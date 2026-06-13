@@ -250,13 +250,20 @@
     font-family: var(--type); font-size: 12px; color: var(--ink-soft);
   }
 
-  /* ---------- Input + dropdown (interim paper styling) ---------- */
+  /* ---------- Input + dropdown ---------- */
   .input-area { position: relative; }
+  /* a pencil resting at the start of the line you write on */
+  .input-area::before {
+    content: "\270E"; position: absolute; left: 1px; bottom: 9px;
+    font-size: 17px; color: var(--ink-soft); pointer-events: none; z-index: 1;
+    transform: rotate(8deg);
+  }
   #songInput {
-    width: 100%; padding: 10px 4px;
+    width: 100%; padding: 10px 4px 10px 26px;
     font-family: var(--type); font-size: 17px;
     border: none; border-bottom: 2px solid var(--ink); border-radius: 0;
     background: transparent; color: var(--ink); outline: none;
+    caret-color: var(--ink-accent);
   }
   #songInput::placeholder { color: var(--ink-soft); font-style: italic; }
   #songInput:focus { box-shadow: inset 0 -2px 0 var(--ink-accent); }
@@ -267,20 +274,30 @@
   }
   .dropdown.show { display: block; }
   .dropdown .item {
-    padding: 10px 14px; cursor: pointer;
+    position: relative;
+    padding: 11px 14px; cursor: pointer;
     font-family: var(--type); font-size: 14px; color: var(--ink);
     background: var(--paper-edge);
     border: 1.5px solid var(--ink-soft); border-radius: 2px;
-    margin-bottom: 6px; box-shadow: 2px 2px 0 rgba(43,39,34,0.12);
+    margin: 9px 4px 6px; box-shadow: 2px 2px 0 rgba(43,39,34,0.12);
     transform: rotate(-0.4deg);
-    transition: transform 0.12s, background 0.12s;
+    transition: transform 0.12s, background 0.12s, box-shadow 0.12s;
   }
-  .dropdown .item:last-child { margin-bottom: 0; }
+  /* a strip of washi tape pinning each card to the page */
+  .dropdown .item::before {
+    content: ""; position: absolute; top: -7px; left: 50%;
+    width: 30px; height: 13px; transform: translateX(-50%) rotate(-4deg);
+    background: rgba(232,210,150,0.45); border: 1px solid rgba(43,39,34,0.10);
+  }
   .dropdown .item:nth-child(even) { transform: rotate(0.5deg); }
+  .dropdown .item:nth-child(even)::before { transform: translateX(-50%) rotate(5deg); }
+  .dropdown .item:nth-child(3n) { transform: rotate(-0.9deg); }
+  .dropdown .item:last-child { margin-bottom: 4px; }
   .dropdown .item.active, .dropdown .item:hover {
     /* translucent highlighter composited over opaque paper so text can't bleed through */
     background: linear-gradient(var(--highlighter), var(--highlighter)), var(--paper-edge);
-    transform: rotate(0deg) scale(1.01);
+    transform: rotate(0deg) translateY(-2px) scale(1.015);
+    box-shadow: 3px 5px 0 rgba(43,39,34,0.16); z-index: 2;
   }
 
   .hint {
@@ -288,7 +305,23 @@
     color: var(--ink-soft); margin-top: 16px;
   }
 
-  /* ---------- Feedback (interim) ---------- */
+  /* ---------- Pen-circle confirm ---------- */
+  .circled-choice { text-align: center; padding: 24px 16px 30px; }
+  .cc-box { position: relative; display: inline-block; padding: 10px 26px; max-width: 100%; }
+  .cc-box .cc-text {
+    position: relative; z-index: 1;
+    font-family: var(--hand); font-weight: 700; color: var(--ink);
+    font-size: clamp(28px, 7.5vw, 44px); line-height: 1.1;
+  }
+  .cc-box svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
+  .cc-ring {
+    fill: none; stroke: var(--ink-accent); stroke-width: 2.4; stroke-linecap: round;
+    stroke-dasharray: 1; stroke-dashoffset: 1;
+    animation: drawRing 0.55s ease-out forwards;
+  }
+  @keyframes drawRing { to { stroke-dashoffset: 0; } }
+
+  /* ---------- Feedback ---------- */
   .feedback { margin-top: 6px; }
   .feedback .banner {
     text-align: center; font-family: var(--hand); font-weight: 700;
@@ -761,13 +794,31 @@ function submitAnswer(song, isTimeout) {
   const correct = !!song && currentSongs.some((s) => s.title === song.title);
   roundResults[round - 1] = correct;
   justEarnedIndex = correct ? round - 1 : -1;
-  if (correct) {
-    score++;
-    showCorrectFeedback(song);
-  } else {
-    showWrongFeedback(song, isTimeout);
-  }
+  if (correct) score++;
   renderBracelet();
+
+  // Circle the player's pick before revealing the verdict (skipped on timeout / reduced motion).
+  const reveal = () => (correct ? showCorrectFeedback(song) : showWrongFeedback(song, isTimeout));
+  if (song && !isTimeout && !prefersReducedMotion()) {
+    showCircledChoice(song, reveal);
+  } else {
+    reveal();
+  }
+}
+
+function prefersReducedMotion() {
+  return !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+}
+
+function showCircledChoice(song, done) {
+  $("feedback").innerHTML =
+    `<div class="circled-choice"><span class="cc-box">` +
+      `<span class="cc-text">${escapeHtml(song.title)}</span>` +
+      `<svg viewBox="0 0 100 46" preserveAspectRatio="none" aria-hidden="true">` +
+        `<path class="cc-ring" pathLength="1" d="M7,25 C5,12 31,5 53,6 C80,7 96,14 94,27 C92,40 63,43 43,42 C20,41 8,38 7,25"/>` +
+      `</svg>` +
+    `</span></div>`;
+  setTimeout(done, 640);
 }
 
 function showCorrectFeedback(song) {
