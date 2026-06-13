@@ -10,6 +10,9 @@ add_song/
 .vscode/
 .idea/
 
+# Local Claude project notes (kept local, not published)
+CLAUDE.md
+
 # Logs and temp
 *.log
 Thumbs.db
