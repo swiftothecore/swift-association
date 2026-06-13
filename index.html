@@ -31,6 +31,7 @@
     --serif: Georgia, "Times New Roman", serif;
     --hand: "Caveat", "Bradley Hand", "Segoe Script", cursive;
     --type: "Courier Prime", "Courier New", monospace;
+    --tension: 0;  /* 0 calm → 1 the bridge; driven by the timer */
   }
 
   /* ---- Era palettes (accent / highlighter / bead / wash) ---- */
@@ -104,6 +105,29 @@
     position: absolute; top: 0; bottom: 0; left: 44px;
     width: 2px; background: var(--margin);
     opacity: 0.8;
+  }
+  /* tension vignette — the room dims as the timer runs out */
+  .card::after {
+    content: ""; position: absolute; inset: 0; border-radius: 3px;
+    pointer-events: none; z-index: 5;
+    background: radial-gradient(108% 82% at 50% 43%,
+      transparent 36%, rgba(58,14,14,0.5) 76%, rgba(34,6,6,0.82) 100%);
+    opacity: var(--tension, 0);
+    transition: opacity 0.15s linear;
+  }
+
+  /* hurried tally scrawled in the outer margin in the final seconds */
+  .margin-tally {
+    position: absolute; left: 8px; top: 39%; z-index: 6;
+    font-family: var(--hand); font-weight: 700; font-size: 42px;
+    color: var(--margin); opacity: 0; transform: rotate(-9deg);
+    pointer-events: none;
+  }
+  .margin-tally.show { animation: tally 0.95s ease-out; }
+  @keyframes tally {
+    0%   { opacity: 0; transform: rotate(-9deg) scale(0.6); }
+    25%  { opacity: 0.95; transform: rotate(-9deg) scale(1.05); }
+    100% { opacity: 0; transform: rotate(-9deg) scale(1.15) translateY(-8px); }
   }
 
   .screen { display: none; }
@@ -216,7 +240,15 @@
     font-family: var(--type); font-size: 12px; letter-spacing: 1px;
     color: var(--ink-soft); margin-bottom: 6px; transform: rotate(-0.5deg);
   }
-  .word-wrap { text-align: center; margin: 6px 0 14px; }
+  .word-wrap { text-align: center; margin: 6px 0 14px; animation: tremor 0.15s linear infinite; }
+  /* amplitude scales with --tension, so it's perfectly still until time runs low */
+  @keyframes tremor {
+    0%   { transform: translate(calc(var(--tension) * -1.1px), calc(var(--tension) *  0.5px)); }
+    25%  { transform: translate(calc(var(--tension) *  1.3px), calc(var(--tension) * -0.9px)); }
+    50%  { transform: translate(calc(var(--tension) * -0.7px), calc(var(--tension) *  1.1px)); }
+    75%  { transform: translate(calc(var(--tension) *  1.0px), calc(var(--tension) *  0.6px)); }
+    100% { transform: translate(calc(var(--tension) * -1.1px), calc(var(--tension) *  0.5px)); }
+  }
   .word {
     display: inline-block; position: relative;
     font-family: var(--hand); font-weight: 700;
@@ -375,7 +407,11 @@
   @media (prefers-reduced-motion: reduce) {
     .screen.active { animation: none; }
     .b-halo, .charm-dangle, .charm-dangle.fresh { animation: none; }
+    .word-wrap { animation: none; }
+    .margin-tally.show { animation: none; opacity: 0.9; }
+    .cc-ring { animation: none; stroke-dashoffset: 0; }
     .card, .timer-fill, .word::before { transition: none; }
+    /* vignette stays (it's a colour/state change, not motion) */
   }
 </style>
 </head>
@@ -399,6 +435,7 @@
 
   <!-- GAME SCREEN -->
   <section id="screen-game" class="screen card">
+    <div id="marginTally" class="margin-tally" aria-hidden="true"></div>
     <div class="bracelet-wrap">
       <div class="bracelet-meta">
         <span>page <b id="pageNum">1</b> of 13</span>
@@ -703,6 +740,7 @@ function nextRound() {
   hideDropdown();
   input.focus();
 
+  resetTension();
   startTimer();
 }
 
@@ -721,6 +759,9 @@ function startTimer() {
     fill.style.width = pct + "%";
     label.textContent = remaining.toFixed(1);
     fill.classList.toggle("low", remaining <= 3);
+    // the bridge build: ramp tension over the final 4 seconds
+    setTension(remaining >= 4 ? 0 : (4 - remaining) / 4);
+    updateTally(remaining);
     if (remaining <= 0) {
       label.textContent = "0.0";
       submitAnswer(null, true);
@@ -729,6 +770,35 @@ function startTimer() {
 }
 function clearTimer() {
   if (timerId) { clearInterval(timerId); timerId = null; }
+}
+
+/* ---------- Timer tension ---------- */
+function setTension(t) {
+  document.body.style.setProperty("--tension", String(t));
+}
+function updateTally(remaining) {
+  const el = $("marginTally");
+  if (remaining > 0 && remaining <= 3) {
+    const n = String(Math.ceil(remaining));
+    if (el.dataset.n !== n) {
+      el.dataset.n = n;
+      el.textContent = n;
+      el.classList.remove("show");
+      void el.offsetWidth; // restart the scrawl animation
+      el.classList.add("show");
+    }
+  } else if (el.dataset.n) {
+    el.dataset.n = "";
+    el.textContent = "";
+    el.classList.remove("show");
+  }
+}
+function resetTension() {
+  setTension(0);
+  const el = $("marginTally");
+  el.dataset.n = "";
+  el.textContent = "";
+  el.classList.remove("show");
 }
 
 /* ---------- Dropdown (searches whole catalog) ---------- */
@@ -787,6 +857,7 @@ function submitAnswer(song, isTimeout) {
 
   roundLocked = true;
   clearTimer();
+  resetTension();
   hideDropdown();
   $("songInput").disabled = true;
   $("playArea").style.display = "none";
@@ -880,6 +951,7 @@ function shuffle(arr) {
 /* ---------- End game ---------- */
 function endGame() {
   clearTimer();
+  resetTension();
   applyEra(FINALE_ERAS[Math.floor(Math.random() * FINALE_ERAS.length)]);
   showScreen("results");
   $("resultBracelet").innerHTML = buildBraceletSVG(roundResults, 0, -1);
