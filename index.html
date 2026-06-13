@@ -153,12 +153,6 @@
     to   { transform: rotateX(108deg); }
   }
   @keyframes pageFlipShade { from { opacity: 0; } to { opacity: 1; } }
-  /* the revealed page settles in with a soft lift */
-  #screen-game.settling { animation: pageSettle 0.5s ease-out; }
-  @keyframes pageSettle {
-    0%   { transform: translateY(-5px) scale(0.992); filter: brightness(0.93); }
-    100% { transform: none; filter: brightness(1); }
-  }
 
   /* ---------- Buttons (hand-drawn / taped) ---------- */
   button {
@@ -433,7 +427,6 @@
     .margin-tally.show { animation: none; opacity: 0.9; }
     .cc-ring { animation: none; stroke-dashoffset: 0; }
     .page-flip-sheet { display: none; }
-    #screen-game.settling { animation: none; }
     .card, .timer-fill, .word::before { transition: none; }
     /* vignette stays (it's a colour/state change, not motion) */
   }
@@ -752,16 +745,18 @@ function nextRound() {
   // First round (from the start screen) and reduced motion advance instantly.
   if (round === 0 || prefersReducedMotion()) {
     advanceRound();
+    startTimer();
     return;
   }
   // Clone the answered page as a sheet, swap the real page to the next round
-  // beneath it, then flip the sheet away to reveal it.
+  // beneath it, then flip the sheet away to reveal it. The timer for the new
+  // round only starts once the flip has finished, so none of the 10s is lost.
   const card = $("screen-game");
   card.style.transform = "";
   const flip = card.cloneNode(true);
   flip.removeAttribute("id");
   flip.querySelectorAll("[id]").forEach((e) => e.removeAttribute("id"));
-  flip.classList.remove("screen", "active", "settling");
+  flip.classList.remove("screen", "active");
   flip.classList.add("page-flip-sheet");
   flip.style.top = card.offsetTop + "px";
   flip.style.left = card.offsetLeft + "px";
@@ -772,12 +767,18 @@ function nextRound() {
   card.parentNode.appendChild(flip);
 
   advanceRound();             // the next page is now in place under the flipping sheet
-  card.classList.add("settling");
-  setTimeout(() => card.classList.remove("settling"), 520);
 
-  const cleanup = () => flip.remove();
-  flip.addEventListener("animationend", cleanup, { once: true });
-  setTimeout(cleanup, 1200);  // safety fallback if animationend doesn't fire
+  let finished = false;
+  const finish = () => {
+    if (finished) return;
+    finished = true;
+    flip.remove();
+    startTimer();             // start the clock only after the page has turned
+  };
+  // Primary trigger is a timeout matched to the 0.5s flip (CSS .page-flip-sheet),
+  // with animationend as a fast-path; whichever lands first wins.
+  flip.addEventListener("animationend", (e) => { if (e.target === flip) finish(); });
+  setTimeout(finish, 500);
 }
 
 function advanceRound() {
@@ -799,7 +800,8 @@ function advanceRound() {
   input.focus();
 
   resetTension();
-  startTimer();
+  // Note: the timer is started by the caller (nextRound) — for a page turn it
+  // only starts once the flip finishes, so no time is lost during the animation.
 }
 
 function startTimer() {
