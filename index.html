@@ -263,6 +263,7 @@
   .dropdown {
     position: absolute; left: 0; right: 0; top: calc(100% + 6px);
     z-index: 100; display: none;
+    background: var(--paper); border-radius: 3px; padding: 2px;
   }
   .dropdown.show { display: block; }
   .dropdown .item {
@@ -274,9 +275,12 @@
     transform: rotate(-0.4deg);
     transition: transform 0.12s, background 0.12s;
   }
+  .dropdown .item:last-child { margin-bottom: 0; }
   .dropdown .item:nth-child(even) { transform: rotate(0.5deg); }
   .dropdown .item.active, .dropdown .item:hover {
-    background: var(--highlighter); transform: rotate(0deg) scale(1.01);
+    /* translucent highlighter composited over opaque paper so text can't bleed through */
+    background: linear-gradient(var(--highlighter), var(--highlighter)), var(--paper-edge);
+    transform: rotate(0deg) scale(1.01);
   }
 
   .hint {
