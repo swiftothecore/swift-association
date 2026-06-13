@@ -50,25 +50,31 @@
     font-family: var(--type);
     color: var(--ink);
     background:
-      /* soft pool of light where the notebook sits — adds dimension */
-      radial-gradient(980px 600px at 50% 6%, rgba(247,238,222,0.12), rgba(247,238,222,0) 58%),
-      /* low edge vignette grounds the surface */
-      radial-gradient(155% 135% at 50% 30%, rgba(60,46,33,0) 38%, rgba(26,18,11,0.46) 100%),
-      /* muted walnut base, gentle top→bottom shading */
-      linear-gradient(178deg, #5b4938 0%, #4c3c2d 52%, #3d3024 100%);
+      /* broad, soft plank tonal variation — horizontal, low contrast, large
+         period so no obvious repeat shows on screen */
+      repeating-linear-gradient(to bottom,
+        rgba(255,249,238,0.022) 0px,
+        rgba(0,0,0,0.018) 130px,
+        rgba(255,249,238,0.018) 250px,
+        rgba(0,0,0,0.022) 370px,
+        rgba(255,249,238,0.022) 520px),
+      /* very gentle, even light — slightly brighter up top, no dramatic pool */
+      linear-gradient(180deg, rgba(255,250,240,0.05), rgba(0,0,0,0.04)),
+      /* muted warm oak base */
+      linear-gradient(176deg, #6a5640 0%, #5d4a37 56%, #534230 100%);
     background-attachment: fixed;
     display: flex;
     justify-content: center;
     padding: 40px 18px 64px;
   }
-  /* fine wood grain — quiet, tactile, blended into the walnut */
+  /* fine horizontal wood grain — crisp, quiet, barely-there */
   body::before {
     content: "";
     position: fixed; inset: 0; z-index: -1; pointer-events: none;
-    background-image: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='400'%20height='400'%3E%3Cfilter%20id='w'%3E%3CfeTurbulence%20type='fractalNoise'%20baseFrequency='0.16%200.018'%20numOctaves='3'%20seed='14'%20stitchTiles='stitch'/%3E%3CfeColorMatrix%20type='saturate'%20values='0'/%3E%3CfeComponentTransfer%3E%3CfeFuncA%20type='discrete'%20tableValues='1'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect%20width='100%25'%20height='100%25'%20filter='url(%23w)'/%3E%3C/svg%3E");
-    background-size: 440px 440px;
-    opacity: 0.3;
-    mix-blend-mode: soft-light;
+    background-image: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='600'%20height='600'%3E%3Cfilter%20id='w'%3E%3CfeTurbulence%20type='fractalNoise'%20baseFrequency='0.009%200.34'%20numOctaves='2'%20seed='9'%20stitchTiles='stitch'/%3E%3CfeColorMatrix%20type='saturate'%20values='0'/%3E%3CfeComponentTransfer%3E%3CfeFuncA%20type='discrete'%20tableValues='1'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect%20width='100%25'%20height='100%25'%20filter='url(%23w)'/%3E%3C/svg%3E");
+    background-size: 600px 600px;
+    opacity: 0.14;
+    mix-blend-mode: overlay;
   }
 
   .app { width: 100%; max-width: 600px; position: relative; perspective: 1700px; perspective-origin: 50% 0%; }
