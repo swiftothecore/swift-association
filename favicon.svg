@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <title>Swift To The Song Association</title>
+  <rect x="2" y="2" width="60" height="60" rx="14" fill="#f5efe1" stroke="#e0d6bf" stroke-width="1"/>
+  <line x1="16" y1="24" x2="52" y2="24" stroke="#2b2722" stroke-opacity="0.10" stroke-width="1"/>
+  <line x1="16" y1="40" x2="52" y2="40" stroke="#2b2722" stroke-opacity="0.10" stroke-width="1"/>
+  <line x1="16" y1="12" x2="16" y2="52" stroke="#b23a3a" stroke-opacity="0.85" stroke-width="2.5" stroke-linecap="round"/>
+  <path d="M38,17 L41.70,26.90 L52.27,27.37 L43.99,33.95 L46.82,44.14 L38,38.30 L29.18,44.14 L32.01,33.95 L23.73,27.37 L34.30,26.90 Z"
+        fill="#e0a32f" stroke="#2b2722" stroke-width="2" stroke-linejoin="round"/>
+</svg>
