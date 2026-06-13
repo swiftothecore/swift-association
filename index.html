@@ -50,11 +50,25 @@
     font-family: var(--type);
     color: var(--ink);
     background:
-      radial-gradient(1100px 700px at 50% -10%, #d6cbb4 0%, var(--desk) 60%, #b9ad96 100%);
+      /* soft pool of light where the notebook sits — adds dimension */
+      radial-gradient(980px 600px at 50% 6%, rgba(247,238,222,0.12), rgba(247,238,222,0) 58%),
+      /* low edge vignette grounds the surface */
+      radial-gradient(155% 135% at 50% 30%, rgba(60,46,33,0) 38%, rgba(26,18,11,0.46) 100%),
+      /* muted walnut base, gentle top→bottom shading */
+      linear-gradient(178deg, #5b4938 0%, #4c3c2d 52%, #3d3024 100%);
     background-attachment: fixed;
     display: flex;
     justify-content: center;
     padding: 40px 18px 64px;
+  }
+  /* fine wood grain — quiet, tactile, blended into the walnut */
+  body::before {
+    content: "";
+    position: fixed; inset: 0; z-index: -1; pointer-events: none;
+    background-image: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='400'%20height='400'%3E%3Cfilter%20id='w'%3E%3CfeTurbulence%20type='fractalNoise'%20baseFrequency='0.16%200.018'%20numOctaves='3'%20seed='14'%20stitchTiles='stitch'/%3E%3CfeColorMatrix%20type='saturate'%20values='0'/%3E%3CfeComponentTransfer%3E%3CfeFuncA%20type='discrete'%20tableValues='1'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect%20width='100%25'%20height='100%25'%20filter='url(%23w)'/%3E%3C/svg%3E");
+    background-size: 440px 440px;
+    opacity: 0.3;
+    mix-blend-mode: soft-light;
   }
 
   .app { width: 100%; max-width: 600px; position: relative; perspective: 1700px; perspective-origin: 50% 0%; }
