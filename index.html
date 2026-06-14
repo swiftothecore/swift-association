@@ -226,6 +226,34 @@
     font-family: var(--hand); font-weight: 700; font-size: 26px;
     color: var(--ink); margin: 0 0 6px; transform: rotate(-0.8deg);
   }
+
+  /* ---------- Difficulty picker — notebook tabs ---------- */
+  .mode-picker { margin: 0 0 20px; }
+  .mode-picker-label {
+    font-family: var(--type); font-size: 10px; letter-spacing: 1.5px;
+    text-transform: uppercase; color: var(--ink-soft); margin: 0 0 7px;
+  }
+  .mode-tabs { display: flex; gap: 6px; flex-wrap: wrap; }
+  .mode-tab {
+    font-family: var(--hand); font-size: 19px; line-height: 1; color: var(--ink-soft);
+    background: transparent; cursor: pointer; padding: 6px 13px 7px;
+    border: 1.5px solid rgba(43,39,34,0.18);
+    border-bottom: none; border-radius: 6px 6px 0 0;
+    transform: translateY(1px) rotate(-0.4deg);
+    transition: color 0.15s, background 0.15s, transform 0.12s;
+  }
+  .mode-tab:nth-child(even) { transform: translateY(1px) rotate(0.5deg); }
+  .mode-tab:hover { color: var(--ink); }
+  .mode-tab.active {
+    color: var(--ink); background: var(--highlighter);
+    border-color: rgba(43,39,34,0.32); transform: translateY(0) rotate(0deg);
+  }
+  .mode-blurb {
+    font-family: var(--type); font-size: 11px; color: var(--ink-soft);
+    margin: 9px 0 0; padding-top: 8px; border-top: 1px dashed rgba(43,39,34,0.16);
+  }
+  /* the tab row reused on the stats page */
+  .stats-tabs { margin-bottom: 16px; }
   .podium { list-style: none; margin: 0 0 4px; padding: 0; }
   .podium li {
     display: flex; align-items: baseline; gap: 12px;
@@ -860,7 +888,12 @@
   <section id="screen-start" class="screen card">
     <div id="loading" class="loading">opening the notebook…</div>
     <div id="startContent" style="display:none;">
-      <p class="podium-title">Hall of Fame</p>
+      <div class="mode-picker">
+        <p class="mode-picker-label">difficulty</p>
+        <div id="modeTabs" class="mode-tabs"></div>
+        <p id="modeBlurb" class="mode-blurb"></p>
+      </div>
+      <p id="startPodiumTitle" class="podium-title">Hall of Fame</p>
       <ul id="startPodium" class="podium"></ul>
       <button id="playBtn" class="btn-primary" style="margin-top:18px;">Start writing</button>
       <button id="statsBtn" class="btn-ghost">stats &amp; streaks</button>
@@ -903,7 +936,7 @@
                placeholder="write the line…" />
         <div id="dropdown" class="dropdown"></div>
       </div>
-      <p class="hint">Enter accepts the top match</p>
+      <p id="gameHint" class="hint">Enter accepts the top match</p>
     </div>
 
     <div id="feedback" class="feedback"></div>
@@ -945,6 +978,20 @@ const RECENT_WINDOW = 5;
 const HS_KEY = "swiftSongAssociation.highscores";
 const STATS_KEY = "swiftSongAssociation.stats";
 const STREAK_THRESHOLD = 7; // score >= this counts toward a streak
+
+/* Difficulty modes — each just re-tunes existing levers (timer, dropdown,
+   word-rarity pool, matching strictness, wrong-answer help). Gameplay code is
+   shared; the mode object sets the parameters. */
+const MODES = {
+  easy:   { id: "easy",   label: "Easy",   seconds: 15, dropdown: true,  pool: "easy",  strict: false, examples: 3, blurb: "15s · hints on · common words" },
+  medium: { id: "medium", label: "Medium", seconds: 10, dropdown: true,  pool: "all",   strict: false, examples: 3, blurb: "10s · hints on · all words" },
+  hard:   { id: "hard",   label: "Hard",   seconds: 7,  dropdown: false, pool: "hard",  strict: false, examples: 3, blurb: "7s · no hints · rarer words" },
+  ultra:  { id: "ultra",  label: "Ultra",  seconds: 5,  dropdown: false, pool: "ultra", strict: true,  examples: 0, blurb: "5s · no hints · rarest · exact title" },
+};
+const MODE_ORDER = ["easy", "medium", "hard", "ultra"];
+const DIFF_KEY = "swiftSongAssociation.difficulty";
+let currentMode = MODES.medium;
+let wordBuckets = { easy: [], all: [], hard: [], ultra: [] };
 const DEFAULT_PODIUM = [
   { name: "Sabrina Carpenter", score: 13 },
   { name: "Taylor Swift", score: 12 },
@@ -1009,20 +1056,27 @@ function escapeRegExp(s) { return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); }
 // Prefix-stem match: the word as the start of a token, plus any trailing letters,
 // so "gold" matches "golden", "dream" matches "dreamer". The leading \b keeps it
 // safe (e.g. "love" won't match "glove"/"clover"; "rain" won't match "train").
-function wordRegex(word) { return new RegExp("\\b" + escapeRegExp(word) + "[a-z']*\\b", "i"); }
-function songsContainingWord(word) {
-  const rx = wordRegex(word);
+// Lenient (default) matches derived forms via the [a-z']* tail (gold→golden);
+// strict (Ultra) requires the exact word. Defaults to the active mode.
+function wordRegex(word, strict) {
+  if (strict === undefined) strict = currentMode.strict;
+  const tail = strict ? "" : "[a-z']*";
+  return new RegExp("\\b" + escapeRegExp(word) + tail + "\\b", "i");
+}
+function songsContainingWord(word, strict) {
+  const rx = wordRegex(word, strict);
   return allSongs.filter((s) => rx.test(s.lyrics));
 }
-function extractLineWithWord(lyrics, word) {
-  const rx = wordRegex(word);
+function extractLineWithWord(lyrics, word, strict) {
+  const rx = wordRegex(word, strict);
   const lines = lyrics.split("\n");
   const line = lines.find((l) => rx.test(l)) || lines[0] || "";
   return line.trim();
 }
-function highlightWord(line, word) {
-  // Highlight the whole variant token (e.g. "golden", not just "gold").
-  const rx = new RegExp("\\b(" + escapeRegExp(word) + "[a-z']*)\\b", "ig");
+function highlightWord(line, word, strict) {
+  if (strict === undefined) strict = currentMode.strict;
+  const tail = strict ? "" : "[a-z']*";
+  const rx = new RegExp("\\b(" + escapeRegExp(word) + tail + ")\\b", "ig");
   return escapeHtml(line).replace(rx, "<mark>$1</mark>");
 }
 function escapeHtml(s) {
@@ -1030,9 +1084,11 @@ function escapeHtml(s) {
 }
 
 /* ---------- Stats ---------- */
-function loadStats() {
+// Medium keeps the legacy key for back-compat; other modes get a suffix.
+function statsKey(mode) { return mode === "medium" ? STATS_KEY : STATS_KEY + "." + mode; }
+function loadStats(mode = currentMode.id) {
   try {
-    const raw = localStorage.getItem(STATS_KEY);
+    const raw = localStorage.getItem(statsKey(mode));
     if (raw) {
       const s = JSON.parse(raw);
       if (s && typeof s.played === "number") return s;
@@ -1040,11 +1096,13 @@ function loadStats() {
   } catch (e) { /* ignore */ }
   return { played: 0, best: 0, totalScore: 0, scoreCounts: Array(14).fill(0), lastPlayed: null, currentStreak: 0, maxStreak: 0 };
 }
-function saveStats(s) {
-  try { localStorage.setItem(STATS_KEY, JSON.stringify(s)); } catch (e) { /* ignore */ }
+function saveStats(s, mode = currentMode.id) {
+  try { localStorage.setItem(statsKey(mode), JSON.stringify(s)); } catch (e) { /* ignore */ }
 }
-function updateStats(gameScore) {
-  const s = loadStats();
+// Total games across every mode — for the global "play N games" achievements.
+function totalPlayed() { return MODE_ORDER.reduce((n, m) => n + loadStats(m).played, 0); }
+function updateStats(gameScore, mode = currentMode.id) {
+  const s = loadStats(mode);
   s.played += 1;
   s.best = Math.max(s.best, gameScore);
   s.totalScore += gameScore;
@@ -1056,42 +1114,50 @@ function updateStats(gameScore) {
   } else {
     s.currentStreak = 0;
   }
-  saveStats(s);
+  saveStats(s, mode);
   return s;
 }
-function renderStats(lastScore) {
-  const s = loadStats();
+function renderStats(lastScore, viewMode = currentMode.id) {
+  const s = loadStats(viewMode);
   const el = $("statsBody");
+  // mode tabs — browse each difficulty's separate stats
+  const tabs = `<div class="mode-tabs stats-tabs">` + MODE_ORDER.map((m) =>
+    `<button type="button" class="mode-tab${m === viewMode ? " active" : ""}" data-statmode="${m}">${MODES[m].label}</button>`
+  ).join("") + `</div>`;
+
+  let body;
   if (s.played === 0) {
-    el.innerHTML = `<p class="stats-empty">no games yet — start writing!</p>`;
-    return;
+    body = `<p class="stats-empty">no games yet in ${MODES[viewMode].label} — start writing!</p>`;
+  } else {
+    const avg = (s.totalScore / s.played).toFixed(1);
+    const maxCount = Math.max(...s.scoreCounts, 1);
+    // highlight the just-played bar only on the mode that was actually played
+    const youScore = (viewMode === currentMode.id) ? lastScore : null;
+    const bars = s.scoreCounts.map((count, score) => {
+      const h = Math.round((count / maxCount) * 56);
+      const isYou = (score === youScore);
+      return `<div class="histogram-col">
+        <div class="histogram-bar${isYou ? " has-you" : ""}" style="height:${Math.max(h, count > 0 ? 4 : 2)}px"></div>
+        <div class="histogram-score">${score}</div>
+      </div>`;
+    }).join("");
+    body = `
+      <div class="stats-grid">
+        <div class="stat-cell"><span class="stat-val">${s.played}</span><span class="stat-lbl">Played</span></div>
+        <div class="stat-cell"><span class="stat-val">${s.best}</span><span class="stat-lbl">Best</span></div>
+        <div class="stat-cell"><span class="stat-val">${avg}</span><span class="stat-lbl">Average</span></div>
+      </div>
+      <div class="streak-row">
+        <div class="streak-cell"><span class="stat-val">${s.currentStreak}</span><span class="stat-lbl">Current streak</span></div>
+        <div class="streak-cell"><span class="stat-val">${s.maxStreak}</span><span class="stat-lbl">Best streak</span></div>
+      </div>
+      <p class="histogram-label">score distribution</p>
+      <div class="histogram">${bars}</div>`;
   }
-  const avg = (s.totalScore / s.played).toFixed(1);
-  const maxCount = Math.max(...s.scoreCounts, 1);
 
-  const bars = s.scoreCounts.map((count, score) => {
-    const h = Math.round((count / maxCount) * 56);
-    const isYou = (score === lastScore);
-    return `<div class="histogram-col">
-      <div class="histogram-bar${isYou ? " has-you" : ""}" style="height:${Math.max(h, count > 0 ? 4 : 2)}px"></div>
-      <div class="histogram-score">${score}</div>
-    </div>`;
-  }).join("");
-
-  el.innerHTML = `
-    <div class="stats-grid">
-      <div class="stat-cell"><span class="stat-val">${s.played}</span><span class="stat-lbl">Played</span></div>
-      <div class="stat-cell"><span class="stat-val">${s.best}</span><span class="stat-lbl">Best</span></div>
-      <div class="stat-cell"><span class="stat-val">${avg}</span><span class="stat-lbl">Average</span></div>
-    </div>
-    <div class="streak-row">
-      <div class="streak-cell"><span class="stat-val">${s.currentStreak}</span><span class="stat-lbl">Current streak</span></div>
-      <div class="streak-cell"><span class="stat-val">${s.maxStreak}</span><span class="stat-lbl">Best streak</span></div>
-    </div>
-    <p class="histogram-label">score distribution</p>
-    <div class="histogram">${bars}</div>
-    ${achievementsGridHTML()}
-  `;
+  el.innerHTML = tabs + body + achievementsGridHTML();
+  el.querySelectorAll("[data-statmode]").forEach((b) =>
+    b.addEventListener("click", () => renderStats(lastScore, b.dataset.statmode)));
 }
 
 /* ---------- Achievements ---------- */
@@ -1182,10 +1248,12 @@ function achievementsGridHTML() {
   return `<p class="histogram-label" style="margin-top:24px;">achievements · ${earnedCount}/${ACHIEVEMENTS.length}</p><div class="ach-grid">${items}</div>`;
 }
 
-/* ---------- High scores ---------- */
-function loadHighScores() {
+/* ---------- High scores (separate board per mode) ---------- */
+// Medium keeps the legacy key for back-compat; other modes get a suffix.
+function hsKey(mode) { return mode === "medium" ? HS_KEY : HS_KEY + "." + mode; }
+function loadHighScores(mode = currentMode.id) {
   try {
-    const raw = localStorage.getItem(HS_KEY);
+    const raw = localStorage.getItem(hsKey(mode));
     if (raw) {
       const parsed = JSON.parse(raw);
       if (Array.isArray(parsed) && parsed.length) return parsed;
@@ -1193,8 +1261,8 @@ function loadHighScores() {
   } catch (e) { /* ignore */ }
   return DEFAULT_PODIUM.slice();
 }
-function saveHighScores(list) {
-  try { localStorage.setItem(HS_KEY, JSON.stringify(list)); } catch (e) { /* ignore */ }
+function saveHighScores(list, mode = currentMode.id) {
+  try { localStorage.setItem(hsKey(mode), JSON.stringify(list)); } catch (e) { /* ignore */ }
 }
 function renderPodium(el, list, youName) {
   el.innerHTML = "";
@@ -1328,8 +1396,59 @@ async function loadData() {
   allSongs = grouped.flatMap(({ album, songs }) =>
     songs.map((s) => ({ ...s, album }))
   );
-  playableWords = words.filter((w) => songsContainingWord(w).length >= 1);
+  // Lenient playability (Easy/Medium/Hard use derived forms).
+  playableWords = words.filter((w) => songsContainingWord(w, false).length >= 1);
   if (!playableWords.length) throw new Error("No playable words found in data");
+  buildWordBuckets();
+}
+
+// Bucket words by how many songs contain them, so each mode draws from an
+// appropriate-rarity pool. Thresholds are tunable; each bucket falls back to
+// the full list if it ends up too thin to sustain a 13-round, no-repeat game.
+function buildWordBuckets() {
+  const MIN = RECENT_WINDOW + 8;
+  const lenient = playableWords.map((w) => ({ w, n: songsContainingWord(w, false).length }));
+  const easy = lenient.filter((x) => x.n >= 18).map((x) => x.w);
+  const hard = lenient.filter((x) => x.n >= 3 && x.n <= 9).map((x) => x.w);
+  // Ultra ranks by *strict* count (exact word, no derived forms) and keeps the rarest.
+  const ultra = playableWords
+    .map((w) => ({ w, n: songsContainingWord(w, true).length }))
+    .filter((x) => x.n >= 1 && x.n <= 3)
+    .map((x) => x.w);
+  const safe = (arr) => (arr.length >= MIN ? arr : playableWords);
+  wordBuckets = { easy: safe(easy), all: playableWords, hard: safe(hard), ultra: safe(ultra) };
+}
+
+/* ---------- Difficulty ---------- */
+function loadMode() {
+  try {
+    const id = localStorage.getItem(DIFF_KEY);
+    if (id && MODES[id]) return MODES[id];
+  } catch (e) { /* ignore */ }
+  return MODES.medium;
+}
+function setMode(id) {
+  if (!MODES[id]) return;
+  currentMode = MODES[id];
+  try { localStorage.setItem(DIFF_KEY, id); } catch (e) { /* ignore */ }
+  renderModePicker();
+  refreshStartBoard();
+}
+// The start-screen Hall of Fame follows the selected mode.
+function refreshStartBoard() {
+  const t = $("startPodiumTitle");
+  if (t) t.textContent = "Hall of Fame · " + currentMode.label;
+  renderPodium($("startPodium"), sortHs(loadHighScores(currentMode.id)), null);
+}
+function renderModePicker() {
+  const tabs = $("modeTabs");
+  if (!tabs) return;
+  tabs.innerHTML = MODE_ORDER.map((m) =>
+    `<button type="button" class="mode-tab${m === currentMode.id ? " active" : ""}" data-mode="${m}">${MODES[m].label}</button>`
+  ).join("");
+  tabs.querySelectorAll("[data-mode]").forEach((b) =>
+    b.addEventListener("click", () => setMode(b.dataset.mode)));
+  $("modeBlurb").textContent = currentMode.blurb;
 }
 
 /* ---------- Game flow ---------- */
@@ -1344,13 +1463,16 @@ function startGame() {
   recentEras = [];
   roundResults = [];
   roundAlbums = [];
+  $("songInput").placeholder = currentMode.dropdown ? "write the line…" : "write the full title…";
+  $("gameHint").textContent = currentMode.dropdown ? "Enter accepts the top match" : "no hints — type the full title, then Enter";
   showScreen("game");
   nextRound();
 }
 
 function pickWord() {
-  const pool = playableWords.filter((w) => !recentWords.includes(w));
-  const choices = pool.length ? pool : playableWords;
+  const bucket = wordBuckets[currentMode.pool] || playableWords;
+  const pool = bucket.filter((w) => !recentWords.includes(w));
+  const choices = pool.length ? pool : bucket;
   const word = choices[Math.floor(Math.random() * choices.length)];
   recentWords.push(word);
   if (recentWords.length > RECENT_WINDOW) recentWords.shift();
@@ -1427,13 +1549,15 @@ function startTimer() {
   timerStart = performance.now();
   const fill = $("timerFill");
   const label = $("timerLabel");
+  const total = currentMode.seconds;
   fill.style.width = "100%";
   fill.classList.remove("low");
+  label.textContent = total.toFixed(1);
 
   timerId = setInterval(() => {
     const elapsed = (performance.now() - timerStart) / 1000;
-    const remaining = Math.max(0, ROUND_SECONDS - elapsed);
-    const pct = (remaining / ROUND_SECONDS) * 100;
+    const remaining = Math.max(0, total - elapsed);
+    const pct = (remaining / total) * 100;
     fill.style.width = pct + "%";
     label.textContent = remaining.toFixed(1);
     fill.classList.toggle("low", remaining <= 3);
@@ -1550,7 +1674,7 @@ function submitAnswer(song, isTimeout) {
 
   // achievements: timing + streak signals (mid-game unlocks toast immediately)
   const elapsed = (performance.now() - timerStart) / 1000;
-  const remaining = ROUND_SECONDS - elapsed;
+  const remaining = currentMode.seconds - elapsed;
   if (isTimeout) gameTimeouts++;
   if (correct) {
     if (elapsed < 2) unlock("speak-now", true);
@@ -1609,12 +1733,17 @@ function showCorrectFeedback(song) {
 function showWrongFeedback(song, isTimeout) {
   const fb = $("feedback");
   const reason = isTimeout ? "the page ran out" : "not this verse";
-  const examples = shuffle(currentSongs.slice()).slice(0, 3);
-  const cards = examples.map((s) => lyricCard(s, currentWord, true)).join("");
+  // Ultra offers no help — examples is 0, so skip the cards and the label.
+  const n = currentMode.examples;
+  let help = "";
+  if (n > 0) {
+    const examples = shuffle(currentSongs.slice()).slice(0, n);
+    const cards = examples.map((s) => lyricCard(s, currentWord, true)).join("");
+    help = `<span class="red-note">songs that hold "<b>${escapeHtml(currentWord)}</b>"</span>${cards}`;
+  }
   fb.innerHTML = `
     <div class="banner bad">✗ ${reason}</div>
-    <span class="red-note">songs that hold "<b>${escapeHtml(currentWord)}</b>"</span>
-    ${cards}
+    ${help}
     <button id="continueBtn" class="btn-ghost">next page →</button>`;
   $("continueBtn").addEventListener("click", advanceFromFeedback);
 }
@@ -1657,13 +1786,14 @@ function endGame() {
   clearTimer();
   resetTension();
   applyEra(FINALE_ERAS[Math.floor(Math.random() * FINALE_ERAS.length)]);
-  const stats = updateStats(score);
+  updateStats(score, currentMode.id);
+  const played = totalPlayed();   // across all modes — achievements are global
 
   // end-of-game achievements (shown in the results recap, no toast)
   if (score === TOTAL_ROUNDS) unlock("mastermind", false);
   if (gameTimeouts === 0) unlock("fearless", false);
-  if (stats.played >= 1) unlock("enchanted", false);
-  if (stats.played >= 5) unlock("begin-again", false);
+  if (played >= 1) unlock("enchanted", false);
+  if (played >= 5) unlock("begin-again", false);
   const trailingStreak = (() => { let n = 0; for (let i = roundResults.length - 1; i >= 0 && roundResults[i]; i--) n++; return n; })();
   if (roundResults.includes(false) && trailingStreak >= 5) unlock("long-story-short", false);
 
@@ -2029,8 +2159,11 @@ function celebratePerfect() {
 function wireInput() {
   const input = $("songInput");
   input.addEventListener("input", () => {
-    if (debounceId) clearTimeout(debounceId);
-    debounceId = setTimeout(updateDropdown, 120);
+    // Hard/Ultra have no autocomplete — you type the full title.
+    if (currentMode.dropdown) {
+      if (debounceId) clearTimeout(debounceId);
+      debounceId = setTimeout(updateDropdown, 120);
+    }
     handleTypingEggs(input.value);
   });
   input.addEventListener("keydown", (e) => {
@@ -2039,8 +2172,9 @@ function wireInput() {
       e.stopPropagation();        // this keypress submits — don't let it also bubble to the page-advance handler
       // The dropdown refresh is debounced (120ms). If a keystroke is still
       // pending, flush it now so Enter accepts a match for what's *currently*
-      // typed — not the previous query's stale top result.
-      if (debounceId) { clearTimeout(debounceId); debounceId = null; updateDropdown(); }
+      // typed — not the previous query's stale top result. With the dropdown
+      // off, dropdownItems stays empty and submitAnswer takes the exact-title path.
+      if (currentMode.dropdown && debounceId) { clearTimeout(debounceId); debounceId = null; updateDropdown(); }
       submitAnswer(null, false);
     } else if (e.key === "ArrowDown") {
       e.preventDefault();
@@ -2071,7 +2205,9 @@ async function init() {
   applyEra("gold");
   earnedAchievements = loadAchievements();
   console.log("%c♡ written in the margins · 13 pages of you ♡", "font-size:14px;color:#a9791f;font-family:cursive;");
-  renderPodium($("startPodium"), sortHs(loadHighScores()), null);
+  currentMode = loadMode();
+  renderModePicker();
+  refreshStartBoard();
   const titleEl = document.querySelector("header.title h1");
   if (titleEl) titleEl.addEventListener("click", () => {
     if (++titleTaps >= 13) { titleTaps = 0; revealSecret13(); }
@@ -2086,7 +2222,7 @@ async function init() {
   });
   $("againBtn").addEventListener("click", () => {
     applyEra("gold");
-    renderPodium($("startPodium"), sortHs(loadHighScores()), null);
+    refreshStartBoard();
     showScreen("start");
     $("startContent").style.display = "";
   });
@@ -2096,7 +2232,7 @@ async function init() {
     await loadData();
     $("loading").style.display = "none";
     $("startContent").style.display = "";
-    renderPodium($("startPodium"), sortHs(loadHighScores()), null);
+    refreshStartBoard();
   } catch (err) {
     $("loading").outerHTML = `
       <div class="error">
