@@ -797,6 +797,7 @@ let score = 0;
 let round = 0;
 let recentWords = [];
 let roundResults = [];   // per-round true/false for the bracelet
+let roundAlbums = [];    // per-round album of the picked song (for the final bracelet)
 let currentWord = "";
 let currentSongs = [];
 let dropdownItems = [];
@@ -1056,7 +1057,7 @@ function starPath(cx, cy, rOut, rIn) {
   return d + "Z";
 }
 
-function buildBraceletSVG(results, activeRound, freshIndex) {
+function buildBraceletSVG(results, activeRound, freshIndex, albums) {
   const W = 520, H = 64, xL = 26, xR = W - 26;
   // the thread sags between its tied ends like a real bracelet laid on the page
   const yAt = (x) => 20 + 10 * Math.sin(Math.PI * ((x - xL) / (xR - xL)));
@@ -1086,20 +1087,24 @@ function buildBraceletSVG(results, activeRound, freshIndex) {
     const x = +(xL + ((xR - xL) * i) / (TOTAL_ROUNDS - 1)).toFixed(1);
     const y = +yAt(x).toFixed(1);
     const answered = results[i];
+    // colour this bead by the album of the song picked that round (final bracelet)
+    const albumCol = (albums && albums[i]) ? (ALBUM_COLORS[albums[i]] || null) : null;
+    const beadStyle = albumCol ? ` style="--bead:${albumCol}"` : "";
 
     if (answered === true) {
       // a small bead on the thread, with a star charm dangling from a jump ring
-      svg += `<circle cx="${x}" cy="${y}" r="4.1" class="b-bead" stroke-width="1"/>`;
+      svg += `<circle cx="${x}" cy="${y}" r="4.1" class="b-bead" stroke-width="1"${beadStyle}/>`;
       const fresh = i === freshIndex;
       const delay = fresh ? "" : ` style="animation-delay:${(-(i * 0.9) % 5.5).toFixed(2)}s"`;
       svg += `<g class="charm-dangle${fresh ? " fresh" : ""}"${delay}>` +
         `<circle cx="${x}" cy="${y + 5.4}" r="2.3" fill="none" stroke="var(--ink)" stroke-width="1" opacity="0.7"/>` +
-        `<path d="${starPath(x, y + 15.5, 7.4, 3.1)}" class="b-bead" stroke-width="1.1" stroke-linejoin="round"/>` +
+        `<path d="${starPath(x, y + 15.5, 7.4, 3.1)}" class="b-bead" stroke-width="1.1" stroke-linejoin="round"${beadStyle}/>` +
         `<circle cx="${x - 1.9}" cy="${y + 12.6}" r="1.2" class="b-gloss"/>` +
         `</g>`;
     } else if (answered === false) {
-      // a quiet matte spacer bead
-      svg += `<circle cx="${x}" cy="${y}" r="4.9" class="b-miss" stroke-width="1"/>` +
+      // a quiet matte spacer bead — tinted to the picked album, kept muted
+      const missStyle = albumCol ? ` style="fill:${albumCol}" fill-opacity="0.5"` : "";
+      svg += `<circle cx="${x}" cy="${y}" r="4.9" class="b-miss" stroke-width="1"${missStyle}/>` +
              `<circle cx="${x}" cy="${y}" r="1.1" class="b-miss-dot"/>`;
     } else if (i + 1 === activeRound) {
       // the bead being strung right now: bigger, glossy, with a soft halo pulse
@@ -1169,6 +1174,7 @@ function startGame() {
   recentWords = [];
   recentEras = [];
   roundResults = [];
+  roundAlbums = [];
   showScreen("game");
   nextRound();
 }
@@ -1367,6 +1373,7 @@ function submitAnswer(song, isTimeout) {
 
   const correct = !!song && currentSongs.some((s) => s.title === song.title);
   roundResults[round - 1] = correct;
+  roundAlbums[round - 1] = song ? (song.album || null) : null;
   justEarnedIndex = correct ? round - 1 : -1;
   if (correct) score++;
   correctStreak = correct ? correctStreak + 1 : 0;
@@ -1481,7 +1488,7 @@ function endGame() {
   if (roundResults.includes(false) && trailingStreak >= 5) unlock("long-story-short", false);
 
   showScreen("results");
-  $("resultBracelet").innerHTML = buildBraceletSVG(roundResults, 0, -1);
+  $("resultBracelet").innerHTML = buildBraceletSVG(roundResults, 0, -1, roundAlbums);
   $("finalScore").textContent = score;
   $("finalSub").textContent = "out of " + TOTAL_ROUNDS;
   renderResultRecap();
