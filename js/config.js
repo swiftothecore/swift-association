@@ -43,10 +43,10 @@ export const ALBUM_COLORS = {
   "1989":                             "#4a8fb5",
   "reputation":                       "#555555",
   "Lover":                            "#c4649a",
-  "folklore":                         "#7a8a72",
+  "folklore":                         "#9b9b9b",
   "evermore":                         "#7a5a38",
   "Midnights":                        "#3d4f8a",
-  "The Tortured Poets Department":    "#7a6e60",
+  "The Tortured Poets Department":    "#b39a7c",
   "The Life of a Showgirl":          "#e07830",
 };
 
