@@ -1,4 +1,5 @@
 "use strict";
+import { $, escapeRegExp, escapeHtml, prefersReducedMotion, shuffle, chance } from "./util.js";
 
 /* ---------- Constants & state ---------- */
 const TOTAL_ROUNDS = 13;
@@ -54,7 +55,6 @@ let debounceId = null;
 let statsBackTarget = "start";
 
 /* ---------- DOM ---------- */
-const $ = (id) => document.getElementById(id);
 const screens = {
   start: $("screen-start"),
   game: $("screen-game"),
@@ -81,7 +81,6 @@ function pickEra() {
 function applyEra(era) { document.body.setAttribute("data-era", era); }
 
 /* ---------- Matching helpers ---------- */
-function escapeRegExp(s) { return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); }
 // Prefix-stem match: the word as the start of a token, plus any trailing letters,
 // so "gold" matches "golden", "dream" matches "dreamer". The leading \b keeps it
 // safe (e.g. "love" won't match "glove"/"clover"; "rain" won't match "train").
@@ -113,9 +112,6 @@ function highlightWord(line, word, strict) {
   const tail = strict ? "" : "[a-z']*";
   const rx = new RegExp("\\b(" + escapeRegExp(word) + tail + ")\\b", "ig");
   return escapeHtml(line).replace(rx, "<mark>$1</mark>");
-}
-function escapeHtml(s) {
-  return s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 }
 
 /* ---------- Stats ---------- */
@@ -731,9 +727,6 @@ function submitAnswer(song, isTimeout) {
   }
 }
 
-function prefersReducedMotion() {
-  return !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
-}
 
 function showCircledChoice(song, done) {
   $("feedback").innerHTML =
@@ -812,13 +805,6 @@ function runCountdown() {
   }, 1000);
 }
 
-function shuffle(arr) {
-  for (let i = arr.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [arr[i], arr[j]] = [arr[j], arr[i]];
-  }
-  return arr;
-}
 
 /* ---------- End game ---------- */
 function endGame() {
@@ -897,7 +883,6 @@ const DOODLE_SVG = {
   thirteen: `<svg viewBox="0 0 40 40"><text x="6" y="29" font-family="Caveat, cursive" font-size="29" fill="var(--ink-soft)">13</text><ellipse cx="19" cy="20" rx="17" ry="14.5" fill="none" stroke="var(--ink-soft)" stroke-width="1.5" transform="rotate(-8 19 20)"/></svg>`,
 };
 
-function chance(p) { return Math.random() < p; }
 
 function clearEggs() {
   stopSnake();
