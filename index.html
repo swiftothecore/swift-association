@@ -1015,6 +1015,7 @@ async function loadData() {
 function startGame() {
   score = 0;
   round = 0;
+  correctStreak = 0;
   recentWords = [];
   recentEras = [];
   roundResults = [];
@@ -1218,6 +1219,7 @@ function submitAnswer(song, isTimeout) {
   roundResults[round - 1] = correct;
   justEarnedIndex = correct ? round - 1 : -1;
   if (correct) score++;
+  correctStreak = correct ? correctStreak + 1 : 0;
   renderBracelet();
 
   // Circle the player's pick before revealing the verdict (skipped on timeout / reduced motion).
@@ -1261,6 +1263,7 @@ function showCorrectFeedback(song) {
     <div class="banner good">✓ that's the one</div>
     ${lyricCard(song, currentWord, false)}
     <div class="countdown">next page in <b id="cd">5</b></div>`;
+  celebrateCorrect(correctStreak);
   runCountdown();
 }
 
@@ -1342,7 +1345,7 @@ function sortHs(list) { return list.slice().sort((a, b) => b.score - a.score); }
 let titleTaps = 0;
 let activePen = null;            // 'quill' | 'fountain' | 'glitter' | null
 let blueUsedThisRound = false;
-let lastSparkleKey = "";
+let correctStreak = 0;           // consecutive correct answers this game
 
 const PEN_LABELS = { quill: "quill pen", fountain: "fountain pen", glitter: "glitter gel pen" };
 const PEN_SVG = {
@@ -1411,7 +1414,6 @@ function runRoundEggs() {
   clearEggs();
   setPen(null);
   blueUsedThisRound = false;
-  lastSparkleKey = "";
 
   const era = document.body.getAttribute("data-era");
   const now = new Date();
@@ -1444,7 +1446,6 @@ function handleTypingEggs(val) {
     blueUsedThisRound = true;
     triggerBlueWash();
   }
-  if (!prefersReducedMotion()) maybeLyricSparkle(val);
 }
 
 function triggerBlueWash() {
@@ -1456,20 +1457,27 @@ function triggerBlueWash() {
   setTimeout(() => w.remove(), 1700);
 }
 
-function maybeLyricSparkle(val) {
-  const phrase = val.trim().toLowerCase();
-  if (phrase.length < 8 || !phrase.includes(" ") || phrase === lastSparkleKey) return;
-  const hit = allSongs.some((s) => s.lyrics.toLowerCase().includes(phrase));
-  if (!hit) return;
-  lastSparkleKey = phrase;
-  const area = document.querySelector(".input-area");
-  if (!area) return;
-  const s = document.createElement("span");
-  s.className = "sparkle"; s.setAttribute("aria-hidden", "true");
-  s.style.right = "2px"; s.style.bottom = "10px";
-  s.innerHTML = SPARKLE_SVG;
-  area.appendChild(s);
-  setTimeout(() => s.remove(), 900);
+// A burst of sparkles on a correct answer — the longer the streak, the
+// bigger and more plentiful they get.
+function celebrateCorrect(streak) {
+  if (prefersReducedMotion()) return;
+  const card = $("screen-game");
+  if (!card) return;
+  const count = Math.min(5 + streak * 2, 16);
+  const sizeMin = Math.min(12 + (streak - 1) * 5, 36);
+  for (let i = 0; i < count; i++) {
+    const s = document.createElement("span");
+    s.className = "sparkle"; s.setAttribute("aria-hidden", "true");
+    const size = Math.round(sizeMin + Math.random() * 14);
+    s.style.width = s.style.height = size + "px";
+    s.style.left = (12 + Math.random() * 72) + "%";
+    s.style.top = (36 + Math.random() * 28) + "%";
+    s.style.animationDelay = (Math.random() * 0.35).toFixed(2) + "s";
+    s.style.animationDuration = (0.8 + Math.random() * 0.5).toFixed(2) + "s";
+    s.innerHTML = SPARKLE_SVG;
+    card.appendChild(s);
+    setTimeout(() => s.remove(), 1600);
+  }
 }
 
 function revealSecret13() {
