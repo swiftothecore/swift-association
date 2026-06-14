@@ -1886,6 +1886,7 @@ function wireInput() {
   input.addEventListener("keydown", (e) => {
     if (e.key === "Enter") {
       e.preventDefault();
+      e.stopPropagation();        // this keypress submits — don't let it also bubble to the page-advance handler
       submitAnswer(null, false);
     } else if (e.key === "ArrowDown") {
       e.preventDefault();
@@ -1902,6 +1903,9 @@ function wireInput() {
   document.addEventListener("keydown", (e) => {
     if (e.key !== "Enter") return;
     if (!screens.game.classList.contains("active") || !roundLocked) return;
+    // Only once a verdict is actually on the page — not during the pen-circle
+    // animation between submitting and the feedback appearing.
+    if (!$("cd") && !$("continueBtn")) return;
     e.preventDefault();
     advanceFromFeedback();
   });
