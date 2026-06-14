@@ -29,6 +29,9 @@ let round = 0;
 let usedWords = [];
 let roundResults = [];   // per-round true/false for the bracelet
 let roundAlbums = [];    // per-round album of the picked song (for the final bracelet)
+let gameType = "classic";       // "classic" (fixed 13) | "infinite" (until lives run out)
+let infiniteVariant = "3lives"; // "3lives" | "sudden"
+let lives = 0;                  // remaining lives in infinite mode
 let currentWord = "";
 let currentSongs = [];
 let dropdownItems = [];
@@ -55,8 +58,9 @@ function showScreen(name) {
 /* ---------- Era selection ---------- */
 function pickEra() {
   let pool;
-  if (round === 5) pool = TENDER_ERAS;
-  else if (round === TOTAL_ROUNDS) pool = FINALE_ERAS;
+  // Round-5/round-13 biases only make sense for the fixed classic run.
+  if (gameType === "classic" && round === 5) pool = TENDER_ERAS;
+  else if (gameType === "classic" && round === TOTAL_ROUNDS) pool = FINALE_ERAS;
   else pool = ERAS.filter((e) => !recentEras.includes(e));
   if (!pool.length) pool = ERAS;
   const era = pool[Math.floor(Math.random() * pool.length)];
@@ -222,7 +226,26 @@ let justEarnedIndex = -1; // bead that just became a charm, for the swing-in
 function renderBracelet() {
   $("bracelet").innerHTML = buildBraceletSVG(roundResults, round, justEarnedIndex, roundAlbums);
   $("charmCount").textContent = roundResults.filter(Boolean).length;
-  $("pageNum").textContent = Math.min(Math.max(round, 1), TOTAL_ROUNDS);
+  $("pageNum").textContent = gameType === "infinite"
+    ? Math.max(round, 1)
+    : Math.min(Math.max(round, 1), TOTAL_ROUNDS);
+}
+
+// Pencil tally in the margin: one mark per starting life, spent ones struck out.
+// Only shown in infinite mode; classic hides the element.
+function startingLives() { return infiniteVariant === "sudden" ? 1 : 3; }
+function renderLives() {
+  const el = $("livesTally");
+  if (!el) return;
+  if (gameType !== "infinite") { el.classList.remove("show"); el.innerHTML = ""; return; }
+  const total = startingLives();
+  let marks = "";
+  for (let i = 0; i < total; i++) {
+    const spent = i >= lives;
+    marks += `<span class="life-mark${spent ? " spent" : ""}" aria-hidden="true"></span>`;
+  }
+  el.innerHTML = marks;
+  el.classList.add("show");
 }
 
 /* ---------- Data load ---------- */
@@ -311,7 +334,21 @@ function renderModePicker() {
 }
 
 /* ---------- Game flow ---------- */
+// The run is over when the classic 13 pages are filled, or (infinite) lives run out.
+function isGameOver() {
+  return gameType === "classic" ? round >= TOTAL_ROUNDS : lives <= 0;
+}
+
+// Storage token for the active board/stats: classic uses the bare difficulty id
+// (medium stays the legacy unsuffixed key); infinite tags variant + difficulty.
+function boardMode() {
+  return gameType === "infinite"
+    ? "inf-" + infiniteVariant + "-" + currentMode.id
+    : currentMode.id;
+}
+
 function startGame() {
+  gameType = "classic";
   score = 0;
   round = 0;
   correctStreak = 0;
@@ -341,7 +378,7 @@ function pickWord() {
 }
 
 function nextRound() {
-  if (round >= TOTAL_ROUNDS) { endGame(); return; }
+  if (isGameOver()) { endGame(); return; }
   // First round (from the start screen) and reduced motion advance instantly.
   if (round === 0 || prefersReducedMotion()) {
     advanceRound();
@@ -551,6 +588,7 @@ function submitAnswer(song, isTimeout) {
   justEarnedIndex = correct ? round - 1 : -1;
   if (correct) score++;
   correctStreak = correct ? correctStreak + 1 : 0;
+  if (gameType === "infinite" && !correct) { lives--; renderLives(); }
   renderBracelet();
 
   // achievements: timing + streak signals (mid-game unlocks toast immediately)
@@ -762,7 +800,7 @@ function runRoundEggs() {
   const midnightHour = now.getHours() === 0 && now.getMinutes() <= 13;
 
   // at most one margin doodle / note, by priority
-  if (round === 5) {
+  if (gameType === "classic" && round === 5) {
     addDoodle("fence", "corner-br", 76, 64);
   } else if (era === "graphite" && chance(0.5)) {
     slitherSnake();
