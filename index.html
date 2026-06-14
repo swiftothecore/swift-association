@@ -606,6 +606,61 @@
   .star-shower .ss svg { width: 100%; height: 100%; }
   @keyframes starFall { to { transform: translateY(var(--fall, 480px)) rotate(220deg); opacity: 0.15; } }
 
+  /* ---------- Achievements ---------- */
+  /* live toast (bottom-right) when one unlocks mid-game */
+  .toast-layer {
+    position: fixed; right: 16px; bottom: 16px; z-index: 200;
+    display: flex; flex-direction: column; gap: 10px; align-items: flex-end;
+    pointer-events: none;
+  }
+  .toast {
+    display: flex; align-items: center; gap: 11px;
+    background: var(--paper); color: var(--ink);
+    border: 1.5px solid var(--ink); border-radius: 3px;
+    padding: 10px 14px 10px 11px; max-width: 280px;
+    box-shadow: 3px 3px 0 rgba(43,39,34,0.18);
+    transform: rotate(-1deg);
+    animation: toastIn 0.4s cubic-bezier(.34,1.56,.64,1) both;
+  }
+  .toast.leaving { animation: toastOut 0.4s ease forwards; }
+  .toast .charm { width: 34px; height: 34px; flex: none; color: var(--bead); }
+  .toast .charm svg { width: 100%; height: 100%; overflow: visible; }
+  .toast .charm .ink { fill: none; stroke: var(--ink); stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+  .toast .charm .ink-fill { fill: var(--bead); stroke: var(--ink); stroke-width: 1.2; }
+  .toast .t-label { font-family: var(--type); font-size: 10px; letter-spacing: 1px; color: var(--ink-soft); text-transform: uppercase; }
+  .toast .t-name { font-family: var(--hand); font-weight: 700; font-size: 21px; color: var(--ink); line-height: 1.05; }
+  @keyframes toastIn { from { opacity: 0; transform: translateX(30px) rotate(-1deg); } to { opacity: 1; transform: translateX(0) rotate(-1deg); } }
+  @keyframes toastOut { to { opacity: 0; transform: translateX(30px) rotate(-1deg); } }
+
+  /* newly-unlocked recap on the results page */
+  .ach-recap { margin: 18px 0 4px; text-align: center; }
+  .ach-recap .ach-recap-title { font-family: var(--type); font-size: 11px; letter-spacing: 1px; color: var(--ink-soft); text-transform: uppercase; margin-bottom: 10px; }
+  .ach-recap-row { display: flex; flex-wrap: wrap; gap: 14px 18px; justify-content: center; }
+  .ach-recap .ach-chip { display: flex; flex-direction: column; align-items: center; gap: 4px; width: 84px; }
+  .ach-recap .ach-chip .charm { width: 38px; height: 38px; color: var(--bead); }
+  .ach-recap .ach-chip .charm svg { width: 100%; height: 100%; overflow: visible; }
+  .ach-recap .ach-chip .charm .ink { fill: none; stroke: var(--ink); stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+  .ach-recap .ach-chip .charm .ink-fill { fill: var(--bead); stroke: var(--ink); stroke-width: 1.2; }
+  .ach-recap .ach-chip .nm { font-family: var(--hand); font-size: 16px; color: var(--ink); line-height: 1.05; }
+
+  /* full collection grid on the stats page */
+  .ach-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 6px; }
+  .ach {
+    display: flex; align-items: center; gap: 10px;
+    border: 1.5px solid rgba(43,39,34,0.12); border-radius: 2px; padding: 9px 11px;
+  }
+  .ach .charm { width: 30px; height: 30px; flex: none; color: var(--bead); }
+  .ach .charm svg { width: 100%; height: 100%; overflow: visible; }
+  .ach .charm .ink { fill: none; stroke: var(--ink); stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+  .ach .charm .ink-fill { fill: var(--bead); stroke: var(--ink); stroke-width: 1.2; }
+  .ach .ach-text { min-width: 0; }
+  .ach .ach-nm { font-family: var(--hand); font-weight: 700; font-size: 18px; color: var(--ink); line-height: 1.05; }
+  .ach .ach-dc { font-family: var(--type); font-size: 10px; color: var(--ink-soft); line-height: 1.25; margin-top: 2px; }
+  .ach.locked { opacity: 0.55; }
+  .ach.locked .charm { color: var(--ink-soft); }
+  .ach.locked .charm .ink-fill { fill: var(--ink-soft); }
+  .ach.secret .charm-q { font-family: var(--hand); font-weight: 700; font-size: 22px; color: var(--ink-soft); width: 30px; text-align: center; flex: none; }
+
   @media (prefers-reduced-motion: reduce) {
     .screen.active { animation: none; }
     .b-halo, .charm-dangle, .charm-dangle.fresh { animation: none; }
@@ -620,11 +675,13 @@
     .secret-13 { animation: none; opacity: 1; }
     .blue-wash { animation: none; opacity: 0.16; }
     .sparkle, .star-shower { display: none; }
+    .toast, .toast.leaving { animation: none; }
     /* vignette stays (it's a colour/state change, not motion) */
   }
 </style>
 </head>
 <body data-era="gold">
+<div id="toastLayer" class="toast-layer" aria-live="polite"></div>
 <div class="app">
   <header class="title">
     <h1>Swift to the Song Association</h1>
@@ -694,6 +751,8 @@
 
     <p class="bracelet-caption">the bracelet you made</p>
     <div id="resultBracelet" class="bracelet bracelet-finished"></div>
+
+    <div id="resultAchievements" class="ach-recap" style="display:none;"></div>
 
     <div id="namePrompt" class="name-prompt" style="display:none;">
       <p>a new high score — sign the page</p>
@@ -862,7 +921,95 @@ function renderStats(lastScore) {
     </div>
     <p class="histogram-label">score distribution</p>
     <div class="histogram">${bars}</div>
+    ${achievementsGridHTML()}
   `;
+}
+
+/* ---------- Achievements ---------- */
+const ACH_KEY = "swiftSongAssociation.achievements";
+const ACH_ICONS = {
+  star:    `<svg viewBox="0 0 24 24"><path class="ink-fill" d="M12 2 L14.6 9 L22 9.3 L16 14 L18 21.5 L12 17 L6 21.5 L8 14 L2 9.3 L9.4 9 Z"/></svg>`,
+  sparkle: `<svg viewBox="0 0 24 24"><path class="ink-fill" d="M12 1 C13 8 16 11 23 12 C16 13 13 16 12 23 C11 16 8 13 1 12 C8 11 11 8 12 1 Z"/></svg>`,
+  shield:  `<svg viewBox="0 0 24 24"><path class="ink-fill" d="M12 2 L20 5 V11 C20 16 16.5 20 12 22 C7.5 20 4 16 4 11 V5 Z"/><path class="ink" d="M8.4 12 l2.6 2.6 4.6 -5.2"/></svg>`,
+  bolt:    `<svg viewBox="0 0 24 24"><path class="ink-fill" d="M13 2 L4 14 H10.5 L9.5 22 L20 9 H13 Z"/></svg>`,
+  refresh: `<svg viewBox="0 0 24 24"><path class="ink" d="M19.5 12 a7.5 7.5 0 1 1 -2.2 -5.3"/><path class="ink-fill" d="M18 2.5 L19 8 L13.6 7.2 Z"/></svg>`,
+  key:     `<svg viewBox="0 0 24 24"><circle class="ink-fill" cx="8" cy="8" r="5"/><circle class="ink" cx="8" cy="8" r="1.7" fill="var(--paper)"/><path class="ink" d="M11.6 11.6 L20 20 M17 17 l2.2 -2.2 M14.3 14.3 l2.2 -2.2"/></svg>`,
+  gem:     `<svg viewBox="0 0 24 24"><path class="ink-fill" d="M6 3 H18 L22 9 L12 22 L2 9 Z"/><path class="ink" d="M2 9 H22 M9 3 L7.2 9 L12 22 M15 3 L16.8 9 L12 22"/></svg>`,
+  rise:    `<svg viewBox="0 0 24 24"><path class="ink" d="M4 18 l8 -8 8 8 M4 12 l8 -8 8 8"/></svg>`,
+};
+const ACHIEVEMENTS = [
+  { id: "enchanted",        name: "Enchanted",        desc: "Finish your first game",              secret: false, icon: "sparkle" },
+  { id: "mastermind",       name: "Mastermind",       desc: "Score a perfect 13/13",               secret: false, icon: "star" },
+  { id: "fearless",         name: "Fearless",         desc: "Finish with no timeouts",             secret: false, icon: "shield" },
+  { id: "speak-now",        name: "Speak Now",        desc: "Answer correctly in under 2s",        secret: false, icon: "bolt" },
+  { id: "begin-again",      name: "Begin Again",      desc: "Play 5 games",                        secret: false, icon: "refresh" },
+  { id: "getaway-car",      name: "Getaway Car",      desc: "Answer correctly with under 1s left", secret: true,  icon: "key" },
+  { id: "bejeweled",        name: "Bejeweled",        desc: "Hit a 5-in-a-row streak",             secret: true,  icon: "gem" },
+  { id: "long-story-short", name: "Long Story Short", desc: "Come back to finish on a 5+ streak",  secret: true,  icon: "rise" },
+];
+const ACH_BY_ID = Object.fromEntries(ACHIEVEMENTS.map((a) => [a.id, a]));
+
+let earnedAchievements = {};   // persisted: { id: "YYYY-MM-DD" }
+let newlyUnlocked = [];        // ids unlocked this game (for the results recap)
+
+function loadAchievements() {
+  try {
+    const raw = localStorage.getItem(ACH_KEY);
+    if (raw) { const o = JSON.parse(raw); if (o && typeof o === "object") return o; }
+  } catch (e) { /* ignore */ }
+  return {};
+}
+function saveAchievements() {
+  try { localStorage.setItem(ACH_KEY, JSON.stringify(earnedAchievements)); } catch (e) { /* ignore */ }
+}
+function charmMarkup(icon) { return `<span class="charm" aria-hidden="true">${ACH_ICONS[icon]}</span>`; }
+
+function unlock(id, toast) {
+  if (!ACH_BY_ID[id] || earnedAchievements[id]) return;
+  earnedAchievements[id] = new Date().toISOString().slice(0, 10);
+  saveAchievements();
+  newlyUnlocked.push(id);
+  if (toast) showToast(ACH_BY_ID[id]);
+}
+
+function showToast(a) {
+  const layer = $("toastLayer");
+  if (!layer) return;
+  const t = document.createElement("div");
+  t.className = "toast";
+  t.innerHTML = charmMarkup(a.icon) +
+    `<div><div class="t-label">achievement unlocked</div><div class="t-name">${escapeHtml(a.name)}</div></div>`;
+  layer.appendChild(t);
+  setTimeout(() => {
+    t.classList.add("leaving");
+    setTimeout(() => t.remove(), 420);
+  }, 3500);
+}
+
+function renderResultRecap() {
+  const el = $("resultAchievements");
+  if (!el) return;
+  if (!newlyUnlocked.length) { el.style.display = "none"; el.innerHTML = ""; return; }
+  const chips = newlyUnlocked.map((id) => {
+    const a = ACH_BY_ID[id];
+    return `<div class="ach-chip">${charmMarkup(a.icon)}<span class="nm">${escapeHtml(a.name)}</span></div>`;
+  }).join("");
+  el.innerHTML = `<div class="ach-recap-title">newly unlocked</div><div class="ach-recap-row">${chips}</div>`;
+  el.style.display = "";
+}
+
+function achievementsGridHTML() {
+  const items = ACHIEVEMENTS.map((a) => {
+    if (earnedAchievements[a.id]) {
+      return `<div class="ach">${charmMarkup(a.icon)}<div class="ach-text"><div class="ach-nm">${escapeHtml(a.name)}</div><div class="ach-dc">${escapeHtml(a.desc)}</div></div></div>`;
+    }
+    if (a.secret) {
+      return `<div class="ach locked secret"><span class="charm-q" aria-hidden="true">?</span><div class="ach-text"><div class="ach-nm">???</div><div class="ach-dc">a secret charm</div></div></div>`;
+    }
+    return `<div class="ach locked">${charmMarkup(a.icon)}<div class="ach-text"><div class="ach-nm">${escapeHtml(a.name)}</div><div class="ach-dc">${escapeHtml(a.desc)}</div></div></div>`;
+  }).join("");
+  const earnedCount = ACHIEVEMENTS.filter((a) => earnedAchievements[a.id]).length;
+  return `<p class="histogram-label" style="margin-top:24px;">achievements · ${earnedCount}/${ACHIEVEMENTS.length}</p><div class="ach-grid">${items}</div>`;
 }
 
 /* ---------- High scores ---------- */
@@ -1016,6 +1163,9 @@ function startGame() {
   score = 0;
   round = 0;
   correctStreak = 0;
+  gameTimeouts = 0;
+  gameMaxStreak = 0;
+  newlyUnlocked = [];
   recentWords = [];
   recentEras = [];
   roundResults = [];
@@ -1222,6 +1372,17 @@ function submitAnswer(song, isTimeout) {
   correctStreak = correct ? correctStreak + 1 : 0;
   renderBracelet();
 
+  // achievements: timing + streak signals (mid-game unlocks toast immediately)
+  const elapsed = (performance.now() - timerStart) / 1000;
+  const remaining = ROUND_SECONDS - elapsed;
+  if (isTimeout) gameTimeouts++;
+  if (correct) {
+    if (elapsed < 2) unlock("speak-now", true);
+    if (remaining < 1) unlock("getaway-car", true);
+  }
+  gameMaxStreak = Math.max(gameMaxStreak, correctStreak);
+  if (correctStreak >= 5) unlock("bejeweled", true);
+
   // Circle the player's pick before revealing the verdict (skipped on timeout / reduced motion).
   const reveal = () => (correct ? showCorrectFeedback(song) : showWrongFeedback(song, isTimeout));
   if (song && !isTimeout && !prefersReducedMotion()) {
@@ -1309,11 +1470,21 @@ function endGame() {
   clearTimer();
   resetTension();
   applyEra(FINALE_ERAS[Math.floor(Math.random() * FINALE_ERAS.length)]);
-  updateStats(score);
+  const stats = updateStats(score);
+
+  // end-of-game achievements (shown in the results recap, no toast)
+  if (score === TOTAL_ROUNDS) unlock("mastermind", false);
+  if (gameTimeouts === 0) unlock("fearless", false);
+  if (stats.played >= 1) unlock("enchanted", false);
+  if (stats.played >= 5) unlock("begin-again", false);
+  const trailingStreak = (() => { let n = 0; for (let i = roundResults.length - 1; i >= 0 && roundResults[i]; i--) n++; return n; })();
+  if (roundResults.includes(false) && trailingStreak >= 5) unlock("long-story-short", false);
+
   showScreen("results");
   $("resultBracelet").innerHTML = buildBraceletSVG(roundResults, 0, -1);
   $("finalScore").textContent = score;
   $("finalSub").textContent = "out of " + TOTAL_ROUNDS;
+  renderResultRecap();
   if (score === TOTAL_ROUNDS) celebratePerfect();
 
   const list = loadHighScores();
@@ -1346,6 +1517,8 @@ let titleTaps = 0;
 let activePen = null;            // 'quill' | 'fountain' | 'glitter' | null
 let blueUsedThisRound = false;
 let correctStreak = 0;           // consecutive correct answers this game
+let gameTimeouts = 0;            // timeouts this game (for Fearless)
+let gameMaxStreak = 0;           // best streak reached this game
 
 const PEN_LABELS = { quill: "quill pen", fountain: "fountain pen", glitter: "glitter gel pen" };
 const PEN_SVG = {
@@ -1539,6 +1712,7 @@ function wireInput() {
 async function init() {
   showScreen("start");
   applyEra("gold");
+  earnedAchievements = loadAchievements();
   console.log("%c♡ written in the margins · 13 pages of you ♡", "font-size:14px;color:#a9791f;font-family:cursive;");
   renderPodium($("startPodium"), sortHs(loadHighScores()), null);
   const titleEl = document.querySelector("header.title h1");
