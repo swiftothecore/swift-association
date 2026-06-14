@@ -1698,18 +1698,18 @@ function slitherSnake() {
   svg.innerHTML = `
     <defs>
       <linearGradient id="snBody" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0" stop-color="#1f1d1a"/>
-        <stop offset="0.45" stop-color="#3b3733"/>
-        <stop offset="0.8" stop-color="#6c655d"/>
-        <stop offset="1" stop-color="#8a8178"/>
+        <stop offset="0" stop-color="#173a1c"/>
+        <stop offset="0.45" stop-color="#2f6b30"/>
+        <stop offset="0.8" stop-color="#5aa03f"/>
+        <stop offset="1" stop-color="#93c86a"/>
       </linearGradient>
       <pattern id="snScales" width="15" height="13" patternUnits="userSpaceOnUse">
-        <path d="M7.5 1 L14 6.5 L7.5 12 L1 6.5 Z" fill="#100f0c" opacity="0.20"/>
-        <path d="M0 6.5 L1 6.5 M14 6.5 L15 6.5" stroke="#100f0c" stroke-width="0.6" opacity="0.12"/>
+        <path d="M7.5 1 L14 6.5 L7.5 12 L1 6.5 Z" fill="#0c2410" opacity="0.22"/>
+        <path d="M0 6.5 L1 6.5 M14 6.5 L15 6.5" stroke="#0c2410" stroke-width="0.6" opacity="0.14"/>
       </pattern>
       <clipPath id="snClip"><path id="snClipPath" d="M0 0"/></clipPath>
     </defs>
-    <path id="snFill" d="M0 0" fill="url(#snBody)" stroke="#100e0b" stroke-width="1.1" stroke-linejoin="round"/>
+    <path id="snFill" d="M0 0" fill="url(#snBody)" stroke="#0c2410" stroke-width="1.1" stroke-linejoin="round"/>
     <rect id="snScalesRect" x="-40" y="0" width="${W + 80}" height="${H}" fill="url(#snScales)" clip-path="url(#snClip)"/>
     <path id="snSheen" d="M0 0" fill="none" stroke="rgba(255,246,228,0.16)" stroke-width="2.6" stroke-linecap="round"/>
     <g id="snHead"></g>
@@ -1804,11 +1804,11 @@ function slitherSnake() {
       : `<path d="M13 0 L19 0 M19 0 L21.6 -1.6 M19 0 L21.6 1.6" stroke="#9b2226" stroke-width="1.5" fill="none" stroke-linecap="round" opacity="0.85"/>`;
     head.setAttribute("transform", `translate(${hx.toFixed(1)} ${hy.toFixed(1)}) rotate(${ang.toFixed(1)})`);
     head.innerHTML =
-      `<ellipse cx="3" cy="0" rx="12.5" ry="9" fill="url(#snBody)" stroke="#100e0b" stroke-width="1.1"/>` +
+      `<ellipse cx="3" cy="0" rx="12.5" ry="9" fill="url(#snBody)" stroke="#0c2410" stroke-width="1.1"/>` +
       tongue +
-      `<g><circle cx="3.5" cy="-5" r="2.7" fill="#c89b3c"/><circle cx="3.5" cy="-5" r="2.7" fill="none" stroke="#100e0b" stroke-width="0.7"/><rect x="2.8" y="-6.7" width="1.4" height="3.4" rx="0.6" fill="#100e0b"/></g>` +
-      `<g><circle cx="3.5" cy="5" r="2.7" fill="#c89b3c"/><circle cx="3.5" cy="5" r="2.7" fill="none" stroke="#100e0b" stroke-width="0.7"/><rect x="2.8" y="3.3" width="1.4" height="3.4" rx="0.6" fill="#100e0b"/></g>` +
-      `<circle cx="12" cy="-2" r="0.8" fill="#100e0b"/><circle cx="12" cy="2" r="0.8" fill="#100e0b"/>`;
+      `<g><circle cx="3.5" cy="-5" r="2.7" fill="#c89b3c"/><circle cx="3.5" cy="-5" r="2.7" fill="none" stroke="#0c2410" stroke-width="0.7"/><rect x="2.8" y="-6.7" width="1.4" height="3.4" rx="0.6" fill="#0c2410"/></g>` +
+      `<g><circle cx="3.5" cy="5" r="2.7" fill="#c89b3c"/><circle cx="3.5" cy="5" r="2.7" fill="none" stroke="#0c2410" stroke-width="0.7"/><rect x="2.8" y="3.3" width="1.4" height="3.4" rx="0.6" fill="#0c2410"/></g>` +
+      `<circle cx="12" cy="-2" r="0.8" fill="#0c2410"/><circle cx="12" cy="2" r="0.8" fill="#0c2410"/>`;
 
     if (nodes[M - 1].x > W + 36) {           // tail has cleared the right edge
       svg.classList.add("leaving");
