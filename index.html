@@ -983,10 +983,10 @@ const STREAK_THRESHOLD = 7; // score >= this counts toward a streak
    word-rarity pool, matching strictness, wrong-answer help). Gameplay code is
    shared; the mode object sets the parameters. */
 const MODES = {
-  easy:   { id: "easy",   label: "Easy",   seconds: 15, dropdown: true,  pool: "easy",  strict: false, examples: 3, blurb: "15s · hints on · common words" },
-  medium: { id: "medium", label: "Medium", seconds: 10, dropdown: true,  pool: "all",   strict: false, examples: 3, blurb: "10s · hints on · all words" },
-  hard:   { id: "hard",   label: "Hard",   seconds: 7,  dropdown: false, pool: "hard",  strict: false, examples: 3, blurb: "7s · no hints · rarer words" },
-  ultra:  { id: "ultra",  label: "Ultra",  seconds: 5,  dropdown: false, pool: "ultra", strict: true,  examples: 0, blurb: "5s · no hints · rarest · exact title" },
+  easy:   { id: "easy",   label: "Easy",   seconds: 15, dropdown: true,  pool: "easy",  strict: false, noTitle: false, examples: 3, blurb: "15s · hints on · common words" },
+  medium: { id: "medium", label: "Medium", seconds: 10, dropdown: true,  pool: "all",   strict: false, noTitle: false, examples: 3, blurb: "10s · hints on · all words" },
+  hard:   { id: "hard",   label: "Hard",   seconds: 7,  dropdown: false, pool: "hard",  strict: false, noTitle: true,  examples: 3, blurb: "7s · no hints · rarer words · not in the title" },
+  ultra:  { id: "ultra",  label: "Ultra",  seconds: 5,  dropdown: false, pool: "ultra", strict: true,  noTitle: true,  examples: 0, blurb: "5s · no hints · rarest · exact · not in the title" },
 };
 const MODE_ORDER = ["easy", "medium", "hard", "ultra"];
 const DIFF_KEY = "swiftSongAssociation.difficulty";
@@ -1066,6 +1066,12 @@ function wordRegex(word, strict) {
 function songsContainingWord(word, strict) {
   const rx = wordRegex(word, strict);
   return allSongs.filter((s) => rx.test(s.lyrics));
+}
+// Valid answers for a round: lyrics contain the word and — when noTitle (Hard/
+// Ultra) — the title does NOT, so you can't just name the obvious title song.
+function validSongs(word, strict, noTitle) {
+  const rx = wordRegex(word, strict);
+  return allSongs.filter((s) => rx.test(s.lyrics) && !(noTitle && rx.test(s.title)));
 }
 function extractLineWithWord(lyrics, word, strict) {
   const rx = wordRegex(word, strict);
@@ -1407,14 +1413,18 @@ async function loadData() {
 // the full list if it ends up too thin to sustain a 13-round, no-repeat game.
 function buildWordBuckets() {
   const MIN = RECENT_WINDOW + 8;
-  const lenient = playableWords.map((w) => ({ w, n: songsContainingWord(w, false).length }));
-  const easy = lenient.filter((x) => x.n >= 18).map((x) => x.w);
-  const hard = lenient.filter((x) => x.n >= 3 && x.n <= 9).map((x) => x.w);
-  // Ultra ranks by *strict* count (exact word, no derived forms) and keeps the rarest.
-  const ultra = playableWords
-    .map((w) => ({ w, n: songsContainingWord(w, true).length }))
-    .filter((x) => x.n >= 1 && x.n <= 3)
-    .map((x) => x.w);
+  // Easy counts plain lyric matches (title songs are allowed in Easy/Medium).
+  const easy = playableWords.filter((w) => songsContainingWord(w, false).length >= 18);
+  // Hard/Ultra count only *valid* answers (word in lyrics but NOT the title), so
+  // every bucketed word still has at least one answerable, non-giveaway song.
+  const hard = playableWords.filter((w) => {
+    const n = validSongs(w, false, true).length;
+    return n >= 3 && n <= 9;
+  });
+  const ultra = playableWords.filter((w) => {
+    const n = validSongs(w, true, true).length;   // strict word, no title, rarest
+    return n >= 1 && n <= 3;
+  });
   const safe = (arr) => (arr.length >= MIN ? arr : playableWords);
   wordBuckets = { easy: safe(easy), all: playableWords, hard: safe(hard), ultra: safe(ultra) };
 }
@@ -1525,7 +1535,7 @@ function advanceRound() {
   roundLocked = false;
   justEarnedIndex = -1;
   currentWord = pickWord();
-  currentSongs = songsContainingWord(currentWord);
+  currentSongs = validSongs(currentWord, currentMode.strict, currentMode.noTitle);
   applyEra(pickEra());
 
   $("wordDisplay").textContent = currentWord;
