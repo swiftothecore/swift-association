@@ -20,3 +20,23 @@ export function shuffle(arr) {
 }
 
 export function chance(p) { return Math.random() < p; }
+
+// Canonical comparison key for a song title (or a typed answer). Lets a player's
+// answer match regardless of punctuation, & vs "and", the $ stylisation, bracket
+// tags, or numerals-vs-words. Display titles stay canonical — this only feeds the
+// match. Verified to produce zero collisions across the catalog. NOTE: the order
+// matters (twenty-two before the single-word folds).
+export function normalizeTitle(s) {
+  return s
+    .toLowerCase()
+    .replace(/’/g, "'")                 // curly apostrophe -> straight
+    .replace(/\$/g, "s")                     // Wi$h Li$t -> wish list
+    .replace(/[&+]/g, "and")                 // & / + -> and
+    .replace(/[().!?,:;"'…]/g, "")       // drop punctuation + bracket chars (keep content)
+    .replace(/[-–—/]/g, " ")        // dashes & slashes -> space
+    .replace(/\btwenty[\s-]?two\b/g, "22")
+    .replace(/\bten\b/g, "10")
+    .replace(/\bone\b/g, "1")
+    .replace(/\s+/g, " ")
+    .trim();
+}

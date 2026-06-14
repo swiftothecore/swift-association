@@ -50,6 +50,18 @@ export const ALBUM_COLORS = {
   "The Life of a Showgirl":          "#e07830",
 };
 
+// Extra accepted spellings for titles whose forgiving forms normalizeTitle can't
+// derive (irregular abbreviations). Keyed by the canonical title; each alias is run
+// through normalizeTitle at index-build time, so list them readably. The "ten"
+// variants fold to their "10" forms automatically, and the full "...10/ten minute
+// version" already matches via normalizeTitle — these cover the abbreviations.
+export const TITLE_ALIASES = {
+  "All Too Well (10 Minute Version)": [
+    "all ten well", "all 10 well",
+    "all too well 10", "all too well ten",
+  ],
+};
+
 /* ---------- Achievements ---------- */
 export const ACH_ICONS = {
   // hung charms: filled bead bodies (ink-fill) with inked detail (ink)

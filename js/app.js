@@ -1,10 +1,10 @@
 "use strict";
-import { $, escapeRegExp, escapeHtml, prefersReducedMotion, shuffle, chance } from "./util.js";
+import { $, escapeRegExp, escapeHtml, prefersReducedMotion, shuffle, chance, normalizeTitle } from "./util.js";
 import {
   TOTAL_ROUNDS, RECENT_WINDOW, DIFF_KEY,
   MODES, MODE_ORDER,
   ERAS, TENDER_ERAS, FINALE_ERAS,
-  ALBUM_COLORS,
+  ALBUM_COLORS, TITLE_ALIASES,
   ACHIEVEMENTS, ACH_ICONS, ACH_BY_ID,
   PEN_SVG, STAR_SVG, SPARKLE_SVG, DOODLE_SVG,
 } from "./config.js";
@@ -22,6 +22,7 @@ let wordBuckets = { easy: [], all: [], hard: [], ultra: [] };
 let recentEras = [];
 
 let allSongs = [];
+let titleIndex = new Map();   // normalizeTitle(title|alias) -> song, built in loadData
 let playableWords = [];
 let score = 0;
 let round = 0;
@@ -236,6 +237,27 @@ async function loadData() {
   allSongs = grouped.flatMap(({ album, songs }) =>
     songs.map((s) => ({ ...s, album }))
   );
+  // Precompute a normalized comparison key per song and index by it, so a typed
+  // answer matches regardless of punctuation / & / $ / numerals. Then fold in the
+  // irregular aliases, never letting one shadow a genuine title.
+  titleIndex = new Map();
+  for (const s of allSongs) {
+    s._norm = normalizeTitle(s.title);
+    titleIndex.set(s._norm, s);
+  }
+  for (const [canonical, aliases] of Object.entries(TITLE_ALIASES)) {
+    const song = allSongs.find((s) => s.title === canonical);
+    if (!song) { console.warn(`TITLE_ALIASES: no song titled "${canonical}"`); continue; }
+    for (const alias of aliases) {
+      const key = normalizeTitle(alias);
+      const existing = titleIndex.get(key);
+      if (existing && existing !== song) {
+        console.warn(`TITLE_ALIASES: "${alias}" collides with "${existing.title}"; skipped`);
+        continue;
+      }
+      titleIndex.set(key, song);
+    }
+  }
   // Lenient playability (Easy/Medium/Hard use derived forms).
   playableWords = words.filter((w) => songsContainingWord(w, false).length >= 1);
   if (!playableWords.length) throw new Error("No playable words found in data");
@@ -442,11 +464,11 @@ function resetTension() {
 
 /* ---------- Dropdown (searches whole catalog) ---------- */
 function rankMatches(query) {
-  const q = query.trim().toLowerCase();
+  const q = normalizeTitle(query);
   if (!q) return [];
   const scored = [];
   for (const song of allSongs) {
-    const t = song.title.toLowerCase();
+    const t = song._norm;
     const idx = t.indexOf(q);
     if (idx === -1) continue;
     const rank = idx === 0 ? 0 : 1;
@@ -488,8 +510,8 @@ function submitAnswer(song, isTimeout) {
     if (dropdownItems.length) {
       song = dropdownItems[activeIndex >= 0 ? activeIndex : 0];
     } else {
-      const typed = $("songInput").value.trim().toLowerCase();
-      song = allSongs.find((s) => s.title.toLowerCase() === typed) || null;
+      const key = normalizeTitle($("songInput").value);
+      song = key ? (titleIndex.get(key) || null) : null;
     }
     if (!song) return;
   }
