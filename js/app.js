@@ -2,7 +2,7 @@
 import { $, escapeRegExp, escapeHtml, prefersReducedMotion, shuffle, chance, normalizeTitle } from "./util.js";
 import {
   TOTAL_ROUNDS, RECENT_WINDOW, DIFF_KEY,
-  MODES, MODE_ORDER,
+  MODES, MODE_ORDER, INFINITE_DEFAULT_PODIUM,
   ERAS, TENDER_ERAS, FINALE_ERAS,
   ALBUM_COLORS, TITLE_ALIASES,
   ACHIEVEMENTS, ACH_ICONS, ACH_BY_ID,
@@ -317,11 +317,28 @@ function setMode(id) {
   renderModePicker();
   refreshStartBoard();
 }
-// The start-screen Hall of Fame follows the selected mode.
+const GAMETYPE_LABELS = { classic: "Classic", infinite: "Infinite" };
+const VARIANT_LABELS = { "3lives": "3 lives", sudden: "Sudden death" };
+
+// The start-screen Hall of Fame follows the selected mode (+ infinite variant).
 function refreshStartBoard() {
   const t = $("startPodiumTitle");
-  if (t) t.textContent = "Hall of Fame · " + currentMode.label;
-  renderPodium($("startPodium"), sortHs(loadHighScores(currentMode.id)), null);
+  const label = gameType === "infinite"
+    ? VARIANT_LABELS[infiniteVariant] + " · " + currentMode.label
+    : currentMode.label;
+  if (t) t.textContent = "Hall of Fame · " + label;
+  const fallback = gameType === "infinite" ? INFINITE_DEFAULT_PODIUM : undefined;
+  renderPodium($("startPodium"), sortHs(loadHighScores(boardMode(), fallback)), null);
+}
+function updateBlurb() {
+  const b = $("modeBlurb");
+  if (!b) return;
+  if (gameType === "infinite") {
+    const v = infiniteVariant === "sudden" ? "one miss ends it" : "three lives";
+    b.textContent = v + " · " + currentMode.blurb;
+  } else {
+    b.textContent = currentMode.blurb;
+  }
 }
 function renderModePicker() {
   const tabs = $("modeTabs");
@@ -331,7 +348,47 @@ function renderModePicker() {
   ).join("");
   tabs.querySelectorAll("[data-mode]").forEach((b) =>
     b.addEventListener("click", () => setMode(b.dataset.mode)));
-  $("modeBlurb").textContent = currentMode.blurb;
+  updateBlurb();
+}
+function renderTypePicker() {
+  const tabs = $("typeTabs");
+  if (!tabs) return;
+  tabs.innerHTML = ["classic", "infinite"].map((g) =>
+    `<button type="button" class="mode-tab${g === gameType ? " active" : ""}" data-type="${g}">${GAMETYPE_LABELS[g]}</button>`
+  ).join("");
+  tabs.querySelectorAll("[data-type]").forEach((b) =>
+    b.addEventListener("click", () => setGameType(b.dataset.type)));
+}
+function renderVariantPicker() {
+  const tabs = $("variantTabs");
+  if (!tabs) return;
+  tabs.innerHTML = ["3lives", "sudden"].map((v) =>
+    `<button type="button" class="mode-tab${v === infiniteVariant ? " active" : ""}" data-variant="${v}">${VARIANT_LABELS[v]}</button>`
+  ).join("");
+  tabs.querySelectorAll("[data-variant]").forEach((b) =>
+    b.addEventListener("click", () => setVariant(b.dataset.variant)));
+}
+// Render all three start-screen pickers + the board for the current selection.
+function renderStartPickers() {
+  gameType = gameType === "infinite" ? "infinite" : "classic";
+  renderTypePicker();
+  renderVariantPicker();
+  $("variantRow").style.display = gameType === "infinite" ? "" : "none";
+  renderModePicker();
+  refreshStartBoard();
+}
+function setGameType(g) {
+  gameType = g === "infinite" ? "infinite" : "classic";
+  $("variantRow").style.display = gameType === "infinite" ? "" : "none";
+  renderTypePicker();
+  updateBlurb();
+  refreshStartBoard();
+}
+function setVariant(v) {
+  infiniteVariant = v === "sudden" ? "sudden" : "3lives";
+  renderVariantPicker();
+  updateBlurb();
+  refreshStartBoard();
 }
 
 /* ---------- Game flow ---------- */
@@ -348,8 +405,7 @@ function boardMode() {
     : currentMode.id;
 }
 
-function startGame() {
-  gameType = "classic";
+function resetRunState() {
   score = 0;
   round = 0;
   correctStreak = 0;
@@ -360,8 +416,31 @@ function startGame() {
   recentEras = [];
   roundResults = [];
   roundAlbums = [];
+}
+function applyInputHints() {
   $("songInput").placeholder = currentMode.dropdown ? "write the line…" : "write the full title…";
   $("gameHint").textContent = currentMode.dropdown ? "Enter accepts the top match" : "no hints — type the full title, then Enter";
+}
+
+function startGame() {
+  gameType = "classic";
+  resetRunState();
+  applyInputHints();
+  $("pageTotalWrap").style.display = "";
+  $("pageTotal").textContent = TOTAL_ROUNDS;
+  showScreen("game");
+  nextRound();
+}
+
+// Infinite mode: endless rounds until lives run out. `opts.carry` keeps the
+// current run's score/streak/round (used by "keep going" from a finished game).
+function startInfinite(variant, opts) {
+  infiniteVariant = variant === "sudden" ? "sudden" : "3lives";
+  gameType = "infinite";
+  lives = startingLives();
+  if (!opts || !opts.carry) resetRunState();
+  applyInputHints();
+  $("pageTotalWrap").style.display = "none";
   showScreen("game");
   nextRound();
 }
@@ -1099,13 +1178,15 @@ async function init() {
   earnedAchievements = loadAchievements();
   console.log("%c♡ written in the margins · 13 pages of you ♡", "font-size:14px;color:#a9791f;font-family:cursive;");
   currentMode = loadMode();
-  renderModePicker();
-  refreshStartBoard();
+  renderStartPickers();
   const titleEl = document.querySelector("header.title h1");
   if (titleEl) titleEl.addEventListener("click", () => {
     if (++titleTaps >= 13) { titleTaps = 0; revealSecret13(); }
   });
-  $("playBtn").addEventListener("click", startGame);
+  $("playBtn").addEventListener("click", () => {
+    if (gameType === "infinite") startInfinite(infiniteVariant);
+    else startGame();
+  });
   $("statsBtn").addEventListener("click", () => { statsBackTarget = "start"; renderStats(null); showScreen("stats"); });
   $("resultsStatsBtn").addEventListener("click", () => { statsBackTarget = "results"; renderStats(score); showScreen("stats"); });
   $("statsBackBtn").addEventListener("click", () => {
@@ -1115,7 +1196,7 @@ async function init() {
   });
   $("againBtn").addEventListener("click", () => {
     applyEra("gold");
-    refreshStartBoard();
+    renderStartPickers();
     showScreen("start");
     $("startContent").style.display = "";
   });

@@ -62,7 +62,7 @@ export function saveAchievements(earned) {
 /* ---------- High scores (separate board per mode) ---------- */
 // Medium keeps the legacy key for back-compat; other modes get a suffix.
 export function hsKey(mode) { return mode === "medium" ? HS_KEY : HS_KEY + "." + mode; }
-export function loadHighScores(mode) {
+export function loadHighScores(mode, fallback = DEFAULT_PODIUM) {
   try {
     const raw = localStorage.getItem(hsKey(mode));
     if (raw) {
@@ -70,7 +70,7 @@ export function loadHighScores(mode) {
       if (Array.isArray(parsed) && parsed.length) return parsed;
     }
   } catch (e) { /* ignore */ }
-  return DEFAULT_PODIUM.slice();
+  return fallback.slice();
 }
 export function saveHighScores(list, mode) {
   try { localStorage.setItem(hsKey(mode), JSON.stringify(list)); } catch (e) { /* ignore */ }

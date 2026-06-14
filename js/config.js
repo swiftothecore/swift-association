@@ -28,6 +28,12 @@ export const DEFAULT_PODIUM = [
   { name: "SwiftLover13", score: 8 },
   { name: "Selena Gomez", score: 4 },
 ];
+// Infinite boards seed with rounds-survived numbers, not the 13-capped classic ones.
+export const INFINITE_DEFAULT_PODIUM = [
+  { name: "Taylor Swift", score: 22 },
+  { name: "SwiftLover13", score: 16 },
+  { name: "Sabrina Carpenter", score: 11 },
+];
 
 /* Era engine */
 export const ERAS = ["gold", "lavender", "red", "denim", "graphite", "midnight"];
