@@ -438,11 +438,15 @@ function startInfinite(variant, opts) {
   infiniteVariant = variant === "sudden" ? "sudden" : "3lives";
   gameType = "infinite";
   lives = startingLives();
-  if (!opts || !opts.carry) resetRunState();
+  const carry = !!(opts && opts.carry);
+  if (!carry) resetRunState();
   applyInputHints();
   $("pageTotalWrap").style.display = "none";
   showScreen("game");
-  nextRound();
+  // Fresh runs use nextRound's round-0 instant path; a carried run is mid-game,
+  // so advance straight into the next page without the results→game page flip.
+  if (carry) { advanceRound(); startTimer(); }
+  else nextRound();
 }
 
 function pickWord() {
@@ -776,39 +780,49 @@ function endGame() {
   clearTimer();
   resetTension();
   applyEra(FINALE_ERAS[Math.floor(Math.random() * FINALE_ERAS.length)]);
-  updateStats(score, currentMode.id);
-  const played = totalPlayed();   // across all modes — achievements are global
 
-  // end-of-game achievements (shown in the results recap, no toast)
-  if (score === TOTAL_ROUNDS) unlock("mastermind", false);
-  if (gameTimeouts === 0) unlock("fearless", false);
-  if (played >= 1) unlock("enchanted", false);
-  if (played >= 5) unlock("begin-again", false);
-  const trailingStreak = (() => { let n = 0; for (let i = roundResults.length - 1; i >= 0 && roundResults[i]; i--) n++; return n; })();
-  if (roundResults.includes(false) && trailingStreak >= 5) unlock("long-story-short", false);
+  const isInfinite = gameType === "infinite";
+  const roundsSurvived = roundResults.length;
+  const boardScore = isInfinite ? roundsSurvived : score;  // infinite ranks by how far you got
+  const mode = boardMode();
+
+  updateStats(boardScore, mode);
+  const played = totalPlayed();   // classic modes only — infinite is tracked separately
+
+  // end-of-game achievements (classic only for v1; infinite achievements deferred)
+  if (!isInfinite) {
+    if (score === TOTAL_ROUNDS) unlock("mastermind", false);
+    if (gameTimeouts === 0) unlock("fearless", false);
+    if (played >= 1) unlock("enchanted", false);
+    if (played >= 5) unlock("begin-again", false);
+    const trailingStreak = (() => { let n = 0; for (let i = roundResults.length - 1; i >= 0 && roundResults[i]; i--) n++; return n; })();
+    if (roundResults.includes(false) && trailingStreak >= 5) unlock("long-story-short", false);
+  }
 
   showScreen("results");
-  const keepsakeOpts = gameType === "infinite"
-    ? { total: Math.max(roundResults.length, 1), letterBead: false }
+  const keepsakeOpts = isInfinite
+    ? { total: Math.max(roundsSurvived, 1), letterBead: false }
     : undefined;
   $("resultBracelet").innerHTML = buildBraceletSVG(roundResults, 0, -1, roundAlbums, keepsakeOpts);
-  $("finalScore").textContent = score;
-  $("finalSub").textContent = "out of " + TOTAL_ROUNDS;
+  $("finalScore").textContent = boardScore;
+  $("finalSub").textContent = isInfinite ? "rounds · " + score + " correct" : "out of " + TOTAL_ROUNDS;
+  $("keepGoingBtn").style.display = isInfinite ? "none" : "";
   renderResultRecap();
-  if (score === TOTAL_ROUNDS) celebratePerfect();
+  if (!isInfinite && score === TOTAL_ROUNDS) celebratePerfect();
 
-  const list = loadHighScores(currentMode.id);
+  const fallback = isInfinite ? INFINITE_DEFAULT_PODIUM : undefined;
+  const list = loadHighScores(mode, fallback);
   const lowest = list.length >= 5 ? list[list.length - 1].score : -1;
-  const beats = list.length < 5 || score > lowest;
+  const beats = list.length < 5 || boardScore > lowest;
 
   const nameDiv = $("namePrompt");
-  if (beats && score > 0) {
+  if (beats && boardScore > 0) {
     nameDiv.style.display = "";
     renderPodium($("resultPodium"), sortHs(list), null);
     const save = () => {
       const name = ($("nameInput").value || "You").trim().slice(0, 20) || "You";
-      const updated = sortHs(list.concat([{ name, score, __you: true }])).slice(0, 5);
-      saveHighScores(updated.map(({ name, score }) => ({ name, score })), currentMode.id);
+      const updated = sortHs(list.concat([{ name, score: boardScore, __you: true }])).slice(0, 5);
+      saveHighScores(updated.map(({ name, score }) => ({ name, score })), mode);
       nameDiv.style.display = "none";
       renderPodium($("resultPodium"), updated, name);
     };
@@ -1200,6 +1214,8 @@ async function init() {
     showScreen("start");
     $("startContent").style.display = "";
   });
+  // Roll a finished classic run straight into endless play, carrying the score.
+  $("keepGoingBtn").addEventListener("click", () => startInfinite("3lives", { carry: true }));
   wireInput();
 
   try {
