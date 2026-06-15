@@ -16,6 +16,7 @@ import {
   loadMode,
   loadDailyResult, saveDailyResult, loadDailyBoard, saveDailyBoard,
   bumpDailyStreak, effectiveDailyStreak,
+  markTypePlayed,
 } from "./storage.js";
 
 /* ---------- Constants & state ---------- */
@@ -483,6 +484,7 @@ function resetRunState() {
   correctStreak = 0;
   gameTimeouts = 0;
   gameMaxStreak = 0;
+  lyricLineAnswers = 0;
   newlyUnlocked = [];
   usedWords = [];
   recentEras = [];
@@ -917,6 +919,8 @@ function submitAnswer(song, isTimeout) {
   if (gameType === "infinite" && !correct) { lives--; renderLives(); }
   renderBracelet();
 
+  if (lyricMatch) lyricLineAnswers++;   // recalled a lyric line (for You Knew The Line)
+
   // achievements: timing + streak signals (mid-game unlocks toast immediately)
   const elapsed = (performance.now() - timerStart) / 1000;
   const remaining = currentMode.seconds - elapsed;
@@ -927,6 +931,7 @@ function submitAnswer(song, isTimeout) {
   }
   gameMaxStreak = Math.max(gameMaxStreak, correctStreak);
   if (correctStreak >= 5) unlock("bejeweled", true);
+  if (correctStreak >= 10) unlock("sparks-fly", true);
 
   // Circle the player's pick before revealing the verdict (skipped on timeout / reduced
   // motion, and on a lyric answer — the circle re-draws a title the player never typed).
@@ -1038,15 +1043,29 @@ function endGame() {
   if (!isDaily) updateStats(boardScore, mode);
   const played = totalPlayed();   // classic modes only — infinite/daily tracked separately
 
+  // Record this game type; "Hits Different" needs all three (classic + infinite + daily).
+  const typesPlayed = markTypePlayed(gameType);
+  if (typesPlayed.classic && typesPlayed.infinite && typesPlayed.daily) unlock("hits-different", false);
+
   // end-of-game achievements (daily counts toward the game-quality ones; infinite deferred)
   if (!isInfinite) {
     if (score === TOTAL_ROUNDS) unlock("mastermind", false);
+    if (score === TOTAL_ROUNDS - 1) unlock("champagne-problems", false);
+    if (score === 0) unlock("anti-hero", false);
     if (gameTimeouts === 0) unlock("fearless", false);
+    if (currentMode.lyricOnly) unlock("all-too-well", false);
     if (played >= 1) unlock("enchanted", false);
     if (played >= 5) unlock("begin-again", false);
+    if (played >= 15) unlock("fifteen", false);
     const trailingStreak = (() => { let n = 0; for (let i = roundResults.length - 1; i >= 0 && roundResults[i]; i--) n++; return n; })();
     if (roundResults.includes(false) && trailingStreak >= 5) unlock("long-story-short", false);
   }
+  if (isInfinite) {
+    if (roundsSurvived >= 20) unlock("out-of-the-woods", false);
+    if (roundsSurvived === 22) unlock("twenty-two", false);
+  }
+  // Lyric-line recall counts in any game type.
+  if (lyricLineAnswers >= 5) unlock("you-knew-the-line", false);
 
   showScreen("results");
   const keepsakeOpts = isInfinite
@@ -1064,6 +1083,7 @@ function endGame() {
     const dateStr = todayKey();
     saveDailyResult(dateStr, { score, roundResults: roundResults.slice(), roundAlbums: roundAlbums.slice() });
     bumpDailyStreak(dateStr);   // extend (or reset) the consecutive-days streak
+    unlock("today-was-a-fairytale", false);   // finished a Daily Challenge
     dailyRng = null;   // back to Math.random() for any subsequent Classic game
     renderDailyBoard(dateStr);
     renderShareButton(dateStr);
@@ -1108,6 +1128,7 @@ let blueUsedThisRound = false;
 let correctStreak = 0;           // consecutive correct answers this game
 let gameTimeouts = 0;            // timeouts this game (for Fearless)
 let gameMaxStreak = 0;           // best streak reached this game
+let lyricLineAnswers = 0;        // lyric-line answers this game (for You Knew The Line)
 
 const PEN_LABELS = { quill: "quill pen", fountain: "fountain pen", glitter: "glitter gel pen" };
 

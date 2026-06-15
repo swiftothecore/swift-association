@@ -12,6 +12,7 @@ export const DIFF_KEY = "swiftSongAssociation.difficulty";
 export const DAILY_KEY = "swiftSongAssociation.daily";
 export const DAILY_BOARD_KEY = "swiftSongAssociation.dailyBoard";
 export const DAILY_STREAK_KEY = "swiftSongAssociation.dailyStreak";
+export const TYPES_KEY = "swiftSongAssociation.typesPlayed";   // {classic,infinite,daily} — for "Hits Different"
 
 /* Difficulty modes — each just re-tunes existing levers (timer, dropdown,
    word-rarity pool, matching strictness, wrong-answer help). Gameplay code is
@@ -91,6 +92,16 @@ export const ACH_ICONS = {
   key:     `<svg viewBox="0 0 24 24"><circle class="ink-fill" cx="8" cy="8" r="5.4"/><circle cx="8" cy="8" r="1.9" fill="var(--paper)"/><path class="ink" d="M11.8 11.8 L20 20 M16.8 16.8 l2.4 -2.4 M14.2 14.2 l2.2 -2.2"/></svg>`,
   gem:     `<svg viewBox="0 0 24 24"><path class="ink-fill" d="M6.6 3 H17.4 L21.6 9 L12 21.6 L2.4 9 Z"/><path class="ink" d="M2.4 9 H21.6 M8.8 3 L6.9 9 L12 21.6 M15.2 3 L17.1 9 L12 21.6"/></svg>`,
   rise:    `<svg viewBox="0 0 24 24"><path class="ink" stroke-width="2.1" stroke-linecap="round" d="M3 19 L9.5 12.5 L13 16 L20.5 6.5"/><path class="ink-fill" d="M14.6 5 L21.5 4 L21 10.8 Z"/></svg>`,
+  crown:   `<svg viewBox="0 0 24 24"><path class="ink-fill" d="M2.5 18 L4.5 7.5 L9 12.5 L12 5 L15 12.5 L19.5 7.5 L21.5 18 Z"/><path class="ink" d="M3 18 H21"/><circle class="ink-fill" cx="4.5" cy="7.5" r="1.5"/><circle class="ink-fill" cx="12" cy="5" r="1.5"/><circle class="ink-fill" cx="19.5" cy="7.5" r="1.5"/></svg>`,
+  scarf:   `<svg viewBox="0 0 24 24"><path class="ink-fill" d="M5 5 C11 9 13 9 19 5 L20.5 8.5 C14 12.5 10 12.5 3.5 8.5 Z"/><path class="ink-fill" d="M9.5 11 L8 21 L11 18.5 L12.5 11 Z"/><g class="ink"><path d="M8 21 l-0.4 1.5 M10 20 l0 1.5 M11.5 19 l0.4 1.5"/></g></svg>`,
+  heartcrack: `<svg viewBox="0 0 24 24"><path class="ink-fill" d="M12 21 C3.5 14.5 3 9.5 5.8 6.6 C8.2 4.1 11 5.2 12 7.4 C13 5.2 15.8 4.1 18.2 6.6 C21 9.5 20.5 14.5 12 21 Z"/><path d="M12 7.4 L10 12 L13.2 13.6 L11 18.5" fill="none" stroke="var(--paper)" stroke-width="1.3" stroke-linejoin="round"/></svg>`,
+  flute:   `<svg viewBox="0 0 24 24"><path class="ink-fill" d="M8.5 3 H15.5 L14 11 A2 2 0 0 1 10 11 Z"/><path class="ink" d="M12 12.5 V19.5 M9 19.5 H15"/><circle class="ink-fill" cx="16.5" cy="3.5" r="1"/><circle class="ink-fill" cx="18" cy="6.5" r="0.8"/><circle class="ink-fill" cx="16.8" cy="9" r="0.6"/></svg>`,
+  trio:    `<svg viewBox="0 0 24 24"><circle class="ink-fill" cx="8.5" cy="9" r="4.5"/><circle class="ink-fill" cx="15.5" cy="9" r="4.5"/><circle class="ink-fill" cx="12" cy="15.5" r="4.5"/></svg>`,
+  calendar:`<svg viewBox="0 0 24 24"><rect class="ink-fill" x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 9.5 H20.5" stroke="var(--paper)" stroke-width="1.4"/><path class="ink" d="M8 3 V6 M16 3 V6"/><g fill="var(--paper)"><circle cx="8.5" cy="13" r="1"/><circle cx="12" cy="13" r="1"/><circle cx="15.5" cy="13" r="1"/><circle cx="8.5" cy="16.5" r="1"/><circle cx="12" cy="16.5" r="1"/></g></svg>`,
+  note:    `<svg viewBox="0 0 24 24"><circle class="ink-fill" cx="7" cy="17.5" r="2.8"/><circle class="ink-fill" cx="16" cy="15.5" r="2.8"/><path class="ink" fill="none" d="M9.5 17.5 V6 L18.5 4 V15.5"/><path class="ink" fill="none" d="M9.5 8.5 L18.5 6.5"/></svg>`,
+  tree:    `<svg viewBox="0 0 24 24"><path class="ink-fill" d="M12 2 L16.5 8.5 H14 L17.5 13.5 H6.5 L10 8.5 H7.5 Z"/><rect class="ink-fill" x="10.5" y="13" width="3" height="6.5"/></svg>`,
+  balloon: `<svg viewBox="0 0 24 24"><ellipse class="ink-fill" cx="12" cy="9" rx="6.5" ry="7.5"/><path class="ink-fill" d="M10.8 16 L13.2 16 L12 18 Z"/><path class="ink" fill="none" d="M12 18 C12 20 10.5 20 11 21.5"/></svg>`,
+  firework:`<svg viewBox="0 0 24 24"><g class="ink"><path d="M12 12 V3"/><path d="M12 12 L18.4 5.6"/><path d="M12 12 H21"/><path d="M12 12 L18.4 18.4"/><path d="M12 12 V21"/><path d="M12 12 L5.6 18.4"/><path d="M12 12 H3"/><path d="M12 12 L5.6 5.6"/></g><circle class="ink-fill" cx="12" cy="12" r="2.2"/></svg>`,
 };
 export const ACHIEVEMENTS = [
   { id: "enchanted",        name: "Enchanted",        desc: "Finish your first game",              secret: false, icon: "sparkle" },
@@ -101,6 +112,16 @@ export const ACHIEVEMENTS = [
   { id: "getaway-car",      name: "Getaway Car",      desc: "Answer correctly with under 1s left", secret: true,  icon: "key" },
   { id: "bejeweled",        name: "Bejeweled",        desc: "Hit a 5-in-a-row streak",             secret: true,  icon: "gem" },
   { id: "long-story-short", name: "Long Story Short", desc: "Come back to finish on a 5+ streak",  secret: true,  icon: "rise" },
+  { id: "today-was-a-fairytale", name: "Today Was A Fairytale", desc: "Finish your first Daily Challenge", secret: false, icon: "crown" },
+  { id: "all-too-well",     name: "All Too Well",     desc: "Finish a full Lyricist game",          secret: false, icon: "scarf" },
+  { id: "champagne-problems", name: "Champagne Problems", desc: "Finish one shy — 12/13",            secret: true,  icon: "flute" },
+  { id: "anti-hero",        name: "Anti-Hero",        desc: "Score 0/13",                          secret: true,  icon: "heartcrack" },
+  { id: "hits-different",   name: "Hits Different",   desc: "Play all three game types",           secret: false, icon: "trio" },
+  { id: "fifteen",          name: "Fifteen",          desc: "Play 15 games",                       secret: false, icon: "calendar" },
+  { id: "you-knew-the-line", name: "You Knew The Line", desc: "Recall 5 lyric lines in one game",  secret: true,  icon: "note" },
+  { id: "out-of-the-woods", name: "Out Of The Woods", desc: "Survive 20+ rounds in Infinite",      secret: false, icon: "tree" },
+  { id: "twenty-two",       name: "22",               desc: "Reach exactly round 22 in Infinite",  secret: false, icon: "balloon" },
+  { id: "sparks-fly",       name: "Sparks Fly",       desc: "Hit a 10-in-a-row streak",            secret: true,  icon: "firework" },
 ];
 export const ACH_BY_ID = Object.fromEntries(ACHIEVEMENTS.map((a) => [a.id, a]));
 

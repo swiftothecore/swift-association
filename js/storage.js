@@ -3,7 +3,7 @@
 // achievements map are passed in explicitly rather than closed over.
 import {
   HS_KEY, STATS_KEY, ACH_KEY, DIFF_KEY,
-  DAILY_KEY, DAILY_BOARD_KEY, DAILY_STREAK_KEY,
+  DAILY_KEY, DAILY_BOARD_KEY, DAILY_STREAK_KEY, TYPES_KEY,
   MODES, MODE_ORDER, DEFAULT_PODIUM, DAILY_DEFAULT_PODIUM,
 } from "./config.js";
 
@@ -58,6 +58,24 @@ export function loadAchievements() {
 }
 export function saveAchievements(earned) {
   try { localStorage.setItem(ACH_KEY, JSON.stringify(earned)); } catch (e) { /* ignore */ }
+}
+
+/* ---------- Game types ever played (for "Hits Different") ---------- */
+// Value: { classic?: true, infinite?: true, daily?: true }
+export function loadTypesPlayed() {
+  try {
+    const raw = localStorage.getItem(TYPES_KEY);
+    if (raw) { const o = JSON.parse(raw); if (o && typeof o === "object") return o; }
+  } catch (e) { /* ignore */ }
+  return {};
+}
+// Mark a game type as played; returns the updated record.
+export function markTypePlayed(type) {
+  const o = loadTypesPlayed();
+  if (o[type]) return o;
+  o[type] = true;
+  try { localStorage.setItem(TYPES_KEY, JSON.stringify(o)); } catch (e) { /* ignore */ }
+  return o;
 }
 
 /* ---------- High scores (separate board per mode) ---------- */
