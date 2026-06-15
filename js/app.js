@@ -207,12 +207,15 @@ let newlyUnlocked = [];        // ids unlocked this game (for the results recap)
 
 function charmMarkup(icon) { return `<span class="charm" aria-hidden="true">${ACH_ICONS[icon]}</span>`; }
 
-function unlock(id, toast) {
+// Every unlock pops a toast. Already-earned ids no-op above, so a charm earned
+// mid-game (toasted during play) never re-toasts at end-of-game. When several
+// unlock at once (typically at endGame), the toasts stack in the corner.
+function unlock(id) {
   if (!ACH_BY_ID[id] || earnedAchievements[id]) return;
   earnedAchievements[id] = new Date().toISOString().slice(0, 10);
   saveAchievements(earnedAchievements);
   newlyUnlocked.push(id);
-  if (toast) showToast(ACH_BY_ID[id]);
+  showToast(ACH_BY_ID[id]);
 }
 
 function showToast(a) {
@@ -926,12 +929,12 @@ function submitAnswer(song, isTimeout) {
   const remaining = currentMode.seconds - elapsed;
   if (isTimeout) gameTimeouts++;
   if (correct) {
-    if (elapsed < 2) unlock("speak-now", true);
-    if (remaining < 1) unlock("getaway-car", true);
+    if (elapsed < 2) unlock("speak-now");
+    if (remaining < 1) unlock("getaway-car");
   }
   gameMaxStreak = Math.max(gameMaxStreak, correctStreak);
-  if (correctStreak >= 5) unlock("bejeweled", true);
-  if (correctStreak >= 10) unlock("sparks-fly", true);
+  if (correctStreak >= 5) unlock("bejeweled");
+  if (correctStreak >= 10) unlock("sparks-fly");
 
   // Circle the player's pick before revealing the verdict (skipped on timeout / reduced
   // motion, and on a lyric answer — the circle re-draws a title the player never typed).
@@ -1045,27 +1048,27 @@ function endGame() {
 
   // Record this game type; "Hits Different" needs all three (classic + infinite + daily).
   const typesPlayed = markTypePlayed(gameType);
-  if (typesPlayed.classic && typesPlayed.infinite && typesPlayed.daily) unlock("hits-different", false);
+  if (typesPlayed.classic && typesPlayed.infinite && typesPlayed.daily) unlock("hits-different");
 
   // end-of-game achievements (daily counts toward the game-quality ones; infinite deferred)
   if (!isInfinite) {
-    if (score === TOTAL_ROUNDS) unlock("mastermind", false);
-    if (score === TOTAL_ROUNDS - 1) unlock("champagne-problems", false);
-    if (score === 0) unlock("anti-hero", false);
-    if (gameTimeouts === 0) unlock("fearless", false);
-    if (currentMode.lyricOnly) unlock("all-too-well", false);
-    if (played >= 1) unlock("enchanted", false);
-    if (played >= 5) unlock("begin-again", false);
-    if (played >= 15) unlock("fifteen", false);
+    if (score === TOTAL_ROUNDS) unlock("mastermind");
+    if (score === TOTAL_ROUNDS - 1) unlock("champagne-problems");
+    if (score === 0) unlock("anti-hero");
+    if (gameTimeouts === 0) unlock("fearless");
+    if (currentMode.lyricOnly) unlock("all-too-well");
+    if (played >= 1) unlock("enchanted");
+    if (played >= 5) unlock("begin-again");
+    if (played >= 15) unlock("fifteen");
     const trailingStreak = (() => { let n = 0; for (let i = roundResults.length - 1; i >= 0 && roundResults[i]; i--) n++; return n; })();
-    if (roundResults.includes(false) && trailingStreak >= 5) unlock("long-story-short", false);
+    if (roundResults.includes(false) && trailingStreak >= 5) unlock("long-story-short");
   }
   if (isInfinite) {
-    if (roundsSurvived >= 20) unlock("out-of-the-woods", false);
-    if (roundsSurvived === 22) unlock("twenty-two", false);
+    if (roundsSurvived >= 20) unlock("out-of-the-woods");
+    if (roundsSurvived === 22) unlock("twenty-two");
   }
   // Lyric-line recall counts in any game type.
-  if (lyricLineAnswers >= 5) unlock("you-knew-the-line", false);
+  if (lyricLineAnswers >= 5) unlock("you-knew-the-line");
 
   showScreen("results");
   const keepsakeOpts = isInfinite
@@ -1083,7 +1086,7 @@ function endGame() {
     const dateStr = todayKey();
     saveDailyResult(dateStr, { score, roundResults: roundResults.slice(), roundAlbums: roundAlbums.slice() });
     bumpDailyStreak(dateStr);   // extend (or reset) the consecutive-days streak
-    unlock("today-was-a-fairytale", false);   // finished a Daily Challenge
+    unlock("today-was-a-fairytale");   // finished a Daily Challenge
     dailyRng = null;   // back to Math.random() for any subsequent Classic game
     renderDailyBoard(dateStr);
     renderShareButton(dateStr);
