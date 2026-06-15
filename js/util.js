@@ -40,3 +40,64 @@ export function normalizeTitle(s) {
     .replace(/\s+/g, " ")
     .trim();
 }
+
+// Comparison key for a typed lyric line vs stored lyrics. Like normalizeTitle for
+// casing / apostrophes / & / $ / punctuation / dashes / whitespace, but WITHOUT the
+// title-only numeral folds (those would corrupt ordinary lyric text, e.g. "the ONE
+// that got away"). Adds one lyric-specific transform: fold word-final "ing" -> "in"
+// so "dancing" and "dancin'" match either way (g-dropping is common in TS lyrics).
+// Collapses all whitespace (incl. newlines) to single spaces, so a per-song blob is
+// one flat string ideal for substring search.
+export function normalizeLyric(s) {
+  return s
+    .toLowerCase()
+    .replace(/’/g, "'")
+    .replace(/\$/g, "s")
+    .replace(/[&+]/g, "and")
+    .replace(/[().!?,:;"'…]/g, "")
+    .replace(/[-–—/]/g, " ")
+    .replace(/ing\b/g, "in")        // g-dropping: dancing / dancin' -> dancin
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+// Standard Levenshtein edit distance (two-row DP).
+export function levenshtein(a, b) {
+  if (a === b) return 0;
+  if (!a.length) return b.length;
+  if (!b.length) return a.length;
+  let prev = new Array(b.length + 1);
+  let curr = new Array(b.length + 1);
+  for (let j = 0; j <= b.length; j++) prev[j] = j;
+  for (let i = 1; i <= a.length; i++) {
+    curr[0] = i;
+    for (let j = 1; j <= b.length; j++) {
+      const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+      curr[j] = Math.min(prev[j] + 1, curr[j - 1] + 1, prev[j - 1] + cost);
+    }
+    [prev, curr] = [curr, prev];
+  }
+  return prev[b.length];
+}
+
+// Approximate SUBSTRING match: how well `pattern` matches its best-aligned window of
+// `text`, in [0,1] (1 = a clean substring; less for typos / partial). The DP's first
+// row stays 0 so the pattern may start anywhere in `text`, and leftover `text` past
+// the match is free — the score is 1 - min(last row) / pattern.length.
+export function fuzzySubstringRatio(pattern, text) {
+  if (!pattern.length) return 0;
+  if (!text.length) return 0;
+  let prev = new Array(text.length + 1).fill(0);
+  let curr = new Array(text.length + 1);
+  for (let i = 1; i <= pattern.length; i++) {
+    curr[0] = i;
+    for (let j = 1; j <= text.length; j++) {
+      const cost = pattern[i - 1] === text[j - 1] ? 0 : 1;
+      curr[j] = Math.min(prev[j] + 1, curr[j - 1] + 1, prev[j - 1] + cost);
+    }
+    [prev, curr] = [curr, prev];
+  }
+  let best = Infinity;
+  for (let j = 0; j <= text.length; j++) if (prev[j] < best) best = prev[j];
+  return Math.max(0, 1 - best / pattern.length);
+}

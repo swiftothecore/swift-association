@@ -1,5 +1,5 @@
 "use strict";
-import { $, escapeRegExp, escapeHtml, prefersReducedMotion, shuffle, chance, normalizeTitle } from "./util.js";
+import { $, escapeRegExp, escapeHtml, prefersReducedMotion, shuffle, chance, normalizeTitle, normalizeLyric, fuzzySubstringRatio } from "./util.js";
 import {
   TOTAL_ROUNDS, RECENT_WINDOW, DIFF_KEY,
   MODES, MODE_ORDER, INFINITE_DEFAULT_PODIUM,
@@ -17,6 +17,12 @@ import {
 } from "./storage.js";
 
 /* ---------- Constants & state ---------- */
+// Lyric-line answering: a typed line must be at least this many words (so a bare
+// prompt-word echo can't pass), and must match a real word-bearing lyric line at or
+// above this fuzzy similarity (1 = verbatim; lower tolerates typos / a partial line).
+const MIN_LYRIC_WORDS = 3;
+const FUZZY_THRESHOLD = 0.8;
+
 let currentMode = MODES.medium;
 let wordBuckets = { easy: [], all: [], hard: [], ultra: [] };
 let recentEras = [];
@@ -291,6 +297,7 @@ async function loadData() {
   titleIndex = new Map();
   for (const s of allSongs) {
     s._norm = normalizeTitle(s.title);
+    s._normLyrics = normalizeLyric(s.lyrics);   // flat blob for lyric-line matching
     titleIndex.set(s._norm, s);
   }
   for (const [canonical, aliases] of Object.entries(TITLE_ALIASES)) {
@@ -452,8 +459,8 @@ function resetRunState() {
   roundAlbums = [];
 }
 function applyInputHints() {
-  $("songInput").placeholder = currentMode.dropdown ? "write the line…" : "write the full title…";
-  $("gameHint").textContent = currentMode.dropdown ? "Enter accepts the top match" : "no hints — type the full title, then Enter";
+  $("songInput").placeholder = currentMode.dropdown ? "a title… or sing me a line" : "the full title… or a lyric line";
+  $("gameHint").textContent = currentMode.dropdown ? "Enter accepts the top match — or type a lyric line" : "no hints — type the full title or a real lyric line, then Enter";
 }
 
 function startGame() {
@@ -682,16 +689,69 @@ function renderDropdown() {
 }
 function hideDropdown() { $("dropdown").classList.remove("show"); }
 
+/* ---------- Lyric-line answering ---------- */
+// A player can answer by typing a LYRIC LINE instead of the title. There is no lyric
+// autocomplete (that would hand them the answer); the line is blind-typed and only
+// JUDGED here. To pass it must (a) contain the prompt word, (b) be >= MIN_LYRIC_WORDS,
+// and (c) closely match a real word-bearing lyric line of a valid song. Fuzzy so
+// typos / a slightly-off line still count. Returns { song, line } or null.
+function matchLyricLine(phrase) {
+  const normPhrase = normalizeLyric(phrase);
+  if (!normPhrase) return null;
+  if (normPhrase.split(" ").length < MIN_LYRIC_WORDS) return null;
+  // The typed phrase must hold the prompt word (stem-lenient by default; exact in
+  // Ultra via currentMode.strict — so a stem-only line like "golden" for "gold" fails).
+  if (!wordRegex(currentWord).test(phrase)) return null;
+
+  // Fast path: a verbatim contiguous run anywhere in the lyrics (incl. across lines).
+  for (const s of currentSongs) {
+    if (s._normLyrics.includes(normPhrase)) {
+      return { song: s, line: recoverLyricLine(s, normPhrase) };
+    }
+  }
+
+  // Fuzzy path: best-matching word-bearing line per song; keep the best overall.
+  const rx = wordRegex(currentWord);
+  let best = null;
+  for (const s of currentSongs) {
+    const lines = s.lyrics.split("\n");
+    for (const raw of lines) {
+      if (!rx.test(raw)) continue;
+      const ratio = fuzzySubstringRatio(normPhrase, normalizeLyric(raw));
+      if (ratio < FUZZY_THRESHOLD) continue;
+      if (!best || ratio > best.ratio ||
+          (ratio === best.ratio && (s.lyrics.length < best.song.lyrics.length ||
+            (s.lyrics.length === best.song.lyrics.length && s.title < best.song.title)))) {
+        best = { song: s, line: raw.trim(), ratio };
+      }
+    }
+  }
+  return best ? { song: best.song, line: best.line } : null;
+}
+
+// Recover the original lyric line (for display) that holds the matched phrase.
+function recoverLyricLine(song, normPhrase) {
+  const lines = song.lyrics.split("\n");
+  const hit = lines.find((l) => normalizeLyric(l).includes(normPhrase));
+  return (hit || lines[0] || "").trim();
+}
+
 /* ---------- Submit & feedback ---------- */
 function submitAnswer(song, isTimeout) {
   if (roundLocked) return;
 
+  let lyricMatch = null;
   if (!song && !isTimeout) {
     if (dropdownItems.length) {
       song = dropdownItems[activeIndex >= 0 ? activeIndex : 0];
     } else {
-      const key = normalizeTitle($("songInput").value);
+      const raw = $("songInput").value;
+      const key = normalizeTitle(raw);
       song = key ? (titleIndex.get(key) || null) : null;
+      if (!song) {                         // not a title — try it as a lyric line
+        lyricMatch = matchLyricLine(raw);
+        if (lyricMatch) song = lyricMatch.song;
+      }
     }
     if (!song) return;
   }
@@ -723,9 +783,10 @@ function submitAnswer(song, isTimeout) {
   gameMaxStreak = Math.max(gameMaxStreak, correctStreak);
   if (correctStreak >= 5) unlock("bejeweled", true);
 
-  // Circle the player's pick before revealing the verdict (skipped on timeout / reduced motion).
-  const reveal = () => (correct ? showCorrectFeedback(song) : showWrongFeedback(song, isTimeout));
-  if (song && !isTimeout && !prefersReducedMotion()) {
+  // Circle the player's pick before revealing the verdict (skipped on timeout / reduced
+  // motion, and on a lyric answer — the circle re-draws a title the player never typed).
+  const reveal = () => (correct ? showCorrectFeedback(song, lyricMatch) : showWrongFeedback(song, isTimeout));
+  if (song && !isTimeout && !lyricMatch && !prefersReducedMotion()) {
     showCircledChoice(song, reveal);
   } else {
     reveal();
@@ -744,8 +805,8 @@ function showCircledChoice(song, done) {
   setTimeout(done, 640);
 }
 
-function lyricCard(song, word, isWrong) {
-  const line = extractLineWithWord(song.lyrics, word);
+function lyricCard(song, word, isWrong, lineOverride) {
+  const line = lineOverride != null ? lineOverride : extractLineWithWord(song.lyrics, word);
   const color = ALBUM_COLORS[song.album] || "var(--ink-soft)";
   const albumLabel = song.album ? `<span class="album-tag" style="--album-color:${color}">${escapeHtml(song.album)}</span>` : "";
   const cls = isWrong ? " wrong-card" : "";
@@ -755,11 +816,16 @@ function lyricCard(song, word, isWrong) {
   </div>`;
 }
 
-function showCorrectFeedback(song) {
+function showCorrectFeedback(song, lyricMatch) {
   const fb = $("feedback");
+  // On a lyric answer, celebrate the recall and show the exact line they typed.
+  const banner = lyricMatch ? "✓ you knew the line" : "✓ that's the one";
+  const card = lyricMatch
+    ? lyricCard(song, currentWord, false, lyricMatch.line)
+    : lyricCard(song, currentWord, false);
   fb.innerHTML = `
-    <div class="banner good">✓ that's the one</div>
-    ${lyricCard(song, currentWord, false)}
+    <div class="banner good">${banner}</div>
+    ${card}
     <div class="countdown">next page in <b id="cd">5</b></div>
     <button id="skipBtn" class="countdown-skip">skip →</button>`;
   $("skipBtn").addEventListener("click", advanceFromFeedback);
