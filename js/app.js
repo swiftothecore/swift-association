@@ -4,7 +4,7 @@ import {
   TOTAL_ROUNDS, RECENT_WINDOW, DIFF_KEY,
   MODES, MODE_ORDER, INFINITE_DEFAULT_PODIUM,
   ERAS, TENDER_ERAS, FINALE_ERAS,
-  ALBUM_COLORS, TITLE_ALIASES,
+  ALBUM_COLORS, STUDIO_ALBUMS, TITLE_ALIASES,
   ACHIEVEMENTS, ACH_ICONS, ACH_BY_ID,
   PEN_SVG, STAR_SVG, SPARKLE_SVG, DOODLE_SVG,
 } from "./config.js";
@@ -169,32 +169,82 @@ function topTallyEntry(obj) {
   for (const k in obj) if (obj[k] > bestV) { bestV = obj[k]; bestK = k; }
   return bestK === null ? null : { key: bestK, count: bestV };
 }
-function favRow(label, value, note) {
-  return `<div class="fav-row"><span class="fav-lbl">${escapeHtml(label)}</span>` +
-    `<span class="fav-val">${escapeHtml(value)}` +
-    (note ? ` <span class="fav-note">${escapeHtml(note)}</span>` : "") + `</span></div>`;
+// Exact-title → album lookup for the lifetime tally (tally keys are song.title).
+function albumOfTitle(title) {
+  const s = allSongs.find((x) => x.title === title);
+  return s ? (s.album || null) : null;
 }
 
-// Lifetime catalog stats — global (not per-mode), drawn from the per-song/per-word
+// Lifetime catalogue stats — global (not per-mode), drawn from the per-song/per-word
 // tally written in endGame. Shows under every Stats tab, like the daily streak.
+// Three zones: a hero "songs discovered" meter (filled portion split into album-colour
+// segments), two album-tinted keepsake cards, and a red-pen-circled nemesis word.
 function lifetimeStatsHTML() {
   const t = loadSongTally();
-  const discovered = Object.keys(t.songs).length;
-  const total = allSongs.length;
+  const discoveredTitles = Object.keys(t.songs);
+  const discovered = discoveredTitles.length;
+  const total = allSongs.length || 1;
   const favSong = topTallyEntry(t.songs);
   const favAlbum = topTallyEntry(t.albums);
   const nemesis = topTallyEntry(t.misses);
-  const header = `<p class="histogram-label" style="margin-top:24px;">your catalog</p>`;
+  const header = `<p class="histogram-label" style="margin-top:24px;">your catalogue</p>`;
   if (!discovered && !nemesis) {
-    return header + `<p class="stats-empty">no answers logged yet — play a game to start your catalog!</p>`;
+    return header + `<p class="stats-empty">no answers logged yet — play a game to start your catalogue!</p>`;
   }
-  const rows = [
-    favRow("Favourite song", favSong ? favSong.key : "—", favSong ? `×${favSong.count}` : ""),
-    favRow("Favourite album", favAlbum ? favAlbum.key : "—", favAlbum ? `×${favAlbum.count}` : ""),
-    favRow("Nemesis word", nemesis ? `"${nemesis.key}"` : "—", nemesis ? `missed ×${nemesis.count}` : ""),
-    favRow("Songs discovered", `${discovered} / ${total}`, ""),
-  ];
-  return header + `<div class="fav-list">${rows.join("")}</div>`;
+  const pct = Math.round((discovered / total) * 100);
+
+  // Distinct discovered songs per album → album-rainbow meter segments, drawn in the
+  // chronological album order songs appear in allSongs (covers any pseudo-albums too).
+  const byAlbum = {};
+  for (const title of discoveredTitles) {
+    const a = albumOfTitle(title);
+    if (a) byAlbum[a] = (byAlbum[a] || 0) + 1;
+  }
+  const albumOrder = [];
+  for (const s of allSongs) if (s.album && !albumOrder.includes(s.album)) albumOrder.push(s.album);
+  const segs = albumOrder.filter((a) => byAlbum[a]).map((a) =>
+    `<div class="cat-seg" style="width:${(byAlbum[a] / total) * 100}%;background:${ALBUM_COLORS[a] || "var(--ink-soft)"}" title="${escapeHtml(a)}: ${byAlbum[a]}"></div>`
+  ).join("");
+
+  const songColor = favSong ? (ALBUM_COLORS[albumOfTitle(favSong.key)] || "var(--bead)") : "var(--bead)";
+  const songAlbum = favSong ? albumOfTitle(favSong.key) : null;
+  const albColor = favAlbum ? (ALBUM_COLORS[favAlbum.key] || "var(--ink-soft)") : "var(--ink-soft)";
+
+  const meter = `
+    <div class="cat-meter">
+      <div class="cat-meter-head"><span>songs discovered</span><span>${pct}%</span></div>
+      <div class="cat-meter-num"><b>${discovered}</b> / ${total} songs</div>
+      <div class="cat-bar">${segs}</div>
+    </div>`;
+
+  const songCard = `
+    <div class="cat-card" style="border-left-color:${songColor}">
+      <div class="cat-card-head"><span class="cat-star">${STAR_SVG}</span>favourite song</div>
+      <div class="cat-card-val">${favSong ? escapeHtml(favSong.key) : "—"}</div>
+      <div class="cat-card-sub" style="color:${songColor}">${favSong ? (songAlbum ? escapeHtml(songAlbum) + " · " : "") + "sung ×" + favSong.count : "play a game"}</div>
+    </div>`;
+  const albumCard = `
+    <div class="cat-card" style="border-left-color:${albColor}">
+      <div class="cat-card-head"><span class="cat-dot" style="background:${albColor}"></span>favourite album</div>
+      <div class="cat-card-val">${favAlbum ? escapeHtml(favAlbum.key) : "—"}</div>
+      <div class="cat-card-sub" style="color:${albColor}">${favAlbum ? "×" + favAlbum.count + " correct" : "play a game"}</div>
+    </div>`;
+
+  const nemesisBlock = `
+    <div class="cat-nemesis">
+      <div>
+        <div class="cat-card-head">nemesis word</div>
+        <div class="cat-nemesis-sub">${nemesis ? "missed ×" + nemesis.count : "no misses yet"}</div>
+      </div>
+      <div class="cat-nemesis-word">
+        <span>${nemesis ? escapeHtml(nemesis.key) : "—"}</span>
+        <svg viewBox="0 0 160 60" preserveAspectRatio="none" aria-hidden="true">
+          <path d="M18 30 C18 12, 60 8, 90 10 C130 13, 152 22, 150 34 C148 48, 100 54, 64 52 C28 50, 12 42, 16 28" fill="none" stroke="rgba(178,58,58,0.7)" stroke-width="2.2" stroke-linecap="round"/>
+        </svg>
+      </div>
+    </div>`;
+
+  return header + `<div class="cat-wrap">${meter}<div class="cat-cards">${songCard}${albumCard}</div>${nemesisBlock}</div>`;
 }
 
 // Daily-challenge streak — global (not per-mode), so it shows under every tab.
@@ -247,12 +297,35 @@ function charmMarkup(icon) { return `<span class="charm" aria-hidden="true">${AC
 // Every unlock pops a toast. Already-earned ids no-op above, so a charm earned
 // mid-game (toasted during play) never re-toasts at end-of-game. When several
 // unlock at once (typically at endGame), the toasts stack in the corner.
+// Longest run of consecutive CORRECT rounds that share one album (Time To Branch Out?).
+function longestAlbumRun(results, albums) {
+  let best = 0, run = 0, prev = null;
+  for (let i = 0; i < results.length; i++) {
+    if (results[i] && albums[i] && albums[i] === prev) run++;
+    else if (results[i] && albums[i]) { run = 1; prev = albums[i]; }
+    else { run = 0; prev = null; }
+    best = Math.max(best, run);
+  }
+  return best;
+}
+
+// Distinct studio albums that produced a correct answer this game (The Eras Tour).
+function distinctStudioAlbumsHit(results, albums) {
+  const set = new Set();
+  for (let i = 0; i < results.length; i++) {
+    if (results[i] && albums[i] && STUDIO_ALBUMS.includes(albums[i])) set.add(albums[i]);
+  }
+  return set.size;
+}
+
 function unlock(id) {
   if (!ACH_BY_ID[id] || earnedAchievements[id]) return;
   earnedAchievements[id] = new Date().toISOString().slice(0, 10);
   saveAchievements(earnedAchievements);
   newlyUnlocked.push(id);
   showToast(ACH_BY_ID[id]);
+  // Karma: earning your 13th achievement is itself one (fires retroactively, any path).
+  if (id !== "karma" && Object.keys(earnedAchievements).length >= 13) unlock("karma");
 }
 
 function showToast(a) {
@@ -971,7 +1044,9 @@ function submitAnswer(song, isTimeout) {
   if (isTimeout) gameTimeouts++;
   if (correct) {
     if (elapsed < 2) unlock("speak-now");
+    if (round === 1 && elapsed < 2) unlock("ready-for-it");
     if (remaining < 1) unlock("getaway-car");
+    if (remaining < 0.5) unlock("i-did-something-bad");
   }
   gameMaxStreak = Math.max(gameMaxStreak, correctStreak);
   if (correctStreak >= 5) unlock("bejeweled");
@@ -1113,6 +1188,10 @@ function endGame() {
     if (played >= 15) unlock("fifteen");
     const trailingStreak = (() => { let n = 0; for (let i = roundResults.length - 1; i >= 0 && roundResults[i]; i--) n++; return n; })();
     if (roundResults.includes(false) && trailingStreak >= 5) unlock("long-story-short");
+    if (currentMode.id === "ultra" && score >= 10) unlock("great-war");
+    if (score === TOTAL_ROUNDS && (currentMode.id === "hard" || currentMode.id === "ultra")) unlock("long-live");
+    if (longestAlbumRun(roundResults, roundAlbums) >= 3) unlock("branch-out");
+    if (distinctStudioAlbumsHit(roundResults, roundAlbums) >= STUDIO_ALBUMS.length - 1) unlock("eras-tour");
   }
   if (isInfinite) {
     if (roundsSurvived >= 20) unlock("out-of-the-woods");
@@ -1136,8 +1215,11 @@ function endGame() {
   if (isDaily) {
     const dateStr = todayKey();
     saveDailyResult(dateStr, { score, roundResults: roundResults.slice(), roundAlbums: roundAlbums.slice() });
-    bumpDailyStreak(dateStr);   // extend (or reset) the consecutive-days streak
+    const streak = bumpDailyStreak(dateStr);   // extend (or reset) the consecutive-days streak
     unlock("today-was-a-fairytale");   // finished a Daily Challenge
+    if (score === TOTAL_ROUNDS) unlock("daylight");
+    if (streak.current >= 7) unlock("story-of-us");
+    if (streak.current >= 30) unlock("evermore");
     dailyRng = null;   // back to Math.random() for any subsequent Classic game
     renderDailyBoard(dateStr);
     renderShareButton(dateStr);

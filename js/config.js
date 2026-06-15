@@ -55,6 +55,13 @@ export const TENDER_ERAS = ["lavender", "denim"];   // round 5 (Track 5) leans t
 export const FINALE_ERAS = ["gold", "midnight"];    // round 13 leans grand
 
 /* ---------- Album colours (left-rule tint + tag on lyric cards) ---------- */
+// The 12 studio albums (explicit so future pseudo-album groups — singles, holiday,
+// features — don't dilute album-scoped achievements like The Eras Tour / Branch Out).
+export const STUDIO_ALBUMS = [
+  "Taylor Swift", "Fearless", "Speak Now", "Red", "1989", "reputation",
+  "Lover", "folklore", "evermore", "Midnights",
+  "The Tortured Poets Department", "The Life of a Showgirl",
+];
 export const ALBUM_COLORS = {
   "Taylor Swift":                     "#5a9ea6",
   "Fearless":                         "#b8943a",
@@ -103,6 +110,16 @@ export const ACH_ICONS = {
   tree:    `<svg viewBox="0 0 24 24"><path class="ink-fill" d="M12 2 L16.5 8.5 H14 L17.5 13.5 H6.5 L10 8.5 H7.5 Z"/><rect class="ink-fill" x="10.5" y="13" width="3" height="6.5"/></svg>`,
   balloon: `<svg viewBox="0 0 24 24"><ellipse class="ink-fill" cx="12" cy="9" rx="6.5" ry="7.5"/><path class="ink-fill" d="M10.8 16 L13.2 16 L12 18 Z"/><path class="ink" fill="none" d="M12 18 C12 20 10.5 20 11 21.5"/></svg>`,
   firework:`<svg viewBox="0 0 24 24"><g class="ink"><path d="M12 12 V3"/><path d="M12 12 L18.4 5.6"/><path d="M12 12 H21"/><path d="M12 12 L18.4 18.4"/><path d="M12 12 V21"/><path d="M12 12 L5.6 18.4"/><path d="M12 12 H3"/><path d="M12 12 L5.6 5.6"/></g><circle class="ink-fill" cx="12" cy="12" r="2.2"/></svg>`,
+  swords:  `<svg viewBox="0 0 24 24"><g class="ink" stroke-width="2" stroke-linecap="round" fill="none"><path d="M4 4 L15 15"/><path d="M20 4 L9 15"/><path d="M7 17 L4 20"/><path d="M17 17 L20 20"/><path d="M6 14 L10 18"/><path d="M18 14 L14 18"/></g><circle class="ink-fill" cx="4" cy="4" r="1.6"/><circle class="ink-fill" cx="20" cy="4" r="1.6"/></svg>`,
+  castle:  `<svg viewBox="0 0 24 24"><rect class="ink-fill" x="5" y="9" width="14" height="11"/><g class="ink-fill"><rect x="5" y="6" width="3" height="3"/><rect x="10.5" y="6" width="3" height="3"/><rect x="16" y="6" width="3" height="3"/></g><path d="M10 20 V15 a2 2 0 0 1 4 0 V20 Z" fill="var(--paper)"/></svg>`,
+  sun:     `<svg viewBox="0 0 24 24"><circle class="ink-fill" cx="12" cy="12" r="5"/><g class="ink" stroke-width="1.8" stroke-linecap="round"><path d="M12 1.5 V4"/><path d="M12 20 V22.5"/><path d="M1.5 12 H4"/><path d="M20 12 H22.5"/><path d="M4.2 4.2 L6 6"/><path d="M18 18 L19.8 19.8"/><path d="M19.8 4.2 L18 6"/><path d="M6 18 L4.2 19.8"/></g></svg>`,
+  book:    `<svg viewBox="0 0 24 24"><path class="ink-fill" d="M12 5 C9 3.2 5.5 3.2 3 4.2 V19 C5.5 18 9 18 12 19.8 C15 18 18.5 18 21 19 V4.2 C18.5 3.2 15 3.2 12 5 Z"/><path d="M12 5 V19.8" stroke="var(--paper)" stroke-width="1.2"/><g stroke="var(--paper)" stroke-width="0.9" fill="none"><path d="M5 7.5 H10"/><path d="M5 10 H10"/><path d="M14 7.5 H19"/><path d="M14 10 H19"/></g></svg>`,
+  feather: `<svg viewBox="0 0 24 24"><path class="ink-fill" d="M19 3 C10 4 5 10 4.5 17 L8 13.5 C10 16 14 15 16 11 C13 12 11.5 11 11 9.5 C13 11 16 10 17 6.5 C14.5 7.5 13 6.8 12.5 5.5 C15 7 18 5.5 19 3 Z"/><path class="ink" stroke-width="1.4" stroke-linecap="round" d="M4 20 L8 13.5"/></svg>`,
+  rocket:  `<svg viewBox="0 0 24 24"><path class="ink-fill" d="M12 1.5 C15.5 4 17 8 17 12 L15 16 H9 L7 12 C7 8 8.5 4 12 1.5 Z"/><circle cx="12" cy="9" r="2" fill="var(--paper)"/><path class="ink-fill" d="M9 14 L5.5 17 L8 16.5 L8.5 19 Z"/><path class="ink-fill" d="M15 14 L18.5 17 L16 16.5 L15.5 19 Z"/><path class="ink" stroke-width="1.6" stroke-linecap="round" d="M11 18 L11 21 M13 18 L13 20.5"/></svg>`,
+  mask:    `<svg viewBox="0 0 24 24"><path class="ink-fill" d="M5 4 H19 V11 C19 17 16 21 12 21 C8 21 5 17 5 11 Z"/><g fill="var(--paper)"><circle cx="9.3" cy="10" r="1"/><circle cx="14.7" cy="10" r="1"/></g><path d="M9 16 q3 -3 6 0" fill="none" stroke="var(--paper)" stroke-width="1.4"/></svg>`,
+  branch:  `<svg viewBox="0 0 24 24"><path class="ink" stroke-width="1.8" stroke-linecap="round" fill="none" d="M5 21 C7 14 9 9 16 4"/><path class="ink-fill" d="M9 11 C7 9 7 6 9.5 5 C10.5 7.5 11.5 9 9 11 Z"/><path class="ink-fill" d="M12 8 C10 6 10 3 12.5 2 C13.5 4.5 14.5 6 12 8 Z"/><path class="ink-fill" d="M8 15 C6 14 5 11 7 9.5 C8.5 11.5 9.5 13 8 15 Z"/></svg>`,
+  ticket:  `<svg viewBox="0 0 24 24"><path class="ink-fill" d="M3 7 H21 V10 a2 2 0 0 0 0 4 V17 H3 V14 a2 2 0 0 0 0 -4 Z"/><path d="M14 7 V17" stroke="var(--paper)" stroke-width="1.2" stroke-dasharray="1.5 1.5"/><circle cx="8.5" cy="12" r="1.3" fill="var(--paper)"/></svg>`,
+  cycle:   `<svg viewBox="0 0 24 24"><g class="ink" stroke-width="2" fill="none"><path d="M19 9 A8 8 0 0 0 5.5 6.5"/><path d="M5 15 A8 8 0 0 0 18.5 17.5"/></g><path class="ink-fill" d="M4 3 L6.5 7 L2 7.2 Z"/><path class="ink-fill" d="M20 21 L17.5 17 L22 16.8 Z"/></svg>`,
 };
 export const ACHIEVEMENTS = [
   { id: "enchanted",        name: "Enchanted",        desc: "Finish your first game",              secret: false, icon: "sparkle" },
@@ -123,6 +140,16 @@ export const ACHIEVEMENTS = [
   { id: "out-of-the-woods", name: "Out Of The Woods", desc: "Survive 20+ rounds in Infinite",      secret: false, icon: "tree" },
   { id: "twenty-two",       name: "22",               desc: "Reach exactly round 22 in Infinite",  secret: false, icon: "balloon" },
   { id: "sparks-fly",       name: "Sparks Fly",       desc: "Hit a 10-in-a-row streak",            secret: true,  icon: "firework" },
+  { id: "great-war",        name: "The Great War",    desc: "Win an Ultra game — 10+ correct",     secret: false, icon: "swords" },
+  { id: "long-live",        name: "Long Live",        desc: "Perfect 13/13 on Hard or Ultra",      secret: true,  icon: "castle" },
+  { id: "ready-for-it",     name: "…Ready For It?",   desc: "Nail round 1 in under 2s",            secret: false, icon: "rocket" },
+  { id: "i-did-something-bad", name: "I Did Something Bad", desc: "Answer right with under 0.5s left", secret: true, icon: "mask" },
+  { id: "branch-out",       name: "Time To Branch Out?", desc: "3 correct in a row from one album", secret: true, icon: "branch" },
+  { id: "eras-tour",        name: "The Eras Tour",    desc: "Score from nearly every studio album in one game", secret: true, icon: "ticket" },
+  { id: "daylight",         name: "Daylight",         desc: "Score a perfect Daily",               secret: true,  icon: "sun" },
+  { id: "story-of-us",      name: "The Story Of Us",  desc: "Keep a 7-day Daily streak",           secret: false, icon: "book" },
+  { id: "evermore",         name: "Evermore",         desc: "Reach a 30-day Daily streak",         secret: true,  icon: "feather" },
+  { id: "karma",            name: "Karma",            desc: "Earn 13 achievements",                secret: false, icon: "cycle" },
 ];
 export const ACH_BY_ID = Object.fromEntries(ACHIEVEMENTS.map((a) => [a.id, a]));
 
