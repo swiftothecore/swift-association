@@ -1238,6 +1238,7 @@ function endGame() {
   if (lyricLineAnswers >= 5) unlock("you-knew-the-line");
   if (recoveryCount(roundResults) >= 3) unlock("shake-it-off");
   if (hasTriangle(roundSongs)) unlock("the-triangle");
+  if (roundSongs.includes("If This Was A Movie")) unlock("spicy-drama");
   if (longestBTitleRun(roundResults, roundSongs) >= 3) unlock("my-mind-is-alive");
   if (totalLifetimeMisses() >= 1000) unlock("thousand-cuts");
   if (new Date().getHours() === 0) unlock("midnights");   // played in the midnight hour

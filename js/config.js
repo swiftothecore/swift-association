@@ -130,6 +130,7 @@ export const ACH_ICONS = {
   eyeoff:  `<svg viewBox="0 0 24 24"><path class="ink" fill="none" stroke-width="1.8" d="M2.5 12 C6 6 18 6 21.5 12 C18 18 6 18 2.5 12 Z"/><circle class="ink-fill" cx="12" cy="12" r="3"/><path class="ink" stroke-width="2.2" stroke-linecap="round" d="M4 4 L20 20"/></svg>`,
   scissors:`<svg viewBox="0 0 24 24"><g class="ink" stroke-width="1.8" fill="none"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M8.5 7.5 L20 18"/><path d="M8.5 16.5 L20 6"/></g><circle class="ink-fill" cx="12" cy="12" r="1.3"/></svg>`,
   mountain:`<svg viewBox="0 0 24 24"><path class="ink-fill" d="M2 20 L9 7 L13 14 L16 9 L22 20 Z"/><path d="M7 11 L9 7 L11 11 Z" fill="var(--paper)"/><path d="M14.5 11.5 L16 9 L17.5 11.5 Z" fill="var(--paper)"/></svg>`,
+  clapper: `<svg viewBox="0 0 24 24"><path class="ink-fill" d="M3 8 L20.5 5 L21 8.5 L3.5 11.5 Z"/><g stroke="var(--paper)" stroke-width="1.3"><path d="M6.5 7.4 L7.8 5.3 M10.5 6.7 L11.8 4.7 M14.5 6 L15.8 4 M18.5 5.3 L19.8 3.4"/></g><rect class="ink-fill" x="3.5" y="11" width="17" height="9" rx="1"/></svg>`,
 };
 export const ACHIEVEMENTS = [
   { id: "enchanted",        name: "Enchanted",        desc: "Finish your first game",              secret: false, icon: "sparkle" },
@@ -170,6 +171,7 @@ export const ACHIEVEMENTS = [
   { id: "i-cant-see-you",   name: "I Can't See You",  desc: "Finish a game without answering once", secret: true, icon: "eyeoff" },
   { id: "thousand-cuts",    name: "Death By A Thousand Cuts", desc: "1,000 lifetime missed rounds", secret: true, icon: "scissors" },
   { id: "holy-ground",      name: "Holy Ground",      desc: "Reach round 13 from scratch in Infinite", secret: true, icon: "mountain" },
+  { id: "spicy-drama",      name: "Spicy Drama",      desc: "Answer a round with \"If This Was A Movie\"", secret: true, icon: "clapper" },
 ];
 export const ACH_BY_ID = Object.fromEntries(ACHIEVEMENTS.map((a) => [a.id, a]));
 
