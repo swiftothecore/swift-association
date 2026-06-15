@@ -11,6 +11,7 @@ export const ACH_KEY = "swiftSongAssociation.achievements";
 export const DIFF_KEY = "swiftSongAssociation.difficulty";
 export const DAILY_KEY = "swiftSongAssociation.daily";
 export const DAILY_BOARD_KEY = "swiftSongAssociation.dailyBoard";
+export const DAILY_STREAK_KEY = "swiftSongAssociation.dailyStreak";
 
 /* Difficulty modes — each just re-tunes existing levers (timer, dropdown,
    word-rarity pool, matching strictness, wrong-answer help). Gameplay code is

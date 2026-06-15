@@ -15,6 +15,7 @@ import {
   loadAchievements, saveAchievements,
   loadMode,
   loadDailyResult, saveDailyResult, loadDailyBoard, saveDailyBoard,
+  bumpDailyStreak, effectiveDailyStreak,
 } from "./storage.js";
 
 /* ---------- Constants & state ---------- */
@@ -153,9 +154,26 @@ function renderStats(lastScore, viewMode = currentMode.id) {
       <div class="histogram">${bars}</div>`;
   }
 
-  el.innerHTML = tabs + body + infiniteStatsHTML() + achievementsGridHTML();
+  el.innerHTML = tabs + body + dailyStatsHTML() + infiniteStatsHTML() + achievementsGridHTML();
   el.querySelectorAll("[data-statmode]").forEach((b) =>
     b.addEventListener("click", () => renderStats(lastScore, b.dataset.statmode)));
+}
+
+// Daily-challenge streak — global (not per-mode), so it shows under every tab.
+function dailyStatsHTML() {
+  const d = effectiveDailyStreak(todayKey());
+  if (!d.lastPlayed) {
+    return `<p class="histogram-label" style="margin-top:24px;">daily challenge</p>` +
+      `<p class="stats-empty">no daily runs yet — try today's Daily Challenge!</p>`;
+  }
+  const note = d.playedToday
+    ? `<p class="daily-streak-note">✓ played today's challenge</p>`
+    : `<p class="daily-streak-note">today's challenge awaits</p>`;
+  return `<p class="histogram-label" style="margin-top:24px;">daily challenge</p>` +
+    `<div class="streak-row">` +
+    `<div class="streak-cell"><span class="stat-val">🔥 ${d.current}</span><span class="stat-lbl">day streak</span></div>` +
+    `<div class="streak-cell"><span class="stat-val">${d.best}</span><span class="stat-lbl">best streak</span></div>` +
+    `</div>` + note;
 }
 
 // Infinite runs aren't comparable to the 13-round game (scores can exceed 13 and
@@ -1045,6 +1063,7 @@ function endGame() {
   if (isDaily) {
     const dateStr = todayKey();
     saveDailyResult(dateStr, { score, roundResults: roundResults.slice(), roundAlbums: roundAlbums.slice() });
+    bumpDailyStreak(dateStr);   // extend (or reset) the consecutive-days streak
     dailyRng = null;   // back to Math.random() for any subsequent Classic game
     renderDailyBoard(dateStr);
     renderShareButton(dateStr);

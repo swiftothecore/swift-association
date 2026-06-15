@@ -803,6 +803,9 @@
   /* Daily Challenge button on the start screen — a dashed "today only" treatment. */
   .daily-btn { margin-top: 8px; border-style: dashed; font-size: 14px; }
 
+  /* Daily-streak status line under the streak numbers on the Stats page. */
+  .daily-streak-note { font-family: var(--type); font-size: 11px; letter-spacing: 0.5px; color: var(--ink-soft); text-align: center; margin-top: 8px; }
+
   /* Share/copy button on the results screen — sits just below the bracelet. */
   .daily-share-btn { display: block; width: 100%; margin: 14px 0 10px; padding: 11px; font-size: 13px; letter-spacing: 1px; color: var(--ink-accent); border-color: var(--ink-accent); }
   .daily-share-btn:hover { background: var(--highlighter); border-style: solid; color: var(--ink); }

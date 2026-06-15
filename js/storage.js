@@ -3,7 +3,7 @@
 // achievements map are passed in explicitly rather than closed over.
 import {
   HS_KEY, STATS_KEY, ACH_KEY, DIFF_KEY,
-  DAILY_KEY, DAILY_BOARD_KEY,
+  DAILY_KEY, DAILY_BOARD_KEY, DAILY_STREAK_KEY,
   MODES, MODE_ORDER, DEFAULT_PODIUM, DAILY_DEFAULT_PODIUM,
 } from "./config.js";
 
@@ -111,4 +111,42 @@ export function loadDailyBoard(dateStr) {
 }
 export function saveDailyBoard(list, dateStr) {
   try { localStorage.setItem(DAILY_BOARD_KEY + "." + dateStr, JSON.stringify(list)); } catch (e) { /* ignore */ }
+}
+
+/* ---------- Daily streak (consecutive calendar days played) ---------- */
+// Key: swiftSongAssociation.dailyStreak  Value: { current, best, lastPlayed }
+const yesterdayOf = (dateStr) => {
+  const d = new Date(dateStr + "T00:00:00Z");
+  d.setUTCDate(d.getUTCDate() - 1);
+  return d.toISOString().slice(0, 10);
+};
+export function loadDailyStreak() {
+  try {
+    const raw = localStorage.getItem(DAILY_STREAK_KEY);
+    if (raw) { const o = JSON.parse(raw); if (o && typeof o.current === "number") return o; }
+  } catch (e) { /* ignore */ }
+  return { current: 0, best: 0, lastPlayed: null };
+}
+export function saveDailyStreak(d) {
+  try { localStorage.setItem(DAILY_STREAK_KEY, JSON.stringify(d)); } catch (e) { /* ignore */ }
+}
+// Record a completed daily play on `dateStr`. Consecutive days extend the streak;
+// a gap resets it to 1. Idempotent for the same day (the one-play gate already
+// guarantees one call/day, but guard anyway). Returns the updated record.
+export function bumpDailyStreak(dateStr) {
+  const d = loadDailyStreak();
+  if (d.lastPlayed === dateStr) return d;
+  d.current = d.lastPlayed === yesterdayOf(dateStr) ? d.current + 1 : 1;
+  d.best = Math.max(d.best, d.current);
+  d.lastPlayed = dateStr;
+  saveDailyStreak(d);
+  return d;
+}
+// The streak as it stands *today*: alive only if the last play was today or
+// yesterday, otherwise the run is broken (current shown as 0, best preserved).
+export function effectiveDailyStreak(today) {
+  const d = loadDailyStreak();
+  if (!d.lastPlayed) return { current: 0, best: d.best, lastPlayed: null, playedToday: false };
+  const alive = d.lastPlayed === today || d.lastPlayed === yesterdayOf(today);
+  return { current: alive ? d.current : 0, best: d.best, lastPlayed: d.lastPlayed, playedToday: d.lastPlayed === today };
 }
