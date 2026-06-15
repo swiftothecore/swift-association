@@ -18,6 +18,9 @@ export function starPath(cx, cy, rOut, rIn) {
 export function buildBraceletSVG(results, activeRound, freshIndex, albums, opts) {
   const total = (opts && opts.total) || TOTAL_ROUNDS;
   const letterBead = !opts || opts.letterBead !== false;
+  // Album→colour map; callers pass the active palette (colour-blind variant when
+  // that setting is on), defaulting to the standard album colours.
+  const colors = (opts && opts.colors) || ALBUM_COLORS;
   const W = 520, H = 64, xL = 26, xR = W - 26;
   // the thread sags between its tied ends like a real bracelet laid on the page
   const yAt = (x) => 20 + 10 * Math.sin(Math.PI * ((x - xL) / (xR - xL)));
@@ -59,7 +62,7 @@ export function buildBraceletSVG(results, activeRound, freshIndex, albums, opts)
     const y = +yAt(x).toFixed(1);
     const answered = results[i];
     // colour this bead by the album of the song picked that round (final bracelet)
-    const albumCol = (albums && albums[i]) ? (ALBUM_COLORS[albums[i]] || null) : null;
+    const albumCol = (albums && albums[i]) ? (colors[albums[i]] || null) : null;
     const beadStyle = albumCol ? ` style="--bead:${albumCol}"` : "";
 
     if (answered === true) {

@@ -4,7 +4,7 @@ import {
   TOTAL_ROUNDS, RECENT_WINDOW, DIFF_KEY,
   MODES, MODE_ORDER, INFINITE_DEFAULT_PODIUM,
   ERAS, TENDER_ERAS, FINALE_ERAS,
-  ALBUM_COLORS, STUDIO_ALBUMS, TITLE_ALIASES,
+  ALBUM_COLORS, CB_ALBUM_COLORS, STUDIO_ALBUMS, TITLE_ALIASES,
   ACHIEVEMENTS, ACH_ICONS, ACH_BY_ID,
   PEN_SVG, STAR_SVG, SPARKLE_SVG, DOODLE_SVG,
 } from "./config.js";
@@ -18,6 +18,9 @@ import {
   bumpDailyStreak, effectiveDailyStreak,
   markTypePlayed,
   loadSongTally, recordGameTally,
+  loadSettings, saveSettings,
+  exportData, importData,
+  resetHallOfFame, resetStatsAll, resetAchievements, resetTally, resetDaily, clearAllData,
 } from "./storage.js";
 
 /* ---------- Constants & state ---------- */
@@ -55,6 +58,41 @@ let timerStart = 0;
 let roundLocked = false;
 let debounceId = null;
 let statsBackTarget = "start";
+let settings = { ...{} };       // populated from loadSettings() in init
+let pausedRemaining = null;     // timer seconds left when the settings modal paused play
+
+/* ---------- Settings: effective getters & application ---------- */
+// Reduced motion: the setting overrides the OS preference ("on"/"off"); "auto"
+// follows the system. Used everywhere motion is gated in JS.
+function motionReduced() {
+  if (settings.reduceMotion === "on") return true;
+  if (settings.reduceMotion === "off") return false;
+  return prefersReducedMotion();
+}
+// "Instant" animation speed skips the JS-timed animations (page flip, pen circle).
+function animInstant() { return settings.animSpeed === "instant"; }
+// Scale factor for JS animation delays: instant→0, fast→0.5, normal→1.
+function animScale() { return settings.animSpeed === "instant" ? 0 : settings.animSpeed === "fast" ? 0.5 : 1; }
+// The active album→colour palette (colour-blind variant when that setting is on).
+function albumPalette() { return settings.colorBlindAlbums ? CB_ALBUM_COLORS : ALBUM_COLORS; }
+function albumColor(name) { return albumPalette()[name] || null; }
+
+// Push the settings that are realised via CSS onto <body> data-attributes, and
+// keep the easter-egg / motion code paths reading the live `settings` object.
+function applySettings() {
+  const body = document.body;
+  const rm = settings.reduceMotion === "on" ? "on"
+           : settings.reduceMotion === "off" ? "off"
+           : (prefersReducedMotion() ? "on" : "off");
+  body.setAttribute("data-reduce-motion", rm);
+  body.setAttribute("data-anim-speed", settings.animSpeed || "normal");
+  if (settings.highContrast) body.setAttribute("data-contrast", "high");
+  else body.removeAttribute("data-contrast");
+}
+// Remember the last-played type so defaultGameType:"last" can restore it next launch.
+function rememberGameType(t) {
+  if (settings.lastGameType !== t) { settings.lastGameType = t; saveSettings(settings); }
+}
 
 /* ---------- DOM ---------- */
 const screens = {
@@ -203,12 +241,12 @@ function lifetimeStatsHTML() {
   const albumOrder = [];
   for (const s of allSongs) if (s.album && !albumOrder.includes(s.album)) albumOrder.push(s.album);
   const segs = albumOrder.filter((a) => byAlbum[a]).map((a) =>
-    `<div class="cat-seg" style="width:${(byAlbum[a] / total) * 100}%;background:${ALBUM_COLORS[a] || "var(--ink-soft)"}" title="${escapeHtml(a)}: ${byAlbum[a]}"></div>`
+    `<div class="cat-seg" style="width:${(byAlbum[a] / total) * 100}%;background:${albumColor(a) || "var(--ink-soft)"}" title="${escapeHtml(a)}: ${byAlbum[a]}"></div>`
   ).join("");
 
-  const songColor = favSong ? (ALBUM_COLORS[albumOfTitle(favSong.key)] || "var(--bead)") : "var(--bead)";
+  const songColor = favSong ? (albumColor(albumOfTitle(favSong.key)) || "var(--bead)") : "var(--bead)";
   const songAlbum = favSong ? albumOfTitle(favSong.key) : null;
-  const albColor = favAlbum ? (ALBUM_COLORS[favAlbum.key] || "var(--ink-soft)") : "var(--ink-soft)";
+  const albColor = favAlbum ? (albumColor(favAlbum.key) || "var(--ink-soft)") : "var(--ink-soft)";
 
   const meter = `
     <div class="cat-meter">
@@ -418,7 +456,9 @@ function renderPodium(el, list, youName) {
 let justEarnedIndex = -1; // bead that just became a charm, for the swing-in
 
 function renderBracelet() {
-  const opts = gameType === "infinite" ? { total: Math.max(round, 1), letterBead: false } : undefined;
+  const opts = gameType === "infinite"
+    ? { total: Math.max(round, 1), letterBead: false, colors: albumPalette() }
+    : { colors: albumPalette() };
   $("bracelet").innerHTML = buildBraceletSVG(roundResults, round, justEarnedIndex, roundAlbums, opts);
   $("charmCount").textContent = roundResults.filter(Boolean).length;
   $("pageNum").textContent = gameType === "infinite"
@@ -541,9 +581,10 @@ function updateBlurb() {
 function updateTagline() {
   const el = $("tagline");
   if (!el) return;
+  const clock = currentMode.seconds > 0 ? `${currentMode.seconds} seconds each` : "no timer";
   el.textContent = gameType === "infinite"
-    ? `endless pages · ${currentMode.seconds} seconds each`
-    : `${TOTAL_ROUNDS} pages · ${currentMode.seconds} seconds each`;
+    ? `endless pages · ${clock}`
+    : `${TOTAL_ROUNDS} pages · ${clock}`;
 }
 function renderModePicker() {
   const tabs = $("modeTabs");
@@ -577,8 +618,10 @@ function renderVariantPicker() {
 function renderStartPickers() {
   gameType = gameType === "infinite" ? "infinite" : "classic";
   // A daily game forces currentMode to Normal without persisting; restore the
-  // player's saved preference so the difficulty picker reflects their choice.
-  currentMode = loadMode();
+  // player's preference (a fixed default-difficulty setting, else their last pick).
+  currentMode = (settings.defaultDifficulty !== "last" && MODES[settings.defaultDifficulty])
+    ? MODES[settings.defaultDifficulty]
+    : loadMode();
   renderTypePicker();
   renderVariantPicker();
   $("variantRow").style.display = gameType === "infinite" ? "" : "none";
@@ -651,6 +694,7 @@ function applyInputHints() {
 
 function startGame() {
   gameType = "classic";
+  rememberGameType("classic");
   resetRunState();
   applyInputHints();
   updateTagline();
@@ -665,6 +709,7 @@ function startGame() {
 function startInfinite(variant, opts) {
   infiniteVariant = variant === "sudden" ? "sudden" : "3lives";
   gameType = "infinite";
+  rememberGameType("infinite");
   lives = startingLives();
   const carry = !!(opts && opts.carry);
   if (!carry) resetRunState();
@@ -706,15 +751,15 @@ function showDailyResult(data, dateStr) {
   roundAlbums = data.roundAlbums;
   score = data.score;
   showScreen("results");
-  $("resultBracelet").innerHTML = buildBraceletSVG(roundResults, 0, -1, roundAlbums);
-  $("finalScore").textContent = score;
+  $("resultBracelet").innerHTML = buildBraceletSVG(roundResults, 0, -1, roundAlbums, { colors: albumPalette() });
+  $("finalScore").textContent = settings.hideDailyScore ? "?" : score;
   $("finalSub").textContent = "out of " + TOTAL_ROUNDS;
   $("keepGoingBtn").style.display = "none";
   $("resultAchievements").style.display = "none";
   $("namePrompt").style.display = "none";
   renderPodium($("resultPodium"), sortHs(loadDailyBoard(dateStr)), null);
   document.querySelector("#screen-results .podium-title").textContent = "Today's Board";
-  renderShareButton(dateStr);
+  renderShareButton(dateStr, settings.hideDailyScore);
 }
 
 // Wordle-style copyable summary built from the per-round results.
@@ -725,14 +770,16 @@ function buildShareString(dateStr) {
   return `Swift Song Association 🎵\nDaily Challenge · ${label}\n${emoji}\n${score}/${TOTAL_ROUNDS}`;
 }
 
-function renderShareButton(dateStr) {
+function renderShareButton(dateStr, hidden) {
   const existing = $("shareBtn");
   if (existing) existing.remove();
   const btn = document.createElement("button");
   btn.id = "shareBtn";
   btn.className = "btn-ghost daily-share-btn";
-  btn.textContent = "Copy result";
+  const label = hidden ? "Reveal & copy" : "Copy result";
+  btn.textContent = label;
   btn.addEventListener("click", async () => {
+    if (hidden) $("finalScore").textContent = score;   // reveal the held-back score
     const text = buildShareString(dateStr);
     try {
       await navigator.clipboard.writeText(text);
@@ -746,7 +793,7 @@ function renderShareButton(dateStr) {
       ta.remove();
     }
     btn.textContent = "Copied!";
-    setTimeout(() => { btn.textContent = "Copy result"; }, 2000);
+    setTimeout(() => { btn.textContent = "Copied ✓"; }, 2000);
   });
   const braceletEl = $("resultBracelet");
   braceletEl.parentNode.insertBefore(btn, braceletEl.nextSibling);
@@ -795,8 +842,9 @@ function pickWord() {
 
 function nextRound() {
   if (isGameOver()) { endGame(); return; }
-  // First round (from the start screen) and reduced motion advance instantly.
-  if (round === 0 || prefersReducedMotion()) {
+  // First round (from the start screen) advances instantly; so do reduced motion,
+  // "instant" animation speed, and the page-turn setting being off.
+  if (round === 0 || motionReduced() || animInstant() || !settings.pageTurn) {
     advanceRound();
     startTimer();
     return;
@@ -831,7 +879,7 @@ function nextRound() {
   // Primary trigger is a timeout matched to the 0.5s flip (CSS .page-flip-sheet),
   // with animationend as a fast-path; whichever lands first wins.
   flip.addEventListener("animationend", (e) => { if (e.target === flip) finish(); });
-  setTimeout(finish, 500);
+  setTimeout(finish, 500 * animScale() || 250);
 }
 
 // How rare the round's word is, from its number of valid answers. Returns a
@@ -879,15 +927,25 @@ function advanceRound() {
   // only starts once the flip finishes, so no time is lost during the animation.
 }
 
-function startTimer() {
+// `resume` (seconds remaining) restarts a paused round mid-count instead of from
+// the full clock — used when closing the settings modal during play.
+function startTimer(resume) {
   clearTimer();
-  timerStart = performance.now();
   const fill = $("timerFill");
   const label = $("timerLabel");
   const total = currentMode.seconds;
-  fill.style.width = "100%";
+  const wrap = document.querySelector(".timer-wrap");
+  // Relaxed mode (seconds <= 0): no clock at all — hide the bar and never time out.
+  if (!(total > 0)) {
+    if (wrap) wrap.style.display = "none";
+    return;
+  }
+  if (wrap) wrap.style.display = "";
+  const begin = (resume != null && resume > 0 && resume < total) ? resume : total;
+  timerStart = performance.now() - (total - begin) * 1000;
+  fill.style.width = (begin / total * 100) + "%";
   fill.classList.remove("low");
-  label.textContent = total.toFixed(1);
+  label.textContent = begin.toFixed(1);
 
   timerId = setInterval(() => {
     const elapsed = (performance.now() - timerStart) / 1000;
@@ -911,9 +969,11 @@ function clearTimer() {
 
 /* ---------- Timer tension ---------- */
 function setTension(t) {
-  document.body.style.setProperty("--tension", String(t));
+  // Timer-tension setting off → keep the vignette/tremor at rest.
+  document.body.style.setProperty("--tension", settings.timerTension ? String(t) : "0");
 }
 function updateTally(remaining) {
+  if (!settings.timerTension) return;
   const el = $("marginTally");
   if (remaining > 0 && remaining <= 3) {
     const n = String(Math.ceil(remaining));
@@ -1068,17 +1128,21 @@ function submitAnswer(song, isTimeout) {
 
   if (lyricMatch) lyricLineAnswers++;   // recalled a lyric line (for You Knew The Line)
 
-  // achievements: timing + streak signals (mid-game unlocks toast immediately)
-  const elapsed = (performance.now() - timerStart) / 1000;
-  const remaining = currentMode.seconds - elapsed;
-  gameTimeSum += Math.min(elapsed, currentMode.seconds);   // for Perfect Storm
-  if (remaining <= 3) gameHitRedZone = true;               // for Peace (timeouts count too)
+  // achievements: timing + streak signals (mid-game unlocks toast immediately).
+  // Timing signals only apply to timed modes — Relaxed has no clock, so they're skipped.
+  const timed = currentMode.seconds > 0;
   if (isTimeout) gameTimeouts++;
-  if (correct) {
-    if (elapsed < 2) unlock("speak-now");
-    if (round === 1 && elapsed < 2) unlock("ready-for-it");
-    if (remaining < 1) unlock("getaway-car");
-    if (remaining < 0.5) unlock("i-did-something-bad");
+  if (timed) {
+    const elapsed = (performance.now() - timerStart) / 1000;
+    const remaining = currentMode.seconds - elapsed;
+    gameTimeSum += Math.min(elapsed, currentMode.seconds);   // for Perfect Storm
+    if (remaining <= 3) gameHitRedZone = true;               // for Peace (timeouts count too)
+    if (correct) {
+      if (elapsed < 2) unlock("speak-now");
+      if (round === 1 && elapsed < 2) unlock("ready-for-it");
+      if (remaining < 1) unlock("getaway-car");
+      if (remaining < 0.5) unlock("i-did-something-bad");
+    }
   }
   gameMaxStreak = Math.max(gameMaxStreak, correctStreak);
   if (correctStreak >= 5) unlock("bejeweled");
@@ -1087,7 +1151,7 @@ function submitAnswer(song, isTimeout) {
   // Circle the player's pick before revealing the verdict (skipped on timeout / reduced
   // motion, and on a lyric answer — the circle re-draws a title the player never typed).
   const reveal = () => (correct ? showCorrectFeedback(song, lyricMatch) : showWrongFeedback(song, isTimeout));
-  if (song && !isTimeout && !lyricMatch && !prefersReducedMotion()) {
+  if (song && !isTimeout && !lyricMatch && settings.penCircle && !motionReduced() && !animInstant()) {
     showCircledChoice(song, reveal);
   } else {
     reveal();
@@ -1103,12 +1167,12 @@ function showCircledChoice(song, done) {
         `<path class="cc-ring" pathLength="1" d="M7,25 C5,12 31,5 53,6 C80,7 96,14 94,27 C92,40 63,43 43,42 C20,41 8,38 7,25"/>` +
       `</svg>` +
     `</span></div>`;
-  setTimeout(done, 640);
+  setTimeout(done, 640 * animScale());
 }
 
 function lyricCard(song, word, isWrong, lineOverride) {
   const line = lineOverride != null ? lineOverride : extractLineWithWord(song.lyrics, word);
-  const color = ALBUM_COLORS[song.album] || "var(--ink-soft)";
+  const color = albumColor(song.album) || "var(--ink-soft)";
   const albumLabel = song.album ? `<span class="album-tag" style="--album-color:${color}">${escapeHtml(song.album)}</span>` : "";
   const cls = isWrong ? " wrong-card" : "";
   return `<div class="lyric-card${cls}" style="--album-color:${color}">
@@ -1124,21 +1188,25 @@ function showCorrectFeedback(song, lyricMatch) {
   const card = lyricMatch
     ? lyricCard(song, currentWord, false, lyricMatch.line)
     : lyricCard(song, currentWord, false);
+  // Auto-advance setting on → a countdown + skip; off → a plain "next page" button.
+  const auto = settings.autoAdvance;
+  const advanceUI = auto
+    ? `<div class="countdown">next page in <b id="cd">${settings.countdownSecs}</b></div><button id="skipBtn" class="countdown-skip">skip →</button>`
+    : `<button id="continueBtn" class="btn-ghost">next page →</button>`;
   fb.innerHTML = `
     <div class="banner good">${banner}</div>
     ${card}
-    <div class="countdown">next page in <b id="cd">5</b></div>
-    <button id="skipBtn" class="countdown-skip">skip →</button>`;
-  $("skipBtn").addEventListener("click", advanceFromFeedback);
+    ${advanceUI}`;
+  $(auto ? "skipBtn" : "continueBtn").addEventListener("click", advanceFromFeedback);
   celebrateCorrect(correctStreak);
-  runCountdown();
+  if (auto) runCountdown();
 }
 
 function showWrongFeedback(song, isTimeout) {
   const fb = $("feedback");
   const reason = isTimeout ? "the page ran out" : "not this verse";
-  // Ultra offers no help — examples is 0, so skip the cards and the label.
-  const n = currentMode.examples;
+  // Ultra offers no help (examples 0); the "show examples" setting can also force 0.
+  const n = settings.showExamples ? currentMode.examples : 0;
   let help = "";
   if (n > 0) {
     const examples = shuffle(currentSongs.slice()).slice(0, n);
@@ -1162,10 +1230,11 @@ function advanceFromFeedback() {
 }
 
 function runCountdown() {
-  let n = 5;
+  let n = settings.countdownSecs;
   const el = $("cd");
   if (countdownId) clearInterval(countdownId);
   countdownId = setInterval(() => {
+    if ($("settingsModal").classList.contains("open")) return;   // paused while settings is open
     n--;
     if (n <= 0) {
       clearInterval(countdownId);
@@ -1209,6 +1278,7 @@ function endGame() {
   if (typesPlayed.classic && typesPlayed.infinite && typesPlayed.daily) unlock("hits-different");
 
   // end-of-game achievements (daily counts toward the game-quality ones; infinite deferred)
+  const timedMode = currentMode.seconds > 0;   // Relaxed (no clock) skips timing achievements
   if (!isInfinite) {
     if (score === TOTAL_ROUNDS) unlock("mastermind");
     if (score === TOTAL_ROUNDS - 1) unlock("champagne-problems");
@@ -1224,8 +1294,8 @@ function endGame() {
     if (score === TOTAL_ROUNDS && (currentMode.id === "hard" || currentMode.id === "ultra")) unlock("long-live");
     if (longestAlbumRun(roundResults, roundAlbums) >= 3) unlock("branch-out");
     if (distinctStudioAlbumsHit(roundResults, roundAlbums) >= STUDIO_ALBUMS.length - 1) unlock("eras-tour");
-    if (!gameHitRedZone) unlock("peace");
-    if (gameTimeSum / TOTAL_ROUNDS < 3) unlock("perfect-storm");
+    if (timedMode && !gameHitRedZone) unlock("peace");
+    if (timedMode && gameTimeSum / TOTAL_ROUNDS < 3) unlock("perfect-storm");
     if (gameTimeouts === TOTAL_ROUNDS) unlock("i-cant-see-you");
   }
   if (isInfinite) {
@@ -1245,8 +1315,8 @@ function endGame() {
 
   showScreen("results");
   const keepsakeOpts = isInfinite
-    ? { total: Math.max(roundsSurvived, 1), letterBead: false }
-    : undefined;
+    ? { total: Math.max(roundsSurvived, 1), letterBead: false, colors: albumPalette() }
+    : { colors: albumPalette() };
   $("resultBracelet").innerHTML = buildBraceletSVG(roundResults, 0, -1, roundAlbums, keepsakeOpts);
   $("finalScore").textContent = boardScore;
   $("finalSub").textContent = isInfinite ? "rounds · " + score + " correct" : "out of " + TOTAL_ROUNDS;
@@ -1264,8 +1334,9 @@ function endGame() {
     if (streak.current >= 7) unlock("story-of-us");
     if (streak.current >= 30) unlock("evermore");
     dailyRng = null;   // back to Math.random() for any subsequent Classic game
+    if (settings.hideDailyScore) $("finalScore").textContent = "?";
     renderDailyBoard(dateStr);
-    renderShareButton(dateStr);
+    renderShareButton(dateStr, settings.hideDailyScore);
     return;
   }
 
@@ -1367,7 +1438,7 @@ function runRoundEggs() {
   // at most one margin doodle / note, by priority
   if (gameType === "classic" && round === 5) {
     addDoodle("fence", "corner-br", 76, 64);
-  } else if (era === "graphite" && chance(0.5)) {
+  } else if (era === "graphite" && settings.snake && chance(0.5)) {
     slitherSnake();
   } else if (midnightHour) {
     addMarginNote("meet me at midnight");
@@ -1416,7 +1487,7 @@ function stopSnake() {
 function slitherSnake() {
   const card = $("screen-game");
   if (!card) return;
-  if (prefersReducedMotion()) { addDoodle("snake", "corner-br", 84, 60); return; }
+  if (motionReduced()) { addDoodle("snake", "corner-br", 84, 60); return; }
   stopSnake();
 
   const W = card.clientWidth || 520;
@@ -1557,7 +1628,7 @@ function slitherSnake() {
 // A burst of sparkles on a correct answer — the longer the streak, the
 // bigger and more plentiful they get.
 function celebrateCorrect(streak) {
-  if (prefersReducedMotion()) return;
+  if (motionReduced() || !settings.sparkles || settings.reducedFlashing) return;
   const card = $("screen-game");
   if (!card) return;
   const count = Math.min(5 + streak * 2, 16);
@@ -1588,7 +1659,7 @@ function revealSecret13() {
 }
 
 function celebratePerfect() {
-  if (prefersReducedMotion()) return;
+  if (motionReduced() || settings.reducedFlashing) return;
   const card = $("screen-results");
   if (!card) return;
   const layer = document.createElement("div");
@@ -1620,6 +1691,7 @@ function wireInput() {
     handleTypingEggs(input.value);
   });
   input.addEventListener("keydown", (e) => {
+    if ($("settingsModal").classList.contains("open")) return;   // modal is captive
     if (e.key === "Enter") {
       e.preventDefault();
       e.stopPropagation();        // this keypress submits — don't let it also bubble to the page-advance handler
@@ -1644,12 +1716,176 @@ function wireInput() {
   document.addEventListener("keydown", (e) => {
     if (e.key !== "Enter") return;
     if (!screens.game.classList.contains("active") || !roundLocked) return;
+    // Settings modal is captive — don't let Enter advance the page behind it.
+    if ($("settingsModal").classList.contains("open")) return;
     // Only once a verdict is actually on the page — not during the pen-circle
     // animation between submitting and the feedback appearing.
     if (!$("cd") && !$("continueBtn")) return;
+    // "Enter advances on a miss" off → require a click on the miss/answer screen.
+    if (!settings.enterOnMiss && document.querySelector("#feedback .banner.bad")) return;
     e.preventDefault();
     advanceFromFeedback();
   });
+}
+
+/* ---------- Settings modal ---------- */
+// Control builders — all keyed by a settings field; a change re-renders the body.
+function setToggleHTML(key, name, desc) {
+  return `<div class="set-row"><div class="set-label"><span class="set-name">${name}</span>` +
+    (desc ? `<span class="set-desc">${desc}</span>` : "") + `</div>` +
+    `<div class="set-control"><button type="button" class="set-toggle" data-toggle="${key}" aria-pressed="${!!settings[key]}" aria-label="${name}"></button></div></div>`;
+}
+function setChoiceHTML(key, name, desc, options) {
+  const tabs = options.map((o) =>
+    `<button type="button" class="mode-tab${o.val === settings[key] ? " active" : ""}" data-choice="${key}" data-val="${o.val}">${o.label}</button>`
+  ).join("");
+  return `<div class="set-row"><div class="set-label"><span class="set-name">${name}</span>` +
+    (desc ? `<span class="set-desc">${desc}</span>` : "") + `</div>` +
+    `<div class="set-control set-choice">${tabs}</div></div>`;
+}
+function setSliderHTML() {
+  return `<div class="set-row"><div class="set-label"><span class="set-name">Countdown length</span>` +
+    `<span class="set-desc">seconds before the next page auto-turns</span></div>` +
+    `<div class="set-control set-slider-row"><input type="range" id="countdownSlider" class="set-slider" min="3" max="8" step="1" value="${settings.countdownSecs}">` +
+    `<span class="set-slider-val" id="countdownVal">${settings.countdownSecs}s</span></div></div>`;
+}
+function setSection(title, inner) { return `<div class="set-section"><p class="set-section-title">${title}</p>${inner}</div>`; }
+
+function renderSettingsBody() {
+  const diffOpts = [{ val: "last", label: "Last" }].concat(MODE_ORDER.map((m) => ({ val: m, label: MODES[m].label })));
+  const body = $("settingsBody");
+  body.innerHTML =
+    setSection("Motion &amp; animation",
+      setChoiceHTML("reduceMotion", "Reduce motion", "Auto follows your system", [{ val: "auto", label: "Auto" }, { val: "on", label: "On" }, { val: "off", label: "Off" }]) +
+      setChoiceHTML("animSpeed", "Animation speed", "", [{ val: "normal", label: "Normal" }, { val: "fast", label: "Fast" }, { val: "instant", label: "Instant" }]) +
+      setToggleHTML("pageTurn", "Page-turn animation", "the paper flip between rounds") +
+      setToggleHTML("penCircle", "Pen-circle confirm", "circles your pick before the verdict") +
+      setToggleHTML("sparkles", "Sparkles", "a burst on a correct answer") +
+      setToggleHTML("timerTension", "Timer tension", "vignette + tremor as the clock runs low") +
+      setToggleHTML("snake", "Slithering snake", "the reputation-era easter egg") +
+      setToggleHTML("reducedFlashing", "Reduced flashing", "also mutes the perfect-game star shower")
+    ) +
+    setSection("Gameplay",
+      setToggleHTML("autoAdvance", "Auto-advance after a correct answer", "or wait and tap “next page”") +
+      setSliderHTML() +
+      setToggleHTML("enterOnMiss", "Enter advances on a miss", "press Enter to leave the answer screen") +
+      setToggleHTML("showExamples", "Show example songs after a miss", "") +
+      setChoiceHTML("defaultGameType", "Default game type", "on launch", [{ val: "last", label: "Last" }, { val: "classic", label: "Classic" }, { val: "infinite", label: "Infinite" }]) +
+      setChoiceHTML("defaultDifficulty", "Default difficulty", "on launch", diffOpts)
+    ) +
+    setSection("Display &amp; accessibility",
+      setToggleHTML("highContrast", "High contrast", "darker ink, whiter paper") +
+      setToggleHTML("colorBlindAlbums", "Colour-blind album colours", "a more distinguishable palette") +
+      setToggleHTML("hideDailyScore", "Hide daily score until reveal", "")
+    ) +
+    setSection("Sound",
+      setToggleHTML("sound", "Sound effects", "") +
+      `<p class="set-note">no sounds yet — this just saves your preference.</p>`
+    ) +
+    setSection("Data",
+      `<div class="set-actions"><button class="btn-ghost" data-action="export">Export backup</button>` +
+      `<button class="btn-ghost" data-action="import">Import backup</button></div>`
+    ) +
+    `<div class="set-danger"><p class="set-section-title">danger zone — these can’t be undone</p>` +
+      `<div class="set-danger-grid">` +
+        `<button class="danger-btn" data-danger="hof">Reset Hall of Fame</button>` +
+        `<button class="danger-btn" data-danger="stats">Reset stats &amp; streaks</button>` +
+        `<button class="danger-btn" data-danger="ach">Reset achievements</button>` +
+        `<button class="danger-btn" data-danger="tally">Reset catalogue</button>` +
+        `<button class="danger-btn" data-danger="daily">Reset daily</button>` +
+        `<button class="danger-btn wipe" data-danger="all">Clear everything</button>` +
+      `</div></div>` +
+    setSection("About",
+      `<div class="set-about">` +
+      `<p>Swift to the Song Association — a songwriter’s-notebook word game. Fan-made and unofficial; lyrics belong to their writers.</p>` +
+      `<p><a href="https://github.com/swiftothecore/swift-association-testing" target="_blank" rel="noopener">View the project on GitHub →</a></p>` +
+      `</div>`
+    );
+  wireSettingsBody();
+}
+
+let dangerTimer = null;
+function wireSettingsBody() {
+  const body = $("settingsBody");
+  body.querySelectorAll("[data-toggle]").forEach((b) => b.addEventListener("click", () => {
+    const k = b.dataset.toggle;
+    settings[k] = !settings[k];
+    saveSettings(settings); applySettings(); renderSettingsBody();
+  }));
+  body.querySelectorAll("[data-choice]").forEach((b) => b.addEventListener("click", () => {
+    settings[b.dataset.choice] = b.dataset.val;
+    saveSettings(settings); applySettings(); renderSettingsBody();
+  }));
+  const slider = $("countdownSlider");
+  if (slider) {
+    slider.addEventListener("input", () => { $("countdownVal").textContent = slider.value + "s"; });
+    slider.addEventListener("change", () => { settings.countdownSecs = parseInt(slider.value, 10) || 5; saveSettings(settings); });
+  }
+  body.querySelectorAll("[data-action]").forEach((b) => b.addEventListener("click", () => {
+    if (b.dataset.action === "export") exportBackup();
+    else if (b.dataset.action === "import") $("importFile").click();
+  }));
+  body.querySelectorAll("[data-danger]").forEach((b) => b.addEventListener("click", () => armDanger(b)));
+}
+
+// Each danger button needs a second confirming tap within 3s before it fires.
+function armDanger(btn) {
+  if (btn.classList.contains("armed")) { clearTimeout(dangerTimer); performDanger(btn.dataset.danger); return; }
+  $("settingsBody").querySelectorAll(".danger-btn.armed").forEach((b) => { b.classList.remove("armed"); b.textContent = b.dataset.label || b.textContent; });
+  btn.dataset.label = btn.textContent;
+  btn.classList.add("armed");
+  btn.textContent = "tap again to confirm";
+  dangerTimer = setTimeout(() => { btn.classList.remove("armed"); btn.textContent = btn.dataset.label; }, 3000);
+}
+function performDanger(which) {
+  if (which === "all") { clearAllData(); location.reload(); return; }
+  if (which === "hof") resetHallOfFame();
+  else if (which === "stats") resetStatsAll();
+  else if (which === "ach") { resetAchievements(); earnedAchievements = loadAchievements(); }
+  else if (which === "tally") resetTally();
+  else if (which === "daily") resetDaily();
+  refreshStartBoard();
+  renderSettingsBody();   // clears armed states and re-reads any reset data
+}
+
+function exportBackup() {
+  const blob = new Blob([JSON.stringify(exportData(), null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "swift-association-backup-" + todayKey() + ".json";
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+// Pause the round timer while the modal is open; resume from where it left off.
+function pauseForSettings() {
+  pausedRemaining = null;
+  if (timerId && screens.game.classList.contains("active") && !roundLocked && currentMode.seconds > 0) {
+    const elapsed = (performance.now() - timerStart) / 1000;
+    pausedRemaining = Math.max(0.1, currentMode.seconds - elapsed);
+    clearTimer();
+  }
+}
+function resumeFromSettings() {
+  if (pausedRemaining == null) return;
+  const r = pausedRemaining;
+  pausedRemaining = null;
+  if (screens.game.classList.contains("active") && !roundLocked && currentMode.seconds > 0) startTimer(r);
+}
+function openSettings() {
+  pauseForSettings();
+  renderSettingsBody();
+  const m = $("settingsModal");
+  m.classList.add("open");
+  m.setAttribute("aria-hidden", "false");
+}
+function closeSettings() {
+  const m = $("settingsModal");
+  if (!m.classList.contains("open")) return;
+  m.classList.remove("open");
+  m.setAttribute("aria-hidden", "true");
+  resumeFromSettings();
 }
 
 /* ---------- Init ---------- */
@@ -1657,8 +1893,14 @@ async function init() {
   showScreen("start");
   applyEra("gold");
   earnedAchievements = loadAchievements();
+  settings = loadSettings();
+  applySettings();
   console.log("%c♡ written in the margins · 13 pages of you ♡", "font-size:14px;color:#a9791f;font-family:cursive;");
   currentMode = loadMode();
+  // Default game type on launch (or restore the last one played).
+  gameType = settings.defaultGameType === "infinite" ? "infinite"
+           : settings.defaultGameType === "classic" ? "classic"
+           : (settings.lastGameType === "infinite" ? "infinite" : "classic");
   renderStartPickers();
   const titleEl = document.querySelector("header.title h1");
   if (titleEl) titleEl.addEventListener("click", () => {
@@ -1684,6 +1926,28 @@ async function init() {
   });
   // Roll a finished classic run straight into endless play, carrying the score.
   $("keepGoingBtn").addEventListener("click", () => startInfinite("3lives", { carry: true }));
+
+  // Settings modal — openable from any screen (gear), closed by ✕, scrim, or ESC.
+  $("settingsGear").addEventListener("click", openSettings);
+  $("settingsCloseBtn").addEventListener("click", closeSettings);
+  $("settingsScrim").addEventListener("click", closeSettings);
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && $("settingsModal").classList.contains("open")) closeSettings();
+  });
+  $("importFile").addEventListener("change", (e) => {
+    const file = e.target.files && e.target.files[0];
+    e.target.value = "";   // allow re-picking the same file later
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      let n = 0;
+      try { n = importData(JSON.parse(reader.result)); }
+      catch (err) { alert("Couldn't read that backup file."); return; }
+      if (n > 0) { alert("Restored " + n + " item(s). Reloading…"); location.reload(); }
+      else alert("Nothing to restore from that file.");
+    };
+    reader.readAsText(file);
+  });
   wireInput();
 
   try {

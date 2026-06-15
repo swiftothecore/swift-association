@@ -4,6 +4,7 @@
 import {
   HS_KEY, STATS_KEY, ACH_KEY, DIFF_KEY,
   DAILY_KEY, DAILY_BOARD_KEY, DAILY_STREAK_KEY, TYPES_KEY, TALLY_KEY,
+  SETTINGS_KEY, APP_PREFIX, DEFAULT_SETTINGS,
   MODES, MODE_ORDER, DEFAULT_PODIUM, DAILY_DEFAULT_PODIUM,
 } from "./config.js";
 
@@ -209,3 +210,65 @@ export function effectiveDailyStreak(today) {
   const alive = d.lastPlayed === today || d.lastPlayed === yesterdayOf(today);
   return { current: alive ? d.current : 0, best: d.best, lastPlayed: d.lastPlayed, playedToday: d.lastPlayed === today };
 }
+
+/* ---------- Settings ---------- */
+// DEFAULT_SETTINGS is merged under the stored object, so a newly-added default
+// key fills in for existing players without a migration step.
+export function loadSettings() {
+  try {
+    const raw = localStorage.getItem(SETTINGS_KEY);
+    if (raw) { const o = JSON.parse(raw); if (o && typeof o === "object") return { ...DEFAULT_SETTINGS, ...o }; }
+  } catch (e) { /* ignore */ }
+  return { ...DEFAULT_SETTINGS };
+}
+export function saveSettings(s) {
+  try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(s)); } catch (e) { /* ignore */ }
+}
+
+/* ---------- Data management (export / import / reset) ---------- */
+// Every key this app writes lives under APP_PREFIX; these helpers operate on that
+// namespace only, so a backup never drags in unrelated localStorage.
+function appKeys() {
+  const keys = [];
+  for (let i = 0; i < localStorage.length; i++) {
+    const k = localStorage.key(i);
+    if (k && k.startsWith(APP_PREFIX)) keys.push(k);
+  }
+  return keys;
+}
+// Remove a key family: the exact key plus any "<base>.<suffix>" variants
+// (e.g. highscores + highscores.hard + highscores.inf-3lives-easy).
+function removeByPrefix(base) {
+  for (const k of appKeys()) if (k === base || k.startsWith(base + ".")) localStorage.removeItem(k);
+}
+
+// A plain { key: rawString } snapshot of every app key, for a JSON backup.
+export function exportData() {
+  const out = {};
+  for (const k of appKeys()) out[k] = localStorage.getItem(k);
+  return out;
+}
+// Restore from such a snapshot. Only keys in the app namespace are written.
+// Returns the number of keys restored.
+export function importData(obj) {
+  if (!obj || typeof obj !== "object") return 0;
+  let n = 0;
+  for (const k in obj) {
+    if (!k.startsWith(APP_PREFIX) || typeof obj[k] !== "string") continue;
+    try { localStorage.setItem(k, obj[k]); n++; } catch (e) { /* ignore */ }
+  }
+  return n;
+}
+
+// Per-category resets (the danger zone). Each clears one family of keys.
+export function resetHallOfFame() { removeByPrefix(HS_KEY); }
+export function resetStatsAll()   { removeByPrefix(STATS_KEY); }
+export function resetAchievements() { try { localStorage.removeItem(ACH_KEY); localStorage.removeItem(TYPES_KEY); } catch (e) { /* ignore */ } }
+export function resetTally()      { try { localStorage.removeItem(TALLY_KEY); } catch (e) { /* ignore */ } }
+export function resetDaily() {
+  try { localStorage.removeItem(DAILY_STREAK_KEY); } catch (e) { /* ignore */ }
+  removeByPrefix(DAILY_KEY);
+  removeByPrefix(DAILY_BOARD_KEY);
+}
+// Wipe everything (settings included). Caller should reload afterward.
+export function clearAllData() { for (const k of appKeys()) localStorage.removeItem(k); }

@@ -14,6 +14,40 @@ export const DAILY_BOARD_KEY = "swiftSongAssociation.dailyBoard";
 export const DAILY_STREAK_KEY = "swiftSongAssociation.dailyStreak";
 export const TYPES_KEY = "swiftSongAssociation.typesPlayed";   // {classic,infinite,daily} — for "Hits Different"
 export const TALLY_KEY = "swiftSongAssociation.songTally";     // lifetime per-song/per-word tally — Favourite Song, Songs Discovered, Nemesis Word, I Hate It Here
+export const SETTINGS_KEY = "swiftSongAssociation.settings";   // user preferences (see DEFAULT_SETTINGS)
+
+// Every persisted key shares this namespace; export/import and "clear everything"
+// sweep all keys under it.
+export const APP_PREFIX = "swiftSongAssociation.";
+
+/* ---------- User settings (the settings panel) ---------- */
+// One flat record. loadSettings merges this over whatever's stored, so adding a
+// new key here gives existing players a sensible default with no migration.
+export const DEFAULT_SETTINGS = {
+  // motion & animation
+  reduceMotion: "auto",     // "auto" (follow OS) | "on" | "off"
+  animSpeed: "normal",      // "normal" | "fast" | "instant"
+  pageTurn: true,           // page-flip between rounds
+  penCircle: true,          // pen-circle confirm before the verdict
+  sparkles: true,           // sparkle burst on a correct answer
+  timerTension: true,       // vignette / word tremor / red margin tally in the final seconds
+  reducedFlashing: false,   // also suppress the perfect-game star shower
+  snake: true,              // the reputation-era slithering snake
+  // gameplay pacing
+  autoAdvance: true,        // auto-advance countdown after a correct answer
+  countdownSecs: 5,         // 3..8 — length of that countdown
+  enterOnMiss: true,        // Enter advances past the miss screen
+  showExamples: true,       // show example songs after a wrong answer
+  defaultGameType: "last",  // "last" | "classic" | "infinite"
+  defaultDifficulty: "last",// "last" | a MODES id
+  // display & accessibility
+  highContrast: false,
+  colorBlindAlbums: false,  // swap ALBUM_COLORS for a colour-blind-friendly palette
+  hideDailyScore: false,    // hide the daily score until "reveal & copy"
+  // meta
+  sound: false,             // placeholder — no audio wired yet
+  lastGameType: "classic",  // runtime memory backing defaultGameType: "last" (not shown in UI)
+};
 
 /* Difficulty modes — each just re-tunes existing levers (timer, dropdown,
    word-rarity pool, matching strictness, wrong-answer help). Gameplay code is
@@ -26,8 +60,11 @@ export const MODES = {
   // Lyric-only: no title input (lyricOnly), longer clock. You answer by typing a lyric
   // line (a few words around the prompt word are enough — the matcher is fuzzy).
   lyricist: { id: "lyricist", label: "Lyricist", seconds: 20, dropdown: false, pool: "all", strict: false, noTitle: false, examples: 3, lyricOnly: true, blurb: "20s · type a lyric line, not the title" },
+  // No-timer practice mode (seconds: 0 → startTimer takes the no-timer path). Same
+  // forgiving levers as Normal; the only difference is the clock never runs.
+  relaxed: { id: "relaxed", label: "Relaxed", seconds: 0, dropdown: true, pool: "all", strict: false, noTitle: false, examples: 3, blurb: "no timer · hints on · all words" },
 };
-export const MODE_ORDER = ["easy", "medium", "hard", "ultra", "lyricist"];
+export const MODE_ORDER = ["easy", "medium", "hard", "ultra", "lyricist", "relaxed"];
 
 export const DEFAULT_PODIUM = [
   { name: "Sabrina Carpenter", score: 13 },
@@ -75,6 +112,23 @@ export const ALBUM_COLORS = {
   "Midnights":                        "#3d4f8a",
   "The Tortured Poets Department":    "#b39a7c",
   "The Life of a Showgirl":          "#e07830",
+};
+// A colour-blind-friendly alternative (Okabe-Ito / Paul-Tol hues + spread lightness)
+// so the 12 albums stay distinguishable for deutan/protan/tritan vision. Same keys
+// as ALBUM_COLORS; swapped in when the "colour-blind album colours" setting is on.
+export const CB_ALBUM_COLORS = {
+  "Taylor Swift":                     "#0072b2",  // blue
+  "Fearless":                         "#e69f00",  // orange
+  "Speak Now":                        "#cc79a7",  // reddish purple
+  "Red":                              "#d55e00",  // vermillion
+  "1989":                             "#56b4e9",  // sky blue
+  "reputation":                       "#333333",  // near-black
+  "Lover":                            "#e78ac3",  // pink
+  "folklore":                         "#999999",  // grey
+  "evermore":                         "#8c5a2b",  // brown
+  "Midnights":                        "#332288",  // indigo
+  "The Tortured Poets Department":    "#44aa99",  // teal
+  "The Life of a Showgirl":           "#ddcc77",  // sand
 };
 
 // Extra accepted spellings for titles whose forgiving forms normalizeTitle can't

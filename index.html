@@ -125,6 +125,23 @@
   </div>
 </div>
 <div id="toastLayer" class="toast-layer" aria-live="polite"></div>
+<button id="settingsGear" class="settings-gear" aria-label="Settings" title="Settings">
+  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 8.5 a3.5 3.5 0 1 0 0 7 a3.5 3.5 0 0 0 0 -7 Z M20.3 13.6 l1.5 1.2 -1.8 3.1 -1.9 -0.6 a6.7 6.7 0 0 1 -1.6 0.9 l-0.4 1.9 H10.9 l-0.4 -1.9 a6.7 6.7 0 0 1 -1.6 -0.9 l-1.9 0.6 -1.8 -3.1 1.5 -1.2 a6.8 6.8 0 0 1 0 -1.9 L3.7 10.4 5.5 7.3 7.4 7.9 a6.7 6.7 0 0 1 1.6 -0.9 L9.4 5.1 h3.2 l0.4 1.9 a6.7 6.7 0 0 1 1.6 0.9 l1.9 -0.6 1.8 3.1 -1.5 1.2 a6.8 6.8 0 0 1 0 1.9 Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
+</button>
+
+<!-- SETTINGS MODAL (openable from any screen) -->
+<div id="settingsModal" class="settings-modal" aria-hidden="true">
+  <div class="settings-scrim" id="settingsScrim"></div>
+  <div class="settings-card card" role="dialog" aria-modal="true" aria-label="Settings">
+    <div class="settings-nav">
+      <span class="settings-title">Settings</span>
+      <button id="settingsCloseBtn" class="btn-link" aria-label="Close settings">✕ close</button>
+    </div>
+    <div id="settingsBody"></div>
+  </div>
+</div>
+<input id="importFile" type="file" accept="application/json,.json" style="display:none;" />
+
 <div class="app">
   <header class="title">
     <h1>Swift to the Song Association</h1>

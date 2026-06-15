@@ -879,24 +879,155 @@
   .daily-share-btn { display: block; width: 100%; margin: 14px 0 10px; padding: 11px; font-size: 13px; letter-spacing: 1px; color: var(--ink-accent); border-color: var(--ink-accent); }
   .daily-share-btn:hover { background: var(--highlighter); border-style: solid; color: var(--ink); }
 
-  @media (prefers-reduced-motion: reduce) {
-    .screen.active { animation: none; }
-    .b-halo, .charm-dangle, .charm-dangle.fresh { animation: none; }
-    .word-wrap { animation: none; }
-    .margin-tally.show { animation: none; opacity: 0.9; }
-    .life-mark.spent::after { animation: none; }
-    .rarity-stamp.show { animation: none; opacity: 0.58; transform: rotate(7deg) scale(1); }
-    .cc-ring { animation: none; stroke-dashoffset: 0; }
-    .page-flip-sheet { display: none; }
-    .card, .timer-fill, .word::before, .histogram-bar { transition: none; }
-    /* easter eggs: show statically, no motion */
-    .doodle, .doodle-note { animation: none; opacity: 0.5; }
-    .doodle.snake .ink { animation: none; stroke-dashoffset: 0; }
-    .secret-13 { animation: none; opacity: 1; }
-    .blue-wash { animation: none; opacity: 0.16; }
-    .sparkle, .star-shower { display: none; }
-    .toast, .toast.leaving { animation: none; }
-    .desk-steam path, .desk-sway { animation: none; }
-    .desk-steam { opacity: 0.3; }
-    /* vignette stays (it's a colour/state change, not motion) */
+  /* Reduced motion is attribute-driven so the in-app "reduce motion" setting can
+     OVERRIDE the OS preference (force ON beats a media query; force OFF restores
+     motion). app.js's applySettings() sets data-reduce-motion to the effective
+     value: the setting when explicit, else the OS preference. */
+  body[data-reduce-motion="on"] .screen.active { animation: none; }
+  body[data-reduce-motion="on"] .b-halo,
+  body[data-reduce-motion="on"] .charm-dangle,
+  body[data-reduce-motion="on"] .charm-dangle.fresh { animation: none; }
+  body[data-reduce-motion="on"] .word-wrap { animation: none; }
+  body[data-reduce-motion="on"] .margin-tally.show { animation: none; opacity: 0.9; }
+  body[data-reduce-motion="on"] .life-mark.spent::after { animation: none; }
+  body[data-reduce-motion="on"] .rarity-stamp.show { animation: none; opacity: 0.58; transform: rotate(7deg) scale(1); }
+  body[data-reduce-motion="on"] .cc-ring { animation: none; stroke-dashoffset: 0; }
+  body[data-reduce-motion="on"] .page-flip-sheet { display: none; }
+  body[data-reduce-motion="on"] .card,
+  body[data-reduce-motion="on"] .timer-fill,
+  body[data-reduce-motion="on"] .word::before,
+  body[data-reduce-motion="on"] .histogram-bar { transition: none; }
+  /* easter eggs: show statically, no motion */
+  body[data-reduce-motion="on"] .doodle,
+  body[data-reduce-motion="on"] .doodle-note { animation: none; opacity: 0.5; }
+  body[data-reduce-motion="on"] .doodle.snake .ink { animation: none; stroke-dashoffset: 0; }
+  body[data-reduce-motion="on"] .secret-13 { animation: none; opacity: 1; }
+  body[data-reduce-motion="on"] .blue-wash { animation: none; opacity: 0.16; }
+  body[data-reduce-motion="on"] .sparkle,
+  body[data-reduce-motion="on"] .star-shower { display: none; }
+  body[data-reduce-motion="on"] .toast,
+  body[data-reduce-motion="on"] .toast.leaving { animation: none; }
+  body[data-reduce-motion="on"] .desk-steam path,
+  body[data-reduce-motion="on"] .desk-sway { animation: none; }
+  body[data-reduce-motion="on"] .desk-steam { opacity: 0.3; }
+  /* vignette stays (it's a colour/state change, not motion) */
+
+  /* Animation speed — "fast" roughly halves the page-turn / pen-circle timings.
+     "instant" is handled in JS (those animations are skipped outright). */
+  body[data-anim-speed="fast"] .page-flip-sheet,
+  body[data-anim-speed="fast"] .page-flip-sheet .flip-shade { animation-duration: 0.25s; }
+  body[data-anim-speed="fast"] .cc-ring { animation-duration: 0.28s; }
+  body[data-anim-speed="instant"] .screen.active { animation: none; }
+
+  /* High contrast — darker ink, whiter paper, a bolder margin rule, and punchier
+     era accents. Layered after the era palettes so it wins. */
+  body[data-contrast="high"] {
+    --paper: #ffffff;
+    --paper-edge: #f0f0f0;
+    --ink: #000000;
+    --ink-soft: #3a3a3a;
+    --rule: rgba(0, 0, 0, 0.14);
+    --margin: rgba(190, 0, 0, 0.85);
   }
+  body[data-contrast="high"][data-era="gold"]     { --ink-accent:#7a5300; --highlighter:rgba(230,180,0,0.7);  --bead:#7a5300; }
+  body[data-contrast="high"][data-era="lavender"] { --ink-accent:#3f2c80; --highlighter:rgba(150,120,225,0.7); --bead:#3f2c80; }
+  body[data-contrast="high"][data-era="red"]      { --ink-accent:#8a0008; --highlighter:rgba(210,40,45,0.6);  --bead:#8a0008; }
+  body[data-contrast="high"][data-era="denim"]    { --ink-accent:#0d3f73; --highlighter:rgba(60,130,200,0.65); --bead:#0d3f73; }
+  body[data-contrast="high"][data-era="graphite"] { --ink-accent:#222222; --highlighter:rgba(90,90,90,0.6);   --bead:#222222; }
+  body[data-contrast="high"][data-era="midnight"] { --ink-accent:#101d4d; --highlighter:rgba(60,80,170,0.6);  --bead:#101d4d; }
+
+  /* =========================================================
+     SETTINGS — gear button, modal, and notebook-style controls
+     ========================================================= */
+  .settings-gear {
+    position: fixed; top: 14px; right: 14px; z-index: 60;
+    width: 42px; height: 42px; padding: 7px; border-radius: 50%;
+    color: var(--ink); background: rgba(245, 239, 225, 0.82);
+    border: 1.5px solid rgba(43, 39, 34, 0.32);
+    box-shadow: 0 2px 6px rgba(60, 50, 35, 0.22);
+    transition: transform 0.4s ease, background 0.18s, color 0.18s;
+  }
+  .settings-gear svg { display: block; width: 100%; height: 100%; }
+  .settings-gear:hover { background: var(--highlighter); transform: rotate(40deg); }
+  @media (min-width: 1040px) { .settings-gear { top: 18px; right: 22px; } }
+
+  .settings-modal { position: fixed; inset: 0; z-index: 200; display: none; }
+  .settings-modal.open { display: block; }
+  .settings-scrim { position: absolute; inset: 0; background: rgba(34, 24, 12, 0.5); animation: fade 0.25s ease; }
+  .settings-card {
+    position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    width: min(540px, calc(100vw - 28px)); max-height: calc(100vh - 40px); overflow-y: auto;
+    padding: 22px 24px 28px 48px;
+  }
+  body[data-reduce-motion="on"] .settings-scrim { animation: none; }
+
+  .settings-nav {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 14px; padding-bottom: 8px; border-bottom: 1px dashed rgba(43, 39, 34, 0.2);
+  }
+  .settings-title { font-family: var(--hand); font-weight: 700; font-size: 28px; color: var(--ink); transform: rotate(-0.8deg); }
+  .btn-link {
+    font-family: var(--type); font-size: 12px; letter-spacing: 1px; color: var(--ink-soft);
+    background: transparent; border: none; cursor: pointer; padding: 4px 6px;
+  }
+  .btn-link:hover { color: var(--ink); }
+
+  .set-section { margin: 0 0 18px; }
+  .set-section-title {
+    font-family: var(--type); font-size: 10px; letter-spacing: 1.6px; text-transform: uppercase;
+    color: var(--ink-soft); margin: 0 0 8px; padding-bottom: 4px;
+  }
+  .set-row {
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    padding: 7px 0; min-height: 30px; border-bottom: 1px solid var(--rule);
+  }
+  .set-row:last-child { border-bottom: none; }
+  .set-label { display: flex; flex-direction: column; gap: 1px; }
+  .set-name { font-family: var(--hand); font-size: 20px; line-height: 1.1; color: var(--ink); }
+  .set-desc { font-family: var(--type); font-size: 10.5px; color: var(--ink-soft); }
+  .set-control { flex: 0 0 auto; }
+
+  /* on/off toggle — an inked switch */
+  .set-toggle {
+    position: relative; width: 46px; height: 25px; border-radius: 13px;
+    border: 1.5px solid var(--ink-soft); background: var(--paper-edge); cursor: pointer; padding: 0;
+  }
+  .set-toggle::after {
+    content: ""; position: absolute; top: 1.5px; left: 1.5px; width: 19px; height: 19px;
+    border-radius: 50%; background: var(--ink-soft); transition: transform 0.16s ease, background 0.16s;
+  }
+  .set-toggle[aria-pressed="true"] { background: var(--highlighter); border-color: var(--ink); }
+  .set-toggle[aria-pressed="true"]::after { transform: translateX(21px); background: var(--ink); }
+  body[data-reduce-motion="on"] .set-toggle::after { transition: none; }
+
+  /* multi-choice — reuse the notebook tab look, compact */
+  .set-choice { display: inline-flex; gap: 4px; flex-wrap: wrap; justify-content: flex-end; }
+  .set-choice .mode-tab { font-size: 16px; padding: 4px 9px 5px; border-bottom: 1.5px solid rgba(43,39,34,0.18); border-radius: 5px; transform: none; }
+  .set-choice .mode-tab:nth-child(even) { transform: none; }
+  .set-choice .mode-tab.active { transform: none; }
+
+  /* countdown slider */
+  .set-slider-row { display: flex; align-items: center; gap: 10px; }
+  .set-slider { width: 130px; accent-color: var(--ink-accent); cursor: pointer; }
+  .set-slider-val { font-family: var(--type); font-size: 14px; color: var(--ink-accent); min-width: 26px; text-align: right; }
+
+  .set-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+  .set-actions .btn-ghost { width: auto; flex: 1 1 0; margin-top: 0; }
+
+  /* danger zone — set apart with a torn red border */
+  .set-danger { margin-top: 22px; border: 1.5px dashed var(--margin); border-radius: 3px; padding: 14px 16px 16px; }
+  .set-danger .set-section-title { color: var(--margin); }
+  .set-danger-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .danger-btn {
+    font-family: var(--type); font-size: 12px; letter-spacing: 0.5px; color: var(--margin);
+    background: transparent; border: 1.4px solid var(--margin); border-radius: 2px; padding: 9px 8px; cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+  }
+  .danger-btn:hover { background: rgba(178, 58, 58, 0.12); }
+  .danger-btn.armed { background: var(--margin); color: #fff; font-weight: 700; }
+  .danger-btn.wipe { grid-column: 1 / -1; }
+
+  .set-about { font-family: var(--type); font-size: 11.5px; color: var(--ink-soft); line-height: 1.5; }
+  .set-about a { color: var(--ink-accent); }
+  .set-about p { margin: 4px 0; }
+  .set-note { font-family: var(--type); font-size: 10px; color: var(--ink-soft); font-style: italic; }
