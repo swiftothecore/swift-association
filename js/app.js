@@ -25,10 +25,16 @@ import {
 
 /* ---------- Constants & state ---------- */
 // Lyric-line answering: a typed line must be at least this many words (so a bare
-// prompt-word echo can't pass), and must match a real word-bearing lyric line at or
-// above this fuzzy similarity (1 = verbatim; lower tolerates typos / a partial line).
-const MIN_LYRIC_WORDS = 3;
+// prompt-word echo — or a token three-word stub — can't pass), and must match a real
+// word-bearing lyric line at or above this fuzzy similarity (1 = verbatim; lower
+// tolerates typos / a partial line). The 4-word floor nudges players to recall more
+// than a fragment; verse-bonus grading rewards fuller lines on top of that.
+const MIN_LYRIC_WORDS = 4;
 const FUZZY_THRESHOLD = 0.8;
+// Recall grading: a typed line covering this fraction of the matched real line earns
+// a verse bonus; at the "perfect" mark (or verbatim) it earns the full bonus.
+const RECALL_GOOD = 0.5;
+const RECALL_PERFECT = 0.9;
 
 let currentMode = MODES.medium;
 let wordBuckets = { easy: [], all: [], hard: [], ultra: [] };
@@ -669,6 +675,7 @@ function resetRunState() {
   gameTimeouts = 0;
   gameMaxStreak = 0;
   lyricLineAnswers = 0;
+  verseBonus = 0;
   gameTimeSum = 0;
   gameHitRedZone = false;
   newlyUnlocked = [];
@@ -1055,7 +1062,8 @@ function matchLyricLine(phrase) {
   // Fast path: a verbatim contiguous run anywhere in the lyrics (incl. across lines).
   for (const s of currentSongs) {
     if (s._normLyrics.includes(normPhrase)) {
-      return { song: s, line: recoverLyricLine(s, normPhrase) };
+      const line = recoverLyricLine(s, normPhrase);
+      return { song: s, line, ...gradeLyricRecall(normPhrase, line) };
     }
   }
 
@@ -1075,7 +1083,7 @@ function matchLyricLine(phrase) {
       }
     }
   }
-  return best ? { song: best.song, line: best.line } : null;
+  return best ? { song: best.song, line: best.line, ...gradeLyricRecall(normPhrase, best.line) } : null;
 }
 
 // Recover the original lyric text (for display) that holds the matched phrase.
@@ -1106,6 +1114,20 @@ function recoverLyricLine(song, normPhrase) {
   if (!startSeg || !endSeg) return (rawLines.find(Boolean) || "").trim();
   return rawLines.slice(startSeg.i, endSeg.i + 1)
     .map((l) => l.trim()).filter(Boolean).join(" ");
+}
+
+// Grade how much of the matched real line the player actually typed. Typing the
+// minimum scrapes a pass with no bonus; recalling most / all of the line earns a
+// "verse bonus" and a louder celebration. Returns { tier, bonus, coverage }.
+function gradeLyricRecall(normPhrase, line) {
+  const normLine = normalizeLyric(line);
+  const total = normLine ? normLine.split(" ").length : 0;
+  const typed = normPhrase ? normPhrase.split(" ").length : 0;
+  const verbatim = normPhrase === normLine;
+  const coverage = total ? Math.min(typed / total, 1) : 0;
+  if (verbatim || coverage >= RECALL_PERFECT) return { tier: "perfect", bonus: 2, coverage };
+  if (coverage >= RECALL_GOOD) return { tier: "good", bonus: 1, coverage };
+  return { tier: "base", bonus: 0, coverage };
 }
 
 /* ---------- Submit & feedback ---------- */
@@ -1149,7 +1171,11 @@ function submitAnswer(song, isTimeout) {
   if (gameType === "infinite" && !correct) { lives--; renderLives(); }
   renderBracelet();
 
-  if (lyricMatch) lyricLineAnswers++;   // recalled a lyric line (for You Knew The Line)
+  if (lyricMatch) {
+    lyricLineAnswers++;                  // recalled a lyric line (for You Knew The Line)
+    verseBonus += lyricMatch.bonus;      // reward fuller recall, separate from the 0–13 score
+    if (lyricMatch.tier === "perfect") unlock("word-for-word");
+  }
 
   // achievements: timing + streak signals (mid-game unlocks toast immediately).
   // Timing signals only apply to timed modes — Relaxed has no clock, so they're skipped.
@@ -1204,10 +1230,16 @@ function lyricCard(song, word, isWrong, lineOverride) {
   </div>`;
 }
 
+const LYRIC_BANNERS = { base: "✓ you knew the line", good: "✓ nicely recalled", perfect: "✓ word-perfect" };
+
 function showCorrectFeedback(song, lyricMatch) {
   const fb = $("feedback");
   // On a lyric answer, celebrate the recall and show the exact line they typed.
-  const banner = lyricMatch ? "✓ you knew the line" : "✓ that's the one";
+  // The banner escalates with how much of the line they recalled, and a chip calls
+  // out any verse bonus earned (fuller line = more reward than the bare minimum).
+  const banner = lyricMatch ? (LYRIC_BANNERS[lyricMatch.tier] || LYRIC_BANNERS.base) : "✓ that's the one";
+  const bonusChip = lyricMatch && lyricMatch.bonus > 0
+    ? `<div class="verse-bonus">+${lyricMatch.bonus} verse bonus</div>` : "";
   const card = lyricMatch
     ? lyricCard(song, currentWord, false, lyricMatch.line)
     : lyricCard(song, currentWord, false);
@@ -1218,10 +1250,11 @@ function showCorrectFeedback(song, lyricMatch) {
     : `<button id="continueBtn" class="btn-ghost">next page →</button>`;
   fb.innerHTML = `
     <div class="banner good">${banner}</div>
+    ${bonusChip}
     ${card}
     ${advanceUI}`;
   $(auto ? "skipBtn" : "continueBtn").addEventListener("click", advanceFromFeedback);
-  celebrateCorrect(correctStreak);
+  celebrateCorrect(correctStreak, lyricMatch ? lyricMatch.bonus : 0);
   if (auto) runCountdown();
 }
 
@@ -1342,7 +1375,10 @@ function endGame() {
     : { colors: albumPalette() };
   $("resultBracelet").innerHTML = buildBraceletSVG(roundResults, 0, -1, roundAlbums, keepsakeOpts);
   $("finalScore").textContent = boardScore;
-  $("finalSub").textContent = isInfinite ? "rounds · " + score + " correct" : "out of " + TOTAL_ROUNDS;
+  // Verse bonus (fuller lyric recall) rides alongside the score, never folded into it.
+  // Hidden on a held-back daily score — it would leak how well the round went.
+  const bonusSuffix = (verseBonus > 0 && !(isDaily && settings.hideDailyScore)) ? " · +" + verseBonus + " verse bonus" : "";
+  $("finalSub").textContent = (isInfinite ? "rounds · " + score + " correct" : "out of " + TOTAL_ROUNDS) + bonusSuffix;
   $("keepGoingBtn").style.display = (isInfinite || isDaily) ? "none" : "";
   renderResultRecap();
   if (!isInfinite && score === TOTAL_ROUNDS) celebratePerfect();
@@ -1402,6 +1438,7 @@ let correctStreak = 0;           // consecutive correct answers this game
 let gameTimeouts = 0;            // timeouts this game (for Fearless)
 let gameMaxStreak = 0;           // best streak reached this game
 let lyricLineAnswers = 0;        // lyric-line answers this game (for You Knew The Line)
+let verseBonus = 0;              // verse-bonus points this game (fuller lyric recall; separate from score)
 let gameTimeSum = 0;             // total answer time this game, secs (for Perfect Storm)
 let gameHitRedZone = false;      // any round answered with ≤3s left this game (for Peace)
 
@@ -1649,13 +1686,14 @@ function slitherSnake() {
 }
 
 // A burst of sparkles on a correct answer — the longer the streak, the
-// bigger and more plentiful they get.
-function celebrateCorrect(streak) {
+// bigger and more plentiful they get. A verse-bonus `boost` (fuller lyric recall)
+// adds extra sparkles and size on top, so a word-perfect line pops the hardest.
+function celebrateCorrect(streak, boost = 0) {
   if (motionReduced() || !settings.sparkles || settings.reducedFlashing) return;
   const card = $("screen-game");
   if (!card) return;
-  const count = Math.min(5 + streak * 2, 16);
-  const sizeMin = Math.min(12 + (streak - 1) * 5, 36);
+  const count = Math.min(5 + streak * 2 + boost * 4, 20);
+  const sizeMin = Math.min(12 + (streak - 1) * 5 + boost * 6, 40);
   for (let i = 0; i < count; i++) {
     const s = document.createElement("span");
     s.className = "sparkle"; s.setAttribute("aria-hidden", "true");

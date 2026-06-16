@@ -226,6 +226,7 @@ export const ACHIEVEMENTS = [
   { id: "thousand-cuts",    name: "Death By A Thousand Cuts", desc: "1,000 lifetime missed rounds", secret: true, icon: "scissors" },
   { id: "holy-ground",      name: "Holy Ground",      desc: "Reach round 13 from scratch in Infinite", secret: true, icon: "mountain" },
   { id: "spicy-drama",      name: "Spicy Drama",      desc: "Answer a round with \"If This Was A Movie\"", secret: true, icon: "clapper" },
+  { id: "word-for-word",    name: "Word For Word",    desc: "Recall a lyric line word-perfect",     secret: true,  icon: "note" },
 ];
 export const ACH_BY_ID = Object.fromEntries(ACHIEVEMENTS.map((a) => [a.id, a]));
 

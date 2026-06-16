@@ -498,6 +498,18 @@
     padding: 0;
   }
 
+  /* Verse bonus: a little gold star-sticker for recalling more of the line */
+  .feedback .verse-bonus {
+    font-family: var(--hand); font-weight: 700; font-size: 18px;
+    color: var(--ink-accent);
+    transform: rotate(-1deg);
+    display: inline-block; margin: -4px 0 10px;
+    padding: 1px 10px;
+    border: 1.5px dashed var(--ink-accent);
+    border-radius: 14px;
+    opacity: 0.9;
+  }
+
   /* Wrong/timeout: a red-pen correction scrawled in the margin */
   .feedback .banner.bad {
     font-family: var(--hand); font-weight: 700; font-size: 22px;
