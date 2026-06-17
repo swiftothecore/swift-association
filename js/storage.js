@@ -87,6 +87,7 @@ export function markTypePlayed(type) {
 // Key: swiftSongAssociation.songTally
 //   songs:  { [title]:  correctCount }  — times this song was a correct answer
 //   albums: { [album]:  correctCount }  — times a correct answer came from this album
+//   words:  { [word]:   correctCount }  — times this prompt word was answered correctly
 //   misses: { [word]:   missCount }     — times this prompt word was missed (wrong/timeout)
 export function loadSongTally() {
   try {
@@ -94,19 +95,19 @@ export function loadSongTally() {
     if (raw) {
       const o = JSON.parse(raw);
       if (o && typeof o === "object") {
-        return { songs: o.songs || {}, albums: o.albums || {}, misses: o.misses || {} };
+        return { songs: o.songs || {}, albums: o.albums || {}, words: o.words || {}, misses: o.misses || {} };
       }
     }
   } catch (e) { /* ignore */ }
-  return { songs: {}, albums: {}, misses: {} };
+  return { songs: {}, albums: {}, words: {}, misses: {} };
 }
 export function saveSongTally(t) {
   try { localStorage.setItem(TALLY_KEY, JSON.stringify(t)); } catch (e) { /* ignore */ }
 }
 // Fold one finished game into the lifetime tally. `rounds` is an array of
 // { correct, title, album, word } — one entry per played round. A correct round
-// credits its song + album; a missed round blames its prompt word. Returns the
-// updated tally.
+// credits its song + album + prompt word; a missed round blames its prompt word.
+// Returns the updated tally.
 export function recordGameTally(rounds) {
   const t = loadSongTally();
   for (const r of rounds) {
@@ -114,6 +115,7 @@ export function recordGameTally(rounds) {
     if (r.correct) {
       if (r.title) t.songs[r.title] = (t.songs[r.title] || 0) + 1;
       if (r.album) t.albums[r.album] = (t.albums[r.album] || 0) + 1;
+      if (r.word) t.words[r.word] = (t.words[r.word] || 0) + 1;
     } else if (r.word) {
       t.misses[r.word] = (t.misses[r.word] || 0) + 1;
     }

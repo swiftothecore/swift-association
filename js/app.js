@@ -287,6 +287,17 @@ function lifetimeStatsHTML() {
       <div class="cat-bar">${segs}</div>
     </div>`;
 
+  // Words discovered — distinct prompt words answered correctly, out of the playable set.
+  const wordsFound = Object.keys(t.words || {}).length;
+  const wordTotal = playableWords.length || 1;
+  const wordPct = Math.round((wordsFound / wordTotal) * 100);
+  const wordMeter = `
+    <div class="cat-meter">
+      <div class="cat-meter-head"><span>words discovered</span><span>${wordPct}%</span></div>
+      <div class="cat-meter-num"><b>${wordsFound}</b> / ${wordTotal} words</div>
+      <div class="cat-bar"><div class="cat-seg" style="width:${(wordsFound / wordTotal) * 100}%;background:var(--ink-accent)"></div></div>
+    </div>`;
+
   const songCard = `
     <div class="cat-card" style="border-left-color:${songColor}">
       <div class="cat-card-head"><span class="cat-star">${STAR_SVG}</span>favourite song</div>
@@ -314,7 +325,7 @@ function lifetimeStatsHTML() {
       </div>
     </div>`;
 
-  return header + `<div class="cat-wrap">${meter}<div class="cat-cards">${songCard}${albumCard}</div>${nemesisBlock}</div>`;
+  return header + `<div class="cat-wrap">${meter}${wordMeter}<div class="cat-cards">${songCard}${albumCard}</div>${nemesisBlock}</div>`;
 }
 
 // Daily-challenge streak — global (not per-mode), so it shows under every tab.
@@ -562,7 +573,7 @@ function appendHistoryRows(hist) {
 function renderRecordsPage() {
   const name = getPlayerName();
   const sig = name
-    ? `<span class="rec-sig-name">${escapeHtml(name)}</span><span class="rec-sig-sub">your notebook · best scores &amp; history</span>`
+    ? `<span class="rec-sig-name">${escapeHtml(name)}’s notebook</span><span class="rec-sig-sub">best scores &amp; history</span>`
     : `<div class="rec-sign-row"><input id="recSignInput" class="set-text" maxlength="20" placeholder="sign your notebook" /><button id="recSignSave" class="btn-ghost">sign</button></div>`;
 
   // Personal bests — classic difficulties always shown; infinite/daily only if played.
