@@ -447,6 +447,25 @@
     100% { opacity: 0.58; transform: rotate(7deg) scale(1); }
   }
 
+  /* ---------- Off-limits note (Hard/Ultra "not in the title" rule) ---------- */
+  .excluded-note {
+    text-align: center; margin: -6px auto 14px; max-width: 340px;
+    line-height: 1.5; transform: rotate(-0.4deg);
+  }
+  .excluded-note .ex-lead {
+    font-family: var(--type); font-size: 11px; letter-spacing: 0.5px;
+    color: var(--margin); text-transform: uppercase;
+  }
+  .excluded-note .ex-title {
+    font-family: var(--hand); font-weight: 700; font-size: 19px;
+    color: var(--margin); text-decoration: line-through;
+    text-decoration-color: var(--margin); text-decoration-thickness: 2px;
+    white-space: nowrap; margin: 0 2px;
+  }
+  .excluded-note .ex-more {
+    font-family: var(--type); font-size: 11px; color: var(--ink-soft);
+  }
+
   /* ---------- Timer (draining highlighter underline) ---------- */
   .timer-wrap { max-width: 320px; margin: 0 auto 30px; }
   .timer-track {

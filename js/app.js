@@ -152,6 +152,28 @@ function validSongs(word, strict, noTitle) {
   const rx = wordRegex(word, strict);
   return allSongs.filter((s) => rx.test(s.lyrics) && !(noTitle && rx.test(s.title)));
 }
+// Songs whose TITLE contains the prompt word — the ones the Hard/Ultra "not in
+// the title" rule blocks, so we can warn the player before they waste the clock.
+function titleSongsForWord(word, strict) {
+  const rx = wordRegex(word, strict);
+  return allSongs.filter((s) => rx.test(s.title));
+}
+// Marginalia warning: in noTitle modes (Hard/Ultra), list the songs whose title
+// holds the word so the player knows e.g. "All Too Well" won't be accepted.
+function renderExcludedNote() {
+  const el = $("excludedNote");
+  if (!el) return;
+  if (!currentMode.noTitle) { el.style.display = "none"; el.innerHTML = ""; return; }
+  const titles = titleSongsForWord(currentWord, currentMode.strict).map((s) => s.title);
+  if (!titles.length) { el.style.display = "none"; el.innerHTML = ""; return; }
+  const SHOWN = 3;
+  const shown = titles.slice(0, SHOWN)
+    .map((t) => `<span class="ex-title">“${escapeHtml(t)}”</span>`);
+  if (titles.length > SHOWN) shown.push(`<span class="ex-more">+${titles.length - SHOWN} more</span>`);
+  const lead = titles.length === 1 ? "off-limits — it’s in the title:" : "off-limits — they’re in the title:";
+  el.innerHTML = `<span class="ex-lead">${lead}</span> ${shown.join(" ")}`;
+  el.style.display = "";
+}
 function extractLineWithWord(lyrics, word, strict) {
   const rx = wordRegex(word, strict);
   const lines = lyrics.split("\n");
@@ -1036,6 +1058,7 @@ function advanceRound() {
   if (rar.stamp) { void stamp.offsetWidth; stamp.classList.add("show"); } // reflow re-fires the stamp-in
 
   $("wordDisplay").textContent = currentWord;
+  renderExcludedNote();
   $("feedback").innerHTML = "";
   $("playArea").style.display = "";
   renderBracelet();
