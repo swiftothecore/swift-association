@@ -152,10 +152,15 @@ function wordVariants(word) {
   if (w.length >= 3 && /[^aeiou][aeiou][^aeiouwxy]$/.test(w)) alts.push(escapeRegExp(w + w.slice(-1)) + INFLECT);
   return alts;
 }
+// The strictness used for gameplay matching: the active mode's strict flag, OR the
+// player's global "stem matching off" opt-out (Settings → Gameplay) which forces
+// exact-word matching even in lenient modes. NOT used for the rarity buckets/daily
+// determinism (those pass explicit strict args), only for judging/highlighting a round.
+function effectiveStrict() { return currentMode.strict || settings.stemMatching === false; }
 // Lenient (default) also matches the inflected forms above; strict (Ultra) requires
-// the exact word. Defaults to the active mode.
+// the exact word. Defaults to the active mode + the stem-matching opt-out.
 function wordRegex(word, strict) {
-  if (strict === undefined) strict = currentMode.strict;
+  if (strict === undefined) strict = effectiveStrict();
   if (strict) return new RegExp("\\b" + escapeRegExp(word) + "\\b", "i");
   return new RegExp("\\b(?:" + wordVariants(word).join("|") + ")\\b", "i");
 }
@@ -183,7 +188,7 @@ function renderExcludedNote() {
   const el = $("excludedNote");
   if (!el) return;
   if (!currentMode.noTitle || currentMode.dropdown) { el.style.display = "none"; el.innerHTML = ""; return; }
-  const titles = titleSongsForWord(currentWord, currentMode.strict).map((s) => s.title);
+  const titles = titleSongsForWord(currentWord, effectiveStrict()).map((s) => s.title);
   if (!titles.length) { el.style.display = "none"; el.innerHTML = ""; return; }
   const SHOWN = 3;
   const shown = titles.slice(0, SHOWN)
@@ -200,7 +205,7 @@ function extractLineWithWord(lyrics, word, strict) {
   return line.trim();
 }
 function highlightWord(line, word, strict) {
-  if (strict === undefined) strict = currentMode.strict;
+  if (strict === undefined) strict = effectiveStrict();
   const body = strict ? escapeRegExp(word) : wordVariants(word).join("|");
   const rx = new RegExp("\\b(" + body + ")\\b", "ig");
   return escapeHtml(line).replace(rx, "<mark>$1</mark>");
@@ -1120,7 +1125,7 @@ function advanceRound() {
   roundLocked = false;
   justEarnedIndex = -1;
   currentWord = pickWord();
-  currentSongs = validSongs(currentWord, currentMode.strict, currentMode.noTitle);
+  currentSongs = validSongs(currentWord, effectiveStrict(), currentMode.noTitle);
   applyEra(pickEra());
 
   const rar = rarityTier(currentSongs.length);
@@ -1268,7 +1273,7 @@ function hideDropdown() { $("dropdown").classList.remove("show"); }
 // A pick is off-limits when the active mode bars title songs and the word sits in
 // this song's title — the exact condition validSongs() uses to exclude it.
 function isOffLimitsPick(song) {
-  return !!song && currentMode.noTitle && wordRegex(currentWord, currentMode.strict).test(song.title);
+  return !!song && currentMode.noTitle && wordRegex(currentWord, effectiveStrict()).test(song.title);
 }
 // Soft rejection: don't consume the round. Flash a red note, wipe the line, and
 // keep the clock running so the player can answer the same word with a valid song.
@@ -2176,6 +2181,7 @@ function renderSettingsBody() {
       setSliderHTML() +
       setToggleHTML("enterOnMiss", "Enter advances on a miss", "press Enter to leave the answer screen") +
       setToggleHTML("showExamples", "Show example songs after a miss", "") +
+      setToggleHTML("stemMatching", "Match word variants", "off = exact word only (love won’t match loving)") +
       setChoiceHTML("defaultGameType", "Default game type", "on launch", [{ val: "last", label: "Last" }, { val: "classic", label: "Classic" }, { val: "infinite", label: "Infinite" }]) +
       setChoiceHTML("defaultDifficulty", "Default difficulty", "on launch", diffOpts) +
       setChoiceHTML("defaultStatsTab", "Default stats tab", "which tab opens first", statsOpts)

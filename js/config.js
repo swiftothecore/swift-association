@@ -40,6 +40,8 @@ export const DEFAULT_SETTINGS = {
   countdownSecs: 5,         // 3..8 — length of that countdown
   enterOnMiss: true,        // Enter advances past the miss screen
   showExamples: true,       // show example songs after a wrong answer
+  stemMatching: true,       // match word variants (love→loving, gold→golden); off = exact word only
+
   defaultGameType: "last",  // "last" | "classic" | "infinite"
   defaultDifficulty: "last",// "last" | a MODES id
   defaultStatsTab: "all",   // which Stats tab opens first: "all" | "last" | a MODES id
