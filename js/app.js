@@ -868,14 +868,31 @@ function renderStartPickers() {
   refreshStartBoard();
   renderDailyButtonState();
 }
-// The Daily Challenge button wears an obvious "not done yet" coat (coral-pink wash
-// + a pinned "today!" sticky note) until today's puzzle is played; once played it
-// falls back to its quiet denim resting state, so the difference reads at a glance.
+// The Daily Challenge button wears an obvious "not done yet" coat (a sketchy dashed
+// ink border, a pinned "today!" sticky note, and 13 twinkling margin stars — Taylor's
+// number) until today's puzzle is played; once played it falls back to its quiet denim
+// resting state, so the difference reads at a glance.
+// Scatter spots ([left%, top%]) hug the button's edges, clear of the centred label.
+const DAILY_STAR_SPOTS = [
+  [5, 24], [10, 64], [15, 32], [21, 72], [27, 18],
+  [50, 14], [50, 84], [36, 80], [64, 80],
+  [73, 22], [80, 66], [88, 30], [93, 70],
+];
 function renderDailyButtonState() {
   const btn = $("dailyBtn");
   if (!btn) return;
   const undone = !loadDailyResult(todayKey());
   btn.classList.toggle("undone", undone);
+  // Wrap the label once so it always stacks above the decorative stars.
+  let label = btn.querySelector(".daily-label");
+  if (!label) {
+    const text = btn.textContent.trim() || "Daily Challenge";
+    btn.textContent = "";
+    label = document.createElement("span");
+    label.className = "daily-label";
+    label.textContent = text;
+    btn.appendChild(label);
+  }
   let tab = btn.querySelector(".daily-tab");
   if (undone && !tab) {
     tab = document.createElement("span");
@@ -884,6 +901,20 @@ function renderDailyButtonState() {
     btn.appendChild(tab);
   } else if (!undone && tab) {
     tab.remove();
+  }
+  const hasStars = btn.querySelector(".daily-star");
+  if (undone && !hasStars) {
+    DAILY_STAR_SPOTS.forEach((p, i) => {
+      const s = document.createElement("span");
+      s.className = "daily-star";
+      s.textContent = "✦";
+      s.style.left = p[0] + "%";
+      s.style.top = p[1] + "%";
+      s.style.animationDelay = (i * 0.17).toFixed(2) + "s";
+      btn.appendChild(s);
+    });
+  } else if (!undone && hasStars) {
+    btn.querySelectorAll(".daily-star").forEach((s) => s.remove());
   }
 }
 function setGameType(g) {

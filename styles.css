@@ -1028,12 +1028,27 @@
   }
   .daily-btn:hover { background: rgba(91, 135, 184, 0.42); }
 
-  /* "Not done today" state: a warm Showgirl-orange wash (a touch brighter than the
-     album hue, so it reads as a deliberate accent) with a pinned sticky note, so an
-     unplayed daily is unmistakable next to the gold primary. Resets to denim (rules
-     above) once played. */
-  .daily-btn.undone { background: rgba(244, 126, 28, 0.92); }
-  .daily-btn.undone:hover { background: rgb(244, 126, 28); }
+  /* "Not done today" state: a sketchy dashed ink border over a warm paper tint, with
+     13 twinkling margin stars and a pinned sticky note — unmistakable next to the gold
+     primary. Resets to the solid denim resting state (rules above) once played. */
+  .daily-btn.undone {
+    background: rgba(224, 120, 48, 0.12);
+    border-style: dashed;
+  }
+  .daily-btn.undone:hover { background: rgba(224, 120, 48, 0.2); }
+  .daily-btn .daily-label { position: relative; z-index: 2; }
+  .daily-btn .daily-star {
+    position: absolute; z-index: 1; pointer-events: none;
+    font-family: var(--hand); font-size: 15px; line-height: 1; color: #e07830;
+    transform: translate(-50%, -50%);
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .daily-btn .daily-star { animation: dailyStarTwinkle 1.9s ease-in-out infinite; }
+  }
+  @keyframes dailyStarTwinkle {
+    0%, 100% { opacity: 0.35; transform: translate(-50%, -50%) scale(0.8); }
+    50%      { opacity: 1;    transform: translate(-50%, -50%) scale(1.18); }
+  }
   .daily-btn .daily-tab {
     position: absolute; top: -14px; right: -8px;
     font-family: var(--hand); font-weight: 700; font-size: 15px; letter-spacing: 0;
