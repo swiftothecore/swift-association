@@ -238,11 +238,22 @@ function defaultStatsView() {
 function renderStats(lastScore, viewMode = defaultStatsView()) {
   const el = $("statsBody");
   const isAll = viewMode === "all";
-  // mode tabs — an "All" collated tab plus each difficulty's separate stats
+  const isInf = viewMode === "infinite";
+  // mode tabs — an "All" collated tab, each difficulty, then a distinct Infinite tab
   const tabDefs = [{ m: "all", label: "All" }].concat(MODE_ORDER.map((m) => ({ m, label: MODES[m].label })));
   const tabs = `<div class="mode-tabs stats-tabs">` + tabDefs.map((t) =>
     `<button type="button" class="mode-tab${t.m === viewMode ? " active" : ""}" data-statmode="${t.m}">${t.label}</button>`
-  ).join("") + `</div>`;
+  ).join("") +
+    `<button type="button" class="mode-tab mode-tab--inf${isInf ? " active" : ""}" data-statmode="infinite"><span class="inf-glyph" aria-hidden="true">∞</span>Infinite</button>` +
+    `</div>`;
+
+  // Infinite is its own game type — its own headline + ledger, not the 0–13 histogram.
+  if (isInf) {
+    el.innerHTML = tabs + infiniteTabHTML() + achievementsGridHTML();
+    el.querySelectorAll("[data-statmode]").forEach((b) =>
+      b.addEventListener("click", () => renderStats(lastScore, b.dataset.statmode)));
+    return;
+  }
 
   const s = isAll ? aggregateStats() : loadStats(viewMode);
   let body;
@@ -280,7 +291,9 @@ function renderStats(lastScore, viewMode = defaultStatsView()) {
       <div class="histogram">${bars}</div>`;
   }
 
-  el.innerHTML = tabs + body + lifetimeStatsHTML() + dailyStatsHTML() + infiniteStatsHTML() + achievementsGridHTML();
+  // Catalogue + daily streak are lifetime summaries — they live only on the All tab.
+  if (isAll) body += lifetimeStatsHTML() + dailyStatsHTML();
+  el.innerHTML = tabs + body + achievementsGridHTML();
   el.querySelectorAll("[data-statmode]").forEach((b) =>
     b.addEventListener("click", () => renderStats(lastScore, b.dataset.statmode)));
 }
@@ -398,17 +411,17 @@ function dailyStatsHTML() {
 }
 
 // Infinite runs aren't comparable to the 13-round game (scores can exceed 13 and
-// the 0–13 histogram is meaningless), so they get their own compact summary:
-// best rounds survived + games played per variant × difficulty.
-// Each played variant×difficulty is a keepsake card (matching the catalogue's
-// vocabulary): a bead motif for the lives mode, the best run as a hero number over a
-// relative-to-the-leader strand meter, and the games-played count. Colour-coded by
-// variant — gold for the forgiving 3-lives, danger-red for sudden death.
+// the 0–13 histogram is meaningless), so the Infinite tab gets its own body: a
+// pen-circled headline (your single longest run + where it came from) and a ruled
+// LEDGER — difficulty down the side, the two lives-variants across the top, each cell
+// the best run + games played. No relative-fill bar (it was meaningless); the number
+// carries it, the ruling does the structure, and a red-pen ellipse marks the all-time
+// best. Colour-coded by variant — gold for forgiving 3-lives, danger-red for sudden death.
 const INF_VARIANT_STYLE = {
   "3lives": { color: "#c08a2e", beads: 3 },
   sudden:   { color: "#b23a3a", beads: 1 },
 };
-function infiniteStatsHTML() {
+function infiniteTabHTML() {
   const entries = [];
   for (const variant of ["3lives", "sudden"]) {
     for (const m of MODE_ORDER) {
@@ -417,24 +430,42 @@ function infiniteStatsHTML() {
     }
   }
   if (!entries.length) {
-    return `<p class="histogram-label" style="margin-top:24px;">infinite</p>` +
-      `<p class="stats-empty">no infinite runs yet — try Infinite mode!</p>`;
+    return `<p class="stats-empty">no infinite runs yet — try Infinite mode!</p>`;
   }
-  const maxBest = Math.max(...entries.map((e) => e.best), 1);
-  const cards = entries.map((e) => {
-    const sty = INF_VARIANT_STYLE[e.variant];
-    const beads = Array.from({ length: sty.beads }, () => `<i></i>`).join("");
-    const pct = Math.round((e.best / maxBest) * 100);
-    return `
-      <div class="inf-card" style="--spine:${sty.color}">
-        <div class="inf-card-head"><span class="inf-beads">${beads}</span>${VARIANT_LABELS[e.variant]} · ${MODES[e.mode].label}</div>
-        <div class="inf-card-main"><b>${e.best}</b><span>rounds survived</span></div>
-        <div class="inf-card-meter"><div style="width:${pct}%"></div></div>
-        <div class="inf-card-foot">${e.played} game${e.played === 1 ? "" : "s"} played</div>
-      </div>`;
-  }).join("");
-  return `<p class="histogram-label" style="margin-top:24px;">infinite · best rounds survived</p>` +
-    `<div class="inf-grid">${cards}</div>`;
+  // headline = the single longest run across every combo, + total infinite games played
+  let top = entries[0], totalGames = 0;
+  for (const e of entries) { totalGames += e.played; if (e.best > top.best) top = e; }
+  const hero = `
+    <div class="inf-hero">
+      <div class="inf-medallion">
+        <b>${top.best}</b><span>rounds</span>
+      </div>
+      <div class="inf-hero-text">
+        <div class="inf-hero-title">your longest run</div>
+        <div class="inf-hero-sub">${VARIANT_LABELS[top.variant]} · ${MODES[top.mode].label}</div>
+      </div>
+    </div>`;
+  // ledger: a cell per variant×difficulty; unplayed = a faint dash; the best one is circled
+  const cell = (variant, m) => {
+    const e = entries.find((x) => x.variant === variant && x.mode === m);
+    if (!e) return `<td class="inf-cell inf-cell--empty">–</td>`;
+    const circ = (e === top)
+      ? `<svg class="inf-circle" viewBox="0 0 90 50" aria-hidden="true"><ellipse cx="45" cy="25" rx="40" ry="20" fill="none" stroke="#b23a3a" stroke-width="1.6"/></svg>`
+      : "";
+    return `<td class="inf-cell">${circ}<span class="inf-cell-num" style="color:${INF_VARIANT_STYLE[variant].color}">${e.best}</span><span class="inf-cell-sub">${e.played} game${e.played === 1 ? "" : "s"}</span></td>`;
+  };
+  const colHead = (variant) => {
+    const sty = INF_VARIANT_STYLE[variant];
+    const beads = Array.from({ length: sty.beads }, () => `<i style="background:${sty.color}"></i>`).join("");
+    return `<th><span class="inf-th-beads">${beads}</span>${VARIANT_LABELS[variant]}</th>`;
+  };
+  const rows = MODE_ORDER.map((m) =>
+    `<tr><th class="inf-row-h">${MODES[m].label}</th>${cell("3lives", m)}${cell("sudden", m)}</tr>`
+  ).join("");
+  return hero +
+    `<table class="inf-ledger"><thead><tr><th></th>${colHead("3lives")}${colHead("sudden")}</tr></thead>` +
+    `<tbody>${rows}</tbody></table>` +
+    `<p class="inf-foot">${totalGames} infinite game${totalGames === 1 ? "" : "s"} played · the circle marks your all-time best</p>`;
 }
 
 /* ---------- Achievements ---------- */
