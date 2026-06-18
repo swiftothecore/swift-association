@@ -904,13 +904,16 @@ function renderDailyButtonState() {
   }
   const hasStars = btn.querySelector(".daily-star");
   if (undone && !hasStars) {
-    DAILY_STAR_SPOTS.forEach((p, i) => {
+    DAILY_STAR_SPOTS.forEach((p) => {
       const s = document.createElement("span");
       s.className = "daily-star";
       s.textContent = "✦";
       s.style.left = p[0] + "%";
       s.style.top = p[1] + "%";
-      s.style.animationDelay = (i * 0.17).toFixed(2) + "s";
+      // Randomise each star's phase + speed so they sparkle independently rather
+      // than rippling left-to-right. Negative delay starts them mid-twinkle.
+      s.style.animationDelay = (-Math.random() * 3).toFixed(2) + "s";
+      s.style.animationDuration = (1.5 + Math.random() * 1.6).toFixed(2) + "s";
       btn.appendChild(s);
     });
   } else if (!undone && hasStars) {
