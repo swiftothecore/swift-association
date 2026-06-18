@@ -1018,6 +1018,7 @@
   /* Daily Challenge — a pinned "second card" action: solid, denim-washed, lightly skewed
      so it reads as a sibling of the gold primary button without competing with it. */
   .daily-btn {
+    position: relative;
     display: block; width: 100%; margin-top: 12px; padding: 12px;
     font-family: var(--type); font-size: 14px; letter-spacing: 1px; font-weight: 700;
     color: var(--ink); background: rgba(91, 135, 184, 0.28);
@@ -1026,6 +1027,26 @@
     transform: rotate(0.5deg);
   }
   .daily-btn:hover { background: rgba(91, 135, 184, 0.42); }
+
+  /* "Not done today" state: a warm Lover coral-pink wash with a pinned sticky note,
+     so an unplayed daily is unmistakable next to the gold primary. Resets to denim
+     (rules above) once played. */
+  .daily-btn.undone { background: rgba(196, 100, 154, 0.30); }
+  .daily-btn.undone:hover { background: rgba(196, 100, 154, 0.44); }
+  .daily-btn .daily-tab {
+    position: absolute; top: -14px; right: -8px;
+    font-family: var(--hand); font-weight: 700; font-size: 15px; letter-spacing: 0;
+    color: #5a3a3a; background: #f4e58a;
+    padding: 5px 12px; transform: rotate(6deg);
+    box-shadow: 1px 2px 4px rgba(43, 39, 34, 0.22);
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .daily-btn.undone .daily-tab { animation: dailyTabNudge 2.6s ease-in-out infinite; }
+  }
+  @keyframes dailyTabNudge {
+    0%, 92%, 100% { transform: rotate(6deg); }
+    96% { transform: rotate(2deg); }
+  }
 
   /* records & history + stats & streaks — quiet "see also" pair, not boxed actions. */
   .see-also { display: flex; justify-content: center; gap: 22px; margin-top: 16px; }

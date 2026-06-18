@@ -866,6 +866,25 @@ function renderStartPickers() {
   $("variantRow").style.display = gameType === "infinite" ? "" : "none";
   renderModePicker();
   refreshStartBoard();
+  renderDailyButtonState();
+}
+// The Daily Challenge button wears an obvious "not done yet" coat (coral-pink wash
+// + a pinned "today!" sticky note) until today's puzzle is played; once played it
+// falls back to its quiet denim resting state, so the difference reads at a glance.
+function renderDailyButtonState() {
+  const btn = $("dailyBtn");
+  if (!btn) return;
+  const undone = !loadDailyResult(todayKey());
+  btn.classList.toggle("undone", undone);
+  let tab = btn.querySelector(".daily-tab");
+  if (undone && !tab) {
+    tab = document.createElement("span");
+    tab.className = "daily-tab";
+    tab.textContent = "today!";
+    btn.appendChild(tab);
+  } else if (!undone && tab) {
+    tab.remove();
+  }
 }
 function setGameType(g) {
   gameType = g === "infinite" ? "infinite" : "classic";
