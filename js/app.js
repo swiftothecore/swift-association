@@ -255,6 +255,30 @@ function defaultStatsView() {
   if (d && d !== "last" && MODES[d]) return d;
   return currentMode.id;
 }
+// Recent run scores for the "recent form" sparkline (oldest→newest, capped).
+// All tab = every classic run; a mode tab = that mode's runs. Daily/Infinite use
+// different score scales, so they're excluded — the same scope as the All
+// histogram, which sums only the classic difficulty boards.
+function recentScores(viewMode, cap = 12) {
+  const picked = loadHistory().filter((e) =>
+    viewMode === "all" ? e.t === "classic" : e.m === viewMode);
+  return picked.slice(0, cap).map((e) => e.s).reverse();
+}
+// A small hand-inked sparkline of recent scores (0–TOTAL_ROUNDS), with a dotted
+// baseline at the window's average and a filled dot on the latest game.
+function sparklineSVG(scores) {
+  const W = 360, H = 40, pad = 6, top = 6, bot = 34, n = scores.length;
+  const x = (i) => n === 1 ? W / 2 : pad + (i * (W - pad * 2)) / (n - 1);
+  const y = (v) => bot - (Math.min(v, TOTAL_ROUNDS) / TOTAL_ROUNDS) * (bot - top);
+  const pts = scores.map((v, i) => `${x(i).toFixed(1)},${y(v).toFixed(1)}`).join(" ");
+  const avg = scores.reduce((a, b) => a + b, 0) / n;
+  const ay = y(avg).toFixed(1), lx = x(n - 1).toFixed(1), ly = y(scores[n - 1]).toFixed(1);
+  return `<svg class="form-spark" viewBox="0 0 ${W} ${H}" width="100%" height="${H}" preserveAspectRatio="none" aria-hidden="true">
+    <line x1="0" y1="${ay}" x2="${W}" y2="${ay}" class="form-base"/>
+    <polyline points="${pts}" class="form-line"/>
+    <circle cx="${lx}" cy="${ly}" r="3.6" class="form-dot"/>
+  </svg>`;
+}
 function renderStats(lastScore, viewMode = defaultStatsView()) {
   const el = $("statsBody");
   const isAll = viewMode === "all";
@@ -297,17 +321,29 @@ function renderStats(lastScore, viewMode = defaultStatsView()) {
     }).join("");
     // Best correct-in-a-row (lifetime, per mode; max across modes in the All view) +
     // perfect-game count. Same two cells for every tab.
-    const streakRow = `<div class="streak-row">
-        <div class="streak-cell"><span class="stat-val">${s.bestInRow || 0}</span><span class="stat-lbl">Best in a row</span></div>
-        <div class="streak-cell"><span class="stat-val">${s.scoreCounts[TOTAL_ROUNDS] || 0}</span><span class="stat-lbl">Perfect games</span></div>
-      </div>`;
+    // "By the numbers" header (design E): three primaries on top, then a
+    // recent-form sparkline beside the secondary stats (best-in-a-row, perfect).
+    const recent = recentScores(viewMode);
+    const formPanel = recent.length >= 2
+      ? sparklineSVG(recent)
+      : `<span class="statE-form-empty">— more games will draw your form —</span>`;
+    const star = `<span class="statE-star">${STAR_SVG}</span>`;
     body = `
-      <div class="stats-grid">
-        <div class="stat-cell"><span class="stat-val">${s.played}</span><span class="stat-lbl">Played</span></div>
-        <div class="stat-cell"><span class="stat-val">${s.best}</span><span class="stat-lbl">Best</span></div>
-        <div class="stat-cell"><span class="stat-val">${avg}</span><span class="stat-lbl">Average</span></div>
+      <div class="statE-top">
+        <div class="statE-cell"><span class="statE-val">${s.played}</span><span class="statE-lbl">Played</span></div>
+        <div class="statE-cell"><span class="statE-val statE-best">${s.best}</span>${star}<span class="statE-lbl">Best</span></div>
+        <div class="statE-cell"><span class="statE-val">${avg}</span><span class="statE-lbl">Average</span></div>
       </div>
-      ${streakRow}
+      <div class="statE-form">
+        <div class="statE-form-spark">
+          <span class="statE-lbl statE-form-lbl">recent form${recent.length >= 2 ? " · last " + recent.length : ""}</span>
+          ${formPanel}
+        </div>
+        <div class="statE-chips">
+          <div class="statE-cell"><span class="statE-val statE-accent">${s.bestInRow || 0}</span><span class="statE-lbl">In a row</span></div>
+          <div class="statE-cell"><span class="statE-val statE-accent">${s.scoreCounts[TOTAL_ROUNDS] || 0}</span>${star}<span class="statE-lbl">Perfect</span></div>
+        </div>
+      </div>
       <p class="histogram-label">score distribution</p>
       <div class="histogram">${bars}</div>`;
   }
