@@ -10,7 +10,7 @@
  * Paths are relative so the worker works under the project subpath
  * (…github.io/swift-association-testing/).
  */
-const CACHE = "stta-v1";
+const CACHE = "stta-v2";
 const ASSETS = [
   "./",
   "index.html",
@@ -22,12 +22,12 @@ const ASSETS = [
   "js/storage.js",
   "songs.json",
   "words.json",
-  "favicon.svg",
+  "icons/favicon.svg",
   "manifest.webmanifest",
-  "icon-192.png",
-  "icon-512.png",
-  "icon-512-maskable.png",
-  "apple-touch-icon.png",
+  "icons/icon-192.png",
+  "icons/icon-512.png",
+  "icons/icon-512-maskable.png",
+  "icons/apple-touch-icon.png",
 ];
 
 self.addEventListener("install", (e) => {
