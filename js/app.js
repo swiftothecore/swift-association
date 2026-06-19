@@ -32,6 +32,11 @@ import {
 // tolerates typos / a partial line). The 4-word floor nudges players to recall more
 // than a fragment; verse-bonus grading rewards fuller lines on top of that.
 const MIN_LYRIC_WORDS = 4;
+// ...but a 3-word phrase still passes if it's long enough by character count — a
+// genuinely long trio (e.g. "unconditional everlasting devotion") is clearly a real
+// recalled line, not a bare-word cheat. Short trios ("i love you") still fall short.
+const MIN_LYRIC_WORDS_SHORT = 3;
+const MIN_LYRIC_SHORT_CHARS = 20;
 const FUZZY_THRESHOLD = 0.8;
 // Recall grading: a typed line covering this fraction of the matched real line earns
 // a verse bonus; at the "perfect" mark (or verbatim) it earns the full bonus.
@@ -1613,13 +1618,19 @@ function rejectOffLimits(song) {
 /* ---------- Lyric-line answering ---------- */
 // A player can answer by typing a LYRIC LINE instead of the title. There is no lyric
 // autocomplete (that would hand them the answer); the line is blind-typed and only
-// JUDGED here. To pass it must (a) contain the prompt word, (b) be >= MIN_LYRIC_WORDS,
+// JUDGED here. To pass it must (a) contain the prompt word, (b) be >= MIN_LYRIC_WORDS
+// (or a long-enough 3-word phrase, see below),
 // and (c) closely match a real word-bearing lyric line of a valid song. Fuzzy so
 // typos / a slightly-off line still count. Returns { song, line } or null.
 function matchLyricLine(phrase) {
   const normPhrase = normalizeLyric(phrase);
   if (!normPhrase) return null;
-  if (normPhrase.split(" ").length < MIN_LYRIC_WORDS) return null;
+  const wordCount = normPhrase.split(" ").length;
+  // Accept 4+ words, OR a 3-word phrase that's long enough by character count.
+  if (wordCount < MIN_LYRIC_WORDS &&
+      !(wordCount >= MIN_LYRIC_WORDS_SHORT && normPhrase.length >= MIN_LYRIC_SHORT_CHARS)) {
+    return null;
+  }
   // NOTE: we deliberately do NOT require the prompt word to appear in the typed phrase.
   // Matching is already restricted to currentSongs (every one of which contains the
   // word — they're the round's valid answers), so any real lyric chunk that matches is
