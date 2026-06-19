@@ -646,21 +646,9 @@ function achTile(a) {
 
 const achGroupOf = (id) => ACH_GROUP_OF[id] || "core";
 
-// The growing friendship-bracelet keepsake: one star charm per earned achievement,
-// tinted by theme. Reuses buildBraceletSVG's per-bead colour channel (the `albums`
-// arg + `colors` map) — every earned charm is a "correct" bead. `earnedAsc` is the
-// earned achievements oldest→newest, so the newest sits at the clasp end and swings in.
-function achievementBraceletSVG(earnedAsc) {
-  if (!earnedAsc.length) return "";   // empty handled by the page (bare-thread caption)
-  const results = earnedAsc.map(() => true);
-  const groups = earnedAsc.map((a) => achGroupOf(a.id));
-  return buildBraceletSVG(results, 0, earnedAsc.length - 1, groups,
-    { total: earnedAsc.length, letterBead: false, colors: ACH_GROUP_COLORS });
-}
-
 function renderAchievementsPage() {
   const total = ACHIEVEMENTS.length;
-  // earned, oldest → newest (drives both the bracelet order and the "latest" pick)
+  // earned, oldest → newest (the newest is the "latest charm")
   const earnedAsc = ACHIEVEMENTS.filter((a) => earnedAchievements[a.id])
     .sort((x, y) => (earnedAchievements[x.id] || "").localeCompare(earnedAchievements[y.id] || ""));
   const earnedCount = earnedAsc.length;
@@ -669,9 +657,20 @@ function renderAchievementsPage() {
   let html = `<div class="ach-page-head"><div class="ach-page-title">Charm Collection</div>` +
     `<div class="ach-page-sub">${earnedCount} / ${total} charms collected</div></div>`;
 
-  const strand = achievementBraceletSVG(earnedAsc);
-  html += `<div class="ach-bracelet">${strand ||
-    `<p class="ach-bracelet-empty">your bracelet starts here — earn a charm to string the first bead</p>`}</div>`;
+  // by-theme breakdown — one small colour-coded bar per group (denominators count
+  // every charm in the theme, secret ones included, so the five sum to the total).
+  const themeRows = ACH_GROUPS.map((g) => {
+    const members = ACHIEVEMENTS.filter((a) => achGroupOf(a.id) === g.id);
+    const got = members.filter((a) => earnedAchievements[a.id]).length;
+    const tot = members.length;
+    const col = ACH_GROUP_COLORS[g.id];
+    return `<div class="ach-theme">` +
+      `<div class="ach-theme-head"><span class="ach-theme-name"><span class="ach-group-dot" style="background:${col}"></span>${g.short}</span><span>${got} / ${tot}</span></div>` +
+      `<div class="ach-theme-bar"><div style="width:${tot ? (got / tot) * 100 : 0}%;background:${col}"></div></div>` +
+      `</div>`;
+  }).join("");
+  html += `<div class="ach-themes"><div class="ach-themes-label">by theme</div>` +
+    `<div class="ach-themes-grid">${themeRows}</div></div>`;
 
   const meter = `<div class="cat-meter">` +
     `<div class="cat-meter-head"><span>charms collected</span><span>${pct}%</span></div>` +
@@ -679,14 +678,17 @@ function renderAchievementsPage() {
     `<div class="cat-bar"><div class="cat-seg" style="width:${(earnedCount / total) * 100}%;background:var(--ink-accent)"></div></div>` +
     `</div>`;
 
-  const latest = earnedAsc[earnedAsc.length - 1];   // newest = clasp-end charm
-  const latestCard = latest ? `<div class="cat-nemesis ach-latest">` +
-    `<div><div class="cat-card-head">latest charm</div>` +
-    `<div class="ach-latest-sub">${escapeHtml(latest.desc)}</div></div>` +
-    `<div class="cat-nemesis-word"><span>${escapeHtml(latest.name)}</span>` +
-    `<svg viewBox="0 0 160 60" preserveAspectRatio="none" aria-hidden="true">` +
-    `<path d="M18 30 C18 12, 60 8, 90 10 C130 13, 152 22, 150 34 C148 48, 100 54, 64 52 C28 50, 12 42, 16 28" fill="none" stroke="rgba(178,58,58,0.7)" stroke-width="2.2" stroke-linecap="round"/>` +
-    `</svg></div></div>` : "";
+  // newest charm as a proper keepsake — its real icon, the name (wraps), and the date.
+  const latest = earnedAsc[earnedAsc.length - 1];
+  const latestCard = latest ? `<div class="ach-latest">` +
+    `<span class="ach-latest-charm">${charmMarkup(latest.icon)}</span>` +
+    `<div class="ach-latest-text"><div class="ach-latest-label">your newest charm</div>` +
+    `<div class="ach-latest-name">${escapeHtml(latest.name)}</div>` +
+    `<div class="ach-latest-meta">${escapeHtml(latest.desc)} · ${recordDateLabel(earnedAchievements[latest.id])}</div></div>` +
+    `</div>` :
+    `<div class="ach-latest ach-latest--empty"><div class="ach-latest-text">` +
+    `<div class="ach-latest-label">your newest charm</div>` +
+    `<div class="ach-latest-meta">no charms yet — finish a game to earn your first</div></div></div>`;
 
   html += `<div class="ach-head-row">${meter}${latestCard}</div>`;
 

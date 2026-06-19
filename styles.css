@@ -1088,23 +1088,43 @@
   .ach.locked .charm .ink-fill { fill: var(--ink-soft); }
   .ach.secret .charm-q { font-family: var(--hand); font-weight: 700; font-size: 22px; color: var(--ink-soft); width: 30px; text-align: center; flex: none; }
 
-  /* Charm Collection page — header (title + growing bracelet + meter/latest), then grouped grid */
+  /* Charm Collection page — header (title + by-theme breakdown + meter/latest), then grouped grid */
   .ach-page-head { margin-bottom: 14px; }
   .ach-page-title { font-family: var(--hand); font-weight: 700; font-size: 44px; color: var(--ink); line-height: 0.95; }
   .ach-page-sub { font-family: var(--type); font-size: 12px; letter-spacing: 1px; color: var(--ink-soft); }
-  .ach-bracelet { margin: 6px 0 18px; }
-  .ach-bracelet svg { width: 100%; height: auto; max-height: 76px; display: block; }
-  .ach-bracelet-empty { font-family: var(--type); font-size: 11px; color: var(--ink-soft); text-align: center; padding: 14px 0; }
-  .ach-head-row { display: grid; grid-template-columns: 1.3fr 1fr; gap: 12px; align-items: stretch; margin-bottom: 8px; }
+
+  /* by-theme breakdown — a small colour-coded progress bar per group */
+  .ach-themes { border: 1.5px solid rgba(43,39,34,0.12); border-radius: 3px; padding: 14px 16px; margin-bottom: 14px; }
+  .ach-themes-label { font-family: var(--type); font-size: 10px; letter-spacing: 1px; text-transform: uppercase; color: var(--ink-soft); margin-bottom: 12px; }
+  .ach-themes-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 11px 22px; }
+  .ach-theme-head { display: flex; justify-content: space-between; align-items: baseline; font-family: var(--type); font-size: 11px; color: var(--ink-soft); margin-bottom: 4px; }
+  .ach-theme-name { display: flex; align-items: center; gap: 6px; }
+  .ach-theme-bar { height: 7px; border-radius: 4px; background: rgba(43,39,34,0.10); overflow: hidden; }
+  .ach-theme-bar > div { height: 100%; border-radius: 4px; }
+
+  .ach-head-row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; align-items: stretch; margin-bottom: 8px; }
   .ach-head-row .cat-meter { margin-bottom: 0; }
-  .ach-latest { flex-direction: row; }
-  .ach-latest .ach-latest-sub { font-family: var(--type); font-size: 10px; color: var(--ink-soft); margin-top: 3px; max-width: 18ch; }
+
+  /* latest charm — a proper keepsake: real icon + wrapping name + date */
+  .ach-latest { border: 1.5px solid rgba(43,39,34,0.12); border-radius: 3px; padding: 13px 15px; display: flex; align-items: center; gap: 13px; }
+  .ach-latest-charm { flex: none; }
+  .ach-latest-charm .charm { display: block; width: 46px; height: 46px; color: var(--bead); }
+  .ach-latest-charm .charm svg { width: 100%; height: 100%; overflow: visible; }
+  .ach-latest-charm .charm .ink { fill: none; stroke: var(--ink); stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+  .ach-latest-charm .charm .ink-fill { fill: var(--bead); stroke: var(--ink); stroke-width: 1.2; }
+  .ach-latest-text { min-width: 0; }
+  .ach-latest-label { font-family: var(--type); font-size: 9px; letter-spacing: 1px; text-transform: uppercase; color: var(--ink-soft); }
+  .ach-latest-name { font-family: var(--hand); font-weight: 700; font-size: 23px; color: var(--ink); line-height: 1.05; margin: 1px 0; }
+  .ach-latest-meta { font-family: var(--type); font-size: 10px; color: var(--ink-soft); line-height: 1.3; }
+  .ach-latest--empty { opacity: 0.7; }
+
   .ach-section { margin-top: 22px; display: flex; align-items: center; gap: 7px; }
   .ach-group-dot { width: 9px; height: 9px; border-radius: 50%; flex: none; box-shadow: inset 0 0 0 1px rgba(43,39,34,0.25); }
   .ach-group-dot--secret { background: var(--ink-soft); opacity: 0.5; }
 
   @media (max-width: 560px) {
     .ach-head-row { grid-template-columns: 1fr; }
+    .ach-themes-grid { grid-template-columns: 1fr; }
   }
 
   /* Daily Challenge — a pinned "second card" action: solid, denim-washed, lightly skewed

@@ -273,13 +273,13 @@ export const ACH_BY_ID = Object.fromEntries(ACHIEVEMENTS.map((a) => [a.id, a]));
 // Achievements are shown grouped by theme on the Charm Collection page. Order here is
 // the section order. The final "Secret charms" section is render-only (not a group).
 export const ACH_GROUPS = [
-  { id: "core",      label: "Core" },
-  { id: "daily",     label: "Daily challenge" },
-  { id: "infinite",  label: "Infinite mode" },
-  { id: "lyricist",  label: "Lyricist & lyric lines" },
-  { id: "catalogue", label: "Catalogue knowledge" },
+  { id: "core",      label: "Core",                   short: "Core" },
+  { id: "daily",     label: "Daily challenge",        short: "Daily" },
+  { id: "infinite",  label: "Infinite mode",          short: "Infinite" },
+  { id: "lyricist",  label: "Lyricist & lyric lines", short: "Lyricist" },
+  { id: "catalogue", label: "Catalogue knowledge",    short: "Catalogue" },
 ];
-// One muted notebook hue per theme — tints the bracelet charms AND the section dots.
+// One muted notebook hue per theme — the section dots and the by-theme breakdown bars.
 export const ACH_GROUP_COLORS = {
   core:      "#c8951f",
   daily:     "#3f7d6e",
