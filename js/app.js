@@ -1198,8 +1198,11 @@ function msUntilDailyReset() {
 function formatResetCountdown(ms) {
   const s = Math.max(0, Math.floor(ms / 1000));
   const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), sec = s % 60;
-  return h > 0 ? `${h}h ${String(m).padStart(2, "0")}m`
-              : `${m}m ${String(sec).padStart(2, "0")}s`;
+  const ss = String(sec).padStart(2, "0");
+  // Seconds always show so the note visibly ticks every second; hours appear only when
+  // they're nonzero (≥1h: "7h 02m 33s", under: "42m 10s").
+  return h > 0 ? `${h}h ${String(m).padStart(2, "0")}m ${ss}s`
+              : `${m}m ${ss}s`;
 }
 
 // The run is over when the fixed 13 pages are filled (classic + daily), or
