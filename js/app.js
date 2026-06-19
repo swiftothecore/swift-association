@@ -432,52 +432,89 @@ function dailyStatsHTML() {
 }
 
 // Lifetime cross-game numbers — global (All tab only, like the catalogue). Drawn from
-// the metrics store folded in endGame, plus aggregate stats (best streak ever) and the
-// song tally (albums collected). Empty until the first finished game.
-// Tiny ink marginalia icons for the ledger rows (18×18, stroked in currentColor).
+// the metrics store folded in endGame and the song tally. A notebook bento: an accuracy
+// ring + album-spine meter up top, a row of quick-stat tiles, a daily footer. Empty
+// until the first finished game. ("Best streak ever" lives in the per-tab block above —
+// it's the same bestInRow value, so it isn't repeated here.)
+// Tiny ink marginalia icons (18×18, stroked in currentColor).
 const NUM_ICONS = {
   rounds:  `<svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"><path d="M5 3h5l3 3v9H5z"/><path d="M10 3v3h3"/></svg>`,
-  streak:  `<svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"><path d="M9 2.4l1.9 4.1 4.5.5-3.4 3 1 4.5L9 12.2 5 14.5l1-4.5-3.4-3 4.5-.5z"/></svg>`,
   bolt:    `<svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"><path d="M10.5 2L4.5 10H8l-.8 6 6.3-9H10z"/></svg>`,
   clock:   `<svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="9" cy="9" r="6.4"/><path d="M9 5v4.2l2.8 1.8" stroke-linecap="round"/></svg>`,
-  disc:    `<svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="9" cy="9" r="6.4"/><circle cx="9" cy="9" r="1.3"/></svg>`,
   lines:   `<svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><path d="M3.5 6h11M3.5 9h11M3.5 12h7"/></svg>`,
   cal:     `<svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"><rect x="3" y="4.2" width="12" height="10.8" rx="1.2"/><path d="M3 7.4h12M6 2.6v2.6M12 2.6v2.6"/></svg>`,
   rosette: `<svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"><circle cx="9" cy="9" r="6.4"/><path d="M9 5.4l1 2.1 2.3.2-1.7 1.5.5 2.3L9 10.5 6.9 11.7l.5-2.3L5.7 7.7 8 7.5z"/></svg>`,
 };
 
+const RING_CIRC = 2 * Math.PI * 52;   // accuracy ring: r=52 in a 120×120 viewBox
+
 function extraStatsHTML() {
   const m = loadMetrics();
   if (m.roundsTotal === 0) return "";
-  const agg = aggregateStats();
   const t = loadSongTally();
   const dt = dailyTotals();   // authoritative daily counts (per-day keys, not the metrics store)
   const secs = (ms) => (ms / 1000).toFixed(1) + "s";
   const fastest = m.fastestMs != null ? secs(m.fastestMs) : "—";
   const avg = m.answerN ? secs(m.answerSumMs / m.answerN) : "—";
   const accPct = m.roundsTotal ? Math.round((m.roundsCorrect / m.roundsTotal) * 100) : 0;
-  const albumsTotal = new Set(allSongs.map((s) => s.album).filter(Boolean)).size || 1;
-  const albumsCollected = Object.keys(t.albums || {}).filter((a) => t.albums[a] > 0).length;
+  const ringOffset = RING_CIRC * (1 - accPct / 100);
 
-  const row = (icon, label, value) =>
-    `<div class="num-row"><span class="num-ico">${NUM_ICONS[icon]}</span>` +
-    `<span class="num-lbl">${label}</span><span class="num-val">${value}</span></div>`;
+  // Album-spine meter: one bar per album in chronological catalogue order, lit in its
+  // album colour once any of its songs has been answered, faint until then.
+  const albumOrder = [];
+  for (const s of allSongs) if (s.album && !albumOrder.includes(s.album)) albumOrder.push(s.album);
+  const albumsTotal = albumOrder.length || 1;
+  const albumsCollected = albumOrder.filter((a) => (t.albums || {})[a] > 0).length;
+  const spines = albumOrder.map((a) => {
+    const got = ((t.albums || {})[a] || 0) > 0;
+    const c = got ? (albumColor(a) || "var(--ink-soft)") : "rgba(43,39,34,0.13)";
+    return `<div class="num-spine" style="background:${c}" title="${escapeHtml(a)}"></div>`;
+  }).join("");
+
+  const tile = (icon, label, value) =>
+    `<div class="num-card num-tile"><span class="num-ico">${NUM_ICONS[icon]}</span>` +
+    `<span class="num-val">${value}</span><span class="num-sub">${label}</span></div>`;
 
   return `<p class="histogram-label" style="margin-top:24px;">by the numbers</p>
-    <div class="num-hero">
-      <div class="num-hero-head"><span>Accuracy</span><span>${m.roundsCorrect} / ${m.roundsTotal} rounds</span></div>
-      <div class="num-hero-num"><b>${accPct}</b>%</div>
-      <div class="num-bar"><div class="num-bar-fill" style="width:${accPct}%"></div></div>
+    <div class="num-hero-row">
+      <div class="num-card num-acc">
+        <div class="num-ring">
+          <svg viewBox="0 0 120 120" aria-hidden="true">
+            <circle class="num-ring-track" cx="60" cy="60" r="52"/>
+            <circle class="num-ring-arc" cx="60" cy="60" r="52" transform="rotate(-90 60 60)"
+              stroke-dasharray="${RING_CIRC.toFixed(1)}" stroke-dashoffset="${ringOffset.toFixed(1)}"/>
+          </svg>
+          <div class="num-ring-val"><b>${accPct}</b><span>%</span></div>
+        </div>
+        <div>
+          <div class="num-lbl">Accuracy</div>
+          <div class="num-sub">${m.roundsCorrect} of ${m.roundsTotal}<br>rounds right</div>
+        </div>
+      </div>
+      <div class="num-card num-albums">
+        <div class="num-albums-head">
+          <span class="num-lbl">Albums collected</span>
+          <span class="num-count">${albumsCollected}<i> / ${albumsTotal}</i></span>
+        </div>
+        <div class="num-spines">${spines}</div>
+      </div>
     </div>
-    <div class="num-ledger">
-      ${row("rounds", "Rounds played", m.roundsTotal)}
-      ${row("streak", "Best streak ever", agg.bestInRow || 0)}
-      ${row("bolt", "Fastest answer", fastest)}
-      ${row("clock", "Average answer time", avg)}
-      ${row("disc", "Albums collected", `${albumsCollected} / ${albumsTotal}`)}
-      ${row("lines", "Lyric lines recalled", m.lyricLines)}
-      ${row("cal", "Daily challenges", dt.played)}
-      ${row("rosette", "Daily perfects", dt.perfect)}
+    <div class="num-tiles">
+      ${tile("rounds", "Rounds played", m.roundsTotal)}
+      ${tile("bolt", "Fastest", fastest)}
+      ${tile("clock", "Avg time", avg)}
+      ${tile("lines", "Lyric lines", m.lyricLines)}
+    </div>
+    <div class="num-card num-daily">
+      <div class="num-daily-item">
+        <span class="num-ico num-ico-lg">${NUM_ICONS.cal}</span>
+        <div><div class="num-val num-val-md">${dt.played}</div><div class="num-sub">Daily challenges</div></div>
+      </div>
+      <div class="num-daily-div"></div>
+      <div class="num-daily-item">
+        <span class="num-ico num-ico-lg num-ico-gold">${NUM_ICONS.rosette}</span>
+        <div><div class="num-val num-val-md num-gold">${dt.perfect}</div><div class="num-sub">Daily perfects</div></div>
+      </div>
     </div>`;
 }
 

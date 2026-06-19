@@ -827,53 +827,65 @@
   .streak-cell:last-child { border-right: none; }
   .streak-cell .stat-val { font-family: var(--hand); font-size: 42px; font-weight: 700; color: var(--ink-accent); line-height: 1; display: block; }
   .streak-cell .stat-lbl { font-family: var(--type); font-size: 10px; letter-spacing: 1px; color: var(--ink-soft); display: block; margin-top: 4px; text-transform: uppercase; }
-  /* "By the numbers" — a hero accuracy meter over a ruled tally ledger.
-     Echoes the catalogue meter below it instead of the old uniform box grid. */
-  .num-hero {
-    border: 1.5px solid rgba(43,39,34,0.12); border-radius: 3px;
-    padding: 14px 16px 16px; margin-bottom: 14px;
+  /* "By the numbers" — a notebook bento: accuracy ring + album-spine meter,
+     quick-stat tiles, daily footer. Cards are transparent over the ruled paper. */
+  .num-card {
+    border: 1.5px solid rgba(43,39,34,0.14); border-radius: 3px;
+    padding: 13px 15px; position: relative;
   }
-  .num-hero-head {
-    display: flex; justify-content: space-between; align-items: baseline;
-    font-family: var(--type); font-size: 10px; letter-spacing: 1px;
-    color: var(--ink-soft); text-transform: uppercase;
-  }
-  .num-hero-num {
-    font-family: var(--hand); font-size: 26px; color: var(--ink-soft);
-    margin: 2px 0 12px; line-height: 1;
-  }
-  .num-hero-num b { font-weight: 700; font-size: 54px; color: var(--ink-accent); }
-  .num-bar {
-    height: 11px; border-radius: 6px; overflow: hidden;
-    background: rgba(43,39,34,0.10);
-  }
-  .num-bar-fill {
-    height: 100%; background: var(--ink-accent); opacity: 0.85;
-    border-radius: 6px; transition: width 0.5s cubic-bezier(0.2,0.7,0.2,1);
-  }
-  .num-ledger {
-    border: 1.5px solid rgba(43,39,34,0.12); border-radius: 3px;
-    padding: 2px 16px; margin-bottom: 22px;
-  }
-  .num-row {
-    display: flex; align-items: center; gap: 11px;
-    padding: 9px 0; border-bottom: 1px solid rgba(43,39,34,0.09);
-  }
-  .num-row:last-child { border-bottom: none; }
-  .num-ico {
-    width: 18px; height: 18px; flex: none; color: var(--ink-soft);
-    opacity: 0.75; display: block;
-  }
-  .num-ico svg { width: 100%; height: 100%; display: block; }
   .num-lbl {
-    flex: 1; font-family: var(--type); font-size: 11px; letter-spacing: 0.5px;
-    color: var(--ink-soft); text-transform: uppercase; min-width: 0;
+    font-family: var(--type); font-size: 10px; letter-spacing: 1.5px;
+    text-transform: uppercase; color: var(--ink-soft);
+  }
+  .num-sub {
+    display: block; font-family: var(--type); font-size: 10px; letter-spacing: 0.5px;
+    text-transform: uppercase; color: var(--ink-soft); line-height: 1.4;
   }
   .num-val {
-    font-family: var(--hand); font-weight: 700; font-size: 28px;
-    color: var(--ink); line-height: 1; flex: none;
+    display: block; font-family: var(--hand); font-weight: 700; font-size: 34px;
+    line-height: 1; color: var(--ink);
   }
-  .num-row:hover .num-ico { opacity: 1; color: var(--ink-accent); }
+  .num-val-md { font-size: 30px; }
+  .num-gold { color: var(--ink-accent); }
+  .num-ico {
+    display: inline-block; width: 19px; height: 19px;
+    color: var(--ink-soft); opacity: 0.7;
+  }
+  .num-ico svg { width: 100%; height: 100%; display: block; }
+  .num-ico-lg { width: 22px; height: 22px; }
+  .num-ico-gold { color: var(--ink-accent); opacity: 1; }
+  .num-hero-row {
+    display: grid; grid-template-columns: 1fr 1.2fr; gap: 12px; margin-bottom: 12px;
+  }
+  .num-acc { display: flex; align-items: center; gap: 16px; }
+  .num-ring { position: relative; width: 92px; height: 92px; flex: none; }
+  .num-ring svg { width: 100%; height: 100%; display: block; }
+  .num-ring-track { fill: none; stroke: rgba(43,39,34,0.13); stroke-width: 11; }
+  .num-ring-arc {
+    fill: none; stroke: var(--ink-accent); stroke-width: 11; stroke-linecap: round;
+    transition: stroke-dashoffset 0.6s cubic-bezier(0.2,0.7,0.2,1);
+  }
+  .num-ring-val {
+    position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+    font-family: var(--hand); font-weight: 700; color: var(--ink);
+  }
+  .num-ring-val b { font-size: 38px; line-height: 1; }
+  .num-ring-val span { font-size: 19px; color: var(--ink-soft); }
+  .num-albums { display: flex; flex-direction: column; justify-content: center; }
+  .num-albums-head {
+    display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 11px;
+  }
+  .num-count { font-family: var(--hand); font-weight: 700; font-size: 30px; color: var(--ink); line-height: 1; }
+  .num-count i { font-style: normal; font-size: 17px; color: var(--ink-soft); }
+  .num-spines { display: flex; gap: 3px; align-items: flex-end; height: 38px; }
+  .num-spine { flex: 1; height: 100%; border-radius: 1px; }
+  .num-tiles { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 12px; }
+  .num-tile { text-align: center; }
+  .num-tile .num-ico { margin-bottom: 2px; }
+  .num-tile .num-val { margin: 2px 0 3px; }
+  .num-daily { display: flex; justify-content: space-around; align-items: center; margin-bottom: 22px; }
+  .num-daily-item { display: flex; align-items: center; gap: 12px; }
+  .num-daily-div { width: 1px; height: 46px; background: rgba(43,39,34,0.12); }
   .histogram-label {
     font-family: var(--type); font-size: 10px; letter-spacing: 1px;
     color: var(--ink-soft); text-transform: uppercase; margin-bottom: 10px;
