@@ -1252,7 +1252,7 @@ function applyInputHints() {
     return;
   }
   input.placeholder = currentMode.dropdown ? "a title… or sing me a line" : "the full title… or a lyric line";
-  hint.textContent = currentMode.dropdown ? "Enter accepts the top match — or type a lyric line" : "no hints — type the full title or a real lyric line, then Enter";
+  hint.textContent = currentMode.dropdown ? "Enter accepts the top match — or type a lyric line" : "no suggestions — type the full title or a real lyric line, then Enter";
   if (settings.enableHints !== false && currentMode.hint && gameType !== "daily") {
     hint.textContent += " · Tab for a hint";
   }
