@@ -289,7 +289,8 @@ function renderStats(lastScore, viewMode = defaultStatsView()) {
     const bars = s.scoreCounts.map((count, score) => {
       const h = Math.round((count / maxCount) * 56);
       const isYou = (score === youScore);
-      return `<div class="histogram-col">
+      const tip = `scored ${score}/${TOTAL_ROUNDS} · ${count} time${count === 1 ? "" : "s"}`;
+      return `<div class="histogram-col" title="${tip}">
         <div class="histogram-bar${isYou ? " has-you" : ""}" style="height:${Math.max(h, count > 0 ? 4 : 2)}px"></div>
         <div class="histogram-score">${score}</div>
       </div>`;
@@ -616,6 +617,7 @@ function showToast(a) {
   if (!layer) return;
   const t = document.createElement("div");
   t.className = "toast";
+  t.title = a.desc;
   t.innerHTML = charmMarkup(a.icon) +
     `<div><div class="t-label">achievement unlocked</div><div class="t-name">${escapeHtml(a.name)}</div></div>`;
   layer.appendChild(t);
@@ -631,7 +633,7 @@ function renderResultRecap() {
   if (!newlyUnlocked.length) { el.style.display = "none"; el.innerHTML = ""; return; }
   const chips = newlyUnlocked.map((id) => {
     const a = ACH_BY_ID[id];
-    return `<div class="ach-chip">${charmMarkup(a.icon)}<span class="nm">${escapeHtml(a.name)}</span></div>`;
+    return `<div class="ach-chip" title="${escapeHtml(a.desc)}">${charmMarkup(a.icon)}<span class="nm">${escapeHtml(a.name)}</span></div>`;
   }).join("");
   el.innerHTML = `<div class="ach-recap-title">newly unlocked</div><div class="ach-recap-row">${chips}</div>`;
   el.style.display = "";

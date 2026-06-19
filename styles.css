@@ -618,6 +618,7 @@
   .quit-btn.armed { color: var(--margin); opacity: 1; font-weight: 700; }
 
   /* ---------- Hints (progressive ladder) ---------- */
+  .hint-btn[hidden] { display: none; }
   .hint-btn {
     display: block; margin: 10px auto 0; cursor: pointer;
     font-family: var(--hand); font-size: 19px; color: var(--ink-accent);
@@ -1285,7 +1286,7 @@
   .settings-gear {
     position: fixed; top: 14px; right: 14px; z-index: 60;
     width: 42px; height: 42px; padding: 7px; border-radius: 50%;
-    color: var(--ink); background: rgba(245, 239, 225, 0.82);
+    color: #5c4326; background: rgba(245, 239, 225, 0.82);
     border: 1.5px solid rgba(43, 39, 34, 0.32);
     box-shadow: 0 2px 6px rgba(60, 50, 35, 0.22);
     transition: transform 0.18s ease, background 0.18s, color 0.18s;
