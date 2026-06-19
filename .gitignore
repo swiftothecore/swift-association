@@ -5,6 +5,9 @@
 # Local song-builder tool + its data
 add_song/
 
+# Local word-research script + its output (not part of the shipped game)
+scripts/
+
 # Local editor / tooling config
 .claude/
 .vscode/
