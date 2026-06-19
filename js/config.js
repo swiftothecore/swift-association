@@ -211,6 +211,10 @@ export const ACH_ICONS = {
   hourglass:`<svg viewBox="0 0 24 24"><g class="ink" stroke-width="2" stroke-linecap="round"><path d="M6 3 H18 M6 21 H18"/></g><path class="ink-fill" d="M7 4 H17 L12 12 Z"/><path class="ink-fill" d="M12 12 L17 20 H7 Z"/></svg>`,
   // a four-leaf clover — the lucky one
   clover:  `<svg viewBox="0 0 24 24"><g class="ink-fill"><circle cx="12" cy="7.6" r="3.1"/><circle cx="12" cy="14.4" r="3.1"/><circle cx="8.6" cy="11" r="3.1"/><circle cx="15.4" cy="11" r="3.1"/></g><path class="ink" stroke-width="1.6" stroke-linecap="round" d="M12.5 12 L14.5 21"/></svg>`,
+  // an ajar door — the bolter (someone who runs)
+  door:    `<svg viewBox="0 0 24 24"><g class="ink" stroke-width="1.6" stroke-linejoin="round"><path d="M4 21 H20"/></g><path class="ink-fill" d="M7 3 L16 4.6 V20.4 L7 21 Z"/><circle cx="9" cy="12" r="0.9" fill="var(--paper)"/></svg>`,
+  // a padlock, shut — no closure
+  lock:    `<svg viewBox="0 0 24 24"><path class="ink" fill="none" stroke-width="1.8" d="M8 10 V7.5 a4 4 0 0 1 8 0 V10"/><rect class="ink-fill" x="5" y="10" width="14" height="10" rx="1.6"/><circle cx="12" cy="14" r="1.3" fill="var(--paper)"/><rect x="11.3" y="14.5" width="1.4" height="3.2" rx="0.6" fill="var(--paper)"/></svg>`,
 };
 export const ACHIEVEMENTS = [
   { id: "enchanted",        name: "Enchanted",        desc: "Finish your first game",              secret: false, icon: "sparkle" },
@@ -266,6 +270,8 @@ export const ACHIEVEMENTS = [
   { id: "everything-nothing", name: "Everything & Nothing All At Once", desc: "Win a game in every difficulty", secret: false, icon: "yinyang" },
   { id: "fearless-tv",      name: "Fearless (Taylor's Version)", desc: "Two games in a row with no timeouts", secret: false, icon: "vinyl" },
   { id: "piano-was-hissing", name: "The Piano Was Hissing", desc: "Type “reputation tv” somewhere",    secret: true,  icon: "piano" },
+  { id: "the-bolter",       name: "The Bolter",       desc: "Quit before typing anything in round 1", secret: true,  icon: "door" },
+  { id: "no-closure",       name: "No Closure",       desc: "Give up after 12 — never answer the 13th", secret: true, icon: "lock" },
   { id: "is-it-over-now",   name: "Is It Over Now?",  desc: "Earn every hidden achievement",         secret: true,  icon: "hourglass" },
   { id: "the-lucky-one",    name: "The Lucky One",    desc: "Earn every other achievement",          secret: true,  icon: "clover" },
 ];

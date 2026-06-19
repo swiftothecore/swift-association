@@ -606,6 +606,17 @@
     color: var(--ink-soft); margin-top: 16px;
   }
 
+  /* ---------- Quit / give-up (close the notebook) ---------- */
+  .quit-btn {
+    position: absolute; top: 10px; right: 12px; z-index: 7; cursor: pointer;
+    font-family: var(--type); font-size: 10px; letter-spacing: 0.6px; text-transform: uppercase;
+    color: var(--ink-soft); background: transparent; border: none;
+    padding: 4px 6px; opacity: 0.65; transition: color 0.15s, opacity 0.15s;
+  }
+  .quit-btn::before { content: "✕ "; }
+  .quit-btn:hover { color: var(--ink); opacity: 1; }
+  .quit-btn.armed { color: var(--margin); opacity: 1; font-weight: 700; }
+
   /* ---------- Hints (progressive ladder) ---------- */
   .hint-btn {
     display: block; margin: 10px auto 0; cursor: pointer;

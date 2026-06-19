@@ -128,6 +128,11 @@ function showScreen(name) {
   // The daily reset countdown only lives on the start screen; don't let its interval
   // outlive the view (renderDailyButtonState restarts it when start is shown again).
   if (name !== "start") stopResetCountdown();
+  // Re-arm the quit button fresh for each visit to the game (drop any stale armed state).
+  if (name === "game") {
+    const qb = $("quitBtn");
+    if (qb) { clearTimeout(quitTimer); qb.classList.remove("armed"); qb.textContent = qb.dataset.label; }
+  }
 }
 
 /* ---------- Era selection ---------- */
@@ -2251,6 +2256,62 @@ function hideNewBestBanner() {
   if (el) { el.style.display = "none"; el.classList.remove("pop"); }
 }
 
+/* ---------- Quit / give up (close the notebook) ---------- */
+let quitTimer = null;
+// First tap arms the button; a second tap within 3s actually leaves. Guards an
+// in-progress run against a stray click. Wired to #quitBtn.
+function armQuit() {
+  const btn = $("quitBtn");
+  if (!btn) return;
+  if (btn.classList.contains("armed")) {
+    clearTimeout(quitTimer);
+    btn.classList.remove("armed");
+    btn.textContent = btn.dataset.label;
+    quitGame();
+    return;
+  }
+  btn.classList.add("armed");
+  btn.textContent = "give up? tap again";
+  quitTimer = setTimeout(() => {
+    btn.classList.remove("armed");
+    btn.textContent = btn.dataset.label;
+  }, 3000);
+}
+
+// Abandon the in-progress run and return to the start screen. A quit isn't a finished
+// game, so nothing is logged to stats / records / history — but two fail-fun
+// achievements watch for the way you leave.
+function quitGame() {
+  if (!screens.game.classList.contains("active")) return;
+
+  // Quit achievements — checked against the live run state, before teardown.
+  // The Bolter: bail in round 1 having typed nothing.
+  if (round === 1 && roundResults.length === 0 && !($("songInput").value || "").trim()) {
+    unlock("the-bolter");
+  }
+  // No Closure: answered the first 12 of a 13-round run, then leave the 13th blank.
+  if ((gameType === "classic" || gameType === "daily") && roundResults.length === TOTAL_ROUNDS - 1) {
+    unlock("no-closure");
+  }
+
+  // Teardown: stop every timer / animation a round may have started.
+  clearTimer();
+  if (countdownId) { clearInterval(countdownId); countdownId = null; }
+  clearTimeout(hintUrgeTimer);
+  resetTension();
+  clearEggs();
+  roundLocked = false;
+  $("feedback").innerHTML = "";
+  $("songInput").value = "";
+
+  // Back to the desk. The next game start (startGame / startInfinite / startDaily)
+  // calls resetRunState, so the abandoned score/round clear there.
+  applyEra("gold");
+  renderStartPickers();
+  showScreen("start");
+  $("startContent").style.display = "";
+}
+
 /* ---------- Easter eggs (Phase 8) ---------- */
 let titleTaps = 0;
 let activePen = null;            // 'quill' | 'fountain' | 'glitter' | null
@@ -2893,6 +2954,8 @@ async function init() {
   });
   // Roll a finished classic run straight into endless play, carrying the score.
   $("keepGoingBtn").addEventListener("click", () => startInfinite("3lives", { carry: true }));
+  // Quit / give up mid-game — first tap arms, second tap leaves (see armQuit).
+  $("quitBtn").addEventListener("click", armQuit);
 
   // Settings modal — openable from any screen (gear), closed by ✕, scrim, or ESC.
   $("settingsGear").addEventListener("click", openSettings);
