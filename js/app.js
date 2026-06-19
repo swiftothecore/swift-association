@@ -2415,6 +2415,7 @@ function renderSettingsBody() {
     setSection("About",
       `<div class="set-about">` +
       `<p>Swift to the Song Association — a songwriter’s-notebook word game. Fan-made and unofficial; lyrics belong to their writers.</p>` +
+      `<p> Inspired by ELLE.</p>` +
       `<p><a href="https://github.com/swiftothecore/swift-association-testing" target="_blank" rel="noopener">View the project on GitHub →</a></p>` +
       `</div>`
     );
