@@ -1199,6 +1199,7 @@ function renderHintAffordance() {
   const box = $("hintBox");
   box.innerHTML = "";
   hintTier = 0;
+  applyInputHints();   // restore the default placeholder/hint (a prior round's tier-3 may have changed it)
   if (!btn) return;
   btn.classList.remove("urge");
   if (hintsAllowed() && roundHintSong) {
@@ -1257,6 +1258,11 @@ function useHint() {
   if (btn && hintTier >= 3) {
     btn.textContent = "no more hints";
     btn.disabled = true;
+    // The line is now on screen, so lyric-line answering is off (see submitAnswer) —
+    // tell the player to name the song instead of typing back what they're reading.
+    const input = $("songInput");
+    input.placeholder = "now name the song…";
+    $("gameHint").textContent = "type the song title — the line above is your clue";
   } else if (btn) {
     btn.textContent = "another hint?";
   }
@@ -1780,7 +1786,11 @@ function submitAnswer(song, isTimeout) {
       const key = normalizeTitle(raw);
       song = key ? (titleIndex.get(key) || null) : null;
       if (!song && key) song = spacelessIndex.get(key.replace(/ /g, "")) || null;  // forgive misplaced spaces
-      if (!song) {                         // not a title — try it as a lyric line
+      // Not a title — try it as a lyric line. EXCEPT when this round's tier-3 line
+      // hint has been revealed: the line is on screen, so accepting a typed line
+      // would just be copying the hint. Force the title instead (dropdown is on in
+      // every hint mode, so the title path is always available).
+      if (!song && hintTier < 3) {
         lyricMatch = matchLyricLine(raw);
         if (lyricMatch) song = lyricMatch.song;
       }
