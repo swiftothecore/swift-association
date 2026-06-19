@@ -200,8 +200,9 @@ export const ACH_ICONS = {
   tower:   `<svg viewBox="0 0 24 24"><path class="ink-fill" d="M12 1.5 L13.4 6 H10.6 Z"/><path class="ink" fill="none" stroke-width="1.6" stroke-linejoin="round" d="M10.7 5.5 L7.5 14 L4 22 H20 L16.5 14 L13.3 5.5"/><g class="ink" stroke-width="1.3"><path d="M6.4 16.8 H17.6"/><path d="M9 9.5 H15"/><path d="M8.4 13 C10.5 11.5 13.5 11.5 15.6 13"/><path d="M5.6 18.6 C9.5 16.6 14.5 16.6 18.4 18.6"/></g><path class="ink" stroke-width="1.3" d="M12 6.5 V22"/></svg>`,
   // a single water droplet — "Clean" (the rain washed it all away)
   drop:    `<svg viewBox="0 0 24 24"><path class="ink-fill" d="M12 2 C12 2 5 10 5 15 a7 7 0 0 0 14 0 C19 10 12 2 12 2 Z"/><path d="M9.5 15 a2.5 2.5 0 0 0 2.5 2.5" fill="none" stroke="var(--paper)" stroke-width="1.4" stroke-linecap="round"/></svg>`,
-  // two linked rings — everything and nothing, all at once
-  infinity:`<svg viewBox="0 0 24 24"><g class="ink" fill="none" stroke-width="2.4"><circle cx="7.6" cy="12" r="4"/><circle cx="16.4" cy="12" r="4"/></g></svg>`,
+  // yin-yang — everything & nothing, all at once (the gold half is the bead fill,
+  // the other half solid ink; two eyes complete the taijitu)
+  yinyang: `<svg viewBox="0 0 24 24"><circle class="ink-fill" cx="12" cy="12" r="10" stroke-width="1.2"/><path d="M12 2 a10 10 0 0 1 0 20 a5 5 0 0 1 0 -10 a5 5 0 0 0 0 -10 z" fill="var(--ink)"/><circle cx="12" cy="7" r="1.7" fill="var(--ink)"/><circle cx="12" cy="17" r="1.7" fill="var(--bead)"/></svg>`,
   // a vinyl record — Taylor's Version (re-recording)
   vinyl:   `<svg viewBox="0 0 24 24"><circle class="ink-fill" cx="12" cy="12" r="9.5"/><circle cx="12" cy="12" r="4.4" fill="var(--paper)"/><circle class="ink-fill" cx="12" cy="12" r="1.3"/><g stroke="var(--paper)" stroke-width="0.8" fill="none" opacity="0.6"><circle cx="12" cy="12" r="6.6"/><circle cx="12" cy="12" r="8"/></g></svg>`,
   // a few piano keys — the piano was hissing
@@ -262,7 +263,7 @@ export const ACHIEVEMENTS = [
   { id: "eyes-closed",      name: "Eyes Closed",      desc: "10 fuzzy lyric matches in one Lyricist game", secret: true, icon: "eyeclosed" },
   { id: "paris",            name: "Paris",            desc: "Answer “Paris” when the word is “somewhere”", secret: true, icon: "tower" },
   { id: "clean",            name: "Clean",            desc: "Win without hints or a single timeout",  secret: false, icon: "drop" },
-  { id: "everything-nothing", name: "Everything & Nothing All At Once", desc: "Win a game in every difficulty", secret: false, icon: "infinity" },
+  { id: "everything-nothing", name: "Everything & Nothing All At Once", desc: "Win a game in every difficulty", secret: false, icon: "yinyang" },
   { id: "fearless-tv",      name: "Fearless (Taylor's Version)", desc: "Two games in a row with no timeouts", secret: false, icon: "vinyl" },
   { id: "piano-was-hissing", name: "The Piano Was Hissing", desc: "Type “reputation tv” somewhere",    secret: true,  icon: "piano" },
   { id: "is-it-over-now",   name: "Is It Over Now?",  desc: "Earn every hidden achievement",         secret: true,  icon: "hourglass" },
