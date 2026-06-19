@@ -290,7 +290,7 @@ function renderStats(lastScore, viewMode = defaultStatsView()) {
       const h = Math.round((count / maxCount) * 56);
       const isYou = (score === youScore);
       const tip = `scored ${score}/${TOTAL_ROUNDS} · ${count} time${count === 1 ? "" : "s"}`;
-      return `<div class="histogram-col" title="${tip}">
+      return `<div class="histogram-col" data-tip="${tip}">
         <div class="histogram-bar${isYou ? " has-you" : ""}" style="height:${Math.max(h, count > 0 ? 4 : 2)}px"></div>
         <div class="histogram-score">${score}</div>
       </div>`;
@@ -612,12 +612,65 @@ function checkPianoEgg(s) {
   if (k === "reptv" || k === "reputationtv") unlock("piano-was-hissing");
 }
 
+/* ---------- Custom tooltips (data-tip; controllable delay, no clipping) ---------- */
+// A single body-level bubble shared by every [data-tip] element. Default shows
+// immediately; an element can opt into a delay with data-tip-delay (ms).
+let _tipEl = null, _tipTimer = null;
+function ensureTipEl() {
+  if (_tipEl) return _tipEl;
+  _tipEl = document.createElement("div");
+  _tipEl.className = "tip-pop";
+  _tipEl.setAttribute("role", "tooltip");
+  document.body.appendChild(_tipEl);
+  return _tipEl;
+}
+function positionTip(el, target) {
+  const r = target.getBoundingClientRect();
+  el.style.left = "0px"; el.style.top = "0px";   // measure unclamped
+  const tr = el.getBoundingClientRect();
+  let left = r.left + r.width / 2 - tr.width / 2;
+  left = Math.max(6, Math.min(left, window.innerWidth - tr.width - 6));
+  let top = r.top - tr.height - 8;
+  if (top < 6) top = r.bottom + 8;               // flip below if no room above
+  el.style.left = left + "px";
+  el.style.top = top + "px";
+}
+function showTip(target) {
+  const text = target.getAttribute("data-tip");
+  if (!text) return;
+  const el = ensureTipEl();
+  el.textContent = text;
+  el.classList.add("show");
+  positionTip(el, target);
+}
+function hideTip() {
+  clearTimeout(_tipTimer);
+  if (_tipEl) _tipEl.classList.remove("show");
+}
+function setupTooltips() {
+  document.addEventListener("mouseover", (e) => {
+    const t = e.target.closest("[data-tip]");
+    if (!t) return;
+    clearTimeout(_tipTimer);
+    const delay = parseInt(t.getAttribute("data-tip-delay") || "0", 10);
+    if (delay > 0) _tipTimer = setTimeout(() => showTip(t), delay);
+    else showTip(t);
+  });
+  document.addEventListener("mouseout", (e) => {
+    const t = e.target.closest("[data-tip]");
+    if (!t || t.contains(e.relatedTarget)) return;
+    hideTip();
+  });
+  window.addEventListener("scroll", hideTip, true);
+}
+
 function showToast(a) {
   const layer = $("toastLayer");
   if (!layer) return;
   const t = document.createElement("div");
   t.className = "toast";
-  t.title = a.desc;
+  t.setAttribute("data-tip", a.desc);
+  t.setAttribute("data-tip-delay", "500");
   t.innerHTML = charmMarkup(a.icon) +
     `<div><div class="t-label">achievement unlocked</div><div class="t-name">${escapeHtml(a.name)}</div></div>`;
   layer.appendChild(t);
@@ -633,7 +686,7 @@ function renderResultRecap() {
   if (!newlyUnlocked.length) { el.style.display = "none"; el.innerHTML = ""; return; }
   const chips = newlyUnlocked.map((id) => {
     const a = ACH_BY_ID[id];
-    return `<div class="ach-chip" title="${escapeHtml(a.desc)}">${charmMarkup(a.icon)}<span class="nm">${escapeHtml(a.name)}</span></div>`;
+    return `<div class="ach-chip" data-tip="${escapeHtml(a.desc)}" data-tip-delay="500">${charmMarkup(a.icon)}<span class="nm">${escapeHtml(a.name)}</span></div>`;
   }).join("");
   el.innerHTML = `<div class="ach-recap-title">newly unlocked</div><div class="ach-recap-row">${chips}</div>`;
   el.style.display = "";
@@ -2981,6 +3034,7 @@ async function init() {
     reader.readAsText(file);
   });
   wireInput();
+  setupTooltips();
 
   try {
     await loadData();
