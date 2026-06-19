@@ -1158,7 +1158,7 @@ function applyInputHints() {
   }
 }
 
-/* ---------- Hints (progressive ladder, Easy/Normal/Relaxed only) ---------- */
+/* ---------- Hints (progressive ladder, Easy/Relaxed only) ---------- */
 // All tiers derive from currentSongs — nothing is handwritten. A hinted run still
 // plays/scores/logs to history but can't set a personal best (see endGame).
 function hintsAllowed() {
@@ -2567,7 +2567,7 @@ function renderSettingsBody() {
       setToggleHTML("enterOnMiss", "Enter advances on a miss", "press Enter to leave the answer screen") +
       setToggleHTML("showExamples", "Show example songs after a miss", "") +
       setToggleHTML("stemMatching", "Match word variants", "off = exact word only (love won’t match loving)") +
-      setToggleHTML("enableHints", "Hints", "Easy/Normal/Relaxed — Tab for a hint; a hinted run can’t set a personal best") +
+      setToggleHTML("enableHints", "Hints", "Easy &amp; Relaxed — Tab for a hint; a hinted run can’t set a personal best") +
       setChoiceHTML("defaultGameType", "Default game type", "on launch", [{ val: "last", label: "Last" }, { val: "classic", label: "Classic" }, { val: "infinite", label: "Infinite" }]) +
       setChoiceHTML("defaultDifficulty", "Default difficulty", "on launch", diffOpts) +
       setChoiceHTML("defaultStatsTab", "Default stats tab", "which tab opens first", statsOpts)
