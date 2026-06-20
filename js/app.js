@@ -3160,7 +3160,11 @@ function wireInput() {
     // Hard/Ultra have no autocomplete — you type the full title.
     if (currentMode.dropdown) {
       if (debounceId) clearTimeout(debounceId);
-      debounceId = setTimeout(updateDropdown, 120);
+      // Null debounceId when it fires so the Enter handler can tell a *genuinely
+      // pending* edit (flush + reset selection) from an already-settled list (leave
+      // the arrow-key selection alone). Without this, debounceId stays truthy after
+      // firing, so every Enter re-ran updateDropdown and snapped activeIndex back to 0.
+      debounceId = setTimeout(() => { debounceId = null; updateDropdown(); }, 120);
     }
     clearTimeout(hintUrgeTimer);            // typing cancels the Relaxed idle nudge
     $("hintBtn").classList.remove("urge");
