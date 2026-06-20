@@ -156,6 +156,19 @@ const TAPE_SPOTS = [
   { left: "50%",   top: "-7px",     tx: "-50%", rot: [-7, 7] },     // top-centre
   { left: "50%",   bottom: "-8px",  tx: "-50%", rot: [-7, 7] },     // bottom-centre
 ];
+// A hand-torn short-edge silhouette: the top/bottom run straight, while the left and
+// right ends bite inward by a random amount at each segment, so every strip tears
+// differently. Returns a CSS polygon() for clip-path.
+function tornEdge() {
+  const J = 13;                // max inward bite, % of the strip length
+  const segs = 5;              // tear resolution down each short edge
+  const bite = () => +(Math.random() * J).toFixed(1);
+  const pts = [`${bite()}% 0%`, `${(100 - bite()).toFixed(1)}% 0%`];   // straight top
+  for (let i = 1; i < segs; i++) pts.push(`${(100 - bite()).toFixed(1)}% ${(i / segs * 100).toFixed(1)}%`); // right edge down
+  pts.push(`${(100 - bite()).toFixed(1)}% 100%`, `${bite()}% 100%`);   // straight bottom
+  for (let i = segs - 1; i >= 1; i--) pts.push(`${bite()}% ${(i / segs * 100).toFixed(1)}%`);  // left edge up
+  return `polygon(${pts.join(", ")})`;
+}
 function makeTapeStrip(spot) {
   const t = document.createElement("span");
   t.className = "nav-tape";
@@ -164,7 +177,10 @@ function makeTapeStrip(spot) {
   t.style.right = spot.right || "auto";
   t.style.bottom = spot.bottom || "auto";
   t.style.left = spot.left || "auto";
+  t.style.width = (44 + Math.round(Math.random() * 16)) + "px";   // varied length
+  t.style.height = (15 + Math.round(Math.random() * 3)) + "px";   // near-constant tape width
   t.style.transform = `translateX(${spot.tx || "0"}) rotate(${rot}deg)`;
+  t.style.clipPath = tornEdge();
   return t;
 }
 function scatterNavTape(screenName) {
