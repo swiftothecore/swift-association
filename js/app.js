@@ -919,6 +919,27 @@ function scheduleToastDismiss() {
   toastDismissTimer = setTimeout(tick, 3000);   // initial dwell before the first leaves
 }
 
+// The results keepsake: lines the player recalled word-for-word this run, re-written
+// in faint handwriting like verses pressed into the notebook. Skipped when empty or on
+// a held-back daily score (it would leak how the round went). ★ = word-perfect line,
+// ★★ = a whole verse.
+function renderVerseAnthology() {
+  const el = $("verseAnthology");
+  if (!el) return;
+  if (!verseKeepsake.length || (gameType === "daily" && settings.hideDailyScore)) {
+    el.style.display = "none"; el.innerHTML = ""; return;
+  }
+  const rows = verseKeepsake.map((k) => {
+    const mark = k.tier === "verse" ? "★★" : "★";
+    return `<li class="va-row"><span class="va-mark">${mark}</span>` +
+      `<span class="va-text">${highlightWord(k.line, k.word)}</span></li>`;
+  }).join("");
+  const n = verseKeepsake.length;
+  el.innerHTML = `<p class="va-caption">pages you filled in — ${n} line${n > 1 ? "s" : ""} from memory</p>` +
+    `<ul class="va-list">${rows}</ul>`;
+  el.style.display = "";
+}
+
 function renderResultRecap() {
   const el = $("resultAchievements");
   if (!el) return;
@@ -1965,6 +1986,7 @@ function showDailyResult(data, dateStr) {
   $("finalSub").textContent = "out of " + TOTAL_ROUNDS;
   $("keepGoingBtn").style.display = "none";
   $("resultAchievements").style.display = "none";
+  $("verseAnthology").style.display = "none";   // saved daily snapshot has no recalled-lines list
   $("namePrompt").style.display = "none";
   hideNewBestBanner();
   document.querySelector("#screen-results .podium-title").textContent = "Today's Result";
@@ -2835,6 +2857,7 @@ function endGame() {
   const timeSuffix = (runTime != null && !(isDaily && settings.hideDailyScore)) ? " · " + fmtTime(runTime) : "";
   $("finalSub").textContent = (isInfinite ? "rounds · " + score + " correct" : "out of " + TOTAL_ROUNDS) + timeSuffix + bonusSuffix;
   $("keepGoingBtn").style.display = (isInfinite || isDaily) ? "none" : "";
+  renderVerseAnthology();
   renderResultRecap();
   if (!isInfinite && score === TOTAL_ROUNDS) celebratePerfect();
 
