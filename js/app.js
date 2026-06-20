@@ -3138,7 +3138,7 @@ function celebratePerfect() {
   if (!card) return;
   const layer = document.createElement("div");
   layer.className = "star-shower"; layer.setAttribute("aria-hidden", "true");
-  for (let i = 0; i < 18; i++) {
+  for (let i = 0; i < 126; i++) {
     const st = document.createElement("span");
     st.className = "ss";
     st.style.left = (Math.random() * 100) + "%";
