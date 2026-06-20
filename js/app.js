@@ -1543,7 +1543,7 @@ function renderTypePicker() {
   const tabs = $("typeTabs");
   if (!tabs) return;
   tabs.innerHTML = ["classic", "infinite"].map((g) =>
-    `<button type="button" class="mode-tab${g === gameType ? " active" : ""}" data-type="${g}">${GAMETYPE_LABELS[g]}</button>`
+    `<button type="button" class="mode-tab${g === gameType ? " active" : ""}" data-type="${g}">${g === "infinite" ? `<span class="inf-glyph" aria-hidden="true">∞</span>` : ""}${GAMETYPE_LABELS[g]}</button>`
   ).join("");
   tabs.querySelectorAll("[data-type]").forEach((b) =>
     b.addEventListener("click", () => setGameType(b.dataset.type)));
