@@ -768,17 +768,17 @@
 
   /* ---------- Pen-circle confirm ---------- */
   .circled-choice { text-align: center; padding: 24px 16px 30px; }
-  .cc-box { position: relative; display: inline-block; padding: 16px 34px; max-width: 100%; }
+  .cc-box { position: relative; display: inline-block; padding: 9px 20px; max-width: 100%; }
   .cc-box .cc-text {
     position: relative; z-index: 1;
     font-family: var(--hand); font-weight: 700; color: var(--ink);
-    font-size: clamp(28px, 7.5vw, 44px); line-height: 1.2;
+    font-size: clamp(28px, 7.5vw, 44px); line-height: 1.15;
   }
-  /* the ring is pushed a touch outside the padded box so its inward-curving top
-     and bottom clear the text even when a long title wraps to two lines.
-     (an SVG is a replaced element, so it needs explicit width/height — top/bottom
-     insets alone won't stretch it) */
-  .cc-box svg { position: absolute; top: -6px; left: -4px; width: calc(100% + 8px); height: calc(100% + 12px); overflow: visible; pointer-events: none; }
+  /* the ring path fills its viewBox, so stretching it to the (padded) box keeps it
+     hugging the edges uniformly — a small outward offset clears the text whether the
+     title is one line or two. (an SVG is a replaced element, so it needs explicit
+     width/height — top/bottom insets alone won't stretch it) */
+  .cc-box svg { position: absolute; top: -3px; left: -3px; width: calc(100% + 6px); height: calc(100% + 6px); overflow: visible; pointer-events: none; }
   .cc-ring {
     fill: none; stroke: var(--ink-accent); stroke-width: 2.4; stroke-linecap: round;
     stroke-dasharray: 1; stroke-dashoffset: 1;
@@ -1696,9 +1696,9 @@
 
   /* notebook-name text field */
   .set-text {
-    font-family: var(--hand); font-size: 18px; line-height: 1.5; width: 150px; text-align: right;
+    font-family: var(--hand); font-size: 18px; line-height: 1.55; width: 150px; text-align: right;
     border: none; border-bottom: 1.5px solid var(--ink-soft); background: transparent;
-    color: var(--ink); outline: none; padding: 2px 2px 6px;
+    color: var(--ink); outline: none; padding: 3px 2px 8px;
   }
   .set-text:focus { border-bottom-color: var(--ink-accent); }
   .set-text::placeholder { color: var(--ink-soft); opacity: 0.7; }

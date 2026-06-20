@@ -68,19 +68,20 @@ export function buildBraceletSVG(results, activeRound, freshIndex, albums, opts)
     const beadStyle = albumCol ? ` style="--bead:${albumCol}"` : "";
 
     if (answered === true) {
-      // a small bead on the thread, with a star charm dangling from a jump ring
-      svg += `<circle cx="${x}" cy="${y}" r="${s(4.1)}" class="b-bead" stroke-width="1"${beadStyle}/>`;
+      // a small bead on the thread, with a star charm dangling from a jump ring.
+      // a hinted round is flagged: the bead grows a touch and is stamped with an "H".
+      const wasHinted = !!hinted[i];
+      const beadR = wasHinted ? s(5.2) : s(4.1);
+      svg += `<circle cx="${x}" cy="${y}" r="${beadR}" class="b-bead" stroke-width="1"${beadStyle}/>`;
+      if (wasHinted) {
+        svg += `<text x="${x}" y="${y + s(2.3)}" text-anchor="middle" font-size="${s(6.4)}" class="b-hint-h">H</text>`;
+      }
       const fresh = i === freshIndex;
       const delay = fresh ? "" : ` style="animation-delay:${(-(i * 0.9) % 5.5).toFixed(2)}s"`;
-      // a hinted round wears a small "H" on the star charm (a hint was used here)
-      const hintMark = hinted[i]
-        ? `<text x="${x}" y="${y + s(15.5) + s(2.5)}" text-anchor="middle" font-size="${s(7)}" class="b-hint-h">H</text>`
-        : "";
       svg += `<g class="charm-dangle${fresh ? " fresh" : ""}"${delay}>` +
         `<circle cx="${x}" cy="${y + s(5.4)}" r="${s(2.3)}" fill="none" stroke="var(--ink)" stroke-width="1" opacity="0.7"/>` +
         `<path d="${starPath(x, y + s(15.5), s(7.4), s(3.1))}" class="b-bead" stroke-width="1.1" stroke-linejoin="round"${beadStyle}/>` +
         `<circle cx="${x - s(1.9)}" cy="${y + s(12.6)}" r="${s(1.2)}" class="b-gloss"/>` +
-        hintMark +
         `</g>`;
     } else if (answered === false) {
       // a quiet matte spacer bead — tinted to the picked album, kept muted

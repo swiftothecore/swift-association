@@ -1872,7 +1872,7 @@ function useHint() {
     // tell the player to name the song instead of typing back what they're reading.
     const input = $("songInput");
     input.placeholder = "now name the song…";
-    $("gameHint").textContent = "type the song title — the line above is your clue";
+    $("gameHint").textContent = "type the song title — the line below is your clue";
   } else if (btn) {
     btn.textContent = "another hint?";
   }
@@ -2504,7 +2504,7 @@ function showCircledChoice(song, done) {
     `<div class="circled-choice"><span class="cc-box"${activePen ? ` data-pen="${activePen}"` : ""}>` +
       `<span class="cc-text">${escapeHtml(song.title)}</span>` +
       `<svg viewBox="0 0 100 46" preserveAspectRatio="none" aria-hidden="true">` +
-        `<path class="cc-ring" pathLength="1" d="M7,25 C5,12 31,5 53,6 C80,7 96,14 94,27 C92,40 63,43 43,42 C20,41 8,38 7,25"/>` +
+        `<path class="cc-ring" pathLength="1" d="M5,26 C2,12 30,3 54,4 C84,5 99,13 96,25 C93,39 64,44 42,43 C16,42 7,38 5,26"/>` +
       `</svg>` +
     `</span></div>`;
   setTimeout(done, 640 * animScale());
