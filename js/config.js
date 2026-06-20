@@ -215,6 +215,8 @@ export const ACH_ICONS = {
   door:    `<svg viewBox="0 0 24 24"><g class="ink" stroke-width="1.6" stroke-linejoin="round"><path d="M4 21 H20"/></g><path class="ink-fill" d="M7 3 L16 4.6 V20.4 L7 21 Z"/><circle cx="9" cy="12" r="0.9" fill="var(--paper)"/></svg>`,
   // a padlock, shut — no closure
   lock:    `<svg viewBox="0 0 24 24"><path class="ink" fill="none" stroke-width="1.8" d="M8 10 V7.5 a4 4 0 0 1 8 0 V10"/><rect class="ink-fill" x="5" y="10" width="14" height="10" rx="1.6"/><circle cx="12" cy="14" r="1.3" fill="var(--paper)"/><rect x="11.3" y="14.5" width="1.4" height="3.2" rx="0.6" fill="var(--paper)"/></svg>`,
+  // a pair of quotation marks — word for word, quoted exactly
+  quote:   `<svg viewBox="0 0 24 24"><path class="ink-fill" d="M4 5 H10 V11 C10 14.5 8 16.5 4.5 17.5 L3.5 15 C5.5 14.4 6.6 13.4 7 12 H4 Z"/><path class="ink-fill" d="M14 5 H20 V11 C20 14.5 18 16.5 14.5 17.5 L13.5 15 C15.5 14.4 16.6 13.4 17 12 H14 Z"/></svg>`,
 };
 export const ACHIEVEMENTS = [
   { id: "enchanted",        name: "Enchanted",        desc: "Finish your first game",              secret: false, icon: "sparkle" },
@@ -256,7 +258,7 @@ export const ACHIEVEMENTS = [
   { id: "thousand-cuts",    name: "Death By A Thousand Cuts", desc: "1,000 lifetime missed rounds", secret: true, icon: "scissors" },
   { id: "holy-ground",      name: "Holy Ground",      desc: "Reach round 13 from scratch in Infinite", secret: true, icon: "mountain" },
   { id: "spicy-drama",      name: "Spicy Drama",      desc: "Answer a round with \"If This Was A Movie\"", secret: true, icon: "clapper" },
-  { id: "word-for-word",    name: "Word For Word",    desc: "Recall a lyric line word-perfect",     secret: true,  icon: "note" },
+  { id: "word-for-word",    name: "Word For Word",    desc: "Recall a lyric line word-perfect",     secret: true,  icon: "quote" },
   { id: "i-look-in-windows", name: "I Look In People's Windows", desc: "Open the settings menu",      secret: true,  icon: "window" },
   { id: "look-what-you-made-me-do", name: "Look What You Made Me Do", desc: "Make the snake appear",  secret: true,  icon: "snake" },
   { id: "safe-and-sound",   name: "Safe & Sound",     desc: "Play Easy three times in a row",       secret: false, icon: "house" },
