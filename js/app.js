@@ -2194,7 +2194,14 @@ function showCircledChoice(song, done) {
 }
 
 function lyricCard(song, word, isWrong, lineOverride) {
-  const line = lineOverride != null ? lineOverride : extractLineWithWord(song.lyrics, word);
+  // A lyric-answer override is the span the player actually recalled, which need NOT
+  // contain the prompt word (matching only requires a real line of a valid song — see
+  // matchLyricLine). When it doesn't, fall back to the song's word-bearing line so the
+  // card always shows — and highlights — the lyric that holds the prompt word.
+  let line = lineOverride != null ? lineOverride : extractLineWithWord(song.lyrics, word);
+  if (lineOverride != null && !wordRegex(word).test(line)) {
+    line = extractLineWithWord(song.lyrics, word);
+  }
   const color = albumColor(song.album) || "var(--ink-soft)";
   const albumLabel = song.album ? `<span class="album-tag" style="--album-color:${color}">${escapeHtml(song.album)}</span>` : "";
   const cls = isWrong ? " wrong-card" : "";
