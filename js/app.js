@@ -60,6 +60,7 @@ let roundWords = [];     // per-round prompt word (for the lifetime tally / Neme
 let roundSongs = [];     // per-round answered song title, null on a miss (lifetime tally)
 let roundHinted = [];    // per-round true if a hint was taken (a hinted run can't set a PB)
 let hintsUsed = 0;       // count of rounds this game where a hint was taken
+let runFolded = false;   // partial/full stats already saved for the current run (quit / unload / endGame)
 let hintTier = 0;        // hints revealed this round (0..3); reset each round
 let roundHintSong = null;// the valid song this round's hints zoom in on
 let hintUrgeTimer = null;// idle nudge timer for Relaxed (no clock)
@@ -787,20 +788,38 @@ function showToast(a) {
 }
 
 // Toasts leave the stack one at a time from the bottom (not all at once when
-// several unlock together): the bottom one slides out, the stack drops into its
-// place and dwells ~1s, then the new bottom leaves, and so on.
+// several unlock together): the bottom one slides out, the toasts above glide
+// down into the freed slot (FLIP) and dwell ~1s, then the new bottom leaves.
 let toastDismissTimer = null;
 function scheduleToastDismiss() {
   if (toastDismissTimer) return;            // a dismissal cycle is already running
   const layer = $("toastLayer");
   if (!layer) return;
   const tick = () => {
-    const toasts = layer.querySelectorAll(".toast:not(.leaving)");
+    const toasts = [...layer.querySelectorAll(".toast:not(.leaving)")];
     if (!toasts.length) { toastDismissTimer = null; return; }
     const bottom = toasts[toasts.length - 1];   // last child = bottom of the stack
+    const above = toasts.slice(0, -1);
+    const beforeTops = above.map((el) => el.getBoundingClientRect().top);
     bottom.classList.add("leaving");
-    setTimeout(() => bottom.remove(), 420);
-    toastDismissTimer = setTimeout(tick, 420 + 1000);   // let it leave + the next one dwell
+    setTimeout(() => {
+      bottom.remove();
+      // FLIP: the removal collapses the layout instantly, so smoothly animate the
+      // toasts above from their old positions down into their new ones.
+      if (!motionReduced()) {
+        above.forEach((el, i) => {
+          const dy = beforeTops[i] - el.getBoundingClientRect().top;   // <0: moved down
+          if (!dy) return;
+          el.style.transition = "none";
+          el.style.transform = `translateY(${dy}px) rotate(-1deg)`;
+          requestAnimationFrame(() => {
+            el.style.transition = "transform 0.34s cubic-bezier(.34,1.1,.64,1)";
+            el.style.transform = "rotate(-1deg)";
+          });
+        });
+      }
+    }, 420);
+    toastDismissTimer = setTimeout(tick, 420 + 340 + 900);   // leave + drop + dwell
   };
   toastDismissTimer = setTimeout(tick, 3000);   // initial dwell before the first leaves
 }
@@ -1431,7 +1450,26 @@ function resetRunState() {
   roundSongs = [];
   roundHinted = [];
   hintsUsed = 0;
+  runFolded = false;
   dailyRng = null;
+}
+
+// Fold the rounds completed so far into the lifetime stats (songs/words
+// discovered, played count, score distribution). Shared by quitGame and the
+// page-unload handler so leaving mid-game never throws away progress. An
+// abandoned run can't set a personal best (countBest = false) or hit the
+// history. Idempotent per run via runFolded.
+function foldRunProgress() {
+  if (runFolded || roundResults.length === 0) return;
+  runFolded = true;
+  const partialScore = gameType === "infinite" ? roundResults.length : score;
+  if (gameType !== "daily") updateStats(partialScore, boardMode(), gameMaxStreak, false);
+  recordGameTally(roundResults.map((correct, i) => ({
+    correct,
+    title: roundSongs[i] || null,
+    album: roundAlbums[i] || null,
+    word: roundWords[i] || null,
+  })));
 }
 function applyInputHints() {
   const input = $("songInput");
@@ -2237,6 +2275,7 @@ function runCountdown() {
 
 /* ---------- End game ---------- */
 function endGame() {
+  runFolded = true;   // this run's stats are saved here in full; block any unload re-fold
   clearTimer();
   clearTimeout(hintUrgeTimer);
   resetTension();
@@ -2475,19 +2514,8 @@ function quitGame() {
   }
 
   // Save the progress made before quitting, so a partial run still credits the
-  // lifetime stats (songs/words discovered, played count, score distribution).
-  // An abandoned run can't set a personal best (countBest = false) and isn't
-  // logged to the chronological history.
-  if (roundResults.length > 0) {
-    const partialScore = gameType === "infinite" ? roundResults.length : score;
-    if (gameType !== "daily") updateStats(partialScore, boardMode(), gameMaxStreak, false);
-    recordGameTally(roundResults.map((correct, i) => ({
-      correct,
-      title: roundSongs[i] || null,
-      album: roundAlbums[i] || null,
-      word: roundWords[i] || null,
-    })));
-  }
+  // lifetime stats (see foldRunProgress).
+  foldRunProgress();
 
   // Teardown: stop every timer / animation a round may have started.
   clearTimer();
@@ -3174,6 +3202,14 @@ async function init() {
   $("settingsCloseBtn").addEventListener("click", closeSettings);
   $("settingsScrim").addEventListener("click", closeSettings);
   $("settingsModal").addEventListener("wheel", routeSettingsWheel, { passive: false });
+
+  // Leaving the page mid-game (reload / close) still banks the progress made so
+  // far, exactly like the quit button. Skipped for bfcache restores (persisted),
+  // where the in-memory game just resumes.
+  window.addEventListener("pagehide", (e) => {
+    if (e.persisted) return;
+    if (screens.game.classList.contains("active")) foldRunProgress();
+  });
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape" && $("settingsModal").classList.contains("open")) closeSettings();
   });

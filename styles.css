@@ -1156,7 +1156,10 @@
     padding: 10px 14px 10px 11px; max-width: 280px;
     box-shadow: 3px 3px 0 rgba(43,39,34,0.18);
     transform: rotate(-1deg);
-    animation: toastIn 0.4s cubic-bezier(.34,1.56,.64,1) both;
+    /* No fill-mode: once the entrance ends the toast rests on the CSS transform
+       above, so the JS FLIP drop (inline transform) isn't overridden by a
+       lingering animation fill. The end keyframe equals this rest state. */
+    animation: toastIn 0.4s cubic-bezier(.34,1.56,.64,1);
     pointer-events: auto;
   }
   .tip-pop {
