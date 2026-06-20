@@ -280,9 +280,8 @@
     color: var(--ink); background: var(--highlighter);
     border-color: rgba(43,39,34,0.32); transform: translateY(0) rotate(0deg);
   }
-  /* the Infinite stats tab — its own game type: set apart by a gap, the ∞ glyph and
+  /* the Infinite stats tab — its own game type: set apart by the ∞ glyph and
      (when active) an inked fill instead of the pale highlighter wash */
-  .mode-tab--inf { margin-left: 16px; }
   .mode-tab--inf.active {
     background: var(--ink); color: var(--paper); border-color: var(--ink);
   }
@@ -294,7 +293,7 @@
   /* the tab rows reused on the stats page — two tiers (view / difficulty) */
   .stats-tabs { margin-bottom: 16px; }
   .stats-tabs:has(+ .stats-subtabs) { margin-bottom: 8px; }
-  .stats-subtabs { margin-bottom: 16px; padding-left: 18px; }
+  .stats-subtabs { margin-bottom: 16px; }
   /* #resultPodium holds the compact best line (classic/infinite) or the daily streak panel */
   .podium { list-style: none; margin: 0 0 4px; padding: 0; }
 
