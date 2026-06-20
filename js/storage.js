@@ -140,10 +140,13 @@ export function recordGameTally(rounds) {
 //   answerSumMs — total time spent on timed rounds (for the average)
 //   answerN     — count of timed rounds counted (for the average)
 //   lyricLines  — lifetime lyric lines recalled
+//   versePerfect — lifetime word-perfect-or-better lines (the verse-bonus prestige metric)
+//   wholeVerses  — lifetime whole-verse (WHOLE_VERSE_LINES-line) recalls
+//   bestVerseBonus — most verse-bonus points earned in a single game
 //   roundsTotal / roundsCorrect — lifetime rounds played / answered right (accuracy)
 //   dailyPlayed / dailyPerfect  — lifetime daily challenges finished / perfected
 export function loadMetrics() {
-  const d = { fastestMs: null, answerSumMs: 0, answerN: 0, lyricLines: 0, roundsTotal: 0, roundsCorrect: 0, dailyPlayed: 0, dailyPerfect: 0, noTimeoutStreak: 0 };
+  const d = { fastestMs: null, answerSumMs: 0, answerN: 0, lyricLines: 0, versePerfect: 0, wholeVerses: 0, bestVerseBonus: 0, roundsTotal: 0, roundsCorrect: 0, dailyPlayed: 0, dailyPerfect: 0, noTimeoutStreak: 0 };
   try {
     const raw = localStorage.getItem(METRICS_KEY);
     if (raw) { const o = JSON.parse(raw); if (o && typeof o === "object") return { ...d, ...o }; }
@@ -160,6 +163,9 @@ export function recordGameMetrics(g) {
   m.roundsTotal += g.rounds || 0;
   m.roundsCorrect += g.correct || 0;
   m.lyricLines += g.lyricLines || 0;
+  m.versePerfect += g.versePerfect || 0;
+  m.wholeVerses += g.wholeVerses || 0;
+  if ((g.verseBonus || 0) > (m.bestVerseBonus || 0)) m.bestVerseBonus = g.verseBonus;
   m.answerSumMs += g.timeSumMs || 0;
   m.answerN += g.timedRounds || 0;
   if (g.fastestMs != null && (m.fastestMs == null || g.fastestMs < m.fastestMs)) m.fastestMs = g.fastestMs;

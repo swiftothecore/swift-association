@@ -42,6 +42,9 @@ const FUZZY_THRESHOLD = 0.8;
 // a verse bonus; at the "perfect" mark (or verbatim) it earns the full bonus.
 const RECALL_GOOD = 0.5;
 const RECALL_PERFECT = 0.9;
+// The top rung of the ladder: recalling a word-perfect block this many real lines long
+// is a "whole verse" (+3) — the loudest reward, and the Overachiever trigger.
+const WHOLE_VERSE_LINES = 4;
 
 let currentMode = MODES.medium;
 let wordBuckets = { easy: [], all: [], hard: [], ultra: [] };
@@ -474,6 +477,7 @@ function albumDisplayName(name) {
 // segments), two album-tinted keepsake cards, and a red-pen-circled nemesis word.
 function lifetimeStatsHTML() {
   const t = loadSongTally();
+  const m = loadMetrics();
   const discoveredTitles = Object.keys(t.songs);
   const discovered = discoveredTitles.length;
   const total = allSongs.length || 1;
@@ -548,7 +552,18 @@ function lifetimeStatsHTML() {
       </div>
     </div>`;
 
-  return header + `<div class="cat-wrap">${meter}${wordMeter}<div class="cat-cards">${songCard}${albumCard}</div>${nemesisBlock}</div>`;
+  // "From memory" — the verse-bonus prestige tally (lyric lines recalled, word-perfect ones).
+  // Paired beside the nemesis word so neither owns a whole row.
+  const lines = m.lyricLines || 0;
+  const perfect = m.versePerfect || 0;
+  const fromMemoryBlock = `
+    <div class="cat-frommemory">
+      <div class="cat-card-head"><span class="cat-star">${STAR_SVG}</span>from memory</div>
+      <div class="cat-fm-val">${lines}</div>
+      <div class="cat-fm-sub">${lines ? "lines written · " + perfect + " word-perfect" : "write a lyric line"}</div>
+    </div>`;
+
+  return header + `<div class="cat-wrap">${meter}${wordMeter}<div class="cat-cards">${songCard}${albumCard}</div><div class="cat-pair">${fromMemoryBlock}${nemesisBlock}</div></div>`;
 }
 
 // Daily-challenge streak — global (not per-mode), so it shows under every tab.
@@ -1746,6 +1761,11 @@ function resetRunState() {
   gameMaxStreak = 0;
   lyricLineAnswers = 0;
   verseBonus = 0;
+  gameVersePerfect = 0;
+  gameWholeVerses = 0;
+  verseKeepsake = [];
+  roundVerseTier = [];
+  lyricAnswerSongs = [];
   gameTimeSum = 0;
   gameHitRedZone = false;
   rareStreak = 0;
@@ -1787,11 +1807,11 @@ function applyInputHints() {
   const hint = $("gameHint");
   if (currentMode.lyricOnly) {
     input.placeholder = "type the lyric line…";
-    hint.textContent = "type a few words around the word — Enter to answer";
+    hint.textContent = "write more of the line for a bigger verse bonus — Enter to answer";
     return;
   }
   input.placeholder = currentMode.dropdown ? "a title… or sing me a line" : "the full title… or a lyric line";
-  hint.textContent = currentMode.dropdown ? "Enter accepts the top match — or type a lyric line" : "no suggestions — type the full title or a real lyric line, then Enter";
+  hint.textContent = currentMode.dropdown ? "Enter accepts the top match — or write a lyric line for a verse bonus" : "no suggestions — type the full title or a real lyric line, then Enter";
   if (settings.enableHints !== false && currentMode.hint && gameType !== "daily") {
     hint.textContent += " · Tab for a hint";
   }
@@ -2292,8 +2312,8 @@ function matchLyricLine(phrase) {
   // Fast path: a verbatim contiguous run anywhere in the lyrics (incl. across lines).
   for (const s of currentSongs) {
     if (s._normLyrics.includes(normPhrase)) {
-      const line = recoverLyricLine(s, normPhrase);
-      return { song: s, line, fuzzy: false, ...gradeLyricRecall(normPhrase, line) };
+      const { text: line, lines } = recoverLyricLine(s, normPhrase);
+      return { song: s, line, fuzzy: false, ...gradeLyricRecall(normPhrase, line, lines) };
     }
   }
 
@@ -2314,8 +2334,8 @@ function matchLyricLine(phrase) {
     }
   }
   if (!best) return null;
-  const line = recoverFuzzyLine(best.song, normPhrase);
-  return { song: best.song, line, fuzzy: true, ...gradeLyricRecall(normPhrase, line) };
+  const { text: line, lines } = recoverFuzzyLine(best.song, normPhrase);
+  return { song: best.song, line, fuzzy: true, ...gradeLyricRecall(normPhrase, line, lines) };
 }
 
 // Recover a display line for a FUZZY (non-verbatim) match: scan the song's contiguous
@@ -2338,11 +2358,11 @@ function recoverFuzzyLine(song, normPhrase) {
       // window that happens to contain it (fuzzySubstringRatio leaves trailing lyric
       // free, which would let an over-long window tie and win).
       const sim = 1 - levenshtein(normPhrase, windowNorm) / Math.max(normPhrase.length, windowNorm.length);
-      if (!best || sim > best.sim) best = { sim, text: windowRaw.join(" ") };
+      if (!best || sim > best.sim) best = { sim, text: windowRaw.join(" "), lines: windowRaw.length };
       if (windowNorm.length > normPhrase.length * 2) break;   // don't over-grow the window
     }
   }
-  return best ? best.text : (rawLines[0] || "");
+  return best ? { text: best.text, lines: best.lines } : { text: rawLines[0] || "", lines: 1 };
 }
 
 // Recover the original lyric text (for display) that holds the matched phrase.
@@ -2354,7 +2374,7 @@ function recoverLyricLine(song, normPhrase) {
   const rawLines = song.lyrics.split("\n");
   // Single-line hit — the common case.
   const single = rawLines.find((l) => normalizeLyric(l).includes(normPhrase));
-  if (single) return single.trim();
+  if (single) return { text: single.trim(), lines: 1 };
   // Cross-line phrase: rebuild each non-empty line's char span within the blob
   // (lines join with one space, matching how _normLyrics was normalized).
   const segs = [];
@@ -2366,27 +2386,32 @@ function recoverLyricLine(song, normPhrase) {
     pos += norm.length + 1;                                  // + joining space
   }
   const at = song._normLyrics.indexOf(normPhrase);
-  if (at < 0) return (rawLines.find(Boolean) || "").trim();
+  if (at < 0) return { text: (rawLines.find(Boolean) || "").trim(), lines: 1 };
   const endAt = at + normPhrase.length - 1;
   const startSeg = segs.find((s) => at >= s.start && at < s.end);
   const endSeg = segs.find((s) => endAt >= s.start && endAt < s.end);
-  if (!startSeg || !endSeg) return (rawLines.find(Boolean) || "").trim();
-  return rawLines.slice(startSeg.i, endSeg.i + 1)
-    .map((l) => l.trim()).filter(Boolean).join(" ");
+  if (!startSeg || !endSeg) return { text: (rawLines.find(Boolean) || "").trim(), lines: 1 };
+  const spanLines = rawLines.slice(startSeg.i, endSeg.i + 1)
+    .map((l) => l.trim()).filter(Boolean);
+  return { text: spanLines.join(" "), lines: spanLines.length };
 }
 
 // Grade how much of the matched real line the player actually typed. Typing the
 // minimum scrapes a pass with no bonus; recalling most / all of the line earns a
-// "verse bonus" and a louder celebration. Returns { tier, bonus, coverage }.
-function gradeLyricRecall(normPhrase, line) {
+// "verse bonus" and a louder celebration. A word-perfect block spanning WHOLE_VERSE_LINES
+// real lines is the top "whole verse" rung. `lines` = how many raw lines the match spanned.
+// Returns { tier, bonus, coverage, lines }.
+function gradeLyricRecall(normPhrase, line, lines = 1) {
   const normLine = normalizeLyric(line);
   const total = normLine ? normLine.split(" ").length : 0;
   const typed = normPhrase ? normPhrase.split(" ").length : 0;
   const verbatim = normPhrase === normLine;
   const coverage = total ? Math.min(typed / total, 1) : 0;
-  if (verbatim || coverage >= RECALL_PERFECT) return { tier: "perfect", bonus: 2, coverage };
-  if (coverage >= RECALL_GOOD) return { tier: "good", bonus: 1, coverage };
-  return { tier: "base", bonus: 0, coverage };
+  const perfect = verbatim || coverage >= RECALL_PERFECT;
+  if (perfect && lines >= WHOLE_VERSE_LINES) return { tier: "verse", bonus: 3, coverage, lines };
+  if (perfect) return { tier: "perfect", bonus: 2, coverage, lines };
+  if (coverage >= RECALL_GOOD) return { tier: "good", bonus: 1, coverage, lines };
+  return { tier: "base", bonus: 0, coverage, lines };
 }
 
 /* ---------- Submit & feedback ---------- */
@@ -2449,6 +2474,16 @@ function submitAnswer(song, isTimeout) {
   if (lyricMatch) {
     lyricLineAnswers++;                  // recalled a lyric line (for You Knew The Line)
     verseBonus += lyricMatch.bonus;      // reward fuller recall, separate from the 0–13 score
+    const perfectPlus = lyricMatch.tier === "perfect" || lyricMatch.tier === "verse";
+    if (perfectPlus) {
+      gameVersePerfect++;                // lifetime versePerfect / milestone achievements
+      verseKeepsake.push({ line: lyricMatch.line, word: currentWord, tier: lyricMatch.tier });
+      roundVerseTier[round - 1] = lyricMatch.tier;   // nib bracelet charm
+    }
+    if (lyricMatch.tier === "verse") { gameWholeVerses++; unlock("overachiever"); }
+    // Someone Has A Favourite Song — 3 lyric answers from the same song in one game.
+    lyricAnswerSongs.push(song.title);
+    if (lyricAnswerSongs.filter((t) => t === song.title).length >= 3) unlock("fav-song");
     if (lyricMatch.tier === "perfect") unlock("word-for-word");
     if (lyricMatch.fuzzy) {              // landed it without the line being verbatim
       gameFuzzyMatches++;
@@ -2646,13 +2681,21 @@ function endGame() {
   })));
 
   // Lifetime cross-game metrics (fastest/avg answer, accuracy, lyric lines, daily totals).
-  const metrics = devNoLog ? { noTimeoutStreak: 0 } : recordGameMetrics({
+  const metrics = devNoLog ? { noTimeoutStreak: 0, versePerfect: 0 } : recordGameMetrics({
     rounds: roundsSurvived, correct: score,
     timeSumMs: gameTimeSum * 1000, timedRounds: gameTimedRounds,
     fastestMs: gameFastestMs, lyricLines: lyricLineAnswers,
+    versePerfect: gameVersePerfect, wholeVerses: gameWholeVerses, verseBonus,
     isDaily, dailyPerfect: isDaily && score === TOTAL_ROUNDS,
     isInfinite, timeouts: gameTimeouts,
   });
+  // Lifetime word-perfect-recall milestones (verse-bonus prestige ladder).
+  if (!devNoLog) {
+    if (metrics.versePerfect >= 10) unlock("got-you-down");
+    if (metrics.versePerfect >= 50) unlock("by-heart");
+    if (metrics.versePerfect >= 100) unlock("where-i-start");
+    if (metrics.versePerfect >= 1000) unlock("clearly-ready");
+  }
   const played = totalPlayed();   // classic modes only — infinite/daily tracked separately
 
   // Record this game type; "Hits Different" needs all three (classic + infinite + daily).
@@ -2876,6 +2919,11 @@ let gameTimeouts = 0;            // timeouts this game (for Fearless)
 let gameMaxStreak = 0;           // best streak reached this game
 let lyricLineAnswers = 0;        // lyric-line answers this game (for You Knew The Line)
 let verseBonus = 0;              // verse-bonus points this game (fuller lyric recall; separate from score)
+let gameVersePerfect = 0;        // word-perfect-or-better lines this game (lifetime versePerfect / milestones)
+let gameWholeVerses = 0;         // whole-verse (4-line) recalls this game (Overachiever fires per-round)
+let verseKeepsake = [];          // { line, word, tier } for each perfect+ recall — results-page anthology
+let roundVerseTier = [];         // per-round verse tier ("perfect"/"verse") → nib bracelet charm
+let lyricAnswerSongs = [];       // titles answered via a lyric line this game (for Someone Has A Favourite Song)
 let gameTimeSum = 0;             // total answer time this game, secs (for Perfect Storm)
 let gameHitRedZone = false;      // any round answered with ≤3s left this game (for Peace)
 let rareStreak = 0;              // consecutive correct rare/scarce words this game (for Diamonds Are Forever)
