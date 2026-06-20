@@ -2131,6 +2131,7 @@ function advanceRound() {
   clearTimeout(rejectFlashTimer);
   $("rejectFlash").classList.remove("show");
   hideDropdown();
+  renderVerseMeter("");                 // reset the live verse gauge for the new round
   input.focus();
 
   resetTension();
@@ -2412,6 +2413,50 @@ function gradeLyricRecall(normPhrase, line, lines = 1) {
   if (perfect) return { tier: "perfect", bonus: 2, coverage, lines };
   if (coverage >= RECALL_GOOD) return { tier: "good", bonus: 1, coverage, lines };
   return { tier: "base", bonus: 0, coverage, lines };
+}
+
+// Live verse-bonus gauge for what's CURRENTLY typed — drives #verseMeter so a player
+// sees the reward climb as they write more of the line. Deliberately non-revealing:
+// it only ever reacts to text the player has ALREADY typed (a real contiguous lyric
+// fragment of a valid song), and returns a QUANTIZED tier — never a word count, a line
+// length, or any un-typed text. Returns null when the text isn't yet a real fragment
+// (so the meter stays hidden until the player is genuinely on a line). Cheap: an
+// indexOf over currentSongs' precomputed _normLyrics blobs, gated behind the input debounce.
+function verseProgress(text) {
+  const np = normalizeLyric(text || "");
+  if (!np || np.split(" ").length < 2) return null;
+  for (const s of currentSongs) {
+    if (!s._normLyrics.includes(np)) continue;
+    const { text: line, lines } = recoverLyricLine(s, np);
+    const total = normalizeLyric(line).split(" ").length;
+    const coverage = total ? Math.min(np.split(" ").length / total, 1) : 0;
+    if (coverage >= RECALL_PERFECT && lines >= WHOLE_VERSE_LINES) return "verse";
+    if (coverage >= RECALL_PERFECT) return "perfect";
+    if (coverage >= RECALL_GOOD) return "good";
+    return "fragment";
+  }
+  return null;
+}
+
+const VERSE_METER = {
+  fragment: { level: 1, label: "a fragment" },
+  good:     { level: 2, label: "half the verse" },
+  perfect:  { level: 3, label: "the whole line ★" },
+  verse:    { level: 4, label: "a whole verse ★★" },
+};
+// Light the meter's notches for what's typed. Hidden unless the text is a real lyric
+// fragment, and suppressed once the tier-3 line hint is on screen (it'd be copying).
+function renderVerseMeter(text) {
+  const meter = $("verseMeter");
+  if (!meter) return;
+  const tier = (gameType !== "daily" && hintTier >= 3) ? null : verseProgress(text);
+  if (!tier) { meter.hidden = true; return; }
+  const { level, label } = VERSE_METER[tier];
+  meter.hidden = false;
+  meter.querySelectorAll(".vm-notch").forEach((n) => {
+    n.classList.toggle("lit", Number(n.dataset.tier) <= level);
+  });
+  meter.querySelector(".vm-label").textContent = label;
 }
 
 /* ---------- Submit & feedback ---------- */
@@ -3286,6 +3331,7 @@ function wireInput() {
     clearTimeout(hintUrgeTimer);            // typing cancels the Relaxed idle nudge
     $("hintBtn").classList.remove("urge");
     handleTypingEggs(input.value);
+    renderVerseMeter(input.value);          // live verse-bonus gauge (non-revealing)
   });
   input.addEventListener("keydown", (e) => {
     if ($("settingsModal").classList.contains("open")) return;   // modal is captive
