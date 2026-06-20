@@ -172,7 +172,7 @@ function scatterNavTape(screenName) {
   root.querySelectorAll(".nav-card").forEach((card) => {
     card.querySelectorAll(".nav-tape").forEach((t) => t.remove());   // clear last visit's strips
     const pool = shuffle(TAPE_SPOTS.slice());
-    const count = 2 + (chance(0.7) ? 1 : 0) + (chance(0.2) ? 1 : 0); // 2–4, usually 3
+    const count = chance(0.7) ? 2 : 1;   // mostly two strips, occasionally one
     for (let i = 0; i < count && i < pool.length; i++) card.appendChild(makeTapeStrip(pool[i]));
   });
 }
