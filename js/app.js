@@ -967,7 +967,6 @@ const HISTORY_PAGE = 20;          // history rows revealed per "load more"
 let historyShown = 0;             // rows currently rendered
 let recordsBackTarget = "start";  // where ← back returns to
 let _pbByMode = {};               // per-mode best, for crowning history rows
-let _modeRunCount = {};           // per-mode run tally — only crown modes played >1×
 
 // Best daily score ever (daily runs don't live in the per-mode records store).
 function dailyBest() {
@@ -1005,9 +1004,7 @@ function appendHistoryRows(hist) {
   const next = hist.slice(historyShown, historyShown + HISTORY_PAGE);
   rowsEl.insertAdjacentHTML("beforeend", next.map((h) => {
     const unit = isInfiniteToken(h.m) ? "" : "/" + TOTAL_ROUNDS;
-    // Crown a row only when it's the mode's best AND that mode has been played
-    // more than once — a one-off run shouldn't trivially crown itself.
-    const isPB = h.s > 0 && h.s === _pbByMode[h.m] && _modeRunCount[h.m] > 1;
+    const isPB = h.s > 0 && h.s === _pbByMode[h.m];
     return `<div class="hist-row${isPB ? " hist-pb" : ""}">` +
       `<span class="hist-score">${isPB ? `<span class="hist-crown" aria-hidden="true">${ACH_ICONS.crown}</span>` : ""}${h.s}${unit ? `<span class="hist-unit">${unit}</span>` : ""}</span>` +
       `<span class="hist-time">${h.tm != null ? fmtTime(h.tm) : "—"}</span>` +
@@ -1044,11 +1041,7 @@ function renderRecordsPage() {
 
   const hist = loadHistory();
   _pbByMode = {};
-  _modeRunCount = {};
-  for (const h of hist) {
-    _modeRunCount[h.m] = (_modeRunCount[h.m] || 0) + 1;
-    if (!(h.m in _pbByMode)) _pbByMode[h.m] = h.m === "daily" ? db : (loadRecords(h.m)[0] ? loadRecords(h.m)[0].score : -1);
-  }
+  for (const h of hist) if (!(h.m in _pbByMode)) _pbByMode[h.m] = h.m === "daily" ? db : (loadRecords(h.m)[0] ? loadRecords(h.m)[0].score : -1);
   const histBlock = hist.length
     ? `<p class="rec-group-label">history — ${hist.length} run${hist.length === 1 ? "" : "s"}</p>` +
       `<div class="hist-head"><span>score</span><span>time</span><span>mode</span><span>date</span></div>` +
