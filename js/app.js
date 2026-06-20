@@ -130,6 +130,9 @@ const screens = {
 function showScreen(name) {
   Object.values(screens).forEach((s) => s.classList.remove("active"));
   screens[name].classList.add("active");
+  // Drop any lingering perfect-game shimmer; celebratePerfect re-adds it after
+  // showScreen("results") when the run was actually flawless.
+  clearPerfectFX();
   // The daily reset countdown only lives on the start screen; don't let its interval
   // outlive the view (renderDailyButtonState restarts it when start is shown again).
   if (name !== "start") stopResetCountdown();
@@ -3184,6 +3187,39 @@ function celebratePerfect() {
   }
   card.appendChild(layer);
   setTimeout(() => layer.remove(), 10200);
+
+  // Make the whole page sparkle while you sit with a perfect score: a slow gold
+  // glow on the card, a soft sheen that sweeps across the paper, and a field of
+  // twinkling sparkles scattered over it. Cleared by clearPerfectFX on the next
+  // showScreen (so a later non-perfect result doesn't inherit it).
+  card.classList.add("perfect");
+  const twinkle = document.createElement("div");
+  twinkle.className = "twinkle-layer"; twinkle.setAttribute("aria-hidden", "true");
+  for (let i = 0; i < 46; i++) {
+    const t = document.createElement("span");
+    t.className = "tw";
+    t.style.left = (Math.random() * 100) + "%";
+    t.style.top = (Math.random() * 100) + "%";
+    t.style.width = t.style.height = (6 + Math.random() * 11) + "px";
+    t.style.animationDuration = (1.4 + Math.random() * 2.2) + "s";
+    t.style.animationDelay = (Math.random() * 3.2) + "s";
+    t.innerHTML = SPARKLE_SVG;
+    twinkle.appendChild(t);
+  }
+  card.appendChild(twinkle);
+  const sweep = document.createElement("div");
+  sweep.className = "shine-sweep"; sweep.setAttribute("aria-hidden", "true");
+  card.appendChild(sweep);
+}
+
+// Strip the perfect-game shimmer (glow class + sparkle/sheen overlays) from the
+// results card. Called whenever we change screens so the effect never lingers
+// onto a subsequent ordinary result.
+function clearPerfectFX() {
+  const card = $("screen-results");
+  if (!card) return;
+  card.classList.remove("perfect");
+  card.querySelectorAll(".twinkle-layer, .shine-sweep").forEach((el) => el.remove());
 }
 
 /* ---------- Input wiring ---------- */
