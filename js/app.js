@@ -3138,19 +3138,22 @@ function celebratePerfect() {
   if (!card) return;
   const layer = document.createElement("div");
   layer.className = "star-shower"; layer.setAttribute("aria-hidden", "true");
-  for (let i = 0; i < 126; i++) {
+  for (let i = 0; i < 378; i++) {
     const st = document.createElement("span");
     st.className = "ss";
     st.style.left = (Math.random() * 100) + "%";
     st.style.width = st.style.height = (10 + Math.random() * 12) + "px";
-    st.style.setProperty("--fall", (380 + Math.random() * 280) + "px");
-    st.style.animationDuration = (1.6 + Math.random() * 1.4) + "s";
+    // 3x the fall distance (and matching duration) so the shower lasts ~3x longer;
+    // the long fall carries every star off the card's clipped bottom edge while
+    // still bright, so none linger resting in a faded state.
+    st.style.setProperty("--fall", (1140 + Math.random() * 840) + "px");
+    st.style.animationDuration = (4.8 + Math.random() * 4.2) + "s";
     st.style.animationDelay = (Math.random() * 0.8) + "s";
     st.innerHTML = STAR_SVG;
     layer.appendChild(st);
   }
   card.appendChild(layer);
-  setTimeout(() => layer.remove(), 4200);
+  setTimeout(() => layer.remove(), 10200);
 }
 
 /* ---------- Input wiring ---------- */

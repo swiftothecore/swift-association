@@ -1243,7 +1243,7 @@
   .star-shower { position: absolute; inset: 0; z-index: 30; pointer-events: none; overflow: hidden; }
   .star-shower .ss { position: absolute; top: -28px; color: var(--bead); animation: starFall linear forwards; }
   .star-shower .ss svg { width: 100%; height: 100%; }
-  @keyframes starFall { to { transform: translateY(var(--fall, 480px)) rotate(220deg); opacity: 0.15; } }
+  @keyframes starFall { to { transform: translateY(var(--fall, 480px)) rotate(220deg); opacity: 0.9; } }
 
   /* ---------- Achievements ---------- */
   /* live toast (bottom-right) when one unlocks mid-game */
