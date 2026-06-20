@@ -98,7 +98,7 @@
     font-size: clamp(22px, 6.4vw, 44px);
     line-height: 1.1;
     white-space: nowrap;
-    color: var(--ink);
+    color: #5c4326;  /* matches the settings-gear light brown */
     transform: rotate(-1.4deg);
   }
   header.title p {
@@ -229,6 +229,49 @@
     transform: rotate(-0.6deg);
   }
   .btn-primary:hover { background: var(--ink); color: var(--paper); }
+
+  /* ---------- "Start writing" — the hero CTA ----------
+     Lifted out of the plain highlighter wash: a warm, fully-saturated gold fill, a
+     hand-drawn pencil that rides along, a sketchy underline, and a near-imperceptible
+     idle bob so it gently invites a click without shouting. */
+  #playBtn {
+    position: relative; overflow: visible;
+    font-size: 17px;
+    background: linear-gradient(168deg, #f8d367 0%, #efb73e 60%, #e6a92c 100%);
+    border-color: var(--ink);
+    box-shadow: 3px 3px 0 rgba(43, 39, 34, 0.22);
+  }
+  #playBtn::before {
+    content: "✎"; margin-right: 9px; font-size: 19px; vertical-align: -1px;
+    display: inline-block; transform-origin: 70% 90%;
+  }
+  /* sketchy underline that "draws" under the label on hover/focus */
+  #playBtn::after {
+    content: ""; position: absolute; left: 16%; right: 16%; bottom: 9px; height: 2px;
+    background: currentColor; border-radius: 2px;
+    transform: scaleX(0); transform-origin: left center;
+    transition: transform 0.28s ease;
+    opacity: 0.7;
+  }
+  #playBtn:hover, #playBtn:focus-visible {
+    background: var(--ink); color: var(--paper);
+  }
+  #playBtn:hover::after, #playBtn:focus-visible::after { transform: scaleX(1); }
+  @media (prefers-reduced-motion: no-preference) {
+    #playBtn { animation: playBob 2.8s ease-in-out infinite; }
+    #playBtn::before { animation: playPencil 2.8s ease-in-out infinite; }
+  }
+  body[data-reduce-motion="on"] #playBtn,
+  body[data-reduce-motion="on"] #playBtn::before { animation: none; }
+  @keyframes playBob {
+    0%, 100% { transform: rotate(-0.6deg) translateY(0); box-shadow: 3px 3px 0 rgba(43, 39, 34, 0.22); }
+    50%      { transform: rotate(-0.6deg) translateY(-3px); box-shadow: 3px 6px 0 rgba(43, 39, 34, 0.18); }
+  }
+  @keyframes playPencil {
+    0%, 100% { transform: rotate(0deg); }
+    45%      { transform: rotate(-12deg) translateY(-1px); }
+    55%      { transform: rotate(-12deg) translateY(-1px); }
+  }
 
   .btn-ghost {
     width: 100%; margin-top: 14px; padding: 12px;
@@ -1386,7 +1429,13 @@
     --card-bg: #fbf6e9;
     flex: 1; min-width: 0; width: auto; margin: 0;
     padding: 18px 10px 14px; text-align: center;
-    background: var(--card-bg); color: var(--ink);
+    color: var(--ink);
+    /* paper grain baked into the card background (background-blend multiply keeps the
+       speckle subtle) so both pseudo-elements are free to carry tape strips */
+    background-color: var(--card-bg);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='90' height='90'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.6' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='90' height='90' filter='url(%23n)' opacity='0.16'/%3E%3C/svg%3E");
+    background-size: 90px 90px;
+    background-blend-mode: multiply;
     border: 1px solid rgba(43, 39, 34, 0.2); border-radius: 3px;
     position: relative; box-shadow: 0 1px 2px rgba(43, 39, 34, 0.1);
     transition: transform 0.16s ease, box-shadow 0.16s ease;
@@ -1394,20 +1443,28 @@
   .nav-card[data-era-tint="gold"]     { --tint: 199, 149, 31; }
   .nav-card[data-era-tint="lavender"] { --tint: 139, 115, 201; }
   .nav-card[data-era-tint="denim"]    { --tint: 91, 135, 184; }
-  /* paper grain */
-  .nav-card::after {
-    content: ""; position: absolute; inset: 0; border-radius: 3px; pointer-events: none;
-    mix-blend-mode: multiply; opacity: 0.85;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='90' height='90'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.6' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='90' height='90' filter='url(%23n)' opacity='0.16'/%3E%3C/svg%3E");
+  /* Sticky tape — OPAQUE pastel washi (a cream backing under a half-strength tint wash,
+     plus a diagonal sheen), so the card never shows through. ::before is the primary
+     strip, ::after an optional second strip; placement varies per card below so the row
+     doesn't read as a repeated template. */
+  .nav-card::before, .nav-card::after {
+    position: absolute; z-index: 3; width: 48px; height: 15px;
+    background:
+      linear-gradient(105deg, rgba(255, 255, 255, 0.45), rgba(255, 255, 255, 0) 48%, rgba(43, 39, 34, 0.07)),
+      linear-gradient(rgba(var(--tint), 0.5), rgba(var(--tint), 0.5)),
+      #fbf6e9;
+    box-shadow: 0 1px 2px rgba(43, 39, 34, 0.14);
   }
-  /* washi tape over the top-left corner */
-  .nav-card::before {
-    content: ""; position: absolute; top: -6px; left: -9px; z-index: 2;
-    width: 48px; height: 14px; transform: rotate(-42deg);
-    background: rgba(var(--tint), 0.34);
-    background-image: linear-gradient(105deg, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0) 45%);
-    box-shadow: 0 1px 1px rgba(43, 39, 34, 0.07);
-  }
+  .nav-card::before { content: ""; }
+  .nav-card::after  { content: none; }
+  /* Card 1 (records · gold): a single strip pinning the top-left corner. */
+  .nav-card:nth-child(3n+1)::before { top: -6px; left: -9px; transform: rotate(-42deg); }
+  /* Card 2 (charms · lavender): two strips — top-right and bottom-left, like it's
+     been re-taped. */
+  .nav-card:nth-child(3n+2)::before { top: -6px; right: -9px; transform: rotate(42deg); }
+  .nav-card:nth-child(3n+2)::after  { content: ""; bottom: -7px; left: -10px; transform: rotate(40deg); }
+  /* Card 3 (stats · denim): a single strip taped along the bottom-right. */
+  .nav-card:nth-child(3n)::before   { bottom: -7px; right: -10px; transform: rotate(-40deg); }
   .nav-card-seat {
     width: 56px; height: 56px; border-radius: 50%; margin: 0 auto 8px;
     display: flex; align-items: center; justify-content: center;
