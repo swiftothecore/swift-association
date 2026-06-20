@@ -2611,16 +2611,42 @@ function lyricCard(song, word, isWrong, lineOverride) {
   </div>`;
 }
 
-const LYRIC_BANNERS = { base: "✓ you knew the line", good: "✓ nicely recalled", perfect: "✓ word-perfect" };
+const LYRIC_BANNERS = { base: "✓ you knew the line", good: "✓ nicely recalled", perfect: "✓ word-perfect", verse: "✓ the whole verse" };
+
+// A reusable peel-and-stick gold sticker (notebook cosmetic). Other moments can reuse
+// it as the sticker vocabulary grows — see PLAN.md. Escalates by tier.
+function stickerHTML({ stars = 1, amt, label, tone = "gold" }) {
+  return `<div class="sticker sticker--${tone}" aria-label="+${amt} ${label}">
+    <span class="sticker-stars">${STAR_SVG.repeat(stars)}</span>
+    <span class="sticker-amt">+${amt}</span>
+    <span class="sticker-label">${label}</span>
+  </div>`;
+}
+const VERSE_STICKERS = {
+  good:    { stars: 1, label: "verse bonus",     tone: "gold" },
+  perfect: { stars: 1, label: "word-perfect",    tone: "gold" },
+  verse:   { stars: 2, label: "the whole verse", tone: "rose" },
+};
+function verseSticker(tier, bonus) {
+  if (!bonus) return "";
+  const cfg = VERSE_STICKERS[tier] || VERSE_STICKERS.good;
+  return stickerHTML({ stars: cfg.stars, amt: bonus, label: cfg.label, tone: cfg.tone });
+}
 
 function showCorrectFeedback(song, lyricMatch) {
   const fb = $("feedback");
   // On a lyric answer, celebrate the recall and show the exact line they typed.
-  // The banner escalates with how much of the line they recalled, and a chip calls
-  // out any verse bonus earned (fuller line = more reward than the bare minimum).
+  // The banner escalates with how much of the line they recalled, and a gold sticker
+  // is pressed on for any verse bonus earned (fuller line = a louder, gold-foil reward).
   const banner = lyricMatch ? (LYRIC_BANNERS[lyricMatch.tier] || LYRIC_BANNERS.base) : "✓ that's the one";
-  const bonusChip = lyricMatch && lyricMatch.bonus > 0
-    ? `<div class="verse-bonus">+${lyricMatch.bonus} verse bonus</div>` : "";
+  const bonus = lyricMatch ? lyricMatch.bonus : 0;
+  const sticker = lyricMatch ? verseSticker(lyricMatch.tier, bonus) : "";
+  // First time a verse bonus is ever earned, teach what it is — once, then silent.
+  let firstNote = "";
+  if (bonus > 0 && !settings.seenVerseBonus) {
+    settings.seenVerseBonus = true; saveSettings(settings);
+    firstNote = `<p class="verse-firstnote">writing more of the line earns a verse bonus — a prestige tally, kept apart from your score</p>`;
+  }
   const card = lyricMatch
     ? lyricCard(song, currentWord, false, lyricMatch.line)
     : lyricCard(song, currentWord, false);
@@ -2631,11 +2657,12 @@ function showCorrectFeedback(song, lyricMatch) {
     : `<button id="continueBtn" class="btn-ghost">next page →</button>`;
   fb.innerHTML = `
     <div class="banner good">${banner}</div>
-    ${bonusChip}
+    ${sticker}
+    ${firstNote}
     ${card}
     ${advanceUI}`;
   $(auto ? "skipBtn" : "continueBtn").addEventListener("click", advanceFromFeedback);
-  celebrateCorrect(correctStreak, lyricMatch ? lyricMatch.bonus : 0);
+  celebrateCorrect(correctStreak, bonus);
   if (auto) runCountdown();
 }
 
