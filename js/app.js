@@ -1,7 +1,7 @@
 "use strict";
 import { $, escapeRegExp, escapeHtml, prefersReducedMotion, shuffle, chance, normalizeTitle, normalizeLyric, fuzzySubstringRatio, levenshtein, mulberry32, dailySeed } from "./util.js";
 import {
-  TOTAL_ROUNDS, RECENT_WINDOW, DIFF_KEY,
+  TOTAL_ROUNDS, RECENT_WINDOW, DIFF_KEY, DEFAULT_SETTINGS,
   MODES, MODE_ORDER, MODE_COLORS,
   ERAS, TENDER_ERAS, FINALE_ERAS,
   ALBUM_COLORS, CB_ALBUM_COLORS, STUDIO_ALBUMS, TITLE_ALIASES,
@@ -3386,6 +3386,7 @@ function renderSettingsBody() {
         `<button class="danger-btn" data-danger="ach">Reset achievements</button>` +
         `<button class="danger-btn" data-danger="tally">Reset catalogue</button>` +
         `<button class="danger-btn" data-danger="daily">Reset daily</button>` +
+        `<button class="danger-btn" data-danger="settings">Reset settings</button>` +
         `<button class="danger-btn wipe" data-danger="all">Clear everything</button>` +
       `</div></div>` +
     setSection("About",
@@ -3456,6 +3457,13 @@ function performDanger(which) {
   }
   else if (which === "tally") resetTally();
   else if (which === "daily") resetDaily();
+  else if (which === "settings") {
+    // Revert every preference to its default, but keep the player's signature
+    // and the runtime "last game type" memory — those aren't a tuned preference.
+    settings = { ...DEFAULT_SETTINGS, playerName: settings.playerName, lastGameType: settings.lastGameType };
+    saveSettings(settings);
+    applySettings();
+  }
   refreshStartBoard();
   renderSettingsBody();   // clears armed states and re-reads any reset data
 }
