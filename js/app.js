@@ -178,13 +178,14 @@ function wordVariants(word) {
   if (w.length >= 3 && /[^aeiou][aeiou][^aeiouwxy]$/.test(w)) alts.push(escapeRegExp(w + w.slice(-1)) + INFLECT);
   return alts;
 }
-// The strictness used for gameplay matching: the active mode's strict flag, OR the
-// player's global "stem matching off" opt-out (Settings → Gameplay) which forces
-// exact-word matching even in lenient modes. NOT used for the rarity buckets/daily
-// determinism (those pass explicit strict args), only for judging/highlighting a round.
+// The strictness used for gameplay matching: the active mode's strict flag (no mode
+// sets it currently — every difficulty is stem-lenient, incl. Ultra), OR the player's
+// global "stem matching off" opt-out (Settings → Gameplay) which forces exact-word
+// matching even in lenient modes. NOT used for the rarity buckets/daily determinism
+// (those pass explicit strict args), only for judging/highlighting a round.
 function effectiveStrict() { return currentMode.strict || settings.stemMatching === false; }
-// Lenient (default) also matches the inflected forms above; strict (Ultra) requires
-// the exact word. Defaults to the active mode + the stem-matching opt-out.
+// Lenient (default) also matches the inflected forms above (cheat→cheats); strict
+// requires the exact word. Defaults to the active mode + the stem-matching opt-out.
 function wordRegex(word, strict) {
   if (strict === undefined) strict = effectiveStrict();
   if (strict) return new RegExp("\\b" + escapeRegExp(word) + "\\b", "i");
