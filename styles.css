@@ -804,6 +804,7 @@
   }
   @media (prefers-reduced-motion: reduce) {
     .hint-btn.urge { animation: none; }
+    .feedback .sticker { animation: none; }
   }
 
   /* ---------- Pen-circle confirm ---------- */
