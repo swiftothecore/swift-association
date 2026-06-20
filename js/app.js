@@ -138,6 +138,44 @@ function showScreen(name) {
     const qb = $("quitBtn");
     if (qb) { clearTimeout(quitTimer); qb.classList.remove("armed"); qb.textContent = qb.dataset.label; }
   }
+  // Re-scatter the keepsake-card tape each time its screen is shown, so the pinning
+  // feels hand-done rather than templated.
+  if (name === "start" || name === "results") scatterNavTape(name);
+}
+
+/* ---------- Random sticky-tape placement for the nav keepsake cards ----------
+   Each card gets one strip (sometimes two), pinned to a randomly chosen corner or
+   edge with a little rotation jitter. We write CSS custom properties the ::before/
+   ::after pseudo-elements read (see styles.css). `corner` carries only the sides it
+   uses; the rest fall back to `auto`. */
+const TAPE_SPOTS = [
+  { left: "-9px",  top: "-6px",     rot: [-52, -34] },              // top-left
+  { right: "-9px", top: "-6px",     rot: [34, 52] },                // top-right
+  { left: "-10px", bottom: "-7px",  rot: [30, 50] },                // bottom-left
+  { right: "-10px", bottom: "-7px", rot: [-50, -30] },              // bottom-right
+  { left: "50%",   top: "-7px",     tx: "-50%", rot: [-7, 7] },     // top-centre
+  { left: "50%",   bottom: "-8px",  tx: "-50%", rot: [-7, 7] },     // bottom-centre
+];
+const TAPE_PROPS = ["top", "right", "bottom", "left", "tx", "rot", "content"];
+function applyTapeSpot(card, spot, n) {
+  const lo = spot.rot[0], hi = spot.rot[1];
+  const rot = (lo + Math.random() * (hi - lo)).toFixed(1) + "deg";
+  card.style.setProperty(`--t${n}-top`, spot.top || "auto");
+  card.style.setProperty(`--t${n}-right`, spot.right || "auto");
+  card.style.setProperty(`--t${n}-bottom`, spot.bottom || "auto");
+  card.style.setProperty(`--t${n}-left`, spot.left || "auto");
+  card.style.setProperty(`--t${n}-tx`, spot.tx || "0");
+  card.style.setProperty(`--t${n}-rot`, rot);
+  if (n === 2) card.style.setProperty("--t2-content", '""');
+}
+function scatterNavTape(screenName) {
+  const root = screens[screenName] || document;
+  root.querySelectorAll(".nav-card").forEach((card) => {
+    TAPE_PROPS.forEach((p) => { card.style.removeProperty(`--t1-${p}`); card.style.removeProperty(`--t2-${p}`); });
+    const pool = shuffle(TAPE_SPOTS.slice());
+    applyTapeSpot(card, pool[0], 1);
+    if (chance(0.4)) applyTapeSpot(card, pool[1], 2);  // sometimes a second strip
+  });
 }
 
 /* ---------- Era selection ---------- */

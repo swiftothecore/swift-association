@@ -1455,16 +1455,22 @@
       #fbf6e9;
     box-shadow: 0 1px 2px rgba(43, 39, 34, 0.14);
   }
-  .nav-card::before { content: ""; }
-  .nav-card::after  { content: none; }
-  /* Card 1 (records · gold): a single strip pinning the top-left corner. */
-  .nav-card:nth-child(3n+1)::before { top: -6px; left: -9px; transform: rotate(-42deg); }
-  /* Card 2 (charms · lavender): two strips — top-right and bottom-left, like it's
-     been re-taped. */
-  .nav-card:nth-child(3n+2)::before { top: -6px; right: -9px; transform: rotate(42deg); }
-  .nav-card:nth-child(3n+2)::after  { content: ""; bottom: -7px; left: -10px; transform: rotate(40deg); }
-  /* Card 3 (stats · denim): a single strip taped along the bottom-right. */
-  .nav-card:nth-child(3n)::before   { bottom: -7px; right: -10px; transform: rotate(-40deg); }
+  /* Placement is randomised per visit by scatterNavTape() in app.js, which writes the
+     --t1-*/--t2-* custom properties (corner offsets, an optional translate for centred
+     strips, and a rotation). ::before is the primary strip; ::after only appears when
+     JS sets --t2-content. The fallbacks below are a sensible static layout if JS is off. */
+  .nav-card::before {
+    content: "";
+    top: var(--t1-top, -6px); right: var(--t1-right, auto);
+    bottom: var(--t1-bottom, auto); left: var(--t1-left, -9px);
+    transform: translateX(var(--t1-tx, 0)) rotate(var(--t1-rot, -42deg));
+  }
+  .nav-card::after {
+    content: var(--t2-content, none);
+    top: var(--t2-top, auto); right: var(--t2-right, auto);
+    bottom: var(--t2-bottom, auto); left: var(--t2-left, auto);
+    transform: translateX(var(--t2-tx, 0)) rotate(var(--t2-rot, 0deg));
+  }
   .nav-card-seat {
     width: 56px; height: 56px; border-radius: 50%; margin: 0 auto 8px;
     display: flex; align-items: center; justify-content: center;
