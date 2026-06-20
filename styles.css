@@ -1409,8 +1409,11 @@
   .settings-card {
     position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
     width: min(540px, calc(100vw - 28px)); max-height: calc(100vh - 40px); overflow-y: auto;
+    overscroll-behavior: contain;   /* don't chain scroll to the page behind */
     padding: 22px 24px 28px 48px;
   }
+  /* Freeze the page behind an open modal so the background can't scroll. */
+  body.modal-open { overflow: hidden; }
   body[data-reduce-motion="on"] .settings-scrim { animation: none; }
 
   .settings-nav {

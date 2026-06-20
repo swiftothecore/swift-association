@@ -381,6 +381,12 @@ function albumOfTitle(title) {
   return s ? (s.album || null) : null;
 }
 
+// Display name for an album — long titles that overflow the keepsake cards get a
+// short form (e.g. "The Tortured Poets Department" → "TTPD").
+function albumDisplayName(name) {
+  return name === "The Tortured Poets Department" ? "TTPD" : name;
+}
+
 // Lifetime catalogue stats — global (not per-mode), drawn from the per-song/per-word
 // tally written in endGame. Shows under every Stats tab, like the daily streak.
 // Three zones: a hero "songs discovered" meter (filled portion split into album-colour
@@ -438,12 +444,12 @@ function lifetimeStatsHTML() {
     <div class="cat-card" style="border-left-color:${songColor}">
       <div class="cat-card-head"><span class="cat-star">${STAR_SVG}</span>favourite song</div>
       <div class="cat-card-val">${favSong ? escapeHtml(favSong.key) : "—"}</div>
-      <div class="cat-card-sub" style="color:${songColor}">${favSong ? (songAlbum ? escapeHtml(songAlbum) + " · " : "") + "sung ×" + favSong.count : "play a game"}</div>
+      <div class="cat-card-sub" style="color:${songColor}">${favSong ? (songAlbum ? escapeHtml(albumDisplayName(songAlbum)) + " · " : "") + "sung ×" + favSong.count : "play a game"}</div>
     </div>`;
   const albumCard = `
     <div class="cat-card" style="border-left-color:${albColor}">
       <div class="cat-card-head"><span class="cat-dot" style="background:${albColor}"></span>favourite album</div>
-      <div class="cat-card-val">${favAlbum ? escapeHtml(favAlbum.key) : "—"}</div>
+      <div class="cat-card-val">${favAlbum ? escapeHtml(albumDisplayName(favAlbum.key)) : "—"}</div>
       <div class="cat-card-sub" style="color:${albColor}">${favAlbum ? "×" + favAlbum.count + " correct" : "play a game"}</div>
     </div>`;
 
@@ -777,10 +783,26 @@ function showToast(a) {
   t.innerHTML = charmMarkup(a.icon) +
     `<div><div class="t-label">achievement unlocked</div><div class="t-name">${escapeHtml(a.name)}</div></div>`;
   layer.appendChild(t);
-  setTimeout(() => {
-    t.classList.add("leaving");
-    setTimeout(() => t.remove(), 420);
-  }, 3500);
+  scheduleToastDismiss();
+}
+
+// Toasts leave the stack one at a time from the bottom (not all at once when
+// several unlock together): the bottom one slides out, the stack drops into its
+// place and dwells ~1s, then the new bottom leaves, and so on.
+let toastDismissTimer = null;
+function scheduleToastDismiss() {
+  if (toastDismissTimer) return;            // a dismissal cycle is already running
+  const layer = $("toastLayer");
+  if (!layer) return;
+  const tick = () => {
+    const toasts = layer.querySelectorAll(".toast:not(.leaving)");
+    if (!toasts.length) { toastDismissTimer = null; return; }
+    const bottom = toasts[toasts.length - 1];   // last child = bottom of the stack
+    bottom.classList.add("leaving");
+    setTimeout(() => bottom.remove(), 420);
+    toastDismissTimer = setTimeout(tick, 420 + 1000);   // let it leave + the next one dwell
+  };
+  toastDismissTimer = setTimeout(tick, 3000);   // initial dwell before the first leaves
 }
 
 function renderResultRecap() {
@@ -789,7 +811,7 @@ function renderResultRecap() {
   if (!newlyUnlocked.length) { el.style.display = "none"; el.innerHTML = ""; return; }
   const chips = newlyUnlocked.map((id) => {
     const a = ACH_BY_ID[id];
-    return `<div class="ach-chip" data-tip="${escapeHtml(a.desc)}" data-tip-delay="500">${charmMarkup(a.icon)}<span class="nm">${escapeHtml(a.name)}</span></div>`;
+    return `<div class="ach-chip" data-tip="${escapeHtml(a.desc)}" data-tip-delay="120">${charmMarkup(a.icon)}<span class="nm">${escapeHtml(a.name)}</span></div>`;
   }).join("");
   el.innerHTML = `<div class="ach-recap-title">newly unlocked</div><div class="ach-recap-row">${chips}</div>`;
   el.style.display = "";
@@ -2387,7 +2409,7 @@ function endGame() {
 function promptSignOnce(after) {
   const nameDiv = $("namePrompt");
   const p = nameDiv.querySelector("p");
-  if (p) p.textContent = "sign your notebook — we'll remember it";
+  if (p) p.textContent = "sign your notebook — you will be remembered";
   nameDiv.style.display = "";
   const save = () => {
     const v = ($("nameInput").value || "").trim().slice(0, 20);
@@ -2450,6 +2472,21 @@ function quitGame() {
   // No Closure: answered the first 12 of a 13-round run, then leave the 13th blank.
   if ((gameType === "classic" || gameType === "daily") && roundResults.length === TOTAL_ROUNDS - 1) {
     unlock("no-closure");
+  }
+
+  // Save the progress made before quitting, so a partial run still credits the
+  // lifetime stats (songs/words discovered, played count, score distribution).
+  // An abandoned run can't set a personal best (countBest = false) and isn't
+  // logged to the chronological history.
+  if (roundResults.length > 0) {
+    const partialScore = gameType === "infinite" ? roundResults.length : score;
+    if (gameType !== "daily") updateStats(partialScore, boardMode(), gameMaxStreak, false);
+    recordGameTally(roundResults.map((correct, i) => ({
+      correct,
+      title: roundSongs[i] || null,
+      album: roundAlbums[i] || null,
+      word: roundWords[i] || null,
+    })));
   }
 
   // Teardown: stop every timer / animation a round may have started.
@@ -2598,6 +2635,11 @@ function slitherSnake() {
   const W = card.clientWidth || 520;
   const H = card.clientHeight || 800;
   const NS = "http://www.w3.org/2000/svg";
+  // The overlay's viewBox is 0..W mapped to the card width (≈1 unit per px) but
+  // it overflows visibly onto the desk, so the snake keeps slithering past the
+  // card and only despawns once it's fully off the right edge of the window —
+  // no tell-tale fade where the user could see it pop out.
+  const exitX = (window.innerWidth - card.getBoundingClientRect().left) + 80;
 
   const svg = document.createElementNS(NS, "svg");
   svg.setAttribute("class", "snake-overlay");
@@ -2719,10 +2761,9 @@ function slitherSnake() {
       `<g><circle cx="3.5" cy="5" r="2.7" fill="#c89b3c"/><circle cx="3.5" cy="5" r="2.7" fill="none" stroke="#0c2410" stroke-width="0.7"/><rect x="2.8" y="3.3" width="1.4" height="3.4" rx="0.6" fill="#0c2410"/></g>` +
       `<circle cx="12" cy="-2" r="0.8" fill="#0c2410"/><circle cx="12" cy="2" r="0.8" fill="#0c2410"/>`;
 
-    if (nodes[M - 1].x > W + 36) {           // tail has cleared the right edge
-      svg.classList.add("leaving");
+    if (nodes[M - 1].x > exitX) {            // whole snake has slithered off the screen
       snakeRaf = null;
-      setTimeout(() => svg.remove(), 720);
+      svg.remove();
       return;
     }
     snakeRaf = requestAnimationFrame(frame);
@@ -3050,13 +3091,26 @@ function openSettings() {
   const m = $("settingsModal");
   m.classList.add("open");
   m.setAttribute("aria-hidden", "false");
+  document.body.classList.add("modal-open");   // freeze the page behind the modal
 }
 function closeSettings() {
   const m = $("settingsModal");
   if (!m.classList.contains("open")) return;
   m.classList.remove("open");
   m.setAttribute("aria-hidden", "true");
+  document.body.classList.remove("modal-open");
   resumeFromSettings();
+}
+
+// Wheel over the dimmed backdrop (outside the dialog) still scrolls the dialog,
+// so the cursor doesn't have to be on the panel for the wheel to work.
+function routeSettingsWheel(e) {
+  const card = document.querySelector(".settings-card");
+  if (!card) return;
+  if (card.contains(e.target)) return;   // already over the panel — let it scroll natively
+  const factor = e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? card.clientHeight : 1;
+  card.scrollTop += e.deltaY * factor;
+  e.preventDefault();
 }
 
 /* ---------- Init ---------- */
@@ -3119,6 +3173,7 @@ async function init() {
   $("settingsGear").addEventListener("click", openSettings);
   $("settingsCloseBtn").addEventListener("click", closeSettings);
   $("settingsScrim").addEventListener("click", closeSettings);
+  $("settingsModal").addEventListener("wheel", routeSettingsWheel, { passive: false });
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape" && $("settingsModal").classList.contains("open")) closeSettings();
   });
