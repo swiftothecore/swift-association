@@ -51,7 +51,7 @@
     padding: 20px 18px 64px;
   }
 
-  .app { width: 100%; max-width: 600px; position: relative; z-index: 1; perspective: 1700px; perspective-origin: 50% 0%; }
+  .app { width: 100%; max-width: 660px; position: relative; z-index: 1; perspective: 1700px; perspective-origin: 50% 0%; }
 
   /* ---------- Desk props (decorative, desktop only) ----------
      Quiet, semi-realistic objects that straddle the screen edges — each runs
