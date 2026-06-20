@@ -1316,15 +1316,73 @@
     box-shadow: -1px 2px 4px rgba(43, 39, 34, 0.22);
   }
 
-  /* records & history + stats & streaks — quiet "see also" pair, not boxed actions. */
-  .see-also { display: flex; justify-content: center; gap: 22px; margin-top: 16px; }
-  .link-btn {
-    width: auto; margin: 0; padding: 2px 0;
-    font-family: var(--type); font-size: 12px; letter-spacing: 1px;
-    color: var(--ink-soft); background: transparent; border: none; border-radius: 0;
-    border-bottom: 1.5px dotted var(--ink-soft);
+  /* records / charms / stats — three taped index cards pinned to the page. Each is a
+     real notebook keepsake: cream card stock, faint paper grain (::after), a strip of
+     era-tinted washi tape (::before), a hand-built SVG icon seated on a tinted disc, a
+     Caveat title with the carried-over dotted underline, and a Courier kicker. The era
+     tint (gold/lavender/denim) is set per card via [data-era-tint]; --card-bg feeds the
+     bracelet-knot fill in the markup's inline SVG. */
+  .see-also { display: flex; justify-content: center; align-items: stretch; gap: 18px; margin-top: 22px; }
+  .nav-card {
+    --card-bg: #fbf6e9;
+    flex: 1; min-width: 0; width: auto; margin: 0;
+    padding: 22px 12px 17px; text-align: center;
+    background: var(--card-bg); color: var(--ink);
+    border: 1px solid rgba(43, 39, 34, 0.2); border-radius: 3px;
+    position: relative; box-shadow: 0 1px 2px rgba(43, 39, 34, 0.1);
+    transition: transform 0.16s ease, box-shadow 0.16s ease;
   }
-  .link-btn:hover { color: var(--ink); border-bottom-color: var(--ink); }
+  .nav-card[data-era-tint="gold"]     { --tint: 199, 149, 31; }
+  .nav-card[data-era-tint="lavender"] { --tint: 139, 115, 201; }
+  .nav-card[data-era-tint="denim"]    { --tint: 91, 135, 184; }
+  /* paper grain */
+  .nav-card::after {
+    content: ""; position: absolute; inset: 0; border-radius: 3px; pointer-events: none;
+    mix-blend-mode: multiply; opacity: 0.85;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='90' height='90'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.6' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='90' height='90' filter='url(%23n)' opacity='0.16'/%3E%3C/svg%3E");
+  }
+  /* washi tape over the top-left corner */
+  .nav-card::before {
+    content: ""; position: absolute; top: -6px; left: -9px; z-index: 2;
+    width: 48px; height: 14px; transform: rotate(-42deg);
+    background: rgba(var(--tint), 0.34);
+    background-image: linear-gradient(105deg, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0) 45%);
+    box-shadow: 0 1px 1px rgba(43, 39, 34, 0.07);
+  }
+  .nav-card-seat {
+    width: 62px; height: 62px; border-radius: 50%; margin: 0 auto 10px;
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(var(--tint), 0.13);
+  }
+  .nav-ic { display: block; }
+  .nav-card-title {
+    display: inline-block; font-family: var(--hand); font-weight: 700;
+    font-size: 26px; line-height: 0.95; color: var(--ink);
+    border-bottom: 2px dotted var(--ink-soft); padding-bottom: 3px;
+  }
+  .nav-card-kicker {
+    display: block; margin-top: 7px;
+    font-family: var(--type); font-size: 8.5px; letter-spacing: 1.5px;
+    text-transform: uppercase; color: var(--ink-soft);
+  }
+  .nav-card:hover, .nav-card:focus-visible {
+    transform: translateY(-2px); box-shadow: 0 4px 9px rgba(43, 39, 34, 0.16);
+    outline: none;
+  }
+  .nav-card:hover .nav-card-seat, .nav-card:focus-visible .nav-card-seat {
+    background: rgba(var(--tint), 0.22);
+  }
+  .nav-card:hover .nav-card-title, .nav-card:focus-visible .nav-card-title { border-bottom-color: var(--ink); }
+  .nav-card:active { transform: translateY(0); box-shadow: 0 1px 2px rgba(43, 39, 34, 0.1); }
+  [data-reduce-motion="true"] .nav-card { transition: none; }
+  [data-reduce-motion="true"] .nav-card:hover, [data-reduce-motion="true"] .nav-card:focus-visible { transform: none; }
+  @media (max-width: 420px) {
+    .see-also { gap: 10px; }
+    .nav-card { padding: 16px 6px 13px; }
+    .nav-card-seat { width: 52px; height: 52px; }
+    .nav-ic { width: 42px; height: 42px; }
+    .nav-card-title { font-size: 21px; }
+  }
 
   /* Daily-streak status line under the streak numbers on the Stats page. */
   .daily-streak-note { font-family: var(--type); font-size: 11px; letter-spacing: 0.5px; color: var(--ink-soft); text-align: center; margin-top: 8px; }
