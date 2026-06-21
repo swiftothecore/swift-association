@@ -1950,7 +1950,7 @@
     padding: 0 8px;
     /* keep the name itself on the very top layer of the plate, above the
        heart-hands sibling, so nothing can ever overlap or clip it. */
-    position: relative; z-index: 2;
+    position: relative; z-index: 200;
   }
   .np-name-input::placeholder { color: var(--ink-soft); opacity: 0.55; }
   /* fixed-size decoration: the flex row always reserves its space so the name's input
