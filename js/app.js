@@ -4696,6 +4696,7 @@ async function init() {
     if (prev === "start") { $("startContent").style.display = ""; }
   });
   $("challengesBtn").addEventListener("click", () => openChallenges("start"));
+  $("viewChallengesBtn").addEventListener("click", () => openChallenges("results"));
   $("challengesBackBtn").addEventListener("click", () => {
     const prev = challengesBackTarget;
     showScreen(prev);
