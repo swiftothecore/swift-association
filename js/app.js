@@ -1589,8 +1589,18 @@ async function loadData() {
   if (!wordsRes.ok || !songsRes.ok) throw new Error("Failed to fetch data files");
   const words = await wordsRes.json();
   const grouped = await songsRes.json();
+  // songs.json stores lyrics as structured sections ([{label, lines}]); the game
+  // works off a flat newline-joined `lyrics` string, so derive it here once. The
+  // `sections` stay on the song object (line numbers + verse/chorus/bridge) for the
+  // lyrics searcher. The flatten is byte-identical to the old flat `lyrics` field.
   allSongs = grouped.flatMap(({ album, songs }) =>
-    songs.map((s) => ({ ...s, album }))
+    songs.map((s) => ({
+      ...s,
+      album,
+      lyrics: Array.isArray(s.sections)
+        ? s.sections.flatMap((sec) => sec.lines || []).join("\n")
+        : (s.lyrics || ""),
+    }))
   );
   // Precompute a normalized comparison key per song and index by it, so a typed
   // answer matches regardless of punctuation / & / $ / numerals. Then fold in the

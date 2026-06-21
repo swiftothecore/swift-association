@@ -10,7 +10,7 @@
  * Paths are relative so the worker works under the project subpath
  * (…github.io/swift-association-testing/).
  */
-const CACHE = "stta-v3";
+const CACHE = "stta-v4";
 const ASSETS = [
   "./",
   "index.html",
