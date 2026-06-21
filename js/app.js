@@ -1939,12 +1939,10 @@ function renderChallengesPage() {
   const wallet = loadChallengeTokens();
   const tk = wallet.balance;
   const defeated = CHALLENGES.filter((c) => challengeRecord(c.id).defeated).length;
-  const accent = ACH_GROUP_COLORS.challenges;
 
   let html = `<div class="chall-head">` +
-    `<div class="chall-head-row"><span class="chall-head-title">Challenges</span>` +
-    `<span class="chall-tokens" title="spend a token to unlock a challenge">🎟 <b>${tk}</b> token${tk === 1 ? "" : "s"}</span></div>` +
-    `<div class="chall-head-sub">${defeated} / ${CHALLENGES.length} defeated</div></div>`;
+    `<div class="chall-head-sub">spend a token · defeat the rule · ${defeated} / ${CHALLENGES.length} defeated</div>` +
+    `<span class="chall-tokens" title="spend a token to unlock a challenge">🎟 <b>${tk}</b> token${tk === 1 ? "" : "s"}</span></div>`;
 
   html += `<div class="chall-grid">`;
   for (const c of CHALLENGES) {
@@ -1967,14 +1965,16 @@ function renderChallengesPage() {
       action = `<button class="chall-btn chall-play" data-play="${c.id}">play</button>` +
         (rec.attempts ? `<div class="chall-meta">${rec.attempts} attempt${rec.attempts === 1 ? "" : "s"}</div>` : "");
     }
-    html += `<div class="chall-tile ${stateCls}" style="--chall-accent:${accent}">` +
+    html += `<div class="chall-note ${stateCls}">` +
+      `<span class="chall-pin" aria-hidden="true"></span>` +
+      `<div class="chall-paper">` +
       (rec.defeated ? `<span class="chall-stamp">defeated</span>` : "") +
       `<span class="chall-charm">${charmMarkup(c.icon)}</span>` +
       `<div class="chall-name">${escapeHtml(c.name)}</div>` +
       `<div class="chall-desc">${escapeHtml(c.desc)}</div>` +
       `<div class="chall-win">${escapeHtml(c.win)}</div>` +
       `<div class="chall-action">${action}</div>` +
-      `</div>`;
+      `</div></div>`;
   }
   html += `</div>`;
 
