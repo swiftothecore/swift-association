@@ -338,6 +338,27 @@ export function dailyTotals() {
   return { played, perfect };
 }
 
+// Every date a daily was completed, as a { "YYYY-MM-DD": score } map. Drawn from
+// the same per-day result keys as dailyTotals — the authoritative log. Backs the
+// Stats daily calendar (which days get crossed off).
+export function dailyPlayedDates() {
+  const out = {};
+  const prefix = DAILY_KEY + ".";
+  try {
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (!k || !k.startsWith(prefix)) continue;
+      const dateStr = k.slice(prefix.length);
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) continue;
+      try {
+        const o = JSON.parse(localStorage.getItem(k));
+        if (o && typeof o.score === "number") out[dateStr] = o.score;
+      } catch (e) { /* skip malformed entry */ }
+    }
+  } catch (e) { /* ignore */ }
+  return out;
+}
+
 // The per-day daily fake board (DAILY_BOARD_KEY) is retired — daily now shows a
 // personal result + streak + share. Stale dailyBoard.* keys are swept by resetDaily().
 

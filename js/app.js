@@ -16,7 +16,7 @@ import {
   loadStats, updateStats, totalPlayed,
   loadAchievements, saveAchievements,
   loadMode,
-  loadDailyResult, saveDailyResult, clearDailyResult, dailyTotals,
+  loadDailyResult, saveDailyResult, clearDailyResult, dailyTotals, dailyPlayedDates,
   bumpDailyStreak, effectiveDailyStreak, saveDailyStreak,
   markTypePlayed,
   loadSongTally, recordGameTally,
@@ -577,20 +577,138 @@ function lifetimeStatsHTML() {
 }
 
 // Daily-challenge streak — global (not per-mode), so it shows under every tab.
+// --- Hand-inked marker marks for the daily calendar ---------------------------
+// Each X/O is a one-off: drawn from pressure-tapered ribbon strokes (fat-marker
+// profile — near-uniform body, blunt rounded tips) with per-mark jitter, so no two
+// look stamped. Rendered as inline SVG strings (the Stats body is set via innerHTML),
+// re-randomised on every renderStats call. multiply blend makes the X's crossing and
+// the O's self-overlap bleed darker, like wet ink. See CLAUDE.md "daily calendar".
+const MARK_REDS = ["#c0352b", "#b62f27", "#c43d31", "#aa2c25"];
+const MARK_GREENS = ["#2f6d4f", "#356f4a", "#2b6044"];
+const mRand = (a, b) => a + Math.random() * (b - a);
+const mPick = (arr) => arr[Math.floor(Math.random() * arr.length)];
+
+// Centerline → filled ribbon path (+ rounded tip circles). wmax = full body width.
+function markerRibbon(pts, wmax) {
+  const N = pts.length - 1, left = [], right = [];
+  for (let i = 0; i <= N; i++) {
+    const t = i / N;
+    const shape = Math.pow(Math.sin(Math.PI * t), 0.32);   // flat-topped: blunt ends
+    const w = wmax * (0.78 + 0.22 * shape);
+    const p0 = pts[Math.max(0, i - 1)], p1 = pts[Math.min(N, i + 1)];
+    const tx = p1[0] - p0[0], ty = p1[1] - p0[1], tl = Math.hypot(tx, ty) || 1;
+    const nx = -ty / tl, ny = tx / tl;
+    left.push([pts[i][0] + nx * w / 2, pts[i][1] + ny * w / 2]);
+    right.push([pts[i][0] - nx * w / 2, pts[i][1] - ny * w / 2]);
+  }
+  let d = "M " + left[0][0].toFixed(2) + " " + left[0][1].toFixed(2);
+  for (let i = 1; i <= N; i++) d += " L " + left[i][0].toFixed(2) + " " + left[i][1].toFixed(2);
+  for (let i = N; i >= 0; i--) d += " L " + right[i][0].toFixed(2) + " " + right[i][1].toFixed(2);
+  return { d: d + " Z", a: pts[0], b: pts[N], r: wmax * 0.39 };
+}
+
+// One marker stroke: a single smooth arc (wrist pivot) with overshoot + soft lift.
+function markerSlash(a, b, bow, hook) {
+  const dx = b[0] - a[0], dy = b[1] - a[1], len = Math.hypot(dx, dy) || 1;
+  const ux = dx / len, uy = dy / len, nx = -uy, ny = ux;
+  const os = len * mRand(0.02, 0.06);
+  const A = [a[0] - ux * os, a[1] - uy * os], B = [b[0] + ux * os, b[1] + uy * os];
+  const cx = (A[0] + B[0]) / 2 + nx * bow, cy = (A[1] + B[1]) / 2 + ny * bow;
+  const N = 24, pts = [];
+  for (let i = 0; i <= N; i++) {
+    const t = i / N, mt = 1 - t;
+    pts.push([mt * mt * A[0] + 2 * mt * t * cx + t * t * B[0], mt * mt * A[1] + 2 * mt * t * cy + t * t * B[1]]);
+  }
+  if (hook) {
+    const K = 4, piv = pts[N - K], cs = Math.cos(hook), sn = Math.sin(hook);
+    for (let i = N - K + 1; i <= N; i++) {
+      const vx = pts[i][0] - piv[0], vy = pts[i][1] - piv[1];
+      pts[i] = [piv[0] + vx * cs - vy * sn, piv[1] + vx * sn + vy * cs];
+    }
+  }
+  return pts;
+}
+
+function ribbonSVG(rib, col, op) {
+  const o = op.toFixed(2), cap = (p) =>
+    `<circle cx="${p[0].toFixed(2)}" cy="${p[1].toFixed(2)}" r="${rib.r.toFixed(2)}" fill="${col}" opacity="${o}" style="mix-blend-mode:multiply"/>`;
+  return `<path d="${rib.d}" fill="${col}" opacity="${o}" stroke-linejoin="round" style="mix-blend-mode:multiply"/>` + cap(rib.a) + cap(rib.b);
+}
+
+function markerX(s) {
+  const col = mPick(MARK_REDS), w = s * mRand(0.12, 0.155), op = mRand(0.8, 0.9);
+  const pad = s * mRand(0.18, 0.23), off = mRand(-s * 0.05, s * 0.05);
+  const j = (v) => v + mRand(-s * 0.04, s * 0.04);
+  const s1 = markerSlash([j(pad), j(pad)], [j(s - pad), j(s - pad)], mRand(-s * 0.06, s * 0.06), mRand(0.05, 0.22) * mPick([1, -1]));
+  const s2 = markerSlash([j(s - pad) + off, j(pad)], [j(pad) + off, j(s - pad)], mRand(-s * 0.06, s * 0.06), mRand(0.05, 0.22) * mPick([1, -1]));
+  const inner = ribbonSVG(markerRibbon(s1, w), col, op) + ribbonSVG(markerRibbon(s2, w * mRand(0.94, 1.06)), col, op);
+  return `<svg class="cal-mark" viewBox="0 0 ${s} ${s}" style="transform:rotate(${mRand(-11, 11).toFixed(1)}deg)">${inner}</svg>`;
+}
+
+function markerO(s) {
+  const col = mPick(MARK_GREENS), w = s * mRand(0.11, 0.14), op = mRand(0.8, 0.9);
+  const cx = s / 2 + mRand(-s * 0.03, s * 0.03), cy = s / 2 + mRand(-s * 0.03, s * 0.03);
+  const rx = s * mRand(0.32, 0.37), ry = s * mRand(0.31, 0.36);
+  const tilt = mRand(-0.3, 0.3), ct = Math.cos(tilt), st = Math.sin(tilt);
+  const start = mRand(-2.6, -1.6), sweep = Math.PI * 2 * mRand(1.05, 1.13), ph = mRand(0, 6.28);
+  const N = 60, pts = [];
+  for (let i = 0; i <= N; i++) {
+    const t = i / N, a = start + sweep * t, wob = 1 + 0.022 * Math.sin(a * 2 + ph);
+    const x = Math.cos(a) * rx * wob, y = Math.sin(a) * ry * wob;
+    pts.push([cx + x * ct - y * st, cy + x * st + y * ct]);
+  }
+  return `<svg class="cal-mark" viewBox="0 0 ${s} ${s}" style="transform:rotate(${mRand(-9, 9).toFixed(1)}deg)">${ribbonSVG(markerRibbon(pts, w), col, op)}</svg>`;
+}
+
+const MONTH_NAMES = ["January", "February", "March", "April", "May", "June",
+  "July", "August", "September", "October", "November", "December"];
+
+// The current month as a notebook calendar: today ringed in green marker, every
+// completed-daily day struck out with a unique red marker X. Month/today come from
+// todayKey() (active timezone); the crossed-off set from dailyPlayedDates().
+function dailyCalendarHTML() {
+  const today = todayKey();                       // YYYY-MM-DD in the active zone
+  const [yy, mm, dd] = today.split("-").map(Number);
+  const monthIdx = mm - 1;
+  const daysInMonth = new Date(Date.UTC(yy, mm, 0)).getUTCDate();
+  const firstDow = new Date(Date.UTC(yy, monthIdx, 1)).getUTCDay();   // 0 = Sunday
+  const pad2 = (n) => String(n).padStart(2, "0");
+  const monthPrefix = `${yy}-${pad2(mm)}-`;
+  const played = dailyPlayedDates();
+
+  let cells = "";
+  for (let i = 0; i < firstDow; i++) cells += `<div class="cal-cell cal-blank"></div>`;
+  for (let day = 1; day <= daysInMonth; day++) {
+    const isToday = day === dd, done = played[monthPrefix + pad2(day)] != null;
+    let ink = "";
+    if (isToday) ink += markerO(30);
+    if (done) ink += markerX(30);
+    const cls = "cal-cell" + (day > dd ? " cal-future" : "") + (isToday ? " cal-today" : "");
+    cells += `<div class="${cls}"><span class="cal-num">${day}</span><span class="cal-ink">${ink}</span></div>`;
+  }
+  const dows = ["S", "M", "T", "W", "T", "F", "S"].map((x) => `<div class="cal-dow">${x}</div>`).join("");
+  return `<div class="daily-cal">` +
+    `<div class="cal-head"><span class="cal-month">${MONTH_NAMES[monthIdx]}</span><span class="cal-year">${yy}</span></div>` +
+    `<div class="cal-grid cal-dows">${dows}</div>` +
+    `<div class="cal-grid cal-days">${cells}</div>` +
+    `</div>`;
+}
+
 function dailyStatsHTML() {
   const d = effectiveDailyStreak(todayKey());
+  const cal = dailyCalendarHTML();
+  const head = `<p class="histogram-label" style="margin-top:24px;">daily challenge</p>`;
   if (!d.lastPlayed) {
-    return `<p class="histogram-label" style="margin-top:24px;">daily challenge</p>` +
-      `<p class="stats-empty">no daily runs yet — try today's Daily Challenge!</p>`;
+    return head + cal + `<p class="stats-empty">no daily runs yet — try today's Daily Challenge!</p>`;
   }
   const note = d.playedToday
     ? `<p class="daily-streak-note">✓ played today's challenge</p>`
     : `<p class="daily-streak-note">today's challenge awaits</p>`;
-  return `<p class="histogram-label" style="margin-top:24px;">daily challenge</p>` +
+  return head +
     `<div class="streak-row">` +
     `<div class="streak-cell"><span class="stat-val">🔥 ${d.current}</span><span class="stat-lbl">day streak</span></div>` +
     `<div class="streak-cell"><span class="stat-val">${d.best}</span><span class="stat-lbl">best streak</span></div>` +
-    `</div>` + note;
+    `</div>` + note + cal;
 }
 
 // Lifetime cross-game numbers — global (All tab only, like the catalogue). Drawn from
