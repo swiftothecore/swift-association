@@ -1887,10 +1887,11 @@
   .set-text {
     font-family: var(--hand); font-size: 18px; line-height: 1.4; width: 150px; text-align: right;
     border: none; border-bottom: 1.5px solid var(--ink-soft); background: transparent;
-    /* Caveat's ink overhangs the advance width (a final f/l/d/t exit stroke runs ~4px
-       past it); inputs clip at the border box, so pad the sides to keep the last (or,
-       for the left-aligned sign field, first) glyph's flourish from being sliced off. */
-    color: var(--ink); outline: none; padding: 2px 8px 15px;
+    /* Caveat's ink overhangs the advance width (a final f/l/d/t exit stroke runs
+       well past it, and some glyphs are wider than their metrics); inputs clip at the
+       border box, so pad the sides generously to keep the last (or, for the
+       left-aligned sign field, first) glyph's flourish from being sliced off. */
+    color: var(--ink); outline: none; padding: 2px 14px 15px;
   }
   .set-text:focus { border-bottom-color: var(--ink-accent); }
   .set-text::placeholder { color: var(--ink-soft); opacity: 0.7; }
