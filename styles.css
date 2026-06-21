@@ -382,7 +382,8 @@
   .pol-tape {
     position: absolute; top: -8px; left: 50%; width: 50px; height: 17px;
     transform: translateX(-50%) rotate(-6deg);
-    background: var(--bead); opacity: 0.4; border-radius: 1px;
+    /* realistic washi surface comes from the shared .nav-tape rule; just tint it */
+    --tape-color: var(--bead);
   }
   .polaroid.is-empty {
     background: var(--paper); border: 1.5px dashed rgba(43,39,34,0.34); box-shadow: none;
@@ -1664,6 +1665,7 @@
      supplies the hand-torn outline (nav strips set a fresh random one inline; the tiles
      and dropdown cycle a few preset tears below). */
   .nav-tape,
+  .pol-tape,
   .pb-tile::before,
   .dropdown .item::before {
     background:
@@ -1893,6 +1895,41 @@
   }
   .set-text:focus { border-bottom-color: var(--ink-accent); }
   .set-text::placeholder { color: var(--ink-soft); opacity: 0.7; }
+
+  /* ---------- "Your name" flyleaf nameplate ----------
+     The signature is the marquee setting, so it gets its own bookplate instead of
+     a plain row: a cream index-card patch, a "this notebook belongs to" kicker, the
+     name written large on a signature rule, and a heart-hands end-cap. The big line
+     IS the input (id stays #set-playerName so the existing change handler is reused). */
+  .nameplate {
+    position: relative; background: rgba(251, 247, 234, 0.93);
+    border: 1px solid rgba(43, 39, 34, 0.16); border-radius: 3px;
+    padding: 14px 18px 15px; margin: 2px 0 4px; transform: rotate(-0.4deg);
+    box-shadow: 0 1px 0 rgba(43, 39, 34, 0.06);
+  }
+  .np-kicker {
+    font-family: var(--type); font-size: 11px; letter-spacing: 0.5px;
+    color: var(--ink-soft); margin: 0;
+  }
+  .np-sigrow {
+    display: flex; align-items: flex-end; gap: 10px; margin-top: 4px;
+    border-bottom: 1.5px solid var(--ink); padding-bottom: 4px;
+  }
+  .np-sigrow:focus-within { border-bottom-color: var(--ink-accent); }
+  .np-name-input {
+    flex: 1; min-width: 0; font-family: var(--hand); font-weight: 700;
+    font-size: 38px; line-height: 1.05; color: var(--ink);
+    background: transparent; border: none; outline: none;
+    /* Caveat's exit strokes overhang the advance width — pad so the first/last
+       glyph's flourish isn't clipped at the input's border box. */
+    padding: 0 8px;
+  }
+  .np-name-input::placeholder { color: var(--ink-soft); opacity: 0.55; }
+  .np-hands { flex: 0 0 auto; color: var(--ink-accent); margin-bottom: 3px; }
+  .np-hint {
+    font-family: var(--type); font-size: 10.5px; color: var(--ink-soft);
+    margin: 7px 2px 0;
+  }
 
   /* timezone select — typewriter-styled to match the notebook's functional layer.
      padding-right reserves room for the native arrow so it never overlaps the label,
