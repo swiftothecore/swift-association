@@ -117,7 +117,7 @@
     background:
       /* red margin rule as a background layer so it spans the full scroll height
          (the old absolute ::before stopped at the visible box in scrolling cards). */
-      linear-gradient(to right, transparent 44px, rgba(178, 58, 58, 0.38) 44px, rgba(178, 58, 58, 0.38) 46px, transparent 46px),
+      linear-gradient(to right, transparent var(--rule-x, 44px), rgba(178, 58, 58, 0.38) var(--rule-x, 44px), rgba(178, 58, 58, 0.38) calc(var(--rule-x, 44px) + 2px), transparent calc(var(--rule-x, 44px) + 2px)),
       linear-gradient(var(--page-wash), var(--page-wash)),
       repeating-linear-gradient(
         to bottom,
@@ -1829,6 +1829,7 @@
     width: min(540px, calc(100vw - 28px)); max-height: calc(100vh - 40px); overflow-y: auto;
     overscroll-behavior: contain;   /* don't chain scroll to the page behind */
     padding: 22px 24px 28px 48px;
+    --rule-x: 34px;   /* nudge the red margin rule left so it isn't squished against the text */
   }
   /* Freeze the page behind an open modal so the background can't scroll. */
   body.modal-open { overflow: hidden; }
