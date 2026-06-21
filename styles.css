@@ -449,6 +449,74 @@
     .pb-grid .pb-tile::before { left: 50%; margin-left: -21px; }
   }
 
+  /* ---------- Challenges page ---------- */
+  .chall-head { margin-bottom: 6px; }
+  .chall-head-row { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+  .chall-head-title { font-family: var(--hand); font-weight: 700; font-size: 26px; color: var(--ink); }
+  .chall-tokens { font-family: var(--type); font-size: 12px; color: var(--ink-soft); white-space: nowrap; }
+  .chall-tokens b { font-size: 15px; color: #7d5ba6; }
+  .chall-head-sub { font-family: var(--type); font-size: 10px; letter-spacing: 1px; text-transform: uppercase; color: var(--ink-soft); margin-top: 2px; }
+
+  .chall-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(186px, 1fr)); gap: 20px 16px; padding-top: 14px; }
+  .chall-tile {
+    --chall-accent: #7d5ba6;
+    position: relative; border: 1px solid rgba(43,39,34,0.16); border-radius: 3px;
+    padding: 18px 14px 14px; background: rgba(251,247,234,0.94);
+    box-shadow: 0 1px 0 rgba(43,39,34,0.06);
+    display: flex; flex-direction: column; align-items: center; text-align: center; gap: 5px;
+    overflow: hidden;
+  }
+  .chall-tile::before {   /* washi tape pin, tinted to the accent (shared .nav-tape surface) */
+    content: ""; position: absolute; top: -8px; left: 50%; width: 46px; height: 16px;
+    transform: translateX(-50%) rotate(-3deg); --tape-color: var(--chall-accent);
+  }
+  .chall-grid .chall-tile:nth-child(3n+1) { transform: rotate(-1.1deg); }
+  .chall-grid .chall-tile:nth-child(3n+2) { transform: rotate(0.8deg); }
+  .chall-grid .chall-tile:nth-child(3n)   { transform: rotate(-0.5deg); }
+  .chall-charm { display: block; color: var(--chall-accent); }
+  .chall-charm .charm { width: 30px; height: 30px; }
+  .chall-name { font-family: var(--hand); font-weight: 700; font-size: 21px; line-height: 1; color: var(--ink); }
+  .chall-desc { font-family: var(--type); font-size: 11px; line-height: 1.35; color: var(--ink-soft); }
+  .chall-win { font-family: var(--type); font-size: 10px; line-height: 1.3; color: var(--chall-accent); opacity: 0.85; margin-top: 1px; }
+  .chall-action { margin-top: 6px; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .chall-btn {
+    font-family: var(--type); font-size: 12px; letter-spacing: 0.5px;
+    padding: 5px 16px; border-radius: 3px; cursor: pointer;
+    border: 1.5px solid var(--chall-accent); background: transparent; color: var(--chall-accent);
+    transition: background 0.15s, color 0.15s;
+  }
+  .chall-btn:hover { background: var(--chall-accent); color: #fff; }
+  .chall-cost { font-size: 11px; opacity: 0.9; }
+  .chall-need { font-family: var(--type); font-size: 11px; color: var(--ink-soft); }
+  .chall-meta { font-family: var(--type); font-size: 10px; color: var(--ink-soft); }
+  /* locked tiles read as not-yet-opened: muted, faintly washed out */
+  .chall-locked { opacity: 0.66; filter: saturate(0.6); }
+  .chall-locked .chall-name, .chall-locked .chall-charm { color: var(--ink-soft); }
+  /* defeated: a red rubber stamp slammed across the card */
+  .chall-stamp {
+    position: absolute; top: 30px; right: -22px; transform: rotate(-13deg);
+    font-family: var(--type); font-weight: 700; font-size: 13px; letter-spacing: 2px; text-transform: uppercase;
+    color: rgba(178,58,58,0.78); border: 2.5px solid rgba(178,58,58,0.6); border-radius: 4px;
+    padding: 3px 26px; pointer-events: none;
+  }
+  .chall-done { background: rgba(251,247,234,0.97); }
+  @media (prefers-reduced-motion: reduce) {
+    .chall-grid .chall-tile { transform: none; }
+    .chall-tile::before { left: 50%; margin-left: -23px; }
+  }
+
+  /* Vanishing Word challenge — the prompt word fades out of view after a beat
+     (still in state, so matching is unaffected). */
+  .word-wrap.vanished #wordDisplay { color: transparent; transition: color 0.5s ease; }
+  .word-wrap.vanished #wordDisplay::after {
+    content: "·  ·  ·"; position: absolute; left: 50%; transform: translateX(-50%);
+    color: var(--ink-soft); opacity: 0.5; letter-spacing: 2px;
+  }
+  @media (prefers-reduced-motion: reduce) { .word-wrap.vanished #wordDisplay { transition: none; } }
+
+  /* "cashed in for a ticket" badge on a converted achievement */
+  .ach-ticket { color: #7d5ba6; font-size: 12px; margin-left: 4px; }
+
   .hist-head, .hist-row {
     display: grid; grid-template-columns: 1fr 0.8fr 0.8fr 1.9fr 1.3fr;
     align-items: baseline; gap: 10px;

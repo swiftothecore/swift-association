@@ -135,6 +135,7 @@ const screens = {
   stats: $("screen-stats"),
   records: $("screen-records"),
   achievements: $("screen-achievements"),
+  challenges: $("screen-challenges"),
   songbook: $("screen-songbook"),
 };
 function showScreen(name) {
@@ -1895,6 +1896,65 @@ function openAchievements(from) {
   achievementsBackTarget = from;
   renderAchievementsPage();
   showScreen("achievements");
+}
+
+/* ---------- Challenges page ---------- */
+let challengesBackTarget = "start";  // where the Challenges' ← back returns to
+function openChallenges(from) {
+  challengesBackTarget = from;
+  renderChallengesPage();
+  showScreen("challenges");
+}
+
+function renderChallengesPage() {
+  const wallet = loadChallengeTokens();
+  const tk = wallet.balance;
+  const defeated = CHALLENGES.filter((c) => challengeRecord(c.id).defeated).length;
+  const accent = ACH_GROUP_COLORS.challenges;
+
+  let html = `<div class="chall-head">` +
+    `<div class="chall-head-row"><span class="chall-head-title">Challenges</span>` +
+    `<span class="chall-tokens" title="spend a token to unlock a challenge">🎟 <b>${tk}</b> token${tk === 1 ? "" : "s"}</span></div>` +
+    `<div class="chall-head-sub">${defeated} / ${CHALLENGES.length} defeated</div></div>`;
+
+  html += `<div class="chall-grid">`;
+  for (const c of CHALLENGES) {
+    const rec = challengeRecord(c.id);
+    const open = c.free || rec.unlocked;
+    const cost = c.cost || 1;
+    let stateCls, action;
+    if (!open) {
+      const afford = tk >= cost;
+      stateCls = "chall-locked";
+      action = afford
+        ? `<button class="chall-btn chall-unlock" data-unlock="${c.id}">unlock <span class="chall-cost">🎟 ${cost}</span></button>`
+        : `<div class="chall-need">need a token <span class="chall-cost">🎟 ${cost}</span></div>`;
+    } else if (rec.defeated) {
+      stateCls = "chall-done";
+      action = `<button class="chall-btn chall-play" data-play="${c.id}">play again</button>` +
+        `<div class="chall-meta">best ${rec.best}/${TOTAL_ROUNDS} · ${rec.attempts} attempt${rec.attempts === 1 ? "" : "s"}</div>`;
+    } else {
+      stateCls = "chall-open";
+      action = `<button class="chall-btn chall-play" data-play="${c.id}">play</button>` +
+        (rec.attempts ? `<div class="chall-meta">${rec.attempts} attempt${rec.attempts === 1 ? "" : "s"}</div>` : "");
+    }
+    html += `<div class="chall-tile ${stateCls}" style="--chall-accent:${accent}">` +
+      (rec.defeated ? `<span class="chall-stamp">defeated</span>` : "") +
+      `<span class="chall-charm">${charmMarkup(c.icon)}</span>` +
+      `<div class="chall-name">${escapeHtml(c.name)}</div>` +
+      `<div class="chall-desc">${escapeHtml(c.desc)}</div>` +
+      `<div class="chall-win">${escapeHtml(c.win)}</div>` +
+      `<div class="chall-action">${action}</div>` +
+      `</div>`;
+  }
+  html += `</div>`;
+
+  const el = $("challengesBody");
+  el.innerHTML = html;
+  el.querySelectorAll("[data-unlock]").forEach((b) => b.addEventListener("click", () => {
+    if (unlockChallenge(b.dataset.unlock)) renderChallengesPage();
+  }));
+  el.querySelectorAll("[data-play]").forEach((b) => b.addEventListener("click", () => startChallenge(b.dataset.play)));
 }
 
 /* ---------- Bracelet (hand-strung SVG) ---------- */
@@ -4461,6 +4521,12 @@ async function init() {
   });
   $("songbookBackBtn").addEventListener("click", () => {
     const prev = songbookBackTarget;
+    showScreen(prev);
+    if (prev === "start") { $("startContent").style.display = ""; }
+  });
+  $("challengesBtn").addEventListener("click", () => openChallenges("start"));
+  $("challengesBackBtn").addEventListener("click", () => {
+    const prev = challengesBackTarget;
     showScreen(prev);
     if (prev === "start") { $("startContent").style.display = ""; }
   });

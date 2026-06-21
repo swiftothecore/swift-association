@@ -102,11 +102,11 @@ export const CHALLENGES = [
     desc: "The word vanishes after a moment — answer from memory.",
     win: "Score 10 / 13 with disappearing words." },
   { id: "deep-cut", name: "Deep Cut", rule: "album5", mode: "easy",
-    free: false, cost: 1, album: null /* any single album */, icon: "star",
+    free: false, cost: 1, album: null /* any single album */, icon: "vinyl",
     desc: "Pull five correct answers from a single album.",
     win: "Answer 5 correct songs from one album." },
   { id: "alphabetical", name: "From A to Z", rule: "alphabetical", mode: "medium",
-    free: false, cost: 1, target: 9, icon: "thirteen",
+    free: false, cost: 1, target: 9, icon: "book",
     desc: "Each song's title must start no earlier than the last.",
     win: "Land 9 correct answers in non-decreasing A→Z order." },
 ];
