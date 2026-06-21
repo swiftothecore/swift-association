@@ -1376,39 +1376,54 @@ function polaroidHTML(photo, caption, opts = {}) {
 // Read a chosen image file, center-crop it to a square and downscale it to a
 // small JPEG data-URL (~kBs) so it sits comfortably in localStorage. No crop UI.
 const AVATAR_SIZE = 240;
-function processAvatarFile(file, cb) {
-  if (!file || !/^image\//.test(file.type)) return;
+// `cb(url)` on success; `done()` always fires (success or failure) so the caller
+// can tear down the file input only after the read finishes.
+function processAvatarFile(file, cb, done) {
+  const finish = () => { if (done) done(); };
+  const fail = (msg) => { console.warn("avatar:", msg); finish(); };
+  if (!file || !/^image\//.test(file.type)) return fail("not an image (" + (file && file.type) + ")");
   const reader = new FileReader();
+  reader.onerror = () => fail("could not read the file");
   reader.onload = () => {
     const img = new Image();
+    img.onerror = () => fail("could not decode the image");
     img.onload = () => {
       const side = Math.min(img.width, img.height);
-      if (!side) return;
+      if (!side) return fail("image has no dimensions");
       const sx = (img.width - side) / 2, sy = (img.height - side) / 2;
       const c = document.createElement("canvas");
       c.width = c.height = AVATAR_SIZE;
       const ctx = c.getContext("2d");
       ctx.drawImage(img, sx, sy, side, side, 0, 0, AVATAR_SIZE, AVATAR_SIZE);
       let url;
-      try { url = c.toDataURL("image/jpeg", 0.82); } catch (e) { return; }   // tainted/oversized → bail
+      try { url = c.toDataURL("image/jpeg", 0.82); } catch (e) { return fail("encode failed: " + e); }
       cb(url);
+      finish();
     };
-    img.onerror = () => {};
     img.src = reader.result;
   };
   reader.readAsDataURL(file);
 }
 
 // Pop the native file picker, process the pick, hand the data-URL back.
+// WebKit gotchas this avoids: a `display:none` file input may not fire `change`,
+// and removing the input before the async read finishes can invalidate the File.
+// So the input is kept rendered (off-screen) and only removed once reading is done.
 function chooseAvatar(cb) {
   const inp = document.createElement("input");
-  inp.type = "file"; inp.accept = "image/*"; inp.style.display = "none";
+  inp.type = "file"; inp.accept = "image/*";
+  inp.style.cssText = "position:fixed;left:-9999px;top:0;width:1px;height:1px;opacity:0;";
   document.body.appendChild(inp);
+  let picked = false;
+  const cleanup = () => { if (inp.parentNode) inp.remove(); };
   inp.addEventListener("change", () => {
+    picked = true;
     const f = inp.files && inp.files[0];
-    if (f) processAvatarFile(f, cb);
-    inp.remove();
+    if (!f) { cleanup(); return; }
+    processAvatarFile(f, cb, cleanup);
   });
+  // If the dialog is cancelled, no `change` fires — tidy up once focus returns.
+  window.addEventListener("focus", () => setTimeout(() => { if (!picked) cleanup(); }, 500), { once: true });
   inp.click();
 }
 
