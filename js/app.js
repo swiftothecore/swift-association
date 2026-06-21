@@ -2755,24 +2755,25 @@ function lyricCard(song, word, isWrong, lineOverride) {
 
 const LYRIC_BANNERS = { base: "✓ you knew the line", good: "✓ nicely recalled", perfect: "✓ word-perfect", verse: "✓ the whole verse" };
 
-// A reusable peel-and-stick gold sticker (notebook cosmetic). Other moments can reuse
-// it as the sticker vocabulary grows — see PLAN.md. Escalates by tier.
-function stickerHTML({ stars = 1, amt, label, tone = "gold" }) {
-  return `<div class="sticker sticker--${tone}" aria-label="+${amt} ${label}">
-    <span class="sticker-stars">${STAR_SVG.repeat(stars)}</span>
+// A reusable peel-and-stick foil star — the teacher's gold star, pressed into the
+// margin. A die-cut star (clip-path foil) with the bonus amount written across its
+// body; the tier wording lives in the banner beside it, so the sticker stays terse.
+// Other moments can reuse it as the sticker vocabulary grows — see PLAN.md.
+function stickerHTML({ amt, label, tone = "gold", big = false }) {
+  return `<span class="sticker sticker--${tone}${big ? " sticker--big" : ""}" role="img" aria-label="+${amt} ${label}">
+    <span class="sticker-foil"></span>
     <span class="sticker-amt">+${amt}</span>
-    <span class="sticker-label">${label}</span>
-  </div>`;
+  </span>`;
 }
 const VERSE_STICKERS = {
-  good:    { stars: 1, label: "verse bonus",     tone: "gold" },
-  perfect: { stars: 1, label: "word-perfect",    tone: "gold" },
-  verse:   { stars: 2, label: "the whole verse", tone: "rose" },
+  good:    { label: "verse bonus",     tone: "gold" },
+  perfect: { label: "word-perfect",    tone: "gold" },
+  verse:   { label: "the whole verse", tone: "rose", big: true },
 };
 function verseSticker(tier, bonus) {
   if (!bonus) return "";
   const cfg = VERSE_STICKERS[tier] || VERSE_STICKERS.good;
-  return stickerHTML({ stars: cfg.stars, amt: bonus, label: cfg.label, tone: cfg.tone });
+  return stickerHTML({ amt: bonus, label: cfg.label, tone: cfg.tone, big: cfg.big });
 }
 
 function showCorrectFeedback(song, lyricMatch) {
@@ -2798,8 +2799,7 @@ function showCorrectFeedback(song, lyricMatch) {
     ? `<div class="countdown">next page in <b id="cd">${settings.countdownSecs}</b></div><button id="skipBtn" class="countdown-skip">skip →</button>`
     : `<button id="continueBtn" class="btn-ghost">next page →</button>`;
   fb.innerHTML = `
-    <div class="banner good">${banner}</div>
-    ${sticker}
+    <div class="fb-head"><div class="banner good">${banner}</div>${sticker}</div>
     ${firstNote}
     ${card}
     ${advanceUI}`;
