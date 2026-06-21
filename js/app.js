@@ -1258,7 +1258,6 @@ function renderDailyHeat(body, view) {
   const counts = heatDayCounts();
   let rangeStart;
   if (view === "y1") rangeStart = keyMinus(today, 364);
-  else if (view === "m1") rangeStart = keyMinus(today, 29);
   else rangeStart = today.slice(0, 4) + "-01-01";                       // ytd: counts up from 1 Jan
   const gridStart = keyMinus(rangeStart, heatRow(rangeStart));          // back up to the week-start boundary
   const weeks = Math.floor(keyDiff(today, gridStart) / 7) + 1;
@@ -1302,6 +1301,39 @@ function renderDailyHeat(body, view) {
   fitHeatGrid();
 }
 
+// The 30-day view renders as a single full-width strip (one row of 30 days, today on the
+// right) rather than a 7×5 calendar block — 5 calendar columns capped to square cells left a
+// lot of empty space on the right. Month markers ride the top where the month changes; the
+// weekday axis is dropped (thin at this range). fitHeatGrid sizes the row to keep cells square.
+function renderMonthStrip(body) {
+  const today = todayKey();
+  const counts = heatDayCounts();
+  const DAYS = 30;
+  const start = keyMinus(today, DAYS - 1);
+  let max = 0, total = 0, daysPlayed = 0;
+  for (let i = 0; i < DAYS; i++) {
+    const c = counts[keyPlus(start, i)] || 0;
+    if (c > max) max = c;
+    if (c > 0) { total += c; daysPlayed++; }
+  }
+  const months = [], cells = []; let lastMonth = -1;
+  for (let i = 0; i < DAYS; i++) {
+    const key = keyPlus(start, i);
+    const m = keyMonth(key);
+    if (m !== lastMonth) { months.push(`<span style="left:${(i / DAYS * 100).toFixed(3)}%">${MON_ABBR[m]}</span>`); lastMonth = m; }
+    const c = counts[key] || 0;
+    cells.push(`<div class="heat-cell" title="${c} game${c === 1 ? "" : "s"} · ${heatPrettyDate(key)}" style="background:${HEAT_FILL[heatLevel(c, max)]};border:0.5px solid rgba(43,39,34,0.10)"></div>`);
+  }
+  body.innerHTML =
+    `<div class="heat-strip">` +
+      `<div class="heat-months" style="height:15px">${months.join("")}</div>` +
+      `<div class="heat-grid" id="heatGrid" data-view="m1" data-strip="1" data-days="${DAYS}" style="grid-auto-flow:column;grid-template-columns:repeat(${DAYS},1fr);grid-template-rows:11px">${cells.join("")}</div>` +
+      `<div class="heat-strip-ends"><span>${heatPrettyDate(start)}</span><span>today</span></div>` +
+    `</div>`;
+  setHeatFoot("m1", total, daysPlayed);
+  fitHeatGrid();
+}
+
 function renderWeekHeat(body) {
   const today = todayKey();
   const nowHour = localHourOf(new Date().toISOString());
@@ -1342,12 +1374,15 @@ function renderWeekHeat(body) {
 
 function renderHeatBody() {
   const body = $("heatBody"); if (!body) return;
-  if (_heatView === "wk") renderWeekHeat(body); else renderDailyHeat(body, _heatView);
+  if (_heatView === "wk") renderWeekHeat(body);
+  else if (_heatView === "m1") renderMonthStrip(body);
+  else renderDailyHeat(body, _heatView);
   const sel = $("heatRange"); if (sel) sel.value = _heatView;
 }
 // Size the daily grid to the full content width: square cells + matching day-label rows.
-// Dense ranges (12 months, year) fill the width with small cells; sparse ranges (30 days =
-// 5 weeks) are capped at HEAT_CELL_MAX and left-aligned so the squares don't balloon. The
+// Dense ranges (12 months, year) fill the width with small cells. The 30-day view is a single
+// full-width strip (data-strip) — its one row is sized square from the column width. Any range
+// wide enough to exceed HEAT_CELL_MAX is capped+left-aligned so squares don't balloon. The
 // month-label strip is pinned to the grid's actual width either way so labels stay aligned.
 // Retries on rAF while the width reads 0 (the records screen is hidden during the initial
 // render, so the first measurement after showScreen can still be mid-layout).
@@ -1357,6 +1392,11 @@ function fitHeatGrid(retries = 10) {
   const grid = $("heatGrid"); if (!grid || grid.dataset.view === "wk") return;
   const w = grid.clientWidth;
   if (!w) { if (retries > 0) requestAnimationFrame(() => fitHeatGrid(retries - 1)); return; }
+  if (grid.dataset.strip) {                                            // 30-day strip: square the single row to the 1fr column width
+    const days = +grid.dataset.days || 30;
+    grid.style.gridTemplateRows = `${(w - (days - 1) * HEAT_GAP) / days}px`;
+    return;
+  }
   const weeks = +grid.dataset.weeks || 1;
   const full = (w - (weeks - 1) * HEAT_GAP) / weeks;
   // Three regimes: cap big (sparse → left-aligned), floor small (dense+narrow → fixed px, the

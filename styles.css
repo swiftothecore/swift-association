@@ -508,6 +508,12 @@
   .heat-cols span { text-align: center; line-height: 16px; }
   .heat-grid { display: grid; gap: 3px; width: 100%; }
   .heat-cell { border-radius: 2px; }
+  /* 30-day strip: one full-width row of days, with start/end date captions for orientation */
+  .heat-strip { width: 100%; }
+  .heat-strip-ends {
+    display: flex; justify-content: space-between;
+    font-family: var(--type); font-size: 9px; color: var(--ink-soft); margin-top: 5px;
+  }
   .heat-foot { font-family: var(--hand); font-size: 18px; color: var(--ink-soft); margin-top: 12px; transform: rotate(-0.4deg); }
   .heat-foot b { color: var(--ink-accent); font-weight: 700; }
 
