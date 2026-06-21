@@ -870,6 +870,18 @@ function setupTooltips() {
   window.addEventListener("scroll", hideTip, true);
 }
 
+// A plain (non-achievement) toast — a short heading + message. Reuses the
+// achievement toast stack + auto-dismiss, so failures surface instead of being silent.
+function notifyNote(label, msg) {
+  const layer = $("toastLayer");
+  if (!layer) return;
+  const t = document.createElement("div");
+  t.className = "toast toast-note";
+  t.innerHTML = `<div><div class="t-label">${escapeHtml(label)}</div><div class="t-name">${escapeHtml(msg)}</div></div>`;
+  layer.appendChild(t);
+  scheduleToastDismiss();
+}
+
 function showToast(a) {
   const layer = $("toastLayer");
   if (!layer) return;
@@ -1380,8 +1392,11 @@ const AVATAR_SIZE = 240;
 // can tear down the file input only after the read finishes.
 function processAvatarFile(file, cb, done) {
   const finish = () => { if (done) done(); };
-  const fail = (msg) => { console.warn("avatar:", msg); finish(); };
-  if (!file || !/^image\//.test(file.type)) return fail("not an image (" + (file && file.type) + ")");
+  const fail = (msg) => { console.warn("avatar:", msg); notifyNote("couldn’t add that photo", "try a JPG or PNG image"); finish(); };
+  if (!file) return fail("no file");
+  // Don't hard-gate on file.type — Safari/iCloud sometimes report "" for a real
+  // image. The picker's accept="image/*" already filters; let decode be the judge.
+  if (file.type && !/^image\//.test(file.type)) return fail("not an image (" + file.type + ")");
   const reader = new FileReader();
   reader.onerror = () => fail("could not read the file");
   reader.onload = () => {
@@ -1406,13 +1421,14 @@ function processAvatarFile(file, cb, done) {
 }
 
 // Pop the native file picker, process the pick, hand the data-URL back.
-// WebKit gotchas this avoids: a `display:none` file input may not fire `change`,
-// and removing the input before the async read finishes can invalidate the File.
-// So the input is kept rendered (off-screen) and only removed once reading is done.
+// WebKit gotchas this avoids: a `display:none` (or fully off-screen) file input
+// may not fire `change`, and removing the input before the async read finishes
+// can invalidate the File. So the input is kept rendered (visually-hidden but
+// in-viewport) and only removed once reading is done.
 function chooseAvatar(cb) {
   const inp = document.createElement("input");
   inp.type = "file"; inp.accept = "image/*";
-  inp.style.cssText = "position:fixed;left:-9999px;top:0;width:1px;height:1px;opacity:0;";
+  inp.style.cssText = "position:fixed;left:0;top:0;width:1px;height:1px;opacity:0;pointer-events:none;";
   document.body.appendChild(inp);
   let picked = false;
   const cleanup = () => { if (inp.parentNode) inp.remove(); };
