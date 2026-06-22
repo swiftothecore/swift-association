@@ -113,6 +113,10 @@ export const CHALLENGES = [
     free: false, cost: 1, target: 9, icon: "shake",
     desc: "The word warps more each round — read it before it's gibberish.",
     win: "Score 9 / 13 through the distortion." },
+  { id: "one-of-a-kind", name: "One Of A Kind", rule: "newsong", mode: "easy",
+    free: false, cost: 1, icon: "gem",
+    desc: "A song you've never gotten before is hiding in this run — find it.",
+    win: "Answer the never-before-seen song." },
 ];
 export const CHALLENGE_BY_ID = Object.fromEntries(CHALLENGES.map((c) => [c.id, c]));
 export const CHALLENGE_ORDER = CHALLENGES.map((c) => c.id);

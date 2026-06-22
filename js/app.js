@@ -79,6 +79,9 @@ let currentChallenge = null;    // the active CHALLENGES entry while gameType ==
 let challengeRunActive = false; // true only during a live challenge run (gates the achievement sandbox)
 let vanishTimer = null;         // Vanishing Word: timeout that hides the prompt word
 let lastAlphaLetter = "";       // From A to Z: first letter of the last accepted answer
+let challengeTargetSong = null; // One Of A Kind: the never-before-answered song to surface
+let challengeForcedRound = 0;   // One Of A Kind: the round that forces challengeForcedWordVal
+let challengeForcedWordVal = "";// One Of A Kind: the prompt word that surfaces the target song
 let currentWord = "";
 let currentSongs = [];
 let dropdownItems = [];
@@ -2381,6 +2384,9 @@ function resetRunState() {
   currentChallenge = null;
   challengeRunActive = false;
   lastAlphaLetter = "";
+  challengeTargetSong = null;
+  challengeForcedRound = 0;
+  challengeForcedWordVal = "";
   clearTimeout(vanishTimer);
   const wrap = $("wordDisplay") && $("wordDisplay").parentNode;
   if (wrap) wrap.classList.remove("vanished");
@@ -2563,6 +2569,7 @@ function startChallenge(id) {
   resetRunState();
   currentChallenge = c;                          // set AFTER resetRunState (which nulls it)
   challengeRunActive = true;                     // start the achievement sandbox
+  if (c.rule === "newsong") setupNewSongChallenge();
   recordChallengeAttempt(id);
   applyInputHints();
   updateTagline();
@@ -2570,6 +2577,31 @@ function startChallenge(id) {
   $("pageTotal").textContent = TOTAL_ROUNDS;
   showScreen("game");
   nextRound();
+}
+
+// One Of A Kind setup: pick a song the player has never answered, then a prompt word
+// that surfaces it as NARROWLY as possible (fewest valid songs), so naming the target
+// is actually achievable, and a round to force it on. Pre-seed usedWords so the word
+// can't surface earlier by chance. New players (empty tally) → any song.
+function setupNewSongChallenge() {
+  challengeTargetSong = null; challengeForcedRound = 0; challengeForcedWordVal = "";
+  const found = (loadSongTally().songs) || {};
+  const unseen = allSongs.filter((s) => !found[s.title]);
+  const target = shuffle((unseen.length ? unseen : allSongs).slice())[0];
+  if (!target) return;
+  const candidates = playableWords.filter((w) => wordRegex(w, false).test(target.lyrics));
+  if (!candidates.length) return;                         // can't surface it — leave disabled
+  const scored = candidates.map((w) => ({ w, n: validSongs(w, false, false).length }));
+  const minN = Math.min(...scored.map((s) => s.n));
+  challengeForcedWordVal = shuffle(scored.filter((s) => s.n === minN))[0].w;
+  challengeTargetSong = target;
+  challengeForcedRound = 3 + Math.floor(Math.random() * 9);  // rounds 3..11
+  if (!usedWords.includes(challengeForcedWordVal)) usedWords.push(challengeForcedWordVal);
+}
+// One Of A Kind: the prompt word forced on the target round (null otherwise / for
+// every other challenge, since challengeTargetSong is only set for this rule).
+function challengeForcedWord(r) {
+  return (challengeTargetSong && r === challengeForcedRound) ? challengeForcedWordVal : null;
 }
 
 // Per-round modifier for the active challenge (called from advanceRound after the
@@ -2626,6 +2658,9 @@ function renderWordFx(wrap, word, r) {
 // Did the finished run defeat the challenge?
 function challengeWinCheck(c) {
   if (!c) return false;
+  if (c.rule === "newsong") {
+    return !!challengeTargetSong && roundSongs.includes(challengeTargetSong.title);
+  }
   if (c.rule === "album5") {
     const counts = {};
     let best = 0;
@@ -2832,7 +2867,7 @@ function advanceRound() {
   round++;
   roundLocked = false;
   justEarnedIndex = -1;
-  currentWord = pickWord();
+  currentWord = challengeForcedWord(round) || pickWord();   // One Of A Kind forces its target word
   currentSongs = validSongs(currentWord, effectiveStrict(), currentMode.noTitle);
   roundHintSong = pickHintSong();
   applyEra(pickEra());
