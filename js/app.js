@@ -82,6 +82,8 @@ let lastAlphaLetter = "";       // From A to Z: first letter of the last accepte
 let challengeTargetSong = null; // One Of A Kind: the never-before-answered song to surface
 let challengeForcedRound = 0;   // One Of A Kind: the round that forces challengeForcedWordVal
 let challengeForcedWordVal = "";// One Of A Kind: the prompt word that surfaces the target song
+let newSongLives = 0;           // One Of A Kind: wrong target guesses left before the run fails
+const NEW_SONG_LIVES = 3;       // One Of A Kind: starting guesses (discourages spamming the target)
 let extraSecondsPerRound = 0;   // Choose Your Path: bonus seconds added to every round's clock
 let skipTokens = 0;             // Choose Your Path: one-time word "swaps" earned at a fork
 let pathForksTaken = [];        // Choose Your Path: fork rounds whose perk has been chosen
@@ -2473,6 +2475,7 @@ function resetRunState() {
   challengeTargetSong = null;
   challengeForcedRound = 0;
   challengeForcedWordVal = "";
+  newSongLives = 0;
   extraSecondsPerRound = 0;
   skipTokens = 0;
   pathForksTaken = [];
@@ -2696,6 +2699,7 @@ function setupNewSongChallenge() {
   const minN = Math.min(...scored.map((s) => s.n));
   challengeForcedWordVal = shuffle(scored.filter((s) => s.n === minN))[0].w;
   challengeTargetSong = target;
+  newSongLives = NEW_SONG_LIVES;                             // wrong-guess budget for this run
   challengeForcedRound = 3 + Math.floor(Math.random() * 9);  // rounds 3..11
   if (!usedWords.includes(challengeForcedWordVal)) usedWords.push(challengeForcedWordVal);
 }
@@ -2780,11 +2784,17 @@ function renderNewSongBanner() {
   if (!challengeTargetSong) { el.remove(); return; }
   const got = roundSongs.includes(challengeTargetSong.title);
   const col = albumColor(challengeTargetSong.album) || "var(--ink-soft)";
+  const livesPips = `<span class="chall-pips" title="${newSongLives} guess` +
+    `${newSongLives === 1 ? "" : "es"} left">` +
+    Array.from({ length: NEW_SONG_LIVES }, (_, i) =>
+      `<span class="chall-pip${i < newSongLives ? " filled" : ""}"></span>`).join("") +
+    `</span>`;
   el.innerHTML = got
     ? `<span class="chall-banner-tag" style="border-color:${col};color:${col}">found</span> ` +
       `<span style="text-decoration:line-through;opacity:0.7">${escapeHtml(challengeTargetSong.title)}</span> ✓`
     : `<span class="chall-banner-tag">find</span> ` +
-      `<span class="chall-prog-name" style="color:${col}">${escapeHtml(challengeTargetSong.title)}</span>`;
+      `<span class="chall-prog-name" style="color:${col}">${escapeHtml(challengeTargetSong.title)}</span>` +
+      livesPips;
 }
 
 // Wildcard's rotating sub-constraints, rebuilt each round against the round's word /
@@ -2939,9 +2949,12 @@ function endChallenge() {
   const rec = challengeRecord(c.id);
 
   document.querySelector("#screen-results .podium-title").textContent = c.name;
+  const outOfGuesses = c.rule === "newsong" && challengeTargetSong && newSongLives <= 0;
   const status = won
     ? `<div class="chall-result-status win">challenge defeated!</div>`
-    : `<div class="chall-result-status">not yet — ${escapeHtml(c.win)}</div>`;
+    : outOfGuesses
+      ? `<div class="chall-result-status">out of guesses — the song got away</div>`
+      : `<div class="chall-result-status">not yet — ${escapeHtml(c.win)}</div>`;
   const tokenLine = firstTime ? `<div class="chall-result-token">🎟 +1 token earned</div>` : "";
   const meta = `<div class="chall-result-meta">${rec.attempts} attempt${rec.attempts === 1 ? "" : "s"}` +
     `${rec.best ? ` · best ${rec.best}/${TOTAL_ROUNDS}` : ""}</div>`;
@@ -3461,10 +3474,22 @@ function rejectAlpha(letter) {
   softRejectFlash(`out of order — start with <b>${escapeHtml(lastAlphaLetter)}</b> or later`);
 }
 // One Of A Kind: the player tried their target song on a round where it doesn't fit
-// the prompt word. Don't burn the round — keep hunting for a word that lands it.
+// the prompt word. Costs a guess (so spamming the target every round can't brute-force
+// the win); when the budget runs out the run fails. A guess is only spent here — naming
+// it on a round where it DOES fit falls through and wins.
 function rejectNewSong() {
   const t = challengeTargetSong ? challengeTargetSong.title : "your song";
-  softRejectFlash(`<b>“${escapeHtml(censor(t))}”</b> doesn't fit this word — keep looking`);
+  newSongLives -= 1;
+  if (newSongLives <= 0) {                       // out of guesses — the song got away
+    roundLocked = true;
+    softRejectFlash(`<b>“${escapeHtml(censor(t))}”</b> doesn't fit — out of guesses`);
+    endGame();                                   // routes to endChallenge (a loss)
+    return;
+  }
+  const n = newSongLives;
+  softRejectFlash(`<b>“${escapeHtml(censor(t))}”</b> doesn't fit this word — ` +
+    `${n} ${n === 1 ? "guess" : "guesses"} left`);
+  renderNewSongBanner();                          // refresh the lives pips
 }
 
 /* ---------- Lyric-line answering ---------- */

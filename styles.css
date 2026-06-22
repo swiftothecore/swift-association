@@ -614,6 +614,8 @@
     border: 1.5px solid rgba(43, 39, 34, 0.35); background: transparent;
     transition: background 0.2s ease, border-color 0.2s ease;
   }
+  /* One Of A Kind — a remaining guess (drains to a hollow pip as guesses are spent) */
+  .chall-pip.filled { background: #b23a3a; border-color: #b23a3a; }
   .chall-prog-count { font-variant-numeric: tabular-nums; opacity: 0.8; }
 
   /* Vanishing Word challenge — the prompt word fades out of view after a beat
