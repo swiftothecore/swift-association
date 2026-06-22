@@ -2703,7 +2703,72 @@ function applyChallengeRound(wrap) {
     renderWordFx(wrap, currentWord, round);
   } else if (currentChallenge.rule === "wildcard") {
     applyWildcardRound(wrap);
+  } else if (currentChallenge.rule === "album5") {
+    renderDeepCutCounter();
+  } else if (currentChallenge.rule === "newsong") {
+    renderNewSongBanner();
   }
+}
+
+// The shared challenge-banner element above the word (reused across rules; cleaned
+// up by resetRunState, which removes #challBanner between runs).
+function ensureChallBanner() {
+  let el = $("challBanner");
+  if (!el) {
+    el = document.createElement("div");
+    el.id = "challBanner";
+    el.className = "chall-banner";
+    const anchor = document.querySelector("#screen-game .word-label");
+    anchor.parentNode.insertBefore(el, anchor);
+  }
+  return el;
+}
+
+// Deep Cut: the album you've pulled the most correct songs from so far (the one the
+// win check rewards), with a 5-pip tally in that album's colour. Live — re-rendered
+// each round and the moment a correct answer lands.
+function deepCutLeader() {
+  const counts = {};
+  let album = null, best = 0;
+  roundResults.forEach((ok, i) => {
+    if (!ok) return;
+    const a = roundAlbums[i];
+    if (!a || (currentChallenge.album && a !== currentChallenge.album)) return;
+    counts[a] = (counts[a] || 0) + 1;
+    if (counts[a] > best) { best = counts[a]; album = a; }
+  });
+  return { album, count: best };
+}
+function renderDeepCutCounter() {
+  if (gameType !== "challenge" || !currentChallenge || currentChallenge.rule !== "album5") return;
+  const el = ensureChallBanner();
+  const { album, count } = deepCutLeader();
+  const target = 5;
+  const col = (album && albumColor(album)) || "var(--ink-soft)";
+  const label = album || "your best album";
+  let pips = "";
+  for (let i = 0; i < target; i++) {
+    pips += `<span class="chall-pip${i < count ? " on" : ""}" style="${i < count ? `background:${col};border-color:${col}` : ""}"></span>`;
+  }
+  el.innerHTML =
+    `<span class="chall-prog-name" style="color:${col}">${escapeHtml(label)}</span>` +
+    `<span class="chall-pips">${pips}</span>` +
+    `<span class="chall-prog-count">${count} / ${target}</span>`;
+}
+
+// One Of A Kind: name the target song the player is hunting for, written as a
+// persistent margin banner so the mission is explicit (not a hidden surprise word).
+function renderNewSongBanner() {
+  if (gameType !== "challenge" || !currentChallenge || currentChallenge.rule !== "newsong") return;
+  const el = ensureChallBanner();
+  if (!challengeTargetSong) { el.remove(); return; }
+  const got = roundSongs.includes(challengeTargetSong.title);
+  const col = albumColor(challengeTargetSong.album) || "var(--ink-soft)";
+  el.innerHTML = got
+    ? `<span class="chall-banner-tag" style="border-color:${col};color:${col}">found</span> ` +
+      `<span style="text-decoration:line-through;opacity:0.7">${escapeHtml(challengeTargetSong.title)}</span> ✓`
+    : `<span class="chall-banner-tag">find</span> ` +
+      `<span class="chall-prog-name" style="color:${col}">${escapeHtml(challengeTargetSong.title)}</span>`;
 }
 
 // Wildcard's rotating sub-constraints, rebuilt each round against the round's word /
@@ -2739,15 +2804,7 @@ function applyWildcardRound(wrap) {
 }
 // The margin banner naming the current Wildcard rule (created lazily above the word).
 function renderWildcardBanner(label) {
-  let el = $("challBanner");
-  if (!el) {
-    el = document.createElement("div");
-    el.id = "challBanner";
-    el.className = "chall-banner";
-    const anchor = document.querySelector("#screen-game .word-label");
-    anchor.parentNode.insertBefore(el, anchor);
-  }
-  el.innerHTML = `<span class="chall-banner-tag">rule</span> ${escapeHtml(label)}`;
+  ensureChallBanner().innerHTML = `<span class="chall-banner-tag">rule</span> ${escapeHtml(label)}`;
 }
 // Soft reject for an answer that breaks the round's Wildcard rule — no burned round,
 // same flash vocabulary as the alphabetical / off-limits rejects.
@@ -3570,6 +3627,12 @@ function submitAnswer(song, isTimeout) {
   roundSongs[round - 1] = correct && song ? song.title : null;  // credited song — for the lifetime tally
   justEarnedIndex = correct ? round - 1 : -1;
   if (correct) score++;
+  // Live challenge progress — refresh the banner the instant an answer is recorded
+  // (Deep Cut's album tally / One Of A Kind's found-it stamp), before the page turns.
+  if (gameType === "challenge" && currentChallenge) {
+    if (currentChallenge.rule === "album5") renderDeepCutCounter();
+    else if (currentChallenge.rule === "newsong") renderNewSongBanner();
+  }
   // From A to Z: advance the alphabetical floor only on an accepted correct answer.
   if (correct && currentChallenge && currentChallenge.rule === "alphabetical") {
     lastAlphaLetter = firstAlphaLetter(song.title);
