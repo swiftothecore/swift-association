@@ -125,6 +125,11 @@ export const CHALLENGES = [
     free: false, cost: 1, target: 9, noTitle: false, icon: "mask",
     desc: "Every round changes the rule — keep up.",
     win: "Score 9 / 13 across shifting rules." },
+  { id: "revolving-door", name: "Revolving Door", rule: "revolving", mode: "medium",
+    free: false, cost: 1, target: 9, seconds: 20, rotateMs: 5000, noTitle: false, icon: "cycle",
+    blurb: "20s a page · suggestions · all words · the word swaps every 5s",
+    desc: "You get 20 seconds a page — but the word swaps for a new one every 5. Answer the one that's showing before it spins away.",
+    win: "Score 9 / 13 while the word keeps revolving." },
 ];
 export const CHALLENGE_BY_ID = Object.fromEntries(CHALLENGES.map((c) => [c.id, c]));
 export const CHALLENGE_ORDER = CHALLENGES.map((c) => c.id);

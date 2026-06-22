@@ -78,6 +78,8 @@ let dailyRng = null;            // seeded PRNG, non-null only during a daily gam
 let currentChallenge = null;    // the active CHALLENGES entry while gameType === "challenge"
 let challengeRunActive = false; // true only during a live challenge run (gates the achievement sandbox)
 let vanishTimer = null;         // Vanishing Word: timeout that hides the prompt word
+let revolveId = null;           // Revolving Door: interval that swaps the word every rotateMs
+let revolveIndex = 0;           // Revolving Door: how many times the word has revolved this round
 let lastAlphaLetter = "";       // From A to Z: first letter of the last accepted answer
 let challengeTargetSong = null; // One Of A Kind: the never-before-answered song to surface
 let challengeForcedRound = 0;   // One Of A Kind: the round that forces challengeForcedWordVal
@@ -2069,7 +2071,7 @@ function renderChallengeDetail(id) {
     `<div class="chall-sec chall-sec--beat">` +
       `<div class="chall-eyebrow">To beat it</div>` +
       `<div class="chall-goal">${escapeHtml(c.win)}</div>` +
-      `<div class="chall-mods">${escapeHtml(mode.blurb)}</div>` +
+      `<div class="chall-mods">${escapeHtml(c.blurb || mode.blurb)}</div>` +
     `</div>` +
     `<div class="chall-act">` +
       `<span class="chall-meta">${meta}</span>${action}` +
@@ -2492,6 +2494,8 @@ function resetRunState() {
   roundWildcard = null;
   lastWildcardId = "";
   clearTimeout(vanishTimer);
+  if (revolveId) { clearInterval(revolveId); revolveId = null; }
+  revolveIndex = 0;
   clearCurtain();
   const skipBtn = $("pathSkipBtn");
   if (skipBtn) skipBtn.remove();
@@ -2675,6 +2679,10 @@ function startChallenge(id) {
   if (!c || !challengeUnlocked(id)) return;
   gameType = "challenge";
   currentMode = MODES[c.mode] || MODES.medium;   // fixed by the challenge, not persisted via DIFF_KEY
+  // Some challenges override a single lever of the borrowed mode (Revolving Door wants a
+  // 20s clock). Clone so the shared MODES object is never mutated; id stays the same so
+  // id-based achievement/label checks are unaffected.
+  if (c.seconds != null) currentMode = { ...currentMode, seconds: c.seconds };
   resetRunState();
   currentChallenge = c;                          // set AFTER resetRunState (which nulls it)
   challengeRunActive = true;                     // start the achievement sandbox
@@ -2724,6 +2732,8 @@ function applyChallengeRound(wrap) {
     vanishTimer = setTimeout(() => { wrap.classList.add("vanished"); }, ms);
   } else if (currentChallenge.rule === "wordfx") {
     renderWordFx(wrap, currentWord, round);
+  } else if (currentChallenge.rule === "revolving") {
+    renderRevolveCounter();
   } else if (currentChallenge.rule === "wildcard") {
     applyWildcardRound(wrap);
   } else if (currentChallenge.rule === "album5") {
@@ -2800,6 +2810,60 @@ function renderNewSongBanner() {
     : `<span class="chall-banner-tag">find</span> ` +
       `<span class="chall-prog-name" style="color:${col}">${escapeHtml(challengeTargetSong.title)}</span>` +
       livesPips;
+}
+
+// Revolving Door: how many words a single round will cycle through (one per rotateMs
+// slot across the round's clock), e.g. 20s / 5s = 4.
+function revolveSlots() {
+  const ms = (currentChallenge && currentChallenge.rotateMs) || 5000;
+  return Math.max(1, Math.ceil((currentMode.seconds * 1000) / ms));
+}
+// Revolving Door: a margin banner of one pip per word-slot, the current slot lit, so the
+// player can see how many revolutions are left this page. Re-rendered on each swap.
+function renderRevolveCounter() {
+  if (gameType !== "challenge" || !currentChallenge || currentChallenge.rule !== "revolving") return;
+  const el = ensureChallBanner();
+  const slots = revolveSlots();
+  let pips = "";
+  for (let i = 0; i < slots; i++) {
+    pips += `<span class="chall-pip${i === revolveIndex ? " on" : ""}"` +
+      `${i === revolveIndex ? ` style="background:var(--ink-accent);border-color:var(--ink-accent)"` : ""}></span>`;
+  }
+  el.innerHTML =
+    `<span class="chall-banner-tag">revolving</span> ` +
+    `<span class="chall-pips">${pips}</span>` +
+    `<span class="chall-prog-count">word ${Math.min(revolveIndex + 1, slots)} / ${slots}</span>`;
+}
+
+// Revolving Door: swap to a fresh word mid-round WITHOUT touching the round clock. Fired
+// by the rotation interval every rotateMs. Re-derives the round's valid-answer set, hint
+// song and rarity from the new word, clears any stale input/dropdown (the old word is gone),
+// and animates the swap. Guarded so a stray late tick after an answer is a no-op.
+function revolveWord() {
+  if (gameType !== "challenge" || !currentChallenge || currentChallenge.rule !== "revolving") return;
+  if (roundLocked) return;
+  if (revolveIndex + 1 >= revolveSlots()) return;   // already on the last slot — keep it (round will time out)
+  revolveIndex++;
+  currentWord = pickWord();
+  currentSongs = validSongs(currentWord, effectiveStrict(), effectiveNoTitle());
+  roundHintSong = pickHintSong();
+
+  const wrap = $("wordDisplay").parentNode;   // .word-wrap
+  const rar = rarityTier(currentSongs.length);
+  wrap.dataset.rarity = rar.name;
+  wrap.style.setProperty("--rarity", rar.t);
+  $("wordDisplay").textContent = currentWord;
+  // re-fire the swap animation (motion-safe)
+  wrap.classList.remove("revolve-in");
+  if (!motionReduced()) { void wrap.offsetWidth; wrap.classList.add("revolve-in"); }
+
+  const input = $("songInput");
+  input.value = "";
+  input.classList.remove("reject-pulse");
+  hideDropdown();
+  renderVerseMeter("");
+  renderRevolveCounter();
+  input.focus();
 }
 
 // Wildcard's rotating sub-constraints, rebuilt each round against the round's word /
@@ -3414,7 +3478,10 @@ function advanceRound() {
   $("wordDisplay").textContent = currentWord;
   wrap.classList.remove("vanished");          // clear any prior round's vanish
   wrap.removeAttribute("data-fx");            // clear any prior round's Word Games distortion
+  wrap.classList.remove("revolve-in");        // clear any prior round's revolve swap
   clearTimeout(vanishTimer);
+  if (revolveId) { clearInterval(revolveId); revolveId = null; }   // stop the prior round's rotation
+  revolveIndex = 0;                            // Revolving Door: this round's word is slot 0
   applyChallengeRound(wrap);                   // challenge per-round modifier (e.g. Vanishing Word)
   renderExcludedNote();
   $("feedback").innerHTML = "";
@@ -3601,6 +3668,7 @@ function startTimer(resume) {
   fill.classList.remove("low");
   label.textContent = begin.toFixed(1);
   timerSpark.start();
+  startRevolve();   // Revolving Door: begin (or restart) the per-round word rotation, in sync with the clock
 
   timerId = setInterval(() => {
     const elapsed = (performance.now() - timerStart) / 1000;
@@ -3625,7 +3693,18 @@ function startTimer(resume) {
 }
 function clearTimer() {
   if (timerId) { clearInterval(timerId); timerId = null; }
+  if (revolveId) { clearInterval(revolveId); revolveId = null; }   // stop Revolving Door's word rotation alongside the clock
   timerSpark.stop();
+}
+
+// Revolving Door only: start the interval that swaps the word every rotateMs. The round
+// clock keeps draining underneath — this just changes which word is in play. No-op for
+// every other game type/challenge. Cleared by clearTimer with the round clock.
+function startRevolve() {
+  if (revolveId) { clearInterval(revolveId); revolveId = null; }
+  if (gameType !== "challenge" || !currentChallenge || currentChallenge.rule !== "revolving") return;
+  const ms = currentChallenge.rotateMs || 5000;
+  revolveId = setInterval(revolveWord, ms);
 }
 
 /* ---------- Timer tension ---------- */

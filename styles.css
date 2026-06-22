@@ -721,6 +721,16 @@
   }
   @media (prefers-reduced-motion: reduce) { .word-wrap.vanished #wordDisplay { transition: none; } }
 
+  /* Revolving Door challenge — each time the word swaps mid-round it spins in (a quick
+     half-turn + fade), so the change reads as the door revolving. Motion-safe; the class
+     is only added when motion is allowed. */
+  .word-wrap.revolve-in #wordDisplay { animation: revolve-swap 0.4s cubic-bezier(0.22, 0.7, 0.3, 1) both; transform-origin: 50% 50%; }
+  @keyframes revolve-swap {
+    0%   { opacity: 0; transform: rotateY(-82deg) translateX(10px); }
+    55%  { opacity: 1; }
+    100% { opacity: 1; transform: rotateY(0deg) translateX(0); }
+  }
+
   /* Word Games challenge — the prompt word is distorted (display only; matching reads
      state). Letters render as inline spans so each can tilt at the wobble tier. */
   .word-wrap[data-fx] #wordDisplay .fx-ch { display: inline-block; transform: rotate(var(--fx-rot, 0deg)); }
