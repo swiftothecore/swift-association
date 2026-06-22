@@ -3235,6 +3235,7 @@ function mountCurtain(innerHTML) {
 function beginRoundClock() {
   const html = roundCurtainHTML();
   if (!html) { startTimer(); return; }
+  showTimerFull();   // pin the clock at a paused full bar beneath the curtain — no leftover time shows through the lift
   const wrap = $("wordDisplay").parentNode;
   const onDone = () => {
     if (isWildcardRound() && roundWildcard.display) roundWildcard.display(wrap);
@@ -3436,6 +3437,22 @@ function advanceRound() {
   runRoundEggs();
   // Note: the timer is started by the caller (nextRound) — for a page turn it
   // only starts once the flip finishes, so no time is lost during the animation.
+}
+
+// Paint the round's clock at full WITHOUT starting it — a paused, full-bar "10.0"
+// look. Used while a challenge curtain holds the round, so the previous round's
+// leftover time never shows through (or beneath) the lifting curtain; the live
+// countdown only begins once startTimer fires as the curtain clears.
+function showTimerFull() {
+  const fill = $("timerFill");
+  const label = $("timerLabel");
+  const wrap = document.querySelector(".timer-wrap");
+  const total = currentMode.seconds > 0 ? currentMode.seconds + (extraSecondsPerRound || 0) : currentMode.seconds;
+  if (!(total > 0)) { if (wrap) wrap.style.display = "none"; return; }
+  if (wrap) wrap.style.display = "";
+  fill.style.width = "100%";
+  fill.classList.remove("low");
+  label.textContent = total.toFixed(1);
 }
 
 // `resume` (seconds remaining) restarts a paused round mid-count instead of from
