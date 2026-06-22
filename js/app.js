@@ -2488,7 +2488,7 @@ function resetRunState() {
   roundWildcard = null;
   lastWildcardId = "";
   clearTimeout(vanishTimer);
-  clearWildIntro();
+  clearCurtain();
   const skipBtn = $("pathSkipBtn");
   if (skipBtn) skipBtn.remove();
   const banner = $("challBanner");
@@ -3089,9 +3089,11 @@ function nextRound() {
   card.parentNode.appendChild(flip);
 
   advanceRound();             // the next page is now in place under the flipping sheet
-  // Wildcard: mount the rule curtain NOW, hidden beneath the flip sheet, so the new
-  // word is already covered the instant the sheet rotates away (no flash of the round).
-  if (isWildcardRound()) mountWildIntro(roundWildcard);
+  // Mount this round's curtain (Wildcard's per-round rule) NOW, hidden beneath the flip
+  // sheet, so the new word is already covered the instant the sheet rotates away (no
+  // flash of the round). Once-per-run intros only show on round 1, which has no flip.
+  const preHTML = roundCurtainHTML();
+  if (preHTML) mountCurtain(preHTML);
 
   let finished = false;
   const finish = () => {
@@ -3106,67 +3108,113 @@ function nextRound() {
   setTimeout(finish, 500 * animScale() || 250);
 }
 
-// Whether this round wants the Wildcard rule curtain.
+// Whether this round wants the Wildcard rule curtain (per-round, so it pre-mounts under
+// the page-flip — unlike the once-per-run intros, which only show on round 1).
 function isWildcardRound() {
   return gameType === "challenge" && currentChallenge
     && currentChallenge.rule === "wildcard" && !!roundWildcard;
 }
 
-let wildIntroTimers = [];
-// Tear down any live Wildcard rule-intro overlay + its timers (called on quit/reset
-// so an abandoned run never leaves the curtain up or fires a stale onDone).
-function clearWildIntro() {
-  wildIntroTimers.forEach(clearTimeout);
-  wildIntroTimers = [];
-  const ov = document.querySelector(".wild-intro");
+// The inner card markup for a curtain. `o.headline` is the big handwritten line; the
+// optional `o.sub` is trusted HTML (callers build it with escaped pieces) so it can carry
+// album-colour spans / bold.
+function curtainCardHTML(o) {
+  const ruleStyle = o.headlineColor ? ` style="color:${o.headlineColor}"` : "";
+  return `<div class="chall-curtain-card">` +
+    `<div class="chall-curtain-kicker">${escapeHtml(o.kicker)}</div>` +
+    `<div class="chall-curtain-tag">${escapeHtml(o.tag)}</div>` +
+    `<div class="chall-curtain-rule"${ruleStyle}>${escapeHtml(o.headline)}</div>` +
+    (o.sub ? `<div class="chall-curtain-sub">${o.sub}</div>` : "") +
+    `<div class="chall-curtain-cue">${escapeHtml(o.cue || "the word is coming…")}</div>` +
+    `</div>`;
+}
+
+// The curtain content for THIS round, or null if the round wants no curtain:
+//  • Wildcard — every round, naming the active rule.
+//  • One Of A Kind — round 1 only, revealing the target song to hunt for.
+//  • Choose Your Path — round 1 only, explaining the perk-fork run.
+function roundCurtainHTML() {
+  if (gameType !== "challenge" || !currentChallenge) return null;
+  const c = currentChallenge;
+  if (c.rule === "wildcard" && roundWildcard) {
+    return curtainCardHTML({ kicker: `page ${round} · wildcard`, tag: "the rule",
+      headline: roundWildcard.label });
+  }
+  if (round === 1 && c.rule === "newsong" && challengeTargetSong) {
+    const col = albumColor(challengeTargetSong.album) || "var(--ink-soft)";
+    const lives = NEW_SONG_LIVES;
+    return curtainCardHTML({ kicker: "one of a kind", tag: "find this song",
+      headline: challengeTargetSong.title, headlineColor: col,
+      sub: challengeTargetSong.album
+        ? `from <b style="color:${col}">${escapeHtml(challengeTargetSong.album)}</b> — it's hiding somewhere in the next 13 pages`
+        : `it's hiding somewhere in the next 13 pages`,
+      cue: `name it on the right page — you get ${lives} guesses` });
+  }
+  if (round === 1 && c.rule === "path") {
+    const forks = (c.forks || []).map((f) => `<b>${f}</b>`).join(" & ");
+    return curtainCardHTML({ kicker: "choose your path", tag: "how it works",
+      headline: "forge your own run",
+      sub: `clear pages to reach <b>${c.target}/13</b>` +
+        (forks ? ` — and at pages ${forks} you'll pick a perk for the rest of the way` : ""),
+      cue: "choose wisely" });
+  }
+  return null;
+}
+
+let curtainTimers = [];
+// Tear down any live challenge curtain + its timers (called on quit/reset so an abandoned
+// run never leaves the curtain up or fires a stale onDone).
+function clearCurtain() {
+  curtainTimers.forEach(clearTimeout);
+  curtainTimers = [];
+  const ov = document.querySelector(".chall-curtain");
   if (ov) ov.remove();
 }
 
-// Build the Wildcard rule curtain over the game card (idempotent — reuses an already
-// mounted one). The curtain is OPAQUE from its first painted frame (no fade-in), so the
-// round beneath it is never glimpsed; only the card's own contents animate in. In the
-// page-turn path this is mounted UNDER the flip sheet so the new word is already covered
-// when the sheet rotates away.
-function mountWildIntro(con) {
-  let ov = document.querySelector(".wild-intro");
+// Build the challenge curtain over the game card (idempotent — reuses an already mounted
+// one). The curtain is OPAQUE from its first painted frame (no fade-in), so the round
+// beneath it is never glimpsed; only the card's own contents animate in. In the page-turn
+// path this is mounted UNDER the flip sheet so the new word is already covered when the
+// sheet rotates away.
+function mountCurtain(innerHTML) {
+  let ov = document.querySelector(".chall-curtain");
   if (ov) return ov;
   ov = document.createElement("div");
-  ov.className = "wild-intro";
-  ov.innerHTML =
-    `<div class="wild-intro-card">` +
-    `<div class="wild-intro-kicker">page ${round} · wildcard</div>` +
-    `<div class="wild-intro-tag">the rule</div>` +
-    `<div class="wild-intro-rule">${escapeHtml(con.label)}</div>` +
-    `<div class="wild-intro-cue">the word is coming…</div>` +
-    `</div>`;
+  ov.className = "chall-curtain";
+  ov.innerHTML = innerHTML;
   $("screen-game").appendChild(ov);
   return ov;
 }
 
-// Gate between a round being set up and its clock starting. For Wildcard, hold the
-// already-mounted rule curtain a beat (announcing the round's constraint), then lift it
-// to reveal the word — onDone (the rule's visual gimmick + the timer) fires only once the
-// curtain is gone, so none of the clock is spent reading the rule. Tap to skip ahead.
-// Reduced motion shows it briefly without animation. Every other path starts the clock
-// immediately.
+// Gate between a round being set up and its clock starting. When the round has a curtain
+// (see roundCurtainHTML), hold the already-mounted curtain a beat — announcing the rule /
+// the target song / how the run works — then lift it to reveal the word. onDone (the
+// Wildcard visual gimmick + the timer) fires only once the curtain is gone, so none of the
+// clock is spent reading it. Tap to skip ahead. Reduced motion shows it briefly without
+// animation. Every other path starts the clock immediately.
 function beginRoundClock() {
-  if (!isWildcardRound()) { startTimer(); return; }
+  const html = roundCurtainHTML();
+  if (!html) { startTimer(); return; }
   const wrap = $("wordDisplay").parentNode;
   const onDone = () => {
-    if (roundWildcard && roundWildcard.display) roundWildcard.display(wrap);
+    if (isWildcardRound() && roundWildcard.display) roundWildcard.display(wrap);
     startTimer();
   };
-  const ov = mountWildIntro(roundWildcard);   // usually already mounted (pre-flip)
+  const ov = mountCurtain(html);   // usually already mounted (pre-flip, Wildcard)
   const reduced = motionReduced();
+  // Once-per-run intros (the target song / the path rules) have more to read than the
+  // per-round Wildcard rule, so they linger a touch longer.
+  const isIntro = round === 1 && (currentChallenge.rule === "newsong" || currentChallenge.rule === "path");
+  const hold = reduced ? 1100 : (isIntro ? 2400 : 1750);
   let done = false;
-  const finish = () => { if (done) return; done = true; clearWildIntro(); onDone(); };
+  const finish = () => { if (done) return; done = true; clearCurtain(); onDone(); };
   const lift = () => {
     if (done) return;
     ov.classList.add("leaving");
-    wildIntroTimers.push(setTimeout(finish, reduced ? 0 : 360));
+    curtainTimers.push(setTimeout(finish, reduced ? 0 : 360));
   };
   ov.addEventListener("click", lift);                       // tap to skip the wait
-  wildIntroTimers.push(setTimeout(lift, reduced ? 1000 : 1750));
+  curtainTimers.push(setTimeout(lift, hold));
 }
 
 // Choose Your Path perk registry. Each perk's apply() mutates run state (time/swaps/
@@ -4311,7 +4359,7 @@ function quitGame() {
   if (countdownId) { clearInterval(countdownId); countdownId = null; }
   clearTimeout(hintUrgeTimer);
   clearTimeout(vanishTimer);
-  clearWildIntro();
+  clearCurtain();
   challengeRunActive = false;
   resetTension();
   clearEggs();

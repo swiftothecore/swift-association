@@ -618,74 +618,80 @@
   .chall-pip.filled { background: #b23a3a; border-color: #b23a3a; }
   .chall-prog-count { font-variant-numeric: tabular-nums; opacity: 0.8; }
 
-  /* Wildcard — the full-screen rule reveal that precedes each round's word. A paper
-     curtain over the game card (position:relative): fades in, holds, lifts away. */
-  /* Opaque from frame one (no fade-in) so the round beneath is never glimpsed —
-     only the card's own contents animate in. */
-  .wild-intro {
+  /* Challenge curtain — the full-screen reveal that precedes a round's word: Wildcard's
+     per-round rule, One Of A Kind's target song, Choose Your Path's run intro. A paper
+     curtain over the game card (position:relative). Opaque from frame one (no fade-in) so
+     the round beneath is never glimpsed — only the card's own contents animate in; holds,
+     then lifts away. */
+  .chall-curtain {
     position: absolute; inset: 0; z-index: 70;
     display: flex; align-items: center; justify-content: center;
     background: rgb(245, 239, 225);
     cursor: pointer;
   }
-  .wild-intro.leaving { animation: wild-out 0.34s ease both; }
-  @keyframes wild-out { from { opacity: 1; } to { opacity: 0; } }
-  .wild-intro-card {
-    position: relative; text-align: center; max-width: 440px;
+  .chall-curtain.leaving { animation: curtain-out 0.34s ease both; }
+  @keyframes curtain-out { from { opacity: 1; } to { opacity: 0; } }
+  .chall-curtain-card {
+    position: relative; text-align: center; max-width: 460px;
     padding: 26px 30px 24px 38px;
     background: var(--paper); border: 1px solid rgba(43, 39, 34, 0.18);
     border-radius: 4px; box-shadow: 3px 5px 0 rgba(43, 39, 34, 0.14);
-    animation: wild-card-in 0.42s cubic-bezier(0.2, 0.9, 0.3, 1.2) both;
+    animation: curtain-card-in 0.42s cubic-bezier(0.2, 0.9, 0.3, 1.2) both;
   }
   /* the notebook's red margin rule down the left edge of the card */
-  .wild-intro-card::before {
+  .chall-curtain-card::before {
     content: ""; position: absolute; top: 8px; bottom: 8px; left: 22px;
     border-left: 1.5px solid rgba(178, 58, 58, 0.55);
   }
-  .leaving .wild-intro-card { animation: wild-card-out 0.3s ease both; }
-  @keyframes wild-card-in {
+  .leaving .chall-curtain-card { animation: curtain-card-out 0.3s ease both; }
+  @keyframes curtain-card-in {
     from { opacity: 0; transform: translateY(14px) rotate(-1.2deg) scale(0.97); }
     to   { opacity: 1; transform: none; }
   }
-  @keyframes wild-card-out {
+  @keyframes curtain-card-out {
     from { opacity: 1; transform: none; }
     to   { opacity: 0; transform: translateY(-12px) scale(0.98); }
   }
-  .wild-intro-kicker {
+  .chall-curtain-kicker {
     font-family: var(--type); font-size: 10px; letter-spacing: 1.5px;
     text-transform: uppercase; color: var(--ink-soft); margin-bottom: 12px;
   }
-  .wild-intro-tag {
+  .chall-curtain-tag {
     display: block; width: fit-content; margin: 0 auto 12px;
     font-family: var(--type); font-weight: 700;
     text-transform: uppercase; font-size: 10px; letter-spacing: 1.5px;
     color: #b23a3a; border: 1px solid rgba(178, 58, 58, 0.5); border-radius: 3px;
     padding: 2px 8px;
   }
-  .wild-intro-rule {
+  .chall-curtain-rule {
     position: relative; display: inline-block;
     font-family: var(--hand); font-weight: 700; line-height: 1.1;
     font-size: clamp(28px, 7vw, 42px); color: var(--ink);
     padding-bottom: 6px;
   }
-  /* a hand-drawn pen underline that sweeps in under the rule */
-  .wild-intro-rule::after {
+  /* a hand-drawn pen underline that sweeps in under the headline */
+  .chall-curtain-rule::after {
     content: ""; position: absolute; left: -2px; right: -2px; bottom: -1px;
     height: 2px; background: var(--ink-accent, #b23a3a); border-radius: 2px;
     transform: scaleX(0); transform-origin: left center;
-    animation: wild-underline 0.5s ease 0.34s both;
+    animation: curtain-underline 0.5s ease 0.34s both;
   }
-  @keyframes wild-underline { to { transform: scaleX(1); } }
-  .wild-intro-cue {
+  @keyframes curtain-underline { to { transform: scaleX(1); } }
+  /* optional supporting line under the headline (album / how-it-works) */
+  .chall-curtain-sub {
+    font-family: var(--type); font-size: 12.5px; line-height: 1.5;
+    color: var(--ink-soft); max-width: 340px; margin: 14px auto 0;
+  }
+  .chall-curtain-cue {
     font-family: var(--type); font-size: 12px; color: var(--ink-soft);
-    margin-top: 16px; animation: wild-cue 1.4s ease-in-out 0.6s infinite;
+    margin-top: 16px; animation: curtain-cue 1.4s ease-in-out 0.6s infinite;
   }
-  @keyframes wild-cue { 0%, 100% { opacity: 0.45; } 50% { opacity: 0.9; } }
+  @keyframes curtain-cue { 0%, 100% { opacity: 0.45; } 50% { opacity: 0.9; } }
   @media (prefers-reduced-motion: reduce) {
-    .wild-intro, .wild-intro.leaving,
-    .wild-intro-card, .leaving .wild-intro-card,
-    .wild-intro-rule::after, .wild-intro-cue { animation: none; }
-    .wild-intro-rule::after { transform: scaleX(1); }
+    .chall-curtain, .chall-curtain.leaving,
+    .chall-curtain-card, .leaving .chall-curtain-card,
+    .chall-curtain-rule::after, .chall-curtain-cue { animation: none; }
+    .chall-curtain-rule::after { transform: scaleX(1); }
   }
 
   /* Vanishing Word challenge — the prompt word fades out of view after a beat
