@@ -1444,6 +1444,10 @@ function fmtTime(sec) {
 // "3 lives · Easy", "daily" → "Daily".
 function modeLabel(token) {
   if (token === "daily") return "Daily";
+  if (token && token.startsWith("chl-")) {
+    const c = CHALLENGE_BY_ID[token.slice(4)];
+    return c ? "Challenge · " + c.name : "Challenge";
+  }
   if (token && token.startsWith("inf-")) {
     const parts = token.split("-");   // ["inf", variant, mode]
     return (VARIANT_LABELS[parts[1]] || parts[1]) + " · " + (MODES[parts[2]] ? MODES[parts[2]].label : parts[2]);
@@ -3126,6 +3130,7 @@ function curtainCardHTML(o) {
     `<div class="chall-curtain-rule"${ruleStyle}>${escapeHtml(o.headline)}</div>` +
     (o.sub ? `<div class="chall-curtain-sub">${o.sub}</div>` : "") +
     `<div class="chall-curtain-cue">${escapeHtml(o.cue || "the word is coming…")}</div>` +
+    (o.button ? `<button type="button" class="chall-curtain-next">${escapeHtml(o.button)}</button>` : "") +
     `</div>`;
 }
 
@@ -3148,7 +3153,7 @@ function roundCurtainHTML() {
       sub: challengeTargetSong.album
         ? `from <b style="color:${col}">${escapeHtml(challengeTargetSong.album)}</b> — it's hiding somewhere in the next 13 pages`
         : `it's hiding somewhere in the next 13 pages`,
-      cue: `name it on the right page — you get ${lives} guesses` });
+      cue: `name it on the right page — you get ${lives} guesses`, button: "start the hunt" });
   }
   if (round === 1 && c.rule === "path") {
     const forks = (c.forks || []).map((f) => `<b>${f}</b>`).join(" & ");
@@ -3156,7 +3161,7 @@ function roundCurtainHTML() {
       headline: "forge your own run",
       sub: `clear pages to reach <b>${c.target}/13</b>` +
         (forks ? ` — and at pages ${forks} you'll pick a perk for the rest of the way` : ""),
-      cue: "choose wisely" });
+      cue: "choose wisely", button: "let's go" });
   }
   return null;
 }
@@ -3203,9 +3208,8 @@ function beginRoundClock() {
   const ov = mountCurtain(html);   // usually already mounted (pre-flip, Wildcard)
   const reduced = motionReduced();
   // Once-per-run intros (the target song / the path rules) have more to read than the
-  // per-round Wildcard rule, so they linger a touch longer.
+  // per-round Wildcard rule, so they carry their own "next" button and wait for it.
   const isIntro = round === 1 && (currentChallenge.rule === "newsong" || currentChallenge.rule === "path");
-  const hold = reduced ? 1100 : (isIntro ? 2400 : 1750);
   let done = false;
   const finish = () => { if (done) return; done = true; clearCurtain(); onDone(); };
   const lift = () => {
@@ -3213,8 +3217,16 @@ function beginRoundClock() {
     ov.classList.add("leaving");
     curtainTimers.push(setTimeout(finish, reduced ? 0 : 360));
   };
-  ov.addEventListener("click", lift);                       // tap to skip the wait
-  curtainTimers.push(setTimeout(lift, hold));
+  const nextBtn = ov.querySelector(".chall-curtain-next");
+  if (isIntro && nextBtn) {
+    // No auto-lift: the player reads the rules and taps "next" when ready. The whole-overlay
+    // tap is intentionally NOT wired here so a stray click can't skip the intro unread.
+    nextBtn.addEventListener("click", lift);
+  } else {
+    // Per-round Wildcard rule curtain: auto-lift after a beat, tap anywhere to skip ahead.
+    ov.addEventListener("click", lift);
+    curtainTimers.push(setTimeout(lift, reduced ? 1100 : 1750));
+  }
 }
 
 // Choose Your Path perk registry. Each perk's apply() mutates run state (time/swaps/

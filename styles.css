@@ -687,11 +687,25 @@
     margin-top: 16px; animation: curtain-cue 1.4s ease-in-out 0.6s infinite;
   }
   @keyframes curtain-cue { 0%, 100% { opacity: 0.45; } 50% { opacity: 0.9; } }
+  .chall-curtain-next {
+    margin-top: 20px;
+    font-family: var(--type); font-size: 14px; letter-spacing: 1px; font-weight: 700;
+    color: var(--ink); background-color: #efb73e;
+    background-image: linear-gradient(168deg, rgba(255,255,255,0.34) 0%, rgba(255,255,255,0) 46%, rgba(43,39,34,0.12) 100%);
+    border: 2px solid var(--ink); border-radius: 2px;
+    box-shadow: 3px 3px 0 rgba(43,39,34,0.22); transform: rotate(-0.6deg);
+    padding: 10px 26px; cursor: pointer; white-space: nowrap;
+    transition: background-color 0.24s ease, color 0.2s ease, transform 0.12s, box-shadow 0.2s;
+  }
+  .chall-curtain-next:hover, .chall-curtain-next:focus-visible { background-color: var(--ink); color: var(--paper); }
+  .chall-curtain-next:active { transform: rotate(-0.6deg) translateY(1px); box-shadow: 1px 1px 0 rgba(43,39,34,0.22); }
   @media (prefers-reduced-motion: reduce) {
     .chall-curtain, .chall-curtain.leaving,
     .chall-curtain-card, .leaving .chall-curtain-card,
     .chall-curtain-rule::after, .chall-curtain-cue { animation: none; }
     .chall-curtain-rule::after { transform: scaleX(1); }
+    .chall-curtain-next { transform: none; }
+    .chall-curtain-next:active { transform: translateY(1px); }
   }
 
   /* Vanishing Word challenge — the prompt word fades out of view after a beat
