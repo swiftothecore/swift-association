@@ -449,36 +449,17 @@
     .pb-grid .pb-tile::before { left: 50%; margin-left: -21px; }
   }
 
-  /* ---------- Challenges page — a cork pinboard of torn-paper notes ---------- */
-  /* The whole screen becomes the board: warm cork, a wooden frame, faint speckle.
-     Overrides the paper .card background/padding for this screen only. */
-  #screen-challenges {
-    --chall-accent: #7d5ba6;        /* challenges amethyst (local to this page) */
-    background-color: #c8a877;
-    background-image:
-      radial-gradient(circle at 50% 32%, rgba(255,255,255,0.05), transparent 70%),
-      radial-gradient(rgba(120,86,46,0.16) 1px, transparent 1.5px);
-    background-size: 100% 100%, 13px 13px;
-    border: 7px solid #7a5733;
-    padding: 20px 22px 30px;
-    box-shadow:
-      inset 0 0 70px rgba(70,45,18,0.4),
-      0 18px 40px rgba(60,50,35,0.32),
-      0 2px 6px rgba(60,50,35,0.18);
-  }
-  /* nav bar reads on cork */
-  #screen-challenges .stats-nav { border-bottom: 1px solid rgba(60,40,18,0.22); padding-bottom: 10px; }
-  #screen-challenges .stats-title { color: #3a2410; text-shadow: 0 1px 0 rgba(255,255,255,0.18); }
-  #screen-challenges .btn-link { color: #5c3f22; }
-  #screen-challenges .btn-link:hover { color: #2b1a0a; }
-
-  .chall-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 2px 2px 16px; }
-  .chall-head-sub { font-family: var(--type); font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; color: #5c3f22; }
+  /* ---------- Challenges page — a master/detail entry in the notebook ----------
+     Left: a contents list of challenges (gold tick / hollow ring / lock marks; the
+     selected row flagged with a red play-arrow). Right: the selected challenge's
+     rule + win written out. One ruled sheet (the .card paper) — no cork, no scraps. */
+  .chall-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 0 0 14px; }
+  .chall-head-sub { font-family: var(--type); font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--ink-soft); }
   /* the token wallet — a denim sticky note with its own little gold pin */
   .chall-tokens {
     position: relative; font-family: var(--type); font-size: 12px; font-weight: 700;
     color: #274560; background: #cfdfea; padding: 8px 13px 9px; border-radius: 1px;
-    box-shadow: 0 3px 6px rgba(0,0,0,0.26); white-space: nowrap; transform: rotate(1.5deg);
+    box-shadow: 0 3px 6px rgba(0,0,0,0.22); white-space: nowrap; transform: rotate(1.4deg);
   }
   .chall-tokens b { font-size: 14px; color: #1f3a52; }
   .chall-tokens::before {
@@ -488,79 +469,89 @@
     box-shadow: 0 2px 3px rgba(0,0,0,0.38);
   }
 
-  .chall-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 36px 24px; padding-top: 6px; }
-  /* .chall-note = the pinned wrapper (reserves room for the pin); .chall-paper = the torn sheet */
-  .chall-note { position: relative; padding-top: 13px; display: flex; }
-  .chall-paper {
-    position: relative; flex: 1; padding: 24px 18px 18px 34px;
-    display: flex; flex-direction: column; align-items: flex-start; gap: 4px;
-    color: var(--ink);
-    background-color: #f4eedf;
-    background-image:
-      linear-gradient(90deg, transparent 26px, rgba(178,58,58,0.4) 26px, rgba(178,58,58,0.4) 27px, transparent 27px),
-      repeating-linear-gradient(180deg, transparent 0 22px, rgba(74,96,150,0.14) 22px 23px);
-    filter: drop-shadow(0 5px 6px rgba(40,25,10,0.34));
+  .chall-layout { display: grid; grid-template-columns: 208px 1fr; gap: 0; }
+
+  /* ---- left: the contents list ---- */
+  .chall-list { padding-right: 16px; border-right: 1px solid rgba(60,40,18,0.16); }
+  .chall-item {
+    position: relative; display: grid; grid-template-columns: 18px 1fr 22px;
+    align-items: center; column-gap: 9px; width: 100%;
+    padding: 8px 8px 8px 4px; min-height: 40px; cursor: pointer;
+    background: none; border: none; border-radius: 2px; text-align: left;
+    font: inherit; color: var(--ink); transition: background 0.12s;
   }
-  /* three torn-edge variants (fine deckle on top/bottom, clean-cut sides) + tilt, cycled */
-  .chall-grid .chall-note:nth-child(3n+1) { transform: rotate(-1.4deg); }
-  .chall-grid .chall-note:nth-child(3n+2) { transform: rotate(1.2deg); }
-  .chall-grid .chall-note:nth-child(3n)   { transform: rotate(-1deg); }
-  .chall-grid .chall-note:nth-child(3n+1) .chall-paper { clip-path: polygon(0% 2.2%,7% 0.6%,14% 2.4%,21% 1%,28% 2.6%,35% 1.2%,42% 2.4%,50% 1%,57% 2.5%,64% 1.2%,71% 2.7%,78% 1%,85% 2.4%,92% 1.2%,100% 2.2%,100% 97.8%,92% 99%,85% 97.6%,78% 99.2%,71% 97.4%,64% 99%,57% 97.6%,50% 99.2%,42% 97.4%,35% 99%,28% 97.6%,21% 99.2%,14% 97.5%,7% 99%,0% 97.7%); }
-  .chall-grid .chall-note:nth-child(3n+2) .chall-paper { clip-path: polygon(0% 1.4%,7% 2.6%,14% 1%,21% 2.4%,28% 1.2%,35% 2.6%,42% 1%,50% 2.5%,57% 1.2%,64% 2.4%,71% 1%,78% 2.6%,85% 1.2%,92% 2.4%,100% 1.2%,100% 98.6%,92% 97.4%,85% 99%,78% 97.6%,71% 99.2%,64% 97.4%,57% 99%,50% 97.5%,42% 99.2%,35% 97.4%,28% 99%,21% 97.6%,14% 99.2%,7% 97.5%,0% 99%); }
-  .chall-grid .chall-note:nth-child(3n)   .chall-paper { clip-path: polygon(0% 2.6%,7% 1%,14% 2.5%,21% 1.3%,28% 2.4%,35% 1%,42% 2.6%,50% 1.2%,57% 2.4%,64% 1%,71% 2.6%,78% 1.3%,85% 2.5%,92% 1%,100% 2.5%,100% 97.5%,92% 99.2%,85% 97.5%,78% 99%,71% 97.6%,64% 99.2%,57% 97.4%,50% 99%,42% 97.6%,35% 99.2%,28% 97.4%,21% 99%,14% 97.6%,7% 99.2%,0% 97.4%); }
-  /* the pushpin, sticking out of the top of each note */
-  .chall-pin {
-    position: absolute; top: 0; left: 50%; transform: translateX(-50%); z-index: 5;
-    width: 20px; height: 20px; border-radius: 50%;
-    background: radial-gradient(circle at 36% 30%, #ff9a9a, #d8312f 58%, #971513);
-    box-shadow: 0 3px 4px rgba(0,0,0,0.4), inset -2px -2px 3px rgba(0,0,0,0.3);
+  .chall-item:hover { background: rgba(43,39,34,0.05); }
+  .chall-item.selected { background: rgba(39,69,96,0.10); }
+  .chall-item.selected::before {
+    content: "\25B6"; position: absolute; left: -12px; top: 50%; transform: translateY(-50%);
+    color: #b23a3a; font-size: 11px; line-height: 1;
   }
-  .chall-pin::after {
-    content: ""; position: absolute; top: 4px; left: 5px; width: 5px; height: 5px;
-    border-radius: 50%; background: rgba(255,255,255,0.7);
+  .chall-item-num { font-family: var(--type); font-size: 11px; color: var(--ink-soft); text-align: right; }
+  .chall-item-name { font-family: var(--hand); font-weight: 700; font-size: 22px; line-height: 1; color: var(--ink); }
+  .chall-item.selected .chall-item-name { color: #1f3a52; }
+  .chall-item-mark { display: flex; justify-content: center; }
+  .chall-mark-svg { width: 20px; height: 20px; display: block; }
+  .chall-item.is-locked .chall-item-name { color: var(--ink-soft); }
+  .chall-item.is-locked .chall-item-num { color: #c7bfac; }
+  .chall-item.is-locked .chall-item-mark { color: #c4bca9; }
+  .chall-tally {
+    font-family: var(--type); font-size: 10px; letter-spacing: 0.6px; color: var(--ink-soft);
+    text-align: center; margin-top: 10px; padding-top: 9px; border-top: 1px dashed #c7ba9b;
   }
-  .chall-charm { display: block; color: var(--chall-accent); margin-bottom: 2px; }
-  .chall-charm .charm { display: block; width: 28px; height: 28px; }
-  .chall-charm .charm svg { width: 100%; height: 100%; overflow: visible; }
-  .chall-charm .ink { fill: none; stroke: var(--ink); stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
-  .chall-charm .ink-fill { fill: var(--chall-accent); stroke: var(--ink); stroke-width: 1.2; }
-  .chall-name { font-family: var(--hand); font-weight: 700; font-size: 24px; line-height: 0.95; color: var(--ink); }
-  .chall-desc { font-family: var(--hand); font-size: 17px; line-height: 1.05; color: #3c3325; }
-  .chall-win {
-    font-family: var(--type); font-size: 10px; line-height: 1.3; color: #5a5042;
-    border-top: 1px dashed #c0b291; padding-top: 8px; margin-top: auto; align-self: stretch;
+
+  /* ---- right: the selected challenge ---- */
+  .chall-detail { padding-left: 22px; min-width: 0; }
+  .chall-detail-head { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; }
+  .chall-detail-charm { color: var(--ink); display: flex; }
+  .chall-detail-charm .charm { display: block; width: 30px; height: 30px; }
+  .chall-detail-charm .charm svg { width: 100%; height: 100%; overflow: visible; }
+  .chall-detail-charm .ink { fill: none; stroke: var(--ink); stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+  .chall-detail-charm .ink-fill { fill: #e0a32f; stroke: var(--ink); stroke-width: 1.2; }
+  .chall-detail-name { font-family: var(--hand); font-weight: 700; font-size: 32px; line-height: 1; color: var(--ink); }
+  .chall-detail-star { display: flex; }
+  .chall-star-svg { width: 18px; height: 18px; display: block; }
+  .chall-detail-stamp {
+    font-family: var(--type); font-weight: 700; font-size: 11px; letter-spacing: 2px; text-transform: uppercase;
+    color: rgba(178,58,58,0.82); border: 2px double rgba(178,58,58,0.6); border-radius: 3px;
+    padding: 2px 7px; transform: rotate(-4deg);
   }
-  .chall-win b { color: var(--ink); }
-  .chall-action { margin-top: 10px; display: flex; flex-direction: column; gap: 5px; align-self: stretch; }
-  .chall-btn {
-    font-family: var(--type); font-size: 11.5px; font-weight: 700; letter-spacing: 0.6px;
-    padding: 8px 0; border-radius: 1px; cursor: pointer; text-align: center;
-    border: 1.5px solid var(--chall-accent); transition: filter 0.15s, background 0.15s, color 0.15s;
-  }
-  .chall-play { background: var(--chall-accent); color: #f3ecf8; }
-  .chall-play:hover { filter: brightness(1.08); }
-  .chall-unlock { background: transparent; color: var(--chall-accent); }
-  .chall-unlock:hover { background: var(--chall-accent); color: #f3ecf8; }
-  .chall-cost { font-size: 11px; opacity: 0.9; }
+  .chall-sec { margin-bottom: 14px; }
+  .chall-sec--beat { border-top: 1px dashed #c7ba9b; padding-top: 11px; }
+  .chall-eyebrow { font-family: var(--type); font-size: 9.5px; letter-spacing: 1.6px; text-transform: uppercase; color: var(--ink-soft); margin-bottom: 5px; }
+  .chall-rule { font-family: var(--hand); font-size: 21px; line-height: 1.25; color: var(--ink); }
+  .chall-goal { font-family: var(--hand); font-size: 22px; line-height: 1.2; color: var(--ink); margin-bottom: 4px; }
+  .chall-mods { font-family: var(--type); font-size: 12px; line-height: 1.45; color: #5a5042; }
+  .chall-act { display: flex; align-items: center; justify-content: space-between; gap: 14px; margin-top: 16px; }
+  .chall-meta { font-family: var(--type); font-size: 10px; color: var(--ink-soft); flex: 1; }
   .chall-need {
-    font-family: var(--type); font-size: 10.5px; color: #5a5042; text-align: center;
-    border: 1px dashed #b3a584; border-radius: 1px; padding: 7px 0; background: rgba(236,227,208,0.5);
+    font-family: var(--type); font-size: 11px; color: #5a5042; text-align: center;
+    border: 1px dashed #b3a584; border-radius: 1px; padding: 9px 18px; background: rgba(236,227,208,0.5);
   }
-  .chall-meta { font-family: var(--type); font-size: 9.5px; letter-spacing: 0.3px; color: #9b8e72; text-align: center; }
-  /* locked notes read as not-yet-opened: muted, faintly washed out */
-  .chall-locked { opacity: 0.7; filter: saturate(0.55); }
-  .chall-locked .chall-name, .chall-locked .chall-charm { color: var(--ink-soft); }
-  .chall-locked .chall-charm .ink-fill { fill: var(--ink-soft); }
-  /* defeated: a red rubber stamp slammed across the note */
-  .chall-stamp {
-    position: absolute; top: 28%; right: 8%; transform: rotate(-13deg); z-index: 4;
-    font-family: var(--type); font-weight: 700; font-size: 13px; letter-spacing: 2px; text-transform: uppercase;
-    color: rgba(178,58,58,0.8); border: 2.5px double rgba(178,58,58,0.62); border-radius: 3px;
-    padding: 3px 9px; pointer-events: none;
+
+  /* primary action — the gold "Start writing" sticker, reused */
+  .chall-go {
+    font-family: var(--type); font-size: 15px; letter-spacing: 1px; font-weight: 700;
+    color: var(--ink); background-color: #efb73e;
+    background-image: linear-gradient(168deg, rgba(255,255,255,0.34) 0%, rgba(255,255,255,0) 46%, rgba(43,39,34,0.12) 100%);
+    border: 2px solid var(--ink); border-radius: 2px;
+    box-shadow: 3px 3px 0 rgba(43,39,34,0.22); transform: rotate(-0.6deg);
+    padding: 11px 28px; cursor: pointer; white-space: nowrap;
+    transition: background-color 0.24s ease, color 0.2s ease, transform 0.12s, box-shadow 0.2s;
+  }
+  .chall-go::before { content: "\270E"; margin-right: 9px; font-size: 17px; vertical-align: -1px; }
+  .chall-go.is-unlock { background-color: #cfdfea; }
+  .chall-go.is-unlock::before { content: none; margin-right: 0; }
+  .chall-go:hover, .chall-go:focus-visible { background-color: var(--ink); color: var(--paper); }
+  .chall-go:active { transform: rotate(-0.6deg) translateY(1px); box-shadow: 1px 1px 0 rgba(43,39,34,0.22); }
+
+  @media (max-width: 620px) {
+    .chall-layout { grid-template-columns: 1fr; }
+    .chall-list { padding-right: 0; border-right: none; border-bottom: 1px solid rgba(60,40,18,0.16); padding-bottom: 8px; margin-bottom: 14px; }
+    .chall-detail { padding-left: 0; }
   }
   @media (prefers-reduced-motion: reduce) {
-    .chall-grid .chall-note { transform: none; }
-    .chall-tokens { transform: none; }
+    .chall-tokens, .chall-go { transform: none; }
+    .chall-go:active { transform: translateY(1px); }
   }
 
   /* Challenge results panel (sandboxed — in place of the records board) */

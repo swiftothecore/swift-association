@@ -1936,7 +1936,15 @@ function openAchievements(from) {
 }
 
 /* ---------- Challenges page ---------- */
-let challengesBackTarget = "start";  // where the Challenges' ← back returns to
+let challengesBackTarget = "start";  // where the Challenges' back link returns to
+let challSelectedId = null;          // which challenge the detail panel is showing
+
+// Status marks for the contents list (gold tick = defeated, hollow ring = open, lock = locked).
+const CHALL_TICK = `<svg viewBox="0 0 20 20" class="chall-mark-svg" aria-hidden="true"><circle cx="10" cy="10" r="8.5" fill="none" stroke="#d8a32f" stroke-width="1.6"/><path d="M5.5 10.2 L8.7 13.4 L14.5 6.4" fill="none" stroke="#d8a32f" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+const CHALL_RING = `<svg viewBox="0 0 20 20" class="chall-mark-svg" aria-hidden="true"><circle cx="10" cy="10" r="8.5" fill="none" stroke="#b6a98d" stroke-width="1.6"/></svg>`;
+const CHALL_LOCK = `<svg viewBox="0 0 20 20" class="chall-mark-svg" aria-hidden="true"><rect x="4.5" y="9" width="11" height="8" rx="1.4" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M6.8 9 V6.7 a3.2 3.2 0 0 1 6.4 0 V9" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>`;
+const CHALL_STAR = `<svg viewBox="0 0 24 24" class="chall-star-svg" aria-hidden="true"><path d="M12 2.5l2.7 6.2 6.8.5-5.2 4.4 1.6 6.6L12 17.1 6.1 20.8l1.6-6.6L2.5 9.2l6.8-.5z" fill="#e0a32f" stroke="#b9821f" stroke-width="0.8"/></svg>`;
+
 function openChallenges(from) {
   challengesBackTarget = from;
   renderChallengesPage();
@@ -1944,54 +1952,105 @@ function openChallenges(from) {
 }
 
 function renderChallengesPage() {
-  const wallet = loadChallengeTokens();
-  const tk = wallet.balance;
+  const tk = loadChallengeTokens().balance;
   const defeated = CHALLENGES.filter((c) => challengeRecord(c.id).defeated).length;
 
-  let html = `<div class="chall-head">` +
-    `<div class="chall-head-sub">spend a token · defeat the rule · ${defeated} / ${CHALLENGES.length} defeated</div>` +
-    `<span class="chall-tokens" title="spend a token to unlock a challenge">🎟 <b>${tk}</b> token${tk === 1 ? "" : "s"}</span></div>`;
+  // Default selection: keep the current pick if still valid, else the first
+  // not-yet-defeated challenge, else the very first.
+  if (!challSelectedId || !CHALLENGE_BY_ID[challSelectedId]) {
+    const firstOpen = CHALLENGES.find((c) => !challengeRecord(c.id).defeated);
+    challSelectedId = (firstOpen || CHALLENGES[0]).id;
+  }
 
-  html += `<div class="chall-grid">`;
-  for (const c of CHALLENGES) {
+  let list = "";
+  CHALLENGES.forEach((c, idx) => {
     const rec = challengeRecord(c.id);
     const open = c.free || rec.unlocked;
-    const cost = c.cost || 1;
-    let stateCls, action;
-    if (!open) {
-      const afford = tk >= cost;
-      stateCls = "chall-locked";
-      action = afford
-        ? `<button class="chall-btn chall-unlock" data-unlock="${c.id}">unlock <span class="chall-cost">🎟 ${cost}</span></button>`
-        : `<div class="chall-need">need a token <span class="chall-cost">🎟 ${cost}</span></div>`;
-    } else if (rec.defeated) {
-      stateCls = "chall-done";
-      action = `<button class="chall-btn chall-play" data-play="${c.id}">play again</button>` +
-        `<div class="chall-meta">best ${rec.best}/${TOTAL_ROUNDS} · ${rec.attempts} attempt${rec.attempts === 1 ? "" : "s"}</div>`;
-    } else {
-      stateCls = "chall-open";
-      action = `<button class="chall-btn chall-play" data-play="${c.id}">play</button>` +
-        (rec.attempts ? `<div class="chall-meta">${rec.attempts} attempt${rec.attempts === 1 ? "" : "s"}</div>` : "");
-    }
-    html += `<div class="chall-note ${stateCls}">` +
-      `<span class="chall-pin" aria-hidden="true"></span>` +
-      `<div class="chall-paper">` +
-      (rec.defeated ? `<span class="chall-stamp">defeated</span>` : "") +
-      `<span class="chall-charm">${charmMarkup(c.icon)}</span>` +
-      `<div class="chall-name">${escapeHtml(c.name)}</div>` +
-      `<div class="chall-desc">${escapeHtml(c.desc)}</div>` +
-      `<div class="chall-win">${escapeHtml(c.win)}</div>` +
-      `<div class="chall-action">${action}</div>` +
-      `</div></div>`;
-  }
-  html += `</div>`;
+    let mark, stateCls;
+    if (rec.defeated)   { mark = CHALL_TICK; stateCls = "is-defeated"; }
+    else if (open)      { mark = CHALL_RING; stateCls = "is-open"; }
+    else                { mark = CHALL_LOCK; stateCls = "is-locked"; }
+    list += `<button type="button" class="chall-item ${stateCls}" data-id="${c.id}">` +
+      `<span class="chall-item-num">${idx + 1}</span>` +
+      `<span class="chall-item-name">${escapeHtml(c.name)}</span>` +
+      `<span class="chall-item-mark">${mark}</span></button>`;
+  });
+
+  const html =
+    `<div class="chall-head">` +
+      `<div class="chall-head-sub">spend a token · defeat the rule</div>` +
+      `<span class="chall-tokens" title="spend a token to unlock a challenge">` +
+        `🎟 <b>${tk}</b> token${tk === 1 ? "" : "s"}</span>` +
+    `</div>` +
+    `<div class="chall-layout">` +
+      `<div class="chall-list">${list}` +
+        `<div class="chall-tally">${defeated} of ${CHALLENGES.length} defeated</div>` +
+      `</div>` +
+      `<div class="chall-detail" id="challDetail"></div>` +
+    `</div>`;
 
   const el = $("challengesBody");
   el.innerHTML = html;
-  el.querySelectorAll("[data-unlock]").forEach((b) => b.addEventListener("click", () => {
-    if (unlockChallenge(b.dataset.unlock)) renderChallengesPage();
-  }));
-  el.querySelectorAll("[data-play]").forEach((b) => b.addEventListener("click", () => startChallenge(b.dataset.play)));
+  el.querySelectorAll(".chall-item").forEach((b) =>
+    b.addEventListener("click", () => selectChallenge(b.dataset.id)));
+  selectChallenge(challSelectedId);
+}
+
+function selectChallenge(id) {
+  challSelectedId = id;
+  const body = $("challengesBody");
+  if (!body) return;
+  body.querySelectorAll(".chall-item").forEach((b) =>
+    b.classList.toggle("selected", b.dataset.id === id));
+  renderChallengeDetail(id);
+}
+
+function renderChallengeDetail(id) {
+  const el = $("challDetail");
+  if (!el) return;
+  const c = CHALLENGE_BY_ID[id];
+  const rec = challengeRecord(id);
+  const open = c.free || rec.unlocked;
+  const cost = c.cost || 1;
+  const tk = loadChallengeTokens().balance;
+  const mode = MODES[c.mode];
+
+  let action;
+  if (!open) {
+    action = tk >= cost
+      ? `<button type="button" class="chall-go is-unlock" data-unlock="${id}">unlock · 🎟 ${cost}</button>`
+      : `<div class="chall-need">need a token · 🎟 ${cost}</div>`;
+  } else {
+    action = `<button type="button" class="chall-go" data-play="${id}">${rec.defeated ? "Play again" : "Play"}</button>`;
+  }
+
+  let meta = "";
+  if (rec.defeated) meta = `best ${rec.best}/${TOTAL_ROUNDS} · ${rec.attempts} attempt${rec.attempts === 1 ? "" : "s"}`;
+  else if (rec.attempts) meta = `${rec.attempts} attempt${rec.attempts === 1 ? "" : "s"} · not yet beaten`;
+
+  el.innerHTML =
+    `<div class="chall-detail-head">` +
+      `<span class="chall-detail-charm">${charmMarkup(c.icon)}</span>` +
+      `<span class="chall-detail-name">${escapeHtml(c.name)}</span>` +
+      (rec.defeated ? `<span class="chall-detail-star">${CHALL_STAR}</span><span class="chall-detail-stamp">defeated</span>` : "") +
+    `</div>` +
+    `<div class="chall-sec">` +
+      `<div class="chall-eyebrow">The rule</div>` +
+      `<div class="chall-rule">${escapeHtml(c.desc)}</div>` +
+    `</div>` +
+    `<div class="chall-sec chall-sec--beat">` +
+      `<div class="chall-eyebrow">To beat it</div>` +
+      `<div class="chall-goal">${escapeHtml(c.win)}</div>` +
+      `<div class="chall-mods">${escapeHtml(mode.blurb)}</div>` +
+    `</div>` +
+    `<div class="chall-act">` +
+      `<span class="chall-meta">${meta}</span>${action}` +
+    `</div>`;
+
+  const ub = el.querySelector("[data-unlock]");
+  if (ub) ub.addEventListener("click", () => { if (unlockChallenge(ub.dataset.unlock)) renderChallengesPage(); });
+  const pb = el.querySelector("[data-play]");
+  if (pb) pb.addEventListener("click", () => startChallenge(pb.dataset.play));
 }
 
 /* ---------- Bracelet (hand-strung SVG) ---------- */
