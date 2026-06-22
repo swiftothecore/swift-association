@@ -117,6 +117,10 @@ export const CHALLENGES = [
     free: false, cost: 1, icon: "gem",
     desc: "A song you've never gotten before is hiding in this run — find it.",
     win: "Answer the never-before-seen song." },
+  { id: "choose-your-path", name: "Choose Your Path", rule: "path", mode: "medium",
+    free: false, cost: 1, target: 9, forks: [4, 8], icon: "branch",
+    desc: "At forks in the run, pick a perk that reshapes the rest.",
+    win: "Score 9 / 13 — your way." },
 ];
 export const CHALLENGE_BY_ID = Object.fromEntries(CHALLENGES.map((c) => [c.id, c]));
 export const CHALLENGE_ORDER = CHALLENGES.map((c) => c.id);

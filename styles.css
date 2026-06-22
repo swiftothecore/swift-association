@@ -570,6 +570,41 @@
   .chall-result-meta { font-family: var(--type); font-size: 11px; color: var(--ink-soft); margin-bottom: 12px; }
   #backToChallenges { width: auto; margin: 0 auto; padding: 5px 18px; }
 
+  /* Choose Your Path — mid-run perk fork. The overlay covers the answered page
+     (the card is position:relative — see .quit-btn) until a perk is chosen. */
+  .chall-path-overlay {
+    position: absolute; inset: 0; z-index: 60;
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(245, 239, 225, 0.9); animation: cpo-in 0.25s ease both;
+  }
+  @keyframes cpo-in { from { opacity: 0; } to { opacity: 1; } }
+  .chall-path-panel { text-align: center; max-width: 460px; padding: 0 16px; }
+  .chall-path-title { font-family: var(--hand); font-weight: 700; font-size: 30px; color: var(--ink); margin: 0 0 2px; }
+  .chall-path-sub { font-family: var(--type); font-size: 12px; color: var(--ink-soft); margin: 0 0 18px; }
+  .chall-path-cards { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
+  .chall-path-card {
+    flex: 1 1 0; min-width: 150px; max-width: 200px; cursor: pointer; text-align: center;
+    background: var(--paper); border: 1.5px solid var(--ink-soft); border-radius: 4px;
+    padding: 16px 14px; display: flex; flex-direction: column; align-items: center; gap: 6px;
+    box-shadow: 2px 3px 0 rgba(43, 39, 34, 0.16); transition: transform 0.12s ease, box-shadow 0.12s ease;
+  }
+  .chall-path-card:hover { transform: translateY(-2px); box-shadow: 3px 5px 0 rgba(43, 39, 34, 0.22); }
+  .cpc-icon { font-family: var(--type); font-weight: 700; font-size: 20px; color: #b23a3a; }
+  .cpc-name { font-family: var(--hand); font-weight: 700; font-size: 19px; color: var(--ink); }
+  .cpc-desc { font-family: var(--type); font-size: 11px; line-height: 1.35; color: var(--ink-soft); }
+  .path-skip-btn {
+    display: block; margin: 8px auto 0; cursor: pointer;
+    font-family: var(--type); font-size: 12px; letter-spacing: 0.4px;
+    color: var(--ink-soft); background: transparent; border: 1px dashed var(--ink-soft);
+    border-radius: 3px; padding: 3px 10px;
+  }
+  .path-skip-btn:hover { color: var(--ink); border-color: var(--ink); }
+  @media (prefers-reduced-motion: reduce) {
+    .chall-path-overlay { animation: none; }
+    .chall-path-card { transition: none; }
+    .chall-path-card:hover { transform: none; }
+  }
+
   /* Vanishing Word challenge — the prompt word fades out of view after a beat
      (still in state, so matching is unaffected). */
   .word-wrap.vanished #wordDisplay {

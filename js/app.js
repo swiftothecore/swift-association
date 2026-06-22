@@ -82,6 +82,9 @@ let lastAlphaLetter = "";       // From A to Z: first letter of the last accepte
 let challengeTargetSong = null; // One Of A Kind: the never-before-answered song to surface
 let challengeForcedRound = 0;   // One Of A Kind: the round that forces challengeForcedWordVal
 let challengeForcedWordVal = "";// One Of A Kind: the prompt word that surfaces the target song
+let extraSecondsPerRound = 0;   // Choose Your Path: bonus seconds added to every round's clock
+let skipTokens = 0;             // Choose Your Path: one-time word "swaps" earned at a fork
+let pathForksTaken = [];        // Choose Your Path: fork rounds whose perk has been chosen
 let currentWord = "";
 let currentSongs = [];
 let dropdownItems = [];
@@ -2387,7 +2390,12 @@ function resetRunState() {
   challengeTargetSong = null;
   challengeForcedRound = 0;
   challengeForcedWordVal = "";
+  extraSecondsPerRound = 0;
+  skipTokens = 0;
+  pathForksTaken = [];
   clearTimeout(vanishTimer);
+  const skipBtn = $("pathSkipBtn");
+  if (skipBtn) skipBtn.remove();
   const wrap = $("wordDisplay") && $("wordDisplay").parentNode;
   if (wrap) wrap.classList.remove("vanished");
 }
@@ -2798,6 +2806,13 @@ function pickWord() {
 }
 
 function nextRound() {
+  // Choose Your Path: pause at a fork (after rounds 4 / 8) to pick a perk before
+  // advancing. The overlay resumes nextRound once a card is chosen.
+  if (gameType === "challenge" && currentChallenge && currentChallenge.rule === "path"
+      && (currentChallenge.forks || []).includes(round) && !pathForksTaken.includes(round)) {
+    showPathFork(round);
+    return;
+  }
   if (isGameOver()) { endGame(); return; }
   // First round (from the start screen) advances instantly; so do reduced motion,
   // "instant" animation speed, and the page-turn setting being off.
@@ -2837,6 +2852,64 @@ function nextRound() {
   // with animationend as a fast-path; whichever lands first wins.
   flip.addEventListener("animationend", (e) => { if (e.target === flip) finish(); });
   setTimeout(finish, 500 * animScale() || 250);
+}
+
+// Choose Your Path: a mid-run perk fork. Covers the answered page with two cards;
+// the pick adds a run-modifier (extra time or a word swap) for the rest of the run,
+// then resumes the page-turn. No scoring change — the win is still the score target.
+function showPathFork(forkRound) {
+  if (document.querySelector(".chall-path-overlay")) return;   // never stack two forks
+  const card = $("screen-game");
+  const ov = document.createElement("div");
+  ov.className = "chall-path-overlay";
+  ov.innerHTML =
+    `<div class="chall-path-panel">` +
+    `<h3 class="chall-path-title">choose your path</h3>` +
+    `<p class="chall-path-sub">page ${forkRound} cleared — pick a perk for the rest of the run</p>` +
+    `<div class="chall-path-cards">` +
+    `<button class="chall-path-card" data-perk="time"><span class="cpc-icon">+2s</span>` +
+    `<span class="cpc-name">Slow Down Time</span><span class="cpc-desc">two extra seconds on every remaining word</span></button>` +
+    `<button class="chall-path-card" data-perk="skip"><span class="cpc-icon">↻</span>` +
+    `<span class="cpc-name">Mulligan</span><span class="cpc-desc">a one-time swap for a word you don't know</span></button>` +
+    `</div></div>`;
+  card.appendChild(ov);
+  ov.querySelectorAll("[data-perk]").forEach((b) => b.addEventListener("click", () => {
+    if (b.dataset.perk === "time") extraSecondsPerRound += 2;
+    else skipTokens += 1;
+    pathForksTaken.push(forkRound);
+    ov.remove();
+    renderPathSkip();
+    nextRound();   // fork is taken now — fall through to the normal advance
+  }, { once: true }));
+}
+
+// Choose Your Path: spend a Mulligan to swap this round's word for a fresh one —
+// the round is NOT consumed (re-rolls in place with a new clock), so it's a true
+// "I don't know this one" escape, not a forfeit.
+function usePathSkip() {
+  if (skipTokens <= 0 || roundLocked) return;
+  skipTokens -= 1;
+  round -= 1;            // advanceRound bumps it straight back to the same round number
+  clearTimer();
+  advanceRound();
+  startTimer();
+}
+
+// Show/refresh the Mulligan button during a Choose Your Path run (only while swaps remain).
+function renderPathSkip() {
+  let btn = $("pathSkipBtn");
+  const show = gameType === "challenge" && currentChallenge && currentChallenge.rule === "path" && skipTokens > 0;
+  if (!show) { if (btn) btn.remove(); return; }
+  if (!btn) {
+    btn = document.createElement("button");
+    btn.id = "pathSkipBtn";
+    btn.type = "button";
+    btn.className = "path-skip-btn";
+    btn.addEventListener("click", usePathSkip);
+    const hintBtn = $("hintBtn");
+    hintBtn.parentNode.insertBefore(btn, hintBtn);
+  }
+  btn.textContent = `↻ swap this word (${skipTokens} left)`;
 }
 
 // How rare the round's word is, from its number of valid answers. Returns a
@@ -2903,6 +2976,7 @@ function advanceRound() {
 
   resetTension();
   renderHintAffordance();
+  renderPathSkip();
   runRoundEggs();
   // Note: the timer is started by the caller (nextRound) — for a page turn it
   // only starts once the flip finishes, so no time is lost during the animation.
@@ -2914,7 +2988,9 @@ function startTimer(resume) {
   clearTimer();
   const fill = $("timerFill");
   const label = $("timerLabel");
-  const total = currentMode.seconds;
+  // Choose Your Path's "Slow Down Time" perk adds seconds, but only where there's
+  // already a clock (Relaxed stays clock-less).
+  const total = currentMode.seconds > 0 ? currentMode.seconds + (extraSecondsPerRound || 0) : currentMode.seconds;
   const wrap = document.querySelector(".timer-wrap");
   // Relaxed mode (seconds <= 0): no clock at all — hide the bar and never time out.
   if (!(total > 0)) {
