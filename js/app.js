@@ -2940,6 +2940,38 @@ function challengeWinCheck(c) {
 function endChallenge() {
   const c = currentChallenge;
   challengeRunActive = false;   // run is over — let defeat/meta charms fire normally
+
+  // Challenges count toward the GLOBAL/catalogue stores only — the chronological
+  // history log, the lifetime catalogue tally (Songs/Words Discovered, Favourite,
+  // Nemesis), and the cross-game lifetime metrics. They deliberately do NOT touch
+  // any per-mode difficulty board (updateStats), personal records (insertRecord),
+  // or play-count totals: a challenge bends the rules and borrows a mode, so folding
+  // it into normal difficulty stats would pollute them. (devNoLog skips it all.)
+  if (!devNoLog) {
+    const runTime = currentMode.seconds > 0 ? gameTimeSum : null;
+    appendHistory({
+      s: score, c: score, n: roundResults.length,
+      m: "chl-" + c.id, t: "challenge",
+      d: new Date().toISOString(), tm: runTime,
+      ...(verseBonus > 0 ? { v: verseBonus } : {}),
+      ...(hintsUsed > 0 ? { h: 1 } : {}),
+    });
+    recordGameTally(roundResults.map((correct, i) => ({
+      correct,
+      title: roundSongs[i] || null,
+      album: roundAlbums[i] || null,
+      word: roundWords[i] || null,
+    })));
+    recordGameMetrics({
+      rounds: roundResults.length, correct: score,
+      timeSumMs: gameTimeSum * 1000, timedRounds: gameTimedRounds,
+      fastestMs: gameFastestMs, lyricLines: lyricLineAnswers,
+      versePerfect: gameVersePerfect, wholeVerses: gameWholeVerses, verseBonus,
+      isDaily: false, dailyPerfect: false,
+      isInfinite: false, timeouts: gameTimeouts,
+    });
+  }
+
   showScreen("results");
   $("resultBracelet").innerHTML = buildBraceletSVG(roundResults, 0, -1, roundAlbums,
     { colors: albumPalette(), hinted: roundHinted, verseTiers: roundVerseTier });
