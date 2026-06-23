@@ -451,6 +451,21 @@ export const ACH_GROUP_OF = {
   "a-place-in-this-world": "albumFocus", "change": "albumFocus", "gold-rush": "albumFocus", "starlight": "albumFocus",
 };
 
+// Charm → token conversion eligibility. Only *skill/mastery* charms can be sacrificed
+// for a challenge token; freebies can't. Secret charms (easter eggs / trivia) and the
+// whole `challenges` group (no recursion — challenge progress shouldn't fund more
+// challenge unlocks) are excluded by isTradeableAch() in app.js. This set adds the
+// remaining *visible* freebies: pure participation / play-count / meta charms.
+export const ACH_NO_TRADE = new Set([
+  "enchanted",              // finish your first game
+  "begin-again",            // play 5 games
+  "fifteen",                // play 15 games
+  "karma",                  // earn 13 charms (meta)
+  "today-was-a-fairytale",  // finish your first Daily
+  "hits-different",         // play all three game types
+  "safe-and-sound",         // play Easy three times in a row
+]);
+
 /* ---------- Easter-egg art ---------- */
 export const PEN_SVG = {
   // A feather quill: a barbed plume, a bare curved rachis, and a sharpened cut nib.

@@ -5,7 +5,7 @@ import {
   MODES, MODE_ORDER, MODE_COLORS,
   ERAS, TENDER_ERAS, FINALE_ERAS, ALBUM_ERA,
   ALBUM_COLORS, CB_ALBUM_COLORS, STUDIO_ALBUMS, TITLE_ALIASES,
-  ACHIEVEMENTS, ACH_ICONS, ACH_BY_ID, ACH_GROUPS, ACH_GROUP_COLORS, ACH_GROUP_OF,
+  ACHIEVEMENTS, ACH_ICONS, ACH_BY_ID, ACH_GROUPS, ACH_GROUP_COLORS, ACH_GROUP_OF, ACH_NO_TRADE,
   CHALLENGES, CHALLENGE_BY_ID, CHALLENGE_ORDER,
   ALBUM_FOCUS_DIFFS, ALBUM_FOCUS_TARGET,
   PEN_SVG, STAR_SVG, SPARKLE_SVG, DOODLE_SVG,
@@ -1016,6 +1016,7 @@ function infiniteTabHTML() {
 
 /* ---------- Achievements ---------- */
 let earnedAchievements = {};   // persisted: { id: "YYYY-MM-DD" }
+let burnedAchIds = new Set();   // charms sacrificed for a token — permanently un-earned
 let newlyUnlocked = [];        // ids unlocked this game (for the results recap)
 
 function charmMarkup(icon) { return `<span class="charm" aria-hidden="true">${ACH_ICONS[icon]}</span>`; }
@@ -1081,7 +1082,7 @@ function unlock(id) {
   // no game-quality achievements (streaks, speed, etc.) leak in from mid-round checks.
   // The flag is cleared before endChallenge folds, so post-run meta charms still fire.
   if (challengeRunActive && !CHALLENGE_ACH_IDS.has(id)) return;
-  if (!ACH_BY_ID[id] || earnedAchievements[id]) return;
+  if (!ACH_BY_ID[id] || earnedAchievements[id] || burnedAchIds.has(id)) return; // burned = gone for good
   earnedAchievements[id] = new Date().toISOString().slice(0, 10);
   saveAchievements(earnedAchievements);
   newlyUnlocked.push(id);
@@ -1164,17 +1165,41 @@ function markChallengeDefeated(id, score) {
   return firstTime;
 }
 
-// Escape valve: convert an earned achievement into a token (max 5 ever).
-function convertAchievementToToken(achId) {
-  if (!earnedAchievements[achId]) return false;
+// Escape valve (tightened): you can SACRIFICE a skill charm toward a challenge token,
+// but the price DOUBLES each time and the charm is gone for good.
+//   - Only skill/mastery charms qualify (isTradeableAch): no freebies, no secret/easter-egg
+//     charms, no challenge-group charms (which would let challenges fund themselves).
+//   - The k-th conversion token costs 2^(k-1) charms, so the running total of charms you must
+//     burn to have minted k tokens is 2^k - 1 (1, 3, 7, 15…).
+//   - A sacrificed charm is permanently un-earned: it drops off the collection %, the by-theme
+//     bars and the completion metas (the-lucky-one / is-it-over-now), and can't be re-earned.
+function achEarned(id) { return !!earnedAchievements[id] && !burnedAchIds.has(id); }
+function isTradeableAch(a) {
+  return !!a && !a.secret && achGroupOf(a.id) !== "challenges" && !ACH_NO_TRADE.has(a.id);
+}
+// tokens minted from `n` burned charms (cumulative cost for k tokens is 2^k - 1), and the
+// running total needed for the next one. Integer loop — exact at the power-of-2 thresholds.
+function tokensFromBurned(n) { let k = 0; while ((2 ** (k + 1)) - 1 <= n) k++; return k; } // 0,1,1,2,3…
+function burnedNeededForNextToken(n) { return (2 ** (tokensFromBurned(n) + 1)) - 1; }
+
+// Sacrifice one charm. Returns {minted} (a token may or may not drop this burn — higher
+// tiers cost several charms), or false if the charm isn't eligible.
+function sacrificeAchievement(achId) {
+  const a = ACH_BY_ID[achId];
+  if (!a || !achEarned(achId) || !isTradeableAch(a)) return false;
   const wallet = loadChallengeTokens();
-  if (wallet.fromAchievements.includes(achId)) return false;
-  if (wallet.fromAchievements.length >= 5) return false;
-  wallet.fromAchievements.push(achId);
-  wallet.balance += 1;
+  if (!Array.isArray(wallet.burnedAchievements)) wallet.burnedAchievements = [];
+  const before = tokensFromBurned(wallet.burnedAchievements.length);
+  wallet.burnedAchievements.push(achId);
+  const minted = tokensFromBurned(wallet.burnedAchievements.length) - before; // 0 or 1
+  wallet.balance += minted;
   saveChallengeTokens(wallet);
-  unlock("castles-crumbling");
-  return true;
+  // burn the charm: drop it from earned (so it stops counting) + tombstone it so it can't return.
+  burnedAchIds.add(achId);
+  delete earnedAchievements[achId];
+  saveAchievements(earnedAchievements);
+  if (minted) unlock("castles-crumbling");
+  return { minted };
 }
 
 // "The Piano Was Hissing" — typing "rep tv" / "reputation tv" as an answer OR as your name.
@@ -1333,21 +1358,27 @@ function renderResultRecap() {
   el.querySelectorAll(".ach-chip").forEach((c) => c.addEventListener("click", () => openAchievements("results")));
 }
 
-// The escape valve: an earned charm can be cashed in for a challenge token (max 5
-// ever). Converted charms wear a ticket; un-converted ones offer a "cash in" button
-// while conversions remain. Reads the wallet fresh so re-render reflects the latest.
-function achTicketMarkup(id) {
+// The (tightened) escape valve: a skill charm can be SACRIFICED toward a challenge
+// token. Two-tap to confirm (it's permanent). Legacy cash-ins keep their ticket badge.
+let armedSacrifice = null, armSacrificeTimer = null, sacrificeNote = "";
+function achSacrificeMarkup(a) {
   const w = loadChallengeTokens();
-  if (w.fromAchievements.includes(id)) return `<span class="ach-ticket" title="cashed in for a challenge token">🎟</span>`;
-  if (w.fromAchievements.length >= 5) return "";
-  return `<button type="button" class="ach-cashin" data-convert="${id}" title="trade this charm for a challenge token">cash in 🎟</button>`;
+  if ((w.fromAchievements || []).includes(a.id)) // grandfathered legacy cash-in
+    return `<span class="ach-ticket" title="cashed in for a challenge token">🎟</span>`;
+  if (!isTradeableAch(a)) return "";   // only skill charms qualify
+  if (armedSacrifice === a.id)
+    return `<button type="button" class="ach-cashin is-armed" data-sacrifice="${a.id}" title="this can't be undone">give up for good?</button>`;
+  return `<button type="button" class="ach-cashin" data-sacrifice="${a.id}" title="sacrifice this charm toward a challenge token — permanent">sacrifice ✦</button>`;
 }
 
-// One charm tile: earned (revealed), a still-locked secret (masked ???), or a
-// visible locked target. Shared by the grouped grid and the secret section.
+// One charm tile: earned (revealed), a sacrificed charm (given up), a still-locked
+// secret (masked ???), or a visible locked target. Shared by the grid + secret section.
 function achTile(a) {
+  if (burnedAchIds.has(a.id)) {
+    return `<div class="ach ach--given" title="sacrificed for a challenge token">${charmMarkup(a.icon)}<div class="ach-text"><div class="ach-nm">${escapeHtml(a.name)}</div><div class="ach-dc">given up for a token 🎟</div></div></div>`;
+  }
   if (earnedAchievements[a.id]) {
-    return `<div class="ach ach--earned">${charmMarkup(a.icon)}<div class="ach-text"><div class="ach-nm">${escapeHtml(a.name)}</div><div class="ach-dc">${escapeHtml(a.desc)}</div></div>${achTicketMarkup(a.id)}</div>`;
+    return `<div class="ach ach--earned">${charmMarkup(a.icon)}<div class="ach-text"><div class="ach-nm">${escapeHtml(a.name)}</div><div class="ach-dc">${escapeHtml(a.desc)}</div></div>${achSacrificeMarkup(a)}</div>`;
   }
   if (a.secret) {
     return `<div class="ach locked secret"><span class="charm-q" aria-hidden="true">?</span><div class="ach-text"><div class="ach-nm">???</div><div class="ach-dc">a secret charm</div></div></div>`;
@@ -1366,11 +1397,24 @@ function renderAchievementsPage() {
   const pct = Math.round((earnedCount / total) * 100);
 
   const wallet = loadChallengeTokens();
-  const cashedIn = wallet.fromAchievements.length;
+  const burnedCount = (wallet.burnedAchievements || []).length;
+  const tradeableLeft = ACHIEVEMENTS.filter((a) => achEarned(a.id) && isTradeableAch(a)).length;
+  const needNext = burnedNeededForNextToken(burnedCount) - burnedCount; // charms until the next token
+  // Only surface the escape valve once there's something to trade or something already given up.
+  const noteLine = sacrificeNote ? `<div class="ach-sacrifice-note">${escapeHtml(sacrificeNote)}</div>` : ``;
+  sacrificeNote = "";   // one-shot
+  const convoLine = (tradeableLeft || burnedCount)
+    ? noteLine + `<div class="ach-page-tickets">` +
+      (burnedCount ? `🎟 charms given up: ${burnedCount} · ` : ``) +
+      (tradeableLeft
+        ? `next challenge token after ${needNext} more sacrifice${needNext === 1 ? "" : "s"} ` +
+          `<span class="ach-trade-note">(the price doubles each time — and a given-up charm is gone for good)</span>`
+        : `no skill charms left to trade`) +
+      `</div>`
+    : ``;
   let html = `<div class="ach-page-head"><div class="ach-page-title">Charm Collection</div>` +
     `<div class="ach-page-sub">${earnedCount} / ${total} charms collected</div>` +
-    (earnedCount ? `<div class="ach-page-tickets">🎟 cashed in for tokens: ${cashedIn} / 5` +
-      `${cashedIn < 5 ? ` · trade a charm for a challenge token` : ``}</div>` : ``) +
+    convoLine +
     `</div>`;
 
   // by-theme breakdown — one small colour-coded bar per group (denominators count
@@ -1437,8 +1481,27 @@ function renderAchievementsPage() {
   $("achievementsBody").innerHTML = html;
   $("achievementsBody").querySelectorAll("[data-open-songbook]").forEach((b) =>
     b.addEventListener("click", () => openSongbook(b.dataset.openSongbook)));
-  $("achievementsBody").querySelectorAll("[data-convert]").forEach((b) =>
-    b.addEventListener("click", () => { if (convertAchievementToToken(b.dataset.convert)) renderAchievementsPage(); }));
+  $("achievementsBody").querySelectorAll("[data-sacrifice]").forEach((b) =>
+    b.addEventListener("click", () => onSacrificeClick(b.dataset.sacrifice)));
+}
+
+// Two-tap to confirm a permanent sacrifice (mirrors the quit button). First tap arms the
+// charm (3s auto-disarm); second tap on the same charm burns it.
+function onSacrificeClick(id) {
+  if (armedSacrifice === id) {
+    clearTimeout(armSacrificeTimer);
+    armedSacrifice = null;
+    const res = sacrificeAchievement(id);
+    if (res) sacrificeNote = res.minted
+      ? `a challenge token earned 🎟 — spend it on the Challenges page`
+      : `charm given up — one more sacrifice earns the next token`;
+    renderAchievementsPage();
+    return;
+  }
+  clearTimeout(armSacrificeTimer);
+  armedSacrifice = id;
+  armSacrificeTimer = setTimeout(() => { armedSacrifice = null; renderAchievementsPage(); }, 3000);
+  renderAchievementsPage();
 }
 
 // Shared album-rainbow segments for a {album: discoveredCount} split out of total.
@@ -6012,6 +6075,9 @@ function performDanger(which) {
   else if (which === "ach") {
     resetAchievements();
     earnedAchievements = loadAchievements();
+    // also lift the sacrifice tombstones (charms become re-earnable; spent tokens stay)
+    const w = loadChallengeTokens(); w.burnedAchievements = []; saveChallengeTokens(w);
+    burnedAchIds = new Set();
     if (screens.achievements.classList.contains("active")) renderAchievementsPage();
   }
   else if (which === "tally") resetTally();
@@ -6316,6 +6382,8 @@ async function init() {
   showScreen("start");
   applyEra("gold");
   earnedAchievements = loadAchievements();
+  burnedAchIds = new Set(loadChallengeTokens().burnedAchievements || []);
+  burnedAchIds.forEach((id) => delete earnedAchievements[id]);   // sacrificed charms never count
   settings = loadSettings();
   applySettings();
   migrateRecordsFromStats();   // seed records from pre-existing stats once, before any game runs

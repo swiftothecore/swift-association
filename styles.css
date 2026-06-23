@@ -841,18 +841,30 @@
 
   /* Charm → token conversion (the escape valve) */
   .ach-page-tickets { font-family: var(--type); font-size: 10px; letter-spacing: 0.5px; color: #2b2722; margin-top: 4px; }
+  .ach-trade-note { color: rgba(43,39,34,0.6); }
+  .ach-sacrifice-note {
+    font-family: var(--type); font-size: 10px; letter-spacing: 0.4px; color: #b23a3a;
+    margin-top: 5px; font-weight: 600;
+  }
   .ach--earned { position: relative; }
   .ach-ticket { position: absolute; top: 6px; right: 7px; font-size: 13px; line-height: 1; }
   .ach-cashin {
     position: absolute; top: 5px; right: 6px;
-    font-family: var(--type); font-size: 9px; letter-spacing: 0.3px;
+    font-family: var(--type); font-size: 9px; letter-spacing: 0.3px; white-space: nowrap;
     padding: 2px 6px; border-radius: 3px; cursor: pointer;
     border: 1px solid rgba(43,39,34,0.5); background: rgba(43,39,34,0.06); color: #2b2722;
     opacity: 0; transition: opacity 0.15s;
   }
   .ach--earned:hover .ach-cashin, .ach-cashin:focus-visible { opacity: 1; }
   .ach-cashin:hover { background: #2b2722; color: #fff; border-color: #2b2722; }
+  /* armed (second-tap confirms): always shown, red, can't be missed */
+  .ach-cashin.is-armed { opacity: 1; background: #b23a3a; color: #fff; border-color: #b23a3a; }
   @media (hover: none) { .ach-cashin { opacity: 1; } }
+
+  /* a sacrificed charm — faded, struck through, given up for good */
+  .ach--given { opacity: 0.5; filter: grayscale(0.85); position: relative; }
+  .ach--given .ach-nm { text-decoration: line-through; text-decoration-color: rgba(43,39,34,0.5); }
+  .ach--given .ach-dc { color: #b23a3a; }
 
   .hist-head, .hist-row {
     display: grid; grid-template-columns: 1fr 0.8fr 0.8fr 1.9fr 1.3fr;
