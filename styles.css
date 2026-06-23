@@ -674,6 +674,9 @@
   /* One Of A Kind — a remaining guess (drains to a hollow pip as guesses are spent) */
   .chall-pip.filled { background: #b23a3a; border-color: #b23a3a; }
   .chall-prog-count { font-variant-numeric: tabular-nums; opacity: 0.8; }
+  /* When the count sits directly after the name (no pips between — Shrinking Timer,
+     Wrapped Like A Chain, On Tour!, It's A Clock!), keep them from butting together. */
+  .chall-prog-name + .chall-prog-count { margin-left: 8px; }
 
   /* Challenge curtain — the full-screen reveal that precedes a round's word: Wildcard's
      per-round rule, One Of A Kind's target song, Choose Your Path's run intro. A paper

@@ -61,6 +61,7 @@ let titleIndex = new Map();   // normalizeTitle(title|alias) -> song, built in l
 let spacelessIndex = new Map(); // titleIndex key with spaces removed -> song (space-error fallback)
 let playableWords = [];
 let titleWordList = [];  // playable words that appear in at least one song title (Title...? challenge pool)
+let shortTitleWordList = []; // playable words with a valid (lyrics) song whose title is ≤2 words (Short n' Sweet pool)
 let albumWordMap = {};   // album -> playable words with a valid (lyrics) song in that album (On Tour! pool)
 let albumOrder = [];     // album names in canonical songs.json order (On Tour! setlist order)
 let score = 0;
@@ -110,6 +111,10 @@ let roundWildcard = null;       // Wildcard: this round's active sub-constraint
 let lastWildcardId = "";        // Wildcard: previous round's constraint id (no immediate repeat)
 let currentWord = "";
 let currentSongs = [];
+// The full lyrics-valid set for the round, BEFORE a challenge sub-rule narrows currentSongs
+// (Short n' Sweet / Wrapped Like A Chain / On Tour!). Soft-rejects use it to tell a near-miss
+// (lyrics fit, sub-rule doesn't) from a wholly wrong answer.
+let currentLyricSongs = [];
 let dropdownItems = [];
 let activeIndex = -1;
 let timerId = null;
@@ -2385,6 +2390,10 @@ async function loadData() {
   // Title...? challenge pool: words that appear in at least one song title (so every
   // round can be won by naming a title that holds the word).
   titleWordList = playableWords.filter((w) => titleSongsForWord(w, false).length >= 1);
+  // Short n' Sweet pool: words with at least one valid (lyrics) song whose title is ≤2 words,
+  // so every round can be won with a one- or two-word title.
+  shortTitleWordList = playableWords.filter((w) =>
+    validSongs(w, false, false).some((s) => titleWordCount(s.title) <= 2));
   // On Tour! pools: for each album, the playable words that have a valid (lyrics) song
   // in it, so each tour stop can be handed a winnable word. Plus the canonical album order.
   albumOrder = grouped.map((g) => g.album);
@@ -3610,10 +3619,20 @@ function pickWord() {
   // title rule), so every round is winnable from the chosen album.
   if (gameType === "album" && focusAlbum) { const w = pickAlbumWord(); if (w) return w; }
   // Title...? draws only from words that appear in some song title, so each round is winnable.
-  const bucket = (gameType === "challenge" && currentChallenge && currentChallenge.rule === "titleHas"
-    && titleWordList.length)
-    ? titleWordList
-    : (wordBuckets[effectivePool()] || playableWords);
+  let bucket;
+  if (gameType === "challenge" && currentChallenge && currentChallenge.rule === "titleHas"
+      && titleWordList.length) {
+    bucket = titleWordList;
+  } else if (gameType === "challenge" && currentChallenge && currentChallenge.rule === "shorttitle"
+      && shortTitleWordList.length) {
+    // Short n' Sweet: keep the easy-pool feel but guarantee a ≤2-word title exists.
+    const poolBucket = wordBuckets[effectivePool()] || playableWords;
+    const set = new Set(shortTitleWordList);
+    const narrowed = poolBucket.filter((w) => set.has(w));
+    bucket = narrowed.length >= TOTAL_ROUNDS ? narrowed : shortTitleWordList;
+  } else {
+    bucket = wordBuckets[effectivePool()] || playableWords;
+  }
   // No-repeat within a game: exclude every word already used this run. Buckets
   // are guaranteed ≥ TOTAL_ROUNDS words (see buildWordBuckets' MIN), so the pool
   // only empties on a degenerate list — fall back to the full bucket if so.
@@ -3733,6 +3752,14 @@ function roundCurtainHTML() {
   if (c.rule === "wildcard" && roundWildcard) {
     return curtainCardHTML({ kicker: `page ${round} · wildcard`, tag: "the rule",
       headline: roundWildcard.label });
+  }
+  // On Tour! — every page announces tonight's album (the only acceptable source).
+  if (c.rule === "setlist") {
+    const album = tourSetlist[round - 1] || "";
+    const col = (album && albumColor(album)) || "var(--ink-soft)";
+    return curtainCardHTML({ kicker: `stop ${Math.min(round, TOTAL_ROUNDS)} / ${TOTAL_ROUNDS} · on tour`,
+      tag: "tonight's album", headline: album || "any album", headlineColor: col,
+      sub: album ? `name a song from <b style="color:${col}">${escapeHtml(album)}</b>` : "" });
   }
   if (round === 1 && c.rule === "newsong" && challengeTargetSong) {
     const col = albumColor(challengeTargetSong.album) || "var(--ink-soft)";
@@ -3953,9 +3980,21 @@ function advanceRound() {
   justEarnedIndex = -1;
   currentWord = challengeForcedWord(round) || pickWord();   // One Of A Kind forces its target word
   currentSongs = validSongs(currentWord, effectiveStrict(), effectiveNoTitle());
+  currentLyricSongs = currentSongs;   // full lyrics-valid set (soft-rejects judge near-misses off this)
   // Title...?: flip the rule — the only valid answers are songs whose TITLE holds the word.
   if (gameType === "challenge" && currentChallenge && currentChallenge.rule === "titleHas")
     currentSongs = titleSongsForWord(currentWord, effectiveStrict());
+  // Short n' Sweet: only one- or two-word titles are acceptable answers — so the rarity
+  // count, the suggestion pool and the example pool all reflect the SHORT-title subset.
+  if (gameType === "challenge" && currentChallenge && currentChallenge.rule === "shorttitle")
+    currentSongs = currentSongs.filter((s) => titleWordCount(s.title) <= 2);
+  // Wrapped Like A Chain: once a chain letter is set, only songs whose title starts with it
+  // are acceptable — narrow the valid set so the rarity count and examples agree.
+  if (gameType === "challenge" && currentChallenge && currentChallenge.rule === "chain" && chainLetter)
+    currentSongs = currentSongs.filter((s) => firstAlphaLetter(s.title) === chainLetter);
+  // On Tour!: only songs from tonight's album are acceptable answers.
+  if (gameType === "challenge" && currentChallenge && currentChallenge.rule === "setlist")
+    currentSongs = currentSongs.filter((s) => s.album === tourSetlist[round - 1]);
   // Album Focus: the only valid answers are songs from the chosen album.
   if (gameType === "album" && focusAlbum)
     currentSongs = currentSongs.filter((s) => s.album === focusAlbum);
@@ -4691,7 +4730,7 @@ function submitAnswer(song, isTimeout) {
   // Short n' Sweet: a song valid by lyrics but with a 3+-word title is soft-rejected so
   // the player keeps looking for a one- or two-word title.
   if (song && !isTimeout && currentChallenge && currentChallenge.rule === "shorttitle"
-      && currentSongs.some((s) => s.title === song.title)
+      && currentLyricSongs.some((s) => s.title === song.title)
       && titleWordCount(song.title) > 2) {
     rejectShortTitle(); return;
   }
@@ -4700,7 +4739,7 @@ function submitAnswer(song, isTimeout) {
   // letter is soft-rejected so the player can keep the chain going.
   if (song && !isTimeout && currentChallenge && currentChallenge.rule === "chain"
       && chainLetter
-      && currentSongs.some((s) => s.title === song.title)
+      && currentLyricSongs.some((s) => s.title === song.title)
       && firstAlphaLetter(song.title) !== chainLetter) {
     rejectChain(); return;
   }
@@ -4708,7 +4747,7 @@ function submitAnswer(song, isTimeout) {
   // On Tour!: a valid-by-lyrics answer from the wrong album is soft-rejected so the
   // player keeps looking for one off tonight's album.
   if (song && !isTimeout && currentChallenge && currentChallenge.rule === "setlist"
-      && currentSongs.some((s) => s.title === song.title)
+      && currentLyricSongs.some((s) => s.title === song.title)
       && song.album !== tourSetlist[round - 1]) {
     rejectTour(); return;
   }
