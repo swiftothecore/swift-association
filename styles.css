@@ -212,6 +212,20 @@
   }
   @keyframes pageFlipShade { from { opacity: 0; } to { opacity: 1; } }
 
+  /* side-to-side page turn — used for back/give-up navigation. The leaving page turns
+     sideways toward the left spine (rotateY) to reveal the destination beneath it. */
+  .page-flip-sheet.page-flip-sheet--side {
+    transform-origin: center left;
+    animation-name: pageFlipSide;
+  }
+  .flip-shade.flip-shade--side {
+    background: linear-gradient(to left, rgba(38,24,10,0.42), rgba(38,24,10,0.06) 48%, rgba(255,255,255,0.10) 100%);
+  }
+  @keyframes pageFlipSide {
+    from { transform: rotateY(0deg); }
+    to   { transform: rotateY(-104deg); }
+  }
+
   /* ---------- Buttons (hand-drawn / taped) ---------- */
   button {
     font-family: var(--type); cursor: pointer; border: none;

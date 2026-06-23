@@ -186,6 +186,40 @@ function showScreen(name) {
   if (name === "start" || name === "results") scatterNavTape(name);
 }
 
+/* Side-to-side page turn for "back"/give-up navigation. Where nextRound's flip lifts
+   the answered page up from its top edge (forward through the notebook), this one turns
+   the current page sideways toward the spine — like flipping a page back — to reveal the
+   destination screen already in place beneath it. Mirrors the nextRound clone technique:
+   clone the leaving screen as a frozen sheet, switch to the target underneath, then let
+   the sheet rotateY away and remove it. Honours the same reduced-motion / instant-speed /
+   page-turn-off opt-outs (in which case it just switches with no animation). */
+function flipBackToScreen(name) {
+  const current = Object.values(screens).find((s) => s.classList.contains("active"));
+  if (!current || current === screens[name] || motionReduced() || animInstant() || !settings.pageTurn) {
+    showScreen(name);
+    return;
+  }
+  const flip = current.cloneNode(true);
+  flip.removeAttribute("id");
+  flip.querySelectorAll("[id]").forEach((e) => e.removeAttribute("id"));
+  flip.classList.remove("screen", "active");
+  flip.classList.add("page-flip-sheet", "page-flip-sheet--side");
+  flip.style.top = current.offsetTop + "px";
+  flip.style.left = current.offsetLeft + "px";
+  flip.style.width = current.offsetWidth + "px";
+  const shade = document.createElement("div");
+  shade.className = "flip-shade flip-shade--side";
+  flip.appendChild(shade);
+  current.parentNode.appendChild(flip);
+
+  showScreen(name);            // the destination screen is now active beneath the sheet
+
+  let finished = false;
+  const finish = () => { if (finished) return; finished = true; flip.remove(); };
+  flip.addEventListener("animationend", (e) => { if (e.target === flip) finish(); });
+  setTimeout(finish, 500 * animScale() || 250);
+}
+
 /* ---------- Random sticky-tape placement for the nav keepsake cards ----------
    Each card gets 2–4 strips (mostly 3), each pinned to a distinct randomly chosen corner
    or edge with a little rotation jitter, so the cards look genuinely taped down rather
@@ -4915,7 +4949,7 @@ function quitGame() {
   // calls resetRunState, so the abandoned score/round clear there.
   applyEra("gold");
   renderStartPickers();
-  showScreen("start");
+  flipBackToScreen("start");
   $("startContent").style.display = "";
 }
 
@@ -5859,33 +5893,33 @@ async function init() {
   $("resultsStatsBtn").addEventListener("click", () => { statsBackTarget = "results"; renderStats(score); showScreen("stats"); });
   $("statsBackBtn").addEventListener("click", () => {
     const prev = statsBackTarget;
-    showScreen(prev);
+    flipBackToScreen(prev);
     if (prev === "start") { $("startContent").style.display = ""; }
   });
   $("recordsBtn").addEventListener("click", () => openRecords("start"));
   $("viewRecordsBtn").addEventListener("click", () => openRecords("results"));
   $("recordsBackBtn").addEventListener("click", () => {
     const prev = recordsBackTarget;
-    showScreen(prev);
+    flipBackToScreen(prev);
     if (prev === "start") { $("startContent").style.display = ""; }
   });
   $("achievementsBtn").addEventListener("click", () => openAchievements("start"));
   $("viewAchievementsBtn").addEventListener("click", () => openAchievements("results"));
   $("achievementsBackBtn").addEventListener("click", () => {
     const prev = achievementsBackTarget;
-    showScreen(prev);
+    flipBackToScreen(prev);
     if (prev === "start") { $("startContent").style.display = ""; }
   });
   $("songbookBackBtn").addEventListener("click", () => {
     const prev = songbookBackTarget;
-    showScreen(prev);
+    flipBackToScreen(prev);
     if (prev === "start") { $("startContent").style.display = ""; }
   });
   $("challengesBtn").addEventListener("click", () => openChallenges("start"));
   $("viewChallengesBtn").addEventListener("click", () => openChallenges("results"));
   $("challengesBackBtn").addEventListener("click", () => {
     const prev = challengesBackTarget;
-    showScreen(prev);
+    flipBackToScreen(prev);
     if (prev === "start") { $("startContent").style.display = ""; }
   });
   $("againBtn").addEventListener("click", () => {
