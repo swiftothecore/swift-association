@@ -2206,6 +2206,41 @@
     .nav-card-kicker { font-size: 7.5px; letter-spacing: 1px; }
   }
 
+  /* Album-focus corner badge — a colour-wheel of the 12 albums (gold star centre),
+     pinned to the top-right corner of the start page, bleeding slightly over the edge
+     like a sticker. Replaces the old "album focus" keepsake card in the .see-also row.
+     Keeps id="albumFocusBtn" so the existing click handler (→ openAlbumFocus) is unchanged. */
+  .album-focus-badge {
+    position: absolute; top: -16px; right: -16px; z-index: 6;
+    width: 70px; height: 70px; padding: 0; margin: 0; line-height: 0;
+    background: none; border: none; cursor: pointer; border-radius: 50%;
+    filter: drop-shadow(0 2px 3px rgba(43, 39, 34, 0.28));
+    transition: transform 0.18s ease, filter 0.18s ease;
+  }
+  .album-focus-badge svg { display: block; }
+  /* caption hidden by default — surfaces as a small ink label on hover/focus */
+  .album-focus-badge-cap {
+    position: absolute; top: 100%; right: 0; margin-top: 3px;
+    font-family: var(--type); font-size: 8.5px; letter-spacing: 1.2px;
+    text-transform: uppercase; color: var(--ink-soft); white-space: nowrap;
+    opacity: 0; transform: translateY(-3px); pointer-events: none;
+    transition: opacity 0.18s ease, transform 0.18s ease;
+  }
+  .album-focus-badge:hover, .album-focus-badge:focus-visible {
+    transform: rotate(-7deg) scale(1.07);
+    filter: drop-shadow(0 4px 7px rgba(43, 39, 34, 0.34));
+    outline: none;
+  }
+  .album-focus-badge:hover .album-focus-badge-cap,
+  .album-focus-badge:focus-visible .album-focus-badge-cap { opacity: 1; transform: translateY(0); }
+  .album-focus-badge:active { transform: scale(0.97); }
+  [data-reduce-motion="true"] .album-focus-badge { transition: none; }
+  [data-reduce-motion="true"] .album-focus-badge:hover,
+  [data-reduce-motion="true"] .album-focus-badge:focus-visible { transform: none; }
+  @media (max-width: 480px) {
+    .album-focus-badge { width: 54px; height: 54px; top: -10px; right: -10px; }
+  }
+
   /* Daily-streak status line under the streak numbers on the Stats page. */
   .daily-streak-note { font-family: var(--type); font-size: 11px; letter-spacing: 0.5px; color: var(--ink-soft); text-align: center; margin-top: 8px; }
 

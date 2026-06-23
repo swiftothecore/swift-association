@@ -178,6 +178,26 @@
   <section id="screen-start" class="screen card">
     <div id="loading" class="loading">opening the notebook…</div>
     <div id="startContent" style="display:none;">
+      <button id="albumFocusBtn" class="album-focus-badge" type="button" title="Album focus — beat all 12" aria-label="Album focus — beat all 12">
+        <svg viewBox="0 0 100 100" width="70" height="70" aria-hidden="true">
+          <path d="M50 50 L90 50 A40 40 0 0 1 84.641 70 Z" fill="#6f8f5e" stroke="#fbf6e9" stroke-width="0.9"/>
+          <path d="M50 50 L84.641 70 A40 40 0 0 1 70 84.641 Z" fill="#d4b06a" stroke="#fbf6e9" stroke-width="0.9"/>
+          <path d="M50 50 L70 84.641 A40 40 0 0 1 50 90 Z" fill="#7e6aa6" stroke="#fbf6e9" stroke-width="0.9"/>
+          <path d="M50 50 L50 90 A40 40 0 0 1 30 84.641 Z" fill="#b23a3a" stroke="#fbf6e9" stroke-width="0.9"/>
+          <path d="M50 50 L30 84.641 A40 40 0 0 1 15.359 70 Z" fill="#6f93b5" stroke="#fbf6e9" stroke-width="0.9"/>
+          <path d="M50 50 L15.359 70 A40 40 0 0 1 10 50 Z" fill="#3a3a3f" stroke="#fbf6e9" stroke-width="0.9"/>
+          <path d="M50 50 L10 50 A40 40 0 0 1 15.359 30 Z" fill="#e09ab8" stroke="#fbf6e9" stroke-width="0.9"/>
+          <path d="M50 50 L15.359 30 A40 40 0 0 1 30 15.359 Z" fill="#8d99a6" stroke="#fbf6e9" stroke-width="0.9"/>
+          <path d="M50 50 L30 15.359 A40 40 0 0 1 50 10 Z" fill="#9a7b55" stroke="#fbf6e9" stroke-width="0.9"/>
+          <path d="M50 50 L50 10 A40 40 0 0 1 70 15.359 Z" fill="#2b3a5e" stroke="#fbf6e9" stroke-width="0.9"/>
+          <path d="M50 50 L70 15.359 A40 40 0 0 1 84.641 30 Z" fill="#b56a8a" stroke="#fbf6e9" stroke-width="0.9"/>
+          <path d="M50 50 L84.641 30 A40 40 0 0 1 90 50 Z" fill="#5aa0a0" stroke="#fbf6e9" stroke-width="0.9"/>
+          <circle cx="50" cy="50" r="40" fill="none" stroke="#2b2b2b" stroke-width="1.6"/>
+          <circle cx="50" cy="50" r="23" fill="#fbf6e9" stroke="#2b2b2b" stroke-width="1.6"/>
+          <path transform="translate(50,50) scale(1.45)" d="M0,-10 L2.94,-4.05 L9.51,-3.09 L4.76,1.55 L5.88,8.09 L0,5 L-5.88,8.09 L-4.76,1.55 L-9.51,-3.09 L-2.94,-4.05 Z" fill="#e0a32f" stroke="#b9852a" stroke-width="0.8"/>
+        </svg>
+        <span class="album-focus-badge-cap">album focus</span>
+      </button>
       <div class="mode-picker">
         <p class="mode-picker-label">mode</p>
         <div id="typeTabs" class="mode-tabs"></div>
@@ -262,18 +282,6 @@
           </span>
           <span class="nav-card-title">challenges</span>
           <span class="nav-card-kicker">unlock &amp; defeat</span>
-        </button>
-        <button id="albumFocusBtn" class="nav-card" data-era-tint="red">
-          <span class="nav-card-seat">
-            <svg class="nav-ic" width="50" height="50" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <circle cx="24" cy="24" r="15" fill="rgba(178,58,58,.10)" stroke-width="1.6"/>
-              <circle cx="24" cy="24" r="9" fill="none" stroke-width="1.3"/>
-              <circle cx="24" cy="24" r="3" fill="rgba(178,58,58,.5)" stroke-width="1.2"/>
-              <circle cx="24" cy="24" r="1" fill="currentColor"/>
-            </svg>
-          </span>
-          <span class="nav-card-title">album focus</span>
-          <span class="nav-card-kicker">beat all 12</span>
         </button>
       </div>
       <p class="hint">jot the song that holds the word, then press Enter</p>
