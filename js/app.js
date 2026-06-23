@@ -168,7 +168,9 @@ const screens = {
   songbook: $("screen-songbook"),
 };
 function showScreen(name) {
-  Object.values(screens).forEach((s) => s.classList.remove("active"));
+  // Clear any one-shot inline enter-fade suppression a flip-in left behind (see
+  // flipInToScreen), so every screen animates normally on its next genuine show.
+  Object.values(screens).forEach((s) => { s.classList.remove("active"); s.style.animation = ""; });
   screens[name].classList.add("active");
   // Drop any lingering perfect-game shimmer; celebratePerfect re-adds it after
   // showScreen("results") when the run was actually flawless.
@@ -234,9 +236,25 @@ function flipAwayToScreen(name) {
 function flipInToScreen(name) {
   const current = Object.values(screens).find((s) => s.classList.contains("active"));
   if (flipDisabled(name, current)) { showScreen(name); return; }
+  const dest = screens[name];
   // Clone the (still-inactive) destination, overlaid on the leaving screen, and let it swing in.
-  const flip = makeFlipSheet(screens[name], current, "page-flip-sheet--in", "flip-shade--in");
-  scheduleFlipRemoval(flip, () => showScreen(name));  // reveal the real destination once it lands
+  const flip = makeFlipSheet(dest, current, "page-flip-sheet--in", "flip-shade--in");
+  // Pages have variable height, so the destination is often SHORTER than the page we're
+  // leaving. Keep that page solid while the incoming sheet sweeps across it, then fade its
+  // lower (uncovered) half out in the final moments — so it dissolves into the desk instead
+  // of snapping out of existence the instant we swap to the shorter destination.
+  const s = animScale() || 1;
+  current.style.transition = `opacity ${(0.16 * s).toFixed(3)}s linear ${(0.32 * s).toFixed(3)}s`;
+  current.style.opacity = "0";
+  scheduleFlipRemoval(flip, () => {
+    current.style.transition = "";
+    current.style.opacity = "";
+    showScreen(name);
+    // The sheet already presented the destination flat; kill the enter-fade it just started so
+    // the real screen doesn't re-fade and nudge up 8px (a blink) as it takes over. This stays
+    // inline until the next showScreen, which wipes it — so the fade returns on later visits.
+    dest.style.animation = "none";
+  });
 }
 
 /* ---------- Random sticky-tape placement for the nav keepsake cards ----------
