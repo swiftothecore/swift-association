@@ -742,6 +742,11 @@
     font-family: var(--type); font-size: 12.5px; line-height: 1.5;
     color: var(--ink-soft); max-width: 340px; margin: 14px auto 0;
   }
+  /* The "to beat it" win condition under a challenge's round-1 intro. */
+  .chall-curtain-win {
+    display: inline-block; margin-top: 9px; font-style: italic;
+    color: var(--ink); opacity: 0.82;
+  }
   .chall-curtain-cue {
     font-family: var(--type); font-size: 12px; color: var(--ink-soft);
     margin-top: 16px; animation: curtain-cue 1.4s ease-in-out 0.6s infinite;

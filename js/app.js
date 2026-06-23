@@ -3743,12 +3743,15 @@ function curtainCardHTML(o) {
 }
 
 // The curtain content for THIS round, or null if the round wants no curtain:
-//  • Wildcard — every round, naming the active rule.
-//  • One Of A Kind — round 1 only, revealing the target song to hunt for.
-//  • Choose Your Path — round 1 only, explaining the perk-fork run.
+//  • EVERY challenge — round 1 only, a "here's what you're doing" intro (challengeIntroHTML).
+//  • Wildcard — every later round, naming the active rule.
+//  • On Tour! — every later round, announcing tonight's album.
 function roundCurtainHTML() {
   if (gameType !== "challenge" || !currentChallenge) return null;
   const c = currentChallenge;
+  // Round 1 of any challenge opens with an explanatory intro (button-gated — see
+  // beginRoundClock). The per-round curtains below take over from round 2 onward.
+  if (round === 1) return challengeIntroHTML(c);
   if (c.rule === "wildcard" && roundWildcard) {
     return curtainCardHTML({ kicker: `page ${round} · wildcard`, tag: "the rule",
       headline: roundWildcard.label });
@@ -3761,17 +3764,26 @@ function roundCurtainHTML() {
       tag: "tonight's album", headline: album || "any album", headlineColor: col,
       sub: album ? `name a song from <b style="color:${col}">${escapeHtml(album)}</b>` : "" });
   }
-  if (round === 1 && c.rule === "newsong" && challengeTargetSong) {
+  return null;
+}
+
+// The round-1 intro curtain for a challenge: names it, restates the rule + win condition,
+// and waits for a "let's go" tap before the first word and the clock. A couple of rules
+// carry extra setup that has to be shown up front (the song to smuggle in / the perk forks),
+// so they get bespoke copy; everything else uses the registry's `desc` + `win`.
+function challengeIntroHTML(c) {
+  // One Of A Kind — reveal the specific song to slip in on a fitting page.
+  if (c.rule === "newsong" && challengeTargetSong) {
     const col = albumColor(challengeTargetSong.album) || "var(--ink-soft)";
-    const lives = NEW_SONG_LIVES;
     return curtainCardHTML({ kicker: "one of a kind", tag: "find this song",
       headline: challengeTargetSong.title, headlineColor: col,
       sub: challengeTargetSong.album
         ? `from <b style="color:${col}">${escapeHtml(challengeTargetSong.album)}</b> — it's hiding somewhere in the next 13 pages`
         : `it's hiding somewhere in the next 13 pages`,
-      cue: `name it on the right page — you get ${lives} guesses`, button: "start the hunt" });
+      cue: `name it on the right page — you get ${NEW_SONG_LIVES} guesses`, button: "start the hunt" });
   }
-  if (round === 1 && c.rule === "path") {
+  // Choose Your Path — explain the perk forks.
+  if (c.rule === "path") {
     const forks = (c.forks || []).map((f) => `<b>${f}</b>`).join(" & ");
     return curtainCardHTML({ kicker: "choose your path", tag: "how it works",
       headline: "forge your own run",
@@ -3779,7 +3791,10 @@ function roundCurtainHTML() {
         (forks ? ` — and at pages ${forks} you'll pick a perk for the rest of the way` : ""),
       cue: "choose wisely", button: "let's go" });
   }
-  return null;
+  // Every other challenge — name it, restate the rule and the win condition.
+  return curtainCardHTML({ kicker: "challenge", tag: "the rule", headline: c.name,
+    sub: `${escapeHtml(c.desc)}<span class="chall-curtain-win">${escapeHtml(c.win)}</span>`,
+    cue: "ready when you are", button: "let's go" });
 }
 
 let curtainTimers = [];
@@ -3824,9 +3839,9 @@ function beginRoundClock() {
   };
   const ov = mountCurtain(html);   // usually already mounted (pre-flip, Wildcard)
   const reduced = motionReduced();
-  // Once-per-run intros (the target song / the path rules) have more to read than the
-  // per-round Wildcard rule, so they carry their own "next" button and wait for it.
-  const isIntro = round === 1 && (currentChallenge.rule === "newsong" || currentChallenge.rule === "path");
+  // Round-1 intros (every challenge) carry their own "let's go"/"next" button and wait for
+  // it — unlike the per-round Wildcard/On Tour curtains (round 2+), which auto-lift.
+  const isIntro = round === 1 && !!currentChallenge;
   let done = false;
   const finish = () => { if (done) return; done = true; clearCurtain(); onDone(); };
   const lift = () => {
