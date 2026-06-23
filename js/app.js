@@ -186,38 +186,57 @@ function showScreen(name) {
   if (name === "start" || name === "results") scatterNavTape(name);
 }
 
-/* Side-to-side page turn for "back"/give-up navigation. Where nextRound's flip lifts
-   the answered page up from its top edge (forward through the notebook), this one turns
-   the current page sideways toward the spine — like flipping a page back — to reveal the
-   destination screen already in place beneath it. Mirrors the nextRound clone technique:
-   clone the leaving screen as a frozen sheet, switch to the target underneath, then let
-   the sheet rotateY away and remove it. Honours the same reduced-motion / instant-speed /
-   page-turn-off opt-outs (in which case it just switches with no animation). */
-function flipBackToScreen(name) {
-  const current = Object.values(screens).find((s) => s.classList.contains("active"));
-  if (!current || current === screens[name] || motionReduced() || animInstant() || !settings.pageTurn) {
-    showScreen(name);
-    return;
-  }
-  const flip = current.cloneNode(true);
+/* Side-to-side page turns for screen navigation. Where nextRound's flip lifts the answered
+   page up from its top edge (forward through the notebook), these turn pages sideways around
+   the left spine. Two complementary motions sell "going in" vs "coming back":
+     • flipAwayToScreen — FORWARD into a sub-page (records/stats/charms/challenges): the page
+       you're leaving turns away to the left, revealing the destination already in place beneath.
+     • flipInToScreen — BACK (and give-up): the page you're returning to turns IN from the left,
+       landing on top of the screen you're leaving, which then becomes the real active screen.
+   Both clone a screen as a frozen sheet (the nextRound technique) and honour the same
+   reduced-motion / instant-speed / page-turn-off opt-outs (else they just switch instantly).
+   A flip sheet is the clone of `src`, positioned over `at` (a currently-visible screen, so its
+   offsets are real even when `src` is display:none). */
+function makeFlipSheet(src, at, sideClass, shadeClass) {
+  const flip = src.cloneNode(true);
   flip.removeAttribute("id");
   flip.querySelectorAll("[id]").forEach((e) => e.removeAttribute("id"));
   flip.classList.remove("screen", "active");
-  flip.classList.add("page-flip-sheet", "page-flip-sheet--side");
-  flip.style.top = current.offsetTop + "px";
-  flip.style.left = current.offsetLeft + "px";
-  flip.style.width = current.offsetWidth + "px";
+  flip.classList.add("page-flip-sheet", sideClass);
+  flip.style.top = at.offsetTop + "px";
+  flip.style.left = at.offsetLeft + "px";
+  flip.style.width = at.offsetWidth + "px";
   const shade = document.createElement("div");
-  shade.className = "flip-shade flip-shade--side";
+  shade.className = "flip-shade " + shadeClass;
   flip.appendChild(shade);
-  current.parentNode.appendChild(flip);
-
-  showScreen(name);            // the destination screen is now active beneath the sheet
-
+  at.parentNode.appendChild(flip);
+  return flip;
+}
+function scheduleFlipRemoval(flip, onEnd) {
   let finished = false;
-  const finish = () => { if (finished) return; finished = true; flip.remove(); };
+  const finish = () => { if (finished) return; finished = true; flip.remove(); if (onEnd) onEnd(); };
   flip.addEventListener("animationend", (e) => { if (e.target === flip) finish(); });
   setTimeout(finish, 500 * animScale() || 250);
+}
+function flipDisabled(name, current) {
+  return !current || current === screens[name] || motionReduced() || animInstant() || !settings.pageTurn;
+}
+// FORWARD: the leaving page turns away to reveal the destination beneath it.
+function flipAwayToScreen(name) {
+  const current = Object.values(screens).find((s) => s.classList.contains("active"));
+  if (flipDisabled(name, current)) { showScreen(name); return; }
+  const flip = makeFlipSheet(current, current, "page-flip-sheet--side", "flip-shade--side");
+  showScreen(name);                                   // destination now active beneath the sheet
+  scheduleFlipRemoval(flip);
+}
+// BACK: the destination page turns in on top of the page you're leaving. The destination must
+// already be rendered (and any display fix applied) by the caller before this runs.
+function flipInToScreen(name) {
+  const current = Object.values(screens).find((s) => s.classList.contains("active"));
+  if (flipDisabled(name, current)) { showScreen(name); return; }
+  // Clone the (still-inactive) destination, overlaid on the leaving screen, and let it swing in.
+  const flip = makeFlipSheet(screens[name], current, "page-flip-sheet--in", "flip-shade--in");
+  scheduleFlipRemoval(flip, () => showScreen(name));  // reveal the real destination once it lands
 }
 
 /* ---------- Random sticky-tape placement for the nav keepsake cards ----------
@@ -1418,7 +1437,7 @@ let songbookBackTarget = "stats";  // where the Songbook's ← back returns to
 function openSongbook(from) {
   songbookBackTarget = from;
   renderSongbook();
-  showScreen("songbook");
+  flipAwayToScreen("songbook");
 }
 // A full per-album checklist of the catalogue: which songs you've named (gold star) and
 // which are still missing (hollow). Reads the lifetime tally, so it spans every mode.
@@ -1995,7 +2014,7 @@ function renderRecordsPage() {
 function openRecords(from) {
   recordsBackTarget = from;
   renderRecordsPage();
-  showScreen("records");
+  flipAwayToScreen("records");
   fitHeatGrid();                                   // now visible (display:block) → size to the real width
   requestAnimationFrame(() => fitHeatGrid());      // and again next frame, in case layout wasn't flushed
 }
@@ -2003,7 +2022,7 @@ let achievementsBackTarget = "start";  // where the Charm Collection's ← back 
 function openAchievements(from) {
   achievementsBackTarget = from;
   renderAchievementsPage();
-  showScreen("achievements");
+  flipAwayToScreen("achievements");
 }
 
 /* ---------- Challenges page ---------- */
@@ -2019,7 +2038,7 @@ const CHALL_STAR = `<svg viewBox="0 0 24 24" class="chall-star-svg" aria-hidden=
 function openChallenges(from) {
   challengesBackTarget = from;
   renderChallengesPage();
-  showScreen("challenges");
+  flipAwayToScreen("challenges");
 }
 
 function renderChallengesPage() {
@@ -4949,8 +4968,8 @@ function quitGame() {
   // calls resetRunState, so the abandoned score/round clear there.
   applyEra("gold");
   renderStartPickers();
-  flipBackToScreen("start");
   $("startContent").style.display = "";
+  flipInToScreen("start");
 }
 
 /* ---------- Easter eggs (Phase 8) ---------- */
@@ -5889,38 +5908,38 @@ async function init() {
     else startGame();
   });
   $("dailyBtn").addEventListener("click", startDaily);
-  $("statsBtn").addEventListener("click", () => { statsBackTarget = "start"; renderStats(null); showScreen("stats"); });
-  $("resultsStatsBtn").addEventListener("click", () => { statsBackTarget = "results"; renderStats(score); showScreen("stats"); });
+  $("statsBtn").addEventListener("click", () => { statsBackTarget = "start"; renderStats(null); flipAwayToScreen("stats"); });
+  $("resultsStatsBtn").addEventListener("click", () => { statsBackTarget = "results"; renderStats(score); flipAwayToScreen("stats"); });
   $("statsBackBtn").addEventListener("click", () => {
     const prev = statsBackTarget;
-    flipBackToScreen(prev);
     if (prev === "start") { $("startContent").style.display = ""; }
+    flipInToScreen(prev);
   });
   $("recordsBtn").addEventListener("click", () => openRecords("start"));
   $("viewRecordsBtn").addEventListener("click", () => openRecords("results"));
   $("recordsBackBtn").addEventListener("click", () => {
     const prev = recordsBackTarget;
-    flipBackToScreen(prev);
     if (prev === "start") { $("startContent").style.display = ""; }
+    flipInToScreen(prev);
   });
   $("achievementsBtn").addEventListener("click", () => openAchievements("start"));
   $("viewAchievementsBtn").addEventListener("click", () => openAchievements("results"));
   $("achievementsBackBtn").addEventListener("click", () => {
     const prev = achievementsBackTarget;
-    flipBackToScreen(prev);
     if (prev === "start") { $("startContent").style.display = ""; }
+    flipInToScreen(prev);
   });
   $("songbookBackBtn").addEventListener("click", () => {
     const prev = songbookBackTarget;
-    flipBackToScreen(prev);
     if (prev === "start") { $("startContent").style.display = ""; }
+    flipInToScreen(prev);
   });
   $("challengesBtn").addEventListener("click", () => openChallenges("start"));
   $("viewChallengesBtn").addEventListener("click", () => openChallenges("results"));
   $("challengesBackBtn").addEventListener("click", () => {
     const prev = challengesBackTarget;
-    flipBackToScreen(prev);
     if (prev === "start") { $("startContent").style.display = ""; }
+    flipInToScreen(prev);
   });
   $("againBtn").addEventListener("click", () => {
     applyEra("gold");

@@ -212,19 +212,30 @@
   }
   @keyframes pageFlipShade { from { opacity: 0; } to { opacity: 1; } }
 
-  /* side-to-side page turn — used for back/give-up navigation. The leaving page turns
-     sideways toward the left spine (rotateY) to reveal the destination beneath it. */
-  .page-flip-sheet.page-flip-sheet--side {
+  /* side-to-side page turns for screen navigation, both pivoting on the left spine.
+     --side (FORWARD into a sub-page): the leaving page turns away to the left, revealing
+     the destination beneath. --in (BACK / give-up): the destination page turns in from the
+     left, landing on top of the page being left behind. */
+  .page-flip-sheet.page-flip-sheet--side,
+  .page-flip-sheet.page-flip-sheet--in {
     transform-origin: center left;
-    animation-name: pageFlipSide;
   }
-  .flip-shade.flip-shade--side {
+  .page-flip-sheet.page-flip-sheet--side { animation-name: pageFlipSide; }
+  .page-flip-sheet.page-flip-sheet--in   { animation-name: pageFlipIn; }
+  .flip-shade.flip-shade--side,
+  .flip-shade.flip-shade--in {
     background: linear-gradient(to left, rgba(38,24,10,0.42), rgba(38,24,10,0.06) 48%, rgba(255,255,255,0.10) 100%);
   }
+  .flip-shade.flip-shade--in { animation-name: pageFlipShadeOut; }
   @keyframes pageFlipSide {
     from { transform: rotateY(0deg); }
     to   { transform: rotateY(-104deg); }
   }
+  @keyframes pageFlipIn {
+    from { transform: rotateY(-104deg); }
+    to   { transform: rotateY(0deg); }
+  }
+  @keyframes pageFlipShadeOut { from { opacity: 1; } to { opacity: 0; } }
 
   /* ---------- Buttons (hand-drawn / taped) ---------- */
   button {
