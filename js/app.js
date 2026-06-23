@@ -58,6 +58,7 @@ let allSongs = [];
 let titleIndex = new Map();   // normalizeTitle(title|alias) -> song, built in loadData
 let spacelessIndex = new Map(); // titleIndex key with spaces removed -> song (space-error fallback)
 let playableWords = [];
+let titleWordList = [];  // playable words that appear in at least one song title (Title...? challenge pool)
 let score = 0;
 let round = 0;
 let usedWords = [];
@@ -81,6 +82,7 @@ let vanishTimer = null;         // Vanishing Word: timeout that hides the prompt
 let revolveId = null;           // Revolving Door: interval that swaps the word every rotateMs
 let revolveIndex = 0;           // Revolving Door: how many times the word has revolved this round
 let lastAlphaLetter = "";       // From A to Z: first letter of the last accepted answer
+let roundSecondsOverride = null; // Shrinking Timer: per-round clock override (null = use the mode's seconds)
 let challengeTargetSong = null; // One Of A Kind: the never-before-answered song to surface
 let challengeForcedRound = 0;   // One Of A Kind: the round that forces challengeForcedWordVal
 let challengeForcedWordVal = "";// One Of A Kind: the prompt word that surfaces the target song
@@ -2174,6 +2176,9 @@ async function loadData() {
   // Lenient playability (Easy/Medium/Hard use derived forms).
   playableWords = words.filter((w) => songsContainingWord(w, false).length >= 1);
   if (!playableWords.length) throw new Error("No playable words found in data");
+  // Title...? challenge pool: words that appear in at least one song title (so every
+  // round can be won by naming a title that holds the word).
+  titleWordList = playableWords.filter((w) => titleSongsForWord(w, false).length >= 1);
   buildWordBuckets();
 }
 
@@ -2478,6 +2483,7 @@ function resetRunState() {
   currentChallenge = null;
   challengeRunActive = false;
   lastAlphaLetter = "";
+  roundSecondsOverride = null;
   challengeTargetSong = null;
   challengeForcedRound = 0;
   challengeForcedWordVal = "";
@@ -2680,9 +2686,12 @@ function startChallenge(id) {
   gameType = "challenge";
   currentMode = MODES[c.mode] || MODES.medium;   // fixed by the challenge, not persisted via DIFF_KEY
   // Some challenges override a single lever of the borrowed mode (Revolving Door wants a
-  // 20s clock). Clone so the shared MODES object is never mutated; id stays the same so
-  // id-based achievement/label checks are unaffected.
-  if (c.seconds != null) currentMode = { ...currentMode, seconds: c.seconds };
+  // 20s clock; Shrinking Timer hides suggestions). Clone so the shared MODES object is
+  // never mutated; id stays the same so id-based achievement/label checks are unaffected.
+  const lever = {};
+  if (c.seconds != null) lever.seconds = c.seconds;
+  if (c.dropdown != null) lever.dropdown = c.dropdown;
+  if (Object.keys(lever).length) currentMode = { ...currentMode, ...lever };
   resetRunState();
   currentChallenge = c;                          // set AFTER resetRunState (which nulls it)
   challengeRunActive = true;                     // start the achievement sandbox
@@ -2742,7 +2751,38 @@ function applyChallengeRound(wrap) {
     renderNewSongBanner();
   } else if (currentChallenge.rule === "path") {
     renderPerkReveals();
+  } else if (currentChallenge.rule === "accelerate") {
+    roundSecondsOverride = accelSeconds(round);   // Shrinking Timer: shrink this page's clock
+    renderAccelBanner();
+  } else if (currentChallenge.rule === "titleHas" || currentChallenge.rule === "shorttitle") {
+    renderTitleRuleBanner();
   }
+}
+
+// Shrinking Timer: this round's clock, shrinking linearly from ACCEL_FROM (round 1)
+// down to ACCEL_TO (the final round). Per-round, applied via roundSecondsOverride and
+// read by baseSeconds(); the shared MODES object is never touched.
+const ACCEL_FROM = 16, ACCEL_TO = 5;
+function accelSeconds(r) {
+  const span = TOTAL_ROUNDS - 1;
+  const t = span > 0 ? Math.min(1, Math.max(0, (r - 1) / span)) : 1;
+  return Math.max(ACCEL_TO, Math.round(ACCEL_FROM - t * (ACCEL_FROM - ACCEL_TO)));
+}
+function renderAccelBanner() {
+  if (gameType !== "challenge" || !currentChallenge || currentChallenge.rule !== "accelerate") return;
+  const el = ensureChallBanner();
+  el.innerHTML =
+    `<span class="chall-prog-name">shrinking clock</span>` +
+    `<span class="chall-prog-count">${accelSeconds(round)}s this page</span>`;
+}
+// Title...? / Short n' Sweet: a fixed reminder of the standing title rule.
+function renderTitleRuleBanner() {
+  if (gameType !== "challenge" || !currentChallenge) return;
+  const el = ensureChallBanner();
+  const msg = currentChallenge.rule === "titleHas"
+    ? "the word must be in the title"
+    : "one- or two-word titles only";
+  el.innerHTML = `<span class="chall-prog-name">${msg}</span>`;
 }
 
 // The shared challenge-banner element above the word (reused across rules; cleaned
@@ -2995,7 +3035,9 @@ function challengeWinCheck(c) {
     });
     return best >= 5;
   }
-  // vanishing / alphabetical (score-target rules): meet the target.
+  // Lyric Lover: recall a target number of word-perfect-or-better lines this run.
+  if (c.rule === "verse") return gameVersePerfect >= (c.target || 4);
+  // vanishing / alphabetical / accelerate / titleHas / shorttitle (score-target rules).
   return score >= (c.target || TOTAL_ROUNDS);
 }
 
@@ -3061,9 +3103,13 @@ function endChallenge() {
       ? `<div class="chall-result-status">out of guesses — the song got away</div>`
       : `<div class="chall-result-status">not yet — ${escapeHtml(c.win)}</div>`;
   const tokenLine = firstTime ? `<div class="chall-result-token">🎟 +1 token earned</div>` : "";
+  // Lyric Lover is judged on word-perfect recall, not the 0–13 score — surface that count.
+  const verseLine = c.rule === "verse"
+    ? `<div class="chall-result-meta">${gameVersePerfect} line${gameVersePerfect === 1 ? "" : "s"} recalled word-for-word</div>`
+    : "";
   const meta = `<div class="chall-result-meta">${rec.attempts} attempt${rec.attempts === 1 ? "" : "s"}` +
     `${rec.best ? ` · best ${rec.best}/${TOTAL_ROUNDS}` : ""}</div>`;
-  $("resultPodium").innerHTML = status + tokenLine + meta +
+  $("resultPodium").innerHTML = status + tokenLine + verseLine + meta +
     `<button id="backToChallenges" class="btn-ghost">back to challenges</button>`;
   $("backToChallenges").addEventListener("click", () => openChallenges("start"));
 
@@ -3145,7 +3191,11 @@ function renderShareButton(dateStr, hidden) {
 }
 
 function pickWord() {
-  const bucket = wordBuckets[effectivePool()] || playableWords;
+  // Title...? draws only from words that appear in some song title, so each round is winnable.
+  const bucket = (gameType === "challenge" && currentChallenge && currentChallenge.rule === "titleHas"
+    && titleWordList.length)
+    ? titleWordList
+    : (wordBuckets[effectivePool()] || playableWords);
   // No-repeat within a game: exclude every word already used this run. Buckets
   // are guaranteed ≥ TOTAL_ROUNDS words (see buildWordBuckets' MIN), so the pool
   // only empties on a degenerate list — fall back to the full bucket if so.
@@ -3463,6 +3513,9 @@ function advanceRound() {
   justEarnedIndex = -1;
   currentWord = challengeForcedWord(round) || pickWord();   // One Of A Kind forces its target word
   currentSongs = validSongs(currentWord, effectiveStrict(), effectiveNoTitle());
+  // Title...?: flip the rule — the only valid answers are songs whose TITLE holds the word.
+  if (gameType === "challenge" && currentChallenge && currentChallenge.rule === "titleHas")
+    currentSongs = titleSongsForWord(currentWord, effectiveStrict());
   roundHintSong = pickHintSong();
   applyEra(pickEra());
 
@@ -3506,6 +3559,13 @@ function advanceRound() {
   // only starts once the flip finishes, so no time is lost during the animation.
 }
 
+// The base clock for the current round: the active mode's seconds, unless a challenge
+// has set a per-round override (Shrinking Timer). Perk bonus seconds are added on top
+// by the callers (startTimer/showTimerFull).
+function baseSeconds() {
+  return roundSecondsOverride != null ? roundSecondsOverride : currentMode.seconds;
+}
+
 // Paint the round's clock at full WITHOUT starting it — a paused, full-bar "10.0"
 // look. Used while a challenge curtain holds the round, so the previous round's
 // leftover time never shows through (or beneath) the lifting curtain; the live
@@ -3514,7 +3574,8 @@ function showTimerFull() {
   const fill = $("timerFill");
   const label = $("timerLabel");
   const wrap = document.querySelector(".timer-wrap");
-  const total = currentMode.seconds > 0 ? currentMode.seconds + (extraSecondsPerRound || 0) : currentMode.seconds;
+  const base = baseSeconds();
+  const total = base > 0 ? base + (extraSecondsPerRound || 0) : base;
   if (!(total > 0)) { if (wrap) wrap.style.display = "none"; return; }
   if (wrap) wrap.style.display = "";
   fill.style.width = "100%";
@@ -3653,8 +3714,10 @@ function startTimer(resume) {
   const fill = $("timerFill");
   const label = $("timerLabel");
   // Choose Your Path's "Slow Down Time" perk adds seconds, but only where there's
-  // already a clock (Relaxed stays clock-less).
-  const total = currentMode.seconds > 0 ? currentMode.seconds + (extraSecondsPerRound || 0) : currentMode.seconds;
+  // already a clock (Relaxed stays clock-less). baseSeconds() applies Shrinking Timer's
+  // per-round override.
+  const base = baseSeconds();
+  const total = base > 0 ? base + (extraSecondsPerRound || 0) : base;
   const wrap = document.querySelector(".timer-wrap");
   // Relaxed mode (seconds <= 0): no clock at all — hide the bar and never time out.
   if (!(total > 0)) {
@@ -3757,7 +3820,16 @@ function roundAcceptsSong(song) {
     const L = firstAlphaLetter(song.title);
     return !L || L >= lastAlphaLetter;
   }
+  if (currentChallenge.rule === "titleHas")
+    return wordRegex(currentWord, effectiveStrict()).test(song.title);
+  if (currentChallenge.rule === "shorttitle")
+    return titleWordCount(song.title) <= 2;
   return true;
+}
+
+// The number of whitespace-separated words in a title (Short n' Sweet's measure).
+function titleWordCount(title) {
+  return (title || "").trim().split(/\s+/).filter(Boolean).length;
 }
 
 /* ---------- Dropdown (searches whole catalog) ---------- */
@@ -3861,6 +3933,14 @@ function softRejectFlash(html) {
 // Soft reject for an out-of-order answer in the alphabetical challenge.
 function rejectAlpha(letter) {
   softRejectFlash(`out of order — start with <b>${escapeHtml(lastAlphaLetter)}</b> or later`);
+}
+// Title...?: the word's in the lyrics but not the title they named.
+function rejectTitleHas() {
+  softRejectFlash(`that's in the lyrics — name a <b>title</b> with the word`);
+}
+// Short n' Sweet: the named title is too long.
+function rejectShortTitle() {
+  softRejectFlash(`too long — name a <b>one- or two-word</b> title`);
 }
 // One Of A Kind: the player tried their target song on a round where it doesn't fit
 // the prompt word. Costs a guess (so spamming the target every round can't brute-force
@@ -4118,6 +4198,22 @@ function submitAnswer(song, isTimeout) {
       && currentSongs.some((s) => s.title === song.title)
       && !roundWildcard.accepts(song)) {
     rejectWildcard(roundWildcard.label); return;
+  }
+
+  // Title...?: a song whose lyrics hold the word but whose TITLE doesn't is soft-
+  // rejected (keep hunting for a title with the word) — a wholly unrelated song still
+  // falls through and scores wrong.
+  if (song && !isTimeout && currentChallenge && currentChallenge.rule === "titleHas") {
+    const rx = wordRegex(currentWord, effectiveStrict());
+    if (!rx.test(song.title) && rx.test(song.lyrics)) { rejectTitleHas(); return; }
+  }
+
+  // Short n' Sweet: a song valid by lyrics but with a 3+-word title is soft-rejected so
+  // the player keeps looking for a one- or two-word title.
+  if (song && !isTimeout && currentChallenge && currentChallenge.rule === "shorttitle"
+      && currentSongs.some((s) => s.title === song.title)
+      && titleWordCount(song.title) > 2) {
+    rejectShortTitle(); return;
   }
 
   roundLocked = true;
