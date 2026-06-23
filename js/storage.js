@@ -6,6 +6,7 @@ import {
   DAILY_KEY, DAILY_BOARD_KEY, DAILY_STREAK_KEY, TYPES_KEY, TALLY_KEY,
   SETTINGS_KEY, METRICS_KEY, APP_PREFIX, DEFAULT_SETTINGS,
   CHALLENGES_KEY, CHALLENGE_TOKENS_KEY,
+  ALBUM_FOCUS_KEY, ALBUM_FOCUS_TARGET, DIFF_RANK,
   MODES, MODE_ORDER, TOTAL_ROUNDS,
 } from "./config.js";
 
@@ -108,6 +109,54 @@ export function saveChallengeTokens(o) {
 }
 export function resetChallenges() {
   try { localStorage.removeItem(CHALLENGES_KEY); localStorage.removeItem(CHALLENGE_TOKENS_KEY); } catch (e) { /* ignore */ }
+}
+
+/* ---------- Album Focus board (sandboxed, like challenges) ----------
+   { [album]: { best, bestDiff, beaten, beatenDiff, perfected, perfectedDiff } }
+   beatenDiff / perfectedDiff = the HARDEST difficulty the album was beaten / perfected at,
+   so the completed-album keepsake can scale with difficulty. */
+export function loadAlbumFocus() {
+  try {
+    const raw = localStorage.getItem(ALBUM_FOCUS_KEY);
+    if (raw) { const o = JSON.parse(raw); if (o && typeof o === "object") return o; }
+  } catch (e) { /* ignore */ }
+  return {};
+}
+export function saveAlbumFocus(o) {
+  try { localStorage.setItem(ALBUM_FOCUS_KEY, JSON.stringify(o)); } catch (e) { /* ignore */ }
+}
+// One album's record, with defaults filled in.
+export function albumFocusRecord(album) {
+  const e = loadAlbumFocus()[album] || {};
+  return {
+    best: e.best || 0, bestDiff: e.bestDiff || null,
+    beaten: !!e.beaten, beatenDiff: e.beatenDiff || null,
+    perfected: !!e.perfected, perfectedDiff: e.perfectedDiff || null,
+  };
+}
+// Keep the harder of two difficulty ids (null-safe).
+function harderDiff(a, b) {
+  if (!a) return b; if (!b) return a;
+  return (DIFF_RANK[b] || 0) > (DIFF_RANK[a] || 0) ? b : a;
+}
+// Fold a finished Album Focus run into the board. `score` is 0..TOTAL_ROUNDS, `diff` a MODES id.
+// Returns the updated record. (Caller gates beaten/perfected on a hint-free run.)
+export function recordAlbumFocusRun(album, score, diff, countBest = true) {
+  const all = loadAlbumFocus();
+  const e = all[album] || {};
+  // best score ever — ties keep the harder difficulty
+  if (score > (e.best || 0)) { e.best = score; e.bestDiff = diff; }
+  else if (score === (e.best || 0) && score > 0) { e.bestDiff = harderDiff(e.bestDiff, diff); }
+  if (countBest) {
+    if (score >= ALBUM_FOCUS_TARGET) { e.beaten = true; e.beatenDiff = harderDiff(e.beatenDiff, diff); }
+    if (score >= TOTAL_ROUNDS) { e.perfected = true; e.perfectedDiff = harderDiff(e.perfectedDiff, diff); }
+  }
+  all[album] = e;
+  saveAlbumFocus(all);
+  return albumFocusRecord(album);
+}
+export function resetAlbumFocus() {
+  try { localStorage.removeItem(ALBUM_FOCUS_KEY); } catch (e) { /* ignore */ }
 }
 
 /* ---------- Game types ever played (for "Hits Different") ---------- */

@@ -590,6 +590,34 @@
   .chall-result-meta { font-family: var(--type); font-size: 11px; color: var(--ink-soft); margin-bottom: 12px; }
   #backToChallenges { width: auto; margin: 0 auto; padding: 5px 18px; }
 
+  /* ---------- Album Focus page — borrows the master/detail .chall-* layout ----------
+     The album rows extend .chall-item with a colour dot + best score; the status mark
+     scales with how hard the album was beaten (af-mark--perfect/beaten/played/none). */
+  .af-item { grid-template-columns: 16px 1fr auto 22px; }
+  .af-item-dot { width: 13px; height: 13px; border-radius: 50%; box-shadow: inset 0 0 0 1px rgba(43,39,34,0.25); }
+  .af-item-best { font-family: var(--type); font-size: 11px; color: var(--ink-soft); white-space: nowrap; }
+  .af-item.selected .af-item-best { color: #1f3a52; }
+  .af-item.is-fresh .chall-item-name { color: var(--ink-soft); }
+  .af-mark { display: flex; justify-content: center; align-items: center; }
+  .af-mark--none { font-family: var(--type); font-size: 13px; color: #c4bca9; }
+  .af-mark .chall-mark-svg, .af-mark .chall-star-svg { width: 19px; height: 19px; }
+  /* a beaten-on-Hard tick reads a touch bolder/gold; the data-diff hook lets the tier scale */
+  .af-mark--beaten[data-diff="hard"] .chall-mark-svg circle,
+  .af-mark--beaten[data-diff="hard"] .chall-mark-svg path { stroke: #c8901c; }
+  .af-mark--perfect .chall-star-svg { filter: drop-shadow(0 1px 1px rgba(176,130,31,0.5)); }
+
+  .af-detail-spine { width: 7px; align-self: stretch; min-height: 30px; border-radius: 2px; box-shadow: inset 0 0 0 1px rgba(43,39,34,0.2); }
+  .af-stamp { color: rgba(60,90,70,0.85); border-color: rgba(60,90,70,0.55); }
+  .af-diffs { display: flex; gap: 8px; margin-top: 10px; }
+  .af-diff {
+    font-family: var(--type); font-size: 12px; font-weight: 700; color: var(--ink-soft);
+    background: rgba(236,227,208,0.5); border: 1.5px solid #c7ba9b; border-radius: 2px;
+    padding: 6px 14px; cursor: pointer; transition: background 0.14s, color 0.14s, border-color 0.14s;
+  }
+  .af-diff:hover { background: rgba(43,39,34,0.06); }
+  .af-diff.is-on { color: var(--paper); background: var(--ink); border-color: var(--ink); }
+  #backToAlbumFocus { width: auto; margin: 0 auto; padding: 5px 18px; }
+
   /* Choose Your Path — mid-run perk fork. The overlay covers the answered page
      (the card is position:relative — see .quit-btn) until a perk is chosen. */
   .chall-path-overlay {

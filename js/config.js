@@ -20,6 +20,7 @@ export const SETTINGS_KEY = "swiftSongAssociation.settings";   // user preferenc
 export const METRICS_KEY = "swiftSongAssociation.metrics";    // lifetime cross-game counters — fastest/avg answer, accuracy, lyric lines, daily totals
 export const CHALLENGES_KEY = "swiftSongAssociation.challenges";        // per-challenge progress — { [id]: {unlocked, defeated, attempts, best} }
 export const CHALLENGE_TOKENS_KEY = "swiftSongAssociation.challengeTokens"; // { balance, fromAchievements:[] } — tokens spent to unlock challenges
+export const ALBUM_FOCUS_KEY = "swiftSongAssociation.albumFocus";       // per-album best/beaten board — { [album]: {best, bestDiff, beaten, beatenDiff, perfected, perfectedDiff} }
 
 // Every persisted key shares this namespace; export/import and "clear everything"
 // sweep all keys under it.
@@ -90,6 +91,16 @@ export const MODE_COLORS = {
   ultra:    "#5a5a66",   // graphite
   lyricist: "#8a78b0",   // lavender
 };
+
+/* ---------- Album Focus mode ----------
+   "Quiz me on one album": every prompt word and valid answer come from a single studio
+   album, played at a chosen difficulty. Sandboxed in its own board (ALBUM_FOCUS_KEY).
+   The album list is STUDIO_ALBUMS (the 12 — pseudo-groups are never offered). */
+export const ALBUM_FOCUS_DIFFS = ["easy", "medium", "hard"];   // MODES ids the sub-picker offers
+export const ALBUM_FOCUS_TARGET = 9;                           // score ≥ this beats an album; === TOTAL_ROUNDS perfects it
+// Hardness ranking — the completed-album look scales with the toughest difficulty it was
+// beaten/perfected at, so re-beating on Hard upgrades the keepsake (see recordAlbumFocusRun).
+export const DIFF_RANK = { easy: 1, medium: 2, hard: 3 };
 
 /* Challenges mode — discrete rule-bending puzzles, unlocked with tokens and "defeated".
    Pure data: each entry declares a `rule` token; app.js dispatches on it (round modifier,
@@ -170,6 +181,14 @@ export const CHALLENGE_ORDER = CHALLENGES.map((c) => c.id);
 
 /* Era engine */
 export const ERAS = ["gold", "lavender", "red", "denim", "graphite", "midnight", "debut", "reputation", "lover", "evermore"];
+// Album Focus locks the whole run to one era wash — the era that best fits each studio
+// album's mood (a couple reuse the closest era; only one album plays per run, so that's fine).
+export const ALBUM_ERA = {
+  "Taylor Swift": "debut", "Fearless": "gold", "Speak Now": "lavender", "Red": "red",
+  "1989": "denim", "reputation": "reputation", "Lover": "lover", "folklore": "graphite",
+  "evermore": "evermore", "Midnights": "midnight",
+  "The Tortured Poets Department": "graphite", "The Life of a Showgirl": "gold",
+};
 export const TENDER_ERAS = ["lavender", "denim", "lover", "evermore"];   // round 5 (Track 5) leans tender
 export const FINALE_ERAS = ["gold", "midnight", "reputation"];           // round 13 leans grand
 
@@ -383,6 +402,10 @@ export const ACHIEVEMENTS = [
   { id: "paper-rings",      name: "Paper Rings",      desc: "Unlock every challenge",                secret: false, icon: "diamond" },
   { id: "state-of-grace",   name: "State Of Grace",   desc: "Defeat a challenge on the first try",   secret: true,  icon: "feather" },
   { id: "this-is-me-trying", name: "This Is Me Trying", desc: "Defeat a challenge after 5+ attempts", secret: true, icon: "mountain" },
+  { id: "a-place-in-this-world", name: "A Place In This World", desc: "Beat your first album in Album Focus", secret: false, icon: "house" },
+  { id: "change",           name: "Change",           desc: "Beat all 12 albums in Album Focus",     secret: false, icon: "crown" },
+  { id: "gold-rush",        name: "Gold Rush",        desc: "Perfect an album in Album Focus — 13/13", secret: true,  icon: "star" },
+  { id: "starlight",        name: "Starlight",        desc: "Perfect all 12 albums in Album Focus",  secret: true,  icon: "firework" },
   { id: "castles-crumbling", name: "Castles Crumbling", desc: "Trade an achievement for a token",    secret: true,  icon: "castle" },
   { id: "is-it-over-now",   name: "Is It Over Now?",  desc: "Earn every hidden achievement",         secret: true,  icon: "hourglass" },
   { id: "the-lucky-one",    name: "The Lucky One",    desc: "Earn every other achievement",          secret: true,  icon: "clover" },
@@ -398,6 +421,7 @@ export const ACH_GROUPS = [
   { id: "lyricist",  label: "Lyricist & lyric lines", short: "Lyricist" },
   { id: "catalogue", label: "Catalogue knowledge",    short: "Catalogue" },
   { id: "challenges", label: "Challenges",             short: "Challenge" },
+  { id: "albumFocus", label: "Album Focus",            short: "Album" },
 ];
 // One muted notebook hue per theme — the section dots and the by-theme breakdown bars.
 export const ACH_GROUP_COLORS = {
@@ -407,6 +431,7 @@ export const ACH_GROUP_COLORS = {
   lyricist:  "#9b6b9e",
   catalogue: "#b23a3a",
   challenges: "#2b2722",
+  albumFocus: "#a8577a",
 };
 // Membership: only the non-core ids are listed; everything else defaults to "core"
 // (groupOf in app.js). Keeps this in sync without re-listing every achievement.
@@ -423,6 +448,7 @@ export const ACH_GROUP_OF = {
   "diamonds": "catalogue", "paris": "catalogue", "i-hate-it-here": "catalogue",
   "the-archer": "challenges", "the-alchemy": "challenges", "paper-rings": "challenges",
   "state-of-grace": "challenges", "this-is-me-trying": "challenges", "castles-crumbling": "challenges",
+  "a-place-in-this-world": "albumFocus", "change": "albumFocus", "gold-rush": "albumFocus", "starlight": "albumFocus",
 };
 
 /* ---------- Easter-egg art ---------- */

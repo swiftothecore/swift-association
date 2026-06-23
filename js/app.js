@@ -3,10 +3,11 @@ import { $, escapeRegExp, escapeHtml, prefersReducedMotion, shuffle, chance, nor
 import {
   TOTAL_ROUNDS, RECENT_WINDOW, DIFF_KEY, DEFAULT_SETTINGS,
   MODES, MODE_ORDER, MODE_COLORS,
-  ERAS, TENDER_ERAS, FINALE_ERAS,
+  ERAS, TENDER_ERAS, FINALE_ERAS, ALBUM_ERA,
   ALBUM_COLORS, CB_ALBUM_COLORS, STUDIO_ALBUMS, TITLE_ALIASES,
   ACHIEVEMENTS, ACH_ICONS, ACH_BY_ID, ACH_GROUPS, ACH_GROUP_COLORS, ACH_GROUP_OF,
   CHALLENGES, CHALLENGE_BY_ID, CHALLENGE_ORDER,
+  ALBUM_FOCUS_DIFFS, ALBUM_FOCUS_TARGET,
   PEN_SVG, STAR_SVG, SPARKLE_SVG, DOODLE_SVG,
 } from "./config.js";
 import { buildBraceletSVG } from "./bracelet.js";
@@ -26,6 +27,7 @@ import {
   exportData, importData,
   loadChallengeState, saveChallengeState, challengeRecord,
   loadChallengeTokens, saveChallengeTokens, resetChallenges,
+  loadAlbumFocus, albumFocusRecord, recordAlbumFocusRun,
   resetRecords, resetStatsAll, resetAchievements, resetTally, resetDaily, clearAllData,
 } from "./storage.js";
 
@@ -74,7 +76,9 @@ let runFolded = false;   // partial/full stats already saved for the current run
 let hintTier = 0;        // hints revealed this round (0..3); reset each round
 let roundHintSong = null;// the valid song this round's hints zoom in on
 let hintUrgeTimer = null;// idle nudge timer for Relaxed (no clock)
-let gameType = "classic";       // "classic" (fixed 13) | "infinite" (until lives run out) | "daily" | "challenge"
+let gameType = "classic";       // "classic" (fixed 13) | "infinite" (until lives run out) | "daily" | "challenge" | "album"
+let focusAlbum = null;          // Album Focus: the locked-in studio album while gameType === "album"
+let focusDifficulty = null;     // Album Focus: the chosen MODES id this run plays at
 let infiniteVariant = "3lives"; // "3lives" | "sudden"
 let lives = 0;                  // remaining lives in infinite mode
 let dailyRng = null;            // seeded PRNG, non-null only during a daily game
@@ -166,6 +170,7 @@ const screens = {
   achievements: $("screen-achievements"),
   challenges: $("screen-challenges"),
   songbook: $("screen-songbook"),
+  albumfocus: $("screen-albumfocus"),
 };
 function showScreen(name) {
   // Defensive: clear any stray inline animation a flip sheet helper might have left on a real
@@ -319,6 +324,9 @@ function scatterNavTape(screenName) {
 
 /* ---------- Era selection ---------- */
 function pickEra() {
+  // Album Focus locks the whole run to its album's era wash (bracelet/cards already use
+  // the album colour; this themes the page to match).
+  if (gameType === "album" && focusAlbum) return ALBUM_ERA[focusAlbum] || "gold";
   let pool;
   // Round-5/round-13 biases apply to any fixed 13-round run (classic + daily + challenge).
   const fixedRun = gameType === "classic" || gameType === "daily" || gameType === "challenge";
@@ -1534,6 +1542,7 @@ function modeLabel(token) {
     const c = CHALLENGE_BY_ID[token.slice(4)];
     return c ? "Challenge · " + c.name : "Challenge";
   }
+  if (token && token.startsWith("af-")) return "Album · " + token.slice(3);
   if (token && token.startsWith("inf-")) {
     const parts = token.split("-");   // ["inf", variant, mode]
     return (VARIANT_LABELS[parts[1]] || parts[1]) + " · " + (MODES[parts[2]] ? MODES[parts[2]].label : parts[2]);
@@ -2167,6 +2176,121 @@ function renderChallengeDetail(id) {
   if (pb) pb.addEventListener("click", () => startChallenge(pb.dataset.play));
 }
 
+/* ---------- Album Focus page (master/detail; the 12-album completion board) ---------- */
+let albumFocusBackTarget = "start";   // where the Album Focus back link returns to
+let afSelectedAlbum = null;           // which album the detail panel is showing
+let afSelectedDiff = "medium";        // the difficulty tab the detail panel has picked
+
+// Status mark for an album row, scaling with how hard it was beaten/perfected. The exact
+// visual tiers are styling — the data (beatenDiff/perfectedDiff) drives which one shows.
+function afStatusMark(rec) {
+  if (rec.perfected) return `<span class="af-mark af-mark--perfect" data-diff="${rec.perfectedDiff || ""}">${CHALL_STAR}</span>`;
+  if (rec.beaten)    return `<span class="af-mark af-mark--beaten" data-diff="${rec.beatenDiff || ""}">${CHALL_TICK}</span>`;
+  if (rec.best > 0)  return `<span class="af-mark af-mark--played">${CHALL_RING}</span>`;
+  return `<span class="af-mark af-mark--none">—</span>`;
+}
+
+function openAlbumFocus(from) {
+  albumFocusBackTarget = from;
+  renderAlbumFocusPage();
+  flipAwayToScreen("albumfocus");
+}
+
+function renderAlbumFocusPage() {
+  const board = loadAlbumFocus();
+  const beaten = STUDIO_ALBUMS.filter((a) => board[a] && board[a].beaten).length;
+  const perfected = STUDIO_ALBUMS.filter((a) => board[a] && board[a].perfected).length;
+
+  // Default selection: keep the current pick if valid, else the first not-yet-beaten album.
+  if (!afSelectedAlbum || !STUDIO_ALBUMS.includes(afSelectedAlbum)) {
+    afSelectedAlbum = STUDIO_ALBUMS.find((a) => !(board[a] && board[a].beaten)) || STUDIO_ALBUMS[0];
+  }
+
+  let list = "";
+  STUDIO_ALBUMS.forEach((a, idx) => {
+    const rec = albumFocusRecord(a);
+    const stateCls = rec.perfected ? "is-perfect" : rec.beaten ? "is-beaten" : rec.best > 0 ? "is-played" : "is-fresh";
+    const best = rec.best > 0 ? `<span class="af-item-best">${rec.best}/${TOTAL_ROUNDS}</span>` : "";
+    list += `<button type="button" class="chall-item af-item ${stateCls}" data-album="${escapeHtml(a)}">` +
+      `<span class="af-item-dot" style="background:${albumColor(a) || "#999"}"></span>` +
+      `<span class="chall-item-name">${escapeHtml(a)}</span>` +
+      `${best}<span class="chall-item-mark">${afStatusMark(rec)}</span></button>`;
+  });
+
+  const perfectLine = perfected ? ` · perfected <b>${perfected}</b>/${STUDIO_ALBUMS.length}` : "";
+  const html =
+    `<div class="chall-head">` +
+      `<div class="chall-head-sub">pick an album · beat all 12</div>` +
+      `<span class="chall-tokens">beaten <b>${beaten}</b>/${STUDIO_ALBUMS.length}${perfectLine}</span>` +
+    `</div>` +
+    `<div class="chall-layout">` +
+      `<div class="chall-list">${list}</div>` +
+      `<div class="chall-detail" id="afDetail"></div>` +
+    `</div>`;
+
+  const el = $("albumFocusBody");
+  el.innerHTML = html;
+  el.querySelectorAll(".af-item").forEach((b) =>
+    b.addEventListener("click", () => selectAlbum(b.dataset.album)));
+  selectAlbum(afSelectedAlbum);
+}
+
+function selectAlbum(album) {
+  afSelectedAlbum = album;
+  const body = $("albumFocusBody");
+  if (!body) return;
+  body.querySelectorAll(".af-item").forEach((b) =>
+    b.classList.toggle("selected", b.dataset.album === album));
+  renderAlbumDetail(album);
+}
+
+function renderAlbumDetail(album) {
+  const el = $("afDetail");
+  if (!el) return;
+  const rec = albumFocusRecord(album);
+  const col = albumColor(album) || "#999";
+
+  const tabs = ALBUM_FOCUS_DIFFS.map((d) =>
+    `<button type="button" class="af-diff${d === afSelectedDiff ? " is-on" : ""}" data-diff="${d}">${escapeHtml(MODES[d].label)}</button>`
+  ).join("");
+
+  const stamp = rec.perfected
+    ? `<span class="chall-detail-star">${CHALL_STAR}</span><span class="chall-detail-stamp af-stamp">perfected</span>`
+    : rec.beaten ? `<span class="chall-detail-stamp af-stamp">beaten</span>` : "";
+
+  let meta = "";
+  if (rec.best > 0) {
+    meta = `best ${rec.best}/${TOTAL_ROUNDS}`;
+    if (rec.beatenDiff) meta += ` · beaten on ${(MODES[rec.beatenDiff] || {}).label || rec.beatenDiff}`;
+  } else {
+    meta = "not played yet";
+  }
+
+  el.innerHTML =
+    `<div class="chall-detail-head">` +
+      `<span class="af-detail-spine" style="background:${col}"></span>` +
+      `<span class="chall-detail-name">${escapeHtml(album)}</span>${stamp}` +
+    `</div>` +
+    `<div class="chall-sec">` +
+      `<div class="chall-eyebrow">The rule</div>` +
+      `<div class="chall-rule">Every word and every answer comes from <b>${escapeHtml(album)}</b>.</div>` +
+    `</div>` +
+    `<div class="chall-sec chall-sec--beat">` +
+      `<div class="chall-eyebrow">To beat it</div>` +
+      `<div class="chall-goal">Score ${ALBUM_FOCUS_TARGET}/${TOTAL_ROUNDS} — a perfect 13/13 completes it in style.</div>` +
+      `<div class="af-diffs">${tabs}</div>` +
+    `</div>` +
+    `<div class="chall-act">` +
+      `<span class="chall-meta">${escapeHtml(meta)}</span>` +
+      `<button type="button" class="chall-go" data-play="${escapeHtml(album)}">${rec.beaten ? "Play again" : "Start writing"}</button>` +
+    `</div>`;
+
+  el.querySelectorAll(".af-diff").forEach((b) =>
+    b.addEventListener("click", () => { afSelectedDiff = b.dataset.diff; renderAlbumDetail(album); }));
+  const pb = el.querySelector("[data-play]");
+  if (pb) pb.addEventListener("click", () => startAlbumFocus(pb.dataset.play, afSelectedDiff));
+}
+
 /* ---------- Bracelet (hand-strung SVG) ---------- */
 let justEarnedIndex = -1; // bead that just became a charm, for the swing-in
 
@@ -2572,6 +2696,8 @@ function resetRunState() {
   dailyRng = null;
   currentChallenge = null;
   challengeRunActive = false;
+  focusAlbum = null;
+  focusDifficulty = null;
   lastAlphaLetter = "";
   roundSecondsOverride = null;
   chainLetter = "";
@@ -2611,7 +2737,7 @@ function resetRunState() {
 // history. Idempotent per run via runFolded.
 function foldRunProgress() {
   if (runFolded || roundResults.length === 0) return;
-  if (gameType === "challenge") { runFolded = true; return; }   // challenges are sandboxed — never fold
+  if (gameType === "challenge" || gameType === "album") { runFolded = true; return; }   // sandboxed — never fold into difficulty stats
   runFolded = true;
   const partialScore = gameType === "infinite" ? roundResults.length : score;
   if (gameType !== "daily") updateStats(partialScore, boardMode(), gameMaxStreak, false);
@@ -2792,6 +2918,25 @@ function startChallenge(id) {
   if (c.rule === "setlist") buildTourSetlist();
   if (c.rule === "combo") comboClock = COMBO_START;
   recordChallengeAttempt(id);
+  applyInputHints();
+  updateTagline();
+  $("pageTotalWrap").style.display = "";
+  $("pageTotal").textContent = TOTAL_ROUNDS;
+  showScreen("game");
+  nextRound();
+}
+
+// An Album Focus run: a fixed-13 game where every prompt word and valid answer come from
+// ONE studio album, at a chosen difficulty. Sandboxed like challenges/daily — folds into the
+// global catalogue tally + history + metrics, but never the difficulty boards/records.
+function startAlbumFocus(album, diffId) {
+  if (!STUDIO_ALBUMS.includes(album)) return;
+  const mode = MODES[ALBUM_FOCUS_DIFFS.includes(diffId) ? diffId : "medium"];
+  gameType = "album";
+  currentMode = { ...mode };               // clone — never mutate the shared MODES object
+  resetRunState();
+  focusAlbum = album;                      // set AFTER resetRunState (which nulls them)
+  focusDifficulty = currentMode.id;
   applyInputHints();
   updateTagline();
   $("pageTotalWrap").style.display = "";
@@ -3302,6 +3447,85 @@ function endChallenge() {
   if (won && score === TOTAL_ROUNDS) celebratePerfect();
 }
 
+// Sandboxed results path for an Album Focus run (mirrors endChallenge). Folds into the
+// global catalogue stores only; the per-album board (beaten/perfected) is its own store.
+function endAlbumFocus() {
+  const album = focusAlbum, diff = focusDifficulty;
+  const hintFree = hintsUsed === 0;
+  let rec = albumFocusRecord(album);
+  if (!devNoLog) {
+    const runTime = currentMode.seconds > 0 ? gameTimeSum : null;
+    appendHistory({
+      s: score, c: score, n: roundResults.length,
+      m: "af-" + album, t: "album",
+      d: new Date().toISOString(), tm: runTime,
+      ...(verseBonus > 0 ? { v: verseBonus } : {}),
+      ...(hintsUsed > 0 ? { h: 1 } : {}),
+    });
+    const tally = recordGameTally(roundResults.map((correct, i) => ({
+      correct,
+      title: roundSongs[i] || null,
+      album: roundAlbums[i] || null,
+      word: roundWords[i] || null,
+    })));
+    if (allSongs.length && allSongs.every((s) => tally.songs[s.title])) unlock("i-hate-it-here");
+    recordGameMetrics({
+      rounds: roundResults.length, correct: score,
+      timeSumMs: gameTimeSum * 1000, timedRounds: gameTimedRounds,
+      fastestMs: gameFastestMs, lyricLines: lyricLineAnswers,
+      versePerfect: gameVersePerfect, wholeVerses: gameWholeVerses, verseBonus,
+      isDaily: false, dailyPerfect: false,
+      isInfinite: false, timeouts: gameTimeouts,
+    });
+    // The board only counts hint-free runs toward beating/perfecting (mirrors the
+    // "a hinted run can't set a personal best" rule); best score still updates.
+    rec = recordAlbumFocusRun(album, score, diff, hintFree);
+  }
+
+  // Album Focus achievements (post-run, off the updated board — not sandbox-gated).
+  const board = loadAlbumFocus();
+  const beatenCount = STUDIO_ALBUMS.filter((a) => board[a] && board[a].beaten).length;
+  const perfectedCount = STUDIO_ALBUMS.filter((a) => board[a] && board[a].perfected).length;
+  if (rec.beaten) unlock("a-place-in-this-world");
+  if (rec.perfected) unlock("gold-rush");
+  if (beatenCount >= STUDIO_ALBUMS.length) unlock("change");
+  if (perfectedCount >= STUDIO_ALBUMS.length) unlock("starlight");
+
+  showScreen("results");
+  $("resultBracelet").innerHTML = buildBraceletSVG(roundResults, 0, -1, roundAlbums,
+    { colors: albumPalette(), hinted: roundHinted, verseTiers: roundVerseTier });
+  $("finalScore").textContent = score;
+  $("finalSub").textContent = "out of " + TOTAL_ROUNDS;
+  $("keepGoingBtn").style.display = "none";
+  $("namePrompt").style.display = "none";
+  $("verseAnthology").style.display = "none";
+  hideNewBestBanner();
+
+  const beat = score >= ALBUM_FOCUS_TARGET;
+  const perfect = score >= TOTAL_ROUNDS;
+  document.querySelector("#screen-results .podium-title").textContent = album;
+  let status;
+  if (beat && hintFree) {
+    status = perfect
+      ? `<div class="chall-result-status win">perfect — album complete ★</div>`
+      : `<div class="chall-result-status win">album beaten!</div>`;
+  } else if (beat && !hintFree) {
+    status = `<div class="chall-result-status">beaten — but hinted runs don't count toward completion</div>`;
+  } else {
+    status = `<div class="chall-result-status">not yet — score ${ALBUM_FOCUS_TARGET}/${TOTAL_ROUNDS} to beat it</div>`;
+  }
+  const diffLabel = (MODES[diff] && MODES[diff].label) || diff;
+  const meta = `<div class="chall-result-meta">${escapeHtml(diffLabel)} · best ${rec.best}/${TOTAL_ROUNDS}` +
+    ` · beaten ${beatenCount}/${STUDIO_ALBUMS.length}` +
+    `${perfectedCount ? ` · perfected ${perfectedCount}/${STUDIO_ALBUMS.length}` : ""}</div>`;
+  $("resultPodium").innerHTML = status + meta +
+    `<button id="backToAlbumFocus" class="btn-ghost">back to album focus</button>`;
+  $("backToAlbumFocus").addEventListener("click", () => openAlbumFocus("start"));
+
+  renderResultRecap();   // surface any album-focus achievements just earned
+  if (perfect) celebratePerfect();
+}
+
 // Re-render the results screen from a previously saved daily result (the
 // already-played path). Reuses the regular results layout + daily board + share.
 function showDailyResult(data, dateStr) {
@@ -3382,6 +3606,9 @@ function pickWord() {
     if (currentChallenge.rule === "setlist") { const w = pickTourWord(); if (w) return w; }
     if (currentChallenge.rule === "chain") { const w = pickChainWord(); if (w) return w; }
   }
+  // Album Focus draws only words with a valid in-album answer (honouring the difficulty's
+  // title rule), so every round is winnable from the chosen album.
+  if (gameType === "album" && focusAlbum) { const w = pickAlbumWord(); if (w) return w; }
   // Title...? draws only from words that appear in some song title, so each round is winnable.
   const bucket = (gameType === "challenge" && currentChallenge && currentChallenge.rule === "titleHas"
     && titleWordList.length)
@@ -3396,6 +3623,28 @@ function pickWord() {
   const word = choices[Math.floor(rng() * choices.length)];
   usedWords.push(word);
   return word;
+}
+
+// Album Focus: a word whose chosen-album valid set is non-empty under the active difficulty's
+// title rule. Start from the album's playable words intersected with the rarity bucket (so the
+// difficulty still shapes the pool), falling back to the full album list when that's too thin
+// (the buildWordBuckets safe() pattern). Then verify an in-album song survives effectiveNoTitle
+// (Hard can title-filter a word's only album song) — skip the word if not. null → normal pool.
+function pickAlbumWord() {
+  const albumWords = albumWordMap[focusAlbum] || [];
+  if (!albumWords.length) return null;
+  const bucketSet = new Set(wordBuckets[effectivePool()] || playableWords);
+  const narrowed = albumWords.filter((w) => bucketSet.has(w));
+  const base = narrowed.length >= TOTAL_ROUNDS ? narrowed : albumWords;
+  const fresh = shuffle(base.filter((w) => !usedWords.includes(w)));
+  const pool = fresh.length ? fresh : shuffle(base.slice());
+  for (const w of pool) {
+    if (validSongs(w, effectiveStrict(), effectiveNoTitle()).some((s) => s.album === focusAlbum)) {
+      usedWords.push(w);
+      return w;
+    }
+  }
+  return null;   // degenerate — let the normal pool path run
 }
 
 function nextRound() {
@@ -3707,6 +3956,9 @@ function advanceRound() {
   // Title...?: flip the rule — the only valid answers are songs whose TITLE holds the word.
   if (gameType === "challenge" && currentChallenge && currentChallenge.rule === "titleHas")
     currentSongs = titleSongsForWord(currentWord, effectiveStrict());
+  // Album Focus: the only valid answers are songs from the chosen album.
+  if (gameType === "album" && focusAlbum)
+    currentSongs = currentSongs.filter((s) => s.album === focusAlbum);
   roundHintSong = pickHintSong();
   applyEra(pickEra());
 
@@ -4011,6 +4263,8 @@ function resetTension() {
 // title under "only one-word titles", or an out-of-order title in From A to Z).
 // Non-constraint rules (and non-challenge play) accept everything.
 function roundAcceptsSong(song) {
+  // Album Focus: only ever suggest songs from the locked album.
+  if (gameType === "album" && focusAlbum) return song.album === focusAlbum;
   if (gameType !== "challenge" || !currentChallenge) return true;
   // noTitle challenges (e.g. Revolving Door): never suggest a song whose title
   // contains the prompt word — the round would reject it.
@@ -4158,6 +4412,10 @@ function rejectChain() {
 function rejectTour() {
   const a = tourSetlist[round - 1] || "tonight's album";
   softRejectFlash(`not on the setlist — name a <b>${escapeHtml(a)}</b> song`);
+}
+// Album Focus: the named song is from another album. Don't burn the round.
+function rejectAlbumFocus() {
+  softRejectFlash(`from <b>${escapeHtml(focusAlbum)}</b> only`);
 }
 // The last A–Z letter of a title (Wrapped Like A Chain's link to the next answer).
 function lastChainLetter(title) {
@@ -4455,6 +4713,13 @@ function submitAnswer(song, isTimeout) {
     rejectTour(); return;
   }
 
+  // Album Focus: a named song from another album is soft-rejected (no burned round) so the
+  // player keeps looking within the chosen album. Lyric/dropdown answers are already album-
+  // gated; this catches a deliberately typed off-album title.
+  if (song && !isTimeout && gameType === "album" && focusAlbum && song.album !== focusAlbum) {
+    rejectAlbumFocus(); return;
+  }
+
   roundLocked = true;
   clearTimer();
   resetTension();
@@ -4716,9 +4981,10 @@ function endGame() {
   resetTension();
   applyEra(FINALE_ERAS[Math.floor(Math.random() * FINALE_ERAS.length)]);
 
-  // Challenges are sandboxed — their own self-contained results path, before any
-  // stats/records/history/tally/achievement fold runs.
+  // Challenges and Album Focus are sandboxed — their own self-contained results path,
+  // before any stats/records/achievement fold runs.
   if (gameType === "challenge") { endChallenge(); return; }
+  if (gameType === "album") { endAlbumFocus(); return; }
 
   const isInfinite = gameType === "infinite";
   const isDaily = gameType === "daily";
@@ -5962,6 +6228,12 @@ async function init() {
   $("viewChallengesBtn").addEventListener("click", () => openChallenges("results"));
   $("challengesBackBtn").addEventListener("click", () => {
     const prev = challengesBackTarget;
+    if (prev === "start") { $("startContent").style.display = ""; }
+    flipInToScreen(prev);
+  });
+  $("albumFocusBtn").addEventListener("click", () => openAlbumFocus("start"));
+  $("albumFocusBackBtn").addEventListener("click", () => {
+    const prev = albumFocusBackTarget;
     if (prev === "start") { $("startContent").style.display = ""; }
     flipInToScreen(prev);
   });

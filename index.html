@@ -263,6 +263,18 @@
           <span class="nav-card-title">challenges</span>
           <span class="nav-card-kicker">unlock &amp; defeat</span>
         </button>
+        <button id="albumFocusBtn" class="nav-card" data-era-tint="red">
+          <span class="nav-card-seat">
+            <svg class="nav-ic" width="50" height="50" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <circle cx="24" cy="24" r="15" fill="rgba(178,58,58,.10)" stroke-width="1.6"/>
+              <circle cx="24" cy="24" r="9" fill="none" stroke-width="1.3"/>
+              <circle cx="24" cy="24" r="3" fill="rgba(178,58,58,.5)" stroke-width="1.2"/>
+              <circle cx="24" cy="24" r="1" fill="currentColor"/>
+            </svg>
+          </span>
+          <span class="nav-card-title">album focus</span>
+          <span class="nav-card-kicker">beat all 12</span>
+        </button>
       </div>
       <p class="hint">jot the song that holds the word, then press Enter</p>
     </div>
@@ -445,6 +457,15 @@
       <button id="challengesBackBtn" class="btn-link">← back</button>
     </div>
     <div id="challengesBody"></div>
+  </section>
+
+  <!-- ALBUM FOCUS SCREEN — pick an album, pick a difficulty, beat all 12 -->
+  <section id="screen-albumfocus" class="screen card">
+    <div class="stats-nav">
+      <span class="stats-title">Album Focus</span>
+      <button id="albumFocusBackBtn" class="btn-link">← back</button>
+    </div>
+    <div id="albumFocusBody"></div>
   </section>
 
   <!-- SONGBOOK SCREEN — the missing-songs checklist behind "I Hate It Here" -->
