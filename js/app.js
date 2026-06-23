@@ -216,6 +216,9 @@ function makeFlipSheet(src, at, sideClass, shadeClass) {
   // The real screens come earlier in the DOM, so getElementById still resolves to them; the
   // clone carries no event listeners (cloneNode) and is pointer-events:none and short-lived.
   flip.classList.remove("screen", "active");
+  // Purely a visual page-turn artifact (and a duplicate of live regions like #wordDisplay) —
+  // keep it out of the a11y tree so screen readers don't re-announce the cloned word/feedback.
+  flip.setAttribute("aria-hidden", "true");
   flip.classList.add("page-flip-sheet", sideClass);
   flip.style.animation = "";          // never inherit a one-off inline animation from the source
   flip.style.opacity = "";
@@ -3691,6 +3694,9 @@ function nextRound() {
   flip.removeAttribute("id");
   flip.querySelectorAll("[id]").forEach((e) => e.removeAttribute("id"));
   flip.classList.remove("screen", "active");
+  // Decorative clone of the game card — hide from the a11y tree so the duplicated
+  // #wordDisplay/#feedback live regions in it aren't re-announced during the page turn.
+  flip.setAttribute("aria-hidden", "true");
   flip.classList.add("page-flip-sheet");
   flip.style.top = card.offsetTop + "px";
   flip.style.left = card.offsetLeft + "px";
