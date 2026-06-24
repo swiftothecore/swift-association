@@ -13,7 +13,7 @@ Standout features:
 - Lots and lots of easter eggs
 - Over 50 achievements
 - Daily challenge
-- Challenges mode with 14+ challenges
+- Challenges mode with 18 challenges
 - Album Focus mode to narrow your focus to a single album
 - Installable as a phone or desktop app and works offline once loaded
 
