@@ -107,6 +107,18 @@ let perkReveals = new Set();    // Choose Your Path: active per-round reveals (l
 let perkPoolOverride = null;    // Choose Your Path: Crowd Pleaser → draw words from the common pool
 let perkNoTitleOff = false;     // Choose Your Path: Off The Record → allow the word in the title
 let perkCalm = false;           // Choose Your Path: Steady Hands → no timer tremor/tension
+let roundLyricOnly = false;     // Switch-Up: this page demands a lyric line (true) or a title (false)
+let roundNamed = [];            // Double Trouble: distinct valid titles named this page so far
+// Devil's Path: curses taken at forks, each a permanent handicap for the rest of the run.
+let devilCursesTaken = [];      // curse ids already taken (never re-offered)
+let devilDropOff = false;       // In The Dark: suggestions switched off
+let devilVanish = false;        // Disappearing Ink: the word fades each page
+let devilFx = null;             // word distortion: "scramble" | "drop" | "reverse" (or null)
+let devilNoTitle = false;       // No Giveaways: the word can't be in the answer's title
+let devilShortOnly = false;     // Keep It Short: only ≤2-word titles count
+let devilBannedAlbums = [];     // Off Limits / Locked Out: albums no longer accepted
+let devilBannedInitials = [];   // Forbidden Letters: title-start letters no longer accepted
+let devilPoolHard = false;      // Rarer Air: remaining words drawn from the rarer pool
 let roundWildcard = null;       // Wildcard: this round's active sub-constraint
 let lastWildcardId = "";        // Wildcard: previous round's constraint id (no immediate repeat)
 let currentWord = "";
@@ -472,9 +484,25 @@ function effectiveNoTitle() {
 }
 function effectivePool() {
   if (perkPoolOverride) return perkPoolOverride;   // Choose Your Path: Crowd Pleaser
-  if (gameType === "challenge" && currentChallenge && currentChallenge.pool)
-    return currentChallenge.pool;
+  if (gameType === "challenge" && currentChallenge) {
+    if (currentChallenge.rule === "devil" && devilPoolHard) return "hard";   // Devil's Path: Rarer Air
+    if (currentChallenge.pool) return currentChallenge.pool;
+  }
   return currentMode.pool;
+}
+// Whether suggestions (the title dropdown) are live right now. Off in lyric-only modes,
+// off on a Switch-Up lyric page (a dropdown would hand over the title), and off once
+// Devil's Path's "In The Dark" curse has been taken.
+function effectiveDropdown() {
+  if (lyricModeNow()) return false;
+  if (gameType === "challenge" && currentChallenge && currentChallenge.rule === "devil" && devilDropOff) return false;
+  return currentMode.dropdown;
+}
+// Whether THIS page accepts only a sung lyric line (no title): Lyricist mode always, and
+// Switch-Up on a lyric page.
+function lyricModeNow() {
+  if (currentMode.lyricOnly) return true;
+  return gameType === "challenge" && currentChallenge && currentChallenge.rule === "switchup" && roundLyricOnly;
 }
 // Lenient (default) also matches the inflected forms above (cheat→cheats); strict
 // requires the exact word. Defaults to the active mode + the stem-matching opt-out.
@@ -2916,6 +2944,17 @@ function resetRunState() {
   perkPoolOverride = null;
   perkNoTitleOff = false;
   perkCalm = false;
+  roundLyricOnly = false;
+  roundNamed = [];
+  devilCursesTaken = [];
+  devilDropOff = false;
+  devilVanish = false;
+  devilFx = null;
+  devilNoTitle = false;
+  devilShortOnly = false;
+  devilBannedAlbums = [];
+  devilBannedInitials = [];
+  devilPoolHard = false;
   roundWildcard = null;
   lastWildcardId = "";
   clearTimeout(vanishTimer);
@@ -3257,7 +3296,65 @@ function applyChallengeRound(wrap) {
     renderTourBanner();
   } else if (currentChallenge.rule === "combo") {
     renderComboBanner();
+  } else if (currentChallenge.rule === "switchup") {
+    // Coin-flip the answer type each page (round 1 always starts on a title, a gentle open).
+    roundLyricOnly = round === 1 ? false : Math.random() < 0.5;
+    renderSwitchBanner();
+  } else if (currentChallenge.rule === "multi") {
+    renderMultiBanner();
+  } else if (currentChallenge.rule === "devil") {
+    if (devilVanish) vanishTimer = setTimeout(() => { wrap.classList.add("vanished"); }, 1500);
+    if (devilFx) renderDevilFx(wrap, currentWord, devilFx);
+    renderDevilBanner();
   }
+}
+
+// Switch-Up: which answer type this page wants + the running score.
+function renderSwitchBanner() {
+  if (gameType !== "challenge" || !currentChallenge || currentChallenge.rule !== "switchup") return;
+  const el = ensureChallBanner();
+  el.innerHTML =
+    `<span class="chall-prog-name">${roundLyricOnly ? "sing a lyric line" : "name a title"}</span>` +
+    `<span class="chall-prog-count">${score} / ${currentChallenge.target || 9}</span>`;
+}
+// Double Trouble: how many of the two needed songs have been named this page.
+function renderMultiBanner() {
+  if (gameType !== "challenge" || !currentChallenge || currentChallenge.rule !== "multi") return;
+  const el = ensureChallBanner();
+  const need = currentChallenge.need || 2;
+  el.innerHTML =
+    `<span class="chall-prog-name">name ${need} different songs</span>` +
+    `<span class="chall-prog-count">${roundNamed.length} / ${need} this page · ${score} / ${currentChallenge.target || 8}</span>`;
+}
+// Devil's Path: distort the prompt word display-only (matching reads currentWord from
+// state, never the DOM), at a FIXED effect for the run — unlike Word Games' escalating tiers.
+function renderDevilFx(wrap, word, fx) {
+  let text = fx === "scramble" ? scrambleWord(word)
+    : fx === "drop" ? dropLetters(word)
+    : word.split("").reverse().join("");
+  if (text === word && word.length > 1) text = word.split("").reverse().join("");  // never show un-warped
+  wrap.dataset.fx = fx === "drop" ? "2" : fx === "reverse" ? "3" : "1";
+  $("wordDisplay").innerHTML = text.split("").map((ch) => `<span class="fx-ch">${escapeHtml(ch)}</span>`).join("");
+}
+// Devil's Path: the running score + every curse currently in effect, in the shared banner.
+function renderDevilBanner() {
+  if (gameType !== "challenge" || !currentChallenge || currentChallenge.rule !== "devil") return;
+  const el = ensureChallBanner();
+  const parts = [];
+  if (extraSecondsPerRound < 0) parts.push(`${extraSecondsPerRound}s`);
+  if (devilDropOff) parts.push("no suggestions");
+  if (devilVanish) parts.push("vanishing");
+  if (devilFx) parts.push(devilFx === "scramble" ? "scrambled" : devilFx === "drop" ? "redacted" : "reversed");
+  if (devilNoTitle) parts.push("not in title");
+  if (devilShortOnly) parts.push("short titles");
+  devilBannedAlbums.forEach((a) => parts.push(`no ${a}`));
+  if (devilBannedInitials.length) parts.push(`no ${devilBannedInitials.join("/")}`);
+  if (devilPoolHard) parts.push("rarer words");
+  el.innerHTML =
+    `<span class="chall-prog-name">devil's path · ${score} / ${currentChallenge.target || 9}</span>` +
+    (parts.length
+      ? `<span class="chall-prog-count">${parts.map(escapeHtml).join(" · ")}</span>`
+      : `<span class="chall-prog-count">no curses… yet</span>`);
 }
 
 // Shrinking Timer: this round's clock, shrinking linearly from ACCEL_FROM (round 1)
@@ -3949,6 +4046,14 @@ function roundCurtainHTML() {
   if (c.rule === "wildcard" && roundWildcard) {
     return curtainCardHTML({ kicker: `page ${round} · wildcard`, tag: "the rule",
       headline: roundWildcard.label });
+  }
+  // Switch-Up — every page flashes whether it wants a title or a sung lyric line.
+  if (c.rule === "switchup") {
+    return curtainCardHTML({ kicker: `page ${round} · switch-up`, tag: "this page",
+      headline: roundLyricOnly ? "sing me a line" : "name the title",
+      sub: roundLyricOnly
+        ? "type a real lyric line — a title won't count"
+        : "name any song that uses the word" });
   }
   // On Tour! — every page announces tonight's album (the only acceptable source).
   if (c.rule === "setlist") {
@@ -4895,7 +5000,7 @@ function submitAnswer(song, isTimeout) {
 
   let lyricMatch = null;
   if (!song && !isTimeout) {
-    if (currentMode.lyricOnly) {           // Lyricist mode: lyric line is the only path
+    if (lyricModeNow()) {                   // Lyricist mode / Switch-Up lyric page: lyric line only
       lyricMatch = matchLyricLine($("songInput").value);
       if (lyricMatch) song = lyricMatch.song;
     } else if (dropdownItems.length) {
@@ -5898,7 +6003,7 @@ function wireInput() {
   const input = $("songInput");
   input.addEventListener("input", () => {
     // Hard/Ultra have no autocomplete — you type the full title.
-    if (currentMode.dropdown) {
+    if (effectiveDropdown()) {
       if (debounceId) clearTimeout(debounceId);
       // Null debounceId when it fires so the Enter handler can tell a *genuinely
       // pending* edit (flush + reset selection) from an already-settled list (leave
@@ -5923,7 +6028,7 @@ function wireInput() {
       // pending, flush it now so Enter accepts a match for what's *currently*
       // typed — not the previous query's stale top result. With the dropdown
       // off, dropdownItems stays empty and submitAnswer takes the exact-title path.
-      if (currentMode.dropdown && debounceId) { clearTimeout(debounceId); debounceId = null; updateDropdown(); }
+      if (effectiveDropdown() && debounceId) { clearTimeout(debounceId); debounceId = null; updateDropdown(); }
       submitAnswer(null, false);
     } else if (e.key === "ArrowDown") {
       e.preventDefault();

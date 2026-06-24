@@ -175,6 +175,11 @@ export const CHALLENGES = [
     blurb: "one shared clock · every right answer winds it back up · run it dry and it's over",
     desc: "Forget per-page timers — one shared clock drains across the whole run. Each correct answer winds it back up; let it hit zero and the run ends.",
     win: "Score 9 / 13 before the shared clock runs out." },
+  { id: "switch-up", name: "Switch-Up", rule: "switchup", mode: "medium",
+    free: false, cost: 1, target: 9, seconds: 12, noTitle: false, tapes: 1, icon: "refresh",
+    blurb: "12s · each page wants EITHER a title OR a sung lyric line — it keeps switching",
+    desc: "Every page flips the rules: sometimes name the song's title, sometimes sing a real lyric line. Read the switch before you answer.",
+    win: "Score 9 / 13 as the answer type keeps switching." },
 ];
 export const CHALLENGE_BY_ID = Object.fromEntries(CHALLENGES.map((c) => [c.id, c]));
 export const CHALLENGE_ORDER = CHALLENGES.map((c) => c.id);
