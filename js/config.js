@@ -347,6 +347,8 @@ export const ACH_ICONS = {
   umbrella:`<svg viewBox="0 0 24 24"><path class="ink-fill" d="M12 2.2 C6 2.2 2 7 2 12 L22 12 C22 7 18 2.2 12 2.2 Z"/><g stroke="var(--paper)" stroke-width="1" fill="none"><path d="M7 12 C7 8 8.5 4 12 2.6"/><path d="M17 12 C17 8 15.5 4 12 2.6"/><path d="M12 2.6 V12"/></g><path class="ink" stroke-width="1.6" stroke-linecap="round" fill="none" d="M12 12 V19 a2.6 2.6 0 0 1 -5.2 0"/></svg>`,
   // a ticked checklist page — every song in the catalogue, named (I Hate It Here)
   checklist:`<svg viewBox="0 0 24 24"><rect class="ink-fill" x="4" y="2.5" width="16" height="19" rx="2"/><g stroke="var(--paper)" stroke-width="1.4" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M6.6 7.6 l1.3 1.3 L10.4 6.4"/><path d="M6.6 13.4 l1.3 1.3 L10.4 12.2"/><path d="M12.8 8 H17"/><path d="M12.8 13.8 H17"/></g></svg>`,
+  // a six-armed snowflake — weird but beautiful (Snow On The Beach)
+  snowflake:`<svg viewBox="0 0 24 24"><g class="ink" stroke-width="1.5" stroke-linecap="round" fill="none"><path d="M12 2.5 V21.5"/><path d="M3.8 7.25 L20.2 16.75"/><path d="M20.2 7.25 L3.8 16.75"/><path d="M12 6 L9.7 4.4 M12 6 L14.3 4.4 M12 18 L9.7 19.6 M12 18 L14.3 19.6"/><path d="M6.6 7.7 L6.5 5 M6.6 7.7 L3.9 7.9 M17.4 16.3 L17.5 19 M17.4 16.3 L20.1 16.1"/><path d="M17.4 7.7 L17.5 5 M17.4 7.7 L20.1 7.9 M6.6 16.3 L6.5 19 M6.6 16.3 L3.9 16.1"/></g></svg>`,
 };
 export const ACHIEVEMENTS = [
   { id: "enchanted",        name: "Enchanted",        desc: "Finish your first game",              secret: false, icon: "sparkle" },
@@ -391,6 +393,7 @@ export const ACHIEVEMENTS = [
   { id: "word-for-word",    name: "Word For Word",    desc: "Recall a lyric line word-perfect",     secret: true,  icon: "quote" },
   { id: "i-look-in-windows", name: "I Look In People's Windows", desc: "Open the settings menu",      secret: true,  icon: "window" },
   { id: "look-what-you-made-me-do", name: "Look What You Made Me Do", desc: "Make the snake appear",  secret: true,  icon: "snake" },
+  { id: "snow-on-the-beach",   name: "Snow On The Beach",   desc: "Watch the snow fall on the page",        secret: true,  icon: "snowflake" },
   { id: "safe-and-sound",   name: "Safe & Sound",     desc: "Play Easy three times in a row",       secret: false, icon: "house" },
   { id: "revenge",          name: "R-E-V-E-N-G-E",    desc: "Beat your own best score on any board", secret: false, icon: "target" },
   { id: "mirrorball",       name: "Mirrorball",       desc: "Score a perfect 13/13 in every difficulty", secret: true, icon: "mirrorball" },

@@ -237,6 +237,7 @@ function startSnow() {
   snowCanvas.style.display = "block";
   snowLast = 0;
   if (!snowRaf) snowRaf = requestAnimationFrame(snowFrame);
+  unlock("snow-on-the-beach");   // weird but beautiful — you caught the December snow
 }
 function stopSnow() {
   if (snowRaf) { cancelAnimationFrame(snowRaf); snowRaf = null; }
