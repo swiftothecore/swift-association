@@ -2571,4 +2571,51 @@
   .set-about { font-family: var(--type); font-size: 11.5px; color: var(--ink-soft); line-height: 1.5; }
   .set-about a { color: var(--ink-accent); }
   .set-about p { margin: 4px 0; }
+
+  /* Three pinned sticky notes — quick links out (code / Taylor / ELLE). */
+  .about-notes {
+    display: flex; flex-wrap: wrap; gap: 16px 14px;
+    justify-content: center; margin: 16px 4px 6px;
+  }
+  .about-note {
+    position: relative; flex: 0 1 132px; min-width: 116px;
+    display: flex; flex-direction: column; align-items: center; gap: 9px;
+    padding: 18px 12px 14px; border-radius: 1px; text-decoration: none;
+    text-align: center; box-shadow: 0 4px 9px rgba(0,0,0,0.24);
+    transition: transform 0.14s ease, box-shadow 0.14s ease;
+  }
+  /* a little gold pin head at the top of each note */
+  .about-note::before {
+    content: ""; position: absolute; top: -6px; left: 50%; transform: translateX(-50%);
+    width: 11px; height: 11px; border-radius: 50%;
+    background: radial-gradient(circle at 36% 30%, #ffe08a, #d8a32f 60%, #9c6e14);
+    box-shadow: 0 2px 3px rgba(0,0,0,0.4);
+  }
+  .about-note:hover { transform: translateY(-2px) rotate(0deg) !important; box-shadow: 0 7px 14px rgba(0,0,0,0.3); }
+  .about-note:focus-visible { outline: 2px solid var(--ink-accent); outline-offset: 3px; }
+  .about-note-ico { width: 34px; height: 34px; display: block; }
+  .about-note-ico--txt {
+    display: flex; align-items: center; justify-content: center;
+    font-size: 26px; line-height: 1;
+  }
+  .about-note-lbl {
+    font-family: var(--hand); font-weight: 700; font-size: 18px; line-height: 1.05;
+  }
+
+  /* GitHub — a charcoal note, white octocat */
+  .about-note--gh { background: #24292f; transform: rotate(-2.2deg); }
+  .about-note--gh .about-note-ico path { fill: #fff; }
+  .about-note--gh .about-note-lbl { color: #f3f3f0; }
+  /* Taylor's website — a soft lavender note */
+  .about-note--ts { background: #e3d8f0; transform: rotate(1.6deg); }
+  .about-note--ts .about-note-ico--txt { color: #6b4ea0; }
+  .about-note--ts .about-note-lbl { color: #4a3570; }
+  /* ELLE's Song Association — a warm rose note (the YouTube play) */
+  .about-note--elle { background: #f0d3d3; transform: rotate(-1.2deg); }
+  .about-note--elle .about-note-ico--txt { color: #c0392b; }
+  .about-note--elle .about-note-lbl { color: #8a2b22; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .about-note { transition: none; }
+  }
   .set-note { font-family: var(--type); font-size: 10px; color: var(--ink-soft); font-style: italic; }
