@@ -114,6 +114,10 @@ export const ADAPTIVE_LEVELS = [null, "Common", "Deeper", "Rare", "Rarest"]; // 
 export const ADAPT_MAX_LEVEL = 4;       // top level (ultra bucket)
 export const ADAPT_START_LEVEL = 2;     // start in the middle (the "all" bucket)
 export const ADAPT_PROMO_STREAK = 2;    // correct answers at a level needed to climb one (a single miss demotes)
+// Anti-too-soft knob: at this level and above, the title dropdown switches off, so the
+// rarest tiers test RECALL (type the full title) not just recognition. Set above
+// ADAPT_MAX_LEVEL to keep suggestions on for the whole run.
+export const ADAPT_NODROP_LEVEL = 3;    // suggestions off from Rare (L3) upward
 
 /* Challenges mode — discrete rule-bending puzzles, unlocked with tokens and "defeated".
    Pure data: each entry declares a `rule` token; app.js dispatches on it (round modifier,
@@ -459,6 +463,8 @@ export const ACHIEVEMENTS = [
   { id: "paper-rings",      name: "Paper Rings",      desc: "Unlock every challenge",                secret: false, icon: "diamond" },
   { id: "state-of-grace",   name: "State Of Grace",   desc: "Defeat a challenge on the first try",   secret: true,  icon: "feather" },
   { id: "this-is-me-trying", name: "This Is Me Trying", desc: "Defeat a challenge after 5+ attempts", secret: true, icon: "mountain" },
+  { id: "the-lakes",        name: "The Lakes",        desc: "Climb to the Rarest tier in Adaptive",  secret: false, icon: "mountain" },
+  { id: "stay-stay-stay",   name: "Stay Stay Stay",   desc: "Reach Rarest and finish there without slipping", secret: true, icon: "crown" },
   { id: "a-place-in-this-world", name: "A Place In This World", desc: "Beat your first album in Album Focus", secret: false, icon: "house" },
   { id: "change",           name: "Change",           desc: "Beat all 12 albums in Album Focus",     secret: false, icon: "crown" },
   { id: "gold-rush",        name: "Gold Rush",        desc: "Perfect an album in Album Focus — 13/13", secret: true,  icon: "star" },
@@ -479,6 +485,7 @@ export const ACH_GROUPS = [
   { id: "catalogue", label: "Catalogue knowledge",    short: "Catalogue" },
   { id: "challenges", label: "Challenges",             short: "Challenge" },
   { id: "albumFocus", label: "Album Focus",            short: "Album" },
+  { id: "adaptive",  label: "Adaptive mode",          short: "Adaptive" },
 ];
 // One muted notebook hue per theme — the section dots and the by-theme breakdown bars.
 export const ACH_GROUP_COLORS = {
@@ -489,6 +496,7 @@ export const ACH_GROUP_COLORS = {
   catalogue: "#b23a3a",
   challenges: "#2b2722",
   albumFocus: "#a8577a",
+  adaptive:  "#7d5a3f",
 };
 // Membership: only the non-core ids are listed; everything else defaults to "core"
 // (groupOf in app.js). Keeps this in sync without re-listing every achievement.
@@ -506,6 +514,7 @@ export const ACH_GROUP_OF = {
   "the-archer": "challenges", "the-alchemy": "challenges", "paper-rings": "challenges",
   "state-of-grace": "challenges", "this-is-me-trying": "challenges", "castles-crumbling": "challenges",
   "a-place-in-this-world": "albumFocus", "change": "albumFocus", "gold-rush": "albumFocus", "starlight": "albumFocus",
+  "the-lakes": "adaptive", "stay-stay-stay": "adaptive",
 };
 
 // Charm → token conversion eligibility. Only *skill/mastery* charms can be sacrificed

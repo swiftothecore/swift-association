@@ -8,7 +8,7 @@ import {
   ACHIEVEMENTS, ACH_ICONS, ACH_BY_ID, ACH_GROUPS, ACH_GROUP_COLORS, ACH_GROUP_OF, ACH_NO_TRADE,
   CHALLENGES, CHALLENGE_BY_ID, CHALLENGE_ORDER,
   ALBUM_FOCUS_DIFFS, ALBUM_FOCUS_TARGET,
-  ADAPTIVE_BUCKETS, ADAPTIVE_LEVELS, ADAPT_MAX_LEVEL, ADAPT_START_LEVEL, ADAPT_PROMO_STREAK,
+  ADAPTIVE_BUCKETS, ADAPTIVE_LEVELS, ADAPT_MAX_LEVEL, ADAPT_START_LEVEL, ADAPT_PROMO_STREAK, ADAPT_NODROP_LEVEL,
   PEN_SVG, STAR_SVG, SPARKLE_SVG, DOODLE_SVG,
 } from "./config.js";
 import { buildBraceletSVG } from "./bracelet.js";
@@ -87,6 +87,9 @@ let lives = 0;                  // remaining lives in infinite mode
 let adaptiveLevel = ADAPT_START_LEVEL; // Adaptive: current rarity level (1..4), floats with performance
 let adaptivePeak = ADAPT_START_LEVEL;  // Adaptive: highest level reached this run (the board metric)
 let adaptivePromo = 0;          // Adaptive: correct-in-a-row at the current level toward promotion
+let adaptiveReachedTop = false; // Adaptive: ever hit the Rarest tier this run (for The Lakes)
+let adaptiveHeldTop = true;     // Adaptive: still true if no miss has landed since reaching the top (for Stay Stay Stay)
+let adaptiveDropAnnounced = true; // Adaptive: the dropdown state the player was last shown a curtain for (starts on, at L2)
 let dailyRng = null;            // seeded PRNG, non-null only during a daily game
 let currentChallenge = null;    // the active CHALLENGES entry while gameType === "challenge"
 let challengeRunActive = false; // true only during a live challenge run (gates the achievement sandbox)
@@ -505,6 +508,8 @@ function effectivePool() {
 function effectiveDropdown() {
   if (lyricModeNow()) return false;
   if (gameType === "challenge" && currentChallenge && currentChallenge.rule === "devil" && devilDropOff) return false;
+  // Adaptive: the rarest tiers switch suggestions off so they test recall, not recognition.
+  if (gameType === "adaptive" && adaptiveLevel >= ADAPT_NODROP_LEVEL) return false;
   return currentMode.dropdown;
 }
 // Whether THIS page accepts only a sung lyric line (no title): Lyricist mode always, and
@@ -543,7 +548,7 @@ function titleSongsForWord(word, strict) {
 function renderExcludedNote() {
   const el = $("excludedNote");
   if (!el) return;
-  if (!effectiveNoTitle() || currentMode.dropdown) { el.style.display = "none"; el.innerHTML = ""; return; }
+  if (!effectiveNoTitle() || effectiveDropdown()) { el.style.display = "none"; el.innerHTML = ""; return; }
   const titles = titleSongsForWord(currentWord, effectiveStrict()).map((s) => s.title);
   if (!titles.length) { el.style.display = "none"; el.innerHTML = ""; return; }
   const SHOWN = 3;
@@ -2643,6 +2648,10 @@ function adaptiveAdjust(correct) {
     if (adaptiveLevel > 1) adaptiveLevel--;
   }
   adaptivePeak = Math.max(adaptivePeak, adaptiveLevel);
+  // Adaptive charms: The Lakes the moment you touch the Rarest tier; Stay Stay Stay stays
+  // alive only while no miss has landed since reaching the top (judged at endAdaptive).
+  if (adaptiveLevel >= ADAPT_MAX_LEVEL) { adaptiveReachedTop = true; unlock("the-lakes"); }
+  if (!correct && adaptiveReachedTop) adaptiveHeldTop = false;
   renderAdaptiveGauge();
 }
 
@@ -3096,6 +3105,9 @@ function resetRunState() {
   adaptiveLevel = ADAPT_START_LEVEL;
   adaptivePeak = ADAPT_START_LEVEL;
   adaptivePromo = 0;
+  adaptiveReachedTop = false;
+  adaptiveHeldTop = true;
+  adaptiveDropAnnounced = ADAPT_START_LEVEL < ADAPT_NODROP_LEVEL;   // suggestions on at the start level
   dailyRng = null;
   currentChallenge = null;
   challengeRunActive = false;
@@ -3170,8 +3182,9 @@ function applyInputHints() {
     hint.textContent = "write more of the line for a bigger verse bonus — Enter to answer";
     return;
   }
-  input.placeholder = currentMode.dropdown ? "a title… or sing me a line" : "the full title… or a lyric line";
-  hint.textContent = currentMode.dropdown ? "Enter accepts the top match — or write a lyric line for a verse bonus" : "no suggestions — type the full title or a real lyric line, then Enter";
+  const suggesting = effectiveDropdown();
+  input.placeholder = suggesting ? "a title… or sing me a line" : "the full title… or a lyric line";
+  hint.textContent = suggesting ? "Enter accepts the top match — or write a lyric line for a verse bonus" : "no suggestions — type the full title or a real lyric line, then Enter";
   if (settings.enableHints !== false && currentMode.hint && gameType !== "daily") {
     hint.textContent += " · Tab for a hint";
   }
@@ -4050,6 +4063,8 @@ function endAdaptive() {
       isDaily: false, dailyPerfect: false,
       isInfinite: false, timeouts: gameTimeouts,
     });
+    // Stay Stay Stay: reached the Rarest tier and finished there without ever slipping off it.
+    if (adaptiveReachedTop && adaptiveHeldTop && adaptiveLevel >= ADAPT_MAX_LEVEL) unlock("stay-stay-stay");
     rec = recordAdaptiveRun(peak, score, todayKey());
   }
 
@@ -4305,6 +4320,7 @@ function curtainCardHTML(o) {
 //  • Wildcard — every later round, naming the active rule.
 //  • On Tour! — every later round, announcing tonight's album.
 function roundCurtainHTML() {
+  if (gameType === "adaptive") return adaptiveCurtainHTML();
   if (gameType !== "challenge" || !currentChallenge) return null;
   const c = currentChallenge;
   // Round 1 of any challenge opens with an explanatory intro (button-gated — see
@@ -4331,6 +4347,25 @@ function roundCurtainHTML() {
       sub: album ? `name a song from <b style="color:${col}">${escapeHtml(album)}</b>` : "" });
   }
   return null;
+}
+
+// Adaptive's curtain: shown only on the round where the suggestions dropdown flips state
+// (off as you climb into the rarest tiers, back on if you slip below them). Acknowledged
+// with a tap so the rule change is never a silent surprise. No change means no curtain.
+function adaptiveCurtainHTML() {
+  const live = effectiveDropdown();
+  if (live === adaptiveDropAnnounced) return null;
+  const name = (ADAPTIVE_LEVELS[adaptiveLevel] || "").toLowerCase();
+  if (!live) {
+    return curtainCardHTML({ kicker: `level ${adaptiveLevel} · ${name}`, tag: "suggestions off",
+      headline: "type the full title now",
+      sub: "these words are rare enough that the dropdown comes down. Type the whole title, or sing a real lyric line.",
+      cue: "you know these", button: "got it" });
+  }
+  return curtainCardHTML({ kicker: `level ${adaptiveLevel} · ${name}`, tag: "suggestions back",
+    headline: "the dropdown returns",
+    sub: "back to a gentler tier. Pick from the suggestions again, or sing a line.",
+    cue: "carry on", button: "got it" });
 }
 
 // The round-1 intro curtain for a challenge: names it, restates the rule + win condition,
@@ -4405,6 +4440,10 @@ function mountCurtain(innerHTML) {
 // animation. Every other path starts the clock immediately.
 function beginRoundClock() {
   const html = roundCurtainHTML();
+  // Adaptive: remember the dropdown state we've now surfaced, so the curtain only fires
+  // again on the next genuine flip. Committed after roundCurtainHTML so the pre-flip mount
+  // (nextRound) and this call agree on the same round's curtain.
+  if (gameType === "adaptive") adaptiveDropAnnounced = effectiveDropdown();
   if (!html) { startTimer(); return; }
   showTimerFull();   // pin the clock at a paused full bar beneath the curtain — no leftover time shows through the lift
   const wrap = $("wordDisplay").parentNode;
@@ -4414,9 +4453,6 @@ function beginRoundClock() {
   };
   const ov = mountCurtain(html);   // usually already mounted (pre-flip, Wildcard)
   const reduced = motionReduced();
-  // Round-1 intros (every challenge) carry their own "let's go"/"next" button and wait for
-  // it — unlike the per-round Wildcard/On Tour curtains (round 2+), which auto-lift.
-  const isIntro = round === 1 && !!currentChallenge;
   let done = false;
   const finish = () => { if (done) return; done = true; clearCurtain(); onDone(); };
   const lift = () => {
@@ -4425,9 +4461,10 @@ function beginRoundClock() {
     curtainTimers.push(setTimeout(finish, reduced ? 0 : 360));
   };
   const nextBtn = ov.querySelector(".chall-curtain-next");
-  if (isIntro && nextBtn) {
-    // No auto-lift: the player reads the rules and taps "next" when ready. The whole-overlay
-    // tap is intentionally NOT wired here so a stray click can't skip the intro unread.
+  if (nextBtn) {
+    // Button-gated curtains (every challenge's round-1 intro; Adaptive's suggestions-toggle
+    // notice) wait for an explicit tap, with no auto-lift, and the whole-overlay tap is
+    // intentionally NOT wired so a stray click can't skip the notice unread.
     nextBtn.addEventListener("click", lift);
   } else {
     // Per-round Wildcard rule curtain: auto-lift after a beat, tap anywhere to skip ahead.
