@@ -7,6 +7,7 @@ import {
   SETTINGS_KEY, METRICS_KEY, APP_PREFIX, DEFAULT_SETTINGS,
   CHALLENGES_KEY, CHALLENGE_TOKENS_KEY,
   ALBUM_FOCUS_KEY, ALBUM_FOCUS_TARGET, DIFF_RANK,
+  ADAPTIVE_KEY,
   MODES, MODE_ORDER, TOTAL_ROUNDS,
 } from "./config.js";
 
@@ -158,6 +159,37 @@ export function recordAlbumFocusRun(album, score, diff, countBest = true) {
 }
 export function resetAlbumFocus() {
   try { localStorage.removeItem(ALBUM_FOCUS_KEY); } catch (e) { /* ignore */ }
+}
+
+/* ---------- Adaptive board (sandboxed, like challenges/album focus) ----------
+   { bestPeak, bestScore, date, played }. Ranked on the peak level reached in a run
+   (1..4); ties keep the higher score. A floating 0-13 score is not comparable across
+   runs, so Adaptive never touches the difficulty boards/stats. */
+export function loadAdaptive() {
+  try {
+    const raw = localStorage.getItem(ADAPTIVE_KEY);
+    if (raw) { const o = JSON.parse(raw); if (o && typeof o === "object") return o; }
+  } catch (e) { /* ignore */ }
+  return {};
+}
+export function adaptiveRecord() {
+  const e = loadAdaptive();
+  return { bestPeak: e.bestPeak || 0, bestScore: e.bestScore || 0, date: e.date || null, played: e.played || 0 };
+}
+// Fold a finished Adaptive run into the board. `peak` is the highest level reached (1..4),
+// `score` the 0..TOTAL_ROUNDS correct count. The best run is the highest peak, ties broken
+// by the higher score. Returns the updated record.
+export function recordAdaptiveRun(peak, score, date) {
+  const e = loadAdaptive();
+  e.played = (e.played || 0) + 1;
+  if (peak > (e.bestPeak || 0) || (peak === (e.bestPeak || 0) && score > (e.bestScore || 0))) {
+    e.bestPeak = peak; e.bestScore = score; e.date = date;
+  }
+  try { localStorage.setItem(ADAPTIVE_KEY, JSON.stringify(e)); } catch (err) { /* ignore */ }
+  return adaptiveRecord();
+}
+export function resetAdaptive() {
+  try { localStorage.removeItem(ADAPTIVE_KEY); } catch (e) { /* ignore */ }
 }
 
 /* ---------- Game types ever played (for "Hits Different") ---------- */

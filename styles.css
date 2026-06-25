@@ -192,6 +192,40 @@
     to   { width: 20px; opacity: 1; }
   }
 
+  /* adaptive-mode level gauge: the rarity level you're riding, shown as four lit
+     pips with a promo sub-meter filling toward the next. Notebook-honest, not an XP bar. */
+  .adaptive-gauge {
+    display: none; align-items: center; justify-content: center; gap: 10px;
+    flex-wrap: wrap; margin: 2px auto 10px; padding: 5px 12px;
+    width: max-content; max-width: 90%;
+    border: 1.4px solid rgba(43,39,34,0.18); border-radius: 16px;
+    background: rgba(247,201,72,0.07);
+  }
+  .adaptive-gauge.show { display: flex; }
+  .adapt-label {
+    font-family: var(--type); font-size: 11px; letter-spacing: 0.4px;
+    text-transform: uppercase; color: var(--ink); font-weight: 700; white-space: nowrap;
+  }
+  .adapt-pips { display: inline-flex; gap: 5px; }
+  .adapt-pip {
+    width: 9px; height: 9px; border-radius: 50%;
+    border: 1.4px solid var(--ink-soft); background: transparent;
+    transition: background 0.3s ease, transform 0.3s ease;
+  }
+  .adapt-pip.on { background: var(--ink-soft); }
+  .adapt-pip.cur { background: var(--ink); border-color: var(--ink); transform: scale(1.35); }
+  .adapt-meter {
+    position: relative; width: 46px; height: 5px; border-radius: 3px;
+    background: rgba(43,39,34,0.14); overflow: hidden;
+  }
+  .adapt-meter i {
+    position: absolute; left: 0; top: 0; height: 100%; border-radius: 3px;
+    background: var(--ink); transition: width 0.3s ease;
+  }
+  .adapt-meter--top { background: var(--highlighter, rgba(247,201,72,0.5)); }
+  [data-reduce-motion="on"] .adapt-pip,
+  [data-reduce-motion="on"] .adapt-meter i { transition: none; }
+
   /* Visually hidden but available to screen readers — used for live status/timer
      cues and any text alternative to a purely visual element. */
   .sr-only {
@@ -1805,6 +1839,25 @@
     font-family: var(--type); font-size: 10px; color: var(--ink-soft);
     margin: 12px 0 4px; text-align: right;
   }
+
+  /* adaptive stats ladder: the four rungs, lit up to the best peak reached */
+  .adapt-ladder { width: 100%; border-collapse: collapse; table-layout: fixed; }
+  .adapt-ladder tbody tr { border-top: 1px solid rgba(43,39,34,0.12); }
+  .adapt-ladder tbody tr:last-child { border-bottom: 1px solid rgba(43,39,34,0.12); }
+  .adapt-rung { opacity: 0.4; }
+  .adapt-rung.reached { opacity: 1; }
+  .adapt-rung-lvl {
+    font-family: var(--hand); font-size: 22px; font-weight: 700; text-align: left;
+    color: var(--ink); padding: 10px 0; width: 18%;
+  }
+  .adapt-rung-name {
+    font-family: var(--hand); font-size: 22px; font-weight: 400; color: var(--ink); padding: 10px 0;
+  }
+  .adapt-rung-mark {
+    font-family: var(--type); font-size: 11px; letter-spacing: 0.5px; color: var(--ink-soft);
+    text-align: right; padding: 10px 0;
+  }
+  .adapt-rung.peak .adapt-rung-mark { color: var(--ink); font-weight: 700; }
 
   /* ---------- Easter eggs (Phase 8) ---------- */
   /* Margin doodles — faint hand-drawn ink scribbles in the page corners */

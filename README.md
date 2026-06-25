@@ -7,6 +7,7 @@ Standout features:
 - Five difficulty options
 - Hints for those that need them
 - Endless mode
+- Adaptive mode, where the word difficulty climbs and falls with how you play
 - In-depth settings menu
 - Unique UI with a notebook theme
 - Support for all eras + all miscellaneous and some unreleased Taylor songs coming soon

@@ -21,6 +21,7 @@ export const METRICS_KEY = "swiftSongAssociation.metrics";    // lifetime cross-
 export const CHALLENGES_KEY = "swiftSongAssociation.challenges";        // per-challenge progress — { [id]: {unlocked, defeated, attempts, best} }
 export const CHALLENGE_TOKENS_KEY = "swiftSongAssociation.challengeTokens"; // { balance, fromAchievements:[] } — tokens spent to unlock challenges
 export const ALBUM_FOCUS_KEY = "swiftSongAssociation.albumFocus";       // per-album best/beaten board — { [album]: {best, bestDiff, beaten, beatenDiff, perfected, perfectedDiff} }
+export const ADAPTIVE_KEY = "swiftSongAssociation.adaptive";            // Adaptive mode board — { bestPeak, bestScore, date, played }
 
 // Every persisted key shares this namespace; export/import and "clear everything"
 // sweep all keys under it.
@@ -101,6 +102,18 @@ export const ALBUM_FOCUS_TARGET = 9;                           // score ≥ this
 // Hardness ranking — the completed-album look scales with the toughest difficulty it was
 // beaten/perfected at, so re-beating on Hard upgrades the keepsake (see recordAlbumFocusRun).
 export const DIFF_RANK = { easy: 1, medium: 2, hard: 3 };
+
+/* ---------- Adaptive mode ----------
+   A third gameType beside Classic and Infinite. A fixed 13-round run where word RARITY
+   alone floats with live performance, on a visible level. The level maps straight onto the
+   four rarity buckets; every other lever stays fixed at Normal's baseline. Sandboxed in its
+   own board (ADAPTIVE_KEY), ranked on the peak level reached (a floating 0-13 score is not
+   comparable, so it is never ranked against the difficulty boards). See PLAN.md section 5. */
+export const ADAPTIVE_BUCKETS = [null, "easy", "all", "hard", "ultra"];   // level 1..4 -> wordBuckets key (index 0 unused)
+export const ADAPTIVE_LEVELS = [null, "Common", "Deeper", "Rare", "Rarest"]; // level 1..4 -> readable tier name
+export const ADAPT_MAX_LEVEL = 4;       // top level (ultra bucket)
+export const ADAPT_START_LEVEL = 2;     // start in the middle (the "all" bucket)
+export const ADAPT_PROMO_STREAK = 2;    // correct answers at a level needed to climb one (a single miss demotes)
 
 /* Challenges mode — discrete rule-bending puzzles, unlocked with tokens and "defeated".
    Pure data: each entry declares a `rule` token; app.js dispatches on it (round modifier,

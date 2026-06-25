@@ -208,11 +208,12 @@
         <p class="mode-picker-label">lives</p>
         <div id="variantTabs" class="mode-tabs"></div>
       </div>
-      <div class="mode-picker">
+      <div id="difficultyRow" class="mode-picker">
         <p class="mode-picker-label">difficulty</p>
         <div id="modeTabs" class="mode-tabs"></div>
         <p id="modeBlurb" class="mode-blurb"></p>
       </div>
+      <p id="adaptiveNote" class="mode-blurb adaptive-note" style="display:none;"></p>
       <p id="startPodiumTitle" class="podium-title">Your best</p>
       <div id="startBest" class="start-best"></div>
       <button id="playBtn" class="btn-primary" style="margin-top:18px;">Start writing</button>
@@ -312,6 +313,7 @@
       </div>
       <div id="bracelet" class="bracelet"></div>
     </div>
+    <div id="adaptiveGauge" class="adaptive-gauge" aria-hidden="true"></div>
 
     <p class="word-label">write a song with</p>
     <div class="word-wrap"><span id="wordDisplay" class="word" aria-live="polite" aria-atomic="true">—</span><span id="rarityStamp" class="rarity-stamp" aria-hidden="true"></span></div>
