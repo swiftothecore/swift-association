@@ -172,8 +172,18 @@ body {
 .sx-flat-loc { font-family: var(--type); font-size: 10px; color: var(--ink-faint); margin-left: auto; }
 .sx-hit-flat .sx-lines { border-bottom: 0; }
 
+/* honest footer — copyright/about note, no tracking, offline */
+.sx-foot {
+  max-width: 820px; margin: 0 auto 60px; padding: 0 34px 0 62px;
+  font-family: var(--type); font-size: 11px; line-height: 1.7; color: #cdbf9f;
+}
+.sx-foot p { margin: 6px 0; max-width: 60ch; }
+.sx-foot a { color: #e6dcc1; text-decoration: none; border-bottom: 1px dashed rgba(230,220,193,.4); }
+.sx-foot a:hover { border-bottom-color: rgba(230,220,193,.85); }
+
 @media (max-width: 560px) {
   .sx-page { padding: 22px 18px 40px 42px; background-image: linear-gradient(to right, transparent 28px, var(--margin) 28px, var(--margin) 29px, transparent 29px); }
   #q { font-size: 28px; }
   .sx-hit { grid-template-columns: 42px 1fr; gap: 7px; }
+  .sx-foot { padding: 0 18px 0 42px; }
 }
