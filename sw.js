@@ -7,8 +7,8 @@
  *    CACHE on every change; bump it only to evict stale precached entries.
  *  - cross-origin (Google Fonts) → CACHE-FIRST (offline fonts; they ~never change).
  *
- * Paths are relative so the worker works under the project subpath
- * (…github.io/swift-association-testing/).
+ * Paths are relative so the worker works at the site root (swiftassociation.com)
+ * and under any project subpath, without hardcoding the origin.
  */
 const CACHE = "stta-v6";
 const ASSETS = [
