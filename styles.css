@@ -2245,6 +2245,23 @@
      so the cards read landscape and the titles fit on one line; the corner tape
      sitting over the red margin rule looks intentionally pinned-over-the-edge. */
   .see-also { display: flex; justify-content: center; align-items: stretch; gap: 14px; margin: 22px -12px 0; }
+  /* Companion-tool entry: the lyrics searcher lives on its own page, so it reads as a
+     margin note rather than one of the data nav-cards. Typewriter label, red-pen
+     magnifier (matching the searcher), a hand-drawn underline that fills on hover. */
+  .search-link {
+    display: inline-flex; align-items: center; gap: 9px;
+    margin: 16px auto 0; padding: 6px 4px 5px; width: fit-content;
+    text-decoration: none; color: var(--ink-soft);
+    border-bottom: 1.5px dashed rgba(178, 58, 58, 0.32);
+    transition: color 0.16s ease, border-color 0.16s ease;
+  }
+  .search-link-ic { width: 17px; height: 17px; color: rgba(178, 58, 58, 0.85); flex: none; }
+  .search-link-label { font-family: var(--type); font-size: 12px; letter-spacing: 0.04em; }
+  .search-link-arrow { font-family: var(--type); font-size: 12px; opacity: 0; transform: translateX(-4px); transition: opacity 0.16s ease, transform 0.16s ease; }
+  .search-link:hover, .search-link:focus-visible {
+    color: var(--ink); border-bottom-color: rgba(178, 58, 58, 0.7); outline: none;
+  }
+  .search-link:hover .search-link-arrow, .search-link:focus-visible .search-link-arrow { opacity: 0.7; transform: translateX(0); }
   .nav-card {
     --card-bg: #fbf6e9;
     flex: 1; min-width: 0; width: auto; margin: 0;

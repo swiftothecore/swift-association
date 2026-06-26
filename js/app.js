@@ -105,6 +105,7 @@ let comboClock = 0;             // It's A Clock!: seconds left on the single sha
 let challengeTargetSong = null; // One Of A Kind: the never-before-answered song to surface
 let challengeForcedRound = 0;   // One Of A Kind: the round that forces challengeForcedWordVal
 let challengeForcedWordVal = "";// One Of A Kind: the prompt word that surfaces the target song
+let forcedFirstWord = "";       // "Play this word" deep-link (search/?word=): forces round 1's prompt word
 let newSongLives = 0;           // One Of A Kind: wrong target guesses left before the run fails
 const NEW_SONG_LIVES = 3;       // One Of A Kind: starting guesses (discourages spamming the target)
 let extraSecondsPerRound = 0;   // Choose Your Path: bonus seconds added to every round's clock
@@ -3085,6 +3086,7 @@ function resetRunState() {
   challengeTargetSong = null;
   challengeForcedRound = 0;
   challengeForcedWordVal = "";
+  forcedFirstWord = "";
   newSongLives = 0;
   extraSecondsPerRound = 0;
   skipTokens = 0;
@@ -3238,16 +3240,44 @@ function useHint() {
   }
 }
 
-function startGame() {
+function startGame(opts) {
   gameType = "classic";
   rememberGameType("classic");
   resetRunState();
+  if (opts && opts.word) forcedFirstWord = opts.word;   // "Play this word" from the searcher
   applyInputHints();
   updateTagline();
   $("pageTotalWrap").style.display = "";
   $("pageTotal").textContent = TOTAL_ROUNDS;
   showScreen("game");
   nextRound();
+}
+
+// "Play this word" from the searcher (search/?word=…). Starts a normal classic run
+// with round 1 forced to the requested word, if it's a real playable prompt word.
+// Returns true if it took. Matching is case-insensitive against the playable pool.
+function startFromWord(raw) {
+  const want = String(raw || "").trim().toLowerCase();
+  if (!want) return false;
+  const match = playableWords.find((w) => w.toLowerCase() === want);
+  if (!match) return false;
+  startGame({ word: match });
+  return true;
+}
+
+// Read a `?word=` deep-link (from the searcher's "play this word"), strip it from the
+// URL so a refresh won't restart the round, then launch a forced classic run. Silently
+// ignores an unknown/empty word, leaving the player on the start screen.
+function maybeStartFromWordParam() {
+  try {
+    const params = new URLSearchParams(location.search);
+    if (!params.has("word")) return;
+    const word = params.get("word");
+    params.delete("word");
+    const qs = params.toString();
+    history.replaceState(null, "", location.pathname + (qs ? "?" + qs : "") + location.hash);
+    if (word && word.trim()) startFromWord(word);
+  } catch (e) { /* malformed URL — ignore */ }
 }
 
 // Infinite mode: endless rounds until lives run out. `opts.carry` keeps the
@@ -4653,7 +4683,14 @@ function advanceRound() {
   round++;
   roundLocked = false;
   justEarnedIndex = -1;
-  currentWord = challengeForcedWord(round) || pickWord();   // One Of A Kind forces its target word
+  // "Play this word" deep-link forces round 1's word; every later round draws normally.
+  if (round === 1 && forcedFirstWord) {
+    currentWord = forcedFirstWord;
+    if (!usedWords.includes(currentWord)) usedWords.push(currentWord);
+    forcedFirstWord = "";
+  } else {
+    currentWord = challengeForcedWord(round) || pickWord();   // One Of A Kind forces its target word
+  }
   currentSongs = validSongs(currentWord, effectiveStrict(), effectiveNoTitle());
   currentLyricSongs = currentSongs;   // full lyrics-valid set (soft-rejects judge near-misses off this)
   // Title...?: flip the rule — the only valid answers are songs whose TITLE holds the word.
@@ -7116,6 +7153,7 @@ async function init() {
     $("loading").style.display = "none";
     $("startContent").style.display = "";
     refreshStartBoard();
+    maybeStartFromWordParam();   // "Play this word" deep-link from the searcher
   } catch (err) {
     $("loading").outerHTML = `
       <div class="error">
