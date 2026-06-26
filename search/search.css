@@ -82,7 +82,35 @@ body {
 .sx-bar:empty { display: none; }
 .sx-bar span { min-width: 2px; }
 
+/* "play this word in the game" — a red-pen invitation tucked beside the counter */
+.sx-play {
+  font-family: var(--type); font-size: 11px; letter-spacing: .02em;
+  color: var(--pen); text-decoration: none; white-space: nowrap;
+  border-bottom: 1px dashed rgba(185, 64, 47, .45); padding-bottom: 1px; margin-left: 10px;
+}
+.sx-play:hover { color: #8f2e20; border-bottom-color: rgba(185, 64, 47, .9); }
+
 .sx-hint { font-family: var(--hand); font-size: 21px; color: var(--ink-faint); margin-top: 22px; }
+
+/* recent searches — a little jotted list shown before you start typing */
+.sx-recent { margin-top: 26px; max-width: 460px; }
+.sx-recent-head {
+  font-family: var(--type); font-size: 11px; letter-spacing: .06em; text-transform: uppercase;
+  color: var(--ink-faint); display: flex; align-items: baseline; gap: 10px;
+  border-bottom: 1px solid #e6dcc6; padding-bottom: 5px;
+}
+.sx-recent-clear {
+  font-family: var(--type); font-size: 10px; color: var(--ink-faint);
+  background: none; border: 0; cursor: pointer; padding: 0; margin-left: auto; text-transform: none;
+}
+.sx-recent-clear:hover { color: var(--pen); text-decoration: underline; }
+.sx-recent-list { display: flex; flex-wrap: wrap; gap: 8px 14px; margin-top: 12px; }
+.sx-recent-item {
+  font-family: var(--hand); font-size: 20px; line-height: 1; color: var(--ink-soft);
+  background: none; border: 0; cursor: pointer; padding: 2px 0;
+  border-bottom: 1.5px solid transparent;
+}
+.sx-recent-item:hover { color: var(--ink); border-bottom-color: var(--pen); }
 
 /* results — a binder divider per album, songs within */
 .sx-results { margin-top: 14px; }

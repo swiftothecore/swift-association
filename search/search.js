@@ -6,13 +6,15 @@
 // its section and per-section line number without re-parsing strings.
 import { escapeHtml, fuzzySubstringRatio } from "../js/util.js";
 import { wordRegex, highlightWord } from "../js/match.js";
-import { ALBUM_COLORS } from "../js/config.js";
+import { ALBUM_COLORS, SEARCH_KEY } from "../js/config.js";
 
 const $ = (id) => document.getElementById(id);
 const FUZZY_MIN = 0.78;   // token similarity needed for a fuzzy hit (0..1)
+const RECENT_MAX = 8;     // how many recent searches to keep
 
 let SONGS = [];                  // flat: { title, album, sections:[{label, lines}] }
 const ALBUM_INDEX = new Map();   // album name -> release order (from songs.json order)
+const PROMPT_WORDS = new Set();  // words.json (lowercased) — only these can "play in the game"
 
 // Section TYPES present in the data (for the structural filter), in a sensible order.
 const SECTION_ORDER = ["(intro)", "Intro", "Verse", "Pre-Chorus", "Chorus", "Post-Chorus",
@@ -21,12 +23,66 @@ let SECTION_TYPES = [];
 
 const state = { q: "", mode: "stem", grouped: true, section: "any", pos: "any" };
 
+/* ---------- persistence (shared-origin localStorage) ----------
+   We remember the two "how to search" preferences (match mode + layout) across visits —
+   the one thing the popular competitor explicitly doesn't. The content filters
+   (section/position) are deliberately NOT persisted: a sticky filter silently hiding
+   results on the next visit is a trap. Both still travel in the deep-link hash. */
+function loadStore() {
+  try { return JSON.parse(localStorage.getItem(SEARCH_KEY)) || {}; } catch (e) { return {}; }
+}
+function saveStore(o) {
+  try { localStorage.setItem(SEARCH_KEY, JSON.stringify(o)); } catch (e) { /* private mode / full disk */ }
+}
+function applyPrefs() {
+  const s = loadStore();
+  if (["stem", "exact", "fuzzy"].includes(s.mode)) state.mode = s.mode;
+  if (s.view === "flat") state.grouped = false;
+  else if (s.view === "grouped") state.grouped = true;
+}
+function savePrefs() {
+  const s = loadStore();
+  s.mode = state.mode;
+  s.view = state.grouped ? "grouped" : "flat";
+  saveStore(s);
+}
+
+function getRecent() {
+  const r = loadStore().recent;
+  return Array.isArray(r) ? r : [];
+}
+// Record a settled query. Collapsing entries that are a prefix of the new one folds the
+// keystroke trail ("lov" → "love") into a single entry without a debounce timer.
+function pushRecent(raw) {
+  const q = raw.trim();
+  if (q.length < 2) return;
+  const ql = q.toLowerCase();
+  const s = loadStore();
+  const recent = (Array.isArray(s.recent) ? s.recent : [])
+    .filter((e) => { const el = e.toLowerCase(); return el !== ql && !ql.startsWith(el); });
+  recent.unshift(q);
+  s.recent = recent.slice(0, RECENT_MAX);
+  saveStore(s);
+}
+function clearRecent() {
+  const s = loadStore();
+  delete s.recent;
+  saveStore(s);
+}
+
 /* ---------- data ---------- */
 async function loadData() {
   const res = await fetch("../songs.json");
   if (!res.ok) throw new Error("Failed to load songs.json");
   const grouped = await res.json();
   grouped.forEach((g, i) => ALBUM_INDEX.set(g.album, i));
+  // The prompt-word list the game plays from — gates the "play this word" link so it
+  // only appears for words a round can actually start on. A miss is non-fatal: the game
+  // re-validates and silently ignores an unknown ?word=, so a stale list never breaks play.
+  try {
+    const wr = await fetch("../words.json");
+    if (wr.ok) for (const w of await wr.json()) PROMPT_WORDS.add(String(w).toLowerCase());
+  } catch (e) { /* searcher still works without the play-in-game link */ }
   SONGS = grouped.flatMap(({ album, songs }) =>
     songs.map((s) => ({ title: s.title, album, sections: Array.isArray(s.sections) ? s.sections : [] }))
   );
@@ -139,9 +195,17 @@ function renderInitial(q) {
   $("counter").innerHTML = "";
   $("bar").innerHTML = "";
   const msg = q.length === 1
-    ? "Keep going — type at least two letters."
+    ? "Keep going, type at least two letters."
     : `Type a word to search every lyric line across ${SONGS.length} songs.`;
-  $("results").innerHTML = `<p class="sx-hint">${escapeHtml(msg)}</p>`;
+  const recent = getRecent();
+  const recentHTML = recent.length
+    ? `<div class="sx-recent"><div class="sx-recent-head">recent searches` +
+      `<button type="button" class="sx-recent-clear" id="recentClear">clear</button></div>` +
+      `<div class="sx-recent-list">` +
+      recent.map((r) => `<button type="button" class="sx-recent-item" data-q="${escapeHtml(r)}">${escapeHtml(r)}</button>`).join("") +
+      `</div></div>`
+    : "";
+  $("results").innerHTML = `<p class="sx-hint">${escapeHtml(msg)}</p>` + recentHTML;
 }
 
 function albumBar(groups) {
@@ -175,8 +239,14 @@ function render(q, groups) {
     $("results").innerHTML = "";
     return;
   }
-  $("counter").innerHTML = `found in <b>${plural(songs, "song")}</b> &middot; <b>${plural(lines, "line")}</b>`;
+  // "Play this word" — only offered when the query is a real prompt word the game
+  // can start a round on (gated by words.json), so the link never dead-ends.
+  const play = PROMPT_WORDS.has(q.toLowerCase())
+    ? ` <a class="sx-play" href="../index.html?word=${encodeURIComponent(q.toLowerCase())}" title="Start a game round on this word">play this word in the game &rarr;</a>`
+    : "";
+  $("counter").innerHTML = `found in <b>${plural(songs, "song")}</b> &middot; <b>${plural(lines, "line")}</b>${play}`;
   $("bar").innerHTML = albumBar(groups);
+  pushRecent(q);
 
   if (state.grouped) {
     // Group by album (a binder divider per album), songs within. Albums in release order.
@@ -219,14 +289,17 @@ function readHash() {
   if (p.get("q")) state.q = p.get("q");
   if (["stem", "exact", "fuzzy"].includes(p.get("mode"))) state.mode = p.get("mode");
   if (p.get("view") === "flat") state.grouped = false;
+  else if (p.get("view") === "grouped") state.grouped = true;   // can override a saved "flat"
   if (p.get("section") && SECTION_TYPES.includes(p.get("section"))) state.section = p.get("section");
   if (["start", "end"].includes(p.get("pos"))) state.pos = p.get("pos");
 }
 function writeHash() {
   const p = new URLSearchParams();
-  if (state.q.trim()) p.set("q", state.q.trim());
-  if (state.mode !== "stem") p.set("mode", state.mode);
-  if (!state.grouped) p.set("view", "flat");
+  const q = state.q.trim();
+  if (q) p.set("q", q);
+  // A real search encodes mode + layout explicitly so a shared link reproduces faithfully
+  // regardless of the recipient's saved prefs. A bare URL leaves them to the saved prefs.
+  if (q.length >= 2) { p.set("mode", state.mode); p.set("view", state.grouped ? "grouped" : "flat"); }
   if (state.section !== "any") p.set("section", state.section);
   if (state.pos !== "any") p.set("pos", state.pos);
   history.replaceState(null, "", "#" + p.toString());
@@ -241,6 +314,7 @@ function syncToggles() {
 }
 
 function init() {
+  applyPrefs();   // remembered mode + layout first; the deep-link hash overrides below
   readHash();
   const input = $("q");
   input.value = state.q;
@@ -259,13 +333,22 @@ function init() {
     t = setTimeout(runSearch, state.mode === "fuzzy" ? 220 : 120);
   });
   for (const b of document.querySelectorAll("[data-mode]")) {
-    b.addEventListener("click", () => { state.mode = b.dataset.mode; syncToggles(); runSearch(); });
+    b.addEventListener("click", () => { state.mode = b.dataset.mode; savePrefs(); syncToggles(); runSearch(); });
   }
   for (const b of document.querySelectorAll("[data-view]")) {
-    b.addEventListener("click", () => { state.grouped = b.dataset.view !== "flat"; syncToggles(); runSearch(); });
+    b.addEventListener("click", () => { state.grouped = b.dataset.view !== "flat"; savePrefs(); syncToggles(); runSearch(); });
   }
   $("section").addEventListener("change", (e) => { state.section = e.target.value; syncToggles(); runSearch(); });
   $("pos").addEventListener("change", (e) => { state.pos = e.target.value; syncToggles(); runSearch(); });
+
+  // Recent-search list (rendered in the initial state) is wired via delegation since
+  // #results is re-rendered on every search.
+  $("results").addEventListener("click", (e) => {
+    const item = e.target.closest(".sx-recent-item");
+    if (item) { input.value = item.dataset.q; state.q = item.dataset.q; runSearch(); input.focus(); return; }
+    if (e.target.closest("#recentClear")) { clearRecent(); renderInitial(state.q.trim()); }
+  });
+
   runSearch();
   if (!state.q) input.focus();
 }
