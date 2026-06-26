@@ -818,11 +818,16 @@ function lifetimeStatsHTML() {
       <div class="cat-card-sub" style="color:${albColor}">${favAlbum ? "×" + favAlbum.count + " correct" : "play a game"}</div>
     </div>`;
 
+  // The nemesis word is a real prompt word, so it deep-links straight into the lyric
+  // searcher — one click to see every song that holds the word you keep missing.
+  const nemesisSub = nemesis
+    ? `missed ×${nemesis.count} · <a class="cat-search-link" href="search/#q=${encodeURIComponent(nemesis.key)}" title="See every song with “${escapeHtml(nemesis.key)}” in the lyric searcher">look it up →</a>`
+    : "no misses yet";
   const nemesisBlock = `
     <div class="cat-nemesis">
       <div>
         <div class="cat-card-head">nemesis word</div>
-        <div class="cat-nemesis-sub">${nemesis ? "missed ×" + nemesis.count : "no misses yet"}</div>
+        <div class="cat-nemesis-sub">${nemesisSub}</div>
       </div>
       <div class="cat-nemesis-word">
         <span>${nemesis ? escapeHtml(nemesis.key) : "—"}</span>
