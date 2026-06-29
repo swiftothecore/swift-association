@@ -1521,6 +1521,30 @@
     background: rgba(178,58,58,0.15); color: var(--ink);
   }
 
+  /* Lyric context: a quiet toggle that expands ±2 surrounding lines, with a nested
+     link out to the whole song. Kept low-key so the card stays uncluttered by default. */
+  .lyric-ctx-toggle {
+    margin-top: 6px; padding: 1px 0;
+    font-family: var(--type); font-size: 10px; letter-spacing: 0.8px; text-transform: uppercase;
+    color: var(--ink-soft); background: transparent;
+    border: none; border-bottom: 1px dashed var(--ink-soft);
+    cursor: pointer;
+  }
+  .lyric-ctx-toggle:hover { color: var(--ink); }
+  .lyric-ctx { margin-top: 8px; }
+  .lyric-ctx-lines { margin-bottom: 6px; }
+  .lc-line { font-family: var(--hand); font-size: 17px; line-height: 1.45; color: var(--ink-soft); }
+  .lc-line.lc-match { color: var(--ink); }
+  .lc-line.lc-match mark { background: var(--highlighter); color: var(--ink); padding: 0 3px; font-weight: 700; }
+  .lc-gap { font-family: var(--type); font-size: 12px; color: var(--ink-soft); opacity: 0.6; line-height: 1; }
+  .lyric-fullsong {
+    font-family: var(--type); font-size: 10px; letter-spacing: 0.8px; text-transform: uppercase;
+    color: var(--album-color, var(--ink-soft)); background: transparent;
+    border: none; padding: 2px 0; cursor: pointer;
+  }
+  .lyric-fullsong:hover { text-decoration: underline; }
+  .cd-paused { font-family: var(--type); font-size: 12px; color: var(--ink-soft); font-style: italic; }
+
   .countdown {
     text-align: center; margin-top: 18px;
     font-family: var(--type); font-size: 12px; color: var(--ink-soft);
@@ -2544,6 +2568,33 @@
   /* Freeze the page behind an open modal so the background can't scroll. */
   body.modal-open { overflow: hidden; }
   body[data-reduce-motion="on"] .settings-scrim { animation: none; }
+
+  /* Full-song lyrics modal — same notebook card as Settings, album-tinted left rule. */
+  .song-modal { position: fixed; inset: 0; z-index: 210; display: none; }
+  .song-modal.open { display: block; }
+  .song-scrim { position: absolute; inset: 0; background: rgba(34, 24, 12, 0.5); animation: fade 0.25s ease; }
+  body[data-reduce-motion="on"] .song-scrim { animation: none; }
+  .song-card {
+    position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    width: min(560px, calc(100vw - 28px)); max-height: calc(100vh - 40px); overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: 20px 24px 28px 48px;
+    --rule-x: 34px;
+    border-left: 4px solid var(--album-color, var(--ink-soft));
+  }
+  .song-modal-nav {
+    display: flex; align-items: baseline; justify-content: space-between; gap: 12px;
+    margin-bottom: 14px; padding-bottom: 8px; border-bottom: 1px dashed rgba(43, 39, 34, 0.2);
+  }
+  .song-modal-title { font-family: var(--hand); font-weight: 700; font-size: 24px; color: var(--ink); line-height: 1.1; }
+  .song-modal-body { font-family: var(--hand); }
+  .fs-section { margin: 0 0 16px; }
+  .fs-section:last-child { margin-bottom: 0; }
+  .fs-label {
+    font-family: var(--type); font-size: 9px; letter-spacing: 1.4px; text-transform: uppercase;
+    color: var(--ink-soft); margin: 0 0 4px;
+  }
+  .song-modal-body .lc-line { font-size: 19px; line-height: 1.5; }
 
   .settings-nav {
     display: flex; align-items: center; justify-content: space-between;

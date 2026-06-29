@@ -173,6 +173,17 @@ if (location.pathname.endsWith('/index.html')) {
     <div id="settingsBody"></div>
   </div>
 </div>
+
+<div id="songModal" class="song-modal" aria-hidden="true">
+  <div class="song-scrim" id="songScrim"></div>
+  <div class="song-card card" role="dialog" aria-modal="true" aria-label="Full lyrics">
+    <div class="song-modal-nav">
+      <span class="song-modal-title" id="songModalTitle"></span>
+      <button id="songModalClose" class="btn-link" aria-label="Close lyrics">✕ close</button>
+    </div>
+    <div id="songModalBody" class="song-modal-body"></div>
+  </div>
+</div>
 <input id="importFile" type="file" accept="application/json,.json" style="display:none;" />
 
 <div class="app">

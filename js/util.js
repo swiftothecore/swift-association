@@ -103,14 +103,20 @@ export function fuzzySubstringRatio(pattern, text) {
 }
 
 // Mulberry32 — a fast, small seeded PRNG. Returns a factory that produces
-// float values in [0, 1) each call, exactly like Math.random().
+// float values in [0, 1) each call, exactly like Math.random(). The whole state is
+// the advancing counter, exposed via .state()/.seek() so a seeded sequence (the daily
+// challenge) can be saved mid-run and resumed at the exact same position.
 export function mulberry32(seed) {
-  return function() {
-    seed |= 0; seed = seed + 0x6D2B79F5 | 0;
-    let t = Math.imul(seed ^ seed >>> 15, 1 | seed);
+  let s = seed | 0;
+  const rng = function() {
+    s = s + 0x6D2B79F5 | 0;
+    let t = Math.imul(s ^ s >>> 15, 1 | s);
     t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
     return ((t ^ t >>> 14) >>> 0) / 4294967296;
   };
+  rng.state = () => s;
+  rng.seek = (v) => { s = v | 0; };
+  return rng;
 }
 
 // Hash a "YYYY-MM-DD" date string to a uint32 seed (djb2-style).

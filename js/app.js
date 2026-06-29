@@ -21,6 +21,7 @@ import {
   loadAchievements, saveAchievements,
   loadMode,
   loadDailyResult, saveDailyResult, clearDailyResult, dailyTotals, dailyPlayedDates,
+  loadDailyProgress, saveDailyProgress, clearDailyProgress,
   bumpDailyStreak, effectiveDailyStreak, saveDailyStreak,
   markTypePlayed,
   loadSongTally, recordGameTally,
@@ -92,6 +93,7 @@ let adaptiveReachedTop = false; // Adaptive: ever hit the Rarest tier this run (
 let adaptiveHeldTop = true;     // Adaptive: still true if no miss has landed since reaching the top (for Stay Stay Stay)
 let adaptiveDropAnnounced = true; // Adaptive: the dropdown state the player was last shown a curtain for (starts on, at L2)
 let dailyRng = null;            // seeded PRNG, non-null only during a daily game
+let dailyShareTime = null;      // completion time (sec) of the daily on screen — for the copyable result
 let currentChallenge = null;    // the active CHALLENGES entry while gameType === "challenge"
 let challengeRunActive = false; // true only during a live challenge run (gates the achievement sandbox)
 let vanishTimer = null;         // Vanishing Word: timeout that hides the prompt word
@@ -2308,7 +2310,7 @@ let challSelectedId = null;          // which challenge the detail panel is show
 const CHALL_TICK = `<svg viewBox="0 0 20 20" class="chall-mark-svg" aria-hidden="true"><circle cx="10" cy="10" r="8.5" fill="none" stroke="#d8a32f" stroke-width="1.6"/><path d="M5.5 10.2 L8.7 13.4 L14.5 6.4" fill="none" stroke="#d8a32f" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
 const CHALL_RING = `<svg viewBox="0 0 20 20" class="chall-mark-svg" aria-hidden="true"><circle cx="10" cy="10" r="8.5" fill="none" stroke="#b6a98d" stroke-width="1.6"/></svg>`;
 const CHALL_LOCK = `<svg viewBox="0 0 20 20" class="chall-mark-svg" aria-hidden="true"><rect x="4.5" y="9" width="11" height="8" rx="1.4" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M6.8 9 V6.7 a3.2 3.2 0 0 1 6.4 0 V9" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>`;
-const CHALL_STAR = `<svg viewBox="0 0 24 24" class="chall-star-svg" aria-hidden="true"><path d="M12 2.5l2.7 6.2 6.8.5-5.2 4.4 1.6 6.6L12 17.1 6.1 20.8l1.6-6.6L2.5 9.2l6.8-.5z" fill="#e0a32f" stroke="#b9821f" stroke-width="0.8"/></svg>`;
+const CHALL_STAR = `<svg viewBox="0 0 24 24" class="chall-star-svg" aria-hidden="true"><path d="M12 2 L14.7 8.3 L21.5 8.9 L16.4 13.4 L17.9 20.1 L12 16.6 L6.1 20.1 L7.6 13.4 L2.5 8.9 L9.3 8.3 Z" fill="#e0a32f" stroke="#b9821f" stroke-width="0.8" stroke-linejoin="round"/></svg>`;
 
 // Difficulty rating — cassette tapes (1 easy → 3 hard). Echoes the dark-shell +
 // cream-label cassette desk prop; the shell is recoloured per tier by the
@@ -3147,10 +3149,13 @@ function resetRunState() {
 // history. Idempotent per run via runFolded.
 function foldRunProgress() {
   if (runFolded || roundResults.length === 0) return;
-  if (gameType === "challenge" || gameType === "album" || gameType === "adaptive") { runFolded = true; return; }   // sandboxed — never fold into difficulty stats
+  // Sandboxed modes never fold into difficulty stats. Daily is also skipped: it resumes
+  // after a refresh/exit and folds its tally in full at completion (endGame), so folding
+  // a partial here would double-count the same rounds once the run is finished.
+  if (gameType === "challenge" || gameType === "album" || gameType === "adaptive" || gameType === "daily") { runFolded = true; return; }
   runFolded = true;
   const partialScore = gameType === "infinite" ? roundResults.length : score;
-  if (gameType !== "daily") updateStats(partialScore, boardMode(), gameMaxStreak, false);
+  updateStats(partialScore, boardMode(), gameMaxStreak, false);
   recordGameTally(roundResults.map((correct, i) => ({
     correct,
     title: roundSongs[i] || null,
@@ -3332,6 +3337,61 @@ function startAdaptive() {
   nextRound();
 }
 
+// Snapshot of the daily run's accumulators, persisted after each completed round so a
+// refresh/exit resumes a faithful run (same score, streaks, verse bonus, timing) rather
+// than a fresh restart. Daily forces Normal and disables hints, so none of the broader
+// challenge/path/adaptive run state applies here. rngState pins the seeded PRNG position
+// so the remaining words match what everyone else gets on the date.
+function dailyProgressSnapshot(dateStr) {
+  return {
+    startDate: dateStr,
+    round, score,
+    rngState: dailyRng ? dailyRng.state() : null,
+    roundResults: roundResults.slice(),
+    roundAlbums: roundAlbums.slice(),
+    roundWords: roundWords.slice(),
+    roundSongs: roundSongs.slice(),
+    roundVerseTier: roundVerseTier.slice(),
+    usedWords: usedWords.slice(),
+    recentEras: recentEras.slice(),
+    correctStreak, gameMaxStreak, gameTimeouts,
+    gameTimeSum, gameTimedRounds, gameFastestMs, gameHitRedZone,
+    lyricLineAnswers, verseBonus, gameVersePerfect, gameWholeVerses, gameFuzzyMatches,
+    rareStreak,
+    verseKeepsake: verseKeepsake.slice(),
+    lyricAnswerSongs: lyricAnswerSongs.slice(),
+  };
+}
+
+// Restore a daily run from a saved snapshot (see dailyProgressSnapshot). The PRNG is
+// re-seeded from the date then seeked to the saved position by the caller.
+function restoreDailyProgress(p) {
+  round = p.round || 0;
+  score = p.score || 0;
+  roundResults = Array.isArray(p.roundResults) ? p.roundResults.slice() : [];
+  roundAlbums = Array.isArray(p.roundAlbums) ? p.roundAlbums.slice() : [];
+  roundWords = Array.isArray(p.roundWords) ? p.roundWords.slice() : [];
+  roundSongs = Array.isArray(p.roundSongs) ? p.roundSongs.slice() : [];
+  roundVerseTier = Array.isArray(p.roundVerseTier) ? p.roundVerseTier.slice() : [];
+  usedWords = Array.isArray(p.usedWords) ? p.usedWords.slice() : [];
+  recentEras = Array.isArray(p.recentEras) ? p.recentEras.slice() : [];
+  correctStreak = p.correctStreak || 0;
+  gameMaxStreak = p.gameMaxStreak || 0;
+  gameTimeouts = p.gameTimeouts || 0;
+  gameTimeSum = p.gameTimeSum || 0;
+  gameTimedRounds = p.gameTimedRounds || 0;
+  gameFastestMs = p.gameFastestMs != null ? p.gameFastestMs : null;
+  gameHitRedZone = !!p.gameHitRedZone;
+  lyricLineAnswers = p.lyricLineAnswers || 0;
+  verseBonus = p.verseBonus || 0;
+  gameVersePerfect = p.gameVersePerfect || 0;
+  gameWholeVerses = p.gameWholeVerses || 0;
+  gameFuzzyMatches = p.gameFuzzyMatches || 0;
+  rareStreak = p.rareStreak || 0;
+  verseKeepsake = Array.isArray(p.verseKeepsake) ? p.verseKeepsake.slice() : [];
+  lyricAnswerSongs = Array.isArray(p.lyricAnswerSongs) ? p.lyricAnswerSongs.slice() : [];
+}
+
 // Daily challenge: the same seeded 13 words + eras for everyone on a given date,
 // one play per day. Always Normal settings. If you've already played today, jump
 // straight to your saved result instead of replaying.
@@ -3343,12 +3403,26 @@ function startDaily() {
   currentMode = MODES.medium;   // daily is always Normal — override without persisting via DIFF_KEY
   resetRunState();
   dailyRng = mulberry32(dailySeed(dateStr));   // set AFTER resetRunState (which clears it)
+  // Resume an in-progress run from earlier today (a refresh or exit mid-daily) instead
+  // of restarting — this is what closes the replay loophole. Restore the accumulators and
+  // seek the PRNG to the saved position so the remaining words are deterministic. Stale
+  // progress from another day is ignored (resetDaily / the date guard handle cleanup).
+  const progress = loadDailyProgress(dateStr);
+  const resuming = progress && progress.startDate === dateStr
+    && progress.round > 0 && progress.round < TOTAL_ROUNDS;
+  if (resuming) {
+    restoreDailyProgress(progress);
+    if (typeof progress.rngState === "number") dailyRng.seek(progress.rngState);
+  }
   applyInputHints();
   updateTagline();
   $("pageTotalWrap").style.display = "";
   $("pageTotal").textContent = TOTAL_ROUNDS;
   showScreen("game");
-  nextRound();
+  // On resume, advance straight into the next unplayed round (no page-flip from a blank
+  // page); a fresh run goes through nextRound's round-0 instant path.
+  if (resuming) { advanceRound(); beginRoundClock(); }
+  else nextRound();
 }
 
 // A Challenge run: a fixed-13 game with a rule modifier, sandboxed like daily (no
@@ -4105,6 +4179,7 @@ function showDailyResult(data, dateStr) {
   roundResults = data.roundResults;
   roundAlbums = data.roundAlbums;
   score = data.score;
+  dailyShareTime = typeof data.tm === "number" ? data.tm : null;   // restore completion time for the share (older saves lack it)
   showScreen("results");
   $("resultBracelet").innerHTML = buildBraceletSVG(roundResults, 0, -1, roundAlbums, { colors: albumPalette() });
   $("finalScore").textContent = settings.hideDailyScore ? "?" : score;
@@ -4138,7 +4213,12 @@ function buildShareString(dateStr) {
   const dateObj = new Date(dateStr + "T00:00:00Z");
   const label = dateObj.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric", timeZone: "UTC" });
   const emoji = roundResults.map((r) => (r ? "⭐" : "⬜")).join("");
-  return `Swift Song Association 🎵\nDaily Challenge · ${label}\n${emoji}\n${score}/${TOTAL_ROUNDS}`;
+  // Active solving time (sum of per-round answer seconds, capped per round) rides on the
+  // score line — a fair, comparable number since everyone gets the same words. m:ss so
+  // pasted results sort and compare cleanly.
+  const time = fmtTime(dailyShareTime);
+  const scoreLine = time ? `${score}/${TOTAL_ROUNDS} · ${time}` : `${score}/${TOTAL_ROUNDS}`;
+  return `Swift Song Association 🎵\nDaily Challenge · ${label}\n${emoji}\n${scoreLine}`;
 }
 
 function renderShareButton(dateStr, hidden) {
@@ -5668,6 +5748,14 @@ function submitAnswer(song, isTimeout) {
   // It's Raining And It's Monday — answer the word "rain" right on a Monday.
   if (correct && currentWord === "rain" && new Date().getDay() === 1) unlock("raining-monday");
 
+  // Daily: persist the run so a refresh/exit resumes here instead of restarting. Saved
+  // after the round is recorded but before the next word is drawn, so the stored PRNG
+  // position resumes the remaining words deterministically. The final round isn't saved —
+  // endGame finalizes the result and clears the in-progress record.
+  if (gameType === "daily" && round < TOTAL_ROUNDS) {
+    saveDailyProgress(todayKey(), dailyProgressSnapshot(todayKey()));
+  }
+
   // Circle the player's pick before revealing the verdict (skipped on timeout / reduced
   // motion, and on a lyric answer — the circle re-draws a title the player never typed).
   const reveal = () => (correct ? showCorrectFeedback(song, lyricMatch) : showWrongFeedback(song, isTimeout));
@@ -5690,7 +5778,7 @@ function showCircledChoice(song, done) {
   setTimeout(done, 640 * animScale());
 }
 
-function lyricCard(song, word, isWrong, lineOverride) {
+function lyricCard(song, word, isWrong, lineOverride, context) {
   // A lyric-answer override is the span the player actually recalled, which need NOT
   // contain the prompt word (matching only requires a real line of a valid song — see
   // matchLyricLine). When it doesn't, fall back to the song's word-bearing line so the
@@ -5702,10 +5790,45 @@ function lyricCard(song, word, isWrong, lineOverride) {
   const color = albumColor(song.album) || "var(--ink-soft)";
   const albumLabel = song.album ? `<span class="album-tag" style="--album-color:${color}">${escapeHtml(song.album)}</span>` : "";
   const cls = isWrong ? " wrong-card" : "";
+  const ctx = context ? lyricCardContext(song, word) : "";
   return `<div class="lyric-card${cls}" style="--album-color:${color}">
     <div class="song-title">${escapeHtml(censor(song.title))}${albumLabel}</div>
     <div class="lyric-line">"${highlightWord(line, word)}"</div>
+    ${ctx}
   </div>`;
+}
+
+// The ±2 surrounding lines around the prompt word's line, for the in-card "in context"
+// peek. Anchored on the word (not the displayed line, which may be a multi-line lyric
+// answer) so it always lands where the word actually sits.
+function lyricContextRows(song, word) {
+  const all = (song.lyrics || "").split("\n").map((l) => l.trim()).filter(Boolean);
+  const idx = all.findIndex((l) => wordRegex(word).test(l));
+  if (idx < 0) return "";
+  const start = Math.max(0, idx - 2), end = Math.min(all.length, idx + 3);
+  let html = "";
+  if (start > 0) html += `<div class="lc-gap" aria-hidden="true">⋯</div>`;
+  for (let i = start; i < end; i++) {
+    html += i === idx
+      ? `<div class="lc-line lc-match">${highlightWord(all[i], word)}</div>`
+      : `<div class="lc-line">${escapeHtml(censor(all[i]))}</div>`;
+  }
+  if (end < all.length) html += `<div class="lc-gap" aria-hidden="true">⋯</div>`;
+  return html;
+}
+
+// Progressive disclosure for a lyric card: a quiet "in context" toggle that expands the
+// surrounding lines inline, with a "full lyrics" link nested inside that opens the whole
+// song in a modal. One control keeps the default card uncluttered (CLAUDE: gameplay stays
+// dominant). Returns "" when there's nothing to expand.
+function lyricCardContext(song, word) {
+  const rows = lyricContextRows(song, word);
+  if (!rows) return "";
+  return `<button type="button" class="lyric-ctx-toggle" aria-expanded="false">in context</button>` +
+    `<div class="lyric-ctx" hidden>` +
+      `<div class="lyric-ctx-lines">${rows}</div>` +
+      `<button type="button" class="lyric-fullsong" data-song="${escapeHtml(song.title)}" data-word="${escapeHtml(word)}">full lyrics →</button>` +
+    `</div>`;
 }
 
 const LYRIC_BANNERS = { base: "✓ you knew the line", good: "✓ nicely recalled", perfect: "✓ word-perfect", verse: "✓ the whole verse" };
@@ -5746,8 +5869,8 @@ function showCorrectFeedback(song, lyricMatch) {
     firstNote = `<p class="verse-firstnote">writing more of the line earns a verse bonus — a prestige tally, kept apart from your score</p>`;
   }
   const card = lyricMatch
-    ? lyricCard(song, currentWord, false, lyricMatch.line)
-    : lyricCard(song, currentWord, false);
+    ? lyricCard(song, currentWord, false, lyricMatch.line, true)
+    : lyricCard(song, currentWord, false, null, true);
   // Auto-advance setting on → a countdown + skip; off → a plain "next page" button.
   const auto = settings.autoAdvance;
   const advanceUI = auto
@@ -5772,7 +5895,7 @@ function showWrongFeedback(song, isTimeout) {
   let help = "";
   if (n > 0) {
     const examples = shuffle(currentSongs.slice()).slice(0, n);
-    const cards = examples.map((s) => lyricCard(s, currentWord, true)).join("");
+    const cards = examples.map((s) => lyricCard(s, currentWord, true, null, true)).join("");
     help = `<span class="red-note">songs that hold "<b>${escapeHtml(currentWord)}</b>"</span>${cards}`;
   }
   fb.innerHTML = `
@@ -5950,7 +6073,9 @@ function endGame() {
   // Daily: persist the result, lock to one play/day, show streak + share (no board).
   if (isDaily) {
     const dateStr = todayKey();
-    saveDailyResult(dateStr, { score, roundResults: roundResults.slice(), roundAlbums: roundAlbums.slice() });
+    dailyShareTime = runTime;   // for the copyable result (held back behind reveal if the score is hidden)
+    saveDailyResult(dateStr, { score, roundResults: roundResults.slice(), roundAlbums: roundAlbums.slice(), tm: runTime });
+    clearDailyProgress(dateStr);   // run finished — drop the resumable in-progress record
     const streak = bumpDailyStreak(dateStr);   // extend (or reset) the consecutive-days streak
     unlock("today-was-a-fairytale");   // finished a Daily Challenge
     if (score === TOTAL_ROUNDS) unlock("daylight");
@@ -6510,8 +6635,9 @@ function wireInput() {
   document.addEventListener("keydown", (e) => {
     if (e.key !== "Enter") return;
     if (!screens.game.classList.contains("active") || !roundLocked) return;
-    // Settings modal is captive — don't let Enter advance the page behind it.
+    // Modals are captive — don't let Enter advance the page behind them.
     if ($("settingsModal").classList.contains("open")) return;
+    if ($("songModal").classList.contains("open")) return;
     // Only once a verdict is actually on the page — not during the pen-circle
     // animation between submitting and the feedback appearing.
     if (!$("cd") && !$("continueBtn")) return;
@@ -6521,6 +6647,42 @@ function wireInput() {
     if (!settings.enterOnMiss && document.querySelector("#feedback .banner.bad")) return;
     e.preventDefault();
     advanceFromFeedback();
+  });
+
+  // Lyric-context controls live inside #feedback, whose innerHTML is rebuilt each round,
+  // so delegate from the stable container. The toggle expands the inline ±context peek;
+  // the nested link opens the full song. Either interaction pauses any auto-advance.
+  $("feedback").addEventListener("click", (e) => {
+    const toggle = e.target.closest(".lyric-ctx-toggle");
+    if (toggle) {
+      const card = toggle.closest(".lyric-card");
+      const box = card && card.querySelector(".lyric-ctx");
+      if (box) {
+        const showing = box.hidden;   // currently hidden → we're about to show it
+        box.hidden = !showing;
+        toggle.setAttribute("aria-expanded", String(showing));
+        toggle.textContent = showing ? "hide context" : "in context";
+        if (showing) pauseAutoAdvanceForReading();
+      }
+      return;
+    }
+    const full = e.target.closest(".lyric-fullsong");
+    if (full) openFullSong(full.dataset.song, full.dataset.word);
+  });
+
+  // Full-song modal: close on the scrim, the close button, or Escape; trap Tab inside it.
+  $("songModalClose").addEventListener("click", closeFullSong);
+  $("songScrim").addEventListener("click", closeFullSong);
+  document.addEventListener("keydown", (e) => {
+    const m = $("songModal");
+    if (!m.classList.contains("open")) return;
+    if (e.key === "Escape") { e.stopPropagation(); closeFullSong(); return; }
+    if (e.key !== "Tab") return;
+    const focusable = m.querySelectorAll("button, [href], a");
+    if (!focusable.length) return;
+    const first = focusable[0], last = focusable[focusable.length - 1];
+    if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+    else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
   });
 }
 
@@ -6793,6 +6955,73 @@ function resumeFromSettings() {
 // Element focused before the modal opened, so focus can be returned there on close
 // (usually #songInput mid-game or the gear) instead of being lost to the hidden page.
 let lastFocusedBeforeSettings = null;
+let lastFocusedBeforeSong = null;
+
+// Reading lyric context shouldn't let the page turn out from under the reader, so any
+// running correct-answer countdown is cancelled the moment they expand context or open
+// the full song. The manual "skip"/Enter path stays available to advance when ready.
+function pauseAutoAdvanceForReading() {
+  if (countdownId) { clearInterval(countdownId); countdownId = null; }
+  const cd = document.querySelector("#feedback .countdown");
+  if (cd) cd.innerHTML = `<span class="cd-paused">take your time</span>`;
+}
+
+// Build the full lyrics for the song modal: structured sections with their labels, every
+// line holding the prompt word highlighted (and used as the scroll anchor). Falls back to
+// the flat lyrics if a song somehow has no structured sections.
+function fullSongHTML(song, word) {
+  const sections = (Array.isArray(song.sections) && song.sections.length)
+    ? song.sections
+    : [{ label: "", lines: (song.lyrics || "").split("\n") }];
+  return sections.map((sec) => {
+    const lines = (sec.lines || []).map((raw) => {
+      const l = (raw || "").trim();
+      if (!l) return "";
+      return word && wordRegex(word).test(l)
+        ? `<div class="lc-line lc-match">${highlightWord(l, word)}</div>`
+        : `<div class="lc-line">${escapeHtml(censor(l))}</div>`;
+    }).join("");
+    const label = sec.label ? `<div class="fs-label">${escapeHtml(sec.label)}</div>` : "";
+    return `<div class="fs-section">${label}${lines}</div>`;
+  }).join("");
+}
+
+function openFullSong(title, word) {
+  const song = allSongs.find((s) => s.title === title);
+  if (!song) return;
+  lastFocusedBeforeSong = document.activeElement;
+  pauseAutoAdvanceForReading();
+  const color = albumColor(song.album) || "var(--ink-soft)";
+  const albumLabel = song.album ? `<span class="album-tag" style="--album-color:${color}">${escapeHtml(song.album)}</span>` : "";
+  $("songModalTitle").innerHTML = `${escapeHtml(censor(song.title))}${albumLabel}`;
+  $("songModalBody").innerHTML = fullSongHTML(song, word);
+  const m = $("songModal");
+  m.style.setProperty("--album-color", color);
+  m.classList.add("open");
+  m.setAttribute("aria-hidden", "false");
+  document.body.classList.add("modal-open");
+  const close = $("songModalClose");
+  if (close) { try { close.focus({ preventScroll: true }); } catch (_) { close.focus(); } }
+  // Land the reader on the first highlighted line rather than the top of the song.
+  const match = $("songModalBody").querySelector(".lc-match");
+  if (match) { try { match.scrollIntoView({ block: "center" }); } catch (_) { /* ignore */ } }
+}
+
+function closeFullSong() {
+  const m = $("songModal");
+  if (!m.classList.contains("open")) return;
+  m.classList.remove("open");
+  m.setAttribute("aria-hidden", "true");
+  // Settings may also be open behind it (its own scroll lock); only release the page
+  // freeze when nothing else needs it.
+  if (!$("settingsModal").classList.contains("open")) document.body.classList.remove("modal-open");
+  const back = lastFocusedBeforeSong;
+  lastFocusedBeforeSong = null;
+  if (back && typeof back.focus === "function" && document.contains(back)) {
+    try { back.focus({ preventScroll: true }); } catch (_) { back.focus(); }
+  }
+}
+
 function openSettings() {
   unlock("i-look-in-windows");
   lastFocusedBeforeSettings = document.activeElement;
@@ -7023,6 +7252,8 @@ function buildDevApi() {
     // Daily
     daily: {
       resetToday: () => clearDailyResult(todayKey()),
+      clearProgress: () => clearDailyProgress(todayKey()),   // drop the in-progress resume record
+      hasProgress: () => !!loadDailyProgress(todayKey()),
       setDate: (d) => { window.__devDate = d || null; },
       setStreak: (current, best, lastPlayed) =>
         saveDailyStreak({ current: current | 0, best: Math.max(best | 0, current | 0),

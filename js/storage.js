@@ -3,7 +3,7 @@
 // achievements map are passed in explicitly rather than closed over.
 import {
   HS_KEY, RECORDS_KEY, HISTORY_KEY, STATS_KEY, ACH_KEY, DIFF_KEY,
-  DAILY_KEY, DAILY_BOARD_KEY, DAILY_STREAK_KEY, TYPES_KEY, TALLY_KEY,
+  DAILY_KEY, DAILY_PROGRESS_KEY, DAILY_BOARD_KEY, DAILY_STREAK_KEY, TYPES_KEY, TALLY_KEY,
   SETTINGS_KEY, METRICS_KEY, APP_PREFIX, DEFAULT_SETTINGS,
   CHALLENGES_KEY, CHALLENGE_TOKENS_KEY,
   ALBUM_FOCUS_KEY, ALBUM_FOCUS_TARGET, DIFF_RANK,
@@ -432,6 +432,24 @@ export function saveDailyResult(dateStr, data) {
 // replayed without nuking the streak the way resetDaily() does.
 export function clearDailyResult(dateStr) {
   try { localStorage.removeItem(DAILY_KEY + "." + dateStr); } catch (e) { /* ignore */ }
+}
+
+// Per-day IN-PROGRESS daily run. Saved after each completed round so a refresh or
+// exit mid-daily resumes where the player left off (closing the replay loophole)
+// instead of silently restarting. Cleared the moment the run is completed.
+// Key: swiftSongAssociation.dailyProgress.YYYY-MM-DD
+export function loadDailyProgress(dateStr) {
+  try {
+    const raw = localStorage.getItem(DAILY_PROGRESS_KEY + "." + dateStr);
+    if (raw) { const o = JSON.parse(raw); if (o && Array.isArray(o.roundResults)) return o; }
+  } catch (e) { /* ignore */ }
+  return null;
+}
+export function saveDailyProgress(dateStr, data) {
+  try { localStorage.setItem(DAILY_PROGRESS_KEY + "." + dateStr, JSON.stringify(data)); } catch (e) { /* ignore */ }
+}
+export function clearDailyProgress(dateStr) {
+  try { localStorage.removeItem(DAILY_PROGRESS_KEY + "." + dateStr); } catch (e) { /* ignore */ }
 }
 
 // Lifetime daily totals derived from the per-day result keys (the authoritative

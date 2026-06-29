@@ -111,7 +111,8 @@ export function initDev(api) {
   const dateInput = mk("input", { type: "date", class: "dv-text", style: "width:124px" });
   const stCur = num(5), stBest = num(9);
   body.append(section("daily",
-    row(btn("reset today (replay)", () => { api.daily.resetToday(); toast("today's daily cleared"); })),
+    row(btn("reset today (replay)", () => { api.daily.resetToday(); toast("today's daily cleared"); }),
+        btn("clear in-progress", () => { api.daily.clearProgress(); toast(api.daily.hasProgress() ? "still in progress" : "in-progress cleared"); })),
     row(dateInput, btn("set date", () => { api.daily.setDate(dateInput.value); toast("date → " + (dateInput.value || "live")); }),
         btn("clear", () => { api.daily.setDate(null); dateInput.value = ""; toast("date → live"); })),
     row("streak cur", stCur, "best", stBest, btn("set", () => { api.daily.setStreak(+stCur.value, +stBest.value); toast("streak set"); }))));
