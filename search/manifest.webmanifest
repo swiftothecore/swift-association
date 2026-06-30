@@ -1,0 +1,17 @@
+{
+  "name": "Swift To The Lyric",
+  "short_name": "The Lyric",
+  "description": "Search every line of Taylor Swift's lyrics. Type a word to see every song it appears in, with the section and line number. Works offline, no tracking.",
+  "id": "./",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f5efe1",
+  "theme_color": "#f5efe1",
+  "icons": [
+    { "src": "../icons/icon-search-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "../icons/icon-search-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "../icons/icon-search-512-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
+    { "src": "../icons/favicon-search.svg", "sizes": "any", "type": "image/svg+xml" }
+  ]
+}

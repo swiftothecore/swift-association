@@ -10,7 +10,7 @@
  * Paths are relative so the worker works at the site root (swiftassociation.com)
  * and under any project subpath, without hardcoding the origin.
  */
-const CACHE = "stta-v6";
+const CACHE = "stta-v7";
 const ASSETS = [
   "./",
   "index.html",
@@ -29,12 +29,20 @@ const ASSETS = [
   "search/index.html",
   "search/search.css",
   "search/search.js",
+  "search/manifest.webmanifest",
   "icons/favicon.svg",
   "manifest.webmanifest",
   "icons/icon-192.png",
   "icons/icon-512.png",
   "icons/icon-512-maskable.png",
   "icons/apple-touch-icon.png",
+  // Swift To The Lyric PWA / Apple-touch assets.
+  "icons/favicon-search.svg",
+  "icons/icon-search-192.png",
+  "icons/icon-search-512.png",
+  "icons/icon-search-512-maskable.png",
+  "icons/apple-touch-icon-search.png",
+  "icons/og-image-search.png",
 ];
 
 self.addEventListener("install", (e) => {
