@@ -7,10 +7,13 @@
   --ink: #2b2722;
   --ink-soft: #6f675a;
   --ink-faint: #a39c8e;
-  --rule-line: #d6e1ea;          /* faint blue rule under a lyric line */
-  --margin: rgba(178, 58, 58, 0.5);
-  --pen: #b9402f;                /* red pen — the matched word */
-  --desk: #b9a988;
+  --rule: rgba(43, 39, 34, 0.07);   /* faint ruled lines, matching the game */
+  --line: 32px;                     /* notebook baseline rhythm */
+  --margin: rgba(178, 58, 58, 0.45);
+  --page-wash: rgba(212, 160, 23, 0.05);
+  --highlighter: rgba(247, 201, 72, 0.55); /* gold highlighter swipe, matching the game */
+  --pen: #b9402f;                /* red pen — accents */
+  --desk: #c8bca6;
   --hand: "Caveat", cursive;
   --type: "Courier Prime", "Courier New", monospace;
 }
@@ -28,34 +31,61 @@ html, body { margin: 0; }
   transition: background 0.6s ease;
 }
 body {
-  background: var(--desk);
-  background-image: radial-gradient(140% 120% at 50% 0%, #c7b794 0%, #b09e7c 100%);
+  /* Light blonde-oak desk, rendered as one non-repeating SVG (no tiling, no seams) —
+     the exact same desk the game uses, so the two pages read as one surface. */
+  background:
+    url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='1600'%20height='1100'%20viewBox='0%200%201600%201100'%20preserveAspectRatio='xMidYMid%20slice'%3E%3Cdefs%3E%3ClinearGradient%20id='b'%20x1='0'%20y1='0'%20x2='0.1'%20y2='1'%3E%3Cstop%20offset='0'%20stop-color='%23dcc6a1'/%3E%3Cstop%20offset='0.55'%20stop-color='%23d0b78d'/%3E%3Cstop%20offset='1'%20stop-color='%23c5a97c'/%3E%3C/linearGradient%3E%3Cfilter%20id='g'%3E%3CfeTurbulence%20type='fractalNoise'%20baseFrequency='0.006%200.1'%20numOctaves='2'%20seed='11'%20stitchTiles='stitch'/%3E%3CfeColorMatrix%20type='matrix'%20values='0%200%200%200%200.5%200%200%200%200%200.39%200%200%200%200%200.24%200%200%200%200.4%200'/%3E%3C/filter%3E%3C/defs%3E%3Crect%20width='1600'%20height='1100'%20fill='url(%23b)'/%3E%3Crect%20width='1600'%20height='1100'%20filter='url(%23g)'/%3E%3Cg%20fill='none'%20stroke='%239c7f56'%20stroke-opacity='0.14'%20stroke-width='1.5'%3E%3Cpath%20d='M0%20312%20H1600'/%3E%3Cpath%20d='M0%20742%20H1600'/%3E%3C/g%3E%3C/svg%3E")
+      center / cover no-repeat fixed;
+  background-color: #cdb389;
   color: var(--ink);
   font-family: var(--hand);
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
 }
 
-/* top bar */
+/* top bar — a big handwritten title centred over the desk, like the game's, with the
+   back-to-game link tucked into the top-left corner. */
 .sx-top {
-  max-width: 820px; margin: 0 auto; padding: 14px 18px 0;
-  display: flex; align-items: center; justify-content: space-between;
+  position: relative; max-width: 820px; margin: 0 auto; padding: 22px 18px 4px;
+  text-align: center;
 }
 .sx-back {
+  position: absolute; left: 18px; top: 24px;
   font-family: var(--type); font-size: 12px; letter-spacing: .04em;
   color: #efe7d4; text-decoration: none; opacity: .85;
 }
 .sx-back:hover { opacity: 1; text-decoration: underline; }
-.sx-mark { font-family: var(--type); font-size: 12px; letter-spacing: .18em; color: #efe7d4; opacity: .8; }
+.sx-title {
+  margin: 0; font-family: var(--hand); font-weight: 700;
+  font-size: clamp(30px, 7vw, 54px); line-height: 1.1; white-space: nowrap;
+  color: #4a3518; transform: rotate(-1.4deg);
+}
+.sx-tagline {
+  margin: 8px 0 0; font-family: var(--type);
+  font-size: 12px; letter-spacing: 1px; color: #efe7d4; opacity: .8;
+}
+@media (max-width: 560px) {
+  .sx-back { position: static; display: block; margin-bottom: 8px; }
+  .sx-top { text-align: center; }
+  .sx-title { font-size: clamp(26px, 9vw, 40px); }
+}
 
-/* the page */
+/* the page — the game's exact notebook paper: faint ruled lines, a warm page-wash, and a
+   single red margin rule, just wider than the game's card. */
 .sx-page {
-  max-width: 820px; margin: 14px auto 90px; padding: 26px 34px 54px 62px;
+  max-width: 820px; margin: 16px auto 90px; padding: 30px 34px 44px 58px;
+  background:
+    linear-gradient(to right, transparent 44px, rgba(178, 58, 58, 0.38) 44px, rgba(178, 58, 58, 0.38) 46px, transparent 46px),
+    linear-gradient(var(--page-wash), var(--page-wash)),
+    repeating-linear-gradient(to bottom,
+      var(--paper) 0, var(--paper) calc(var(--line) - 1px),
+      var(--rule) calc(var(--line) - 1px), var(--rule) var(--line));
   background-color: var(--paper);
-  background-image: linear-gradient(to right, transparent 46px, var(--margin) 46px, var(--margin) 47px,
-    rgba(178,58,58,.28) 47px, rgba(178,58,58,.28) 49px, transparent 49px);
-  border-radius: 3px 6px 6px 3px;
-  box-shadow: 0 14px 40px rgba(0,0,0,.32);
+  border-radius: 3px;
+  box-shadow:
+    0 1px 0 #fff inset,
+    0 18px 40px rgba(60, 50, 35, 0.28),
+    0 2px 6px rgba(60, 50, 35, 0.18);
 }
 
 /* search field */
@@ -99,7 +129,7 @@ body {
 .sx-counter { font-family: var(--type); font-size: 13px; color: var(--ink-soft); margin-top: 18px; min-height: 17px; }
 .sx-counter b { color: var(--ink); font-weight: 700; }
 .sx-none b { color: var(--pen); }
-.sx-bar { display: flex; height: 7px; border-radius: 3px; overflow: hidden; margin-top: 8px; }
+.sx-bar { display: flex; height: 11px; border-radius: 3px; overflow: hidden; margin-top: 8px; box-shadow: inset 0 0 0 1px rgba(43,39,34,0.12); }
 .sx-bar:empty { display: none; }
 .sx-bar span { min-width: 2px; }
 
@@ -112,7 +142,7 @@ body {
 .sx-rarity { color: var(--ink-faint); font-style: italic; }
 .sx-concord-legend { display: flex; flex-wrap: wrap; gap: 5px 14px; margin-top: 6px; }
 .sx-leg { font-family: var(--type); font-size: 11px; color: var(--ink-soft); display: inline-flex; align-items: center; gap: 6px; }
-.sx-leg-dot { width: 8px; height: 8px; border-radius: 50%; flex: none; }
+.sx-leg-dot { width: 12px; height: 12px; border-radius: 50%; flex: none; box-shadow: inset 0 0 0 1px rgba(0,0,0,0.18); }
 .sx-leg b { color: var(--ink); font-weight: 700; }
 .sx-leg-more { font-family: var(--type); font-size: 11px; color: var(--ink-faint); font-style: italic; }
 
@@ -123,6 +153,15 @@ body {
   border-bottom: 1px dashed rgba(185, 64, 47, .45); padding-bottom: 1px; margin-left: 10px;
 }
 .sx-play:hover { color: #8f2e20; border-bottom-color: rgba(185, 64, 47, .9); }
+
+/* "copy link" — a quiet typewriter button beside the counter that mints a shareable link */
+.sx-copy {
+  font-family: var(--type); font-size: 11px; letter-spacing: .02em;
+  color: var(--ink-soft); background: transparent; cursor: pointer;
+  border: 0; border-bottom: 1px dashed rgba(111, 103, 90, .45);
+  padding: 0 0 1px; margin-left: 12px;
+}
+.sx-copy:hover { color: var(--ink); border-bottom-color: rgba(111, 103, 90, .9); }
 
 .sx-hint { font-family: var(--hand); font-size: 21px; color: var(--ink-faint); margin-top: 22px; }
 
@@ -156,16 +195,16 @@ body {
 .sx-album-tab {
   display: inline-flex; align-items: center;
   margin: 0 0 6px -56px; padding: 3px 15px 4px 11px;
-  background: var(--paper-edge); border: 1px solid #ddd2bb; border-left: 5px solid var(--album);
+  background: var(--paper-edge); border: 1px solid #ddd2bb; border-left: 8px solid var(--album);
   border-radius: 0 6px 6px 0;
 }
-.sx-album-era { font-family: var(--hand); font-size: 22px; line-height: 1.05; color: color-mix(in srgb, var(--album) 78%, #2b2722); }
+.sx-album-era { font-family: var(--hand); font-weight: 600; font-size: 23px; line-height: 1.05; color: color-mix(in srgb, var(--album) 88%, #241f18); }
 .sx-song { margin-top: 16px; }
 .sx-song:first-of-type { margin-top: 4px; }
 .sx-song-head { display: flex; align-items: baseline; gap: 10px; padding-bottom: 2px;
   border-bottom: 1px solid color-mix(in srgb, var(--album) 24%, #e3d9c2); }
 .sx-song-title { font-family: var(--hand); font-size: 23px; line-height: 1.1;
-  color: color-mix(in srgb, var(--album) 68%, var(--ink)); }
+  color: color-mix(in srgb, var(--album) 80%, var(--ink)); }
 .sx-song-count { font-family: var(--type); font-size: 10px; color: var(--ink-faint); margin-left: auto; }
 
 /* a single hit — section jotted in the margin (hand), line number in typewriter */
@@ -176,16 +215,14 @@ body {
 .sx-lines { padding-bottom: 4px; }
 .sx-main { font-family: var(--hand); font-size: 21px; color: var(--ink); line-height: 1.55; }
 .sx-ctx { font-family: var(--hand); font-size: 16px; color: var(--ink-faint); line-height: 1.45; }
-/* the matched word, circled in red pen (a hand-drawn ellipse stretched over the word) */
+/* the matched word, swiped with the game's gold highlighter (not circled) */
 .sx-main mark {
-  background: transparent; color: #1c1813; padding: 2px 7px; margin: 0 -2px;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 40' preserveAspectRatio='none'%3E%3Cpath d='M50 5 C78 4 95 12 93 21 C91 31 64 36 40 35 C16 34 4 26 6 17 C8 8 31 4 55 5 C77 6 92 12 88 19' fill='none' stroke='%23b9402f' stroke-width='2.4' stroke-linecap='round' opacity='0.85'/%3E%3C/svg%3E");
-  background-repeat: no-repeat; background-size: 100% 100%; background-position: center;
+  background: var(--highlighter); color: var(--ink); padding: 0 3px; font-weight: 700;
 }
 
 /* flat view */
 .sx-flat .sx-hit-flat { grid-template-columns: 1fr; gap: 4px; padding: 10px 0; border-bottom: 1px solid #ece3cd; }
-.sx-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--album); flex: none; }
+.sx-dot { width: 12px; height: 12px; border-radius: 50%; background: var(--album); flex: none; box-shadow: inset 0 0 0 1px rgba(0,0,0,0.18); }
 .sx-ann-flat { text-align: left; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding-top: 0; }
 .sx-ann-flat .sx-dot { align-self: center; }
 .sx-flat-title { font-family: var(--hand); font-size: 19px; color: var(--ink); }
@@ -221,7 +258,16 @@ body {
 .sx-foot a:hover { border-bottom-color: rgba(230,220,193,.85); }
 
 @media (max-width: 560px) {
-  .sx-page { padding: 22px 18px 40px 42px; background-image: linear-gradient(to right, transparent 28px, var(--margin) 28px, var(--margin) 29px, transparent 29px); }
+  .sx-page {
+    padding: 22px 18px 40px 42px;
+    background:
+      linear-gradient(to right, transparent 28px, rgba(178, 58, 58, 0.38) 28px, rgba(178, 58, 58, 0.38) 30px, transparent 30px),
+      linear-gradient(var(--page-wash), var(--page-wash)),
+      repeating-linear-gradient(to bottom,
+        var(--paper) 0, var(--paper) calc(var(--line) - 1px),
+        var(--rule) calc(var(--line) - 1px), var(--rule) var(--line));
+    background-color: var(--paper);
+  }
   #q { font-size: 28px; }
   .sx-hit { grid-template-columns: 42px 1fr; gap: 7px; }
   .sx-foot { padding: 0 18px 0 42px; }

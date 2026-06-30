@@ -111,7 +111,7 @@ function sectionDisplays(song) {
   return song.sections.map((sec) => {
     const n = sectionName(sec.label);
     seen[n] = (seen[n] || 0) + 1;
-    return totals[n] > 1 ? `${n} (${seen[n]})` : n;
+    return totals[n] > 1 ? `${n} ${seen[n]}` : n;
   });
 }
 
@@ -212,7 +212,6 @@ function activeTerms() {
 }
 
 function runSearch() {
-  writeHash();
   renderChips();
   const terms = activeTerms();
   if (!terms.length) { renderInitial(state.q.trim()); return; }
@@ -361,7 +360,8 @@ function render(terms, groups) {
   const play = (terms.length === 1 && PROMPT_WORDS.has(terms[0].toLowerCase()))
     ? ` <a class="sx-play" href="../index.html?word=${encodeURIComponent(terms[0].toLowerCase())}" title="Start a game round on this word">play this word in the game &rarr;</a>`
     : "";
-  $("counter").innerHTML = `found in <b>${plural(songs, "song")}</b> &middot; <b>${plural(lines, "line")}</b>${play}`;
+  const share = ` <button type="button" class="sx-copy" id="copyLink" title="Copy a shareable link to this search">copy link</button>`;
+  $("counter").innerHTML = `found in <b>${plural(songs, "song")}</b> &middot; <b>${plural(lines, "line")}</b>${play}${share}`;
   const counts = albumLineCounts(groups);
   $("bar").innerHTML = albumBar(counts);
   renderConcord(groups, counts);
@@ -422,19 +422,45 @@ function readHash() {
   if (p.get("section") && SECTION_TYPES.includes(p.get("section"))) state.section = p.get("section");
   if (["start", "end"].includes(p.get("pos"))) state.pos = p.get("pos");
 }
-function writeHash() {
+// Build a shareable deep-link URL for the current search. We deliberately do NOT write this
+// to the address bar as you type — the URL stays clean during normal use, and a link is only
+// minted on demand by the "copy link" button. Incoming deep links are still read on load.
+function buildShareURL() {
   const p = new URLSearchParams();
   const terms = activeTerms();
   if (terms.length) {
     p.set("q", terms.join(" "));
-    // A real search encodes mode + layout explicitly so a shared link reproduces faithfully
-    // regardless of the recipient's saved prefs. A bare URL leaves them to the saved prefs.
+    // A shared link encodes mode + layout explicitly so it reproduces faithfully regardless
+    // of the recipient's saved prefs.
     p.set("mode", state.mode);
     p.set("view", state.grouped ? "grouped" : "flat");
   }
   if (state.section !== "any") p.set("section", state.section);
   if (state.pos !== "any") p.set("pos", state.pos);
-  history.replaceState(null, "", "#" + p.toString());
+  const hash = p.toString();
+  return location.origin + location.pathname + (hash ? "#" + hash : "");
+}
+
+// Copy text to the clipboard, preferring the async Clipboard API and falling back to a
+// hidden-textarea execCommand for older browsers / non-secure contexts. Returns success.
+async function copyToClipboard(text) {
+  try {
+    if (navigator.clipboard && window.isSecureContext) {
+      await navigator.clipboard.writeText(text);
+      return true;
+    }
+  } catch (e) { /* fall through to the legacy path */ }
+  try {
+    const ta = document.createElement("textarea");
+    ta.value = text;
+    ta.setAttribute("readonly", "");
+    ta.style.position = "fixed"; ta.style.top = "-9999px";
+    document.body.appendChild(ta);
+    ta.select();
+    const ok = document.execCommand("copy");
+    document.body.removeChild(ta);
+    return ok;
+  } catch (e) { return false; }
 }
 
 /* ---------- wiring ---------- */
@@ -488,6 +514,16 @@ function init() {
   }
   $("section").addEventListener("change", (e) => { state.section = e.target.value; syncToggles(); runSearch(); });
   $("pos").addEventListener("change", (e) => { state.pos = e.target.value; syncToggles(); runSearch(); });
+
+  // "Copy link" — mints a shareable deep link on demand (the URL is otherwise kept clean).
+  // Delegated since #counter is re-rendered on every search.
+  $("counter").addEventListener("click", async (e) => {
+    const btn = e.target.closest("#copyLink");
+    if (!btn) return;
+    const ok = await copyToClipboard(buildShareURL());
+    btn.textContent = ok ? "link copied!" : "copy failed";
+    setTimeout(() => { btn.textContent = "copy link"; }, 1600);
+  });
 
   // Recent-search list (rendered in the initial state) is wired via delegation since
   // #results is re-rendered on every search.
