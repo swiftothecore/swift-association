@@ -3,6 +3,11 @@
 export const TOTAL_ROUNDS = 13;
 export const ROUND_SECONDS = 10;
 export const RECENT_WINDOW = 5;
+// On an album's anniversary, the daily challenge leans toward words that recur across that
+// album's songs. Per round this is the chance of drawing from the album-common pool (the rest
+// stay general, for variety); the draw is weighted by within-album coverage. Consumed through
+// the seeded dailyRng so it stays identical for everyone on the day. See pickWord / startDaily.
+export const DAILY_ALBUM_SKEW = 0.7;
 
 /* ---------- localStorage keys ---------- */
 export const HS_KEY = "swiftSongAssociation.highscores";        // legacy fake-celebrity board (dormant; kept for old backups)

@@ -16,7 +16,7 @@ Standout features:
 - Support for all eras + all miscellaneous and some unreleased Taylor songs coming soon
 - Lots and lots of easter eggs
 - Over 75 achievements
-- Daily challenge
+- Daily challenge (on an album's release anniversary, it leans toward words that recur across that album)
 - Challenges mode with 18 challenges (with more to come)
 - Album Focus mode to narrow your focus to a single album
 - A companion lyric searcher, Swift To The Lyric, for searching every line of every song (work in progress)

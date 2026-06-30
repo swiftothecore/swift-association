@@ -1,7 +1,7 @@
 "use strict";
 import { $, escapeRegExp, escapeHtml, prefersReducedMotion, shuffle, chance, normalizeTitle, normalizeLyric, fuzzySubstringRatio, levenshtein, mulberry32, dailySeed, censorText, anniversaryNote } from "./util.js";
 import {
-  TOTAL_ROUNDS, RECENT_WINDOW, DIFF_KEY, DEFAULT_SETTINGS,
+  TOTAL_ROUNDS, RECENT_WINDOW, DAILY_ALBUM_SKEW, DIFF_KEY, DEFAULT_SETTINGS,
   MODES, MODE_ORDER, MODE_COLORS, DIFFICULTY_LADDER, MODALITY_MODES,
   ERAS, TENDER_ERAS, FINALE_ERAS, ALBUM_ERA, TS_MILESTONES,
   ALBUM_COLORS, CB_ALBUM_COLORS, STUDIO_ALBUMS, TITLE_ALIASES,
@@ -93,6 +93,7 @@ let adaptiveReachedTop = false; // Adaptive: ever hit the Rarest tier this run (
 let adaptiveHeldTop = true;     // Adaptive: still true if no miss has landed since reaching the top (for Stay Stay Stay)
 let adaptiveDropAnnounced = true; // Adaptive: the dropdown state the player was last shown a curtain for (starts on, at L2)
 let dailyRng = null;            // seeded PRNG, non-null only during a daily game
+let dailyAlbumPool = null;      // on an album-anniversary daily: [{ w, n }] album-common words (n = within-album coverage), freq-desc; null otherwise
 let dailyShareTime = null;      // completion time (sec) of the daily on screen — for the copyable result
 let currentChallenge = null;    // the active CHALLENGES entry while gameType === "challenge"
 let challengeRunActive = false; // true only during a live challenge run (gates the achievement sandbox)
@@ -3166,6 +3167,7 @@ function resetRunState() {
   adaptiveHeldTop = true;
   adaptiveDropAnnounced = ADAPT_START_LEVEL < ADAPT_NODROP_LEVEL;   // suggestions on at the start level
   dailyRng = null;
+  dailyAlbumPool = null;
   currentChallenge = null;
   challengeRunActive = false;
   focusAlbum = null;
@@ -3475,6 +3477,9 @@ function startDaily() {
   currentMode = MODES.medium;   // daily is always Normal — override without persisting via DIFF_KEY
   resetRunState();
   dailyRng = mulberry32(dailySeed(dateStr));   // set AFTER resetRunState (which clears it)
+  // On a real album anniversary, lean today's words toward that album (deterministic — the
+  // album comes from the date, the skew is rolled on dailyRng). See pickWord.
+  dailyAlbumPool = buildDailyAlbumPool(anniversaryAlbumFor(dateStr));
   // Resume an in-progress run from earlier today (a refresh or exit mid-daily) instead
   // of restarting — this is what closes the replay loophole. Restore the accumulators and
   // seek the PRNG to the saved position so the remaining words are deterministic. Stale
@@ -4322,6 +4327,48 @@ function renderShareButton(dateStr, hidden) {
   braceletEl.parentNode.insertBefore(btn, braceletEl.nextSibling);
 }
 
+// The studio album whose anniversary falls on `dateKey` (re-records borrow their original
+// album), or null on a non-album day (ordinary day, or her birthday). Pure date → album, so
+// the album-themed daily stays deterministic. Reuses the milestone table via anniversaryNote.
+function anniversaryAlbumFor(dateKey) {
+  const note = anniversaryNote(dateKey, TS_MILESTONES);
+  return (note && note.album) || null;
+}
+// How many of an album's songs a word reaches — its "commonness" within that album. Counts
+// valid (lyrics) songs in the album holding the word; drives the album-anniversary daily skew.
+function albumWordCoverage(word, album) {
+  return validSongs(word, false, false).filter((s) => s.album === album).length;
+}
+// The album-common word pool for an anniversary daily: the album's playable words (intersected
+// with the active rarity bucket) scored by within-album coverage, most-common first. null when
+// there's no album today or the pool is empty (→ pickWord just behaves like a normal daily).
+function buildDailyAlbumPool(album) {
+  if (!album || !albumWordMap[album]) return null;
+  const bucketSet = new Set(wordBuckets[effectivePool()] || playableWords);
+  const scored = albumWordMap[album]
+    .filter((w) => bucketSet.has(w))
+    .map((w) => ({ w, n: albumWordCoverage(w, album) }))
+    .sort((a, b) => b.n - a.n);
+  // "Most commonly found" means recurring across the album, so drop hapax words (in a single
+  // album song) — they're album-specific but not characteristic. Keep a floor of distinct words
+  // (well over TOTAL_ROUNDS) so the no-repeat draw never starves; relax if an album is too thin.
+  const FLOOR = TOTAL_ROUNDS * 2;
+  const recurring = scored.filter((s) => s.n >= 2);
+  const pool = recurring.length >= FLOOR ? recurring : scored;
+  return pool.length ? pool : null;
+}
+// Weighted pick from [{ w, n }], strongly favouring higher n (more common in the album) via an
+// n² weight so the signature words surface, not the long tail. Uses the supplied rng so the
+// daily stays deterministic; falls back to a flat pick if weights vanish.
+function weightedAlbumWord(scored, rng) {
+  const weight = (n) => n * n;
+  const total = scored.reduce((sum, s) => sum + weight(s.n), 0);
+  if (total <= 0) return scored[Math.floor(rng() * scored.length)].w;
+  let r = rng() * total;
+  for (const s of scored) { r -= weight(s.n); if (r < 0) return s.w; }
+  return scored[scored.length - 1].w;
+}
+
 function pickWord() {
   // Some challenges force the word so the round is winnable within their rule (and push
   // it onto usedWords themselves). A null return means "fall back to the normal pool".
@@ -4374,6 +4421,18 @@ function pickWord() {
     if (winnable.length) choices = winnable;
   }
   const rng = dailyRng || Math.random;
+  // Album-anniversary daily: most rounds lean toward words common in that album (weighted by
+  // within-album coverage), some stay general for variety. Rolled on dailyRng so every player
+  // gets the same run. The chosen word is still answerable from any song — this only biases
+  // which word surfaces, not the valid answers — so winnability matches a normal daily.
+  if (dailyAlbumPool) {
+    const albumChoices = dailyAlbumPool.filter((s) => !usedWords.includes(s.w));
+    if (albumChoices.length && rng() < DAILY_ALBUM_SKEW) {
+      const word = weightedAlbumWord(albumChoices, rng);
+      usedWords.push(word);
+      return word;
+    }
+  }
   const word = choices[Math.floor(rng() * choices.length)];
   usedWords.push(word);
   return word;
@@ -7410,6 +7469,16 @@ function buildDevApi() {
         return anniversaryNote(window.__devDate, TS_MILESTONES);
       },
       clear: () => { window.__devDate = null; renderAnniversaryNote(); renderMilestoneSticky(); },
+      // Preview the album-anniversary daily skew for a date: the album today leans toward and
+      // its most-common words (top of the weighted pool). null album → no skew that day.
+      dailyPool: (dateKey) => {
+        const key = dateKey || window.__devDate || todayKey();
+        const album = anniversaryAlbumFor(key);
+        const pool = buildDailyAlbumPool(album);
+        return { date: key, album, size: pool ? pool.length : 0,
+          top: pool ? pool.slice(0, 13).map((s) => `${s.w} (${s.n})`) : null,
+          all: pool ? pool.map((s) => s.w) : null };
+      },
     },
     // Seeding
     seed: { records: devSeedRecords, history: devSeedHistory, tally: devSeedTally,
