@@ -155,6 +155,12 @@ if (location.pathname.endsWith('/index.html')) {
   </div>
 </div>
 <div id="toastLayer" class="toast-layer" aria-live="polite"></div>
+<a id="searchLink" class="search-link" href="search/" title="Swift To The Lyric — search every lyric">
+  <svg class="search-link-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+    <circle cx="11" cy="11" r="7" /><line x1="16.5" y1="16.5" x2="21" y2="21" />
+  </svg>
+  <span class="search-link-label">search every lyric</span>
+</a>
 <button id="settingsGear" class="settings-gear" aria-label="Settings" title="Settings">
   <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
     <circle cx="12" cy="12" r="3"/>
@@ -303,14 +309,19 @@ if (location.pathname.endsWith('/index.html')) {
           <span class="nav-card-title">challenges</span>
           <span class="nav-card-kicker">unlock &amp; defeat</span>
         </button>
+        <button id="masteryBtn" class="nav-card" data-era-tint="rose">
+          <span class="nav-card-seat">
+            <svg class="nav-ic" width="50" height="50" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M18 27 L14.5 42 L20 38.5 L24 42 L28 38.5 L33.5 42 L30 27 Z" fill="rgba(168,87,122,.18)" stroke-width="1.4"/>
+              <circle cx="24" cy="18" r="11" fill="rgba(168,87,122,.16)" stroke-width="1.6"/>
+              <circle cx="24" cy="18" r="6.6" fill="rgba(168,87,122,.12)" stroke-width="1.1"/>
+              <path d="M24 12.4 L25.7 16.1 L29.7 16.5 L26.7 19.2 L27.6 23.1 L24 21 L20.4 23.1 L21.3 19.2 L18.3 16.5 L22.3 16.1 Z" fill="rgba(168,87,122,.6)" stroke-width="1"/>
+            </svg>
+          </span>
+          <span class="nav-card-title">mastery</span>
+          <span class="nav-card-kicker js-mastery-kicker">skills &amp; rewards</span>
+        </button>
       </div>
-      <a id="searchLink" class="search-link" href="search/" title="Swift To The Lyric — search every lyric">
-        <svg class="search-link-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
-          <circle cx="11" cy="11" r="7" /><line x1="16.5" y1="16.5" x2="21" y2="21" />
-        </svg>
-        <span class="search-link-label">search every lyric</span>
-        <span class="search-link-arrow" aria-hidden="true">→</span>
-      </a>
       <p class="hint">jot the song that holds the word, then press Enter</p>
     </div>
   </section>
@@ -474,6 +485,18 @@ if (location.pathname.endsWith('/index.html')) {
         <span class="nav-card-title">challenges</span>
         <span class="nav-card-kicker">unlock &amp; defeat</span>
       </button>
+      <button id="viewMasteryBtn" class="nav-card" data-era-tint="rose">
+        <span class="nav-card-seat">
+          <svg class="nav-ic" width="50" height="50" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M18 27 L14.5 42 L20 38.5 L24 42 L28 38.5 L33.5 42 L30 27 Z" fill="rgba(168,87,122,.18)" stroke-width="1.4"/>
+            <circle cx="24" cy="18" r="11" fill="rgba(168,87,122,.16)" stroke-width="1.6"/>
+            <circle cx="24" cy="18" r="6.6" fill="rgba(168,87,122,.12)" stroke-width="1.1"/>
+            <path d="M24 12.4 L25.7 16.1 L29.7 16.5 L26.7 19.2 L27.6 23.1 L24 21 L20.4 23.1 L21.3 19.2 L18.3 16.5 L22.3 16.1 Z" fill="rgba(168,87,122,.6)" stroke-width="1"/>
+          </svg>
+        </span>
+        <span class="nav-card-title">mastery</span>
+        <span class="nav-card-kicker js-mastery-kicker">skills &amp; rewards</span>
+      </button>
     </div>
   </section>
 
@@ -493,6 +516,15 @@ if (location.pathname.endsWith('/index.html')) {
       <button id="achievementsBackBtn" class="btn-link">← back</button>
     </div>
     <div id="achievementsBody"></div>
+  </section>
+
+  <!-- MASTERY SCREEN -->
+  <section id="screen-mastery" class="screen card" tabindex="-1" aria-label="Skills and mastery">
+    <div class="stats-nav">
+      <span class="stats-title">Mastery</span>
+      <button id="masteryBackBtn" class="btn-link">← back</button>
+    </div>
+    <div id="masteryBody"></div>
   </section>
 
   <!-- CHALLENGES SCREEN — the unlock-and-defeat puzzle collection -->

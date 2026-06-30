@@ -283,6 +283,7 @@ const screens = {
   challenges: $("screen-challenges"),
   songbook: $("screen-songbook"),
   albumfocus: $("screen-albumfocus"),
+  mastery: $("screen-mastery"),
 };
 function showScreen(name) {
   // Defensive: clear any stray inline animation a flip sheet helper might have left on a real
@@ -295,6 +296,8 @@ function showScreen(name) {
   // The daily reset countdown only lives on the start screen; don't let its interval
   // outlive the view (renderDailyButtonState restarts it when start is shown again).
   if (name !== "start") stopResetCountdown();
+  // Hide the bottom-left lyric-search chrome during active play, so it doesn't clutter the board.
+  document.body.classList.toggle("in-game", name === "game");
   // Re-arm the quit button fresh for each visit to the game (drop any stale armed state).
   if (name === "game") {
     const qb = $("quitBtn");
@@ -303,7 +306,7 @@ function showScreen(name) {
   }
   // Re-scatter the keepsake-card tape each time its screen is shown, so the pinning
   // feels hand-done rather than templated.
-  if (name === "start" || name === "results") scatterNavTape(name);
+  if (name === "start" || name === "results") { scatterNavTape(name); updateMasteryNav(); }
   // Move keyboard/screen-reader focus onto the newly shown screen so the next Tab
   // (and the SR reading position) start there, not on the now-hidden trigger. The
   // game screen manages its own focus on #songInput, so don't steal it there.
@@ -2316,6 +2319,115 @@ function openAchievements(from) {
   achievementsBackTarget = from;
   renderAchievementsPage();
   flipAwayToScreen("achievements");
+}
+let masteryBackTarget = "start";       // where the Mastery page's ← back returns to
+function openMastery(from) {
+  masteryBackTarget = from;
+  renderMasteryPage();
+  flipAwayToScreen("mastery");
+}
+// Keep the live indicator on the mastery nav-cards (both start + results) current: the
+// Mastery level once unlocked, otherwise progress toward the unlock gate.
+function updateMasteryNav() {
+  const m = loadMastery();
+  const text = isMasteryUnlocked(m)
+    ? "mastery · level " + masteryLevelFromXp(m.masteryXp)
+    : totalSkillLevels(m) + " / " + MASTERY_GATE + " to unlock";
+  document.querySelectorAll(".js-mastery-kicker").forEach((el) => { el.textContent = text; });
+}
+
+// The Mastery page: a headline rank, the five skills with their levels + progress, and the
+// reward ladder (unlocked cosmetics are selectable; future tiers read "coming soon").
+function renderMasteryPage() {
+  const body = $("masteryBody");
+  if (!body) return;
+  const m = loadMastery();
+  const unlocked = isMasteryUnlocked(m);
+  const total = totalSkillLevels(m);
+  const mLevel = masteryLevelFromXp(m.masteryXp);
+
+  // Headline
+  let head;
+  if (unlocked) {
+    const cur = masteryXpForLevel(mLevel), next = masteryXpForLevel(mLevel + 1);
+    const pct = Math.max(0, Math.min(100, ((m.masteryXp - cur) / (next - cur)) * 100));
+    head = `<div class="mastery-rank">Mastery — level ${mLevel}</div>` +
+      `<div class="ms-bar"><i style="width:${pct.toFixed(1)}%"></i></div>` +
+      `<p class="mastery-sub">${m.masteryXp - cur} / ${next - cur} ink to level ${mLevel + 1}</p>`;
+  } else {
+    const pct = Math.max(0, Math.min(100, (total / MASTERY_GATE) * 100));
+    head = `<div class="mastery-rank"><span class="ms-locked">Mastery locked</span></div>` +
+      `<div class="ms-bar"><i style="width:${pct.toFixed(1)}%"></i></div>` +
+      `<p class="mastery-sub">${total} / ${MASTERY_GATE} skill levels — raise your skills to begin</p>`;
+  }
+
+  // Skills
+  const skills = SKILLS.map((sk) => {
+    const xp = m.skills[sk.id] || 0;
+    const lvl = skillLevelFromXp(xp);
+    const maxed = lvl >= SKILL_MAX_LEVEL;
+    const cur = skillXpForLevel(lvl), next = skillXpForLevel(lvl + 1);
+    const pct = maxed ? 100 : Math.max(0, Math.min(100, ((xp - cur) / (next - cur)) * 100));
+    const lvlText = maxed ? "Level " + lvl + " · max" : "Level " + lvl;
+    return `<div class="skill-row">` +
+      `<span class="skill-icon">${charmMarkup(sk.icon)}</span>` +
+      `<div class="skill-main">` +
+        `<div class="skill-top"><span class="skill-name">${escapeHtml(sk.name)}</span><span class="skill-lvl">${lvlText}</span></div>` +
+        `<div class="skill-bar${maxed ? " maxed" : ""}"><i style="width:${pct.toFixed(1)}%"></i></div>` +
+        `<div class="skill-blurb">${escapeHtml(sk.blurb)}</div>` +
+      `</div></div>`;
+  }).join("");
+
+  // Reward ladder
+  const rewards = MASTERY_REWARDS.map((r) => {
+    const isUnlocked = !!m.unlocked[r.id];
+    const isSoon = r.kind === "soon";
+    const active = r.kind === "pen" && settings.masteryPen === (r.payload && r.payload.pen);
+    let action;
+    if (isSoon) action = `<button class="reward-action" disabled>coming soon</button>`;
+    else if (!isUnlocked) action = `<button class="reward-action" disabled>locked</button>`;
+    else if (active) action = `<button class="reward-action active" data-reward="${r.id}">in use</button>`;
+    else action = `<button class="reward-action" data-reward="${r.id}">use</button>`;
+    const cls = isUnlocked ? "unlocked" : (isSoon ? "soon" : "locked");
+    return `<div class="reward-row ${cls}">` +
+      `<span class="reward-icon">${charmMarkup(r.icon)}</span>` +
+      `<div class="reward-main"><span class="reward-name">${escapeHtml(r.name)}</span>` +
+        `<span class="reward-meta">Mastery ${r.level} · ${escapeHtml(r.desc)}</span></div>` +
+      action + `</div>`;
+  }).join("");
+  // A "default pen" reset, shown once any pen is in use.
+  const penReset = (settings.masteryPen)
+    ? `<div class="reward-row unlocked"><span class="reward-icon">${charmMarkup("nib")}</span>` +
+      `<div class="reward-main"><span class="reward-name">Default pen</span>` +
+      `<span class="reward-meta">the everyday hand</span></div>` +
+      `<button class="reward-action" data-reward="">use</button></div>`
+    : "";
+
+  body.innerHTML = `<div class="mastery-page">` +
+    `<div class="mastery-head">${head}</div>` +
+    `<div class="mastery-section-label">Skills</div>${skills}` +
+    `<div class="mastery-section-label">Rewards</div>${rewards}${penReset}` +
+    `</div>`;
+
+  // Wire the cosmetic-selection buttons (v1: choose your writing pen).
+  body.querySelectorAll(".reward-action[data-reward]").forEach((btn) => {
+    btn.addEventListener("click", () => chooseMasteryPen(btn.getAttribute("data-reward")));
+  });
+}
+
+// Apply a Mastery-unlocked pen as the default writing hand (or "" to clear). Persists in
+// settings and re-renders the page so the active state updates.
+function chooseMasteryPen(rewardId) {
+  let pen = "";
+  if (rewardId) {
+    const r = MASTERY_REWARD_BY_ID[rewardId];
+    if (!r || r.kind !== "pen" || !loadMastery().unlocked[rewardId]) return;   // guard: must be an unlocked pen
+    pen = (r.payload && r.payload.pen) || "";
+  }
+  settings.masteryPen = pen;
+  saveSettings(settings);
+  if (pen) setPen(pen); else setPen(null);
+  renderMasteryPage();
 }
 
 /* ---------- Challenges page ---------- */
@@ -6598,8 +6710,10 @@ function runRoundEggs() {
     addDoodle("thirteen", "corner-bl", 40, 40);
   }
 
-  // rare pen swap, independent of the doodle
-  if (chance(0.12)) {
+  // A Mastery-chosen pen is the persistent default each round; otherwise the rare random swap.
+  if (settings.masteryPen) {
+    setPen(settings.masteryPen);
+  } else if (chance(0.12)) {
     const pens = ["quill", "fountain", "glitter"];
     setPen(pens[Math.floor(Math.random() * pens.length)]);
   }
@@ -7632,6 +7746,13 @@ async function init() {
   $("viewAchievementsBtn").addEventListener("click", () => openAchievements("results"));
   $("achievementsBackBtn").addEventListener("click", () => {
     const prev = achievementsBackTarget;
+    if (prev === "start") { $("startContent").style.display = ""; }
+    flipInToScreen(prev);
+  });
+  $("masteryBtn").addEventListener("click", () => openMastery("start"));
+  $("viewMasteryBtn").addEventListener("click", () => openMastery("results"));
+  $("masteryBackBtn").addEventListener("click", () => {
+    const prev = masteryBackTarget;
     if (prev === "start") { $("startContent").style.display = ""; }
     flipInToScreen(prev);
   });

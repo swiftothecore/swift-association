@@ -2343,24 +2343,28 @@
   /* Pull the row a touch wider than the ruled text column (negative side margins)
      so the cards read landscape and the titles fit on one line; the corner tape
      sitting over the red margin rule looks intentionally pinned-over-the-edge. */
-  .see-also { display: flex; justify-content: center; align-items: stretch; gap: 14px; margin: 22px -12px 0; }
-  /* Companion-tool entry: the lyrics searcher lives on its own page, so it reads as a
-     margin note rather than one of the data nav-cards. Typewriter label, red-pen
-     magnifier (matching the searcher), a hand-drawn underline that fills on hover. */
+  /* A 3-column grid: five cards lay out 3 + 2 today, with room for a sixth to make 3 + 3. */
+  .see-also { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin: 22px -12px 0; }
+  /* Companion-tool entry: the lyrics searcher lives on its own page, so it sits as
+     site-level chrome in the bottom-left corner — mirroring the settings gear (top-right)
+     — rather than competing with the data nav-cards. Hidden during active play. */
   .search-link {
-    display: inline-flex; align-items: center; gap: 9px;
-    margin: 16px auto 0; padding: 6px 4px 5px; width: fit-content;
-    text-decoration: none; color: var(--ink-soft);
-    border-bottom: 1.5px dashed rgba(178, 58, 58, 0.32);
-    transition: color 0.16s ease, border-color 0.16s ease;
+    position: fixed; left: 14px; bottom: 14px; z-index: 60;
+    display: inline-flex; align-items: center; gap: 7px;
+    padding: 8px 12px; border-radius: 999px;
+    text-decoration: none; color: #5c4326;
+    background: rgba(245, 239, 225, 0.82);
+    border: 1.5px solid rgba(43, 39, 34, 0.32);
+    box-shadow: 0 2px 6px rgba(60, 50, 35, 0.22);
+    transition: transform 0.18s ease, background 0.18s, color 0.18s, border-color 0.18s;
   }
-  .search-link-ic { width: 17px; height: 17px; color: rgba(178, 58, 58, 0.85); flex: none; }
-  .search-link-label { font-family: var(--type); font-size: 12px; letter-spacing: 0.04em; }
-  .search-link-arrow { font-family: var(--type); font-size: 12px; opacity: 0; transform: translateX(-4px); transition: opacity 0.16s ease, transform 0.16s ease; }
+  .search-link-ic { width: 16px; height: 16px; color: rgba(178, 58, 58, 0.85); flex: none; }
+  .search-link-label { font-family: var(--type); font-size: 11.5px; letter-spacing: 0.04em; }
   .search-link:hover, .search-link:focus-visible {
-    color: var(--ink); border-bottom-color: rgba(178, 58, 58, 0.7); outline: none;
+    background: var(--highlighter); transform: translateY(-1px); color: var(--ink); outline: none;
   }
-  .search-link:hover .search-link-arrow, .search-link:focus-visible .search-link-arrow { opacity: 0.7; transform: translateX(0); }
+  body.in-game .search-link { display: none; }
+  @media (min-width: 1040px) { .search-link { left: 22px; bottom: 18px; } }
   .nav-card {
     --card-bg: #fbf6e9;
     flex: 1; min-width: 0; width: auto; margin: 0;
@@ -2380,6 +2384,7 @@
   .nav-card[data-era-tint="lavender"] { --tint: 139, 115, 201; }
   .nav-card[data-era-tint="denim"]    { --tint: 91, 135, 184; }
   .nav-card[data-era-tint="graphite"] { --tint: 43, 39, 34; }
+  .nav-card[data-era-tint="rose"]     { --tint: 168, 87, 122; }
   /* Sticky tape — OPAQUE pastel washi (a cream backing under a half-strength tint wash,
      plus a diagonal sheen), so the card never shows through. ::before is the primary
      strip, ::after an optional second strip; placement varies per card below so the row
@@ -2476,6 +2481,38 @@
     .nav-card-title { font-size: 16px; }
     .nav-card-kicker { font-size: 7.5px; letter-spacing: 1px; }
   }
+
+  /* ===== Mastery screen ===== */
+  .mastery-page { --m-accent: 168, 87, 122; }
+  .mastery-head { text-align: center; margin: 4px 0 6px; }
+  .mastery-rank { font-family: var(--hand); font-weight: 700; font-size: 30px; line-height: 1; color: var(--ink); }
+  .mastery-rank .ms-locked { font-size: 19px; color: var(--ink-soft); }
+  .mastery-sub { font-family: var(--type); font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-soft); margin: 8px 0 0; }
+  .ms-bar { height: 9px; border-radius: 5px; background: rgba(43, 39, 34, 0.1); overflow: hidden; margin: 12px auto 0; max-width: 320px; }
+  .ms-bar i { display: block; height: 100%; border-radius: 5px; background: rgba(var(--m-accent), 0.7); }
+  .mastery-section-label { font-family: var(--type); font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-soft); margin: 26px 0 8px; }
+  .skill-row { display: flex; align-items: center; gap: 12px; padding: 11px 4px; border-bottom: 1px solid rgba(43, 39, 34, 0.08); }
+  .skill-icon { width: 30px; height: 30px; flex: none; color: rgba(var(--m-accent), 0.85); }
+  .skill-icon svg { width: 100%; height: 100%; }
+  .skill-main { flex: 1; min-width: 0; }
+  .skill-top { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+  .skill-name { font-family: var(--hand); font-weight: 700; font-size: 18px; color: var(--ink); }
+  .skill-lvl { font-family: var(--type); font-size: 11px; letter-spacing: 0.05em; color: var(--ink-soft); white-space: nowrap; }
+  .skill-bar { height: 7px; border-radius: 4px; background: rgba(43, 39, 34, 0.09); overflow: hidden; margin: 6px 0 5px; }
+  .skill-bar i { display: block; height: 100%; border-radius: 4px; background: rgba(var(--m-accent), 0.6); }
+  .skill-bar.maxed i { background: rgba(199, 149, 31, 0.8); }
+  .skill-blurb { font-family: var(--type); font-size: 10.5px; line-height: 1.4; color: var(--ink-soft); }
+  .reward-row { display: flex; align-items: center; gap: 12px; padding: 10px 4px; border-bottom: 1px solid rgba(43, 39, 34, 0.08); }
+  .reward-icon { width: 26px; height: 26px; flex: none; color: var(--ink-soft); }
+  .reward-icon svg { width: 100%; height: 100%; }
+  .reward-row.locked { opacity: 0.5; }
+  .reward-row.unlocked .reward-icon { color: rgba(var(--m-accent), 0.85); }
+  .reward-main { flex: 1; min-width: 0; }
+  .reward-name { display: block; font-family: var(--hand); font-weight: 700; font-size: 16px; color: var(--ink); }
+  .reward-meta { display: block; font-family: var(--type); font-size: 9.5px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-soft); margin-top: 2px; }
+  .reward-action { font-family: var(--type); font-size: 11px; letter-spacing: 0.04em; padding: 5px 11px; border-radius: 3px; border: 1px solid rgba(43, 39, 34, 0.3); background: var(--paper); color: var(--ink); cursor: pointer; white-space: nowrap; }
+  .reward-action[disabled] { cursor: default; opacity: 0.5; }
+  .reward-action.active { background: rgba(var(--m-accent), 0.18); border-color: rgba(var(--m-accent), 0.6); }
 
   /* Album-focus corner badge — a colour-wheel of the 12 albums (gold star centre),
      pinned to the top-right corner of the start page, bleeding slightly over the edge
