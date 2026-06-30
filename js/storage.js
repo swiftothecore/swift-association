@@ -8,6 +8,8 @@ import {
   CHALLENGES_KEY, CHALLENGE_TOKENS_KEY,
   ALBUM_FOCUS_KEY, ALBUM_FOCUS_TARGET, DIFF_RANK,
   ADAPTIVE_KEY,
+  MASTERY_KEY, SKILL_IDS, MASTERY_REWARDS, MASTERY_GATE,
+  skillLevelFromXp, masteryLevelFromXp,
   MODES, MODE_ORDER, TOTAL_ROUNDS,
 } from "./config.js";
 
@@ -296,6 +298,83 @@ export function recordGameMetrics(g) {
   if (!g.isInfinite) m.noTimeoutStreak = (g.timeouts === 0) ? (m.noTimeoutStreak || 0) + 1 : 0;
   saveMetrics(m);
   return m;
+}
+
+/* ---------- Skills & Mastery progression ---------- */
+// One record across every game type. `skills` holds cumulative XP per skill; levels are
+// always DERIVED from XP (never stored), so the curve can be retuned without migration.
+// `masteryXp` only accrues once the unlock gate is cleared. `unlocked` mirrors the
+// achievements shape — { [rewardId]: isoDate }. Spread-merge defaults like loadMetrics, so
+// players with no key (or a future new skill) get sensible values with no migration step.
+export function loadMastery() {
+  const d = { skills: { resolve: 0, tempo: 0, lyricist: 0, endurance: 0, range: 0 }, masteryXp: 0, unlocked: {} };
+  try {
+    const raw = localStorage.getItem(MASTERY_KEY);
+    if (raw) {
+      const o = JSON.parse(raw);
+      if (o && typeof o === "object") {
+        return {
+          skills: { ...d.skills, ...(o.skills || {}) },
+          masteryXp: o.masteryXp || 0,
+          unlocked: (o.unlocked && typeof o.unlocked === "object") ? o.unlocked : {},
+        };
+      }
+    }
+  } catch (e) { /* ignore */ }
+  return d;
+}
+export function saveMastery(m) {
+  try { localStorage.setItem(MASTERY_KEY, JSON.stringify(m)); } catch (e) { /* ignore */ }
+}
+// Total of the five skills' levels (0..50). The Mastery unlock gate compares against this.
+export function totalSkillLevels(m = loadMastery()) {
+  return SKILL_IDS.reduce((n, id) => n + skillLevelFromXp(m.skills[id] || 0), 0);
+}
+export function isMasteryUnlocked(m = loadMastery()) {
+  return totalSkillLevels(m) >= MASTERY_GATE;
+}
+// Fold a game's per-skill XP into the record. `delta` is { [skillId]: xp }. Adds to each
+// skill; once the gate is cleared, Mastery XP accrues by the same total; any reward whose
+// level is newly reached is granted (dated, like a charm). Returns what changed so the
+// caller can surface level-up / mastery / unlock toasts.
+export function recordSkillXp(delta) {
+  const m = loadMastery();
+  const before = {};
+  for (const id of SKILL_IDS) before[id] = skillLevelFromXp(m.skills[id] || 0);
+  const wasUnlocked = isMasteryUnlocked(m);
+  const beforeMastery = masteryLevelFromXp(m.masteryXp);
+
+  let sum = 0;
+  for (const id of SKILL_IDS) {
+    const add = Math.max(0, Math.round((delta && delta[id]) || 0));
+    m.skills[id] = (m.skills[id] || 0) + add;
+    sum += add;
+  }
+
+  const nowUnlocked = isMasteryUnlocked(m);
+  if (nowUnlocked) m.masteryXp = (m.masteryXp || 0) + sum;   // only counts once you're past the gate
+
+  const levelUps = [];
+  for (const id of SKILL_IDS) {
+    const to = skillLevelFromXp(m.skills[id]);
+    if (to > before[id]) levelUps.push({ id, from: before[id], to });
+  }
+  const afterMastery = masteryLevelFromXp(m.masteryXp);
+  const masteryUp = afterMastery > beforeMastery ? { from: beforeMastery, to: afterMastery } : null;
+
+  const newUnlocks = [];
+  for (const r of MASTERY_REWARDS) {
+    if (r.level <= afterMastery && !m.unlocked[r.id]) {
+      m.unlocked[r.id] = new Date().toISOString();
+      newUnlocks.push(r.id);
+    }
+  }
+
+  saveMastery(m);
+  return { levelUps, masteryUp, masteryJustUnlocked: nowUnlocked && !wasUnlocked, newUnlocks, mastery: m };
+}
+export function resetMastery() {
+  try { localStorage.removeItem(MASTERY_KEY); } catch (e) { /* ignore */ }
 }
 
 // The old fake-celebrity "Hall of Fame" (HS_KEY) is fully retired — no reader or

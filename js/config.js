@@ -29,6 +29,7 @@ export const CHALLENGE_TOKENS_KEY = "swiftSongAssociation.challengeTokens"; // {
 export const ALBUM_FOCUS_KEY = "swiftSongAssociation.albumFocus";       // per-album best/beaten board — { [album]: {best, bestDiff, beaten, beatenDiff, perfected, perfectedDiff} }
 export const ADAPTIVE_KEY = "swiftSongAssociation.adaptive";            // Adaptive mode board — { bestPeak, bestScore, date, played }
 export const SEARCH_KEY = "swiftSongAssociation.search";                // Swift To The Lyric searcher — { mode, view, recent:[] }
+export const MASTERY_KEY = "swiftSongAssociation.mastery";              // skills + mastery progression — { skills:{...xp}, masteryXp, unlocked:{[rewardId]:isoDate} }
 
 // Every persisted key shares this namespace; export/import and "clear everything"
 // sweep all keys under it.
@@ -71,6 +72,7 @@ export const DEFAULT_SETTINGS = {
   lastGameType: "classic",  // runtime memory backing defaultGameType: "last" — the last type clicked (not shown in UI)
   playerName: "",           // notebook signature — set once, reused on every personal record
   avatar: "",               // profile polaroid — a center-cropped data-URL, stays on this device
+  masteryPen: "",           // chosen writing pen, unlocked via Mastery ("" = the default random egg)
 };
 
 /* Difficulty modes — each just re-tunes existing levers (timer, dropdown,
@@ -228,6 +230,78 @@ export const CHALLENGES = [
 ];
 export const CHALLENGE_BY_ID = Object.fromEntries(CHALLENGES.map((c) => [c.id, c]));
 export const CHALLENGE_ORDER = CHALLENGES.map((c) => c.id);
+
+/* ---------- Skills & Mastery progression ----------
+   Five skills, each gaining XP from a distinct way of playing. Once total skill levels
+   clear MASTERY_GATE, the Mastery track unlocks and climbs (its XP = the sum of all skill
+   XP earned), and every Mastery level grants a reward. Behaves like the catalogue tally
+   (an inclusive record of engagement), not the competitive boards — see foldSkillXp in
+   app.js for the per-mode contribution mask. Internal ids stay neutral; the visible names
+   are notebook-flavoured and tunable here. No RPG "XP bar / Lvl" chrome in the UI. */
+export const SKILLS = [
+  { id: "resolve",   name: "Instinct",      icon: "nib",    blurb: "Every song you land — and the streaks you string together." },
+  { id: "tempo",     name: "Quick Pen",     icon: "bolt",   blurb: "Answering fast, against the clock." },
+  { id: "lyricist",  name: "By Heart",      icon: "quote",  blurb: "Recalling the lyric line, word for word." },
+  { id: "endurance", name: "The Long Game", icon: "mountain", blurb: "How far you run in Infinite." },
+  { id: "range",     name: "Discography",   icon: "vinyl",  blurb: "Spreading your answers across her albums." },
+];
+export const SKILL_IDS = SKILLS.map((s) => s.id);
+export const SKILL_BY_ID = Object.fromEntries(SKILLS.map((s) => [s.id, s]));
+
+// XP-formula constants (consumed by foldSkillXp in app.js). All tunable.
+export const TEMPO_BASE = 10, TEMPO_SPEED = 40;            // per fast correct answer: BASE + SPEED*speedFactor
+export const LYRIC_TIER_XP = { base: 5, good: 15, perfect: 35, verse: 80 }; // keyed by gradeLyricRecall tier
+export const LYRIC_LEN_REF = 8;                            // typed words for the 2x length-factor cap
+export const ENDURANCE_GROWTH = 1.12, ENDURANCE_RUN_CAP = 1500; // exponential feel, capped per run
+export const RANGE_RATIO_XP = 60, RANGE_PER_ALBUM = 8;     // breadth ratio bonus + flat per distinct album
+export const RESOLVE_BASE = 10, RESOLVE_STREAK_CAP = 10;   // streakMult = 1 + 0.1*min(streak, CAP)
+
+// Skill levels cap at 10. Cumulative XP to REACH a level (level 1 is free at 0 xp):
+//   threshold(n) = round(BASE * (n-1)^EXP).
+export const SKILL_MAX_LEVEL = 10;
+export const SKILL_LEVEL_BASE = 120;
+export const SKILL_LEVEL_EXP = 1.6;
+export function skillXpForLevel(level) {
+  if (level <= 1) return 0;
+  return Math.round(SKILL_LEVEL_BASE * Math.pow(level - 1, SKILL_LEVEL_EXP));
+}
+export function skillLevelFromXp(xp) {
+  let lv = 1;
+  while (lv < SKILL_MAX_LEVEL && (xp || 0) >= skillXpForLevel(lv + 1)) lv++;
+  return lv;
+}
+
+// Mastery unlocks when the five skills' levels SUM to this (of a possible 50) — broad
+// progress without forcing any single skill to be maxed. Mastery itself starts at level 0
+// and has no cap; cumulative XP to reach a level: round(BASE * level^EXP).
+export const MASTERY_GATE = 40;
+export const MASTERY_LEVEL_BASE = 800;
+export const MASTERY_LEVEL_EXP = 1.5;
+export function masteryXpForLevel(level) {
+  if (level <= 0) return 0;
+  return Math.round(MASTERY_LEVEL_BASE * Math.pow(level, MASTERY_LEVEL_EXP));
+}
+export function masteryLevelFromXp(xp) {
+  let lv = 0;
+  while ((xp || 0) >= masteryXpForLevel(lv + 1)) lv++;
+  return lv;
+}
+
+// Mastery rewards — one granted per Mastery level. `kind` drives how the Mastery screen
+// renders/applies it; `payload` is kind-specific. v1 ships the cosmetic "pen" tier (reusing
+// setPen / PEN_SVG); later entries are designed but stubbed ("soon") until built, so adding
+// future tiers is data-only.
+export const MASTERY_REWARDS = [
+  { level: 1, id: "pen-fountain", kind: "pen",  name: "Fountain pen",     icon: "nib",     desc: "Always write with a fountain pen.", payload: { pen: "fountain" } },
+  { level: 2, id: "pen-quill",    kind: "pen",  name: "Feather quill",    icon: "feather", desc: "Trade your pen for a feather quill.", payload: { pen: "quill" } },
+  { level: 3, id: "pen-glitter",  kind: "pen",  name: "Glitter gel pen",  icon: "sparkle", desc: "A glitter gel pen, for the sparkle.", payload: { pen: "glitter" } },
+  // Designed, not yet built — rendered as "coming soon" on the ladder.
+  { level: 4,  id: "covers-soon",   kind: "soon", name: "Notebook covers",       icon: "book",    desc: "New cover and paper themes." },
+  { level: 5,  id: "charms-soon",   kind: "soon", name: "Bracelet charms",       icon: "scarf",   desc: "Customise your friendship-bracelet charms." },
+  { level: 6,  id: "hardmode-soon", kind: "soon", name: "Super-hard challenges", icon: "swords",  desc: "Unlock a tier of brutal new challenges." },
+  { level: 8,  id: "title-soon",    kind: "soon", name: "Prestige titles",       icon: "crown",   desc: "Wear a title on your records page." },
+];
+export const MASTERY_REWARD_BY_ID = Object.fromEntries(MASTERY_REWARDS.map((r) => [r.id, r]));
 
 /* Era engine */
 export const ERAS = ["gold", "lavender", "red", "denim", "graphite", "midnight", "debut", "reputation", "lover", "evermore"];
