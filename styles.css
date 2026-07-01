@@ -2533,6 +2533,65 @@
   /* Bracelet-charm glyph in the reward ladder (reuses the global .b-bead/.b-gloss styling). */
   .charm-preview { overflow: visible; }
 
+  /* ---- Results-screen skills recap (what each skill earned this game + a live Mastery bar).
+     Carries the mastery rose accent locally, since it lives on the results card, not the
+     mastery page. ---- */
+  .skills-recap { --m-accent: 168, 87, 122; margin: 18px 0 4px; }
+  .skills-recap .sr-head { font-family: var(--type); font-size: 11px; letter-spacing: 1px;
+    color: var(--ink-soft); text-transform: uppercase; text-align: center; margin-bottom: 12px; }
+  .skills-recap .sr-row { display: flex; flex-wrap: wrap; gap: 8px 10px; justify-content: center; }
+  .sr-chip { display: flex; align-items: center; gap: 8px; padding: 6px 11px 6px 8px;
+    border: 1px solid rgba(43, 39, 34, 0.14); border-radius: 4px; background: var(--paper);
+    box-shadow: 0 1px 2px rgba(43, 39, 34, 0.05); }
+  .sr-chip.up { border-color: rgba(var(--m-accent), 0.55); background: rgba(var(--m-accent), 0.07); }
+  .sr-chip .sr-ic { width: 24px; height: 24px; flex: none; color: rgba(var(--m-accent), 0.85); }
+  .sr-chip .sr-ic .charm { width: 100%; height: 100%; display: block; }
+  .sr-chip .sr-ic svg { width: 100%; height: 100%; overflow: visible; }
+  .sr-chip .sr-ic .ink { fill: none; stroke: var(--ink); stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+  .sr-chip .sr-ic .ink-fill { fill: rgba(var(--m-accent), 0.75); stroke: var(--ink); stroke-width: 1.2; }
+  .sr-body { display: flex; flex-direction: column; gap: 1px; line-height: 1.1; }
+  .sr-name { font-family: var(--hand); font-weight: 700; font-size: 15px; color: var(--ink); }
+  .sr-xp { font-family: var(--type); font-size: 9.5px; letter-spacing: 0.04em; text-transform: uppercase; color: var(--ink-soft); }
+  .sr-chip.up .sr-xp { color: rgba(var(--m-accent), 0.95); }
+  .sr-mastery { max-width: 320px; margin: 14px auto 0; }
+  .sr-mtop { display: flex; justify-content: space-between; align-items: baseline; gap: 8px;
+    font-family: var(--type); font-size: 10.5px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-soft); }
+  .sr-mtop span:first-child { font-family: var(--hand); font-weight: 700; font-size: 15px; letter-spacing: 0; text-transform: none; color: var(--ink); }
+  .sr-mastery.locked .sr-mtop span:first-child { color: var(--ink-soft); }
+  .sr-mbar { margin-top: 6px; }
+
+  /* ---- First-class Mastery moment (unlock / level-up) — a gold wax-seal banner atop the
+     recap, with a sparkle burst. ---- */
+  .mastery-celebrate { position: relative; text-align: center; margin: 4px auto 16px; max-width: 340px;
+    padding: 16px 18px 15px; border-radius: 6px; border: 1.5px solid rgba(199, 149, 31, 0.5);
+    background: linear-gradient(180deg, rgba(212, 160, 23, 0.12), rgba(212, 160, 23, 0.04));
+    box-shadow: 0 3px 10px rgba(43, 39, 34, 0.1); opacity: 0; transform: translateY(6px) scale(0.98); }
+  .mastery-celebrate.in { opacity: 1; transform: none; transition: opacity 0.5s ease, transform 0.5s cubic-bezier(.34,1.56,.64,1); }
+  .mc-seal { width: 42px; height: 42px; margin: 0 auto 6px; color: #c8951f;
+    filter: drop-shadow(0 1px 2px rgba(199, 149, 31, 0.5)); }
+  .mc-seal svg { width: 100%; height: 100%; }
+  .mc-title { font-family: var(--hand); font-weight: 700; font-size: 24px; line-height: 1; color: var(--ink); }
+  .mc-sub { font-family: var(--type); font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-soft); margin-top: 6px; }
+  .mc-reward { font-family: var(--hand); font-size: 16px; color: var(--ink-accent); margin-top: 8px; }
+  .mc-cta { margin-top: 11px; font-family: var(--type); font-size: 11px; letter-spacing: 0.04em;
+    padding: 5px 13px; border-radius: 3px; border: 1px solid rgba(199, 149, 31, 0.55);
+    background: var(--paper); color: var(--ink); cursor: pointer; }
+  .mc-cta:hover { background: rgba(199, 149, 31, 0.14); }
+  .mc-burst { position: absolute; top: 42px; left: 50%; width: 0; height: 0; pointer-events: none; }
+  .mc-burst .mcs { position: absolute; left: 0; top: 0; width: 14px; height: 14px; margin: -7px 0 0 -7px;
+    color: #d8a71b; opacity: 0; animation: mcSpark 1.6s ease-out forwards; }
+  .mc-burst .mcs svg { width: 100%; height: 100%; }
+  @keyframes mcSpark {
+    0% { opacity: 0; transform: translate(0, 0) scale(0.2); }
+    25% { opacity: 1; }
+    100% { opacity: 0; transform: translate(var(--dx), var(--dy)) scale(1); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .mastery-celebrate { opacity: 1; transform: none; }
+    .mastery-celebrate.in { transition: none; }
+    .mc-burst { display: none; }
+  }
+
   /* Album-focus corner badge — a colour-wheel of the 12 albums (gold star centre),
      pinned to the top-right corner of the start page, bleeding slightly over the edge
      like a sticker. Replaces the old "album focus" keepsake card in the .see-also row.

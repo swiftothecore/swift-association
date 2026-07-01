@@ -1193,6 +1193,7 @@ function adaptiveTabHTML() {
 let earnedAchievements = {};   // persisted: { id: "YYYY-MM-DD" }
 let burnedAchIds = new Set();   // charms sacrificed for a token — permanently un-earned
 let newlyUnlocked = [];        // ids unlocked this game (for the results recap)
+let lastSkillFold = null;      // { delta, res } from this game's foldSkillXp — the results skills recap
 
 function charmMarkup(icon) { return `<span class="charm" aria-hidden="true">${ACH_ICONS[icon]}</span>`; }
 
@@ -1535,6 +1536,104 @@ function renderResultRecap() {
   el.style.display = "";
   // tapping any charm jumps to the full Charm Collection (back-arrow returns here)
   el.querySelectorAll(".ach-chip").forEach((c) => c.addEventListener("click", () => openAchievements("results")));
+}
+
+// The results-screen skills recap: what each skill earned this game, plus a live Mastery
+// bar. Reads the stashed foldSkillXp outcome (lastSkillFold); shows nothing when no fold
+// ran (a daily replay) or nothing was earned. Also the trigger point for the first-class
+// Mastery level-up / unlock celebration (celebrateMastery), so it lands on the results card.
+function renderSkillsRecap() {
+  const el = $("resultSkills");
+  if (!el) return;
+  const fold = lastSkillFold;
+  const hideForDaily = gameType === "daily" && settings.hideDailyScore;  // don't leak how the day went
+  if (!fold || !fold.res || hideForDaily) { el.style.display = "none"; el.innerHTML = ""; return; }
+  const { delta, res } = fold;
+
+  const levelTo = {};
+  for (const up of res.levelUps) levelTo[up.id] = up.to;
+  const gained = SKILLS.filter((sk) => (delta[sk.id] || 0) > 0);
+  const masteryMoment = res.masteryJustUnlocked || !!res.masteryUp;
+  if (!gained.length && !masteryMoment) { el.style.display = "none"; el.innerHTML = ""; return; }
+
+  const chips = gained.map((sk) => {
+    const up = levelTo[sk.id];
+    return `<div class="sr-chip${up ? " up" : ""}">` +
+      `<span class="sr-ic">${charmMarkup(sk.icon)}</span>` +
+      `<span class="sr-body"><span class="sr-name">${escapeHtml(sk.name)}</span>` +
+      `<span class="sr-xp">+${delta[sk.id]} ink${up ? ` · level ${up}` : ""}</span></span></div>`;
+  }).join("");
+
+  // Mastery line: the live bar to the next level (or progress toward the unlock gate).
+  const m = res.mastery;
+  let mastery;
+  if (isMasteryUnlocked(m)) {
+    const lvl = masteryLevelFromXp(m.masteryXp);
+    const cur = masteryXpForLevel(lvl), next = masteryXpForLevel(lvl + 1);
+    const pct = Math.max(0, Math.min(100, ((m.masteryXp - cur) / (next - cur)) * 100));
+    mastery = `<div class="sr-mastery"><div class="sr-mtop"><span>Mastery — level ${lvl}</span>` +
+      `<span class="sr-mxp">${m.masteryXp - cur} / ${next - cur} to ${lvl + 1}</span></div>` +
+      `<div class="ms-bar sr-mbar"><i style="width:${pct.toFixed(1)}%"></i></div></div>`;
+  } else {
+    const total = totalSkillLevels(m);
+    const pct = Math.max(0, Math.min(100, (total / MASTERY_GATE) * 100));
+    mastery = `<div class="sr-mastery locked"><div class="sr-mtop"><span>Mastery locked</span>` +
+      `<span class="sr-mxp">${total} / ${MASTERY_GATE} skill levels</span></div>` +
+      `<div class="ms-bar sr-mbar"><i style="width:${pct.toFixed(1)}%"></i></div></div>`;
+  }
+
+  el.innerHTML = `<div class="sr-head">skills this game</div>` +
+    (chips ? `<div class="sr-row">${chips}</div>` : "") + mastery;
+  el.style.display = "";
+
+  celebrateMastery(res, el);
+}
+
+// A first-class Mastery moment on the results card: a gold seal banner for the unlock or a
+// level-up, naming any reward just earned, with a soft sparkle burst (honours reduced
+// motion / reduced flashing). Skill level-ups stay as plain toasts; this is only the rarer,
+// bigger beat. Injected at the top of the skills recap so it reads before the detail.
+function celebrateMastery(res, host) {
+  if (!res || !host) return;
+  const isUnlock = res.masteryJustUnlocked;
+  const up = res.masteryUp;
+  if (!isUnlock && !up) return;
+  const lvl = up ? up.to : masteryLevelFromXp(res.mastery.masteryXp);
+  const rewards = (res.newUnlocks || []).map((id) => MASTERY_REWARD_BY_ID[id]).filter(Boolean);
+  const rewardLine = rewards.length
+    ? `<div class="mc-reward">new reward${rewards.length > 1 ? "s" : ""} — ${rewards.map((r) => escapeHtml(r.name)).join(", ")}</div>`
+    : "";
+  const title = isUnlock ? "Mastery unlocked" : `Mastery — level ${lvl}`;
+  const sub = isUnlock ? "every skill now feeds your mastery" : "another page turns in your songbook";
+
+  const banner = document.createElement("div");
+  banner.className = "mastery-celebrate";
+  banner.innerHTML = `<div class="mc-seal">${STAR_SVG}</div>` +
+    `<div class="mc-title">${escapeHtml(title)}</div>` +
+    `<div class="mc-sub">${escapeHtml(sub)}</div>${rewardLine}` +
+    `<button type="button" class="mc-cta">see mastery →</button>`;
+  host.insertBefore(banner, host.firstChild);
+  banner.querySelector(".mc-cta").addEventListener("click", () => openMastery("results"));
+
+  if (!motionReduced() && !settings.reducedFlashing) {
+    const burst = document.createElement("div");
+    burst.className = "mc-burst"; burst.setAttribute("aria-hidden", "true");
+    for (let i = 0; i < 22; i++) {
+      const s = document.createElement("span");
+      s.className = "mcs";
+      const ang = (Math.PI * 2 * i) / 22 + Math.random() * 0.3;
+      const dist = 54 + Math.random() * 74;
+      s.style.setProperty("--dx", (Math.cos(ang) * dist).toFixed(0) + "px");
+      s.style.setProperty("--dy", (Math.sin(ang) * dist).toFixed(0) + "px");
+      s.style.animationDelay = (Math.random() * 0.22).toFixed(2) + "s";
+      s.innerHTML = SPARKLE_SVG;
+      burst.appendChild(s);
+    }
+    banner.appendChild(burst);
+    setTimeout(() => burst.remove(), 2100);
+  }
+  if (!motionReduced()) { void banner.offsetWidth; }
+  banner.classList.add("in");
 }
 
 // The (tightened) escape valve: a skill charm can be SACRIFICED toward a challenge
@@ -3317,6 +3416,7 @@ function resetRunState() {
   gameResolveXp = 0;
   roundAnswerAlbums = [];
   newlyUnlocked = [];
+  lastSkillFold = null;
   usedWords = [];
   recentEras = [];
   roundResults = [];
@@ -4274,6 +4374,7 @@ function endChallenge() {
   $("backToChallenges").addEventListener("click", () => openChallenges("start"));
 
   renderResultRecap();   // surface any challenge achievements just earned
+  renderSkillsRecap();
   if (won && score === TOTAL_ROUNDS) celebratePerfect();
 }
 
@@ -4355,6 +4456,7 @@ function endAlbumFocus() {
   $("backToAlbumFocus").addEventListener("click", () => openAlbumFocus("start"));
 
   renderResultRecap();   // surface any album-focus achievements just earned
+  renderSkillsRecap();
   if (perfect) celebratePerfect();
 }
 
@@ -4418,6 +4520,7 @@ function endAdaptive() {
   if (isBest && !devNoLog) showNewBestBanner("a new height ★ · level " + peak + " " + name);
 
   renderResultRecap();
+  renderSkillsRecap();
 }
 
 // Re-render the results screen from a previously saved daily result (the
@@ -4435,6 +4538,7 @@ function showDailyResult(data, dateStr) {
   $("finalSub").textContent = "out of " + TOTAL_ROUNDS;
   $("keepGoingBtn").style.display = "none";
   $("resultAchievements").style.display = "none";
+  $("resultSkills").style.display = "none";   // a saved daily snapshot folded no skill XP
   $("verseAnthology").style.display = "none";   // saved daily snapshot has no recalled-lines list
   $("namePrompt").style.display = "none";
   hideNewBestBanner();
@@ -6341,23 +6445,20 @@ function foldSkillXp(mask) {
     delta.range = Math.round(RANGE_RATIO_XP * ratio + RANGE_PER_ALBUM * used.size);
   }
   const res = recordSkillXp(delta);
+  lastSkillFold = { delta, res };   // stashed for the results-screen recap + level-up celebration
   announceSkillProgress(res);
   return res;
 }
 
-// Toast skill level-ups, a mastery unlock/level, and any reward newly earned. Reuses the
-// note-toast stack so progress surfaces the same way achievements do.
+// Toast the small, frequent skill level-ups (they float over any screen the same way
+// achievements do). The bigger mastery moments — the unlock, a mastery level-up, and any
+// reward newly earned — are NOT toasted here: they get a first-class celebration on the
+// results screen instead (see celebrateMastery, fired from renderSkillsRecap).
 function announceSkillProgress(res) {
   if (!res) return;
   for (const up of res.levelUps) {
     const sk = SKILL_BY_ID[up.id];
     notifyNote(`${sk ? sk.name : up.id} — level ${up.to}`, sk ? sk.blurb : "");
-  }
-  if (res.masteryJustUnlocked) notifyNote("Mastery unlocked", "Every skill now feeds your mastery.");
-  else if (res.masteryUp) notifyNote(`Mastery — level ${res.masteryUp.to}`, "A new reward is waiting.");
-  for (const id of res.newUnlocks) {
-    const r = MASTERY_REWARD_BY_ID[id];
-    if (r) notifyNote("Reward unlocked", r.name);
   }
 }
 
@@ -6516,6 +6617,7 @@ function endGame() {
     if (streak.current >= 7) unlock("story-of-us");
     if (streak.current >= 30) unlock("evermore");
     renderResultRecap();
+    renderSkillsRecap();   // (hidden by renderSkillsRecap itself when the daily score is held back)
     dailyRng = null;   // back to Math.random() for any subsequent Classic game
     if (settings.hideDailyScore) $("finalScore").textContent = "?";
     $("namePrompt").style.display = "none";
@@ -6527,6 +6629,7 @@ function endGame() {
   }
 
   renderResultRecap();
+  renderSkillsRecap();
 
   // Reset any daily-only chrome left over from a previous daily results view.
   document.querySelector("#screen-results .podium-title").textContent = "Your best";
@@ -7751,6 +7854,24 @@ function buildDevApi() {
       // Preview a bracelet charm without unlocking it: pass an id (heart/moon/daisy/bow/pick/note/lightning/snake) or "" for the default star.
       charm: (id) => { settings.masteryCharm = id || ""; saveSettings(settings); if ($("masteryBody")) renderMasteryPage(); },
       open: () => openMastery("start"),
+      // Preview the results-screen skills recap + the level-up celebration without a real
+      // game. Pass a mastery level (>=1) for a level-up beat; pass 0 for the first-unlock beat.
+      // Fabricates a fold (persists nothing) and shows it on the results card.
+      celebrate: (lvl) => {
+        lvl = lvl | 0;
+        const skills = {}; SKILL_IDS.forEach((id) => { skills[id] = skillXpForLevel(SKILL_MAX_LEVEL); });
+        const fakeM = { skills, masteryXp: masteryXpForLevel(Math.max(1, lvl)) + 40, unlocked: {} };
+        const res = {
+          levelUps: [{ id: "resolve", from: 2, to: 3 }],
+          masteryUp: lvl >= 1 ? { from: lvl - 1, to: lvl } : null,
+          masteryJustUnlocked: lvl < 1,
+          newUnlocks: MASTERY_REWARDS.filter((r) => r.level === Math.max(1, lvl)).map((r) => r.id),
+          mastery: fakeM,
+        };
+        lastSkillFold = { delta: { resolve: 118, tempo: 44, lyricist: 30, endurance: 0, range: 26 }, res };
+        showScreen("results");
+        renderSkillsRecap();
+      },
     },
     // Seeding
     seed: { records: devSeedRecords, history: devSeedHistory, tally: devSeedTally,
