@@ -6563,10 +6563,26 @@ function foldSkillXp(mask) {
 // results screen instead (see celebrateMastery, fired from renderSkillsRecap).
 function announceSkillProgress(res) {
   if (!res) return;
-  for (const up of res.levelUps) {
-    const sk = SKILL_BY_ID[up.id];
-    notifyNote(`${sk ? sk.name : up.id} — level ${up.to}`, sk ? sk.blurb : "");
-  }
+  for (const up of res.levelUps) emitSkillToast(SKILL_BY_ID[up.id], up.to, up.id);
+}
+
+// A skill level-up floats over any screen like an achievement, but reads as its own
+// "rank up" beat: the skill's ink medallion with the new level struck onto it like a
+// wax seal, the skill name in the notebook hand, and the level named beneath. The
+// craft blurb rides along as the tooltip. Kept distinct from notifyNote (a plain note).
+function emitSkillToast(sk, level, fallbackId) {
+  const layer = $("toastLayer");
+  if (!layer) return;
+  const t = document.createElement("div");
+  t.className = "toast toast-skill";
+  if (sk && sk.blurb) { t.setAttribute("data-tip", sk.blurb); t.setAttribute("data-tip-delay", "500"); }
+  t.innerHTML =
+    `<div class="ts-medal">${sk ? charmMarkup(sk.icon) : ""}<span class="ts-lv">${level}</span></div>` +
+    `<div class="ts-body"><div class="t-label">skill leveled up</div>` +
+    `<div class="t-name">${escapeHtml(sk ? sk.name : fallbackId)}</div>` +
+    `<div class="ts-craft">reached level ${level}</div></div>`;
+  layer.appendChild(t);
+  scheduleToastDismiss();
 }
 
 /* ---------- End game ---------- */
