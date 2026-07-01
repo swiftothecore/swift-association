@@ -296,8 +296,10 @@ export function skillLevelFromXp(xp) {
 
 // Mastery unlocks when the five skills' levels SUM to this (of a possible 50) — broad
 // progress without forcing any single skill to be maxed. Mastery itself starts at level 0
-// and has no cap; cumulative XP to reach a level: round(BASE * level^EXP).
+// and caps at MASTERY_MAX_LEVEL (the top of the reward ladder — Ultimate Showgirl);
+// cumulative XP to reach a level: round(BASE * level^EXP).
 export const MASTERY_GATE = 40;
+export const MASTERY_MAX_LEVEL = 13;
 export const MASTERY_LEVEL_BASE = 800;
 export const MASTERY_LEVEL_EXP = 1.5;
 export function masteryXpForLevel(level) {
@@ -306,14 +308,13 @@ export function masteryXpForLevel(level) {
 }
 export function masteryLevelFromXp(xp) {
   let lv = 0;
-  while ((xp || 0) >= masteryXpForLevel(lv + 1)) lv++;
+  while (lv < MASTERY_MAX_LEVEL && (xp || 0) >= masteryXpForLevel(lv + 1)) lv++;
   return lv;
 }
 
 // Mastery rewards — one granted per Mastery level. `kind` drives how the Mastery screen
-// renders/applies it; `payload` is kind-specific. v1 ships the cosmetic "pen" tier (reusing
-// setPen / PEN_SVG); later entries are designed but stubbed ("soon") until built, so adding
-// future tiers is data-only.
+// renders/applies it; `payload` is kind-specific. The ladder runs 1–13 (pens, papers,
+// charms, the super-hard unlock, then prestige titles) and 13 is the Mastery cap.
 export const MASTERY_REWARDS = [
   { level: 1, id: "pen-fountain", kind: "pen",  name: "Fountain pen",     icon: "nib",     desc: "Always write with a fountain pen.", payload: { pen: "fountain" } },
   { level: 2, id: "pen-quill",    kind: "pen",  name: "Feather quill",    icon: "feather", desc: "Trade your pen for a feather quill.", payload: { pen: "quill" } },

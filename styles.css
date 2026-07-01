@@ -2547,6 +2547,7 @@
   .mastery-sub { font-family: var(--type); font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-soft); margin: 8px 0 0; }
   .ms-bar { height: 9px; border-radius: 5px; background: rgba(43, 39, 34, 0.1); overflow: hidden; margin: 12px auto 0; max-width: 320px; }
   .ms-bar i { display: block; height: 100%; border-radius: 5px; background: rgba(var(--m-accent), 0.7); }
+  .ms-bar.maxed i { background: rgba(199, 149, 31, 0.85); }
   .mastery-section-label { font-family: var(--type); font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-soft); margin: 26px 0 8px; }
   .skill-row { display: flex; align-items: center; gap: 12px; padding: 11px 4px; border-bottom: 1px solid rgba(43, 39, 34, 0.08); }
   .skill-icon { width: 30px; height: 30px; flex: none; color: rgba(var(--m-accent), 0.85); }

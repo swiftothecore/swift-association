@@ -14,7 +14,7 @@ import {
   TEMPO_BASE, TEMPO_SPEED, LYRIC_TIER_XP, LYRIC_LEN_REF,
   ENDURANCE_GROWTH, ENDURANCE_RUN_CAP, RANGE_RATIO_XP, RANGE_PER_ALBUM,
   RESOLVE_BASE, RESOLVE_STREAK_CAP,
-  MASTERY_REWARDS, MASTERY_REWARD_BY_ID, MASTERY_GATE, SKILL_MAX_LEVEL,
+  MASTERY_REWARDS, MASTERY_REWARD_BY_ID, MASTERY_GATE, MASTERY_MAX_LEVEL, SKILL_MAX_LEVEL,
   MASTERY_TITLES, MASTERY_TITLE_BY_VALUE, masteryDefaultTitle,
   skillXpForLevel, skillLevelFromXp, masteryXpForLevel, masteryLevelFromXp,
 } from "./config.js";
@@ -1580,11 +1580,17 @@ function renderSkillsRecap() {
   let mastery;
   if (isMasteryUnlocked(m)) {
     const lvl = masteryLevelFromXp(m.masteryXp);
-    const cur = masteryXpForLevel(lvl), next = masteryXpForLevel(lvl + 1);
-    const pct = Math.max(0, Math.min(100, ((m.masteryXp - cur) / (next - cur)) * 100));
-    mastery = `<div class="sr-mastery"><div class="sr-mtop"><span>Mastery — level ${lvl}</span>` +
-      `<span class="sr-mxp">${m.masteryXp - cur} / ${next - cur} to ${lvl + 1}</span></div>` +
-      `<div class="ms-bar sr-mbar"><i style="width:${pct.toFixed(1)}%"></i></div></div>`;
+    if (lvl >= MASTERY_MAX_LEVEL) {
+      mastery = `<div class="sr-mastery"><div class="sr-mtop"><span>Mastery — level ${lvl}</span>` +
+        `<span class="sr-mxp">max</span></div>` +
+        `<div class="ms-bar sr-mbar maxed"><i style="width:100%"></i></div></div>`;
+    } else {
+      const cur = masteryXpForLevel(lvl), next = masteryXpForLevel(lvl + 1);
+      const pct = Math.max(0, Math.min(100, ((m.masteryXp - cur) / (next - cur)) * 100));
+      mastery = `<div class="sr-mastery"><div class="sr-mtop"><span>Mastery — level ${lvl}</span>` +
+        `<span class="sr-mxp">${m.masteryXp - cur} / ${next - cur} to ${lvl + 1}</span></div>` +
+        `<div class="ms-bar sr-mbar"><i style="width:${pct.toFixed(1)}%"></i></div></div>`;
+    }
   } else {
     const total = totalSkillLevels(m);
     const pct = Math.max(0, Math.min(100, (total / MASTERY_GATE) * 100));
@@ -2461,7 +2467,7 @@ const MASTERY_COSMETICS = {
 };
 
 // The Mastery page: a headline rank, the five skills with their levels + progress, and the
-// reward ladder (unlocked cosmetics are selectable; future tiers read "coming soon").
+// reward ladder (unlocked cosmetics are selectable; still-locked tiers read "locked").
 function renderMasteryPage() {
   const body = $("masteryBody");
   if (!body) return;
@@ -2472,7 +2478,11 @@ function renderMasteryPage() {
 
   // Headline
   let head;
-  if (unlocked) {
+  if (unlocked && mLevel >= MASTERY_MAX_LEVEL) {
+    head = `<div class="mastery-rank">Mastery — level ${mLevel}</div>` +
+      `<div class="ms-bar maxed"><i style="width:100%"></i></div>` +
+      `<p class="mastery-sub">Mastery complete — every reward earned.</p>`;
+  } else if (unlocked) {
     const cur = masteryXpForLevel(mLevel), next = masteryXpForLevel(mLevel + 1);
     const pct = Math.max(0, Math.min(100, ((m.masteryXp - cur) / (next - cur)) * 100));
     head = `<div class="mastery-rank">Mastery — level ${mLevel}</div>` +
@@ -2505,17 +2515,15 @@ function renderMasteryPage() {
   // Reward ladder — titles are excluded here; they get their own stepper section below.
   const rewards = MASTERY_REWARDS.filter((r) => r.kind !== "title").map((r) => {
     const isUnlocked = !!m.unlocked[r.id];
-    const isSoon = r.kind === "soon";
     const isInfo = r.kind === "unlock";   // milestone that grants no toggle (e.g. super-hard tier)
     const cos = MASTERY_COSMETICS[r.kind];
     const active = cos && settings[cos.setting] === (r.payload && r.payload[cos.field]);
     let action;
-    if (isSoon) action = `<button class="reward-action" disabled>coming soon</button>`;
-    else if (isInfo) action = `<button class="reward-action" disabled>${isUnlocked ? "unlocked" : "locked"}</button>`;
+    if (isInfo) action = `<button class="reward-action" disabled>${isUnlocked ? "unlocked" : "locked"}</button>`;
     else if (!isUnlocked) action = `<button class="reward-action" disabled>locked</button>`;
     else if (active) action = `<button class="reward-action active" data-reward="${r.id}">in use</button>`;
     else action = `<button class="reward-action" data-reward="${r.id}">use</button>`;
-    const cls = isUnlocked ? "unlocked" : (isSoon ? "soon" : "locked");
+    const cls = isUnlocked ? "unlocked" : "locked";
     return `<div class="reward-row ${cls}">` +
       `<span class="reward-icon">${rewardIconMarkup(r)}</span>` +
       `<div class="reward-main"><span class="reward-name">${escapeHtml(r.name)}</span>` +
@@ -7937,6 +7945,14 @@ function devSimulate(correctCount, opts = {}) {
       gameMaxStreak = Math.max(gameMaxStreak, correctStreak);
       gameTimedRounds++;
       gameTimeSum += 2;
+      // Mirror real play's per-answer skill XP so simulate exercises resolve/tempo (not just
+      // the range/endurance the fold derives from state). Instinct scales with the streak;
+      // Quick Pen only on the clock (relaxed has seconds: 0), off a fixed 2s answer.
+      gameResolveXp += Math.round(RESOLVE_BASE * (1 + 0.1 * Math.min(correctStreak, RESOLVE_STREAK_CAP)));
+      if (currentMode.seconds > 0) {
+        const speedFactor = Math.max(0, Math.min(1, (currentMode.seconds - 2) / currentMode.seconds));
+        gameTempoXp += Math.round(TEMPO_BASE + TEMPO_SPEED * speedFactor);
+      }
     } else {
       roundAlbums[i] = null;
       roundSongs[i] = null;
@@ -8075,9 +8091,10 @@ function buildDevApi() {
         saveMastery(m); updateMasteryNav();
       },
       setMasteryLevel: (lvl) => {
+        lvl = Math.max(0, Math.min(MASTERY_MAX_LEVEL, lvl | 0));   // Mastery caps at level 13
         const m = loadMastery();
         SKILL_IDS.forEach((id) => { m.skills[id] = skillXpForLevel(SKILL_MAX_LEVEL); });   // clear the unlock gate
-        m.masteryXp = masteryXpForLevel(Math.max(0, lvl | 0));
+        m.masteryXp = masteryXpForLevel(lvl);
         for (const r of MASTERY_REWARDS) if (r.level <= lvl && !m.unlocked[r.id]) m.unlocked[r.id] = new Date().toISOString();
         saveMastery(m); updateMasteryNav();
       },
