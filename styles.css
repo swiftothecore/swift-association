@@ -2530,6 +2530,8 @@
   .paper-chip[data-paper="parchment"] { background: #f1e4c9; }
   .paper-chip[data-paper="blush"]     { background: #f6e4e4; }
   .paper-chip[data-paper="slate"]     { background: #dfe3e8; }
+  /* Bracelet-charm glyph in the reward ladder (reuses the global .b-bead/.b-gloss styling). */
+  .charm-preview { overflow: visible; }
 
   /* Album-focus corner badge — a colour-wheel of the 12 albums (gold star centre),
      pinned to the top-right corner of the start page, bleeding slightly over the edge

@@ -17,7 +17,7 @@ import {
   MASTERY_REWARDS, MASTERY_REWARD_BY_ID, MASTERY_GATE, SKILL_MAX_LEVEL,
   skillXpForLevel, skillLevelFromXp, masteryXpForLevel, masteryLevelFromXp,
 } from "./config.js";
-import { buildBraceletSVG } from "./bracelet.js";
+import { buildBraceletSVG, charmPreviewSVG } from "./bracelet.js";
 import { wordRegex as wordRegexCore, extractLineWithWord as extractLineWithWordCore, highlightWord as highlightWordCore } from "./match.js";
 import {
   loadRecords, insertRecord, migrateRecordsFromStats, getPlayerName, setPlayerName,
@@ -2344,6 +2344,7 @@ function updateMasteryNav() {
 const MASTERY_COSMETICS = {
   pen:   { setting: "masteryPen",   field: "pen",   resetLabel: "Default pen",   resetMeta: "the everyday hand", resetIcon: "nib" },
   paper: { setting: "masteryPaper", field: "paper", resetLabel: "Plain paper",   resetMeta: "the everyday page" },
+  charm: { setting: "masteryCharm", field: "charm", resetLabel: "Star charm",    resetMeta: "the default keepsake" },
 };
 
 // The Mastery page: a headline rank, the five skills with their levels + progress, and the
@@ -2409,7 +2410,9 @@ function renderMasteryPage() {
   // A "default" reset per cosmetic kind, shown once a choice in that kind is in use.
   const resets = Object.entries(MASTERY_COSMETICS).map(([kind, cos]) => {
     if (!settings[cos.setting]) return "";
-    const icon = kind === "paper" ? paperChipMarkup("default") : charmMarkup(cos.resetIcon);
+    const icon = kind === "paper" ? paperChipMarkup("default")
+      : kind === "charm" ? charmPreviewSVG("star", "#c8951f")
+      : charmMarkup(cos.resetIcon);
     return `<div class="reward-row unlocked"><span class="reward-icon">${icon}</span>` +
       `<div class="reward-main"><span class="reward-name">${cos.resetLabel}</span>` +
       `<span class="reward-meta">${cos.resetMeta}</span></div>` +
@@ -2431,9 +2434,12 @@ function renderMasteryPage() {
   });
 }
 
-// The reward-row icon: a paper swatch for paper stocks, else the charm glyph.
+// The reward-row icon: a paper swatch for paper stocks, a bracelet-charm glyph for
+// charms, else the achievement-style charm icon.
 function rewardIconMarkup(r) {
-  return r.kind === "paper" ? paperChipMarkup(r.payload && r.payload.paper) : charmMarkup(r.icon);
+  if (r.kind === "paper") return paperChipMarkup(r.payload && r.payload.paper);
+  if (r.kind === "charm") return charmPreviewSVG((r.payload && r.payload.charm) || "star", "#c8951f");
+  return charmMarkup(r.icon);
 }
 function paperChipMarkup(paper) {
   return `<span class="paper-chip" data-paper="${paper || "default"}" aria-hidden="true"></span>`;
@@ -2729,11 +2735,17 @@ function renderAlbumDetail(album) {
 /* ---------- Bracelet (hand-strung SVG) ---------- */
 let justEarnedIndex = -1; // bead that just became a charm, for the swing-in
 
+// Wraps the pure buildBraceletSVG, injecting the Mastery-chosen dangling charm into
+// every render so app.js stays the single owner of that game-state default.
+function renderBraceletSVG(results, active, fresh, albums, opts) {
+  return buildBraceletSVG(results, active, fresh, albums, { ...opts, charm: settings.masteryCharm });
+}
+
 function renderBracelet() {
   const opts = gameType === "infinite"
     ? { total: Math.max(round, 1), letterBead: false, colors: albumPalette(), hinted: roundHinted, verseTiers: roundVerseTier }
     : { colors: albumPalette(), hinted: roundHinted, verseTiers: roundVerseTier };
-  $("bracelet").innerHTML = buildBraceletSVG(roundResults, round, justEarnedIndex, roundAlbums, opts);
+  $("bracelet").innerHTML = renderBraceletSVG(roundResults, round, justEarnedIndex, roundAlbums, opts);
   const correct = roundResults.filter(Boolean).length;
   $("charmCount").textContent = correct;
   const pg = gameType === "infinite"
@@ -4230,7 +4242,7 @@ function endChallenge() {
   }
 
   showScreen("results");
-  $("resultBracelet").innerHTML = buildBraceletSVG(roundResults, 0, -1, roundAlbums,
+  $("resultBracelet").innerHTML = renderBraceletSVG(roundResults, 0, -1, roundAlbums,
     { colors: albumPalette(), hinted: roundHinted, verseTiers: roundVerseTier });
   $("finalScore").textContent = score;
   $("finalSub").textContent = "out of " + TOTAL_ROUNDS;
@@ -4312,7 +4324,7 @@ function endAlbumFocus() {
   if (perfectedCount >= STUDIO_ALBUMS.length) unlock("starlight");
 
   showScreen("results");
-  $("resultBracelet").innerHTML = buildBraceletSVG(roundResults, 0, -1, roundAlbums,
+  $("resultBracelet").innerHTML = renderBraceletSVG(roundResults, 0, -1, roundAlbums,
     { colors: albumPalette(), hinted: roundHinted, verseTiers: roundVerseTier });
   $("finalScore").textContent = score;
   $("finalSub").textContent = "out of " + TOTAL_ROUNDS;
@@ -4388,7 +4400,7 @@ function endAdaptive() {
   }
 
   showScreen("results");
-  $("resultBracelet").innerHTML = buildBraceletSVG(roundResults, 0, -1, roundAlbums,
+  $("resultBracelet").innerHTML = renderBraceletSVG(roundResults, 0, -1, roundAlbums,
     { colors: albumPalette(), hinted: roundHinted, verseTiers: roundVerseTier });
   $("finalScore").textContent = "L" + peak;
   $("finalSub").textContent = name + " · " + score + "/" + TOTAL_ROUNDS + " correct";
@@ -4418,7 +4430,7 @@ function showDailyResult(data, dateStr) {
   score = data.score;
   dailyShareTime = typeof data.tm === "number" ? data.tm : null;   // restore completion time for the share (older saves lack it)
   showScreen("results");
-  $("resultBracelet").innerHTML = buildBraceletSVG(roundResults, 0, -1, roundAlbums, { colors: albumPalette() });
+  $("resultBracelet").innerHTML = renderBraceletSVG(roundResults, 0, -1, roundAlbums, { colors: albumPalette() });
   $("finalScore").textContent = settings.hideDailyScore ? "?" : score;
   $("finalSub").textContent = "out of " + TOTAL_ROUNDS;
   $("keepGoingBtn").style.display = "none";
@@ -6481,7 +6493,7 @@ function endGame() {
   const keepsakeOpts = isInfinite
     ? { total: Math.max(roundsSurvived, 1), letterBead: false, colors: albumPalette(), hinted: roundHinted, verseTiers: roundVerseTier }
     : { colors: albumPalette(), hinted: roundHinted, verseTiers: roundVerseTier };
-  $("resultBracelet").innerHTML = buildBraceletSVG(roundResults, 0, -1, roundAlbums, keepsakeOpts);
+  $("resultBracelet").innerHTML = renderBraceletSVG(roundResults, 0, -1, roundAlbums, keepsakeOpts);
   $("finalScore").textContent = boardScore;
   // Verse bonus (fuller lyric recall) rides alongside the score, never folded into it.
   // Hidden on a held-back daily score — it would leak how well the round went.
@@ -7733,9 +7745,11 @@ function buildDevApi() {
         saveMastery(m); updateMasteryNav();
       },
       unlockRewards: () => { const m = loadMastery(); for (const r of MASTERY_REWARDS) m.unlocked[r.id] = new Date().toISOString(); saveMastery(m); },
-      reset: () => { resetMastery(); settings.masteryPen = ""; settings.masteryPaper = ""; saveSettings(settings); setPen(null); applySettings(); updateMasteryNav(); },
+      reset: () => { resetMastery(); settings.masteryPen = ""; settings.masteryPaper = ""; settings.masteryCharm = ""; saveSettings(settings); setPen(null); applySettings(); updateMasteryNav(); },
       // Preview a paper stock without unlocking it: pass an id (manila/parchment/blush/slate) or "" to clear.
       paper: (id) => { settings.masteryPaper = id || ""; saveSettings(settings); applySettings(); if ($("masteryBody")) renderMasteryPage(); },
+      // Preview a bracelet charm without unlocking it: pass an id (heart/moon/daisy/bow/pick/note/lightning/snake) or "" for the default star.
+      charm: (id) => { settings.masteryCharm = id || ""; saveSettings(settings); if ($("masteryBody")) renderMasteryPage(); },
       open: () => openMastery("start"),
     },
     // Seeding

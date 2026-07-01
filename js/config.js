@@ -74,6 +74,7 @@ export const DEFAULT_SETTINGS = {
   avatar: "",               // profile polaroid — a center-cropped data-URL, stays on this device
   masteryPen: "",           // chosen writing pen, unlocked via Mastery ("" = the default random egg)
   masteryPaper: "",         // chosen paper stock, unlocked via Mastery ("" = the default cream page)
+  masteryCharm: "",         // chosen bracelet charm, unlocked via Mastery ("" = the default star)
 };
 
 /* Difficulty modes — each just re-tunes existing levers (timer, dropdown,
@@ -302,8 +303,17 @@ export const MASTERY_REWARDS = [
   { level: 4,  id: "paper-parchment", kind: "paper", name: "Aged parchment",  icon: "book", desc: "Antique ivory, softly foxed.",        payload: { paper: "parchment" } },
   { level: 4,  id: "paper-blush",     kind: "paper", name: "Blush leaf",      icon: "book", desc: "A soft rose stationery.",            payload: { paper: "blush" } },
   { level: 4,  id: "paper-slate",     kind: "paper", name: "Slate pad",       icon: "book", desc: "Cool blue-grey engineer's stock.",   payload: { paper: "slate" } },
-  // Designed, not yet built — rendered as "coming soon" on the ladder.
-  { level: 5,  id: "charms-soon",   kind: "soon", name: "Bracelet charms",       icon: "scarf",   desc: "Customise your friendship-bracelet charms." },
+  // Bracelet charms — a set unlocked together at level 5. Each swaps the charm that
+  // dangles from every correct-answer bead (the CHARMS renderer in bracelet.js); the
+  // verse pen-nib stays reserved. Selection persists in settings.masteryCharm.
+  { level: 5,  id: "charm-heart",     kind: "charm", name: "Heart charm",     icon: "heart",  desc: "Hang a friendship heart.",       payload: { charm: "heart" } },
+  { level: 5,  id: "charm-moon",      kind: "charm", name: "Moon charm",      icon: "moon",   desc: "A waxing crescent moon.",        payload: { charm: "moon" } },
+  { level: 5,  id: "charm-daisy",     kind: "charm", name: "Daisy charm",     icon: "branch", desc: "A little pressed daisy.",        payload: { charm: "daisy" } },
+  { level: 5,  id: "charm-bow",       kind: "charm", name: "Bow charm",       icon: "scarf",  desc: "A tied ribbon bow.",             payload: { charm: "bow" } },
+  { level: 5,  id: "charm-pick",      kind: "charm", name: "Pick charm",      icon: "note",   desc: "A guitar pick, for the stage.",  payload: { charm: "pick" } },
+  { level: 5,  id: "charm-note",      kind: "charm", name: "Note charm",      icon: "note",   desc: "A single eighth note.",          payload: { charm: "note" } },
+  { level: 5,  id: "charm-lightning", kind: "charm", name: "Lightning charm", icon: "bolt",   desc: "A bolt of lightning.",           payload: { charm: "lightning" } },
+  { level: 5,  id: "charm-snake",     kind: "charm", name: "Snake charm",     icon: "snake",  desc: "A reputation serpent.",          payload: { charm: "snake" } },
   { level: 6,  id: "hardmode-soon", kind: "soon", name: "Super-hard challenges", icon: "swords",  desc: "Unlock a tier of brutal new challenges." },
   { level: 8,  id: "title-soon",    kind: "soon", name: "Prestige titles",       icon: "crown",   desc: "Wear a title on your records page." },
 ];
