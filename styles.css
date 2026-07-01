@@ -956,6 +956,16 @@
     }
   }
 
+  /* The Smallest Song Who Ever Lived challenge — the prompt word is shrunk, tilted, and
+     offset to a random spot (display only; matching reads state). The offset/tilt are set
+     per round as inline --tiny-* vars in renderTinyWord. */
+  .word-wrap[data-tiny] #wordDisplay {
+    font-size: clamp(15px, 3vw, 22px);
+    transform: translate(var(--tiny-dx, 0px), var(--tiny-dy, 0px)) rotate(var(--tiny-rot, 0deg));
+    transition: none;
+  }
+  .word-wrap[data-tiny] #wordDisplay::before { display: none; }   /* hide the highlighter swipe — no help finding it */
+
   /* Charm → token conversion (the escape valve) */
   .ach-page-tickets { font-family: var(--type); font-size: 10px; letter-spacing: 0.5px; color: #2b2722; margin-top: 4px; }
   .ach-trade-note { color: rgba(43,39,34,0.6); }

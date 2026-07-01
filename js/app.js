@@ -113,6 +113,7 @@ let roundSecondsOverride = null; // Shrinking Timer: per-round clock override (n
 let chainLetter = "";           // Wrapped Like A Chain: required first letter of the next title ("" = free)
 let tourSetlist = [];           // On Tour!: the album scheduled for each round (index = round-1)
 let comboClock = 0;             // It's A Clock!: seconds left on the single shared run clock
+let spiteSeconds = 0;           // Home Evasion: run-scoped per-page clock, cut permanently by wrong answers
 let challengeTargetSong = null; // One Of A Kind: the never-before-answered song to surface
 let challengeForcedRound = 0;   // One Of A Kind: the round that forces challengeForcedWordVal
 let challengeForcedWordVal = "";// One Of A Kind: the prompt word that surfaces the target song
@@ -2969,7 +2970,9 @@ function renderBracelet() {
   $("bracelet").innerHTML = renderBraceletSVG(roundResults, round, justEarnedIndex, roundAlbums, opts);
   const correct = roundResults.filter(Boolean).length;
   $("charmCount").textContent = correct;
-  const pg = gameType === "infinite"
+  const uncapped = gameType === "infinite"
+    || (gameType === "challenge" && currentChallenge && currentChallenge.rule === "survive");
+  const pg = uncapped
     ? Math.max(round, 1)
     : Math.min(Math.max(round, 1), TOTAL_ROUNDS);
   $("pageNum").textContent = pg;
@@ -3501,6 +3504,11 @@ function formatResetCountdown(ms) {
 // (infinite) lives run out.
 function isGameOver() {
   if (gameType === "infinite") return lives <= 0;
+  // Thirty-One: Infinite's sudden-death rules inside a sandboxed challenge — endless
+  // until a miss (never the round-13 cap), or a win the moment the target round is cleared.
+  if (surviveRuleActive()) return lives <= 0 || round >= (currentChallenge.target || 31);
+  // Home Evasion: the per-page clock has been cut to nothing — the run is over.
+  if (spiteRuleActive() && spiteSeconds <= 0) return true;
   return round >= TOTAL_ROUNDS;
 }
 
@@ -3565,6 +3573,7 @@ function resetRunState() {
   chainLetter = "";
   tourSetlist = [];
   comboClock = 0;
+  spiteSeconds = 0;
   challengeTargetSong = null;
   challengeForcedRound = 0;
   challengeForcedWordVal = "";
@@ -3910,11 +3919,20 @@ function startChallenge(id) {
   if (c.rule === "newsong") setupNewSongChallenge();
   if (c.rule === "setlist") buildTourSetlist();
   if (c.rule === "combo") comboClock = COMBO_START;
+  // Home Evasion: run-scoped clock, starts at c.seconds and only shrinks on wrong answers.
+  if (c.rule === "spite") spiteSeconds = c.seconds || 10;
+  // Thirty-One: runs on Infinite's sudden-death rules while staying a sandboxed challenge.
+  if (c.rule === "survive") lives = 1;
   recordChallengeAttempt(id);
   applyInputHints();
   updateTagline();
-  $("pageTotalWrap").style.display = "";
-  $("pageTotal").textContent = TOTAL_ROUNDS;
+  // Thirty-One shows a live round count (like Infinite), not "page X / 13".
+  if (c.rule === "survive") {
+    $("pageTotalWrap").style.display = "none";
+  } else {
+    $("pageTotalWrap").style.display = "";
+    $("pageTotal").textContent = TOTAL_ROUNDS;
+  }
   showScreen("game");
   nextRound();
 }
@@ -4012,6 +4030,14 @@ const COMBO_START = 20, COMBO_BONUS = 5, COMBO_CAP = 30;
 function comboRuleActive() {
   return gameType === "challenge" && currentChallenge && currentChallenge.rule === "combo";
 }
+// Thirty-One: Infinite sudden-death rules, sandboxed as a challenge.
+function surviveRuleActive() {
+  return gameType === "challenge" && currentChallenge && currentChallenge.rule === "survive";
+}
+// Home Evasion: the run-scoped clock that shrinks on every wrong answer.
+function spiteRuleActive() {
+  return gameType === "challenge" && currentChallenge && currentChallenge.rule === "spite";
+}
 // Seconds left on the shared clock right now, derived from the running timer (total is
 // scaled to COMBO_CAP, so remaining == the shared clock). Valid while/just after a combo
 // round's timer ran.
@@ -4059,7 +4085,60 @@ function applyChallengeRound(wrap) {
     if (devilVanish) vanishTimer = setTimeout(() => { wrap.classList.add("vanished"); }, 1500);
     if (devilFx) renderDevilFx(wrap, currentWord, devilFx);
     renderDevilBanner();
+  } else if (currentChallenge.rule === "flashwarp") {
+    // Are You Sure You're …Ready For It??? — max warp AND vanishing, constant from round 1.
+    // The vanish timeout itself is armed in beginRoundClock (which knows the clock start).
+    renderWordFx(wrap, currentWord, round, FLASHWARP_LEVEL);
+    renderFlashwarpBanner();
+  } else if (currentChallenge.rule === "spite") {
+    // I Have No Experience With Home Evasion — this page's clock is the run-scoped value.
+    roundSecondsOverride = spiteSeconds;
+    renderSpiteBanner();
+  } else if (currentChallenge.rule === "survive") {
+    renderSurviveBanner();
+  } else if (currentChallenge.rule === "tiny") {
+    // The Smallest Song Who Ever Lived — shrink, tilt, and offset the prompt, constant.
+    renderTinyWord(wrap, currentWord);
   }
+}
+// Fixed max-warp tier for Ready For It (the round-4-equivalent scramble+drop+reverse).
+const FLASHWARP_LEVEL = 4;
+function renderFlashwarpBanner() {
+  if (!(gameType === "challenge" && currentChallenge && currentChallenge.rule === "flashwarp")) return;
+  const el = ensureChallBanner();
+  el.innerHTML =
+    `<span class="chall-prog-name">warped · vanishing</span>` +
+    `<span class="chall-prog-count">${score} / ${currentChallenge.target || 9}</span>`;
+}
+// Home Evasion: the current run-scoped per-page clock (drops on wrong answers).
+function renderSpiteBanner() {
+  if (!spiteRuleActive()) return;
+  const el = ensureChallBanner();
+  el.innerHTML =
+    `<span class="chall-prog-name">${spiteSeconds}s a page</span>` +
+    `<span class="chall-prog-count">${score} / ${currentChallenge.target || 9}</span>`;
+}
+// Thirty-One: how far the unbroken run has climbed toward round 31.
+function renderSurviveBanner() {
+  if (!surviveRuleActive()) return;
+  const el = ensureChallBanner();
+  el.innerHTML =
+    `<span class="chall-prog-name">sudden death</span>` +
+    `<span class="chall-prog-count">round ${round} / ${currentChallenge.target || 31}</span>`;
+}
+// The Smallest Song Who Ever Lived: render the prompt word tiny, tilted, and offset to a
+// random spot within the word area — every round, constant. Display-only: matching reads
+// currentWord from state, never the DOM. Reduced motion keeps it readable/static (no drift
+// animation) but still tiny + tilted.
+function renderTinyWord(wrap, word) {
+  wrap.dataset.tiny = "1";
+  const tilt = Math.round((Math.random() * 40) - 20);         // -20°..+20°
+  const dx = Math.round((Math.random() * 44) - 22);           // -22px..+22px
+  const dy = Math.round((Math.random() * 24) - 12);           // -12px..+12px
+  wrap.style.setProperty("--tiny-rot", tilt + "deg");
+  wrap.style.setProperty("--tiny-dx", dx + "px");
+  wrap.style.setProperty("--tiny-dy", dy + "px");
+  $("wordDisplay").textContent = word;
 }
 
 // Switch-Up: which answer type this page wants + the running score.
@@ -4377,8 +4456,10 @@ function dropLetters(w) {
   if (!drop.size) drop.add(eligible[Math.floor(Math.random() * eligible.length)]);
   return w.split("").map((ch, i) => (drop.has(i) ? "_" : ch)).join("");
 }
-function renderWordFx(wrap, word, r) {
-  const level = wordFxLevel(r);
+// `levelOverride` (optional) forces a fixed distortion tier (e.g. Ready For It's constant
+// max warp); otherwise the tier escalates by round via wordFxLevel.
+function renderWordFx(wrap, word, r, levelOverride) {
+  const level = levelOverride != null ? levelOverride : wordFxLevel(r);
   let text = word;
   if (level === 1) text = scrambleWord(word);
   else if (level === 2) text = dropLetters(word);
@@ -4416,6 +4497,8 @@ function challengeWinCheck(c) {
   }
   // Lyric Lover: recall a target number of word-perfect-or-better lines this run.
   if (c.rule === "verse") return gameVersePerfect >= (c.target || 4);
+  // Thirty-One: an unbroken run (still alive) that cleared the target round (31).
+  if (c.rule === "survive") return round >= (c.target || 31) && lives > 0;
   // Score-target rules: vanishing / alphabetical / accelerate / titleHas / shorttitle /
   // chain (chain length == score) / setlist / combo (reach the target before the clock dies).
   return score >= (c.target || TOTAL_ROUNDS);
@@ -5084,7 +5167,8 @@ function beginRoundClock() {
   if (gameType === "adaptive") adaptiveDropAnnounced = effectiveDropdown();
   const wrap = $("wordDisplay").parentNode;
   const beginTimedRoundEffects = () => {
-    if (gameType === "challenge" && currentChallenge && currentChallenge.rule === "vanishing") {
+    if (gameType === "challenge" && currentChallenge
+        && (currentChallenge.rule === "vanishing" || currentChallenge.rule === "flashwarp")) {
       clearTimeout(vanishTimer);
       const ms = currentChallenge.revealMs || 1500;
       vanishTimer = setTimeout(() => { wrap.classList.add("vanished"); }, ms);
@@ -5415,6 +5499,10 @@ function advanceRound() {
   $("wordDisplay").textContent = currentWord;
   wrap.classList.remove("vanished");          // clear any prior round's vanish
   wrap.removeAttribute("data-fx");            // clear any prior round's Word Games distortion
+  wrap.removeAttribute("data-tiny");          // clear any prior round's Smallest Song shrink
+  wrap.style.removeProperty("--tiny-rot");
+  wrap.style.removeProperty("--tiny-dx");
+  wrap.style.removeProperty("--tiny-dy");
   wrap.classList.remove("revolve-in");        // clear any prior round's revolve swap
   clearTimeout(vanishTimer);
   if (revolveId) { clearInterval(revolveId); revolveId = null; }   // stop the prior round's rotation
@@ -6273,6 +6361,14 @@ function submitAnswer(song, isTimeout) {
   }
   correctStreak = correct ? correctStreak + 1 : 0;
   if (gameType === "infinite" && !correct) { lives--; renderLives(); }
+  // Thirty-One: sudden death — one miss ends the run (checked at nextRound via isGameOver).
+  if (surviveRuleActive() && !correct) lives--;
+  // Home Evasion: every wrong answer permanently cuts the per-page clock; drying it out
+  // ends the run (isGameOver picks it up at nextRound → endChallenge, a loss).
+  if (spiteRuleActive() && !correct) {
+    spiteSeconds = Math.max(0, spiteSeconds - (currentChallenge.penalty || 3));
+    renderSpiteBanner();
+  }
   if (gameType === "adaptive") adaptiveAdjust(correct);
   // A word-perfect+ recall earns a pen-nib bead (set BEFORE renderBracelet so the
   // charm shows on the bead the moment it's earned, not a round late).
