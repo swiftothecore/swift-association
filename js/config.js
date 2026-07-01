@@ -75,6 +75,7 @@ export const DEFAULT_SETTINGS = {
   masteryPen: "",           // chosen writing pen, unlocked via Mastery ("" = the default random egg)
   masteryPaper: "",         // chosen paper stock, unlocked via Mastery ("" = the default cream page)
   masteryCharm: "",         // chosen bracelet charm, unlocked via Mastery ("" = the default star)
+  masteryTitle: "",         // chosen prestige title, unlocked via Mastery ("" = follows your mastery: the highest tier's default)
 };
 
 /* Difficulty modes — each just re-tunes existing levers (timer, dropdown,
@@ -315,9 +316,37 @@ export const MASTERY_REWARDS = [
   { level: 5,  id: "charm-lightning", kind: "charm", name: "Lightning charm", icon: "bolt",   desc: "A bolt of lightning.",           payload: { charm: "lightning" } },
   { level: 5,  id: "charm-snake",     kind: "charm", name: "Snake charm",     icon: "snake",  desc: "A reputation serpent.",          payload: { charm: "snake" } },
   { level: 6,  id: "hardmode-soon", kind: "soon", name: "Super-hard challenges", icon: "swords",  desc: "Unlock a tier of brutal new challenges." },
-  { level: 8,  id: "title-soon",    kind: "soon", name: "Prestige titles",       icon: "crown",   desc: "Wear a title on your records page." },
+  // Prestige titles — worn on your records-page notebook signature. Unlocked in tiers as
+  // Mastery climbs; each tier has one `isDefault` title that a player on the "follows your
+  // mastery" auto setting wears automatically, plus alternates they can switch to via the
+  // stepper picker on the Mastery page. Selection persists in settings.masteryTitle
+  // ("" = follow mastery). Kept out of the reward-ladder list; rendered by their own stepper.
+  { level: 7,  id: "title-certified-poet",    kind: "title", isDefault: true, name: "Certified Poet",             icon: "feather", desc: "The everyday byline.",            payload: { title: "certified-poet" } },
+  { level: 7,  id: "title-ink-stained",       kind: "title", name: "Ink-Stained",                                 icon: "drop",    desc: "Married to the page.",           payload: { title: "ink-stained" } },
+  { level: 7,  id: "title-notebook-keeper",   kind: "title", name: "Notebook Keeper",                             icon: "book",    desc: "Guardian of the songbook.",      payload: { title: "notebook-keeper" } },
+  { level: 7,  id: "title-wordsmith",         kind: "title", name: "Wordsmith",                                   icon: "nib",     desc: "Forger of phrases.",             payload: { title: "wordsmith" } },
+  { level: 9,  id: "title-bridge-builder",    kind: "title", isDefault: true, name: "Bridge Builder",             icon: "tower",   desc: "Master of the eight-line bridge.", payload: { title: "bridge-builder" } },
+  { level: 9,  id: "title-lyricist",          kind: "title", name: "The Lyricist",                                icon: "note",    desc: "Words and melody as one.",       payload: { title: "lyricist" } },
+  { level: 9,  id: "title-archivist",         kind: "title", name: "The Archivist",                               icon: "book",    desc: "Keeper of every verse.",         payload: { title: "archivist" } },
+  { level: 9,  id: "title-curator",           kind: "title", name: "The Curator",                                 icon: "gem",     desc: "Curator of the catalogue.",      payload: { title: "curator" } },
+  { level: 11, id: "title-chairman",          kind: "title", isDefault: true, name: "Chairman of the Department", icon: "quote",   desc: "Tenured in the songbook.",       payload: { title: "chairman" } },
+  { level: 11, id: "title-verse-architect",   kind: "title", name: "Verse Architect",                             icon: "tower",   desc: "Builder of the structure.",      payload: { title: "verse-architect" } },
+  { level: 11, id: "title-mastermind",        kind: "title", name: "Mastermind",                                  icon: "brain",   desc: "You saw it all coming.",         payload: { title: "mastermind" } },
+  { level: 11, id: "title-poet-laureate",     kind: "title", name: "Poet Laureate",                               icon: "feather", desc: "Laurelled for the words.",       payload: { title: "poet-laureate" } },
+  { level: 13, id: "title-ultimate-showgirl", kind: "title", isDefault: true, name: "Ultimate Showgirl",          icon: "crown",   desc: "The capstone. Take a bow.",      payload: { title: "ultimate-showgirl" } },
+  { level: 13, id: "title-ultimate-swiftie",  kind: "title", name: "Ultimate Swiftie",                            icon: "star",    desc: "You know all the words.",        payload: { title: "ultimate-swiftie" } },
 ];
 export const MASTERY_REWARD_BY_ID = Object.fromEntries(MASTERY_REWARDS.map((r) => [r.id, r]));
+
+// Prestige titles, in tier order. `masteryDefaultTitle` resolves the title a "follows your
+// mastery" player wears: the default of the highest tier they've reached ("" before level 7).
+export const MASTERY_TITLES = MASTERY_REWARDS.filter((r) => r.kind === "title");
+export const MASTERY_TITLE_BY_VALUE = Object.fromEntries(MASTERY_TITLES.map((r) => [r.payload.title, r]));
+export function masteryDefaultTitle(masteryLevel) {
+  let val = "";
+  for (const r of MASTERY_TITLES) if (r.isDefault && r.level <= masteryLevel) val = r.payload.title;
+  return val;
+}
 
 /* Era engine */
 export const ERAS = ["gold", "lavender", "red", "denim", "graphite", "midnight", "debut", "reputation", "lover", "evermore"];

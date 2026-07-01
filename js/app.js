@@ -15,6 +15,7 @@ import {
   ENDURANCE_GROWTH, ENDURANCE_RUN_CAP, RANGE_RATIO_XP, RANGE_PER_ALBUM,
   RESOLVE_BASE, RESOLVE_STREAK_CAP,
   MASTERY_REWARDS, MASTERY_REWARD_BY_ID, MASTERY_GATE, SKILL_MAX_LEVEL,
+  MASTERY_TITLES, MASTERY_TITLE_BY_VALUE, masteryDefaultTitle,
   skillXpForLevel, skillLevelFromXp, masteryXpForLevel, masteryLevelFromXp,
 } from "./config.js";
 import { buildBraceletSVG, charmPreviewSVG } from "./bracelet.js";
@@ -2336,8 +2337,10 @@ function renderRecordsPage() {
   if (_heatView === null) _heatView = heatDefaultView();
   const name = getPlayerName();
   const avatar = getAvatar();
+  const title = wornTitleName();
+  const titleHTML = (name && title) ? `<span class="rec-sig-title">${escapeHtml(title)}</span>` : "";
   const sigText = name
-    ? `<span class="rec-sig-name">${escapeHtml(name)}’s notebook</span><span class="rec-sig-sub">best scores &amp; history</span>`
+    ? `<span class="rec-sig-name">${escapeHtml(name)}’s notebook</span><span class="rec-sig-sub">best scores &amp; history</span>${titleHTML}`
     : `<div class="rec-sign-row"><input id="recSignInput" class="set-text" maxlength="20" placeholder="sign your notebook" /><button id="recSignSave" class="btn-ghost">sign</button></div>`;
   const sig =
     `<button type="button" id="recPolBtn" class="rec-pol-btn" aria-label="${avatar ? "change your photo" : "add a photo"}">${polaroidHTML(avatar, name)}</button>` +
@@ -2424,6 +2427,7 @@ function openAchievements(from) {
 let masteryBackTarget = "start";       // where the Mastery page's ← back returns to
 function openMastery(from) {
   masteryBackTarget = from;
+  _titleView = null;   // recenter the title stepper on the worn title each time the page opens
   renderMasteryPage();
   flipAwayToScreen("mastery");
 }
@@ -2488,8 +2492,8 @@ function renderMasteryPage() {
       `</div></div>`;
   }).join("");
 
-  // Reward ladder
-  const rewards = MASTERY_REWARDS.map((r) => {
+  // Reward ladder — titles are excluded here; they get their own stepper section below.
+  const rewards = MASTERY_REWARDS.filter((r) => r.kind !== "title").map((r) => {
     const isUnlocked = !!m.unlocked[r.id];
     const isSoon = r.kind === "soon";
     const cos = MASTERY_COSMETICS[r.kind];
@@ -2518,11 +2522,19 @@ function renderMasteryPage() {
       `<button class="reward-action" data-reward-reset="${kind}">use</button></div>`;
   }).join("");
 
+  // Titles — a stepper (own section) once Mastery is unlocked; hidden while still locked.
+  const titlesSection = unlocked
+    ? `<div class="mastery-section-label">Titles</div><div id="titleStepper" class="title-stepper"></div>`
+    : "";
+
   body.innerHTML = `<div class="mastery-page">` +
     `<div class="mastery-head">${head}</div>` +
     `<div class="mastery-section-label">Skills</div>${skills}` +
+    titlesSection +
     `<div class="mastery-section-label">Rewards</div>${rewards}${resets}` +
     `</div>`;
+
+  renderTitleStepper();
 
   // Wire the cosmetic-selection buttons (choose a pen / paper, or reset a kind to default).
   body.querySelectorAll(".reward-action[data-reward]").forEach((btn) => {
@@ -2564,6 +2576,101 @@ function applyMasteryCosmetic(kind, value) {
   if (kind === "pen") setPen(value || null);
   else applySettings();   // paper realised on <body data-paper>
   renderMasteryPage();
+}
+
+/* ---------- Prestige titles ---------- */
+// The title the player currently wears: their explicit pick (if still unlocked), else the
+// "follows your mastery" default — the highest tier's default they've reached. "" = none yet.
+function wornTitleValue(m = loadMastery()) {
+  const pick = settings.masteryTitle;
+  const picked = pick && MASTERY_TITLE_BY_VALUE[pick];
+  if (picked && m.unlocked[picked.id]) return pick;
+  return isMasteryUnlocked(m) ? masteryDefaultTitle(masteryLevelFromXp(m.masteryXp)) : "";
+}
+function wornTitleName(m = loadMastery()) {
+  const r = MASTERY_TITLE_BY_VALUE[wornTitleValue(m)];
+  return r ? r.name : "";
+}
+// Persist a title choice ("" = follow your mastery) and refresh anywhere it shows.
+function setMasteryTitle(value) {
+  settings.masteryTitle = value || "";
+  saveSettings(settings);
+  renderTitleStepper();
+  if (screens.records.classList.contains("active")) renderRecordsPage();
+}
+
+let _titleView = null;   // index into MASTERY_TITLES the stepper is currently viewing
+const TS_STAR = `<span class="ts-star"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l2.9 6.3 6.9.7-5.2 4.6 1.5 6.8L12 17.8 5.9 21.4l1.5-6.8L2.2 9l6.9-.7z"/></svg></span>`;
+const TS_CHEV_L = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+const TS_CHEV_R = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+
+// The title picker: one title at a time with ← → to browse, a star marking the worn title
+// and a circle marking the one being viewed, tier-grouped position dots, and a context action
+// (wear / currently worn / N levels to go). Re-renders itself on each step; commits on "wear".
+function renderTitleStepper() {
+  const host = $("titleStepper");
+  if (!host) return;
+  const m = loadMastery();
+  const last = MASTERY_TITLES.length - 1;
+  const worn = wornTitleValue(m);
+  const wornIdx = MASTERY_TITLES.findIndex((t) => t.payload.title === worn);
+  if (_titleView == null) _titleView = wornIdx >= 0 ? wornIdx : 0;
+  _titleView = Math.max(0, Math.min(last, _titleView));
+
+  const r = MASTERY_TITLES[_titleView];
+  const mLevel = masteryLevelFromXp(m.masteryXp);
+  const isUnlocked = !!m.unlocked[r.id];
+  const isWorn = r.payload.title === worn;
+  const isCapstone = r.level >= 13;
+
+  const nameHTML = (isCapstone ? charmMarkup(r.icon) + "<span>" + escapeHtml(r.name) + "</span>" : escapeHtml(r.name)) +
+    (r.isDefault ? ` <span class="ts-def">default</span>` : "");
+  const sub = isCapstone ? `the capstone · Mastery ${r.level}` : `Mastery ${r.level}`;
+
+  let action;
+  if (!isUnlocked) {
+    const togo = Math.max(1, r.level - mLevel);
+    action = `<div class="ts-act lock"><span class="charm">${ACH_ICONS.lock}</span>${togo} level${togo === 1 ? "" : "s"} to go</div>`;
+  } else if (isWorn) {
+    action = `<div class="ts-act worn">currently worn</div>`;
+  } else {
+    action = `<button type="button" class="ts-act wear" id="tsWear">wear this title</button>`;
+  }
+
+  // Position dots, grouped by tier level. Star = worn, filled circle = viewing, hollow = locked.
+  const levels = [...new Set(MASTERY_TITLES.map((t) => t.level))];
+  const dots = levels.map((lv) => {
+    const cells = MASTERY_TITLES.map((t, i) => ({ t, i })).filter((x) => x.t.level === lv).map(({ t, i }) => {
+      const locked = !m.unlocked[t.id];
+      if (t.payload.title === worn) return TS_STAR;
+      if (i === _titleView) return `<i class="ts-cur${locked ? " lk" : ""}"></i>`;
+      return `<i class="${locked ? "ts-lk" : ""}"></i>`;
+    }).join("");
+    return `<span class="ts-grp">${cells}</span>`;
+  }).join("");
+
+  const reset = settings.masteryTitle
+    ? `<button type="button" class="ts-reset" id="tsReset">reset to default · follows your mastery</button>`
+    : `<div class="ts-reset muted">following your mastery</div>`;
+
+  host.innerHTML =
+    `<div class="ts-cap">Choose your title</div>` +
+    `<div class="ts-row">` +
+      `<button type="button" class="ts-arw" id="tsPrev"${_titleView === 0 ? " disabled" : ""} aria-label="previous title">${TS_CHEV_L}</button>` +
+      `<div class="ts-mid">` +
+        `<div class="ts-title${isUnlocked ? "" : " lk"}">${nameHTML}</div>` +
+        `<div class="ts-sub">${sub}</div>` +
+        `<div class="ts-dots">${dots}</div>` +
+        `<div class="ts-legend"><span>${TS_STAR}worn</span><span><span class="d"></span>viewing</span></div>` +
+      `</div>` +
+      `<button type="button" class="ts-arw" id="tsNext"${_titleView === last ? " disabled" : ""} aria-label="next title">${TS_CHEV_R}</button>` +
+    `</div>` +
+    action + reset;
+
+  const prev = $("tsPrev"); if (prev) prev.onclick = () => { _titleView--; renderTitleStepper(); };
+  const next = $("tsNext"); if (next) next.onclick = () => { _titleView++; renderTitleStepper(); };
+  const wear = $("tsWear"); if (wear) wear.onclick = () => setMasteryTitle(r.payload.title);
+  const rst = $("tsReset"); if (rst) rst.onclick = () => setMasteryTitle("");
 }
 
 /* ---------- Challenges page ---------- */
@@ -7848,11 +7955,16 @@ function buildDevApi() {
         saveMastery(m); updateMasteryNav();
       },
       unlockRewards: () => { const m = loadMastery(); for (const r of MASTERY_REWARDS) m.unlocked[r.id] = new Date().toISOString(); saveMastery(m); },
-      reset: () => { resetMastery(); settings.masteryPen = ""; settings.masteryPaper = ""; settings.masteryCharm = ""; saveSettings(settings); setPen(null); applySettings(); updateMasteryNav(); },
+      reset: () => { resetMastery(); settings.masteryPen = ""; settings.masteryPaper = ""; settings.masteryCharm = ""; settings.masteryTitle = ""; saveSettings(settings); setPen(null); applySettings(); updateMasteryNav(); },
       // Preview a paper stock without unlocking it: pass an id (manila/parchment/blush/slate) or "" to clear.
       paper: (id) => { settings.masteryPaper = id || ""; saveSettings(settings); applySettings(); if ($("masteryBody")) renderMasteryPage(); },
       // Preview a bracelet charm without unlocking it: pass an id (heart/moon/daisy/bow/pick/note/lightning/snake) or "" for the default star.
       charm: (id) => { settings.masteryCharm = id || ""; saveSettings(settings); if ($("masteryBody")) renderMasteryPage(); },
+      // Wear a prestige title: pass a slug (see mastery.titles() for the list) or "" to follow your
+      // mastery. Only honoured once that title's reward is unlocked — run mastery.setMasteryLevel or
+      // mastery.unlockRewards first, else it falls back to the mastery-following default.
+      title: (slug) => { settings.masteryTitle = slug || ""; saveSettings(settings); if ($("masteryBody")) renderMasteryPage(); if (screens.records.classList.contains("active")) renderRecordsPage(); },
+      titles: () => MASTERY_TITLES.map((t) => `${t.payload.title} (L${t.level}${t.isDefault ? ", default" : ""})`),
       open: () => openMastery("start"),
       // Preview the results-screen skills recap + the level-up celebration without a real
       // game. Pass a mastery level (>=1) for a level-up beat; pass 0 for the first-unlock beat.
