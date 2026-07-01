@@ -2634,7 +2634,7 @@
   .rb-prog i { display: block; height: 100%; border-radius: 3px; background: rgba(var(--m-accent), 0.78); }
 
   .rb-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;
-    grid-template-areas: "pens charm charm charm" "pens charm charm charm" "paper paper hard hard" "title title title title"; }
+    grid-template-areas: "pens pens paper paper" "hard hard hard hard" "charm charm charm charm" "title title title title"; }
 
   .rb-tile { position: relative; border-radius: 12px; padding: 14px 16px;
     background-color: var(--paper); background-image: linear-gradient(rgba(255, 255, 255, 0.32), rgba(255, 255, 255, 0.32));
@@ -2692,6 +2692,8 @@
   .rb-sw-col { display: flex; flex-direction: column; align-items: center; gap: 7px; font: inherit; border: 0; background: none; padding: 0; cursor: pointer; }
   .rb-sw-col.locked { cursor: default; }
   .rb-sw { width: 56px; height: 44px; border-radius: 8px; }
+  /* Re-assert the swatch size over the generic .paper-chip (26px) so unlocked chips match the locked slots. */
+  .rb-sw.paper-chip { width: 56px; height: 44px; border-radius: 8px; }
   .rb-sw.paper-chip::before { left: 9px; }
   .rb-sw-col.active .rb-sw { border-color: rgba(var(--m-accent), 0.7); box-shadow: 0 0 0 3px rgba(var(--m-accent), 0.16); }
   .rb-sw.locked { display: flex; align-items: center; justify-content: center; border: 1px dashed rgba(43, 39, 34, 0.25); background: rgba(43, 39, 34, 0.04); }
