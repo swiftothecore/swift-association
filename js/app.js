@@ -113,7 +113,7 @@ let roundSecondsOverride = null; // Shrinking Timer: per-round clock override (n
 let chainLetter = "";           // Wrapped Like A Chain: required first letter of the next title ("" = free)
 let tourSetlist = [];           // On Tour!: the album scheduled for each round (index = round-1)
 let comboClock = 0;             // It's A Clock!: seconds left on the single shared run clock
-let spiteSeconds = 0;           // Home Evasion: run-scoped per-page clock, cut permanently by wrong answers
+let spiteSeconds = 0;           // Home Invasion: run-scoped per-page clock, cut permanently by wrong answers
 let challengeTargetSong = null; // One Of A Kind: the never-before-answered song to surface
 let challengeForcedRound = 0;   // One Of A Kind: the round that forces challengeForcedWordVal
 let challengeForcedWordVal = "";// One Of A Kind: the prompt word that surfaces the target song
@@ -3507,7 +3507,7 @@ function isGameOver() {
   // Thirty-One: Infinite's sudden-death rules inside a sandboxed challenge — endless
   // until a miss (never the round-13 cap), or a win the moment the target round is cleared.
   if (surviveRuleActive()) return lives <= 0 || round >= (currentChallenge.target || 31);
-  // Home Evasion: the per-page clock has been cut to nothing — the run is over.
+  // Home Invasion: the per-page clock has been cut to nothing — the run is over.
   if (spiteRuleActive() && spiteSeconds <= 0) return true;
   return round >= TOTAL_ROUNDS;
 }
@@ -3919,7 +3919,7 @@ function startChallenge(id) {
   if (c.rule === "newsong") setupNewSongChallenge();
   if (c.rule === "setlist") buildTourSetlist();
   if (c.rule === "combo") comboClock = COMBO_START;
-  // Home Evasion: run-scoped clock, starts at c.seconds and only shrinks on wrong answers.
+  // Home Invasion: run-scoped clock, starts at c.seconds and only shrinks on wrong answers.
   if (c.rule === "spite") spiteSeconds = c.seconds || 10;
   // Thirty-One: runs on Infinite's sudden-death rules while staying a sandboxed challenge.
   if (c.rule === "survive") lives = 1;
@@ -4034,7 +4034,7 @@ function comboRuleActive() {
 function surviveRuleActive() {
   return gameType === "challenge" && currentChallenge && currentChallenge.rule === "survive";
 }
-// Home Evasion: the run-scoped clock that shrinks on every wrong answer.
+// Home Invasion: the run-scoped clock that shrinks on every wrong answer.
 function spiteRuleActive() {
   return gameType === "challenge" && currentChallenge && currentChallenge.rule === "spite";
 }
@@ -4091,7 +4091,7 @@ function applyChallengeRound(wrap) {
     renderWordFx(wrap, currentWord, round, FLASHWARP_LEVEL);
     renderFlashwarpBanner();
   } else if (currentChallenge.rule === "spite") {
-    // I Have No Experience With Home Evasion — this page's clock is the run-scoped value.
+    // I Have No Experience With Home Invasion — this page's clock is the run-scoped value.
     roundSecondsOverride = spiteSeconds;
     renderSpiteBanner();
   } else if (currentChallenge.rule === "survive") {
@@ -4110,7 +4110,7 @@ function renderFlashwarpBanner() {
     `<span class="chall-prog-name">warped · vanishing</span>` +
     `<span class="chall-prog-count">${score} / ${currentChallenge.target || 9}</span>`;
 }
-// Home Evasion: the current run-scoped per-page clock (drops on wrong answers).
+// Home Invasion: the current run-scoped per-page clock (drops on wrong answers).
 function renderSpiteBanner() {
   if (!spiteRuleActive()) return;
   const el = ensureChallBanner();
@@ -6363,7 +6363,7 @@ function submitAnswer(song, isTimeout) {
   if (gameType === "infinite" && !correct) { lives--; renderLives(); }
   // Thirty-One: sudden death — one miss ends the run (checked at nextRound via isGameOver).
   if (surviveRuleActive() && !correct) lives--;
-  // Home Evasion: every wrong answer permanently cuts the per-page clock; drying it out
+  // Home Invasion: every wrong answer permanently cuts the per-page clock; drying it out
   // ends the run (isGameOver picks it up at nextRound → endChallenge, a loss).
   if (spiteRuleActive() && !correct) {
     spiteSeconds = Math.max(0, spiteSeconds - (currentChallenge.penalty || 3));

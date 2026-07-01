@@ -235,7 +235,7 @@ export const CHALLENGES = [
     blurb: "the word flashes warped, then it's gone",
     desc: "The word shows up scrambled AND vanishes after a beat. Read it warped, answer from memory.",
     win: "Score 9 / 13 on warped, vanishing words." },
-  { id: "home-evasion", name: "I Have No Experience With Home Evasion", rule: "spite", mode: "medium",
+  { id: "home-evasion", name: "I Have No Experience With Home Invasion", rule: "spite", mode: "medium",
     mastery: 6, target: 9, seconds: 10, penalty: 3, tapes: 4, icon: "homeevasion",
     blurb: "10s a page · every wrong answer cuts 3s off the clock, permanently",
     desc: "You start with 10 seconds a page. Every wrong answer steals 3 seconds from every page that follows. Miss four times and there's nothing left.",
