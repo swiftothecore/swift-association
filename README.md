@@ -17,9 +17,9 @@ Standout features:
 - Lots and lots of easter eggs
 - Over 75 achievements
 - Daily challenge (on an album's release anniversary, it leans toward words that recur across that album)
-- Challenges mode with 18 challenges (with more to come)
+- Challenges mode with 22 challenges (with more to come), including a super-hard tier unlocked through mastery
 - Album Focus mode to narrow your focus to a single album
-- A skills and mastery system: five skills that level up as you play, feeding an overall mastery track that unlocks rewards (pens to write with, paper stocks to write on, charms for your friendship bracelet, and prestige titles to wear on your records page, with more to come)
+- A skills and mastery system: five skills that level up as you play, feeding an overall mastery track that unlocks rewards (pens to write with, paper stocks to write on, charms for your friendship bracelet, a tier of super-hard challenges, and prestige titles to wear on your records page, with more to come)
 - A companion lyric searcher, Swift To The Lyric, for searching every line of every song (work in progress)
 - Installable as a phone or desktop app and works offline once loaded
 
@@ -29,7 +29,7 @@ With many features in the works as we speak:
 - Learning features
 - More easter eggs
 - Sound design
-- More mastery rewards (super-hard challenges and more)
+- More mastery rewards
 - Stickers!!
 - And much more
 
