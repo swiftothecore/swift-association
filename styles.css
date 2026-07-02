@@ -2468,20 +2468,37 @@
   /* Companion-tool entry: the lyrics searcher lives on its own page, so it sits as
      site-level chrome in the bottom-left corner — mirroring the settings gear (top-right)
      — rather than competing with the data nav-cards. Hidden during active play. */
+  /* Collapsed to an icon-only disc by default so it recedes and lets gameplay stay
+     dominant; smoothly expands to reveal the "search every lyric" label on hover or
+     keyboard focus. On touch (no hover) it stays expanded so the companion tool is
+     never a mystery. */
   .search-link {
     position: fixed; left: 14px; bottom: 14px; z-index: 60;
-    display: inline-flex; align-items: center; gap: 7px;
-    padding: 8px 12px; border-radius: 999px;
+    display: inline-flex; align-items: center; gap: 0;
+    padding: 8px; border-radius: 999px;
     text-decoration: none; color: #5c4326;
     background: rgba(245, 239, 225, 0.82);
     border: 1.5px solid rgba(43, 39, 34, 0.32);
     box-shadow: 0 2px 6px rgba(60, 50, 35, 0.22);
-    transition: transform 0.18s ease, background 0.18s, color 0.18s, border-color 0.18s;
+    transition: transform 0.18s ease, background 0.18s, color 0.18s, border-color 0.18s,
+                gap 0.22s ease, padding 0.22s ease;
   }
-  .search-link-ic { width: 16px; height: 16px; color: rgba(178, 58, 58, 0.85); flex: none; }
-  .search-link-label { font-family: var(--type); font-size: 11.5px; letter-spacing: 0.04em; }
+  .search-link-ic { width: 20px; height: 20px; color: rgba(178, 58, 58, 0.85); flex: none; }
+  .search-link-label {
+    font-family: var(--type); font-size: 11.5px; letter-spacing: 0.04em;
+    max-width: 0; overflow: hidden; white-space: nowrap; opacity: 0;
+    transition: max-width 0.28s ease, opacity 0.18s ease;
+  }
   .search-link:hover, .search-link:focus-visible {
     background: var(--highlighter); transform: translateY(-1px); color: var(--ink); outline: none;
+    gap: 7px; padding: 8px 14px 8px 8px;
+  }
+  .search-link:hover .search-link-label,
+  .search-link:focus-visible .search-link-label { max-width: 160px; opacity: 1; }
+  /* No hover means touch: keep the label out so mobile users can read what it is. */
+  @media (hover: none) {
+    .search-link { gap: 7px; padding: 8px 14px 8px 8px; }
+    .search-link-label { max-width: 160px; opacity: 1; }
   }
   body.in-game .search-link { display: none; }
   @media (min-width: 1040px) { .search-link { left: 22px; bottom: 18px; } }
