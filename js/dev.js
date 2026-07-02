@@ -1,6 +1,10 @@
 // Dev cheats panel — loaded only behind the ?dev flag (see devActive in app.js).
 // Deliberately un-notebook (dark, monospace, fixed corner) so it can never be
 // confused with the game UI. Receives a curated `api` from app.js's buildDevApi.
+// Pure config data (achievement/icon tables for the charm gallery) is imported
+// directly rather than routed through the api.
+
+import { ACHIEVEMENTS, ACH_ICONS, ACH_GROUPS, ACH_GROUP_OF, ACH_GROUP_COLORS } from "./config.js";
 
 export function initDev(api) {
   injectStyles();
@@ -157,6 +161,53 @@ export function initDev(api) {
         btn("secret 13", () => api.eggs.secret13())),
     row(penSel, btn("set pen", () => api.eggs.pen(penSel.value)))));
 
+  // ---- Charm icon gallery ------------------------------------------------------
+  // Every achievement charm at real render size on real paper, grouped like the
+  // collection page, with duplicate-key flagging. QA tool for the icon set.
+  body.append(section("icons",
+    row(btn("charm gallery", openGallery))));
+
+  function openGallery() {
+    const old = document.getElementById("dv-gallery");
+    if (old) { old.remove(); return; }
+
+    const counts = {};
+    ACHIEVEMENTS.forEach((a) => { counts[a.icon] = (counts[a.icon] || 0) + 1; });
+    const dupes = Object.values(counts).filter((n) => n > 1).length;
+
+    const grid = mk("div", { class: "dvg-body" });
+    for (const g of [...ACH_GROUPS, { id: "__all", label: "" }]) {
+      if (g.id === "__all") break;
+      const members = ACHIEVEMENTS.filter((a) => (ACH_GROUP_OF[a.id] || "core") === g.id);
+      if (!members.length) continue;
+      const head = mk("div", { class: "dvg-group" },
+        mk("span", { class: "dvg-dot", style: `background:${ACH_GROUP_COLORS[g.id]}` }),
+        `${g.label} · ${members.length}`);
+      const cells = mk("div", { class: "dvg-grid" });
+      for (const a of members) {
+        cells.append(mk("div", { class: "dvg-cell" + (counts[a.icon] > 1 ? " dup" : ""), "data-tip": a.desc },
+          mk("span", { class: "charm", html: ACH_ICONS[a.icon] || "<b>?</b>" }),
+          mk("span", { class: "dvg-nm" }, a.name + (a.secret ? " ✦" : "")),
+          mk("span", { class: "dvg-key" }, a.icon + (counts[a.icon] > 1 ? ` ×${counts[a.icon]}` : ""))));
+      }
+      grid.append(head, cells);
+    }
+
+    const sizes = [26, 30, 38, 60].map((px) =>
+      btn(px + "px", (e) => {
+        overlay.style.setProperty("--dvg-size", px + "px");
+        overlay.querySelectorAll(".dvg-size .dv-btn").forEach((b) => b.classList.toggle("on", b === e.target));
+      }, px === 30 ? "on" : ""));
+    const overlay = mk("div", { id: "dv-gallery", style: "--dvg-size:30px" },
+      mk("div", { class: "dvg-bar" },
+        mk("span", { class: "dvg-title" }, `charm gallery · ${ACHIEVEMENTS.length} charms · ${dupes ? dupes + " duped keys" : "all unique"}`),
+        mk("span", { class: "dvg-size" }, ...sizes),
+        btn("✕ close", () => overlay.remove())),
+      grid);
+    overlay.addEventListener("click", (e) => { if (e.target === overlay) overlay.remove(); });
+    document.body.append(overlay);
+  }
+
   // ---- Reset (danger) --------------------------------------------------------
   body.append(section("reset",
     row(btn("records", () => { api.reset.records(); toast("records reset"); }, "warn"),
@@ -242,6 +293,30 @@ function injectStyles() {
   .dv-toast { position: absolute; left: 9px; bottom: 9px; right: 9px; background: #1d4e54; color: #d6f6fa;
     padding: 5px 8px; border-radius: 5px; opacity: 0; transition: opacity .15s; pointer-events: none; text-align: center; }
   .dv-toast.show { opacity: 1; }
+  #dv-gallery { position: fixed; inset: 0; z-index: 2147482999; background: rgba(12,10,8,.55);
+    display: flex; flex-direction: column; align-items: center; padding: 24px; overflow-y: auto; }
+  .dvg-bar { display: flex; align-items: center; gap: 10px; width: min(920px, 100%);
+    background: #14161b; color: #cdd3dc; border: 1px solid #2c313c; border-radius: 8px 8px 0 0;
+    padding: 8px 12px; font: 11px ui-monospace, Menlo, monospace; position: sticky; top: 0; }
+  .dvg-title { color: #7cd; font-weight: 700; flex: 1; }
+  .dvg-size { display: flex; gap: 4px; }
+  .dvg-body { width: min(920px, 100%); background: var(--paper, #f6efdd); border-radius: 0 0 8px 8px;
+    padding: 14px 18px 22px; box-shadow: 0 12px 40px rgba(0,0,0,.5); }
+  .dvg-group { font: 10px ui-monospace, Menlo, monospace; text-transform: uppercase; letter-spacing: .08em;
+    color: var(--ink-soft, #6b6156); margin: 14px 0 6px; display: flex; align-items: center; gap: 6px; }
+  .dvg-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+  .dvg-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 8px; }
+  .dvg-cell { display: flex; flex-direction: column; align-items: center; gap: 3px; text-align: center;
+    padding: 8px 4px 6px; border-radius: 6px; border: 1px dashed transparent; }
+  .dvg-cell.dup { border-color: #b23a3a; background: rgba(178,58,58,.07); }
+  .dvg-cell .charm { width: var(--dvg-size); height: var(--dvg-size); color: var(--bead, #e0a32f); }
+  .dvg-cell .charm svg { width: 100%; height: 100%; overflow: visible; display: block; }
+  .dvg-cell .charm .ink { fill: none; stroke: var(--ink, #2b2722); stroke-width: 1.6;
+    stroke-linecap: round; stroke-linejoin: round; }
+  .dvg-cell .charm .ink-fill { fill: var(--bead, #e0a32f); stroke: var(--ink, #2b2722); stroke-width: 1.2; }
+  .dvg-nm { font: 9px/1.2 ui-monospace, Menlo, monospace; color: var(--ink, #2b2722); }
+  .dvg-key { font: 8px ui-monospace, Menlo, monospace; color: var(--ink-soft, #8a7f70); }
+  .dvg-cell.dup .dvg-key { color: #b23a3a; font-weight: 700; }
   `;
   const tag = document.createElement("style");
   tag.id = "dev-styles";
