@@ -147,7 +147,7 @@ export function initDev(api) {
 
   // ---- Visual eggs -----------------------------------------------------------
   const penSel = select(["", "quill", "fountain", "glitter"], (x) => x, (x) => x || "no pen");
-  const doodleSel = select(["cat", "guitar", "scarf", "fence", "thirteen", "snake"], (x) => x, (x) => x);
+  const doodleSel = select(["cat", "guitar", "scarf", "fence", "thirteen", "snake", "cardigan", "mirrorball", "paperplane", "willow", "seagulls"], (x) => x, (x) => x);
   body.append(section("eggs",
     row(btn("snake", () => api.eggs.snake()), doodleSel, btn("doodle", () => api.eggs.doodle(doodleSel.value)),
         btn("sparkle", () => api.eggs.sparkle())),

@@ -9,7 +9,7 @@ import {
   CHALLENGES, CHALLENGE_BY_ID, CHALLENGE_ORDER,
   ALBUM_FOCUS_DIFFS, ALBUM_FOCUS_TARGET,
   ADAPTIVE_BUCKETS, ADAPTIVE_LEVELS, ADAPT_MAX_LEVEL, ADAPT_START_LEVEL, ADAPT_PROMO_STREAK, ADAPT_NODROP_LEVEL,
-  PEN_SVG, STAR_SVG, SPARKLE_SVG, DOODLE_SVG,
+  PEN_SVG, STAR_SVG, SPARKLE_SVG, DOODLE_SVG, DOODLE_SIZE,
   SKILLS, SKILL_IDS, SKILL_BY_ID,
   TEMPO_BASE, TEMPO_SPEED, LYRIC_TIER_XP, LYRIC_LEN_REF,
   ENDURANCE_GROWTH, ENDURANCE_RUN_CAP, RANGE_RATIO_XP, RANGE_PER_ALBUM,
@@ -7361,9 +7361,10 @@ function clearEggs() {
   if (layer) layer.innerHTML = "";
 }
 
-function addDoodle(kind, posClass, w, h) {
+function addDoodle(kind, posClass) {
   const layer = $("doodleLayer");
   if (!layer) return;
+  const [w, h] = DOODLE_SIZE[kind] || [56, 56];
   const d = document.createElement("div");
   d.className = "doodle " + posClass + (kind === "snake" ? " snake" : "");
   d.style.width = w + "px"; d.style.height = h + "px";
@@ -7408,16 +7409,16 @@ function runRoundEggs() {
 
   // at most one margin doodle / note, by priority
   if (gameType === "classic" && round === 5) {
-    addDoodle("fence", "corner-br", 76, 64);
+    addDoodle("fence", "corner-br");
   } else if (era === "reputation" && settings.snake && chance(0.5)) {
     slitherSnake();
   } else if (midnightHour) {
     addMarginNote("meet me at midnight");
   } else if (chance(0.14)) {
-    const pool = ["scarf", "cat", "guitar"];
-    addDoodle(pool[Math.floor(Math.random() * pool.length)], "corner-br", 56, 56);
+    const pool = ["scarf", "cat", "guitar", "cardigan", "mirrorball", "paperplane", "willow", "seagulls"];
+    addDoodle(pool[Math.floor(Math.random() * pool.length)], "corner-br");
   } else if (chance(0.05)) {
-    addDoodle("thirteen", "corner-bl", 40, 40);
+    addDoodle("thirteen", "corner-bl");
   }
 
   // A Mastery-chosen pen is the persistent default each round; otherwise the rare random swap.
@@ -7461,7 +7462,7 @@ function slitherSnake() {
   const card = $("screen-game");
   if (!card) return;
   unlock("look-what-you-made-me-do");
-  if (motionReduced()) { addDoodle("snake", "corner-br", 84, 60); return; }
+  if (motionReduced()) { addDoodle("snake", "corner-br"); return; }
   stopSnake();
 
   const W = card.clientWidth || 520;
@@ -8483,7 +8484,7 @@ function buildDevApi() {
     reset: { records: resetRecords, stats: resetStatsAll, ach: () => { resetAchievements(); earnedAchievements = {}; },
              tally: resetTally, daily: resetDaily, all: clearAllData },
     // Visual eggs
-    eggs: { snake: () => slitherSnake(), doodle: (k) => addDoodle(k || "cat", "corner-br", 60, 60),
+    eggs: { snake: () => slitherSnake(), doodle: (k) => addDoodle(k || "cat", "corner-br"),
             sparkle: () => celebrateCorrect(3), starShower: () => celebratePerfect(),
             blueWash: () => triggerBlueWash(), secret13: () => revealSecret13(),
             pen: (p) => setPen(p || null) },
