@@ -2667,8 +2667,8 @@
       "pens pens paper paper"
       "charm charm charm charm"
       "hard hard hard hard"
-      "sig sig button button"
-      "sig sig hint hint"
+      "button button sig sig"
+      "hint hint sig sig"
       "title title title title"; }
 
   .rb-tile { position: relative; border-radius: 12px; padding: 14px 16px;
