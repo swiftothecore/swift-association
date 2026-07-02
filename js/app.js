@@ -1199,7 +1199,13 @@ let burnedAchIds = new Set();   // charms sacrificed for a token — permanently
 let newlyUnlocked = [];        // ids unlocked this game (for the results recap)
 let lastSkillFold = null;      // { delta, res } from this game's foldSkillXp — the results skills recap
 
-function charmMarkup(icon) { return `<span class="charm" aria-hidden="true">${ACH_ICONS[icon]}</span>`; }
+function charmMarkup(icon, color) {
+  const style = color ? ` style="--bead:${color}"` : "";
+  return `<span class="charm" aria-hidden="true"${style}>${ACH_ICONS[icon]}</span>`;
+}
+
+// The theme colour an achievement's charm should render in (undefined for non-achievement icons).
+const achColor = (a) => ACH_GROUP_COLORS[achGroupOf(a.id)];
 
 // Every unlock pops a toast. Already-earned ids no-op above, so a charm earned
 // mid-game (toasted during play) never re-toasts at end-of-game. When several
@@ -1470,7 +1476,7 @@ function showToast(a) {
   t.className = "toast";
   t.setAttribute("data-tip", a.desc);
   t.setAttribute("data-tip-delay", "500");
-  t.innerHTML = charmMarkup(a.icon) +
+  t.innerHTML = charmMarkup(a.icon, achColor(a)) +
     `<div><div class="t-label">achievement unlocked</div><div class="t-name">${escapeHtml(a.name)}</div></div>`;
   layer.appendChild(t);
   scheduleToastDismiss();
@@ -1543,7 +1549,7 @@ function renderResultRecap() {
   if (!ids.length) { el.style.display = "none"; el.innerHTML = ""; return; }
   const chips = ids.map((id) => {
     const a = ACH_BY_ID[id];
-    return `<button type="button" class="ach-chip" data-tip="${escapeHtml(a.desc)}" data-tip-delay="120">${charmMarkup(a.icon)}<span class="nm">${escapeHtml(a.name)}</span></button>`;
+    return `<button type="button" class="ach-chip" data-tip="${escapeHtml(a.desc)}" data-tip-delay="120">${charmMarkup(a.icon, achColor(a))}<span class="nm">${escapeHtml(a.name)}</span></button>`;
   }).join("");
   el.innerHTML = `<div class="ach-recap-title">newly unlocked</div><div class="ach-recap-row">${chips}</div>`;
   el.style.display = "";
@@ -1672,10 +1678,10 @@ function achSacrificeMarkup(a) {
 // secret (masked ???), or a visible locked target. Shared by the grid + secret section.
 function achTile(a) {
   if (burnedAchIds.has(a.id)) {
-    return `<div class="ach ach--given" title="sacrificed for a challenge token">${charmMarkup(a.icon)}<div class="ach-text"><div class="ach-nm">${escapeHtml(a.name)}</div><div class="ach-dc">given up for a token 🎟</div></div></div>`;
+    return `<div class="ach ach--given" title="sacrificed for a challenge token">${charmMarkup(a.icon, achColor(a))}<div class="ach-text"><div class="ach-nm">${escapeHtml(a.name)}</div><div class="ach-dc">given up for a token 🎟</div></div></div>`;
   }
   if (earnedAchievements[a.id]) {
-    return `<div class="ach ach--earned">${charmMarkup(a.icon)}<div class="ach-text"><div class="ach-nm">${escapeHtml(a.name)}</div><div class="ach-dc">${escapeHtml(a.desc)}</div></div>${achSacrificeMarkup(a)}</div>`;
+    return `<div class="ach ach--earned">${charmMarkup(a.icon, achColor(a))}<div class="ach-text"><div class="ach-nm">${escapeHtml(a.name)}</div><div class="ach-dc">${escapeHtml(a.desc)}</div></div>${achSacrificeMarkup(a)}</div>`;
   }
   if (a.secret) {
     // Once the level-10 "secret hints" reward is earned, reveal the how-to (desc) while
@@ -1739,7 +1745,7 @@ function renderAchievementsPage() {
   // newest charm as a proper keepsake — its real icon, the name (wraps), and the date.
   const latest = earnedAsc[earnedAsc.length - 1];
   const latestCard = latest ? `<div class="ach-latest">` +
-    `<span class="ach-latest-charm">${charmMarkup(latest.icon)}</span>` +
+    `<span class="ach-latest-charm">${charmMarkup(latest.icon, achColor(latest))}</span>` +
     `<div class="ach-latest-text"><div class="ach-latest-label">your newest charm</div>` +
     `<div class="ach-latest-name">${escapeHtml(latest.name)}</div>` +
     `<div class="ach-latest-meta">${escapeHtml(latest.desc)} · ${recordDateLabel(earnedAchievements[latest.id])}</div></div>` +
@@ -1836,7 +1842,7 @@ function questCardHTML() {
       </div>
     </div>
     <div class="ach-quest-aside">
-      <span class="ach-quest-charm${done ? " earned" : ""}">${charmMarkup(a.icon)}</span>
+      <span class="ach-quest-charm${done ? " earned" : ""}">${charmMarkup(a.icon, achColor(a))}</span>
       <span class="ach-quest-state">${done ? "earned" : "locked"}</span>
     </div>
   </button>`;
