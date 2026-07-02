@@ -2488,7 +2488,14 @@
   .nav-card {
     --card-bg: #fbf6e9;
     flex: 1; min-width: 0; width: auto; margin: 0;
-    padding: 18px 10px 14px; text-align: center;
+    padding: 15px 16px; text-align: left;
+    /* Horizontal keepsake row: circle seat on the left spanning both text rows,
+       title over kicker on the right. Reverts to the stacked layout on phones
+       (see the max-width:480px block), where 3-across cards are too narrow. */
+    display: grid; grid-template-columns: auto 1fr;
+    grid-template-areas: "seat title" "seat kicker";
+    align-items: center; align-content: center;
+    column-gap: 14px; row-gap: 2px;
     color: var(--ink);
     /* paper grain baked into the card background (background-blend multiply keeps the
        speckle subtle) so both pseudo-elements are free to carry tape strips */
@@ -2567,18 +2574,21 @@
     --tape-color: rgb(var(--tint));
   }
   .nav-card-seat {
-    width: 56px; height: 56px; border-radius: 50%; margin: 0 auto 8px;
+    grid-area: seat;
+    width: 56px; height: 56px; border-radius: 50%; margin: 0;
     display: flex; align-items: center; justify-content: center;
     background: rgba(var(--tint), 0.13);
   }
   .nav-ic { display: block; }
   .nav-card-title {
+    grid-area: title; align-self: end; justify-self: start;
     display: inline-block; font-family: var(--hand); font-weight: 700;
     font-size: 18px; line-height: 0.95; color: var(--ink); white-space: nowrap;
     border-bottom: 2px dotted var(--ink-soft); padding-bottom: 3px;
   }
   .nav-card-kicker {
-    display: block; margin-top: 7px;
+    grid-area: kicker; align-self: start;
+    display: block; margin-top: 3px;
     font-family: var(--type); font-size: 8.5px; letter-spacing: 1.5px;
     text-transform: uppercase; color: var(--ink-soft);
   }
@@ -2595,8 +2605,8 @@
   [data-reduce-motion="true"] .nav-card:hover, [data-reduce-motion="true"] .nav-card:focus-visible { transform: none; }
   @media (max-width: 480px) {
     .see-also { gap: 7px; margin: 18px -10px 0; }
-    .nav-card { padding: 14px 5px 11px; }
-    .nav-card-seat { width: 46px; height: 46px; }
+    .nav-card { display: block; text-align: center; padding: 14px 5px 11px; }
+    .nav-card-seat { width: 46px; height: 46px; margin: 0 auto 8px; }
     .nav-ic { width: 38px; height: 38px; }
     .nav-card-title { font-size: 16px; }
     .nav-card-kicker { font-size: 7.5px; letter-spacing: 1px; }
