@@ -29,7 +29,6 @@ With many features in the works as we speak:
 - Learning features
 - More easter eggs
 - Sound design
-- Currently redesigning all achievement icons
 - Stickers!!
 - Dark mode
 - Polaroids in more places!
