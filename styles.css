@@ -141,6 +141,20 @@
   /* picks ride the cassette pile: right-edge anchored so the pair stays
      together at any viewport width, drawn after it so they land on top */
   .di-picks   { width: 155px; top: 70%; right: 36px; transform: rotate(22deg); }
+  /* spilled alphabet beads: 7mm beads at desk scale (21px). The main spill
+     drifts down-left from the floss station, the left pinch is page-anchored
+     in the gutter above the pencil, the strays sit alone on bare wood. */
+  .di-beads-r { width: 240px; top: 27%; right: 30px; }
+  .di-beads-l { width: 80px;  top: 19%; left: calc(50% - 434px); }
+  .di-bead-s1 { width: 22px;  top: 44%; left: calc(50% - 370px); }
+  .di-bead-s2 { width: 22px;  top: 45%; right: 130px; }
+  .di-beads-r, .di-beads-l, .di-bead-s1, .di-bead-s2 {
+    filter: drop-shadow(1.5px 3px 2px rgba(46,32,14,0.32)) saturate(0.92);
+  }
+  .desk-items .bead-letter {
+    font: 700 14px "Courier Prime", monospace;
+    fill: #2e2b26; text-anchor: middle;
+  }
 
   /* mug steam — faint wisps drifting up */
   .desk-steam path { animation: deskSteam 4.4s ease-in-out infinite; transform-origin: center bottom; }
