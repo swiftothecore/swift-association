@@ -131,36 +131,28 @@
   .di-pencil {
     width: 520px; top: 58%; left: calc(50% - 412px);
     /* near-vertical, tip down toward the sharpener; the scaleY flip keeps the
-       palest hex facet toward the upper-left light after the rotation */
-    transform: translate(-50%, -50%) rotate(100deg) scaleY(-1);
+       palest hex facet toward the upper-left light after the rotation, and its
+       0.4 magnitude squashes the drawn girth to a real pencil's ~8mm */
+    transform: translate(-50%, -50%) rotate(100deg) scaleY(-0.4);
     /* shadow offset pre-rotated (filter applies before transform) so the cast
-       shadow still falls down-right on screen like every other prop */
-    filter: drop-shadow(6.4px 4.2px 6px rgba(46,32,14,0.30)) saturate(0.88);
+       shadow still falls down-right on screen like every other prop; the y
+       part is pre-divided by the 0.4 girth squash */
+    filter: drop-shadow(6.4px 10.5px 6px rgba(46,32,14,0.30)) saturate(0.88);
   }
   .di-sharpener { width: 200px; top: 84%; left: calc(50% - 520px); }
   /* picks ride the cassette pile: right-edge anchored so the pair stays
      together at any viewport width, drawn after it so they land on top */
   .di-picks   { width: 155px; top: 70%; right: 36px; transform: rotate(22deg); }
-  /* spilled alphabet beads: 7mm beads at desk scale (21px). The main spill
-     drifts down-left from the floss station, the left pinch is page-anchored
-     in the gutter above the pencil, the strays sit alone on bare wood. */
-  .di-beads-r { width: 240px; top: 27%; right: 30px; }
-  /* the left pinch needs the wider gutter: below 1280px it would land on
-     the glasses, so it only joins on roomier desks */
-  .di-beads-l { width: 80px;  top: 19%; left: calc(50% - 434px); display: none; }
-  @media (min-width: 1280px) { .di-beads-l { display: block; } }
-  .di-bead-s1 { width: 22px;  top: 44%; left: calc(50% - 370px); }
-  .di-bead-s2 { width: 22px;  top: 45%; right: 130px; }
-  .di-beads-r, .di-beads-l, .di-bead-s1, .di-bead-s2 {
+  /* spilled alphabet beads: 7mm beads at desk scale (21px), one loose spill
+     drifting down-left from the floss station */
+  .di-beads-r {
+    width: 240px; top: 27%; right: 30px;
     filter: drop-shadow(1.5px 3px 2px rgba(46,32,14,0.32)) saturate(0.92);
   }
   .desk-items .bead-letter {
     font: 700 14px "Courier Prime", monospace;
     fill: #2e2b26; text-anchor: middle;
   }
-  /* dried coffee ring: page-anchored on the bare wood right of the notebook,
-     where the mug sits during a real session; flat, so no cast shadow */
-  .di-ring { width: 190px; top: 38%; left: calc(50% + 350px); filter: none; opacity: 0.9; }
   /* crumpled draft: below the music pile, as if flicked off the page */
   .di-crumple { width: 130px; top: 80%; left: calc(50% + 372px); transform: rotate(-24deg); }
 
