@@ -114,12 +114,17 @@
      660px of page = 22cm of paper, so roughly 3px per mm. Folded glasses
      ~14cm, mug ~8cm plus its coaster, pencil ~17cm, cassette 10.2cm,
      sharpener ~2.5cm block, picks 3cm. Sizes below follow from that. */
+  /* Composition: things live in loose clusters with real empty desk between
+     them, not one prop per slot. Left is the writing side (glasses up top,
+     mug, then pencil and sharpener low). Right is the bracelet station up
+     top and a music pile (cassette with picks tossed on it) low; the
+     mid-right stretch of wood stays deliberately bare. */
   /* screen-edge props: pinned to a viewport edge, roughly half hanging off */
-  .di-glasses { width: 420px; top: 6%;   left: 0; transform: translateX(-52%) rotate(-7deg); }
-  .di-mug     { width: 380px; top: 36%;  left: 0; transform: translateX(-55%);
+  .di-glasses { width: 420px; top: 9%;   left: 0; transform: translateX(-52%) rotate(-22deg); }
+  .di-mug     { width: 380px; top: 36%;  left: 0; transform: translateX(-55%) rotate(-14deg);
     filter: drop-shadow(6px 13px 11px rgba(46,32,14,0.28)) saturate(0.88); }
-  .di-floss   { width: 370px; top: 4%;   right: 0; transform: translateX(34%); }
-  .di-cassette{ width: 320px; top: 42%;  right: 0; transform: translateX(50%) rotate(-5deg); }
+  .di-floss   { width: 370px; top: 5%;   right: 0; transform: translateX(34%) rotate(8deg); }
+  .di-cassette{ width: 320px; top: 54%;  right: 0; transform: translateX(42%) rotate(-16deg); }
   /* on-desk props: anchored to the notebook column (the .app is a fixed 660px
      wide whenever props are visible, so calc(50% +/- 330px) is the paper edge)
      rather than the viewport, keeping their gap to the page constant */
@@ -133,7 +138,9 @@
     filter: drop-shadow(6.4px 4.2px 6px rgba(46,32,14,0.30)) saturate(0.88);
   }
   .di-sharpener { width: 200px; top: 84%; left: calc(50% - 520px); }
-  .di-picks   { width: 155px; top: 68%; left: calc(50% + 360px); transform: rotate(6deg); }
+  /* picks ride the cassette pile: right-edge anchored so the pair stays
+     together at any viewport width, drawn after it so they land on top */
+  .di-picks   { width: 155px; top: 70%; right: 36px; transform: rotate(22deg); }
 
   /* mug steam — faint wisps drifting up */
   .desk-steam path { animation: deskSteam 4.4s ease-in-out infinite; transform-origin: center bottom; }
