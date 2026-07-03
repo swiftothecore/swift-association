@@ -145,7 +145,10 @@
      drifts down-left from the floss station, the left pinch is page-anchored
      in the gutter above the pencil, the strays sit alone on bare wood. */
   .di-beads-r { width: 240px; top: 27%; right: 30px; }
-  .di-beads-l { width: 80px;  top: 19%; left: calc(50% - 434px); }
+  /* the left pinch needs the wider gutter: below 1280px it would land on
+     the glasses, so it only joins on roomier desks */
+  .di-beads-l { width: 80px;  top: 19%; left: calc(50% - 434px); display: none; }
+  @media (min-width: 1280px) { .di-beads-l { display: block; } }
   .di-bead-s1 { width: 22px;  top: 44%; left: calc(50% - 370px); }
   .di-bead-s2 { width: 22px;  top: 45%; right: 130px; }
   .di-beads-r, .di-beads-l, .di-bead-s1, .di-bead-s2 {
@@ -155,6 +158,11 @@
     font: 700 14px "Courier Prime", monospace;
     fill: #2e2b26; text-anchor: middle;
   }
+  /* dried coffee ring: page-anchored on the bare wood right of the notebook,
+     where the mug sits during a real session; flat, so no cast shadow */
+  .di-ring { width: 190px; top: 38%; left: calc(50% + 350px); filter: none; opacity: 0.9; }
+  /* crumpled draft: below the music pile, as if flicked off the page */
+  .di-crumple { width: 130px; top: 80%; left: calc(50% + 372px); transform: rotate(-24deg); }
 
   /* mug steam — faint wisps drifting up */
   .desk-steam path { animation: deskSteam 4.4s ease-in-out infinite; transform-origin: center bottom; }
