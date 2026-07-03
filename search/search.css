@@ -243,13 +243,17 @@ body::before {
   background: none; border: 0; cursor: pointer; padding: 0; margin-left: auto; text-transform: none;
 }
 .sx-recent-clear:hover { color: var(--pen); text-decoration: underline; }
-.sx-recent-list { display: flex; flex-wrap: wrap; gap: 8px 14px; margin-top: 12px; }
+.sx-recent-list { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 14px; }
+/* jotted paper tags rather than a grey run-on of words — each a little index chip pinned to
+   the page at a slight, alternating tilt so the list reads as scraps on a desk. */
 .sx-recent-item {
-  font-family: var(--hand); font-size: 20px; line-height: 1; color: var(--ink-soft);
-  background: none; border: 0; cursor: pointer; padding: 2px 0;
-  border-bottom: 1.5px solid transparent;
+  font-family: var(--hand); font-size: 19px; line-height: 1.15; color: var(--ink);
+  background: var(--paper-edge); border: 1px solid #d8cbb0; border-radius: 4px;
+  padding: 3px 11px; cursor: pointer; box-shadow: 0 1px 2px rgba(60, 50, 35, .1);
 }
-.sx-recent-item:hover { color: var(--ink); border-bottom-color: var(--pen); }
+.sx-recent-item:nth-child(odd) { transform: rotate(-.6deg); }
+.sx-recent-item:nth-child(even) { transform: rotate(.7deg); }
+.sx-recent-item:hover { background: #fff8ec; border-color: var(--pen); color: var(--ink); transform: rotate(0); }
 
 /* results — a binder divider per album, songs within. The album's colour is carried by the
    margin rule itself: a coloured spine sits exactly over the red rule for the height of the
