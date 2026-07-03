@@ -54,22 +54,37 @@
   </div>
 
   <div class="sx-controls">
-    <div class="sx-seg" role="group" aria-label="Match mode">
-      <button type="button" data-mode="stem" title="Match the word and its forms (love, lover, loved)">stem</button>
-      <button type="button" data-mode="exact" title="Match the exact word only">exact</button>
-      <button type="button" data-mode="fuzzy" title="Tolerate typos and near-spellings">fuzzy</button>
+    <div class="sx-ctrl-group">
+      <span class="sx-ctrl-label">how to match</span>
+      <div class="sx-seg" role="group" aria-label="Match mode">
+        <button type="button" data-mode="stem" title="Match the word and its forms (love, lover, loved)">
+          <span class="sx-seg-name">word + forms</span><span class="sx-seg-eg">love &rarr; loved</span></button>
+        <button type="button" data-mode="exact" title="Match the exact word only">
+          <span class="sx-seg-name">exact word</span><span class="sx-seg-eg">love only</span></button>
+        <button type="button" data-mode="fuzzy" title="Tolerate typos and near-spellings">
+          <span class="sx-seg-name">allow typos</span><span class="sx-seg-eg">lvoe &rarr; love</span></button>
+      </div>
     </div>
-    <div class="sx-seg" role="group" aria-label="Result layout">
-      <button type="button" data-view="grouped" title="Group hits by song">grouped</button>
-      <button type="button" data-view="flat" title="One flat list of every matching line">flat</button>
+    <div class="sx-ctrl-group">
+      <span class="sx-ctrl-label">how to list</span>
+      <div class="sx-seg" role="group" aria-label="Result layout">
+        <button type="button" data-view="grouped" title="Group matching lines by album">by album</button>
+        <button type="button" data-view="flat" title="One flat list of every matching line">one list</button>
+      </div>
     </div>
-    <label class="sx-filter">in <select id="section" aria-label="Filter by section type"></select></label>
-    <label class="sx-filter">word <select id="pos" aria-label="Filter by where the word sits in the line">
-      <option value="any">anywhere</option>
-      <option value="start">starts the line</option>
-      <option value="end">ends the line</option>
-    </select></label>
+    <div class="sx-ctrl-group">
+      <span class="sx-ctrl-label">narrow it down</span>
+      <div class="sx-filters">
+        <label class="sx-filter"><select id="section" aria-label="Filter by section type"></select></label>
+        <label class="sx-filter"><select id="pos" aria-label="Filter by where the word sits in the line">
+          <option value="any">anywhere in the line</option>
+          <option value="start">starts the line</option>
+          <option value="end">ends the line</option>
+        </select></label>
+      </div>
+    </div>
   </div>
+  <p id="explain" class="sx-explain" aria-live="polite"></p>
 
   <div id="counter" class="sx-counter" aria-live="polite"></div>
   <div id="bar" class="sx-bar" aria-hidden="true"></div>

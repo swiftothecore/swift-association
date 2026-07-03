@@ -139,22 +139,40 @@ body::before {
 .sx-chip-x { font-family: var(--type); font-size: 15px; line-height: 1; color: #b9402f; background: none; border: 0; cursor: pointer; padding: 0 2px; }
 .sx-chip-x:hover { color: #8f2e20; }
 
-/* controls */
-.sx-controls { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 14px; align-items: center; }
+/* controls — three labelled groups (how to match / how to list / narrow it down) so a
+   first-timer can tell what each knob does; the plain-language names + a micro-example
+   under each match mode carry the meaning, and #explain narrates the live combination. */
+.sx-controls { display: flex; flex-wrap: wrap; gap: 16px 22px; margin-top: 16px; align-items: flex-start; }
+.sx-ctrl-group { display: flex; flex-direction: column; gap: 5px; }
+.sx-ctrl-label { font-family: var(--type); font-size: 9px; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-faint); }
 .sx-seg { display: inline-flex; gap: 4px; }
 .sx-seg button {
-  font-family: var(--type); font-size: 11px; letter-spacing: .03em; color: var(--ink-soft);
-  background: #f1ead9; border: 1px solid #cbbfa8; border-radius: 4px; padding: 4px 11px; cursor: pointer;
+  font-family: var(--type); font-size: 11px; letter-spacing: .02em; color: var(--ink-soft);
+  background: #f1ead9; border: 1px solid #cbbfa8; border-radius: 4px; padding: 5px 10px; cursor: pointer;
+  line-height: 1.15; text-align: left;
 }
 .sx-seg button:hover { border-color: var(--ink-soft); }
 .sx-seg button.on { color: #7a2f24; border-color: #c08274; background: #f3e2dc; }
+.sx-seg-name { display: block; }
+.sx-seg-eg { display: block; font-size: 8.5px; letter-spacing: .01em; color: var(--ink-faint); margin-top: 1px; }
+.sx-seg button.on .sx-seg-eg { color: #a86a5c; }
+.sx-filters { display: inline-flex; gap: 8px; flex-wrap: wrap; }
 .sx-filter { font-family: var(--type); font-size: 11px; color: var(--ink-soft); display: inline-flex; align-items: center; gap: 6px; }
 .sx-filter select {
   font-family: var(--type); font-size: 11px; color: var(--ink-soft);
-  background: #f1ead9; border: 1px solid #cbbfa8; border-radius: 4px; padding: 4px 8px; cursor: pointer;
+  background: #f1ead9; border: 1px solid #cbbfa8; border-radius: 4px; padding: 5px 8px; cursor: pointer;
 }
 .sx-filter select:hover { border-color: var(--ink-soft); }
 .sx-filter select.active { color: #7a2f24; border-color: #c08274; background: #f3e2dc; }
+
+/* a plain-English read of the current match/layout combination — teaches the controls by
+   narrating what they're doing to the live search. Hidden until there's a word to describe. */
+.sx-explain {
+  font-family: var(--type); font-size: 11px; color: var(--ink-soft); line-height: 1.5;
+  border-left: 2px solid #e0d6bf; padding-left: 10px; margin: 12px 0 0;
+}
+.sx-explain:empty { display: none; }
+.sx-explain b { color: var(--pen); font-weight: 700; }
 
 /* counter + album bar */
 .sx-counter { font-family: var(--type); font-size: 13px; color: var(--ink-soft); margin-top: 18px; min-height: 17px; }

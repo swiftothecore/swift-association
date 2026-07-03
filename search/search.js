@@ -211,8 +211,31 @@ function activeTerms() {
   return terms;
 }
 
+// Narrate the live match/layout combination in plain English (empty before there's a word
+// to describe, so the pristine start screen stays uncluttered). Deliberately does NOT
+// enumerate stem forms — the matcher over-generates non-words, so we describe, not list.
+function renderExplain() {
+  const el = $("explain");
+  if (!el) return;
+  const terms = activeTerms();
+  if (!terms.length) { el.innerHTML = ""; return; }
+  const layout = state.grouped ? "grouped by album" : "as one flat list";
+  if (terms.length > 1) {
+    const modeWord = state.mode === "exact" ? "exact words"
+      : state.mode === "fuzzy" ? "typos allowed" : "word forms included";
+    el.innerHTML = `Lines holding all <b>${terms.length}</b> words (${modeWord}) &middot; ${layout}.`;
+    return;
+  }
+  const w = escapeHtml(terms[0]);
+  const how = state.mode === "exact" ? `Matching the exact word <b>${w}</b> only`
+    : state.mode === "fuzzy" ? `Matching <b>${w}</b> and close misspellings`
+    : `Matching <b>${w}</b> plus its word forms`;
+  el.innerHTML = `${how} &middot; ${layout}.`;
+}
+
 function runSearch() {
   renderChips();
+  renderExplain();
   const terms = activeTerms();
   if (!terms.length) { renderInitial(state.q.trim()); return; }
   const groups = [];
