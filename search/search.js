@@ -230,6 +230,12 @@ function renderChips() {
   $("chips").innerHTML = state.terms.map((t, i) =>
     `<span class="sx-chip">${escapeHtml(t)}<button type="button" class="sx-chip-x" data-i="${i}" aria-label="Remove ${escapeHtml(t)}">&times;</button></span>`).join("");
   $("q").placeholder = state.terms.length ? "and another word…" : "search the lyrics…";
+  updateClear();
+}
+// Show the clear cross only when there's a live word or a committed chip to clear.
+function updateClear() {
+  const c = $("clear");
+  if (c) c.hidden = !($("q").value || state.terms.length);
 }
 function commitTerm() {
   const t = state.q.trim();
@@ -360,7 +366,10 @@ function render(terms, groups) {
   const play = (terms.length === 1 && PROMPT_WORDS.has(terms[0].toLowerCase()))
     ? ` <a class="sx-play" href="../index.html?word=${encodeURIComponent(terms[0].toLowerCase())}" title="Start a game round on this word">play this word in the game &rarr;</a>`
     : "";
-  const share = ` <button type="button" class="sx-copy" id="copyLink" title="Copy a shareable link to this search">copy link</button>`;
+  const share = ` <button type="button" class="sx-copy" id="copyLink" title="Copy a shareable link to this search">` +
+    `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">` +
+    `<path d="M9 15l6-6"/><path d="M11 6l1-1a4 4 0 0 1 6 6l-1 1"/><path d="M13 18l-1 1a4 4 0 0 1-6-6l1-1"/></svg>` +
+    `<span class="sx-copy-label">copy link</span></button>`;
   $("counter").innerHTML = `found in <b>${plural(songs, "song")}</b> &middot; <b>${plural(lines, "line")}</b>${play}${share}`;
   const counts = albumLineCounts(groups);
   $("bar").innerHTML = albumBar(counts);
@@ -488,8 +497,16 @@ function init() {
   let t;
   input.addEventListener("input", () => {
     state.q = input.value;
+    updateClear();
     clearTimeout(t);
     t = setTimeout(runSearch, state.mode === "fuzzy" ? 220 : 120);
+  });
+  // Clear cross: wipe the live word and every committed chip, then hand focus back.
+  $("clear").addEventListener("click", () => {
+    state.q = ""; state.terms = [];
+    input.value = "";
+    runSearch();
+    input.focus();
   });
   // Enter / comma commits the live word into a chip (AND-ed with the rest); Backspace on an
   // empty input peels the last chip back off.
@@ -520,9 +537,10 @@ function init() {
   $("counter").addEventListener("click", async (e) => {
     const btn = e.target.closest("#copyLink");
     if (!btn) return;
+    const label = btn.querySelector(".sx-copy-label") || btn;
     const ok = await copyToClipboard(buildShareURL());
-    btn.textContent = ok ? "link copied!" : "copy failed";
-    setTimeout(() => { btn.textContent = "copy link"; }, 1600);
+    label.textContent = ok ? "link copied!" : "copy failed";
+    setTimeout(() => { label.textContent = "copy link"; }, 1600);
   });
 
   // Recent-search list (rendered in the initial state) is wired via delegation since
