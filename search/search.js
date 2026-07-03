@@ -420,8 +420,9 @@ function render(terms, groups) {
           </div>${hits}</div>`;
       }).join("");
       return `<section id="sx-al-${i}" class="sx-album" style="--album:${color}">
+        <span class="sx-album-rule" aria-hidden="true"></span>
         <div class="sx-album-tab"><span class="sx-album-era">${escapeHtml(al)}</span></div>
-        ${songs}</section>`;
+        <div class="sx-album-body">${songs}</div></section>`;
     }).join("");
     renderRail(albums);
   } else {
