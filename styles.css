@@ -110,16 +110,21 @@
   }
   .desk-item svg { display: block; width: 100%; height: auto; overflow: visible; }
 
+  /* All props share one real-world scale, taken from the notebook page:
+     660px of page = 22cm of paper, so roughly 3px per mm. Folded glasses
+     ~14cm, mug ~8cm plus its coaster, pencil ~17cm, cassette 10.2cm,
+     sharpener ~2.5cm block, picks 3cm. Sizes below follow from that. */
   /* screen-edge props: pinned to a viewport edge, roughly half hanging off */
-  .di-glasses { width: 170px; top: 10%;  left: 0; transform: translateX(-50%) rotate(-7deg); }
-  .di-mug     { width: 142px; top: 39%;  left: 0; transform: translateX(-46%); }
-  .di-floss   { width: 158px; top: 11%;  right: 0; transform: translateX(28%); }
-  .di-cassette{ width: 190px; top: 40%;  right: 0; transform: translateX(50%) rotate(-5deg); }
+  .di-glasses { width: 420px; top: 6%;   left: 0; transform: translateX(-52%) rotate(-7deg); }
+  .di-mug     { width: 380px; top: 36%;  left: 0; transform: translateX(-55%);
+    filter: drop-shadow(6px 13px 11px rgba(46,32,14,0.28)) saturate(0.88); }
+  .di-floss   { width: 370px; top: 4%;   right: 0; transform: translateX(34%); }
+  .di-cassette{ width: 320px; top: 42%;  right: 0; transform: translateX(50%) rotate(-5deg); }
   /* on-desk props: anchored to the notebook column (the .app is a fixed 660px
      wide whenever props are visible, so calc(50% +/- 330px) is the paper edge)
      rather than the viewport, keeping their gap to the page constant */
   .di-pencil {
-    width: 216px; top: 56%; left: calc(50% - 410px);
+    width: 520px; top: 58%; left: calc(50% - 412px);
     /* near-vertical, tip down toward the sharpener; the scaleY flip keeps the
        palest hex facet toward the upper-left light after the rotation */
     transform: translate(-50%, -50%) rotate(100deg) scaleY(-1);
@@ -127,8 +132,8 @@
        shadow still falls down-right on screen like every other prop */
     filter: drop-shadow(6.4px 4.2px 6px rgba(46,32,14,0.30)) saturate(0.88);
   }
-  .di-sharpener { width: 92px; top: 73%; left: calc(50% - 444px); }
-  .di-picks   { width: 128px; top: 66%; left: calc(50% + 356px); transform: rotate(6deg); }
+  .di-sharpener { width: 200px; top: 84%; left: calc(50% - 520px); }
+  .di-picks   { width: 155px; top: 68%; left: calc(50% + 360px); transform: rotate(6deg); }
 
   /* mug steam — faint wisps drifting up */
   .desk-steam path { animation: deskSteam 4.4s ease-in-out infinite; transform-origin: center bottom; }
@@ -144,7 +149,9 @@
   .desk-sway { transform-box: fill-box; transform-origin: 50% 0%; animation: deskSway 5.2s ease-in-out infinite; }
   @keyframes deskSway { 0%,100% { transform: rotate(-2.4deg); } 50% { transform: rotate(2.4deg); } }
 
-  @media (min-width: 1040px) { .desk-items { display: block; } }
+  /* Props are life-size against the page, so they need real desk room:
+     below 1120px the left cluster would pile onto the mug. */
+  @media (min-width: 1120px) { .desk-items { display: block; } }
 
   /* ---------- Title ---------- */
   header.title { text-align: center; margin-bottom: 22px; }
