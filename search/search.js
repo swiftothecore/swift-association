@@ -282,8 +282,11 @@ const plural = (n, w) => `${n} ${w}${n === 1 ? "" : "s"}`;
 function renderInitial(q) {
   $("counter").innerHTML = "";
   $("bar").innerHTML = "";
+  $("barlabel").innerHTML = "";
   $("concord").innerHTML = "";
   $("rail").innerHTML = "";
+  $("results").classList.remove("sx-iso");
+  LAST_COUNTS = null;
   setEraTint(null);
   const msg = q.length === 1
     ? "Keep going, type at least two letters."
@@ -310,8 +313,35 @@ function albumLineCounts(groups) {
 function topAlbum(counts) {
   return [...counts.entries()].sort((a, b) => (b[1] - a[1]) || (ALBUM_INDEX.get(a[0]) - ALBUM_INDEX.get(b[0])))[0];
 }
-// Tint the desk toward an album's colour for the current search (null clears it).
+// Tint the notebook's binding edge toward an album's colour for the current search (null clears it).
 function setEraTint(color) { document.body.style.setProperty("--era", color || "transparent"); }
+
+// The per-album line counts of the current result set, kept so the bar/legend hover read-out
+// can name a count without recomputing. Cleared whenever there are no results.
+let LAST_COUNTS = null;
+
+// Brushing: isolate one album across the results (grouped blocks or flat rows), fading the
+// rest, and name it in the read-out under the bar. Reversed by clearIsolate on mouse-out.
+function isolateAlbum(al) {
+  const results = $("results");
+  if (!results) return;
+  results.classList.add("sx-iso");
+  for (const el of results.querySelectorAll("[data-album]")) el.classList.toggle("sx-lit", el.dataset.album === al);
+  const label = $("barlabel");
+  if (label) {
+    const c = LAST_COUNTS ? LAST_COUNTS.get(al) : null;
+    const color = ALBUM_COLORS[al] || "#999";
+    label.innerHTML = `<b style="color:${color}">${escapeHtml(al)}</b>${c != null ? " &middot; " + plural(c, "line") : ""}`;
+  }
+}
+function clearIsolate() {
+  const results = $("results");
+  if (!results) return;
+  results.classList.remove("sx-iso");
+  for (const el of results.querySelectorAll(".sx-lit")) el.classList.remove("sx-lit");
+  const label = $("barlabel");
+  if (label) label.textContent = label.dataset.hint || "";
+}
 
 // Right-edge jump rail: a binder tab per album in the (grouped) results, ordered as they
 // appear, that scrolls to its block. Hidden for flat view or a single album.
@@ -324,7 +354,7 @@ function renderRail(albums) {
 function albumBar(counts) {
   const albums = [...counts.keys()].sort((a, b) => ALBUM_INDEX.get(a) - ALBUM_INDEX.get(b));
   return albums.map((al) =>
-    `<span style="flex:${counts.get(al)};background:${ALBUM_COLORS[al] || "#999"}" title="${escapeHtml(al)}: ${counts.get(al)}"></span>`).join("");
+    `<span data-album="${escapeHtml(al)}" style="flex:${counts.get(al)};background:${ALBUM_COLORS[al] || "#999"}" title="${escapeHtml(al)}: ${counts.get(al)}"></span>`).join("");
 }
 
 // A plain-language rarity read, echoing the game's difficulty bands (common ≥18 songs,
@@ -345,23 +375,30 @@ function renderConcord(groups, counts) {
   if (!entries.length) { $("concord").innerHTML = ""; return; }
   const [topAlbum, topCount] = entries[0];
   const topColor = ALBUM_COLORS[topAlbum] || "#999";
-  const shown = entries.slice(0, CONCORD_TOP);
-  const more = entries.length - shown.length;
-  const legend = shown.map(([al, c]) =>
-    `<span class="sx-leg"><span class="sx-leg-dot" style="background:${ALBUM_COLORS[al] || "#999"}"></span>${escapeHtml(al)} <b>${c}</b></span>`).join("");
-  const moreTag = more > 0 ? `<span class="sx-leg-more">+${more} more album${more === 1 ? "" : "s"}</span>` : "";
+  const more = entries.length - CONCORD_TOP;
+  // Render EVERY album (so the hover-isolate can reach it and the breakdown can expand), but
+  // fold everything past the top few behind a "+N more" toggle to keep the strip compact.
+  const legend = entries.map(([al, c], i) =>
+    `<span class="sx-leg${i >= CONCORD_TOP ? " sx-leg-extra" : ""}" data-album="${escapeHtml(al)}">` +
+    `<span class="sx-leg-dot" style="background:${ALBUM_COLORS[al] || "#999"}"></span>${escapeHtml(al)} <b>${c}</b></span>`).join("");
+  const moreBtn = more > 0
+    ? `<button type="button" class="sx-leg-more" id="moreAlbums" data-more="${more}">+${more} more album${more === 1 ? "" : "s"}</button>`
+    : "";
   $("concord").innerHTML =
     `<div class="sx-concord-line">most in <b style="color:${topColor}">${escapeHtml(topAlbum)}</b> ` +
     `(${plural(topCount, "line")}) &middot; <span class="sx-rarity">${rarityNote(groups.length)}</span></div>` +
-    `<div class="sx-concord-legend">${legend}${moreTag}</div>`;
+    `<div class="sx-concord-legend">${legend}${moreBtn}</div>`;
 }
 
-function hitHTML(h, flatMeta) {
+function hitHTML(h, flatMeta, album) {
   const ctx = (l) => l ? `<div class="sx-ctx">${escapeHtml(l)}</div>` : "";
   const ann = flatMeta
     ? `<div class="sx-ann sx-ann-flat">${flatMeta}</div>`
     : `<div class="sx-ann"><span class="sx-sec">${escapeHtml(h.sectionLabel)}</span><span class="sx-ln">l.${h.lineNo}</span></div>`;
-  return `<div class="sx-hit${flatMeta ? " sx-hit-flat" : ""}">${ann}<div class="sx-lines">${ctx(h.prev)}<div class="sx-main">${h.html}</div>${ctx(h.next)}</div></div>`;
+  // Flat rows carry data-album so hover-isolate can dim them individually (grouped hits are
+  // dimmed by their parent .sx-album block, so they don't need it).
+  const dataAl = album ? ` data-album="${escapeHtml(album)}"` : "";
+  return `<div class="sx-hit${flatMeta ? " sx-hit-flat" : ""}"${dataAl}>${ann}<div class="sx-lines">${ctx(h.prev)}<div class="sx-main">${h.html}</div>${ctx(h.next)}</div></div>`;
 }
 
 function render(terms, groups) {
@@ -378,9 +415,12 @@ function render(terms, groups) {
     const lead = terms.length > 1 ? "No lyric line holds all of " : "No lyrics match ";
     $("counter").innerHTML = `<span class="sx-none">${lead}${termLabels}${ctx}.${tip}</span>`;
     $("bar").innerHTML = "";
+    $("barlabel").innerHTML = "";
     $("concord").innerHTML = "";
     $("results").innerHTML = "";
+    $("results").classList.remove("sx-iso");
     $("rail").innerHTML = "";
+    LAST_COUNTS = null;
     setEraTint(null);
     return;
   }
@@ -395,7 +435,11 @@ function render(terms, groups) {
     `<span class="sx-copy-label">copy link</span></button>`;
   $("counter").innerHTML = `found in <b>${plural(songs, "song")}</b> &middot; <b>${plural(lines, "line")}</b>${play}${share}`;
   const counts = albumLineCounts(groups);
+  LAST_COUNTS = counts;
+  $("results").classList.remove("sx-iso");   // drop any stale isolation from the previous search
   $("bar").innerHTML = albumBar(counts);
+  const bl = $("barlabel");
+  if (bl) { bl.dataset.hint = counts.size > 1 ? "hover a colour to isolate that album" : ""; bl.textContent = bl.dataset.hint; }
   renderConcord(groups, counts);
   const top = topAlbum(counts);
   setEraTint(top ? ALBUM_COLORS[top[0]] : null);
@@ -419,7 +463,7 @@ function render(terms, groups) {
             <span class="sx-song-count">${plural(g.hits.length, "line")}</span>
           </div>${hits}</div>`;
       }).join("");
-      return `<section id="sx-al-${i}" class="sx-album" style="--album:${color}">
+      return `<section id="sx-al-${i}" class="sx-album" data-album="${escapeHtml(al)}" style="--album:${color}">
         <span class="sx-album-rule" aria-hidden="true"></span>
         <div class="sx-album-tab"><span class="sx-album-era">${escapeHtml(al)}</span></div>
         <div class="sx-album-body">${songs}</div></section>`;
@@ -432,7 +476,7 @@ function render(terms, groups) {
       const color = ALBUM_COLORS[g.song.album] || "#999";
       for (const h of g.hits) {
         const meta = `<span class="sx-dot" style="--album:${color}"></span><span class="sx-flat-title">${escapeHtml(g.song.title)}</span><span class="sx-flat-album">${escapeHtml(g.song.album)}</span><span class="sx-flat-loc">${escapeHtml(h.sectionLabel)} &middot; l.${h.lineNo}</span>`;
-        rows.push(hitHTML(h, meta));
+        rows.push(hitHTML(h, meta, g.song.album));
       }
     }
     $("results").innerHTML = `<div class="sx-flat" style="--album:#999">${rows.join("")}</div>`;
@@ -546,6 +590,30 @@ function init() {
   $("rail").addEventListener("click", (e) => {
     const b = e.target.closest("button[data-al]");
     if (b) document.getElementById("sx-al-" + b.dataset.al)?.scrollIntoView({ behavior: "smooth", block: "start" });
+  });
+
+  // Rainbow bar + legend brushing. #bar and #concord are stable containers (only their
+  // innerHTML changes each search), so we delegate hover once here.
+  const bar = $("bar");
+  bar.addEventListener("mouseover", (e) => { const s = e.target.closest("[data-album]"); if (s) isolateAlbum(s.dataset.album); });
+  bar.addEventListener("mouseleave", clearIsolate);
+  // Click a colour to jump to that album's block (grouped view; a no-op in flat view).
+  bar.addEventListener("click", (e) => {
+    const s = e.target.closest("[data-album]");
+    if (!s) return;
+    [...document.querySelectorAll(".sx-album")].find((a) => a.dataset.album === s.dataset.album)
+      ?.scrollIntoView({ behavior: "smooth", block: "start" });
+  });
+  const concord = $("concord");
+  concord.addEventListener("mouseover", (e) => { const s = e.target.closest(".sx-leg[data-album]"); if (s) isolateAlbum(s.dataset.album); });
+  concord.addEventListener("mouseleave", clearIsolate);
+  // "+N more albums" unfolds the rest of the breakdown.
+  concord.addEventListener("click", (e) => {
+    const btn = e.target.closest("#moreAlbums");
+    if (!btn) return;
+    const expanded = btn.closest(".sx-concord-legend").classList.toggle("expanded");
+    const n = btn.dataset.more;
+    btn.textContent = expanded ? "show fewer" : `+${n} more album${n === "1" ? "" : "s"}`;
   });
   for (const b of document.querySelectorAll("[data-mode]")) {
     b.addEventListener("click", () => { state.mode = b.dataset.mode; savePrefs(); syncToggles(); runSearch(); });

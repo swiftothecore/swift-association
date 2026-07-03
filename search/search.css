@@ -181,9 +181,14 @@ body::before {
 .sx-counter:empty { display: none; }
 .sx-counter b { color: var(--ink); font-weight: 700; }
 .sx-none b { color: var(--pen); }
-.sx-bar { display: flex; height: 11px; border-radius: 3px; overflow: hidden; margin-top: 8px; box-shadow: inset 0 0 0 1px rgba(43,39,34,0.12); }
+.sx-bar { display: flex; height: 13px; border-radius: 3px; overflow: hidden; margin-top: 8px; box-shadow: inset 0 0 0 1px rgba(43,39,34,0.12); cursor: pointer; }
 .sx-bar:empty { display: none; }
-.sx-bar span { min-width: 2px; }
+.sx-bar span { min-width: 2px; transition: opacity .15s ease; }
+/* a readable read-out under the bar: a discoverability hint at rest, the hovered album +
+   its line count while you're brushing over a colour (or a legend dot) */
+.sx-barlabel { font-family: var(--type); font-size: 11px; color: var(--ink-faint); margin-top: 6px; min-height: 15px; }
+.sx-barlabel:empty { display: none; }
+.sx-barlabel b { font-weight: 700; }
 
 /* concordance — the readable counterpart to the rainbow bar: where the word lives most,
    how rare it is, and a labeled breakdown of the top albums */
@@ -192,11 +197,18 @@ body::before {
 .sx-concord-line { font-family: var(--type); font-size: 12px; color: var(--ink-soft); }
 .sx-concord-line b { font-weight: 700; }
 .sx-rarity { color: var(--ink-faint); font-style: italic; }
-.sx-concord-legend { display: flex; flex-wrap: wrap; gap: 5px 14px; margin-top: 6px; }
-.sx-leg { font-family: var(--type); font-size: 11px; color: var(--ink-soft); display: inline-flex; align-items: center; gap: 6px; }
+.sx-concord-legend { display: flex; flex-wrap: wrap; gap: 5px 14px; margin-top: 6px; align-items: center; }
+.sx-leg { font-family: var(--type); font-size: 11px; color: var(--ink-soft); display: inline-flex; align-items: center; gap: 6px; cursor: pointer; }
 .sx-leg-dot { width: 12px; height: 12px; border-radius: 50%; flex: none; box-shadow: inset 0 0 0 1px rgba(0,0,0,0.18); }
 .sx-leg b { color: var(--ink); font-weight: 700; }
-.sx-leg-more { font-family: var(--type); font-size: 11px; color: var(--ink-faint); font-style: italic; }
+/* albums past the top few stay folded until "+N more" is pressed */
+.sx-leg-extra { display: none; }
+.sx-concord-legend.expanded .sx-leg-extra { display: inline-flex; }
+.sx-leg-more {
+  font-family: var(--type); font-size: 11px; color: var(--pen); font-style: italic;
+  background: none; border: 0; cursor: pointer; padding: 0 0 1px; border-bottom: 1px dashed rgba(185, 64, 47, .4);
+}
+.sx-leg-more:hover { color: #8f2e20; border-bottom-color: rgba(185, 64, 47, .9); }
 
 /* "play this word in the game" — a red-pen invitation tucked beside the counter */
 .sx-play {
@@ -244,7 +256,11 @@ body::before {
    block (red shows through between blocks, keeping the notebook's identity), with the era
    name on a tab riding flush on that spine. Nothing crosses into the desk or over the rule. */
 .sx-results { margin-top: 18px; }
-.sx-album { position: relative; margin-top: 32px; }
+/* brushing: hovering a bar colour (or a legend dot) isolates that album — every other
+   album's block or row fades back so you see just the one until you move away */
+.sx-results.sx-iso .sx-album:not(.sx-lit),
+.sx-results.sx-iso .sx-hit-flat:not(.sx-lit) { opacity: .16; }
+.sx-album { position: relative; margin-top: 32px; transition: opacity .15s ease; }
 .sx-album:first-child { margin-top: 6px; }
 /* the coloured spine, laid over the page's red margin rule (offset -14px lines up on both
    the desktop 58px/44px and mobile 42px/28px paddings — both differ by exactly 14px) */
@@ -286,7 +302,7 @@ body::before {
 }
 
 /* flat view */
-.sx-flat .sx-hit-flat { grid-template-columns: 1fr; gap: 4px; padding: 10px 0; border-bottom: 1px solid #ece3cd; }
+.sx-flat .sx-hit-flat { grid-template-columns: 1fr; gap: 4px; padding: 10px 0; border-bottom: 1px solid #ece3cd; transition: opacity .15s ease; }
 .sx-dot { width: 12px; height: 12px; border-radius: 50%; background: var(--album); flex: none; box-shadow: inset 0 0 0 1px rgba(0,0,0,0.18); }
 .sx-ann-flat { text-align: left; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding-top: 0; }
 .sx-ann-flat .sx-dot { align-self: center; }
