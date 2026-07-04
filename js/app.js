@@ -7,6 +7,7 @@ import {
   ALBUM_COLORS, CB_ALBUM_COLORS, STUDIO_ALBUMS, TITLE_ALIASES,
   ACHIEVEMENTS, ACH_ICONS, ACH_BY_ID, ACH_GROUPS, ACH_GROUP_COLORS, ACH_GROUP_OF, ACH_NO_TRADE,
   CHALLENGES, CHALLENGE_BY_ID, CHALLENGE_ORDER,
+  IMPOSTOR_WORDS, IMPOSTOR_COUNT,
   ALBUM_FOCUS_DIFFS, ALBUM_FOCUS_TARGET,
   ADAPTIVE_BUCKETS, ADAPTIVE_LEVELS, ADAPT_MAX_LEVEL, ADAPT_START_LEVEL, ADAPT_PROMO_STREAK, ADAPT_NODROP_LEVEL,
   PEN_SVG, STAR_SVG, SPARKLE_SVG, DOODLE_SVG, DOODLE_SIZE,
@@ -143,6 +144,14 @@ let devilBannedInitials = [];   // Forbidden Letters: title-start letters no lon
 let devilPoolHard = false;      // Rarer Air: remaining words drawn from the rarer pool
 let roundWildcard = null;       // Wildcard: this round's active sub-constraint
 let lastWildcardId = "";        // Wildcard: previous round's constraint id (no immediate repeat)
+// Impostor: which of the 13 pages show a fake word (Set of round numbers), whether THIS page
+// is a fake, and the run outcome trackers. impostorFailed short-circuits the win to a loss.
+let impostorRounds = new Set(); // rounds (1-based) whose prompt word is an impostor decoy
+let roundIsImpostor = false;    // this page's word is an impostor (set in advanceRound)
+let impostorFailed = false;     // a fatal misjudgement happened — the run is a loss
+let impostorSeen = 0;           // impostor pages encountered so far (for "first impostor" charm)
+let impostorFlagged = 0;        // impostors correctly flagged this run
+let impostorMissed = 0;         // real pages answered wrong or timed out (perfect-run tracker)
 let currentWord = "";
 let currentSongs = [];
 // The full lyrics-valid set for the round, BEFORE a challenge sub-rule narrows currentSongs
@@ -3046,11 +3055,15 @@ const CHALL_STAR = `<svg viewBox="0 0 24 24" class="chall-star-svg" aria-hidden=
 // cream-label cassette desk prop; the shell is recoloured per tier by the
 // wrapper's t1/t2/t3 class (green → orange → red, set in CSS).
 const TAPE_GLYPH = `<svg viewBox="0 0 24 16" class="tape-glyph" aria-hidden="true"><rect class="tape-shell" x="1" y="1.6" width="22" height="12.8" rx="2.2"/><rect class="tape-label" x="5" y="3.3" width="14" height="3.2" rx="0.7"/><circle class="tape-reel" cx="8.5" cy="10.2" r="2.4"/><circle class="tape-reel" cx="15.5" cy="10.2" r="2.4"/></svg>`;
-const TAPE_WORD = { 1: "easy", 2: "tricky", 3: "tough", 4: "brutal" };
+// tapes:0 is a placeholder "unrated" tier for freshly-built challenges whose real
+// difficulty hasn't been decided yet (see the Tier C minigames in config).
+const TAPE_WORD = { 0: "unrated", 1: "easy", 2: "tricky", 3: "tough", 4: "brutal" };
 
-// `n` tapes (clamped 1–4); the wrapper's t<n> class colours them by tier.
+// `n` tapes (0 = unrated placeholder, else clamped 1–4); the wrapper's t<n> class
+// colours them by tier. Unrated draws a single ghosted, dashed tape.
 function tapesMarkup(n) {
-  const t = Math.max(1, Math.min(4, n || 1));
+  if ((n || 0) === 0) return `<span class="chall-tapes t0" aria-label="difficulty not yet rated">${TAPE_GLYPH}</span>`;
+  const t = Math.max(1, Math.min(4, n));
   return `<span class="chall-tapes t${t}" aria-label="difficulty ${t} of 4">${TAPE_GLYPH.repeat(t)}</span>`;
 }
 
@@ -3074,8 +3087,8 @@ function renderChallengesPage() {
   // Grouped by difficulty: three tape tiers (easy → tough), each a coloured
   // header over its challenges (kept in registry order within the tier).
   let list = "";
-  [1, 2, 3, 4].forEach((tier) => {
-    const inTier = CHALLENGES.filter((c) => (c.tapes || 1) === tier);
+  [1, 2, 3, 4, 0].forEach((tier) => {
+    const inTier = CHALLENGES.filter((c) => (c.tapes || 0) === tier);
     if (!inTier.length) return;
     list += `<div class="chall-group">` +
       `<div class="chall-group-head t${tier}">` +
@@ -3163,7 +3176,7 @@ function renderChallengeDetail(id) {
     `<div class="chall-diff">` +
       `<span class="chall-eyebrow">Difficulty</span>` +
       `${tapesMarkup(c.tapes)}` +
-      `<span class="chall-diff-word">${TAPE_WORD[Math.max(1, Math.min(4, c.tapes || 1))]}</span>` +
+      `<span class="chall-diff-word">${TAPE_WORD[(c.tapes || 0) === 0 ? 0 : Math.max(1, Math.min(4, c.tapes))]}</span>` +
     `</div>` +
     `<div class="chall-sec">` +
       `<div class="chall-eyebrow">The rule</div>` +
@@ -3917,6 +3930,12 @@ function resetRunState() {
   focusDifficulty = null;
   lastAlphaLetter = "";
   roundSecondsOverride = null;
+  impostorRounds = new Set();
+  roundIsImpostor = false;
+  impostorFailed = false;
+  impostorSeen = 0;
+  impostorFlagged = 0;
+  impostorMissed = 0;
   chainLetter = "";
   tourSetlist = [];
   comboClock = 0;
@@ -3994,6 +4013,19 @@ function applyInputHints() {
   hint.textContent = suggesting ? "Enter accepts the top match — or write a lyric line for a verse bonus" : "no suggestions — type the full title or a real lyric line, then Enter";
   if (settings.enableHints !== false && currentMode.hint && gameType !== "daily") {
     hint.textContent += " · Tab for a hint";
+  }
+}
+
+// Impostor: show the 🚩 flag bar for the whole run and re-enable it each fresh page.
+// Hidden (and never in the way) for every other game.
+function renderImpostorBar() {
+  const bar = $("impostorBar");
+  if (!bar) return;
+  const on = impostorRuleActive();
+  bar.hidden = !on;
+  if (on) {
+    const btn = $("flagBtn");
+    if (btn) btn.disabled = false;
   }
 }
 
@@ -4264,6 +4296,7 @@ function startChallenge(id) {
   currentChallenge = c;                          // set AFTER resetRunState (which nulls it)
   challengeRunActive = true;                     // start the achievement sandbox
   if (c.rule === "newsong") setupNewSongChallenge();
+  if (c.rule === "impostor") setupImpostorChallenge();
   if (c.rule === "setlist") buildTourSetlist();
   if (c.rule === "combo") comboClock = COMBO_START;
   // Home Invasion: run-scoped clock, starts at c.seconds and only shrinks on wrong answers.
@@ -4327,6 +4360,30 @@ function setupNewSongChallenge() {
 // every other challenge, since challengeTargetSong is only set for this rule).
 function challengeForcedWord(r) {
   return (challengeTargetSong && r === challengeForcedRound) ? challengeForcedWordVal : null;
+}
+
+/* ---------- Impostor ---------- */
+// True while an Impostor run is live (thin guard reused by the input/flag/submit paths).
+function impostorRuleActive() {
+  return gameType === "challenge" && currentChallenge && currentChallenge.rule === "impostor";
+}
+// Pick IMPOSTOR_COUNT of the run's 13 pages to be fakes. Round 1 is always real (a gentle
+// tutorial open), so the decoys land somewhere in rounds 2..13.
+function setupImpostorChallenge() {
+  impostorRounds = new Set();
+  impostorSeen = impostorFlagged = impostorMissed = 0;
+  impostorFailed = false;
+  const slots = [];
+  for (let r = 2; r <= TOTAL_ROUNDS; r++) slots.push(r);
+  shuffle(slots).slice(0, Math.min(IMPOSTOR_COUNT, slots.length)).forEach((r) => impostorRounds.add(r));
+}
+// A fresh impostor decoy not used yet this run (falls back to the whole pool if exhausted).
+function pickImpostorWord() {
+  const fresh = IMPOSTOR_WORDS.filter((w) => !usedWords.includes(w));
+  const pool = fresh.length ? fresh : IMPOSTOR_WORDS;
+  const w = pool[Math.floor(Math.random() * pool.length)];
+  usedWords.push(w);
+  return w;
 }
 
 // On Tour!: a setlist of one album per round. Cycle through albums with enough candidate
@@ -4443,6 +4500,8 @@ function applyChallengeRound(wrap) {
     renderSpiteBanner();
   } else if (currentChallenge.rule === "survive") {
     renderSurviveBanner();
+  } else if (currentChallenge.rule === "impostor") {
+    renderImpostorBanner();
   } else if (currentChallenge.rule === "tiny") {
     // The Smallest Song Who Ever Lived — shrink, tilt, and offset the prompt, constant.
     renderTinyWord(wrap, currentWord);
@@ -4472,6 +4531,15 @@ function renderSurviveBanner() {
   el.innerHTML =
     `<span class="chall-prog-name">sudden death</span>` +
     `<span class="chall-prog-count">round ${round} / ${currentChallenge.target || 31}</span>`;
+}
+// Impostor: run progress. Deliberately says nothing about THIS page — only the tally of real
+// words named (toward target) and impostors caught so far, so it never gives the round away.
+function renderImpostorBanner() {
+  if (!impostorRuleActive()) return;
+  const el = ensureChallBanner();
+  el.innerHTML =
+    `<span class="chall-prog-name">🚩 ${impostorFlagged} caught</span>` +
+    `<span class="chall-prog-count">${score} / ${currentChallenge.target || 7}</span>`;
 }
 // The Smallest Song Who Ever Lived: render the prompt word tiny, tilted, and offset to a
 // random spot within the word area — every round, constant. Display-only: matching reads
@@ -4842,6 +4910,9 @@ function challengeWinCheck(c) {
     });
     return best >= 5;
   }
+  // Impostor: survive the run (no fatal misjudgement) AND name enough REAL words. Caught
+  // impostors fill beads and count into `score`, so the real-answer tally is score - flagged.
+  if (c.rule === "impostor") return !impostorFailed && (score - impostorFlagged) >= (c.target || 7);
   // Lyric Lover: recall a target number of word-perfect-or-better lines this run.
   if (c.rule === "verse") return gameVersePerfect >= (c.target || 4);
   // Thirty-One: an unbroken run (still alive) that cleared the target round (31).
@@ -4906,6 +4977,9 @@ function endChallenge() {
   const won = challengeWinCheck(c);
   const firstTime = won ? markChallengeDefeated(c.id, score) : false;
   const rec = challengeRecord(c.id);
+  // Should've Said No — a flawless Impostor run: every impostor flagged (implied by surviving)
+  // and every real word named. challengeRunActive is already false, so the charm fires normally.
+  if (c.rule === "impostor" && won && impostorMissed === 0) unlock("shouldve-said-no");
 
   document.querySelector("#screen-results .podium-title").textContent = c.name;
   const outOfGuesses = c.rule === "newsong" && challengeTargetSong && newSongLives <= 0;
@@ -4919,9 +4993,15 @@ function endChallenge() {
   const verseLine = c.rule === "verse"
     ? `<div class="chall-result-meta">${gameVersePerfect} line${gameVersePerfect === 1 ? "" : "s"} recalled word-for-word</div>`
     : "";
+  // Impostor: the score bundles caught fakes and real answers — break it out honestly.
+  const realNamed = score - impostorFlagged;
+  const impostorLine = c.rule === "impostor"
+    ? `<div class="chall-result-meta">${realNamed} real word${realNamed === 1 ? "" : "s"} named · ` +
+      `${impostorFlagged} impostor${impostorFlagged === 1 ? "" : "s"} caught</div>`
+    : "";
   const meta = `<div class="chall-result-meta">${rec.attempts} attempt${rec.attempts === 1 ? "" : "s"}` +
     `${rec.best ? ` · best ${rec.best}/${TOTAL_ROUNDS}` : ""}</div>`;
-  $("resultPodium").innerHTML = status + tokenLine + verseLine + meta +
+  $("resultPodium").innerHTML = status + tokenLine + verseLine + impostorLine + meta +
     `<button id="backToChallenges" class="btn-ghost">back to challenges</button>`;
   $("backToChallenges").addEventListener("click", () => openChallenges("start"));
 
@@ -5798,15 +5878,20 @@ function advanceRound() {
   // always opens on a title, a gentle start. applyChallengeRound just renders the banner.
   if (gameType === "challenge" && currentChallenge && currentChallenge.rule === "switchup")
     roundLyricOnly = round === 1 ? false : Math.random() < 0.5;
+  // Impostor: is THIS page a decoy? Decided at run start (setupImpostorChallenge). A fake page
+  // draws from IMPOSTOR_WORDS and has NO valid answer — the player must flag it, not answer it.
+  roundIsImpostor = impostorRuleActive() && impostorRounds.has(round);
   // "Play this word" deep-link forces round 1's word; every later round draws normally.
-  if (round === 1 && forcedFirstWord) {
+  if (roundIsImpostor) {
+    currentWord = pickImpostorWord();
+  } else if (round === 1 && forcedFirstWord) {
     currentWord = forcedFirstWord;
     if (!usedWords.includes(currentWord)) usedWords.push(currentWord);
     forcedFirstWord = "";
   } else {
     currentWord = challengeForcedWord(round) || pickWord();   // One Of A Kind forces its target word
   }
-  currentSongs = validSongs(currentWord, effectiveStrict(), effectiveNoTitle());
+  currentSongs = roundIsImpostor ? [] : validSongs(currentWord, effectiveStrict(), effectiveNoTitle());
   currentLyricSongs = currentSongs;   // full lyrics-valid set (soft-rejects judge near-misses off this)
   // Title...?: flip the rule — the only valid answers are songs whose TITLE holds the word.
   if (gameType === "challenge" && currentChallenge && currentChallenge.rule === "titleHas")
@@ -5845,6 +5930,7 @@ function advanceRound() {
 
   $("wordDisplay").textContent = currentWord;
   wrap.classList.remove("vanished");          // clear any prior round's vanish
+  wrap.classList.remove("impostor-laugh", "impostor-ha", "impostor-wronged");   // clear any prior gag
   wrap.removeAttribute("data-fx");            // clear any prior round's Word Games distortion
   wrap.removeAttribute("data-tiny");          // clear any prior round's Smallest Song shrink
   wrap.style.removeProperty("--tiny-rot");
@@ -5856,6 +5942,7 @@ function advanceRound() {
   revolveIndex = 0;                            // Revolving Door: this round's word is slot 0
   roundNamed = [];                             // Double Trouble: no songs named on the fresh page yet
   applyChallengeRound(wrap);                   // challenge per-round modifier (e.g. Vanishing Word)
+  renderImpostorBar();                         // Impostor: the 🚩 flag action (hidden elsewhere)
   renderExcludedNote();
   $("feedback").innerHTML = "";
   $("playArea").style.display = "";
@@ -6519,8 +6606,98 @@ function renderVerseMeter(text) {
 }
 
 /* ---------- Submit & feedback ---------- */
+/* ---------- Impostor: resolving a page (flag / fall / catch) ---------- */
+// Record a resolved impostor page onto the run arrays. Decoys never touch the lifetime
+// word/song tally (roundWords/roundSongs null), so a fake never pollutes Nemesis / discovery.
+function recordImpostorPage(caught) {
+  roundResults[round - 1] = caught;
+  roundAlbums[round - 1] = null;
+  roundWords[round - 1] = null;
+  roundSongs[round - 1] = null;
+  roundAnswerAlbums[round - 1] = [];
+}
+// Lock the page's inputs (shared by every impostor resolution path).
+function lockImpostorPage() {
+  roundLocked = true;
+  clearTimer();
+  resetTension();
+  hideDropdown();
+  const btn = $("flagBtn"); if (btn) btn.disabled = true;
+  $("songInput").disabled = true;
+  $("playArea").style.display = "none";
+}
+// The 🚩 button: call the current word a fake. Right on a decoy (caught), fatal on a real word.
+function flagImpostor() {
+  if (!impostorRuleActive() || roundLocked) return;
+  if (!roundIsImpostor) { impostorGameOver("falseflag"); return; }   // accused a genuine word
+  lockImpostorPage();
+  impostorSeen++;
+  impostorFlagged++;
+  score++;                          // a caught fake fills a bead; real answers = score - impostorFlagged
+  justEarnedIndex = round - 1;
+  recordImpostorPage(true);
+  renderBracelet();
+  renderImpostorBanner();
+  celebrateCorrect(1, 0);
+  const fb = $("feedback");
+  fb.innerHTML =
+    `<div class="fb-head"><div class="banner good">🚩 impostor caught</div></div>` +
+    `<div class="impostor-caught">“<b>${escapeHtml(currentWord)}</b>” appears in no Taylor song. Good instinct.</div>` +
+    `<button id="continueBtn" class="btn-ghost">next page →</button>`;
+  feedbackShownAt = Date.now();
+  $("continueBtn").addEventListener("click", advanceFromFeedback);
+}
+// A fatal misjudgement ends the run. `kind`: "answered" (named a song for a fake) / "timeout"
+// (let a fake slip past the clock) — both mean you fell for an impostor — or "falseflag"
+// (accused a real word). Plays the gag, then drops to the sandboxed challenge results.
+function impostorGameOver(kind) {
+  lockImpostorPage();
+  impostorFailed = true;
+  if (kind === "answered" || kind === "timeout") {
+    impostorSeen++;                                   // this fake page counts as met
+    if (impostorSeen === 1) unlock("smallest-man");   // fell for the very first impostor you met
+  }
+  recordImpostorPage(false);                          // the fatal page is a miss
+  renderBracelet();
+  playImpostorLose(kind);
+}
+// The gag: a caught-out fake word cackles (a wiggle, or a static "ha!" stamp under reduced
+// motion); a wronged real word just recoils. Then a full-screen wipe carries the verdict and
+// hands off to endChallenge.
+function playImpostorLose(kind) {
+  const wrap = $("wordDisplay").parentNode;   // .word-wrap
+  const reduced = motionReduced() || animInstant();
+  const fellForIt = kind !== "falseflag";
+  wrap.classList.add(fellForIt ? (reduced ? "impostor-ha" : "impostor-laugh") : "impostor-wronged");
+  const hold = reduced ? 450 : 1150 * animScale() || 450;
+  setTimeout(() => showImpostorLoseWipe(kind), hold);
+}
+function showImpostorLoseWipe(kind) {
+  const w = escapeHtml(currentWord);
+  const copy = kind === "falseflag"
+    ? { big: "innocent!", sub: `“${w}” is a real Taylor lyric — you accused a genuine word.` }
+    : kind === "timeout"
+      ? { big: "too slow…", sub: `“${w}” was an impostor, and it slipped right past you.` }
+      : { big: "gotcha.", sub: `“${w}” appears in zero Taylor songs — you fell for the impostor.` };
+  const ov = document.createElement("div");
+  ov.className = "impostor-wipe";
+  ov.setAttribute("role", "alert");
+  ov.innerHTML =
+    `<div class="iw-inner"><div class="iw-big">${copy.big}</div><div class="iw-sub">${copy.sub}</div></div>`;
+  document.body.appendChild(ov);
+  requestAnimationFrame(() => ov.classList.add("in"));
+  const hold = (motionReduced() || animInstant()) ? 750 : 1600;
+  // Route through endGame (not endChallenge directly) so the runFolded guard + finale cleanup
+  // fire; endGame dispatches straight back to endChallenge for the challenge game type.
+  setTimeout(() => { ov.remove(); endGame(); }, hold);
+}
+
 function submitAnswer(song, isTimeout) {
   if (roundLocked) return;
+
+  // Impostor: a fake page can only be cleared by flagging it. Letting the clock run out means
+  // you failed to flag it in time — fatal. (A real page's timeout is a normal miss below.)
+  if (impostorRuleActive() && roundIsImpostor && isTimeout) { impostorGameOver("timeout"); return; }
 
   // Paris easter egg — answering "Paris" when the prompt word is "somewhere".
   // Fires on the attempt regardless of whether it's a correct match for the round.
@@ -6550,6 +6727,10 @@ function submitAnswer(song, isTimeout) {
     }
     if (!song) return;
   }
+
+  // Impostor: you named a song for a fake word — you fell for it. Fatal. (Reaching any of the
+  // scoring code below on an impostor run therefore always means a genuine, real-word page.)
+  if (impostorRuleActive() && roundIsImpostor && song) { impostorGameOver("answered"); return; }
 
   // Off-limits pick (covers every path: dropdown click, Enter, exact-title). In a
   // noTitle mode where the word is in this song's title, don't burn the round —
@@ -6682,6 +6863,9 @@ function submitAnswer(song, isTimeout) {
   roundSongs[round - 1] = correct && song ? song.title : null;  // credited song — for the lifetime tally
   justEarnedIndex = correct ? round - 1 : -1;
   if (correct) score++;
+  // Impostor: a missed real page (wrong/timeout) can't fail the run, but it spoils a flawless
+  // one (Should've Said No). Impostor pages were already intercepted, so this is a real page.
+  if (impostorRuleActive() && !correct) impostorMissed++;
   if (correct && song && song.title === "If This Was A Movie") unlock("spicy-drama");
   // It's A Clock!: bank the time left on the shared clock; a correct answer winds it
   // back up (capped). The timer is already cleared, so comboRemaining() is the reading
@@ -7755,6 +7939,7 @@ function wireInput() {
     }
   });
   $("hintBtn").addEventListener("click", () => { useHint(); input.focus(); });
+  $("flagBtn").addEventListener("click", () => flagImpostor());   // Impostor: 🚩 call the fake
   // After a verdict the input is disabled, so a document-level Enter advances
   // the page: skips the correct-answer countdown, or fires "next page" on a miss.
   document.addEventListener("keydown", (e) => {
@@ -8499,6 +8684,20 @@ function buildDevApi() {
         lastSkillFold = { delta: { resolve: 118, tempo: 44, lyricist: 30, endurance: 0, range: 26 }, res };
         showScreen("results");
         renderSkillsRecap();
+      },
+    },
+    // Challenges (start any one; Impostor helpers for the fake-word minigame)
+    challenge: {
+      list: () => CHALLENGE_ORDER.slice(),
+      start: (id) => startChallenge(id),
+      impostor: {
+        words: () => IMPOSTOR_WORDS.slice(),
+        rounds: () => [...impostorRounds].sort((a, b) => a - b),   // which pages are fakes this run
+        current: () => roundIsImpostor,                            // is the page on screen a fake?
+        // Pin this run's fake pages (call right after challenge.start("impostor")). e.g. (2,3,4)
+        forceRounds: (...rs) => { impostorRounds = new Set(rs.map((r) => r | 0).filter((r) => r >= 1 && r <= TOTAL_ROUNDS)); },
+        win: () => { impostorFailed = false; score = ((CHALLENGE_BY_ID.impostor.target) || 7) + impostorFlagged; endGame(); },
+        lose: (kind) => impostorGameOver(kind || "answered"),      // "answered" | "timeout" | "falseflag"
       },
     },
     // Seeding

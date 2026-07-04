@@ -252,9 +252,41 @@ export const CHALLENGES = [
     blurb: "the word is tiny, tilted, and never quite where you look",
     desc: "The word shrinks to almost nothing, slants off-axis, and drifts somewhere on the page. Find it, read it, name it.",
     win: "Score 9 / 13 hunting the tiny word." },
+  // ---- Tier C minigames (own input / lose-state). tapes:0 = placeholder "unrated" tier and
+  //      free:true so they're playable now; real difficulty + gating slot in later. ----
+  { id: "impostor", name: "Impostor", rule: "impostor", mode: "medium",
+    free: true, cost: 1, target: 7, seconds: 15, tapes: 0, icon: "placeholder",
+    blurb: "some words are fakes — flag the impostors, answer the real ones",
+    desc: "Most pages show a real word. But some are impostors — words that appear in zero Taylor songs. Flag the fakes with 🚩 and answer the real ones. Accuse a real word, or let an impostor slip past, and the run ends on the spot.",
+    win: "Survive the run: flag every impostor and answer 7 real words." },
 ];
 export const CHALLENGE_BY_ID = Object.fromEntries(CHALLENGES.map((c) => [c.id, c]));
 export const CHALLENGE_ORDER = CHALLENGES.map((c) => c.id);
+
+/* ---------- Impostor challenge — decoy word pool ----------
+   Plausibly-Swiftian words (romantic / aesthetic / literary vocabulary) that appear in
+   ZERO songs. Verified against the whole corpus with the game's own matching core
+   (scripts/mine_impostors.py imports js/match.js's logic) so none can stem-match a real
+   lyric or title — a decoy is always a fair "flag me". Re-run the miner if songs.json grows.
+   IMPOSTOR_COUNT of a run's 13 pages are impostors (round 1 is always real — a gentle open). */
+export const IMPOSTOR_COUNT = 4;
+export const IMPOSTOR_WORDS = [
+  "velvet", "satin", "chiffon", "cashmere", "corduroy", "porcelain",
+  "marble", "granite", "ivory", "emerald", "turquoise", "cathedral",
+  "chapel", "steeple", "promenade", "veranda", "cellar", "corridor",
+  "alcove", "wharf", "lagoon", "moor", "monsoon", "tempest",
+  "solstice", "equinox", "glacier", "prairie", "canyon", "ravine",
+  "cavern", "sycamore", "cypress", "juniper", "hazel", "myrtle",
+  "heather", "wistful", "forlorn", "morose", "reverie", "rapture",
+  "elation", "euphoria", "solitude", "serenity", "penance", "requiem",
+  "epitaph", "lament", "devotion", "adoration", "infatuation", "tenderness",
+  "carriage", "brooch", "cameo", "parasol", "corset", "quill",
+  "inkwell", "pirouette", "curtsy", "swoon", "saunter", "meander",
+  "beckon", "smolder", "paramour", "suitor", "confidant", "wanderer",
+  "vagabond", "nomad", "sovereign", "monarch", "opulent", "decadent",
+  "gilded", "ornate", "baroque", "ephemeral", "fleeting", "transient",
+  "boundless", "furtive", "veiled", "luminous", "translucent",
+];
 
 /* ---------- Skills & Mastery progression ----------
    Five skills, each gaining XP from a distinct way of playing. Once total skill levels
@@ -571,6 +603,10 @@ export const ACH_ICONS = {
   homeinvasion: `<svg viewBox="0 0 24 24"><path class="ink" fill="none" stroke-width="1.8" stroke-linejoin="round" d="M12 12 L12 4 A8 8 0 1 0 20 12 Z"/><path class="ink" fill="none" stroke-width="1.8" stroke-linecap="round" d="M12 12 L8.5 9.5"/><circle class="ink-fill" cx="12" cy="12" r="1"/><path class="ink" fill="none" stroke-width="1.5" stroke-linecap="round" d="M8.5 19.6 L7 21.6 M15.5 19.6 L17 21.6"/></svg>`,
   thirtyone: `<svg viewBox="0 0 24 24"><path class="ink" fill="none" stroke-width="1.8" stroke-linecap="round" d="M6 22 L6 3"/><path class="ink" fill="none" stroke-width="1.6" stroke-linejoin="round" d="M6 3 H19 L16 7.4 L19 11.8 H6 Z"/><text class="ink-fill" x="11.6" y="9.8" text-anchor="middle" font-size="6.4" font-weight="700" font-family="monospace">31</text><path class="ink" fill="none" stroke-width="1.6" stroke-linecap="round" d="M2 22 H22"/></svg>`,
   smallestsong: `<svg viewBox="0 0 24 24"><circle class="ink" fill="none" stroke-width="1.8" cx="10" cy="10" r="6.4"/><path class="ink" fill="none" stroke-width="2.3" stroke-linecap="round" d="M14.9 14.9 L21 21"/><g transform="rotate(-18 10 10)"><ellipse class="ink-fill" cx="8.6" cy="12" rx="1.5" ry="1.1"/><path class="ink" fill="none" stroke-width="1.2" stroke-linecap="round" d="M10 11.8 L10 7.4"/><path class="ink" fill="none" stroke-width="1.2" stroke-linecap="round" d="M10 7.4 C11.7 7.9 12.1 9 11.4 10.1"/></g></svg>`,
+  // TEMPORARY placeholder charm — a dashed frame around a question mark. Any icon set to
+  // "placeholder" is art-pending (new challenges / achievements before their real icon is
+  // drawn). Search "placeholder" to find everything still awaiting a bespoke charm.
+  placeholder: `<svg viewBox="0 0 24 24"><rect class="ink" fill="none" stroke-width="1.5" stroke-dasharray="2.6 2.2" x="4" y="4" width="16" height="16" rx="3"/><path class="ink" fill="none" stroke-width="1.8" stroke-linecap="round" d="M9.3 9.5 a2.7 2.7 0 1 1 3.5 2.6 c-0.95 0.32 -1.05 0.95 -1.05 1.9"/><circle class="ink-fill" cx="11.75" cy="16.6" r="1.05"/></svg>`,
 
   /* ---- Achievement charm overhaul (every charm bespoke) ---- */
   // a wand mid-flick, star at the tip, dust still settling — your first spell
@@ -746,6 +782,8 @@ export const ACHIEVEMENTS = [
   { id: "paper-rings",      name: "Paper Rings",      desc: "Unlock every challenge",                secret: false, icon: "rings" },
   { id: "state-of-grace",   name: "State Of Grace",   desc: "Defeat a challenge on the first try",   secret: true,  icon: "feather" },
   { id: "this-is-me-trying", name: "This Is Me Trying", desc: "Defeat a challenge after 5+ attempts", secret: true, icon: "crumple" },
+  { id: "shouldve-said-no",  name: "Should've Said No",  desc: "Defeat Impostor flawlessly — every impostor flagged, every real word named", secret: false, icon: "placeholder" },
+  { id: "smallest-man",      name: "The Smallest Man Who Ever Lived", desc: "Fall for the very first impostor you meet", secret: true, icon: "placeholder" },
   { id: "the-lakes",        name: "The Lakes",        desc: "Climb to the Rarest tier in Adaptive",  secret: false, icon: "lake" },
   { id: "stay-stay-stay",   name: "Stay Stay Stay",   desc: "Reach Rarest and finish there without slipping", secret: true, icon: "anchor" },
   { id: "a-place-in-this-world", name: "A Place In This World", desc: "Beat your first album in Album Focus", secret: false, icon: "map" },
@@ -796,6 +834,7 @@ export const ACH_GROUP_OF = {
   "diamonds": "catalogue", "paris": "catalogue", "i-hate-it-here": "catalogue",
   "the-archer": "challenges", "the-alchemy": "challenges", "paper-rings": "challenges",
   "state-of-grace": "challenges", "this-is-me-trying": "challenges", "castles-crumbling": "challenges",
+  "shouldve-said-no": "challenges", "smallest-man": "challenges",
   "a-place-in-this-world": "albumFocus", "change": "albumFocus", "gold-rush": "albumFocus", "starlight": "albumFocus",
   "the-lakes": "adaptive", "stay-stay-stay": "adaptive",
 };

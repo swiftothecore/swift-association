@@ -688,6 +688,13 @@ if (location.pathname.endsWith('/index.html')) {
         <span class="vm-notch" data-tier="4"></span>
         <span class="vm-label"></span>
       </div>
+      <!-- Impostor challenge only: call a fake word's bluff instead of answering it. -->
+      <div id="impostorBar" class="impostor-bar" hidden>
+        <button id="flagBtn" class="flag-btn" type="button">
+          <span class="flag-flag" aria-hidden="true">🚩</span> impostor
+        </button>
+        <span class="flag-note">a fake word? call it out. wrong call ends the run.</span>
+      </div>
       <p id="gameHint" class="hint">Enter accepts the top match</p>
       <button id="hintBtn" class="hint-btn" type="button" hidden>need a hint?</button>
       <div id="hintBox" class="hint-box" aria-live="polite"></div>

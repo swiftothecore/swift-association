@@ -717,6 +717,14 @@
   /* brutal tier group-head: oxblood accent on the divider + label */
   .chall-group-head.t4 { border-bottom-color: #a86a6a; }
   .chall-group-head.t4 .chall-group-label { color: #7a2b2b; }
+  /* tier 0 "unrated" — placeholder while a freshly-built challenge's real difficulty is
+     decided. A single ghosted, dashed cassette; the group sits last in the list. */
+  .chall-tapes.t0 { opacity: 0.8; }
+  .chall-tapes.t0 .tape-shell { fill: none; stroke: #b3a584; stroke-dasharray: 2.4 1.8; }
+  .chall-tapes.t0 .tape-label { fill: #d3c7a8; }
+  .chall-tapes.t0 .tape-reel  { stroke: #b3a584; }
+  .chall-group-head.t0 { border-bottom-color: #cfc3a4; }
+  .chall-group-head.t0 .chall-group-label { color: #a9a081; font-style: italic; }
   .chall-item.is-locked .chall-item-name { color: var(--ink-soft); }
   .chall-item.is-locked .chall-item-num { color: #c7bfac; }
   .chall-item.is-locked .chall-item-mark { color: #c4bca9; }
@@ -1538,6 +1546,66 @@
   .hint-box { text-align: center; margin-top: 10px; }
   .hint-tier {
     font-family: var(--hand); font-size: 20px; color: var(--ink); margin: 6px 0;
+  }
+
+  /* ---- Impostor challenge ---- */
+  /* the 🚩 flag action, shown only during an Impostor run */
+  .impostor-bar { display: flex; flex-direction: column; align-items: center; gap: 3px; margin-top: 12px; }
+  .flag-btn {
+    cursor: pointer; font-family: var(--hand); font-size: 20px; color: #7a2b2b;
+    background: transparent; border: 1.5px dashed #a86a6a; border-radius: 3px;
+    padding: 3px 18px; transition: background 0.15s, transform 0.1s;
+  }
+  .flag-btn .flag-flag { font-size: 15px; }
+  .flag-btn:hover { background: #f3e2df; }
+  .flag-btn:active { transform: scale(0.97); }
+  .flag-btn:disabled { color: var(--ink-soft); border-color: var(--ink-soft); cursor: default; opacity: 0.6; }
+  .flag-note { font-family: var(--type); font-size: 10.5px; letter-spacing: 0.3px; color: var(--ink-soft); }
+  /* the "you caught a fake" verdict card */
+  .impostor-caught {
+    font-family: var(--hand); font-size: 20px; color: var(--ink);
+    text-align: center; margin: 6px auto 10px; max-width: 30ch;
+  }
+
+  /* the gag: a caught-out fake word cackles; a wronged real word recoils */
+  .word-wrap.impostor-laugh #wordDisplay { animation: impostorLaugh 0.42s ease-in-out 0s 3 both; color: #7a2b2b; }
+  .word-wrap.impostor-wronged #wordDisplay { animation: impostorWronged 0.5s ease-out both; color: #3f7d6e; }
+  /* reduced-motion fallback: a static "ha!" stamp instead of the wiggle */
+  .word-wrap.impostor-ha #wordDisplay { color: #7a2b2b; }
+  .word-wrap.impostor-ha #wordDisplay::after {
+    content: "ha!"; position: absolute; left: 100%; bottom: 60%;
+    font-family: var(--hand); font-size: 26px; color: #b23a3a; transform: rotate(-12deg);
+    margin-left: 6px; white-space: nowrap;
+  }
+  @keyframes impostorLaugh {
+    0%, 100% { transform: rotate(-5deg) translateY(0); }
+    50%      { transform: rotate(5deg) translateY(-4px); }
+  }
+  @keyframes impostorWronged {
+    0%   { transform: translateX(0); }
+    30%  { transform: translateX(-7px) rotate(-2deg); }
+    60%  { transform: translateX(5px) rotate(1deg); }
+    100% { transform: translateX(0); opacity: 0.7; }
+  }
+
+  /* the full-screen lose wipe */
+  .impostor-wipe {
+    position: fixed; inset: 0; z-index: 60;
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(43, 39, 34, 0.94);
+    opacity: 0; transition: opacity 0.35s ease;
+  }
+  .impostor-wipe.in { opacity: 1; }
+  .impostor-wipe .iw-inner {
+    text-align: center; color: #f2ead6; padding: 0 24px;
+    transform: scale(0.9); transition: transform 0.35s cubic-bezier(0.2, 0.9, 0.3, 1.2);
+  }
+  .impostor-wipe.in .iw-inner { transform: scale(1); }
+  .iw-big { font-family: var(--hand); font-size: 52px; color: #e88; line-height: 1; }
+  .iw-sub { font-family: var(--type); font-size: 14px; letter-spacing: 0.3px; margin-top: 12px; color: #d8cfba; max-width: 34ch; }
+  @media (prefers-reduced-motion: reduce) {
+    .word-wrap.impostor-laugh #wordDisplay, .word-wrap.impostor-wronged #wordDisplay { animation: none; }
+    .impostor-wipe, .impostor-wipe .iw-inner { transition: none; }
   }
   .hint-chip {
     display: inline-block; padding: 0 8px; border-radius: 10px;
