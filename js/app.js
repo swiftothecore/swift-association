@@ -5920,13 +5920,16 @@ function advanceRound() {
   applyEra(pickEra());
 
   const rar = rarityTier(currentSongs.length);
+  // Impostor: rarity would betray a fake outright (0 songs → "one of one"), and even a
+  // real word's scarcity is a tell, so flatten the swipe and show no stamp for the run.
+  const hideRarity = impostorRuleActive();
   const wrap = $("wordDisplay").parentNode;   // .word-wrap
-  wrap.dataset.rarity = rar.name;
-  wrap.style.setProperty("--rarity", rar.t);
+  wrap.dataset.rarity = hideRarity ? "common" : rar.name;
+  wrap.style.setProperty("--rarity", hideRarity ? 0 : rar.t);
   const stamp = $("rarityStamp");
   stamp.classList.remove("show");
-  stamp.textContent = rar.stamp;
-  if (rar.stamp) { void stamp.offsetWidth; stamp.classList.add("show"); } // reflow re-fires the stamp-in
+  stamp.textContent = hideRarity ? "" : rar.stamp;
+  if (!hideRarity && rar.stamp) { void stamp.offsetWidth; stamp.classList.add("show"); } // reflow re-fires the stamp-in
 
   $("wordDisplay").textContent = currentWord;
   wrap.classList.remove("vanished");          // clear any prior round's vanish
@@ -6595,6 +6598,9 @@ const VERSE_METER = {
 function renderVerseMeter(text) {
   const meter = $("verseMeter");
   if (!meter) return;
+  // Impostor: the meter only lights when the typed text is a real lyric fragment, which
+  // would confirm the prompt word is genuine — so it's suppressed for the whole run.
+  if (impostorRuleActive()) { meter.hidden = true; return; }
   const tier = (gameType !== "daily" && hintTier >= 3) ? null : verseProgress(text);
   if (!tier) { meter.hidden = true; return; }
   const { level, label } = VERSE_METER[tier];

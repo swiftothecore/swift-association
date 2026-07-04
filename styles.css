@@ -1549,12 +1549,25 @@
   }
 
   /* ---- Impostor challenge ---- */
-  /* the 🚩 flag action, shown only during an Impostor run */
-  .impostor-bar { display: flex; flex-direction: column; align-items: center; gap: 3px; margin-top: 12px; }
+  /* the 🚩 flag action, shown only during an Impostor run. Framed as the "or" branch
+     to answering (an "or" divider ties it to the input above) so it reads as a
+     deliberate second way to resolve the page, not a stray button. */
+  .impostor-bar { display: flex; flex-direction: column; align-items: center; gap: 8px; margin-top: 16px; }
+  .flag-or {
+    position: relative; font-family: var(--type); font-size: 11px; letter-spacing: 2px;
+    text-transform: uppercase; color: var(--ink-soft);
+  }
+  .flag-or::before, .flag-or::after {
+    content: ""; position: absolute; top: 50%; width: 40px; height: 1px;
+    background: var(--paper-edge);
+  }
+  .flag-or::before { right: calc(100% + 10px); }
+  .flag-or::after  { left:  calc(100% + 10px); }
   .flag-btn {
     cursor: pointer; font-family: var(--hand); font-size: 20px; color: #7a2b2b;
     background: transparent; border: 1.5px dashed #a86a6a; border-radius: 3px;
     padding: 3px 18px; transition: background 0.15s, transform 0.1s;
+    display: inline-flex; align-items: center; gap: 8px;
   }
   .flag-btn .flag-flag { font-size: 15px; }
   .flag-btn:hover { background: #f3e2df; }
