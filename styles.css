@@ -189,7 +189,8 @@
   header.title p {
     margin: 10px 0 0;
     font-family: var(--type);
-    font-size: 12px; letter-spacing: 1px; color: var(--ink-soft);
+    font-size: 12px; letter-spacing: 1px;
+    color: #7a5c38;  /* warm desk-brown, a faded sibling of the title's #4a3518 (sits on wood, not paper) */
   }
 
   /* ---------- Paper page ---------- */
