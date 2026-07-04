@@ -7517,10 +7517,13 @@ function showCircledChoice(song, done) {
       const b = box.getBoundingClientRect();
       const t = text.getBoundingClientRect();
       if (b.width && t.width) {
+        const lh = parseFloat(getComputedStyle(text).lineHeight) ||
+                   parseFloat(getComputedStyle(text).fontSize) * 1.18;
+        const lines = Math.max(1, Math.round(t.height / lh));
         box.insertAdjacentHTML(
           "beforeend",
           buildChoiceRing(b.width, b.height, t.width, t.height,
-            (t.left - b.left) + t.width / 2, (t.top - b.top) + t.height / 2)
+            (t.left - b.left) + t.width / 2, (t.top - b.top) + t.height / 2, lines)
         );
       }
     });
@@ -7528,28 +7531,49 @@ function showCircledChoice(song, done) {
   setTimeout(done, 640 * animScale());
 }
 
-// A hand-drawn pen circle around a measured title box. The ellipse is sized to CIRCUMSCRIBE
-// the text rectangle (√2 rule: the whole rect, grown by CLEAR px on every side, sits inside
-// the ellipse), so every corner of the title clears the ring by at least CLEAR pixels. The
-// wobble only ever pushes anchors OUTWARD (factors ≥ 1), so it can never eat that margin.
-// Coordinates are box-local pixels; the SVG's viewBox matches the box and overflow is
-// visible, so the ring may bulge beyond the box without being clipped.
-function buildChoiceRing(bw, bh, tw, th, cx, cy) {
-  const CLEAR = 9;                      // guaranteed minimum text-to-ring gap, in px
-  const a = (tw / 2 + CLEAR) * Math.SQRT2;
-  const b = (th / 2 + CLEAR) * Math.SQRT2;
-  const k = 0.5523;                     // circle→bezier constant
-  // Per-anchor outward wobble (all ≥ 1) for a hand-drawn, slightly-uneven loop.
-  const wob = () => 1 + Math.random() * 0.05;
-  const aL = a * wob(), aR = a * wob(), bT = b * wob(), bB = b * wob();
+// A hand-drawn pen ring around a measured title box. Both shapes are sized to clear every
+// corner of the title by a safe pixel margin, and the wobble only ever pushes points OUTWARD
+// so it can never eat that margin. Coordinates are box-local pixels; the SVG viewBox matches
+// the box and overflow is visible, so the ring may bulge beyond the box without being clipped.
+//
+// The shape is chosen by line count. A single line reads best as a true ellipse (a squircle
+// looks like a pill around a short word). But a two-line block is nearly 3:1, and an ellipse
+// that clears its corners has to balloon ~1.5x wider than the text — too loose. There we use
+// a superellipse (n≈3): it fills the corners, so it hugs the block far more tightly while
+// still reading as a soft hand-drawn loop rather than a box.
+function buildChoiceRing(bw, bh, tw, th, cx, cy, lines) {
   const p = (x, y) => `${(cx + x).toFixed(1)},${(cy + y).toFixed(1)}`;
-  // Clockwise from the left anchor, up over the top, round and back — a closed loop.
-  const d =
-    `M${p(-aL, 0)} ` +
-    `C${p(-aL, -k * bT)} ${p(-k * aL, -bT)} ${p(0, -bT)} ` +
-    `C${p(k * aR, -bT)} ${p(aR, -k * bT)} ${p(aR, 0)} ` +
-    `C${p(aR, k * bB)} ${p(k * aR, bB)} ${p(0, bB)} ` +
-    `C${p(-k * aL, bB)} ${p(-aL, k * bB)} ${p(-aL, 0)}Z`;
+  let d;
+  if (lines >= 2) {
+    // Superellipse |x/a|^n + |y/b|^n = 1, sampled and drawn as a smooth polyline. The margin
+    // M is the side clearance; the corners keep a smaller but still-safe gap (~7px worst).
+    const N = 3, M = 32, STEPS = 200;
+    const a = tw / 2 + M, b = th / 2 + M;
+    const seed = Math.random() * Math.PI * 2;
+    let s = "";
+    for (let i = 0; i < STEPS; i++) {
+      const q = (i / STEPS) * Math.PI * 2;
+      const c = Math.cos(q), sn = Math.sin(q);
+      const jit = 1 + 0.02 * (0.5 + 0.5 * Math.sin(q * 3 + seed)); // outward-only waver
+      const x = a * jit * Math.sign(c) * Math.pow(Math.abs(c), 2 / N);
+      const y = b * jit * Math.sign(sn) * Math.pow(Math.abs(sn), 2 / N);
+      s += (i ? "L" : "M") + p(x, y);
+    }
+    d = s + "Z";
+  } else {
+    // Ellipse circumscribing the text rect (√2 rule: the rect grown by CLEAR px sits inside),
+    // drawn as four beziers with per-anchor outward wobble for a hand-drawn, uneven loop.
+    const CLEAR = 9, k = 0.5523;
+    const a = (tw / 2 + CLEAR) * Math.SQRT2, b = (th / 2 + CLEAR) * Math.SQRT2;
+    const wob = () => 1 + Math.random() * 0.05;
+    const aL = a * wob(), aR = a * wob(), bT = b * wob(), bB = b * wob();
+    d =
+      `M${p(-aL, 0)} ` +
+      `C${p(-aL, -k * bT)} ${p(-k * aL, -bT)} ${p(0, -bT)} ` +
+      `C${p(k * aR, -bT)} ${p(aR, -k * bT)} ${p(aR, 0)} ` +
+      `C${p(aR, k * bB)} ${p(k * aR, bB)} ${p(0, bB)} ` +
+      `C${p(-k * aL, bB)} ${p(-aL, k * bB)} ${p(-aL, 0)}Z`;
+  }
   return `<svg viewBox="0 0 ${bw.toFixed(1)} ${bh.toFixed(1)}" aria-hidden="true">` +
     `<path class="cc-ring" pathLength="1" d="${d}"/></svg>`;
 }
