@@ -261,9 +261,10 @@ body::before {
    name on a tab riding flush on that spine. Nothing crosses into the desk or over the rule. */
 .sx-results { margin-top: 18px; }
 /* brushing: hovering a bar colour (or a legend dot) isolates that album — every other
-   album's block or row fades back so you see just the one until you move away */
+   album's block or row is removed entirely so you see just the one, then restored the
+   moment you move away */
 .sx-results.sx-iso .sx-album:not(.sx-lit),
-.sx-results.sx-iso .sx-hit-flat:not(.sx-lit) { opacity: .16; }
+.sx-results.sx-iso .sx-hit-flat:not(.sx-lit) { display: none; }
 .sx-album { position: relative; margin-top: 32px; transition: opacity .15s ease; }
 .sx-album:first-child { margin-top: 6px; }
 /* the coloured spine, laid over the page's red margin rule (offset -14px lines up on both
