@@ -264,7 +264,25 @@ export const CHALLENGES = [
     blurb: "10s · no typing · a sea of titles — tap one whose lyrics hold the word",
     desc: "No typing this time. Each page floats up a sea of song titles — tap one whose lyrics contain the word. A few titles fit; the rest are decoys. Tap a decoy or run out of time and the page is lost.",
     win: "Score 9 / 13 fishing the right song out of the sea." },
+  { id: "common-thread", name: "Common Thread", rule: "common", mode: "medium",
+    free: true, cost: 1, target: 9, seconds: 22, noTitle: false, dropdown: false, tapes: 0, icon: "placeholder",
+    blurb: "22s · the game flips: three lines, one word runs through all of them",
+    desc: "The game flips. No prompt word this time. Instead each page shows three lyric lines from three different songs. Type the one word they all share. Any real word that runs through all three counts.",
+    win: "Score 9 / 13 finding the thread." },
 ];
+/* Common Thread — the "type the shared word" inversion. Each page shows COMMON_LINES lyric
+   lines from different songs; the answer is the word running through all of them. Puzzles are
+   generated at runtime from allSongs + playableWords: an intended word is chosen from a mid-
+   frequency band (its song count in COMMON_MIN_SONGS..COMMON_MAX_SONGS keeps the thread from
+   being a trivial ubiquitous word), lines are sampled from distinct songs, and buildCommonPuzzle
+   keeps the attempt whose accept set (playable words shared by every shown line) is smallest, so
+   the thread is as unambiguous as the corpus allows. Any playable word in that accept set counts,
+   never just the intended one. Re-tunes itself if songs.json grows — no precomputed data. */
+export const COMMON_LINES = 3;
+export const COMMON_MIN_SONGS = 3;
+export const COMMON_MAX_SONGS = 28;
+export const COMMON_GEN_ATTEMPTS = 14;
+export const COMMON_MAX_ACCEPT = 3;   // reject attempts with more shared words than this (until the last)
 /* Sea of Songs — the tap-a-title grid. SEA_GRID_SIZE tiles per page, of which a random
    SEA_MIN_VALID..SEA_MAX_VALID are genuine answers (lyrics hold the word) and the rest are
    decoys (neither lyrics nor title hold the word). Clamped to how many valids actually exist. */
@@ -796,6 +814,7 @@ export const ACHIEVEMENTS = [
   { id: "this-is-me-trying", name: "This Is Me Trying", desc: "Defeat a challenge after 5+ attempts", secret: true, icon: "crumple" },
   { id: "shouldve-said-no",  name: "Should've Said No",  desc: "Defeat Impostor flawlessly — every impostor flagged, every real word named", secret: false, icon: "placeholder" },
   { id: "smallest-man",      name: "The Smallest Man Who Ever Lived", desc: "Fall for the very first impostor you meet", secret: true, icon: "placeholder" },
+  { id: "invisible-string",  name: "Invisible String",  desc: "Defeat Common Thread: pull the word through every line", secret: false, icon: "placeholder" },
   { id: "the-lakes",        name: "The Lakes",        desc: "Climb to the Rarest tier in Adaptive",  secret: false, icon: "lake" },
   { id: "stay-stay-stay",   name: "Stay Stay Stay",   desc: "Reach Rarest and finish there without slipping", secret: true, icon: "anchor" },
   { id: "a-place-in-this-world", name: "A Place In This World", desc: "Beat your first album in Album Focus", secret: false, icon: "map" },

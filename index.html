@@ -672,6 +672,8 @@ if (location.pathname.endsWith('/index.html')) {
     </div>
 
     <div id="playArea">
+      <!-- Common Thread challenge only: three lyric lines from three songs — type the shared word. -->
+      <div id="commonLines" class="common-lines" role="group" aria-label="Three lyric lines that share one word" hidden></div>
       <div class="input-area">
         <input id="songInput" type="text" autocomplete="off" spellcheck="false"
                placeholder="write the line…"

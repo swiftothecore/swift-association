@@ -9,6 +9,7 @@ import {
   CHALLENGES, CHALLENGE_BY_ID, CHALLENGE_ORDER,
   IMPOSTOR_WORDS, IMPOSTOR_COUNT,
   SEA_GRID_SIZE, SEA_MIN_VALID, SEA_MAX_VALID,
+  COMMON_LINES, COMMON_MIN_SONGS, COMMON_MAX_SONGS, COMMON_GEN_ATTEMPTS, COMMON_MAX_ACCEPT,
   ALBUM_FOCUS_DIFFS, ALBUM_FOCUS_TARGET,
   ADAPTIVE_BUCKETS, ADAPTIVE_LEVELS, ADAPT_MAX_LEVEL, ADAPT_START_LEVEL, ADAPT_PROMO_STREAK, ADAPT_NODROP_LEVEL,
   PEN_SVG, STAR_SVG, SPARKLE_SVG, DOODLE_SVG, DOODLE_SIZE,
@@ -156,6 +157,11 @@ let impostorMissed = 0;         // real pages answered wrong or timed out (perfe
 // Sea of Songs: this page's grid of song objects, each tagged {song, valid} — valids hold the
 // word in their lyrics, decoys don't. Rebuilt each round in buildSeaGrid; read only by dev tools.
 let seaTiles = [];
+// Common Thread: this page's puzzle — the intended thread word, the lines shown (each {song,
+// line}), and the accept set (every playable word running through all shown lines, lower-cased;
+// always includes `word`). Built each round in buildCommonPuzzle; null off a Common Thread run.
+let commonPuzzle = null;
+let commonAnswerCorrect = null;   // set by submitAnswer's Common Thread intercept, read by the scoring tail
 let currentWord = "";
 let currentSongs = [];
 // The full lyrics-valid set for the round, BEFORE a challenge sub-rule narrows currentSongs
@@ -3940,6 +3946,8 @@ function resetRunState() {
   impostorSeen = 0;
   impostorFlagged = 0;
   impostorMissed = 0;
+  commonPuzzle = null;
+  commonAnswerCorrect = null;
   chainLetter = "";
   tourSetlist = [];
   comboClock = 0;
@@ -4007,6 +4015,11 @@ function foldRunProgress() {
 function applyInputHints() {
   const input = $("songInput");
   const hint = $("gameHint");
+  if (commonRuleActive()) {   // Common Thread: the answer is the one word running through the lines
+    input.placeholder = "the word they all share…";
+    hint.textContent = "type the one word in all three lines, then Enter";
+    return;
+  }
   if (currentMode.lyricOnly) {
     input.placeholder = "type the lyric line…";
     hint.textContent = "write more of the line for a bigger verse bonus — Enter to answer";
@@ -4455,6 +4468,135 @@ function renderSeaBanner() {
     `<span class="chall-prog-count">${score} / ${currentChallenge.target || 9}</span>`;
 }
 
+/* ---------- Common Thread ---------- */
+// True while a Common Thread run is live (guards the puzzle build, the lines panel, the
+// word-answer intercept in submitAnswer, and the several song-centric scoring branches skipped
+// for a word answer).
+function commonRuleActive() {
+  return gameType === "challenge" && currentChallenge && currentChallenge.rule === "common";
+}
+// Every playable word that runs (stem-leniently) through ALL the given lines — the intended
+// thread plus any other real word common to them. Lower-cased. Same matching core as the game,
+// so "lover" and "love" share a thread. Used to score generation attempts and by dev tools.
+function commonAcceptSet(lines) {
+  const set = new Set();
+  for (const w of playableWords) {
+    const rx = wordRegex(w, false);
+    if (lines.every((l) => rx.test(l))) set.add(w.toLowerCase());
+  }
+  return set;
+}
+// Build this round's puzzle: an intended thread word from a mid-frequency band (so the thread
+// is neither a one-off nor an everywhere word), COMMON_LINES lines drawn from distinct songs,
+// keeping the attempt whose accept set is tightest (ideally the thread word alone). The intended
+// word always lands in the accept set, so the page is always winnable.
+function buildCommonPuzzle() {
+  commonPuzzle = null;
+  let candidates = playableWords.filter((w) => {
+    if (usedWords.includes(w)) return false;
+    const n = songsContainingWord(w, false).length;
+    return n >= COMMON_MIN_SONGS && n <= COMMON_MAX_SONGS;
+  });
+  if (candidates.length < 1) candidates = playableWords.filter((w) => songsContainingWord(w, false).length >= COMMON_LINES);
+  candidates = shuffle(candidates.slice());
+
+  let best = null;
+  for (let i = 0; i < COMMON_GEN_ATTEMPTS && i < candidates.length; i++) {
+    const w = candidates[i];
+    const songs = shuffle(songsContainingWord(w, false).slice()).slice(0, COMMON_LINES);
+    if (songs.length < COMMON_LINES) continue;
+    const lines = [];
+    for (const s of songs) {
+      const line = extractLineWithWord(s.lyrics, w, false);
+      if (line) lines.push({ song: s, line });
+    }
+    if (lines.length < COMMON_LINES) continue;
+    const accept = commonAcceptSet(lines.map((x) => x.line));
+    accept.add(w.toLowerCase());   // the intended thread is always accepted
+    if (!best || accept.size < best.accept.size) best = { word: w, lines, accept };
+    if (accept.size <= COMMON_MAX_ACCEPT) break;   // tight enough — stop hunting
+  }
+  if (!best) {
+    // Degenerate fallback (shouldn't hit with real data): force any word with enough songs.
+    const w = candidates[0] || playableWords[0];
+    const songs = shuffle(songsContainingWord(w, false).slice()).slice(0, COMMON_LINES);
+    const lines = songs.map((s) => ({ song: s, line: extractLineWithWord(s.lyrics, w, false) || s.title }));
+    best = { word: w, lines, accept: new Set([w.toLowerCase()]) };
+  }
+  commonPuzzle = best;
+  if (!usedWords.includes(best.word)) usedWords.push(best.word);
+}
+// Judge a typed Common Thread answer against the accept set — every playable word that runs
+// through all shown lines (the intended thread plus any other real word common to them). Matching
+// is bidirectional so stem variants land it ("admitted" answers an "admit" thread and vice versa),
+// mirroring the game's stem-lenient core. The accept set is drawn only from playable words, so
+// filler like "the"/"you" (never promptable) can't win even if it sits in every line.
+function commonAnswerMatches(raw) {
+  const token = String(raw || "").trim().toLowerCase();
+  if (!token || !commonPuzzle) return false;
+  const rx = wordRegex(token, false);
+  for (const w of commonPuzzle.accept) {
+    if (w === token || rx.test(w) || wordRegex(w, false).test(token)) return true;
+  }
+  return false;
+}
+// Toggle the Common Thread UI each round: render the three-line puzzle panel and flag
+// #playArea[data-common] (CSS hides the suggestion/hint affordances, keeps the typed input) plus
+// hide the empty prompt word-wrap; tear it all down off a Common Thread run. Mirrors renderSeaUI.
+function renderCommonUI() {
+  const panel = $("commonLines");
+  const play = $("playArea");
+  const ww = document.querySelector(".word-wrap");
+  const wl = document.querySelector(".word-label");
+  if (!panel || !play) return;
+  const on = commonRuleActive();
+  play.dataset.common = on ? "1" : "";
+  if (ww) ww.style.display = on ? "none" : "";   // no single prompt word on a Common Thread page
+  if (wl) wl.style.display = on ? "none" : "";   // ...and no "write a song with" lead-in
+  panel.hidden = !on;
+  if (on && commonPuzzle) {
+    panel.innerHTML =
+      `<p class="common-lead">one word runs through all three</p>` +
+      commonPuzzle.lines.map(({ line }) =>
+        `<div class="common-line"><span class="common-line-text">${escapeHtml(censor(line))}</span></div>`
+      ).join("");
+  } else {
+    panel.innerHTML = "";
+  }
+}
+// Common Thread: run progress toward the target.
+function renderCommonBanner() {
+  if (!commonRuleActive()) return;
+  const el = ensureChallBanner();
+  el.innerHTML =
+    `<span class="chall-prog-name">the thread</span>` +
+    `<span class="chall-prog-count">${score} / ${currentChallenge.target || 9}</span>`;
+}
+// Common Thread verdict: the answer, plus the three lines with the thread lit and the songs they
+// came from. Reuses the feedback shell + advance affordance (auto-advance aware) like the others.
+function revealCommon(correct) {
+  const fb = $("feedback");
+  const word = commonPuzzle ? commonPuzzle.word : "";
+  const cards = commonPuzzle ? commonPuzzle.lines.map(({ song, line }) =>
+    `<div class="common-reveal-line" style="--album-color:${albumColor(song.album) || "var(--ink-soft)"}">` +
+    `<span class="common-reveal-text">${highlightWord(line, word, false)}</span>` +
+    `<span class="common-reveal-song">${escapeHtml(censor(song.title))}</span></div>`
+  ).join("") : "";
+  const auto = settings.autoAdvance;
+  const advanceUI = auto
+    ? `<div class="countdown">next page in <b id="cd">${settings.countdownSecs}</b></div><button id="skipBtn" class="countdown-skip">skip →</button>`
+    : `<button id="continueBtn" class="btn-ghost">next page →</button>`;
+  fb.innerHTML =
+    `<div class="banner ${correct ? "good" : "bad"}">${correct ? "✓ that's the thread" : "✗ not the thread"}</div>` +
+    `<p class="red-note">the thread was “<b>${escapeHtml(word)}</b>”</p>` +
+    `<div class="common-reveal">${cards}</div>` +
+    advanceUI;
+  feedbackShownAt = Date.now();
+  $(auto ? "skipBtn" : "continueBtn").addEventListener("click", advanceFromFeedback);
+  if (correct) celebrateCorrect(correctStreak, 0);
+  if (auto) runCountdown();
+}
+
 // On Tour!: a setlist of one album per round. Cycle through albums with enough candidate
 // words (so each stop can be handed a winnable word), in shuffled canonical order — with
 // 16 album groups this almost always yields 13 distinct stops. Degenerate data falls back
@@ -4573,6 +4715,8 @@ function applyChallengeRound(wrap) {
     renderImpostorBanner();
   } else if (currentChallenge.rule === "sea") {
     renderSeaBanner();
+  } else if (currentChallenge.rule === "common") {
+    renderCommonBanner();
   } else if (currentChallenge.rule === "tiny") {
     // The Smallest Song Who Ever Lived — shrink, tilt, and offset the prompt, constant.
     renderTinyWord(wrap, currentWord);
@@ -5051,6 +5195,8 @@ function endChallenge() {
   // Should've Said No — a flawless Impostor run: every impostor flagged (implied by surviving)
   // and every real word named. challengeRunActive is already false, so the charm fires normally.
   if (c.rule === "impostor" && won && impostorMissed === 0) unlock("shouldve-said-no");
+  // Invisible String — defeat Common Thread (the word is the string tying the lines together).
+  if (c.rule === "common" && won) unlock("invisible-string");
 
   document.querySelector("#screen-results .podium-title").textContent = c.name;
   const outOfGuesses = c.rule === "newsong" && challengeTargetSong && newSongLives <= 0;
@@ -5953,7 +6099,12 @@ function advanceRound() {
   // draws from IMPOSTOR_WORDS and has NO valid answer — the player must flag it, not answer it.
   roundIsImpostor = impostorRuleActive() && impostorRounds.has(round);
   // "Play this word" deep-link forces round 1's word; every later round draws normally.
-  if (roundIsImpostor) {
+  if (commonRuleActive()) {
+    // Common Thread: no single prompt word — build the three-line puzzle; currentWord holds the
+    // intended thread (for the reveal / highlight), currentSongs the shown songs.
+    buildCommonPuzzle();
+    currentWord = commonPuzzle ? commonPuzzle.word : pickWord();
+  } else if (roundIsImpostor) {
     currentWord = pickImpostorWord();
   } else if (round === 1 && forcedFirstWord) {
     currentWord = forcedFirstWord;
@@ -5963,6 +6114,7 @@ function advanceRound() {
     currentWord = challengeForcedWord(round) || pickWord();   // One Of A Kind forces its target word
   }
   currentSongs = roundIsImpostor ? [] : validSongs(currentWord, effectiveStrict(), effectiveNoTitle());
+  if (commonRuleActive() && commonPuzzle) currentSongs = commonPuzzle.lines.map((x) => x.song);
   currentLyricSongs = currentSongs;   // full lyrics-valid set (soft-rejects judge near-misses off this)
   // Title...?: flip the rule — the only valid answers are songs whose TITLE holds the word.
   if (gameType === "challenge" && currentChallenge && currentChallenge.rule === "titleHas")
@@ -5993,7 +6145,7 @@ function advanceRound() {
   const rar = rarityTier(currentSongs.length);
   // Impostor: rarity would betray a fake outright (0 songs → "one of one"), and even a
   // real word's scarcity is a tell, so flatten the swipe and show no stamp for the run.
-  const hideRarity = impostorRuleActive();
+  const hideRarity = impostorRuleActive() || commonRuleActive();
   const wrap = $("wordDisplay").parentNode;   // .word-wrap
   wrap.dataset.rarity = hideRarity ? "common" : rar.name;
   wrap.style.setProperty("--rarity", hideRarity ? 0 : rar.t);
@@ -6018,6 +6170,7 @@ function advanceRound() {
   applyChallengeRound(wrap);                   // challenge per-round modifier (e.g. Vanishing Word)
   renderImpostorBar();                         // Impostor: the 🚩 flag action (hidden elsewhere)
   renderSeaUI();                               // Sea of Songs: the tap-a-title grid (hidden elsewhere)
+  renderCommonUI();                            // Common Thread: the three-line puzzle (hidden elsewhere)
   renderExcludedNote();
   $("feedback").innerHTML = "";
   $("playArea").style.display = "";
@@ -6777,13 +6930,26 @@ function submitAnswer(song, isTimeout) {
   // you failed to flag it in time — fatal. (A real page's timeout is a normal miss below.)
   if (impostorRuleActive() && roundIsImpostor && isTimeout) { impostorGameOver("timeout"); return; }
 
+  // Common Thread: the answer is a WORD, not a song. Judge it here, then fall through the shared
+  // scoring tail (score/streak/skills/timer/page-turn) with a correct-override and no song. An
+  // empty box isn't an answer (don't burn the page); a timeout is a miss.
+  if (commonRuleActive()) {
+    if (!isTimeout) {
+      if (!String($("songInput").value || "").trim()) return;
+      commonAnswerCorrect = commonAnswerMatches($("songInput").value);
+    } else {
+      commonAnswerCorrect = false;
+    }
+    song = null;
+  }
+
   // Paris easter egg — answering "Paris" when the prompt word is "somewhere".
   // Fires on the attempt regardless of whether it's a correct match for the round.
   if (currentWord === "somewhere" && normalizeTitle($("songInput").value || "") === "paris") unlock("paris");
   checkPianoEgg($("songInput").value);   // "rep tv" / "reputation tv" typed as an answer
 
   let lyricMatch = null;
-  if (!song && !isTimeout) {
+  if (!song && !isTimeout && !commonRuleActive()) {
     if (lyricModeNow()) {                   // Lyricist mode / Switch-Up lyric page: lyric line only
       lyricMatch = matchLyricLine($("songInput").value);
       if (lyricMatch) song = lyricMatch.song;
@@ -6919,7 +7085,8 @@ function submitAnswer(song, isTimeout) {
   $("songInput").disabled = true;
   $("playArea").style.display = "none";
 
-  const correct = !!song && currentSongs.some((s) => s.title === song.title);
+  // Common Thread scores off the word verdict (no song); every other path off the named song.
+  const correct = commonRuleActive() ? !!commonAnswerCorrect : (!!song && currentSongs.some((s) => s.title === song.title));
   // Choose Your Path — Second Chance / Nine Lives: spend a mulligan to retry a miss
   // (same word, fresh clock) instead of burning the round. Only kicks in on an actual
   // miss while mulligans remain; correct answers and the other challenges are untouched.
@@ -7011,7 +7178,7 @@ function submitAnswer(song, isTimeout) {
   // Diamonds Are Forever — three rare/scarce prompt words answered right in a row.
   // Disqualified in Ultra (its pool is the rarest words, so a streak there is trivial).
   const rar = rarityTier(currentSongs.length);
-  if (currentMode.id !== "ultra" && correct && (rar.name === "rare" || rar.name === "scarce" || rar.name === "singular")) {
+  if (currentMode.id !== "ultra" && correct && !commonRuleActive() && (rar.name === "rare" || rar.name === "scarce" || rar.name === "singular")) {
     rareStreak++;
     if (rareStreak >= 3) unlock("diamonds");
   } else {
@@ -7046,7 +7213,7 @@ function submitAnswer(song, isTimeout) {
   if (correctStreak >= 5) unlock("bejeweled");
   if (correctStreak >= 10) unlock("sparks-fly");
   // It's Raining And It's Monday — answer the word "rain" right on a Monday.
-  if (correct && currentWord === "rain" && new Date().getDay() === 1) unlock("raining-monday");
+  if (correct && !commonRuleActive() && currentWord === "rain" && new Date().getDay() === 1) unlock("raining-monday");
 
   // Daily: persist the run so a refresh/exit resumes here instead of restarting. Saved
   // after the round is recorded but before the next word is drawn, so the stored PRNG
@@ -7055,6 +7222,9 @@ function submitAnswer(song, isTimeout) {
   if (gameType === "daily" && round < TOTAL_ROUNDS) {
     saveDailyProgress(todayKey(), dailyProgressSnapshot(todayKey()));
   }
+
+  // Common Thread has its own reveal (lines + thread), not the song-card feedback.
+  if (commonRuleActive()) { revealCommon(correct); return; }
 
   // Circle the player's pick before revealing the verdict (skipped on timeout / reduced
   // motion, and on a lyric answer — the circle re-draws a title the player never typed).
@@ -8788,6 +8958,14 @@ function buildDevApi() {
         valids: () => seaTiles.filter((t) => t.valid).map((t) => t.song.title),         // which tiles are answers
         answer: () => { const v = seaTiles.find((t) => t.valid); if (v) onSeaTileClick(seaTiles.indexOf(v)); },  // tap a correct tile
         win: () => { score = (CHALLENGE_BY_ID["sea-of-songs"].target) || 9; endGame(); },
+      },
+      // Common Thread — the "type the shared word" inversion.
+      common: {
+        puzzle: () => commonPuzzle && { word: commonPuzzle.word,
+          lines: commonPuzzle.lines.map((x) => ({ song: x.song.title, line: x.line })) },
+        accept: () => commonPuzzle ? [...commonPuzzle.accept] : [],   // every word that runs through all three lines
+        answer: () => { if (commonPuzzle) { $("songInput").value = commonPuzzle.word; submitAnswer(); } },  // type + submit the thread
+        win: () => { score = (CHALLENGE_BY_ID["common-thread"].target) || 9; endGame(); },
       },
     },
     // Seeding
