@@ -12,6 +12,8 @@ import {
   COMMON_LINES, COMMON_MIN_SONGS, COMMON_MAX_SONGS, COMMON_GEN_ATTEMPTS, COMMON_MAX_ACCEPT,
   ALBUM_FOCUS_DIFFS, ALBUM_FOCUS_TARGET,
   ADAPTIVE_BUCKETS, ADAPTIVE_LEVELS, ADAPT_MAX_LEVEL, ADAPT_START_LEVEL, ADAPT_PROMO_STREAK, ADAPT_NODROP_LEVEL,
+  STUDY_MAX_BOX, STUDY_INTERVALS, STUDY_SESSION_ROUNDS,
+  STUDY_MISS_WEIGHT, STUDY_GAP_WEIGHT, STUDY_BOX_WEIGHT, STUDY_BASE_WEIGHT,
   PEN_SVG, STAR_SVG, SPARKLE_SVG, DOODLE_SVG, DOODLE_SIZE,
   SKILLS, SKILL_IDS, SKILL_BY_ID,
   TEMPO_BASE, TEMPO_SPEED, LYRIC_TIER_XP, LYRIC_LEN_REF,
@@ -35,6 +37,7 @@ import {
   bumpDailyStreak, effectiveDailyStreak, saveDailyStreak,
   markTypePlayed,
   loadSongTally, recordGameTally,
+  loadStudySet, saveStudySet, resetStudySet,
   loadMetrics, recordGameMetrics,
   loadSettings, saveSettings,
   exportData, importData,
@@ -92,7 +95,7 @@ let runFolded = false;   // partial/full stats already saved for the current run
 let hintTier = 0;        // hints revealed this round (0..3); reset each round
 let roundHintSong = null;// the valid song this round's hints zoom in on
 let hintUrgeTimer = null;// idle nudge timer for Relaxed (no clock)
-let gameType = "classic";       // "classic" (fixed 13) | "infinite" (until lives run out) | "adaptive" (fixed 13, floating rarity) | "daily" | "challenge" | "album"
+let gameType = "classic";       // "classic" (fixed 13) | "infinite" (until lives run out) | "adaptive" (fixed 13, floating rarity) | "daily" | "challenge" | "album" | "study"
 let focusAlbum = null;          // Album Focus: the locked-in studio album while gameType === "album"
 let focusDifficulty = null;     // Album Focus: the chosen MODES id this run plays at
 let infiniteVariant = "3lives"; // "3lives" | "sudden"
@@ -103,6 +106,9 @@ let adaptivePromo = 0;          // Adaptive: correct-in-a-row at the current lev
 let adaptiveReachedTop = false; // Adaptive: ever hit the Rarest tier this run (for The Lakes)
 let adaptiveHeldTop = true;     // Adaptive: still true if no miss has landed since reaching the top (for Stay Stay Stay)
 let adaptiveDropAnnounced = true; // Adaptive: the dropdown state the player was last shown a curtain for (starts on, at L2)
+let studyDeck = [];             // Study: the ordered, weighted queue of due words to review this session
+let studySessionLen = STUDY_SESSION_ROUNDS; // Study: this session's length (deck size, capped) — a short deck means a short session
+let studyStartBoxes = null;     // Study: snapshot of each reviewed word's box at session start (to count promotes/graduates)
 let dailyRng = null;            // seeded PRNG, non-null only during a daily game
 let dailyAlbumPool = null;      // on an album-anniversary daily: [{ w, n }] album-common words (n = within-album coverage), freq-desc; null otherwise
 let dailyShareTime = null;      // completion time (sec) of the daily on screen — for the copyable result
@@ -308,6 +314,7 @@ const screens = {
   challenges: $("screen-challenges"),
   songbook: $("screen-songbook"),
   albumfocus: $("screen-albumfocus"),
+  study: $("screen-study"),
   mastery: $("screen-mastery"),
 };
 function showScreen(name) {
@@ -772,6 +779,8 @@ function renderStats(lastScore, viewMode = defaultStatsView()) {
     b.addEventListener("click", () => renderStats(lastScore, b.dataset.statmode)));
   el.querySelectorAll("[data-open-songbook]").forEach((b) =>
     b.addEventListener("click", () => openSongbook(b.dataset.openSongbook)));
+  el.querySelectorAll("[data-open-study]").forEach((b) =>
+    b.addEventListener("click", () => openStudy(b.dataset.openStudy)));
 }
 
 // Highest-count entry of a {key: count} map (first one wins ties), or null if empty.
@@ -867,7 +876,8 @@ function lifetimeStatsHTML() {
   // The nemesis word is a real prompt word, so it deep-links straight into the lyric
   // searcher — one click to see every song that holds the word you keep missing.
   const nemesisSub = nemesis
-    ? `missed ×${nemesis.count} · <a class="cat-search-link" href="search/#q=${encodeURIComponent(nemesis.key)}" title="See every song with “${escapeHtml(nemesis.key)}” in the lyric searcher">look it up →</a>`
+    ? `missed ×${nemesis.count} · <a class="cat-search-link" href="search/#q=${encodeURIComponent(nemesis.key)}" title="See every song with “${escapeHtml(nemesis.key)}” in the lyric searcher">look it up →</a>` +
+      ` · <button type="button" class="cat-search-link" data-open-study="stats" title="Practise the words you keep missing">practise →</button>`
     : "no misses yet";
   const nemesisBlock = `
     <div class="cat-nemesis">
@@ -1896,6 +1906,7 @@ function renderSongbook() {
       <div class="cat-meter-num"><b>${discovered}</b> / ${total} songs</div>
       <div class="cat-bar">${albumRainbowSegs(byAlbum, total)}</div>
       <div class="sb-sub">${sub}</div>
+      ${discovered > 0 && !complete ? `<button type="button" class="sb-practise" data-open-study="songbook">practise the ones still hiding →</button>` : ""}
     </div>`;
 
   // Album order = first appearance in allSongs (the catalogue order).
@@ -1923,6 +1934,8 @@ function renderSongbook() {
   }).join("");
 
   $("songbookBody").innerHTML = html;
+  $("songbookBody").querySelectorAll("[data-open-study]").forEach((b) =>
+    b.addEventListener("click", () => openStudy(b.dataset.openStudy)));
 }
 
 /* ---------- Personal records (your own best runs, per mode) ---------- */
@@ -3324,6 +3337,76 @@ function renderAlbumDetail(album) {
   if (pb) pb.addEventListener("click", () => startAlbumFocus(pb.dataset.play, afSelectedDiff));
 }
 
+/* ---------- Study page (the review deck's home) ---------- */
+let studyBackTarget = "start";   // where the Study page's ← back returns to
+function openStudy(from) {
+  studyBackTarget = from;
+  renderStudyPage();
+  flipAwayToScreen("study");
+}
+
+function renderStudyPage() {
+  const el = $("studyBody");
+  if (!el) return;
+  const review = studyReviewCount();                  // your honest backlog (missed + Leitner-due)
+  const boxes = studyBoxCounts();
+  const learned = boxes[STUDY_MAX_BOX];
+  const found = (loadSongTally().songs) || {};
+  const discovered = Object.keys(found).length;
+  const missingSongs = allSongs.filter((s) => !found[s.title]).length;
+  // There's something to practise if the backlog isn't empty, or (once you've started a
+  // catalogue) there are still songs to discover through their words.
+  const canPractise = review > 0 || (discovered > 0 && missingSongs > 0);
+
+  const intro =
+    `<p class="chall-eyebrow">Your review deck</p>` +
+    `<p class="study-lead">The words you've missed and the songs you've never found, gathered to practise. ` +
+    `No clock, no score. Answer one and it settles deeper; miss it and it comes back sooner.</p>`;
+
+  const tiles =
+    `<div class="study-tiles">` +
+      `<div class="study-tile"><span class="study-tile-n">${review}</span><span class="study-tile-l">due to review</span></div>` +
+      `<div class="study-tile"><span class="study-tile-n">${learned}</span><span class="study-tile-l">words learned</span></div>` +
+      `<div class="study-tile"><span class="study-tile-n">${missingSongs}</span><span class="study-tile-l">songs still to find</span></div>` +
+    `</div>`;
+
+  // The Leitner ladder: how many words currently rest in each box (1 = shaky, 5 = learned).
+  const ladder =
+    `<div class="study-ladder" aria-label="Words in each review box">` +
+      Array.from({ length: STUDY_MAX_BOX }, (_, i) => {
+        const b = i + 1;
+        return `<div class="study-box" data-box="${b}">` +
+          `<span class="study-box-n">${boxes[b]}</span>` +
+          `<span class="study-box-l">${b === STUDY_MAX_BOX ? "learned" : "box " + b}</span>` +
+        `</div>`;
+      }).join("") +
+    `</div>`;
+
+  if (canPractise) {
+    const meta = review > 0
+      ? `${review} word${review === 1 ? "" : "s"} due — a session runs up to ${STUDY_SESSION_ROUNDS}`
+      : `nothing overdue — practise words that unlock songs you've never found`;
+    el.innerHTML =
+      `<div class="study-intro">${intro}</div>` +
+      tiles + ladder +
+      `<div class="chall-act">` +
+        `<span class="chall-meta">${meta}</span>` +
+        `<button type="button" id="studyStartBtn" class="chall-go">Start reviewing</button>` +
+      `</div>`;
+    const go = $("studyStartBtn");
+    if (go) go.addEventListener("click", () => { if (!startStudy()) renderStudyPage(); });
+  } else {
+    // Honest empty state — not padded with random words.
+    const line = discovered === 0
+      ? `Nothing to review yet. Play a few rounds and the words you trip on will show up here to practise.`
+      : `Nothing's due — you've got these down. Every song found, every word settled. Come back after your next run.`;
+    el.innerHTML =
+      `<div class="study-intro">${intro}</div>` +
+      tiles + (learned > 0 ? ladder : "") +
+      `<div class="study-empty">${line}</div>`;
+  }
+}
+
 /* ---------- Bracelet (hand-strung SVG) ---------- */
 let justEarnedIndex = -1; // bead that just became a charm, for the swing-in
 
@@ -3336,6 +3419,8 @@ function renderBraceletSVG(results, active, fresh, albums, opts) {
 function renderBracelet() {
   const opts = gameType === "infinite"
     ? { total: Math.max(round, 1), letterBead: false, colors: albumPalette(), hinted: roundHinted, verseTiers: roundVerseTier }
+    : gameType === "study"
+    ? { total: studySessionLen, colors: albumPalette(), hinted: roundHinted, verseTiers: roundVerseTier }
     : { colors: albumPalette(), hinted: roundHinted, verseTiers: roundVerseTier };
   $("bracelet").innerHTML = renderBraceletSVG(roundResults, round, justEarnedIndex, roundAlbums, opts);
   const correct = roundResults.filter(Boolean).length;
@@ -3344,13 +3429,13 @@ function renderBracelet() {
     || (gameType === "challenge" && currentChallenge && currentChallenge.rule === "survive");
   const pg = uncapped
     ? Math.max(round, 1)
-    : Math.min(Math.max(round, 1), TOTAL_ROUNDS);
+    : Math.min(Math.max(round, 1), sessionRounds());
   $("pageNum").textContent = pg;
   // Voice the progress the bracelet shows visually (the SVG is aria-hidden). Only
   // re-announces when the text changes, so it fires on round advance and after a verdict.
   const sr = $("srStatus");
   if (sr) {
-    sr.textContent = (gameType === "infinite" ? `Round ${pg}. ` : `Page ${pg} of ${TOTAL_ROUNDS}. `)
+    sr.textContent = (gameType === "infinite" ? `Round ${pg}. ` : `Page ${pg} of ${sessionRounds()}. `)
       + `${correct} correct so far.`;
   }
 }
@@ -3872,8 +3957,15 @@ function formatResetCountdown(ms) {
 
 // The run is over when the fixed 13 pages are filled (classic + daily), or
 // (infinite) lives run out.
+// Rounds in the current session — TOTAL_ROUNDS for fixed runs, but a Study session is only
+// as long as its deck (a near-complete player may have fewer than 13 words due to review).
+function sessionRounds() {
+  return gameType === "study" ? studySessionLen : TOTAL_ROUNDS;
+}
+
 function isGameOver() {
   if (gameType === "infinite") return lives <= 0;
+  if (gameType === "study") return round >= studySessionLen;
   // Thirty-One: Infinite's sudden-death rules inside a sandboxed challenge — endless
   // until a miss (never the round-13 cap), or a win the moment the target round is cleared.
   if (surviveRuleActive()) return lives <= 0 || round >= (currentChallenge.target || 31);
@@ -3932,6 +4024,9 @@ function resetRunState() {
   adaptiveReachedTop = false;
   adaptiveHeldTop = true;
   adaptiveDropAnnounced = ADAPT_START_LEVEL < ADAPT_NODROP_LEVEL;   // suggestions on at the start level
+  studyDeck = [];
+  studySessionLen = STUDY_SESSION_ROUNDS;
+  studyStartBoxes = null;
   dailyRng = null;
   dailyAlbumPool = null;
   currentChallenge = null;
@@ -4202,6 +4297,30 @@ function startAdaptive() {
   showScreen("game");
   renderAdaptiveGauge();
   nextRound();
+}
+
+// Study: a no-clock review session over your own review deck (misses / catalogue gaps /
+// due Leitner words). Plays on Relaxed's levers (no timer, suggestions + hints on). Sandboxed
+// like Album Focus/Adaptive: it feeds the catalogue tally, the Leitner boxes, and skills, but
+// never records/stats/play-counts. The session is only as long as the deck (a near-complete
+// player may review fewer than 13). Returns false without starting if nothing is due.
+function startStudy() {
+  gameType = "study";
+  currentMode = { ...MODES.relaxed };   // no clock · suggestions + hints on, not persisted via DIFF_KEY
+  resetRunState();
+  studyDeck = buildStudyDeck();
+  if (!studyDeck.length) return false;   // nothing to review — caller keeps the player on the study page
+  studySessionLen = Math.min(studyDeck.length, STUDY_SESSION_ROUNDS);
+  const s0 = loadStudySet();             // remember each reviewed word's box so the results can count promotes/graduates
+  studyStartBoxes = {};
+  for (const w of studyDeck) studyStartBoxes[w] = s0.words[w] ? s0.words[w].box : 0;
+  applyInputHints();
+  updateTagline();
+  $("pageTotalWrap").style.display = "";
+  $("pageTotal").textContent = studySessionLen;
+  showScreen("game");
+  nextRound();
+  return true;
 }
 
 // Snapshot of the daily run's accumulators, persisted after each completed round so a
@@ -5372,6 +5491,73 @@ function endAdaptive() {
   renderSkillsRecap();
 }
 
+// Study achievements. `after` is the post-fold study set; `graduated` is how many words hit
+// the top box in this session. Called only for a genuine (non-dev) finished session.
+function checkStudyAchievements(after, graduated) {
+  unlock("back-to-december");                                  // finishing a real session is enough
+  let atTop = 0;
+  for (const w in after.words) if (after.words[w].box >= STUDY_MAX_BOX) atTop++;
+  if (atTop >= 25) unlock("stay-beautiful");
+  if (graduated >= 5) unlock("the-best-day");
+}
+
+// End a Study session. Sandboxed practice: it folds the catalogue tally (which moves the
+// Leitner boxes) and skills, but never touches records/stats/metrics/play-counts. The result
+// is framed as practice — words reviewed, boxes promoted, words graduated, how many are still
+// due — not a 0–13 score.
+function endStudy() {
+  const reviewed = roundResults.length;
+  let promoted = 0, graduated = 0;
+  if (!devNoLog) {
+    const tally = recordGameTally(roundResults.map((correct, i) => ({
+      correct,
+      title: roundSongs[i] || null,
+      album: roundAlbums[i] || null,
+      word: roundWords[i] || null,
+    })));
+    if (allSongs.length && allSongs.every((s) => tally.songs[s.title])) unlock("i-hate-it-here");
+    // Count promotes/graduates from the box snapshot taken at session start (recordGameTally
+    // above already advanced the boxes). Only correct answers can climb.
+    const after = loadStudySet();
+    for (let i = 0; i < roundWords.length; i++) {
+      const w = roundWords[i];
+      if (!w || !roundResults[i]) continue;
+      const before = studyStartBoxes ? (studyStartBoxes[w] || 0) : 0;
+      const now = after.words[w] ? after.words[w].box : 0;
+      if (now > before) promoted++;
+      if (now >= STUDY_MAX_BOX && before < STUDY_MAX_BOX) graduated++;
+    }
+    // Study achievements (progress-style; the tally keeps the lifetime counts).
+    checkStudyAchievements(after, graduated);
+    // Practice on relaxed levers: no tempo (no clock) and no endurance (not Infinite).
+    foldSkillXp(["resolve", "lyricist", "range"]);
+  }
+  const stillDue = studyReviewCount();
+
+  showScreen("results");
+  $("resultBracelet").innerHTML = renderBraceletSVG(roundResults, 0, -1, roundAlbums,
+    { total: reviewed, colors: albumPalette(), hinted: roundHinted, verseTiers: roundVerseTier });
+  $("finalScore").textContent = reviewed;
+  $("finalSub").textContent = reviewed === 1 ? "word reviewed" : "words reviewed";
+  $("keepGoingBtn").style.display = "none";
+  $("namePrompt").style.display = "none";
+  hideNewBestBanner();
+  renderVerseAnthology();
+
+  document.querySelector("#screen-results .podium-title").textContent = "Study";
+  const statusTxt = graduated > 0
+    ? `${graduated} word${graduated === 1 ? "" : "s"} graduated ★`
+    : (promoted > 0
+        ? `${promoted} word${promoted === 1 ? "" : "s"} moved up a box`
+        : "a little practice goes a long way");
+  const status = `<div class="chall-result-status${graduated > 0 ? " win" : ""}">${escapeHtml(statusTxt)}</div>`;
+  const meta = `<div class="chall-result-meta">${score}/${reviewed} correct · ${stillDue} still due to review</div>`;
+  $("resultPodium").innerHTML = status + meta;
+
+  renderResultRecap();
+  renderSkillsRecap();
+}
+
 // Re-render the results screen from a previously saved daily result (the
 // already-played path). Reuses the regular results layout + daily board + share.
 function showDailyResult(data, dateStr) {
@@ -5504,6 +5690,10 @@ function pickWord() {
   // Album Focus draws only words with a valid in-album answer (honouring the difficulty's
   // title rule), so every round is winnable from the chosen album.
   if (gameType === "album" && focusAlbum) { const w = pickAlbumWord(); if (w) return w; }
+  // Study draws the next word straight from the pre-built review deck (misses / gaps / due).
+  // The session length equals the deck size, so this never runs dry mid-session; the fall-
+  // through to the normal pool is a safety net only.
+  if (gameType === "study") { const w = pickStudyWord(); if (w) return w; }
   // Title...? draws only from words that appear in some song title, so each round is winnable.
   let bucket;
   if (gameType === "challenge" && currentChallenge && currentChallenge.rule === "titleHas"
@@ -5583,6 +5773,81 @@ function pickAlbumWord() {
     }
   }
   return null;   // degenerate — let the normal pool path run
+}
+
+/* ---------- Study mode: the review deck ---------- */
+// Build this session's ordered deck from the player's own history, in two tiers so REVIEW
+// always comes before DISCOVERY:
+//   1. Review words — ones Leitner says are due to revisit (missed words auto-enter the box
+//      system, so this is your real backlog). Always fill the session first.
+//   2. Discovery words — words that would unlock a song you've never found. Fill only the
+//      slots the backlog leaves, so a huge catalogue-completion pool can't drown your misses.
+// Within each tier a weighted shuffle keeps the most useful words near the front (Efraimidis–
+// Spirakis: key = U^(1/weight), largest keys win). Capped to a session's length. Returns []
+// when there's genuinely nothing to do (fresh player / everything learned & discovered).
+function buildStudyDeck() {
+  const tally = loadSongTally();
+  const study = loadStudySet();
+  const now = study.sessions;
+  // Gaps only pull once the player has discovered something — a brand-new player (empty tally)
+  // has "every word" as a gap, which isn't a review deck, so discovery waits until there's a
+  // catalogue to complete. A fresh player's empty deck then falls through to the empty state.
+  const hasDiscovery = Object.keys(tally.songs).length > 0;
+  const keyed = (weight) => Math.pow(Math.random() || 1e-9, 1 / Math.max(weight, 0.01));
+  const review = [];    // tier 1 — due to revisit
+  const gaps = [];      // tier 2 — discovery fill
+  for (const w of playableWords) {
+    const rec = study.words[w];
+    const box = rec ? rec.box : 0;
+    if (box >= STUDY_MAX_BOX) continue;                       // learned — settled until it's missed again
+    const misses = tally.misses[w] || 0;                      // lifetime counter → weight only, never inclusion
+    if (box > 0 && now >= rec.due) {                          // Leitner says it's time to revisit
+      const weight = STUDY_BASE_WEIGHT + STUDY_MISS_WEIGHT * misses + STUDY_BOX_WEIGHT * (STUDY_MAX_BOX - box);
+      review.push({ w, key: keyed(weight) });
+    } else if (hasDiscovery && validSongs(w, false, false).some((s) => !tally.songs[s.title])) {
+      // a word you've fumbled before still nudges up among the discovery fill
+      gaps.push({ w, key: keyed(STUDY_BASE_WEIGHT + STUDY_GAP_WEIGHT + STUDY_MISS_WEIGHT * misses) });
+    }
+  }
+  review.sort((a, b) => b.key - a.key);
+  gaps.sort((a, b) => b.key - a.key);
+  return review.concat(gaps).slice(0, STUDY_SESSION_ROUNDS).map((it) => it.w);
+}
+
+// Draw the next word off the pre-built deck. Each word sits in the deck once, so no-repeat
+// is automatic; null means the deck is spent (shouldn't happen mid-session — see pickWord).
+function pickStudyWord() {
+  while (studyDeck.length) {
+    const w = studyDeck.shift();
+    if (!usedWords.includes(w)) { usedWords.push(w); return w; }
+  }
+  return null;
+}
+
+// Your review backlog: words genuinely due to revisit — ones you've MISSED or that Leitner
+// says it's time to see again. Deliberately EXCLUDES song-gap discovery words (there can be
+// hundreds, and they aren't "overdue" — they just fill out a session), so the "due to review"
+// number the player sees stays honest and small. Powers the page count + results line.
+function studyReviewCount() {
+  const study = loadStudySet();
+  const now = study.sessions;
+  let n = 0;
+  for (const w in study.words) {
+    const rec = study.words[w];
+    if (rec.box < STUDY_MAX_BOX && now >= rec.due) n++;   // tracked, not yet learned, and due
+  }
+  return n;
+}
+
+// Words currently sitting in each Leitner box (1..STUDY_MAX_BOX) — for the study page ladder.
+function studyBoxCounts() {
+  const study = loadStudySet();
+  const counts = new Array(STUDY_MAX_BOX + 1).fill(0);
+  for (const w in study.words) {
+    const b = study.words[w].box;
+    if (b >= 1 && b <= STUDY_MAX_BOX) counts[b]++;
+  }
+  return counts;
 }
 
 function nextRound() {
@@ -7489,6 +7754,7 @@ function endGame() {
   if (gameType === "challenge") { endChallenge(); return; }
   if (gameType === "album") { endAlbumFocus(); return; }
   if (gameType === "adaptive") { endAdaptive(); return; }
+  if (gameType === "study") { endStudy(); return; }
 
   const isInfinite = gameType === "infinite";
   const isDaily = gameType === "daily";
@@ -8939,6 +9205,33 @@ function buildDevApi() {
         renderSkillsRecap();
       },
     },
+    // Study mode — the personal review deck (Leitner boxes). Inspect/seed the deck without
+    // playing a full session; the boxes also move on their own after any finished game.
+    study: {
+      due: () => studyReviewCount(),                           // your review backlog (missed + Leitner-due)
+      deck: () => buildStudyDeck(),                            // the words the next session would draw, in order
+      boxes: () => studyBoxCounts().slice(1).map((n, i) => `box ${i + 1}: ${n}`),
+      state: (w) => { const s = loadStudySet(); return w ? (s.words[w] || null) : s; },   // one word's SRS record, or the whole set
+      // Put a word in box 1..5, due now (so it lands in the next deck).
+      seed: (w, box) => {
+        const s = loadStudySet();
+        const b = Math.max(1, Math.min(STUDY_MAX_BOX, (box | 0) || 1));
+        s.words[w] = { box: b, seen: s.sessions, due: s.sessions };
+        saveStudySet(s); if ($("studyBody")) renderStudyPage(); return s.words[w];
+      },
+      promote: (w) => { const s = loadStudySet(); const cur = s.words[w] ? s.words[w].box : 0; s.words[w] = { box: Math.min(cur + 1, STUDY_MAX_BOX), seen: s.sessions, due: s.sessions + 1 }; saveStudySet(s); if ($("studyBody")) renderStudyPage(); return s.words[w]; },
+      graduate: (w) => { const s = loadStudySet(); s.words[w] = { box: STUDY_MAX_BOX, seen: s.sessions, due: s.sessions + 1 }; saveStudySet(s); if ($("studyBody")) renderStudyPage(); return s.words[w]; },
+      // Fast-fill the deck: seed your N most-missed words into box 1, due now.
+      seedMisses: (n) => {
+        const t = loadSongTally(); const s = loadStudySet();
+        const missed = Object.keys(t.misses || {}).sort((a, b) => t.misses[b] - t.misses[a]).slice(0, (n | 0) || 13);
+        for (const w of missed) s.words[w] = { box: 1, seen: s.sessions, due: s.sessions };
+        saveStudySet(s); if ($("studyBody")) renderStudyPage(); return missed;
+      },
+      play: () => startStudy(),                                // build the deck and start a session (false if nothing due)
+      open: () => openStudy("start"),                          // jump to the study page
+      reset: () => { resetStudySet(); if ($("studyBody")) renderStudyPage(); },
+    },
     // Challenges (start any one; Impostor helpers for the fake-word minigame)
     challenge: {
       list: () => CHALLENGE_ORDER.slice(),
@@ -9058,6 +9351,13 @@ async function init() {
   $("albumFocusBtn").addEventListener("click", () => openAlbumFocus("start"));
   $("albumFocusBackBtn").addEventListener("click", () => {
     const prev = albumFocusBackTarget;
+    if (prev === "start") { $("startContent").style.display = ""; }
+    flipInToScreen(prev);
+  });
+  $("studyBtn").addEventListener("click", () => openStudy("start"));
+  $("viewStudyBtn").addEventListener("click", () => openStudy("results"));
+  $("studyBackBtn").addEventListener("click", () => {
+    const prev = studyBackTarget;
     if (prev === "start") { $("startContent").style.display = ""; }
     flipInToScreen(prev);
   });

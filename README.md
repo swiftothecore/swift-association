@@ -19,6 +19,7 @@ Standout features:
 - Daily challenge
 - Challenges mode with 25 challenges (with more to come), including a super-hard tier unlocked through mastery
 - Album Focus mode to narrow your focus to a single album
+- Study mode, a personal review deck that resurfaces the words you miss and the songs you've never found, and settles them as you learn them
 - A content-packed skills and mastery system
 - A companion lyric searcher, Swift To The Lyric, for searching every line of every song (work in progress but usable)
 - Installable as a phone or desktop app and works offline once loaded
@@ -26,7 +27,6 @@ Standout features:
 With many features in the works as we speak:
 
 - Global leaderboards
-- Learning features
 - More easter eggs
 - Sound design
 - Stickers!!

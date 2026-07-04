@@ -30,6 +30,7 @@ export const ALBUM_FOCUS_KEY = "swiftSongAssociation.albumFocus";       // per-a
 export const ADAPTIVE_KEY = "swiftSongAssociation.adaptive";            // Adaptive mode board — { bestPeak, bestScore, date, played }
 export const SEARCH_KEY = "swiftSongAssociation.search";                // Swift To The Lyric searcher — { mode, view, recent:[] }
 export const MASTERY_KEY = "swiftSongAssociation.mastery";              // skills + mastery progression — { skills:{...xp}, masteryXp, unlocked:{[rewardId]:isoDate} }
+export const STUDY_KEY = "swiftSongAssociation.studySet";              // Study mode Leitner deck — { words:{[word]:{box,seen,due}}, sessions }
 
 // Every persisted key shares this namespace; export/import and "clear everything"
 // sweep all keys under it.
@@ -144,6 +145,20 @@ export const ADAPT_PROMO_STREAK = 2;    // correct answers at a level needed to 
 // ADAPT_MAX_LEVEL to keep suggestions on for the whole run.
 export const ADAPT_NODROP_LEVEL = 3;    // suggestions off from Rare (L3) upward
 
+/* ---------- Study mode (personal review deck, Leitner SRS) ---------- */
+// Boxes 1..5. A word is "due" for review when the session counter reaches its `due`.
+// Getting a word right in ANY finished game promotes it a box and pushes its next review
+// further out; missing it drops it to box 1 (and re-enters it into the deck). Box 5 = graduated.
+// The interval is in "sessions" (finished games), a simple monotonic SRS clock — index by box-1.
+export const STUDY_MAX_BOX = 5;
+export const STUDY_INTERVALS = [1, 2, 4, 8, 16];   // sessions until due again, per box (box1..box5)
+export const STUDY_SESSION_ROUNDS = TOTAL_ROUNDS;  // a review session is up to this many rounds (ends early if the deck runs dry)
+// Deck weighting — how strongly each learning signal pulls a word into a session. All additive;
+// a floor keeps it from being strictly worst-first (weighted sample, not a sort).
+export const STUDY_MISS_WEIGHT = 3;      // per recorded miss (tally.misses[w])
+export const STUDY_GAP_WEIGHT = 4;       // a word that can unlock an undiscovered song (catalogue completion)
+export const STUDY_BOX_WEIGHT = 5;       // multiplied by (STUDY_MAX_BOX - box): lower box = more urgent
+export const STUDY_BASE_WEIGHT = 1;      // floor of randomness so it never feels grindy
 /* Challenges mode — discrete rule-bending puzzles, unlocked with tokens and "defeated".
    Pure data: each entry declares a `rule` token; app.js dispatches on it (round modifier,
    per-answer judge, win check). Sandboxed like daily — a challenge run never folds into the
@@ -821,6 +836,9 @@ export const ACHIEVEMENTS = [
   { id: "change",           name: "Change",           desc: "Beat all 12 albums in Album Focus",     secret: false, icon: "butterfly" },
   { id: "gold-rush",        name: "Gold Rush",        desc: "Perfect an album in Album Focus — 13/13", secret: true,  icon: "coins" },
   { id: "starlight",        name: "Starlight",        desc: "Perfect all 12 albums in Album Focus",  secret: true,  icon: "constellation" },
+  { id: "back-to-december", name: "Back To December", desc: "Finish your first Study session",       secret: false, icon: "placeholder" },
+  { id: "stay-beautiful",   name: "Stay Beautiful",   desc: "Settle 25 words into the top review box", secret: false, icon: "placeholder" },
+  { id: "the-best-day",     name: "The Best Day",     desc: "Graduate 5 words in a single Study session", secret: true, icon: "placeholder" },
   { id: "castles-crumbling", name: "Castles Crumbling", desc: "Trade an achievement for a token",    secret: true,  icon: "castle" },
   { id: "is-it-over-now",   name: "Is It Over Now?",  desc: "Earn every hidden achievement",         secret: true,  icon: "hourglass" },
   { id: "the-lucky-one",    name: "The Lucky One",    desc: "Earn every other achievement",          secret: true,  icon: "clover" },
@@ -838,6 +856,7 @@ export const ACH_GROUPS = [
   { id: "challenges", label: "Challenges",             short: "Challenge" },
   { id: "albumFocus", label: "Album Focus",            short: "Album" },
   { id: "adaptive",  label: "Adaptive mode",          short: "Adaptive" },
+  { id: "study",     label: "Study mode",             short: "Study" },
 ];
 // One muted notebook hue per theme — the section dots and the by-theme breakdown bars.
 export const ACH_GROUP_COLORS = {
@@ -849,6 +868,7 @@ export const ACH_GROUP_COLORS = {
   challenges: "#2b2722",
   albumFocus: "#a8577a",
   adaptive:  "#7d5a3f",
+  study:     "#7a9e5e",
 };
 // Membership: only the non-core ids are listed; everything else defaults to "core"
 // (groupOf in app.js). Keeps this in sync without re-listing every achievement.
@@ -868,6 +888,7 @@ export const ACH_GROUP_OF = {
   "shouldve-said-no": "challenges", "smallest-man": "challenges",
   "a-place-in-this-world": "albumFocus", "change": "albumFocus", "gold-rush": "albumFocus", "starlight": "albumFocus",
   "the-lakes": "adaptive", "stay-stay-stay": "adaptive",
+  "back-to-december": "study", "stay-beautiful": "study", "the-best-day": "study",
 };
 
 // Charm → token conversion eligibility. Only *skill/mastery* charms can be sacrificed
@@ -883,6 +904,8 @@ export const ACH_NO_TRADE = new Set([
   "today-was-a-fairytale",  // finish your first Daily
   "hits-different",         // play all three game types
   "safe-and-sound",         // play Easy three times in a row
+  "back-to-december",       // finish first Study session (participation)
+  "stay-beautiful",         // settle 25 words into the top box (practice milestone)
 ]);
 
 /* ---------- Easter-egg art ---------- */

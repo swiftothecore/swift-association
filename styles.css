@@ -839,6 +839,32 @@
   .af-diff.is-on { color: var(--paper); background: var(--ink); border-color: var(--ink); }
   #backToAlbumFocus { width: auto; margin: 0 auto; padding: 5px 18px; }
 
+  /* ---------- Study page — the personal review deck ----------
+     A quiet, notebook-honest layout: a lead-in, three tally tiles, the Leitner box
+     ladder (words settle from box 1 → learned), then the start action. Reuses .chall-act
+     / .chall-go for the button so it matches the other mode pages. */
+  .study-intro { margin-bottom: 16px; }
+  .study-lead { font-family: var(--hand); font-size: 20px; line-height: 1.34; color: var(--ink); max-width: 44ch; }
+  .study-tiles { display: flex; gap: 10px; margin-bottom: 16px; }
+  .study-tile {
+    flex: 1; text-align: center; padding: 12px 6px 10px;
+    background: rgba(122,158,94,0.09); border: 1.5px solid rgba(122,158,94,0.4); border-radius: 3px;
+  }
+  .study-tile-n { display: block; font-family: var(--hand); font-size: 30px; line-height: 1; color: var(--ink); }
+  .study-tile-l { display: block; font-family: var(--type); font-size: 9.5px; letter-spacing: 0.8px; text-transform: uppercase; color: var(--ink-soft); margin-top: 6px; }
+  .study-ladder { display: flex; gap: 7px; margin-bottom: 4px; }
+  .study-box {
+    flex: 1; text-align: center; padding: 9px 4px 7px;
+    border: 1.4px dashed rgba(43,39,34,0.28); border-radius: 3px; background: rgba(236,227,208,0.35);
+  }
+  .study-box[data-box="5"] { border-style: solid; border-color: rgba(122,158,94,0.6); background: rgba(122,158,94,0.12); }
+  .study-box-n { display: block; font-family: var(--hand); font-size: 22px; line-height: 1; color: var(--ink); }
+  .study-box-l { display: block; font-family: var(--type); font-size: 9px; letter-spacing: 0.5px; text-transform: uppercase; color: var(--ink-soft); margin-top: 5px; }
+  .study-empty {
+    font-family: var(--hand); font-size: 20px; line-height: 1.35; color: var(--margin);
+    text-align: center; padding: 22px 10px 6px; max-width: 42ch; margin: 0 auto;
+  }
+
   /* Choose Your Path — mid-run perk fork. The overlay covers the answered page
      (the card is position:relative — see .quit-btn) until a perk is chosen. */
   .chall-path-overlay {
@@ -2140,6 +2166,7 @@
   .cat-nemesis-sub { font-family: var(--type); font-size: 11px; color: rgba(155,34,38,0.85); }
   .cat-search-link { color: inherit; text-decoration: none; border-bottom: 1px dashed rgba(155,34,38,0.5); white-space: nowrap; }
   .cat-search-link:hover, .cat-search-link:focus-visible { color: #8f2e20; border-bottom-color: rgba(155,34,38,0.9); outline: none; }
+  button.cat-search-link { background: none; border: none; border-bottom: 1px dashed rgba(155,34,38,0.5); padding: 0; font: inherit; cursor: pointer; }
   .cat-nemesis-word { position: relative; padding: 4px 10px; flex: none; }
   .cat-nemesis-word span {
     font-family: var(--hand); font-weight: 700; font-size: 34px;
@@ -2545,6 +2572,12 @@
     padding: 14px 16px 16px; margin-bottom: 18px; background: var(--page-wash);
   }
   .sb-meter.done { border-color: var(--bead); }
+  .sb-practise {
+    display: inline-block; margin-top: 11px; background: none; border: none; padding: 0; cursor: pointer;
+    font-family: var(--type); font-size: 11px; color: var(--ink-soft);
+    border-bottom: 1px dashed rgba(122,158,94,0.7);
+  }
+  .sb-practise:hover, .sb-practise:focus-visible { color: #46632f; border-bottom-color: rgba(122,158,94,1); outline: none; }
   .sb-sub { font-family: var(--hand); font-size: 19px; color: var(--margin); margin-top: 9px; line-height: 1; }
   .sb-meter.done .sb-sub { color: var(--ink-accent); }
   .sb-album { margin-bottom: 18px; }
@@ -2713,6 +2746,7 @@
   .nav-card[data-era-tint="denim"]    { --tint: 91, 135, 184; }
   .nav-card[data-era-tint="graphite"] { --tint: 43, 39, 34; }
   .nav-card[data-era-tint="rose"]     { --tint: 168, 87, 122; }
+  .nav-card[data-era-tint="sage"]     { --tint: 122, 158, 94; }
   /* Sticky tape — OPAQUE pastel washi (a cream backing under a half-strength tint wash,
      plus a diagonal sheen), so the card never shows through. ::before is the primary
      strip, ::after an optional second strip; placement varies per card below so the row
