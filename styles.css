@@ -1743,20 +1743,29 @@
   }
 
   /* ---------- Pen-circle confirm ---------- */
-  .circled-choice { text-align: center; padding: 24px 16px 30px; }
-  .cc-box { position: relative; display: inline-block; padding: 9px 20px; max-width: 100%; }
+  /* Extra vertical room so the ring, which bulges above and below the title, is never
+     clipped by the neighbouring feedback. */
+  .circled-choice { text-align: center; padding: 40px 16px 46px; overflow: visible; }
+  /* Long titles wrap to two lines here (keeps the circle a pleasant round-ish oval instead
+     of a very flat one). Correctness does NOT depend on this — the ring is measured, see
+     below — it is purely so the shape looks natural. */
+  /* The ring circumscribes the title, so it is ~1.4x wider than the text. The vw cap keeps
+     the whole circle (not just the text) within the screen on narrow viewports; the ch cap
+     governs wrapping on wide ones. The longest few titles fall to three lines on a phone,
+     which keeps the circle on-screen. */
+  .cc-box { position: relative; display: inline-block; padding: 4px 8px; max-width: min(38ch, 58vw); }
   .cc-box .cc-text {
-    position: relative; z-index: 1;
+    position: relative; z-index: 1; display: block; text-align: center;
     font-family: var(--hand); font-weight: 700; color: var(--ink);
-    font-size: clamp(28px, 7.5vw, 44px); line-height: 1.15;
+    font-size: clamp(28px, 7.5vw, 44px); line-height: 1.18;
   }
-  /* the ring path fills its viewBox, so stretching it to the (padded) box keeps it
-     hugging the edges uniformly — a small outward offset clears the text whether the
-     title is one line or two. (an SVG is a replaced element, so it needs explicit
-     width/height — top/bottom insets alone won't stretch it) */
-  .cc-box svg { position: absolute; top: -6px; left: -5px; width: calc(100% + 10px); height: calc(100% + 12px); overflow: visible; pointer-events: none; }
+  /* The ring is generated in JS from the MEASURED title box (see showCircledChoice), so it
+     always circumscribes the text with a fixed pixel margin — it can never bite into the
+     letters however long the title is or how many lines it wraps to. Because it bulges past
+     the box, it must not be clipped. */
+  .cc-box svg { position: absolute; inset: 0; overflow: visible; pointer-events: none; }
   .cc-ring {
-    fill: none; stroke: var(--ink-accent); stroke-width: 2.4; stroke-linecap: round;
+    fill: none; stroke: var(--ink-accent); stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round;
     stroke-dasharray: 1; stroke-dashoffset: 1;
     animation: drawRing 0.55s ease-out forwards;
   }

@@ -7503,14 +7503,55 @@ function submitAnswer(song, isTimeout) {
 
 
 function showCircledChoice(song, done) {
-  $("feedback").innerHTML =
+  const fb = $("feedback");
+  fb.innerHTML =
     `<div class="circled-choice"><span class="cc-box"${activePen ? ` data-pen="${activePen}"` : ""}>` +
       `<span class="cc-text">${escapeHtml(censor(song.title))}</span>` +
-      `<svg viewBox="0 0 100 46" preserveAspectRatio="none" aria-hidden="true">` +
-        `<path class="cc-ring" pathLength="1" d="M5,26 C2,12 30,3 54,4 C84,5 99,13 96,25 C93,39 64,44 42,43 C16,42 7,38 5,26"/>` +
-      `</svg>` +
     `</span></div>`;
+  // The ring is drawn from the title's real measured box, so it always clears the letters
+  // by a fixed pixel margin — no matter the length or line count. Measure after layout.
+  const box = fb.querySelector(".cc-box");
+  const text = fb.querySelector(".cc-text");
+  if (box && text) {
+    requestAnimationFrame(() => {
+      const b = box.getBoundingClientRect();
+      const t = text.getBoundingClientRect();
+      if (b.width && t.width) {
+        box.insertAdjacentHTML(
+          "beforeend",
+          buildChoiceRing(b.width, b.height, t.width, t.height,
+            (t.left - b.left) + t.width / 2, (t.top - b.top) + t.height / 2)
+        );
+      }
+    });
+  }
   setTimeout(done, 640 * animScale());
+}
+
+// A hand-drawn pen circle around a measured title box. The ellipse is sized to CIRCUMSCRIBE
+// the text rectangle (√2 rule: the whole rect, grown by CLEAR px on every side, sits inside
+// the ellipse), so every corner of the title clears the ring by at least CLEAR pixels. The
+// wobble only ever pushes anchors OUTWARD (factors ≥ 1), so it can never eat that margin.
+// Coordinates are box-local pixels; the SVG's viewBox matches the box and overflow is
+// visible, so the ring may bulge beyond the box without being clipped.
+function buildChoiceRing(bw, bh, tw, th, cx, cy) {
+  const CLEAR = 9;                      // guaranteed minimum text-to-ring gap, in px
+  const a = (tw / 2 + CLEAR) * Math.SQRT2;
+  const b = (th / 2 + CLEAR) * Math.SQRT2;
+  const k = 0.5523;                     // circle→bezier constant
+  // Per-anchor outward wobble (all ≥ 1) for a hand-drawn, slightly-uneven loop.
+  const wob = () => 1 + Math.random() * 0.05;
+  const aL = a * wob(), aR = a * wob(), bT = b * wob(), bB = b * wob();
+  const p = (x, y) => `${(cx + x).toFixed(1)},${(cy + y).toFixed(1)}`;
+  // Clockwise from the left anchor, up over the top, round and back — a closed loop.
+  const d =
+    `M${p(-aL, 0)} ` +
+    `C${p(-aL, -k * bT)} ${p(-k * aL, -bT)} ${p(0, -bT)} ` +
+    `C${p(k * aR, -bT)} ${p(aR, -k * bT)} ${p(aR, 0)} ` +
+    `C${p(aR, k * bB)} ${p(k * aR, bB)} ${p(0, bB)} ` +
+    `C${p(-k * aL, bB)} ${p(-aL, k * bB)} ${p(-aL, 0)}Z`;
+  return `<svg viewBox="0 0 ${bw.toFixed(1)} ${bh.toFixed(1)}" aria-hidden="true">` +
+    `<path class="cc-ring" pathLength="1" d="${d}"/></svg>`;
 }
 
 function lyricCard(song, word, isWrong, lineOverride, context) {
