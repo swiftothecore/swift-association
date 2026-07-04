@@ -61,7 +61,7 @@ body::before {
   text-align: center;
 }
 .sx-back {
-  position: absolute; left: 18px; top: 20px;
+  position: absolute; left: 18px; top: 20px; z-index: 2;
   font-family: var(--type); font-size: 11px; letter-spacing: .03em;
   color: #4a3518; text-decoration: none;
   background: var(--paper-edge); border: 1px solid #cdbf9f;
