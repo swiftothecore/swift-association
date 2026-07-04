@@ -1743,26 +1743,22 @@
   }
 
   /* ---------- Pen-circle confirm ---------- */
-  /* Extra vertical room so the ring, which bulges above and below the title, is never
-     clipped by the neighbouring feedback. */
+  /* Extra vertical room so the mark, which sits above/below the title, is never clipped by
+     the neighbouring feedback. */
   .circled-choice { text-align: center; padding: 40px 16px 46px; overflow: visible; }
-  /* Long titles wrap to two lines here (keeps the circle a pleasant round-ish oval instead
-     of a very flat one). Correctness does NOT depend on this — the ring is measured, see
-     below — it is purely so the shape looks natural. */
-  /* The ring circumscribes the title, so it is ~1.4x wider than the text. The vw cap keeps
-     the whole circle (not just the text) within the screen on narrow viewports; the ch cap
-     governs wrapping on wide ones. The longest few titles fall to three lines on a phone,
-     which keeps the circle on-screen. */
+  /* Long titles wrap here. Single-line titles are circled; wrapped ones are underlined per
+     line (see showCircledChoice), so the generous line-height gives each underline room to
+     sit under its own line without crowding the next. The vw cap keeps a single-line circle
+     (which bulges ~1.4x wider than the text) on-screen on narrow viewports. */
   .cc-box { position: relative; display: inline-block; padding: 4px 8px; max-width: min(38ch, 58vw); }
   .cc-box .cc-text {
     position: relative; z-index: 1; display: block; text-align: center;
     font-family: var(--hand); font-weight: 700; color: var(--ink);
-    font-size: clamp(28px, 7.5vw, 44px); line-height: 1.18;
+    font-size: clamp(28px, 7.5vw, 44px); line-height: 1.42;
   }
-  /* The ring is generated in JS from the MEASURED title box (see showCircledChoice), so it
-     always circumscribes the text with a fixed pixel margin — it can never bite into the
-     letters however long the title is or how many lines it wraps to. Because it bulges past
-     the box, it must not be clipped. */
+  /* The mark (circle or underlines) is generated in JS from the MEASURED title box (see
+     showCircledChoice), so it always clears the letters by a fixed pixel margin. Because it
+     can extend past the box, it must not be clipped. */
   .cc-box svg { position: absolute; inset: 0; overflow: visible; pointer-events: none; }
   .cc-ring {
     fill: none; stroke: var(--ink-accent); stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round;

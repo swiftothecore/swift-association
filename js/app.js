@@ -7520,62 +7520,72 @@ function showCircledChoice(song, done) {
         const lh = parseFloat(getComputedStyle(text).lineHeight) ||
                    parseFloat(getComputedStyle(text).fontSize) * 1.18;
         const lines = Math.max(1, Math.round(t.height / lh));
-        box.insertAdjacentHTML(
-          "beforeend",
-          buildChoiceRing(b.width, b.height, t.width, t.height,
-            (t.left - b.left) + t.width / 2, (t.top - b.top) + t.height / 2, lines)
-        );
+        // A single line reads best as a hand-drawn circle. Once the title wraps, an oval that
+        // clears its corners has to balloon awkwardly, so instead we underline each line with a
+        // curvy pen stroke — it fits any length and can never clip.
+        let svg;
+        if (lines >= 2) {
+          const range = document.createRange();
+          range.selectNodeContents(text);
+          const rows = [...range.getClientRects()]
+            .filter((r) => r.width > 4)
+            .map((r) => ({ x0: r.left - b.left, x1: r.right - b.left, bottom: r.bottom - b.top }));
+          svg = buildTitleUnderline(b.width, b.height, rows);
+        } else {
+          svg = buildChoiceRing(b.width, b.height, t.width, t.height,
+            (t.left - b.left) + t.width / 2, (t.top - b.top) + t.height / 2);
+        }
+        box.insertAdjacentHTML("beforeend", svg);
       }
     });
   }
   setTimeout(done, 640 * animScale());
 }
 
-// A hand-drawn pen ring around a measured title box. Both shapes are sized to clear every
-// corner of the title by a safe pixel margin, and the wobble only ever pushes points OUTWARD
-// so it can never eat that margin. Coordinates are box-local pixels; the SVG viewBox matches
-// the box and overflow is visible, so the ring may bulge beyond the box without being clipped.
-//
-// The shape is chosen by line count. A single line reads best as a true ellipse (a squircle
-// looks like a pill around a short word). But a two-line block is nearly 3:1, and an ellipse
-// that clears its corners has to balloon ~1.5x wider than the text — too loose. There we use
-// a superellipse (n≈3): it fills the corners, so it hugs the block far more tightly while
-// still reading as a soft hand-drawn loop rather than a box.
-function buildChoiceRing(bw, bh, tw, th, cx, cy, lines) {
+// A hand-drawn pen ring around a single-line title. The ellipse circumscribes the text rect
+// (√2 rule: the rect grown by CLEAR px sits inside), drawn as four beziers with per-anchor
+// outward wobble for an uneven, hand-drawn loop. Coordinates are box-local pixels; the SVG
+// viewBox matches the box and overflow is visible, so the ring may bulge past the box freely.
+function buildChoiceRing(bw, bh, tw, th, cx, cy) {
   const p = (x, y) => `${(cx + x).toFixed(1)},${(cy + y).toFixed(1)}`;
-  let d;
-  if (lines >= 2) {
-    // Superellipse |x/a|^n + |y/b|^n = 1, sampled and drawn as a smooth polyline. The margin
-    // M is the side clearance; the corners keep a smaller but still-safe gap (~7px worst).
-    const N = 3, M = 32, STEPS = 200;
-    const a = tw / 2 + M, b = th / 2 + M;
-    const seed = Math.random() * Math.PI * 2;
-    let s = "";
-    for (let i = 0; i < STEPS; i++) {
-      const q = (i / STEPS) * Math.PI * 2;
-      const c = Math.cos(q), sn = Math.sin(q);
-      const jit = 1 + 0.02 * (0.5 + 0.5 * Math.sin(q * 3 + seed)); // outward-only waver
-      const x = a * jit * Math.sign(c) * Math.pow(Math.abs(c), 2 / N);
-      const y = b * jit * Math.sign(sn) * Math.pow(Math.abs(sn), 2 / N);
-      s += (i ? "L" : "M") + p(x, y);
-    }
-    d = s + "Z";
-  } else {
-    // Ellipse circumscribing the text rect (√2 rule: the rect grown by CLEAR px sits inside),
-    // drawn as four beziers with per-anchor outward wobble for a hand-drawn, uneven loop.
-    const CLEAR = 9, k = 0.5523;
-    const a = (tw / 2 + CLEAR) * Math.SQRT2, b = (th / 2 + CLEAR) * Math.SQRT2;
-    const wob = () => 1 + Math.random() * 0.05;
-    const aL = a * wob(), aR = a * wob(), bT = b * wob(), bB = b * wob();
-    d =
-      `M${p(-aL, 0)} ` +
-      `C${p(-aL, -k * bT)} ${p(-k * aL, -bT)} ${p(0, -bT)} ` +
-      `C${p(k * aR, -bT)} ${p(aR, -k * bT)} ${p(aR, 0)} ` +
-      `C${p(aR, k * bB)} ${p(k * aR, bB)} ${p(0, bB)} ` +
-      `C${p(-k * aL, bB)} ${p(-aL, k * bB)} ${p(-aL, 0)}Z`;
-  }
+  const CLEAR = 9, k = 0.5523;
+  const a = (tw / 2 + CLEAR) * Math.SQRT2, b = (th / 2 + CLEAR) * Math.SQRT2;
+  const wob = () => 1 + Math.random() * 0.05;
+  const aL = a * wob(), aR = a * wob(), bT = b * wob(), bB = b * wob();
+  const d =
+    `M${p(-aL, 0)} ` +
+    `C${p(-aL, -k * bT)} ${p(-k * aL, -bT)} ${p(0, -bT)} ` +
+    `C${p(k * aR, -bT)} ${p(aR, -k * bT)} ${p(aR, 0)} ` +
+    `C${p(aR, k * bB)} ${p(k * aR, bB)} ${p(0, bB)} ` +
+    `C${p(-k * aL, bB)} ${p(-aL, k * bB)} ${p(-aL, 0)}Z`;
   return `<svg viewBox="0 0 ${bw.toFixed(1)} ${bh.toFixed(1)}" aria-hidden="true">` +
     `<path class="cc-ring" pathLength="1" d="${d}"/></svg>`;
+}
+
+// A curvy, hand-drawn underline beneath each line of a wrapped title. Each stroke is a gently
+// undulating polyline that overshoots the ends a touch and tapers its wave to nothing at the
+// tips (like a pen touching down and lifting), with a slight random tilt so no two are alike.
+function buildTitleUnderline(bw, bh, rows) {
+  const stroke = (x0, x1, y) => {
+    const ext = Math.min(11, (x1 - x0) * 0.05);         // overshoot past the words
+    const X0 = x0 - ext, X1 = x1 + ext, w = X1 - X0;
+    const amp = Math.min(2.6, Math.max(1.6, w * 0.011)); // wave height (kept low so a crest
+    const periods = 1.3 + Math.random() * 0.5;           //   can't reach up into a descender)
+    const phase = Math.random() * Math.PI * 2;
+    const tilt = (Math.random() - 0.5) * 2.2;            // faint overall slant
+    const N = Math.max(20, Math.round(w / 10));
+    let d = "";
+    for (let i = 0; i <= N; i++) {
+      const tt = i / N;
+      const x = X0 + tt * w;
+      const yy = y + Math.sin(tt * Math.PI * 2 * periods + phase) * amp * Math.sin(Math.PI * tt) +
+                 tilt * (tt - 0.5);
+      d += (i ? "L" : "M") + `${x.toFixed(1)},${yy.toFixed(1)}`;
+    }
+    return `<path class="cc-ring" pathLength="1" d="${d}"/>`;
+  };
+  const paths = rows.map((r) => stroke(r.x0, r.x1, r.bottom - 1)).join("");
+  return `<svg viewBox="0 0 ${bw.toFixed(1)} ${bh.toFixed(1)}" aria-hidden="true">${paths}</svg>`;
 }
 
 function lyricCard(song, word, isWrong, lineOverride, context) {
@@ -8669,7 +8679,7 @@ function renderSettingsBody() {
       setChoiceHTML("reduceMotion", "Reduce motion", "Auto follows your system", [{ val: "auto", label: "Auto" }, { val: "on", label: "On" }, { val: "off", label: "Off" }]) +
       setChoiceHTML("animSpeed", "Animation speed", "", [{ val: "normal", label: "Normal" }, { val: "fast", label: "Fast" }, { val: "instant", label: "Instant" }]) +
       setToggleHTML("pageTurn", "Page-turn animation", "the paper flip between rounds") +
-      setToggleHTML("penCircle", "Pen-circle confirm", "circles your pick before the verdict") +
+      setToggleHTML("penCircle", "Pen-circle confirm", "marks your pick in pen before the verdict") +
       setToggleHTML("sparkles", "Sparkles", "a burst on a correct answer") +
       setToggleHTML("timerTension", "Timer tension", "vignette + tremor as the clock runs low") +
       setToggleHTML("snake", "Slithering snake", "the reputation-era easter egg") +
