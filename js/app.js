@@ -8,6 +8,7 @@ import {
   ACHIEVEMENTS, ACH_ICONS, ACH_BY_ID, ACH_GROUPS, ACH_GROUP_COLORS, ACH_GROUP_OF, ACH_NO_TRADE,
   CHALLENGES, CHALLENGE_BY_ID, CHALLENGE_ORDER,
   IMPOSTOR_WORDS, IMPOSTOR_COUNT,
+  SEA_GRID_SIZE, SEA_MIN_VALID, SEA_MAX_VALID,
   ALBUM_FOCUS_DIFFS, ALBUM_FOCUS_TARGET,
   ADAPTIVE_BUCKETS, ADAPTIVE_LEVELS, ADAPT_MAX_LEVEL, ADAPT_START_LEVEL, ADAPT_PROMO_STREAK, ADAPT_NODROP_LEVEL,
   PEN_SVG, STAR_SVG, SPARKLE_SVG, DOODLE_SVG, DOODLE_SIZE,
@@ -152,6 +153,9 @@ let impostorFailed = false;     // a fatal misjudgement happened — the run is 
 let impostorSeen = 0;           // impostor pages encountered so far (for "first impostor" charm)
 let impostorFlagged = 0;        // impostors correctly flagged this run
 let impostorMissed = 0;         // real pages answered wrong or timed out (perfect-run tracker)
+// Sea of Songs: this page's grid of song objects, each tagged {song, valid} — valids hold the
+// word in their lyrics, decoys don't. Rebuilt each round in buildSeaGrid; read only by dev tools.
+let seaTiles = [];
 let currentWord = "";
 let currentSongs = [];
 // The full lyrics-valid set for the round, BEFORE a challenge sub-rule narrows currentSongs
@@ -4386,6 +4390,71 @@ function pickImpostorWord() {
   return w;
 }
 
+/* ---------- Sea of Songs ---------- */
+// True while a Sea of Songs run is live (guards the grid UI + tile clicks).
+function seaRuleActive() {
+  return gameType === "challenge" && currentChallenge && currentChallenge.rule === "sea";
+}
+// Build this round's tile grid: a random handful of genuine answers (from currentSongs)
+// plus decoys drawn from songs that hold the word in NEITHER lyrics nor title (so no tile is
+// an unfair "title matches but it's wrong" trap), then shuffled together.
+function buildSeaGrid() {
+  const valids = shuffle(currentSongs.slice());
+  const want = SEA_MIN_VALID + Math.floor(Math.random() * (SEA_MAX_VALID - SEA_MIN_VALID + 1));
+  const showValid = Math.max(1, Math.min(valids.length, want));
+  const chosen = valids.slice(0, showValid).map((s) => ({ song: s, valid: true }));
+
+  const rx = wordRegex(currentWord, effectiveStrict());
+  const validTitles = new Set(currentSongs.map((s) => s.title));
+  const decoyPool = shuffle(allSongs.filter((s) =>
+    !validTitles.has(s.title) && !rx.test(s.lyrics) && !rx.test(s.title)));
+  const need = Math.max(0, SEA_GRID_SIZE - chosen.length);
+  const decoys = decoyPool.slice(0, need).map((s) => ({ song: s, valid: false }));
+
+  seaTiles = shuffle(chosen.concat(decoys));
+}
+// Render the grid (called every round via renderSeaUI). Each tile is a button carrying its
+// index into seaTiles; the click handler routes the picked song through submitAnswer.
+function renderSeaGrid() {
+  const grid = $("seaGrid");
+  if (!grid) return;
+  grid.innerHTML = seaTiles.map((t, i) =>
+    `<button type="button" class="sea-tile" data-sea="${i}" ` +
+    `style="--album-color:${albumColor(t.song.album) || "var(--ink-soft)"}">` +
+    `<span class="sea-tile-title">${escapeHtml(censor(t.song.title))}</span></button>`
+  ).join("");
+}
+// A tile was tapped — lock the grid and answer with that song. A valid tile scores correct;
+// a decoy falls through submitAnswer as a wrong pick (the page is lost), same as the game.
+function onSeaTileClick(index) {
+  if (roundLocked || !seaRuleActive()) return;
+  const tile = seaTiles[index];
+  if (!tile) return;
+  $("seaGrid").querySelectorAll(".sea-tile").forEach((b) => { b.disabled = true; });
+  submitAnswer(tile.song);
+}
+// Toggle the whole Sea UI: build+show the grid (and hide the typed-input affordances) on a
+// Sea run, restore normal play otherwise. Called every round from advanceRound, like the
+// Impostor bar, so a leftover grid never bleeds into another game.
+function renderSeaUI() {
+  const grid = $("seaGrid");
+  const play = $("playArea");
+  if (!grid || !play) return;
+  const on = seaRuleActive();
+  play.dataset.sea = on ? "1" : "";
+  grid.hidden = !on;
+  if (on) { buildSeaGrid(); renderSeaGrid(); }
+  else { grid.innerHTML = ""; seaTiles = []; }
+}
+// Sea of Songs: run progress toward the target.
+function renderSeaBanner() {
+  if (!seaRuleActive()) return;
+  const el = ensureChallBanner();
+  el.innerHTML =
+    `<span class="chall-prog-name">tap the sea</span>` +
+    `<span class="chall-prog-count">${score} / ${currentChallenge.target || 9}</span>`;
+}
+
 // On Tour!: a setlist of one album per round. Cycle through albums with enough candidate
 // words (so each stop can be handed a winnable word), in shuffled canonical order — with
 // 16 album groups this almost always yields 13 distinct stops. Degenerate data falls back
@@ -4502,6 +4571,8 @@ function applyChallengeRound(wrap) {
     renderSurviveBanner();
   } else if (currentChallenge.rule === "impostor") {
     renderImpostorBanner();
+  } else if (currentChallenge.rule === "sea") {
+    renderSeaBanner();
   } else if (currentChallenge.rule === "tiny") {
     // The Smallest Song Who Ever Lived — shrink, tilt, and offset the prompt, constant.
     renderTinyWord(wrap, currentWord);
@@ -5946,6 +6017,7 @@ function advanceRound() {
   roundNamed = [];                             // Double Trouble: no songs named on the fresh page yet
   applyChallengeRound(wrap);                   // challenge per-round modifier (e.g. Vanishing Word)
   renderImpostorBar();                         // Impostor: the 🚩 flag action (hidden elsewhere)
+  renderSeaUI();                               // Sea of Songs: the tap-a-title grid (hidden elsewhere)
   renderExcludedNote();
   $("feedback").innerHTML = "";
   $("playArea").style.display = "";
@@ -7946,6 +8018,11 @@ function wireInput() {
   });
   $("hintBtn").addEventListener("click", () => { useHint(); input.focus(); });
   $("flagBtn").addEventListener("click", () => flagImpostor());   // Impostor: 🚩 call the fake
+  // Sea of Songs: delegate tile taps (buttons are rebuilt each round) to the answer path.
+  $("seaGrid").addEventListener("click", (e) => {
+    const tile = e.target.closest(".sea-tile");
+    if (tile) onSeaTileClick(Number(tile.dataset.sea));
+  });
   // After a verdict the input is disabled, so a document-level Enter advances
   // the page: skips the correct-answer countdown, or fires "next page" on a miss.
   document.addEventListener("keydown", (e) => {
@@ -8704,6 +8781,13 @@ function buildDevApi() {
         forceRounds: (...rs) => { impostorRounds = new Set(rs.map((r) => r | 0).filter((r) => r >= 1 && r <= TOTAL_ROUNDS)); },
         win: () => { impostorFailed = false; score = ((CHALLENGE_BY_ID.impostor.target) || 7) + impostorFlagged; endGame(); },
         lose: (kind) => impostorGameOver(kind || "answered"),      // "answered" | "timeout" | "falseflag"
+      },
+      // Sea of Songs — the tap-a-title grid minigame.
+      sea: {
+        tiles: () => seaTiles.map((t) => ({ title: t.song.title, valid: t.valid })),   // this page's grid
+        valids: () => seaTiles.filter((t) => t.valid).map((t) => t.song.title),         // which tiles are answers
+        answer: () => { const v = seaTiles.find((t) => t.valid); if (v) onSeaTileClick(seaTiles.indexOf(v)); },  // tap a correct tile
+        win: () => { score = (CHALLENGE_BY_ID["sea-of-songs"].target) || 9; endGame(); },
       },
     },
     // Seeding

@@ -17,7 +17,7 @@ Standout features:
 - Lots and lots of easter eggs
 - Over 75 achievements
 - Daily challenge
-- Challenges mode with 23 challenges (with more to come), including a super-hard tier unlocked through mastery
+- Challenges mode with 24 challenges (with more to come), including a super-hard tier unlocked through mastery
 - Album Focus mode to narrow your focus to a single album
 - A content-packed skills and mastery system
 - A companion lyric searcher, Swift To The Lyric, for searching every line of every song (work in progress but usable)

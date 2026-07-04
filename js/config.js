@@ -259,7 +259,19 @@ export const CHALLENGES = [
     blurb: "some words are fakes — flag the impostors, answer the real ones",
     desc: "Most pages show a real word. But some are impostors — words that appear in zero Taylor songs. Flag the fakes with 🚩 and answer the real ones. Accuse a real word, or let an impostor slip past, and the run ends on the spot.",
     win: "Survive the run: flag every impostor and answer 7 real words." },
+  { id: "sea-of-songs", name: "Sea of Songs", rule: "sea", mode: "medium",
+    free: true, cost: 1, target: 9, seconds: 10, noTitle: false, tapes: 0, icon: "placeholder",
+    blurb: "10s · no typing · a sea of titles — tap one whose lyrics hold the word",
+    desc: "No typing this time. Each page floats up a sea of song titles — tap one whose lyrics contain the word. A few titles fit; the rest are decoys. Tap a decoy or run out of time and the page is lost.",
+    win: "Score 9 / 13 fishing the right song out of the sea." },
 ];
+/* Sea of Songs — the tap-a-title grid. SEA_GRID_SIZE tiles per page, of which a random
+   SEA_MIN_VALID..SEA_MAX_VALID are genuine answers (lyrics hold the word) and the rest are
+   decoys (neither lyrics nor title hold the word). Clamped to how many valids actually exist. */
+export const SEA_GRID_SIZE = 16;
+export const SEA_MIN_VALID = 2;
+export const SEA_MAX_VALID = 4;
+
 export const CHALLENGE_BY_ID = Object.fromEntries(CHALLENGES.map((c) => [c.id, c]));
 export const CHALLENGE_ORDER = CHALLENGES.map((c) => c.id);
 

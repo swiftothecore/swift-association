@@ -1553,6 +1553,7 @@
      to answering (an "or" divider ties it to the input above) so it reads as a
      deliberate second way to resolve the page, not a stray button. */
   .impostor-bar { display: flex; flex-direction: column; align-items: center; gap: 8px; margin-top: 16px; }
+  .impostor-bar[hidden] { display: none; }
   .flag-or {
     position: relative; font-family: var(--type); font-size: 11px; letter-spacing: 2px;
     text-transform: uppercase; color: var(--ink-soft);
@@ -1578,6 +1579,39 @@
   .impostor-caught {
     font-family: var(--hand); font-size: 20px; color: var(--ink);
     text-align: center; margin: 6px auto 10px; max-width: 30ch;
+  }
+
+  /* Sea of Songs — the tap-a-title grid replaces the typed-input affordances. */
+  #playArea[data-sea="1"] .input-area,
+  #playArea[data-sea="1"] #gameHint,
+  #playArea[data-sea="1"] .hint-btn,
+  #playArea[data-sea="1"] .hint-box,
+  #playArea[data-sea="1"] .verse-meter,
+  #playArea[data-sea="1"] .excluded-note { display: none !important; }
+  .sea-grid {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;
+    margin: 14px auto 4px; max-width: 560px;
+  }
+  .sea-tile {
+    cursor: pointer; text-align: left; min-height: 58px;
+    display: flex; align-items: center;
+    padding: 7px 9px 7px 11px;
+    background: var(--paper); border: 1px solid var(--paper-edge);
+    border-left: 3px solid var(--album-color, var(--ink-soft));
+    border-radius: 3px; box-shadow: 0 1px 0 rgba(43,39,34,0.06);
+    transition: transform 0.1s, background 0.15s, box-shadow 0.15s;
+  }
+  .sea-tile-title {
+    font-family: var(--hand); font-size: 19px; line-height: 1.1; color: var(--ink);
+  }
+  .sea-tile:hover:not(:disabled) {
+    background: var(--paper-edge); box-shadow: 0 2px 4px rgba(43,39,34,0.12);
+  }
+  .sea-tile:active:not(:disabled) { transform: scale(0.97); }
+  .sea-tile:disabled { cursor: default; opacity: 0.55; }
+  @media (max-width: 560px) {
+    .sea-grid { grid-template-columns: repeat(2, 1fr); gap: 7px; }
+    .sea-tile-title { font-size: 17px; }
   }
 
   /* the gag: a caught-out fake word cackles; a wronged real word recoils */
