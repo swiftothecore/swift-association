@@ -328,11 +328,11 @@ export const IMPOSTOR_WORDS = [
 // `tint` is the skill's own ink (an "r, g, b" triplet, drawn from the era palette) — the
 // mastery skills bars, emblem, and level label all take it; a maxed skill overrides to gold.
 export const SKILLS = [
-  { id: "resolve",   name: "Instinct",      icon: "comet",     tint: "61, 79, 134",   blurb: "Every song you land — and the streaks you string together." },
-  { id: "tempo",     name: "Quick Pen",     icon: "metronome", tint: "178, 58, 63",   blurb: "Answering fast, against the clock." },
-  { id: "lyricist",  name: "By Heart",      icon: "heartline", tint: "200, 95, 151",  blurb: "Recalling the lyric line, word for word." },
-  { id: "endurance", name: "The Long Game", icon: "trail",     tint: "78, 143, 99",   blurb: "How far you run in Infinite." },
-  { id: "range",     name: "Discography",   icon: "records",   tint: "125, 104, 184", blurb: "Spreading your answers across her albums." },
+  { id: "resolve",   name: "Instinct",      icon: "comet",     tint: "61, 79, 134",   blurb: "Grows with every word you match to the right song." },
+  { id: "tempo",     name: "Quick Pen",     icon: "metronome", tint: "178, 58, 63",   blurb: "Grows when you beat the clock to your answer." },
+  { id: "lyricist",  name: "By Heart",      icon: "heartline", tint: "200, 95, 151",  blurb: "Grows when you recall the full lyric line, word for word." },
+  { id: "endurance", name: "The Long Game", icon: "trail",     tint: "78, 143, 99",   blurb: "Grows the further a single Infinite run carries you." },
+  { id: "range",     name: "Discography",   icon: "records",   tint: "125, 104, 184", blurb: "Grows as your answers reach across more albums." },
 ];
 export const SKILL_IDS = SKILLS.map((s) => s.id);
 export const SKILL_BY_ID = Object.fromEntries(SKILLS.map((s) => [s.id, s]));
