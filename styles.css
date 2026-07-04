@@ -536,7 +536,7 @@
   .best-empty-star svg { width: 100%; height: 100%; display: block; }
   /* Adaptive level marker ("L3"): the bare "L" is set in the typewriter face so the big
      handwritten numeral doesn't render it as an oversized swash capital. */
-  .lvl-prefix { font-family: var(--type); font-weight: 700; font-size: 0.56em; letter-spacing: 0.5px; color: var(--ink-soft); margin-right: 1px; }
+  .lvl-prefix { font-family: var(--hand); font-weight: 700; font-size: 0.62em; color: var(--ink-accent); margin-right: 2px; }
 
   /* ---------- Records page (personal bests + history) ---------- */
   .rec-sig { display: flex; align-items: center; gap: 18px; margin: 2px 0 16px; padding-bottom: 16px; border-bottom: 1px dashed rgba(43,39,34,0.16); }
