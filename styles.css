@@ -195,12 +195,14 @@
   /* the dot on the first i becomes the game's gold star */
   .mast-i { position: relative; }
   .mast-i .mast-star {
-    position: absolute; left: 50%; top: 0.12em;
-    width: 0.32em; height: 0.32em;
-    /* nudge right to sit over the slanted stem top, not the letterbox centre */
-    transform: translate(calc(-50% + 0.05em), -50%) rotate(-8deg);
-    fill: var(--bead, #c8951f);
-    filter: drop-shadow(0 1px 1px rgba(58,30,8,0.3));
+    position: absolute; left: 0.185em; top: 0.44em;  /* measured onto the i stem top */
+    width: 0.27em; height: 0.27em;
+    transform: translate(-50%, -50%) rotate(-8deg);
+    /* wears the same gold and lifted-ink edge as the "Song" letters */
+    fill: var(--ink-accent);
+    stroke: var(--ink-accent); stroke-width: 1.1;
+    stroke-linejoin: round; stroke-linecap: round;
+    filter: drop-shadow(0 1px 0 rgba(255,248,232,0.45)) drop-shadow(0 2px 5px rgba(58,30,8,0.28));
   }
   /* a songwriter's underline flourish, drawn in the same pen as the era ink */
   .mast-swash {
