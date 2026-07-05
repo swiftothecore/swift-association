@@ -11,6 +11,7 @@
   --line: 32px;                     /* notebook baseline rhythm */
   --margin: rgba(178, 58, 58, 0.45);
   --page-wash: rgba(212, 160, 23, 0.05);
+  --ink-accent: #a9791f;         /* gold era ink, matching the game masthead */
   --highlighter: rgba(247, 201, 72, 0.55); /* gold highlighter swipe, matching the game */
   --pen: #b9402f;                /* red pen — accents */
   --desk: #c8bca6;
@@ -69,13 +70,39 @@ body::before {
 }
 .sx-back:hover { background: #fff8ec; }
 .sx-title {
+  position: relative; display: inline-block;
   margin: 0; font-family: var(--hand); font-weight: 700;
   font-size: clamp(22px, 6.4vw, 44px); line-height: 1.1; white-space: nowrap;
-  color: #4a3518; transform: rotate(-1.4deg);
+  color: #43301a;  /* the same carved desk-brown as the game masthead */
+  /* soft lift so the ink rests on the wood instead of sitting flat in it */
+  text-shadow: 0 1px 0 rgba(255,248,232,0.42), 0 2px 6px rgba(58,30,8,0.28);
+  transform: rotate(-1.4deg);
+}
+/* the accent word carries the gold era ink, like the game's "Song" */
+.sx-title .mast-gold { color: var(--ink-accent); }
+/* the dot on the first i becomes the game's gold star */
+.sx-title .mast-i { position: relative; }
+.sx-title .mast-i .mast-star {
+  position: absolute; left: 0.185em; top: 0.44em;  /* measured onto the i stem top */
+  width: 0.27em; height: 0.27em;
+  transform: translate(-50%, -50%) rotate(-8deg);
+  /* wears the same gold and lifted-ink edge as the accent letters */
+  fill: var(--ink-accent);
+  stroke: var(--ink-accent); stroke-width: 1.1;
+  stroke-linejoin: round; stroke-linecap: round;
+  filter: drop-shadow(0 1px 0 rgba(255,248,232,0.45)) drop-shadow(0 2px 5px rgba(58,30,8,0.28));
+}
+/* a songwriter's underline flourish, drawn in the same pen as the era ink */
+.sx-title .mast-swash {
+  position: absolute; left: 50%; bottom: -0.42em;
+  width: 88%; height: auto; overflow: visible;
+  transform: translateX(-50%);
+  stroke: var(--ink-accent); opacity: 0.78; pointer-events: none;
 }
 .sx-tagline {
   margin: 10px 0 0; font-family: var(--type);
-  font-size: 12px; letter-spacing: 1px; color: var(--ink-soft);
+  font-size: 12px; letter-spacing: 1px;
+  color: #7a5c38;  /* warm desk-brown, matching the game's tagline */
 }
 @media (max-width: 560px) {
   .sx-back { position: static; display: inline-block; margin-bottom: 10px; }
