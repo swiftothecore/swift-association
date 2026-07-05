@@ -197,13 +197,14 @@
   .mast-i .mast-star {
     position: absolute; left: 50%; top: 0.12em;
     width: 0.32em; height: 0.32em;
-    transform: translate(-50%, -50%) rotate(-8deg);
+    /* nudge right to sit over the slanted stem top, not the letterbox centre */
+    transform: translate(calc(-50% + 0.05em), -50%) rotate(-8deg);
     fill: var(--bead, #c8951f);
     filter: drop-shadow(0 1px 1px rgba(58,30,8,0.3));
   }
   /* a songwriter's underline flourish, drawn in the same pen as the era ink */
   .mast-swash {
-    position: absolute; left: 50%; bottom: -0.24em;
+    position: absolute; left: 50%; bottom: -0.42em;
     width: 88%; height: auto; overflow: visible;
     transform: translateX(-50%);
     stroke: var(--ink-accent); opacity: 0.78; pointer-events: none;
