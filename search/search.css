@@ -95,8 +95,8 @@ body::before {
    the game's star was, with the handle reaching off to the north-west. */
 .sx-title .mast-i { position: relative; }
 .sx-title .mast-i .mast-loupe {
-  position: absolute; left: 0.185em; top: 0.44em;  /* ring centred on the i stem top */
-  width: 0.5em; height: 0.5em; overflow: visible;
+  position: absolute; left: 0.21em; top: 0.49em;  /* ring centred on the i stem top */
+  width: 0.3em; height: 0.3em; overflow: visible;
   transform: translate(-50%, -50%);
   /* wears the same gold and lifted-ink edge as the accent letters */
   fill: none;
