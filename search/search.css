@@ -33,7 +33,8 @@ body {
   color: var(--ink);
   font-family: var(--hand);
   min-height: 100vh;
-  -webkit-font-smoothing: antialiased;
+  /* No -webkit-font-smoothing override: the game leaves it at the browser default so
+     its ink renders full-weight. Matching that keeps the searcher's type as bold. */
 }
 /* Below 1200px the tile is pinned at 1200px wide (cropped, centred) so the grain
    stays at a believable scale on phones; from 1200px up it tracks the viewport
@@ -94,7 +95,7 @@ body::before {
 }
 /* a songwriter's underline flourish, drawn in the same pen as the era ink */
 .sx-title .mast-swash {
-  position: absolute; left: 50%; bottom: -0.42em;
+  position: absolute; left: 50%; bottom: -0.18em;
   width: 88%; height: auto; overflow: visible;
   transform: translateX(-50%);
   stroke: var(--ink-accent); opacity: 0.78; pointer-events: none;
