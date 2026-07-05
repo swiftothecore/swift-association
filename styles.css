@@ -177,14 +177,36 @@
   /* ---------- Title ---------- */
   header.title { text-align: center; margin-bottom: 22px; }
   header.title h1 {
+    position: relative;
+    display: inline-block;
     margin: 0;
     font-family: var(--hand);
     font-weight: 700;
     font-size: clamp(22px, 6.4vw, 44px);
     line-height: 1.1;
     white-space: nowrap;
-    color: #4a3518;  /* a darker take on the settings-gear brown */
+    color: #43301a;  /* a darker take on the settings-gear brown, carved into the desk */
+    /* soft lift so the ink rests on the wood instead of sitting flat in it */
+    text-shadow: 0 1px 0 rgba(255,248,232,0.42), 0 2px 6px rgba(58,30,8,0.28);
     transform: rotate(-1.4deg);
+  }
+  /* the era ink carried up into a single title word (recolours with the album era) */
+  .mast-gold { color: var(--ink-accent); }
+  /* the dot on the first i becomes the game's gold star */
+  .mast-i { position: relative; }
+  .mast-i .mast-star {
+    position: absolute; left: 50%; top: 0.12em;
+    width: 0.32em; height: 0.32em;
+    transform: translate(-50%, -50%) rotate(-8deg);
+    fill: var(--bead, #c8951f);
+    filter: drop-shadow(0 1px 1px rgba(58,30,8,0.3));
+  }
+  /* a songwriter's underline flourish, drawn in the same pen as the era ink */
+  .mast-swash {
+    position: absolute; left: 50%; bottom: -0.24em;
+    width: 88%; height: auto; overflow: visible;
+    transform: translateX(-50%);
+    stroke: var(--ink-accent); opacity: 0.78; pointer-events: none;
   }
   header.title p {
     margin: 10px 0 0;
