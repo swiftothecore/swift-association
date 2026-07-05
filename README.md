@@ -1,6 +1,6 @@
 # Welcome to the ✨Swift To The Song Association✨ repository
 
-I’m currently working on a game inspired by ELLE’s Song Association. Where, by default, you are given 10 seconds to name a song or lyric with a specific word in it. The twist? It’s all Taylor Swift songs.
+I’m currently working on a game inspired by ELLE’s Song Association. Where, by default, you are given 10 seconds to name a song or lyric with a specific word in it. The twist? It’s all Taylor Swift songs 🫶.
 
 The game is still a work in progress and is by no means 'done'.
 
@@ -15,11 +15,12 @@ Standout features:
 - Unique UI with a notebook theme
 - Support for all eras + all miscellaneous and some unreleased Taylor songs coming soon
 - Lots and lots of easter eggs
+- Packed with visual charm
 - Over 75 achievements
 - Daily challenge
 - Challenges mode with 25 challenges (with more to come), including a super-hard tier unlocked through mastery
-- Album Focus mode to narrow your focus to a single album
-- Study mode, a personal review deck that resurfaces the words you miss and the songs you've never found, and settles them as you learn them
+- Album focus mode so you can focus on ONE album only
+- Study mode so you can improve
 - A content-packed skills and mastery system
 - A companion lyric searcher, Swift To The Lyric, for searching every line of every song (work in progress but usable)
 - Installable as a phone or desktop app and works offline once loaded
