@@ -501,6 +501,12 @@ if (location.pathname.endsWith('/index.html')) {
     <div id="songModalBody" class="song-modal-body"></div>
   </div>
 </div>
+<div id="firstRun" class="firstrun" aria-hidden="true">
+  <div class="firstrun-scrim"></div>
+  <div class="firstrun-card card" role="dialog" aria-modal="true" aria-label="Welcome to the notebook">
+    <div id="firstRunBody"></div>
+  </div>
+</div>
 <input id="importFile" type="file" accept="application/json,.json" style="display:none;" />
 
 <div class="app">

@@ -101,6 +101,14 @@ export function initDev(api) {
     row(eraSel, btn("apply era", () => api.setEra(eraSel.value)),
         modeSel, btn("set mode", () => api.setMode(modeSel.value)))));
 
+  // ---- Onboarding / first-run ------------------------------------------------
+  const obAlbumSel = select(["", ...api.STUDIO_ALBUMS], (x) => x, (x) => x || "no favourite");
+  body.append(section("onboarding",
+    row(btn("replay first-run", () => api.onboarding.replay()),
+        btn("mark done", () => { api.onboarding.markDone(); toast("first-run marked done"); })),
+    row(obAlbumSel, btn("set era", () => { api.onboarding.setEra(obAlbumSel.value); toast("era → " + (obAlbumSel.value || "none")); }),
+        btn("reset", () => { api.onboarding.reset(); toast("onboarding reset"); }, "warn"))));
+
   // ---- Timer -----------------------------------------------------------------
   let frozen = false;
   const freezeBtn = btn("freeze", () => {

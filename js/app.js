@@ -4283,13 +4283,14 @@ function startFromWord(raw) {
 function maybeStartFromWordParam() {
   try {
     const params = new URLSearchParams(location.search);
-    if (!params.has("word")) return;
+    if (!params.has("word")) return false;
     const word = params.get("word");
     params.delete("word");
     const qs = params.toString();
     history.replaceState(null, "", location.pathname + (qs ? "?" + qs : "") + location.hash);
-    if (word && word.trim()) startFromWord(word);
+    if (word && word.trim()) { startFromWord(word); return true; }
   } catch (e) { /* malformed URL — ignore */ }
+  return false;
 }
 
 // Infinite mode: endless rounds until lives run out. `opts.carry` keeps the
@@ -8701,7 +8702,9 @@ function renderSettingsBody() {
   body.innerHTML =
     setSection("Notebook",
       setNameplateHTML() +
-      setAvatarRowHTML()
+      setAvatarRowHTML() +
+      setSelectHTML("favouriteAlbum", "Your era", "the album closest to your heart",
+        [{ val: "", label: "No favourite yet" }].concat(STUDIO_ALBUMS.map((a) => ({ val: a, label: a }))))
     ) +
     setSection("Motion &amp; animation",
       setChoiceHTML("reduceMotion", "Reduce motion", "Auto follows your system", [{ val: "auto", label: "Auto" }, { val: "on", label: "On" }, { val: "off", label: "Off" }]) +
@@ -8982,6 +8985,104 @@ function closeSettings() {
   if (target) { try { target.focus({ preventScroll: true }); } catch (_) { target.focus(); } }
 }
 
+/* ---------- First-run welcome (onboarding) ----------
+   A one-time captive flow shown to genuinely new players (never to established players who
+   predate the feature — guarded on lifetime rounds). Built as a small step machine so later
+   "first impressions" work can add steps; the era question is the final step and completing
+   or skipping it sets firstRunDone so the flow never returns. Reached via maybeRunFirstRun()
+   from init (skipped when a "play this word" deep-link is starting a game). */
+const FIRST_RUN_STEPS = ["era"];   // the era question is the last step; new steps prepend before it
+let firstRunIndex = 0;
+let firstRunEra = "";              // the currently-highlighted era, committed to settings on confirm
+let lastFocusedBeforeFirstRun = null;
+
+// The album closest to the player's heart, saved once and reused later. "" = not chosen.
+function setFavouriteAlbum(album) {
+  settings.favouriteAlbum = (album && STUDIO_ALBUMS.includes(album)) ? album : "";
+  saveSettings(settings);
+}
+
+function maybeRunFirstRun() {
+  if (settings.firstRunDone) return;
+  // Someone who has already played (this shipped after they started) isn't a first-timer —
+  // mark them done silently so the welcome never ambushes an existing notebook.
+  if (loadMetrics().roundsTotal > 0) { settings.firstRunDone = true; saveSettings(settings); return; }
+  openFirstRun();
+}
+function openFirstRun() {
+  firstRunIndex = 0;
+  firstRunEra = settings.favouriteAlbum || "";
+  lastFocusedBeforeFirstRun = document.activeElement;
+  renderFirstRunStep();
+  const m = $("firstRun");
+  m.classList.add("open");
+  m.setAttribute("aria-hidden", "false");
+  document.body.classList.add("modal-open");
+}
+function closeFirstRun() {
+  const m = $("firstRun");
+  if (!m.classList.contains("open")) return;
+  m.classList.remove("open");
+  m.setAttribute("aria-hidden", "true");
+  if (!$("settingsModal").classList.contains("open")) document.body.classList.remove("modal-open");
+  const back = lastFocusedBeforeFirstRun;
+  lastFocusedBeforeFirstRun = null;
+  const target = (back && typeof back.focus === "function" && document.contains(back)) ? back : $("playBtn");
+  if (target) { try { target.focus({ preventScroll: true }); } catch (_) { target.focus(); } }
+}
+function renderFirstRunStep() {
+  const body = $("firstRunBody");
+  if (!body) return;
+  const step = FIRST_RUN_STEPS[firstRunIndex];
+  if (step === "era") body.innerHTML = firstRunEraHTML();
+  const focusTarget = body.querySelector("[data-fr='confirm'], .btn-primary, button");
+  if (focusTarget) { try { focusTarget.focus({ preventScroll: true }); } catch (_) { /* noop */ } }
+}
+function advanceFirstRun() {
+  firstRunIndex += 1;
+  if (firstRunIndex >= FIRST_RUN_STEPS.length) { finishFirstRun(); return; }
+  renderFirstRunStep();
+}
+function finishFirstRun() {
+  settings.firstRunDone = true;
+  saveSettings(settings);
+  closeFirstRun();
+}
+// The era-question step: pick the album closest to your heart (or skip). Highlight is held in
+// firstRunEra and only committed on confirm, so "skip for now" genuinely leaves it unset.
+function firstRunEraHTML() {
+  const pal = albumPalette();
+  const chips = STUDIO_ALBUMS.map((a) => {
+    const c = pal[a] || "#8b8272";
+    const sel = firstRunEra === a ? " is-selected" : "";
+    return `<button type="button" class="fr-era${sel}" data-era-album="${escapeHtml(a)}" style="--era-c:${c}"` +
+      `${firstRunEra === a ? ' aria-pressed="true"' : ' aria-pressed="false"'}>` +
+      `<span class="fr-era-dot" style="background:${c}"></span>` +
+      `<span class="fr-era-name">${escapeHtml(a)}</span></button>`;
+  }).join("");
+  return `<p class="fr-kicker">before you start</p>` +
+    `<h2 class="fr-title">Which era is yours?</h2>` +
+    `<p class="fr-sub">Pick the album closest to your heart. We'll keep it on your notebook — you can change it any time in settings.</p>` +
+    `<div class="fr-era-grid" role="group" aria-label="Choose your era">${chips}</div>` +
+    `<div class="fr-actions">` +
+      `<button type="button" class="btn-primary fr-confirm" data-fr="confirm"${firstRunEra ? "" : " disabled"}>` +
+        `${firstRunEra ? "That's my era &rarr;" : "Pick an era"}</button>` +
+      `<button type="button" class="btn-link" data-fr="skip">skip for now</button>` +
+    `</div>`;
+}
+function wireFirstRun() {
+  const body = $("firstRunBody");
+  if (!body) return;
+  body.addEventListener("click", (e) => {
+    const eraBtn = e.target.closest("[data-era-album]");
+    if (eraBtn) { firstRunEra = eraBtn.getAttribute("data-era-album"); renderFirstRunStep(); return; }
+    const act = e.target.closest("[data-fr]");
+    if (!act) return;
+    if (act.getAttribute("data-fr") === "confirm") { setFavouriteAlbum(firstRunEra); advanceFirstRun(); }
+    else if (act.getAttribute("data-fr") === "skip") { advanceFirstRun(); }
+  });
+}
+
 // Wheel over the dimmed backdrop (outside the dialog) still scrolls the dialog,
 // so the cursor doesn't have to be on the panel for the wheel to work.
 function routeSettingsWheel(e) {
@@ -9157,7 +9258,7 @@ function devLockAllAch() { resetAchievements(); earnedAchievements = {}; }
 // state on each call; the rest are thin wrappers over the game's own functions.
 function buildDevApi() {
   return {
-    MODES, MODE_ORDER, ERAS, ACHIEVEMENTS, SKILL_IDS,
+    MODES, MODE_ORDER, ERAS, ACHIEVEMENTS, SKILL_IDS, STUDIO_ALBUMS,
     getState: () => ({
       screen: Object.keys(screens).find((k) => screens[k].classList.contains("active")),
       round, score, total: TOTAL_ROUNDS,
@@ -9186,6 +9287,14 @@ function buildDevApi() {
     // Word / era / mode
     setEra: (era) => applyEra(era),
     setMode: (id) => setMode(id),
+    // Onboarding / first-run
+    onboarding: {
+      state: () => ({ firstRunDone: settings.firstRunDone, favouriteAlbum: settings.favouriteAlbum || null }),
+      replay: () => { settings.firstRunDone = false; saveSettings(settings); openFirstRun(); },
+      markDone: () => { settings.firstRunDone = true; saveSettings(settings); },
+      setEra: (album) => setFavouriteAlbum(album),
+      reset: () => { settings.firstRunDone = false; settings.favouriteAlbum = ""; saveSettings(settings); },
+    },
     // Timer
     timer: { freeze: devTimerFreeze, unfreeze: devTimerUnfreeze, add: devTimerAdd,
              set: devTimerSet, disable: devTimerDisable },
@@ -9527,11 +9636,14 @@ async function init() {
   });
   wireInput();
   setupTooltips();
+  wireFirstRun();
 
   try {
     await loadData();
     revealNotebook();            // hide the loader, lay out the start board (with a page-turn when motion allows)
-    maybeStartFromWordParam();   // "Play this word" deep-link from the searcher
+    // "Play this word" deep-link from the searcher jumps straight into a round; only greet a
+    // fresh player with the first-run welcome when we're not launching into a game.
+    if (!maybeStartFromWordParam()) maybeRunFirstRun();
   } catch (err) {
     $("loading").outerHTML = `
       <div class="error">

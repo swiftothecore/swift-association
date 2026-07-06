@@ -3471,6 +3471,37 @@
   body.modal-open { overflow: hidden; }
   body[data-reduce-motion="on"] .settings-scrim { animation: none; }
 
+  /* ---------- First-run welcome (onboarding) ---------- */
+  .firstrun { position: fixed; inset: 0; z-index: 220; display: none; }
+  .firstrun.open { display: block; }
+  .firstrun-scrim { position: absolute; inset: 0; background: rgba(34, 24, 12, 0.55); animation: fade 0.25s ease; }
+  body[data-reduce-motion="on"] .firstrun-scrim { animation: none; }
+  .firstrun-card {
+    position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    width: min(560px, calc(100vw - 28px)); max-height: calc(100vh - 40px); overflow-y: auto;
+    overscroll-behavior: contain; padding: 26px 28px 30px 52px; --rule-x: 36px;
+    animation: fade 0.3s ease;
+  }
+  body[data-reduce-motion="on"] .firstrun-card { animation: none; }
+  .fr-kicker { font-family: var(--type); font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: var(--ink-soft); margin: 0 0 6px; }
+  .fr-title { font-family: var(--hand); font-size: 34px; font-weight: 700; color: var(--ink); margin: 0 0 8px; transform: rotate(-0.6deg); }
+  .fr-sub { font-family: var(--type); font-size: 14px; line-height: 1.5; color: var(--ink-soft); margin: 0 0 20px; max-width: 44ch; }
+  .fr-era-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px 10px; margin-bottom: 22px; }
+  @media (max-width: 480px) { .fr-era-grid { grid-template-columns: 1fr; } }
+  .fr-era {
+    display: flex; align-items: center; gap: 10px; text-align: left;
+    padding: 9px 12px; border-radius: 4px; background: rgba(255, 255, 255, 0.35);
+    border: 1.5px solid rgba(43, 39, 34, 0.16); color: var(--ink);
+    font-family: var(--hand); font-size: 18px; transition: border-color .15s, background .15s;
+  }
+  .fr-era:hover { background: rgba(255, 255, 255, 0.6); border-color: var(--era-c); }
+  .fr-era.is-selected { border-color: var(--era-c); background: rgba(255, 255, 255, 0.72); box-shadow: 0 0 0 1px var(--era-c) inset; }
+  .fr-era-dot { width: 14px; height: 14px; border-radius: 50%; flex: none; box-shadow: 0 0 0 1.5px rgba(255, 255, 255, 0.7); }
+  .fr-era-name { line-height: 1.15; }
+  .fr-actions { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+  .fr-confirm { width: 100%; }
+  .fr-confirm[disabled] { opacity: 0.5; cursor: default; }
+
   /* Full-song lyrics modal — same notebook card as Settings, album-tinted left rule. */
   .song-modal { position: fixed; inset: 0; z-index: 210; display: none; }
   .song-modal.open { display: block; }
