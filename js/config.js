@@ -68,6 +68,11 @@ export const DEFAULT_SETTINGS = {
   hideDailyScore: false,    // hide the daily score until "reveal & copy"
   timezone: "auto",         // daily-reset zone: "auto" (detect) | an IANA id e.g. "America/New_York"
   weekStart: "mon",         // first row/column of week-based views (the records calendar): "mon" | "sun"
+  // onboarding / first-run — the shared state every "first impressions" feature hangs off
+  firstRunDone: false,      // has the player finished the first-run welcome flow (gates the intro + the ready-for-normal nudge)
+  favouriteAlbum: "",       // era chosen in the first-run question ("" = never asked or skipped); surfaced on the profile
+  firstMatchDone: false,    // has the player ever landed a correct answer (guards the one-time first-match celebration)
+  seenCoachmarks: {},       // { [coachmarkId]: true } — just-in-time tips already shown, so each fires once
   // meta
   sound: false,             // placeholder — no audio wired yet
   lastGameType: "classic",  // runtime memory backing defaultGameType: "last" — the last type clicked (not shown in UI)

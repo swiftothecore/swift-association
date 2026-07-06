@@ -438,6 +438,31 @@ function flipInToScreen(name) {
   scheduleFlipRemoval(incoming, () => { backdrop.remove(); });
 }
 
+/* First paint after loadData(): swap the "opening the notebook…" loader for the real start
+   board. When motion allows, the loader becomes an opaque cover sheet and flips up from its
+   top edge — turning to the first page — revealing the board already laid out beneath. The
+   reduced-motion / instant / page-turn-off paths just hide it, exactly as before. */
+function revealNotebook() {
+  const loading = $("loading");
+  const content = $("startContent");
+  content.style.display = "";
+  refreshStartBoard();
+  if (!loading) return;
+  if (motionReduced() || animInstant() || !settings.pageTurn) {
+    loading.style.display = "none";
+    return;
+  }
+  loading.classList.add("loading-cover", "loading-cover--turning");
+  let finished = false;
+  const finish = () => {
+    if (finished) return; finished = true;
+    loading.style.display = "none";
+    loading.classList.remove("loading-cover", "loading-cover--turning");
+  };
+  loading.addEventListener("animationend", finish, { once: true });
+  setTimeout(finish, 550 * (animScale() || 1) + 80);
+}
+
 /* ---------- Random sticky-tape placement for the nav keepsake cards ----------
    Each card gets 2–4 strips (mostly 3), each pinned to a distinct randomly chosen corner
    or edge with a little rotation jitter, so the cards look genuinely taped down rather
@@ -9505,9 +9530,7 @@ async function init() {
 
   try {
     await loadData();
-    $("loading").style.display = "none";
-    $("startContent").style.display = "";
-    refreshStartBoard();
+    revealNotebook();            // hide the loader, lay out the start board (with a page-turn when motion allows)
     maybeStartFromWordParam();   // "Play this word" deep-link from the searcher
   } catch (err) {
     $("loading").outerHTML = `
