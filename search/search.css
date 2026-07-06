@@ -56,6 +56,55 @@ body::before {
     radial-gradient(ellipse 95% 95% at 50% 36%, rgba(74,53,29,0) 45%, rgba(74,53,29,0.22) 100%);
 }
 
+/* ---------- Desk props (decorative, desktop only) ----------
+   The searcher's own still life, same conventions as the game's desk props but
+   never repeating its objects: where the game's desk is a songwriter's (pencil,
+   mug, floss, cassette), this one is a lyric researcher's (magnifying glass,
+   the gold highlighter, index cards, a flagged rhyming dictionary, page flags,
+   earbuds). Document-anchored (absolute, one viewport tall) so the props sit on
+   the first screenful of desk and scroll away with the wood grain; only the
+   lighting overlay stays with the viewport. Pointer-transparent, painted at the
+   same negative z as the lighting but later in the tree, so they sit on the lit
+   wood and under the paper. */
+.sx-desk { position: absolute; top: 0; left: 0; right: 0; height: 100vh; z-index: -1; pointer-events: none; display: none; overflow: hidden; }
+.sx-desk-item {
+  position: absolute; opacity: 0.92;
+  filter: drop-shadow(3px 7px 6px rgba(46,32,14,0.30)) saturate(0.88);
+}
+.sx-desk-item svg { display: block; width: 100%; height: auto; overflow: visible; }
+/* Props share the game's real-world scale (roughly 3px per mm of desk): the
+   magnifier's lens is ~6cm across, the highlighter ~12cm, index cards 13x8cm,
+   the dictionary ~20cm tall, flags 3cm, the earbud coil ~8cm.
+   Composition: left is the close-reading side (magnifier up top, highlighter
+   mid, card stack low), right is the reference side (dictionary up top, flag
+   station and earbuds low); the mid stretches of wood stay deliberately bare.
+   Edge props hang half off the viewport so the desk reads as continuing. */
+/* the magnifier tucks into the corner: handle running off screen up-left, lens
+   reaching in toward the page (its grain group counter-rotates inside the SVG
+   so the magnified grain stays parallel with the desk's) */
+.dx-loupe { width: 480px; top: 0;   left: 0; transform: translate(-25%, -25%) rotate(50deg);
+  filter: drop-shadow(5px 11px 9px rgba(46,32,14,0.26)) saturate(0.88); }
+/* the highlighter stands near-vertical in the gap beside the page, like the
+   game's pencil; its test swipe rotates with it, which just reads as a swipe
+   drawn at that angle on the wood */
+.dx-marker { width: 340px; top: 46%; left: calc(50% - 505px); transform: translate(-50%, -50%) rotate(75deg); }
+.dx-cards  { width: 380px; top: 64%; left: 0; transform: translateX(-36%) rotate(-9deg); }
+.dx-book   { width: 300px; top: 5%;  right: 0; transform: translateX(40%) rotate(-7deg); }
+.dx-flags  { width: 215px; top: 56%; right: 34px; transform: rotate(8deg); }
+.dx-buds   { width: 300px; top: 74%; right: 0; transform: translateX(32%) rotate(-12deg); }
+/* functional lettering on the props (the marker's label, L/R on the buds)
+   stays in the typewriter hand, like the game's bead letters */
+.sx-desk .dx-label { font: 700 13px var(--type); letter-spacing: 0.18em; fill: #8a6f3a; text-anchor: middle; }
+.sx-desk .dx-type  { font: 700 9px var(--type); fill: #8a7f66; text-anchor: middle; }
+/* the earbud jack tail sways gently, pivoting where it leaves the coil
+   (the tail's bottom-right corner) */
+.dx-sway { transform-box: fill-box; transform-origin: 100% 100%; animation: dxSway 5.6s ease-in-out infinite; }
+@keyframes dxSway { 0%, 100% { transform: rotate(-2.2deg); } 50% { transform: rotate(2.2deg); } }
+@media (prefers-reduced-motion: reduce) { .dx-sway { animation: none; } }
+/* Life-size props need real desk room: below 1280px (the searcher's page is
+   820px wide) the side clusters would pile onto the paper. */
+@media (min-width: 1280px) { .sx-desk { display: block; } }
+
 /* top bar — a big handwritten title centred over the desk, like the game's, with the
    back-to-game link tucked into the top-left corner. */
 .sx-top {

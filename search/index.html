@@ -35,6 +35,307 @@
 <link rel="stylesheet" href="search.css" />
 </head>
 <body>
+<div class="sx-desk" aria-hidden="true">
+  <!-- LEFT: brass hand magnifier set down beside the page, handle running off
+       the screen edge. The lens does the searcher's job on the desk itself:
+       the wood grain under the glass is drawn back bigger and darker, with a
+       refraction band at the rim and a diagonal glare. -->
+  <div class="sx-desk-item dx-loupe">
+    <svg viewBox="0 0 480 232" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="lpBrass" x1="0" y1="0" x2="0.85" y2="1"><stop offset="0" stop-color="#ecc87e"/><stop offset="0.5" stop-color="#cfa050"/><stop offset="1" stop-color="#a1742f"/></linearGradient>
+        <linearGradient id="lpWood" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8a5a30"/><stop offset="0.45" stop-color="#633c1c"/><stop offset="1" stop-color="#41250e"/></linearGradient>
+        <radialGradient id="lpGlass" cx="0.38" cy="0.32" r="0.85"><stop offset="0" stop-color="#eef4f0" stop-opacity="0.26"/><stop offset="0.6" stop-color="#dbe6df" stop-opacity="0.1"/><stop offset="1" stop-color="#9fb4a8" stop-opacity="0.26"/></radialGradient>
+        <clipPath id="lpClip"><circle cx="356" cy="116" r="84"/></clipPath>
+      </defs>
+      <!-- turned wooden handle, pommel trailing off screen left -->
+      <ellipse cx="34" cy="116" rx="17" ry="18" fill="url(#lpWood)"/>
+      <path d="M36 101 C92 93 152 95 202 102 C228 106 246 108 257 109 L257 123 C246 124 228 126 202 130 C152 137 92 139 36 131 Z" fill="url(#lpWood)"/>
+      <path d="M44 100.5 C100 93.5 160 95.5 236 105" fill="none" stroke="#a5714a" stroke-width="2.2" stroke-linecap="round" opacity="0.75"/>
+      <path d="M60 133 C110 138 160 137 210 129" fill="none" stroke="#2c1706" stroke-width="1.6" stroke-linecap="round" opacity="0.5"/>
+      <path d="M64 98.6 q4 17.4 0 34.8 M72 98 q4 18 0 36" fill="none" stroke="#341d0a" stroke-width="1.4" opacity="0.55"/>
+      <!-- brass collar where the handle meets the ring -->
+      <rect x="252" y="100" width="18" height="32" rx="3" fill="url(#lpBrass)" stroke="#7c5a22" stroke-width="1"/>
+      <rect x="255" y="103" width="12" height="4" rx="2" fill="#f4d896" opacity="0.8"/>
+      <!-- lens interior first: glass tint over magnified wood grain -->
+      <g clip-path="url(#lpClip)">
+<!-- counter-rotated against the item's CSS rotate(50deg) so the magnified
+             grain lies parallel with the desk grain outside the glass -->
+        <g fill="none" stroke="#6f4e20" stroke-linecap="round" transform="rotate(-55 356 116)">
+          <path d="M268 56 q46 6 88 0 q46 -6 92 0" stroke-width="5" opacity="0.24"/>
+          <path d="M268 82 q46 -7 88 0 q46 7 92 0" stroke-width="4" opacity="0.28"/>
+          <path d="M268 108 q40 6 84 1 q48 -5 96 1" stroke-width="6" opacity="0.22"/>
+          <path d="M268 136 q46 -6 88 -1 q46 5 92 -1" stroke-width="4.5" opacity="0.28"/>
+          <path d="M268 162 q46 6 88 0 q46 -6 92 0" stroke-width="5" opacity="0.22"/>
+          <ellipse cx="394" cy="148" rx="27" ry="8.5" stroke-width="2.4" opacity="0.26"/>
+          <ellipse cx="394" cy="148" rx="14" ry="4.5" stroke-width="2" opacity="0.3"/>
+        </g>
+        <circle cx="356" cy="116" r="84" fill="url(#lpGlass)"/>
+        <!-- refraction band just inside the rim, then the darker seat shadow -->
+        <circle cx="356" cy="116" r="78" fill="none" stroke="#ffffff" stroke-width="4" opacity="0.1"/>
+        <path d="M298 164 A75 75 0 0 0 430 130" fill="none" stroke="#2e2010" stroke-width="9" opacity="0.12"/>
+        <!-- diagonal glare -->
+        <path d="M310 70 L390 150" stroke="#ffffff" stroke-opacity="0.2" stroke-width="13" stroke-linecap="round"/>
+        <path d="M330 62 L392 124" stroke="#ffffff" stroke-opacity="0.3" stroke-width="3.5" stroke-linecap="round"/>
+        <ellipse cx="322" cy="78" rx="14" ry="8" fill="#ffffff" opacity="0.16" transform="rotate(-38 322 78)"/>
+      </g>
+      <!-- the brass ring, milled edge, rim lines and a top sheen -->
+      <circle cx="356" cy="116" r="92" fill="none" stroke="url(#lpBrass)" stroke-width="13"/>
+      <circle cx="356" cy="116" r="92" fill="none" stroke="#7c5822" stroke-width="13" stroke-dasharray="1.7 7.3" opacity="0.16"/>
+      <circle cx="356" cy="116" r="98.5" fill="none" stroke="#6e4d1c" stroke-width="1.3" opacity="0.9"/>
+      <circle cx="356" cy="116" r="85.5" fill="none" stroke="#5f421a" stroke-width="1.2" opacity="0.9"/>
+      <path d="M282 62 A92 92 0 0 1 430 62" fill="none" stroke="#f4d896" stroke-width="2.5" stroke-linecap="round" opacity="0.8"/>
+    </svg>
+  </div>
+  <!-- LEFT: the gold highlighter, uncapped, set down mid-thought: chisel felt
+       still wet, cap tossed aside, and a translucent test swipe of gold drying
+       on the wood by the tip. This is the pen behind every highlight on the
+       page, so it earns its spot on the desk. -->
+  <div class="sx-desk-item dx-marker">
+    <svg viewBox="0 0 340 150" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="hmBody" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f6efdc"/><stop offset="0.55" stop-color="#e7dbbd"/><stop offset="1" stop-color="#cbbb93"/></linearGradient>
+        <linearGradient id="hmGold" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ecc453"/><stop offset="0.5" stop-color="#d3a02b"/><stop offset="1" stop-color="#a97e1c"/></linearGradient>
+        <linearGradient id="hmFelt" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ecc14a"/><stop offset="1" stop-color="#c8931f"/></linearGradient>
+      </defs>
+      <!-- the test swipe: two translucent passes, a wet leading edge, and two
+           darker fibres where the felt dragged -->
+      <path d="M156 111 C112 111 70 117 34 125" fill="none" stroke="#e6b32f" stroke-width="23" stroke-opacity="0.38"/>
+      <path d="M150 115 C110 115 72 121 40 128" fill="none" stroke="#d9a827" stroke-width="15" stroke-opacity="0.28"/>
+      <ellipse cx="40" cy="124" rx="7" ry="5" fill="#d9a827" opacity="0.4" transform="rotate(-10 40 124)"/>
+      <path d="M140 109 C106 109 76 113 50 118" fill="none" stroke="#b98d1e" stroke-width="1.2" stroke-opacity="0.3"/>
+      <path d="M138 118 C106 119 80 122 56 127" fill="none" stroke="#b98d1e" stroke-width="1" stroke-opacity="0.25"/>
+      <!-- chisel felt, ferrule, nose cone -->
+      <path d="M52 57 L30 52 L24 64 L52 75 Z" fill="url(#hmFelt)"/>
+      <path d="M30 52 L24 64" stroke="#a2751a" stroke-width="3.5" stroke-linecap="round"/>
+      <path d="M33 54.5 L27 63" stroke="#8a5f12" stroke-width="1.4" opacity="0.6"/>
+      <rect x="52" y="55" width="8" height="22" rx="2" fill="#d9ceac" stroke="#a8956d" stroke-width="0.8"/>
+      <path d="M96 45 C74 48 63 54 58 58 L58 74 C63 78 74 82 96 85 Z" fill="#ddd0ab" stroke="#a8956d" stroke-width="1"/>
+      <path d="M70 52 C66 55 64 58 63 60" fill="none" stroke="#f6efdc" stroke-width="1.6" stroke-linecap="round" opacity="0.7"/>
+      <!-- barrel with its gold ring, label rules and posted end cap -->
+      <rect x="88" y="43" width="12" height="44" fill="url(#hmGold)" stroke="#96701f" stroke-width="0.8"/>
+      <rect x="96" y="43" width="158" height="44" rx="9" fill="url(#hmBody)" stroke="#b7a67f" stroke-width="1"/>
+      <path d="M104 48 H246" stroke="#fdf8ea" stroke-width="3" stroke-linecap="round" opacity="0.55"/>
+      <path d="M104 82 H246" stroke="#a8956d" stroke-width="2.4" stroke-linecap="round" opacity="0.4"/>
+      <path d="M116 52 H238 M116 78 H238" stroke="#b3a175" stroke-width="1" opacity="0.65"/>
+      <text class="dx-label" x="177" y="70">gold</text>
+      <rect x="254" y="45" width="20" height="40" rx="8" fill="url(#hmGold)" stroke="#96701f" stroke-width="1"/>
+      <path d="M259 49 q7 -2 11 1" fill="none" stroke="#f4d896" stroke-width="1.8" stroke-linecap="round" opacity="0.8"/>
+      <!-- the cap, dropped nose-up just past the barrel -->
+      <g transform="translate(300 114) rotate(-28)">
+        <rect x="-34" y="-16" width="68" height="32" rx="8" fill="url(#hmBody)" stroke="#b7a67f" stroke-width="1"/>
+        <rect x="22" y="-16" width="12" height="32" rx="6" fill="url(#hmGold)" stroke="#96701f" stroke-width="0.8"/>
+        <path d="M-24 -10 H18" stroke="#fdf8ea" stroke-width="1.5" stroke-linecap="round" opacity="0.5"/>
+        <path d="M-22 -12.5 H14" stroke="#cbbd97" stroke-width="4" stroke-linecap="round"/>
+        <circle cx="16" cy="-12.5" r="2.6" fill="#cbbd97" stroke="#a8956d" stroke-width="0.6"/>
+        <ellipse cx="-32" cy="0" rx="4.5" ry="13.5" fill="#3f382c"/>
+        <ellipse cx="-32.5" cy="0" rx="2.6" ry="10" fill="#241f16"/>
+      </g>
+    </svg>
+  </div>
+  <!-- LEFT: a stack of ruled index cards half under the screen edge, clipped
+       together. The top card carries scrawled word-notes: one swiped with the
+       gold highlighter, one circled in red pen, like a search that already
+       happened on paper. -->
+  <div class="sx-desk-item dx-cards">
+    <svg viewBox="0 0 380 260" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="icSteel" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f0ede3"/><stop offset="0.5" stop-color="#b7b1a2"/><stop offset="1" stop-color="#8a8374"/></linearGradient>
+      </defs>
+      <g transform="translate(190 130)">
+        <!-- the pile beneath, each card askew -->
+        <rect x="-150" y="-90" width="300" height="180" rx="6" transform="rotate(6)" fill="#eee5cd" stroke="#cabb98" stroke-width="1"/>
+        <rect x="-150" y="-90" width="300" height="180" rx="6" transform="rotate(-4)" fill="#f2ead4" stroke="#cabb98" stroke-width="1"/>
+        <rect x="-150" y="-90" width="300" height="180" rx="6" transform="rotate(2.5)" fill="#f0e8d1" stroke="#cabb98" stroke-width="1"/>
+        <!-- top card -->
+        <g transform="rotate(-1.5)">
+          <rect x="-150" y="-90" width="300" height="180" rx="6" fill="#f8f2df" stroke="#c9ba97" stroke-width="1.2"/>
+          <path d="M-138 -56 H138" stroke="#b23a3f" stroke-width="1.6" opacity="0.5"/>
+          <g stroke="#8f9ab8" stroke-width="1.1" opacity="0.35">
+            <path d="M-138 -34 H138"/><path d="M-138 -12 H138"/><path d="M-138 10 H138"/><path d="M-138 32 H138"/><path d="M-138 54 H138"/>
+          </g>
+          <!-- gold swipe behind the second-line word, laid before the ink -->
+          <rect x="-36" y="-34" width="76" height="20" rx="3" fill="#e8b83a" opacity="0.45" transform="rotate(-1)"/>
+          <!-- scrawled word-notes, three to a line -->
+          <g fill="none" stroke="#474033" stroke-width="2" stroke-linecap="round" opacity="0.8">
+            <path d="M-124 -66 q5 -9 10 -2 q4 6 9 0 q4 -8 9 -1 q5 6 11 0"/>
+            <path d="M-58 -68 q6 -6 11 -1 q5 5 10 -1 q5 -6 10 0"/>
+            <path d="M12 -66 q5 -8 10 -1 q4 6 9 0 q5 -7 10 -1 q4 5 9 0 q5 -7 10 0"/>
+            <path d="M-126 -42 q6 -7 11 -1 q4 5 9 -1 q5 -6 10 0"/>
+            <path d="M-30 -44 q5 -8 10 -1 q5 6 10 0 q4 -7 9 -1 q5 5 10 -1 q5 -6 10 0 q4 5 9 0"/>
+            <path d="M62 -42 q6 -7 11 -1 q5 5 10 -1 q4 -6 9 0"/>
+            <path d="M-122 -20 q5 -7 10 -1 q4 5 9 -1 q5 -6 10 0 q5 5 10 -1"/>
+            <path d="M-44 -18 q6 -7 11 -1 q4 5 9 0"/>
+            <path d="M-120 26 q5 -7 10 -1 q5 5 10 -1 q4 -6 9 0"/>
+            <path d="M-64 24 q6 -8 11 -1 q4 6 9 0 q5 -7 10 -1"/>
+            <path d="M36 24 q5 -7 10 -1 q4 5 9 -1 q5 -6 10 0 q5 5 10 -1"/>
+          </g>
+          <!-- a red-pen circle round the fourth-line find, drawn in one loop -->
+          <path d="M104 20 C98 8 46 8 32 18 C20 27 36 36 70 35 C98 34 112 28 102 17" fill="none" stroke="#b23a3f" stroke-width="2" stroke-linecap="round" opacity="0.7"/>
+          <!-- three tally ticks in the corner, one small dog-ear -->
+          <path d="M-134 68 v10 M-128 66 v10 M-122 68 v10" stroke="#6f675a" stroke-width="1.6" stroke-linecap="round" opacity="0.6"/>
+          <path d="M124 90 L150 64 L150 90 Z" fill="#e6dcc2"/>
+          <path d="M124 90 L150 64" stroke="#c3b590" stroke-width="1"/>
+          <!-- paperclip over the top edge -->
+          <g transform="translate(-16 -92) rotate(-9)" fill="none" stroke="url(#icSteel)" stroke-width="3.4" stroke-linecap="round">
+            <path d="M0 26 L0 -12 A8 8 0 0 1 16 -12 L16 22 A6 6 0 0 1 4 22 L4 -6"/>
+          </g>
+        </g>
+      </g>
+    </svg>
+  </div>
+  <!-- RIGHT: a cloth-bound rhyming dictionary lying flat, spine off the screen
+       edge: blind-embossed border, a gold loupe stamped on the cover, page
+       flags in era colours marking the fore-edge, and a satin ribbon bookmark
+       slipped out onto the desk. -->
+  <div class="sx-desk-item dx-book">
+    <svg viewBox="0 0 330 470" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="bkCloth" x1="0" y1="0" x2="0.7" y2="1"><stop offset="0" stop-color="#7d3b41"/><stop offset="0.55" stop-color="#692c32"/><stop offset="1" stop-color="#521e23"/></linearGradient>
+        <linearGradient id="bkGold" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#e5bc5a"/><stop offset="1" stop-color="#c1913a"/></linearGradient>
+        <filter id="bkGrain" x="0" y="0" width="100%" height="100%">
+          <feTurbulence type="fractalNoise" baseFrequency="0.9 0.4" numOctaves="2" seed="7" stitchTiles="stitch"/>
+          <feColorMatrix type="matrix" values="0 0 0 0 0.16 0 0 0 0 0.06 0 0 0 0 0.07 0.5 0 0 0 -0.1"/>
+        </filter>
+      </defs>
+      <!-- fore-edge page block peeking out from under the cover -->
+      <rect x="40" y="30" width="26" height="384" fill="#efe6cd" stroke="#cdbf9e" stroke-width="1"/>
+      <g fill="none" stroke="#d9cca9" stroke-width="1" opacity="0.85">
+        <path d="M45 32 q2 190 0 380"/><path d="M49 32 q-1.6 190 0 380"/><path d="M53 32 q2 190 0 380"/><path d="M57 32 q-1.6 190 0 380"/><path d="M61 32 q1.4 190 0 380"/>
+      </g>
+      <!-- era-coloured page flags stuck through the fore-edge -->
+      <g stroke-width="0.8">
+        <rect x="6" y="66" width="36" height="13" rx="2" fill="#d9a827" stroke="#a37b1a" transform="rotate(-2 42 72)"/>
+        <rect x="10" y="128" width="32" height="13" rx="2" fill="#b23a3f" stroke="#84262a" transform="rotate(1.5 42 134)"/>
+        <rect x="4" y="196" width="38" height="13" rx="2" fill="#7ea6c9" stroke="#587e9e" transform="rotate(-1 42 202)"/>
+        <rect x="12" y="258" width="30" height="13" rx="2" fill="#9b7fb6" stroke="#71578c" transform="rotate(2 42 264)"/>
+        <rect x="8" y="330" width="34" height="13" rx="2" fill="#7ba05b" stroke="#587840" transform="rotate(-1.5 42 336)"/>
+      </g>
+      <g stroke="#b3a685" stroke-width="1" opacity="0.8">
+        <path d="M41 66 v13 M41 128 v13 M41 196 v13 M41 258 v13 M41 330 v13"/>
+      </g>
+      <g stroke="#ffffff" stroke-width="1.2" opacity="0.3">
+        <path d="M10 69.5 h28 M14 131.5 h24 M8 199.5 h30 M16 261.5 h22 M12 333.5 h26"/>
+      </g>
+      <!-- the cover, overhanging the pages, rounded on its open corners -->
+      <path d="M64 20 H330 V424 H64 Q52 424 52 412 V32 Q52 20 64 20 Z" fill="url(#bkCloth)" stroke="#40161a" stroke-width="1.5"/>
+      <path d="M64 20 H330 V424 H64 Q52 424 52 412 V32 Q52 20 64 20 Z" filter="url(#bkGrain)" opacity="0.35"/>
+      <!-- blind-embossed border: a dark press line with its raised highlight -->
+      <rect x="78" y="36" width="236" height="372" rx="2" fill="none" stroke="#46181d" stroke-width="2" opacity="0.9"/>
+      <rect x="79.5" y="37.5" width="236" height="372" rx="2" fill="none" stroke="#a05a61" stroke-width="1" opacity="0.4"/>
+      <!-- gold rules and the stamped loupe emblem -->
+      <path d="M78 76 H314" stroke="url(#bkGold)" stroke-width="2" opacity="0.85"/>
+      <path d="M78 88 H314" stroke="url(#bkGold)" stroke-width="1" opacity="0.7"/>
+      <path d="M78 372 H314" stroke="url(#bkGold)" stroke-width="1.5" opacity="0.75"/>
+      <g fill="none" stroke="url(#bkGold)">
+        <circle cx="196" cy="180" r="24" stroke-width="4"/>
+        <circle cx="196" cy="180" r="18.5" stroke-width="1" opacity="0.6"/>
+        <path d="M213 197 L230 214" stroke-width="5" stroke-linecap="round"/>
+      </g>
+      <path d="M156 246 H236" stroke="url(#bkGold)" stroke-width="1.5" opacity="0.8"/>
+      <path d="M172 256 H220" stroke="url(#bkGold)" stroke-width="1" opacity="0.7"/>
+      <!-- corner wear where the cloth has rubbed pale -->
+      <path d="M58 38 Q56 27 66 24" fill="none" stroke="#b06a70" stroke-width="2" stroke-linecap="round" opacity="0.35"/>
+      <path d="M58 406 Q56 417 66 420" fill="none" stroke="#b06a70" stroke-width="2" stroke-linecap="round" opacity="0.3"/>
+      <!-- satin ribbon slipped out of the bottom, forked tail on the wood -->
+      <path d="M96 424 C86 440 66 444 52 456 C46 461 42 465 42 468" fill="none" stroke="#caa23b" stroke-width="9"/>
+      <path d="M95 422 C85 438 66 442 53 453" fill="none" stroke="#e6c469" stroke-width="3" stroke-linecap="round" opacity="0.6"/>
+      <path d="M46 461 L28 470 L46 477 L40 469 Z" fill="#caa23b" stroke="#a37f27" stroke-width="0.8"/>
+    </svg>
+  </div>
+  <!-- RIGHT: the flag station: a half-used pad of gold page flags with its top
+       flag curling, and three loose flags (red, blue, lilac) stuck to the wood
+       nearby, translucent tails showing the grain through them. -->
+  <div class="sx-desk-item dx-flags">
+    <svg viewBox="0 0 230 190" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="fgGold" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e3b83c"/><stop offset="1" stop-color="#c9931d"/></linearGradient>
+      </defs>
+      <!-- the pad: stacked sheets, clear tails left, gold heads right -->
+      <g transform="translate(64 52) rotate(-7)">
+        <rect x="-50" y="-24" width="100" height="58" rx="3" fill="#c08d1c"/>
+        <rect x="-51" y="-27" width="102" height="58" rx="3" fill="#cf9a20"/>
+        <rect x="-52" y="-30" width="52" height="60" rx="3" fill="#f3ead2" opacity="0.5" stroke="#cbbfa8" stroke-width="0.8"/>
+        <rect x="0" y="-30" width="52" height="60" rx="3" fill="url(#fgGold)" stroke="#a37b1a" stroke-width="0.8"/>
+        <path d="M-46 -24 H46" stroke="#ffffff" stroke-width="2" opacity="0.3"/>
+        <path d="M-50 31 H50" stroke="#9c7415" stroke-width="1"/>
+        <path d="M-49 34 H49" stroke="#8a660f" stroke-width="1" opacity="0.7"/>
+        <!-- top flag's corner lifting off the stack -->
+        <path d="M52 -30 L52 -6 C40 -12 39 -24 52 -30 Z" fill="#f0cf6a" stroke="#a37b1a" stroke-width="0.7"/>
+      </g>
+      <!-- loose flags: colour head, translucent tail, faint gloss -->
+      <g transform="translate(154 74) rotate(24)">
+        <rect x="-46" y="-11" width="46" height="22" rx="2" fill="#f6f1e2" opacity="0.34" stroke="#b9ad91" stroke-opacity="0.5" stroke-width="0.8"/>
+        <rect x="0" y="-11" width="46" height="22" rx="2" fill="#b64040" stroke="#84262a" stroke-width="0.8"/>
+        <path d="M4 -6 H40" stroke="#ffffff" stroke-width="1.4" opacity="0.3"/>
+      </g>
+      <g transform="translate(112 128) rotate(-16)">
+        <rect x="-46" y="-11" width="46" height="22" rx="2" fill="#f6f1e2" opacity="0.34" stroke="#b9ad91" stroke-opacity="0.5" stroke-width="0.8"/>
+        <rect x="0" y="-11" width="46" height="22" rx="2" fill="#7ea6c9" stroke="#587e9e" stroke-width="0.8"/>
+        <path d="M4 -6 H40" stroke="#ffffff" stroke-width="1.4" opacity="0.35"/>
+      </g>
+      <g transform="translate(58 158) rotate(6)">
+        <rect x="-46" y="-11" width="46" height="22" rx="2" fill="#f6f1e2" opacity="0.34" stroke="#b9ad91" stroke-opacity="0.5" stroke-width="0.8"/>
+        <rect x="0" y="-11" width="46" height="22" rx="2" fill="#9b7fb6" stroke="#71578c" stroke-width="0.8"/>
+        <path d="M4 -6 H40" stroke="#ffffff" stroke-width="1.4" opacity="0.3"/>
+      </g>
+    </svg>
+  </div>
+  <!-- RIGHT: wired earbuds dropped in a loose coil, the researcher's close
+       listening kit: oxblood cord, pearl shells marked L and R, silicone tips,
+       jack trailing off on a tail that sways like the game's bead strand. -->
+  <div class="sx-desk-item dx-buds">
+    <svg viewBox="0 0 310 260" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <radialGradient id="ebPearl" cx="0.35" cy="0.3" r="0.9"><stop offset="0" stop-color="#f7f2e6"/><stop offset="0.65" stop-color="#e6dcc4"/><stop offset="1" stop-color="#c4b795"/></radialGradient>
+        <linearGradient id="ebSteel" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#f0ede3"/><stop offset="0.5" stop-color="#b7b1a2"/><stop offset="1" stop-color="#8a8374"/></linearGradient>
+      </defs>
+      <!-- the coil -->
+      <path d="M96 48 C160 14 252 52 248 120 C244 180 168 212 114 190 C66 170 58 116 98 90 C136 65 206 76 214 126 C220 164 182 194 142 188 C134 187 128 184 124 180" fill="none" stroke="#a4443c" stroke-width="4.6" stroke-linecap="round"/>
+      <path d="M150 30 C190 26 222 44 236 72" fill="none" stroke="#cf7a70" stroke-width="1.6" stroke-linecap="round" opacity="0.55"/>
+      <path d="M84 130 C88 158 108 178 134 186" fill="none" stroke="#cf7a70" stroke-width="1.4" stroke-linecap="round" opacity="0.4"/>
+      <!-- jack tail, attached at the coil, swaying gently -->
+      <g class="dx-sway">
+        <path d="M96 48 C74 40 58 44 44 30" fill="none" stroke="#a4443c" stroke-width="4.6" stroke-linecap="round"/>
+        <g transform="translate(42 28) rotate(-42)">
+          <rect x="-4.5" y="-8" width="9" height="15" rx="3.5" fill="#93413a" stroke="#6f2b26" stroke-width="0.8"/>
+          <rect x="-2.6" y="-22" width="5.2" height="14" rx="1.5" fill="url(#ebSteel)"/>
+          <path d="M-2.6 -13 h5.2 M-2.6 -17.5 h5.2" stroke="#3a362d" stroke-width="1"/>
+          <path d="M-2.6 -22 L0 -26 L2.6 -22 Z" fill="#b7b1a2"/>
+        </g>
+      </g>
+      <!-- splitter and the two short leads -->
+      <g transform="translate(125 183) rotate(20)">
+        <rect x="-4.5" y="-8" width="9" height="16" rx="3.5" fill="#93413a" stroke="#6f2b26" stroke-width="0.8"/>
+        <path d="M-1.8 -5 v10" stroke="#cf7a70" stroke-width="1" opacity="0.5"/>
+      </g>
+      <path d="M122 188 C118 208 104 222 90 230" fill="none" stroke="#a4443c" stroke-width="4" stroke-linecap="round"/>
+      <path d="M129 188 C140 208 160 220 182 219" fill="none" stroke="#a4443c" stroke-width="4" stroke-linecap="round"/>
+      <!-- left bud -->
+      <g transform="translate(86 234) rotate(150)">
+        <rect x="-15" y="-3" width="7" height="6" rx="2" fill="#ddd2b8" stroke="#b0a488" stroke-width="0.8"/>
+        <rect x="8" y="-4.5" width="9" height="9" rx="3" fill="#d6cab0" stroke="#b0a488" stroke-width="0.8"/>
+        <ellipse cx="19.5" cy="0" rx="4.5" ry="7" fill="#6b6458"/>
+        <ellipse cx="20.5" cy="0" rx="2.2" ry="3.8" fill="#37322a"/>
+        <circle r="10.5" fill="url(#ebPearl)" stroke="#b0a488" stroke-width="1"/>
+        <circle r="8.6" fill="none" stroke="#ffffff" stroke-width="1" opacity="0.4"/>
+        <circle cx="-3.5" cy="-3.5" r="2.6" fill="#ffffff" opacity="0.55"/>
+        <text class="dx-type" y="3">L</text>
+      </g>
+      <!-- right bud -->
+      <g transform="translate(190 219) rotate(-6)">
+        <rect x="-15" y="-3" width="7" height="6" rx="2" fill="#ddd2b8" stroke="#b0a488" stroke-width="0.8"/>
+        <rect x="8" y="-4.5" width="9" height="9" rx="3" fill="#d6cab0" stroke="#b0a488" stroke-width="0.8"/>
+        <ellipse cx="19.5" cy="0" rx="4.5" ry="7" fill="#6b6458"/>
+        <ellipse cx="20.5" cy="0" rx="2.2" ry="3.8" fill="#37322a"/>
+        <circle r="10.5" fill="url(#ebPearl)" stroke="#b0a488" stroke-width="1"/>
+        <circle r="8.6" fill="none" stroke="#ffffff" stroke-width="1" opacity="0.4"/>
+        <circle cx="-3.5" cy="-3.5" r="2.6" fill="#ffffff" opacity="0.55"/>
+        <text class="dx-type" y="3">R</text>
+      </g>
+    </svg>
+  </div>
+</div>
 <header class="sx-top">
   <a class="sx-back" href="../index.html">&larr; the game</a>
   <h1 class="sx-title" aria-label="Swift to the Lyric"><span class="mast-line" aria-hidden="true">Sw<span class="mast-i">&#x131;<svg class="mast-loupe" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="6"/><line x1="7.8" y1="7.8" x2="2.6" y2="2.6"/></svg></span>ft to the <span class="mast-hl">Lyric</span></span><svg class="mast-swash" viewBox="0 0 300 22" fill="none" aria-hidden="true"><path d="M2 13 C 40 5, 78 6, 120 11 C 150 14.5, 168 8, 200 13 C 232 16.5, 262 16, 298 14" stroke-width="2.2" stroke-linecap="round" vector-effect="non-scaling-stroke"/></svg></h1>
