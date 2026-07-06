@@ -348,6 +348,9 @@ function showScreen(name) {
       try { sec.focus({ preventScroll: true }); } catch (_) { sec.focus(); }
     }
   }
+  // Nudge the decorative gutter beads (js/scatter.js): the page height changes
+  // between screens, so the scatter re-fills to match whatever is now shown.
+  window.dispatchEvent(new CustomEvent("deskscatter:refresh"));
 }
 
 /* Side-to-side page turns for screen navigation. Where nextRound's flip lifts the answered
@@ -9350,6 +9353,13 @@ function buildDevApi() {
             sparkle: () => celebrateCorrect(3), starShower: () => celebratePerfect(),
             blueWash: () => triggerBlueWash(), secret13: () => revealSecret13(),
             pen: (p) => setPen(p || null) },
+    // Scattered desk beads (js/scatter.js) — cosmetic gutter spill
+    scatter: {
+      rebuild: () => window.__deskScatter && window.__deskScatter.rebuild(),
+      reseed: (n) => window.__deskScatter && window.__deskScatter.reseed(n),
+      density: (m) => window.__deskScatter && window.__deskScatter.density(m),
+      count: () => (window.__deskScatter ? window.__deskScatter.count() : 0),
+    },
     // Misc
     setNoLog: (on) => { devNoLog = !!on; },
     reload: () => location.reload(),

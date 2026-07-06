@@ -161,6 +161,13 @@ export function initDev(api) {
         btn("secret 13", () => api.eggs.secret13())),
     row(penSel, btn("set pen", () => api.eggs.pen(penSel.value)))));
 
+  // ---- Scattered desk beads ----------------------------------------------------
+  const scDensN = num(1, 40);
+  body.append(section("desk beads",
+    row(btn("rebuild", () => { api.scatter.rebuild(); toast(api.scatter.count() + " beads"); }),
+        btn("reseed", () => { api.scatter.reseed(); toast("reseeded → " + api.scatter.count() + " beads"); })),
+    row("density", scDensN, btn("set", () => { api.scatter.density(+scDensN.value); toast(api.scatter.count() + " beads"); }))));
+
   // ---- Charm icon gallery ------------------------------------------------------
   // Every achievement charm at real render size on real paper, grouped like the
   // collection page, with duplicate-key flagging. QA tool for the icon set.

@@ -156,6 +156,49 @@
   /* crumpled draft: below the music pile, as if flicked off the page */
   .di-crumple { width: 130px; top: 80%; left: calc(50% + 372px); transform: rotate(-24deg); }
 
+  /* ---------- Scattered friendship beads (js/scatter.js) ----------
+     A light spill of bracelet beads down the wood gutters either side of the
+     notebook, so the desk keeps a little life once you scroll past the fixed
+     props. Document-anchored like .desk-items but spanning the full scroll
+     height; the module sets its pixel height and places every bead. Purely
+     decorative, non-interactive, desktop-only. */
+  .desk-scatter {
+    position: absolute; top: 0; left: 0; right: 0; z-index: 0;
+    pointer-events: none; overflow: hidden; display: none;
+  }
+  @media (min-width: 1120px) { .desk-scatter { display: block; } }
+
+  .bead-scatter {
+    position: absolute;
+    width: var(--sz, 20px); height: var(--sz, 20px);
+    transform: translate(-50%, -50%) rotate(var(--rot, 0deg));
+    border-radius: 50%;
+    opacity: 0.9;
+    filter: drop-shadow(1.5px 3px 2px rgba(46,32,14,0.30)) saturate(0.9);
+  }
+  /* coloured round bead: threading hole + light speck + lit body, all as
+     stacked radial gradients so no extra elements are needed */
+  .bead-scatter.round {
+    background:
+      radial-gradient(circle at 50% 50%, var(--hole) 0 11%, transparent 13%),
+      radial-gradient(circle at 32% 28%, rgba(255,255,255,0.62) 0 7%, transparent 12%),
+      radial-gradient(circle at 38% 32%, var(--hi), var(--lo) 82%);
+    border: 0.8px solid var(--edge);
+  }
+  /* cream alphabet-disc bead: aged bone body with a stamped letter */
+  .bead-scatter.disc {
+    background:
+      radial-gradient(circle at 30% 26%, rgba(255,255,255,0.55) 0 6%, transparent 11%),
+      radial-gradient(circle at 36% 30%, #fdfbf4, #f0ebdd 68%, #d5cdb9);
+    border: 0.9px solid #bdb49e;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .bead-scatter.disc span {
+    font: 700 calc(var(--sz, 20px) * 0.6) "Courier Prime", monospace;
+    color: #2e2b26; line-height: 1;
+    /* counter the bead's rotation is unnecessary — a tilted stamp reads fine */
+  }
+
   /* mug steam — faint wisps drifting up */
   .desk-steam path { animation: deskSteam 4.4s ease-in-out infinite; transform-origin: center bottom; }
   .desk-steam path:nth-child(2) { animation-delay: 1.3s; }
