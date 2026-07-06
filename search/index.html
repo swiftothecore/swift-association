@@ -74,10 +74,11 @@
         <!-- refraction band just inside the rim, then the darker seat shadow -->
         <circle cx="356" cy="116" r="78" fill="none" stroke="#ffffff" stroke-width="4" opacity="0.1"/>
         <path d="M298 164 A75 75 0 0 0 430 130" fill="none" stroke="#2e2010" stroke-width="9" opacity="0.12"/>
-        <!-- diagonal glare -->
-        <path d="M310 70 L390 150" stroke="#ffffff" stroke-opacity="0.2" stroke-width="13" stroke-linecap="round"/>
-        <path d="M330 62 L392 124" stroke="#ffffff" stroke-opacity="0.3" stroke-width="3.5" stroke-linecap="round"/>
-        <ellipse cx="322" cy="78" rx="14" ry="8" fill="#ffffff" opacity="0.16" transform="rotate(-38 322 78)"/>
+        <!-- diagonal glare, kept faint so it reads as light on glass, not as
+             an object under it -->
+        <path d="M316 76 L384 144" stroke="#ffffff" stroke-opacity="0.12" stroke-width="8" stroke-linecap="round"/>
+        <path d="M332 66 L390 124" stroke="#ffffff" stroke-opacity="0.24" stroke-width="2.6" stroke-linecap="round"/>
+        <ellipse cx="320" cy="78" rx="9" ry="5.5" fill="#ffffff" opacity="0.12" transform="rotate(-38 320 78)"/>
       </g>
       <!-- the brass ring, milled edge, rim lines and a top sheen -->
       <circle cx="356" cy="116" r="92" fill="none" stroke="url(#lpBrass)" stroke-width="13"/>
@@ -98,13 +99,14 @@
         <linearGradient id="hmGold" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ecc453"/><stop offset="0.5" stop-color="#d3a02b"/><stop offset="1" stop-color="#a97e1c"/></linearGradient>
         <linearGradient id="hmFelt" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ecc14a"/><stop offset="1" stop-color="#c8931f"/></linearGradient>
       </defs>
-      <!-- the test swipe: two translucent passes, a wet leading edge, and two
-           darker fibres where the felt dragged -->
-      <path d="M156 111 C112 111 70 117 34 125" fill="none" stroke="#e6b32f" stroke-width="23" stroke-opacity="0.38"/>
-      <path d="M150 115 C110 115 72 121 40 128" fill="none" stroke="#d9a827" stroke-width="15" stroke-opacity="0.28"/>
-      <ellipse cx="40" cy="124" rx="7" ry="5" fill="#d9a827" opacity="0.4" transform="rotate(-10 40 124)"/>
-      <path d="M140 109 C106 109 76 113 50 118" fill="none" stroke="#b98d1e" stroke-width="1.2" stroke-opacity="0.3"/>
-      <path d="M138 118 C106 119 80 122 56 127" fill="none" stroke="#b98d1e" stroke-width="1" stroke-opacity="0.25"/>
+      <!-- the test swipe, lying tight along the barrel with its wet end by
+           the tip, so the pen visibly just made it: two translucent passes,
+           a wet edge, two darker fibres where the felt dragged -->
+      <path d="M36 26 C80 20 130 17 172 18" fill="none" stroke="#e6b32f" stroke-width="22" stroke-opacity="0.36"/>
+      <path d="M42 30 C84 24 130 21 168 22" fill="none" stroke="#d9a827" stroke-width="14" stroke-opacity="0.26"/>
+      <ellipse cx="34" cy="27" rx="8" ry="6" fill="#d9a827" opacity="0.42" transform="rotate(-12 34 27)"/>
+      <path d="M46 21 C88 15 128 13 162 14" fill="none" stroke="#b98d1e" stroke-width="1.2" stroke-opacity="0.3"/>
+      <path d="M50 33 C90 28 128 25 160 26" fill="none" stroke="#b98d1e" stroke-width="1" stroke-opacity="0.25"/>
       <!-- chisel felt, ferrule, nose cone -->
       <path d="M52 57 L30 52 L24 64 L52 75 Z" fill="url(#hmFelt)"/>
       <path d="M30 52 L24 64" stroke="#a2751a" stroke-width="3.5" stroke-linecap="round"/>
@@ -121,8 +123,8 @@
       <text class="dx-label" x="177" y="70">gold</text>
       <rect x="254" y="45" width="20" height="40" rx="8" fill="url(#hmGold)" stroke="#96701f" stroke-width="1"/>
       <path d="M259 49 q7 -2 11 1" fill="none" stroke="#f4d896" stroke-width="1.8" stroke-linecap="round" opacity="0.8"/>
-      <!-- the cap, dropped nose-up just past the barrel -->
-      <g transform="translate(300 114) rotate(-28)">
+      <!-- the cap, set down alongside the barrel, still nearly parallel -->
+      <g transform="translate(196 120) rotate(-9)">
         <rect x="-34" y="-16" width="68" height="32" rx="8" fill="url(#hmBody)" stroke="#b7a67f" stroke-width="1"/>
         <rect x="22" y="-16" width="12" height="32" rx="6" fill="url(#hmGold)" stroke="#96701f" stroke-width="0.8"/>
         <path d="M-24 -10 H18" stroke="#fdf8ea" stroke-width="1.5" stroke-linecap="round" opacity="0.5"/>
@@ -227,20 +229,23 @@
       <path d="M78 76 H314" stroke="url(#bkGold)" stroke-width="2" opacity="0.85"/>
       <path d="M78 88 H314" stroke="url(#bkGold)" stroke-width="1" opacity="0.7"/>
       <path d="M78 372 H314" stroke="url(#bkGold)" stroke-width="1.5" opacity="0.75"/>
+      <!-- the stamp sits toward the fore-edge, on the half of the cover that
+           stays on screen, so it never gets cut to a floating ring -->
       <g fill="none" stroke="url(#bkGold)">
-        <circle cx="196" cy="180" r="24" stroke-width="4"/>
-        <circle cx="196" cy="180" r="18.5" stroke-width="1" opacity="0.6"/>
-        <path d="M213 197 L230 214" stroke-width="5" stroke-linecap="round"/>
+        <circle cx="146" cy="180" r="24" stroke-width="4"/>
+        <circle cx="146" cy="180" r="18.5" stroke-width="1" opacity="0.6"/>
+        <path d="M163 197 L180 214" stroke-width="5" stroke-linecap="round"/>
       </g>
-      <path d="M156 246 H236" stroke="url(#bkGold)" stroke-width="1.5" opacity="0.8"/>
-      <path d="M172 256 H220" stroke="url(#bkGold)" stroke-width="1" opacity="0.7"/>
+      <path d="M106 246 H186" stroke="url(#bkGold)" stroke-width="1.5" opacity="0.8"/>
+      <path d="M122 256 H170" stroke="url(#bkGold)" stroke-width="1" opacity="0.7"/>
       <!-- corner wear where the cloth has rubbed pale -->
       <path d="M58 38 Q56 27 66 24" fill="none" stroke="#b06a70" stroke-width="2" stroke-linecap="round" opacity="0.35"/>
       <path d="M58 406 Q56 417 66 420" fill="none" stroke="#b06a70" stroke-width="2" stroke-linecap="round" opacity="0.3"/>
-      <!-- satin ribbon slipped out of the bottom, forked tail on the wood -->
-      <path d="M96 424 C86 440 66 444 52 456 C46 461 42 465 42 468" fill="none" stroke="#caa23b" stroke-width="9"/>
-      <path d="M95 422 C85 438 66 442 53 453" fill="none" stroke="#e6c469" stroke-width="3" stroke-linecap="round" opacity="0.6"/>
-      <path d="M46 461 L28 470 L46 477 L40 469 Z" fill="#caa23b" stroke="#a37f27" stroke-width="0.8"/>
+      <!-- satin ribbon slipped out of the bottom: one smooth fall, then a
+           swallowtail end cut square to the ribbon's direction -->
+      <path d="M96 424 C90 442 78 452 64 459" fill="none" stroke="#caa23b" stroke-width="10"/>
+      <path d="M95 422 C90 438 80 447 68 453" fill="none" stroke="#e6c469" stroke-width="3" stroke-linecap="round" opacity="0.6"/>
+      <path d="M61.8 454.5 L52 459.4 L60.4 460.8 L56.4 468.4 L66.2 463.5 Z" fill="#caa23b" stroke="#a37f27" stroke-width="0.8" stroke-linejoin="round"/>
     </svg>
   </div>
   <!-- RIGHT: the flag station: a half-used pad of gold page flags with its top
@@ -251,33 +256,35 @@
       <defs>
         <linearGradient id="fgGold" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e3b83c"/><stop offset="1" stop-color="#c9931d"/></linearGradient>
       </defs>
-      <!-- the pad: stacked sheets, clear tails left, gold heads right -->
+      <!-- the pad: a block of gold flags, clear tails left, with the join
+           line printed where colour meets tail so the top sheet reads as one
+           flag, and pad-thickness lines along the bottom edge -->
       <g transform="translate(64 52) rotate(-7)">
-        <rect x="-50" y="-24" width="100" height="58" rx="3" fill="#c08d1c"/>
-        <rect x="-51" y="-27" width="102" height="58" rx="3" fill="#cf9a20"/>
-        <rect x="-52" y="-30" width="52" height="60" rx="3" fill="#f3ead2" opacity="0.5" stroke="#cbbfa8" stroke-width="0.8"/>
-        <rect x="0" y="-30" width="52" height="60" rx="3" fill="url(#fgGold)" stroke="#a37b1a" stroke-width="0.8"/>
-        <path d="M-46 -24 H46" stroke="#ffffff" stroke-width="2" opacity="0.3"/>
-        <path d="M-50 31 H50" stroke="#9c7415" stroke-width="1"/>
-        <path d="M-49 34 H49" stroke="#8a660f" stroke-width="1" opacity="0.7"/>
+        <rect x="-50" y="-24" width="100" height="58" rx="3" fill="#b98618"/>
+        <rect x="-51" y="-27" width="102" height="58" rx="3" fill="#d3a125"/>
+        <rect x="-52" y="-30" width="104" height="60" rx="3" fill="#eee3c6" opacity="0.45" stroke="#c4b795" stroke-width="0.8"/>
+        <rect x="2" y="-30" width="50" height="60" rx="3" fill="url(#fgGold)" stroke="#a37b1a" stroke-width="0.8"/>
+        <path d="M2 -30 V30" stroke="#b3891c" stroke-width="1.2"/>
+        <path d="M-44 6 L-16 -14" stroke="#ffffff" stroke-width="1.4" opacity="0.35"/>
+        <path d="M8 -24 H46" stroke="#ffffff" stroke-width="2" opacity="0.3"/>
+        <path d="M-50 31 H50" stroke="#96700f" stroke-width="1.2"/>
+        <path d="M-48 34 H48" stroke="#7f5d0a" stroke-width="1" opacity="0.7"/>
         <!-- top flag's corner lifting off the stack -->
         <path d="M52 -30 L52 -6 C40 -12 39 -24 52 -30 Z" fill="#f0cf6a" stroke="#a37b1a" stroke-width="0.7"/>
       </g>
-      <!-- loose flags: colour head, translucent tail, faint gloss -->
-      <g transform="translate(154 74) rotate(24)">
-        <rect x="-46" y="-11" width="46" height="22" rx="2" fill="#f6f1e2" opacity="0.34" stroke="#b9ad91" stroke-opacity="0.5" stroke-width="0.8"/>
-        <rect x="0" y="-11" width="46" height="22" rx="2" fill="#b64040" stroke="#84262a" stroke-width="0.8"/>
-        <path d="M4 -6 H40" stroke="#ffffff" stroke-width="1.4" opacity="0.3"/>
+      <!-- two flags dropped just off the pad, one lying across the other so
+           the trio reads as a single station, not a scatter -->
+      <g transform="translate(150 96) rotate(20)">
+        <rect x="-46" y="-11" width="50" height="22" rx="2" fill="#ffffff" opacity="0.2" stroke="#b9ad91" stroke-opacity="0.6" stroke-width="0.8"/>
+        <rect x="4" y="-11" width="44" height="22" rx="2" fill="#b64040" stroke="#84262a" stroke-width="0.8"/>
+        <path d="M8 -6 H42" stroke="#ffffff" stroke-width="1.4" opacity="0.32"/>
+        <path d="M-40 7 L-14 -8" stroke="#ffffff" stroke-width="1.2" opacity="0.35"/>
       </g>
-      <g transform="translate(112 128) rotate(-16)">
-        <rect x="-46" y="-11" width="46" height="22" rx="2" fill="#f6f1e2" opacity="0.34" stroke="#b9ad91" stroke-opacity="0.5" stroke-width="0.8"/>
-        <rect x="0" y="-11" width="46" height="22" rx="2" fill="#7ea6c9" stroke="#587e9e" stroke-width="0.8"/>
-        <path d="M4 -6 H40" stroke="#ffffff" stroke-width="1.4" opacity="0.35"/>
-      </g>
-      <g transform="translate(58 158) rotate(6)">
-        <rect x="-46" y="-11" width="46" height="22" rx="2" fill="#f6f1e2" opacity="0.34" stroke="#b9ad91" stroke-opacity="0.5" stroke-width="0.8"/>
-        <rect x="0" y="-11" width="46" height="22" rx="2" fill="#9b7fb6" stroke="#71578c" stroke-width="0.8"/>
-        <path d="M4 -6 H40" stroke="#ffffff" stroke-width="1.4" opacity="0.3"/>
+      <g transform="translate(120 130) rotate(-28)">
+        <rect x="-46" y="-11" width="50" height="22" rx="2" fill="#ffffff" opacity="0.2" stroke="#b9ad91" stroke-opacity="0.6" stroke-width="0.8"/>
+        <rect x="4" y="-11" width="44" height="22" rx="2" fill="#7ea6c9" stroke="#587e9e" stroke-width="0.8"/>
+        <path d="M8 -6 H42" stroke="#ffffff" stroke-width="1.4" opacity="0.36"/>
+        <path d="M-40 7 L-14 -8" stroke="#ffffff" stroke-width="1.2" opacity="0.35"/>
       </g>
     </svg>
   </div>
