@@ -343,15 +343,13 @@ function clearIsolate() {
   if (label) label.textContent = label.dataset.hint || "";
 }
 
-// Right-edge jump rail: a flag per album, stuck in the index journal on the screen edge,
-// ordered as the (grouped) results appear; each scrolls to its block. Hidden for flat view
-// or a single album. The body class fades the right-side desk props out while the journal
-// is on the desk, so the two never collide.
+// The index journal on the screen edge is a permanent desk prop; this only fills or empties
+// its flags. A flag per album, stuck between the pages, ordered as the (grouped) results
+// appear; each scrolls to its block. Flat view or a single album leaves the notebook closed.
 function renderRail(albums) {
   const on = state.grouped && albums.length >= 2;
   $("rail").innerHTML = !on ? "" : albums.map((al, i) =>
     `<button type="button" data-al="${i}" style="--al:${ALBUM_COLORS[al] || "#999"}" title="${escapeHtml(al)}">${escapeHtml(al)}</button>`).join("");
-  document.body.classList.toggle("sx-railbook", on);
 }
 
 function albumBar(counts) {
@@ -594,6 +592,21 @@ function init() {
     const b = e.target.closest("button[data-al]");
     if (b) document.getElementById("sx-al-" + b.dataset.al)?.scrollIntoView({ behavior: "smooth", block: "start" });
   });
+
+  // Deep-reference dictionary: it stays below the fold until you scroll into a long result
+  // list, then slides up into the bottom-right corner (a CSS body class does the sliding).
+  // rAF-throttled so the scroll stays cheap.
+  let scrollQueued = false;
+  const syncScrolled = () => {
+    scrollQueued = false;
+    document.body.classList.toggle("sx-scrolled", window.scrollY > window.innerHeight * 0.5);
+  };
+  window.addEventListener("scroll", () => {
+    if (scrollQueued) return;
+    scrollQueued = true;
+    requestAnimationFrame(syncScrolled);
+  }, { passive: true });
+  syncScrolled();
 
   // Rainbow bar + legend brushing. #bar and #concord are stable containers (only their
   // innerHTML changes each search), so we delegate hover once here.

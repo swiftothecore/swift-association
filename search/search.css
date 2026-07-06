@@ -60,8 +60,8 @@ body::before {
    The searcher's own still life, same conventions as the game's desk props but
    never repeating its objects: where the game's desk is a songwriter's (pencil,
    mug, floss, cassette), this one is a lyric researcher's (magnifying glass,
-   the gold highlighter, index cards, a flagged rhyming dictionary, page flags,
-   earbuds). Document-anchored (absolute, one viewport tall) so the props sit on
+   the gold highlighter, index cards, a flagged rhyming dictionary, an index
+   journal, earbuds). Document-anchored (absolute, one viewport tall) so the props sit on
    the first screenful of desk and scroll away with the wood grain; only the
    lighting overlay stays with the viewport. Pointer-transparent, painted at the
    same negative z as the lighting but later in the tree, so they sit on the lit
@@ -74,11 +74,13 @@ body::before {
 .sx-desk-item svg { display: block; width: 100%; height: auto; overflow: visible; }
 /* Props share the game's real-world scale (roughly 3px per mm of desk): the
    magnifier's lens is ~6cm across, the highlighter ~12cm, index cards 13x8cm,
-   the dictionary ~20cm tall, flags 3cm, the earbud coil ~8cm.
+   the dictionary ~20cm tall, the earbud coil ~8cm.
    Composition: left is the close-reading side (magnifier up top, highlighter
-   mid, card stack low), right is the reference side (dictionary up top, flag
-   station and earbuds low); the mid stretches of wood stay deliberately bare.
-   Edge props hang half off the viewport so the desk reads as continuing. */
+   mid, card stack low); the right edge belongs to the index journal (the album
+   rail, styled far below) with the earbuds low beneath it, and the dictionary
+   held back below the fold to slide up when you scroll into a long result list.
+   The mid stretches of wood stay deliberately bare, and edge props hang half off
+   the viewport so the desk reads as continuing. */
 /* the magnifier tucks into the corner: handle running off screen up-left, lens
    reaching in toward the page (its grain group counter-rotates inside the SVG
    so the magnified grain stays parallel with the desk's) */
@@ -89,9 +91,23 @@ body::before {
    drawn at that angle on the wood */
 .dx-marker { width: 340px; top: 46%; left: calc(50% - 505px); transform: translate(-50%, -50%) rotate(75deg); }
 .dx-cards  { width: 380px; top: 64%; left: 0; transform: translateX(-36%) rotate(-9deg); }
-.dx-book   { width: 300px; top: 5%;  right: 0; transform: translateX(40%) rotate(-7deg); }
-.dx-flags  { width: 215px; top: 56%; right: 34px; transform: rotate(8deg); }
 .dx-buds   { width: 300px; top: 74%; right: 0; transform: translateX(32%) rotate(-12deg); }
+/* the rhyming dictionary is the deep-reference prop. The index journal owns the
+   right edge on the first screenful, so the dictionary keeps clear of it: it waits
+   below the fold and slides up into the bottom-right corner once you scroll down
+   into a long results list, giving the bare desk under the results its reference
+   book. Fixed so it rides with the viewport like the journal, behind the paper like
+   every prop, desktop-only through its .sx-desk parent. */
+.dx-book {
+  position: fixed; width: 300px; right: 0; bottom: 0; top: auto; left: auto;
+  transform: translate(40%, 116%) rotate(-6deg);
+  transition: transform .55s cubic-bezier(.22, .61, .36, 1);
+}
+body.sx-scrolled .dx-book { transform: translate(40%, 52%) rotate(-6deg); }
+/* short desktops: a tall (many-album) journal reaches further down the right edge, so
+   the book peeks a little lower to stay clear of it */
+@media (max-height: 880px) { body.sx-scrolled .dx-book { transform: translate(40%, 86%) rotate(-6deg); } }
+@media (prefers-reduced-motion: reduce) { .dx-book { transition: none; } }
 /* functional lettering on the props (the marker's label, L/R on the buds)
    stays in the typewriter hand, like the game's bead letters */
 .sx-desk .dx-label { font: 700 13px var(--type); letter-spacing: 0.18em; fill: #8a6f3a; text-anchor: middle; }
@@ -405,20 +421,19 @@ body::before {
 .sx-flat-loc { font-family: var(--type); font-size: 10px; color: var(--ink-faint); margin-left: auto; }
 .sx-hit-flat .sx-lines { border-bottom: 0; }
 
-/* right-edge album rail: the index journal. A slim green cloth notebook lies half off the
-   right screen edge (same convention as the dictionary: spine off screen, fore-edge in),
-   and each album gets a paper flag stuck out from between its pages that jumps to that
-   album's results block. The journal is the rail's own pseudo-elements (cover on top,
-   page block under it, flags tucked under both), so it appears and leaves with the tabs;
-   while it's out, the right-side desk props fade away below so nothing collides.
-   Wide desktops only (needs the margin); grouped view only. */
+/* right-edge album rail: the index journal, a permanent desk prop. A slim green cloth
+   notebook lies half off the right screen edge (same convention as the dictionary: spine
+   off screen, fore-edge in) and sits there closed even before a search. Each album in a
+   grouped result sprouts a paper flag from between its pages that jumps to that album's
+   block; clear the search and the flags are pulled back out, leaving the closed notebook.
+   The journal is the rail's own pseudo-elements (cover on top, page block under it, flags
+   tucked under both). Desktop only (needs the desk margin). */
 .sx-rail {
   position: fixed; top: 50%; right: 0; transform: translateY(-50%);
-  display: flex; flex-direction: column; align-items: flex-end; gap: 4px; z-index: 5;
-  padding: 34px 26px 38px 0;
+  display: flex; flex-direction: column; align-items: flex-end; justify-content: center;
+  gap: 4px; z-index: 5; min-height: 340px; padding: 34px 26px 38px 0;
   filter: drop-shadow(3px 7px 6px rgba(46, 32, 14, 0.30));
 }
-.sx-rail:empty { display: none; }
 /* the page block: a cream fore-edge strip, its stacked-page lines running with the spine */
 .sx-rail::before {
   content: ""; position: absolute; z-index: 2; top: 13px; bottom: 13px; right: -6px; width: 52px;
@@ -450,10 +465,7 @@ body::before {
 .sx-rail button:nth-child(odd) { transform: rotate(-.5deg); }
 .sx-rail button:nth-child(even) { transform: rotate(.5deg); }
 .sx-rail button:hover { opacity: 1; background: #fff8ec; transform: rotate(0) translateX(-3px); }
-@media (max-width: 1180px) { .sx-rail { display: none; } }
-/* while the journal is out, its side of the desk clears */
-.dx-book, .dx-flags, .dx-buds { transition: opacity .35s ease; }
-body.sx-railbook .dx-book, body.sx-railbook .dx-flags, body.sx-railbook .dx-buds { opacity: 0; }
+@media (max-width: 1279px) { .sx-rail { display: none; } }
 
 @media (max-width: 560px) {
   .sx-page {
