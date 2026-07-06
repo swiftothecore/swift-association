@@ -105,8 +105,9 @@ export function initDev(api) {
   const obAlbumSel = select(["", ...api.STUDIO_ALBUMS], (x) => x, (x) => x || "no favourite");
   body.append(section("onboarding",
     row(btn("replay first-run", () => api.onboarding.replay()),
-        btn("mark done", () => { api.onboarding.markDone(); toast("first-run marked done"); })),
-    row(obAlbumSel, btn("set era", () => { api.onboarding.setEra(obAlbumSel.value); toast("era → " + (obAlbumSel.value || "none")); }),
+        btn("ready-for-normal nudge", () => api.onboarding.normalNudge())),
+    row(obAlbumSel, btn("set era", () => { api.onboarding.setEra(obAlbumSel.value); toast("era → " + (obAlbumSel.value || "none")); })),
+    row(btn("mark done", () => { api.onboarding.markDone(); toast("first-run marked done"); }),
         btn("reset", () => { api.onboarding.reset(); toast("onboarding reset"); }, "warn"))));
 
   // ---- Timer -----------------------------------------------------------------

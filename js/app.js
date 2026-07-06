@@ -8047,6 +8047,9 @@ function endGame() {
       $("resultPodium").appendChild(note);
     }
   }
+
+  // A fresh player who took the gentle Relaxed start gets a one-time nudge toward Normal.
+  maybeShowReadyForNormal();
 }
 
 // First personal record with no signature yet → ask for a name once, store it globally,
@@ -8991,14 +8994,23 @@ function closeSettings() {
    "first impressions" work can add steps; the era question is the final step and completing
    or skipping it sets firstRunDone so the flow never returns. Reached via maybeRunFirstRun()
    from init (skipped when a "play this word" deep-link is starting a game). */
-const FIRST_RUN_STEPS = ["era"];   // the era question is the last step; new steps prepend before it
+const FIRST_RUN_STEPS = ["welcome", "era"];   // the era question stays last; new steps prepend before it
 let firstRunIndex = 0;
 let firstRunEra = "";              // the currently-highlighted era, committed to settings on confirm
+let firstRunMode = null;           // the difficulty picked from the welcome step ("relaxed" or null), applied on finish
 let lastFocusedBeforeFirstRun = null;
 
 // The album closest to the player's heart, saved once and reused later. "" = not chosen.
 function setFavouriteAlbum(album) {
   settings.favouriteAlbum = (album && STUDIO_ALBUMS.includes(album)) ? album : "";
+  saveSettings(settings);
+}
+
+// Just-in-time onboarding tips fire once each, tracked in settings.seenCoachmarks.
+function coachmarkSeen(id) { return !!(settings.seenCoachmarks && settings.seenCoachmarks[id]); }
+function markCoachmark(id) {
+  if (!settings.seenCoachmarks || typeof settings.seenCoachmarks !== "object") settings.seenCoachmarks = {};
+  settings.seenCoachmarks[id] = true;
   saveSettings(settings);
 }
 
@@ -9009,15 +9021,21 @@ function maybeRunFirstRun() {
   if (loadMetrics().roundsTotal > 0) { settings.firstRunDone = true; saveSettings(settings); return; }
   openFirstRun();
 }
-function openFirstRun() {
-  firstRunIndex = 0;
-  firstRunEra = settings.favouriteAlbum || "";
+// Show the onboarding overlay with whatever #firstRunBody currently holds. Shared by the
+// first-run step flow and the one-off post-game nudge.
+function showOnboardingOverlay() {
   lastFocusedBeforeFirstRun = document.activeElement;
-  renderFirstRunStep();
   const m = $("firstRun");
   m.classList.add("open");
   m.setAttribute("aria-hidden", "false");
   document.body.classList.add("modal-open");
+}
+function openFirstRun() {
+  firstRunIndex = 0;
+  firstRunEra = settings.favouriteAlbum || "";
+  firstRunMode = null;
+  renderFirstRunStep();
+  showOnboardingOverlay();
 }
 function closeFirstRun() {
   const m = $("firstRun");
@@ -9034,7 +9052,8 @@ function renderFirstRunStep() {
   const body = $("firstRunBody");
   if (!body) return;
   const step = FIRST_RUN_STEPS[firstRunIndex];
-  if (step === "era") body.innerHTML = firstRunEraHTML();
+  if (step === "welcome") body.innerHTML = firstRunWelcomeHTML();
+  else if (step === "era") body.innerHTML = firstRunEraHTML();
   const focusTarget = body.querySelector("[data-fr='confirm'], .btn-primary, button");
   if (focusTarget) { try { focusTarget.focus({ preventScroll: true }); } catch (_) { /* noop */ } }
 }
@@ -9044,9 +9063,25 @@ function advanceFirstRun() {
   renderFirstRunStep();
 }
 function finishFirstRun() {
+  // Honour the recommended path: if they accepted the gentle start, pre-select Classic · Relaxed
+  // so the start screen is ready to play. Declining leaves whatever default they had.
+  if (firstRunMode && MODES[firstRunMode]) { setGameType("classic"); setMode(firstRunMode); }
   settings.firstRunDone = true;
   saveSettings(settings);
   closeFirstRun();
+}
+// The welcome step: a one-line explanation of the game + the recommended gentle start, with a
+// clear "no thanks" for players who already know it. Neither choice starts a game — both flow
+// on to the era question and then land on the start screen, ready to play.
+function firstRunWelcomeHTML() {
+  return `<p class="fr-kicker">welcome to the notebook</p>` +
+    `<h2 class="fr-title">Let's ease you in</h2>` +
+    `<p class="fr-sub">Here's the whole game: you'll see a word, and you name a Taylor Swift song that has it somewhere in the lyrics. That's it.</p>` +
+    `<p class="fr-sub">First time? We'd start you in <b>Relaxed</b> &mdash; no clock, suggestions and hints on, every song in play. You can turn the difficulty up whenever you're ready.</p>` +
+    `<div class="fr-actions">` +
+      `<button type="button" class="btn-primary" data-fr="relaxed">Start me in Relaxed &rarr;</button>` +
+      `<button type="button" class="btn-link" data-fr="knowit">I already know this game</button>` +
+    `</div>`;
 }
 // The era-question step: pick the album closest to your heart (or skip). Highlight is held in
 // firstRunEra and only committed on confirm, so "skip for now" genuinely leaves it unset.
@@ -9078,9 +9113,43 @@ function wireFirstRun() {
     if (eraBtn) { firstRunEra = eraBtn.getAttribute("data-era-album"); renderFirstRunStep(); return; }
     const act = e.target.closest("[data-fr]");
     if (!act) return;
-    if (act.getAttribute("data-fr") === "confirm") { setFavouriteAlbum(firstRunEra); advanceFirstRun(); }
-    else if (act.getAttribute("data-fr") === "skip") { advanceFirstRun(); }
+    switch (act.getAttribute("data-fr")) {
+      // Welcome step — recommended path vs "I know this game"
+      case "relaxed": firstRunMode = "relaxed"; advanceFirstRun(); break;
+      case "knowit":  firstRunMode = null;      advanceFirstRun(); break;
+      // Era step
+      case "confirm": setFavouriteAlbum(firstRunEra); advanceFirstRun(); break;
+      case "skip":    advanceFirstRun(); break;
+      // Post-game "ready for Normal?" nudge
+      case "normal-yes": setGameType("classic"); setMode("medium"); closeFirstRun(); break;
+      case "normal-no":  closeFirstRun(); break;
+    }
   });
+}
+
+// One-off nudge after a new player's first Relaxed game: invites them to start the clock in
+// Normal. Fires once (tracked as a coachmark), only off the recommended Relaxed path, and only
+// after the results have had a beat to land so it never buries the score they just earned.
+function maybeShowReadyForNormal() {
+  if (coachmarkSeen("readyForNormal")) return;
+  if (gameType !== "classic" || currentMode.id !== "relaxed") return;
+  markCoachmark("readyForNormal");   // mark on show — a one-time invitation, ignored or not
+  const delay = animInstant() ? 0 : 900 * (animScale() || 1);
+  setTimeout(showReadyForNormal, delay);
+}
+function showReadyForNormal(force) {
+  if (!force && !screens.results.classList.contains("active")) return;   // they navigated away — skip
+  $("firstRunBody").innerHTML =
+    `<p class="fr-kicker">nicely done</p>` +
+    `<h2 class="fr-title">Ready to start the clock?</h2>` +
+    `<p class="fr-sub">That was Relaxed &mdash; no timer, all the help. <b>Normal</b> adds a 10-second clock per page. Same game, a little more thrilling. Want to give it a go next?</p>` +
+    `<div class="fr-actions">` +
+      `<button type="button" class="btn-primary" data-fr="normal-yes">Yes, switch me to Normal &rarr;</button>` +
+      `<button type="button" class="btn-link" data-fr="normal-no">Stay in Relaxed for now</button>` +
+    `</div>`;
+  showOnboardingOverlay();
+  const focusTarget = $("firstRunBody").querySelector(".btn-primary");
+  if (focusTarget) { try { focusTarget.focus({ preventScroll: true }); } catch (_) { /* noop */ } }
 }
 
 // Wheel over the dimmed backdrop (outside the dialog) still scrolls the dialog,
@@ -9289,11 +9358,16 @@ function buildDevApi() {
     setMode: (id) => setMode(id),
     // Onboarding / first-run
     onboarding: {
-      state: () => ({ firstRunDone: settings.firstRunDone, favouriteAlbum: settings.favouriteAlbum || null }),
+      state: () => ({ firstRunDone: settings.firstRunDone, favouriteAlbum: settings.favouriteAlbum || null,
+        seenCoachmarks: { ...(settings.seenCoachmarks || {}) } }),
       replay: () => { settings.firstRunDone = false; saveSettings(settings); openFirstRun(); },
       markDone: () => { settings.firstRunDone = true; saveSettings(settings); },
       setEra: (album) => setFavouriteAlbum(album),
-      reset: () => { settings.firstRunDone = false; settings.favouriteAlbum = ""; saveSettings(settings); },
+      normalNudge: () => { markCoachmark("readyForNormal"); showReadyForNormal(true); },
+      reset: () => {
+        settings.firstRunDone = false; settings.favouriteAlbum = ""; settings.seenCoachmarks = {};
+        saveSettings(settings);
+      },
     },
     // Timer
     timer: { freeze: devTimerFreeze, unfreeze: devTimerUnfreeze, add: devTimerAdd,
