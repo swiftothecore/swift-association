@@ -405,23 +405,55 @@ body::before {
 .sx-flat-loc { font-family: var(--type); font-size: 10px; color: var(--ink-faint); margin-left: auto; }
 .sx-hit-flat .sx-lines { border-bottom: 0; }
 
-/* right-edge album rail — binder index tabs out in the desk margin that jump to each
-   album's results block. Wide desktops only (needs the margin); grouped view only. */
+/* right-edge album rail: the index journal. A slim green cloth notebook lies half off the
+   right screen edge (same convention as the dictionary: spine off screen, fore-edge in),
+   and each album gets a paper flag stuck out from between its pages that jumps to that
+   album's results block. The journal is the rail's own pseudo-elements (cover on top,
+   page block under it, flags tucked under both), so it appears and leaves with the tabs;
+   while it's out, the right-side desk props fade away below so nothing collides.
+   Wide desktops only (needs the margin); grouped view only. */
 .sx-rail {
-  position: fixed; top: 50%; right: 12px; transform: translateY(-50%);
-  display: flex; flex-direction: column; gap: 4px; z-index: 5; max-height: 84vh; overflow-y: auto;
+  position: fixed; top: 50%; right: 0; transform: translateY(-50%);
+  display: flex; flex-direction: column; align-items: flex-end; gap: 4px; z-index: 5;
+  padding: 34px 26px 38px 0;
+  filter: drop-shadow(3px 7px 6px rgba(46, 32, 14, 0.30));
 }
 .sx-rail:empty { display: none; }
-.sx-rail button {
-  font-family: var(--type); font-size: 10px; letter-spacing: .02em; text-align: right;
-  color: var(--ink-soft); background: var(--paper-edge);
-  border: 1px solid #ddd2bb; border-right: 4px solid var(--al); border-radius: 6px 0 0 6px;
-  padding: 4px 9px 4px 11px; cursor: pointer; white-space: nowrap;
-  max-width: 156px; overflow: hidden; text-overflow: ellipsis; opacity: .82;
-  transition: opacity .15s ease, background .15s ease;
+/* the page block: a cream fore-edge strip, its stacked-page lines running with the spine */
+.sx-rail::before {
+  content: ""; position: absolute; z-index: 2; top: 13px; bottom: 13px; right: -6px; width: 52px;
+  background: repeating-linear-gradient(to right, #efe6cd 0 3px, #ddd0ac 3px 4px);
+  border: 1px solid #cdbf9e; border-right: none; border-radius: 3px 0 0 3px;
 }
-.sx-rail button:hover { opacity: 1; background: #fff8ec; }
+/* the cloth cover, overhanging the pages top and bottom, elastic band near its fore-edge */
+.sx-rail::after {
+  content: ""; position: absolute; z-index: 3; top: 0; bottom: 0; right: -14px; width: 44px;
+  background:
+    linear-gradient(to right, transparent 9px, rgba(46, 38, 12, 0.35) 9px, rgba(46, 38, 12, 0.35) 15px, transparent 15px),
+    linear-gradient(135deg, #6d7b53, #525f3c 70%);
+  border: 1px solid #39442a; border-right: none; border-radius: 10px 0 0 10px;
+  box-shadow: inset 2px 0 0 rgba(255, 255, 255, 0.14), -3px 0 5px rgba(46, 32, 14, 0.28);
+}
+/* the flags: paper tails whose inner ends disappear under the page block, era colour on
+   the outer tip, each settled at its own slight angle pivoting where it enters the book */
+.sx-rail button {
+  position: relative; z-index: 1;
+  font-family: var(--type); font-size: 10px; letter-spacing: .02em; text-align: right;
+  color: var(--ink-soft); background: color-mix(in srgb, var(--al) 10%, var(--paper-edge));
+  border: 1px solid #ddd2bb; border-right: none; border-left: 5px solid var(--al);
+  border-radius: 4px 0 0 4px;
+  padding: 4px 22px 4px 9px; cursor: pointer; white-space: nowrap;
+  max-width: 174px; overflow: hidden; text-overflow: ellipsis; opacity: .88;
+  transform-origin: 100% 50%;
+  transition: opacity .15s ease, background .15s ease, transform .15s ease;
+}
+.sx-rail button:nth-child(odd) { transform: rotate(-.5deg); }
+.sx-rail button:nth-child(even) { transform: rotate(.5deg); }
+.sx-rail button:hover { opacity: 1; background: #fff8ec; transform: rotate(0) translateX(-3px); }
 @media (max-width: 1180px) { .sx-rail { display: none; } }
+/* while the journal is out, its side of the desk clears */
+.dx-book, .dx-flags, .dx-buds { transition: opacity .35s ease; }
+body.sx-railbook .dx-book, body.sx-railbook .dx-flags, body.sx-railbook .dx-buds { opacity: 0; }
 
 @media (max-width: 560px) {
   .sx-page {

@@ -284,7 +284,7 @@ function renderInitial(q) {
   $("bar").innerHTML = "";
   $("barlabel").innerHTML = "";
   $("concord").innerHTML = "";
-  $("rail").innerHTML = "";
+  renderRail([]);
   $("results").classList.remove("sx-iso");
   LAST_COUNTS = null;
   setEraTint(null);
@@ -343,12 +343,15 @@ function clearIsolate() {
   if (label) label.textContent = label.dataset.hint || "";
 }
 
-// Right-edge jump rail: a binder tab per album in the (grouped) results, ordered as they
-// appear, that scrolls to its block. Hidden for flat view or a single album.
+// Right-edge jump rail: a flag per album, stuck in the index journal on the screen edge,
+// ordered as the (grouped) results appear; each scrolls to its block. Hidden for flat view
+// or a single album. The body class fades the right-side desk props out while the journal
+// is on the desk, so the two never collide.
 function renderRail(albums) {
-  if (!state.grouped || albums.length < 2) { $("rail").innerHTML = ""; return; }
-  $("rail").innerHTML = albums.map((al, i) =>
+  const on = state.grouped && albums.length >= 2;
+  $("rail").innerHTML = !on ? "" : albums.map((al, i) =>
     `<button type="button" data-al="${i}" style="--al:${ALBUM_COLORS[al] || "#999"}" title="${escapeHtml(al)}">${escapeHtml(al)}</button>`).join("");
+  document.body.classList.toggle("sx-railbook", on);
 }
 
 function albumBar(counts) {
@@ -419,7 +422,7 @@ function render(terms, groups) {
     $("concord").innerHTML = "";
     $("results").innerHTML = "";
     $("results").classList.remove("sx-iso");
-    $("rail").innerHTML = "";
+    renderRail([]);
     LAST_COUNTS = null;
     setEraTint(null);
     return;
@@ -470,7 +473,7 @@ function render(terms, groups) {
     }).join("");
     renderRail(albums);
   } else {
-    $("rail").innerHTML = "";
+    renderRail([]);
     const rows = [];
     for (const g of groups) {
       const color = ALBUM_COLORS[g.song.album] || "#999";
