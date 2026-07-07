@@ -2081,7 +2081,7 @@
   .nb-cover-corner--br { bottom: 0; right: 0; clip-path: polygon(100% 0, 100% 100%, 0 100%); border-bottom-right-radius: 5px; }
   /* the taped title plate — a cream label pinned to the board */
   .nb-cover-plate {
-    position: relative; z-index: 2; margin-left: 18px;
+    position: relative; z-index: 2; margin-left: 18px; text-align: center;
     max-width: min(76%, 360px); padding: 22px 26px 20px;
     background: linear-gradient(180deg, #f7f1e3, var(--paper));
     border-radius: 2px; transform: rotate(-1.3deg);
