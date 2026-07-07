@@ -438,44 +438,54 @@ function flipInToScreen(name) {
   scheduleFlipRemoval(incoming, () => { backdrop.remove(); });
 }
 
-/* First paint after loadData(): swap the "opening the notebook…" loader for the real start
-   board. When motion allows, the full-page loader becomes an opaque cover sheet and flips up
-   from its top edge — the same page turn used between rounds — revealing the board already laid
-   out beneath. The cover's height is locked to the idle loading page first, so displaying the
-   board underneath never resizes it mid-turn (which would jump from a strip to a full board).
-   `onDone` runs once the notebook is fully open (after the flip, or immediately on the
-   reduced-motion / instant / page-turn-off paths), so splash screens wait for a settled layout. */
+/* First paint after loadData(): swap the closed notebook cover for the real start board.
+   While loading, #screen-start wears `is-booting` (no ruled paper/padding) so the cover fills
+   the whole card. To open, we lay the board out beneath, drop `is-booting` so the card is its
+   real self, then clone the cover into a genuine .page-flip-sheet--side and turn it away on the
+   left spine — the exact motion + shading used everywhere else (e.g. exiting a game). Cloning
+   into the same flip machinery (rather than a bespoke transform) is what keeps the open feeling
+   as polished as the other page turns. `onDone` runs once the notebook is fully open (after the
+   turn, or immediately on the reduced-motion / instant / page-turn-off paths), so splash screens
+   only appear over a settled layout. */
 function revealNotebook(onDone) {
   const loading = $("loading");
   const content = $("startContent");
+  const card = $("screen-start");
   const done = () => { if (typeof onDone === "function") onDone(); };
-  if (!loading) { content.style.display = ""; refreshStartBoard(); done(); return; }
-  if (motionReduced() || animInstant() || !settings.pageTurn) {
-    loading.style.display = "none";
-    content.style.display = "";
-    refreshStartBoard();
+  const layOutBoard = () => { card.classList.remove("is-booting"); content.style.display = ""; refreshStartBoard(); };
+  if (!loading || motionReduced() || animInstant() || !settings.pageTurn) {
+    if (loading) loading.style.display = "none";
+    layOutBoard();
     done();
     return;
   }
-  // Freeze the cover at the idle loading page's height before revealing the (much taller)
-  // board beneath it, so the sheet turning away stays the size the player was looking at.
-  // (No rAF gate: it locks the height inline first, and rAF is paused in background tabs,
-  //  which would otherwise stall the whole open until the tab is focused.)
-  loading.style.height = loading.getBoundingClientRect().height + "px";
-  loading.classList.add("loading-cover");
-  content.style.display = "";
-  refreshStartBoard();
-  loading.classList.add("loading-cover--turning");
+  // Measure the closed cover exactly as the player sees it now — at the card's real position and
+  // width (border-box, so restoring padding below won't move it) and the idle page height.
+  const top = card.offsetTop, left = card.offsetLeft, width = card.offsetWidth;
+  const height = loading.getBoundingClientRect().height;
+  // Reveal the real board and hide the original cover, then immediately cover the seam with the
+  // flip sheet (same synchronous tick, so the bare board never flashes before the turn starts).
+  layOutBoard();
+  loading.style.display = "none";
+  const flip = loading.cloneNode(true);
+  flip.removeAttribute("id");
+  flip.querySelectorAll("[id]").forEach((e) => e.removeAttribute("id"));
+  flip.setAttribute("aria-hidden", "true");
+  flip.style.display = "";
+  flip.classList.remove("loading");
+  flip.classList.add("page-flip-sheet", "page-flip-sheet--side", "cover-flip");
+  flip.style.top = top + "px";
+  flip.style.left = left + "px";
+  flip.style.width = width + "px";
+  flip.style.height = height + "px";
+  const shade = document.createElement("div");
+  shade.className = "flip-shade flip-shade--side";
+  flip.appendChild(shade);
+  card.parentNode.appendChild(flip);
   let finished = false;
-  const finish = () => {
-    if (finished) return; finished = true;
-    loading.style.display = "none";
-    loading.style.height = "";
-    loading.classList.remove("loading-cover", "loading-cover--turning");
-    done();
-  };
-  loading.addEventListener("animationend", finish, { once: true });
-  setTimeout(finish, 620 * (animScale() || 1) + 80);
+  const finish = () => { if (finished) return; finished = true; flip.remove(); done(); };
+  flip.addEventListener("animationend", (e) => { if (e.target === flip) finish(); });
+  setTimeout(finish, 500 * (animScale() || 1) + 80);
 }
 
 /* ---------- Random sticky-tape placement for the nav keepsake cards ----------
@@ -9776,6 +9786,7 @@ async function init() {
     // splash — otherwise the overlay flashes in mid-layout before snapping to centre.
     revealNotebook(startedFromWord ? null : maybeRunFirstRun);
   } catch (err) {
+    $("screen-start").classList.remove("is-booting");   // show the error on the normal paper card
     $("loading").outerHTML = `
       <div class="error">
         <p><b>Couldn't open the notebook.</b></p>
