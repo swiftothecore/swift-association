@@ -171,121 +171,121 @@ export const STUDY_BASE_WEIGHT = 1;      // floor of randomness so it never feel
    under (without persisting DIFF_KEY). `free` challenges start unlocked; the rest cost a token. */
 export const CHALLENGES = [
   { id: "vanishing-word", name: "Vanishing Word", rule: "vanishing", mode: "medium",
-    free: true,  cost: 1, target: 10, revealMs: 1500, tapes: 1, icon: "sparkle",
+    free: true,  cost: 1, target: 10, revealMs: 1500, tapes: 1,
     desc: "The word vanishes after a moment — answer from memory.",
     win: "Score 10 / 13 with disappearing words." },
   { id: "deep-cut", name: "Deep Cut", rule: "album5", mode: "easy",
-    free: false, cost: 1, album: null /* any single album */, tapes: 1, icon: "vinyl",
+    free: false, cost: 1, album: null /* any single album */, tapes: 1,
     desc: "Pull five correct answers from a single album.",
     win: "Answer 5 correct songs from one album." },
   { id: "alphabetical", name: "From A to Z", rule: "alphabetical", mode: "medium",
-    free: false, cost: 1, target: 9, pool: "easy", tapes: 3, icon: "book",
+    free: false, cost: 1, target: 9, pool: "easy", tapes: 3,
     desc: "Each song's title must start no earlier than the last.",
     win: "Land 9 correct answers in non-decreasing A→Z order." },
   { id: "word-modifiers", name: "Word Games", rule: "wordfx", mode: "medium",
-    free: false, cost: 1, target: 9, noTitle: false, tapes: 2, icon: "shake",
+    free: false, cost: 1, target: 9, noTitle: false, tapes: 2,
     desc: "The word warps more each round — read it before it's gibberish.",
     win: "Score 9 / 13 through the distortion." },
   { id: "one-of-a-kind", name: "One Of A Kind", rule: "newsong", mode: "easy",
-    free: false, cost: 1, tapes: 1, icon: "gem",
+    free: false, cost: 1, tapes: 1,
     desc: "You're given one specific song. Slip it in as your answer on a round where it actually fits the word. You get 3 guesses — naming it on a word it doesn't fit costs you one.",
     win: "Answer the named song before your 3 guesses run out." },
   { id: "choose-your-path", name: "Choose Your Path", rule: "path", mode: "medium",
-    free: false, cost: 1, target: 9, forks: [4, 8], tapes: 1, icon: "branch",
+    free: false, cost: 1, target: 9, forks: [4, 8], tapes: 1,
     desc: "At forks in the run, pick a perk that reshapes the rest.",
     win: "Score 9 / 13 — your way." },
   { id: "wildcard", name: "Wildcard", rule: "wildcard", mode: "medium",
-    free: false, cost: 1, target: 9, noTitle: false, tapes: 2, icon: "mask",
+    free: false, cost: 1, target: 9, noTitle: false, tapes: 2,
     desc: "Every round changes the rule — keep up.",
     win: "Score 9 / 13 across shifting rules." },
   { id: "revolving-door", name: "Revolving Door", rule: "revolving", mode: "medium",
-    free: false, cost: 1, target: 9, seconds: 20, rotateMs: 5000, noTitle: true, tapes: 1, icon: "cycle",
+    free: false, cost: 1, target: 9, seconds: 20, rotateMs: 5000, noTitle: true, tapes: 1,
     blurb: "20s a page · suggestions · not in the title · the word swaps every 5s",
     desc: "You get 20 seconds a page — but the word swaps for a new one every 5. Answer the one that's showing before it spins away.",
     win: "Score 9 / 13 while the word keeps revolving." },
   { id: "shrinking-timer", name: "Shrinking Timer", rule: "accelerate", mode: "medium",
-    free: false, cost: 1, target: 9, noTitle: true, pool: "easy", tapes: 2, icon: "hourglass",
+    free: false, cost: 1, target: 9, noTitle: true, pool: "easy", tapes: 2,
     blurb: "suggestions · not in the title · the clock shrinks every page (16s → 5s)",
     desc: "Each page gives you less time than the last — from 16 seconds down to 5.",
     win: "Score 9 / 13 as the clock keeps shrinking." },
   { id: "title-in", name: "Title...?", rule: "titleHas", mode: "medium",
-    free: false, cost: 1, target: 9, noTitle: false, dropdown: false, tapes: 2, icon: "key",
+    free: false, cost: 1, target: 9, noTitle: false, dropdown: false, tapes: 2,
     blurb: "10s · no suggestions · the word must be in the title",
     desc: "Flip the usual rule — name a song whose TITLE contains the word.",
     win: "Score 9 / 13, each answer's title holding the word." },
   { id: "short-title", name: "Short n' Sweet", rule: "shorttitle", mode: "medium",
-    free: false, cost: 1, target: 9, pool: "easy", noTitle: false, tapes: 1, icon: "feather",
+    free: false, cost: 1, target: 9, pool: "easy", noTitle: false, tapes: 1,
     blurb: "10s · suggestions · only one- or two-word titles count",
     desc: "Only songs with a one- or two-word title are allowed answers.",
     win: "Score 9 / 13 using only short titles." },
   { id: "lyric-lover", name: "Lyric Lover", rule: "verse", mode: "lyricist",
-    free: false, cost: 1, target: 6, tapes: 3, icon: "quote",
+    free: false, cost: 1, target: 6, tapes: 3,
     desc: "Answer by typing the lyric line — and recall it word-for-word.",
     win: "Recall 6 lines word-for-word (or better) — type the line exactly." },
   { id: "wrapped-chain", name: "Wrapped Like A Chain", rule: "chain", mode: "medium",
-    free: false, cost: 1, target: 6, noTitle: false, pool: "easy", tapes: 3, icon: "scarf",
+    free: false, cost: 1, target: 6, noTitle: false, pool: "easy", tapes: 3,
     blurb: "10s · suggestions · each title starts with the last letter of the one before",
     desc: "Link the songs into a chain — each title must begin with the last letter of your previous answer.",
     win: "Build a chain of 6 linked songs." },
   { id: "on-tour", name: "On Tour!", rule: "setlist", mode: "medium",
-    free: false, cost: 1, target: 9, noTitle: false, tapes: 2, icon: "ticket",
+    free: false, cost: 1, target: 9, noTitle: false, tapes: 2,
     blurb: "10s · suggestions · each page wants a song from that night's album",
     desc: "A setlist of albums, one per page — your answer must come from that night's album.",
     win: "Score 9 / 13 playing each album on cue." },
   { id: "its-a-clock", name: "It's A Clock!", rule: "combo", mode: "medium",
-    free: false, cost: 1, target: 9, noTitle: false, pool: "easy", tapes: 2, icon: "bolt",
+    free: false, cost: 1, target: 9, noTitle: false, pool: "easy", tapes: 2,
     blurb: "one shared clock · every right answer winds it back up · run it dry and it's over",
     desc: "Forget per-page timers — one shared clock drains across the whole run. Each correct answer winds it back up; let it hit zero and the run ends.",
     win: "Score 9 / 13 before the shared clock runs out." },
   { id: "switch-up", name: "Switch-Up", rule: "switchup", mode: "medium",
-    free: false, cost: 1, target: 9, seconds: 12, noTitle: false, tapes: 1, icon: "refresh",
+    free: false, cost: 1, target: 9, seconds: 12, noTitle: false, tapes: 1,
     blurb: "12s · each page wants EITHER a title OR a sung lyric line — it keeps switching",
     desc: "Every page flips the rules: sometimes name the song's title, sometimes sing a real lyric line. Read the switch before you answer.",
     win: "Score 9 / 13 as the answer type keeps switching." },
   { id: "double-trouble", name: "Double Trouble", rule: "multi", mode: "medium",
-    free: false, cost: 1, target: 8, need: 2, pool: "easy", seconds: 18, tapes: 2, icon: "trio",
+    free: false, cost: 1, target: 8, need: 2, pool: "easy", seconds: 18, tapes: 2,
     blurb: "18s · suggestions · name TWO different songs each page · not in the title",
     desc: "One song isn't enough — each page needs two different songs that both use the word (and the word can't be in either title).",
     win: "Clear 8 pages, naming two different songs each." },
   { id: "devils-path", name: "Devil's Path", rule: "devil", mode: "medium",
-    free: false, cost: 1, target: 9, forks: [4, 8], tapes: 2, icon: "triangle",
+    free: false, cost: 1, target: 9, forks: [4, 8], tapes: 2,
     blurb: "10s · suggestions · at pages 4 & 8 you must take the lesser of two curses",
     desc: "Choose Your Path's evil twin: at forks in the run you're handed two curses and must take the lesser of two evils. Whatever you pick haunts the rest of the run.",
     win: "Score 9 / 13 despite the curses you take." },
   { id: "ready-for-it", name: "Are You Sure You're …Ready For It???", rule: "flashwarp", mode: "medium",
-    mastery: 6, target: 9, revealMs: 1200, noTitle: true, tapes: 4, icon: "readyforit",
+    mastery: 6, target: 9, revealMs: 1200, noTitle: true, tapes: 4,
     blurb: "the word flashes warped, then it's gone",
     desc: "The word shows up scrambled AND vanishes after a beat. Read it warped, answer from memory.",
     win: "Score 9 / 13 on warped, vanishing words." },
   { id: "home-invasion", name: "I Have No Experience With Home Invasion", rule: "spite", mode: "medium",
-    mastery: 6, target: 9, seconds: 10, penalty: 3, tapes: 4, icon: "homeinvasion",
+    mastery: 6, target: 9, seconds: 10, penalty: 3, tapes: 4,
     blurb: "10s a page · every wrong answer cuts 3s off the clock, permanently",
     desc: "You start with 10 seconds a page. Every wrong answer steals 3 seconds from every page that follows. Miss four times and there's nothing left.",
     win: "Score 9 / 13 before the clock runs dry." },
   { id: "thirty-one", name: "Thirty-One", rule: "survive", mode: "infinite",
-    mastery: 6, target: 31, tapes: 4, icon: "thirtyone",
+    mastery: 6, target: 31, tapes: 4,
     blurb: "Infinite sudden-death rules · reach round 31",
     desc: "Infinite mode's rules, one miss ends it. Get to round 31.",
     win: "Reach round 31 in a single unbroken run." },
   { id: "smallest-song", name: "The Smallest Song Who Ever Lived", rule: "tiny", mode: "medium",
-    mastery: 6, target: 9, tapes: 4, icon: "smallestsong",
+    mastery: 6, target: 9, tapes: 4,
     blurb: "the word is tiny, tilted, and never quite where you look",
     desc: "The word shrinks to almost nothing, slants off-axis, and drifts somewhere on the page. Find it, read it, name it.",
     win: "Score 9 / 13 hunting the tiny word." },
   // ---- Tier C minigames (own input / lose-state). tapes:0 = placeholder "unrated" tier and
   //      free:true so they're playable now; real difficulty + gating slot in later. ----
   { id: "impostor", name: "Impostor", rule: "impostor", mode: "medium",
-    free: true, cost: 1, target: 7, seconds: 15, tapes: 0, icon: "placeholder",
+    free: true, cost: 1, target: 7, seconds: 15, tapes: 0,
     blurb: "some words are fakes — flag the impostors, answer the real ones",
     desc: "Most pages show a real word. But some are impostors — words that appear in zero Taylor songs. Flag the fakes with 🚩 and answer the real ones. Accuse a real word, or let an impostor slip past, and the run ends on the spot.",
     win: "Survive the run: flag every impostor and answer 7 real words." },
   { id: "sea-of-songs", name: "Sea of Songs", rule: "sea", mode: "medium",
-    free: true, cost: 1, target: 9, seconds: 10, noTitle: false, tapes: 0, icon: "placeholder",
+    free: true, cost: 1, target: 9, seconds: 10, noTitle: false, tapes: 0,
     blurb: "10s · no typing · a sea of titles — tap one whose lyrics hold the word",
     desc: "No typing this time. Each page floats up a sea of song titles — tap one whose lyrics contain the word. A few titles fit; the rest are decoys. Tap a decoy or run out of time and the page is lost.",
     win: "Score 9 / 13 fishing the right song out of the sea." },
   { id: "common-thread", name: "Common Thread", rule: "common", mode: "medium",
-    free: true, cost: 1, target: 9, seconds: 6, noTitle: false, dropdown: false, tapes: 0, icon: "placeholder",
+    free: true, cost: 1, target: 9, seconds: 6, noTitle: false, dropdown: false, tapes: 0,
     blurb: "6s · the game flips: three lines, one word runs through all of them",
     desc: "The game flips. No prompt word this time. Instead each page shows three lyric lines from three different songs. Type the one word they all share. Any real word that runs through all three counts.",
     win: "Score 9 / 13 finding the thread." },
@@ -584,7 +584,6 @@ export const ACH_ICONS = {
   star:    `<svg viewBox="0 0 24 24"><path class="ink-fill" stroke-width="1.1" stroke-linejoin="round" stroke-linecap="round" d="M12 2.3 L14.94 7.96 L21.22 9 L16.76 13.55 L17.7 19.85 L12 17 L6.3 19.85 L7.24 13.55 L2.78 9 L9.06 7.96 Z"/><path class="ink" stroke-width="0.9" opacity="0.7" d="M12 6.4 L13.1 9.2 L16 9.5"/></svg>`,
   sparkle: `<svg viewBox="0 0 24 24"><path class="ink-fill" d="M10.6 1.6 C11.6 7.4 14 9.8 19.8 10.8 C14 11.8 11.6 14.2 10.6 20 C9.6 14.2 7.2 11.8 1.4 10.8 C7.2 9.8 9.6 7.4 10.6 1.6 Z"/><path class="ink-fill" d="M18.8 14.6 C19.2 16.6 19.8 17.2 21.8 17.6 C19.8 18 19.2 18.6 18.8 20.6 C18.4 18.6 17.8 18 15.8 17.6 C17.8 17.2 18.4 16.6 18.8 14.6 Z"/></svg>`,
   bolt:    `<svg viewBox="0 0 24 24"><path class="ink-fill" d="M13.6 1.8 L4.4 13.6 H10 L9 22.2 L19.6 9.5 H13.3 Z"/><path class="ink" stroke-width="0.9" opacity="0.6" d="M12 6 L9 13"/></svg>`,
-  refresh: `<svg viewBox="0 0 24 24"><path class="ink" stroke-width="2.1" d="M19.4 14.2 A8 8 0 1 1 17 6.4"/><path class="ink-fill" d="M17.3 1.4 L19.1 7.6 L12.8 6.7 Z"/></svg>`,
   key:     `<svg viewBox="0 0 24 24"><circle class="ink-fill" cx="8" cy="8" r="5.4"/><circle cx="8" cy="8" r="1.9" fill="var(--paper)"/><path class="ink" d="M11.8 11.8 L20 20 M16.8 16.8 l2.4 -2.4 M14.2 14.2 l2.2 -2.2"/></svg>`,
   gem:     `<svg viewBox="0 0 24 24"><path class="ink-fill" d="M6.6 3 H17.4 L21.6 9 L12 21.6 L2.4 9 Z"/><path class="ink" d="M2.4 9 H21.6 M8.8 3 L6.9 9 L12 21.6 M15.2 3 L17.1 9 L12 21.6"/></svg>`,
   rise:    `<svg viewBox="0 0 24 24"><path class="ink" stroke-width="2.1" stroke-linecap="round" d="M3 19 L9.5 12.5 L13 16 L20.5 6.5"/><path class="ink-fill" d="M14.6 5 L21.5 4 L21 10.8 Z"/></svg>`,
@@ -592,7 +591,6 @@ export const ACH_ICONS = {
   scarf:   `<svg viewBox="0 0 24 24"><path class="ink-fill" d="M4.6 4.6 C10 8.2 14 8.2 19.4 4.6 L21 8.4 C14.8 12.4 9.2 12.4 3 8.4 Z"/><path class="ink-fill" d="M10.2 10.8 L8.6 19.6 L11.8 17.2 L13.2 10.9 Z"/><g class="ink" stroke-width="1.2"><path d="M8.6 19.6 L8 21.6"/><path d="M10.2 18.4 L10 20.4"/><path d="M11.8 17.2 L12.2 19.2"/></g><g class="ink" stroke-width="0.9" opacity="0.6"><path d="M7 6.6 L8 9.2"/><path d="M10.4 7.8 L11 10.4"/><path d="M13.8 7.8 L13.4 10.4"/><path d="M17 6.4 L16.2 9"/><path d="M10.7 13.2 L12.5 12.8"/><path d="M10.1 15.6 L11.9 15.2"/></g></svg>`,
   // a slender flute filled one sip shy of the rim — 12/13, the toast that never happened
   flute:   `<svg viewBox="0 0 24 24"><path class="ink-fill" d="M8.8 2.5 H15.2 L14.4 9.8 C14.2 11.9 13.2 13.2 12 13.2 C10.8 13.2 9.8 11.9 9.6 9.8 Z"/><path d="M9.3 3.1 H14.7 L14.5 5.6 H9.5 Z" fill="var(--paper)" stroke="none"/><path class="ink" d="M12 13.2 V19 M8.7 19.6 H15.3"/><circle class="ink-fill" cx="17.2" cy="4" r="1"/><circle class="ink-fill" cx="18.8" cy="7" r="0.7"/><circle class="ink-fill" cx="17.6" cy="9.6" r="0.5"/></svg>`,
-  trio:    `<svg viewBox="0 0 24 24"><circle class="ink-fill" cx="8.5" cy="9" r="4.5"/><circle class="ink-fill" cx="15.5" cy="9" r="4.5"/><circle class="ink-fill" cx="12" cy="15.5" r="4.5"/></svg>`,
   note:    `<svg viewBox="0 0 24 24"><ellipse class="ink-fill" cx="7.7" cy="17.7" rx="2.5" ry="1.9" transform="rotate(-18 7.7 17.7)"/><ellipse class="ink-fill" cx="16.5" cy="15.9" rx="2.5" ry="1.9" transform="rotate(-18 16.5 15.9)"/><g class="ink" stroke-width="1.5" fill="none"><path d="M10 17.4 V6.2"/><path d="M18.8 15.6 V4.4"/></g><path class="ink-fill" d="M10 6.4 L18.8 4.4 L18.8 7.2 L10 9.2 Z"/></svg>`,
   swords:  `<svg viewBox="0 0 24 24"><g class="ink" stroke-width="2" stroke-linecap="round" fill="none"><path d="M4 4 L15 15"/><path d="M20 4 L9 15"/><path d="M7 17 L4 20"/><path d="M17 17 L20 20"/><path d="M6 14 L10 18"/><path d="M18 14 L14 18"/></g><circle class="ink-fill" cx="4" cy="4" r="1.6"/><circle class="ink-fill" cx="20" cy="4" r="1.6"/></svg>`,
   castle:  `<svg viewBox="0 0 24 24"><rect class="ink-fill" x="5" y="9.5" width="14" height="10.5"/><g class="ink-fill"><rect x="5" y="6.4" width="3" height="3.1"/><rect x="10.5" y="6.4" width="3" height="3.1"/></g><path class="ink-fill" d="M16 9.5 V7.6 L17.4 6.4 L19 7.4 V9.5 Z"/><path d="M10 20 V15.6 a2 2 0 0 1 4 0 V20 Z" fill="var(--paper)" stroke="none"/><path d="M14.8 9.5 L13.6 12.4 L15.4 14.2 L14.2 17.2" stroke="var(--paper)" stroke-width="1.15" fill="none"/><rect class="ink-fill" x="19.9" y="7.6" width="2.1" height="2.1" transform="rotate(18 20.9 8.6)"/><rect class="ink-fill" x="20.9" y="12.6" width="1.7" height="1.7" transform="rotate(-14 21.8 13.4)"/></svg>`,
@@ -601,14 +599,10 @@ export const ACH_ICONS = {
   feather: `<svg viewBox="0 0 24 24"><path class="ink-fill" d="M19 2.6 C10 3.6 5 9.6 4.5 16.6 L8 13.1 C10 15.6 14 14.6 16 10.6 C13 11.6 11.5 10.6 11 9.1 C13 10.6 16 9.6 17 6.1 C14.5 7.1 13 6.4 12.5 5.1 C15 6.6 18 5.1 19 2.6 Z"/><path class="ink" stroke-width="1.4" d="M3.9 19.6 L8 13.1"/><path class="ink" stroke-width="1" opacity="0.55" d="M5 22.2 C7.2 21.8 9 20.8 10.4 19.2"/></svg>`,
   // a rocket mid-launch, banked toward the corner — round 1, no hesitation
   rocket:  `<svg viewBox="0 0 24 24"><g transform="rotate(38 12 12)"><path class="ink-fill" d="M12 1.6 C14.7 3.9 15.9 7.4 15.9 10.9 L14.4 14.4 H9.6 L8.1 10.9 C8.1 7.4 9.3 3.9 12 1.6 Z"/><circle cx="12" cy="8.2" r="1.7" fill="var(--paper)" stroke="var(--ink)" stroke-width="0.9"/><path class="ink-fill" d="M9.6 12.9 L6.4 16.1 L8.8 15.7 L9.4 17.9 Z"/><path class="ink-fill" d="M14.4 12.9 L17.6 16.1 L15.2 15.7 L14.6 17.9 Z"/><path class="ink" stroke-width="1.4" d="M10.6 18.4 L10.2 20.4 M12 18.8 V21.6 M13.4 18.4 L13.8 20.4"/></g></svg>`,
-  mask:    `<svg viewBox="0 0 24 24"><path class="ink-fill" d="M5 4 H19 V11 C19 17 16 21 12 21 C8 21 5 17 5 11 Z"/><g fill="var(--paper)"><circle cx="9.3" cy="10" r="1"/><circle cx="14.7" cy="10" r="1"/></g><path d="M9 16 q3 -3 6 0" fill="none" stroke="var(--paper)" stroke-width="1.4"/></svg>`,
   branch:  `<svg viewBox="0 0 24 24"><path class="ink" stroke-width="1.7" fill="none" d="M4.4 21 C7.2 14.6 11.4 9.2 18.6 4.6"/><g class="ink-fill"><ellipse cx="7.6" cy="15.7" rx="2.4" ry="0.9" transform="rotate(72 7.6 15.7)"/><ellipse cx="10.2" cy="12.5" rx="2.4" ry="0.9" transform="rotate(64 10.2 12.5)"/><ellipse cx="13.2" cy="9.6" rx="2.4" ry="0.9" transform="rotate(56 13.2 9.6)"/><ellipse cx="16.4" cy="7" rx="2.3" ry="0.85" transform="rotate(48 16.4 7)"/><ellipse cx="19.2" cy="5" rx="2.1" ry="0.8" transform="rotate(40 19.2 5)"/></g></svg>`,
   ticket:  `<svg viewBox="0 0 24 24"><path class="ink-fill" d="M3 7.2 H21 V10 a2 2 0 0 0 0 4 V16.8 H3 V14 a2 2 0 0 0 0 -4 Z"/><path d="M15.4 7.2 V16.8" stroke="var(--paper)" stroke-width="1.1" stroke-dasharray="1.5 1.5" fill="none"/><path d="M9 9.9 L9.7 11.4 L11.3 11.6 L10.1 12.7 L10.4 14.3 L9 13.5 L7.6 14.3 L7.9 12.7 L6.7 11.6 L8.3 11.4 Z" fill="var(--paper)" stroke="none"/><g stroke="var(--paper)" stroke-width="1" fill="none"><path d="M17.4 9.8 H19"/><path d="M17.4 12 H19"/><path d="M17.4 14.2 H19"/></g></svg>`,
-  cycle:   `<svg viewBox="0 0 24 24"><g class="ink" stroke-width="2" fill="none"><path d="M19 9 A8 8 0 0 0 5.5 6.5"/><path d="M5 15 A8 8 0 0 0 18.5 17.5"/></g><path class="ink-fill" d="M4 3 L6.5 7 L2 7.2 Z"/><path class="ink-fill" d="M20 21 L17.5 17 L22 16.8 Z"/></svg>`,
   moon:    `<svg viewBox="0 0 24 24"><path class="ink-fill" d="M20 14.5 A9 9 0 1 1 11 3 A7 7 0 0 0 20 14.5 Z"/></svg>`,
-  shake:   `<svg viewBox="0 0 24 24"><circle class="ink-fill" cx="12" cy="12" r="4"/><g class="ink" stroke-width="1.8" stroke-linecap="round" fill="none"><path d="M5 7 q-2 5 0 10"/><path d="M3 9 q-1.2 3 0 6"/><path d="M19 7 q2 5 0 10"/><path d="M21 9 q1.2 3 0 6"/></g></svg>`,
   storm:   `<svg viewBox="0 0 24 24"><path class="ink-fill" d="M7 13.6 a4.2 4.2 0 0 1 0.5 -8.4 a5.2 5.2 0 0 1 9.8 1 a3.7 3.7 0 0 1 -0.9 7.3 Z"/><path class="ink-fill" d="M12.4 12.6 L9 18.6 H11.8 L10.6 22.4 L15.6 15.6 H12.8 Z"/><g class="ink" stroke-width="1.2"><path d="M6.4 15.6 L5.6 17.6"/><path d="M16.8 15.2 L16 17.2"/></g></svg>`,
-  triangle:`<svg viewBox="0 0 24 24"><path class="ink" fill="none" stroke-width="2" stroke-linejoin="round" d="M12 4 L20.5 19 H3.5 Z"/><circle cx="12" cy="4" r="2.2" class="ink-fill"/><circle cx="20.5" cy="19" r="2.2" class="ink-fill"/><circle cx="3.5" cy="19" r="2.2" class="ink-fill"/></svg>`,
   brain:   `<svg viewBox="0 0 24 24"><path class="ink-fill" d="M9 3 a3 3 0 0 0 -3 3 a3 3 0 0 0 -2 4 a3 3 0 0 0 1 4 a3 3 0 0 0 3 3 a2.5 2.5 0 0 0 3 0 V4 a2 2 0 0 0 -2 -1 Z"/><path class="ink-fill" d="M15 3 a3 3 0 0 1 3 3 a3 3 0 0 1 2 4 a3 3 0 0 1 -1 4 a3 3 0 0 1 -3 3 a2.5 2.5 0 0 1 -3 0 V4 a2 2 0 0 1 2 -1 Z"/><path d="M12 4 V20" stroke="var(--paper)" stroke-width="1"/></svg>`,
   scissors:`<svg viewBox="0 0 24 24"><g class="ink" stroke-width="1.6" fill="none"><circle cx="5.9" cy="5.9" r="2.5"/><circle cx="5.9" cy="18.1" r="2.5"/></g><path class="ink-fill" d="M7.9 7.3 L20.8 16.2 C21.4 16.7 21 17.6 20.2 17.4 L7.1 9.4 Z"/><path class="ink-fill" d="M7.9 16.7 L20.8 7.8 C21.4 7.3 21 6.4 20.2 6.6 L7.1 14.6 Z"/><circle class="ink-fill" cx="12.8" cy="12" r="1.1"/></svg>`,
   clapper: `<svg viewBox="0 0 24 24"><path class="ink-fill" d="M3 8.2 L20.3 4.6 L20.9 7.4 L3.6 11 Z"/><g stroke="var(--paper)" stroke-width="1.3" fill="none"><path d="M6.3 7.6 L7.7 5.2"/><path d="M10.3 6.8 L11.7 4.4"/><path d="M14.3 6 L15.7 3.7"/><path d="M18.3 5.2 L19.5 3.1"/></g><rect class="ink-fill" x="3.4" y="10.6" width="17.4" height="9.2" rx="1.1"/><path d="M5.6 13.2 H12.4" stroke="var(--paper)" stroke-width="1.1" fill="none"/></svg>`,
@@ -649,10 +643,6 @@ export const ACH_ICONS = {
   umbrella:`<svg viewBox="0 0 24 24"><path class="ink" stroke-width="1.3" d="M12 1 V2.6"/><path class="ink-fill" d="M12 2.4 C6.2 2.4 2.4 6.8 2.4 11.6 L21.6 11.6 C21.6 6.8 17.8 2.4 12 2.4 Z"/><g stroke="var(--paper)" stroke-width="1" fill="none"><path d="M7.2 11.6 C7.2 7.4 8.8 3.8 12 2.8"/><path d="M16.8 11.6 C16.8 7.4 15.2 3.8 12 2.8"/><path d="M12 2.8 V11.6"/></g><path class="ink" stroke-width="1.6" fill="none" d="M12 11.6 V18.6 a2.4 2.4 0 0 1 -4.8 0"/><path class="ink-fill" d="M19.6 13.6 C20.3 14.6 20.6 15.3 20.6 15.9 A1.05 1.05 0 0 1 18.6 15.9 C18.6 15.3 18.9 14.5 19.6 13.6 Z"/><path class="ink-fill" d="M16.2 17.4 C16.7 18.1 16.9 18.6 16.9 19 A0.78 0.78 0 0 1 15.5 19 C15.5 18.6 15.7 18.1 16.2 17.4 Z"/></svg>`,
   // a ticked checklist page — every song in the catalogue, named (I Hate It Here)
   checklist:`<svg viewBox="0 0 24 24"><rect class="ink-fill" x="4.2" y="2.8" width="15.6" height="18.4" rx="1.8"/><rect class="ink-fill" x="9.6" y="1.4" width="4.8" height="2.8" rx="1.2"/><g stroke="var(--paper)" stroke-width="1.35" fill="none"><path d="M6.7 7.8 l1.2 1.2 L10.3 6.6"/><path d="M6.7 12.6 l1.2 1.2 L10.3 11.4"/><path d="M6.7 17.4 l1.2 1.2 L10.3 16.2"/><path d="M12.6 8.2 H17.2"/><path d="M12.6 13 H17.2"/><path d="M12.6 17.8 H16"/></g></svg>`,
-  readyforit: `<svg viewBox="0 0 24 24"><path class="ink" fill="none" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round" d="M11 2 L5 13 L10 13 L8 22 L16 9 L11 9 Z"/><circle class="ink-fill" cx="17.6" cy="14" r="1.3"/><circle class="ink-fill" cx="20" cy="17" r="1"/><circle class="ink-fill" cx="21.8" cy="20" r="0.7"/></svg>`,
-  homeinvasion: `<svg viewBox="0 0 24 24"><path class="ink" fill="none" stroke-width="1.8" stroke-linejoin="round" d="M12 12 L12 4 A8 8 0 1 0 20 12 Z"/><path class="ink" fill="none" stroke-width="1.8" stroke-linecap="round" d="M12 12 L8.5 9.5"/><circle class="ink-fill" cx="12" cy="12" r="1"/><path class="ink" fill="none" stroke-width="1.5" stroke-linecap="round" d="M8.5 19.6 L7 21.6 M15.5 19.6 L17 21.6"/></svg>`,
-  thirtyone: `<svg viewBox="0 0 24 24"><path class="ink" fill="none" stroke-width="1.8" stroke-linecap="round" d="M6 22 L6 3"/><path class="ink" fill="none" stroke-width="1.6" stroke-linejoin="round" d="M6 3 H19 L16 7.4 L19 11.8 H6 Z"/><text class="ink-fill" x="11.6" y="9.8" text-anchor="middle" font-size="6.4" font-weight="700" font-family="monospace">31</text><path class="ink" fill="none" stroke-width="1.6" stroke-linecap="round" d="M2 22 H22"/></svg>`,
-  smallestsong: `<svg viewBox="0 0 24 24"><circle class="ink" fill="none" stroke-width="1.8" cx="10" cy="10" r="6.4"/><path class="ink" fill="none" stroke-width="2.3" stroke-linecap="round" d="M14.9 14.9 L21 21"/><g transform="rotate(-18 10 10)"><ellipse class="ink-fill" cx="8.6" cy="12" rx="1.5" ry="1.1"/><path class="ink" fill="none" stroke-width="1.2" stroke-linecap="round" d="M10 11.8 L10 7.4"/><path class="ink" fill="none" stroke-width="1.2" stroke-linecap="round" d="M10 7.4 C11.7 7.9 12.1 9 11.4 10.1"/></g></svg>`,
   // TEMPORARY placeholder charm — a dashed frame around a question mark. Any icon set to
   // "placeholder" is art-pending (new challenges / achievements before their real icon is
   // drawn). Search "placeholder" to find everything still awaiting a bespoke charm.
@@ -764,43 +754,100 @@ export const ACH_ICONS = {
 };
 
 /* ---------- Challenge wax seals ----------
-   The challenge-icon revamp: each challenge's icon becomes a red sealing-wax stamp
-   with its motif pressed in relief, echoing the notebook's red margin rule. Realistic
-   matte wax — soft sheen, never gloss. Challenges without a seal yet fall back to
-   their old line charm in the detail head. Proof of concept: Vanishing Word only. */
-export const CHALLENGE_SEALS = {
-  // a sparkle pressed into the wax — the word that vanishes.
-  // Built in layers: turbulence-displaced organic blob, granular diffuse-lit wax grain,
-  // a crisp circular die (beaded border + engraved ring, the stamp is round even though
-  // the wax isn't), rim relief following the blob's own outline, faceted motif, pinhole
-  // bubbles, and a two-layer contact shadow. Matte throughout — sheen, never gloss.
-  "vanishing-word": `<svg viewBox="-2 -2 68 68" aria-hidden="true">
+   Every challenge's icon is a red sealing-wax stamp with its motif pressed in relief,
+   echoing the notebook's red margin rule. Realistic matte wax (sheen, never gloss):
+   turbulence-displaced blob, diffuse-lit grain, a crisp circular die with beaded border
+   and engraved ring, rim relief following the blob's own outline, pinhole bubbles and a
+   two-layer contact shadow. The die motif is the only thing that changes per seal.
+   Motifs are bold filled silhouettes (roughly 30 units across, centred on 32,32) designed
+   from each challenge's name + rule description. fr is the motif's fill-rule: "evenodd"
+   for plain cutouts, "nonzero" where overlapping subpaths must union (holes are then cut
+   by reversing a subpath's winding). */
+const WAX_SEAL_MOTIFS = {
+  // a circle dissolving into scattering dots: the word vanishing before your eyes
+  "vanishing-word": { fr: "nonzero", d: "M32 19 A13 13 0 0 0 32 45 Z M37.5 22.5 m-2.7 0 a2.7 2.7 0 1 1 5.4 0 a2.7 2.7 0 1 1 -5.4 0 M40 32 m-3.1 0 a3.1 3.1 0 1 1 6.2 0 a3.1 3.1 0 1 1 -6.2 0 M37.5 41.5 m-2.7 0 a2.7 2.7 0 1 1 5.4 0 a2.7 2.7 0 1 1 -5.4 0 M43.5 25.5 m-1.7 0 a1.7 1.7 0 1 1 3.4 0 a1.7 1.7 0 1 1 -3.4 0 M44.8 36.5 m-1.6 0 a1.6 1.6 0 1 1 3.2 0 a1.6 1.6 0 1 1 -3.2 0 M46.7 31 m-1.1 0 a1.1 1.1 0 1 1 2.2 0 a1.1 1.1 0 1 1 -2.2 0" },
+  // a vinyl record, label and spindle hole pressed in: one single album
+  "deep-cut": { fr: "nonzero", d: "M18.5 32 a13.5 13.5 0 1 1 27 0 a13.5 13.5 0 1 1 -27 0 M23.7 32 a8.3 8.3 0 1 0 16.6 0 a8.3 8.3 0 1 0 -16.6 0 M25.7 32 a6.3 6.3 0 1 1 12.6 0 a6.3 6.3 0 1 1 -12.6 0 M30.2 32 a1.8 1.8 0 1 0 3.6 0 a1.8 1.8 0 1 0 -3.6 0" },
+  // an A-to-Z monogram, the classic wax-seal treatment for an alphabetical rule
+  "alphabetical": { fr: "nonzero", d: "M25.5 21.5 L31 31.5 H27.9 L25.5 26.6 L23.1 31.5 H20 Z M22.1 28.4 H28.9 L29.6 30.3 H21.4 Z M34 30.5 H43 V33 L37.6 39.9 H43.2 V42.4 H33.8 V39.9 L39.2 33 H34 Z" },
+  // a word as three bars, warping more with every line until it breaks apart
+  "word-modifiers": { fr: "nonzero", d: "M22 22.5 H42 V26 H22 Z M22 30.5 C26 28.5 28 32.5 32 30.5 C36 28.5 38 32.5 42 30.5 L42 34 C38 36 36 32 32 34 C28 36 26 32 22 34 Z M21.5 39 C25 36.5 28 41.5 31 39 L31 42.5 C28 45 25 40 21.5 42.5 Z M34 38.5 C37 36 40 41 43.5 38.5 L43.5 42 C40 44.5 37 39.5 34 41.5 Z" },
+  // one lone song: a single bold eighth note
+  "one-of-a-kind": { fr: "nonzero", d: "M24.2 40.4 a4.2 4.2 0 1 1 8.4 0 a4.2 4.2 0 1 1 -8.4 0 M31.4 22.6 H34 V40.4 H31.4 Z M34 22.6 C39 24.6 40.6 28.5 39.4 33.1 C38.5 30.3 36.7 28.7 34 28.1 Z" },
+  // a forking road: one path in, two ways out
+  "choose-your-path": { fr: "nonzero", d: "M30 46 V37.2 L22 24.6 A2.7 2.7 0 0 1 26.4 21.9 L32 31.2 L37.6 21.9 A2.7 2.7 0 0 1 42 24.6 L34 37.2 V46 Z" },
+  // a tilted playing card with a question mark: the rule you can't predict
+  "wildcard": { fr: "evenodd", d: "M22.6 23.8 L37.3 20.7 L41.4 40.2 L26.7 43.3 Z M28.3 29.5 A4.2 4.2 0 1 1 34.5 32.4 L33.4 30.5 A1.9 1.9 0 1 0 30.6 29.1 Z M31.8 32.8 L33.9 32.6 L34.1 35.4 L32 35.6 Z M31.4 38.7 a1.6 1.6 0 1 0 3.2 0 a1.6 1.6 0 1 0 -3.2 0" },
+  // a revolving door from above: the ring and its spinning vanes
+  "revolving-door": { fr: "evenodd", d: "M19 32 a13 13 0 1 1 26 0 a13 13 0 1 1 -26 0 M21 32 a11 11 0 1 1 22 0 a11 11 0 1 1 -22 0 M30.7 21.5 H33.3 V42.5 H30.7 Z M21.5 30.7 H42.5 V33.3 H21.5 Z M29 32 a3 3 0 1 1 6 0 a3 3 0 1 1 -6 0" },
+  // a stopwatch nearly empty, only a thin wedge of time left
+  "shrinking-timer": { fr: "nonzero", d: "M21.7 34.2 a10.3 10.3 0 1 1 20.6 0 a10.3 10.3 0 1 1 -20.6 0 M24.3 34.2 a7.7 7.7 0 1 0 15.4 0 a7.7 7.7 0 1 0 -15.4 0 M32 34.2 L32 27.3 A6.9 6.9 0 0 1 37.6 30.9 Z M29.7 20.5 H34.3 V24.2 H29.7 Z" },
+  // a title ribbon with the word slotted inside it
+  "title-in": { fr: "evenodd", d: "M18.8 27 H45.2 L41.8 32 L45.2 37 H18.8 L22.2 32 Z M24.8 30.7 H39.2 V33.3 H24.8 Z" },
+  // a little name tag with a heart: short and sweet
+  "short-title": { fr: "evenodd", d: "M22 32 L28 25.5 H40.9 Q42.5 25.5 42.5 27.1 V36.9 Q42.5 38.5 40.9 38.5 H28 Z M25.3 32 a1.5 1.5 0 1 0 3 0 a1.5 1.5 0 1 0 -3 0 M35 35.6 C33 33.8 31.5 32.4 31.5 30.5 C31.5 28.5 33.9 27.9 35 29.7 C36.1 27.9 38.5 28.5 38.5 30.5 C38.5 32.4 37 33.8 35 35.6 Z" },
+  // a heart holding a quotation: the lyric line, loved word for word
+  "lyric-lover": { fr: "evenodd", d: "M32 45 C25.5 39.5 20.5 35 20.5 28.8 C20.5 22.4 28.4 20.6 32 26 C35.6 20.6 43.5 22.4 43.5 28.8 C43.5 35 38.5 39.5 32 45 Z M29.4 27.6 C31.2 28.3 31.5 30.7 30 33.6 L28.6 33 C29.7 30.8 29.6 29.2 28.8 28.3 Z M35 27.6 C36.8 28.3 37.1 30.7 35.6 33.6 L34.2 33 C35.3 30.8 35.2 29.2 34.4 28.3 Z" },
+  // three chain links running corner to corner: each song wrapped onto the last
+  "wrapped-chain": { fr: "evenodd", d: "M20.9 26.6 a4.5 4.5 0 1 1 9 0 a4.5 4.5 0 1 1 -9 0 M23.4 26.6 a2 2 0 1 1 4 0 a2 2 0 1 1 -4 0 M27.5 32 a4.5 4.5 0 1 1 9 0 a4.5 4.5 0 1 1 -9 0 M30 32 a2 2 0 1 1 4 0 a2 2 0 1 1 -4 0 M34.1 37.4 a4.5 4.5 0 1 1 9 0 a4.5 4.5 0 1 1 -9 0 M36.6 37.4 a2 2 0 1 1 4 0 a2 2 0 1 1 -4 0" },
+  // a stage microphone: every night a different album on cue
+  "on-tour": { fr: "nonzero", d: "M31.3 25.5 a5.2 5.2 0 1 1 10.4 0 a5.2 5.2 0 1 1 -10.4 0 M33.85 29.12 L35.95 30.28 L28.05 44.58 L25.95 43.42 Z M22 45.4 a6.5 1.9 0 1 1 13 0 a6.5 1.9 0 1 1 -13 0" },
+  // an alarm clock, hands frozen mid-run: the one shared clock
+  "its-a-clock": { fr: "nonzero", d: "M22 33.5 a10 10 0 1 1 20 0 a10 10 0 1 1 -20 0 M24.4 33.5 a7.6 7.6 0 1 0 15.2 0 a7.6 7.6 0 1 0 -15.2 0 M31 34.5 V27.8 H33 V32.5 H36.8 V34.5 Z M20.8 24.4 a3.2 3.2 0 1 1 6.4 0 a3.2 3.2 0 1 1 -6.4 0 M36.8 24.4 a3.2 3.2 0 1 1 6.4 0 a3.2 3.2 0 1 1 -6.4 0 M24.4 41.9 L26 42.9 L24.4 45.5 L22.8 44.5 Z M39.6 41.9 L38 42.9 L39.6 45.5 L41.2 44.5 Z" },
+  // two arrows trading places: title one page, lyric the next
+  "switch-up": { fr: "nonzero", d: "M22 26.2 H36 V23.4 L42.5 28 L36 32.6 V29.8 H22 Z M42 37.8 H28 V35 L21.5 39.6 L28 44.2 V41.4 H42 Z" },
+  // two beamed notes: every page wants a pair of songs
+  "double-trouble": { fr: "nonzero", d: "M22.4 40.3 a3.5 3.5 0 1 1 7 0 a3.5 3.5 0 1 1 -7 0 M28.2 25.2 H30.2 V40.3 H28.2 Z M34.4 38.3 a3.5 3.5 0 1 1 7 0 a3.5 3.5 0 1 1 -7 0 M40.2 23.5 H42.2 V38.3 H40.2 Z M28.2 25.2 L42.2 23.2 V27.2 L28.2 29.2 Z" },
+  // the devil's own fork: a trident with a wavering path for a shaft
+  "devils-path": { fr: "nonzero", d: "M24.2 29 H39.8 V31.6 H24.2 Z M24.2 22.3 L25.4 19.7 L26.6 22.3 V29.3 H24.2 Z M30.8 21.4 L32 18.8 L33.2 21.4 V29.3 H30.8 Z M37.4 22.3 L38.6 19.7 L39.8 22.3 V29.3 H37.4 Z M30.7 31.4 H33.3 C32.2 34.4 34.6 36.2 33.5 39.2 C32.7 41.4 34.2 42.8 33.2 45.4 H30.6 C31.6 42.8 30.1 41.4 30.9 39.2 C32 36.2 29.6 34.4 30.7 31.4 Z" },
+  // an eye with a lightning-bolt iris: read the flash before it's gone
+  "ready-for-it": { fr: "evenodd", d: "M18.5 32 C23 24.5 41 24.5 45.5 32 C41 39.5 23 39.5 18.5 32 Z M34 26.8 L28.4 33.4 H31.6 L30.6 37.2 L35.6 30.7 H32.8 Z" },
+  // a house split by a jagged crack: every miss steals from the home clock
+  "home-invasion": { fr: "evenodd", d: "M32 19.8 L38.4 25 V21.9 H42 V27.9 L44.6 30 H42.2 V43.4 H21.8 V30 H19.4 Z M31.3 23.2 L33.7 23.2 L31.9 30.4 L34.6 30.4 L29.9 41 L31.1 33.4 L28.5 33.4 Z" },
+  // the number itself, stamped like a year on a document seal
+  "thirty-one": { fr: "nonzero", d: "M24.5 23 H34.9 V25.7 H24.5 Z M26.3 30.7 H34.9 V33.3 H26.3 Z M24.5 38.3 H34.9 V41 H24.5 Z M32.3 23 H34.9 V41 H32.3 Z M38.7 23 H41.3 V41 H38.7 Z M36.3 26.6 L38.7 23 L38.7 26.6 Z M36.5 38.3 H43.5 V41 H36.5 Z" },
+  // a magnifying glass over a tiny tilted scrap of a word
+  "smallest-song": { fr: "nonzero", d: "M20.6 28.3 a7.7 7.7 0 1 1 15.4 0 a7.7 7.7 0 1 1 -15.4 0 M22.6 28.3 a5.7 5.7 0 1 0 11.4 0 a5.7 5.7 0 1 0 -11.4 0 M33.1 34.5 L34.5 33.1 L42.9 41.5 L41.5 42.9 Z M25.7 29.9 L30.7 28 L31.2 29.3 L26.2 31.2 Z" },
+  // the flag you raise on a fake: a pennant on its pole
+  "impostor": { fr: "nonzero", d: "M26.2 20 H28.8 V45.4 H26.2 Z M28.6 20.8 C33.8 22.6 37.9 21.4 42.8 24.6 C38 27.8 33.8 26.6 28.6 28.4 Z" },
+  // a song bobbing on open water: fish the right title out of the sea
+  "sea-of-songs": { fr: "nonzero", d: "M24.6 30.6 a2.9 2.9 0 1 1 5.8 0 a2.9 2.9 0 1 1 -5.8 0 M30.1 21 H31.9 V30.6 H30.1 Z M31.9 21 C35.4 22.6 36.6 25.4 35.8 28.7 C35.1 26.5 33.8 25.3 31.9 24.9 Z M21.5 34.8 C24.5 32.4 27.5 32.4 30.5 34.8 C33.5 37.2 36.5 37.2 39.5 34.8 C40.6 33.9 41.6 33.3 42.5 33.1 L42.5 35.9 C41.6 36.1 40.6 36.7 39.5 37.6 C36.5 40 33.5 40 30.5 37.6 C27.5 35.2 24.5 35.2 21.5 37.6 Z M21.5 39.8 C24.5 37.4 27.5 37.4 30.5 39.8 C33.5 42.2 36.5 42.2 39.5 39.8 C40.6 38.9 41.6 38.3 42.5 38.1 L42.5 40.9 C41.6 41.1 40.6 41.7 39.5 42.6 C36.5 45 33.5 45 30.5 42.6 C27.5 40.2 24.5 40.2 21.5 42.6 Z" },
+  // a needle drawing one thread through everything: the word all three lines share
+  "common-thread": { fr: "nonzero", d: "M21.3 43.2 L39 24.4 Q40.5 23 42 24.5 Q43.5 26 42.1 27.5 L23.3 45.2 Z M39.3 25.9 a1.2 1.2 0 1 0 2.4 0 a1.2 1.2 0 1 0 -2.4 0 M41.2 26.3 C45.6 29.7 43.6 35.2 38.3 36 C33.6 36.7 30.9 40 32 44.4 L30.4 44.8 C29 39.4 32.5 35.2 37.7 34.4 C41.9 33.6 43.4 30 40.1 27.4 Z" },
+};
+
+// The shared wax recipe. `id` scopes the SVG's internal ids so several seals can
+// coexist in one document; the motif is stamped three times (shadow, highlight, face)
+// to sit in raised relief on the die.
+function waxSealSvg(id, motif) {
+  const p = `wax-${id}`;
+  return `<svg viewBox="-2 -2 68 68" aria-hidden="true">
     <defs>
-      <path id="wax-vw-blob" d="M32.0 5.5 C36.3 5.6 40.3 8.2 44.6 10.2 C48.9 12.1 55.6 13.5 57.8 17.1 C60.0 20.7 58.7 27.4 58.0 32.0 C57.3 36.6 55.8 40.6 53.7 44.5 C51.6 48.4 49.0 53.1 45.4 55.2 C41.8 57.4 36.4 57.5 32.0 57.4 C27.6 57.3 23.1 56.5 18.9 54.7 C14.7 52.9 9.0 50.4 6.7 46.6 C4.5 42.8 4.8 36.5 5.4 32.0 C6.0 27.5 7.9 23.2 10.2 19.4 C12.4 15.6 15.4 11.8 19.0 9.5 C22.6 7.2 27.7 5.4 32.0 5.5 Z"/>
-      <path id="wax-vw-star" d="M32 20 C33.2 27 36.6 30.4 43.6 31.6 C36.6 32.8 33.2 36.2 32 43.2 C30.8 36.2 27.4 32.8 20.4 31.6 C27.4 30.4 30.8 27 32 20 Z M41.8 36.2 C42.2 38.8 43.2 39.8 45.8 40.2 C43.2 40.6 42.2 41.6 41.8 44.2 C41.4 41.6 40.4 40.6 37.8 40.2 C40.4 39.8 41.4 38.8 41.8 36.2 Z"/>
-      <path id="wax-vw-beads" d="M32.0 14.6 m-0.85 0 a0.85 0.85 0 1 0 1.7 0 a0.85 0.85 0 1 0 -1.7 0 M36.2 15.1 m-0.85 0 a0.85 0.85 0 1 0 1.7 0 a0.85 0.85 0 1 0 -1.7 0 M40.1 16.6 m-0.85 0 a0.85 0.85 0 1 0 1.7 0 a0.85 0.85 0 1 0 -1.7 0 M43.5 19.0 m-0.85 0 a0.85 0.85 0 1 0 1.7 0 a0.85 0.85 0 1 0 -1.7 0 M46.3 22.1 m-0.85 0 a0.85 0.85 0 1 0 1.7 0 a0.85 0.85 0 1 0 -1.7 0 M48.3 25.8 m-0.85 0 a0.85 0.85 0 1 0 1.7 0 a0.85 0.85 0 1 0 -1.7 0 M49.3 29.9 m-0.85 0 a0.85 0.85 0 1 0 1.7 0 a0.85 0.85 0 1 0 -1.7 0 M49.3 34.1 m-0.85 0 a0.85 0.85 0 1 0 1.7 0 a0.85 0.85 0 1 0 -1.7 0 M48.3 38.2 m-0.85 0 a0.85 0.85 0 1 0 1.7 0 a0.85 0.85 0 1 0 -1.7 0 M46.3 41.9 m-0.85 0 a0.85 0.85 0 1 0 1.7 0 a0.85 0.85 0 1 0 -1.7 0 M43.5 45.0 m-0.85 0 a0.85 0.85 0 1 0 1.7 0 a0.85 0.85 0 1 0 -1.7 0 M40.1 47.4 m-0.85 0 a0.85 0.85 0 1 0 1.7 0 a0.85 0.85 0 1 0 -1.7 0 M36.2 48.9 m-0.85 0 a0.85 0.85 0 1 0 1.7 0 a0.85 0.85 0 1 0 -1.7 0 M32.0 49.4 m-0.85 0 a0.85 0.85 0 1 0 1.7 0 a0.85 0.85 0 1 0 -1.7 0 M27.8 48.9 m-0.85 0 a0.85 0.85 0 1 0 1.7 0 a0.85 0.85 0 1 0 -1.7 0 M23.9 47.4 m-0.85 0 a0.85 0.85 0 1 0 1.7 0 a0.85 0.85 0 1 0 -1.7 0 M20.5 45.0 m-0.85 0 a0.85 0.85 0 1 0 1.7 0 a0.85 0.85 0 1 0 -1.7 0 M17.7 41.9 m-0.85 0 a0.85 0.85 0 1 0 1.7 0 a0.85 0.85 0 1 0 -1.7 0 M15.7 38.2 m-0.85 0 a0.85 0.85 0 1 0 1.7 0 a0.85 0.85 0 1 0 -1.7 0 M14.7 34.1 m-0.85 0 a0.85 0.85 0 1 0 1.7 0 a0.85 0.85 0 1 0 -1.7 0 M14.7 29.9 m-0.85 0 a0.85 0.85 0 1 0 1.7 0 a0.85 0.85 0 1 0 -1.7 0 M15.7 25.8 m-0.85 0 a0.85 0.85 0 1 0 1.7 0 a0.85 0.85 0 1 0 -1.7 0 M17.7 22.1 m-0.85 0 a0.85 0.85 0 1 0 1.7 0 a0.85 0.85 0 1 0 -1.7 0 M20.5 19.0 m-0.85 0 a0.85 0.85 0 1 0 1.7 0 a0.85 0.85 0 1 0 -1.7 0 M23.9 16.6 m-0.85 0 a0.85 0.85 0 1 0 1.7 0 a0.85 0.85 0 1 0 -1.7 0 M27.8 15.1 m-0.85 0 a0.85 0.85 0 1 0 1.7 0 a0.85 0.85 0 1 0 -1.7 0"/>
-      <clipPath id="wax-vw-cb"><use href="#wax-vw-blob"/></clipPath>
-      <radialGradient id="wax-vw-g" cx="40%" cy="35%" r="75%">
+      <path id="${p}-blob" d="M32.0 5.5 C36.3 5.6 40.3 8.2 44.6 10.2 C48.9 12.1 55.6 13.5 57.8 17.1 C60.0 20.7 58.7 27.4 58.0 32.0 C57.3 36.6 55.8 40.6 53.7 44.5 C51.6 48.4 49.0 53.1 45.4 55.2 C41.8 57.4 36.4 57.5 32.0 57.4 C27.6 57.3 23.1 56.5 18.9 54.7 C14.7 52.9 9.0 50.4 6.7 46.6 C4.5 42.8 4.8 36.5 5.4 32.0 C6.0 27.5 7.9 23.2 10.2 19.4 C12.4 15.6 15.4 11.8 19.0 9.5 C22.6 7.2 27.7 5.4 32.0 5.5 Z"/>
+      <path id="${p}-m" d="${motif.d}" fill-rule="${motif.fr || "nonzero"}"/>
+      <path id="${p}-beads" d="M32.0 14.6 m-0.85 0 a0.85 0.85 0 1 0 1.7 0 a0.85 0.85 0 1 0 -1.7 0 M36.2 15.1 m-0.85 0 a0.85 0.85 0 1 0 1.7 0 a0.85 0.85 0 1 0 -1.7 0 M40.1 16.6 m-0.85 0 a0.85 0.85 0 1 0 1.7 0 a0.85 0.85 0 1 0 -1.7 0 M43.5 19.0 m-0.85 0 a0.85 0.85 0 1 0 1.7 0 a0.85 0.85 0 1 0 -1.7 0 M46.3 22.1 m-0.85 0 a0.85 0.85 0 1 0 1.7 0 a0.85 0.85 0 1 0 -1.7 0 M48.3 25.8 m-0.85 0 a0.85 0.85 0 1 0 1.7 0 a0.85 0.85 0 1 0 -1.7 0 M49.3 29.9 m-0.85 0 a0.85 0.85 0 1 0 1.7 0 a0.85 0.85 0 1 0 -1.7 0 M49.3 34.1 m-0.85 0 a0.85 0.85 0 1 0 1.7 0 a0.85 0.85 0 1 0 -1.7 0 M48.3 38.2 m-0.85 0 a0.85 0.85 0 1 0 1.7 0 a0.85 0.85 0 1 0 -1.7 0 M46.3 41.9 m-0.85 0 a0.85 0.85 0 1 0 1.7 0 a0.85 0.85 0 1 0 -1.7 0 M43.5 45.0 m-0.85 0 a0.85 0.85 0 1 0 1.7 0 a0.85 0.85 0 1 0 -1.7 0 M40.1 47.4 m-0.85 0 a0.85 0.85 0 1 0 1.7 0 a0.85 0.85 0 1 0 -1.7 0 M36.2 48.9 m-0.85 0 a0.85 0.85 0 1 0 1.7 0 a0.85 0.85 0 1 0 -1.7 0 M32.0 49.4 m-0.85 0 a0.85 0.85 0 1 0 1.7 0 a0.85 0.85 0 1 0 -1.7 0 M27.8 48.9 m-0.85 0 a0.85 0.85 0 1 0 1.7 0 a0.85 0.85 0 1 0 -1.7 0 M23.9 47.4 m-0.85 0 a0.85 0.85 0 1 0 1.7 0 a0.85 0.85 0 1 0 -1.7 0 M20.5 45.0 m-0.85 0 a0.85 0.85 0 1 0 1.7 0 a0.85 0.85 0 1 0 -1.7 0 M17.7 41.9 m-0.85 0 a0.85 0.85 0 1 0 1.7 0 a0.85 0.85 0 1 0 -1.7 0 M15.7 38.2 m-0.85 0 a0.85 0.85 0 1 0 1.7 0 a0.85 0.85 0 1 0 -1.7 0 M14.7 34.1 m-0.85 0 a0.85 0.85 0 1 0 1.7 0 a0.85 0.85 0 1 0 -1.7 0 M14.7 29.9 m-0.85 0 a0.85 0.85 0 1 0 1.7 0 a0.85 0.85 0 1 0 -1.7 0 M15.7 25.8 m-0.85 0 a0.85 0.85 0 1 0 1.7 0 a0.85 0.85 0 1 0 -1.7 0 M17.7 22.1 m-0.85 0 a0.85 0.85 0 1 0 1.7 0 a0.85 0.85 0 1 0 -1.7 0 M20.5 19.0 m-0.85 0 a0.85 0.85 0 1 0 1.7 0 a0.85 0.85 0 1 0 -1.7 0 M23.9 16.6 m-0.85 0 a0.85 0.85 0 1 0 1.7 0 a0.85 0.85 0 1 0 -1.7 0 M27.8 15.1 m-0.85 0 a0.85 0.85 0 1 0 1.7 0 a0.85 0.85 0 1 0 -1.7 0"/>
+      <clipPath id="${p}-cb"><use href="#${p}-blob"/></clipPath>
+      <radialGradient id="${p}-g" cx="40%" cy="35%" r="75%">
         <stop offset="0" stop-color="#b8413f"/>
         <stop offset="0.4" stop-color="#a72e33"/>
         <stop offset="0.75" stop-color="#93232a"/>
         <stop offset="1" stop-color="#781a20"/>
       </radialGradient>
-      <radialGradient id="wax-vw-fg" cx="42%" cy="38%" r="70%">
+      <radialGradient id="${p}-fg" cx="42%" cy="38%" r="70%">
         <stop offset="0" stop-color="#ae363b"/>
         <stop offset="0.6" stop-color="#9c282e"/>
         <stop offset="1" stop-color="#8a2028"/>
       </radialGradient>
-      <linearGradient id="wax-vw-fct" x1="0" y1="0" x2="1" y2="1">
+      <linearGradient id="${p}-fct" x1="0" y1="0" x2="1" y2="1">
         <stop offset="0" stop-color="#cd5c55"/>
         <stop offset="0.45" stop-color="#ad353a"/>
         <stop offset="1" stop-color="#96262d"/>
       </linearGradient>
-      <filter id="wax-vw-b04" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="0.4"/></filter>
-      <filter id="wax-vw-b08" x="-25%" y="-25%" width="150%" height="150%"><feGaussianBlur stdDeviation="0.8"/></filter>
-      <filter id="wax-vw-b18" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="1.8"/></filter>
-      <filter id="wax-vw-b26" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="2.6"/></filter>
-      <filter id="wax-vw-fx" x="-8%" y="-8%" width="116%" height="116%">
+      <filter id="${p}-b04" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="0.4"/></filter>
+      <filter id="${p}-b08" x="-25%" y="-25%" width="150%" height="150%"><feGaussianBlur stdDeviation="0.8"/></filter>
+      <filter id="${p}-b18" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="1.8"/></filter>
+      <filter id="${p}-b26" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="2.6"/></filter>
+      <filter id="${p}-fx" x="-8%" y="-8%" width="116%" height="116%">
         <feTurbulence type="fractalNoise" baseFrequency="0.11" numOctaves="3" seed="11" result="warp"/>
         <feDisplacementMap in="SourceGraphic" in2="warp" scale="2.2" xChannelSelector="R" yChannelSelector="G" result="disp"/>
         <feTurbulence type="fractalNoise" baseFrequency="0.45" numOctaves="3" seed="5" result="grain"/>
@@ -816,35 +863,39 @@ export const CHALLENGE_SEALS = {
         <feBlend in="disp" in2="litclip" mode="multiply"/>
       </filter>
     </defs>
-    <use href="#wax-vw-blob" transform="translate(1.7,2.5)" fill="rgba(46,33,25,0.2)" filter="url(#wax-vw-b26)"/>
-    <use href="#wax-vw-blob" transform="translate(0.6,1.0)" fill="rgba(46,33,25,0.3)" filter="url(#wax-vw-b08)"/>
-    <g filter="url(#wax-vw-fx)">
-      <use href="#wax-vw-blob" fill="url(#wax-vw-g)" stroke="rgba(74,13,17,0.6)" stroke-width="0.8"/>
-      <use href="#wax-vw-blob" fill="none" stroke="rgba(60,8,12,0.42)" stroke-width="2.4" filter="url(#wax-vw-b08)" clip-path="url(#wax-vw-cb)"/>
-      <use href="#wax-vw-blob" transform="translate(0.8,0.9) translate(32,32) scale(0.9) translate(-32,-32)" fill="none" stroke="rgba(70,10,14,0.42)" stroke-width="1.7" filter="url(#wax-vw-b08)"/>
-      <use href="#wax-vw-blob" transform="translate(-0.6,-0.7) translate(32,32) scale(0.9) translate(-32,-32)" fill="none" stroke="rgba(250,188,168,0.4)" stroke-width="1.6" filter="url(#wax-vw-b08)"/>
-      <g clip-path="url(#wax-vw-cb)">
-        <ellipse cx="21" cy="17.5" rx="13" ry="8" transform="rotate(-30 21 17.5)" fill="rgba(255,216,198,0.17)" filter="url(#wax-vw-b18)"/>
-        <ellipse cx="44" cy="48" rx="10" ry="5.5" transform="rotate(-25 44 48)" fill="rgba(255,190,170,0.06)" filter="url(#wax-vw-b18)"/>
+    <use href="#${p}-blob" transform="translate(1.7,2.5)" fill="rgba(46,33,25,0.2)" filter="url(#${p}-b26)"/>
+    <use href="#${p}-blob" transform="translate(0.6,1.0)" fill="rgba(46,33,25,0.3)" filter="url(#${p}-b08)"/>
+    <g filter="url(#${p}-fx)">
+      <use href="#${p}-blob" fill="url(#${p}-g)" stroke="rgba(74,13,17,0.6)" stroke-width="0.8"/>
+      <use href="#${p}-blob" fill="none" stroke="rgba(60,8,12,0.42)" stroke-width="2.4" filter="url(#${p}-b08)" clip-path="url(#${p}-cb)"/>
+      <use href="#${p}-blob" transform="translate(0.8,0.9) translate(32,32) scale(0.9) translate(-32,-32)" fill="none" stroke="rgba(70,10,14,0.42)" stroke-width="1.7" filter="url(#${p}-b08)"/>
+      <use href="#${p}-blob" transform="translate(-0.6,-0.7) translate(32,32) scale(0.9) translate(-32,-32)" fill="none" stroke="rgba(250,188,168,0.4)" stroke-width="1.6" filter="url(#${p}-b08)"/>
+      <g clip-path="url(#${p}-cb)">
+        <ellipse cx="21" cy="17.5" rx="13" ry="8" transform="rotate(-30 21 17.5)" fill="rgba(255,216,198,0.17)" filter="url(#${p}-b18)"/>
+        <ellipse cx="44" cy="48" rx="10" ry="5.5" transform="rotate(-25 44 48)" fill="rgba(255,190,170,0.06)" filter="url(#${p}-b18)"/>
       </g>
-      <circle cx="32" cy="32" r="20" fill="url(#wax-vw-fg)"/>
-      <path d="M14.7 42.0 A20 20 0 0 0 42.0 14.7" fill="none" stroke="rgba(56,7,10,0.55)" stroke-width="1.2" stroke-linecap="round" filter="url(#wax-vw-b04)"/>
-      <path d="M49.9 21.7 A20.7 20.7 0 0 1 21.7 49.9" fill="none" stroke="rgba(246,182,162,0.38)" stroke-width="1.1" stroke-linecap="round" filter="url(#wax-vw-b04)"/>
+      <circle cx="32" cy="32" r="20" fill="url(#${p}-fg)"/>
+      <path d="M14.7 42.0 A20 20 0 0 0 42.0 14.7" fill="none" stroke="rgba(56,7,10,0.55)" stroke-width="1.2" stroke-linecap="round" filter="url(#${p}-b04)"/>
+      <path d="M49.9 21.7 A20.7 20.7 0 0 1 21.7 49.9" fill="none" stroke="rgba(246,182,162,0.38)" stroke-width="1.1" stroke-linecap="round" filter="url(#${p}-b04)"/>
       <circle cx="32" cy="32" r="19.1" fill="none" stroke="rgba(60,8,11,0.42)" stroke-width="0.6"/>
       <circle cx="32" cy="32" r="19.1" transform="translate(0.5,0.55)" fill="none" stroke="rgba(246,184,164,0.28)" stroke-width="0.5"/>
-      <use href="#wax-vw-beads" transform="translate(0.55,0.65)" fill="rgba(56,7,10,0.5)" filter="url(#wax-vw-b04)"/>
-      <use href="#wax-vw-beads" transform="translate(-0.4,-0.5)" fill="rgba(250,192,172,0.5)"/>
-      <use href="#wax-vw-beads" fill="#b04046"/>
-      <use href="#wax-vw-star" transform="translate(1.05,1.2)" fill="rgba(50,6,9,0.6)" filter="url(#wax-vw-b04)"/>
-      <use href="#wax-vw-star" transform="translate(-0.6,-0.7)" fill="rgba(252,198,180,0.45)" filter="url(#wax-vw-b04)"/>
-      <use href="#wax-vw-star" fill="url(#wax-vw-fct)" stroke="rgba(88,14,18,0.4)" stroke-width="0.4"/>
+      <use href="#${p}-beads" transform="translate(0.55,0.65)" fill="rgba(56,7,10,0.5)" filter="url(#${p}-b04)"/>
+      <use href="#${p}-beads" transform="translate(-0.4,-0.5)" fill="rgba(250,192,172,0.5)"/>
+      <use href="#${p}-beads" fill="#b04046"/>
+      <use href="#${p}-m" transform="translate(1.05,1.2)" fill="rgba(50,6,9,0.6)" filter="url(#${p}-b04)"/>
+      <use href="#${p}-m" transform="translate(-0.6,-0.7)" fill="rgba(252,198,180,0.45)" filter="url(#${p}-b04)"/>
+      <use href="#${p}-m" fill="url(#${p}-fct)" stroke="rgba(88,14,18,0.4)" stroke-width="0.4"/>
       <g fill="rgba(56,7,10,0.45)"><circle cx="47.6" cy="46.8" r="0.6"/><circle cx="12.3" cy="24.2" r="0.5"/><circle cx="26.3" cy="52.6" r="0.55"/></g>
       <g fill="rgba(252,198,182,0.5)"><circle cx="47.4" cy="46.5" r="0.22"/><circle cx="12.1" cy="24.0" r="0.18"/><circle cx="26.1" cy="52.35" r="0.2"/></g>
       <path d="M51.8 39.8 q1.3 1.1 0.9 2.7" fill="none" stroke="rgba(70,10,14,0.35)" stroke-width="0.9" stroke-linecap="round"/>
       <path d="M14.6 14.8 q-1.2 1.1 -0.8 2.6" fill="none" stroke="rgba(70,10,14,0.35)" stroke-width="0.9" stroke-linecap="round"/>
     </g>
-  </svg>`,
-};
+  </svg>`;
+}
+
+export const CHALLENGE_SEALS = Object.fromEntries(
+  Object.keys(WAX_SEAL_MOTIFS).map((id) => [id, waxSealSvg(id, WAX_SEAL_MOTIFS[id])])
+);
 export const ACHIEVEMENTS = [
   { id: "enchanted",        name: "Enchanted",        desc: "Finish your first game",              secret: false, icon: "wand" },
   { id: "mastermind",       name: "Mastermind",       desc: "Score a perfect 13/13",               secret: false, icon: "queen" },

@@ -828,11 +828,6 @@
   /* ---- right: the selected challenge ---- */
   .chall-detail { padding-left: 22px; min-width: 0; }
   .chall-detail-head { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; }
-  .chall-detail-charm { color: var(--ink); display: flex; }
-  .chall-detail-charm .charm { display: block; width: 30px; height: 30px; }
-  .chall-detail-charm .charm svg { width: 100%; height: 100%; overflow: visible; }
-  .chall-detail-charm .ink { fill: none; stroke: var(--ink); stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
-  .chall-detail-charm .ink-fill { fill: #e0a32f; stroke: var(--ink); stroke-width: 1.2; }
   .chall-detail-seal { display: flex; }
   .chall-detail-seal svg { display: block; width: 53px; height: 53px; }
   .chall-detail-name { font-family: var(--hand); font-weight: 700; font-size: 32px; line-height: 1; color: var(--ink); }

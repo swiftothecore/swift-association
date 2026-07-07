@@ -3246,9 +3246,7 @@ function renderChallengeDetail(id) {
 
   el.innerHTML =
     `<div class="chall-detail-head">` +
-      (CHALLENGE_SEALS[c.id]
-        ? `<span class="chall-detail-seal">${CHALLENGE_SEALS[c.id]}</span>`
-        : `<span class="chall-detail-charm">${charmMarkup(c.icon)}</span>`) +
+      `<span class="chall-detail-seal">${CHALLENGE_SEALS[c.id] || ""}</span>` +
       `<span class="chall-detail-name">${escapeHtml(c.name)}</span>` +
       (rec.defeated ? `<span class="chall-detail-star">${CHALL_STAR}</span><span class="chall-detail-stamp">defeated</span>` : "") +
     `</div>` +
