@@ -7614,14 +7614,16 @@ function showCircledChoice(song, done) {
   setTimeout(done, 640 * animScale());
 }
 
-// A hand-drawn pen ring around a single-line title. The ellipse circumscribes the text rect
-// (√2 rule: the rect grown by CLEAR px sits inside), drawn as four beziers with per-anchor
+// A hand-drawn pen ring around a single-line title. The ellipse hugs the text rect: a full √2
+// factor would circumscribe the rect exactly through its corners, but that balloons well past a
+// short word, so we pull in to SNUG. The line-height padding keeps the glyphs clear of the box
+// corners, so the tighter loop never clips a letter. Drawn as four beziers with per-anchor
 // outward wobble for an uneven, hand-drawn loop. Coordinates are box-local pixels; the SVG
 // viewBox matches the box and overflow is visible, so the ring may bulge past the box freely.
 function buildChoiceRing(bw, bh, tw, th, cx, cy) {
   const p = (x, y) => `${(cx + x).toFixed(1)},${(cy + y).toFixed(1)}`;
-  const CLEAR = 9, k = 0.5523;
-  const a = (tw / 2 + CLEAR) * Math.SQRT2, b = (th / 2 + CLEAR) * Math.SQRT2;
+  const CLEAR = 7, k = 0.5523, SNUG = 1.28;
+  const a = (tw / 2 + CLEAR) * SNUG, b = (th / 2 + CLEAR) * SNUG;
   const wob = () => 1 + Math.random() * 0.05;
   const aL = a * wob(), aR = a * wob(), bT = b * wob(), bB = b * wob();
   const d =
@@ -8232,6 +8234,11 @@ function clearEggs() {
 function addDoodle(kind, posClass) {
   const layer = $("doodleLayer");
   if (!layer) return;
+  // The milestone sticky is pinned to the bottom-right corner on an anniversary
+  // day, so keep doodles out of that corner and tuck them opposite instead.
+  if (posClass === "corner-br" && anniversaryNote(todayKey(), TS_MILESTONES)) {
+    posClass = "corner-bl";
+  }
   const [w, h] = DOODLE_SIZE[kind] || [56, 56];
   const d = document.createElement("div");
   d.className = "doodle " + posClass + (kind === "snake" ? " snake" : "");
