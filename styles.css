@@ -2005,9 +2005,10 @@
   }
 
   .loading {
+    position: relative;
     display: flex; align-items: center; justify-content: center;
     min-height: min(78vh, 680px);
-    text-align: center; padding: 40px 16px;
+    text-align: center;
     font-family: var(--hand); font-size: 24px; color: var(--ink-soft);
   }
   .error {
@@ -2016,25 +2017,116 @@
   }
   .error code { font-family: var(--type); font-size: 13px; background: rgba(43,39,34,0.08); padding: 2px 6px; }
 
-  /* Opening-the-notebook reveal — the full-page "opening the notebook…" sheet lifts
-     from its top edge (the same page turn used between rounds) to uncover the ruled
-     start board already laid out beneath. The cover height is locked in JS to the
-     idle loading page so laying the board out underneath never resizes it mid-turn.
-     Only applied for the flip path; the instant path just hides #loading. */
+  /* ---------- The notebook's front cover (the loading state) ----------
+     A kraft-board cover — cloth spine, elastic strap, red bookmark ribbon, a taped
+     title plate — that sits closed while the data loads, then swings open on its spine
+     (see the reveal rules below) to uncover the ruled start board already laid out. */
+  .nb-cover {
+    position: absolute; inset: 0; overflow: hidden;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 3px 5px 5px 3px;
+    background:
+      repeating-linear-gradient(92deg, rgba(255,255,255,0.03) 0 2px, rgba(60,42,20,0.03) 2px 4px),
+      radial-gradient(120% 90% at 30% 12%, #c9ae7e 0%, #bb9c69 46%, #a2824f 100%);
+    box-shadow: inset 0 0 0 1px rgba(74,52,24,0.28), inset 0 2px 10px rgba(255,246,225,0.22),
+      inset 0 -26px 46px rgba(74,50,20,0.18);
+  }
+  /* stitched border a little in from the edge */
+  .nb-cover::after {
+    content: ""; position: absolute; inset: 12px 14px 14px 40px; border-radius: 3px;
+    border: 1.5px dashed rgba(74,52,24,0.32); pointer-events: none;
+  }
+  .nb-cover-spine {
+    position: absolute; top: 0; bottom: 0; left: 0; width: 30px;
+    background: linear-gradient(90deg, #6f5330 0%, #7c5f38 62%, #5f4726 100%);
+    box-shadow: inset -6px 0 10px rgba(40,26,10,0.4), inset 2px 0 0 rgba(255,240,210,0.14);
+  }
+  /* two stitch runs up the spine */
+  .nb-cover-spine::before, .nb-cover-spine::after {
+    content: ""; position: absolute; top: 16px; bottom: 16px; width: 0;
+    border-left: 1.5px dashed rgba(255,238,206,0.42);
+  }
+  .nb-cover-spine::before { left: 9px; }
+  .nb-cover-spine::after  { left: 21px; }
+  /* the closure elastic, strung down the right side */
+  .nb-cover-elastic {
+    position: absolute; top: -4%; bottom: -4%; right: 13%; width: 12px;
+    background: linear-gradient(90deg, rgba(40,34,30,0.35), #2f2a26 40%, #211d1a 60%, rgba(40,34,30,0.35));
+    border-radius: 3px; box-shadow: 0 1px 4px rgba(20,14,8,0.4);
+  }
+  /* red bookmark ribbon peeking over the top edge (echoes the margin rule) */
+  .nb-cover-ribbon {
+    position: absolute; top: -6px; right: 28%; width: 16px; height: 76px;
+    background: linear-gradient(180deg, #9a2f2f, #b23a3a 60%, #7d2626);
+    box-shadow: 0 2px 5px rgba(40,10,10,0.35);
+    clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 82%, 0 100%);
+  }
+  /* worn corner protectors */
+  .nb-cover-corner {
+    position: absolute; width: 34px; height: 34px; pointer-events: none;
+    background: linear-gradient(135deg, rgba(120,92,48,0.9), rgba(92,68,32,0.9));
+    box-shadow: inset 0 0 0 1px rgba(255,240,210,0.16);
+  }
+  .nb-cover-corner--tr { top: 0; right: 0; clip-path: polygon(100% 0, 0 0, 100% 100%); border-top-right-radius: 5px; }
+  .nb-cover-corner--br { bottom: 0; right: 0; clip-path: polygon(100% 0, 100% 100%, 0 100%); border-bottom-right-radius: 5px; }
+  /* the taped title plate — a cream label pinned to the board */
+  .nb-cover-plate {
+    position: relative; z-index: 2; margin-left: 18px;
+    max-width: min(76%, 360px); padding: 22px 26px 20px;
+    background: linear-gradient(180deg, #f7f1e3, var(--paper));
+    border-radius: 2px; transform: rotate(-1.3deg);
+    box-shadow: 0 10px 22px rgba(48,32,12,0.28), inset 0 0 0 1px rgba(120,92,48,0.14);
+  }
+  /* washi tape at two corners of the plate */
+  .nb-cover-plate::before, .nb-cover-plate::after {
+    content: ""; position: absolute; width: 58px; height: 20px;
+    background: rgba(214,196,150,0.6); box-shadow: 0 1px 2px rgba(60,44,20,0.22);
+  }
+  .nb-cover-plate::before { top: -9px; left: -14px; transform: rotate(-24deg); }
+  .nb-cover-plate::after  { bottom: -9px; right: -14px; transform: rotate(-24deg); }
+  .nb-cover-star {
+    position: absolute; z-index: 3; top: -16px; right: -12px;
+    width: 32px; height: 32px; transform: rotate(-12deg);
+    fill: var(--ink-accent);
+    filter: drop-shadow(0 1px 0 rgba(255,248,232,0.5)) drop-shadow(0 2px 4px rgba(58,30,8,0.3));
+  }
+  .nb-cover-kicker {
+    margin: 0 0 6px; font-family: var(--type); font-size: 10px; letter-spacing: 2.5px;
+    text-transform: uppercase; color: var(--ink-soft);
+  }
+  .nb-cover-title {
+    margin: 0; font-family: var(--hand); font-weight: 700; line-height: 1.02;
+    font-size: clamp(30px, 5.4vw, 44px); color: #43301a;
+    text-shadow: 0 1px 0 rgba(255,248,232,0.5);
+  }
+  .nb-cover-gold { color: var(--ink-accent); }
+  .nb-cover-sub {
+    margin: 12px 0 0; font-family: var(--type); font-size: 11px; letter-spacing: 0.6px;
+    color: var(--ink-soft);
+  }
+
+  /* Opening-the-notebook reveal — once the data loads, the whole cover swings open on its
+     left spine (a book opening, right edge lifting toward you and over to the left) to
+     uncover the start board already laid out beneath. The cover height is locked in JS to
+     the idle page so laying the board out underneath never resizes it mid-turn. Only the
+     flip path uses this; the instant / reduced-motion path just hides #loading. */
   .loading-cover {
     position: absolute; top: 0; left: 0; right: 0; z-index: 30; margin: 0;
-    background-color: var(--paper); border-radius: 3px;
-    transform-origin: top center; backface-visibility: hidden; will-change: transform;
+    transform-origin: left center; backface-visibility: hidden; will-change: transform;
   }
   .loading-cover--turning {
-    animation: pageFlip 0.5s cubic-bezier(.42,.04,.34,1) forwards;
-    box-shadow: 0 22px 44px rgba(60, 50, 35, 0.34);
+    animation: coverOpen 0.62s cubic-bezier(.5,.02,.28,1) forwards;
   }
-  /* reuse the page-turn shade gradient/keyframes for the same lifting-page depth */
+  /* a soft shadow that deepens across the cover as it lifts off the page, for real depth */
   .loading-cover--turning::after {
-    content: ""; position: absolute; inset: 0; border-radius: 3px; pointer-events: none;
-    background: linear-gradient(to top, rgba(38,24,10,0.42), rgba(38,24,10,0.06) 48%, rgba(255,255,255,0.10) 100%);
-    opacity: 0; animation: pageFlipShade 0.5s ease-in forwards;
+    content: ""; position: absolute; inset: 0; border-radius: 3px 5px 5px 3px; z-index: 5;
+    pointer-events: none;
+    background: linear-gradient(to right, rgba(30,18,6,0.06), rgba(30,18,6,0.34) 62%, rgba(30,18,6,0.5));
+    opacity: 0; animation: pageFlipShade 0.62s ease-in forwards;
+  }
+  @keyframes coverOpen {
+    from { transform: rotateY(0deg); }
+    to   { transform: rotateY(-128deg); }
   }
 
   /* ---------- Stats page ---------- */
@@ -3476,11 +3568,14 @@
 
   /* ---------- First-run welcome (onboarding) ---------- */
   .firstrun { position: fixed; inset: 0; z-index: 220; display: none; }
-  .firstrun.open { display: block; }
+  /* Flex-centre the card. It must NOT be centred with its own transform: the `fade`
+     keyframe animates transform, which would clobber a translate(-50%,-50%) for the
+     first frames and flash the card in from the corner before snapping to the middle. */
+  .firstrun.open { display: flex; align-items: center; justify-content: center; }
   .firstrun-scrim { position: absolute; inset: 0; background: rgba(34, 24, 12, 0.55); animation: fade 0.25s ease; }
   body[data-reduce-motion="on"] .firstrun-scrim { animation: none; }
   .firstrun-card {
-    position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    position: relative;
     width: min(560px, calc(100vw - 28px)); max-height: calc(100vh - 40px); overflow-y: auto;
     overscroll-behavior: contain; padding: 26px 28px 30px 52px; --rule-x: 36px;
     animation: fade 0.3s ease;

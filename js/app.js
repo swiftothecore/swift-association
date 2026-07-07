@@ -475,7 +475,7 @@ function revealNotebook(onDone) {
     done();
   };
   loading.addEventListener("animationend", finish, { once: true });
-  setTimeout(finish, 500 * (animScale() || 1) + 80);
+  setTimeout(finish, 620 * (animScale() || 1) + 80);
 }
 
 /* ---------- Random sticky-tape placement for the nav keepsake cards ----------
