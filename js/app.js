@@ -439,28 +439,43 @@ function flipInToScreen(name) {
 }
 
 /* First paint after loadData(): swap the "opening the notebook…" loader for the real start
-   board. When motion allows, the loader becomes an opaque cover sheet and flips up from its
-   top edge — turning to the first page — revealing the board already laid out beneath. The
-   reduced-motion / instant / page-turn-off paths just hide it, exactly as before. */
-function revealNotebook() {
+   board. When motion allows, the full-page loader becomes an opaque cover sheet and flips up
+   from its top edge — the same page turn used between rounds — revealing the board already laid
+   out beneath. The cover's height is locked to the idle loading page first, so displaying the
+   board underneath never resizes it mid-turn (which would jump from a strip to a full board).
+   `onDone` runs once the notebook is fully open (after the flip, or immediately on the
+   reduced-motion / instant / page-turn-off paths), so splash screens wait for a settled layout. */
+function revealNotebook(onDone) {
   const loading = $("loading");
   const content = $("startContent");
-  content.style.display = "";
-  refreshStartBoard();
-  if (!loading) return;
+  const done = () => { if (typeof onDone === "function") onDone(); };
+  if (!loading) { content.style.display = ""; refreshStartBoard(); done(); return; }
   if (motionReduced() || animInstant() || !settings.pageTurn) {
     loading.style.display = "none";
+    content.style.display = "";
+    refreshStartBoard();
+    done();
     return;
   }
-  loading.classList.add("loading-cover", "loading-cover--turning");
+  // Freeze the cover at the idle loading page's height before revealing the (much taller)
+  // board beneath it, so the sheet turning away stays the size the player was looking at.
+  // (No rAF gate: it locks the height inline first, and rAF is paused in background tabs,
+  //  which would otherwise stall the whole open until the tab is focused.)
+  loading.style.height = loading.getBoundingClientRect().height + "px";
+  loading.classList.add("loading-cover");
+  content.style.display = "";
+  refreshStartBoard();
+  loading.classList.add("loading-cover--turning");
   let finished = false;
   const finish = () => {
     if (finished) return; finished = true;
     loading.style.display = "none";
+    loading.style.height = "";
     loading.classList.remove("loading-cover", "loading-cover--turning");
+    done();
   };
   loading.addEventListener("animationend", finish, { once: true });
-  setTimeout(finish, 550 * (animScale() || 1) + 80);
+  setTimeout(finish, 500 * (animScale() || 1) + 80);
 }
 
 /* ---------- Random sticky-tape placement for the nav keepsake cards ----------
@@ -9077,7 +9092,7 @@ function firstRunWelcomeHTML() {
   return `<p class="fr-kicker">welcome to the notebook</p>` +
     `<h2 class="fr-title">Let's ease you in</h2>` +
     `<p class="fr-sub">Here's the whole game: you'll see a word, and you name a Taylor Swift song that has it somewhere in the lyrics. That's it.</p>` +
-    `<p class="fr-sub">First time? We'd start you in <b>Relaxed</b> &mdash; no clock, suggestions and hints on, every song in play. You can turn the difficulty up whenever you're ready.</p>` +
+    `<p class="fr-sub">First time? We'd start you in <b>Relaxed</b>, so there's no clock, suggestions and hints stay on, and every song is in play. You can turn the difficulty up whenever you're ready.</p>` +
     `<div class="fr-actions">` +
       `<button type="button" class="btn-primary" data-fr="relaxed">Start me in Relaxed &rarr;</button>` +
       `<button type="button" class="btn-link" data-fr="knowit">I already know this game</button>` +
@@ -9097,7 +9112,7 @@ function firstRunEraHTML() {
   }).join("");
   return `<p class="fr-kicker">before you start</p>` +
     `<h2 class="fr-title">Which era is yours?</h2>` +
-    `<p class="fr-sub">Pick the album closest to your heart. We'll keep it on your notebook — you can change it any time in settings.</p>` +
+    `<p class="fr-sub">Pick the album closest to your heart. We'll keep it on your notebook, and you can change it any time in settings.</p>` +
     `<div class="fr-era-grid" role="group" aria-label="Choose your era">${chips}</div>` +
     `<div class="fr-actions">` +
       `<button type="button" class="btn-primary fr-confirm" data-fr="confirm"${firstRunEra ? "" : " disabled"}>` +
@@ -9142,7 +9157,7 @@ function showReadyForNormal(force) {
   $("firstRunBody").innerHTML =
     `<p class="fr-kicker">nicely done</p>` +
     `<h2 class="fr-title">Ready to start the clock?</h2>` +
-    `<p class="fr-sub">That was Relaxed &mdash; no timer, all the help. <b>Normal</b> adds a 10-second clock per page. Same game, a little more thrilling. Want to give it a go next?</p>` +
+    `<p class="fr-sub">That was Relaxed, with no timer and all the help. <b>Normal</b> adds a 10-second clock per page. Same game, a little more thrilling. Want to give it a go next?</p>` +
     `<div class="fr-actions">` +
       `<button type="button" class="btn-primary" data-fr="normal-yes">Yes, switch me to Normal &rarr;</button>` +
       `<button type="button" class="btn-link" data-fr="normal-no">Stay in Relaxed for now</button>` +
@@ -9714,10 +9729,12 @@ async function init() {
 
   try {
     await loadData();
-    revealNotebook();            // hide the loader, lay out the start board (with a page-turn when motion allows)
     // "Play this word" deep-link from the searcher jumps straight into a round; only greet a
     // fresh player with the first-run welcome when we're not launching into a game.
-    if (!maybeStartFromWordParam()) maybeRunFirstRun();
+    const startedFromWord = maybeStartFromWordParam();
+    // Reveal the notebook, and only once its page-turn has fully settled bring up the first-run
+    // splash — otherwise the overlay flashes in mid-layout before snapping to centre.
+    revealNotebook(startedFromWord ? null : maybeRunFirstRun);
   } catch (err) {
     $("loading").outerHTML = `
       <div class="error">
