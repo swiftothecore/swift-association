@@ -6410,7 +6410,11 @@ function advanceRound() {
   round++;
   roundLocked = false;
   justEarnedIndex = -1;
-  dismissCoachmark();   // clear any lingering guided-round note before the new page draws
+  // Clear any lingering guided-round note before the new page draws — but let beat B ("nice,
+  // match every song...") ride onto the very next page so the player can actually read it, since
+  // it fires on the correct answer that immediately turns the page. It anchors to the bracelet
+  // (stable across rounds) and self-clears on its own timer, the next answer, or leaving the board.
+  if (shownCoachmarkId !== "guideMatch") dismissCoachmark();
   // Switch-Up decides this page's answer type up front — BEFORE the word is drawn — so the
   // word pool can honour the "lyric pages avoid title words" rule (see pickWord). Round 1
   // always opens on a title, a gentle start. applyChallengeRound just renders the banner.
@@ -9069,6 +9073,7 @@ function markCoachmark(id) {
    started outside Relaxed. */
 let coachmarkDismissTimer = null;
 let coachmarkFadeTimer = null;
+let shownCoachmarkId = "";   // which beat is currently on screen (for advance-survival rules)
 // Gate for both beats: brand-new player, welcome finished, no classic games logged yet.
 function firstGameGuideEligible() {
   return !!settings.firstRunDone && totalPlayed() === 0;
@@ -9097,7 +9102,7 @@ function dismissCoachmark() {
   const el = $("coachmark");
   if (!el || el.hidden) return;
   if (coachmarkDismissTimer) { clearTimeout(coachmarkDismissTimer); coachmarkDismissTimer = null; }
-  const finish = () => { coachmarkFadeTimer = null; el.hidden = true; el.classList.remove("leaving"); el.innerHTML = ""; };
+  const finish = () => { coachmarkFadeTimer = null; el.hidden = true; el.classList.remove("leaving"); el.innerHTML = ""; shownCoachmarkId = ""; };
   if (motionReduced() || animInstant()) { finish(); return; }
   el.classList.add("leaving");
   if (coachmarkFadeTimer) clearTimeout(coachmarkFadeTimer);
@@ -9115,6 +9120,7 @@ function showCoachmark(id, opts) {
   if (coachmarkFadeTimer) { clearTimeout(coachmarkFadeTimer); coachmarkFadeTimer = null; }
   if (coachmarkDismissTimer) { clearTimeout(coachmarkDismissTimer); coachmarkDismissTimer = null; }
   el.classList.remove("leaving");
+  shownCoachmarkId = id;
   markCoachmark(id);
   const gotBtn = opts.got ? `<button type="button" class="coach-got">${escapeHtml(opts.got)}</button>` : "";
   el.innerHTML =
