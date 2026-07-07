@@ -765,45 +765,84 @@ export const ACH_ICONS = {
 
 /* ---------- Challenge wax seals ----------
    The challenge-icon revamp: each challenge's icon becomes a red sealing-wax stamp
-   with its motif pressed in relief, echoing the notebook's red margin rule. Flat,
-   letterpress-style rendering, no gloss. Challenges without a seal yet fall back to
+   with its motif pressed in relief, echoing the notebook's red margin rule. Realistic
+   matte wax — soft sheen, never gloss. Challenges without a seal yet fall back to
    their old line charm in the detail head. Proof of concept: Vanishing Word only. */
 export const CHALLENGE_SEALS = {
-  // a sparkle pressed into the wax — the word that vanishes
-  "vanishing-word": `<svg viewBox="0 0 64 64" aria-hidden="true">
+  // a sparkle pressed into the wax — the word that vanishes.
+  // Built in layers: turbulence-displaced organic blob, granular diffuse-lit wax grain,
+  // a crisp circular die (beaded border + engraved ring, the stamp is round even though
+  // the wax isn't), rim relief following the blob's own outline, faceted motif, pinhole
+  // bubbles, and a two-layer contact shadow. Matte throughout — sheen, never gloss.
+  "vanishing-word": `<svg viewBox="-2 -2 68 68" aria-hidden="true">
     <defs>
-      <radialGradient id="wax-vw-g" cx="42%" cy="38%" r="72%">
-        <stop offset="0" stop-color="#b2393c"/>
-        <stop offset="0.55" stop-color="#a02d31"/>
-        <stop offset="1" stop-color="#872326"/>
+      <path id="wax-vw-blob" d="M32.0 5.5 C36.3 5.6 40.3 8.2 44.6 10.2 C48.9 12.1 55.6 13.5 57.8 17.1 C60.0 20.7 58.7 27.4 58.0 32.0 C57.3 36.6 55.8 40.6 53.7 44.5 C51.6 48.4 49.0 53.1 45.4 55.2 C41.8 57.4 36.4 57.5 32.0 57.4 C27.6 57.3 23.1 56.5 18.9 54.7 C14.7 52.9 9.0 50.4 6.7 46.6 C4.5 42.8 4.8 36.5 5.4 32.0 C6.0 27.5 7.9 23.2 10.2 19.4 C12.4 15.6 15.4 11.8 19.0 9.5 C22.6 7.2 27.7 5.4 32.0 5.5 Z"/>
+      <path id="wax-vw-star" d="M32 20 C33.2 27 36.6 30.4 43.6 31.6 C36.6 32.8 33.2 36.2 32 43.2 C30.8 36.2 27.4 32.8 20.4 31.6 C27.4 30.4 30.8 27 32 20 Z M41.8 36.2 C42.2 38.8 43.2 39.8 45.8 40.2 C43.2 40.6 42.2 41.6 41.8 44.2 C41.4 41.6 40.4 40.6 37.8 40.2 C40.4 39.8 41.4 38.8 41.8 36.2 Z"/>
+      <path id="wax-vw-beads" d="M32.0 14.6 m-0.85 0 a0.85 0.85 0 1 0 1.7 0 a0.85 0.85 0 1 0 -1.7 0 M36.2 15.1 m-0.85 0 a0.85 0.85 0 1 0 1.7 0 a0.85 0.85 0 1 0 -1.7 0 M40.1 16.6 m-0.85 0 a0.85 0.85 0 1 0 1.7 0 a0.85 0.85 0 1 0 -1.7 0 M43.5 19.0 m-0.85 0 a0.85 0.85 0 1 0 1.7 0 a0.85 0.85 0 1 0 -1.7 0 M46.3 22.1 m-0.85 0 a0.85 0.85 0 1 0 1.7 0 a0.85 0.85 0 1 0 -1.7 0 M48.3 25.8 m-0.85 0 a0.85 0.85 0 1 0 1.7 0 a0.85 0.85 0 1 0 -1.7 0 M49.3 29.9 m-0.85 0 a0.85 0.85 0 1 0 1.7 0 a0.85 0.85 0 1 0 -1.7 0 M49.3 34.1 m-0.85 0 a0.85 0.85 0 1 0 1.7 0 a0.85 0.85 0 1 0 -1.7 0 M48.3 38.2 m-0.85 0 a0.85 0.85 0 1 0 1.7 0 a0.85 0.85 0 1 0 -1.7 0 M46.3 41.9 m-0.85 0 a0.85 0.85 0 1 0 1.7 0 a0.85 0.85 0 1 0 -1.7 0 M43.5 45.0 m-0.85 0 a0.85 0.85 0 1 0 1.7 0 a0.85 0.85 0 1 0 -1.7 0 M40.1 47.4 m-0.85 0 a0.85 0.85 0 1 0 1.7 0 a0.85 0.85 0 1 0 -1.7 0 M36.2 48.9 m-0.85 0 a0.85 0.85 0 1 0 1.7 0 a0.85 0.85 0 1 0 -1.7 0 M32.0 49.4 m-0.85 0 a0.85 0.85 0 1 0 1.7 0 a0.85 0.85 0 1 0 -1.7 0 M27.8 48.9 m-0.85 0 a0.85 0.85 0 1 0 1.7 0 a0.85 0.85 0 1 0 -1.7 0 M23.9 47.4 m-0.85 0 a0.85 0.85 0 1 0 1.7 0 a0.85 0.85 0 1 0 -1.7 0 M20.5 45.0 m-0.85 0 a0.85 0.85 0 1 0 1.7 0 a0.85 0.85 0 1 0 -1.7 0 M17.7 41.9 m-0.85 0 a0.85 0.85 0 1 0 1.7 0 a0.85 0.85 0 1 0 -1.7 0 M15.7 38.2 m-0.85 0 a0.85 0.85 0 1 0 1.7 0 a0.85 0.85 0 1 0 -1.7 0 M14.7 34.1 m-0.85 0 a0.85 0.85 0 1 0 1.7 0 a0.85 0.85 0 1 0 -1.7 0 M14.7 29.9 m-0.85 0 a0.85 0.85 0 1 0 1.7 0 a0.85 0.85 0 1 0 -1.7 0 M15.7 25.8 m-0.85 0 a0.85 0.85 0 1 0 1.7 0 a0.85 0.85 0 1 0 -1.7 0 M17.7 22.1 m-0.85 0 a0.85 0.85 0 1 0 1.7 0 a0.85 0.85 0 1 0 -1.7 0 M20.5 19.0 m-0.85 0 a0.85 0.85 0 1 0 1.7 0 a0.85 0.85 0 1 0 -1.7 0 M23.9 16.6 m-0.85 0 a0.85 0.85 0 1 0 1.7 0 a0.85 0.85 0 1 0 -1.7 0 M27.8 15.1 m-0.85 0 a0.85 0.85 0 1 0 1.7 0 a0.85 0.85 0 1 0 -1.7 0"/>
+      <clipPath id="wax-vw-cb"><use href="#wax-vw-blob"/></clipPath>
+      <radialGradient id="wax-vw-g" cx="40%" cy="35%" r="75%">
+        <stop offset="0" stop-color="#b8413f"/>
+        <stop offset="0.4" stop-color="#a72e33"/>
+        <stop offset="0.75" stop-color="#93232a"/>
+        <stop offset="1" stop-color="#781a20"/>
       </radialGradient>
-      <filter id="wax-vw-sh" x="-15%" y="-15%" width="130%" height="130%"><feGaussianBlur stdDeviation="1.4"/></filter>
-      <filter id="wax-vw-soft" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="1.3"/></filter>
+      <radialGradient id="wax-vw-fg" cx="42%" cy="38%" r="70%">
+        <stop offset="0" stop-color="#ae363b"/>
+        <stop offset="0.6" stop-color="#9c282e"/>
+        <stop offset="1" stop-color="#8a2028"/>
+      </radialGradient>
+      <linearGradient id="wax-vw-fct" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="#cd5c55"/>
+        <stop offset="0.45" stop-color="#ad353a"/>
+        <stop offset="1" stop-color="#96262d"/>
+      </linearGradient>
+      <filter id="wax-vw-b04" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="0.4"/></filter>
+      <filter id="wax-vw-b08" x="-25%" y="-25%" width="150%" height="150%"><feGaussianBlur stdDeviation="0.8"/></filter>
+      <filter id="wax-vw-b18" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="1.8"/></filter>
+      <filter id="wax-vw-b26" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="2.6"/></filter>
+      <filter id="wax-vw-fx" x="-8%" y="-8%" width="116%" height="116%">
+        <feTurbulence type="fractalNoise" baseFrequency="0.11" numOctaves="3" seed="11" result="warp"/>
+        <feDisplacementMap in="SourceGraphic" in2="warp" scale="2.2" xChannelSelector="R" yChannelSelector="G" result="disp"/>
+        <feTurbulence type="fractalNoise" baseFrequency="0.45" numOctaves="3" seed="5" result="grain"/>
+        <feDiffuseLighting in="grain" lighting-color="#ffffff" surfaceScale="1.4" diffuseConstant="1" result="lit">
+          <feDistantLight azimuth="235" elevation="55"/>
+        </feDiffuseLighting>
+        <feComponentTransfer in="lit" result="litsoft">
+          <feFuncR type="linear" slope="0.3" intercept="0.76"/>
+          <feFuncG type="linear" slope="0.3" intercept="0.76"/>
+          <feFuncB type="linear" slope="0.3" intercept="0.76"/>
+        </feComponentTransfer>
+        <feComposite in="litsoft" in2="disp" operator="in" result="litclip"/>
+        <feBlend in="disp" in2="litclip" mode="multiply"/>
+      </filter>
     </defs>
-    <path d="M32.0 4.5 C37.1 4.5 42.9 7.7 47.4 10.8 C51.9 13.9 57.5 18.2 59.2 23.2 C60.9 28.1 59.7 35.4 57.7 40.3 C55.7 45.3 51.4 49.6 47.2 52.9 C42.9 56.1 37.1 59.7 32.0 59.8 C26.9 59.9 21.0 56.5 16.5 53.4 C12.0 50.2 7.3 45.8 5.2 40.7 C3.1 35.6 2.1 27.9 4.0 22.9 C5.9 17.9 11.9 13.9 16.6 10.8 C21.3 7.7 26.9 4.5 32.0 4.5 Z" transform="translate(1.1,1.5)" fill="rgba(43,39,34,0.28)" filter="url(#wax-vw-sh)"/>
-    <path d="M32.0 4.5 C37.1 4.5 42.9 7.7 47.4 10.8 C51.9 13.9 57.5 18.2 59.2 23.2 C60.9 28.1 59.7 35.4 57.7 40.3 C55.7 45.3 51.4 49.6 47.2 52.9 C42.9 56.1 37.1 59.7 32.0 59.8 C26.9 59.9 21.0 56.5 16.5 53.4 C12.0 50.2 7.3 45.8 5.2 40.7 C3.1 35.6 2.1 27.9 4.0 22.9 C5.9 17.9 11.9 13.9 16.6 10.8 C21.3 7.7 26.9 4.5 32.0 4.5 Z" fill="url(#wax-vw-g)" stroke="rgba(90,20,22,0.55)" stroke-width="1"/>
-    <g filter="url(#wax-vw-soft)">
-      <path d="M11.2 44.0 A24 24 0 0 0 44.0 11.2" fill="none" stroke="rgba(236,158,150,0.32)" stroke-width="2.4" stroke-linecap="round"/>
-      <path d="M52.8 20.0 A24 24 0 0 1 20.0 52.8" fill="none" stroke="rgba(70,12,14,0.32)" stroke-width="2.4" stroke-linecap="round"/>
+    <use href="#wax-vw-blob" transform="translate(1.7,2.5)" fill="rgba(46,33,25,0.2)" filter="url(#wax-vw-b26)"/>
+    <use href="#wax-vw-blob" transform="translate(0.6,1.0)" fill="rgba(46,33,25,0.3)" filter="url(#wax-vw-b08)"/>
+    <g filter="url(#wax-vw-fx)">
+      <use href="#wax-vw-blob" fill="url(#wax-vw-g)" stroke="rgba(74,13,17,0.6)" stroke-width="0.8"/>
+      <use href="#wax-vw-blob" fill="none" stroke="rgba(60,8,12,0.42)" stroke-width="2.4" filter="url(#wax-vw-b08)" clip-path="url(#wax-vw-cb)"/>
+      <use href="#wax-vw-blob" transform="translate(0.8,0.9) translate(32,32) scale(0.9) translate(-32,-32)" fill="none" stroke="rgba(70,10,14,0.42)" stroke-width="1.7" filter="url(#wax-vw-b08)"/>
+      <use href="#wax-vw-blob" transform="translate(-0.6,-0.7) translate(32,32) scale(0.9) translate(-32,-32)" fill="none" stroke="rgba(250,188,168,0.4)" stroke-width="1.6" filter="url(#wax-vw-b08)"/>
+      <g clip-path="url(#wax-vw-cb)">
+        <ellipse cx="21" cy="17.5" rx="13" ry="8" transform="rotate(-30 21 17.5)" fill="rgba(255,216,198,0.17)" filter="url(#wax-vw-b18)"/>
+        <ellipse cx="44" cy="48" rx="10" ry="5.5" transform="rotate(-25 44 48)" fill="rgba(255,190,170,0.06)" filter="url(#wax-vw-b18)"/>
+      </g>
+      <circle cx="32" cy="32" r="20" fill="url(#wax-vw-fg)"/>
+      <path d="M14.7 42.0 A20 20 0 0 0 42.0 14.7" fill="none" stroke="rgba(56,7,10,0.55)" stroke-width="1.2" stroke-linecap="round" filter="url(#wax-vw-b04)"/>
+      <path d="M49.9 21.7 A20.7 20.7 0 0 1 21.7 49.9" fill="none" stroke="rgba(246,182,162,0.38)" stroke-width="1.1" stroke-linecap="round" filter="url(#wax-vw-b04)"/>
+      <circle cx="32" cy="32" r="19.1" fill="none" stroke="rgba(60,8,11,0.42)" stroke-width="0.6"/>
+      <circle cx="32" cy="32" r="19.1" transform="translate(0.5,0.55)" fill="none" stroke="rgba(246,184,164,0.28)" stroke-width="0.5"/>
+      <use href="#wax-vw-beads" transform="translate(0.55,0.65)" fill="rgba(56,7,10,0.5)" filter="url(#wax-vw-b04)"/>
+      <use href="#wax-vw-beads" transform="translate(-0.4,-0.5)" fill="rgba(250,192,172,0.5)"/>
+      <use href="#wax-vw-beads" fill="#b04046"/>
+      <use href="#wax-vw-star" transform="translate(1.05,1.2)" fill="rgba(50,6,9,0.6)" filter="url(#wax-vw-b04)"/>
+      <use href="#wax-vw-star" transform="translate(-0.6,-0.7)" fill="rgba(252,198,180,0.45)" filter="url(#wax-vw-b04)"/>
+      <use href="#wax-vw-star" fill="url(#wax-vw-fct)" stroke="rgba(88,14,18,0.4)" stroke-width="0.4"/>
+      <g fill="rgba(56,7,10,0.45)"><circle cx="47.6" cy="46.8" r="0.6"/><circle cx="12.3" cy="24.2" r="0.5"/><circle cx="26.3" cy="52.6" r="0.55"/></g>
+      <g fill="rgba(252,198,182,0.5)"><circle cx="47.4" cy="46.5" r="0.22"/><circle cx="12.1" cy="24.0" r="0.18"/><circle cx="26.1" cy="52.35" r="0.2"/></g>
+      <path d="M51.8 39.8 q1.3 1.1 0.9 2.7" fill="none" stroke="rgba(70,10,14,0.35)" stroke-width="0.9" stroke-linecap="round"/>
+      <path d="M14.6 14.8 q-1.2 1.1 -0.8 2.6" fill="none" stroke="rgba(70,10,14,0.35)" stroke-width="0.9" stroke-linecap="round"/>
     </g>
-    <circle cx="32" cy="32" r="20.5" fill="rgba(60,10,12,0.14)"/>
-    <path d="M14.2 42.2 A20.5 20.5 0 0 0 42.2 14.2" fill="none" stroke="rgba(70,12,14,0.5)" stroke-width="1.1" stroke-linecap="round"/>
-    <path d="M50.4 21.4 A21.3 21.3 0 0 1 21.4 50.4" fill="none" stroke="rgba(236,158,150,0.28)" stroke-width="1.1" stroke-linecap="round"/>
-    <circle cx="32" cy="32" r="17.5" fill="none" stroke="rgba(70,12,14,0.28)" stroke-width="0.7"/>
-    <g fill="rgba(66,10,12,0.55)" transform="translate(1,1)">
-      <path d="M32 20 C33.2 27 36.6 30.4 43.6 31.6 C36.6 32.8 33.2 36.2 32 43.2 C30.8 36.2 27.4 32.8 20.4 31.6 C27.4 30.4 30.8 27 32 20 Z"/>
-      <path d="M41.8 36.2 C42.2 38.8 43.2 39.8 45.8 40.2 C43.2 40.6 42.2 41.6 41.8 44.2 C41.4 41.6 40.4 40.6 37.8 40.2 C40.4 39.8 41.4 38.8 41.8 36.2 Z"/>
-    </g>
-    <g fill="rgba(240,172,162,0.45)" transform="translate(-0.7,-0.7)">
-      <path d="M32 20 C33.2 27 36.6 30.4 43.6 31.6 C36.6 32.8 33.2 36.2 32 43.2 C30.8 36.2 27.4 32.8 20.4 31.6 C27.4 30.4 30.8 27 32 20 Z"/>
-      <path d="M41.8 36.2 C42.2 38.8 43.2 39.8 45.8 40.2 C43.2 40.6 42.2 41.6 41.8 44.2 C41.4 41.6 40.4 40.6 37.8 40.2 C40.4 39.8 41.4 38.8 41.8 36.2 Z"/>
-    </g>
-    <g fill="#b8474a">
-      <path d="M32 20 C33.2 27 36.6 30.4 43.6 31.6 C36.6 32.8 33.2 36.2 32 43.2 C30.8 36.2 27.4 32.8 20.4 31.6 C27.4 30.4 30.8 27 32 20 Z"/>
-      <path d="M41.8 36.2 C42.2 38.8 43.2 39.8 45.8 40.2 C43.2 40.6 42.2 41.6 41.8 44.2 C41.4 41.6 40.4 40.6 37.8 40.2 C40.4 39.8 41.4 38.8 41.8 36.2 Z"/>
-    </g>
-    <path d="M50 45 q1.5 1 1.2 2.6" fill="none" stroke="rgba(70,12,14,0.35)" stroke-width="0.9" stroke-linecap="round"/>
-    <path d="M13.5 20.5 q-0.8 1.4 0.2 2.6" fill="none" stroke="rgba(70,12,14,0.3)" stroke-width="0.9" stroke-linecap="round"/>
   </svg>`,
 };
 export const ACHIEVEMENTS = [

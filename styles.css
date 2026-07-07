@@ -834,7 +834,7 @@
   .chall-detail-charm .ink { fill: none; stroke: var(--ink); stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
   .chall-detail-charm .ink-fill { fill: #e0a32f; stroke: var(--ink); stroke-width: 1.2; }
   .chall-detail-seal { display: flex; }
-  .chall-detail-seal svg { display: block; width: 50px; height: 50px; }
+  .chall-detail-seal svg { display: block; width: 53px; height: 53px; }
   .chall-detail-name { font-family: var(--hand); font-weight: 700; font-size: 32px; line-height: 1; color: var(--ink); }
   .chall-detail-star { display: flex; }
   .chall-star-svg { width: 18px; height: 18px; display: block; }
