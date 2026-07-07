@@ -466,6 +466,9 @@ if (location.pathname.endsWith('/index.html')) {
   </div>
 </div>
 <div id="toastLayer" class="toast-layer" aria-live="polite"></div>
+<!-- Light-touch guided-round coachmarks: a small pencil note pinned near the thing it
+     teaches. Non-modal, never covers the board. Positioned + filled by app.js. -->
+<div id="coachmark" class="coachmark" role="status" aria-live="polite" hidden></div>
 <a id="searchLink" class="search-link" href="search/" title="Swift To The Lyric — search every lyric">
   <svg class="search-link-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
     <circle cx="11" cy="11" r="7" /><line x1="16.5" y1="16.5" x2="21" y2="21" />

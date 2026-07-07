@@ -330,6 +330,7 @@ function showScreen(name) {
   if (name !== "start") stopResetCountdown();
   // Hide the bottom-left lyric-search chrome during active play, so it doesn't clutter the board.
   document.body.classList.toggle("in-game", name === "game");
+  if (name !== "game") dismissCoachmark();   // no guided-round note should outlive the board
   // Re-arm the quit button fresh for each visit to the game (drop any stale armed state).
   if (name === "game") {
     const qb = $("quitBtn");
@@ -6409,6 +6410,7 @@ function advanceRound() {
   round++;
   roundLocked = false;
   justEarnedIndex = -1;
+  dismissCoachmark();   // clear any lingering guided-round note before the new page draws
   // Switch-Up decides this page's answer type up front — BEFORE the word is drawn — so the
   // word pool can honour the "lyric pages avoid title words" rule (see pickWord). Round 1
   // always opens on a title, a gentle start. applyChallengeRound just renders the banner.
@@ -6510,6 +6512,7 @@ function advanceRound() {
   renderHintAffordance();
   renderPathSkip();
   runRoundEggs();
+  maybeGuideType();   // Beat A: teach the core action on the first game's opening page
   // Note: the timer is started by the caller (nextRound) — for a page turn it
   // only starts once the flip finishes, so no time is lost during the animation.
 }
@@ -7427,6 +7430,9 @@ function submitAnswer(song, isTimeout) {
   roundSongs[round - 1] = correct && song ? song.title : null;  // credited song — for the lifetime tally
   justEarnedIndex = correct ? round - 1 : -1;
   if (correct) score++;
+  // Guided round: the player answered, so beat A ("type a word") has served its purpose —
+  // clear it whether they got it or not.
+  dismissCoachmark();
   // Impostor: a missed real page (wrong/timeout) can't fail the run, but it spoils a flawless
   // one (Should've Said No). Impostor pages were already intercepted, so this is a real page.
   if (impostorRuleActive() && !correct) impostorMissed++;
@@ -7470,6 +7476,14 @@ function submitAnswer(song, isTimeout) {
   const versePlus = lyricMatch && (lyricMatch.tier === "perfect" || lyricMatch.tier === "verse");
   if (versePlus) roundVerseTier[round - 1] = lyricMatch.tier;
   renderBracelet();
+
+  // Guided round beat B: the first-ever correct match. Fire it right after the bracelet redraws,
+  // so the note points at the freshly-added charm. firstMatchDone is a one-and-done lifetime flag
+  // (the coachmark itself is also gated to a genuine first classic game).
+  if (correct) {
+    if (!settings.firstMatchDone) { settings.firstMatchDone = true; saveSettings(settings); }
+    maybeGuideMatch();
+  }
 
   if (lyricMatch) {
     lyricLineAnswers++;                  // recalled a lyric line (for You Knew The Line)
@@ -9044,15 +9058,118 @@ function markCoachmark(id) {
   saveSettings(settings);
 }
 
+/* ---------- Guided first round (light-touch coachmarks) ----------
+   Two tiny, non-modal pencil-note pointers that gently teach the core loop DURING a brand-new
+   player's real first classic game (their score/stats count as normal — this is not a sandbox).
+   Beat A ("guideType") anchors near the answer input at round start; beat B ("guideMatch") lands
+   the instant their first-ever correct match does, near the bracelet. Each fires at most once
+   ever (seenCoachmarks gate), only when the welcome is done AND this is genuinely their first
+   classic game AND they aren't an established player (that case is pre-marked in maybeRunFirstRun).
+   Not tied to a specific mode — the copy is mode-agnostic — so it still teaches if they somehow
+   started outside Relaxed. */
+let coachmarkDismissTimer = null;
+let coachmarkFadeTimer = null;
+// Gate for both beats: brand-new player, welcome finished, no classic games logged yet.
+function firstGameGuideEligible() {
+  return !!settings.firstRunDone && totalPlayed() === 0;
+}
+// Position the note so its nub points at the anchor, clamped to the viewport. Placed below the
+// anchor by default; flips above if there's no room beneath.
+function positionCoachmark(el, anchor) {
+  const a = anchor.getBoundingClientRect();
+  const r = el.getBoundingClientRect();
+  const pad = 8;
+  let place = "below";
+  let top = a.bottom + 10;
+  if (top + r.height > window.innerHeight - pad && a.top - r.height - 10 > pad) {
+    place = "above";
+    top = a.top - r.height - 10;
+  }
+  // Anchor the nub (which sits ~32px from the note's left edge) under the anchor's centre.
+  let left = a.left + a.width / 2 - 32;
+  left = Math.max(pad, Math.min(left, window.innerWidth - r.width - pad));
+  top = Math.max(pad, Math.min(top, window.innerHeight - r.height - pad));
+  el.dataset.place = place;
+  el.style.left = left + "px";
+  el.style.top = top + "px";
+}
+function dismissCoachmark() {
+  const el = $("coachmark");
+  if (!el || el.hidden) return;
+  if (coachmarkDismissTimer) { clearTimeout(coachmarkDismissTimer); coachmarkDismissTimer = null; }
+  const finish = () => { coachmarkFadeTimer = null; el.hidden = true; el.classList.remove("leaving"); el.innerHTML = ""; };
+  if (motionReduced() || animInstant()) { finish(); return; }
+  el.classList.add("leaving");
+  if (coachmarkFadeTimer) clearTimeout(coachmarkFadeTimer);
+  coachmarkFadeTimer = setTimeout(finish, 260);
+}
+// Show one coachmark once. `opts`: { anchor, kicker, body (trusted HTML), got (button label or
+// null to omit), autoMs (auto-dismiss delay or 0) }. Marks the id seen immediately so a mid-game
+// refresh never re-fires it. Skips silently if the anchor is missing.
+function showCoachmark(id, opts) {
+  const el = $("coachmark");
+  const anchor = opts.anchor;
+  if (!el || !anchor || !document.contains(anchor)) return;
+  // Cancel any in-flight dismissal so a new beat isn't wiped by a lingering fade-out (e.g. beat A
+  // is dismissed on the same answer that lands beat B).
+  if (coachmarkFadeTimer) { clearTimeout(coachmarkFadeTimer); coachmarkFadeTimer = null; }
+  if (coachmarkDismissTimer) { clearTimeout(coachmarkDismissTimer); coachmarkDismissTimer = null; }
+  el.classList.remove("leaving");
+  markCoachmark(id);
+  const gotBtn = opts.got ? `<button type="button" class="coach-got">${escapeHtml(opts.got)}</button>` : "";
+  el.innerHTML =
+    `<p class="coach-kicker">${escapeHtml(opts.kicker || "")}</p>` +
+    `<p class="coach-body">${opts.body}</p>` +
+    gotBtn;
+  el.hidden = false;
+  positionCoachmark(el, anchor);
+  const gel = el.querySelector(".coach-got");
+  if (gel) gel.addEventListener("click", dismissCoachmark);
+  if (coachmarkDismissTimer) { clearTimeout(coachmarkDismissTimer); coachmarkDismissTimer = null; }
+  if (opts.autoMs) coachmarkDismissTimer = setTimeout(dismissCoachmark, opts.autoMs);
+}
+
+// Beat A — round start of the first real game: teach the core action near the input.
+function maybeGuideType() {
+  if (coachmarkSeen("guideType")) return;
+  if (!firstGameGuideEligible()) return;
+  if (round !== 1) return;   // only the opening page
+  const anchor = document.querySelector(".input-area") || $("songInput");
+  if (!anchor) return;
+  showCoachmark("guideType", {
+    anchor,
+    kicker: "how to play",
+    body: 'Type any word and pick it from the <b>suggestions</b>. Every song that uses it lights up.',
+    got: "got it",
+    autoMs: 0,   // this one waits for the player — dismissed on "got it" or their first answer
+  });
+}
+// Beat B — the instant the first-ever correct match lands: celebrate near the bracelet.
+function maybeGuideMatch() {
+  if (coachmarkSeen("guideMatch")) return;
+  if (!firstGameGuideEligible()) return;
+  const anchor = document.querySelector(".bracelet-wrap") || $("bracelet");
+  if (!anchor) return;
+  showCoachmark("guideMatch", {
+    anchor,
+    kicker: "nice",
+    body: 'Match every song on the page to finish, and each match adds a charm to your <b>bracelet</b>.',
+    got: null,
+    autoMs: (animInstant() ? 0 : 6500),   // brief and self-clearing; also cleared on the next page
+  });
+}
+
 function maybeRunFirstRun() {
   if (settings.firstRunDone) return;
   // Someone who has already played (this shipped after they started) isn't a first-timer —
   // mark them done silently so the welcome never ambushes an existing notebook, and mark the
-  // era prompt seen too so it doesn't spring on a long-time player mid-session.
+  // era prompt + guided-round beats seen too so none of them spring on a long-time player.
   if (loadMetrics().roundsTotal > 0) {
     settings.firstRunDone = true;
     saveSettings(settings);
     markCoachmark("askEra");
+    markCoachmark("guideType");
+    markCoachmark("guideMatch");
     return;
   }
   openFirstRun();
@@ -9429,8 +9546,22 @@ function buildDevApi() {
       setEra: (album) => setFavouriteAlbum(album),
       normalNudge: () => { markCoachmark("readyForNormal"); showReadyForNormal(true); },
       eraPrompt: () => { markCoachmark("askEra"); showAskEra(true); },
+      // Guided first round: clear the two beat gates (+ the first-match flag) so they re-arm on
+      // the player's next fresh classic game. If a game is already open, force beat A on screen
+      // now (bypassing the first-game eligibility gate) so devs can preview it any time.
+      guideReplay: () => {
+        if (settings.seenCoachmarks) { delete settings.seenCoachmarks.guideType; delete settings.seenCoachmarks.guideMatch; }
+        settings.firstMatchDone = false;
+        saveSettings(settings);
+        if (screens.game && screens.game.classList.contains("active")) {
+          const anchor = document.querySelector(".input-area") || $("songInput");
+          if (anchor) showCoachmark("guideType", { anchor, kicker: "how to play",
+            body: 'Type any word and pick it from the <b>suggestions</b>. Every song that uses it lights up.',
+            got: "got it", autoMs: 0 });
+        }
+      },
       reset: () => {
-        settings.firstRunDone = false; settings.favouriteAlbum = ""; settings.seenCoachmarks = {};
+        settings.firstRunDone = false; settings.favouriteAlbum = ""; settings.firstMatchDone = false; settings.seenCoachmarks = {};
         saveSettings(settings);
       },
     },

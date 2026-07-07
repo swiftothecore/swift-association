@@ -2612,6 +2612,50 @@
   @keyframes toastIn { from { opacity: 0; transform: translateX(30px) rotate(-1deg); } to { opacity: 1; transform: translateX(0) rotate(-1deg); } }
   @keyframes toastOut { to { opacity: 0; transform: translateX(30px) rotate(-1deg); } }
 
+  /* ---------- Guided-round coachmarks ----------
+     A small pencil note pinned near the thing it teaches. Non-modal, light-touch, never
+     covers the board. Positioned by app.js (fixed left/top from the anchor's rect); a little
+     nub points back at the anchor, its side set via data-place. Stays typewriter/clean per
+     the functional-UI rule, on notebook paper with the red margin rule down its edge. */
+  .coachmark {
+    position: fixed; z-index: 210; left: 0; top: 0; width: max-content; max-width: 236px;
+    box-sizing: border-box; padding: 10px 13px 11px 15px;
+    font-family: var(--type); color: var(--ink);
+    background: var(--paper); border: 1.5px solid var(--ink); border-left: 3px solid var(--margin);
+    border-radius: 3px; box-shadow: 3px 3px 0 rgba(43,39,34,0.18);
+    transform: rotate(-0.8deg); pointer-events: auto;
+    animation: coachIn 0.34s cubic-bezier(.34,1.56,.64,1);
+  }
+  .coachmark[hidden] { display: none; }
+  .coachmark.leaving { animation: coachOut 0.26s ease forwards; }
+  .coach-kicker {
+    font-family: var(--type); font-size: 9.5px; letter-spacing: 1.4px; text-transform: uppercase;
+    color: var(--ink-soft); margin: 0 0 3px;
+  }
+  .coach-body { font-size: 12.5px; line-height: 1.4; margin: 0; }
+  .coach-body b { color: var(--ink-accent); }
+  .coach-got {
+    margin-top: 9px; font-family: var(--type); font-size: 11px; color: var(--ink-soft);
+    background: transparent; border: none; border-bottom: 1px solid var(--ink-soft);
+    padding: 0 0 1px; cursor: pointer; transition: color 0.15s ease, border-color 0.15s ease;
+  }
+  .coach-got:hover, .coach-got:focus-visible { color: var(--ink); border-color: var(--ink); outline: none; }
+  /* the pointing nub — a small paper triangle bordered to match the note */
+  .coachmark::before, .coachmark::after {
+    content: ""; position: absolute; width: 12px; height: 12px;
+    background: var(--paper); border: 1.5px solid var(--ink);
+  }
+  .coachmark::after { border: none; width: 13px; height: 13px; }
+  /* nub below, pointing down at an anchor above the note */
+  .coachmark[data-place="below"]::before { left: 26px; top: -7px; border-right: none; border-bottom: none; transform: rotate(45deg); }
+  .coachmark[data-place="below"]::after  { left: 27px; top: -4px; transform: rotate(45deg); }
+  /* nub above, pointing up at an anchor below the note */
+  .coachmark[data-place="above"]::before { left: 26px; bottom: -7px; border-left: none; border-top: none; transform: rotate(45deg); }
+  .coachmark[data-place="above"]::after  { left: 27px; bottom: -4px; transform: rotate(45deg); }
+  @keyframes coachIn  { from { opacity: 0; transform: translateY(6px) rotate(-0.8deg); } to { opacity: 1; transform: translateY(0) rotate(-0.8deg); } }
+  @keyframes coachOut { to { opacity: 0; transform: translateY(4px) rotate(-0.8deg); } }
+  @media (max-width: 520px) { .coachmark { max-width: 210px; } }
+
   /* skill level-up toast: a distinct "rank up" note, set apart from the achievement box.
      The skill icon sits in a stamped ink medallion with the new level struck on as a wax
      seal; both the medallion ink and the seal pick up the era accent so it reads warm. */

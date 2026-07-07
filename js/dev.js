@@ -108,6 +108,7 @@ export function initDev(api) {
         btn("ready-for-normal nudge", () => api.onboarding.normalNudge())),
     row(btn("era prompt", () => api.onboarding.eraPrompt()),
         btn("mark done", () => { api.onboarding.markDone(); toast("first-run marked done"); })),
+    row(btn("replay guided round", () => { api.onboarding.guideReplay(); toast("guided-round beats re-armed"); })),
     row(obAlbumSel, btn("set era", () => { api.onboarding.setEra(obAlbumSel.value); toast("era → " + (obAlbumSel.value || "none")); })),
     row(btn("reset", () => { api.onboarding.reset(); toast("onboarding reset"); }, "warn"))));
 
