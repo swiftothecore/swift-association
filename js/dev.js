@@ -106,9 +106,10 @@ export function initDev(api) {
   body.append(section("onboarding",
     row(btn("replay first-run", () => api.onboarding.replay()),
         btn("ready-for-normal nudge", () => api.onboarding.normalNudge())),
+    row(btn("era prompt", () => api.onboarding.eraPrompt()),
+        btn("mark done", () => { api.onboarding.markDone(); toast("first-run marked done"); })),
     row(obAlbumSel, btn("set era", () => { api.onboarding.setEra(obAlbumSel.value); toast("era → " + (obAlbumSel.value || "none")); })),
-    row(btn("mark done", () => { api.onboarding.markDone(); toast("first-run marked done"); }),
-        btn("reset", () => { api.onboarding.reset(); toast("onboarding reset"); }, "warn"))));
+    row(btn("reset", () => { api.onboarding.reset(); toast("onboarding reset"); }, "warn"))));
 
   // ---- Timer -----------------------------------------------------------------
   let frozen = false;

@@ -8063,8 +8063,11 @@ function endGame() {
     }
   }
 
-  // A fresh player who took the gentle Relaxed start gets a one-time nudge toward Normal.
+  // A fresh player who took the gentle Relaxed start gets a one-time nudge toward Normal, and
+  // once they're a few games in, the one-time "which era is yours?" prompt (both fire at most
+  // once and are gated to different game counts, so they never land on the same results).
   maybeShowReadyForNormal();
+  maybeAskEra();
 }
 
 // First personal record with no signature yet → ask for a name once, store it globally,
@@ -9006,10 +9009,12 @@ function closeSettings() {
 /* ---------- First-run welcome (onboarding) ----------
    A one-time captive flow shown to genuinely new players (never to established players who
    predate the feature — guarded on lifetime rounds). Built as a small step machine so later
-   "first impressions" work can add steps; the era question is the final step and completing
-   or skipping it sets firstRunDone so the flow never returns. Reached via maybeRunFirstRun()
-   from init (skipped when a "play this word" deep-link is starting a game). */
-const FIRST_RUN_STEPS = ["welcome", "era"];   // the era question stays last; new steps prepend before it
+   "first impressions" work can add steps. Reached via maybeRunFirstRun() from init (skipped
+   when a "play this word" deep-link is starting a game). The favourite-era question is kept
+   OUT of this flow so nothing stands between a new player and their first game; it surfaces
+   later as a gentle post-game prompt once they've played a few (see maybeAskEra). */
+const FIRST_RUN_STEPS = ["welcome"];   // new steps prepend here
+const ERA_PROMPT_AFTER_GAMES = 3;      // hold the era question until the player is a few games in
 let firstRunIndex = 0;
 let firstRunEra = "";              // the currently-highlighted era, committed to settings on confirm
 let firstRunMode = null;           // the difficulty picked from the welcome step ("relaxed" or null), applied on finish
@@ -9032,8 +9037,14 @@ function markCoachmark(id) {
 function maybeRunFirstRun() {
   if (settings.firstRunDone) return;
   // Someone who has already played (this shipped after they started) isn't a first-timer —
-  // mark them done silently so the welcome never ambushes an existing notebook.
-  if (loadMetrics().roundsTotal > 0) { settings.firstRunDone = true; saveSettings(settings); return; }
+  // mark them done silently so the welcome never ambushes an existing notebook, and mark the
+  // era prompt seen too so it doesn't spring on a long-time player mid-session.
+  if (loadMetrics().roundsTotal > 0) {
+    settings.firstRunDone = true;
+    saveSettings(settings);
+    markCoachmark("askEra");
+    return;
+  }
   openFirstRun();
 }
 // Show the onboarding overlay with whatever #firstRunBody currently holds. Shared by the
@@ -9068,8 +9079,17 @@ function renderFirstRunStep() {
   if (!body) return;
   const step = FIRST_RUN_STEPS[firstRunIndex];
   if (step === "welcome") body.innerHTML = firstRunWelcomeHTML();
-  else if (step === "era") body.innerHTML = firstRunEraHTML();
-  const focusTarget = body.querySelector("[data-fr='confirm'], .btn-primary, button");
+  const focusTarget = body.querySelector(".btn-primary, button");
+  if (focusTarget) { try { focusTarget.focus({ preventScroll: true }); } catch (_) { /* noop */ } }
+}
+// Re-render the era grid in place (on chip select, and when the standalone prompt opens),
+// keeping focus sensible without disturbing the highlight held in firstRunEra.
+function renderEra() {
+  const body = $("firstRunBody");
+  if (!body) return;
+  body.innerHTML = firstRunEraHTML();
+  const focusTarget = body.querySelector("[data-fr='confirm']:not([disabled])")
+    || body.querySelector(".fr-era.is-selected") || body.querySelector(".fr-era");
   if (focusTarget) { try { focusTarget.focus({ preventScroll: true }); } catch (_) { /* noop */ } }
 }
 function advanceFirstRun() {
@@ -9086,8 +9106,8 @@ function finishFirstRun() {
   closeFirstRun();
 }
 // The welcome step: a one-line explanation of the game + the recommended gentle start, with a
-// clear "no thanks" for players who already know it. Neither choice starts a game — both flow
-// on to the era question and then land on the start screen, ready to play.
+// clear "no thanks" for players who already know it. Neither choice starts a game; both just
+// close the welcome onto the start screen, ready to play.
 function firstRunWelcomeHTML() {
   return `<p class="fr-kicker">welcome to the notebook</p>` +
     `<h2 class="fr-title">Let's ease you in</h2>` +
@@ -9098,7 +9118,8 @@ function firstRunWelcomeHTML() {
       `<button type="button" class="btn-link" data-fr="knowit">I already know this game</button>` +
     `</div>`;
 }
-// The era-question step: pick the album closest to your heart (or skip). Highlight is held in
+// The era prompt: pick the album closest to your heart (or skip). Shown as a one-off post-game
+// nudge once the player is a few games in, never before their first game. Highlight is held in
 // firstRunEra and only committed on confirm, so "skip for now" genuinely leaves it unset.
 function firstRunEraHTML() {
   const pal = albumPalette();
@@ -9110,9 +9131,9 @@ function firstRunEraHTML() {
       `<span class="fr-era-dot" style="background:${c}"></span>` +
       `<span class="fr-era-name">${escapeHtml(a)}</span></button>`;
   }).join("");
-  return `<p class="fr-kicker">before you start</p>` +
+  return `<p class="fr-kicker">a few games in</p>` +
     `<h2 class="fr-title">Which era is yours?</h2>` +
-    `<p class="fr-sub">Pick the album closest to your heart. We'll keep it on your notebook, and you can change it any time in settings.</p>` +
+    `<p class="fr-sub">Now you've settled in, pick the album closest to your heart. We'll keep it on your notebook, and you can change it any time in settings.</p>` +
     `<div class="fr-era-grid" role="group" aria-label="Choose your era">${chips}</div>` +
     `<div class="fr-actions">` +
       `<button type="button" class="btn-primary fr-confirm" data-fr="confirm"${firstRunEra ? "" : " disabled"}>` +
@@ -9125,16 +9146,16 @@ function wireFirstRun() {
   if (!body) return;
   body.addEventListener("click", (e) => {
     const eraBtn = e.target.closest("[data-era-album]");
-    if (eraBtn) { firstRunEra = eraBtn.getAttribute("data-era-album"); renderFirstRunStep(); return; }
+    if (eraBtn) { firstRunEra = eraBtn.getAttribute("data-era-album"); renderEra(); return; }
     const act = e.target.closest("[data-fr]");
     if (!act) return;
     switch (act.getAttribute("data-fr")) {
       // Welcome step — recommended path vs "I know this game"
       case "relaxed": firstRunMode = "relaxed"; advanceFirstRun(); break;
       case "knowit":  firstRunMode = null;      advanceFirstRun(); break;
-      // Era step
-      case "confirm": setFavouriteAlbum(firstRunEra); advanceFirstRun(); break;
-      case "skip":    advanceFirstRun(); break;
+      // Post-game era prompt (standalone — not part of the first-run step machine)
+      case "confirm": setFavouriteAlbum(firstRunEra); closeFirstRun(); break;
+      case "skip":    closeFirstRun(); break;
       // Post-game "ready for Normal?" nudge
       case "normal-yes": setGameType("classic"); setMode("medium"); closeFirstRun(); break;
       case "normal-no":  closeFirstRun(); break;
@@ -9165,6 +9186,24 @@ function showReadyForNormal(force) {
   showOnboardingOverlay();
   const focusTarget = $("firstRunBody").querySelector(".btn-primary");
   if (focusTarget) { try { focusTarget.focus({ preventScroll: true }); } catch (_) { /* noop */ } }
+}
+
+// One-off era prompt, held back until the player is a few games in (ERA_PROMPT_AFTER_GAMES) so
+// it never delays their first game. Fires once (coachmark), skipped if they've already chosen an
+// era, and only after the results have had a beat to land so it doesn't bury the score.
+function maybeAskEra() {
+  if (coachmarkSeen("askEra")) return;
+  if (settings.favouriteAlbum) { markCoachmark("askEra"); return; }   // already chosen (e.g. via settings)
+  if (totalPlayed() < ERA_PROMPT_AFTER_GAMES) return;
+  markCoachmark("askEra");   // mark on show — a one-time invitation, answered or not
+  const delay = animInstant() ? 0 : 900 * (animScale() || 1);
+  setTimeout(showAskEra, delay);
+}
+function showAskEra(force) {
+  if (!force && !screens.results.classList.contains("active")) return;   // they navigated away — skip
+  firstRunEra = settings.favouriteAlbum || "";
+  renderEra();
+  showOnboardingOverlay();
 }
 
 // Wheel over the dimmed backdrop (outside the dialog) still scrolls the dialog,
@@ -9379,6 +9418,7 @@ function buildDevApi() {
       markDone: () => { settings.firstRunDone = true; saveSettings(settings); },
       setEra: (album) => setFavouriteAlbum(album),
       normalNudge: () => { markCoachmark("readyForNormal"); showReadyForNormal(true); },
+      eraPrompt: () => { markCoachmark("askEra"); showAskEra(true); },
       reset: () => {
         settings.firstRunDone = false; settings.favouriteAlbum = ""; settings.seenCoachmarks = {};
         saveSettings(settings);
