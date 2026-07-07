@@ -656,8 +656,6 @@ function init() {
     clearIsolate();
   });
   const concord = $("concord");
-  concord.addEventListener("mouseover", (e) => { const s = e.target.closest(".sx-leg[data-album]"); if (s) isolateAlbum(s.dataset.album); });
-  concord.addEventListener("mouseleave", leaveIsolate);
   // "+N more albums" unfolds the rest of the breakdown.
   concord.addEventListener("click", (e) => {
     const btn = e.target.closest("#moreAlbums");
