@@ -320,6 +320,18 @@ function setEraTint(color) { document.body.style.setProperty("--era", color || "
 // can name a count without recomputing. Cleared whenever there are no results.
 let LAST_COUNTS = null;
 
+// A clicked colour locks the isolation to one album, so it survives mouse-out (hovering another
+// colour still previews it, then reverts to the lock on leave). Cleared by clicking that colour
+// again, clicking away from the bar, or running a new search. null = nothing locked.
+let pinnedAlbum = null;
+
+// Restore isolation after a hover ends: fall back to the locked album, or clear if nothing is
+// locked.
+function leaveIsolate() {
+  if (pinnedAlbum) isolateAlbum(pinnedAlbum);
+  else clearIsolate();
+}
+
 // Brushing: isolate one album across the results (grouped blocks or flat rows), fading the
 // rest, and name it in the read-out under the bar. Reversed by clearIsolate on mouse-out.
 function isolateAlbum(al) {
@@ -422,6 +434,7 @@ function render(terms, groups) {
     $("results").classList.remove("sx-iso");
     renderRail([]);
     LAST_COUNTS = null;
+    pinnedAlbum = null;
     setEraTint(null);
     return;
   }
@@ -437,10 +450,11 @@ function render(terms, groups) {
   $("counter").innerHTML = `found in <b>${plural(songs, "song")}</b> &middot; <b>${plural(lines, "line")}</b>${play}${share}`;
   const counts = albumLineCounts(groups);
   LAST_COUNTS = counts;
+  pinnedAlbum = null;                         // a new result set clears any locked album
   $("results").classList.remove("sx-iso");   // drop any stale isolation from the previous search
   $("bar").innerHTML = albumBar(counts);
   const bl = $("barlabel");
-  if (bl) { bl.dataset.hint = counts.size > 1 ? "hover a colour to isolate that album" : ""; bl.textContent = bl.dataset.hint; }
+  if (bl) { bl.dataset.hint = counts.size > 1 ? "hover a colour to isolate that album, click to lock it" : ""; bl.textContent = bl.dataset.hint; }
   renderConcord(groups, counts);
   const top = topAlbum(counts);
   setEraTint(top ? ALBUM_COLORS[top[0]] : null);
@@ -612,17 +626,25 @@ function init() {
   // innerHTML changes each search), so we delegate hover once here.
   const bar = $("bar");
   bar.addEventListener("mouseover", (e) => { const s = e.target.closest("[data-album]"); if (s) isolateAlbum(s.dataset.album); });
-  bar.addEventListener("mouseleave", clearIsolate);
-  // Click a colour to jump to that album's block (grouped view; a no-op in flat view).
+  bar.addEventListener("mouseleave", leaveIsolate);
+  // Click a colour to lock the view to that album; click it again to unlock and show every album.
   bar.addEventListener("click", (e) => {
     const s = e.target.closest("[data-album]");
     if (!s) return;
-    [...document.querySelectorAll(".sx-album")].find((a) => a.dataset.album === s.dataset.album)
-      ?.scrollIntoView({ behavior: "smooth", block: "start" });
+    const al = s.dataset.album;
+    pinnedAlbum = pinnedAlbum === al ? null : al;
+    if (pinnedAlbum) isolateAlbum(pinnedAlbum);
+    else clearIsolate();
+  });
+  // Clicking anywhere off the bar releases a locked album and brings every album back.
+  document.addEventListener("click", (e) => {
+    if (!pinnedAlbum || e.target.closest("#bar [data-album]")) return;
+    pinnedAlbum = null;
+    clearIsolate();
   });
   const concord = $("concord");
   concord.addEventListener("mouseover", (e) => { const s = e.target.closest(".sx-leg[data-album]"); if (s) isolateAlbum(s.dataset.album); });
-  concord.addEventListener("mouseleave", clearIsolate);
+  concord.addEventListener("mouseleave", leaveIsolate);
   // "+N more albums" unfolds the rest of the breakdown.
   concord.addEventListener("click", (e) => {
     const btn = e.target.closest("#moreAlbums");
