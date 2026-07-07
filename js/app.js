@@ -6,7 +6,7 @@ import {
   ERAS, TENDER_ERAS, FINALE_ERAS, ALBUM_ERA, TS_MILESTONES,
   ALBUM_COLORS, CB_ALBUM_COLORS, STUDIO_ALBUMS, TITLE_ALIASES,
   ACHIEVEMENTS, ACH_ICONS, ACH_BY_ID, ACH_GROUPS, ACH_GROUP_COLORS, ACH_GROUP_OF, ACH_NO_TRADE,
-  CHALLENGES, CHALLENGE_BY_ID, CHALLENGE_ORDER,
+  CHALLENGES, CHALLENGE_BY_ID, CHALLENGE_ORDER, CHALLENGE_SEALS,
   IMPOSTOR_WORDS, IMPOSTOR_COUNT,
   SEA_GRID_SIZE, SEA_MIN_VALID, SEA_MAX_VALID,
   COMMON_LINES, COMMON_MIN_SONGS, COMMON_MAX_SONGS, COMMON_GEN_ATTEMPTS, COMMON_MAX_ACCEPT,
@@ -3246,7 +3246,9 @@ function renderChallengeDetail(id) {
 
   el.innerHTML =
     `<div class="chall-detail-head">` +
-      `<span class="chall-detail-charm">${charmMarkup(c.icon)}</span>` +
+      (CHALLENGE_SEALS[c.id]
+        ? `<span class="chall-detail-seal">${CHALLENGE_SEALS[c.id]}</span>`
+        : `<span class="chall-detail-charm">${charmMarkup(c.icon)}</span>`) +
       `<span class="chall-detail-name">${escapeHtml(c.name)}</span>` +
       (rec.defeated ? `<span class="chall-detail-star">${CHALL_STAR}</span><span class="chall-detail-stamp">defeated</span>` : "") +
     `</div>` +

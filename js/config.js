@@ -762,6 +762,50 @@ export const ACH_ICONS = {
   // an anchor set — stayed, stayed, stayed
   anchor:  `<svg viewBox="0 0 24 24"><circle cx="12" cy="4.1" r="1.5" fill="none" stroke="var(--ink)" stroke-width="1.5"/><rect class="ink-fill" x="8" y="6.9" width="8" height="1.8" rx="0.9"/><path class="ink" stroke-width="1.7" d="M12 5.6 V18"/><path class="ink" stroke-width="1.7" fill="none" d="M4.6 13.2 C4.6 17.6 7.8 20.4 12 20.4 C16.2 20.4 19.4 17.6 19.4 13.2"/><path class="ink-fill" d="M4.9 12.2 L2.8 14.6 L6.2 15 Z"/><path class="ink-fill" d="M19.1 12.2 L21.2 14.6 L17.8 15 Z"/></svg>`,
 };
+
+/* ---------- Challenge wax seals ----------
+   The challenge-icon revamp: each challenge's icon becomes a red sealing-wax stamp
+   with its motif pressed in relief, echoing the notebook's red margin rule. Flat,
+   letterpress-style rendering, no gloss. Challenges without a seal yet fall back to
+   their old line charm in the detail head. Proof of concept: Vanishing Word only. */
+export const CHALLENGE_SEALS = {
+  // a sparkle pressed into the wax — the word that vanishes
+  "vanishing-word": `<svg viewBox="0 0 64 64" aria-hidden="true">
+    <defs>
+      <radialGradient id="wax-vw-g" cx="42%" cy="38%" r="72%">
+        <stop offset="0" stop-color="#b2393c"/>
+        <stop offset="0.55" stop-color="#a02d31"/>
+        <stop offset="1" stop-color="#872326"/>
+      </radialGradient>
+      <filter id="wax-vw-sh" x="-15%" y="-15%" width="130%" height="130%"><feGaussianBlur stdDeviation="1.4"/></filter>
+      <filter id="wax-vw-soft" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="1.3"/></filter>
+    </defs>
+    <path d="M32.0 4.5 C37.1 4.5 42.9 7.7 47.4 10.8 C51.9 13.9 57.5 18.2 59.2 23.2 C60.9 28.1 59.7 35.4 57.7 40.3 C55.7 45.3 51.4 49.6 47.2 52.9 C42.9 56.1 37.1 59.7 32.0 59.8 C26.9 59.9 21.0 56.5 16.5 53.4 C12.0 50.2 7.3 45.8 5.2 40.7 C3.1 35.6 2.1 27.9 4.0 22.9 C5.9 17.9 11.9 13.9 16.6 10.8 C21.3 7.7 26.9 4.5 32.0 4.5 Z" transform="translate(1.1,1.5)" fill="rgba(43,39,34,0.28)" filter="url(#wax-vw-sh)"/>
+    <path d="M32.0 4.5 C37.1 4.5 42.9 7.7 47.4 10.8 C51.9 13.9 57.5 18.2 59.2 23.2 C60.9 28.1 59.7 35.4 57.7 40.3 C55.7 45.3 51.4 49.6 47.2 52.9 C42.9 56.1 37.1 59.7 32.0 59.8 C26.9 59.9 21.0 56.5 16.5 53.4 C12.0 50.2 7.3 45.8 5.2 40.7 C3.1 35.6 2.1 27.9 4.0 22.9 C5.9 17.9 11.9 13.9 16.6 10.8 C21.3 7.7 26.9 4.5 32.0 4.5 Z" fill="url(#wax-vw-g)" stroke="rgba(90,20,22,0.55)" stroke-width="1"/>
+    <g filter="url(#wax-vw-soft)">
+      <path d="M11.2 44.0 A24 24 0 0 0 44.0 11.2" fill="none" stroke="rgba(236,158,150,0.32)" stroke-width="2.4" stroke-linecap="round"/>
+      <path d="M52.8 20.0 A24 24 0 0 1 20.0 52.8" fill="none" stroke="rgba(70,12,14,0.32)" stroke-width="2.4" stroke-linecap="round"/>
+    </g>
+    <circle cx="32" cy="32" r="20.5" fill="rgba(60,10,12,0.14)"/>
+    <path d="M14.2 42.2 A20.5 20.5 0 0 0 42.2 14.2" fill="none" stroke="rgba(70,12,14,0.5)" stroke-width="1.1" stroke-linecap="round"/>
+    <path d="M50.4 21.4 A21.3 21.3 0 0 1 21.4 50.4" fill="none" stroke="rgba(236,158,150,0.28)" stroke-width="1.1" stroke-linecap="round"/>
+    <circle cx="32" cy="32" r="17.5" fill="none" stroke="rgba(70,12,14,0.28)" stroke-width="0.7"/>
+    <g fill="rgba(66,10,12,0.55)" transform="translate(1,1)">
+      <path d="M32 20 C33.2 27 36.6 30.4 43.6 31.6 C36.6 32.8 33.2 36.2 32 43.2 C30.8 36.2 27.4 32.8 20.4 31.6 C27.4 30.4 30.8 27 32 20 Z"/>
+      <path d="M41.8 36.2 C42.2 38.8 43.2 39.8 45.8 40.2 C43.2 40.6 42.2 41.6 41.8 44.2 C41.4 41.6 40.4 40.6 37.8 40.2 C40.4 39.8 41.4 38.8 41.8 36.2 Z"/>
+    </g>
+    <g fill="rgba(240,172,162,0.45)" transform="translate(-0.7,-0.7)">
+      <path d="M32 20 C33.2 27 36.6 30.4 43.6 31.6 C36.6 32.8 33.2 36.2 32 43.2 C30.8 36.2 27.4 32.8 20.4 31.6 C27.4 30.4 30.8 27 32 20 Z"/>
+      <path d="M41.8 36.2 C42.2 38.8 43.2 39.8 45.8 40.2 C43.2 40.6 42.2 41.6 41.8 44.2 C41.4 41.6 40.4 40.6 37.8 40.2 C40.4 39.8 41.4 38.8 41.8 36.2 Z"/>
+    </g>
+    <g fill="#b8474a">
+      <path d="M32 20 C33.2 27 36.6 30.4 43.6 31.6 C36.6 32.8 33.2 36.2 32 43.2 C30.8 36.2 27.4 32.8 20.4 31.6 C27.4 30.4 30.8 27 32 20 Z"/>
+      <path d="M41.8 36.2 C42.2 38.8 43.2 39.8 45.8 40.2 C43.2 40.6 42.2 41.6 41.8 44.2 C41.4 41.6 40.4 40.6 37.8 40.2 C40.4 39.8 41.4 38.8 41.8 36.2 Z"/>
+    </g>
+    <path d="M50 45 q1.5 1 1.2 2.6" fill="none" stroke="rgba(70,12,14,0.35)" stroke-width="0.9" stroke-linecap="round"/>
+    <path d="M13.5 20.5 q-0.8 1.4 0.2 2.6" fill="none" stroke="rgba(70,12,14,0.3)" stroke-width="0.9" stroke-linecap="round"/>
+  </svg>`,
+};
 export const ACHIEVEMENTS = [
   { id: "enchanted",        name: "Enchanted",        desc: "Finish your first game",              secret: false, icon: "wand" },
   { id: "mastermind",       name: "Mastermind",       desc: "Score a perfect 13/13",               secret: false, icon: "queen" },
