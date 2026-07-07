@@ -8708,35 +8708,40 @@ function setSliderHTML() {
 // line. fill:currentColor so it era-tints with --ink-accent (set in CSS).
 const HEART_HANDS_SVG = `<svg class="np-hands" viewBox="0 14 100 80" width="52" height="42" fill="currentColor" role="img" aria-label="heart hands"><path d="M98.402,59.013c-3.616-4.526-7.108-9.851-9.115-13.895c-0.087-0.175-0.183-0.365-0.285-0.568c-0.017-0.049-0.028-0.098-0.05-0.146c-1.069-2.343-1.792-4.372-2.43-6.162c-1.202-3.376-2.071-5.815-4.251-7.123c-2.077-1.247-3.877-2.375-5.446-3.359c-4.831-3.03-7.505-4.693-9.837-4.542c-0.616,0.041-2.491,0.166-11.093,4.479l-0.19,0.095c-1.822,0.91-4.708,5.807-5.514,9.356c-0.039,0.173-0.041,0.345-0.021,0.512c-0.059,0.069-0.115,0.138-0.171,0.207c-0.056-0.069-0.112-0.137-0.17-0.206c0.021-0.167,0.019-0.339-0.021-0.512c-0.806-3.549-3.691-8.445-5.516-9.357l-0.198-0.099c-8.597-4.308-10.468-4.433-11.083-4.474c-2.35-0.158-5.005,1.512-9.836,4.541c-1.569,0.984-3.369,2.113-5.448,3.36c-2.179,1.308-3.048,3.747-4.25,7.123c-0.638,1.79-1.36,3.818-2.43,6.162c-0.022,0.049-0.034,0.099-0.05,0.148c-0.103,0.202-0.198,0.392-0.284,0.566c-2.005,4.042-5.499,9.366-9.116,13.894c-0.517,0.647-0.412,1.592,0.236,2.108c0.647,0.518,1.592,0.41,2.108-0.235c3.742-4.685,7.366-10.215,9.46-14.434c2.519-5.079,5.242-9.014,6.777-9.793c4.442-2.256,12-5.635,13.238-5.69c0.755,0.147,4.253,1.921,6.132,2.874c2,1.015,2.803,1.415,3.239,1.562c1.096,0.554,5.417,4.374,5.713,5.476c0,0.001,0,0.001,0,0.002c0,0.005,0,0.014,0,0.02c0,0.111-0.004,0.207-0.011,0.279c-0.399-0.054-1.115-0.265-2.136-0.627c-1.298-0.462-2.682-1.342-3.902-2.118l-0.649-0.411c-2.142-1.339-6.262-1.977-10.244-0.208c-2.987,1.326-5.268,4.094-6.102,7.405c-0.608,2.423-0.851,6.237,1.445,10.652c1.882,3.614,6.307,7.71,9.47,8.764c0.227,0.075,0.506,0.164,0.83,0.267c3.089,0.975,11.292,3.563,11.299,8.171c0,0.002,0,0.003,0,0.005c0,0.003,0,0.008,0,0.011c-0.001,0.28-0.039,0.501-0.081,0.647c-0.843-0.205-2.285-0.807-3.684-1.39c-2.012-0.839-4.093-1.707-5.746-2.035c-2.779-0.551-6.172-0.559-9.765-0.568c-5.506-0.013-11.747-0.028-15.941-2.204c-0.735-0.38-1.641-0.094-2.022,0.642s-0.094,1.641,0.641,2.022c0.892,0.463,1.845,0.839,2.842,1.147c-1.248,0.736-2.576,1.577-3.536,2.345c-0.647,0.518-0.752,1.462-0.234,2.108c0.296,0.371,0.732,0.563,1.172,0.563c0.329,0,0.659-0.107,0.936-0.328c1.718-1.374,4.992-3.145,6.133-3.747c3.283,0.434,6.762,0.443,10.001,0.451c3.443,0.009,6.694,0.017,9.188,0.512c1.359,0.27,3.386,1.114,5.175,1.86c1.876,0.782,3.497,1.458,4.629,1.638c0.149,0.023,0.298,0.035,0.444,0.035c0.485,0,0.943-0.133,1.345-0.381c0.401,0.248,0.859,0.381,1.345,0.381c0.146,0,0.295-0.012,0.445-0.035c1.133-0.18,2.753-0.855,4.629-1.638c1.789-0.746,3.816-1.591,5.176-1.86c2.494-0.495,5.746-0.503,9.188-0.512c3.24-0.008,6.719-0.018,10.001-0.451c1.141,0.602,4.412,2.37,6.132,3.746c0.277,0.222,0.607,0.329,0.937,0.329c0.44,0,0.876-0.192,1.172-0.563c0.518-0.647,0.413-1.591-0.233-2.108c-0.96-0.768-2.289-1.61-3.536-2.346c0.997-0.309,1.95-0.686,2.842-1.148c0.735-0.381,1.022-1.286,0.641-2.021c-0.382-0.736-1.287-1.025-2.021-0.641c-4.193,2.175-10.434,2.19-15.94,2.203c-3.592,0.01-6.984,0.018-9.765,0.568c-1.653,0.328-3.734,1.196-5.746,2.035c-1.399,0.583-2.842,1.185-3.685,1.39c-0.042-0.148-0.08-0.372-0.08-0.658c0-4.612,8.209-7.202,11.3-8.177c0.323-0.102,0.604-0.19,0.829-0.266c3.164-1.055,7.589-5.149,9.47-8.764c2.298-4.418,2.054-8.231,1.444-10.653c-0.834-3.31-3.114-6.078-6.101-7.404c-3.985-1.769-8.103-1.131-10.243,0.208l-0.656,0.415c-1.219,0.775-2.6,1.653-3.895,2.113c-1.028,0.365-1.746,0.576-2.145,0.628c-0.003-0.026-0.004-0.063-0.006-0.094c0.001-0.049,0.001-0.088,0.001-0.128c0.339-1.217,4.626-5.006,5.715-5.556c0.438-0.147,1.241-0.547,3.234-1.559c1.88-0.954,5.38-2.729,6.037-2.868c1.338,0.046,8.896,3.426,13.338,5.682c1.532,0.778,4.255,4.713,6.776,9.793c2.095,4.221,5.719,9.751,9.459,14.434c0.517,0.646,1.462,0.753,2.108,0.235C98.813,60.604,98.92,59.66,98.402,59.013z M40.905,31.167c-4.518-2.292-6.288-3.118-7.214-3.184c-2.388-0.181-13.106,5.119-14.675,5.902c0.085-0.066,0.166-0.139,0.256-0.193c2.098-1.258,3.914-2.397,5.498-3.391c3.871-2.427,6.686-4.18,8.042-4.089c0.442,0.03,2.463,0.417,9.938,4.163l0.188,0.093c0.392,0.238,1.262,1.379,2.105,2.868c-0.599-0.422-1.076-0.708-1.304-0.777C43.44,32.454,42.035,31.741,40.905,31.167z M54.653,43.38c1.614-0.574,3.214-1.591,4.499-2.408l0.638-0.403c1.196-0.748,4.273-1.414,7.436-0.01c2.149,0.955,3.798,2.972,4.407,5.395c0.483,1.917,0.667,4.955-1.196,8.536c-1.645,3.161-5.588,6.58-7.757,7.303c-0.214,0.071-0.478,0.154-0.782,0.25C58.879,62.994,52.814,64.91,50,68.705c-2.814-3.794-8.878-5.71-11.896-6.662c-0.305-0.097-0.569-0.18-0.784-0.251c-2.168-0.723-6.112-4.142-7.757-7.303c-1.862-3.579-1.678-6.618-1.197-8.536c0.61-2.423,2.258-4.44,4.409-5.395c3.16-1.405,6.238-0.74,7.436,0.01l0.63,0.398c1.288,0.818,2.89,1.837,4.507,2.413c1.882,0.668,3.439,1.121,4.652,0.516C51.212,44.501,52.769,44.048,54.653,43.38z M66.309,27.983c-0.927,0.066-2.696,0.893-7.218,3.186c-1.128,0.572-2.531,1.284-2.812,1.384c-0.234,0.07-0.721,0.362-1.329,0.791c0.842-1.491,1.71-2.632,2.093-2.866l0.197-0.099c7.672-3.847,9.633-4.146,9.947-4.167c1.392-0.114,4.173,1.663,8.044,4.09c1.584,0.993,3.4,2.132,5.497,3.39c0.089,0.054,0.17,0.126,0.254,0.191C79.409,33.093,68.746,27.789,66.309,27.983z"/></svg>`;
 
-// The "Your name" flyleaf nameplate. The big handwritten line is the input — its id
-// stays #set-playerName so wireSettingsBody's existing change handler is reused.
-function setNameplateHTML() {
-  return `<div class="nameplate">` +
-    `<p class="np-kicker">this notebook belongs to</p>` +
-    `<div class="np-sigrow">` +
-      `<input type="text" class="np-name-input" id="set-playerName" maxlength="20" ` +
-      `value="${escapeHtml(settings.playerName || "")}" placeholder="your name" ` +
-      `aria-label="Your name" autocomplete="off" spellcheck="false">` +
-      HEART_HANDS_SVG +
+// The bookplate: the flyleaf nameplate and the profile polaroid merged into one
+// element — the photo is clipped onto the left of the "belongs to" plate. The
+// big handwritten line is the input; its id stays #set-playerName so
+// wireSettingsBody's existing change handler is reused. The photo's Change /
+// Remove controls live in a scrim over the polaroid, revealed on hover/focus
+// (and always shown on touch, where there is no hover).
+function setBookplateHTML() {
+  const photo = getAvatar();
+  // With a photo: a hover/focus scrim carrying Change + Remove. Empty: the whole
+  // polaroid is a single "add" hit-target (its own dashed placeholder is the cue).
+  const overlay = photo
+    ? `<div class="bp-photo-scrim">` +
+        `<button type="button" class="bp-act" data-avatar="change">Change</button>` +
+        `<button type="button" class="bp-act" data-avatar="remove">Remove</button>` +
+      `</div>`
+    : `<button type="button" class="bp-add" data-avatar="change" aria-label="add a photo"></button>`;
+  return `<div class="bookplate">` +
+    `<div class="bp-photo${photo ? "" : " is-empty"}">` +
+      polaroidHTML(photo, getPlayerName(), { tilt: 0 }) +
+      overlay +
     `</div>` +
-    `<p class="np-hint">signed on every personal record</p>` +
+    `<div class="bp-plate">` +
+      `<p class="np-kicker">this notebook belongs to</p>` +
+      `<div class="np-sigrow">` +
+        `<input type="text" class="np-name-input" id="set-playerName" maxlength="20" ` +
+        `value="${escapeHtml(settings.playerName || "")}" placeholder="your name" ` +
+        `aria-label="Your name" autocomplete="off" spellcheck="false">` +
+        HEART_HANDS_SVG +
+      `</div>` +
+      `<p class="np-hint">signed on every personal record · photo stays on this device</p>` +
+    `</div>` +
   `</div>`;
 }
 function setSection(title, inner) { return `<div class="set-section"><p class="set-section-title">${title}</p>${inner}</div>`; }
-
-// The profile-polaroid row: a thumbnail + add/change/remove. The photo never
-// leaves the browser, so the copy says so.
-function setAvatarRowHTML() {
-  const photo = getAvatar();
-  const controls = photo
-    ? `<button type="button" class="btn-ghost" data-avatar="change">Change photo</button>` +
-      `<button type="button" class="btn-ghost" data-avatar="remove">Remove</button>`
-    : `<button type="button" class="btn-ghost" data-avatar="change">Add a photo</button>`;
-  return `<div class="set-row set-row-avatar"><div class="set-label"><span class="set-name">Your photo</span>` +
-    `<span class="set-desc">a polaroid on your records page — stays on this device</span></div>` +
-    `<div class="set-control set-avatar">${polaroidHTML(photo, getPlayerName(), { small: true, tilt: -3 })}` +
-    `<div class="set-avatar-actions">${controls}</div></div></div>`;
-}
 
 // Fallback zone list for the rare browser without Intl.supportedValuesOf — a spread of
 // common UTC offsets so a player can still pick a sensible reset day.
@@ -8757,8 +8762,7 @@ function renderSettingsBody() {
   const body = $("settingsBody");
   body.innerHTML =
     setSection("Notebook",
-      setNameplateHTML() +
-      setAvatarRowHTML() +
+      setBookplateHTML() +
       setSelectHTML("favouriteAlbum", "Your era", "the album closest to your heart",
         [{ val: "", label: "No favourite yet" }].concat(STUDIO_ALBUMS.map((a) => ({ val: a, label: a }))))
     ) +

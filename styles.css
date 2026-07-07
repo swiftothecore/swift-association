@@ -664,9 +664,32 @@
   .polaroid-sm.is-empty .pol-lip { font-size: 13px; }
   .polaroid-sm .pol-add svg { width: 24px; height: 24px; }
   .polaroid-sm .pol-clip { width: 15px; height: 15px; top: -5px; right: 6px; }
-  .set-avatar { display: flex; align-items: center; gap: 16px; }
-  .set-avatar-actions { display: flex; flex-direction: column; gap: 6px; }
-  .set-avatar-actions .btn-ghost { width: auto; margin: 0; padding: 4px 14px; white-space: nowrap; }
+  /* Bookplate photo — the polaroid clipped onto the left of the nameplate, with a
+     hover/focus scrim carrying its Change / Remove controls (see .bookplate). */
+  .bp-photo { position: relative; flex: none; transform: rotate(-3deg); }
+  .bp-photo-scrim {
+    position: absolute; inset: 0; border-radius: 2px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 7px;
+    background: rgba(28, 24, 20, 0.6); backdrop-filter: blur(1px);
+    opacity: 0; transition: opacity 0.15s ease;
+  }
+  .bp-photo:hover .bp-photo-scrim, .bp-photo:focus-within .bp-photo-scrim { opacity: 1; }
+  .bp-act {
+    font-family: var(--type); font-size: 12px; letter-spacing: 0.3px;
+    color: #fbf7ea; background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(251, 247, 234, 0.55); border-radius: 3px;
+    padding: 4px 14px; min-width: 78px; cursor: pointer; transition: background 0.12s ease;
+  }
+  .bp-act:hover { background: rgba(251, 247, 234, 0.2); }
+  .bp-act:focus-visible { outline: 2px solid #fbf7ea; outline-offset: 2px; }
+  /* Empty state: the whole polaroid is one invisible add-a-photo hit target. */
+  .bp-add { position: absolute; inset: 0; background: none; border: 0; padding: 0; margin: 0; cursor: pointer; border-radius: 2px; }
+  .bp-add:focus-visible { outline: 2px solid var(--ink-accent); outline-offset: 3px; }
+  @media (hover: none) {
+    /* No hover on touch — keep the controls visible so they stay reachable. */
+    .bp-photo-scrim { opacity: 1; background: rgba(28, 24, 20, 0.42); }
+  }
+  @media (prefers-reduced-motion: reduce) { .bp-photo-scrim { transition: none; } }
   @media (prefers-reduced-motion: reduce) { .polaroid { transition: none; } }
 
   .rec-group-label {
@@ -3726,12 +3749,18 @@
      a plain row: a cream index-card patch, a "this notebook belongs to" kicker, the
      name written large on a signature rule, and a heart-hands end-cap. The big line
      IS the input (id stays #set-playerName so the existing change handler is reused). */
-  .nameplate {
-    /* z-index lifts the whole bookplate above the card's ::after tension vignette
-       (z-index 5) so the signature can never be painted over. */
+  /* Bookplate — the profile photo and the "belongs to" nameplate as one unit: the
+     polaroid clipped onto the plate's left edge, the signature line filling the rest. */
+  .bookplate { display: flex; align-items: center; margin: 2px 0 6px; }
+  .bookplate .bp-photo { z-index: 12; margin-right: -16px; }
+  .bp-plate {
+    /* z-index lifts the plate above the card's ::after tension vignette (z-index 5)
+       so the signature can never be painted over; the photo sits a layer above it. */
+    flex: 1; min-width: 0;
     position: relative; z-index: 10; background: rgba(251, 247, 234, 0.93);
     border: 1px solid rgba(43, 39, 34, 0.16); border-radius: 3px;
-    padding: 14px 18px 15px; margin: 2px 0 4px; transform: rotate(-0.4deg);
+    /* extra left padding clears the overlapping polaroid */
+    padding: 14px 18px 15px 34px; transform: rotate(-0.4deg);
     box-shadow: 0 1px 0 rgba(43, 39, 34, 0.06);
   }
   .np-kicker {
