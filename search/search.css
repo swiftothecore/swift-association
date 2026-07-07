@@ -288,7 +288,11 @@ body.sx-scrolled .dx-book { transform: translate(40%, 52%) rotate(-6deg); }
 .sx-none b { color: var(--pen); }
 .sx-bar { display: flex; height: 13px; border-radius: 3px; overflow: hidden; margin-top: 8px; box-shadow: inset 0 0 0 1px rgba(43,39,34,0.12); cursor: pointer; }
 .sx-bar:empty { display: none; }
-.sx-bar span { min-width: 2px; transition: opacity .15s ease; }
+.sx-bar span { min-width: 2px; transition: opacity .15s ease, box-shadow .15s ease; }
+/* while a colour is isolated (hover) or locked (click), grey the other colours down */
+.sx-bar.sx-iso span:not(.sx-lit) { opacity: .22; }
+/* a locked colour keeps a soft ring so it reads as a deliberate, sticky choice */
+.sx-bar.sx-locked span.sx-lit { box-shadow: inset 0 0 0 2px rgba(43,39,34,0.5); }
 /* a readable read-out under the bar: a discoverability hint at rest, the hovered album +
    its line count while you're brushing over a colour (or a legend dot) */
 .sx-barlabel { font-family: var(--type); font-size: 11px; color: var(--ink-faint); margin-top: 6px; min-height: 15px; }

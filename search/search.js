@@ -339,6 +339,14 @@ function isolateAlbum(al) {
   if (!results) return;
   results.classList.add("sx-iso");
   for (const el of results.querySelectorAll("[data-album]")) el.classList.toggle("sx-lit", el.dataset.album === al);
+  // Grey the rest of the rainbow bar too, so the bar itself shows what's isolated. A locked
+  // album (sx-locked) also gets a ring on its colour to read as a deliberate, sticky choice.
+  const bar = $("bar");
+  if (bar) {
+    bar.classList.add("sx-iso");
+    bar.classList.toggle("sx-locked", pinnedAlbum === al);
+    for (const el of bar.querySelectorAll("[data-album]")) el.classList.toggle("sx-lit", el.dataset.album === al);
+  }
   const label = $("barlabel");
   if (label) {
     const c = LAST_COUNTS ? LAST_COUNTS.get(al) : null;
@@ -351,6 +359,11 @@ function clearIsolate() {
   if (!results) return;
   results.classList.remove("sx-iso");
   for (const el of results.querySelectorAll(".sx-lit")) el.classList.remove("sx-lit");
+  const bar = $("bar");
+  if (bar) {
+    bar.classList.remove("sx-iso", "sx-locked");
+    for (const el of bar.querySelectorAll(".sx-lit")) el.classList.remove("sx-lit");
+  }
   const label = $("barlabel");
   if (label) label.textContent = label.dataset.hint || "";
 }
