@@ -334,25 +334,36 @@ function leaveIsolate() {
 
 // Brushing: isolate one album across the results (grouped blocks or flat rows), fading the
 // rest, and name it in the read-out under the bar. Reversed by clearIsolate on mouse-out.
-function isolateAlbum(al) {
-  const results = $("results");
-  if (!results) return;
-  results.classList.add("sx-iso");
-  for (const el of results.querySelectorAll("[data-album]")) el.classList.toggle("sx-lit", el.dataset.album === al);
-  // Grey the rest of the rainbow bar too, so the bar itself shows what's isolated. A locked
-  // album (sx-locked) also gets a ring on its colour to read as a deliberate, sticky choice.
+// Name an album in the read-out under the bar, with its line count when known.
+function barReadout(al) {
+  const label = $("barlabel");
+  if (!label) return;
+  const c = LAST_COUNTS ? LAST_COUNTS.get(al) : null;
+  const color = ALBUM_COLORS[al] || "#999";
+  label.innerHTML = `<b style="color:${color}">${escapeHtml(al)}</b>${c != null ? " &middot; " + plural(c, "line") : ""}`;
+}
+
+// Hover preview: grey the OTHER bar colours down and name the album, but leave the results
+// alone. Actually hiding the other albums is reserved for a click (isolateAlbum). A locked
+// album keeps its ring while it (or nothing) is previewed.
+function previewAlbum(al) {
   const bar = $("bar");
   if (bar) {
     bar.classList.add("sx-iso");
     bar.classList.toggle("sx-locked", pinnedAlbum === al);
     for (const el of bar.querySelectorAll("[data-album]")) el.classList.toggle("sx-lit", el.dataset.album === al);
   }
-  const label = $("barlabel");
-  if (label) {
-    const c = LAST_COUNTS ? LAST_COUNTS.get(al) : null;
-    const color = ALBUM_COLORS[al] || "#999";
-    label.innerHTML = `<b style="color:${color}">${escapeHtml(al)}</b>${c != null ? " &middot; " + plural(c, "line") : ""}`;
-  }
+  barReadout(al);
+}
+
+// Full isolation (on click): the bar preview PLUS hiding every other album from the results,
+// leaving only this one. Reversed by clearIsolate.
+function isolateAlbum(al) {
+  previewAlbum(al);
+  const results = $("results");
+  if (!results) return;
+  results.classList.add("sx-iso");
+  for (const el of results.querySelectorAll("[data-album]")) el.classList.toggle("sx-lit", el.dataset.album === al);
 }
 function clearIsolate() {
   const results = $("results");
@@ -638,7 +649,7 @@ function init() {
   // Rainbow bar + legend brushing. #bar and #concord are stable containers (only their
   // innerHTML changes each search), so we delegate hover once here.
   const bar = $("bar");
-  bar.addEventListener("mouseover", (e) => { const s = e.target.closest("[data-album]"); if (s) isolateAlbum(s.dataset.album); });
+  bar.addEventListener("mouseover", (e) => { const s = e.target.closest("[data-album]"); if (s) previewAlbum(s.dataset.album); });
   bar.addEventListener("mouseleave", leaveIsolate);
   // Click a colour to lock the view to that album; click it again to unlock and show every album.
   bar.addEventListener("click", (e) => {
