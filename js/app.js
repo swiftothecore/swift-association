@@ -1599,9 +1599,9 @@ function scheduleToastDismiss() {
         });
       }
     }, 420);
-    toastDismissTimer = setTimeout(tick, 420 + 340 + 900);   // leave + drop + dwell
+    toastDismissTimer = setTimeout(tick, 420 + 340 + 1220);   // leave + drop + dwell
   };
-  toastDismissTimer = setTimeout(tick, 3000);   // initial dwell before the first leaves
+  toastDismissTimer = setTimeout(tick, 4050);   // initial dwell before the first leaves
 }
 
 // The results keepsake: lines the player recalled word-for-word this run, re-written
