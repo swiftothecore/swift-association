@@ -3205,6 +3205,24 @@ function renderChallengesPage() {
   el.innerHTML = html;
   el.querySelectorAll(".chall-item").forEach((b) =>
     b.addEventListener("click", () => selectChallenge(b.dataset.id)));
+
+  // Fade the list edge only where there's hidden content, cueing scrollability.
+  const listEl = el.querySelector(".chall-list");
+  if (listEl) {
+    const FADE = 26;
+    const updateFade = () => {
+      if (!listEl.clientHeight) return;  // hidden (screen not shown yet) — keep CSS default
+      const atTop = listEl.scrollTop <= 1;
+      const atBottom = listEl.scrollTop + listEl.clientHeight >= listEl.scrollHeight - 1;
+      listEl.style.setProperty("--fade-top", atTop ? "0px" : FADE + "px");
+      listEl.style.setProperty("--fade-bot", atBottom ? "0px" : FADE + "px");
+    };
+    listEl.addEventListener("scroll", updateFade, { passive: true });
+    // Recompute once the screen is actually shown (0→real size) and on resize.
+    if (typeof ResizeObserver === "function") new ResizeObserver(updateFade).observe(listEl);
+    updateFade();
+  }
+
   selectChallenge(challSelectedId);
 }
 
