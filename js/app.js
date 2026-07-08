@@ -720,6 +720,12 @@ function sparklineSVG(scores) {
 // "Classic" (after a detour through All/Infinite) returns there, not to the
 // active play mode. Falls back to currentMode.id until a difficulty is opened.
 let lastStatsDifficulty = null;
+// A zero-data screen's teaching copy tells the player to go play; this small ghost-button lets
+// them do it, landing on the start screen's "Start writing" launchpad in one tap. Shared by every
+// empty state so the affordance reads the same everywhere.
+function playCTA(label = "start writing") {
+  return `<button type="button" class="empty-cta" data-go-play>${label} →</button>`;
+}
 function renderStats(lastScore, viewMode = defaultStatsView()) {
   const el = $("statsBody");
   // "classic" is a tier-1 selector, not a real view — resolve it to a difficulty.
@@ -763,9 +769,9 @@ function renderStats(lastScore, viewMode = defaultStatsView()) {
   const s = isAll ? aggregateStats() : loadStats(viewMode);
   let body;
   if (s.played === 0) {
-    body = isAll
+    body = (isAll
       ? `<p class="stats-empty">no games yet — start writing!</p>`
-      : `<p class="stats-empty">no games yet in ${MODES[viewMode].label} — start writing!</p>`;
+      : `<p class="stats-empty">no games yet in ${MODES[viewMode].label} — start writing!</p>`) + playCTA();
   } else {
     const avg = (s.totalScore / s.played).toFixed(1);
     const maxCount = Math.max(...s.scoreCounts, 1);
@@ -1825,7 +1831,8 @@ function renderAchievementsPage() {
     `</div>` :
     `<div class="ach-latest ach-latest--empty"><div class="ach-latest-text">` +
     `<div class="ach-latest-label">your newest charm</div>` +
-    `<div class="ach-latest-meta">no charms yet — finish a game to earn your first</div></div></div>`;
+    `<div class="ach-latest-meta">no charms yet — finish a game to earn your first</div>` +
+    playCTA() + `</div></div>`;
 
   html += `<div class="ach-head-row">${meter}${latestCard}</div>`;
 
@@ -2489,7 +2496,7 @@ function renderRecordsPage() {
       `<div class="hist-head"><span>score</span><span>time</span><span>verse</span><span>mode</span><span>date</span></div>` +
       `<div id="histRows" class="hist-rows"></div>` +
       (hist.length > HISTORY_PAGE ? `<button id="histMore" class="btn-ghost">load more</button>` : "")
-    : `<p class="rec-group-label">history</p><p class="stats-empty">no runs yet — finish a game to start your log.</p>`;
+    : `<p class="rec-group-label">history</p><p class="stats-empty">no runs yet — finish a game to start your log.</p>${playCTA()}`;
 
   $("recordsBody").innerHTML =
     `<div class="rec-sig">${sig}</div>` +
@@ -3492,7 +3499,7 @@ function renderStudyPage() {
     el.innerHTML =
       `<div class="study-intro">${intro}</div>` +
       tiles + (learned > 0 ? ladder : "") +
-      `<div class="study-empty">${line}</div>`;
+      `<div class="study-empty">${line}${playCTA()}</div>`;
   }
 }
 
@@ -9938,6 +9945,14 @@ async function init() {
     const prev = statsBackTarget;
     if (prev === "start") { $("startContent").style.display = ""; }
     flipInToScreen(prev);
+  });
+  // Empty-state "start writing →" affordance: wherever a zero-data screen renders one, send the
+  // player straight to the start screen's launchpad (same page-flip as a back tap). Delegated once
+  // since the buttons live inside re-rendered bodies.
+  document.addEventListener("click", (e) => {
+    if (!e.target.closest("[data-go-play]")) return;
+    $("startContent").style.display = "";
+    flipInToScreen("start");
   });
   $("recordsBtn").addEventListener("click", () => openRecords("start"));
   $("viewRecordsBtn").addEventListener("click", () => openRecords("results"));

@@ -2383,6 +2383,16 @@
     font-family: var(--hand); font-size: 20px; color: var(--ink-soft);
     text-align: center; padding: 24px 0 8px; font-style: italic;
   }
+  /* Shared "start writing →" action on any zero-data screen: a centred typewriter link (functional
+     UI stays typewriter), echoing .sb-practise but in accent ink so it reads as the next step. */
+  .empty-cta {
+    display: block; width: max-content; margin: 6px auto 10px;
+    background: none; border: none; padding: 4px 2px; cursor: pointer;
+    font-family: var(--type); font-size: 11.5px; letter-spacing: 0.4px;
+    color: var(--ink-accent); border-bottom: 1px dashed var(--ink-accent);
+    transition: color 0.15s, border-color 0.15s;
+  }
+  .empty-cta:hover, .empty-cta:focus-visible { color: var(--ink); border-bottom-color: var(--ink); outline: none; }
   /* lifetime catalogue stats — hero meter + keepsake cards + circled nemesis */
   .cat-wrap { margin-bottom: 22px; }
   .cat-label {  /* shared type label: small uppercase typewriter */
