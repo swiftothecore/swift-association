@@ -1632,6 +1632,21 @@
     margin-top: 4px; transform: rotate(-3deg); white-space: nowrap;
   }
 
+  /* ---------- Sacred-13 days (the 13th / dates that add up to 13) ----------
+     A quieter cousin of the album marginalia: smaller, softer paper, muted ink, so an
+     ordinary lucky day never competes with an album release or her birthday. */
+  .an-slip--minor {
+    max-width: 26ch; padding: 13px 24px 12px; transform: rotate(-1deg);
+    background: #f7f2e6; box-shadow: 1px 3px 8px rgba(60, 50, 35, 0.11);
+  }
+  .an-slip--minor .an-headline { font-size: 22px; color: var(--ink-soft); }
+  .an-slip--minor .an-name { font-weight: 400; }
+  .an-slip--minor .an-note { font-size: 16px; opacity: 0.85; }
+  .ms-slip--minor {
+    width: 54px; height: 54px; background: #f7f2e6;
+    box-shadow: 1px 3px 7px rgba(60, 50, 35, 0.15); transform: rotate(-2deg);
+  }
+
   /* ---------- Live verse-bonus gauge (climbs as you write more of the line) ---------- */
   .verse-meter[hidden] { display: none; }
   .verse-meter {

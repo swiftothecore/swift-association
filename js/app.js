@@ -1,5 +1,5 @@
 "use strict";
-import { $, escapeRegExp, escapeHtml, prefersReducedMotion, shuffle, chance, normalizeTitle, normalizeLyric, fuzzySubstringRatio, levenshtein, mulberry32, dailySeed, censorText, anniversaryNote } from "./util.js";
+import { $, escapeRegExp, escapeHtml, prefersReducedMotion, shuffle, chance, normalizeTitle, normalizeLyric, fuzzySubstringRatio, levenshtein, mulberry32, dailySeed, censorText, anniversaryNote, thirteenNote } from "./util.js";
 import {
   TOTAL_ROUNDS, RECENT_WINDOW, DAILY_ALBUM_SKEW, DIFF_KEY, DEFAULT_SETTINGS,
   MODES, MODE_ORDER, MODE_COLORS, DIFFICULTY_LADDER, MODALITY_MODES,
@@ -3121,6 +3121,7 @@ function renderTitleStepper() {
 /* ---------- Challenges page ---------- */
 let challengesBackTarget = "start";  // where the Challenges' back link returns to
 let challSelectedId = null;          // which challenge the detail panel is showing
+let challListResizeHandler = null;   // window-resize handler that re-snaps the list peek
 
 // Status marks for the contents list (gold tick = defeated, hollow ring = open, lock = locked).
 const CHALL_TICK = `<svg viewBox="0 0 20 20" class="chall-mark-svg" aria-hidden="true"><circle cx="10" cy="10" r="8.5" fill="none" stroke="#d8a32f" stroke-width="1.6"/><path d="M5.5 10.2 L8.7 13.4 L14.5 6.4" fill="none" stroke="#d8a32f" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
@@ -3206,10 +3207,12 @@ function renderChallengesPage() {
   el.querySelectorAll(".chall-item").forEach((b) =>
     b.addEventListener("click", () => selectChallenge(b.dataset.id)));
 
-  // Fade the list edge only where there's hidden content, cueing scrollability.
+  // The list scrolls internally; cue that with a soft edge fade plus a half-row
+  // "peek" — trim the visible height so the bottom edge bisects the next row, so
+  // its top half shows under the fade and reads as "there's more below".
   const listEl = el.querySelector(".chall-list");
   if (listEl) {
-    const FADE = 26;
+    const FADE = 30;
     const updateFade = () => {
       if (!listEl.clientHeight) return;  // hidden (screen not shown yet) — keep CSS default
       const atTop = listEl.scrollTop <= 1;
@@ -3217,10 +3220,29 @@ function renderChallengesPage() {
       listEl.style.setProperty("--fade-top", atTop ? "0px" : FADE + "px");
       listEl.style.setProperty("--fade-bot", atBottom ? "0px" : FADE + "px");
     };
+    // Snap the visible height to the deepest row midpoint that fits the vh budget,
+    // so the bottom edge lands mid-row and that row's top half peeks through.
+    const fitPeek = () => {
+      if (!listEl.clientHeight) return;  // hidden — nothing to measure yet
+      const budget = Math.round(window.innerHeight * 0.58);  // mirrors CSS max-height: 58vh
+      const listTop = listEl.getBoundingClientRect().top;
+      let target = budget;
+      for (const it of listEl.querySelectorAll(".chall-item")) {
+        const r = it.getBoundingClientRect();
+        const mid = (r.top - listTop + listEl.scrollTop) + r.height / 2;  // row midpoint in content
+        if (mid <= budget - 2) target = mid; else break;
+      }
+      target = Math.round(target);
+      if (Math.abs(listEl.clientHeight - target) > 1) listEl.style.maxHeight = target + "px";
+      updateFade();
+    };
     listEl.addEventListener("scroll", updateFade, { passive: true });
-    // Recompute once the screen is actually shown (0→real size) and on resize.
-    if (typeof ResizeObserver === "function") new ResizeObserver(updateFade).observe(listEl);
-    updateFade();
+    // Re-snap once the screen is actually shown (0→real size) and on viewport resize.
+    if (typeof ResizeObserver === "function") new ResizeObserver(fitPeek).observe(listEl);
+    if (challListResizeHandler) window.removeEventListener("resize", challListResizeHandler);
+    challListResizeHandler = fitPeek;
+    window.addEventListener("resize", challListResizeHandler);
+    fitPeek();
   }
 
   selectChallenge(challSelectedId);
@@ -3806,20 +3828,27 @@ function milestoneColor(album) {
   const colors = settings.colorBlindAlbums ? CB_ALBUM_COLORS : ALBUM_COLORS;
   return (album && colors[album]) || "";
 }
+// Today's dated note for the margin and the game sticky: a real Taylor milestone always wins;
+// on a quiet day we fall back to the game's sacred 13 (the 13th, or a date that adds up to 13).
+// Album-only paths (daily theming) keep calling anniversaryNote directly, so a 13-day never
+// tints the daily challenge.
+function dayNote(dateKey) {
+  return anniversaryNote(dateKey, TS_MILESTONES) || thirteenNote(dateKey);
+}
 // Dated marginalia at the top of today's page: on a real Taylor milestone (an album
 // release or her birthday) a torn slip is taped to the page, the album name tinted to its
 // era. Most days it's silent (hidden). Keyed on todayKey() so it flips on the player's day.
 function renderAnniversaryNote() {
   const el = $("anniversaryNote");
   if (!el) return;
-  const note = anniversaryNote(todayKey(), TS_MILESTONES);
+  const note = dayNote(todayKey());
   if (!note) { el.hidden = true; el.innerHTML = ""; return; }
   const accent = milestoneColor(note.album);
   const name = accent
     ? `<span class="an-name" style="color:${accent}">${escapeHtml(note.headline)}</span>`
     : `<span class="an-name">${escapeHtml(note.headline)}</span>`;
   el.innerHTML =
-    `<div class="an-slip">` +
+    `<div class="an-slip${note.tone === "minor" ? " an-slip--minor" : ""}">` +
       `<span class="an-tape an-tape-l"></span><span class="an-tape an-tape-r"></span>` +
       `<div class="an-eyebrow">${escapeHtml(note.eyebrow)}</div>` +
       `<div class="an-headline">${name}${note.headlineRest ? " " + escapeHtml(note.headlineRest) : ""}</div>` +
@@ -3833,11 +3862,13 @@ function renderAnniversaryNote() {
 function renderMilestoneSticky() {
   const el = $("milestoneSticky");
   if (!el) return;
-  const note = anniversaryNote(todayKey(), TS_MILESTONES);
+  const note = dayNote(todayKey());
   if (!note) { el.hidden = true; el.innerHTML = ""; el.removeAttribute("aria-label"); return; }
-  const icon = note.icon === "cake" ? cakeSvg() : heartSvg(milestoneColor(note.album) || "var(--bead)");
+  const icon = note.icon === "cake" ? cakeSvg()
+    : note.icon === "thirteen" ? thirteenSvg()
+    : heartSvg(milestoneColor(note.album) || "var(--bead)");
   el.innerHTML =
-    `<div class="ms-slip"><span class="ms-tape"></span>${icon}</div>` +
+    `<div class="ms-slip${note.tone === "minor" ? " ms-slip--minor" : ""}"><span class="ms-tape"></span>${icon}</div>` +
     `<div class="ms-cap">${escapeHtml(note.caption)}</div>`;
   el.setAttribute("aria-label", note.aria || note.caption);
   el.hidden = false;
@@ -3848,6 +3879,15 @@ function heartSvg(fill) {
   return `<svg viewBox="0 0 32 32" width="38" height="38" aria-hidden="true">` +
     `<path d="M16 27.5C15.4 27.1 4.5 19.6 4.5 11.7c0-3.6 2.7-6.4 6-6.4 2.3 0 4.2 1.3 5.5 3.4 1.3-2.1 3.2-3.4 5.5-3.4 3.3 0 6 2.8 6 6.4 0 7.9-10.9 15.4-11.5 15.8z" fill="${fill}" stroke="rgba(0,0,0,0.22)" stroke-width="0.7" stroke-linejoin="round"/>` +
     `<path d="M9.5 9.2c-1 .6-1.6 1.7-1.7 3" fill="none" stroke="rgba(255,255,255,0.55)" stroke-width="1.1" stroke-linecap="round"/>` +
+    `</svg>`;
+}
+// The sacred-13 mark for the minor 13-day sticky: a hand-inked "13" over a soft ring, in
+// plain ink so it reads as a quieter cousin of the album heart rather than an era colour.
+function thirteenSvg() {
+  return `<svg viewBox="0 0 32 32" width="34" height="34" aria-hidden="true">` +
+    `<circle cx="16" cy="16" r="12" fill="none" stroke="var(--ink-soft)" stroke-width="1.1" opacity="0.55"/>` +
+    `<text x="16" y="16" text-anchor="middle" dominant-baseline="central" ` +
+      `font-family="var(--hand), cursive" font-size="15" font-weight="700" fill="var(--ink)">13</text>` +
     `</svg>`;
 }
 // A "13" birthday cake: gold number candles (darker edge + lighter face + sheen) with lit
@@ -8255,7 +8295,7 @@ function addDoodle(kind, posClass) {
   if (!layer) return;
   // The milestone sticky is pinned to the bottom-right corner on an anniversary
   // day, so keep doodles out of that corner and tuck them opposite instead.
-  if (posClass === "corner-br" && anniversaryNote(todayKey(), TS_MILESTONES)) {
+  if (posClass === "corner-br" && dayNote(todayKey())) {
     posClass = "corner-bl";
   }
   const [w, h] = DOODLE_SIZE[kind] || [56, 56];
@@ -9638,6 +9678,42 @@ function buildDevApi() {
           top: pool ? pool.slice(0, 13).map((s) => `${s.w} (${s.n})`) : null,
           all: pool ? pool.map((s) => s.w) : null };
       },
+    },
+    // Sacred-13 days (the 13th of the month + dates that add up to 13). `dates` lists this
+    // year's qualifying days, flagging any that a real milestone outranks; `preview` jumps
+    // the date and re-renders both surfaces; `next` finds the soonest one on or after today.
+    thirteen: {
+      dates: (year) => {
+        const yr = +String(year || (window.__devDate || todayKey()).slice(0, 4));
+        const out = [];
+        for (let mo = 1; mo <= 12; mo++) {
+          const last = new Date(yr, mo, 0).getDate();
+          for (let d = 1; d <= last; d++) {
+            const key = `${yr}-${String(mo).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+            const tn = thirteenNote(key);
+            if (!tn) continue;
+            const shadowed = !!anniversaryNote(key, TS_MILESTONES);
+            out.push(`${key}  ${tn.caption}${shadowed ? "  (shadowed by milestone)" : ""}`);
+          }
+        }
+        return out;
+      },
+      preview: (dateKey) => {
+        window.__devDate = dateKey || todayKey();
+        renderAnniversaryNote();
+        renderMilestoneSticky();
+        return dayNote(window.__devDate);
+      },
+      next: () => {
+        const d = new Date((window.__devDate || todayKey()) + "T00:00:00");
+        for (let i = 0; i < 400; i++) {
+          const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+          if (thirteenNote(key)) return { date: key, note: thirteenNote(key) };
+          d.setDate(d.getDate() + 1);
+        }
+        return null;
+      },
+      clear: () => { window.__devDate = null; renderAnniversaryNote(); renderMilestoneSticky(); },
     },
     // Skills & Mastery
     mastery: {

@@ -246,3 +246,79 @@ export function anniversaryNote(dateKey, milestones) {
     aria: `${m.title} ${headlineRest}.${note ? " " + note + "." : ""}`,
   };
 }
+
+const MONTH_NAMES = [
+  "January", "February", "March", "April", "May", "June",
+  "July", "August", "September", "October", "November", "December",
+];
+// Ordinal day-of-month, e.g. 1 → "1st", 24 → "24th" (11/12/13 are the -th exceptions).
+function ordinalDay(n) {
+  const t = n % 100;
+  const s = t >= 11 && t <= 13 ? "th" : (["th", "st", "nd", "rd"][n % 10] || "th");
+  return `${n}${s}`;
+}
+function digitSum(n) {
+  return String(n).split("").reduce((a, d) => a + Number(d), 0);
+}
+// A date "adds up to 13" when its day and month reach thirteen, either by digit sum
+// (24 Jul → 2+4+7) or the plain day + month (8 May → 8+5). Mirrors the reference rule.
+function addsUpTo13(day, month) {
+  return digitSum(day) + month === 13 || day + month === 13;
+}
+// The addends to show in the little equation: the day's digits when the digit-sum path
+// is what qualifies (24 → 2, 4), else the whole day. The month is appended by the caller.
+function sumAddends(day, month) {
+  if (digitSum(day) + month === 13) return String(day).split("").map(Number);
+  return [day];
+}
+
+// The game's sacred 13, celebrated on the ordinary days the milestone table doesn't already
+// claim: the 13th of any month, and dates that "add up to 13" (24 Jul, 8 May …). Returns the
+// same note shape as anniversaryNote() so the existing renderers can consume it, but with
+// tone:"minor" (the UI keeps it quieter than an album release), icon:"thirteen", and no album
+// (plain ink). Pure: date string in, structured note or null out. Milestone days take priority,
+// so the caller resolves a real anniversary first and only falls back to this on a quiet day.
+export function thirteenNote(dateKey) {
+  if (!dateKey || dateKey.length < 10) return null;
+  const month = +dateKey.slice(5, 7);
+  const day = +dateKey.slice(8, 10);
+  if (!month || !day) return null;
+
+  const isThirteenth = day === 13;
+  const isSum = addsUpTo13(day, month);
+  if (!isThirteenth && !isSum) return null;
+
+  const monthName = MONTH_NAMES[month - 1];
+  const sumPhrase = isSum ? [...sumAddends(day, month), month].join(" + ") + " = 13" : "";
+  const base = { icon: "thirteen", album: null, tone: "minor", headlineRest: "" };
+
+  // A 13th that also adds up (13 Sep: the date is 13, and 1+3+9 = 13 too).
+  if (isThirteenth && isSum) {
+    return {
+      ...base,
+      eyebrow: "The thirteenth",
+      headline: "The 13th, twice over",
+      note: `It's the 13th, and the date adds up too: ${sumPhrase}.`,
+      caption: "lucky 13",
+      aria: `It's the 13th of ${monthName}, and the date adds up to 13.`,
+    };
+  }
+  if (isThirteenth) {
+    return {
+      ...base,
+      eyebrow: "The thirteenth",
+      headline: "It's the 13th",
+      note: "Taylor's lucky number. A good day to play.",
+      caption: "the 13th",
+      aria: `It's the 13th of ${monthName}, Taylor's lucky number.`,
+    };
+  }
+  return {
+    ...base,
+    eyebrow: "Lucky math",
+    headline: "Today adds up to 13",
+    note: `${ordinalDay(day)} of ${monthName}: ${sumPhrase}.`,
+    caption: "adds up to 13",
+    aria: `Today's date adds up to 13. ${sumPhrase}.`,
+  };
+}
