@@ -4273,7 +4273,7 @@ function renderHintAffordance() {
     // Relaxed has no clock — nudge after a few idle seconds instead of at half-time.
     if (!(currentMode.seconds > 0) && !motionReduced()) {
       hintUrgeTimer = setTimeout(() => {
-        if (hintsAllowed() && hintTier === 0) btn.classList.add("urge");
+        if (hintsAllowed() && hintTier === 0) { btn.classList.add("urge"); maybeGuideHint(); }
       }, 6000);
     }
   } else {
@@ -4292,6 +4292,7 @@ function useHint() {
   const btn = $("hintBtn");
   clearTimeout(hintUrgeTimer);
   if (btn) btn.classList.remove("urge");
+  dismissCoachmark();   // they've engaged the hint ladder; clear the guided nudge if it's up
 
   const box = $("hintBox");
   const tiers = [];
@@ -9228,6 +9229,23 @@ function maybeGuideMatch() {
     autoMs: (animInstant() ? 0 : 6500),   // brief and self-clearing; also cleared on the next page
   });
 }
+// Beat C — the first time the player stalls in their guided first game (their real first game is
+// Relaxed, which has no clock, so the hint button starts pulsing after a few idle seconds). Point
+// out the hint ladder right then, anchored to the "need a hint?" button. Self-clears on its own
+// timer, on using a hint, on the next answer, or on leaving the board.
+function maybeGuideHint() {
+  if (coachmarkSeen("guideHint")) return;
+  if (!firstGameGuideEligible()) return;
+  const anchor = $("hintBtn");
+  if (!anchor || anchor.hidden) return;
+  showCoachmark("guideHint", {
+    anchor,
+    kicker: "stuck?",
+    body: 'Reveal a clue one step at a time. Tap here or press <b>Tab</b>, and it eases you in without just handing over the answer.',
+    got: null,
+    autoMs: (animInstant() ? 0 : 9000),
+  });
+}
 
 function maybeRunFirstRun() {
   if (settings.firstRunDone) return;
@@ -9240,6 +9258,7 @@ function maybeRunFirstRun() {
     markCoachmark("askEra");
     markCoachmark("guideType");
     markCoachmark("guideMatch");
+    markCoachmark("guideHint");
     return;
   }
   openFirstRun();
@@ -9620,7 +9639,7 @@ function buildDevApi() {
       // the player's next fresh classic game. If a game is already open, force beat A on screen
       // now (bypassing the first-game eligibility gate) so devs can preview it any time.
       guideReplay: () => {
-        if (settings.seenCoachmarks) { delete settings.seenCoachmarks.guideType; delete settings.seenCoachmarks.guideMatch; }
+        if (settings.seenCoachmarks) { delete settings.seenCoachmarks.guideType; delete settings.seenCoachmarks.guideMatch; delete settings.seenCoachmarks.guideHint; }
         settings.firstMatchDone = false;
         saveSettings(settings);
         if (screens.game && screens.game.classList.contains("active")) {
@@ -9629,6 +9648,16 @@ function buildDevApi() {
             body: 'Type any word and pick it from the <b>suggestions</b>. Every song that uses it lights up.',
             got: "got it", autoMs: 0 });
         }
+      },
+      // Force beat C (the hint nudge) on screen now, bypassing the first-game gate — needs an open
+      // game with the hint button showing (an Easy/Relaxed round). Returns false if it can't anchor.
+      guideHintPreview: () => {
+        const anchor = $("hintBtn");
+        if (!(screens.game && screens.game.classList.contains("active")) || !anchor || anchor.hidden) return false;
+        showCoachmark("guideHint", { anchor, kicker: "stuck?",
+          body: 'Reveal a clue one step at a time. Tap here or press <b>Tab</b>, and it eases you in without just handing over the answer.',
+          got: null, autoMs: 0 });
+        return true;
       },
       reset: () => {
         settings.firstRunDone = false; settings.favouriteAlbum = ""; settings.firstMatchDone = false; settings.seenCoachmarks = {};
