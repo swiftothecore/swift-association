@@ -758,7 +758,14 @@
   .chall-layout { display: grid; grid-template-columns: 208px 1fr; gap: 0; }
 
   /* ---- left: the contents list ---- */
-  .chall-list { padding-right: 16px; padding-left: 14px; border-right: 1px solid rgba(60,40,18,0.16); }
+  /* The column holds the divider + tally still; only .chall-list scrolls, so the
+     notebook page never grows and you browse challenges within a fixed frame. */
+  .chall-col {
+    display: flex; flex-direction: column; min-height: 0;
+    padding-left: 14px; padding-right: 16px;
+    border-right: 1px solid rgba(60,40,18,0.16);
+  }
+  .chall-list { overflow-y: auto; max-height: 58vh; padding-right: 6px; scrollbar-gutter: stable; }
   .chall-item {
     position: relative; display: grid; grid-template-columns: 1fr 22px;
     align-items: center; column-gap: 9px; width: 100%;
@@ -885,7 +892,8 @@
 
   @media (max-width: 620px) {
     .chall-layout { grid-template-columns: 1fr; }
-    .chall-list { padding-right: 0; border-right: none; border-bottom: 1px solid rgba(60,40,18,0.16); padding-bottom: 8px; margin-bottom: 14px; }
+    .chall-col { border-right: none; border-bottom: 1px solid rgba(60,40,18,0.16); padding-bottom: 8px; margin-bottom: 14px; }
+    .chall-list { padding-right: 0; }
     .chall-detail { padding-left: 0; }
   }
   @media (prefers-reduced-motion: reduce) {

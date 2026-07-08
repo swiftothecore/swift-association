@@ -3194,7 +3194,8 @@ function renderChallengesPage() {
         `🎟 <b>${tk}</b> token${tk === 1 ? "" : "s"}</span>` +
     `</div>` +
     `<div class="chall-layout">` +
-      `<div class="chall-list">${list}` +
+      `<div class="chall-col">` +
+        `<div class="chall-list">${list}</div>` +
         `<div class="chall-tally">${defeated} of ${CHALLENGES.length} defeated</div>` +
       `</div>` +
       `<div class="chall-detail" id="challDetail"></div>` +
