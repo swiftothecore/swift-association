@@ -3192,7 +3192,8 @@ function renderChallengesPage() {
     `<div class="chall-head">` +
       `<div class="chall-head-sub">spend a token · defeat the rule</div>` +
       `<span class="chall-tokens" title="spend a token to unlock a challenge">` +
-        `🎟 <b>${tk}</b> token${tk === 1 ? "" : "s"}</span>` +
+        `<span class="chall-tok-perf"></span>` +
+        `🎟 <b>${tk}</b> <span class="chall-tok-label">token${tk === 1 ? "" : "s"}</span></span>` +
     `</div>` +
     `<div class="chall-layout">` +
       `<div class="chall-col">` +
@@ -3273,7 +3274,10 @@ function renderChallengeDetail(id) {
     action = `<div class="chall-need chall-need--mastery">${CHALL_LOCK} Unlocks at Mastery level ${c.mastery}</div>`;
   } else if (!open) {
     action = tk >= cost
-      ? `<button type="button" class="chall-go is-unlock" data-unlock="${id}">unlock · 🎟 ${cost}</button>`
+      ? `<button type="button" class="chall-go is-unlock" data-unlock="${id}" title="tear a ticket to unlock">` +
+          `<span class="chall-unlock-perf"></span>` +
+          `<span class="chall-unlock-stamp">admit one</span>` +
+          `<span class="chall-unlock-lab">unlock</span></button>`
       : `<div class="chall-need">need a token · 🎟 ${cost}</div>` +
         `<button type="button" class="chall-token-link" data-open-charms>get tokens from charms</button>`;
   } else {

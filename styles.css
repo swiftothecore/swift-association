@@ -740,19 +740,28 @@
      rule + win written out. One ruled sheet (the .card paper) — no cork, no scraps. */
   .chall-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 0 0 14px; }
   .chall-head-sub { font-family: var(--type); font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--ink-soft); }
-  /* the token wallet — a denim sticky note with its own little gold pin */
+  /* the token wallet — a kraft admission-ticket stub with a punched perforation
+     and the count inked in stamp red. The notches are filled with var(--paper) so
+     they read as holes bitten out of whatever paper stock is on the desk. */
   .chall-tokens {
-    position: relative; font-family: var(--type); font-size: 12px; font-weight: 700;
-    color: #274560; background: #cfdfea; padding: 8px 13px 9px; border-radius: 1px;
-    box-shadow: 0 3px 6px rgba(0,0,0,0.22); white-space: nowrap; transform: rotate(1.4deg);
+    position: relative; display: inline-flex; align-items: baseline; gap: 7px;
+    font-family: var(--type); font-size: 12px; font-weight: 700; color: #6a3b1e;
+    background: #dfcba0; padding: 9px 14px 9px 22px; border-radius: 3px;
+    box-shadow: 0 3px 6px rgba(0,0,0,0.22); white-space: nowrap; transform: rotate(1.2deg);
   }
-  .chall-tokens b { font-size: 14px; color: #1f3a52; }
-  .chall-tokens::before {
-    content: ""; position: absolute; top: -6px; left: 50%; transform: translateX(-50%);
-    width: 10px; height: 10px; border-radius: 50%;
-    background: radial-gradient(circle at 36% 30%, #ffe08a, #d8a32f 60%, #9c6e14);
-    box-shadow: 0 2px 3px rgba(0,0,0,0.38);
+  .chall-tokens b { font-size: 16px; color: #8a2f22; }
+  .chall-tok-label { color: #a9713e; }
+  /* the perforation: a dashed rule down the stub with a notch bitten from each edge */
+  .chall-tok-perf {
+    position: absolute; left: 15px; top: 6px; bottom: 6px;
+    border-left: 2px dashed rgba(106,59,30,0.5);
   }
+  .chall-tok-perf::before, .chall-tok-perf::after {
+    content: ""; position: absolute; left: -5px; width: 8px; height: 8px;
+    border-radius: 50%; background: var(--paper);
+  }
+  .chall-tok-perf::before { top: -10px; }
+  .chall-tok-perf::after { bottom: -10px; }
 
   .chall-layout { display: grid; grid-template-columns: 208px 1fr; gap: 0; }
 
@@ -893,10 +902,46 @@
     transition: background-color 0.24s ease, color 0.2s ease, transform 0.12s, box-shadow 0.2s;
   }
   .chall-go::before { content: "\270E"; margin-right: 9px; font-size: 17px; vertical-align: -1px; }
-  .chall-go.is-unlock { background-color: #cfdfea; }
-  .chall-go.is-unlock::before { content: none; margin-right: 0; }
   .chall-go:hover, .chall-go:focus-visible { background-color: var(--ink); color: var(--paper); }
   .chall-go:active { transform: rotate(-0.6deg) translateY(1px); box-shadow: 1px 1px 0 rgba(43,39,34,0.22); }
+
+  /* unlock action — tear a ticket. Kraft stock, a punched perforation, and a
+     rotated "admit one" stamp in place of the pencil sticker. */
+  .chall-go.is-unlock {
+    position: relative; display: inline-flex; align-items: center; gap: 11px;
+    background-color: #e6d3ab; color: #6a3b1e; padding: 10px 20px 10px 27px;
+  }
+  .chall-go.is-unlock::before { content: none; margin-right: 0; }
+  .chall-unlock-perf {
+    position: absolute; left: 16px; top: 3px; bottom: 3px;
+    border-left: 2px dashed rgba(43,39,34,0.42);
+  }
+  .chall-unlock-perf::before, .chall-unlock-perf::after {
+    content: ""; position: absolute; left: -6px; width: 9px; height: 9px;
+    border-radius: 50%; background: var(--paper); border: 2px solid var(--ink);
+  }
+  .chall-unlock-perf::before { top: -9px; }
+  .chall-unlock-perf::after { bottom: -9px; }
+  .chall-unlock-stamp {
+    font-size: 8.5px; letter-spacing: 1.4px; text-transform: uppercase; color: #8a2f22;
+    border: 1.5px solid rgba(138,47,34,0.6); border-radius: 2px; padding: 1px 5px;
+    transform: rotate(-3deg);
+  }
+  .chall-unlock-lab { font-size: 15px; letter-spacing: 1px; }
+  /* on hover the whole ticket inks over; keep the stamp + notch readable */
+  .chall-go.is-unlock:hover, .chall-go.is-unlock:focus-visible {
+    background-color: var(--ink); color: var(--paper);
+  }
+  .chall-go.is-unlock:hover .chall-unlock-stamp,
+  .chall-go.is-unlock:focus-visible .chall-unlock-stamp {
+    color: var(--paper); border-color: rgba(245,239,225,0.6);
+  }
+  .chall-go.is-unlock:hover .chall-unlock-perf,
+  .chall-go.is-unlock:focus-visible .chall-unlock-perf { border-left-color: rgba(245,239,225,0.4); }
+  .chall-go.is-unlock:hover .chall-unlock-perf::before,
+  .chall-go.is-unlock:hover .chall-unlock-perf::after,
+  .chall-go.is-unlock:focus-visible .chall-unlock-perf::before,
+  .chall-go.is-unlock:focus-visible .chall-unlock-perf::after { background: var(--ink); border-color: var(--paper); }
 
   @media (max-width: 620px) {
     .chall-layout { grid-template-columns: 1fr; }
