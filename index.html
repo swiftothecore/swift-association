@@ -121,84 +121,92 @@ if (location.pathname.endsWith('/index.html')) {
     </svg>
   </div>
   <!-- LEFT: hexagonal pencil from above, set down whole beside the page:
-       three shaded facets, brass ferrule, worn eraser, freshly sharpened tip
-       pointing down at the sharpener it just came out of -->
+       drawn at its real skinny proportions (barrel ~7mm at desk scale) so the
+       CSS transform only rotates and flips it, never squashes it. Three shaded
+       facets, brass ferrule, worn eraser, freshly sharpened tip pointing down
+       at the sharpener it just came out of -->
   <div class="desk-item di-pencil">
-    <svg viewBox="0 0 232 54" xmlns="http://www.w3.org/2000/svg">
+    <svg viewBox="0 0 520 32" xmlns="http://www.w3.org/2000/svg">
       <defs>
         <linearGradient id="pcFer" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f0ede3"/><stop offset="0.45" stop-color="#b7b1a2"/><stop offset="1" stop-color="#837c6c"/></linearGradient>
       </defs>
       <!-- eraser -->
-      <path d="M16 12.5 H11 Q2 12.5 2 27 Q2 41.5 11 41.5 H16 Z" fill="#d795a1"/>
-      <rect x="5" y="15" width="10" height="4" rx="2" fill="#ecb7c0" opacity="0.8"/>
-      <path d="M14 38.5 q-8 1 -11 -8" fill="none" stroke="#b06e7c" stroke-width="2.5" stroke-linecap="round" opacity="0.6"/>
-      <!-- brass ferrule with crimp dimples -->
-      <rect x="16" y="11.5" width="20" height="31" fill="url(#pcFer)"/>
-      <rect x="16" y="15" width="20" height="4" fill="#ffffff" opacity="0.35"/>
-      <rect x="16" y="11.5" width="2" height="31" fill="#8f897b"/>
-      <rect x="34" y="11.5" width="2" height="31" fill="#8f897b" opacity="0.8"/>
-      <g fill="#6c665a" opacity="0.6"><circle cx="21.5" cy="16" r="1"/><circle cx="21.5" cy="23" r="1"/><circle cx="21.5" cy="30" r="1"/><circle cx="21.5" cy="37" r="1"/><circle cx="30.5" cy="16" r="1"/><circle cx="30.5" cy="23" r="1"/><circle cx="30.5" cy="30" r="1"/><circle cx="30.5" cy="37" r="1"/></g>
-      <!-- barrel: three hex facets, lit from the upper left -->
-      <rect x="36" y="13" width="138.5" height="9.5" fill="#f2cd6e"/>
-      <rect x="36" y="22.5" width="138.5" height="9.5" fill="#e5a93a"/>
-      <rect x="36" y="32" width="138.5" height="9" fill="#bd8225"/>
-      <path d="M36 13.6 H174" stroke="#ffe9ac" stroke-width="1" opacity="0.8"/>
-      <g stroke="#925f10" stroke-width="0.8" stroke-opacity="0.35"><path d="M36 22.5 H174.5"/><path d="M36 32 H174.5"/></g>
+      <path d="M26 6.5 H16 Q6 6.5 6 16 Q6 25.5 16 25.5 H26 Z" fill="#d795a1"/>
+      <path d="M11 10 q6 -2 13 -1.5" fill="none" stroke="#ecb7c0" stroke-width="1.8" stroke-linecap="round" opacity="0.85"/>
+      <path d="M24 23.5 q-10 1.5 -14 -5" fill="none" stroke="#b06e7c" stroke-width="1.6" stroke-linecap="round" opacity="0.6"/>
+      <!-- brass ferrule: edge grooves and two rows of crimp dimples -->
+      <rect x="26" y="5.5" width="26" height="21" fill="url(#pcFer)"/>
+      <rect x="26" y="8" width="26" height="2.6" fill="#ffffff" opacity="0.35"/>
+      <rect x="26" y="5.5" width="1.6" height="21" fill="#8f897b"/>
+      <rect x="50.4" y="5.5" width="1.6" height="21" fill="#8f897b" opacity="0.8"/>
+      <g fill="#6c665a" opacity="0.6"><circle cx="32.5" cy="9.5" r="1"/><circle cx="32.5" cy="16" r="1"/><circle cx="32.5" cy="22.5" r="1"/><circle cx="45.5" cy="9.5" r="1"/><circle cx="45.5" cy="16" r="1"/><circle cx="45.5" cy="22.5" r="1"/></g>
+      <!-- barrel: three hex facets, the slanted ones foreshortened, lit from
+           the upper left (the CSS flip puts the pale facet toward the light) -->
+      <rect x="52" y="5.5" width="390" height="6" fill="#f2cd6e"/>
+      <rect x="52" y="11.5" width="390" height="9" fill="#e5a93a"/>
+      <rect x="52" y="20.5" width="390" height="6" fill="#bd8225"/>
+      <path d="M52 6.3 H442" stroke="#ffe9ac" stroke-width="0.9" opacity="0.8"/>
+      <g stroke="#925f10" stroke-width="0.7" stroke-opacity="0.35"><path d="M52 11.5 H442"/><path d="M52 20.5 H442"/></g>
       <!-- whittled collar and wood cone -->
-      <path d="M174 13 q3 4.7 0 9.3 q-3 4.7 0 9.4 q3 4.7 0 9.3" fill="none" stroke="#8a5c12" stroke-width="1.2" opacity="0.45"/>
-      <path d="M174 13 L208 24.5 L208 29.5 L174 41 Z" fill="#ead0a2"/>
-      <path d="M174 13 L208 24.5 L208 27 L174 27 Z" fill="#f4e2bd"/>
-      <path d="M174 27 L208 27 L208 29.5 L174 41 Z" fill="#d9b988"/>
-      <g stroke="#c1a071" stroke-width="0.8"><path d="M177 16 L204 25.4"/><path d="M177 38 L204 28.6"/></g>
+      <path d="M442 5.5 q2.4 5.3 0 10.5 q-2.4 5.3 0 10.5" fill="none" stroke="#8a5c12" stroke-width="1.1" opacity="0.45"/>
+      <path d="M442 5.5 L497 13.5 L497 16 L442 16 Z" fill="#f4e2bd"/>
+      <path d="M442 16 L497 16 L497 18.5 L442 26.5 Z" fill="#d9b988"/>
+      <g stroke="#c1a071" stroke-width="0.7"><path d="M447 9 L490 14.6"/><path d="M447 23 L490 17.4"/></g>
       <!-- graphite point -->
-      <path d="M208 24.5 L226 27 L208 29.5 Z" fill="#4d4d4d"/>
-      <path d="M208 27 L226 27 L208 29.5 Z" fill="#2b2b2b"/>
-      <circle cx="221" cy="26.4" r="0.6" fill="#a8a8a8"/>
+      <path d="M497 13.5 L516 16 L497 18.5 Z" fill="#4d4d4d"/>
+      <path d="M497 16 L516 16 L497 18.5 Z" fill="#2b2b2b"/>
+      <circle cx="511" cy="15.6" r="0.6" fill="#a8a8a8"/>
     </svg>
   </div>
-  <!-- LEFT: brass wedge sharpener resting below the pencil tip, one spiral
-       shaving still curled from the last sharpen (wood ribbon with the
-       pencil's painted rim on its edge), graphite crumbs by the bore -->
+  <!-- LEFT: brass wedge sharpener resting below the pencil tip, seen from
+       above with its bore end toward the pencil; one loose spiral shaving
+       (open turns, painted rim on its edge, graphite-stained tip) lies
+       beside it, with crumbs fallen from the bore and one broken-off chip -->
   <div class="desk-item di-sharpener">
     <svg viewBox="0 0 96 74" xmlns="http://www.w3.org/2000/svg">
       <defs>
         <linearGradient id="shBrass" x1="0" y1="0" x2="0.85" y2="1"><stop offset="0" stop-color="#ecc87e"/><stop offset="0.5" stop-color="#cfa050"/><stop offset="1" stop-color="#a1742f"/></linearGradient>
         <linearGradient id="shSteel" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f0ede3"/><stop offset="0.5" stop-color="#b7b1a2"/><stop offset="1" stop-color="#8a8374"/></linearGradient>
         <radialGradient id="shScrew" cx="0.35" cy="0.3" r="0.9"><stop offset="0" stop-color="#cfc9ba"/><stop offset="1" stop-color="#6f695c"/></radialGradient>
-        <path id="shCurl" d="M84 44 A16 16 0 1 1 52 44 A13 13 0 1 1 78 44 A10 10 0 1 1 58 44 A7 7 0 1 1 72 44"/>
+        <!-- shaving spine: half-turn arcs of shrinking radius so the curl
+             stays open between turns instead of closing into a solid roll -->
+        <path id="shCurl" d="M62 54 A14 14 0 0 1 48 40 A19 19 0 0 1 86 40 A15 15 0 0 1 56 40 A11.5 11.5 0 0 1 79 40 A8 8 0 0 1 63 40 A5 5 0 0 1 73 40"/>
       </defs>
       <!-- the sharpener block -->
-      <g transform="translate(25 34) rotate(-16)">
-        <rect x="-17" y="-12.5" width="34" height="25" rx="3" fill="url(#shBrass)" stroke="#7c5a22" stroke-width="1"/>
-        <path d="M-13 -10 Q0 -11.5 12 -9.8" fill="none" stroke="#f4d896" stroke-width="1.5" stroke-linecap="round" opacity="0.85"/>
+      <g transform="translate(24 33) rotate(-16)">
+        <rect x="-19" y="-11" width="38" height="22" rx="2.5" fill="url(#shBrass)" stroke="#7c5a22" stroke-width="1"/>
+        <path d="M-15 -8.2 Q-1 -9.6 10 -8" fill="none" stroke="#f4d896" stroke-width="1.4" stroke-linecap="round" opacity="0.85"/>
         <!-- throat slot the shavings curl out of -->
-        <path d="M-11 -3.5 L13 -7 L13 -4.2 L-11 -0.7 Z" fill="#2e2410" opacity="0.9"/>
+        <path d="M-13 -2.8 L10 -5.6 L10 -3.1 L-13 -0.3 Z" fill="#2e2410" opacity="0.92"/>
         <!-- steel blade screwed flat over the slot -->
-        <path d="M-12 1.5 L13.5 -2 L13.5 6 L-12 9.5 Z" fill="url(#shSteel)" stroke="#77705f" stroke-width="0.7"/>
-        <path d="M-11.5 2.1 L13 -1.4" fill="none" stroke="#fbf8ee" stroke-width="0.9" opacity="0.75"/>
-        <circle cx="0.5" cy="4.2" r="3.1" fill="url(#shScrew)" stroke="#5f5949" stroke-width="0.6"/>
-        <path d="M-1.7 2.7 L2.7 5.7" stroke="#3f3a2f" stroke-width="1.1" stroke-linecap="round"/>
-        <!-- bore entry on the end that faces the pencil -->
-        <ellipse cx="16.6" cy="-1" rx="2" ry="4.6" fill="#241a08"/>
-        <ellipse cx="17" cy="-1" rx="1.1" ry="3" fill="#0f0a03"/>
+        <path d="M-14 1 L11 -1.9 L11 5.3 L-14 8.2 Z" fill="url(#shSteel)" stroke="#77705f" stroke-width="0.7"/>
+        <path d="M-13.5 1.6 L10.5 -1.3" fill="none" stroke="#fbf8ee" stroke-width="0.9" opacity="0.8"/>
+        <circle cx="-1.5" cy="3.4" r="3" fill="url(#shScrew)" stroke="#5f5949" stroke-width="0.6"/>
+        <path d="M-3.6 2 L0.6 4.9" stroke="#3f3a2f" stroke-width="1.1" stroke-linecap="round"/>
+        <!-- pencil-end face with the conical bore centred on it -->
+        <path d="M12.5 -11 H16.5 Q19 -11 19 -8.5 V8.5 Q19 11 16.5 11 H12.5 Z" fill="#9a7030" opacity="0.85"/>
+        <path d="M12.5 -10.5 V10.5" stroke="#7c5a22" stroke-width="0.7" opacity="0.6"/>
+        <ellipse cx="15.8" cy="0" rx="3.4" ry="4.6" fill="#5b431c"/>
+        <ellipse cx="15.9" cy="0" rx="2.5" ry="3.6" fill="#241a08"/>
+        <ellipse cx="16" cy="0" rx="1.3" ry="2.1" fill="#0d0903"/>
       </g>
-      <!-- graphite crumbs and a faint smudge spilling from the bore -->
-      <ellipse cx="47" cy="30" rx="5.5" ry="3" fill="#3b3428" opacity="0.12"/>
-      <g fill="#4a423a"><circle cx="45" cy="29" r="1"/><circle cx="49" cy="26.4" r="0.7"/><circle cx="47.2" cy="33" r="0.9"/></g>
-      <g fill="#2f2a24"><circle cx="51.6" cy="30.6" r="0.6"/><circle cx="43" cy="32.4" r="0.55"/></g>
+      <!-- graphite crumbs and a faint smudge fallen from the bore -->
+      <ellipse cx="43" cy="33" rx="5" ry="2.8" fill="#3b3428" opacity="0.12"/>
+      <g fill="#4a423a"><circle cx="41" cy="31.6" r="0.9"/><circle cx="44.8" cy="29.6" r="0.65"/><circle cx="43.4" cy="35" r="0.8"/></g>
+      <g fill="#2f2a24"><circle cx="45.5" cy="33.4" r="0.55"/><circle cx="39.2" cy="34.6" r="0.5"/></g>
       <!-- one long spiral shaving: thin wood ribbon, painted rim along its
            lower edge, a shade line inside the curl, graphite-stained tip -->
-      <g transform="translate(8.2 5.3) scale(0.88)">
-        <use href="#shCurl" y="2" fill="none" stroke="#d99f28" stroke-width="6.2" stroke-linecap="round"/>
-        <use href="#shCurl" fill="none" stroke="#e8cfa0" stroke-width="4.8" stroke-linecap="round"/>
-        <use href="#shCurl" y="0.9" fill="none" stroke="#c9a672" stroke-width="1.1" stroke-linecap="round" opacity="0.7"/>
-        <use href="#shCurl" x="-0.5" y="-1" fill="none" stroke="#f7ead0" stroke-width="1.3" stroke-linecap="round" opacity="0.9"/>
-        <path d="M70 39.4 A7 7 0 0 1 72 44" fill="none" stroke="#6a5a45" stroke-width="4.8" opacity="0.8"/>
-        <circle cx="72.4" cy="43.2" r="1.1" fill="#3b3b3b"/>
+      <g>
+        <use href="#shCurl" y="1.8" fill="none" stroke="#d99f28" stroke-width="5" stroke-linecap="round"/>
+        <use href="#shCurl" fill="none" stroke="#e8cfa0" stroke-width="3.6" stroke-linecap="round"/>
+        <use href="#shCurl" y="0.8" fill="none" stroke="#c9a672" stroke-width="1" stroke-linecap="round" opacity="0.7"/>
+        <use href="#shCurl" y="-0.9" fill="none" stroke="#f7ead0" stroke-width="1.2" stroke-linecap="round" opacity="0.9"/>
+        <path d="M68 35 A5 5 0 0 1 73 40" fill="none" stroke="#6a5a45" stroke-width="3.6" opacity="0.8"/>
+        <circle cx="73" cy="39.4" r="1" fill="#3b3b3b"/>
       </g>
-      <!-- a small broken-off curl by the throat -->
-      <path d="M38 57 A6 6 0 0 1 47.5 54.4" fill="none" stroke="#d99f28" stroke-width="4.4" stroke-linecap="round" transform="translate(0 1.3)"/>
-      <path d="M38 57 A6 6 0 0 1 47.5 54.4" fill="none" stroke="#e8cfa0" stroke-width="3.4" stroke-linecap="round"/>
+      <!-- a thin broken-off chip of shaving below the block -->
+      <path d="M28 64.2 A6.5 6.5 0 0 1 39 61.7" fill="none" stroke="#d99f28" stroke-width="3.4" stroke-linecap="round"/>
+      <path d="M28 63 A6.5 6.5 0 0 1 39 60.5" fill="none" stroke="#e8cfa0" stroke-width="2.4" stroke-linecap="round"/>
     </svg>
   </div>
   <!-- RIGHT: bracelet-making flat lay: two floss skeins seen from above,

@@ -130,14 +130,13 @@
      rather than the viewport, keeping their gap to the page constant */
   .di-pencil {
     width: 520px; top: 58%; left: calc(50% - 412px);
-    /* near-vertical, tip down toward the sharpener; the scaleY flip keeps the
-       palest hex facet toward the upper-left light after the rotation, and its
-       0.4 magnitude squashes the drawn girth to a real pencil's ~8mm */
-    transform: translate(-50%, -50%) rotate(100deg) scaleY(-0.4);
+    /* near-vertical, tip down toward the sharpener; the pencil is drawn at
+       real proportions so this only rotates, and the scaleY(-1) flip keeps
+       the palest hex facet toward the upper-left light after the rotation */
+    transform: translate(-50%, -50%) rotate(100deg) scaleY(-1);
     /* shadow offset pre-rotated (filter applies before transform) so the cast
-       shadow still falls down-right on screen like every other prop; the y
-       part is pre-divided by the 0.4 girth squash */
-    filter: drop-shadow(6.4px 10.5px 6px rgba(46,32,14,0.30)) saturate(0.88);
+       shadow still falls down-right on screen like every other prop */
+    filter: drop-shadow(6.4px 4.2px 6px rgba(46,32,14,0.30)) saturate(0.88);
   }
   .di-sharpener { width: 200px; top: 84%; left: calc(50% - 520px); }
   /* picks ride the cassette pile: right-edge anchored so the pair stays
@@ -765,7 +764,16 @@
     padding-left: 14px; padding-right: 16px;
     border-right: 1px solid rgba(60,40,18,0.16);
   }
-  .chall-list { overflow-y: auto; max-height: 58vh; padding-right: 6px; scrollbar-gutter: stable; }
+  /* Soft edge fade signals there's more to scroll: the list dissolves into the
+     page on whichever edge has hidden content. --fade-top/--fade-bot are driven
+     by JS (wired in renderChallengesPage) so a fade only shows where it's true;
+     the bottom starts faded as a sensible pre-JS default for the full list. */
+  .chall-list {
+    overflow-y: auto; max-height: 58vh; padding-right: 6px; scrollbar-gutter: stable;
+    --fade-top: 0px; --fade-bot: 26px;
+    -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 var(--fade-top), #000 calc(100% - var(--fade-bot)), transparent 100%);
+            mask-image: linear-gradient(to bottom, transparent 0, #000 var(--fade-top), #000 calc(100% - var(--fade-bot)), transparent 100%);
+  }
   .chall-item {
     position: relative; display: grid; grid-template-columns: 1fr 22px;
     align-items: center; column-gap: 9px; width: 100%;
