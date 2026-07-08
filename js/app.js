@@ -489,57 +489,47 @@ function revealNotebook(onDone) {
   setTimeout(finish, 500 * (animScale() || 1) + 80);
 }
 
-/* ---------- Random sticky-tape placement for the nav keepsake cards ----------
-   Each card gets 2–4 strips (mostly 3), each pinned to a distinct randomly chosen corner
-   or edge with a little rotation jitter, so the cards look genuinely taped down rather
-   than templated. Strips are injected as .nav-tape child elements (styles.css) — real
-   elements, so there's no two-strip ceiling like the old ::before/::after approach. */
-const TAPE_SPOTS = [
-  { left: "-9px",  top: "-6px",     rot: [-52, -34] },              // top-left
-  { right: "-9px", top: "-6px",     rot: [34, 52] },                // top-right
-  { left: "-10px", bottom: "-7px",  rot: [30, 50] },                // bottom-left
-  { right: "-10px", bottom: "-7px", rot: [-50, -30] },              // bottom-right
-  { left: "50%",   top: "-7px",     tx: "-50%", rot: [-7, 7] },     // top-centre
-  { left: "50%",   bottom: "-8px",  tx: "-50%", rot: [-7, 7] },     // bottom-centre
+/* ---------- Sticky-tape on the nav keepsake cards ----------
+   ONE deliberate, art-directed arrangement, fixed across visits, so the board reads as
+   a set of cards someone intentionally taped down rather than a layout that re-dices
+   itself on every render (which looked restless and, on unlucky rolls, left strips
+   floating in the gaps between cards). One strip per card, all pinned to the OUTER
+   frame of the 3×2 grid — corners on the four outer cards, a centre pin on each middle
+   card — so tape never lands in the inner gaps. Rotation, length, and tear vary per card
+   for a handmade feel but never change. Order matches the DOM (and both screens):
+   records, charms, stats / study, challenges, mastery. Strips are injected as .nav-tape
+   child elements (styles.css). */
+const TORN_EDGES = [
+  "polygon(5% 0%, 96% 0%, 91% 20%, 97% 40%, 88% 60%, 96% 80%, 90% 100%, 8% 100%, 4% 80%, 10% 60%, 3% 40%, 7% 20%)",
+  "polygon(4% 0%, 95% 0%, 99% 25%, 90% 50%, 97% 75%, 93% 100%, 6% 100%, 10% 75%, 2% 50%, 9% 25%)",
+  "polygon(8% 0%, 92% 0%, 96% 33%, 89% 66%, 97% 100%, 7% 100%, 3% 66%, 11% 33%)",
 ];
-// A hand-torn short-edge silhouette: the top/bottom run straight, while the left and
-// right ends bite inward by a random amount at each segment, so every strip tears
-// differently. Returns a CSS polygon() for clip-path.
-function tornEdge() {
-  const J = 13;                // max inward bite, % of the strip length
-  const segs = 5;              // tear resolution down each short edge
-  const bite = () => +(Math.random() * J).toFixed(1);
-  const pts = [`${bite()}% 0%`, `${(100 - bite()).toFixed(1)}% 0%`];   // straight top
-  for (let i = 1; i < segs; i++) pts.push(`${(100 - bite()).toFixed(1)}% ${(i / segs * 100).toFixed(1)}%`); // right edge down
-  pts.push(`${(100 - bite()).toFixed(1)}% 100%`, `${bite()}% 100%`);   // straight bottom
-  for (let i = segs - 1; i >= 1; i--) pts.push(`${bite()}% ${(i / segs * 100).toFixed(1)}%`);  // left edge up
-  return `polygon(${pts.join(", ")})`;
-}
+const NAV_TAPE_PATTERN = [
+  { left: "-9px",   top: "-6px",             rot: -42, w: 54, tear: 0 },   // records    · top-left corner
+  { left: "50%",    top: "-7px", tx: "-50%", rot: 5,   w: 50, tear: 1 },   // charms     · top-centre pin
+  { right: "-9px",  top: "-6px",             rot: 40,  w: 56, tear: 2 },   // stats      · top-right corner
+  { left: "-10px",  bottom: "-7px",          rot: 38,  w: 52, tear: 1 },   // study      · bottom-left corner
+  { left: "50%",    bottom: "-8px", tx: "-50%", rot: -6, w: 50, tear: 2 }, // challenges · bottom-centre pin
+  { right: "-10px", bottom: "-7px",          rot: -44, w: 55, tear: 0 },   // mastery    · bottom-right corner
+];
 function makeTapeStrip(spot) {
   const t = document.createElement("span");
   t.className = "nav-tape";
-  const rot = (spot.rot[0] + Math.random() * (spot.rot[1] - spot.rot[0])).toFixed(1);
   t.style.top = spot.top || "auto";
   t.style.right = spot.right || "auto";
   t.style.bottom = spot.bottom || "auto";
   t.style.left = spot.left || "auto";
-  t.style.width = (44 + Math.round(Math.random() * 16)) + "px";   // varied length
-  t.style.height = (15 + Math.round(Math.random() * 3)) + "px";   // near-constant tape width
-  t.style.transform = `translateX(${spot.tx || "0"}) rotate(${rot}deg)`;
-  t.style.clipPath = tornEdge();
+  t.style.width = spot.w + "px";
+  t.style.transform = `translateX(${spot.tx || "0"}) rotate(${spot.rot}deg)`;
+  t.style.clipPath = TORN_EDGES[spot.tear];
   return t;
 }
 function scatterNavTape(screenName) {
   const root = screens[screenName] || document;
   const cards = [...root.querySelectorAll(".nav-card")];
-  // Roll every card's strip count first so we can veto the "all cards doubled" case
-  // before anything is drawn: if all three rolled 2, knock one random card back to 1.
-  const counts = cards.map(() => (chance(0.3) ? 2 : 1));   // mostly one, occasionally two
-  if (counts.length && counts.every((n) => n === 2)) counts[Math.floor(Math.random() * counts.length)] = 1;
-  cards.forEach((card, c) => {
-    card.querySelectorAll(".nav-tape").forEach((t) => t.remove());   // clear last visit's strips
-    const pool = shuffle(TAPE_SPOTS.slice());
-    for (let i = 0; i < counts[c] && i < pool.length; i++) card.appendChild(makeTapeStrip(pool[i]));
+  cards.forEach((card, i) => {
+    card.querySelectorAll(".nav-tape").forEach((t) => t.remove());   // clear any prior strip
+    card.appendChild(makeTapeStrip(NAV_TAPE_PATTERN[i % NAV_TAPE_PATTERN.length]));
   });
 }
 
