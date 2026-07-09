@@ -778,7 +778,7 @@
      by JS (wired in renderChallengesPage) so a fade only shows where it's true;
      the bottom starts faded as a sensible pre-JS default for the full list. */
   .chall-list {
-    overflow-y: auto; max-height: calc(100vh - 340px); padding-right: 6px; scrollbar-gutter: stable;
+    overflow-y: auto; max-height: calc(100vh - 340px); padding-right: 20px; margin-right: -14px; scrollbar-gutter: stable;
     --fade-top: 0px; --fade-bot: 30px;
     -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 var(--fade-top), #000 calc(100% - var(--fade-bot)), transparent 100%);
             mask-image: linear-gradient(to bottom, transparent 0, #000 var(--fade-top), #000 calc(100% - var(--fade-bot)), transparent 100%);
@@ -946,7 +946,7 @@
   @media (max-width: 620px) {
     .chall-layout { grid-template-columns: 1fr; }
     .chall-col { border-right: none; border-bottom: 1px solid rgba(60,40,18,0.16); padding-bottom: 8px; margin-bottom: 14px; }
-    .chall-list { padding-right: 0; }
+    .chall-list { padding-right: 0; margin-right: 0; }
     .chall-detail { padding-left: 0; }
   }
   @media (prefers-reduced-motion: reduce) {
