@@ -117,6 +117,7 @@ let challengeRunActive = false; // true only during a live challenge run (gates 
 let vanishTimer = null;         // Vanishing Word: timeout that hides the prompt word
 let revolveId = null;           // Revolving Door: interval that swaps the word every rotateMs
 let revolveIndex = 0;           // Revolving Door: how many times the word has revolved this round
+let revolveBeatEverySwap = true; // Revolving Door: still true if every correct answer landed on slot 0 (Two Steps Ahead)
 let lastAlphaLetter = "";       // From A to Z: first letter of the last accepted answer
 let roundSecondsOverride = null; // Shrinking Timer: per-round clock override (null = use the mode's seconds)
 let chainLetter = "";           // Wrapped Like A Chain: required first letter of the next title ("" = free)
@@ -163,6 +164,7 @@ let impostorMissed = 0;         // real pages answered wrong or timed out (perfe
 // Sea of Songs: this page's grid of song objects, each tagged {song, valid} — valids hold the
 // word in their lyrics, decoys don't. Rebuilt each round in buildSeaGrid; read only by dev tools.
 let seaTiles = [];
+let seaDecoyTaps = 0;             // Sea of Songs: decoy tiles tapped this run (0 = flawless, for Part The Sea)
 // Common Thread: this page's puzzle — the intended thread word, the lines shown (each {song,
 // line}), and the accept set (every playable word running through all shown lines, lower-cased;
 // always includes `word`). Built each round in buildCommonPuzzle; null off a Common Thread run.
@@ -4165,6 +4167,8 @@ function resetRunState() {
   tourSetlist = [];
   comboClock = 0;
   spiteSeconds = 0;
+  revolveBeatEverySwap = true;
+  seaDecoyTaps = 0;
   challengeTargetSong = null;
   challengeForcedRound = 0;
   challengeForcedWordVal = "";
@@ -4684,6 +4688,7 @@ function onSeaTileClick(index) {
   if (roundLocked || !seaRuleActive()) return;
   const tile = seaTiles[index];
   if (!tile) return;
+  if (!tile.valid) seaDecoyTaps++;   // tapped a decoy — spoils a flawless run (Part The Sea)
   $("seaGrid").querySelectorAll(".sea-tile").forEach((b) => { b.disabled = true; });
   submitAnswer(tile.song);
 }
@@ -5471,6 +5476,20 @@ function endChallenge() {
   if (c.rule === "impostor" && won && impostorMissed === 0) unlock("shouldve-said-no");
   // Invisible String — defeat Common Thread (the word is the string tying the lines together).
   if (c.rule === "common" && won) unlock("invisible-string");
+  // Per-challenge flourish charms: winning the harder way, native to each challenge's twist.
+  // Two Steps Ahead — every correct Revolving Door answer landed before the word swapped.
+  if (c.rule === "revolving" && won && revolveBeatEverySwap) unlock("two-steps-ahead");
+  // My Walls Stood Tall — a flawless Home Invasion: no miss ever cut the per-page clock.
+  if (c.rule === "spite" && won && spiteSeconds === (c.seconds || 10)) unlock("walls-stood-tall");
+  // Tick-Tock — cleared every single-digit-clock page of Shrinking Timer (rounds 9-13).
+  if (c.rule === "accelerate" && won && roundResults.slice(8).length === 5
+      && roundResults.slice(8).every(Boolean)) unlock("tick-tock");
+  // Part The Sea — won Sea of Songs without ever tapping a decoy tile.
+  if (c.rule === "sea" && won && seaDecoyTaps === 0) unlock("part-the-sea");
+  // Knowing All The Words — every scored Lyric Lover line was recalled word-perfect.
+  if (c.rule === "verse" && won && score > 0 && gameVersePerfect === score) unlock("knowing-all-the-words");
+  // Two Is Better Than One — a perfect Double Trouble run: all 13 pages cleared with two songs.
+  if (c.rule === "multi" && score === TOTAL_ROUNDS) unlock("two-is-better");
 
   document.querySelector("#screen-results .podium-title").textContent = c.name;
   const outOfGuesses = c.rule === "newsong" && challengeTargetSong && newSongLives <= 0;
@@ -7567,6 +7586,10 @@ function submitAnswer(song, isTimeout) {
   // From A to Z: advance the alphabetical floor only on an accepted correct answer.
   if (correct && currentChallenge && currentChallenge.rule === "alphabetical") {
     lastAlphaLetter = firstAlphaLetter(song.title);
+  }
+  // Revolving Door: a correct answer landed after the word already swapped spoils Two Steps Ahead.
+  if (correct && currentChallenge && currentChallenge.rule === "revolving" && revolveIndex > 0) {
+    revolveBeatEverySwap = false;
   }
   // Wrapped Like A Chain: the next title must start with this answer's LAST letter.
   if (correct && currentChallenge && currentChallenge.rule === "chain") {
