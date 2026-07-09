@@ -10,7 +10,7 @@
  * Paths are relative so the worker works at the site root (swiftassociation.com)
  * and under any project subpath, without hardcoding the origin.
  */
-const CACHE = "stta-v8";
+const CACHE = "stta-v9";
 const ASSETS = [
   "./",
   "index.html",
