@@ -3509,7 +3509,11 @@ let justEarnedIndex = -1; // bead that just became a charm, for the swing-in
 // Wraps the pure buildBraceletSVG, injecting the Mastery-chosen dangling charm into
 // every render so app.js stays the single owner of that game-state default.
 function renderBraceletSVG(results, active, fresh, albums, opts) {
-  return buildBraceletSVG(results, active, fresh, albums, { ...opts, charm: settings.masteryCharm });
+  // Impostor challenge: a bead that flagged a fake dangles a little devil, not the star.
+  const impostorCaught = impostorRuleActive()
+    ? results.map((ok, i) => ok === true && impostorRounds.has(i + 1))
+    : null;
+  return buildBraceletSVG(results, active, fresh, albums, { ...opts, charm: settings.masteryCharm, impostorCaught });
 }
 
 function renderBracelet() {
@@ -5492,8 +5496,8 @@ function endChallenge() {
   // left, replay this same challenge on the right — each half the width of the button below.
   $("resultPodium").innerHTML = status + tokenLine + verseLine + impostorLine + meta +
     `<div class="chall-result-actions">` +
-      `<button id="backToChallenges" class="btn-ghost">← challenges</button>` +
-      `<button id="replayChallenge" class="btn-ghost">replay ↺</button>` +
+      `<button id="backToChallenges" class="btn-primary">← challenges</button>` +
+      `<button id="replayChallenge" class="btn-primary">replay ↺</button>` +
     `</div>`;
   $("backToChallenges").addEventListener("click", () => openChallenges("start"));
   $("replayChallenge").addEventListener("click", () => startChallenge(c.id));
@@ -6572,7 +6576,8 @@ function advanceRound() {
   const rar = rarityTier(currentSongs.length);
   // Impostor: rarity would betray a fake outright (0 songs → "one of one"), and even a
   // real word's scarcity is a tell, so flatten the swipe and show no stamp for the run.
-  const hideRarity = impostorRuleActive() || commonRuleActive();
+  // Sea of Songs: rarity would narrow down which tiles could hold the word, so hide it too.
+  const hideRarity = impostorRuleActive() || commonRuleActive() || seaRuleActive();
   const wrap = $("wordDisplay").parentNode;   // .word-wrap
   wrap.dataset.rarity = hideRarity ? "common" : rar.name;
   wrap.style.setProperty("--rarity", hideRarity ? 0 : rar.t);
@@ -7673,8 +7678,9 @@ function submitAnswer(song, isTimeout) {
 
   // Circle the player's pick before revealing the verdict (skipped on timeout / reduced
   // motion, and on a lyric answer — the circle re-draws a title the player never typed).
+  // Sea of Songs shows the verdict on the grid itself, so it skips the pen-circle too.
   const reveal = () => (correct ? showCorrectFeedback(song, lyricMatch) : showWrongFeedback(song, isTimeout));
-  if (song && !isTimeout && !lyricMatch && settings.penCircle && !motionReduced() && !animInstant()) {
+  if (song && !isTimeout && !lyricMatch && !seaRuleActive() && settings.penCircle && !motionReduced() && !animInstant()) {
     showCircledChoice(song, reveal);
   } else {
     reveal();

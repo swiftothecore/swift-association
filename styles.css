@@ -959,10 +959,11 @@
   .chall-result-status.win { color: #2b2722; }
   .chall-result-token { font-family: var(--type); font-size: 13px; color: #2b2722; margin-bottom: 4px; }
   .chall-result-meta { font-family: var(--type); font-size: 11px; color: var(--ink-soft); margin-bottom: 12px; }
-  /* Two half-width buttons in a row (back to the list · replay this challenge), sitting just
-     above the full-width "front page" button below the podium. */
-  .chall-result-actions { display: flex; gap: 10px; margin-top: 6px; }
-  .chall-result-actions .btn-ghost { flex: 1; margin: 0; padding: 7px 10px; }
+  /* Two half-width buttons in a row (back to the list · replay this challenge), styled like
+     the full-width "front page" button below the podium (highlighter fill, inked border). */
+  .chall-result-actions { display: flex; gap: 12px; margin-top: 8px; }
+  .chall-result-actions .btn-primary { flex: 1; width: auto; margin: 0; padding: 11px 10px; font-size: 13px; }
+  .chall-result-actions .btn-primary:first-child { transform: rotate(0.6deg); }
 
   /* ---------- Album Focus page — borrows the master/detail .chall-* layout ----------
      The album rows extend .chall-item with a colour dot + best score; the status mark

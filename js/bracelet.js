@@ -80,6 +80,26 @@ export const CHARMS = {
     const tongue = `<path d="M${pt(0.25, -0.67)} L${pt(0.45, -0.89)}" stroke="var(--ink)" stroke-width="${(out * 0.9).toFixed(2)}" fill="none" stroke-linecap="round"/><path d="M${pt(0.45, -0.89)} L${pt(0.54, -0.88)} M${pt(0.45, -0.89)} L${pt(0.46, -0.98)}" stroke="var(--ink)" stroke-width="${(out * 0.8).toFixed(2)}" fill="none" stroke-linecap="round"/>`;
     return behind + front + head + eye + tongue;
   },
+  // A small horned devil face — the keepsake for a caught Impostor. Not player-
+  // selectable; hung automatically on beads that flagged a fake (see impostorCaught).
+  devil(cx, cy, r, sw) {
+    const pt = (px, py) => `${(cx + px * r).toFixed(2)},${(cy + py * r).toFixed(2)}`;
+    const X = (px) => (cx + px * r).toFixed(2), Y = (py) => (cy + py * r).toFixed(2);
+    const hornL = `M${pt(-0.70, -0.44)} L${pt(-1.00, -1.12)} L${pt(-0.28, -0.66)} Z`;
+    const hornR = `M${pt(0.70, -0.44)} L${pt(1.00, -1.12)} L${pt(0.28, -0.66)} Z`;
+    const face = cCircle(cx, cy + 0.10 * r, 0.82 * r, sw);
+    const brow = Math.max(Number(sw) * 1.05, r * 0.14).toFixed(2);
+    const feat = Math.max(Number(sw) * 0.95, r * 0.11).toFixed(2);
+    const pupil = (0.09 * r).toFixed(2);
+    // angry V-shaped brows + dot eyes beneath, then a wide grin
+    const eyes =
+      `<path d="M${pt(-0.48, -0.18)} L${pt(-0.14, 0.00)}" stroke="var(--ink)" stroke-width="${brow}" fill="none" stroke-linecap="round"/>` +
+      `<path d="M${pt(0.48, -0.18)} L${pt(0.14, 0.00)}" stroke="var(--ink)" stroke-width="${brow}" fill="none" stroke-linecap="round"/>` +
+      `<circle cx="${X(-0.29)}" cy="${Y(0.16)}" r="${pupil}" fill="var(--ink)"/>` +
+      `<circle cx="${X(0.29)}" cy="${Y(0.16)}" r="${pupil}" fill="var(--ink)"/>`;
+    const mouth = `<path d="M${pt(-0.36, 0.44)} Q${pt(0, 0.72)} ${pt(0.36, 0.44)}" stroke="var(--ink)" stroke-width="${feat}" fill="none" stroke-linecap="round"/>`;
+    return cFill(hornL, sw) + cFill(hornR, sw) + face + eyes + mouth;
+  },
   nib(cx, cy, r, sw) {
     const h = 1.108 * r, w = 0.649 * r;
     const d = `M${cx},${cy - h} L${cx + w},${cy - h * 0.15} L${cx},${cy + h} L${cx - w},${cy - h * 0.15} Z`;
@@ -109,6 +129,8 @@ export function buildBraceletSVG(results, activeRound, freshIndex, albums, opts)
   // per-round verse tier ("perfect"/"verse"): a word-perfect recall hangs a pen-nib
   // charm instead of the usual star — a keepsake of writing the line from memory.
   const verseTiers = (opts && opts.verseTiers) || [];
+  // per-round flag (Impostor challenge): this bead flagged a fake, so it dangles a devil.
+  const impostorCaught = (opts && opts.impostorCaught) || [];
   // opts.charm: the Mastery-chosen dangling charm id (see CHARMS); default "star".
   const W = 520, H = 64, xL = 26, xR = W - 26;
   // the thread sags between its tied ends like a real bracelet laid on the page
@@ -169,7 +191,7 @@ export function buildBraceletSVG(results, activeRound, freshIndex, albums, opts)
       // player's chosen charm (default star), drawn by the shared CHARMS renderer.
       const isNib = verseTiers[i] === "perfect" || verseTiers[i] === "verse";
       const chosen = (opts && opts.charm && CHARMS[opts.charm]) ? opts.charm : "star";
-      const charmId = isNib ? "nib" : chosen;
+      const charmId = impostorCaught[i] ? "devil" : (isNib ? "nib" : chosen);
       const cr = s(7.4), csw = Math.max(0.7, cr * 0.15).toFixed(2);
       const charm = `<g${beadStyle}>${CHARMS[charmId](x, y + s(15.5), cr, csw)}</g>`;
       svg += `<g class="charm-dangle${fresh ? " fresh" : ""}"${delay}>` +

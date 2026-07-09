@@ -272,20 +272,20 @@ export const CHALLENGES = [
     blurb: "the word is tiny, tilted, and never quite where you look",
     desc: "The word shrinks to almost nothing, slants off-axis, and drifts somewhere on the page. Find it, read it, name it.",
     win: "Score 9 / 13 hunting the tiny word." },
-  // ---- Tier C minigames (own input / lose-state). tapes:0 = placeholder "unrated" tier and
-  //      free:true so they're playable now; real difficulty + gating slot in later. ----
+  // ---- Tier C minigames (own input / lose-state). free:true so they're playable now;
+  //      full gating slots in later. ----
   { id: "impostor", name: "Impostor", rule: "impostor", mode: "medium",
-    free: true, cost: 1, target: 7, seconds: 15, tapes: 0,
+    free: true, cost: 1, target: 7, seconds: 15, tapes: 2,
     blurb: "some words are fakes — flag the impostors, answer the real ones",
     desc: "Most pages show a real word. But some are impostors — words that appear in zero Taylor songs. Flag the fakes with 🚩 and answer the real ones. Accuse a real word, or let an impostor slip past, and the run ends on the spot.",
     win: "Survive the run: flag every impostor and answer 7 real words." },
   { id: "sea-of-songs", name: "Sea of Songs", rule: "sea", mode: "medium",
-    free: true, cost: 1, target: 9, seconds: 10, noTitle: false, tapes: 0,
+    free: true, cost: 1, target: 9, seconds: 10, noTitle: false, tapes: 3,
     blurb: "10s · no typing · a sea of titles — tap one whose lyrics hold the word",
     desc: "No typing this time. Each page floats up a sea of song titles — tap one whose lyrics contain the word. A few titles fit; the rest are decoys. Tap a decoy or run out of time and the page is lost.",
     win: "Score 9 / 13 fishing the right song out of the sea." },
   { id: "common-thread", name: "Common Thread", rule: "common", mode: "medium",
-    free: true, cost: 1, target: 9, seconds: 3.5, noTitle: false, dropdown: false, tapes: 0,
+    free: true, cost: 1, target: 9, seconds: 3.5, noTitle: false, dropdown: false, tapes: 2,
     blurb: "3.5s · the game flips: three lines, one word runs through all of them",
     desc: "The game flips. No prompt word this time. Instead each page shows three lyric lines from three different songs. Type the one word they all share. Any real word that runs through all three counts.",
     win: "Score 9 / 13 finding the thread." },
