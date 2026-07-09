@@ -751,6 +751,34 @@ export const ACH_ICONS = {
   lake:    `<svg viewBox="0 0 24 24"><path class="ink-fill" d="M4.6 11.8 L9.6 4.2 L12.8 9 L15 5.8 L19.4 11.8 Z"/><path d="M8.5 5.9 L9.6 4.2 L10.7 5.9 Z" fill="var(--paper)" stroke="none"/><path class="ink" stroke-width="1.5" d="M2.6 12.9 H21.4"/><path class="ink-fill" opacity="0.45" d="M5.4 14 L9.6 19.8 L12.6 15.6 L14.6 18.2 L18.6 14 Z"/><g class="ink" stroke-width="1" opacity="0.5"><path d="M4.6 15.6 H7.8"/><path d="M16 17 H19.4"/></g></svg>`,
   // an anchor set — stayed, stayed, stayed
   anchor:  `<svg viewBox="0 0 24 24"><circle cx="12" cy="4.1" r="1.5" fill="none" stroke="var(--ink)" stroke-width="1.5"/><rect class="ink-fill" x="8" y="6.9" width="8" height="1.8" rx="0.9"/><path class="ink" stroke-width="1.7" d="M12 5.6 V18"/><path class="ink" stroke-width="1.7" fill="none" d="M4.6 13.2 C4.6 17.6 7.8 20.4 12 20.4 C16.2 20.4 19.4 17.6 19.4 13.2"/><path class="ink-fill" d="M4.9 12.2 L2.8 14.6 L6.2 15 Z"/><path class="ink-fill" d="M19.1 12.2 L21.2 14.6 L17.8 15 Z"/></svg>`,
+
+  /* ---- Challenge flourish charms (win the hard way) ---- */
+  // the impostor's horned bead behind a bold no sign, refused every single time
+  nosign:  `<svg viewBox="0 0 24 24"><circle class="ink-fill" cx="12" cy="12.6" r="4.4"/><path class="ink-fill" d="M8.9 10.2 L7.4 6.6 L10.7 8.5 Z"/><path class="ink-fill" d="M15.1 10.2 L16.6 6.6 L13.3 8.5 Z"/><g fill="var(--paper)" stroke="none"><circle cx="10.4" cy="12.2" r="0.75"/><circle cx="13.6" cy="12.2" r="0.75"/></g><circle class="ink" fill="none" stroke-width="1.8" cx="12" cy="12" r="9.4"/><path class="ink" stroke-width="1.8" d="M5.4 5.4 L18.6 18.6"/></svg>`,
+  // hook, line and sinker, the very first bait swallowed whole
+  hooked:  `<svg viewBox="0 0 24 24"><circle cx="15.8" cy="3" r="1.2" fill="none" stroke="var(--ink)" stroke-width="1.2"/><path class="ink" stroke-width="1.7" fill="none" d="M15.8 4.2 V13.4 a4.9 4.9 0 0 1 -9.8 0 V11"/><path class="ink-fill" d="M6 11.6 L4.7 8.7 L7.7 9.9 Z"/><circle class="ink-fill" cx="6.6" cy="5.8" r="2.4"/><path class="ink-fill" d="M5 4.6 L4.3 2.6 L6.2 3.6 Z"/><path class="ink-fill" d="M8.2 4.6 L8.9 2.6 L7 3.6 Z"/><g fill="var(--paper)" stroke="none"><circle cx="5.8" cy="5.6" r="0.55"/><circle cx="7.4" cy="5.6" r="0.55"/></g></svg>`,
+  // one golden thread pulled through every line on the page
+  thread:  `<svg viewBox="0 0 24 24"><g class="ink" stroke-width="1.2" opacity="0.5"><path d="M3.6 7.4 H20.4"/><path d="M3.6 12.2 H20.4"/><path d="M3.6 17 H20.4"/></g><path fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" d="M4.6 21.4 C9.8 19.8 5.6 15.4 9.6 13 C13.2 10.8 10.6 8.6 14 6.4"/><path class="ink-fill" stroke-width="0.9" d="M13.5 7.7 L19.3 1.9 C20.3 2.5 20.7 3.5 20.2 4.6 L14.6 8.8 Z"/><circle cx="19.2" cy="3.3" r="0.7" fill="var(--paper)" stroke="none"/></svg>`,
+  // two steps already past the door before it ever turned
+  twosteps:`<svg viewBox="0 0 24 24"><circle class="ink" fill="none" stroke-width="1.5" cx="7.6" cy="15.6" r="5.4"/><g class="ink" stroke-width="1.1"><path d="M7.6 10.2 V21"/><path d="M2.2 15.6 H13"/></g><path class="ink" stroke-width="1.5" fill="none" d="M3.6 7 C8.2 2.2 14.6 2.4 18.4 5.8"/><path class="ink-fill" d="M17.9 3.9 L21 7.6 L16.7 7.7 Z"/><circle class="ink-fill" cx="8.6" cy="3.9" r="1.15"/><circle class="ink-fill" cx="13.4" cy="4" r="1.15"/></svg>`,
+  // every brick where it was left, the heart kept safe behind
+  wall:    `<svg viewBox="0 0 24 24"><path class="ink-fill" d="M3.4 21 V10.2 H6.6 V7.6 H9.8 V10.2 H14.2 V7.6 H17.4 V10.2 H20.6 V21 Z"/><g stroke="var(--paper)" stroke-width="1" fill="none"><path d="M3.4 13.8 H20.6"/><path d="M3.4 17.4 H20.6"/><path d="M8.6 10.4 V13.8"/><path d="M15.4 10.4 V13.8"/><path d="M6 13.8 V17.4"/><path d="M12 13.8 V17.4"/><path d="M18 13.8 V17.4"/><path d="M9 17.4 V21"/><path d="M15 17.4 V21"/></g><path class="ink-fill" d="M12 5.9 C9.7 4.2 10.4 1.9 12 3 C13.6 1.9 14.3 4.2 12 5.9 Z"/></svg>`,
+  // a single-digit sliver left on the watch, and still every page fell
+  stopwatch:`<svg viewBox="0 0 24 24"><rect class="ink-fill" x="10.6" y="1.6" width="2.8" height="2.6" rx="0.6"/><path class="ink" stroke-width="1.4" d="M17.8 6.2 L19.4 4.6"/><circle class="ink-fill" cx="12" cy="13.4" r="8.2"/><circle cx="12" cy="13.4" r="6.4" fill="var(--paper)" stroke="none"/><path class="ink-fill" stroke-width="0.9" d="M12 13.4 V7 A6.4 6.4 0 0 1 15.2 7.9 Z"/><g class="ink" stroke-width="1"><path d="M12 18.6 V19.8"/><path d="M7.2 13.4 H6"/><path d="M16.8 13.4 H18"/></g><path class="ink" stroke-width="1.5" d="M12 13.4 L14.7 8.4"/><circle cx="12" cy="13.4" r="0.8" fill="var(--ink)" stroke="none"/></svg>`,
+  // the sea held open, a dry path straight through the middle
+  partedsea:`<svg viewBox="0 0 24 24"><path class="ink-fill" d="M2.4 4.4 H8.4 C10 6.9 10 9.5 8.6 12 C7.4 14.2 7.4 16.8 8.8 19.6 H2.4 Z"/><path class="ink-fill" d="M21.6 4.4 H15.6 C14 6.9 14 9.5 15.4 12 C16.6 14.2 16.6 16.8 15.2 19.6 H21.6 Z"/><g stroke="var(--paper)" stroke-width="1" fill="none" opacity="0.8"><path d="M4.4 7.2 C5.4 7.8 6.1 8.7 6.4 9.8"/><path d="M4.4 13.4 C5.4 14 6.1 14.9 6.4 16"/><path d="M19.6 7.2 C18.6 7.8 17.9 8.7 17.6 9.8"/><path d="M19.6 13.4 C18.6 14 17.9 14.9 17.6 16"/></g><path class="ink" stroke-width="1.3" stroke-dasharray="2 2.2" d="M12 4.8 V19.2"/></svg>`,
+  // the tape worn soft from singing every word along
+  cassette:`<svg viewBox="0 0 24 24"><rect class="ink-fill" x="2.6" y="4.8" width="18.8" height="14.4" rx="1.6"/><rect x="5.8" y="7.6" width="12.4" height="5.6" rx="2.8" fill="var(--paper)" stroke="none"/><g class="ink" stroke-width="1.2" fill="none"><circle cx="8.9" cy="10.4" r="1.7"/><circle cx="15.1" cy="10.4" r="1.7"/><path d="M10.6 10.4 H13.4"/></g><path d="M8.4 16.3 L9.3 19.2 H14.7 L15.6 16.3 Z" fill="var(--paper)" stroke="none"/><g fill="var(--paper)" stroke="none"><circle cx="4.5" cy="6.6" r="0.55"/><circle cx="19.5" cy="6.6" r="0.55"/></g></svg>`,
+  // two cherries off one stem, both songs on every page
+  cherries:`<svg viewBox="0 0 24 24"><g class="ink" stroke-width="1.4" fill="none"><path d="M12.6 3 C10.2 6.2 8.6 9.6 8.1 13.2"/><path d="M12.6 3 C14.2 6.6 15.1 10 15.3 13.6"/></g><ellipse class="ink-fill" cx="15.5" cy="4.3" rx="2.6" ry="1.1" transform="rotate(26 15.5 4.3)"/><circle class="ink-fill" cx="7.8" cy="16.2" r="3.2"/><circle class="ink-fill" cx="15.6" cy="16.6" r="3.2"/><g fill="var(--paper)" stroke="none"><circle cx="6.7" cy="15.1" r="0.8"/><circle cx="14.5" cy="15.5" r="0.8"/></g></svg>`,
+
+  /* ---- Study charms ---- */
+  // the calendar turned back to a winter page
+  december:`<svg viewBox="0 0 24 24"><rect class="ink-fill" x="4.4" y="4.2" width="15.2" height="16.6" rx="1.5"/><g class="ink" stroke-width="1.5"><path d="M8.6 2 V6.2"/><path d="M15.4 2 V6.2"/></g><path d="M4.4 8.6 H19.6" stroke="var(--paper)" stroke-width="1.1" fill="none"/><g stroke="var(--paper)" stroke-width="1.05" fill="none" stroke-linecap="round"><path d="M12 10.6 V18.2"/><path d="M8.7 12.5 L15.3 16.3"/><path d="M15.3 12.5 L8.7 16.3"/><path d="M10.9 11.7 L12 12.7 L13.1 11.7"/><path d="M10.9 17.1 L12 16.1 L13.1 17.1"/></g></svg>`,
+  // the keepsake box open for one more word that stayed
+  keepsake:`<svg viewBox="0 0 24 24"><path class="ink-fill" d="M4.4 13.2 L17.6 7 L18.8 9.6 L5.6 15.8 Z"/><rect class="ink-fill" x="4.6" y="13.6" width="14.8" height="7.4" rx="1.2"/><path d="M12.2 19.4 C10.2 17.9 10.8 16.1 12.2 17 C13.6 16.1 14.2 17.9 12.2 19.4 Z" fill="var(--paper)" stroke="none"/><path class="ink-fill" d="M17.4 1.8 L18.1 3.3 L19.6 4 L18.1 4.7 L17.4 6.2 L16.7 4.7 L15.2 4 L16.7 3.3 Z"/><g class="ink" stroke-width="1.1"><path d="M16.2 7.4 L15.2 9.4"/><path d="M19 7.8 L18.4 9.6"/></g></svg>`,
+  // cap and tassel, a whole class graduated in one day
+  mortarboard:`<svg viewBox="0 0 24 24"><path class="ink-fill" d="M7.2 10.4 V14.6 C7.2 16.6 16.8 16.6 16.8 14.6 V10.4 L12 12.6 Z"/><path class="ink-fill" d="M12 3.4 L21.8 7.9 L12 12.4 L2.2 7.9 Z"/><circle class="ink-fill" cx="12" cy="7.4" r="0.9"/><path class="ink" stroke-width="1.3" fill="none" d="M12 7.6 C16.6 7.9 19.6 9.8 19.9 14"/><circle class="ink-fill" cx="19.9" cy="15.4" r="1.25"/><g class="ink" stroke-width="1"><path d="M19.3 16.5 L19 17.9"/><path d="M20.5 16.5 L20.8 17.9"/></g></svg>`,
 };
 
 /* ---------- Challenge wax seals ----------
@@ -966,24 +994,24 @@ export const ACHIEVEMENTS = [
   { id: "paper-rings",      name: "Paper Rings",      desc: "Unlock every challenge",                secret: false, icon: "rings" },
   { id: "state-of-grace",   name: "State Of Grace",   desc: "Defeat a challenge on the first try",   secret: true,  icon: "feather" },
   { id: "this-is-me-trying", name: "This Is Me Trying", desc: "Defeat a challenge after 5+ attempts", secret: true, icon: "crumple" },
-  { id: "shouldve-said-no",  name: "Should've Said No",  desc: "Defeat Impostor flawlessly — every impostor flagged, every real word named", secret: false, icon: "placeholder" },
-  { id: "smallest-man",      name: "The Smallest Man Who Ever Lived", desc: "Fall for the very first impostor you meet", secret: true, icon: "placeholder" },
-  { id: "invisible-string",  name: "Invisible String",  desc: "Defeat Common Thread: pull the word through every line", secret: false, icon: "placeholder" },
-  { id: "two-steps-ahead",   name: "Two Steps Ahead",   desc: "Beat Revolving Door before a single swap — every answer on the first word", secret: true, icon: "placeholder" },
-  { id: "walls-stood-tall",  name: "My Walls Stood Tall", desc: "Win Home Invasion untouched — the clock never once shrinks", secret: true, icon: "placeholder" },
-  { id: "tick-tock",         name: "Tick-Tock",         desc: "Win Shrinking Timer, clearing every page once the clock hits single digits", secret: true, icon: "placeholder" },
-  { id: "part-the-sea",      name: "Part The Sea",      desc: "Win Sea of Songs without ever tapping a decoy", secret: true, icon: "placeholder" },
-  { id: "knowing-all-the-words", name: "Knowing All The Words", desc: "Win Lyric Lover with every line word-perfect — no fuzzy recalls", secret: true, icon: "placeholder" },
-  { id: "two-is-better",     name: "Two Is Better Than One", desc: "Clear all thirteen pages of Double Trouble — two songs each, none dropped", secret: true, icon: "placeholder" },
+  { id: "shouldve-said-no",  name: "Should've Said No",  desc: "Defeat Impostor flawlessly — every impostor flagged, every real word named", secret: false, icon: "nosign" },
+  { id: "smallest-man",      name: "The Smallest Man Who Ever Lived", desc: "Fall for the very first impostor you meet", secret: true, icon: "hooked" },
+  { id: "invisible-string",  name: "Invisible String",  desc: "Defeat Common Thread: pull the word through every line", secret: false, icon: "thread" },
+  { id: "two-steps-ahead",   name: "Two Steps Ahead",   desc: "Beat Revolving Door before a single swap — every answer on the first word", secret: true, icon: "twosteps" },
+  { id: "walls-stood-tall",  name: "My Walls Stood Tall", desc: "Win Home Invasion untouched — the clock never once shrinks", secret: true, icon: "wall" },
+  { id: "tick-tock",         name: "Tick-Tock",         desc: "Win Shrinking Timer, clearing every page once the clock hits single digits", secret: true, icon: "stopwatch" },
+  { id: "part-the-sea",      name: "Part The Sea",      desc: "Win Sea of Songs without ever tapping a decoy", secret: true, icon: "partedsea" },
+  { id: "knowing-all-the-words", name: "Knowing All The Words", desc: "Win Lyric Lover with every line word-perfect — no fuzzy recalls", secret: true, icon: "cassette" },
+  { id: "two-is-better",     name: "Two Is Better Than One", desc: "Clear all thirteen pages of Double Trouble — two songs each, none dropped", secret: true, icon: "cherries" },
   { id: "the-lakes",        name: "The Lakes",        desc: "Climb to the Rarest tier in Adaptive",  secret: false, icon: "lake" },
   { id: "stay-stay-stay",   name: "Stay Stay Stay",   desc: "Reach Rarest and finish there without slipping", secret: true, icon: "anchor" },
   { id: "a-place-in-this-world", name: "A Place In This World", desc: "Beat your first album in Album Focus", secret: false, icon: "map" },
   { id: "change",           name: "Change",           desc: "Beat all 12 albums in Album Focus",     secret: false, icon: "butterfly" },
   { id: "gold-rush",        name: "Gold Rush",        desc: "Perfect an album in Album Focus — 13/13", secret: true,  icon: "coins" },
   { id: "starlight",        name: "Starlight",        desc: "Perfect all 12 albums in Album Focus",  secret: true,  icon: "constellation" },
-  { id: "back-to-december", name: "Back To December", desc: "Finish your first Study session",       secret: false, icon: "placeholder" },
-  { id: "stay-beautiful",   name: "Stay Beautiful",   desc: "Settle 25 words into the top review box", secret: false, icon: "placeholder" },
-  { id: "the-best-day",     name: "The Best Day",     desc: "Graduate 5 words in a single Study session", secret: true, icon: "placeholder" },
+  { id: "back-to-december", name: "Back To December", desc: "Finish your first Study session",       secret: false, icon: "december" },
+  { id: "stay-beautiful",   name: "Stay Beautiful",   desc: "Settle 25 words into the top review box", secret: false, icon: "keepsake" },
+  { id: "the-best-day",     name: "The Best Day",     desc: "Graduate 5 words in a single Study session", secret: true, icon: "mortarboard" },
   { id: "castles-crumbling", name: "Castles Crumbling", desc: "Trade an achievement for a token",    secret: true,  icon: "castle" },
   { id: "is-it-over-now",   name: "Is It Over Now?",  desc: "Earn every hidden achievement",         secret: true,  icon: "hourglass" },
   { id: "the-lucky-one",    name: "The Lucky One",    desc: "Earn every other achievement",          secret: true,  icon: "clover" },
