@@ -285,8 +285,8 @@ export const CHALLENGES = [
     desc: "No typing this time. Each page floats up a sea of song titles — tap one whose lyrics contain the word. A few titles fit; the rest are decoys. Tap a decoy or run out of time and the page is lost.",
     win: "Score 9 / 13 fishing the right song out of the sea." },
   { id: "common-thread", name: "Common Thread", rule: "common", mode: "medium",
-    free: true, cost: 1, target: 9, seconds: 6, noTitle: false, dropdown: false, tapes: 0,
-    blurb: "6s · the game flips: three lines, one word runs through all of them",
+    free: true, cost: 1, target: 9, seconds: 3.5, noTitle: false, dropdown: false, tapes: 0,
+    blurb: "3.5s · the game flips: three lines, one word runs through all of them",
     desc: "The game flips. No prompt word this time. Instead each page shows three lyric lines from three different songs. Type the one word they all share. Any real word that runs through all three counts.",
     win: "Score 9 / 13 finding the thread." },
 ];

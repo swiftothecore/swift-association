@@ -959,7 +959,10 @@
   .chall-result-status.win { color: #2b2722; }
   .chall-result-token { font-family: var(--type); font-size: 13px; color: #2b2722; margin-bottom: 4px; }
   .chall-result-meta { font-family: var(--type); font-size: 11px; color: var(--ink-soft); margin-bottom: 12px; }
-  #backToChallenges { width: auto; margin: 0 auto; padding: 5px 18px; }
+  /* Two half-width buttons in a row (back to the list · replay this challenge), sitting just
+     above the full-width "front page" button below the podium. */
+  .chall-result-actions { display: flex; gap: 10px; margin-top: 6px; }
+  .chall-result-actions .btn-ghost { flex: 1; margin: 0; padding: 7px 10px; }
 
   /* ---------- Album Focus page — borrows the master/detail .chall-* layout ----------
      The album rows extend .chall-item with a colour dot + best score; the status mark
@@ -1677,6 +1680,28 @@
     margin-top: 4px; transform: rotate(-3deg); white-space: nowrap;
   }
 
+  /* ---------- Challenge seal (the active challenge's wax stamp, page corner) ----------
+     Mirrors the milestone sticky on the opposite (bottom-left) corner. Decorative and
+     non-interactive — it just names the challenge you're in. */
+  .challenge-seal[hidden] { display: none; }
+  .challenge-seal {
+    position: absolute; left: 16px; bottom: 16px; z-index: 6;
+    display: flex; flex-direction: column; align-items: center;
+    pointer-events: none; user-select: none;
+  }
+  .cseal-stamp { width: 46px; height: 46px; transform: rotate(-7deg); filter: drop-shadow(1px 2px 3px rgba(60,50,35,0.2)); }
+  .cseal-stamp svg { width: 100%; height: 100%; display: block; }
+  .cseal-name {
+    margin-top: 3px; max-width: 92px; text-align: center;
+    font-family: var(--hand); font-size: 13px; line-height: 1.05; color: var(--ink-soft);
+    transform: rotate(-2deg);
+  }
+  @media (max-width: 560px) {
+    .challenge-seal { left: 10px; bottom: 10px; }
+    .cseal-stamp { width: 38px; height: 38px; }
+    .cseal-name { font-size: 12px; max-width: 80px; }
+  }
+
   /* ---------- Sacred-13 days (the 13th / dates that add up to 13) ----------
      A quieter cousin of the album marginalia: smaller, softer paper, muted ink, so an
      ordinary lucky day never competes with an album release or her birthday. */
@@ -1800,6 +1825,18 @@
   }
   .sea-tile:active:not(:disabled) { transform: scale(0.97); }
   .sea-tile:disabled { cursor: default; opacity: 0.55; }
+  /* Reveal: the titles that actually held the word light up green (you could have tapped
+     these); a wrong pick is marked red. Kept full-opacity so they stand out once disabled. */
+  .sea-tile--valid.sea-tile--valid {
+    opacity: 1; border-color: #3f7d54; border-left-color: #3f7d54;
+    background: rgba(63,125,84,0.14); box-shadow: 0 1px 0 rgba(63,125,84,0.2);
+  }
+  .sea-tile--valid .sea-tile-title { color: #2f6340; font-weight: 700; }
+  .sea-tile--miss.sea-tile--miss {
+    opacity: 1; border-color: #b23a3a; border-left-color: #b23a3a;
+    background: rgba(178,58,58,0.12);
+  }
+  .sea-tile--miss .sea-tile-title { color: #8a2626; }
   @media (max-width: 560px) {
     .sea-grid { grid-template-columns: repeat(2, 1fr); gap: 7px; }
     .sea-tile-title { font-size: 17px; }
@@ -1836,6 +1873,10 @@
   }
   .common-reveal-text {
     display: block; font-family: var(--hand); font-size: 21px; line-height: 1.15; color: var(--ink);
+  }
+  /* The thread, lit with the game's own highlighter wash — not the browser's raw yellow mark. */
+  .common-reveal-text mark {
+    background: var(--highlighter); color: var(--ink); padding: 0 3px; font-weight: 700;
   }
   .common-reveal-song {
     display: block; font-family: var(--type); font-size: 11px; letter-spacing: 0.3px;

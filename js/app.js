@@ -4196,6 +4196,8 @@ function resetRunState() {
   if (skipBtn) skipBtn.remove();
   const banner = $("challBanner");
   if (banner) banner.remove();
+  const seal = $("challengeSeal");
+  if (seal) { seal.hidden = true; seal.innerHTML = ""; seal.removeAttribute("aria-label"); }
   const wrap = $("wordDisplay") && $("wordDisplay").parentNode;
   if (wrap) wrap.classList.remove("vanished");
 }
@@ -4702,6 +4704,20 @@ function renderSeaBanner() {
     `<span class="chall-prog-name">tap the sea</span>` +
     `<span class="chall-prog-count">${score} / ${currentChallenge.target || 9}</span>`;
 }
+// Sea of Songs verdict: light up every title whose lyrics actually held the word (the ones
+// you could have tapped) in green, right on the grid, and mark a wrong pick red. The grid IS
+// the reveal, so the usual example-card feedback is suppressed (see showWrongFeedback).
+function revealSea(pickedSong) {
+  const grid = $("seaGrid");
+  if (!grid) return;
+  grid.querySelectorAll(".sea-tile").forEach((b, i) => {
+    b.disabled = true;
+    const t = seaTiles[i];
+    if (!t) return;
+    if (t.valid) b.classList.add("sea-tile--valid");
+    else if (pickedSong && t.song.title === pickedSong.title) b.classList.add("sea-tile--miss");
+  });
+}
 
 /* ---------- Common Thread ---------- */
 // True while a Common Thread run is live (guards the puzzle build, the lines panel, the
@@ -4898,8 +4914,25 @@ function comboRemaining() {
 // Per-round modifier for the active challenge (called from advanceRound after the
 // word is written). Vanishing Word hides the prompt after a beat; matching is
 // unaffected (currentWord/currentSongs live in state, not the DOM).
+// The active challenge's wax seal, stamped in a corner of the play page so you always know
+// which challenge you're in. Silent (and cleared) outside a challenge run.
+function renderChallengeSeal() {
+  const el = $("challengeSeal");
+  if (!el) return;
+  if (gameType !== "challenge" || !currentChallenge) {
+    el.hidden = true; el.innerHTML = ""; el.removeAttribute("aria-label");
+    return;
+  }
+  el.innerHTML =
+    `<div class="cseal-stamp">${CHALLENGE_SEALS[currentChallenge.id] || ""}</div>` +
+    `<div class="cseal-name">${escapeHtml(currentChallenge.name)}</div>`;
+  el.setAttribute("aria-label", "Challenge: " + currentChallenge.name);
+  el.hidden = false;
+}
+
 function applyChallengeRound(wrap) {
   if (gameType !== "challenge" || !currentChallenge || !wrap) return;
+  renderChallengeSeal();   // the challenge's wax seal, stamped in the page corner for the run
   if (currentChallenge.rule === "vanishing") {
     return;
   } else if (currentChallenge.rule === "wordfx") {
@@ -4987,9 +5020,11 @@ function renderSurviveBanner() {
 function renderImpostorBanner() {
   if (!impostorRuleActive()) return;
   const el = ensureChallBanner();
+  // The score bundles caught fakes AND real answers; the target is real words only, so
+  // show real words named (score minus flags) against it — never the padded raw score.
   el.innerHTML =
     `<span class="chall-prog-name">🚩 ${impostorFlagged} caught</span>` +
-    `<span class="chall-prog-count">${score} / ${currentChallenge.target || 7}</span>`;
+    `<span class="chall-prog-count">${score - impostorFlagged} / ${currentChallenge.target || 7}</span>`;
 }
 // The Smallest Song Who Ever Lived: render the prompt word tiny, tilted, and offset to a
 // random spot within the word area — every round, constant. Display-only: matching reads
@@ -5453,9 +5488,15 @@ function endChallenge() {
     : "";
   const meta = `<div class="chall-result-meta">${rec.attempts} attempt${rec.attempts === 1 ? "" : "s"}` +
     `${rec.best ? ` · best ${rec.best}/${TOTAL_ROUNDS}` : ""}</div>`;
+  // A two-up row sitting above the full-width "front page" button: back to the list on the
+  // left, replay this same challenge on the right — each half the width of the button below.
   $("resultPodium").innerHTML = status + tokenLine + verseLine + impostorLine + meta +
-    `<button id="backToChallenges" class="btn-ghost">back to challenges</button>`;
+    `<div class="chall-result-actions">` +
+      `<button id="backToChallenges" class="btn-ghost">← challenges</button>` +
+      `<button id="replayChallenge" class="btn-ghost">replay ↺</button>` +
+    `</div>`;
   $("backToChallenges").addEventListener("click", () => openChallenges("start"));
+  $("replayChallenge").addEventListener("click", () => startChallenge(c.id));
 
   renderResultRecap();   // surface any challenge achievements just earned
   renderSkillsRecap();
@@ -7470,7 +7511,9 @@ function submitAnswer(song, isTimeout) {
   resetTension();
   hideDropdown();
   $("songInput").disabled = true;
-  $("playArea").style.display = "none";
+  // Sea of Songs reveals its answers ON the grid (green tiles), so the grid — and thus the
+  // play area holding it — must stay visible through the verdict. Its input is CSS-hidden anyway.
+  if (!seaRuleActive()) $("playArea").style.display = "none";
 
   // Common Thread scores off the word verdict (no song); every other path off the named song.
   const correct = commonRuleActive() ? !!commonAnswerCorrect : (!!song && currentSongs.some((s) => s.title === song.title));
@@ -7623,6 +7666,10 @@ function submitAnswer(song, isTimeout) {
 
   // Common Thread has its own reveal (lines + thread), not the song-card feedback.
   if (commonRuleActive()) { revealCommon(correct); return; }
+
+  // Sea of Songs: light up the tappable titles on the grid itself (green = you could have
+  // picked it, red = the decoy you tapped). The feedback card then skips its example songs.
+  if (seaRuleActive()) revealSea(song);
 
   // Circle the player's pick before revealing the verdict (skipped on timeout / reduced
   // motion, and on a lyric answer — the circle re-draws a title the player never typed).
@@ -7843,7 +7890,8 @@ function showWrongFeedback(song, isTimeout) {
   const fb = $("feedback");
   const reason = isTimeout ? "the page ran out" : "not this verse";
   // Ultra offers no help (examples 0); the "show examples" setting can also force 0.
-  const n = settings.showExamples ? currentMode.examples : 0;
+  // Sea of Songs reveals its answers on the grid (green tiles), so skip the example cards.
+  const n = (settings.showExamples && !seaRuleActive()) ? currentMode.examples : 0;
   let help = "";
   if (n > 0) {
     let pool = currentSongs;
