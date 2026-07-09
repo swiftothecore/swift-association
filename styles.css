@@ -959,11 +959,36 @@
   .chall-result-status.win { color: #2b2722; }
   .chall-result-token { font-family: var(--type); font-size: 13px; color: #2b2722; margin-bottom: 4px; }
   .chall-result-meta { font-family: var(--type); font-size: 11px; color: var(--ink-soft); margin-bottom: 12px; }
-  /* Two half-width buttons in a row (back to the list · replay this challenge), styled like
-     the full-width "front page" button below the podium (highlighter fill, inked border). */
+  /* Two half-width buttons in a row (back to the list · replay this challenge), sitting above
+     the full-width gold "front page" button. Each of the three gets its own coloured-pencil
+     wash + hand-drawn pattern so they read as three distinct choices, not one repeated stamp:
+     ← challenges is inked in denim blue with a dotted-notebook grid, replay is a fresh green
+     with hand-ruled diagonal lines, and the front page button keeps its gold highlighter. */
   .chall-result-actions { display: flex; gap: 12px; margin-top: 8px; }
   .chall-result-actions .btn-primary { flex: 1; width: auto; margin: 0; padding: 11px 10px; font-size: 13px; }
   .chall-result-actions .btn-primary:first-child { transform: rotate(0.6deg); }
+
+  #backToChallenges {
+    background-color: rgba(120, 170, 220, 0.30);
+    background-image: radial-gradient(rgba(63, 111, 163, 0.42) 1.3px, transparent 1.5px);
+    background-size: 9px 9px;
+    background-position: 3px 3px;
+  }
+  #backToChallenges:hover {
+    color: var(--paper);
+    background-color: #3f6fa3;
+    background-image: radial-gradient(rgba(245, 239, 225, 0.30) 1.3px, transparent 1.5px);
+  }
+
+  #replayChallenge {
+    background-color: rgba(120, 185, 135, 0.30);
+    background-image: repeating-linear-gradient(45deg, rgba(63, 125, 84, 0.34) 0 2px, transparent 2px 8px);
+  }
+  #replayChallenge:hover {
+    color: var(--paper);
+    background-color: #3f7d54;
+    background-image: repeating-linear-gradient(45deg, rgba(245, 239, 225, 0.26) 0 2px, transparent 2px 8px);
+  }
 
   /* ---------- Album Focus page — borrows the master/detail .chall-* layout ----------
      The album rows extend .chall-item with a colour dot + best score; the status mark
