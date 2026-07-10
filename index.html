@@ -502,6 +502,19 @@ if (location.pathname.endsWith('/index.html')) {
   </div>
 </div>
 
+<!-- CUSTOM MODE "Change" MODAL — author the active preset's levers (reuses settings-modal chrome) -->
+<div id="customModal" class="settings-modal custom-modal" aria-hidden="true">
+  <div class="settings-scrim" id="customModalScrim"></div>
+  <div class="settings-card card" role="dialog" aria-modal="true" aria-label="Change your custom mode">
+    <div class="settings-nav">
+      <span class="settings-title">Change your mode</span>
+      <button id="customModalCloseBtn" class="btn-link" aria-label="Close">✕ close</button>
+    </div>
+    <div id="customModalBody"></div>
+    <div class="cm-foot"><button id="customModalOkBtn" class="btn-primary">ok</button></div>
+  </div>
+</div>
+
 <div id="songModal" class="song-modal" aria-hidden="true">
   <div class="song-scrim" id="songScrim"></div>
   <div class="song-card card" role="dialog" aria-modal="true" aria-label="Full lyrics">
@@ -581,6 +594,10 @@ if (location.pathname.endsWith('/index.html')) {
         <p id="modeBlurb" class="mode-blurb"></p>
       </div>
       <p id="adaptiveNote" class="mode-blurb adaptive-note" style="display:none;"></p>
+      <div id="customRow" class="mode-picker custom-row" style="display:none;">
+        <p class="mode-picker-label">your mode</p>
+        <div id="customStartSummary" class="custom-start"></div>
+      </div>
       <p id="startPodiumTitle" class="podium-title">Your best</p>
       <div id="startBest" class="start-best"></div>
       <button id="playBtn" class="btn-primary" style="margin-top:18px;">Start writing</button>

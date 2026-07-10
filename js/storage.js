@@ -9,6 +9,7 @@ import {
   ALBUM_FOCUS_KEY, ALBUM_FOCUS_TARGET, DIFF_RANK,
   ADAPTIVE_KEY,
   STUDY_KEY, STUDY_MAX_BOX, STUDY_INTERVALS,
+  CUSTOM_KEY, CUSTOM_DEFAULT_MODE,
   MASTERY_KEY, SKILL_IDS, MASTERY_REWARDS, MASTERY_GATE,
   skillLevelFromXp, masteryLevelFromXp,
   MODES, MODE_ORDER, TOTAL_ROUNDS,
@@ -193,6 +194,44 @@ export function recordAdaptiveRun(peak, score, date) {
 }
 export function resetAdaptive() {
   try { localStorage.removeItem(ADAPTIVE_KEY); } catch (e) { /* ignore */ }
+}
+
+/* ---------- Custom mode: player-authored preset store ---------- */
+// Key: swiftSongAssociation.custom → { presets:[{id,name,mode}], activeId }
+// `mode` is a MODES-shaped lever object (see CUSTOM_DEFAULT_MODE). Purely saved
+// configurations — nothing here feeds stats/records. A fresh/empty store seeds one preset
+// so a first-time player always has something to play.
+export function defaultCustomPreset() {
+  return {
+    id: "cp" + Date.now().toString(36) + Math.floor(Math.random() * 1e4).toString(36),
+    name: "17s lyric gauntlet",
+    mode: { ...CUSTOM_DEFAULT_MODE },
+  };
+}
+export function loadCustom() {
+  try {
+    const raw = localStorage.getItem(CUSTOM_KEY);
+    if (raw) {
+      const o = JSON.parse(raw);
+      if (o && Array.isArray(o.presets) && o.presets.length) {
+        const activeId = o.presets.some((p) => p && p.id === o.activeId) ? o.activeId : o.presets[0].id;
+        return { presets: o.presets, activeId };
+      }
+    }
+  } catch (e) { /* ignore */ }
+  const seed = defaultCustomPreset();
+  return { presets: [seed], activeId: seed.id };
+}
+export function saveCustom(o) {
+  try { localStorage.setItem(CUSTOM_KEY, JSON.stringify(o)); } catch (e) { /* ignore */ }
+}
+// The preset the player will play / edit next. Never null (loadCustom always seeds one).
+export function activeCustomPreset() {
+  const o = loadCustom();
+  return o.presets.find((p) => p.id === o.activeId) || o.presets[0];
+}
+export function resetCustom() {
+  try { localStorage.removeItem(CUSTOM_KEY); } catch (e) { /* ignore */ }
 }
 
 /* ---------- Game types ever played (for "Hits Different") ---------- */

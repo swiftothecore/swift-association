@@ -31,6 +31,7 @@ export const ADAPTIVE_KEY = "swiftSongAssociation.adaptive";            // Adapt
 export const SEARCH_KEY = "swiftSongAssociation.search";                // Swift To The Lyric searcher — { mode, view, recent:[] }
 export const MASTERY_KEY = "swiftSongAssociation.mastery";              // skills + mastery progression — { skills:{...xp}, masteryXp, unlocked:{[rewardId]:isoDate} }
 export const STUDY_KEY = "swiftSongAssociation.studySet";              // Study mode Leitner deck — { words:{[word]:{box,seen,due}}, sessions }
+export const CUSTOM_KEY = "swiftSongAssociation.custom";               // player-authored modes — { presets:[{id,name,mode}], activeId }
 
 // Every persisted key shares this namespace; export/import and "clear everything"
 // sweep all keys under it.
@@ -164,6 +165,28 @@ export const STUDY_MISS_WEIGHT = 3;      // per recorded miss (tally.misses[w])
 export const STUDY_GAP_WEIGHT = 4;       // a word that can unlock an undiscovered song (catalogue completion)
 export const STUDY_BOX_WEIGHT = 5;       // multiplied by (STUDY_MAX_BOX - box): lower box = more urgent
 export const STUDY_BASE_WEIGHT = 1;      // floor of randomness so it never feels grindy
+
+/* ---------- Custom mode (player-authored "workshop" modes) ----------
+   A sandboxed gameType. The player builds a MODES-shaped lever object in the Change modal,
+   saves it as a named preset (CUSTOM_KEY), and plays a fixed 13-round run. It folds skill XP
+   + achievements ONLY — never ranked stats/records/history/tally/play-counts (like Challenges).
+   The one lever the base MODES lack is `hintBudget`: the total number of hint reveals allowed
+   across the whole run (each tier-tap spends one; app.js enforces it). `hint` is derived
+   (hintBudget > 0), so a budget of 0 turns hints off entirely. */
+export const CUSTOM_SECONDS_MIN = 0;     // 0 = no clock (like Relaxed)
+export const CUSTOM_SECONDS_MAX = 60;
+export const CUSTOM_HINT_MAX = 13;       // per-run total hint reveals (0 = no hints)
+export const CUSTOM_POOLS = ["easy", "all", "hard", "ultra"];   // word-rarity buckets the picker offers
+export const CUSTOM_EXAMPLES_MAX = 3;    // example songs shown after a miss (0..3)
+export const CUSTOM_MAX_PRESETS = 12;    // keep the saved list manageable
+export const CUSTOM_NAME_MAX = 24;       // preset name length cap
+// The lever object a first-time player's seed preset starts from (their own example: 17s, no
+// suggestions, lyric-only, a 5-reveal hint budget, all words, not in the title). Cloned on use.
+export const CUSTOM_DEFAULT_MODE = {
+  id: "custom", label: "Custom", seconds: 17, dropdown: false, pool: "all",
+  strict: false, noTitle: true, examples: 3, hint: true, hintBudget: 5, lyricOnly: true,
+};
+
 /* Challenges mode — discrete rule-bending puzzles, unlocked with tokens and "defeated".
    Pure data: each entry declares a `rule` token; app.js dispatches on it (round modifier,
    per-answer judge, win check). Sandboxed like daily — a challenge run never folds into the

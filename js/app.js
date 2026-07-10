@@ -14,6 +14,8 @@ import {
   ADAPTIVE_BUCKETS, ADAPTIVE_LEVELS, ADAPT_MAX_LEVEL, ADAPT_START_LEVEL, ADAPT_PROMO_STREAK, ADAPT_NODROP_LEVEL,
   STUDY_MAX_BOX, STUDY_INTERVALS, STUDY_SESSION_ROUNDS,
   STUDY_MISS_WEIGHT, STUDY_GAP_WEIGHT, STUDY_BOX_WEIGHT, STUDY_BASE_WEIGHT,
+  CUSTOM_SECONDS_MIN, CUSTOM_SECONDS_MAX, CUSTOM_HINT_MAX, CUSTOM_POOLS,
+  CUSTOM_EXAMPLES_MAX, CUSTOM_MAX_PRESETS, CUSTOM_NAME_MAX, CUSTOM_DEFAULT_MODE,
   PEN_SVG, STAR_SVG, SPARKLE_SVG, DOODLE_SVG, DOODLE_SIZE,
   SKILLS, SKILL_IDS, SKILL_BY_ID,
   TEMPO_BASE, TEMPO_SPEED, LYRIC_TIER_XP, LYRIC_LEN_REF,
@@ -38,6 +40,7 @@ import {
   markTypePlayed,
   loadSongTally, recordGameTally,
   loadStudySet, saveStudySet, resetStudySet,
+  loadCustom, saveCustom, activeCustomPreset, resetCustom, defaultCustomPreset,
   loadMetrics, recordGameMetrics,
   loadSettings, saveSettings,
   exportData, importData,
@@ -91,11 +94,13 @@ let roundWords = [];     // per-round prompt word (for the lifetime tally / Neme
 let roundSongs = [];     // per-round answered song title, null on a miss (lifetime tally)
 let roundHinted = [];    // per-round true if a hint was taken (a hinted run can't set a PB)
 let hintsUsed = 0;       // count of rounds this game where a hint was taken
+let hintBudgetLeft = Infinity; // Custom mode: total hint reveals still allowed this run (Infinity = uncapped, every other mode)
 let runFolded = false;   // partial/full stats already saved for the current run (quit / unload / endGame)
 let hintTier = 0;        // hints revealed this round (0..3); reset each round
 let roundHintSong = null;// the valid song this round's hints zoom in on
 let hintUrgeTimer = null;// idle nudge timer for Relaxed (no clock)
-let gameType = "classic";       // "classic" (fixed 13) | "infinite" (until lives run out) | "adaptive" (fixed 13, floating rarity) | "daily" | "challenge" | "album" | "study"
+let gameType = "classic";       // "classic" (fixed 13) | "infinite" (until lives run out) | "adaptive" (fixed 13, floating rarity) | "daily" | "challenge" | "album" | "study" | "custom" (player-authored levers, sandboxed)
+let customPreset = null;        // Custom mode: the active preset {id,name,mode} while gameType === "custom"
 let focusAlbum = null;          // Album Focus: the locked-in studio album while gameType === "album"
 let focusDifficulty = null;     // Album Focus: the chosen MODES id this run plays at
 let infiniteVariant = "3lives"; // "3lives" | "sudden"
@@ -3508,6 +3513,54 @@ function renderStudyPage() {
   }
 }
 
+/* ---------- Custom mode start-row (the active preset summary + Change) ----------
+   Custom is a first-class game type: selecting the Custom tab shows this row (in place of the
+   difficulty ladder), and the launchpad "Start writing" button runs the active preset. */
+function renderCustomRow() {
+  const el = $("customStartSummary");
+  if (!el) return;
+  const store = loadCustom();
+  const active = store.presets.find((p) => p.id === store.activeId) || store.presets[0];
+  const activeMode = normalizeCustomMode(active.mode);
+
+  // Other saved presets as quick-switch chips (the Change modal holds the full editor).
+  const others = store.presets.filter((p) => p.id !== active.id);
+  const chips = others.length
+    ? `<div class="custom-presets" aria-label="Your other presets">` +
+        `<span class="custom-presets-lbl">switch to</span>` +
+        others.map((p) =>
+          `<button type="button" class="custom-chip" data-preset="${escapeHtml(p.id)}">${escapeHtml(p.name || "Custom")}</button>`
+        ).join("") +
+      `</div>`
+    : "";
+
+  el.innerHTML =
+    `<div class="custom-active">` +
+      `<div class="custom-active-head">` +
+        `<span class="custom-active-name">${escapeHtml(active.name || "Custom")}</span>` +
+        `<button type="button" id="customChangeBtn" class="custom-change-btn">Change…</button>` +
+      `</div>` +
+      `<span class="custom-active-levers">${escapeHtml(customLeverSummary(activeMode))}</span>` +
+    `</div>` +
+    chips;
+
+  $("customChangeBtn").addEventListener("click", () => openCustomModal());
+  el.querySelectorAll("[data-preset]").forEach((b) => b.addEventListener("click", () => {
+    const s = loadCustom();
+    s.activeId = b.dataset.preset;
+    saveCustom(s);
+    renderCustomRow();
+    updateTagline();
+  }));
+}
+
+// Re-render whatever custom UI is currently on screen (the start row and/or the open modal).
+// Shared by the dev tools so seeding/patching a preset reflects immediately.
+function syncCustomUI() {
+  if (screens.start.classList.contains("active") && gameType === "custom") { renderCustomRow(); updateTagline(); }
+  if ($("customModal") && $("customModal").classList.contains("open")) renderCustomModalBody();
+}
+
 /* ---------- Bracelet (hand-strung SVG) ---------- */
 let justEarnedIndex = -1; // bead that just became a charm, for the swing-in
 
@@ -3720,17 +3773,27 @@ function setMode(id) {
   renderModePicker();
   refreshStartBoard();
 }
-const GAMETYPE_LABELS = { classic: "Classic", infinite: "Infinite", adaptive: "Adaptive" };
-const GAME_TYPES = ["classic", "infinite", "adaptive"];
+const GAMETYPE_LABELS = { classic: "Classic", infinite: "Infinite", adaptive: "Adaptive", custom: "Custom" };
+const GAME_TYPES = ["classic", "infinite", "adaptive", "custom"];
 const VARIANT_LABELS = { "3lives": "3 lives", sudden: "Sudden death" };
 
 // The start-screen "your best" line follows the selected mode (+ infinite variant).
 function refreshStartBoard() {
   const t = $("startPodiumTitle");
+  if (gameType === "custom") {
+    // Custom is sandboxed — no ranked board. Say so plainly where "your best" would sit.
+    if (t) t.textContent = "Custom";
+    const el = $("startBest");
+    if (el) el.innerHTML = `<div class="best-empty">a workshop mode — a run trains your skills, but never sets records</div>`;
+    return;
+  }
   if (t) t.textContent = "Your best";
   if (gameType === "adaptive") { renderAdaptiveBest($("startBest")); return; }
   renderBestLine($("startBest"), boardMode());
 }
+// The active custom preset's playable lever set (clamped + derived). Reused by the start-row
+// summary, the tagline, and startCustom.
+function activeCustomMode() { return normalizeCustomMode(activeCustomPreset().mode); }
 // Adaptive's "your best" line — the highest level ever reached (its board metric),
 // with the score on that run as the tie-break detail.
 function renderAdaptiveBest(el) {
@@ -3749,12 +3812,17 @@ function renderAdaptiveBest(el) {
 // explainer (difficulty floats in Adaptive, so its picker is meaningless).
 function applyTypeLayout() {
   const isAdaptive = gameType === "adaptive";
+  const isCustom = gameType === "custom";
   const vr = $("variantRow"); if (vr) vr.style.display = gameType === "infinite" ? "" : "none";
-  const dr = $("difficultyRow"); if (dr) dr.style.display = isAdaptive ? "none" : "";
+  // Neither Adaptive (difficulty floats) nor Custom (its own lever set) uses the difficulty ladder.
+  const dr = $("difficultyRow"); if (dr) dr.style.display = (isAdaptive || isCustom) ? "none" : "";
   const an = $("adaptiveNote"); if (an) an.style.display = isAdaptive ? "" : "none";
+  const cr = $("customRow"); if (cr) cr.style.display = isCustom ? "" : "none";
 }
 function updateBlurb() {
-  if (gameType === "adaptive") {
+  if (gameType === "custom") {
+    renderCustomRow();   // the custom row carries its own summary; there's no shared blurb line
+  } else if (gameType === "adaptive") {
     const an = $("adaptiveNote");
     if (an) an.textContent = "Start in the middle. Every right answer climbs you toward rarer words; a miss drops you back. Your level is shown as you play.";
   } else {
@@ -3774,11 +3842,15 @@ function updateBlurb() {
 function updateTagline() {
   const el = $("tagline");
   if (!el) return;
-  const clock = currentMode.seconds > 0 ? `${currentMode.seconds} seconds each` : "no timer";
+  // Custom's clock comes from the active preset, not the difficulty currentMode.
+  const cm = gameType === "custom" ? activeCustomMode() : currentMode;
+  const clock = cm.seconds > 0 ? `${cm.seconds} seconds each` : "no timer";
   el.textContent = gameType === "infinite"
     ? `endless pages · ${clock}`
     : gameType === "adaptive"
     ? `${TOTAL_ROUNDS} pages · difficulty that climbs with you`
+    : gameType === "custom"
+    ? `${TOTAL_ROUNDS} pages · ${clock} · your own rules`
     : `${TOTAL_ROUNDS} pages · ${clock}`;
 }
 function renderModePicker() {
@@ -4140,6 +4212,7 @@ function resetRunState() {
   roundSongs = [];
   roundHinted = [];
   hintsUsed = 0;
+  hintBudgetLeft = Infinity;   // Custom mode overrides this to its hint budget in startCustom
   runFolded = false;
   adaptiveLevel = ADAPT_START_LEVEL;
   adaptivePeak = ADAPT_START_LEVEL;
@@ -4154,6 +4227,7 @@ function resetRunState() {
   dailyAlbumPool = null;
   currentChallenge = null;
   challengeRunActive = false;
+  customPreset = null;
   focusAlbum = null;
   focusDifficulty = null;
   lastAlphaLetter = "";
@@ -4223,7 +4297,7 @@ function foldRunProgress() {
   // Sandboxed modes never fold into difficulty stats. Daily is also skipped: it resumes
   // after a refresh/exit and folds its tally in full at completion (endGame), so folding
   // a partial here would double-count the same rounds once the run is finished.
-  if (gameType === "challenge" || gameType === "album" || gameType === "adaptive" || gameType === "daily") { runFolded = true; return; }
+  if (gameType === "challenge" || gameType === "album" || gameType === "adaptive" || gameType === "daily" || gameType === "custom") { runFolded = true; return; }
   runFolded = true;
   const partialScore = gameType === "infinite" ? roundResults.length : score;
   updateStats(partialScore, boardMode(), gameMaxStreak, false);
@@ -4250,8 +4324,10 @@ function applyInputHints() {
   const suggesting = effectiveDropdown();
   input.placeholder = suggesting ? "a title… or sing me a line" : "the full title… or a lyric line";
   hint.textContent = suggesting ? "Enter accepts the top match — or write a lyric line for a verse bonus" : "no suggestions — type the full title or a real lyric line, then Enter";
-  if (settings.enableHints !== false && currentMode.hint && gameType !== "daily") {
-    hint.textContent += " · Tab for a hint";
+  if (settings.enableHints !== false && currentMode.hint && gameType !== "daily" && hintBudgetLeft > 0) {
+    hint.textContent += hintBudgetActive()
+      ? ` · Tab for a hint (${hintBudgetLeft} left)`
+      : " · Tab for a hint";
   }
 }
 
@@ -4268,12 +4344,14 @@ function renderImpostorBar() {
   }
 }
 
-/* ---------- Hints (progressive ladder, Easy/Relaxed only) ---------- */
+/* ---------- Hints (progressive ladder) ---------- */
 // All tiers derive from currentSongs — nothing is handwritten. A hinted run still
-// plays/scores/logs to history but can't set a personal best (see endGame).
+// plays/scores/logs to history but can't set a personal best (see endGame). Custom mode
+// caps the total reveals with a hint budget (hintBudgetLeft); every other mode is uncapped.
+function hintBudgetActive() { return Number.isFinite(hintBudgetLeft); }
 function hintsAllowed() {
   return settings.enableHints !== false && !!currentMode.hint &&
-    gameType !== "daily" && !roundLocked;
+    gameType !== "daily" && !roundLocked && hintBudgetLeft > 0;
 }
 
 // Reset the hint UI for a fresh round; show the affordance only when hints apply.
@@ -4289,7 +4367,7 @@ function renderHintAffordance() {
   if (hintsAllowed() && roundHintSong) {
     btn.hidden = false;
     btn.disabled = false;
-    btn.textContent = "need a hint?";
+    btn.textContent = hintBudgetActive() ? `need a hint? (${hintBudgetLeft} left)` : "need a hint?";
     // Relaxed has no clock — nudge after a few idle seconds instead of at half-time.
     if (!(currentMode.seconds > 0) && !motionReduced()) {
       hintUrgeTimer = setTimeout(() => {
@@ -4309,6 +4387,7 @@ function useHint() {
     hintsUsed++;
   }
   hintTier++;
+  if (hintBudgetActive()) hintBudgetLeft--;   // Custom mode: each reveal spends one from the run's budget
   const btn = $("hintBtn");
   clearTimeout(hintUrgeTimer);
   if (btn) btn.classList.remove("urge");
@@ -4340,6 +4419,7 @@ function useHint() {
   }
   box.innerHTML = tiers.join("");
 
+  const outOfBudget = hintBudgetActive() && hintBudgetLeft <= 0;
   if (btn && hintTier >= 3) {
     btn.textContent = "no more hints";
     btn.disabled = true;
@@ -4348,8 +4428,12 @@ function useHint() {
     const input = $("songInput");
     input.placeholder = "now name the song…";
     $("gameHint").textContent = "type the song title — the line below is your clue";
+  } else if (btn && outOfBudget) {
+    // Custom mode ran the hint budget dry before the full ladder — retire the affordance.
+    btn.textContent = "no more hints";
+    btn.disabled = true;
   } else if (btn) {
-    btn.textContent = "another hint?";
+    btn.textContent = hintBudgetActive() ? `another hint? (${hintBudgetLeft} left)` : "another hint?";
   }
 }
 
@@ -4450,6 +4534,51 @@ function startStudy() {
   showScreen("game");
   nextRound();
   return true;
+}
+
+// Coerce a stored preset's lever object into a safe, playable MODES-shaped clone: clamp the
+// numeric levers to their allowed ranges, keep only a known rarity pool, and derive `hint`
+// from the budget (a 0 budget means no hints at all). Defensive against hand-edited storage.
+function normalizeCustomMode(raw) {
+  const m = raw && typeof raw === "object" ? raw : {};
+  const clamp = (v, lo, hi, dflt) => {
+    const n = Math.round(Number(v));
+    return Number.isFinite(n) ? Math.max(lo, Math.min(hi, n)) : dflt;
+  };
+  const seconds = clamp(m.seconds, CUSTOM_SECONDS_MIN, CUSTOM_SECONDS_MAX, CUSTOM_DEFAULT_MODE.seconds);
+  const hintBudget = clamp(m.hintBudget, 0, CUSTOM_HINT_MAX, CUSTOM_DEFAULT_MODE.hintBudget);
+  const examples = clamp(m.examples, 0, CUSTOM_EXAMPLES_MAX, CUSTOM_DEFAULT_MODE.examples);
+  const pool = CUSTOM_POOLS.includes(m.pool) ? m.pool : CUSTOM_DEFAULT_MODE.pool;
+  const lyricOnly = !!m.lyricOnly;
+  return {
+    id: "custom", label: "Custom",
+    seconds, pool, examples, hintBudget,
+    // Lyric-only answers never use the title dropdown; force suggestions off so the two
+    // can't contradict each other (mirrors the modal's greyed-out control).
+    dropdown: lyricOnly ? false : !!m.dropdown,
+    lyricOnly,
+    noTitle: !!m.noTitle,
+    hint: hintBudget > 0,
+    strict: false,   // stem-matching stays a global setting, not a per-mode lever
+  };
+}
+
+// Custom mode: a fixed 13-round run on a player-authored lever set (the active preset).
+// Sandboxed like Challenges — it folds skill XP + achievements, but never records/stats/
+// history/tally/play-counts (see endCustom). The hint budget caps total reveals for the run.
+function startCustom() {
+  const preset = activeCustomPreset();
+  gameType = "custom";
+  currentMode = normalizeCustomMode(preset.mode);   // clone — never persisted via DIFF_KEY
+  resetRunState();
+  customPreset = preset;                             // set AFTER resetRunState (which nulls it)
+  hintBudgetLeft = currentMode.hintBudget > 0 ? currentMode.hintBudget : 0;
+  applyInputHints();
+  updateTagline();
+  $("pageTotalWrap").style.display = "";
+  $("pageTotal").textContent = TOTAL_ROUNDS;
+  showScreen("game");
+  nextRound();
 }
 
 // Snapshot of the daily run's accumulators, persisted after each completed round so a
@@ -5739,6 +5868,65 @@ function endStudy() {
 
   renderResultRecap();
   renderSkillsRecap();
+}
+
+// End a Custom run. Sandboxed like Challenges: it folds skill XP + achievements ONLY, never
+// records/stats/history/tally/metrics/play-counts — a player-tuned config can't be ranked and
+// shouldn't feed the lifetime catalogue. Scored 0..TOTAL_ROUNDS. Only Instinct (resolve) earns
+// XP, so a deliberately soft config can't farm the specialised skills. (devNoLog skips the fold.)
+function endCustom() {
+  const preset = customPreset;
+  if (!devNoLog) foldSkillXp(["resolve"]);
+
+  showScreen("results");
+  $("resultBracelet").innerHTML = renderBraceletSVG(roundResults, 0, -1, roundAlbums,
+    { colors: albumPalette(), hinted: roundHinted, verseTiers: roundVerseTier });
+  $("finalScore").textContent = score;
+  $("finalSub").textContent = "out of " + TOTAL_ROUNDS;
+  $("keepGoingBtn").style.display = "none";
+  $("namePrompt").style.display = "none";
+  hideNewBestBanner();
+  renderVerseAnthology();
+
+  const name = preset && preset.name ? preset.name : "Custom";
+  document.querySelector("#screen-results .podium-title").textContent = name;
+  const statusTxt = score === TOTAL_ROUNDS ? "a flawless custom run ★"
+    : score >= 9 ? "a strong run on your own rules"
+    : "your mode, your rules";
+  const status = `<div class="chall-result-status${score === TOTAL_ROUNDS ? " win" : ""}">${escapeHtml(statusTxt)}</div>`;
+  const meta = `<div class="chall-result-meta">${escapeHtml(customLeverSummary(currentMode))}</div>`;
+  $("resultPodium").innerHTML = status + meta +
+    `<div class="chall-result-actions">` +
+      `<button id="backToCustom" class="btn-primary">← modes</button>` +
+      `<button id="replayCustom" class="btn-primary">replay ↺</button>` +
+    `</div>`;
+  // Back to the launchpad with Custom still selected (gameType stays "custom" through
+  // renderStartPickers since it's a real game type now).
+  $("backToCustom").addEventListener("click", () => {
+    applyEra("gold");
+    renderStartPickers();
+    showScreen("start");
+    $("startContent").style.display = "";
+  });
+  $("replayCustom").addEventListener("click", () => startCustom());
+
+  renderResultRecap();
+  renderSkillsRecap();
+  if (score === TOTAL_ROUNDS) celebratePerfect();
+}
+
+// A short, human summary of a custom lever set — reused on the custom page and the results
+// card. Reads like the MODES `blurb` field but generated from the levers.
+function customLeverSummary(m) {
+  const parts = [];
+  parts.push(m.seconds > 0 ? `${m.seconds}s` : "no timer");
+  parts.push(m.lyricOnly ? "lyric lines only" : (m.dropdown ? "suggestions" : "type the title"));
+  const poolLabel = { easy: "common words", all: "all words", hard: "rare words", ultra: "rarest words" };
+  parts.push(poolLabel[m.pool] || "all words");
+  if (m.noTitle) parts.push("not in the title");
+  const budget = m.hintBudget | 0;
+  parts.push(budget > 0 ? `${budget} hint${budget === 1 ? "" : "s"}` : "no hints");
+  return parts.join(" · ");
 }
 
 // Re-render the results screen from a previously saved daily result (the
@@ -8045,6 +8233,7 @@ function endGame() {
   if (gameType === "album") { endAlbumFocus(); return; }
   if (gameType === "adaptive") { endAdaptive(); return; }
   if (gameType === "study") { endStudy(); return; }
+  if (gameType === "custom") { endCustom(); return; }
 
   const isInfinite = gameType === "infinite";
   const isDaily = gameType === "daily";
@@ -8925,7 +9114,7 @@ function renderSettingsBody() {
       setToggleHTML("stemMatching", "Match word variants", "off = exact word only (love won’t match loving)") +
       setToggleHTML("enableHints", "Hints", "Easy &amp; Relaxed; a hinted run can’t set a personal best") +
       setToggleHTML("censorExplicit", "Censor explicit words", "mask swearing in shown lyrics &amp; titles (f**k, s**t)") +
-      setChoiceHTML("defaultGameType", "Default game type", "on launch", [{ val: "last", label: "Last" }, { val: "classic", label: "Classic" }, { val: "infinite", label: "Infinite" }, { val: "adaptive", label: "Adaptive" }]) +
+      setChoiceHTML("defaultGameType", "Default game type", "on launch", [{ val: "last", label: "Last" }, { val: "classic", label: "Classic" }, { val: "infinite", label: "Infinite" }, { val: "adaptive", label: "Adaptive" }, { val: "custom", label: "Custom" }]) +
       setChoiceHTML("defaultDifficulty", "Default difficulty", "on launch", diffOpts) +
       setChoiceHTML("defaultStatsTab", "Default stats tab", "which tab opens first", statsOpts)
     ) +
@@ -9183,6 +9372,194 @@ function closeSettings() {
   const back = lastFocusedBeforeSettings;
   lastFocusedBeforeSettings = null;
   const target = (back && typeof back.focus === "function" && document.contains(back)) ? back : $("settingsGear");
+  if (target) { try { target.focus({ preventScroll: true }); } catch (_) { target.focus(); } }
+}
+
+/* ---------- Custom mode: the "Change" modal (author the active preset) ----------
+   Reuses the settings-modal chrome (.settings-modal / .set-row / .set-choice / .set-toggle /
+   .set-slider) but its controls read/write a working PRESET'S lever object instead of global
+   settings, dispatching on data-cm-* attributes. Every edit persists immediately to CUSTOM_KEY;
+   the custom page re-renders on close. */
+function cmToggle(key, name, desc, on, disabled) {
+  return `<div class="set-row${disabled ? " cm-disabled" : ""}"><div class="set-label"><span class="set-name">${name}</span>` +
+    (desc ? `<span class="set-desc">${desc}</span>` : "") + `</div>` +
+    `<div class="set-control"><button type="button" class="set-toggle" data-cm-toggle="${key}" aria-pressed="${!!on}" aria-label="${name}"${disabled ? " disabled" : ""}></button></div></div>`;
+}
+function cmChoice(key, name, desc, options, cur) {
+  const tabs = options.map((o) =>
+    `<button type="button" class="mode-tab${String(o.val) === String(cur) ? " active" : ""}" data-cm-choice="${key}" data-val="${escapeHtml(String(o.val))}">${escapeHtml(o.label)}</button>`
+  ).join("");
+  return `<div class="set-row"><div class="set-label"><span class="set-name">${name}</span>` +
+    (desc ? `<span class="set-desc">${desc}</span>` : "") + `</div>` +
+    `<div class="set-control set-choice">${tabs}</div></div>`;
+}
+function cmSlider(key, name, desc, min, max, val) {
+  return `<div class="set-row"><div class="set-label"><span class="set-name">${name}</span>` +
+    (desc ? `<span class="set-desc">${desc}</span>` : "") + `</div>` +
+    `<div class="set-control set-slider-row">` +
+      `<input type="range" class="set-slider" data-cm-slider="${key}" min="${min}" max="${max}" step="1" value="${val}" aria-label="${name}">` +
+      `<span class="set-slider-val" data-cm-slider-val="${key}">${cmSliderLabel(key, val)}</span>` +
+    `</div></div>`;
+}
+function cmSliderLabel(key, v) {
+  if (key === "seconds") return v > 0 ? v + "s" : "no clock";
+  if (key === "hintBudget") return v > 0 ? String(v) : "none";
+  return String(v);
+}
+
+function renderCustomModalBody() {
+  const body = $("customModalBody");
+  if (!body) return;
+  const store = loadCustom();
+  const preset = store.presets.find((p) => p.id === store.activeId) || store.presets[0];
+  const m = normalizeCustomMode(preset.mode);
+  const atCap = store.presets.length >= CUSTOM_MAX_PRESETS;
+  const canDelete = store.presets.length > 1;
+
+  const chips = store.presets.map((p) =>
+    `<button type="button" class="cm-preset-chip${p.id === preset.id ? " active" : ""}" data-cm-preset="${escapeHtml(p.id)}">${escapeHtml(p.name || "Custom")}</button>`
+  ).join("");
+  const presetRow =
+    `<div class="cm-presets">` +
+      `<div class="cm-preset-head">` +
+        `<input type="text" id="cmNameInput" class="cm-name-input" maxlength="${CUSTOM_NAME_MAX}" ` +
+          `value="${escapeHtml(preset.name || "")}" placeholder="name this mode" aria-label="Preset name" autocomplete="off" spellcheck="false">` +
+        `<div class="cm-preset-acts">` +
+          `<button type="button" class="btn-ghost" data-cm-act="new"${atCap ? " disabled" : ""}>+ New</button>` +
+          `<button type="button" class="btn-ghost" data-cm-act="delete"${canDelete ? "" : " disabled"}>Delete</button>` +
+        `</div>` +
+      `</div>` +
+      (store.presets.length > 1 ? `<div class="cm-preset-chips">${chips}</div>` : "") +
+    `</div>`;
+
+  body.innerHTML =
+    presetRow +
+    setSection("Timer",
+      cmSlider("seconds", "Countdown", "seconds per page — slide to 0 for no clock", CUSTOM_SECONDS_MIN, CUSTOM_SECONDS_MAX, m.seconds)
+    ) +
+    setSection("Answering",
+      cmToggle("lyricOnly", "Lyric lines only", "answer by typing a lyric line, never the title", m.lyricOnly, false) +
+      cmToggle("dropdown", "Suggestions", m.lyricOnly ? "off while answering by lyric line" : "show the title dropdown as you type", m.dropdown, m.lyricOnly) +
+      cmChoice("examples", "Examples after a miss", "how many songs to reveal", [{ val: 0, label: "0" }, { val: 1, label: "1" }, { val: 2, label: "2" }, { val: 3, label: "3" }], m.examples)
+    ) +
+    setSection("Hints",
+      cmSlider("hintBudget", "Hint budget", "total hint reveals for the whole run — 0 for none", 0, CUSTOM_HINT_MAX, m.hintBudget)
+    ) +
+    setSection("Words",
+      cmChoice("pool", "Word rarity", "which words you'll be asked", [{ val: "easy", label: "Common" }, { val: "all", label: "All" }, { val: "hard", label: "Rare" }, { val: "ultra", label: "Rarest" }], m.pool) +
+      cmToggle("noTitle", "Not in the title", "the prompt word never appears in the answer's title", m.noTitle, false)
+    );
+
+  wireCustomModalBody();
+}
+
+function wireCustomModalBody() {
+  const body = $("customModalBody");
+  if (!body) return;
+  // Apply a mutation to the active preset's mode, re-normalise (clamp + derive), persist, re-render.
+  const mutate = (fn) => {
+    const s = loadCustom();
+    const p = s.presets.find((x) => x.id === s.activeId) || s.presets[0];
+    const mode = normalizeCustomMode(p.mode);
+    fn(mode);
+    p.mode = normalizeCustomMode(mode);
+    saveCustom(s);
+    renderCustomModalBody();
+  };
+
+  body.querySelectorAll("[data-cm-toggle]").forEach((b) => b.addEventListener("click", () => {
+    if (b.disabled) return;
+    const k = b.dataset.cmToggle;
+    mutate((mode) => { mode[k] = !mode[k]; });
+  }));
+  body.querySelectorAll("[data-cm-choice]").forEach((b) => b.addEventListener("click", () => {
+    const k = b.dataset.cmChoice, v = b.dataset.val;
+    mutate((mode) => { mode[k] = (k === "pool") ? v : (parseInt(v, 10) || 0); });
+  }));
+  body.querySelectorAll("[data-cm-slider]").forEach((sl) => {
+    const k = sl.dataset.cmSlider;
+    const lbl = body.querySelector(`[data-cm-slider-val="${k}"]`);
+    // Live-update the label as they drag; only persist + re-render when the drag ends.
+    sl.addEventListener("input", () => { if (lbl) lbl.textContent = cmSliderLabel(k, parseInt(sl.value, 10) || 0); });
+    sl.addEventListener("change", () => mutate((mode) => { mode[k] = parseInt(sl.value, 10) || 0; }));
+  });
+
+  // Preset name — live rename of the active preset (no full re-render, to keep input focus).
+  const nameInput = $("cmNameInput");
+  if (nameInput) nameInput.addEventListener("input", () => {
+    const s = loadCustom();
+    const p = s.presets.find((x) => x.id === s.activeId) || s.presets[0];
+    p.name = nameInput.value.slice(0, CUSTOM_NAME_MAX);
+    saveCustom(s);
+    const chip = body.querySelector(".cm-preset-chip.active");
+    if (chip) chip.textContent = p.name || "Custom";
+  });
+
+  // Switch which preset is active (and thus edited / played next).
+  body.querySelectorAll("[data-cm-preset]").forEach((b) => b.addEventListener("click", () => {
+    const s = loadCustom();
+    s.activeId = b.dataset.cmPreset;
+    saveCustom(s);
+    renderCustomModalBody();
+  }));
+
+  // + New — clone the current preset so it's a starting point to tweak, then edit that.
+  const newBtn = body.querySelector('[data-cm-act="new"]');
+  if (newBtn) newBtn.addEventListener("click", () => {
+    const s = loadCustom();
+    if (s.presets.length >= CUSTOM_MAX_PRESETS) return;
+    const src = s.presets.find((x) => x.id === s.activeId) || s.presets[0];
+    const np = defaultCustomPreset();
+    np.name = uniqueCustomName("New mode", s.presets);
+    np.mode = normalizeCustomMode(src.mode);
+    s.presets.push(np);
+    s.activeId = np.id;
+    saveCustom(s);
+    renderCustomModalBody();
+  });
+  // Delete — never the last one (loadCustom always guarantees at least one preset).
+  const delBtn = body.querySelector('[data-cm-act="delete"]');
+  if (delBtn) delBtn.addEventListener("click", () => {
+    const s = loadCustom();
+    if (s.presets.length <= 1) return;
+    s.presets = s.presets.filter((x) => x.id !== s.activeId);
+    s.activeId = s.presets[0].id;
+    saveCustom(s);
+    renderCustomModalBody();
+  });
+}
+
+// A preset name not already taken (New mode, New mode 2, …).
+function uniqueCustomName(base, presets) {
+  const taken = new Set(presets.map((p) => (p.name || "").toLowerCase()));
+  if (!taken.has(base.toLowerCase())) return base;
+  for (let i = 2; i < 99; i++) { const n = `${base} ${i}`; if (!taken.has(n.toLowerCase())) return n; }
+  return base;
+}
+
+let lastFocusedBeforeCustomModal = null;
+function openCustomModal() {
+  lastFocusedBeforeCustomModal = document.activeElement;
+  renderCustomModalBody();
+  const m = $("customModal");
+  m.classList.add("open");
+  m.setAttribute("aria-hidden", "false");
+  document.body.classList.add("modal-open");
+  const close = $("customModalCloseBtn");
+  if (close) { try { close.focus({ preventScroll: true }); } catch (_) { close.focus(); } }
+}
+function closeCustomModal() {
+  const m = $("customModal");
+  if (!m.classList.contains("open")) return;
+  m.classList.remove("open");
+  m.setAttribute("aria-hidden", "true");
+  if (!$("settingsModal").classList.contains("open")) document.body.classList.remove("modal-open");
+  // Reflect the edits on the start-screen custom row (name, lever summary, tagline).
+  renderCustomRow();
+  updateTagline();
+  const back = lastFocusedBeforeCustomModal;
+  lastFocusedBeforeCustomModal = null;
+  const target = (back && typeof back.focus === "function" && document.contains(back)) ? back : $("customChangeBtn");
   if (target) { try { target.focus({ preventScroll: true }); } catch (_) { target.focus(); } }
 }
 
@@ -9936,6 +10313,35 @@ function buildDevApi() {
       open: () => openStudy("start"),                          // jump to the study page
       reset: () => { resetStudySet(); if ($("studyBody")) renderStudyPage(); },
     },
+    // Custom mode — author/seed presets and jump straight into a sandboxed run.
+    custom: {
+      presets: () => loadCustom().presets.map((p) => ({ id: p.id, name: p.name, mode: p.mode })),
+      active: () => activeCustomPreset(),
+      // Patch the active preset's levers, e.g. custom.set({ seconds: 5, pool: "ultra", hintBudget: 0 }).
+      set: (patch) => {
+        const s = loadCustom();
+        const p = s.presets.find((x) => x.id === s.activeId) || s.presets[0];
+        p.mode = normalizeCustomMode({ ...normalizeCustomMode(p.mode), ...(patch || {}) });
+        saveCustom(s);
+        syncCustomUI();
+        return p.mode;
+      },
+      // Create a fresh named preset from a full/partial lever set and make it active.
+      seed: (name, mode) => {
+        const s = loadCustom();
+        const np = defaultCustomPreset();
+        np.name = name || uniqueCustomName("Dev mode", s.presets);
+        np.mode = normalizeCustomMode({ ...CUSTOM_DEFAULT_MODE, ...(mode || {}) });
+        s.presets.push(np); s.activeId = np.id;
+        saveCustom(s);
+        syncCustomUI();
+        return np;
+      },
+      hintsLeft: () => hintBudgetLeft,                         // live hint budget remaining during a run
+      play: () => startCustom(),                               // start a run on the active preset
+      open: () => { gameType = "custom"; rememberGameType("custom"); renderStartPickers(); showScreen("start"); $("startContent").style.display = ""; },
+      reset: () => { resetCustom(); syncCustomUI(); },
+    },
     // Challenges (start any one; Impostor helpers for the fake-word minigame)
     challenge: {
       list: () => CHALLENGE_ORDER.slice(),
@@ -10017,6 +10423,7 @@ async function init() {
   $("playBtn").addEventListener("click", () => {
     if (gameType === "infinite") startInfinite(infiniteVariant);
     else if (gameType === "adaptive") startAdaptive();
+    else if (gameType === "custom") startCustom();
     else startGame();
   });
   $("dailyBtn").addEventListener("click", startDaily);
@@ -10096,6 +10503,10 @@ async function init() {
   $("settingsGear").addEventListener("click", openSettings);
   $("settingsCloseBtn").addEventListener("click", closeSettings);
   $("settingsScrim").addEventListener("click", closeSettings);
+  // Custom-mode "Change" modal — closed by ✕, scrim, ok, or ESC.
+  $("customModalCloseBtn").addEventListener("click", closeCustomModal);
+  $("customModalScrim").addEventListener("click", closeCustomModal);
+  $("customModalOkBtn").addEventListener("click", closeCustomModal);
   $("settingsModal").addEventListener("wheel", routeSettingsWheel, { passive: false });
   // Focus trap: keep Tab/Shift+Tab cycling within the open dialog.
   $("settingsModal").addEventListener("keydown", (e) => {
@@ -10120,6 +10531,7 @@ async function init() {
   });
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape" && $("settingsModal").classList.contains("open")) closeSettings();
+    else if (e.key === "Escape" && $("customModal").classList.contains("open")) closeCustomModal();
   });
   $("importFile").addEventListener("change", (e) => {
     const file = e.target.files && e.target.files[0];
