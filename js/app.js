@@ -232,8 +232,11 @@ function applySettings() {
 // (the player's active timezone, via todayKey — so it follows the same local
 // calendar as the daily reset) and only when motion is allowed.
 let snowRaf = null, snowFlakes = [], snowCanvas = null, snowCtx = null,
-    snowLast = 0, snowResizeT = null, snowResizeBound = false;
-function snowActive() { return todayKey().slice(5, 7) === "12" && !motionReduced(); }
+    snowLast = 0, snowResizeT = null, snowResizeBound = false, devForceSnow = false;
+// December (or dev-forced), and only when motion is allowed. The dev override
+// bypasses the calendar but still respects reduce-motion, so it exercises the
+// real gate rather than a special case.
+function snowActive() { return (devForceSnow || todayKey().slice(5, 7) === "12") && !motionReduced(); }
 function sizeSnowCanvas() {
   if (!snowCanvas) return;
   const dpr = Math.min(window.devicePixelRatio || 1, 2);
@@ -9975,6 +9978,7 @@ function buildDevApi() {
     eggs: { snake: () => slitherSnake(), doodle: (k) => addDoodle(k || "cat", "corner-br"),
             sparkle: () => celebrateCorrect(3), starShower: () => celebratePerfect(),
             blueWash: () => triggerBlueWash(), secret13: () => revealSecret13(),
+            snow: (on) => { devForceSnow = on === undefined ? !devForceSnow : !!on; refreshSnow(); return devForceSnow; },
             pen: (p) => setPen(p || null) },
     // Scattered desk beads (js/scatter.js) — cosmetic gutter spill
     scatter: {
