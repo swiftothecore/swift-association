@@ -2523,8 +2523,10 @@
      cover's own rounding/clip on top of the shared .page-flip-sheet styling. */
   .cover-flip { border-radius: 3px 5px 5px 3px; overflow: hidden; }
 
-  /* The start sheet ends right under the nav-card grid, so keep its foot snug. */
-  #screen-start.card { padding-bottom: 40px; }
+  /* The start sheet ends right under the nav-card grid, so keep its foot snug.
+     Skip it while booting so the padding can't outrank .card.is-booting's padding:0
+     (ID specificity) and leave a bare strip below the closed cover. */
+  #screen-start.card:not(.is-booting) { padding-bottom: 40px; }
 
   /* ---------- Stats page ---------- */
   #screen-stats.card { padding-top: 16px; }
