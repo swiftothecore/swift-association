@@ -991,6 +991,20 @@
     background-image: repeating-linear-gradient(45deg, rgba(245, 239, 225, 0.26) 0 2px, transparent 2px 8px);
   }
 
+  /* The full-width "front page" button keeps its era highlighter wash, but picks up a
+     faint graph-paper grid so it reads as patterned alongside the dotted challenges and
+     diagonally-ruled replay buttons. Inked (not a fixed hue) so it rides every era. */
+  #againBtn {
+    background-image:
+      repeating-linear-gradient(0deg, rgba(43, 39, 34, 0.07) 0 1px, transparent 1px 11px),
+      repeating-linear-gradient(90deg, rgba(43, 39, 34, 0.07) 0 1px, transparent 1px 11px);
+  }
+  #againBtn:hover {
+    background-image:
+      repeating-linear-gradient(0deg, rgba(245, 239, 225, 0.10) 0 1px, transparent 1px 11px),
+      repeating-linear-gradient(90deg, rgba(245, 239, 225, 0.10) 0 1px, transparent 1px 11px);
+  }
+
   /* ---------- Album Focus page — a pinned board of album snapshots ----------
      The 12 studio albums as squares tacked to the desk in a loose 3x4 grid. Each
      picture "develops" with progress: blank when fresh, a faint era wash once
