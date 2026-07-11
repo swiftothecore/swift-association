@@ -1567,6 +1567,14 @@
   .va-mark { flex: none; color: var(--bead); font-size: 13px; letter-spacing: -1px; }
   .va-text { font-style: italic; }
   .va-text mark { background: var(--highlighter); color: var(--ink); padding: 0 2px; font-weight: 700; }
+  /* Long anthologies fold: the first few lines show, the rest wait behind "+ N more". */
+  .va-row.va-folded { display: none; }
+  .va-more {
+    display: block; margin: 8px auto 0; padding: 2px 1px; cursor: pointer;
+    font-family: var(--type); font-size: 10px; letter-spacing: 1px; text-transform: uppercase;
+    color: var(--ink-soft); background: none; border: none; border-bottom: 1px dotted var(--ink-soft);
+  }
+  .va-more:hover { color: var(--ink); border-bottom-color: var(--ink); }
 
   /* ---------- Word + highlighter ---------- */
   .word-label {
@@ -2979,19 +2987,24 @@
   @keyframes skillLvPop { from { transform: scale(0); opacity: 0; } 60% { transform: scale(1.25); } to { transform: scale(1); opacity: 1; } }
 
   /* newly-unlocked recap on the results page */
-  .ach-recap { margin: 18px 0 4px; text-align: center; }
-  .ach-recap .ach-recap-title { font-family: var(--type); font-size: 11px; letter-spacing: 1px; color: var(--ink-soft); text-transform: uppercase; margin-bottom: 10px; }
-  .ach-recap-row { display: flex; flex-wrap: wrap; gap: 14px 18px; justify-content: center; }
-  .ach-recap .ach-chip { display: flex; flex-direction: column; align-items: center; gap: 4px; width: 84px;
+  /* Newly-unlocked recap — a compact inline row (label + small charm chips), capped in
+     app.js with a "+N more →" overflow chip that jumps to the full collection. */
+  .ach-recap { margin: 10px 0 0; text-align: center; }
+  .ach-recap-row { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; justify-content: center; }
+  .ach-recap .ach-chip { display: inline-flex; align-items: center; gap: 6px;
     background: none; border: none; padding: 4px 2px; border-radius: 8px; cursor: pointer;
     font: inherit; transition: transform 0.12s ease, background 0.12s ease; }
   .ach-recap .ach-chip:hover { transform: translateY(-2px); background: var(--page-wash); }
   .ach-recap .ach-chip:focus-visible { outline: 2px solid var(--ink-accent); outline-offset: 2px; }
-  .ach-recap .ach-chip .charm { width: 38px; height: 38px; color: var(--bead); }
+  .ach-recap .ach-chip .charm { width: 24px; height: 24px; color: var(--bead); }
   .ach-recap .ach-chip .charm svg { width: 100%; height: 100%; overflow: visible; }
   .ach-recap .ach-chip .charm .ink { fill: none; stroke: var(--ink); stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
   .ach-recap .ach-chip .charm .ink-fill { fill: var(--bead); stroke: var(--ink); stroke-width: 1.2; }
-  .ach-recap .ach-chip .nm { font-family: var(--hand); font-size: 16px; color: var(--ink); line-height: 1.05; }
+  .ach-recap .ach-chip .nm { font-family: var(--hand); font-size: 15px; color: var(--ink); line-height: 1.05; white-space: nowrap; }
+  .ach-recap .ach-chip--more { font-family: var(--type); font-size: 10px; letter-spacing: 1px;
+    text-transform: uppercase; color: var(--ink-soft); border-bottom: 1px dotted var(--ink-soft);
+    border-radius: 0; padding: 2px 1px; }
+  .ach-recap .ach-chip--more:hover { transform: none; background: none; color: var(--ink); border-bottom-color: var(--ink); }
 
   /* charm tiles — used by the grouped grid on the Charm Collection page */
   .ach-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 6px; }
@@ -3372,6 +3385,41 @@
     .nav-card-kicker { font-size: 7.5px; letter-spacing: 1px; }
   }
 
+  /* Results-page variant: the six keepsake cards collapse into one row of icon discs —
+     the full taped cards live on the front page, so here they only need to point the way.
+     Names stay in the DOM (visually hidden) for the accessible label; a data-tip carries
+     the title + kicker on hover. */
+  .see-also--row { display: flex; justify-content: center; gap: 14px; margin: 24px 0 0; }
+  .see-also--row .nav-card {
+    flex: 0 0 auto; display: block; padding: 0; margin: 0;
+    background: none; border: none; box-shadow: none; border-radius: 50%;
+  }
+  .see-also--row .nav-card-seat {
+    width: 54px; height: 54px; margin: 0;
+    border: 1px solid rgba(43, 39, 34, 0.22);
+    box-shadow: 0 1px 2px rgba(43, 39, 34, 0.1);
+  }
+  .see-also--row .nav-ic { width: 42px; height: 42px; }
+  .see-also--row .nav-card-title,
+  .see-also--row .nav-card-kicker {
+    position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; border: 0;
+    overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap;
+  }
+  .see-also--row .nav-card:hover, .see-also--row .nav-card:focus-visible { box-shadow: none; }
+  .see-also--row .nav-card:hover .nav-card-seat,
+  .see-also--row .nav-card:focus-visible .nav-card-seat {
+    box-shadow: 0 3px 7px rgba(43, 39, 34, 0.18);
+  }
+  .see-also--row .nav-card:focus-visible .nav-card-seat {
+    outline: 2px dotted rgba(43, 39, 34, 0.55); outline-offset: 3px;
+  }
+  @media (max-width: 480px) {
+    .see-also--row { gap: 9px; margin: 20px 0 0; }
+    .see-also--row .nav-card { padding: 0; }
+    .see-also--row .nav-card-seat { width: 44px; height: 44px; margin: 0; }
+    .see-also--row .nav-ic { width: 34px; height: 34px; }
+  }
+
   /* ===== Mastery screen ===== */
   .mastery-page { --m-accent: 168, 87, 122; --m-gold: 199, 149, 31; --m-red: 178, 58, 58; --m-goldink: 150, 105, 20; }
 
@@ -3675,26 +3723,26 @@
   /* Bracelet-charm glyph in the reward ladder (reuses the global .b-bead/.b-gloss styling). */
   .charm-preview { overflow: visible; }
 
-  /* ---- Results-screen skills recap (what each skill earned this game + a live Mastery bar).
+  /* ---- Results-screen skills recap — a compact margin note (one inline row of skill
+     earnings + a one-line mastery status). The full mastery bar only appears on a
+     mastery MOMENT (unlock / level-up), where celebrateMastery lands on top of it.
      Carries the mastery rose accent locally, since it lives on the results card, not the
      mastery page. ---- */
-  .skills-recap { --m-accent: 168, 87, 122; margin: 18px 0 4px; }
-  .skills-recap .sr-head { font-family: var(--type); font-size: 11px; letter-spacing: 1px;
-    color: var(--ink-soft); text-transform: uppercase; text-align: center; margin-bottom: 12px; }
-  .skills-recap .sr-row { display: flex; flex-wrap: wrap; gap: 8px 10px; justify-content: center; }
-  .sr-chip { display: flex; align-items: center; gap: 8px; padding: 6px 11px 6px 8px;
-    border: 1px solid rgba(43, 39, 34, 0.14); border-radius: 4px; background: var(--paper);
-    box-shadow: 0 1px 2px rgba(43, 39, 34, 0.05); }
-  .sr-chip.up { border-color: rgba(var(--m-accent), 0.55); background: rgba(var(--m-accent), 0.07); }
-  .sr-chip .sr-ic { width: 24px; height: 24px; flex: none; color: rgba(var(--m-accent), 0.85); }
-  .sr-chip .sr-ic .charm { width: 100%; height: 100%; display: block; }
-  .sr-chip .sr-ic svg { width: 100%; height: 100%; overflow: visible; }
-  .sr-chip .sr-ic .ink { fill: none; stroke: var(--ink); stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
-  .sr-chip .sr-ic .ink-fill { fill: rgba(var(--m-accent), 0.75); stroke: var(--ink); stroke-width: 1.2; }
-  .sr-body { display: flex; flex-direction: column; gap: 1px; line-height: 1.1; }
-  .sr-name { font-family: var(--hand); font-weight: 700; font-size: 15px; color: var(--ink); }
+  .skills-recap { --m-accent: 168, 87, 122; margin: 20px 0 0; }
+  .sr-line { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 4px 15px; }
+  .sr-lab { font-family: var(--type); font-size: 10px; letter-spacing: 1.5px;
+    text-transform: uppercase; color: var(--ink-soft); }
+  .sr-it { display: inline-flex; align-items: center; gap: 5px; line-height: 1.2; }
+  .sr-it .sr-ic { width: 18px; height: 18px; flex: none; color: rgba(var(--m-accent), 0.85); }
+  .sr-it .sr-ic .charm { width: 100%; height: 100%; display: block; }
+  .sr-it .sr-ic svg { width: 100%; height: 100%; overflow: visible; }
+  .sr-it .sr-ic .ink { fill: none; stroke: var(--ink); stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+  .sr-it .sr-ic .ink-fill { fill: rgba(var(--m-accent), 0.75); stroke: var(--ink); stroke-width: 1.2; }
+  .sr-nm { font-family: var(--hand); font-weight: 700; font-size: 15px; color: var(--ink); }
   .sr-xp { font-family: var(--type); font-size: 9.5px; letter-spacing: 0.04em; text-transform: uppercase; color: var(--ink-soft); }
-  .sr-chip.up .sr-xp { color: rgba(var(--m-accent), 0.95); }
+  .sr-it.up .sr-xp { color: rgba(var(--m-accent), 0.95); }
+  .sr-mline { text-align: center; font-family: var(--type); font-size: 10px; letter-spacing: 1px;
+    text-transform: uppercase; color: var(--ink-soft); margin-top: 7px; }
   .sr-mastery { max-width: 320px; margin: 14px auto 0; }
   .sr-mtop { display: flex; justify-content: space-between; align-items: baseline; gap: 8px;
     font-family: var(--type); font-size: 10.5px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-soft); }

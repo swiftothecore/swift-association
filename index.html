@@ -787,12 +787,6 @@ if (location.pathname.endsWith('/index.html')) {
     <p class="bracelet-caption">the bracelet you made</p>
     <div id="resultBracelet" class="bracelet bracelet-finished"></div>
 
-    <div id="verseAnthology" class="verse-anthology" style="display:none;"></div>
-
-    <div id="resultSkills" class="skills-recap" style="display:none;"></div>
-
-    <div id="resultAchievements" class="ach-recap" style="display:none;"></div>
-
     <div id="namePrompt" class="name-prompt" style="display:none;">
       <p>sign your notebook — you will be remembered</p>
       <input id="nameInput" type="text" maxlength="20" placeholder="your name" aria-label="Your name" />
@@ -804,8 +798,17 @@ if (location.pathname.endsWith('/index.html')) {
     <div id="resultPodium" class="podium"></div>
     <button id="againBtn" class="btn-primary" style="margin-top:18px;">Turn back to the front page</button>
     <button id="keepGoingBtn" class="btn-ghost" style="display:none;">keep going in Infinite mode →</button>
-    <div class="see-also">
-      <button id="viewRecordsBtn" class="nav-card" data-era-tint="gold">
+
+    <!-- The fine print: keepsake lines + progression recaps sit below the actions so the
+         page a player most often wants (play again) never scrolls out of reach. -->
+    <div id="verseAnthology" class="verse-anthology" style="display:none;"></div>
+
+    <div id="resultSkills" class="skills-recap" style="display:none;"></div>
+
+    <div id="resultAchievements" class="ach-recap" style="display:none;"></div>
+
+    <div class="see-also see-also--row">
+      <button id="viewRecordsBtn" class="nav-card" data-tip="records · your best runs" data-era-tint="gold">
         <span class="nav-card-seat">
           <svg class="nav-ic" width="50" height="50" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <path d="M19 25 L22.5 26 L21 43 L19.2 40.2 L17.4 43 Z" fill="rgba(199,149,31,.4)" stroke-width="1.4"/>
@@ -818,7 +821,7 @@ if (location.pathname.endsWith('/index.html')) {
         <span class="nav-card-title">records</span>
         <span class="nav-card-kicker">your best runs</span>
       </button>
-      <button id="viewAchievementsBtn" class="nav-card" data-era-tint="lavender">
+      <button id="viewAchievementsBtn" class="nav-card" data-tip="charms · achievements" data-era-tint="lavender">
         <span class="nav-card-seat">
           <svg class="nav-ic" width="50" height="50" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <path d="M8 16 Q24 39 40 16" stroke-width="1.5"/>
@@ -843,7 +846,7 @@ if (location.pathname.endsWith('/index.html')) {
         <span class="nav-card-title">charms</span>
         <span class="nav-card-kicker">achievements</span>
       </button>
-      <button id="resultsStatsBtn" class="nav-card" data-era-tint="denim">
+      <button id="resultsStatsBtn" class="nav-card" data-tip="stats · your numbers" data-era-tint="denim">
         <span class="nav-card-seat">
           <svg class="nav-ic" width="50" height="50" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <path d="M18 12 L18 38 M26 12 L26 38 M34 12 L34 38 M12 19 L38 19 M12 29 L38 29" stroke="rgba(43,39,34,.09)" stroke-width="1"/>
@@ -859,7 +862,7 @@ if (location.pathname.endsWith('/index.html')) {
         <span class="nav-card-title">stats</span>
         <span class="nav-card-kicker">your numbers</span>
       </button>
-      <button id="viewStudyBtn" class="nav-card" data-era-tint="sage">
+      <button id="viewStudyBtn" class="nav-card" data-tip="study · review your misses" data-era-tint="sage">
         <span class="nav-card-seat">
           <svg class="nav-ic" width="50" height="50" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <rect x="11" y="15" width="24" height="17" rx="2.5" transform="rotate(-7 24 23)" fill="rgba(122,158,94,.14)" stroke-width="1.4"/>
@@ -871,7 +874,7 @@ if (location.pathname.endsWith('/index.html')) {
         <span class="nav-card-title">study</span>
         <span class="nav-card-kicker">review your misses</span>
       </button>
-      <button id="viewChallengesBtn" class="nav-card" data-era-tint="graphite">
+      <button id="viewChallengesBtn" class="nav-card" data-tip="challenges · unlock &amp; defeat" data-era-tint="graphite">
         <span class="nav-card-seat">
           <svg class="nav-ic" width="50" height="50" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <circle cx="24" cy="23" r="13" fill="rgba(43,39,34,.10)" stroke-width="1.6"/>
@@ -884,7 +887,7 @@ if (location.pathname.endsWith('/index.html')) {
         <span class="nav-card-title">challenges</span>
         <span class="nav-card-kicker">unlock &amp; defeat</span>
       </button>
-      <button id="viewMasteryBtn" class="nav-card" data-era-tint="rose">
+      <button id="viewMasteryBtn" class="nav-card" data-tip="mastery · skills &amp; rewards" data-era-tint="rose">
         <span class="nav-card-seat">
           <svg class="nav-ic" width="50" height="50" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <path d="M18 27 L14.5 42 L20 38.5 L24 42 L28 38.5 L33.5 42 L30 27 Z" fill="rgba(168,87,122,.18)" stroke-width="1.4"/>

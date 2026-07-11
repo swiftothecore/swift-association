@@ -536,7 +536,8 @@ function makeTapeStrip(spot) {
 }
 function scatterNavTape(screenName) {
   const root = screens[screenName] || document;
-  const cards = [...root.querySelectorAll(".nav-card")];
+  // The results page's compact icon row (.see-also--row) has no card face to tape.
+  const cards = [...root.querySelectorAll(".nav-card")].filter((c) => !c.closest(".see-also--row"));
   cards.forEach((card, i) => {
     card.querySelectorAll(".nav-tape").forEach((t) => t.remove());   // clear any prior strip
     card.appendChild(makeTapeStrip(NAV_TAPE_PATTERN[i % NAV_TAPE_PATTERN.length]));
@@ -1614,35 +1615,49 @@ function scheduleToastDismiss() {
 // in faint handwriting like verses pressed into the notebook. Skipped when empty or on
 // a held-back daily score (it would leak how the round went). ★ = word-perfect line,
 // ★★ = a whole verse.
+const VA_SHOWN = 3;   // keepsake lines shown before the rest fold behind "+ N more"
 function renderVerseAnthology() {
   const el = $("verseAnthology");
   if (!el) return;
   if (!verseKeepsake.length || (gameType === "daily" && settings.hideDailyScore)) {
     el.style.display = "none"; el.innerHTML = ""; return;
   }
-  const rows = verseKeepsake.map((k) => {
+  const rows = verseKeepsake.map((k, i) => {
     const mark = k.tier === "verse" ? "★★" : "★";
-    return `<li class="va-row"><span class="va-mark">${mark}</span>` +
+    return `<li class="va-row${i >= VA_SHOWN ? " va-folded" : ""}"><span class="va-mark">${mark}</span>` +
       `<span class="va-text">${highlightWord(k.line, k.word)}</span></li>`;
   }).join("");
   const n = verseKeepsake.length;
+  const folded = n - VA_SHOWN;
+  const more = folded > 0
+    ? `<button type="button" class="va-more">+ ${folded} more line${folded > 1 ? "s" : ""}</button>`
+    : "";
   el.innerHTML = `<p class="va-caption">pages you filled in — ${n} line${n > 1 ? "s" : ""} from memory</p>` +
-    `<ul class="va-list">${rows}</ul>`;
+    `<ul class="va-list">${rows}</ul>` + more;
+  const moreBtn = el.querySelector(".va-more");
+  if (moreBtn) moreBtn.addEventListener("click", () => {
+    el.querySelectorAll(".va-folded").forEach((r) => r.classList.remove("va-folded"));
+    moreBtn.remove();
+  });
   el.style.display = "";
 }
 
+const ACH_RECAP_SHOWN = 4;   // unlock chips shown before "+N more" points at the collection
 function renderResultRecap() {
   const el = $("resultAchievements");
   if (!el) return;
   const ids = [...new Set(newlyUnlocked)].filter((id) => ACH_BY_ID[id] && earnedAchievements[id]);
   if (!ids.length) { el.style.display = "none"; el.innerHTML = ""; return; }
-  const chips = ids.map((id) => {
+  const chips = ids.slice(0, ACH_RECAP_SHOWN).map((id) => {
     const a = ACH_BY_ID[id];
     return `<button type="button" class="ach-chip" data-tip="${escapeHtml(a.desc)}" data-tip-delay="120">${charmMarkup(a.icon, achColor(a))}<span class="nm">${escapeHtml(a.name)}</span></button>`;
   }).join("");
-  el.innerHTML = `<div class="ach-recap-title">newly unlocked</div><div class="ach-recap-row">${chips}</div>`;
+  const extra = ids.length > ACH_RECAP_SHOWN
+    ? `<button type="button" class="ach-chip ach-chip--more">+${ids.length - ACH_RECAP_SHOWN} more →</button>`
+    : "";
+  el.innerHTML = `<div class="ach-recap-row"><span class="sr-lab">newly unlocked</span>${chips}${extra}</div>`;
   el.style.display = "";
-  // tapping any charm jumps to the full Charm Collection (back-arrow returns here)
+  // tapping any charm (or the overflow count) jumps to the full Charm Collection
   el.querySelectorAll(".ach-chip").forEach((c) => c.addEventListener("click", () => openAchievements("results")));
 }
 
@@ -1664,18 +1679,20 @@ function renderSkillsRecap() {
   const masteryMoment = res.masteryJustUnlocked || !!res.masteryUp;
   if (!gained.length && !masteryMoment) { el.style.display = "none"; el.innerHTML = ""; return; }
 
-  const chips = gained.map((sk) => {
+  const items = gained.map((sk) => {
     const up = levelTo[sk.id];
-    return `<div class="sr-chip${up ? " up" : ""}">` +
+    return `<span class="sr-it${up ? " up" : ""}">` +
       `<span class="sr-ic">${charmMarkup(sk.icon)}</span>` +
-      `<span class="sr-body"><span class="sr-name">${escapeHtml(sk.name)}</span>` +
-      `<span class="sr-xp">+${delta[sk.id]} ink${up ? ` · level ${up}` : ""}</span></span></div>`;
+      `<span class="sr-nm">${escapeHtml(sk.name)}</span>` +
+      `<span class="sr-xp">+${delta[sk.id]}${up ? ` · lv ${up}` : ""}</span></span>`;
   }).join("");
 
-  // Mastery line: the live bar to the next level (or progress toward the unlock gate).
+  // Mastery line. The full live bar is reserved for a mastery MOMENT (the unlock or a
+  // level-up, where celebrateMastery lands on top of it); ordinary games get a single
+  // typewriter line so the recap stays a margin note, not a section.
   const m = res.mastery;
   let mastery;
-  if (isMasteryUnlocked(m)) {
+  if (masteryMoment) {
     const lvl = masteryLevelFromXp(m.masteryXp);
     if (lvl >= MASTERY_MAX_LEVEL) {
       mastery = `<div class="sr-mastery"><div class="sr-mtop"><span>Mastery — level ${lvl}</span>` +
@@ -1688,16 +1705,20 @@ function renderSkillsRecap() {
         `<span class="sr-mxp">${m.masteryXp - cur} / ${next - cur} to ${lvl + 1}</span></div>` +
         `<div class="ms-bar sr-mbar"><i style="width:${pct.toFixed(1)}%"></i></div></div>`;
     }
+  } else if (isMasteryUnlocked(m)) {
+    const lvl = masteryLevelFromXp(m.masteryXp);
+    if (lvl >= MASTERY_MAX_LEVEL) {
+      mastery = `<div class="sr-mline">mastery · level ${lvl} · max</div>`;
+    } else {
+      const cur = masteryXpForLevel(lvl), next = masteryXpForLevel(lvl + 1);
+      mastery = `<div class="sr-mline">mastery · level ${lvl} · ${m.masteryXp - cur} / ${next - cur} to ${lvl + 1}</div>`;
+    }
   } else {
-    const total = totalSkillLevels(m);
-    const pct = Math.max(0, Math.min(100, (total / MASTERY_GATE) * 100));
-    mastery = `<div class="sr-mastery locked"><div class="sr-mtop"><span>Mastery locked</span>` +
-      `<span class="sr-mxp">${total} / ${MASTERY_GATE} skill levels</span></div>` +
-      `<div class="ms-bar sr-mbar"><i style="width:${pct.toFixed(1)}%"></i></div></div>`;
+    mastery = `<div class="sr-mline">mastery locked · ${totalSkillLevels(m)} / ${MASTERY_GATE} skill levels</div>`;
   }
 
-  el.innerHTML = `<div class="sr-head">skills this game</div>` +
-    (chips ? `<div class="sr-row">${chips}</div>` : "") + mastery;
+  el.innerHTML =
+    (items ? `<div class="sr-line"><span class="sr-lab">skills</span>${items}</div>` : "") + mastery;
   el.style.display = "";
 
   celebrateMastery(res, el);
