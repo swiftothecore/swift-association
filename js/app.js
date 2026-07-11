@@ -24,7 +24,9 @@ import {
   MASTERY_REWARDS, MASTERY_REWARD_BY_ID, MASTERY_GATE, MASTERY_MAX_LEVEL, SKILL_MAX_LEVEL,
   MASTERY_TITLES, MASTERY_TITLE_BY_VALUE, masteryDefaultTitle,
   skillXpForLevel, skillLevelFromXp, masteryXpForLevel, masteryLevelFromXp,
+  POLAROID_DEVELOP_MS, POLAROID_TOTAL,
 } from "./config.js";
+import { POLAROIDS, POLAROID_BY_ID } from "./polaroids.js";
 import { buildBraceletSVG, charmPreviewSVG } from "./bracelet.js";
 import { wordRegex as wordRegexCore, extractLineWithWord as extractLineWithWordCore, highlightWord as highlightWordCore } from "./match.js";
 import {
@@ -33,6 +35,7 @@ import {
   loadHistory, appendHistory,
   loadStats, updateStats, totalPlayed,
   loadAchievements, saveAchievements,
+  loadKeepsakes, saveKeepsakes, resetKeepsakes,
   loadMode,
   loadDailyResult, saveDailyResult, clearDailyResult, dailyTotals, dailyPlayedDates,
   loadDailyProgress, saveDailyProgress, clearDailyProgress,
@@ -2481,8 +2484,36 @@ const POL_CLIP_SVG = `<svg class="pol-clip" viewBox="0 0 24 24" fill="none" stro
 // `tilt`/`small` tune the look. The washi tape colour is era-tinted in CSS.
 function polaroidHTML(photo, caption, opts = {}) {
   const tilt = opts.tilt != null ? opts.tilt : -4;
-  const cls = "polaroid" + (photo ? "" : " is-empty") + (opts.small ? " polaroid-sm" : "");
   const cap = (caption || "").trim();
+
+  // Keepsake variant — a collectible polaroid carrying SVG art (not a photo data-URL), a
+  // two-line caption, and one of three develop states. It shares the frame, washi tape and
+  // tilt with the profile polaroid below; only the photo well and caption block differ.
+  //   locked     — never earned: an undeveloped --ink-soft wash, caption hidden (a mystery).
+  //   developing — earned <13min ago: solid black exposed film, the name shown.
+  //   developed  — earned 13min+ ago: the full photo + both caption lines.
+  if (opts.keepsake) {
+    const state = opts.state || "locked";
+    const cls = "polaroid polaroid-keep is-" + state + (opts.small ? " polaroid-sm" : "");
+    let well, lines;
+    if (state === "developed") {
+      well = `<span class="pol-photo pol-art">${opts.art || ""}</span>`;
+      lines = `<span class="pol-lip-main">${escapeHtml(cap)}</span>` +
+        (opts.sub ? `<span class="pol-lip-sub">${escapeHtml(opts.sub)}</span>` : "");
+    } else if (state === "developing") {
+      well = `<span class="pol-photo pol-film"></span>`;
+      lines = `<span class="pol-lip-main">${escapeHtml(cap)}</span>`;
+    } else {
+      well = `<span class="pol-photo pol-wash" aria-hidden="true"></span>`;
+      lines = "";
+    }
+    return `<span class="${cls}" style="--tilt:${tilt}deg">` +
+      `<span class="pol-tape" aria-hidden="true"></span>` +
+      well +
+      `<span class="pol-cap">${lines}</span></span>`;
+  }
+
+  const cls = "polaroid" + (photo ? "" : " is-empty") + (opts.small ? " polaroid-sm" : "");
   if (photo) {
     return `<span class="${cls}" style="--tilt:${tilt}deg">` +
       `<span class="pol-tape" aria-hidden="true"></span>` +
@@ -2492,6 +2523,41 @@ function polaroidHTML(photo, caption, opts = {}) {
   return `<span class="${cls}" style="--tilt:${tilt}deg">${POL_CLIP_SVG}` +
     `<span class="pol-photo pol-add">${POL_CAMERA_SVG}</span>` +
     `<span class="pol-lip">add a photo</span></span>`;
+}
+
+/* ---------- Keepsakes: the collectible polaroid set (see js/polaroids.js) ---------- */
+// A polaroid develops like real instant film: solid black on unlock, the photo fading in
+// POLAROID_DEVELOP_MS (13 min) later. "developed" is DERIVED from the stored unlock time at
+// render, never a running timer — so it survives reloads/closes and self-heals.
+function polaroidDeveloped(iso) {
+  if (!iso) return false;
+  const t = Date.parse(iso);
+  return Number.isFinite(t) && (Date.now() - t) >= POLAROID_DEVELOP_MS;
+}
+// "locked" (not earned) | "developing" (earned, still black) | "developed" (earned, 13min+).
+function polaroidState(id, earned) {
+  const map = earned || loadKeepsakes();
+  const iso = map[id];
+  if (!iso) return "locked";
+  return polaroidDeveloped(iso) ? "developed" : "developing";
+}
+// Build a keepsake tile for polaroid `p` at its current develop state. `small` shrinks it.
+function keepsakePolaroidHTML(p, opts = {}) {
+  const state = opts.state || polaroidState(p.id);
+  return polaroidHTML(null, p.name, { keepsake: true, state, art: p.art, sub: p.sub, tilt: opts.tilt, small: opts.small });
+}
+// Re-render the Keepsakes page if it's on screen (no-op until #screen-keepsakes exists).
+function refreshKeepsakes() {
+  if (typeof renderKeepsakesPage === "function" && $("keepsakesBody")) renderKeepsakesPage();
+}
+// Dev-only: grant `id` backdated `agoMs` milliseconds (0 = fresh/developing, >13min = developed).
+function devSetKeepsake(id, agoMs) {
+  if (!POLAROID_BY_ID[id]) return "unknown polaroid: " + id;
+  const e = loadKeepsakes();
+  e[id] = new Date(Date.now() - (agoMs || 0)).toISOString();
+  saveKeepsakes(e);
+  refreshKeepsakes();
+  return polaroidState(id);
 }
 
 // Read a chosen image file, center-crop it to a square and downscale it to a
@@ -10452,6 +10518,27 @@ function buildDevApi() {
       play: () => startCustom(),                               // start a run on the active preset
       open: () => { gameType = "custom"; rememberGameType("custom"); renderStartPickers(); showScreen("start"); $("startContent").style.display = ""; },
       reset: () => { resetCustom(); syncCustomUI(); },
+    },
+    // Keepsakes — the collectible polaroid set. Grant/backdate/clear polaroids so the three
+    // develop states (locked / developing / developed) can be eyeballed without the 13-min
+    // wait. These write the store directly (no toast); earnPolaroid is the real earn path.
+    keepsakes: {
+      list: () => { const e = loadKeepsakes(); return POLAROIDS.map((p) => ({ id: p.id, name: p.name, state: polaroidState(p.id, e), at: e[p.id] || null })); },
+      state: (id) => polaroidState(id),
+      // Grant `id` as freshly unlocked (still developing / black film).
+      earn: (id) => devSetKeepsake(id, 0),
+      // Grant `id` already developed (backdated past the 13-min line).
+      develop: (id) => devSetKeepsake(id, POLAROID_DEVELOP_MS + 1000),
+      // Grant `id` backdated `min` minutes, so you can watch it cross into developed live.
+      setTime: (id, min) => devSetKeepsake(id, Math.max(0, (min || 0)) * 60000),
+      remove: (id) => { const e = loadKeepsakes(); delete e[id]; saveKeepsakes(e); refreshKeepsakes(); return polaroidState(id); },
+      // Flood the whole set: developed by default, or pass false for all-developing.
+      all: (developed = true) => {
+        const e = loadKeepsakes(); const ago = developed ? POLAROID_DEVELOP_MS + 1000 : 0;
+        for (const p of POLAROIDS) e[p.id] = new Date(Date.now() - ago).toISOString();
+        saveKeepsakes(e); refreshKeepsakes(); return POLAROIDS.length;
+      },
+      reset: () => { resetKeepsakes(); refreshKeepsakes(); },
     },
     // Album Focus — force any album's board state without grinding runs, then eyeball
     // the pinned board (fresh / played / beaten / perfected + the gold-leaf treatment).

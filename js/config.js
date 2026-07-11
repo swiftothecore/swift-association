@@ -32,6 +32,15 @@ export const SEARCH_KEY = "swiftSongAssociation.search";                // Swift
 export const MASTERY_KEY = "swiftSongAssociation.mastery";              // skills + mastery progression — { skills:{...xp}, masteryXp, unlocked:{[rewardId]:isoDate} }
 export const STUDY_KEY = "swiftSongAssociation.studySet";              // Study mode Leitner deck — { words:{[word]:{box,seen,due}}, sessions }
 export const CUSTOM_KEY = "swiftSongAssociation.custom";               // player-authored modes — { presets:[{id,name,mode}], activeId }
+export const KEEPSAKES_KEY = "swiftSongAssociation.keepsakes";         // earned collectibles — { [polaroidId]: isoDate } (unlock time, mirrors achievements)
+
+// Keepsakes — the collectible polaroid set (subjects + SVGs live in js/polaroids.js).
+// A polaroid develops like real instant film: solid black on unlock, the photo fading
+// in POLAROID_DEVELOP_MS later. "developed" is derived from unlock+this at render time,
+// never a running timer, so it survives reloads and self-heals. POLAROID_TOTAL is the
+// counter denominator (a Taylor number); the set grows toward it.
+export const POLAROID_DEVELOP_MS = 13 * 60 * 1000;   // 13 real minutes
+export const POLAROID_TOTAL = 22;
 
 // Every persisted key shares this namespace; export/import and "clear everything"
 // sweep all keys under it.

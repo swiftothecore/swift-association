@@ -10,6 +10,7 @@ import {
   ADAPTIVE_KEY,
   STUDY_KEY, STUDY_MAX_BOX, STUDY_INTERVALS,
   CUSTOM_KEY, CUSTOM_DEFAULT_MODE,
+  KEEPSAKES_KEY,
   MASTERY_KEY, SKILL_IDS, MASTERY_REWARDS, MASTERY_GATE,
   skillLevelFromXp, masteryLevelFromXp,
   MODES, MODE_ORDER, TOTAL_ROUNDS,
@@ -76,6 +77,23 @@ export function loadAchievements() {
 }
 export function saveAchievements(earned) {
   try { localStorage.setItem(ACH_KEY, JSON.stringify(earned)); } catch (e) { /* ignore */ }
+}
+
+/* ---------- Keepsakes (collectible polaroids) ---------- */
+// Same shape as achievements: { [polaroidId]: isoDate }. The isoDate is the unlock time,
+// which drives the develop clock (unlock+POLAROID_DEVELOP_MS = developed) at render time.
+export function loadKeepsakes() {
+  try {
+    const raw = localStorage.getItem(KEEPSAKES_KEY);
+    if (raw) { const o = JSON.parse(raw); if (o && typeof o === "object") return o; }
+  } catch (e) { /* ignore */ }
+  return {};
+}
+export function saveKeepsakes(earned) {
+  try { localStorage.setItem(KEEPSAKES_KEY, JSON.stringify(earned)); } catch (e) { /* ignore */ }
+}
+export function resetKeepsakes() {
+  try { localStorage.removeItem(KEEPSAKES_KEY); } catch (e) { /* ignore */ }
 }
 
 /* ---------- Challenges mode (progress + tokens) ---------- */

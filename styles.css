@@ -729,6 +729,49 @@
   @media (prefers-reduced-motion: reduce) { .bp-photo-scrim { transition: none; } }
   @media (prefers-reduced-motion: reduce) { .polaroid { transition: none; } }
 
+  /* Keepsake polaroids — the collectible set (see js/polaroids.js). A cream instant-film
+     frame that fills its grid cell, carrying SVG art and a two-line handwritten caption.
+     Three develop states: undeveloped wash (locked), black exposed film (developing), and
+     the full photo (developed). Shares the washi .pol-tape rule; just resized + retinted. */
+  .polaroid-keep {
+    display: block; width: 100%; box-sizing: border-box;
+    background: #f7f2e5; border: 1px solid #d8cfba; border-radius: 2px;
+    padding: 11px 11px 0; box-shadow: 0 3px 10px rgba(43, 39, 34, 0.16);
+    transform: rotate(var(--tilt, -2deg)); transition: transform 0.16s ease;
+  }
+  .polaroid-keep .pol-photo {
+    display: block; width: 100%; height: auto; aspect-ratio: 1 / 1;
+    border: 1px solid #cfc6b0; border-radius: 1px; overflow: hidden; background: none;
+  }
+  .polaroid-keep .pol-art svg { display: block; width: 100%; height: 100%; }
+  .polaroid-keep .pol-wash { background: var(--ink-soft); }
+  .polaroid-keep .pol-film { background: #17140f; }   /* black exposed film, still developing */
+  /* The photo fades up as it "develops" into view on (re)render. */
+  .polaroid-keep .pol-art { animation: polDevelop 0.6s ease both; }
+  @keyframes polDevelop { from { opacity: 0; } to { opacity: 1; } }
+  .pol-cap {
+    min-height: 54px; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 2px;
+    padding: 6px 4px 8px; text-align: center;
+  }
+  .pol-lip-main {
+    font-family: var(--hand); font-weight: 600; font-size: 24px; line-height: 1.05;
+    color: #403a2e; max-width: 100%;
+  }
+  .pol-lip-sub {
+    font-family: var(--hand); font-weight: 500; font-size: 14.5px; line-height: 1.1;
+    color: #8b8272; max-width: 100%;
+  }
+  .polaroid-keep .pol-tape {
+    width: 72px; height: 20px; top: -10px;
+    transform: translateX(-50%) rotate(-3deg);
+    --tape-color: rgba(224, 196, 120, 0.6);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .polaroid-keep { transition: none; }
+    .polaroid-keep .pol-art { animation: none; }
+  }
+
   .rec-group-label {
     font-family: var(--type); font-size: 10px; letter-spacing: 1px;
     color: var(--ink-soft); text-transform: uppercase; margin: 24px 0 10px;
