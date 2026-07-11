@@ -695,6 +695,19 @@ if (location.pathname.endsWith('/index.html')) {
           <span class="nav-card-title">mastery</span>
           <span class="nav-card-kicker js-mastery-kicker">skills &amp; rewards</span>
         </button>
+        <button id="keepsakesBtn" class="nav-card" data-era-tint="teal">
+          <span class="nav-card-seat">
+            <svg class="nav-ic" width="50" height="50" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <rect x="11" y="10" width="26" height="30" rx="2" transform="rotate(-5 24 25)" fill="rgba(74,140,135,.14)" stroke-width="1.6"/>
+              <rect x="14.5" y="13.5" width="19" height="16" transform="rotate(-5 24 25)" fill="rgba(74,140,135,.22)" stroke-width="1.2"/>
+              <path d="M15.5 27.5 L21 21 L25 25 L29 19 L33 27.5 Z" transform="rotate(-5 24 25)" fill="rgba(74,140,135,.5)" stroke="none"/>
+              <circle cx="19.5" cy="18.5" r="1.7" transform="rotate(-5 24 25)" fill="rgba(199,149,31,.7)" stroke="none"/>
+              <path d="M24 32.2 L24.9 34.9 L27.8 34.95 L25.5 36.7 L26.3 39.5 L24 37.8 L21.7 39.5 L22.5 36.7 L20.2 34.95 L23.1 34.9 Z" fill="rgba(199,149,31,.66)" stroke-width="1"/>
+            </svg>
+          </span>
+          <span class="nav-card-title">keepsakes</span>
+          <span class="nav-card-kicker js-keepsakes-kicker">the polaroid wall</span>
+        </button>
       </div>
     </div>
   </section>
@@ -929,6 +942,19 @@ if (location.pathname.endsWith('/index.html')) {
         <span class="nav-card-title">mastery</span>
         <span class="nav-card-kicker js-mastery-kicker">skills &amp; rewards</span>
       </button>
+      <button id="viewKeepsakesBtn" class="nav-card" data-tip="keepsakes · the polaroid wall" data-era-tint="teal">
+        <span class="nav-card-seat">
+          <svg class="nav-ic" width="50" height="50" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <rect x="11" y="10" width="26" height="30" rx="2" transform="rotate(-5 24 25)" fill="rgba(74,140,135,.14)" stroke-width="1.6"/>
+            <rect x="14.5" y="13.5" width="19" height="16" transform="rotate(-5 24 25)" fill="rgba(74,140,135,.22)" stroke-width="1.2"/>
+            <path d="M15.5 27.5 L21 21 L25 25 L29 19 L33 27.5 Z" transform="rotate(-5 24 25)" fill="rgba(74,140,135,.5)" stroke="none"/>
+            <circle cx="19.5" cy="18.5" r="1.7" transform="rotate(-5 24 25)" fill="rgba(199,149,31,.7)" stroke="none"/>
+            <path d="M24 32.2 L24.9 34.9 L27.8 34.95 L25.5 36.7 L26.3 39.5 L24 37.8 L21.7 39.5 L22.5 36.7 L20.2 34.95 L23.1 34.9 Z" fill="rgba(199,149,31,.66)" stroke-width="1"/>
+          </svg>
+        </span>
+        <span class="nav-card-title">keepsakes</span>
+        <span class="nav-card-kicker js-keepsakes-kicker">the polaroid wall</span>
+      </button>
     </div>
   </section>
 
@@ -957,6 +983,15 @@ if (location.pathname.endsWith('/index.html')) {
       <button id="masteryBackBtn" class="btn-link">← back</button>
     </div>
     <div id="masteryBody"></div>
+  </section>
+
+  <!-- KEEPSAKES SCREEN — the collectible polaroid wall (develops like instant film) -->
+  <section id="screen-keepsakes" class="screen card" tabindex="-1" aria-label="Keepsakes">
+    <div class="stats-nav">
+      <span class="stats-title">Keepsakes</span>
+      <button id="keepsakesBackBtn" class="btn-link">← back</button>
+    </div>
+    <div id="keepsakesBody"></div>
   </section>
 
   <!-- CHALLENGES SCREEN — the unlock-and-defeat puzzle collection -->

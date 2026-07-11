@@ -413,6 +413,7 @@ const screens = {
   albumfocus: $("screen-albumfocus"),
   study: $("screen-study"),
   mastery: $("screen-mastery"),
+  keepsakes: $("screen-keepsakes"),
 };
 function showScreen(name) {
   // Defensive: clear any stray inline animation a flip sheet helper might have left on a real
@@ -436,7 +437,8 @@ function showScreen(name) {
   }
   // Re-scatter the keepsake-card tape each time its screen is shown, so the pinning
   // feels hand-done rather than templated.
-  if (name === "start" || name === "results") { scatterNavTape(name); updateMasteryNav(); }
+  if (name === "start" || name === "results") { scatterNavTape(name); updateMasteryNav(); updateKeepsakesNav(); }
+  if (name !== "keepsakes") stopKeepsakeDevWatch();   // the develop poll only runs while the wall is open
   // Move keyboard/screen-reader focus onto the newly shown screen so the next Tab
   // (and the SR reading position) start there, not on the now-hidden trigger. The
   // game screen manages its own focus on #songInput, so don't steal it there.
@@ -2558,6 +2560,106 @@ function devSetKeepsake(id, agoMs) {
   saveKeepsakes(e);
   refreshKeepsakes();
   return polaroidState(id);
+}
+
+// How many polaroids the player has earned (any develop state counts as "found").
+function keepsakeCount(earned) {
+  const map = earned || loadKeepsakes();
+  return POLAROIDS.reduce((n, p) => n + (map[p.id] ? 1 : 0), 0);
+}
+// Keep the live "N / 22 found" indicator on the keepsakes nav-cards (start + results) current.
+function updateKeepsakesNav() {
+  const text = keepsakeCount() + " / " + POLAROID_TOTAL + " found";
+  document.querySelectorAll(".js-keepsakes-kicker").forEach((el) => { el.textContent = text; });
+}
+
+// A stable per-polaroid tilt + vertical nudge so the wall reads as hand-pinned rather than
+// gridded — deterministic (hashed from the id), so it never reshuffles between renders.
+function polaroidJitter(id) {
+  let h = 2166136261;
+  for (let i = 0; i < id.length; i++) { h = Math.imul(h ^ id.charCodeAt(i), 16777619); }
+  const rng = mulberry32(h >>> 0);
+  const tilt = (rng() * 6 - 3).toFixed(2);   // -3deg .. +3deg
+  const dy = (rng() * 12 - 3).toFixed(1);    // -3px .. +9px
+  return { tilt, dy };
+}
+
+let keepsakesBackTarget = "start";           // where the Keepsakes page's ← back returns to
+function openKeepsakes(from) {
+  keepsakesBackTarget = from;
+  renderKeepsakesPage();   // also schedules the develop watch
+  flipAwayToScreen("keepsakes");
+}
+
+// The polaroid wall: an eyebrow + lead, the found counter, then the messy pinned grid. Every
+// tile is a keepsake polaroid at its current develop state (locked wash / developing black /
+// developed photo), tilted by its deterministic jitter.
+function renderKeepsakesPage() {
+  const body = $("keepsakesBody");
+  if (!body) return;
+  const earned = loadKeepsakes();
+  const found = keepsakeCount(earned);
+
+  const intro =
+    `<p class="chall-eyebrow">Your keepsakes</p>` +
+    `<p class="keep-lead">Polaroids from the notebook, earned by playing — each one a little moment worth pinning up. ` +
+    `Fresh ones develop like real instant film, so give a new photo a while to come through.</p>`;
+
+  const counter =
+    `<div class="keep-counter"><span class="keep-counter-n">${found}</span>` +
+    `<span class="keep-counter-d">/ ${POLAROID_TOTAL}</span>` +
+    `<span class="keep-counter-l">pinned up</span></div>`;
+
+  const tiles = POLAROIDS.map((p) => {
+    const state = polaroidState(p.id, earned);
+    const j = polaroidJitter(p.id);
+    const label = state === "locked" ? "a polaroid not yet earned"
+      : state === "developing" ? p.name + " — developing" : p.name;
+    return `<div class="keep-cell" data-id="${p.id}" data-state="${state}" style="--dy:${j.dy}px" title="${escapeHtml(label)}">` +
+      keepsakePolaroidHTML(p, { state, tilt: j.tilt }) + `</div>`;
+  }).join("");
+
+  body.innerHTML = intro + counter + `<div class="keep-grid">${tiles}</div>`;
+  scheduleKeepsakeDevWatch();   // re-arm the live reveal for the next tile due to develop
+}
+
+// Live reveal: instead of a running poll, schedule ONE timeout for the moment the soonest
+// still-developing tile crosses the 13-min mark, then re-render (which re-runs the .pol-art
+// fade and re-arms for the tile after it). When nothing is developing there is no timer at
+// all. Purely cosmetic and derived from stored unlock times — it never earns anything.
+let keepsakeDevTimer = null;
+function scheduleKeepsakeDevWatch() {
+  stopKeepsakeDevWatch();
+  // No active-guard here: openKeepsakes renders (and schedules) just before the flip marks the
+  // screen active. The timeout callback below guards on active, and leaving the page clears the
+  // timer via showScreen → stopKeepsakeDevWatch, so a stray schedule can never leak work.
+  const earned = loadKeepsakes();
+  let soonest = Infinity;
+  for (const p of POLAROIDS) {
+    const iso = earned[p.id];
+    if (!iso) continue;
+    const left = Date.parse(iso) + POLAROID_DEVELOP_MS - Date.now();
+    if (left > 0 && left < soonest) soonest = left;
+  }
+  if (!Number.isFinite(soonest)) return;   // nothing developing → no timer needed
+  keepsakeDevTimer = setTimeout(() => {
+    keepsakeDevTimer = null;
+    if (!screens.keepsakes.classList.contains("active")) return;
+    // Which tiles are crossing the line right now? Fade just those in as they re-render.
+    const now = loadKeepsakes();
+    const crossing = POLAROIDS.filter((p) => {
+      const cell = document.querySelector('.keep-cell[data-id="' + p.id + '"]');
+      return cell && cell.dataset.state === "developing" && polaroidState(p.id, now) === "developed";
+    }).map((p) => p.id);
+    renderKeepsakesPage();   // re-renders + reschedules for the next pending tile
+    for (const id of crossing) {
+      const art = document.querySelector('.keep-cell[data-id="' + id + '"] .pol-art');
+      if (art) art.classList.add("pol-develop-in");
+    }
+  }, Math.min(soonest + 250, 0x7fffffff));
+}
+function stopKeepsakeDevWatch() {
+  if (keepsakeDevTimer) { clearTimeout(keepsakeDevTimer); keepsakeDevTimer = null; }
 }
 
 // Read a chosen image file, center-crop it to a square and downscale it to a
@@ -10538,7 +10640,8 @@ function buildDevApi() {
         for (const p of POLAROIDS) e[p.id] = new Date(Date.now() - ago).toISOString();
         saveKeepsakes(e); refreshKeepsakes(); return POLAROIDS.length;
       },
-      reset: () => { resetKeepsakes(); refreshKeepsakes(); },
+      open: () => openKeepsakes("start"),                      // jump to the polaroid wall
+      reset: () => { resetKeepsakes(); refreshKeepsakes(); updateKeepsakesNav(); },
     },
     // Album Focus — force any album's board state without grinding runs, then eyeball
     // the pinned board (fresh / played / beaten / perfected + the gold-leaf treatment).
@@ -10695,6 +10798,14 @@ async function init() {
   $("viewMasteryBtn").addEventListener("click", () => openMastery("results"));
   $("masteryBackBtn").addEventListener("click", () => {
     const prev = masteryBackTarget;
+    if (prev === "start") { $("startContent").style.display = ""; }
+    flipInToScreen(prev);
+  });
+  $("keepsakesBtn").addEventListener("click", () => openKeepsakes("start"));
+  $("viewKeepsakesBtn").addEventListener("click", () => openKeepsakes("results"));
+  $("keepsakesBackBtn").addEventListener("click", () => {
+    const prev = keepsakesBackTarget;
+    stopKeepsakeDevWatch();
     if (prev === "start") { $("startContent").style.display = ""; }
     flipInToScreen(prev);
   });

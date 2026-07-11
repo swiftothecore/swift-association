@@ -746,8 +746,10 @@
   .polaroid-keep .pol-art svg { display: block; width: 100%; height: 100%; }
   .polaroid-keep .pol-wash { background: var(--ink-soft); }
   .polaroid-keep .pol-film { background: #17140f; }   /* black exposed film, still developing */
-  /* The photo fades up as it "develops" into view on (re)render. */
-  .polaroid-keep .pol-art { animation: polDevelop 0.6s ease both; }
+  /* The photo fades up once, at the moment it crosses the develop line (class added by the
+     live-reveal watch). Deliberately NOT an always-on animation: content-visibility would
+     otherwise replay it every time a tile scrolls back into view. */
+  .polaroid-keep .pol-art.pol-develop-in { animation: polDevelop 0.9s ease both; }
   @keyframes polDevelop { from { opacity: 0; } to { opacity: 1; } }
   .pol-cap {
     min-height: 54px; display: flex; flex-direction: column;
@@ -769,8 +771,35 @@
   }
   @media (prefers-reduced-motion: reduce) {
     .polaroid-keep { transition: none; }
-    .polaroid-keep .pol-art { animation: none; }
+    .polaroid-keep .pol-art.pol-develop-in { animation: none; }
   }
+
+  /* Keepsakes page — a lead, the found counter, then the messy pinned polaroid wall. */
+  .keep-lead {
+    font-family: var(--type); font-size: 13px; color: var(--ink-soft);
+    line-height: 1.55; margin: 4px 0 18px; max-width: 62ch;
+  }
+  .keep-counter { display: flex; align-items: baseline; gap: 9px; margin: 0 0 6px; }
+  .keep-counter-n { font-family: var(--hand); font-size: 42px; font-weight: 700; color: var(--ink); line-height: 1; }
+  .keep-counter-d { font-family: var(--hand); font-size: 24px; color: var(--ink-soft); }
+  .keep-counter-l {
+    font-family: var(--type); font-size: 10px; letter-spacing: 1.4px;
+    text-transform: uppercase; color: var(--ink-soft);
+  }
+  .keep-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(148px, 1fr));
+    gap: 26px 20px; align-items: start; padding: 18px 6px 20px;
+  }
+  /* content-visibility lets the browser skip rendering off-screen tiles — a full wall is 21
+     detailed inline SVGs, so this keeps scrolling smooth. The intrinsic size reserves each
+     cell's rough footprint so the scrollbar/layout stay stable before a tile paints. */
+  .keep-cell { transform: translateY(var(--dy, 0)); content-visibility: auto; contain-intrinsic-size: auto 180px auto 300px; }
+  .keep-cell[data-state="locked"] .polaroid-keep { box-shadow: 0 2px 6px rgba(43, 39, 34, 0.10); }
+  @media (max-width: 560px) {
+    .keep-grid { grid-template-columns: repeat(auto-fill, minmax(116px, 1fr)); gap: 20px 14px; }
+    .keep-counter-n { font-size: 34px; }
+  }
+  @media (prefers-reduced-motion: reduce) { .keep-cell { transform: none; } }
 
   .rec-group-label {
     font-family: var(--type); font-size: 10px; letter-spacing: 1px;
@@ -3366,6 +3395,9 @@
   .nav-card[data-era-tint="graphite"] { --tint: 43, 39, 34; }
   .nav-card[data-era-tint="rose"]     { --tint: 168, 87, 122; }
   .nav-card[data-era-tint="sage"]     { --tint: 122, 158, 94; }
+  .nav-card[data-era-tint="teal"]     { --tint: 74, 140, 135; }
+  /* A lone last card starting a fresh row (e.g. the 7th) centres instead of clinging left. */
+  .see-also > .nav-card:last-child:nth-child(3n+1) { grid-column: 2; }
   /* Sticky tape — OPAQUE pastel washi (a cream backing under a half-strength tint wash,
      plus a diagonal sheen), so the card never shows through. ::before is the primary
      strip, ::after an optional second strip; placement varies per card below so the row
