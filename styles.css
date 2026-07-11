@@ -104,6 +104,9 @@
      below the settings modal (z 200). Shown/hidden + animated by app.js, gated on
      December (active timezone) and motion-allowed. */
   #snowfall { position: fixed; inset: 0; z-index: 50; pointer-events: none; display: none; }
+  /* Midnight Rain: the snowfall's seasonal sibling. Same layer, same rules, but
+     gated on the witching hour (12–1am, active timezone) instead of December. */
+  #midnightrain { position: fixed; inset: 0; z-index: 50; pointer-events: none; display: none; }
   .desk-item {
     position: absolute; opacity: 0.92;
     filter: drop-shadow(3px 7px 6px rgba(46,32,14,0.30)) saturate(0.88);

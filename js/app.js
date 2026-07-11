@@ -230,6 +230,7 @@ function applySettings() {
   if (settings.masteryButton) body.setAttribute("data-startbtn", settings.masteryButton);
   else body.removeAttribute("data-startbtn");
   refreshSnow();   // December snowfall follows the reduce-motion setting live
+  refreshRain();   // midnight rain follows the reduce-motion setting live too
 }
 
 /* ---------- December snowfall ---------- */
@@ -308,6 +309,89 @@ function stopSnow() {
   }
 }
 function refreshSnow() { if (snowActive()) startSnow(); else stopSnow(); }
+
+/* ---------- Midnight Rain ---------- */
+// The snowfall's seasonal sibling on the same rAF machinery: a full-viewport canvas
+// of thin, near-vertical streaks. Active only in the witching hour — 12 to 1am in the
+// player's active timezone (the hour reads local wall-clock, matching how the daily
+// midnight sticky is gated) — and only when motion is allowed. Sparse and quiet: a
+// notebook left out overnight, not a weather app.
+let rainRaf = null, rainDrops = [], rainCanvas = null, rainCtx = null,
+    rainLast = 0, rainResizeT = null, rainResizeBound = false, devForceRain = false;
+// The hour hand sits on 12: getHours() === 0 is the stretch from midnight to 1am.
+// Dev override bypasses the clock but still respects reduce-motion, exercising the
+// real gate rather than a special case.
+function rainActive() { return (devForceRain || new Date().getHours() === 0) && !motionReduced(); }
+function sizeRainCanvas() {
+  if (!rainCanvas) return;
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  const w = window.innerWidth, h = window.innerHeight;
+  rainCanvas.width = Math.max(1, Math.round(w * dpr));
+  rainCanvas.height = Math.max(1, Math.round(h * dpr));
+  rainCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  // Drop count scales with viewport area, capped for performance. Depth is faked per
+  // drop (length/speed/opacity/width), so nearer drops fall faster, longer, brighter.
+  const target = Math.min(140, Math.round((w * h) / 14000));
+  if (rainDrops.length > target) rainDrops.length = target;
+  while (rainDrops.length < target) {
+    const d = Math.random();
+    rainDrops.push({ x: Math.random() * w, y: Math.random() * h,
+      len: 9 + d * 18, sp: 380 + d * 520, wob: 0.6 + d * 0.9,
+      o: 0.18 + d * 0.34 });
+  }
+}
+function rainFrame(ts) {
+  if (!rainActive() || !rainCtx) { stopRain(); return; }
+  const w = window.innerWidth, h = window.innerHeight;
+  let dt = rainLast ? (ts - rainLast) / 1000 : 0.016;
+  rainLast = ts;
+  if (dt > 0.05) dt = 0.05;   // clamp big jumps from a throttled/backgrounded tab
+  rainCtx.clearRect(0, 0, w, h);
+  rainCtx.strokeStyle = "#3f4d6b";   // dark slate-blue — reads as rain on a light desk
+  rainCtx.lineCap = "round";
+  const slant = 1.1;   // px of horizontal drift per px of fall — a light wind lean
+  for (const d of rainDrops) {
+    d.y += d.sp * dt;
+    d.x += d.wob * d.sp * 0.03 * dt;   // faint drift so the streaks aren't a rigid grid
+    if (d.y - d.len > h) { d.y = -d.len; d.x = Math.random() * w; }
+    if (d.x > w + 4) d.x = -4;
+    rainCtx.globalAlpha = d.o;
+    rainCtx.lineWidth = 0.8 + d.len * 0.04;
+    rainCtx.beginPath();
+    rainCtx.moveTo(d.x, d.y);
+    rainCtx.lineTo(d.x - slant * d.len * 0.32, d.y - d.len);
+    rainCtx.stroke();
+  }
+  rainCtx.globalAlpha = 1;
+  rainRaf = requestAnimationFrame(rainFrame);
+}
+function startRain() {
+  if (!rainCanvas) {
+    rainCanvas = document.getElementById("midnightrain");
+    if (!rainCanvas) return;
+    rainCtx = rainCanvas.getContext("2d");
+  }
+  if (!rainResizeBound) {
+    window.addEventListener("resize", () => {
+      clearTimeout(rainResizeT);
+      rainResizeT = setTimeout(() => { if (rainActive()) sizeRainCanvas(); }, 150);
+    });
+    rainResizeBound = true;
+  }
+  sizeRainCanvas();
+  rainCanvas.style.display = "block";
+  rainLast = 0;
+  if (!rainRaf) rainRaf = requestAnimationFrame(rainFrame);
+  unlock("midnight-rain");   // you kept the page company past midnight
+}
+function stopRain() {
+  if (rainRaf) { cancelAnimationFrame(rainRaf); rainRaf = null; }
+  if (rainCanvas) {
+    rainCtx && rainCtx.clearRect(0, 0, rainCanvas.width, rainCanvas.height);
+    rainCanvas.style.display = "none";
+  }
+}
+function refreshRain() { if (rainActive()) startRain(); else stopRain(); }
 // Remember the last type clicked so defaultGameType:"last" can restore it next launch.
 function rememberGameType(t) {
   if (settings.lastGameType !== t) { settings.lastGameType = t; saveSettings(settings); }
@@ -10448,6 +10532,7 @@ function buildDevApi() {
             sparkle: () => celebrateCorrect(3), starShower: () => celebratePerfect(),
             blueWash: () => triggerBlueWash(), secret13: () => revealSecret13(),
             snow: (on) => { devForceSnow = on === undefined ? !devForceSnow : !!on; refreshSnow(); return devForceSnow; },
+            rain: (on) => { devForceRain = on === undefined ? !devForceRain : !!on; refreshRain(); return devForceRain; },
             pen: (p) => setPen(p || null) },
     // Scattered desk beads (js/scatter.js) — cosmetic gutter spill
     scatter: {
