@@ -46,7 +46,7 @@ import {
   exportData, importData,
   loadChallengeState, saveChallengeState, challengeRecord,
   loadChallengeTokens, saveChallengeTokens, resetChallenges,
-  loadAlbumFocus, albumFocusRecord, recordAlbumFocusRun,
+  loadAlbumFocus, saveAlbumFocus, albumFocusRecord, recordAlbumFocusRun, resetAlbumFocus,
   adaptiveRecord, recordAdaptiveRun,
   resetRecords, resetStatsAll, resetAchievements, resetTally, resetDaily, clearAllData,
   loadMastery, saveMastery, recordSkillXp, resetMastery, totalSkillLevels, isMasteryUnlocked,
@@ -3335,11 +3335,11 @@ let afSelectedDiff = "medium";        // the difficulty tab the detail panel has
 
 // Status mark for an album row, scaling with how hard it was beaten/perfected. The exact
 // visual tiers are styling — the data (beatenDiff/perfectedDiff) drives which one shows.
-function afStatusMark(rec) {
-  if (rec.perfected) return `<span class="af-mark af-mark--perfect" data-diff="${rec.perfectedDiff || ""}">${CHALL_STAR}</span>`;
-  if (rec.beaten)    return `<span class="af-mark af-mark--beaten" data-diff="${rec.beatenDiff || ""}">${CHALL_TICK}</span>`;
-  if (rec.best > 0)  return `<span class="af-mark af-mark--played">${CHALL_RING}</span>`;
-  return `<span class="af-mark af-mark--none">—</span>`;
+// Short caption for a board tile — long titles are trimmed so each name sits on one line.
+function albumTileName(a) {
+  if (a === "The Tortured Poets Department") return "TTPD";
+  if (a === "The Life of a Showgirl") return "Life of a Showgirl";
+  return a;
 }
 
 function openAlbumFocus(from) {
@@ -3358,31 +3358,37 @@ function renderAlbumFocusPage() {
     afSelectedAlbum = STUDIO_ALBUMS.find((a) => !(board[a] && board[a].beaten)) || STUDIO_ALBUMS[0];
   }
 
-  let list = "";
-  STUDIO_ALBUMS.forEach((a, idx) => {
+  // The board — 12 pinned snapshots that "develop" with progress: blank when fresh,
+  // a faint era wash once played (with the best score pencilled in), full era colour
+  // when beaten, and gold-leafed when perfected. The era colour is exposed as --era so
+  // the picture layer can later swap the flat wash for a per-album illustration.
+  let tiles = "";
+  STUDIO_ALBUMS.forEach((a) => {
     const rec = albumFocusRecord(a);
-    const stateCls = rec.perfected ? "is-perfect" : rec.beaten ? "is-beaten" : rec.best > 0 ? "is-played" : "is-fresh";
-    const best = rec.best > 0 ? `<span class="af-item-best">${rec.best}/${TOTAL_ROUNDS}</span>` : "";
-    list += `<button type="button" class="chall-item af-item ${stateCls}" data-album="${escapeHtml(a)}">` +
-      `<span class="af-item-dot" style="background:${albumColor(a) || "#999"}"></span>` +
-      `<span class="chall-item-name">${escapeHtml(a)}</span>` +
-      `${best}<span class="chall-item-mark">${afStatusMark(rec)}</span></button>`;
+    const state = rec.perfected ? "is-perfect" : rec.beaten ? "is-beaten" : rec.best > 0 ? "is-played" : "is-fresh";
+    const stateWord = rec.perfected ? "perfected" : rec.beaten ? "beaten" : rec.best > 0 ? "in progress" : "not played yet";
+    const score = (rec.best > 0 && !rec.beaten) ? `<span class="af-tile-score">${rec.best}/${TOTAL_ROUNDS}</span>` : "";
+    const gold = rec.perfected
+      ? `<span class="af-corner af-corner--tl" aria-hidden="true"></span><span class="af-corner af-corner--tr" aria-hidden="true"></span>` : "";
+    tiles += `<button type="button" class="af-tile ${state}" data-album="${escapeHtml(a)}" style="--era:${albumColor(a) || "#999"}" aria-label="${escapeHtml(a)} — ${stateWord}">` +
+      `<span class="af-pin" aria-hidden="true"></span>${gold}` +
+      `<span class="af-tile-win" aria-hidden="true"></span>${score}` +
+      `<span class="af-tile-cap">${escapeHtml(albumTileName(a))}</span>` +
+      `</button>`;
   });
 
   const perfectLine = perfected ? ` · perfected <b>${perfected}</b>/${STUDIO_ALBUMS.length}` : "";
   const html =
     `<div class="chall-head">` +
-      `<div class="chall-head-sub">pick an album · beat all 12</div>` +
+      `<div class="chall-head-sub">tap an album · beat all 12</div>` +
       `<span class="chall-tokens">beaten <b>${beaten}</b>/${STUDIO_ALBUMS.length}${perfectLine}</span>` +
     `</div>` +
-    `<div class="chall-layout">` +
-      `<div class="chall-list">${list}</div>` +
-      `<div class="chall-detail" id="afDetail"></div>` +
-    `</div>`;
+    `<div class="af-board">${tiles}</div>` +
+    `<div class="chall-detail af-detail" id="afDetail"></div>`;
 
   const el = $("albumFocusBody");
   el.innerHTML = html;
-  el.querySelectorAll(".af-item").forEach((b) =>
+  el.querySelectorAll(".af-tile").forEach((b) =>
     b.addEventListener("click", () => selectAlbum(b.dataset.album)));
   selectAlbum(afSelectedAlbum);
 }
@@ -3391,7 +3397,7 @@ function selectAlbum(album) {
   afSelectedAlbum = album;
   const body = $("albumFocusBody");
   if (!body) return;
-  body.querySelectorAll(".af-item").forEach((b) =>
+  body.querySelectorAll(".af-tile").forEach((b) =>
     b.classList.toggle("selected", b.dataset.album === album));
   renderAlbumDetail(album);
 }
@@ -10341,6 +10347,42 @@ function buildDevApi() {
       play: () => startCustom(),                               // start a run on the active preset
       open: () => { gameType = "custom"; rememberGameType("custom"); renderStartPickers(); showScreen("start"); $("startContent").style.display = ""; },
       reset: () => { resetCustom(); syncCustomUI(); },
+    },
+    // Album Focus — force any album's board state without grinding runs, then eyeball
+    // the pinned board (fresh / played / beaten / perfected + the gold-leaf treatment).
+    album: {
+      board: () => loadAlbumFocus(),
+      state: (a) => albumFocusRecord(a),
+      // Force one album's record. e.g. album.set("Red", { best: 7 }) for in-progress,
+      // ("1989", { beaten: true, diff: "hard" }), or ("Lover", { perfected: true }).
+      set: (a, patch) => {
+        if (!STUDIO_ALBUMS.includes(a)) return `unknown album: ${a}`;
+        const all = loadAlbumFocus(); const e = all[a] || {}; const p = patch || {}; const d = p.diff || "medium";
+        if (p.best != null) { e.best = p.best | 0; e.bestDiff = d; }
+        if (p.perfected) { e.perfected = true; e.perfectedDiff = d; e.beaten = true; e.beatenDiff = d; e.best = TOTAL_ROUNDS; e.bestDiff = d; }
+        else if (p.beaten) { e.beaten = true; e.beatenDiff = d; e.best = Math.max(e.best || 0, ALBUM_FOCUS_TARGET); e.bestDiff = d; }
+        all[a] = e; saveAlbumFocus(all);
+        if ($("albumFocusBody")) renderAlbumFocusPage();
+        return albumFocusRecord(a);
+      },
+      // Flood the whole board to one state: "fresh" | "played" | "beaten" | "perfect".
+      fill: (state, diff) => {
+        resetAlbumFocus();
+        if (state && state !== "fresh") {
+          const d = diff || "medium"; const all = {};
+          STUDIO_ALBUMS.forEach((a) => {
+            if (state === "perfect") all[a] = { best: TOTAL_ROUNDS, bestDiff: d, beaten: true, beatenDiff: d, perfected: true, perfectedDiff: d };
+            else if (state === "beaten") all[a] = { best: ALBUM_FOCUS_TARGET, bestDiff: d, beaten: true, beatenDiff: d };
+            else all[a] = { best: 7, bestDiff: d };
+          });
+          saveAlbumFocus(all);
+        }
+        if ($("albumFocusBody")) renderAlbumFocusPage();
+        return loadAlbumFocus();
+      },
+      play: (a, diff) => startAlbumFocus(a, diff || "medium"),
+      open: () => openAlbumFocus("start"),
+      reset: () => { resetAlbumFocus(); if ($("albumFocusBody")) renderAlbumFocusPage(); },
     },
     // Challenges (start any one; Impostor helpers for the fake-word minigame)
     challenge: {

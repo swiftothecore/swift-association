@@ -948,6 +948,7 @@
     .chall-col { border-right: none; border-bottom: 1px solid rgba(60,40,18,0.16); padding-bottom: 8px; margin-bottom: 14px; }
     .chall-list { padding-right: 0; margin-right: 0; }
     .chall-detail { padding-left: 0; }
+    .af-board { grid-template-columns: repeat(3, 1fr); gap: 24px 12px; }
   }
   @media (prefers-reduced-motion: reduce) {
     .chall-tokens, .chall-go { transform: none; }
@@ -990,21 +991,78 @@
     background-image: repeating-linear-gradient(45deg, rgba(245, 239, 225, 0.26) 0 2px, transparent 2px 8px);
   }
 
-  /* ---------- Album Focus page — borrows the master/detail .chall-* layout ----------
-     The album rows extend .chall-item with a colour dot + best score; the status mark
-     scales with how hard the album was beaten (af-mark--perfect/beaten/played/none). */
-  .af-item { grid-template-columns: 16px 1fr auto 22px; }
-  .af-item-dot { width: 13px; height: 13px; border-radius: 50%; box-shadow: inset 0 0 0 1px rgba(43,39,34,0.25); }
-  .af-item-best { font-family: var(--type); font-size: 11px; color: var(--ink-soft); white-space: nowrap; }
-  .af-item.selected .af-item-best { color: #1f3a52; }
-  .af-item.is-fresh .chall-item-name { color: var(--ink-soft); }
-  .af-mark { display: flex; justify-content: center; align-items: center; }
-  .af-mark--none { font-family: var(--type); font-size: 13px; color: #c4bca9; }
-  .af-mark .chall-mark-svg, .af-mark .chall-star-svg { width: 19px; height: 19px; }
-  /* a beaten-on-Hard tick reads a touch bolder/gold; the data-diff hook lets the tier scale */
-  .af-mark--beaten[data-diff="hard"] .chall-mark-svg circle,
-  .af-mark--beaten[data-diff="hard"] .chall-mark-svg path { stroke: #c8901c; }
-  .af-mark--perfect .chall-star-svg { filter: drop-shadow(0 1px 1px rgba(176,130,31,0.5)); }
+  /* ---------- Album Focus page — a pinned board of album snapshots ----------
+     The 12 studio albums as squares tacked to the desk in a loose 3x4 grid. Each
+     picture "develops" with progress: blank when fresh, a faint era wash once
+     played, full era colour when beaten, gold-leafed when perfected. Tapping a tile
+     drops the difficulty picker + record into the detail panel below the board. The
+     colour wash is a --era-driven layer so a per-album illustration can replace it. */
+  .af-board {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 30px 18px;
+    padding: 16px 6px 24px; justify-items: center;
+  }
+  .af-tile {
+    position: relative; width: 100%; max-width: 136px; cursor: pointer;
+    background: #fbf6ea; padding: 7px 7px 0; border: none; border-radius: 3px;
+    box-shadow: 0 4px 10px rgba(60,50,35,0.26);
+    font: inherit; text-align: center; color: var(--ink);
+    transition: transform 0.16s ease, box-shadow 0.16s ease;
+  }
+  /* deterministic scatter so the board looks hand-arranged, not gridded */
+  .af-board .af-tile:nth-child(4n+1) { transform: rotate(-2.4deg); }
+  .af-board .af-tile:nth-child(4n+2) { transform: rotate(1.5deg); }
+  .af-board .af-tile:nth-child(4n+3) { transform: rotate(-1deg); }
+  .af-board .af-tile:nth-child(4n)   { transform: rotate(2.2deg); }
+  .af-tile:hover { transform: rotate(0deg) translateY(-3px); box-shadow: 0 9px 17px rgba(60,50,35,0.3); z-index: 2; }
+  .af-tile.selected { box-shadow: 0 0 0 2px var(--ink), 0 6px 14px rgba(60,50,35,0.3); }
+
+  .af-tile-win {
+    display: block; aspect-ratio: 1 / 1; border-radius: 2px;
+    background: var(--era, #999); box-shadow: inset 0 0 0 1px rgba(43,39,34,0.08);
+  }
+  .af-tile.is-fresh .af-tile-win {
+    background: #e7dfcd;
+    background-image: repeating-linear-gradient(45deg, rgba(120,110,90,0.09) 0 6px, transparent 6px 12px);
+    box-shadow: inset 0 0 0 1.5px #c3b89c;
+  }
+  .af-tile.is-played .af-tile-win { opacity: 0.4; filter: saturate(0.7); }
+  .af-tile-cap {
+    font-family: var(--hand); font-weight: 700; font-size: 19px; line-height: 1.02;
+    color: var(--ink); padding: 7px 3px 9px; min-height: 1.8em;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .af-tile.is-fresh .af-tile-cap, .af-tile.is-played .af-tile-cap { color: var(--ink-soft); }
+  .af-tile-score {
+    position: absolute; right: 10px; bottom: 42px;
+    font-family: var(--hand); font-weight: 700; font-size: 17px; color: var(--ink-soft);
+  }
+
+  /* the pushpin holding each snapshot to the desk */
+  .af-pin {
+    position: absolute; top: -8px; left: 50%; width: 15px; height: 15px; z-index: 3;
+    transform: translateX(-50%); border-radius: 50%; background: #c7413a;
+    box-shadow: inset 2px 2px 2px rgba(255,255,255,0.45), inset -1px -2px 2px rgba(0,0,0,0.28), 0 3px 4px rgba(0,0,0,0.32);
+  }
+
+  /* perfected — pressed in gold leaf: gold pin, gilded top corners, gold caption */
+  .af-tile.is-perfect { box-shadow: 0 4px 12px rgba(120,90,20,0.34); }
+  .af-tile.is-perfect.selected { box-shadow: 0 0 0 2px #b98a1f, 0 6px 14px rgba(120,90,20,0.4); }
+  .af-tile.is-perfect .af-pin {
+    background: #e6c052;
+    box-shadow: inset 2px 2px 2px rgba(255,255,255,0.6), inset -1px -2px 2px rgba(120,90,20,0.35), 0 3px 4px rgba(120,90,20,0.4);
+  }
+  .af-tile.is-perfect .af-tile-cap { color: #b0821f; }
+  .af-corner { position: absolute; top: 7px; width: 0; height: 0; z-index: 2; }
+  .af-corner--tl { left: 7px; border-top: 15px solid #e0b93f; border-right: 15px solid transparent; }
+  .af-corner--tr { right: 7px; border-top: 15px solid #e0b93f; border-left: 15px solid transparent; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .af-board .af-tile { transform: none; }
+    .af-tile:hover { transform: translateY(-2px); }
+  }
+
+  /* the detail panel drops in full-width beneath the board */
+  .af-detail { padding-left: 0; margin-top: 4px; padding-top: 18px; border-top: 1px solid rgba(60,40,18,0.16); }
 
   .af-detail-spine { width: 7px; align-self: stretch; min-height: 30px; border-radius: 2px; box-shadow: inset 0 0 0 1px rgba(43,39,34,0.2); }
   .af-stamp { color: rgba(60,90,70,0.85); border-color: rgba(60,90,70,0.55); }
