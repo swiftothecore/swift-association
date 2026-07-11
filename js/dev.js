@@ -209,7 +209,9 @@ export function initDev(api) {
         `${g.label} · ${members.length}`);
       const cells = mk("div", { class: "dvg-grid" });
       for (const a of members) {
-        cells.append(mk("div", { class: "dvg-cell" + (counts[a.icon] > 1 ? " dup" : ""), "data-tip": a.desc },
+        // group colour rides in on --bead so each charm's highlighter swipe is tinted
+        // like the real earned charm (charmMarkup does the same in-game).
+        cells.append(mk("div", { class: "dvg-cell" + (counts[a.icon] > 1 ? " dup" : ""), "data-tip": a.desc, style: `--bead:${ACH_GROUP_COLORS[g.id]}` },
           mk("span", { class: "charm", html: ACH_ICONS[a.icon] || "<b>?</b>" }),
           mk("span", { class: "dvg-nm" }, a.name + (a.secret ? " ✦" : "")),
           mk("span", { class: "dvg-key" }, a.icon + (counts[a.icon] > 1 ? ` ×${counts[a.icon]}` : ""))));
@@ -222,10 +224,17 @@ export function initDev(api) {
         overlay.style.setProperty("--dvg-size", px + "px");
         overlay.querySelectorAll(".dvg-size .dv-btn").forEach((b) => b.classList.toggle("on", b === e.target));
       }, px === 30 ? "on" : ""));
+    // earned ⇄ locked preview: the penned charms read very differently with the
+    // highlighter swipe on (earned) vs off + pencil-grey (locked), so let QA flip.
+    const stateBtn = btn("earned", (e) => {
+      const locked = overlay.classList.toggle("dvg-locked");
+      e.target.textContent = locked ? "locked" : "earned";
+    });
     const overlay = mk("div", { id: "dv-gallery", style: "--dvg-size:30px" },
       mk("div", { class: "dvg-bar" },
         mk("span", { class: "dvg-title" }, `charm gallery · ${ACHIEVEMENTS.length} charms · ${dupes ? dupes + " duped keys" : "all unique"}`),
         mk("span", { class: "dvg-size" }, ...sizes),
+        stateBtn,
         btn("✕ close", () => overlay.remove())),
       grid);
     overlay.addEventListener("click", (e) => { if (e.target === overlay) overlay.remove(); });
@@ -333,11 +342,14 @@ function injectStyles() {
   .dvg-cell { display: flex; flex-direction: column; align-items: center; gap: 3px; text-align: center;
     padding: 8px 4px 6px; border-radius: 6px; border: 1px dashed transparent; }
   .dvg-cell.dup { border-color: #b23a3a; background: rgba(178,58,58,.07); }
-  .dvg-cell .charm { width: var(--dvg-size); height: var(--dvg-size); color: var(--bead, #e0a32f); }
-  .dvg-cell .charm svg { width: 100%; height: 100%; overflow: visible; display: block; }
-  .dvg-cell .charm .ink { fill: none; stroke: var(--ink, #2b2722); stroke-width: 1.6;
-    stroke-linecap: round; stroke-linejoin: round; }
-  .dvg-cell .charm .ink-fill { fill: var(--bead, #e0a32f); stroke: var(--ink, #2b2722); stroke-width: 1.2; }
+  /* pen is ink; the group colour (--bead, set on each cell) only tints the swipe.
+     Paint rules come from the shared .charm block in styles.css — nothing to
+     duplicate here. The svg needs display:block so cells size cleanly. */
+  .dvg-cell .charm { width: var(--dvg-size); height: var(--dvg-size); }
+  .dvg-cell .charm svg { display: block; }
+  /* locked-state preview: pencil-grey pen, swipe dropped */
+  #dv-gallery.dvg-locked .charm { color: var(--ink-soft, #8a7f70); }
+  #dv-gallery.dvg-locked .charm::before { display: none; }
   .dvg-nm { font: 9px/1.2 ui-monospace, Menlo, monospace; color: var(--ink, #2b2722); }
   .dvg-key { font: 8px ui-monospace, Menlo, monospace; color: var(--ink-soft, #8a7f70); }
   .dvg-cell.dup .dvg-key { color: #b23a3a; font-weight: 700; }

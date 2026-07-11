@@ -41,6 +41,15 @@ if (location.pathname.endsWith('/index.html')) {
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body data-era="gold">
+<!-- Hand-drawn wobble for the penned achievement charms. Referenced by .charm svg
+     in styles.css via filter: url(#charmWobble). Small displacement only — big
+     values turn 30px icons to mush. Defined once here; hidden, zero layout. -->
+<svg width="0" height="0" aria-hidden="true" style="position:absolute" focusable="false">
+  <filter id="charmWobble" x="-15%" y="-15%" width="130%" height="130%">
+    <feTurbulence type="fractalNoise" baseFrequency="0.045" numOctaves="2" seed="7" result="noise"/>
+    <feDisplacementMap in="SourceGraphic" in2="noise" scale="1.8" xChannelSelector="R" yChannelSelector="G"/>
+  </filter>
+</svg>
 <canvas id="snowfall" aria-hidden="true"></canvas>
 <canvas id="midnightrain" aria-hidden="true"></canvas>
 <div class="desk-items" aria-hidden="true">

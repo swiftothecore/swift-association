@@ -3019,10 +3019,29 @@
   }
   .tip-pop.show { opacity: 1; visibility: visible; }
   .toast.leaving { animation: toastOut 0.4s ease forwards; }
-  .toast .charm { width: 34px; height: 34px; flex: none; color: var(--bead); }
-  .toast .charm svg { width: 100%; height: 100%; overflow: visible; }
-  .toast .charm .ink { fill: none; stroke: var(--ink); stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
-  .toast .charm .ink-fill { fill: var(--bead); stroke: var(--ink); stroke-width: 1.2; }
+  /* ---------- Penned achievement charms ----------
+     Charms (charmMarkup → <span class="charm">) are hand-inked doodles: pure pen
+     outline (the old gold bead fill is gone), a faint drawn-by-hand wobble, and a
+     swipe of highlighter behind an earned glyph. The achievement's group colour
+     rides in on --bead (set inline by charmMarkup) and tints that swipe. Locked /
+     un-earned charms drop the swipe and go pencil-grey. Defined once here; each
+     surface below only sets its own size + earned/locked state. */
+  .charm { position: relative; isolation: isolate; display: inline-flex; color: var(--ink); }
+  .charm svg { width: 100%; height: 100%; overflow: visible; filter: url(#charmWobble); }
+  .charm .ink, .charm .ink-fill {
+    fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round;
+  }
+  .charm .ink { stroke-width: 1.5; }
+  .charm .ink-fill { stroke-width: 1.7; }
+  /* the earned highlighter swipe — a blobby marker smudge laid down slightly askew */
+  .charm::before {
+    content: ""; position: absolute; inset: 8%; z-index: -1;
+    background: color-mix(in srgb, var(--bead, var(--highlighter)) 42%, transparent);
+    border-radius: 52% 40% 55% 45% / 62% 48% 58% 42%;
+    transform: rotate(-3.5deg);
+  }
+
+  .toast .charm { width: 34px; height: 34px; flex: none; }
   .toast .t-label { font-family: var(--type); font-size: 10px; letter-spacing: 1px; color: var(--ink-soft); text-transform: uppercase; }
   .toast .t-name { font-family: var(--hand); font-weight: 700; font-size: 21px; color: var(--ink); line-height: 1.05; }
   @keyframes toastIn { from { opacity: 0; transform: translateX(30px) rotate(-1deg); } to { opacity: 1; transform: translateX(0) rotate(-1deg); } }
@@ -3081,10 +3100,9 @@
     display: grid; place-items: center; border-radius: 50%;
     background: var(--paper); box-shadow: inset 0 0 0 1.5px var(--ink);
   }
-  .toast-skill .ts-medal .charm { width: 26px; height: 26px; color: var(--bead); }
-  .toast-skill .ts-medal .charm svg { width: 100%; height: 100%; overflow: visible; }
-  .toast-skill .ts-medal .charm .ink { fill: none; stroke: var(--ink); stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
-  .toast-skill .ts-medal .charm .ink-fill { fill: var(--bead); stroke: var(--ink); stroke-width: 1.2; }
+  .toast-skill .ts-medal .charm { width: 26px; height: 26px; }
+  /* the skill glyph lives in its own stamped ink medallion — no highlighter swipe */
+  .toast-skill .ts-medal .charm::before { display: none; }
   .toast-skill .ts-lv {
     position: absolute; right: -5px; bottom: -5px; box-sizing: border-box;
     min-width: 19px; height: 19px; padding: 0 4px; border-radius: 10px;
@@ -3108,10 +3126,7 @@
     font: inherit; transition: transform 0.12s ease, background 0.12s ease; }
   .ach-recap .ach-chip:hover { transform: translateY(-2px); background: var(--page-wash); }
   .ach-recap .ach-chip:focus-visible { outline: 2px solid var(--ink-accent); outline-offset: 2px; }
-  .ach-recap .ach-chip .charm { width: 24px; height: 24px; color: var(--bead); }
-  .ach-recap .ach-chip .charm svg { width: 100%; height: 100%; overflow: visible; }
-  .ach-recap .ach-chip .charm .ink { fill: none; stroke: var(--ink); stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
-  .ach-recap .ach-chip .charm .ink-fill { fill: var(--bead); stroke: var(--ink); stroke-width: 1.2; }
+  .ach-recap .ach-chip .charm { width: 24px; height: 24px; }
   .ach-recap .ach-chip .nm { font-family: var(--hand); font-size: 15px; color: var(--ink); line-height: 1.05; white-space: nowrap; }
   .ach-recap .ach-chip--more { font-family: var(--type); font-size: 10px; letter-spacing: 1px;
     text-transform: uppercase; color: var(--ink-soft); border-bottom: 1px dotted var(--ink-soft);
@@ -3124,16 +3139,14 @@
     display: flex; align-items: center; gap: 10px;
     border: 1.5px solid rgba(43,39,34,0.12); border-radius: 2px; padding: 9px 11px;
   }
-  .ach .charm { width: 30px; height: 30px; flex: none; color: var(--bead); }
-  .ach .charm svg { width: 100%; height: 100%; overflow: visible; }
-  .ach .charm .ink { fill: none; stroke: var(--ink); stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
-  .ach .charm .ink-fill { fill: var(--bead); stroke: var(--ink); stroke-width: 1.2; }
+  .ach .charm { width: 30px; height: 30px; flex: none; }
   .ach .ach-text { min-width: 0; }
   .ach .ach-nm { font-family: var(--hand); font-weight: 700; font-size: 18px; color: var(--ink); line-height: 1.05; }
   .ach .ach-dc { font-family: var(--type); font-size: 10px; color: var(--ink-soft); line-height: 1.25; margin-top: 2px; }
   .ach.locked { opacity: 0.55; }
+  /* locked = pencil, no highlighter: pen goes soft grey and the swipe is dropped */
   .ach.locked .charm { color: var(--ink-soft); }
-  .ach.locked .charm .ink-fill { fill: var(--ink-soft); }
+  .ach.locked .charm::before { display: none; }
   .ach.secret .charm-q { font-family: var(--hand); font-weight: 700; font-size: 22px; color: var(--ink-soft); width: 30px; text-align: center; flex: none; }
   /* Secret charm with the level-10 hints reward earned: the how-to is shown (still masked name). */
   .ach.secret.hinted { opacity: 0.72; }
@@ -3159,10 +3172,7 @@
   /* latest charm — a proper keepsake: real icon + wrapping name + date */
   .ach-latest { border: 1.5px solid rgba(43,39,34,0.12); border-radius: 3px; padding: 13px 15px; display: flex; align-items: center; gap: 13px; }
   .ach-latest-charm { flex: none; }
-  .ach-latest-charm .charm { display: block; width: 46px; height: 46px; color: var(--bead); }
-  .ach-latest-charm .charm svg { width: 100%; height: 100%; overflow: visible; }
-  .ach-latest-charm .charm .ink { fill: none; stroke: var(--ink); stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
-  .ach-latest-charm .charm .ink-fill { fill: var(--bead); stroke: var(--ink); stroke-width: 1.2; }
+  .ach-latest-charm .charm { display: inline-flex; width: 46px; height: 46px; }
   .ach-latest-text { min-width: 0; }
   .ach-latest-label { font-family: var(--type); font-size: 9px; letter-spacing: 1px; text-transform: uppercase; color: var(--ink-soft); }
   .ach-latest-name { font-family: var(--hand); font-weight: 700; font-size: 23px; color: var(--ink); line-height: 1.05; margin: 1px 0; }
@@ -3209,11 +3219,10 @@
     background: rgba(43,39,34,0.05); border: 2px dashed rgba(43,39,34,0.28);
   }
   .ach-quest-charm.earned { background: var(--page-wash); border-style: solid; border-color: var(--bead); }
-  .ach-quest-charm .charm { display: block; width: 32px; height: 32px; color: var(--bead); opacity: 0.45; }
+  .ach-quest-charm .charm { display: inline-flex; width: 32px; height: 32px; opacity: 0.45; }
   .ach-quest-charm.earned .charm { opacity: 1; }
-  .ach-quest-charm .charm svg { width: 100%; height: 100%; overflow: visible; }
-  .ach-quest-charm .charm .ink { fill: none; stroke: var(--ink); stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
-  .ach-quest-charm .charm .ink-fill { fill: var(--bead); stroke: var(--ink); stroke-width: 1.2; }
+  /* the quest charm only earns its swipe once completed */
+  .ach-quest-charm:not(.earned) .charm::before { display: none; }
   .ach-quest-state { font-family: var(--type); font-size: 8.5px; letter-spacing: 1px; text-transform: uppercase; color: var(--ink-soft); }
 
   /* Songbook — the per-album missing-songs checklist */
