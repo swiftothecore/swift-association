@@ -2562,6 +2562,43 @@ function devSetKeepsake(id, agoMs) {
   return polaroidState(id);
 }
 
+// Earn a polaroid: persist the unlock time (which starts its 13-min develop clock), fire the
+// "developing" toast, refresh the wall + nav counter, and check the collection meta. Idempotent
+// — re-earning an owned polaroid is a no-op, so triggers can fire freely on every game.
+function earnPolaroid(id) {
+  const p = POLAROID_BY_ID[id];
+  if (!p) return false;
+  const earned = loadKeepsakes();
+  if (earned[id]) return false;                      // already have it
+  earned[id] = new Date().toISOString();
+  saveKeepsakes(earned);
+  notifyNote("new keepsake", p.name + " polaroid is developing");
+  updateKeepsakesNav();
+  refreshKeepsakes();                                // if the wall is open, show it developing
+  checkKeepsakeMeta(earned);
+  return true;
+}
+
+// You Took A Polaroid Of Us — every polaroid earned. Keys off what actually EXISTS (POLAROIDS),
+// so it re-targets automatically as the set grows toward POLAROID_TOTAL and needs no migration.
+function checkKeepsakeMeta(earned = loadKeepsakes()) {
+  if (POLAROIDS.length && POLAROIDS.every((p) => earned[p.id])) unlock("you-took-a-polaroid-of-us");
+}
+
+// Song-discovery keepsakes — checked from every end-of-game tally (main + sandboxed paths),
+// mirroring the i-hate-it-here discovery check. `tally.songs` keys are exact stored titles
+// (TLGAD is lowercase), so match case-insensitively. Idempotent via earnPolaroid.
+function checkSongKeepsakes(tally) {
+  const found = (tally && tally.songs) || {};
+  const has = (titleLc) => Object.keys(found).some((t) => t.toLowerCase() === titleLc);
+  if (has("the last great american dynasty")) earnPolaroid("holiday-house");   // TLGAD → the Watch Hill house
+  if (has("cornelia street")) earnPolaroid("cornelia-street");
+  if (has("the fate of ophelia")) earnPolaroid("doughphelia");
+  // Getting Married — every song with "love" in its title discovered.
+  const love = allSongs.filter((s) => /\blove\b/i.test(s.title));
+  if (love.length && love.every((s) => found[s.title])) earnPolaroid("getting-married");
+}
+
 // How many polaroids the player has earned (any develop state counts as "found").
 function keepsakeCount(earned) {
   const map = earned || loadKeepsakes();
@@ -5856,7 +5893,7 @@ function endChallenge() {
     })));
     // "I Hate It Here" — every catalogue song answered correctly at least once.
     // challengeRunActive is already false above, so this unlock fires normally.
-    if (allSongs.length && allSongs.every((s) => tally.songs[s.title])) unlock("i-hate-it-here");
+    if (allSongs.length && allSongs.every((s) => tally.songs[s.title])) unlock("i-hate-it-here"); checkSongKeepsakes(tally);
     recordGameMetrics({
       rounds: roundResults.length, correct: score,
       timeSumMs: gameTimeSum * 1000, timedRounds: gameTimedRounds,
@@ -5958,7 +5995,7 @@ function endAlbumFocus() {
       album: roundAlbums[i] || null,
       word: roundWords[i] || null,
     })));
-    if (allSongs.length && allSongs.every((s) => tally.songs[s.title])) unlock("i-hate-it-here");
+    if (allSongs.length && allSongs.every((s) => tally.songs[s.title])) unlock("i-hate-it-here"); checkSongKeepsakes(tally);
     recordGameMetrics({
       rounds: roundResults.length, correct: score,
       timeSumMs: gameTimeSum * 1000, timedRounds: gameTimedRounds,
@@ -6044,7 +6081,7 @@ function endAdaptive() {
       album: roundAlbums[i] || null,
       word: roundWords[i] || null,
     })));
-    if (allSongs.length && allSongs.every((s) => tally.songs[s.title])) unlock("i-hate-it-here");
+    if (allSongs.length && allSongs.every((s) => tally.songs[s.title])) unlock("i-hate-it-here"); checkSongKeepsakes(tally);
     recordGameMetrics({
       rounds: roundResults.length, correct: score,
       timeSumMs: gameTimeSum * 1000, timedRounds: gameTimedRounds,
@@ -6106,7 +6143,7 @@ function endStudy() {
       album: roundAlbums[i] || null,
       word: roundWords[i] || null,
     })));
-    if (allSongs.length && allSongs.every((s) => tally.songs[s.title])) unlock("i-hate-it-here");
+    if (allSongs.length && allSongs.every((s) => tally.songs[s.title])) unlock("i-hate-it-here"); checkSongKeepsakes(tally);
     // Count promotes/graduates from the box snapshot taken at session start (recordGameTally
     // above already advanced the boxes). Only correct answers can climb.
     const after = loadStudySet();
@@ -7786,6 +7823,7 @@ function flagImpostor() {
   lockImpostorPage();
   impostorSeen++;
   impostorFlagged++;
+  earnPolaroid("no-its-becky");     // caught an impostor — "(it was taylor swift)"
   score++;                          // a caught fake fills a bead; real answers = score - impostorFlagged
   justEarnedIndex = round - 1;
   recordImpostorPage(true);
@@ -8066,6 +8104,8 @@ function submitAnswer(song, isTimeout) {
     chainLetter = lastChainLetter(song.title);
     renderChainBanner();
   }
+  // The goat remix — a timeout that snaps a 5+ answer streak (the scream skyward).
+  if (isTimeout && correctStreak >= 5) earnPolaroid("goat-remix");
   correctStreak = correct ? correctStreak + 1 : 0;
   if (gameType === "infinite" && !correct) { lives--; renderLives(); }
   // Thirty-One: sudden death — one miss ends the run (checked at nextRound via isGameOver).
@@ -8103,7 +8143,9 @@ function submitAnswer(song, isTimeout) {
       gameVersePerfect++;                // lifetime versePerfect / milestone achievements
       verseKeepsake.push({ line: lyricMatch.line, word: currentWord, tier: lyricMatch.tier });
     }
-    if (lyricMatch.tier === "verse") { gameWholeVerses++; unlock("overachiever"); }
+    if (lyricMatch.tier === "verse") { gameWholeVerses++; unlock("overachiever"); earnPolaroid("typewriter"); }
+    // The neighbor's dog — the "dyed it key lime green" line recalled word-perfect (or better).
+    if (versePlus && lyricMatch.line && /dyed it key lime green/i.test(lyricMatch.line)) earnPolaroid("neighbors-dog");
     // Someone Has A Favourite Song — 3 lyric answers from the same song in one game.
     lyricAnswerSongs.push(song.title);
     if (lyricAnswerSongs.filter((t) => t === song.title).length >= 3) unlock("fav-song");
@@ -8139,7 +8181,7 @@ function submitAnswer(song, isTimeout) {
       if (gameFastestMs == null || ms < gameFastestMs) gameFastestMs = ms;   // lifetime fastest answer
       if (elapsed < 2) unlock("speak-now");
       if (round === 1 && elapsed < 2) unlock("ready-for-it");
-      if (remaining < 1) unlock("getaway-car");
+      if (remaining < 1) { unlock("getaway-car"); earnPolaroid("getaway-car"); }   // same beat, both fire
       if (remaining < 0.5) unlock("i-did-something-bad");
       // Quick Pen skill: faster answers earn more (full at instant, zero at the buzzer).
       const speedFactor = Math.max(0, Math.min(1, remaining / currentMode.seconds));
@@ -8150,6 +8192,7 @@ function submitAnswer(song, isTimeout) {
   // Instinct skill: every correct answer, scaled by the live correct-in-a-row streak.
   if (correct) gameResolveXp += Math.round(RESOLVE_BASE * (1 + 0.1 * Math.min(correctStreak, RESOLVE_STREAK_CAP)));
   if (correctStreak >= 5) unlock("bejeweled");
+  if (correctStreak >= 7) earnPolaroid("seven");         // picture me in the trees
   if (correctStreak >= 10) unlock("sparks-fly");
   // It's Raining And It's Monday — answer the word "rain" right on a Monday.
   if (correct && !commonRuleActive() && currentWord === "rain" && new Date().getDay() === 1) unlock("raining-monday");
@@ -8550,7 +8593,32 @@ function endGame() {
     })));
     // "I Hate It Here" — every song in the catalogue answered correctly at least once.
     // Count discovered against allSongs (not raw tally keys) so it's exact.
-    if (allSongs.length && allSongs.every((s) => tally.songs[s.title])) unlock("i-hate-it-here");
+    if (allSongs.length && allSongs.every((s) => tally.songs[s.title])) unlock("i-hate-it-here"); checkSongKeepsakes(tally);
+  }
+
+  // Keepsakes — end-of-game polaroids (classic/infinite/daily; test runs never earn).
+  if (!devNoLog) {
+    const tk = todayKey();                                                    // respects the dev date
+    if (currentMode.id === "relaxed") earnPolaroid("paris");                 // finish a Relaxed game
+    if (gameTimeouts >= 3) earnPolaroid("interview-um");                     // 3+ timeouts in a game
+    if (+tk.slice(5, 7) === 12) earnPolaroid("christmas-tree-farm");         // finished in December
+    if (+tk.slice(8, 10) === 22) earnPolaroid("not-a-lot");                  // finished on the 22nd
+    if (hintsUsed >= 10) earnPolaroid("traffic-lights");                     // leaned on 10+ hints
+    if (score === TOTAL_ROUNDS && currentMode.id === "hard") earnPolaroid("stars");   // 13/13 on Hard
+    // Hey kids! — three word-perfect (or better) lyric lines back to back.
+    let perfectRun = 0;
+    for (let i = 0; i < roundVerseTier.length; i++) {
+      if (roundVerseTier[i]) { if (++perfectRun >= 3) { earnPolaroid("hey-kids"); break; } }
+      else perfectRun = 0;
+    }
+    // Debutation — a debut song and a reputation song both landed this game (the arc, either way).
+    let gotDebut = false, gotRep = false;
+    for (let i = 0; i < roundResults.length; i++) {
+      if (!roundResults[i]) continue;
+      const era = ALBUM_ERA[roundAlbums[i]];
+      if (era === "debut") gotDebut = true; else if (era === "reputation") gotRep = true;
+    }
+    if (gotDebut && gotRep) earnPolaroid("debutation");
   }
 
   // Lifetime cross-game metrics (fastest/avg answer, accuracy, lyric lines, daily totals).
@@ -10809,6 +10877,14 @@ async function init() {
     if (prev === "start") { $("startContent").style.display = ""; }
     flipInToScreen(prev);
   });
+  // Starbucks Lovers keepsake — the misheard "long list of ex-lovers", typed into ANY text field.
+  document.addEventListener("input", (e) => {
+    const t = e.target;
+    if (t && typeof t.value === "string" && /starbucks lovers/i.test(t.value)) earnPolaroid("starbucks-lovers");
+  }, true);
+  // Backfill the collection meta in case the final polaroid was earned inside a sandbox (where
+  // its unlock() was gated) on a previous run, so a complete set still lights up its charm.
+  checkKeepsakeMeta();
   $("songbookBackBtn").addEventListener("click", () => {
     const prev = songbookBackTarget;
     if (prev === "start") { $("startContent").style.display = ""; }
