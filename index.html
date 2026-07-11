@@ -797,7 +797,36 @@ if (location.pathname.endsWith('/index.html')) {
     <p class="podium-title" style="margin-top:22px;">Your best</p>
     <div id="resultPodium" class="podium"></div>
     <button id="againBtn" class="btn-primary" style="margin-top:18px;">Turn back to the front page</button>
-    <button id="keepGoingBtn" class="btn-ghost" style="display:none;">keep going in Infinite mode →</button>
+    <!-- "Keep going" — the encore stamp. The final tally has been marked the way a
+         teacher stamps a finished page: ENCORE / INFINITE MODE pressed in red ink
+         (distressed by an SVG turbulence filter so no two edges print clean).
+         Hover re-inks it and ghosts in a second strike; clicking carries this
+         run's score straight into Infinite mode. -->
+    <button id="keepGoingBtn" class="keep-going" style="display:none;" aria-label="Keep going in Infinite mode. This run's score carries over.">
+      <span class="kg-press">
+        <svg class="kg-stamp" viewBox="0 0 260 74" aria-hidden="true" focusable="false">
+          <defs>
+            <filter id="kgStampInk" x="-8%" y="-14%" width="116%" height="128%">
+              <feTurbulence type="fractalNoise" baseFrequency="0.55" numOctaves="2" seed="13" result="speck"/>
+              <feColorMatrix in="speck" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.9 -0.35" result="holes"/>
+              <feComposite in="SourceGraphic" in2="holes" operator="out" result="patchy"/>
+              <feTurbulence type="fractalNoise" baseFrequency="0.055" numOctaves="2" seed="4" result="warp"/>
+              <feDisplacementMap in="patchy" in2="warp" scale="2.6"/>
+            </filter>
+            <!-- Presentation attributes (not CSS classes) because <use> clones live in a
+                 shadow tree that stylesheet selectors cannot reach; attributes clone fine. -->
+            <g id="kgStampArt">
+              <rect x="4" y="4" width="252" height="66" rx="9" fill="none" stroke="currentColor" stroke-width="2.6"/>
+              <rect x="10" y="10" width="240" height="54" rx="5" fill="none" stroke="currentColor" stroke-width="1.1"/>
+              <text x="130" y="44" rotate="-2 1 -1 2 -1 1" fill="currentColor" text-anchor="middle" style="font-family: var(--type); font-weight: 700; font-size: 30px; letter-spacing: 6px;">ENCORE</text>
+              <text x="130" y="59" fill="currentColor" text-anchor="middle" style="font-family: var(--type); font-weight: 700; font-size: 9px; letter-spacing: 3.2px;">&#9733; INFINITE MODE &#9733;</text>
+            </g>
+          </defs>
+          <use class="kg-ghost" href="#kgStampArt" filter="url(#kgStampInk)"/>
+          <use class="kg-print" href="#kgStampArt" filter="url(#kgStampInk)"/>
+        </svg>
+      </span>
+    </button>
 
     <!-- The fine print: keepsake lines + progression recaps sit below the actions so the
          page a player most often wants (play again) never scrolls out of reach. -->
