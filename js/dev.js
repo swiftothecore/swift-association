@@ -170,12 +170,13 @@ export function initDev(api) {
   // reduce-motion, so they exercise the real effect rather than a special case.
   const snowBtn = btn("snow", () => snowBtn.classList.toggle("on", api.eggs.snow()));
   const rainBtn = btn("rain", () => rainBtn.classList.toggle("on", api.eggs.rain()));
+  const leafBtn = btn("leaves", () => leafBtn.classList.toggle("on", api.eggs.leaves()));
   body.append(section("eggs",
     row(btn("snake", () => api.eggs.snake()), doodleSel, btn("doodle", () => api.eggs.doodle(doodleSel.value)),
         btn("sparkle", () => api.eggs.sparkle())),
     row(btn("star shower", () => api.eggs.starShower()), btn("blue wash", () => api.eggs.blueWash()),
         btn("secret 13", () => api.eggs.secret13())),
-    row(snowBtn, rainBtn),
+    row(snowBtn, rainBtn, leafBtn),
     row(penSel, btn("set pen", () => api.eggs.pen(penSel.value)))));
 
   // ---- Scattered desk beads ----------------------------------------------------

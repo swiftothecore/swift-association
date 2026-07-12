@@ -235,6 +235,7 @@ function applySettings() {
   else body.removeAttribute("data-startbtn");
   refreshSnow();   // December snowfall follows the reduce-motion setting live
   refreshRain();   // midnight rain follows the reduce-motion setting live too
+  refreshLeaves(); // autumn leaves follow the reduce-motion setting live too
 }
 
 /* ---------- December snowfall ---------- */
@@ -396,6 +397,125 @@ function stopRain() {
   }
 }
 function refreshRain() { if (rainActive()) startRain(); else stopRain(); }
+
+/* ---------- Autumn leaves ---------- */
+// The third seasonal sibling on the same rAF machinery: a full-viewport canvas of leaves
+// that tumble rather than fall. Where snow drifts and rain streaks, a leaf flutters — a
+// pendulum sway, a slow spin, and a faked edge-on flip so each one turns over on its way
+// down. Active for the Halloween week (28 Oct through 3 Nov, active timezone) and only
+// when motion is allowed. Sparse and warm: a window left open in late October, not a
+// leaf storm.
+let leafRaf = null, leaves = [], leafCanvas = null, leafCtx = null,
+    leafLast = 0, leafResizeT = null, leafResizeBound = false, devForceLeaves = false;
+// Muted autumn hues — ochre, sienna, russet, faded gold, dusty red-brown. Warm but
+// low-saturation, so they read as pressed leaves on a desk, not a neon confetti burst.
+const LEAF_HUES = ["#b5651d", "#a0522d", "#c68a3e", "#8a5a2b", "#9e4a34", "#c9a24b"];
+// The Halloween window: the 31st plus the three days either side (28 Oct through
+// 3 Nov), in the player's active timezone via todayKey so it follows the same local
+// calendar as the daily reset. The dev override bypasses the calendar but still
+// respects reduce-motion, exercising the real gate rather than a special case.
+const LEAF_DAYS = new Set(["10-28", "10-29", "10-30", "10-31", "11-01", "11-02", "11-03"]);
+function leavesActive() {
+  return (devForceLeaves || LEAF_DAYS.has(todayKey().slice(5, 10))) && !motionReduced();
+}
+function makeLeaf(w, h) {
+  const d = Math.random();   // 0 = far/small/slow, 1 = near/big/fast (faked depth)
+  return {
+    x: Math.random() * w, y: Math.random() * h,
+    size: 6 + d * 10,                    // half-length in px → ~12–32px tall
+    sp: 20 + d * 42,                     // fall speed (px/s), gentler than rain
+    sway: 16 + d * 30,                   // lateral flutter amplitude (px)
+    swayFq: 0.5 + Math.random() * 0.8,   // flutter frequency
+    swayPh: Math.random() * 6.2832,
+    rot: Math.random() * 6.2832, rotSp: (Math.random() - 0.5) * 1.6,   // spin, either way
+    flip: Math.random() * 6.2832, flipSp: 0.6 + d * 1.3,               // edge-on tumble rate
+    hue: LEAF_HUES[(Math.random() * LEAF_HUES.length) | 0],
+    o: 0.5 + d * 0.4 };
+}
+function sizeLeafCanvas() {
+  if (!leafCanvas) return;
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  const w = window.innerWidth, h = window.innerHeight;
+  leafCanvas.width = Math.max(1, Math.round(w * dpr));
+  leafCanvas.height = Math.max(1, Math.round(h * dpr));
+  leafCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  // Leaf count scales with viewport area, capped for performance. Leaves are large,
+  // so this runs sparser than snow. Depth is faked per leaf (size/speed/spin/opacity).
+  const target = Math.min(70, Math.round((w * h) / 26000));
+  if (leaves.length > target) leaves.length = target;
+  while (leaves.length < target) leaves.push(makeLeaf(w, h));
+}
+// A single leaf silhouette at the origin, pointing up: two quad curves for the ovate
+// blade, a thin darker midrib, and a short stem past the base. Caller sets the transform.
+function drawLeaf(ctx, lf) {
+  const s = lf.size;
+  ctx.beginPath();
+  ctx.moveTo(0, -s);                                   // tip
+  ctx.quadraticCurveTo(s * 0.62, -s * 0.05, 0, s);     // right edge down to base
+  ctx.quadraticCurveTo(-s * 0.62, -s * 0.05, 0, -s);   // left edge back to tip
+  ctx.closePath();
+  ctx.fillStyle = lf.hue;
+  ctx.fill();
+  if (s > 8) {   // skip veins on the tiniest far leaves — they'd just read as noise
+    ctx.strokeStyle = "rgba(58,36,16,0.4)";
+    ctx.lineWidth = Math.max(0.5, s * 0.05);
+    ctx.beginPath();
+    ctx.moveTo(0, -s * 0.85);
+    ctx.lineTo(0, s * 1.22);   // vein runs a little past the base to hint the stem
+    ctx.stroke();
+  }
+}
+function leafFrame(ts) {
+  if (!leavesActive() || !leafCtx) { stopLeaves(); return; }
+  const w = window.innerWidth, h = window.innerHeight;
+  let dt = leafLast ? (ts - leafLast) / 1000 : 0.016;
+  leafLast = ts;
+  if (dt > 0.05) dt = 0.05;   // clamp big jumps from a throttled/backgrounded tab
+  leafCtx.clearRect(0, 0, w, h);
+  for (const lf of leaves) {
+    lf.y += lf.sp * dt;
+    lf.rot += lf.rotSp * dt;
+    lf.flip += lf.flipSp * dt;
+    if (lf.y - lf.size > h) { lf.y = -lf.size; lf.x = Math.random() * w; }   // recycle up top
+    const drawX = lf.x + Math.sin(ts / 1000 * lf.swayFq + lf.swayPh) * lf.sway;   // flutter
+    leafCtx.save();
+    leafCtx.translate(drawX, lf.y);
+    leafCtx.rotate(lf.rot);
+    leafCtx.scale(Math.cos(lf.flip), 1);   // edge-on flip: width collapses then mirrors
+    leafCtx.globalAlpha = lf.o;
+    drawLeaf(leafCtx, lf);
+    leafCtx.restore();
+  }
+  leafCtx.globalAlpha = 1;
+  leafRaf = requestAnimationFrame(leafFrame);
+}
+function startLeaves() {
+  if (!leafCanvas) {
+    leafCanvas = document.getElementById("autumnleaves");
+    if (!leafCanvas) return;
+    leafCtx = leafCanvas.getContext("2d");
+  }
+  if (!leafResizeBound) {
+    window.addEventListener("resize", () => {
+      clearTimeout(leafResizeT);
+      leafResizeT = setTimeout(() => { if (leavesActive()) sizeLeafCanvas(); }, 150);
+    });
+    leafResizeBound = true;
+  }
+  sizeLeafCanvas();
+  leafCanvas.style.display = "block";
+  leafLast = 0;
+  if (!leafRaf) leafRaf = requestAnimationFrame(leafFrame);
+  unlock("autumn-leaves-falling");   // you stayed with the page through the autumn leaves
+}
+function stopLeaves() {
+  if (leafRaf) { cancelAnimationFrame(leafRaf); leafRaf = null; }
+  if (leafCanvas) {
+    leafCtx && leafCtx.clearRect(0, 0, leafCanvas.width, leafCanvas.height);
+    leafCanvas.style.display = "none";
+  }
+}
+function refreshLeaves() { if (leavesActive()) startLeaves(); else stopLeaves(); }
 // Remember the last type clicked so defaultGameType:"last" can restore it next launch.
 function rememberGameType(t) {
   if (settings.lastGameType !== t) { settings.lastGameType = t; saveSettings(settings); }
@@ -10850,6 +10970,7 @@ function buildDevApi() {
             blueWash: () => triggerBlueWash(), secret13: () => revealSecret13(),
             snow: (on) => { devForceSnow = on === undefined ? !devForceSnow : !!on; refreshSnow(); return devForceSnow; },
             rain: (on) => { devForceRain = on === undefined ? !devForceRain : !!on; refreshRain(); return devForceRain; },
+            leaves: (on) => { devForceLeaves = on === undefined ? !devForceLeaves : !!on; refreshLeaves(); return devForceLeaves; },
             pen: (p) => setPen(p || null) },
     // Scattered desk beads (js/scatter.js) — cosmetic gutter spill
     scatter: {
