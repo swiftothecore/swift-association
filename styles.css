@@ -1259,7 +1259,6 @@
   }
   .af-diff:hover { background: rgba(43,39,34,0.06); }
   .af-diff.is-on { color: var(--paper); background: var(--ink); border-color: var(--ink); }
-  #backToAlbumFocus { width: auto; margin: 0 auto; padding: 5px 18px; }
 
   /* ---------- Study page — the personal review deck ----------
      A quiet, notebook-honest layout: a lead-in, three tally tiles, the Leitner box
