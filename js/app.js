@@ -6084,9 +6084,15 @@ function endAlbumFocus() {
   const meta = `<div class="chall-result-meta">${escapeHtml(diffLabel)} · best ${rec.best}/${TOTAL_ROUNDS}` +
     ` · beaten ${beatenCount}/${STUDIO_ALBUMS.length}` +
     `${perfectedCount ? ` · perfected ${perfectedCount}/${STUDIO_ALBUMS.length}` : ""}</div>`;
+  // A two-up row like Challenges: back to the album list on the left, replay this
+  // same album at the same difficulty on the right.
   $("resultPodium").innerHTML = status + meta +
-    `<button id="backToAlbumFocus" class="btn-ghost">back to album focus</button>`;
+    `<div class="chall-result-actions">` +
+      `<button id="backToAlbumFocus" class="btn-primary">← album focus</button>` +
+      `<button id="replayAlbumFocus" class="btn-primary">replay ↺</button>` +
+    `</div>`;
   $("backToAlbumFocus").addEventListener("click", () => openAlbumFocus("start"));
+  $("replayAlbumFocus").addEventListener("click", () => startAlbumFocus(album, diff));
 
   renderResultRecap();   // surface any album-focus achievements just earned
   renderSkillsRecap();
