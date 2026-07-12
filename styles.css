@@ -256,7 +256,7 @@
   /* the era ink carried up into a single title word (recolours with the album era) */
   .mast-gold {
     background:
-      linear-gradient(180deg, rgba(255,251,230,0.34), rgba(255,251,230,0.06) 24%, rgba(255,251,230,0) 42%, rgba(66,30,0,0) 86%, rgba(66,30,0,0.1) 98%),
+      linear-gradient(180deg, rgba(255,251,230,0.22), rgba(255,251,230,0) 26%),
       linear-gradient(var(--ink-accent), var(--ink-accent));
     -webkit-background-clip: text; background-clip: text;
     -webkit-text-fill-color: transparent; color: transparent;
@@ -276,7 +276,7 @@
   /* a songwriter's underline flourish, drawn in the same pen as the era ink,
      now finishing in a little cursive loop at the right */
   .mast-swash {
-    position: absolute; left: 50%; bottom: 0.02em;
+    position: absolute; left: 50%; bottom: 0.08em;
     width: 90%; height: auto; overflow: visible;
     transform: translateX(-50%);
     /* the stroke scales with the title (no non-scaling-stroke) so the underline
@@ -292,14 +292,14 @@
     /* compact cluster that hugs the title height (the drawing is ~1.3x taller
        than wide, so keep the width modest or it pokes past the masthead) */
     width: 1.1em; height: auto; overflow: visible;
-    transform: translateY(-44%);
+    transform: translateY(-38%);
     pointer-events: none;
     stroke: var(--ink-accent); fill: none;
     stroke-width: 3.2; stroke-linecap: round; stroke-linejoin: round;
     opacity: 0.9;
   }
-  .mast-flank--l { left: -1.12em; }
-  .mast-flank--r { right: -1.32em; transform: translateY(-44%) scaleX(-1); }
+  .mast-flank--l { left: -0.95em; }
+  .mast-flank--r { right: -1.32em; transform: translateY(-38%) scaleX(-1); }
   .mast-flank .mf-spark { fill: var(--ink-accent); stroke: none; }
   /* below the font-size cap the title scales with the viewport, and the doodle
      tips ride ~2% in from the screen edges; under ~620px that air runs out */
