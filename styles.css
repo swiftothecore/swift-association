@@ -276,11 +276,14 @@
   /* a songwriter's underline flourish, drawn in the same pen as the era ink,
      now finishing in a little cursive loop at the right */
   .mast-swash {
-    position: absolute; left: 50%; bottom: -0.52em;
-    width: 94%; height: auto; overflow: visible;
+    position: absolute; left: 50%; bottom: -0.3em;
+    width: 90%; height: auto; overflow: visible;
     transform: translateX(-50%);
     /* the stroke scales with the title (no non-scaling-stroke) so the underline
-       keeps the target's bold pen weight at every size */
+       keeps the target's bold pen weight at every size.
+       the drawing space is deliberately FLAT (320x16): the svg stretches with
+       the title, so a tall viewBox amplifies every y-wiggle until the right
+       end of the line climbs into the letters at wide sizes. */
     stroke: var(--ink-accent); opacity: 0.85; pointer-events: none;
   }
   /* pen doodles flanking the title: sparkle, radiating strokes, an inked heart */
@@ -288,20 +291,22 @@
     position: absolute; top: 50%;
     /* compact cluster that hugs the title height (the drawing is ~1.3x taller
        than wide, so keep the width modest or it pokes past the masthead) */
-    width: 1.15em; height: auto; overflow: visible;
+    width: 1.1em; height: auto; overflow: visible;
     transform: translateY(-52%);
     pointer-events: none;
     stroke: var(--ink-accent); fill: none;
     stroke-width: 3.2; stroke-linecap: round; stroke-linejoin: round;
     opacity: 0.9;
   }
-  .mast-flank--l { left: -1.5em; }
-  .mast-flank--r { right: -1.5em; transform: translateY(-52%) scaleX(-1); }
+  .mast-flank--l { left: -1.32em; }
+  .mast-flank--r { right: -1.32em; transform: translateY(-52%) scaleX(-1); }
   .mast-flank .mf-spark { fill: var(--ink-accent); stroke: none; }
-  /* the doodles crowd the viewport edges once the phone gets narrow */
-  @media (max-width: 540px) { .mast-flank { display: none; } }
+  /* below the font-size cap the title scales with the viewport, and the doodle
+     tips ride ~2% in from the screen edges; under ~620px that air runs out */
+  @media (max-width: 620px) { .mast-flank { display: none; } }
   header.title p {
-    margin: 10px 0 0;
+    /* enough top clearance that the swash's low-left tail never strikes it */
+    margin: 16px 0 0;
     font-family: var(--type);
     font-size: 12px; letter-spacing: 1px;
     color: #7a5c38;  /* warm desk-brown, a faded sibling of the title's #4a3518 (sits on wood, not paper) */
