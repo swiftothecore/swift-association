@@ -235,12 +235,28 @@
     line-height: 1.1;
     white-space: nowrap;
     color: #43301a;  /* a darker take on the settings-gear brown, carved into the desk */
-    /* soft lift so the ink rests on the wood instead of sitting flat in it */
-    text-shadow: 0 1px 0 rgba(255,248,232,0.42), 0 2px 6px rgba(58,30,8,0.28);
+    /* soft lift so the ink rests on the wood instead of sitting flat in it.
+       drop-shadow (not text-shadow) because the letters are gradient-clipped:
+       a text-shadow would bleed through the transparent glyph fill. */
+    filter: drop-shadow(0 1px 0 rgba(255,248,232,0.42)) drop-shadow(0 2px 6px rgba(58,30,8,0.3));
     transform: rotate(-1.4deg);
   }
+  /* wet-ink gloss: a sheen at the top of the strokes fading into deeper ink below */
+  .mast-line {
+    background:
+      linear-gradient(180deg, rgba(255,242,214,0.5), rgba(255,242,214,0) 38%, rgba(26,14,4,0.32) 94%),
+      linear-gradient(#553c20, #553c20);
+    -webkit-background-clip: text; background-clip: text;
+    -webkit-text-fill-color: transparent; color: transparent;
+  }
   /* the era ink carried up into a single title word (recolours with the album era) */
-  .mast-gold { color: var(--ink-accent); }
+  .mast-gold {
+    background:
+      linear-gradient(180deg, rgba(255,250,228,0.55), rgba(255,250,228,0) 38%, rgba(70,32,0,0.3) 94%),
+      linear-gradient(var(--ink-accent), var(--ink-accent));
+    -webkit-background-clip: text; background-clip: text;
+    -webkit-text-fill-color: transparent; color: transparent;
+  }
   /* the dot on the first i becomes the game's gold star */
   .mast-i { position: relative; }
   .mast-i .mast-star {
@@ -253,18 +269,42 @@
     stroke-linejoin: round; stroke-linecap: round;
     filter: drop-shadow(0 1px 0 rgba(255,248,232,0.45)) drop-shadow(0 2px 5px rgba(58,30,8,0.28));
   }
-  /* a songwriter's underline flourish, drawn in the same pen as the era ink */
+  /* a songwriter's underline flourish, drawn in the same pen as the era ink,
+     now finishing in a little cursive loop at the right */
   .mast-swash {
-    position: absolute; left: 50%; bottom: -0.42em;
-    width: 88%; height: auto; overflow: visible;
+    position: absolute; left: 50%; bottom: -0.5em;
+    width: 92%; height: auto; overflow: visible;
     transform: translateX(-50%);
-    stroke: var(--ink-accent); opacity: 0.78; pointer-events: none;
+    stroke: var(--ink-accent); opacity: 0.82; pointer-events: none;
   }
+  /* pen doodles flanking the title: sparkle, radiating strokes, an inked heart */
+  .mast-flank {
+    position: absolute; top: 50%;
+    width: 1.5em; height: auto; overflow: visible;
+    transform: translateY(-56%);
+    pointer-events: none;
+    stroke: var(--ink-accent); fill: none;
+    stroke-width: 3; stroke-linecap: round; stroke-linejoin: round;
+    opacity: 0.9;
+  }
+  .mast-flank--l { left: -1.95em; }
+  .mast-flank--r { right: -1.95em; transform: translateY(-56%) scaleX(-1); }
+  .mast-flank .mf-spark { fill: var(--ink-accent); stroke: none; }
+  /* the doodles crowd the viewport edges once the phone gets narrow */
+  @media (max-width: 540px) { .mast-flank { display: none; } }
   header.title p {
     margin: 10px 0 0;
     font-family: var(--type);
     font-size: 12px; letter-spacing: 1px;
     color: #7a5c38;  /* warm desk-brown, a faded sibling of the title's #4a3518 (sits on wood, not paper) */
+  }
+  /* small inked hearts holding the tagline */
+  .tagline-row .tag-heart {
+    width: 12px; height: auto; overflow: visible;
+    margin: 0 9px; vertical-align: -2px;
+    fill: none; stroke: var(--ink-accent);
+    stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round;
+    opacity: 0.85;
   }
 
   /* ---------- Paper page ---------- */
