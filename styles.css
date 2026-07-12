@@ -243,9 +243,12 @@
     transform: rotate(-1.4deg);
   }
   /* wet-ink gloss: a sheen at the top of the strokes fading into deeper ink below */
+  /* NOTE: these gradients span the full line box, and lowercase glyphs only
+     sample the middle-to-lower band of it. Keep that band close to the base
+     colour or short letters go muddy; shade only the extremes. */
   .mast-line {
     background:
-      linear-gradient(180deg, rgba(255,246,222,0.68), rgba(255,246,222,0.1) 32%, rgba(255,246,222,0) 46%, rgba(24,12,2,0.38) 94%),
+      linear-gradient(180deg, rgba(255,246,222,0.62), rgba(255,246,222,0.08) 26%, rgba(255,246,222,0) 40%, rgba(24,12,2,0) 78%, rgba(24,12,2,0.3) 97%),
       linear-gradient(#5a3f1e, #5a3f1e);
     -webkit-background-clip: text; background-clip: text;
     -webkit-text-fill-color: transparent; color: transparent;
@@ -253,7 +256,7 @@
   /* the era ink carried up into a single title word (recolours with the album era) */
   .mast-gold {
     background:
-      linear-gradient(180deg, rgba(255,251,230,0.7), rgba(255,251,230,0.12) 32%, rgba(255,251,230,0) 46%, rgba(66,30,0,0.34) 94%),
+      linear-gradient(180deg, rgba(255,251,230,0.62), rgba(255,251,230,0.1) 26%, rgba(255,251,230,0) 40%, rgba(66,30,0,0) 82%, rgba(66,30,0,0.16) 97%),
       linear-gradient(var(--ink-accent), var(--ink-accent));
     -webkit-background-clip: text; background-clip: text;
     -webkit-text-fill-color: transparent; color: transparent;
@@ -283,15 +286,17 @@
   /* pen doodles flanking the title: sparkle, radiating strokes, an inked heart */
   .mast-flank {
     position: absolute; top: 50%;
-    width: 1.7em; height: auto; overflow: visible;
-    transform: translateY(-56%);
+    /* compact cluster that hugs the title height (the drawing is ~1.3x taller
+       than wide, so keep the width modest or it pokes past the masthead) */
+    width: 1.15em; height: auto; overflow: visible;
+    transform: translateY(-52%);
     pointer-events: none;
     stroke: var(--ink-accent); fill: none;
-    stroke-width: 3.4; stroke-linecap: round; stroke-linejoin: round;
+    stroke-width: 3.2; stroke-linecap: round; stroke-linejoin: round;
     opacity: 0.9;
   }
-  .mast-flank--l { left: -2.25em; }
-  .mast-flank--r { right: -2.25em; transform: translateY(-56%) scaleX(-1); }
+  .mast-flank--l { left: -1.5em; }
+  .mast-flank--r { right: -1.5em; transform: translateY(-52%) scaleX(-1); }
   .mast-flank .mf-spark { fill: var(--ink-accent); stroke: none; }
   /* the doodles crowd the viewport edges once the phone gets narrow */
   @media (max-width: 540px) { .mast-flank { display: none; } }
