@@ -237,22 +237,23 @@
     color: #43301a;  /* a darker take on the settings-gear brown, carved into the desk */
     /* soft lift so the ink rests on the wood instead of sitting flat in it.
        drop-shadow (not text-shadow) because the letters are gradient-clipped:
-       a text-shadow would bleed through the transparent glyph fill. */
-    filter: drop-shadow(0 1px 0 rgba(255,248,232,0.42)) drop-shadow(0 2px 6px rgba(58,30,8,0.3));
+       a text-shadow would bleed through the transparent glyph fill.
+       the tight dark shadow is the piped-ink underside; the wide one is ambient. */
+    filter: drop-shadow(0 1px 0 rgba(255,248,232,0.38)) drop-shadow(0 2px 1.5px rgba(50,26,7,0.42)) drop-shadow(0 4px 8px rgba(58,30,8,0.26));
     transform: rotate(-1.4deg);
   }
   /* wet-ink gloss: a sheen at the top of the strokes fading into deeper ink below */
   .mast-line {
     background:
-      linear-gradient(180deg, rgba(255,242,214,0.5), rgba(255,242,214,0) 38%, rgba(26,14,4,0.32) 94%),
-      linear-gradient(#553c20, #553c20);
+      linear-gradient(180deg, rgba(255,246,222,0.68), rgba(255,246,222,0.1) 32%, rgba(255,246,222,0) 46%, rgba(24,12,2,0.38) 94%),
+      linear-gradient(#5a3f1e, #5a3f1e);
     -webkit-background-clip: text; background-clip: text;
     -webkit-text-fill-color: transparent; color: transparent;
   }
   /* the era ink carried up into a single title word (recolours with the album era) */
   .mast-gold {
     background:
-      linear-gradient(180deg, rgba(255,250,228,0.55), rgba(255,250,228,0) 38%, rgba(70,32,0,0.3) 94%),
+      linear-gradient(180deg, rgba(255,251,230,0.7), rgba(255,251,230,0.12) 32%, rgba(255,251,230,0) 46%, rgba(66,30,0,0.34) 94%),
       linear-gradient(var(--ink-accent), var(--ink-accent));
     -webkit-background-clip: text; background-clip: text;
     -webkit-text-fill-color: transparent; color: transparent;
@@ -272,23 +273,25 @@
   /* a songwriter's underline flourish, drawn in the same pen as the era ink,
      now finishing in a little cursive loop at the right */
   .mast-swash {
-    position: absolute; left: 50%; bottom: -0.5em;
-    width: 92%; height: auto; overflow: visible;
+    position: absolute; left: 50%; bottom: -0.52em;
+    width: 94%; height: auto; overflow: visible;
     transform: translateX(-50%);
-    stroke: var(--ink-accent); opacity: 0.82; pointer-events: none;
+    /* the stroke scales with the title (no non-scaling-stroke) so the underline
+       keeps the target's bold pen weight at every size */
+    stroke: var(--ink-accent); opacity: 0.85; pointer-events: none;
   }
   /* pen doodles flanking the title: sparkle, radiating strokes, an inked heart */
   .mast-flank {
     position: absolute; top: 50%;
-    width: 1.5em; height: auto; overflow: visible;
+    width: 1.7em; height: auto; overflow: visible;
     transform: translateY(-56%);
     pointer-events: none;
     stroke: var(--ink-accent); fill: none;
-    stroke-width: 3; stroke-linecap: round; stroke-linejoin: round;
+    stroke-width: 3.4; stroke-linecap: round; stroke-linejoin: round;
     opacity: 0.9;
   }
-  .mast-flank--l { left: -1.95em; }
-  .mast-flank--r { right: -1.95em; transform: translateY(-56%) scaleX(-1); }
+  .mast-flank--l { left: -2.25em; }
+  .mast-flank--r { right: -2.25em; transform: translateY(-56%) scaleX(-1); }
   .mast-flank .mf-spark { fill: var(--ink-accent); stroke: none; }
   /* the doodles crowd the viewport edges once the phone gets narrow */
   @media (max-width: 540px) { .mast-flank { display: none; } }
@@ -300,11 +303,11 @@
   }
   /* small inked hearts holding the tagline */
   .tagline-row .tag-heart {
-    width: 12px; height: auto; overflow: visible;
-    margin: 0 9px; vertical-align: -2px;
+    width: 13px; height: auto; overflow: visible;
+    margin: 0 10px; vertical-align: -2px;
     fill: none; stroke: var(--ink-accent);
-    stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round;
-    opacity: 0.85;
+    stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
+    opacity: 0.9;
   }
 
   /* ---------- Paper page ---------- */
