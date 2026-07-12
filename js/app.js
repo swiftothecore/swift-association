@@ -413,7 +413,6 @@ const screens = {
   albumfocus: $("screen-albumfocus"),
   study: $("screen-study"),
   mastery: $("screen-mastery"),
-  keepsakes: $("screen-keepsakes"),
 };
 function showScreen(name) {
   // Defensive: clear any stray inline animation a flip sheet helper might have left on a real
@@ -438,7 +437,6 @@ function showScreen(name) {
   // Re-scatter the keepsake-card tape each time its screen is shown, so the pinning
   // feels hand-done rather than templated.
   if (name === "start" || name === "results") { scatterNavTape(name); updateMasteryNav(); updateKeepsakesNav(); }
-  if (name !== "keepsakes") stopKeepsakeDevWatch();   // the develop poll only runs while the wall is open
   // Move keyboard/screen-reader focus onto the newly shown screen so the next Tab
   // (and the SR reading position) start there, not on the now-hidden trigger. The
   // game screen manages its own focus on #songInput, so don't steal it there.
@@ -2491,24 +2489,27 @@ function polaroidHTML(photo, caption, opts = {}) {
   // Keepsake variant — a collectible polaroid carrying SVG art (not a photo data-URL), a
   // two-line caption, and one of three develop states. It shares the frame, washi tape and
   // tilt with the profile polaroid below; only the photo well and caption block differ.
-  //   locked     — never earned: an undeveloped --ink-soft wash, caption hidden (a mystery).
-  //   developing — earned <13min ago: solid black exposed film, the name shown.
-  //   developed  — earned 13min+ ago: the full photo + both caption lines.
+  //   locked     — never earned: a plain black rectangle, no frame or caption (a sealed mystery).
+  //   developing — earned <13min ago: the photo under a black veil that is still fading up.
+  //   developed  — earned 13min+ ago: the fully cleared photo + both caption lines.
   if (opts.keepsake) {
     const state = opts.state || "locked";
-    const cls = "polaroid polaroid-keep is-" + state + (opts.small ? " polaroid-sm" : "");
-    let well, lines;
-    if (state === "developed") {
-      well = `<span class="pol-photo pol-art">${opts.art || ""}</span>`;
-      lines = `<span class="pol-lip-main">${escapeHtml(cap)}</span>` +
-        (opts.sub ? `<span class="pol-lip-sub">${escapeHtml(opts.sub)}</span>` : "");
-    } else if (state === "developing") {
-      well = `<span class="pol-photo pol-film"></span>`;
-      lines = `<span class="pol-lip-main">${escapeHtml(cap)}</span>`;
-    } else {
-      well = `<span class="pol-photo pol-wash" aria-hidden="true"></span>`;
-      lines = "";
+    if (state === "locked") {
+      return `<span class="keep-locked${opts.small ? " keep-locked-sm" : ""}" style="--tilt:${tilt}deg" aria-hidden="true"></span>`;
     }
+    const cls = "polaroid polaroid-keep is-" + state + (opts.small ? " polaroid-sm" : "");
+    // Instant film: the photo sits under a black veil whose opacity slides from 1 (just
+    // unlocked) to 0 across POLAROID_DEVELOP_MS. `elapsed` drives a linear CSS animation
+    // (a live, continuous fade via negative delay) AND a static opacity fallback that
+    // takes over when the animation is off (reduced motion).
+    const total = POLAROID_DEVELOP_MS;
+    const elapsed = Math.max(0, opts.elapsed || 0);
+    const frac = Math.max(0, Math.min(1, 1 - elapsed / total));
+    const veil = `<span class="pol-veil" style="opacity:${frac.toFixed(3)};` +
+      `animation-duration:${Math.round(total / 1000)}s;animation-delay:-${Math.round(elapsed / 1000)}s"></span>`;
+    const well = `<span class="pol-photo pol-art">${opts.art || ""}${veil}</span>`;
+    const lines = `<span class="pol-lip-main">${escapeHtml(cap)}</span>` +
+      (state === "developed" && opts.sub ? `<span class="pol-lip-sub">${escapeHtml(opts.sub)}</span>` : "");
     return `<span class="${cls}" style="--tilt:${tilt}deg">` +
       `<span class="pol-tape" aria-hidden="true"></span>` +
       well +
@@ -2544,13 +2545,17 @@ function polaroidState(id, earned) {
   return polaroidDeveloped(iso) ? "developed" : "developing";
 }
 // Build a keepsake tile for polaroid `p` at its current develop state. `small` shrinks it.
+// `elapsed` (ms since unlock) drives the develop veil's live fade.
 function keepsakePolaroidHTML(p, opts = {}) {
-  const state = opts.state || polaroidState(p.id);
-  return polaroidHTML(null, p.name, { keepsake: true, state, art: p.art, sub: p.sub, tilt: opts.tilt, small: opts.small });
+  const earned = opts.earned || loadKeepsakes();
+  const state = opts.state || polaroidState(p.id, earned);
+  const iso = earned[p.id];
+  const elapsed = iso ? Date.now() - Date.parse(iso) : 0;
+  return polaroidHTML(null, p.name, { keepsake: true, state, elapsed, art: p.art, sub: p.sub, tilt: opts.tilt, small: opts.small });
 }
-// Re-render the Keepsakes page if it's on screen (no-op until #screen-keepsakes exists).
+// Re-render the Keepsakes wall if its modal is currently open (otherwise a no-op).
 function refreshKeepsakes() {
-  if (typeof renderKeepsakesPage === "function" && $("keepsakesBody")) renderKeepsakesPage();
+  if ($("keepsakesModal") && $("keepsakesModal").classList.contains("open")) renderKeepsakesPage();
 }
 // Dev-only: grant `id` backdated `agoMs` milliseconds (0 = fresh/developing, >13min = developed).
 function devSetKeepsake(id, agoMs) {
@@ -2559,6 +2564,7 @@ function devSetKeepsake(id, agoMs) {
   e[id] = new Date(Date.now() - (agoMs || 0)).toISOString();
   saveKeepsakes(e);
   refreshKeepsakes();
+  updateKeepsakesNav();
   return polaroidState(id);
 }
 
@@ -2572,11 +2578,28 @@ function earnPolaroid(id) {
   if (earned[id]) return false;                      // already have it
   earned[id] = new Date().toISOString();
   saveKeepsakes(earned);
-  notifyNote("new keepsake", p.name + " polaroid is developing");
+  showKeepsakeToast(p);
   updateKeepsakesNav();
   refreshKeepsakes();                                // if the wall is open, show it developing
   checkKeepsakeMeta(earned);
   return true;
+}
+
+// The keepsake unlock toast — a mini polaroid caught mid-develop (its art under a
+// half-lifted black veil) beside the "new keepsake / {name} · developing" note.
+function showKeepsakeToast(p) {
+  const layer = $("toastLayer");
+  if (!layer) return;
+  const t = document.createElement("div");
+  t.className = "toast toast-keepsake";
+  const thumb = `<span class="pol-thumb" aria-hidden="true"><span class="pol-thumb-art">${p.art || ""}` +
+    `<span class="pol-thumb-veil"></span></span></span>`;
+  t.innerHTML = thumb +
+    `<div><div class="t-label">new keepsake</div>` +
+    `<div class="t-name">${escapeHtml(p.name)}</div>` +
+    `<div class="t-sub">developing…</div></div>`;
+  layer.appendChild(t);
+  scheduleToastDismiss();
 }
 
 // You Took A Polaroid Of Us — every polaroid earned. Keys off what actually EXISTS (POLAROIDS),
@@ -2604,10 +2627,13 @@ function keepsakeCount(earned) {
   const map = earned || loadKeepsakes();
   return POLAROIDS.reduce((n, p) => n + (map[p.id] ? 1 : 0), 0);
 }
-// Keep the live "N / 22 found" indicator on the keepsakes nav-cards (start + results) current.
+// Keep the little count badge on the keepsakes icon current (hidden until the first is found).
 function updateKeepsakesNav() {
-  const text = keepsakeCount() + " / " + POLAROID_TOTAL + " found";
-  document.querySelectorAll(".js-keepsakes-kicker").forEach((el) => { el.textContent = text; });
+  const n = keepsakeCount();
+  document.querySelectorAll(".js-keepsakes-count").forEach((el) => {
+    el.textContent = n ? String(n) : "";
+    el.classList.toggle("is-empty", !n);
+  });
 }
 
 // A stable per-polaroid tilt + vertical nudge so the wall reads as hand-pinned rather than
@@ -2616,21 +2642,42 @@ function polaroidJitter(id) {
   let h = 2166136261;
   for (let i = 0; i < id.length; i++) { h = Math.imul(h ^ id.charCodeAt(i), 16777619); }
   const rng = mulberry32(h >>> 0);
-  const tilt = (rng() * 6 - 3).toFixed(2);   // -3deg .. +3deg
-  const dy = (rng() * 12 - 3).toFixed(1);    // -3px .. +9px
-  return { tilt, dy };
+  const tilt = (rng() * 14 - 7).toFixed(2);  // -7deg .. +7deg — pinned any-old-how
+  const dy = (rng() * 22 - 7).toFixed(1);    // -7px .. +15px
+  const dx = (rng() * 16 - 8).toFixed(1);    // -8px .. +8px
+  return { tilt, dy, dx };
 }
 
-let keepsakesBackTarget = "start";           // where the Keepsakes page's ← back returns to
-function openKeepsakes(from) {
-  keepsakesBackTarget = from;
+// The Keepsakes modal — opened from the camera icon beside the settings gear. Reuses the
+// settings-modal chrome (scrim + card + close), so it behaves like the other captive dialogs.
+let lastFocusedBeforeKeepsakes = null;
+function openKeepsakes() {
+  lastFocusedBeforeKeepsakes = document.activeElement;
   renderKeepsakesPage();   // also schedules the develop watch
-  flipAwayToScreen("keepsakes");
+  const m = $("keepsakesModal");
+  m.classList.add("open");
+  m.setAttribute("aria-hidden", "false");
+  document.body.classList.add("modal-open");
+  const close = $("keepsakesCloseBtn");
+  if (close) { try { close.focus({ preventScroll: true }); } catch (_) { close.focus(); } }
+}
+function closeKeepsakes() {
+  const m = $("keepsakesModal");
+  if (!m.classList.contains("open")) return;
+  stopKeepsakeDevWatch();
+  m.classList.remove("open");
+  m.setAttribute("aria-hidden", "true");
+  // Only unfreeze the page if no other modal is still holding it open.
+  if (!$("settingsModal").classList.contains("open")) document.body.classList.remove("modal-open");
+  const back = lastFocusedBeforeKeepsakes;
+  lastFocusedBeforeKeepsakes = null;
+  const target = (back && typeof back.focus === "function" && document.contains(back)) ? back : $("keepsakesGear");
+  if (target) { try { target.focus({ preventScroll: true }); } catch (_) { target.focus(); } }
 }
 
-// The polaroid wall: an eyebrow + lead, the found counter, then the messy pinned grid. Every
-// tile is a keepsake polaroid at its current develop state (locked wash / developing black /
-// developed photo), tilted by its deterministic jitter.
+// The polaroid wall: a lead, the found counter, then the messy pinned grid. Every tile is a
+// keepsake polaroid at its current develop state (blacked-out lock / developing / developed),
+// pinned at its deterministic jitter so the wall reads hand-done rather than gridded.
 function renderKeepsakesPage() {
   const body = $("keepsakesBody");
   if (!body) return;
@@ -2639,8 +2686,8 @@ function renderKeepsakesPage() {
 
   const intro =
     `<p class="chall-eyebrow">Your keepsakes</p>` +
-    `<p class="keep-lead">Polaroids from the notebook, earned by playing — each one a little moment worth pinning up. ` +
-    `Fresh ones develop like real instant film, so give a new photo a while to come through.</p>`;
+    `<p class="keep-lead">Polaroids from the notebook, earned by playing. A fresh one develops like real ` +
+    `instant film, fading up from black over thirteen minutes, so give a new photo a while to come through.</p>`;
 
   const counter =
     `<div class="keep-counter"><span class="keep-counter-n">${found}</span>` +
@@ -2650,26 +2697,23 @@ function renderKeepsakesPage() {
   const tiles = POLAROIDS.map((p) => {
     const state = polaroidState(p.id, earned);
     const j = polaroidJitter(p.id);
-    const label = state === "locked" ? "a polaroid not yet earned"
-      : state === "developing" ? p.name + " — developing" : p.name;
-    return `<div class="keep-cell" data-id="${p.id}" data-state="${state}" style="--dy:${j.dy}px" title="${escapeHtml(label)}">` +
-      keepsakePolaroidHTML(p, { state, tilt: j.tilt }) + `</div>`;
+    const label = state === "locked" ? "a keepsake not yet earned"
+      : state === "developing" ? p.name + " (developing)" : p.name;
+    return `<div class="keep-cell" data-id="${p.id}" data-state="${state}" style="--dy:${j.dy}px;--dx:${j.dx}px" title="${escapeHtml(label)}">` +
+      keepsakePolaroidHTML(p, { earned, state, tilt: j.tilt, small: true }) + `</div>`;
   }).join("");
 
   body.innerHTML = intro + counter + `<div class="keep-grid">${tiles}</div>`;
-  scheduleKeepsakeDevWatch();   // re-arm the live reveal for the next tile due to develop
+  scheduleKeepsakeDevWatch();   // re-arm the develop watch for the next tile due to finish
 }
 
-// Live reveal: instead of a running poll, schedule ONE timeout for the moment the soonest
-// still-developing tile crosses the 13-min mark, then re-render (which re-runs the .pol-art
-// fade and re-arms for the tile after it). When nothing is developing there is no timer at
-// all. Purely cosmetic and derived from stored unlock times — it never earns anything.
+// The photo veil fades continuously in pure CSS, so the only thing the watch still does is
+// re-render when a tile crosses the 13-min line, to reveal its second caption line. One
+// timeout for the soonest pending tile; none at all when nothing is developing. Derived from
+// stored unlock times, so it never earns anything.
 let keepsakeDevTimer = null;
 function scheduleKeepsakeDevWatch() {
   stopKeepsakeDevWatch();
-  // No active-guard here: openKeepsakes renders (and schedules) just before the flip marks the
-  // screen active. The timeout callback below guards on active, and leaving the page clears the
-  // timer via showScreen → stopKeepsakeDevWatch, so a stray schedule can never leak work.
   const earned = loadKeepsakes();
   let soonest = Infinity;
   for (const p of POLAROIDS) {
@@ -2681,18 +2725,8 @@ function scheduleKeepsakeDevWatch() {
   if (!Number.isFinite(soonest)) return;   // nothing developing → no timer needed
   keepsakeDevTimer = setTimeout(() => {
     keepsakeDevTimer = null;
-    if (!screens.keepsakes.classList.contains("active")) return;
-    // Which tiles are crossing the line right now? Fade just those in as they re-render.
-    const now = loadKeepsakes();
-    const crossing = POLAROIDS.filter((p) => {
-      const cell = document.querySelector('.keep-cell[data-id="' + p.id + '"]');
-      return cell && cell.dataset.state === "developing" && polaroidState(p.id, now) === "developed";
-    }).map((p) => p.id);
+    if (!$("keepsakesModal").classList.contains("open")) return;
     renderKeepsakesPage();   // re-renders + reschedules for the next pending tile
-    for (const id of crossing) {
-      const art = document.querySelector('.keep-cell[data-id="' + id + '"] .pol-art');
-      if (art) art.classList.add("pol-develop-in");
-    }
   }, Math.min(soonest + 250, 0x7fffffff));
 }
 function stopKeepsakeDevWatch() {
@@ -10701,14 +10735,14 @@ function buildDevApi() {
       develop: (id) => devSetKeepsake(id, POLAROID_DEVELOP_MS + 1000),
       // Grant `id` backdated `min` minutes, so you can watch it cross into developed live.
       setTime: (id, min) => devSetKeepsake(id, Math.max(0, (min || 0)) * 60000),
-      remove: (id) => { const e = loadKeepsakes(); delete e[id]; saveKeepsakes(e); refreshKeepsakes(); return polaroidState(id); },
+      remove: (id) => { const e = loadKeepsakes(); delete e[id]; saveKeepsakes(e); refreshKeepsakes(); updateKeepsakesNav(); return polaroidState(id); },
       // Flood the whole set: developed by default, or pass false for all-developing.
       all: (developed = true) => {
         const e = loadKeepsakes(); const ago = developed ? POLAROID_DEVELOP_MS + 1000 : 0;
         for (const p of POLAROIDS) e[p.id] = new Date(Date.now() - ago).toISOString();
-        saveKeepsakes(e); refreshKeepsakes(); return POLAROIDS.length;
+        saveKeepsakes(e); refreshKeepsakes(); updateKeepsakesNav(); return POLAROIDS.length;
       },
-      open: () => openKeepsakes("start"),                      // jump to the polaroid wall
+      open: () => openKeepsakes(),                             // jump to the polaroid wall
       reset: () => { resetKeepsakes(); refreshKeepsakes(); updateKeepsakesNav(); },
     },
     // Album Focus — force any album's board state without grinding runs, then eyeball
@@ -10869,13 +10903,21 @@ async function init() {
     if (prev === "start") { $("startContent").style.display = ""; }
     flipInToScreen(prev);
   });
-  $("keepsakesBtn").addEventListener("click", () => openKeepsakes("start"));
-  $("viewKeepsakesBtn").addEventListener("click", () => openKeepsakes("results"));
-  $("keepsakesBackBtn").addEventListener("click", () => {
-    const prev = keepsakesBackTarget;
-    stopKeepsakeDevWatch();
-    if (prev === "start") { $("startContent").style.display = ""; }
-    flipInToScreen(prev);
+  // Keepsakes modal — opened from the camera icon beside the gear, closed by ✕, scrim, or ESC.
+  $("keepsakesGear").addEventListener("click", openKeepsakes);
+  $("keepsakesCloseBtn").addEventListener("click", closeKeepsakes);
+  $("keepsakesModalScrim").addEventListener("click", closeKeepsakes);
+  $("keepsakesModal").addEventListener("keydown", (e) => {
+    if (e.key !== "Tab" || !$("keepsakesModal").classList.contains("open")) return;
+    const card = $("keepsakesModal").querySelector(".settings-card");
+    if (!card) return;
+    const focusables = Array.from(
+      card.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])')
+    ).filter((el) => !el.disabled && el.offsetParent !== null);
+    if (!focusables.length) return;
+    const first = focusables[0], last = focusables[focusables.length - 1];
+    if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+    else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
   });
   // Starbucks Lovers keepsake — the misheard "long list of ex-lovers", typed into ANY text field.
   document.addEventListener("input", (e) => {
@@ -10954,6 +10996,7 @@ async function init() {
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape" && $("settingsModal").classList.contains("open")) closeSettings();
     else if (e.key === "Escape" && $("customModal").classList.contains("open")) closeCustomModal();
+    else if (e.key === "Escape" && $("keepsakesModal").classList.contains("open")) closeKeepsakes();
   });
   $("importFile").addEventListener("change", (e) => {
     const file = e.target.files && e.target.files[0];

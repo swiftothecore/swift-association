@@ -731,73 +731,84 @@
 
   /* Keepsake polaroids — the collectible set (see js/polaroids.js). A cream instant-film
      frame that fills its grid cell, carrying SVG art and a two-line handwritten caption.
-     Three develop states: undeveloped wash (locked), black exposed film (developing), and
-     the full photo (developed). Shares the washi .pol-tape rule; just resized + retinted. */
+     Earned tiles show the photo under a black veil (.pol-veil) that fades from opaque to
+     clear across 13 minutes, like real instant film. Shares the washi .pol-tape rule. */
   .polaroid-keep {
     display: block; width: 100%; box-sizing: border-box;
     background: #f7f2e5; border: 1px solid #d8cfba; border-radius: 2px;
-    padding: 11px 11px 0; box-shadow: 0 3px 10px rgba(43, 39, 34, 0.16);
+    padding: 9px 9px 0; box-shadow: 0 3px 10px rgba(43, 39, 34, 0.16);
     transform: rotate(var(--tilt, -2deg)); transition: transform 0.16s ease;
   }
   .polaroid-keep .pol-photo {
-    display: block; width: 100%; height: auto; aspect-ratio: 1 / 1;
-    border: 1px solid #cfc6b0; border-radius: 1px; overflow: hidden; background: none;
+    display: block; position: relative; width: 100%; height: auto; aspect-ratio: 1 / 1;
+    border: 1px solid #cfc6b0; border-radius: 1px; overflow: hidden; background: #0c0a07;
   }
   .polaroid-keep .pol-art svg { display: block; width: 100%; height: 100%; }
-  .polaroid-keep .pol-wash { background: var(--ink-soft); }
-  .polaroid-keep .pol-film { background: #17140f; }   /* black exposed film, still developing */
-  /* The photo fades up once, at the moment it crosses the develop line (class added by the
-     live-reveal watch). Deliberately NOT an always-on animation: content-visibility would
-     otherwise replay it every time a tile scrolls back into view. */
-  .polaroid-keep .pol-art.pol-develop-in { animation: polDevelop 0.9s ease both; }
-  @keyframes polDevelop { from { opacity: 0; } to { opacity: 1; } }
+  /* The develop veil — a black sheet over the photo whose opacity slides 1 → 0 across the
+     13-min develop window. The linear animation gives a live, continuous fade; its negative
+     delay (elapsed, set inline) resumes it at the right point after a reload. Under reduced
+     motion the animation is off and the inline static opacity (also elapsed-derived) shows. */
+  .polaroid-keep .pol-veil {
+    position: absolute; inset: 0; background: #0c0a07;
+    animation-name: polDevelopFade; animation-timing-function: linear; animation-fill-mode: both;
+  }
+  @keyframes polDevelopFade { from { opacity: 1; } to { opacity: 0; } }
+  /* Locked — a sealed keepsake: just a black rectangle, no cream frame or caption at all. */
+  .keep-locked {
+    display: block; width: 100%; aspect-ratio: 5 / 6; box-sizing: border-box;
+    background: #0c0a07; border-radius: 2px; box-shadow: 0 2px 6px rgba(43, 39, 34, 0.20);
+    transform: rotate(var(--tilt, -2deg)); transition: transform 0.16s ease;
+  }
   .pol-cap {
-    min-height: 54px; display: flex; flex-direction: column;
+    min-height: 42px; display: flex; flex-direction: column;
     align-items: center; justify-content: center; gap: 2px;
-    padding: 6px 4px 8px; text-align: center;
+    padding: 5px 3px 7px; text-align: center;
   }
   .pol-lip-main {
-    font-family: var(--hand); font-weight: 600; font-size: 24px; line-height: 1.05;
+    font-family: var(--hand); font-weight: 600; font-size: 20px; line-height: 1.05;
     color: #403a2e; max-width: 100%;
   }
   .pol-lip-sub {
-    font-family: var(--hand); font-weight: 500; font-size: 14.5px; line-height: 1.1;
+    font-family: var(--hand); font-weight: 500; font-size: 13px; line-height: 1.1;
     color: #8b8272; max-width: 100%;
   }
   .polaroid-keep .pol-tape {
-    width: 72px; height: 20px; top: -10px;
+    width: 58px; height: 17px; top: -9px;
     transform: translateX(-50%) rotate(-3deg);
     --tape-color: rgba(224, 196, 120, 0.6);
   }
   @media (prefers-reduced-motion: reduce) {
-    .polaroid-keep { transition: none; }
-    .polaroid-keep .pol-art.pol-develop-in { animation: none; }
+    .polaroid-keep, .keep-locked { transition: none; }
+    .polaroid-keep .pol-veil { animation: none; }
   }
 
-  /* Keepsakes page — a lead, the found counter, then the messy pinned polaroid wall. */
+  /* Keepsakes modal — a lead, the found counter, then the messy pinned polaroid wall. The
+     tiles are small and jittered (translate + rotate) so the wall reads scattered, not gridded. */
   .keep-lead {
-    font-family: var(--type); font-size: 13px; color: var(--ink-soft);
-    line-height: 1.55; margin: 4px 0 18px; max-width: 62ch;
+    font-family: var(--type); font-size: 12.5px; color: var(--ink-soft);
+    line-height: 1.55; margin: 4px 0 14px; max-width: 60ch;
   }
-  .keep-counter { display: flex; align-items: baseline; gap: 9px; margin: 0 0 6px; }
-  .keep-counter-n { font-family: var(--hand); font-size: 42px; font-weight: 700; color: var(--ink); line-height: 1; }
-  .keep-counter-d { font-family: var(--hand); font-size: 24px; color: var(--ink-soft); }
+  .keep-counter { display: flex; align-items: baseline; gap: 9px; margin: 0 0 4px; }
+  .keep-counter-n { font-family: var(--hand); font-size: 38px; font-weight: 700; color: var(--ink); line-height: 1; }
+  .keep-counter-d { font-family: var(--hand); font-size: 22px; color: var(--ink-soft); }
   .keep-counter-l {
     font-family: var(--type); font-size: 10px; letter-spacing: 1.4px;
     text-transform: uppercase; color: var(--ink-soft);
   }
   .keep-grid {
-    display: grid; grid-template-columns: repeat(auto-fill, minmax(148px, 1fr));
-    gap: 26px 20px; align-items: start; padding: 18px 6px 20px;
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+    gap: 18px 12px; align-items: start; padding: 16px 4px 12px;
   }
-  /* content-visibility lets the browser skip rendering off-screen tiles — a full wall is 21
+  /* content-visibility lets the browser skip rendering off-screen tiles — a full wall is 22
      detailed inline SVGs, so this keeps scrolling smooth. The intrinsic size reserves each
      cell's rough footprint so the scrollbar/layout stay stable before a tile paints. */
-  .keep-cell { transform: translateY(var(--dy, 0)); content-visibility: auto; contain-intrinsic-size: auto 180px auto 300px; }
-  .keep-cell[data-state="locked"] .polaroid-keep { box-shadow: 0 2px 6px rgba(43, 39, 34, 0.10); }
+  .keep-cell {
+    transform: translate(var(--dx, 0), var(--dy, 0));
+    content-visibility: auto; contain-intrinsic-size: auto 130px auto 180px;
+  }
   @media (max-width: 560px) {
-    .keep-grid { grid-template-columns: repeat(auto-fill, minmax(116px, 1fr)); gap: 20px 14px; }
-    .keep-counter-n { font-size: 34px; }
+    .keep-grid { grid-template-columns: repeat(auto-fill, minmax(82px, 1fr)); gap: 14px 10px; }
+    .keep-counter-n { font-size: 32px; }
   }
   @media (prefers-reduced-motion: reduce) { .keep-cell { transform: none; } }
 
@@ -3044,6 +3055,21 @@
   .toast .charm { width: 34px; height: 34px; flex: none; }
   .toast .t-label { font-family: var(--type); font-size: 10px; letter-spacing: 1px; color: var(--ink-soft); text-transform: uppercase; }
   .toast .t-name { font-family: var(--hand); font-weight: 700; font-size: 21px; color: var(--ink); line-height: 1.05; }
+  .toast .t-sub { font-family: var(--type); font-size: 10.5px; letter-spacing: 0.4px; color: var(--ink-soft); margin-top: 1px; }
+  /* Keepsake toast thumbnail — a tiny cream polaroid caught mid-develop: the art under a
+     black veil held at half opacity, so the unlock note shows a photo just coming through. */
+  .toast .pol-thumb {
+    flex: none; width: 40px; box-sizing: border-box;
+    background: #f7f2e5; border: 1px solid #d8cfba; border-radius: 2px;
+    padding: 3px 3px 7px; box-shadow: 0 2px 5px rgba(43, 39, 34, 0.22);
+    transform: rotate(-5deg);
+  }
+  .toast .pol-thumb-art {
+    display: block; position: relative; width: 100%; aspect-ratio: 1 / 1;
+    border-radius: 1px; overflow: hidden; background: #0c0a07;
+  }
+  .toast .pol-thumb-art svg { display: block; width: 100%; height: 100%; }
+  .toast .pol-thumb-veil { position: absolute; inset: 0; background: #0c0a07; opacity: 0.5; }
   @keyframes toastIn { from { opacity: 0; transform: translateX(30px) rotate(-1deg); } to { opacity: 1; transform: translateX(0) rotate(-1deg); } }
   @keyframes toastOut { to { opacity: 0; transform: translateX(30px) rotate(-1deg); } }
 
@@ -4056,6 +4082,19 @@
   .settings-gear svg { display: block; width: 100%; height: 100%; }
   .settings-gear:hover { background: var(--highlighter); transform: scale(1.08); }
   @media (min-width: 1040px) { .settings-gear { top: 18px; right: 22px; } }
+
+  /* Keepsakes icon — sits to the left of the settings gear. Hidden during active play so it
+     doesn't clutter the board (and can't sidestep the timer, which only the gear pauses). */
+  .keepsakes-gear { right: 64px; }
+  @media (min-width: 1040px) { .keepsakes-gear { right: 72px; } }
+  body.in-game .keepsakes-gear { display: none; }
+  .keepsakes-gear-badge {
+    position: absolute; top: -4px; right: -4px; min-width: 17px; height: 17px; padding: 0 4px;
+    box-sizing: border-box; border-radius: 9px; background: var(--ink); color: var(--paper);
+    font-family: var(--type); font-size: 10px; font-weight: 700; line-height: 17px;
+    text-align: center; box-shadow: 0 1px 3px rgba(43, 39, 34, 0.3);
+  }
+  .keepsakes-gear-badge.is-empty { display: none; }
 
   .settings-modal { position: fixed; inset: 0; z-index: 200; display: none; }
   .settings-modal.open { display: block; }
