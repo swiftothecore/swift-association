@@ -161,6 +161,7 @@ let devilBannedInitials = [];   // Forbidden Letters: title-start letters no lon
 let devilPoolHard = false;      // Rarer Air: remaining words drawn from the rarer pool
 let roundWildcard = null;       // Wildcard: this round's active sub-constraint
 let lastWildcardId = "";        // Wildcard: previous round's constraint id (no immediate repeat)
+let devForcedWildcardId = null; // Dev tools: pin every Wildcard round to one sub-rule (or null)
 // Impostor: which of the 13 pages show a fake word (Set of round numbers), whether THIS page
 // is a fake, and the run outcome trackers. impostorFailed short-circuits the win to a loss.
 let impostorRounds = new Set(); // rounds (1-based) whose prompt word is an impostor decoy
@@ -5787,9 +5788,11 @@ function buildWildcardConstraints() {
 function applyWildcardRound(wrap) {
   const cons = buildWildcardConstraints();
   const usable = cons.filter((c) => !c.accepts || currentSongs.some(c.accepts));
+  // Dev tools: pin the round to a chosen sub-rule when it's solvable this round.
+  const forced = devForcedWildcardId && usable.find((c) => c.id === devForcedWildcardId);
   let pool = usable.filter((c) => c.id !== lastWildcardId);
   if (!pool.length) pool = usable.length ? usable : cons;
-  roundWildcard = pool[Math.floor(Math.random() * pool.length)];
+  roundWildcard = forced || pool[Math.floor(Math.random() * pool.length)];
   lastWildcardId = roundWildcard.id;
   renderWildcardBanner(roundWildcard.label);
   // NOTE: the visual gimmick (vanish/scramble) is NOT run here — it's deferred to
@@ -8471,6 +8474,14 @@ function showWrongFeedback(song, isTimeout) {
   let help = "";
   if (n > 0) {
     let pool = currentSongs;
+    // Wildcard: currentSongs is the full lyrics-valid set (never narrowed to the round's
+    // sub-rule), so filter the reveal to songs that actually satisfy the active constraint
+    // — otherwise a miss would showcase songs the rule soft-rejects (a multi-word title
+    // under "only one-word titles", an off-album song under "only from …", etc.). The
+    // rule guarantees at least one such song exists (applyWildcardRound only picks solvable
+    // constraints). Null-accepts rules (vanish/scramble) impose no answer constraint.
+    if (currentChallenge && currentChallenge.rule === "wildcard" && roundWildcard && roundWildcard.accepts)
+      pool = pool.filter(roundWildcard.accepts);
     // Double Trouble: don't showcase a song the player already named on this page (e.g.
     // they got the first of the pair, then missed the second) — only surface fresh options.
     if (currentChallenge && currentChallenge.rule === "multi" && roundNamed.length)
@@ -10793,6 +10804,14 @@ function buildDevApi() {
         forceRounds: (...rs) => { impostorRounds = new Set(rs.map((r) => r | 0).filter((r) => r >= 1 && r <= TOTAL_ROUNDS)); },
         win: () => { impostorFailed = false; score = ((CHALLENGE_BY_ID.impostor.target) || 7) + impostorFlagged; endGame(); },
         lose: (kind) => impostorGameOver(kind || "answered"),      // "answered" | "timeout" | "falseflag"
+      },
+      // Wildcard — inspect / pin the per-round sub-rule (useful for verifying the
+      // wrong-answer reveal only surfaces songs the active rule accepts).
+      wildcard: {
+        ids: () => ["oneword", "twoword", "long", "vowel", "consonant", "notitle", "titleword", "vanish", "scramble", "album"],
+        current: () => roundWildcard && roundWildcard.id,
+        force: (id) => { devForcedWildcardId = id || null; return devForcedWildcardId; },
+        clear: () => { devForcedWildcardId = null; },
       },
       // Sea of Songs — the tap-a-title grid minigame.
       sea: {
