@@ -500,13 +500,15 @@ if (location.pathname.endsWith('/index.html')) {
   </svg>
 </button>
 
-<!-- KEEPSAKES ICON — sits beside the settings gear; opens the polaroid-wall modal -->
+<!-- KEEPSAKES ICON — sits beside the settings gear; opens the keepsakes modal. An open
+     keepsake trunk with a sparkle rising out: deliberately not a polaroid, so it still
+     fits when keepsake kinds beyond the polaroid wall arrive. -->
 <button id="keepsakesGear" class="settings-gear keepsakes-gear" aria-label="Keepsakes" title="Keepsakes">
   <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-    <rect x="4" y="4.5" width="16" height="15" rx="1.4"/>
-    <rect x="6.4" y="6.9" width="11.2" height="7.4"/>
-    <path d="M6.4 12.8 L9.8 9.4 L12.2 11.8 L14.6 8.4 L17.6 12.8"/>
-    <circle cx="8.8" cy="8.7" r="0.85"/>
+    <rect x="4.4" y="12.4" width="15.2" height="8" rx="1.2"/>
+    <path d="M4.4 12.4 L2.6 7.8 Q2.3 6.9 3.2 6.9 L20.8 6.9 Q21.7 6.9 21.4 7.8 L19.6 12.4"/>
+    <path d="M12 15.6 v2.2"/>
+    <path d="M12 1.6 L12.8 3.1 L14.3 3.9 L12.8 4.7 L12 6.2 L11.2 4.7 L9.7 3.9 L11.2 3.1 Z" fill="currentColor" stroke="none"/>
   </svg>
   <span class="keepsakes-gear-badge js-keepsakes-count is-empty" aria-hidden="true"></span>
 </button>
