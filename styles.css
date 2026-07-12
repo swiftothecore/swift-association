@@ -1129,6 +1129,39 @@
     --btn-mark: rgba(245, 239, 225, 0.26);
   }
 
+  /* Album Focus reuses the same two-up row, but gets its own colours + patterns so it
+     never reads as a copy of Challenges: back is a warm terracotta crosshatch (woven
+     diagonals), replay is a plum field of hollow rings. */
+  #backToAlbumFocus {
+    --btn-wash: rgba(181, 98, 63, 0.28);
+    --btn-mark: rgba(150, 74, 44, 0.36);
+    background-color: var(--btn-wash);
+    background-image:
+      repeating-linear-gradient(45deg, var(--btn-mark) 0 1.5px, transparent 1.5px 8px),
+      repeating-linear-gradient(-45deg, var(--btn-mark) 0 1.5px, transparent 1.5px 8px);
+    transition: --btn-wash 0.22s ease, --btn-mark 0.22s ease, color 0.2s ease, transform 0.12s, box-shadow 0.2s;
+  }
+  #backToAlbumFocus:hover {
+    color: var(--paper);
+    --btn-wash: #b5623f;
+    --btn-mark: rgba(245, 239, 225, 0.28);
+  }
+
+  #replayAlbumFocus {
+    --btn-wash: rgba(138, 106, 168, 0.28);
+    --btn-mark: rgba(122, 90, 158, 0.42);
+    background-color: var(--btn-wash);
+    background-image: radial-gradient(circle, transparent 1.4px, var(--btn-mark) 1.5px 2.3px, transparent 2.4px);
+    background-size: 11px 11px;
+    background-position: 3px 3px;
+    transition: --btn-wash 0.22s ease, --btn-mark 0.22s ease, color 0.2s ease, transform 0.12s, box-shadow 0.2s;
+  }
+  #replayAlbumFocus:hover {
+    color: var(--paper);
+    --btn-wash: #7a5a9e;
+    --btn-mark: rgba(245, 239, 225, 0.30);
+  }
+
   /* The full-width "front page" button keeps its era highlighter wash, but picks up a
      faint graph-paper grid so it reads as patterned alongside the dotted challenges and
      diagonally-ruled replay buttons. Inked (not a fixed hue) so it rides every era. */
