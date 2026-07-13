@@ -35,10 +35,12 @@ if (location.pathname.endsWith('/index.html')) {
 <meta name="apple-mobile-web-app-title" content="Song Assoc." />
 <link rel="icon" type="image/svg+xml" href="icons/favicon.svg" />
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
-<link rel="preconnect" href="https://fonts.googleapis.com" />
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;500;600;700&family=Courier+Prime:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css?v=29" />
+<!-- Fonts are self-hosted and declared in styles.css (@font-face, font-display:
+     optional). Preload the two faces used above the fold so first paint can use
+     the real face and skip the flash; the rest load on demand. -->
+<link rel="preload" href="fonts/caveat-latin.woff2" as="font" type="font/woff2" crossorigin />
+<link rel="preload" href="fonts/courierprime-400-latin.woff2" as="font" type="font/woff2" crossorigin />
+  <link rel="stylesheet" href="styles.css?v=30" />
 </head>
 <body data-era="gold">
 <!-- Hand-drawn wobble for the penned achievement charms. Referenced by .charm svg

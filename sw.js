@@ -5,16 +5,23 @@
  *    offline, and to the cached index.html for navigations). This deliberately
  *    avoids the "my deploy isn't showing up" stale-code trap — no need to bump
  *    CACHE on every change; bump it only to evict stale precached entries.
- *  - cross-origin (Google Fonts) → CACHE-FIRST (offline fonts; they ~never change).
+ *  - cross-origin → CACHE-FIRST (kept as a safety net; the fonts are now
+ *    self-hosted same-origin, so in practice nothing hits this branch).
  *
  * Paths are relative so the worker works at the site root (swiftassociation.com)
  * and under any project subpath, without hardcoding the origin.
  */
-const CACHE = "stta-v9";
+const CACHE = "stta-v10";
 const ASSETS = [
   "./",
   "index.html",
   "styles.css",
+  // Self-hosted fonts (latin subset). Precached so first offline load has the
+  // real faces; declared via @font-face in styles.css / search.css.
+  "fonts/caveat-latin.woff2",
+  "fonts/courierprime-400-latin.woff2",
+  "fonts/courierprime-700-latin.woff2",
+  "fonts/courierprime-italic-latin.woff2",
   "js/app.js",
   "js/util.js",
   "js/config.js",

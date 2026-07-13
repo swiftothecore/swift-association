@@ -29,9 +29,10 @@
 <meta name="apple-mobile-web-app-title" content="The Lyric" />
 <link rel="icon" type="image/svg+xml" href="../icons/favicon-search.svg" />
 <link rel="apple-touch-icon" href="../icons/apple-touch-icon-search.png" />
-<link rel="preconnect" href="https://fonts.googleapis.com" />
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;500;600;700&family=Courier+Prime:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet" />
+<!-- Fonts are self-hosted and declared in search.css (@font-face, font-display:
+     optional). Preload the two above-the-fold faces so first paint skips the flash. -->
+<link rel="preload" href="../fonts/caveat-latin.woff2" as="font" type="font/woff2" crossorigin />
+<link rel="preload" href="../fonts/courierprime-400-latin.woff2" as="font" type="font/woff2" crossorigin />
 <link rel="stylesheet" href="search.css" />
 </head>
 <body>
