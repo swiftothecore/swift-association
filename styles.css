@@ -3131,6 +3131,51 @@
   .snake-overlay.leaving { animation: none; opacity: 0; transition: opacity 0.7s ease; }
   @keyframes snakeFade { to { opacity: 1; } }
 
+  /* Yes, whale! — the leg-like tail surfacing from behind the top edge of the
+     notebook. The wrapper is an overflow-hidden window flush with the paper line,
+     so the tail is clipped at the card edge while it rises, sells "behind the
+     page", and needs no z-index games with the card itself. */
+  .whale-egg {
+    position: absolute; bottom: 100%; margin-bottom: -1px;
+    width: 66px; height: 68px;
+    overflow: hidden; pointer-events: none; z-index: 2;
+  }
+  .whale-tail {
+    display: block; width: 100%; height: 100%;
+    margin: 0; padding: 0; border: 0; background: none; appearance: none;
+    pointer-events: auto; cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transform: translateY(103%);
+    transition: transform 1s cubic-bezier(0.23, 1, 0.32, 1);
+    filter: drop-shadow(2px 3px 3px rgba(20, 16, 12, 0.25));
+  }
+  .whale-egg.up .whale-tail { transform: translateY(4%); }
+  .whale-tail svg { display: block; width: 100%; height: 100%; }
+  .whale-egg.up .whale-tail svg { animation: whaleBob 2.8s ease-in-out infinite; }
+  @keyframes whaleBob {
+    0%, 100% { transform: translateY(0) rotate(0deg); }
+    50% { transform: translateY(5px) rotate(-2.4deg); }
+  }
+  /* caught: a droplet splash and a quick dive */
+  .whale-egg.caught .whale-tail { transform: translateY(103%); transition: transform 0.5s ease-in; }
+  .whale-egg.caught .whale-tail svg { animation: none; }
+  .whale-splash {
+    position: absolute; left: 50%; top: 30%;
+    width: 110px; height: 55px; margin-left: -55px;
+    opacity: 0; pointer-events: none;
+  }
+  .whale-splash svg { display: block; width: 100%; height: 100%; }
+  .whale-egg.caught .whale-splash { animation: whaleSplash 0.7s ease-out forwards; }
+  @keyframes whaleSplash {
+    0% { opacity: 0; transform: translateY(12px) scale(0.5); }
+    25% { opacity: 1; }
+    100% { opacity: 0; transform: translateY(-14px) scale(1.15); }
+  }
+  /* reduced motion: the tail simply appears and disappears — same 13s window */
+  body[data-reduce-motion="on"] .whale-tail { transition: none; }
+  body[data-reduce-motion="on"] .whale-egg.up .whale-tail svg { animation: none; }
+  body[data-reduce-motion="on"] .whale-egg.caught .whale-splash { animation: none; opacity: 1; }
+
   /* The three pens — a rare swap of the resting pencil */
   .input-area[data-pen]::before { content: none; }
   .pen-glyph { position: absolute; left: -2px; bottom: 5px; z-index: 1; width: 22px; height: 22px; pointer-events: none; color: var(--ink-soft); }

@@ -18,6 +18,7 @@ import {
   CUSTOM_EXAMPLES_MAX, CUSTOM_MAX_PRESETS, CUSTOM_NAME_MAX, CUSTOM_DEFAULT_MODE,
   CUSTOM_ROUNDS_MIN, CUSTOM_ROUNDS_MAX, CUSTOM_LIVES_MIN, CUSTOM_LIVES_MAX, CUSTOM_ANSWER_MODES,
   PEN_SVG, STAR_SVG, SPARKLE_SVG, DOODLE_SVG, DOODLE_SIZE,
+  WHALE_SURFACE_MS, WHALE_TAIL_SVG, WHALE_SPLASH_SVG,
   SKILLS, SKILL_IDS, SKILL_BY_ID,
   TEMPO_BASE, TEMPO_SPEED, LYRIC_TIER_XP, LYRIC_LEN_REF,
   ENDURANCE_GROWTH, ENDURANCE_RUN_CAP, RANGE_RATIO_XP, RANGE_PER_ALBUM,
@@ -9025,6 +9026,8 @@ let roundAnswerAlbums = [];      // per-round distinct albums among the round's 
 const PEN_LABELS = { quill: "quill pen", fountain: "fountain pen", glitter: "glitter gel pen" };
 
 function clearEggs() {
+  // (the whale egg is deliberately NOT cleared here — it lives off the page, behind
+  // the top edge, and its 13-second visit is meant to survive page turns)
   stopSnake();
   const layer = $("doodleLayer");
   if (layer) layer.innerHTML = "";
@@ -9094,6 +9097,11 @@ function runRoundEggs() {
   } else if (chance(0.05)) {
     addDoodle("thirteen", "corner-bl");
   }
+
+  // Yes, whale! — its own rare roll, independent of the margin-doodle chain above,
+  // because the tail lives off the page (behind the top edge), not in the margins.
+  // One visitor at a time; the click-to-catch keepsake trigger lives in surfaceWhale.
+  if (!document.querySelector(".whale-egg") && chance(0.035)) surfaceWhale();
 
   // A Mastery-chosen pen is the persistent default each round; otherwise the rare random swap.
   if (settings.masteryPen) {
@@ -9276,6 +9284,48 @@ function slitherSnake() {
     snakeRaf = requestAnimationFrame(frame);
   }
   snakeRaf = requestAnimationFrame(frame);
+}
+
+// Yes, whale! — the famous whale tail that looks like a pair of legs surfaces from
+// behind the top edge of the notebook, treads water for 13 seconds, and dives back
+// down. Catch it with a click before it goes for the "yes, whale!" keepsake
+// (earnPolaroid is idempotent, so it keeps visiting once earned). The wrapper is an
+// overflow-hidden window sitting flush above the card's top edge, so the tail rises
+// into view already clipped at the paper line — as if the desk behind the notebook
+// were open water. Deliberately outside the doodle layer and clearEggs: the visit
+// spans page turns, and only ends on its own clock (or the catch).
+let whaleTimers = [];
+function stopWhale() {
+  whaleTimers.forEach(clearTimeout);
+  whaleTimers = [];
+  const w = document.querySelector(".whale-egg");
+  if (w) w.remove();
+}
+function surfaceWhale() {
+  const card = $("screen-game");
+  if (!card) return;
+  stopWhale();
+  const wrap = document.createElement("div");
+  wrap.className = "whale-egg";
+  wrap.setAttribute("aria-hidden", "true");                // a pointer-only secret, like the other visual eggs
+  wrap.style.left = (10 + Math.random() * 62) + "%";       // a different spot along the paper line each visit
+  wrap.innerHTML =
+    `<button type="button" class="whale-tail" tabindex="-1">${WHALE_TAIL_SVG}</button>` +
+    `<span class="whale-splash">${WHALE_SPLASH_SVG}</span>`;
+  card.appendChild(wrap);
+  wrap.querySelector(".whale-tail").addEventListener("click", () => {
+    if (wrap.classList.contains("caught")) return;
+    wrap.classList.add("caught");                          // splash + a quick dive (CSS)
+    earnPolaroid("yes-whale");
+    whaleTimers.forEach(clearTimeout);
+    whaleTimers = [setTimeout(stopWhale, 900)];
+  });
+  // Flush styles, then rise, so the transition runs from the hidden position
+  // (a forced reflow, not rAF — rAF stalls in throttled/background tabs).
+  void wrap.offsetHeight;
+  wrap.classList.add("up");
+  whaleTimers.push(setTimeout(() => wrap.classList.remove("up"), WHALE_SURFACE_MS));
+  whaleTimers.push(setTimeout(stopWhale, WHALE_SURFACE_MS + 1300));
 }
 
 // A burst of sparkles on a correct answer — the longer the streak, the
@@ -10953,7 +11003,7 @@ function buildDevApi() {
     reset: { records: resetRecords, stats: resetStatsAll, ach: () => { resetAchievements(); earnedAchievements = {}; },
              tally: resetTally, daily: resetDaily, all: clearAllData },
     // Visual eggs
-    eggs: { snake: () => slitherSnake(), doodle: (k) => addDoodle(k || "cat", "corner-br"),
+    eggs: { snake: () => slitherSnake(), whale: () => surfaceWhale(), doodle: (k) => addDoodle(k || "cat", "corner-br"),
             sparkle: () => celebrateCorrect(3), starShower: () => celebratePerfect(),
             blueWash: () => triggerBlueWash(), secret13: () => revealSecret13(),
             snow: (on) => { devForceSnow = on === undefined ? !devForceSnow : !!on; refreshSnow(); return devForceSnow; },

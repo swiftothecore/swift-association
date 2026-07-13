@@ -1182,3 +1182,20 @@ export const DOODLE_SIZE = {
   guitar: [46, 62], thirteen: [46, 56], cardigan: [62, 54], mirrorball: [56, 62],
   paperplane: [64, 46], willow: [58, 60], seagulls: [64, 44],
 };
+
+// Yes, whale! — the famous whale tail that looks for all the world like a pair of
+// legs, surfacing from behind the top edge of the notebook (see surfaceWhale in
+// app.js). Same slate-and-spray palette as the "yes, whale!" polaroid so the
+// keepsake reads as a photo of this exact visitor. How long it treads water is
+// WHALE_SURFACE_MS — 13 seconds, of course.
+export const WHALE_SURFACE_MS = 13000;
+export const WHALE_TAIL_SVG = `<svg viewBox="0 0 100 100" role="img"><title>A whale tail that looks like a pair of legs, sticking up from behind the page</title>
+  <path d="M28 100 C26 76 27 46 32 20 Q32 10 26 4 Q33 8 35 16 C39 36 42 60 46 82 Q48 87 50 83 C55 62 59 38 62 16 Q63 7 72 1 Q69 9 68.5 18 C73 44 74 74 72 100 Z" fill="#27384a"/>
+  <path d="M28.5 82 C27.5 62 28 44 30.5 26 M72.5 80 C73.5 60 73 42 70 22" stroke="#3d5166" stroke-width="2.6" fill="none" stroke-linecap="round" opacity=".7"/>
+  <g fill="#dfe7ec"><circle cx="33" cy="72" r="1"/><circle cx="34" cy="52" r="0.85"/><circle cx="36" cy="32" r="0.8"/><circle cx="67" cy="68" r="1"/><circle cx="66" cy="48" r="0.85"/><circle cx="64" cy="28" r="0.8"/></g>
+  <g fill="#6d94a8"><path d="M18 12 q1.7 2.8 0 4.3 q-1.7 -1.5 0 -4.3 z"/><path d="M80 8 q1.6 2.6 0 4 q-1.6 -1.4 0 -4 z"/><path d="M49 50 q1.4 2.3 0 3.6 q-1.4 -1.3 0 -3.6 z"/><circle cx="16" cy="24" r="1.2"/><circle cx="84" cy="18" r="1.1"/></g>
+</svg>`;
+export const WHALE_SPLASH_SVG = `<svg viewBox="0 0 120 60" aria-hidden="true">
+  <g fill="#6d94a8"><circle cx="18" cy="28" r="3"/><circle cx="38" cy="13" r="2.4"/><circle cx="60" cy="7" r="3.2"/><circle cx="82" cy="13" r="2.4"/><circle cx="102" cy="28" r="3"/><circle cx="28" cy="42" r="2"/><circle cx="92" cy="42" r="2"/></g>
+  <g fill="#9fb8c4"><circle cx="48" cy="21" r="1.6"/><circle cx="72" cy="21" r="1.6"/><circle cx="60" cy="35" r="1.8"/><circle cx="12" cy="16" r="1.3"/><circle cx="108" cy="16" r="1.3"/></g>
+</svg>`;
