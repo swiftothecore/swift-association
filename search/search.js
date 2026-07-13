@@ -487,7 +487,7 @@ function render(terms, groups) {
   // "Play this word" — only for a SINGLE term that is a real prompt word the game can
   // start a round on (gated by words.json), so the link never dead-ends.
   const play = (terms.length === 1 && PROMPT_WORDS.has(terms[0].toLowerCase()))
-    ? ` <a class="sx-play" href="../index.html?word=${encodeURIComponent(terms[0].toLowerCase())}" title="Start a game round on this word">play this word in the game &rarr;</a>`
+    ? ` <a class="sx-play" href="../?word=${encodeURIComponent(terms[0].toLowerCase())}" title="Start a game round on this word">play this word in the game &rarr;</a>`
     : "";
   const share = ` <button type="button" class="sx-copy" id="copyLink" title="Copy a shareable link to this search">` +
     `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">` +
