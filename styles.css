@@ -260,6 +260,15 @@
       linear-gradient(var(--ink-accent), var(--ink-accent));
     -webkit-background-clip: text; background-clip: text;
     -webkit-text-fill-color: transparent; color: transparent;
+    /* Its own gold-toned lift. The h1's brown drop-shadow is the piped-ink
+       underside for the dark letters, but under this gold word its dark edge
+       pooled as a brown smudge on the lone "g" descender. This gold shadow is
+       drawn first (inside the h1, before that brown shadow), so what peeks out
+       below the strokes is gold, not brown. Driven off --ink-accent so it
+       recolours with the era alongside the fill. */
+    filter:
+      drop-shadow(0 2px 0 color-mix(in srgb, var(--ink-accent) 90%, transparent))
+      drop-shadow(0 3px 2px color-mix(in srgb, var(--ink-accent) 52%, transparent));
   }
   /* the dot on the first i becomes the game's gold star */
   .mast-i { position: relative; }
@@ -276,7 +285,7 @@
   /* a songwriter's underline flourish, drawn in the same pen as the era ink,
      now finishing in a little cursive loop at the right */
   .mast-swash {
-    position: absolute; left: 50%; bottom: 0.08em;
+    position: absolute; left: 50%; bottom: -0.14em;
     width: 90%; height: auto; overflow: visible;
     transform: translateX(-50%);
     /* the stroke scales with the title (no non-scaling-stroke) so the underline
