@@ -38,7 +38,7 @@ function saveStore(o) {
 }
 function applyPrefs() {
   const s = loadStore();
-  if (["stem", "exact", "fuzzy"].includes(s.mode)) state.mode = s.mode;
+  if (["stem", "exact", "fuzzy", "contains"].includes(s.mode)) state.mode = s.mode;
   if (s.view === "flat") state.grouped = false;
   else if (s.view === "grouped") state.grouped = true;
 }
@@ -167,6 +167,20 @@ function fuzzyTermRange(line, term) {
   return best >= FUZZY_MIN ? { start: bestIdx, len: bestLen } : null;
 }
 
+// Substring ("letters inside a word") match: the query letters appearing consecutively
+// anywhere inside a single word — test in pro⟨test⟩ed. This is deliberately NOT a game-valid
+// match (the game only counts whole words and their forms), so it's a wordplay/curiosity
+// tool and the UI labels it as such. Scoped to one token so it never runs across a space,
+// and it returns just the matched letters' range (not the whole word) so the mark is tight.
+function containsTermRange(line, term) {
+  const ql = term.toLowerCase();
+  for (const m of line.matchAll(/[A-Za-z']+/g)) {
+    const idx = m[0].toLowerCase().indexOf(ql);
+    if (idx >= 0) return { start: m.index + idx, len: ql.length };
+  }
+  return null;
+}
+
 // Position filter against a single range ("starts the line" / "ends the line" = only
 // non-letters before / after it). With several terms it judges the first term's match.
 function passesPosition(line, range) {
@@ -186,8 +200,11 @@ function searchSong(song, terms, mode) {
     if (state.section !== "any" && sectionType(sec.label) !== state.section) return;
     (sec.lines || []).forEach((line, li) => {
       let ranges = [];
-      if (mode === "fuzzy") {
-        for (const term of terms) { const r = fuzzyTermRange(line, term); if (!r) { ranges = null; break; } ranges.push(r); }
+      // fuzzy and contains both locate their matches as explicit ranges (marked via markRanges);
+      // stem/exact use the shared word-boundary regex (marked via highlightTerms).
+      const finder = mode === "fuzzy" ? fuzzyTermRange : mode === "contains" ? containsTermRange : null;
+      if (finder) {
+        for (const term of terms) { const r = finder(line, term); if (!r) { ranges = null; break; } ranges.push(r); }
       } else {
         for (const term of terms) {
           const m = wordRegex(term, strict).exec(line);   // non-global: first match per line
@@ -196,7 +213,7 @@ function searchSong(song, terms, mode) {
         }
       }
       if (!ranges || !passesPosition(line, ranges[0])) return;
-      const html = mode === "fuzzy" ? markRanges(line, ranges) : highlightTerms(line, terms, strict);
+      const html = finder ? markRanges(line, ranges) : highlightTerms(line, terms, strict);
       hits.push(makeHit(sec, si, li, disp[si], html));
     });
   });
@@ -532,7 +549,7 @@ function readHash() {
     if (tokens.length > 1) { state.terms = tokens; state.q = ""; }
     else if (tokens.length === 1) { state.q = tokens[0]; }
   }
-  if (["stem", "exact", "fuzzy"].includes(p.get("mode"))) state.mode = p.get("mode");
+  if (["stem", "exact", "fuzzy", "contains"].includes(p.get("mode"))) state.mode = p.get("mode");
   if (p.get("view") === "flat") state.grouped = false;
   else if (p.get("view") === "grouped") state.grouped = true;   // can override a saved "flat"
   if (p.get("section") && SECTION_TYPES.includes(p.get("section"))) state.section = p.get("section");

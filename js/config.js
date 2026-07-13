@@ -184,16 +184,23 @@ export const STUDY_BASE_WEIGHT = 1;      // floor of randomness so it never feel
    (hintBudget > 0), so a budget of 0 turns hints off entirely. */
 export const CUSTOM_SECONDS_MIN = 0;     // 0 = no clock (like Relaxed)
 export const CUSTOM_SECONDS_MAX = 60;
-export const CUSTOM_HINT_MAX = 13;       // per-run total hint reveals (0 = no hints)
+export const CUSTOM_HINT_MAX = 8;        // per-run total hint reveals (0 = no hints)
 export const CUSTOM_POOLS = ["easy", "all", "hard", "ultra"];   // word-rarity buckets the picker offers
 export const CUSTOM_EXAMPLES_MAX = 3;    // example songs shown after a miss (0..3)
 export const CUSTOM_MAX_PRESETS = 12;    // keep the saved list manageable
 export const CUSTOM_NAME_MAX = 24;       // preset name length cap
+export const CUSTOM_ROUNDS_MIN = 5;      // shortest finite run
+export const CUSTOM_ROUNDS_MAX = 30;     // longest finite run (one tick past this = infinite, stored as rounds:0)
+export const CUSTOM_LIVES_MIN = 1;       // fewest lives in an infinite run
+export const CUSTOM_LIVES_MAX = 5;       // most lives in an infinite run
+export const CUSTOM_ANSWER_MODES = ["title", "lyric", "either"];   // how a page may be answered
 // The lever object a first-time player's seed preset starts from (their own example: 17s, no
-// suggestions, lyric-only, a 5-reveal hint budget, all words, not in the title). Cloned on use.
+// suggestions, lyric-only, a 5-reveal hint budget, all words, not in the title, a 13-page run).
+// Cloned on use. `answer` is the canonical answering lever; `lyricOnly`/`dropdown` are derived.
 export const CUSTOM_DEFAULT_MODE = {
   id: "custom", label: "Custom", seconds: 17, dropdown: false, pool: "all",
   strict: false, noTitle: true, examples: 3, hint: true, hintBudget: 5, lyricOnly: true,
+  answer: "lyric", rounds: 13, lives: 3,
 };
 
 /* Challenges mode — discrete rule-bending puzzles, unlocked with tokens and "defeated".
@@ -523,6 +530,10 @@ export const FINALE_ERAS = ["gold", "midnight", "reputation"];           // roun
    recurs annually; the "Nth anniversary" is computed from the year. `album` keys into
    ALBUM_ERA / ALBUM_COLORS so a milestone note can wear that era's colour (re-records
    borrow their original album's era). Dec 13 doubles as the game's sacred 13.
+   `songday` entries are the fan-loved dates Taylor sings outright (High Infidelity's
+   April 29th, Last Kiss's July 9th): no release year, they carry their own blurb/caption
+   and wear the song's era colour, but they never tint the anniversary daily (guarded in
+   anniversaryAlbumFor). `blurb`/`caption` must paraphrase, never quote the lyric.
    ⚠ Verify every date before editing — fans catch a wrong one instantly. */
 export const TS_MILESTONES = [
   { md: "12-13", year: 1989, kind: "birthday", title: "Taylor Swift",                  album: null },
@@ -542,6 +553,10 @@ export const TS_MILESTONES = [
   { md: "10-27", year: 2023, kind: "tv",       title: "1989 (Taylor's Version)",       album: "1989" },
   { md: "04-19", year: 2024, kind: "album",    title: "The Tortured Poets Department", album: "The Tortured Poets Department" },
   { md: "10-03", year: 2025, kind: "album",    title: "The Life of a Showgirl",        album: "The Life of a Showgirl" },
+  { md: "04-29", kind: "songday", title: "High Infidelity", album: "Midnights",  eyebrow: "High Infidelity Day",
+    blurb: "April 29th, the one date Taylor names outright on Midnights. Where were you?", caption: "April 29th" },
+  { md: "07-09", kind: "songday", title: "Last Kiss",       album: "Speak Now",  eyebrow: "Last Kiss Day",
+    blurb: "July 9th, the date Speak Now can never quite stop remembering.", caption: "July 9th" },
 ];
 
 /* ---------- Album colours (left-rule tint + tag on lyric cards) ---------- */

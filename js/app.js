@@ -6489,11 +6489,12 @@ function renderShareButton(dateStr, hidden) {
 }
 
 // The studio album whose anniversary falls on `dateKey` (re-records borrow their original
-// album), or null on a non-album day (ordinary day, or her birthday). Pure date → album, so
-// the album-themed daily stays deterministic. Reuses the milestone table via anniversaryNote.
+// album), or null on a non-album day (ordinary day, her birthday, or a lyric songday). Pure
+// date → album, so the album-themed daily stays deterministic. Reuses the milestone table via
+// anniversaryNote; songdays are skipped so a sung date (April 29th) never skews the daily.
 function anniversaryAlbumFor(dateKey) {
   const note = anniversaryNote(dateKey, TS_MILESTONES);
-  return (note && note.album) || null;
+  return (note && !note.songday && note.album) || null;
 }
 // How many of an album's songs a word reaches — its "commonness" within that album. Counts
 // valid (lyrics) songs in the album holding the word; drives the album-anniversary daily skew.
@@ -10664,7 +10665,7 @@ function buildDevApi() {
     milestone: {
       dates: () => {
         const yr = (window.__devDate || todayKey()).slice(0, 4);
-        return TS_MILESTONES.map((m) => `${yr}-${m.md}  ${m.title}${m.kind === "birthday" ? " (birthday)" : m.kind === "tv" ? " (TV)" : ""}`);
+        return TS_MILESTONES.map((m) => `${yr}-${m.md}  ${m.title}${m.kind === "birthday" ? " (birthday)" : m.kind === "tv" ? " (TV)" : m.kind === "songday" ? " (songday)" : ""}`);
       },
       preview: (dateKey) => {
         window.__devDate = dateKey || todayKey();

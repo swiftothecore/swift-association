@@ -173,6 +173,8 @@ function yearsTodayPhrase(n) {
 // `icon` is "cake" on her birthday, else "heart"; `album` keys the era colour (null on the
 // birthday, which wears plain ink). When an original and its Taylor's Version share a day
 // (Oct 27: 1989 + 1989 TV) the two collapse into one note rather than fighting for the margin.
+// A "songday" hit (a date Taylor sings, e.g. April 29th) returns its own blurb and carries a
+// songday:true flag so callers can tell it apart from a real release (see anniversaryAlbumFor).
 export function anniversaryNote(dateKey, milestones) {
   if (!dateKey || dateKey.length < 10) return null;
   const md = dateKey.slice(5);
@@ -195,6 +197,22 @@ export function anniversaryNote(dateKey, milestones) {
       note: `${born} Today's notebook runs to 13 pages.`,
       caption: "happy birthday!",
       aria: `Happy birthday, Taylor. ${born}`,
+    };
+  }
+
+  // A date Taylor sings outright (High Infidelity's April 29th, Last Kiss's July 9th):
+  // its own blurb + caption, wearing the song's era colour, but flagged songday so the
+  // anniversary daily never skews toward it (it's a lyric wink, not a release).
+  const songday = hits.find((m) => m.kind === "songday");
+  if (songday) {
+    return {
+      icon: "heart", album: songday.album, songday: true,
+      eyebrow: songday.eyebrow || "On this day",
+      headline: songday.title,
+      headlineRest: "",
+      note: songday.blurb || "",
+      caption: songday.caption,
+      aria: `${songday.eyebrow || songday.title}. ${songday.blurb || ""}`.trim(),
     };
   }
 
