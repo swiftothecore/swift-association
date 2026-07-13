@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Page not found — Swift to the Song Association</title>
+<meta name="description" content="This page slipped out of the notebook. Head back to the front page." />
+<meta name="theme-color" content="#f5efe1" />
+<meta name="robots" content="noindex" />
+<link rel="icon" type="image/svg+xml" href="/icons/favicon.svg" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;500;600;700&family=Courier+Prime:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --paper: #f5efe1;
+    --paper-edge: #efe7d4;
+    --desk: #cdb389;
+    --ink: #2b2722;
+    --ink-soft: #6f675a;
+    --rule: rgba(43, 39, 34, 0.07);
+    --margin: rgba(178, 58, 58, 0.45);
+    --ink-accent: #a9791f;
+    --highlighter: rgba(247, 201, 72, 0.55);
+    --bead: #c8951f;
+    --hand: "Caveat", "Bradley Hand", "Segoe Script", cursive;
+    --type: "Courier Prime", "Courier New", monospace;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body { height: 100%; }
+
+  body {
+    margin: 0;
+    font-family: var(--type);
+    color: var(--ink);
+    background-color: var(--desk);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 32px 20px;
+    min-height: 100vh;
+  }
+
+  /* A single leaf of notebook paper resting on the desk. */
+  .page {
+    position: relative;
+    width: min(560px, 100%);
+    background:
+      repeating-linear-gradient(
+        to bottom,
+        transparent 0,
+        transparent 31px,
+        var(--rule) 31px,
+        var(--rule) 32px
+      ),
+      var(--paper);
+    border: 1px solid var(--paper-edge);
+    border-radius: 3px;
+    box-shadow:
+      0 1px 0 rgba(255, 255, 255, 0.35) inset,
+      0 18px 40px rgba(40, 30, 15, 0.28),
+      0 2px 6px rgba(40, 30, 15, 0.18);
+    padding: 56px 48px 52px 68px;
+    transform: rotate(-0.5deg);
+  }
+
+  /* Red margin rule down the left side. */
+  .page::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 46px;
+    width: 2px;
+    background: var(--margin);
+    opacity: 0.8;
+  }
+
+  /* Two punch holes at the top, torn-out-of-a-binder feel. */
+  .holes {
+    position: absolute;
+    top: 18px;
+    left: 0;
+    right: 0;
+    display: flex;
+    justify-content: center;
+    gap: 120px;
+    pointer-events: none;
+  }
+  .holes span {
+    width: 13px;
+    height: 13px;
+    border-radius: 50%;
+    background: var(--desk);
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.35);
+  }
+
+  .stamp {
+    font-family: var(--hand);
+    font-size: clamp(88px, 24vw, 148px);
+    font-weight: 700;
+    line-height: 0.9;
+    color: var(--ink-accent);
+    letter-spacing: 2px;
+    transform: rotate(-2deg);
+    margin: 8px 0 0;
+  }
+
+  /* Highlighter swipe under the number. */
+  .stamp .mark {
+    background: linear-gradient(var(--highlighter), var(--highlighter));
+    background-repeat: no-repeat;
+    background-size: 100% 46%;
+    background-position: 0 82%;
+    padding: 0 6px;
+  }
+
+  h1 {
+    font-family: var(--hand);
+    font-weight: 600;
+    font-size: clamp(30px, 7vw, 40px);
+    margin: 4px 0 0;
+    color: var(--ink);
+  }
+
+  p.note {
+    font-family: var(--type);
+    font-size: 15px;
+    line-height: 1.7;
+    color: var(--ink-soft);
+    max-width: 40ch;
+    margin: 20px 0 0;
+  }
+
+  .actions {
+    margin-top: 34px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px 26px;
+    align-items: baseline;
+  }
+
+  /* Primary: a pressed rubber stamp, matching the site's CTA taste. */
+  a.home {
+    font-family: var(--type);
+    font-weight: 700;
+    font-size: 15px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    text-decoration: none;
+    color: var(--ink-accent);
+    border: 2.5px solid var(--ink-accent);
+    border-radius: 4px;
+    padding: 11px 20px;
+    background: transparent;
+    transform: rotate(-1.2deg);
+    transition: transform 0.12s ease, background 0.12s ease, color 0.12s ease;
+  }
+  a.home:hover,
+  a.home:focus-visible {
+    transform: rotate(-1.2deg) translateY(-1px);
+    background: var(--ink-accent);
+    color: var(--paper);
+    outline: none;
+  }
+
+  a.link {
+    font-family: var(--hand);
+    font-size: 22px;
+    color: var(--ink);
+    text-decoration: none;
+    border-bottom: 2px solid var(--bead);
+    padding-bottom: 1px;
+  }
+  a.link:hover,
+  a.link:focus-visible {
+    color: var(--ink-accent);
+    outline: none;
+  }
+
+  /* A little penned star doodle in the margin. */
+  .doodle {
+    position: absolute;
+    right: 30px;
+    bottom: 26px;
+    width: 58px;
+    height: 58px;
+    opacity: 0.5;
+    transform: rotate(9deg);
+    pointer-events: none;
+  }
+  .doodle path { stroke: var(--ink-accent); }
+
+  @media (max-width: 480px) {
+    .page { padding: 48px 26px 44px 52px; }
+    .page::before { left: 30px; }
+    .holes { gap: 90px; }
+  }
+</style>
+</head>
+<body data-era="gold">
+  <main class="page" role="main">
+    <div class="holes" aria-hidden="true"><span></span><span></span></div>
+
+    <div class="stamp" aria-hidden="true"><span class="mark">404</span></div>
+
+    <h1>This page slipped out of the notebook.</h1>
+
+    <p class="note">
+      There's no track by this name in the catalogue. Maybe the link had a
+      typo, or the page was torn out and rewritten. Either way, the front
+      page is still on the desk where you left it.
+    </p>
+
+    <div class="actions">
+      <a class="home" href="/">Back to the front page</a>
+      <a class="link" href="/search/">Try the lyric searcher</a>
+    </div>
+
+    <svg class="doodle" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path d="M12 2.5l2.9 5.9 6.5 0.9-4.7 4.6 1.1 6.5-5.8-3-5.8 3 1.1-6.5-4.7-4.6 6.5-0.9z"
+            stroke-width="1.4" stroke-linejoin="round" />
+    </svg>
+  </main>
+</body>
+</html>
