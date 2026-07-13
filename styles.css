@@ -600,12 +600,11 @@
      hero sibling — same typewriter caps, double ring, multiply ink), distressed
      by the #kgStampInk turbulence filter so no two edges print clean. Hovering
      re-inks it and ghosts in a second strike; pressing thumps it down. */
-  /* the button spans the full page column so it takes up the same horizontal space
-     as the "front page" button beneath it; the stamp art itself stays capped and
-     centred (see .kg-stamp) so it doesn't balloon on wide screens */
+  /* the button (and the stamp inside it) spans the full page column so it takes up
+     the same horizontal space as the "front page" button beneath it */
   .keep-going {
     display: block; width: 100%; margin: 16px auto 0;
-    padding: 6px 10px 4px;
+    padding: 4px 0;
     background: transparent; border: none; cursor: pointer;
   }
   .keep-going:focus-visible { outline: 1.5px dashed var(--ink-soft); outline-offset: 5px; border-radius: 4px; }
@@ -619,7 +618,7 @@
 
   /* the stamp art itself carries its styling as presentation attributes (see the
      index.html note: <use> shadow clones are out of reach of these selectors) */
-  .kg-stamp { display: block; width: 100%; max-width: 304px; height: auto; margin: 0 auto; overflow: visible; mix-blend-mode: multiply; }
+  .kg-stamp { display: block; width: 100%; height: auto; overflow: visible; mix-blend-mode: multiply; }
   .kg-print { color: #9e2b2b; opacity: 0.82; transition: opacity 0.25s; }
   .keep-going:hover .kg-print, .keep-going:focus-visible .kg-print { opacity: 1; }
   .keep-going:active .kg-print { opacity: 1; }
