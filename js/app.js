@@ -9302,7 +9302,9 @@ function stopWhale() {
   if (w) w.remove();
 }
 function surfaceWhale() {
-  const card = $("screen-game");
+  // Surface on whichever notebook card is showing (all screens share .screen.card).
+  // During real play that is #screen-game; the dev spawn can fire it from any screen.
+  const card = document.querySelector(".screen.card.active") || $("screen-game");
   if (!card) return;
   stopWhale();
   const wrap = document.createElement("div");
