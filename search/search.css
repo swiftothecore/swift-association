@@ -251,7 +251,7 @@ body.sx-scrolled .dx-book { transform: translate(40%, 52%) rotate(-6deg); }
 .sx-controls { display: flex; flex-wrap: wrap; gap: 16px 22px; margin-top: 16px; align-items: flex-start; }
 .sx-ctrl-group { display: flex; flex-direction: column; gap: 5px; }
 .sx-ctrl-label { font-family: var(--type); font-size: 9px; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-faint); }
-.sx-seg { display: inline-flex; gap: 4px; }
+.sx-seg { display: inline-flex; gap: 4px; flex-wrap: wrap; }
 .sx-seg button {
   font-family: var(--type); font-size: 11px; letter-spacing: .02em; color: var(--ink-soft);
   background: #f1ead9; border: 1px solid #cbbfa8; border-radius: 4px; padding: 5px 10px; cursor: pointer;
@@ -279,6 +279,11 @@ body.sx-scrolled .dx-book { transform: translate(40%, 52%) rotate(-6deg); }
 }
 .sx-explain:empty { display: none; }
 .sx-explain b { color: var(--pen); font-weight: 700; }
+/* honest caveat shown only in "letters in a word" mode — these hits aren't game word matches */
+.sx-explain-note {
+  font-size: 9px; letter-spacing: .1em; text-transform: uppercase; color: #8a6a34;
+  border: 1px solid #d6c48f; border-radius: 3px; padding: 1px 5px; margin-left: 4px; white-space: nowrap;
+}
 
 /* counter + album bar */
 .sx-counter { font-family: var(--type); font-size: 13px; color: var(--ink-soft); margin-top: 18px; min-height: 17px; }

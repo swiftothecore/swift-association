@@ -237,17 +237,22 @@ function renderExplain() {
   const terms = activeTerms();
   if (!terms.length) { el.innerHTML = ""; return; }
   const layout = state.grouped ? "grouped by album" : "as one flat list";
+  // "contains" surfaces lines the game would NOT count (letters buried inside other words), so
+  // it carries an honest caveat that these aren't game-valid word matches.
+  const caveat = state.mode === "contains" ? ` <span class="sx-explain-note">not game word matches</span>` : "";
   if (terms.length > 1) {
     const modeWord = state.mode === "exact" ? "exact words"
-      : state.mode === "fuzzy" ? "typos allowed" : "word forms included";
-    el.innerHTML = `Lines holding all <b>${terms.length}</b> words (${modeWord}) &middot; ${layout}.`;
+      : state.mode === "fuzzy" ? "typos allowed"
+      : state.mode === "contains" ? "letters inside words" : "word forms included";
+    el.innerHTML = `Lines holding all <b>${terms.length}</b> words (${modeWord}) &middot; ${layout}.${caveat}`;
     return;
   }
   const w = escapeHtml(terms[0]);
   const how = state.mode === "exact" ? `Matching the exact word <b>${w}</b> only`
     : state.mode === "fuzzy" ? `Matching <b>${w}</b> and close misspellings`
+    : state.mode === "contains" ? `Finding the letters <b>${w}</b> anywhere inside a word`
     : `Matching <b>${w}</b> plus its word forms`;
-  el.innerHTML = `${how} &middot; ${layout}.`;
+  el.innerHTML = `${how} &middot; ${layout}.${caveat}`;
 }
 
 function runSearch() {
