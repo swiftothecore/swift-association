@@ -11,7 +11,7 @@ Standout features:
 - Hints for those that need them
 - Endless mode
 - Adaptive mode, where the word difficulty climbs and falls with how you play
-- Custom mode, where you build your own mode: set the timer, suggestions, lyric-only answering, word rarity, a hint budget and more, saved as named presets
+- Custom mode, where you build your own mode: set the run length (a fixed number of rounds, or endless with your own lives), the timer, how you answer (by title, by lyric line, or either), suggestions, word rarity, a hint budget and more, saved as named presets
 - In-depth settings menu
 - Unique UI with a notebook theme
 - Support for all eras + all miscellaneous and some unreleased Taylor songs coming soon

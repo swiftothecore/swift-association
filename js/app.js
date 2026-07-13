@@ -3907,35 +3907,18 @@ function renderCustomRow() {
   const active = store.presets.find((p) => p.id === store.activeId) || store.presets[0];
   const activeMode = normalizeCustomMode(active.mode);
 
-  // Other saved presets as quick-switch chips (the Change modal holds the full editor).
-  const others = store.presets.filter((p) => p.id !== active.id);
-  const chips = others.length
-    ? `<div class="custom-presets" aria-label="Your other presets">` +
-        `<span class="custom-presets-lbl">switch to</span>` +
-        others.map((p) =>
-          `<button type="button" class="custom-chip" data-preset="${escapeHtml(p.id)}">${escapeHtml(p.name || "Custom")}</button>`
-        ).join("") +
-      `</div>`
-    : "";
-
+  // One clean section: the active preset's name + lever summary, and a single Change button
+  // that opens the full editor (which also holds the preset switcher). No extra chips here.
   el.innerHTML =
     `<div class="custom-active">` +
       `<div class="custom-active-head">` +
         `<span class="custom-active-name">${escapeHtml(active.name || "Custom")}</span>` +
-        `<button type="button" id="customChangeBtn" class="custom-change-btn">Change…</button>` +
+        `<button type="button" id="customChangeBtn" class="custom-change-btn">Change</button>` +
       `</div>` +
       `<span class="custom-active-levers">${escapeHtml(customLeverSummary(activeMode))}</span>` +
-    `</div>` +
-    chips;
+    `</div>`;
 
   $("customChangeBtn").addEventListener("click", () => openCustomModal());
-  el.querySelectorAll("[data-preset]").forEach((b) => b.addEventListener("click", () => {
-    const s = loadCustom();
-    s.activeId = b.dataset.preset;
-    saveCustom(s);
-    renderCustomRow();
-    updateTagline();
-  }));
 }
 
 // Re-render whatever custom UI is currently on screen (the start row and/or the open modal).

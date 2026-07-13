@@ -1416,14 +1416,6 @@
   .custom-change-btn::before { content: "\2699"; margin-right: 6px; }
   .custom-change-btn:hover, .custom-change-btn:focus-visible { color: var(--paper); border-color: var(--ink); background: var(--ink); }
   .custom-active-levers { font-family: var(--type); font-size: 11.5px; line-height: 1.45; color: #5a5042; }
-  .custom-presets { display: flex; align-items: center; flex-wrap: wrap; gap: 7px; }
-  .custom-presets-lbl { font-family: var(--type); font-size: 9px; letter-spacing: 1.2px; text-transform: uppercase; color: var(--ink-soft); }
-  .custom-chip {
-    font-family: var(--type); font-size: 11px; color: var(--ink-soft);
-    background: transparent; border: 1px solid rgba(43,39,34,0.26); border-radius: 2px;
-    padding: 3px 10px; cursor: pointer; transition: color 0.15s, border-color 0.15s, background 0.15s;
-  }
-  .custom-chip:hover, .custom-chip:focus-visible { color: var(--ink); border-color: var(--ink); background: rgba(43,39,34,0.04); }
 
   /* ---------- Custom "Change" modal (reuses the settings-modal chrome) ---------- */
   .cm-foot { display: flex; justify-content: flex-end; margin-top: 8px; padding-top: 13px; border-top: 1px solid rgba(43,39,34,0.1); }
