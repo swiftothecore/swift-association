@@ -38,7 +38,7 @@ if (location.pathname.endsWith('/index.html')) {
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;500;600;700&family=Courier+Prime:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css?v=12" />
+  <link rel="stylesheet" href="styles.css?v=13" />
 </head>
 <body data-era="gold">
 <!-- Hand-drawn wobble for the penned achievement charms. Referenced by .charm svg
@@ -856,7 +856,7 @@ if (location.pathname.endsWith('/index.html')) {
          run's score straight into Infinite mode. -->
     <button id="keepGoingBtn" class="keep-going" style="display:none;" aria-label="Keep going in Infinite mode. This run's score carries over.">
       <span class="kg-press">
-        <svg class="kg-stamp" viewBox="0 0 260 74" aria-hidden="true" focusable="false">
+        <svg class="kg-stamp" viewBox="0 0 560 74" aria-hidden="true" focusable="false">
           <defs>
             <filter id="kgStampInk" x="-8%" y="-14%" width="116%" height="128%">
               <feTurbulence type="fractalNoise" baseFrequency="0.55" numOctaves="2" seed="13" result="speck"/>
@@ -868,10 +868,10 @@ if (location.pathname.endsWith('/index.html')) {
             <!-- Presentation attributes (not CSS classes) because <use> clones live in a
                  shadow tree that stylesheet selectors cannot reach; attributes clone fine. -->
             <g id="kgStampArt">
-              <rect x="4" y="4" width="252" height="66" rx="9" fill="none" stroke="currentColor" stroke-width="2.6"/>
-              <rect x="10" y="10" width="240" height="54" rx="5" fill="none" stroke="currentColor" stroke-width="1.1"/>
-              <text x="130" y="44" rotate="-2 1 -1 2 -1 1" fill="currentColor" text-anchor="middle" style="font-family: var(--type); font-weight: 700; font-size: 30px; letter-spacing: 6px;">ENCORE</text>
-              <text x="130" y="59" fill="currentColor" text-anchor="middle" style="font-family: var(--type); font-weight: 700; font-size: 9px; letter-spacing: 3.2px;">&#9733; INFINITE MODE &#9733;</text>
+              <rect x="4" y="4" width="552" height="66" rx="9" fill="none" stroke="currentColor" stroke-width="2.6"/>
+              <rect x="10" y="10" width="540" height="54" rx="5" fill="none" stroke="currentColor" stroke-width="1.1"/>
+              <text x="280" y="44" rotate="-2 1 -1 2 -1 1" fill="currentColor" text-anchor="middle" style="font-family: var(--type); font-weight: 700; font-size: 30px; letter-spacing: 6px;">ENCORE</text>
+              <text x="280" y="59" fill="currentColor" text-anchor="middle" style="font-family: var(--type); font-weight: 700; font-size: 9px; letter-spacing: 3.2px;">&#9733; INFINITE MODE &#9733;</text>
             </g>
           </defs>
           <use class="kg-ghost" href="#kgStampArt" filter="url(#kgStampInk)"/>
