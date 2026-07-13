@@ -610,11 +610,11 @@
   .keep-going:focus-visible { outline: 1.5px dashed var(--ink-soft); outline-offset: 5px; border-radius: 4px; }
 
   .kg-press {
-    display: block; transform: rotate(-3.2deg);
+    display: block; transform: rotate(0deg);
     transition: transform 0.18s cubic-bezier(0.3, 1.3, 0.5, 1);
   }
-  .keep-going:hover .kg-press, .keep-going:focus-visible .kg-press { transform: rotate(-2.4deg) scale(1.025); }
-  .keep-going:active .kg-press { transform: rotate(-3.8deg) scale(0.945); transition-duration: 0.07s; }
+  .keep-going:hover .kg-press, .keep-going:focus-visible .kg-press { transform: scale(1.025); }
+  .keep-going:active .kg-press { transform: scale(0.945); transition-duration: 0.07s; }
 
   /* the stamp art itself carries its styling as presentation attributes (see the
      index.html note: <use> shadow clones are out of reach of these selectors) */
