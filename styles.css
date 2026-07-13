@@ -267,8 +267,9 @@
        below the strokes is gold, not brown. Driven off --ink-accent so it
        recolours with the era alongside the fill. */
     filter:
-      drop-shadow(0 2px 0 color-mix(in srgb, var(--ink-accent) 90%, transparent))
-      drop-shadow(0 3px 2px color-mix(in srgb, var(--ink-accent) 52%, transparent));
+      drop-shadow(0 2px 0 var(--ink-accent))
+      drop-shadow(0 3px 1.5px var(--ink-accent))
+      drop-shadow(0 4px 5px color-mix(in srgb, var(--ink-accent) 40%, transparent));
   }
   /* the dot on the first i becomes the game's gold star */
   .mast-i { position: relative; }
