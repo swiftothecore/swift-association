@@ -235,11 +235,11 @@
     line-height: 1.1;
     white-space: nowrap;
     color: #43301a;  /* a darker take on the settings-gear brown, carved into the desk */
-    /* soft lift so the ink rests on the wood instead of sitting flat in it.
-       drop-shadow (not text-shadow) because the letters are gradient-clipped:
-       a text-shadow would bleed through the transparent glyph fill.
-       the tight dark shadow is the piped-ink underside; the wide one is ambient. */
-    filter: drop-shadow(0 1px 0 rgba(255,248,232,0.38)) drop-shadow(0 2px 1.5px rgba(50,26,7,0.42)) drop-shadow(0 4px 8px rgba(58,30,8,0.26));
+    /* The lift (soft drop-shadow so the ink rests on the wood) lives on the fill
+       spans, NOT here. A filter on the h1 shadows the WHOLE title as one image,
+       so the dark-brown underside pooled behind the gold "Song" as a smudge in
+       its "g" crook. Split onto .mast-line (brown lift) and .mast-gold (gold
+       lift) so the gold word never has a brown shadow cast behind it. */
     transform: rotate(-1.4deg);
   }
   /* wet-ink gloss: a sheen at the top of the strokes fading into deeper ink below */
@@ -252,24 +252,28 @@
       linear-gradient(#5a3f1e, #5a3f1e);
     -webkit-background-clip: text; background-clip: text;
     -webkit-text-fill-color: transparent; color: transparent;
+    /* the ink's lift: a light top edge, a tight dark underside (piped ink), and
+       a wide ambient. drop-shadow (not text-shadow) so it doesn't bleed through
+       the gradient-clipped glyph fill. Kept gentle so the ink rests on the wood
+       without a heavy carved shadow. */
+    filter: drop-shadow(0 1px 0 rgba(255,248,232,0.32)) drop-shadow(0 1.5px 1px rgba(50,26,7,0.28)) drop-shadow(0 3px 5px rgba(58,30,8,0.16));
   }
   /* the era ink carried up into a single title word (recolours with the album era) */
   .mast-gold {
-    background:
-      linear-gradient(180deg, rgba(255,251,230,0.22), rgba(255,251,230,0) 26%),
-      linear-gradient(var(--ink-accent), var(--ink-accent));
-    -webkit-background-clip: text; background-clip: text;
-    -webkit-text-fill-color: transparent; color: transparent;
-    /* Its own gold-toned lift. The h1's brown drop-shadow is the piped-ink
-       underside for the dark letters, but under this gold word its dark edge
-       pooled as a brown smudge on the lone "g" descender. This gold shadow is
-       drawn first (inside the h1, before that brown shadow), so what peeks out
-       below the strokes is gold, not brown. Driven off --ink-accent so it
-       recolours with the era alongside the fill. */
+    /* Solid era-gold fill (the same yellow as the rest of the title's accents),
+       NOT a gradient clipped to the text: Caveat's big "g" descender hangs below
+       the text-clip box, so any clipped fill leaves its tip unpainted (a brown
+       smudge when nested in the brown text, a cut-off tip once isolated). A solid
+       colour paints the whole glyph, descender and all. */
+    color: var(--ink-accent);
+    -webkit-text-fill-color: var(--ink-accent);
+    /* A bright near-white highlight edge (brighter than .mast-line's, because a
+       light edge reads dimmer over gold than over dark brown), then a dark-gold
+       underside for depth and the same recessive ambient the brown letters use. */
     filter:
-      drop-shadow(0 2px 0 var(--ink-accent))
-      drop-shadow(0 3px 1.5px var(--ink-accent))
-      drop-shadow(0 4px 5px color-mix(in srgb, var(--ink-accent) 40%, transparent));
+      drop-shadow(0 1px 0 rgba(255,250,240,0.44))
+      drop-shadow(0 1.5px 1px color-mix(in srgb, var(--ink-accent), #000 42%))
+      drop-shadow(0 3px 5px rgba(58,30,8,0.14));
   }
   /* the dot on the first i becomes the game's gold star */
   .mast-i { position: relative; }
@@ -309,7 +313,7 @@
     opacity: 0.9;
   }
   .mast-flank--l { left: -0.95em; }
-  .mast-flank--r { right: -1.32em; transform: translateY(-38%) scaleX(-1); }
+  .mast-flank--r { right: -1.15em; transform: translateY(-38%) scaleX(-1); }
   .mast-flank .mf-spark { fill: var(--ink-accent); stroke: none; }
   /* below the font-size cap the title scales with the viewport, and the doodle
      tips ride ~2% in from the screen edges; under ~620px that air runs out */
