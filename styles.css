@@ -1232,6 +1232,48 @@
     --btn-mark: rgba(245, 239, 225, 0.30);
   }
 
+  /* Custom's two-up row gets its own colours + patterns too, so it never reads as a copy
+     of Challenges or Album Focus: ← modes is a brick-rust field ruled with vertical ledger
+     lines (its own workshop hue), replay is a teal ruled the opposite diagonal. */
+  #backToCustom {
+    --btn-wash: rgba(187, 86, 64, 0.28);
+    --btn-mark: rgba(150, 60, 44, 0.42);
+    background-color: var(--btn-wash);
+    background-image: repeating-linear-gradient(90deg, var(--btn-mark) 0 1.5px, transparent 1.5px 9px);
+    transition: --btn-wash 0.22s ease, --btn-mark 0.22s ease, color 0.2s ease, transform 0.12s, box-shadow 0.2s;
+  }
+  #backToCustom:hover {
+    color: var(--paper);
+    --btn-wash: #b5563f;
+    --btn-mark: rgba(245, 239, 225, 0.30);
+  }
+
+  #replayCustom {
+    --btn-wash: rgba(74, 140, 135, 0.28);
+    --btn-mark: rgba(44, 108, 103, 0.40);
+    background-color: var(--btn-wash);
+    background-image: repeating-linear-gradient(-45deg, var(--btn-mark) 0 2px, transparent 2px 8px);
+    transition: --btn-wash 0.22s ease, --btn-mark 0.22s ease, color 0.2s ease, transform 0.12s, box-shadow 0.2s;
+  }
+  #replayCustom:hover {
+    color: var(--paper);
+    --btn-wash: #3f8580;
+    --btn-mark: rgba(245, 239, 225, 0.28);
+  }
+
+  /* The Change modal's OK button echoes the results "front page" button: the gold
+     highlighter wash under a faint graph-paper grid, so it reads as a patterned stamp
+     rather than a plain block. */
+  #customModalOkBtn {
+    --btn-mark: rgba(43, 39, 34, 0.08);
+    padding: 10px 34px;
+    background-image:
+      repeating-linear-gradient(0deg, var(--btn-mark) 0 1px, transparent 1px 11px),
+      repeating-linear-gradient(90deg, var(--btn-mark) 0 1px, transparent 1px 11px);
+    transition: --btn-mark 0.22s ease, background 0.18s, color 0.18s, transform 0.12s, box-shadow 0.2s;
+  }
+  #customModalOkBtn:hover { --btn-mark: rgba(245, 239, 225, 0.12); }
+
   /* The full-width "front page" button keeps its era highlighter wash, but picks up a
      faint graph-paper grid so it reads as patterned alongside the dotted challenges and
      diagonally-ruled replay buttons. Inked (not a fixed hue) so it rides every era. */
@@ -1403,6 +1445,71 @@
   .cm-preset-chip:hover, .cm-preset-chip:focus-visible { color: var(--ink); border-color: var(--ink); }
   .cm-preset-chip.active { color: var(--ink); border-color: var(--ink); background: var(--highlighter); }
   .set-row.cm-disabled { opacity: 0.45; }
+
+  /* ---------- Custom "Change" modal — a bento of control tiles ----------
+     Instead of a flat settings list, the levers sit in a 4-column grid where some
+     tiles are deliberately bigger (the run-length hero spans 2×2, the answering
+     picker spans the full width) so the panel reads like a songwriter's console. */
+  .cm-grid {
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    gap: 11px; margin-top: 6px;
+  }
+  .cm-tile {
+    display: flex; flex-direction: column; gap: 9px;
+    padding: 12px 13px 13px; border-radius: 7px;
+    background: rgba(255,255,255,0.36);
+    border: 1.5px solid rgba(43,39,34,0.14);
+    box-shadow: 0 1px 0 rgba(255,255,255,0.55) inset, 0 2px 6px rgba(60,50,35,0.05);
+  }
+  .cm-tile--wide { grid-column: span 4; }
+  .cm-tile--half { grid-column: span 2; }
+  .cm-tile--hero { grid-column: span 2; grid-row: span 2; }
+  .cm-tile--toggle {
+    flex-direction: row; align-items: center; justify-content: space-between; gap: 12px;
+  }
+  .cm-tile--toggle .set-toggle { flex: 0 0 auto; }
+  .cm-tile.cm-disabled { opacity: 0.5; }
+  .cm-tile-head { display: flex; flex-direction: column; gap: 2px; }
+  .cm-tile-name { font-family: var(--hand); font-size: 21px; line-height: 1.02; color: var(--ink); }
+  .cm-tile-desc { font-family: var(--type); font-size: 9.5px; line-height: 1.3; color: var(--ink-soft); }
+
+  /* sliders inside a tile — stretch to fill, value inked to the right */
+  .cm-slider-wrap { display: flex; align-items: center; gap: 10px; margin-top: auto; }
+  .cm-slider { flex: 1; width: auto; min-width: 0; accent-color: var(--ink-accent); }
+  .cm-slider-val { font-family: var(--type); font-size: 13px; color: var(--ink-accent); min-width: 30px; text-align: right; flex: 0 0 auto; }
+
+  /* choice pills inside a tile — even, full-radius, no ladder tilt */
+  .cm-choices { display: flex; gap: 5px; flex-wrap: wrap; margin-top: auto; }
+  .cm-choices .mode-tab {
+    flex: 1 1 auto; min-width: 40px; text-align: center;
+    font-size: 15px; padding: 5px 8px 6px; border-radius: 6px;
+    border: 1.5px solid rgba(43,39,34,0.16); transform: none;
+  }
+  .cm-choices .mode-tab:nth-child(even) { transform: none; }
+  .cm-choices .mode-tab.active { transform: none; border-color: rgba(43,39,34,0.34); }
+  .cm-tile--wide .cm-choices .mode-tab { font-size: 18px; padding: 8px 10px 9px; }
+
+  /* the run-length hero — a big ink number over its slider, lives tucked below when endless */
+  .cm-tile--rounds { justify-content: flex-start; }
+  .cm-rounds-big {
+    font-family: var(--hand); font-weight: 700; font-size: 54px; line-height: 0.95;
+    color: var(--ink-accent); text-align: center; margin: 4px 0 2px;
+  }
+  .cm-rounds-big.is-inf { font-size: 62px; }
+  .cm-slider--rounds { width: 100%; flex: none; }
+  .cm-lives {
+    margin-top: 12px; padding-top: 11px; display: flex; flex-direction: column; gap: 7px;
+    border-top: 1px dashed rgba(43,39,34,0.2);
+  }
+  .cm-lives-head { display: flex; align-items: baseline; justify-content: space-between; }
+  .cm-lives-lbl { font-size: 18px; }
+
+  @media (max-width: 520px) {
+    .cm-grid { grid-template-columns: repeat(2, 1fr); }
+    .cm-tile--wide { grid-column: span 2; }
+    .cm-tile--half { grid-column: span 1; }
+    .cm-tile--hero { grid-column: span 2; grid-row: auto; }
+  }
 
   /* Choose Your Path — mid-run perk fork. The overlay covers the answered page
      (the card is position:relative — see .quit-btn) until a perk is chosen. */
@@ -1626,37 +1733,6 @@
     transition: none;
   }
   .word-wrap[data-tiny] #wordDisplay::before { display: none; }   /* hide the highlighter swipe — no help finding it */
-
-  /* Charm → token conversion (the escape valve) */
-  .ach-page-tickets { font-family: var(--type); font-size: 10px; letter-spacing: 0.5px; color: #2b2722; margin-top: 4px; }
-  .ach-trade-note { color: rgba(43,39,34,0.6); }
-  .ach-sacrifice-note {
-    font-family: var(--type); font-size: 10px; letter-spacing: 0.4px; color: #b23a3a;
-    margin-top: 5px; font-weight: 600;
-  }
-  .ach--earned { position: relative; }
-  .ach-ticket { position: absolute; top: 6px; right: 7px; font-size: 13px; line-height: 1; }
-  .ach-cashin {
-    position: absolute; top: 5px; right: 6px;
-    font-family: var(--type); font-size: 9px; letter-spacing: 0.3px; white-space: nowrap;
-    padding: 2px 6px; border-radius: 3px; cursor: pointer;
-    border: 1px solid rgba(43,39,34,0.5); background: rgba(43,39,34,0.06); color: #2b2722;
-    opacity: 0; transition: opacity 0.15s;
-  }
-  .ach--earned:hover .ach-cashin, .ach-cashin:focus-visible { opacity: 1; }
-  .ach-cashin:hover { background: #2b2722; color: #fff; border-color: #2b2722; }
-  /* armed (second-tap confirms): always shown, red, can't be missed */
-  .ach-cashin.is-armed { opacity: 1; background: #b23a3a; color: #fff; border-color: #b23a3a; }
-  .ach-cashin--disabled {
-    cursor: help; border-style: dashed; color: rgba(43,39,34,0.55); background: rgba(43,39,34,0.03);
-  }
-  .ach-cashin--disabled:hover { background: rgba(43,39,34,0.03); color: rgba(43,39,34,0.55); border-color: rgba(43,39,34,0.5); }
-  @media (hover: none) { .ach-cashin { opacity: 1; } }
-
-  /* a sacrificed charm — faded, struck through, given up for good */
-  .ach--given { opacity: 0.5; filter: grayscale(0.85); position: relative; }
-  .ach--given .ach-nm { text-decoration: line-through; text-decoration-color: rgba(43,39,34,0.5); }
-  .ach--given .ach-dc { color: #b23a3a; }
 
   .hist-head, .hist-row {
     display: grid; grid-template-columns: 1fr 0.8fr 0.8fr 1.9fr 1.3fr;

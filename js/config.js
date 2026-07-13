@@ -25,7 +25,7 @@ export const TALLY_KEY = "swiftSongAssociation.songTally";     // lifetime per-s
 export const SETTINGS_KEY = "swiftSongAssociation.settings";   // user preferences (see DEFAULT_SETTINGS)
 export const METRICS_KEY = "swiftSongAssociation.metrics";    // lifetime cross-game counters — fastest/avg answer, accuracy, lyric lines, daily totals
 export const CHALLENGES_KEY = "swiftSongAssociation.challenges";        // per-challenge progress — { [id]: {unlocked, defeated, attempts, best} }
-export const CHALLENGE_TOKENS_KEY = "swiftSongAssociation.challengeTokens"; // { balance, fromAchievements:[] } — tokens spent to unlock challenges
+export const CHALLENGE_TOKENS_KEY = "swiftSongAssociation.challengeTokens"; // { balance } — tokens spent to unlock challenges
 export const ALBUM_FOCUS_KEY = "swiftSongAssociation.albumFocus";       // per-album best/beaten board — { [album]: {best, bestDiff, beaten, beatenDiff, perfected, perfectedDiff} }
 export const ADAPTIVE_KEY = "swiftSongAssociation.adaptive";            // Adaptive mode board — { bestPeak, bestScore, date, played }
 export const SEARCH_KEY = "swiftSongAssociation.search";                // Swift To The Lyric searcher — { mode, view, recent:[] }
@@ -1066,7 +1066,6 @@ export const ACHIEVEMENTS = [
   { id: "back-to-december", name: "Back To December", desc: "Finish your first Study session",       secret: false, icon: "december" },
   { id: "stay-beautiful",   name: "Stay Beautiful",   desc: "Settle 25 words into the top review box", secret: false, icon: "keepsake" },
   { id: "the-best-day",     name: "The Best Day",     desc: "Graduate 5 words in a single Study session", secret: true, icon: "mortarboard" },
-  { id: "castles-crumbling", name: "Castles Crumbling", desc: "Trade an achievement for a token",    secret: true,  icon: "castle" },
   { id: "you-took-a-polaroid-of-us", name: "You Took A Polaroid Of Us", desc: "Find every polaroid keepsake", secret: true, icon: "polaroid" },
   { id: "is-it-over-now",   name: "Is It Over Now?",  desc: "Earn every hidden achievement",         secret: true,  icon: "hourglass" },
   { id: "the-lucky-one",    name: "The Lucky One",    desc: "Earn every other achievement",          secret: true,  icon: "clover" },
@@ -1112,7 +1111,7 @@ export const ACH_GROUP_OF = {
   "my-mind-is-alive": "catalogue", "thousand-cuts": "catalogue", "spicy-drama": "catalogue",
   "diamonds": "catalogue", "paris": "catalogue", "i-hate-it-here": "catalogue",
   "the-archer": "challenges", "the-alchemy": "challenges", "paper-rings": "challenges",
-  "state-of-grace": "challenges", "this-is-me-trying": "challenges", "castles-crumbling": "challenges",
+  "state-of-grace": "challenges", "this-is-me-trying": "challenges",
   "shouldve-said-no": "challenges", "smallest-man": "challenges", "invisible-string": "challenges",
   "two-steps-ahead": "challenges", "walls-stood-tall": "challenges", "tick-tock": "challenges",
   "part-the-sea": "challenges", "knowing-all-the-words": "challenges", "two-is-better": "challenges",
@@ -1120,23 +1119,6 @@ export const ACH_GROUP_OF = {
   "the-lakes": "adaptive", "stay-stay-stay": "adaptive",
   "back-to-december": "study", "stay-beautiful": "study", "the-best-day": "study",
 };
-
-// Charm → token conversion eligibility. Only *skill/mastery* charms can be sacrificed
-// for a challenge token; freebies can't. Secret charms (easter eggs / trivia) and the
-// whole `challenges` group (no recursion — challenge progress shouldn't fund more
-// challenge unlocks) are excluded by isTradeableAch() in app.js. This set adds the
-// remaining *visible* freebies: pure participation / play-count / meta charms.
-export const ACH_NO_TRADE = new Set([
-  "enchanted",              // finish your first game
-  "begin-again",            // play 5 games
-  "fifteen",                // play 15 games
-  "karma",                  // earn 13 charms (meta)
-  "today-was-a-fairytale",  // finish your first Daily
-  "hits-different",         // play all three game types
-  "safe-and-sound",         // play Easy three times in a row
-  "back-to-december",       // finish first Study session (participation)
-  "stay-beautiful",         // settle 25 words into the top box (practice milestone)
-]);
 
 /* ---------- Easter-egg art ---------- */
 export const PEN_SVG = {

@@ -119,14 +119,10 @@ export function loadChallengeTokens() {
     const raw = localStorage.getItem(CHALLENGE_TOKENS_KEY);
     if (raw) {
       const o = JSON.parse(raw);
-      if (o && typeof o.balance === "number") {
-        if (!Array.isArray(o.fromAchievements)) o.fromAchievements = [];   // legacy cash-ins
-        if (!Array.isArray(o.burnedAchievements)) o.burnedAchievements = []; // sacrificed charms
-        return o;
-      }
+      if (o && typeof o.balance === "number") return o;
     }
   } catch (e) { /* ignore */ }
-  return { balance: 1, fromAchievements: [], burnedAchievements: [] };   // the starting token
+  return { balance: 1 };   // the starting token
 }
 export function saveChallengeTokens(o) {
   try { localStorage.setItem(CHALLENGE_TOKENS_KEY, JSON.stringify(o)); } catch (e) { /* ignore */ }

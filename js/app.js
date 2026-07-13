@@ -5,7 +5,7 @@ import {
   MODES, MODE_ORDER, MODE_COLORS, DIFFICULTY_LADDER, MODALITY_MODES,
   ERAS, TENDER_ERAS, FINALE_ERAS, ALBUM_ERA, TS_MILESTONES,
   ALBUM_COLORS, CB_ALBUM_COLORS, STUDIO_ALBUMS, TITLE_ALIASES,
-  ACHIEVEMENTS, ACH_ICONS, ACH_BY_ID, ACH_GROUPS, ACH_GROUP_COLORS, ACH_GROUP_OF, ACH_NO_TRADE,
+  ACHIEVEMENTS, ACH_ICONS, ACH_BY_ID, ACH_GROUPS, ACH_GROUP_COLORS, ACH_GROUP_OF,
   CHALLENGES, CHALLENGE_BY_ID, CHALLENGE_ORDER, CHALLENGE_SEALS,
   IMPOSTOR_WORDS, IMPOSTOR_COUNT,
   SEA_GRID_SIZE, SEA_MIN_VALID, SEA_MAX_VALID,
@@ -16,6 +16,7 @@ import {
   STUDY_MISS_WEIGHT, STUDY_GAP_WEIGHT, STUDY_BOX_WEIGHT, STUDY_BASE_WEIGHT,
   CUSTOM_SECONDS_MIN, CUSTOM_SECONDS_MAX, CUSTOM_HINT_MAX, CUSTOM_POOLS,
   CUSTOM_EXAMPLES_MAX, CUSTOM_MAX_PRESETS, CUSTOM_NAME_MAX, CUSTOM_DEFAULT_MODE,
+  CUSTOM_ROUNDS_MIN, CUSTOM_ROUNDS_MAX, CUSTOM_LIVES_MIN, CUSTOM_LIVES_MAX, CUSTOM_ANSWER_MODES,
   PEN_SVG, STAR_SVG, SPARKLE_SVG, DOODLE_SVG, DOODLE_SIZE,
   SKILLS, SKILL_IDS, SKILL_BY_ID,
   TEMPO_BASE, TEMPO_SPEED, LYRIC_TIER_XP, LYRIC_LEN_REF,
@@ -104,6 +105,7 @@ let roundHintSong = null;// the valid song this round's hints zoom in on
 let hintUrgeTimer = null;// idle nudge timer for Relaxed (no clock)
 let gameType = "classic";       // "classic" (fixed 13) | "infinite" (until lives run out) | "adaptive" (fixed 13, floating rarity) | "daily" | "challenge" | "album" | "study" | "custom" (player-authored levers, sandboxed)
 let customPreset = null;        // Custom mode: the active preset {id,name,mode} while gameType === "custom"
+let customSessionLen = 0;       // Custom mode: rounds this run (finite runs). 0 while running an infinite custom run
 let focusAlbum = null;          // Album Focus: the locked-in studio album while gameType === "album"
 let focusDifficulty = null;     // Album Focus: the chosen MODES id this run plays at
 let infiniteVariant = "3lives"; // "3lives" | "sudden"
@@ -1493,7 +1495,6 @@ function adaptiveTabHTML() {
 
 /* ---------- Achievements ---------- */
 let earnedAchievements = {};   // persisted: { id: "YYYY-MM-DD" }
-let burnedAchIds = new Set();   // charms sacrificed for a token — permanently un-earned
 let newlyUnlocked = [];        // ids unlocked this game (for the results recap)
 let lastSkillFold = null;      // { delta, res } from this game's foldSkillXp — the results skills recap
 
@@ -1566,7 +1567,7 @@ function unlock(id) {
   // no game-quality achievements (streaks, speed, etc.) leak in from mid-round checks.
   // The flag is cleared before endChallenge folds, so post-run meta charms still fire.
   if (challengeRunActive && !CHALLENGE_ACH_IDS.has(id)) return;
-  if (!ACH_BY_ID[id] || earnedAchievements[id] || burnedAchIds.has(id)) return; // burned = gone for good
+  if (!ACH_BY_ID[id] || earnedAchievements[id]) return;
   earnedAchievements[id] = new Date().toISOString();   // full ISO so same-day charms sort by earn time
   saveAchievements(earnedAchievements);
   newlyUnlocked.push(id);
@@ -1656,43 +1657,6 @@ function markChallengeDefeated(id, score) {
     if (CHALLENGES.every((ch) => challengeRecord(ch.id).defeated)) unlock("the-alchemy");
   }
   return firstTime;
-}
-
-// Escape valve (tightened): you can SACRIFICE a skill charm toward a challenge token,
-// but the price DOUBLES each time and the charm is gone for good.
-//   - Only skill/mastery charms qualify (isTradeableAch): no freebies, no secret/easter-egg
-//     charms, no challenge-group charms (which would let challenges fund themselves).
-//   - The k-th conversion token costs 2^(k-1) charms, so the running total of charms you must
-//     burn to have minted k tokens is 2^k - 1 (1, 3, 7, 15…).
-//   - A sacrificed charm is permanently un-earned: it drops off the collection %, the by-theme
-//     bars and the completion metas (the-lucky-one / is-it-over-now), and can't be re-earned.
-function achEarned(id) { return !!earnedAchievements[id] && !burnedAchIds.has(id); }
-function isTradeableAch(a) {
-  return !!a && !a.secret && achGroupOf(a.id) !== "challenges" && !ACH_NO_TRADE.has(a.id);
-}
-// tokens minted from `n` burned charms (cumulative cost for k tokens is 2^k - 1), and the
-// running total needed for the next one. Integer loop — exact at the power-of-2 thresholds.
-function tokensFromBurned(n) { let k = 0; while ((2 ** (k + 1)) - 1 <= n) k++; return k; } // 0,1,1,2,3…
-function burnedNeededForNextToken(n) { return (2 ** (tokensFromBurned(n) + 1)) - 1; }
-
-// Sacrifice one charm. Returns {minted} (a token may or may not drop this burn — higher
-// tiers cost several charms), or false if the charm isn't eligible.
-function sacrificeAchievement(achId) {
-  const a = ACH_BY_ID[achId];
-  if (!a || !achEarned(achId) || !isTradeableAch(a)) return false;
-  const wallet = loadChallengeTokens();
-  if (!Array.isArray(wallet.burnedAchievements)) wallet.burnedAchievements = [];
-  const before = tokensFromBurned(wallet.burnedAchievements.length);
-  wallet.burnedAchievements.push(achId);
-  const minted = tokensFromBurned(wallet.burnedAchievements.length) - before; // 0 or 1
-  wallet.balance += minted;
-  saveChallengeTokens(wallet);
-  // burn the charm: drop it from earned (so it stops counting) + tombstone it so it can't return.
-  burnedAchIds.add(achId);
-  delete earnedAchievements[achId];
-  saveAchievements(earnedAchievements);
-  if (minted) unlock("castles-crumbling");
-  return { minted };
 }
 
 // "The Piano Was Hissing" — typing "rep tv" / "reputation tv" as an answer OR as your name.
@@ -1979,27 +1943,11 @@ function celebrateMastery(res, host) {
   banner.classList.add("in");
 }
 
-// The (tightened) escape valve: a skill charm can be SACRIFICED toward a challenge
-// token. Two-tap to confirm (it's permanent). Legacy cash-ins keep their ticket badge.
-let armedSacrifice = null, armSacrificeTimer = null, sacrificeNote = "";
-function achSacrificeMarkup(a) {
-  const w = loadChallengeTokens();
-  if ((w.fromAchievements || []).includes(a.id)) // grandfathered legacy cash-in
-    return `<span class="ach-ticket" title="cashed in for a challenge token">🎟</span>`;
-  if (!isTradeableAch(a)) return `<span class="ach-cashin ach-cashin--disabled" title="only visible non-challenge skill charms can be sacrificed">keepsake</span>`;
-  if (armedSacrifice === a.id)
-    return `<button type="button" class="ach-cashin is-armed" data-sacrifice="${a.id}" title="this can't be undone">give up for good?</button>`;
-  return `<button type="button" class="ach-cashin" data-sacrifice="${a.id}" title="sacrifice this charm toward a challenge token — permanent">sacrifice ✦</button>`;
-}
-
-// One charm tile: earned (revealed), a sacrificed charm (given up), a still-locked
-// secret (masked ???), or a visible locked target. Shared by the grid + secret section.
+// One charm tile: earned (revealed), a still-locked secret (masked ???), or a visible
+// locked target. Shared by the grid + secret section.
 function achTile(a) {
-  if (burnedAchIds.has(a.id)) {
-    return `<div class="ach ach--given" title="sacrificed for a challenge token">${charmMarkup(a.icon, achColor(a))}<div class="ach-text"><div class="ach-nm">${escapeHtml(a.name)}</div><div class="ach-dc">given up for a token 🎟</div></div></div>`;
-  }
   if (earnedAchievements[a.id]) {
-    return `<div class="ach ach--earned">${charmMarkup(a.icon, achColor(a))}<div class="ach-text"><div class="ach-nm">${escapeHtml(a.name)}</div><div class="ach-dc">${escapeHtml(a.desc)}</div></div>${achSacrificeMarkup(a)}</div>`;
+    return `<div class="ach ach--earned">${charmMarkup(a.icon, achColor(a))}<div class="ach-text"><div class="ach-nm">${escapeHtml(a.name)}</div><div class="ach-dc">${escapeHtml(a.desc)}</div></div></div>`;
   }
   if (a.secret) {
     // Once the level-10 "secret hints" reward is earned, reveal the how-to (desc) while
@@ -2021,22 +1969,8 @@ function renderAchievementsPage() {
   const earnedCount = earnedAsc.length;
   const pct = Math.round((earnedCount / total) * 100);
 
-  const wallet = loadChallengeTokens();
-  const burnedCount = (wallet.burnedAchievements || []).length;
-  const tradeableLeft = ACHIEVEMENTS.filter((a) => achEarned(a.id) && isTradeableAch(a)).length;
-  const needNext = burnedNeededForNextToken(burnedCount) - burnedCount; // charms until the next token
-  const noteLine = sacrificeNote ? `<div class="ach-sacrifice-note">${escapeHtml(sacrificeNote)}</div>` : ``;
-  sacrificeNote = "";   // one-shot
-  const convoLine = noteLine + `<div class="ach-page-tickets">` +
-    (burnedCount ? `🎟 charms given up: ${burnedCount} · ` : ``) +
-    (tradeableLeft
-      ? `next challenge token after ${needNext} more sacrifice${needNext === 1 ? "" : "s"} ` +
-        `<span class="ach-trade-note">(the price doubles each time, and a given-up charm is gone for good)</span>`
-      : `earn a visible skill charm to sacrifice it for challenge tokens`) +
-    `</div>`;
   let html = `<div class="ach-page-head"><div class="ach-page-title">Charm Collection</div>` +
     `<div class="ach-page-sub">${earnedCount} / ${total} charms collected</div>` +
-    convoLine +
     `</div>`;
 
   // by-theme breakdown — one small colour-coded bar per group (denominators count
@@ -2104,27 +2038,6 @@ function renderAchievementsPage() {
   $("achievementsBody").innerHTML = html;
   $("achievementsBody").querySelectorAll("[data-open-songbook]").forEach((b) =>
     b.addEventListener("click", () => openSongbook(b.dataset.openSongbook)));
-  $("achievementsBody").querySelectorAll("[data-sacrifice]").forEach((b) =>
-    b.addEventListener("click", () => onSacrificeClick(b.dataset.sacrifice)));
-}
-
-// Two-tap to confirm a permanent sacrifice (mirrors the quit button). First tap arms the
-// charm (3s auto-disarm); second tap on the same charm burns it.
-function onSacrificeClick(id) {
-  if (armedSacrifice === id) {
-    clearTimeout(armSacrificeTimer);
-    armedSacrifice = null;
-    const res = sacrificeAchievement(id);
-    if (res) sacrificeNote = res.minted
-      ? `a challenge token earned 🎟 — spend it on the Challenges page`
-      : `charm given up — one more sacrifice earns the next token`;
-    renderAchievementsPage();
-    return;
-  }
-  clearTimeout(armSacrificeTimer);
-  armedSacrifice = id;
-  armSacrificeTimer = setTimeout(() => { armedSacrifice = null; renderAchievementsPage(); }, 3000);
-  renderAchievementsPage();
 }
 
 // Shared album-rainbow segments for a {album: discoveredCount} split out of total.
@@ -4046,15 +3959,17 @@ function renderBraceletSVG(results, active, fresh, albums, opts) {
 }
 
 function renderBracelet() {
-  const opts = gameType === "infinite"
+  const opts = (gameType === "infinite" || customInfinite())
     ? { total: Math.max(round, 1), letterBead: false, colors: albumPalette(), hinted: roundHinted, verseTiers: roundVerseTier }
     : gameType === "study"
     ? { total: studySessionLen, colors: albumPalette(), hinted: roundHinted, verseTiers: roundVerseTier }
+    : gameType === "custom"
+    ? { total: customSessionLen, colors: albumPalette(), hinted: roundHinted, verseTiers: roundVerseTier }
     : { colors: albumPalette(), hinted: roundHinted, verseTiers: roundVerseTier };
   $("bracelet").innerHTML = renderBraceletSVG(roundResults, round, justEarnedIndex, roundAlbums, opts);
   const correct = roundResults.filter(Boolean).length;
   $("charmCount").textContent = correct;
-  const uncapped = gameType === "infinite"
+  const uncapped = gameType === "infinite" || customInfinite()
     || (gameType === "challenge" && currentChallenge && currentChallenge.rule === "survive");
   const pg = uncapped
     ? Math.max(round, 1)
@@ -4064,19 +3979,21 @@ function renderBracelet() {
   // re-announces when the text changes, so it fires on round advance and after a verdict.
   const sr = $("srStatus");
   if (sr) {
-    sr.textContent = (gameType === "infinite" ? `Round ${pg}. ` : `Page ${pg} of ${sessionRounds()}. `)
+    sr.textContent = (uncapped ? `Round ${pg}. ` : `Page ${pg} of ${sessionRounds()}. `)
       + `${correct} correct so far.`;
   }
 }
 
 // Pencil tally in the margin: one mark per starting life, spent ones struck out.
-// Only shown in infinite mode; classic hides the element.
+// Shown in infinite mode and in an infinite custom run; every other mode hides the element.
 function startingLives() { return infiniteVariant === "sudden" ? 1 : 3; }
+// Starting lives for whichever run counts them down (Infinite variant, or a custom infinite run).
+function runStartingLives() { return customInfinite() ? currentMode.lives : startingLives(); }
 function renderLives() {
   const el = $("livesTally");
   if (!el) return;
-  if (gameType !== "infinite") { el.classList.remove("show"); el.innerHTML = ""; return; }
-  const total = startingLives();
+  if (gameType !== "infinite" && !customInfinite()) { el.classList.remove("show"); el.innerHTML = ""; return; }
+  const total = runStartingLives();
   let marks = "";
   for (let i = 0; i < total; i++) {
     const spent = i >= lives;
@@ -4321,7 +4238,7 @@ function updateTagline() {
     : gameType === "adaptive"
     ? `${TOTAL_ROUNDS} pages · difficulty that climbs with you`
     : gameType === "custom"
-    ? `${TOTAL_ROUNDS} pages · ${clock} · your own rules`
+    ? `${cm.rounds === 0 ? "endless pages" : cm.rounds + " pages"} · ${clock} · your own rules`
     : `${TOTAL_ROUNDS} pages · ${clock}`;
 }
 function renderModePicker() {
@@ -4626,12 +4543,15 @@ function formatResetCountdown(ms) {
 // Rounds in the current session — TOTAL_ROUNDS for fixed runs, but a Study session is only
 // as long as its deck (a near-complete player may have fewer than 13 words due to review).
 function sessionRounds() {
-  return gameType === "study" ? studySessionLen : TOTAL_ROUNDS;
+  if (gameType === "study") return studySessionLen;
+  if (gameType === "custom" && !customInfinite()) return customSessionLen;
+  return TOTAL_ROUNDS;
 }
 
 function isGameOver() {
   if (gameType === "infinite") return lives <= 0;
   if (gameType === "study") return round >= studySessionLen;
+  if (gameType === "custom") return customInfinite() ? lives <= 0 : round >= customSessionLen;
   // Thirty-One: Infinite's sudden-death rules inside a sandboxed challenge — endless
   // until a miss (never the round-13 cap), or a win the moment the target round is cleared.
   if (surviveRuleActive()) return lives <= 0 || round >= (currentChallenge.target || 31);
@@ -4793,8 +4713,14 @@ function applyInputHints() {
     return;
   }
   const suggesting = effectiveDropdown();
-  input.placeholder = suggesting ? "a title… or sing me a line" : "the full title… or a lyric line";
-  hint.textContent = suggesting ? "Enter accepts the top match — or write a lyric line for a verse bonus" : "no suggestions — type the full title or a real lyric line, then Enter";
+  if (currentMode.titleOnly) {
+    // Title-only custom preset: a sung line is never accepted, so don't invite one.
+    input.placeholder = suggesting ? "type the title…" : "the full title…";
+    hint.textContent = suggesting ? "Enter accepts the top match — titles only" : "no suggestions — type the full title, then Enter";
+  } else {
+    input.placeholder = suggesting ? "a title… or sing me a line" : "the full title… or a lyric line";
+    hint.textContent = suggesting ? "Enter accepts the top match — or write a lyric line for a verse bonus" : "no suggestions — type the full title or a real lyric line, then Enter";
+  }
   if (settings.enableHints !== false && currentMode.hint && gameType !== "daily" && hintBudgetLeft > 0) {
     hint.textContent += hintBudgetActive()
       ? ` · Tab for a hint (${hintBudgetLeft} left)`
@@ -5020,23 +4946,42 @@ function normalizeCustomMode(raw) {
   const hintBudget = clamp(m.hintBudget, 0, CUSTOM_HINT_MAX, CUSTOM_DEFAULT_MODE.hintBudget);
   const examples = clamp(m.examples, 0, CUSTOM_EXAMPLES_MAX, CUSTOM_DEFAULT_MODE.examples);
   const pool = CUSTOM_POOLS.includes(m.pool) ? m.pool : CUSTOM_DEFAULT_MODE.pool;
-  const lyricOnly = !!m.lyricOnly;
+  // `answer` is the canonical answering lever. Migrate older presets that only stored
+  // `lyricOnly` (true → "lyric", otherwise "either" — they never had a title-only option).
+  const answer = CUSTOM_ANSWER_MODES.includes(m.answer)
+    ? m.answer
+    : (m.lyricOnly ? "lyric" : (m.answer === undefined ? CUSTOM_DEFAULT_MODE.answer : "either"));
+  const lyricOnly = answer === "lyric";
+  const titleOnly = answer === "title";
+  // Run length: rounds 0 = an infinite run (play until lives run out); otherwise a finite
+  // page count. Lives only matter in the infinite variant.
+  const rounds = (Math.round(Number(m.rounds)) === 0)
+    ? 0
+    : clamp(m.rounds, CUSTOM_ROUNDS_MIN, CUSTOM_ROUNDS_MAX, CUSTOM_DEFAULT_MODE.rounds);
+  const lives = clamp(m.lives, CUSTOM_LIVES_MIN, CUSTOM_LIVES_MAX, CUSTOM_DEFAULT_MODE.lives);
   return {
     id: "custom", label: "Custom",
     seconds, pool, examples, hintBudget,
+    answer, rounds, lives,
     // Lyric-only answers never use the title dropdown; force suggestions off so the two
-    // can't contradict each other (mirrors the modal's greyed-out control).
+    // can't contradict each other (mirrors the modal's greyed-out control). Title-only can
+    // still show suggestions.
     dropdown: lyricOnly ? false : !!m.dropdown,
-    lyricOnly,
+    lyricOnly, titleOnly,
     noTitle: !!m.noTitle,
     hint: hintBudget > 0,
     strict: false,   // stem-matching stays a global setting, not a per-mode lever
   };
 }
 
-// Custom mode: a fixed 13-round run on a player-authored lever set (the active preset).
-// Sandboxed like Challenges — it folds skill XP + achievements, but never records/stats/
-// history/tally/play-counts (see endCustom). The hint budget caps total reveals for the run.
+// True while running a custom preset whose run length is infinite (rounds:0) — the run ends
+// only when lives run out, like Infinite mode. Reads currentMode so it's valid mid-run.
+function customInfinite() { return gameType === "custom" && currentMode && currentMode.rounds === 0; }
+
+// Custom mode: a player-authored run on the active preset — a finite page count, or an
+// infinite run capped by lives. Sandboxed like Challenges: it folds skill XP + achievements,
+// but never records/stats/history/tally/play-counts (see endCustom). The hint budget caps
+// total reveals for the run.
 function startCustom() {
   const preset = activeCustomPreset();
   gameType = "custom";
@@ -5044,10 +4989,14 @@ function startCustom() {
   resetRunState();
   customPreset = preset;                             // set AFTER resetRunState (which nulls it)
   hintBudgetLeft = currentMode.hintBudget > 0 ? currentMode.hintBudget : 0;
+  const infinite = currentMode.rounds === 0;
+  customSessionLen = infinite ? 0 : currentMode.rounds;
+  if (infinite) lives = currentMode.lives;           // infinite custom counts down lives like Infinite mode
   applyInputHints();
+  renderLives();
   updateTagline();
-  $("pageTotalWrap").style.display = "";
-  $("pageTotal").textContent = TOTAL_ROUNDS;
+  $("pageTotalWrap").style.display = infinite ? "none" : "";
+  if (!infinite) $("pageTotal").textContent = customSessionLen;
   showScreen("game");
   nextRound();
 }
@@ -6351,17 +6300,27 @@ function endStudy() {
 
 // End a Custom run. Sandboxed like Challenges: it folds skill XP + achievements ONLY, never
 // records/stats/history/tally/metrics/play-counts — a player-tuned config can't be ranked and
-// shouldn't feed the lifetime catalogue. Scored 0..TOTAL_ROUNDS. Only Instinct (resolve) earns
-// XP, so a deliberately soft config can't farm the specialised skills. (devNoLog skips the fold.)
+// shouldn't feed the lifetime catalogue. A finite run scores 0..rounds; an infinite run is
+// judged by how far you got before lives ran out. Only Instinct (resolve) earns XP, so a
+// deliberately soft config can't farm the specialised skills. (devNoLog skips the fold.)
 function endCustom() {
   const preset = customPreset;
   if (!devNoLog) foldSkillXp(["resolve"]);
 
+  const infinite = customInfinite();
+  const roundsPlayed = roundResults.length;
+  const total = infinite ? roundsPlayed : customSessionLen;
+  const perfect = !infinite && total > 0 && score === total;
+
   showScreen("results");
   $("resultBracelet").innerHTML = renderBraceletSVG(roundResults, 0, -1, roundAlbums,
-    { colors: albumPalette(), hinted: roundHinted, verseTiers: roundVerseTier });
+    infinite
+      ? { total: Math.max(roundsPlayed, 1), letterBead: false, colors: albumPalette(), hinted: roundHinted, verseTiers: roundVerseTier }
+      : { total, colors: albumPalette(), hinted: roundHinted, verseTiers: roundVerseTier });
   $("finalScore").textContent = score;
-  $("finalSub").textContent = "out of " + TOTAL_ROUNDS;
+  $("finalSub").textContent = infinite
+    ? `across ${roundsPlayed} round${roundsPlayed === 1 ? "" : "s"}`
+    : "out of " + total;
   $("keepGoingBtn").style.display = "none";
   $("namePrompt").style.display = "none";
   hideNewBestBanner();
@@ -6369,10 +6328,11 @@ function endCustom() {
 
   const name = preset && preset.name ? preset.name : "Custom";
   document.querySelector("#screen-results .podium-title").textContent = name;
-  const statusTxt = score === TOTAL_ROUNDS ? "a flawless custom run ★"
-    : score >= 9 ? "a strong run on your own rules"
+  const statusTxt = perfect ? "a flawless custom run ★"
+    : infinite ? `${score} named before your lives ran out`
+    : score >= Math.ceil(total * 0.7) ? "a strong run on your own rules"
     : "your mode, your rules";
-  const status = `<div class="chall-result-status${score === TOTAL_ROUNDS ? " win" : ""}">${escapeHtml(statusTxt)}</div>`;
+  const status = `<div class="chall-result-status${perfect ? " win" : ""}">${escapeHtml(statusTxt)}</div>`;
   const meta = `<div class="chall-result-meta">${escapeHtml(customLeverSummary(currentMode))}</div>`;
   $("resultPodium").innerHTML = status + meta +
     `<div class="chall-result-actions">` +
@@ -6391,15 +6351,21 @@ function endCustom() {
 
   renderResultRecap();
   renderSkillsRecap();
-  if (score === TOTAL_ROUNDS) celebratePerfect();
+  if (perfect) celebratePerfect();
 }
 
 // A short, human summary of a custom lever set — reused on the custom page and the results
 // card. Reads like the MODES `blurb` field but generated from the levers.
 function customLeverSummary(m) {
   const parts = [];
+  parts.push(m.rounds === 0
+    ? `∞ · ${m.lives} li${m.lives === 1 ? "fe" : "ves"}`
+    : `${m.rounds} rounds`);
   parts.push(m.seconds > 0 ? `${m.seconds}s` : "no timer");
-  parts.push(m.lyricOnly ? "lyric lines only" : (m.dropdown ? "suggestions" : "type the title"));
+  const answerLabel = m.titleOnly ? "titles only"
+    : m.lyricOnly ? "lyric lines only"
+    : (m.dropdown ? "suggestions" : "title or line");
+  parts.push(answerLabel);
   const poolLabel = { easy: "common words", all: "all words", hard: "rare words", ultra: "rarest words" };
   parts.push(poolLabel[m.pool] || "all words");
   if (m.noTitle) parts.push("not in the title");
@@ -8084,11 +8050,12 @@ function submitAnswer(song, isTimeout) {
       const key = normalizeTitle(raw);
       song = key ? (titleIndex.get(key) || null) : null;
       if (!song && key) song = spacelessIndex.get(key.replace(/ /g, "")) || null;  // forgive misplaced spaces
-      // Not a title — try it as a lyric line. EXCEPT when this round's tier-3 line
-      // hint has been revealed: the line is on screen, so accepting a typed line
-      // would just be copying the hint. Force the title instead (dropdown is on in
-      // every hint mode, so the title path is always available).
-      if (!song && hintTier < 3) {
+      // Not a title — try it as a lyric line. EXCEPT: a custom title-only preset never
+      // accepts a sung line (you must name the title), and when this round's tier-3 line
+      // hint has been revealed the line is on screen, so accepting a typed line would just
+      // be copying the hint (dropdown is on in every hint mode, so the title path is always
+      // available there).
+      if (!song && hintTier < 3 && !currentMode.titleOnly) {
         lyricMatch = matchLyricLine(raw);
         if (lyricMatch) song = lyricMatch.song;
       }
@@ -8271,7 +8238,7 @@ function submitAnswer(song, isTimeout) {
   // The goat remix — a timeout that snaps a 5+ answer streak (the scream skyward).
   if (isTimeout && correctStreak >= 5) earnPolaroid("goat-remix");
   correctStreak = correct ? correctStreak + 1 : 0;
-  if (gameType === "infinite" && !correct) { lives--; renderLives(); }
+  if ((gameType === "infinite" || customInfinite()) && !correct) { lives--; renderLives(); }
   // Thirty-One: sudden death — one miss ends the run (checked at nextRound via isGameOver).
   if (surviveRuleActive() && !correct) lives--;
   // Home Invasion: every wrong answer permanently cuts the per-page clock; drying it out
@@ -9753,9 +9720,6 @@ function performDanger(which) {
   else if (which === "ach") {
     resetAchievements();
     earnedAchievements = loadAchievements();
-    // also lift the sacrifice tombstones (charms become re-earnable; spent tokens stay)
-    const w = loadChallengeTokens(); w.burnedAchievements = []; saveChallengeTokens(w);
-    burnedAchIds = new Set();
     if (screens.achievements.classList.contains("active")) renderAchievementsPage();
   }
   else if (which === "tally") resetTally();
@@ -9899,30 +9863,60 @@ function closeSettings() {
    .set-slider) but its controls read/write a working PRESET'S lever object instead of global
    settings, dispatching on data-cm-* attributes. Every edit persists immediately to CUSTOM_KEY;
    the custom page re-renders on close. */
-function cmToggle(key, name, desc, on, disabled) {
-  return `<div class="set-row${disabled ? " cm-disabled" : ""}"><div class="set-label"><span class="set-name">${name}</span>` +
-    (desc ? `<span class="set-desc">${desc}</span>` : "") + `</div>` +
-    `<div class="set-control"><button type="button" class="set-toggle" data-cm-toggle="${key}" aria-pressed="${!!on}" aria-label="${name}"${disabled ? " disabled" : ""}></button></div></div>`;
+// The modal is a bento of control tiles (see .cm-grid) rather than a flat list. Each helper
+// emits one tile; a `span` class (cm-tile--hero / --wide / --half) sets how many grid cells it
+// takes so some controls read bigger than others. All still dispatch on the same data-cm-*
+// attributes the wiring listens for.
+function cmTileHead(name, desc) {
+  return `<div class="cm-tile-head"><span class="cm-tile-name">${name}</span>` +
+    (desc ? `<span class="cm-tile-desc">${desc}</span>` : "") + `</div>`;
 }
-function cmChoice(key, name, desc, options, cur) {
+function cmToggleTile(key, name, desc, on, disabled, span) {
+  return `<div class="cm-tile cm-tile--toggle ${span}${disabled ? " cm-disabled" : ""}">` +
+    cmTileHead(name, desc) +
+    `<button type="button" class="set-toggle" data-cm-toggle="${key}" aria-pressed="${!!on}" aria-label="${name}"${disabled ? " disabled" : ""}></button>` +
+    `</div>`;
+}
+function cmChoiceTile(key, name, desc, options, cur, span) {
   const tabs = options.map((o) =>
     `<button type="button" class="mode-tab${String(o.val) === String(cur) ? " active" : ""}" data-cm-choice="${key}" data-val="${escapeHtml(String(o.val))}">${escapeHtml(o.label)}</button>`
   ).join("");
-  return `<div class="set-row"><div class="set-label"><span class="set-name">${name}</span>` +
-    (desc ? `<span class="set-desc">${desc}</span>` : "") + `</div>` +
-    `<div class="set-control set-choice">${tabs}</div></div>`;
+  return `<div class="cm-tile cm-tile--choice ${span}">` +
+    cmTileHead(name, desc) +
+    `<div class="cm-choices">${tabs}</div></div>`;
 }
-function cmSlider(key, name, desc, min, max, val) {
-  return `<div class="set-row"><div class="set-label"><span class="set-name">${name}</span>` +
-    (desc ? `<span class="set-desc">${desc}</span>` : "") + `</div>` +
-    `<div class="set-control set-slider-row">` +
-      `<input type="range" class="set-slider" data-cm-slider="${key}" min="${min}" max="${max}" step="1" value="${val}" aria-label="${name}">` +
-      `<span class="set-slider-val" data-cm-slider-val="${key}">${cmSliderLabel(key, val)}</span>` +
+function cmSliderTile(key, name, desc, min, max, val, span) {
+  return `<div class="cm-tile cm-tile--slider ${span}">` +
+    cmTileHead(name, desc) +
+    `<div class="cm-slider-wrap">` +
+      `<input type="range" class="set-slider cm-slider" data-cm-slider="${key}" min="${min}" max="${max}" step="1" value="${val}" aria-label="${name}">` +
+      `<span class="cm-slider-val" data-cm-slider-val="${key}">${cmSliderLabel(key, val)}</span>` +
     `</div></div>`;
+}
+// The run-length hero tile: a big value that reads the round count (or ∞), a slider whose top
+// stop (one past CUSTOM_ROUNDS_MAX) means "endless", and — only while endless — a lives slider.
+function cmRoundsTile(m) {
+  const infinite = m.rounds === 0;
+  const sliderVal = infinite ? CUSTOM_ROUNDS_MAX + 1 : m.rounds;
+  const livesBlock = infinite
+    ? `<div class="cm-lives">` +
+        `<div class="cm-lives-head"><span class="cm-tile-name cm-lives-lbl">Lives</span>` +
+          `<span class="cm-slider-val" data-cm-slider-val="lives">${cmSliderLabel("lives", m.lives)}</span></div>` +
+        `<input type="range" class="set-slider cm-slider" data-cm-slider="lives" min="${CUSTOM_LIVES_MIN}" max="${CUSTOM_LIVES_MAX}" step="1" value="${m.lives}" aria-label="Lives">` +
+      `</div>`
+    : "";
+  return `<div class="cm-tile cm-tile--hero cm-tile--rounds">` +
+    cmTileHead("Rounds", `pages in a run — slide past ${CUSTOM_ROUNDS_MAX} for endless`) +
+    `<div class="cm-rounds-big${infinite ? " is-inf" : ""}" data-cm-rounds-big>${cmSliderLabel("rounds", sliderVal)}</div>` +
+    `<input type="range" class="set-slider cm-slider cm-slider--rounds" data-cm-slider="rounds" min="${CUSTOM_ROUNDS_MIN}" max="${CUSTOM_ROUNDS_MAX + 1}" step="1" value="${sliderVal}" aria-label="Rounds">` +
+    livesBlock +
+    `</div>`;
 }
 function cmSliderLabel(key, v) {
   if (key === "seconds") return v > 0 ? v + "s" : "no clock";
   if (key === "hintBudget") return v > 0 ? String(v) : "none";
+  if (key === "rounds") return v > CUSTOM_ROUNDS_MAX ? "∞" : String(v);
+  if (key === "lives") return v + (v === 1 ? " life" : " lives");
   return String(v);
 }
 
@@ -9953,21 +9947,19 @@ function renderCustomModalBody() {
 
   body.innerHTML =
     presetRow +
-    setSection("Timer",
-      cmSlider("seconds", "Countdown", "seconds per page — slide to 0 for no clock", CUSTOM_SECONDS_MIN, CUSTOM_SECONDS_MAX, m.seconds)
-    ) +
-    setSection("Answering",
-      cmToggle("lyricOnly", "Lyric lines only", "answer by typing a lyric line, never the title", m.lyricOnly, false) +
-      cmToggle("dropdown", "Suggestions", m.lyricOnly ? "off while answering by lyric line" : "show the title dropdown as you type", m.dropdown, m.lyricOnly) +
-      cmChoice("examples", "Examples after a miss", "how many songs to reveal", [{ val: 0, label: "0" }, { val: 1, label: "1" }, { val: 2, label: "2" }, { val: 3, label: "3" }], m.examples)
-    ) +
-    setSection("Hints",
-      cmSlider("hintBudget", "Hint budget", "total hint reveals for the whole run — 0 for none", 0, CUSTOM_HINT_MAX, m.hintBudget)
-    ) +
-    setSection("Words",
-      cmChoice("pool", "Word rarity", "which words you'll be asked", [{ val: "easy", label: "Common" }, { val: "all", label: "All" }, { val: "hard", label: "Rare" }, { val: "ultra", label: "Rarest" }], m.pool) +
-      cmToggle("noTitle", "Not in the title", "the prompt word never appears in the answer's title", m.noTitle, false)
-    );
+    `<div class="cm-grid">` +
+      cmRoundsTile(m) +
+      cmSliderTile("seconds", "Countdown", "seconds per page — 0 for no clock", CUSTOM_SECONDS_MIN, CUSTOM_SECONDS_MAX, m.seconds, "cm-tile--half") +
+      cmSliderTile("hintBudget", "Hint budget", "total reveals for the run", 0, CUSTOM_HINT_MAX, m.hintBudget, "cm-tile--half") +
+      cmChoiceTile("answer", "Answering", "how a page can be answered", [
+        { val: "title", label: "Titles" }, { val: "lyric", label: "Lyric lines" }, { val: "either", label: "Either" }], m.answer, "cm-tile--wide") +
+      cmChoiceTile("pool", "Word rarity", "which words you'll be asked", [
+        { val: "all", label: "All" }, { val: "easy", label: "Common" }, { val: "hard", label: "Rare" }, { val: "ultra", label: "Rarest" }], m.pool, "cm-tile--half") +
+      cmChoiceTile("examples", "Examples after a miss", "songs revealed", [
+        { val: 0, label: "0" }, { val: 1, label: "1" }, { val: 2, label: "2" }, { val: 3, label: "3" }], m.examples, "cm-tile--half") +
+      cmToggleTile("dropdown", "Suggestions", m.lyricOnly ? "off while answering by line" : "title dropdown as you type", m.dropdown, m.lyricOnly, "cm-tile--half") +
+      cmToggleTile("noTitle", "Not in the title", "prompt word never in the answer's title", m.noTitle, false, "cm-tile--half") +
+    `</div>`;
 
   wireCustomModalBody();
 }
@@ -9993,14 +9985,26 @@ function wireCustomModalBody() {
   }));
   body.querySelectorAll("[data-cm-choice]").forEach((b) => b.addEventListener("click", () => {
     const k = b.dataset.cmChoice, v = b.dataset.val;
-    mutate((mode) => { mode[k] = (k === "pool") ? v : (parseInt(v, 10) || 0); });
+    // pool + answer are string levers; the rest are integers.
+    mutate((mode) => { mode[k] = (k === "pool" || k === "answer") ? v : (parseInt(v, 10) || 0); });
   }));
   body.querySelectorAll("[data-cm-slider]").forEach((sl) => {
     const k = sl.dataset.cmSlider;
-    const lbl = body.querySelector(`[data-cm-slider-val="${k}"]`);
+    // The rounds hero shows its value in a big number, not the standard val span.
+    const lbl = body.querySelector(`[data-cm-slider-val="${k}"]`)
+      || (k === "rounds" ? body.querySelector("[data-cm-rounds-big]") : null);
+    // The top rounds stop (one past the max) is the sentinel for an endless run (stored as 0).
+    const readSlider = () => {
+      const raw = parseInt(sl.value, 10) || 0;
+      return (k === "rounds" && raw > CUSTOM_ROUNDS_MAX) ? 0 : raw;
+    };
     // Live-update the label as they drag; only persist + re-render when the drag ends.
-    sl.addEventListener("input", () => { if (lbl) lbl.textContent = cmSliderLabel(k, parseInt(sl.value, 10) || 0); });
-    sl.addEventListener("change", () => mutate((mode) => { mode[k] = parseInt(sl.value, 10) || 0; }));
+    sl.addEventListener("input", () => {
+      if (!lbl) return;
+      lbl.textContent = cmSliderLabel(k, parseInt(sl.value, 10) || 0);
+      if (k === "rounds") lbl.classList.toggle("is-inf", (parseInt(sl.value, 10) || 0) > CUSTOM_ROUNDS_MAX);
+    });
+    sl.addEventListener("change", () => { const nv = readSlider(); mutate((mode) => { mode[k] = nv; }); });
   });
 
   // Preset name — live rename of the active preset (no full re-render, to keep input focus).
@@ -10992,8 +10996,6 @@ async function init() {
   showScreen("start");
   applyEra("gold");
   earnedAchievements = loadAchievements();
-  burnedAchIds = new Set(loadChallengeTokens().burnedAchievements || []);
-  burnedAchIds.forEach((id) => delete earnedAchievements[id]);   // sacrificed charms never count
   settings = loadSettings();
   applySettings();
   migrateRecordsFromStats();   // seed records from pre-existing stats once, before any game runs
@@ -11102,8 +11104,9 @@ async function init() {
   $("againBtn").addEventListener("click", () => {
     applyEra("gold");
     renderStartPickers();
-    showScreen("start");
     $("startContent").style.display = "";
+    // Same "turn the page back" motion as give-up: the front page flips in from the left.
+    flipInToScreen("start");
   });
   // Roll a finished classic run straight into endless play, carrying the score.
   $("keepGoingBtn").addEventListener("click", () => startInfinite("3lives", { carry: true }));
