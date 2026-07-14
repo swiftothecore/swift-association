@@ -4147,15 +4147,18 @@ function setMode(id) {
 }
 const GAMETYPE_LABELS = { classic: "Classic", infinite: "Infinite", adaptive: "Adaptive", custom: "Custom" };
 // Glyphs that sit before a game type's label in the start-screen picker. A mark
-// only earns a spot when it IS the concept: Infinite's endless ∞, and Custom's
-// levers (the mode is a board of levers you drag). Classic/Adaptive stay plain.
-// Both are pen-stroke SVGs that inherit the tab's ink via currentColor, so they
-// flip to paper on an inked-active tab exactly as the old Unicode ∞ did. Shared
-// with the stats mode tabs (renderStatsTabs) so the two ∞s never drift apart.
+// only earns a spot when it IS the concept: Infinite's endless ∞, Adaptive's
+// self-adjusting gauge (rarity floats on a visible level), and Custom's levers
+// (the mode is a board of levers you drag). Classic stays plain — the default.
+// All are pen-stroke SVGs that inherit the tab's ink via currentColor, so they
+// flip to paper on an inked-active tab exactly as the old Unicode ∞ did. INF_GLYPH
+// is shared with the stats mode tabs (renderStatsTabs) so the two ∞s never drift.
 const INF_GLYPH = `<svg class="type-glyph type-glyph--inf" viewBox="0 0 28 24" aria-hidden="true">` +
   `<path d="M14 12 C 10.5 6.4, 3.4 7, 3.4 12 C 3.4 17, 10.6 17.6, 14 12 C 17.5 6.4, 24.6 7, 24.6 12 C 24.6 17, 17.4 17.6, 14 12 Z"/></svg>`;
 const TYPE_GLYPHS = {
   infinite: INF_GLYPH,
+  adaptive: `<svg class="type-glyph type-glyph--gauge" viewBox="0 0 24 24" aria-hidden="true">` +
+    `<path d="M4 17a8 8 0 0 1 16 0"/><path d="M12 17l4.6 -5.2"/><circle class="hub" cx="12" cy="17" r="1.3"/></svg>`,
   custom: `<svg class="type-glyph type-glyph--levers" viewBox="0 0 24 24" aria-hidden="true">` +
     `<path d="M4 6h6"/><path d="M14 6h6"/><path d="M4 12h8"/><path d="M16 12h4"/><path d="M4 18h3"/><path d="M11 18h9"/>` +
     `<circle cx="12" cy="6" r="2.1"/><circle cx="14" cy="12" r="2.1"/><circle cx="9" cy="18" r="2.1"/></svg>`,

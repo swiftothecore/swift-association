@@ -730,6 +730,9 @@
   .type-glyph--inf { width: 25px; height: 21px; vertical-align: -4px; }
   /* Levers: paper-filled knobs so the rails read as sliders you can slide. */
   .type-glyph--levers circle { fill: var(--paper); }
+  /* Gauge: its content sits low in the box, so nudge it up; the hub is inked. */
+  .type-glyph--gauge { vertical-align: -2px; }
+  .type-glyph--gauge .hub { fill: currentColor; }
   /* Lyricist sits off the relaxed→ultra ladder: it's a different modality (answer by
      lyric line), not a harder rung. A dashed divider sets it apart, and its active wash
      is lyricist lavender rather than the ladder's yellow highlighter. */
