@@ -744,6 +744,18 @@
   .mode-tab--modality.active {
     background: rgba(138,120,176,0.20); border-color: rgba(138,120,176,0.5);
   }
+  /* Each ladder rung and each game type carries its own highlighter wash when active, so the
+     picked mode reads by colour, not just by position. Normal (medium) and Classic keep the
+     canonical gold highlighter as the "home base"; the rest get a tuned marker tint + inked-in
+     border echoing MODE_COLORS (denim / green / coral / violet). Lyricist keeps its lavender
+     modality rule above; the variant sub-tabs (3 lives / sudden death) stay neutral gold. */
+  .mode-tab.active[data-mode="relaxed"]  { background: rgba(103,150,190,0.36); border-color: rgba(63,111,163,0.5); }
+  .mode-tab.active[data-mode="easy"]     { background: rgba(133,173,96,0.40);  border-color: rgba(96,131,62,0.5); }
+  .mode-tab.active[data-mode="hard"]     { background: rgba(202,92,74,0.34);   border-color: rgba(155,54,46,0.5); }
+  .mode-tab.active[data-mode="ultra"]    { background: rgba(122,98,182,0.34);   border-color: rgba(90,72,152,0.5); }
+  .mode-tab.active[data-type="infinite"] { background: rgba(64,150,146,0.34);   border-color: rgba(40,120,116,0.52); }
+  .mode-tab.active[data-type="adaptive"] { background: rgba(206,132,58,0.34);   border-color: rgba(160,96,36,0.52); }
+  .mode-tab.active[data-type="custom"]   { background: rgba(176,104,150,0.32);  border-color: rgba(150,74,124,0.52); }
   .mode-blurb {
     font-family: var(--type); font-size: 11px; color: var(--ink-soft);
     margin: 9px 0 0; padding-top: 8px; border-top: 1px dashed rgba(43,39,34,0.16);
