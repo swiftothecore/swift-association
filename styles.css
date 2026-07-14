@@ -1574,6 +1574,27 @@
   .cm-lives-head { display: flex; align-items: baseline; justify-content: space-between; }
   .cm-lives-lbl { font-size: 18px; }
 
+  /* click-to-type value readouts: the number turns into a small field on click, so an exact
+     amount can be set past the slider's own range */
+  .cm-val-edit { cursor: text; border-radius: 4px; }
+  .cm-slider-val.cm-val-edit:hover { text-decoration: underline dotted; text-underline-offset: 2px; }
+  .cm-rounds-big.cm-val-edit:hover { text-decoration: underline dotted; text-underline-offset: 4px; }
+  .cm-val-edit:focus-visible { outline: 2px solid var(--ink-accent); outline-offset: 2px; }
+  .cm-val-input {
+    font: inherit; color: inherit; text-align: right; width: 3.4em; max-width: 100%;
+    padding: 0 3px; background: rgba(43,39,34,0.06);
+    border: 1px solid rgba(43,39,34,0.34); border-radius: 4px;
+    -moz-appearance: textfield; appearance: textfield;
+  }
+  .cm-val-input::-webkit-inner-spin-button, .cm-val-input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+  .cm-rounds-big .cm-val-input {
+    font-family: var(--hand); font-weight: 700; font-size: 40px; line-height: 1;
+    text-align: center; width: 2.4em;
+  }
+  /* the shared ∞ mark sizes to whichever readout hosts it */
+  .cm-slider-val .type-glyph { margin-right: 0; }
+  .cm-rounds-big .type-glyph--inf { width: 58px; height: 46px; margin: 0; vertical-align: middle; }
+
   @media (max-width: 520px) {
     .cm-grid { grid-template-columns: repeat(2, 1fr); }
     .cm-tile--wide { grid-column: span 2; }

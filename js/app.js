@@ -14,9 +14,11 @@ import {
   ADAPTIVE_BUCKETS, ADAPTIVE_LEVELS, ADAPT_MAX_LEVEL, ADAPT_START_LEVEL, ADAPT_PROMO_STREAK, ADAPT_NODROP_LEVEL,
   STUDY_MAX_BOX, STUDY_INTERVALS, STUDY_SESSION_ROUNDS,
   STUDY_MISS_WEIGHT, STUDY_GAP_WEIGHT, STUDY_BOX_WEIGHT, STUDY_BASE_WEIGHT,
-  CUSTOM_SECONDS_MIN, CUSTOM_SECONDS_MAX, CUSTOM_HINT_MAX, CUSTOM_POOLS,
+  CUSTOM_SECONDS_MIN, CUSTOM_SECONDS_MAX, CUSTOM_SECONDS_TYPED_MAX, CUSTOM_HINT_MAX,
+  CUSTOM_HINT_TYPED_MAX, CUSTOM_HINT_UNLIMITED, CUSTOM_POOLS,
   CUSTOM_EXAMPLES_MAX, CUSTOM_MAX_PRESETS, CUSTOM_NAME_MAX, CUSTOM_DEFAULT_MODE,
-  CUSTOM_ROUNDS_MIN, CUSTOM_ROUNDS_MAX, CUSTOM_LIVES_MIN, CUSTOM_LIVES_MAX, CUSTOM_ANSWER_MODES,
+  CUSTOM_ROUNDS_MIN, CUSTOM_ROUNDS_MAX, CUSTOM_ROUNDS_TYPED_MAX,
+  CUSTOM_LIVES_MIN, CUSTOM_LIVES_MAX, CUSTOM_LIVES_TYPED_MAX, CUSTOM_ANSWER_MODES,
   PEN_SVG, STAR_SVG, SPARKLE_SVG, DOODLE_SVG, DOODLE_SIZE,
   WHALE_SURFACE_MS, WHALE_TAIL_SVG, WHALE_SPLASH_SVG,
   SKILLS, SKILL_IDS, SKILL_BY_ID,
@@ -4943,8 +4945,13 @@ function normalizeCustomMode(raw) {
     const n = Math.round(Number(v));
     return Number.isFinite(n) ? Math.max(lo, Math.min(hi, n)) : dflt;
   };
-  const seconds = clamp(m.seconds, CUSTOM_SECONDS_MIN, CUSTOM_SECONDS_MAX, CUSTOM_DEFAULT_MODE.seconds);
-  const hintBudget = clamp(m.hintBudget, 0, CUSTOM_HINT_MAX, CUSTOM_DEFAULT_MODE.hintBudget);
+  const seconds = clamp(m.seconds, CUSTOM_SECONDS_MIN, CUSTOM_SECONDS_TYPED_MAX, CUSTOM_DEFAULT_MODE.seconds);
+  // Hints: -1 sentinel = unlimited (the slider's top stop); 0 = none; else a finite budget.
+  const rawHint = Math.round(Number(m.hintBudget));
+  const hintUnlimited = Number.isFinite(rawHint) && rawHint < 0;
+  const hintBudget = hintUnlimited
+    ? CUSTOM_HINT_UNLIMITED
+    : clamp(m.hintBudget, 0, CUSTOM_HINT_TYPED_MAX, CUSTOM_DEFAULT_MODE.hintBudget);
   const examples = clamp(m.examples, 0, CUSTOM_EXAMPLES_MAX, CUSTOM_DEFAULT_MODE.examples);
   const pool = CUSTOM_POOLS.includes(m.pool) ? m.pool : CUSTOM_DEFAULT_MODE.pool;
   // `answer` is the canonical answering lever. Migrate older presets that only stored
@@ -4958,8 +4965,8 @@ function normalizeCustomMode(raw) {
   // page count. Lives only matter in the infinite variant.
   const rounds = (Math.round(Number(m.rounds)) === 0)
     ? 0
-    : clamp(m.rounds, CUSTOM_ROUNDS_MIN, CUSTOM_ROUNDS_MAX, CUSTOM_DEFAULT_MODE.rounds);
-  const lives = clamp(m.lives, CUSTOM_LIVES_MIN, CUSTOM_LIVES_MAX, CUSTOM_DEFAULT_MODE.lives);
+    : clamp(m.rounds, CUSTOM_ROUNDS_MIN, CUSTOM_ROUNDS_TYPED_MAX, CUSTOM_DEFAULT_MODE.rounds);
+  const lives = clamp(m.lives, CUSTOM_LIVES_MIN, CUSTOM_LIVES_TYPED_MAX, CUSTOM_DEFAULT_MODE.lives);
   return {
     id: "custom", label: "Custom",
     seconds, pool, examples, hintBudget,
@@ -4970,7 +4977,8 @@ function normalizeCustomMode(raw) {
     dropdown: lyricOnly ? false : !!m.dropdown,
     lyricOnly, titleOnly,
     noTitle: !!m.noTitle,
-    hint: hintBudget > 0,
+    hintUnlimited,
+    hint: hintUnlimited || hintBudget > 0,
     strict: false,   // stem-matching stays a global setting, not a per-mode lever
   };
 }
@@ -4989,7 +4997,8 @@ function startCustom() {
   currentMode = normalizeCustomMode(preset.mode);   // clone — never persisted via DIFF_KEY
   resetRunState();
   customPreset = preset;                             // set AFTER resetRunState (which nulls it)
-  hintBudgetLeft = currentMode.hintBudget > 0 ? currentMode.hintBudget : 0;
+  hintBudgetLeft = currentMode.hintUnlimited ? Infinity
+    : (currentMode.hintBudget > 0 ? currentMode.hintBudget : 0);
   const infinite = currentMode.rounds === 0;
   customSessionLen = infinite ? 0 : currentMode.rounds;
   if (infinite) lives = currentMode.lives;           // infinite custom counts down lives like Infinite mode
@@ -6371,7 +6380,8 @@ function customLeverSummary(m) {
   parts.push(poolLabel[m.pool] || "all words");
   if (m.noTitle) parts.push("not in the title");
   const budget = m.hintBudget | 0;
-  parts.push(budget > 0 ? `${budget} hint${budget === 1 ? "" : "s"}` : "no hints");
+  parts.push(m.hintUnlimited ? "unlimited hints"
+    : budget > 0 ? `${budget} hint${budget === 1 ? "" : "s"}` : "no hints");
   return parts.join(" · ");
 }
 
@@ -7302,8 +7312,10 @@ function showTimerFull() {
   const wrap = document.querySelector(".timer-wrap");
   // It's A Clock! uses one shared clock — paint it at its current reading, not "full".
   const base = comboRuleActive() ? Math.max(0, comboClock) : baseSeconds();
-  // Floor a clocked page at 3s so stacked time penalties (Devil's Path) can't zero it.
-  const total = base > 0 ? Math.max(3, base + (comboRuleActive() ? 0 : (extraSecondsPerRound || 0))) : base;
+  // Floor a clocked page so stacked time penalties (Devil's Path) can't zero it, but never
+  // above the mode's own base, so a deliberately short custom clock (e.g. 2s) stays as set.
+  const floor = Math.min(base, 3);
+  const total = base > 0 ? Math.max(floor, base + (comboRuleActive() ? 0 : (extraSecondsPerRound || 0))) : base;
   if (!(total > 0)) { if (wrap) wrap.style.display = "none"; return; }
   if (wrap) wrap.style.display = "";
   fill.style.width = "100%";
@@ -7455,8 +7467,10 @@ function startTimer(resume) {
     if (begin <= 0) { comboClock = 0; roundLocked = true; resetTension(); endGame(); return; }
   } else {
     const base = baseSeconds();
-    // Floor a clocked page at 3s so stacked time penalties (Devil's Path) can't zero it.
-    total = base > 0 ? Math.max(3, base + (extraSecondsPerRound || 0)) : base;
+    // Floor a clocked page so stacked time penalties (Devil's Path) can't zero it, but never
+    // above the mode's own base, so a deliberately short custom clock (e.g. 2s) stays as set.
+    const floor = Math.min(base, 3);
+    total = base > 0 ? Math.max(floor, base + (extraSecondsPerRound || 0)) : base;
     // Relaxed mode (seconds <= 0): no clock at all — hide the bar and never time out.
     if (!(total > 0)) {
       if (wrap) wrap.style.display = "none";
@@ -9937,39 +9951,73 @@ function cmChoiceTile(key, name, desc, options, cur, span) {
     cmTileHead(name, desc) +
     `<div class="cm-choices">${tabs}</div></div>`;
 }
-function cmSliderTile(key, name, desc, min, max, val, span) {
+// Per-lever slider metadata. `sliderMin`/`sliderMax` are the comfortable drag range shown in
+// the modal; `typedMax` is how far the click-to-type value box may go past the slider's end;
+// `infStop` (when set) is the slider position, one past the finite max, that means the
+// endless/unlimited state (rounds → 0, hintBudget → CUSTOM_HINT_UNLIMITED).
+const CM_SLIDER_META = {
+  rounds:     { sliderMin: CUSTOM_ROUNDS_MIN,  sliderMax: CUSTOM_ROUNDS_MAX,  typedMax: CUSTOM_ROUNDS_TYPED_MAX,  infStop: CUSTOM_ROUNDS_MAX + 1 },
+  seconds:    { sliderMin: CUSTOM_SECONDS_MIN, sliderMax: CUSTOM_SECONDS_MAX, typedMax: CUSTOM_SECONDS_TYPED_MAX },
+  hintBudget: { sliderMin: 0,                  sliderMax: CUSTOM_HINT_MAX,    typedMax: CUSTOM_HINT_TYPED_MAX,    infStop: CUSTOM_HINT_MAX + 1 },
+  lives:      { sliderMin: CUSTOM_LIVES_MIN,   sliderMax: CUSTOM_LIVES_MAX,   typedMax: CUSTOM_LIVES_TYPED_MAX },
+};
+// Map a slider's raw thumb position to the lever's stored value (the top stop = endless/unlimited).
+function cmSliderPosToValue(key, pos) {
+  if (key === "rounds") return pos > CUSTOM_ROUNDS_MAX ? 0 : pos;
+  if (key === "hintBudget") return pos > CUSTOM_HINT_MAX ? CUSTOM_HINT_UNLIMITED : pos;
+  return pos;
+}
+// Map a stored value back to a thumb position. Values typed past the slider's end pin the thumb
+// at its finite max (the real number still shows in the label beside it).
+function cmValueToSliderPos(key, v) {
+  const meta = CM_SLIDER_META[key];
+  if (key === "rounds") return v === 0 ? meta.infStop : Math.min(v, meta.sliderMax);
+  if (key === "hintBudget") return v < 0 ? meta.infStop : Math.min(Math.max(v, 0), meta.sliderMax);
+  return Math.min(Math.max(v, meta.sliderMin), meta.sliderMax);
+}
+// The value shown beside a slider, as HTML, from the lever's REAL stored value. Endless runs and
+// unlimited hints render the shared infinite glyph (the same mark Infinite mode wears).
+function cmSliderLabelHtml(key, v) {
+  if (key === "seconds") return v > 0 ? v + "s" : "no clock";
+  if (key === "hintBudget") return v < 0 ? INF_GLYPH : (v > 0 ? String(v) : "none");
+  if (key === "rounds") return v === 0 ? INF_GLYPH : String(v);
+  if (key === "lives") return v === 1 ? "Sudden death" : (v + " lives");
+  return String(v);
+}
+// A slider's value readout, marked up so a click turns it into a number field (see wireCmEditables).
+function cmValLabel(key, val, extraCls) {
+  return `<span class="cm-slider-val cm-val-edit${extraCls ? " " + extraCls : ""}" data-cm-slider-val="${key}" ` +
+    `data-cm-edit="${key}" role="button" tabindex="0" title="click to type an exact value">${cmSliderLabelHtml(key, val)}</span>`;
+}
+function cmSliderTile(key, name, desc, val, span) {
+  const meta = CM_SLIDER_META[key];
+  const sliderMax = meta.infStop != null ? meta.infStop : meta.sliderMax;
   return `<div class="cm-tile cm-tile--slider ${span}">` +
     cmTileHead(name, desc) +
     `<div class="cm-slider-wrap">` +
-      `<input type="range" class="set-slider cm-slider" data-cm-slider="${key}" min="${min}" max="${max}" step="1" value="${val}" aria-label="${name}">` +
-      `<span class="cm-slider-val" data-cm-slider-val="${key}">${cmSliderLabel(key, val)}</span>` +
+      `<input type="range" class="set-slider cm-slider" data-cm-slider="${key}" min="${meta.sliderMin}" max="${sliderMax}" step="1" value="${cmValueToSliderPos(key, val)}" aria-label="${name}">` +
+      cmValLabel(key, val) +
     `</div></div>`;
 }
-// The run-length hero tile: a big value that reads the round count (or ∞), a slider whose top
-// stop (one past CUSTOM_ROUNDS_MAX) means "endless", and — only while endless — a lives slider.
+// The run-length hero tile: a big value that reads the round count (or the infinite glyph), a
+// slider whose top stop means "endless", and (only while endless) a lives slider.
 function cmRoundsTile(m) {
   const infinite = m.rounds === 0;
-  const sliderVal = infinite ? CUSTOM_ROUNDS_MAX + 1 : m.rounds;
+  const meta = CM_SLIDER_META.rounds;
   const livesBlock = infinite
     ? `<div class="cm-lives">` +
         `<div class="cm-lives-head"><span class="cm-tile-name cm-lives-lbl">Lives</span>` +
-          `<span class="cm-slider-val" data-cm-slider-val="lives">${cmSliderLabel("lives", m.lives)}</span></div>` +
-        `<input type="range" class="set-slider cm-slider" data-cm-slider="lives" min="${CUSTOM_LIVES_MIN}" max="${CUSTOM_LIVES_MAX}" step="1" value="${m.lives}" aria-label="Lives">` +
+          cmValLabel("lives", m.lives) + `</div>` +
+        `<input type="range" class="set-slider cm-slider" data-cm-slider="lives" min="${CUSTOM_LIVES_MIN}" max="${CUSTOM_LIVES_MAX}" step="1" value="${cmValueToSliderPos("lives", m.lives)}" aria-label="Lives">` +
       `</div>`
     : "";
   return `<div class="cm-tile cm-tile--hero cm-tile--rounds">` +
-    cmTileHead("Rounds", `pages in a run — slide past ${CUSTOM_ROUNDS_MAX} for endless`) +
-    `<div class="cm-rounds-big${infinite ? " is-inf" : ""}" data-cm-rounds-big>${cmSliderLabel("rounds", sliderVal)}</div>` +
-    `<input type="range" class="set-slider cm-slider cm-slider--rounds" data-cm-slider="rounds" min="${CUSTOM_ROUNDS_MIN}" max="${CUSTOM_ROUNDS_MAX + 1}" step="1" value="${sliderVal}" aria-label="Rounds">` +
+    cmTileHead("Rounds", `pages in a run, or slide to the end for endless`) +
+    `<div class="cm-rounds-big cm-val-edit${infinite ? " is-inf" : ""}" data-cm-rounds-big data-cm-edit="rounds" ` +
+      `role="button" tabindex="0" title="click to type an exact round count">${cmSliderLabelHtml("rounds", m.rounds)}</div>` +
+    `<input type="range" class="set-slider cm-slider cm-slider--rounds" data-cm-slider="rounds" min="${meta.sliderMin}" max="${meta.infStop}" step="1" value="${cmValueToSliderPos("rounds", m.rounds)}" aria-label="Rounds">` +
     livesBlock +
     `</div>`;
-}
-function cmSliderLabel(key, v) {
-  if (key === "seconds") return v > 0 ? v + "s" : "no clock";
-  if (key === "hintBudget") return v > 0 ? String(v) : "none";
-  if (key === "rounds") return v > CUSTOM_ROUNDS_MAX ? "∞" : String(v);
-  if (key === "lives") return v + (v === 1 ? " life" : " lives");
-  return String(v);
 }
 
 function renderCustomModalBody() {
@@ -10001,8 +10049,8 @@ function renderCustomModalBody() {
     presetRow +
     `<div class="cm-grid">` +
       cmRoundsTile(m) +
-      cmSliderTile("seconds", "Countdown", "seconds per page — 0 for no clock", CUSTOM_SECONDS_MIN, CUSTOM_SECONDS_MAX, m.seconds, "cm-tile--half") +
-      cmSliderTile("hintBudget", "Hint budget", "total reveals for the run", 0, CUSTOM_HINT_MAX, m.hintBudget, "cm-tile--half") +
+      cmSliderTile("seconds", "Countdown", "seconds per page (0 for no clock)", m.seconds, "cm-tile--half") +
+      cmSliderTile("hintBudget", "Hint budget", "total reveals for the run (past 13 = unlimited)", m.hintBudget, "cm-tile--half") +
       cmChoiceTile("answer", "Answering", "how a page can be answered", [
         { val: "title", label: "Titles" }, { val: "lyric", label: "Lyric lines" }, { val: "either", label: "Either" }], m.answer, "cm-tile--wide") +
       cmChoiceTile("pool", "Word rarity", "which words you'll be asked", [
@@ -10045,19 +10093,21 @@ function wireCustomModalBody() {
     // The rounds hero shows its value in a big number, not the standard val span.
     const lbl = body.querySelector(`[data-cm-slider-val="${k}"]`)
       || (k === "rounds" ? body.querySelector("[data-cm-rounds-big]") : null);
-    // The top rounds stop (one past the max) is the sentinel for an endless run (stored as 0).
-    const readSlider = () => {
-      const raw = parseInt(sl.value, 10) || 0;
-      return (k === "rounds" && raw > CUSTOM_ROUNDS_MAX) ? 0 : raw;
-    };
-    // Live-update the label as they drag; only persist + re-render when the drag ends.
+    // Live-update the label as they drag; only persist + re-render when the drag ends. The top
+    // stop maps to the endless/unlimited value (0 rounds / -1 hints).
     sl.addEventListener("input", () => {
       if (!lbl) return;
-      lbl.textContent = cmSliderLabel(k, parseInt(sl.value, 10) || 0);
-      if (k === "rounds") lbl.classList.toggle("is-inf", (parseInt(sl.value, 10) || 0) > CUSTOM_ROUNDS_MAX);
+      const val = cmSliderPosToValue(k, parseInt(sl.value, 10) || 0);
+      lbl.innerHTML = cmSliderLabelHtml(k, val);
+      if (k === "rounds") lbl.classList.toggle("is-inf", val === 0);
     });
-    sl.addEventListener("change", () => { const nv = readSlider(); mutate((mode) => { mode[k] = nv; }); });
+    sl.addEventListener("change", () => {
+      const nv = cmSliderPosToValue(k, parseInt(sl.value, 10) || 0);
+      mutate((mode) => { mode[k] = nv; });
+    });
   });
+
+  wireCmEditables(body, mutate);
 
   // Preset name — live rename of the active preset (no full re-render, to keep input focus).
   const nameInput = $("cmNameInput");
@@ -10101,6 +10151,56 @@ function wireCustomModalBody() {
     s.activeId = s.presets[0].id;
     saveCustom(s);
     renderCustomModalBody();
+  });
+}
+
+// Click-to-type on any custom slider's value readout. Turns the number into a small input so a
+// player can set an exact amount past the slider's own range (clamped only to the lever's typed
+// max in normalizeCustomMode). `mutate` writes + re-renders the modal, recreating these elements.
+function wireCmEditables(body, mutate) {
+  body.querySelectorAll("[data-cm-edit]").forEach((el) => {
+    const k = el.dataset.cmEdit;
+    const meta = CM_SLIDER_META[k];
+    if (!meta) return;
+    const open = () => {
+      if (el.querySelector("input")) return;   // already editing
+      const store = loadCustom();
+      const p = store.presets.find((x) => x.id === store.activeId) || store.presets[0];
+      const cur = normalizeCustomMode(p.mode)[k];
+      const input = document.createElement("input");
+      input.type = "number";
+      input.className = "cm-val-input";
+      input.min = String(meta.sliderMin);
+      input.max = String(meta.typedMax);
+      input.step = "1";
+      // Endless/unlimited states have no number to seed; start the field empty.
+      input.value = (cur > 0 || (k !== "rounds" && k !== "hintBudget" && cur >= 0)) ? String(cur) : "";
+      el.textContent = "";
+      el.appendChild(input);
+      input.focus();
+      input.select();
+      let done = false;
+      const finish = (save) => {
+        if (done) return;
+        done = true;
+        if (save && input.value.trim() !== "") {
+          const n = parseInt(input.value, 10);
+          if (Number.isFinite(n)) { mutate((mode) => { mode[k] = n; }); return; }
+        }
+        renderCustomModalBody();   // cancel or empty: repaint from the stored value
+      };
+      input.addEventListener("keydown", (e) => {
+        e.stopPropagation();
+        if (e.key === "Enter") { e.preventDefault(); finish(true); }
+        else if (e.key === "Escape") { e.preventDefault(); finish(false); }
+      });
+      input.addEventListener("blur", () => finish(true));
+      input.addEventListener("click", (e) => e.stopPropagation());
+    };
+    el.addEventListener("click", open);
+    el.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); open(); }
+    });
   });
 }
 

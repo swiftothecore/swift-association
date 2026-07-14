@@ -182,17 +182,26 @@ export const STUDY_BASE_WEIGHT = 1;      // floor of randomness so it never feel
    The one lever the base MODES lack is `hintBudget`: the total number of hint reveals allowed
    across the whole run (each tier-tap spends one; app.js enforces it). `hint` is derived
    (hintBudget > 0), so a budget of 0 turns hints off entirely. */
+// Each lever has a SLIDER range (the comfortable drag range shown in the modal) and a wider
+// TYPED max: clicking the value number lets you type an exact amount past the slider's end,
+// clamped only to the typed max. hintBudget also carries an "unlimited" state, stored as the
+// sentinel -1 (the hint slider's top stop, one past its finite max).
 export const CUSTOM_SECONDS_MIN = 0;     // 0 = no clock (like Relaxed)
-export const CUSTOM_SECONDS_MAX = 60;
-export const CUSTOM_HINT_MAX = 8;        // per-run total hint reveals (0 = no hints)
+export const CUSTOM_SECONDS_MAX = 60;    // slider's top; typing can go higher
+export const CUSTOM_SECONDS_TYPED_MAX = 600;
+export const CUSTOM_HINT_MAX = 13;       // slider's finite top (0 = no hints); one stop past = unlimited (-1)
+export const CUSTOM_HINT_TYPED_MAX = 99; // typed finite hint budgets can climb this high
+export const CUSTOM_HINT_UNLIMITED = -1; // sentinel: hints never run out this run
 export const CUSTOM_POOLS = ["easy", "all", "hard", "ultra"];   // word-rarity buckets the picker offers
 export const CUSTOM_EXAMPLES_MAX = 3;    // example songs shown after a miss (0..3)
 export const CUSTOM_MAX_PRESETS = 12;    // keep the saved list manageable
 export const CUSTOM_NAME_MAX = 24;       // preset name length cap
-export const CUSTOM_ROUNDS_MIN = 5;      // shortest finite run
-export const CUSTOM_ROUNDS_MAX = 30;     // longest finite run (one tick past this = infinite, stored as rounds:0)
-export const CUSTOM_LIVES_MIN = 1;       // fewest lives in an infinite run
-export const CUSTOM_LIVES_MAX = 5;       // most lives in an infinite run
+export const CUSTOM_ROUNDS_MIN = 1;      // shortest finite run
+export const CUSTOM_ROUNDS_MAX = 30;     // slider's finite top (one tick past this = infinite, stored as rounds:0)
+export const CUSTOM_ROUNDS_TYPED_MAX = 500; // typed finite run lengths can climb this high
+export const CUSTOM_LIVES_MIN = 1;       // fewest lives in an infinite run (1 = sudden death)
+export const CUSTOM_LIVES_MAX = 5;       // slider's top; typing can go higher
+export const CUSTOM_LIVES_TYPED_MAX = 99;
 export const CUSTOM_ANSWER_MODES = ["title", "lyric", "either"];   // how a page may be answered
 // The lever object a first-time player's seed preset starts from (their own example: 17s, no
 // suggestions, lyric-only, a 5-reveal hint budget, all words, not in the title, a 13-page run).
