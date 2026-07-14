@@ -726,8 +726,9 @@
      hover/active, paper on the inked Infinite stats tab. */
   .type-glyph { width: 18px; height: 18px; margin-right: 5px; vertical-align: -3px;
     fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
-  /* ∞ is wider than tall, so it gets its own box to keep the lemniscate from squishing. */
-  .type-glyph--inf { width: 25px; height: 21px; vertical-align: -4px; }
+  /* ∞ is wider than tall, so it gets its own box; rounder loops keep it from
+     running too long horizontally next to the label. */
+  .type-glyph--inf { width: 22px; height: 18px; vertical-align: -4px; }
   /* Levers: paper-filled knobs so the rails read as sliders you can slide. */
   .type-glyph--levers circle { fill: var(--paper); }
   /* Gauge: its content sits low in the box, so nudge it up; the hub is inked. */

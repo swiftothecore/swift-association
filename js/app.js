@@ -4153,8 +4153,8 @@ const GAMETYPE_LABELS = { classic: "Classic", infinite: "Infinite", adaptive: "A
 // All are pen-stroke SVGs that inherit the tab's ink via currentColor, so they
 // flip to paper on an inked-active tab exactly as the old Unicode ∞ did. INF_GLYPH
 // is shared with the stats mode tabs (renderStatsTabs) so the two ∞s never drift.
-const INF_GLYPH = `<svg class="type-glyph type-glyph--inf" viewBox="0 0 28 24" aria-hidden="true">` +
-  `<path d="M14 12 C 10.5 6.4, 3.4 7, 3.4 12 C 3.4 17, 10.6 17.6, 14 12 C 17.5 6.4, 24.6 7, 24.6 12 C 24.6 17, 17.4 17.6, 14 12 Z"/></svg>`;
+const INF_GLYPH = `<svg class="type-glyph type-glyph--inf" viewBox="2 4 20 16" aria-hidden="true">` +
+  `<path d="M12 12 C 8.6 5.8, 4 6.6, 4 12 C 4 17.4, 8.6 18.2, 12 12 C 15.4 5.8, 20 6.6, 20 12 C 20 17.4, 15.4 18.2, 12 12 Z"/></svg>`;
 const TYPE_GLYPHS = {
   infinite: INF_GLYPH,
   adaptive: `<svg class="type-glyph type-glyph--gauge" viewBox="0 0 24 24" aria-hidden="true">` +
