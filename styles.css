@@ -757,16 +757,15 @@
   .mode-tab.active[data-type="adaptive"] { background: rgba(206,132,58,0.34);   border-color: rgba(160,96,36,0.52); }
   .mode-tab.active[data-type="custom"]   { background: rgba(176,104,150,0.32);  border-color: rgba(150,74,124,0.52); }
   /* The two Infinite variants read as the stakes they set. "3 lives" wears a green→gold→coral
-     wash — a health meter draining from safe to danger. "Sudden death" goes fully inked (paper
-     text on ink), one slip and it's over, echoing the inked Infinite stats tab. */
+     wash — a health meter draining from safe to danger. "Sudden death" takes the same wash +
+     inked-border treatment as the rest, in a smoky near-black: dark and ominous, one slip and
+     it's over. */
   .mode-tab.active[data-variant="3lives"] {
     background: linear-gradient(100deg, rgba(133,173,96,0.42) 0%, rgba(247,201,72,0.5) 50%, rgba(202,92,74,0.4) 100%);
     border-color: rgba(120,110,70,0.5);
   }
   .mode-tab.active[data-variant="sudden"] {
-    background: radial-gradient(125% 150% at 50% 0%, #2a2320 0%, #14100d 55%, #080605 100%);
-    color: #f0e7d6; border-color: #080605;
-    box-shadow: inset 0 1px 7px rgba(0,0,0,0.65), 0 0 10px rgba(140,18,18,0.35), 0 0 2px rgba(150,20,20,0.55);
+    background: rgba(28,22,18,0.34); border-color: rgba(12,9,7,0.8);
   }
   .mode-blurb {
     font-family: var(--type); font-size: 11px; color: var(--ink-soft);
