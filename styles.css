@@ -748,7 +748,7 @@
      picked mode reads by colour, not just by position. Normal (medium) and Classic keep the
      canonical gold highlighter as the "home base"; the rest get a tuned marker tint + inked-in
      border echoing MODE_COLORS (denim / green / coral / violet). Lyricist keeps its rose-pink
-     modality rule above; the variant sub-tabs (3 lives / sudden death) stay neutral gold. */
+     modality rule above. The Infinite variant sub-tabs get their own read below. */
   .mode-tab.active[data-mode="relaxed"]  { background: rgba(103,150,190,0.36); border-color: rgba(63,111,163,0.5); }
   .mode-tab.active[data-mode="easy"]     { background: rgba(133,173,96,0.40);  border-color: rgba(96,131,62,0.5); }
   .mode-tab.active[data-mode="hard"]     { background: rgba(202,92,74,0.34);   border-color: rgba(155,54,46,0.5); }
@@ -756,6 +756,16 @@
   .mode-tab.active[data-type="infinite"] { background: rgba(64,150,146,0.34);   border-color: rgba(40,120,116,0.52); }
   .mode-tab.active[data-type="adaptive"] { background: rgba(206,132,58,0.34);   border-color: rgba(160,96,36,0.52); }
   .mode-tab.active[data-type="custom"]   { background: rgba(176,104,150,0.32);  border-color: rgba(150,74,124,0.52); }
+  /* The two Infinite variants read as the stakes they set. "3 lives" wears a green→gold→coral
+     wash — a health meter draining from safe to danger. "Sudden death" goes fully inked (paper
+     text on ink), one slip and it's over, echoing the inked Infinite stats tab. */
+  .mode-tab.active[data-variant="3lives"] {
+    background: linear-gradient(100deg, rgba(133,173,96,0.42) 0%, rgba(247,201,72,0.5) 50%, rgba(202,92,74,0.4) 100%);
+    border-color: rgba(120,110,70,0.5);
+  }
+  .mode-tab.active[data-variant="sudden"] {
+    background: var(--ink); color: var(--paper); border-color: var(--ink);
+  }
   .mode-blurb {
     font-family: var(--type); font-size: 11px; color: var(--ink-soft);
     margin: 9px 0 0; padding-top: 8px; border-top: 1px dashed rgba(43,39,34,0.16);
