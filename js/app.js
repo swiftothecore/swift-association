@@ -962,7 +962,7 @@ function renderStats(lastScore, viewMode = defaultStatsView()) {
   const tier1 = `<div class="mode-tabs stats-tabs">` +
     `<button type="button" class="mode-tab${isAll ? " active" : ""}" data-statmode="all">All</button>` +
     `<button type="button" class="mode-tab${isClassic ? " active" : ""}" data-statmode="classic">Classic</button>` +
-    `<button type="button" class="mode-tab mode-tab--inf${isInf ? " active" : ""}" data-statmode="infinite"><span class="inf-glyph" aria-hidden="true">∞</span>Infinite</button>` +
+    `<button type="button" class="mode-tab mode-tab--inf${isInf ? " active" : ""}" data-statmode="infinite">${INF_GLYPH}Infinite</button>` +
     `<button type="button" class="mode-tab${isAdaptive ? " active" : ""}" data-statmode="adaptive">Adaptive</button>` +
     `</div>`;
   const tier2 = isClassic
@@ -4149,8 +4149,13 @@ const GAMETYPE_LABELS = { classic: "Classic", infinite: "Infinite", adaptive: "A
 // Glyphs that sit before a game type's label in the start-screen picker. A mark
 // only earns a spot when it IS the concept: Infinite's endless ∞, and Custom's
 // levers (the mode is a board of levers you drag). Classic/Adaptive stay plain.
+// Both are pen-stroke SVGs that inherit the tab's ink via currentColor, so they
+// flip to paper on an inked-active tab exactly as the old Unicode ∞ did. Shared
+// with the stats mode tabs (renderStatsTabs) so the two ∞s never drift apart.
+const INF_GLYPH = `<svg class="type-glyph type-glyph--inf" viewBox="0 0 28 24" aria-hidden="true">` +
+  `<path d="M14 12 C 10.5 6.4, 3.4 7, 3.4 12 C 3.4 17, 10.6 17.6, 14 12 C 17.5 6.4, 24.6 7, 24.6 12 C 24.6 17, 17.4 17.6, 14 12 Z"/></svg>`;
 const TYPE_GLYPHS = {
-  infinite: `<span class="inf-glyph" aria-hidden="true">∞</span>`,
+  infinite: INF_GLYPH,
   custom: `<svg class="type-glyph type-glyph--levers" viewBox="0 0 24 24" aria-hidden="true">` +
     `<path d="M4 6h6"/><path d="M14 6h6"/><path d="M4 12h8"/><path d="M16 12h4"/><path d="M4 18h3"/><path d="M11 18h9"/>` +
     `<circle cx="12" cy="6" r="2.1"/><circle cx="14" cy="12" r="2.1"/><circle cx="9" cy="18" r="2.1"/></svg>`,
