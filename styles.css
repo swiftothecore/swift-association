@@ -736,18 +736,18 @@
   .type-glyph--gauge .hub { fill: currentColor; }
   /* Lyricist sits off the relaxed→ultra ladder: it's a different modality (answer by
      lyric line), not a harder rung. A dashed divider sets it apart, and its active wash
-     is lyricist lavender rather than the ladder's yellow highlighter. */
+     is a rose pink rather than the ladder's yellow highlighter. */
   .mode-tab-sep {
     align-self: flex-end; width: 0; height: 30px; margin: 0 5px;
     border-left: 1px dashed rgba(43,39,34,0.24);
   }
   .mode-tab--modality.active {
-    background: rgba(138,120,176,0.20); border-color: rgba(138,120,176,0.5);
+    background: rgba(212,108,152,0.28); border-color: rgba(188,78,128,0.5);
   }
   /* Each ladder rung and each game type carries its own highlighter wash when active, so the
      picked mode reads by colour, not just by position. Normal (medium) and Classic keep the
      canonical gold highlighter as the "home base"; the rest get a tuned marker tint + inked-in
-     border echoing MODE_COLORS (denim / green / coral / violet). Lyricist keeps its lavender
+     border echoing MODE_COLORS (denim / green / coral / violet). Lyricist keeps its rose-pink
      modality rule above; the variant sub-tabs (3 lives / sudden death) stay neutral gold. */
   .mode-tab.active[data-mode="relaxed"]  { background: rgba(103,150,190,0.36); border-color: rgba(63,111,163,0.5); }
   .mode-tab.active[data-mode="easy"]     { background: rgba(133,173,96,0.40);  border-color: rgba(96,131,62,0.5); }
