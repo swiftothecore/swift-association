@@ -722,6 +722,12 @@
     background: var(--ink); color: var(--paper); border-color: var(--ink);
   }
   .inf-glyph { font-size: 22px; font-weight: 700; margin-right: 5px; vertical-align: -2px; }
+  /* Custom's levers mark: a pen-stroke SVG that inherits the tab's ink colour
+     (soft when resting, full ink on hover/active) with paper-filled knobs so the
+     rails read as sliders you can slide. */
+  .type-glyph { width: 18px; height: 18px; margin-right: 5px; vertical-align: -3px;
+    fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  .type-glyph--levers circle { fill: var(--paper); }
   /* Lyricist sits off the relaxed→ultra ladder: it's a different modality (answer by
      lyric line), not a harder rung. A dashed divider sets it apart, and its active wash
      is lyricist lavender rather than the ladder's yellow highlighter. */

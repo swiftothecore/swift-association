@@ -4146,6 +4146,15 @@ function setMode(id) {
   refreshStartBoard();
 }
 const GAMETYPE_LABELS = { classic: "Classic", infinite: "Infinite", adaptive: "Adaptive", custom: "Custom" };
+// Glyphs that sit before a game type's label in the start-screen picker. A mark
+// only earns a spot when it IS the concept: Infinite's endless ∞, and Custom's
+// levers (the mode is a board of levers you drag). Classic/Adaptive stay plain.
+const TYPE_GLYPHS = {
+  infinite: `<span class="inf-glyph" aria-hidden="true">∞</span>`,
+  custom: `<svg class="type-glyph type-glyph--levers" viewBox="0 0 24 24" aria-hidden="true">` +
+    `<path d="M4 6h6"/><path d="M14 6h6"/><path d="M4 12h8"/><path d="M16 12h4"/><path d="M4 18h3"/><path d="M11 18h9"/>` +
+    `<circle cx="12" cy="6" r="2.1"/><circle cx="14" cy="12" r="2.1"/><circle cx="9" cy="18" r="2.1"/></svg>`,
+};
 const GAME_TYPES = ["classic", "infinite", "adaptive", "custom"];
 const VARIANT_LABELS = { "3lives": "3 lives", sudden: "Sudden death" };
 
@@ -4246,7 +4255,7 @@ function renderTypePicker() {
   const tabs = $("typeTabs");
   if (!tabs) return;
   tabs.innerHTML = GAME_TYPES.map((g) =>
-    `<button type="button" class="mode-tab${g === gameType ? " active" : ""}" data-type="${g}">${g === "infinite" ? `<span class="inf-glyph" aria-hidden="true">∞</span>` : ""}${GAMETYPE_LABELS[g]}</button>`
+    `<button type="button" class="mode-tab${g === gameType ? " active" : ""}" data-type="${g}">${TYPE_GLYPHS[g] || ""}${GAMETYPE_LABELS[g]}</button>`
   ).join("");
   tabs.querySelectorAll("[data-type]").forEach((b) =>
     b.addEventListener("click", () => setGameType(b.dataset.type)));
