@@ -33,7 +33,7 @@ import {
 import { POLAROIDS, POLAROID_BY_ID } from "./polaroids.js";
 import { buildBraceletSVG, charmPreviewSVG } from "./bracelet.js";
 import { sfx } from "./sound.js";
-import { wordRegex as wordRegexCore, extractLineWithWord as extractLineWithWordCore, highlightWord as highlightWordCore } from "./match.js";
+import { wordRegex as wordRegexCore, extractLineWithWord as extractLineWithWordCore, highlightWord as highlightWordCore, wordVariants } from "./match.js";
 import {
   loadRecords, insertRecord, migrateRecordsFromStats, getPlayerName, setPlayerName,
   getAvatar, setAvatar,
@@ -879,6 +879,16 @@ function censor(text) { return censorText(text, settings.censorExplicit === true
 function highlightWord(line, word, strict) {
   if (strict === undefined) strict = effectiveStrict();
   return highlightWordCore(censor(line), word, strict);
+}
+// The variant the line actually credits when it holds a *form* of the prompt word rather than
+// the word itself ("pray" → "praying"), or "" when the line has the word verbatim (or when
+// strict matching is on, where forms never count). Mirrors highlightWord's own exact-first
+// rule, so a non-empty answer here is precisely what the card's <mark> is wrapping.
+function matchedVariant(line, word) {
+  if (effectiveStrict()) return "";
+  if (new RegExp("\\b" + escapeRegExp(word) + "\\b", "i").test(line)) return "";
+  const m = line.match(new RegExp("\\b(" + wordVariants(word).join("|") + ")\\b", "i"));
+  return m ? m[1] : "";
 }
 
 /* ---------- Stats ---------- */
@@ -8476,15 +8486,18 @@ function buildTitleUnderline(bw, bh, rows) {
   return `<svg viewBox="0 0 ${bw.toFixed(1)} ${bh.toFixed(1)}" aria-hidden="true">${paths}</svg>`;
 }
 
+// The lyric a card will display for a song. A lyric-answer override is the span the player
+// actually recalled, which need NOT contain the prompt word (matching only requires a real
+// line of a valid song — see matchLyricLine). When it doesn't, fall back to the song's
+// word-bearing line so the card always shows — and highlights — the lyric holding the word.
+function lyricCardLine(song, word, lineOverride) {
+  if (lineOverride == null) return extractLineWithWord(song.lyrics, word);
+  if (wordRegex(word).test(lineOverride)) return lineOverride;
+  return extractLineWithWord(song.lyrics, word);
+}
+
 function lyricCard(song, word, isWrong, lineOverride, context) {
-  // A lyric-answer override is the span the player actually recalled, which need NOT
-  // contain the prompt word (matching only requires a real line of a valid song — see
-  // matchLyricLine). When it doesn't, fall back to the song's word-bearing line so the
-  // card always shows — and highlights — the lyric that holds the prompt word.
-  let line = lineOverride != null ? lineOverride : extractLineWithWord(song.lyrics, word);
-  if (lineOverride != null && !wordRegex(word).test(line)) {
-    line = extractLineWithWord(song.lyrics, word);
-  }
+  const line = lyricCardLine(song, word, lineOverride);
   const color = albumColor(song.album) || "var(--ink-soft)";
   const albumLabel = song.album ? `<span class="album-tag" style="--album-color:${color}">${escapeHtml(song.album)}</span>` : "";
   const cls = isWrong ? " wrong-card" : "";
@@ -8552,6 +8565,24 @@ function verseSticker(tier, bonus) {
   return stickerHTML({ amt: bonus, label: cfg.label, tone: cfg.tone, big: cfg.big });
 }
 
+/* The one-time "word forms count" note. Stem-lenient matching is the single rule of this game a
+   player can't infer from watching it work: they answer for "pray", the line reads "praying",
+   and nothing says whether that was luck or the rule. It's only ever spelled out in a settings
+   toggle nobody reads, so name it the first time it visibly happens — with the card's own
+   highlighted variant right there as the evidence. Returns "" unless THIS page was actually won
+   on a form (strict matching, an exact-word line, or a page already noted all return nothing).
+   Tracked as a coachmark, so the dev replay/reset plumbing covers it for free.
+   Pure by design: the caller marks it seen only once the note is really on screen, so a rebuilt
+   feedback card can't burn a one-time note the player never got to read. */
+function wordFormsNote(song, lineOverride) {
+  if (!song || coachmarkSeen("wordForms")) return "";
+  const variant = matchedVariant(lyricCardLine(song, currentWord, lineOverride), currentWord);
+  if (!variant) return "";
+  return `<p class="forms-firstnote">“${escapeHtml(currentWord)}” found “${escapeHtml(variant.toLowerCase())}”. ` +
+    `Word forms count, so you're never hunting the exact spelling. ` +
+    `<i>Match word variants</i> in settings turns that off.</p>`;
+}
+
 function showCorrectFeedback(song, lyricMatch) {
   const fb = $("feedback");
   // On a lyric answer, celebrate the recall and show the exact line they typed.
@@ -8576,6 +8607,10 @@ function showCorrectFeedback(song, lyricMatch) {
     : lyricMatch
       ? lyricCard(song, currentWord, false, lyricMatch.line, true)
       : lyricCard(song, currentWord, false, null, true);
+  // The first time a word FORM is what earned the page ("pray" credited on "praying"), name the
+  // rule — the card above is already showing the highlighted variant, so it lands with the
+  // evidence in view. Once, then silent. Skipped when the verse note is already talking.
+  const formsNote = firstNote ? "" : wordFormsNote(multi ? null : song, multi ? null : (lyricMatch ? lyricMatch.line : null));
   // Auto-advance setting on → a countdown + skip; off → a plain "next page" button.
   const auto = settings.autoAdvance;
   const advanceUI = auto
@@ -8585,7 +8620,9 @@ function showCorrectFeedback(song, lyricMatch) {
     <div class="fb-head"><div class="banner good">${banner}</div>${sticker}</div>
     ${firstNote}
     ${card}
+    ${formsNote}
     ${advanceUI}`;
+  if (formsNote) markCoachmark("wordForms");   // it's on screen now — spend the one-time note
   feedbackShownAt = Date.now();
   $(auto ? "skipBtn" : "continueBtn").addEventListener("click", advanceFromFeedback);
   sfx.play("correct");
@@ -8949,10 +8986,11 @@ function endGame() {
   }
 
   // A fresh player who took the gentle Relaxed start gets a one-time nudge toward Normal, and
-  // once they're a few games in, the one-time "which era is yours?" prompt (both fire at most
-  // once and are gated to different game counts, so they never land on the same results).
-  maybeShowReadyForNormal();
-  maybeAskEra();
+  // once they're a few games in, the one-time "which era is yours?" prompt. Both are one-shot
+  // overlays sharing #firstRunBody, and their gates now overlap, so they take turns: whoever
+  // claims this results screen wins and the other stays armed for a later game. Firing both
+  // would silently overwrite the first — and mark it seen — costing the player that invitation.
+  if (!maybeShowReadyForNormal()) maybeAskEra();
 }
 
 // First personal record with no signature yet → ask for a name once, store it globally,
@@ -10274,6 +10312,10 @@ function closeCustomModal() {
    later as a gentle post-game prompt once they've played a few (see maybeAskEra). */
 const FIRST_RUN_STEPS = ["welcome"];   // new steps prepend here
 const ERA_PROMPT_AFTER_GAMES = 3;      // hold the era question until the player is a few games in
+// The "ready for Normal?" nudge waits for one of these — enough right answers to show the game
+// has clicked, or enough games to show they're sticking around. Either earns the invitation.
+const NORMAL_NUDGE_CORRECT = 5;
+const NORMAL_NUDGE_GAMES = 3;
 let firstRunIndex = 0;
 let firstRunEra = "";              // the currently-highlighted era, committed to settings on confirm
 let firstRunMode = null;           // the difficulty picked from the welcome step ("relaxed" or null), applied on finish
@@ -10309,25 +10351,54 @@ let shownCoachmarkId = "";   // which beat is currently on screen (for advance-s
 function firstGameGuideEligible() {
   return !!settings.firstRunDone && totalPlayed() === 0;
 }
-// Position the note so its nub points at the anchor, clamped to the viewport. Placed below the
-// anchor by default; flips above if there's no room beneath.
-function positionCoachmark(el, anchor) {
+const COACH_GAP = 10;   // breathing room between the note and its anchor
+const COACH_PAD = 8;    // keep the note this far off the viewport edge
+const COACH_NUB = 32;   // the nub's centre, measured in from the note's leading edge (see the CSS)
+
+// Where the note would land for one placement, already clamped into the viewport.
+function coachRectFor(place, a, r) {
+  let left, top;
+  if (place === "left" || place === "right") {
+    left = place === "left" ? a.left - COACH_GAP - r.width : a.right + COACH_GAP;
+    top = a.top + a.height / 2 - COACH_NUB;
+  } else {
+    top = place === "below" ? a.bottom + COACH_GAP : a.top - COACH_GAP - r.height;
+    left = a.left + a.width / 2 - COACH_NUB;
+  }
+  left = Math.max(COACH_PAD, Math.min(left, window.innerWidth - r.width - COACH_PAD));
+  top = Math.max(COACH_PAD, Math.min(top, window.innerHeight - r.height - COACH_PAD));
+  return { left, top, right: left + r.width, bottom: top + r.height };
+}
+function rectOverlapArea(x, y) {
+  const w = Math.min(x.right, y.right) - Math.max(x.left, y.left);
+  const h = Math.min(x.bottom, y.bottom) - Math.max(x.top, y.top);
+  return w > 0 && h > 0 ? w * h : 0;
+}
+// Position the note so its nub points at the anchor. `prefer` is an ordered placement list
+// ("left" | "right" | "above" | "below"); `avoid` is a list of selectors the note must not
+// cover — the prompt word above all, since a tip that hides it is worse than no tip. The
+// board's anchors (the bracelet, the input row) span the full page width, so "below" always
+// lands on whatever sits underneath: the widest screens have desk beside the notebook and
+// take "left", narrower ones fall back to a placement that still clears the word. The first
+// candidate that clears every avoid rect wins; if none can, the least-covering one does.
+function positionCoachmark(el, anchor, prefer, avoid) {
   const a = anchor.getBoundingClientRect();
   const r = el.getBoundingClientRect();
-  const pad = 8;
-  let place = "below";
-  let top = a.bottom + 10;
-  if (top + r.height > window.innerHeight - pad && a.top - r.height - 10 > pad) {
-    place = "above";
-    top = a.top - r.height - 10;
+  const list = (prefer && prefer.length) ? prefer : ["below"];
+  const blockers = (avoid || [])
+    .map((sel) => document.querySelector(sel))
+    .filter((n) => n && !n.hidden && n.offsetParent !== null)
+    .map((n) => n.getBoundingClientRect());
+  let best = null;
+  for (const place of list) {
+    const box = coachRectFor(place, a, r);
+    const cost = blockers.reduce((sum, b) => sum + rectOverlapArea(box, b), 0);
+    if (!best || cost < best.cost) best = { place, box, cost };
+    if (cost === 0) break;
   }
-  // Anchor the nub (which sits ~32px from the note's left edge) under the anchor's centre.
-  let left = a.left + a.width / 2 - 32;
-  left = Math.max(pad, Math.min(left, window.innerWidth - r.width - pad));
-  top = Math.max(pad, Math.min(top, window.innerHeight - r.height - pad));
-  el.dataset.place = place;
-  el.style.left = left + "px";
-  el.style.top = top + "px";
+  el.dataset.place = best.place;
+  el.style.left = best.box.left + "px";
+  el.style.top = best.box.top + "px";
 }
 function dismissCoachmark() {
   const el = $("coachmark");
@@ -10340,8 +10411,9 @@ function dismissCoachmark() {
   coachmarkFadeTimer = setTimeout(finish, 260);
 }
 // Show one coachmark once. `opts`: { anchor, kicker, body (trusted HTML), got (button label or
-// null to omit), autoMs (auto-dismiss delay or 0) }. Marks the id seen immediately so a mid-game
-// refresh never re-fires it. Skips silently if the anchor is missing.
+// null to omit), autoMs (auto-dismiss delay or 0), place (ordered placement list), avoid
+// (selectors the note must not cover) }. Marks the id seen immediately so a mid-game refresh
+// never re-fires it. Skips silently if the anchor is missing.
 function showCoachmark(id, opts) {
   const el = $("coachmark");
   const anchor = opts.anchor;
@@ -10359,11 +10431,56 @@ function showCoachmark(id, opts) {
     `<p class="coach-body">${opts.body}</p>` +
     gotBtn;
   el.hidden = false;
-  positionCoachmark(el, anchor);
+  positionCoachmark(el, anchor, opts.place, opts.avoid);
   const gel = el.querySelector(".coach-got");
   if (gel) gel.addEventListener("click", dismissCoachmark);
   if (coachmarkDismissTimer) { clearTimeout(coachmarkDismissTimer); coachmarkDismissTimer = null; }
   if (opts.autoMs) coachmarkDismissTimer = setTimeout(dismissCoachmark, opts.autoMs);
+}
+
+/* The three beats, defined once so the game and the dev previews can never drift apart.
+   `anchor` resolves live (the board is re-rendered constantly); `avoid` is what the note must
+   not sit on. Every beat protects the prompt word and the input — between them they ARE the
+   page, and a tip covering either teaches nothing. */
+const GUIDE_BEATS = {
+  guideType: {
+    anchor: () => document.querySelector(".input-area") || $("songInput"),
+    kicker: "how to play",
+    body: 'Type any word and pick it from the <b>suggestions</b>. Every song that uses it lights up.',
+    got: "got it",
+    autoMs: () => 0,   // this one waits for the player — dismissed on "got it" or their first answer
+    place: ["left", "below"],
+    avoid: [".word-wrap", ".input-area"],
+  },
+  guideMatch: {
+    anchor: () => document.querySelector(".bracelet-wrap") || $("bracelet"),
+    kicker: "nice",
+    body: 'Match every song on the page to finish, and each match adds a charm to your <b>bracelet</b>.',
+    got: null,
+    autoMs: () => (animInstant() ? 0 : 6500),   // brief and self-clearing; also cleared on the next page
+    // The bracelet sits at the top of the page with the word directly beneath it, so "below"
+    // is the one placement this beat can never take.
+    place: ["left", "right", "above"],
+    avoid: [".word-wrap", ".input-area"],
+  },
+  guideHint: {
+    anchor: () => $("hintBtn"),
+    kicker: "stuck?",
+    body: 'Reveal a clue one step at a time. Tap here or press <b>Tab</b>, and it eases you in without just handing over the answer.',
+    got: null,
+    autoMs: () => (animInstant() ? 0 : 9000),
+    place: ["below", "left", "above"],
+    avoid: [".word-wrap", ".input-area"],
+  },
+};
+// Fire one beat now, bypassing every eligibility gate. Returns false if it can't anchor (the
+// board isn't open, or the beat's element is hidden) — the dev previews report that.
+function showGuideBeat(id) {
+  const beat = GUIDE_BEATS[id];
+  const anchor = beat && beat.anchor();
+  if (!anchor || anchor.hidden) return false;
+  showCoachmark(id, { ...beat, anchor, autoMs: beat.autoMs() });
+  return true;
 }
 
 // Beat A — round start of the first real game: teach the core action near the input.
@@ -10371,29 +10488,13 @@ function maybeGuideType() {
   if (coachmarkSeen("guideType")) return;
   if (!firstGameGuideEligible()) return;
   if (round !== 1) return;   // only the opening page
-  const anchor = document.querySelector(".input-area") || $("songInput");
-  if (!anchor) return;
-  showCoachmark("guideType", {
-    anchor,
-    kicker: "how to play",
-    body: 'Type any word and pick it from the <b>suggestions</b>. Every song that uses it lights up.',
-    got: "got it",
-    autoMs: 0,   // this one waits for the player — dismissed on "got it" or their first answer
-  });
+  showGuideBeat("guideType");
 }
 // Beat B — the instant the first-ever correct match lands: celebrate near the bracelet.
 function maybeGuideMatch() {
   if (coachmarkSeen("guideMatch")) return;
   if (!firstGameGuideEligible()) return;
-  const anchor = document.querySelector(".bracelet-wrap") || $("bracelet");
-  if (!anchor) return;
-  showCoachmark("guideMatch", {
-    anchor,
-    kicker: "nice",
-    body: 'Match every song on the page to finish, and each match adds a charm to your <b>bracelet</b>.',
-    got: null,
-    autoMs: (animInstant() ? 0 : 6500),   // brief and self-clearing; also cleared on the next page
-  });
+  showGuideBeat("guideMatch");
 }
 // Beat C — the first time the player stalls in their guided first game (their real first game is
 // Relaxed, which has no clock, so the hint button starts pulsing after a few idle seconds). Point
@@ -10402,15 +10503,7 @@ function maybeGuideMatch() {
 function maybeGuideHint() {
   if (coachmarkSeen("guideHint")) return;
   if (!firstGameGuideEligible()) return;
-  const anchor = $("hintBtn");
-  if (!anchor || anchor.hidden) return;
-  showCoachmark("guideHint", {
-    anchor,
-    kicker: "stuck?",
-    body: 'Reveal a clue one step at a time. Tap here or press <b>Tab</b>, and it eases you in without just handing over the answer.',
-    got: null,
-    autoMs: (animInstant() ? 0 : 9000),
-  });
+  showGuideBeat("guideHint");
 }
 
 function maybeRunFirstRun() {
@@ -10425,6 +10518,7 @@ function maybeRunFirstRun() {
     markCoachmark("guideType");
     markCoachmark("guideMatch");
     markCoachmark("guideHint");
+    markCoachmark("wordForms");
     return;
   }
   openFirstRun();
@@ -10545,15 +10639,24 @@ function wireFirstRun() {
   });
 }
 
-// One-off nudge after a new player's first Relaxed game: invites them to start the clock in
-// Normal. Fires once (tracked as a coachmark), only off the recommended Relaxed path, and only
-// after the results have had a beat to land so it never buries the score they just earned.
+// One-off nudge off the recommended Relaxed path: invites the player to start the clock in
+// Normal. Fires once (tracked as a coachmark), and only once they've shown they can actually
+// play — someone who scored 1/13 on their first game has no business being sold a timer. Held
+// until they've either answered NORMAL_NUDGE_CORRECT rounds right across their whole notebook
+// or simply stuck around for NORMAL_NUDGE_GAMES games, whichever lands first. Also waits for
+// the results to have a beat to land so it never buries the score they just earned.
+function readyForNormalEarned() {
+  return loadMetrics().roundsCorrect >= NORMAL_NUDGE_CORRECT || totalPlayed() >= NORMAL_NUDGE_GAMES;
+}
+// True when it claimed this results screen, so the era prompt knows to stand down.
 function maybeShowReadyForNormal() {
-  if (coachmarkSeen("readyForNormal")) return;
-  if (gameType !== "classic" || currentMode.id !== "relaxed") return;
-  markCoachmark("readyForNormal");   // mark on show — a one-time invitation, ignored or not
+  if (coachmarkSeen("readyForNormal")) return false;
+  if (gameType !== "classic" || currentMode.id !== "relaxed") return false;
+  if (!readyForNormalEarned()) return false;   // not yet — leave it armed for a later game
+  markCoachmark("readyForNormal");             // mark on show — a one-time invitation, ignored or not
   const delay = animInstant() ? 0 : 900 * (animScale() || 1);
   setTimeout(showReadyForNormal, delay);
+  return true;
 }
 function showReadyForNormal(force) {
   if (!force && !screens.results.classList.contains("active")) return;   // they navigated away — skip
@@ -10764,6 +10867,7 @@ function devLockAllAch() { resetAchievements(); earnedAchievements = {}; }
 function buildDevApi() {
   return {
     MODES, MODE_ORDER, ERAS, ACHIEVEMENTS, SKILL_IDS, STUDIO_ALBUMS,
+    GUIDE_BEAT_IDS: Object.keys(GUIDE_BEATS),
     getState: () => ({
       screen: Object.keys(screens).find((k) => screens[k].classList.contains("active")),
       round, score, total: TOTAL_ROUNDS,
@@ -10801,30 +10905,25 @@ function buildDevApi() {
       setEra: (album) => setFavouriteAlbum(album),
       normalNudge: () => { markCoachmark("readyForNormal"); showReadyForNormal(true); },
       eraPrompt: () => { markCoachmark("askEra"); showAskEra(true); },
-      // Guided first round: clear the two beat gates (+ the first-match flag) so they re-arm on
-      // the player's next fresh classic game. If a game is already open, force beat A on screen
-      // now (bypassing the first-game eligibility gate) so devs can preview it any time.
+      // Guided first round: clear every beat gate (+ the first-match flag) so they re-arm on the
+      // player's next fresh classic game. If a game is already open, force beat A on screen now
+      // (bypassing the first-game eligibility gate) so devs can preview it any time.
       guideReplay: () => {
-        if (settings.seenCoachmarks) { delete settings.seenCoachmarks.guideType; delete settings.seenCoachmarks.guideMatch; delete settings.seenCoachmarks.guideHint; }
+        if (settings.seenCoachmarks) {
+          for (const id of Object.keys(GUIDE_BEATS)) delete settings.seenCoachmarks[id];
+        }
         settings.firstMatchDone = false;
         saveSettings(settings);
-        if (screens.game && screens.game.classList.contains("active")) {
-          const anchor = document.querySelector(".input-area") || $("songInput");
-          if (anchor) showCoachmark("guideType", { anchor, kicker: "how to play",
-            body: 'Type any word and pick it from the <b>suggestions</b>. Every song that uses it lights up.',
-            got: "got it", autoMs: 0 });
-        }
+        if (screens.game && screens.game.classList.contains("active")) showGuideBeat("guideType");
       },
-      // Force beat C (the hint nudge) on screen now, bypassing the first-game gate — needs an open
-      // game with the hint button showing (an Easy/Relaxed round). Returns false if it can't anchor.
-      guideHintPreview: () => {
-        const anchor = $("hintBtn");
-        if (!(screens.game && screens.game.classList.contains("active")) || !anchor || anchor.hidden) return false;
-        showCoachmark("guideHint", { anchor, kicker: "stuck?",
-          body: 'Reveal a clue one step at a time. Tap here or press <b>Tab</b>, and it eases you in without just handing over the answer.',
-          got: null, autoMs: 0 });
-        return true;
+      // Force any beat on screen now, bypassing the first-game gate — needs an open game (and, for
+      // guideHint, the hint button showing, i.e. an Easy/Relaxed round). False if it can't anchor.
+      guideBeat: (id) => {
+        if (!(screens.game && screens.game.classList.contains("active"))) return false;
+        return showGuideBeat(id);
       },
+      // Re-arm the one-time "word forms count" note, so the next page won on a form re-teaches it.
+      formsReplay: () => { if (settings.seenCoachmarks) delete settings.seenCoachmarks.wordForms; saveSettings(settings); },
       reset: () => {
         settings.firstRunDone = false; settings.favouriteAlbum = ""; settings.firstMatchDone = false; settings.seenCoachmarks = {};
         saveSettings(settings);

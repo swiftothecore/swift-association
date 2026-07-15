@@ -2610,6 +2610,13 @@
     font-family: var(--hand); font-size: 16px; color: var(--ink-soft);
     text-align: center; margin: 0 auto 10px; max-width: 32ch; line-height: 1.35;
   }
+  /* The one-time word-forms note: an aside pencilled under the card it's explaining, so it
+     reads as annotation on the lyric above rather than another verdict. */
+  .forms-firstnote {
+    font-family: var(--hand); font-size: 15px; color: var(--ink-soft);
+    text-align: center; margin: 10px auto 0; max-width: 40ch; line-height: 1.4;
+  }
+  .forms-firstnote i { font-style: normal; font-family: var(--type); font-size: 12.5px; }
 
   /* Wrong/timeout: a red-pen correction scrawled in the margin */
   .feedback .banner.bad {
@@ -3456,6 +3463,12 @@
   /* nub above, pointing up at an anchor below the note */
   .coachmark[data-place="above"]::before { left: 26px; bottom: -7px; border-left: none; border-top: none; transform: rotate(45deg); }
   .coachmark[data-place="above"]::after  { left: 27px; bottom: -4px; transform: rotate(45deg); }
+  /* nub on the right edge, pointing right at an anchor beside the note */
+  .coachmark[data-place="left"]::before { right: -7px; top: 26px; border-left: none; border-bottom: none; transform: rotate(45deg); }
+  .coachmark[data-place="left"]::after  { right: -4px; top: 27px; transform: rotate(45deg); }
+  /* nub on the left edge, pointing left at an anchor beside the note */
+  .coachmark[data-place="right"]::before { left: -7px; top: 26px; border-top: none; border-right: none; transform: rotate(45deg); }
+  .coachmark[data-place="right"]::after  { left: -4px; top: 27px; transform: rotate(45deg); }
   @keyframes coachIn  { from { opacity: 0; transform: translateY(6px) rotate(-0.8deg); } to { opacity: 1; transform: translateY(0) rotate(-0.8deg); } }
   @keyframes coachOut { to { opacity: 0; transform: translateY(4px) rotate(-0.8deg); } }
   @media (max-width: 520px) { .coachmark { max-width: 210px; } }

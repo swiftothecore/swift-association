@@ -103,13 +103,19 @@ export function initDev(api) {
 
   // ---- Onboarding / first-run ------------------------------------------------
   const obAlbumSel = select(["", ...api.STUDIO_ALBUMS], (x) => x, (x) => x || "no favourite");
+  // Each guided beat is placement-sensitive (it must dodge the word and the input), so give
+  // every one its own button — checking them across viewport widths is the whole point.
+  const beatSel = select(api.GUIDE_BEAT_IDS, (x) => x, (x) => x.replace("guide", "").toLowerCase() + " beat");
   body.append(section("onboarding",
     row(btn("replay first-run", () => api.onboarding.replay()),
         btn("ready-for-normal nudge", () => api.onboarding.normalNudge())),
     row(btn("era prompt", () => api.onboarding.eraPrompt()),
         btn("mark done", () => { api.onboarding.markDone(); toast("first-run marked done"); })),
     row(btn("replay guided round", () => { api.onboarding.guideReplay(); toast("guided-round beats re-armed"); }),
-        btn("show hint beat", () => { toast(api.onboarding.guideHintPreview() ? "hint beat shown" : "need an open Easy/Relaxed round"); })),
+        btn("replay word-forms note", () => { api.onboarding.formsReplay(); toast("word-forms note re-armed"); })),
+    row(beatSel, btn("show beat", () => {
+      toast(api.onboarding.guideBeat(beatSel.value) ? beatSel.value + " shown" : "can't anchor — need an open round");
+    })),
     row(obAlbumSel, btn("set era", () => { api.onboarding.setEra(obAlbumSel.value); toast("era → " + (obAlbumSel.value || "none")); })),
     row(btn("reset", () => { api.onboarding.reset(); toast("onboarding reset"); }, "warn"))));
 
