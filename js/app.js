@@ -7179,6 +7179,17 @@ function pickHintSong() {
   return from[Math.floor(Math.random() * from.length)];
 }
 
+// The song this round's help pointed at, but only once something actually described it:
+// the hint ladder from tier 1 (album), or a Choose Your Path perk that names a trait of it.
+// Null when no such help was shown, so a miss reveal stays a plain random sample.
+function revealedHintSong() {
+  if (!roundHintSong) return null;
+  if (hintTier >= 1) return roundHintSong;
+  const pathPerk = gameType === "challenge" && currentChallenge && currentChallenge.rule === "path" &&
+    (perkReveals.has("letter") || perkReveals.has("album") || perkReveals.has("example"));
+  return pathPerk ? roundHintSong : null;
+}
+
 function advanceRound() {
   round++;
   roundLocked = false;
@@ -8595,7 +8606,11 @@ function showWrongFeedback(song, isTimeout) {
     // they got the first of the pair, then missed the second) — only surface fresh options.
     if (currentChallenge && currentChallenge.rule === "multi" && roundNamed.length)
       pool = pool.filter((s) => !roundNamed.includes(s.title));
-    const examples = shuffle(pool.slice()).slice(0, n);
+    // Lead with the song the round's help actually described, so the reveal answers the
+    // hint the player was reading instead of making them hunt for it among the cards.
+    const lead = revealedHintSong();
+    const rest = shuffle(pool.filter((s) => s !== lead));
+    const examples = (lead && pool.includes(lead) ? [lead, ...rest] : rest).slice(0, n);
     const cards = examples.map((s) => lyricCard(s, currentWord, true, null, true)).join("");
     help = `<span class="red-note">songs that hold "<b>${escapeHtml(currentWord)}</b>"</span>${cards}`;
   }
