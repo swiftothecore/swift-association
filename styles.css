@@ -2185,19 +2185,25 @@
   }
 
   /* ---------- Anniversary marginalia (start screen, milestone days only) ----------
-     A torn slip taped to today's page with two strips of highlighter "washi". The
-     eyebrow is typewriter (functional), the note handwritten (creative). */
+     A torn slip taped to today's page with two strips of highlighter "washi". It sits in
+     the empty margin to the right of the podium, bottom-aligned with it so it lands just
+     above the Start writing button. Sharing the podium's row means it fills whitespace
+     that's already there instead of shoving the board down the page, and it can never
+     land on the podium's own text. The eyebrow is typewriter (functional), the note
+     handwritten (creative). */
+  .start-podium-row { display: flex; align-items: flex-end; gap: 22px; }
+  .start-podium-col { flex: 1 1 auto; min-width: 0; }
   .anniversary-note[hidden] { display: none; }
-  .anniversary-note { display: flex; justify-content: center; margin: 6px auto 22px; }
+  .anniversary-note { flex: none; margin: 0; }
   .an-slip {
-    position: relative; max-width: 32ch; text-align: center;
+    position: relative; max-width: 29ch; text-align: center;
     background: #fbf6e9; border: 1px solid var(--paper-edge); border-radius: 3px;
     box-shadow: 2px 4px 11px rgba(60, 50, 35, 0.16);
-    padding: 17px 30px 16px; transform: rotate(-1.4deg);
+    padding: 14px 24px 13px; transform: rotate(-1.4deg);
   }
   /* Two strips of the shared realistic washi (kraft tan); see .nav-tape surface rule. */
   .an-tape {
-    position: absolute; top: -11px; z-index: 3; width: 58px; height: 18px;
+    position: absolute; top: -9px; z-index: 3; width: 46px; height: 15px;
     pointer-events: none; --tape-color: #c9b27a;
   }
   .an-tape-l { left: 15%; transform: rotate(-7deg); }
@@ -2206,14 +2212,20 @@
     --tape-clip: polygon(4% 0%, 95% 0%, 99% 25%, 90% 50%, 97% 75%, 93% 100%, 6% 100%, 10% 75%, 2% 50%, 9% 25%);
   }
   .an-eyebrow {
-    font-family: var(--type); font-size: 11px; letter-spacing: 2px;
-    text-transform: uppercase; color: var(--ink-soft); margin-bottom: 4px;
+    font-family: var(--type); font-size: 10px; letter-spacing: 2px;
+    text-transform: uppercase; color: var(--ink-soft); margin-bottom: 3px;
   }
-  .an-headline { font-family: var(--hand); font-size: 28px; line-height: 1.12; color: var(--ink); }
+  .an-headline { font-family: var(--hand); font-size: 23px; line-height: 1.12; color: var(--ink); }
   .an-name { font-weight: 700; }
   .an-note {
-    font-family: var(--hand); font-size: 18px; line-height: 1.2;
-    color: var(--ink-soft); margin-top: 3px;
+    font-family: var(--hand); font-size: 16px; line-height: 1.2;
+    color: var(--ink-soft); margin-top: 2px;
+  }
+  /* Too narrow to sit beside the podium, so stack it under: still right-aligned, still
+     just above the button. */
+  @media (max-width: 700px) {
+    .start-podium-row { display: block; }
+    .anniversary-note { display: flex; justify-content: flex-end; margin: 14px 0 0; }
   }
 
   /* ---------- Milestone sticky (game screen, milestone days only) ----------
@@ -2267,12 +2279,12 @@
      A quieter cousin of the album marginalia: smaller, softer paper, muted ink, so an
      ordinary lucky day never competes with an album release or her birthday. */
   .an-slip--minor {
-    max-width: 26ch; padding: 13px 24px 12px; transform: rotate(-1deg);
+    max-width: 25ch; padding: 12px 20px 11px; transform: rotate(-1deg);
     background: #f7f2e6; box-shadow: 1px 3px 8px rgba(60, 50, 35, 0.11);
   }
-  .an-slip--minor .an-headline { font-size: 22px; color: var(--ink-soft); }
+  .an-slip--minor .an-headline { font-size: 19px; color: var(--ink-soft); }
   .an-slip--minor .an-name { font-weight: 400; }
-  .an-slip--minor .an-note { font-size: 16px; opacity: 0.85; }
+  .an-slip--minor .an-note { font-size: 14px; opacity: 0.85; }
   .ms-slip--minor {
     width: 54px; height: 54px; background: #f7f2e6;
     box-shadow: 1px 3px 7px rgba(60, 50, 35, 0.15); transform: rotate(-2deg);

@@ -40,7 +40,7 @@ if (location.pathname.endsWith('/index.html')) {
      the real face and skip the flash; the rest load on demand. -->
 <link rel="preload" href="fonts/caveat-latin.woff2" as="font" type="font/woff2" crossorigin />
 <link rel="preload" href="fonts/courierprime-400-latin.woff2" as="font" type="font/woff2" crossorigin />
-  <link rel="stylesheet" href="styles.css?v=41" />
+  <link rel="stylesheet" href="styles.css?v=42" />
 </head>
 <body data-era="gold">
 <!-- Hand-drawn wobble for the penned achievement charms. Referenced by .charm svg
@@ -613,7 +613,6 @@ if (location.pathname.endsWith('/index.html')) {
       </div>
     </div>
     <div id="startContent" style="display:none;">
-      <div id="anniversaryNote" class="anniversary-note" hidden></div>
       <button id="albumFocusBtn" class="album-focus-badge" type="button" title="Album focus — beat all 12" aria-label="Album focus — beat all 12">
         <svg viewBox="0 0 100 100" width="100%" height="100%" aria-hidden="true">
           <path d="M50 50 L90 50 A40 40 0 0 1 84.641 70 Z" fill="#6f8f5e" stroke="#fbf6e9" stroke-width="0.9"/>
@@ -652,8 +651,13 @@ if (location.pathname.endsWith('/index.html')) {
         <p class="mode-picker-label">your mode</p>
         <div id="customStartSummary" class="custom-start"></div>
       </div>
-      <p id="startPodiumTitle" class="podium-title">Your best</p>
-      <div id="startBest" class="start-best"></div>
+      <div class="start-podium-row">
+        <div class="start-podium-col">
+          <p id="startPodiumTitle" class="podium-title">Your best</p>
+          <div id="startBest" class="start-best"></div>
+        </div>
+        <div id="anniversaryNote" class="anniversary-note" hidden></div>
+      </div>
       <button id="playBtn" class="btn-primary" style="margin-top:18px;">Start writing</button>
       <button id="dailyBtn" class="daily-btn">Daily Challenge</button>
       <div class="see-also">
