@@ -23,6 +23,7 @@ Standout features:
 - Album focus mode so you can focus on ONE album only
 - Study mode so you can improve
 - A content-packed skills and mastery system
+- Opt-in sound effects, synthesized right in the browser: a page turn, a chime for a hit, a soft thud for a miss (with more sounds on the way)
 - A companion lyric searcher, Swift To The Lyric, for searching every line of every song (work in progress but usable)
 - Installable as a phone or desktop app and works offline once loaded
 
@@ -30,7 +31,7 @@ With many features in the works as we speak:
 
 - Global leaderboards
 - More easter eggs
-- Sound design
+- More sound design
 - Stickers!!
 - Dark mode
 - Polaroids in more places!

@@ -84,7 +84,7 @@ export const DEFAULT_SETTINGS = {
   firstMatchDone: false,    // has the player ever landed a correct answer (guards the one-time first-match celebration)
   seenCoachmarks: {},       // { [coachmarkId]: true } — just-in-time tips already shown, so each fires once
   // meta
-  sound: false,             // placeholder — no audio wired yet
+  sound: false,             // opt-in; the synthesized palette lives in js/sound.js
   lastGameType: "classic",  // runtime memory backing defaultGameType: "last" — the last type clicked (not shown in UI)
   playerName: "",           // notebook signature — set once, reused on every personal record
   avatar: "",               // profile polaroid — a center-cropped data-URL, stays on this device

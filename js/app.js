@@ -32,6 +32,7 @@ import {
 } from "./config.js";
 import { POLAROIDS, POLAROID_BY_ID } from "./polaroids.js";
 import { buildBraceletSVG, charmPreviewSVG } from "./bracelet.js";
+import { sfx } from "./sound.js";
 import { wordRegex as wordRegexCore, extractLineWithWord as extractLineWithWordCore, highlightWord as highlightWordCore } from "./match.js";
 import {
   loadRecords, insertRecord, migrateRecordsFromStats, getPlayerName, setPlayerName,
@@ -238,6 +239,7 @@ function applySettings() {
   else body.removeAttribute("data-paper");
   if (settings.masteryButton) body.setAttribute("data-startbtn", settings.masteryButton);
   else body.removeAttribute("data-startbtn");
+  sfx.setEnabled(!!settings.sound);   // sound gate lives in js/sound.js
   refreshSnow();   // December snowfall follows the reduce-motion setting live
   refreshRain();   // midnight rain follows the reduce-motion setting live too
   refreshLeaves(); // autumn leaves follow the reduce-motion setting live too
@@ -5414,6 +5416,7 @@ function revealCommon(correct) {
     `<div class="common-reveal">${cards}</div>` +
     advanceUI;
   feedbackShownAt = Date.now();
+  sfx.play(correct ? "correct" : "wrong");
   $(auto ? "skipBtn" : "continueBtn").addEventListener("click", advanceFromFeedback);
   if (correct) celebrateCorrect(correctStreak, 0);
   if (auto) runCountdown();
@@ -6689,6 +6692,9 @@ function nextRound() {
     return;
   }
   if (isGameOver()) { endGame(); return; }
+  // Every page turn whooshes, both the animated flip and the instant paths
+  // (round 1 included: that is the notebook opening).
+  sfx.play("page");
   // First round (from the start screen) advances instantly; so do reduced motion,
   // "instant" animation speed, and the page-turn setting being off.
   if (round === 0 || motionReduced() || animInstant() || !settings.pageTurn) {
@@ -7992,6 +7998,7 @@ function flagImpostor() {
     `<div class="impostor-caught">“<b>${escapeHtml(currentWord)}</b>” appears in no Taylor song. Good instinct.</div>` +
     `<button id="continueBtn" class="btn-ghost">next page →</button>`;
   feedbackShownAt = Date.now();
+  sfx.play("correct");
   $("continueBtn").addEventListener("click", advanceFromFeedback);
 }
 // A fatal misjudgement ends the run. `kind`: "answered" (named a song for a fake) / "timeout"
@@ -8581,6 +8588,7 @@ function showCorrectFeedback(song, lyricMatch) {
     ${advanceUI}`;
   feedbackShownAt = Date.now();
   $(auto ? "skipBtn" : "continueBtn").addEventListener("click", advanceFromFeedback);
+  sfx.play("correct");
   celebrateCorrect(correctStreak, bonus);
   if (auto) runCountdown();
 }
@@ -8619,6 +8627,7 @@ function showWrongFeedback(song, isTimeout) {
     ${help}
     <button id="continueBtn" class="btn-ghost">next page →</button>`;
   feedbackShownAt = Date.now();
+  sfx.play("wrong");
   $("continueBtn").addEventListener("click", advanceFromFeedback);
 }
 
@@ -9697,7 +9706,7 @@ function renderSettingsBody() {
     ) +
     setSection("Sound",
       setToggleHTML("sound", "Sound effects", "") +
-      `<p class="set-note">no sounds yet — this just saves your preference.</p>`
+      `<p class="set-note">three little desk sounds: a page turn, a chime for a hit, a soft thud for a miss. more to come.</p>`
     ) +
     setSection("Data",
       `<p class="set-note">Your stats, achievements, and records live in this browser’s storage. That’s safe day-to-day, but not fool-proof — clearing your browser data, switching devices, or some private-browsing modes can wipe it. If you’d hate to lose your progress, export a backup now and then.</p>` +
@@ -9750,6 +9759,9 @@ function wireSettingsBody() {
     const k = b.dataset.toggle;
     settings[k] = !settings[k];
     saveSettings(settings); applySettings(); renderSettingsBody();
+    // Switching sound on auditions the chime immediately, so the player hears
+    // what they just bought without having to play a round first.
+    if (k === "sound" && settings.sound) sfx.play("correct");
   }));
   body.querySelectorAll("[data-choice]").forEach((b) => b.addEventListener("click", () => {
     settings[b.dataset.choice] = b.dataset.val;
@@ -10821,6 +10833,14 @@ function buildDevApi() {
     // Timer
     timer: { freeze: devTimerFreeze, unfreeze: devTimerUnfreeze, add: devTimerAdd,
              set: devTimerSet, disable: devTimerDisable },
+    // Sound (phase 1 palette): play() forces the effect even while the setting
+    // is off, so the palette can be auditioned; all() walks every sound in turn.
+    sound: {
+      names: () => sfx.names.slice(),
+      play: (n) => sfx.play(n, true),
+      all: (gapMs = 800) => sfx.names.forEach((n, i) => setTimeout(() => sfx.play(n, true), i * gapMs)),
+      state: () => sfx.state(),
+    },
     // Daily
     daily: {
       resetToday: () => clearDailyResult(todayKey()),

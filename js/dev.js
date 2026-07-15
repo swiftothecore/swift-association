@@ -123,6 +123,13 @@ export function initDev(api) {
     row(freezeBtn, btn("+5s", () => api.timer.add(5)), btn("−5s", () => api.timer.add(-5)),
         btn("set 3s", () => api.timer.set(3)), btn("disable", () => { api.timer.disable(); frozen = false; freezeBtn.textContent = "freeze"; freezeBtn.classList.remove("on"); }, "warn"))));
 
+  // ---- Sound -------------------------------------------------------------------
+  // Audition buttons force each effect past the sound setting (api.sound.play).
+  body.append(section("sound",
+    row(...api.sound.names().map((n) => btn("🔊 " + n, () => api.sound.play(n))),
+        btn("all", () => api.sound.all()),
+        btn("state", () => toast("audio: " + api.sound.state())))));
+
   // ---- Daily -----------------------------------------------------------------
   const dateInput = mk("input", { type: "date", class: "dv-text", style: "width:124px" });
   const stCur = num(5), stBest = num(9);
