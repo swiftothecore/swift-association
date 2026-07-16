@@ -3891,21 +3891,23 @@
     .nav-card-kicker { font-size: 7.5px; letter-spacing: 1px; }
   }
 
-  /* Results-page variant: the six keepsake cards collapse into one row of icon discs —
+  /* Results-page variant: the six keepsake cards collapse into one row of icon tiles —
      the full taped cards live on the front page, so here they only need to point the way.
+     Equal columns spanning the sheet edge to edge, each tile a shallow landscape rectangle.
      Names stay in the DOM (visually hidden) for the accessible label; a data-tip carries
      the title + kicker on hover. */
-  .see-also--row { display: flex; justify-content: center; gap: 14px; margin: 24px 0 0; }
+  .see-also--row { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; margin: 24px 0 0; }
   .see-also--row .nav-card {
-    flex: 0 0 auto; display: block; padding: 0; margin: 0;
-    background: none; border: none; box-shadow: none; border-radius: 50%;
+    display: block; padding: 0; margin: 0; min-width: 0;
+    background: none; border: none; box-shadow: none; border-radius: 0;
   }
   .see-also--row .nav-card-seat {
-    width: 54px; height: 54px; margin: 0;
+    width: 100%; height: auto; aspect-ratio: 1.25 / 1; margin: 0;
+    border-radius: 3px;
     border: 1px solid rgba(43, 39, 34, 0.22);
     box-shadow: 0 1px 2px rgba(43, 39, 34, 0.1);
   }
-  .see-also--row .nav-ic { width: 42px; height: 42px; }
+  .see-also--row .nav-ic { width: 46px; max-width: 62%; height: auto; }
   .see-also--row .nav-card-title,
   .see-also--row .nav-card-kicker {
     position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; border: 0;
@@ -3919,11 +3921,13 @@
   .see-also--row .nav-card:focus-visible .nav-card-seat {
     outline: 2px dotted rgba(43, 39, 34, 0.55); outline-offset: 3px;
   }
+  /* Six across is unreadably narrow on a phone sheet, so the row folds to 3 + 3 —
+     still edge to edge, just two rows deep. */
   @media (max-width: 480px) {
-    .see-also--row { gap: 9px; margin: 20px 0 0; }
+    .see-also--row { grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 20px 0 0; }
     .see-also--row .nav-card { padding: 0; }
-    .see-also--row .nav-card-seat { width: 44px; height: 44px; margin: 0; }
-    .see-also--row .nav-ic { width: 34px; height: 34px; }
+    .see-also--row .nav-card-seat { width: 100%; height: auto; margin: 0; }
+    .see-also--row .nav-ic { width: 38px; }
   }
 
   /* ===== Mastery screen ===== */
