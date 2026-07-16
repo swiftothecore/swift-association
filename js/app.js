@@ -664,6 +664,21 @@ function flipInToScreen(name) {
   scheduleFlipRemoval(incoming, () => { backdrop.remove(); });
 }
 
+/* The back tap out of a sub-page (stats/records/achievements/mastery/challenges/album focus/
+   study), returning to whichever screen opened it. Landing on the start screen MUST go through
+   renderStartPickers: the sandboxed modes (challenge/daily/album/study/custom) override
+   currentMode and gameType without persisting them, and renderStartPickers is the one place
+   that restores the player's real picked difficulty. Skipping it leaves the launchpad wearing a
+   finished run's levers — e.g. challenge results → ← challenges → back → Infinite handed you
+   Revolving Door's 20s clock on a Normal board. Always route back-to-start through here. */
+function backToScreen(prev) {
+  if (prev === "start") {
+    $("startContent").style.display = "";
+    renderStartPickers();
+  }
+  flipInToScreen(prev);
+}
+
 /* First paint after loadData(): swap the closed notebook cover for the real start board.
    While loading, #screen-start wears `is-booting` (no ruled paper/padding) so the cover fills
    the whole card. To open, we lay the board out beneath, drop `is-booting` so the card is its
@@ -11339,7 +11354,7 @@ function buildDevApi() {
     // Misc
     setNoLog: (on) => { devNoLog = !!on; },
     reload: () => location.reload(),
-    goStart: () => { showScreen("start"); $("startContent").style.display = ""; refreshStartBoard(); },
+    goStart: () => { $("startContent").style.display = ""; renderStartPickers(); showScreen("start"); },
   };
 }
 
@@ -11370,40 +11385,23 @@ async function init() {
   $("dailyBtn").addEventListener("click", startDaily);
   $("statsBtn").addEventListener("click", () => { statsBackTarget = "start"; renderStats(null); flipAwayToScreen("stats"); });
   $("resultsStatsBtn").addEventListener("click", () => { statsBackTarget = "results"; renderStats(score); flipAwayToScreen("stats"); });
-  $("statsBackBtn").addEventListener("click", () => {
-    const prev = statsBackTarget;
-    if (prev === "start") { $("startContent").style.display = ""; }
-    flipInToScreen(prev);
-  });
+  $("statsBackBtn").addEventListener("click", () => backToScreen(statsBackTarget));
   // Empty-state "start writing →" affordance: wherever a zero-data screen renders one, send the
   // player straight to the start screen's launchpad (same page-flip as a back tap). Delegated once
   // since the buttons live inside re-rendered bodies.
   document.addEventListener("click", (e) => {
     if (!e.target.closest("[data-go-play]")) return;
-    $("startContent").style.display = "";
-    flipInToScreen("start");
+    backToScreen("start");
   });
   $("recordsBtn").addEventListener("click", () => openRecords("start"));
   $("viewRecordsBtn").addEventListener("click", () => openRecords("results"));
-  $("recordsBackBtn").addEventListener("click", () => {
-    const prev = recordsBackTarget;
-    if (prev === "start") { $("startContent").style.display = ""; }
-    flipInToScreen(prev);
-  });
+  $("recordsBackBtn").addEventListener("click", () => backToScreen(recordsBackTarget));
   $("achievementsBtn").addEventListener("click", () => openAchievements("start"));
   $("viewAchievementsBtn").addEventListener("click", () => openAchievements("results"));
-  $("achievementsBackBtn").addEventListener("click", () => {
-    const prev = achievementsBackTarget;
-    if (prev === "start") { $("startContent").style.display = ""; }
-    flipInToScreen(prev);
-  });
+  $("achievementsBackBtn").addEventListener("click", () => backToScreen(achievementsBackTarget));
   $("masteryBtn").addEventListener("click", () => openMastery("start"));
   $("viewMasteryBtn").addEventListener("click", () => openMastery("results"));
-  $("masteryBackBtn").addEventListener("click", () => {
-    const prev = masteryBackTarget;
-    if (prev === "start") { $("startContent").style.display = ""; }
-    flipInToScreen(prev);
-  });
+  $("masteryBackBtn").addEventListener("click", () => backToScreen(masteryBackTarget));
   // Keepsakes modal — opened from the camera icon beside the gear, closed by ✕, scrim, or ESC.
   $("keepsakesGear").addEventListener("click", openKeepsakes);
   $("keepsakesCloseBtn").addEventListener("click", closeKeepsakes);
@@ -11435,24 +11433,12 @@ async function init() {
   });
   $("challengesBtn").addEventListener("click", () => openChallenges("start"));
   $("viewChallengesBtn").addEventListener("click", () => openChallenges("results"));
-  $("challengesBackBtn").addEventListener("click", () => {
-    const prev = challengesBackTarget;
-    if (prev === "start") { $("startContent").style.display = ""; }
-    flipInToScreen(prev);
-  });
+  $("challengesBackBtn").addEventListener("click", () => backToScreen(challengesBackTarget));
   $("albumFocusBtn").addEventListener("click", () => openAlbumFocus("start"));
-  $("albumFocusBackBtn").addEventListener("click", () => {
-    const prev = albumFocusBackTarget;
-    if (prev === "start") { $("startContent").style.display = ""; }
-    flipInToScreen(prev);
-  });
+  $("albumFocusBackBtn").addEventListener("click", () => backToScreen(albumFocusBackTarget));
   $("studyBtn").addEventListener("click", () => openStudy("start"));
   $("viewStudyBtn").addEventListener("click", () => openStudy("results"));
-  $("studyBackBtn").addEventListener("click", () => {
-    const prev = studyBackTarget;
-    if (prev === "start") { $("startContent").style.display = ""; }
-    flipInToScreen(prev);
-  });
+  $("studyBackBtn").addEventListener("click", () => backToScreen(studyBackTarget));
   $("againBtn").addEventListener("click", () => {
     applyEra("gold");
     renderStartPickers();
