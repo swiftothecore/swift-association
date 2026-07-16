@@ -4492,10 +4492,19 @@
   .settings-gear:hover { background: var(--highlighter); transform: scale(1.08); }
   @media (min-width: 1040px) { .settings-gear { top: 18px; right: 22px; } }
 
-  /* Keepsakes icon — sits to the left of the settings gear. Hidden during active play so it
+  /* Sound icon: the first seat to the left of the gear, and unlike the keepsakes icon it stays
+     through play: muting a chime you've tired of is exactly a mid-round need. The muted default
+     keeps the plain ink; only a live palette takes the accent, so "on" is the state that shows. */
+  .sound-gear { right: 64px; }
+  @media (min-width: 1040px) { .sound-gear { right: 72px; } }
+  .sound-gear[data-on="false"] .sg-on,
+  .sound-gear[data-on="true"] .sg-off { display: none; }
+  .sound-gear[data-on="true"] { color: var(--ink-accent); }
+
+  /* Keepsakes icon — sits to the left of the sound icon. Hidden during active play so it
      doesn't clutter the board (and can't sidestep the timer, which only the gear pauses). */
-  .keepsakes-gear { right: 64px; }
-  @media (min-width: 1040px) { .keepsakes-gear { right: 72px; } }
+  .keepsakes-gear { right: 114px; }
+  @media (min-width: 1040px) { .keepsakes-gear { right: 122px; } }
   body.in-game .keepsakes-gear { display: none; }
   .keepsakes-gear-badge {
     position: absolute; top: -4px; right: -4px; min-width: 17px; height: 17px; padding: 0 4px;

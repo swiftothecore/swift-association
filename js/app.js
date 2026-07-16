@@ -240,9 +240,34 @@ function applySettings() {
   if (settings.masteryButton) body.setAttribute("data-startbtn", settings.masteryButton);
   else body.removeAttribute("data-startbtn");
   sfx.setEnabled(!!settings.sound);   // sound gate lives in js/sound.js
+  paintSoundGear();                   // the corner icon is a view of settings.sound, never its own state
   refreshSnow();   // December snowfall follows the reduce-motion setting live
   refreshRain();   // midnight rain follows the reduce-motion setting live too
   refreshLeaves(); // autumn leaves follow the reduce-motion setting live too
+}
+
+/* ---------- Sound icon (corner) ----------
+   The speaker beside the gear is the front door to the sound palette: settings.sound is off by
+   default and a player who never opens the Sound section of settings would otherwise never learn
+   the game has a voice. It renders the setting and nothing else: every write goes through
+   setSound → applySettings → paintSoundGear, so the icon and the settings toggle cannot disagree. */
+function paintSoundGear() {
+  const b = $("soundGear");
+  if (!b) return;
+  const on = !!settings.sound;
+  b.dataset.on = on ? "true" : "false";
+  b.setAttribute("aria-pressed", on ? "true" : "false");
+  // The title carries the invitation the icon can only imply.
+  b.title = on ? "Sound effects on. Tap to mute." : "Sound effects off. Tap to turn them on.";
+}
+// The single writer for settings.sound, shared by the corner icon and the settings toggle.
+// Turning it on auditions the chime, which is also the gesture that wakes the AudioContext
+// (see the autoplay note in js/sound.js), so the very first sound is the one they asked for.
+function setSound(on) {
+  settings.sound = !!on;
+  saveSettings(settings);
+  applySettings();
+  if (settings.sound) sfx.play("correct");
 }
 
 /* ---------- December snowfall ---------- */
@@ -9850,11 +9875,11 @@ function wireSettingsBody() {
   const body = $("settingsBody");
   body.querySelectorAll("[data-toggle]").forEach((b) => b.addEventListener("click", () => {
     const k = b.dataset.toggle;
+    // Sound has a second control in the corner, so it writes through setSound (which saves,
+    // applies, repaints that icon, and auditions the chime) rather than duplicating the flip.
+    if (k === "sound") { setSound(!settings.sound); renderSettingsBody(); return; }
     settings[k] = !settings[k];
     saveSettings(settings); applySettings(); renderSettingsBody();
-    // Switching sound on auditions the chime immediately, so the player hears
-    // what they just bought without having to play a round first.
-    if (k === "sound" && settings.sound) sfx.play("correct");
   }));
   body.querySelectorAll("[data-choice]").forEach((b) => b.addEventListener("click", () => {
     settings[b.dataset.choice] = b.dataset.val;
@@ -11450,6 +11475,13 @@ async function init() {
   $("keepGoingBtn").addEventListener("click", () => startInfinite("3lives", { carry: true }));
   // Quit / give up mid-game — first tap arms, second tap leaves (see armQuit).
   $("quitBtn").addEventListener("click", armQuit);
+
+  // Sound icon: a straight toggle beside the gear, no modal and no confirm.
+  $("soundGear").addEventListener("click", () => {
+    setSound(!settings.sound);
+    // If they got here with settings open behind, keep that toggle honest too.
+    if ($("settingsModal").classList.contains("open")) renderSettingsBody();
+  });
 
   // Settings modal — openable from any screen (gear), closed by ✕, scrim, or ESC.
   $("settingsGear").addEventListener("click", openSettings);
