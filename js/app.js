@@ -6882,6 +6882,7 @@ function challengeIntroHTML(c) {
 }
 
 let curtainTimers = [];
+let curtainKeyOff = null;       // detaches the live gated card's Enter listener (see showCard)
 // True while a curtain is over the board (including its lift animation). The curtain is
 // captive: the round beneath it must not answer to the keyboard.
 function curtainUp() { return !!document.querySelector(".chall-curtain"); }
@@ -6890,6 +6891,7 @@ function curtainUp() { return !!document.querySelector(".chall-curtain"); }
 function clearCurtain() {
   curtainTimers.forEach(clearTimeout);
   curtainTimers = [];
+  if (curtainKeyOff) curtainKeyOff();
   const ov = document.querySelector(".chall-curtain");
   if (ov) ov.remove();
 }
@@ -6961,6 +6963,9 @@ function beginRoundClock() {
     const next = () => {
       if (acted) return;
       acted = true;
+      // This card is done with the keyboard: drop its Enter listener now, so it can't also
+      // acknowledge the next card in the queue (which installs its own) or fire mid-lift.
+      if (curtainKeyOff) curtainKeyOff();
       i++;
       if (last) {
         ov.classList.add("leaving");
@@ -6979,15 +6984,24 @@ function beginRoundClock() {
       // notice) wait for an explicit tap — the whole-overlay tap is intentionally NOT wired
       // so a stray click can't skip the notice unread.
       nextBtn.addEventListener("click", next);
-      // Take the focus off the answer line and put it on the button, so Enter/Space
-      // acknowledges the card natively instead of submitting an answer behind it. Safe to
-      // do synchronously: setupRound (which focuses the input) has already run by here,
-      // on both the instant and the page-flip path into beginRoundClock.
-      $("songInput").blur();
-      nextBtn.focus();
-      // An Enter still held down from advancing the previous page must not auto-repeat
-      // straight through the notice — the player has to press it again, deliberately.
-      nextBtn.addEventListener("keydown", (e) => { if (e.key === "Enter" && e.repeat) e.preventDefault(); });
+      // Enter acknowledges the card. Handled here at the document rather than by focusing
+      // the button, so the key works wherever focus happens to sit (the answer line keeps
+      // it) and the button never has to wear a focus ring to be usable. Capture phase, so
+      // this Enter is claimed before the input's own keydown could ever submit behind it.
+      if (curtainKeyOff) curtainKeyOff();   // never orphan a prior card's listener behind this one
+      const shownAt = Date.now();
+      const onKey = (e) => {
+        if (e.key !== "Enter") return;
+        if ($("settingsModal").classList.contains("open")) return;   // a modal over the curtain is captive in turn
+        // An Enter still held from the previous page's advance must not auto-repeat
+        // through the notice, nor land inside the grace window a fresh press would miss.
+        if (e.repeat || Date.now() - shownAt < ENTER_SKIP_GRACE) { e.preventDefault(); return; }
+        e.preventDefault();
+        e.stopPropagation();
+        next();
+      };
+      document.addEventListener("keydown", onKey, true);
+      curtainKeyOff = () => { document.removeEventListener("keydown", onKey, true); curtainKeyOff = null; };
     } else {
       // Auto-lifting cards (per-page Wildcard / Switch-Up): advance after a beat, tap
       // anywhere to skip ahead.
