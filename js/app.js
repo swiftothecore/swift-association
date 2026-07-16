@@ -349,16 +349,21 @@ function refreshSnow() { if (snowActive()) startSnow(); else stopSnow(); }
 
 /* ---------- Midnight Rain ---------- */
 // The snowfall's seasonal sibling on the same rAF machinery: a full-viewport canvas
-// of thin, near-vertical streaks. Active only in the witching hour — 12 to 1am in the
-// player's active timezone (the hour reads local wall-clock, matching how the daily
-// midnight sticky is gated) — and only when motion is allowed. Sparse and quiet: a
-// notebook left out overnight, not a weather app.
+// of thin, near-vertical streaks. Active only in the first minute of the day, 12:00 to
+// 12:01am in the player's active timezone (the clock reads local wall-clock, matching
+// how the daily midnight sticky is gated), and only when motion is allowed. A shower
+// that passes, not weather you have to sit through: an hour of it wears out its
+// welcome long before the hour is up.
 let rainRaf = null, rainDrops = [], rainCanvas = null, rainCtx = null,
     rainLast = 0, rainResizeT = null, rainResizeBound = false, devForceRain = false;
-// The hour hand sits on 12: getHours() === 0 is the stretch from midnight to 1am.
-// Dev override bypasses the clock but still respects reduce-motion, exercising the
-// real gate rather than a special case.
-function rainActive() { return (devForceRain || new Date().getHours() === 0) && !motionReduced(); }
+// Both hands straight up: getHours() === 0 && getMinutes() === 0 is the minute after
+// midnight. rainFrame re-checks this every frame, so a page open across 12:01 stops
+// the rain on its own. Dev override bypasses the clock but still respects
+// reduce-motion, exercising the real gate rather than a special case.
+function rainActive() {
+  const now = new Date();
+  return (devForceRain || (now.getHours() === 0 && now.getMinutes() === 0)) && !motionReduced();
+}
 function sizeRainCanvas() {
   if (!rainCanvas) return;
   const dpr = Math.min(window.devicePixelRatio || 1, 2);
