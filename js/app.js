@@ -9780,6 +9780,62 @@ function setBookplateHTML() {
 }
 function setSection(title, inner) { return `<div class="set-section"><p class="set-section-title">${title}</p>${inner}</div>`; }
 
+/* ---------- The danger zone: the ledger ----------
+   An accounts book, not a row of alarm buttons. Every line says what it would
+   actually cost you before you void it, because you shouldn't have to remember
+   what's in a drawer to decide whether to empty it. A line with nothing in it says
+   so and can't be armed. Counts stay terse: a ledger column is a figure, not a
+   sentence, and the narrow layout drops the figure under the entry rather than
+   ellipsing it. */
+const plural = (n, word) => n + " " + word + (n === 1 ? "" : "s");
+
+// Records live under one key per mode token, including the infinite variants.
+function recordEntryCount() {
+  const tokens = MODE_ORDER.slice();
+  for (const v of ["3lives", "sudden"]) for (const m of MODE_ORDER) tokens.push("inf-" + v + "-" + m);
+  return tokens.reduce((n, t) => n + loadRecords(t).length, 0);
+}
+
+function dangerItems() {
+  const recs = recordEntryCount();
+  const games = totalPlayed();
+  const charms = ACHIEVEMENTS.filter((a) => earnedAchievements[a.id]).length;
+  const found = loadSongTally().songs || {};
+  const songs = allSongs.filter((s) => found[s.title]).length;
+  const dailies = Object.keys(dailyPlayedDates()).length;
+  const streak = effectiveDailyStreak(todayKey()).current;
+
+  return [
+    { key: "hof", name: "Records", n: recs, cost: `${recs} ${recs === 1 ? "entry" : "entries"}` },
+    { key: "stats", name: "Stats & streaks", n: games, cost: plural(games, "game") },
+    { key: "ach", name: "Achievements", n: charms, cost: `${charms} / ${ACHIEVEMENTS.length} charms` },
+    { key: "tally", name: "Catalogue", n: songs, cost: `${songs} / ${allSongs.length} songs` },
+    { key: "daily", name: "Daily challenge", n: dailies,
+      cost: streak ? `${dailies} played, ${streak} run` : plural(dailies, "puzzle") },
+    { key: "settings", name: "Settings", n: 1, cost: "back to defaults" },
+  ];
+}
+
+// One ruled line per item: entry, figure, and the VOID column. The whole line is the
+// control. The stamp itself is a sibling that only inks in once the line is armed.
+function dangerRowHTML(key, name, cost, opts = {}) {
+  const dead = !!opts.dead;
+  return `<button class="led-row${opts.wipe ? " led-row--total" : ""}" ` +
+    `data-danger="${key}"${dead ? " disabled" : ""}>` +
+    `<span class="led-item">${escapeHtml(name)}</span>` +
+    `<span class="led-count">${escapeHtml(dead ? "nothing to lose" : cost)}</span>` +
+    `<span class="led-act">${dead ? "" : "void"}</span>` +
+    (dead ? "" : `<span class="led-stamp" aria-hidden="true">void</span>`) +
+  `</button>`;
+}
+
+function dangerRowsHTML() {
+  return `<div class="danger-led">` +
+    dangerItems().map((it) => dangerRowHTML(it.key, it.name, it.cost, { dead: !it.n })).join("") +
+    dangerRowHTML("all", "Everything", "incl. your name", { wipe: true }) +
+  `</div>`;
+}
+
 // Fallback zone list for the rare browser without Intl.supportedValuesOf — a spread of
 // common UTC offsets so a player can still pick a sensible reset day.
 const COMMON_TZ_FALLBACK = [
@@ -9844,16 +9900,11 @@ function renderSettingsBody() {
       `<div class="set-actions"><button class="btn-ghost" data-action="export">Export backup</button>` +
       `<button class="btn-ghost" data-action="import">Import backup</button></div>`
     ) +
-    `<div class="set-danger"><p class="set-section-title">danger zone — these can’t be undone</p>` +
-      `<div class="set-danger-grid">` +
-        `<button class="danger-btn" data-danger="hof">Reset records</button>` +
-        `<button class="danger-btn" data-danger="stats">Reset stats &amp; streaks</button>` +
-        `<button class="danger-btn" data-danger="ach">Reset achievements</button>` +
-        `<button class="danger-btn" data-danger="tally">Reset catalogue</button>` +
-        `<button class="danger-btn" data-danger="daily">Reset daily</button>` +
-        `<button class="danger-btn" data-danger="settings">Reset settings</button>` +
-        `<button class="danger-btn wipe" data-danger="all">Clear everything</button>` +
-      `</div></div>` +
+    `<div class="set-danger">` +
+      `<p class="danger-head">the ledger</p>` +
+      `<p class="danger-sub">stamped void, and void is forever</p>` +
+      dangerRowsHTML() +
+    `</div>` +
     setSection("About",
       `<div class="set-about">` +
       `<p>Swift to the Song Association — a songwriter’s-notebook word game. Fan-made and unofficial; lyrics belong to their writers.</p>` +
@@ -9925,17 +9976,26 @@ function wireSettingsBody() {
     if (b.dataset.action === "export") exportBackup();
     else if (b.dataset.action === "import") $("importFile").click();
   }));
-  body.querySelectorAll("[data-danger]").forEach((b) => b.addEventListener("click", () => armDanger(b)));
+  body.querySelectorAll(".led-row[data-danger]").forEach((r) => r.addEventListener("click", () => armDanger(r)));
 }
 
-// Each danger button needs a second confirming tap within 3s before it fires.
-function armDanger(btn) {
-  if (btn.classList.contains("armed")) { clearTimeout(dangerTimer); performDanger(btn.dataset.danger); return; }
-  $("settingsBody").querySelectorAll(".danger-btn.armed").forEach((b) => { b.classList.remove("armed"); b.textContent = b.dataset.label || b.textContent; });
-  btn.dataset.label = btn.textContent;
-  btn.classList.add("armed");
-  btn.textContent = "tap again to confirm";
-  dangerTimer = setTimeout(() => { btn.classList.remove("armed"); btn.textContent = btn.dataset.label; }, 3000);
+// Each line needs a second confirming tap within 3s before it fires. The first tap
+// presses the stamp and turns the VOID column into the confirm prompt, so the words
+// change in the column the eye is already on. Disarming (a timeout, or arming another
+// line) lifts the stamp again.
+function disarmDanger(row) {
+  row.classList.remove("armed");
+  const act = row.querySelector(".led-act");
+  if (act && act.dataset.label) act.textContent = act.dataset.label;
+}
+function armDanger(row) {
+  if (row.classList.contains("armed")) { clearTimeout(dangerTimer); performDanger(row.dataset.danger); return; }
+  $("settingsBody").querySelectorAll(".led-row.armed").forEach(disarmDanger);
+  const act = row.querySelector(".led-act");
+  act.dataset.label = act.textContent;
+  row.classList.add("armed");
+  act.textContent = "tap again";
+  dangerTimer = setTimeout(() => disarmDanger(row), 3000);
 }
 function performDanger(which) {
   if (which === "all") { clearAllData(); location.reload(); return; }

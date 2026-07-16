@@ -54,7 +54,8 @@
     --ink: #2b2722;            /* graphite body ink */
     --ink-soft: #6f675a;       /* faded pencil */
     --rule: rgba(43, 39, 34, 0.07);   /* ruled lines */
-    --margin: rgba(178, 58, 58, 0.45); /* red margin rule */
+    --margin: rgba(178, 58, 58, 0.45); /* red margin rule: a printed line, meant to sit UNDER text */
+    --red-pen: #a8322e;                /* the editor's red pen: solid ink, for text you must be able to read */
 
     /* Era tokens (overridden per round by [data-era]) */
     --ink-accent: #a9791f;
@@ -4469,6 +4470,7 @@
     --ink-soft: #3a3a3a;
     --rule: rgba(0, 0, 0, 0.14);
     --margin: rgba(190, 0, 0, 0.85);
+    --red-pen: #9a0006;
   }
   body[data-contrast="high"][data-era="gold"]     { --ink-accent:#7a5300; --highlighter:rgba(230,180,0,0.7);  --bead:#7a5300; }
   body[data-contrast="high"][data-era="lavender"] { --ink-accent:#3f2c80; --highlighter:rgba(150,120,225,0.7); --bead:#3f2c80; }
@@ -4723,18 +4725,99 @@
   .set-actions { display: flex; gap: 10px; flex-wrap: wrap; }
   .set-actions .btn-ghost { width: auto; flex: 1 1 0; margin-top: 0; }
 
-  /* danger zone — set apart with a torn red border */
-  .set-danger { margin: 22px 0; border: 1.5px dashed var(--margin); border-radius: 3px; padding: 14px 16px 16px; }
-  .set-danger .set-section-title { color: var(--margin); }
-  .set-danger-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-  .danger-btn {
-    font-family: var(--type); font-size: 12px; letter-spacing: 0.5px; color: var(--margin);
-    background: transparent; border: 1.4px solid var(--margin); border-radius: 2px; padding: 9px 8px; cursor: pointer;
-    transition: background 0.15s, color 0.15s;
+  /* ---------- Danger zone: the ledger ----------
+     An accounts book ruled into three columns (entry / figure / void), not a row of
+     alarm buttons. The whole line is the control; confirming presses a rubber VOID
+     stamp over it, built from the same recipe as .rarity-stamp (2px border + a 1px
+     inset ring for the double ring, multiply so the paper grain prints through, and
+     an overshoot press-down) so the zone speaks vocabulary the game already owns.
+     Everything you have to READ is --red-pen, solid: --margin is a ruled line at 45%
+     alpha and turns to unreadable pink the moment it's used as text. */
+  /* the ruling is a local token so high contrast can darken the whole grid in one place
+     rather than leaving the ledger pale while the page around it sharpens */
+  .set-danger { margin: 22px 0 18px; --led-frame: rgba(43, 39, 34, 0.22); --led-rule: rgba(43, 39, 34, 0.11); }
+  body[data-contrast="high"] .set-danger { --led-frame: rgba(0, 0, 0, 0.55); --led-rule: rgba(0, 0, 0, 0.32); }
+  body[data-contrast="high"] .led-act { opacity: 0.72; }
+  /* the heading is scrawled in the margin, not set in 10px caps like a form label */
+  .danger-head {
+    font-family: var(--hand); font-size: 23px; line-height: 1; color: var(--red-pen);
+    margin: 0; transform: rotate(-0.7deg); transform-origin: left center;
   }
-  .danger-btn:hover { background: rgba(178, 58, 58, 0.12); }
-  .danger-btn.armed { background: var(--margin); color: #fff; font-weight: 700; }
-  .danger-btn.wipe { grid-column: 1 / -1; }
+  .danger-sub { font-family: var(--type); font-size: 11px; color: var(--ink-soft); margin: 3px 0 9px; }
+
+  .danger-led { border: 1.5px solid var(--led-frame); border-radius: 3px; overflow: hidden; }
+  .led-row {
+    position: relative; width: 100%; margin: 0; padding: 0;
+    display: grid; grid-template-columns: minmax(0, 1fr) 132px 66px; align-items: center;
+    background: transparent; border: none; border-bottom: 1px solid var(--led-rule);
+    border-radius: 0; cursor: pointer; text-align: left;
+  }
+  .led-row:last-child { border-bottom: none; }
+  .led-item {
+    font-family: var(--hand); font-size: 19px; line-height: 1.2; color: var(--ink);
+    padding: 7px 10px; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  /* the ledger's vertical rules, which are what make it read as columns not a list */
+  .led-count {
+    font-family: var(--type); font-size: 11px; color: var(--ink-soft); text-align: right;
+    padding: 7px 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    border-left: 1px solid var(--led-rule); border-right: 1px solid var(--led-rule);
+  }
+  /* the void column reads like a pre-printed ledger heading and is always visible:
+     hover-only would leave touch devices with no affordance at all */
+  .led-act {
+    font-family: var(--type); font-size: 10px; letter-spacing: 1.2px; text-transform: uppercase;
+    color: var(--red-pen); text-align: center; padding: 7px 4px; white-space: nowrap;
+    opacity: 0.38; transition: opacity 0.14s;
+  }
+  .led-row:hover:not(:disabled) { background: rgba(168, 50, 46, 0.05); }
+  .led-row:hover:not(:disabled) .led-act { opacity: 0.85; }
+  .led-row:focus-visible { outline: 2px solid var(--red-pen); outline-offset: -2px; }
+  .led-row:disabled { cursor: default; }
+  .led-row:disabled .led-item { color: var(--ink-soft); opacity: 0.5; }
+  .led-row:disabled .led-count { opacity: 0.5; }
+
+  /* The stamp, pressed across the entry the way a clerk voids a line. It's meant to
+     overlap the words, so the entry has to recede hard: at anything near legible the
+     two fight and neither reads. Offset right of the entry's start so it straddles the
+     word rather than starting flush with it. */
+  .led-stamp {
+    position: absolute; left: 34px; top: 50%; z-index: 2; pointer-events: none;
+    font-family: var(--type); font-weight: 700; font-size: 16px; letter-spacing: 3.5px;
+    text-transform: uppercase; color: var(--red-pen);
+    padding: 2px 12px; border: 2px solid currentColor; border-radius: 3px;
+    box-shadow: inset 0 0 0 1px currentColor;   /* the double ring, as on .rarity-stamp */
+    mix-blend-mode: multiply; opacity: 0;
+    transform: translateY(-50%) rotate(-8deg) scale(1.5);
+  }
+  .led-row.armed { background: rgba(168, 50, 46, 0.05); }
+  .led-row.armed .led-item { opacity: 0.22; }
+  .led-row.armed .led-count { opacity: 0.4; }
+  .led-row.armed .led-act { opacity: 1; font-weight: 700; letter-spacing: 0.6px; }
+  .led-row.armed .led-stamp { animation: void-stamp 0.4s cubic-bezier(.2, 1.4, .4, 1) forwards; }
+  @keyframes void-stamp {
+    0%   { opacity: 0;    transform: translateY(-50%) rotate(-8deg) scale(1.5); }
+    60%  { opacity: 0.9;  transform: translateY(-50%) rotate(-8deg) scale(0.94); }
+    100% { opacity: 0.82; transform: translateY(-50%) rotate(-8deg) scale(1); }
+  }
+  body[data-reduce-motion="on"] .led-row.armed .led-stamp { animation: none; opacity: 0.82; transform: translateY(-50%) rotate(-8deg); }
+
+  /* the balance line: a ledger totals with a double rule, and this is the total */
+  .led-row--total { border-top: 3px double var(--led-frame); }
+  .led-row--total .led-item { color: var(--red-pen); }
+
+  /* Narrow: three columns stop fitting, and an ellipsis would eat the very figure the
+     line exists to report. Drop the figure under the entry and keep the void column. */
+  @media (max-width: 620px) {
+    .led-row { grid-template-columns: minmax(0, 1fr) 62px; }
+    .led-item { padding-bottom: 0; }
+    .led-count {
+      grid-column: 1; text-align: left; padding: 1px 10px 7px;
+      border-left: none; border-right: none;
+    }
+    .led-act { grid-column: 2; grid-row: 1 / 3; border-left: 1px solid var(--led-rule); align-self: stretch; display: flex; align-items: center; justify-content: center; }
+    .led-stamp { left: 10px; top: 34%; }
+  }
 
   .set-about { font-family: var(--type); font-size: 11.5px; color: var(--ink-soft); line-height: 1.5; }
   .set-about a { color: var(--ink-accent); }
