@@ -17,13 +17,13 @@ Standout features:
 - Support for all eras + all miscellaneous and some unreleased Taylor songs coming soon
 - Lots and lots of easter eggs
 - Packed with visual charm
-- Over 75 achievements
+- Over 90 achievements
 - Daily challenge
 - Challenges mode with 25 challenges (with more to come), including a super-hard tier unlocked through mastery
 - Album focus mode so you can focus on ONE album only
 - Study mode so you can improve
 - A content-packed skills and mastery system
-- Opt-in sound effects, real recordings picked by ear: a paper page turn, a small chime for a hit, a soft note for a miss (with more sounds on the way)
+- Opt-in sound effects (with more on the way)
 - A companion lyric searcher, Swift To The Lyric, for searching every line of every song (work in progress but usable)
 - Installable as a phone or desktop app and works offline once loaded
 
@@ -41,4 +41,4 @@ My goals for this project are to make it effortlessly and extensively customisab
 
 If the game doesn’t seem like it’s in a finished state right now, that’s because it isn’t. We’re getting there. For now, thank you for reading, and you can play the game RIGHT NOW in its alpha stage at https://swiftassociation.com
 
-Verdict sounds from [Google’s Material Design sound kit](https://archive.org/details/material-design-sound-resources) (CC-BY 4.0); the page turn is a CC0 recording from freesound.
+no its becky
