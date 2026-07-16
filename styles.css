@@ -1194,12 +1194,12 @@
     color: #7a2b2b; border-color: #b06a6a; background: rgba(92,26,26,0.06);
   }
   .chall-need--mastery .chall-mark-svg { width: 15px; height: 15px; color: #7a2b2b; }
-  .chall-token-link {
-    font-family: var(--type); font-size: 10px; letter-spacing: 0.8px; color: var(--ink-soft);
-    background: transparent; border: none; border-bottom: 1px solid rgba(43,39,34,0.28);
-    padding: 2px 0; cursor: pointer; white-space: nowrap;
+  /* can't-afford state: the torn ticket stub, with the way to earn one pencilled under it */
+  .chall-need-wrap { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
+  .chall-need-hint {
+    font-family: var(--type); font-size: 10px; letter-spacing: 0.4px; line-height: 1.45;
+    color: var(--ink-soft); text-align: right; max-width: 200px;
   }
-  .chall-token-link:hover, .chall-token-link:focus-visible { color: var(--ink); border-bottom-color: var(--ink); }
 
   /* primary action — the gold "Start writing" sticker, reused */
   .chall-go {

@@ -3678,8 +3678,10 @@ function renderChallengeDetail(id) {
           `<span class="chall-unlock-perf"></span>` +
           `<span class="chall-unlock-stamp">admit one</span>` +
           `<span class="chall-unlock-lab">unlock</span></button>`
-      : `<div class="chall-need">need a token · 🎟 ${cost}</div>` +
-        `<button type="button" class="chall-token-link" data-open-charms>get tokens from charms</button>`;
+      : `<div class="chall-need-wrap">` +
+          `<div class="chall-need">need a token · 🎟 ${cost}</div>` +
+          `<div class="chall-need-hint">beat any challenge for the first time to earn one</div>` +
+        `</div>`;
   } else {
     action = `<button type="button" class="chall-go" data-play="${id}">${rec.defeated ? "Play again" : "Play"}</button>`;
   }
@@ -3715,8 +3717,6 @@ function renderChallengeDetail(id) {
 
   const ub = el.querySelector("[data-unlock]");
   if (ub) ub.addEventListener("click", () => { if (unlockChallenge(ub.dataset.unlock)) renderChallengesPage(); });
-  const cb = el.querySelector("[data-open-charms]");
-  if (cb) cb.addEventListener("click", () => openAchievements("challenges"));
   const pb = el.querySelector("[data-play]");
   if (pb) pb.addEventListener("click", () => startChallenge(pb.dataset.play));
 }
