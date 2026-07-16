@@ -1,8 +1,13 @@
 /* Service worker for Swift To The Song Association (static, GitHub Pages).
  *
  * Strategy:
- *  - same-origin → NETWORK-FIRST (always latest when online; fall back to cache
- *    offline, and to the cached index.html for navigations). This deliberately
+ *  - same-origin FONTS → CACHE-FIRST. A .woff2 here is immutable: the filename
+ *    changes when the face does, so there is nothing to revalidate. Sending them
+ *    down the network-first path cost a round trip on EVERY load (`cache: "reload"`
+ *    below deliberately bypasses the HTTP cache), which is a real problem for a
+ *    font: a slow face means a flash of the fallback. Serve from the precache.
+ *  - other same-origin → NETWORK-FIRST (always latest when online; fall back to
+ *    cache offline, and to the cached index.html for navigations). This deliberately
  *    avoids the "my deploy isn't showing up" stale-code trap — no need to bump
  *    CACHE on every change; bump it only to evict stale precached entries.
  *  - cross-origin → CACHE-FIRST (kept as a safety net; the fonts are now
@@ -79,8 +84,23 @@ self.addEventListener("fetch", (e) => {
   const req = e.request;
   if (req.method !== "GET") return;
   const url = new URL(req.url);
+  const isFont = url.origin === location.origin && url.pathname.endsWith(".woff2");
 
-  if (url.origin === location.origin) {
+  if (isFont) {
+    // Immutable + latency-critical: hand over the precached copy, and only touch
+    // the network for a face this cache has never seen (then keep it).
+    e.respondWith(
+      caches.match(req).then(
+        (hit) =>
+          hit ||
+          fetch(req).then((res) => {
+            const copy = res.clone();
+            caches.open(CACHE).then((c) => c.put(req, copy));
+            return res;
+          })
+      )
+    );
+  } else if (url.origin === location.origin) {
     // network-first, fall back to cache (and to index.html for navigations).
     // `cache: "reload"` makes the SW's own fetch BYPASS the browser HTTP cache —
     // without it, GitHub Pages' max-age means fetch() can return a stale file and
