@@ -5577,8 +5577,6 @@ function applyChallengeRound(wrap) {
     renderWordFx(wrap, currentWord, round);
   } else if (currentChallenge.rule === "revolving") {
     renderRevolveCounter();
-  } else if (currentChallenge.rule === "wildcard") {
-    applyWildcardRound(wrap);
   } else if (currentChallenge.rule === "album5") {
     renderDeepCutCounter();
   } else if (currentChallenge.rule === "newsong") {
@@ -5929,9 +5927,10 @@ function buildWildcardConstraints() {
   if (album) cons.push({ id: "album", label: `only from ${album}`, accepts: (s) => s.album === album });
   return cons;
 }
-// Pick this round's Wildcard rule (solvable, no immediate repeat), show its banner,
-// and run any visual gimmick.
-function applyWildcardRound(wrap) {
+// Pick this round's Wildcard rule (solvable, no immediate repeat) and show its banner.
+// Called from advanceRound BEFORE the valid set is narrowed to the rule, so the
+// solvability filter below still sees every lyrics-valid song.
+function applyWildcardRound() {
   const cons = buildWildcardConstraints();
   const usable = cons.filter((c) => !c.accepts || currentSongs.some(c.accepts));
   // Dev tools: pin the round to a chosen sub-rule when it's solvable this round.
@@ -7354,6 +7353,16 @@ function advanceRound() {
   // lyrics-valid set so a curse-breaking pick can be soft-rejected rather than scored wrong.
   if (gameType === "challenge" && currentChallenge && currentChallenge.rule === "devil")
     currentSongs = currentSongs.filter(devilAllowsSong);
+  // Wildcard: pick this page's sub-rule now (it reads the full valid set to stay solvable),
+  // then narrow the valid set to what the rule actually allows. Rarity is counted off this
+  // set, so "title must start with a vowel" over a word in twelve songs but only two vowel
+  // titles stamps SCARCE, not COMMON — and the hint, the examples and the miss reveal all
+  // describe answers you could really give. currentLyricSongs keeps the broader lyrics-valid
+  // set so a rule-breaking pick is soft-rejected rather than scored wrong.
+  if (gameType === "challenge" && currentChallenge && currentChallenge.rule === "wildcard") {
+    applyWildcardRound();
+    if (roundWildcard && roundWildcard.accepts) currentSongs = currentSongs.filter(roundWildcard.accepts);
+  }
   roundHintSong = pickHintSong();
   applyEra(pickEra());
 
@@ -8229,7 +8238,7 @@ function submitAnswer(song, isTimeout) {
   // fall through to score as wrong; a null-accepts rule (vanishing) never rejects.
   if (song && !isTimeout && currentChallenge && currentChallenge.rule === "wildcard"
       && roundWildcard && roundWildcard.accepts
-      && currentSongs.some((s) => s.title === song.title)
+      && currentLyricSongs.some((s) => s.title === song.title)
       && !roundWildcard.accepts(song)) {
     rejectWildcard(roundWildcard.label); return;
   }
@@ -8729,14 +8738,6 @@ function showWrongFeedback(song, isTimeout) {
   let help = "";
   if (n > 0) {
     let pool = currentSongs;
-    // Wildcard: currentSongs is the full lyrics-valid set (never narrowed to the round's
-    // sub-rule), so filter the reveal to songs that actually satisfy the active constraint
-    // — otherwise a miss would showcase songs the rule soft-rejects (a multi-word title
-    // under "only one-word titles", an off-album song under "only from …", etc.). The
-    // rule guarantees at least one such song exists (applyWildcardRound only picks solvable
-    // constraints). Null-accepts rules (vanish/scramble) impose no answer constraint.
-    if (currentChallenge && currentChallenge.rule === "wildcard" && roundWildcard && roundWildcard.accepts)
-      pool = pool.filter(roundWildcard.accepts);
     // Double Trouble: don't showcase a song the player already named on this page (e.g.
     // they got the first of the pair, then missed the second) — only surface fresh options.
     if (currentChallenge && currentChallenge.rule === "multi" && roundNamed.length)
@@ -11340,8 +11341,8 @@ function buildDevApi() {
         win: () => { impostorFailed = false; score = ((CHALLENGE_BY_ID.impostor.target) || 7) + impostorFlagged; endGame(); },
         lose: (kind) => impostorGameOver(kind || "answered"),      // "answered" | "timeout" | "falseflag"
       },
-      // Wildcard — inspect / pin the per-round sub-rule (useful for verifying the
-      // wrong-answer reveal only surfaces songs the active rule accepts).
+      // Wildcard — inspect / pin the per-round sub-rule (useful for verifying that the
+      // rarity stamp, the reveal and getState().valid all describe the same in-rule set).
       wildcard: {
         ids: () => ["oneword", "twoword", "long", "vowel", "consonant", "notitle", "titleword", "vanish", "scramble", "album"],
         current: () => roundWildcard && roundWildcard.id,
