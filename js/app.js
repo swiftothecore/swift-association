@@ -6836,10 +6836,17 @@ function switchPageCardHTML() {
       : "name any song that uses the word" });
 }
 
+// The per-page Wildcard curtain card — names the rule in force for this page. Shown on
+// every page (and, on round 1, right after the rules intro).
+function wildcardPageCardHTML() {
+  return curtainCardHTML({ kicker: `page ${round} · wildcard`, tag: "the rule",
+    headline: roundWildcard.label });
+}
+
 // The curtain content for THIS round: null for no curtain, a single card's HTML, or an
 // array of cards shown in sequence (Switch-Up's round 1 = rules intro then page type):
 //  • EVERY challenge — round 1 only, a "here's what you're doing" intro (challengeIntroHTML).
-//  • Wildcard — every later round, naming the active rule.
+//  • Wildcard — every round, naming the active rule.
 //  • On Tour! — every later round, announcing tonight's album.
 function roundCurtainHTML() {
   if (gameType === "adaptive") return adaptiveCurtainHTML();
@@ -6853,12 +6860,12 @@ function roundCurtainHTML() {
     // also says whether it wants a title or a lyric (always a title here — round 1 is a
     // gentle open). A queue the curtain player shows in sequence.
     if (c.rule === "switchup") return [intro, switchPageCardHTML()];
+    // Wildcard: follow the rules intro with the rule card, so the very first page names
+    // the rule it's playing by instead of leaving it to the margin banner alone.
+    if (c.rule === "wildcard" && roundWildcard) return [intro, wildcardPageCardHTML()];
     return intro;
   }
-  if (c.rule === "wildcard" && roundWildcard) {
-    return curtainCardHTML({ kicker: `page ${round} · wildcard`, tag: "the rule",
-      headline: roundWildcard.label });
-  }
+  if (c.rule === "wildcard" && roundWildcard) return wildcardPageCardHTML();
   // Switch-Up — every page flashes whether it wants a title or a sung lyric line.
   if (c.rule === "switchup") return switchPageCardHTML();
   // On Tour! — every page announces tonight's album (the only acceptable source).
