@@ -42,3 +42,5 @@ My goals for this project are to make it effortlessly and extensively customisab
 If the game doesn’t seem like it’s in a finished state right now, that’s because it isn’t. We’re getting there. For now, thank you for reading, and you can play the game RIGHT NOW in its alpha stage at https://swiftassociation.com
 
 no its becky
+
+Verdict sounds from [Google’s Material Design sound kit](https://archive.org/details/material-design-sound-resources) (CC-BY 4.0); the page turn is a CC0 recording from freesound.
