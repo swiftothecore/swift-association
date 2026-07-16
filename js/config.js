@@ -568,6 +568,19 @@ export const TS_MILESTONES = [
     blurb: "July 9th, the date Speak Now can never quite stop remembering.", caption: "July 9th" },
 ];
 
+/* ---------- Lyric days (desk-calendar marginalia only) ----------
+   Days the songs themselves put a date on. Deliberately kept OUT of
+   TS_MILESTONES: that table is real release history, and it drives the
+   start-screen slip, the milestone sticky and the daily's album skew — none of
+   which should fire just because a lyric names a date. These only ever mark up
+   the desk calendar (js/calendar.js). `album` keys into ALBUM_COLORS the same
+   way, so each mark wears its song's era.
+   ⚠ Verify every date before editing — fans catch a wrong one instantly. */
+export const TS_LORE_DAYS = [
+  { md: "07-09", kind: "lore", title: "Last Kiss",       album: "Speak Now" },
+  { md: "04-29", kind: "lore", title: "High Infidelity", album: "Midnights" },
+];
+
 /* ---------- Album colours (left-rule tint + tag on lyric cards) ---------- */
 // The 12 studio albums (explicit so future pseudo-album groups — singles, holiday,
 // features — don't dilute album-scoped achievements like The Eras Tour / Branch Out).

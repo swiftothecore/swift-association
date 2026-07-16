@@ -136,14 +136,30 @@ export function initDev(api) {
         btn("all", () => api.sound.all()),
         btn("state", () => toast("audio: " + api.sound.state())))));
 
+  // ---- Date ------------------------------------------------------------------
+  // Pretend it's another day. One override behind every dated surface at once — the
+  // daily gate and seed, the anniversary slip, the milestone sticky and the desk
+  // calendar — so they can never disagree. Session-only: reload and it's really today
+  // again. "jump" lists every day the calendar marks (releases, her birthday, the
+  // lyric days), which is the fast way to check a mark landed on the right square.
+  const showDate = (d) => { dateInput.value = d; toast("date → " + d); };
+  // Applies as soon as the picker commits a date (change, not keystroke), so choosing
+  // a date just works; "set" stays for typing straight into the field.
+  const dateInput = mk("input", { type: "date", class: "dv-text", style: "width:124px",
+    onchange: () => showDate(api.date.set(dateInput.value)) });
+  const markSel = select(api.date.marked(), (m) => m.key, (m) => m.label);
+  body.append(section("date",
+    row(dateInput, btn("set", () => showDate(api.date.set(dateInput.value))),
+        btn("-1 day", () => showDate(api.date.shift(-1))),
+        btn("+1 day", () => showDate(api.date.shift(1))),
+        btn("live", () => { const d = api.date.clear(); dateInput.value = ""; toast("date → live (" + d + ")"); })),
+    row(markSel, btn("jump", () => showDate(api.date.set(markSel.value))))));
+
   // ---- Daily -----------------------------------------------------------------
-  const dateInput = mk("input", { type: "date", class: "dv-text", style: "width:124px" });
   const stCur = num(5), stBest = num(9);
   body.append(section("daily",
     row(btn("reset today (replay)", () => { api.daily.resetToday(); toast("today's daily cleared"); }),
         btn("clear in-progress", () => { api.daily.clearProgress(); toast(api.daily.hasProgress() ? "still in progress" : "in-progress cleared"); })),
-    row(dateInput, btn("set date", () => { api.daily.setDate(dateInput.value); toast("date → " + (dateInput.value || "live")); }),
-        btn("clear", () => { api.daily.setDate(null); dateInput.value = ""; toast("date → live"); })),
     row("streak cur", stCur, "best", stBest, btn("set", () => { api.daily.setStreak(+stCur.value, +stBest.value); toast("streak set"); }))));
 
   // ---- Seeding ---------------------------------------------------------------

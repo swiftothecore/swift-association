@@ -43,7 +43,7 @@ if (location.pathname.endsWith('/index.html')) {
 <link rel="preload" href="fonts/courierprime-400-latin.woff2" as="font" type="font/woff2" crossorigin />
 <link rel="preload" href="fonts/courierprime-700-latin.woff2" as="font" type="font/woff2" crossorigin />
 <link rel="preload" href="fonts/courierprime-italic-latin.woff2" as="font" type="font/woff2" crossorigin />
-  <link rel="stylesheet" href="styles.css?v=43" />
+  <link rel="stylesheet" href="styles.css?v=44" />
 </head>
 <body data-era="gold">
 <!-- Hand-drawn wobble for the penned achievement charms. Referenced by .charm svg
@@ -136,11 +136,92 @@ if (location.pathname.endsWith('/index.html')) {
       </g>
     </svg>
   </div>
+  <!-- LEFT: the working desk calendar, up between the glasses and the mug.
+       A wire-bound month pad lying flat on the wood, seen from directly above
+       like every other prop, open to the REAL current month. The pad shows its
+       own history: the days already past are crossed off in graphite, today is
+       circled in red pen, and the 13th carries a quick gold highlighter swipe.
+       Only the static paper is drawn here — card, grain, lighting, punch
+       slots, coil, red divider rule and the lifted tear corner; everything the
+       date decides is built from `new Date()` by js/calendar.js.
+       Desktop-only, non-interactive. -->
+  <div class="desk-item di-calendar">
+    <svg viewBox="0 50 250 268" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="calPage" x1="0" y1="0" x2="0.25" y2="1"><stop offset="0" stop-color="#f9f3e2"/><stop offset="0.55" stop-color="#f3ead4"/><stop offset="1" stop-color="#e6dabd"/></linearGradient>
+        <linearGradient id="calWire" x1="0" y1="0" x2="1" y2="0.4"><stop offset="0" stop-color="#efece2"/><stop offset="0.45" stop-color="#a9a294"/><stop offset="1" stop-color="#6f695c"/></linearGradient>
+        <linearGradient id="calCurl" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#efe5ca"/><stop offset="0.6" stop-color="#f9f4e4"/><stop offset="1" stop-color="#d8caa8"/></linearGradient>
+        <radialGradient id="calSheen" cx="0.3" cy="0.22" r="1.05">
+          <stop offset="0" stop-color="#ffffff" stop-opacity="0.3"/>
+          <stop offset="0.55" stop-color="#ffffff" stop-opacity="0"/>
+          <stop offset="1" stop-color="#6d5a38" stop-opacity="0.15"/>
+        </radialGradient>
+        <filter id="calGrain" x="0" y="0" width="100%" height="100%">
+          <feTurbulence type="fractalNoise" baseFrequency="0.55" numOctaves="2" seed="11"/>
+          <feColorMatrix type="matrix" values="0 0 0 0 0.42  0 0 0 0 0.35  0 0 0 0 0.22  0 0 0 0.55 0"/>
+        </filter>
+        <!-- The binding, in the three pieces you can actually see of a real coil
+             from directly above. #calLoop is the whole ring, but it is drawn
+             BEHIND the pad, so the paper cuts it at the top edge and only the
+             arc wrapping over the edge survives. Of the two wire ends that reach
+             the edge, one dives under the pad (and simply stops there) and the
+             other carries on across the paper as #calStub, into its #calSlot.
+             All three share the loop's centre, so a single x/y places them. -->
+        <g id="calSlot"><rect x="-3.6" y="0" width="7.2" height="3.8" rx="1.9" fill="#43351e" opacity="0.72"/></g>
+        <g id="calLoop">
+          <ellipse rx="3.4" ry="11.4" transform="rotate(13)" fill="none" stroke="url(#calWire)" stroke-width="2.4"/>
+          <path d="M-5 -6.6 C-4.4 -10.8 -0.6 -12.2 1.8 -10.2" fill="none" stroke="#f8f5ec" stroke-width="0.9" opacity="0.55"/>
+        </g>
+        <!-- the wire on the page: its shadow first (the coil is raised off the
+             paper, lit from the upper left like every other prop), then the
+             wire, ending inside the slot as it turns down through it -->
+        <g id="calStub">
+          <path d="M2.5 6 Q2.2 9.8 -1.5 11.2" fill="none" stroke="#46341a" stroke-opacity="0.2" stroke-width="3" stroke-linecap="round"/>
+          <path d="M1.7 6 Q1.4 9.7 -2.3 11.1" fill="none" stroke="url(#calWire)" stroke-width="2.4" stroke-linecap="round"/>
+        </g>
+      </defs>
+      <!-- The coil, threaded: drawn before the paper so the pad hides the half
+           of every loop that passes beneath it. -->
+      <g class="cal-coil">
+        <use href="#calLoop" x="41" y="70"/><use href="#calLoop" x="62" y="70"/><use href="#calLoop" x="83" y="70"/><use href="#calLoop" x="104" y="70"/><use href="#calLoop" x="125" y="70"/><use href="#calLoop" x="146" y="70"/><use href="#calLoop" x="167" y="70"/><use href="#calLoop" x="188" y="70"/><use href="#calLoop" x="209" y="70"/>
+      </g>
+      <!-- the pad, a few sheets thick: spare months peeking out low-right -->
+      <rect x="25" y="80" width="208" height="212" rx="6" fill="#cfc2a2"/>
+      <rect x="23" y="78" width="208" height="212" rx="6" fill="#ddd1b2"/>
+      <rect x="21" y="76" width="208" height="212" rx="6" fill="url(#calPage)" stroke="#c3b696" stroke-width="1"/>
+      <rect class="cal-grain" x="21" y="76" width="208" height="212" rx="6" filter="url(#calGrain)"/>
+      <rect x="21" y="76" width="208" height="212" rx="6" fill="url(#calSheen)"/>
+      <!-- red pen divider under the month title, with a hand wobble -->
+      <path class="cal-rule" d="M34 116 Q125 113.8 216 116"/>
+      <!-- where the binding meets the page: the punched slots, then the length
+           of wire lying on the paper that turns down into each one -->
+      <g class="cal-slots">
+        <use href="#calSlot" x="41" y="79"/><use href="#calSlot" x="62" y="79"/><use href="#calSlot" x="83" y="79"/><use href="#calSlot" x="104" y="79"/><use href="#calSlot" x="125" y="79"/><use href="#calSlot" x="146" y="79"/><use href="#calSlot" x="167" y="79"/><use href="#calSlot" x="188" y="79"/><use href="#calSlot" x="209" y="79"/>
+      </g>
+      <g class="cal-stubs">
+        <use href="#calStub" x="41" y="70"/><use href="#calStub" x="62" y="70"/><use href="#calStub" x="83" y="70"/><use href="#calStub" x="104" y="70"/><use href="#calStub" x="125" y="70"/><use href="#calStub" x="146" y="70"/><use href="#calStub" x="167" y="70"/><use href="#calStub" x="188" y="70"/><use href="#calStub" x="209" y="70"/>
+      </g>
+      <!-- everything below is drawn from the real date by js/calendar.js -->
+      <text class="cal-title" x="125" y="105" text-anchor="middle"></text>
+      <g class="cal-week"></g>
+      <g class="cal-hl"></g>
+      <g class="cal-marks"></g>
+      <g class="cal-days"></g>
+      <g class="cal-strikes"></g>
+      <g class="cal-today"></g>
+      <!-- the sheet's bottom-right corner lifting off the pad, ready to tear:
+           the under-month shows beneath, a soft shadow along the fold, then
+           the curled corner's pale back catching the light -->
+      <path d="M211 288 L229 270 L229 282 Q229 288 223 288 Z" fill="#ddd1b2"/>
+      <path d="M211.5 287.5 L228.5 270.5" fill="none" stroke="#46341a" stroke-opacity="0.24" stroke-width="2.2" stroke-linecap="round"/>
+      <path d="M211 288 L229 270 Q220.5 268.6 212.8 270.5 Q210.2 278.6 211 288 Z" fill="url(#calCurl)" stroke="#c9ba97" stroke-width="0.8" stroke-linejoin="round"/>
+    </svg>
+  </div>
   <!-- LEFT: hexagonal pencil from above, set down whole beside the page:
        drawn at its real skinny proportions (barrel ~7mm at desk scale) so the
        CSS transform only rotates and flips it, never squashes it. Three shaded
        facets, brass ferrule, worn eraser, freshly sharpened tip pointing down
-       at the sharpener it just came out of -->
+       the page as if just set aside mid-line -->
   <div class="desk-item di-pencil">
     <svg viewBox="0 0 520 32" xmlns="http://www.w3.org/2000/svg">
       <defs>
@@ -172,57 +253,6 @@ if (location.pathname.endsWith('/index.html')) {
       <path d="M497 13.5 L516 16 L497 18.5 Z" fill="#4d4d4d"/>
       <path d="M497 16 L516 16 L497 18.5 Z" fill="#2b2b2b"/>
       <circle cx="511" cy="15.6" r="0.6" fill="#a8a8a8"/>
-    </svg>
-  </div>
-  <!-- LEFT: brass wedge sharpener resting below the pencil tip, seen from
-       above with its bore end toward the pencil; one loose spiral shaving
-       (open turns, painted rim on its edge, graphite-stained tip) lies
-       beside it, with crumbs fallen from the bore and one broken-off chip -->
-  <div class="desk-item di-sharpener">
-    <svg viewBox="0 0 96 74" xmlns="http://www.w3.org/2000/svg">
-      <defs>
-        <linearGradient id="shBrass" x1="0" y1="0" x2="0.85" y2="1"><stop offset="0" stop-color="#ecc87e"/><stop offset="0.5" stop-color="#cfa050"/><stop offset="1" stop-color="#a1742f"/></linearGradient>
-        <linearGradient id="shSteel" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f0ede3"/><stop offset="0.5" stop-color="#b7b1a2"/><stop offset="1" stop-color="#8a8374"/></linearGradient>
-        <radialGradient id="shScrew" cx="0.35" cy="0.3" r="0.9"><stop offset="0" stop-color="#cfc9ba"/><stop offset="1" stop-color="#6f695c"/></radialGradient>
-        <!-- shaving spine: half-turn arcs of shrinking radius so the curl
-             stays open between turns instead of closing into a solid roll -->
-        <path id="shCurl" d="M62 54 A14 14 0 0 1 48 40 A19 19 0 0 1 86 40 A15 15 0 0 1 56 40 A11.5 11.5 0 0 1 79 40 A8 8 0 0 1 63 40 A5 5 0 0 1 73 40"/>
-      </defs>
-      <!-- the sharpener block -->
-      <g transform="translate(24 33) rotate(-16)">
-        <rect x="-19" y="-11" width="38" height="22" rx="2.5" fill="url(#shBrass)" stroke="#7c5a22" stroke-width="1"/>
-        <path d="M-15 -8.2 Q-1 -9.6 10 -8" fill="none" stroke="#f4d896" stroke-width="1.4" stroke-linecap="round" opacity="0.85"/>
-        <!-- throat slot the shavings curl out of -->
-        <path d="M-13 -2.8 L10 -5.6 L10 -3.1 L-13 -0.3 Z" fill="#2e2410" opacity="0.92"/>
-        <!-- steel blade screwed flat over the slot -->
-        <path d="M-14 1 L11 -1.9 L11 5.3 L-14 8.2 Z" fill="url(#shSteel)" stroke="#77705f" stroke-width="0.7"/>
-        <path d="M-13.5 1.6 L10.5 -1.3" fill="none" stroke="#fbf8ee" stroke-width="0.9" opacity="0.8"/>
-        <circle cx="-1.5" cy="3.4" r="3" fill="url(#shScrew)" stroke="#5f5949" stroke-width="0.6"/>
-        <path d="M-3.6 2 L0.6 4.9" stroke="#3f3a2f" stroke-width="1.1" stroke-linecap="round"/>
-        <!-- pencil-end face with the conical bore centred on it -->
-        <path d="M12.5 -11 H16.5 Q19 -11 19 -8.5 V8.5 Q19 11 16.5 11 H12.5 Z" fill="#9a7030" opacity="0.85"/>
-        <path d="M12.5 -10.5 V10.5" stroke="#7c5a22" stroke-width="0.7" opacity="0.6"/>
-        <ellipse cx="15.8" cy="0" rx="3.4" ry="4.6" fill="#5b431c"/>
-        <ellipse cx="15.9" cy="0" rx="2.5" ry="3.6" fill="#241a08"/>
-        <ellipse cx="16" cy="0" rx="1.3" ry="2.1" fill="#0d0903"/>
-      </g>
-      <!-- graphite crumbs and a faint smudge fallen from the bore -->
-      <ellipse cx="43" cy="33" rx="5" ry="2.8" fill="#3b3428" opacity="0.12"/>
-      <g fill="#4a423a"><circle cx="41" cy="31.6" r="0.9"/><circle cx="44.8" cy="29.6" r="0.65"/><circle cx="43.4" cy="35" r="0.8"/></g>
-      <g fill="#2f2a24"><circle cx="45.5" cy="33.4" r="0.55"/><circle cx="39.2" cy="34.6" r="0.5"/></g>
-      <!-- one long spiral shaving: thin wood ribbon, painted rim along its
-           lower edge, a shade line inside the curl, graphite-stained tip -->
-      <g>
-        <use href="#shCurl" y="1.8" fill="none" stroke="#d99f28" stroke-width="5" stroke-linecap="round"/>
-        <use href="#shCurl" fill="none" stroke="#e8cfa0" stroke-width="3.6" stroke-linecap="round"/>
-        <use href="#shCurl" y="0.8" fill="none" stroke="#c9a672" stroke-width="1" stroke-linecap="round" opacity="0.7"/>
-        <use href="#shCurl" y="-0.9" fill="none" stroke="#f7ead0" stroke-width="1.2" stroke-linecap="round" opacity="0.9"/>
-        <path d="M68 35 A5 5 0 0 1 73 40" fill="none" stroke="#6a5a45" stroke-width="3.6" opacity="0.8"/>
-        <circle cx="73" cy="39.4" r="1" fill="#3b3b3b"/>
-      </g>
-      <!-- a thin broken-off chip of shaving below the block -->
-      <path d="M28 64.2 A6.5 6.5 0 0 1 39 61.7" fill="none" stroke="#d99f28" stroke-width="3.4" stroke-linecap="round"/>
-      <path d="M28 63 A6.5 6.5 0 0 1 39 60.5" fill="none" stroke="#e8cfa0" stroke-width="2.4" stroke-linecap="round"/>
     </svg>
   </div>
   <!-- RIGHT: bracelet-making flat lay: two floss skeins seen from above,
@@ -1058,6 +1088,7 @@ if (location.pathname.endsWith('/index.html')) {
 
 <script type="module" src="js/app.js"></script>
 <script src="js/scatter.js" defer></script>
+<script type="module" src="js/calendar.js"></script>
 <script>
   // Register the service worker (offline + installable). Relative path keeps the
   // scope on the project subpath; failures are non-fatal.

@@ -29,6 +29,9 @@ const ASSETS = [
   "js/bracelet.js",
   "js/storage.js",
   "js/sound.js",
+  // The desk calendar draws every date itself; index.html only holds its blank
+  // card. Precached so a fresh offline install can't render a dateless pad.
+  "js/calendar.js",
   // The sound palette (opt-in sfx; see js/sound.js for sources + licences).
   "sounds/correct.mp3",
   "sounds/wrong.mp3",

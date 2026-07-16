@@ -3,7 +3,7 @@ import { $, escapeRegExp, escapeHtml, prefersReducedMotion, shuffle, chance, nor
 import {
   TOTAL_ROUNDS, RECENT_WINDOW, DAILY_ALBUM_SKEW, DIFF_KEY, DEFAULT_SETTINGS,
   MODES, MODE_ORDER, MODE_COLORS, DIFFICULTY_LADDER, MODALITY_MODES,
-  ERAS, TENDER_ERAS, FINALE_ERAS, ALBUM_ERA, TS_MILESTONES,
+  ERAS, TENDER_ERAS, FINALE_ERAS, ALBUM_ERA, TS_MILESTONES, TS_LORE_DAYS,
   ALBUM_COLORS, CB_ALBUM_COLORS, STUDIO_ALBUMS, TITLE_ALIASES,
   ACHIEVEMENTS, ACH_ICONS, ACH_BY_ID, ACH_GROUPS, ACH_GROUP_COLORS, ACH_GROUP_OF,
   CHALLENGES, CHALLENGE_BY_ID, CHALLENGE_ORDER, CHALLENGE_SEALS,
@@ -4319,6 +4319,15 @@ function milestoneColor(album) {
 // tints the daily challenge.
 function dayNote(dateKey) {
   return anniversaryNote(dateKey, TS_MILESTONES) || thirteenNote(dateKey);
+}
+// Every surface that reads today's date, re-rendered together. Called whenever the dev
+// date override moves (see buildDevApi's `date`), so the page can never show one day in
+// the margin and another on the desk. The desk calendar is an optional decorative prop —
+// desktop-only, and its module may not have run — so it's refreshed only if it's there.
+function refreshDateSurfaces() {
+  renderAnniversaryNote();
+  renderMilestoneSticky();
+  window.deskCalendar?.refresh();
 }
 // Dated marginalia at the top of today's page: on a real Taylor milestone (an album
 // release or her birthday) a torn slip is taped to the page, the album name tinted to its
@@ -10971,12 +10980,40 @@ function buildDevApi() {
       all: (gapMs = 800) => sfx.names.forEach((n, i) => setTimeout(() => sfx.play(n, true), i * gapMs)),
       state: () => sfx.state(),
     },
+    // The date itself. One override (window.__devDate) behind every dated surface: the
+    // daily gate and seed, the anniversary slip, the milestone sticky and the desk
+    // calendar. Session-only by design — it lives on window, never in storage, so a
+    // reload always returns to the real date and no cheat can strand the daily.
+    date: {
+      get: () => todayKey(),
+      live: () => !window.__devDate,
+      set: (key) => { window.__devDate = key || null; refreshDateSurfaces(); return todayKey(); },
+      // Step a day at a time from wherever we are — the quickest way to watch the
+      // calendar cross off days and move its pen loop.
+      shift: (days) => {
+        const d = new Date(todayKey() + "T00:00:00");
+        d.setDate(d.getDate() + (days | 0));
+        window.__devDate = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+        refreshDateSurfaces();
+        return window.__devDate;
+      },
+      clear: () => { window.__devDate = null; refreshDateSurfaces(); return todayKey(); },
+      // Every day the calendar marks, as this year's date keys: the real milestones
+      // plus the lyric days, ordered through the year.
+      marked: () => {
+        const yr = todayKey().slice(0, 4);
+        const tag = { birthday: "birthday", album: "album", tv: "TV", lore: "lyric" };
+        return [...TS_MILESTONES, ...TS_LORE_DAYS]
+          .map((m) => ({ key: `${yr}-${m.md}`, label: `${m.md}  ${m.title} (${tag[m.kind]})` }))
+          .sort((a, b) => a.key.localeCompare(b.key) || a.label.localeCompare(b.label));
+      },
+    },
     // Daily
     daily: {
       resetToday: () => clearDailyResult(todayKey()),
       clearProgress: () => clearDailyProgress(todayKey()),   // drop the in-progress resume record
       hasProgress: () => !!loadDailyProgress(todayKey()),
-      setDate: (d) => { window.__devDate = d || null; },
+      setDate: (d) => { window.__devDate = d || null; refreshDateSurfaces(); },
       setStreak: (current, best, lastPlayed) =>
         saveDailyStreak({ current: current | 0, best: Math.max(best | 0, current | 0),
           lastPlayed: lastPlayed || todayKey() }),
@@ -10990,11 +11027,10 @@ function buildDevApi() {
       },
       preview: (dateKey) => {
         window.__devDate = dateKey || todayKey();
-        renderAnniversaryNote();
-        renderMilestoneSticky();
+        refreshDateSurfaces();
         return anniversaryNote(window.__devDate, TS_MILESTONES);
       },
-      clear: () => { window.__devDate = null; renderAnniversaryNote(); renderMilestoneSticky(); },
+      clear: () => { window.__devDate = null; refreshDateSurfaces(); },
       // Preview the album-anniversary daily skew for a date: the album today leans toward and
       // its most-common words (top of the weighted pool). null album → no skew that day.
       dailyPool: (dateKey) => {
@@ -11027,8 +11063,7 @@ function buildDevApi() {
       },
       preview: (dateKey) => {
         window.__devDate = dateKey || todayKey();
-        renderAnniversaryNote();
-        renderMilestoneSticky();
+        refreshDateSurfaces();
         return dayNote(window.__devDate);
       },
       next: () => {
@@ -11040,7 +11075,7 @@ function buildDevApi() {
         }
         return null;
       },
-      clear: () => { window.__devDate = null; renderAnniversaryNote(); renderMilestoneSticky(); },
+      clear: () => { window.__devDate = null; refreshDateSurfaces(); },
     },
     // Skills & Mastery
     mastery: {
