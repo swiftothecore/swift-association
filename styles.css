@@ -1507,24 +1507,60 @@
     text-align: center; padding: 22px 10px 6px; max-width: 42ch; margin: 0 auto;
   }
 
-  /* ---------- Custom start-row — the active preset summary + Change ---------- */
+  /* ---------- Custom start-row — the active preset summary + Change ----------
+     The mode you wrote yourself, read back to you on an index card laid on the notebook:
+     its own paper stock, its own faint rules, a hard offset shadow and a slight lie to the
+     page. The one red on the card is the header rule under the name, which is where an
+     index card's rule genuinely lives — so Custom's brick-rust hue gets a home instead of
+     impersonating the page's margin rule with a stray bar down the left edge. */
   .custom-start { margin-top: 2px; }
   .custom-active {
-    display: flex; flex-direction: column; gap: 3px;
-    border: 1px solid rgba(43,39,34,0.16); border-left: 3px solid rgb(187,86,64);
-    border-radius: 2px; background: rgba(187,86,64,0.05);
-    padding: 11px 14px; margin-bottom: 10px;
+    position: relative;
+    display: flex; flex-direction: column; gap: 7px;
+    padding: 12px 15px 13px; margin-bottom: 12px;
+    border: 1px solid rgba(43,39,34,0.22); border-radius: 2px;
+    /* card stock, deliberately brighter than the notebook page it lies on — that contrast is
+       the whole reason it reads as a separate object rather than a box drawn on the page */
+    background-color: #fbf6e9;
+    /* index-card ruling: faint horizontals, kept well under the type so it reads as stock */
+    background-image: repeating-linear-gradient(
+      to bottom, transparent 0 21px, rgba(43,39,34,0.07) 21px 22px);
+    box-shadow: 2.5px 3px 0 rgba(43,39,34,0.16);
+    transform: rotate(-0.35deg);
   }
-  .custom-active-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
-  .custom-active-name { font-family: var(--hand); font-size: 24px; line-height: 1.1; color: var(--ink); }
+  .custom-active-head {
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    padding-bottom: 8px; border-bottom: 1.5px solid rgba(187,86,64,0.55);
+  }
+  .custom-active-name { font-family: var(--hand); font-size: 25px; line-height: 1.1; color: var(--ink); }
+
+  /* Change joins the patterned button family as Custom's small sibling: the same brick-rust
+     wash and vertical ledger ruling as #backToCustom on the results screen, and the levers
+     glyph off Custom's own tab in place of the gear. #backToCustom can carry that ruling at
+     full strength because it's a full-width button with big type; here the label is 11px and
+     the stripes would cut straight through the letterforms, so the mark runs at roughly a
+     third of the ink and a wider gauge. Same pattern, quieter voice, legible label. */
   .custom-change-btn {
-    flex-shrink: 0; font-family: var(--type); font-size: 11px; letter-spacing: 0.6px; color: var(--ink-soft);
-    background: transparent; border: 1px solid rgba(43,39,34,0.3); border-radius: 2px;
-    padding: 4px 12px; cursor: pointer; transition: color 0.15s, border-color 0.15s, background 0.15s;
+    flex-shrink: 0; display: inline-flex; align-items: center; gap: 6px;
+    --btn-wash: rgba(187, 86, 64, 0.26);
+    --btn-mark: rgba(150, 60, 44, 0.14);
+    font-family: var(--type); font-size: 11px; letter-spacing: 0.8px; color: var(--ink);
+    background-color: var(--btn-wash);
+    background-image: repeating-linear-gradient(90deg, var(--btn-mark) 0 1px, transparent 1px 11px);
+    border: 1.5px solid rgba(43,39,34,0.42); border-radius: 2px;
+    padding: 5px 13px; cursor: pointer;
+    box-shadow: 2px 2px 0 rgba(43,39,34,0.15);
+    transform: rotate(0.5deg);
+    transition: --btn-wash 0.22s ease, --btn-mark 0.22s ease, color 0.2s ease, transform 0.12s, box-shadow 0.2s;
   }
-  .custom-change-btn::before { content: "\2699"; margin-right: 6px; }
-  .custom-change-btn:hover, .custom-change-btn:focus-visible { color: var(--paper); border-color: var(--ink); background: var(--ink); }
-  .custom-active-levers { font-family: var(--type); font-size: 11.5px; line-height: 1.45; color: #5a5042; }
+  .custom-change-btn:hover, .custom-change-btn:focus-visible {
+    color: var(--paper); border-color: var(--ink);
+    --btn-wash: #b5563f;
+    --btn-mark: rgba(245, 239, 225, 0.16);
+  }
+  .custom-change-btn .type-glyph { width: 15px; height: 15px; margin-right: 0; vertical-align: 0; }
+  .custom-change-btn .type-glyph--levers circle { fill: none; }
+  .custom-active-levers { font-family: var(--type); font-size: 11.5px; line-height: 1.5; color: #5a5042; }
 
   /* ---------- Custom "Change" modal (reuses the settings-modal chrome) ---------- */
   .cm-foot { display: flex; justify-content: flex-end; margin-top: 8px; padding-top: 13px; border-top: 1px solid rgba(43,39,34,0.1); }

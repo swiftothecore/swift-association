@@ -3973,7 +3973,7 @@ function renderCustomRow() {
     `<div class="custom-active">` +
       `<div class="custom-active-head">` +
         `<span class="custom-active-name">${escapeHtml(active.name || "Custom")}</span>` +
-        `<button type="button" id="customChangeBtn" class="custom-change-btn">Change</button>` +
+        `<button type="button" id="customChangeBtn" class="custom-change-btn">${TYPE_GLYPHS.custom}Change</button>` +
       `</div>` +
       `<span class="custom-active-levers">${escapeHtml(customLeverSummary(activeMode))}</span>` +
     `</div>`;
