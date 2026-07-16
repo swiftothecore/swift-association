@@ -9744,7 +9744,7 @@ function renderSettingsBody() {
     ) +
     setSection("Sound",
       setToggleHTML("sound", "Sound effects", "") +
-      `<p class="set-note">three little desk sounds: a page turn, a chime for a hit, a soft thud for a miss. more to come.</p>`
+      `<p class="set-note">three little desk sounds: a real page turn, a small chime for a hit, a soft note for a miss. more to come.</p>`
     ) +
     setSection("Data",
       `<p class="set-note">Your stats, achievements, and records live in this browser’s storage. That’s safe day-to-day, but not fool-proof — clearing your browser data, switching devices, or some private-browsing modes can wipe it. If you’d hate to lose your progress, export a backup now and then.</p>` +
@@ -10932,7 +10932,7 @@ function buildDevApi() {
     // Timer
     timer: { freeze: devTimerFreeze, unfreeze: devTimerUnfreeze, add: devTimerAdd,
              set: devTimerSet, disable: devTimerDisable },
-    // Sound (phase 1 palette): play() forces the effect even while the setting
+    // Sound (sample palette): play() forces the effect even while the setting
     // is off, so the palette can be auditioned; all() walks every sound in turn.
     sound: {
       names: () => sfx.names.slice(),

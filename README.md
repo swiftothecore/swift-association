@@ -23,7 +23,7 @@ Standout features:
 - Album focus mode so you can focus on ONE album only
 - Study mode so you can improve
 - A content-packed skills and mastery system
-- Opt-in sound effects, synthesized right in the browser: a page turn, a chime for a hit, a soft thud for a miss (with more sounds on the way)
+- Opt-in sound effects, real recordings picked by ear: a paper page turn, a small chime for a hit, a soft note for a miss (with more sounds on the way)
 - A companion lyric searcher, Swift To The Lyric, for searching every line of every song (work in progress but usable)
 - Installable as a phone or desktop app and works offline once loaded
 
@@ -40,3 +40,5 @@ With many features in the works as we speak:
 My goals for this project are to make it effortlessly and extensively customisable. I want it to be fun and challenging. I want it to be as good as it can be for as many people as possible, so I’m working on adding accessibility features, and I’m open to all feedback/suggestions.
 
 If the game doesn’t seem like it’s in a finished state right now, that’s because it isn’t. We’re getting there. For now, thank you for reading, and you can play the game RIGHT NOW in its alpha stage at https://swiftassociation.com
+
+Verdict sounds from [Google’s Material Design sound kit](https://archive.org/details/material-design-sound-resources) (CC-BY 4.0); the page turn is a CC0 recording from freesound.

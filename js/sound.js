@@ -1,15 +1,23 @@
 "use strict";
 
-/* Swift To The Song Association - sound design (phase 1).
+/* Swift To The Song Association - sound design (phase 2: real recordings).
  *
- * Every effect is synthesized with the Web Audio API the moment it plays:
- * no audio files, nothing extra for the service worker to cache, nothing to
- * license. The palette is stationery, not arcade: paper, felt, one small
- * metal charm.
+ * The palette is three short recordings, auditioned and picked by ear from
+ * ~50 candidates, trimmed and level-matched offline. They live in sounds/:
+ *   correct.mp3 - a small rising confirm (Material sound kit, CC-BY 4.0)
+ *   wrong.mp3   - its sibling, a soft descending no (same kit, CC-BY 4.0)
+ *   page.mp3    - a real paper page turn (freesound #630019, CC0)
+ * correct and wrong come from the same Material family on purpose: their
+ * relative balance (bright yes / softer no) is the kit's own, preserved when
+ * the files were level-matched. Keep the palette stationery, never arcade.
  *
  * The module holds no game state. app.js flips sfx.setEnabled() whenever the
  * sound setting changes and calls sfx.play(name) at the moments that should
  * sound; everything here stays inert while the setting is off.
+ *
+ * Buffers are fetched + decoded lazily and cached (as promises, so concurrent
+ * plays never double-fetch); enabling the setting pre-warms the whole palette
+ * so the first real verdict doesn't wait on a fetch.
  *
  * Browsers gate audio behind a user gesture. The AudioContext is created
  * lazily; if it comes up suspended (setting already on at page load, before
@@ -21,10 +29,19 @@
 let ctx = null;        // lazy AudioContext
 let master = null;     // one master gain over the whole palette
 let enabled = false;
-let noiseBuf = null;   // shared 1s white-noise buffer (paper + thud textures)
 let primeBound = false;
 
 const MASTER_LEVEL = 0.55;
+
+// The files peak around -6 dBFS already; per-sound gain is for palette
+// balance tweaks only, not level-matching (that is baked into the files).
+const SOUNDS = {
+  correct: { url: new URL("../sounds/correct.mp3", import.meta.url), gain: 1 },
+  wrong:   { url: new URL("../sounds/wrong.mp3", import.meta.url), gain: 1 },
+  page:    { url: new URL("../sounds/page.mp3", import.meta.url), gain: 1 },
+};
+
+const buffers = {}; // name -> Promise<AudioBuffer>
 
 function ensureCtx() {
   if (ctx) return ctx;
@@ -51,95 +68,57 @@ function bindPrime() {
   window.addEventListener("keydown", prime);
 }
 
-function noise(c) {
-  if (noiseBuf) return noiseBuf;
-  noiseBuf = c.createBuffer(1, c.sampleRate, c.sampleRate);
-  const d = noiseBuf.getChannelData(0);
-  for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
-  return noiseBuf;
+function loadBuffer(name) {
+  if (buffers[name]) return buffers[name];
+  const c = ensureCtx();
+  if (!c) return Promise.reject(new Error("no AudioContext"));
+  buffers[name] = fetch(SOUNDS[name].url)
+    .then((res) => {
+      if (!res.ok) throw new Error(`sound fetch ${res.status}`);
+      return res.arrayBuffer();
+    })
+    .then((data) => c.decodeAudioData(data))
+    .catch((err) => {
+      delete buffers[name]; // a failed fetch/decode retries on the next play
+      throw err;
+    });
+  return buffers[name];
 }
-
-// Percussive gain envelope: quick ramp to peak, exponential tail to silence.
-function env(c, t0, peak, attack, decay) {
-  const g = c.createGain();
-  g.gain.setValueAtTime(0.0001, t0);
-  g.gain.exponentialRampToValueAtTime(Math.max(peak, 0.002), t0 + attack);
-  g.gain.exponentialRampToValueAtTime(0.001, t0 + attack + decay);
-  return g;
-}
-
-// One decaying sine partial (the chime is a tiny chord of these).
-function strike(c, t0, out, freq, peak, decay, delay = 0, detune = 0) {
-  const o = c.createOscillator();
-  o.type = "sine";
-  o.frequency.value = freq;
-  o.detune.value = detune;
-  const g = env(c, t0 + delay, peak, 0.006, decay);
-  o.connect(g); g.connect(out);
-  o.start(t0 + delay);
-  o.stop(t0 + delay + decay + 0.1);
-}
-
-/* ---------- the palette ---------- */
-
-const RECIPES = {
-  // A small metal charm, struck once: warm fundamental, a faint high shimmer
-  // arriving a beat behind the strike, and a low body so it does not read thin.
-  correct(c, t0, out) {
-    strike(c, t0, out, 1174.7, 0.20, 0.50, 0, 3);     // D6, the charm itself
-    strike(c, t0, out, 1760.0, 0.06, 0.32, 0.015);    // A6 shimmer
-    strike(c, t0, out, 587.3, 0.05, 0.22);            // D5 body
-  },
-
-  // A fingertip on the desk: a soft pitch drop under a felt-muffled tap.
-  // Gentle on purpose; a miss should never sting.
-  wrong(c, t0, out) {
-    const o = c.createOscillator();
-    o.type = "sine";
-    o.frequency.setValueAtTime(165, t0);
-    o.frequency.exponentialRampToValueAtTime(88, t0 + 0.16);
-    const g = env(c, t0, 0.35, 0.004, 0.22);
-    o.connect(g); g.connect(out);
-    o.start(t0); o.stop(t0 + 0.35);
-    const tap = c.createBufferSource(); tap.buffer = noise(c);
-    const lp = c.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.value = 420;
-    const tg = env(c, t0, 0.12, 0.002, 0.07);
-    tap.connect(lp); lp.connect(tg); tg.connect(out);
-    tap.start(t0); tap.stop(t0 + 0.12);
-  },
-
-  // A page turning: white noise squeezed through a bandpass that sweeps up
-  // and settles back down, like air moving over paper.
-  page(c, t0, out) {
-    const src = c.createBufferSource(); src.buffer = noise(c);
-    const bp = c.createBiquadFilter(); bp.type = "bandpass"; bp.Q.value = 0.85;
-    bp.frequency.setValueAtTime(350, t0);
-    bp.frequency.exponentialRampToValueAtTime(1900, t0 + 0.11);
-    bp.frequency.exponentialRampToValueAtTime(600, t0 + 0.30);
-    const g = env(c, t0, 0.40, 0.10, 0.21);
-    src.connect(bp); bp.connect(g); g.connect(out);
-    src.start(t0); src.stop(t0 + 0.4);
-  },
-};
 
 export const sfx = {
-  names: Object.keys(RECIPES),
+  names: Object.keys(SOUNDS),
   // Gate follows settings.sound (applySettings). Arming also binds the gesture
-  // primer so a context created before any tap wakes on the first one.
+  // primer and pre-warms the decoded palette so the first play is instant.
   setEnabled(on) {
     enabled = !!on;
-    if (enabled) bindPrime();
+    if (!enabled) return;
+    bindPrime();
+    if (ensureCtx()) for (const n of Object.keys(SOUNDS)) loadBuffer(n).catch(() => {});
   },
   // force=true bypasses the setting (the dev panel's audition buttons).
-  // Returns whether the sound was scheduled.
+  // Returns whether the sound was scheduled (it plays as soon as its buffer
+  // is decoded, which after the pre-warm means immediately).
   play(name, force = false) {
     if (!enabled && !force) return false;
-    const recipe = RECIPES[name];
-    if (!recipe) return false;
+    const spec = SOUNDS[name];
+    if (!spec) return false;
     const c = ensureCtx();
     if (!c) return false;
     if (c.state === "suspended") c.resume().catch(() => {});
-    recipe(c, c.currentTime, master);
+    loadBuffer(name)
+      .then((buf) => {
+        const src = c.createBufferSource();
+        src.buffer = buf;
+        if (spec.gain !== 1) {
+          const g = c.createGain();
+          g.gain.value = spec.gain;
+          src.connect(g); g.connect(master);
+        } else {
+          src.connect(master);
+        }
+        src.start();
+      })
+      .catch(() => {});
     return true;
   },
   // Introspection for the dev panel: "uncreated" until the first play/prime.
