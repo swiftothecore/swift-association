@@ -6882,6 +6882,9 @@ function challengeIntroHTML(c) {
 }
 
 let curtainTimers = [];
+// True while a curtain is over the board (including its lift animation). The curtain is
+// captive: the round beneath it must not answer to the keyboard.
+function curtainUp() { return !!document.querySelector(".chall-curtain"); }
 // Tear down any live challenge curtain + its timers (called on quit/reset so an abandoned
 // run never leaves the curtain up or fires a stale onDone).
 function clearCurtain() {
@@ -6931,6 +6934,9 @@ function beginRoundClock() {
   if (!Array.isArray(queue)) queue = [queue];
   showTimerFull();   // pin the clock at a paused full bar beneath the curtain — no leftover time shows through the lift
   const onDone = () => {
+    // A button-gated card took the focus off the answer line; hand it back now the word is up.
+    const input = $("songInput");
+    if (!input.disabled) input.focus();
     beginTimedRoundEffects();
     if (isWildcardRound() && roundWildcard.display) roundWildcard.display(wrap);
     startTimer();
@@ -6973,6 +6979,15 @@ function beginRoundClock() {
       // notice) wait for an explicit tap — the whole-overlay tap is intentionally NOT wired
       // so a stray click can't skip the notice unread.
       nextBtn.addEventListener("click", next);
+      // Take the focus off the answer line and put it on the button, so Enter/Space
+      // acknowledges the card natively instead of submitting an answer behind it. Safe to
+      // do synchronously: setupRound (which focuses the input) has already run by here,
+      // on both the instant and the page-flip path into beginRoundClock.
+      $("songInput").blur();
+      nextBtn.focus();
+      // An Enter still held down from advancing the previous page must not auto-repeat
+      // straight through the notice — the player has to press it again, deliberately.
+      nextBtn.addEventListener("keydown", (e) => { if (e.key === "Enter" && e.repeat) e.preventDefault(); });
     } else {
       // Auto-lifting cards (per-page Wildcard / Switch-Up): advance after a beat, tap
       // anywhere to skip ahead.
@@ -9534,6 +9549,7 @@ function wireInput() {
   });
   input.addEventListener("keydown", (e) => {
     if ($("settingsModal").classList.contains("open")) return;   // modal is captive
+    if (curtainUp()) return;    // so is a curtain — no answering the word it's covering
     if (e.key === "Tab" && hintsAllowed()) {
       e.preventDefault();                   // keep focus in the input; reveal a hint instead
       useHint();
@@ -9568,9 +9584,10 @@ function wireInput() {
   document.addEventListener("keydown", (e) => {
     if (e.key !== "Enter") return;
     if (!screens.game.classList.contains("active") || !roundLocked) return;
-    // Modals are captive — don't let Enter advance the page behind them.
+    // Modals and curtains are captive — don't let Enter advance the page behind them.
     if ($("settingsModal").classList.contains("open")) return;
     if ($("songModal").classList.contains("open")) return;
+    if (curtainUp()) return;
     // Only once a verdict is actually on the page — not during the pen-circle
     // animation between submitting and the feedback appearing.
     if (!$("cd") && !$("continueBtn")) return;
