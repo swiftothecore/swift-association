@@ -130,10 +130,12 @@ let dailyShareTime = null;      // completion time (sec) of the daily on screen 
 let currentChallenge = null;    // the active CHALLENGES entry while gameType === "challenge"
 let challengeRunActive = false; // true only during a live challenge run (gates the achievement sandbox)
 let vanishTimer = null;         // Vanishing Word: timeout that hides the prompt word
+let vanishAnsweredBlind = true; // Vanishing Word: still true if every correct answer landed after the word blanked (Blank Space)
 let revolveId = null;           // Revolving Door: interval that swaps the word every rotateMs
 let revolveIndex = 0;           // Revolving Door: how many times the word has revolved this round
 let revolveBeatEverySwap = true; // Revolving Door: still true if every correct answer landed on slot 0 (Two Steps Ahead)
 let lastAlphaLetter = "";       // From A to Z: first letter of the last accepted answer
+let alphaEveryLetterNew = true; // From A to Z: still true if the chain never rested twice on one letter (Tied Together With A Smile)
 let roundSecondsOverride = null; // Shrinking Timer: per-round clock override (null = use the mode's seconds)
 let chainLetter = "";           // Wrapped Like A Chain: required first letter of the next title ("" = free)
 let tourSetlist = [];           // On Tour!: the album scheduled for each round (index = round-1)
@@ -4699,6 +4701,8 @@ function resetRunState() {
   focusAlbum = null;
   focusDifficulty = null;
   lastAlphaLetter = "";
+  alphaEveryLetterNew = true;
+  vanishAnsweredBlind = true;
   roundSecondsOverride = null;
   impostorRounds = new Set();
   roundIsImpostor = false;
@@ -6150,6 +6154,15 @@ function endChallenge() {
   if (c.rule === "verse" && won && score > 0 && gameVersePerfect === score) unlock("knowing-all-the-words");
   // Two Is Better Than One — a perfect Double Trouble run: all 13 pages cleared with two songs.
   if (c.rule === "multi" && score === TOTAL_ROUNDS) unlock("two-is-better");
+  // Blank Space — won Vanishing Word writing into the blank: every correct answer came after
+  // the word had already gone.
+  if (c.rule === "vanishing" && won && vanishAnsweredBlind) unlock("blank-space");
+  // You Belong With Me — total loyalty in Deep Cut: not just five from one album, but every
+  // correct answer of the run off that same album, no strays.
+  if (c.rule === "album5" && won && score === deepCutLeader().count) unlock("you-belong-with-me");
+  // Tied Together With A Smile — From A to Z climbing on every link: the alphabet tied end to
+  // end without ever resting twice on the same letter.
+  if (c.rule === "alphabetical" && won && alphaEveryLetterNew) unlock("tied-together");
 
   document.querySelector("#screen-results .podium-title").textContent = c.name;
   const outOfGuesses = c.rule === "newsong" && challengeTargetSong && newSongLives <= 0;
@@ -8407,7 +8420,18 @@ function submitAnswer(song, isTimeout) {
   }
   // From A to Z: advance the alphabetical floor only on an accepted correct answer.
   if (correct && currentChallenge && currentChallenge.rule === "alphabetical") {
-    lastAlphaLetter = firstAlphaLetter(song.title);
+    const L = firstAlphaLetter(song.title);
+    // Tied Together With A Smile: the rule only demands non-decreasing, so resting twice on
+    // the same letter is legal — doing it spoils a chain that climbs on every single link.
+    if (L && L === lastAlphaLetter) alphaEveryLetterNew = false;
+    lastAlphaLetter = L;
+  }
+  // Blank Space: a correct answer landed while the word was still on the page — the run was
+  // no longer written blind. The vanish timeout is untouched by submit, so the class is the
+  // honest reading of what was showing at the moment they answered.
+  if (correct && currentChallenge && currentChallenge.rule === "vanishing"
+      && !$("wordDisplay").parentNode.classList.contains("vanished")) {
+    vanishAnsweredBlind = false;
   }
   // Revolving Door: a correct answer landed after the word already swapped spoils Two Steps Ahead.
   if (correct && currentChallenge && currentChallenge.rule === "revolving" && revolveIndex > 0) {
@@ -11482,6 +11506,16 @@ function buildDevApi() {
     challenge: {
       list: () => CHALLENGE_ORDER.slice(),
       start: (id) => startChallenge(id),
+      // startChallenge silently refuses a locked challenge, so `start` alone can't reach any
+      // non-free one. These open the door directly, without the token wallet or Paper Rings.
+      unlock: (id) => { const st = loadChallengeState(); st[id] = { ...challengeRecord(id), unlocked: true };
+        saveChallengeState(st); if ($("challengesBody")) renderChallengesPage(); return challengeUnlocked(id); },
+      unlockAll: () => { const st = loadChallengeState();
+        CHALLENGES.forEach((c) => { st[c.id] = { ...challengeRecord(c.id), unlocked: true }; });
+        saveChallengeState(st); if ($("challengesBody")) renderChallengesPage();
+        return CHALLENGES.filter((c) => challengeUnlocked(c.id)).length; },
+      tokens: (n) => { const w = loadChallengeTokens(); if (n != null) { w.balance = n | 0; saveChallengeTokens(w);
+        if ($("challengesBody")) renderChallengesPage(); } return loadChallengeTokens().balance; },
       impostor: {
         words: () => IMPOSTOR_WORDS.slice(),
         rounds: () => [...impostorRounds].sort((a, b) => a - b),   // which pages are fakes this run
@@ -11505,6 +11539,35 @@ function buildDevApi() {
         valids: () => seaTiles.filter((t) => t.valid).map((t) => t.song.title),         // which tiles are answers
         answer: () => { const v = seaTiles.find((t) => t.valid); if (v) onSeaTileClick(seaTiles.indexOf(v)); },  // tap a correct tile
         win: () => { score = (CHALLENGE_BY_ID["sea-of-songs"].target) || 9; endGame(); },
+      },
+      // Vanishing Word — the word blanks after revealMs. Blank Space wants a run written
+      // entirely into that blank, so `win(false)` is the spoiled control case.
+      vanishing: {
+        blind: () => vanishAnsweredBlind,               // is Blank Space still alive this run?
+        spoil: () => { vanishAnsweredBlind = false; },  // as if you'd answered before the word went
+        win: (blind) => { vanishAnsweredBlind = blind !== false;
+          score = (CHALLENGE_BY_ID["vanishing-word"].target) || 10; endGame(); },
+      },
+      // Deep Cut — five correct off one album. You Belong With Me wants the WHOLE run off it,
+      // so `win(false)` adds a stray from a second album to prove the charm withholds.
+      deepCut: {
+        leader: () => deepCutLeader(),                  // {album, count} the tally is building on
+        win: (loyal) => {
+          roundResults = []; roundAlbums = [];
+          for (let i = 0; i < 5; i++) { roundResults.push(true); roundAlbums.push(STUDIO_ALBUMS[0]); }
+          if (loyal === false) { roundResults.push(true); roundAlbums.push(STUDIO_ALBUMS[1]); }
+          score = roundResults.length;
+          endGame();
+        },
+      },
+      // From A to Z — non-decreasing letters. Tied Together With A Smile wants a chain that
+      // climbs on every link, so `win(false)` is the rested-twice control case.
+      alpha: {
+        floor: () => lastAlphaLetter,                   // the letter the next title must meet or beat
+        climbing: () => alphaEveryLetterNew,            // is Tied Together still alive this run?
+        spoil: () => { alphaEveryLetterNew = false; },  // as if you'd rested twice on one letter
+        win: (climbing) => { alphaEveryLetterNew = climbing !== false;
+          score = (CHALLENGE_BY_ID.alphabetical.target) || 9; endGame(); },
       },
       // Common Thread — the "type the shared word" inversion.
       common: {
