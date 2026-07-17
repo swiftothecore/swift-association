@@ -126,6 +126,7 @@ let studySessionLen = STUDY_SESSION_ROUNDS; // Study: this session's length (dec
 let studyStartBoxes = null;     // Study: snapshot of each reviewed word's box at session start (to count promotes/graduates)
 let dailyRng = null;            // seeded PRNG, non-null only during a daily game
 let dailyAlbumPool = null;      // on an album-anniversary daily: [{ w, n }] album-common words (n = within-album coverage), freq-desc; null otherwise
+let dailyAlbum = null;          // the album that daily leans toward, non-null only alongside dailyAlbumPool (locks the run's era wash)
 let dailyShareTime = null;      // completion time (sec) of the daily on screen — for the copyable result
 let currentChallenge = null;    // the active CHALLENGES entry while gameType === "challenge"
 let challengeRunActive = false; // true only during a live challenge run (gates the achievement sandbox)
@@ -819,6 +820,9 @@ function pickEra() {
   // Album Focus locks the whole run to its album's era wash (bracelet/cards already use
   // the album colour; this themes the page to match).
   if (gameType === "album" && focusAlbum) return ALBUM_ERA[focusAlbum] || "gold";
+  // An album-anniversary daily already leans its words toward that album, so let the page
+  // wear its colours all thirteen pages rather than shuffling eras over an album-shaped run.
+  if (gameType === "daily" && dailyAlbum) return ALBUM_ERA[dailyAlbum] || "gold";
   let pool;
   // Round-5/round-13 biases apply to any fixed 13-round run (classic + daily + challenge).
   const fixedRun = gameType === "classic" || gameType === "daily" || gameType === "challenge" || gameType === "adaptive";
@@ -4695,6 +4699,7 @@ function resetRunState() {
   studyStartBoxes = null;
   dailyRng = null;
   dailyAlbumPool = null;
+  dailyAlbum = null;
   currentChallenge = null;
   challengeRunActive = false;
   customPreset = null;
@@ -5170,7 +5175,11 @@ function startDaily() {
   dailyRng = mulberry32(dailySeed(dateStr));   // set AFTER resetRunState (which clears it)
   // On a real album anniversary, lean today's words toward that album (deterministic — the
   // album comes from the date, the skew is rolled on dailyRng). See pickWord.
-  dailyAlbumPool = buildDailyAlbumPool(anniversaryAlbumFor(dateStr));
+  const annAlbum = anniversaryAlbumFor(dateStr);
+  dailyAlbumPool = buildDailyAlbumPool(annAlbum);
+  // Only claim the album once its words are actually behind the run — a thin album that
+  // yields no pool leans on nothing, so it shouldn't dress the page as though it did.
+  dailyAlbum = dailyAlbumPool ? annAlbum : null;
   // Resume an in-progress run from earlier today (a refresh or exit mid-daily) instead
   // of restarting — this is what closes the replay loophole. Restore the accumulators and
   // seek the PRNG to the saved position so the remaining words are deterministic. Stale
@@ -9100,6 +9109,7 @@ function endGame() {
     renderResultRecap();
     renderSkillsRecap();   // (hidden by renderSkillsRecap itself when the daily score is held back)
     dailyRng = null;   // back to Math.random() for any subsequent Classic game
+    dailyAlbum = null; // and back to a shuffled era wash with it
     if (settings.hideDailyScore) $("finalScore").textContent = "?";
     $("namePrompt").style.display = "none";
     hideNewBestBanner();
@@ -11264,7 +11274,8 @@ function buildDevApi() {
         const key = dateKey || window.__devDate || todayKey();
         const album = anniversaryAlbumFor(key);
         const pool = buildDailyAlbumPool(album);
-        return { date: key, album, size: pool ? pool.length : 0,
+        return { date: key, album, era: pool && album ? (ALBUM_ERA[album] || "gold") : null,
+          size: pool ? pool.length : 0,
           top: pool ? pool.slice(0, 13).map((s) => `${s.w} (${s.n})`) : null,
           all: pool ? pool.map((s) => s.w) : null };
       },
