@@ -583,6 +583,13 @@ function showScreen(name) {
   // The daily reset countdown only lives on the start screen; don't let its interval
   // outlive the view (renderDailyButtonState restarts it when start is shown again).
   if (name !== "start") stopResetCountdown();
+  // The era wash belongs to a run and to the results it earned. Every other page is the plain
+  // gold desk — otherwise a finale era rides out of a finished game and tints the whole
+  // notebook until the next run or a reload (midnight is navy, so the desk just goes blue).
+  // The routes that already flip home reset this themselves before re-rendering; this is the
+  // backstop for the ones that don't, like a challenge or Album Focus result heading back to
+  // its own list.
+  if (name !== "game" && name !== "results") applyEra("gold");
   // Hide the bottom-left lyric-search chrome during active play, so it doesn't clutter the board.
   document.body.classList.toggle("in-game", name === "game");
   if (name !== "game") dismissCoachmark();   // no guided-round note should outlive the board
