@@ -4776,7 +4776,10 @@ function applyInputHints() {
     hint.textContent = "type the one word in all three lines, then Enter";
     return;
   }
-  if (currentMode.lyricOnly) {
+  // lyricModeNow, not currentMode.lyricOnly: Switch-Up borrows Normal's levers and picks the
+  // answer type per PAGE, so a mode-level read would invite a title on its lyric pages and
+  // submitAnswer would then refuse the very thing this line asked for.
+  if (lyricModeNow()) {
     input.placeholder = "type the lyric line…";
     hint.textContent = "write more of the line for a bigger verse bonus — Enter to answer";
     return;
@@ -10515,8 +10518,9 @@ function markCoachmark(id) {
    the instant their first-ever correct match does, near the bracelet. Each fires at most once
    ever (seenCoachmarks gate), only when the welcome is done AND this is genuinely their first
    classic game AND they aren't an established player (that case is pre-marked in maybeRunFirstRun).
-   Not tied to a specific mode — the copy is mode-agnostic — so it still teaches if they somehow
-   started outside Relaxed. */
+   Not tied to a specific mode: we steer a first-timer into Relaxed, but nothing stops them
+   starting anywhere, so beat A's copy resolves against the page in front of them rather than
+   assuming Relaxed's suggestions are there. */
 let coachmarkDismissTimer = null;
 let coachmarkFadeTimer = null;
 let shownCoachmarkId = "";   // which beat is currently on screen (for advance-survival rules)
@@ -10612,14 +10616,26 @@ function showCoachmark(id, opts) {
 }
 
 /* The three beats, defined once so the game and the dev previews can never drift apart.
-   `anchor` resolves live (the board is re-rendered constantly); `avoid` is what the note must
-   not sit on. Every beat protects the prompt word and the input — between them they ARE the
-   page, and a tip covering either teaches nothing. */
+   `anchor`, `body` and `autoMs` all resolve live (the board is re-rendered constantly, and the
+   copy has to describe THIS page); `avoid` is what the note must not sit on. Every beat protects
+   the prompt word and the input — between them they ARE the page, and a tip covering either
+   teaches nothing. */
 const GUIDE_BEATS = {
   guideType: {
     anchor: () => document.querySelector(".input-area") || $("songInput"),
     kicker: "how to play",
-    body: 'Type any word and pick it from the <b>suggestions</b>. Every song that uses it lights up.',
+    // The core action isn't the same in every mode, so this beat can't be one sentence: it has
+    // to teach whatever the page will actually accept. Pointing a brand new player at a
+    // dropdown that a lyric-only or no-suggestions mode never shows would be the first thing
+    // the game ever told them, and it would be false. Read from the same predicates as
+    // applyInputHints, which writes the placeholder directly under this note, so the two can't
+    // contradict each other; where a dropdown is up it IS the action, title-only or not.
+    body: () => {
+      if (lyricModeNow()) return 'Type a <b>lyric line</b> with the word in it. Get close enough and it counts.';
+      if (effectiveDropdown()) return 'Type any word and pick it from the <b>suggestions</b>. Every song that uses it lights up.';
+      if (currentMode.titleOnly) return 'Type a song\'s <b>full title</b>. Every song that uses the word counts.';
+      return 'Type a song\'s <b>full title</b>, or a <b>lyric line</b> with the word in it.';
+    },
     got: "got it",
     autoMs: () => 0,   // this one waits for the player — dismissed on "got it" or their first answer
     place: ["left", "below"],
@@ -10628,7 +10644,7 @@ const GUIDE_BEATS = {
   guideMatch: {
     anchor: () => document.querySelector(".bracelet-wrap") || $("bracelet"),
     kicker: "nice",
-    body: 'Match every song on the page to finish, and each match adds a charm to your <b>bracelet</b>.',
+    body: () => 'Match every song on the page to finish, and each match adds a charm to your <b>bracelet</b>.',
     got: null,
     autoMs: () => (animInstant() ? 0 : 6500),   // brief and self-clearing; also cleared on the next page
     // The bracelet sits at the top of the page with the word directly beneath it, so "below"
@@ -10639,7 +10655,7 @@ const GUIDE_BEATS = {
   guideHint: {
     anchor: () => $("hintBtn"),
     kicker: "stuck?",
-    body: 'Reveal a clue one step at a time. Tap here or press <b>Tab</b>, and it eases you in without just handing over the answer.',
+    body: () => 'Reveal a clue one step at a time. Tap here or press <b>Tab</b>, and it eases you in without just handing over the answer.',
     got: null,
     autoMs: () => (animInstant() ? 0 : 9000),
     place: ["below", "left", "above"],
@@ -10652,7 +10668,7 @@ function showGuideBeat(id) {
   const beat = GUIDE_BEATS[id];
   const anchor = beat && beat.anchor();
   if (!anchor || anchor.hidden) return false;
-  showCoachmark(id, { ...beat, anchor, autoMs: beat.autoMs() });
+  showCoachmark(id, { ...beat, anchor, body: beat.body(), autoMs: beat.autoMs() });
   return true;
 }
 
