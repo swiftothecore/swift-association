@@ -34,6 +34,8 @@ const ASSETS = [
   "js/bracelet.js",
   "js/storage.js",
   "js/sound.js",
+  // Share/copy plumbing — imported by both the game and the searcher.
+  "js/share.js",
   // The desk calendar draws every date itself; index.html only holds its blank
   // card. Precached so a fresh offline install can't render a dateless pad.
   "js/calendar.js",

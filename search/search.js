@@ -7,10 +7,16 @@
 import { escapeHtml, escapeRegExp, fuzzySubstringRatio } from "../js/util.js";
 import { wordRegex, wordVariants } from "../js/match.js";
 import { ALBUM_COLORS, SEARCH_KEY } from "../js/config.js";
+import { canShare, shareOrCopy } from "../js/share.js";
 
 const $ = (id) => document.getElementById(id);
 const FUZZY_MIN = 0.78;   // token similarity needed for a fuzzy hit (0..1)
 const RECENT_MAX = 8;     // how many recent searches to keep
+// The share button's resting wording. Decided once: whether the OS share sheet exists
+// can't change under us, and #counter re-renders on every search, so this has to be
+// settled while building that markup.
+const SHARE_LABEL = canShare() ? "share link" : "copy link";
+const SHARE_TITLE = canShare() ? "Share a link to this search" : "Copy a shareable link to this search";
 
 let SONGS = [];                  // flat: { title, album, sections:[{label, lines}] }
 const ALBUM_INDEX = new Map();   // album name -> release order (from songs.json order)
@@ -489,10 +495,10 @@ function render(terms, groups) {
   const play = (terms.length === 1 && PROMPT_WORDS.has(terms[0].toLowerCase()))
     ? ` <a class="sx-play" href="../?word=${encodeURIComponent(terms[0].toLowerCase())}" title="Start a game round on this word">play this word in the game &rarr;</a>`
     : "";
-  const share = ` <button type="button" class="sx-copy" id="copyLink" title="Copy a shareable link to this search">` +
+  const share = ` <button type="button" class="sx-copy" id="copyLink" title="${SHARE_TITLE}">` +
     `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">` +
     `<path d="M9 15l6-6"/><path d="M11 6l1-1a4 4 0 0 1 6 6l-1 1"/><path d="M13 18l-1 1a4 4 0 0 1-6-6l1-1"/></svg>` +
-    `<span class="sx-copy-label">copy link</span></button>`;
+    `<span class="sx-copy-label">${SHARE_LABEL}</span></button>`;
   $("counter").innerHTML = `found in <b>${plural(songs, "song")}</b> &middot; <b>${plural(lines, "line")}</b>${play}${share}`;
   const counts = albumLineCounts(groups);
   LAST_COUNTS = counts;
@@ -579,26 +585,12 @@ function buildShareURL() {
   return location.origin + location.pathname + (hash ? "#" + hash : "");
 }
 
-// Copy text to the clipboard, preferring the async Clipboard API and falling back to a
-// hidden-textarea execCommand for older browsers / non-secure contexts. Returns success.
-async function copyToClipboard(text) {
-  try {
-    if (navigator.clipboard && window.isSecureContext) {
-      await navigator.clipboard.writeText(text);
-      return true;
-    }
-  } catch (e) { /* fall through to the legacy path */ }
-  try {
-    const ta = document.createElement("textarea");
-    ta.value = text;
-    ta.setAttribute("readonly", "");
-    ta.style.position = "fixed"; ta.style.top = "-9999px";
-    document.body.appendChild(ta);
-    ta.select();
-    const ok = document.execCommand("copy");
-    document.body.removeChild(ta);
-    return ok;
-  } catch (e) { return false; }
+// A one-line description of the current search, for the share sheet's `text`. The link
+// itself is the payload; this is just what a recipient sees above the preview.
+function shareBlurb() {
+  const terms = activeTerms();
+  if (!terms.length) return "Search Taylor Swift's lyrics";
+  return `"${terms.join(" ")}" in Taylor Swift's lyrics`;
 }
 
 /* ---------- wiring ---------- */
@@ -706,15 +698,24 @@ function init() {
   $("section").addEventListener("change", (e) => { state.section = e.target.value; syncToggles(); runSearch(); });
   $("pos").addEventListener("change", (e) => { state.pos = e.target.value; syncToggles(); runSearch(); });
 
-  // "Copy link" — mints a shareable deep link on demand (the URL is otherwise kept clean).
-  // Delegated since #counter is re-rendered on every search.
+  // Share/copy link — mints a shareable deep link on demand (the URL is otherwise kept
+  // clean). Delegated since #counter is re-rendered on every search.
   $("counter").addEventListener("click", async (e) => {
     const btn = e.target.closest("#copyLink");
     if (!btn) return;
     const label = btn.querySelector(".sx-copy-label") || btn;
-    const ok = await copyToClipboard(buildShareURL());
-    label.textContent = ok ? "link copied!" : "copy failed";
-    setTimeout(() => { label.textContent = "copy link"; }, 1600);
+    // The clipboard gets the bare URL, not the blurb: a pasted link should be a link.
+    const url = buildShareURL();
+    const outcome = await shareOrCopy({
+      title: "Swift To The Lyric",
+      text: shareBlurb(),
+      url,
+      copyText: url,
+    });
+    if (outcome === "cancelled") return;   // sheet dismissed — leave the label alone
+    label.textContent = outcome === "shared" ? "link shared!"
+      : outcome === "copied" ? "link copied!" : "copy failed";
+    setTimeout(() => { label.textContent = SHARE_LABEL; }, 1600);
   });
 
   // Recent-search list (rendered in the initial state) is wired via delegation since

@@ -1,5 +1,6 @@
 "use strict";
 import { $, escapeRegExp, escapeHtml, prefersReducedMotion, shuffle, chance, normalizeTitle, normalizeLyric, fuzzySubstringRatio, levenshtein, mulberry32, dailySeed, censorText, anniversaryNote, thirteenNote } from "./util.js";
+import { SITE_URL, canShare, shareOrCopy, simulateShare } from "./share.js";
 import {
   TOTAL_ROUNDS, RECENT_WINDOW, DAILY_ALBUM_SKEW, DIFF_KEY, DEFAULT_SETTINGS,
   MODES, MODE_ORDER, MODE_COLORS, DIFFICULTY_LADDER, MODALITY_MODES,
@@ -6522,7 +6523,9 @@ function renderDailyResultPanel() {
     `</div>` + note;
 }
 
-// Wordle-style copyable summary built from the per-round results.
+// Wordle-style shareable summary built from the per-round results. The site address is
+// NOT in here — it travels as the share sheet's `url` field (which platforms render as a
+// link preview) and only gets appended to the text on the clipboard path.
 function buildShareString(dateStr) {
   const dateObj = new Date(dateStr + "T00:00:00Z");
   const label = dateObj.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric", timeZone: "UTC" });
@@ -6541,24 +6544,28 @@ function renderShareButton(dateStr, hidden) {
   const btn = document.createElement("button");
   btn.id = "shareBtn";
   btn.className = "btn-ghost daily-share-btn";
-  const label = hidden ? "Reveal & copy" : "Copy result";
-  btn.textContent = label;
+  // The button has to promise what this browser can actually deliver: an OS share sheet
+  // where one exists, the clipboard where it doesn't. `hidden` is the held-back-score
+  // variant, and it's spent on the first click — the score can only be revealed once.
+  let held = hidden;
+  const baseLabel = () => (held ? (canShare() ? "Reveal & share" : "Reveal & copy")
+                                : (canShare() ? "Share result" : "Copy result"));
+  const settle = (now, then) => {
+    btn.textContent = now;
+    setTimeout(() => { btn.textContent = then; }, 2000);
+  };
+  btn.textContent = baseLabel();
   btn.addEventListener("click", async () => {
-    if (hidden) $("finalScore").textContent = score;   // reveal the held-back score
-    const text = buildShareString(dateStr);
-    try {
-      await navigator.clipboard.writeText(text);
-    } catch (e) {
-      const ta = document.createElement("textarea");
-      ta.value = text;
-      ta.style.cssText = "position:fixed;top:-9999px;left:-9999px;opacity:0;";
-      document.body.appendChild(ta);
-      ta.select();
-      try { document.execCommand("copy"); } catch (e2) { /* ignore */ }
-      ta.remove();
-    }
-    btn.textContent = "Copied!";
-    setTimeout(() => { btn.textContent = "Copied ✓"; }, 2000);
+    if (held) { $("finalScore").textContent = score; held = false; }   // reveal the held-back score
+    const outcome = await shareOrCopy({
+      title: "Swift Song Association",
+      text: buildShareString(dateStr),
+      url: SITE_URL,
+    });
+    if (outcome === "shared") settle("Shared!", "Shared ✓");
+    else if (outcome === "copied") settle("Copied!", "Copied ✓");
+    else if (outcome === "failed") settle("Copy failed", baseLabel());
+    else btn.textContent = baseLabel();   // cancelled — they dismissed the sheet; say nothing
   });
   const braceletEl = $("resultBracelet");
   braceletEl.parentNode.insertBefore(btn, braceletEl.nextSibling);
@@ -11164,6 +11171,17 @@ function buildDevApi() {
       play: (n) => sfx.play(n, true),
       all: (gapMs = 800) => sfx.names.forEach((n, i) => setTimeout(() => sfx.play(n, true), i * gapMs)),
       state: () => sfx.state(),
+    },
+    // Sharing the daily result. The OS share sheet doesn't exist on most desktops, so
+    // `simulate(true)` fakes one (the payload goes to the console instead) and
+    // `simulate(false)` hides a real one — that's the only way to see both wordings of
+    // the button on one machine. Re-open the daily result to re-render its label.
+    // Session-only: it lives in the module, never in storage.
+    share: {
+      can: () => canShare(),
+      native: () => typeof navigator.share === "function",
+      simulate: (v) => simulateShare(v),   // true = pretend | false = hide | null = tell the truth
+      payload: () => ({ text: buildShareString(todayKey()), url: SITE_URL }),   // needs a daily result on screen
     },
     // The date itself. One override (window.__devDate) behind every dated surface: the
     // daily gate and seed, the anniversary slip, the milestone sticky and the desk
