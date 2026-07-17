@@ -159,7 +159,9 @@ export function initDev(api) {
   // "preview album pool" dumps an anniversary daily to the console without playing it: the
   // pool behind the words and the 13 the seed really draws. It follows the date override,
   // so set a release date above to read that album; "all albums" ignores the day and dumps
-  // every studio album's anniversary, which is the view that lets them be compared.
+  // every studio album's anniversary, which is the view that lets them be compared. "5 years"
+  // replays the same anniversary across five of them and counts the words each year hands
+  // back from the last, which is the one thing playing today can never show you.
   const stCur = num(5), stBest = num(9);
   body.append(section("daily",
     row(btn("reset today (replay)", () => { api.daily.resetToday(); toast("today's daily cleared"); }),
@@ -170,7 +172,16 @@ export function initDev(api) {
           api.daily.dump(r.date);
           toast(r.pool ? `${r.album}: pool ${r.size}${r.relaxed ? " (relaxed)" : ""} — see console` : "no album pool that day");
         }),
-        btn("all albums", () => toast(api.daily.dump())))));
+        btn("all albums", () => toast(api.daily.dump())),
+        btn("5 years", () => {
+          const y = api.daily.years();
+          if (!y.years) { toast("no album pool that day"); return; }
+          console.group(`${y.album} — same anniversary, ${y.years.length} years (exp ${y.exp})`);
+          for (const r of y.years) console.log(`${r.year}  repeats ${r.repeats === null ? "—" : r.repeats + "/13"}   ${r.words.join(", ")}`);
+          console.log(`${y.distinct}/${y.of} distinct words overall`);
+          console.groupEnd();
+          toast(`${y.album}: ${y.distinct}/${y.of} distinct — see console`);
+        }))));
 
   // ---- Seeding ---------------------------------------------------------------
   const achSel = select(api.ACHIEVEMENTS, (a) => a.id, (a) => a.name + (a.secret ? " (hidden)" : ""));

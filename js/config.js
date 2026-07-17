@@ -4,13 +4,23 @@ export const TOTAL_ROUNDS = 13;
 export const ROUND_SECONDS = 10;
 export const RECENT_WINDOW = 5;
 // On an album's anniversary, the daily challenge draws its prompt words from the words that
-// recur across that album's songs. Per round this is the chance of drawing from the album-common
+// recur across that album's songs. Per round this is the chance of drawing from that album's
 // pool, and at 1.0 that is every round: the run already wears the album's colours on all thirteen
 // pages, so a partial lean was the odd one out. Only the prompt side is constrained — every song
 // in the catalogue stays a legal answer, which is what keeps this from being an Album Focus clone.
-// The draw is weighted by within-album coverage. Consumed through the seeded dailyRng so it stays
+// The draw is weighted by distinctiveness. Consumed through the seeded dailyRng so it stays
 // identical for everyone on the day. See pickWord / startDaily.
 export const DAILY_ALBUM_SKEW = 1.0;
+// The exponent the anniversary daily's distinctiveness score is raised to when it becomes a draw
+// weight (see weightedAlbumWord). Steeper means the album's signature words surface more often at
+// the cost of variety between one anniversary and the next. Re-derived against the score's units,
+// not carried over from the raw song count this used to weight: across all 12 albums x 5 years,
+// exponent 1 lands 27% of the draw in the album's 25 most distinctive words and repeats 1.6 of 13
+// words year-to-year; 2 gives 38% / 1.9; 3 gives 49% / 2.5. 3 buys the strongest album character
+// for about one extra repeated word a year, which is invisible on a prompt a player meets once
+// every 365 days. Word difficulty is flat across all three, so this trades character for variety
+// and nothing else. Re-measure with __dev.daily.years if the score changes again.
+export const DAILY_ALBUM_WEIGHT_EXP = 3;
 
 /* ---------- localStorage keys ---------- */
 export const HS_KEY = "swiftSongAssociation.highscores";        // legacy fake-celebrity board (dormant; kept for old backups)
