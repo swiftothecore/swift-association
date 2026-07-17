@@ -765,6 +765,9 @@
   /* Gauge: its content sits low in the box, so nudge it up; the hub is inked. */
   .type-glyph--gauge { vertical-align: -2px; }
   .type-glyph--gauge .hub { fill: currentColor; }
+  /* Eighth note (Classic): a solid inked notehead, no stroke so it stays a
+     clean dot at tab size rather than fattening by a stroke-width. */
+  .type-glyph--note .head { fill: currentColor; stroke: none; }
   /* Lyricist sits off the relaxed→ultra ladder: it's a different modality (answer by
      lyric line), not a harder rung. A dashed divider sets it apart, and its active wash
      is a rose pink rather than the ladder's yellow highlighter. */
