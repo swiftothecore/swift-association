@@ -4230,8 +4230,8 @@ const INF_GLYPH = `<svg class="type-glyph type-glyph--inf" viewBox="2 4 20 16" a
   `<path d="M12 12 C 8.6 5.8, 4 6.6, 4 12 C 4 17.4, 8.6 18.2, 12 12 C 15.4 5.8, 20 6.6, 20 12 C 20 17.4, 15.4 18.2, 12 12 Z"/></svg>`;
 const TYPE_GLYPHS = {
   classic: `<svg class="type-glyph type-glyph--note" viewBox="0 0 24 24" aria-hidden="true">` +
-    `<circle class="head" cx="8.7" cy="17.6" r="2.8"/><path d="M11.5 17.6 L11.5 4.8"/>` +
-    `<path d="M11.5 4.8 C 14.6 6, 16.6 8, 16 11.4"/></svg>`,
+    `<circle class="head" cx="8.9" cy="17.5" r="2.8"/><path d="M10.7 17.5 L10.7 4.8"/>` +
+    `<path d="M10.7 4.8 C 13.8 6, 16 8.1, 15.4 11.5"/></svg>`,
   infinite: INF_GLYPH,
   adaptive: `<svg class="type-glyph type-glyph--gauge" viewBox="0 0 24 24" aria-hidden="true">` +
     `<path d="M4 17a8 8 0 0 1 16 0"/><path d="M12 17l4.6 -5.2"/><circle class="hub" cx="12" cy="17" r="1.3"/></svg>`,
