@@ -3,11 +3,14 @@
 export const TOTAL_ROUNDS = 13;
 export const ROUND_SECONDS = 10;
 export const RECENT_WINDOW = 5;
-// On an album's anniversary, the daily challenge leans toward words that recur across that
-// album's songs. Per round this is the chance of drawing from the album-common pool (the rest
-// stay general, for variety); the draw is weighted by within-album coverage. Consumed through
-// the seeded dailyRng so it stays identical for everyone on the day. See pickWord / startDaily.
-export const DAILY_ALBUM_SKEW = 0.7;
+// On an album's anniversary, the daily challenge draws its prompt words from the words that
+// recur across that album's songs. Per round this is the chance of drawing from the album-common
+// pool, and at 1.0 that is every round: the run already wears the album's colours on all thirteen
+// pages, so a partial lean was the odd one out. Only the prompt side is constrained — every song
+// in the catalogue stays a legal answer, which is what keeps this from being an Album Focus clone.
+// The draw is weighted by within-album coverage. Consumed through the seeded dailyRng so it stays
+// identical for everyone on the day. See pickWord / startDaily.
+export const DAILY_ALBUM_SKEW = 1.0;
 
 /* ---------- localStorage keys ---------- */
 export const HS_KEY = "swiftSongAssociation.highscores";        // legacy fake-celebrity board (dormant; kept for old backups)

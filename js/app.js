@@ -6606,12 +6606,14 @@ function anniversaryAlbumFor(dateKey) {
 function albumWordCoverage(word, album) {
   return validSongs(word, false, false).filter((s) => s.album === album).length;
 }
-// The album-common word pool for an anniversary daily: the album's playable words (intersected
-// with the active rarity bucket) scored by within-album coverage, most-common first. null when
-// there's no album today or the pool is empty (→ pickWord just behaves like a normal daily).
-function buildDailyAlbumPool(album) {
+// The working out behind buildDailyAlbumPool, kept separate so the dev preview can see the
+// steps (the surviving pool, and whether the FLOOR relax path let hapax words back in) without
+// re-deriving them. `poolName` names the rarity bucket to intersect with; it defaults to the
+// live one, but a preview for another date must pass daily's own bucket rather than inherit
+// whatever mode happens to be loaded. null when there's no album or nothing survives.
+function scoreDailyAlbumPool(album, poolName = effectivePool()) {
   if (!album || !albumWordMap[album]) return null;
-  const bucketSet = new Set(wordBuckets[effectivePool()] || playableWords);
+  const bucketSet = new Set(wordBuckets[poolName] || playableWords);
   const scored = albumWordMap[album]
     .filter((w) => bucketSet.has(w))
     .map((w) => ({ w, n: albumWordCoverage(w, album) }))
@@ -6621,19 +6623,75 @@ function buildDailyAlbumPool(album) {
   // (well over TOTAL_ROUNDS) so the no-repeat draw never starves; relax if an album is too thin.
   const FLOOR = TOTAL_ROUNDS * 2;
   const recurring = scored.filter((s) => s.n >= 2);
-  const pool = recurring.length >= FLOOR ? recurring : scored;
-  return pool.length ? pool : null;
+  const relaxed = recurring.length < FLOOR;
+  const pool = relaxed ? scored : recurring;
+  return pool.length ? { pool, scored, relaxed, floor: FLOOR } : null;
+}
+// The album-common word pool for an anniversary daily: the album's playable words (intersected
+// with the active rarity bucket) scored by within-album coverage, most-common first. null when
+// there's no album today or the pool is empty (→ pickWord just behaves like a normal daily).
+function buildDailyAlbumPool(album) {
+  const built = scoreDailyAlbumPool(album);
+  return built ? built.pool : null;
 }
 // Weighted pick from [{ w, n }], strongly favouring higher n (more common in the album) via an
-// n² weight so the signature words surface, not the long tail. Uses the supplied rng so the
-// daily stays deterministic; falls back to a flat pick if weights vanish.
+// n³ weight so the album's recurring, characteristic words surface well ahead of the long tail.
+// The exponent is coupled to the units of the score it weights: n is a count of album songs, so
+// if albumWordCoverage ever returns something other than an integer song count (a normalised
+// ratio, a distinctiveness score), this exponent has to be re-tuned for the new units. Uses the
+// supplied rng so the daily stays deterministic; falls back to a flat pick if weights vanish.
 function weightedAlbumWord(scored, rng) {
-  const weight = (n) => n * n;
+  const weight = (n) => n * n * n;
   const total = scored.reduce((sum, s) => sum + weight(s.n), 0);
   if (total <= 0) return scored[Math.floor(rng() * scored.length)].w;
   let r = rng() * total;
   for (const s of scored) { r -= weight(s.n); if (r < 0) return s.w; }
   return scored[scored.length - 1].w;
+}
+
+// Dev-only: what an anniversary daily for `dateKey` would look like, without playing it.
+// Everything here is derived from the date, so it reads no run state, mutates none and records
+// no play — any date can be previewed at any time, mid-run included. The bucket is daily's own
+// (Normal), not the live mode's, since that's what startDaily would use. The draw deliberately
+// mirrors pickWord's daily path — including the rng call order, which is what makes the words
+// match the real run — so it has to move whenever that path does.
+function previewDailyAlbum(dateKey) {
+  const album = anniversaryAlbumFor(dateKey);
+  const built = album ? scoreDailyAlbumPool(album, MODES.medium.pool) : null;
+  if (!built) return { date: dateKey, album, pool: null, words: null };
+  const bucket = wordBuckets[MODES.medium.pool] || playableWords;
+  const rng = mulberry32(dailySeed(dateKey));
+  const used = [];
+  const words = [];
+  for (let i = 0; i < TOTAL_ROUNDS; i++) {
+    const gen = bucket.filter((w) => !used.includes(w));
+    const genChoices = gen.length ? gen : bucket;
+    const albumChoices = built.pool.filter((s) => !used.includes(s.w));
+    const fromAlbum = albumChoices.length > 0 && rng() < DAILY_ALBUM_SKEW;
+    const word = fromAlbum ? weightedAlbumWord(albumChoices, rng)
+                           : genChoices[Math.floor(rng() * genChoices.length)];
+    used.push(word);
+    words.push({ word, fromAlbum, n: fromAlbum ? albumWordCoverage(word, album) : 0 });
+  }
+  return {
+    date: dateKey, album, era: ALBUM_ERA[album] || "gold",
+    size: built.pool.length, scored: built.scored.length, floor: built.floor,
+    // true → the album was too thin to fill the floor on recurring words alone, so hapax
+    // words (in a single album song) were let back in. Worth watching: it's the pool
+    // quietly widening past "characteristic of the album".
+    relaxed: built.relaxed,
+    pool: built.pool.map((s) => ({ w: s.w, n: s.n })),
+    words,
+  };
+}
+// Dev-only: previewDailyAlbum for every studio album's release anniversary at once, which is
+// the view that matters — the pools are only really judgeable against each other. Uses each
+// album's own release date in `year`, so it reads the same as thirteen anniversaries would.
+function previewDailyAlbumAll(year) {
+  return STUDIO_ALBUMS.map((album) => {
+    const m = TS_MILESTONES.find((x) => x.kind === "album" && x.album === album);
+    return m ? previewDailyAlbum(`${year}-${m.md}`) : { date: null, album, pool: null, words: null };
+  });
 }
 
 function pickWord() {
@@ -6692,10 +6750,11 @@ function pickWord() {
     if (winnable.length) choices = winnable;
   }
   const rng = dailyRng || Math.random;
-  // Album-anniversary daily: most rounds lean toward words common in that album (weighted by
-  // within-album coverage), some stay general for variety. Rolled on dailyRng so every player
-  // gets the same run. The chosen word is still answerable from any song — this only biases
-  // which word surfaces, not the valid answers — so winnability matches a normal daily.
+  // Album-anniversary daily: every round draws from the words common in that album (weighted by
+  // within-album coverage), since DAILY_ALBUM_SKEW is 1.0 — the roll stays because the skew is
+  // the lever, not the behaviour. Rolled on dailyRng so every player gets the same run. The
+  // chosen word is still answerable from any song — this constrains which word surfaces, not the
+  // valid answers — so winnability matches a normal daily and this is no Album Focus clone.
   if (dailyAlbumPool) {
     const albumChoices = dailyAlbumPool.filter((s) => !usedWords.includes(s.w));
     if (albumChoices.length && rng() < DAILY_ALBUM_SKEW) {
@@ -11254,6 +11313,27 @@ function buildDevApi() {
       setStreak: (current, best, lastPlayed) =>
         saveDailyStreak({ current: current | 0, best: Math.max(best | 0, current | 0),
           lastPlayed: lastPlayed || todayKey() }),
+      // Preview an album-anniversary daily without playing it: the album the date resolves to,
+      // the pool left after the rarity-bucket intersection, whether the FLOOR relax path had to
+      // let hapax words back in, every pool word with its coverage score, and the 13 words the
+      // seeded draw really produces. Reads and mutates no state, records no play, any date.
+      preview: (dateKey) => previewDailyAlbum(dateKey || window.__devDate || todayKey()),
+      // The same across all twelve studio albums at once — the comparison is the point.
+      previewAll: (year) => previewDailyAlbumAll(+String(year || (window.__devDate || todayKey()).slice(0, 4))),
+      // Both, printed rather than returned: pools are long, and a console table per album is
+      // the readable shape. Defaults to every album; pass a date key for just that one.
+      dump: (dateKey) => {
+        const reports = dateKey ? [previewDailyAlbum(dateKey)]
+          : previewDailyAlbumAll(+((window.__devDate || todayKey()).slice(0, 4)));
+        for (const r of reports) {
+          if (!r.pool) { console.log(`%c${r.album || "(no album)"} — ${r.date || "no release date"}: no pool (no skew that day)`, "color:#888"); continue; }
+          console.group(`${r.album}  ${r.date}  [${r.era}]  pool ${r.size}/${r.scored}${r.relaxed ? `  ⚠ FLOOR relaxed (<${r.floor} recurring — hapax words let back in)` : ""}`);
+          console.log("13 words:", r.words.map((w) => `${w.word}${w.fromAlbum ? `(${w.n})` : "*general*"}`).join(", "));
+          console.table(r.pool);
+          console.groupEnd();
+        }
+        return `${reports.length} album(s) — see console`;
+      },
     },
     // Milestones (anniversary / birthday marginalia). `preview` jumps the date to a
     // milestone and re-renders both surfaces; `dates` lists this year's milestone keys.
@@ -11268,17 +11348,8 @@ function buildDevApi() {
         return anniversaryNote(window.__devDate, TS_MILESTONES);
       },
       clear: () => { window.__devDate = null; refreshDateSurfaces(); },
-      // Preview the album-anniversary daily skew for a date: the album today leans toward and
-      // its most-common words (top of the weighted pool). null album → no skew that day.
-      dailyPool: (dateKey) => {
-        const key = dateKey || window.__devDate || todayKey();
-        const album = anniversaryAlbumFor(key);
-        const pool = buildDailyAlbumPool(album);
-        return { date: key, album, era: pool && album ? (ALBUM_ERA[album] || "gold") : null,
-          size: pool ? pool.length : 0,
-          top: pool ? pool.slice(0, 13).map((s) => `${s.w} (${s.n})`) : null,
-          all: pool ? pool.map((s) => s.w) : null };
-      },
+      // The album-anniversary word pool for a date now lives with the rest of the daily
+      // tooling, which sees more of the draw than this did: see __dev.daily.preview.
     },
     // Sacred-13 days (the 13th of the month + dates that add up to 13). `dates` lists this
     // year's qualifying days, flagging any that a real milestone outranks; `preview` jumps

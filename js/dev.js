@@ -156,11 +156,21 @@ export function initDev(api) {
     row(markSel, btn("jump", () => showDate(api.date.set(markSel.value))))));
 
   // ---- Daily -----------------------------------------------------------------
+  // "preview album pool" dumps an anniversary daily to the console without playing it: the
+  // pool behind the words and the 13 the seed really draws. It follows the date override,
+  // so set a release date above to read that album; "all albums" ignores the day and dumps
+  // every studio album's anniversary, which is the view that lets them be compared.
   const stCur = num(5), stBest = num(9);
   body.append(section("daily",
     row(btn("reset today (replay)", () => { api.daily.resetToday(); toast("today's daily cleared"); }),
         btn("clear in-progress", () => { api.daily.clearProgress(); toast(api.daily.hasProgress() ? "still in progress" : "in-progress cleared"); })),
-    row("streak cur", stCur, "best", stBest, btn("set", () => { api.daily.setStreak(+stCur.value, +stBest.value); toast("streak set"); }))));
+    row("streak cur", stCur, "best", stBest, btn("set", () => { api.daily.setStreak(+stCur.value, +stBest.value); toast("streak set"); })),
+    row(btn("preview album pool", () => {
+          const r = api.daily.preview();
+          api.daily.dump(r.date);
+          toast(r.pool ? `${r.album}: pool ${r.size}${r.relaxed ? " (relaxed)" : ""} — see console` : "no album pool that day");
+        }),
+        btn("all albums", () => toast(api.daily.dump())))));
 
   // ---- Seeding ---------------------------------------------------------------
   const achSel = select(api.ACHIEVEMENTS, (a) => a.id, (a) => a.name + (a.secret ? " (hidden)" : ""));
