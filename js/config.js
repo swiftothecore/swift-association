@@ -203,13 +203,19 @@ export const CUSTOM_LIVES_MIN = 1;       // fewest lives in an infinite run (1 =
 export const CUSTOM_LIVES_MAX = 5;       // slider's top; typing can go higher
 export const CUSTOM_LIVES_TYPED_MAX = 99;
 export const CUSTOM_ANSWER_MODES = ["title", "lyric", "either"];   // how a page may be answered
-// The lever object a first-time player's seed preset starts from (their own example: 17s, no
-// suggestions, lyric-only, a 5-reveal hint budget, all words, not in the title, a 13-page run).
-// Cloned on use. `answer` is the canonical answering lever; `lyricOnly`/`dropdown` are derived.
+// The lever object a first-time player's seed preset starts from, and the per-lever fallback
+// normalizeCustomMode drops back to when a stored preset holds nonsense. Both jobs want the
+// same thing: a starting point to edit, not a curated mode. So every lever sits somewhere a
+// player can move in either direction, and the two levers that show off why Custom exists at
+// all are the ones set away from the ladder's defaults — `answer: "either"` (no difficulty
+// mode lets you answer with a title OR a sung line) and a scarce hint budget of 3, which is
+// exactly one full ladder for a whole run, so "budget" explains itself the first time you
+// spend it. 12s sits between Easy (15) and Normal (10). Cloned on use. `answer` is the
+// canonical answering lever; `lyricOnly`/`dropdown`/`hint` are derived.
 export const CUSTOM_DEFAULT_MODE = {
-  id: "custom", label: "Custom", seconds: 17, dropdown: false, pool: "all",
-  strict: false, noTitle: true, examples: 3, hint: true, hintBudget: 5, lyricOnly: true,
-  answer: "lyric", rounds: 13, lives: 3,
+  id: "custom", label: "Custom", seconds: 12, dropdown: true, pool: "all",
+  strict: false, noTitle: true, examples: 3, hint: true, hintBudget: 3, lyricOnly: false,
+  answer: "either", rounds: 13, lives: 3,
 };
 
 /* Challenges mode — discrete rule-bending puzzles, unlocked with tokens and "defeated".

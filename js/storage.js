@@ -218,7 +218,10 @@ export function resetAdaptive() {
 export function defaultCustomPreset() {
   return {
     id: "cp" + Date.now().toString(36) + Math.floor(Math.random() * 1e4).toString(36),
-    name: "17s lyric gauntlet",
+    // Deliberately not descriptive of the levers: this preset is the player's to edit, and a
+    // name that spelled out the clock or the answer type would start lying the moment they
+    // dragged a slider.
+    name: "My mode",
     mode: { ...CUSTOM_DEFAULT_MODE },
   };
 }

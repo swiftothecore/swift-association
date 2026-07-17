@@ -4815,8 +4815,13 @@ function renderImpostorBar() {
 // plays/scores/logs to history but can't set a personal best (see endGame). Custom mode
 // caps the total reveals with a hint budget (hintBudgetLeft); every other mode is uncapped.
 function hintBudgetActive() { return Number.isFinite(hintBudgetLeft); }
+// Hints and lyric-line answering are mutually exclusive, and it's the hint ladder's own top
+// rung that forces it: tier 3 prints the lyric line, which on a lyric page IS the answer you
+// were about to type. So a hint would stop being a clue and start being a script. Checked per
+// round rather than per mode, so Switch-Up's lyric pages hide the affordance and its title
+// pages keep it.
 function hintsAllowed() {
-  return settings.enableHints !== false && !!currentMode.hint &&
+  return settings.enableHints !== false && !!currentMode.hint && !lyricModeNow() &&
     gameType !== "daily" && !roundLocked && hintBudgetLeft > 0;
 }
 
@@ -5012,12 +5017,6 @@ function normalizeCustomMode(raw) {
     return Number.isFinite(n) ? Math.max(lo, Math.min(hi, n)) : dflt;
   };
   const seconds = clamp(m.seconds, CUSTOM_SECONDS_MIN, CUSTOM_SECONDS_TYPED_MAX, CUSTOM_DEFAULT_MODE.seconds);
-  // Hints: -1 sentinel = unlimited (the slider's top stop); 0 = none; else a finite budget.
-  const rawHint = Math.round(Number(m.hintBudget));
-  const hintUnlimited = Number.isFinite(rawHint) && rawHint < 0;
-  const hintBudget = hintUnlimited
-    ? CUSTOM_HINT_UNLIMITED
-    : clamp(m.hintBudget, 0, CUSTOM_HINT_TYPED_MAX, CUSTOM_DEFAULT_MODE.hintBudget);
   const examples = clamp(m.examples, 0, CUSTOM_EXAMPLES_MAX, CUSTOM_DEFAULT_MODE.examples);
   const pool = CUSTOM_POOLS.includes(m.pool) ? m.pool : CUSTOM_DEFAULT_MODE.pool;
   // `answer` is the canonical answering lever. Migrate older presets that only stored
@@ -5027,6 +5026,12 @@ function normalizeCustomMode(raw) {
     : (m.lyricOnly ? "lyric" : (m.answer === undefined ? CUSTOM_DEFAULT_MODE.answer : "either"));
   const lyricOnly = answer === "lyric";
   const titleOnly = answer === "title";
+  // Hints: -1 sentinel = unlimited (the slider's top stop); 0 = none; else a finite budget.
+  const rawHint = Math.round(Number(m.hintBudget));
+  const hintUnlimited = Number.isFinite(rawHint) && rawHint < 0;
+  const hintBudget = hintUnlimited
+    ? CUSTOM_HINT_UNLIMITED
+    : clamp(m.hintBudget, 0, CUSTOM_HINT_TYPED_MAX, CUSTOM_DEFAULT_MODE.hintBudget);
   // Run length: rounds 0 = an infinite run (play until lives run out); otherwise a finite
   // page count. Lives only matter in the infinite variant.
   const rounds = (Math.round(Number(m.rounds)) === 0)
@@ -5037,10 +5042,15 @@ function normalizeCustomMode(raw) {
     id: "custom", label: "Custom",
     seconds, pool, examples, hintBudget,
     answer, rounds, lives,
-    // Lyric-only answers never use the title dropdown; force suggestions off so the two
-    // can't contradict each other (mirrors the modal's greyed-out control). Title-only can
-    // still show suggestions.
-    dropdown: lyricOnly ? false : !!m.dropdown,
+    // Suggestions and hints both go dark while answering by line — a dropdown would hand over
+    // the title, and the hint ladder's last rung IS the line you're being asked to type. But
+    // that's enforced where it's read (effectiveDropdown / hintsAllowed both check
+    // lyricModeNow), not forced flat here, for two reasons: Switch-Up flips answer type per
+    // ROUND, which a stored lever could never express; and zeroing them here would persist
+    // through `mutate`, so a stray tap on "Lyric lines" would quietly eat a hint budget the
+    // player had tuned to 7. Stored = what they authored, live = what the round allows. The
+    // modal greys both tiles and shows the remembered value behind the grey.
+    dropdown: !!m.dropdown,
     lyricOnly, titleOnly,
     noTitle: !!m.noTitle,
     hintUnlimited,
@@ -6445,9 +6455,13 @@ function customLeverSummary(m) {
   const poolLabel = { easy: "common words", all: "all words", hard: "rare words", ultra: "rarest words" };
   parts.push(poolLabel[m.pool] || "all words");
   if (m.noTitle) parts.push("not in the title");
-  const budget = m.hintBudget | 0;
-  parts.push(m.hintUnlimited ? "unlimited hints"
-    : budget > 0 ? `${budget} hint${budget === 1 ? "" : "s"}` : "no hints");
+  // Lyric-only runs have no hint lever at all (see hintsAllowed), so listing it would read as
+  // a choice the player made rather than one the mode took off the table.
+  if (!m.lyricOnly) {
+    const budget = m.hintBudget | 0;
+    parts.push(m.hintUnlimited ? "unlimited hints"
+      : budget > 0 ? `${budget} hint${budget === 1 ? "" : "s"}` : "no hints");
+  }
   return parts.join(" · ");
 }
 
@@ -8195,8 +8209,9 @@ function submitAnswer(song, isTimeout) {
       // Not a title — try it as a lyric line. EXCEPT: a custom title-only preset never
       // accepts a sung line (you must name the title), and when this round's tier-3 line
       // hint has been revealed the line is on screen, so accepting a typed line would just
-      // be copying the hint (dropdown is on in every hint mode, so the title path is always
-      // available there).
+      // be copying the hint. Naming the title stays open on this branch whatever the mode,
+      // so tier 3 narrows the round rather than closing it — and a lyric-only run can't
+      // reach here at all, since hintsAllowed retires the ladder outright.
       if (!song && hintTier < 3 && !currentMode.titleOnly) {
         lyricMatch = matchLyricLine(raw);
         if (lyricMatch) song = lyricMatch.song;
@@ -10207,13 +10222,15 @@ function cmValLabel(key, val, extraCls) {
   return `<span class="cm-slider-val cm-val-edit${extraCls ? " " + extraCls : ""}" data-cm-slider-val="${key}" ` +
     `data-cm-edit="${key}" role="button" tabindex="0" title="click to type an exact value">${cmSliderLabelHtml(key, val)}</span>`;
 }
-function cmSliderTile(key, name, desc, val, span) {
+// A disabled slider greys out and stops taking drags; wireCmEditables also refuses to open the
+// click-to-type field inside a .cm-disabled tile, so a greyed lever is inert on every path.
+function cmSliderTile(key, name, desc, val, disabled, span) {
   const meta = CM_SLIDER_META[key];
   const sliderMax = meta.infStop != null ? meta.infStop : meta.sliderMax;
-  return `<div class="cm-tile cm-tile--slider ${span}">` +
+  return `<div class="cm-tile cm-tile--slider ${span}${disabled ? " cm-disabled" : ""}">` +
     cmTileHead(name, desc) +
     `<div class="cm-slider-wrap">` +
-      `<input type="range" class="set-slider cm-slider" data-cm-slider="${key}" min="${meta.sliderMin}" max="${sliderMax}" step="1" value="${cmValueToSliderPos(key, val)}" aria-label="${name}">` +
+      `<input type="range" class="set-slider cm-slider" data-cm-slider="${key}" min="${meta.sliderMin}" max="${sliderMax}" step="1" value="${cmValueToSliderPos(key, val)}" aria-label="${name}"${disabled ? " disabled" : ""}>` +
       cmValLabel(key, val) +
     `</div></div>`;
 }
@@ -10267,8 +10284,10 @@ function renderCustomModalBody() {
     presetRow +
     `<div class="cm-grid">` +
       cmRoundsTile(m) +
-      cmSliderTile("seconds", "Countdown", "seconds per page (0 for no clock)", m.seconds, "cm-tile--half") +
-      cmSliderTile("hintBudget", "Hint budget", "total reveals for the run (past 13 = unlimited)", m.hintBudget, "cm-tile--half") +
+      cmSliderTile("seconds", "Countdown", "seconds per page (0 for no clock)", m.seconds, false, "cm-tile--half") +
+      cmSliderTile("hintBudget", "Hint budget",
+        m.lyricOnly ? "off while answering by line — the last hint is the line" : "total reveals for the run (past 13 = unlimited)",
+        m.hintBudget, m.lyricOnly, "cm-tile--half") +
       cmChoiceTile("answer", "Answering", "how a page can be answered", [
         { val: "title", label: "Titles" }, { val: "lyric", label: "Lyric lines" }, { val: "either", label: "Either" }], m.answer, "cm-tile--wide") +
       cmChoiceTile("pool", "Word rarity", "which words you'll be asked", [
@@ -10380,6 +10399,7 @@ function wireCmEditables(body, mutate) {
     const k = el.dataset.cmEdit;
     const meta = CM_SLIDER_META[k];
     if (!meta) return;
+    if (el.closest(".cm-disabled")) return;   // a greyed lever can't be typed into either
     const open = () => {
       if (el.querySelector("input")) return;   // already editing
       const store = loadCustom();
