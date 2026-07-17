@@ -5821,6 +5821,15 @@ function deepCutLeader() {
   });
   return { album, count: best };
 }
+// Deep Cut: a missed page is where the run is really won or lost, so the reveal leads with
+// a song off the album the tally is already building on — the one answer that would have
+// moved the pips. Silent until an album is actually leading (nothing to aim at yet).
+function deepCutRevealSong(pool) {
+  if (gameType !== "challenge" || !currentChallenge || currentChallenge.rule !== "album5") return null;
+  const { album } = deepCutLeader();
+  if (!album) return null;
+  return pool.find((s) => s.album === album) || null;
+}
 function renderDeepCutCounter() {
   if (gameType !== "challenge" || !currentChallenge || currentChallenge.rule !== "album5") return;
   const el = ensureChallBanner();
@@ -8760,11 +8769,16 @@ function showWrongFeedback(song, isTimeout) {
     // they got the first of the pair, then missed the second) — only surface fresh options.
     if (currentChallenge && currentChallenge.rule === "multi" && roundNamed.length)
       pool = pool.filter((s) => !roundNamed.includes(s.title));
-    // Lead with the song the round's help actually described, so the reveal answers the
-    // hint the player was reading instead of making them hunt for it among the cards.
-    const lead = revealedHintSong();
-    const rest = shuffle(pool.filter((s) => s !== lead));
-    const examples = (lead && pool.includes(lead) ? [lead, ...rest] : rest).slice(0, n);
+    // Lead with the songs the page was really about: Deep Cut's album-in-progress first
+    // (the answer that would have moved the tally), then the song the round's help actually
+    // described — so the reveal answers the hint the player was reading instead of making
+    // them hunt for it among the cards.
+    const leads = [];
+    for (const s of [deepCutRevealSong(pool), revealedHintSong()]) {
+      if (s && pool.includes(s) && !leads.includes(s)) leads.push(s);
+    }
+    const rest = shuffle(pool.filter((s) => !leads.includes(s)));
+    const examples = [...leads, ...rest].slice(0, n);
     const cards = examples.map((s) => lyricCard(s, currentWord, true, null, true)).join("");
     help = `<span class="red-note">songs that hold "<b>${escapeHtml(currentWord)}</b>"</span>${cards}`;
   }
@@ -9204,6 +9218,7 @@ function quitGame() {
 let titleTaps = 0;
 let activePen = null;            // 'quill' | 'fountain' | 'glitter' | null
 let blueUsedThisRound = false;
+let blueWashTimer = null;        // so the wash can be cut short when the page turns under it
 let correctStreak = 0;           // consecutive correct answers this game
 let gameTimeouts = 0;            // timeouts this game (for Fearless)
 let gameMaxStreak = 0;           // best streak reached this game
@@ -9231,6 +9246,7 @@ function clearEggs() {
   // (the whale egg is deliberately NOT cleared here — it lives off the page, behind
   // the top edge, and its 13-second visit is meant to survive page turns)
   stopSnake();
+  clearBlueWash();
   const layer = $("doodleLayer");
   if (layer) layer.innerHTML = "";
 }
@@ -9325,10 +9341,23 @@ function handleTypingEggs(val) {
 function triggerBlueWash() {
   const card = $("screen-game");
   if (!card) return;
+  clearBlueWash();                 // never stack two washes, and never leave an old timer running
   const w = document.createElement("div");
   w.className = "blue-wash"; w.setAttribute("aria-hidden", "true");
   card.appendChild(w);
-  setTimeout(() => w.remove(), 1700);
+  blueWashTimer = setTimeout(clearBlueWash, 1700);
+}
+// The wash belongs to the page it was typed on, so a page turn takes it with the rest of the
+// eggs. Sweeps by selector rather than a captured node so an orphan can't outlive its timer —
+// on reduced motion the wash is a flat, non-animating tint, and a stuck one would sit on the
+// paper forever with nothing left to fade it out. A wash riding a flip sheet is left alone:
+// that's the page being turned away, it should keep its colour on the way out, and the sheet
+// takes the wash with it when it goes.
+function clearBlueWash() {
+  if (blueWashTimer) { clearTimeout(blueWashTimer); blueWashTimer = null; }
+  document.querySelectorAll(".blue-wash").forEach((w) => {
+    if (!w.closest(".page-flip-sheet")) w.remove();
+  });
 }
 
 // A detailed serpent that slithers right across the page during a reputation
