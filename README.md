@@ -44,4 +44,4 @@ If the game doesn’t seem like it’s in a finished state right now, that’s b
 
 no its becky
 
-Verdict sounds from [Google’s Material Design sound kit](https://archive.org/details/material-design-sound-resources) (CC-BY 4.0); the page turn is a CC0 recording from freesound.
+Verdict sounds from [Google’s Material Design sound kit](https://archive.org/details/material-design-sound-resources) (CC-BY 4.0); the page turn and the unlock glockenspiel are CC0 recordings from freesound.

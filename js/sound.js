@@ -2,11 +2,13 @@
 
 /* Swift To The Song Association - sound design (phase 2: real recordings).
  *
- * The palette is three short recordings, auditioned and picked by ear from
- * ~50 candidates, trimmed and level-matched offline. They live in sounds/:
+ * The palette is short recordings, auditioned and picked by ear from many
+ * candidates, trimmed and level-matched offline. They live in sounds/:
  *   correct.mp3 - a small rising confirm (Material sound kit, CC-BY 4.0)
  *   wrong.mp3   - its sibling, a soft descending no (same kit, CC-BY 4.0)
  *   page.mp3    - a real paper page turn (freesound #630019, CC0)
+ *   unlock.mp3  - a glockenspiel flourish for the rare achievement/mastery
+ *                 unlock (freesound #456965, CC0), peak-matched to correct.
  * correct and wrong come from the same Material family on purpose: their
  * relative balance (bright yes / softer no) is the kit's own, preserved when
  * the files were level-matched. Keep the palette stationery, never arcade.
@@ -39,6 +41,7 @@ const SOUNDS = {
   correct: { url: new URL("../sounds/correct.mp3", import.meta.url), gain: 1 },
   wrong:   { url: new URL("../sounds/wrong.mp3", import.meta.url), gain: 1 },
   page:    { url: new URL("../sounds/page.mp3", import.meta.url), gain: 1 },
+  unlock:  { url: new URL("../sounds/unlock.mp3", import.meta.url), gain: 1 },
 };
 
 const buffers = {}; // name -> Promise<AudioBuffer>
