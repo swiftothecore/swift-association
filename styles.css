@@ -2024,6 +2024,15 @@
     color: var(--ink-soft); margin: 14px 0 0;
   }
 
+  /* "Save as PNG" — a quiet keepsake action tucked under the finished strand */
+  .bracelet-save { text-align: center; margin: 10px 0 0; }
+  .bracelet-save .btn-ghost {
+    width: auto; margin: 0; padding: 6px 18px;
+    font-size: 12px; letter-spacing: 1px; color: var(--ink-soft);
+  }
+  .bracelet-save .btn-ghost:hover { color: var(--ink); }
+  .bracelet-save .btn-ghost[disabled] { opacity: 0.55; cursor: default; }
+
   /* ---------- Results anthology — lines you wrote from memory (pressed-flower keepsake) ---------- */
   .verse-anthology {
     margin: 20px auto 4px; max-width: 30rem;
@@ -3460,7 +3469,7 @@
   }
   .tip-pop {
     position: fixed; z-index: 300; left: 0; top: 0;
-    max-width: 240px; padding: 5px 9px;
+    max-width: 240px; padding: 5px 9px; text-align: center;
     font-family: var(--type); font-size: 12px; line-height: 1.35;
     color: var(--paper); background: var(--ink);
     border-radius: 3px; box-shadow: 2px 2px 0 rgba(43,39,34,0.22);

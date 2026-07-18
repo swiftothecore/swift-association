@@ -33,6 +33,7 @@ import {
 } from "./config.js";
 import { POLAROIDS, POLAROID_BY_ID } from "./polaroids.js";
 import { buildBraceletSVG, charmPreviewSVG } from "./bracelet.js";
+import { exportBraceletCard, copyBraceletCard, buildCardSVG, fontFaceCss } from "./braceletcard.js";
 import { sfx } from "./sound.js";
 import { wordRegex as wordRegexCore, extractLineWithWord as extractLineWithWordCore, highlightWord as highlightWordCore, wordVariants } from "./match.js";
 import {
@@ -2228,6 +2229,15 @@ function fmtTime(sec) {
   const s = Math.round(sec);
   return Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0");
 }
+// Time of day in the player's chosen clock format (settings.clock: "12" | "24").
+// One resolver behind every clock-time surface, so a future one just calls this.
+function fmtClock(date) {
+  return date.toLocaleTimeString("en-US", {
+    hour: settings.clock === "24" ? "2-digit" : "numeric",
+    minute: "2-digit",
+    hour12: settings.clock !== "24",
+  });
+}
 // Human label for a board-mode token: "medium" → "Normal", "inf-3lives-easy" →
 // "3 lives · Easy", "daily" → "Daily".
 function modeLabel(token) {
@@ -4013,6 +4023,138 @@ function renderBraceletSVG(results, active, fresh, albums, opts) {
     ? results.map((ok, i) => ok === true && impostorRounds.has(i + 1))
     : null;
   return buildBraceletSVG(results, active, fresh, albums, { ...opts, charm: settings.masteryCharm, impostorCaught });
+}
+
+// ---- Bracelet-as-PNG keepsake ----
+// The finished strand on screen is a bare SVG; on its own it exports as a lonely
+// sliver. buildCardMeta gathers everything the export needs to frame it as a torn
+// notebook page: the run's headline + stat chips, the live colour tokens (so the
+// card matches whatever era/paper/colour-blind palette is active), and the exact
+// strand markup already on the results screen — reused verbatim so the keepsake is
+// pixel-identical to what the player just saw.
+function cardVars() {
+  const cs = getComputedStyle(document.body);
+  const g = (name, fallback) => (cs.getPropertyValue(name).trim() || fallback);
+  return {
+    ink:       g("--ink", "#2b2722"),
+    inkSoft:   g("--ink-soft", "#6f675a"),
+    inkAccent: g("--ink-accent", "#a9791f"),
+    paper:     g("--paper", "#f5efe1"),
+    paperEdge: g("--paper-edge", "#efe7d4"),
+    bead:      g("--bead", "#c8951f"),
+    margin:    g("--margin", "rgba(160,62,46,0.45)"),
+    rule:      g("--rule", "rgba(74,54,30,0.09)"),
+  };
+}
+
+function buildCardMeta() {
+  const correct = roundResults.filter(Boolean).length;
+  const runTime = currentMode.seconds > 0 ? gameTimeSum : null;
+  const dateKey = window.__devDate || todayKey();
+  const dateLabel = new Date(dateKey + "T00:00:00").toLocaleDateString("en-US",
+    { month: "long", day: "numeric", year: "numeric" });
+  // Stamp the time the keepsake was made (real clock; the date honours any dev override).
+  const timeLabel = fmtClock(new Date());
+
+  const stats = [];
+  let title = "the bracelet you made";
+
+  if (gameType === "infinite") {
+    title = "an infinite strand";
+    stats.push({ v: "Infinite", l: "mode" });
+    stats.push({ v: String(roundResults.length), l: "rounds" });
+    stats.push({ v: String(correct), l: "strung" });
+    if (runTime != null) stats.push({ v: fmtTime(runTime), l: "on the clock" });
+  } else if (gameType === "adaptive") {
+    const name = ADAPTIVE_LEVELS[adaptivePeak] || "";
+    title = adaptivePeak >= ADAPT_MAX_LEVEL ? "climbed all the way up ★" : "how high you climbed";
+    stats.push({ v: "Adaptive", l: "mode" });
+    stats.push({ v: "L" + adaptivePeak, l: name || "peak level" });
+    stats.push({ v: correct + "/" + TOTAL_ROUNDS, l: "strung" });
+  } else if (gameType === "album" && focusAlbum) {
+    const perfect = correct === TOTAL_ROUNDS;
+    title = perfect ? focusAlbum + ", start to finish ★" : "an album, in beads";
+    stats.push({ v: "Album Focus", l: "mode" });
+    stats.push({ v: focusAlbum, l: "the album" });
+    stats.push({ v: correct + "/" + TOTAL_ROUNDS, l: "strung" });
+  } else if (gameType === "custom") {
+    const finite = !customInfinite();
+    title = "a bracelet on my terms";
+    stats.push({ v: "Custom", l: customPreset ? customPreset.name : "mode" });
+    stats.push({ v: finite ? correct + "/" + customSessionLen : String(roundResults.length), l: finite ? "strung" : "rounds" });
+    if (runTime != null) stats.push({ v: fmtTime(runTime), l: "on the clock" });
+  } else if (gameType === "study") {
+    title = "words, reviewed";
+    stats.push({ v: "Study", l: "mode" });
+    stats.push({ v: String(roundResults.length), l: "reviewed" });
+    stats.push({ v: String(correct), l: "recalled" });
+  } else {
+    // classic, daily, challenge — a fixed 13-round page
+    const perfect = correct === TOTAL_ROUNDS;
+    const hidden = gameType === "daily" && settings.hideDailyScore;
+    title = perfect ? "thirteen for thirteen ★"
+          : gameType === "daily" ? "today's daily" : "the bracelet you made";
+    stats.push({ v: gameType === "daily" ? "Daily" : (GAMETYPE_LABELS[gameType] || "Classic"), l: "mode" });
+    stats.push({ v: hidden ? "?" : correct + "/" + TOTAL_ROUNDS, l: "strung" });
+    if (runTime != null && !hidden) stats.push({ v: fmtTime(runTime), l: "on the clock" });
+    if (verseBonus > 0 && !hidden) stats.push({ v: "+" + verseBonus, l: "verse bonus" });
+  }
+
+  const name = (settings.playerName || "").trim();
+  return {
+    kicker: "Swift to the Song Association",
+    title,
+    braceletMarkup: $("resultBracelet").innerHTML,
+    stats: stats.slice(0, 4),
+    signature: name,
+    footer: dateLabel + " · " + timeLabel + " · swiftassociation.com",
+    filename: "swift-bracelet-" + dateKey + ".png",
+    heartHands: HEART_HANDS_SVG,   // the notebook's own emblem, re-tinted on the card
+    vars: cardVars(),
+  };
+}
+
+// Wired to the results-screen bracelet button. A plain click copies the keepsake PNG
+// to the clipboard; a shift- (or ⌘/ctrl-) click downloads it instead. If the browser
+// can't write images to the clipboard, the copy path quietly falls back to a download
+// so the button always does *something*. Guards against a double-click while rasterising.
+let braceletSaveBusy = false;
+async function saveBraceletPNG(e) {
+  if (braceletSaveBusy) return;
+  const btn = $("saveBraceletBtn");
+  if (!$("resultBracelet").innerHTML.trim()) return;   // nothing strung yet
+  const wantDownload = !!(e && (e.shiftKey || e.metaKey || e.ctrlKey));
+  braceletSaveBusy = true;
+  const label = btn ? btn.textContent : "";
+  if (btn) { btn.disabled = true; btn.textContent = wantDownload ? "Saving…" : "Copying…"; }
+  try {
+    if (wantDownload) {
+      await exportBraceletCard(buildCardMeta());
+      if (btn) btn.textContent = "Saved ✓";
+    } else {
+      await copyBraceletCard(buildCardMeta());
+      if (btn) btn.textContent = "Copied ✓";
+    }
+  } catch (e2) {
+    console.warn("bracelet PNG export failed:", e2);
+    if (!wantDownload) {
+      // Clipboard-image writes aren't supported everywhere — fall back to a download.
+      try {
+        await exportBraceletCard(buildCardMeta());
+        if (btn) btn.textContent = "Saved ✓";
+      } catch (e3) {
+        console.warn("bracelet PNG download fallback failed:", e3);
+        if (btn) btn.textContent = "Couldn’t save";
+        notifyNote("couldn’t save the bracelet", "try again in a moment");
+      }
+    } else {
+      if (btn) btn.textContent = "Couldn’t save";
+      notifyNote("couldn’t save the bracelet", "try again in a moment");
+    }
+  } finally {
+    braceletSaveBusy = false;
+    if (btn) setTimeout(() => { btn.disabled = false; btn.textContent = label; }, 1800);
+  }
 }
 
 function renderBracelet() {
@@ -10090,6 +10232,7 @@ function renderSettingsBody() {
     ) +
     setSection("Display &amp; accessibility",
       setChoiceHTML("weekStart", "Week starts on", "first row of the records calendar", [{ val: "mon", label: "Monday" }, { val: "sun", label: "Sunday" }]) +
+      setChoiceHTML("clock", "Time format", "how clock times are shown", [{ val: "12", label: "12-hour" }, { val: "24", label: "24-hour" }]) +
       setToggleHTML("highContrast", "High contrast", "darker ink, whiter paper") +
       setToggleHTML("colorBlindAlbums", "Colour-blind album colours", "a more distinguishable palette") +
       setToggleHTML("hideDailyScore", "Hide daily score until reveal", "")
@@ -11325,6 +11468,23 @@ function buildDevApi() {
       simulate: (v) => simulateShare(v),   // true = pretend | false = hide | null = tell the truth
       payload: () => ({ text: buildShareString(todayKey()), url: SITE_URL }),   // needs a daily result on screen
     },
+    // The bracelet-as-PNG keepsake. Reads whatever finished strand is on the results
+    // screen, so it needs a run to have just ended (any mode). meta() shows what the
+    // export would frame; svg() returns the raw card markup (open it in a tab to eyeball
+    // layout without downloading); copy() writes the PNG to the clipboard, save() downloads.
+    card: {
+      meta: () => buildCardMeta(),
+      copy: () => copyBraceletCard(buildCardMeta()),
+      save: () => exportBraceletCard(buildCardMeta()),
+      svg: async () => buildCardSVG(buildCardMeta(), await fontFaceCss()),
+      open: async () => {
+        const svg = buildCardSVG(buildCardMeta(), await fontFaceCss());
+        const url = URL.createObjectURL(new Blob([svg], { type: "image/svg+xml" }));
+        window.open(url, "_blank");
+        setTimeout(() => URL.revokeObjectURL(url), 8000);
+        return url;
+      },
+    },
     // The date itself. One override (window.__devDate) behind every dated surface: the
     // daily gate and seed, the anniversary slip, the milestone sticky and the desk
     // calendar. Session-only by design — it lives on window, never in storage, so a
@@ -11834,6 +11994,8 @@ async function init() {
     // Same "turn the page back" motion as give-up: the front page flips in from the left.
     flipInToScreen("start");
   });
+  // Save the finished bracelet as a keepsake PNG (a torn notebook page).
+  $("saveBraceletBtn").addEventListener("click", saveBraceletPNG);
   // Roll a finished classic run straight into endless play, carrying the score.
   $("keepGoingBtn").addEventListener("click", () => startInfinite("3lives", { carry: true }));
   // Quit / give up mid-game — first tap arms, second tap leaves (see armQuit).

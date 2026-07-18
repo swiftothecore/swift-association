@@ -17,6 +17,7 @@ Standout features:
 - Support for all eras + all miscellaneous and some unreleased Taylor songs coming soon
 - Lots and lots of easter eggs
 - Packed with visual charm
+- Save the friendship bracelet you make each run as a keepsake image, copied to your clipboard or downloaded as a notebook-page PNG
 - Over 90 achievements
 - Daily challenge
 - Challenges mode with 25 challenges (with more to come), including a super-hard tier unlocked through mastery
