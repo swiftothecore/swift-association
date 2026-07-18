@@ -730,6 +730,8 @@ export const ACH_ICONS = {
   piano:   `<svg viewBox="0 0 24 24"><path class="ink" stroke-width="1.1" d="M10.1 6.8 C10.1 5 10.1 4 9.3 2.8 M9.3 2.8 L8.5 2.1 M9.3 2.8 L10 2"/><rect class="ink-fill" x="3" y="7" width="18" height="12" rx="1.4"/><rect x="4.4" y="8.4" width="15.2" height="9.2" fill="var(--paper)" stroke="none"/><g class="ink" stroke-width="1"><path d="M8.2 8.4 V17.6"/><path d="M12 8.4 V17.6"/><path d="M15.8 8.4 V17.6"/></g><g class="ink-fill"><rect x="6.9" y="8.4" width="1.5" height="5"/><rect x="10.7" y="8.4" width="1.5" height="5"/><rect x="14.5" y="8.4" width="1.5" height="5"/></g></svg>`,
   // an hourglass — is it over now?
   hourglass:`<svg viewBox="0 0 24 24"><g class="ink" stroke-width="2"><path d="M6 2.8 H18"/><path d="M6 21.2 H18"/></g><g class="ink" stroke-width="1.3" fill="none"><path d="M7 3.6 C7 8 10 9.6 11 12 C10 14.4 7 16 7 20.4"/><path d="M17 3.6 C17 8 14 9.6 13 12 C14 14.4 17 16 17 20.4"/></g><path class="ink-fill" d="M10.9 10.2 H13.1 L12 11.7 Z"/><g fill="currentColor"><circle cx="12" cy="13.6" r="0.4"/><circle cx="12" cy="15.2" r="0.4"/><circle cx="12" cy="16.8" r="0.4"/></g><path class="ink-fill" d="M8.2 20.4 C9.4 17.8 14.6 17.8 15.8 20.4 Z"/></svg>`,
+  // a single leaf drifting as it falls — midrib, side veins, a bare stem (autumn leaves falling)
+  leaf:    `<svg viewBox="0 0 24 24"><g transform="rotate(24 12 12)"><path class="ink-fill" d="M12 2 C16.5 5 18 9 16 13.5 C15 15.8 13.6 17 12 18 C10.4 17 9 15.8 8 13.5 C6 9 7.5 5 12 2 Z"/><path class="ink" d="M12 5 V21 M12 8.4 L15 10 M12 8.4 L9 10 M12 11.4 L14.6 12.8 M12 11.4 L9.4 12.8"/></g></svg>`,
   // a four-leaf clover — the lucky one
   clover:  `<svg viewBox="0 0 24 24"><g class="ink-fill"><circle cx="8.9" cy="7.9" r="3.2"/><circle cx="15.1" cy="7.9" r="3.2"/><circle cx="8.9" cy="14.1" r="3.2"/><circle cx="15.1" cy="14.1" r="3.2"/></g><g class="ink" stroke-width="1"><path d="M12 11 L8.1 7.1"/><path d="M12 11 L15.9 7.1"/><path d="M12 11 L8.1 14.9"/><path d="M12 11 L15.9 14.9"/></g><path class="ink" stroke-width="1.6" d="M12.4 12.8 C13.4 16 13 18.4 14.6 21.2"/></svg>`,
   // an ajar door — the bolter (someone who runs)
@@ -1080,7 +1082,7 @@ export const ACHIEVEMENTS = [
   { id: "look-what-you-made-me-do", name: "Look What You Made Me Do", desc: "Make the snake appear",  secret: true,  icon: "snake" },
   { id: "snow-on-the-beach",   name: "Snow On The Beach",   desc: "Watch the snow fall on the page",        secret: true,  icon: "palm" },
   { id: "midnight-rain",       name: "Midnight Rain",       desc: "Keep the page company past midnight",    secret: true,  icon: "nightrain" },
-  { id: "autumn-leaves-falling", name: "Autumn Leaves Falling", desc: "Watch the autumn leaves fall on the page", secret: true, icon: "placeholder" },
+  { id: "autumn-leaves-falling", name: "Autumn Leaves Falling", desc: "Watch the autumn leaves fall on the page", secret: true, icon: "leaf" },
   { id: "safe-and-sound",   name: "Safe & Sound",     desc: "Play Easy three times in a row",       secret: false, icon: "lantern" },
   { id: "revenge",          name: "R-E-V-E-N-G-E",    desc: "Beat your own best score on any board", secret: false, icon: "megaphone" },
   { id: "mirrorball",       name: "Mirrorball",       desc: "Score a perfect 13/13 in every difficulty", secret: true, icon: "mirrorball" },
