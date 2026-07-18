@@ -2,7 +2,7 @@
 import { $, escapeRegExp, escapeHtml, prefersReducedMotion, shuffle, chance, normalizeTitle, normalizeLyric, fuzzySubstringRatio, levenshtein, mulberry32, dailySeed, censorText, anniversaryNote, thirteenNote } from "./util.js";
 import { SITE_URL, canShare, shareOrCopy, simulateShare } from "./share.js";
 import {
-  TOTAL_ROUNDS, RECENT_WINDOW, DAILY_ALBUM_SKEW, DAILY_ALBUM_WEIGHT_EXP, DIFF_KEY, DEFAULT_SETTINGS,
+  TOTAL_ROUNDS, RECENT_WINDOW, NOVELTY_BOOST, DAILY_ALBUM_SKEW, DAILY_ALBUM_WEIGHT_EXP, DIFF_KEY, DEFAULT_SETTINGS,
   MODES, MODE_ORDER, MODE_COLORS, DIFFICULTY_LADDER, MODALITY_MODES,
   ERAS, TENDER_ERAS, FINALE_ERAS, ALBUM_ERA, TS_MILESTONES, TS_LORE_DAYS,
   ALBUM_COLORS, CB_ALBUM_COLORS, STUDIO_ALBUMS, TITLE_ALIASES,
@@ -47,7 +47,7 @@ import {
   loadDailyProgress, saveDailyProgress, clearDailyProgress,
   bumpDailyStreak, effectiveDailyStreak, saveDailyStreak,
   markTypePlayed,
-  loadSongTally, recordGameTally,
+  loadSongTally, saveSongTally, recordGameTally,
   loadStudySet, saveStudySet, resetStudySet,
   loadCustom, saveCustom, activeCustomPreset, resetCustom, defaultCustomPreset,
   loadMetrics, recordGameMetrics,
@@ -97,6 +97,7 @@ let albumOrder = [];     // album names in canonical songs.json order (On Tour! 
 let score = 0;
 let round = 0;
 let usedWords = [];
+let noveltySeen = null;  // Normal-mode coverage bias: Set of words already encountered (tally words+misses), snapshotted at game start. Non-null only during a Normal (classic · medium) run; pickWord favours words NOT in it. null everywhere else → uniform draw.
 let roundResults = [];   // per-round true/false for the bracelet
 let roundAlbums = [];    // per-round album of the picked song (for the final bracelet)
 let roundWords = [];     // per-round prompt word (for the lifetime tally / Nemesis Word)
@@ -4934,6 +4935,11 @@ function useHint() {
 function startGame(opts) {
   gameType = "classic";
   resetRunState();
+  // Normal-mode coverage: snapshot which words this notebook has already shown, so pickWord can
+  // lean the draw toward the ones it hasn't. Only Normal (medium) carries the bias — the rarity-
+  // tiered modes keep their uniform draw. Snapshotting once here (not per round) means words shown
+  // earlier THIS run don't count as "seen" yet, but the run's own no-repeat (usedWords) covers that.
+  noveltySeen = currentMode.id === "medium" ? encounteredWords() : null;
   if (opts && opts.word) forcedFirstWord = opts.word;   // "Play this word" from the searcher
   applyInputHints();
   updateTagline();
@@ -6743,6 +6749,30 @@ function previewDailyAlbumYears(dateKey, count = 5, exp) {
     distinct: new Set(runs.flatMap((r) => r.words)).size, of: count * TOTAL_ROUNDS, years: runs };
 }
 
+// Every prompt word this notebook has already shown the player — the union of the tally's
+// correct answers (words) and its misses. This is "words encountered", deliberately broader
+// than the stats page's "words discovered" (correct answers only): for coverage, a word you
+// saw and blanked on still counts as one you've met. The Normal-mode novelty bias reads this.
+function encounteredWords() {
+  const t = loadSongTally();
+  return new Set([...Object.keys(t.words || {}), ...Object.keys(t.misses || {})]);
+}
+
+// Weighted draw that makes an un-encountered word NOVELTY_BOOST× likelier than a seen one, so a
+// Normal run trends toward covering the whole catalogue. Self-levelling: when every choice is
+// unseen (a fresh notebook) or every choice is seen (catalogue met) the weights are all equal and
+// this is just a uniform pick. `seen` is the snapshot from encounteredWords(); `rng` is the draw.
+function pickNovel(choices, rng, seen) {
+  let total = 0;
+  for (const w of choices) total += seen.has(w) ? 1 : NOVELTY_BOOST;
+  let r = rng() * total;
+  for (const w of choices) {
+    r -= seen.has(w) ? 1 : NOVELTY_BOOST;
+    if (r < 0) return w;
+  }
+  return choices[choices.length - 1];   // float-rounding safety net
+}
+
 function pickWord() {
   // Some challenges force the word so the round is winnable within their rule (and push
   // it onto usedWords themselves). A null return means "fall back to the normal pool".
@@ -6812,7 +6842,12 @@ function pickWord() {
       return word;
     }
   }
-  const word = choices[Math.floor(rng() * choices.length)];
+  // Normal-mode coverage bias: favour words the notebook hasn't shown yet so the catalogue fills
+  // in over time. noveltySeen is set only for a Normal (classic · medium) run; every other mode
+  // leaves it null and draws uniformly. Reverts to a plain uniform draw once every word is seen.
+  const word = noveltySeen
+    ? pickNovel(choices, rng, noveltySeen)
+    : choices[Math.floor(rng() * choices.length)];
   usedWords.push(word);
   return word;
 }
@@ -11580,6 +11615,24 @@ function buildDevApi() {
       play: () => startCustom(),                               // start a run on the active preset
       open: () => { gameType = "custom"; rememberGameType("custom"); renderStartPickers(); showScreen("start"); $("startContent").style.display = ""; },
       reset: () => { resetCustom(); syncCustomUI(); },
+    },
+    // Normal-mode novelty bias — the coverage nudge that favours un-encountered words in Normal.
+    // "Encountered" is read from the lifetime tally (words + misses), so there's no separate store
+    // to reset; forget() clears the tally's word history (leaving song/album counts) to replay it.
+    novelty: {
+      boost: NOVELTY_BOOST,                                    // how many× likelier an unseen word is
+      // Coverage report: seen / total playable words, and how many are still waiting to appear.
+      coverage: () => {
+        const seen = encounteredWords();
+        const total = playableWords.length;
+        const hit = playableWords.filter((w) => seen.has(w)).length;
+        return { seen: hit, total, remaining: total - hit, pct: total ? Math.round((hit / total) * 100) : 0, boost: NOVELTY_BOOST };
+      },
+      unseen: () => playableWords.filter((w) => !encounteredWords().has(w)),   // words Normal will lean toward
+      live: () => (noveltySeen ? { active: true, seen: noveltySeen.size } : { active: false }),  // is the current run biased?
+      // Wipe just the encountered history (tally words + misses) so coverage resets to zero. Leaves
+      // song/album tallies and everything else intact — this only replays the "have I seen it" side.
+      forget: () => { const t = loadSongTally(); t.words = {}; t.misses = {}; saveSongTally(t); return { seen: 0, total: playableWords.length }; },
     },
     // Keepsakes — the collectible polaroid set. Grant/backdate/clear polaroids so the three
     // develop states (locked / developing / developed) can be eyeballed without the 13-min

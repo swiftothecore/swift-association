@@ -3,6 +3,14 @@
 export const TOTAL_ROUNDS = 13;
 export const ROUND_SECONDS = 10;
 export const RECENT_WINDOW = 5;
+// Normal-mode coverage bias: in a Normal (classic · medium) run each draw favours prompt
+// words the player hasn't been shown yet, so playing Normal trends toward meeting the whole
+// catalogue instead of re-rolling the same familiar words forever. This is how many times
+// likelier an un-encountered word is than an already-seen one, per word. A soft nudge, not a
+// forced march: early on nearly everything is unseen so it plays like uniform random, and once
+// every word has been encountered all weights equalise and it reverts to plain random. Only the
+// Normal pool ("all") reads this; the rarity-tiered modes draw uniformly. See pickWord / pickNovel.
+export const NOVELTY_BOOST = 6;
 // On an album's anniversary, the daily challenge draws its prompt words from the words that
 // recur across that album's songs. Per round this is the chance of drawing from that album's
 // pool, and at 1.0 that is every round: the run already wears the album's colours on all thirteen
