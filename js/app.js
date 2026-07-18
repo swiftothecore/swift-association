@@ -3613,6 +3613,33 @@ const CHALL_RING = `<svg viewBox="0 0 20 20" class="chall-mark-svg" aria-hidden=
 const CHALL_LOCK = `<svg viewBox="0 0 20 20" class="chall-mark-svg" aria-hidden="true"><rect x="4.5" y="9" width="11" height="8" rx="1.4" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M6.8 9 V6.7 a3.2 3.2 0 0 1 6.4 0 V9" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>`;
 const CHALL_STAR = `<svg viewBox="0 0 24 24" class="chall-star-svg" aria-hidden="true"><path d="M12 2.3 L14.94 7.96 L21.22 9 L16.76 13.55 L17.7 19.85 L12 17 L6.3 19.85 L7.24 13.55 L2.78 9 L9.06 7.96 Z" fill="#e0a32f" stroke="#b9821f" stroke-width="1.1" stroke-linejoin="round" stroke-linecap="round"/></svg>`;
 
+// The beaten seal is a genuine two-tone: the wax body ages to a warm grey while the
+// beaded rim keeps its red. A uniform CSS filter can't do that (body and beads are both
+// red at the source), so we derive an "aged" copy of each wax seal by string-swapping the
+// body/motif gradient reds (and the pink relief highlights) for warm taupes, leaving the
+// bead red (#b04046) and its highlight untouched. The internal ids are re-scoped (wax- ->
+// waxaged-) so an aged seal and a red one never collide over a shared gradient id.
+const AGED_SEAL_BODY = {
+  "#b8413f": "#bca99f", "#a72e33": "#aa9a8f", "#93232a": "#8f8279", "#781a20": "#726860",
+  "#ae363b": "#b2a498", "#9c282e": "#978a80", "#8a2028": "#847770",
+  "#cd5c55": "#c8bcb0", "#ad353a": "#ab9d92", "#96262d": "#8f8279",
+};
+const AGED_SEAL_HILITE = {
+  "rgba(250,188,168,0.4)": "rgba(216,206,196,0.4)", "rgba(255,216,198,0.17)": "rgba(224,215,205,0.17)",
+  "rgba(255,190,170,0.06)": "rgba(216,207,197,0.06)", "rgba(246,182,162,0.38)": "rgba(212,203,193,0.38)",
+  "rgba(246,184,164,0.28)": "rgba(213,204,194,0.28)", "rgba(252,198,180,0.45)": "rgba(218,209,199,0.45)",
+  "rgba(252,198,182,0.5)": "rgba(218,209,199,0.5)",
+};
+function agedSealSvg(redSvg) {
+  let s = redSvg.split("wax-").join("waxaged-");   // re-scope ids so aged + red can coexist
+  for (const k in AGED_SEAL_BODY) s = s.split(k).join(AGED_SEAL_BODY[k]);
+  for (const k in AGED_SEAL_HILITE) s = s.split(k).join(AGED_SEAL_HILITE[k]);
+  return s;
+}
+const CHALLENGE_SEALS_AGED = Object.fromEntries(
+  Object.entries(CHALLENGE_SEALS).map(([id, svg]) => [id, agedSealSvg(svg)])
+);
+
 // Difficulty rating — cassette tapes (1 easy → 3 hard). Echoes the dark-shell +
 // cream-label cassette desk prop; the shell is recoloured per tier by the
 // wrapper's t1/t2/t3 class (green → orange → red, set in CSS).
@@ -3777,7 +3804,7 @@ function renderChallengeDetail(id) {
 
   el.innerHTML =
     `<div class="chall-detail-head">` +
-      `<span class="chall-detail-seal ${rec.defeated ? "is-beaten" : open ? "is-unbeaten" : "is-locked"}">${CHALLENGE_SEALS[c.id] || ""}</span>` +
+      `<span class="chall-detail-seal ${rec.defeated ? "is-beaten" : open ? "is-unbeaten" : "is-locked"}">${(rec.defeated ? CHALLENGE_SEALS_AGED : CHALLENGE_SEALS)[c.id] || ""}</span>` +
       `<span class="chall-detail-name">${escapeHtml(c.name)}</span>` +
       (rec.defeated ? `<span class="chall-detail-star">${CHALL_STAR}</span><span class="chall-detail-stamp">defeated</span>` : "") +
     `</div>` +
