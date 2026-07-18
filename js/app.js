@@ -1893,7 +1893,7 @@ function renderVerseAnthology() {
   const more = folded > 0
     ? `<button type="button" class="va-more">+ ${folded} more line${folded > 1 ? "s" : ""}</button>`
     : "";
-  el.innerHTML = `<p class="va-caption">pages you filled in — ${n} line${n > 1 ? "s" : ""} from memory</p>` +
+  el.innerHTML = `<p class="va-caption">pages you filled in, ${n} line${n > 1 ? "s" : ""} from memory</p>` +
     `<ul class="va-list">${rows}</ul>` + more;
   const moreBtn = el.querySelector(".va-more");
   if (moreBtn) moreBtn.addEventListener("click", () => {
@@ -1956,13 +1956,13 @@ function renderSkillsRecap() {
   if (masteryMoment) {
     const lvl = masteryLevelFromXp(m.masteryXp);
     if (lvl >= MASTERY_MAX_LEVEL) {
-      mastery = `<div class="sr-mastery"><div class="sr-mtop"><span>Mastery — level ${lvl}</span>` +
+      mastery = `<div class="sr-mastery"><div class="sr-mtop"><span>Mastery: level ${lvl}</span>` +
         `<span class="sr-mxp">max</span></div>` +
         `<div class="ms-bar sr-mbar maxed"><i style="width:100%"></i></div></div>`;
     } else {
       const cur = masteryXpForLevel(lvl), next = masteryXpForLevel(lvl + 1);
       const pct = Math.max(0, Math.min(100, ((m.masteryXp - cur) / (next - cur)) * 100));
-      mastery = `<div class="sr-mastery"><div class="sr-mtop"><span>Mastery — level ${lvl}</span>` +
+      mastery = `<div class="sr-mastery"><div class="sr-mtop"><span>Mastery: level ${lvl}</span>` +
         `<span class="sr-mxp">${m.masteryXp - cur} / ${next - cur} to ${lvl + 1}</span></div>` +
         `<div class="ms-bar sr-mbar"><i style="width:${pct.toFixed(1)}%"></i></div></div>`;
     }
@@ -1997,9 +1997,9 @@ function celebrateMastery(res, host) {
   const lvl = up ? up.to : masteryLevelFromXp(res.mastery.masteryXp);
   const rewards = (res.newUnlocks || []).map((id) => MASTERY_REWARD_BY_ID[id]).filter(Boolean);
   const rewardLine = rewards.length
-    ? `<div class="mc-reward">new reward${rewards.length > 1 ? "s" : ""} — ${rewards.map((r) => escapeHtml(r.name)).join(", ")}</div>`
+    ? `<div class="mc-reward">new reward${rewards.length > 1 ? "s" : ""}: ${rewards.map((r) => escapeHtml(r.name)).join(", ")}</div>`
     : "";
-  const title = isUnlock ? "Mastery unlocked" : `Mastery — level ${lvl}`;
+  const title = isUnlock ? "Mastery unlocked" : `Mastery: level ${lvl}`;
   const sub = isUnlock ? "every skill now feeds your mastery" : "another page turns in your songbook";
 
   const banner = document.createElement("div");
@@ -2191,7 +2191,7 @@ function renderSongbook() {
   for (const s of allSongs) if (found[s.title] && s.album) byAlbum[s.album] = (byAlbum[s.album] || 0) + 1;
 
   const sub = complete
-    ? "every song found — the whole catalogue, by heart ★"
+    ? "every song found: the whole catalogue, by heart ★"
     : remaining + " song" + (remaining === 1 ? "" : "s") + " still hiding from you";
 
   let html = `<div class="sb-meter${complete ? " done" : ""}">
@@ -2427,7 +2427,7 @@ function heatSectionHTML() {
   const opts = [["y1", "last 12 months"], ["ytd", todayKey().slice(0, 4)], ["m1", "last 30 days"], ["wk", "last 7 days · by hour"]];
   const optHTML = opts.map(([v, l]) => `<option value="${v}"${v === _heatView ? " selected" : ""}>${escapeHtml(l)}</option>`).join("");
   const legend = [0, 1, 2, 3, 4].map((l) => `<i style="background:${HEAT_FILL[l]}"></i>`).join("");
-  return `<p class="rec-group-label">calendar — games played</p>` +
+  return `<p class="rec-group-label">calendar: games played</p>` +
     `<div class="heat-wrap">` +
       `<div class="heat-controls">` +
         `<select id="heatRange" class="heat-select" aria-label="calendar timeframe">${optHTML}</select>` +
@@ -2443,7 +2443,7 @@ function setHeatFoot(view, total, days) {
   const g = (n) => `${n} game${n === 1 ? "" : "s"}`;
   let msg;
   if (total === 0) msg = view === "m1" ? `no games yet this month — <b>play to start filling your calendar</b>` : `nothing logged here yet — <b>play a round to begin</b>`;
-  else if (view === "y1") msg = `<b>${g(total)}</b> across <b>${days} day${days === 1 ? "" : "s"}</b> — darker means more games`;
+  else if (view === "y1") msg = `<b>${g(total)}</b> across <b>${days} day${days === 1 ? "" : "s"}</b>, darker means more games`;
   else if (view === "ytd") msg = `<b>${g(total)}</b> so far in ${todayKey().slice(0, 4)}`;
   else msg = `<b>${g(total)}</b> over the last 30 days`;
   f.innerHTML = msg;
@@ -3874,7 +3874,7 @@ function renderAlbumFocusPage() {
     const score = (rec.best > 0 && !rec.beaten) ? `<span class="af-tile-score">${rec.best}/${TOTAL_ROUNDS}</span>` : "";
     const gold = rec.perfected
       ? `<span class="af-corner af-corner--tl" aria-hidden="true"></span><span class="af-corner af-corner--tr" aria-hidden="true"></span>` : "";
-    tiles += `<button type="button" class="af-tile ${state}" data-album="${escapeHtml(a)}" style="--era:${albumColor(a) || "#999"}" aria-label="${escapeHtml(a)} — ${stateWord}">` +
+    tiles += `<button type="button" class="af-tile ${state}" data-album="${escapeHtml(a)}" style="--era:${albumColor(a) || "#999"}" aria-label="${escapeHtml(a)}: ${stateWord}">` +
       `<span class="af-pin" aria-hidden="true"></span>${gold}` +
       `<span class="af-tile-win" aria-hidden="true"></span>${score}` +
       `<span class="af-tile-cap">${escapeHtml(albumTileName(a))}</span>` +
@@ -3939,7 +3939,7 @@ function renderAlbumDetail(album) {
     `</div>` +
     `<div class="chall-sec chall-sec--beat">` +
       `<div class="chall-eyebrow">To beat it</div>` +
-      `<div class="chall-goal">Score ${ALBUM_FOCUS_TARGET}/${TOTAL_ROUNDS} — a perfect 13/13 completes it in style.</div>` +
+      `<div class="chall-goal">Score ${ALBUM_FOCUS_TARGET}/${TOTAL_ROUNDS}. A perfect 13/13 completes it in style.</div>` +
       `<div class="af-diffs">${tabs}</div>` +
     `</div>` +
     `<div class="chall-act">` +
@@ -4000,7 +4000,7 @@ function renderStudyPage() {
 
   if (canPractise) {
     const meta = review > 0
-      ? `${review} word${review === 1 ? "" : "s"} due — a session runs up to ${STUDY_SESSION_ROUNDS}`
+      ? `${review} word${review === 1 ? "" : "s"} due, a session runs up to ${STUDY_SESSION_ROUNDS}`
       : `nothing overdue — practise words that unlock songs you've never found`;
     el.innerHTML =
       `<div class="study-intro">${intro}</div>` +
@@ -6466,7 +6466,7 @@ function endAlbumFocus() {
       ? `<div class="chall-result-status win">perfect — album complete ★</div>`
       : `<div class="chall-result-status win">album beaten!</div>`;
   } else if (beat && !hintFree) {
-    status = `<div class="chall-result-status">beaten — but hinted runs don't count toward completion</div>`;
+    status = `<div class="chall-result-status">beaten, but hinted runs don't count toward completion</div>`;
   } else {
     status = `<div class="chall-result-status">not yet — score ${ALBUM_FOCUS_TARGET}/${TOTAL_ROUNDS} to beat it</div>`;
   }
@@ -7312,7 +7312,7 @@ function challengeIntroHTML(c) {
     return curtainCardHTML({ kicker: "choose your path", tag: "how it works",
       headline: "forge your own run",
       sub: `clear pages to reach <b>${c.target}/13</b>` +
-        (forks ? ` — and at pages ${forks} you'll pick a perk for the rest of the way` : ""),
+        (forks ? `, and at pages ${forks} you'll pick a perk for the rest of the way` : ""),
       cue: "choose wisely", button: "let's go" });
   }
   // Devil's Path — warn that the forks hand you curses, not perks.
@@ -7321,7 +7321,7 @@ function challengeIntroHTML(c) {
     return curtainCardHTML({ kicker: "devil's path", tag: "the bargain",
       headline: "choose your curses",
       sub: `reach <b>${c.target}/13</b>` +
-        (forks ? ` — but at pages ${forks} you must take the lesser of two evils` : ""),
+        (forks ? `, but at pages ${forks} you must take the lesser of two evils` : ""),
       cue: "no way out but through", button: "make the deal" });
   }
   // Every other challenge — name it, restate the rule and the win condition.
@@ -8527,10 +8527,10 @@ function playImpostorLose(kind) {
 function showImpostorLoseWipe(kind) {
   const w = escapeHtml(currentWord);
   const copy = kind === "falseflag"
-    ? { big: "innocent!", sub: `“${w}” is a real Taylor lyric — you accused a genuine word.` }
+    ? { big: "innocent!", sub: `“${w}” is a real Taylor lyric. You accused a genuine word.` }
     : kind === "timeout"
       ? { big: "too slow…", sub: `“${w}” was an impostor, and it slipped right past you.` }
-      : { big: "gotcha.", sub: `“${w}” appears in zero Taylor songs — you fell for the impostor.` };
+      : { big: "gotcha.", sub: `“${w}” appears in zero Taylor songs. You fell for the impostor.` };
   const ov = document.createElement("div");
   ov.className = "impostor-wipe";
   ov.setAttribute("role", "alert");
@@ -9100,7 +9100,7 @@ function showCorrectFeedback(song, lyricMatch) {
   let firstNote = "";
   if (bonus > 0 && !settings.seenVerseBonus) {
     settings.seenVerseBonus = true; saveSettings(settings);
-    firstNote = `<p class="verse-firstnote">writing more of the line earns a verse bonus — a prestige tally, kept apart from your score</p>`;
+    firstNote = `<p class="verse-firstnote">writing more of the line earns a verse bonus: a prestige tally, kept apart from your score</p>`;
   }
   const card = multi
     ? roundNamed.map((t) => lyricCard(currentSongs.find((s) => s.title === t) || song, currentWord, false, null, true)).join("")
@@ -10304,8 +10304,8 @@ function renderSettingsBody() {
       setChoiceHTML("defaultStatsTab", "Default stats tab", "which tab opens first", statsOpts)
     ) +
     setSection("Daily challenge",
-      setSelectHTML("timezone", "Time zone", "when the daily resets — your local day", tzOpts) +
-      `<p class="set-note">Today here is <b>${todayKey()}</b> — the next puzzle drops in ${formatResetCountdown(msUntilDailyReset())}. Changing this shifts your daily’s reset time and can affect your streak.</p>`
+      setSelectHTML("timezone", "Time zone", "when the daily resets, your local day", tzOpts) +
+      `<p class="set-note">Today here is <b>${todayKey()}</b>. The next puzzle drops in ${formatResetCountdown(msUntilDailyReset())}. Changing this shifts your daily’s reset time and can affect your streak.</p>`
     ) +
     setSection("Display &amp; accessibility",
       setChoiceHTML("weekStart", "Week starts on", "first row of the records calendar", [{ val: "mon", label: "Monday" }, { val: "sun", label: "Sunday" }]) +
@@ -10319,7 +10319,7 @@ function renderSettingsBody() {
       `<p class="set-note">a few little desk sounds: a real page turn, a small chime for a hit, a soft note for a miss, a quiet pip when a hint reveals, and a glockenspiel flourish when you unlock something. more to come.</p>`
     ) +
     setSection("Data",
-      `<p class="set-note">Your stats, achievements, and records live in this browser’s storage. That’s safe day-to-day, but not fool-proof — clearing your browser data, switching devices, or some private-browsing modes can wipe it. If you’d hate to lose your progress, export a backup now and then.</p>` +
+      `<p class="set-note">Your stats, achievements, and records live in this browser’s storage. That’s safe day-to-day, but not fool-proof: clearing your browser data, switching devices, or some private-browsing modes can wipe it. If you’d hate to lose your progress, export a backup now and then.</p>` +
       `<div class="set-actions"><button class="btn-ghost" data-action="export">Export backup</button>` +
       `<button class="btn-ghost" data-action="import">Import backup</button></div>`
     ) +
@@ -10330,7 +10330,7 @@ function renderSettingsBody() {
     `</div>` +
     setSection("About",
       `<div class="set-about">` +
-      `<p>Swift to the Song Association — a songwriter’s-notebook word game. Fan-made and unofficial; lyrics belong to their writers.</p>` +
+      `<p>Swift to the Song Association: a songwriter’s-notebook word game. Fan-made and unofficial; lyrics belong to their writers.</p>` +
       `<p> Inspired by ELLE.</p>` +
       `<div class="about-notes">` +
         `<a class="about-note about-note--gh" href="https://github.com/swiftothecore/swift-association" target="_blank" rel="noopener">` +
@@ -10694,7 +10694,7 @@ function renderCustomModalBody() {
       cmRoundsTile(m) +
       cmSliderTile("seconds", "Countdown", "seconds per page (0 for no clock)", m.seconds, false, "cm-tile--half") +
       cmSliderTile("hintBudget", "Hint budget",
-        m.lyricOnly ? "off while answering by line — the last hint is the line" : "total reveals for the run (past 13 = unlimited)",
+        m.lyricOnly ? "off while answering by line: the last hint is the line" : "total reveals for the run (past 13 = unlimited)",
         m.hintBudget, m.lyricOnly, "cm-tile--half") +
       cmChoiceTile("answer", "Answering", "how a page can be answered", [
         { val: "title", label: "Titles" }, { val: "lyric", label: "Lyric lines" }, { val: "either", label: "Either" }], m.answer, "cm-tile--wide") +
