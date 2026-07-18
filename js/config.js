@@ -99,6 +99,7 @@ export const DEFAULT_SETTINGS = {
   hideDailyScore: false,    // hide the daily score until "reveal & copy"
   timezone: "auto",         // daily-reset zone: "auto" (detect) | an IANA id e.g. "America/New_York"
   weekStart: "mon",         // first row/column of week-based views (the records calendar): "mon" | "sun"
+  clock: "12",              // time-of-day format wherever a clock time is shown: "12" (4:31 PM) | "24" (16:31)
   // onboarding / first-run — the shared state every "first impressions" feature hangs off
   firstRunDone: false,      // has the player finished the first-run welcome flow (gates the intro + the ready-for-normal nudge)
   favouriteAlbum: "",       // era chosen in the first-run question ("" = never asked or skipped); surfaced on the profile

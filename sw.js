@@ -16,7 +16,7 @@
  * Paths are relative so the worker works at the site root (swiftassociation.com)
  * and under any project subpath, without hardcoding the origin.
  */
-const CACHE = "stta-v13";
+const CACHE = "stta-v14";
 const ASSETS = [
   "./",
   "index.html",
@@ -32,6 +32,7 @@ const ASSETS = [
   "js/config.js",
   "js/match.js",
   "js/bracelet.js",
+  "js/braceletcard.js",
   "js/storage.js",
   "js/sound.js",
   // Share/copy plumbing — imported by both the game and the searcher.
