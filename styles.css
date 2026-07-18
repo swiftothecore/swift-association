@@ -1171,10 +1171,12 @@
   /* The seal reads three states by how alive the wax looks. Locked sits cold and
      fully drained (pure grey, faded back) — the challenge isn't yours yet. Unlocked
      but not beaten runs a fresh, full oxblood: here it is, go press it. Beaten is the
-     wax pressed and set — mostly desaturated but keeping ~15% of its red, an aged
-     grey-with-red-hints (the grayscale(0.85) the retired sacrifice charm once wore). */
-  .chall-detail-seal.is-locked svg   { filter: grayscale(1) brightness(1.05) opacity(0.55); }
-  .chall-detail-seal.is-beaten svg   { filter: grayscale(0.85); }
+     wax pressed and set — the exact grey-with-red-hints the retired sacrifice charm
+     wore (`.ach--given`: opacity 0.5 + grayscale(0.85)). The opacity is not optional:
+     dropping it and leaning on grayscale alone darkens the low-luminance red into a
+     muddy brown; the half-opacity is what floats it back up to that light, aged grey. */
+  .chall-detail-seal.is-locked svg   { filter: grayscale(1) opacity(0.42); }
+  .chall-detail-seal.is-beaten svg   { opacity: 0.5; filter: grayscale(0.85); }
   .chall-detail-name { font-family: var(--hand); font-weight: 700; font-size: 32px; line-height: 1; color: var(--ink); }
   .chall-detail-star { display: flex; }
   .chall-star-svg { width: 18px; height: 18px; display: block; }
