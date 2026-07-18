@@ -16,7 +16,7 @@
  * Paths are relative so the worker works at the site root (swiftassociation.com)
  * and under any project subpath, without hardcoding the origin.
  */
-const CACHE = "stta-v15";
+const CACHE = "stta-v16";
 const ASSETS = [
   "./",
   "index.html",
@@ -45,6 +45,7 @@ const ASSETS = [
   "sounds/wrong.mp3",
   "sounds/page.mp3",
   "sounds/unlock.mp3",
+  "sounds/hint.mp3",
   "songs.json",
   "words.json",
   // Swift To The Lyric searcher — precached (incl. the "search/" navigate path) so it

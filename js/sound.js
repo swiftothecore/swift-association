@@ -9,6 +9,9 @@
  *   page.mp3    - a real paper page turn (freesound #630019, CC0)
  *   unlock.mp3  - a glockenspiel flourish for the rare achievement/mastery
  *                 unlock (freesound #456965, CC0), peak-matched to correct.
+ *   hint.mp3    - that same glockenspiel's first note alone, trimmed dry and
+ *                 mixed quietest in the palette (-13 dBFS): a small pip when a
+ *                 hint tier reveals, reading as a cousin of the unlock.
  * correct and wrong come from the same Material family on purpose: their
  * relative balance (bright yes / softer no) is the kit's own, preserved when
  * the files were level-matched. Keep the palette stationery, never arcade.
@@ -42,6 +45,7 @@ const SOUNDS = {
   wrong:   { url: new URL("../sounds/wrong.mp3", import.meta.url), gain: 1 },
   page:    { url: new URL("../sounds/page.mp3", import.meta.url), gain: 1 },
   unlock:  { url: new URL("../sounds/unlock.mp3", import.meta.url), gain: 1 },
+  hint:    { url: new URL("../sounds/hint.mp3", import.meta.url), gain: 1 },
 };
 
 const buffers = {}; // name -> Promise<AudioBuffer>

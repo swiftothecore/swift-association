@@ -5069,6 +5069,7 @@ function useHint() {
     tiers.push(`<blockquote class="hint-tier hint-line">${highlightWord(line, currentWord)}</blockquote>`);
   }
   box.innerHTML = tiers.join("");
+  sfx.play("hint");   // a small pip as the clue reveals (quietest in the palette; see sound.js)
 
   const outOfBudget = hintBudgetActive() && hintBudgetLeft <= 0;
   if (btn && hintTier >= 3) {
@@ -10288,7 +10289,7 @@ function renderSettingsBody() {
     ) +
     setSection("Sound",
       setToggleHTML("sound", "Sound effects", "") +
-      `<p class="set-note">a few little desk sounds: a real page turn, a small chime for a hit, a soft note for a miss, and a glockenspiel flourish when you unlock something. more to come.</p>`
+      `<p class="set-note">a few little desk sounds: a real page turn, a small chime for a hit, a soft note for a miss, a quiet pip when a hint reveals, and a glockenspiel flourish when you unlock something. more to come.</p>`
     ) +
     setSection("Data",
       `<p class="set-note">Your stats, achievements, and records live in this browser’s storage. That’s safe day-to-day, but not fool-proof — clearing your browser data, switching devices, or some private-browsing modes can wipe it. If you’d hate to lose your progress, export a backup now and then.</p>` +
