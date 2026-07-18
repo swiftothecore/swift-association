@@ -3777,7 +3777,7 @@ function renderChallengeDetail(id) {
 
   el.innerHTML =
     `<div class="chall-detail-head">` +
-      `<span class="chall-detail-seal ${rec.defeated ? "is-pressed" : "is-unpressed"}">${CHALLENGE_SEALS[c.id] || ""}</span>` +
+      `<span class="chall-detail-seal ${rec.defeated ? "is-beaten" : open ? "is-unbeaten" : "is-locked"}">${CHALLENGE_SEALS[c.id] || ""}</span>` +
       `<span class="chall-detail-name">${escapeHtml(c.name)}</span>` +
       (rec.defeated ? `<span class="chall-detail-star">${CHALL_STAR}</span><span class="chall-detail-stamp">defeated</span>` : "") +
     `</div>` +
@@ -3988,7 +3988,7 @@ function renderStudyPage() {
     // Honest empty state — not padded with random words.
     const line = discovered === 0
       ? `Nothing to review yet. Play a few rounds and the words you trip on will show up here to practise.`
-      : `Nothing's due — you've got these down. Every song found, every word settled. Come back after your next run.`;
+      : `Nothing's due. You've got these down. Every song found, every word settled. Come back after your next run.`;
     el.innerHTML =
       `<div class="study-intro">${intro}</div>` +
       tiles + (learned > 0 ? ladder : "") +
@@ -4406,7 +4406,7 @@ function refreshStartBoard() {
     // Custom is sandboxed — no ranked board. Say so plainly where "your best" would sit.
     if (t) t.textContent = "Custom";
     const el = $("startBest");
-    if (el) el.innerHTML = `<div class="best-empty">a workshop mode — a run trains your skills, but never sets records</div>`;
+    if (el) el.innerHTML = `<div class="best-empty">a workshop mode: a run trains your skills, but never sets records</div>`;
     return;
   }
   if (t) t.textContent = "Your best";

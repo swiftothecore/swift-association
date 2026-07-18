@@ -1168,10 +1168,13 @@
   .chall-detail-head { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; }
   .chall-detail-seal { display: flex; }
   .chall-detail-seal svg { display: block; width: 53px; height: 53px; }
-  /* The seal is a signet you press by beating the rule. Undefeated, the wax sits
-     uninked and cold — the die never came down. Beat it and the wax runs a warm
-     oxblood, freshly stamped in relief. */
-  .chall-detail-seal.is-unpressed svg { filter: grayscale(1) sepia(0.18) brightness(1.03) opacity(0.82); }
+  /* The seal reads three states by how alive the wax looks. Locked sits cold and
+     fully drained (pure grey, faded back) — the challenge isn't yours yet. Unlocked
+     but not beaten runs a fresh, full oxblood: here it is, go press it. Beaten is the
+     wax pressed and set — mostly desaturated but keeping ~15% of its red, an aged
+     grey-with-red-hints (the grayscale(0.85) the retired sacrifice charm once wore). */
+  .chall-detail-seal.is-locked svg   { filter: grayscale(1) brightness(1.05) opacity(0.55); }
+  .chall-detail-seal.is-beaten svg   { filter: grayscale(0.85); }
   .chall-detail-name { font-family: var(--hand); font-weight: 700; font-size: 32px; line-height: 1; color: var(--ink); }
   .chall-detail-star { display: flex; }
   .chall-star-svg { width: 18px; height: 18px; display: block; }
