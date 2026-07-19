@@ -2,6 +2,8 @@
 
 I’m currently working on a game inspired by ELLE’s Song Association. Where, by default, you are given 10 seconds to name a song or lyric with a specific word in it. The twist? It’s all Taylor Swift songs 🫶
 
+pretty sure that's Taylor Swift
+
 The game is still a work in progress and is by no means 'done'.
 
 Standout features:
