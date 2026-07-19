@@ -6157,7 +6157,7 @@ function buildWildcardConstraints() {
     { id: "titleword", label: "the word must be in the title",   accepts: (s) => rx.test(s.title) },
     { id: "vanish",    label: "the word vanishes",               accepts: null,
       display: (w) => { vanishTimer = setTimeout(() => w.classList.add("vanished"), 1500); } },
-    { id: "scramble",  label: "the word is scrambled",           accepts: null,
+    { id: "scramble",  label: "the word is scrambled",           accepts: null, instant: true,
       display: (w) => renderWordFx(w, currentWord, 1) },
   ];
   if (album) cons.push({ id: "album", label: `only from ${album}`, accepts: (s) => s.album === album });
@@ -6176,8 +6176,10 @@ function applyWildcardRound() {
   roundWildcard = forced || pool[Math.floor(Math.random() * pool.length)];
   lastWildcardId = roundWildcard.id;
   renderWildcardBanner(roundWildcard.label);
-  // NOTE: the visual gimmick (vanish/scramble) is NOT run here — it's deferred to
-  // beginRoundClock so its countdown doesn't burn behind the full-screen rule intro.
+  // NOTE: a TIMED gimmick (the vanish countdown) is NOT run here — it's deferred to
+  // beginRoundClock so its countdown doesn't burn behind the full-screen rule intro. An
+  // INSTANT gimmick (scramble) is applied at word-render time instead (see advanceRound),
+  // so the word is already warped under the curtain and never flashes un-scrambled.
 }
 // The margin banner naming the current Wildcard rule (created lazily above the word).
 function renderWildcardBanner(label) {
@@ -7389,7 +7391,7 @@ function beginRoundClock() {
     const input = $("songInput");
     if (!input.disabled) input.focus();
     beginTimedRoundEffects();
-    if (isWildcardRound() && roundWildcard.display) roundWildcard.display(wrap);
+    if (isWildcardRound() && roundWildcard.display && !roundWildcard.instant) roundWildcard.display(wrap);
     startTimer();
   };
   const reduced = motionReduced();
@@ -7777,6 +7779,9 @@ function advanceRound() {
   wrap.style.removeProperty("--tiny-dx");
   wrap.style.removeProperty("--tiny-dy");
   wrap.classList.remove("revolve-in");        // clear any prior round's revolve swap
+  // Wildcard: apply an INSTANT gimmick (scramble) the moment the word is rendered, so it's
+  // already warped beneath the curtain. Timed gimmicks (vanish) still defer to beginRoundClock.
+  if (isWildcardRound() && roundWildcard.instant && roundWildcard.display) roundWildcard.display(wrap);
   clearTimeout(vanishTimer);
   if (revolveId) { clearInterval(revolveId); revolveId = null; }   // stop the prior round's rotation
   revolveIndex = 0;                            // Revolving Door: this round's word is slot 0
