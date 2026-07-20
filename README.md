@@ -8,7 +8,7 @@ The game is still a work in progress and is by no means 'done'.
 
 Standout features:
 
-- Support for all eras, plus miscellaneous and unreleased Taylor songs
+- Every era, plus holiday, movie, collaboration and some unreleased songs
 - Unique UI with a notebook theme, and lots and lots of easter eggs
 - Lyricist mode, where you answer by typing a lyric line instead of a song title
 - Five difficulty options, with hints if you want them
