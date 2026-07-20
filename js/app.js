@@ -11,6 +11,7 @@ import {
   IMPOSTOR_WORDS, IMPOSTOR_COUNT,
   SEA_GRID_SIZE, SEA_MIN_VALID, SEA_MAX_VALID,
   COMMON_LINES, COMMON_MIN_SONGS, COMMON_MAX_SONGS, COMMON_GEN_ATTEMPTS, COMMON_MAX_ACCEPT,
+  ODD_TILES, WHOSE_TILES, WHOSE_MIN_WORDS, WHOSE_GEN_ATTEMPTS,
   ALBUM_FOCUS_DIFFS, ALBUM_FOCUS_TARGET,
   ADAPTIVE_BUCKETS, ADAPTIVE_LEVELS, ADAPT_MAX_LEVEL, ADAPT_START_LEVEL, ADAPT_PROMO_STREAK, ADAPT_NODROP_LEVEL,
   STUDY_MAX_BOX, STUDY_INTERVALS, STUDY_SESSION_ROUNDS,
@@ -191,6 +192,13 @@ let seaDecoyTaps = 0;             // Sea of Songs: decoy tiles tapped this run (
 // always includes `word`). Built each round in buildCommonPuzzle; null off a Common Thread run.
 let commonPuzzle = null;
 let commonAnswerCorrect = null;   // set by submitAnswer's Common Thread intercept, read by the scoring tail
+// Odd One Out / Whose Line?: this page's tile list, each {song, correct} — exactly one tile is
+// the one to tap. Rebuilt each round; empty off both runs. Shares the tap grid with Sea of Songs.
+let tapTiles = [];
+let tapAnswerCorrect = null;      // set when a tile is tapped (or the clock dies), read by the scoring tail
+let tapPicked = -1;               // index of the tile tapped this page (-1 = timed out, nothing picked)
+// Whose Line?: this page's puzzle — {song, line}, the source song and the single line shown.
+let whosePuzzle = null;
 let currentWord = "";
 let currentSongs = [];
 // The full lyrics-valid set for the round, BEFORE a challenge sub-rule narrows currentSongs
@@ -4904,6 +4912,10 @@ function resetRunState() {
   impostorMissed = 0;
   commonPuzzle = null;
   commonAnswerCorrect = null;
+  tapTiles = [];
+  tapAnswerCorrect = null;
+  tapPicked = -1;
+  whosePuzzle = null;
   chainLetter = "";
   tourSetlist = [];
   comboClock = 0;
@@ -5526,15 +5538,22 @@ function buildSeaGrid() {
 
   seaTiles = shuffle(chosen.concat(decoys));
 }
-// Render the grid (called every round via renderSeaUI). Each tile is a button carrying its
-// index into seaTiles; the click handler routes the picked song through submitAnswer.
-function renderSeaGrid() {
-  const grid = $("seaGrid");
+// The tile list the active rule built. Sea of Songs keeps its own (its tiles are tagged
+// {song, valid} and several may be right); the knowledge grids share tapTiles.
+function activeTapTiles() { return seaRuleActive() ? seaTiles : tapTiles; }
+// The shared tile grid behind every tap-to-answer challenge (Sea of Songs, Odd One Out, Whose
+// Line?). Rendered every round by the owning rule's UI toggle; each button carries its index,
+// and the delegated click handler routes it to whichever rule is live.
+function renderTapGrid() {
+  const grid = $("tapGrid");
   if (!grid) return;
-  grid.innerHTML = seaTiles.map((t, i) =>
-    `<button type="button" class="sea-tile" data-sea="${i}" ` +
+  const tiles = activeTapTiles();
+  // Four tiles read better 2×2 than as one cramped row (see .tap-grid[data-cols="2"]).
+  grid.dataset.cols = tiles.length <= 4 ? "2" : "";
+  grid.innerHTML = tiles.map((t, i) =>
+    `<button type="button" class="tap-tile" data-tap="${i}" ` +
     `style="--album-color:${albumColor(t.song.album) || "var(--ink-soft)"}">` +
-    `<span class="sea-tile-title">${escapeHtml(censor(t.song.title))}</span></button>`
+    `<span class="tap-tile-title">${escapeHtml(censor(t.song.title))}</span></button>`
   ).join("");
 }
 // A tile was tapped — lock the grid and answer with that song. A valid tile scores correct;
@@ -5544,21 +5563,23 @@ function onSeaTileClick(index) {
   const tile = seaTiles[index];
   if (!tile) return;
   if (!tile.valid) seaDecoyTaps++;   // tapped a decoy — spoils a flawless run (Part The Sea)
-  $("seaGrid").querySelectorAll(".sea-tile").forEach((b) => { b.disabled = true; });
+  $("tapGrid").querySelectorAll(".tap-tile").forEach((b) => { b.disabled = true; });
   submitAnswer(tile.song);
 }
 // Toggle the whole Sea UI: build+show the grid (and hide the typed-input affordances) on a
 // Sea run, restore normal play otherwise. Called every round from advanceRound, like the
 // Impostor bar, so a leftover grid never bleeds into another game.
 function renderSeaUI() {
-  const grid = $("seaGrid");
+  const grid = $("tapGrid");
   const play = $("playArea");
   if (!grid || !play) return;
-  const on = seaRuleActive();
-  play.dataset.sea = on ? "1" : "";
-  grid.hidden = !on;
-  if (on) { buildSeaGrid(); renderSeaGrid(); }
-  else { grid.innerHTML = ""; seaTiles = []; }
+  // One flag for every tap-grid challenge — the CSS it drives (hiding the typed-input
+  // affordances) is identical for all of them.
+  const anyGrid = tapGridActive();
+  play.dataset.tapgrid = anyGrid ? "1" : "";
+  grid.hidden = !anyGrid;
+  if (seaRuleActive()) { buildSeaGrid(); renderTapGrid(); }
+  else if (!anyGrid) { grid.innerHTML = ""; seaTiles = []; tapTiles = []; }
 }
 // Sea of Songs: run progress toward the target.
 function renderSeaBanner() {
@@ -5572,15 +5593,176 @@ function renderSeaBanner() {
 // you could have tapped) in green, right on the grid, and mark a wrong pick red. The grid IS
 // the reveal, so the usual example-card feedback is suppressed (see showWrongFeedback).
 function revealSea(pickedSong) {
-  const grid = $("seaGrid");
+  const grid = $("tapGrid");
   if (!grid) return;
-  grid.querySelectorAll(".sea-tile").forEach((b, i) => {
+  grid.querySelectorAll(".tap-tile").forEach((b, i) => {
     b.disabled = true;
     const t = seaTiles[i];
     if (!t) return;
-    if (t.valid) b.classList.add("sea-tile--valid");
-    else if (pickedSong && t.song.title === pickedSong.title) b.classList.add("sea-tile--miss");
+    if (t.valid) b.classList.add("tap-tile--valid");
+    else if (pickedSong && t.song.title === pickedSong.title) b.classList.add("tap-tile--miss");
   });
+}
+
+// The prompt chrome — the big word and its "write a song with" lead-in — doesn't suit every
+// challenge: Common Thread and Whose Line? replace the single prompt word outright, and Odd One
+// Out keeps the word but inverts the ask (you're rejecting a song, not naming one). Deciding it
+// in one place stops two rules writing over each other's answer on the same two elements.
+function renderPromptChrome() {
+  const ww = document.querySelector(".word-wrap");
+  const wl = document.querySelector(".word-label");
+  const hideWord = commonRuleActive() || whoseLineRuleActive();
+  if (ww) ww.style.display = hideWord ? "none" : "";
+  if (wl) {
+    wl.style.display = hideWord ? "none" : "";
+    wl.textContent = oddOneRuleActive() ? "which song never sings" : "write a song with";
+  }
+}
+
+/* ---------- Odd One Out / Whose Line? — the tap-grid knowledge challenges ---------- */
+// Both share Sea of Songs' tile grid, but they can't route a tapped song through the normal
+// matcher the way Sea does: Odd One Out's winning tile is the song that *doesn't* hold the word,
+// and Whose Line? has no prompt word to match against at all. So each judges its own tap, parks
+// the verdict in tapAnswerCorrect, and falls through submitAnswer's shared scoring tail — the
+// same trick Common Thread uses for its word answers.
+function oddOneRuleActive() {
+  return gameType === "challenge" && currentChallenge && currentChallenge.rule === "oddone";
+}
+function whoseLineRuleActive() {
+  return gameType === "challenge" && currentChallenge && currentChallenge.rule === "whoseline";
+}
+// The two grids that judge their own taps (Sea of Songs is a tap grid too, but it answers with
+// a real song, so it stays on the normal path).
+function tapKnowledgeActive() { return oddOneRuleActive() || whoseLineRuleActive(); }
+// Every challenge that swaps typing for a grid of song tiles.
+function tapGridActive() { return seaRuleActive() || tapKnowledgeActive(); }
+
+// Odd One Out: ODD_TILES tiles, exactly one of them the odd one — a song holding the word in
+// NEITHER its lyrics nor its title (so it's never an unfair "the title matched" trap). The rest
+// are genuine holders from currentSongs. Shrinks the grid rather than failing if the word is
+// thin on holders, but never below one holder + the odd one.
+function buildOddGrid() {
+  tapTiles = [];
+  const holders = shuffle(currentSongs.slice()).slice(0, ODD_TILES - 1);
+  if (!holders.length) return false;
+  const rx = wordRegex(currentWord, effectiveStrict());
+  const holderTitles = new Set(currentSongs.map((s) => s.title));
+  const odd = shuffle(allSongs.filter((s) =>
+    !holderTitles.has(s.title) && !rx.test(s.lyrics) && !rx.test(s.title)))[0];
+  if (!odd) return false;
+  tapTiles = shuffle(holders.map((s) => ({ song: s, correct: false }))
+    .concat([{ song: odd, correct: true }]));
+  return true;
+}
+
+// One showable line from a song: long enough to be a fair puzzle, and never a line containing
+// the song's own title (which would just hand the answer over). Null when the song has none.
+function pickWhoseLine(song) {
+  const title = String(song.title || "").toLowerCase();
+  const bare = title.replace(/\s*\((taylor's version|from the vault|.*?)\)\s*/gi, "").trim();
+  const lines = shuffle(String(song.lyrics || "").split("\n").map((l) => l.trim()).filter((l) => {
+    if (l.split(/\s+/).filter(Boolean).length < WHOSE_MIN_WORDS) return false;
+    const low = l.toLowerCase();
+    return !low.includes(title) && !(bare && low.includes(bare));
+  }));
+  return lines[0] || null;
+}
+// Whose Line?: draw a source song + a line from it, then offer WHOSE_TILES songs with the source
+// hidden among decoys. Decoys never include a song whose lyrics also carry that exact line, so a
+// re-recording sharing the line with its original can't make two tiles correct at once.
+function buildWhosePuzzle() {
+  whosePuzzle = null;
+  tapTiles = [];
+  const pool = shuffle(allSongs.slice());
+  let source = null, line = null;
+  for (let i = 0; i < WHOSE_GEN_ATTEMPTS && i < pool.length; i++) {
+    const l = pickWhoseLine(pool[i]);
+    if (l) { source = pool[i]; line = l; break; }
+  }
+  if (!source) return false;
+  const low = line.toLowerCase();
+  const decoys = shuffle(allSongs.filter((s) =>
+    s.title !== source.title && !String(s.lyrics || "").toLowerCase().includes(low)))
+    .slice(0, WHOSE_TILES - 1);
+  if (!decoys.length) return false;
+  whosePuzzle = { song: source, line };
+  tapTiles = shuffle(decoys.map((s) => ({ song: s, correct: false }))
+    .concat([{ song: source, correct: true }]));
+  return true;
+}
+
+// Toggle the knowledge-grid UI each round: build the page's tiles, show the grid (and, for
+// Whose Line?, the lone lyric line in place of the prompt word), or tear it all down off these
+// runs. Mirrors renderSeaUI / renderCommonUI.
+function renderTapKnowledgeUI() {
+  const panel = $("whoseLine");
+  const play = $("playArea");
+  if (!play) return;
+  const onWhose = whoseLineRuleActive();
+  const on = tapKnowledgeActive();
+  if (on) { if (onWhose) buildWhosePuzzle(); else buildOddGrid(); renderTapGrid(); }
+  if (panel) {
+    panel.hidden = !onWhose;
+    panel.innerHTML = (onWhose && whosePuzzle)
+      ? `<p class="whose-lead">whose line is it?</p>` +
+        `<div class="whose-line-text">${escapeHtml(censor(whosePuzzle.line))}</div>`
+      : "";
+  }
+}
+// Judge a tapped tile (index -1 = the clock ran out with nothing tapped), then hand the page to
+// submitAnswer's shared tail via the tapAnswerCorrect override.
+function onTapKnowledgeClick(index) {
+  if (roundLocked || !tapKnowledgeActive()) return;
+  const tile = index >= 0 ? tapTiles[index] : null;
+  if (index >= 0 && !tile) return;
+  tapAnswerCorrect = !!(tile && tile.correct);
+  tapPicked = index;
+  submitAnswer(null);
+}
+// Verdict reveal on the grid itself: mark the tile you should have tapped, and redden a wrong
+// pick. The grid IS the reveal, so the verdict card underneath stays minimal — a banner, the
+// answer named in words, and the way onward. (The normal song card can't be used here anyway:
+// there's no answered song to build it from.)
+function revealTapKnowledge(correct) {
+  const grid = $("tapGrid");
+  if (grid) {
+    grid.querySelectorAll(".tap-tile").forEach((b, i) => {
+      b.disabled = true;
+      const t = tapTiles[i];
+      if (!t) return;
+      if (t.correct) b.classList.add("tap-tile--valid");
+      else if (i === tapPicked) b.classList.add("tap-tile--miss");
+    });
+  }
+  const answer = (tapTiles.find((t) => t.correct) || {}).song;
+  const note = oddOneRuleActive()
+    ? `“<b>${escapeHtml(currentWord)}</b>” is nowhere in ${escapeHtml(censor(answer ? answer.title : ""))}`
+    : `that line is from ${escapeHtml(censor(answer ? answer.title : ""))}`;
+  const auto = settings.autoAdvance;
+  const advanceUI = auto
+    ? `<div class="countdown">next page in <b id="cd">${settings.countdownSecs}</b></div><button id="skipBtn" class="countdown-skip">skip →</button>`
+    : `<button id="continueBtn" class="btn-ghost">next page →</button>`;
+  const banner = correct
+    ? (oddOneRuleActive() ? "✓ that's the odd one" : "✓ that's the one")
+    : (oddOneRuleActive() ? "✗ that one sings it" : "✗ not that one");
+  const fb = $("feedback");
+  fb.innerHTML =
+    `<div class="banner ${correct ? "good" : "bad"}">${banner}</div>` +
+    `<p class="red-note">${note}</p>` +
+    advanceUI;
+  feedbackShownAt = Date.now();
+  sfx.play(correct ? "correct" : "wrong");
+  $(auto ? "skipBtn" : "continueBtn").addEventListener("click", advanceFromFeedback);
+  if (correct) celebrateCorrect(correctStreak, 0);
+  if (auto) runCountdown();
+}
+// Odd One Out / Whose Line?: run progress toward the target.
+function renderTapKnowledgeBanner() {
+  if (!tapKnowledgeActive()) return;
+  const el = ensureChallBanner();
+  el.innerHTML =
+    `<span class="chall-prog-name">${oddOneRuleActive() ? "spot the odd one" : "place the line"}</span>` +
+    `<span class="chall-prog-count">${score} / ${currentChallenge.target || 9}</span>`;
 }
 
 /* ---------- Common Thread ---------- */
@@ -5661,13 +5843,9 @@ function commonAnswerMatches(raw) {
 function renderCommonUI() {
   const panel = $("commonLines");
   const play = $("playArea");
-  const ww = document.querySelector(".word-wrap");
-  const wl = document.querySelector(".word-label");
   if (!panel || !play) return;
   const on = commonRuleActive();
   play.dataset.common = on ? "1" : "";
-  if (ww) ww.style.display = on ? "none" : "";   // no single prompt word on a Common Thread page
-  if (wl) wl.style.display = on ? "none" : "";   // ...and no "write a song with" lead-in
   panel.hidden = !on;
   if (on && commonPuzzle) {
     panel.innerHTML =
@@ -5846,6 +6024,8 @@ function applyChallengeRound(wrap) {
     renderImpostorBanner();
   } else if (currentChallenge.rule === "sea") {
     renderSeaBanner();
+  } else if (currentChallenge.rule === "oddone" || currentChallenge.rule === "whoseline") {
+    renderTapKnowledgeBanner();
   } else if (currentChallenge.rule === "common") {
     renderCommonBanner();
   } else if (currentChallenge.rule === "tiny") {
@@ -7761,7 +7941,9 @@ function advanceRound() {
   // Impostor: rarity would betray a fake outright (0 songs → "one of one"), and even a
   // real word's scarcity is a tell, so flatten the swipe and show no stamp for the run.
   // Sea of Songs: rarity would narrow down which tiles could hold the word, so hide it too.
-  const hideRarity = impostorRuleActive() || commonRuleActive() || seaRuleActive();
+  // Odd One Out: same tell, and a "one of one" stamp would outright contradict a grid showing
+  // three holders. Whose Line? has no prompt word on the page at all.
+  const hideRarity = impostorRuleActive() || commonRuleActive() || tapGridActive();
   const wrap = $("wordDisplay").parentNode;   // .word-wrap
   wrap.dataset.rarity = hideRarity ? "common" : rar.name;
   wrap.style.setProperty("--rarity", hideRarity ? 0 : rar.t);
@@ -7789,7 +7971,9 @@ function advanceRound() {
   applyChallengeRound(wrap);                   // challenge per-round modifier (e.g. Vanishing Word)
   renderImpostorBar();                         // Impostor: the 🚩 flag action (hidden elsewhere)
   renderSeaUI();                               // Sea of Songs: the tap-a-title grid (hidden elsewhere)
+  renderTapKnowledgeUI();                      // Odd One Out / Whose Line?: their own tap grids
   renderCommonUI();                            // Common Thread: the three-line puzzle (hidden elsewhere)
+  renderPromptChrome();                        // whether the prompt word shows, and what it's asking
   renderExcludedNote();
   $("feedback").innerHTML = "";
   $("playArea").style.display = "";
@@ -8556,6 +8740,14 @@ function submitAnswer(song, isTimeout) {
   // you failed to flag it in time — fatal. (A real page's timeout is a normal miss below.)
   if (impostorRuleActive() && roundIsImpostor && isTimeout) { impostorGameOver("timeout"); return; }
 
+  // Odd One Out / Whose Line?: the tile tap already decided the page (onTapKnowledgeClick set
+  // tapAnswerCorrect before calling in). The only other way here is the clock expiring with
+  // nothing tapped, which is simply a miss. Either way there's no song to judge.
+  if (tapKnowledgeActive()) {
+    if (isTimeout) { tapAnswerCorrect = false; tapPicked = -1; }
+    song = null;
+  }
+
   // Common Thread: the answer is a WORD, not a song. Judge it here, then fall through the shared
   // scoring tail (score/streak/skills/timer/page-turn) with a correct-override and no song. An
   // empty box isn't an answer (don't burn the page); a timeout is a miss.
@@ -8575,7 +8767,10 @@ function submitAnswer(song, isTimeout) {
   checkPianoEgg($("songInput").value);   // "rep tv" / "reputation tv" typed as an answer
 
   let lyricMatch = null;
-  if (!song && !isTimeout && !commonRuleActive()) {
+  // Resolving what was typed into a song — skipped by the answer paths that have no typed
+  // input at all: Common Thread (a word) and the tap grids (a tile, already judged). Without
+  // the exemption the empty box would bail out here and silently eat the answer.
+  if (!song && !isTimeout && !commonRuleActive() && !tapKnowledgeActive()) {
     if (lyricModeNow()) {                   // Lyricist mode / Switch-Up lyric page: lyric line only
       lyricMatch = matchLyricLine($("songInput").value);
       if (lyricMatch) song = lyricMatch.song;
@@ -8711,12 +8906,15 @@ function submitAnswer(song, isTimeout) {
   resetTension();
   hideDropdown();
   $("songInput").disabled = true;
-  // Sea of Songs reveals its answers ON the grid (green tiles), so the grid — and thus the
-  // play area holding it — must stay visible through the verdict. Its input is CSS-hidden anyway.
-  if (!seaRuleActive()) $("playArea").style.display = "none";
+  // The tap grids reveal their answers ON the grid (green tiles), so the grid — and thus the
+  // play area holding it — must stay visible through the verdict. Their input is CSS-hidden anyway.
+  if (!tapGridActive()) $("playArea").style.display = "none";
 
-  // Common Thread scores off the word verdict (no song); every other path off the named song.
-  const correct = commonRuleActive() ? !!commonAnswerCorrect : (!!song && currentSongs.some((s) => s.title === song.title));
+  // Common Thread scores off the word verdict, the knowledge grids off the tapped tile (neither
+  // has a song to check); every other path scores off the named song.
+  const correct = commonRuleActive() ? !!commonAnswerCorrect
+    : tapKnowledgeActive() ? !!tapAnswerCorrect
+    : (!!song && currentSongs.some((s) => s.title === song.title));
   // Choose Your Path — Second Chance / Nine Lives: spend a mulligan to retry a miss
   // (same word, fresh clock) instead of burning the round. Only kicks in on an actual
   // miss while mulligans remain; correct answers and the other challenges are untouched.
@@ -8734,7 +8932,9 @@ function submitAnswer(song, isTimeout) {
   // Distinct albums the prompt word *could* have been answered from — the Discography skill
   // normalises breadth against this, so a word that only lives in one album never penalises.
   roundAnswerAlbums[round - 1] = [...new Set(currentSongs.map((s) => s.album).filter(Boolean))];
-  roundWords[round - 1] = currentWord;                 // prompt word — for Nemesis Word
+  // Prompt word — for Nemesis Word. Whose Line? never shows a word, so it logs none: crediting
+  // (or blaming) the player for a word they were never asked about would poison the catalogue.
+  roundWords[round - 1] = whoseLineRuleActive() ? null : currentWord;
   roundSongs[round - 1] = correct && song ? song.title : null;  // credited song — for the lifetime tally
   justEarnedIndex = correct ? round - 1 : -1;
   if (correct) score++;
@@ -8758,6 +8958,9 @@ function submitAnswer(song, isTimeout) {
   if (gameType === "challenge" && currentChallenge) {
     if (currentChallenge.rule === "album5") renderDeepCutCounter();
     else if (currentChallenge.rule === "newsong") renderNewSongBanner();
+    // The knowledge grids sit under their banner through the whole verdict, so a stale count
+    // would be read as "that didn't score" for the several seconds the reveal is up.
+    else if (tapKnowledgeActive()) renderTapKnowledgeBanner();
   }
   // From A to Z: advance the alphabetical floor only on an accepted correct answer.
   if (correct && currentChallenge && currentChallenge.rule === "alphabetical") {
@@ -8890,12 +9093,14 @@ function submitAnswer(song, isTimeout) {
   // Sea of Songs: light up the tappable titles on the grid itself (green = you could have
   // picked it, red = the decoy you tapped). The feedback card then skips its example songs.
   if (seaRuleActive()) revealSea(song);
+  // The knowledge grids own their whole verdict (grid + card), like Common Thread above.
+  if (tapKnowledgeActive()) { revealTapKnowledge(correct); return; }
 
   // Circle the player's pick before revealing the verdict (skipped on timeout / reduced
   // motion, and on a lyric answer — the circle re-draws a title the player never typed).
   // Sea of Songs shows the verdict on the grid itself, so it skips the pen-circle too.
   const reveal = () => (correct ? showCorrectFeedback(song, lyricMatch) : showWrongFeedback(song, isTimeout));
-  if (song && !isTimeout && !lyricMatch && !seaRuleActive() && settings.penCircle && !motionReduced() && !animInstant()) {
+  if (song && !isTimeout && !lyricMatch && !tapGridActive() && settings.penCircle && !motionReduced() && !animInstant()) {
     showCircledChoice(song, reveal);
   } else {
     reveal();
@@ -9139,8 +9344,9 @@ function showWrongFeedback(song, isTimeout) {
   const fb = $("feedback");
   const reason = isTimeout ? "the page ran out" : "not this verse";
   // Ultra offers no help (examples 0); the "show examples" setting can also force 0.
-  // Sea of Songs reveals its answers on the grid (green tiles), so skip the example cards.
-  const n = (settings.showExamples && !seaRuleActive()) ? currentMode.examples : 0;
+  // The tap grids reveal their answers on the grid itself (green tiles), so skip the example
+  // cards — and on Whose Line? the "songs with this word" cards would be nonsense anyway.
+  const n = (settings.showExamples && !tapGridActive()) ? currentMode.examples : 0;
   let help = "";
   if (n > 0) {
     let pool = currentSongs;
@@ -10077,10 +10283,15 @@ function wireInput() {
   });
   $("hintBtn").addEventListener("click", () => { useHint(); input.focus(); });
   $("flagBtn").addEventListener("click", () => flagImpostor());   // Impostor: 🚩 call the fake
-  // Sea of Songs: delegate tile taps (buttons are rebuilt each round) to the answer path.
-  $("seaGrid").addEventListener("click", (e) => {
-    const tile = e.target.closest(".sea-tile");
-    if (tile) onSeaTileClick(Number(tile.dataset.sea));
+  // The shared tap grid: delegate tile taps (buttons are rebuilt each round) to whichever
+  // tap-to-answer challenge is live — Sea of Songs answers with the song, the knowledge
+  // grids judge the tile themselves.
+  $("tapGrid").addEventListener("click", (e) => {
+    const tile = e.target.closest(".tap-tile");
+    if (!tile) return;
+    const i = Number(tile.dataset.tap);
+    if (seaRuleActive()) onSeaTileClick(i);
+    else if (tapKnowledgeActive()) onTapKnowledgeClick(i);
   });
   // After a verdict the input is disabled, so a document-level Enter advances
   // the page: skips the correct-answer countdown, or fires "next page" on a miss.
@@ -11936,6 +12147,22 @@ function buildDevApi() {
         valids: () => seaTiles.filter((t) => t.valid).map((t) => t.song.title),         // which tiles are answers
         answer: () => { const v = seaTiles.find((t) => t.valid); if (v) onSeaTileClick(seaTiles.indexOf(v)); },  // tap a correct tile
         win: () => { score = (CHALLENGE_BY_ID["sea-of-songs"].target) || 9; endGame(); },
+      },
+      // Odd One Out / Whose Line? — the two tap grids that judge their own tile.
+      oddone: {
+        tiles: () => tapTiles.map((t) => ({ title: t.song.title, odd: t.correct })),  // this page's grid
+        odd: () => (tapTiles.find((t) => t.correct) || {}).song?.title || null,       // the tile to tap
+        answer: () => { const t = tapTiles.find((x) => x.correct); if (t) onTapKnowledgeClick(tapTiles.indexOf(t)); },
+        miss: () => { const t = tapTiles.find((x) => !x.correct); if (t) onTapKnowledgeClick(tapTiles.indexOf(t)); },
+        win: () => { score = (CHALLENGE_BY_ID["odd-one-out"].target) || 9; endGame(); },
+      },
+      whoseline: {
+        line: () => (whosePuzzle ? whosePuzzle.line : null),          // the line on the page
+        source: () => (whosePuzzle ? whosePuzzle.song.title : null),  // the song it came from
+        tiles: () => tapTiles.map((t) => ({ title: t.song.title, source: t.correct })),
+        answer: () => { const t = tapTiles.find((x) => x.correct); if (t) onTapKnowledgeClick(tapTiles.indexOf(t)); },
+        miss: () => { const t = tapTiles.find((x) => !x.correct); if (t) onTapKnowledgeClick(tapTiles.indexOf(t)); },
+        win: () => { score = (CHALLENGE_BY_ID["whose-line"].target) || 9; endGame(); },
       },
       // Vanishing Word — the word blanks after revealMs. Blank Space wants a run written
       // entirely into that blank, so `win(false)` is the spoiled control case.

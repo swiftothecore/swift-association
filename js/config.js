@@ -365,7 +365,32 @@ export const CHALLENGES = [
     blurb: "3.5s · the game flips: three lines, one word runs through all of them",
     desc: "Throw everything you know about this game out the window. This time you are shown three lyrics from three different songs and you need to type the word they all share. Can you do it in 3.5 seconds?",
     win: "Score 9 / 13 finding the thread." },
+  // ---- Knowledge-flex batch. tapes:0 (unrated) until they've been played enough to
+  //      rate honestly; seals are placeholders pending real motifs. ----
+  { id: "odd-one-out", name: "Odd One Out", rule: "oddone", mode: "medium",
+    free: true, cost: 1, target: 9, seconds: 12, noTitle: false, dropdown: false, tapes: 0,
+    blurb: "12s · no typing · four songs, three hold the word · tap the one that doesn't",
+    desc: "Four songs, and the word hides in the lyrics of three of them. Tap the odd one out, the only song that never sings it.",
+    win: "Score 9 / 13 spotting the odd one out." },
+  { id: "whose-line", name: "Whose Line?", rule: "whoseline", mode: "medium",
+    free: true, cost: 1, target: 9, seconds: 12, noTitle: false, dropdown: false, tapes: 0,
+    blurb: "12s · no typing · one lyric line · name the song it came from",
+    desc: "No prompt word at all. You get a single line of lyric and four songs, and you have to know whose line it is.",
+    win: "Score 9 / 13 placing the line." },
 ];
+/* Odd One Out — the reject grid. Each page shows ODD_TILES songs, of which exactly one is the
+   odd one: the word appears in NEITHER its lyrics nor its title (so the tile isn't an unfair
+   "title matched but it's wrong" trap). Tapping the odd one scores; tapping any of the genuine
+   ones loses the page. Built at runtime from currentSongs + allSongs, like the Sea grid. */
+export const ODD_TILES = 4;
+/* Whose Line? — the line-placement grid. One line is drawn from a source song and shown alone;
+   WHOSE_TILES songs are offered, one of them the source. Lines are vetted: at least
+   WHOSE_MIN_WORDS long (a three-word line is a coin flip), and never a line that contains its
+   own song's title (which would hand the answer over). WHOSE_GEN_ATTEMPTS tries before we
+   settle for the best line we saw. */
+export const WHOSE_TILES = 4;
+export const WHOSE_MIN_WORDS = 5;
+export const WHOSE_GEN_ATTEMPTS = 24;
 /* Common Thread — the "type the shared word" inversion. Each page shows COMMON_LINES lyric
    lines from different songs; the answer is the word running through all of them. Puzzles are
    generated at runtime from allSongs + playableWords: an intended word is chosen from a mid-
@@ -904,6 +929,10 @@ export const ACH_ICONS = {
    from each challenge's name + rule description. fr is the motif's fill-rule: "evenodd"
    for plain cutouts, "nonzero" where overlapping subpaths must union (holes are then cut
    by reversing a subpath's winding). */
+/* The stand-in motif for a freshly built challenge: a plain upright question mark, deliberately
+   generic so an unfinished seal reads as unfinished at a glance. Swap each one for a real motif
+   drawn from its challenge's name + rule (see the notes above) as they're designed. */
+const PLACEHOLDER_MOTIF_D = "M32 19 A7 7 0 0 1 39 26 C39 30 34.5 31 33.5 34 L30.5 34 C31.5 29.5 36 28.5 36 26 A4 4 0 0 0 28 26 L25 26 A7 7 0 0 1 32 19 Z M29.8 37.4 a2.2 2.2 0 1 1 4.4 0 a2.2 2.2 0 1 1 -4.4 0";
 const WAX_SEAL_MOTIFS = {
   // a circle dissolving into scattering dots: the word vanishing before your eyes
   "vanishing-word": { fr: "nonzero", d: "M32 19 A13 13 0 0 0 32 45 Z M37.5 22.5 m-2.7 0 a2.7 2.7 0 1 1 5.4 0 a2.7 2.7 0 1 1 -5.4 0 M40 32 m-3.1 0 a3.1 3.1 0 1 1 6.2 0 a3.1 3.1 0 1 1 -6.2 0 M37.5 41.5 m-2.7 0 a2.7 2.7 0 1 1 5.4 0 a2.7 2.7 0 1 1 -5.4 0 M43.5 25.5 m-1.7 0 a1.7 1.7 0 1 1 3.4 0 a1.7 1.7 0 1 1 -3.4 0 M44.8 36.5 m-1.6 0 a1.6 1.6 0 1 1 3.2 0 a1.6 1.6 0 1 1 -3.2 0 M46.7 31 m-1.1 0 a1.1 1.1 0 1 1 2.2 0 a1.1 1.1 0 1 1 -2.2 0" },
@@ -955,6 +984,10 @@ const WAX_SEAL_MOTIFS = {
   "sea-of-songs": { fr: "nonzero", d: "M24.6 30.6 a2.9 2.9 0 1 1 5.8 0 a2.9 2.9 0 1 1 -5.8 0 M30.1 21 H31.9 V30.6 H30.1 Z M31.9 21 C35.4 22.6 36.6 25.4 35.8 28.7 C35.1 26.5 33.8 25.3 31.9 24.9 Z M21.5 34.8 C24.5 32.4 27.5 32.4 30.5 34.8 C33.5 37.2 36.5 37.2 39.5 34.8 C40.6 33.9 41.6 33.3 42.5 33.1 L42.5 35.9 C41.6 36.1 40.6 36.7 39.5 37.6 C36.5 40 33.5 40 30.5 37.6 C27.5 35.2 24.5 35.2 21.5 37.6 Z M21.5 39.8 C24.5 37.4 27.5 37.4 30.5 39.8 C33.5 42.2 36.5 42.2 39.5 39.8 C40.6 38.9 41.6 38.3 42.5 38.1 L42.5 40.9 C41.6 41.1 40.6 41.7 39.5 42.6 C36.5 45 33.5 45 30.5 42.6 C27.5 40.2 24.5 40.2 21.5 42.6 Z" },
   // a needle drawing one thread through everything: the word all three lines share
   "common-thread": { fr: "nonzero", d: "M21.3 43.2 L39 24.4 Q40.5 23 42 24.5 Q43.5 26 42.1 27.5 L23.3 45.2 Z M39.3 25.9 a1.2 1.2 0 1 0 2.4 0 a1.2 1.2 0 1 0 -2.4 0 M41.2 26.3 C45.6 29.7 43.6 35.2 38.3 36 C33.6 36.7 30.9 40 32 44.4 L30.4 44.8 C29 39.4 32.5 35.2 37.7 34.4 C41.9 33.6 43.4 30 40.1 27.4 Z" },
+  // PLACEHOLDER (a plain question mark) — real motif still to be drawn.
+  "odd-one-out": { fr: "nonzero", d: PLACEHOLDER_MOTIF_D },
+  // PLACEHOLDER (a plain question mark) — real motif still to be drawn.
+  "whose-line": { fr: "nonzero", d: PLACEHOLDER_MOTIF_D },
 };
 
 // The shared wax recipe. `id` scopes the SVG's internal ids so several seals can

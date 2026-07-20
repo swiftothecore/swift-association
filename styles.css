@@ -2458,18 +2458,22 @@
     text-align: center; margin: 6px auto 10px; max-width: 30ch;
   }
 
-  /* Sea of Songs — the tap-a-title grid replaces the typed-input affordances. */
-  #playArea[data-sea="1"] .input-area,
-  #playArea[data-sea="1"] #gameHint,
-  #playArea[data-sea="1"] .hint-btn,
-  #playArea[data-sea="1"] .hint-box,
-  #playArea[data-sea="1"] .verse-meter,
-  #playArea[data-sea="1"] .excluded-note { display: none !important; }
-  .sea-grid {
+  /* The shared tap grid (Sea of Songs, Odd One Out, Whose Line?) — tapping a title replaces
+     typing, so the typed-input affordances come off the page on all of them. */
+  #playArea[data-tapgrid="1"] .input-area,
+  #playArea[data-tapgrid="1"] #gameHint,
+  #playArea[data-tapgrid="1"] .hint-btn,
+  #playArea[data-tapgrid="1"] .hint-box,
+  #playArea[data-tapgrid="1"] .verse-meter,
+  #playArea[data-tapgrid="1"] .excluded-note { display: none !important; }
+  .tap-grid {
     display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;
     margin: 14px auto 4px; max-width: 560px;
   }
-  .sea-tile {
+  /* The knowledge grids show only four tiles, so a single row of four would leave the titles
+     cramped — they lay out 2×2 with more room to breathe. */
+  .tap-grid[data-cols="2"] { grid-template-columns: repeat(2, 1fr); max-width: 460px; }
+  .tap-tile {
     cursor: pointer; text-align: left; min-height: 58px;
     display: flex; align-items: center;
     padding: 7px 9px 7px 11px;
@@ -2478,30 +2482,44 @@
     border-radius: 3px; box-shadow: 0 1px 0 rgba(43,39,34,0.06);
     transition: transform 0.1s, background 0.15s, box-shadow 0.15s;
   }
-  .sea-tile-title {
+  .tap-tile-title {
     font-family: var(--hand); font-size: 19px; line-height: 1.1; color: var(--ink);
   }
-  .sea-tile:hover:not(:disabled) {
+  .tap-tile:hover:not(:disabled) {
     background: var(--paper-edge); box-shadow: 0 2px 4px rgba(43,39,34,0.12);
   }
-  .sea-tile:active:not(:disabled) { transform: scale(0.97); }
-  .sea-tile:disabled { cursor: default; opacity: 0.55; }
-  /* Reveal: the titles that actually held the word light up green (you could have tapped
-     these); a wrong pick is marked red. Kept full-opacity so they stand out once disabled. */
-  .sea-tile--valid.sea-tile--valid {
+  .tap-tile:active:not(:disabled) { transform: scale(0.97); }
+  .tap-tile:disabled { cursor: default; opacity: 0.55; }
+  /* Reveal: the tile(s) you could have tapped light up green; a wrong pick is marked red.
+     Kept full-opacity so they stand out once the grid is disabled. */
+  .tap-tile--valid.tap-tile--valid {
     opacity: 1; border-color: #3f7d54; border-left-color: #3f7d54;
     background: rgba(63,125,84,0.14); box-shadow: 0 1px 0 rgba(63,125,84,0.2);
   }
-  .sea-tile--valid .sea-tile-title { color: #2f6340; font-weight: 700; }
-  .sea-tile--miss.sea-tile--miss {
+  .tap-tile--valid .tap-tile-title { color: #2f6340; font-weight: 700; }
+  .tap-tile--miss.tap-tile--miss {
     opacity: 1; border-color: #b23a3a; border-left-color: #b23a3a;
     background: rgba(178,58,58,0.12);
   }
-  .sea-tile--miss .sea-tile-title { color: #8a2626; }
+  .tap-tile--miss .tap-tile-title { color: #8a2626; }
   @media (max-width: 560px) {
-    .sea-grid { grid-template-columns: repeat(2, 1fr); gap: 7px; }
-    .sea-tile-title { font-size: 17px; }
+    .tap-grid { grid-template-columns: repeat(2, 1fr); gap: 7px; }
+    .tap-tile-title { font-size: 17px; }
   }
+
+  /* Whose Line? — the lone lyric line standing where the prompt word usually sits. Set in the
+     hand, quoted, like a line copied out of the notebook. */
+  .whose-line { margin: 6px auto 2px; max-width: 42ch; text-align: center; }
+  .whose-lead {
+    font-family: var(--type); font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--ink-soft); margin: 0 0 8px;
+  }
+  .whose-line-text {
+    font-family: var(--hand); font-size: 27px; line-height: 1.32; color: var(--ink);
+  }
+  .whose-line-text::before { content: "“"; }
+  .whose-line-text::after  { content: "”"; }
+  @media (max-width: 560px) { .whose-line-text { font-size: 23px; } }
 
   /* Common Thread — three lyric lines replace the prompt word; the typed input stays, but the
      suggestion/hint scaffolding goes (a dropdown of titles would give the thread away). */
