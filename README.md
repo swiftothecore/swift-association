@@ -8,26 +8,22 @@ The game is still a work in progress and is by no means 'done'.
 
 Standout features:
 
-- Five difficulty options
+- Support for all eras, plus miscellaneous and unreleased Taylor songs
+- Unique UI with a notebook theme, and lots and lots of easter eggs
 - Lyricist mode, where you answer by typing a lyric line instead of a song title
-- Hints for those that need them
+- Five difficulty options, with hints if you want them
 - Endless mode
 - Adaptive mode, where the word difficulty climbs and falls with how you play
-- The ability to make your own **custom modes**
-- In-depth settings menu
-- Unique UI with a notebook theme
-- Support for all eras + all miscellaneous and some unreleased Taylor songs coming soon
-- Lots and lots of easter eggs
-- Packed with visual charm
-- Ability to save your friendship bracelet as a PNG to share your run!
-- Over 90 achievements
-- Daily challenge
-- Challenges mode with 25 challenges (with more to come), including a super-hard tier unlocked through mastery
 - Album focus mode so you can concentrate on ONE album only
-- Study mode so you can improve and get better
+- Study mode so you can improve
+- Challenges mode with 25 challenges, including a super-hard tier unlocked through mastery
+- Daily challenge
+- The ability to make your own **custom modes**
 - A skills and mastery system full of rewards
-- Opt-in sound effects (with more on the way)
-- A companion lyric searcher, Swift To The Lyric, for searching every line of every song (work in progress, but usable)
+- Over 90 achievements
+- Ability to save your friendship bracelet as a PNG to share your run!
+- A companion lyric searcher, Swift To The Lyric, for searching every line of every song
+- Opt-in sound effects
 - Installable as a phone or desktop app and works offline once loaded
 
 With many features in the works as we speak:
