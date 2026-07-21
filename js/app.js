@@ -11391,9 +11391,11 @@ function finishFirstRun() {
   saveSettings(settings);
   closeFirstRun();
 }
-// The welcome step: a one-line explanation of the game + the recommended gentle start, with a
-// clear "no thanks" for players who already know it. Neither choice starts a game; both just
-// close the welcome onto the start screen, ready to play.
+// The welcome step: a one-line explanation of the game + the recommended gentle start, with two
+// clear "no thanks" paths for players who already know it. "I already know this game" leaves the
+// gentle first-game tips armed (they still nudge, unobtrusively); "…and skip the tips" also
+// silences those pointers up front. None of the three starts a game; all just close the welcome
+// onto the start screen, ready to play.
 function firstRunWelcomeHTML() {
   return `<p class="fr-kicker">welcome to the notebook</p>` +
     `<h2 class="fr-title">Let's ease you in</h2>` +
@@ -11402,7 +11404,17 @@ function firstRunWelcomeHTML() {
     `<div class="fr-actions">` +
       `<button type="button" class="btn-primary" data-fr="relaxed">Start me in Relaxed &rarr;</button>` +
       `<button type="button" class="btn-link" data-fr="knowit">I already know this game</button>` +
+      `<button type="button" class="btn-link" data-fr="knowit-quiet">I know it &mdash; skip the tips</button>` +
     `</div>`;
+}
+// Silence the gentle first-game pointers by spending each beat's one-time coachmark up front, for
+// a player who's told us they don't want them. Leaves the "a few games in" prompts (era, ready
+// for Normal) alone — those aren't the in-game tips they're opting out of.
+function skipFirstGameTips() {
+  markCoachmark("guideType");
+  markCoachmark("guideMatch");
+  markCoachmark("guideHint");
+  markCoachmark("wordForms");
 }
 // The era prompt: pick the album closest to your heart (or skip). Shown as a one-off post-game
 // nudge once the player is a few games in, never before their first game. Highlight is held in
@@ -11439,6 +11451,7 @@ function wireFirstRun() {
       // Welcome step — recommended path vs "I know this game"
       case "relaxed": firstRunMode = "relaxed"; advanceFirstRun(); break;
       case "knowit":  firstRunMode = null;      advanceFirstRun(); break;
+      case "knowit-quiet": firstRunMode = null; skipFirstGameTips(); advanceFirstRun(); break;
       // Post-game era prompt (standalone — not part of the first-run step machine)
       case "confirm": setFavouriteAlbum(firstRunEra); closeFirstRun(); break;
       case "skip":    closeFirstRun(); break;
