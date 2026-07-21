@@ -1922,23 +1922,28 @@
     .chall-curtain-next:active { transform: translateY(1px); }
   }
 
+  /* Every prompt-word modifier below targets `.word`, never `#wordDisplay`. The page-turn
+     flip sheet is a clone of the game card with all ids stripped, so an id-based selector
+     silently stops matching on the sheet and the answered page snaps back to a plain,
+     full-size word for the half second it takes to turn. */
+
   /* Vanishing Word challenge — the prompt word fades out of view after a beat
      (still in state, so matching is unaffected). */
-  .word-wrap.vanished #wordDisplay {
+  .word-wrap.vanished .word {
     color: transparent !important; -webkit-text-fill-color: transparent !important;
     transition: color 0.45s ease, -webkit-text-fill-color 0.45s ease;
   }
-  .word-wrap.vanished #wordDisplay::after {
+  .word-wrap.vanished .word::after {
     content: "·  ·  ·"; position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
     white-space: nowrap;   /* the three dots always sit on a single line, never wrapping */
     color: var(--ink-soft); -webkit-text-fill-color: var(--ink-soft); opacity: 0.55; letter-spacing: 2px;
   }
-  @media (prefers-reduced-motion: reduce) { .word-wrap.vanished #wordDisplay { transition: none; } }
+  @media (prefers-reduced-motion: reduce) { .word-wrap.vanished .word { transition: none; } }
 
   /* Revolving Door challenge — each time the word swaps mid-round it spins in (a quick
      half-turn + fade), so the change reads as the door revolving. Motion-safe; the class
      is only added when motion is allowed. */
-  .word-wrap.revolve-in #wordDisplay { animation: revolve-swap 0.4s cubic-bezier(0.22, 0.7, 0.3, 1) both; transform-origin: 50% 50%; }
+  .word-wrap.revolve-in .word { animation: revolve-swap 0.4s cubic-bezier(0.22, 0.7, 0.3, 1) both; transform-origin: 50% 50%; }
   @keyframes revolve-swap {
     0%   { opacity: 0; transform: rotateY(-82deg) translateX(10px); }
     55%  { opacity: 1; }
@@ -1947,11 +1952,11 @@
 
   /* Word Games challenge — the prompt word is distorted (display only; matching reads
      state). Letters render as inline spans so each can tilt at the wobble tier. */
-  .word-wrap[data-fx] #wordDisplay .fx-ch { display: inline-block; transform: rotate(var(--fx-rot, 0deg)); }
-  .word-wrap[data-fx="2"] #wordDisplay .fx-ch,
-  .word-wrap[data-fx="4"] #wordDisplay .fx-ch { letter-spacing: 0.5px; }
+  .word-wrap[data-fx] .word .fx-ch { display: inline-block; transform: rotate(var(--fx-rot, 0deg)); }
+  .word-wrap[data-fx="2"] .word .fx-ch,
+  .word-wrap[data-fx="4"] .word .fx-ch { letter-spacing: 0.5px; }
   @media (prefers-reduced-motion: no-preference) {
-    .word-wrap[data-fx="4"] #wordDisplay .fx-ch { animation: fx-wobble 1.6s ease-in-out infinite; }
+    .word-wrap[data-fx="4"] .word .fx-ch { animation: fx-wobble 1.6s ease-in-out infinite; }
     @keyframes fx-wobble {
       0%, 100% { transform: rotate(var(--fx-rot, 0deg)); }
       50%      { transform: rotate(calc(var(--fx-rot, 0deg) * -1)) translateY(-1px); }
@@ -1961,19 +1966,19 @@
   /* The Smallest Song Who Ever Lived challenge — the prompt word is shrunk, tilted, and
      offset to a random spot (display only; matching reads state). The offset/tilt are set
      per round as inline --tiny-* vars in renderTinyWord. */
-  .word-wrap[data-tiny] #wordDisplay {
+  .word-wrap[data-tiny] .word {
     font-size: clamp(15px, 3vw, 22px);
     transform: translate(var(--tiny-dx, 0px), var(--tiny-dy, 0px)) rotate(var(--tiny-rot, 0deg));
     transition: none;
   }
-  .word-wrap[data-tiny] #wordDisplay::before { display: none; }   /* hide the highlighter swipe — no help finding it */
+  .word-wrap[data-tiny] .word::before { display: none; }   /* hide the highlighter swipe — no help finding it */
 
   /* Vanishing Word's dark side — the prompt renders at a fraction of its normal size
      (--word-scale, set per round in applyChallengeRound) on top of vanishing sooner. It
      keeps the base clamp, so it stays responsive, and keeps its highlighter swipe and its
      centred, untilted position: this challenge asks you to READ the word before it goes,
      not to hunt for it the way Smallest Song does. */
-  .word-wrap[data-small] #wordDisplay {
+  .word-wrap[data-small] .word {
     font-size: calc(clamp(50px, 12vw, 80px) * var(--word-scale, 1));
   }
 
@@ -2642,11 +2647,11 @@
   }
 
   /* the gag: a caught-out fake word cackles; a wronged real word recoils */
-  .word-wrap.impostor-laugh #wordDisplay { animation: impostorLaugh 0.42s ease-in-out 0s 3 both; color: #7a2b2b; }
-  .word-wrap.impostor-wronged #wordDisplay { animation: impostorWronged 0.5s ease-out both; color: #3f7d6e; }
+  .word-wrap.impostor-laugh .word { animation: impostorLaugh 0.42s ease-in-out 0s 3 both; color: #7a2b2b; }
+  .word-wrap.impostor-wronged .word { animation: impostorWronged 0.5s ease-out both; color: #3f7d6e; }
   /* reduced-motion fallback: a static "ha!" stamp instead of the wiggle */
-  .word-wrap.impostor-ha #wordDisplay { color: #7a2b2b; }
-  .word-wrap.impostor-ha #wordDisplay::after {
+  .word-wrap.impostor-ha .word { color: #7a2b2b; }
+  .word-wrap.impostor-ha .word::after {
     content: "ha!"; position: absolute; left: 100%; bottom: 60%;
     font-family: var(--hand); font-size: 26px; color: #b23a3a; transform: rotate(-12deg);
     margin-left: 6px; white-space: nowrap;
@@ -2678,7 +2683,7 @@
   .iw-big { font-family: var(--hand); font-size: 52px; color: #e88; line-height: 1; }
   .iw-sub { font-family: var(--type); font-size: 14px; letter-spacing: 0.3px; margin-top: 12px; color: #d8cfba; max-width: 34ch; }
   @media (prefers-reduced-motion: reduce) {
-    .word-wrap.impostor-laugh #wordDisplay, .word-wrap.impostor-wronged #wordDisplay { animation: none; }
+    .word-wrap.impostor-laugh .word, .word-wrap.impostor-wronged .word { animation: none; }
     .impostor-wipe, .impostor-wipe .iw-inner { transition: none; }
   }
   .hint-chip {
