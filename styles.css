@@ -2184,6 +2184,21 @@
     transition: background 0.4s ease, opacity 0.4s ease, top 0.4s ease;
   }
 
+  /* Both Of Us — two or three prompt words sharing the line. Each word keeps its own
+     handwriting, tilt and highlighter swipe (they're all .word), so the page still reads as
+     written rather than as a list; only the size comes down to make room, and the words are
+     free to wrap on a narrow page. The ampersand between them is written smaller and softer,
+     the way you'd join two words in a margin. */
+  .word-extra { display: inline; }   /* plain inline wrapper — [hidden] still hides it */
+  .word-join { white-space: nowrap; }   /* the "& word" pair never splits across lines */
+  .word-wrap[data-words] .word { font-size: clamp(34px, 8vw, 56px); padding: 0 6px; }
+  .word-wrap[data-words="3"] .word { font-size: clamp(26px, 6vw, 42px); padding: 0 4px; }
+  .word-amp {
+    display: inline-block; font-family: var(--hand); font-weight: 400;
+    font-size: clamp(20px, 4vw, 30px); color: var(--ink-soft);
+    padding: 0 2px; transform: rotate(-1.2deg) translateY(-0.15em);
+  }
+
   /* rubber-stamp rarity badge — a faded, rotated ink stamp pressed onto the
      page for notable (non-common) words. Colour deepens with rarity; common
      words show no stamp. mix-blend multiply lets the paper grain read through. */

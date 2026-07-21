@@ -829,7 +829,10 @@ if (location.pathname.endsWith('/index.html')) {
     <div id="adaptiveGauge" class="adaptive-gauge" aria-hidden="true"></div>
 
     <p class="word-label">write a song with</p>
-    <div class="word-wrap"><span id="wordDisplay" class="word" aria-live="polite" aria-atomic="true">—</span><span id="rarityStamp" class="rarity-stamp" aria-hidden="true"></span></div>
+    <!-- #wordExtra carries the SECOND (and third) prompt word on a Both Of Us page, so
+         #wordDisplay stays the single home of word one and every per-round word modifier
+         keeps working. Empty and hidden on every other page — renderPromptChrome owns it. -->
+    <div class="word-wrap"><span id="wordDisplay" class="word" aria-live="polite" aria-atomic="true">—</span><span id="wordExtra" class="word-extra" aria-live="polite" aria-atomic="true" hidden></span><span id="rarityStamp" class="rarity-stamp" aria-hidden="true"></span></div>
 
     <div class="timer-wrap" role="timer" aria-live="off" aria-label="Time remaining">
       <canvas id="timerSpark" class="timer-spark" aria-hidden="true"></canvas>
