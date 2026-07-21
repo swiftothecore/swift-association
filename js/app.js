@@ -2411,7 +2411,12 @@ function appendHistoryRows(hist) {
       `<span class="hist-score">${isPB ? `<span class="hist-crown" aria-hidden="true">${ACH_ICONS.crown}</span>` : ""}${scoreText}${unit ? `<span class="hist-unit">${unit}</span>` : ""}</span>` +
       `<span class="hist-time">${h.tm != null ? fmtTime(h.tm) : "—"}</span>` +
       `<span class="hist-verse">${h.v > 0 ? `<span class="hist-verse-star" aria-hidden="true">★</span>+${h.v}` : "—"}</span>` +
-      `<span class="hist-mode">${escapeHtml(modeLabel(h.m))}</span>` +
+      // `dk` marks a challenge run played on its dark side. It rides as a violet eclipse
+      // rather than a word because modeLabel is deliberately token-only (the dark flag is
+      // not a token suffix — see the appendHistory call in endChallenge) and because the
+      // mode column is the tightest one in the row.
+      `<span class="hist-mode">${escapeHtml(modeLabel(h.m))}` +
+        `${h.dk ? `<span class="hist-dark" title="dark side" aria-label="dark side">${CHALL_ECLIPSE}</span>` : ""}</span>` +
       `<span class="hist-date">${histDateLabel(h.d)}</span></div>`;
   }).join(""));
   historyShown += next.length;
@@ -3668,6 +3673,7 @@ function renderTitleStepper() {
 /* ---------- Challenges page ---------- */
 let challengesBackTarget = "start";  // where the Challenges' back link returns to
 let challSelectedId = null;          // which challenge the detail panel is showing
+let challDetailPeek = false;         // ...and whether its "what changes on the dark side?" is unfolded
 let challListResizeHandler = null;   // window-resize handler that re-snaps the list peek
 
 // Status marks for the contents list (gold tick = defeated, violet tick = dark side also
@@ -3768,6 +3774,9 @@ function tapesMarkup(n) {
 
 function openChallenges(from) {
   challengesBackTarget = from;
+  // Arriving at the page always starts with the dark rules folded away — they're an aside
+  // you go looking for, not the first thing the card says.
+  challDetailPeek = false;
   renderChallengesPage();
   flipAwayToScreen("challenges");
 }
@@ -3872,6 +3881,9 @@ function renderChallengesPage() {
 }
 
 function selectChallenge(id) {
+  // Picking a different challenge folds the dark rules away again; re-rendering the same one
+  // (a page refresh after a win, say) leaves what you were reading open.
+  if (id !== challSelectedId) challDetailPeek = false;
   challSelectedId = id;
   const body = $("challengesBody");
   if (!body) return;
@@ -3912,26 +3924,61 @@ function renderChallengeDetail(id) {
   // authored — a permanently locked button on a challenge with no dark side would be a lie.
   // Greyed with a padlock until the challenge itself is beaten, then inked black.
   let darkAction = "";
+  const darkOpen = darkSideUnlocked(id);
   if (open && hasDarkSide(id)) {
-    const dOpen = darkSideUnlocked(id);
-    const cls = "chall-dark" + (dOpen ? "" : " is-locked") + (rec.darkDefeated ? " is-conquered" : "");
+    const cls = "chall-dark" + (darkOpen ? "" : " is-locked") + (rec.darkDefeated ? " is-conquered" : "");
     darkAction =
       `<button type="button" class="${cls}"` +
-        (dOpen ? ` data-dark="${id}"` : ` disabled aria-disabled="true"`) +
-        ` title="${dOpen ? "play the dark side" : "beat this challenge to unlock its dark side"}">` +
-        `<span class="chall-dark-mark">${dOpen ? CHALL_ECLIPSE : CHALL_LOCK}</span>` +
+        (darkOpen ? ` data-dark="${id}"` : ` disabled aria-disabled="true"`) +
+        ` title="${darkOpen ? "play the dark side" : "beat this challenge to unlock its dark side"}">` +
+        `<span class="chall-dark-mark">${darkOpen ? CHALL_ECLIPSE : CHALL_LOCK}</span>` +
         `<span class="chall-dark-lab">Dark Side</span>` +
       `</button>`;
   }
 
-  let meta = "";
   // Thirty-One's best is a round number, and the risk batch's is a bead total that can
   // legitimately run past the page count — neither belongs over a "/ 13" denominator.
-  const bestOutOf = RISK_RULES.has(c.rule) ? ` bead${rec.best === 1 ? "" : "s"}`
+  // Declared before `meta` because the dark-side note below reuses it against `darkBest`.
+  const outOfFor = (best) => RISK_RULES.has(c.rule) ? ` bead${best === 1 ? "" : "s"}`
     : c.rule === "survive" ? "" : `/${TOTAL_ROUNDS}`;
+  const bestOutOf = outOfFor(rec.best);
+  let meta = "";
   if (rec.defeated) meta = `best ${rec.best}${bestOutOf} · ${rec.attempts} attempt${rec.attempts === 1 ? "" : "s"}`;
   else if (rec.attempts) meta = `${rec.attempts} attempt${rec.attempts === 1 ? "" : "s"} · not yet beaten`;
-  if (rec.darkDefeated) meta += `${meta ? " · " : ""}dark side beaten`;
+
+  // "What changes on the dark side?" — the rules you're being offered, readable without
+  // committing to a run. It unfolds in place rather than switching the card into a dark
+  // "mode": the buttons below never move, so the card can't be misread as being about the
+  // dark side when you press Play. Same gate as the button — beating the base earns the
+  // reveal. Only genuinely different fields are listed, so it stays a diff, not a reprint.
+  let darkPeek = "";
+  if (open && darkOpen) {
+    const d = resolveChallenge(c, true);
+    const dMode = MODES[d.mode];
+    const dBlurb = d.blurb || dMode.blurb, cBlurb = c.blurb || mode.blurb;
+    const dMeta = rec.darkDefeated
+      ? `best ${rec.darkBest}${outOfFor(rec.darkBest)} · ${rec.darkAttempts} attempt${rec.darkAttempts === 1 ? "" : "s"}`
+      : rec.darkAttempts
+        ? `${rec.darkAttempts} attempt${rec.darkAttempts === 1 ? "" : "s"} · not yet beaten`
+        : "not yet attempted";
+    darkPeek =
+      `<div class="chall-peek${challDetailPeek ? " is-open" : ""}">` +
+        `<button type="button" class="chall-peek-toggle" data-peek aria-expanded="${challDetailPeek}">` +
+          `<span class="chall-peek-mark">${CHALL_ECLIPSE}</span>` +
+          `<span class="chall-peek-lab">what changes on the dark side?</span>` +
+          `<span class="chall-peek-chev" aria-hidden="true">${challDetailPeek ? "▴" : "▾"}</span>` +
+        `</button>` +
+        (challDetailPeek
+          ? `<div class="chall-peek-body">` +
+              (d.desc !== c.desc ? `<div class="chall-peek-rule">${escapeHtml(d.desc)}</div>` : "") +
+              (d.win !== c.win ? `<div class="chall-peek-goal">${escapeHtml(d.win)}</div>` : "") +
+              (dBlurb !== cBlurb ? `<div class="chall-peek-mods">${escapeHtml(dBlurb)}</div>` : "") +
+              `<div class="chall-peek-meta">` +
+                `${rec.darkDefeated ? `<span class="chall-peek-stamp">defeated</span>` : ""}${dMeta}</div>` +
+            `</div>`
+          : "") +
+      `</div>`;
+  }
 
   el.innerHTML =
     `<div class="chall-detail-head">` +
@@ -3957,8 +4004,16 @@ function renderChallengeDetail(id) {
     `<div class="chall-act">` +
       `<span class="chall-meta">${meta}</span>` +
       `<span class="chall-act-btns">${darkAction}${action}</span>` +
-    `</div>`;
+    `</div>` +
+    // Below the actions on purpose: unfolding it must never shove the buttons off the page,
+    // and a note about the dark side reads best directly beneath the button it describes.
+    darkPeek;
 
+  const peek = el.querySelector("[data-peek]");
+  if (peek) peek.addEventListener("click", () => {
+    challDetailPeek = !challDetailPeek;
+    renderChallengeDetail(id);
+  });
   const ub = el.querySelector("[data-unlock]");
   if (ub) ub.addEventListener("click", () => { if (unlockChallenge(ub.dataset.unlock)) renderChallengesPage(); });
   const pb = el.querySelector("[data-play]");
@@ -7080,7 +7135,15 @@ function endChallenge() {
   // end without ever resting twice on the same letter.
   if (c.rule === "alphabetical" && won && alphaEveryLetterNew) unlock("tied-together");
 
-  document.querySelector("#screen-results .podium-title").textContent = c.name;
+  // A dark run signs off the way it was announced: the briefing card's violet kicker,
+  // repeated above the challenge name so the run opens and closes on the same note. The
+  // other end paths set .textContent here, which wipes the kicker again on the way past.
+  const titleEl = document.querySelector("#screen-results .podium-title");
+  if (c.dark) {
+    titleEl.innerHTML = `<span class="podium-dark">${CHALL_ECLIPSE}dark side</span>` + escapeHtml(c.name);
+  } else {
+    titleEl.textContent = c.name;
+  }
   const outOfGuesses = c.rule === "newsong" && challengeTargetSong && newSongLives <= 0;
   const status = won
     ? `<div class="chall-result-status win">challenge defeated!</div>`
@@ -7098,11 +7161,16 @@ function endChallenge() {
     ? `<div class="chall-result-meta">${realNamed} real word${realNamed === 1 ? "" : "s"} named · ` +
       `${impostorFlagged} impostor${impostorFlagged === 1 ? "" : "s"} caught</div>`
     : "";
+  // The dark side keeps its own attempt count and best (darkAttempts/darkBest), so a dark
+  // run must report those — quoting the base record here would credit a run played on the
+  // easy version, which is both wrong and deflating.
+  const metaAttempts = c.dark ? rec.darkAttempts : rec.attempts;
+  const metaBest = c.dark ? rec.darkBest : rec.best;
   // A risk run's best is a bead count, so it can't wear the "/ 13" denominator either.
-  const bestLine = !rec.best ? ""
-    : riskRuleActive() ? ` · best ${rec.best} bead${rec.best === 1 ? "" : "s"}`
-    : ` · best ${rec.best}/${TOTAL_ROUNDS}`;
-  const meta = `<div class="chall-result-meta">${rec.attempts} attempt${rec.attempts === 1 ? "" : "s"}` +
+  const bestLine = !metaBest ? ""
+    : riskRuleActive() ? ` · best ${metaBest} bead${metaBest === 1 ? "" : "s"}`
+    : ` · best ${metaBest}/${TOTAL_ROUNDS}`;
+  const meta = `<div class="chall-result-meta">${metaAttempts} attempt${metaAttempts === 1 ? "" : "s"}` +
     `${bestLine}</div>`;
   // A two-up row sitting above the full-width "front page" button: back to the list on the
   // left, replay this same challenge on the right — each half the width of the button below.
@@ -7112,7 +7180,10 @@ function endChallenge() {
       `<button id="replayChallenge" class="btn-primary">replay ↺</button>` +
     `</div>`;
   $("backToChallenges").addEventListener("click", () => openChallenges("start"));
-  $("replayChallenge").addEventListener("click", () => startChallenge(c.id));
+  // Replay means replay THIS run — `c` is the resolved challenge, so a dark run's replay has
+  // to ask for the dark side again. startChallenge re-resolves from CHALLENGE_BY_ID and
+  // defaults to the base, which would quietly hand back the easy version.
+  $("replayChallenge").addEventListener("click", () => startChallenge(c.id, { dark: !!c.dark }));
 
   renderResultRecap();   // surface any challenge achievements just earned
   renderSkillsRecap();

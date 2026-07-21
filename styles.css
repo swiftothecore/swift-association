@@ -725,6 +725,15 @@
     font-family: var(--hand); font-weight: 700; font-size: 26px;
     color: var(--ink); margin: 0 0 6px; transform: rotate(-0.8deg);
   }
+  /* A dark challenge run signs its results the way the briefing card announced it: the small
+     typewriter kicker in violet, sitting above the handwritten challenge name. Set upright
+     against the title's rotation — the kicker is functional UI, so it stays level. */
+  .podium-dark {
+    display: flex; align-items: center; gap: 5px;
+    font-family: var(--type); font-weight: 700; font-size: 10px; letter-spacing: 1.5px;
+    text-transform: uppercase; color: #7a4bb0; margin-bottom: 3px;
+  }
+  .podium-dark .chall-mark-svg { width: 11px; height: 11px; color: currentColor; }
 
   /* ---------- Difficulty picker — notebook tabs ---------- */
   .mode-picker { margin: 0 0 20px; }
@@ -1186,6 +1195,39 @@
     color: rgba(178,58,58,0.82); border: 2px double rgba(178,58,58,0.6); border-radius: 3px;
     padding: 2px 7px; transform: rotate(-4deg);
   }
+  /* "what changes on the dark side?" — a marginal note in violet pencil, folded away until
+     asked for. Deliberately quiet: it's an aside on the card, and must never compete with
+     the Dark Side button below it, which is the actual invitation to play. */
+  .chall-peek { margin: 10px 0 2px; }
+  .chall-peek-toggle {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-family: var(--type); font-size: 10.5px; letter-spacing: 0.5px;
+    color: #7a4bb0; background: transparent; border: none; padding: 2px 0; cursor: pointer;
+    text-decoration: underline; text-decoration-style: dotted;
+    text-decoration-color: rgba(122,75,176,0.45); text-underline-offset: 3px;
+  }
+  .chall-peek-toggle:hover, .chall-peek-toggle:focus-visible { color: #5d3590; text-decoration-color: rgba(122,75,176,0.8); }
+  .chall-peek-mark { display: flex; }
+  .chall-peek-mark svg { width: 11px; height: 11px; display: block; color: currentColor; }
+  .chall-peek-chev { font-size: 9px; line-height: 1; }
+  /* the unfolded note: indented behind a violet margin rule, the way an annotation sits
+     against the ruling rather than starting a new section of the page */
+  .chall-peek-body {
+    margin-top: 8px; padding: 2px 0 2px 11px;
+    border-left: 2px solid rgba(122,75,176,0.32);
+  }
+  .chall-peek-rule { font-family: var(--hand); font-size: 18px; line-height: 1.25; color: #4a3a5c; }
+  .chall-peek-goal { font-family: var(--hand); font-size: 18px; line-height: 1.25; color: #4a3a5c; margin-top: 3px; }
+  .chall-peek-mods { font-family: var(--type); font-size: 11px; color: #7a6b8c; margin-top: 4px; }
+  .chall-peek-meta {
+    display: flex; align-items: center; gap: 7px;
+    font-family: var(--type); font-size: 10.5px; color: #8a7d99; margin-top: 7px;
+  }
+  .chall-peek-stamp {
+    font-weight: 700; font-size: 9px; letter-spacing: 1.4px; text-transform: uppercase;
+    color: rgba(122,75,176,0.9); border: 1.5px double rgba(122,75,176,0.5); border-radius: 2px;
+    padding: 1px 5px; transform: rotate(-3deg);
+  }
   .chall-diff { display: flex; align-items: center; gap: 9px; margin-bottom: 14px; }
   .chall-diff .chall-eyebrow { margin-bottom: 0; }
   .chall-diff .tape-glyph { width: 22px; height: 15px; }
@@ -1291,6 +1333,7 @@
     background-color: #cec7b7; color: #8b8375; box-shadow: 3px 3px 0 rgba(43,39,34,0.14);
   }
   .chall-dark.is-locked:active { transform: rotate(-0.6deg); }
+
 
   /* unlock action — tear a ticket. Kraft stock, a punched perforation, and a
      rotated "admit one" stamp in place of the pencil sticker. */
@@ -2057,6 +2100,10 @@
   .hist-crown svg { width: 100%; height: 100%; display: block; overflow: visible; }
   .hist-crown .ink { fill: none; stroke: var(--ink); stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
   .hist-crown .ink-fill { fill: var(--ink); stroke: none; }
+  /* dark-side mark — the same violet eclipse the in-run tagline and the challenge seal use,
+     shrunk to sit inside the mode label without stealing width from an already tight column. */
+  .hist-dark { display: inline-block; width: 11px; height: 11px; margin-left: 5px; vertical-align: -1px; color: #7a4bb0; }
+  .hist-dark .chall-mark-svg { width: 100%; height: 100%; display: block; color: currentColor; }
   #histMore { margin-top: 12px; }
 
   /* ---------- Records calendar heatmap (games played per day / per hour) ----------

@@ -290,6 +290,7 @@ export const CHALLENGES = [
     // `strictAlpha` bans ties, so the alphabet has to climb on every link instead of resting.
     // The copy changes too: the base rule permits repeats, this one doesn't.
     hard: { target: 8, pool: null, dropdown: false, strictAlpha: true,
+      blurb: "10s · no suggestions · all words · not in the title",
       desc: "Each title must start LATER in the alphabet than the last, with no resting twice on the same letter.",
       win: "Land 8 correct answers, each one climbing the alphabet." },
     desc: "Each song's title must start with a later letter in the alphabet than a previous one.",
@@ -299,6 +300,7 @@ export const CHALLENGES = [
     // `fxFrom` starts the ladder partway up (page 1 is already warped, no gentle opening) and
     // `fxRamp` climbs it twice as fast, so the run tops out at full nonsense by the halfway mark.
     hard: { dropdown: false, fxFrom: 2, fxRamp: 2,
+      blurb: "10s · no suggestions · all words · not in the title",
       desc: "The word is already warped on page one, and it falls apart twice as fast from there.",
       win: "Score 9 / 13 through the worst of the distortion." },
     desc: "The word becomes more warped every round, can you still beat it when it becomes nonsense?",
@@ -327,14 +329,18 @@ export const CHALLENGES = [
     win: "Score 9 / 13 across shifting rules." },
   { id: "revolving-door", name: "Revolving Door", rule: "revolving", mode: "medium",
     free: false, cost: 1, target: 9, seconds: 20, rotateMs: 5000, noTitle: true, tapes: 1,
-    hard: { seconds: 16, rotateMs: 2000 },
+    hard: { seconds: 16, rotateMs: 2000,
+      blurb: "16s a page · suggestions · not in the title · the word swaps every 2s",
+      desc: "You get 16 seconds to answer, but the word swaps every 2 seconds, can you still answer for the first word every time?" },
     blurb: "20s a page · suggestions · not in the title · the word swaps every 5s",
     desc: "You get 20 seconds to answer, but the word swaps every 5 seconds, can you answer for the first word every time?",
     win: "Score 9 / 13 while the word keeps revolving." },
   { id: "shrinking-timer", name: "Shrinking Timer", rule: "accelerate", mode: "medium",
     free: false, cost: 1, target: 9, noTitle: true, pool: "easy", tapes: 2,
     accelFrom: 16, accelTo: 5,
-    hard: { accelFrom: 12, accelTo: 3, pool: null },
+    hard: { accelFrom: 12, accelTo: 3, pool: null,
+      blurb: "suggestions · not in the title · all words · the clock shrinks every page (12s → 3s)",
+      desc: "The timer shrinks each round, from 12 down to 3, and no word is off the table." },
     blurb: "suggestions · not in the title · the clock shrinks every page (16s → 5s)",
     desc: "The timer shrinks each round, from 16 down to 5.",
     win: "Score 9 / 13 as the clock keeps shrinking." },
@@ -348,6 +354,7 @@ export const CHALLENGES = [
     // `maxTitleWords: 1` drops the two-word allowance. The word pool tightens with it, so a
     // page always has a one-word title available to win with.
     hard: { pool: null, dropdown: false, maxTitleWords: 1,
+      blurb: "10s · no suggestions · only one-word titles count",
       desc: "One-word titles only now. Two words is one too many.",
       win: "Score 9 / 13 using nothing but one-word titles." },
     blurb: "10s · suggestions · only one- or two-word titles count",
@@ -355,7 +362,9 @@ export const CHALLENGES = [
     win: "Score 9 / 13 using only short titles." },
   { id: "lyric-lover", name: "Lyric Lover", rule: "verse", mode: "lyricist",
     free: false, cost: 1, target: 6, tapes: 3,
-    hard: { target: 8 },
+    hard: { target: 8,
+      desc: "Answer by typing the lyric line, and do it word-for-word eight times.",
+      win: "Recall 8 lines word-for-word (or better). Type the line exactly." },
     desc: "Answer by typing the lyric line, and do it word-for-word six times.",
     win: "Recall 6 lines word-for-word (or better). Type the line exactly." },
   { id: "wrapped-chain", name: "Wrapped Like A Chain", rule: "chain", mode: "medium",
@@ -376,7 +385,8 @@ export const CHALLENGES = [
     // never bank a buffer to coast on. Suggestions deliberately stay ON: typing a title blind
     // costs 3-5s on its own, so removing them here would put break-even out of reach outright.
     comboStart: 20, comboBonus: 5, comboCap: 30,
-    hard: { comboStart: 14, comboBonus: 3, comboCap: 20, pool: null },
+    hard: { comboStart: 14, comboBonus: 3, comboCap: 20, pool: null,
+      blurb: "one shared clock, and less of it · every right answer winds it back up by less · all words" },
     blurb: "one shared clock · every right answer winds it back up · run it dry and it's over",
     desc: "Per-page timers. Who needs them? How about one shared clock that drains across the whole run. Every correct answer increases the timer, and the run ends when it hits zero.",
     win: "Score 9 / 13 before the shared clock runs out." },
@@ -387,7 +397,10 @@ export const CHALLENGES = [
     win: "Score 9 / 13 as the answer type keeps switching." },
   { id: "double-trouble", name: "Double Trouble", rule: "multi", mode: "medium",
     free: false, cost: 1, target: 8, need: 2, pool: "easy", seconds: 18, tapes: 2,
-    hard: { need: 3, seconds: 15 },
+    hard: { need: 3, seconds: 15,
+      blurb: "15s · suggestions · name THREE different songs each page · not in the title",
+      desc: "Two songs isn't enough either! Answer three songs per word, in less time, or fail the round.",
+      win: "Clear 8 pages, naming three different songs each." },
     blurb: "18s · suggestions · name TWO different songs each page · not in the title",
     desc: "One song isn't enough! Answer two songs per word or fail the round.",
     win: "Clear 8 pages, naming two different songs each." },
@@ -398,7 +411,8 @@ export const CHALLENGES = [
     // page clock at its 3s floor, and In The Dark landing on top of that (typing full
     // titles blind in 3s) makes the run unwinnable by draw rather than by play. The cap
     // is live for BASE Devil's Path too, which is why base can no longer draw crunch+drain.
-    hard: { forks: [3, 6, 9, 12] },
+    hard: { forks: [3, 6, 9, 12],
+      blurb: "10s · suggestions · at pages 3, 6, 9 & 12 you must take the lesser of two curses" },
     blurb: "10s · suggestions · at pages 4 & 8 you must take the lesser of two curses",
     desc: "Choose Your Path's alter-ego. Pick curses at forks in the run, try taking the lesser of two evils. You will be haunted by your choices for the rest of the run.",
     win: "Score 9 / 13 despite the curses you take." },
