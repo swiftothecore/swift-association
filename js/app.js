@@ -13,6 +13,7 @@ import {
   SEA_GRID_SIZE, SEA_MIN_VALID, SEA_MAX_VALID,
   COMMON_LINES, COMMON_MIN_SONGS, COMMON_MAX_SONGS, COMMON_GEN_ATTEMPTS, COMMON_MAX_ACCEPT,
   ODD_TILES, WHOSE_TILES, WHOSE_MIN_WORDS, WHOSE_GEN_ATTEMPTS,
+  BOTH_WORDS, BOTH_MIN_SONGS, BOTH_PARTNER_TRIES,
   ALBUM_FOCUS_DIFFS, ALBUM_FOCUS_TARGET,
   ADAPTIVE_BUCKETS, ADAPTIVE_LEVELS, ADAPT_MAX_LEVEL, ADAPT_START_LEVEL, ADAPT_PROMO_STREAK, ADAPT_NODROP_LEVEL,
   STUDY_MAX_BOX, STUDY_INTERVALS, STUDY_SESSION_ROUNDS,
@@ -164,7 +165,8 @@ let perkPoolOverride = null;    // Choose Your Path: Crowd Pleaser → draw word
 let perkNoTitleOff = false;     // Choose Your Path: Off The Record → allow the word in the title
 let perkCalm = false;           // Choose Your Path: Steady Hands → no timer tremor/tension
 let roundLyricOnly = false;     // Switch-Up: this page demands a lyric line (true) or a title (false)
-let roundNamed = [];            // Double Trouble: distinct valid titles named this page so far
+let roundNamed = [];            // Double Trouble / Name Three: distinct valid titles named this page so far
+let bothWords = [];             // Both Of Us: every prompt word on this page (bothWords[0] === currentWord)
 // Devil's Path: curses taken at forks, each a permanent handicap for the rest of the run.
 let devilCursesTaken = [];      // curse ids already taken (never re-offered)
 let devilDropOff = false;       // In The Dark: suggestions switched off
@@ -5063,6 +5065,7 @@ function resetRunState() {
   perkCalm = false;
   roundLyricOnly = false;
   roundNamed = [];
+  bothWords = [];
   devilCursesTaken = [];
   devilDropOff = false;
   devilVanish = false;
@@ -5791,17 +5794,37 @@ function revealSea(pickedSong) {
 }
 
 // The prompt chrome — the big word and its "write a song with" lead-in — doesn't suit every
-// challenge: Common Thread and Whose Line? replace the single prompt word outright, and Odd One
-// Out keeps the word but inverts the ask (you're rejecting a song, not naming one). Deciding it
-// in one place stops two rules writing over each other's answer on the same two elements.
+// challenge: Common Thread and Whose Line? replace the single prompt word outright, Odd One
+// Out keeps the word but inverts the ask (you're rejecting a song, not naming one), and Both
+// Of Us hangs a second and third word off the first. Deciding it in one place stops two rules
+// writing over each other's answer on the same handful of elements.
 function renderPromptChrome() {
   const ww = document.querySelector(".word-wrap");
   const wl = document.querySelector(".word-label");
+  const extra = $("wordExtra");
   const hideWord = commonRuleActive() || whoseLineRuleActive();
   if (ww) ww.style.display = hideWord ? "none" : "";
+  // Both Of Us: bothWords[0] is already in #wordDisplay (advanceRound wrote it there, so every
+  // per-round word modifier still applies to it) — the rest are written here, each joined by a
+  // hand-drawn "&". `data-words` sizes the whole line down to fit two or three of them.
+  const more = bothRuleActive() ? bothWords.slice(1) : [];
+  if (extra) {
+    extra.hidden = !more.length;
+    // Each "& word" is one unbreakable group, so a wrap on a narrow page breaks BEFORE the
+    // ampersand rather than leaving it stranded at the end of a line.
+    extra.innerHTML = more.map((w) =>
+      `<span class="word-join"><span class="word-amp" aria-hidden="true">&amp;</span>` +
+      `<span class="word">${escapeHtml(w)}</span></span>`).join("");
+  }
+  if (ww) {
+    if (more.length) ww.dataset.words = String(more.length + 1);
+    else ww.removeAttribute("data-words");
+  }
   if (wl) {
     wl.style.display = hideWord ? "none" : "";
-    wl.textContent = oddOneRuleActive() ? "which song never sings" : "write a song with";
+    wl.textContent = oddOneRuleActive() ? "which song never sings"
+      : more.length ? (more.length === 1 ? "write one song with both" : "write one song with all three")
+      : "write a song with";
   }
 }
 
@@ -5995,6 +6018,94 @@ function renderTapKnowledgeBanner() {
   const el = ensureChallBanner();
   el.innerHTML =
     `<span class="chall-prog-name">${oddOneRuleActive() ? "spot the odd one" : "place the line"}</span>` +
+    `<span class="chall-prog-count">${score} / ${currentChallenge.target || 9}</span>`;
+}
+
+/* ---------- Both Of Us — the multi-word page ---------- */
+// Two prompt words (three on the dark side) and a single answer that has to hold every one of
+// them. The round engine is untouched: the page still draws one word normally, then the extra
+// words are drawn AGAINST it and `currentSongs` is narrowed to the intersection — so rarity,
+// the examples, the hint song and the win check all describe the songs that really answer the
+// page. A pick holding some of the words but not all is soft-rejected at the seam-2 judge.
+function bothRuleActive() {
+  return gameType === "challenge" && currentChallenge && currentChallenge.rule === "bothwords";
+}
+// How many prompt words this page carries. BOTH_WORDS is the base pair; the dark side carries a
+// wider `words`. Every site that cares reads THIS, so the draw, the display, the soft reject and
+// the reveal can never disagree about how many words are on the page.
+function bothWordCountNow() {
+  const n = gameType === "challenge" && currentChallenge && Number(currentChallenge.words);
+  return n > 1 ? n : BOTH_WORDS;
+}
+// The winnability floor: how many songs must hold EVERY word before the set is served.
+function bothMinSongsNow() {
+  const n = gameType === "challenge" && currentChallenge && Number(currentChallenge.bothMinSongs);
+  return n > 0 ? n : BOTH_MIN_SONGS;
+}
+// Two words are "the same word" for this page's purposes when either matches the other under the
+// game's own stem-lenient rule ("love" / "loved", "dream" / "dreaming"). Pairing those would be a
+// free page dressed up as a hard one, so the partner draw refuses them.
+function bothWordsClash(a, b) {
+  if (a === b) return true;
+  return wordRegex(a, false).test(b) || wordRegex(b, false).test(a);
+}
+// Draw one more prompt word for the page: a word that still leaves `min` songs holding
+// everything drawn so far. Scanned in shuffled order and taken on the first hit, so the partner
+// is a uniform pick among the words that keep the page winnable. Returns null when the anchor
+// has no partner at all (see buildBothWords, which then serves a shorter page rather than a
+// dead one). BOTH_PARTNER_TRIES caps the work so a hopeless anchor can't stall the page turn.
+function pickBothPartner(pool, chosen) {
+  const min = bothMinSongsNow();
+  const used = new Set(usedWords);
+  let tried = 0;
+  for (const w of shuffle(playableWords.slice())) {
+    if (tried++ >= BOTH_PARTNER_TRIES) break;
+    if (used.has(w) || chosen.some((c) => bothWordsClash(c, w))) continue;
+    const rx = wordRegex(w, effectiveStrict());
+    const songs = pool.filter((s) => rx.test(s.lyrics));
+    if (songs.length >= min) return { word: w, songs };
+  }
+  return null;
+}
+// Build this page's word set around the word already drawn, and return the songs that hold all
+// of them (which becomes currentSongs). Each partner is drawn against the surviving pool, so the
+// guarantee holds however many words the page asks for. Extra words join usedWords like any
+// other, so the run never repeats one.
+function buildBothWords() {
+  bothWords = [currentWord];
+  let pool = validSongs(currentWord, effectiveStrict(), effectiveNoTitle());
+  for (let n = 1; n < bothWordCountNow(); n++) {
+    const partner = pickBothPartner(pool, bothWords);
+    if (!partner) break;          // no winnable partner left — serve the shorter page, never a dead one
+    bothWords.push(partner.word);
+    usedWords.push(partner.word);
+    pool = partner.songs;
+  }
+  return pool;
+}
+// Every song holding at least ONE of the page's words. currentLyricSongs is set to this, so a
+// half-right pick reads as a near miss (soft-rejected, page kept) rather than a wrong answer.
+function bothUnionSongs() {
+  const rxs = bothWords.map((w) => wordRegex(w, effectiveStrict()));
+  return allSongs.filter((s) => rxs.some((rx) => rx.test(s.lyrics)));
+}
+// Which of the page's words a song never sings — the soft reject names them.
+function bothWordsMissing(song) {
+  return bothWords.filter((w) => !wordRegex(w, effectiveStrict()).test(song.lyrics));
+}
+// The page's words written out for a note ("storm" and "diamond").
+function bothWordsPhrase(quote) {
+  const parts = bothWords.map((w) => (quote ? `“<b>${escapeHtml(w)}</b>”` : `<b>${escapeHtml(w)}</b>`));
+  if (parts.length < 2) return parts.join("");
+  return parts.slice(0, -1).join(", ") + " and " + parts[parts.length - 1];
+}
+// Both Of Us: how many words the page is asking for, and the run's progress.
+function renderBothBanner() {
+  if (!bothRuleActive()) return;
+  const el = ensureChallBanner();
+  const n = bothWords.length;
+  el.innerHTML =
+    `<span class="chall-prog-name">one song, ${n === 3 ? "all three" : "both"} words</span>` +
     `<span class="chall-prog-count">${score} / ${currentChallenge.target || 9}</span>`;
 }
 
@@ -6298,6 +6409,8 @@ function applyChallengeRound(wrap) {
     renderSeaBanner();
   } else if (currentChallenge.rule === "oddone" || currentChallenge.rule === "whoseline") {
     renderTapKnowledgeBanner();
+  } else if (currentChallenge.rule === "bothwords") {
+    renderBothBanner();
   } else if (currentChallenge.rule === "common") {
     renderCommonBanner();
   } else if (currentChallenge.rule === "tiny") {
@@ -6875,7 +6988,9 @@ function endChallenge() {
   // Knowing All The Words — every scored Lyric Lover line was recalled word-perfect.
   if (c.rule === "verse" && won && score > 0 && gameVersePerfect === score) unlock("knowing-all-the-words");
   // Two Is Better Than One — a perfect Double Trouble run: all 13 pages cleared with two songs.
-  if (c.rule === "multi" && score === TOTAL_ROUNDS) unlock("two-is-better");
+  // Keyed on the id, not the rule: Name Three borrows the same `multi` rule, and a perfect run
+  // of THREE songs a page is a different feat that shouldn't quietly claim this charm.
+  if (c.id === "double-trouble" && score === TOTAL_ROUNDS) unlock("two-is-better");
   // Blank Space — won Vanishing Word writing into the blank: every correct answer came after
   // the word had already gone.
   if (c.rule === "vanishing" && won && vanishAnsweredBlind) unlock("blank-space");
@@ -7523,6 +7638,15 @@ function pickWord() {
   // songs (after the no-title rule). Keep only such words; fall back if none remain.
   if (gameType === "challenge" && currentChallenge && currentChallenge.rule === "multi") {
     const need = currentChallenge.need || 2;
+    const enough = choices.filter((w) => validSongs(w, effectiveStrict(), effectiveNoTitle()).length >= need);
+    if (enough.length) choices = enough;
+  }
+  // Both Of Us: the page's extra words are drawn against this one, so an anchor with fewer
+  // holders than the winnability floor can't survive a single partner — and one with barely
+  // more would leave pickBothPartner nothing to choose from. Draw an anchor with real room in
+  // it and let the partner draw do the narrowing. Fall back if none remain.
+  if (bothRuleActive()) {
+    const need = bothMinSongsNow() * bothWordCountNow();
     const enough = choices.filter((w) => validSongs(w, effectiveStrict(), effectiveNoTitle()).length >= need);
     if (enough.length) choices = enough;
   }
@@ -8299,6 +8423,16 @@ function advanceRound() {
   currentSongs = roundIsImpostor ? [] : validSongs(currentWord, effectiveStrict(), effectiveNoTitle());
   if (commonRuleActive() && commonPuzzle) currentSongs = commonPuzzle.lines.map((x) => x.song);
   currentLyricSongs = currentSongs;   // full lyrics-valid set (soft-rejects judge near-misses off this)
+  // Both Of Us: draw the page's extra word(s) against the one just drawn, then narrow the valid
+  // set to the songs holding them ALL — so the rarity stamp, the examples, the hint song and the
+  // win check every describe an answer that really clears the page. currentLyricSongs widens to
+  // the UNION instead, which is what lets a song holding one word but not the other be
+  // soft-rejected as a near miss rather than scored wrong.
+  bothWords = [];
+  if (bothRuleActive()) {
+    currentSongs = buildBothWords();
+    currentLyricSongs = bothUnionSongs();
+  }
   // Title...?: flip the rule — the only valid answers are songs whose TITLE holds the word.
   if (gameType === "challenge" && currentChallenge && currentChallenge.rule === "titleHas")
     currentSongs = titleSongsForWord(currentWord, effectiveStrict());
@@ -8858,6 +8992,12 @@ function rejectTour() {
 function rejectAlbumFocus() {
   softRejectFlash(`from <b>${escapeHtml(focusAlbum)}</b> only`);
 }
+// Both Of Us: the named song sings some of the page's words but not all. Name the ones it's
+// missing rather than just refusing it, so the near miss teaches something. Doesn't burn the page.
+function rejectBoth(missing) {
+  const words = missing.map((w) => `“<b>${escapeHtml(w)}</b>”`).join(" or ");
+  softRejectFlash(`that one never sings ${words}`);
+}
 // The last A–Z letter of a title (Wrapped Like A Chain's link to the next answer).
 function lastChainLetter(title) {
   const m = (title || "").toUpperCase().match(/[A-Z]/g);
@@ -9296,7 +9436,16 @@ function submitAnswer(song, isTimeout) {
     rejectDevil(song); return;
   }
 
-  // Double Trouble: a page resolves only once `need` DIFFERENT valid songs are named.
+  // Both Of Us: a song that sings SOME of the page's words but not all of them is soft-rejected
+  // (the page isn't burned) so the player keeps hunting for one that holds every word — the
+  // near miss is the whole texture of this challenge. A song holding none of them falls through
+  // and scores the page wrong, exactly as a wrong answer does anywhere else.
+  if (song && !isTimeout && bothRuleActive() && !currentSongs.some((s) => s.title === song.title)) {
+    const missing = bothWordsMissing(song);
+    if (missing.length && missing.length < bothWords.length) { rejectBoth(missing); return; }
+  }
+
+  // Double Trouble / Name Three: a page resolves only once `need` DIFFERENT valid songs are named.
   // Each accepted valid song banks toward the pair without locking the page (the clock
   // keeps running); a duplicate is soft-rejected; reaching `need` falls through to
   // resolve the page correct. A wrong song falls through and scores the page wrong.
@@ -9349,7 +9498,10 @@ function submitAnswer(song, isTimeout) {
   roundAnswerAlbums[round - 1] = [...new Set(currentSongs.map((s) => s.album).filter(Boolean))];
   // Prompt word — for Nemesis Word. Whose Line? never shows a word, so it logs none: crediting
   // (or blaming) the player for a word they were never asked about would poison the catalogue.
-  roundWords[round - 1] = whoseLineRuleActive() ? null : currentWord;
+  // Both Of Us logs none for the mirror reason: the page's difficulty belongs to the SET of
+  // words, and the tally has one slot per round, so either half would be a lie — a miss on
+  // "storm + diamond" is no evidence at all about "storm". The song still logs normally.
+  roundWords[round - 1] = (whoseLineRuleActive() || bothRuleActive()) ? null : currentWord;
   roundSongs[round - 1] = correct && song ? song.title : null;  // credited song — for the lifetime tally
   justEarnedIndex = correct ? round - 1 : -1;
   if (correct) score++;
@@ -9716,8 +9868,12 @@ function showCorrectFeedback(song, lyricMatch) {
   // Double Trouble resolves a page only once both songs are named — celebrate (and show)
   // the pair, not just the last one typed.
   const multi = gameType === "challenge" && currentChallenge && currentChallenge.rule === "multi" && roundNamed.length > 1;
+  // Both Of Us: one song answered several words, so the proof is one card per word — the same
+  // song's lyric shown at each place it earns the page.
+  const both = bothRuleActive() && bothWords.length > 1;
   const banner = multi
     ? (roundNamed.length === 2 ? "✓ both of them" : `✓ all ${roundNamed.length}`)
+    : both ? (bothWords.length === 2 ? "✓ it holds both" : "✓ it holds all three")
     : lyricMatch ? (LYRIC_BANNERS[lyricMatch.tier] || LYRIC_BANNERS.base) : "✓ that's the one";
   const bonus = lyricMatch ? lyricMatch.bonus : 0;
   const sticker = lyricMatch ? verseSticker(lyricMatch.tier, bonus) : "";
@@ -9729,13 +9885,15 @@ function showCorrectFeedback(song, lyricMatch) {
   }
   const card = multi
     ? roundNamed.map((t) => lyricCard(currentSongs.find((s) => s.title === t) || song, currentWord, false, null, true)).join("")
+    : both
+      ? bothWords.map((w) => lyricCard(song, w, false, null, true)).join("")
     : lyricMatch
       ? lyricCard(song, currentWord, false, lyricMatch.line, true)
       : lyricCard(song, currentWord, false, null, true);
   // The first time a word FORM is what earned the page ("pray" credited on "praying"), name the
   // rule — the card above is already showing the highlighted variant, so it lands with the
   // evidence in view. Once, then silent. Skipped when the verse note is already talking.
-  const formsNote = firstNote ? "" : wordFormsNote(multi ? null : song, multi ? null : (lyricMatch ? lyricMatch.line : null));
+  const formsNote = firstNote ? "" : wordFormsNote((multi || both) ? null : song, multi ? null : (lyricMatch ? lyricMatch.line : null));
   // Auto-advance setting on → a countdown + skip; off → a plain "next page" button.
   const auto = settings.autoAdvance;
   const advanceUI = auto
@@ -9778,9 +9936,21 @@ function showWrongFeedback(song, isTimeout) {
       if (s && pool.includes(s) && !leads.includes(s)) leads.push(s);
     }
     const rest = shuffle(pool.filter((s) => !leads.includes(s)));
-    const examples = [...leads, ...rest].slice(0, n);
-    const cards = examples.map((s) => lyricCard(s, currentWord, true, null, true)).join("");
-    help = `<span class="red-note">songs that hold "<b>${escapeHtml(currentWord)}</b>"</span>${cards}`;
+    const ordered = [...leads, ...rest];
+    if (bothRuleActive() && bothWords.length > 1) {
+      // Both Of Us: the useful reveal isn't three more songs, it's ONE song shown holding every
+      // word on the page — the answer you couldn't find, proved a word at a time.
+      const pick = ordered[0];
+      if (pick) {
+        const verb = bothWords.length === 2 ? "both live" : "all live";
+        help = `<span class="red-note">${bothWordsPhrase(true)} ${verb} in this one</span>` +
+          bothWords.map((w) => lyricCard(pick, w, true, null, true)).join("");
+      }
+    } else {
+      const examples = ordered.slice(0, n);
+      const cards = examples.map((s) => lyricCard(s, currentWord, true, null, true)).join("");
+      help = `<span class="red-note">songs that hold "<b>${escapeHtml(currentWord)}</b>"</span>${cards}`;
+    }
   }
   fb.innerHTML = `
     <div class="banner bad">✗ ${reason}</div>
@@ -12724,6 +12894,49 @@ function buildDevApi() {
         spoil: () => { alphaEveryLetterNew = false; },  // as if you'd rested twice on one letter
         win: (climbing) => { alphaEveryLetterNew = climbing !== false;
           score = (CHALLENGE_BY_ID.alphabetical.target) || 9; endGame(); },
+      },
+      // Both Of Us — the multi-word page. `check` is the honest read: it re-derives, straight
+      // off the song lyrics, which of this page's words each "answer" really holds, so a
+      // generated page can be verified without trusting the narrowing that built it.
+      both: {
+        words: () => bothWords.slice(),                     // every prompt word on the page
+        need: () => bothWordCountNow(),                     // how many the run asks for (dark = 3)
+        min: () => bothMinSongsNow(),                       // the winnability floor the draw had to clear
+        answers: () => currentSongs.map((s) => s.title),    // songs holding ALL of them
+        near: () => currentLyricSongs.filter((s) => !currentSongs.includes(s))
+          .map((s) => ({ title: s.title, missing: bothWordsMissing(s) })),   // the soft-reject set
+        check: () => currentSongs.map((s) => ({
+          title: s.title,
+          holds: bothWords.filter((w) => wordRegex(w, effectiveStrict()).test(s.lyrics)),
+          missing: bothWordsMissing(s),
+        })),
+        answer: () => { if (currentSongs[0]) submitAnswer(currentSongs[0]); },   // name a song that holds them all
+        // Name a song holding SOME of the words but not all — the soft-reject path.
+        half: () => { const s = currentLyricSongs.find((x) => !currentSongs.includes(x));
+          if (s) submitAnswer(s); return s ? s.title : null; },
+        win: () => { score = (CHALLENGE_BY_ID["both-of-us"].target) || 9; endGame(); },
+      },
+      // Double Trouble / Name Three — the "name N different songs a page" rule.
+      multi: {
+        need: () => (currentChallenge && currentChallenge.need) || 2,           // songs this page wants
+        named: () => roundNamed.slice(),                                        // named so far this page
+        answers: () => currentSongs.map((s) => s.title),                        // every song that would count
+        // Name the next song not yet used this page (repeat to clear the page).
+        name: () => { const s = currentSongs.find((x) => !roundNamed.includes(x.title));
+          if (s) submitAnswer(s); return s ? s.title : null; },
+        // Clear the whole page in one call, proving the soft-reject ladder resolves at `need`.
+        fill: () => { const need = (currentChallenge && currentChallenge.need) || 2;
+          for (let i = roundNamed.length; i < need && !roundLocked; i++) {
+            const s = currentSongs.find((x) => !roundNamed.includes(x.title));
+            if (!s) break;
+            submitAnswer(s);
+          }
+          return roundNamed.slice(); },
+        // Name a song already banked this page — the duplicate soft reject.
+        repeat: () => { const t = roundNamed[0]; const s = t && currentSongs.find((x) => x.title === t);
+          if (s) submitAnswer(s); return t || null; },
+        win: (id) => { const c = CHALLENGE_BY_ID[id || "name-three"];
+          score = (c && c.target) || 8; endGame(); },
       },
       // Common Thread — the "type the shared word" inversion.
       common: {

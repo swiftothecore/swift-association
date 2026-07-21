@@ -501,7 +501,49 @@ export const CHALLENGES = [
     blurb: "12s · no typing · one lyric line · name the song it came from",
     desc: "No prompt word at all. You get a single line of lyric and four songs, and you have to know whose line it is.",
     win: "Score 9 / 13 placing the line." },
+  { id: "both-of-us", name: "Both Of Us", rule: "bothwords", mode: "medium",
+    free: true, cost: 1, target: 9, seconds: 20, noTitle: false, pool: "easy", tapes: 0,
+    // `bothMinSongs` is the winnability floor: a pair is only served if at least this many
+    // songs hold every word on the page, so no page can be drawn unanswerable. Base asks for
+    // two, which keeps a page from resting on one obscure song nobody could be expected to
+    // find; the dark side drops to one, where the page really is that single song.
+    bothMinSongs: 2,
+    // Dark: a THIRD word, the last of the slack gone, and less time. `words` (read everywhere
+    // through bothWordCountNow) is what the partner draw builds to, so the guard, the prompt
+    // display, the soft reject and the reveal all widen together. All three copy sites state
+    // the count, so all three move with it.
+    hard: { seconds: 15, words: 3, bothMinSongs: 1, pool: null,
+      blurb: "15s · suggestions · THREE words · one song has to hold every one",
+      desc: "A third word joins the page and the words get rarer. One song still has to hold all of them, and there may only be one that does.",
+      win: "Score 9 / 13 naming songs that hold all three words." },
+    blurb: "20s · suggestions · two words · name one song whose lyrics hold both",
+    desc: "Two words on the page instead of one. Name a single song whose lyrics hold both of them, because half doesn't count.",
+    win: "Score 9 / 13 naming songs that hold both words." },
+  { id: "name-three", name: "Name Three", rule: "multi", mode: "medium",
+    free: true, cost: 1, target: 8, need: 3, seconds: 30, tapes: 0,
+    // Double Trouble's rule, taken deeper: three songs a page instead of two, and drawn from
+    // the whole word pool rather than the common one. `need` already drives the banner, the
+    // soft reject and the winnability filter, so this is a registry entry, not new machinery.
+    // Dark: a fourth song on the same thirty-second clock, and a target lowered to keep the
+    // run survivable — four different songs for one word is the wall, not the page count.
+    // The clock deliberately does NOT tighten: naming a fourth song is already the whole
+    // difficulty, and taking seconds away on top would make it a typing race instead.
+    hard: { need: 4, target: 7,
+      blurb: "30s · suggestions · FOUR different songs a page · not in the title",
+      desc: "Three wasn't enough. Four different songs for the one word, every page, in the same half minute.",
+      win: "Clear 7 pages, naming four different songs each." },
+    blurb: "30s · suggestions · name THREE different songs a page · not in the title",
+    desc: "One word, and three different songs that sing it. Anyone can name one. Three means you really know the catalogue.",
+    win: "Clear 8 pages, naming three different songs each." },
 ];
+/* Both Of Us — the multi-word page. BOTH_WORDS prompt words are drawn per page (the dark side
+   carries a wider `words`), and a set is only served once at least BOTH_MIN_SONGS songs hold
+   every one of them (the entry's `bothMinSongs` raises that floor), so a page can never be
+   drawn without an answer. BOTH_PARTNER_TRIES caps the partner scan so a hopeless anchor word
+   can't stall the page turn. */
+export const BOTH_WORDS = 2;
+export const BOTH_MIN_SONGS = 1;
+export const BOTH_PARTNER_TRIES = 400;
 /* Odd One Out — the reject grid. Each page shows ODD_TILES songs, of which exactly one is the
    odd one: the word appears in NEITHER its lyrics nor its title (so the tile isn't an unfair
    "title matched but it's wrong" trap). Tapping the odd one scores; tapping any of the genuine
@@ -1205,6 +1247,10 @@ const WAX_SEAL_MOTIFS = {
   "odd-one-out": { fr: "nonzero", d: PLACEHOLDER_MOTIF_D },
   // PLACEHOLDER (a plain question mark) — real motif still to be drawn.
   "whose-line": { fr: "nonzero", d: PLACEHOLDER_MOTIF_D },
+  // PLACEHOLDER (a plain question mark) — real motif still to be drawn.
+  "both-of-us": { fr: "nonzero", d: PLACEHOLDER_MOTIF_D },
+  // PLACEHOLDER (a plain question mark) — real motif still to be drawn.
+  "name-three": { fr: "nonzero", d: PLACEHOLDER_MOTIF_D },
 };
 
 // The shared wax recipe. `id` scopes the SVG's internal ids so several seals can
