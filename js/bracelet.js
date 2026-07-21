@@ -100,6 +100,29 @@ export const CHARMS = {
     const mouth = `<path d="M${pt(-0.36, 0.44)} Q${pt(0, 0.72)} ${pt(0.36, 0.44)}" stroke="var(--ink)" stroke-width="${feat}" fill="none" stroke-linecap="round"/>`;
     return cFill(hornL, sw) + cFill(hornR, sw) + face + eyes + mouth;
   },
+  // A horseshoe, open end down, three nails punched through the band — the keepsake for a
+  // bead won at stake in the risk challenges. Not player-selectable; hung automatically on
+  // the pages where a bet actually paid (see riskWon). Built from segments rather than arcs
+  // so the band stays even at any bead scale.
+  horseshoe(cx, cy, r, sw) {
+    const Ro = 1.0 * r, Ri = 0.60 * r, Rm = (Ro + Ri) / 2;
+    const A0 = 200, A1 = -20;                 // sweeps over the top, so the shoe hangs mouth-down
+    const P = (R, deg) => {
+      const a = (deg * Math.PI) / 180;
+      return `${(cx + R * Math.cos(a)).toFixed(2)},${(cy - R * Math.sin(a)).toFixed(2)}`;
+    };
+    const N = 20;
+    let d = "M" + P(Ro, A0);
+    for (let k = 1; k <= N; k++) d += "L" + P(Ro, A0 + ((A1 - A0) * k) / N);
+    d += "L" + P(Ri, A1);
+    for (let k = 1; k <= N; k++) d += "L" + P(Ri, A1 + ((A0 - A1) * k) / N);
+    const holes = [155, 90, 25].map((deg) => {
+      const a = (deg * Math.PI) / 180;
+      return `<circle cx="${(cx + Rm * Math.cos(a)).toFixed(2)}" cy="${(cy - Rm * Math.sin(a)).toFixed(2)}" ` +
+        `r="${(0.11 * r).toFixed(2)}" fill="var(--paper)"/>`;
+    }).join("");
+    return cFill(d + "Z", sw) + holes + cGloss(cx - 0.62 * r, cy - 0.42 * r, r * 0.12);
+  },
   nib(cx, cy, r, sw) {
     const h = 1.108 * r, w = 0.649 * r;
     const d = `M${cx},${cy - h} L${cx + w},${cy - h * 0.15} L${cx},${cy + h} L${cx - w},${cy - h * 0.15} Z`;
@@ -131,6 +154,10 @@ export function buildBraceletSVG(results, activeRound, freshIndex, albums, opts)
   const verseTiers = (opts && opts.verseTiers) || [];
   // per-round flag (Impostor challenge): this bead flagged a fake, so it dangles a devil.
   const impostorCaught = (opts && opts.impostorCaught) || [];
+  // per-round flag (the risk challenges): this bead was won at stake, so it dangles a
+  // horseshoe. The strand stays one bead per page whatever a bet paid — the charm is how
+  // a high-stakes page shows what it was worth.
+  const riskWon = (opts && opts.riskWon) || [];
   // opts.charm: the Mastery-chosen dangling charm id (see CHARMS); default "star".
   const W = 520, H = 64, xL = 26, xR = W - 26;
   // the thread sags between its tied ends like a real bracelet laid on the page
@@ -191,7 +218,7 @@ export function buildBraceletSVG(results, activeRound, freshIndex, albums, opts)
       // player's chosen charm (default star), drawn by the shared CHARMS renderer.
       const isNib = verseTiers[i] === "perfect" || verseTiers[i] === "verse";
       const chosen = (opts && opts.charm && CHARMS[opts.charm]) ? opts.charm : "star";
-      const charmId = impostorCaught[i] ? "devil" : (isNib ? "nib" : chosen);
+      const charmId = impostorCaught[i] ? "devil" : riskWon[i] ? "horseshoe" : (isNib ? "nib" : chosen);
       const cr = s(7.4), csw = Math.max(0.7, cr * 0.15).toFixed(2);
       const charm = `<g${beadStyle}>${CHARMS[charmId](x, y + s(15.5), cr, csw)}</g>`;
       svg += `<g class="charm-dangle${fresh ? " fresh" : ""}"${delay}>` +

@@ -1787,10 +1787,62 @@
   .chall-path-overlay.is-devil .cpc-icon { color: #e2725b; }
   .chall-path-overlay.is-devil .cpc-name { color: #f3e9da; }
   .chall-path-overlay.is-devil .cpc-desc { color: #c9a59c; }
+  /* The risk batch — the same fork overlay for the bank / double-or-nothing offer, tinted
+     toward the margin red so a page that is asking you to gamble reads differently from
+     one handing out perks. */
+  .chall-path-overlay.is-risk { background: rgba(246, 238, 226, 0.94); }
+  .chall-path-overlay.is-risk .chall-path-title { color: #9c3b2e; }
+  .chall-path-overlay.is-risk .chall-path-card { border-color: #b06a58; }
+  .chall-path-overlay.is-risk .cpc-icon { color: #9c3b2e; }
   @media (prefers-reduced-motion: reduce) {
     .chall-path-overlay { animation: none; }
     .chall-path-card { transition: none; }
     .chall-path-card:hover { transform: none; }
+  }
+
+  /* Confidence Wager — the stake row, standing in for the answer line while the clock is
+     still paused. The word is already up, so this sits where the typing would be. */
+  .risk-stake { text-align: center; margin: 4px 0 2px; }
+  .risk-stake-ask {
+    font-family: var(--hand); font-weight: 700; font-size: 22px;
+    color: var(--ink); margin: 0 0 8px;
+  }
+  .risk-stake-row { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+  .risk-stake-btn {
+    cursor: pointer; min-width: 74px; padding: 10px 12px;
+    display: flex; flex-direction: column; align-items: center; gap: 2px;
+    background: var(--paper); border: 1.5px solid var(--ink-soft); border-radius: 4px;
+    box-shadow: 2px 3px 0 rgba(43, 39, 34, 0.16);
+    transition: transform 0.12s ease, box-shadow 0.12s ease, border-color 0.12s ease;
+  }
+  .risk-stake-btn:hover {
+    transform: translateY(-2px); border-color: #9c3b2e;
+    box-shadow: 3px 5px 0 rgba(43, 39, 34, 0.22);
+  }
+  .rs-n { font-family: var(--hand); font-weight: 700; font-size: 26px; color: var(--ink); line-height: 1; }
+  .rs-l { font-family: var(--type); font-size: 10px; letter-spacing: 0.6px; color: var(--ink-soft); }
+  .risk-stake-note { font-family: var(--type); font-size: 11px; color: var(--ink-soft); margin: 10px 0 0; }
+  /* Insurance — the shield you spend before answering. Same dashed affordance as Choose Your
+     Path's Mulligan (it is the same kind of thing: a run resource), inked red because it is
+     the only thing standing between you and the end of the run. */
+  .risk-shield-btn { color: #9c3b2e; border-color: rgba(156, 59, 46, 0.6); }
+  .risk-shield-btn:hover { color: #7d2f24; border-color: #7d2f24; }
+  /* The bead swing a bet just paid (or cost), called out beside the strand's charm count. */
+  .bead-delta {
+    margin-left: 8px; font-family: var(--type); font-weight: 700; font-size: 12px;
+    color: #4f7a3a; animation: bead-delta-in 1.5s ease both;
+  }
+  .bead-delta.is-loss { color: #9c3b2e; }
+  @keyframes bead-delta-in {
+    0% { opacity: 0; transform: translateY(4px); }
+    12% { opacity: 1; transform: translateY(0); }
+    75% { opacity: 1; }
+    100% { opacity: 0; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .risk-stake-btn { transition: none; }
+    .risk-stake-btn:hover { transform: none; }
+    .bead-delta { animation: none; }
   }
 
   /* Wildcard — the per-round rule banner above the prompt word */
