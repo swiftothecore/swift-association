@@ -14,6 +14,7 @@ import {
   COMMON_LINES, COMMON_MIN_SONGS, COMMON_MAX_SONGS, COMMON_GEN_ATTEMPTS, COMMON_MAX_ACCEPT,
   ODD_TILES, WHOSE_TILES, WHOSE_MIN_WORDS, WHOSE_GEN_ATTEMPTS,
   BOTH_WORDS, BOTH_MIN_SONGS, BOTH_PARTNER_TRIES,
+  PRESS_RIDE_STEP, PRESS_CHARM_RIDE, RISK_MAX_STAKE, RISK_TOKENS, RISK_TOKEN_VALUE,
   ALBUM_FOCUS_DIFFS, ALBUM_FOCUS_TARGET,
   ADAPTIVE_BUCKETS, ADAPTIVE_LEVELS, ADAPT_MAX_LEVEL, ADAPT_START_LEVEL, ADAPT_PROMO_STREAK, ADAPT_NODROP_LEVEL,
   STUDY_MAX_BOX, STUDY_INTERVALS, STUDY_SESSION_ROUNDS,
@@ -177,6 +178,24 @@ let devilShortOnly = false;     // Keep It Short: only ≤2-word titles count
 let devilBannedAlbums = [];     // Off Limits / Locked Out: albums no longer accepted
 let devilBannedInitials = [];   // Forbidden Letters: title-start letters no longer accepted
 let devilPoolHard = false;      // Rarer Air: remaining words drawn from the rarer pool
+// The risk batch's shared bead economy (Press Your Luck / Confidence Wager / Double Or
+// Nothing / Insurance). Beads ARE `score`, so a wager just moves that number; these track
+// what is currently at stake, and what the run still owes the player.
+let beadPot = 0;                // Press Your Luck: beads riding, unbanked — a miss wipes them
+let beadRide = 0;               // Press Your Luck: how deep the current ride is (the pot escalates with it)
+let beadsBanked = 0;            // Press Your Luck: times the pot was banked (for the results recap)
+let roundStake = 0;             // Confidence Wager: beads staked on this page (0 until chosen)
+let stakeChosen = false;        // Confidence Wager: this page's stake is locked in, the clock may run
+let riskCharm = [];             // per-round: this page's bead was won at stake — hang a horseshoe
+let bonusActive = false;        // Double Or Nothing: the second word is live on this page
+let bonusTaken = 0;             // Double Or Nothing: bonus words attempted this run
+let bonusWon = 0;               // Double Or Nothing: bonus words landed this run
+let insuranceTokens = 0;        // Insurance: shields still unspent
+let roundInsured = false;       // Insurance: a shield is covering THIS page
+let insuranceSpent = 0;         // Insurance: shields burned this run
+let insuranceDead = false;      // Insurance: an uninsured miss landed — the run is over
+let riskDecisionPending = false;// a between-pages bank/double offer is waiting for nextRound
+let riskSettled = false;        // the end-of-run payout has already been applied (see endChallenge)
 let roundWildcard = null;       // Wildcard: this round's active sub-constraint
 let lastWildcardId = "";        // Wildcard: previous round's constraint id (no immediate repeat)
 let devForcedWildcardId = null; // Dev tools: pin every Wildcard round to one sub-rule (or null)
@@ -3906,7 +3925,10 @@ function renderChallengeDetail(id) {
   }
 
   let meta = "";
-  const bestOutOf = c.rule === "survive" ? "" : `/${TOTAL_ROUNDS}`;
+  // Thirty-One's best is a round number, and the risk batch's is a bead total that can
+  // legitimately run past the page count — neither belongs over a "/ 13" denominator.
+  const bestOutOf = RISK_RULES.has(c.rule) ? ` bead${rec.best === 1 ? "" : "s"}`
+    : c.rule === "survive" ? "" : `/${TOTAL_ROUNDS}`;
   if (rec.defeated) meta = `best ${rec.best}${bestOutOf} · ${rec.attempts} attempt${rec.attempts === 1 ? "" : "s"}`;
   else if (rec.attempts) meta = `${rec.attempts} attempt${rec.attempts === 1 ? "" : "s"} · not yet beaten`;
   if (rec.darkDefeated) meta += `${meta ? " · " : ""}dark side beaten`;
@@ -4177,7 +4199,10 @@ function renderBraceletSVG(results, active, fresh, albums, opts) {
   const impostorCaught = impostorRuleActive()
     ? results.map((ok, i) => ok === true && impostorRounds.has(i + 1))
     : null;
-  return buildBraceletSVG(results, active, fresh, albums, { ...opts, charm: settings.masteryCharm, impostorCaught });
+  // Risk challenges: a bead won at stake dangles a horseshoe instead of the usual charm.
+  const riskWon = riskRuleActive() ? riskCharm.slice() : null;
+  return buildBraceletSVG(results, active, fresh, albums,
+    { ...opts, charm: settings.masteryCharm, impostorCaught, riskWon });
 }
 
 // ---- Bracelet-as-PNG keepsake ----
@@ -4960,6 +4985,8 @@ function isGameOver() {
   if (surviveRuleActive()) return lives <= 0 || round >= (currentChallenge.target || 31);
   // Home Invasion: the per-page clock has been cut to nothing — the run is over.
   if (spiteRuleActive() && spiteSeconds <= 0) return true;
+  // Insurance: sudden death — a miss nobody had shielded ends the run where it stands.
+  if (insuranceRuleActive() && insuranceDead) return true;
   return round >= TOTAL_ROUNDS;
 }
 
@@ -5075,6 +5102,21 @@ function resetRunState() {
   devilBannedAlbums = [];
   devilBannedInitials = [];
   devilPoolHard = false;
+  beadPot = 0;
+  beadRide = 0;
+  beadsBanked = 0;
+  roundStake = 0;
+  stakeChosen = false;
+  riskCharm = [];
+  bonusActive = false;
+  bonusTaken = 0;
+  bonusWon = 0;
+  insuranceTokens = 0;
+  roundInsured = false;
+  insuranceSpent = 0;
+  insuranceDead = false;
+  riskDecisionPending = false;
+  riskSettled = false;
   roundWildcard = null;
   lastWildcardId = "";
   clearTimeout(vanishTimer);
@@ -5587,6 +5629,12 @@ function startChallenge(id, opts) {
   if (c.rule === "impostor") setupImpostorChallenge();
   if (c.rule === "setlist") buildTourSetlist();
   if (c.rule === "combo") comboClock = comboStart();
+  // The risk batch: seed whatever the run opens holding. Confidence Wager deals a few beads
+  // so page one is a real bet rather than a forced pass; Insurance deals its shields.
+  if (RISK_RULES.has(c.rule)) {
+    score = riskStartBeads();
+    insuranceTokens = c.rule === "insurance" ? riskStartTokens() : 0;
+  }
   // Home Invasion: run-scoped clock, starts at c.seconds and only shrinks on wrong answers.
   if (c.rule === "spite") spiteSeconds = c.seconds || 10;
   // Thirty-One: runs on Infinite's sudden-death rules while staying a sandboxed challenge.
@@ -5795,9 +5843,10 @@ function revealSea(pickedSong) {
 
 // The prompt chrome — the big word and its "write a song with" lead-in — doesn't suit every
 // challenge: Common Thread and Whose Line? replace the single prompt word outright, Odd One
-// Out keeps the word but inverts the ask (you're rejecting a song, not naming one), and Both
-// Of Us hangs a second and third word off the first. Deciding it in one place stops two rules
-// writing over each other's answer on the same handful of elements.
+// Out keeps the word but inverts the ask (you're rejecting a song, not naming one), Both Of Us
+// hangs a second and third word off the first, and Double Or Nothing's bonus word is asking for
+// one more song on a page you've already won. Deciding it in one place stops two rules writing
+// over each other's answer on the same handful of elements.
 function renderPromptChrome() {
   const ww = document.querySelector(".word-wrap");
   const wl = document.querySelector(".word-label");
@@ -5824,6 +5873,7 @@ function renderPromptChrome() {
     wl.style.display = hideWord ? "none" : "";
     wl.textContent = oddOneRuleActive() ? "which song never sings"
       : more.length ? (more.length === 1 ? "write one song with both" : "write one song with all three")
+      : bonusActive ? "one more song, for one more bead"
       : "write a song with";
   }
 }
@@ -6413,6 +6463,9 @@ function applyChallengeRound(wrap) {
     renderBothBanner();
   } else if (currentChallenge.rule === "common") {
     renderCommonBanner();
+  } else if (RISK_RULES.has(currentChallenge.rule)) {
+    // The risk batch shares one banner (what's at stake · beads against the target).
+    renderRiskBanner();
   } else if (currentChallenge.rule === "tiny") {
     // The Smallest Song Who Ever Lived — shrink, tilt, and offset the prompt, constant.
     renderTinyWord(wrap, currentWord);
@@ -6906,6 +6959,11 @@ function challengeWinCheck(c) {
   if (c.rule === "verse") return gameVersePerfect >= (c.target || 4);
   // Thirty-One: an unbroken run (still alive) that cleared the target round (31).
   if (c.rule === "survive") return round >= (c.target || 31) && lives > 0;
+  // Insurance: sudden death, so surviving all 13 pages is half the win — the other half is
+  // the bead target, which the shields you never had to spend pay into (see endChallenge).
+  if (c.rule === "insurance") {
+    return !insuranceDead && roundResults.length >= TOTAL_ROUNDS && score >= (c.target || 13);
+  }
   // Score-target rules: vanishing / alphabetical / accelerate / titleHas / shorttitle /
   // chain (chain length == score) / setlist / combo (reach the target before the clock dies).
   return score >= (c.target || TOTAL_ROUNDS);
@@ -6917,6 +6975,20 @@ function endChallenge() {
   const c = currentChallenge;
   challengeRunActive = false;   // run is over — let defeat/meta charms fire normally
 
+  // The risk batch settles up BEFORE anything reads the score. Press Your Luck banks
+  // whatever was still riding when the pages ran out (the run ending is not a miss, so a
+  // pot ridden all the way home pays out and earns its charm like any other bank), and
+  // Insurance cashes in every shield the player never had to spend — which is the whole
+  // reason spending one hurts.
+  // Guarded, because unlike every other end path this one MUTATES the score rather than
+  // just reading it: endGame sets runFolded but doesn't refuse a second call, so an
+  // unguarded payout would pay twice if this were ever re-entered.
+  if (riskRuleActive() && !riskSettled) {
+    riskSettled = true;
+    if (pressRuleActive()) bankPot(true);
+    if (insuranceRuleActive() && insuranceTokens > 0) score += insuranceTokens * riskTokenValue();
+  }
+
   // Challenges count toward the GLOBAL/catalogue stores only — the chronological
   // history log, the lifetime catalogue tally (Songs/Words Discovered, Favourite,
   // Nemesis), and the cross-game lifetime metrics. They deliberately do NOT touch
@@ -6925,8 +6997,13 @@ function endChallenge() {
   // it into normal difficulty stats would pollute them. (devNoLog skips it all.)
   if (!devNoLog) {
     const runTime = currentMode.seconds > 0 ? gameTimeSum : null;
+    // A risk run's score is a BEAD total, which can outrun the page count — and a history row
+    // reads "s / n", so logging it there would render "20 / 13". Log pages won instead: that
+    // is the honest 0-13 reading of the same run, and the bead total is the challenge's own
+    // currency, kept on its record and its results card.
+    const logged = riskRuleActive() ? roundResults.filter(Boolean).length : score;
     appendHistory({
-      s: score, c: score, n: roundResults.length,
+      s: logged, c: logged, n: roundResults.length,
       // Token stays "chl-<id>" so modeLabel keeps naming the challenge; the dark side is a
       // separate flag rather than a token suffix, which would fall out of CHALLENGE_BY_ID
       // and degrade the label to a bare "Challenge". Surfacing `dk` comes with the UI.
@@ -6946,7 +7023,7 @@ function endChallenge() {
     // challengeRunActive is already false above, so this unlock fires normally.
     if (allSongs.length && allSongs.every((s) => tally.songs[s.title])) unlock("i-hate-it-here"); checkSongKeepsakes(tally);
     recordGameMetrics({
-      rounds: roundResults.length, correct: score,
+      rounds: roundResults.length, correct: logged,
       timeSumMs: gameTimeSum * 1000, timedRounds: gameTimedRounds,
       fastestMs: gameFastestMs, lyricLines: lyricLineAnswers,
       versePerfect: gameVersePerfect, wholeVerses: gameWholeVerses, verseBonus,
@@ -6961,7 +7038,9 @@ function endChallenge() {
   $("resultBracelet").innerHTML = renderBraceletSVG(roundResults, 0, -1, roundAlbums,
     { colors: albumPalette(), hinted: roundHinted, verseTiers: roundVerseTier });
   $("finalScore").textContent = score;
-  $("finalSub").textContent = "out of " + TOTAL_ROUNDS;
+  // A bead total has no "out of": the page count is not its ceiling, so it's shown against
+  // the challenge's target instead of the 13 pages that produced it.
+  $("finalSub").textContent = riskRuleActive() ? "beads · need " + riskTarget() : "out of " + TOTAL_ROUNDS;
   $("keepGoingBtn").style.display = "none";
   $("namePrompt").style.display = "none";
   $("verseAnthology").style.display = "none";
@@ -7019,11 +7098,15 @@ function endChallenge() {
     ? `<div class="chall-result-meta">${realNamed} real word${realNamed === 1 ? "" : "s"} named · ` +
       `${impostorFlagged} impostor${impostorFlagged === 1 ? "" : "s"} caught</div>`
     : "";
+  // A risk run's best is a bead count, so it can't wear the "/ 13" denominator either.
+  const bestLine = !rec.best ? ""
+    : riskRuleActive() ? ` · best ${rec.best} bead${rec.best === 1 ? "" : "s"}`
+    : ` · best ${rec.best}/${TOTAL_ROUNDS}`;
   const meta = `<div class="chall-result-meta">${rec.attempts} attempt${rec.attempts === 1 ? "" : "s"}` +
-    `${rec.best ? ` · best ${rec.best}/${TOTAL_ROUNDS}` : ""}</div>`;
+    `${bestLine}</div>`;
   // A two-up row sitting above the full-width "front page" button: back to the list on the
   // left, replay this same challenge on the right — each half the width of the button below.
-  $("resultPodium").innerHTML = status + tokenLine + verseLine + impostorLine + meta +
+  $("resultPodium").innerHTML = status + tokenLine + verseLine + impostorLine + riskResultLine() + meta +
     `<div class="chall-result-actions">` +
       `<button id="backToChallenges" class="btn-primary">← challenges</button>` +
       `<button id="replayChallenge" class="btn-primary">replay ↺</button>` +
@@ -7033,7 +7116,12 @@ function endChallenge() {
 
   renderResultRecap();   // surface any challenge achievements just earned
   renderSkillsRecap();
-  if (won && score === TOTAL_ROUNDS) celebratePerfect();
+  // "Perfect" means every page, not a number that happens to read 13 — which on a risk run
+  // is a bead total that could sit anywhere relative to the pages actually cleared.
+  const perfect = riskRuleActive()
+    ? roundResults.length === TOTAL_ROUNDS && roundResults.every(Boolean)
+    : score === TOTAL_ROUNDS;
+  if (won && perfect) celebratePerfect();
 }
 
 // Sandboxed results path for an Album Focus run (mirrors endChallenge). Folds into the
@@ -7807,6 +7895,14 @@ function nextRound() {
     (currentChallenge.rule === "devil" ? showDevilFork : showPathFork)(round);
     return;
   }
+  // The risk batch: Press Your Luck's bank-or-ride and Double Or Nothing's second-word offer
+  // both sit between the answered page and the next one, which is structurally the same beat
+  // as a fork. showRiskDecision resumes the page turn (or starts a bonus word) once answered,
+  // and returns false when there was nothing worth asking.
+  if (riskDecisionPending) {
+    riskDecisionPending = false;
+    if (showRiskDecision()) return;
+  }
   if (isGameOver()) { endGame(); return; }
   // Every page turn whooshes, both the animated flip and the instant paths
   // (round 1 included: that is the notebook opening).
@@ -8057,7 +8153,10 @@ function beginRoundClock() {
       vanishTimer = setTimeout(() => { wrap.classList.add("vanished"); }, ms);
     }
   };
-  if (!queue) { beginTimedRoundEffects(); startTimer(); return; }
+  // Confidence Wager stakes AFTER the word is up but BEFORE the clock runs — this is the one
+  // place that owns that gap, so the gate lives here rather than in the rule.
+  const startPlay = () => { if (wagerRuleActive()) showWagerStake(startTimer); else startTimer(); };
+  if (!queue) { beginTimedRoundEffects(); startPlay(); return; }
   if (!Array.isArray(queue)) queue = [queue];
   showTimerFull();   // pin the clock at a paused full bar beneath the curtain — no leftover time shows through the lift
   const onDone = () => {
@@ -8066,7 +8165,7 @@ function beginRoundClock() {
     if (!input.disabled) input.focus();
     beginTimedRoundEffects();
     if (isWildcardRound() && roundWildcard.display && !roundWildcard.instant) roundWildcard.display(wrap);
-    startTimer();
+    startPlay();
   };
   const reduced = motionReduced();
   let i = 0;
@@ -8353,6 +8452,359 @@ function showDevilFork(forkRound) {
   }, { once: true }));
 }
 
+/* ---------- The risk batch: one bead economy, four different bets ----------
+   Press Your Luck / Confidence Wager / Double Or Nothing / Insurance all answer their pages
+   the ordinary way. What they add is a DECISION wrapped around the answer, so they share one
+   layer rather than four. Beads ARE `score` (the correct-answer count) — there is no separate
+   point system here and we are not inventing one — so every bet is just a move on that number
+   and `challengeWinCheck`'s `score >= target` keeps judging the run untouched.
+
+   Two invariants the rest of the app has to honour, both handled in this file:
+   • A run can finish holding more beads than it played pages. So progress is NEVER rendered
+     against the page count: "20 / 13" reads as a bug, because 13 is the page count and not a
+     ceiling. Everything goes through riskProgressText ("20 beads · need 9") instead, and the
+     history log records pages won rather than beads (see endChallenge).
+   • The bracelet still strings exactly ONE BEAD PER PAGE. A bead won at stake shows its stakes
+     by wearing a horseshoe charm (riskCharm), never by adding beads to the strand. */
+const RISK_RULES = new Set(["press", "wager", "doubleup", "insurance"]);
+function riskRuleActive() {
+  return gameType === "challenge" && !!currentChallenge && RISK_RULES.has(currentChallenge.rule);
+}
+function pressRuleActive() { return riskRuleActive() && currentChallenge.rule === "press"; }
+function wagerRuleActive() { return riskRuleActive() && currentChallenge.rule === "wager"; }
+function doubleRuleActive() { return riskRuleActive() && currentChallenge.rule === "doubleup"; }
+function insuranceRuleActive() { return riskRuleActive() && currentChallenge.rule === "insurance"; }
+
+// The per-run levers, each falling back to the shared default so a challenge entry only
+// carries the numbers it actually moves.
+function riskTarget() { return (currentChallenge && currentChallenge.target) || 0; }
+function riskMaxStake() { const n = currentChallenge && Number(currentChallenge.maxStake); return n > 0 ? n : RISK_MAX_STAKE; }
+function riskStartBeads() { const n = currentChallenge && Number(currentChallenge.startBeads); return n > 0 ? n : 0; }
+function riskStartTokens() { const n = currentChallenge && Number(currentChallenge.tokens); return n > 0 ? n : RISK_TOKENS; }
+function riskTokenValue() { const n = currentChallenge && Number(currentChallenge.tokenValue); return n > 0 ? n : RISK_TOKEN_VALUE; }
+
+// The ONLY way a risk run's progress is ever phrased. See the invariant above: never "n / 13".
+function riskProgressText(n) {
+  const v = n == null ? score : n;
+  return `${v} bead${v === 1 ? "" : "s"} · need ${riskTarget()}`;
+}
+// Move the bead total, floor it at zero (a bet can't put you in debt), and say so on screen.
+function adjustBeads(n) {
+  if (!n) return;
+  score = Math.max(0, score + n);
+  flashBeadDelta(n);
+}
+// A bead swing, called out where the eye already is: beside the strand's charm count.
+// Also used for beads lost from a pot that never reached `score` at all (Press Your Luck),
+// which is why it takes the delta rather than reading the score itself.
+function flashBeadDelta(n) {
+  const meta = document.querySelector("#screen-game .bracelet-meta");
+  if (!meta) return;
+  const old = meta.querySelector(".bead-delta");
+  if (old) old.remove();
+  const el = document.createElement("span");
+  el.className = "bead-delta" + (n < 0 ? " is-loss" : "");
+  el.textContent = (n > 0 ? "+" : "") + n;
+  meta.appendChild(el);
+  setTimeout(() => el.remove(), 1500);
+}
+
+// The shared banner: what's at stake on the left, the bead total against the target on the
+// right. Every risk rule uses this one row rather than growing its own.
+function renderRiskBanner() {
+  if (!riskRuleActive()) return;
+  const el = ensureChallBanner();
+  let left;
+  if (pressRuleActive()) {
+    left = beadPot > 0 ? `${beadPot} riding` : "nothing riding";
+  } else if (wagerRuleActive()) {
+    left = !stakeChosen ? "set your stake"
+      : roundStake > 0 ? `${roundStake} staked` : "no stake this page";
+  } else if (doubleRuleActive()) {
+    left = bonusActive ? "double or nothing" : "clear it, then choose";
+  } else {
+    left = `${insuranceTokens} shield${insuranceTokens === 1 ? "" : "s"}` + (roundInsured ? " · insured" : "");
+  }
+  el.innerHTML = `<span class="chall-prog-name">${escapeHtml(left)}</span>` +
+    `<span class="chall-prog-count">${escapeHtml(riskProgressText())}</span>`;
+}
+
+/* ---------- Press Your Luck ---------- */
+// Bank whatever is riding. The pot escalates while it rides (the first page you ride is
+// worth 1, the second 2, and so on), so banking is always a real decision rather than a
+// formality: bank early and 13 pages cap you well under the target.
+// `quiet` banks without the on-screen delta: the run-end settle (endChallenge) is a bank
+// like any other and earns its charm the same way, but the game screen is already on its
+// way out, so there is nobody left to flash at.
+function bankPot(quiet) {
+  if (beadPot <= 0) return 0;
+  const n = beadPot;
+  // A deep ride carried home is the run's high-stakes moment — mark the page that closed it.
+  // A pot only ever survives on a page that was won, so round - 1 is always a real bead.
+  if (beadRide >= PRESS_CHARM_RIDE) riskCharm[round - 1] = true;
+  if (quiet) score += n; else adjustBeads(n);
+  beadPot = 0;
+  beadRide = 0;
+  beadsBanked += 1;
+  return n;
+}
+
+/* ---------- Confidence Wager ---------- */
+// The stake is set with the word already on the page but the clock not yet running, so it's
+// a judgement about THIS word rather than a blind bet. Gated in beginRoundClock, which is
+// the one place that owns "the round is ready, start the clock".
+function showWagerStake(done) {
+  if (!wagerRuleActive()) { done(); return; }
+  stakeChosen = false;
+  roundStake = 0;
+  const input = $("songInput");
+  const inputArea = document.querySelector("#screen-game .input-area");
+  const typeHint = $("gameHint");
+  input.disabled = true;                         // no answering until the stake is down
+  if (inputArea) inputArea.style.display = "none";
+  // The typing hint is instructions for a line that isn't on the page yet — hide it with
+  // the input it describes, and put it back when the stake is down.
+  const hintWas = typeHint ? typeHint.style.display : null;
+  if (typeHint) typeHint.style.display = "none";
+  showTimerFull();                               // a paused, full bar — none of the clock is spent deciding
+  // You can only stake what you actually hold, so a run that has bled out its beads gets a
+  // single "no stake" button rather than an offer it can't honour.
+  const cap = Math.min(riskMaxStake(), score);
+  const panel = document.createElement("div");
+  panel.id = "wagerStake";
+  panel.className = "risk-stake";
+  let btns = "";
+  for (let n = 0; n <= cap; n++) {
+    btns += `<button type="button" class="risk-stake-btn" data-stake="${n}">` +
+      `<span class="rs-n">${n}</span>` +
+      `<span class="rs-l">${n === 0 ? "no stake" : n === 1 ? "bead" : "beads"}</span></button>`;
+  }
+  panel.innerHTML =
+    `<p class="risk-stake-ask">how sure are you?</p>` +
+    `<div class="risk-stake-row">${btns}</div>` +
+    `<p class="risk-stake-note">${cap < riskMaxStake()
+      ? `you can only stake what you hold`
+      : `a right answer pays your stake back doubled`}</p>`;
+  $("playArea").appendChild(panel);
+  panel.querySelectorAll("[data-stake]").forEach((b) => b.addEventListener("click", () => {
+    roundStake = Number(b.dataset.stake) || 0;
+    stakeChosen = true;
+    panel.remove();
+    if (inputArea) inputArea.style.display = "";
+    if (typeHint) typeHint.style.display = hintWas;
+    input.disabled = false;
+    input.focus();
+    renderRiskBanner();
+    done();
+  }, { once: true }));
+}
+
+/* ---------- Double Or Nothing ---------- */
+// The bonus word rides on the SAME page as the answer that earned it: a fresh word and a
+// fresh clock, but still page N. Its verdict overwrites the page's result, which is exactly
+// the rule ("miss it and you forfeit the bead you had already won") and keeps the strand at
+// one bead per page with no special-casing.
+function startBonusWord() {
+  bonusActive = true;
+  currentWord = pickWord();
+  currentSongs = validSongs(currentWord, effectiveStrict(), effectiveNoTitle());
+  currentLyricSongs = currentSongs;
+  roundHintSong = pickHintSong();
+  const wrap = $("wordDisplay").parentNode;
+  const rar = rarityTier(currentSongs.length);
+  wrap.dataset.rarity = rar.name;
+  wrap.style.setProperty("--rarity", rar.t);
+  $("wordDisplay").textContent = currentWord;
+  const stamp = $("rarityStamp");
+  stamp.classList.remove("show");
+  stamp.textContent = rar.stamp;
+  if (rar.stamp) { void stamp.offsetWidth; stamp.classList.add("show"); }
+  $("feedback").innerHTML = "";
+  $("playArea").style.display = "";
+  roundLocked = false;
+  const input = $("songInput");
+  input.value = "";
+  input.disabled = false;
+  input.classList.remove("reject-pulse");
+  hideDropdown();
+  renderVerseMeter("");
+  renderPromptChrome();      // the lead-in changes for a bonus word — its single owner does it
+  renderRiskBanner();
+  resetTension();
+  renderHintAffordance();
+  input.focus();
+  startTimer();
+}
+
+/* ---------- Insurance ---------- */
+// Sudden death, with a way out you pay for. A shield spent here covers a miss on THIS page;
+// a shield never spent is worth beads at the end (see endChallenge), which is what makes
+// buying your way out of trouble cost you the win rather than being free.
+function useInsurance() {
+  if (!insuranceRuleActive() || roundInsured || insuranceTokens <= 0 || roundLocked) return;
+  insuranceTokens -= 1;
+  insuranceSpent += 1;
+  roundInsured = true;
+  renderInsuranceBtn();
+  renderRiskBanner();
+  softRejectFlash(`insured — a miss on this page won't end the run`);
+  $("songInput").focus();
+}
+// Show/refresh the shield button (only while a shield is unspent and this page isn't already
+// covered). Mirrors renderPathSkip, and sits in the same slot above the hint affordance.
+function renderInsuranceBtn() {
+  let btn = $("insureBtn");
+  const show = insuranceRuleActive() && insuranceTokens > 0 && !roundInsured;
+  if (!show) { if (btn) btn.remove(); return; }
+  if (!btn) {
+    btn = document.createElement("button");
+    btn.id = "insureBtn";
+    btn.type = "button";
+    btn.className = "path-skip-btn risk-shield-btn";
+    btn.addEventListener("click", useInsurance);
+    const hintBtn = $("hintBtn");
+    hintBtn.parentNode.insertBefore(btn, hintBtn);
+  }
+  btn.textContent = `🛡 insure this page (${insuranceTokens} left)`;
+}
+
+/* ---------- The between-pages offer ---------- */
+// Press Your Luck and Double Or Nothing both stop between the answered page and the next
+// one to ask a question. That is structurally a fork, so it hooks nextRound the same way
+// Choose Your Path does, and wears the same overlay.
+function riskOverlay(o, onPick) {
+  if (document.querySelector(".chall-path-overlay")) return;   // never stack two offers
+  const ov = document.createElement("div");
+  ov.className = "chall-path-overlay is-risk";
+  ov.innerHTML =
+    `<div class="chall-path-panel">` +
+    `<h3 class="chall-path-title">${escapeHtml(o.title)}</h3>` +
+    `<p class="chall-path-sub">${o.sub}</p>` +
+    `<div class="chall-path-cards">` +
+    o.cards.map((c, i) =>
+      `<button class="chall-path-card" data-i="${i}"><span class="cpc-icon">${escapeHtml(c.icon)}</span>` +
+      `<span class="cpc-name">${escapeHtml(c.name)}</span><span class="cpc-desc">${escapeHtml(c.desc)}</span></button>`).join("") +
+    `</div></div>`;
+  $("screen-game").appendChild(ov);
+  ov.querySelectorAll("[data-i]").forEach((b) => b.addEventListener("click", () => {
+    const i = Number(b.dataset.i);
+    ov.remove();
+    onPick(i);
+  }, { once: true }));
+}
+
+// Returns true if an offer was raised (nextRound then waits for it), false if there was
+// nothing to ask and the page should just turn.
+function showRiskDecision() {
+  if (pressRuleActive()) {
+    // Nothing riding, or no pages left to risk it on: the run's end banks the pot anyway,
+    // so asking would be a choice with only one real answer.
+    if (beadPot <= 0 || isGameOver()) return false;
+    riskOverlay({
+      title: "press your luck",
+      sub: `page ${round} cleared — <b>${beadPot}</b> bead${beadPot === 1 ? "" : "s"} riding on the next one`,
+      cards: [
+        { icon: "✓", name: "bank it", desc: `take the ${beadPot} into your total and start a fresh pot` },
+        { icon: "↑", name: "ride on", desc: `the next page you clear is worth ${(beadRide + 1) * PRESS_RIDE_STEP}, but a miss wipes the pot` },
+      ],
+    }, (i) => {
+      if (i === 0) bankPot();
+      renderRiskBanner();
+      nextRound();
+    });
+    return true;
+  }
+  if (doubleRuleActive()) {
+    riskOverlay({
+      title: "double or nothing",
+      sub: `page ${round} is worth <b>1</b> bead — go again for a second?`,
+      cards: [
+        { icon: "✓", name: "take the bead", desc: "keep it and turn the page" },
+        { icon: "×2", name: "double or nothing", desc: "a second word for a second bead. Miss it and you forfeit this page's bead too." },
+      ],
+    }, (i) => {
+      if (i === 1) { bonusTaken += 1; startBonusWord(); return; }
+      nextRound();
+    });
+    return true;
+  }
+  return false;
+}
+
+/* ---------- The scoring seam ---------- */
+// The ONE place a risk rule moves the bead count, called from submitAnswer's shared tail
+// straight after the ordinary `if (correct) score++`. Every rule is expressed as a correction
+// to that baseline, so the tail keeps owning streaks, skills, the bracelet and the page turn.
+function applyRiskScoring(correct) {
+  if (!riskRuleActive()) return;
+  const rule = currentChallenge.rule;
+  if (rule === "press") {
+    if (correct) {
+      // The bead doesn't land in the total at all: it feeds the pot, and the pot only
+      // becomes score when it's banked (or when the run ends still holding it).
+      score -= 1;
+      beadRide += 1;
+      beadPot += beadRide * PRESS_RIDE_STEP;
+      riskDecisionPending = true;
+    } else if (beadPot > 0) {
+      flashBeadDelta(-beadPot);      // lost from the pot, which never reached `score`
+      beadPot = 0;
+      beadRide = 0;
+    } else {
+      beadRide = 0;
+    }
+  } else if (rule === "wager") {
+    // The stake is never deducted up front, so a win pays it and a miss forfeits it — the
+    // same arithmetic as "stake it, get it back doubled", with nothing to refund.
+    if (roundStake > 0) {
+      adjustBeads(correct ? roundStake : -roundStake);
+      if (correct && roundStake >= riskMaxStake()) riskCharm[round - 1] = true;
+    }
+  } else if (rule === "doubleup") {
+    if (bonusActive) {
+      // The bonus verdict has already overwritten this page's result and, on a win, added
+      // its own bead through the tail. A loss has to hand back the bead the page had.
+      // The flag deliberately stays UP through the verdict — the page really was asking for
+      // one more song, so the lead-in and the banner should keep saying so while its answer
+      // is on screen. advanceRound clears it when the page actually turns.
+      if (correct) { bonusWon += 1; riskCharm[round - 1] = true; }
+      else adjustBeads(-1);
+    } else if (correct) {
+      riskDecisionPending = true;
+    }
+  } else if (rule === "insurance") {
+    if (correct) {
+      // Every page played with no shields left is a genuine sudden-death page.
+      if (insuranceTokens === 0 && !roundInsured) riskCharm[round - 1] = true;
+    } else if (roundInsured) {
+      roundInsured = false;          // the shield absorbs the miss; the run lives on
+    } else {
+      insuranceDead = true;
+    }
+  }
+}
+
+// The results-card line each risk rule wants said out loud, since a bare bead total doesn't
+// explain how it got there.
+function riskResultLine() {
+  if (!riskRuleActive()) return "";
+  const pages = roundResults.filter(Boolean).length;
+  const plural = (n, w) => `${n} ${w}${n === 1 ? "" : "s"}`;
+  let text;
+  if (pressRuleActive()) {
+    text = `${plural(pages, "page")} cleared · banked ${plural(beadsBanked, "time")}`;
+  } else if (wagerRuleActive()) {
+    text = `${plural(pages, "page")} cleared`;
+  } else if (doubleRuleActive()) {
+    text = `${plural(pages, "page")} cleared · ${bonusWon} of ${bonusTaken} bonus word${bonusTaken === 1 ? "" : "s"} landed`;
+  } else {
+    text = insuranceDead
+      ? `an uninsured miss on page ${roundResults.length} ended the run`
+      : `all ${roundResults.length} pages survived · ${plural(insuranceSpent, "shield")} spent, ${plural(insuranceTokens, "shield")} cashed in`;
+  }
+  return `<div class="chall-result-meta">${escapeHtml(text)}</div>`;
+}
+
 // How rare the round's word is, from its number of valid answers. Returns a
 // name (for data-rarity) and t in 0..1 (common→scarce) used to scale the
 // highlighter swipe's weight, so rarer words *feel* rarer without touching the
@@ -8502,6 +8954,10 @@ function advanceRound() {
   if (revolveId) { clearInterval(revolveId); revolveId = null; }   // stop the prior round's rotation
   revolveIndex = 0;                            // Revolving Door: this round's word is slot 0
   roundNamed = [];                             // Double Trouble: no songs named on the fresh page yet
+  roundStake = 0;                              // Confidence Wager: this page's stake isn't set yet
+  stakeChosen = false;                         // (beginRoundClock gates the clock until it is)
+  roundInsured = false;                        // Insurance: a shield covers one page only
+  bonusActive = false;                         // Double Or Nothing: a bonus belongs to the page that won it
   applyChallengeRound(wrap);                   // challenge per-round modifier (e.g. Vanishing Word)
   renderImpostorBar();                         // Impostor: the 🚩 flag action (hidden elsewhere)
   renderSeaUI();                               // Sea of Songs: the tap-a-title grid (hidden elsewhere)
@@ -8527,6 +8983,7 @@ function advanceRound() {
   resetTension();
   renderHintAffordance();
   renderPathSkip();
+  renderInsuranceBtn();                        // Insurance: the shield action (hidden elsewhere)
   runRoundEggs();
   maybeGuideType();   // Beat A: teach the core action on the first game's opening page
   // Note: the timer is started by the caller (nextRound) — for a page turn it
@@ -9505,6 +9962,10 @@ function submitAnswer(song, isTimeout) {
   roundSongs[round - 1] = correct && song ? song.title : null;  // credited song — for the lifetime tally
   justEarnedIndex = correct ? round - 1 : -1;
   if (correct) score++;
+  // The risk batch corrects that baseline bead into whatever the bet actually paid (and
+  // arms the between-pages offer). Everything below it — streaks, skills, the bracelet,
+  // the page turn — stays shared, exactly as it is for every other rule.
+  applyRiskScoring(correct);
   // Guided round: the player answered, so beat A ("type a word") has served its purpose —
   // clear it whether they got it or not.
   dismissCoachmark();
@@ -9528,6 +9989,8 @@ function submitAnswer(song, isTimeout) {
     // The knowledge grids sit under their banner through the whole verdict, so a stale count
     // would be read as "that didn't score" for the several seconds the reveal is up.
     else if (tapKnowledgeActive()) renderTapKnowledgeBanner();
+    // The risk batch's banner carries the live bead total, which a bet has just moved.
+    else if (RISK_RULES.has(currentChallenge.rule)) { renderRiskBanner(); renderInsuranceBtn(); }
   }
   // From A to Z: advance the alphabetical floor only on an accepted correct answer.
   if (correct && currentChallenge && currentChallenge.rule === "alphabetical") {
@@ -12861,6 +13324,59 @@ function buildDevApi() {
         answer: () => { const t = tapTiles.find((x) => x.correct); if (t) onTapKnowledgeClick(tapTiles.indexOf(t)); },
         miss: () => { const t = tapTiles.find((x) => !x.correct); if (t) onTapKnowledgeClick(tapTiles.indexOf(t)); },
         win: () => { score = (CHALLENGE_BY_ID["whose-line"].target) || 9; endGame(); },
+      },
+      // The risk batch — the shared bead economy behind Press Your Luck / Confidence Wager /
+      // Double Or Nothing / Insurance. `state` is the one read-out that answers "where did
+      // that number come from", and `beads` lets a run be dropped straight onto its target
+      // to exercise the win path without playing 13 honest pages.
+      risk: {
+        rules: () => [...RISK_RULES],
+        active: () => riskRuleActive() && currentChallenge.rule,
+        state: () => (!riskRuleActive() ? null : {
+          rule: currentChallenge.rule, beads: score, target: riskTarget(),
+          progress: riskProgressText(),
+          pot: beadPot, ride: beadRide, banked: beadsBanked,
+          stake: roundStake, stakeChosen,
+          bonusActive, bonusTaken, bonusWon,
+          tokens: insuranceTokens, insured: roundInsured, spent: insuranceSpent, dead: insuranceDead,
+          charms: riskCharm.map((v, i) => (v ? i + 1 : 0)).filter(Boolean),   // pages wearing a horseshoe
+        }),
+        // Set the bead total outright (the currency IS score, so this is the honest lever).
+        beads: (n) => { if (n != null) score = Math.max(0, n | 0); renderRiskBanner(); renderBracelet(); return score; },
+        // Drop the run on its target and finish it — the win path, without 13 real pages.
+        win: () => { if (!riskRuleActive()) return null; score = riskTarget(); return endGame(); },
+      },
+      // Press Your Luck — the escalating pot. `pot` shows what a bank would pay right now.
+      press: {
+        pot: () => ({ pot: beadPot, ride: beadRide, nextWorth: (beadRide + 1) * PRESS_RIDE_STEP, banked: beadsBanked }),
+        bank: () => bankPot(),                                  // bank whatever is riding
+        wipe: () => { const n = beadPot; beadPot = 0; beadRide = 0; renderRiskBanner(); return n; },
+        // Ride a pot up n pages headlessly, to check the escalation and the charm threshold.
+        simulate: (n) => { let pot = 0; const steps = [];
+          for (let k = 1; k <= (n || 5); k++) { pot += k * PRESS_RIDE_STEP; steps.push({ ride: k, pot }); }
+          return { steps, charmAt: PRESS_CHARM_RIDE }; },
+      },
+      // Confidence Wager — the per-page stake. `set` skips the panel (or pre-answers it).
+      wager: {
+        stake: () => ({ stake: roundStake, chosen: stakeChosen, max: riskMaxStake(), affordable: Math.min(riskMaxStake(), score) }),
+        set: (n) => { roundStake = Math.max(0, Math.min(riskMaxStake(), score, n | 0)); stakeChosen = true;
+          const p = $("wagerStake");
+          if (p) { p.remove(); const ia = document.querySelector("#screen-game .input-area");
+            if (ia) ia.style.display = ""; $("songInput").disabled = false; startTimer(); }
+          renderRiskBanner(); return roundStake; },
+      },
+      // Double Or Nothing — the bonus word riding on an already-won page.
+      doubleup: {
+        state: () => ({ active: bonusActive, word: bonusActive ? currentWord : null,
+          valid: bonusActive ? currentSongs.map((s) => s.title) : [], taken: bonusTaken, won: bonusWon }),
+        take: () => { bonusTaken += 1; startBonusWord(); return currentWord; },   // force the bonus offer's "yes"
+      },
+      // Insurance — sudden death and the shields against it.
+      insurance: {
+        tokens: (n) => { if (n != null) { insuranceTokens = Math.max(0, n | 0); renderInsuranceBtn(); renderRiskBanner(); }
+          return { tokens: insuranceTokens, spent: insuranceSpent, insured: roundInsured, worth: riskTokenValue() }; },
+        insure: () => { useInsurance(); return roundInsured; },
+        kill: () => { insuranceDead = true; return insuranceDead; },   // as if an uninsured miss had landed
       },
       // Vanishing Word — the word blanks after revealMs. Blank Space wants a run written
       // entirely into that blank, so `win(false)` is the spoiled control case.

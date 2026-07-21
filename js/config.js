@@ -535,6 +535,35 @@ export const CHALLENGES = [
     blurb: "30s · suggestions · name THREE different songs a page · not in the title",
     desc: "One word, and three different songs that sing it. Anyone can name one. Three means you really know the catalogue.",
     win: "Clear 8 pages, naming three different songs each." },
+  // ---- Risk batch. Four challenges over one shared bead economy: answering is ordinary,
+  //      the difficulty is the DECISION you make around each answer. The currency is beads
+  //      (`score`, the correct-answer count), so `challengeWinCheck`'s score >= target keeps
+  //      working untouched — a wager just moves the number up or down. Two consequences the
+  //      rest of the code has to respect: a run can END on more beads than it has pages (so
+  //      nothing may render "20 / 13", see riskProgressText), and the bracelet still strings
+  //      exactly one bead per page (a bead won at stake wears a horseshoe charm instead).
+  //      tapes:0 (unrated) with placeholder seals, same as the knowledge batch above; no
+  //      dark sides yet, since tightening a difficulty nobody has played is guesswork. ----
+  { id: "press-your-luck", name: "Press Your Luck", rule: "press", mode: "medium",
+    free: true, cost: 1, target: 20, seconds: 12, noTitle: false, tapes: 0,
+    blurb: "12s · suggestions · bank the pot or ride on, a miss wipes it",
+    desc: "Every correct answer drops beads into a pot, and each one you ride is worth more than the last. Bank the pot whenever you like, but one miss wipes everything you haven't banked. Whatever is still riding when the 13 pages run out is yours.",
+    win: "Bank 20 beads across the run." },
+  { id: "confidence-wager", name: "Confidence Wager", rule: "wager", mode: "medium",
+    free: true, cost: 1, target: 20, seconds: 12, noTitle: false, maxStake: 3, startBeads: 3, tapes: 0,
+    blurb: "12s · suggestions · stake beads on the word before the clock starts",
+    desc: "You see the word first, then you say how sure you are. Stake up to three beads before the clock runs: answer it and the stake pays back double, miss it and the stake is gone. A correct answer is always worth its own bead on top.",
+    win: "Finish the run on 20 beads." },
+  { id: "double-or-nothing", name: "Double Or Nothing", rule: "doubleup", mode: "medium",
+    free: true, cost: 1, target: 16, seconds: 12, noTitle: false, tapes: 0,
+    blurb: "12s · suggestions · every bead you win can be doubled, or lost",
+    desc: "Clear a page and you're offered a second word for a second bead. Name a song for it and the page is worth two, miss it and you forfeit the bead you had already won. Nobody makes you take the offer.",
+    win: "Finish the run on 16 beads." },
+  { id: "insurance", name: "Insurance", rule: "insurance", mode: "easy",
+    free: true, cost: 1, target: 13, seconds: 15, tokens: 3, tokenValue: 2, tapes: 0,
+    blurb: "15s · sudden death · three shields, and every one you keep is worth beads",
+    desc: "One miss ends the run. You start with three shields and may spend one before you answer to survive a miss, but every shield you still hold at the end is worth 2 beads. Buying your way out of trouble is exactly what costs you the win.",
+    win: "Survive all 13 pages and finish on 13 beads." },
 ];
 /* Both Of Us — the multi-word page. BOTH_WORDS prompt words are drawn per page (the dark side
    carries a wider `words`), and a set is only served once at least BOTH_MIN_SONGS songs hold
@@ -544,6 +573,21 @@ export const CHALLENGES = [
 export const BOTH_WORDS = 2;
 export const BOTH_MIN_SONGS = 1;
 export const BOTH_PARTNER_TRIES = 400;
+/* The risk batch's shared economy. Beads are `score`; these are the only numbers the four
+   rules add on top of the per-challenge entries above.
+   PRESS_RIDE_STEP: Press Your Luck's pot escalates — the first answer you ride is worth 1
+   bead, the second 2, the third 3, and so on. Riding four deep is therefore a pot of 10 and
+   banking every single page caps you at 13, which is what forces the gamble at a target of 20.
+   RISK_MAX_STAKE / RISK_TOKENS / RISK_TOKEN_VALUE are the fallbacks for the per-entry
+   `maxStake` / `tokens` / `tokenValue` levers. (`startBeads` has no shared default: a run
+   opens on nothing unless its own entry says otherwise.) */
+export const PRESS_RIDE_STEP = 1;
+/* How deep a ride has to be before the bead that banks it earns the horseshoe charm. Riding
+   three pages is a pot of 6 against a target of 20, so it's a real commitment, not a shrug. */
+export const PRESS_CHARM_RIDE = 3;
+export const RISK_MAX_STAKE = 3;
+export const RISK_TOKENS = 3;
+export const RISK_TOKEN_VALUE = 2;
 /* Odd One Out — the reject grid. Each page shows ODD_TILES songs, of which exactly one is the
    odd one: the word appears in NEITHER its lyrics nor its title (so the tile isn't an unfair
    "title matched but it's wrong" trap). Tapping the odd one scores; tapping any of the genuine
@@ -1251,6 +1295,14 @@ const WAX_SEAL_MOTIFS = {
   "both-of-us": { fr: "nonzero", d: PLACEHOLDER_MOTIF_D },
   // PLACEHOLDER (a plain question mark) — real motif still to be drawn.
   "name-three": { fr: "nonzero", d: PLACEHOLDER_MOTIF_D },
+  // PLACEHOLDER (a plain question mark) — real motif still to be drawn.
+  "press-your-luck": { fr: "nonzero", d: PLACEHOLDER_MOTIF_D },
+  // PLACEHOLDER (a plain question mark) — real motif still to be drawn.
+  "confidence-wager": { fr: "nonzero", d: PLACEHOLDER_MOTIF_D },
+  // PLACEHOLDER (a plain question mark) — real motif still to be drawn.
+  "double-or-nothing": { fr: "nonzero", d: PLACEHOLDER_MOTIF_D },
+  // PLACEHOLDER (a plain question mark) — real motif still to be drawn.
+  "insurance": { fr: "nonzero", d: PLACEHOLDER_MOTIF_D },
 };
 
 // The shared wax recipe. `id` scopes the SVG's internal ids so several seals can
