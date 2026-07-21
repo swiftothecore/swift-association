@@ -245,25 +245,70 @@ export const CUSTOM_DEFAULT_MODE = {
    per-answer judge, win check). Sandboxed like daily — a challenge run never folds into the
    difficulty boards/stats/history/tally/achievements. `mode` fixes the MODES levers it runs
    under (without persisting DIFF_KEY). `free` challenges start unlocked; the rest cost a token. */
+/* ---------- Dark sides ----------
+   A challenge's `hard` block is a set of parameter overrides for its "dark side": the same
+   challenge, same seal, same rule — tightened. It is NOT a separate CHALLENGES entry, so the
+   roster stays 27 cards and a dark side is something a challenge grows into rather than
+   another row on the wall.
+
+   Resolution happens once, in app.js's `resolveChallenge(c, dark)`, which returns
+   `{...c, ...c.hard, dark:true}` and hands THAT to `currentChallenge`. Every existing read
+   site (`currentChallenge.target`, `c.revealMs`, `c.forks`, …) therefore picks up the dark
+   value with no per-site changes. `id` is preserved, so id-keyed achievements and labels are
+   unaffected — the same trick startChallenge already uses when cloning a mode.
+
+   Only levers that already flow through existing code live here. Dark behaviours that need
+   NEW rule logic are deliberately absent rather than added as inert data that silently does
+   nothing; they are listed in DARK_SIDE_TODO below. */
 export const CHALLENGES = [
   { id: "vanishing-word", name: "Vanishing Word", rule: "vanishing", mode: "medium",
     free: true,  cost: 1, target: 10, revealMs: 1500, tapes: 1,
+    // Dark: less time AND less to read. `wordScale` is the fraction of normal size the prompt
+    // renders at, so 0.3 is "~70% smaller" — the same magnitude as Smallest Song's data-tiny.
+    // It stays a DIFFERENT thing to that challenge, though: small and centred, but never
+    // tilted, never drifting, and it keeps its highlighter swipe. This one isn't asking you
+    // to hunt for the word, only to read it before it's gone.
+    hard: { revealMs: 600, wordScale: 0.3,
+      desc: "The word is small now, and it's gone in a blink.",
+      win: "Score 10 / 13 reading a word that's barely there." },
     desc: "The word vanishes quickly, so pay attention.",
     win: "Score 10 / 13 with disappearing words." },
   { id: "deep-cut", name: "Deep Cut", rule: "album5", mode: "easy",
-    free: false, cost: 1, album: null /* any single album */, tapes: 1,
+    free: false, cost: 1, album: null /* any single album */, need: 5, tapes: 1,
+    // Dark: the album is DEALT, not chosen. `randomAlbum` makes startChallenge pick a studio
+    // album at run start and pin it to `album`, so the run can't be steered onto whichever
+    // album happens to be going well — and it wants six, not five.
+    // The copy is overridden too, unlike most dark sides: this card's wording states the
+    // number out loud ("five"), so reusing it on a dark run would misstate the win condition.
+    hard: { need: 6, randomAlbum: true,
+      desc: "Guess six correct songs from one album, and this time the album is dealt to you rather than chosen.",
+      win: "Answer 6 correct songs from the album you were dealt." },
     desc: "Guess five correct songs from the same album.",
     win: "Answer 5 correct songs from one album." },
   { id: "alphabetical", name: "From A to Z", rule: "alphabetical", mode: "medium",
     free: false, cost: 1, target: 9, pool: "easy", tapes: 3,
+    // `strictAlpha` bans ties, so the alphabet has to climb on every link instead of resting.
+    // The copy changes too: the base rule permits repeats, this one doesn't.
+    hard: { target: 8, pool: null, dropdown: false, strictAlpha: true,
+      desc: "Each title must start LATER in the alphabet than the last, with no resting twice on the same letter.",
+      win: "Land 8 correct answers, each one climbing the alphabet." },
     desc: "Each song's title must start with a later letter in the alphabet than a previous one.",
     win: "Land 9 correct answers in non-decreasing A→Z order." },
   { id: "word-modifiers", name: "Word Games", rule: "wordfx", mode: "medium",
     free: false, cost: 1, target: 9, noTitle: false, tapes: 2,
+    // `fxFrom` starts the ladder partway up (page 1 is already warped, no gentle opening) and
+    // `fxRamp` climbs it twice as fast, so the run tops out at full nonsense by the halfway mark.
+    hard: { dropdown: false, fxFrom: 2, fxRamp: 2,
+      desc: "The word is already warped on page one, and it falls apart twice as fast from there.",
+      win: "Score 9 / 13 through the worst of the distortion." },
     desc: "The word becomes more warped every round, can you still beat it when it becomes nonsense?",
     win: "Score 9 / 13 through the distortion." },
   { id: "one-of-a-kind", name: "One Of A Kind", rule: "newsong", mode: "easy",
-    free: false, cost: 1, tapes: 1,
+    free: false, cost: 1, guesses: 3, tapes: 1,
+    // One guess, not three. The copy states the number out loud, so it has to move with it.
+    hard: { guesses: 1,
+      desc: "You're given one specific song you've never answered before. Answer it on a round where it fits the word. You get ONE guess, so be sure before you commit.",
+      win: "Answer the named song first time, with a single guess." },
     desc: "You're given one specific song you've never answered before. Answer it on a round where it fits the word. You have three guesses, and getting it wrong costs you a guess.",
     win: "Answer the named song before your 3 guesses run out." },
   { id: "choose-your-path", name: "Choose Your Path", rule: "path", mode: "medium",
@@ -272,15 +317,24 @@ export const CHALLENGES = [
     win: "Score 9 / 13 — your way." },
   { id: "wildcard", name: "Wildcard", rule: "wildcard", mode: "medium",
     free: false, cost: 1, target: 9, noTitle: false, tapes: 2,
+    // Dark: two sub-rules at once. `stack` is read by applyWildcardRound, which only offers
+    // PAIRS whose intersection still has a valid answer, and never pairs two visual gimmicks
+    // (one is instant, one is timed — stacking them would start the vanish behind the curtain).
+    hard: { stack: 2,
+      desc: "Two rules at once now, and both of them change every round.",
+      win: "Score 9 / 13 with two rules stacked on every page." },
     desc: "The rule changes every round, so keep up.",
     win: "Score 9 / 13 across shifting rules." },
   { id: "revolving-door", name: "Revolving Door", rule: "revolving", mode: "medium",
     free: false, cost: 1, target: 9, seconds: 20, rotateMs: 5000, noTitle: true, tapes: 1,
+    hard: { seconds: 16, rotateMs: 2000 },
     blurb: "20s a page · suggestions · not in the title · the word swaps every 5s",
     desc: "You get 20 seconds to answer, but the word swaps every 5 seconds, can you answer for the first word every time?",
     win: "Score 9 / 13 while the word keeps revolving." },
   { id: "shrinking-timer", name: "Shrinking Timer", rule: "accelerate", mode: "medium",
     free: false, cost: 1, target: 9, noTitle: true, pool: "easy", tapes: 2,
+    accelFrom: 16, accelTo: 5,
+    hard: { accelFrom: 12, accelTo: 3, pool: null },
     blurb: "suggestions · not in the title · the clock shrinks every page (16s → 5s)",
     desc: "The timer shrinks each round, from 16 down to 5.",
     win: "Score 9 / 13 as the clock keeps shrinking." },
@@ -291,11 +345,17 @@ export const CHALLENGES = [
     win: "Score 9 / 13, each answer's title holding the word." },
   { id: "short-title", name: "Short n' Sweet", rule: "shorttitle", mode: "medium",
     free: false, cost: 1, target: 9, pool: "easy", noTitle: false, tapes: 1,
+    // `maxTitleWords: 1` drops the two-word allowance. The word pool tightens with it, so a
+    // page always has a one-word title available to win with.
+    hard: { pool: null, dropdown: false, maxTitleWords: 1,
+      desc: "One-word titles only now. Two words is one too many.",
+      win: "Score 9 / 13 using nothing but one-word titles." },
     blurb: "10s · suggestions · only one- or two-word titles count",
     desc: "Only songs with one-word or two-word titles are allowed. Keep it short and sweet.",
     win: "Score 9 / 13 using only short titles." },
   { id: "lyric-lover", name: "Lyric Lover", rule: "verse", mode: "lyricist",
     free: false, cost: 1, target: 6, tapes: 3,
+    hard: { target: 8 },
     desc: "Answer by typing the lyric line, and do it word-for-word six times.",
     win: "Recall 6 lines word-for-word (or better). Type the line exactly." },
   { id: "wrapped-chain", name: "Wrapped Like A Chain", rule: "chain", mode: "medium",
@@ -310,6 +370,13 @@ export const CHALLENGES = [
     win: "Score 9 / 13 playing each album on cue." },
   { id: "its-a-clock", name: "It's A Clock!", rule: "combo", mode: "medium",
     free: false, cost: 1, target: 9, noTitle: false, pool: "easy", tapes: 2,
+    // The shared-clock economy. comboBonus IS the break-even pace: a correct answer refunds
+    // it, so answering faster than it nets time and slower bleeds it. The dark side drops
+    // that pace 5s -> 3s, thins the opening cushion and lowers the ceiling so good play can
+    // never bank a buffer to coast on. Suggestions deliberately stay ON: typing a title blind
+    // costs 3-5s on its own, so removing them here would put break-even out of reach outright.
+    comboStart: 20, comboBonus: 5, comboCap: 30,
+    hard: { comboStart: 14, comboBonus: 3, comboCap: 20, pool: null },
     blurb: "one shared clock · every right answer winds it back up · run it dry and it's over",
     desc: "Per-page timers. Who needs them? How about one shared clock that drains across the whole run. Every correct answer increases the timer, and the run ends when it hits zero.",
     win: "Score 9 / 13 before the shared clock runs out." },
@@ -320,11 +387,18 @@ export const CHALLENGES = [
     win: "Score 9 / 13 as the answer type keeps switching." },
   { id: "double-trouble", name: "Double Trouble", rule: "multi", mode: "medium",
     free: false, cost: 1, target: 8, need: 2, pool: "easy", seconds: 18, tapes: 2,
+    hard: { need: 3, seconds: 15 },
     blurb: "18s · suggestions · name TWO different songs each page · not in the title",
     desc: "One song isn't enough! Answer two songs per word or fail the round.",
     win: "Clear 8 pages, naming two different songs each." },
   { id: "devils-path", name: "Devil's Path", rule: "devil", mode: "medium",
     free: false, cost: 1, target: 9, forks: [4, 8], tapes: 2,
+    // Four forks instead of two. Curses are permanent and stack, so this relies on the
+    // one-`time`-curse-per-run cap in the offer pool: two time curses already bottom the
+    // page clock at its 3s floor, and In The Dark landing on top of that (typing full
+    // titles blind in 3s) makes the run unwinnable by draw rather than by play. The cap
+    // is live for BASE Devil's Path too, which is why base can no longer draw crunch+drain.
+    hard: { forks: [3, 6, 9, 12] },
     blurb: "10s · suggestions · at pages 4 & 8 you must take the lesser of two curses",
     desc: "Choose Your Path's alter-ego. Pick curses at forks in the run, try taking the lesser of two evils. You will be haunted by your choices for the rest of the run.",
     win: "Score 9 / 13 despite the curses you take." },
@@ -352,16 +426,47 @@ export const CHALLENGES = [
   //      full gating slots in later. ----
   { id: "impostor", name: "Impostor", rule: "impostor", mode: "medium",
     free: true, cost: 1, target: 7, seconds: 15, tapes: 2,
+    // Dark: more fakes, and cannier ones. `impostorCount` lifts the fakes from 4 to 5 (read
+    // through impostorCountNow — one more chance to mis-flag, still one real page of slack
+    // against the target of 7), `impostorHardWords` swaps the decoy pool for DARK_IMPOSTOR_WORDS
+    // (the hardest-to-dismiss tier), and the clock drops 15s->10s. The target stays 7 real
+    // answers, so the win copy is unchanged; only the difficulty of each call moves.
+    hard: { seconds: 10, impostorCount: 5, impostorHardWords: true,
+      blurb: "more fakes, harder to spot · flag the impostors, answer the real ones",
+      desc: "Same game, tightened: MORE of the pages are impostors now, and the fakes are the kind of word you could swear you've heard her sing. Flag every impostor and answer the real ones — one wrong call still ends the run." },
     blurb: "some words are fakes · flag the impostors, answer the real ones",
     desc: "Most pages will show a real word that appears in lyrics, but some are IMPOSTORS that don't appear in any real Taylor songs. Flag the impostors and answer the real ones, but don't flag a real word or fail to flag an impostor because you'll instantly lose.",
     win: "Survive the run: flag every impostor and answer 7 real words." },
   { id: "sea-of-songs", name: "Sea of Songs", rule: "sea", mode: "medium",
     free: true, cost: 1, target: 9, seconds: 10, noTitle: false, tapes: 3,
+    // Dark: fewer needles AND less time. `seaMinValid`/`seaMaxValid` (read through
+    // seaMinValidNow/seaMaxValidNow) cut the genuine answers per grid from 2-4 down to 1-2, so
+    // the same 16-tile sea hides as little as a SINGLE right song, and the clock drops 10s->7s.
+    //   NOTE ON TRAPS: the original plan seeded "trap" tiles — titles that hold the word but
+    //   whose lyrics don't. A full-corpus scan found only 2 such (word, song) pairs across 733
+    //   words (all "Mary's Song"), so a per-word trap can essentially never be drawn — it would
+    //   be inert. The looser alternative (a title that merely LOOKS like the word, e.g. "star"
+    //   vs "Starlight") is a word-perception gotcha, a design lane we deliberately avoid. So the
+    //   dark side leans on the honest, plentiful squeeze instead of a trap that can't fire.
+    hard: { seconds: 7, seaMinValid: 1, seaMaxValid: 2,
+      blurb: "7s · no typing · a wide sea, as little as ONE right song · tap its title",
+      desc: "The same sea of titles, but far fewer of them are right — sometimes only one — and you have less time to find it. Tap a title whose lyrics hold the word.",
+      win: "Score 9 / 13 fishing the one right song from the sea." },
     blurb: "10s · no typing · a sea of titles · tap one whose lyrics hold the word",
     desc: "No typing this time. Instead, each page shows a sea of song titles, click one whose lyrics contain the word. There are multiple correct answers, but most are decoys.",
     win: "Score 9 / 13 fishing the right song out of the sea." },
   { id: "common-thread", name: "Common Thread", rule: "common", mode: "medium",
     free: true, cost: 1, target: 9, seconds: 3.5, noTitle: false, dropdown: false, tapes: 2,
+    // Dark: a fourth line AND a tighter thread. `commonLines` (read through commonLinesNow) shows
+    // four lyrics instead of three, so there's more to scan and a fourth constraint on the shared
+    // word; `commonMaxAccept: 1` (commonMaxAcceptNow) makes the generator hunt for a page where
+    // only the intended word threads every line, so lucky near-answers dry up. The clock drops to
+    // 2.5s. Both are fair: the intended word is always accepted, and any genuine thread still
+    // counts, so a rare page that can't reach a unique thread doesn't reject a legitimate answer.
+    hard: { seconds: 2.5, commonLines: 4, commonMaxAccept: 1,
+      blurb: "2.5s · four lines now, and only one word threads them all",
+      desc: "Throw everything you know about this game out the window. Four lyrics from four different songs, and one word runs through every one of them — nothing else will do. Can you find it in 2.5 seconds?",
+      win: "Score 9 / 13 finding the one thread through four lines." },
     blurb: "3.5s · the game flips: three lines, one word runs through all of them",
     desc: "Throw everything you know about this game out the window. This time you are shown three lyrics from three different songs and you need to type the word they all share. Can you do it in 3.5 seconds?",
     win: "Score 9 / 13 finding the thread." },
@@ -369,11 +474,30 @@ export const CHALLENGES = [
   //      rate honestly; seals are placeholders pending real motifs. ----
   { id: "odd-one-out", name: "Odd One Out", rule: "oddone", mode: "medium",
     free: true, cost: 1, target: 9, seconds: 12, noTitle: false, dropdown: false, tapes: 0,
+    // Dark: a wider grid AND a shorter clock. `tiles` (read everywhere through oddTilesNow)
+    // widens the board to 6, so the odd one hides among five genuine holders rather than
+    // three — nearly twice the songs to rule out, in two thirds of the time. The word picker
+    // filters to words with enough holders to fill the wider grid, so it can't quietly
+    // collapse back to a four-tile page. All three copy sites state the count, so all three
+    // move with it.
+    hard: { seconds: 8, tiles: 6,
+      blurb: "8s · no typing · six songs, five hold the word · tap the one that doesn't",
+      desc: "Six songs now, and the word hides in the lyrics of five of them. Only one never sings it, and you have less time to find it.",
+      win: "Score 9 / 13 spotting the odd one out of six." },
     blurb: "12s · no typing · four songs, three hold the word · tap the one that doesn't",
     desc: "Four songs, and the word hides in the lyrics of three of them. Tap the odd one out, the only song that never sings it.",
     win: "Score 9 / 13 spotting the odd one out." },
   { id: "whose-line", name: "Whose Line?", rule: "whoseline", mode: "medium",
     free: true, cost: 1, target: 9, seconds: 12, noTitle: false, dropdown: false, tapes: 0,
+    // Dark: a thinner line, not just a faster clock. `hardLines` drops the song's hook (any
+    // line it repeats — the chorus names the track on sight) and takes the SHORTEST legal
+    // line rather than a random one, and `minWords` lowers the floor so those shorter lines
+    // are in the draw at all. buildWhosePuzzle falls back to the base draw if the corpus
+    // can't produce a hook-free line, so this never costs a playable page.
+    hard: { seconds: 8, hardLines: true, minWords: 4,
+      blurb: "8s · no typing · one thin line, never the chorus · name the song",
+      desc: "No prompt word, and no chorus to lean on. You get one short line from deep in the lyric, four songs, and eight seconds to know whose line it is.",
+      win: "Score 9 / 13 placing lines with nothing to lean on." },
     blurb: "12s · no typing · one lyric line · name the song it came from",
     desc: "No prompt word at all. You get a single line of lyric and four songs, and you have to know whose line it is.",
     win: "Score 9 / 13 placing the line." },
@@ -413,6 +537,72 @@ export const SEA_MAX_VALID = 4;
 
 export const CHALLENGE_BY_ID = Object.fromEntries(CHALLENGES.map((c) => [c.id, c]));
 export const CHALLENGE_ORDER = CHALLENGES.map((c) => c.id);
+/* Challenges that currently have a dark side at all (i.e. carry a `hard` block). */
+export const DARK_SIDE_IDS = CHALLENGES.filter((c) => c.hard).map((c) => c.id);
+/* The mid-way dark-side charm's threshold. The "beat every dark side" charm deliberately has
+   no constant: it counts DARK_SIDE_IDS, so it re-targets itself as dark sides are authored. */
+export const DARK_SIDE_MILESTONE = 5;
+/* Dark sides whose FULL design needs new rule code, so they are not yet expressed (or only
+   partly expressed) in the `hard` blocks above. Listed here rather than added as inert
+   parameters that would silently do nothing. This array is now EMPTY — every agreed dark side
+   has shipped. The log below records what each one's levers do (and, for a couple, why an
+   originally-specced idea was dropped). Keep the log if you extend the roster; a new dark side
+   that needs rule code goes back into DARK_SIDE_TODO until it's real.
+
+   Shipped since:
+   - common-thread `commonLines` (4 on dark) shows a fourth lyric via commonLinesNow, routed
+                  through the generator's candidate band, line draw and the panel lead; the
+                  candidate band lifts its song-count floor to the line count so a 4-line page
+                  always has enough songs. `commonMaxAccept: 1` (commonMaxAcceptNow) makes the
+                  generator hunt for a unique thread. Both stay fair — the intended word is
+                  always accepted and any genuine thread still counts, so a page that can't reach
+                  a singleton never rejects a legitimate answer. Clock drops to 2.5s.
+   - impostor     `impostorCount` (5 on dark, up from 4) seeds one more fake per run via
+                  impostorCountNow — margin stays at one real page against the target of 7 —
+                  and `impostorHardWords` swaps the decoy pool for DARK_IMPOSTOR_WORDS (a
+                  zero-match-verified subset of the plausible-tier words) via impostorWordPool.
+                  Clock drops to 10s. Count 6 was rejected as zero-margin (must clear every real
+                  page) — the difficulty lives in the harder pool, not an unfair page count.
+   - sea-of-songs `seaMinValid`/`seaMaxValid` (1/2 on dark) cut the genuine answers per grid
+                  from 2-4 to 1-2 via seaMinValidNow/seaMaxValidNow, so the 16-tile sea can hide
+                  a single needle; the clock drops to 7s. The originally-specced TRAP decoys
+                  (title holds the word, lyrics don't) were DROPPED: a full-corpus scan found
+                  only 2 such pairs across 733 words, so they'd be inert, and the looser lookalike
+                  version is a word-perception gotcha we avoid. The squeeze is the honest lever.
+   - odd-one-out  `tiles` (6 on dark) widens the board, read through `oddTilesNow` by the grid
+                  builder, the layout (a data-cols="3" two-row board) and the word picker,
+                  which now draws only words with enough holders to FILL the wider grid —
+                  otherwise buildOddGrid's graceful shrink would hand the easy board back.
+   - whose-line   `hardLines` drops the song's hook lines (any line it repeats) and takes the
+                  shortest legal line instead of a random one; `minWords` lowers the floor so
+                  short lines are in the draw. buildWhosePuzzle tries the hard draw first and
+                  falls back to the base one, because a failed build renders a dead page.
+   - vanishing-word `wordScale` (0.3 on dark) renders the prompt at that fraction of its
+                  normal size, read once in applyChallengeRound ahead of the rule dispatch
+                  and cleared with the other per-round word styling. CSS is [data-small] +
+                  --word-scale, scaling the base clamp so it stays responsive. Deliberately
+                  NOT data-tiny: no tilt, no drift, swipe kept — reading, not hunting.
+   - devils-path  the category cap is live (one `time` curse per run, enforced in the offer
+                  pool). It caps `time` ONLY — `restrict` and `wordfx` stack safely, since the
+                  word picker guards restrict and the wordfx curses share one variable.
+   - deep-cut     `randomAlbum` deals the album at run start, `need` lifts the tally to 6, and
+                  the dealt run draws its words against that album (pickAlbumWord) so a page
+                  with no in-album answer can't burn a page the player couldn't have avoided.
+   - wildcard     `stack: 2` fuses two sub-rules per page (fuseWildcard / wildcardPairs), pairs
+                  vetted for a surviving answer and capped at one visual gimmick.
+   - alphabetical `strictAlpha` bans ties, so the alphabet must climb on every link. The soft
+                  reject changes wording with it ("later than X", not "X or later").
+   - short-title  `maxTitleWords` (1 on dark) is read by the pool, the suggestion filter, the
+                  soft reject, the in-run banner and the win check via `maxTitleWordsNow`, so
+                  they can never disagree about the rule. `shortTitleWordLists` keeps one pool
+                  per limit, so a one-word run still gets winnable pages.
+   - word-modifiers `fxFrom` starts the distortion ladder partway up and `fxRamp` climbs it
+                  faster; both default to the base ramp and the level is still clamped to 4.
+   - one-of-a-kind `guesses` sets the wrong-guess budget (1 on dark). `newSongLivesMax` holds
+                  the run's budget so the pips and the intro cue match what you actually get.
+   Deliberately excluded: choose-your-path (its dark twin shipped as Devil's Path) and
+   switch-up (a mid-round type flip rewards hesitating, which fights a speed challenge). */
+export const DARK_SIDE_TODO = [];
 
 /* ---------- Impostor challenge — decoy word pool ----------
    Plausibly-Swiftian words (romantic / aesthetic / literary vocabulary) that appear in
@@ -437,6 +627,25 @@ export const IMPOSTOR_WORDS = [
   "vagabond", "nomad", "sovereign", "monarch", "opulent", "decadent",
   "gilded", "ornate", "baroque", "ephemeral", "fleeting", "transient",
   "boundless", "furtive", "veiled", "luminous", "translucent",
+];
+/* Impostor's dark side draws its fakes from THIS subset instead of the whole pool: the words
+   most easily mistaken for a real Taylor lyric. Every entry is also in IMPOSTOR_WORDS (so it
+   inherits the zero-match verification — a dark decoy is still always a fair "flag me"); this
+   is a taste-curated "hardest tier", the emotional abstractions, luxury textures, romance-
+   archaic and poetic-time words that sit closest to her actual register. The concrete
+   geological / architectural nouns (granite, wharf, monsoon, steeple, …) are left OUT because
+   a player can usually be sure she never sang them — they give the game away. Tune freely; the
+   only hard rule is that each word must remain a member of IMPOSTOR_WORDS.
+   (The dark fake COUNT lives on the challenge's `hard` block as `impostorCount: 5` — margin is
+   6 - count against the target of 7, so 5 keeps one real page of slack; base is IMPOSTOR_COUNT
+   = 4. It can't live here as a constant because CHALLENGES is evaluated before this export.) */
+export const DARK_IMPOSTOR_WORDS = [
+  "velvet", "satin", "chiffon", "cashmere", "ivory", "emerald",
+  "gilded", "ornate", "opulent", "luminous", "translucent", "veiled",
+  "wistful", "forlorn", "reverie", "rapture", "euphoria", "solitude",
+  "serenity", "lament", "devotion", "adoration", "infatuation", "tenderness",
+  "paramour", "suitor", "swoon", "smolder", "beckon",
+  "ephemeral", "fleeting", "transient", "furtive",
 ];
 
 /* ---------- Skills & Mastery progression ----------
@@ -777,6 +986,14 @@ export const ACH_ICONS = {
   // a thread climbing bead over bead, no rung repeated, tied off in a ribbon at the top
   // (NB: "bow" is taken by the archery charm further down)
   ribbon:  `<svg viewBox="0 0 24 24"><path class="ink" stroke-width="1.5" fill="none" d="M2.8 21.4 C8 20.4 12.4 15.6 15.4 8.6"/><g class="ink-fill"><circle cx="6" cy="20.5" r="1.1"/><circle cx="9.3" cy="18.1" r="1.2"/><circle cx="12" cy="14.6" r="1.3"/><circle cx="14" cy="11" r="1.4"/></g><path class="ink-fill" d="M16.2 7.4 C13.6 4.6 10.9 5 11.5 7.3 C12 9.3 14.3 9.2 16.2 7.4 Z"/><path class="ink-fill" d="M16.2 7.4 C18.8 4.6 21.5 5 20.9 7.3 C20.4 9.3 18.1 9.2 16.2 7.4 Z"/><circle class="ink-fill" cx="16.2" cy="7.4" r="1.2"/><path class="ink" stroke-width="1.3" fill="none" d="M17.4 8.5 C18 9.6 17.9 10.7 17.3 11.8"/></svg>`,
+
+  /* ---- Dark side milestone charms (the black seal's keepsakes) ---- */
+  // the pub-sign dog, sat and waiting — your first walk into the dark
+  blackdog: `<svg viewBox="0 0 24 24"><path class="ink-fill" d="M3.3 7.2 C3.2 7.6 3.15 8.05 3.2 8.4 C4.2 9.0 5.2 9.15 6.0 9.1 C6.5 11.0 6.55 15.5 6.5 20.4 L8.8 20.4 C8.9 17.8 8.85 15.6 8.7 13.6 C9.9 14.9 11.5 15.4 12.7 15.9 C13.0 17.4 13.1 18.9 13.1 20.4 L17.5 20.4 C17.7 18.0 17.4 15.5 16.4 13.5 C15.2 11.1 13.0 9.3 10.9 8.2 C10.7 6.6 10.2 5.3 8.9 4.6 C7.3 3.9 5.4 4.4 4.4 5.7 C3.9 6.3 3.5 6.8 3.3 7.2 Z"/><path class="ink-fill" d="M8.8 4.7 C10.1 4.5 10.9 5.6 10.9 7.1 C10.9 8.4 10.3 9.3 9.4 9.2 C8.7 8.2 8.5 6.2 8.8 4.7 Z"/><path class="ink" stroke-width="1.7" fill="none" d="M17.5 19.4 C19.2 19.7 20.5 19.0 20.8 17.3"/><circle class="ink-fill" cx="5.9" cy="6.9" r="0.5"/></svg>`,
+  // a heart with its halo slipping off — love made me do it, blame withheld
+  halo: `<svg viewBox="0 0 24 24"><path class="ink-fill" d="M12 20.8 C12 20.8 4.4 15.5 4.4 10.4 C4.4 7.7 6.4 6.1 8.5 6.1 C10 6.1 11.3 7 12 8.3 C12.7 7 14 6.1 15.5 6.1 C17.6 6.1 19.6 7.7 19.6 10.4 C19.6 15.5 12 20.8 12 20.8 Z"/><ellipse class="ink" cx="15.8" cy="3.6" rx="4.2" ry="1.45" transform="rotate(-17 15.8 3.6)" fill="none"/><path class="ink" stroke-width="1.1" opacity="0.6" d="M8.8 2.2 L10.4 2.7 M8.4 4.3 L10.0 4.5"/></svg>`,
+  // the serpent wound around the apple — every dark side beaten, Eden yours
+  eden: `<svg viewBox="0 0 24 24"><path class="ink" stroke-width="1.4" fill="none" d="M12 7.4 C11.9 6.0 12.5 4.9 13.7 4.1"/><path class="ink-fill" d="M12 7.9 C10 5.9 6.3 6.6 5.3 10.1 C4.3 13.8 6.9 18.5 9.5 19.6 C10.5 20 11.4 19.7 12 19.2 C12.6 19.7 13.5 20 14.5 19.6 C17.1 18.5 19.7 13.8 18.7 10.1 C17.7 6.6 14 5.9 12 7.9 Z"/><path class="ink" fill="none" stroke-width="1.8" d="M4.5 14.0 C8.4 16.8 11.6 12.4 14.6 13.6 C16.6 14.4 17.8 13.2 17.9 11.5 C18.0 10.2 17.6 9.2 16.8 8.5"/><circle class="ink-fill" cx="16.5" cy="7.3" r="1.3"/><path class="ink" stroke-width="1" d="M17.4 6.3 L18.4 5.2 M18.4 5.2 L19.1 5.8 M18.4 5.2 L17.8 4.5"/></svg>`,
 
   // TEMPORARY placeholder charm — a dashed frame around a question mark. Any icon set to
   // "placeholder" is art-pending (new challenges / achievements before their real icon is
@@ -1140,6 +1357,11 @@ export const ACHIEVEMENTS = [
   { id: "the-archer",       name: "The Archer",       desc: "Defeat your first challenge",           secret: false, icon: "bow" },
   { id: "the-alchemy",      name: "The Alchemy",      desc: "Defeat every challenge",                secret: false, icon: "flask" },
   { id: "paper-rings",      name: "Paper Rings",      desc: "Unlock every challenge",                secret: false, icon: "rings" },
+  // Dark sides. Milestones only — a challenge's own dark reward is its black wax seal and
+  // violet tick, so there is deliberately no per-challenge charm here.
+  { id: "the-black-dog",    name: "The Black Dog",    desc: "Beat your first dark side",             secret: false, icon: "blackdog" },
+  { id: "dont-blame-me",    name: "Don't Blame Me",   desc: `Beat ${DARK_SIDE_MILESTONE} dark sides`, secret: false, icon: "halo" },
+  { id: "darkest-paradise", name: "Darkest Little Paradise", desc: "Beat every dark side",           secret: false, icon: "eden" },
   { id: "state-of-grace",   name: "State Of Grace",   desc: "Defeat a challenge on the first try",   secret: true,  icon: "feather" },
   { id: "this-is-me-trying", name: "This Is Me Trying", desc: "Defeat a challenge after 5+ attempts", secret: true, icon: "crumple" },
   { id: "shouldve-said-no",  name: "Should've Said No",  desc: "Defeat Impostor flawlessly: every impostor flagged, every real word named", secret: false, icon: "nosign" },

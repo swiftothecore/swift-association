@@ -7,8 +7,9 @@ import {
   ERAS, TENDER_ERAS, FINALE_ERAS, ALBUM_ERA, TS_MILESTONES, TS_LORE_DAYS,
   ALBUM_COLORS, CB_ALBUM_COLORS, STUDIO_ALBUMS, TITLE_ALIASES,
   ACHIEVEMENTS, ACH_ICONS, ACH_BY_ID, ACH_GROUPS, ACH_GROUP_COLORS, ACH_GROUP_OF,
-  CHALLENGES, CHALLENGE_BY_ID, CHALLENGE_ORDER, CHALLENGE_SEALS,
-  IMPOSTOR_WORDS, IMPOSTOR_COUNT,
+  CHALLENGES, CHALLENGE_BY_ID, CHALLENGE_ORDER, CHALLENGE_SEALS, DARK_SIDE_IDS, DARK_SIDE_TODO,
+  DARK_SIDE_MILESTONE,
+  IMPOSTOR_WORDS, IMPOSTOR_COUNT, DARK_IMPOSTOR_WORDS,
   SEA_GRID_SIZE, SEA_MIN_VALID, SEA_MAX_VALID,
   COMMON_LINES, COMMON_MIN_SONGS, COMMON_MAX_SONGS, COMMON_GEN_ATTEMPTS, COMMON_MAX_ACCEPT,
   ODD_TILES, WHOSE_TILES, WHOSE_MIN_WORDS, WHOSE_GEN_ATTEMPTS,
@@ -93,7 +94,7 @@ let titleIndex = new Map();   // normalizeTitle(title|alias) -> song, built in l
 let spacelessIndex = new Map(); // titleIndex key with spaces removed -> song (space-error fallback)
 let playableWords = [];
 let titleWordList = [];  // playable words that appear in at least one song title (Title...? challenge pool)
-let shortTitleWordList = []; // playable words with a valid (lyrics) song whose title is ≤2 words (Short n' Sweet pool)
+let shortTitleWordLists = {}; // maxTitleWords -> playable words with a valid (lyrics) song whose title fits it (Short n' Sweet pools; 2 = base, 1 = dark)
 let albumWordMap = {};   // album -> playable words with a valid (lyrics) song in that album (On Tour! pool)
 let albumOrder = [];     // album names in canonical songs.json order (On Tour! setlist order)
 let score = 0;
@@ -131,7 +132,8 @@ let dailyRng = null;            // seeded PRNG, non-null only during a daily gam
 let dailyAlbumPool = null;      // on an album-anniversary daily: [{ w, songs, catalogue, score }] the album's words by distinctiveness-desc; null otherwise
 let dailyAlbum = null;          // the album that daily leans toward, non-null only alongside dailyAlbumPool (locks the run's era wash)
 let dailyShareTime = null;      // completion time (sec) of the daily on screen — for the copyable result
-let currentChallenge = null;    // the active CHALLENGES entry while gameType === "challenge"
+let currentChallenge = null;    // the active CHALLENGES entry while gameType === "challenge" (dark-resolved — see resolveChallenge)
+let challengeDark = false;      // true while the active challenge is running its dark side
 let challengeRunActive = false; // true only during a live challenge run (gates the achievement sandbox)
 let vanishTimer = null;         // Vanishing Word: timeout that hides the prompt word
 let vanishAnsweredBlind = true; // Vanishing Word: still true if every correct answer landed after the word blanked (Blank Space)
@@ -150,7 +152,8 @@ let challengeForcedRound = 0;   // One Of A Kind: the round that forces challeng
 let challengeForcedWordVal = "";// One Of A Kind: the prompt word that surfaces the target song
 let forcedFirstWord = "";       // "Play this word" deep-link (search/?word=): forces round 1's prompt word
 let newSongLives = 0;           // One Of A Kind: wrong target guesses left before the run fails
-const NEW_SONG_LIVES = 3;       // One Of A Kind: starting guesses (discourages spamming the target)
+const NEW_SONG_LIVES = 3;       // One Of A Kind: default starting guesses (discourages spamming the target)
+let newSongLivesMax = NEW_SONG_LIVES;   // this run's budget (the dark side deals fewer), for the pips + intro cue
 let extraSecondsPerRound = 0;   // Choose Your Path: bonus seconds added to every round's clock
 let skipTokens = 0;             // Choose Your Path: one-time word "swaps" earned at a fork
 let pathForksTaken = [];        // Choose Your Path: fork rounds whose perk has been chosen
@@ -1725,26 +1728,45 @@ function challengeUnlocked(id) {
   return c.free || challengeRecord(id).unlocked;
 }
 
-// Bump the attempt counter (called when a challenge run starts).
-function recordChallengeAttempt(id) {
+// Bump the attempt counter (called when a challenge run starts). Dark runs count on their
+// own tally so a dark attempt never inflates the base challenge's attempt history.
+function recordChallengeAttempt(id, dark) {
   const st = loadChallengeState();
   const rec = st[id] ? { ...challengeRecord(id) } : { ...challengeRecord(id), unlocked: !!CHALLENGE_BY_ID[id].free };
-  rec.attempts += 1;
+  if (dark) rec.darkAttempts += 1; else rec.attempts += 1;
   st[id] = rec;
   saveChallengeState(st);
-  return rec.attempts;
+  return dark ? rec.darkAttempts : rec.attempts;
 }
 
 // Record a defeat. First-ever defeat awards a token and the milestone charms.
-function markChallengeDefeated(id, score) {
+// A dark-side defeat is recorded against the dark* fields and deliberately awards none of
+// the base milestones: those charms are about first-ever/one-try/persistence on the base
+// roster, and re-firing them off a dark run would double-count the same beat. Dark-side
+// rewards are a separate, selective set still to be designed (see PLAN.md).
+function markChallengeDefeated(id, score, dark) {
   const st = loadChallengeState();
   const rec = { ...challengeRecord(id) };
-  const firstTime = !rec.defeated;
-  rec.defeated = true;
-  if (score > rec.best) rec.best = score;
+  const firstTime = dark ? !rec.darkDefeated : !rec.defeated;
+  if (dark) {
+    rec.darkDefeated = true;
+    if (score > rec.darkBest) rec.darkBest = score;
+  } else {
+    rec.defeated = true;
+    if (score > rec.best) rec.best = score;
+  }
   st[id] = rec;
   saveChallengeState(st);
-  if (firstTime) {
+  // Dark-side milestones. No per-challenge charm — the black seal and violet tick are that
+  // reward. The "every dark side" charm counts DARK_SIDE_IDS rather than a fixed total, so
+  // it re-targets itself as more dark sides get authored.
+  if (firstTime && dark) {
+    const beaten = DARK_SIDE_IDS.filter((k) => challengeRecord(k).darkDefeated).length;
+    unlock("the-black-dog");
+    if (beaten >= DARK_SIDE_MILESTONE) unlock("dont-blame-me");
+    if (DARK_SIDE_IDS.length && beaten >= DARK_SIDE_IDS.length) unlock("darkest-paradise");
+  }
+  if (firstTime && !dark) {
     const wallet = loadChallengeTokens();
     wallet.balance += 1;                              // the self-feeding reward
     saveChallengeTokens(wallet);
@@ -2983,6 +3005,18 @@ function renderRecordsPage() {
         `</div></div>`
     : "";
 
+  // Dark sides — hidden until one is beaten, so a fresh notebook stays clean. Counts
+  // DARK_SIDE_IDS, so the "of N" re-targets itself as more dark sides get authored.
+  const darkBeaten = DARK_SIDE_IDS.filter((k) => challengeRecord(k).darkDefeated).length;
+  const darkBlock = darkBeaten > 0
+    ? `<p class="rec-group-label">dark sides</p><div class="pb-grid">` +
+        `<div class="pb-tile" style="--pb-accent:#7a4bb0">` +
+          `<span class="pb-mode">Dark sides beaten</span>` +
+          `<span class="pb-score">${darkBeaten}</span>` +
+          `<span class="pb-sub">of ${DARK_SIDE_IDS.length}</span>` +
+        `</div></div>`
+    : "";
+
   const hist = loadHistory();
   _pbByMode = {};
   for (const h of hist) if (!(h.m in _pbByMode)) _pbByMode[h.m] = h.m === "daily" ? db : h.m === "adaptive" ? (adaptiveRecord().bestPeak || -1) : (loadRecords(h.m)[0] ? loadRecords(h.m)[0].score : -1);
@@ -2996,7 +3030,7 @@ function renderRecordsPage() {
   $("recordsBody").innerHTML =
     `<div class="rec-sig">${sig}</div>` +
     `<p class="rec-group-label">personal bests</p><div class="pb-grid">${classicTiles}</div>` +
-    infBlock + dailyBlock + verseBlock + heatSectionHTML() + histBlock;
+    infBlock + dailyBlock + verseBlock + darkBlock + heatSectionHTML() + histBlock;
 
   renderHeatBody();
   const heatSel = $("heatRange");
@@ -3615,11 +3649,16 @@ let challengesBackTarget = "start";  // where the Challenges' back link returns 
 let challSelectedId = null;          // which challenge the detail panel is showing
 let challListResizeHandler = null;   // window-resize handler that re-snaps the list peek
 
-// Status marks for the contents list (gold tick = defeated, hollow ring = open, lock = locked).
+// Status marks for the contents list (gold tick = defeated, violet tick = dark side also
+// defeated, hollow ring = open, lock = locked).
 const CHALL_TICK = `<svg viewBox="0 0 20 20" class="chall-mark-svg" aria-hidden="true"><circle cx="10" cy="10" r="8.5" fill="none" stroke="#d8a32f" stroke-width="1.6"/><path d="M5.5 10.2 L8.7 13.4 L14.5 6.4" fill="none" stroke="#d8a32f" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+const CHALL_TICK_DARK = `<svg viewBox="0 0 20 20" class="chall-mark-svg" aria-hidden="true"><circle cx="10" cy="10" r="8.5" fill="none" stroke="#7a4bb0" stroke-width="1.6"/><path d="M5.5 10.2 L8.7 13.4 L14.5 6.4" fill="none" stroke="#7a4bb0" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
 const CHALL_RING = `<svg viewBox="0 0 20 20" class="chall-mark-svg" aria-hidden="true"><circle cx="10" cy="10" r="8.5" fill="none" stroke="#b6a98d" stroke-width="1.6"/></svg>`;
 const CHALL_LOCK = `<svg viewBox="0 0 20 20" class="chall-mark-svg" aria-hidden="true"><rect x="4.5" y="9" width="11" height="8" rx="1.4" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M6.8 9 V6.7 a3.2 3.2 0 0 1 6.4 0 V9" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>`;
 const CHALL_STAR = `<svg viewBox="0 0 24 24" class="chall-star-svg" aria-hidden="true"><path d="M12 2.3 L14.94 7.96 L21.22 9 L16.76 13.55 L17.7 19.85 L12 17 L6.3 19.85 L7.24 13.55 L2.78 9 L9.06 7.96 Z" fill="#e0a32f" stroke="#b9821f" stroke-width="1.1" stroke-linejoin="round" stroke-linecap="round"/></svg>`;
+// The dark side's mark: an eclipse — the blotted disc with its corona still showing. Drawn
+// in currentColor so the same glyph greys out with the button in its locked state.
+const CHALL_ECLIPSE = `<svg viewBox="0 0 20 20" class="chall-mark-svg" aria-hidden="true"><circle cx="10" cy="10" r="8.1" fill="none" stroke="currentColor" stroke-width="1.1" opacity="0.5"/><circle cx="10" cy="10" r="5.6" fill="currentColor"/></svg>`;
 
 // The beaten seal is a genuine two-tone: the wax body ages to a warm grey while the
 // beaded rim keeps its red. A uniform CSS filter can't do that (body and beads are both
@@ -3646,6 +3685,48 @@ function agedSealSvg(redSvg) {
 }
 const CHALLENGE_SEALS_AGED = Object.fromEntries(
   Object.entries(CHALLENGE_SEALS).map(([id, svg]) => [id, agedSealSvg(svg)])
+);
+
+// The dark side's seal: the same wax poured black. Derived exactly like the aged copy, but
+// the swap is wider — as well as the body reds and the pink relief, the deep red SHADOW
+// tints have to move too, or a violet seal keeps casting red shadows. The bead rim, which
+// the aged seal leaves red, goes bright lilac here: that pop against the near-black body is
+// what makes it read as "black and purple" rather than just a dark blob.
+// Because the dark side is gated on defeating the challenge, this seal strictly implies the
+// aged one, so showing it in place of the aged seal hides nothing the player had earned.
+const DARK_SEAL_BODY = {
+  "#cd5c55": "#6b5480", "#b8413f": "#55406b", "#ae363b": "#4c3862", "#ad353a": "#4a3660",
+  "#a72e33": "#443159", "#9c282e": "#3c2b4f", "#96262d": "#382848", "#93232a": "#352544",
+  "#8a2028": "#2e203b", "#781a20": "#241a2e",
+  "#b04046": "#a274d8",   // the beaded rim — the violet that carries the whole seal
+};
+const DARK_SEAL_HILITE = {
+  "rgba(250,188,168,0.4)": "rgba(206,180,240,0.4)", "rgba(255,216,198,0.17)": "rgba(216,198,246,0.17)",
+  "rgba(255,190,170,0.06)": "rgba(210,186,242,0.06)", "rgba(246,182,162,0.38)": "rgba(204,178,238,0.38)",
+  "rgba(246,184,164,0.28)": "rgba(205,180,238,0.28)",
+  "rgba(252,198,182,0.5)": "rgba(212,190,244,0.5)", "rgba(250,192,172,0.5)": "rgba(208,184,242,0.5)",
+  // The motif's offset highlight copy. On the red and taupe seals the body is light enough
+  // that a soft pink relief reads fine; against near-black wax the same value disappears and
+  // the motif flattens out, so this one is pushed brighter and more opaque than a like-for-
+  // like swap would give. It is what keeps each seal's motif legible once poured dark.
+  "rgba(252,198,180,0.45)": "rgba(232,214,255,0.62)",
+};
+const DARK_SEAL_SHADOW = {
+  "rgba(88,14,18,0.4)": "rgba(30,18,46,0.4)", "rgba(74,13,17,0.6)": "rgba(26,16,40,0.6)",
+  "rgba(70,10,14,0.42)": "rgba(24,14,38,0.42)", "rgba(70,10,14,0.35)": "rgba(24,14,38,0.35)",
+  "rgba(60,8,12,0.42)": "rgba(21,12,34,0.42)", "rgba(60,8,11,0.42)": "rgba(21,12,34,0.42)",
+  "rgba(56,7,10,0.55)": "rgba(20,11,32,0.55)", "rgba(56,7,10,0.5)": "rgba(20,11,32,0.5)",
+  "rgba(56,7,10,0.45)": "rgba(20,11,32,0.45)", "rgba(50,6,9,0.6)": "rgba(18,10,30,0.6)",
+};
+function darkSealSvg(redSvg) {
+  let s = redSvg.split("wax-").join("waxdark-");   // re-scope ids so all three copies coexist
+  for (const k in DARK_SEAL_BODY) s = s.split(k).join(DARK_SEAL_BODY[k]);
+  for (const k in DARK_SEAL_HILITE) s = s.split(k).join(DARK_SEAL_HILITE[k]);
+  for (const k in DARK_SEAL_SHADOW) s = s.split(k).join(DARK_SEAL_SHADOW[k]);
+  return s;
+}
+const CHALLENGE_SEALS_DARK = Object.fromEntries(
+  Object.entries(CHALLENGE_SEALS).map(([id, svg]) => [id, darkSealSvg(svg)])
 );
 
 // Difficulty rating — cassette tapes (1 easy → 3 hard). Echoes the dark-shell +
@@ -3697,7 +3778,8 @@ function renderChallengesPage() {
       const rec = challengeRecord(c.id);
       const open = challengeUnlocked(c.id);
       let mark, stateCls;
-      if (rec.defeated)   { mark = CHALL_TICK; stateCls = "is-defeated"; }
+      if (rec.darkDefeated) { mark = CHALL_TICK_DARK; stateCls = "is-defeated is-dark-defeated"; }
+      else if (rec.defeated) { mark = CHALL_TICK; stateCls = "is-defeated"; }
       else if (open)      { mark = CHALL_RING; stateCls = "is-open"; }
       else                { mark = CHALL_LOCK; stateCls = "is-locked"; }
       list += `<button type="button" class="chall-item ${stateCls}" data-id="${c.id}">` +
@@ -3805,14 +3887,32 @@ function renderChallengeDetail(id) {
     action = `<button type="button" class="chall-go" data-play="${id}">${rec.defeated ? "Play again" : "Play"}</button>`;
   }
 
+  // The dark side, sitting beside Play. Only rendered for challenges that actually have one
+  // authored — a permanently locked button on a challenge with no dark side would be a lie.
+  // Greyed with a padlock until the challenge itself is beaten, then inked black.
+  let darkAction = "";
+  if (open && hasDarkSide(id)) {
+    const dOpen = darkSideUnlocked(id);
+    const cls = "chall-dark" + (dOpen ? "" : " is-locked") + (rec.darkDefeated ? " is-conquered" : "");
+    darkAction =
+      `<button type="button" class="${cls}"` +
+        (dOpen ? ` data-dark="${id}"` : ` disabled aria-disabled="true"`) +
+        ` title="${dOpen ? "play the dark side" : "beat this challenge to unlock its dark side"}">` +
+        `<span class="chall-dark-mark">${dOpen ? CHALL_ECLIPSE : CHALL_LOCK}</span>` +
+        `<span class="chall-dark-lab">Dark Side</span>` +
+      `</button>`;
+  }
+
   let meta = "";
   const bestOutOf = c.rule === "survive" ? "" : `/${TOTAL_ROUNDS}`;
   if (rec.defeated) meta = `best ${rec.best}${bestOutOf} · ${rec.attempts} attempt${rec.attempts === 1 ? "" : "s"}`;
   else if (rec.attempts) meta = `${rec.attempts} attempt${rec.attempts === 1 ? "" : "s"} · not yet beaten`;
+  if (rec.darkDefeated) meta += `${meta ? " · " : ""}dark side beaten`;
 
   el.innerHTML =
     `<div class="chall-detail-head">` +
-      `<span class="chall-detail-seal ${rec.defeated ? "is-beaten" : open ? "is-unbeaten" : "is-locked"}">${(rec.defeated ? CHALLENGE_SEALS_AGED : CHALLENGE_SEALS)[c.id] || ""}</span>` +
+      `<span class="chall-detail-seal ${rec.darkDefeated ? "is-dark" : rec.defeated ? "is-beaten" : open ? "is-unbeaten" : "is-locked"}">` +
+        `${(rec.darkDefeated ? CHALLENGE_SEALS_DARK : rec.defeated ? CHALLENGE_SEALS_AGED : CHALLENGE_SEALS)[c.id] || ""}</span>` +
       `<span class="chall-detail-name">${escapeHtml(c.name)}</span>` +
       (rec.defeated ? `<span class="chall-detail-star">${CHALL_STAR}</span><span class="chall-detail-stamp">defeated</span>` : "") +
     `</div>` +
@@ -3831,13 +3931,16 @@ function renderChallengeDetail(id) {
       `<div class="chall-mods">${escapeHtml(c.blurb || mode.blurb)}</div>` +
     `</div>` +
     `<div class="chall-act">` +
-      `<span class="chall-meta">${meta}</span>${action}` +
+      `<span class="chall-meta">${meta}</span>` +
+      `<span class="chall-act-btns">${darkAction}${action}</span>` +
     `</div>`;
 
   const ub = el.querySelector("[data-unlock]");
   if (ub) ub.addEventListener("click", () => { if (unlockChallenge(ub.dataset.unlock)) renderChallengesPage(); });
   const pb = el.querySelector("[data-play]");
   if (pb) pb.addEventListener("click", () => startChallenge(pb.dataset.play));
+  const db = el.querySelector("[data-dark]");
+  if (db) db.addEventListener("click", () => startChallenge(db.dataset.dark, { dark: true }));
 }
 
 /* ---------- Album Focus page (master/detail; the 12-album completion board) ---------- */
@@ -4368,8 +4471,13 @@ async function loadData() {
   titleWordList = playableWords.filter((w) => titleSongsForWord(w, false).length >= 1);
   // Short n' Sweet pool: words with at least one valid (lyrics) song whose title is ≤2 words,
   // so every round can be won with a one- or two-word title.
-  shortTitleWordList = playableWords.filter((w) =>
-    validSongs(w, false, false).some((s) => titleWordCount(s.title) <= 2));
+  // One pool per title-length rule, so the dark side's one-word-only run is guaranteed a
+  // winnable page just as the base ≤2-word run is.
+  shortTitleWordLists = {};
+  for (const max of [1, 2]) {
+    shortTitleWordLists[max] = playableWords.filter((w) =>
+      validSongs(w, false, false).some((s) => titleWordCount(s.title) <= max));
+  }
   // On Tour! pools: for each album, the playable words that have a valid (lyrics) song
   // in it, so each tour stop can be handed a winnable word. Plus the canonical album order.
   albumOrder = grouped.map((g) => g.album);
@@ -4502,13 +4610,22 @@ function updateTagline() {
   // Custom's clock comes from the active preset, not the difficulty currentMode.
   const cm = gameType === "custom" ? activeCustomMode() : currentMode;
   const clock = cm.seconds > 0 ? `${cm.seconds} seconds each` : "no timer";
-  el.textContent = gameType === "infinite"
+  const line = gameType === "infinite"
     ? `endless pages · ${clock}`
     : gameType === "adaptive"
     ? `${TOTAL_ROUNDS} pages · difficulty that climbs with you`
     : gameType === "custom"
     ? `${cm.rounds === 0 ? "endless pages" : cm.rounds + " pages"} · ${clock} · your own rules`
     : `${TOTAL_ROUNDS} pages · ${clock}`;
+  // Without this a dark run is indistinguishable from the base challenge: same tagline, same
+  // page count, just quietly harder numbers. The eclipse + "dark side" is the only thing on
+  // the game screen that says which variant you're actually in.
+  el.classList.toggle("is-dark-run", !!challengeDark);
+  if (challengeDark) {
+    el.innerHTML = `${escapeHtml(line)}<span class="tagline-dark">${CHALL_ECLIPSE}dark side</span>`;
+  } else {
+    el.textContent = line;
+  }
 }
 function renderModePicker() {
   const tabs = $("modeTabs");
@@ -4548,6 +4665,12 @@ function renderVariantPicker() {
 // Render all three start-screen pickers + the board for the current selection.
 function renderStartPickers() {
   if (!GAME_TYPES.includes(gameType)) gameType = "classic";
+  // Back on the desk, there's no live run — so no dark run either. `challengeDark` only clears
+  // at the NEXT game's resetRunState, which leaves the masthead tagline still reading "dark
+  // side" on the start screen after a dark challenge is quit or finished. Clear it here, the
+  // one choke point every return-to-start passes through, so the tagline reflects the mode
+  // that's actually selected.
+  challengeDark = false;
   // A daily game forces currentMode to Normal without persisting; restore the
   // player's preference (a fixed default-difficulty setting, else their last pick).
   currentMode = (settings.defaultDifficulty !== "last" && MODES[settings.defaultDifficulty])
@@ -4896,6 +5019,7 @@ function resetRunState() {
   dailyAlbumPool = null;
   dailyAlbum = null;
   currentChallenge = null;
+  challengeDark = false;
   challengeRunActive = false;
   customPreset = null;
   focusAlbum = null;
@@ -4927,6 +5051,7 @@ function resetRunState() {
   challengeForcedWordVal = "";
   forcedFirstWord = "";
   newSongLives = 0;
+  newSongLivesMax = NEW_SONG_LIVES;
   extraSecondsPerRound = 0;
   skipTokens = 0;
   pathForksTaken = [];
@@ -5409,30 +5534,61 @@ function startDaily() {
 
 // A Challenge run: a fixed-13 game with a rule modifier, sandboxed like daily (no
 // stats/records/history/tally/global achievements). The mode is fixed by the challenge.
-function startChallenge(id) {
+// A challenge's dark side is the SAME entry with its `hard` overrides folded in, resolved
+// once here so every downstream read of currentChallenge.<param> sees the dark value without
+// a single per-site check. `id` survives the merge, so id-keyed achievements, seals and
+// labels are untouched. Returns the base entry unchanged when not dark (or when the
+// challenge has no dark side authored yet).
+function resolveChallenge(c, dark) {
+  if (!c || !dark || !c.hard) return c;
+  return { ...c, ...c.hard, dark: true };
+}
+// Whether a challenge has a dark side authored at all.
+function hasDarkSide(id) {
   const c = CHALLENGE_BY_ID[id];
-  if (!c || !challengeUnlocked(id)) return;
+  return !!(c && c.hard);
+}
+// The dark side opens only once the challenge itself has been defeated: you earn the right
+// to suffer. (Having a dark side at all is a separate question — see hasDarkSide.)
+function darkSideUnlocked(id) {
+  return hasDarkSide(id) && challengeRecord(id).defeated;
+}
+
+function startChallenge(id, opts) {
+  const base = CHALLENGE_BY_ID[id];
+  if (!base || !challengeUnlocked(id)) return;
+  // A dark run needs the base challenge already defeated. `force` is the dev-tools escape
+  // hatch (__dev.challenge.dark.start) so the variants stay testable without a real win.
+  const dark = !!(opts && opts.dark) && hasDarkSide(id)
+            && (!!(opts && opts.force) || darkSideUnlocked(id));
+  const c = resolveChallenge(base, dark);
   gameType = "challenge";
   currentMode = MODES[c.mode] || MODES.medium;   // fixed by the challenge, not persisted via DIFF_KEY
   // Some challenges override a single lever of the borrowed mode (Revolving Door wants a
   // 20s clock; Shrinking Timer hides suggestions). Clone so the shared MODES object is
   // never mutated; id stays the same so id-based achievement/label checks are unaffected.
+  // Read off the RESOLVED entry so a dark override of these levers flows through too.
   const lever = {};
   if (c.seconds != null) lever.seconds = c.seconds;
   if (c.dropdown != null) lever.dropdown = c.dropdown;
   if (Object.keys(lever).length) currentMode = { ...currentMode, ...lever };
   resetRunState();
   currentChallenge = c;                          // set AFTER resetRunState (which nulls it)
+  challengeDark = dark;
   challengeRunActive = true;                     // start the achievement sandbox
+  // Deep Cut (dark): deal the album instead of letting the run drift onto whichever one is
+  // going well. Set on the resolved clone, so `c.album` is a real album everywhere it's read
+  // (the win check, the leader tally, the counter banner) with no per-site dark branch.
+  if (c.rule === "album5" && c.randomAlbum) c.album = pickDealtAlbum(c.need);
   if (c.rule === "newsong") setupNewSongChallenge();
   if (c.rule === "impostor") setupImpostorChallenge();
   if (c.rule === "setlist") buildTourSetlist();
-  if (c.rule === "combo") comboClock = COMBO_START;
+  if (c.rule === "combo") comboClock = comboStart();
   // Home Invasion: run-scoped clock, starts at c.seconds and only shrinks on wrong answers.
   if (c.rule === "spite") spiteSeconds = c.seconds || 10;
   // Thirty-One: runs on Infinite's sudden-death rules while staying a sandboxed challenge.
   if (c.rule === "survive") lives = 1;
-  recordChallengeAttempt(id);
+  recordChallengeAttempt(id, dark);
   applyInputHints();
   updateTagline();
   // Thirty-One shows a live round count (like Infinite), not "page X / 13".
@@ -5481,7 +5637,10 @@ function setupNewSongChallenge() {
   const minN = Math.min(...scored.map((s) => s.n));
   challengeForcedWordVal = shuffle(scored.filter((s) => s.n === minN))[0].w;
   challengeTargetSong = target;
-  newSongLives = NEW_SONG_LIVES;                             // wrong-guess budget for this run
+  // Wrong-guess budget for this run. The dark side deals fewer (`guesses`), so the pips and the
+  // intro cue read the run's own budget rather than the default.
+  newSongLivesMax = (currentChallenge && currentChallenge.guesses) || NEW_SONG_LIVES;
+  newSongLives = newSongLivesMax;
   challengeForcedRound = 3 + Math.floor(Math.random() * 9);  // rounds 3..11
   if (!usedWords.includes(challengeForcedWordVal)) usedWords.push(challengeForcedWordVal);
 }
@@ -5496,7 +5655,20 @@ function challengeForcedWord(r) {
 function impostorRuleActive() {
   return gameType === "challenge" && currentChallenge && currentChallenge.rule === "impostor";
 }
-// Pick IMPOSTOR_COUNT of the run's 13 pages to be fakes. Round 1 is always real (a gentle
+// How many of the run's 13 pages are fakes. Base is IMPOSTOR_COUNT (4); the dark side lifts it
+// via `impostorCount`. Read through this helper so setup and the dev read-out agree.
+function impostorCountNow() {
+  const n = gameType === "challenge" && currentChallenge && Number(currentChallenge.impostorCount);
+  return n > 0 ? n : IMPOSTOR_COUNT;
+}
+// The decoy pool this run draws fakes from. The dark side (`impostorHardWords`) swaps in
+// DARK_IMPOSTOR_WORDS — the subset hardest to dismiss as fake. Both pools are zero-match
+// verified (the dark one is a subset of the base one), so a decoy is always a fair "flag me".
+function impostorWordPool() {
+  return (gameType === "challenge" && currentChallenge && currentChallenge.impostorHardWords)
+    ? DARK_IMPOSTOR_WORDS : IMPOSTOR_WORDS;
+}
+// Pick impostorCountNow() of the run's 13 pages to be fakes. Round 1 is always real (a gentle
 // tutorial open), so the decoys land somewhere in rounds 2..13.
 function setupImpostorChallenge() {
   impostorRounds = new Set();
@@ -5504,12 +5676,13 @@ function setupImpostorChallenge() {
   impostorFailed = false;
   const slots = [];
   for (let r = 2; r <= TOTAL_ROUNDS; r++) slots.push(r);
-  shuffle(slots).slice(0, Math.min(IMPOSTOR_COUNT, slots.length)).forEach((r) => impostorRounds.add(r));
+  shuffle(slots).slice(0, Math.min(impostorCountNow(), slots.length)).forEach((r) => impostorRounds.add(r));
 }
 // A fresh impostor decoy not used yet this run (falls back to the whole pool if exhausted).
 function pickImpostorWord() {
-  const fresh = IMPOSTOR_WORDS.filter((w) => !usedWords.includes(w));
-  const pool = fresh.length ? fresh : IMPOSTOR_WORDS;
+  const all = impostorWordPool();
+  const fresh = all.filter((w) => !usedWords.includes(w));
+  const pool = fresh.length ? fresh : all;
   const w = pool[Math.floor(Math.random() * pool.length)];
   usedWords.push(w);
   return w;
@@ -5520,12 +5693,24 @@ function pickImpostorWord() {
 function seaRuleActive() {
   return gameType === "challenge" && currentChallenge && currentChallenge.rule === "sea";
 }
+// How many genuine answers a Sea grid seeds. Base is SEA_MIN_VALID..SEA_MAX_VALID (2..4); the
+// dark side cuts the band (to 1..2) so there are fewer needles in the same 16-tile sea. Read
+// through these two helpers so the grid builder and the dev read-out can't disagree.
+function seaMinValidNow() {
+  const n = gameType === "challenge" && currentChallenge && Number(currentChallenge.seaMinValid);
+  return n > 0 ? n : SEA_MIN_VALID;
+}
+function seaMaxValidNow() {
+  const n = gameType === "challenge" && currentChallenge && Number(currentChallenge.seaMaxValid);
+  return n > 0 ? Math.max(n, seaMinValidNow()) : Math.max(SEA_MAX_VALID, seaMinValidNow());
+}
 // Build this round's tile grid: a random handful of genuine answers (from currentSongs)
 // plus decoys drawn from songs that hold the word in NEITHER lyrics nor title (so no tile is
 // an unfair "title matches but it's wrong" trap), then shuffled together.
 function buildSeaGrid() {
   const valids = shuffle(currentSongs.slice());
-  const want = SEA_MIN_VALID + Math.floor(Math.random() * (SEA_MAX_VALID - SEA_MIN_VALID + 1));
+  const lo = seaMinValidNow(), hi = seaMaxValidNow();
+  const want = lo + Math.floor(Math.random() * (hi - lo + 1));
   const showValid = Math.max(1, Math.min(valids.length, want));
   const chosen = valids.slice(0, showValid).map((s) => ({ song: s, valid: true }));
 
@@ -5548,8 +5733,9 @@ function renderTapGrid() {
   const grid = $("tapGrid");
   if (!grid) return;
   const tiles = activeTapTiles();
-  // Four tiles read better 2×2 than as one cramped row (see .tap-grid[data-cols="2"]).
-  grid.dataset.cols = tiles.length <= 4 ? "2" : "";
+  // Four tiles read better 2×2 than as one cramped row (see .tap-grid[data-cols="2"]), and
+  // the dark side's six sit as two rows of three rather than a ragged 4 + 2.
+  grid.dataset.cols = tiles.length <= 4 ? "2" : tiles.length <= 6 ? "3" : "";
   grid.innerHTML = tiles.map((t, i) =>
     `<button type="button" class="tap-tile" data-tap="${i}" ` +
     `style="--album-color:${albumColor(t.song.album) || "var(--ink-soft)"}">` +
@@ -5637,13 +5823,21 @@ function tapKnowledgeActive() { return oddOneRuleActive() || whoseLineRuleActive
 // Every challenge that swaps typing for a grid of song tiles.
 function tapGridActive() { return seaRuleActive() || tapKnowledgeActive(); }
 
-// Odd One Out: ODD_TILES tiles, exactly one of them the odd one — a song holding the word in
+// How many tiles this Odd One Out page shows. ODD_TILES is the base board; the dark side
+// carries a wider `tiles`. Every site that cares about the grid width reads THIS, so the
+// board, the word picker and the layout can never disagree about how big the page is.
+function oddTilesNow() {
+  const n = gameType === "challenge" && currentChallenge && Number(currentChallenge.tiles);
+  return n > 0 ? n : ODD_TILES;
+}
+
+// Odd One Out: oddTilesNow() tiles, exactly one of them the odd one — a song holding the word in
 // NEITHER its lyrics nor its title (so it's never an unfair "the title matched" trap). The rest
 // are genuine holders from currentSongs. Shrinks the grid rather than failing if the word is
 // thin on holders, but never below one holder + the odd one.
 function buildOddGrid() {
   tapTiles = [];
-  const holders = shuffle(currentSongs.slice()).slice(0, ODD_TILES - 1);
+  const holders = shuffle(currentSongs.slice()).slice(0, oddTilesNow() - 1);
   if (!holders.length) return false;
   const rx = wordRegex(currentWord, effectiveStrict());
   const holderTitles = new Set(currentSongs.map((s) => s.title));
@@ -5655,16 +5849,47 @@ function buildOddGrid() {
   return true;
 }
 
+// The shortest line this page will accept. WHOSE_MIN_WORDS is the base floor; the dark side
+// lowers it, letting shorter (and so thinner-signalled) lines into the draw.
+function whoseMinWordsNow() {
+  const n = gameType === "challenge" && currentChallenge && Number(currentChallenge.minWords);
+  return n > 0 ? n : WHOSE_MIN_WORDS;
+}
+// Whether this page draws the harder line (dark side): no hook, and the shortest one going.
+function whoseHardLinesNow() {
+  return !!(gameType === "challenge" && currentChallenge && currentChallenge.hardLines);
+}
+// A song's hook lines: any line it sings more than once. A repeated line is the chorus, and a
+// chorus is the single most recognisable thing about a song — hearing it names the track
+// instantly. The dark side refuses to serve them, so it has to be placed on a deeper cut of
+// the lyric. Compared on a loose normalisation so punctuation and case can't split a repeat.
+function hookLines(song) {
+  const seen = new Map();
+  String(song.lyrics || "").split("\n").forEach((l) => {
+    const k = l.toLowerCase().replace(/[^a-z0-9 ]+/g, "").replace(/\s+/g, " ").trim();
+    if (k) seen.set(k, (seen.get(k) || 0) + 1);
+  });
+  return new Set([...seen.entries()].filter(([, n]) => n > 1).map(([k]) => k));
+}
 // One showable line from a song: long enough to be a fair puzzle, and never a line containing
 // the song's own title (which would just hand the answer over). Null when the song has none.
-function pickWhoseLine(song) {
+// `hard` (the dark side) additionally drops the song's hook lines and prefers the SHORTEST
+// legal line left, where the base draw takes any of them at random — least signal, not just
+// less time.
+function pickWhoseLine(song, hard) {
   const title = String(song.title || "").toLowerCase();
   const bare = title.replace(/\s*\((taylor's version|from the vault|.*?)\)\s*/gi, "").trim();
+  const min = whoseMinWordsNow();
+  const hooks = hard ? hookLines(song) : null;
+  const words = (l) => l.split(/\s+/).filter(Boolean).length;
   const lines = shuffle(String(song.lyrics || "").split("\n").map((l) => l.trim()).filter((l) => {
-    if (l.split(/\s+/).filter(Boolean).length < WHOSE_MIN_WORDS) return false;
+    if (words(l) < min) return false;
     const low = l.toLowerCase();
-    return !low.includes(title) && !(bare && low.includes(bare));
+    if (low.includes(title) || (bare && low.includes(bare))) return false;
+    if (hooks && hooks.has(low.replace(/[^a-z0-9 ]+/g, "").replace(/\s+/g, " ").trim())) return false;
+    return true;
   }));
+  if (hard && lines.length) return lines.reduce((a, b) => (words(b) < words(a) ? b : a));
   return lines[0] || null;
 }
 // Whose Line?: draw a source song + a line from it, then offer WHOSE_TILES songs with the source
@@ -5675,9 +5900,17 @@ function buildWhosePuzzle() {
   tapTiles = [];
   const pool = shuffle(allSongs.slice());
   let source = null, line = null;
-  for (let i = 0; i < WHOSE_GEN_ATTEMPTS && i < pool.length; i++) {
-    const l = pickWhoseLine(pool[i]);
-    if (l) { source = pool[i]; line = l; break; }
+  // On a dark run, look for a hook-free line first. Those are strictly rarer, and a build that
+  // returns false renders a DEAD page (the caller ignores the return, leaving no line and no
+  // tiles) — so fall back to the base draw rather than ever serving one. Harder when the
+  // corpus allows it, always playable when it doesn't.
+  const harden = whoseHardLinesNow();
+  for (const hard of (harden ? [true, false] : [false])) {
+    for (let i = 0; i < WHOSE_GEN_ATTEMPTS && i < pool.length; i++) {
+      const l = pickWhoseLine(pool[i], hard);
+      if (l) { source = pool[i]; line = l; break; }
+    }
+    if (source) break;
   }
   if (!source) return false;
   const low = line.toLowerCase();
@@ -5783,40 +6016,59 @@ function commonAcceptSet(lines) {
   }
   return set;
 }
+// How many lyric lines a Common Thread page shows. Base is COMMON_LINES (3); the dark side
+// carries `commonLines` (4). Read through this helper so the generator, the puzzle panel and the
+// candidate band never disagree about the line count.
+function commonLinesNow() {
+  const n = gameType === "challenge" && currentChallenge && Number(currentChallenge.commonLines);
+  return n > 0 ? n : COMMON_LINES;
+}
+// The tightest accept set the generator is happy to stop on. Base is COMMON_MAX_ACCEPT (3); the
+// dark side drops it to 1, so it hunts for a page where ONLY the intended word threads every
+// line (a single unambiguous answer). It's a target, not a guarantee — the generator still keeps
+// the tightest attempt it found, and any genuine thread word is still accepted, so a page that
+// can't reach a singleton stays fair rather than rejecting a legitimate answer.
+function commonMaxAcceptNow() {
+  const n = gameType === "challenge" && currentChallenge && Number(currentChallenge.commonMaxAccept);
+  return n > 0 ? n : COMMON_MAX_ACCEPT;
+}
 // Build this round's puzzle: an intended thread word from a mid-frequency band (so the thread
-// is neither a one-off nor an everywhere word), COMMON_LINES lines drawn from distinct songs,
+// is neither a one-off nor an everywhere word), commonLinesNow() lines drawn from distinct songs,
 // keeping the attempt whose accept set is tightest (ideally the thread word alone). The intended
 // word always lands in the accept set, so the page is always winnable.
 function buildCommonPuzzle() {
   commonPuzzle = null;
+  const want = commonLinesNow();
   let candidates = playableWords.filter((w) => {
     if (usedWords.includes(w)) return false;
     const n = songsContainingWord(w, false).length;
-    return n >= COMMON_MIN_SONGS && n <= COMMON_MAX_SONGS;
+    // Need at least `want` songs to draw `want` distinct lines, and stay under the ubiquity cap.
+    return n >= Math.max(COMMON_MIN_SONGS, want) && n <= COMMON_MAX_SONGS;
   });
-  if (candidates.length < 1) candidates = playableWords.filter((w) => songsContainingWord(w, false).length >= COMMON_LINES);
+  if (candidates.length < 1) candidates = playableWords.filter((w) => songsContainingWord(w, false).length >= want);
   candidates = shuffle(candidates.slice());
 
+  const maxAccept = commonMaxAcceptNow();
   let best = null;
   for (let i = 0; i < COMMON_GEN_ATTEMPTS && i < candidates.length; i++) {
     const w = candidates[i];
-    const songs = shuffle(songsContainingWord(w, false).slice()).slice(0, COMMON_LINES);
-    if (songs.length < COMMON_LINES) continue;
+    const songs = shuffle(songsContainingWord(w, false).slice()).slice(0, want);
+    if (songs.length < want) continue;
     const lines = [];
     for (const s of songs) {
       const line = extractLineWithWord(s.lyrics, w, false);
       if (line) lines.push({ song: s, line });
     }
-    if (lines.length < COMMON_LINES) continue;
+    if (lines.length < want) continue;
     const accept = commonAcceptSet(lines.map((x) => x.line));
     accept.add(w.toLowerCase());   // the intended thread is always accepted
     if (!best || accept.size < best.accept.size) best = { word: w, lines, accept };
-    if (accept.size <= COMMON_MAX_ACCEPT) break;   // tight enough — stop hunting
+    if (accept.size <= maxAccept) break;   // tight enough — stop hunting
   }
   if (!best) {
     // Degenerate fallback (shouldn't hit with real data): force any word with enough songs.
     const w = candidates[0] || playableWords[0];
-    const songs = shuffle(songsContainingWord(w, false).slice()).slice(0, COMMON_LINES);
+    const songs = shuffle(songsContainingWord(w, false).slice()).slice(0, want);
     const lines = songs.map((s) => ({ song: s, line: extractLineWithWord(s.lyrics, w, false) || s.title }));
     best = { word: w, lines, accept: new Set([w.toLowerCase()]) };
   }
@@ -5848,8 +6100,9 @@ function renderCommonUI() {
   play.dataset.common = on ? "1" : "";
   panel.hidden = !on;
   if (on && commonPuzzle) {
+    const numWord = ["", "one", "two", "three", "four", "five", "six"][commonPuzzle.lines.length] || commonPuzzle.lines.length;
     panel.innerHTML =
-      `<p class="common-lead">one word runs through all three</p>` +
+      `<p class="common-lead">one word runs through all ${numWord}</p>` +
       commonPuzzle.lines.map(({ line }) =>
         `<div class="common-line"><span class="common-line-text">${escapeHtml(censor(line))}</span></div>`
       ).join("");
@@ -5933,9 +6186,18 @@ function pickChainWord() {
   chainLetter = "";   // no word can extend this letter — let the chain restart free
   return null;
 }
-// It's A Clock!: one shared run clock. COMBO_START seconds to begin, +COMBO_BONUS per
-// correct answer, capped at COMBO_CAP. Hitting zero ends the run.
+// It's A Clock!: one shared run clock. comboStart() seconds to begin, +comboBonus() per
+// correct answer, capped at comboCap(). Hitting zero ends the run.
+// These live on the challenge entry (so the dark side can tighten the economy) with the
+// original constants kept as fallbacks for any path that reads them before a run resolves.
 const COMBO_START = 20, COMBO_BONUS = 5, COMBO_CAP = 30;
+function comboParam(key, fallback) {
+  const v = currentChallenge && currentChallenge[key];
+  return typeof v === "number" ? v : fallback;
+}
+function comboStart() { return comboParam("comboStart", COMBO_START); }
+function comboBonus() { return comboParam("comboBonus", COMBO_BONUS); }
+function comboCap()   { return comboParam("comboCap",   COMBO_CAP);   }
 function comboRuleActive() {
   return gameType === "challenge" && currentChallenge && currentChallenge.rule === "combo";
 }
@@ -5948,10 +6210,10 @@ function spiteRuleActive() {
   return gameType === "challenge" && currentChallenge && currentChallenge.rule === "spite";
 }
 // Seconds left on the shared clock right now, derived from the running timer (total is
-// scaled to COMBO_CAP, so remaining == the shared clock). Valid while/just after a combo
+// scaled to comboCap(), so remaining == the shared clock). Valid while/just after a combo
 // round's timer ran.
 function comboRemaining() {
-  return Math.max(0, COMBO_CAP - (performance.now() - timerStart) / 1000);
+  return Math.max(0, comboCap() - (performance.now() - timerStart) / 1000);
 }
 
 // Per-round modifier for the active challenge (called from advanceRound after the
@@ -5976,6 +6238,16 @@ function renderChallengeSeal() {
 function applyChallengeRound(wrap) {
   if (gameType !== "challenge" || !currentChallenge || !wrap) return;
   renderChallengeSeal();   // the challenge's wax seal, stamped in the page corner for the run
+  // `wordScale` (Vanishing Word's dark side) renders the prompt at a fraction of its normal
+  // size. Read here, before the rule dispatch, so it's one lever any challenge can carry
+  // rather than a per-rule special case. Display only — matching always reads currentWord
+  // from state, never the DOM. Distinct from Smallest Song's data-tiny, which also tilts,
+  // drifts, and drops the highlighter swipe.
+  const scale = Number(currentChallenge.wordScale);
+  if (scale > 0 && scale < 1) {
+    wrap.dataset.small = "1";
+    wrap.style.setProperty("--word-scale", String(scale));
+  }
   if (currentChallenge.rule === "vanishing") {
     return;
   } else if (currentChallenge.rule === "wordfx") {
@@ -6132,14 +6404,18 @@ function renderDevilBanner() {
       : `<span class="chall-prog-count">no curses… yet</span>`);
 }
 
-// Shrinking Timer: this round's clock, shrinking linearly from ACCEL_FROM (round 1)
-// down to ACCEL_TO (the final round). Per-round, applied via roundSecondsOverride and
+// Shrinking Timer: this round's clock, shrinking linearly from accelFrom (round 1)
+// down to accelTo (the final round). Per-round, applied via roundSecondsOverride and
 // read by baseSeconds(); the shared MODES object is never touched.
+// The endpoints live on the challenge entry so the dark side can steepen the curve; the
+// original constants remain the fallback.
 const ACCEL_FROM = 16, ACCEL_TO = 5;
 function accelSeconds(r) {
+  const from = (currentChallenge && currentChallenge.accelFrom) || ACCEL_FROM;
+  const to   = (currentChallenge && currentChallenge.accelTo)   || ACCEL_TO;
   const span = TOTAL_ROUNDS - 1;
   const t = span > 0 ? Math.min(1, Math.max(0, (r - 1) / span)) : 1;
-  return Math.max(ACCEL_TO, Math.round(ACCEL_FROM - t * (ACCEL_FROM - ACCEL_TO)));
+  return Math.max(to, Math.round(from - t * (from - to)));
 }
 function renderAccelBanner() {
   if (gameType !== "challenge" || !currentChallenge || currentChallenge.rule !== "accelerate") return;
@@ -6154,7 +6430,7 @@ function renderTitleRuleBanner() {
   const el = ensureChallBanner();
   const msg = currentChallenge.rule === "titleHas"
     ? "the word must be in the title"
-    : "one- or two-word titles only";
+    : maxTitleWordsNow() === 1 ? "one-word titles only" : "one- or two-word titles only";
   el.innerHTML = `<span class="chall-prog-name">${msg}</span>`;
 }
 // Wrapped Like A Chain: chain length so far + the letter the next title must start with.
@@ -6183,7 +6459,7 @@ function renderComboBanner() {
   const el = ensureChallBanner();
   el.innerHTML =
     `<span class="chall-prog-name">shared clock</span>` +
-    `<span class="chall-prog-count">${Math.max(0, comboClock).toFixed(0)}s · +${COMBO_BONUS}s per correct</span>`;
+    `<span class="chall-prog-count">${Math.max(0, comboClock).toFixed(0)}s · +${comboBonus()}s per correct</span>`;
 }
 
 // The shared challenge-banner element above the word (reused across rules; cleaned
@@ -6203,9 +6479,22 @@ function ensureChallBanner() {
 // Deep Cut: the album you've pulled the most correct songs from so far (the one the
 // win check rewards), with a 5-pip tally in that album's colour. Live — re-rendered
 // each round and the moment a correct answer lands.
+// Deep Cut (dark): deal one studio album for the whole run. Only albums with enough songs
+// to actually reach the target are eligible — a dealt album you mathematically cannot finish
+// would lose the run at the draw rather than at the desk.
+function pickDealtAlbum(need) {
+  const want = need || 5;
+  const counts = {};
+  for (const s of allSongs) if (s.album) counts[s.album] = (counts[s.album] || 0) + 1;
+  const eligible = STUDIO_ALBUMS.filter((a) => (counts[a] || 0) >= want);
+  const pool = eligible.length ? eligible : STUDIO_ALBUMS;
+  return shuffle(pool.slice())[0] || null;
+}
 function deepCutLeader() {
   const counts = {};
-  let album = null, best = 0;
+  // A dealt album (dark) is known before a single answer lands, so name it from page 1
+  // instead of "your best album" — there's no leader to discover, only a target to hit.
+  let album = (currentChallenge && currentChallenge.album) || null, best = 0;
   roundResults.forEach((ok, i) => {
     if (!ok) return;
     const a = roundAlbums[i];
@@ -6228,7 +6517,7 @@ function renderDeepCutCounter() {
   if (gameType !== "challenge" || !currentChallenge || currentChallenge.rule !== "album5") return;
   const el = ensureChallBanner();
   const { album, count } = deepCutLeader();
-  const target = 5;
+  const target = currentChallenge.need || 5;
   const col = (album && albumColor(album)) || "var(--ink-soft)";
   const label = album || "your best album";
   let pips = "";
@@ -6251,7 +6540,7 @@ function renderNewSongBanner() {
   const col = albumColor(challengeTargetSong.album) || "var(--ink-soft)";
   const livesPips = `<span class="chall-pips" title="${newSongLives} guess` +
     `${newSongLives === 1 ? "" : "es"} left">` +
-    Array.from({ length: NEW_SONG_LIVES }, (_, i) =>
+    Array.from({ length: newSongLivesMax }, (_, i) =>
       `<span class="chall-pip${i < newSongLives ? " filled" : ""}"></span>`).join("") +
     `</span>`;
   el.innerHTML = got
@@ -6343,16 +6632,54 @@ function buildWildcardConstraints() {
   if (album) cons.push({ id: "album", label: `only from ${album}`, accepts: (s) => s.album === album });
   return cons;
 }
+// Fuse two sub-rules into one constraint object shaped exactly like a single rule, so every
+// read site (.label / .accepts / .display / .instant / .id) works unchanged. A null `accepts`
+// means "this rule doesn't restrict answers" (the visual gimmicks), so the fused accepts is
+// the AND of whichever halves actually restrict.
+function fuseWildcard(a, b) {
+  const both = a.accepts && b.accepts;
+  const gimmick = a.display ? a : (b.display ? b : null);
+  return {
+    id: `${a.id}+${b.id}`,
+    label: `${a.label} · and · ${b.label}`,
+    accepts: both ? (s) => a.accepts(s) && b.accepts(s) : (a.accepts || b.accepts || null),
+    // At most one half carries a gimmick (see wildcardPairs), so `instant` is unambiguous:
+    // it belongs to that half. Stacking an instant and a timed gimmick would start the
+    // vanish countdown behind the curtain, which the single-rule path deliberately avoids.
+    instant: !!(gimmick && gimmick.instant),
+    display: gimmick ? gimmick.display : null,
+  };
+}
+// Every legal PAIR for this page. A pair must leave at least one valid answer standing (which
+// silently rules out the contradictions: one-word + two-word, vowel + consonant, the word must
+// / can't be in the title), and may carry at most one visual gimmick.
+function wildcardPairs(usable) {
+  const out = [];
+  for (let i = 0; i < usable.length; i++) {
+    for (let j = i + 1; j < usable.length; j++) {
+      const a = usable[i], b = usable[j];
+      if (a.display && b.display) continue;             // one gimmick per page at most
+      const fused = fuseWildcard(a, b);
+      if (fused.accepts && !currentSongs.some(fused.accepts)) continue;   // no answer survives
+      out.push(fused);
+    }
+  }
+  return out;
+}
 // Pick this round's Wildcard rule (solvable, no immediate repeat) and show its banner.
 // Called from advanceRound BEFORE the valid set is narrowed to the rule, so the
 // solvability filter below still sees every lyrics-valid song.
 function applyWildcardRound() {
   const cons = buildWildcardConstraints();
   const usable = cons.filter((c) => !c.accepts || currentSongs.some(c.accepts));
+  // Dark: two sub-rules at once. Falls back to single rules on a page where no pair leaves a
+  // valid answer (a word in one song can't satisfy two constraints), so the run never stalls.
+  const stacked = (currentChallenge.stack | 0) > 1 ? wildcardPairs(usable) : [];
+  const choices = stacked.length ? stacked : usable;
   // Dev tools: pin the round to a chosen sub-rule when it's solvable this round.
-  const forced = devForcedWildcardId && usable.find((c) => c.id === devForcedWildcardId);
-  let pool = usable.filter((c) => c.id !== lastWildcardId);
-  if (!pool.length) pool = usable.length ? usable : cons;
+  const forced = devForcedWildcardId && choices.find((c) => c.id === devForcedWildcardId);
+  let pool = choices.filter((c) => c.id !== lastWildcardId);
+  if (!pool.length) pool = choices.length ? choices : cons;
   roundWildcard = forced || pool[Math.floor(Math.random() * pool.length)];
   lastWildcardId = roundWildcard.id;
   renderWildcardBanner(roundWildcard.label);
@@ -6375,10 +6702,17 @@ function rejectWildcard(label) {
 // state, never the DOM, so the warping never affects correctness. The level climbs by
 // round; rendered once per round (stable, so a reflow won't re-shuffle).
 function wordFxLevel(r) {
-  if (r <= 3) return 1;   // scramble interior letters
-  if (r <= 6) return 2;   // drop ~a third of the letters
-  if (r <= 9) return 3;   // reverse
-  return 4;               // scramble + drop + reverse + wobble
+  // Dark: `fxRamp` climbs the ladder faster and `fxFrom` starts partway up it, so page 1 is
+  // already warped instead of easing in. Both default to the base ramp (1 rung per 3 pages,
+  // starting clean), and the level is still clamped to the 4 rungs that actually exist.
+  const c = currentChallenge || {};
+  const ramp = c.fxRamp || 1;
+  const from = (c.fxFrom || 1) - 1;
+  const eff = Math.ceil(r * ramp) + from * 3;
+  if (eff <= 3) return 1;   // scramble interior letters
+  if (eff <= 6) return 2;   // drop ~a third of the letters
+  if (eff <= 9) return 3;   // reverse
+  return 4;                 // scramble + drop + reverse + wobble
 }
 function scrambleWord(w) {
   if (w.length < 4) return w;                 // too short to disguise — leave it
@@ -6450,7 +6784,7 @@ function challengeWinCheck(c) {
       counts[a] = (counts[a] || 0) + 1;
       if (counts[a] > best) best = counts[a];
     });
-    return best >= 5;
+    return best >= (c.need || 5);
   }
   // Impostor: survive the run (no fatal misjudgement) AND name enough REAL words. Caught
   // impostors fill beads and count into `score`, so the real-answer tally is score - flagged.
@@ -6480,7 +6814,11 @@ function endChallenge() {
     const runTime = currentMode.seconds > 0 ? gameTimeSum : null;
     appendHistory({
       s: score, c: score, n: roundResults.length,
+      // Token stays "chl-<id>" so modeLabel keeps naming the challenge; the dark side is a
+      // separate flag rather than a token suffix, which would fall out of CHALLENGE_BY_ID
+      // and degrade the label to a bare "Challenge". Surfacing `dk` comes with the UI.
       m: "chl-" + c.id, t: "challenge",
+      ...(challengeDark ? { dk: 1 } : {}),
       d: new Date().toISOString(), tm: runTime,
       ...(verseBonus > 0 ? { v: verseBonus } : {}),
       ...(hintsUsed > 0 ? { h: 1 } : {}),
@@ -6517,7 +6855,7 @@ function endChallenge() {
   hideNewBestBanner();
 
   const won = challengeWinCheck(c);
-  const firstTime = won ? markChallengeDefeated(c.id, score) : false;
+  const firstTime = won ? markChallengeDefeated(c.id, score, challengeDark) : false;
   const rec = challengeRecord(c.id);
   // Should've Said No — a flawless Impostor run: every impostor flagged (implied by surviving)
   // and every real word named. challengeRunActive is already false, so the charm fires normally.
@@ -7145,6 +7483,13 @@ function pickWord() {
   if (gameType === "challenge" && currentChallenge) {
     if (currentChallenge.rule === "setlist") { const w = pickTourWord(); if (w) return w; }
     if (currentChallenge.rule === "chain") { const w = pickChainWord(); if (w) return w; }
+    // Deep Cut with a DEALT album (dark): the album is no longer the player's to steer, so a
+    // page with no in-album answer would be a dead page they couldn't have avoided. Draw the
+    // word against that album, exactly as Album Focus does. Base Deep Cut has no `album`, so
+    // it keeps the open pool and is untouched.
+    if (currentChallenge.rule === "album5" && currentChallenge.album) {
+      const w = pickAlbumWord(currentChallenge.album); if (w) return w;
+    }
   }
   // Album Focus draws only words with a valid in-album answer (honouring the difficulty's
   // title rule), so every round is winnable from the chosen album.
@@ -7159,12 +7504,13 @@ function pickWord() {
       && titleWordList.length) {
     bucket = titleWordList;
   } else if (gameType === "challenge" && currentChallenge && currentChallenge.rule === "shorttitle"
-      && shortTitleWordList.length) {
-    // Short n' Sweet: keep the easy-pool feel but guarantee a ≤2-word title exists.
+      && (shortTitleWordLists[maxTitleWordsNow()] || []).length) {
+    // Short n' Sweet: keep the easy-pool feel but guarantee a title short enough to win exists.
+    const shortList = shortTitleWordLists[maxTitleWordsNow()];
     const poolBucket = wordBuckets[effectivePool()] || playableWords;
-    const set = new Set(shortTitleWordList);
+    const set = new Set(shortList);
     const narrowed = poolBucket.filter((w) => set.has(w));
-    bucket = narrowed.length >= TOTAL_ROUNDS ? narrowed : shortTitleWordList;
+    bucket = narrowed.length >= TOTAL_ROUNDS ? narrowed : shortList;
   } else {
     bucket = wordBuckets[effectivePool()] || playableWords;
   }
@@ -7177,6 +7523,15 @@ function pickWord() {
   // songs (after the no-title rule). Keep only such words; fall back if none remain.
   if (gameType === "challenge" && currentChallenge && currentChallenge.rule === "multi") {
     const need = currentChallenge.need || 2;
+    const enough = choices.filter((w) => validSongs(w, effectiveStrict(), effectiveNoTitle()).length >= need);
+    if (enough.length) choices = enough;
+  }
+  // Odd One Out: the grid needs `tiles - 1` genuine holders to fill it. buildOddGrid shrinks
+  // the board rather than failing when a word is thin, which is fine on the base four-tile
+  // page but would quietly hand the dark side back its easier grid — so draw words that can
+  // actually fill it. Fall back if none survive.
+  if (oddOneRuleActive()) {
+    const need = oddTilesNow() - 1;
     const enough = choices.filter((w) => validSongs(w, effectiveStrict(), effectiveNoTitle()).length >= need);
     if (enough.length) choices = enough;
   }
@@ -7223,8 +7578,11 @@ function pickWord() {
 // difficulty still shapes the pool), falling back to the full album list when that's too thin
 // (the buildWordBuckets safe() pattern). Then verify an in-album song survives effectiveNoTitle
 // (Hard can title-filter a word's only album song) — skip the word if not. null → normal pool.
-function pickAlbumWord() {
-  const albumWords = albumWordMap[focusAlbum] || [];
+// `album` defaults to Album Focus's chosen album, but Deep Cut's dark side passes its DEALT
+// album so that run gets the same guarantee: never serve a page with no in-album answer.
+function pickAlbumWord(album) {
+  const focus = album || focusAlbum;
+  const albumWords = albumWordMap[focus] || [];
   if (!albumWords.length) return null;
   const bucketSet = new Set(wordBuckets[effectivePool()] || playableWords);
   const narrowed = albumWords.filter((w) => bucketSet.has(w));
@@ -7232,7 +7590,7 @@ function pickAlbumWord() {
   const fresh = shuffle(base.filter((w) => !usedWords.includes(w)));
   const pool = fresh.length ? fresh : shuffle(base.slice());
   for (const w of pool) {
-    if (validSongs(w, effectiveStrict(), effectiveNoTitle()).some((s) => s.album === focusAlbum)) {
+    if (validSongs(w, effectiveStrict(), effectiveNoTitle()).some((s) => s.album === focus)) {
       usedWords.push(w);
       return w;
     }
@@ -7391,7 +7749,7 @@ function isWildcardRound() {
 // album-colour spans / bold.
 function curtainCardHTML(o) {
   const ruleStyle = o.headlineColor ? ` style="color:${o.headlineColor}"` : "";
-  return `<div class="chall-curtain-card">` +
+  return `<div class="chall-curtain-card${o.dark ? " is-dark" : ""}">` +
     `<div class="chall-curtain-kicker">${escapeHtml(o.kicker)}</div>` +
     `<div class="chall-curtain-tag">${escapeHtml(o.tag)}</div>` +
     `<div class="chall-curtain-rule"${ruleStyle}>${escapeHtml(o.headline)}</div>` +
@@ -7478,20 +7836,32 @@ function adaptiveCurtainHTML() {
 // carry extra setup that has to be shown up front (the song to smuggle in / the perk forks),
 // so they get bespoke copy; everything else uses the registry's `desc` + `win`.
 function challengeIntroHTML(c) {
+  // The briefing you read immediately before a dark run is otherwise word-for-word the base
+  // challenge's, because the rule genuinely hasn't changed — only its numbers have. So the
+  // marker rides on the kicker (and a card class) instead of duplicating every card's copy.
+  // Note the bespoke branches below read `c.forks`/`c.target` off the RESOLVED entry, so a
+  // dark Devil's Path already announces its four forks without any change here.
+  const kick = (k) => (challengeDark ? `${k} · dark side` : k);
+  // "4 & 8" reads fine; the dark side's "3 & 6 & 9 & 12" does not, so list them properly.
+  const forkList = (fs) => {
+    const b = (fs || []).map((f) => `<b>${f}</b>`);
+    return b.length < 3 ? b.join(" & ") : b.slice(0, -1).join(", ") + " & " + b[b.length - 1];
+  };
   // One Of A Kind — reveal the specific song to slip in on a fitting page.
   if (c.rule === "newsong" && challengeTargetSong) {
     const col = albumColor(challengeTargetSong.album) || "var(--ink-soft)";
-    return curtainCardHTML({ kicker: "one of a kind", tag: "find this song",
+    return curtainCardHTML({ kicker: kick("one of a kind"), dark: challengeDark, tag: "find this song",
       headline: challengeTargetSong.title, headlineColor: col,
       sub: challengeTargetSong.album
         ? `from <b style="color:${col}">${escapeHtml(challengeTargetSong.album)}</b> — it's hiding somewhere in the next 13 pages`
         : `it's hiding somewhere in the next 13 pages`,
-      cue: `name it on the right page — you get ${NEW_SONG_LIVES} guesses`, button: "start the hunt" });
+      cue: `name it on the right page — you get ${newSongLivesMax} guess${newSongLivesMax === 1 ? "" : "es"}`,
+      button: "start the hunt" });
   }
   // Choose Your Path — explain the perk forks.
   if (c.rule === "path") {
-    const forks = (c.forks || []).map((f) => `<b>${f}</b>`).join(" & ");
-    return curtainCardHTML({ kicker: "choose your path", tag: "how it works",
+    const forks = forkList(c.forks);
+    return curtainCardHTML({ kicker: kick("choose your path"), dark: challengeDark, tag: "how it works",
       headline: "forge your own run",
       sub: `clear pages to reach <b>${c.target}/13</b>` +
         (forks ? `, and at pages ${forks} you'll pick a perk for the rest of the way` : ""),
@@ -7499,15 +7869,15 @@ function challengeIntroHTML(c) {
   }
   // Devil's Path — warn that the forks hand you curses, not perks.
   if (c.rule === "devil") {
-    const forks = (c.forks || []).map((f) => `<b>${f}</b>`).join(" & ");
-    return curtainCardHTML({ kicker: "devil's path", tag: "the bargain",
+    const forks = forkList(c.forks);
+    return curtainCardHTML({ kicker: kick("devil's path"), dark: challengeDark, tag: "the bargain",
       headline: "choose your curses",
       sub: `reach <b>${c.target}/13</b>` +
         (forks ? `, but at pages ${forks} you must take the lesser of two evils` : ""),
       cue: "no way out but through", button: "make the deal" });
   }
   // Every other challenge — name it, restate the rule and the win condition.
-  return curtainCardHTML({ kicker: "challenge", tag: "the rule", headline: c.name,
+  return curtainCardHTML({ kicker: kick("challenge"), dark: challengeDark, tag: "the rule", headline: c.name,
     sub: `${escapeHtml(c.desc)}<span class="chall-curtain-win">${escapeHtml(c.win)}</span>`,
     cue: "ready when you are", button: "let's go" });
 }
@@ -7780,27 +8150,55 @@ function rejectDevil(song) {
 // card can name specifics; it returns the display + an apply() that mutates run state,
 // plus an optional `album` the fork reserves so two album-bans never collide.
 const DEVIL_CURSES = [
-  { id: "crunch",  build: () => ({ icon: "−2s", name: "Time Crunch", desc: "two fewer seconds on every remaining page", apply: () => { extraSecondsPerRound -= 2; } }) },
-  { id: "drain",   build: () => ({ icon: "−4s", name: "Time Drain",  desc: "four fewer seconds on every remaining page", apply: () => { extraSecondsPerRound -= 4; } }) },
-  { id: "dark",    build: () => ({ icon: "◐",   name: "In The Dark", desc: "no more suggestions for the rest of the run", apply: () => { devilDropOff = true; } }) },
-  { id: "vanish",  build: () => ({ icon: "…",   name: "Disappearing Ink", desc: "the word fades away after a moment each page", apply: () => { devilVanish = true; } }) },
-  { id: "scramble",build: () => ({ icon: "⤮",   name: "Word Salad",  desc: "the word's letters are scrambled each page", apply: () => { devilFx = "scramble"; } }) },
-  { id: "drop",    build: () => ({ icon: "_",   name: "Redacted",    desc: "some of the word's letters go missing each page", apply: () => { devilFx = "drop"; } }) },
-  { id: "reverse", build: () => ({ icon: "↔",   name: "Backwards",   desc: "the word is shown reversed each page", apply: () => { devilFx = "reverse"; } }) },
-  { id: "notitle", build: () => ({ icon: "✎",   name: "No Giveaways", desc: "the word can no longer be in your answer's title", apply: () => { devilNoTitle = true; } }) },
-  { id: "short",   build: () => ({ icon: "≤2",  name: "Keep It Short", desc: "only one- or two-word titles count", apply: () => { devilShortOnly = true; } }) },
-  { id: "ban1",    build: (reserved) => { const a = pickDevilAlbum(reserved); return { icon: "⊘", name: "Off Limits", desc: a ? `no answers from ${a}` : "an album is off-limits", album: a, apply: () => { if (a) devilBannedAlbums.push(a); } }; } },
-  { id: "ban2",    build: (reserved) => { const a = pickDevilAlbum(reserved); return { icon: "⊘", name: "Locked Out", desc: a ? `no answers from ${a}` : "an album is off-limits", album: a, apply: () => { if (a) devilBannedAlbums.push(a); } }; } },
-  { id: "initials",build: () => ({ icon: "T/S", name: "Forbidden Letters", desc: "no title that starts with T or S", apply: () => { devilBannedInitials = ["T", "S"]; } }) },
-  { id: "rarer",   build: () => ({ icon: "◆",   name: "Rarer Air",   desc: "the rest of the words get rarer", apply: () => { devilPoolHard = true; } }) },
+  { id: "crunch", cat: "time",  build: () => ({ icon: "−2s", name: "Time Crunch", desc: "two fewer seconds on every remaining page", apply: () => { extraSecondsPerRound -= 2; } }) },
+  { id: "drain", cat: "time",   build: () => ({ icon: "−4s", name: "Time Drain",  desc: "four fewer seconds on every remaining page", apply: () => { extraSecondsPerRound -= 4; } }) },
+  { id: "dark", cat: "time",    build: () => ({ icon: "◐",   name: "In The Dark", desc: "no more suggestions for the rest of the run", apply: () => { devilDropOff = true; } }) },
+  { id: "vanish", cat: "wordfx",  build: () => ({ icon: "…",   name: "Disappearing Ink", desc: "the word fades away after a moment each page", apply: () => { devilVanish = true; } }) },
+  { id: "scramble", cat: "wordfx",build: () => ({ icon: "⤮",   name: "Word Salad",  desc: "the word's letters are scrambled each page", apply: () => { devilFx = "scramble"; } }) },
+  { id: "drop", cat: "wordfx",    build: () => ({ icon: "_",   name: "Redacted",    desc: "some of the word's letters go missing each page", apply: () => { devilFx = "drop"; } }) },
+  { id: "reverse", cat: "wordfx", build: () => ({ icon: "↔",   name: "Backwards",   desc: "the word is shown reversed each page", apply: () => { devilFx = "reverse"; } }) },
+  { id: "notitle", cat: "restrict", build: () => ({ icon: "✎",   name: "No Giveaways", desc: "the word can no longer be in your answer's title", apply: () => { devilNoTitle = true; } }) },
+  { id: "short", cat: "restrict",   build: () => ({ icon: "≤2",  name: "Keep It Short", desc: "only one- or two-word titles count", apply: () => { devilShortOnly = true; } }) },
+  { id: "ban1", cat: "restrict",    build: (reserved) => { const a = pickDevilAlbum(reserved); return { icon: "⊘", name: "Off Limits", desc: a ? `no answers from ${a}` : "an album is off-limits", album: a, apply: () => { if (a) devilBannedAlbums.push(a); } }; } },
+  { id: "ban2", cat: "restrict",    build: (reserved) => { const a = pickDevilAlbum(reserved); return { icon: "⊘", name: "Locked Out", desc: a ? `no answers from ${a}` : "an album is off-limits", album: a, apply: () => { if (a) devilBannedAlbums.push(a); } }; } },
+  { id: "initials", cat: "restrict",build: () => ({ icon: "T/S", name: "Forbidden Letters", desc: "no title that starts with T or S", apply: () => { devilBannedInitials = ["T", "S"]; } }) },
+  { id: "rarer", cat: "pool",   build: () => ({ icon: "◆",   name: "Rarer Air",   desc: "the rest of the words get rarer", apply: () => { devilPoolHard = true; } }) },
 ];
 
 // Devil's Path: a mid-run curse fork. Offers two not-yet-taken curses; the player MUST
 // take one (no escape) — it applies a permanent handicap, then resumes the page-turn.
+// Curses are permanent and stack, so an uncapped draw can end a run before it starts: two
+// time curses alone bottom the page clock at its 3s floor, and In The Dark landing on top
+// (typing full titles blind in 3s) makes the rest of the run unwinnable by draw rather than
+// by play. So each curse carries a `cat` and a run takes AT MOST ONE PER CATEGORY.
+//
+// In The Dark sits in "time" deliberately: losing suggestions is a large time cost wearing a
+// different hat, and it's the half of the fatal pair that isn't obviously a clock curse.
+//
+// With four categories and the dark side's four forks, a full run now hits four DIFFERENT
+// axes — which is also just a better run than two clock cuts. Restrict curses were already
+// safe (the word picker only offers words that still have a valid answer under them), so
+// this guard is about the time/aid stacking, not the answer space.
+const DEVIL_CAT_BY_ID = Object.fromEntries(DEVIL_CURSES.map((c) => [c.id, c.cat]));
+function devilOfferPool() {
+  const taken = devilCursesTaken;
+  const takenCats = new Set(taken.map((id) => DEVIL_CAT_BY_ID[id]).filter(Boolean));
+  const untaken = DEVIL_CURSES.filter((c) => !taken.includes(c.id));
+  // HARD RULE — at most one "time" curse per run, ever. This is the only stack that can end
+  // a run outright, and it is never relaxed, including on the last fork.
+  const safe = takenCats.has("time") ? untaken.filter((c) => c.cat !== "time") : untaken;
+  // SOFT RULE — prefer a category this run hasn't seen yet, so four forks hit four different
+  // axes. Relaxed when fresh categories run out (pool holds a single curse, so by fork 4
+  // there may be only one left), but never at the expense of the hard rule above.
+  const fresh = safe.filter((c) => !takenCats.has(c.cat));
+  if (fresh.length >= 2) return fresh;
+  // 13 curses against at most 4 forks means `safe` always has two cards to offer here.
+  return safe.length >= 2 ? safe : untaken;
+}
+
 function showDevilFork(forkRound) {
   if (document.querySelector(".chall-path-overlay")) return;   // never stack two forks
-  let pool = DEVIL_CURSES.filter((c) => !devilCursesTaken.includes(c.id));
-  if (pool.length < 2) pool = DEVIL_CURSES.slice();
+  const pool = devilOfferPool();
   const picks = shuffle(pool.slice()).slice(0, 2);
   const reserved = [];                          // albums claimed by an already-built card
   const offers = picks.map((c) => {
@@ -7960,6 +8358,8 @@ function advanceRound() {
   wrap.style.removeProperty("--tiny-rot");
   wrap.style.removeProperty("--tiny-dx");
   wrap.style.removeProperty("--tiny-dy");
+  wrap.removeAttribute("data-small");         // clear any prior round's Vanishing Word dark shrink
+  wrap.style.removeProperty("--word-scale");
   wrap.classList.remove("revolve-in");        // clear any prior round's revolve swap
   // Wildcard: apply an INSTANT gimmick (scramble) the moment the word is rendered, so it's
   // already warped beneath the curtain. Timed gimmicks (vanish) still defer to beginRoundClock.
@@ -8164,9 +8564,9 @@ function startTimer(resume) {
   let total, begin;
   if (comboRuleActive()) {
     // It's A Clock!: one shared budget across the whole run. The bar is scaled to
-    // COMBO_CAP and begins wherever the shared clock stands; it never resets per round.
-    total = COMBO_CAP;
-    begin = Math.max(0, Math.min(COMBO_CAP, comboClock));
+    // comboCap() and begins wherever the shared clock stands; it never resets per round.
+    total = comboCap();
+    begin = Math.max(0, Math.min(comboCap(), comboClock));
     if (wrap) wrap.style.display = "";
     if (begin <= 0) { comboClock = 0; roundLocked = true; resetTension(); endGame(); return; }
   } else {
@@ -8289,12 +8689,14 @@ function roundAcceptsSong(song) {
   if (currentChallenge.rule === "alphabetical") {
     if (!lastAlphaLetter) return true;
     const L = firstAlphaLetter(song.title);
-    return !L || L >= lastAlphaLetter;
+    // Dark (`strictAlpha`): the letter must actually CLIMB, so resting twice on the same
+    // letter is no longer a free move.
+    return !L || (currentChallenge.strictAlpha ? L > lastAlphaLetter : L >= lastAlphaLetter);
   }
   if (currentChallenge.rule === "titleHas")
     return wordRegex(currentWord, effectiveStrict()).test(song.title);
   if (currentChallenge.rule === "shorttitle")
-    return titleWordCount(song.title) <= 2;
+    return titleWordCount(song.title) <= maxTitleWordsNow();
   if (currentChallenge.rule === "chain")
     return !chainLetter || firstAlphaLetter(song.title) === chainLetter;
   if (currentChallenge.rule === "setlist")
@@ -8420,9 +8822,18 @@ function softRejectFlash(html) {
   }, 1700);
   input.focus();
 }
+// Short n' Sweet: how many words a title may have this run. Base allows one or two; the dark
+// side allows one only. Read everywhere the rule is judged so the pool, the suggestion filter,
+// the soft reject and the win condition can never disagree.
+function maxTitleWordsNow() {
+  return (currentChallenge && currentChallenge.maxTitleWords) || 2;
+}
 // Soft reject for an out-of-order answer in the alphabetical challenge.
 function rejectAlpha(letter) {
-  softRejectFlash(`out of order — start with <b>${escapeHtml(lastAlphaLetter)}</b> or later`);
+  // Dark bans ties, so "or later" would be a lie — it has to climb PAST the last letter.
+  softRejectFlash(currentChallenge && currentChallenge.strictAlpha
+    ? `out of order — start later than <b>${escapeHtml(lastAlphaLetter)}</b>`
+    : `out of order — start with <b>${escapeHtml(lastAlphaLetter)}</b> or later`);
 }
 // Title...?: the word's in the lyrics but not the title they named.
 function rejectTitleHas() {
@@ -8430,7 +8841,9 @@ function rejectTitleHas() {
 }
 // Short n' Sweet: the named title is too long.
 function rejectShortTitle() {
-  softRejectFlash(`too long — name a <b>one- or two-word</b> title`);
+  softRejectFlash(maxTitleWordsNow() === 1
+    ? `too long — name a <b>one-word</b> title`
+    : `too long — name a <b>one- or two-word</b> title`);
 }
 // Wrapped Like A Chain: the named title doesn't start with the required letter.
 function rejectChain() {
@@ -8810,7 +9223,9 @@ function submitAnswer(song, isTimeout) {
   if (song && !isTimeout && currentChallenge && currentChallenge.rule === "alphabetical"
       && currentSongs.some((s) => s.title === song.title)) {
     const L = firstAlphaLetter(song.title);
-    if (lastAlphaLetter && L && L < lastAlphaLetter) { rejectAlpha(L); return; }
+    // Dark: a REPEAT of the last letter is rejected too, not just a step backwards.
+    const stalled = currentChallenge.strictAlpha ? L <= lastAlphaLetter : L < lastAlphaLetter;
+    if (lastAlphaLetter && L && stalled) { rejectAlpha(L); return; }
   }
 
   // One Of A Kind: trying the named target song on a round where it doesn't fit the
@@ -8845,7 +9260,7 @@ function submitAnswer(song, isTimeout) {
   // the player keeps looking for a one- or two-word title.
   if (song && !isTimeout && currentChallenge && currentChallenge.rule === "shorttitle"
       && currentLyricSongs.some((s) => s.title === song.title)
-      && titleWordCount(song.title) > 2) {
+      && titleWordCount(song.title) > maxTitleWordsNow()) {
     rejectShortTitle(); return;
   }
 
@@ -8950,7 +9365,7 @@ function submitAnswer(song, isTimeout) {
   // at the moment of the answer. Next round's startTimer resumes from comboClock.
   if (comboRuleActive()) {
     comboClock = comboRemaining();
-    if (correct) comboClock = Math.min(COMBO_CAP, comboClock + COMBO_BONUS);
+    if (correct) comboClock = Math.min(comboCap(), comboClock + comboBonus());
     renderComboBanner();
   }
   // Live challenge progress — refresh the banner the instant an answer is recorded
@@ -12137,8 +12552,71 @@ function buildDevApi() {
         return CHALLENGES.filter((c) => challengeUnlocked(c.id)).length; },
       tokens: (n) => { const w = loadChallengeTokens(); if (n != null) { w.balance = n | 0; saveChallengeTokens(w);
         if ($("challengesBody")) renderChallengesPage(); } return loadChallengeTokens().balance; },
+      // Devil's Path — inspect the curse categories and the offer pool the cap allows.
+      // `simulate` runs N forks headlessly to prove no run can take two from one category.
+      devil: {
+        curses: () => DEVIL_CURSES.map((c) => ({ id: c.id, cat: c.cat })),
+        taken: () => devilCursesTaken.slice(),
+        pool: () => devilOfferPool().map((c) => c.id),
+        simulate: (forks) => {
+          const keep = devilCursesTaken.slice();
+          devilCursesTaken = [];
+          const took = [];
+          for (let i = 0; i < (forks || 4); i++) {
+            const offered = devilOfferPool();
+            if (!offered.length) break;
+            const pick = offered[Math.floor(Math.random() * offered.length)];
+            devilCursesTaken.push(pick.id);
+            took.push({ id: pick.id, cat: pick.cat });
+          }
+          devilCursesTaken = keep;
+          return took;
+        },
+      },
+      // Dark sides. There is no unlock path and no UI yet, so these are the ONLY way in.
+      dark: {
+        // Which challenges have a dark side authored, and which still need rule code
+        // before their full design is expressed (see DARK_SIDE_TODO in config.js).
+        list: () => DARK_SIDE_IDS.slice(),
+        todo: () => DARK_SIDE_TODO.slice(),
+        // Start a dark run, bypassing the "beat it first" gate so variants stay testable.
+        // The base challenge still has to be unlocked, same as any run.
+        start: (id) => startChallenge(id, { dark: true, force: true }),
+        // Is this challenge's dark side open through the real gate (base defeated)?
+        unlocked: (id) => darkSideUnlocked(id),
+        // Is the run currently on screen a dark one?
+        active: () => challengeDark,
+        // Base vs dark for one challenge: exactly which levers the `hard` block moves.
+        // Verifies the merge without having to play the run out.
+        diff: (id) => {
+          const c = CHALLENGE_BY_ID[id];
+          if (!c) return null;
+          if (!c.hard) return { id, dark: false, note: "no dark side authored" };
+          return Object.fromEntries(Object.keys(c.hard).map((k) => [k, { base: c[k], dark: c.hard[k] }]));
+        },
+        // The resolved entry a dark run would actually play with.
+        resolve: (id) => resolveChallenge(CHALLENGE_BY_ID[id], true),
+        // Per-challenge dark progress, and a way to clear it.
+        record: (id) => { const r = challengeRecord(id);
+          return { darkDefeated: r.darkDefeated, darkAttempts: r.darkAttempts, darkBest: r.darkBest }; },
+        reset: (id) => { const st = loadChallengeState();
+          const ids = id ? [id] : CHALLENGE_ORDER;
+          ids.forEach((k) => { if (st[k]) st[k] = { ...challengeRecord(k), darkDefeated: false, darkAttempts: 0, darkBest: 0 }; });
+          saveChallengeState(st); if ($("challengesBody")) renderChallengesPage(); return ids.length; },
+        // Open every dark side through the REAL gate so it can be played from the UI, not just
+        // via dark.start's force hatch: marks each dark-side-bearing challenge unlocked + base-
+        // defeated (the two things darkSideUnlocked / challengeUnlocked check), WITHOUT touching
+        // darkDefeated — so the dark sides show as still-to-beat, ready to actually playtest.
+        // Writes storage directly rather than through markChallengeDefeated, so no achievements,
+        // charms or tokens fire from a dev unlock. `id` targets one; omit for all.
+        unlockAll: (id) => { const st = loadChallengeState();
+          const ids = (id ? [id] : DARK_SIDE_IDS).filter((k) => hasDarkSide(k));
+          ids.forEach((k) => { st[k] = { ...challengeRecord(k), unlocked: true, defeated: true }; });
+          saveChallengeState(st); if ($("challengesBody")) renderChallengesPage(); return ids.length; },
+      },
       impostor: {
-        words: () => IMPOSTOR_WORDS.slice(),
+        words: () => impostorWordPool().slice(),                   // the pool THIS run draws fakes from (dark = harder subset)
+        count: () => impostorCountNow(),                           // how many fakes this run seeds (dark lifts it)
         rounds: () => [...impostorRounds].sort((a, b) => a - b),   // which pages are fakes this run
         current: () => roundIsImpostor,                            // is the page on screen a fake?
         // Pin this run's fake pages (call right after challenge.start("impostor")). e.g. (2,3,4)
@@ -12151,13 +12629,36 @@ function buildDevApi() {
       wildcard: {
         ids: () => ["oneword", "twoword", "long", "vowel", "consonant", "notitle", "titleword", "vanish", "scramble", "album"],
         current: () => roundWildcard && roundWildcard.id,
+        // On a dark run `force` also takes a FUSED id ("vowel+long") — see pairs() below.
         force: (id) => { devForcedWildcardId = id || null; return devForcedWildcardId; },
         clear: () => { devForcedWildcardId = null; },
+        // Dark: every legal PAIR for the page on screen, with how many songs survive each.
+        // A pair that leaves 0 answers is never offered, so this should have no zeroes.
+        pairs: () => {
+          const cons = buildWildcardConstraints();
+          const usable = cons.filter((c) => !c.accepts || currentSongs.some(c.accepts));
+          return wildcardPairs(usable).map((p) => ({
+            id: p.id,
+            label: p.label,
+            valid: p.accepts ? currentSongs.filter(p.accepts).length : currentSongs.length,
+          }));
+        },
+      },
+      // Deep Cut — the album tally, and (dark) the album dealt for the run.
+      deepcut: {
+        album: () => currentChallenge && currentChallenge.album,   // the DEALT album, or null on base
+        need: () => (currentChallenge && currentChallenge.need) || 5,
+        leader: () => deepCutLeader(),                             // {album, count} driving the pips
+        // Re-deal mid-run to a chosen album (or a fresh random one) to test the counter/win.
+        deal: (album) => { if (!currentChallenge) return null;
+          currentChallenge.album = album || pickDealtAlbum(currentChallenge.need);
+          renderDeepCutCounter(); return currentChallenge.album; },
       },
       // Sea of Songs — the tap-a-title grid minigame.
       sea: {
         tiles: () => seaTiles.map((t) => ({ title: t.song.title, valid: t.valid })),   // this page's grid
         valids: () => seaTiles.filter((t) => t.valid).map((t) => t.song.title),         // which tiles are answers
+        range: () => [seaMinValidNow(), seaMaxValidNow()],                              // how many valids this run seeds per grid (dark cuts it)
         answer: () => { const v = seaTiles.find((t) => t.valid); if (v) onSeaTileClick(seaTiles.indexOf(v)); },  // tap a correct tile
         win: () => { score = (CHALLENGE_BY_ID["sea-of-songs"].target) || 9; endGame(); },
       },
@@ -12172,6 +12673,20 @@ function buildDevApi() {
       whoseline: {
         line: () => (whosePuzzle ? whosePuzzle.line : null),          // the line on the page
         source: () => (whosePuzzle ? whosePuzzle.song.title : null),  // the song it came from
+        // Is this page drawing the dark side's thinner line (no hook, shortest legal)?
+        hard: () => whoseHardLinesNow(),
+        // What the draw actually produced: the line's length against the floor it had to
+        // clear, and whether it's one of the source song's repeated (hook) lines. On a dark
+        // page `hook` should be false — unless the fallback draw fired for want of a
+        // hook-free line, which is exactly the case worth being able to see.
+        drawn: () => {
+          if (!whosePuzzle) return null;
+          const norm = (s) => s.toLowerCase().replace(/[^a-z0-9 ]+/g, "").replace(/\s+/g, " ").trim();
+          return { line: whosePuzzle.line,
+            words: whosePuzzle.line.split(/\s+/).filter(Boolean).length,
+            minWords: whoseMinWordsNow(),
+            hook: hookLines(whosePuzzle.song).has(norm(whosePuzzle.line)) };
+        },
         tiles: () => tapTiles.map((t) => ({ title: t.song.title, source: t.correct })),
         answer: () => { const t = tapTiles.find((x) => x.correct); if (t) onTapKnowledgeClick(tapTiles.indexOf(t)); },
         miss: () => { const t = tapTiles.find((x) => !x.correct); if (t) onTapKnowledgeClick(tapTiles.indexOf(t)); },
@@ -12200,7 +12715,11 @@ function buildDevApi() {
       // From A to Z — non-decreasing letters. Tied Together With A Smile wants a chain that
       // climbs on every link, so `win(false)` is the rested-twice control case.
       alpha: {
-        floor: () => lastAlphaLetter,                   // the letter the next title must meet or beat
+        // The letter the next title must meet or beat (must BEAT outright on a dark run).
+        floor: () => lastAlphaLetter,
+        // Pin the floor so a rejection can be tested without playing the sequence up to it.
+        setFloor: (L) => { lastAlphaLetter = (L || "").toUpperCase().slice(0, 1); return lastAlphaLetter; },
+        strict: () => !!(currentChallenge && currentChallenge.strictAlpha),   // are ties banned?
         climbing: () => alphaEveryLetterNew,            // is Tied Together still alive this run?
         spoil: () => { alphaEveryLetterNew = false; },  // as if you'd rested twice on one letter
         win: (climbing) => { alphaEveryLetterNew = climbing !== false;
@@ -12210,7 +12729,9 @@ function buildDevApi() {
       common: {
         puzzle: () => commonPuzzle && { word: commonPuzzle.word,
           lines: commonPuzzle.lines.map((x) => ({ song: x.song.title, line: x.line })) },
-        accept: () => commonPuzzle ? [...commonPuzzle.accept] : [],   // every word that runs through all three lines
+        accept: () => commonPuzzle ? [...commonPuzzle.accept] : [],   // every word that threads all shown lines
+        lines: () => commonLinesNow(),                                // how many lines a page shows (dark = 4)
+        maxAccept: () => commonMaxAcceptNow(),                        // the tightest accept set the generator stops on (dark = 1)
         answer: () => { if (commonPuzzle) { $("songInput").value = commonPuzzle.word; submitAnswer(); } },  // type + submit the thread
         win: () => { score = (CHALLENGE_BY_ID["common-thread"].target) || 9; endGame(); },
       },

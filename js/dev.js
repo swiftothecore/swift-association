@@ -94,6 +94,14 @@ export function initDev(api) {
     row(infVar, btn("start infinite", () => api.startInfinite(infVar.value)),
         btn("start daily", () => api.startDaily()))));
 
+  // ---- Challenges ------------------------------------------------------------
+  // Dark sides open only after the base challenge is beaten. This unlocks every one through
+  // the real gate (base marked defeated + unlocked, dark progress left untouched) so they can
+  // be played from the Challenges screen — then reports the count in the readout.
+  body.append(section("challenges",
+    row(btn("unlock all dark sides", () => { const n = api.challenge.dark.unlockAll(); readout.textContent = `${n} dark sides unlocked — open Challenges`; }),
+        btn("relock dark progress", () => { api.challenge.dark.reset(); readout.textContent = "dark progress cleared"; }, "warn"))));
+
   // ---- Word / Era / Mode -----------------------------------------------------
   const eraSel = select(api.ERAS, (x) => x, (x) => x);
   const modeSel = select(api.MODE_ORDER, (x) => x, (x) => x);

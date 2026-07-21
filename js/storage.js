@@ -97,7 +97,11 @@ export function resetKeepsakes() {
 }
 
 /* ---------- Challenges mode (progress + tokens) ---------- */
-// Per-challenge progress, keyed by challenge id: { unlocked, defeated, attempts, best }.
+// Per-challenge progress, keyed by challenge id:
+//   { unlocked, defeated, attempts, best, darkDefeated, darkAttempts, darkBest }
+// The dark* fields track the challenge's dark side as a separate line of progress against the
+// same id, so beating the base and beating the dark side stay independently recorded. Records
+// written before dark sides existed simply lack them and default cleanly — no migration.
 export function loadChallengeState() {
   try {
     const raw = localStorage.getItem(CHALLENGES_KEY);
@@ -111,7 +115,10 @@ export function saveChallengeState(o) {
 // One challenge's record, with defaults filled in.
 export function challengeRecord(id) {
   const e = loadChallengeState()[id] || {};
-  return { unlocked: !!e.unlocked, defeated: !!e.defeated, attempts: e.attempts || 0, best: e.best || 0 };
+  return {
+    unlocked: !!e.unlocked, defeated: !!e.defeated, attempts: e.attempts || 0, best: e.best || 0,
+    darkDefeated: !!e.darkDefeated, darkAttempts: e.darkAttempts || 0, darkBest: e.darkBest || 0,
+  };
 }
 // Token wallet. Seeded with one starting token on first read (persisted on first save).
 export function loadChallengeTokens() {

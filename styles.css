@@ -1175,7 +1175,8 @@
      wax body has cooled to a warm taupe but the beaded rim keeps its red, a set and
      conquered seal that still remembers its colour. That two-tone can't come from a
      filter (body and beads are both red at source), so it's baked into the SVG and
-     needs no CSS here. */
+     needs no CSS here. A fourth state, the dark side beaten, swaps in the DARK seal art
+     (darkSealSvg) — the same wax poured black with a lilac rim. Also baked into the SVG. */
   .chall-detail-seal.is-locked svg   { filter: grayscale(1) opacity(0.42); }
   .chall-detail-name { font-family: var(--hand); font-weight: 700; font-size: 32px; line-height: 1; color: var(--ink); }
   .chall-detail-star { display: flex; }
@@ -1195,8 +1196,10 @@
   .chall-rule { font-family: var(--hand); font-size: 21px; line-height: 1.25; color: var(--ink); }
   .chall-goal { font-family: var(--hand); font-size: 22px; line-height: 1.2; color: var(--ink); margin-bottom: 4px; }
   .chall-mods { font-family: var(--type); font-size: 12px; line-height: 1.45; color: #5a5042; }
-  .chall-act { display: flex; align-items: center; justify-content: space-between; gap: 14px; margin-top: 16px; }
-  .chall-meta { font-family: var(--type); font-size: 10px; color: var(--ink-soft); flex: 1; }
+  /* wraps: with two actions the row can outgrow the detail panel, so the meta line drops
+     above them rather than being squeezed to a two-word column */
+  .chall-act { display: flex; align-items: center; justify-content: space-between; gap: 10px 14px; margin-top: 16px; flex-wrap: wrap; }
+  .chall-meta { font-family: var(--type); font-size: 10px; color: var(--ink-soft); flex: 1 1 auto; min-width: 130px; }
   .chall-need {
     font-family: var(--type); font-size: 11px; color: #5a5042; text-align: center;
     border: 1px dashed #b3a584; border-radius: 1px; padding: 9px 18px; background: rgba(236,227,208,0.5);
@@ -1227,6 +1230,67 @@
   .chall-go::before { content: "\270E"; margin-right: 9px; font-size: 17px; vertical-align: -1px; }
   .chall-go:hover, .chall-go:focus-visible { background-color: var(--ink); color: var(--paper); }
   .chall-go:active { transform: rotate(-0.6deg) translateY(1px); box-shadow: 1px 1px 0 rgba(43,39,34,0.22); }
+
+  /* the pre-run briefing for a dark run: the kicker carries the marker, inked violet, and
+     the card's rule underline follows it so the whole card reads dark at a glance */
+  .chall-curtain-card.is-dark .chall-curtain-kicker { color: #7a4bb0; }
+  .chall-curtain-card.is-dark .chall-curtain-rule { text-decoration-color: #7a4bb0; }
+
+  /* in-run marker: the only thing on the game screen saying you're in the dark variant.
+     Violet ink on the tagline, set in the functional typewriter face like the rest of it. */
+  .tagline-dark {
+    display: inline-flex; align-items: center; gap: 5px; margin-left: 9px;
+    /* An inline-flex box synthesises its baseline off its bottom edge, so left at the default
+       `baseline` it rides a couple px high above the surrounding tagline text. `middle` re-centres
+       the whole badge on the line — keeping it one atomic unit (so it never breaks the line the
+       way loose inline text + a replaced SVG would) while sitting level with "…seconds each". */
+    vertical-align: middle;
+    color: #7a4bb0; font-weight: 700; letter-spacing: 0.6px;
+  }
+  /* Nudge just the eclipse up a couple px off the flex centre — it reads better sitting a
+     hair high against the cap-height of "dark side" than dead-centred on the line. */
+  .tagline-dark .chall-mark-svg { width: 12px; height: 12px; color: currentColor; transform: translateY(-1px); }
+
+  /* the two actions sit together, dark side first so Play stays the rightmost primary */
+  .chall-act-btns { display: inline-flex; align-items: center; gap: 10px; flex: 0 0 auto; margin-left: auto; }
+
+  /* dark side — the challenge's black-ink twin. Same stationery skeleton as .chall-go
+     (2px edge, hard drop shadow, the same tilt) so it reads as one family, but inked in
+     aubergine-black with a violet bleed instead of the gold wash. The purple is ink
+     soaking into paper, never a glow. */
+  .chall-dark {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-family: var(--type); font-size: 13px; letter-spacing: 1px; font-weight: 700;
+    color: #cdbde3; background-color: #241a33;
+    background-image:
+      radial-gradient(125% 150% at 20% 6%, rgba(160,116,214,0.40) 0%, rgba(74,44,116,0.18) 44%, rgba(0,0,0,0) 74%),
+      linear-gradient(168deg, rgba(255,255,255,0.10) 0%, rgba(255,255,255,0) 44%, rgba(0,0,0,0.44) 100%);
+    border: 2px solid #150e1f; border-radius: 2px;
+    box-shadow: 3px 3px 0 rgba(26,15,42,0.34); transform: rotate(-0.6deg);
+    padding: 10px 19px; cursor: pointer; white-space: nowrap;
+    transition: background-color 0.24s ease, color 0.2s ease, transform 0.12s, box-shadow 0.2s;
+  }
+  .chall-dark .chall-mark-svg { width: 15px; height: 15px; color: currentColor; }
+  .chall-dark-lab { line-height: 1; }
+  .chall-dark:hover, .chall-dark:focus-visible {
+    background-color: #33244a; color: #ede4f8;
+    box-shadow: 3px 3px 0 rgba(26,15,42,0.44);
+  }
+  .chall-dark:active { transform: rotate(-0.6deg) translateY(1px); box-shadow: 1px 1px 0 rgba(26,15,42,0.34); }
+  /* beaten: a thin violet rule inside the edge, the dark twin of the gold "defeated" stamp */
+  .chall-dark.is-conquered { box-shadow: inset 0 0 0 1px rgba(190,150,240,0.5), 3px 3px 0 rgba(26,15,42,0.34); }
+
+  /* locked: the same object, unlinked — pencil-grey stock, padlock in place of the eclipse,
+     and none of the ink. Deliberately flat so the unlocked state reads as an event. */
+  .chall-dark.is-locked {
+    color: #8b8375; background-color: #cec7b7; background-image: none;
+    border-color: #a79e8b; box-shadow: 3px 3px 0 rgba(43,39,34,0.14);
+    cursor: default;
+  }
+  .chall-dark.is-locked:hover, .chall-dark.is-locked:focus-visible {
+    background-color: #cec7b7; color: #8b8375; box-shadow: 3px 3px 0 rgba(43,39,34,0.14);
+  }
+  .chall-dark.is-locked:active { transform: rotate(-0.6deg); }
 
   /* unlock action — tear a ticket. Kraft stock, a punched perforation, and a
      rotated "admit one" stamp in place of the pencil sticker. */
@@ -1904,6 +1968,15 @@
   }
   .word-wrap[data-tiny] #wordDisplay::before { display: none; }   /* hide the highlighter swipe — no help finding it */
 
+  /* Vanishing Word's dark side — the prompt renders at a fraction of its normal size
+     (--word-scale, set per round in applyChallengeRound) on top of vanishing sooner. It
+     keeps the base clamp, so it stays responsive, and keeps its highlighter swipe and its
+     centred, untilted position: this challenge asks you to READ the word before it goes,
+     not to hunt for it the way Smallest Song does. */
+  .word-wrap[data-small] #wordDisplay {
+    font-size: calc(clamp(50px, 12vw, 80px) * var(--word-scale, 1));
+  }
+
   .hist-head, .hist-row {
     display: grid; grid-template-columns: 1fr 0.8fr 0.8fr 1.9fr 1.3fr;
     align-items: baseline; gap: 10px;
@@ -2473,6 +2546,8 @@
   /* The knowledge grids show only four tiles, so a single row of four would leave the titles
      cramped — they lay out 2×2 with more room to breathe. */
   .tap-grid[data-cols="2"] { grid-template-columns: repeat(2, 1fr); max-width: 460px; }
+  /* Odd One Out's dark side widens the board to six — two rows of three, not a ragged 4 + 2. */
+  .tap-grid[data-cols="3"] { grid-template-columns: repeat(3, 1fr); max-width: 520px; }
   .tap-tile {
     cursor: pointer; text-align: left; min-height: 58px;
     display: flex; align-items: center;
