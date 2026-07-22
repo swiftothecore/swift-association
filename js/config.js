@@ -1301,22 +1301,22 @@ const WAX_SEAL_MOTIFS = {
   "sea-of-songs": { fr: "nonzero", d: "M24.6 30.6 a2.9 2.9 0 1 1 5.8 0 a2.9 2.9 0 1 1 -5.8 0 M30.1 21 H31.9 V30.6 H30.1 Z M31.9 21 C35.4 22.6 36.6 25.4 35.8 28.7 C35.1 26.5 33.8 25.3 31.9 24.9 Z M21.5 34.8 C24.5 32.4 27.5 32.4 30.5 34.8 C33.5 37.2 36.5 37.2 39.5 34.8 C40.6 33.9 41.6 33.3 42.5 33.1 L42.5 35.9 C41.6 36.1 40.6 36.7 39.5 37.6 C36.5 40 33.5 40 30.5 37.6 C27.5 35.2 24.5 35.2 21.5 37.6 Z M21.5 39.8 C24.5 37.4 27.5 37.4 30.5 39.8 C33.5 42.2 36.5 42.2 39.5 39.8 C40.6 38.9 41.6 38.3 42.5 38.1 L42.5 40.9 C41.6 41.1 40.6 41.7 39.5 42.6 C36.5 45 33.5 45 30.5 42.6 C27.5 40.2 24.5 40.2 21.5 42.6 Z" },
   // a needle drawing one thread through everything: the word all three lines share
   "common-thread": { fr: "nonzero", d: "M21.3 43.2 L39 24.4 Q40.5 23 42 24.5 Q43.5 26 42.1 27.5 L23.3 45.2 Z M39.3 25.9 a1.2 1.2 0 1 0 2.4 0 a1.2 1.2 0 1 0 -2.4 0 M41.2 26.3 C45.6 29.7 43.6 35.2 38.3 36 C33.6 36.7 30.9 40 32 44.4 L30.4 44.8 C29 39.4 32.5 35.2 37.7 34.4 C41.9 33.6 43.4 30 40.1 27.4 Z" },
-  // PLACEHOLDER (a plain question mark) — real motif still to be drawn.
-  "odd-one-out": { fr: "nonzero", d: PLACEHOLDER_MOTIF_D },
-  // PLACEHOLDER (a plain question mark) — real motif still to be drawn.
-  "whose-line": { fr: "nonzero", d: PLACEHOLDER_MOTIF_D },
-  // PLACEHOLDER (a plain question mark) — real motif still to be drawn.
-  "both-of-us": { fr: "nonzero", d: PLACEHOLDER_MOTIF_D },
-  // PLACEHOLDER (a plain question mark) — real motif still to be drawn.
-  "name-three": { fr: "nonzero", d: PLACEHOLDER_MOTIF_D },
-  // PLACEHOLDER (a plain question mark) — real motif still to be drawn.
-  "press-your-luck": { fr: "nonzero", d: PLACEHOLDER_MOTIF_D },
-  // PLACEHOLDER (a plain question mark) — real motif still to be drawn.
-  "confidence-wager": { fr: "nonzero", d: PLACEHOLDER_MOTIF_D },
-  // PLACEHOLDER (a plain question mark) — real motif still to be drawn.
-  "double-or-nothing": { fr: "nonzero", d: PLACEHOLDER_MOTIF_D },
-  // PLACEHOLDER (a plain question mark) — real motif still to be drawn.
-  "insurance": { fr: "nonzero", d: PLACEHOLDER_MOTIF_D },
+  // a two-by-two grid of pressed dots, three solid and one hollow: tap the one that doesn't belong
+  "odd-one-out": { fr: "evenodd", d: "M20.3 25.5 a5.2 5.2 0 1 1 10.4 0 a5.2 5.2 0 1 1 -10.4 0 M33.3 25.5 a5.2 5.2 0 1 1 10.4 0 a5.2 5.2 0 1 1 -10.4 0 M20.3 38.5 a5.2 5.2 0 1 1 10.4 0 a5.2 5.2 0 1 1 -10.4 0 M33.3 38.5 a5.2 5.2 0 1 1 10.4 0 a5.2 5.2 0 1 1 -10.4 0 M35.8 38.5 a2.7 2.7 0 1 1 5.4 0 a2.7 2.7 0 1 1 -5.4 0" },
+  // a speech bubble holding one blank line: no prompt word, just whose line it is
+  "whose-line": { fr: "evenodd", d: "M23.5 21.5 H40.5 Q43.5 21.5 43.5 24.5 V32.5 Q43.5 35.5 40.5 35.5 H30.5 L23.8 41.8 L26 35.5 H23.5 Q20.5 35.5 20.5 32.5 V24.5 Q20.5 21.5 23.5 21.5 Z M25.5 26.8 H38.5 V29.9 H25.5 Z" },
+  // two words as overlapping discs, the shared lens pressed in with one bead: the song holding both
+  "both-of-us": { fr: "evenodd", d: "M17 32 a9 9 0 1 1 18 0 a9 9 0 1 1 -18 0 M29 32 a9 9 0 1 1 18 0 a9 9 0 1 1 -18 0 M30.2 32 a1.8 1.8 0 1 1 3.6 0 a1.8 1.8 0 1 1 -3.6 0" },
+  // three eighth notes on one beam: Double Trouble's pair, plus the one that proves it
+  "name-three": { fr: "nonzero", d: "M20.6 39.6 a3 3 0 1 1 6 0 a3 3 0 1 1 -6 0 M28.4 38.5 a3 3 0 1 1 6 0 a3 3 0 1 1 -6 0 M36.2 37.4 a3 3 0 1 1 6 0 a3 3 0 1 1 -6 0 M25.6 25.1 H27.5 V39.6 H25.6 Z M33.4 24.1 H35.3 V38.5 H33.4 Z M41.1 22.9 H43 V37.4 H41.1 Z M25.6 24.9 L43 22.6 L43 26.1 L25.6 28.4 Z" },
+  // a lucky horseshoe: the same luck a stake-won bead's charm wears on the bracelet
+  "press-your-luck": { fr: "evenodd", d: "M26.9 41.4 A12 12 0 1 1 37.1 41.4 L35.2 37.3 A7.5 7.5 0 1 0 28.8 37.3 Z M21.1 30.5 a1.15 1.15 0 1 0 2.3 0 a1.15 1.15 0 1 0 -2.3 0 M23.95 23.6 a1.15 1.15 0 1 0 2.3 0 a1.15 1.15 0 1 0 -2.3 0 M30.85 20.75 a1.15 1.15 0 1 0 2.3 0 a1.15 1.15 0 1 0 -2.3 0 M37.75 23.6 a1.15 1.15 0 1 0 2.3 0 a1.15 1.15 0 1 0 -2.3 0 M40.6 30.5 a1.15 1.15 0 1 0 2.3 0 a1.15 1.15 0 1 0 -2.3 0" },
+  // a stack of chips with one more tossed on top: the stake laid before the clock runs
+  "confidence-wager": { fr: "nonzero", d: "M23.5 25.9 L39 22.3 A2.4 2.4 0 0 0 38 17.7 L22.5 21.3 A2.4 2.4 0 0 0 23.5 25.9 Z M24.9 27.1 a2.4 2.4 0 0 0 0 4.8 H38.1 a2.4 2.4 0 0 0 0 -4.8 Z M27.4 32.7 a2.4 2.4 0 0 0 0 4.8 H40.6 a2.4 2.4 0 0 0 0 -4.8 Z M25.4 38.3 a2.4 2.4 0 0 0 0 4.8 H38.6 a2.4 2.4 0 0 0 0 -4.8 Z" },
+  // a tilted die landed on two: the second bead, doubled or forfeit
+  "double-or-nothing": { fr: "evenodd", d: "M24.8 21 L43 24.8 L39.2 43 L21 39.2 Z M26.9 27.6 a2.3 2.3 0 1 1 4.6 0 a2.3 2.3 0 1 1 -4.6 0 M32.5 36.4 a2.3 2.3 0 1 1 4.6 0 a2.3 2.3 0 1 1 -4.6 0" },
+  // a shield holding one bead safe inside it: every shield you keep is worth beads
+  "insurance": { fr: "evenodd", d: "M32 18.5 C36 21 40 21.8 44 22.2 V31 C44 38.5 39 43.5 32 46.5 C25 43.5 20 38.5 20 31 V22.2 C24 21.8 28 21 32 18.5 Z M27 31 a5 5 0 1 1 10 0 a5 5 0 1 1 -10 0 M29.6 31 a2.4 2.4 0 1 1 4.8 0 a2.4 2.4 0 1 1 -4.8 0" },
 };
 
 // The shared wax recipe. `id` scopes the SVG's internal ids so several seals can
