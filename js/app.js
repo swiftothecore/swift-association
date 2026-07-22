@@ -5183,7 +5183,7 @@ function resetRunState() {
   const banner = $("challBanner");
   if (banner) banner.remove();
   const seal = $("challengeSeal");
-  if (seal) { seal.hidden = true; seal.innerHTML = ""; seal.removeAttribute("aria-label"); }
+  if (seal) { seal.hidden = true; seal.innerHTML = ""; seal.removeAttribute("aria-label"); seal.classList.remove("is-dark"); }
   const wrap = $("wordDisplay") && $("wordDisplay").parentNode;
   if (wrap) wrap.classList.remove("vanished");
 }
@@ -6442,12 +6442,20 @@ function renderChallengeSeal() {
   if (!el) return;
   if (gameType !== "challenge" || !currentChallenge) {
     el.hidden = true; el.innerHTML = ""; el.removeAttribute("aria-label");
+    el.classList.remove("is-dark");
     return;
   }
+  // On a dark run the corner stamp pours black-violet like every other dark-side surface,
+  // with a small violet line under the name so the corner alone tells you which version
+  // you're playing — the tagline marker is at the top of the page and easy to lose.
+  const dark = !!challengeDark;
+  const seals = dark ? CHALLENGE_SEALS_DARK : CHALLENGE_SEALS;
+  el.classList.toggle("is-dark", dark);
   el.innerHTML =
-    `<div class="cseal-stamp">${CHALLENGE_SEALS[currentChallenge.id] || ""}</div>` +
-    `<div class="cseal-name">${escapeHtml(currentChallenge.name)}</div>`;
-  el.setAttribute("aria-label", "Challenge: " + currentChallenge.name);
+    `<div class="cseal-stamp">${seals[currentChallenge.id] || ""}</div>` +
+    `<div class="cseal-name">${escapeHtml(currentChallenge.name)}</div>` +
+    (dark ? `<div class="cseal-dark">${CHALL_ECLIPSE}dark side</div>` : "");
+  el.setAttribute("aria-label", "Challenge: " + currentChallenge.name + (dark ? " (dark side)" : ""));
   el.hidden = false;
 }
 

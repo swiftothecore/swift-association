@@ -2549,10 +2549,20 @@
     font-family: var(--hand); font-size: 13px; line-height: 1.05; color: var(--ink-soft);
     transform: rotate(-2deg);
   }
+  /* dark side: the same corner stamp poured black-violet, named underneath in the same
+     violet typewriter ink as the tagline marker so the two read as one signal. */
+  .cseal-dark {
+    display: inline-flex; align-items: center; gap: 4px; margin-top: 2px;
+    font-family: var(--type); font-size: 10px; font-weight: 700; letter-spacing: 0.6px;
+    text-transform: lowercase; color: #7a4bb0; transform: rotate(-2deg);
+  }
+  .cseal-dark .chall-mark-svg { width: 9px; height: 9px; color: currentColor; }
+  .challenge-seal.is-dark .cseal-stamp { filter: drop-shadow(1px 2px 3px rgba(40,25,60,0.3)); }
   @media (max-width: 560px) {
     .challenge-seal { left: 10px; bottom: 10px; }
     .cseal-stamp { width: 38px; height: 38px; }
     .cseal-name { font-size: 12px; max-width: 80px; }
+    .cseal-dark { font-size: 9px; }
   }
 
   /* ---------- Sacred-13 days (the 13th / dates that add up to 13) ----------
