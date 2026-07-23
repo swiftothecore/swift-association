@@ -931,6 +931,44 @@ export const POLAROIDS = [
   <rect x="0.5" y="0.5" width="199" height="199" fill="none" stroke="#3f3a2e" opacity=".12"/>
 </svg>`,
   },
+  {
+    id: "message-in-a-bottle",
+    name: "message in a bottle",
+    sub: "washed up with a secret inside",
+    // Placeholder-quality art in the shared sea palette (mirrors the yes-whale
+    // polaroid) — a corked bottle bobbing on the water with its rolled note. Swap for
+    // the real hand-drawn photo later, same as the other keepsakes.
+    art: `<svg viewBox="0 0 200 200" role="img"><title>A corked bottle with a note inside, bobbing on the sea at dusk</title>
+  <rect width="200" height="108" fill="#cfdae0"/>
+  <circle cx="158" cy="30" r="11" fill="#eae7d6"/>
+  <ellipse cx="46" cy="26" rx="20" ry="6" fill="#e3eaee"/>
+  <ellipse cx="92" cy="44" rx="15" ry="5" fill="#e3eaee"/>
+  <g stroke="#8a938c" stroke-width="1.4" fill="none" stroke-linecap="round"><path d="M40 40 q4 -4 8 0 M48 40 q4 -4 8 0 M120 58 q3 -3 6 0 M126 58 q3 -3 6 0"/></g>
+  <rect y="108" width="200" height="26" fill="#6d94a8"/>
+  <rect y="134" width="200" height="30" fill="#5f8aa0"/>
+  <rect y="164" width="200" height="36" fill="#567d92"/>
+  <g stroke="#dbe7ec" stroke-width="1.6" stroke-linecap="round" opacity=".7"><path d="M20 114 h10 M38 118 h7 M150 112 h9 M168 118 h6"/></g>
+  <!-- the bottle, lying on the swell, cork to the right -->
+  <g transform="rotate(-9 100 116)">
+    <rect x="58" y="105" width="64" height="24" rx="11" fill="#9cc0b0" fill-opacity=".62" stroke="#6f9a88" stroke-width="1.8"/>
+    <rect x="66" y="110" width="40" height="14" rx="4" fill="#efe3c4"/>
+    <g stroke="#a8966b" stroke-width="1.1" stroke-linecap="round" opacity=".6"><path d="M72 114 H98"/><path d="M70 117 H100"/><path d="M74 120 H94"/></g>
+    <rect x="118" y="109" width="6" height="16" rx="2" fill="#9cc0b0" fill-opacity=".6" stroke="#6f9a88" stroke-width="1.4"/>
+    <rect x="122" y="110" width="12" height="14" rx="3" fill="#c08a4d" stroke="#8f6231" stroke-width="1.4"/>
+    <path d="M62 110 Q58 114 59 122" stroke="#ffffff" stroke-width="2.4" stroke-linecap="round" fill="none" opacity=".5"/>
+  </g>
+  <ellipse cx="100" cy="132" rx="40" ry="6" fill="none" stroke="#dbe7ec" stroke-width="2" opacity=".7"/>
+  <g stroke="#4e7890" stroke-width="1.5" fill="none" stroke-linecap="round">
+    <path d="M14 150 q10 -5 20 0 q10 5 20 0"/>
+    <path d="M136 152 q10 -5 20 0 q10 5 20 0"/>
+    <path d="M36 176 q10 -5 20 0 q10 5 20 0 q10 -5 20 0"/>
+    <path d="M20 190 q10 -5 20 0 M148 188 q10 -5 20 0"/>
+  </g>
+  <ellipse cx="100" cy="144" rx="46" ry="7" fill="none" stroke="#4e7890" stroke-width="1.2" opacity=".55"/>
+  <rect width="200" height="200" fill="#9fb8c4" opacity=".07"/>
+  <rect x="0.5" y="0.5" width="199" height="199" fill="none" stroke="#3f3a2e" opacity=".12"/>
+</svg>`,
+  },
 ];
 
 export const POLAROID_BY_ID = Object.fromEntries(POLAROIDS.map((p) => [p.id, p]));

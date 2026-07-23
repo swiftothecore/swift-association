@@ -1631,3 +1631,40 @@ export const WHALE_SPLASH_SVG = `<svg viewBox="0 0 120 60" aria-hidden="true">
   <g fill="#6d94a8"><circle cx="18" cy="28" r="3"/><circle cx="38" cy="13" r="2.4"/><circle cx="60" cy="7" r="3.2"/><circle cx="82" cy="13" r="2.4"/><circle cx="102" cy="28" r="3"/><circle cx="28" cy="42" r="2"/><circle cx="92" cy="42" r="2"/></g>
   <g fill="#9fb8c4"><circle cx="48" cy="21" r="1.6"/><circle cx="72" cy="21" r="1.6"/><circle cx="60" cy="35" r="1.8"/><circle cx="12" cy="16" r="1.3"/><circle cx="108" cy="16" r="1.3"/></g>
 </svg>`;
+
+// Message in a bottle — a corked sea-glass bottle with a rolled note inside,
+// drifting out from behind the SIDE edge of the notebook (see surfaceBottle in
+// app.js) and bobbing on a little wake for BOTTLE_SURFACE_MS before floating back.
+// Catch it with a click and the cork pops, the note unrolls, and a real Taylor
+// liner-note secret message (from secret-messages.json, lazy-loaded on first
+// surface) is revealed with its song + album. Sea-glass + kraft-cork palette so it
+// sits on the desk like the whale does, no album art. Lies horizontal, cork pointing
+// outward (right); the wrapper flips it with scaleX when it surfaces on the left edge.
+export const BOTTLE_SURFACE_MS = 13000;
+export const BOTTLE_SVG = `<svg viewBox="0 0 132 64" role="img"><title>A corked glass bottle with a rolled note inside, bobbing beside the page</title>
+  <!-- rolled note, seen through the glass -->
+  <g>
+    <rect x="20" y="21" width="58" height="22" rx="6" fill="#efe3c4"/>
+    <ellipse cx="20" cy="32" rx="4" ry="11" fill="#e2d3a9"/>
+    <ellipse cx="78" cy="32" rx="4" ry="11" fill="#f4ebd2"/>
+    <g stroke="#a8966b" stroke-width="1.3" stroke-linecap="round" opacity=".65">
+      <path d="M30 27 H66"/><path d="M28 32 H68"/><path d="M31 37 H63"/>
+    </g>
+  </g>
+  <!-- glass body: rounded base at left, shoulder tapering to a neck on the right -->
+  <path d="M14 12 H84 Q93 12 95 23 L107 23 L107 41 L95 41 Q93 52 84 52 H14 Q5 52 5 43 V21 Q5 12 14 12 Z"
+        fill="#9cc0b0" fill-opacity=".42" stroke="#6f9a88" stroke-width="2.3" stroke-linejoin="round"/>
+  <!-- neck lip -->
+  <rect x="103" y="22" width="5" height="20" rx="2" fill="#9cc0b0" fill-opacity=".5" stroke="#6f9a88" stroke-width="1.8"/>
+  <!-- cork -->
+  <rect x="106" y="24" width="15" height="16" rx="3.2" fill="#c08a4d" stroke="#8f6231" stroke-width="1.6"/>
+  <rect x="106" y="24" width="5.5" height="16" rx="2.6" fill="#a9743c" opacity=".6"/>
+  <!-- glass highlights -->
+  <path d="M15 18 Q10 22 11 34" stroke="#ffffff" stroke-width="3" stroke-linecap="round" fill="none" opacity=".45"/>
+  <path d="M22 47 H80" stroke="#ffffff" stroke-width="2" stroke-linecap="round" opacity=".22"/>
+</svg>`;
+// A gentle wake the bottle rides on — two nested waves, drawn beneath it, sea tint.
+export const BOTTLE_WAVE_SVG = `<svg viewBox="0 0 140 24" aria-hidden="true">
+  <path d="M2 10 q10 -7 20 0 t20 0 t20 0 t20 0 t20 0 t20 0" fill="none" stroke="#7fa8b6" stroke-width="2.4" stroke-linecap="round" opacity=".7"/>
+  <path d="M8 18 q10 -6 20 0 t20 0 t20 0 t20 0 t20 0" fill="none" stroke="#a6c3cd" stroke-width="2" stroke-linecap="round" opacity=".55"/>
+</svg>`;

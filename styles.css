@@ -3580,6 +3580,94 @@
   body[data-reduce-motion="on"] .whale-egg.up .whale-tail svg { animation: none; }
   body[data-reduce-motion="on"] .whale-egg.caught .whale-splash { animation: none; opacity: 1; }
 
+  /* Message in a bottle — the whale's sibling, drifting in from behind a SIDE edge
+     of the notebook into the desk gutter. .bottle-window is an overflow-hidden clip
+     flush with the card's left/right edge, so the bottle is cut off at the paper line
+     while it floats out — the same "behind the page" trick as the whale, sideways.
+     The note is a free sibling of the window so it can unroll out over the desk. */
+  .bottle-egg { position: absolute; z-index: 2; pointer-events: none; }
+  .bottle-egg.on-right { left: 100%; }
+  .bottle-egg.on-left  { right: 100%; }
+  .bottle-window { display: block; position: relative; width: 178px; height: 100px; overflow: hidden; }
+  /* The whole clipped window is mirrored for the left edge — cork points outward and
+     the bottle drifts leftward — so the glass's own transitioned transform below can
+     stay flip-free and IDENTICAL on both sides (transitioning a translate that also
+     carries scaleX(-1) makes some browsers skip the animation). The note is a sibling
+     of the window, so it is never mirrored — its text always reads the right way. */
+  .bottle-egg.on-left .bottle-window { transform: scaleX(-1); }
+
+  .bottle-glass {
+    position: absolute; top: 22px; left: 8px;
+    width: 120px; height: 58px;                 /* 132:64 viewBox aspect */
+    margin: 0; padding: 0; border: 0; background: none; appearance: none;
+    pointer-events: auto; cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transform: translateX(-136px);              /* hidden: tucked behind the page edge (clipped) */
+    transition: transform 1.4s cubic-bezier(0.23, 1, 0.32, 1);
+    filter: drop-shadow(2px 4px 3px rgba(20, 16, 12, 0.22));
+  }
+  .bottle-glass svg { display: block; width: 100%; height: 100%; }
+
+  /* adrift: floated out into the gutter, rocking on the wake */
+  .bottle-egg.adrift .bottle-glass { transform: translateX(34px); }
+  .bottle-egg.adrift .bottle-glass svg { animation: bottleBob 3.6s ease-in-out infinite; }
+  @keyframes bottleBob {
+    0%, 100% { transform: translateY(0) rotate(-3.2deg); }
+    50%      { transform: translateY(5px) rotate(3.2deg); }
+  }
+
+  .bottle-wave {
+    position: absolute; bottom: 14px; left: 26px;
+    width: 150px; height: 22px; opacity: 0;
+    transition: opacity 0.7s ease 0.6s;
+  }
+  .bottle-egg.adrift .bottle-wave { opacity: 0.85; }
+  .bottle-wave svg { display: block; width: 100%; height: 100%; animation: bottleWave 3.6s ease-in-out infinite; }
+  @keyframes bottleWave { 0%,100% { transform: translateY(0); } 50% { transform: translateY(3px); } }
+
+  /* caught: the bottle settles and the note unrolls out over the desk */
+  .bottle-egg.caught .bottle-glass { transition: transform 0.5s ease; transform: translateX(34px) rotate(-8deg); }
+  .bottle-egg.caught .bottle-glass svg { animation: none; }
+  .bottle-egg.caught .bottle-wave { opacity: 0.5; }
+
+  .bottle-note {
+    position: absolute; top: -8px; left: 66px;
+    width: 182px; padding: 12px 15px 12px;
+    background:
+      linear-gradient(115deg, rgba(255,255,255,0.35), transparent 40%),
+      linear-gradient(#f5ecd2, #ece0bb);
+    border: 1px solid #d9c793; border-radius: 4px;
+    box-shadow: 0 8px 20px rgba(60, 50, 35, 0.28), 0 1px 0 rgba(255,255,255,0.7) inset;
+    transform: scale(0.18) translate(-30px, 26px) rotate(-6deg); transform-origin: 12% 90%;
+    opacity: 0; pointer-events: none;
+    transition: transform 0.6s cubic-bezier(0.34, 1.42, 0.52, 1), opacity 0.42s ease;
+  }
+  .bottle-note::before {   /* a bit of curl at the parchment's top */
+    content: ""; position: absolute; left: 0; right: 0; top: -5px; height: 7px;
+    background: linear-gradient(#e2d3a4, #f5ecd2); border-radius: 60% 60% 0 0 / 100% 100% 0 0;
+  }
+  /* the decoded message in handwriting; the song + album credited beneath in the
+     functional typewriter face, so the cryptic ones ("Toby.", "SAG.") land. */
+  .bottle-note-msg {
+    display: block; font-family: var(--hand); font-weight: 600;
+    font-size: 18px; line-height: 1.28; color: #5b5038;
+  }
+  .bottle-note-cite {
+    display: block; margin-top: 5px; padding-top: 5px;
+    border-top: 1px dashed rgba(139, 122, 84, 0.5);
+    font-family: var(--type); font-size: 9.5px; letter-spacing: 0.02em;
+    text-transform: uppercase; color: #9a8a63;
+  }
+  .bottle-egg.on-left .bottle-note { left: auto; right: 66px; transform-origin: 88% 90%; }
+  .bottle-egg.caught .bottle-note { opacity: 1; transform: scale(1) translate(0, 0) rotate(-1.5deg); }
+  .bottle-egg.on-left.caught .bottle-note { transform: scale(1) translate(0, 0) rotate(1.5deg); }
+
+  /* reduced motion: the bottle simply appears out in the gutter, the note simply shows */
+  body[data-reduce-motion="on"] .bottle-glass { transition: none; }
+  body[data-reduce-motion="on"] .bottle-egg.adrift .bottle-glass svg,
+  body[data-reduce-motion="on"] .bottle-wave svg { animation: none; }
+  body[data-reduce-motion="on"] .bottle-note { transition: opacity 0.3s ease; transform: scale(1) translate(0,0) rotate(-1.5deg); }
+
   /* The three pens — a rare swap of the resting pencil */
   .input-area[data-pen]::before { content: none; }
   .pen-glyph { position: absolute; left: -2px; bottom: 5px; z-index: 1; width: 22px; height: 22px; pointer-events: none; color: var(--ink-soft); }

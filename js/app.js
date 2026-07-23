@@ -26,6 +26,7 @@ import {
   CUSTOM_LIVES_MIN, CUSTOM_LIVES_MAX, CUSTOM_LIVES_TYPED_MAX, CUSTOM_ANSWER_MODES,
   PEN_SVG, STAR_SVG, SPARKLE_SVG, DOODLE_SVG, DOODLE_SIZE,
   WHALE_SURFACE_MS, WHALE_TAIL_SVG, WHALE_SPLASH_SVG,
+  BOTTLE_SURFACE_MS, BOTTLE_SVG, BOTTLE_WAVE_SVG,
   SKILLS, SKILL_IDS, SKILL_BY_ID,
   TEMPO_BASE, TEMPO_SPEED, LYRIC_TIER_XP, LYRIC_LEN_REF,
   ENDURANCE_GROWTH, ENDURANCE_RUN_CAP, RANGE_RATIO_XP, RANGE_PER_ALBUM,
@@ -11048,6 +11049,11 @@ function runRoundEggs() {
   // One visitor at a time; the click-to-catch keepsake trigger lives in surfaceWhale.
   if (!document.querySelector(".whale-egg") && chance(0.035)) surfaceWhale();
 
+  // Message in a bottle — a rarer sibling roll, drifting in from the side edge. Never
+  // shares a page with the whale (one off-page visitor at a time reads calmer).
+  if (!document.querySelector(".whale-egg") && !document.querySelector(".bottle-egg") &&
+      chance(0.03)) surfaceBottle();
+
   // A Mastery-chosen pen is the persistent default each round; otherwise the rare random swap.
   if (settings.masteryPen) {
     setPen(settings.masteryPen);
@@ -11339,6 +11345,106 @@ function surfaceWhale() {
   wrap.classList.add("up");
   whaleTimers.push(setTimeout(() => wrap.classList.remove("up"), WHALE_SURFACE_MS));
   whaleTimers.push(setTimeout(stopWhale, WHALE_SURFACE_MS + 1300));
+}
+
+// Message in a bottle — the sibling of the whale, but it drifts in from behind the
+// SIDE edge of the notebook rather than rising from the top (the page is infinitely
+// scrollable now, so there is no fixed bottom to surface at). The wrapper is an
+// overflow-hidden window flush with the card's left OR right edge; the bottle floats
+// out horizontally into the desk gutter, bobs on its little wake for
+// BOTTLE_SURFACE_MS, then drifts back behind the page. Like the whale it lives
+// outside the doodle layer and clearEggs, so a visit survives page turns and only
+// ends on its own clock or the catch. Catch it → cork pops, the note unrolls with a
+// real Taylor liner-note secret message, and (once the keepsake is wired)
+// earnPolaroid fires.
+let bottleTimers = [];
+
+// The liner-note secret messages (secret-messages.json), flattened to a pick-list of
+// { song, album, message }. Lazy: the file is only fetched the first time a bottle
+// surfaces (a rare egg), then the promise is cached. Round-agnostic on purpose — the
+// pick is random across all five albums, never tied to the current word, so the
+// bottle stays a pure flourish and never tells you the answer (same rule as the
+// lyric-sparkle egg). A tiny inline fallback covers a failed fetch so a caught bottle
+// never opens to a blank scroll.
+let secretMessagePromise = null;
+const SECRET_MESSAGE_FALLBACK = { song: "Clean", album: "1989",
+  message: "She lost him, but she found herself, and somehow, that was everything." };
+function loadSecretMessages() {
+  if (!secretMessagePromise) {
+    secretMessagePromise = fetch("secret-messages.json")
+      .then((r) => { if (!r.ok) throw new Error("secret-messages " + r.status); return r.json(); })
+      .then((byAlbum) => {
+        const pool = [];
+        for (const rawAlbum of Object.keys(byAlbum)) {
+          // The debut is titled "Taylor Swift"; fans (and the notebook) call it the
+          // Self-Titled record, so credit it that way to avoid "Song · Taylor Swift".
+          const album = rawAlbum === "Taylor Swift" ? "Self-Titled" : rawAlbum;
+          for (const song of Object.keys(byAlbum[rawAlbum])) {
+            pool.push({ song, album, message: byAlbum[rawAlbum][song] });
+          }
+        }
+        return pool.length ? pool : [SECRET_MESSAGE_FALLBACK];
+      })
+      .catch(() => [SECRET_MESSAGE_FALLBACK]);
+  }
+  return secretMessagePromise;
+}
+
+function stopBottle() {
+  bottleTimers.forEach(clearTimeout);
+  bottleTimers = [];
+  const b = document.querySelector(".bottle-egg");
+  if (b) b.remove();
+}
+function surfaceBottle(side) {
+  const card = document.querySelector(".screen.card.active") || $("screen-game");
+  if (!card) return;
+  stopBottle();
+  loadSecretMessages();   // prewarm so the note is ready by the time it's caught
+  // Left or right edge, chosen at random unless the caller pins a side (dev tools).
+  const onLeft = side === "left" || (side == null && Math.random() < 0.5);
+  const wrap = document.createElement("div");
+  wrap.className = "bottle-egg " + (onLeft ? "on-left" : "on-right");
+  wrap.setAttribute("aria-hidden", "true");          // a pointer-only secret, like the whale
+  // A different height along the page edge each visit, kept clear of the very top/bottom.
+  wrap.style.top = (24 + Math.random() * 46) + "%";
+  // .bottle-window clips the drift at the paper line; the note is a free sibling so
+  // it can unroll out over the desk without being clipped.
+  wrap.innerHTML =
+    `<span class="bottle-window">` +
+      `<span class="bottle-wave" aria-hidden="true">${BOTTLE_WAVE_SVG}</span>` +
+      `<button type="button" class="bottle-glass" tabindex="-1">${BOTTLE_SVG}</button>` +
+    `</span>` +
+    `<span class="bottle-note" role="status"></span>`;
+  card.appendChild(wrap);
+  wrap.querySelector(".bottle-glass").addEventListener("click", () => {
+    if (wrap.classList.contains("caught")) return;
+    wrap.classList.add("caught");                    // cork pop + note unroll (CSS)
+    // Fill the scroll once the messages resolve (prewarmed on surface, so usually
+    // instant). A real Taylor liner-note secret message with its song + album.
+    loadSecretMessages().then((pool) => {
+      const s = pool[Math.floor(Math.random() * pool.length)];
+      const note = wrap.querySelector(".bottle-note");
+      if (!note) return;                             // bottle already drifted off
+      note.innerHTML =
+        `<span class="bottle-note-msg">${escapeHtml(s.message)}</span>` +
+        `<span class="bottle-note-cite">${escapeHtml(s.song)} · ${escapeHtml(s.album)}</span>`;
+    });
+    earnPolaroid("message-in-a-bottle");             // idempotent — the first catch develops it
+    bottleTimers.forEach(clearTimeout);
+    // Hold the open note on screen a good while before it drifts away.
+    bottleTimers = [setTimeout(stopBottle, 7000)];
+  });
+  // Flush styles, then drift in, so the transition runs from the hidden position
+  // (a forced reflow, not rAF — rAF stalls in throttled/background tabs).
+  void wrap.offsetHeight;
+  wrap.classList.add("adrift");
+  bottleTimers.push(setTimeout(() => {
+    if (!wrap.classList.contains("caught")) wrap.classList.remove("adrift");
+  }, BOTTLE_SURFACE_MS));
+  bottleTimers.push(setTimeout(() => {
+    if (!wrap.classList.contains("caught")) stopBottle();
+  }, BOTTLE_SURFACE_MS + 1600));
 }
 
 // A burst of sparkles on a correct answer — the longer the streak, the
@@ -13621,7 +13727,8 @@ function buildDevApi() {
     reset: { records: resetRecords, stats: resetStatsAll, ach: () => { resetAchievements(); earnedAchievements = {}; },
              tally: resetTally, daily: resetDaily, all: clearAllData },
     // Visual eggs
-    eggs: { snake: () => slitherSnake(), whale: () => surfaceWhale(), doodle: (k) => addDoodle(k || "cat", "corner-br"),
+    eggs: { snake: () => slitherSnake(), whale: () => surfaceWhale(), bottle: (side) => surfaceBottle(side),
+            doodle: (k) => addDoodle(k || "cat", "corner-br"),
             sparkle: () => celebrateCorrect(3), lyricSparkle: () => lyricSparkle(), starShower: () => celebratePerfect(),
             blueWash: () => triggerBlueWash(), secret13: () => revealSecret13(),
             snow: (on) => { devForceSnow = on === undefined ? !devForceSnow : !!on; refreshSnow(); return devForceSnow; },

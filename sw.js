@@ -16,7 +16,7 @@
  * Paths are relative so the worker works at the site root (swiftassociation.com)
  * and under any project subpath, without hardcoding the origin.
  */
-const CACHE = "stta-v22";
+const CACHE = "stta-v23";
 const ASSETS = [
   "./",
   "index.html",
@@ -48,6 +48,9 @@ const ASSETS = [
   "sounds/hint.mp3",
   "songs.json",
   "words.json",
+  // Taylor's liner-note secret messages — lazy-loaded when a message-in-a-bottle egg
+  // is first caught (see loadSecretMessages in js/app.js).
+  "secret-messages.json",
   // Swift To The Lyric searcher — precached (incl. the "search/" navigate path) so it
   // works offline on a fresh install, not just after a runtime-cached visit.
   "search/",
