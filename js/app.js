@@ -3043,6 +3043,18 @@ function renderRecordsPage() {
         `</div></div>`
     : "";
 
+  // Study — the words you've settled into the top review box. Hidden until the first one
+  // graduates, so a fresh notebook stays clean (same rule as verse bonus and dark sides).
+  const learnedWords = studyBoxCounts()[STUDY_MAX_BOX];
+  const studyBlock = learnedWords > 0
+    ? `<p class="rec-group-label">study</p><div class="pb-grid">` +
+        `<div class="pb-tile" style="--pb-accent:#7a9e5e">` +
+          `<span class="pb-mode">Words learned</span>` +
+          `<span class="pb-score">${learnedWords}</span>` +
+          `<span class="pb-sub">settled in the top review box</span>` +
+        `</div></div>`
+    : "";
+
   const hist = loadHistory();
   _pbByMode = {};
   for (const h of hist) if (!(h.m in _pbByMode)) _pbByMode[h.m] = h.m === "daily" ? db : h.m === "adaptive" ? (adaptiveRecord().bestPeak || -1) : (loadRecords(h.m)[0] ? loadRecords(h.m)[0].score : -1);
@@ -3056,7 +3068,7 @@ function renderRecordsPage() {
   $("recordsBody").innerHTML =
     `<div class="rec-sig">${sig}</div>` +
     `<p class="rec-group-label">personal bests</p><div class="pb-grid">${classicTiles}</div>` +
-    infBlock + dailyBlock + verseBlock + darkBlock + heatSectionHTML() + histBlock;
+    infBlock + dailyBlock + verseBlock + darkBlock + studyBlock + heatSectionHTML() + histBlock;
 
   renderHeatBody();
   const heatSel = $("heatRange");
