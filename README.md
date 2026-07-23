@@ -37,7 +37,7 @@ With many features in the works as we speak:
 - More achievements
 - And much more
 
-My goals for this project are to make it effortlessly and extensively customisable. I want it to be challenging. I want it to be as good as it can be for as many people as possible, so I’m working on adding accessibility features, and I’m open to all feedback/suggestions.
+I want this game to have extensive replay value. I want it to be challenging. I want it to be as good as it can be for as many people as possible, so I’m working on adding accessibility features, and I’m open to all feedback/suggestions.
 
 Above all, I want it to be fun.
 
