@@ -10943,6 +10943,7 @@ function quitGame() {
 let titleTaps = 0;
 let activePen = null;            // 'quill' | 'fountain' | 'glitter' | null
 let blueUsedThisRound = false;
+let lyricEggMatched = false;     // whether the typed text is currently sitting on a real lyric (so the sparkle fires once per crossing, not every keystroke)
 let blueWashTimer = null;        // so the wash can be cut short when the page turns under it
 let correctStreak = 0;           // consecutive correct answers this game
 let gameTimeouts = 0;            // timeouts this game (for Fearless)
@@ -11022,6 +11023,7 @@ function runRoundEggs() {
   clearEggs();
   setPen(null);
   blueUsedThisRound = false;
+  lyricEggMatched = false;
 
   const era = document.body.getAttribute("data-era");
   const now = new Date();
@@ -11060,6 +11062,59 @@ function handleTypingEggs(val) {
   if (!blueUsedThisRound && /\bblue\b/.test(v)) {
     blueUsedThisRound = true;
     triggerBlueWash();
+  }
+
+  // A sparkle wink when what you've typed is a real Taylor lyric. Matched against
+  // ALL songs, not just this round's valid answers, on purpose: the verse meter
+  // already lights for the round's songs (that's the verse-bonus gauge). Keeping
+  // this egg song-agnostic makes it a "I see you know your Taylor" flourish, never
+  // a tell about which answer is correct. Fires once as the text crosses onto a
+  // line; clearing the phrase re-arms it so retyping sparkles again.
+  const onLyric = isKnownLyricPhrase(val);
+  if (onLyric && !lyricEggMatched) { lyricEggMatched = true; lyricSparkle(); }
+  else if (!onLyric) lyricEggMatched = false;
+}
+
+// Is the typed text a substantial, verbatim lyric line from any song? Mirrors
+// matchLyricLine's length gate (4+ words, or a long-enough 3-word phrase) but scans
+// allSongs and stops at the first hit. Cheap: an indexOf over precomputed blobs,
+// gated behind the input debounce and the word-count floor.
+function isKnownLyricPhrase(text) {
+  const np = normalizeLyric(text || "");
+  if (!np) return false;
+  const wc = np.split(" ").length;
+  if (wc < MIN_LYRIC_WORDS &&
+      !(wc >= MIN_LYRIC_WORDS_SHORT && np.length >= MIN_LYRIC_SHORT_CHARS)) return false;
+  for (const s of allSongs) {
+    if (s._normLyrics.includes(np)) return true;
+  }
+  return false;
+}
+
+// A small trio of sparkles hovering over the input — deliberately quieter and fewer
+// than the correct-answer burst, since this fires mid-thought, not on a verdict.
+// Honours the same sparkles / motion / flashing guards.
+function lyricSparkle() {
+  if (motionReduced() || !settings.sparkles || settings.reducedFlashing) return;
+  const card = $("screen-game");
+  const input = $("songInput");
+  if (!card || !input) return;
+  const cardRect = card.getBoundingClientRect();
+  const inRect = input.getBoundingClientRect();
+  const baseLeft = inRect.left - cardRect.left;
+  const baseTop = inRect.top - cardRect.top;
+  for (let i = 0; i < 3; i++) {
+    const s = document.createElement("span");
+    s.className = "sparkle"; s.setAttribute("aria-hidden", "true");
+    const size = 10 + Math.round(Math.random() * 8);
+    s.style.width = s.style.height = size + "px";
+    s.style.left = (baseLeft + inRect.width * (0.52 + Math.random() * 0.42)) + "px";
+    s.style.top = (baseTop + (Math.random() - 0.35) * inRect.height) + "px";
+    s.style.animationDelay = (Math.random() * 0.22).toFixed(2) + "s";
+    s.style.animationDuration = (0.8 + Math.random() * 0.4).toFixed(2) + "s";
+    s.innerHTML = SPARKLE_SVG;
+    card.appendChild(s);
+    setTimeout(() => s.remove(), 1500);
   }
 }
 
@@ -13567,7 +13622,7 @@ function buildDevApi() {
              tally: resetTally, daily: resetDaily, all: clearAllData },
     // Visual eggs
     eggs: { snake: () => slitherSnake(), whale: () => surfaceWhale(), doodle: (k) => addDoodle(k || "cat", "corner-br"),
-            sparkle: () => celebrateCorrect(3), starShower: () => celebratePerfect(),
+            sparkle: () => celebrateCorrect(3), lyricSparkle: () => lyricSparkle(), starShower: () => celebratePerfect(),
             blueWash: () => triggerBlueWash(), secret13: () => revealSecret13(),
             snow: (on) => { devForceSnow = on === undefined ? !devForceSnow : !!on; refreshSnow(); return devForceSnow; },
             rain: (on) => { devForceRain = on === undefined ? !devForceRain : !!on; refreshRain(); return devForceRain; },
