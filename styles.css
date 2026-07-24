@@ -1385,6 +1385,61 @@
     .chall-go:active { transform: translateY(1px); }
   }
 
+  /* ---------- Bonus games shelf ----------
+     A rack of index-card mini-games. Each card is a small stationery object; games that
+     aren't written yet wear a "coming soon" tape ribbon and sit a touch faded (.is-soon). */
+  .bonus-intro {
+    font-family: var(--type); font-size: 12px; letter-spacing: 0.4px; color: var(--ink-soft);
+    line-height: 1.5; margin: 2px 0 18px; max-width: 48ch;
+  }
+  .bonus-shelf {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px;
+  }
+  .bonus-card {
+    position: relative; overflow: hidden; text-align: left; cursor: pointer;
+    display: flex; flex-direction: column; gap: 7px;
+    padding: 16px 16px 18px; min-height: 128px;
+    background: var(--card-bg, #fbf6e9);
+    border: 1px solid rgba(60, 40, 18, 0.18); border-radius: 4px;
+    box-shadow: 0 2px 5px rgba(43, 39, 34, 0.08);
+    transition: transform 0.14s ease, box-shadow 0.14s ease;
+  }
+  .bonus-card:nth-child(3n)   { transform: rotate(-0.5deg); }
+  .bonus-card:nth-child(3n+2) { transform: rotate(0.6deg); }
+  .bonus-card:hover, .bonus-card:focus-visible {
+    transform: translateY(-2px); box-shadow: 0 5px 12px rgba(43, 39, 34, 0.14); outline: none;
+  }
+  .bonus-card-kicker {
+    font-family: var(--type); font-size: 9px; letter-spacing: 1.4px; text-transform: uppercase;
+    color: #4a8c87;
+  }
+  .bonus-card-name {
+    font-family: var(--hand); font-weight: 700; font-size: 22px; line-height: 1.05; color: var(--ink);
+  }
+  .bonus-card-blurb {
+    font-family: var(--type); font-size: 11.5px; line-height: 1.5; color: var(--ink-soft);
+  }
+  /* Coming-soon shell: a faded card wearing a torn tape ribbon across the top-right corner. */
+  .bonus-card.is-soon { filter: saturate(0.82); }
+  .bonus-card.is-soon .bonus-card-name { color: var(--ink-soft); }
+  .bonus-soon {
+    position: absolute; top: 14px; right: -34px; width: 132px;
+    transform: rotate(38deg); transform-origin: center;
+    background: rgba(122, 158, 94, 0.9); color: #fff;
+    font-family: var(--type); font-size: 8.5px; letter-spacing: 1.5px; text-transform: uppercase;
+    text-align: center; padding: 3px 0; box-shadow: 0 1px 2px rgba(43, 39, 34, 0.2);
+    pointer-events: none;
+  }
+  .bonus-card.nudge { animation: bonusNudge 0.4s ease; }
+  @keyframes bonusNudge {
+    0%, 100% { transform: translateX(0); }
+    20% { transform: translateX(-4px) rotate(-0.5deg); }
+    45% { transform: translateX(3px) rotate(0.4deg); }
+    70% { transform: translateX(-2px); }
+  }
+  [data-reduce-motion="true"] .bonus-card { transition: none; }
+  [data-reduce-motion="true"] .bonus-card.nudge { animation: none; }
+
   /* Challenge results panel (sandboxed — in place of the records board) */
   .chall-result-status { font-family: var(--hand); font-weight: 700; font-size: 22px; color: var(--ink-soft); margin-bottom: 4px; }
   .chall-result-status.win { color: #2b2722; }
@@ -4285,7 +4340,7 @@
      Equal columns spanning the sheet edge to edge, each tile a shallow landscape rectangle.
      Names stay in the DOM (visually hidden) for the accessible label; a data-tip carries
      the title + kicker on hover. */
-  .see-also--row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin: 24px 0 0; }
+  .see-also--row { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; margin: 24px 0 0; }
   .see-also--row .nav-card {
     display: block; padding: 0; margin: 0; min-width: 0;
     background: none; border: none; box-shadow: none; border-radius: 0;

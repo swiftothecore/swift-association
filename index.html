@@ -786,6 +786,21 @@ if (location.pathname.endsWith('/index.html')) {
           <span class="nav-card-title">mastery</span>
           <span class="nav-card-kicker js-mastery-kicker">skills &amp; rewards</span>
         </button>
+        <button id="bonusBtn" class="nav-card" data-era-tint="teal">
+          <span class="nav-card-seat">
+            <svg class="nav-ic" width="50" height="50" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <rect x="11" y="14" width="26" height="26" rx="6" fill="rgba(74,140,135,.14)" stroke-width="1.7"/>
+              <g fill="rgba(74,140,135,.7)" stroke="none">
+                <circle cx="18" cy="21" r="2.3"/><circle cx="30" cy="21" r="2.3"/>
+                <circle cx="24" cy="27" r="2.3"/>
+                <circle cx="18" cy="33" r="2.3"/><circle cx="30" cy="33" r="2.3"/>
+              </g>
+              <path d="M24 4.4 L24.92 6.98 L27.65 7.02 L25.46 8.66 L26.28 11.24 L24 9.66 L21.72 11.24 L22.54 8.66 L20.35 7.02 L23.08 6.98 Z" fill="rgba(199,149,31,.62)" stroke-width="1"/>
+            </svg>
+          </span>
+          <span class="nav-card-title">bonus games</span>
+          <span class="nav-card-kicker">quick play</span>
+        </button>
       </div>
     </div>
   </section>
@@ -1018,6 +1033,21 @@ if (location.pathname.endsWith('/index.html')) {
         <span class="nav-card-title">mastery</span>
         <span class="nav-card-kicker js-mastery-kicker">skills &amp; rewards</span>
       </button>
+      <button id="viewBonusBtn" class="nav-card" data-tip="bonus games · quick play" data-era-tint="teal">
+        <span class="nav-card-seat">
+          <svg class="nav-ic" width="50" height="50" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <rect x="11" y="14" width="26" height="26" rx="6" fill="rgba(74,140,135,.14)" stroke-width="1.7"/>
+            <g fill="rgba(74,140,135,.7)" stroke="none">
+              <circle cx="18" cy="21" r="2.3"/><circle cx="30" cy="21" r="2.3"/>
+              <circle cx="24" cy="27" r="2.3"/>
+              <circle cx="18" cy="33" r="2.3"/><circle cx="30" cy="33" r="2.3"/>
+            </g>
+            <path d="M24 4.4 L24.92 6.98 L27.65 7.02 L25.46 8.66 L26.28 11.24 L24 9.66 L21.72 11.24 L22.54 8.66 L20.35 7.02 L23.08 6.98 Z" fill="rgba(199,149,31,.62)" stroke-width="1"/>
+          </svg>
+        </span>
+        <span class="nav-card-title">bonus games</span>
+        <span class="nav-card-kicker">quick play</span>
+      </button>
     </div>
   </section>
 
@@ -1055,6 +1085,15 @@ if (location.pathname.endsWith('/index.html')) {
       <button id="challengesBackBtn" class="btn-link">← back</button>
     </div>
     <div id="challengesBody"></div>
+  </section>
+
+  <!-- BONUS GAMES SCREEN — a shelf of quick, self-contained mini-games -->
+  <section id="screen-bonus" class="screen card" tabindex="-1" aria-label="Bonus games">
+    <div class="stats-nav">
+      <span class="stats-title">Bonus games</span>
+      <button id="bonusBackBtn" class="btn-link">← back</button>
+    </div>
+    <div id="bonusBody"></div>
   </section>
 
   <!-- ALBUM FOCUS SCREEN — pick an album, pick a difficulty, beat all 12 -->

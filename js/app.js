@@ -7,6 +7,7 @@ import {
   ERAS, TENDER_ERAS, FINALE_ERAS, ALBUM_ERA, TS_MILESTONES, TS_LORE_DAYS,
   ALBUM_COLORS, CB_ALBUM_COLORS, STUDIO_ALBUMS, TITLE_ALIASES,
   ACHIEVEMENTS, ACH_ICONS, ACH_BY_ID, ACH_GROUPS, ACH_GROUP_COLORS, ACH_GROUP_OF,
+  BONUS_GAMES,
   CHALLENGES, CHALLENGE_BY_ID, CHALLENGE_ORDER, CHALLENGE_SEALS, DARK_SIDE_IDS, DARK_SIDE_TODO,
   DARK_SIDE_MILESTONE,
   IMPOSTOR_WORDS, IMPOSTOR_COUNT, DARK_IMPOSTOR_WORDS,
@@ -600,6 +601,7 @@ const screens = {
   records: $("screen-records"),
   achievements: $("screen-achievements"),
   challenges: $("screen-challenges"),
+  bonus: $("screen-bonus"),
   songbook: $("screen-songbook"),
   albumfocus: $("screen-albumfocus"),
   mastery: $("screen-mastery"),
@@ -802,12 +804,11 @@ function revealNotebook(onDone) {
    ONE deliberate, art-directed arrangement, fixed across visits, so the board reads as
    a set of cards someone intentionally taped down rather than a layout that re-dices
    itself on every render (which looked restless and, on unlucky rolls, left strips
-   floating in the gaps between cards). One strip per card: the top row of three gets
-   corners on the outer pair and a centre pin on the middle card; the bottom row is a
-   centred pair, each taped at its outer corner — so tape never lands in the inner gaps.
-   Rotation, length, and tear vary per card for a handmade feel but never change. Order
-   matches the DOM (start screen): records, stats, charms, challenges, mastery. Strips are
-   injected as .nav-tape child elements (styles.css). */
+   floating in the gaps between cards). One strip per card: each row of three gets corners
+   on the outer pair and a centre pin on the middle card, so tape never lands in the inner
+   gaps. Rotation, length, and tear vary per card for a handmade feel but never change. Order
+   matches the DOM (start screen): records, stats, charms, challenges, mastery, bonus. Strips
+   are injected as .nav-tape child elements (styles.css). */
 const TORN_EDGES = [
   "polygon(5% 0%, 96% 0%, 91% 20%, 97% 40%, 88% 60%, 96% 80%, 90% 100%, 8% 100%, 4% 80%, 10% 60%, 3% 40%, 7% 20%)",
   "polygon(4% 0%, 95% 0%, 99% 25%, 90% 50%, 97% 75%, 93% 100%, 6% 100%, 10% 75%, 2% 50%, 9% 25%)",
@@ -817,8 +818,9 @@ const NAV_TAPE_PATTERN = [
   { left: "-9px",   top: "-6px",             rot: -42, w: 54, tear: 0 },   // records    · top-left corner
   { left: "50%",    top: "-7px", tx: "-50%", rot: 5,   w: 50, tear: 1 },   // stats      · top-centre pin
   { right: "-9px",  top: "-6px",             rot: 40,  w: 56, tear: 2 },   // charms     · top-right corner
-  { left: "-10px",  bottom: "-7px",          rot: 38,  w: 52, tear: 1 },   // challenges · bottom-left corner (centred pair)
-  { right: "-10px", bottom: "-7px",          rot: -44, w: 55, tear: 0 },   // mastery    · bottom-right corner (centred pair)
+  { left: "-10px",  bottom: "-7px",             rot: 38,  w: 52, tear: 1 },   // challenges · bottom-left corner
+  { left: "50%",    bottom: "-7px", tx: "-50%", rot: -6,  w: 50, tear: 2 },   // mastery    · bottom-centre pin
+  { right: "-10px", bottom: "-7px",             rot: -44, w: 55, tear: 0 },   // bonus      · bottom-right corner
 ];
 function makeTapeStrip(spot) {
   const t = document.createElement("span");
@@ -3655,6 +3657,50 @@ function renderTitleStepper() {
   const next = $("tsNext"); if (next) next.onclick = () => { _titleView++; renderTitleStepper(); };
   const wear = $("tsWear"); if (wear) wear.onclick = () => setMasteryTitle(r.payload.title);
   const rst = $("tsReset"); if (rst) rst.onclick = () => setMasteryTitle("");
+}
+
+/* ---------- Bonus games shelf ----------
+   A shelf of quick, self-contained mini-games away from the main association loop. The shelf
+   and its cards are real and wired now; the games themselves are shells (see BONUS_GAMES in
+   config.js) — each renders a coming-soon card until it's authored. When a game is built, flip
+   its `ready` flag and give it a launch branch in `selectBonusGame`. */
+let bonusBackTarget = "start";       // where the shelf's back link returns to
+
+function openBonus(from) {
+  bonusBackTarget = from;
+  renderBonusPage();
+  flipAwayToScreen("bonus");
+}
+
+function renderBonusPage() {
+  const cards = BONUS_GAMES.map((g) => {
+    const soon = !g.ready;
+    return `<button type="button" class="bonus-card${soon ? " is-soon" : ""}" data-id="${escapeHtml(g.id)}">` +
+      `<span class="bonus-card-kicker">${escapeHtml(g.kicker)}</span>` +
+      `<span class="bonus-card-name">${escapeHtml(g.name)}</span>` +
+      `<span class="bonus-card-blurb">${escapeHtml(g.blurb)}</span>` +
+      (soon ? `<span class="bonus-soon">coming soon</span>` : "") +
+    `</button>`;
+  }).join("");
+  const el = $("bonusBody");
+  el.innerHTML =
+    `<p class="bonus-intro">A shelf of quick games away from the main round. More are still being written.</p>` +
+    `<div class="bonus-shelf">${cards}</div>`;
+  el.querySelectorAll(".bonus-card").forEach((b) =>
+    b.addEventListener("click", () => selectBonusGame(b.dataset.id)));
+}
+
+function selectBonusGame(id) {
+  const g = BONUS_GAMES.find((x) => x.id === id);
+  if (!g) return;
+  if (!g.ready) {
+    // A shell: nothing to launch yet. Give the card a small acknowledging wiggle rather than
+    // a dead click, so a tap reads as "heard you, not ready" instead of "broken".
+    const card = $("bonusBody").querySelector(`.bonus-card[data-id="${CSS.escape(id)}"]`);
+    if (card) { card.classList.remove("nudge"); void card.offsetWidth; card.classList.add("nudge"); }
+    return;
+  }
+  // Future: launch the built game here.
 }
 
 /* ---------- Challenges page ---------- */
@@ -13041,6 +13087,12 @@ function buildDevApi() {
       open: () => { gameType = "custom"; rememberGameType("custom"); renderStartPickers(); showScreen("start"); $("startContent").style.display = ""; },
       reset: () => { resetCustom(); syncCustomUI(); },
     },
+    // Bonus games shelf. The games are shells for now (BONUS_GAMES `ready` flags), so this just
+    // lists the roster and jumps to the shelf for playtesting the surface.
+    bonus: {
+      list: () => BONUS_GAMES.map((g) => ({ id: g.id, name: g.name, ready: g.ready })),
+      open: (from) => openBonus(from || "start"),
+    },
     // Normal-mode novelty bias — the coverage nudge that favours un-encountered words in Normal.
     // "Encountered" is read from the lifetime tally (words + misses), so there's no separate store
     // to reset; forget() clears the tally's word history (leaving song/album counts) to replay it.
@@ -13519,6 +13571,9 @@ async function init() {
   $("challengesBtn").addEventListener("click", () => openChallenges("start"));
   $("viewChallengesBtn").addEventListener("click", () => openChallenges("results"));
   $("challengesBackBtn").addEventListener("click", () => backToScreen(challengesBackTarget));
+  $("bonusBtn").addEventListener("click", () => openBonus("start"));
+  $("viewBonusBtn").addEventListener("click", () => openBonus("results"));
+  $("bonusBackBtn").addEventListener("click", () => backToScreen(bonusBackTarget));
   $("albumFocusBtn").addEventListener("click", () => openAlbumFocus("start"));
   $("albumFocusBackBtn").addEventListener("click", () => backToScreen(albumFocusBackTarget));
   $("againBtn").addEventListener("click", () => {

@@ -244,6 +244,23 @@ export const CUSTOM_DEFAULT_MODE = {
    Only levers that already flow through existing code live here. Dark behaviours that need
    NEW rule logic are deliberately absent rather than added as inert data that silently does
    nothing; they are listed in DARK_SIDE_TODO below. */
+// BONUS GAMES — a shelf of quick, self-contained mini-games that sit apart from the
+// main association loop. This is the roster the shelf draws from. Each game is authored
+// one at a time; until then it's a "shell": `ready:false` renders a coming-soon card that
+// launches nothing. Flip `ready` true and wire the launcher in `selectBonusGame` when the
+// game is built. Keep `name` short and `blurb` to a single sentence so the cards stay even.
+export const BONUS_GAMES = [
+  { id: "spot-the-slip", name: "Spot the Slip", ready: false,
+    kicker: "find the wrong word",
+    blurb: "One word in the lyric has been swapped for an impostor. Catch it before the ink dries." },
+  { id: "name-that-song", name: "Name That Song", ready: false,
+    kicker: "lyric in, title out",
+    blurb: "Read the line, name the song, and beat the clock. No prompt word to lean on but the lyric itself." },
+  { id: "sing-it-back", name: "Sing It Back", ready: false,
+    kicker: "recite from memory",
+    blurb: "Pick a song, take a word, and write out the very line that holds it." },
+];
+
 export const CHALLENGES = [
   { id: "vanishing-word", name: "Vanishing Word", rule: "vanishing", mode: "medium",
     free: true,  cost: 1, target: 10, revealMs: 1500, tapes: 1,

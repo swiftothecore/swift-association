@@ -27,6 +27,7 @@ Standout features:
 
 With many features in the works as we speak:
 
+- Bonus mini-games
 - Global leaderboards
 - More easter eggs
 - More sound design
