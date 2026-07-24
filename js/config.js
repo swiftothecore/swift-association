@@ -51,7 +51,6 @@ export const ALBUM_FOCUS_KEY = "swiftSongAssociation.albumFocus";       // per-a
 export const ADAPTIVE_KEY = "swiftSongAssociation.adaptive";            // Adaptive mode board — { bestPeak, bestScore, date, played }
 export const SEARCH_KEY = "swiftSongAssociation.search";                // Swift To The Lyric searcher — { mode, view, recent:[] }
 export const MASTERY_KEY = "swiftSongAssociation.mastery";              // skills + mastery progression — { skills:{...xp}, masteryXp, unlocked:{[rewardId]:isoDate} }
-export const STUDY_KEY = "swiftSongAssociation.studySet";              // Study mode Leitner deck — { words:{[word]:{box,seen,due}}, sessions }
 export const CUSTOM_KEY = "swiftSongAssociation.custom";               // player-authored modes — { presets:[{id,name,mode}], activeId }
 export const KEEPSAKES_KEY = "swiftSongAssociation.keepsakes";         // earned collectibles — { [polaroidId]: isoDate } (unlock time, mirrors achievements)
 
@@ -181,21 +180,6 @@ export const ADAPT_PROMO_STREAK = 2;    // correct answers at a level needed to 
 // rarest tiers test RECALL (type the full title) not just recognition. Set above
 // ADAPT_MAX_LEVEL to keep suggestions on for the whole run.
 export const ADAPT_NODROP_LEVEL = 3;    // suggestions off from Rare (L3) upward
-
-/* ---------- Study mode (personal review deck, Leitner SRS) ---------- */
-// Boxes 1..5. A word is "due" for review when the session counter reaches its `due`.
-// Getting a word right in ANY finished game promotes it a box and pushes its next review
-// further out; missing it drops it to box 1 (and re-enters it into the deck). Box 5 = graduated.
-// The interval is in "sessions" (finished games), a simple monotonic SRS clock — index by box-1.
-export const STUDY_MAX_BOX = 5;
-export const STUDY_INTERVALS = [1, 2, 4, 8, 16];   // sessions until due again, per box (box1..box5)
-export const STUDY_SESSION_ROUNDS = TOTAL_ROUNDS;  // a review session is up to this many rounds (ends early if the deck runs dry)
-// Deck weighting — how strongly each learning signal pulls a word into a session. All additive;
-// a floor keeps it from being strictly worst-first (weighted sample, not a sort).
-export const STUDY_MISS_WEIGHT = 3;      // per recorded miss (tally.misses[w])
-export const STUDY_GAP_WEIGHT = 4;       // a word that can unlock an undiscovered song (catalogue completion)
-export const STUDY_BOX_WEIGHT = 5;       // multiplied by (STUDY_MAX_BOX - box): lower box = more urgent
-export const STUDY_BASE_WEIGHT = 1;      // floor of randomness so it never feels grindy
 
 /* ---------- Custom mode (player-authored "workshop" modes) ----------
    A sandboxed gameType. The player builds a MODES-shaped lever object in the Change modal,
@@ -1227,13 +1211,6 @@ export const ACH_ICONS = {
   // two cherries off one stem, both songs on every page
   cherries:`<svg viewBox="0 0 24 24"><g class="ink" stroke-width="1.4" fill="none"><path d="M12.6 3 C10.2 6.2 8.6 9.6 8.1 13.2"/><path d="M12.6 3 C14.2 6.6 15.1 10 15.3 13.6"/></g><ellipse class="ink-fill" cx="15.5" cy="4.3" rx="2.6" ry="1.1" transform="rotate(26 15.5 4.3)"/><circle class="ink-fill" cx="7.8" cy="16.2" r="3.2"/><circle class="ink-fill" cx="15.6" cy="16.6" r="3.2"/><g fill="var(--paper)" stroke="none"><circle cx="6.7" cy="15.1" r="0.8"/><circle cx="14.5" cy="15.5" r="0.8"/></g></svg>`,
 
-  /* ---- Study charms ---- */
-  // the calendar turned back to a winter page
-  december:`<svg viewBox="0 0 24 24"><rect class="ink-fill" x="4.4" y="4.2" width="15.2" height="16.6" rx="1.5"/><g class="ink" stroke-width="1.5"><path d="M8.6 2 V6.2"/><path d="M15.4 2 V6.2"/></g><path d="M4.4 8.6 H19.6" stroke="currentColor" stroke-width="1.1" fill="none"/><g stroke="currentColor" stroke-width="1.05" fill="none" stroke-linecap="round"><path d="M12 10.6 V18.2"/><path d="M8.7 12.5 L15.3 16.3"/><path d="M15.3 12.5 L8.7 16.3"/><path d="M10.9 11.7 L12 12.7 L13.1 11.7"/><path d="M10.9 17.1 L12 16.1 L13.1 17.1"/></g></svg>`,
-  // the keepsake box open for one more word that stayed
-  keepsake:`<svg viewBox="0 0 24 24"><path class="ink-fill" d="M4.4 13.2 L17.6 7 L18.8 9.6 L5.6 15.8 Z"/><rect class="ink-fill" x="4.6" y="13.6" width="14.8" height="7.4" rx="1.2"/><path d="M12.2 19.4 C10.2 17.9 10.8 16.1 12.2 17 C13.6 16.1 14.2 17.9 12.2 19.4 Z" fill="currentColor" stroke="none"/><path class="ink-fill" d="M17.4 1.8 L18.1 3.3 L19.6 4 L18.1 4.7 L17.4 6.2 L16.7 4.7 L15.2 4 L16.7 3.3 Z"/><g class="ink" stroke-width="1.1"><path d="M16.2 7.4 L15.2 9.4"/><path d="M19 7.8 L18.4 9.6"/></g></svg>`,
-  // cap and tassel, a whole class graduated in one day
-  mortarboard:`<svg viewBox="0 0 24 24"><path class="ink-fill" d="M7.2 10.4 V14.6 C7.2 16.6 16.8 16.6 16.8 14.6 V10.4 L12 12.6 Z"/><path class="ink-fill" d="M12 3.4 L21.8 7.9 L12 12.4 L2.2 7.9 Z"/><circle class="ink-fill" cx="12" cy="7.4" r="0.9"/><path class="ink" stroke-width="1.3" fill="none" d="M12 7.6 C16.6 7.9 19.6 9.8 19.9 14"/><circle class="ink-fill" cx="19.9" cy="15.4" r="1.25"/><g class="ink" stroke-width="1"><path d="M19.3 16.5 L19 17.9"/><path d="M20.5 16.5 L20.8 17.9"/></g></svg>`,
 };
 
 /* ---------- Challenge wax seals ----------
@@ -1494,9 +1471,6 @@ export const ACHIEVEMENTS = [
   { id: "change",           name: "Change",           desc: "Beat all 12 albums in Album Focus",     secret: false, icon: "butterfly" },
   { id: "gold-rush",        name: "Gold Rush",        desc: "Perfect an album in Album Focus (13/13)", secret: true,  icon: "coins" },
   { id: "starlight",        name: "Starlight",        desc: "Perfect all 12 albums in Album Focus",  secret: true,  icon: "constellation" },
-  { id: "back-to-december", name: "Back To December", desc: "Finish your first Study session",       secret: false, icon: "december" },
-  { id: "stay-beautiful",   name: "Stay Beautiful",   desc: "Settle 25 words into the top review box", secret: false, icon: "keepsake" },
-  { id: "the-best-day",     name: "The Best Day",     desc: "Graduate 5 words in a single Study session", secret: true, icon: "mortarboard" },
   { id: "you-took-a-polaroid-of-us", name: "You Took A Polaroid Of Us", desc: "Find every polaroid keepsake", secret: true, icon: "polaroid" },
   { id: "is-it-over-now",   name: "Is It Over Now?",  desc: "Earn every hidden achievement",         secret: true,  icon: "hourglass" },
   { id: "the-lucky-one",    name: "The Lucky One",    desc: "Earn every other achievement",          secret: true,  icon: "clover" },
@@ -1514,7 +1488,6 @@ export const ACH_GROUPS = [
   { id: "challenges", label: "Challenges",             short: "Challenge" },
   { id: "albumFocus", label: "Album Focus",            short: "Album" },
   { id: "adaptive",  label: "Adaptive mode",          short: "Adaptive" },
-  { id: "study",     label: "Study mode",             short: "Study" },
 ];
 // One muted notebook hue per theme — the section dots and the by-theme breakdown bars.
 export const ACH_GROUP_COLORS = {
@@ -1526,7 +1499,6 @@ export const ACH_GROUP_COLORS = {
   challenges: "#2b2722",
   albumFocus: "#a8577a",
   adaptive:  "#7d5a3f",
-  study:     "#7a9e5e",
 };
 // Membership: only the non-core ids are listed; everything else defaults to "core"
 // (groupOf in app.js). Keeps this in sync without re-listing every achievement.
@@ -1549,7 +1521,6 @@ export const ACH_GROUP_OF = {
   "blank-space": "challenges", "you-belong-with-me": "challenges", "tied-together": "challenges",
   "a-place-in-this-world": "albumFocus", "change": "albumFocus", "gold-rush": "albumFocus", "starlight": "albumFocus",
   "the-lakes": "adaptive", "stay-stay-stay": "adaptive",
-  "back-to-december": "study", "stay-beautiful": "study", "the-best-day": "study",
 };
 
 /* ---------- Easter-egg art ---------- */

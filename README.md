@@ -15,7 +15,6 @@ Standout features:
 - Endless mode
 - Adaptive mode, where the word difficulty climbs and falls with how you play
 - Album focus mode so you can concentrate on ONE album only
-- Study mode so you can improve
 - Challenges mode with 33 challenges, most with a harder "dark side" to unlock, plus a super-hard tier unlocked through mastery
 - Daily challenge
 - The ability to make your own **custom modes**

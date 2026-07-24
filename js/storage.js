@@ -8,7 +8,6 @@ import {
   CHALLENGES_KEY, CHALLENGE_TOKENS_KEY,
   ALBUM_FOCUS_KEY, ALBUM_FOCUS_TARGET, DIFF_RANK,
   ADAPTIVE_KEY,
-  STUDY_KEY, STUDY_MAX_BOX, STUDY_INTERVALS,
   CUSTOM_KEY, CUSTOM_DEFAULT_MODE,
   KEEPSAKES_KEY,
   MASTERY_KEY, SKILL_IDS, MASTERY_REWARDS, MASTERY_GATE,
@@ -316,55 +315,7 @@ export function recordGameTally(rounds) {
     }
   }
   saveSongTally(t);
-  foldStudyBoxes(rounds);   // Leitner boxes move on EVERY finished game (a correct answer anywhere graduates a word)
   return t;
-}
-
-/* ---------- Study mode: the Leitner review deck ---------- */
-// Key: swiftSongAssociation.studySet
-//   words:    { [word]: { box: 1..STUDY_MAX_BOX, seen, due } } — SRS state per word
-//   sessions: monotonic counter, ++ once per finished game — the review "clock"
-// A word is "due" when sessions >= its `due`. Box 5 = graduated (stays until missed again).
-export function loadStudySet() {
-  try {
-    const raw = localStorage.getItem(STUDY_KEY);
-    if (raw) {
-      const o = JSON.parse(raw);
-      if (o && typeof o === "object") {
-        return { words: o.words || {}, sessions: o.sessions || 0 };
-      }
-    }
-  } catch (e) { /* ignore */ }
-  return { words: {}, sessions: 0 };
-}
-export function saveStudySet(s) {
-  try { localStorage.setItem(STUDY_KEY, JSON.stringify(s)); } catch (e) { /* ignore */ }
-}
-export function resetStudySet() {
-  try { localStorage.removeItem(STUDY_KEY); } catch (e) { /* ignore */ }
-}
-// Move each played word's Leitner box, then advance the session clock. A correct answer
-// on a word we're already tracking promotes it (box+1, next review pushed further out); a
-// miss drops any word to box 1 and (re)enters it into the deck. A correct answer on an
-// untracked word is ignored — the deck only ever holds words the player has stumbled on.
-export function foldStudyBoxes(rounds) {
-  const s = loadStudySet();
-  const now = s.sessions;
-  const nextDue = (box) => now + (STUDY_INTERVALS[box - 1] || STUDY_INTERVALS[STUDY_INTERVALS.length - 1]);
-  for (const r of rounds) {
-    if (!r || !r.word) continue;
-    const cur = s.words[r.word];
-    if (r.correct) {
-      if (!cur) continue;                                   // never miss it → never add it
-      const box = Math.min(cur.box + 1, STUDY_MAX_BOX);
-      s.words[r.word] = { box, seen: now, due: nextDue(box) };
-    } else {
-      s.words[r.word] = { box: 1, seen: now, due: nextDue(1) };
-    }
-  }
-  s.sessions = now + 1;
-  saveStudySet(s);
-  return s;
 }
 
 /* ---------- Lifetime metrics (cross-game, cross-mode counters) ---------- */
