@@ -8,6 +8,7 @@ import {
   CHALLENGES_KEY, CHALLENGE_TOKENS_KEY,
   ALBUM_FOCUS_KEY, ALBUM_FOCUS_TARGET, DIFF_RANK,
   ADAPTIVE_KEY,
+  BONUS_KEY,
   CUSTOM_KEY, CUSTOM_DEFAULT_MODE,
   KEEPSAKES_KEY,
   MASTERY_KEY, SKILL_IDS, MASTERY_REWARDS, MASTERY_GATE,
@@ -214,6 +215,41 @@ export function recordAdaptiveRun(peak, score, date) {
 }
 export function resetAdaptive() {
   try { localStorage.removeItem(ADAPTIVE_KEY); } catch (e) { /* ignore */ }
+}
+
+/* ---------- Bonus games board (sandboxed, like challenges/album focus/custom) ----------
+   { [gameId]: {best, plays, last} }. These are side games with their own scoring shape, so
+   they stay entirely out of the difficulty stats, records, history and the song tally — a
+   Name That Song run is not a run of the association game and must not be ranked beside one. */
+export function loadBonus() {
+  try {
+    const raw = localStorage.getItem(BONUS_KEY);
+    if (raw) { const o = JSON.parse(raw); if (o && typeof o === "object") return o; }
+  } catch (e) { /* ignore */ }
+  return {};
+}
+export function saveBonus(o) {
+  try { localStorage.setItem(BONUS_KEY, JSON.stringify(o)); } catch (e) { /* ignore */ }
+}
+export function bonusRecord(id) {
+  const e = loadBonus()[id] || {};
+  return { best: e.best || 0, plays: e.plays || 0, last: e.last || 0 };
+}
+// Fold a finished bonus run into the board and return the updated record, plus whether the
+// run set a new best (the end card calls that out).
+export function recordBonusRun(id, score) {
+  const all = loadBonus();
+  const e = all[id] || {};
+  const isBest = score > (e.best || 0);
+  if (isBest) e.best = score;
+  e.plays = (e.plays || 0) + 1;
+  e.last = score;
+  all[id] = e;
+  saveBonus(all);
+  return { ...bonusRecord(id), isBest };
+}
+export function resetBonus() {
+  try { localStorage.removeItem(BONUS_KEY); } catch (e) { /* ignore */ }
 }
 
 /* ---------- Custom mode: player-authored preset store ---------- */

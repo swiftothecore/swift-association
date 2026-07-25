@@ -1094,6 +1094,24 @@ if (location.pathname.endsWith('/index.html')) {
     <div id="bonusBody"></div>
   </section>
 
+  <!-- BONUS GAME PLAY SCREEN — shared chrome (name · progress · clock) for every bonus game;
+       each game fills #bonusPlayBody and the end card renders there too. -->
+  <section id="screen-bonusplay" class="screen card" tabindex="-1" aria-label="Bonus game">
+    <div class="stats-nav">
+      <span class="stats-title" id="bonusPlayTitle">Bonus game</span>
+      <button id="bonusQuitBtn" class="btn-link">← quit</button>
+    </div>
+    <div id="bonusHud" class="bg-hud">
+      <span id="bonusProgress" class="bg-progress"></span>
+      <span id="bonusScore" class="bg-score"></span>
+    </div>
+    <div id="bonusTimer" class="bg-timer">
+      <div class="bg-timer-track"><div id="bonusTimerFill" class="bg-timer-fill"></div></div>
+    </div>
+    <div id="bonusPlayBody"></div>
+    <div id="bonusFeedback" class="bg-feedback" aria-live="polite"></div>
+  </section>
+
   <!-- ALBUM FOCUS SCREEN — pick an album, pick a difficulty, beat all 12 -->
   <section id="screen-albumfocus" class="screen card" tabindex="-1" aria-label="Album focus">
     <div class="stats-nav">

@@ -49,6 +49,7 @@ export const CHALLENGES_KEY = "swiftSongAssociation.challenges";        // per-c
 export const CHALLENGE_TOKENS_KEY = "swiftSongAssociation.challengeTokens"; // { balance } — tokens spent to unlock challenges
 export const ALBUM_FOCUS_KEY = "swiftSongAssociation.albumFocus";       // per-album best/beaten board — { [album]: {best, bestDiff, beaten, beatenDiff, perfected, perfectedDiff} }
 export const ADAPTIVE_KEY = "swiftSongAssociation.adaptive";            // Adaptive mode board — { bestPeak, bestScore, date, played }
+export const BONUS_KEY = "swiftSongAssociation.bonus";                  // bonus games shelf — { [gameId]: {best, plays, last} }
 export const SEARCH_KEY = "swiftSongAssociation.search";                // Swift To The Lyric searcher — { mode, view, recent:[] }
 export const MASTERY_KEY = "swiftSongAssociation.mastery";              // skills + mastery progression — { skills:{...xp}, masteryXp, unlocked:{[rewardId]:isoDate} }
 export const CUSTOM_KEY = "swiftSongAssociation.custom";               // player-authored modes — { presets:[{id,name,mode}], activeId }
@@ -250,16 +251,20 @@ export const CUSTOM_DEFAULT_MODE = {
 // launches nothing. Flip `ready` true and wire the launcher in `selectBonusGame` when the
 // game is built. Keep `name` short and `blurb` to a single sentence so the cards stay even.
 export const BONUS_GAMES = [
-  { id: "spot-the-slip", name: "Spot the Slip", ready: false,
+  { id: "spot-the-slip", name: "Spot the Slip", ready: true,
     kicker: "find the wrong word",
     blurb: "One word in the lyric has been swapped for an impostor. Catch it before the ink dries." },
-  { id: "name-that-song", name: "Name That Song", ready: false,
+  { id: "name-that-song", name: "Name That Song", ready: true,
     kicker: "lyric in, title out",
     blurb: "Read the line, name the song, and beat the clock. No prompt word to lean on but the lyric itself." },
   { id: "sing-it-back", name: "Sing It Back", ready: false,
     kicker: "recite from memory",
     blurb: "Pick a song, take a word, and write out the very line that holds it." },
 ];
+// A bonus run is short by design — these sit beside the main game, they don't replace it.
+export const BONUS_ROUNDS = 10;
+export const BONUS_SLIP_SECONDS = 20;   // reading a whole line takes longer than naming a title
+export const BONUS_NAME_SECONDS = 15;
 
 export const CHALLENGES = [
   { id: "vanishing-word", name: "Vanishing Word", rule: "vanishing", mode: "medium",

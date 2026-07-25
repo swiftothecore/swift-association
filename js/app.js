@@ -7,7 +7,7 @@ import {
   ERAS, TENDER_ERAS, FINALE_ERAS, ALBUM_ERA, TS_MILESTONES, TS_LORE_DAYS,
   ALBUM_COLORS, CB_ALBUM_COLORS, STUDIO_ALBUMS, TITLE_ALIASES,
   ACHIEVEMENTS, ACH_ICONS, ACH_BY_ID, ACH_GROUPS, ACH_GROUP_COLORS, ACH_GROUP_OF,
-  BONUS_GAMES,
+  BONUS_GAMES, BONUS_ROUNDS, BONUS_SLIP_SECONDS, BONUS_NAME_SECONDS,
   CHALLENGES, CHALLENGE_BY_ID, CHALLENGE_ORDER, CHALLENGE_SEALS, DARK_SIDE_IDS, DARK_SIDE_TODO,
   DARK_SIDE_MILESTONE,
   IMPOSTOR_WORDS, IMPOSTOR_COUNT, DARK_IMPOSTOR_WORDS,
@@ -40,6 +40,7 @@ import { buildBraceletSVG, charmPreviewSVG } from "./bracelet.js";
 import { exportBraceletCard, copyBraceletCard, buildCardSVG, fontFaceCss } from "./braceletcard.js";
 import { sfx } from "./sound.js";
 import { wordRegex as wordRegexCore, extractLineWithWord as extractLineWithWordCore, highlightWord as highlightWordCore, wordVariants } from "./match.js";
+import { buildLineIndex, buildSlipContext, buildSlipPuzzle, buildNamePuzzle } from "./bonus.js";
 import {
   loadRecords, insertRecord, migrateRecordsFromStats, getPlayerName, setPlayerName,
   getAvatar, setAvatar,
@@ -61,6 +62,7 @@ import {
   loadChallengeTokens, saveChallengeTokens, resetChallenges,
   loadAlbumFocus, saveAlbumFocus, albumFocusRecord, recordAlbumFocusRun, resetAlbumFocus,
   adaptiveRecord, recordAdaptiveRun,
+  bonusRecord, recordBonusRun, resetBonus,
   resetRecords, resetStatsAll, resetAchievements, resetTally, resetDaily, clearAllData,
   loadMastery, saveMastery, recordSkillXp, resetMastery, totalSkillLevels, isMasteryUnlocked,
 } from "./storage.js";
@@ -602,6 +604,7 @@ const screens = {
   achievements: $("screen-achievements"),
   challenges: $("screen-challenges"),
   bonus: $("screen-bonus"),
+  bonusplay: $("screen-bonusplay"),
   songbook: $("screen-songbook"),
   albumfocus: $("screen-albumfocus"),
   mastery: $("screen-mastery"),
@@ -3660,11 +3663,42 @@ function renderTitleStepper() {
 }
 
 /* ---------- Bonus games shelf ----------
-   A shelf of quick, self-contained mini-games away from the main association loop. The shelf
-   and its cards are real and wired now; the games themselves are shells (see BONUS_GAMES in
-   config.js) — each renders a coming-soon card until it's authored. When a game is built, flip
-   its `ready` flag and give it a launch branch in `selectBonusGame`. */
+   A shelf of quick, self-contained mini-games away from the main association loop. Two are
+   built (Spot the Slip, Name That Song); the rest are shells — `ready:false` in BONUS_GAMES
+   renders a coming-soon card that launches nothing. To build one: flip `ready` and add its
+   branch to `selectBonusGame` + `renderBonusRound`.
+
+   SANDBOXED, like Challenges/Album Focus/Custom. A bonus run is not a run of the association
+   game and is never ranked beside one: nothing here touches stats, records, history, the song
+   tally, metrics, achievements or skill XP. The only thing a run writes is its own best score
+   (`recordBonusRun`). Keep it that way — these are deliberately unbalanced against the main
+   game's scoring. */
 let bonusBackTarget = "start";       // where the shelf's back link returns to
+
+// The puzzle builders need two catalogue-wide indexes (see js/bonus.js). Both are a full pass
+// over every lyric line, so they're built once on first play and cached for the session —
+// never at load, since most sessions never open the shelf.
+let bonusLineIndex = null;
+let bonusSlipCtx = null;
+function bonusIndexes() {
+  if (!bonusLineIndex) bonusLineIndex = buildLineIndex(allSongs);
+  if (!bonusSlipCtx) bonusSlipCtx = buildSlipContext(allSongs);
+  return { lineIndex: bonusLineIndex, ctx: bonusSlipCtx };
+}
+
+/* In-run state. Deliberately separate from the main game's state (score/round/currentSongs):
+   a bonus run must never be mistaken for an association run by any shared code path. */
+let bonusGame = null;      // the BONUS_GAMES entry being played
+let bonusRound = 0;        // 1-based page number
+let bonusScore = 0;
+let bonusPuzzle = null;    // this round's puzzle from js/bonus.js
+let bonusLocked = false;   // round answered — ignore further input until the next round
+let bonusRaf = null;       // clock handle (setInterval id — see startBonusClock)
+let bonusEnded = false;
+let bonusRecentFakes = []; // Spot the Slip: impostor words used recently, so a run doesn't repeat one
+// Bumped on every start. The between-rounds pause is a setTimeout, so without a token a run
+// that's quit and immediately restarted would have the old pause advance the NEW run a round.
+let bonusRunId = 0;
 
 function openBonus(from) {
   bonusBackTarget = from;
@@ -3675,11 +3709,18 @@ function openBonus(from) {
 function renderBonusPage() {
   const cards = BONUS_GAMES.map((g) => {
     const soon = !g.ready;
+    const rec = bonusRecord(g.id);
+    // A best score only means something once a game has actually been played.
+    const foot = soon
+      ? `<span class="bonus-soon">coming soon</span>`
+      : `<span class="bonus-card-best">${rec.plays
+          ? `best ${rec.best} / ${BONUS_ROUNDS}`
+          : "not played yet"}</span>`;
     return `<button type="button" class="bonus-card${soon ? " is-soon" : ""}" data-id="${escapeHtml(g.id)}">` +
       `<span class="bonus-card-kicker">${escapeHtml(g.kicker)}</span>` +
       `<span class="bonus-card-name">${escapeHtml(g.name)}</span>` +
       `<span class="bonus-card-blurb">${escapeHtml(g.blurb)}</span>` +
-      (soon ? `<span class="bonus-soon">coming soon</span>` : "") +
+      foot +
     `</button>`;
   }).join("");
   const el = $("bonusBody");
@@ -3700,7 +3741,220 @@ function selectBonusGame(id) {
     if (card) { card.classList.remove("nudge"); void card.offsetWidth; card.classList.add("nudge"); }
     return;
   }
-  // Future: launch the built game here.
+  startBonusGame(g);
+}
+
+function startBonusGame(g) {
+  bonusGame = g;
+  bonusRound = 0;
+  bonusScore = 0;
+  bonusEnded = false;
+  bonusRecentFakes = [];
+  bonusRunId++;
+  stopBonusClock();
+  $("bonusPlayTitle").textContent = g.name;
+  flipAwayToScreen("bonusplay");
+  nextBonusRound();
+}
+
+function bonusSeconds() {
+  return bonusGame && bonusGame.id === "spot-the-slip" ? BONUS_SLIP_SECONDS : BONUS_NAME_SECONDS;
+}
+
+function nextBonusRound() {
+  if (bonusRound >= BONUS_ROUNDS) { endBonusRun(); return; }
+  bonusRound++;
+  bonusLocked = false;
+  $("bonusFeedback").innerHTML = "";
+  $("bonusFeedback").className = "bg-feedback";
+  $("bonusProgress").textContent = `round ${bonusRound} / ${BONUS_ROUNDS}`;
+  $("bonusScore").textContent = `${bonusScore} correct`;
+  $("bonusTimer").style.display = "";
+
+  const { lineIndex, ctx } = bonusIndexes();
+  bonusPuzzle = bonusGame.id === "spot-the-slip"
+    ? buildSlipPuzzle(allSongs, playableWords, lineIndex, ctx, Math.random, 120, new Set(bonusRecentFakes))
+    : buildNamePuzzle(allSongs, lineIndex);
+  // A builder returning null means it couldn't find a puzzle clearing its fairness bars. That
+  // should be vanishingly rare, but skipping the page is the honest response — never show a
+  // puzzle we can't vouch for.
+  if (!bonusPuzzle) { nextBonusRound(); return; }
+  if (bonusPuzzle.fakeWord) {
+    bonusRecentFakes.push(bonusPuzzle.fakeWord.toLowerCase());
+    if (bonusRecentFakes.length > 6) bonusRecentFakes.shift();
+  }
+
+  renderBonusRound();
+  startBonusClock();
+}
+
+function renderBonusRound() {
+  const body = $("bonusPlayBody");
+  const p = bonusPuzzle;
+  const label = p.label ? `<div class="bg-section">${escapeHtml(p.label.toLowerCase())}</div>` : "";
+
+  if (bonusGame.id === "spot-the-slip") {
+    const words = p.tokens.map((t, i) => t.tappable
+      ? `<button type="button" class="bg-word" data-i="${i}">${escapeHtml(t.text)}</button>`
+      : `<span class="bg-word-plain">${escapeHtml(t.text)}</span>`).join(" ");
+    body.innerHTML =
+      `<p class="bg-ask">One word was swapped. Tap the impostor.</p>` +
+      label +
+      `<div class="bg-line" role="group" aria-label="Lyric line with one wrong word">${words}</div>`;
+    body.querySelectorAll(".bg-word").forEach((b) =>
+      b.addEventListener("click", () => judgeSlip(+b.dataset.i)));
+  } else {
+    body.innerHTML =
+      `<p class="bg-ask">Which song is this line from?</p>` +
+      label +
+      `<blockquote class="bg-lyric">${escapeHtml(p.line)}</blockquote>` +
+      `<div class="bg-input-wrap">` +
+        `<input id="bonusInput" type="text" autocomplete="off" spellcheck="false" ` +
+               `placeholder="name the song…" aria-label="Type the song title" />` +
+        `<div id="bonusReject" class="bg-reject"></div>` +
+      `</div>`;
+    const input = $("bonusInput");
+    input.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") { e.preventDefault(); judgeName(); }
+    });
+    input.focus();
+  }
+}
+
+/* ---------- the clock ----------
+   setInterval off a performance.now() baseline, matching the main game's timer rather than
+   requestAnimationFrame: rAF is suspended in a backgrounded tab, which would freeze the clock
+   while hidden and then, because the deadline is absolute, expire the round the instant the
+   player came back. An interval keeps ticking (throttled but firing) and stays accurate. */
+function startBonusClock() {
+  stopBonusClock();
+  const fill = $("bonusTimerFill");
+  const total = bonusSeconds() * 1000;
+  const started = performance.now();
+  fill.style.width = "100%";
+  fill.classList.remove("low");
+  bonusRaf = setInterval(() => {
+    const left = Math.max(0, total - (performance.now() - started));
+    const pct = (left / total) * 100;
+    fill.style.width = pct + "%";
+    fill.classList.toggle("low", pct <= 25);
+    if (left <= 0) bonusTimeout();
+  }, 50);
+}
+function stopBonusClock() {
+  if (bonusRaf) clearInterval(bonusRaf);
+  bonusRaf = null;
+}
+
+function bonusTimeout() {
+  if (bonusLocked) return;
+  settleBonusRound(false, "out of time");
+}
+
+/* ---------- judging ---------- */
+function judgeSlip(i) {
+  if (bonusLocked) return;
+  const correct = i === bonusPuzzle.answer;
+  // Mark the tap and always reveal the real impostor, so a wrong guess still teaches the line.
+  const btns = $("bonusPlayBody").querySelectorAll(".bg-word");
+  btns.forEach((b) => {
+    const idx = +b.dataset.i;
+    b.disabled = true;
+    if (idx === bonusPuzzle.answer) b.classList.add("is-answer");
+    else if (idx === i) b.classList.add("is-wrong");
+  });
+  settleBonusRound(correct, correct
+    ? `Yes — it's <b>${escapeHtml(bonusPuzzle.realWord)}</b>, not <b>${escapeHtml(bonusPuzzle.fakeWord)}</b>.`
+    : `It was <b>${escapeHtml(bonusPuzzle.fakeWord)}</b> — the real word is <b>${escapeHtml(bonusPuzzle.realWord)}</b>.`);
+}
+
+function judgeName() {
+  if (bonusLocked) return;
+  const raw = $("bonusInput").value;
+  const key = normalizeTitle(raw);
+  if (!key) return;
+  // Same forgiving title resolution the main game uses, so aliases and misplaced spaces work.
+  let song = titleIndex.get(key) || spacelessIndex.get(key.replace(/ /g, "")) || null;
+  if (!song) {
+    // Not a song we know: don't burn the round, just say so and let them keep typing.
+    const r = $("bonusReject");
+    r.textContent = "not a song I know";
+    r.classList.remove("show"); void r.offsetWidth; r.classList.add("show");
+    return;
+  }
+  const correct = song.title === bonusPuzzle.song.title;
+  $("bonusInput").disabled = true;
+  settleBonusRound(correct, correct
+    ? `Yes — <b>${escapeHtml(bonusPuzzle.song.title)}</b>.`
+    : `It was <b>${escapeHtml(bonusPuzzle.song.title)}</b>, not ${escapeHtml(song.title)}.`);
+}
+
+// The one place a bonus round ends: locks input, scores it, shows the verdict, moves on.
+function settleBonusRound(correct, message) {
+  bonusLocked = true;
+  stopBonusClock();
+  if (correct) bonusScore++;
+  sfx.play(correct ? "correct" : "wrong");
+
+  const input = $("bonusInput");
+  if (input) input.disabled = true;
+  $("bonusPlayBody").querySelectorAll(".bg-word").forEach((b) => { b.disabled = true; });
+  // Reveal the answer on a timeout too, whichever game we're in.
+  if (bonusGame.id === "spot-the-slip") {
+    $("bonusPlayBody").querySelectorAll(".bg-word").forEach((b) => {
+      if (+b.dataset.i === bonusPuzzle.answer) b.classList.add("is-answer");
+    });
+  }
+
+  const fb = $("bonusFeedback");
+  fb.className = "bg-feedback show " + (correct ? "ok" : "no");
+  fb.innerHTML = `<span class="bg-verdict">${correct ? "correct" : "missed"}</span>` +
+    `<span class="bg-detail">${message}</span>` +
+    `<span class="bg-source">${escapeHtml(bonusPuzzle.song.title)} · ${escapeHtml(bonusPuzzle.song.album)}</span>`;
+  $("bonusScore").textContent = `${bonusScore} correct`;
+
+  const runAtSettle = bonusRunId;
+  setTimeout(() => {
+    if (!bonusEnded && bonusGame && bonusRunId === runAtSettle) nextBonusRound();
+  }, 1900);
+}
+
+/* ---------- end of run ---------- */
+function endBonusRun() {
+  bonusEnded = true;
+  stopBonusClock();
+  const rec = recordBonusRun(bonusGame.id, bonusScore);
+  $("bonusTimer").style.display = "none";
+  $("bonusProgress").textContent = "run complete";
+  $("bonusFeedback").innerHTML = "";
+  $("bonusFeedback").className = "bg-feedback";
+
+  const perfect = bonusScore === BONUS_ROUNDS;
+  $("bonusPlayBody").innerHTML =
+    `<div class="bg-end">` +
+      `<div class="bg-end-kicker">${escapeHtml(bonusGame.name)}</div>` +
+      `<div class="bg-end-score">${bonusScore} <span>/ ${BONUS_ROUNDS}</span></div>` +
+      (rec.isBest && rec.plays > 1 ? `<div class="bg-end-best">a new best</div>` : "") +
+      (perfect ? `<div class="bg-end-best">not one slipped past you</div>` : "") +
+      `<div class="bg-end-meta">best ${rec.best} / ${BONUS_ROUNDS} · played ${rec.plays}</div>` +
+      `<div class="bg-end-actions">` +
+        `<button type="button" id="bonusAgainBtn" class="btn-primary">Play again</button>` +
+        `<button type="button" id="bonusShelfBtn" class="btn-primary">← the shelf</button>` +
+      `</div>` +
+    `</div>`;
+  $("bonusAgainBtn").addEventListener("click", () => startBonusGame(bonusGame));
+  $("bonusShelfBtn").addEventListener("click", () => leaveBonusGame());
+}
+
+// Leaving a game (quit or from the end card) always lands back on the shelf, with the board
+// re-rendered so a new best shows immediately.
+function leaveBonusGame() {
+  stopBonusClock();
+  bonusEnded = true;
+  bonusGame = null;
+  bonusPuzzle = null;
+  renderBonusPage();
+  flipInToScreen("bonus");
 }
 
 /* ---------- Challenges page ---------- */
@@ -13087,11 +13341,46 @@ function buildDevApi() {
       open: () => { gameType = "custom"; rememberGameType("custom"); renderStartPickers(); showScreen("start"); $("startContent").style.display = ""; },
       reset: () => { resetCustom(); syncCustomUI(); },
     },
-    // Bonus games shelf. The games are shells for now (BONUS_GAMES `ready` flags), so this just
-    // lists the roster and jumps to the shelf for playtesting the surface.
+    // Bonus games shelf. `sample` is the useful one: it dry-runs a builder N times without
+    // touching the UI, so the fairness guards and (for Spot the Slip) the quality of the
+    // generated swaps can be eyeballed in bulk before shipping a change to js/bonus.js.
     bonus: {
-      list: () => BONUS_GAMES.map((g) => ({ id: g.id, name: g.name, ready: g.ready })),
+      list: () => BONUS_GAMES.map((g) => ({ id: g.id, name: g.name, ready: g.ready, ...bonusRecord(g.id) })),
       open: (from) => openBonus(from || "start"),
+      play: (id) => { const g = BONUS_GAMES.find((x) => x.id === id); if (g && g.ready) startBonusGame(g); return g ? g.name : null; },
+      sample: (id, n = 10) => {
+        const { lineIndex, ctx } = bonusIndexes();
+        const out = [];
+        const recent = [];   // mirrors the in-run avoid list, so samples read like a real run
+        for (let i = 0; i < n; i++) {
+          if (id === "name-that-song") {
+            const p = buildNamePuzzle(allSongs, lineIndex);
+            out.push(p ? { line: p.line, song: p.song.title, album: p.song.album } : null);
+          } else {
+            const p = buildSlipPuzzle(allSongs, playableWords, lineIndex, ctx, Math.random, 120, new Set(recent));
+            if (p) { recent.push(p.fakeWord.toLowerCase()); if (recent.length > 6) recent.shift(); }
+            out.push(p ? { slip: p.tokens.map((t) => t.text).join(" "), real: p.realLine,
+                           swap: `${p.realWord} -> ${p.fakeWord}`, song: p.song.title } : null);
+          }
+        }
+        return out;
+      },
+      // How often a builder succeeds within its own retry budget — a failure here means the
+      // fairness guards have been tightened past what the catalogue can serve.
+      audit: (id, n = 200) => {
+        const { lineIndex, ctx } = bonusIndexes();
+        let ok = 0;
+        for (let i = 0; i < n; i++) {
+          const p = id === "name-that-song"
+            ? buildNamePuzzle(allSongs, lineIndex)
+            : buildSlipPuzzle(allSongs, playableWords, lineIndex, ctx);
+          if (p) ok++;
+        }
+        return { tried: n, built: ok, rate: `${((ok / n) * 100).toFixed(1)}%` };
+      },
+      score: (n) => { bonusScore = Math.max(0, Math.min(BONUS_ROUNDS, +n || 0)); return bonusScore; },
+      end: () => endBonusRun(),
+      reset: () => { resetBonus(); if ($("bonusBody")) renderBonusPage(); },
     },
     // Normal-mode novelty bias — the coverage nudge that favours un-encountered words in Normal.
     // "Encountered" is read from the lifetime tally (words + misses), so there's no separate store
@@ -13574,6 +13863,7 @@ async function init() {
   $("bonusBtn").addEventListener("click", () => openBonus("start"));
   $("viewBonusBtn").addEventListener("click", () => openBonus("results"));
   $("bonusBackBtn").addEventListener("click", () => backToScreen(bonusBackTarget));
+  $("bonusQuitBtn").addEventListener("click", () => leaveBonusGame());
   $("albumFocusBtn").addEventListener("click", () => openAlbumFocus("start"));
   $("albumFocusBackBtn").addEventListener("click", () => backToScreen(albumFocusBackTarget));
   $("againBtn").addEventListener("click", () => {

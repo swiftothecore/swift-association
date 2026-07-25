@@ -21,13 +21,14 @@ Standout features:
 - A skills and mastery system full of rewards
 - Over 90 achievements
 - Ability to save your friendship bracelet as a PNG to share your run!
+- A shelf of bonus mini-games, including one where you hunt a swapped word in a real lyric
 - A companion lyric searcher, Swift To The Lyric, for searching every line of every song
 - Opt-in sound effects
 - Installable as a phone or desktop app and works offline once loaded
 
 With many features in the works as we speak:
 
-- Bonus mini-games
+- More bonus mini-games
 - Global leaderboards
 - More easter eggs
 - More sound design

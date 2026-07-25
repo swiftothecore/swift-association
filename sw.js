@@ -31,6 +31,8 @@ const ASSETS = [
   "js/util.js",
   "js/config.js",
   "js/match.js",
+  // Bonus-game puzzle builders (pure; see js/bonus.js).
+  "js/bonus.js",
   "js/bracelet.js",
   "js/braceletcard.js",
   "js/storage.js",
