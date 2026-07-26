@@ -2514,15 +2514,15 @@
     font-size: 17px; color: var(--ink-soft); pointer-events: none; z-index: 1;
     transform: rotate(8deg);
   }
-  #songInput {
+  .song-input {
     width: 100%; padding: 10px 4px 10px 26px;
     font-family: var(--type); font-size: 17px;
     border: none; border-bottom: 2px solid var(--ink); border-radius: 0;
     background: transparent; color: var(--ink); outline: none;
     caret-color: var(--ink-accent);
   }
-  #songInput::placeholder { color: var(--ink-soft); font-style: italic; }
-  #songInput:focus { box-shadow: inset 0 -2px 0 var(--ink-accent); }
+  .song-input::placeholder { color: var(--ink-soft); font-style: italic; }
+  .song-input:focus { box-shadow: inset 0 -2px 0 var(--ink-accent); }
   .dropdown {
     position: absolute; left: 0; right: 0; top: calc(100% + 6px);
     z-index: 100; display: none;
@@ -2591,7 +2591,7 @@
     80%  { opacity: 1; transform: translateY(0) rotate(-0.5deg); }
     100% { opacity: 0; transform: translateY(-4px) rotate(-0.5deg); }
   }
-  #songInput.reject-pulse { animation: input-reject 0.5s ease; }
+  .song-input.reject-pulse { animation: input-reject 0.5s ease; }
   @keyframes input-reject {
     0%, 100% { box-shadow: inset 0 -2px 0 var(--ink); }
     50%      { box-shadow: inset 0 -3px 0 #b23a3a; }
@@ -2599,7 +2599,7 @@
   body[data-reduce-motion="on"] .reject-flash.show {
     animation: none; opacity: 1; transform: translateY(0) rotate(-0.5deg);
   }
-  body[data-reduce-motion="on"] #songInput.reject-pulse { animation: none; }
+  body[data-reduce-motion="on"] .song-input.reject-pulse { animation: none; }
 
   .hint {
     text-align: center; font-family: var(--hand); font-size: 17px;
@@ -2803,13 +2803,17 @@
   }
 
   /* The shared tap grid (Sea of Songs, Odd One Out, Whose Line?) — tapping a title replaces
-     typing, so the typed-input affordances come off the page on all of them. */
-  #playArea[data-tapgrid="1"] .input-area,
-  #playArea[data-tapgrid="1"] #gameHint,
-  #playArea[data-tapgrid="1"] .hint-btn,
-  #playArea[data-tapgrid="1"] .hint-box,
-  #playArea[data-tapgrid="1"] .verse-meter,
-  #playArea[data-tapgrid="1"] .excluded-note { display: none !important; }
+     typing, so the typed-input affordances come off the page on all of them.
+     Keyed off the data attribute alone, never `#playArea`/`#gameHint`: the page-turn flip
+     sheet is a clone of the game card with all ids stripped, so an id-based selector would
+     stop applying there and the answered page would flip away wearing an input box it never
+     had. (Same rule as the prompt-word modifiers below — always target the class.) */
+  [data-tapgrid="1"] .input-area,
+  [data-tapgrid="1"] .hint,
+  [data-tapgrid="1"] .hint-btn,
+  [data-tapgrid="1"] .hint-box,
+  [data-tapgrid="1"] .verse-meter,
+  [data-tapgrid="1"] .excluded-note { display: none !important; }
   .tap-grid {
     display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;
     margin: 14px auto 4px; max-width: 560px;
@@ -2869,10 +2873,10 @@
 
   /* Common Thread — three lyric lines replace the prompt word; the typed input stays, but the
      suggestion/hint scaffolding goes (a dropdown of titles would give the thread away). */
-  #playArea[data-common="1"] .hint-btn,
-  #playArea[data-common="1"] .hint-box,
-  #playArea[data-common="1"] .verse-meter,
-  #playArea[data-common="1"] .excluded-note { display: none !important; }
+  [data-common="1"] .hint-btn,
+  [data-common="1"] .hint-box,
+  [data-common="1"] .verse-meter,
+  [data-common="1"] .excluded-note { display: none !important; }
   .common-lines[hidden] { display: none; }
   .common-lines {
     max-width: 560px; margin: 6px auto 16px; display: flex; flex-direction: column; gap: 10px;
