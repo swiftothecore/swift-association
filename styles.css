@@ -4277,7 +4277,9 @@
   /* Six half-width tracks (each card spans two), so a trailing row that doesn't fill all
      three columns can be centred under the row above instead of clinging left. */
   .see-also { display: grid; grid-template-columns: repeat(6, 1fr); gap: 14px; margin: 22px -12px 0; }
-  .see-also > .nav-card { grid-column: span 2; }
+  /* Scoped away from the results row, which shares the .see-also class but wants one
+     tile per track (see .see-also--row below). */
+  .see-also:not(.see-also--row) > .nav-card { grid-column: span 2; }
   /* Companion-tool entry: the lyrics searcher lives on its own page, so it sits as
      site-level chrome in the bottom-left corner — mirroring the settings gear (top-right)
      — rather than competing with the data nav-cards. Hidden during active play. */
@@ -4345,9 +4347,9 @@
   .nav-card[data-era-tint="sage"]     { --tint: 122, 158, 94; }
   .nav-card[data-era-tint="teal"]     { --tint: 74, 140, 135; }
   /* A trailing pair (five cards: 3 + 2) centres under the row of three. */
-  .see-also > .nav-card:nth-child(4):nth-last-child(2) { grid-column: 2 / span 2; }
+  .see-also:not(.see-also--row) > .nav-card:nth-child(4):nth-last-child(2) { grid-column: 2 / span 2; }
   /* A lone last card starting a fresh row centres instead of clinging left. */
-  .see-also > .nav-card:last-child:nth-child(3n+1) { grid-column: 3 / span 2; }
+  .see-also:not(.see-also--row) > .nav-card:last-child:nth-child(3n+1) { grid-column: 3 / span 2; }
   /* Sticky tape — OPAQUE pastel washi (a cream backing under a half-strength tint wash,
      plus a diagonal sheen), so the card never shows through. ::before is the primary
      strip, ::after an optional second strip; placement varies per card below so the row
