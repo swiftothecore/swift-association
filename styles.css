@@ -1109,7 +1109,19 @@
     --fade-top: 0px; --fade-bot: 30px;
     -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 var(--fade-top), #000 calc(100% - var(--fade-bot)), transparent 100%);
             mask-image: linear-gradient(to bottom, transparent 0, #000 var(--fade-top), #000 calc(100% - var(--fade-bot)), transparent 100%);
+    scrollbar-width: thin;
+    scrollbar-color: rgba(60,40,18,0.26) transparent;
   }
+  /* The default scrollbar lays a white trough down the page, which on ruled paper reads
+     as a strip of something else taped over the notebook. Track goes transparent so the
+     rules run under it; the thumb is just a soft graphite bar, the same ink the divider
+     and the tally rule are drawn in, darkening a little under the cursor. */
+  .chall-list::-webkit-scrollbar { width: 8px; }
+  .chall-list::-webkit-scrollbar-track { background: transparent; }
+  .chall-list::-webkit-scrollbar-thumb {
+    background: rgba(60,40,18,0.26); border-radius: 4px;
+  }
+  .chall-list::-webkit-scrollbar-thumb:hover { background: rgba(60,40,18,0.42); }
   .chall-item {
     position: relative; display: grid; grid-template-columns: 1fr 20px;
     align-items: center; column-gap: 6px; width: 100%;
