@@ -508,19 +508,21 @@ export const CHALLENGES = [
     desc: "Four songs, and the word hides in the lyrics of three of them. Tap the odd one out, the only song that never sings it.",
     win: "Score 9 / 13 spotting the odd one out." },
   { id: "whose-line", name: "Whose Line?", rule: "whoseline", mode: "medium",
-    free: false, cost: 1, target: 9, seconds: 12, noTitle: false, dropdown: false, tapes: 1,
-    // Dark: a thinner line, not just a faster clock. `hardLines` drops the song's hook (any
-    // line it repeats — the chorus names the track on sight) and takes the SHORTEST legal
-    // line rather than a random one, and `minWords` lowers the floor so those shorter lines
-    // are in the draw at all. buildWhosePuzzle falls back to the base draw if the corpus
-    // can't produce a hook-free line, so this never costs a playable page.
-    hard: { seconds: 8, hardLines: true, minWords: 4,
+    free: false, cost: 1, target: 10, seconds: 8, noTitle: false, dropdown: false, tapes: 1,
+    // Dark: a thinner line. `hardLines` drops the song's hook (any line it repeats — the
+    // chorus names the track on sight) and takes the SHORTEST legal line rather than a random
+    // one, and `minWords` lowers the floor so those shorter lines are in the draw at all.
+    // buildWhosePuzzle falls back to the base draw if the corpus can't produce a hook-free
+    // line, so this never costs a playable page. The clock deliberately does NOT tighten
+    // below the base eight: four songs to read in eight seconds is already the floor, and
+    // taking more away would make a thin line unreadable rather than unknowable.
+    hard: { hardLines: true, minWords: 4,
       blurb: "8s · no typing · one thin line, never the chorus · name the song",
       desc: "No prompt word, and no chorus to lean on. You get one short line from deep in the lyric, four songs, and eight seconds to know whose line it is.",
-      win: "Score 9 / 13 placing lines with nothing to lean on." },
-    blurb: "12s · no typing · one lyric line · name the song it came from",
+      win: "Score 10 / 13 placing lines with nothing to lean on." },
+    blurb: "8s · no typing · one lyric line · name the song it came from",
     desc: "No prompt word at all. You get a single line of lyric and four songs, and you have to know whose line it is.",
-    win: "Score 9 / 13 placing the line." },
+    win: "Score 10 / 13 placing the line." },
   { id: "both-of-us", name: "Both Of Us", rule: "bothwords", mode: "medium",
     free: false, cost: 1, target: 9, seconds: 20, noTitle: false, pool: "easy", tapes: 2,
     // `bothMinSongs` is the winnability floor: a pair is only served if at least this many
@@ -540,20 +542,24 @@ export const CHALLENGES = [
     desc: "Two words on the page instead of one. Name a single song whose lyrics hold both of them, because half doesn't count.",
     win: "Score 9 / 13 naming songs that hold both words." },
   { id: "name-three", name: "Name Three", rule: "multi", mode: "medium",
-    free: false, cost: 1, target: 8, need: 3, seconds: 30, tapes: 3,
+    free: false, cost: 1, target: 8, need: 3, seconds: 30, noTitle: false, tapes: 3,
     // Double Trouble's rule, taken deeper: three songs a page instead of two, and drawn from
     // the whole word pool rather than the common one. `need` already drives the banner, the
     // soft reject and the winnability filter, so this is a registry entry, not new machinery.
-    // Dark: a fourth song on the same thirty-second clock, and a target lowered to keep the
-    // run survivable — four different songs for one word is the wall, not the page count.
-    // The clock deliberately does NOT tighten: naming a fourth song is already the whole
-    // difficulty, and taking seconds away on top would make it a typing race instead.
-    hard: { need: 4, target: 7,
-      blurb: "30s · suggestions · FOUR different songs a page · not in the title",
-      desc: "Three wasn't enough. Four different songs for the one word, every page, in the same half minute.",
+    // `noTitle: false` overrides Normal's usual ban: finding three songs for one word is hard
+    // enough without also ruling out the ones that wear it on the cover, and the titles are
+    // the rung that gets a player from two songs to three.
+    // Dark: a fourth song on the same thirty-second clock, the titles taken back off the
+    // table, and a target lowered to keep the run survivable — four different songs for one
+    // word is the wall, not the page count. The clock deliberately does NOT tighten: naming a
+    // fourth song is already the whole difficulty, and taking seconds away on top would make
+    // it a typing race instead.
+    hard: { need: 4, target: 7, noTitle: true,
+      blurb: "30s · suggestions · FOUR different songs a page · never in the title",
+      desc: "Three wasn't enough. Four different songs for the one word, every page, in the same half minute — and the titles no longer count, so every one of them has to sing it.",
       win: "Clear 7 pages, naming four different songs each." },
-    blurb: "30s · suggestions · name THREE different songs a page · not in the title",
-    desc: "One word, and three different songs that sing it. Anyone can name one. Three means you really know the catalogue.",
+    blurb: "30s · suggestions · name THREE different songs a page",
+    desc: "One word, and three different songs that sing it. Anyone can name one. Three means you really know the catalogue. Songs with the word in the title count here.",
     win: "Clear 8 pages, naming three different songs each." },
   // ---- Risk batch. Four challenges over one shared bead economy: answering is ordinary,
   //      the difficulty is the DECISION you make around each answer. The currency is beads
@@ -562,8 +568,7 @@ export const CHALLENGES = [
   //      rest of the code has to respect: a run can END on more beads than it has pages (so
   //      nothing may render "20 / 13", see riskProgressText), and the bracelet still strings
   //      exactly one bead per page (a bead won at stake wears a horseshoe charm instead).
-  //      tapes:0 (unrated) with placeholder seals, same as the knowledge batch above; no
-  //      dark sides yet, since tightening a difficulty nobody has played is guesswork. ----
+  //      No dark sides yet, since tightening a difficulty nobody has played is guesswork. ----
   { id: "press-your-luck", name: "Press Your Luck", rule: "press", mode: "medium",
     free: false, cost: 1, target: 20, seconds: 12, noTitle: false, tapes: 1,
     blurb: "12s · suggestions · bank the pot or ride on, a miss wipes it",
@@ -574,22 +579,18 @@ export const CHALLENGES = [
     blurb: "12s · suggestions · stake beads on the word before the clock starts",
     desc: "You see the word first, then you say how sure you are. Stake up to three beads before the clock runs: answer it and the stake pays back double, miss it and the stake is gone. A correct answer is always worth its own bead on top.",
     win: "Finish the run on 20 beads." },
-  /* SHELVED — Double Or Nothing, off the roster until its rule is redesigned. The offer paid a
-     flat +1 or -1, and an exact doubling is scale-invariant, so taking it was worth 2p-1 beads
-     and was therefore correct on every page for any player above a 50% hit rate. The target of
-     16 against a 13-bead ceiling forced it as well, so the overlay asked a question with one
-     answer 13 times a run. (Press Your Luck escapes this because its pot escalates ADDITIVELY:
-     the pot outgrows the next increment, so the take-vs-bank threshold climbs with depth and the
-     frontier actually moves.) The fix is to escalate difficulty rather than stake: a chain of
-     bonus words on one page worth 1/2/4/8, each drawn rarer on a shorter clock, the whole page
-     forfeit on a miss, which also makes the name true. See PLAN.md. The rule's machinery is
-     still live in app.js (`doubleup`), just unreachable with no roster entry pointing at it.
+  // Double Or Nothing is Press Your Luck's twin over the same pot, escalating by DOUBLING
+  // rather than adding: 1, 2, 4, 8, 16. The first version of this rule paid a flat +1 or -1
+  // and was correct to take on every page for anyone above a 50% hit rate; what makes the
+  // offer a real decision now is that the run is judged on a TARGET, not a score. Once a
+  // chain is worth enough to bank the win, doubling it is worth nothing and risks everything,
+  // so the frontier moves with what you already hold. `target: 20` is deliberately Press Your
+  // Luck's number: at a 75% hit rate both come out around a one-in-two run.
   { id: "double-or-nothing", name: "Double Or Nothing", rule: "doubleup", mode: "medium",
-    free: false, cost: 1, target: 16, seconds: 12, noTitle: false, tapes: 1,
-    blurb: "12s · suggestions · every bead you win can be doubled, or lost",
-    desc: "Clear a page and you're offered a second word for a second bead. Name a song for it and the page is worth two, miss it and you forfeit the bead you had already won. Nobody makes you take the offer.",
-    win: "Finish the run on 16 beads." },
-  */
+    free: false, cost: 1, target: 20, seconds: 12, noTitle: false, tapes: 1,
+    blurb: "12s · suggestions · let a page ride and the next one is worth double",
+    desc: "Clear a page and it's worth one bead. Take it, or let it ride: the next page you clear is worth double, and the one after that double again. Miss while a chain is riding and every bead in it goes, and banking a page at a time can never reach 20.",
+    win: "Finish the run on 20 beads." },
   { id: "insurance", name: "Insurance", rule: "insurance", mode: "easy",
     free: false, cost: 1, target: 13, seconds: 15, tokens: 3, tokenValue: 2, tapes: 2,
     blurb: "15s · sudden death · three shields, and every one you keep is worth beads",
@@ -604,6 +605,11 @@ export const CHALLENGES = [
 export const BOTH_WORDS = 2;
 export const BOTH_MIN_SONGS = 1;
 export const BOTH_PARTNER_TRIES = 400;
+/* How many songs a missed page reveals. Each one is shown holding every word on the page, so
+   two songs is already four or six lines of proof — the ceiling is the reveal staying readable,
+   not the supply (a page is only served once bothMinSongs songs hold every word). Falls back to
+   one song on a page that only had one. */
+export const BOTH_REVEAL_SONGS = 2;
 /* The risk batch's shared economy. Beads are `score`; these are the only numbers the four
    rules add on top of the per-challenge entries above.
    PRESS_RIDE_STEP: Press Your Luck's pot escalates — the first answer you ride is worth 1
@@ -1323,9 +1329,8 @@ const WAX_SEAL_MOTIFS = {
   "press-your-luck": { wax: 30, fr: "evenodd", d: "M26.9 41.4 A12 12 0 1 1 37.1 41.4 L35.2 37.3 A7.5 7.5 0 1 0 28.8 37.3 Z M21.1 30.5 a1.15 1.15 0 1 0 2.3 0 a1.15 1.15 0 1 0 -2.3 0 M23.95 23.6 a1.15 1.15 0 1 0 2.3 0 a1.15 1.15 0 1 0 -2.3 0 M30.85 20.75 a1.15 1.15 0 1 0 2.3 0 a1.15 1.15 0 1 0 -2.3 0 M37.75 23.6 a1.15 1.15 0 1 0 2.3 0 a1.15 1.15 0 1 0 -2.3 0 M40.6 30.5 a1.15 1.15 0 1 0 2.3 0 a1.15 1.15 0 1 0 -2.3 0" },
   // a stack of chips with one more tossed on top: the stake laid before the clock runs
   "confidence-wager": { wax: 31, fr: "nonzero", d: "M23.5 25.9 L39 22.3 A2.4 2.4 0 0 0 38 17.7 L22.5 21.3 A2.4 2.4 0 0 0 23.5 25.9 Z M24.9 27.1 a2.4 2.4 0 0 0 0 4.8 H38.1 a2.4 2.4 0 0 0 0 -4.8 Z M27.4 32.7 a2.4 2.4 0 0 0 0 4.8 H40.6 a2.4 2.4 0 0 0 0 -4.8 Z M25.4 38.3 a2.4 2.4 0 0 0 0 4.8 H38.6 a2.4 2.4 0 0 0 0 -4.8 Z" },
-  // a tilted die landed on two: the second bead, doubled or forfeit. Shelved with its challenge
-  // (see CHALLENGES above); wax seed 32 stays reserved so the seal comes back unchanged.
-  // "double-or-nothing": { wax: 32, fr: "evenodd", d: "M24.8 21 L43 24.8 L39.2 43 L21 39.2 Z M26.9 27.6 a2.3 2.3 0 1 1 4.6 0 a2.3 2.3 0 1 1 -4.6 0 M32.5 36.4 a2.3 2.3 0 1 1 4.6 0 a2.3 2.3 0 1 1 -4.6 0" },
+  // a tilted die landed on two: the pot that doubles, or goes
+  "double-or-nothing": { wax: 32, fr: "evenodd", d: "M24.8 21 L43 24.8 L39.2 43 L21 39.2 Z M26.9 27.6 a2.3 2.3 0 1 1 4.6 0 a2.3 2.3 0 1 1 -4.6 0 M32.5 36.4 a2.3 2.3 0 1 1 4.6 0 a2.3 2.3 0 1 1 -4.6 0" },
   // a shield holding one bead safe inside it: every shield you keep is worth beads
   "insurance": { wax: 33, fr: "evenodd", d: "M32 18.5 C36 21 40 21.8 44 22.2 V31 C44 38.5 39 43.5 32 46.5 C25 43.5 20 38.5 20 31 V22.2 C24 21.8 28 21 32 18.5 Z M27 31 a5 5 0 1 1 10 0 a5 5 0 1 1 -10 0 M29.6 31 a2.4 2.4 0 1 1 4.8 0 a2.4 2.4 0 1 1 -4.8 0" },
 };

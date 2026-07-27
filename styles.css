@@ -2329,6 +2329,10 @@
   .b-letter-text { fill: var(--ink-soft); font-family: "Courier Prime", "Courier New", monospace; font-weight: 700; }
   .b-miss { fill: var(--paper-edge); stroke: var(--ink-soft); }
   .b-miss-dot { fill: var(--ink-soft); opacity: 0.7; }
+  /* the bone bead on the page a sudden-death run died (Insurance) */
+  .b-skull { fill: #f3ece0; stroke: var(--ink-soft); stroke-linejoin: round; }
+  .b-skull-hole { fill: var(--ink-soft); }
+  .b-skull-line { fill: none; stroke: var(--ink-soft); stroke-linecap: round; opacity: 0.75; }
   .b-bead { fill: var(--bead); stroke: var(--ink); }
   .b-gloss { fill: #fff; opacity: 0.55; }
   /* pen-nib charm (word-perfect recall): a vent hole punched out + the slit */
@@ -3131,6 +3135,13 @@
     color: var(--album-color, var(--ink-soft));
     vertical-align: middle; opacity: 0.85; text-transform: uppercase;
   }
+
+  /* Both Of Us proof card: ONE song, one line per word on the page. The lines sit together
+     under a single title because they are all the same song singing — tighter than a stack
+     of separate cards, and it reads as one answer instead of two. */
+  .lyric-card.both-proof { margin-bottom: 12px; }
+  .lyric-card.both-proof .lyric-line { font-size: 21px; }
+  .lyric-card.both-proof .lyric-line + .lyric-line { margin-top: 5px; }
 
   /* Wrong cards: album border stays, lyric slightly faded, keyword blushes */
   .lyric-card.wrong-card .lyric-line { color: var(--ink-soft); }

@@ -154,6 +154,9 @@ export function buildCardSVG(meta, fontCss) {
       `.b-letter-text{fill:var(--ink-soft);font-family:"Courier Prime",monospace;font-weight:700}` +
       `.b-miss{fill:var(--paper-edge);stroke:var(--ink-soft)}` +
       `.b-miss-dot{fill:var(--ink-soft);opacity:.7}` +
+      `.b-skull{fill:#f3ece0;stroke:var(--ink-soft);stroke-linejoin:round}` +
+      `.b-skull-hole{fill:var(--ink-soft)}` +
+      `.b-skull-line{fill:none;stroke:var(--ink-soft);stroke-linecap:round;opacity:.75}` +
       `.b-bead{fill:var(--bead);stroke:var(--ink)}` +
       `.b-gloss{fill:#fff;opacity:.55}` +
       `.b-nib-hole{fill:var(--paper)}` +

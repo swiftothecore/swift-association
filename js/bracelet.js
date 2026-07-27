@@ -132,6 +132,25 @@ export const CHARMS = {
   },
 };
 
+// The bone bead. Not a dangling charm but a BEAD: it replaces the matte spacer on the one
+// page a sudden-death run actually died on (Insurance's uninsured miss), so the strand says
+// where it ended without a caption. Drawn in the miss bead's own muted paper, since it is
+// still a page that was lost — the shape does the talking, not the colour.
+export function skullBead(cx, cy, r, sw) {
+  const X = (p) => (cx + p * r).toFixed(2), Y = (p) => (cy + p * r).toFixed(2);
+  const w = Number(sw);
+  // cranium + a jaw block tucked under it, drawn as one silhouette
+  const jaw = `<rect x="${X(-0.52)}" y="${Y(0.34)}" width="${(1.04 * r).toFixed(2)}" height="${(0.66 * r).toFixed(2)}" ` +
+    `rx="${(0.16 * r).toFixed(2)}" class="b-skull" stroke-width="${sw}"/>`;
+  const cranium = `<circle cx="${X(0)}" cy="${Y(-0.12)}" r="${(0.96 * r).toFixed(2)}" class="b-skull" stroke-width="${sw}"/>`;
+  const socket = (dx) => `<ellipse cx="${X(dx)}" cy="${Y(-0.16)}" rx="${(0.27 * r).toFixed(2)}" ry="${(0.31 * r).toFixed(2)}" class="b-skull-hole"/>`;
+  const nose = `<path d="M${X(0)},${Y(0.08)} L${X(-0.13)},${Y(0.32)} L${X(0.13)},${Y(0.32)} Z" class="b-skull-hole"/>`;
+  // two gaps in the teeth, kept clear of the nose above them so the jaw doesn't read as one block
+  const teeth = [-0.21, 0.21].map((dx) =>
+    `<path d="M${X(dx)},${Y(0.50)} L${X(dx)},${Y(0.90)}" class="b-skull-line" stroke-width="${Math.max(0.6, w * 0.8).toFixed(2)}"/>`).join("");
+  return jaw + cranium + socket(-0.40) + socket(0.40) + nose + teeth;
+}
+
 // A standalone charm glyph for the Mastery picker (no bead or thread). `tint` sets
 // the --bead fill; omit to inherit the current era tint.
 export function charmPreviewSVG(id, tint) {
@@ -158,6 +177,9 @@ export function buildBraceletSVG(results, activeRound, freshIndex, albums, opts)
   // horseshoe. The strand stays one bead per page whatever a bet paid — the charm is how
   // a high-stakes page shows what it was worth.
   const riskWon = (opts && opts.riskWon) || [];
+  // per-round flag (Insurance): the uninsured miss that ended the run — this page's bead is
+  // a skull rather than the usual matte spacer. At most one page a run ever carries it.
+  const skullMiss = (opts && opts.skullMiss) || [];
   // opts.charm: the Mastery-chosen dangling charm id (see CHARMS); default "star".
   const W = 520, H = 64, xL = 26, xR = W - 26;
   // the thread sags between its tied ends like a real bracelet laid on the page
@@ -225,6 +247,10 @@ export function buildBraceletSVG(results, activeRound, freshIndex, albums, opts)
         `<circle cx="${x}" cy="${y + s(5.4)}" r="${s(2.3)}" fill="none" stroke="var(--ink)" stroke-width="1" opacity="0.7"/>` +
         charm +
         `</g>`;
+    } else if (answered === false && skullMiss[i]) {
+      // the page the run died on: a bone bead, a little larger than a spacer so the eye
+      // lands on it. No album tint — this bead is about the run ending, not the song.
+      svg += `<g class="b-skull-bead">${skullBead(x, y, s(5.4), 1)}</g>`;
     } else if (answered === false) {
       // a quiet matte spacer bead — tinted to the picked album, kept muted
       const missStyle = albumCol ? ` style="fill:${albumCol}" fill-opacity="0.5"` : "";
