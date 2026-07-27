@@ -6099,7 +6099,9 @@ function revealSea(pickedSong) {
 // Out keeps the word but inverts the ask (you're rejecting a song, not naming one), Both Of Us
 // hangs a second and third word off the first, and Double Or Nothing's bonus word is asking for
 // one more song on a page you've already won. Deciding it in one place stops two rules writing
-// over each other's answer on the same handful of elements.
+// over each other's answer on the same handful of elements. So this function is the single owner
+// of .word-wrap, .word-label and #wordExtra: nothing outside it writes to them. Extend the rule
+// table here rather than reaching for those elements from a rule's own code.
 function renderPromptChrome() {
   const ww = document.querySelector(".word-wrap");
   const wl = document.querySelector(".word-label");
