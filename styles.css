@@ -1086,7 +1086,7 @@
   .chall-tok-perf::before { top: -10px; }
   .chall-tok-perf::after { bottom: -10px; }
 
-  .chall-layout { display: grid; grid-template-columns: 256px 1fr; gap: 0; }
+  .chall-layout { display: grid; grid-template-columns: 247px 1fr; gap: 0; }
 
   /* ---- left: the contents list ---- */
   /* The column holds the divider + tally still; only .chall-list scrolls, so the
@@ -1101,7 +1101,7 @@
      by JS (wired in renderChallengesPage) so a fade only shows where it's true;
      the bottom starts faded as a sensible pre-JS default for the full list. */
   .chall-list {
-    overflow-y: auto; max-height: calc(100vh - 340px); padding-right: 6px; margin-right: -14px; scrollbar-gutter: stable;
+    overflow-y: auto; max-height: calc(100vh - 340px); padding-right: 2px; margin-right: -14px; scrollbar-gutter: stable;
     /* The list is pulled left and padded back by the same amount: content lands where
        .chall-col puts it, but the selected row's red play-arrow (at left:-12px) now has
        paintable room inside the scroller instead of being clipped by its overflow. */
@@ -1111,8 +1111,8 @@
             mask-image: linear-gradient(to bottom, transparent 0, #000 var(--fade-top), #000 calc(100% - var(--fade-bot)), transparent 100%);
   }
   .chall-item {
-    position: relative; display: grid; grid-template-columns: 1fr 22px;
-    align-items: center; column-gap: 9px; width: 100%;
+    position: relative; display: grid; grid-template-columns: 1fr 20px;
+    align-items: center; column-gap: 6px; width: 100%;
     padding: 8px 8px 8px 4px; min-height: 40px; cursor: pointer;
     background: none; border: none; border-radius: 2px; text-align: left;
     font: inherit; color: var(--ink); transition: background 0.12s;
