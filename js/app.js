@@ -4043,6 +4043,22 @@ const CHALLENGE_SEALS_DARK = Object.fromEntries(
   Object.entries(CHALLENGE_SEALS).map(([id, svg]) => [id, darkSealSvg(svg)])
 );
 
+// Every wax seal carries internal SVG ids (the blob path, the gradients, the wax filter),
+// scoped by challenge id — which is only unique while ONE copy of that seal is in the
+// document. Two routinely are: the play page's corner stamp stays in the (now hidden) game
+// screen after a run ends, and the challenge card then stamps the same seal again. A
+// duplicate id means the card's href/url(#…) references resolve to the FIRST match, the one
+// buried in a display:none screen, and the seal renders washed-out taupe — which is exactly
+// what a DEFEATED seal looks like, on a challenge you had just failed or walked out of. Only
+// a reload cleared it. So every render gets its own id scope: put seal markup through here,
+// never straight from the maps above.
+let sealScopeSeq = 0;
+function sealMarkup(svg) {
+  if (!svg) return "";
+  const n = ++sealScopeSeq;
+  return svg.replace(/(wax(?:aged|dark)?)-/g, `$1${n}-`);
+}
+
 // Difficulty rating — cassette tapes (1 easy → 3 hard). Echoes the dark-shell +
 // cream-label cassette desk prop; the shell is recoloured per tier by the
 // wrapper's t1/t2/t3 class (green → orange → red, set in CSS).
@@ -4270,7 +4286,7 @@ function renderChallengeDetail(id) {
   el.innerHTML =
     `<div class="chall-detail-head">` +
       `<span class="chall-detail-seal ${rec.darkDefeated ? "is-dark" : rec.defeated ? "is-beaten" : open ? "is-unbeaten" : "is-locked"}">` +
-        `${(rec.darkDefeated ? CHALLENGE_SEALS_DARK : rec.defeated ? CHALLENGE_SEALS_AGED : CHALLENGE_SEALS)[c.id] || ""}</span>` +
+        `${sealMarkup((rec.darkDefeated ? CHALLENGE_SEALS_DARK : rec.defeated ? CHALLENGE_SEALS_AGED : CHALLENGE_SEALS)[c.id])}</span>` +
       `<span class="chall-detail-name">${escapeHtml(c.name)}</span>` +
       (rec.defeated ? `<span class="chall-detail-star">${CHALL_STAR}</span><span class="chall-detail-stamp">defeated</span>` : "") +
     `</div>` +
@@ -6634,7 +6650,7 @@ function renderChallengeSeal() {
   const seals = dark ? CHALLENGE_SEALS_DARK : CHALLENGE_SEALS;
   el.classList.toggle("is-dark", dark);
   el.innerHTML =
-    `<div class="cseal-stamp">${seals[currentChallenge.id] || ""}</div>` +
+    `<div class="cseal-stamp">${sealMarkup(seals[currentChallenge.id])}</div>` +
     `<div class="cseal-name">${escapeHtml(currentChallenge.name)}</div>` +
     (dark ? `<div class="cseal-dark">${CHALL_ECLIPSE}dark side</div>` : "");
   el.setAttribute("aria-label", "Challenge: " + currentChallenge.name + (dark ? " (dark side)" : ""));
