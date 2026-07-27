@@ -493,7 +493,7 @@ export const CHALLENGES = [
   // ---- Knowledge-flex batch. tapes:0 (unrated) until they've been played enough to
   //      rate honestly; seals are placeholders pending real motifs. ----
   { id: "odd-one-out", name: "Odd One Out", rule: "oddone", mode: "medium",
-    free: true, cost: 1, target: 9, seconds: 12, noTitle: false, dropdown: false, tapes: 0,
+    free: false, cost: 1, target: 9, seconds: 12, noTitle: false, dropdown: false, tapes: 2,
     // Dark: a wider grid AND a shorter clock. `tiles` (read everywhere through oddTilesNow)
     // widens the board to 6, so the odd one hides among five genuine holders rather than
     // three — nearly twice the songs to rule out, in two thirds of the time. The word picker
@@ -508,7 +508,7 @@ export const CHALLENGES = [
     desc: "Four songs, and the word hides in the lyrics of three of them. Tap the odd one out, the only song that never sings it.",
     win: "Score 9 / 13 spotting the odd one out." },
   { id: "whose-line", name: "Whose Line?", rule: "whoseline", mode: "medium",
-    free: true, cost: 1, target: 9, seconds: 12, noTitle: false, dropdown: false, tapes: 0,
+    free: false, cost: 1, target: 9, seconds: 12, noTitle: false, dropdown: false, tapes: 1,
     // Dark: a thinner line, not just a faster clock. `hardLines` drops the song's hook (any
     // line it repeats — the chorus names the track on sight) and takes the SHORTEST legal
     // line rather than a random one, and `minWords` lowers the floor so those shorter lines
@@ -522,7 +522,7 @@ export const CHALLENGES = [
     desc: "No prompt word at all. You get a single line of lyric and four songs, and you have to know whose line it is.",
     win: "Score 9 / 13 placing the line." },
   { id: "both-of-us", name: "Both Of Us", rule: "bothwords", mode: "medium",
-    free: true, cost: 1, target: 9, seconds: 20, noTitle: false, pool: "easy", tapes: 0,
+    free: false, cost: 1, target: 9, seconds: 20, noTitle: false, pool: "easy", tapes: 2,
     // `bothMinSongs` is the winnability floor: a pair is only served if at least this many
     // songs hold every word on the page, so no page can be drawn unanswerable. Base asks for
     // two, which keeps a page from resting on one obscure song nobody could be expected to
@@ -540,7 +540,7 @@ export const CHALLENGES = [
     desc: "Two words on the page instead of one. Name a single song whose lyrics hold both of them, because half doesn't count.",
     win: "Score 9 / 13 naming songs that hold both words." },
   { id: "name-three", name: "Name Three", rule: "multi", mode: "medium",
-    free: true, cost: 1, target: 8, need: 3, seconds: 30, tapes: 0,
+    free: false, cost: 1, target: 8, need: 3, seconds: 30, tapes: 3,
     // Double Trouble's rule, taken deeper: three songs a page instead of two, and drawn from
     // the whole word pool rather than the common one. `need` already drives the banner, the
     // soft reject and the winnability filter, so this is a registry entry, not new machinery.
@@ -565,22 +565,22 @@ export const CHALLENGES = [
   //      tapes:0 (unrated) with placeholder seals, same as the knowledge batch above; no
   //      dark sides yet, since tightening a difficulty nobody has played is guesswork. ----
   { id: "press-your-luck", name: "Press Your Luck", rule: "press", mode: "medium",
-    free: true, cost: 1, target: 20, seconds: 12, noTitle: false, tapes: 0,
+    free: false, cost: 1, target: 20, seconds: 12, noTitle: false, tapes: 1,
     blurb: "12s · suggestions · bank the pot or ride on, a miss wipes it",
     desc: "Every correct answer drops beads into a pot, and each one you ride is worth more than the last. Bank the pot whenever you like, but one miss wipes everything you haven't banked. Whatever is still riding when the 13 pages run out is yours.",
     win: "Bank 20 beads across the run." },
   { id: "confidence-wager", name: "Confidence Wager", rule: "wager", mode: "medium",
-    free: true, cost: 1, target: 20, seconds: 12, noTitle: false, maxStake: 3, startBeads: 3, tapes: 0,
+    free: false, cost: 1, target: 20, seconds: 12, noTitle: false, maxStake: 3, startBeads: 3, tapes: 1,
     blurb: "12s · suggestions · stake beads on the word before the clock starts",
     desc: "You see the word first, then you say how sure you are. Stake up to three beads before the clock runs: answer it and the stake pays back double, miss it and the stake is gone. A correct answer is always worth its own bead on top.",
     win: "Finish the run on 20 beads." },
   { id: "double-or-nothing", name: "Double Or Nothing", rule: "doubleup", mode: "medium",
-    free: true, cost: 1, target: 16, seconds: 12, noTitle: false, tapes: 0,
+    free: false, cost: 1, target: 16, seconds: 12, noTitle: false, tapes: 1,
     blurb: "12s · suggestions · every bead you win can be doubled, or lost",
     desc: "Clear a page and you're offered a second word for a second bead. Name a song for it and the page is worth two, miss it and you forfeit the bead you had already won. Nobody makes you take the offer.",
     win: "Finish the run on 16 beads." },
   { id: "insurance", name: "Insurance", rule: "insurance", mode: "easy",
-    free: true, cost: 1, target: 13, seconds: 15, tokens: 3, tokenValue: 2, tapes: 0,
+    free: false, cost: 1, target: 13, seconds: 15, tokens: 3, tokenValue: 2, tapes: 2,
     blurb: "15s · sudden death · three shields, and every one you keep is worth beads",
     desc: "One miss ends the run. You start with three shields and may spend one before you answer to survive a miss, but every shield you still hold at the end is worth 2 beads. Buying your way out of trouble is exactly what costs you the win.",
     win: "Survive all 13 pages and finish on 13 beads." },
