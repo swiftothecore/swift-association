@@ -1086,14 +1086,14 @@
   .chall-tok-perf::before { top: -10px; }
   .chall-tok-perf::after { bottom: -10px; }
 
-  .chall-layout { display: grid; grid-template-columns: 208px 1fr; gap: 0; }
+  .chall-layout { display: grid; grid-template-columns: 268px 1fr; gap: 0; }
 
   /* ---- left: the contents list ---- */
   /* The column holds the divider + tally still; only .chall-list scrolls, so the
      notebook page never grows and you browse challenges within a fixed frame. */
   .chall-col {
     display: flex; flex-direction: column; min-height: 0;
-    padding-left: 14px; padding-right: 16px;
+    padding-left: 2px; padding-right: 16px;
     border-right: 1px solid rgba(60,40,18,0.16);
   }
   /* Soft edge fade signals there's more to scroll: the list dissolves into the
@@ -1102,6 +1102,10 @@
      the bottom starts faded as a sensible pre-JS default for the full list. */
   .chall-list {
     overflow-y: auto; max-height: calc(100vh - 340px); padding-right: 20px; margin-right: -14px; scrollbar-gutter: stable;
+    /* The list is pulled left and padded back by the same amount: content lands where
+       .chall-col puts it, but the selected row's red play-arrow (at left:-12px) now has
+       paintable room inside the scroller instead of being clipped by its overflow. */
+    padding-left: 14px; margin-left: -14px;
     --fade-top: 0px; --fade-bot: 30px;
     -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 var(--fade-top), #000 calc(100% - var(--fade-bot)), transparent 100%);
             mask-image: linear-gradient(to bottom, transparent 0, #000 var(--fade-top), #000 calc(100% - var(--fade-bot)), transparent 100%);
@@ -1376,7 +1380,7 @@
   @media (max-width: 620px) {
     .chall-layout { grid-template-columns: 1fr; }
     .chall-col { border-right: none; border-bottom: 1px solid rgba(60,40,18,0.16); padding-bottom: 8px; margin-bottom: 14px; }
-    .chall-list { padding-right: 0; margin-right: 0; }
+    .chall-list { padding-right: 0; margin-right: 0; padding-left: 14px; margin-left: -14px; }
     .chall-detail { padding-left: 0; }
     .af-board { grid-template-columns: repeat(3, 1fr); gap: 24px 12px; }
   }
