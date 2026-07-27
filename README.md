@@ -19,7 +19,7 @@ Standout features:
 - Daily challenge
 - The ability to make your own **custom modes**
 - A skills and mastery system full of rewards
-- Over 90 achievements
+- Over 100 achievements
 - Ability to save your friendship bracelet as a PNG to share your run!
 - A shelf of bonus mini-games, including one where you hunt a swapped word in a real lyric
 - A companion lyric searcher, Swift To The Lyric, for searching every line of every song

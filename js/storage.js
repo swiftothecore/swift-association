@@ -4,6 +4,7 @@
 import {
   HS_KEY, RECORDS_KEY, HISTORY_KEY, STATS_KEY, ACH_KEY, DIFF_KEY,
   DAILY_KEY, DAILY_PROGRESS_KEY, DAILY_BOARD_KEY, DAILY_STREAK_KEY, TYPES_KEY, TALLY_KEY,
+  BREADTH_KEY, WEEKDAYS_KEY, EXPLORER_TOKENS,
   SETTINGS_KEY, METRICS_KEY, APP_PREFIX, DEFAULT_SETTINGS,
   CHALLENGES_KEY, CHALLENGE_TOKENS_KEY,
   ALBUM_FOCUS_KEY, ALBUM_FOCUS_TARGET, DIFF_RANK,
@@ -309,6 +310,59 @@ export function markTypePlayed(type) {
   o[type] = true;
   try { localStorage.setItem(TYPES_KEY, JSON.stringify(o)); } catch (e) { /* ignore */ }
   return o;
+}
+
+/* ---------- Modes ever played (for "Explorer") ---------- */
+// Finer-grained than TYPES_KEY, which only knows classic/infinite/daily. A token is one
+// way the game can be played: "classic:hard", "inf-sudden:ultra", "adaptive", "custom".
+// EXPLORER_TOKENS lists the set Explorer wants; anything else recorded here (lyricist,
+// daily) is harmless breadth we simply don't ask for.
+// Value: { [token]: true }
+export function loadModesSeen() {
+  try {
+    const raw = localStorage.getItem(BREADTH_KEY);
+    if (raw) { const o = JSON.parse(raw); if (o && typeof o === "object") return o; }
+  } catch (e) { /* ignore */ }
+  return {};
+}
+// Record one mode token as played; returns the updated record.
+export function markModeSeen(token) {
+  const o = loadModesSeen();
+  if (!token || o[token]) return o;
+  o[token] = true;
+  try { localStorage.setItem(BREADTH_KEY, JSON.stringify(o)); } catch (e) { /* ignore */ }
+  return o;
+}
+// Has every Explorer token been seen?
+export function hasExploredEverything(seen = loadModesSeen()) {
+  return EXPLORER_TOKENS.every((t) => seen[t]);
+}
+
+/* ---------- Weekdays ever played on (for "Seven") ---------- */
+// Value: { [0-6]: true }, Sunday = 0, matching Date#getDay.
+export function loadWeekdaysPlayed() {
+  try {
+    const raw = localStorage.getItem(WEEKDAYS_KEY);
+    if (raw) { const o = JSON.parse(raw); if (o && typeof o === "object") return o; }
+  } catch (e) { /* ignore */ }
+  return {};
+}
+// Record today's weekday as played; returns the updated record.
+export function markWeekdayPlayed(day = new Date().getDay()) {
+  const o = loadWeekdaysPlayed();
+  if (o[day]) return o;
+  o[day] = true;
+  try { localStorage.setItem(WEEKDAYS_KEY, JSON.stringify(o)); } catch (e) { /* ignore */ }
+  return o;
+}
+// All seven days ticked off?
+export function hasPlayedEveryWeekday(seen = loadWeekdaysPlayed()) {
+  for (let d = 0; d < 7; d++) if (!seen[d]) return false;
+  return true;
+}
+// Clear both breadth stores (dev tool; resetAchievements sweeps them too).
+export function resetBreadth() {
+  try { localStorage.removeItem(BREADTH_KEY); localStorage.removeItem(WEEKDAYS_KEY); } catch (e) { /* ignore */ }
 }
 
 /* ---------- Lifetime per-song / per-word tally ---------- */
@@ -774,7 +828,7 @@ export function resetRecords() {
   removeByPrefix(HS_KEY);
 }
 export function resetStatsAll()   { removeByPrefix(STATS_KEY); try { localStorage.removeItem(METRICS_KEY); } catch (e) { /* ignore */ } }
-export function resetAchievements() { try { localStorage.removeItem(ACH_KEY); localStorage.removeItem(TYPES_KEY); } catch (e) { /* ignore */ } }
+export function resetAchievements() { try { localStorage.removeItem(ACH_KEY); localStorage.removeItem(TYPES_KEY); localStorage.removeItem(BREADTH_KEY); localStorage.removeItem(WEEKDAYS_KEY); } catch (e) { /* ignore */ } }
 export function resetTally()      { try { localStorage.removeItem(TALLY_KEY); } catch (e) { /* ignore */ } }
 export function resetDaily() {
   try { localStorage.removeItem(DAILY_STREAK_KEY); } catch (e) { /* ignore */ }

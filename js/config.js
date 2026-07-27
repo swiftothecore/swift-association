@@ -54,6 +54,8 @@ export const SEARCH_KEY = "swiftSongAssociation.search";                // Swift
 export const MASTERY_KEY = "swiftSongAssociation.mastery";              // skills + mastery progression — { skills:{...xp}, masteryXp, unlocked:{[rewardId]:isoDate} }
 export const CUSTOM_KEY = "swiftSongAssociation.custom";               // player-authored modes — { presets:[{id,name,mode}], activeId }
 export const KEEPSAKES_KEY = "swiftSongAssociation.keepsakes";         // earned collectibles — { [polaroidId]: isoDate } (unlock time, mirrors achievements)
+export const BREADTH_KEY = "swiftSongAssociation.modesSeen";           // { [token]: true } — every mode/difficulty combination ever finished, for "Explorer"
+export const WEEKDAYS_KEY = "swiftSongAssociation.weekdaysPlayed";     // { [0-6]: true } — which weekdays you have finished a game on, for "Seven"
 
 // Keepsakes — the collectible polaroid set (subjects + SVGs live in js/polaroids.js).
 // A polaroid develops like real instant film: solid black on unlock, the photo fading
@@ -141,6 +143,18 @@ export const MODE_ORDER = ["relaxed", "easy", "medium", "hard", "ultra", "lyrici
 // Focus, where lyricist legitimately ranks as the top "by heart" tier.
 export const DIFFICULTY_LADDER = ["relaxed", "easy", "medium", "hard", "ultra"];
 export const MODALITY_MODES = ["lyricist"];
+// "Explorer" — every way the main game can be played, written as the breadth tokens
+// markModeSeen stores. The whole ladder in classic and in BOTH infinite variants (sudden
+// death is a different game from three lives, not a setting), plus the two game types that
+// have no ladder of their own. Lyricist is deliberately absent: MODALITY_MODES keeps it
+// apart from the ladder, and it already carries its own charms. Daily is absent too — it
+// forces Normal and is one play a day, so it would gate Explorer behind the calendar.
+export const EXPLORER_TOKENS = [
+  ...DIFFICULTY_LADDER.map((m) => "classic:" + m),
+  ...DIFFICULTY_LADDER.map((m) => "inf-3lives:" + m),
+  ...DIFFICULTY_LADDER.map((m) => "inf-sudden:" + m),
+  "adaptive", "custom",
+];
 // Per-mode accent for the index-card record tiles (label + tape tint). Keyed by mode id;
 // infinite tokens borrow the colour of their underlying difficulty.
 export const MODE_COLORS = {
@@ -202,6 +216,9 @@ export const CUSTOM_HINT_UNLIMITED = -1; // sentinel: hints never run out this r
 export const CUSTOM_POOLS = ["easy", "all", "hard", "ultra"];   // word-rarity buckets the picker offers
 export const CUSTOM_EXAMPLES_MAX = 3;    // example songs shown after a miss (0..3)
 export const CUSTOM_MAX_PRESETS = 12;    // keep the saved list manageable
+export const MEAN_GRUDGE = 5;            // times a word must have beaten you before answering it right earns "Mean"
+export const CUSTOM_PRESET_SHELF = 5;    // presets kept at once to earn "Mine" (well short of the cap, so it rewards tuning rather than hoarding)
+export const CUSTOM_ENDLESS_MILESTONE = 50;  // rounds into an endless custom run for "Forever & Always"
 export const CUSTOM_NAME_MAX = 24;       // preset name length cap
 export const CUSTOM_ROUNDS_MIN = 1;      // shortest finite run
 export const CUSTOM_ROUNDS_MAX = 30;     // slider's finite top (one tick past this = infinite, stored as rounds:0)
@@ -1641,6 +1658,7 @@ export const ACHIEVEMENTS = [
   { id: "you-knew-the-line", name: "You Knew The Line", desc: "Recall 5 lyric lines in one game",  secret: true,  icon: "note" },
   { id: "out-of-the-woods", name: "Out Of The Woods", desc: "Survive 20+ rounds in Infinite",      secret: false, icon: "pines" },
   { id: "twenty-two",       name: "22",               desc: "Reach exactly round 22 in Infinite",  secret: false, icon: "balloons" },
+  { id: "nineteen-eighty-nine", name: "1989",         desc: "Reach round 89 in Infinite",          secret: false, icon: "placeholder" },
   { id: "sparks-fly",       name: "Sparks Fly",       desc: "Hit a 10-in-a-row streak",            secret: true,  icon: "sparkler" },
   { id: "great-war",        name: "The Great War",    desc: "Win an Ultra game (10+ correct)",     secret: false, icon: "poppy" },
   { id: "long-live",        name: "Long Live",        desc: "Perfect 13/13 on Hard or Ultra",      secret: true,  icon: "coronet" },
@@ -1683,10 +1701,14 @@ export const ACHIEVEMENTS = [
   { id: "eyes-closed",      name: "Eyes Closed",      desc: "10 fuzzy lyric matches in one Lyricist game", secret: true, icon: "eyeclosed" },
   { id: "paris",            name: "Paris",            desc: "Answer “Paris” when the word is “somewhere”", secret: true, icon: "tower" },
   { id: "i-hate-it-here",   name: "I Hate It Here",   desc: "Answer every song in the catalogue at least once", secret: false, icon: "checklist" },
+  { id: "mean",             name: "Mean",             desc: "Finally answer your nemesis word right", secret: true, icon: "placeholder" },
   { id: "raining-monday",   name: "It's Raining And It's Monday", desc: "Answer “rain” correctly on a Monday", secret: true, icon: "umbrella" },
   { id: "clean",            name: "Clean",            desc: "Win without hints or a single timeout",  secret: false, icon: "drop" },
   { id: "everything-nothing", name: "Everything & Nothing All At Once", desc: "Win a game in every difficulty", secret: false, icon: "yinyang" },
   { id: "fearless-tv",      name: "Fearless (Taylor's Version)", desc: "Two games in a row with no timeouts", secret: false, icon: "vinyl" },
+  { id: "explorer",         name: "Explorer",         desc: "Play every difficulty in Classic and in both Infinite variants, plus Adaptive and Custom", secret: false, icon: "placeholder" },
+  { id: "seven",            name: "Seven",            desc: "Play on all seven days of the week", secret: true,  icon: "placeholder" },
+  { id: "youre-on-your-own-kid", name: "You're On Your Own, Kid", desc: "Save your first bracelet keepsake", secret: false, icon: "placeholder" },
   { id: "piano-was-hissing", name: "The Piano Was Hissing", desc: "Type “reputation tv” somewhere",    secret: true,  icon: "piano" },
   { id: "the-bolter",       name: "The Bolter",       desc: "Quit before typing anything in round 1", secret: true,  icon: "door" },
   { id: "no-closure",       name: "No Closure",       desc: "Give up after 12, never answer the 13th", secret: true, icon: "unclasped" },
@@ -1718,6 +1740,14 @@ export const ACHIEVEMENTS = [
   { id: "change",           name: "Change",           desc: "Beat all 12 albums in Album Focus",     secret: false, icon: "butterfly" },
   { id: "gold-rush",        name: "Gold Rush",        desc: "Perfect an album in Album Focus (13/13)", secret: true,  icon: "coins" },
   { id: "starlight",        name: "Starlight",        desc: "Perfect all 12 albums in Album Focus",  secret: true,  icon: "constellation" },
+  /* ---- Custom mode (your own levers, your own rules) ---- */
+  { id: "ours",             name: "Ours",             desc: "Finish your first Custom run",         secret: false, icon: "placeholder" },
+  { id: "mine",             name: "Mine",             desc: `Keep ${CUSTOM_PRESET_SHELF} custom presets on the shelf at once`, secret: false, icon: "placeholder" },
+  { id: "forever-and-always", name: "Forever & Always", desc: `Reach round ${CUSTOM_ENDLESS_MILESTONE} of an endless Custom run`, secret: true, icon: "placeholder" },
+  /* ---- Skills & Mastery ---- */
+  { id: "bigger-than-the-whole-sky", name: "Bigger Than The Whole Sky", desc: "Press the wax and unlock Mastery", secret: false, icon: "placeholder" },
+  { id: "superstar",        name: "Superstar",        desc: `Take a single skill all the way to level ${SKILL_MAX_LEVEL}`, secret: true, icon: "placeholder" },
+  { id: "call-it-what-you-want", name: "Call It What You Want", desc: "Wear a prestige title on your signature", secret: false, icon: "placeholder" },
   { id: "you-took-a-polaroid-of-us", name: "You Took A Polaroid Of Us", desc: "Find every polaroid keepsake", secret: true, icon: "polaroid" },
   { id: "is-it-over-now",   name: "Is It Over Now?",  desc: "Earn every hidden achievement",         secret: true,  icon: "hourglass" },
   { id: "the-lucky-one",    name: "The Lucky One",    desc: "Earn every other achievement",          secret: true,  icon: "clover" },
@@ -1735,6 +1765,8 @@ export const ACH_GROUPS = [
   { id: "challenges", label: "Challenges",             short: "Challenge" },
   { id: "albumFocus", label: "Album Focus",            short: "Album" },
   { id: "adaptive",  label: "Adaptive mode",          short: "Adaptive" },
+  { id: "custom",    label: "Custom mode",            short: "Custom" },
+  { id: "mastery",   label: "Skills & Mastery",       short: "Mastery" },
 ];
 // One muted notebook hue per theme — the section dots and the by-theme breakdown bars.
 export const ACH_GROUP_COLORS = {
@@ -1746,6 +1778,8 @@ export const ACH_GROUP_COLORS = {
   challenges: "#2b2722",
   albumFocus: "#a8577a",
   adaptive:  "#7d5a3f",
+  custom:    "#4a6b8a",
+  mastery:   "#8a6d1f",
 };
 // Membership: only the non-core ids are listed; everything else defaults to "core"
 // (groupOf in app.js). Keeps this in sync without re-listing every achievement.
@@ -1768,6 +1802,9 @@ export const ACH_GROUP_OF = {
   "blank-space": "challenges", "you-belong-with-me": "challenges", "tied-together": "challenges",
   "a-place-in-this-world": "albumFocus", "change": "albumFocus", "gold-rush": "albumFocus", "starlight": "albumFocus",
   "the-lakes": "adaptive", "stay-stay-stay": "adaptive",
+  "ours": "custom", "mine": "custom", "forever-and-always": "custom",
+  "bigger-than-the-whole-sky": "mastery", "superstar": "mastery", "call-it-what-you-want": "mastery",
+  "nineteen-eighty-nine": "infinite", "mean": "catalogue",
 };
 
 /* ---------- Easter-egg art ---------- */

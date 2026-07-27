@@ -3,7 +3,7 @@ import { $, escapeRegExp, escapeHtml, prefersReducedMotion, shuffle, chance, nor
 import { SITE_URL, canShare, shareOrCopy, simulateShare } from "./share.js";
 import {
   TOTAL_ROUNDS, RECENT_WINDOW, NOVELTY_BOOST, DAILY_ALBUM_SKEW, DAILY_ALBUM_WEIGHT_EXP, DIFF_KEY, DEFAULT_SETTINGS,
-  MODES, MODE_ORDER, MODE_COLORS, DIFFICULTY_LADDER, MODALITY_MODES,
+  MODES, MODE_ORDER, MODE_COLORS, DIFFICULTY_LADDER, MODALITY_MODES, EXPLORER_TOKENS,
   ERAS, TENDER_ERAS, FINALE_ERAS, ALBUM_ERA, TS_MILESTONES, TS_LORE_DAYS,
   ALBUM_COLORS, CB_ALBUM_COLORS, STUDIO_ALBUMS, TITLE_ALIASES,
   ACHIEVEMENTS, ACH_ICONS, ACH_BY_ID, ACH_GROUPS, ACH_GROUP_COLORS, ACH_GROUP_OF,
@@ -21,6 +21,7 @@ import {
   CUSTOM_SECONDS_MIN, CUSTOM_SECONDS_MAX, CUSTOM_SECONDS_TYPED_MAX, CUSTOM_HINT_MAX,
   CUSTOM_HINT_TYPED_MAX, CUSTOM_HINT_UNLIMITED, CUSTOM_POOLS,
   CUSTOM_EXAMPLES_MAX, CUSTOM_MAX_PRESETS, CUSTOM_NAME_MAX, CUSTOM_DEFAULT_MODE,
+  CUSTOM_PRESET_SHELF, CUSTOM_ENDLESS_MILESTONE, MEAN_GRUDGE,
   CUSTOM_ROUNDS_MIN, CUSTOM_ROUNDS_MAX, CUSTOM_ROUNDS_TYPED_MAX,
   CUSTOM_LIVES_MIN, CUSTOM_LIVES_MAX, CUSTOM_LIVES_TYPED_MAX, CUSTOM_ANSWER_MODES,
   PEN_SVG, STAR_SVG, SPARKLE_SVG, DOODLE_SVG, DOODLE_SIZE,
@@ -53,6 +54,8 @@ import {
   loadDailyProgress, saveDailyProgress, clearDailyProgress,
   bumpDailyStreak, effectiveDailyStreak, saveDailyStreak,
   markTypePlayed,
+  markModeSeen, hasExploredEverything, loadModesSeen,
+  markWeekdayPlayed, hasPlayedEveryWeekday, loadWeekdaysPlayed, resetBreadth,
   loadSongTally, saveSongTally, recordGameTally,
   loadCustom, saveCustom, activeCustomPreset, resetCustom, defaultCustomPreset,
   loadMetrics, recordGameMetrics,
@@ -1704,6 +1707,19 @@ function checkMetaAchievements() {
   if (hidden.length && hidden.every((a) => earnedAchievements[a.id])) unlock("is-it-over-now");
   const all = ACHIEVEMENTS.filter((a) => a.id !== "the-lucky-one");
   if (all.length && all.every((a) => earnedAchievements[a.id])) unlock("the-lucky-one");
+}
+
+// Breadth charms — called once from the end of every finished run. `token` is this run's
+// Explorer token (see EXPLORER_TOKENS), or null for the modes Explorer doesn't ask for;
+// those still tick their weekday off, since Seven only cares that you played at all.
+// The weekday comes off todayKey so the dev date override moves it like every other dated
+// surface. Test runs (devNoLog) record nothing, exactly as stats and history don't.
+function markRunBreadth(token) {
+  if (devNoLog) return;
+  if (token && hasExploredEverything(markModeSeen(token))) unlock("explorer");
+  // Noon, so neither the timezone nor a DST shift can roll the parsed date onto its neighbour.
+  const day = new Date(todayKey() + "T12:00:00").getDay();
+  if (hasPlayedEveryWeekday(markWeekdayPlayed(day))) unlock("seven");
 }
 
 /* ---------- Challenges mode: token wallet + progress mutators ----------
@@ -3584,6 +3600,7 @@ function wornTitleName(m = loadMastery()) {
 function setMasteryTitle(value) {
   settings.masteryTitle = value || "";
   saveSettings(settings);
+  checkTitleCharm();
   renderTitleStepper();
   if (screens.records.classList.contains("active")) renderRecordsPage();
 }
@@ -4591,13 +4608,16 @@ async function saveBraceletPNG(e) {
   const wantDownload = !!(e && (e.shiftKey || e.metaKey || e.ctrlKey));
   braceletSaveBusy = true;
   const label = btn ? btn.textContent : "";
+  let kept = false;   // did the keepsake actually make it out? ("You're On Your Own, Kid")
   if (btn) { btn.disabled = true; btn.textContent = wantDownload ? "Saving…" : "Copying…"; }
   try {
     if (wantDownload) {
       await exportBraceletCard(buildCardMeta());
+      kept = true;
       if (btn) btn.textContent = "Saved ✓";
     } else {
       await copyBraceletCard(buildCardMeta());
+      kept = true;
       if (btn) btn.textContent = "Copied ✓";
     }
   } catch (e2) {
@@ -4606,6 +4626,7 @@ async function saveBraceletPNG(e) {
       // Clipboard-image writes aren't supported everywhere — fall back to a download.
       try {
         await exportBraceletCard(buildCardMeta());
+        kept = true;
         if (btn) btn.textContent = "Saved ✓";
       } catch (e3) {
         console.warn("bracelet PNG download fallback failed:", e3);
@@ -4618,6 +4639,7 @@ async function saveBraceletPNG(e) {
     }
   } finally {
     braceletSaveBusy = false;
+    if (kept) unlock("youre-on-your-own-kid");
     if (btn) setTimeout(() => { btn.disabled = false; btn.textContent = label; }, 1800);
   }
 }
@@ -7237,6 +7259,7 @@ function challengeWinCheck(c) {
 function endChallenge() {
   const c = currentChallenge;
   challengeRunActive = false;   // run is over — let defeat/meta charms fire normally
+  markRunBreadth(null);         // no Explorer token (Challenges bend the rules), but the day still counts
 
   // The risk batch settles up BEFORE anything reads the score. Press Your Luck and Double Or
   // Nothing bank whatever was still riding when the pages ran out (the run ending is not a
@@ -7407,6 +7430,7 @@ function endChallenge() {
 // global catalogue stores only; the per-album board (beaten/perfected) is its own store.
 function endAlbumFocus() {
   const album = focusAlbum, diff = focusDifficulty;
+  markRunBreadth(null);   // one album, not a difficulty of the main game — the day counts, the token doesn't
   const hintFree = hintsUsed === 0;
   let rec = albumFocusRecord(album);
   if (!devNoLog) {
@@ -7496,6 +7520,7 @@ function endAlbumFocus() {
 // never the difficulty records. The headline is "how high you climbed", not a 0-13 score.
 function endAdaptive() {
   const peak = adaptivePeak;
+  markRunBreadth("adaptive");
   const name = ADAPTIVE_LEVELS[peak] || "";
   const reachedTop = peak >= ADAPT_MAX_LEVEL;
   const prev = adaptiveRecord();                       // before this run folds in
@@ -7565,6 +7590,13 @@ function endCustom() {
 
   const infinite = customInfinite();
   const roundsPlayed = roundResults.length;
+  // Custom's own charms. The sandbox keeps stats, records and history out, but achievements
+  // are exempt from it the same way Challenges' are — a run you finished still happened.
+  markRunBreadth("custom");
+  if (!devNoLog) {
+    unlock("ours");
+    if (infinite && roundsPlayed >= CUSTOM_ENDLESS_MILESTONE) unlock("forever-and-always");
+  }
   const total = infinite ? roundsPlayed : customSessionLen;
   const perfect = !infinite && total > 0 && score === total;
 
@@ -10636,7 +10668,22 @@ function foldSkillXp(mask) {
   const res = recordSkillXp(delta);
   lastSkillFold = { delta, res };   // stashed for the results-screen recap + level-up celebration
   announceSkillProgress(res);
+  // Mastery charms. Every end path folds through here, so this is the one place all three can
+  // be read. Each asks the SAVED record rather than this fold's transitions (masteryJustUnlocked,
+  // levelUps), so a player who cleared the gate or capped a skill before these charms existed
+  // still earns them on their next finished run instead of being locked out by the timing.
+  if (res) {
+    if (isMasteryUnlocked(res.mastery)) unlock("bigger-than-the-whole-sky");
+    if (SKILL_IDS.some((id) => skillLevelFromXp(res.mastery.skills[id] || 0) >= SKILL_MAX_LEVEL)) unlock("superstar");
+    checkTitleCharm(res.mastery);
+  }
   return res;
+}
+
+// "Call It What You Want" — worn the moment a prestige title is actually on the signature,
+// whether the player picked it in the stepper or their mastery handed them a tier default.
+function checkTitleCharm(m = loadMastery()) {
+  if (wornTitleValue(m)) unlock("call-it-what-you-want");
 }
 
 // Toast the small, frequent skill level-ups (they float over any screen the same way
@@ -10712,6 +10759,14 @@ function endGame() {
   // record, not a per-mode board). Powers Favourite Song, Songs Discovered,
   // Favourite Album, Nemesis Word.
   if (!devNoLog) {
+    // "Mean" — the nemesis word is whichever word you've missed most, so it has to be read
+    // BEFORE this game folds in, or a word missed again this run could crown itself and be
+    // "beaten" in the same breath. A word needs a real history of beating you (MEAN_GRUDGE
+    // misses) before overcoming it means anything.
+    const nemesisBefore = topTallyEntry(loadSongTally().misses);
+    if (nemesisBefore && nemesisBefore.count >= MEAN_GRUDGE
+        && roundResults.some((correct, i) => correct && roundWords[i] === nemesisBefore.key)) unlock("mean");
+
     const tally = recordGameTally(roundResults.map((correct, i) => ({
       correct,
       title: roundSongs[i] || null,
@@ -10776,6 +10831,12 @@ function endGame() {
   const typesPlayed = devNoLog ? { classic: false, infinite: false, daily: false } : markTypePlayed(gameType);
   if (typesPlayed.classic && typesPlayed.infinite && typesPlayed.daily) unlock("hits-different");
 
+  // Explorer / Seven. Daily passes through here too, but forces Normal and only runs once a
+  // day, so it earns no Explorer token — it would gate the charm behind the calendar.
+  markRunBreadth(gameType === "classic" ? "classic:" + currentMode.id
+    : gameType === "infinite" ? "inf-" + infiniteVariant + ":" + currentMode.id
+    : null);
+
   // end-of-game achievements (daily counts toward the game-quality ones; infinite deferred)
   const timedMode = currentMode.seconds > 0;   // Relaxed (no clock) skips timing achievements
   if (!isInfinite) {
@@ -10807,6 +10868,7 @@ function endGame() {
   if (isInfinite) {
     if (roundsSurvived >= 20) unlock("out-of-the-woods");
     if (roundsSurvived === 22) unlock("twenty-two");
+    if (roundsSurvived >= 89) unlock("nineteen-eighty-nine");
     if (roundResults.length >= 13 && roundResults.slice(0, 13).every(Boolean)) unlock("holy-ground");
     if (infiniteVariant === "3lives" && lives <= 0 && roundsSurvived <= 4) unlock("cruel-summer");
   }
@@ -12258,6 +12320,9 @@ function renderCustomModalBody() {
   const m = normalizeCustomMode(preset.mode);
   const atCap = store.presets.length >= CUSTOM_MAX_PRESETS;
   const canDelete = store.presets.length > 1;
+  // "Mine" — checked on every render of the modal, so it catches a shelf that filled up via
+  // + New, via an import, or on any later visit, not just the click that crossed the line.
+  if (store.presets.length >= CUSTOM_PRESET_SHELF) unlock("mine");
 
   const chips = store.presets.map((p) =>
     `<button type="button" class="cm-preset-chip${p.id === preset.id ? " active" : ""}" data-cm-preset="${escapeHtml(p.id)}">${escapeHtml(p.name || "Custom")}</button>`
@@ -13056,6 +13121,26 @@ function devUnlockAllAch() {
 }
 function devLockAllAch() { resetAchievements(); earnedAchievements = {}; }
 
+// Readouts for the two breadth stores, shared by every breadth dev tool below so each one
+// can answer with the same shape ("what's left?") after it writes.
+function devExplorerReport() {
+  const seen = loadModesSeen();
+  return {
+    done: hasExploredEverything(seen),
+    seen: EXPLORER_TOKENS.filter((t) => seen[t]),
+    missing: EXPLORER_TOKENS.filter((t) => !seen[t]),
+  };
+}
+const DEV_DAY_NAMES = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+function devWeekdayReport() {
+  const seen = loadWeekdaysPlayed();
+  return {
+    done: hasPlayedEveryWeekday(seen),
+    played: DEV_DAY_NAMES.filter((n, d) => seen[d]),
+    missing: DEV_DAY_NAMES.filter((n, d) => !seen[d]),
+  };
+}
+
 // The single curated surface handed to the dev panel. Getters read live module
 // state on each call; the rest are thin wrappers over the game's own functions.
 function buildDevApi() {
@@ -13390,6 +13475,25 @@ function buildDevApi() {
       play: () => startCustom(),                               // start a run on the active preset
       open: () => { gameType = "custom"; rememberGameType("custom"); renderStartPickers(); showScreen("start"); $("startContent").style.display = ""; },
       reset: () => { resetCustom(); syncCustomUI(); },
+    },
+    // The two breadth stores behind "Explorer" and "Seven". Both are slow to fill by hand —
+    // Explorer wants seventeen separate runs and Seven wants a real week — so these let the
+    // charms (and the meta charms that wait on them) be reached without the calendar.
+    breadth: {
+      tokens: () => EXPLORER_TOKENS.slice(),
+      // What Explorer still wants, and what it has already seen.
+      explorer: devExplorerReport,
+      // Tick off one token by hand, e.g. breadth.see("inf-sudden:ultra").
+      see: (token) => { markModeSeen(token); return devExplorerReport(); },
+      // Fill every Explorer token and take the charm.
+      exploreAll: () => { EXPLORER_TOKENS.forEach((t) => markModeSeen(t)); if (hasExploredEverything()) unlock("explorer"); return devExplorerReport(); },
+      // Which weekdays have been played (Sunday = 0).
+      weekdays: devWeekdayReport,
+      // Tick off one weekday by hand, e.g. breadth.day(3) for Wednesday.
+      day: (d) => { markWeekdayPlayed(Math.max(0, Math.min(6, d | 0))); return devWeekdayReport(); },
+      // Fill the whole week and take the charm.
+      weekAll: () => { for (let d = 0; d < 7; d++) markWeekdayPlayed(d); if (hasPlayedEveryWeekday()) unlock("seven"); return devWeekdayReport(); },
+      reset: () => { resetBreadth(); return { explorer: devExplorerReport(), weekdays: devWeekdayReport() }; },
     },
     // Bonus games shelf. `sample` is the useful one: it dry-runs a builder N times without
     // touching the UI, so the fairness guards and (for Spot the Slip) the quality of the
