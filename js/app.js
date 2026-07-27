@@ -11072,7 +11072,7 @@ function runRoundEggs() {
   // One visitor at a time; the click-to-catch keepsake trigger lives in surfaceWhale.
   // Capped at one surfacing per game — a flat per-round roll made it show up several
   // times in a long infinite run, which cheapened the "rare" visitor it's meant to be.
-  if (!whaleSeenThisGame && !document.querySelector(".whale-egg") && chance(0.035)) {
+  if (!whaleSeenThisGame && !document.querySelector(".whale-egg") && chance(1 / 70)) {
     whaleSeenThisGame = true;
     surfaceWhale();
   }
