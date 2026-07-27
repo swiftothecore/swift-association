@@ -4,7 +4,8 @@
 // Pure config data (achievement/icon tables for the charm gallery) is imported
 // directly rather than routed through the api.
 
-import { ACHIEVEMENTS, ACH_ICONS, ACH_GROUPS, ACH_GROUP_OF, ACH_GROUP_COLORS } from "./config.js";
+import { ACHIEVEMENTS, ACH_ICONS, ACH_GROUPS, ACH_GROUP_OF, ACH_GROUP_COLORS,
+         CHALLENGES, CHALLENGE_SEALS, WAX_SEEDS, reseedSeal } from "./config.js";
 
 export function initDev(api) {
   injectStyles();
@@ -249,7 +250,7 @@ export function initDev(api) {
   // Every achievement charm at real render size on real paper, grouped like the
   // collection page, with duplicate-key flagging. QA tool for the icon set.
   body.append(section("icons",
-    row(btn("charm gallery", openGallery))));
+    row(btn("charm gallery", openGallery), btn("seal gallery", openSeals))));
 
   function openGallery() {
     const old = document.getElementById("dv-gallery");
@@ -295,6 +296,84 @@ export function initDev(api) {
         mk("span", { class: "dvg-title" }, `charm gallery · ${ACHIEVEMENTS.length} charms · ${dupes ? dupes + " duped keys" : "all unique"}`),
         mk("span", { class: "dvg-size" }, ...sizes),
         stateBtn,
+        btn("✕ close", () => overlay.remove())),
+      grid);
+    overlay.addEventListener("click", (e) => { if (e.target === overlay) overlay.remove(); });
+    document.body.append(overlay);
+  }
+
+  // ---- Challenge seal gallery --------------------------------------------------
+  // The charm gallery's opposite number: every challenge's wax seal at real render size on
+  // real paper, grouped by tape tier. Each seal's wax is poured from the `wax` seed on its
+  // motif entry, so this is also the audition bench — ← → re-pour one seal live, and "copy
+  // seeds" hands back a paste-ready list of whatever you settled on, to lock into config.js.
+  const SEAL_TIERS = { 1: "easy", 2: "tricky", 3: "tough", 4: "brutal", 0: "unrated" };
+  function openSeals() {
+    const old = document.getElementById("dv-seals");
+    if (old) { old.remove(); return; }
+
+    const seeds = { ...WAX_SEEDS };
+    let state = "red";   // red (unbeaten) → aged (defeated) → dark (dark side beaten)
+
+    const dress = (id) => {
+      const svg = seeds[id] === WAX_SEEDS[id] ? CHALLENGE_SEALS[id] : reseedSeal(id, seeds[id]);
+      if (state === "aged") return api.seals.aged(svg);
+      if (state === "dark") return api.seals.dark(svg);
+      return svg;
+    };
+    const paint = (id) => {
+      const cell = grid.querySelector(`[data-seal="${id}"]`);
+      if (!cell) return;
+      cell.querySelector(".dvs-stamp").innerHTML = dress(id);
+      const sd = cell.querySelector(".dvs-seed");
+      sd.textContent = "wax " + seeds[id];
+      sd.classList.toggle("moved", seeds[id] !== WAX_SEEDS[id]);
+    };
+    const bump = (id, by) => { seeds[id] = Math.max(1, seeds[id] + by); paint(id); };
+
+    const grid = mk("div", { class: "dvg-body" });
+    for (const tier of [1, 2, 3, 4, 0]) {
+      const inTier = CHALLENGES.filter((c) => (c.tapes || 0) === tier && CHALLENGE_SEALS[c.id]);
+      if (!inTier.length) continue;
+      grid.append(mk("div", { class: "dvg-group" }, `${SEAL_TIERS[tier]} · ${inTier.length}`));
+      const cells = mk("div", { class: "dvs-grid" });
+      for (const c of inTier) {
+        cells.append(mk("div", { class: "dvg-cell", "data-seal": c.id },
+          mk("span", { class: "dvs-stamp", html: dress(c.id) }),
+          mk("span", { class: "dvg-nm" }, c.name),
+          mk("span", { class: "dvs-row" },
+            btn("‹", () => bump(c.id, -1), "dvs-mini"),
+            mk("span", { class: "dvs-seed" }, "wax " + seeds[c.id]),
+            btn("›", () => bump(c.id, 1), "dvs-mini"))));
+      }
+      grid.append(cells);
+    }
+
+    // 38/46 are the in-run corner stamp, 53 the challenge detail; 88 is for judging shape.
+    const sizes = [38, 46, 53, 88].map((px) =>
+      btn(px + "px", (e) => {
+        overlay.style.setProperty("--dvs-size", px + "px");
+        overlay.querySelectorAll(".dvs-size .dv-btn").forEach((b) => b.classList.toggle("on", b === e.target));
+      }, px === 53 ? "on" : ""));
+
+    const stateBtn = btn("red · unbeaten", (e) => {
+      state = state === "red" ? "aged" : state === "aged" ? "dark" : "red";
+      e.target.textContent = state === "red" ? "red · unbeaten" : state === "aged" ? "taupe · defeated" : "black · dark side";
+      Object.keys(seeds).forEach(paint);
+    });
+    const copyBtn = btn("copy seeds", () => {
+      const txt = Object.keys(seeds).map((id) => `${id}: wax ${seeds[id]}`).join("\n");
+      console.log("[dev] seal seeds\n" + txt);
+      if (navigator.clipboard) navigator.clipboard.writeText(txt).then(() => toast("seeds copied"), () => toast("seeds in console"));
+      else toast("seeds in console");
+    });
+    const resetBtn = btn("revert", () => { Object.assign(seeds, WAX_SEEDS); Object.keys(seeds).forEach(paint); });
+
+    const overlay = mk("div", { id: "dv-seals", style: "--dvs-size:53px" },
+      mk("div", { class: "dvg-bar" },
+        mk("span", { class: "dvg-title" }, `seal gallery · ${Object.keys(WAX_SEEDS).length} seals`),
+        mk("span", { class: "dvs-size" }, ...sizes),
+        stateBtn, copyBtn, resetBtn,
         btn("✕ close", () => overlay.remove())),
       grid);
     overlay.addEventListener("click", (e) => { if (e.target === overlay) overlay.remove(); });
@@ -410,6 +489,16 @@ function injectStyles() {
   /* locked-state preview: pencil-grey pen, swipe dropped */
   #dv-gallery.dvg-locked .charm { color: var(--ink-soft, #8a7f70); }
   #dv-gallery.dvg-locked .charm::before { display: none; }
+  #dv-seals { position: fixed; inset: 0; z-index: 2147482999; background: rgba(12,10,8,.55);
+    display: flex; flex-direction: column; align-items: center; padding: 24px; overflow-y: auto; }
+  .dvs-size { display: flex; gap: 4px; }
+  .dvs-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(112px, 1fr)); gap: 10px; }
+  .dvs-stamp { width: var(--dvs-size); height: var(--dvs-size); }
+  .dvs-stamp svg { display: block; width: 100%; height: 100%; }
+  .dvs-row { display: flex; align-items: center; gap: 2px; }
+  .dvs-seed { font: 8px ui-monospace, Menlo, monospace; color: var(--ink-soft, #8a7f70); min-width: 44px; }
+  .dvs-seed.moved { color: #1d7d8a; font-weight: 700; }   /* re-poured, not yet locked in config */
+  .dv-btn.dvs-mini { padding: 0 4px; line-height: 14px; min-width: 0; }
   .dvg-nm { font: 9px/1.2 ui-monospace, Menlo, monospace; color: var(--ink, #2b2722); }
   .dvg-key { font: 8px ui-monospace, Menlo, monospace; color: var(--ink-soft, #8a7f70); }
   .dvg-cell.dup .dvg-key { color: #b23a3a; font-weight: 700; }

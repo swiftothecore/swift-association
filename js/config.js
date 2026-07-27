@@ -1251,83 +1251,199 @@ export const ACH_ICONS = {
 const PLACEHOLDER_MOTIF_D = "M32 19 A7 7 0 0 1 39 26 C39 30 34.5 31 33.5 34 L30.5 34 C31.5 29.5 36 28.5 36 26 A4 4 0 0 0 28 26 L25 26 A7 7 0 0 1 32 19 Z M29.8 37.4 a2.2 2.2 0 1 1 4.4 0 a2.2 2.2 0 1 1 -4.4 0";
 const WAX_SEAL_MOTIFS = {
   // a circle dissolving into scattering dots: the word vanishing before your eyes
-  "vanishing-word": { fr: "nonzero", d: "M32 19 A13 13 0 0 0 32 45 Z M37.5 22.5 m-2.7 0 a2.7 2.7 0 1 1 5.4 0 a2.7 2.7 0 1 1 -5.4 0 M40 32 m-3.1 0 a3.1 3.1 0 1 1 6.2 0 a3.1 3.1 0 1 1 -6.2 0 M37.5 41.5 m-2.7 0 a2.7 2.7 0 1 1 5.4 0 a2.7 2.7 0 1 1 -5.4 0 M43.5 25.5 m-1.7 0 a1.7 1.7 0 1 1 3.4 0 a1.7 1.7 0 1 1 -3.4 0 M44.8 36.5 m-1.6 0 a1.6 1.6 0 1 1 3.2 0 a1.6 1.6 0 1 1 -3.2 0 M46.7 31 m-1.1 0 a1.1 1.1 0 1 1 2.2 0 a1.1 1.1 0 1 1 -2.2 0" },
+  "vanishing-word": { wax: 1, fr: "nonzero", d: "M32 19 A13 13 0 0 0 32 45 Z M37.5 22.5 m-2.7 0 a2.7 2.7 0 1 1 5.4 0 a2.7 2.7 0 1 1 -5.4 0 M40 32 m-3.1 0 a3.1 3.1 0 1 1 6.2 0 a3.1 3.1 0 1 1 -6.2 0 M37.5 41.5 m-2.7 0 a2.7 2.7 0 1 1 5.4 0 a2.7 2.7 0 1 1 -5.4 0 M43.5 25.5 m-1.7 0 a1.7 1.7 0 1 1 3.4 0 a1.7 1.7 0 1 1 -3.4 0 M44.8 36.5 m-1.6 0 a1.6 1.6 0 1 1 3.2 0 a1.6 1.6 0 1 1 -3.2 0 M46.7 31 m-1.1 0 a1.1 1.1 0 1 1 2.2 0 a1.1 1.1 0 1 1 -2.2 0" },
   // a vinyl record, label and spindle hole pressed in: one single album
-  "deep-cut": { fr: "nonzero", d: "M18.5 32 a13.5 13.5 0 1 1 27 0 a13.5 13.5 0 1 1 -27 0 M23.7 32 a8.3 8.3 0 1 0 16.6 0 a8.3 8.3 0 1 0 -16.6 0 M25.7 32 a6.3 6.3 0 1 1 12.6 0 a6.3 6.3 0 1 1 -12.6 0 M30.2 32 a1.8 1.8 0 1 0 3.6 0 a1.8 1.8 0 1 0 -3.6 0" },
+  "deep-cut": { wax: 2, fr: "nonzero", d: "M18.5 32 a13.5 13.5 0 1 1 27 0 a13.5 13.5 0 1 1 -27 0 M23.7 32 a8.3 8.3 0 1 0 16.6 0 a8.3 8.3 0 1 0 -16.6 0 M25.7 32 a6.3 6.3 0 1 1 12.6 0 a6.3 6.3 0 1 1 -12.6 0 M30.2 32 a1.8 1.8 0 1 0 3.6 0 a1.8 1.8 0 1 0 -3.6 0" },
   // an A-to-Z monogram, the classic wax-seal treatment for an alphabetical rule
-  "alphabetical": { fr: "nonzero", d: "M25.5 21.5 L31 31.5 H27.9 L25.5 26.6 L23.1 31.5 H20 Z M22.1 28.4 H28.9 L29.6 30.3 H21.4 Z M34 30.5 H43 V33 L37.6 39.9 H43.2 V42.4 H33.8 V39.9 L39.2 33 H34 Z" },
+  "alphabetical": { wax: 3, fr: "nonzero", d: "M25.5 21.5 L31 31.5 H27.9 L25.5 26.6 L23.1 31.5 H20 Z M22.1 28.4 H28.9 L29.6 30.3 H21.4 Z M34 30.5 H43 V33 L37.6 39.9 H43.2 V42.4 H33.8 V39.9 L39.2 33 H34 Z" },
   // a word as three bars, warping more with every line until it breaks apart
-  "word-modifiers": { fr: "nonzero", d: "M22 22.5 H42 V26 H22 Z M22 30.5 C26 28.5 28 32.5 32 30.5 C36 28.5 38 32.5 42 30.5 L42 34 C38 36 36 32 32 34 C28 36 26 32 22 34 Z M21.5 39 C25 36.5 28 41.5 31 39 L31 42.5 C28 45 25 40 21.5 42.5 Z M34 38.5 C37 36 40 41 43.5 38.5 L43.5 42 C40 44.5 37 39.5 34 41.5 Z" },
+  "word-modifiers": { wax: 4, fr: "nonzero", d: "M22 22.5 H42 V26 H22 Z M22 30.5 C26 28.5 28 32.5 32 30.5 C36 28.5 38 32.5 42 30.5 L42 34 C38 36 36 32 32 34 C28 36 26 32 22 34 Z M21.5 39 C25 36.5 28 41.5 31 39 L31 42.5 C28 45 25 40 21.5 42.5 Z M34 38.5 C37 36 40 41 43.5 38.5 L43.5 42 C40 44.5 37 39.5 34 41.5 Z" },
   // one lone song: a single bold eighth note
-  "one-of-a-kind": { fr: "nonzero", d: "M24.2 40.4 a4.2 4.2 0 1 1 8.4 0 a4.2 4.2 0 1 1 -8.4 0 M31.4 22.6 H34 V40.4 H31.4 Z M34 22.6 C39 24.6 40.6 28.5 39.4 33.1 C38.5 30.3 36.7 28.7 34 28.1 Z" },
+  "one-of-a-kind": { wax: 5, fr: "nonzero", d: "M24.2 40.4 a4.2 4.2 0 1 1 8.4 0 a4.2 4.2 0 1 1 -8.4 0 M31.4 22.6 H34 V40.4 H31.4 Z M34 22.6 C39 24.6 40.6 28.5 39.4 33.1 C38.5 30.3 36.7 28.7 34 28.1 Z" },
   // a forking road: one path in, two ways out
-  "choose-your-path": { fr: "nonzero", d: "M30 46 V37.2 L22 24.6 A2.7 2.7 0 0 1 26.4 21.9 L32 31.2 L37.6 21.9 A2.7 2.7 0 0 1 42 24.6 L34 37.2 V46 Z" },
+  "choose-your-path": { wax: 6, fr: "nonzero", d: "M30 46 V37.2 L22 24.6 A2.7 2.7 0 0 1 26.4 21.9 L32 31.2 L37.6 21.9 A2.7 2.7 0 0 1 42 24.6 L34 37.2 V46 Z" },
   // a tilted playing card with a question mark: the rule you can't predict
-  "wildcard": { fr: "evenodd", d: "M22.6 23.8 L37.3 20.7 L41.4 40.2 L26.7 43.3 Z M28.3 29.5 A4.2 4.2 0 1 1 34.5 32.4 L33.4 30.5 A1.9 1.9 0 1 0 30.6 29.1 Z M31.8 32.8 L33.9 32.6 L34.1 35.4 L32 35.6 Z M31.4 38.7 a1.6 1.6 0 1 0 3.2 0 a1.6 1.6 0 1 0 -3.2 0" },
+  "wildcard": { wax: 7, fr: "evenodd", d: "M22.6 23.8 L37.3 20.7 L41.4 40.2 L26.7 43.3 Z M28.3 29.5 A4.2 4.2 0 1 1 34.5 32.4 L33.4 30.5 A1.9 1.9 0 1 0 30.6 29.1 Z M31.8 32.8 L33.9 32.6 L34.1 35.4 L32 35.6 Z M31.4 38.7 a1.6 1.6 0 1 0 3.2 0 a1.6 1.6 0 1 0 -3.2 0" },
   // a revolving door from above: the ring and its spinning vanes
-  "revolving-door": { fr: "evenodd", d: "M19 32 a13 13 0 1 1 26 0 a13 13 0 1 1 -26 0 M21 32 a11 11 0 1 1 22 0 a11 11 0 1 1 -22 0 M30.7 21.5 H33.3 V42.5 H30.7 Z M21.5 30.7 H42.5 V33.3 H21.5 Z M29 32 a3 3 0 1 1 6 0 a3 3 0 1 1 -6 0" },
+  "revolving-door": { wax: 8, fr: "evenodd", d: "M19 32 a13 13 0 1 1 26 0 a13 13 0 1 1 -26 0 M21 32 a11 11 0 1 1 22 0 a11 11 0 1 1 -22 0 M30.7 21.5 H33.3 V42.5 H30.7 Z M21.5 30.7 H42.5 V33.3 H21.5 Z M29 32 a3 3 0 1 1 6 0 a3 3 0 1 1 -6 0" },
   // a stopwatch nearly empty, only a thin wedge of time left
-  "shrinking-timer": { fr: "nonzero", d: "M21.7 34.2 a10.3 10.3 0 1 1 20.6 0 a10.3 10.3 0 1 1 -20.6 0 M24.3 34.2 a7.7 7.7 0 1 0 15.4 0 a7.7 7.7 0 1 0 -15.4 0 M32 34.2 L32 27.3 A6.9 6.9 0 0 1 37.6 30.9 Z M29.7 20.5 H34.3 V24.2 H29.7 Z" },
+  "shrinking-timer": { wax: 9, fr: "nonzero", d: "M21.7 34.2 a10.3 10.3 0 1 1 20.6 0 a10.3 10.3 0 1 1 -20.6 0 M24.3 34.2 a7.7 7.7 0 1 0 15.4 0 a7.7 7.7 0 1 0 -15.4 0 M32 34.2 L32 27.3 A6.9 6.9 0 0 1 37.6 30.9 Z M29.7 20.5 H34.3 V24.2 H29.7 Z" },
   // a title ribbon with the word slotted inside it
-  "title-in": { fr: "evenodd", d: "M18.8 27 H45.2 L41.8 32 L45.2 37 H18.8 L22.2 32 Z M24.8 30.7 H39.2 V33.3 H24.8 Z" },
+  "title-in": { wax: 10, fr: "evenodd", d: "M18.8 27 H45.2 L41.8 32 L45.2 37 H18.8 L22.2 32 Z M24.8 30.7 H39.2 V33.3 H24.8 Z" },
   // a little name tag with a heart: short and sweet
-  "short-title": { fr: "evenodd", d: "M22 32 L28 25.5 H40.9 Q42.5 25.5 42.5 27.1 V36.9 Q42.5 38.5 40.9 38.5 H28 Z M25.3 32 a1.5 1.5 0 1 0 3 0 a1.5 1.5 0 1 0 -3 0 M35 35.6 C33 33.8 31.5 32.4 31.5 30.5 C31.5 28.5 33.9 27.9 35 29.7 C36.1 27.9 38.5 28.5 38.5 30.5 C38.5 32.4 37 33.8 35 35.6 Z" },
+  "short-title": { wax: 11, fr: "evenodd", d: "M22 32 L28 25.5 H40.9 Q42.5 25.5 42.5 27.1 V36.9 Q42.5 38.5 40.9 38.5 H28 Z M25.3 32 a1.5 1.5 0 1 0 3 0 a1.5 1.5 0 1 0 -3 0 M35 35.6 C33 33.8 31.5 32.4 31.5 30.5 C31.5 28.5 33.9 27.9 35 29.7 C36.1 27.9 38.5 28.5 38.5 30.5 C38.5 32.4 37 33.8 35 35.6 Z" },
   // a heart holding a quotation: the lyric line, loved word for word
-  "lyric-lover": { fr: "evenodd", d: "M32 45 C25.5 39.5 20.5 35 20.5 28.8 C20.5 22.4 28.4 20.6 32 26 C35.6 20.6 43.5 22.4 43.5 28.8 C43.5 35 38.5 39.5 32 45 Z M29.4 27.6 C31.2 28.3 31.5 30.7 30 33.6 L28.6 33 C29.7 30.8 29.6 29.2 28.8 28.3 Z M35 27.6 C36.8 28.3 37.1 30.7 35.6 33.6 L34.2 33 C35.3 30.8 35.2 29.2 34.4 28.3 Z" },
+  "lyric-lover": { wax: 12, fr: "evenodd", d: "M32 45 C25.5 39.5 20.5 35 20.5 28.8 C20.5 22.4 28.4 20.6 32 26 C35.6 20.6 43.5 22.4 43.5 28.8 C43.5 35 38.5 39.5 32 45 Z M29.4 27.6 C31.2 28.3 31.5 30.7 30 33.6 L28.6 33 C29.7 30.8 29.6 29.2 28.8 28.3 Z M35 27.6 C36.8 28.3 37.1 30.7 35.6 33.6 L34.2 33 C35.3 30.8 35.2 29.2 34.4 28.3 Z" },
   // three chain links running corner to corner: each song wrapped onto the last
-  "wrapped-chain": { fr: "evenodd", d: "M20.9 26.6 a4.5 4.5 0 1 1 9 0 a4.5 4.5 0 1 1 -9 0 M23.4 26.6 a2 2 0 1 1 4 0 a2 2 0 1 1 -4 0 M27.5 32 a4.5 4.5 0 1 1 9 0 a4.5 4.5 0 1 1 -9 0 M30 32 a2 2 0 1 1 4 0 a2 2 0 1 1 -4 0 M34.1 37.4 a4.5 4.5 0 1 1 9 0 a4.5 4.5 0 1 1 -9 0 M36.6 37.4 a2 2 0 1 1 4 0 a2 2 0 1 1 -4 0" },
+  "wrapped-chain": { wax: 13, fr: "evenodd", d: "M20.9 26.6 a4.5 4.5 0 1 1 9 0 a4.5 4.5 0 1 1 -9 0 M23.4 26.6 a2 2 0 1 1 4 0 a2 2 0 1 1 -4 0 M27.5 32 a4.5 4.5 0 1 1 9 0 a4.5 4.5 0 1 1 -9 0 M30 32 a2 2 0 1 1 4 0 a2 2 0 1 1 -4 0 M34.1 37.4 a4.5 4.5 0 1 1 9 0 a4.5 4.5 0 1 1 -9 0 M36.6 37.4 a2 2 0 1 1 4 0 a2 2 0 1 1 -4 0" },
   // a stage microphone: every night a different album on cue
-  "on-tour": { fr: "nonzero", d: "M31.3 25.5 a5.2 5.2 0 1 1 10.4 0 a5.2 5.2 0 1 1 -10.4 0 M33.85 29.12 L35.95 30.28 L28.05 44.58 L25.95 43.42 Z M22 45.4 a6.5 1.9 0 1 1 13 0 a6.5 1.9 0 1 1 -13 0" },
+  "on-tour": { wax: 14, fr: "nonzero", d: "M31.3 25.5 a5.2 5.2 0 1 1 10.4 0 a5.2 5.2 0 1 1 -10.4 0 M33.85 29.12 L35.95 30.28 L28.05 44.58 L25.95 43.42 Z M22 45.4 a6.5 1.9 0 1 1 13 0 a6.5 1.9 0 1 1 -13 0" },
   // an alarm clock, hands frozen mid-run: the one shared clock
-  "its-a-clock": { fr: "nonzero", d: "M22 33.5 a10 10 0 1 1 20 0 a10 10 0 1 1 -20 0 M24.4 33.5 a7.6 7.6 0 1 0 15.2 0 a7.6 7.6 0 1 0 -15.2 0 M31 34.5 V27.8 H33 V32.5 H36.8 V34.5 Z M20.8 24.4 a3.2 3.2 0 1 1 6.4 0 a3.2 3.2 0 1 1 -6.4 0 M36.8 24.4 a3.2 3.2 0 1 1 6.4 0 a3.2 3.2 0 1 1 -6.4 0 M24.4 41.9 L26 42.9 L24.4 45.5 L22.8 44.5 Z M39.6 41.9 L38 42.9 L39.6 45.5 L41.2 44.5 Z" },
+  "its-a-clock": { wax: 15, fr: "nonzero", d: "M22 33.5 a10 10 0 1 1 20 0 a10 10 0 1 1 -20 0 M24.4 33.5 a7.6 7.6 0 1 0 15.2 0 a7.6 7.6 0 1 0 -15.2 0 M31 34.5 V27.8 H33 V32.5 H36.8 V34.5 Z M20.8 24.4 a3.2 3.2 0 1 1 6.4 0 a3.2 3.2 0 1 1 -6.4 0 M36.8 24.4 a3.2 3.2 0 1 1 6.4 0 a3.2 3.2 0 1 1 -6.4 0 M24.4 41.9 L26 42.9 L24.4 45.5 L22.8 44.5 Z M39.6 41.9 L38 42.9 L39.6 45.5 L41.2 44.5 Z" },
   // two arrows trading places: title one page, lyric the next
-  "switch-up": { fr: "nonzero", d: "M22 26.2 H36 V23.4 L42.5 28 L36 32.6 V29.8 H22 Z M42 37.8 H28 V35 L21.5 39.6 L28 44.2 V41.4 H42 Z" },
+  "switch-up": { wax: 16, fr: "nonzero", d: "M22 26.2 H36 V23.4 L42.5 28 L36 32.6 V29.8 H22 Z M42 37.8 H28 V35 L21.5 39.6 L28 44.2 V41.4 H42 Z" },
   // two beamed notes: every page wants a pair of songs
-  "double-trouble": { fr: "nonzero", d: "M22.4 40.3 a3.5 3.5 0 1 1 7 0 a3.5 3.5 0 1 1 -7 0 M28.2 25.2 H30.2 V40.3 H28.2 Z M34.4 38.3 a3.5 3.5 0 1 1 7 0 a3.5 3.5 0 1 1 -7 0 M40.2 23.5 H42.2 V38.3 H40.2 Z M28.2 25.2 L42.2 23.2 V27.2 L28.2 29.2 Z" },
+  "double-trouble": { wax: 17, fr: "nonzero", d: "M22.4 40.3 a3.5 3.5 0 1 1 7 0 a3.5 3.5 0 1 1 -7 0 M28.2 25.2 H30.2 V40.3 H28.2 Z M34.4 38.3 a3.5 3.5 0 1 1 7 0 a3.5 3.5 0 1 1 -7 0 M40.2 23.5 H42.2 V38.3 H40.2 Z M28.2 25.2 L42.2 23.2 V27.2 L28.2 29.2 Z" },
   // the devil's own fork: a trident with a wavering path for a shaft
-  "devils-path": { fr: "nonzero", d: "M24.2 29 H39.8 V31.6 H24.2 Z M24.2 22.3 L25.4 19.7 L26.6 22.3 V29.3 H24.2 Z M30.8 21.4 L32 18.8 L33.2 21.4 V29.3 H30.8 Z M37.4 22.3 L38.6 19.7 L39.8 22.3 V29.3 H37.4 Z M30.7 31.4 H33.3 C32.2 34.4 34.6 36.2 33.5 39.2 C32.7 41.4 34.2 42.8 33.2 45.4 H30.6 C31.6 42.8 30.1 41.4 30.9 39.2 C32 36.2 29.6 34.4 30.7 31.4 Z" },
+  "devils-path": { wax: 18, fr: "nonzero", d: "M24.2 29 H39.8 V31.6 H24.2 Z M24.2 22.3 L25.4 19.7 L26.6 22.3 V29.3 H24.2 Z M30.8 21.4 L32 18.8 L33.2 21.4 V29.3 H30.8 Z M37.4 22.3 L38.6 19.7 L39.8 22.3 V29.3 H37.4 Z M30.7 31.4 H33.3 C32.2 34.4 34.6 36.2 33.5 39.2 C32.7 41.4 34.2 42.8 33.2 45.4 H30.6 C31.6 42.8 30.1 41.4 30.9 39.2 C32 36.2 29.6 34.4 30.7 31.4 Z" },
   // an eye with a lightning-bolt iris: read the flash before it's gone
-  "ready-for-it": { fr: "evenodd", d: "M18.5 32 C23 24.5 41 24.5 45.5 32 C41 39.5 23 39.5 18.5 32 Z M34 26.8 L28.4 33.4 H31.6 L30.6 37.2 L35.6 30.7 H32.8 Z" },
+  "ready-for-it": { wax: 19, fr: "evenodd", d: "M18.5 32 C23 24.5 41 24.5 45.5 32 C41 39.5 23 39.5 18.5 32 Z M34 26.8 L28.4 33.4 H31.6 L30.6 37.2 L35.6 30.7 H32.8 Z" },
   // a house split by a jagged crack: every miss steals from the home clock
-  "home-invasion": { fr: "evenodd", d: "M32 19.8 L38.4 25 V21.9 H42 V27.9 L44.6 30 H42.2 V43.4 H21.8 V30 H19.4 Z M31.3 23.2 L33.7 23.2 L31.9 30.4 L34.6 30.4 L29.9 41 L31.1 33.4 L28.5 33.4 Z" },
+  "home-invasion": { wax: 20, fr: "evenodd", d: "M32 19.8 L38.4 25 V21.9 H42 V27.9 L44.6 30 H42.2 V43.4 H21.8 V30 H19.4 Z M31.3 23.2 L33.7 23.2 L31.9 30.4 L34.6 30.4 L29.9 41 L31.1 33.4 L28.5 33.4 Z" },
   // the number itself, stamped like a year on a document seal
-  "thirty-one": { fr: "nonzero", d: "M24.5 23 H34.9 V25.7 H24.5 Z M26.3 30.7 H34.9 V33.3 H26.3 Z M24.5 38.3 H34.9 V41 H24.5 Z M32.3 23 H34.9 V41 H32.3 Z M38.7 23 H41.3 V41 H38.7 Z M36.3 26.6 L38.7 23 L38.7 26.6 Z M36.5 38.3 H43.5 V41 H36.5 Z" },
+  "thirty-one": { wax: 21, fr: "nonzero", d: "M24.5 23 H34.9 V25.7 H24.5 Z M26.3 30.7 H34.9 V33.3 H26.3 Z M24.5 38.3 H34.9 V41 H24.5 Z M32.3 23 H34.9 V41 H32.3 Z M38.7 23 H41.3 V41 H38.7 Z M36.3 26.6 L38.7 23 L38.7 26.6 Z M36.5 38.3 H43.5 V41 H36.5 Z" },
   // a magnifying glass over a tiny tilted scrap of a word
-  "smallest-song": { fr: "nonzero", d: "M20.6 28.3 a7.7 7.7 0 1 1 15.4 0 a7.7 7.7 0 1 1 -15.4 0 M22.6 28.3 a5.7 5.7 0 1 0 11.4 0 a5.7 5.7 0 1 0 -11.4 0 M33.1 34.5 L34.5 33.1 L42.9 41.5 L41.5 42.9 Z M25.7 29.9 L30.7 28 L31.2 29.3 L26.2 31.2 Z" },
+  "smallest-song": { wax: 22, fr: "nonzero", d: "M20.6 28.3 a7.7 7.7 0 1 1 15.4 0 a7.7 7.7 0 1 1 -15.4 0 M22.6 28.3 a5.7 5.7 0 1 0 11.4 0 a5.7 5.7 0 1 0 -11.4 0 M33.1 34.5 L34.5 33.1 L42.9 41.5 L41.5 42.9 Z M25.7 29.9 L30.7 28 L31.2 29.3 L26.2 31.2 Z" },
   // the flag you raise on a fake: a pennant on its pole
-  "impostor": { fr: "nonzero", d: "M26.2 20 H28.8 V45.4 H26.2 Z M28.6 20.8 C33.8 22.6 37.9 21.4 42.8 24.6 C38 27.8 33.8 26.6 28.6 28.4 Z" },
+  "impostor": { wax: 23, fr: "nonzero", d: "M26.2 20 H28.8 V45.4 H26.2 Z M28.6 20.8 C33.8 22.6 37.9 21.4 42.8 24.6 C38 27.8 33.8 26.6 28.6 28.4 Z" },
   // a song bobbing on open water: fish the right title out of the sea
-  "sea-of-songs": { fr: "nonzero", d: "M24.6 30.6 a2.9 2.9 0 1 1 5.8 0 a2.9 2.9 0 1 1 -5.8 0 M30.1 21 H31.9 V30.6 H30.1 Z M31.9 21 C35.4 22.6 36.6 25.4 35.8 28.7 C35.1 26.5 33.8 25.3 31.9 24.9 Z M21.5 34.8 C24.5 32.4 27.5 32.4 30.5 34.8 C33.5 37.2 36.5 37.2 39.5 34.8 C40.6 33.9 41.6 33.3 42.5 33.1 L42.5 35.9 C41.6 36.1 40.6 36.7 39.5 37.6 C36.5 40 33.5 40 30.5 37.6 C27.5 35.2 24.5 35.2 21.5 37.6 Z M21.5 39.8 C24.5 37.4 27.5 37.4 30.5 39.8 C33.5 42.2 36.5 42.2 39.5 39.8 C40.6 38.9 41.6 38.3 42.5 38.1 L42.5 40.9 C41.6 41.1 40.6 41.7 39.5 42.6 C36.5 45 33.5 45 30.5 42.6 C27.5 40.2 24.5 40.2 21.5 42.6 Z" },
+  "sea-of-songs": { wax: 24, fr: "nonzero", d: "M24.6 30.6 a2.9 2.9 0 1 1 5.8 0 a2.9 2.9 0 1 1 -5.8 0 M30.1 21 H31.9 V30.6 H30.1 Z M31.9 21 C35.4 22.6 36.6 25.4 35.8 28.7 C35.1 26.5 33.8 25.3 31.9 24.9 Z M21.5 34.8 C24.5 32.4 27.5 32.4 30.5 34.8 C33.5 37.2 36.5 37.2 39.5 34.8 C40.6 33.9 41.6 33.3 42.5 33.1 L42.5 35.9 C41.6 36.1 40.6 36.7 39.5 37.6 C36.5 40 33.5 40 30.5 37.6 C27.5 35.2 24.5 35.2 21.5 37.6 Z M21.5 39.8 C24.5 37.4 27.5 37.4 30.5 39.8 C33.5 42.2 36.5 42.2 39.5 39.8 C40.6 38.9 41.6 38.3 42.5 38.1 L42.5 40.9 C41.6 41.1 40.6 41.7 39.5 42.6 C36.5 45 33.5 45 30.5 42.6 C27.5 40.2 24.5 40.2 21.5 42.6 Z" },
   // a needle drawing one thread through everything: the word all three lines share
-  "common-thread": { fr: "nonzero", d: "M21.3 43.2 L39 24.4 Q40.5 23 42 24.5 Q43.5 26 42.1 27.5 L23.3 45.2 Z M39.3 25.9 a1.2 1.2 0 1 0 2.4 0 a1.2 1.2 0 1 0 -2.4 0 M41.2 26.3 C45.6 29.7 43.6 35.2 38.3 36 C33.6 36.7 30.9 40 32 44.4 L30.4 44.8 C29 39.4 32.5 35.2 37.7 34.4 C41.9 33.6 43.4 30 40.1 27.4 Z" },
+  "common-thread": { wax: 25, fr: "nonzero", d: "M21.3 43.2 L39 24.4 Q40.5 23 42 24.5 Q43.5 26 42.1 27.5 L23.3 45.2 Z M39.3 25.9 a1.2 1.2 0 1 0 2.4 0 a1.2 1.2 0 1 0 -2.4 0 M41.2 26.3 C45.6 29.7 43.6 35.2 38.3 36 C33.6 36.7 30.9 40 32 44.4 L30.4 44.8 C29 39.4 32.5 35.2 37.7 34.4 C41.9 33.6 43.4 30 40.1 27.4 Z" },
   // a two-by-two grid of pressed dots, three solid and one hollow: tap the one that doesn't belong
-  "odd-one-out": { fr: "evenodd", d: "M20.3 25.5 a5.2 5.2 0 1 1 10.4 0 a5.2 5.2 0 1 1 -10.4 0 M33.3 25.5 a5.2 5.2 0 1 1 10.4 0 a5.2 5.2 0 1 1 -10.4 0 M20.3 38.5 a5.2 5.2 0 1 1 10.4 0 a5.2 5.2 0 1 1 -10.4 0 M33.3 38.5 a5.2 5.2 0 1 1 10.4 0 a5.2 5.2 0 1 1 -10.4 0 M35.8 38.5 a2.7 2.7 0 1 1 5.4 0 a2.7 2.7 0 1 1 -5.4 0" },
+  "odd-one-out": { wax: 26, fr: "evenodd", d: "M20.3 25.5 a5.2 5.2 0 1 1 10.4 0 a5.2 5.2 0 1 1 -10.4 0 M33.3 25.5 a5.2 5.2 0 1 1 10.4 0 a5.2 5.2 0 1 1 -10.4 0 M20.3 38.5 a5.2 5.2 0 1 1 10.4 0 a5.2 5.2 0 1 1 -10.4 0 M33.3 38.5 a5.2 5.2 0 1 1 10.4 0 a5.2 5.2 0 1 1 -10.4 0 M35.8 38.5 a2.7 2.7 0 1 1 5.4 0 a2.7 2.7 0 1 1 -5.4 0" },
   // a speech bubble holding one blank line: no prompt word, just whose line it is
-  "whose-line": { fr: "evenodd", d: "M23.5 21.5 H40.5 Q43.5 21.5 43.5 24.5 V32.5 Q43.5 35.5 40.5 35.5 H30.5 L23.8 41.8 L26 35.5 H23.5 Q20.5 35.5 20.5 32.5 V24.5 Q20.5 21.5 23.5 21.5 Z M25.5 26.8 H38.5 V29.9 H25.5 Z" },
+  "whose-line": { wax: 27, fr: "evenodd", d: "M23.5 21.5 H40.5 Q43.5 21.5 43.5 24.5 V32.5 Q43.5 35.5 40.5 35.5 H30.5 L23.8 41.8 L26 35.5 H23.5 Q20.5 35.5 20.5 32.5 V24.5 Q20.5 21.5 23.5 21.5 Z M25.5 26.8 H38.5 V29.9 H25.5 Z" },
   // two words as overlapping discs, the shared lens pressed in with one bead: the song holding both
-  "both-of-us": { fr: "evenodd", d: "M17 32 a9 9 0 1 1 18 0 a9 9 0 1 1 -18 0 M29 32 a9 9 0 1 1 18 0 a9 9 0 1 1 -18 0 M30.2 32 a1.8 1.8 0 1 1 3.6 0 a1.8 1.8 0 1 1 -3.6 0" },
+  "both-of-us": { wax: 28, fr: "evenodd", d: "M17 32 a9 9 0 1 1 18 0 a9 9 0 1 1 -18 0 M29 32 a9 9 0 1 1 18 0 a9 9 0 1 1 -18 0 M30.2 32 a1.8 1.8 0 1 1 3.6 0 a1.8 1.8 0 1 1 -3.6 0" },
   // three eighth notes on one beam: Double Trouble's pair, plus the one that proves it
-  "name-three": { fr: "nonzero", d: "M20.6 39.6 a3 3 0 1 1 6 0 a3 3 0 1 1 -6 0 M28.4 38.5 a3 3 0 1 1 6 0 a3 3 0 1 1 -6 0 M36.2 37.4 a3 3 0 1 1 6 0 a3 3 0 1 1 -6 0 M25.6 25.1 H27.5 V39.6 H25.6 Z M33.4 24.1 H35.3 V38.5 H33.4 Z M41.1 22.9 H43 V37.4 H41.1 Z M25.6 24.9 L43 22.6 L43 26.1 L25.6 28.4 Z" },
+  "name-three": { wax: 29, fr: "nonzero", d: "M20.6 39.6 a3 3 0 1 1 6 0 a3 3 0 1 1 -6 0 M28.4 38.5 a3 3 0 1 1 6 0 a3 3 0 1 1 -6 0 M36.2 37.4 a3 3 0 1 1 6 0 a3 3 0 1 1 -6 0 M25.6 25.1 H27.5 V39.6 H25.6 Z M33.4 24.1 H35.3 V38.5 H33.4 Z M41.1 22.9 H43 V37.4 H41.1 Z M25.6 24.9 L43 22.6 L43 26.1 L25.6 28.4 Z" },
   // a lucky horseshoe: the same luck a stake-won bead's charm wears on the bracelet
-  "press-your-luck": { fr: "evenodd", d: "M26.9 41.4 A12 12 0 1 1 37.1 41.4 L35.2 37.3 A7.5 7.5 0 1 0 28.8 37.3 Z M21.1 30.5 a1.15 1.15 0 1 0 2.3 0 a1.15 1.15 0 1 0 -2.3 0 M23.95 23.6 a1.15 1.15 0 1 0 2.3 0 a1.15 1.15 0 1 0 -2.3 0 M30.85 20.75 a1.15 1.15 0 1 0 2.3 0 a1.15 1.15 0 1 0 -2.3 0 M37.75 23.6 a1.15 1.15 0 1 0 2.3 0 a1.15 1.15 0 1 0 -2.3 0 M40.6 30.5 a1.15 1.15 0 1 0 2.3 0 a1.15 1.15 0 1 0 -2.3 0" },
+  "press-your-luck": { wax: 30, fr: "evenodd", d: "M26.9 41.4 A12 12 0 1 1 37.1 41.4 L35.2 37.3 A7.5 7.5 0 1 0 28.8 37.3 Z M21.1 30.5 a1.15 1.15 0 1 0 2.3 0 a1.15 1.15 0 1 0 -2.3 0 M23.95 23.6 a1.15 1.15 0 1 0 2.3 0 a1.15 1.15 0 1 0 -2.3 0 M30.85 20.75 a1.15 1.15 0 1 0 2.3 0 a1.15 1.15 0 1 0 -2.3 0 M37.75 23.6 a1.15 1.15 0 1 0 2.3 0 a1.15 1.15 0 1 0 -2.3 0 M40.6 30.5 a1.15 1.15 0 1 0 2.3 0 a1.15 1.15 0 1 0 -2.3 0" },
   // a stack of chips with one more tossed on top: the stake laid before the clock runs
-  "confidence-wager": { fr: "nonzero", d: "M23.5 25.9 L39 22.3 A2.4 2.4 0 0 0 38 17.7 L22.5 21.3 A2.4 2.4 0 0 0 23.5 25.9 Z M24.9 27.1 a2.4 2.4 0 0 0 0 4.8 H38.1 a2.4 2.4 0 0 0 0 -4.8 Z M27.4 32.7 a2.4 2.4 0 0 0 0 4.8 H40.6 a2.4 2.4 0 0 0 0 -4.8 Z M25.4 38.3 a2.4 2.4 0 0 0 0 4.8 H38.6 a2.4 2.4 0 0 0 0 -4.8 Z" },
+  "confidence-wager": { wax: 31, fr: "nonzero", d: "M23.5 25.9 L39 22.3 A2.4 2.4 0 0 0 38 17.7 L22.5 21.3 A2.4 2.4 0 0 0 23.5 25.9 Z M24.9 27.1 a2.4 2.4 0 0 0 0 4.8 H38.1 a2.4 2.4 0 0 0 0 -4.8 Z M27.4 32.7 a2.4 2.4 0 0 0 0 4.8 H40.6 a2.4 2.4 0 0 0 0 -4.8 Z M25.4 38.3 a2.4 2.4 0 0 0 0 4.8 H38.6 a2.4 2.4 0 0 0 0 -4.8 Z" },
   // a tilted die landed on two: the second bead, doubled or forfeit
-  "double-or-nothing": { fr: "evenodd", d: "M24.8 21 L43 24.8 L39.2 43 L21 39.2 Z M26.9 27.6 a2.3 2.3 0 1 1 4.6 0 a2.3 2.3 0 1 1 -4.6 0 M32.5 36.4 a2.3 2.3 0 1 1 4.6 0 a2.3 2.3 0 1 1 -4.6 0" },
+  "double-or-nothing": { wax: 32, fr: "evenodd", d: "M24.8 21 L43 24.8 L39.2 43 L21 39.2 Z M26.9 27.6 a2.3 2.3 0 1 1 4.6 0 a2.3 2.3 0 1 1 -4.6 0 M32.5 36.4 a2.3 2.3 0 1 1 4.6 0 a2.3 2.3 0 1 1 -4.6 0" },
   // a shield holding one bead safe inside it: every shield you keep is worth beads
-  "insurance": { fr: "evenodd", d: "M32 18.5 C36 21 40 21.8 44 22.2 V31 C44 38.5 39 43.5 32 46.5 C25 43.5 20 38.5 20 31 V22.2 C24 21.8 28 21 32 18.5 Z M27 31 a5 5 0 1 1 10 0 a5 5 0 1 1 -10 0 M29.6 31 a2.4 2.4 0 1 1 4.8 0 a2.4 2.4 0 1 1 -4.8 0" },
+  "insurance": { wax: 33, fr: "evenodd", d: "M32 18.5 C36 21 40 21.8 44 22.2 V31 C44 38.5 39 43.5 32 46.5 C25 43.5 20 38.5 20 31 V22.2 C24 21.8 28 21 32 18.5 Z M27 31 a5 5 0 1 1 10 0 a5 5 0 1 1 -10 0 M29.6 31 a2.4 2.4 0 1 1 4.8 0 a2.4 2.4 0 1 1 -4.8 0" },
 };
+
+/* ---------- The wax, poured once per seal ----------
+   The die is ONE physical stamp: same 20-unit circle, same engraved ring, same relief
+   lighting on every challenge, with only the motif swapped in the middle. The wax it gets
+   pressed into is what differs, because a puddle of wax never pools the same way twice.
+   So the blob outline, the bead ring, the pinhole bubbles, the sheen and the squeeze marks
+   at the rim are all generated from one small integer (`wax` on the motif entry) instead of
+   being shared literals.
+
+   THE CONSTRAINT that caps how wild a shape can get: the die is drawn ON TOP of the wax and
+   is NOT clipped to it (the clip group closes before the die circle below). If the puddle's
+   edge ever came inside r≈22, the die's hard circular rim would hang out over bare paper and
+   the whole illusion dies. Hence WAX_R_MIN, and hence every seal still being a roughly round
+   pour. Anything more dramatic (a drip, a squarish press, wax run to one side) needs the die
+   clipped to the blob first, which is a different job.
+
+   `wax` is a CHOSEN seed, not a hash of the id: shapes are generated but picked by eye and
+   then locked, because a seal is an identity object and must never change once a player has
+   seen it. Audition alternates with the dev panel's seal gallery, then write the winner in. */
+const WAX_R_MIN = 23.0;   // the die is r=20; this keeps a lip of wax proud of it at every angle
+const WAX_R_MAX = 28.6;   // viewBox is -2..66 and the contact shadow is offset (1.7,2.5) + blurred
+
+// mulberry32: small, fast, and good enough that neighbouring seeds give unrelated shapes
+// (a plain LCG gave visibly similar pours for 7 and 8, which defeats the point of auditioning).
+function waxRng(seed) {
+  let a = (seed >>> 0) + 0x6d2b79f5;
+  return () => {
+    a = (a + 0x6d2b79f5) >>> 0;
+    let t = a;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+const w1 = (v) => Math.round(v * 10) / 10;
+
+// Everything about one pour. Anchors come back out with it because the squeeze marks are
+// placed against real anchor radii rather than a guessed constant, which is the only way to
+// be sure they land in wax on a lopsided blob.
+function waxPour(seed) {
+  const rnd = waxRng(seed);
+  const lobes = 10 + Math.floor(rnd() * 4);          // 10-13, so lobe COUNT differs, not just size
+  const amp = 1.1 + rnd() * 1.7;                     // how lumpy this particular pour is
+  const base = 25.5 + rnd() * 0.9;
+  const ox = (rnd() - 0.5) * 1.2;                    // a hand press is never dead centre
+  const oy = (rnd() - 0.5) * 1.2;
+  const spin = rnd() * Math.PI * 2;
+  const floor = WAX_R_MIN + Math.hypot(ox, oy);      // keep the offset pour clear of the die too
+  const pts = [];
+  for (let i = 0; i < lobes; i++) {
+    const a = spin + (i / lobes) * Math.PI * 2 + (rnd() - 0.5) * (Math.PI / lobes) * 0.8;
+    const r = Math.min(WAX_R_MAX, Math.max(floor, base + (rnd() * 2 - 1) * amp));
+    pts.push([32 + ox + Math.cos(a) * r, 32 + oy + Math.sin(a) * r, a, r]);
+  }
+
+  // Closed Catmull-Rom through the anchors, expressed as cubics so the result is the same
+  // shape of path the hand-drawn original was.
+  const at = (i) => pts[(i + lobes) % lobes];
+  let blob = `M${w1(pts[0][0])} ${w1(pts[0][1])}`;
+  for (let i = 0; i < lobes; i++) {
+    const p0 = at(i - 1), p1 = at(i), p2 = at(i + 1), p3 = at(i + 2);
+    blob += ` C${w1(p1[0] + (p2[0] - p0[0]) / 6)} ${w1(p1[1] + (p2[1] - p0[1]) / 6)}` +
+            ` ${w1(p2[0] - (p3[0] - p1[0]) / 6)} ${w1(p2[1] - (p3[1] - p1[1]) / 6)}` +
+            ` ${w1(p2[0])} ${w1(p2[1])}`;
+  }
+  blob += " Z";
+
+  // The beaded rim: count and phase vary, and the dot shrinks as the count climbs so a
+  // 28-bead rim reads as finer rather than crowded.
+  const nb = 24 + 2 * Math.floor(rnd() * 3);
+  const dot = nb >= 28 ? 0.78 : nb >= 26 ? 0.85 : 0.92;
+  const phase = rnd() * Math.PI * 2;
+  let beads = "";
+  for (let i = 0; i < nb; i++) {
+    const a = phase + (i / nb) * Math.PI * 2;
+    beads += `M${w1(32 + Math.cos(a) * 17.4)} ${w1(32 + Math.sin(a) * 17.4)} ` +
+      `m-${dot} 0 a${dot} ${dot} 0 1 0 ${dot * 2} 0 a${dot} ${dot} 0 1 0 ${-dot * 2} 0 `;
+  }
+
+  // Pinhole bubbles, in the lip band between die and outline (r=20 to the blob edge, so
+  // ~21 is always safely inside wax and always outside the die).
+  const holes = [];
+  for (let i = 0, n = 2 + Math.floor(rnd() * 3); i < n; i++) {
+    const a = rnd() * Math.PI * 2, r = 20.9 + rnd() * 0.9;
+    holes.push([w1(32 + Math.cos(a) * r), w1(32 + Math.sin(a) * r), w1(0.45 + rnd() * 0.25)]);
+  }
+
+  // Squeeze marks: the little creases where wax was pressed out past the die. Hung off real
+  // anchors at 0.87 of their radius, so they can never drift outside a shallow lobe.
+  const nicks = [];
+  for (let i = 0, n = 1 + Math.floor(rnd() * 3); i < n; i++) {
+    const [, , a, r] = pts[Math.floor(rnd() * lobes)];
+    const rr = r * 0.87;
+    const dir = rnd() < 0.5 ? -1 : 1;
+    nicks.push(`M${w1(32 + Math.cos(a) * rr)} ${w1(32 + Math.sin(a) * rr)} ` +
+      `q${w1(dir * (1.0 + rnd() * 0.6))} ${w1(0.9 + rnd() * 0.5)} ${w1(dir * (0.6 + rnd() * 0.5))} ${w1(2.2 + rnd() * 0.8)}`);
+  }
+
+  // Sheen stays in the upper-left because the relief lighting does (azimuth 235), with the
+  // faint bounce opposite it. Only the shape and placing wander; moving a highlight to
+  // another quadrant would just read as a lighting bug across the set.
+  const sheen = {
+    x: w1(20 + rnd() * 3), y: w1(16.4 + rnd() * 2.4), rx: w1(11.5 + rnd() * 2.6),
+    ry: w1(7 + rnd() * 1.8), rot: w1(-38 + rnd() * 16),
+    x2: w1(42.5 + rnd() * 3), y2: w1(46.5 + rnd() * 3), rx2: w1(9 + rnd() * 2.4),
+    ry2: w1(4.8 + rnd() * 1.6), rot2: w1(-33 + rnd() * 16),
+  };
+
+  return {
+    blob, beads: beads.trim(), holes, nicks, sheen,
+    warp: 1 + Math.floor(rnd() * 90), grain: 1 + Math.floor(rnd() * 90),
+    freq: w1(0.095 + rnd() * 0.035) , scale: w1(1.8 + rnd() * 0.8),
+  };
+}
 
 // The shared wax recipe. `id` scopes the SVG's internal ids so several seals can
 // coexist in one document; the motif is stamped three times (shadow, highlight, face)
-// to sit in raised relief on the die.
-function waxSealSvg(id, motif) {
+// to sit in raised relief on the die. `seed` overrides the motif's locked pour, which is
+// what lets the dev gallery audition alternates without editing this file.
+function waxSealSvg(id, motif, seed) {
   const p = `wax-${id}`;
+  const w = waxPour(seed == null ? (motif.wax || 1) : seed);
   return `<svg viewBox="-2 -2 68 68" aria-hidden="true">
     <defs>
-      <path id="${p}-blob" d="M32.0 5.5 C36.3 5.6 40.3 8.2 44.6 10.2 C48.9 12.1 55.6 13.5 57.8 17.1 C60.0 20.7 58.7 27.4 58.0 32.0 C57.3 36.6 55.8 40.6 53.7 44.5 C51.6 48.4 49.0 53.1 45.4 55.2 C41.8 57.4 36.4 57.5 32.0 57.4 C27.6 57.3 23.1 56.5 18.9 54.7 C14.7 52.9 9.0 50.4 6.7 46.6 C4.5 42.8 4.8 36.5 5.4 32.0 C6.0 27.5 7.9 23.2 10.2 19.4 C12.4 15.6 15.4 11.8 19.0 9.5 C22.6 7.2 27.7 5.4 32.0 5.5 Z"/>
+      <path id="${p}-blob" d="${w.blob}"/>
       <path id="${p}-m" d="${motif.d}" fill-rule="${motif.fr || "nonzero"}"/>
-      <path id="${p}-beads" d="M32.0 14.6 m-0.85 0 a0.85 0.85 0 1 0 1.7 0 a0.85 0.85 0 1 0 -1.7 0 M36.2 15.1 m-0.85 0 a0.85 0.85 0 1 0 1.7 0 a0.85 0.85 0 1 0 -1.7 0 M40.1 16.6 m-0.85 0 a0.85 0.85 0 1 0 1.7 0 a0.85 0.85 0 1 0 -1.7 0 M43.5 19.0 m-0.85 0 a0.85 0.85 0 1 0 1.7 0 a0.85 0.85 0 1 0 -1.7 0 M46.3 22.1 m-0.85 0 a0.85 0.85 0 1 0 1.7 0 a0.85 0.85 0 1 0 -1.7 0 M48.3 25.8 m-0.85 0 a0.85 0.85 0 1 0 1.7 0 a0.85 0.85 0 1 0 -1.7 0 M49.3 29.9 m-0.85 0 a0.85 0.85 0 1 0 1.7 0 a0.85 0.85 0 1 0 -1.7 0 M49.3 34.1 m-0.85 0 a0.85 0.85 0 1 0 1.7 0 a0.85 0.85 0 1 0 -1.7 0 M48.3 38.2 m-0.85 0 a0.85 0.85 0 1 0 1.7 0 a0.85 0.85 0 1 0 -1.7 0 M46.3 41.9 m-0.85 0 a0.85 0.85 0 1 0 1.7 0 a0.85 0.85 0 1 0 -1.7 0 M43.5 45.0 m-0.85 0 a0.85 0.85 0 1 0 1.7 0 a0.85 0.85 0 1 0 -1.7 0 M40.1 47.4 m-0.85 0 a0.85 0.85 0 1 0 1.7 0 a0.85 0.85 0 1 0 -1.7 0 M36.2 48.9 m-0.85 0 a0.85 0.85 0 1 0 1.7 0 a0.85 0.85 0 1 0 -1.7 0 M32.0 49.4 m-0.85 0 a0.85 0.85 0 1 0 1.7 0 a0.85 0.85 0 1 0 -1.7 0 M27.8 48.9 m-0.85 0 a0.85 0.85 0 1 0 1.7 0 a0.85 0.85 0 1 0 -1.7 0 M23.9 47.4 m-0.85 0 a0.85 0.85 0 1 0 1.7 0 a0.85 0.85 0 1 0 -1.7 0 M20.5 45.0 m-0.85 0 a0.85 0.85 0 1 0 1.7 0 a0.85 0.85 0 1 0 -1.7 0 M17.7 41.9 m-0.85 0 a0.85 0.85 0 1 0 1.7 0 a0.85 0.85 0 1 0 -1.7 0 M15.7 38.2 m-0.85 0 a0.85 0.85 0 1 0 1.7 0 a0.85 0.85 0 1 0 -1.7 0 M14.7 34.1 m-0.85 0 a0.85 0.85 0 1 0 1.7 0 a0.85 0.85 0 1 0 -1.7 0 M14.7 29.9 m-0.85 0 a0.85 0.85 0 1 0 1.7 0 a0.85 0.85 0 1 0 -1.7 0 M15.7 25.8 m-0.85 0 a0.85 0.85 0 1 0 1.7 0 a0.85 0.85 0 1 0 -1.7 0 M17.7 22.1 m-0.85 0 a0.85 0.85 0 1 0 1.7 0 a0.85 0.85 0 1 0 -1.7 0 M20.5 19.0 m-0.85 0 a0.85 0.85 0 1 0 1.7 0 a0.85 0.85 0 1 0 -1.7 0 M23.9 16.6 m-0.85 0 a0.85 0.85 0 1 0 1.7 0 a0.85 0.85 0 1 0 -1.7 0 M27.8 15.1 m-0.85 0 a0.85 0.85 0 1 0 1.7 0 a0.85 0.85 0 1 0 -1.7 0"/>
+      <path id="${p}-beads" d="${w.beads}"/>
       <clipPath id="${p}-cb"><use href="#${p}-blob"/></clipPath>
       <radialGradient id="${p}-g" cx="40%" cy="35%" r="75%">
         <stop offset="0" stop-color="#b8413f"/>
@@ -1350,9 +1466,9 @@ function waxSealSvg(id, motif) {
       <filter id="${p}-b18" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="1.8"/></filter>
       <filter id="${p}-b26" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="2.6"/></filter>
       <filter id="${p}-fx" x="-8%" y="-8%" width="116%" height="116%">
-        <feTurbulence type="fractalNoise" baseFrequency="0.11" numOctaves="3" seed="11" result="warp"/>
-        <feDisplacementMap in="SourceGraphic" in2="warp" scale="2.2" xChannelSelector="R" yChannelSelector="G" result="disp"/>
-        <feTurbulence type="fractalNoise" baseFrequency="0.45" numOctaves="3" seed="5" result="grain"/>
+        <feTurbulence type="fractalNoise" baseFrequency="${w.freq}" numOctaves="3" seed="${w.warp}" result="warp"/>
+        <feDisplacementMap in="SourceGraphic" in2="warp" scale="${w.scale}" xChannelSelector="R" yChannelSelector="G" result="disp"/>
+        <feTurbulence type="fractalNoise" baseFrequency="0.45" numOctaves="3" seed="${w.grain}" result="grain"/>
         <feDiffuseLighting in="grain" lighting-color="#ffffff" surfaceScale="1.4" diffuseConstant="1" result="lit">
           <feDistantLight azimuth="235" elevation="55"/>
         </feDiffuseLighting>
@@ -1373,8 +1489,8 @@ function waxSealSvg(id, motif) {
       <use href="#${p}-blob" transform="translate(0.8,0.9) translate(32,32) scale(0.9) translate(-32,-32)" fill="none" stroke="rgba(70,10,14,0.42)" stroke-width="1.7" filter="url(#${p}-b08)"/>
       <use href="#${p}-blob" transform="translate(-0.6,-0.7) translate(32,32) scale(0.9) translate(-32,-32)" fill="none" stroke="rgba(250,188,168,0.4)" stroke-width="1.6" filter="url(#${p}-b08)"/>
       <g clip-path="url(#${p}-cb)">
-        <ellipse cx="21" cy="17.5" rx="13" ry="8" transform="rotate(-30 21 17.5)" fill="rgba(255,216,198,0.17)" filter="url(#${p}-b18)"/>
-        <ellipse cx="44" cy="48" rx="10" ry="5.5" transform="rotate(-25 44 48)" fill="rgba(255,190,170,0.06)" filter="url(#${p}-b18)"/>
+        <ellipse cx="${w.sheen.x}" cy="${w.sheen.y}" rx="${w.sheen.rx}" ry="${w.sheen.ry}" transform="rotate(${w.sheen.rot} ${w.sheen.x} ${w.sheen.y})" fill="rgba(255,216,198,0.17)" filter="url(#${p}-b18)"/>
+        <ellipse cx="${w.sheen.x2}" cy="${w.sheen.y2}" rx="${w.sheen.rx2}" ry="${w.sheen.ry2}" transform="rotate(${w.sheen.rot2} ${w.sheen.x2} ${w.sheen.y2})" fill="rgba(255,190,170,0.06)" filter="url(#${p}-b18)"/>
       </g>
       <circle cx="32" cy="32" r="20" fill="url(#${p}-fg)"/>
       <path d="M14.7 42.0 A20 20 0 0 0 42.0 14.7" fill="none" stroke="rgba(56,7,10,0.55)" stroke-width="1.2" stroke-linecap="round" filter="url(#${p}-b04)"/>
@@ -1387,10 +1503,9 @@ function waxSealSvg(id, motif) {
       <use href="#${p}-m" transform="translate(1.05,1.2)" fill="rgba(50,6,9,0.6)" filter="url(#${p}-b04)"/>
       <use href="#${p}-m" transform="translate(-0.6,-0.7)" fill="rgba(252,198,180,0.45)" filter="url(#${p}-b04)"/>
       <use href="#${p}-m" fill="url(#${p}-fct)" stroke="rgba(88,14,18,0.4)" stroke-width="0.4"/>
-      <g fill="rgba(56,7,10,0.45)"><circle cx="47.6" cy="46.8" r="0.6"/><circle cx="12.3" cy="24.2" r="0.5"/><circle cx="26.3" cy="52.6" r="0.55"/></g>
-      <g fill="rgba(252,198,182,0.5)"><circle cx="47.4" cy="46.5" r="0.22"/><circle cx="12.1" cy="24.0" r="0.18"/><circle cx="26.1" cy="52.35" r="0.2"/></g>
-      <path d="M51.8 39.8 q1.3 1.1 0.9 2.7" fill="none" stroke="rgba(70,10,14,0.35)" stroke-width="0.9" stroke-linecap="round"/>
-      <path d="M14.6 14.8 q-1.2 1.1 -0.8 2.6" fill="none" stroke="rgba(70,10,14,0.35)" stroke-width="0.9" stroke-linecap="round"/>
+      <g fill="rgba(56,7,10,0.45)">${w.holes.map((h) => `<circle cx="${h[0]}" cy="${h[1]}" r="${h[2]}"/>`).join("")}</g>
+      <g fill="rgba(252,198,182,0.5)">${w.holes.map((h) => `<circle cx="${w1(h[0] - 0.2)}" cy="${w1(h[1] - 0.3)}" r="${w1(h[2] * 0.37)}"/>`).join("")}</g>
+      ${w.nicks.map((d) => `<path d="${d}" fill="none" stroke="rgba(70,10,14,0.35)" stroke-width="0.9" stroke-linecap="round"/>`).join("")}
     </g>
   </svg>`;
 }
@@ -1398,6 +1513,15 @@ function waxSealSvg(id, motif) {
 export const CHALLENGE_SEALS = Object.fromEntries(
   Object.keys(WAX_SEAL_MOTIFS).map((id) => [id, waxSealSvg(id, WAX_SEAL_MOTIFS[id])])
 );
+// For the dev panel's seal gallery only: re-pour one seal at an arbitrary seed so alternates
+// can be auditioned in the browser before a `wax` value is locked into the motif table above.
+export const WAX_SEEDS = Object.fromEntries(
+  Object.entries(WAX_SEAL_MOTIFS).map(([id, m]) => [id, m.wax || 1])
+);
+export function reseedSeal(id, seed) {
+  const m = WAX_SEAL_MOTIFS[id];
+  return m ? waxSealSvg(id, m, seed) : "";
+}
 export const ACHIEVEMENTS = [
   { id: "enchanted",        name: "Enchanted",        desc: "Finish your first game",              secret: false, icon: "wand" },
   { id: "mastermind",       name: "Mastermind",       desc: "Score a perfect 13/13",               secret: false, icon: "queen" },

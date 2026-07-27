@@ -13481,6 +13481,12 @@ function buildDevApi() {
       open: () => openAlbumFocus("start"),
       reset: () => { resetAlbumFocus(); if ($("albumFocusBody")) renderAlbumFocusPage(); },
     },
+    // Wax seals. The aged and dark copies are derived here in app.js by string-swapping
+    // colours, so the dev panel's seal gallery can't reach them through config.js alone.
+    seals: {
+      aged: (svg) => agedSealSvg(svg),
+      dark: (svg) => darkSealSvg(svg),
+    },
     // Challenges (start any one; Impostor helpers for the fake-word minigame)
     challenge: {
       list: () => CHALLENGE_ORDER.slice(),
