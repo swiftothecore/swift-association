@@ -321,6 +321,14 @@ export function initDev(api) {
       if (state === "dark") return api.seals.dark(svg);
       return svg;
     };
+    // A pour is a pure function of its seed, so two seals sharing one would be the same
+    // outline twice — the one thing this whole scheme exists to avoid. Flag it like the charm
+    // gallery flags a duplicated icon key, and re-check every cell after any change.
+    const dupes = () => {
+      const seen = {};
+      Object.values(seeds).forEach((s) => { seen[s] = (seen[s] || 0) + 1; });
+      return seen;
+    };
     const paint = (id) => {
       const cell = grid.querySelector(`[data-seal="${id}"]`);
       if (!cell) return;
@@ -329,7 +337,13 @@ export function initDev(api) {
       sd.textContent = "wax " + seeds[id];
       sd.classList.toggle("moved", seeds[id] !== WAX_SEEDS[id]);
     };
-    const bump = (id, by) => { seeds[id] = Math.max(1, seeds[id] + by); paint(id); };
+    const markDupes = () => {
+      const seen = dupes();
+      grid.querySelectorAll("[data-seal]").forEach((c) => {
+        c.classList.toggle("dup", seen[seeds[c.dataset.seal]] > 1);
+      });
+    };
+    const bump = (id, by) => { seeds[id] = Math.max(1, seeds[id] + by); paint(id); markDupes(); };
 
     const grid = mk("div", { class: "dvg-body" });
     for (const tier of [1, 2, 3, 4, 0]) {
@@ -367,7 +381,7 @@ export function initDev(api) {
       if (navigator.clipboard) navigator.clipboard.writeText(txt).then(() => toast("seeds copied"), () => toast("seeds in console"));
       else toast("seeds in console");
     });
-    const resetBtn = btn("revert", () => { Object.assign(seeds, WAX_SEEDS); Object.keys(seeds).forEach(paint); });
+    const resetBtn = btn("revert", () => { Object.assign(seeds, WAX_SEEDS); Object.keys(seeds).forEach(paint); markDupes(); });
 
     const overlay = mk("div", { id: "dv-seals", style: "--dvs-size:53px" },
       mk("div", { class: "dvg-bar" },
@@ -378,6 +392,7 @@ export function initDev(api) {
       grid);
     overlay.addEventListener("click", (e) => { if (e.target === overlay) overlay.remove(); });
     document.body.append(overlay);
+    markDupes();
   }
 
   // ---- Reset (danger) --------------------------------------------------------
@@ -498,6 +513,7 @@ function injectStyles() {
   .dvs-row { display: flex; align-items: center; gap: 2px; }
   .dvs-seed { font: 8px ui-monospace, Menlo, monospace; color: var(--ink-soft, #8a7f70); min-width: 44px; }
   .dvs-seed.moved { color: #1d7d8a; font-weight: 700; }   /* re-poured, not yet locked in config */
+  .dvg-cell.dup .dvs-seed { color: #b23a3a; font-weight: 700; }   /* seed shared — identical outline */
   .dv-btn.dvs-mini { padding: 0 4px; line-height: 14px; min-width: 0; }
   .dvg-nm { font: 9px/1.2 ui-monospace, Menlo, monospace; color: var(--ink, #2b2722); }
   .dvg-key { font: 8px ui-monospace, Menlo, monospace; color: var(--ink-soft, #8a7f70); }

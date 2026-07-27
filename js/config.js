@@ -1269,7 +1269,7 @@ const WAX_SEAL_MOTIFS = {
   // a stopwatch nearly empty, only a thin wedge of time left
   "shrinking-timer": { wax: 9, fr: "nonzero", d: "M21.7 34.2 a10.3 10.3 0 1 1 20.6 0 a10.3 10.3 0 1 1 -20.6 0 M24.3 34.2 a7.7 7.7 0 1 0 15.4 0 a7.7 7.7 0 1 0 -15.4 0 M32 34.2 L32 27.3 A6.9 6.9 0 0 1 37.6 30.9 Z M29.7 20.5 H34.3 V24.2 H29.7 Z" },
   // a title ribbon with the word slotted inside it
-  "title-in": { wax: 10, fr: "evenodd", d: "M18.8 27 H45.2 L41.8 32 L45.2 37 H18.8 L22.2 32 Z M24.8 30.7 H39.2 V33.3 H24.8 Z" },
+  "title-in": { wax: 43, fr: "evenodd", d: "M18.8 27 H45.2 L41.8 32 L45.2 37 H18.8 L22.2 32 Z M24.8 30.7 H39.2 V33.3 H24.8 Z" },
   // a little name tag with a heart: short and sweet
   "short-title": { wax: 11, fr: "evenodd", d: "M22 32 L28 25.5 H40.9 Q42.5 25.5 42.5 27.1 V36.9 Q42.5 38.5 40.9 38.5 H28 Z M25.3 32 a1.5 1.5 0 1 0 3 0 a1.5 1.5 0 1 0 -3 0 M35 35.6 C33 33.8 31.5 32.4 31.5 30.5 C31.5 28.5 33.9 27.9 35 29.7 C36.1 27.9 38.5 28.5 38.5 30.5 C38.5 32.4 37 33.8 35 35.6 Z" },
   // a heart holding a quotation: the lyric line, loved word for word
@@ -1305,7 +1305,7 @@ const WAX_SEAL_MOTIFS = {
   // a speech bubble holding one blank line: no prompt word, just whose line it is
   "whose-line": { wax: 27, fr: "evenodd", d: "M23.5 21.5 H40.5 Q43.5 21.5 43.5 24.5 V32.5 Q43.5 35.5 40.5 35.5 H30.5 L23.8 41.8 L26 35.5 H23.5 Q20.5 35.5 20.5 32.5 V24.5 Q20.5 21.5 23.5 21.5 Z M25.5 26.8 H38.5 V29.9 H25.5 Z" },
   // two words as overlapping discs, the shared lens pressed in with one bead: the song holding both
-  "both-of-us": { wax: 28, fr: "evenodd", d: "M17 32 a9 9 0 1 1 18 0 a9 9 0 1 1 -18 0 M29 32 a9 9 0 1 1 18 0 a9 9 0 1 1 -18 0 M30.2 32 a1.8 1.8 0 1 1 3.6 0 a1.8 1.8 0 1 1 -3.6 0" },
+  "both-of-us": { wax: 37, fr: "evenodd", d: "M17 32 a9 9 0 1 1 18 0 a9 9 0 1 1 -18 0 M29 32 a9 9 0 1 1 18 0 a9 9 0 1 1 -18 0 M30.2 32 a1.8 1.8 0 1 1 3.6 0 a1.8 1.8 0 1 1 -3.6 0" },
   // three eighth notes on one beam: Double Trouble's pair, plus the one that proves it
   "name-three": { wax: 29, fr: "nonzero", d: "M20.6 39.6 a3 3 0 1 1 6 0 a3 3 0 1 1 -6 0 M28.4 38.5 a3 3 0 1 1 6 0 a3 3 0 1 1 -6 0 M36.2 37.4 a3 3 0 1 1 6 0 a3 3 0 1 1 -6 0 M25.6 25.1 H27.5 V39.6 H25.6 Z M33.4 24.1 H35.3 V38.5 H33.4 Z M41.1 22.9 H43 V37.4 H41.1 Z M25.6 24.9 L43 22.6 L43 26.1 L25.6 28.4 Z" },
   // a lucky horseshoe: the same luck a stake-won bead's charm wears on the bracelet
