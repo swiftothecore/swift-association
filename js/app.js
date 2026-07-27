@@ -5379,6 +5379,7 @@ function resetRunState() {
   riskSettled = false;
   roundWildcard = null;
   lastWildcardId = "";
+  whaleSeenThisGame = false;
   clearTimeout(vanishTimer);
   if (revolveId) { clearInterval(revolveId); revolveId = null; }
   revolveIndex = 0;
@@ -10965,6 +10966,7 @@ function quitGame() {
 let titleTaps = 0;
 let activePen = null;            // 'quill' | 'fountain' | 'glitter' | null
 let blueUsedThisRound = false;
+let whaleSeenThisGame = false;   // caps "yes, whale!" at one surfacing per game — see runRoundEggs
 let lyricEggMatched = false;     // whether the typed text is currently sitting on a real lyric (so the sparkle fires once per crossing, not every keystroke)
 let blueWashTimer = null;        // so the wash can be cut short when the page turns under it
 let correctStreak = 0;           // consecutive correct answers this game
@@ -11068,7 +11070,12 @@ function runRoundEggs() {
   // Yes, whale! — its own rare roll, independent of the margin-doodle chain above,
   // because the tail lives off the page (behind the top edge), not in the margins.
   // One visitor at a time; the click-to-catch keepsake trigger lives in surfaceWhale.
-  if (!document.querySelector(".whale-egg") && chance(0.035)) surfaceWhale();
+  // Capped at one surfacing per game — a flat per-round roll made it show up several
+  // times in a long infinite run, which cheapened the "rare" visitor it's meant to be.
+  if (!whaleSeenThisGame && !document.querySelector(".whale-egg") && chance(0.035)) {
+    whaleSeenThisGame = true;
+    surfaceWhale();
+  }
 
   // Message in a bottle — a rarer sibling roll, drifting in from the side edge. Never
   // shares a page with the whale (one off-page visitor at a time reads calmer).
