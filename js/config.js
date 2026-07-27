@@ -1333,9 +1333,17 @@ const WAX_SEAL_MOTIFS = {
    pour. Anything more dramatic (a drip, a squarish press, wax run to one side) needs the die
    clipped to the blob first, which is a different job.
 
-   `wax` is a CHOSEN seed, not a hash of the id: shapes are generated but picked by eye and
-   then locked, because a seal is an identity object and must never change once a player has
-   seen it. Audition alternates with the dev panel's seal gallery, then write the winner in. */
+   SEEDS. A pour is a pure function of its seed, so two seals holding the same number are the
+   same outline twice. There are two classes of seed, kept in disjoint ranges so they can
+   never collide with each other:
+     - LOCKED (below WAX_AUTO_BASE): a small integer written into the motif entry by hand,
+       chosen by eye in the dev panel's seal gallery. A seal is an identity object and must
+       never change once a player has seen it, so a reviewed shape gets pinned here.
+     - AUTO (WAX_AUTO_BASE and up): derived from the challenge id when the entry omits `wax`.
+       A new challenge therefore gets a unique, stable shape for free, and the gallery marks
+       it as never-reviewed so it can be auditioned and locked whenever you get to it.
+   The gallery flags a duplicate seed in red, so a hash collision between two auto ids (or a
+   locked number typed twice) shows up the moment you look rather than shipping two twins. */
 const WAX_R_MIN = 23.0;   // the die is r=20; this keeps a lip of wax proud of it at every angle
 const WAX_R_MAX = 28.6;   // viewBox is -2..66 and the contact shadow is offset (1.7,2.5) + blurred
 
@@ -1352,6 +1360,20 @@ function waxRng(seed) {
   };
 }
 const w1 = (v) => Math.round(v * 10) / 10;
+
+// Auto seeds live above every hand-locked one, so the two classes can never collide.
+const WAX_AUTO_BASE = 1000;
+// FNV-1a over the challenge id. Only needs to scatter well enough that two ids rarely land
+// on the same pour; the gallery's duplicate flag is the backstop if they ever do.
+function waxAutoSeed(id) {
+  let h = 0x811c9dc5;
+  for (let i = 0; i < id.length; i++) {
+    h ^= id.charCodeAt(i);
+    h = Math.imul(h, 0x01000193) >>> 0;
+  }
+  return WAX_AUTO_BASE + (h % 900000);
+}
+const waxSeedOf = (id, motif) => motif.wax || waxAutoSeed(id);
 
 // Everything about one pour. Anchors come back out with it because the squeeze marks are
 // placed against real anchor radii rather than a guessed constant, which is the only way to
@@ -1375,12 +1397,14 @@ function waxPour(seed) {
   // Closed Catmull-Rom through the anchors, expressed as cubics so the result is the same
   // shape of path the hand-drawn original was.
   const at = (i) => pts[(i + lobes) % lobes];
+  const segs = [];
   let blob = `M${w1(pts[0][0])} ${w1(pts[0][1])}`;
   for (let i = 0; i < lobes; i++) {
     const p0 = at(i - 1), p1 = at(i), p2 = at(i + 1), p3 = at(i + 2);
-    blob += ` C${w1(p1[0] + (p2[0] - p0[0]) / 6)} ${w1(p1[1] + (p2[1] - p0[1]) / 6)}` +
-            ` ${w1(p2[0] - (p3[0] - p1[0]) / 6)} ${w1(p2[1] - (p3[1] - p1[1]) / 6)}` +
-            ` ${w1(p2[0])} ${w1(p2[1])}`;
+    const c1 = [p1[0] + (p2[0] - p0[0]) / 6, p1[1] + (p2[1] - p0[1]) / 6];
+    const c2 = [p2[0] - (p3[0] - p1[0]) / 6, p2[1] - (p3[1] - p1[1]) / 6];
+    segs.push([[p1[0], p1[1]], c1, c2, [p2[0], p2[1]]]);
+    blob += ` C${w1(c1[0])} ${w1(c1[1])} ${w1(c2[0])} ${w1(c2[1])} ${w1(p2[0])} ${w1(p2[1])}`;
   }
   blob += " Z";
 
@@ -1426,9 +1450,66 @@ function waxPour(seed) {
   };
 
   return {
-    blob, beads: beads.trim(), holes, nicks, sheen,
+    blob, segs, beads: beads.trim(), holes, nicks, sheen,
     warp: 1 + Math.floor(rnd() * 90), grain: 1 + Math.floor(rnd() * 90),
     freq: w1(0.095 + rnd() * 0.035) , scale: w1(1.8 + rnd() * 0.8),
+  };
+}
+
+/* The generator has one characteristic fault worth flagging, and it is worth being precise
+   about what it is, because the first guess was wrong.
+
+   Both pours rejected in the first 33-seal review (Title...? on seed 10, Both Of Us on 28)
+   looked like stamped metal tokens rather than poured wax: straight runs of edge meeting at
+   corners. The obvious explanations did not survive measurement. Neither had a thin lip of
+   wax past the die — at 3.9 and 3.5 units both were roomier than the thinnest KEPT seal at
+   3.1 — and per-segment chord deflection ranked one of them mid-pack among the seals that
+   passed. Whatever the eye was objecting to, it was not either of those.
+
+   What does separate them is where the curvature SITS. On a convincing pour it is spread
+   fairly evenly around the outline; on a token it is concentrated into a few corners with
+   near-straight edge between. Sampling the outline and taking peak turn-per-unit-length over
+   mean turn-per-unit-length scores the two rejects at 5.18 and 4.67, against a ceiling of
+   4.19 across the 31 that were kept — a clean split with room either side.
+
+   WAX_KINK_MAX sits in that gap. Over 2000 random pours it flags 4.3%, close to the 2-in-33
+   rejected by eye, so it should stay a rare nudge rather than constant noise. Re-measure
+   before touching it: the score is sensitive to the sampling rate below, and an earlier
+   threshold picked against a finer sampler let one of the two known-bad pours through.
+   Advisory only: nothing refuses to render, because a rejection loop inside waxPour would
+   silently re-pour seals that are already locked and approved. */
+const WAX_KINK_MAX = 4.4;
+
+function waxPourFaults(seed) {
+  const { segs } = waxPour(seed);
+  // Walk the outline as one polyline, ~24 samples per cubic.
+  const pts = [];
+  for (const [p0, c1, c2, p3] of segs) {
+    for (let i = 0; i < 24; i++) {
+      const t = i / 24, u = 1 - t;
+      pts.push([
+        u * u * u * p0[0] + 3 * u * u * t * c1[0] + 3 * u * t * t * c2[0] + t * t * t * p3[0],
+        u * u * u * p0[1] + 3 * u * u * t * c1[1] + 3 * u * t * t * c2[1] + t * t * t * p3[1],
+      ]);
+    }
+  }
+  const n = pts.length;
+  let sum = 0, peak = 0, lip = Infinity;
+  for (let i = 0; i < n; i++) {
+    const a = pts[(i - 1 + n) % n], b = pts[i], c = pts[(i + 1) % n];
+    const v1x = b[0] - a[0], v1y = b[1] - a[1], v2x = c[0] - b[0], v2y = c[1] - b[1];
+    const l1 = Math.hypot(v1x, v1y) || 1e-9, l2 = Math.hypot(v2x, v2y) || 1e-9;
+    // turn angle per unit length — discrete curvature
+    const k = Math.abs(Math.atan2(v1x * v2y - v1y * v2x, v1x * v2x + v1y * v2y)) / ((l1 + l2) / 2);
+    sum += k;
+    if (k > peak) peak = k;
+    lip = Math.min(lip, Math.hypot(b[0] - 32, b[1] - 32) - 20);
+  }
+  const kink = peak / (sum / n);
+  return {
+    kink: Math.round(kink * 100) / 100,
+    lip: Math.round(lip * 100) / 100,   // reported for context; WAX_R_MIN already guards it
+    kinked: kink > WAX_KINK_MAX,
   };
 }
 
@@ -1438,7 +1519,7 @@ function waxPour(seed) {
 // what lets the dev gallery audition alternates without editing this file.
 function waxSealSvg(id, motif, seed) {
   const p = `wax-${id}`;
-  const w = waxPour(seed == null ? (motif.wax || 1) : seed);
+  const w = waxPour(seed == null ? waxSeedOf(id, motif) : seed);
   return `<svg viewBox="-2 -2 68 68" aria-hidden="true">
     <defs>
       <path id="${p}-blob" d="${w.blob}"/>
@@ -1513,11 +1594,14 @@ function waxSealSvg(id, motif, seed) {
 export const CHALLENGE_SEALS = Object.fromEntries(
   Object.keys(WAX_SEAL_MOTIFS).map((id) => [id, waxSealSvg(id, WAX_SEAL_MOTIFS[id])])
 );
-// For the dev panel's seal gallery only: re-pour one seal at an arbitrary seed so alternates
-// can be auditioned in the browser before a `wax` value is locked into the motif table above.
+// For the dev panel's seal gallery: the seed each seal is currently pouring from, which of
+// them are auto (never reviewed, still free to change) and a re-pour at an arbitrary seed, so
+// alternates can be auditioned in the browser before a `wax` value is locked into the table.
 export const WAX_SEEDS = Object.fromEntries(
-  Object.entries(WAX_SEAL_MOTIFS).map(([id, m]) => [id, m.wax || 1])
+  Object.entries(WAX_SEAL_MOTIFS).map(([id, m]) => [id, waxSeedOf(id, m)])
 );
+export const WAX_AUTO_IDS = Object.keys(WAX_SEAL_MOTIFS).filter((id) => !WAX_SEAL_MOTIFS[id].wax);
+export { waxPourFaults };
 export function reseedSeal(id, seed) {
   const m = WAX_SEAL_MOTIFS[id];
   return m ? waxSealSvg(id, m, seed) : "";

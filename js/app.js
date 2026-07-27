@@ -13486,6 +13486,10 @@ function buildDevApi() {
     seals: {
       aged: (svg) => agedSealSvg(svg),
       dark: (svg) => darkSealSvg(svg),
+      // Every seal on screen must be id-re-scoped or copies of the same seal fight over their
+      // shared gradient ids — see sealMarkup. The gallery paints 33 at once into a document
+      // that may already be holding the play page's corner stamp, so it needs this too.
+      markup: (svg) => sealMarkup(svg),
     },
     // Challenges (start any one; Impostor helpers for the fake-word minigame)
     challenge: {

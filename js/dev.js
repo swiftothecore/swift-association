@@ -5,7 +5,7 @@
 // directly rather than routed through the api.
 
 import { ACHIEVEMENTS, ACH_ICONS, ACH_GROUPS, ACH_GROUP_OF, ACH_GROUP_COLORS,
-         CHALLENGES, CHALLENGE_SEALS, WAX_SEEDS, reseedSeal } from "./config.js";
+         CHALLENGES, CHALLENGE_SEALS, WAX_SEEDS, WAX_AUTO_IDS, reseedSeal, waxPourFaults } from "./config.js";
 
 export function initDev(api) {
   injectStyles();
@@ -317,9 +317,8 @@ export function initDev(api) {
 
     const dress = (id) => {
       const svg = seeds[id] === WAX_SEEDS[id] ? CHALLENGE_SEALS[id] : reseedSeal(id, seeds[id]);
-      if (state === "aged") return api.seals.aged(svg);
-      if (state === "dark") return api.seals.dark(svg);
-      return svg;
+      const tinted = state === "aged" ? api.seals.aged(svg) : state === "dark" ? api.seals.dark(svg) : svg;
+      return api.seals.markup(tinted);   // re-scope ids, or these fight the play page's stamp
     };
     // A pour is a pure function of its seed, so two seals sharing one would be the same
     // outline twice — the one thing this whole scheme exists to avoid. Flag it like the charm
@@ -329,13 +328,27 @@ export function initDev(api) {
       Object.values(seeds).forEach((s) => { seen[s] = (seen[s] || 0) + 1; });
       return seen;
     };
+    // An auto seed is derived from the challenge id because the motif entry has no `wax`,
+    // which means nobody has ever looked at that pour. Shown as "auto" rather than a number:
+    // the number is noise until you decide to keep it, and then it gets written into config.
+    const autoIds = new Set(WAX_AUTO_IDS);
+    const seedLabel = (id) =>
+      (seeds[id] === WAX_SEEDS[id] && autoIds.has(id)) ? "auto" : "wax " + seeds[id];
+
     const paint = (id) => {
       const cell = grid.querySelector(`[data-seal="${id}"]`);
       if (!cell) return;
       cell.querySelector(".dvs-stamp").innerHTML = dress(id);
       const sd = cell.querySelector(".dvs-seed");
-      sd.textContent = "wax " + seeds[id];
+      sd.textContent = seedLabel(id);
       sd.classList.toggle("moved", seeds[id] !== WAX_SEEDS[id]);
+      sd.classList.toggle("auto", seeds[id] === WAX_SEEDS[id] && autoIds.has(id));
+      // The generator's one known fault, so a new challenge's pour gets vetted without a
+      // fresh eyeball pass over all 33. Advisory: a flagged seal still renders.
+      const f = waxPourFaults(seeds[id]);
+      cell.classList.toggle("fault", f.kinked);
+      if (f.kinked) cell.setAttribute("title", `kinked (${f.kink}) — corners with straight edge between, worth re-pouring`);
+      else cell.removeAttribute("title");
     };
     const markDupes = () => {
       const seen = dupes();
@@ -357,7 +370,7 @@ export function initDev(api) {
           mk("span", { class: "dvg-nm" }, c.name),
           mk("span", { class: "dvs-row" },
             btn("‹", () => bump(c.id, -1), "dvs-mini"),
-            mk("span", { class: "dvs-seed" }, "wax " + seeds[c.id]),
+            mk("span", { class: "dvs-seed" }, seedLabel(c.id)),
             btn("›", () => bump(c.id, 1), "dvs-mini"))));
       }
       grid.append(cells);
@@ -375,23 +388,33 @@ export function initDev(api) {
       e.target.textContent = state === "red" ? "red · unbeaten" : state === "aged" ? "taupe · defeated" : "black · dark side";
       Object.keys(seeds).forEach(paint);
     });
+    // Only the seeds that differ from config are worth pasting back — those are the decisions.
+    // Falls back to the whole set when nothing has been re-poured.
     const copyBtn = btn("copy seeds", () => {
-      const txt = Object.keys(seeds).map((id) => `${id}: wax ${seeds[id]}`).join("\n");
-      console.log("[dev] seal seeds\n" + txt);
-      if (navigator.clipboard) navigator.clipboard.writeText(txt).then(() => toast("seeds copied"), () => toast("seeds in console"));
+      const moved = Object.keys(seeds).filter((id) => seeds[id] !== WAX_SEEDS[id]);
+      const list = moved.length ? moved : Object.keys(seeds);
+      const txt = list.map((id) => `"${id}": { wax: ${seeds[id]}, ...`).join("\n");
+      console.log(`[dev] ${moved.length ? "re-poured" : "all"} seal seeds — lock these into WAX_SEAL_MOTIFS\n` + txt);
+      if (navigator.clipboard) navigator.clipboard.writeText(txt).then(() => toast(`${list.length} seed(s) copied`), () => toast("seeds in console"));
       else toast("seeds in console");
     });
     const resetBtn = btn("revert", () => { Object.assign(seeds, WAX_SEEDS); Object.keys(seeds).forEach(paint); markDupes(); });
 
+    const nAuto = WAX_AUTO_IDS.length;
+    const nFault = Object.keys(seeds).filter((id) => waxPourFaults(seeds[id]).kinked).length;
+    const title = `seal gallery · ${Object.keys(WAX_SEEDS).length} seals` +
+      (nAuto ? ` · ${nAuto} auto` : " · all locked") + (nFault ? ` · ${nFault} flagged` : "");
+
     const overlay = mk("div", { id: "dv-seals", style: "--dvs-size:53px" },
       mk("div", { class: "dvg-bar" },
-        mk("span", { class: "dvg-title" }, `seal gallery · ${Object.keys(WAX_SEEDS).length} seals`),
+        mk("span", { class: "dvg-title" }, title),
         mk("span", { class: "dvs-size" }, ...sizes),
         stateBtn, copyBtn, resetBtn,
         btn("✕ close", () => overlay.remove())),
       grid);
     overlay.addEventListener("click", (e) => { if (e.target === overlay) overlay.remove(); });
     document.body.append(overlay);
+    Object.keys(seeds).forEach(paint);   // applies the fault flags the initial build skipped
     markDupes();
   }
 
@@ -513,7 +536,10 @@ function injectStyles() {
   .dvs-row { display: flex; align-items: center; gap: 2px; }
   .dvs-seed { font: 8px ui-monospace, Menlo, monospace; color: var(--ink-soft, #8a7f70); min-width: 44px; }
   .dvs-seed.moved { color: #1d7d8a; font-weight: 700; }   /* re-poured, not yet locked in config */
+  .dvs-seed.auto { color: #7a6f60; font-style: italic; }   /* derived from the id, never reviewed */
   .dvg-cell.dup .dvs-seed { color: #b23a3a; font-weight: 700; }   /* seed shared — identical outline */
+  /* the known generator fault (curvature kinked into corners) — advisory, hover for the score */
+  .dvg-cell.fault { border-color: #c08a2e; background: rgba(192,138,46,.09); }
   .dv-btn.dvs-mini { padding: 0 4px; line-height: 14px; min-width: 0; }
   .dvg-nm { font: 9px/1.2 ui-monospace, Menlo, monospace; color: var(--ink, #2b2722); }
   .dvg-key { font: 8px ui-monospace, Menlo, monospace; color: var(--ink-soft, #8a7f70); }
