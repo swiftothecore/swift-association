@@ -1086,7 +1086,7 @@
   .chall-tok-perf::before { top: -10px; }
   .chall-tok-perf::after { bottom: -10px; }
 
-  .chall-layout { display: grid; grid-template-columns: 268px 1fr; gap: 0; }
+  .chall-layout { display: grid; grid-template-columns: 256px 1fr; gap: 0; }
 
   /* ---- left: the contents list ---- */
   /* The column holds the divider + tally still; only .chall-list scrolls, so the
@@ -1101,7 +1101,7 @@
      by JS (wired in renderChallengesPage) so a fade only shows where it's true;
      the bottom starts faded as a sensible pre-JS default for the full list. */
   .chall-list {
-    overflow-y: auto; max-height: calc(100vh - 340px); padding-right: 20px; margin-right: -14px; scrollbar-gutter: stable;
+    overflow-y: auto; max-height: calc(100vh - 340px); padding-right: 6px; margin-right: -14px; scrollbar-gutter: stable;
     /* The list is pulled left and padded back by the same amount: content lands where
        .chall-col puts it, but the selected row's red play-arrow (at left:-12px) now has
        paintable room inside the scroller instead of being clipped by its overflow. */
