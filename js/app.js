@@ -8732,7 +8732,12 @@ function showWagerStake(done) {
   }, { once: true }));
 }
 
-/* ---------- Double Or Nothing ---------- */
+/* ---------- Double Or Nothing (SHELVED) ---------- */
+// The challenge is commented out of CHALLENGES, so nothing carries rule "doubleup" and every
+// doubleup branch below (here, showRiskDecision, applyRiskScoring, riskResultLine, the prompt
+// lead-in) is unreachable. Left standing rather than deleted because the redesign keeps the
+// same shape, a bonus word riding the page that earned it, and only changes what it costs and
+// pays. config.js has the reasoning; PLAN.md has the intended rule.
 // The bonus word rides on the SAME page as the answer that earned it: a fresh word and a
 // fresh clock, but still page N. Its verdict overwrites the page's result, which is exactly
 // the rule ("miss it and you forfeit the bead you had already won") and keeps the strand at
@@ -13687,12 +13692,14 @@ function buildDevApi() {
             if (ia) ia.style.display = ""; $("songInput").disabled = false; startTimer(); }
           renderRiskBanner(); return roundStake; },
       },
-      // Double Or Nothing — the bonus word riding on an already-won page.
-      doubleup: {
-        state: () => ({ active: bonusActive, word: bonusActive ? currentWord : null,
-          valid: bonusActive ? currentSongs.map((s) => s.title) : [], taken: bonusTaken, won: bonusWon }),
-        take: () => { bonusTaken += 1; startBonusWord(); return currentWord; },   // force the bonus offer's "yes"
-      },
+      // Double Or Nothing's bonus word, shelved with its challenge (see CHALLENGES in config.js).
+      // No roster entry carries rule "doubleup" any more, so these would drive a rule that can
+      // never be live: uncommented together with the challenge when it is redesigned.
+      // doubleup: {
+      //   state: () => ({ active: bonusActive, word: bonusActive ? currentWord : null,
+      //     valid: bonusActive ? currentSongs.map((s) => s.title) : [], taken: bonusTaken, won: bonusWon }),
+      //   take: () => { bonusTaken += 1; startBonusWord(); return currentWord; },   // force the bonus offer's "yes"
+      // },
       // Insurance — sudden death and the shields against it.
       insurance: {
         tokens: (n) => { if (n != null) { insuranceTokens = Math.max(0, n | 0); renderInsuranceBtn(); renderRiskBanner(); }

@@ -574,11 +574,22 @@ export const CHALLENGES = [
     blurb: "12s · suggestions · stake beads on the word before the clock starts",
     desc: "You see the word first, then you say how sure you are. Stake up to three beads before the clock runs: answer it and the stake pays back double, miss it and the stake is gone. A correct answer is always worth its own bead on top.",
     win: "Finish the run on 20 beads." },
+  /* SHELVED — Double Or Nothing, off the roster until its rule is redesigned. The offer paid a
+     flat +1 or -1, and an exact doubling is scale-invariant, so taking it was worth 2p-1 beads
+     and was therefore correct on every page for any player above a 50% hit rate. The target of
+     16 against a 13-bead ceiling forced it as well, so the overlay asked a question with one
+     answer 13 times a run. (Press Your Luck escapes this because its pot escalates ADDITIVELY:
+     the pot outgrows the next increment, so the take-vs-bank threshold climbs with depth and the
+     frontier actually moves.) The fix is to escalate difficulty rather than stake: a chain of
+     bonus words on one page worth 1/2/4/8, each drawn rarer on a shorter clock, the whole page
+     forfeit on a miss, which also makes the name true. See PLAN.md. The rule's machinery is
+     still live in app.js (`doubleup`), just unreachable with no roster entry pointing at it.
   { id: "double-or-nothing", name: "Double Or Nothing", rule: "doubleup", mode: "medium",
     free: false, cost: 1, target: 16, seconds: 12, noTitle: false, tapes: 1,
     blurb: "12s · suggestions · every bead you win can be doubled, or lost",
     desc: "Clear a page and you're offered a second word for a second bead. Name a song for it and the page is worth two, miss it and you forfeit the bead you had already won. Nobody makes you take the offer.",
     win: "Finish the run on 16 beads." },
+  */
   { id: "insurance", name: "Insurance", rule: "insurance", mode: "easy",
     free: false, cost: 1, target: 13, seconds: 15, tokens: 3, tokenValue: 2, tapes: 2,
     blurb: "15s · sudden death · three shields, and every one you keep is worth beads",
@@ -1312,8 +1323,9 @@ const WAX_SEAL_MOTIFS = {
   "press-your-luck": { wax: 30, fr: "evenodd", d: "M26.9 41.4 A12 12 0 1 1 37.1 41.4 L35.2 37.3 A7.5 7.5 0 1 0 28.8 37.3 Z M21.1 30.5 a1.15 1.15 0 1 0 2.3 0 a1.15 1.15 0 1 0 -2.3 0 M23.95 23.6 a1.15 1.15 0 1 0 2.3 0 a1.15 1.15 0 1 0 -2.3 0 M30.85 20.75 a1.15 1.15 0 1 0 2.3 0 a1.15 1.15 0 1 0 -2.3 0 M37.75 23.6 a1.15 1.15 0 1 0 2.3 0 a1.15 1.15 0 1 0 -2.3 0 M40.6 30.5 a1.15 1.15 0 1 0 2.3 0 a1.15 1.15 0 1 0 -2.3 0" },
   // a stack of chips with one more tossed on top: the stake laid before the clock runs
   "confidence-wager": { wax: 31, fr: "nonzero", d: "M23.5 25.9 L39 22.3 A2.4 2.4 0 0 0 38 17.7 L22.5 21.3 A2.4 2.4 0 0 0 23.5 25.9 Z M24.9 27.1 a2.4 2.4 0 0 0 0 4.8 H38.1 a2.4 2.4 0 0 0 0 -4.8 Z M27.4 32.7 a2.4 2.4 0 0 0 0 4.8 H40.6 a2.4 2.4 0 0 0 0 -4.8 Z M25.4 38.3 a2.4 2.4 0 0 0 0 4.8 H38.6 a2.4 2.4 0 0 0 0 -4.8 Z" },
-  // a tilted die landed on two: the second bead, doubled or forfeit
-  "double-or-nothing": { wax: 32, fr: "evenodd", d: "M24.8 21 L43 24.8 L39.2 43 L21 39.2 Z M26.9 27.6 a2.3 2.3 0 1 1 4.6 0 a2.3 2.3 0 1 1 -4.6 0 M32.5 36.4 a2.3 2.3 0 1 1 4.6 0 a2.3 2.3 0 1 1 -4.6 0" },
+  // a tilted die landed on two: the second bead, doubled or forfeit. Shelved with its challenge
+  // (see CHALLENGES above); wax seed 32 stays reserved so the seal comes back unchanged.
+  // "double-or-nothing": { wax: 32, fr: "evenodd", d: "M24.8 21 L43 24.8 L39.2 43 L21 39.2 Z M26.9 27.6 a2.3 2.3 0 1 1 4.6 0 a2.3 2.3 0 1 1 -4.6 0 M32.5 36.4 a2.3 2.3 0 1 1 4.6 0 a2.3 2.3 0 1 1 -4.6 0" },
   // a shield holding one bead safe inside it: every shield you keep is worth beads
   "insurance": { wax: 33, fr: "evenodd", d: "M32 18.5 C36 21 40 21.8 44 22.2 V31 C44 38.5 39 43.5 32 46.5 C25 43.5 20 38.5 20 31 V22.2 C24 21.8 28 21 32 18.5 Z M27 31 a5 5 0 1 1 10 0 a5 5 0 1 1 -10 0 M29.6 31 a2.4 2.4 0 1 1 4.8 0 a2.4 2.4 0 1 1 -4.8 0" },
 };
