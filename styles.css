@@ -4371,7 +4371,11 @@
     transition: transform 0.18s ease, background 0.18s, color 0.18s, border-color 0.18s,
                 gap 0.22s ease, padding 0.22s ease;
   }
-  .corner-link-ic { width: 20px; height: 20px; color: rgba(178, 58, 58, 0.85); flex: none; }
+  /* The red is faded with element opacity, not a translucent colour: a translucent
+     stroke composites twice wherever an icon crosses itself, which drew a dark seam
+     where the magnifier's handle meets its ring. Element opacity flattens the icon
+     first, so the same shade arrives with no doubled join. */
+  .corner-link-ic { width: 20px; height: 20px; color: #b23a3a; opacity: 0.85; flex: none; }
   .corner-link-label {
     font-family: var(--type); font-size: 11.5px; letter-spacing: 0.04em;
     max-width: 0; overflow: hidden; white-space: nowrap; opacity: 0;

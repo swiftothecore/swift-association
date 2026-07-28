@@ -534,16 +534,23 @@ if (location.pathname.endsWith('/index.html')) {
          the tail onto a written page keeps it stationery, and the tail is the only pointed
          silhouette among its neighbours (magnifier, cog, speaker, trunk). Deliberately
          under-detailed: the fold crease and a third line both turned to mud at 20px. -->
+    <!-- Geometry is tuned so the inked bbox lands on the viewBox centre: the tail is
+         tucked in from the far-left edge (it used to hang past the writing lines and
+         drag the whole note left) and the page sits 0.4 lower so the tail's reach
+         downward is paid for at the top. -->
     <svg class="corner-link-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-      <path d="M4 4 H14 L20 10 V16 H10 L5 19.5 L6.5 16 H4 Z" />
-      <path d="M7.5 8.5 H11" />
-      <path d="M7.5 12.5 H14.5" />
+      <path d="M4 4.4 H14 L20 10.4 V16.4 H10 L6.5 19.6 L8 16.4 H4 Z" />
+      <path d="M8 8.9 H11.5" />
+      <path d="M8 12.9 H15" />
     </svg>
     <span class="corner-link-label">feedback</span>
   </a>
   <a id="searchLink" class="corner-link search-link" href="search/" title="Swift To The Lyric: search every lyric">
     <svg class="corner-link-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
-      <circle cx="11" cy="11" r="7" /><line x1="16.5" y1="16.5" x2="21" y2="21" />
+      <!-- The handle starts on the ring's own centreline (10.9 + 7·cos45°), not outside
+           it: any other start point leaves the round cap sitting half-on the ring as a
+           thickened blob. Ring and handle tip then bracket the viewBox centre evenly. -->
+      <circle cx="10.9" cy="10.9" r="7" /><line x1="15.85" y1="15.85" x2="20.1" y2="20.1" />
     </svg>
     <span class="corner-link-label">search every lyric</span>
   </a>

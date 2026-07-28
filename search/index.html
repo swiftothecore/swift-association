@@ -316,7 +316,8 @@
 <main class="sx-page">
   <div class="sx-search">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
-      <circle cx="11" cy="11" r="7" /><line x1="16.5" y1="16.5" x2="21" y2="21" />
+      <!-- handle springs from the ring's centreline so the join stays a single stroke -->
+      <circle cx="10.9" cy="10.9" r="7" /><line x1="15.85" y1="15.85" x2="20.1" y2="20.1" />
     </svg>
     <span id="chips" class="sx-chips"></span>
     <input id="q" type="search" autocomplete="off" autocapitalize="off" spellcheck="false"
