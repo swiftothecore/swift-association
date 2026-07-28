@@ -596,18 +596,25 @@ export const CHALLENGES = [
     blurb: "12s · suggestions · stake beads on the word before the clock starts",
     desc: "You see the word first, then you say how sure you are. Stake up to three beads before the clock runs: answer it and the stake pays back double, miss it and the stake is gone. A correct answer is always worth its own bead on top.",
     win: "Finish the run on 20 beads." },
-  // Double Or Nothing is Press Your Luck's twin over the same pot, escalating by DOUBLING
-  // rather than adding: 1, 2, 4, 8, 16. The first version of this rule paid a flat +1 or -1
-  // and was correct to take on every page for anyone above a 50% hit rate; what makes the
-  // offer a real decision now is that the run is judged on a TARGET, not a score. Once a
-  // chain is worth enough to bank the win, doubling it is worth nothing and risks everything,
-  // so the frontier moves with what you already hold. `target: 20` is deliberately Press Your
-  // Luck's number: at a 75% hit rate both come out around a one-in-two run.
+  /* SHELVED (2026-07-28, second time) — Double Or Nothing is off the roster because it and Press
+     Your Luck have converged into one challenge. They share the pot, the bank-or-ride offer, the
+     wipe on a miss, 13 pages and a target of 20, and differ only in whether the pot escalates by
+     adding or by doubling. That is a tuning difference wearing two seals, and it is not what the
+     player experiences as a separate rule. This is NOT the scale-invariance problem that shelved
+     the first version: the target fixed that, and the doubling rule below is sound in isolation.
+     To bring it back, give it an axis Press Your Luck does not have rather than a steeper curve
+     on the same one. The likeliest is escalating DIFFICULTY instead of stake, so the odds fall as
+     the payout climbs: each step of a chain drawing a rarer word on a shorter clock, suggestions
+     gone by depth three. Press Your Luck would then be how many pages you let ride, and this how
+     deep you dare run one chain. Retarget from scratch if so, since p is no longer flat.
+     The pot machinery in app.js is SHARED with Press Your Luck and stays live; only
+     `doubleRuleActive()` goes permanently false. See PLAN.md.
   { id: "double-or-nothing", name: "Double Or Nothing", rule: "doubleup", mode: "medium",
     free: false, cost: 1, target: 20, seconds: 12, noTitle: false, tapes: 1,
     blurb: "12s · suggestions · let a page ride and the next one is worth double",
     desc: "Clear a page and it's worth one bead. Take it, or let it ride: the next page you clear is worth double, and the one after that double again. Miss while a chain is riding and every bead in it goes, and banking a page at a time can never reach 20.",
     win: "Finish the run on 20 beads." },
+  */
   { id: "insurance", name: "Insurance", rule: "insurance", mode: "easy",
     free: false, cost: 1, target: 13, seconds: 15, tokens: 3, tokenValue: 2, tapes: 2,
     blurb: "15s · sudden death · three shields, and every one you keep is worth beads",
@@ -1053,8 +1060,10 @@ export const TITLE_ALIASES = {
 export const ACH_ICONS = {
   // hung charms: filled bead bodies (ink-fill) with inked detail (ink)
   star:    `<svg viewBox="0 0 24 24"><path class="ink-fill" stroke-width="1.1" stroke-linejoin="round" stroke-linecap="round" d="M12 2.3 L14.94 7.96 L21.22 9 L16.76 13.55 L17.7 19.85 L12 17 L6.3 19.85 L7.24 13.55 L2.78 9 L9.06 7.96 Z"/><path class="ink" stroke-width="0.9" opacity="0.7" d="M12 6.4 L13.1 9.2 L16 9.5"/></svg>`,
-  // PLACEHOLDER (keepsakes meta) — a plain polaroid with a little landscape; real icon comes later.
-  polaroid: `<svg viewBox="0 0 24 24"><rect class="ink-fill" x="4" y="3" width="16" height="18" rx="1.5"/><rect x="6" y="5" width="12" height="10" fill="var(--paper)"/><circle class="ink-fill" cx="9" cy="8.5" r="1.3"/><path class="ink" stroke-width="1.1" fill="none" d="M6 13 L10 9.8 L12.6 12 L18 7.6"/></svg>`,
+  // the whole set found: three polaroids fanned out of the shoebox, the top one face up.
+  // Each card is paper-filled rather than class="ink-fill" so the front of the fan masks
+  // the ones behind it instead of the outlines piling into a blot.
+  polaroid: `<svg viewBox="0 0 24 24"><g transform="rotate(-14 12 13)"><rect x="4" y="6.2" width="10.4" height="12" rx="0.9" fill="var(--paper)" stroke="currentColor" stroke-width="1.7"/></g><g transform="rotate(-2 12 13)"><rect x="6.4" y="5.4" width="10.4" height="12" rx="0.9" fill="var(--paper)" stroke="currentColor" stroke-width="1.7"/></g><g transform="rotate(9 12 13)"><rect x="8.6" y="4.8" width="10.6" height="12.4" rx="0.9" fill="var(--paper)" stroke="currentColor" stroke-width="1.7"/><rect x="9.9" y="6.1" width="8" height="7.2" fill="none" stroke="currentColor" stroke-width="1.15"/><path class="ink" stroke-width="1" fill="none" d="M10.3 12.3 L12.3 9.7 L13.8 11.1 L16.4 7.9"/><circle cx="11.9" cy="8.3" r="0.8" fill="currentColor" stroke="none"/></g></svg>`,
   sparkle: `<svg viewBox="0 0 24 24"><path class="ink-fill" d="M10.6 1.6 C11.6 7.4 14 9.8 19.8 10.8 C14 11.8 11.6 14.2 10.6 20 C9.6 14.2 7.2 11.8 1.4 10.8 C7.2 9.8 9.6 7.4 10.6 1.6 Z"/><path class="ink-fill" d="M18.8 14.6 C19.2 16.6 19.8 17.2 21.8 17.6 C19.8 18 19.2 18.6 18.8 20.6 C18.4 18.6 17.8 18 15.8 17.6 C17.8 17.2 18.4 16.6 18.8 14.6 Z"/></svg>`,
   bolt:    `<svg viewBox="0 0 24 24"><path class="ink-fill" d="M13.6 1.8 L4.4 13.6 H10 L9 22.2 L19.6 9.5 H13.3 Z"/><path class="ink" stroke-width="0.9" opacity="0.6" d="M12 6 L9 13"/></svg>`,
   key:     `<svg viewBox="0 0 24 24"><circle class="ink-fill" cx="8" cy="8" r="5.4"/><circle cx="8" cy="8" r="1.9" fill="var(--paper)"/><path class="ink" d="M11.8 11.8 L20 20 M16.8 16.8 l2.4 -2.4 M14.2 14.2 l2.2 -2.2"/></svg>`,
@@ -1267,6 +1276,34 @@ export const ACH_ICONS = {
   // two cherries off one stem, both songs on every page
   cherries:`<svg viewBox="0 0 24 24"><g class="ink" stroke-width="1.4" fill="none"><path d="M12.6 3 C10.2 6.2 8.6 9.6 8.1 13.2"/><path d="M12.6 3 C14.2 6.6 15.1 10 15.3 13.6"/></g><ellipse class="ink-fill" cx="15.5" cy="4.3" rx="2.6" ry="1.1" transform="rotate(26 15.5 4.3)"/><circle class="ink-fill" cx="7.8" cy="16.2" r="3.2"/><circle class="ink-fill" cx="15.6" cy="16.6" r="3.2"/><g fill="var(--paper)" stroke="none"><circle cx="6.7" cy="15.1" r="0.8"/><circle cx="14.5" cy="15.5" r="0.8"/></g></svg>`,
 
+  /* ---- The last of the stand-ins, drawn properly ---- */
+  // a skyline still lit at round 89 — welcome to New York
+  skyline: `<svg viewBox="0 0 24 24"><path class="ink-fill" d="M2.6 20.2 V13.2 H6.2 V9 H9.4 V15 H12 V6.6 H15.4 V11.4 H18.2 V14.6 H21.4 V20.2 Z"/><path class="ink" stroke-width="1.2" d="M13.7 6.6 V3.2"/><g fill="currentColor" stroke="none"><rect x="3.7" y="15" width="1.2" height="1.2"/><rect x="7.3" y="11" width="1.2" height="1.2"/><rect x="13.1" y="8.6" width="1.2" height="1.2"/><rect x="13.1" y="11.6" width="1.2" height="1.2"/><rect x="16.3" y="13.4" width="1.2" height="1.2"/><rect x="19.3" y="16.6" width="1.2" height="1.2"/></g><path class="ink-fill" d="M19.8 3.2 L20.35 4.55 L21.7 5.1 L20.35 5.65 L19.8 7 L19.25 5.65 L17.9 5.1 L19.25 4.55 Z"/></svg>`,
+  // the banjo that carries "Mean". The neck is laid in first so the drum's paper head covers
+  // where it runs under the pot.
+  banjo:   `<svg viewBox="0 0 24 24"><g transform="rotate(32 9.2 16.2)"><path class="ink-fill" d="M6.6 2.6 V0.9 a1 1 0 0 1 1 -1 H10.8 a1 1 0 0 1 1 1 V2.6 Z"/><g class="ink" stroke-width="1"><path d="M6.6 0.5 H5.9"/><path d="M11.8 0.5 H12.5"/></g><g fill="currentColor" stroke="none"><circle cx="5.5" cy="0.5" r="0.75"/><circle cx="12.9" cy="0.5" r="0.75"/></g><rect class="ink-fill" x="7.5" y="2.6" width="3.4" height="10.4"/><g class="ink" stroke-width="0.95" opacity="0.6"><path d="M7.5 5.2 H10.9"/><path d="M7.5 7.6 H10.9"/><path d="M7.5 10 H10.9"/></g></g><circle class="ink-fill" cx="9.2" cy="16.2" r="6"/><circle cx="9.2" cy="16.2" r="4.1" fill="var(--paper)" stroke="currentColor" stroke-width="1.1"/><rect class="ink-fill" x="8.1" y="18.5" width="2.2" height="1.6" rx="0.5"/></svg>`,
+  // a pocket compass, needle steady — every board on the map, walked
+  compass: `<svg viewBox="0 0 24 24"><circle class="ink-fill" cx="12" cy="12.4" r="8.6"/><circle cx="12" cy="12.4" r="6.6" fill="var(--paper)" stroke="currentColor" stroke-width="0.9" opacity="0.6"/><path d="M12 6.2 L13.7 12.4 L10.3 12.4 Z" fill="currentColor" stroke="none"/><path class="ink" stroke-width="1.1" d="M12 18.6 L13.7 12.4 L10.3 12.4 Z"/><circle cx="12" cy="12.4" r="0.95" fill="var(--paper)" stroke="currentColor" stroke-width="0.9"/><path class="ink" stroke-width="1.3" fill="none" d="M10.5 3.9 A1.55 1.55 0 1 1 13.5 3.9"/></svg>`,
+  // feet in the swing over the creek. The water underneath is doing real work: without it
+  // two ropes and a plank read as a table.
+  swing:   `<svg viewBox="0 0 24 24"><path class="ink" stroke-width="2.2" fill="none" d="M1.4 5.6 C6.2 3.2 14.6 4 22.6 2.2"/><path class="ink" stroke-width="1.2" fill="none" d="M17.8 3.5 C18.8 2.3 19.8 1.9 21 1.9"/><g class="ink-fill"><ellipse cx="5" cy="7.6" rx="2.1" ry="0.9" transform="rotate(66 5 7.6)"/><ellipse cx="19.8" cy="5" rx="1.9" ry="0.8" transform="rotate(52 19.8 5)"/></g><g transform="rotate(-8 12 4.6)"><g class="ink" stroke-width="1.15" fill="none"><path d="M9 5 L9.7 14.4"/><path d="M15 4.6 L14.3 14.4"/></g><rect class="ink-fill" x="8.1" y="14.4" width="7.8" height="2.4" rx="0.8"/></g><g class="ink" stroke-width="1.3" fill="none" opacity="0.75"><path d="M2.4 20 C4.6 18.6 6.6 21 8.8 19.6 C11 18.2 13 20.6 15.2 19.2 C17.4 17.8 19.4 20.2 21.6 18.8"/><path d="M3.6 22.6 C5.8 21.2 7.8 23.6 10 22.2 C12.2 20.8 14.2 23.2 16.4 21.8"/></g></svg>`,
+  // the first bracelet card, pinned up: the strand laid across it in a slack S rather than a
+  // symmetric arc, which reads as a mouth at charm size
+  keepsake:`<svg viewBox="0 0 24 24"><g transform="rotate(-4 12 13)"><rect class="ink-fill" x="3.2" y="6.6" width="17.6" height="12.6" rx="1.4"/><path class="ink" stroke-width="0.85" opacity="0.65" fill="none" d="M5.4 15.6 C8 16.2 8.6 11.2 12 10.6 C15.4 10 16 14.4 18.6 13"/><g class="ink-fill"><circle cx="5.9" cy="15.7" r="0.9"/><circle cx="8.3" cy="14.8" r="0.95"/><circle cx="10.5" cy="11.7" r="1"/><circle cx="13.4" cy="10.9" r="1"/><circle cx="15.9" cy="13" r="0.95"/><circle cx="18.4" cy="12.9" r="0.9"/></g></g><path class="ink" stroke-width="1.2" fill="none" d="M12 6.4 V4.4"/><circle class="ink-fill" cx="12" cy="3.2" r="1.5"/></svg>`,
+  // your own levers, each slid somewhere different. The knobs are beads, not handles, so the
+  // panel stays notebook rather than mixing desk.
+  levers:  `<svg viewBox="0 0 24 24"><g class="ink" stroke-width="1.3" fill="none"><path d="M3.2 6.6 H20.8"/><path d="M3.2 12 H20.8"/><path d="M3.2 17.4 H20.8"/></g><g class="ink-fill"><circle cx="15.4" cy="6.6" r="2.1"/><circle cx="7.6" cy="12" r="2.1"/><circle cx="16.8" cy="17.4" r="2.1"/></g></svg>`,
+  // the shelf itself: written-up preset cards stood in an open holder
+  presetbox:`<svg viewBox="0 0 24 24"><g class="ink-fill"><rect x="4.4" y="3" width="10.4" height="11.4" rx="0.8" transform="rotate(-9 9.6 8.7)"/><rect x="9.6" y="2.4" width="10.4" height="12" rx="0.8" transform="rotate(7 14.8 8.4)"/></g><g class="ink" stroke-width="1" opacity="0.55" transform="rotate(7 14.8 8.4)"><path d="M11.6 6 H18"/><path d="M11.6 8.4 H16.4"/><path d="M11.6 10.8 H17.4"/></g><path class="ink-fill" d="M2.8 13.4 L4.1 20.4 a1 1 0 0 0 1 0.8 H18.9 a1 1 0 0 0 1 -0.8 L21.2 13.4"/></svg>`,
+  // one pen stroke looped twice and carried past itself — a run with no last page
+  infinity:`<svg viewBox="0 0 24 24"><path class="ink" stroke-width="2.2" fill="none" d="M13.6 10.9 C11.8 7.8 8.6 7.2 6.3 8.8 C3.7 10.6 3.9 14.2 6.8 15.4 C9.6 16.6 12 14.6 13.4 11.6 C14.9 8.5 17.6 7.2 19.6 8.8 C22 10.7 21.4 14.6 18.4 15.5 C15.8 16.3 13.2 14.6 11.6 12.2"/><path class="ink-fill" d="M20.6 3.4 L21.15 4.65 L22.4 5.2 L21.15 5.75 L20.6 7 L20.05 5.75 L18.8 5.2 L20.05 4.65 Z"/></svg>`,
+  // the wax pressed at last, the nib's own shape sunk into it
+  waxpress:`<svg viewBox="0 0 24 24"><path class="ink-fill" d="M19.3 12 Q21.02 14.65 18.14 15.95 Q18.16 19.1 15.03 18.64 Q13.34 21.3 10.96 19.23 Q8.09 20.55 7.22 17.52 Q4.09 17.08 4.99 14.06 Q2.6 12 4.99 9.94 Q4.09 6.92 7.22 6.48 Q8.09 3.45 10.96 4.77 Q13.34 2.7 15.03 5.36 Q18.16 4.9 18.14 8.05 Q21.02 9.35 19.3 12 Z"/><path class="ink-fill" d="M12 7 L15 12.6 L12 17.4 L9 12.6 Z"/><circle cx="12" cy="11.5" r="1" fill="var(--paper)" stroke="none"/><path class="ink" stroke-width="1.1" d="M12 12.7 V16.6"/><g fill="currentColor" stroke="none" opacity="0.45"><circle cx="6.9" cy="9.6" r="0.5"/><circle cx="17.2" cy="15.2" r="0.45"/></g></svg>`,
+  // a pleated prize rosette, one skill taken all the way
+  rosette: `<svg viewBox="0 0 24 24"><g class="ink-fill"><path d="M10.4 16 L8.4 21.6 L10.4 21 L11.6 16.4 Z"/><path d="M13.6 16 L15.6 21.6 L13.6 21 L12.4 16.4 Z"/></g><circle class="ink-fill" cx="12" cy="10" r="6.6"/><g class="ink" stroke-width="0.85" opacity="0.55"><path d="M12 3.6 V6.4"/><path d="M16.4 5.6 L14.5 7.5"/><path d="M18.4 10 H15.6"/><path d="M16.4 14.4 L14.5 12.5"/><path d="M12 16.4 V13.6"/><path d="M7.6 14.4 L9.5 12.5"/><path d="M5.6 10 H8.4"/><path d="M7.6 5.6 L9.5 7.5"/></g><circle cx="12" cy="10" r="3.5" fill="var(--paper)" stroke="currentColor" stroke-width="0.9" opacity="0.6"/><path d="M12 7.5 L12.68 9.07 L14.38 9.23 L13.09 10.36 L13.47 12.02 L12 11.15 L10.53 12.02 L10.91 10.36 L9.62 9.23 L11.32 9.07 Z" fill="currentColor" stroke="none"/></svg>`,
+  // a tag on a string, written up in your own hand — call it what you want
+  nametag: `<svg viewBox="0 0 24 24"><g transform="rotate(-9 12 13)"><path class="ink-fill" d="M8.4 7.4 H19.4 a1.4 1.4 0 0 1 1.4 1.4 V17.4 a1.4 1.4 0 0 1 -1.4 1.4 H8.4 L3.6 13.1 Z"/><circle cx="7" cy="13.1" r="1.15" fill="var(--paper)" stroke="currentColor" stroke-width="1.1"/><g class="ink" stroke-width="1.1" opacity="0.6"><path d="M10.6 11.4 H18"/><path d="M10.6 14.6 H15.6"/></g></g><path class="ink" stroke-width="1.2" fill="none" d="M7.1 13.4 C4.4 10.4 5.4 5.4 9.6 3.6"/><circle cx="10.9" cy="3.2" r="1.4" fill="none" stroke="currentColor" stroke-width="1.2"/></svg>`,
+
 };
 
 /* ---------- Challenge wax seals ----------
@@ -1346,8 +1383,9 @@ const WAX_SEAL_MOTIFS = {
   "press-your-luck": { wax: 30, fr: "evenodd", d: "M26.9 41.4 A12 12 0 1 1 37.1 41.4 L35.2 37.3 A7.5 7.5 0 1 0 28.8 37.3 Z M21.1 30.5 a1.15 1.15 0 1 0 2.3 0 a1.15 1.15 0 1 0 -2.3 0 M23.95 23.6 a1.15 1.15 0 1 0 2.3 0 a1.15 1.15 0 1 0 -2.3 0 M30.85 20.75 a1.15 1.15 0 1 0 2.3 0 a1.15 1.15 0 1 0 -2.3 0 M37.75 23.6 a1.15 1.15 0 1 0 2.3 0 a1.15 1.15 0 1 0 -2.3 0 M40.6 30.5 a1.15 1.15 0 1 0 2.3 0 a1.15 1.15 0 1 0 -2.3 0" },
   // a stack of chips with one more tossed on top: the stake laid before the clock runs
   "confidence-wager": { wax: 31, fr: "nonzero", d: "M23.5 25.9 L39 22.3 A2.4 2.4 0 0 0 38 17.7 L22.5 21.3 A2.4 2.4 0 0 0 23.5 25.9 Z M24.9 27.1 a2.4 2.4 0 0 0 0 4.8 H38.1 a2.4 2.4 0 0 0 0 -4.8 Z M27.4 32.7 a2.4 2.4 0 0 0 0 4.8 H40.6 a2.4 2.4 0 0 0 0 -4.8 Z M25.4 38.3 a2.4 2.4 0 0 0 0 4.8 H38.6 a2.4 2.4 0 0 0 0 -4.8 Z" },
-  // a tilted die landed on two: the pot that doubles, or goes
-  "double-or-nothing": { wax: 32, fr: "evenodd", d: "M24.8 21 L43 24.8 L39.2 43 L21 39.2 Z M26.9 27.6 a2.3 2.3 0 1 1 4.6 0 a2.3 2.3 0 1 1 -4.6 0 M32.5 36.4 a2.3 2.3 0 1 1 4.6 0 a2.3 2.3 0 1 1 -4.6 0" },
+  // a tilted die landed on two: the pot that doubles, or goes. Shelved with its challenge
+  // (see CHALLENGES above); seed 32 stays reserved so the seal returns with the same pour.
+  // "double-or-nothing": { wax: 32, fr: "evenodd", d: "M24.8 21 L43 24.8 L39.2 43 L21 39.2 Z M26.9 27.6 a2.3 2.3 0 1 1 4.6 0 a2.3 2.3 0 1 1 -4.6 0 M32.5 36.4 a2.3 2.3 0 1 1 4.6 0 a2.3 2.3 0 1 1 -4.6 0" },
   // a shield holding one bead safe inside it: every shield you keep is worth beads
   "insurance": { wax: 33, fr: "evenodd", d: "M32 18.5 C36 21 40 21.8 44 22.2 V31 C44 38.5 39 43.5 32 46.5 C25 43.5 20 38.5 20 31 V22.2 C24 21.8 28 21 32 18.5 Z M27 31 a5 5 0 1 1 10 0 a5 5 0 1 1 -10 0 M29.6 31 a2.4 2.4 0 1 1 4.8 0 a2.4 2.4 0 1 1 -4.8 0" },
 };
@@ -1658,7 +1696,7 @@ export const ACHIEVEMENTS = [
   { id: "you-knew-the-line", name: "You Knew The Line", desc: "Recall 5 lyric lines in one game",  secret: true,  icon: "note" },
   { id: "out-of-the-woods", name: "Out Of The Woods", desc: "Survive 20+ rounds in Infinite",      secret: false, icon: "pines" },
   { id: "twenty-two",       name: "22",               desc: "Reach exactly round 22 in Infinite",  secret: false, icon: "balloons" },
-  { id: "nineteen-eighty-nine", name: "1989",         desc: "Reach round 89 in Infinite",          secret: false, icon: "placeholder" },
+  { id: "nineteen-eighty-nine", name: "1989",         desc: "Reach round 89 in Infinite",          secret: false, icon: "skyline" },
   { id: "sparks-fly",       name: "Sparks Fly",       desc: "Hit a 10-in-a-row streak",            secret: true,  icon: "sparkler" },
   { id: "great-war",        name: "The Great War",    desc: "Win an Ultra game (10+ correct)",     secret: false, icon: "poppy" },
   { id: "long-live",        name: "Long Live",        desc: "Perfect 13/13 on Hard or Ultra",      secret: true,  icon: "coronet" },
@@ -1701,14 +1739,14 @@ export const ACHIEVEMENTS = [
   { id: "eyes-closed",      name: "Eyes Closed",      desc: "10 fuzzy lyric matches in one Lyricist game", secret: true, icon: "eyeclosed" },
   { id: "paris",            name: "Paris",            desc: "Answer “Paris” when the word is “somewhere”", secret: true, icon: "tower" },
   { id: "i-hate-it-here",   name: "I Hate It Here",   desc: "Answer every song in the catalogue at least once", secret: false, icon: "checklist" },
-  { id: "mean",             name: "Mean",             desc: "Finally answer your nemesis word right", secret: true, icon: "placeholder" },
+  { id: "mean",             name: "Mean",             desc: "Finally answer your nemesis word right", secret: true, icon: "banjo" },
   { id: "raining-monday",   name: "It's Raining And It's Monday", desc: "Answer “rain” correctly on a Monday", secret: true, icon: "umbrella" },
   { id: "clean",            name: "Clean",            desc: "Win without hints or a single timeout",  secret: false, icon: "drop" },
   { id: "everything-nothing", name: "Everything & Nothing All At Once", desc: "Win a game in every difficulty", secret: false, icon: "yinyang" },
   { id: "fearless-tv",      name: "Fearless (Taylor's Version)", desc: "Two games in a row with no timeouts", secret: false, icon: "vinyl" },
-  { id: "explorer",         name: "Explorer",         desc: "Play every difficulty in Classic and in both Infinite variants, plus Adaptive and Custom", secret: false, icon: "placeholder" },
-  { id: "seven",            name: "Seven",            desc: "Play on all seven days of the week", secret: true,  icon: "placeholder" },
-  { id: "youre-on-your-own-kid", name: "You're On Your Own, Kid", desc: "Save your first bracelet keepsake", secret: false, icon: "placeholder" },
+  { id: "explorer",         name: "Explorer",         desc: "Play every difficulty in Classic and in both Infinite variants, plus Adaptive and Custom", secret: false, icon: "compass" },
+  { id: "seven",            name: "Seven",            desc: "Play on all seven days of the week", secret: true,  icon: "swing" },
+  { id: "youre-on-your-own-kid", name: "You're On Your Own, Kid", desc: "Save your first bracelet keepsake", secret: false, icon: "keepsake" },
   { id: "piano-was-hissing", name: "The Piano Was Hissing", desc: "Type “reputation tv” somewhere",    secret: true,  icon: "piano" },
   { id: "the-bolter",       name: "The Bolter",       desc: "Quit before typing anything in round 1", secret: true,  icon: "door" },
   { id: "no-closure",       name: "No Closure",       desc: "Give up after 12, never answer the 13th", secret: true, icon: "unclasped" },
@@ -1741,13 +1779,13 @@ export const ACHIEVEMENTS = [
   { id: "gold-rush",        name: "Gold Rush",        desc: "Perfect an album in Album Focus (13/13)", secret: true,  icon: "coins" },
   { id: "starlight",        name: "Starlight",        desc: "Perfect all 12 albums in Album Focus",  secret: true,  icon: "constellation" },
   /* ---- Custom mode (your own levers, your own rules) ---- */
-  { id: "ours",             name: "Ours",             desc: "Finish your first Custom run",         secret: false, icon: "placeholder" },
-  { id: "mine",             name: "Mine",             desc: `Keep ${CUSTOM_PRESET_SHELF} custom presets on the shelf at once`, secret: false, icon: "placeholder" },
-  { id: "forever-and-always", name: "Forever & Always", desc: `Reach round ${CUSTOM_ENDLESS_MILESTONE} of an endless Custom run`, secret: true, icon: "placeholder" },
+  { id: "ours",             name: "Ours",             desc: "Finish your first Custom run",         secret: false, icon: "levers" },
+  { id: "mine",             name: "Mine",             desc: `Keep ${CUSTOM_PRESET_SHELF} custom presets on the shelf at once`, secret: false, icon: "presetbox" },
+  { id: "forever-and-always", name: "Forever & Always", desc: `Reach round ${CUSTOM_ENDLESS_MILESTONE} of an endless Custom run`, secret: true, icon: "infinity" },
   /* ---- Skills & Mastery ---- */
-  { id: "bigger-than-the-whole-sky", name: "Bigger Than The Whole Sky", desc: "Press the wax and unlock Mastery", secret: false, icon: "placeholder" },
-  { id: "superstar",        name: "Superstar",        desc: `Take a single skill all the way to level ${SKILL_MAX_LEVEL}`, secret: true, icon: "placeholder" },
-  { id: "call-it-what-you-want", name: "Call It What You Want", desc: "Wear a prestige title on your signature", secret: false, icon: "placeholder" },
+  { id: "bigger-than-the-whole-sky", name: "Bigger Than The Whole Sky", desc: "Press the wax and unlock Mastery", secret: false, icon: "waxpress" },
+  { id: "superstar",        name: "Superstar",        desc: `Take a single skill all the way to level ${SKILL_MAX_LEVEL}`, secret: true, icon: "rosette" },
+  { id: "call-it-what-you-want", name: "Call It What You Want", desc: "Wear a prestige title on your signature", secret: false, icon: "nametag" },
   { id: "you-took-a-polaroid-of-us", name: "You Took A Polaroid Of Us", desc: "Find every polaroid keepsake", secret: true, icon: "polaroid" },
   { id: "is-it-over-now",   name: "Is It Over Now?",  desc: "Earn every hidden achievement",         secret: true,  icon: "hourglass" },
   { id: "the-lucky-one",    name: "The Lucky One",    desc: "Earn every other achievement",          secret: true,  icon: "clover" },

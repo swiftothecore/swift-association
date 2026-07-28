@@ -8784,7 +8784,11 @@ function clearWagerStake() {
   if (wagerRestore) { const restore = wagerRestore; wagerRestore = null; restore(); }
 }
 
-/* ---------- Double Or Nothing ---------- */
+/* ---------- Double Or Nothing (SHELVED) ---------- */
+// Off the roster because it and Press Your Luck had converged into one challenge; config.js
+// carries the reasoning and PLAN.md the way back. Nothing here needs disabling: the rule owns
+// no code of its own, so with no entry carrying rule "doubleup", doubleRuleActive() is simply
+// always false and every arm below it is unreachable while the shared pot keeps serving Press.
 // The rule is the offer, and the offer lives in showRiskDecision alongside Press Your Luck's:
 // both ride the same pot, and both are answered between the page that was won and the next
 // one. What is left over is arithmetic, and that lives in applyRiskScoring. So there is no
@@ -13817,20 +13821,23 @@ function buildDevApi() {
           if (open) startTimer();                 // the panel was gating the clock; answer it and run
           renderRiskBanner(); return roundStake; },
       },
-      // Double Or Nothing — the same pot, doubling. `chain` reads where a run stands mid-offer,
-      // and `simulate` prints the ladder against the target so a retune can be eyeballed
-      // without playing 13 pages (the pages column is what actually constrains a run).
-      doubleup: {
-        chain: () => ({ pot: beadPot, ride: beadRide, nextWorth: beadPot > 0 ? beadPot * 2 : 1,
-          deepest: beadRideBest, banked: beadsBanked }),
-        bank: () => bankPot(),                                  // take the chain where it stands
-        // Answer an open offer with "let it ride" (only meaningful while the overlay is up).
-        ride: () => { const ov = document.querySelector(".chall-path-overlay");
-          if (!ov) return null; ov.remove(); renderRiskBanner(); nextRound(); return beadPot; },
-        wipe: () => { const n = beadPot; beadPot = 0; beadRide = 0; renderRiskBanner(); return n; },
-        simulate: (n) => ({ charmAt: PRESS_CHARM_RIDE, target: riskTarget(),
-          steps: Array.from({ length: n || 6 }, (_, k) => ({ ride: k + 1, pages: k + 1, pot: 2 ** k })) }),
-      },
+      // Double Or Nothing — the same pot, doubling. Shelved with its challenge (see CHALLENGES
+      // in config.js), so nothing carries rule "doubleup" and there is no run for these to read.
+      // The pot tools they lean on are Press Your Luck's and stay live above; uncomment this
+      // block together with the roster entry. `chain` reads where a run stands mid-offer, and
+      // `simulate` prints the ladder against the target so a retune can be eyeballed without
+      // playing 13 pages (the pages column is what actually constrains a run).
+      // doubleup: {
+      //   chain: () => ({ pot: beadPot, ride: beadRide, nextWorth: beadPot > 0 ? beadPot * 2 : 1,
+      //     deepest: beadRideBest, banked: beadsBanked }),
+      //   bank: () => bankPot(),                                  // take the chain where it stands
+      //   // Answer an open offer with "let it ride" (only meaningful while the overlay is up).
+      //   ride: () => { const ov = document.querySelector(".chall-path-overlay");
+      //     if (!ov) return null; ov.remove(); renderRiskBanner(); nextRound(); return beadPot; },
+      //   wipe: () => { const n = beadPot; beadPot = 0; beadRide = 0; renderRiskBanner(); return n; },
+      //   simulate: (n) => ({ charmAt: PRESS_CHARM_RIDE, target: riskTarget(),
+      //     steps: Array.from({ length: n || 6 }, (_, k) => ({ ride: k + 1, pages: k + 1, pot: 2 ** k })) }),
+      // },
       // Insurance — sudden death and the shields against it.
       insurance: {
         tokens: (n) => { if (n != null) { insuranceTokens = Math.max(0, n | 0); renderInsuranceBtn(); renderRiskBanner(); }
