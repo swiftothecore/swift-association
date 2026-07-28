@@ -3724,29 +3724,84 @@ function openBonus(from) {
   flipAwayToScreen("bonus");
 }
 
+/* The game's pressing. All the geometry is shared (#bd-* in index.html); a game supplies
+   only its label colour and its mark, and an unwritten game gets the bare test pressing
+   with its title pencilled on. `extra` lets a caller add classes without re-declaring the
+   whole disc, so the shelf, the play screen and the end card all draw the same object. */
+function bonusDisc(g, extra = "") {
+  const cls = `bonus-disc${extra ? " " + extra : ""}`;
+  const open = `<svg class="${cls}" viewBox="0 0 140 140" aria-hidden="true">`;
+  if (!g.ready) {
+    return open +
+      `<use href="#bd-vinyl"/><use href="#bd-test-label"/>` +
+      `<text x="70" y="95" text-anchor="middle" class="bd-pencil" font-size="11"` +
+      ` transform="rotate(-2 70 92)">${escapeHtml(g.name.toLowerCase())}</text>` +
+      `<use href="#bd-hub"/></svg>`;
+  }
+  return open +
+    `<use href="#bd-vinyl"/>` +
+    `<circle cx="70" cy="70" r="44" fill="${escapeHtml(g.tint)}"/>` +
+    `<use href="#bd-rays"/><use href="#bd-furniture"/>` +
+    `<g stroke="${escapeHtml(g.tint)}" fill="${escapeHtml(g.tint)}"><use href="#bd-mark-${escapeHtml(g.mark)}"/></g>` +
+    `<use href="#bd-hub"/></svg>`;
+}
+
 function renderBonusPage() {
   const cards = BONUS_GAMES.map((g) => {
     const soon = !g.ready;
     const rec = bonusRecord(g.id);
-    // A best score only means something once a game has actually been played.
+    // A best score only means something once a game has actually been played; an unpressed
+    // record has no score to report at all, only a promise.
     const foot = soon
-      ? `<span class="bonus-soon">coming soon</span>`
-      : `<span class="bonus-card-best">${rec.plays
+      ? `<span class="bonus-press-foot is-soon-foot">not pressed yet</span>`
+      : `<span class="bonus-press-foot">${rec.plays
           ? `best ${rec.best} / ${BONUS_ROUNDS}`
-          : "not played yet"}</span>`;
-    return `<button type="button" class="bonus-card${soon ? " is-soon" : ""}" data-id="${escapeHtml(g.id)}">` +
-      `<span class="bonus-card-kicker">${escapeHtml(g.kicker)}</span>` +
-      `<span class="bonus-card-name">${escapeHtml(g.name)}</span>` +
-      `<span class="bonus-card-blurb">${escapeHtml(g.blurb)}</span>` +
+          : "unplayed"}</span>`;
+    return `<button type="button" class="bonus-press${soon ? " is-soon" : ""}" data-id="${escapeHtml(g.id)}">` +
+      `<span class="bonus-press-disc">${bonusDisc(g)}</span>` +
+      `<span class="bonus-press-kicker">${escapeHtml(g.kicker)}</span>` +
+      `<span class="bonus-press-name">${escapeHtml(g.name)}</span>` +
+      `<span class="bonus-press-blurb">${escapeHtml(g.blurb)}</span>` +
       foot +
     `</button>`;
   }).join("");
   const el = $("bonusBody");
   el.innerHTML =
-    `<p class="bonus-intro">A shelf of quick games away from the main round. More are still being written.</p>` +
-    `<div class="bonus-shelf">${cards}</div>`;
-  el.querySelectorAll(".bonus-card").forEach((b) =>
+    `<div class="bonus-head">` +
+      `<p class="bonus-intro">A rack of quick pressings, kept apart from the main round. More are still being cut.</p>` +
+      `<span class="bonus-count">${BONUS_GAMES.filter((g) => g.ready).length} in print</span>` +
+    `</div>` +
+    `<div class="bonus-rack">${cards}</div>`;
+  el.querySelectorAll(".bonus-press").forEach((b) =>
     b.addEventListener("click", () => selectBonusGame(b.dataset.id)));
+  layoutBonusShelves();
+}
+
+/* One shelf rule per row, running the rack's full width even when the row is half full.
+   CSS can't do this alone: a grid has no row element to hang the rule on, and a rule drawn
+   per cell would stop dead under the last record of a short row, which reads as a broken
+   shelf rather than a rack with room left on it. So the first card of each row draws the
+   rule and is told how wide the rack is; the rest draw nothing. Rows are found by grouping
+   on offsetTop, which costs one layout read and survives any column count. */
+let bonusRackObserver = null;
+function layoutBonusShelves() {
+  const rack = $("bonusBody") && $("bonusBody").querySelector(".bonus-rack");
+  if (!rack) return;
+  const items = [...rack.querySelectorAll(".bonus-press")];
+  let top = null;
+  items.forEach((it) => {
+    const isStart = it.offsetTop !== top;
+    if (isStart) top = it.offsetTop;
+    it.classList.toggle("shelf-start", isStart);
+    it.style.setProperty("--shelf-w", `${rack.clientWidth}px`);
+  });
+  // Re-run when the rack changes width (window resize, or the notebook page re-laying out).
+  if (!bonusRackObserver && typeof ResizeObserver !== "undefined") {
+    bonusRackObserver = new ResizeObserver(() => {
+      if (document.querySelector("#screen-bonus .bonus-rack")) layoutBonusShelves();
+    });
+  }
+  if (bonusRackObserver) { bonusRackObserver.disconnect(); bonusRackObserver.observe(rack); }
 }
 
 function selectBonusGame(id) {
@@ -3755,7 +3810,7 @@ function selectBonusGame(id) {
   if (!g.ready) {
     // A shell: nothing to launch yet. Give the card a small acknowledging wiggle rather than
     // a dead click, so a tap reads as "heard you, not ready" instead of "broken".
-    const card = $("bonusBody").querySelector(`.bonus-card[data-id="${CSS.escape(id)}"]`);
+    const card = $("bonusBody").querySelector(`.bonus-press[data-id="${CSS.escape(id)}"]`);
     if (card) { card.classList.remove("nudge"); void card.offsetWidth; card.classList.add("nudge"); }
     return;
   }
@@ -3770,7 +3825,9 @@ function startBonusGame(g) {
   bonusRecentFakes = [];
   bonusRunId++;
   stopBonusClock();
-  $("bonusPlayTitle").textContent = g.name;
+  // The pressing follows the game in from the shelf, so the play screen is visibly the
+  // same record you picked up rather than a generic titled page.
+  $("bonusPlayTitle").innerHTML = `${bonusDisc(g, "bonus-disc-sm")}<span>${escapeHtml(g.name)}</span>`;
   flipAwayToScreen("bonusplay");
   nextBonusRound();
 }
@@ -3950,6 +4007,7 @@ function endBonusRun() {
   const perfect = bonusScore === BONUS_ROUNDS;
   $("bonusPlayBody").innerHTML =
     `<div class="bg-end">` +
+      `<div class="bg-end-disc">${bonusDisc(bonusGame)}</div>` +
       `<div class="bg-end-kicker">${escapeHtml(bonusGame.name)}</div>` +
       `<div class="bg-end-score">${bonusScore} <span>/ ${BONUS_ROUNDS}</span></div>` +
       (rec.isBest && rec.plays > 1 ? `<div class="bg-end-best">a new best</div>` : "") +
@@ -13624,6 +13682,22 @@ function buildDevApi() {
         return { tried: n, built: ok, rate: `${((ok / n) * 100).toFixed(1)}%` };
       },
       score: (n) => { bonusScore = Math.max(0, Math.min(BONUS_ROUNDS, +n || 0)); return bonusScore; },
+      // Eyeball the pressings as a family: every disc at shelf size and at the two small
+      // sizes it has to survive, plus its test-pressing twin, pinned above the rack. The
+      // marks are the whole risk here — they're drawn at one scale and used at three.
+      discs: () => {
+        if (!$("bonusBody")) return "open the shelf first";
+        renderBonusPage();
+        const row = (px) => BONUS_GAMES.map((g) =>
+          `<span style="display:inline-block;width:${px}px">${bonusDisc(g)}</span>` +
+          `<span style="display:inline-block;width:${px}px">${bonusDisc({ ...g, ready: false })}</span>`).join("");
+        const strip = document.createElement("div");
+        strip.style.cssText = "display:flex;flex-direction:column;gap:14px;margin-bottom:22px";
+        strip.innerHTML = [160, 56, 36].map((px) =>
+          `<div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">${row(px)}</div>`).join("");
+        $("bonusBody").prepend(strip);
+        return BONUS_GAMES.map((g) => `${g.id}: ${g.tint} ${g.mark}`);
+      },
       end: () => endBonusRun(),
       reset: () => { resetBonus(); if ($("bonusBody")) renderBonusPage(); },
     },

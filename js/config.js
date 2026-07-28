@@ -267,15 +267,22 @@ export const CUSTOM_DEFAULT_MODE = {
 // one at a time; until then it's a "shell": `ready:false` renders a coming-soon card that
 // launches nothing. Flip `ready` true and wire the launcher in `selectBonusGame` when the
 // game is built. Keep `name` short and `blurb` to a single sentence so the cards stay even.
+//
+// `tint` and `mark` dress the game's pressing on the shelf: the label colour of the disc,
+// and which drawn cartouche mark sits on it (the marks live in the #bd-* sprite in
+// index.html). The vinyl, rays and deco furniture are shared and identical on every disc,
+// so a new game means one new colour and one new mark, nothing else. A `ready:false` game
+// gets neither: an unreleased record wears a bare white-label test pressing instead, which
+// is what makes "coming soon" legible without a word of UI.
 export const BONUS_GAMES = [
   { id: "spot-the-slip", name: "Spot the Slip", ready: true,
-    kicker: "find the wrong word",
+    kicker: "find the wrong word", tint: "#cf6752", mark: "skip",
     blurb: "One word in the lyric has been swapped for an impostor. Catch it before the ink dries." },
   { id: "name-that-song", name: "Name That Song", ready: true,
-    kicker: "lyric in, title out",
+    kicker: "lyric in, title out", tint: "#33486e", mark: "question",
     blurb: "Read the line, name the song, and beat the clock. No prompt word to lean on but the lyric itself." },
   { id: "sing-it-back", name: "Sing It Back", ready: false,
-    kicker: "recite from memory",
+    kicker: "recite from memory", tint: "#77485e", mark: "loop",
     blurb: "Pick a song, take a word, and write out the very line that holds it." },
 ];
 // A bonus run is short by design — these sit beside the main game, they don't replace it.

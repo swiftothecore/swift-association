@@ -55,6 +55,90 @@ if (location.pathname.endsWith('/index.html')) {
     <feDisplacementMap in="SourceGraphic" in2="noise" scale="1.8" xChannelSelector="R" yChannelSelector="G"/>
   </filter>
 </svg>
+<!-- BONUS GAME PRESSINGS — the shelf's icon family, drawn once here and <use>d per card.
+     Every bonus game is a black 7-inch pressing with a 1920s shellac label: engraved
+     sunrays, a beaded ring, hub rings, and the game's own mark inside a cream cartouche
+     flanked by deco diamonds. The vinyl, rays and furniture never change from game to
+     game; only the label colour and the mark do (see BONUS_GAMES in js/config.js), which
+     is what holds the family together at 40px as well as at 160px.
+     The marks are DRAWN PATHS, never font glyphs: a typed "?" reads as typing rather than
+     printing, and renders differently on every machine. Keep it that way. -->
+<svg width="0" height="0" aria-hidden="true" style="position:absolute" focusable="false">
+  <defs>
+    <!-- the record itself: matte black, fine groove rings, two soft sheens raked across it -->
+    <g id="bd-vinyl">
+      <circle cx="70" cy="70" r="66" fill="#262220"/>
+      <circle cx="70" cy="70" r="65" fill="none" stroke="rgba(255,255,255,0.10)" stroke-width="0.8"/>
+      <g fill="none" stroke="rgba(255,255,255,0.045)" stroke-width="0.8">
+        <circle cx="70" cy="70" r="62.5"/><circle cx="70" cy="70" r="60"/><circle cx="70" cy="70" r="57.5"/>
+        <circle cx="70" cy="70" r="55"/><circle cx="70" cy="70" r="52.5"/><circle cx="70" cy="70" r="50"/>
+      </g>
+      <g fill="none" stroke="rgba(255,255,255,0.07)" stroke-width="0.8">
+        <circle cx="70" cy="70" r="61.2"/><circle cx="70" cy="70" r="53.7"/>
+      </g>
+      <path d="M18 52 A54 54 0 0 1 50 17" fill="none" stroke="rgba(255,255,255,0.10)" stroke-width="5" stroke-linecap="round"/>
+      <path d="M122 88 A54 54 0 0 1 90 123" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="5" stroke-linecap="round"/>
+    </g>
+    <!-- engraved sunrays across the label, 24 spokes struck from the hub -->
+    <g id="bd-rays">
+      <g stroke="rgba(247,236,215,0.3)" stroke-width="1" stroke-linecap="round">
+        <line x1="84" y1="70" x2="104" y2="70"/><line x1="83.5" y1="73.6" x2="102.8" y2="78.8"/>
+        <line x1="82.1" y1="77" x2="99.4" y2="87"/><line x1="79.9" y1="79.9" x2="94" y2="94"/>
+        <line x1="77" y1="82.1" x2="87" y2="99.4"/><line x1="73.6" y1="83.5" x2="78.8" y2="102.8"/>
+        <line x1="70" y1="84" x2="70" y2="104"/><line x1="66.4" y1="83.5" x2="61.2" y2="102.8"/>
+        <line x1="63" y1="82.1" x2="53" y2="99.4"/><line x1="60.1" y1="79.9" x2="46" y2="94"/>
+        <line x1="57.9" y1="77" x2="40.6" y2="87"/><line x1="56.5" y1="73.6" x2="37.2" y2="78.8"/>
+        <line x1="56" y1="70" x2="36" y2="70"/><line x1="56.5" y1="66.4" x2="37.2" y2="61.2"/>
+        <line x1="57.9" y1="63" x2="40.6" y2="53"/><line x1="60.1" y1="60.1" x2="46" y2="46"/>
+        <line x1="63" y1="57.9" x2="53" y2="40.6"/><line x1="66.4" y1="56.5" x2="61.2" y2="37.2"/>
+        <line x1="70" y1="56" x2="70" y2="36"/><line x1="73.6" y1="56.5" x2="78.8" y2="37.2"/>
+        <line x1="77" y1="57.9" x2="87" y2="40.6"/><line x1="79.9" y1="60.1" x2="94" y2="46"/>
+        <line x1="82.1" y1="63" x2="99.4" y2="53"/><line x1="83.5" y1="66.4" x2="102.8" y2="61.2"/>
+      </g>
+    </g>
+    <!-- shared deco furniture: hairline ring, beaded ring, hub rings, cartouche, diamonds -->
+    <g id="bd-furniture">
+      <circle cx="70" cy="70" r="41" fill="none" stroke="rgba(247,236,215,0.5)" stroke-width="0.8"/>
+      <circle cx="70" cy="70" r="38.5" fill="none" stroke="rgba(247,236,215,0.65)" stroke-width="2.2"
+              stroke-dasharray="0.1 5.05" stroke-linecap="round"/>
+      <circle cx="70" cy="70" r="10" fill="none" stroke="rgba(247,236,215,0.7)" stroke-width="1"/>
+      <circle cx="70" cy="70" r="7.8" fill="none" stroke="rgba(247,236,215,0.45)" stroke-width="0.6"/>
+      <rect x="54" y="88" width="32" height="15" rx="7.5" fill="#f7ecd7"/>
+      <path d="M47.5 95.5 L49.5 93.5 L51.5 95.5 L49.5 97.5 Z" fill="rgba(247,236,215,0.75)"/>
+      <path d="M88.5 95.5 L90.5 93.5 L92.5 95.5 L90.5 97.5 Z" fill="rgba(247,236,215,0.75)"/>
+    </g>
+    <!-- the spindle hole, drawn last on every disc so nothing crosses it -->
+    <circle id="bd-hub" cx="70" cy="70" r="5.4" fill="#f2e8d3" stroke="rgba(0,0,0,0.3)" stroke-width="0.8"/>
+    <!-- the marks. Each inherits the label colour from the <g> the card wraps it in. -->
+    <g id="bd-mark-question">
+      <path d="M66.6 92.8 C66.6 88.6 73.8 88.6 73.8 92.5 C73.8 95.2 71.2 95.0 70.9 97.4"
+            fill="none" stroke-width="1.9" stroke-linecap="round"/>
+      <circle cx="70.9" cy="100.4" r="1.15" stroke="none"/>
+    </g>
+    <g id="bd-mark-skip">
+      <path d="M58.5 95.5 L63.5 95.5 L66.5 90.8 L70 100.2 L73 95.5 L81.5 95.5"
+            fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+    </g>
+    <g id="bd-mark-loop">
+      <path d="M75.64 93.45 A6 6 0 1 1 71.04 89.59"
+            fill="none" stroke-width="1.8" stroke-linecap="round"/>
+      <path d="M74.39 90.18 L70.69 91.56 L71.39 87.62 Z" stroke="none"/>
+    </g>
+    <!-- the unreleased record: a bare white label with a rubber-stamped TEST PRESSING box.
+         The title is pencilled on per game by renderBonusPage, so it isn't in here. -->
+    <g id="bd-test-label">
+      <circle cx="70" cy="70" r="44" fill="#efe7d2"/>
+      <circle cx="70" cy="70" r="41" fill="none" stroke="rgba(60,40,18,0.2)" stroke-width="0.8"/>
+      <g transform="rotate(-6 70 51)">
+        <rect x="41" y="43" width="58" height="14" rx="2" fill="none" stroke="rgba(179,64,46,0.75)" stroke-width="1.4"/>
+        <text x="70" y="52.6" text-anchor="middle" class="bd-stamp-type" font-weight="bold"
+              font-size="6.6" letter-spacing="1.1" fill="rgba(179,64,46,0.8)">TEST PRESSING</text>
+      </g>
+      <text x="70" y="104.5" text-anchor="middle" class="bd-stamp-type" font-size="4.2"
+            letter-spacing="0.8" fill="rgba(74,66,56,0.65)">NOT FOR SALE</text>
+    </g>
+  </defs>
+</svg>
 <canvas id="snowfall" aria-hidden="true"></canvas>
 <canvas id="midnightrain" aria-hidden="true"></canvas>
 <canvas id="autumnleaves" aria-hidden="true"></canvas>
