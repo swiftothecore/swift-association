@@ -525,20 +525,21 @@ export const CHALLENGES = [
     desc: "Four songs, and the word hides in the lyrics of three of them. Tap the odd one out, the only song that never sings it.",
     win: "Score 9 / 13 spotting the odd one out." },
   { id: "whose-line", name: "Whose Line?", rule: "whoseline", mode: "medium",
-    free: false, cost: 1, target: 10, seconds: 8, noTitle: false, dropdown: false, tapes: 1,
-    // Dark: a thinner line. `hardLines` drops the song's hook (any line it repeats — the
-    // chorus names the track on sight) and takes the SHORTEST legal line rather than a random
-    // one, and `minWords` lowers the floor so those shorter lines are in the draw at all.
-    // buildWhosePuzzle falls back to the base draw if the corpus can't produce a hook-free
-    // line, so this never costs a playable page. The clock deliberately does NOT tighten
-    // below the base eight: four songs to read in eight seconds is already the floor, and
-    // taking more away would make a thin line unreadable rather than unknowable.
-    hard: { hardLines: true, minWords: 4,
-      blurb: "8s · no typing · one thin line, never the chorus · name the song",
-      desc: "No prompt word, and no chorus to lean on. You get one short line from deep in the lyric, four songs, and eight seconds to know whose line it is.",
-      win: "Score 10 / 13 placing lines with nothing to lean on." },
-    blurb: "8s · no typing · one lyric line · name the song it came from",
-    desc: "No prompt word at all. You get a single line of lyric and four songs, and you have to know whose line it is.",
+    free: false, cost: 1, target: 10, seconds: 5, noTitle: false, dropdown: false, tapes: 1,
+    // Dark: a thinner line AND a shorter clock. `hardLines` drops the song's hook (any line it
+    // repeats — the chorus names the track on sight) and draws from the WHOSE_HARD_POOL
+    // shortest distinct lines rather than any of them, and `minWords` lowers the floor so
+    // those shorter lines are in the draw at all. buildWhosePuzzle falls back to the base draw
+    // if the corpus can't produce a hook-free line, so this never costs a playable page. The
+    // clock was long held at the base eight on the theory that four songs couldn't be read any
+    // faster; playtesting said otherwise on both sides, so the base moved to five and the dark
+    // side to three, where reading speed is deliberately part of what's being tested.
+    hard: { hardLines: true, minWords: 4, seconds: 3, target: 11,
+      blurb: "3s · no typing · one thin line, never the chorus · name the song",
+      desc: "No prompt word, and no chorus to lean on. You get one short line from deep in the lyric, four songs, and three seconds to know whose line it is.",
+      win: "Score 11 / 13 placing lines with nothing to lean on." },
+    blurb: "5s · no typing · one lyric line · name the song it came from",
+    desc: "No prompt word at all. You get a single line of lyric and four songs, five seconds to place it, and no second guesses.",
     win: "Score 10 / 13 placing the line." },
   { id: "both-of-us", name: "Both Of Us", rule: "bothwords", mode: "medium",
     free: false, cost: 1, target: 9, seconds: 20, noTitle: false, pool: "easy", tapes: 2,
@@ -662,6 +663,10 @@ export const ODD_TILES = 4;
 export const WHOSE_TILES = 4;
 export const WHOSE_MIN_WORDS = 5;
 export const WHOSE_GEN_ATTEMPTS = 24;
+/* Dark side only: how many of a song's shortest distinct legal lines the draw picks from. Five
+   because a corpus scan showed 99% of songs can fill a pool that size, and widening it from
+   three costs only about a third of a word of average line length — nearly free variety. */
+export const WHOSE_HARD_POOL = 5;
 /* Common Thread — the "type the shared word" inversion. Each page shows COMMON_LINES lyric
    lines from different songs; the answer is the word running through all of them. Puzzles are
    generated at runtime from allSongs + playableWords: an intended word is chosen from a mid-
@@ -720,10 +725,11 @@ export const DARK_SIDE_MILESTONE = 5;
                   builder, the layout (a data-cols="3" two-row board) and the word picker,
                   which now draws only words with enough holders to FILL the wider grid —
                   otherwise buildOddGrid's graceful shrink would hand the easy board back.
-   - whose-line   `hardLines` drops the song's hook lines (any line it repeats) and takes the
-                  shortest legal line instead of a random one; `minWords` lowers the floor so
-                  short lines are in the draw. buildWhosePuzzle tries the hard draw first and
-                  falls back to the base one, because a failed build renders a dead page.
+   - whose-line   `hardLines` drops the song's hook lines (any line it repeats) and draws from
+                  the WHOSE_HARD_POOL shortest distinct lines instead of any legal one;
+                  `minWords` lowers the floor so short lines are in the draw. buildWhosePuzzle
+                  tries the hard draw first and falls back to the base one, because a failed
+                  build renders a dead page. `seconds` and `target` squeeze on top.
    - vanishing-word `wordScale` (0.3 on dark) renders the prompt at that fraction of its
                   normal size, read once in applyChallengeRound ahead of the rule dispatch
                   and cleared with the other per-round word styling. CSS is [data-small] +

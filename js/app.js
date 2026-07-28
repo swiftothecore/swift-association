@@ -13,7 +13,7 @@ import {
   IMPOSTOR_WORDS, IMPOSTOR_COUNT, DARK_IMPOSTOR_WORDS,
   SEA_GRID_SIZE, SEA_MIN_VALID, SEA_MAX_VALID,
   COMMON_LINES, COMMON_MIN_SONGS, COMMON_MAX_SONGS, COMMON_GEN_ATTEMPTS, COMMON_MAX_ACCEPT,
-  ODD_TILES, WHOSE_TILES, WHOSE_MIN_WORDS, WHOSE_GEN_ATTEMPTS,
+  ODD_TILES, WHOSE_TILES, WHOSE_MIN_WORDS, WHOSE_GEN_ATTEMPTS, WHOSE_HARD_POOL,
   BOTH_WORDS, BOTH_MIN_SONGS, BOTH_PARTNER_TRIES, BOTH_REVEAL_SONGS,
   PRESS_RIDE_STEP, PRESS_CHARM_RIDE, RISK_MAX_STAKE, RISK_TOKENS, RISK_TOKEN_VALUE,
   ALBUM_FOCUS_DIFFS, ALBUM_FOCUS_TARGET,
@@ -6249,9 +6249,14 @@ function hookLines(song) {
 }
 // One showable line from a song: long enough to be a fair puzzle, and never a line containing
 // the song's own title (which would just hand the answer over). Null when the song has none.
-// `hard` (the dark side) additionally drops the song's hook lines and prefers the SHORTEST
-// legal line left, where the base draw takes any of them at random — least signal, not just
-// less time.
+// `hard` (the dark side) additionally drops the song's hook lines and draws from the song's
+// WHOSE_HARD_POOL shortest DISTINCT lines, where the base draw takes any legal line at random —
+// least signal, not just less time. It draws from a pool rather than taking the single shortest
+// line because that was effectively deterministic: a corpus scan found a third of songs had
+// exactly one shortest line and the median song had two, so a dark run kept serving the same
+// line for the same song and became a memory test of this challenge rather than of the lyrics.
+// Deduplication is on the same loose normalisation hookLines uses, so a line repeated with
+// different punctuation can't eat two of the five slots.
 function pickWhoseLine(song, hard) {
   const title = String(song.title || "").toLowerCase();
   const bare = title.replace(/\s*\((taylor's version|from the vault|.*?)\)\s*/gi, "").trim();
@@ -6265,7 +6270,17 @@ function pickWhoseLine(song, hard) {
     if (hooks && hooks.has(low.replace(/[^a-z0-9 ]+/g, "").replace(/\s+/g, " ").trim())) return false;
     return true;
   }));
-  if (hard && lines.length) return lines.reduce((a, b) => (words(b) < words(a) ? b : a));
+  if (hard && lines.length) {
+    // Dedupe first, then a STABLE sort by length over the already-shuffled list, so lines of
+    // equal length stay in random order and the pool isn't the same five every time either.
+    const seen = new Map();
+    lines.forEach((l) => {
+      const k = l.toLowerCase().replace(/[^a-z0-9 ]+/g, "").replace(/\s+/g, " ").trim();
+      if (!seen.has(k)) seen.set(k, l);
+    });
+    const pool = [...seen.values()].sort((a, b) => words(a) - words(b)).slice(0, WHOSE_HARD_POOL);
+    return shuffle(pool)[0];
+  }
   return lines[0] || null;
 }
 // Whose Line?: draw a source song + a line from it, then offer WHOSE_TILES songs with the source
@@ -13833,8 +13848,26 @@ function buildDevApi() {
       whoseline: {
         line: () => (whosePuzzle ? whosePuzzle.line : null),          // the line on the page
         source: () => (whosePuzzle ? whosePuzzle.song.title : null),  // the song it came from
-        // Is this page drawing the dark side's thinner line (no hook, shortest legal)?
+        // Is this page drawing the dark side's thinner line (no hook, one of the shortest)?
         hard: () => whoseHardLinesNow(),
+        // The source song's dark pool: the WHOSE_HARD_POOL shortest distinct legal lines this
+        // page could have drawn from. Shown shortest-first so a suspiciously thin pool is
+        // obvious at a glance; on a base page this is just what a dark page would have offered.
+        pool: () => {
+          if (!whosePuzzle) return null;
+          const song = whosePuzzle.song, hooks = hookLines(song);
+          const norm = (s) => s.toLowerCase().replace(/[^a-z0-9 ]+/g, "").replace(/\s+/g, " ").trim();
+          const title = String(song.title || "").toLowerCase();
+          const words = (l) => l.split(/\s+/).filter(Boolean).length;
+          const seen = new Map();
+          String(song.lyrics || "").split("\n").map((l) => l.trim()).forEach((l) => {
+            if (words(l) < whoseMinWordsNow()) return;
+            if (l.toLowerCase().includes(title) || hooks.has(norm(l))) return;
+            if (!seen.has(norm(l))) seen.set(norm(l), l);
+          });
+          return [...seen.values()].sort((a, b) => words(a) - words(b))
+            .slice(0, WHOSE_HARD_POOL).map((l) => ({ line: l, words: words(l) }));
+        },
         // What the draw actually produced: the line's length against the floor it had to
         // clear, and whether it's one of the source song's repeated (hook) lines. On a dark
         // page `hook` should be false — unless the fallback draw fired for want of a
@@ -13850,7 +13883,9 @@ function buildDevApi() {
         tiles: () => tapTiles.map((t) => ({ title: t.song.title, source: t.correct })),
         answer: () => { const t = tapTiles.find((x) => x.correct); if (t) onTapKnowledgeClick(tapTiles.indexOf(t)); },
         miss: () => { const t = tapTiles.find((x) => !x.correct); if (t) onTapKnowledgeClick(tapTiles.indexOf(t)); },
-        win: () => { score = (CHALLENGE_BY_ID["whose-line"].target) || 9; endGame(); },
+        // Reads the LIVE challenge, not the base entry: the dark side asks for 11 where the
+        // base asks for 10, so the base target wouldn't be a win on a dark run.
+        win: () => { score = (currentChallenge?.target) || CHALLENGE_BY_ID["whose-line"].target; endGame(); },
       },
       // The risk batch — the shared bead economy behind Press Your Luck / Confidence Wager /
       // Double Or Nothing / Insurance. `state` is the one read-out that answers "where did
