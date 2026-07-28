@@ -593,8 +593,8 @@ export const CHALLENGES = [
     win: "Bank 20 beads across the run." },
   { id: "confidence-wager", name: "Confidence Wager", rule: "wager", mode: "medium",
     free: false, cost: 1, target: 20, seconds: 12, noTitle: false, maxStake: 3, startBeads: 3, tapes: 1,
-    blurb: "12s · suggestions · stake beads on the word before the clock starts",
-    desc: "You see the word first, then you say how sure you are. Stake up to three beads before the clock runs: answer it and the stake pays back double, miss it and the stake is gone. A correct answer is always worth its own bead on top.",
+    blurb: "12s · suggestions · stake beads on a word you haven't seen yet",
+    desc: "The word is face down. All you get is how widely it is sung and your own record with it, and on that you stake up to three beads. Turn it over and the clock runs: answer it and the stake pays back double, miss it and the stake is gone. A correct answer is always worth its own bead on top.",
     win: "Finish the run on 20 beads." },
   /* SHELVED (2026-07-28, second time) — Double Or Nothing is off the roster because it and Press
      Your Luck have converged into one challenge. They share the pot, the bank-or-ride offer, the

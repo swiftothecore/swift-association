@@ -187,6 +187,7 @@ let beadRide = 0;               // Press Your Luck: how deep the current ride is
 let beadsBanked = 0;            // Press Your Luck: times the pot was banked (for the results recap)
 let roundStake = 0;             // Confidence Wager: beads staked on this page (0 until chosen)
 let stakeChosen = false;        // Confidence Wager: this page's stake is locked in, the clock may run
+let wordConcealed = false;      // Confidence Wager: the word is face down until the stake is down
 let wagerRestore = null;        // Confidence Wager: undoes the stake panel's board lockdown (see clearWagerStake)
 let riskCharm = [];             // per-round: this page's bead was won at stake — hang a horseshoe
 let riskSkull = [];             // per-round: the miss that ended the run — string a skull, not a spacer
@@ -6147,12 +6148,37 @@ function renderPromptChrome() {
     if (more.length) ww.dataset.words = String(more.length + 1);
     else ww.removeAttribute("data-words");
   }
+  // Confidence Wager: the word is face down while the stake is open, so the slot holds a card
+  // back rather than the word, and the lead-in says what it is instead of asking for a song.
+  // The word itself is never written into the page until revealPromptWord turns it over.
+  if (wordConcealed) $("wordDisplay").textContent = "?";
+  if (ww) {
+    if (wordConcealed) ww.dataset.concealed = "on";
+    else ww.removeAttribute("data-concealed");
+  }
   if (wl) {
     wl.style.display = hideWord ? "none" : "";
-    wl.textContent = oddOneRuleActive() ? "which song never sings"
+    wl.textContent = wordConcealed ? "the word, face down"
+      : oddOneRuleActive() ? "which song never sings"
       : more.length ? (more.length === 1 ? "write one song with both" : "write one song with all three")
       : "write a song with";
   }
+}
+
+// Confidence Wager: turn the face-down word over. The stake is down, so the word, its lead-in
+// and the rarity stamp all arrive together and the clock can start. Idempotent, so a path that
+// reveals twice (the stake button and the dev override both do) is harmless.
+function revealPromptWord() {
+  if (!wordConcealed) return;
+  wordConcealed = false;
+  renderPromptChrome();
+  $("wordDisplay").textContent = currentWord;
+  renderRarityStamp();
+  // Reuse Revolving Door's swap animation: this is the same gesture, a word arriving in a slot
+  // that already had something in it.
+  const wrap = $("wordDisplay").parentNode;   // .word-wrap
+  wrap.classList.remove("revolve-in");
+  if (!motionReduced()) { void wrap.offsetWidth; wrap.classList.add("revolve-in"); }
 }
 
 /* ---------- Odd One Out / Whose Line? — the tap-grid knowledge challenges ---------- */
@@ -8721,9 +8747,37 @@ function bankPot(quiet) {
 }
 
 /* ---------- Confidence Wager ---------- */
-// The stake is set with the word already on the page but the clock not yet running, so it's
-// a judgement about THIS word rather than a blind bet. Gated in beginRoundClock, which is
-// the one place that owns "the round is ready, start the clock".
+// What the face-down card tells you about the word you're betting on. Two honest readings,
+// both already in the game's own data: how widely the word is sung (the same band that will
+// be stamped beside it the moment it's turned over, so this leaks nothing you weren't about
+// to see anyway), and your own lifetime record with it across every mode. The bands are
+// worded rather than counted, so it stays a feel rather than arithmetic — and a word you've
+// never had says exactly that, which is its own kind of warning.
+function wagerTease() {
+  const tier = rarityTier(currentSongs.length);
+  const spread = {
+    common:   "sung all over the catalogue",
+    uncommon: "sung in a fair few songs",
+    rare:     "sung in only a few songs",
+    scarce:   "sung in barely any",
+    singular: "sung in exactly one song",
+  };
+  const t = loadSongTally();
+  const got = t.words[currentWord] || 0;
+  const missed = t.misses[currentWord] || 0;
+  const times = (n) => (n === 1 ? "once" : n === 2 ? "twice" : `${n} times`);
+  let history;
+  if (!got && !missed) history = "you have never had this word before";
+  else if (!missed) history = `you have had it ${times(got)} and never missed it`;
+  else if (!got) history = `you have missed it ${times(missed)}`;
+  else history = `you have had it ${times(got)}, and missed it ${times(missed)}`;
+  return { tier: tier.name, spread: spread[tier.name] || "", history };
+}
+
+// The stake is set with the word still FACE DOWN — the card back's two readings are all you
+// get, which is what keeps the clock honest: with the word on the page and the clock paused
+// you could simply solve it for free and then stake the maximum on an answer you already had.
+// Gated in beginRoundClock, the one place that owns "the round is ready, start the clock".
 function showWagerStake(done) {
   if (!wagerRuleActive()) { done(); return; }
   clearWagerStake();                             // never two panels on the page at once
@@ -8758,7 +8812,12 @@ function showWagerStake(done) {
       `<span class="rs-n">${n}</span>` +
       `<span class="rs-l">${n === 0 ? "no stake" : n === 1 ? "bead" : "beads"}</span></button>`;
   }
+  const tease = wagerTease();
   panel.innerHTML =
+    `<div class="risk-tease" data-tier="${tease.tier}">` +
+      `<p class="rt-line">${escapeHtml(tease.spread)}</p>` +
+      `<p class="rt-line rt-you">${escapeHtml(tease.history)}</p>` +
+    `</div>` +
     `<p class="risk-stake-ask">how sure are you?</p>` +
     `<div class="risk-stake-row">${btns}</div>` +
     `<p class="risk-stake-note">${cap < riskMaxStake()
@@ -8769,6 +8828,7 @@ function showWagerStake(done) {
     roundStake = Number(b.dataset.stake) || 0;
     stakeChosen = true;
     clearWagerStake();
+    revealPromptWord();   // the bet is placed, so the card turns over — then `done` starts the clock
     input.focus();
     renderRiskBanner();
     done();
@@ -8992,6 +9052,26 @@ function rarityTier(n) {
   return { name: "singular", t: 1, stamp: "one of one" };
 }
 
+// Paint the rarity stamp beside the prompt word, and the swipe weight that scales with it.
+// Impostor: rarity would betray a fake outright (0 songs → "one of one"), and even a real
+// word's scarcity is a tell, so flatten the swipe and show no stamp for the run.
+// Sea of Songs: rarity would narrow down which tiles could hold the word, so hide it too.
+// Odd One Out: same tell, and a "one of one" stamp would outright contradict a grid showing
+// three holders. Whose Line? has no prompt word on the page at all.
+// Confidence Wager: while the word is face down the band is the very thing being sold on the
+// stake card, so it stays off the page here and is asked for again at the reveal.
+function renderRarityStamp() {
+  const rar = rarityTier(currentSongs.length);
+  const hide = impostorRuleActive() || commonRuleActive() || tapGridActive() || wordConcealed;
+  const wrap = $("wordDisplay").parentNode;   // .word-wrap
+  wrap.dataset.rarity = hide ? "common" : rar.name;
+  wrap.style.setProperty("--rarity", hide ? 0 : rar.t);
+  const stamp = $("rarityStamp");
+  stamp.classList.remove("show");
+  stamp.textContent = hide ? "" : rar.stamp;
+  if (!hide && rar.stamp) { void stamp.offsetWidth; stamp.classList.add("show"); } // reflow re-fires the stamp-in
+}
+
 // The valid song this round's hints zoom in on. Prefer one whose lyrics hold the
 // EXACT prompt word so the revealed line/affordance never leans on a looser stem
 // variant ("babe" should point at a "babe" line, not a "baby" one).
@@ -9095,20 +9175,12 @@ function advanceRound() {
   roundHintSong = pickHintSong();
   applyEra(pickEra());
 
-  const rar = rarityTier(currentSongs.length);
-  // Impostor: rarity would betray a fake outright (0 songs → "one of one"), and even a
-  // real word's scarcity is a tell, so flatten the swipe and show no stamp for the run.
-  // Sea of Songs: rarity would narrow down which tiles could hold the word, so hide it too.
-  // Odd One Out: same tell, and a "one of one" stamp would outright contradict a grid showing
-  // three holders. Whose Line? has no prompt word on the page at all.
-  const hideRarity = impostorRuleActive() || commonRuleActive() || tapGridActive();
+  // Confidence Wager: the word is face down for as long as the stake is still open, so it is
+  // settled BEFORE anything paints the word or its rarity. renderPromptChrome masks the slot,
+  // and revealPromptWord turns it over once the stake is down.
+  wordConcealed = wagerRuleActive();
   const wrap = $("wordDisplay").parentNode;   // .word-wrap
-  wrap.dataset.rarity = hideRarity ? "common" : rar.name;
-  wrap.style.setProperty("--rarity", hideRarity ? 0 : rar.t);
-  const stamp = $("rarityStamp");
-  stamp.classList.remove("show");
-  stamp.textContent = hideRarity ? "" : rar.stamp;
-  if (!hideRarity && rar.stamp) { void stamp.offsetWidth; stamp.classList.add("show"); } // reflow re-fires the stamp-in
+  renderRarityStamp();
 
   $("wordDisplay").textContent = currentWord;
   wrap.classList.remove("vanished");          // clear any prior round's vanish
@@ -12991,7 +13063,7 @@ function devApplyWord(word) {
   if (!usedWords.includes(word)) usedWords.push(word);
   currentSongs = validSongs(currentWord, effectiveStrict(), effectiveNoTitle());
   roundHintSong = pickHintSong();
-  $("wordDisplay").textContent = currentWord;
+  if (!wordConcealed) $("wordDisplay").textContent = currentWord;   // a face-down page stays face down
   renderExcludedNote();
   renderHintAffordance();
 }
@@ -13818,8 +13890,13 @@ function buildDevApi() {
         set: (n) => { roundStake = Math.max(0, Math.min(riskMaxStake(), score, n | 0)); stakeChosen = true;
           const open = !!$("wagerStake");
           clearWagerStake();
+          revealPromptWord();                     // a stake answered is a card turned over
           if (open) startTimer();                 // the panel was gating the clock; answer it and run
           renderRiskBanner(); return roundStake; },
+        // What the card back is offering to bet on, and the word it is hiding — the one place
+        // the two can be read side by side to check a band or a tally line reads true.
+        tease: () => (wagerRuleActive() ? { ...wagerTease(), word: currentWord, concealed: wordConcealed } : null),
+        reveal: () => { revealPromptWord(); return currentWord; },   // peek without staking
       },
       // Double Or Nothing — the same pot, doubling. Shelved with its challenge (see CHALLENGES
       // in config.js), so nothing carries rule "doubleup" and there is no run for these to read.

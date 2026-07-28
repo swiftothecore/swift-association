@@ -2002,8 +2002,31 @@
   }
 
   /* Confidence Wager — the stake row, standing in for the answer line while the clock is
-     still paused. The word is already up, so this sits where the typing would be. */
+     still paused. The word is face down above it, so this sits where the typing would be. */
   .risk-stake { text-align: center; margin: 4px 0 2px; }
+  /* The word slot with nothing in it yet: the "?" sits back on the page in pencil rather than
+     ink, and keeps the slot's full height so turning the card over doesn't shift the board. */
+  .word-wrap[data-concealed] .word {
+    color: var(--ink-soft); opacity: 0.5;
+    display: inline-block; transform: rotate(-3deg);
+  }
+  /* What is written on the back of the card: the two readings you place the bet on. Pinned
+     just under the word slot as a torn scrap, so it reads as a note ABOUT the hidden word
+     rather than as part of the stake row. */
+  .risk-tease {
+    max-width: 320px; margin: 0 auto 14px; padding: 8px 14px 9px;
+    background: var(--paper); border: 1px solid rgba(43, 39, 34, 0.18); border-radius: 3px;
+    box-shadow: 1px 2px 0 rgba(43, 39, 34, 0.1);
+    transform: rotate(-0.6deg);
+  }
+  .rt-line {
+    font-family: var(--hand); font-size: 16px; color: var(--ink);
+    margin: 0; line-height: 1.45;
+  }
+  .rt-you { color: var(--ink-soft); font-size: 15px; }
+  /* A word in one song is the whole bet in three words, so it is inked like the margin rule. */
+  .risk-tease[data-tier="singular"] .rt-line:first-child,
+  .risk-tease[data-tier="scarce"] .rt-line:first-child { color: #9c3b2e; }
   .risk-stake-ask {
     font-family: var(--hand); font-weight: 700; font-size: 22px;
     color: var(--ink); margin: 0 0 8px;
@@ -2044,6 +2067,8 @@
     .risk-stake-btn { transition: none; }
     .risk-stake-btn:hover { transform: none; }
     .bead-delta { animation: none; }
+    .risk-tease { transform: none; }
+    .word-wrap[data-concealed] .word { transform: none; }
   }
 
   /* Wildcard — the per-round rule banner above the prompt word */
