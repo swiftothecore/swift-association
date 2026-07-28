@@ -523,12 +523,31 @@ if (location.pathname.endsWith('/index.html')) {
 <!-- Light-touch guided-round coachmarks: a small pencil note pinned near the thing it
      teaches. Non-modal, never covers the board. Positioned + filled by app.js. -->
 <div id="coachmark" class="coachmark" role="status" aria-live="polite" hidden></div>
-<a id="searchLink" class="search-link" href="search/" title="Swift To The Lyric: search every lyric">
-  <svg class="search-link-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
-    <circle cx="11" cy="11" r="7" /><line x1="16.5" y1="16.5" x2="21" y2="21" />
-  </svg>
-  <span class="search-link-label">search every lyric</span>
-</a>
+<!-- Bottom-left corner chrome: the two links that take you off the board. Ordered with
+     feedback first so the searcher, the wider of the two, has the free space on its right
+     to expand into. Both vanish during play (see .corner-links in styles.css). -->
+<div class="corner-links">
+  <a id="feedbackLink" class="corner-link feedback-link" href="https://forms.gle/XhQHcLtvzrwLHuzQ8"
+     target="_blank" rel="noopener" title="Tell me what you think: a short feedback form">
+    <!-- A passed note: a dog-eared page with two lines of writing on it and a speech-bubble
+         tail. An envelope would read "email" and a bare bubble is the SaaS cliché; grafting
+         the tail onto a written page keeps it stationery, and the tail is the only pointed
+         silhouette among its neighbours (magnifier, cog, speaker, trunk). Deliberately
+         under-detailed: the fold crease and a third line both turned to mud at 20px. -->
+    <svg class="corner-link-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M4 4 H14 L20 10 V16 H10 L5 19.5 L6.5 16 H4 Z" />
+      <path d="M7.5 8.5 H11" />
+      <path d="M7.5 12.5 H14.5" />
+    </svg>
+    <span class="corner-link-label">feedback</span>
+  </a>
+  <a id="searchLink" class="corner-link search-link" href="search/" title="Swift To The Lyric: search every lyric">
+    <svg class="corner-link-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+      <circle cx="11" cy="11" r="7" /><line x1="16.5" y1="16.5" x2="21" y2="21" />
+    </svg>
+    <span class="corner-link-label">search every lyric</span>
+  </a>
+</div>
 <button id="settingsGear" class="settings-gear" aria-label="Settings" title="Settings">
   <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
     <circle cx="12" cy="12" r="3"/>
