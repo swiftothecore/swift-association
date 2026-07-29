@@ -767,7 +767,7 @@ export const DARK_SIDE_TODO = [];
 /* ---------- Impostor challenge — decoy word pool ----------
    Plausibly-Swiftian words (romantic / aesthetic / literary vocabulary) that appear in
    ZERO songs. Verified against the whole corpus with the game's own matching core
-   (scripts/mine_impostors.py imports js/match.js's logic) so none can stem-match a real
+   (scripts/words/mine_impostors.py imports js/match.js's logic) so none can stem-match a real
    lyric or title — a decoy is always a fair "flag me". Re-run the miner if songs.json grows.
    IMPOSTOR_COUNT of a run's 13 pages are impostors (round 1 is always real — a gentle open). */
 export const IMPOSTOR_COUNT = 4;
