@@ -5163,12 +5163,11 @@
      start page at opposing angles the way postage lands on an envelope. The album
      sheet is upright, the guest shelf is on its side; the orientation change is what
      makes them read as a pair rather than one element repeated.
-     The markup is generated (scripts/make_stamps.py) because the guest stamp carries
-     a ~7k-character traced silhouette. Only the album sheet is a control — the guest
-     stamp is inert until the shelf itself exists, so it is a <span>, aria-hidden, and
-     takes no pointer events. */
+     The markup is generated (scripts/stamps/make_stamps.py) because the guest stamp
+     carries a ~7k-character traced silhouette. Both stamps are controls: the album
+     sheet opens album focus, the guest one franks you through to the guest shelf. */
   /* the block is a 108px-wide overlay pinned into the corner, so it stays
-     transparent to the pointer and only the one real control takes clicks —
+     transparent to the pointer and only the stamps themselves take clicks —
      otherwise it would swallow taps on whatever the mode picker wraps underneath
      it at narrow widths */
   .franking {
@@ -5176,7 +5175,14 @@
     display: flex; align-items: flex-start; line-height: 0;
     pointer-events: none;
   }
-  .stamp { display: block; padding: 0; margin: 0; line-height: 0; background: none; border: none; }
+  /* --stamp-rot is each die's resting angle; the hover/active rules lean off it so a
+     stamp keeps its own orientation while sharing one set of affordances */
+  .stamp {
+    display: block; padding: 0; margin: 0; line-height: 0; background: none; border: none;
+    cursor: pointer; pointer-events: auto;
+    transform: rotate(var(--stamp-rot));
+    transition: transform 0.18s ease, filter 0.18s ease;
+  }
   .stamp-art {
     display: block; width: 100%; height: auto;
     filter: drop-shadow(0 2px 3px rgba(43, 39, 34, 0.28));
@@ -5185,27 +5191,20 @@
   .stamp-cap {
     font-family: var(--type); font-weight: 700; letter-spacing: 0.6px;
   }
-  .stamp--focus {
-    width: 50px; cursor: pointer; pointer-events: auto;
-    transform: rotate(-4deg);
-    transition: transform 0.18s ease, filter 0.18s ease;
-  }
-  .stamp--guest {
-    width: 62px; margin-left: -4px;
-    transform: rotate(3.5deg);
-  }
-  .stamp--focus:hover, .stamp--focus:focus-visible {
-    transform: rotate(-8deg) scale(1.07);
+  .stamp--focus { --stamp-rot: -4deg; --stamp-lean: -8deg; width: 50px; }
+  .stamp--guest { --stamp-rot: 3.5deg; --stamp-lean: 7.5deg; width: 62px; margin-left: -4px; }
+  .stamp:hover, .stamp:focus-visible {
+    transform: rotate(var(--stamp-lean)) scale(1.07);
     outline: none;
   }
-  .stamp--focus:hover .stamp-art, .stamp--focus:focus-visible .stamp-art {
+  .stamp:hover .stamp-art, .stamp:focus-visible .stamp-art {
     filter: drop-shadow(0 4px 7px rgba(43, 39, 34, 0.34));
   }
-  .stamp--focus:focus-visible .stamp-art { outline: 1.5px dashed var(--ink-soft); outline-offset: 3px; }
-  .stamp--focus:active { transform: rotate(-4deg) scale(0.97); }
-  [data-reduce-motion="true"] .stamp--focus { transition: none; }
-  [data-reduce-motion="true"] .stamp--focus:hover,
-  [data-reduce-motion="true"] .stamp--focus:focus-visible { transform: rotate(-4deg); }
+  .stamp:focus-visible .stamp-art { outline: 1.5px dashed var(--ink-soft); outline-offset: 3px; }
+  .stamp:active { transform: rotate(var(--stamp-rot)) scale(0.97); }
+  [data-reduce-motion="true"] .stamp { transition: none; }
+  [data-reduce-motion="true"] .stamp:hover,
+  [data-reduce-motion="true"] .stamp:focus-visible { transform: rotate(var(--stamp-rot)); }
   @media (max-width: 480px) {
     .franking { top: 9px; right: 9px; }
     .stamp--focus { width: 38px; }
