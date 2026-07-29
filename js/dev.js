@@ -204,6 +204,9 @@ export function initDev(api) {
         btn("lock all", () => { api.seed.lockAch(); toast("achievements cleared"); }, "warn")),
     row(achSel, btn("fire", () => api.seed.fireAch(achSel.value)),
         btn("remove", () => { api.seed.removeAch(achSel.value); toast("achievement removed"); }, "warn")),
+    // Stocks the results band's charm half: fire enough at once to push it past its cap.
+    row(btn("fire 8 (recap band)", () => toast(api.seed.fireBatch(8) + " charms fired — now end a game")),
+        btn("fire 2", () => toast(api.seed.fireBatch(2) + " charms fired"))),
     row(nameInput, btn("set name", () => { if (nameInput.value.trim()) { api.seed.setName(nameInput.value.trim()); toast("name set"); } }))));
 
   // ---- Skills & Mastery ------------------------------------------------------

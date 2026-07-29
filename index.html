@@ -43,7 +43,7 @@ if (location.pathname.endsWith('/index.html')) {
 <link rel="preload" href="fonts/courierprime-400-latin.woff2" as="font" type="font/woff2" crossorigin />
 <link rel="preload" href="fonts/courierprime-700-latin.woff2" as="font" type="font/woff2" crossorigin />
 <link rel="preload" href="fonts/courierprime-italic-latin.woff2" as="font" type="font/woff2" crossorigin />
-  <link rel="stylesheet" href="styles.css?v=50" />
+  <link rel="stylesheet" href="styles.css?v=51" />
 </head>
 <body data-era="gold">
 <!-- Hand-drawn wobble for the penned achievement charms. Referenced by .charm svg
@@ -1127,9 +1127,15 @@ if (location.pathname.endsWith('/index.html')) {
          page a player most often wants (play again) never scrolls out of reach. -->
     <div id="verseAnthology" class="verse-anthology" style="display:none;"></div>
 
-    <div id="resultSkills" class="skills-recap" style="display:none;"></div>
+    <!-- Skills and charms share ONE band, side by side, so the recap stays a single
+         horizontal strip however many of each a game earned. Either half can be empty
+         (a daily replay folds no xp; plenty of games unlock nothing), in which case the
+         survivor takes the full width and the band's own rules do the framing. -->
+    <div id="recapBand" class="recap-band" style="display:none;">
+      <div id="resultSkills" class="skills-recap" style="display:none;"></div>
 
-    <div id="resultAchievements" class="ach-recap" style="display:none;"></div>
+      <div id="resultAchievements" class="ach-recap" style="display:none;"></div>
+    </div>
 
     <div class="see-also see-also--row">
       <button id="viewRecordsBtn" class="nav-card" data-tip="records · your best runs" data-era-tint="gold">

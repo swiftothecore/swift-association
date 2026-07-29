@@ -1975,23 +1975,54 @@ function renderVerseAnthology() {
   el.style.display = "";
 }
 
-const ACH_RECAP_SHOWN = 4;   // unlock chips shown before "+N more" points at the collection
+// The recap band frames itself, so it has to know when both its halves went quiet: two
+// hidden children would otherwise leave a pair of rules around nothing. Called at the end
+// of both renderers, since the two run in either order across the end paths.
+function syncRecapBand() {
+  const band = $("recapBand");
+  if (!band) return;
+  const live = [...band.children].filter((c) => c.style.display !== "none");
+  band.style.display = live.length ? "" : "none";
+  band.classList.toggle("recap-band--solo", live.length === 1);
+}
+
+const ACH_RECAP_SHOWN = 5;   // unlock charms shown before "+N" points at the collection
+// (5, not 6: six charms plus the overflow count wrap to a second line in the band's half-width column)
 function renderResultRecap() {
   const el = $("resultAchievements");
   if (!el) return;
   const ids = [...new Set(newlyUnlocked)].filter((id) => ACH_BY_ID[id] && earnedAchievements[id]);
-  if (!ids.length) { el.style.display = "none"; el.innerHTML = ""; return; }
+  if (!ids.length) { el.style.display = "none"; el.innerHTML = ""; syncRecapBand(); return; }
+  // The charms carry no name of their own here: at this size six names would fill the
+  // column and blow the band's height out. The names read underneath as one handwritten
+  // line instead, and each charm keeps its name in the tooltip and its aria-label.
   const chips = ids.slice(0, ACH_RECAP_SHOWN).map((id) => {
     const a = ACH_BY_ID[id];
-    return `<button type="button" class="ach-chip" data-tip="${escapeHtml(a.desc)}" data-tip-delay="120">${charmMarkup(a.icon, achColor(a))}<span class="nm">${escapeHtml(a.name)}</span></button>`;
+    return `<button type="button" class="ach-chip" aria-label="${escapeHtml(a.name)}" ` +
+      `data-tip="${escapeHtml(a.name)} · ${escapeHtml(a.desc)}" data-tip-delay="120">${charmMarkup(a.icon, achColor(a))}</button>`;
   }).join("");
   const extra = ids.length > ACH_RECAP_SHOWN
-    ? `<button type="button" class="ach-chip ach-chip--more">+${ids.length - ACH_RECAP_SHOWN} more →</button>`
+    ? `<button type="button" class="ach-chip--more">+${ids.length - ACH_RECAP_SHOWN} →</button>`
     : "";
-  el.innerHTML = `<div class="ach-recap-row"><span class="sr-lab">newly unlocked</span>${chips}${extra}</div>`;
+  el.innerHTML = `<p class="sr-lab ach-recap-lab">newly unlocked · ${ids.length}</p>` +
+    `<div class="ach-recap-row">${chips}${extra}</div>` +
+    `<p class="ach-recap-names">${escapeHtml(unlockNameLine(ids))}</p>`;
   el.style.display = "";
   // tapping any charm (or the overflow count) jumps to the full Charm Collection
-  el.querySelectorAll(".ach-chip").forEach((c) => c.addEventListener("click", () => openAchievements("results")));
+  el.querySelectorAll(".ach-chip, .ach-chip--more").forEach((c) => c.addEventListener("click", () => openAchievements("results")));
+  syncRecapBand();
+}
+
+// "Word For Word, Wordsmith and Getaway Car" — or, past three, "…and 5 more". Reads as a
+// sentence under the charm row so an unlock is still legible without a hover.
+const ACH_NAMES_SHOWN = 3;
+function unlockNameLine(ids) {
+  const names = ids.map((id) => ACH_BY_ID[id].name);
+  if (names.length > ACH_NAMES_SHOWN) {
+    return `${names.slice(0, ACH_NAMES_SHOWN).join(", ")} and ${names.length - ACH_NAMES_SHOWN} more`;
+  }
+  if (names.length === 1) return names[0];
+  return `${names.slice(0, -1).join(", ")} and ${names[names.length - 1]}`;
 }
 
 // The results-screen skills recap: what each skill earned this game, plus a live Mastery
@@ -2003,14 +2034,14 @@ function renderSkillsRecap() {
   if (!el) return;
   const fold = lastSkillFold;
   const hideForDaily = gameType === "daily" && settings.hideDailyScore;  // don't leak how the day went
-  if (!fold || !fold.res || hideForDaily) { el.style.display = "none"; el.innerHTML = ""; return; }
+  if (!fold || !fold.res || hideForDaily) { el.style.display = "none"; el.innerHTML = ""; syncRecapBand(); return; }
   const { delta, res } = fold;
 
   const levelTo = {};
   for (const up of res.levelUps) levelTo[up.id] = up.to;
   const gained = SKILLS.filter((sk) => (delta[sk.id] || 0) > 0);
   const masteryMoment = res.masteryJustUnlocked || !!res.masteryUp;
-  if (!gained.length && !masteryMoment) { el.style.display = "none"; el.innerHTML = ""; return; }
+  if (!gained.length && !masteryMoment) { el.style.display = "none"; el.innerHTML = ""; syncRecapBand(); return; }
 
   const items = gained.map((sk) => {
     const up = levelTo[sk.id];
@@ -2020,11 +2051,16 @@ function renderSkillsRecap() {
       `<span class="sr-xp">+${delta[sk.id]}${up ? ` · lv ${up}` : ""}</span></span>`;
   }).join("");
 
-  // Mastery line. The full live bar is reserved for a mastery MOMENT (the unlock or a
+  // Mastery. The big stacked bar is reserved for a mastery MOMENT (the unlock or a
   // level-up, where celebrateMastery lands on top of it); ordinary games get a single
-  // typewriter line so the recap stays a margin note, not a section.
+  // hairline row — label, thin bar, count — sitting under the skills so the whole half
+  // stays one block rather than growing a section of its own.
   const m = res.mastery;
   let mastery;
+  const mrow = (lab, val, pct, cls) =>
+    `<div class="sr-mrow${cls ? ` ${cls}` : ""}"><span>${lab}</span>` +
+    `<div class="ms-bar sr-mbar${cls === "maxed" ? " maxed" : ""}"><i style="width:${pct}%"></i></div>` +
+    `<span>${val}</span></div>`;
   if (masteryMoment) {
     const lvl = masteryLevelFromXp(m.masteryXp);
     if (lvl >= MASTERY_MAX_LEVEL) {
@@ -2041,18 +2077,25 @@ function renderSkillsRecap() {
   } else if (isMasteryUnlocked(m)) {
     const lvl = masteryLevelFromXp(m.masteryXp);
     if (lvl >= MASTERY_MAX_LEVEL) {
-      mastery = `<div class="sr-mline">mastery · level ${lvl} · max</div>`;
+      mastery = mrow(`mastery lv ${lvl}`, "max", 100, "maxed");
     } else {
       const cur = masteryXpForLevel(lvl), next = masteryXpForLevel(lvl + 1);
-      mastery = `<div class="sr-mline">mastery · level ${lvl} · ${m.masteryXp - cur} / ${next - cur} to ${lvl + 1}</div>`;
+      const pct = Math.max(0, Math.min(100, ((m.masteryXp - cur) / (next - cur)) * 100));
+      mastery = mrow(`mastery lv ${lvl}`, `${m.masteryXp - cur} / ${next - cur}`, pct.toFixed(1));
     }
   } else {
-    mastery = `<div class="sr-mline">mastery locked · ${totalSkillLevels(m)} / ${MASTERY_GATE} skill levels</div>`;
+    const lv = totalSkillLevels(m);
+    mastery = mrow("mastery", `${lv} / ${MASTERY_GATE}`, ((lv / MASTERY_GATE) * 100).toFixed(1), "locked");
   }
 
   el.innerHTML =
-    (items ? `<div class="sr-line"><span class="sr-lab">skills</span>${items}</div>` : "") + mastery;
+    (items ? `<p class="sr-lab">skills</p><div class="sr-grid">${items}</div>` : "") + mastery;
   el.style.display = "";
+  syncRecapBand();
+  // A mastery moment gets the whole band's width: the celebration banner and its sparkle
+  // burst are the loudest thing on the results card and should not be squeezed into a half.
+  const band = $("recapBand");
+  if (band) band.classList.toggle("recap-band--moment", masteryMoment);
 
   celebrateMastery(res, el);
 }
@@ -14692,6 +14735,14 @@ function buildDevApi() {
     seed: { records: devSeedRecords, history: devSeedHistory, tally: devSeedTally,
             unlockAch: devUnlockAllAch, lockAch: devLockAllAch,
             fireAch: (id) => unlock(id),
+            // Fire N still-unearned charms into THIS game's unlock list, so the results
+            // band's charm half can be seen at its overflow width without playing the
+            // twenty games it would otherwise take to earn six at once.
+            fireBatch: (n) => {
+              const pool = ACHIEVEMENTS.filter((a) => !earnedAchievements[a.id]).slice(0, n);
+              pool.forEach((a) => unlock(a.id));
+              return pool.length;
+            },
             removeAch: (id) => { if (earnedAchievements[id]) { delete earnedAchievements[id]; saveAchievements(earnedAchievements); } },
             setName: (n) => { settings.playerName = setPlayerName(n); } },
     // Resets
