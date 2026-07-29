@@ -180,6 +180,34 @@ export const ALBUM_FOCUS_TARGET = 9;                           // score ≥ this
 // recordAlbumFocusRun). Lyricist (recall by lyric line) ranks top as the "by heart" flex.
 export const DIFF_RANK = { relaxed: 0, easy: 1, medium: 2, hard: 3, ultra: 4, lyricist: 5 };
 
+/* ---------- Guest shelf ----------
+   Other artists as opt-in catalogues, NEVER blended into Taylor's pool: a blended second
+   catalogue makes every prompt easier (more valid answers), invalidates the rarity tunings
+   words.json derives from a 287-song corpus, and turns "not in the catalogue" from a reliable
+   "not a Taylor song" into an ambiguous shrug. So a guest is its own catalogue, played on its
+   own, the way Album Focus already points the same machinery at a 12-song pool.
+
+   A guest's SONGS AND WORDS ARE NOT HERE. They live in one file per guest under guests/,
+   fetched on demand by loadGuest (app.js) the first time the shelf needs their counts —
+   songs.json is already ~1MB, and a player who never opens the shelf should never pay for it.
+   This list carries only what the shelf itself must draw before the file arrives: the name,
+   where to fetch it, and the ink. Colour and mood only — no album art, ever.
+
+   GUEST_SHELF_SLOTS is how many hangers the rail holds. Slots beyond GUESTS render as bare
+   rings: honest about the room left, without promising a name that doesn't exist yet. */
+export const GUEST_SHELF_SLOTS = 10;
+export const GUESTS = [
+  {
+    id: "olivia-rodrigo",
+    name: "Olivia Rodrigo",
+    file: "guests/olivia-rodrigo.json",
+    // pass ink: band gradient (deep → accent), the strap, the name, and the three
+    // record ticks. Violet, which is SOUR/GUTS as a mood and nothing more.
+    ink: { deep: "#2f1c47", accent: "#7a55b0", strap: "#5b3c88", pen: "#4a2f6b",
+           ticks: ["#8e7bbf", "#6b4a95", "#3d2a5c"] },
+  },
+];
+
 /* ---------- Adaptive mode ----------
    A third gameType beside Classic and Infinite. A fixed 13-round run where word RARITY
    alone floats with live performance, on a visible level. The level maps straight onto the

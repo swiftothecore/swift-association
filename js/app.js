@@ -17,6 +17,7 @@ import {
   BOTH_WORDS, BOTH_MIN_SONGS, BOTH_PARTNER_TRIES, BOTH_REVEAL_SONGS,
   PRESS_RIDE_STEP, PRESS_CHARM_RIDE, RISK_MAX_STAKE, RISK_TOKENS, RISK_TOKEN_VALUE,
   ALBUM_FOCUS_DIFFS, ALBUM_FOCUS_TARGET,
+  GUEST_SHELF_SLOTS, GUESTS,
   ADAPTIVE_BUCKETS, ADAPTIVE_LEVELS, ADAPT_MAX_LEVEL, ADAPT_START_LEVEL, ADAPT_PROMO_STREAK, ADAPT_NODROP_LEVEL,
   CUSTOM_SECONDS_MIN, CUSTOM_SECONDS_MAX, CUSTOM_SECONDS_TYPED_MAX, CUSTOM_HINT_MAX,
   CUSTOM_HINT_TYPED_MAX, CUSTOM_HINT_UNLIMITED, CUSTOM_POOLS,
@@ -611,6 +612,7 @@ const screens = {
   bonusplay: $("screen-bonusplay"),
   songbook: $("screen-songbook"),
   albumfocus: $("screen-albumfocus"),
+  guests: $("screen-guests"),
   mastery: $("screen-mastery"),
 };
 function showScreen(name) {
@@ -4551,6 +4553,212 @@ function renderAlbumDetail(album) {
     b.addEventListener("click", () => { afSelectedDiff = b.dataset.diff; renderAlbumDetail(album); }));
   const pb = el.querySelector("[data-play]");
   if (pb) pb.addEventListener("click", () => startAlbumFocus(pb.dataset.play, afSelectedDiff));
+}
+
+/* ---------- Guest shelf ----------
+   The destination the corner guest stamp franks you through to: other artists' catalogues,
+   hung on a rail as backstage passes. GUESTS carries only the name and the ink; every number
+   on a pass (songs, records, prompt words) comes from the guest's own file, fetched the first
+   time the shelf is opened and cached for the session. Nothing about a guest is hardcoded
+   here, so growing guests/olivia-rodrigo.json changes the pass without touching this file.
+
+   The remaining slots are drawn as bare rings. An empty hanger is honest — it shows the rail
+   has room without inventing a name we cannot play. */
+// The hardware, shared by every hanger: the split ring the strap loops through (drawn as
+// three ellipses — the metal itself, plus a darker edge either side of it) and the notebook
+// star printed on the pass band.
+const GUEST_RING_SHAPES =
+  `<ellipse class="ring" cx="48" cy="19" rx="12" ry="13.5"/>` +
+  `<ellipse class="ring-edge" cx="48" cy="19" rx="14.7" ry="16.2"/>` +
+  `<ellipse class="ring-edge" cx="48" cy="19" rx="9.3" ry="10.8"/>`;
+const GUEST_STAR =
+  `<svg class="guest-band-star" viewBox="0 0 24 24" aria-hidden="true">` +
+  `<path d="M12 1.6l2.7 6.1 6.6.6-5 4.4 1.5 6.5L12 16.3 6.2 19.7l1.5-6.5-5-4.4 6.6-.6z"/></svg>`;
+
+let guestBackTarget = "start";        // where the shelf's back link returns to
+let guestSelected = null;             // id of the pass whose detail is open, or null
+const guestFiles = new Map();         // id -> Promise<catalogue json>, one fetch per session
+
+// Lazy-load a guest's catalogue. Rejections are swallowed by the caller (the pass just keeps
+// its em-dashes) but NOT cached as a failure, so a flaky first fetch can be retried by
+// reopening the shelf.
+function loadGuest(id) {
+  const guest = GUESTS.find((g) => g.id === id);
+  if (!guest) return Promise.reject(new Error("unknown guest " + id));
+  if (!guestFiles.has(id)) {
+    guestFiles.set(id, fetch(guest.file)
+      .then((r) => { if (!r.ok) throw new Error(guest.file + " " + r.status); return r.json(); })
+      .catch((err) => { guestFiles.delete(id); throw err; }));
+  }
+  return guestFiles.get(id);
+}
+
+// The counts a pass shows, derived from the file rather than stored anywhere.
+function guestCounts(cat) {
+  const albums = Array.isArray(cat.albums) ? cat.albums : [];
+  return {
+    records: albums.length,
+    songs: albums.reduce((n, a) => n + (a.songs ? a.songs.length : 0), 0),
+    words: Array.isArray(cat.words) ? cat.words.length : 0,
+  };
+}
+
+// How many passes hang from one rail. A pass never shrinks past the point where its own name
+// is readable, so a narrow page gets MORE rails rather than smaller passes. The count comes
+// from the notebook card's real content width (NOT the window: the card is narrower than the
+// viewport, and its left margin gutter is wide), so it stays right at any page width.
+const GUEST_PASS_W = 128, GUEST_RAIL_GAP = 14;
+function guestRailWidth() {
+  const el = $("guestBody");
+  if (el && el.clientWidth) return el.clientWidth;
+  // Rendered before the flip, so the shelf is still display:none and measures 0. Every screen
+  // is the same card, so borrow the width of whichever one is currently visible.
+  const active = Object.values(screens).find((s) => s.classList.contains("active"));
+  if (active && active.clientWidth) {
+    const cs = getComputedStyle(active);
+    return active.clientWidth - parseFloat(cs.paddingLeft || 0) - parseFloat(cs.paddingRight || 0);
+  }
+  return window.innerWidth;
+}
+function guestPerRail() {
+  const fit = Math.floor((guestRailWidth() + GUEST_RAIL_GAP) / (GUEST_PASS_W + GUEST_RAIL_GAP));
+  return Math.max(2, Math.min(5, fit));
+}
+
+function openGuestShelf(from) {
+  guestBackTarget = from;
+  renderGuestShelfPage();
+  flipAwayToScreen("guests");
+}
+
+function renderGuestShelfPage() {
+  const perRail = guestPerRail();
+  let rails = "";
+  for (let i = 0; i < GUEST_SHELF_SLOTS; i += perRail) {
+    let pegs = "";
+    for (let s = i; s < Math.min(i + perRail, GUEST_SHELF_SLOTS); s++) {
+      pegs += GUESTS[s] ? guestPassMarkup(GUESTS[s], s) : guestEmptyMarkup();
+    }
+    rails += `<div class="guest-rail">${pegs}</div>`;
+  }
+
+  const el = $("guestBody");
+  el.innerHTML =
+    `<div class="chall-head">` +
+      `<div class="chall-head-sub">visiting catalogues</div>` +
+      `<span class="chall-tokens">on the rail <b>${GUESTS.length}</b>/${GUEST_SHELF_SLOTS}</span>` +
+    `</div>` +
+    `<div class="guest-rack">${rails}</div>` +
+    `<div class="chall-detail guest-detail" id="guestDetail"></div>`;
+
+  el.querySelectorAll(".guest-pass").forEach((b) =>
+    b.addEventListener("click", () => selectGuest(b.dataset.guest)));
+
+  // Fill the counts in as the files land. Each pass renders with em-dashes first so the rail
+  // never waits on the network to draw.
+  GUESTS.forEach((g) => {
+    loadGuest(g.id)
+      .then((cat) => { paintGuestCounts(g.id, guestCounts(cat)); })
+      .catch(() => {});
+  });
+
+  selectGuest(guestSelected || (GUESTS[0] && GUESTS[0].id) || null);
+}
+
+// One hanger: a ring, a woven strap of its own length, and the pass. The strap length and
+// tilt are derived from the slot so the rail reads as hung rather than laid out on a grid,
+// and so a given guest always hangs the same way.
+function guestPassMarkup(g, slot) {
+  const len = 96 + ((slot * 37) % 5) * 17;
+  const tilt = (((slot * 53) % 7) - 3) * 0.7;
+  const ticks = g.ink.ticks.map((c) => `<i style="background:${c}"></i>`).join("");
+  return (
+    `<span class="guest-peg" style="--g-deep:${g.ink.deep};--g-accent:${g.ink.accent};` +
+      `--g-strap:${g.ink.strap};--g-pen:${g.ink.pen};">` +
+      guestStrapMarkup(len) +
+      `<button type="button" class="guest-pass" data-guest="${escapeHtml(g.id)}"` +
+        ` style="--tilt:${tilt.toFixed(1)}deg" aria-label="${escapeHtml(g.name)}: guest catalogue">` +
+        `<span class="guest-slot" aria-hidden="true"></span>` +
+        `<span class="guest-print">` +
+          `<span class="guest-band">guest${GUEST_STAR}</span>` +
+          `<span class="guest-face">` +
+            `<span class="guest-name">${escapeHtml(g.name).replace(" ", "<br>")}</span>` +
+            `<span class="guest-ticks" aria-hidden="true">${ticks}</span>` +
+            `<span class="guest-line"><span data-count="songs">— songs</span></span>` +
+            `<span class="guest-stub"></span>` +
+          `</span>` +
+        `</span>` +
+      `</button>` +
+    `</span>`
+  );
+}
+
+// An empty hanger: the ring and nothing on it.
+function guestEmptyMarkup() {
+  return `<span class="guest-peg guest-peg--empty" aria-hidden="true">` +
+    `<svg class="guest-strap guest-strap--bare" viewBox="0 0 96 44" aria-hidden="true">${GUEST_RING_SHAPES}</svg></span>`;
+}
+
+function guestStrapMarkup(len) {
+  const mid = 30 + (len - 48) * 0.3, low = 30 + (len - 48) * 0.66;
+  return (
+    `<svg class="guest-strap" viewBox="0 0 96 ${len}" style="height:${Math.round(len * 0.66)}px" aria-hidden="true">` +
+      GUEST_RING_SHAPES +
+      `<path class="webbing" d="M43 30 C 28 ${mid}, 25 ${low}, 31 ${len - 18} L42 ${len - 18} C 36 ${low}, 36 ${mid}, 50 34 Z"/>` +
+      `<path class="webbing webbing--dark" d="M53 30 C 68 ${mid}, 71 ${low}, 65 ${len - 18} L54 ${len - 18} C 60 ${low}, 60 ${mid}, 46 34 Z"/>` +
+      `<rect class="crimp" x="31" y="${len - 22}" width="34" height="15" rx="2"/>` +
+    `</svg>`
+  );
+}
+
+// Drop the real numbers onto a pass once its file has landed.
+function paintGuestCounts(id, counts) {
+  const body = $("guestBody");
+  if (!body) return;
+  const pass = body.querySelector(`.guest-pass[data-guest="${CSS.escape(id)}"]`);
+  if (pass) {
+    const songs = pass.querySelector('[data-count="songs"]');
+    if (songs) songs.textContent = `${counts.songs} songs`;
+  }
+  if (guestSelected === id) renderGuestDetail(id);
+}
+
+function selectGuest(id) {
+  guestSelected = id;
+  const body = $("guestBody");
+  if (!body) return;
+  body.querySelectorAll(".guest-pass").forEach((b) =>
+    b.classList.toggle("selected", b.dataset.guest === id));
+  renderGuestDetail(id);
+}
+
+// The pass turned over: what is actually in this catalogue. The record list comes straight
+// from the file, so it can never drift from what a guest round would draw on.
+function renderGuestDetail(id) {
+  const el = $("guestDetail");
+  if (!el) return;
+  const g = GUESTS.find((x) => x.id === id);
+  if (!g) { el.innerHTML = ""; return; }
+
+  loadGuest(id).then((c) => {
+    if (guestSelected !== id || !$("guestDetail")) return;
+    const counts = guestCounts(c);
+    const records = (c.albums || []).map((a) =>
+      `<li><span class="guest-rec-name">${escapeHtml(a.album)}</span>` +
+      `<span class="guest-rec-n">${(a.songs || []).length}</span></li>`).join("");
+    $("guestDetail").innerHTML =
+      `<div class="guest-detail-head" style="--g-pen:${g.ink.pen}">` +
+        `<span class="guest-detail-name">${escapeHtml(g.name)}</span>` +
+        `<span class="guest-detail-nums">${counts.songs} songs · ${counts.records} records · ${counts.words} words</span>` +
+      `</div>` +
+      `<ul class="guest-recs">${records}</ul>` +
+      `<p class="guest-detail-note">on the shelf, not yet on the board</p>`;
+  }).catch(() => {
+    if (guestSelected !== id || !$("guestDetail")) return;
+    $("guestDetail").innerHTML =
+      `<p class="guest-detail-note">couldn't fetch this catalogue — check your connection and reopen the shelf</p>`;
+  });
+  if (!el.innerHTML) el.innerHTML = `<p class="guest-detail-note">reading the sleeve…</p>`;
 }
 
 /* ---------- Custom mode start-row (the active preset summary + Change) ----------
@@ -13808,6 +14016,27 @@ function buildDevApi() {
       open: () => openAlbumFocus("start"),
       reset: () => { resetAlbumFocus(); if ($("albumFocusBody")) renderAlbumFocusPage(); },
     },
+    // Guest shelf. A guest's numbers are never stored — they are read out of its file — so
+    // there is nothing here to seed or reset. What IS worth reaching is the fetch itself:
+    // `counts` proves a catalogue parses and reports what the pass will draw, and `drop`
+    // clears the session cache so the next open re-fetches (the only way to re-test the
+    // loading state, or a file you just edited, without a reload).
+    guest: {
+      list: () => GUESTS.map((g) => ({ id: g.id, name: g.name, file: g.file })),
+      open: () => openGuestShelf("start"),
+      slots: () => ({ filled: GUESTS.length, total: GUEST_SHELF_SLOTS, perRail: guestPerRail() }),
+      load: (id) => loadGuest(id || (GUESTS[0] && GUESTS[0].id)),
+      counts: (id) => loadGuest(id || (GUESTS[0] && GUESTS[0].id)).then(guestCounts),
+      // Everything the shelf believes about a catalogue, checked against the file: records
+      // with their song counts, plus the per-catalogue bucket thresholds a guest round would
+      // use (which are deliberately NOT the hardcoded ones tuned for 287 songs).
+      inspect: (id) => loadGuest(id || (GUESTS[0] && GUESTS[0].id)).then((c) => ({
+        ...guestCounts(c),
+        buckets: c.buckets,
+        records: (c.albums || []).map((a) => [a.album, (a.songs || []).length]),
+      })),
+      drop: (id) => { if (id) guestFiles.delete(id); else guestFiles.clear(); return guestFiles.size; },
+    },
     // Wax seals. The aged and dark copies are derived here in app.js by string-swapping
     // colours, so the dev panel's seal gallery can't reach them through config.js alone.
     seals: {
@@ -14264,6 +14493,18 @@ async function init() {
   $("bonusQuitBtn").addEventListener("click", () => leaveBonusGame());
   $("albumFocusBtn").addEventListener("click", () => openAlbumFocus("start"));
   $("albumFocusBackBtn").addEventListener("click", () => backToScreen(albumFocusBackTarget));
+  $("guestShelfBtn").addEventListener("click", () => openGuestShelf("start"));
+  $("guestBackBtn").addEventListener("click", () => backToScreen(guestBackTarget));
+  // The rail's pass-per-rail count is a layout decision made in markup (a pass cannot shrink
+  // past its own name), so a width change that crosses a breakpoint has to re-render. Only
+  // while the shelf is the visible screen, and only when the count actually changes.
+  let guestRailCount = guestPerRail();
+  window.addEventListener("resize", () => {
+    const next = guestPerRail();
+    if (next === guestRailCount) return;
+    guestRailCount = next;
+    if (screens.guests.classList.contains("active")) renderGuestShelfPage();
+  });
   $("againBtn").addEventListener("click", () => {
     applyEra("gold");
     renderStartPickers();

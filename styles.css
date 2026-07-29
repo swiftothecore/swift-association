@@ -1874,6 +1874,149 @@
   .af-diff:hover { background: rgba(43,39,34,0.06); }
   .af-diff.is-on { color: var(--paper); background: var(--ink); border-color: var(--ink); }
 
+  /* ---------- Guest shelf — catalogues hung as backstage passes ----------
+     The one place in the notebook where another artist's name appears, so it is deliberately
+     an object brought IN rather than a page of the book: a rail, a split ring, a woven strap
+     and a printed card in a laminate pouch. Warm stock and typewriter fields keep it on the
+     desk instead of tipping into event-plastic.
+
+     Sizing rule: the pass never shrinks past the point where its own name is readable. Five
+     across only fits the full page width, so narrower viewports get MORE rails rather than
+     smaller passes — which is why guestPerRail (app.js) picks the count in markup and a
+     breakpoint crossing re-renders. Nothing here reflows the passes on its own. */
+  .guest-rack { margin: 4px 0 6px; }
+  .guest-rail {
+    position: relative; display: flex; justify-content: center; align-items: flex-start;
+    gap: 14px; padding: 6px 0 34px;
+  }
+  /* the rail itself: a turned wooden bar, lit from above */
+  .guest-rail::before {
+    content: ""; position: absolute; left: 0; right: 0; top: 4px; height: 9px;
+    border-radius: 5px;
+    background: linear-gradient(180deg, #a9884f 0%, #8a6b3c 14%, #6d4f27 62%, #4a3417 100%);
+    box-shadow: 0 4px 8px rgba(30,20,8,0.4), 0 1px 0 rgba(255,235,195,0.35) inset;
+  }
+  /* Every hanger occupies a full slot, pass or not, so the rings stay evenly spaced along the
+     rail whether the shelf holds one guest or ten. Slots may SHRINK below 128px but never
+     grow past it: the narrowest phone still wants two passes on a rail rather than one, so
+     128 is a ceiling, not a fixed size. */
+  .guest-peg {
+    position: relative; flex: 0 1 128px; min-width: 0; max-width: 128px;
+    display: flex; flex-direction: column; align-items: center;
+  }
+
+  /* hardware + webbing. The strap's viewBox height varies per hanger (so the rail reads as
+     hung, not gridded), which is why the height comes through as an inline style. */
+  .guest-strap { display: block; width: 62px; }
+  .guest-strap--bare { height: 29px; }
+  .guest-strap .ring { fill: none; stroke: url(#guestMetal); stroke-width: 5.5; }
+  .guest-strap .ring-edge { fill: none; stroke: rgba(70,64,52,0.55); stroke-width: 0.6; }
+  .guest-strap .webbing { fill: var(--g-strap, #6a6a72); }
+  .guest-strap .webbing--dark { fill: var(--g-deep, #35353c); }
+  .guest-strap .crimp { fill: url(#guestMetal); stroke: #6c6558; stroke-width: 0.7; }
+
+  /* the pass: a printed card inside a laminate pouch. The pouch is the padding — the weld
+     edge you can see around the print — and ::after is its sheen. */
+  .guest-pass {
+    position: relative; width: 100%; margin-top: -5px; padding: 5px;
+    border-radius: 6px; border: none; cursor: pointer;
+    background: linear-gradient(150deg, #fbf8f0 0%, #ece5d6 55%, #f4eee2 100%);
+    box-shadow:
+      0 12px 22px rgba(45,32,16,0.32),
+      0 2px 5px rgba(45,32,16,0.22),
+      0 0 0 1px rgba(120,100,70,0.32),
+      0 1px 0 rgba(255,255,255,0.85) inset;
+    transform: rotate(var(--tilt, 0deg));
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  .guest-pass::after {
+    content: ""; position: absolute; inset: 0; border-radius: 6px; pointer-events: none;
+    background:
+      linear-gradient(116deg, rgba(255,255,255,0.5) 0 14%, rgba(255,255,255,0.05) 30%, rgba(255,255,255,0) 46%),
+      linear-gradient(116deg, rgba(255,255,255,0) 58%, rgba(255,255,255,0.22) 63%, rgba(255,255,255,0) 68%);
+  }
+  /* --tilt is this pass's own lie on the rail, set in markup; hover keeps it and adds the
+     lift, so hovering never straightens the card */
+  .guest-pass:hover, .guest-pass:focus-visible {
+    transform: rotate(var(--tilt, 0deg)) translateY(-5px);
+    box-shadow: 0 20px 34px rgba(45,32,16,0.38), 0 2px 5px rgba(45,32,16,0.2),
+                0 0 0 1px rgba(120,100,70,0.32), 0 1px 0 rgba(255,255,255,0.85) inset;
+    z-index: 3;
+  }
+  .guest-pass:focus-visible { outline: 1.5px dashed var(--ink-soft); outline-offset: 4px; }
+  .guest-pass.selected {
+    box-shadow: 0 14px 26px rgba(45,32,16,0.36), 0 2px 5px rgba(45,32,16,0.22),
+                0 0 0 1.5px var(--g-pen, #4a2f6b), 0 1px 0 rgba(255,255,255,0.85) inset;
+  }
+  /* the punched slot the strap's crimp passes through */
+  .guest-slot {
+    position: absolute; left: 50%; top: 11px; width: 34px; height: 7px; margin-left: -17px;
+    border-radius: 4px; z-index: 2; background: #4c4133;
+    box-shadow: 0 1.5px 0 rgba(255,255,255,0.75), 0 -1px 2px rgba(0,0,0,0.35) inset;
+  }
+  .guest-print {
+    position: relative; display: block; border-radius: 2px; overflow: hidden;
+    background: linear-gradient(178deg, #fdfaf2, #f2ebdb);
+    box-shadow: 0 0 0 1px rgba(120,100,70,0.22);
+    padding-top: 22px;                     /* clearance under the punched slot */
+  }
+  .guest-band {
+    display: flex; align-items: center; justify-content: space-between; gap: 4px;
+    padding: 4px 7px;
+    background: linear-gradient(100deg, var(--g-deep, #2f2f36), var(--g-accent, #6b6b7a));
+    color: #f7f2e6; font-family: var(--type); font-size: 6.5px; letter-spacing: 1.6px;
+    text-transform: uppercase;
+  }
+  .guest-band-star { width: 8px; height: 8px; fill: #f7f2e6; opacity: 0.9; flex: none; }
+  .guest-face { display: block; padding: 9px 8px 8px; text-align: left; }
+  .guest-name {
+    display: block; font-family: var(--hand); font-weight: 700; font-size: 20px;
+    line-height: 1; color: var(--g-pen, var(--ink)); margin-bottom: 6px; min-height: 40px;
+  }
+  .guest-ticks { display: flex; gap: 2px; margin-bottom: 8px; }
+  .guest-ticks i { display: block; height: 5px; flex: 1; border-radius: 1px; }
+  .guest-line {
+    display: flex; justify-content: space-between; align-items: baseline;
+    font-family: var(--type); font-size: 7.5px; letter-spacing: 1.2px;
+    color: var(--ink-soft); text-transform: uppercase;
+    border-top: 1px solid rgba(43,39,34,0.16); padding-top: 6px;
+  }
+  /* the tear-off stub at the foot — printed, never actually torn */
+  .guest-stub {
+    position: relative; display: block; height: 26px; margin: 8px -8px -8px;
+    border-top: 1px dashed rgba(43,39,34,0.3); background: rgba(43,39,34,0.025);
+  }
+  .guest-stub::before {
+    content: "admit one"; position: absolute; left: 8px; top: 6px;
+    font-family: var(--type); font-size: 6px; letter-spacing: 1.4px;
+    text-transform: uppercase; color: var(--ink-soft); opacity: 0.75;
+  }
+
+  /* the pass turned over: what is actually in the catalogue */
+  .guest-detail-head {
+    display: flex; align-items: baseline; justify-content: space-between; gap: 12px;
+    flex-wrap: wrap; padding-bottom: 7px; margin-bottom: 10px;
+    border-bottom: 1.5px solid rgba(43,39,34,0.18);
+  }
+  .guest-detail-name { font-family: var(--hand); font-size: 26px; line-height: 1.05; color: var(--g-pen, var(--ink)); }
+  .guest-detail-nums { font-family: var(--type); font-size: 10.5px; letter-spacing: 1px; color: var(--ink-soft); }
+  .guest-recs { list-style: none; margin: 0; padding: 0; }
+  .guest-recs li {
+    display: flex; align-items: baseline; gap: 10px;
+    padding: 5px 0; border-bottom: 1px dotted rgba(43,39,34,0.22);
+    font-family: var(--type); font-size: 12px;
+  }
+  .guest-rec-name { flex: 1; min-width: 0; }
+  .guest-rec-n { color: var(--ink-soft); font-size: 10.5px; letter-spacing: 1px; }
+  .guest-detail-note {
+    margin: 12px 0 0; font-family: var(--hand); font-size: 18px;
+    color: var(--ink-soft); opacity: 0.8; transform: rotate(-0.6deg);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .guest-pass { transition: none; }
+  }
+
   /* ---------- Custom start-row — the active preset summary + Change ----------
      The mode you wrote yourself, read back to you on an index card laid on the notebook:
      its own paper stock, its own faint rules, a hard offset shadow and a slight lie to the

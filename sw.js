@@ -73,6 +73,10 @@ const ASSETS = [
   "icons/icon-search-512-maskable.png",
   "icons/apple-touch-icon-search.png",
   "icons/og-image-search.png",
+  // NOT precached, deliberately: guests/*.json. songs.json alone is ~1MB, and a player who
+  // never opens the guest shelf should never pay for a catalogue they haven't asked for. The
+  // network-first branch below still caches a guest file the first time the shelf fetches it,
+  // so it works offline from then on. Keep new guests out of this list.
 ];
 
 self.addEventListener("install", (e) => {
