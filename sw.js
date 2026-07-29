@@ -44,6 +44,11 @@ const ASSETS = [
   "js/calendar.js",
   // The desk placard's engraved count, likewise (see js/placard.js).
   "js/placard.js",
+  // The desk below the first screenful: the incident placer and the prop/mark
+  // drawings it works from. Precached together, since scatter.js imports
+  // deskprops.js and a half-cached pair would throw on an offline load.
+  "js/scatter.js",
+  "js/deskprops.js",
   // The sound palette (opt-in sfx; see js/sound.js for sources + licences).
   "sounds/correct.mp3",
   "sounds/wrong.mp3",

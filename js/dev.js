@@ -239,12 +239,29 @@ export function initDev(api) {
     row(snowBtn, rainBtn, leafBtn),
     row(penSel, btn("set pen", () => api.eggs.pen(penSel.value)))));
 
-  // ---- Scattered desk beads ----------------------------------------------------
+  // ---- The scrolling desk ------------------------------------------------------
+  // Composition tooling, because the whole thing is a judgement call: reseed to
+  // see whether the rhythm survives a different draw, "only" to judge one
+  // incident type on its own, and showcase to look at the drawings with the
+  // composition taken out of the way.
   const scDensN = num(1, 40);
-  body.append(section("desk beads",
-    row(btn("rebuild", () => { api.scatter.rebuild(); toast(api.scatter.count() + " beads"); }),
-        btn("reseed", () => { api.scatter.reseed(); toast("reseeded → " + api.scatter.count() + " beads"); })),
-    row("density", scDensN, btn("set", () => { api.scatter.density(+scDensN.value); toast(api.scatter.count() + " beads"); }))));
+  const scTypeSel = select(["", "spill", "strand", "row", "handful", "stray"], (x) => x, (x) => x || "all types");
+  const scStat = () => {
+    const s = api.scatter.stats();
+    return `${s.incidents} incidents · ${s.beads} beads · ${s.props} props · ${s.marks} marks`;
+  };
+  const scPropsBtn = btn("props", () => scPropsBtn.classList.toggle("on", api.scatter.props()));
+  const scMarksBtn = btn("marks", () => scMarksBtn.classList.toggle("on", api.scatter.marks()));
+  const scDbgBtn = btn("bands", () => scDbgBtn.classList.toggle("on", api.scatter.debug()));
+  scPropsBtn.classList.add("on");
+  scMarksBtn.classList.add("on");
+  body.append(section("desk",
+    row(btn("rebuild", () => { api.scatter.rebuild(); toast(scStat()); }),
+        btn("reseed", () => { api.scatter.reseed(); toast(scStat()); })),
+    row("density", scDensN, btn("set", () => { api.scatter.density(+scDensN.value); toast(scStat()); })),
+    row(scTypeSel, btn("only", () => { api.scatter.only(scTypeSel.value); toast(scStat()); })),
+    row(scPropsBtn, scMarksBtn, scDbgBtn),
+    row(btn("showcase", () => { api.scatter.showcase(); toast("one of everything, top to bottom"); }))));
 
   // ---- Charm icon gallery ------------------------------------------------------
   // Every achievement charm at real render size on real paper, grouped like the

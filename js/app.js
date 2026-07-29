@@ -14706,12 +14706,20 @@ function buildDevApi() {
             rain: (on) => { devForceRain = on === undefined ? !devForceRain : !!on; refreshRain(); return devForceRain; },
             leaves: (on) => { devForceLeaves = on === undefined ? !devForceLeaves : !!on; refreshLeaves(); return devForceLeaves; },
             pen: (p) => setPen(p || null) },
-    // Scattered desk beads (js/scatter.js) — cosmetic gutter spill
+    // The scrolling desk (js/scatter.js) — cosmetic gutter incidents, props and
+    // marks. All cosmetic: nothing here touches game state or storage.
     scatter: {
       rebuild: () => window.__deskScatter && window.__deskScatter.rebuild(),
       reseed: (n) => window.__deskScatter && window.__deskScatter.reseed(n),
       density: (m) => window.__deskScatter && window.__deskScatter.density(m),
       count: () => (window.__deskScatter ? window.__deskScatter.count() : 0),
+      stats: () => (window.__deskScatter ? window.__deskScatter.stats() : { beads: 0, props: 0, marks: 0, incidents: 0 }),
+      only: (t) => window.__deskScatter && window.__deskScatter.only(t),
+      types: () => (window.__deskScatter ? window.__deskScatter.types() : []),
+      props: (on) => window.__deskScatter && window.__deskScatter.props(on),
+      marks: (on) => window.__deskScatter && window.__deskScatter.marks(on),
+      debug: (on) => window.__deskScatter && window.__deskScatter.debug(on),
+      showcase: () => window.__deskScatter && window.__deskScatter.showcase(),
     },
     // Misc
     setNoLog: (on) => { devNoLog = !!on; },
