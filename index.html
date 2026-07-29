@@ -310,6 +310,70 @@ if (location.pathname.endsWith('/index.html')) {
       <path d="M211 288 L229 270 Q220.5 268.6 212.8 270.5 Q210.2 278.6 211 288 Z" fill="url(#calCurl)" stroke="#c9ba97" stroke-width="0.8" stroke-linejoin="round"/>
     </svg>
   </div>
+  <!-- LEFT: the streak placard, lying flat on the wood just below the calendar.
+       A small engraved brass plate screwed to a walnut base, seen from directly
+       above like every other prop (an upright nameplate would foreshorten to a
+       bar and give the top-down scene away). The engraving is colour-filled, so
+       the flame can burn without breaking the brass.
+       Only the object is drawn here; the numbers and the whole plaque's
+       visibility are set by js/placard.js from the daily-challenge streak, and
+       it stays hidden until that streak is at least one day.
+       Desktop-only, non-interactive. -->
+  <div class="desk-item di-placard" hidden>
+    <svg viewBox="0 0 200 108" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="plcWood" x1="0.1" y1="0" x2="0.6" y2="1">
+          <stop offset="0" stop-color="#6f4726"/><stop offset="0.5" stop-color="#573419"/><stop offset="1" stop-color="#3b230f"/>
+        </linearGradient>
+        <!-- brass reads as brass because it turns over: pale at the lit upper
+             left, a darker band through the middle, warm again at the bottom -->
+        <linearGradient id="plcBrass" x1="0.05" y1="0" x2="0.7" y2="1">
+          <stop offset="0" stop-color="#efdcaa"/><stop offset="0.28" stop-color="#d3b165"/>
+          <stop offset="0.62" stop-color="#a8842f"/><stop offset="1" stop-color="#c6a54a"/>
+        </linearGradient>
+      </defs>
+      <!-- walnut base: the wood the plate is screwed to, with its own grain and
+           a chamfered top-left edge catching the desk's upper-left light -->
+      <rect x="3" y="3" width="194" height="102" rx="7" fill="url(#plcWood)" stroke="#2b1a09" stroke-width="0.9"/>
+      <g class="plc-grain">
+        <path d="M9 16 Q70 12.5 192 15.5"/><path d="M8 27 Q80 30 191 26"/>
+        <path d="M9 89 Q90 93 192 88"/><path d="M8 99 Q90 96 191 98.5"/>
+      </g>
+      <path class="plc-chamfer" d="M8 98 Q6.5 10 12 8 Q100 5.5 190 8"/>
+      <!-- the brass plate, inset, with its engraved border rule -->
+      <rect x="15" y="13" width="170" height="82" rx="3" fill="url(#plcBrass)" stroke="#7c5e21" stroke-width="0.9"/>
+      <rect class="plc-lip" x="20.8" y="18.8" width="160" height="72" rx="2"/>
+      <rect class="plc-cut" x="20" y="18" width="160" height="72" rx="2"/>
+      <!-- slot-head brass screws, one at each corner of the plate -->
+      <g class="plc-screw">
+        <g transform="translate(26 24)"><circle r="4"/><path d="M-2.4 -1.4 L2.4 1.4"/></g>
+        <g transform="translate(174 24)"><circle r="4"/><path d="M-2.4 1.4 L2.4 -1.4"/></g>
+        <g transform="translate(26 84)"><circle r="4"/><path d="M-2.4 1.1 L2.4 -1.1"/></g>
+        <g transform="translate(174 84)"><circle r="4"/><path d="M-2.4 -1.6 L2.4 1.6"/></g>
+      </g>
+      <!-- engraved type: a pale lower-right copy is the far wall of the cut
+           catching the light, the dark copy on top is the cut itself. The
+           heading is centred by text-anchor, but the count line can't be —
+           its width moves with the number of digits — so js/placard.js writes
+           the text and slides .plc-count into the middle itself.
+           text-anchor centres the *advance* box, and letter-spacing hangs a
+           trailing gap off the last letter, so the heading's x sits half a
+           letter-space right of the midline to put the ink in the middle. -->
+      <text class="plc-lip plc-l1" x="101.9" y="44.8">DAILY STREAK</text>
+      <text class="plc-cut plc-l1" x="101.1" y="44">DAILY STREAK</text>
+      <g class="plc-count">
+        <!-- the flame, engraved into the brass and colour-filled like enamel,
+             so it can burn without a gold-on-gold mark disappearing. Drawn at
+             the size the path was struck at, then scaled into the line. -->
+        <g class="plc-flame" transform="translate(-22.9 38.9) scale(0.62)">
+          <path class="flame-body" d="M53 26 C53 38 58 40 62 45 C66 50 68 55 68 60 C68 69 61 75 52.5 75 C44 75 37 69 37 60 C37 54 41 49 44 44 C45.5 48.5 48 50 49.5 48 C52 44.5 51.5 34 53 26 Z"/>
+          <path class="flame-core" d="M54 47 C54 53 58 56 59.5 61 C61 66 58 71 52.5 71 C47.5 71 44.5 67 45.5 62.5 C46.5 58 51 54 54 47 Z"/>
+        </g>
+        <text class="plc-lip plc-l2" x="29" y="78.8"></text>
+        <text class="plc-cut plc-l2" x="28.2" y="78"></text>
+      </g>
+    </svg>
+  </div>
   <!-- LEFT: hexagonal pencil from above, set down whole beside the page:
        drawn at its real skinny proportions (barrel ~7mm at desk scale) so the
        CSS transform only rotates and flips it, never squashes it. Three shaded

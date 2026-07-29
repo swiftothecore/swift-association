@@ -43,6 +43,7 @@ import { exportBraceletCard, copyBraceletCard, buildCardSVG, fontFaceCss } from 
 import { sfx } from "./sound.js";
 import { wordRegex as wordRegexCore, extractLineWithWord as extractLineWithWordCore, highlightWord as highlightWordCore, wordVariants } from "./match.js";
 import { buildLineIndex, buildSlipContext, buildSlipPuzzle, buildNamePuzzle } from "./bonus.js";
+import { renderStreakPlacard } from "./placard.js";
 import {
   loadRecords, insertRecord, migrateRecordsFromStats, getPlayerName, setPlayerName,
   getAvatar, setAvatar,
@@ -5445,6 +5446,10 @@ function refreshDateSurfaces() {
   renderAnniversaryNote();
   renderMilestoneSticky();
   window.deskCalendar?.refresh();
+  // Moving the date moves what "today" means to the daily gate, so the button's
+  // played/unplayed coat, its countdown and the streak on the desk placard all
+  // have to be redrawn with it.
+  renderDailyButtonState();
 }
 // Dated marginalia at the top of today's page: on a real Taylor milestone (an album
 // release or her birthday) a torn slip is taped to the page, the album name tinted to its
@@ -5584,7 +5589,12 @@ function renderDailyButtonState() {
   // Inline streak under the label once played (matches the "🔥 N day streak" phrasing
   // used on the Stats and Records pages).
   let streak = btn.querySelector(".daily-streak-inline");
-  const d = !undone ? effectiveDailyStreak(todayKey()) : null;
+  const live = effectiveDailyStreak(todayKey());
+  // The desk placard runs off the same number, but shows it whether or not today's
+  // puzzle is in: a streak stays alive until the day after it was last fed, and the
+  // whole point of the plaque is standing there reminding you of that.
+  renderStreakPlacard(live);
+  const d = !undone ? live : null;
   if (d && d.current > 0) {
     if (!streak) {
       streak = document.createElement("span");
@@ -13919,9 +13929,14 @@ function buildDevApi() {
       clearProgress: () => clearDailyProgress(todayKey()),   // drop the in-progress resume record
       hasProgress: () => !!loadDailyProgress(todayKey()),
       setDate: (d) => { window.__devDate = d || null; refreshDateSurfaces(); },
-      setStreak: (current, best, lastPlayed) =>
+      // Redraws the start screen after writing, so the daily button's inline streak and
+      // the desk placard show the set number straight away — the placard is the whole
+      // reason to scrub a streak by hand, since a real 100-day one takes 100 days.
+      setStreak: (current, best, lastPlayed) => {
         saveDailyStreak({ current: current | 0, best: Math.max(best | 0, current | 0),
-          lastPlayed: lastPlayed || todayKey() }),
+          lastPlayed: lastPlayed || todayKey() });
+        renderDailyButtonState();
+      },
       // Preview an album-anniversary daily without playing it: the album the date resolves to,
       // the pool left after the rarity-bucket intersection, whether the FLOOR relax path had to
       // let hapax words back in, every pool word with its distinctiveness, and the 13 words the

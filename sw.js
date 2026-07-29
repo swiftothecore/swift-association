@@ -16,7 +16,7 @@
  * Paths are relative so the worker works at the site root (swiftassociation.com)
  * and under any project subpath, without hardcoding the origin.
  */
-const CACHE = "stta-v25";
+const CACHE = "stta-v26";
 const ASSETS = [
   "./",
   "index.html",
@@ -42,6 +42,8 @@ const ASSETS = [
   // The desk calendar draws every date itself; index.html only holds its blank
   // card. Precached so a fresh offline install can't render a dateless pad.
   "js/calendar.js",
+  // The desk placard's engraved count, likewise (see js/placard.js).
+  "js/placard.js",
   // The sound palette (opt-in sfx; see js/sound.js for sources + licences).
   "sounds/correct.mp3",
   "sounds/wrong.mp3",
