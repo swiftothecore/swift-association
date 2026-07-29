@@ -1996,33 +1996,50 @@ function renderResultRecap() {
   // The charms carry no name of their own here: at this size six names would fill the
   // column and blow the band's height out. The names read underneath as one handwritten
   // line instead, and each charm keeps its name in the tooltip and its aria-label.
-  const chips = ids.slice(0, ACH_RECAP_SHOWN).map((id) => {
+  // EVERY charm is rendered; the ones past the cap are folded away in CSS so the overflow
+  // count can unfold them in place rather than throwing the player at the collection.
+  const chips = ids.map((id, i) => {
     const a = ACH_BY_ID[id];
-    return `<button type="button" class="ach-chip" aria-label="${escapeHtml(a.name)}" ` +
+    return `<button type="button" class="ach-chip${i >= ACH_RECAP_SHOWN ? " ach-folded" : ""}" aria-label="${escapeHtml(a.name)}" ` +
       `data-tip="${escapeHtml(a.name)} · ${escapeHtml(a.desc)}" data-tip-delay="120">${charmMarkup(a.icon, achColor(a))}</button>`;
   }).join("");
-  const extra = ids.length > ACH_RECAP_SHOWN
-    ? `<button type="button" class="ach-chip--more">+${ids.length - ACH_RECAP_SHOWN} →</button>`
+  const folded = ids.length > ACH_RECAP_SHOWN;
+  const extra = folded
+    ? `<button type="button" class="ach-chip--more">+${ids.length - ACH_RECAP_SHOWN}</button>`
     : "";
   el.innerHTML = `<p class="sr-lab ach-recap-lab">newly unlocked · ${ids.length}</p>` +
     `<div class="ach-recap-row">${chips}${extra}</div>` +
-    `<p class="ach-recap-names">${escapeHtml(unlockNameLine(ids))}</p>`;
+    `<p class="ach-recap-names">${unlockNameLine(ids)}</p>`;
   el.style.display = "";
-  // tapping any charm (or the overflow count) jumps to the full Charm Collection
-  el.querySelectorAll(".ach-chip, .ach-chip--more").forEach((c) => c.addEventListener("click", () => openAchievements("results")));
+
+  // The two overflow counts ("+3" on the charms, "3 more" in the names) are one gesture:
+  // either unfolds both halves in place. Only a charm itself still leaves for the
+  // collection, which is what a player tapping a charm is actually asking for.
+  const expand = () => {
+    el.querySelectorAll(".ach-folded").forEach((c) => c.classList.remove("ach-folded"));
+    el.querySelector(".ach-chip--more")?.remove();
+    const names = el.querySelector(".ach-recap-names");
+    if (names) names.textContent = joinNames(ids);
+  };
+  el.querySelectorAll(".ach-chip--more, .ach-names-more").forEach((c) => c.addEventListener("click", expand));
+  el.querySelectorAll(".ach-chip").forEach((c) => c.addEventListener("click", () => openAchievements("results")));
   syncRecapBand();
 }
 
-// "Word For Word, Wordsmith and Getaway Car" — or, past three, "…and 5 more". Reads as a
-// sentence under the charm row so an unlock is still legible without a hover.
+// "Word For Word, Wordsmith and Getaway Car" — or, past three, "…and 3 more", where the
+// count is the button that unfolds the rest. Reads as a sentence under the charm row so an
+// unlock is still legible without a hover.
 const ACH_NAMES_SHOWN = 3;
-function unlockNameLine(ids) {
+function joinNames(ids) {
   const names = ids.map((id) => ACH_BY_ID[id].name);
-  if (names.length > ACH_NAMES_SHOWN) {
-    return `${names.slice(0, ACH_NAMES_SHOWN).join(", ")} and ${names.length - ACH_NAMES_SHOWN} more`;
-  }
   if (names.length === 1) return names[0];
   return `${names.slice(0, -1).join(", ")} and ${names[names.length - 1]}`;
+}
+function unlockNameLine(ids) {
+  if (ids.length <= ACH_NAMES_SHOWN) return escapeHtml(joinNames(ids));
+  const shown = ids.slice(0, ACH_NAMES_SHOWN).map((id) => ACH_BY_ID[id].name).join(", ");
+  return `${escapeHtml(shown)} and ` +
+    `<button type="button" class="ach-names-more">${ids.length - ACH_NAMES_SHOWN} more</button>`;
 }
 
 // The results-screen skills recap: what each skill earned this game, plus a live Mastery
