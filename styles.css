@@ -1411,114 +1411,146 @@
   }
 
   /* ---------- Bonus games shelf ----------
-     Not a tile grid: a record rack. Each game is a big deco pressing standing on a shelf
-     rule that runs unbroken across the row, with its title written underneath the way a
-     collector labels a rack. The disc is the whole point, so it is sized generously and
-     everything else on the card is small and quiet beneath it.
-     The shelf rule is drawn per cell (::before, bled to the cell's full width) rather than
-     on the row, because a CSS grid has no row element to hang it on; the columns share a
-     zero gap so the separate rules meet and read as one continuous shelf. That means the
-     disc size has to be a variable: the rule is positioned off it. */
+     Not a grid of cards: a record deck on the desk. One game sits on the platter under the
+     tonearm and turns; the others wait on a shelf below, small but fully described, and
+     drop onto the platter when tapped. The pressings are the point of the screen, so the
+     platter gets the space and the writing arranges itself around it. */
   .bonus-head {
     display: flex; align-items: baseline; justify-content: space-between; gap: 16px;
     margin: 2px 0 4px;
   }
   .bonus-intro {
     font-family: var(--type); font-size: 12px; letter-spacing: 0.4px; color: var(--ink-soft);
-    line-height: 1.5; margin: 0; max-width: 48ch;
+    line-height: 1.5; margin: 0; max-width: 46ch;
   }
   .bonus-count {
     flex: none; font-family: var(--type); font-size: 9px; letter-spacing: 1.5px;
     text-transform: uppercase; color: var(--ink-soft); opacity: 0.75;
   }
-  .bonus-rack {
-    --bd: clamp(104px, 22vw, 152px);
-    display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
-    column-gap: 0; row-gap: 30px; margin-top: 22px;
+
+  /* ---- the deck ---- */
+  .bonus-deck {
+    display: flex; gap: 26px; align-items: center; flex-wrap: wrap; margin: 20px 0 4px;
   }
-  .bonus-press {
-    position: relative; cursor: pointer; text-align: center;
-    display: flex; flex-direction: column; align-items: center; gap: 5px;
-    padding: 0 14px 4px; background: none; border: none;
+  .bonus-platter {
+    position: relative; flex: none;
+    width: clamp(206px, 42vw, 262px); height: clamp(206px, 42vw, 262px);
+    border-radius: 50%; display: grid; place-items: center;
+    background: radial-gradient(circle at 38% 32%, #6b6157, #4a433a 62%, #3a342d);
+    box-shadow: inset 0 0 0 6px rgba(255, 255, 255, 0.05), 0 6px 16px rgba(43, 39, 34, 0.32);
   }
-  /* The shelf itself: an ink rule with a soft lip below it. Drawn once per row by the row's
-     first card and stretched to the rack's full width (--shelf-w, set by layoutBonusShelves),
-     so a half-empty row still gets a whole shelf. */
-  .bonus-press.shelf-start::before {
-    content: ""; position: absolute; left: 0; right: auto; width: var(--shelf-w, 100%);
-    top: calc(var(--bd) - 5px);
-    border-top: 2px solid rgba(60, 40, 18, 0.32);
-    box-shadow: 0 3px 0 -1px rgba(60, 40, 18, 0.09);
+  .bonus-platter-disc { width: 86%; height: 86%; }
+  .bonus-platter-disc .bonus-disc { width: 100%; height: 100%; display: block; }
+  /* The record turns, slowly. This is the whole reason the screen is a deck, so it runs
+     without a hover: a stopped record on a platter reads as broken rather than restful. */
+  .bonus-spin { animation: bonusSpin 14s linear infinite; transform-origin: 50% 50%; }
+  @keyframes bonusSpin { to { transform: rotate(360deg); } }
+  /* dropping a new record on: one quick settle, then it joins the steady turn */
+  .bonus-platter-disc.drop { animation: bonusDrop 0.34s ease-out; }
+  @keyframes bonusDrop {
+    0%   { transform: translateY(-14px) scale(1.04); opacity: 0.4; }
+    100% { transform: none; opacity: 1; }
   }
-  .bonus-press-disc {
-    position: relative; width: var(--bd); height: var(--bd); margin-bottom: 12px;
-    display: block;
+  .bonus-arm {
+    position: absolute; right: -4px; top: 2px; width: 58%; height: 58%; pointer-events: none;
+    filter: drop-shadow(0 2px 3px rgba(43, 39, 34, 0.35));
   }
-  .bonus-disc {
+  .bonus-platter.is-soon { filter: saturate(0.9); }
+
+  /* ---- what is on the platter ---- */
+  .bonus-now { flex: 1; min-width: 210px; padding-top: 6px; }
+  .bonus-now-kicker {
+    font-family: var(--type); font-size: 8.5px; letter-spacing: 1.5px; text-transform: uppercase;
+    color: #4a8c87; margin-bottom: 2px;
+  }
+  .bonus-now-name {
+    font-family: var(--hand); font-weight: 700; font-size: 30px; line-height: 1.02; color: var(--ink);
+    margin: 0;
+  }
+  .bonus-now-blurb {
+    font-family: var(--type); font-size: 11.5px; line-height: 1.6; color: var(--ink-soft);
+    margin: 8px 0 0; max-width: 40ch;
+  }
+  .bonus-now-meta {
+    margin-top: 9px; font-family: var(--type); font-size: 9.5px; letter-spacing: 1.1px;
+    text-transform: uppercase; color: var(--ink-soft); opacity: 0.85;
+  }
+  /* the button sizes to its words: a full-width Play beside a record reads as a banner */
+  .bonus-play { margin-top: 14px; display: inline-block; width: auto; padding-left: 26px; padding-right: 26px; }
+  .bonus-now-soon {
+    margin-top: 12px; font-family: var(--type); font-size: 11px; line-height: 1.6;
+    color: var(--ink-soft); max-width: 34ch;
+    padding-left: 10px; border-left: 2px solid rgba(60, 40, 18, 0.2);
+  }
+
+  /* ---- the rest of the shelf ---- */
+  .bonus-shelf { margin-top: 26px; border-top: 1px solid rgba(60, 40, 18, 0.16); padding-top: 6px; }
+  .bonus-shelf-label {
+    font-family: var(--type); font-size: 9px; letter-spacing: 1.6px; text-transform: uppercase;
+    color: var(--ink-soft); margin: 8px 0 6px;
+  }
+  .bonus-alt {
+    display: flex; align-items: center; gap: 14px; width: 100%; text-align: left;
+    padding: 10px 6px; background: none; border: none; cursor: pointer;
+    border-bottom: 1px dashed rgba(60, 40, 18, 0.14);
+    transition: background 0.14s ease;
+  }
+  .bonus-alt:last-child { border-bottom: none; }
+  .bonus-alt:hover, .bonus-alt:focus-visible { background: rgba(60, 40, 18, 0.04); outline: none; }
+  .bonus-alt-disc { flex: none; width: 64px; height: 64px; }
+  .bonus-alt-disc .bonus-disc {
     width: 100%; height: 100%; display: block;
-    filter: drop-shadow(0 5px 6px rgba(43, 39, 34, 0.3));
+    filter: drop-shadow(0 3px 4px rgba(43, 39, 34, 0.3));
     transition: transform 0.18s ease;
   }
-  /* Lift the record off the shelf on hover and let it turn, slowly, the way a disc does
-     under a stylus. The turn is the affordance: it says "this one plays". */
-  .bonus-press:hover .bonus-disc, .bonus-press:focus-visible .bonus-disc {
-    transform: translateY(-5px); animation: bonusSpin 9s linear infinite;
-  }
-  .bonus-press:focus-visible { outline: none; }
-  .bonus-press:focus-visible .bonus-press-name {
-    box-shadow: 0 2px 0 rgba(74, 140, 135, 0.75);
-  }
-  .bonus-press:active .bonus-disc { transform: translateY(-1px); }
-  @keyframes bonusSpin { to { transform: translateY(-5px) rotate(360deg); } }
-  .bonus-press-kicker {
-    font-family: var(--type); font-size: 8.5px; letter-spacing: 1.5px; text-transform: uppercase;
+  .bonus-alt:hover .bonus-alt-disc .bonus-disc,
+  .bonus-alt:focus-visible .bonus-alt-disc .bonus-disc { transform: rotate(-10deg) translateY(-2px); }
+  .bonus-alt-text { display: flex; flex-direction: column; gap: 1px; }
+  .bonus-alt-kicker {
+    font-family: var(--type); font-size: 8px; letter-spacing: 1.4px; text-transform: uppercase;
     color: #4a8c87;
   }
-  .bonus-press-name {
-    font-family: var(--hand); font-weight: 700; font-size: 23px; line-height: 1.05; color: var(--ink);
+  .bonus-alt-name {
+    font-family: var(--hand); font-weight: 700; font-size: 21px; line-height: 1.05; color: var(--ink);
   }
-  .bonus-press-blurb {
-    font-family: var(--type); font-size: 11px; line-height: 1.55; color: var(--ink-soft);
-    max-width: 26ch;
+  .bonus-alt-blurb {
+    font-family: var(--type); font-size: 10.5px; line-height: 1.5; color: var(--ink-soft);
+    max-width: 52ch;
   }
-  .bonus-press-foot {
-    margin-top: 3px;
-    font-family: var(--type); font-size: 9.5px; letter-spacing: 1.1px; text-transform: uppercase;
-    color: var(--ink-soft); opacity: 0.8;
+  .bonus-alt-meta {
+    margin-top: 3px; font-family: var(--type); font-size: 8.5px; letter-spacing: 1.1px;
+    text-transform: uppercase; color: var(--ink-soft); opacity: 0.8;
   }
-  /* A game that isn't written yet is a white-label test pressing: the disc says it, so the
-     card only needs to stand back a little. No ribbon, no shouting. */
-  .bonus-press.is-soon { cursor: default; }
-  .bonus-press.is-soon .bonus-press-name,
-  .bonus-press.is-soon .bonus-press-kicker { color: var(--ink-soft); }
-  .bonus-press.is-soon .bonus-disc { filter: drop-shadow(0 4px 5px rgba(43, 39, 34, 0.22)) saturate(0.9); }
-  .bonus-press.is-soon:hover .bonus-disc { animation: none; }
-  .bd-stamp-type { font-family: var(--type); }
-  .bd-pencil { font-family: var(--hand); fill: #4a4238; }
-  .bonus-press.nudge .bonus-press-disc { animation: bonusNudge 0.4s ease; }
-  @keyframes bonusNudge {
-    0%, 100% { transform: translateX(0); }
-    20% { transform: translateX(-4px) rotate(-2deg); }
-    45% { transform: translateX(3px) rotate(1.5deg); }
-    70% { transform: translateX(-2px); }
-  }
+  .bonus-alt.is-soon .bonus-alt-name { color: var(--ink-soft); }
+
   /* The same pressing, shrunk to sit beside the game's name on the play screen. */
   .bonus-disc-sm {
     width: 22px; height: 22px; display: inline-block; vertical-align: -4px; margin-right: 7px;
     filter: drop-shadow(0 1px 2px rgba(43, 39, 34, 0.3));
   }
   .bg-end-disc { width: 96px; margin: 0 auto 10px; }
-  [data-reduce-motion="true"] .bonus-disc { transition: none; }
-  [data-reduce-motion="true"] .bonus-press:hover .bonus-disc,
-  [data-reduce-motion="true"] .bonus-press:focus-visible .bonus-disc { animation: none; }
-  [data-reduce-motion="true"] .bonus-press.nudge .bonus-press-disc { animation: none; }
+  .bg-end-disc .bonus-disc { width: 100%; height: auto; display: block; }
+  .bd-stamp-type { font-family: var(--type); }
+  .bd-pencil { font-family: var(--hand); fill: #4a4238; }
+
+  [data-reduce-motion="true"] .bonus-spin,
+  [data-reduce-motion="true"] .bonus-platter-disc.drop { animation: none; }
+  [data-reduce-motion="true"] .bonus-alt-disc .bonus-disc { transition: none; }
   @media (prefers-reduced-motion: reduce) {
-    .bonus-press:hover .bonus-disc, .bonus-press:focus-visible .bonus-disc { animation: none; }
+    .bonus-spin, .bonus-platter-disc.drop { animation: none; }
   }
-  @media (max-width: 420px) {
+  /* Narrow: the deck stacks. This has to be an explicit column — leaving it as a wrapping
+     row and only relaxing min-width lets the text column shrink to a one-word ribbon beside
+     the platter instead of dropping below it. */
+  @media (max-width: 560px) {
     .bonus-head { flex-direction: column; gap: 4px; }
-    .bonus-rack { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
+    .bonus-deck { flex-direction: column; align-items: center; gap: 16px; }
+    .bonus-now { width: 100%; min-width: 0; text-align: center; padding-top: 0; }
+    .bonus-now-blurb, .bonus-now-soon { margin-left: auto; margin-right: auto; }
+    .bonus-now-soon { text-align: left; }
+    .bonus-alt-blurb { max-width: none; }
   }
+
 
   /* ---------- Bonus game play screen (shared chrome for every bonus game) ---------- */
   .bg-hud {

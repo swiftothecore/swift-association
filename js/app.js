@@ -3746,75 +3746,104 @@ function bonusDisc(g, extra = "") {
     `<use href="#bd-hub"/></svg>`;
 }
 
+/* The shelf is a record deck: one game is ON the platter with its details written beside
+   it, and the rest wait on the shelf below as smaller pressings, each with its own name,
+   line and score so nothing has to be guessed from a colour. Tapping one drops it onto the
+   platter; Play starts it. Two taps to play instead of one is the deliberate cost of the
+   metaphor, and it buys the games somewhere to be described properly.
+   `bonusPick` is the id on the platter. It survives the screen so returning from a run
+   leaves your record where you left it. */
+let bonusPick = null;
+
+function bonusPicked() {
+  return BONUS_GAMES.find((g) => g.id === bonusPick)
+      || BONUS_GAMES.find((g) => g.ready)
+      || BONUS_GAMES[0];
+}
+
+// What a game's record reads under its name: an unpressed record has no score to report,
+// only a promise.
+function bonusScoreLine(g) {
+  const rec = bonusRecord(g.id);
+  if (!g.ready) return "not pressed yet";
+  return rec.plays ? `best ${rec.best} / ${BONUS_ROUNDS} · played ${rec.plays}` : "unplayed";
+}
+
+// The tonearm, resting on the record. Drawn here rather than in the sprite because it
+// belongs to the deck, not to any pressing.
+const BONUS_TONEARM =
+  `<svg class="bonus-arm" viewBox="0 0 150 150" aria-hidden="true">` +
+    `<circle cx="126" cy="26" r="13" fill="#cfc7ba" stroke="rgba(43,39,34,0.35)" stroke-width="1.5"/>` +
+    `<circle cx="126" cy="26" r="4" fill="#8d8477"/>` +
+    `<path d="M126 26 L117 48 L111 63" fill="none" stroke="#cfc7ba" stroke-width="7" stroke-linecap="round"/>` +
+    `<path d="M126 26 L117 48 L111 63" fill="none" stroke="rgba(43,39,34,0.22)" stroke-width="1" stroke-linecap="round"/>` +
+    // the head, sat down on the outer grooves rather than in the label: a stylus resting on
+    // the paper label is the tell that gives a drawn record player away
+    `<rect x="104" y="59" width="15" height="11" rx="2" transform="rotate(22 111 65)" fill="#4a433a"/>` +
+  `</svg>`;
+
 function renderBonusPage() {
-  const cards = BONUS_GAMES.map((g) => {
-    const soon = !g.ready;
-    const rec = bonusRecord(g.id);
-    // A best score only means something once a game has actually been played; an unpressed
-    // record has no score to report at all, only a promise.
-    const foot = soon
-      ? `<span class="bonus-press-foot is-soon-foot">not pressed yet</span>`
-      : `<span class="bonus-press-foot">${rec.plays
-          ? `best ${rec.best} / ${BONUS_ROUNDS}`
-          : "unplayed"}</span>`;
-    return `<button type="button" class="bonus-press${soon ? " is-soon" : ""}" data-id="${escapeHtml(g.id)}">` +
-      `<span class="bonus-press-disc">${bonusDisc(g)}</span>` +
-      `<span class="bonus-press-kicker">${escapeHtml(g.kicker)}</span>` +
-      `<span class="bonus-press-name">${escapeHtml(g.name)}</span>` +
-      `<span class="bonus-press-blurb">${escapeHtml(g.blurb)}</span>` +
-      foot +
-    `</button>`;
-  }).join("");
+  const g = bonusPicked();
+  bonusPick = g.id;
+  const others = BONUS_GAMES.filter((x) => x.id !== g.id);
+
+  const deck =
+    `<div class="bonus-deck">` +
+      `<div class="bonus-platter${g.ready ? "" : " is-soon"}">` +
+        // An unpressed record sits still: nothing is playing it, and a turning test
+        // pressing would promise a game that isn't there.
+        `<div class="bonus-platter-disc">${bonusDisc(g, g.ready ? "bonus-spin" : "")}</div>` +
+        BONUS_TONEARM +
+      `</div>` +
+      `<div class="bonus-now">` +
+        `<div class="bonus-now-kicker">${escapeHtml(g.kicker)}</div>` +
+        `<h3 class="bonus-now-name">${escapeHtml(g.name)}</h3>` +
+        `<p class="bonus-now-blurb">${escapeHtml(g.blurb)}</p>` +
+        `<div class="bonus-now-meta">${escapeHtml(bonusScoreLine(g))}</div>` +
+        (g.ready
+          ? `<button type="button" id="bonusPlayBtn" class="btn-primary bonus-play">Play →</button>`
+          : `<p class="bonus-now-soon">This one is still being written, so there is nothing to put the needle on yet.</p>`) +
+      `</div>` +
+    `</div>`;
+
+  const shelf = others.map((x) =>
+    `<button type="button" class="bonus-alt${x.ready ? "" : " is-soon"}" data-id="${escapeHtml(x.id)}">` +
+      `<span class="bonus-alt-disc">${bonusDisc(x)}</span>` +
+      `<span class="bonus-alt-text">` +
+        `<span class="bonus-alt-kicker">${escapeHtml(x.kicker)}</span>` +
+        `<span class="bonus-alt-name">${escapeHtml(x.name)}</span>` +
+        `<span class="bonus-alt-blurb">${escapeHtml(x.blurb)}</span>` +
+        `<span class="bonus-alt-meta">${escapeHtml(bonusScoreLine(x))}</span>` +
+      `</span>` +
+    `</button>`).join("");
+
   const el = $("bonusBody");
   el.innerHTML =
     `<div class="bonus-head">` +
-      `<p class="bonus-intro">A rack of quick pressings, kept apart from the main round. More are still being cut.</p>` +
-      `<span class="bonus-count">${BONUS_GAMES.filter((g) => g.ready).length} in print</span>` +
+      `<p class="bonus-intro">Quick games kept apart from the main round. Put one on and play it.</p>` +
+      `<span class="bonus-count">${BONUS_GAMES.filter((x) => x.ready).length} in print</span>` +
     `</div>` +
-    `<div class="bonus-rack">${cards}</div>`;
-  el.querySelectorAll(".bonus-press").forEach((b) =>
+    deck +
+    `<div class="bonus-shelf">` +
+      `<div class="bonus-shelf-label">also on the shelf</div>` +
+      shelf +
+    `</div>`;
+
+  if ($("bonusPlayBtn")) $("bonusPlayBtn").addEventListener("click", () => startBonusGame(bonusPicked()));
+  el.querySelectorAll(".bonus-alt").forEach((b) =>
     b.addEventListener("click", () => selectBonusGame(b.dataset.id)));
-  layoutBonusShelves();
 }
 
-/* One shelf rule per row, running the rack's full width even when the row is half full.
-   CSS can't do this alone: a grid has no row element to hang the rule on, and a rule drawn
-   per cell would stop dead under the last record of a short row, which reads as a broken
-   shelf rather than a rack with room left on it. So the first card of each row draws the
-   rule and is told how wide the rack is; the rest draw nothing. Rows are found by grouping
-   on offsetTop, which costs one layout read and survives any column count. */
-let bonusRackObserver = null;
-function layoutBonusShelves() {
-  const rack = $("bonusBody") && $("bonusBody").querySelector(".bonus-rack");
-  if (!rack) return;
-  const items = [...rack.querySelectorAll(".bonus-press")];
-  let top = null;
-  items.forEach((it) => {
-    const isStart = it.offsetTop !== top;
-    if (isStart) top = it.offsetTop;
-    it.classList.toggle("shelf-start", isStart);
-    it.style.setProperty("--shelf-w", `${rack.clientWidth}px`);
-  });
-  // Re-run when the rack changes width (window resize, or the notebook page re-laying out).
-  if (!bonusRackObserver && typeof ResizeObserver !== "undefined") {
-    bonusRackObserver = new ResizeObserver(() => {
-      if (document.querySelector("#screen-bonus .bonus-rack")) layoutBonusShelves();
-    });
-  }
-  if (bonusRackObserver) { bonusRackObserver.disconnect(); bonusRackObserver.observe(rack); }
-}
-
+// Dropping a record onto the platter. Every game can be loaded, including one that isn't
+// written yet: its test pressing goes on the deck and the panel says so in words. Nothing
+// launches from here, so a shell can be read about without ever being playable.
 function selectBonusGame(id) {
   const g = BONUS_GAMES.find((x) => x.id === id);
   if (!g) return;
-  if (!g.ready) {
-    // A shell: nothing to launch yet. Give the card a small acknowledging wiggle rather than
-    // a dead click, so a tap reads as "heard you, not ready" instead of "broken".
-    const card = $("bonusBody").querySelector(`.bonus-press[data-id="${CSS.escape(id)}"]`);
-    if (card) { card.classList.remove("nudge"); void card.offsetWidth; card.classList.add("nudge"); }
-    return;
-  }
-  startBonusGame(g);
+  bonusPick = id;
+  renderBonusPage();
+  const disc = $("bonusBody").querySelector(".bonus-platter-disc");
+  if (disc) { disc.classList.remove("drop"); void disc.offsetWidth; disc.classList.add("drop"); }
 }
 
 function startBonusGame(g) {
