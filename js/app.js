@@ -3801,7 +3801,9 @@ function renderBonusPage() {
         `<p class="bonus-now-blurb">${escapeHtml(g.blurb)}</p>` +
         `<div class="bonus-now-meta">${escapeHtml(bonusScoreLine(g))}</div>` +
         (g.ready
-          ? `<button type="button" id="bonusPlayBtn" class="btn-primary bonus-play">Play →</button>`
+          // the same gold pencil sticker the Challenges detail plays from, so starting a
+          // run looks the same act wherever you start it from
+          ? `<button type="button" id="bonusPlayBtn" class="chall-go bonus-play">${bonusRecord(g.id).plays ? "Play again" : "Play"}</button>`
           : `<p class="bonus-now-soon">This one is still being written, so there is nothing to put the needle on yet.</p>`) +
       `</div>` +
     `</div>`;

@@ -1475,8 +1475,7 @@
     margin-top: 9px; font-family: var(--type); font-size: 9.5px; letter-spacing: 1.1px;
     text-transform: uppercase; color: var(--ink-soft); opacity: 0.85;
   }
-  /* the button sizes to its words: a full-width Play beside a record reads as a banner */
-  .bonus-play { margin-top: 14px; display: inline-block; width: auto; padding-left: 26px; padding-right: 26px; }
+  .bonus-play { margin-top: 15px; }
   .bonus-now-soon {
     margin-top: 12px; font-family: var(--type); font-size: 11px; line-height: 1.6;
     color: var(--ink-soft); max-width: 34ch;
