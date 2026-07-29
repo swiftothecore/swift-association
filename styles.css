@@ -1001,13 +1001,12 @@
     display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
     gap: 18px 12px; align-items: start; padding: 16px 4px 12px;
   }
-  /* content-visibility lets the browser skip rendering off-screen tiles — a full wall is 22
-     detailed inline SVGs, so this keeps scrolling smooth. The intrinsic size reserves each
-     cell's rough footprint so the scrollbar/layout stay stable before a tile paints. */
-  .keep-cell {
-    transform: translate(var(--dx, 0), var(--dy, 0));
-    content-visibility: auto; contain-intrinsic-size: auto 130px auto 180px;
-  }
+  /* No content-visibility here, deliberately: `auto` also applies PAINT containment, which
+     clips each tile to its own cell — and these tiles are tilted up to 7deg, so the corners
+     that stick out got sliced off with a hard vertical edge. A wall of 22 inline SVGs paints
+     fine without it; if the set ever grows enough to need the optimisation back, it has to go
+     on a padded wrapper that the rotated polaroid can overflow into. */
+  .keep-cell { transform: translate(var(--dx, 0), var(--dy, 0)); }
   @media (max-width: 560px) {
     .keep-grid { grid-template-columns: repeat(auto-fill, minmax(82px, 1fr)); gap: 14px 10px; }
     .keep-counter-n { font-size: 32px; }
