@@ -17,7 +17,7 @@ import {
   BOTH_WORDS, BOTH_MIN_SONGS, BOTH_PARTNER_TRIES, BOTH_REVEAL_SONGS,
   PRESS_RIDE_STEP, PRESS_CHARM_RIDE, RISK_MAX_STAKE, RISK_TOKENS, RISK_TOKEN_VALUE,
   ALBUM_FOCUS_DIFFS, ALBUM_FOCUS_TARGET,
-  GUEST_SHELF_SLOTS, GUESTS,
+  GUEST_SHELF_SLOTS, GUESTS, GUEST_DIFFS, GUEST_TARGET, TAYLOR_BUCKETS,
   ADAPTIVE_BUCKETS, ADAPTIVE_LEVELS, ADAPT_MAX_LEVEL, ADAPT_START_LEVEL, ADAPT_PROMO_STREAK, ADAPT_NODROP_LEVEL,
   CUSTOM_SECONDS_MIN, CUSTOM_SECONDS_MAX, CUSTOM_SECONDS_TYPED_MAX, CUSTOM_HINT_MAX,
   CUSTOM_HINT_TYPED_MAX, CUSTOM_HINT_UNLIMITED, CUSTOM_POOLS,
@@ -65,6 +65,7 @@ import {
   loadChallengeState, saveChallengeState, challengeRecord,
   loadChallengeTokens, saveChallengeTokens, resetChallenges,
   loadAlbumFocus, saveAlbumFocus, albumFocusRecord, recordAlbumFocusRun, resetAlbumFocus,
+  loadGuests, saveGuests, guestRecord, recordGuestRun, resetGuests,
   adaptiveRecord, recordAdaptiveRun,
   bonusRecord, recordBonusRun, resetBonus,
   resetRecords, resetStatsAll, resetAchievements, resetTally, resetDaily, clearAllData,
@@ -119,11 +120,12 @@ let runFolded = false;   // partial/full stats already saved for the current run
 let hintTier = 0;        // hints revealed this round (0..3); reset each round
 let roundHintSong = null;// the valid song this round's hints zoom in on
 let hintUrgeTimer = null;// idle nudge timer for Relaxed (no clock)
-let gameType = "classic";       // "classic" (fixed 13) | "infinite" (until lives run out) | "adaptive" (fixed 13, floating rarity) | "daily" | "challenge" | "album" | "custom" (player-authored levers, sandboxed)
+let gameType = "classic";       // "classic" (fixed 13) | "infinite" (until lives run out) | "adaptive" (fixed 13, floating rarity) | "daily" | "challenge" | "album" | "custom" (player-authored levers, sandboxed) | "guest" (another artist's catalogue, sandboxed)
 let customPreset = null;        // Custom mode: the active preset {id,name,mode} while gameType === "custom"
 let customSessionLen = 0;       // Custom mode: rounds this run (finite runs). 0 while running an infinite custom run
 let focusAlbum = null;          // Album Focus: the locked-in studio album while gameType === "album"
-let focusDifficulty = null;     // Album Focus: the chosen MODES id this run plays at
+let focusDifficulty = null;     // Album Focus / guest run: the chosen MODES id this run plays at
+let guestRunId = null;          // Guest shelf: the guest whose catalogue is loaded while gameType === "guest"
 let infiniteVariant = "3lives"; // "3lives" | "sudden"
 let lives = 0;                  // remaining lives in infinite mode
 let adaptiveLevel = ADAPT_START_LEVEL; // Adaptive: current rarity level (1..4), floats with performance
@@ -858,6 +860,10 @@ function pickEra() {
   // Album Focus locks the whole run to its album's era wash (bracelet/cards already use
   // the album colour; this themes the page to match).
   if (gameType === "album" && focusAlbum) return ALBUM_ERA[focusAlbum] || "gold";
+  // A guest run wears its guest's own era for all thirteen pages. ALBUM_ERA can't be asked —
+  // it keys on Taylor's albums — and shuffling through her eras would dress someone else's
+  // catalogue in her colours, which is exactly the blending the guest shelf exists to avoid.
+  if (gameType === "guest") return guestEra();
   // An album-anniversary daily already leans its words toward that album, so let the page
   // wear its colours all thirteen pages rather than shuffling eras over an album-shaped run.
   if (gameType === "daily" && dailyAlbum) return ALBUM_ERA[dailyAlbum] || "gold";
@@ -4577,6 +4583,7 @@ const GUEST_STAR =
 
 let guestBackTarget = "start";        // where the shelf's back link returns to
 let guestSelected = null;             // id of the pass whose detail is open, or null
+let guestSelectedDiff = "medium";     // the difficulty tab the detail panel has picked
 const guestFiles = new Map();         // id -> Promise<catalogue json>, one fetch per session
 
 // Lazy-load a guest's catalogue. Rejections are swallowed by the caller (the pass just keeps
@@ -4627,6 +4634,10 @@ function guestPerRail() {
 
 function openGuestShelf(from) {
   guestBackTarget = from;
+  // Arriving straight off a finished run, the masthead is still advertising it by name
+  // ("… · Olivia Rodrigo"). The shelf is the desk, not a live run, so drop the run's game type
+  // the same way renderStartPickers does on the way back to the front page.
+  if (gameType === "guest") { gameType = "classic"; updateTagline(); }
   renderGuestShelfPage();
   flipAwayToScreen("guests");
 }
@@ -4672,12 +4683,20 @@ function guestPassMarkup(g, slot) {
   const len = 96 + ((slot * 37) % 5) * 17;
   const tilt = (((slot * 53) % 7) - 3) * 0.7;
   const ticks = g.ink.ticks.map((c) => `<i style="background:${c}"></i>`).join("");
+  // The stub is printed "admit one" until the guest is admitted, then franked across. The
+  // stamp angle is derived from the slot too, so it sits like a hand-pressed one and, like
+  // the hang, is the same every time this guest is drawn.
+  const rec = guestRecord(g.id);
+  const stub = rec.admitted
+    ? `<span class="guest-stub guest-stub--stamped">` +
+        `<i class="guest-admit" style="--stamp-rot:${(((slot * 29) % 5) - 2) * 1.6}deg">admitted</i></span>`
+    : `<span class="guest-stub"></span>`;
   return (
     `<span class="guest-peg" style="--g-deep:${g.ink.deep};--g-accent:${g.ink.accent};` +
       `--g-strap:${g.ink.strap};--g-pen:${g.ink.pen};">` +
       guestStrapMarkup(len) +
       `<button type="button" class="guest-pass" data-guest="${escapeHtml(g.id)}"` +
-        ` style="--tilt:${tilt.toFixed(1)}deg" aria-label="${escapeHtml(g.name)}: guest catalogue">` +
+        ` style="--tilt:${tilt.toFixed(1)}deg" aria-label="${escapeHtml(g.name)}: guest catalogue${rec.admitted ? ", admitted" : ""}">` +
         `<span class="guest-slot" aria-hidden="true"></span>` +
         `<span class="guest-print">` +
           `<span class="guest-band">guest${GUEST_STAR}</span>` +
@@ -4685,7 +4704,7 @@ function guestPassMarkup(g, slot) {
             `<span class="guest-name">${escapeHtml(g.name).replace(" ", "<br>")}</span>` +
             `<span class="guest-ticks" aria-hidden="true">${ticks}</span>` +
             `<span class="guest-line"><span data-count="songs">— songs</span></span>` +
-            `<span class="guest-stub"></span>` +
+            stub +
           `</span>` +
         `</span>` +
       `</button>` +
@@ -4743,16 +4762,45 @@ function renderGuestDetail(id) {
   loadGuest(id).then((c) => {
     if (guestSelected !== id || !$("guestDetail")) return;
     const counts = guestCounts(c);
+    const rec = guestRecord(id);
     const records = (c.albums || []).map((a) =>
       `<li><span class="guest-rec-name">${escapeHtml(a.album)}</span>` +
       `<span class="guest-rec-n">${(a.songs || []).length}</span></li>`).join("");
+    const tabs = GUEST_DIFFS.map((d) =>
+      `<button type="button" class="af-diff${d === guestSelectedDiff ? " is-on" : ""}" data-diff="${d}">${escapeHtml(MODES[d].label)}</button>`
+    ).join("");
+    const stamp = rec.admitted
+      ? `<span class="chall-detail-star">${CHALL_STAR}</span><span class="chall-detail-stamp af-stamp">admitted</span>` : "";
+    let meta = "not played yet";
+    if (rec.best > 0) {
+      meta = `best ${rec.best}/${TOTAL_ROUNDS}`;
+      if (rec.admittedDiff) meta += ` · admitted on ${(MODES[rec.admittedDiff] || {}).label || rec.admittedDiff}`;
+    }
     $("guestDetail").innerHTML =
       `<div class="guest-detail-head" style="--g-pen:${g.ink.pen}">` +
-        `<span class="guest-detail-name">${escapeHtml(g.name)}</span>` +
+        `<span class="guest-detail-name">${escapeHtml(g.name)}</span>${stamp}` +
         `<span class="guest-detail-nums">${counts.songs} songs · ${counts.records} records · ${counts.words} words</span>` +
       `</div>` +
       `<ul class="guest-recs">${records}</ul>` +
-      `<p class="guest-detail-note">on the shelf, not yet on the board</p>`;
+      `<div class="chall-sec">` +
+        `<div class="chall-eyebrow">The rule</div>` +
+        `<div class="chall-rule">Every word and every answer comes from <b>${escapeHtml(g.name)}</b>'s catalogue. ` +
+          `Nothing here counts toward your Taylor records.</div>` +
+      `</div>` +
+      `<div class="chall-sec chall-sec--beat">` +
+        `<div class="chall-eyebrow">To be admitted</div>` +
+        `<div class="chall-goal">Name all ${TOTAL_ROUNDS}. Anything less is a visit, not a residency.</div>` +
+        `<div class="af-diffs">${tabs}</div>` +
+      `</div>` +
+      `<div class="chall-act">` +
+        `<span class="chall-meta">${escapeHtml(meta)}</span>` +
+        `<button type="button" class="chall-go" data-play="${escapeHtml(id)}">${rec.best > 0 ? "Play again" : "Start writing"}</button>` +
+      `</div>`;
+    const el2 = $("guestDetail");
+    el2.querySelectorAll(".af-diff").forEach((b) =>
+      b.addEventListener("click", () => { guestSelectedDiff = b.dataset.diff; renderGuestDetail(id); }));
+    const pb = el2.querySelector("[data-play]");
+    if (pb) pb.addEventListener("click", () => startGuestRun(pb.dataset.play, guestSelectedDiff));
   }).catch(() => {
     if (guestSelected !== id || !$("guestDetail")) return;
     $("guestDetail").innerHTML =
@@ -4861,6 +4909,13 @@ function buildCardMeta() {
     title = perfect ? focusAlbum + ", start to finish ★" : "an album, in beads";
     stats.push({ v: "Album Focus", l: "mode" });
     stats.push({ v: focusAlbum, l: "the album" });
+    stats.push({ v: correct + "/" + TOTAL_ROUNDS, l: "strung" });
+  } else if (gameType === "guest" && guestRunId) {
+    const guest = GUESTS.find((x) => x.id === guestRunId);
+    const perfect = correct === TOTAL_ROUNDS;
+    title = perfect ? "admitted to the shelf ★" : "a night on someone else's catalogue";
+    stats.push({ v: "Guest shelf", l: "mode" });
+    stats.push({ v: (guest && guest.name) || "Guest", l: "the catalogue" });
     stats.push({ v: correct + "/" + TOTAL_ROUNDS, l: "strung" });
   } else if (gameType === "custom") {
     const finite = !customInfinite();
@@ -5045,6 +5100,49 @@ async function loadData() {
   if (!wordsRes.ok || !songsRes.ok) throw new Error("Failed to fetch data files");
   const words = await wordsRes.json();
   const grouped = await songsRes.json();
+  taylorCorpus = installCorpus(grouped, words, { aliases: true });
+}
+
+/* ---------- The corpus (which catalogue the game is currently playing) ----------
+   Everything below the matcher — allSongs, the title indexes, the playable word list, the
+   rarity buckets — is derived ONCE from songs.json and then read as module state by the whole
+   game. A guest run needs the same machinery pointed at a different catalogue, so rather than
+   thread a corpus argument through every matching call site, a guest SWAPS these globals for
+   the length of its run and swaps them back on the way out (see startGuestRun / restoreCorpus).
+
+   The swap is only safe because it is total: `installCorpus` rebuilds every one of these
+   fields together, and `snapshotCorpus` captures every one of them. If a new derived index is
+   added to loadData, it must be added to BOTH or a guest run will leave a stale Taylor index
+   sitting beside Olivia's songs. That is the whole contract; there is nothing else to it. */
+let taylorCorpus = null;              // the main catalogue, snapshotted at load
+const guestCorpora = new Map();       // guest id -> its built corpus, one build per session
+let activeCorpus = "taylor";          // which catalogue the globals currently hold
+
+function snapshotCorpus() {
+  return { allSongs, titleIndex, spacelessIndex, playableWords, titleWordList,
+           shortTitleWordLists, albumWordMap, albumOrder, wordBuckets };
+}
+function applyCorpus(c) {
+  allSongs = c.allSongs; titleIndex = c.titleIndex; spacelessIndex = c.spacelessIndex;
+  playableWords = c.playableWords; titleWordList = c.titleWordList;
+  shortTitleWordLists = c.shortTitleWordLists; albumWordMap = c.albumWordMap;
+  albumOrder = c.albumOrder; wordBuckets = c.wordBuckets;
+}
+// Put Taylor's catalogue back. Safe to call at any time, including when it is already
+// active — every exit from a guest run goes through it rather than trusting one path.
+function restoreCorpus() {
+  if (activeCorpus === "taylor" || !taylorCorpus) return;
+  applyCorpus(taylorCorpus);
+  activeCorpus = "taylor";
+}
+
+// Build a corpus from a grouped album list + its word list and INSTALL it into the globals,
+// then hand back a snapshot of what was built. Installing as it goes is deliberate: the
+// derivation leans on songsContainingWord / validSongs / titleSongsForWord, which read the
+// globals themselves, so the corpus has to be live to be measured.
+// `opts.aliases` folds in TITLE_ALIASES (Taylor-specific, so guests pass it false);
+// `opts.buckets` is the rarity threshold set (a guest carries its own, see buildWordBuckets).
+function installCorpus(grouped, words, opts = {}) {
   // songs.json stores lyrics as structured sections ([{label, lines}]); the game
   // works off a flat newline-joined `lyrics` string, so derive it here once. The
   // `sections` stay on the song object (line numbers + verse/chorus/bridge) for the
@@ -5067,7 +5165,7 @@ async function loadData() {
     s._normLyrics = normalizeLyric(s.lyrics);   // flat blob for lyric-line matching
     titleIndex.set(s._norm, s);
   }
-  for (const [canonical, aliases] of Object.entries(TITLE_ALIASES)) {
+  for (const [canonical, aliases] of Object.entries(opts.aliases ? TITLE_ALIASES : {})) {
     const song = allSongs.find((s) => s.title === canonical);
     if (!song) { console.warn(`TITLE_ALIASES: no song titled "${canonical}"`); continue; }
     for (const alias of aliases) {
@@ -5116,25 +5214,30 @@ async function loadData() {
     for (const a of new Set(validSongs(w, false, false).map((s) => s.album)))
       (albumWordMap[a] = albumWordMap[a] || []).push(w);
   }
-  buildWordBuckets();
+  buildWordBuckets(opts.buckets);
+  return snapshotCorpus();
 }
 
 // Bucket words by how many songs contain them, so each mode draws from an
 // appropriate-rarity pool. Thresholds are tunable; each bucket falls back to
 // the full list if it ends up too thin to sustain a 13-round, no-repeat game.
-function buildWordBuckets() {
+// `cfg` is a threshold set: TAYLOR_BUCKETS for the main catalogue, or a guest's own out of
+// its file. The numbers are per-catalogue and deliberately NOT scaled off catalogue size —
+// no clean formula fits both 287 songs and 42, and one bent through two points would be a
+// false generalisation waiting to misfit the third guest.
+function buildWordBuckets(cfg = TAYLOR_BUCKETS) {
   const MIN = RECENT_WINDOW + 8;
   // Easy counts plain lyric matches (title songs are allowed in Easy/Medium).
-  const easy = playableWords.filter((w) => songsContainingWord(w, false).length >= 18);
+  const easy = playableWords.filter((w) => songsContainingWord(w, false).length >= cfg.easy);
   // Hard/Ultra count only *valid* answers (word in lyrics but NOT the title), so
   // every bucketed word still has at least one answerable, non-giveaway song.
   const hard = playableWords.filter((w) => {
     const n = validSongs(w, false, true).length;
-    return n >= 3 && n <= 9;
+    return n >= cfg.hard[0] && n <= cfg.hard[1];
   });
   const ultra = playableWords.filter((w) => {
     const n = validSongs(w, true, true).length;   // strict word, no title, rarest
-    return n >= 1 && n <= 3;
+    return n >= cfg.ultra[0] && n <= cfg.ultra[1];
   });
   const safe = (arr) => (arr.length >= MIN ? arr : playableWords);
   wordBuckets = { easy: safe(easy), all: playableWords, hard: safe(hard), ultra: safe(ultra) };
@@ -5246,6 +5349,10 @@ function updateTagline() {
     ? `${TOTAL_ROUNDS} pages · difficulty that climbs with you`
     : gameType === "custom"
     ? `${cm.rounds === 0 ? "endless pages" : cm.rounds + " pages"} · ${clock} · your own rules`
+    // A guest run is the one place where "name the song" doesn't mean a Taylor song, and the
+    // tagline is the only line on the game screen with room to say so.
+    : gameType === "guest"
+    ? `${TOTAL_ROUNDS} pages · ${clock} · ${(currentGuest() || {}).name || "a guest"}`
     : `${TOTAL_ROUNDS} pages · ${clock}`;
   // Without this a dark run is indistinguishable from the base challenge: same tagline, same
   // page count, just quietly harder numbers. The eclipse + "dark side" is the only thing on
@@ -5301,6 +5408,9 @@ function renderStartPickers() {
   // one choke point every return-to-start passes through, so the tagline reflects the mode
   // that's actually selected.
   challengeDark = false;
+  // Same reasoning for the guest catalogue: back on the desk there is no live guest run, so
+  // the stats, records and searcher reachable from here must be reading Taylor's songs.
+  restoreCorpus();
   // A daily game forces currentMode to Normal without persisting; restore the
   // player's preference (a fixed default-difficulty setting, else their last pick).
   currentMode = (settings.defaultDifficulty !== "last" && MODES[settings.defaultDifficulty])
@@ -5602,6 +5712,11 @@ function boardMode() {
 }
 
 function resetRunState() {
+  // The universal choke point every start path passes through, which makes it the one place
+  // that can guarantee a run never inherits the previous run's catalogue. A guest run
+  // re-installs its own corpus immediately AFTER calling this (see startGuestRun), so the
+  // order here is load-bearing: restore first, then let the guest opt back out.
+  restoreCorpus();
   score = 0;
   round = 0;
   correctStreak = 0;
@@ -5651,6 +5766,7 @@ function resetRunState() {
   customPreset = null;
   focusAlbum = null;
   focusDifficulty = null;
+  guestRunId = null;
   lastAlphaLetter = "";
   alphaEveryLetterNew = true;
   vanishAnsweredBlind = true;
@@ -5742,7 +5858,7 @@ function foldRunProgress() {
   // Sandboxed modes never fold into difficulty stats. Daily is also skipped: it resumes
   // after a refresh/exit and folds its tally in full at completion (endGame), so folding
   // a partial here would double-count the same rounds once the run is finished.
-  if (gameType === "challenge" || gameType === "album" || gameType === "adaptive" || gameType === "daily" || gameType === "custom") { runFolded = true; return; }
+  if (gameType === "challenge" || gameType === "album" || gameType === "adaptive" || gameType === "daily" || gameType === "custom" || gameType === "guest") { runFolded = true; return; }
   runFolded = true;
   const partialScore = gameType === "infinite" ? roundResults.length : score;
   updateStats(partialScore, boardMode(), gameMaxStreak, false);
@@ -6245,6 +6361,68 @@ function startAlbumFocus(album, diffId) {
   $("pageTotal").textContent = TOTAL_ROUNDS;
   showScreen("game");
   nextRound();
+}
+
+// A guest run: Album Focus pointed at another artist's catalogue. Thirteen pages whose prompt
+// words and valid answers come from the guest's file alone, at a chosen difficulty. Sandboxed
+// harder than Album Focus — see endGuest — because these songs are not Taylor's and must never
+// reach the lifetime tally, the difficulty boards, or the history.
+//
+// Async because a guest's catalogue is fetched on demand (loadGuest), which is also the only
+// failure mode: a fetch that never lands leaves the player where they were, told why, rather
+// than on a game screen with an empty board.
+async function startGuestRun(id, diffId) {
+  const g = GUESTS.find((x) => x.id === id);
+  if (!g) return;
+  let corpus = guestCorpora.get(id);
+  if (!corpus) {
+    let cat;
+    try { cat = await loadGuest(id); }
+    catch (e) { toast("couldn't fetch that catalogue — check your connection"); return; }
+    // Building installs into the globals as it goes (see installCorpus), so this line already
+    // leaves the guest's catalogue live; the assignment below just remembers it for the replay.
+    corpus = installCorpus(cat.albums || [], cat.words || [], { aliases: false, buckets: cat.buckets });
+    guestCorpora.set(id, corpus);
+  }
+
+  const mode = MODES[GUEST_DIFFS.includes(diffId) ? diffId : "medium"];
+  gameType = "guest";
+  currentMode = { ...mode };               // clone — never mutate the shared MODES object
+  resetRunState();
+  // AFTER resetRunState, which nulls the run fields and hands the globals back to Taylor.
+  applyCorpus(corpus);
+  activeCorpus = id;
+  guestRunId = id;
+  focusDifficulty = currentMode.id;
+  applyInputHints();
+  updateTagline();
+  $("pageTotalWrap").style.display = "";
+  $("pageTotal").textContent = TOTAL_ROUNDS;
+  showScreen("game");
+  nextRound();
+}
+
+// The guest of the moment: the run's guest while one is live, otherwise the pass the shelf has
+// open. Both the era wash and the bracelet palette need it, on and off the game screen.
+function currentGuest() {
+  return GUESTS.find((g) => g.id === (guestRunId || guestSelected)) || null;
+}
+function guestEra() {
+  const g = currentGuest();
+  return (g && g.era) || "gold";
+}
+// A guest's records painted onto the bracelet. ALBUM_COLORS holds Taylor's albums only, so a
+// guest bead would come out uncoloured; the pass already carries one tick colour per record,
+// which IS the guest's record palette, so the beads and the pass agree by construction.
+// Records past the last tick reuse the accent rather than inventing a colour.
+function guestPalette(id) {
+  const g = GUESTS.find((x) => x.id === id);
+  const corpus = guestCorpora.get(id);
+  if (!g || !corpus) return {};
+  const ticks = (g.ink && g.ink.ticks) || [];
+  const map = {};
+  corpus.albumOrder.forEach((album, i) => { map[album] = ticks[i] || (g.ink && g.ink.accent) || "#7a55b0"; });
+  return map;
 }
 
 // One Of A Kind setup: pick a song the player has never answered, then a prompt word
@@ -7851,6 +8029,76 @@ function endAlbumFocus() {
   renderResultRecap();   // surface any album-focus achievements just earned
   renderSkillsRecap();
   if (perfect) celebratePerfect();
+}
+
+// Sandboxed results path for a guest run. Sandboxed harder than Album Focus, which folds its
+// rounds into the lifetime tally, history and metrics because those rounds ARE Taylor's
+// catalogue. A guest's are not: a tally holding Olivia's titles would corrupt Songs
+// Discovered, Favourite Song and the whole "you have seen this much of the catalogue" claim,
+// and a history row would rank a foreign 13 beside the main game's. So a guest run writes its
+// own board and nothing else — the model Custom already follows — plus skill XP and
+// achievements, which stay exempt the way Custom's and Challenges' do: a run you finished
+// still happened.
+function endGuest() {
+  const id = guestRunId, diff = focusDifficulty;
+  const g = GUESTS.find((x) => x.id === id) || { name: "Guest" };
+  const palette = guestPalette(id);
+  markRunBreadth(null);   // someone else's catalogue, not a difficulty of the main game
+  const hintFree = hintsUsed === 0;
+  let rec = guestRecord(id);
+  if (!devNoLog) {
+    // Admission only counts a hint-free run (mirrors "a hinted run can't set a personal
+    // best"); the best score still updates either way.
+    rec = recordGuestRun(id, score, diff, hintFree);
+    // Range is albums-covered, measured here over a three-record guest rather than sixteen,
+    // so it would read as breadth it isn't; endurance belongs to runs that go long. Album
+    // Focus omits the same two, for the same reason.
+    foldSkillXp(["resolve", "tempo", "lyricist"]);
+  }
+  const admittedCount = GUESTS.filter((x) => guestRecord(x.id).admitted).length;
+  if (rec.admitted) unlock("welcome-to-new-york");
+
+  showScreen("results");
+  applyEra(guestEra());   // endGame applies a random finale era; a guest keeps its own
+  $("resultBracelet").innerHTML = renderBraceletSVG(roundResults, 0, -1, roundAlbums,
+    { colors: palette, hinted: roundHinted, verseTiers: roundVerseTier });
+  $("finalScore").textContent = score;
+  $("finalSub").textContent = "out of " + TOTAL_ROUNDS;
+  $("keepGoingBtn").style.display = "none";
+  $("namePrompt").style.display = "none";
+  $("verseAnthology").style.display = "none";
+  hideNewBestBanner();
+
+  const admitted = score >= GUEST_TARGET;
+  document.querySelector("#screen-results .podium-title").textContent = g.name;
+  let status;
+  if (admitted && hintFree) {
+    status = `<div class="chall-result-status win">a perfect run — admitted to the shelf ★</div>`;
+  } else if (admitted && !hintFree) {
+    status = `<div class="chall-result-status">perfect, but hinted runs don't earn the stamp</div>`;
+  } else {
+    status = `<div class="chall-result-status">not yet — every one of the ${TOTAL_ROUNDS} to be admitted</div>`;
+  }
+  const diffLabel = (MODES[diff] && MODES[diff].label) || diff;
+  const meta = `<div class="chall-result-meta">${escapeHtml(diffLabel)} · best ${rec.best}/${TOTAL_ROUNDS}` +
+    ` · admitted ${admittedCount}/${GUESTS.length}</div>`;
+  $("resultPodium").innerHTML = status + meta +
+    `<div class="chall-result-actions">` +
+      `<button id="backToGuests" class="btn-primary">← guest shelf</button>` +
+      `<button id="replayGuest" class="btn-primary">replay ↺</button>` +
+    `</div>`;
+  $("backToGuests").addEventListener("click", () => openGuestShelf("start"));
+  $("replayGuest").addEventListener("click", () => startGuestRun(id, diff));
+
+  // Hand the globals back the moment the run's own numbers are on screen. Everything above
+  // either reads the run's arrays or was passed the guest's palette explicitly, so nothing
+  // needed the guest corpus; the recaps below, and every screen the player can now reach,
+  // are Taylor's again.
+  restoreCorpus();
+
+  renderResultRecap();   // surface any guest achievement just earned
+  renderSkillsRecap();
+  if (admitted) celebratePerfect();
 }
 
 // Adaptive results: sandboxed like Album Focus. Folds into the lifetime catalogue
@@ -11118,6 +11366,7 @@ function endGame() {
   if (gameType === "album") { endAlbumFocus(); return; }
   if (gameType === "adaptive") { endAdaptive(); return; }
   if (gameType === "custom") { endCustom(); return; }
+  if (gameType === "guest") { endGuest(); return; }
 
   const isInfinite = gameType === "infinite";
   const isDaily = gameType === "daily";
@@ -11434,6 +11683,7 @@ function quitGame() {
   foldRunProgress();
 
   // Teardown: stop every timer / animation a round may have started.
+  restoreCorpus();   // a quit guest run hands the globals back before anything else reads them
   clearTimer();
   if (countdownId) { clearInterval(countdownId); countdownId = null; }
   clearTimeout(hintUrgeTimer);
@@ -14016,17 +14266,55 @@ function buildDevApi() {
       open: () => openAlbumFocus("start"),
       reset: () => { resetAlbumFocus(); if ($("albumFocusBody")) renderAlbumFocusPage(); },
     },
-    // Guest shelf. A guest's numbers are never stored — they are read out of its file — so
-    // there is nothing here to seed or reset. What IS worth reaching is the fetch itself:
-    // `counts` proves a catalogue parses and reports what the pass will draw, and `drop`
-    // clears the session cache so the next open re-fetches (the only way to re-test the
-    // loading state, or a file you just edited, without a reload).
+    // Guest shelf. Two halves: the FETCH (a catalogue is read out of its file, so `counts` /
+    // `inspect` prove one parses and report exactly what a pass and a round would draw, and
+    // `drop` clears the session cache so the next open re-fetches — the only way to re-test
+    // the loading state, or a file you just edited, without a reload), and the BOARD (force a
+    // pass's admitted stamp without grinding a 13/13). `corpus` is the one that matters when
+    // something looks wrong mid-run: it reports which catalogue the globals are actually
+    // holding, which is the whole safety property a guest run rests on.
     guest: {
       list: () => GUESTS.map((g) => ({ id: g.id, name: g.name, file: g.file })),
       open: () => openGuestShelf("start"),
       slots: () => ({ filled: GUESTS.length, total: GUEST_SHELF_SLOTS, perRail: guestPerRail() }),
       load: (id) => loadGuest(id || (GUESTS[0] && GUESTS[0].id)),
       counts: (id) => loadGuest(id || (GUESTS[0] && GUESTS[0].id)).then(guestCounts),
+      // Play one, at any of the difficulties the detail panel offers.
+      play: (id, diff) => startGuestRun(id || (GUESTS[0] && GUESTS[0].id), diff || "medium"),
+      board: () => loadGuests(),
+      state: (id) => guestRecord(id || (GUESTS[0] && GUESTS[0].id)),
+      // Force one guest's record. e.g. guest.set("olivia-rodrigo", { best: 9 }) for played,
+      // or ({ admitted: true, diff: "hard" }) for the stamped pass.
+      set: (id, patch) => {
+        if (!GUESTS.some((g) => g.id === id)) return `unknown guest: ${id}`;
+        const all = loadGuests(); const e = all[id] || {}; const p = patch || {}; const d = p.diff || "medium";
+        if (p.best != null) { e.best = p.best | 0; e.bestDiff = d; }
+        if (p.admitted) { e.admitted = true; e.admittedDiff = d; e.best = TOTAL_ROUNDS; e.bestDiff = d; }
+        all[id] = e; saveGuests(all);
+        if ($("guestBody")) renderGuestShelfPage();
+        return guestRecord(id);
+      },
+      // Flood the whole rail to one state: "fresh" | "played" | "admitted".
+      fill: (state, diff) => {
+        resetGuests();
+        if (state && state !== "fresh") {
+          const d = diff || "medium"; const all = {};
+          GUESTS.forEach((g) => {
+            all[g.id] = state === "admitted"
+              ? { best: TOTAL_ROUNDS, bestDiff: d, admitted: true, admittedDiff: d }
+              : { best: 9, bestDiff: d };
+          });
+          saveGuests(all);
+        }
+        if ($("guestBody")) renderGuestShelfPage();
+        return loadGuests();
+      },
+      reset: () => { resetGuests(); if ($("guestBody")) renderGuestShelfPage(); },
+      // Which catalogue the matching globals are holding right now, and how big it is. During
+      // a guest run this reads the guest; anywhere else it must read "taylor" with the full
+      // 287. Anything else means a swap leaked (see restoreCorpus).
+      corpus: () => ({ active: activeCorpus, songs: allSongs.length, words: playableWords.length,
+        buckets: Object.fromEntries(Object.entries(wordBuckets).map(([k, v]) => [k, v.length])) }),
       // Everything the shelf believes about a catalogue, checked against the file: records
       // with their song counts, plus the per-catalogue bucket thresholds a guest round would
       // use (which are deliberately NOT the hardcoded ones tuned for 287 songs).
@@ -14035,7 +14323,13 @@ function buildDevApi() {
         buckets: c.buckets,
         records: (c.albums || []).map((a) => [a.album, (a.songs || []).length]),
       })),
-      drop: (id) => { if (id) guestFiles.delete(id); else guestFiles.clear(); return guestFiles.size; },
+      // Drops the built corpus alongside the file, or an edited catalogue would re-fetch and
+      // then be ignored in favour of the word lists built from the old one.
+      drop: (id) => {
+        if (id) { guestFiles.delete(id); guestCorpora.delete(id); }
+        else { guestFiles.clear(); guestCorpora.clear(); }
+        return guestFiles.size;
+      },
     },
     // Wax seals. The aged and dark copies are derived here in app.js by string-swapping
     // colours, so the dev panel's seal gallery can't reach them through config.js alone.

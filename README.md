@@ -15,6 +15,7 @@ Standout features:
 - Endless mode
 - Adaptive mode, where the word difficulty climbs and falls with how you play
 - Album focus mode so you can concentrate on ONE album only
+- A guest shelf of other artists' catalogues, played on their own and never mixed into Taylor's
 - Challenges mode with 32 challenges, most with a harder "dark side" to unlock, plus a super-hard tier unlocked through mastery
 - Daily challenge
 - The ability to make your own **custom modes**

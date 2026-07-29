@@ -1991,6 +1991,20 @@
     font-family: var(--type); font-size: 6px; letter-spacing: 1.4px;
     text-transform: uppercase; color: var(--ink-soft); opacity: 0.75;
   }
+  /* franked: a rubber stamp pressed across the stub once the guest is admitted. House red
+     (the margin rule's ink) rather than the guest's own colour — the stamp is the shelf's
+     mark, not the catalogue's, so it reads the same on every pass. */
+  /* the stub is only 26px tall, so the "admit one" print sits under the stamp rather than
+     beside it and reads as an overlap bug at pass size. The stamp replaces it. */
+  .guest-stub--stamped::before { content: none; }
+  .guest-admit {
+    position: absolute; left: 50%; top: 50%; z-index: 1;
+    transform: translate(-50%, -50%) rotate(var(--stamp-rot, -3deg));
+    font-family: var(--type); font-weight: 700; font-size: 8px; letter-spacing: 2.2px;
+    text-transform: uppercase; font-style: normal; white-space: nowrap;
+    color: rgba(160,62,46,0.72); padding: 2px 6px;
+    border: 1.4px solid rgba(160,62,46,0.6); border-radius: 2px;
+  }
 
   /* the pass turned over: what is actually in the catalogue */
   .guest-detail-head {
@@ -2000,7 +2014,9 @@
   }
   .guest-detail-name { font-family: var(--hand); font-size: 26px; line-height: 1.05; color: var(--g-pen, var(--ink)); }
   .guest-detail-nums { font-family: var(--type); font-size: 10.5px; letter-spacing: 1px; color: var(--ink-soft); }
-  .guest-recs { list-style: none; margin: 0; padding: 0; }
+  /* the record list, then the rule/goal sections borrowed from a challenge card: the margin
+     is what keeps the last record off the "the rule" eyebrow */
+  .guest-recs { list-style: none; margin: 0 0 14px; padding: 0; }
   .guest-recs li {
     display: flex; align-items: baseline; gap: 10px;
     padding: 5px 0; border-bottom: 1px dotted rgba(43,39,34,0.22);

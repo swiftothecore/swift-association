@@ -49,6 +49,7 @@ export const CHALLENGES_KEY = "swiftSongAssociation.challenges";        // per-c
 export const CHALLENGE_TOKENS_KEY = "swiftSongAssociation.challengeTokens"; // { balance } — tokens spent to unlock challenges
 export const ALBUM_FOCUS_KEY = "swiftSongAssociation.albumFocus";       // per-album best/beaten board — { [album]: {best, bestDiff, beaten, beatenDiff, perfected, perfectedDiff} }
 export const ADAPTIVE_KEY = "swiftSongAssociation.adaptive";            // Adaptive mode board — { bestPeak, bestScore, date, played }
+export const GUEST_KEY = "swiftSongAssociation.guests";                 // guest shelf board — { [guestId]: {best, bestDiff, admitted, admittedDiff} }
 export const BONUS_KEY = "swiftSongAssociation.bonus";                  // bonus games shelf — { [gameId]: {best, plays, last} }
 export const SEARCH_KEY = "swiftSongAssociation.search";                // Swift To The Lyric searcher — { mode, view, recent:[] }
 export const MASTERY_KEY = "swiftSongAssociation.mastery";              // skills + mastery progression — { skills:{...xp}, masteryXp, unlocked:{[rewardId]:isoDate} }
@@ -205,8 +206,23 @@ export const GUESTS = [
     // record ticks. Violet, which is SOUR/GUTS as a mood and nothing more.
     ink: { deep: "#2f1c47", accent: "#7a55b0", strap: "#5b3c88", pen: "#4a2f6b",
            ticks: ["#8e7bbf", "#6b4a95", "#3d2a5c"] },
+    // The era wash a guest run wears for all thirteen pages. ALBUM_ERA can't answer this —
+    // it keys on Taylor's albums — and a guest run shuffling through Taylor's eras would
+    // dress someone else's catalogue in her colours. One era per guest, chosen for mood.
+    era: "lavender",
   },
 ];
+// A guest is played at a chosen difficulty, from the same ladder Album Focus offers:
+// deliberately the same list, since a guest round IS Album Focus pointed at another corpus.
+export const GUEST_DIFFS = ALBUM_FOCUS_DIFFS;
+// What admits a guest to the shelf. Album Focus beats at 9/13 and perfects at 13/13; a guest
+// has only the one mark, set at a perfect run. A 42-song catalogue is small enough that 9/13
+// arrives quickly once you know it, and ADMITTED should mean you know the whole shelf.
+export const GUEST_TARGET = TOTAL_ROUNDS;
+// The bucket thresholds Taylor's 287-song corpus is tuned to. A guest carries its own in its
+// file (see loadGuest / buildWordBuckets) because these numbers do not survive the trip: at
+// 42 songs `easy >= 18` matches nine words and `ultra` swallows most of the vocabulary.
+export const TAYLOR_BUCKETS = { easy: 18, hard: [3, 9], ultra: [1, 3] };
 
 /* ---------- Adaptive mode ----------
    A third gameType beside Classic and Infinite. A fixed 13-round run where word RARITY
@@ -1334,6 +1350,9 @@ export const ACH_ICONS = {
   // your own levers, each slid somewhere different. The knobs are beads, not handles, so the
   // panel stays notebook rather than mixing desk.
   levers:  `<svg viewBox="0 0 24 24"><g class="ink" stroke-width="1.3" fill="none"><path d="M3.2 6.6 H20.8"/><path d="M3.2 12 H20.8"/><path d="M3.2 17.4 H20.8"/></g><g class="ink-fill"><circle cx="15.4" cy="6.6" r="2.1"/><circle cx="7.6" cy="12" r="2.1"/><circle cx="16.8" cy="17.4" r="2.1"/></g></svg>`,
+  // PLACEHOLDER — a backstage pass on its strap, stamped. Stands in until the real charm
+  // is drawn; it is a blocked-out shape, not a considered mark.
+  guestpass:`<svg viewBox="0 0 24 24"><path class="ink" stroke-width="1.3" fill="none" d="M9.4 3.4 C9.4 6.4 14.6 6.4 14.6 9.4"/><rect class="ink-fill" x="5.4" y="9" width="13.2" height="11.6" rx="1.2"/><g class="ink" stroke-width="1" opacity="0.5"><path d="M7.8 15.4 H16.2"/><path d="M7.8 17.6 H13.4"/></g><rect x="7.8" y="11.2" width="8.4" height="2.2" rx="0.6" fill="var(--paper)" stroke="none"/></svg>`,
   // the shelf itself: written-up preset cards stood in an open holder
   presetbox:`<svg viewBox="0 0 24 24"><g class="ink-fill"><rect x="4.4" y="3" width="10.4" height="11.4" rx="0.8" transform="rotate(-9 9.6 8.7)"/><rect x="9.6" y="2.4" width="10.4" height="12" rx="0.8" transform="rotate(7 14.8 8.4)"/></g><g class="ink" stroke-width="1" opacity="0.55" transform="rotate(7 14.8 8.4)"><path d="M11.6 6 H18"/><path d="M11.6 8.4 H16.4"/><path d="M11.6 10.8 H17.4"/></g><path class="ink-fill" d="M2.8 13.4 L4.1 20.4 a1 1 0 0 0 1 0.8 H18.9 a1 1 0 0 0 1 -0.8 L21.2 13.4"/></svg>`,
   // one pen stroke looped twice and carried past itself — a run with no last page
@@ -1823,6 +1842,8 @@ export const ACHIEVEMENTS = [
   { id: "ours",             name: "Ours",             desc: "Finish your first Custom run",         secret: false, icon: "levers" },
   { id: "mine",             name: "Mine",             desc: `Keep ${CUSTOM_PRESET_SHELF} custom presets on the shelf at once`, secret: false, icon: "presetbox" },
   { id: "forever-and-always", name: "Forever & Always", desc: `Reach round ${CUSTOM_ENDLESS_MILESTONE} of an endless Custom run`, secret: true, icon: "infinity" },
+  /* ---- Guest shelf (other artists' catalogues) ---- */
+  { id: "welcome-to-new-york", name: "Welcome To New York", desc: "Admit a guest to the shelf", secret: false, icon: "guestpass" },
   /* ---- Skills & Mastery ---- */
   { id: "bigger-than-the-whole-sky", name: "Bigger Than The Whole Sky", desc: "Press the wax and unlock Mastery", secret: false, icon: "waxpress" },
   { id: "superstar",        name: "Superstar",        desc: `Take a single skill all the way to level ${SKILL_MAX_LEVEL}`, secret: true, icon: "rosette" },
@@ -1845,6 +1866,7 @@ export const ACH_GROUPS = [
   { id: "albumFocus", label: "Album Focus",            short: "Album" },
   { id: "adaptive",  label: "Adaptive mode",          short: "Adaptive" },
   { id: "custom",    label: "Custom mode",            short: "Custom" },
+  { id: "guests",    label: "Guest shelf",            short: "Guests" },
   { id: "mastery",   label: "Skills & Mastery",       short: "Mastery" },
 ];
 // One muted notebook hue per theme — the section dots and the by-theme breakdown bars.
@@ -1858,6 +1880,7 @@ export const ACH_GROUP_COLORS = {
   albumFocus: "#a8577a",
   adaptive:  "#7d5a3f",
   custom:    "#4a6b8a",
+  guests:    "#6b5a92",
   mastery:   "#8a6d1f",
 };
 // Membership: only the non-core ids are listed; everything else defaults to "core"
@@ -1882,6 +1905,7 @@ export const ACH_GROUP_OF = {
   "a-place-in-this-world": "albumFocus", "change": "albumFocus", "gold-rush": "albumFocus", "starlight": "albumFocus",
   "the-lakes": "adaptive", "stay-stay-stay": "adaptive",
   "ours": "custom", "mine": "custom", "forever-and-always": "custom",
+  "welcome-to-new-york": "guests",
   "bigger-than-the-whole-sky": "mastery", "superstar": "mastery", "call-it-what-you-want": "mastery",
   "nineteen-eighty-nine": "infinite", "mean": "catalogue",
 };

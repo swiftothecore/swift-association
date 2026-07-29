@@ -9,6 +9,7 @@ import {
   CHALLENGES_KEY, CHALLENGE_TOKENS_KEY,
   ALBUM_FOCUS_KEY, ALBUM_FOCUS_TARGET, DIFF_RANK,
   ADAPTIVE_KEY,
+  GUEST_KEY, GUEST_TARGET,
   BONUS_KEY,
   CUSTOM_KEY, CUSTOM_DEFAULT_MODE,
   KEEPSAKES_KEY,
@@ -185,6 +186,45 @@ export function recordAlbumFocusRun(album, score, diff, countBest = true) {
 }
 export function resetAlbumFocus() {
   try { localStorage.removeItem(ALBUM_FOCUS_KEY); } catch (e) { /* ignore */ }
+}
+
+/* ---------- Guest shelf board (sandboxed, like album focus) ----------
+   { [guestId]: { best, bestDiff, admitted, admittedDiff } }
+   One mark rather than Album Focus's two: a guest is ADMITTED at a perfect run, so there is
+   no beaten/perfected pair to keep apart. admittedDiff = the HARDEST difficulty it was
+   admitted at, so the pass's stamp can say how it was earned. */
+export function loadGuests() {
+  try {
+    const raw = localStorage.getItem(GUEST_KEY);
+    if (raw) { const o = JSON.parse(raw); if (o && typeof o === "object") return o; }
+  } catch (e) { /* ignore */ }
+  return {};
+}
+export function saveGuests(o) {
+  try { localStorage.setItem(GUEST_KEY, JSON.stringify(o)); } catch (e) { /* ignore */ }
+}
+// One guest's record, with defaults filled in.
+export function guestRecord(id) {
+  const e = loadGuests()[id] || {};
+  return {
+    best: e.best || 0, bestDiff: e.bestDiff || null,
+    admitted: !!e.admitted, admittedDiff: e.admittedDiff || null,
+  };
+}
+// Fold a finished guest run into the board. `score` is 0..TOTAL_ROUNDS, `diff` a MODES id.
+// Returns the updated record. (Caller gates admission on a hint-free run.)
+export function recordGuestRun(id, score, diff, countBest = true) {
+  const all = loadGuests();
+  const e = all[id] || {};
+  if (score > (e.best || 0)) { e.best = score; e.bestDiff = diff; }
+  else if (score === (e.best || 0) && score > 0) { e.bestDiff = harderDiff(e.bestDiff, diff); }
+  if (countBest && score >= GUEST_TARGET) { e.admitted = true; e.admittedDiff = harderDiff(e.admittedDiff, diff); }
+  all[id] = e;
+  saveGuests(all);
+  return guestRecord(id);
+}
+export function resetGuests() {
+  try { localStorage.removeItem(GUEST_KEY); } catch (e) { /* ignore */ }
 }
 
 /* ---------- Adaptive board (sandboxed, like challenges/album focus) ----------
