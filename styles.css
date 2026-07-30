@@ -706,8 +706,14 @@
   }
   .flip-shade.flip-shade--in { animation-name: pageFlipShadeOut; }
   /* A frozen, non-animating backdrop clone of the page being left, sitting beneath the
-     incoming sheet during a back/"in" turn (see flipInToScreen). Its shade is suppressed. */
-  .page-flip-sheet.flip-static { animation: none; box-shadow: none; }
+     incoming sheet during a back/"in" turn (see flipInToScreen). Its shade is suppressed, and it
+     wears the card's own resting shadow rather than the flip sheet's lifted one: the real page
+     underneath is hidden for the length of the turn, so this clone is the only thing casting
+     onto the desk and should sit as flat as the page it's standing in for. */
+  .page-flip-sheet.flip-static {
+    animation: none;
+    box-shadow: 0 18px 40px rgba(60, 50, 35, 0.28), 0 2px 6px rgba(60, 50, 35, 0.18);
+  }
   .flip-shade.flip-shade--off { display: none; }
   @keyframes pageFlipSide {
     from { transform: rotateY(0deg); }

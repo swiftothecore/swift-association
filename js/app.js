@@ -738,14 +738,23 @@ function flipInToScreen(name) {
   //    buttons match the real screen exactly — and flip it in over the backdrop. (dest is the
   //    visible active screen now, so its offsets are real.)
   const incoming = makeFlipSheet(dest, dest, "page-flip-sheet--in", "flip-shade--in");
-  // 4. The destination is often SHORTER than the page we're leaving, so fade the backdrop's
+  // 4. Now hide the real destination for the length of the turn. The backdrop only covers the
+  //    page we're leaving, so when the destination is TALLER (e.g. quitting a game: the start
+  //    board is longer than the game card) its uncovered lower strip would otherwise be sitting
+  //    there in full the instant the button is tapped — the bottom of the incoming page arriving
+  //    before the turn that brings it. Hidden, that strip is bare desk until the incoming sheet
+  //    lands on it, so the page is only ever seen flipping in. Restored in the same tick the
+  //    sheets are removed (below), so there's no frame without a page. Order matters: the clone
+  //    above is taken while the destination is still visible.
+  dest.style.opacity = "0";
+  // 5. The destination is often SHORTER than the page we're leaving, so fade the backdrop's
   //    lower (uncovered) half out near the end — it dissolves into the desk instead of snapping
   //    away when the sheets are removed.
   const s = animScale() || 1;
   backdrop.offsetHeight;                        // flush the opacity:1 baseline so the transition runs
   backdrop.style.transition = `opacity ${(0.16 * s).toFixed(3)}s linear ${(0.32 * s).toFixed(3)}s`;
   backdrop.style.opacity = "0";
-  scheduleFlipRemoval(incoming, () => { backdrop.remove(); });
+  scheduleFlipRemoval(incoming, () => { backdrop.remove(); dest.style.opacity = ""; });
 }
 
 /* The back tap out of a sub-page (stats/records/achievements/mastery/challenges/album focus),
