@@ -2010,10 +2010,11 @@
      and a printed card in a laminate pouch. Warm stock and typewriter fields keep it on the
      desk instead of tipping into event-plastic.
 
-     Sizing rule: the pass never shrinks past the point where its own name is readable. Five
-     across only fits the full page width, so narrower viewports get MORE rails rather than
-     smaller passes — which is why guestPerRail (app.js) picks the count in markup and a
-     breakpoint crossing re-renders. Nothing here reflows the passes on its own. */
+     Sizing rule: the pass never shrinks past the point where its own name is readable (100px),
+     and it never grows past 128. Between those two the rail squeezes; below 100 a narrow
+     viewport gets MORE rails rather than unreadable passes — which is why guestPerRail
+     (app.js) picks the count in markup and a breakpoint crossing re-renders. Nothing here
+     reflows the passes on its own. */
   .guest-rack { margin: 4px 0 6px; }
   .guest-rail {
     position: relative; display: flex; justify-content: center; align-items: flex-start;
@@ -2029,7 +2030,7 @@
   /* Every hanger occupies a full slot, pass or not, so the rings stay evenly spaced along the
      rail whether the shelf holds one guest or ten. Slots may SHRINK below 128px but never
      grow past it: the narrowest phone still wants two passes on a rail rather than one, so
-     128 is a ceiling, not a fixed size. */
+     128 is a ceiling, not a fixed size. The matching floor lives in guestPerRail. */
   .guest-peg {
     position: relative; flex: 0 1 128px; min-width: 0; max-width: 128px;
     display: flex; flex-direction: column; align-items: center;

@@ -4675,7 +4675,7 @@ function guestCounts(cat) {
 // is readable, so a narrow page gets MORE rails rather than smaller passes. The count comes
 // from the notebook card's real content width (NOT the window: the card is narrower than the
 // viewport, and its left margin gutter is wide), so it stays right at any page width.
-const GUEST_PASS_W = 128, GUEST_RAIL_GAP = 14;
+const GUEST_PASS_W = 128, GUEST_PASS_MIN = 100, GUEST_RAIL_GAP = 14;
 function guestRailWidth() {
   const el = $("guestBody");
   if (el && el.clientWidth) return el.clientWidth;
@@ -4689,8 +4689,18 @@ function guestRailWidth() {
   return window.innerWidth;
 }
 function guestPerRail() {
-  const fit = Math.floor((guestRailWidth() + GUEST_RAIL_GAP) / (GUEST_PASS_W + GUEST_RAIL_GAP));
+  // Fit is measured against the pass's floor width, not its comfortable one: five across
+  // squeezed to 100 reads better than a rail count that leaves the last rail half empty.
+  const fit = Math.floor((guestRailWidth() + GUEST_RAIL_GAP) / (GUEST_PASS_MIN + GUEST_RAIL_GAP));
   return Math.max(2, Math.min(5, fit));
+}
+// How the slots divide across the rails. Filling each rail to the maximum leaves the last one
+// stranded (4+4+2), so the count that fits only decides how FEW rails we need — the slots are
+// then spread evenly over them, and the rails being centred hides the odd one out.
+function guestRailPlan() {
+  const rails = Math.max(1, Math.ceil(GUEST_SHELF_SLOTS / guestPerRail()));
+  const base = Math.floor(GUEST_SHELF_SLOTS / rails), extra = GUEST_SHELF_SLOTS % rails;
+  return Array.from({ length: rails }, (_, i) => base + (i < extra ? 1 : 0));
 }
 
 function openGuestShelf(from) {
@@ -4704,12 +4714,11 @@ function openGuestShelf(from) {
 }
 
 function renderGuestShelfPage() {
-  const perRail = guestPerRail();
-  let rails = "";
-  for (let i = 0; i < GUEST_SHELF_SLOTS; i += perRail) {
+  let rails = "", slot = 0;
+  for (const count of guestRailPlan()) {
     let pegs = "";
-    for (let s = i; s < Math.min(i + perRail, GUEST_SHELF_SLOTS); s++) {
-      pegs += GUESTS[s] ? guestPassMarkup(GUESTS[s], s) : guestEmptyMarkup();
+    for (let n = 0; n < count; n++, slot++) {
+      pegs += GUESTS[slot] ? guestPassMarkup(GUESTS[slot], slot) : guestEmptyMarkup();
     }
     rails += `<div class="guest-rail">${pegs}</div>`;
   }
