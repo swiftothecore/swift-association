@@ -3785,6 +3785,7 @@ let bonusRaf = null;       // clock handle (setInterval id — see startBonusClo
 let bonusEnded = false;
 let bonusRecentFakes = []; // Spot the Slip: impostor words used recently, so a run doesn't repeat one
 let bonusRecentSongs = []; // Sing It Back: songs already blanked this run, so one doesn't come round twice
+let bonusLog = [];         // one entry per settled round, for the end card's track listing
 // Bumped on every start. The between-rounds pause is a setTimeout, so without a token a run
 // that's quit and immediately restarted would have the old pause advance the NEW run a round.
 let bonusRunId = 0;
@@ -3926,6 +3927,7 @@ function startBonusGame(g) {
   bonusEnded = false;
   bonusRecentFakes = [];
   bonusRecentSongs = [];
+  bonusLog = [];
   bonusRunId++;
   stopBonusClock();
   // The pressing follows the game in from the shelf, so the play screen is visibly the
@@ -3942,6 +3944,17 @@ function bonusSeconds() {
   return BONUS_NAME_SECONDS;
 }
 
+// This game's puzzle for one page, avoid-lists included. Split out from nextBonusRound so the
+// dev tools can build a page's worth without driving the screen.
+function buildBonusPuzzle() {
+  const { lineIndex, ctx } = bonusIndexes();
+  if (bonusGame.id === "spot-the-slip")
+    return buildSlipPuzzle(allSongs, playableWords, lineIndex, ctx, Math.random, 120, new Set(bonusRecentFakes));
+  if (bonusGame.id === "sing-it-back")
+    return buildBlankPuzzle(allSongs, ctx, Math.random, 120, new Set(bonusRecentSongs));
+  return buildNamePuzzle(allSongs, lineIndex);
+}
+
 function nextBonusRound() {
   if (bonusRound >= BONUS_ROUNDS) { endBonusRun(); return; }
   bonusRound++;
@@ -3952,13 +3965,7 @@ function nextBonusRound() {
   $("bonusScore").textContent = `${bonusScore} correct`;
   $("bonusTimer").style.display = "";
 
-  const { lineIndex, ctx } = bonusIndexes();
-  bonusPuzzle =
-    bonusGame.id === "spot-the-slip"
-      ? buildSlipPuzzle(allSongs, playableWords, lineIndex, ctx, Math.random, 120, new Set(bonusRecentFakes))
-      : bonusGame.id === "sing-it-back"
-        ? buildBlankPuzzle(allSongs, ctx, Math.random, 120, new Set(bonusRecentSongs))
-        : buildNamePuzzle(allSongs, lineIndex);
+  bonusPuzzle = buildBonusPuzzle();
   // A builder returning null means it couldn't find a puzzle clearing its fairness bars. That
   // should be vanishingly rare, but skipping the page is the honest response — never show a
   // puzzle we can't vouch for.
@@ -3973,6 +3980,35 @@ function nextBonusRound() {
   startBonusClock();
 }
 
+/* The writing line, borrowed wholesale from the round screen: same `.input-area` (which is
+   what puts the pencil at the start of the line), same `.song-input`, same washi-taped
+   `.dropdown` cards. A bonus game asks a different question, but it should ask it on the
+   same stationery. `hint` mirrors the round screen's hint line under the input. */
+function bonusWritingLine({ placeholder, aria, hint, dropdown = false }) {
+  return `<div class="input-area bg-write${dropdown ? " bg-write--sug" : ""}">` +
+      `<input id="bonusInput" class="song-input" type="text" autocomplete="off" autocapitalize="off" ` +
+             `spellcheck="false" placeholder="${escapeHtml(placeholder)}" aria-label="${escapeHtml(aria)}"` +
+             (dropdown
+               ? ` role="combobox" aria-expanded="false" aria-controls="bonusDropdown" ` +
+                 `aria-haspopup="listbox" aria-autocomplete="list"`
+               : "") + ` />` +
+      `<div id="bonusReject" class="bg-reject"></div>` +
+      (dropdown ? `<div id="bonusDropdown" class="dropdown" role="listbox" aria-label="Matching songs"></div>` : "") +
+    `</div>` +
+    `<p class="bg-hint">${escapeHtml(hint)}</p>`;
+}
+
+/* A song heading written across the top of the page, the way a lyric sheet in this notebook
+   would be titled: the name in pen, the section it came from noted underneath. */
+function bonusSongHead(song, label) {
+  return `<div class="bg-sheet">` +
+      `<h3 class="bg-sheet-title">${escapeHtml(song.title)}</h3>` +
+      `<div class="bg-sheet-rule" aria-hidden="true"></div>` +
+      `<div class="bg-sheet-meta">${escapeHtml(song.album)}` +
+        (label ? ` · ${escapeHtml(label.toLowerCase())}` : "") + `</div>` +
+    `</div>`;
+}
+
 function renderBonusRound() {
   const body = $("bonusPlayBody");
   const p = bonusPuzzle;
@@ -3983,7 +4019,7 @@ function renderBonusRound() {
       ? `<button type="button" class="bg-word" data-i="${i}">${escapeHtml(t.text)}</button>`
       : `<span class="bg-word-plain">${escapeHtml(t.text)}</span>`).join(" ");
     body.innerHTML =
-      `<p class="bg-ask">One word was swapped. Tap the impostor.</p>` +
+      `<p class="bg-ask">tap the word that was swapped in</p>` +
       label +
       `<div class="bg-line" role="group" aria-label="Lyric line with one wrong word">${words}</div>`;
     body.querySelectorAll(".bg-word").forEach((b) =>
@@ -3998,14 +4034,11 @@ function renderBonusRound() {
         : escapeHtml(t.core)) +
       escapeHtml(t.post)).map((w) => `<span class="bg-word-plain">${w}</span>`).join(" ");
     body.innerHTML =
-      `<p class="bg-ask">One word is missing. Write it back in.</p>` +
-      `<div class="bg-blank-song">${escapeHtml(p.song.title)}</div>` +
-      label +
+      `<p class="bg-ask">write the missing word</p>` +
+      bonusSongHead(p.song, p.label) +
       `<div class="bg-line bg-blank-line" role="group" aria-label="Lyric line with one word missing">${words}</div>` +
-      `<div class="bg-input-wrap">` +
-        `<input id="bonusInput" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" ` +
-               `placeholder="the missing word…" aria-label="Type the missing word" />` +
-      `</div>`;
+      bonusWritingLine({ placeholder: "the missing word…", aria: "Type the missing word",
+                         hint: "one word, then Enter" });
     const input = $("bonusInput");
     // Mirror the typing straight into the gap, so the player is filling the line in rather
     // than answering a question about it.
@@ -4019,16 +4052,15 @@ function renderBonusRound() {
     input.focus();
   } else {
     body.innerHTML =
-      `<p class="bg-ask">Which song is this line from?</p>` +
+      `<p class="bg-ask">name the song this line is from</p>` +
       label +
       `<blockquote class="bg-lyric">${escapeHtml(p.line)}</blockquote>` +
-      `<div class="bg-input-wrap">` +
-        `<input id="bonusInput" type="text" autocomplete="off" spellcheck="false" ` +
-               `placeholder="name the song…" aria-label="Type the song title" />` +
-        `<div id="bonusReject" class="bg-reject"></div>` +
-      `</div>`;
+      bonusWritingLine({ placeholder: "type the title…", aria: "Type the song title",
+                         hint: "Enter accepts the top match", dropdown: true });
     const input = $("bonusInput");
+    input.addEventListener("input", updateBonusDropdown);
     input.addEventListener("keydown", (e) => {
+      if (bonusDropdownKey(e)) return;
       if (e.key === "Enter") { e.preventDefault(); judgeName(); }
     });
     input.focus();
@@ -4082,20 +4114,106 @@ function judgeSlip(i) {
     : `It was <b>${escapeHtml(bonusPuzzle.fakeWord)}</b> — the real word is <b>${escapeHtml(bonusPuzzle.realWord)}</b>.`);
 }
 
-function judgeName() {
+/* ---------- Name That Song's suggestions ----------
+   The round screen's dropdown, on the shelf: same washi-taped cards, same arrow-keys-then-
+   Enter feel. It ranks its own matches rather than calling `rankMatches`, deliberately —
+   that one filters through `roundAcceptsSong`, which reads the live round's state (Album
+   Focus's locked album, a challenge's constraint). A bonus run never sets that state and
+   must not be judged by it, so borrowing the ranking would let whatever was played last
+   quietly shorten this list. */
+let bonusDdItems = [];
+let bonusDdIndex = -1;
+
+function bonusRankMatches(query) {
+  const q = normalizeTitle(query);
+  if (!q) return [];
+  const scored = [];
+  for (const song of allSongs) {
+    const idx = song._norm.indexOf(q);
+    if (idx === -1) continue;
+    scored.push({ song, rank: idx === 0 ? 0 : 1, idx });
+  }
+  scored.sort((a, b) => a.rank - b.rank || a.idx - b.idx || a.song.title.localeCompare(b.song.title));
+  return scored.slice(0, 6).map((s) => s.song);
+}
+
+function updateBonusDropdown() {
+  bonusDdItems = bonusLocked ? [] : bonusRankMatches($("bonusInput").value);
+  bonusDdIndex = bonusDdItems.length ? 0 : -1;
+  renderBonusDropdown();
+}
+
+function renderBonusDropdown() {
+  const dd = $("bonusDropdown");
+  const input = $("bonusInput");
+  if (!dd || !input) return;
+  if (!bonusDdItems.length) { hideBonusDropdown(); return; }
+  dd.innerHTML = "";
+  bonusDdItems.forEach((song, i) => {
+    const div = document.createElement("div");
+    div.className = "item" + (i === bonusDdIndex ? " active" : "");
+    div.id = "bg-dd-opt-" + i;
+    div.setAttribute("role", "option");
+    div.setAttribute("aria-selected", i === bonusDdIndex ? "true" : "false");
+    div.textContent = censor(song.title);
+    div.addEventListener("mousedown", (e) => { e.preventDefault(); judgeName(song); });
+    dd.appendChild(div);
+  });
+  dd.classList.add("show");
+  input.setAttribute("aria-expanded", "true");
+  input.setAttribute("aria-activedescendant", "bg-dd-opt-" + bonusDdIndex);
+}
+
+function hideBonusDropdown() {
+  const dd = $("bonusDropdown");
+  const input = $("bonusInput");
+  if (dd) { dd.classList.remove("show"); dd.innerHTML = ""; }
+  if (input) {
+    input.setAttribute("aria-expanded", "false");
+    input.removeAttribute("aria-activedescendant");
+  }
+  bonusDdItems = [];
+  bonusDdIndex = -1;
+}
+
+// Arrow keys walk the list, Escape puts it away. Returns true when the key belonged to the
+// dropdown, so the caller's own Enter handling doesn't fire as well.
+function bonusDropdownKey(e) {
+  if (e.key === "Escape") { hideBonusDropdown(); return true; }
+  if (!bonusDdItems.length) return false;
+  if (e.key === "ArrowDown") {
+    e.preventDefault();
+    bonusDdIndex = (bonusDdIndex + 1) % bonusDdItems.length;
+    renderBonusDropdown();
+    return true;
+  }
+  if (e.key === "ArrowUp") {
+    e.preventDefault();
+    bonusDdIndex = (bonusDdIndex - 1 + bonusDdItems.length) % bonusDdItems.length;
+    renderBonusDropdown();
+    return true;
+  }
+  return false;
+}
+
+// `picked` is a suggestion clicked outright; otherwise Enter takes the highlighted one, and
+// failing that whatever was typed is resolved as a title.
+function judgeName(picked = null) {
   if (bonusLocked) return;
   const raw = $("bonusInput").value;
   const key = normalizeTitle(raw);
-  if (!key) return;
   // Same forgiving title resolution the main game uses, so aliases and misplaced spaces work.
-  let song = titleIndex.get(key) || spacelessIndex.get(key.replace(/ /g, "")) || null;
+  const typed = key ? (titleIndex.get(key) || spacelessIndex.get(key.replace(/ /g, "")) || null) : null;
+  const song = picked || bonusDdItems[bonusDdIndex] || typed;
   if (!song) {
+    if (!key) return;
     // Not a song we know: don't burn the round, just say so and let them keep typing.
     const r = $("bonusReject");
     r.textContent = "not a song I know";
     r.classList.remove("show"); void r.offsetWidth; r.classList.add("show");
     return;
   }
+  hideBonusDropdown();
   const correct = song.title === bonusPuzzle.song.title;
   $("bonusInput").disabled = true;
   settleBonusRound(correct, correct
@@ -4126,7 +4244,18 @@ function settleBonusRound(correct, message) {
 
   const input = $("bonusInput");
   if (input) input.disabled = true;
+  hideBonusDropdown();
   $("bonusPlayBody").querySelectorAll(".bg-word").forEach((b) => { b.disabled = true; });
+
+  // The run's track listing, written up on the end card. Each game notes the one thing worth
+  // remembering about its page: the impostor you were hunting, the word that was missing, or
+  // (Name That Song, where the song IS the answer) which record it came off.
+  bonusLog.push({
+    n: bonusRound, ok: correct, title: bonusPuzzle.song.title,
+    note: bonusGame.id === "spot-the-slip" ? bonusPuzzle.fakeWord
+        : bonusGame.id === "sing-it-back" ? bonusPuzzle.answer
+        : bonusPuzzle.song.album,
+  });
   // Reveal the answer on a timeout too, whichever game we're in.
   if (bonusGame.id === "spot-the-slip") {
     $("bonusPlayBody").querySelectorAll(".bg-word").forEach((b) => {
@@ -4155,25 +4284,66 @@ function settleBonusRound(correct, message) {
   }, 1900);
 }
 
-/* ---------- end of run ---------- */
+/* ---------- end of run ----------
+   The marks in the margin of the track listing: a gold pen tick, a red pen cross. Drawn
+   rather than typed, like every other mark on the site. */
+const BG_TICK = `<svg viewBox="0 0 16 16" class="bg-mark-svg" aria-hidden="true"><path d="M3 8.6 L6.4 12 L13 4.6" fill="none" stroke="#c7951f" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+const BG_CROSS = `<svg viewBox="0 0 16 16" class="bg-mark-svg" aria-hidden="true"><path d="M4 4 L12 12 M12 4 L4 12" fill="none" stroke="#b23a3f" stroke-width="2" stroke-linecap="round"/></svg>`;
+
+// One line in pen under the game's name. Kept in the shelf's own record-shop voice, and
+// scored the same way for all three games so no game reads as the important one.
+function bonusRemark(score) {
+  if (score >= BONUS_ROUNDS) return "a perfect pressing";
+  if (score >= BONUS_ROUNDS - 1) return "one crackle, no more";
+  if (score >= BONUS_ROUNDS * 0.7) return "a clean side";
+  if (score >= BONUS_ROUNDS * 0.5) return "half the record";
+  if (score >= BONUS_ROUNDS * 0.3) return "a rough cut";
+  if (score > 0) return "mostly static";
+  return "a blank tape";
+}
+
 function endBonusRun() {
   bonusEnded = true;
   stopBonusClock();
   const rec = recordBonusRun(bonusGame.id, bonusScore);
   $("bonusTimer").style.display = "none";
   $("bonusProgress").textContent = "run complete";
+  $("bonusScore").textContent = `${bonusScore} correct`;
   $("bonusFeedback").innerHTML = "";
   $("bonusFeedback").className = "bg-feedback";
 
   const perfect = bonusScore === BONUS_ROUNDS;
+  // The run written up on the back of its own sleeve: the pressing, the score in pen, and the
+  // ten tracks listed out with what each one turned on. A bonus run has no bracelet and no
+  // stats to show for itself by design, so the track listing is the keepsake — and it doubles
+  // as the only place the missed answers are all readable at once.
+  const tracks = bonusLog.map((t) =>
+    `<li class="bg-track ${t.ok ? "ok" : "no"}">` +
+      `<span class="bg-track-n">${t.n}</span>` +
+      `<span class="bg-track-title">${escapeHtml(censor(t.title))}</span>` +
+      (t.note ? `<span class="bg-track-note">${escapeHtml(t.note)}</span>` : "") +
+      `<span class="bg-track-mark" aria-hidden="true">${t.ok ? BG_TICK : BG_CROSS}</span>` +
+      `<span class="sr-only">${t.ok ? "correct" : "missed"}</span>` +
+    `</li>`).join("");
+
   $("bonusPlayBody").innerHTML =
     `<div class="bg-end">` +
-      `<div class="bg-end-disc">${bonusDisc(bonusGame)}</div>` +
-      `<div class="bg-end-kicker">${escapeHtml(bonusGame.name)}</div>` +
-      `<div class="bg-end-score">${bonusScore} <span>/ ${BONUS_ROUNDS}</span></div>` +
-      (rec.isBest && rec.plays > 1 ? `<div class="bg-end-best">a new best</div>` : "") +
-      (perfect ? `<div class="bg-end-best">not one slipped past you</div>` : "") +
-      `<div class="bg-end-meta">best ${rec.best} / ${BONUS_ROUNDS} · played ${rec.plays}</div>` +
+      `<div class="bg-sleeve" style="--bg-tint:${escapeHtml(bonusGame.tint)}">` +
+        `<div class="bg-sleeve-head">` +
+          `<div class="bg-end-disc">${bonusDisc(bonusGame)}</div>` +
+          `<div class="bg-sleeve-titles">` +
+            `<div class="bg-sleeve-kicker">${escapeHtml(bonusGame.kicker)}</div>` +
+            `<h3 class="bg-sleeve-name">${escapeHtml(bonusGame.name)}</h3>` +
+            `<div class="bg-sleeve-remark">${escapeHtml(bonusRemark(bonusScore))}</div>` +
+          `</div>` +
+          `<div class="bg-sleeve-score">${bonusScore}<span>/${BONUS_ROUNDS}</span></div>` +
+          (perfect ? `<i class="bg-stamp">clean sweep</i>`
+            : rec.isBest && rec.plays > 1 ? `<i class="bg-stamp">new best</i>` : "") +
+        `</div>` +
+        `<div class="bg-sleeve-label">the run, track by track</div>` +
+        `<ol class="bg-tracks">${tracks}</ol>` +
+        `<div class="bg-sleeve-foot">best ${rec.best} / ${BONUS_ROUNDS} · played ${rec.plays}</div>` +
+      `</div>` +
       `<div class="bg-end-actions">` +
         `<button type="button" id="bonusAgainBtn" class="btn-primary">Play again</button>` +
         `<button type="button" id="bonusShelfBtn" class="btn-primary">← the shelf</button>` +
@@ -14349,6 +14519,27 @@ function buildDevApi() {
         return BONUS_GAMES.map((g) => `${g.id}: ${g.tint} ${g.mark}`);
       },
       end: () => endBonusRun(),
+      // Fabricate a finished run — real puzzles, `wins` of them ticked — and go straight to the
+      // sleeve. The end card's track listing is the one surface that needs ten SETTLED rounds
+      // to look at, and playing ten out honestly to check a layout is a waste of an afternoon.
+      fill: (wins = 7) => {
+        if (!bonusGame) return "start a bonus game first";
+        bonusLog = [];
+        for (let n = 1; n <= BONUS_ROUNDS; n++) {
+          const p = buildBonusPuzzle();
+          if (!p) continue;
+          if (bonusGame.id === "sing-it-back") bonusRecentSongs.push(p.song.title);
+          bonusLog.push({
+            n, ok: n <= wins, title: p.song.title,
+            note: bonusGame.id === "spot-the-slip" ? p.fakeWord
+                : bonusGame.id === "sing-it-back" ? p.answer : p.song.album,
+          });
+        }
+        bonusScore = Math.max(0, Math.min(BONUS_ROUNDS, wins | 0));
+        bonusRound = BONUS_ROUNDS;
+        endBonusRun();
+        return `${bonusGame.name}: ${bonusScore}/${BONUS_ROUNDS}`;
+      },
       reset: () => { resetBonus(); if ($("bonusBody")) renderBonusPage(); },
     },
     // Normal-mode novelty bias — the coverage nudge that favours un-encountered words in Normal.
