@@ -704,7 +704,7 @@ function scheduleFlipRemoval(flip, onEnd) {
   setTimeout(finish, 500 * animScale() || 250);
 }
 function flipDisabled(name, current) {
-  return !current || current === screens[name] || motionReduced() || animInstant() || !settings.pageTurn;
+  return !current || current === screens[name] || !pageTurnAnimated();
 }
 // FORWARD: the leaving page turns away to reveal the destination beneath it.
 function flipAwayToScreen(name) {
@@ -778,7 +778,7 @@ function revealNotebook(onDone) {
   const card = $("screen-start");
   const done = () => { if (typeof onDone === "function") onDone(); };
   const layOutBoard = () => { card.classList.remove("is-booting"); content.style.display = ""; refreshStartBoard(); };
-  if (!loading || motionReduced() || animInstant() || !settings.pageTurn) {
+  if (!loading || !pageTurnAnimated()) {
     if (loading) loading.style.display = "none";
     layOutBoard();
     done();
@@ -3930,6 +3930,7 @@ function startBonusGame(g) {
   bonusLog = [];
   bonusRunId++;
   stopBonusClock();
+  stopBonusCountdown();
   // The pressing follows the game in from the shelf, so the play screen is visibly the
   // same record you picked up rather than a generic titled page.
   $("bonusPlayTitle").innerHTML = `${bonusDisc(g, "bonus-disc-sm")}<span>${escapeHtml(g.name)}</span>`;
@@ -3958,17 +3959,11 @@ function buildBonusPuzzle() {
 function nextBonusRound() {
   if (bonusRound >= BONUS_ROUNDS) { endBonusRun(); return; }
   bonusRound++;
-  bonusLocked = false;
-  $("bonusFeedback").innerHTML = "";
-  $("bonusFeedback").className = "bg-feedback";
-  $("bonusProgress").textContent = `round ${bonusRound} / ${BONUS_ROUNDS}`;
-  $("bonusScore").textContent = `${bonusScore} correct`;
-  $("bonusTimer").style.display = "";
-
   bonusPuzzle = buildBonusPuzzle();
   // A builder returning null means it couldn't find a puzzle clearing its fairness bars. That
   // should be vanishingly rare, but skipping the page is the honest response — never show a
-  // puzzle we can't vouch for.
+  // puzzle we can't vouch for. Settled BEFORE the page turns, so a skip can never leave a
+  // half-turned sheet on the desk or start two flips over each other.
   if (!bonusPuzzle) { nextBonusRound(); return; }
   if (bonusPuzzle.fakeWord) {
     bonusRecentFakes.push(bonusPuzzle.fakeWord.toLowerCase());
@@ -3976,8 +3971,22 @@ function nextBonusRound() {
   }
   if (bonusGame.id === "sing-it-back") bonusRecentSongs.push(bonusPuzzle.song.title);
 
-  renderBonusRound();
-  startBonusClock();
+  // Everything that makes the new page: the shared chrome, then the game's own body.
+  const lay = () => {
+    bonusLocked = false;
+    $("bonusFeedback").innerHTML = "";
+    $("bonusFeedback").className = "bg-feedback";
+    $("bonusProgress").textContent = `round ${bonusRound} / ${BONUS_ROUNDS}`;
+    $("bonusScore").textContent = `${bonusScore} correct`;
+    $("bonusTimer").style.display = "";
+    renderBonusRound();
+  };
+  // The same page turn the round screen uses, and the same whoosh — a bonus page is a page of
+  // this notebook too. Page 1 lays down instantly: startBonusGame has just turned the whole
+  // card in, so there is no answered page to lift (the round screen's round-0 case exactly).
+  sfx.play("page");
+  if (bonusRound === 1 || !pageTurnAnimated()) { lay(); startBonusClock(); return; }
+  turnPageSheet($("screen-bonusplay"), lay, startBonusClock);
 }
 
 /* The writing line, borrowed wholesale from the round screen: same `.input-area` (which is
@@ -4094,7 +4103,12 @@ function stopBonusClock() {
 
 function bonusTimeout() {
   if (bonusLocked) return;
-  settleBonusRound(false, "out of time");
+  // Spot the Slip names the impostor even on a timeout: that word is the one thing the page
+  // still has to teach, and unlike the other two games the answer card can't carry it (the card
+  // shows the line as it really goes, with no sign of what stood in the gap).
+  const detail = bonusGame && bonusGame.id === "spot-the-slip"
+    ? `<b>${escapeHtml(bonusPuzzle.fakeWord)}</b> was the slip` : "";
+  settleBonusRound(false, detail, true);
 }
 
 /* ---------- judging ---------- */
@@ -4109,9 +4123,9 @@ function judgeSlip(i) {
     if (idx === bonusPuzzle.answer) b.classList.add("is-answer");
     else if (idx === i) b.classList.add("is-wrong");
   });
-  settleBonusRound(correct, correct
-    ? `Yes — it's <b>${escapeHtml(bonusPuzzle.realWord)}</b>, not <b>${escapeHtml(bonusPuzzle.fakeWord)}</b>.`
-    : `It was <b>${escapeHtml(bonusPuzzle.fakeWord)}</b> — the real word is <b>${escapeHtml(bonusPuzzle.realWord)}</b>.`);
+  // Naming the impostor is worth saying either way: on a hit it confirms what was spotted, on a
+  // miss it's the whole lesson. The real word is then shown in place on the card below.
+  settleBonusRound(correct, `<b>${escapeHtml(bonusPuzzle.fakeWord)}</b> was the slip`);
 }
 
 /* ---------- Name That Song's suggestions ----------
@@ -4216,9 +4230,9 @@ function judgeName(picked = null) {
   hideBonusDropdown();
   const correct = song.title === bonusPuzzle.song.title;
   $("bonusInput").disabled = true;
-  settleBonusRound(correct, correct
-    ? `Yes — <b>${escapeHtml(bonusPuzzle.song.title)}</b>.`
-    : `It was <b>${escapeHtml(bonusPuzzle.song.title)}</b>, not ${escapeHtml(song.title)}.`);
+  // The card below names the right song, so the only thing left to say is what was written —
+  // and on a hit that's the same thing twice.
+  settleBonusRound(correct, correct ? "" : `you wrote <b>${escapeHtml(censor(song.title))}</b>`);
 }
 
 function judgeGap() {
@@ -4230,13 +4244,33 @@ function judgeGap() {
   // The catalogue's word frequencies double as its vocabulary, which is what lets judgeBlank
   // forgive a typo without forgiving a genuinely different word (see judgeBlank).
   const correct = judgeBlank(raw, bonusPuzzle, ctx.freq);
-  settleBonusRound(correct, correct
-    ? `Yes — <b>${escapeHtml(bonusPuzzle.answer)}</b>.`
-    : `The word is <b>${escapeHtml(bonusPuzzle.answer)}</b>, not “${escapeHtml(raw)}”.`);
+  // The gap is filled with the real word either way, and the card below highlights it in the
+  // whole line — so on a miss the only thing worth adding is what was written instead.
+  settleBonusRound(correct, correct ? "" : `you wrote “<b>${escapeHtml(raw)}</b>”`);
+}
+
+/* The proof of the page, on the round screen's own lyric card: the song in small caps with its
+   album tag, the real lyric written out large, and an "in context" peek into the lines either
+   side of it. Two of the three games need it, and for opposite reasons — Spot the Slip's page
+   shows a DOCTORED line, so the card is where the line goes right (highlighting the real word
+   the impostor stood in for), and Name That Song's page shows a real line but no song, so the
+   card is the answer.
+   Sing It Back is the exception and gets no card: settleBonusRound writes the missing word back
+   into the gap, under a heading that already names the song and album, so a card would print the
+   same handwritten line again one inch below itself. What its page genuinely can't show is the
+   lines EITHER SIDE, so the context peek goes out on its own. */
+function bonusAnswerCard() {
+  const p = bonusPuzzle;
+  if (bonusGame.id === "sing-it-back")
+    return `<div class="bg-ctx">${lyricCardContext(p.song, p.answer, p.line)}</div>`;
+  const slip = bonusGame.id === "spot-the-slip";
+  return lyricCard(p.song, slip ? p.realWord : null, false, slip ? p.realLine : p.line, true);
 }
 
 // The one place a bonus round ends: locks input, scores it, shows the verdict, moves on.
-function settleBonusRound(correct, message) {
+// `detail` is trusted HTML (callers build it from escaped pieces) and may be empty when the
+// answer card below says everything worth saying.
+function settleBonusRound(correct, detail, isTimeout = false) {
   bonusLocked = true;
   stopBonusClock();
   if (correct) bonusScore++;
@@ -4246,6 +4280,10 @@ function settleBonusRound(correct, message) {
   if (input) input.disabled = true;
   hideBonusDropdown();
   $("bonusPlayBody").querySelectorAll(".bg-word").forEach((b) => { b.disabled = true; });
+  // The writing line has done its job, so put it away for the verdict — the round screen hides
+  // its play area at exactly this beat. It also gives back the space the answer card wants, which
+  // is what keeps the countdown on screen instead of below the fold.
+  $("bonusPlayBody").querySelectorAll(".bg-write, .bg-hint").forEach((el) => { el.style.display = "none"; });
 
   // The run's track listing, written up on the end card. Each game notes the one thing worth
   // remembering about its page: the impostor you were hunting, the word that was missing, or
@@ -4271,17 +4309,69 @@ function settleBonusRound(correct, message) {
     }
   }
 
+  // The verdict is written up the way the round screen writes one: the handwritten banner, then
+  // the proof on a lyric card, then the countdown to the next page. Same furniture, same
+  // reading order — a bonus page is answered on this notebook's terms, not the shelf's own.
+  const last = bonusRound >= BONUS_ROUNDS;
+  const auto = settings.autoAdvance;
+  const advanceUI = auto
+    ? `<div class="countdown">${last ? "the sleeve" : "next page"} in ` +
+        `<b id="bonusCd">${settings.countdownSecs}</b></div>` +
+      `<button type="button" id="bonusSkipBtn" class="countdown-skip">skip →</button>`
+    : `<button type="button" id="bonusNextBtn" class="btn-ghost">${last ? "the sleeve" : "next page"} →</button>`;
   const fb = $("bonusFeedback");
   fb.className = "bg-feedback show " + (correct ? "ok" : "no");
-  fb.innerHTML = `<span class="bg-verdict">${correct ? "correct" : "missed"}</span>` +
-    `<span class="bg-detail">${message}</span>` +
-    `<span class="bg-source">${escapeHtml(bonusPuzzle.song.title)} · ${escapeHtml(bonusPuzzle.song.album)}</span>`;
+  fb.innerHTML =
+    (correct
+      ? `<div class="banner good">✓ that's the one</div>`
+      : `<div class="banner bad">✗ ${isTimeout ? "the page ran out" : "not this one"}</div>`) +
+    (detail ? `<p class="bg-detail">${detail}</p>` : "") +
+    bonusAnswerCard() +
+    advanceUI;
   $("bonusScore").textContent = `${bonusScore} correct`;
+  bonusFeedbackAt = Date.now();
+  $(auto ? "bonusSkipBtn" : "bonusNextBtn").addEventListener("click", advanceFromBonusFeedback);
+  if (auto) runBonusCountdown();
+}
 
+/* ---------- Between the pages ----------
+   The round screen's countdown, on the shelf: the player's own auto-advance setting and their
+   own countdown length, so a bonus page waits exactly as long as a real one. With auto-advance
+   off it's a "next page" button instead and the run waits to be told. Unlike the round screen,
+   the countdown runs on a MISS too — these are ten quick pages and the shelf has always turned
+   its own; the reveal is still readable for the full count, and opening "in context" pauses it. */
+let bonusCdId = null;
+let bonusFeedbackAt = 0;        // ms timestamp the verdict appeared — Enter is held off for ENTER_SKIP_GRACE after it
+
+function stopBonusCountdown() {
+  if (bonusCdId) { clearInterval(bonusCdId); bonusCdId = null; }
+}
+
+function runBonusCountdown() {
+  let n = settings.countdownSecs;
+  stopBonusCountdown();
+  // Tokenised against the run, like the old between-rounds timeout was: quitting and instantly
+  // replaying must not let the abandoned run's countdown turn the new run's page.
   const runAtSettle = bonusRunId;
-  setTimeout(() => {
-    if (!bonusEnded && bonusGame && bonusRunId === runAtSettle) nextBonusRound();
-  }, 1900);
+  bonusCdId = setInterval(() => {
+    if ($("settingsModal").classList.contains("open")) return;   // paused while settings is open
+    n--;
+    if (n <= 0) {
+      stopBonusCountdown();
+      if (!bonusEnded && bonusGame && bonusRunId === runAtSettle) nextBonusRound();
+    } else {
+      const el = $("bonusCd");
+      if (el) el.textContent = n;
+    }
+  }, 1000);
+}
+
+// Leave the verdict and turn the page — the skip button, the "next page" button and Enter all
+// come through here. Guarded so it only fires while a verdict is actually on screen.
+function advanceFromBonusFeedback() {
+  if (!bonusLocked || bonusEnded || !bonusGame) return;
+  stopBonusCountdown();
+  nextBonusRound();
 }
 
 /* ---------- end of run ----------
@@ -4305,6 +4395,7 @@ function bonusRemark(score) {
 function endBonusRun() {
   bonusEnded = true;
   stopBonusClock();
+  stopBonusCountdown();
   const rec = recordBonusRun(bonusGame.id, bonusScore);
   $("bonusTimer").style.display = "none";
   $("bonusProgress").textContent = "run complete";
@@ -4357,6 +4448,7 @@ function endBonusRun() {
 // re-rendered so a new best shows immediately.
 function leaveBonusGame() {
   stopBonusClock();
+  stopBonusCountdown();
   bonusEnded = true;
   bonusGame = null;
   bonusPuzzle = null;
@@ -8946,6 +9038,46 @@ function pickAlbumWord(album) {
   return null;   // degenerate — let the normal pool path run
 }
 
+/* ---------- The forward page turn ----------
+   The answered page, cloned as a sheet, lifts from its top edge and flips away toward the
+   reader while the next page is laid down underneath it. Shared by the association game's
+   nextRound and the bonus shelf's nextBonusRound, so a bonus page turns on exactly the same
+   paper as a real one. `fill` puts the next page in place beneath the sheet (it runs while the
+   sheet still hides everything, so nothing of the new page is ever glimpsed early); `done`
+   runs once the sheet is gone, which is where a clock belongs so none of its time is lost.
+   Distinct from makeFlipSheet's side-to-side turns, which pivot on the left spine for screen
+   navigation rather than forward through the notebook. */
+function turnPageSheet(card, fill, done) {
+  card.style.transform = "";
+  const flip = card.cloneNode(true);
+  flip.removeAttribute("id");
+  flip.querySelectorAll("[id]").forEach((e) => e.removeAttribute("id"));
+  flip.classList.remove("screen", "active");
+  // Decorative clone of the page — hide from the a11y tree so the duplicated live regions in
+  // it (#wordDisplay, #feedback, #bonusFeedback) aren't re-announced during the page turn.
+  flip.setAttribute("aria-hidden", "true");
+  flip.classList.add("page-flip-sheet");
+  flip.style.top = card.offsetTop + "px";
+  flip.style.left = card.offsetLeft + "px";
+  flip.style.width = card.offsetWidth + "px";
+  const shade = document.createElement("div");
+  shade.className = "flip-shade";
+  flip.appendChild(shade);
+  card.parentNode.appendChild(flip);
+
+  fill();                     // the next page is now in place under the flipping sheet
+
+  // Primary trigger is a timeout matched to the 0.5s flip (CSS .page-flip-sheet), with
+  // animationend as a fast-path; whichever lands first wins.
+  scheduleFlipRemoval(flip, done);
+}
+
+// Whether a page turn should be animated at all: reduced motion, "instant" animation speed
+// and the page-turn setting each lay the next page down without the sheet.
+function pageTurnAnimated() {
+  return !motionReduced() && !animInstant() && settings.pageTurn;
+}
+
 function nextRound() {
   // Choose Your Path / Devil's Path: pause at a fork (after rounds 4 / 8) to pick a
   // perk (good) or a curse (evil) before advancing. The overlay resumes nextRound
@@ -8970,52 +9102,23 @@ function nextRound() {
   sfx.play("page");
   // First round (from the start screen) advances instantly; so do reduced motion,
   // "instant" animation speed, and the page-turn setting being off.
-  if (round === 0 || motionReduced() || animInstant() || !settings.pageTurn) {
+  if (round === 0 || !pageTurnAnimated()) {
     advanceRound();
     beginRoundClock();
     return;
   }
-  // Clone the answered page as a sheet, swap the real page to the next round
-  // beneath it, then flip the sheet away to reveal it. The timer for the new
-  // round only starts once the flip has finished, so none of the 10s is lost.
-  const card = $("screen-game");
-  card.style.transform = "";
-  const flip = card.cloneNode(true);
-  flip.removeAttribute("id");
-  flip.querySelectorAll("[id]").forEach((e) => e.removeAttribute("id"));
-  flip.classList.remove("screen", "active");
-  // Decorative clone of the game card — hide from the a11y tree so the duplicated
-  // #wordDisplay/#feedback live regions in it aren't re-announced during the page turn.
-  flip.setAttribute("aria-hidden", "true");
-  flip.classList.add("page-flip-sheet");
-  flip.style.top = card.offsetTop + "px";
-  flip.style.left = card.offsetLeft + "px";
-  flip.style.width = card.offsetWidth + "px";
-  const shade = document.createElement("div");
-  shade.className = "flip-shade";
-  flip.appendChild(shade);
-  card.parentNode.appendChild(flip);
-
-  advanceRound();             // the next page is now in place under the flipping sheet
-  // Mount this round's curtain (Wildcard's per-round rule) NOW, hidden beneath the flip
-  // sheet, so the new word is already covered the instant the sheet rotates away (no
-  // flash of the round). Once-per-run intros only show on round 1, which has no flip.
-  const preHTML = roundCurtainHTML();
-  // Mount only the first card under the flip (round-1 multi-card queues never take the
-  // page-flip path); beginRoundClock re-derives the full queue and reuses this mount.
-  if (preHTML) mountCurtain(Array.isArray(preHTML) ? preHTML[0] : preHTML);
-
-  let finished = false;
-  const finish = () => {
-    if (finished) return;
-    finished = true;
-    flip.remove();
-    beginRoundClock();        // start the clock only after the page has turned
-  };
-  // Primary trigger is a timeout matched to the 0.5s flip (CSS .page-flip-sheet),
-  // with animationend as a fast-path; whichever lands first wins.
-  flip.addEventListener("animationend", (e) => { if (e.target === flip) finish(); });
-  setTimeout(finish, 500 * animScale() || 250);
+  // Turn the answered page and lay the next one down beneath it. The timer for the new round
+  // only starts once the flip has finished, so none of the 10s is lost.
+  turnPageSheet($("screen-game"), () => {
+    advanceRound();
+    // Mount this round's curtain (Wildcard's per-round rule) NOW, hidden beneath the flip
+    // sheet, so the new word is already covered the instant the sheet rotates away (no
+    // flash of the round). Once-per-run intros only show on round 1, which has no flip.
+    const preHTML = roundCurtainHTML();
+    // Mount only the first card under the flip (round-1 multi-card queues never take the
+    // page-flip path); beginRoundClock re-derives the full queue and reuses this mount.
+    if (preHTML) mountCurtain(Array.isArray(preHTML) ? preHTML[0] : preHTML);
+  }, beginRoundClock);        // start the clock only after the page has turned
 }
 
 // Whether this round wants the Wildcard rule curtain (per-round, so it pre-mounts under
@@ -11346,6 +11449,10 @@ function buildTitleUnderline(bw, bh, rows) {
 // line of a valid song — see matchLyricLine). When it doesn't, fall back to the song's
 // word-bearing line so the card always shows — and highlights — the lyric holding the word.
 function lyricCardLine(song, word, lineOverride) {
+  // No prompt word at all — a bonus game's reveal, where the answer is the song rather than a
+  // word in it. There's nothing to search the lyrics for, so the card shows the line it was
+  // handed and nothing else.
+  if (!word) return lineOverride == null ? "" : lineOverride;
   if (lineOverride == null) return extractLineWithWord(song.lyrics, word);
   if (wordRegex(word).test(lineOverride)) return lineOverride;
   return extractLineWithWord(song.lyrics, word);
@@ -11356,10 +11463,10 @@ function lyricCard(song, word, isWrong, lineOverride, context) {
   const color = albumColor(song.album) || "var(--ink-soft)";
   const albumLabel = song.album ? `<span class="album-tag" style="--album-color:${color}">${escapeHtml(song.album)}</span>` : "";
   const cls = isWrong ? " wrong-card" : "";
-  const ctx = context ? lyricCardContext(song, word) : "";
+  const ctx = context ? lyricCardContext(song, word, line) : "";
   return `<div class="lyric-card${cls}" style="--album-color:${color}">
     <div class="song-title">${escapeHtml(censor(song.title))}${albumLabel}</div>
-    <div class="lyric-line">"${highlightWord(line, word)}"</div>
+    <div class="lyric-line">"${word ? highlightWord(line, word) : escapeHtml(censor(line))}"</div>
     ${ctx}
   </div>`;
 }
@@ -11382,17 +11489,21 @@ function bothProofCard(song, isWrong) {
 
 // The ±2 surrounding lines around the prompt word's line, for the in-card "in context"
 // peek. Anchored on the word (not the displayed line, which may be a multi-line lyric
-// answer) so it always lands where the word actually sits.
-function lyricContextRows(song, word) {
+// answer) so it always lands where the word actually sits. With no word — a bonus reveal,
+// where the answer is the song — it anchors on `anchorLine` instead, matched normalized so
+// punctuation and casing can't lose the line.
+function lyricContextRows(song, word, anchorLine) {
   const all = (song.lyrics || "").split("\n").map((l) => l.trim()).filter(Boolean);
-  const idx = all.findIndex((l) => wordRegex(word).test(l));
+  const idx = word
+    ? all.findIndex((l) => wordRegex(word).test(l))
+    : anchorLine ? all.findIndex((l) => normalizeLyric(l) === normalizeLyric(anchorLine)) : -1;
   if (idx < 0) return "";
   const start = Math.max(0, idx - 2), end = Math.min(all.length, idx + 3);
   let html = "";
   if (start > 0) html += `<div class="lc-gap" aria-hidden="true">⋯</div>`;
   for (let i = start; i < end; i++) {
     html += i === idx
-      ? `<div class="lc-line lc-match">${highlightWord(all[i], word)}</div>`
+      ? `<div class="lc-line lc-match">${word ? highlightWord(all[i], word) : escapeHtml(censor(all[i]))}</div>`
       : `<div class="lc-line">${escapeHtml(censor(all[i]))}</div>`;
   }
   if (end < all.length) html += `<div class="lc-gap" aria-hidden="true">⋯</div>`;
@@ -11403,13 +11514,13 @@ function lyricContextRows(song, word) {
 // surrounding lines inline, with a "full lyrics" link nested inside that opens the whole
 // song in a modal. One control keeps the default card uncluttered (CLAUDE: gameplay stays
 // dominant). Returns "" when there's nothing to expand.
-function lyricCardContext(song, word) {
-  const rows = lyricContextRows(song, word);
+function lyricCardContext(song, word, anchorLine) {
+  const rows = lyricContextRows(song, word, anchorLine);
   if (!rows) return "";
   return `<button type="button" class="lyric-ctx-toggle" aria-expanded="false">in context</button>` +
     `<div class="lyric-ctx" hidden>` +
       `<div class="lyric-ctx-lines">${rows}</div>` +
-      `<button type="button" class="lyric-fullsong" data-song="${escapeHtml(song.title)}" data-word="${escapeHtml(word)}">full lyrics →</button>` +
+      `<button type="button" class="lyric-fullsong" data-song="${escapeHtml(song.title)}" data-word="${escapeHtml(word || "")}">full lyrics →</button>` +
     `</div>`;
 }
 
@@ -12694,15 +12805,35 @@ function wireInput() {
     advanceFromFeedback();
   });
 
-  // Lyric-context controls live inside #feedback, whose innerHTML is rebuilt each round,
-  // so delegate from the stable container. The toggle expands the inline ±context peek;
+  // After a bonus verdict the input is disabled, so Enter turns the page there too: it skips
+  // the countdown, or fires "next page" when auto-advance is off. Same grace and same
+  // "Enter advances on a miss" setting as the round screen above.
+  document.addEventListener("keydown", (e) => {
+    if (e.key !== "Enter") return;
+    if (!screens.bonusplay.classList.contains("active") || !bonusLocked || bonusEnded) return;
+    if ($("settingsModal").classList.contains("open")) return;
+    if ($("songModal").classList.contains("open")) return;
+    // A verdict really is on the page. The skip button is checked as well as the count itself,
+    // since pausing to read the context replaces the count but leaves skip there to be taken.
+    if (!$("bonusCd") && !$("bonusSkipBtn") && !$("bonusNextBtn")) return;
+    if (Date.now() - bonusFeedbackAt < ENTER_SKIP_GRACE) return;
+    if (!settings.enterOnMiss && document.querySelector("#bonusFeedback .banner.bad")) return;
+    e.preventDefault();
+    advanceFromBonusFeedback();
+  });
+
+  // Lyric-context controls live inside the feedback blocks, whose innerHTML is rebuilt each
+  // round, so delegate from the stable containers — the round screen's and the bonus shelf's,
+  // which reveal an answer on the same lyric card. The toggle expands the inline ±context peek;
   // the nested link opens the full song. Either interaction pauses any auto-advance.
-  $("feedback").addEventListener("click", (e) => {
+  [$("feedback"), $("bonusFeedback")].forEach((host) => host.addEventListener("click", (e) => {
     const toggle = e.target.closest(".lyric-ctx-toggle");
     if (toggle) {
-      const card = toggle.closest(".lyric-card");
-      const box = card && card.querySelector(".lyric-ctx");
-      if (box) {
+      // The box is always the toggle's next sibling (lyricCardContext emits them as a pair), so
+      // this works whether or not there's a lyric card around them — Sing It Back's reveal is
+      // the peek on its own, with no card to reach up to.
+      const box = toggle.nextElementSibling;
+      if (box && box.classList.contains("lyric-ctx")) {
         const showing = box.hidden;   // currently hidden → we're about to show it
         box.hidden = !showing;
         toggle.setAttribute("aria-expanded", String(showing));
@@ -12713,7 +12844,7 @@ function wireInput() {
     }
     const full = e.target.closest(".lyric-fullsong");
     if (full) openFullSong(full.dataset.song, full.dataset.word);
-  });
+  }));
 
   // Full-song modal: close on the scrim, the close button, or Escape; trap Tab inside it.
   $("songModalClose").addEventListener("click", closeFullSong);
@@ -13074,7 +13205,8 @@ let lastFocusedBeforeSong = null;
 // the full song. The manual "skip"/Enter path stays available to advance when ready.
 function pauseAutoAdvanceForReading() {
   if (countdownId) { clearInterval(countdownId); countdownId = null; }
-  const cd = document.querySelector("#feedback .countdown");
+  stopBonusCountdown();
+  const cd = document.querySelector("#feedback .countdown, #bonusFeedback .countdown");
   if (cd) cd.innerHTML = `<span class="cd-paused">take your time</span>`;
 }
 
@@ -14501,6 +14633,18 @@ function buildDevApi() {
         input.dispatchEvent(new Event("input"));
         judgeGap();
         return bonusPuzzle.answer;
+      },
+      // Settle whatever page is on screen with a chosen outcome, so the verdict — the banner,
+      // the lyric card, the countdown — can be eyeballed in all three games without answering
+      // honestly. Goes through the one settle path, so the in-place reveals fire too.
+      verdict: (ok = true, timeout = false) => {
+        if (!bonusGame || !bonusPuzzle || bonusLocked) return "no live bonus page";
+        // Carry each game's real detail line, so what's on screen is what a played page shows.
+        const detail = bonusGame.id === "spot-the-slip"
+          ? `<b>${escapeHtml(bonusPuzzle.fakeWord)}</b> was the slip`
+          : (ok || timeout) ? "" : `you wrote <b>something else</b>`;
+        settleBonusRound(!!ok, detail, !!timeout);
+        return `${bonusGame.id}: ${ok ? "correct" : timeout ? "timed out" : "missed"}`;
       },
       // Eyeball the pressings as a family: every disc at shelf size and at the two small
       // sizes it has to survive, plus its test-pressing twin, pinned above the rack. The

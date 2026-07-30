@@ -1787,20 +1787,24 @@
   .bg-reject.show { animation: bgReject 1.1s ease forwards; }
   @keyframes bgReject { 0% { opacity: 0; } 15% { opacity: 1; } 75% { opacity: 1; } 100% { opacity: 0; } }
 
-  /* Verdict, shared by both games. */
-  .bg-feedback {
-    display: none; flex-direction: column; align-items: center; gap: 3px;
-    margin: 24px auto 0; max-width: 44ch; text-align: center;
-  }
-  .bg-feedback.show { display: flex; animation: bgFade 0.24s ease; }
+  /* Verdict, shared by all three games. The parts inside it are the ROUND SCREEN's own — the
+     handwritten .banner, the .lyric-card carrying the real lyric, the .countdown to the next
+     page — so what belongs here is only the block that holds them: centred, and narrower than
+     the notebook page, because a bonus page is a smaller thing than a real one. The card
+     itself goes back to reading left-to-right, since a lyric is not a caption. */
+  .bg-feedback { display: none; margin: 22px auto 0; max-width: 44ch; text-align: center; }
+  .bg-feedback.show { display: block; animation: bgFade 0.24s ease; }
   @keyframes bgFade { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
-  .bg-verdict {
-    font-family: var(--type); font-size: 10px; letter-spacing: 2px; text-transform: uppercase;
+  .bg-detail {
+    font-family: var(--type); font-size: 12.5px; line-height: 1.5; color: var(--ink-soft);
+    margin: 0 0 14px;
   }
-  .bg-feedback.ok .bg-verdict { color: #3f7d54; }
-  .bg-feedback.no .bg-verdict { color: var(--margin); }
-  .bg-detail { font-family: var(--type); font-size: 12.5px; line-height: 1.5; color: var(--ink); }
-  .bg-source { font-family: var(--type); font-size: 10px; letter-spacing: 0.8px; color: var(--ink-soft); }
+  .bg-feedback .lyric-card { text-align: left; }
+  .bg-feedback .countdown { margin-top: 14px; }
+  /* Sing It Back's reveal: the context peek with no card around it (see bonusAnswerCard). The
+     toggle stays on the verdict's centre line; the lines it opens read left-to-right like any
+     other lyric. */
+  .bg-ctx .lyric-ctx { text-align: left; }
 
   /* ---------- End of a run: the back of the sleeve ----------
      A bonus run keeps nothing but its own best score, so it has no bracelet and no records
@@ -3549,8 +3553,11 @@
   /* ---------- Feedback ---------- */
   .feedback { margin-top: 6px; }
 
-  /* Correct: a satisfied ink mark written in the margin, era-accented */
-  .feedback .banner.good {
+  /* Correct: a satisfied ink mark written in the margin, era-accented.
+     The bonus shelf reveals its answers on this same furniture (see .bg-feedback), so both
+     verdict containers are named on the banner rules rather than the mark being reinvented. */
+  .feedback .banner.good,
+  .bg-feedback .banner.good {
     font-family: var(--hand); font-weight: 700; font-size: 32px;
     color: var(--ink-accent);
     transform: rotate(-1.2deg);
@@ -3619,7 +3626,8 @@
   .forms-firstnote i { font-style: normal; font-family: var(--type); font-size: 12.5px; }
 
   /* Wrong/timeout: a red-pen correction scrawled in the margin */
-  .feedback .banner.bad {
+  .feedback .banner.bad,
+  .bg-feedback .banner.bad {
     font-family: var(--hand); font-weight: 700; font-size: 22px;
     color: rgba(178,58,58,0.75);
     transform: rotate(-1.8deg);
