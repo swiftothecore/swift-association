@@ -1031,7 +1031,8 @@ if (location.pathname.endsWith('/index.html')) {
       <!-- Common Thread challenge only: three lyric lines from three songs — type the shared word. -->
       <div id="commonLines" class="common-lines" role="group" aria-label="Three lyric lines that share one word" hidden></div>
       <div class="input-area">
-        <input id="songInput" class="song-input" type="text" autocomplete="off" spellcheck="false"
+        <input id="songInput" class="song-input" type="search" autocomplete="off" spellcheck="false"
+               data-1p-ignore data-lpignore="true" data-bwignore data-form-type="other"
                placeholder="write the line…"
                role="combobox" aria-expanded="false" aria-controls="dropdown"
                aria-haspopup="listbox" aria-autocomplete="list"
@@ -1090,7 +1091,8 @@ if (location.pathname.endsWith('/index.html')) {
 
     <div id="namePrompt" class="name-prompt" style="display:none;">
       <p>sign your notebook — you will be remembered</p>
-      <input id="nameInput" type="text" maxlength="20" placeholder="your name" aria-label="Your name" />
+      <input id="nameInput" type="text" maxlength="20" placeholder="your name" aria-label="Your name"
+             autocomplete="off" spellcheck="false" data-1p-ignore data-lpignore="true" data-bwignore data-form-type="other" />
       <button id="saveNameBtn" class="btn-primary"><span class="sn-word">Sign</span></button>
     </div>
 

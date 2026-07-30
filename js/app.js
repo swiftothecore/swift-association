@@ -3085,7 +3085,7 @@ function renderRecordsPage() {
   const floHTML = (name && floId) ? `<span class="rec-flourish" data-fl="${floId}">${flourishSVG(floId)}</span>` : "";
   const sigText = name
     ? `<span class="rec-sig-name">${escapeHtml(name)}’s notebook</span>${floHTML}<span class="rec-sig-sub">best scores &amp; history</span>${titleHTML}`
-    : `<div class="rec-sign-row"><input id="recSignInput" class="set-text" maxlength="20" placeholder="sign your notebook" /><button id="recSignSave" class="btn-ghost">sign</button></div>`;
+    : `<div class="rec-sign-row"><input id="recSignInput" class="set-text" maxlength="20" placeholder="sign your notebook" autocomplete="off" spellcheck="false" data-1p-ignore data-lpignore="true" data-bwignore data-form-type="other" /><button id="recSignSave" class="btn-ghost">sign</button></div>`;
   const sig =
     `<button type="button" id="recPolBtn" class="rec-pol-btn" aria-label="${avatar ? "change your photo" : "add a photo"}">${polaroidHTML(avatar, name)}</button>` +
     `<div class="rec-sig-text">${sigText}</div>`;
@@ -4004,7 +4004,8 @@ function nextBonusRound() {
    same stationery. `hint` mirrors the round screen's hint line under the input. */
 function bonusWritingLine({ placeholder, aria, hint, dropdown = false }) {
   return `<div class="input-area bg-write${dropdown ? " bg-write--sug" : ""}">` +
-      `<input id="bonusInput" class="song-input" type="text" autocomplete="off" autocapitalize="off" ` +
+      `<input id="bonusInput" class="song-input" type="search" autocomplete="off" autocapitalize="off" ` +
+             `data-1p-ignore data-lpignore="true" data-bwignore data-form-type="other" ` +
              `spellcheck="false" placeholder="${escapeHtml(placeholder)}" aria-label="${escapeHtml(aria)}"` +
              (dropdown
                ? ` role="combobox" aria-expanded="false" aria-controls="bonusDropdown" ` +
@@ -4445,8 +4446,8 @@ function endBonusRun() {
         `<div class="bg-sleeve-foot">best ${rec.best} / ${BONUS_ROUNDS} · played ${rec.plays}</div>` +
       `</div>` +
       `<div class="bg-end-actions">` +
-        `<button type="button" id="bonusAgainBtn" class="btn-primary">Play again</button>` +
         `<button type="button" id="bonusShelfBtn" class="btn-primary">← the shelf</button>` +
+        `<button type="button" id="bonusAgainBtn" class="btn-primary">Play again</button>` +
       `</div>` +
     `</div>`;
   $("bonusAgainBtn").addEventListener("click", () => startBonusGame(bonusGame));
@@ -12930,7 +12931,8 @@ function setBookplateHTML() {
       `<div class="np-sigrow">` +
         `<input type="text" class="np-name-input" id="set-playerName" maxlength="20" ` +
         `value="${escapeHtml(settings.playerName || "")}" placeholder="your name" ` +
-        `aria-label="Your name" autocomplete="off" spellcheck="false">` +
+        `aria-label="Your name" autocomplete="off" spellcheck="false" ` +
+        `data-1p-ignore data-lpignore="true" data-bwignore data-form-type="other">` +
         HEART_HANDS_SVG +
       `</div>` +
       `<p class="np-hint">signed on every personal record · photo stays on this device</p>` +
@@ -13420,7 +13422,8 @@ function renderCustomModalBody() {
     `<div class="cm-presets">` +
       `<div class="cm-preset-head">` +
         `<input type="text" id="cmNameInput" class="cm-name-input" maxlength="${CUSTOM_NAME_MAX}" ` +
-          `value="${escapeHtml(preset.name || "")}" placeholder="name this mode" aria-label="Preset name" autocomplete="off" spellcheck="false">` +
+          `value="${escapeHtml(preset.name || "")}" placeholder="name this mode" aria-label="Preset name" autocomplete="off" spellcheck="false" ` +
+          `data-1p-ignore data-lpignore="true" data-bwignore data-form-type="other">` +
         `<div class="cm-preset-acts">` +
           `<button type="button" class="btn-ghost" data-cm-act="new"${atCap ? " disabled" : ""}>+ New</button>` +
           `<button type="button" class="btn-ghost" data-cm-act="delete"${canDelete ? "" : " disabled"}>Delete</button>` +
