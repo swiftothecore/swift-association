@@ -4,10 +4,10 @@
    and returns a finished puzzle, so the shelf's games can be reasoned about and re-rolled
    without touching the main game loop.
 
-   Both shipped games work off REAL lyric lines, so both need the same guarantee: the puzzle
-   handed to the player must have exactly one defensible answer. Enforcing that is most of
-   what this file does. */
-import { normalizeLyric } from "./util.js";
+   All three games work off REAL lyric lines, so all three need the same guarantee: the
+   puzzle handed to the player must have exactly one defensible answer. Enforcing that is
+   most of what this file does. */
+import { normalizeLyric, levenshtein } from "./util.js";
 
 /* Words never worth swapping or counting as a line's content. Swapping a function word
    ("the" -> "a") is invisible rather than hard, and a line whose only meat is filler makes a
@@ -272,4 +272,129 @@ export function buildNamePuzzle(songs, lineIndex, rng = Math.random, tries = 120
     return { song, label, line };
   }
   return null;
+}
+
+/* ---------- Sing It Back ----------
+   The song is named, one word is lifted out of one of its lines, and the player writes it
+   back in. It is Spot the Slip read backwards: there the fake word is on the page and you
+   find it, here the real word is missing and you supply it.
+
+   It was originally specified as "recite the whole line from memory", and that version was
+   never built on purpose: validating a freely typed lyric line cannot separate "you
+   misremembered" from "you typed it differently", and the failure it produces — telling a
+   fan they are wrong about a lyric they know by heart — is the worst one this game has to
+   offer. Blanking ONE word keeps the same test (do you actually know this line?) and leaves
+   exactly one token to judge, which is a promise the code can keep.
+
+   The song title is shown, and that is a fairness decision rather than a kindness: without
+   it the missing word has as many defensible answers as the language allows, and the player
+   is guessing at a line rather than recalling one. With it, the answer is fixed by a real
+   lyric they either know or don't.
+
+   The bars a blank must clear:
+     1. WORTH ASKING  — a content word of 4+ letters that the catalogue doesn't lean on. The
+                        function-word list alone isn't enough of a filter: "know" (673 uses),
+                        "back", "never", "love" and "time" are all content words, and all of
+                        them are recovered from the surrounding grammar without knowing the
+                        song at all, which is the one thing this game is for. So a blank word
+                        also has to sit under BLANK_MAX_FREQ, which aims the gap at whatever
+                        makes the line that line.
+     2. NOT FREE      — it appears nowhere else in the line, and nowhere in the title we're
+                        showing them, so the page never contains its own answer.
+     3. RECOVERABLE   — the line keeps 3+ other content words, so there is a line left to
+                        recall rather than a fragment to guess at.
+     4. SETTLED       — no OTHER line in the same song matches this one but for that slot.
+                        "I remember it all too well" against "I remember it all so well" has
+                        two honest answers and only one of them would score.
+   Returns null if nothing cleared the bars in `tries` attempts (the caller re-rolls). */
+const BLANK_MAX_FREQ = 200;
+export function buildBlankPuzzle(songs, ctx, rng = Math.random, tries = 120, avoid = null) {
+  for (let t = 0; t < tries; t++) {
+    const song = pick(songs, rng);
+    if (!song) continue;
+    // Don't serve the same song twice in a run while there's still catalogue left to draw
+    // from — but stop insisting near the end of the budget rather than fail the page over it.
+    if (avoid && avoid.has(song.title) && t < tries * 0.7) continue;
+
+    const titleWords = new Set(normalizeLyric(song.title).split(/\s+/).filter(Boolean));
+    const lines = songLines(song);
+    // Every line of this song as a token list, for bar 4.
+    const shapes = lines.map(({ line }) =>
+      line.split(/\s+/).filter(Boolean).map(splitWord).map((p) => (p ? wordKey(p.core) : "")));
+
+    const candidates = [];
+    lines.forEach(({ line, label }, li) => {
+      const raw = line.split(/\s+/).filter(Boolean);
+      if (raw.length < 5 || raw.length > 14) return;
+      const parts = raw.map(splitWord);
+      const toks = parts.map((p) => (p ? wordKey(p.core) : ""));
+      const meat = toks.filter((k) => k.length > 2 && !FUNCTION_WORDS.has(k) && !FILLER.has(k));
+      if (meat.length < 4) return;   // bar 3: 3 left over once one is taken out
+
+      for (let i = 0; i < raw.length; i++) {
+        const k = toks[i];
+        if (!parts[i] || k.length < 4) continue;                        // bar 1
+        if (FUNCTION_WORDS.has(k) || FILLER.has(k)) continue;           // bar 1
+        if ((ctx.freq.get(k) || 0) > BLANK_MAX_FREQ) continue;          // bar 1: too well-worn to ask
+        if (titleWords.has(k)) continue;                                // bar 2: the title is on show
+        if (toks.filter((x) => x === k).length > 1) continue;           // bar 2: repeated in the line
+        // bar 4: another line of this song, identical but for this slot, would answer just
+        // as honestly. Compare against the full shape rather than the text, so punctuation
+        // and capitals don't hide a twin.
+        const twin = shapes.some((sh, si) => si !== li && sh.length === toks.length &&
+          sh[i] !== k && sh.every((w, j) => j === i || w === toks[j]));
+        if (twin) continue;
+        candidates.push({ line, label, raw, parts, at: i });
+      }
+    });
+    if (!candidates.length) continue;
+
+    const { line, label, raw, parts, at } = pick(candidates, rng);
+    return {
+      song, label, line, at,
+      answer: parts[at].core,
+      // A token with no letters in it (a lone "—", a stray bracket) has no parts; it still has
+      // to reach the page, so it travels as its own core with nothing around it.
+      tokens: parts.map((p, i) => (p
+        ? { pre: p.pre, core: p.core, post: p.post, blank: i === at }
+        : { pre: "", core: raw[i], post: "", blank: false })),
+    };
+  }
+  return null;
+}
+
+/* Judging a written word. Generous in one direction only: every allowance here exists to
+   stop a player who knows the line being told they don't.
+     • punctuation and case are already gone (wordKey), so "dont" answers "don't"
+     • a shared stem passes, so "wait" answers "waiting" — the player has the line, not the
+       tense, and the tense is not what the game asked about
+     • a single typo passes — one wrong/missing/extra letter, or two neighbours swapped, which
+       is the commonest way a hand gets ahead of itself ("waitign") and is two edits away by
+       plain Levenshtein, so it needs saying separately. But typos are only forgiven for a
+       string that isn't itself a word Taylor sings: that keeps "teh" for "the" while never
+       quietly accepting "night" for "right", which is a different answer rather than a slip.
+   `vocab` is a Set of catalogue word keys (the slip context's `freq` map serves). */
+function swappedNeighbours(a, b) {
+  if (a.length !== b.length) return false;
+  let i = 0;
+  while (i < a.length && a[i] === b[i]) i++;
+  if (i >= a.length - 1) return false;
+  return a[i] === b[i + 1] && a[i + 1] === b[i] &&
+         a.slice(i + 2) === b.slice(i + 2);
+}
+export function judgeBlank(typed, puzzle, vocab = null) {
+  const got = wordKey(typed);
+  if (!got) return false;
+  const want = wordKey(puzzle.answer);
+  if (!want) return false;
+  if (got === want) return true;
+
+  const short = got.length <= want.length ? got : want;
+  const long = got.length <= want.length ? want : got;
+  if (short.length >= 4 && long.startsWith(short) && long.length - short.length <= 3) return true;
+
+  if (got.length >= 4 && Math.abs(got.length - want.length) <= 1 &&
+      !(vocab && vocab.has(got)) &&
+      (levenshtein(got, want) <= 1 || swappedNeighbours(got, want))) return true;
+  return false;
 }

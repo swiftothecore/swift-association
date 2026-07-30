@@ -7,7 +7,7 @@ import {
   ERAS, TENDER_ERAS, FINALE_ERAS, ALBUM_ERA, TS_MILESTONES, TS_LORE_DAYS,
   ALBUM_COLORS, CB_ALBUM_COLORS, STUDIO_ALBUMS, TITLE_ALIASES,
   ACHIEVEMENTS, ACH_ICONS, ACH_BY_ID, ACH_GROUPS, ACH_GROUP_COLORS, ACH_GROUP_OF,
-  BONUS_GAMES, BONUS_ROUNDS, BONUS_SLIP_SECONDS, BONUS_NAME_SECONDS,
+  BONUS_GAMES, BONUS_ROUNDS, BONUS_SLIP_SECONDS, BONUS_NAME_SECONDS, BONUS_BLANK_SECONDS,
   CHALLENGES, CHALLENGE_BY_ID, CHALLENGE_ORDER, CHALLENGE_SEALS, DARK_SIDE_IDS, DARK_SIDE_TODO,
   DARK_SIDE_MILESTONE,
   IMPOSTOR_WORDS, IMPOSTOR_COUNT, DARK_IMPOSTOR_WORDS,
@@ -42,7 +42,8 @@ import { buildBraceletSVG, charmPreviewSVG } from "./bracelet.js";
 import { exportBraceletCard, copyBraceletCard, buildCardSVG, fontFaceCss } from "./braceletcard.js";
 import { sfx } from "./sound.js";
 import { wordRegex as wordRegexCore, extractLineWithWord as extractLineWithWordCore, highlightWord as highlightWordCore, wordVariants } from "./match.js";
-import { buildLineIndex, buildSlipContext, buildSlipPuzzle, buildNamePuzzle } from "./bonus.js";
+import { buildLineIndex, buildSlipContext, buildSlipPuzzle, buildNamePuzzle,
+         buildBlankPuzzle, judgeBlank } from "./bonus.js";
 import { renderStreakPlacard } from "./placard.js";
 import {
   loadRecords, insertRecord, migrateRecordsFromStats, getPlayerName, setPlayerName,
@@ -3783,6 +3784,7 @@ let bonusLocked = false;   // round answered — ignore further input until the 
 let bonusRaf = null;       // clock handle (setInterval id — see startBonusClock)
 let bonusEnded = false;
 let bonusRecentFakes = []; // Spot the Slip: impostor words used recently, so a run doesn't repeat one
+let bonusRecentSongs = []; // Sing It Back: songs already blanked this run, so one doesn't come round twice
 // Bumped on every start. The between-rounds pause is a setTimeout, so without a token a run
 // that's quit and immediately restarted would have the old pause advance the NEW run a round.
 let bonusRunId = 0;
@@ -3923,6 +3925,7 @@ function startBonusGame(g) {
   bonusScore = 0;
   bonusEnded = false;
   bonusRecentFakes = [];
+  bonusRecentSongs = [];
   bonusRunId++;
   stopBonusClock();
   // The pressing follows the game in from the shelf, so the play screen is visibly the
@@ -3933,7 +3936,10 @@ function startBonusGame(g) {
 }
 
 function bonusSeconds() {
-  return bonusGame && bonusGame.id === "spot-the-slip" ? BONUS_SLIP_SECONDS : BONUS_NAME_SECONDS;
+  if (!bonusGame) return BONUS_NAME_SECONDS;
+  if (bonusGame.id === "spot-the-slip") return BONUS_SLIP_SECONDS;
+  if (bonusGame.id === "sing-it-back") return BONUS_BLANK_SECONDS;
+  return BONUS_NAME_SECONDS;
 }
 
 function nextBonusRound() {
@@ -3947,9 +3953,12 @@ function nextBonusRound() {
   $("bonusTimer").style.display = "";
 
   const { lineIndex, ctx } = bonusIndexes();
-  bonusPuzzle = bonusGame.id === "spot-the-slip"
-    ? buildSlipPuzzle(allSongs, playableWords, lineIndex, ctx, Math.random, 120, new Set(bonusRecentFakes))
-    : buildNamePuzzle(allSongs, lineIndex);
+  bonusPuzzle =
+    bonusGame.id === "spot-the-slip"
+      ? buildSlipPuzzle(allSongs, playableWords, lineIndex, ctx, Math.random, 120, new Set(bonusRecentFakes))
+      : bonusGame.id === "sing-it-back"
+        ? buildBlankPuzzle(allSongs, ctx, Math.random, 120, new Set(bonusRecentSongs))
+        : buildNamePuzzle(allSongs, lineIndex);
   // A builder returning null means it couldn't find a puzzle clearing its fairness bars. That
   // should be vanishingly rare, but skipping the page is the honest response — never show a
   // puzzle we can't vouch for.
@@ -3958,6 +3967,7 @@ function nextBonusRound() {
     bonusRecentFakes.push(bonusPuzzle.fakeWord.toLowerCase());
     if (bonusRecentFakes.length > 6) bonusRecentFakes.shift();
   }
+  if (bonusGame.id === "sing-it-back") bonusRecentSongs.push(bonusPuzzle.song.title);
 
   renderBonusRound();
   startBonusClock();
@@ -3978,6 +3988,35 @@ function renderBonusRound() {
       `<div class="bg-line" role="group" aria-label="Lyric line with one wrong word">${words}</div>`;
     body.querySelectorAll(".bg-word").forEach((b) =>
       b.addEventListener("click", () => judgeSlip(+b.dataset.i)));
+  } else if (bonusGame.id === "sing-it-back") {
+    // The song is named on purpose (see buildBlankPuzzle) — the test is recalling this line,
+    // not deducing a word that would fit any line. The gap is a fixed width whatever the
+    // answer is, so it never quietly hands over a letter count.
+    const words = p.tokens.map((t) => escapeHtml(t.pre) +
+      (t.blank
+        ? `<span class="bg-blank" id="bonusBlank"></span>`
+        : escapeHtml(t.core)) +
+      escapeHtml(t.post)).map((w) => `<span class="bg-word-plain">${w}</span>`).join(" ");
+    body.innerHTML =
+      `<p class="bg-ask">One word is missing. Write it back in.</p>` +
+      `<div class="bg-blank-song">${escapeHtml(p.song.title)}</div>` +
+      label +
+      `<div class="bg-line bg-blank-line" role="group" aria-label="Lyric line with one word missing">${words}</div>` +
+      `<div class="bg-input-wrap">` +
+        `<input id="bonusInput" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" ` +
+               `placeholder="the missing word…" aria-label="Type the missing word" />` +
+      `</div>`;
+    const input = $("bonusInput");
+    // Mirror the typing straight into the gap, so the player is filling the line in rather
+    // than answering a question about it.
+    input.addEventListener("input", () => {
+      const gap = $("bonusBlank");
+      if (gap) gap.textContent = input.value.trim();
+    });
+    input.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") { e.preventDefault(); judgeGap(); }
+    });
+    input.focus();
   } else {
     body.innerHTML =
       `<p class="bg-ask">Which song is this line from?</p>` +
@@ -4064,6 +4103,20 @@ function judgeName() {
     : `It was <b>${escapeHtml(bonusPuzzle.song.title)}</b>, not ${escapeHtml(song.title)}.`);
 }
 
+function judgeGap() {
+  if (bonusLocked) return;
+  const raw = $("bonusInput").value.trim();
+  // Enter on an empty line is a slip of the hand, not an answer — never burn the page on it.
+  if (!raw) return;
+  const { ctx } = bonusIndexes();
+  // The catalogue's word frequencies double as its vocabulary, which is what lets judgeBlank
+  // forgive a typo without forgiving a genuinely different word (see judgeBlank).
+  const correct = judgeBlank(raw, bonusPuzzle, ctx.freq);
+  settleBonusRound(correct, correct
+    ? `Yes — <b>${escapeHtml(bonusPuzzle.answer)}</b>.`
+    : `The word is <b>${escapeHtml(bonusPuzzle.answer)}</b>, not “${escapeHtml(raw)}”.`);
+}
+
 // The one place a bonus round ends: locks input, scores it, shows the verdict, moves on.
 function settleBonusRound(correct, message) {
   bonusLocked = true;
@@ -4079,6 +4132,14 @@ function settleBonusRound(correct, message) {
     $("bonusPlayBody").querySelectorAll(".bg-word").forEach((b) => {
       if (+b.dataset.i === bonusPuzzle.answer) b.classList.add("is-answer");
     });
+  } else if (bonusGame.id === "sing-it-back") {
+    // Whatever was in the gap — a wrong word, a half-typed one, nothing at all — the real
+    // word goes in, so the line is left whole and correct on the page.
+    const gap = $("bonusBlank");
+    if (gap) {
+      gap.textContent = bonusPuzzle.answer;
+      gap.classList.add(correct ? "is-got" : "is-answer");
+    }
   }
 
   const fb = $("bonusFeedback");
@@ -14232,6 +14293,11 @@ function buildDevApi() {
           if (id === "name-that-song") {
             const p = buildNamePuzzle(allSongs, lineIndex);
             out.push(p ? { line: p.line, song: p.song.title, album: p.song.album } : null);
+          } else if (id === "sing-it-back") {
+            const p = buildBlankPuzzle(allSongs, ctx, Math.random, 120, new Set(recent));
+            if (p) recent.push(p.song.title);
+            out.push(p ? { gap: p.tokens.map((t) => t.pre + (t.blank ? "____" : t.core) + t.post).join(" "),
+                           answer: p.answer, song: p.song.title } : null);
           } else {
             const p = buildSlipPuzzle(allSongs, playableWords, lineIndex, ctx, Math.random, 120, new Set(recent));
             if (p) { recent.push(p.fakeWord.toLowerCase()); if (recent.length > 6) recent.shift(); }
@@ -14247,14 +14313,25 @@ function buildDevApi() {
         const { lineIndex, ctx } = bonusIndexes();
         let ok = 0;
         for (let i = 0; i < n; i++) {
-          const p = id === "name-that-song"
-            ? buildNamePuzzle(allSongs, lineIndex)
+          const p = id === "name-that-song" ? buildNamePuzzle(allSongs, lineIndex)
+            : id === "sing-it-back" ? buildBlankPuzzle(allSongs, ctx)
             : buildSlipPuzzle(allSongs, playableWords, lineIndex, ctx);
           if (p) ok++;
         }
         return { tried: n, built: ok, rate: `${((ok / n) * 100).toFixed(1)}%` };
       },
       score: (n) => { bonusScore = Math.max(0, Math.min(BONUS_ROUNDS, +n || 0)); return bonusScore; },
+      // Sing It Back: read the gap's answer off the page, or fill it in and submit. Testing
+      // the tenth round of a run you have to play honestly is nobody's idea of a dev tool.
+      gap: () => (bonusGame && bonusGame.id === "sing-it-back" && bonusPuzzle) ? bonusPuzzle.answer : null,
+      solve: () => {
+        if (!bonusGame || bonusGame.id !== "sing-it-back" || !bonusPuzzle || !$("bonusInput")) return "no gap on screen";
+        const input = $("bonusInput");
+        input.value = bonusPuzzle.answer;
+        input.dispatchEvent(new Event("input"));
+        judgeGap();
+        return bonusPuzzle.answer;
+      },
       // Eyeball the pressings as a family: every disc at shelf size and at the two small
       // sizes it has to survive, plus its test-pressing twin, pinned above the rack. The
       // marks are the whole risk here — they're drawn at one scale and used at three.

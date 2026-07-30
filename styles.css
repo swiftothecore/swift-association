@@ -1725,6 +1725,23 @@
   }
   .bg-word.is-wrong { text-decoration: line-through; text-decoration-color: rgba(43,39,34,0.5); opacity: 0.6; }
 
+  /* Sing It Back — the song named above its own line, with one word left out. The gap is a
+     ruled space of FIXED width: sizing it to the answer would hand over the letter count. */
+  .bg-blank-song {
+    font-family: var(--type); font-size: 10.5px; letter-spacing: 1.6px; text-transform: uppercase;
+    color: var(--ink); text-align: center; margin: 10px 0 2px;
+  }
+  .bg-blank-line { margin-bottom: 24px; }
+  .bg-blank {
+    display: inline-block; min-width: 4.6ch; text-align: center;
+    border-bottom: 1.5px solid rgba(43,39,34,0.5); line-height: 1.05;
+    color: var(--ink);
+  }
+  /* Reveal: the word you got is written in as if it always belonged; the one you missed
+     goes in red, the same pen that circles Spot the Slip's impostor. */
+  .bg-blank.is-got { border-bottom-color: rgba(63,125,84,0.6); }
+  .bg-blank.is-answer { color: #8a2626; border-bottom-color: rgba(178,58,63,0.55); }
+
   /* Name That Song — the line, quoted like a copied-out lyric, then a plain writing line. */
   .bg-lyric {
     font-family: var(--hand); font-size: 27px; line-height: 1.35; color: var(--ink);

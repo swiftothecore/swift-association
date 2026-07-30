@@ -325,14 +325,15 @@ export const BONUS_GAMES = [
   { id: "name-that-song", name: "Name That Song", ready: true,
     kicker: "lyric in, title out", tint: "#33486e", mark: "question",
     blurb: "Read the line, name the song, and beat the clock. No prompt word to lean on but the lyric itself." },
-  { id: "sing-it-back", name: "Sing It Back", ready: false,
-    kicker: "recite from memory", tint: "#77485e", mark: "loop",
-    blurb: "Pick a song, take a word, and write out the very line that holds it." },
+  { id: "sing-it-back", name: "Sing It Back", ready: true,
+    kicker: "fill the gap", tint: "#77485e", mark: "caret",
+    blurb: "A word has been lifted out of one of the song's own lines. Write it back in." },
 ];
 // A bonus run is short by design — these sit beside the main game, they don't replace it.
 export const BONUS_ROUNDS = 10;
 export const BONUS_SLIP_SECONDS = 20;   // reading a whole line takes longer than naming a title
 export const BONUS_NAME_SECONDS = 15;
+export const BONUS_BLANK_SECONDS = 20;  // read the line, find the gap, then type — slip's budget
 
 export const CHALLENGES = [
   { id: "vanishing-word", name: "Vanishing Word", rule: "vanishing", mode: "medium",
