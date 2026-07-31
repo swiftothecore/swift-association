@@ -4,7 +4,7 @@ import { SITE_URL, canShare, shareOrCopy, simulateShare } from "./share.js";
 import {
   TOTAL_ROUNDS, RECENT_WINDOW, NOVELTY_BOOST, DAILY_ALBUM_SKEW, DAILY_ALBUM_WEIGHT_EXP, DIFF_KEY, DEFAULT_SETTINGS,
   MODES, MODE_ORDER, MODE_COLORS, DIFFICULTY_LADDER, MODALITY_MODES, EXPLORER_TOKENS,
-  ERAS, TENDER_ERAS, FINALE_ERAS, ALBUM_ERA, TS_MILESTONES, TS_LORE_DAYS,
+  ERAS, TENDER_ERAS, FINALE_ERAS, ALBUM_ERA, TS_MILESTONES, TS_LORE_DAYS, SALT_SHAKER_D, SALT_CAP_D,
   ALBUM_COLORS, CB_ALBUM_COLORS, STUDIO_ALBUMS, TITLE_ALIASES,
   ACHIEVEMENTS, ACH_ICONS, ACH_BY_ID, ACH_GROUPS, ACH_GROUP_COLORS, ACH_GROUP_OF,
   BONUS_GAMES, BONUS_ROUNDS, BONUS_SLIP_SECONDS, BONUS_NAME_SECONDS, BONUS_BLANK_SECONDS,
@@ -6007,6 +6007,7 @@ function renderMilestoneSticky() {
   if (!note) { el.hidden = true; el.innerHTML = ""; el.removeAttribute("aria-label"); return; }
   const icon = note.icon === "cake" ? cakeSvg()
     : note.icon === "thirteen" ? thirteenSvg()
+    : note.icon === "salt" ? saltSvg(milestoneColor(note.album) || "var(--bead)")
     : heartSvg(milestoneColor(note.album) || "var(--bead)");
   el.innerHTML =
     `<div class="ms-slip${note.tone === "minor" ? " ms-slip--minor" : ""}"><span class="ms-tape"></span>${icon}</div>` +
@@ -6020,6 +6021,17 @@ function heartSvg(fill) {
   return `<svg viewBox="0 0 32 32" width="38" height="38" aria-hidden="true">` +
     `<path d="M16 27.5C15.4 27.1 4.5 19.6 4.5 11.7c0-3.6 2.7-6.4 6-6.4 2.3 0 4.2 1.3 5.5 3.4 1.3-2.1 3.2-3.4 5.5-3.4 3.3 0 6 2.8 6 6.4 0 7.9-10.9 15.4-11.5 15.8z" fill="${fill}" stroke="rgba(0,0,0,0.22)" stroke-width="0.7" stroke-linejoin="round"/>` +
     `<path d="M9.5 9.2c-1 .6-1.6 1.7-1.7 3" fill="none" stroke="rgba(255,255,255,0.55)" stroke-width="1.1" stroke-linecap="round"/>` +
+    `</svg>`;
+}
+// The August 1st mark: a salt shaker, drawn the same way as the heart (era ink, translucent
+// dark edge, one white highlight) so the sticky's icon language stays one hand. Same silhouette
+// the desk calendar stamps on the square, at a tenth the size.
+function saltSvg(fill) {
+  return `<svg viewBox="0 0 32 32" width="36" height="36" aria-hidden="true">` +
+    `<path d="${SALT_SHAKER_D}" fill="${fill}" stroke="rgba(0,0,0,0.22)" stroke-width="0.7" stroke-linejoin="round"/>` +
+    `<path d="${SALT_CAP_D}" fill="none" stroke="rgba(0,0,0,0.26)" stroke-width="0.8" stroke-linecap="round"/>` +
+    `<g fill="rgba(0,0,0,0.32)"><circle cx="13.9" cy="6.4" r="0.7"/><circle cx="16" cy="5.9" r="0.7"/><circle cx="18.1" cy="6.4" r="0.7"/></g>` +
+    `<path d="M10.4 17.5v7.5" fill="none" stroke="rgba(255,255,255,0.5)" stroke-width="1.1" stroke-linecap="round"/>` +
     `</svg>`;
 }
 // The sacred-13 mark for the minor 13-day sticky: a hand-inked "13" over a soft ring, in

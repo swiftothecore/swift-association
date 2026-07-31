@@ -175,6 +175,8 @@ function yearsTodayPhrase(n) {
 // (Oct 27: 1989 + 1989 TV) the two collapse into one note rather than fighting for the margin.
 // A "songday" hit (a date Taylor sings, e.g. April 29th) returns its own blurb and carries a
 // songday:true flag so callers can tell it apart from a real release (see anniversaryAlbumFor).
+// A songday may override the headline (August 1st shows its line, not the song title) and the
+// icon (a salt shaker rather than the era heart).
 export function anniversaryNote(dateKey, milestones) {
   if (!dateKey || dateKey.length < 10) return null;
   const md = dateKey.slice(5);
@@ -205,14 +207,17 @@ export function anniversaryNote(dateKey, milestones) {
   // anniversary daily never skews toward it (it's a lyric wink, not a release).
   const songday = hits.find((m) => m.kind === "songday");
   if (songday) {
+    const headline = songday.headline || songday.title;
     return {
-      icon: "heart", album: songday.album, songday: true,
+      icon: songday.icon || "heart", album: songday.album, songday: true,
       eyebrow: songday.eyebrow || "On this day",
-      headline: songday.title,
+      headline,
       headlineRest: "",
       note: songday.blurb || "",
       caption: songday.caption,
-      aria: `${songday.eyebrow || songday.title}. ${songday.blurb || ""}`.trim(),
+      // A songday with no blurb (August 1st is only its line) still has to say something
+      // past the eyebrow, so the headline stands in for the missing sentence.
+      aria: `${songday.eyebrow || headline}. ${songday.blurb || (songday.eyebrow ? headline : "")}`.trim(),
     };
   }
 

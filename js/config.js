@@ -1022,7 +1022,9 @@ export const FINALE_ERAS = ["gold", "midnight", "reputation"];           // roun
    `songday` entries are the fan-loved dates Taylor sings outright (High Infidelity's
    April 29th, Last Kiss's July 9th): no release year, they carry their own blurb/caption
    and wear the song's era colour, but they never tint the anniversary daily (guarded in
-   anniversaryAlbumFor). `blurb`/`caption` must paraphrase, never quote the lyric.
+   anniversaryAlbumFor). `blurb`/`caption` must paraphrase, never quote the lyric. A songday
+   may also carry `headline` (a line to show instead of the song title) and `icon`/`mark`
+   (a sticky/calendar mark other than the era heart).
    ⚠ Verify every date before editing — fans catch a wrong one instantly. */
 export const TS_MILESTONES = [
   { md: "12-13", year: 1989, kind: "birthday", title: "Taylor Swift",                  album: null },
@@ -1046,7 +1048,25 @@ export const TS_MILESTONES = [
     blurb: "April 29th, the one date Taylor names outright on Midnights. Where were you?", caption: "April 29th" },
   { md: "07-09", kind: "songday", title: "Last Kiss",       album: "Speak Now",  eyebrow: "Last Kiss Day",
     blurb: "July 9th, the date Speak Now can never quite stop remembering.", caption: "July 9th" },
+  // The one songday whose note is the whole joke: no blurb, just the line fans say to each
+  // other the moment the month turns. `headline` overrides the song title in the slip so the
+  // dev milestone list still reads "August"; `icon`/`mark` swap the era heart for a salt
+  // shaker, on the sticky and in the desk calendar's square.
+  { md: "08-01", kind: "songday", title: "August",          album: "folklore",   eyebrow: "August 1st",
+    headline: "Get in the car, it's August", icon: "salt", mark: "salt", caption: "it's august" },
 ];
+
+// The salt shaker silhouette for the August 1st mark, in the same 32x32 box as the milestone
+// sticky's heart and centred on (16, 16) so it drops into either transform unchanged. Shared
+// rather than copied because two surfaces stamp it: the sticky (js/app.js) and the desk
+// calendar's square (js/calendar.js). The narrow cap over flared shoulders is what makes it a
+// shaker and not a jar at 10px on the calendar, so keep the cap clearly narrower than the body;
+// SALT_CAP_D is the seam under the cap, drawn separately so each surface can weight it.
+export const SALT_SHAKER_D =
+  "M12.8 3.6h6.4a1.6 1.6 0 0 1 1.6 1.6v3.3c2.5 1.2 3.7 3.4 3.7 6.2v11.4" +
+  "a2.4 2.4 0 0 1-2.4 2.4h-12.2a2.4 2.4 0 0 1-2.4-2.4V14.7c0-2.8 1.2-5 3.7-6.2V5.2" +
+  "a1.6 1.6 0 0 1 1.6-1.6z";
+export const SALT_CAP_D = "M11.2 8.6h9.6";
 
 /* ---------- Lyric days (desk-calendar marginalia only) ----------
    Days the songs themselves put a date on. Deliberately kept OUT of

@@ -26,7 +26,7 @@
 // loop. Purely decorative and non-interactive, like every desk prop; if the
 // markup isn't there it does nothing.
 
-import { TS_MILESTONES, TS_LORE_DAYS, ALBUM_COLORS, CB_ALBUM_COLORS } from "./config.js";
+import { TS_MILESTONES, TS_LORE_DAYS, ALBUM_COLORS, CB_ALBUM_COLORS, SALT_SHAKER_D, SALT_CAP_D } from "./config.js";
 import { loadSettings } from "./storage.js";
 
 const SVG = "http://www.w3.org/2000/svg";
@@ -94,7 +94,8 @@ const strike = (cx, cy, s) => {
 // heart for a release (exactly what the milestone sticky shows on the day), and
 // the game's gold star for her birthday, which no album colour should stand in
 // for. A lyric day gets the same heart hollowed out — a quieter cousin of a
-// real release, since the song only named the date, nothing shipped on it.
+// real release, since the song only named the date, nothing shipped on it. A day carrying its
+// own `mark` gets that object instead (August 1st gets a salt shaker).
 function drawMark(g, mark, cx, cy, colors, s) {
   const x = (cx + MARK_DX).toFixed(1), y = (cy + MARK_DY).toFixed(1);
   const tilt = (-16 + jit(s) * 32).toFixed(1);
@@ -105,6 +106,25 @@ function drawMark(g, mark, cx, cy, colors, s) {
   }
   const hollow = mark.kind === "lore";
   const color = (mark.album && colors[mark.album]) || "#8a7c62";
+  // A day can ask for its own object instead of the heart (August 1st stamps a salt shaker).
+  // Same 32x32 box and centring as the heart, so it takes the identical transform.
+  if (mark.mark === "salt") {
+    // Grouped so the cap seam shares the shaker's transform. The seam is drawn heavy (it
+    // scales down to well under a pixel otherwise) — without it the silhouette reads as a jar.
+    const shaker = el("g", {
+      transform: `translate(${x} ${y}) rotate(${tilt}) scale(0.3) translate(-16 -16)`
+    });
+    shaker.appendChild(el("path", {
+      d: SALT_SHAKER_D, fill: color, stroke: "rgba(0,0,0,0.28)", "stroke-width": 0.9,
+      "stroke-linejoin": "round"
+    }));
+    shaker.appendChild(el("path", {
+      d: SALT_CAP_D, fill: "none", stroke: "rgba(0,0,0,0.3)", "stroke-width": 2.4,
+      "stroke-linecap": "round"
+    }));
+    g.appendChild(shaker);
+    return;
+  }
   g.appendChild(el("path", {
     d: HEART_D,
     fill: hollow ? "none" : color,
