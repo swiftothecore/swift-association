@@ -1221,6 +1221,30 @@
   }
   .chall-tok-perf::before { top: -10px; }
   .chall-tok-perf::after { bottom: -10px; }
+  /* both wallets, kept together on the right of the space-between head row */
+  .chall-wallet { display: flex; align-items: center; gap: 10px; }
+  /* persistence tickets — the second currency, and deliberately NOT a second ticket stub:
+     a small square punch card in a cooler paper stock, double-ruled like a stamped docket
+     and punched once in the corner. Two different objects on the desk can't be misread as
+     two views of the same wallet. */
+  .chall-tickets {
+    position: relative; box-sizing: border-box;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    width: 50px; height: 50px; padding: 2px;
+    font-family: var(--type); color: #3f4a52; background: #dfe0d4;
+    border: 1px solid #8b8f86; border-radius: 1px;
+    box-shadow: 0 3px 6px rgba(0,0,0,0.20), inset 0 0 0 2px #dfe0d4, inset 0 0 0 3px rgba(63,74,82,0.30);
+    white-space: nowrap; transform: rotate(-1.6deg);
+  }
+  .chall-tickets b { font-size: 17px; line-height: 1; color: #2f3941; }
+  .chall-tick-label {
+    font-size: 7px; letter-spacing: 1px; text-transform: uppercase; color: #6f757b; margin-top: 3px;
+  }
+  /* the punch: a hole bitten out of the card, filled with the paper stock behind it */
+  .chall-tick-punch {
+    position: absolute; top: 5px; right: 5px; width: 6px; height: 6px; border-radius: 50%;
+    background: var(--paper); box-shadow: inset 0 0 0 1px rgba(63,74,82,0.45);
+  }
 
   .chall-layout { display: grid; grid-template-columns: 247px 1fr; gap: 0; }
 
@@ -1533,8 +1557,57 @@
   .chall-go.is-unlock:hover .chall-unlock-perf::after,
   .chall-go.is-unlock:focus-visible .chall-unlock-perf::before,
   .chall-go.is-unlock:focus-visible .chall-unlock-perf::after { background: var(--ink); border-color: var(--paper); }
+  /* paying in persistence: the same ticket, re-stocked in the punch card's cooler paper and
+     inked slate instead of kraft, so the button carries which currency it is about to spend */
+  .chall-go.is-unlock.is-persist { background-color: #dfe0d4; color: #39434b; }
+  .chall-go.is-unlock.is-persist .chall-unlock-stamp { color: #4a5b66; border-color: rgba(74,91,102,0.6); }
+  /* what the unlock costs, pencilled under the button so the price is never a surprise */
+  .chall-buy { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
+  .chall-buy-cost {
+    font-family: var(--type); font-size: 10px; letter-spacing: 0.4px; color: var(--ink-soft);
+    text-align: right;
+  }
+
+  /* ---- persistence, below the action row ----
+     The tally while the runs stack up, then the claim. The ticket is never granted on the
+     results screen: you come back to the card of the challenge that cost you the seven runs
+     and take it, which is the whole point of a currency paid for in effort. */
+  .chall-persist {
+    display: flex; align-items: baseline; gap: 8px; margin-top: 14px;
+    padding-top: 10px; border-top: 1px dashed rgba(60,40,18,0.22);
+    font-family: var(--type); color: var(--ink-soft);
+  }
+  .chall-persist-count { font-size: 12px; font-weight: 700; color: #4a5b66; }
+  .chall-persist-lab { font-size: 10px; letter-spacing: 0.3px; line-height: 1.4; }
+  /* the claim — a punch card the size of a control, ruled and punched like the counter it
+     pays into, and tilted the other way from Play so it reads as a separate object entirely */
+  .chall-claim {
+    position: relative; display: flex; flex-direction: column; align-items: flex-start; gap: 3px;
+    width: 100%; box-sizing: border-box; margin-top: 14px; padding: 10px 14px;
+    font-family: var(--type); color: #39434b; text-align: left;
+    background: #dfe0d4; border: 2px solid #47525a; border-radius: 2px;
+    box-shadow: 3px 3px 0 rgba(43,39,34,0.18); transform: rotate(0.5deg); cursor: pointer;
+    transition: background-color 0.24s ease, color 0.2s ease, transform 0.12s, box-shadow 0.2s;
+  }
+  .chall-claim-punch {
+    position: absolute; top: 7px; right: 9px; width: 7px; height: 7px; border-radius: 50%;
+    background: var(--paper); box-shadow: inset 0 0 0 1px rgba(63,74,82,0.45);
+  }
+  .chall-claim-lab { font-size: 13px; letter-spacing: 0.8px; font-weight: 700; }
+  .chall-claim-sub { font-size: 9.5px; letter-spacing: 1.2px; text-transform: uppercase; color: #6f757b; }
+  .chall-claim:hover, .chall-claim:focus-visible { background: #47525a; color: var(--paper); }
+  .chall-claim:hover .chall-claim-sub, .chall-claim:focus-visible .chall-claim-sub { color: rgba(245,239,225,0.75); }
+  .chall-claim:hover .chall-claim-punch, .chall-claim:focus-visible .chall-claim-punch { background: #dfe0d4; }
+  .chall-claim:active { transform: rotate(0.5deg) translateY(1px); box-shadow: 1px 1px 0 rgba(43,39,34,0.18); }
 
   @media (max-width: 620px) {
+    /* Two counters plus the sub-label won't share one narrow row without squeezing the
+       label into a four-line column, so the label takes the width and the wallet drops
+       beneath it, still right-aligned. Scoped to the challenges page: Album Focus and the
+       guest shelf borrow .chall-head with ONE counter, and they still fit a single row. */
+    #challengesBody .chall-head { flex-wrap: wrap; gap: 8px; }
+    #challengesBody .chall-head-sub { flex: 1 0 100%; }
+    #challengesBody .chall-wallet { margin-left: auto; }
     .chall-layout { grid-template-columns: 1fr; }
     .chall-col { border-right: none; border-bottom: 1px solid rgba(60,40,18,0.16); padding-bottom: 8px; margin-bottom: 14px; }
     .chall-list { padding-right: 0; margin-right: 0; padding-left: 14px; margin-left: -14px; }
@@ -1542,8 +1615,8 @@
     .af-board { grid-template-columns: repeat(3, 1fr); gap: 24px 12px; }
   }
   @media (prefers-reduced-motion: reduce) {
-    .chall-tokens, .chall-go { transform: none; }
-    .chall-go:active { transform: translateY(1px); }
+    .chall-tokens, .chall-tickets, .chall-claim, .chall-go { transform: none; }
+    .chall-go:active, .chall-claim:active { transform: translateY(1px); }
   }
 
   /* ---------- Bonus games shelf ----------

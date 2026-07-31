@@ -99,9 +99,23 @@ export function initDev(api) {
   // Dark sides open only after the base challenge is beaten. This unlocks every one through
   // the real gate (base marked defeated + unlocked, dark progress left untouched) so they can
   // be played from the Challenges screen — then reports the count in the readout.
+  // Persistence tickets need seven finished runs to become claimable, which is not something
+  // anyone is going to sit through to check the card — `ready` parks the chosen challenge on
+  // the claimable edge, and the wallet setter reaches the buy states from the other side.
+  const persistSel = select(api.challenge.list(), (x) => x, (x) => x);
+  const ticketN = num(2);
   body.append(section("challenges",
     row(btn("unlock all dark sides", () => { const n = api.challenge.dark.unlockAll(); readout.textContent = `${n} dark sides unlocked — open Challenges`; }),
-        btn("relock dark progress", () => { api.challenge.dark.reset(); readout.textContent = "dark progress cleared"; }, "warn"))));
+        btn("relock dark progress", () => { api.challenge.dark.reset(); readout.textContent = "dark progress cleared"; }, "warn")),
+    row(persistSel, btn("ready a ticket", () => {
+          api.challenge.persist.ready(persistSel.value);
+          readout.textContent = `${persistSel.value}: ticket claimable — open its card`;
+        }),
+        btn("state", () => { readout.textContent = JSON.stringify(api.challenge.persist.state(persistSel.value)); })),
+    row("tickets=", ticketN, btn("set wallet", () => {
+          readout.textContent = `${api.challenge.persist.tickets(+ticketN.value)} persistence tickets`;
+        }),
+        btn("clear persistence", () => { api.challenge.persist.reset(); readout.textContent = "persistence cleared"; }, "warn"))));
 
   // ---- Word / Era / Mode -----------------------------------------------------
   const eraSel = select(api.ERAS, (x) => x, (x) => x);

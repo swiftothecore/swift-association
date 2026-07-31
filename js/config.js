@@ -335,6 +335,19 @@ export const BONUS_SLIP_SECONDS = 20;   // reading a whole line takes longer tha
 export const BONUS_NAME_SECONDS = 15;
 export const BONUS_BLANK_SECONDS = 20;  // read the line, find the gap, then type — slip's budget
 
+/* ---------- Persistence tickets: the second challenge currency ----------
+   Tokens only mint on a first-ever defeat, so a player who cannot beat what is in front of
+   them has no route to anything else. Tickets are the anti-deadlock valve: seven earnest
+   attempts (a run played through to the end screen, won or lost) at a challenge you have not
+   beaten makes a ticket claimable from that challenge's own card, once per challenge ever.
+   They are a genuinely separate wallet, never a second view of the token balance. */
+export const PERSIST_ATTEMPTS = 7;
+// Ticket price by difficulty tier, so a regular token is worth two tickets at tough and one
+// at easy/tricky. The asymmetry is the point — tickets are the grinder's currency. Four tapes
+// is absent on purpose: that tier is Mastery-gated, and a Mastery gate is a requirement, not
+// a price, so no currency buys it. An unrated challenge is priced with the cheap tiers.
+export const TICKET_PRICE = { 0: 1, 1: 1, 2: 1, 3: 2 };
+
 export const CHALLENGES = [
   { id: "vanishing-word", name: "Vanishing Word", rule: "vanishing", mode: "medium",
     free: true,  cost: 1, target: 10, revealMs: 1500, tapes: 1,
@@ -1820,7 +1833,7 @@ export const ACHIEVEMENTS = [
   { id: "dont-blame-me",    name: "Don't Blame Me",   desc: `Beat ${DARK_SIDE_MILESTONE} dark sides`, secret: false, icon: "halo" },
   { id: "darkest-paradise", name: "Darkest Little Paradise", desc: "Beat every dark side",           secret: false, icon: "eden" },
   { id: "state-of-grace",   name: "State Of Grace",   desc: "Defeat a challenge on the first try",   secret: true,  icon: "feather" },
-  { id: "this-is-me-trying", name: "This Is Me Trying", desc: "Defeat a challenge after 5+ attempts", secret: true, icon: "crumple" },
+  { id: "this-is-me-trying", name: "This Is Me Trying", desc: "Defeat a challenge after seeing it through 7 times", secret: true, icon: "crumple" },
   { id: "shouldve-said-no",  name: "Should've Said No",  desc: "Defeat Impostor flawlessly: every impostor flagged, every real word named", secret: false, icon: "nosign" },
   { id: "smallest-man",      name: "The Smallest Man Who Ever Lived", desc: "Fall for the very first impostor you meet", secret: true, icon: "hooked" },
   { id: "invisible-string",  name: "Invisible String",  desc: "Defeat Common Thread: pull the word through every line", secret: false, icon: "thread" },

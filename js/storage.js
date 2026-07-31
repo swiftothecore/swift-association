@@ -100,10 +100,14 @@ export function resetKeepsakes() {
 
 /* ---------- Challenges mode (progress + tokens) ---------- */
 // Per-challenge progress, keyed by challenge id:
-//   { unlocked, defeated, attempts, best, darkDefeated, darkAttempts, darkBest }
+//   { unlocked, defeated, attempts, best, darkDefeated, darkAttempts, darkBest,
+//     earnest, ticketClaimed }
 // The dark* fields track the challenge's dark side as a separate line of progress against the
 // same id, so beating the base and beating the dark side stay independently recorded. Records
 // written before dark sides existed simply lack them and default cleanly — no migration.
+// `earnest` counts runs played through to the end screen (persistence tickets); it is
+// deliberately NOT the same tally as `attempts`, which banks at run start. `ticketClaimed`
+// caps the ticket at one per challenge, ever.
 export function loadChallengeState() {
   try {
     const raw = localStorage.getItem(CHALLENGES_KEY);
@@ -120,18 +124,22 @@ export function challengeRecord(id) {
   return {
     unlocked: !!e.unlocked, defeated: !!e.defeated, attempts: e.attempts || 0, best: e.best || 0,
     darkDefeated: !!e.darkDefeated, darkAttempts: e.darkAttempts || 0, darkBest: e.darkBest || 0,
+    earnest: e.earnest || 0, ticketClaimed: !!e.ticketClaimed,
   };
 }
-// Token wallet. Seeded with one starting token on first read (persisted on first save).
+// The two challenge wallets. `balance` is tokens, seeded with one starting token on first read
+// (persisted on first save); `tickets` is persistence tickets and is deliberately NOT seeded —
+// a ticket only ever arrives by seeing a challenge through seven times. Saves written before
+// tickets existed simply lack the field and normalise to zero here, so nothing backfills.
 export function loadChallengeTokens() {
   try {
     const raw = localStorage.getItem(CHALLENGE_TOKENS_KEY);
     if (raw) {
       const o = JSON.parse(raw);
-      if (o && typeof o.balance === "number") return o;
+      if (o && typeof o.balance === "number") return { ...o, tickets: o.tickets || 0 };
     }
   } catch (e) { /* ignore */ }
-  return { balance: 1 };   // the starting token
+  return { balance: 1, tickets: 0 };   // the starting token, and no starting ticket
 }
 export function saveChallengeTokens(o) {
   try { localStorage.setItem(CHALLENGE_TOKENS_KEY, JSON.stringify(o)); } catch (e) { /* ignore */ }
