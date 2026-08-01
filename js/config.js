@@ -1081,6 +1081,24 @@ export const TS_LORE_DAYS = [
   { md: "04-29", kind: "lore", title: "High Infidelity", album: "Midnights" },
 ];
 
+/* ---------- Guest-shelf stamp inks ---------- */
+// The corner guest stamp is franked in a different colour every page load, the way a
+// post office works through whatever plate is on the press that morning. Every one of
+// these is dark enough to carry the cream silhouette printed over it, which is the
+// only real constraint: a pale yellow would swallow the figure whole, so the yellow
+// here is a deep ochre. Keep them printing inks, not screen colours.
+export const STAMP_INKS = [
+  "#b8392f",  // pillar-box red
+  "#c9536f",  // rose
+  "#96345f",  // plum
+  "#6a4d92",  // violet
+  "#35618f",  // royal blue
+  "#2f7f80",  // teal
+  "#4f7f4a",  // leaf green
+  "#a8862a",  // ochre
+  "#cc6a24",  // orange
+];
+
 /* ---------- Album colours (left-rule tint + tag on lyric cards) ---------- */
 // The 12 studio albums (explicit so future pseudo-album groups — singles, holiday,
 // features — don't dilute album-scoped achievements like The Eras Tour / Branch Out).

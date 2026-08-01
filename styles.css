@@ -5627,6 +5627,14 @@
   }
   .stamp--focus { --stamp-rot: -4deg; --stamp-lean: -8deg; width: 50px; }
   .stamp--guest { --stamp-rot: 3.5deg; --stamp-lean: 7.5deg; width: 62px; margin-left: -4px; }
+  /* The guest die is franked in one ink chosen per page load (STAMP_INKS in js/config.js,
+     applied in app.js). The figure and the caption print in the paper colour and knock
+     out of that ink, so the plate is a single colour on cream like real postage. The
+     fallback here is what a page with no JS gets, so it has to be a real ink, not white. */
+  .stamp--guest { --gs-ink: #35618f; --gs-paper: #fdfaf1; }
+  .stamp--guest .gs-tint { fill: var(--gs-ink); }
+  .stamp--guest .gs-fig,
+  .stamp--guest .stamp-cap { fill: var(--gs-paper); }
   .stamp:hover, .stamp:focus-visible {
     transform: rotate(var(--stamp-lean)) scale(1.07);
     outline: none;

@@ -5,7 +5,7 @@ import {
   TOTAL_ROUNDS, RECENT_WINDOW, NOVELTY_BOOST, DAILY_ALBUM_SKEW, DAILY_ALBUM_WEIGHT_EXP, DIFF_KEY, DEFAULT_SETTINGS,
   MODES, MODE_ORDER, MODE_COLORS, DIFFICULTY_LADDER, MODALITY_MODES, EXPLORER_TOKENS,
   ERAS, TENDER_ERAS, FINALE_ERAS, ALBUM_ERA, TS_MILESTONES, TS_LORE_DAYS, SALT_SHAKER_D, SALT_CAP_D,
-  ALBUM_COLORS, CB_ALBUM_COLORS, STUDIO_ALBUMS, TITLE_ALIASES,
+  ALBUM_COLORS, CB_ALBUM_COLORS, STUDIO_ALBUMS, TITLE_ALIASES, STAMP_INKS,
   ACHIEVEMENTS, ACH_ICONS, ACH_BY_ID, ACH_GROUPS, ACH_GROUP_COLORS, ACH_GROUP_OF,
   BONUS_GAMES, BONUS_ROUNDS, BONUS_SLIP_SECONDS, BONUS_NAME_SECONDS, BONUS_BLANK_SECONDS,
   CHALLENGES, CHALLENGE_BY_ID, CHALLENGE_ORDER, CHALLENGE_SEALS, DARK_SIDE_IDS, DARK_SIDE_TODO,
@@ -5157,6 +5157,16 @@ function guestRailPlan() {
   const rails = Math.max(1, Math.ceil(GUEST_SHELF_SLOTS / guestPerRail()));
   const base = Math.floor(GUEST_SHELF_SLOTS / rails), extra = GUEST_SHELF_SLOTS % rails;
   return Array.from({ length: rails }, (_, i) => base + (i < extra ? 1 : 0));
+}
+
+// The corner guest stamp is franked in a random ink from STAMP_INKS once per page load and
+// then left alone: a stamp that changed colour while you looked at it would read as a bug,
+// and the point is the small pleasure of noticing a different plate on the next visit. The
+// figure and caption knock out in the paper colour, so one property does the whole plate.
+function frankGuestStamp() {
+  const btn = $("guestShelfBtn");
+  if (!btn) return;
+  btn.style.setProperty("--gs-ink", STAMP_INKS[Math.floor(Math.random() * STAMP_INKS.length)]);
 }
 
 function openGuestShelf(from) {
@@ -15386,6 +15396,14 @@ function buildDevApi() {
             rain: (on) => { devForceRain = on === undefined ? !devForceRain : !!on; refreshRain(); return devForceRain; },
             leaves: (on) => { devForceLeaves = on === undefined ? !devForceLeaves : !!on; refreshLeaves(); return devForceLeaves; },
             pen: (p) => setPen(p || null) },
+    // The corner guest stamp's ink, which is otherwise a once-per-load roll: this is
+    // how you see all nine plates without reloading nine times.
+    stamp: {
+      inks: () => STAMP_INKS.slice(),
+      current: () => ($("guestShelfBtn") ? $("guestShelfBtn").style.getPropertyValue("--gs-ink").trim() : ""),
+      ink: (hex) => { const b = $("guestShelfBtn"); if (b) b.style.setProperty("--gs-ink", hex); return hex; },
+      reroll: () => { frankGuestStamp(); const b = $("guestShelfBtn"); return b ? b.style.getPropertyValue("--gs-ink").trim() : ""; },
+    },
     // The scrolling desk (js/scatter.js) — cosmetic gutter incidents, props and
     // marks. All cosmetic: nothing here touches game state or storage.
     scatter: {
@@ -15490,6 +15508,7 @@ async function init() {
   $("bonusQuitBtn").addEventListener("click", () => leaveBonusGame());
   $("albumFocusBtn").addEventListener("click", () => openAlbumFocus("start"));
   $("albumFocusBackBtn").addEventListener("click", () => backToScreen(albumFocusBackTarget));
+  frankGuestStamp();
   $("guestShelfBtn").addEventListener("click", () => openGuestShelf("start"));
   $("guestBackBtn").addEventListener("click", () => backToScreen(guestBackTarget));
   // The rail's pass-per-rail count is a layout decision made in markup (a pass cannot shrink

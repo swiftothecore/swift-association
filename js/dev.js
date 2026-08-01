@@ -280,6 +280,14 @@ export function initDev(api) {
     row(scPropsBtn, scMarksBtn, scDbgBtn),
     row(btn("showcase", () => { api.scatter.showcase(); toast("one of everything, top to bottom"); }))));
 
+  // ---- Guest stamp ink ---------------------------------------------------------
+  // The plate is rolled once per page load, so without this you would be reloading to
+  // see the other eight. The select is the whole palette in order.
+  const inkSel = select(api.stamp.inks(), (h) => h, (h) => h);
+  body.append(section("stamp",
+    row(inkSel, btn("ink", () => toast(api.stamp.ink(inkSel.value))),
+        btn("reroll", () => { const hex = api.stamp.reroll(); inkSel.value = hex; toast(hex); }))));
+
   // ---- Charm icon gallery ------------------------------------------------------
   // Every achievement charm at real render size on real paper, grouped like the
   // collection page, with duplicate-key flagging. QA tool for the icon set.
