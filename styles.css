@@ -1697,15 +1697,28 @@
     font-family: var(--type); font-size: 9px; letter-spacing: 1.6px; text-transform: uppercase;
     color: var(--ink-soft); margin: 8px 0 6px;
   }
+  /* Title strips, one to a row. Every strip is exactly two lines tall however much is
+     written on it, which is what lets the shelf hold a dozen games without the page
+     doubling: the score sits up on the name's line, and the description below is clipped
+     rather than wrapped.
+     ONE column, not two, and that is measured rather than chosen: the notebook is ~660px
+     of paper, so a two-up strip leaves about 206px for the description while a readable
+     one needs ~270px. Two columns would clip every line on the shelf to buy back height a
+     two-line strip does not need. If the page ever gets wider, this is where to reconsider. */
+  .bonus-strips { display: grid; grid-template-columns: 1fr; gap: 2px; }
+  /* min-width: 0 is load-bearing, not tidying. A grid item defaults to min-width: auto, so
+     the nowrap description below would size the COLUMN to the sentence and shove the right
+     strip off the edge of the paper instead of being clipped inside it. */
   .bonus-alt {
-    display: flex; align-items: center; gap: 14px; width: 100%; text-align: left;
-    padding: 10px 6px; background: none; border: none; cursor: pointer;
+    display: flex; align-items: flex-start; gap: 10px; width: 100%; min-width: 0; text-align: left;
+    padding: 8px 8px 8px 0; background: none; border: none; cursor: pointer;
     border-bottom: 1px dashed rgba(60, 40, 18, 0.14);
     transition: background 0.14s ease;
   }
-  .bonus-alt:last-child { border-bottom: none; }
   .bonus-alt:hover, .bonus-alt:focus-visible { background: rgba(60, 40, 18, 0.04); outline: none; }
-  .bonus-alt-disc { flex: none; width: 64px; height: 64px; }
+  /* the coloured tab down the edge of the strip: the pressing's label colour, filed */
+  .bonus-alt-tab { flex: none; width: 5px; height: 34px; border-radius: 1px; }
+  .bonus-alt-disc { flex: none; width: 38px; height: 38px; }
   .bonus-alt-disc .bonus-disc {
     width: 100%; height: 100%; display: block;
     filter: drop-shadow(0 3px 4px rgba(43, 39, 34, 0.3));
@@ -1713,20 +1726,21 @@
   }
   .bonus-alt:hover .bonus-alt-disc .bonus-disc,
   .bonus-alt:focus-visible .bonus-alt-disc .bonus-disc { transform: rotate(-10deg) translateY(-2px); }
-  .bonus-alt-text { display: flex; flex-direction: column; gap: 1px; }
-  .bonus-alt-kicker {
-    font-family: var(--type); font-size: 8px; letter-spacing: 1.4px; text-transform: uppercase;
-    color: #4a8c87;
-  }
+  .bonus-alt-text { flex: 1; min-width: 0; }
+  .bonus-alt-top { display: flex; align-items: baseline; gap: 10px; }
   .bonus-alt-name {
-    font-family: var(--hand); font-weight: 700; font-size: 21px; line-height: 1.05; color: var(--ink);
+    flex: 1; min-width: 0;
+    font-family: var(--hand); font-weight: 700; font-size: 20px; line-height: 1.05; color: var(--ink);
   }
-  .bonus-alt-blurb {
-    font-family: var(--type); font-size: 10.5px; line-height: 1.5; color: var(--ink-soft);
-    max-width: 52ch;
+  /* One sentence, one line, ever. `nowrap` + ellipsis is a hard backstop rather than a
+     hope: a long `line` on a future game degrades to a clipped sentence instead of
+     silently pushing every strip below it down the page. */
+  .bonus-alt-line {
+    display: block; font-family: var(--type); font-size: 10px; line-height: 1.45;
+    color: var(--ink-soft); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   }
   .bonus-alt-meta {
-    margin-top: 3px; font-family: var(--type); font-size: 8.5px; letter-spacing: 1.1px;
+    flex: none; font-family: var(--type); font-size: 8.5px; letter-spacing: 1.1px;
     text-transform: uppercase; color: var(--ink-soft); opacity: 0.8;
   }
   .bonus-alt.is-soon .bonus-alt-name { color: var(--ink-soft); }
@@ -1754,7 +1768,14 @@
     .bonus-now { width: 100%; min-width: 0; text-align: center; padding-top: 0; }
     .bonus-now-blurb, .bonus-now-soon { margin-left: auto; margin-right: auto; }
     .bonus-now-soon { text-align: left; }
-    .bonus-alt-blurb { max-width: none; }
+    /* A phone has ~190px of strip left after the tab, the pressing and the score, and a
+       readable description wants ~270px. So on narrow the line WRAPS rather than clips —
+       clipping here would eat the back half of every sentence on the shelf, which is the
+       one thing this layout exists to prevent. Clamped to two lines so a strip is still a
+       fixed height, just a taller one. */
+    .bonus-alt-line {
+      white-space: normal; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+    }
   }
 
 

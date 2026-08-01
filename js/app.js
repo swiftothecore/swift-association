@@ -3980,14 +3980,28 @@ function renderBonusPage() {
       `</div>` +
     `</div>`;
 
+  /* The rest of the shelf, as title strips: a colour tab, the pressing, and two lines of
+     writing — the name with its score out on the right, and the game's one-line `line`
+     under both. Two to a row, so the shelf grows sideways as well as down.
+     The strip is deliberately a FIXED two lines tall whatever is written on it: the score
+     rides up onto the name's line so the description gets the whole width, and the
+     description is clipped rather than wrapped. That is the whole reason this replaced the
+     old described rows — those reprinted the platter's `blurb`, which is three sentences
+     long, so nine of them ran to twice the page. The kicker is not repeated here; on the
+     shelf `line` does its job, and it says more. */
   const shelf = others.map((x) =>
     `<button type="button" class="bonus-alt${x.ready ? "" : " is-soon"}" data-id="${escapeHtml(x.id)}">` +
+      `<span class="bonus-alt-tab" style="background:${x.ready ? escapeHtml(x.tint) : "#cfc7ba"}"></span>` +
       `<span class="bonus-alt-disc">${bonusDisc(x)}</span>` +
       `<span class="bonus-alt-text">` +
-        `<span class="bonus-alt-kicker">${escapeHtml(x.kicker)}</span>` +
-        `<span class="bonus-alt-name">${escapeHtml(x.name)}</span>` +
-        `<span class="bonus-alt-blurb">${escapeHtml(x.blurb)}</span>` +
-        `<span class="bonus-alt-meta">${escapeHtml(bonusScoreLine(x))}</span>` +
+        `<span class="bonus-alt-top">` +
+          `<span class="bonus-alt-name">${escapeHtml(x.name)}</span>` +
+          `<span class="bonus-alt-meta">${escapeHtml(bonusScoreLine(x))}</span>` +
+        `</span>` +
+        // Falls back to the kicker rather than printing an empty row: a game added to the
+        // roster before its shelf line is written should still say something true about
+        // itself, and the kicker is the one description every entry has always carried.
+        `<span class="bonus-alt-line">${escapeHtml(x.line || x.kicker)}</span>` +
       `</span>` +
     `</button>`).join("");
 
@@ -4000,7 +4014,7 @@ function renderBonusPage() {
     deck +
     `<div class="bonus-shelf">` +
       `<div class="bonus-shelf-label">also on the shelf</div>` +
-      shelf +
+      `<div class="bonus-strips">` + shelf + `</div>` +
     `</div>`;
 
   if ($("bonusPlayBtn")) $("bonusPlayBtn").addEventListener("click", () => startBonusGame(bonusPicked()));
@@ -15148,6 +15162,15 @@ function buildDevApi() {
     // generated swaps can be eyeballed in bulk before shipping a change to js/bonus.js.
     bonus: {
       list: () => BONUS_GAMES.map((g) => ({ id: g.id, name: g.name, ready: g.ready, ...bonusRecord(g.id) })),
+      // The shelf's one-line descriptions, measured. A strip clips rather than wraps, so a
+      // `line` that has crept too long fails SILENTLY as a chopped sentence rather than as a
+      // broken layout — which is exactly the kind of thing nobody notices until it ships.
+      // Run this after writing a new game's line: `over` is what a reader would lose.
+      lines: () => BONUS_GAMES.map((g) => {
+        const el = document.querySelector(`.bonus-alt[data-id="${g.id}"] .bonus-alt-line`);
+        return { id: g.id, chars: (g.line || "").length, line: g.line,
+                 clipped: el ? el.scrollWidth > el.clientWidth + 1 : "not on the shelf right now" };
+      }),
       open: (from) => openBonus(from || "start"),
       play: (id) => { const g = BONUS_GAMES.find((x) => x.id === id); if (g && g.ready) startBonusGame(g); return g ? g.name : null; },
       sample: (id, n = 10) => {

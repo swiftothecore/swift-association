@@ -318,15 +318,25 @@ export const CUSTOM_DEFAULT_MODE = {
 // so a new game means one new colour and one new mark, nothing else. A `ready:false` game
 // gets neither: an unreleased record wears a bare white-label test pressing instead, which
 // is what makes "coming soon" legible without a word of UI.
+// Two descriptions, deliberately, and they are not the same sentence at two lengths.
+// `blurb` is written for the platter, where there is room to say how a game FEELS. `line` is
+// written for the shelf, where every game has to say what it IS in one row: one sentence, kept
+// near 45 characters so it holds on a phone, and clipped by CSS rather than wrapped if a new
+// one ever runs long — a shelf row that reflows is what made the old described list so tall.
+// The kicker below is the platter's, not the shelf's; on the shelf `line` stands in its place,
+// because a three-word tag and a real sentence are the same job done twice.
 export const BONUS_GAMES = [
   { id: "spot-the-slip", name: "Spot the Slip", ready: true,
     kicker: "find the wrong word", tint: "#cf6752", mark: "skip",
+    line: "One word in the lyric is an impostor. Catch it.",
     blurb: "One word in the lyric has been swapped for an impostor. Catch it before the ink dries." },
   { id: "name-that-song", name: "Name That Song", ready: true,
     kicker: "lyric in, title out", tint: "#33486e", mark: "question",
+    line: "Read the line, name the song, beat the clock.",
     blurb: "Read the line, name the song, and beat the clock. No prompt word to lean on but the lyric itself." },
   { id: "sing-it-back", name: "Sing It Back", ready: true,
     kicker: "fill the gap", tint: "#77485e", mark: "caret",
+    line: "A word is missing from the line. Write it back.",
     blurb: "A word has been lifted out of one of the song's own lines. Write it back in." },
   // The one game on the shelf scored in POINTS rather than pages cleared: `points` is what a
   // page opens worth, and every other surface reads its maximum off it (see bonusMaxScore).
@@ -337,9 +347,11 @@ export const BONUS_GAMES = [
   // shorter drop, so peeling the two or three you actually need is not a ruined page.
   { id: "redacted", name: "Redacted", ready: true, points: 6,
     kicker: "how little do you need?", tint: "#4e5f3a", mark: "redact",
+    line: "Peel the tape off a verse, and name it cheap.",
     blurb: "A verse with the telling words taped over. Peel them off one at a time, and name the song before you have spent the page." },
   { id: "invisible-string", name: "Invisible String", ready: true, points: 5,
     kicker: "tie each line to its song", tint: "#8a6620", mark: "string",
+    line: "Thread five lines to the songs they came from.",
     blurb: "Five lines on one side, five songs on the other. Thread each one to where it belongs, and let the ones you know narrow down the ones you don't." },
 ];
 // A bonus run is short by design — these sit beside the main game, they don't replace it.
