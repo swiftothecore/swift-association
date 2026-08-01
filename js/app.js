@@ -4891,7 +4891,7 @@ function endBonusRun() {
       `</div>` +
       `<div class="bg-end-actions">` +
         `<button type="button" id="bonusShelfBtn" class="btn-primary">← the shelf</button>` +
-        `<button type="button" id="bonusAgainBtn" class="btn-primary">Play again</button>` +
+        `<button type="button" id="bonusAgainBtn" class="btn-primary">replay ↺</button>` +
       `</div>` +
     `</div>`;
   $("bonusAgainBtn").addEventListener("click", () => startBonusGame(bonusGame));
