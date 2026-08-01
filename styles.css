@@ -6097,13 +6097,25 @@
   .set-row {
     display: flex; align-items: center; justify-content: space-between; gap: 12px;
     padding: 7px 0; min-height: 30px; border-bottom: 1px solid var(--rule);
-    flex-wrap: wrap;
   }
   .set-row:last-child { border-bottom: none; }
-  .set-label { display: flex; flex-direction: column; gap: 1px; }
+  .set-label { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
   .set-name { font-family: var(--hand); font-size: 20px; line-height: 1.1; color: var(--ink); }
   .set-desc { font-family: var(--type); font-size: 10.5px; color: var(--ink-soft); }
-  .set-control { flex: 0 0 auto; }
+  /* One control column, one axis. Sized rather than shrink-to-fit: a segmented
+     control, a slider and a dropdown are all different widths, and letting each
+     find its own left edge left the column ragged all the way down the page. */
+  #settingsBody { --set-ctrl-w: 240px; }
+  .set-control {
+    /* the fallback matters: .set-row is reused outside #settingsBody, where an
+       undefined var would invalidate the whole shorthand */
+    flex: 0 0 var(--set-ctrl-w, 240px); display: flex; align-items: center; justify-content: flex-end;
+  }
+  /* A control too wide for the column takes the row instead of squeezing into it:
+     label on its own line, control full-width beneath, left-aligned. */
+  .set-row--stack { flex-direction: column; align-items: stretch; gap: 7px; }
+  .set-row--stack .set-control { flex: 1 1 auto; width: 100%; justify-content: flex-start; }
+  .set-row--stack .set-choice { justify-content: flex-start; }
 
   /* on/off toggle — an inked switch */
   .set-toggle {
@@ -6160,8 +6172,20 @@
   /* a ticked line is done: the ink settles, the note behind it recedes */
   .set-check[aria-pressed="false"] .set-check-name { color: var(--ink-soft); }
 
+  /* ---------- Your era, as swatches ----------
+     Reuses the first-run chips (.fr-era) so the album you pick here looks like the
+     album you picked when you opened the game, plus a "no favourite" chip with a
+     hollow dot — the one way back out of a choice a dropdown got for free. */
+  .set-era-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px 8px; }
+  @media (max-width: 520px) { .set-era-grid { grid-template-columns: 1fr; } }
+  .set-era { padding: 7px 10px; font-size: 17px; }
+  .set-era--none { --era-c: var(--ink-soft); }
+  .set-era--none .fr-era-dot {
+    background: transparent; border: 1.5px dashed var(--ink-soft); box-shadow: none;
+  }
+
   /* multi-choice — reuse the notebook tab look, compact */
-  .set-choice { display: inline-flex; gap: 4px; flex-wrap: wrap; justify-content: flex-end; }
+  .set-choice { display: flex; gap: 4px; flex-wrap: wrap; justify-content: flex-end; }
   .set-choice .mode-tab { font-size: 16px; padding: 4px 9px 5px; border-bottom: 1.5px solid rgba(43,39,34,0.18); border-radius: 5px; transform: none; }
   .set-choice .mode-tab:nth-child(even) { transform: none; }
   .set-choice .mode-tab.active { transform: none; }
@@ -6238,7 +6262,7 @@
      and the long zone names clip with an ellipsis instead of spilling. */
   .set-select {
     font-family: var(--type); font-size: 13px;
-    max-width: 340px; width: 100%;
+    max-width: 400px; width: 100%;
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     color: var(--ink); background: var(--page-wash, #efe7d2);
     border: 1.5px solid var(--ink-soft); border-radius: 2px;
@@ -6247,7 +6271,7 @@
   .set-select:focus { border-color: var(--ink-accent); }
 
   /* countdown slider */
-  .set-slider-row { display: flex; align-items: center; gap: 10px; }
+  .set-slider-row { display: flex; align-items: center; justify-content: flex-end; gap: 10px; }
   .set-slider { width: 130px; accent-color: var(--ink-accent); cursor: pointer; }
   .set-slider-val { font-family: var(--type); font-size: 14px; color: var(--ink-accent); min-width: 26px; text-align: right; }
 

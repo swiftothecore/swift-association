@@ -13428,19 +13428,45 @@ function wireInput() {
 
 /* ---------- Settings modal ---------- */
 // Control builders — all keyed by a settings field; a change re-renders the body.
+// Two or three options sit beside their label like a segmented control. Past four they
+// stop fitting the control column and used to wrap back into the label, or give up and
+// drop onto a line of their own — so they're laid out that way on purpose instead: the
+// label on its row, the full set of tabs beneath it.
 function setChoiceHTML(key, name, desc, options) {
   const tabs = options.map((o) =>
     `<button type="button" class="mode-tab${o.val === settings[key] ? " active" : ""}" data-choice="${key}" data-val="${o.val}">${o.label}</button>`
   ).join("");
-  return `<div class="set-row"><div class="set-label"><span class="set-name">${name}</span>` +
+  const stack = options.length > 4 ? " set-row--stack" : "";
+  return `<div class="set-row${stack}"><div class="set-label"><span class="set-name">${name}</span>` +
     (desc ? `<span class="set-desc">${desc}</span>` : "") + `</div>` +
     `<div class="set-control set-choice">${tabs}</div></div>`;
+}
+// Your era, as the twelve album colours rather than a browser dropdown. The player
+// already picked it this way at first run (.fr-era), and a choice that is *about* a
+// colour should not be made from a list of names.
+function setEraGridHTML() {
+  const pal = albumPalette();
+  const chip = (val, label, colour) => {
+    const on = (settings.favouriteAlbum || "") === val;
+    return `<button type="button" class="fr-era set-era${val ? "" : " set-era--none"}${on ? " is-selected" : ""}" ` +
+      `data-era-pick="${escapeHtml(val)}" aria-pressed="${on}"${colour ? ` style="--era-c:${colour}"` : ""}>` +
+      `<span class="fr-era-dot"${colour ? ` style="background:${colour}"` : ""}></span>` +
+      `<span class="fr-era-name">${escapeHtml(label)}</span></button>`;
+  };
+  const chips = STUDIO_ALBUMS.map((a) => chip(a, a, pal[a] || "#8b8272")).join("") +
+    chip("", "No favourite yet", "");
+  return `<div class="set-row set-row--stack"><div class="set-label">` +
+    `<span class="set-name">Your era</span>` +
+    `<span class="set-desc">the album closest to your heart</span></div>` +
+    `<div class="set-control set-era-grid" role="group" aria-label="Your era">${chips}</div></div>`;
 }
 function setSelectHTML(key, name, desc, options) {
   const opts = options.map((o) =>
     `<option value="${escapeHtml(o.val)}"${o.val === settings[key] ? " selected" : ""}>${escapeHtml(o.label)}</option>`
   ).join("");
-  return `<div class="set-row"><div class="set-label"><span class="set-name">${name}</span>` +
+  // Always stacked: option labels here are long enough (four hundred zone names) that
+  // the control column would ellipsis them down to nothing useful.
+  return `<div class="set-row set-row--stack"><div class="set-label"><span class="set-name">${name}</span>` +
     (desc ? `<span class="set-desc">${desc}</span>` : "") + `</div>` +
     `<div class="set-control"><select class="set-select" id="set-${key}" data-select="${key}" aria-label="${name}">${opts}</select></div></div>`;
 }
@@ -13638,8 +13664,7 @@ function renderSettingsBody() {
   panels.notebook =
     setSection("",
       setBookplateHTML() +
-      setSelectHTML("favouriteAlbum", "Your era", "the album closest to your heart",
-        [{ val: "", label: "No favourite yet" }].concat(STUDIO_ALBUMS.map((a) => ({ val: a, label: a }))))
+      setEraGridHTML()
     );
   panels.motion =
     setSection("",
@@ -13731,8 +13756,11 @@ function renderSettingsBody() {
   // Every control re-renders the whole body, which throws focus back to <body>. Note
   // where it was so a keyboard can tick three boxes in a row without re-Tabbing.
   const was = document.activeElement;
-  const wasSel = (was && was.dataset && was.dataset.toggle) ? `[data-toggle="${was.dataset.toggle}"]`
-    : (was && was.dataset && was.dataset.choice) ? `[data-choice="${was.dataset.choice}"][data-val="${was.dataset.val}"]`
+  const d = (was && was.dataset) || {};
+  // eraPick is compared against undefined, not truthiness: "" is the "no favourite" chip.
+  const wasSel = d.toggle ? `[data-toggle="${d.toggle}"]`
+    : d.choice ? `[data-choice="${d.choice}"][data-val="${d.val}"]`
+    : d.eraPick !== undefined ? `[data-era-pick="${d.eraPick}"]`
     : null;
   $("settingsBody").innerHTML = SETTINGS_PANELS.map((p) =>
     `<div class="set-panel" id="set-panel-${p.id}" role="tabpanel" aria-labelledby="set-tab-${p.id}"` +
@@ -13760,6 +13788,11 @@ function wireSettingsBody() {
   body.querySelectorAll("[data-choice]").forEach((b) => b.addEventListener("click", () => {
     settings[b.dataset.choice] = b.dataset.val;
     saveSettings(settings); applySettings(); renderSettingsBody();
+  }));
+  body.querySelectorAll("[data-era-pick]").forEach((b) => b.addEventListener("click", () => {
+    setFavouriteAlbum(b.dataset.eraPick);   // "" clears it; the album list is validated there
+    refreshStartBoard();                    // the notebook is signed with it
+    renderSettingsBody();
   }));
   body.querySelectorAll("[data-select]").forEach((sel) => sel.addEventListener("change", () => {
     settings[sel.dataset.select] = sel.value;
@@ -13957,8 +13990,8 @@ function closeSettings() {
 }
 
 /* ---------- Custom mode: the "Change" modal (author the active preset) ----------
-   Reuses the settings-modal chrome (.settings-modal / .set-row / .set-choice / .set-toggle /
-   .set-slider) but its controls read/write a working PRESET'S lever object instead of global
+   Reuses the settings-modal chrome (.settings-modal / .set-toggle / .set-slider — its rows are
+   its own .cm-tile bento) but its controls read/write a working PRESET'S lever object instead of global
    settings, dispatching on data-cm-* attributes. Every edit persists immediately to CUSTOM_KEY;
    the custom page re-renders on close. */
 // The modal is a bento of control tiles (see .cm-grid) rather than a flat list. Each helper
