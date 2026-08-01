@@ -331,7 +331,11 @@ export const BONUS_GAMES = [
   // The one game on the shelf scored in POINTS rather than pages cleared: `points` is what a
   // page opens worth, and every other surface reads its maximum off it (see bonusMaxScore).
   // Any future game that scores a page on a scale rather than right/wrong sets the same field.
-  { id: "redacted", name: "Redacted", ready: true, points: 10,
+  // Six rather than ten: a page cleared blind is the best thing that happens in this game, and
+  // at ten it paid so far above a normally-peeled page that the sensible play was to sit and
+  // stare rather than spend. Six keeps the same shape (a strip a point, floored at one) with a
+  // shorter drop, so peeling the two or three you actually need is not a ruined page.
+  { id: "redacted", name: "Redacted", ready: true, points: 6,
     kicker: "how little do you need?", tint: "#4e5f3a", mark: "redact",
     blurb: "A verse with the telling words taped over. Peel them off one at a time, and name the song before you have spent the page." },
   { id: "invisible-string", name: "Invisible String", ready: true, points: 5,
@@ -343,11 +347,11 @@ export const BONUS_ROUNDS = 10;
 export const BONUS_SLIP_SECONDS = 20;   // reading a whole line takes longer than naming a title
 export const BONUS_NAME_SECONDS = 15;
 export const BONUS_BLANK_SECONDS = 20;  // read the line, find the gap, then type — slip's budget
-// Redacted's clock is deliberately the loosest on the shelf, and it is a backstop rather than
-// a pressure: the cost of thinking here is already the strips you peel while you think, and a
-// tight clock would just charge you twice for the same hesitation. Long enough to read a
-// verse, weigh four or five blocks and write a title; short enough that stalling is not free.
-export const BONUS_REDACT_SECONDS = 45;
+// Redacted's clock is a backstop rather than a pressure: the cost of thinking here is already
+// the strips you peel while you think, so a tight clock would charge you twice for the same
+// hesitation. Long enough to read two or three lines, weigh the blocks and write a title;
+// short enough that sitting on a page you can't place is a decision rather than a free wait.
+export const BONUS_REDACT_SECONDS = 30;
 // A correct answer never scores nothing, however much of the verse was uncovered — otherwise a
 // page you have over-peeled becomes pointless to finish, which is the one thing the scoring
 // must not do. Peels past the floor are simply free.

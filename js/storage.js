@@ -286,9 +286,15 @@ export function bonusRecord(id) {
 }
 // Fold a finished bonus run into the board and return the updated record, plus whether the
 // run set a new best (the end card calls that out).
-export function recordBonusRun(id, score) {
+// `max` is what a run of that game is out of TODAY. A game's scale can be retuned after a run
+// has been banked (Redacted's page went from ten points to six), and a best from the old
+// pressing would then sit above everything the game can still score — quoted as "best 74 / 60"
+// and, worse, unbeatable, so no run could ever be a new best again. A stale best is therefore
+// retired down to the new maximum here, once, on the next run.
+export function recordBonusRun(id, score, max = Infinity) {
   const all = loadBonus();
   const e = all[id] || {};
+  if (e.best > max) e.best = max;
   const isBest = score > (e.best || 0);
   if (isBest) e.best = score;
   e.plays = (e.plays || 0) + 1;

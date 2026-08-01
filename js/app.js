@@ -3919,11 +3919,16 @@ function bonusPicked() {
 
 /* ---------- What a run is out of ----------
    Most games score a page right or wrong, so a run is out of BONUS_ROUNDS. A game carrying
-   `points` scores each page on a scale instead (Redacted's ten-minus-what-you-peeled), so its
+   `points` scores each page on a scale instead (Redacted's six-minus-what-you-peeled), so its
    run is out of ten times that. Everywhere a score is shown goes through these two, which is
    what stops a 63-point run being written up as "63 correct" out of ten. */
 function bonusPagePoints(g) { return (g && g.points) || 1; }
 function bonusMaxScore(g) { return BONUS_ROUNDS * bonusPagePoints(g); }
+// A best is read back through the maximum it is quoted against, because a game's `points` can
+// be retuned after a run has been banked — and a stored 74 shown as "best 74 / 60" is a
+// notebook contradicting itself. Clamped on the way out rather than rewritten in storage: the
+// run really did happen, and a later re-tune upwards should give the number back.
+function bonusBest(g) { return Math.min(bonusRecord(g.id).best, bonusMaxScore(g)); }
 function bonusScoreText() {
   return `${bonusScore} ${bonusGame && bonusGame.points ? "points" : "correct"}`;
 }
@@ -3933,7 +3938,7 @@ function bonusScoreText() {
 function bonusScoreLine(g) {
   const rec = bonusRecord(g.id);
   if (!g.ready) return "not pressed yet";
-  return rec.plays ? `best ${rec.best} / ${bonusMaxScore(g)} · played ${rec.plays}` : "unplayed";
+  return rec.plays ? `best ${bonusBest(g)} / ${bonusMaxScore(g)} · played ${rec.plays}` : "unplayed";
 }
 
 // The tonearm, resting on the record. Drawn here rather than in the sprite because it
@@ -4493,14 +4498,25 @@ function peelTape(btn) {
 // Everything still taped comes off when the page settles, so the verse is left whole and
 // readable. The strips the player never paid for are marked, which is the page's own
 // after-the-fact answer to "how much of it was I flying blind on?".
+// The verse is also where the song is finally named: the instruction line and the bare section
+// label give way to the real lyric-sheet heading (title, red rule, album · section), so the
+// finished page is the answer rather than a peeled page with the answer quoted underneath it.
+// That is why bonusAnswerCard gives this game no card — see the note there.
 function revealRedacted() {
-  $("bonusPlayBody").querySelectorAll(".bg-tape").forEach((b) => {
+  const body = $("bonusPlayBody");
+  body.querySelectorAll(".bg-tape").forEach((b) => {
     b.disabled = true;
     if (b.classList.contains("is-open")) return;
     b.classList.add("is-open", "was-taped");
     const strip = b.querySelector(".bg-tape-strip");
     if (strip) strip.remove();
   });
+  const ask = body.querySelector(".bg-ask");
+  if (ask) ask.remove();
+  const sec = body.querySelector(".bg-section");
+  if (sec) sec.remove();
+  const verse = body.querySelector(".bg-redact");
+  if (verse) verse.insertAdjacentHTML("beforebegin", bonusSongHead(bonusPuzzle.song, bonusPuzzle.label));
 }
 
 // What the verdict says about a won page: what it paid out and what it cost.
@@ -4640,11 +4656,11 @@ function judgeGap() {
    shows a DOCTORED line, so the card is where the line goes right (highlighting the real word
    the impostor stood in for), and Name That Song's page shows a real line but no song, so the
    card is the answer.
-   Redacted takes the same card as Name That Song and for the same reason: its page ends up
-   fully peeled but still unattributed, so the card is where the verse finally gets a name. (It
-   is not Sing It Back's duplication problem — that page carries a heading naming the song, so a
-   card there would print the same line twice under the same title.)
-   Sing It Back is therefore the one exception and gets no card: settleBonusRound writes the
+   Redacted gets no card either, and for Sing It Back's reason: its reveal peels the whole verse
+   and writes the song's name and album at the top of it, so a card underneath would quote one
+   of the lines already sitting in full an inch above itself — which is exactly what it did
+   before revealRedacted took over the attribution.
+   Sing It Back is therefore the other exception and gets no card: settleBonusRound writes the
    missing word back into the gap, under a heading that already names the song and album. What
    its page genuinely can't show is the lines EITHER SIDE, so the context peek goes out alone. */
 function bonusAnswerCard() {
@@ -4652,7 +4668,7 @@ function bonusAnswerCard() {
   // Invisible String has no card at all: its reveal straightens the whole board out, so every
   // line is already sitting beside its own song with the album tag on it. A card could only
   // repeat one fifth of that.
-  if (bonusGame.id === "invisible-string") return "";
+  if (bonusGame.id === "invisible-string" || bonusGame.id === "redacted") return "";
   if (bonusGame.id === "sing-it-back")
     return `<div class="bg-ctx">${lyricCardContext(p.song, p.answer, p.line)}</div>`;
   const slip = bonusGame.id === "spot-the-slip";
@@ -4663,7 +4679,7 @@ function bonusAnswerCard() {
 // `detail` is trusted HTML (callers build it from escaped pieces) and may be empty when the
 // answer card below says everything worth saying.
 // What this page pays. One for a page cleared, unless the game scores on a scale — Redacted's
-// page is worth whatever is left of its ten, floored so a correct answer always beats a wrong
+// page is worth whatever is left of its six, floored so a correct answer always beats a wrong
 // one however much of the verse it took.
 function bonusPageScore(correct) {
   // Invisible String is the one game whose page pays for what it got rather than for clearing:
@@ -4831,7 +4847,7 @@ function endBonusRun() {
   stopBonusClock();
   stopBonusCountdown();
   clearStringResize();
-  const rec = recordBonusRun(bonusGame.id, bonusScore);
+  const rec = recordBonusRun(bonusGame.id, bonusScore, bonusMaxScore(bonusGame));
   $("bonusTimer").style.display = "none";
   $("bonusProgress").textContent = "run complete";
   $("bonusScore").textContent = bonusScoreText();
@@ -4871,7 +4887,7 @@ function endBonusRun() {
         `</div>` +
         `<div class="bg-sleeve-label">the run, track by track</div>` +
         `<ol class="bg-tracks">${tracks}</ol>` +
-        `<div class="bg-sleeve-foot">best ${rec.best} / ${max} · played ${rec.plays}</div>` +
+        `<div class="bg-sleeve-foot">best ${Math.min(rec.best, max)} / ${max} · played ${rec.plays}</div>` +
       `</div>` +
       `<div class="bg-end-actions">` +
         `<button type="button" id="bonusShelfBtn" class="btn-primary">← the shelf</button>` +

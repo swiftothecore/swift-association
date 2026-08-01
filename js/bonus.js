@@ -384,7 +384,7 @@ function swappedNeighbours(a, b) {
 }
 /* ---------- Redacted ----------
    A whole verse printed out with its telling words taped over, and the player peels the strips
-   off one at a time until they dare name the song. The page opens worth ten and every strip
+   off one at a time until they dare name the song. The page opens worth six and every strip
    costs one, so the tension is entirely self-inflicted: nothing here is racing you, you are
    just spending.
 
@@ -414,16 +414,20 @@ function swappedNeighbours(a, b) {
                      REDACT_MIN_PLAIN of its words, so what is left is a document with holes in
                      it rather than a wall with a few words stuck to it. The window is short
                      enough to sit on the page too.
-     4. WORTH TEN  — at least REDACT_MIN_BLOCKS distinct words are covered, or the ten-point
+     4. WORTH SIX  — at least REDACT_MIN_BLOCKS distinct words are covered, or the six-point
                      budget is never really spent and the decision the game is made of never
                      gets asked. DISTINCT is the count that matters, because peeling a strip
                      peels every strip of the same word (see the `key` on each token): a verse
                      that repeats one line back at itself offers half as many choices as it has
                      strips, and would otherwise pass this bar on an echo.
    Returns null if nothing cleared the bars in `tries` attempts (the caller re-rolls). */
-const REDACT_LINES_MIN = 3;
-const REDACT_LINES_MAX = 5;
-const REDACT_MIN_BLOCKS = 6;
+// Two or three lines, never five. A five-line verse hands over so much surviving grammar,
+// rhyme and shape that the song is often placeable without peeling anything at all — the page
+// answers itself and the budget never gets spent. A short window is the scarcity the game runs
+// on: it is what makes a strip worth buying.
+const REDACT_LINES_MIN = 2;
+const REDACT_LINES_MAX = 3;
+const REDACT_MIN_BLOCKS = 4;
 const REDACT_MIN_PLAIN = 0.38;  // share of the verse's words left uncovered
 const REDACT_MAX_WORDS = 11;    // per line, so a verse stays a shape you can read at a glance
 
