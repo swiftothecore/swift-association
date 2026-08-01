@@ -1053,7 +1053,7 @@ export const TS_MILESTONES = [
   // dev milestone list still reads "August"; `icon`/`mark` swap the era heart for a salt
   // shaker, on the sticky and in the desk calendar's square.
   { md: "08-01", kind: "songday", title: "August",          album: "folklore",   eyebrow: "August 1st",
-    headline: "get in the car, it's august", icon: "salt", mark: "salt", caption: "it's august" },
+    headline: "get in the car it's august", icon: "salt", mark: "salt", caption: "it's august" },
 ];
 
 // The salt shaker silhouette for the August 1st mark, in the same 32x32 box as the milestone
