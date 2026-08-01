@@ -4252,14 +4252,20 @@ function renderBonusRound() {
 function startBonusClock() {
   stopBonusClock();
   const fill = $("bonusTimerFill");
-  const total = bonusSeconds() * 1000;
+  const label = $("bonusTimerLabel");
+  const secs = bonusSeconds();
+  const total = secs * 1000;
   const started = performance.now();
   fill.style.width = "100%";
   fill.classList.remove("low");
+  // The seconds are written out as well as drawn, exactly as the round screen does it — a bar
+  // alone tells you time is going but never how much of it there is left to spend.
+  label.textContent = secs.toFixed(1);
   bonusRaf = setInterval(() => {
     const left = Math.max(0, total - (performance.now() - started));
     const pct = (left / total) * 100;
     fill.style.width = pct + "%";
+    label.textContent = (left / 1000).toFixed(1);
     fill.classList.toggle("low", pct <= 25);
     if (left <= 0) bonusTimeout();
   }, 50);
