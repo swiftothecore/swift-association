@@ -8,6 +8,7 @@ import {
   ALBUM_COLORS, CB_ALBUM_COLORS, STUDIO_ALBUMS, TITLE_ALIASES, STAMP_INKS,
   ACHIEVEMENTS, ACH_ICONS, ACH_BY_ID, ACH_GROUPS, ACH_GROUP_COLORS, ACH_GROUP_OF,
   BONUS_GAMES, BONUS_ROUNDS, BONUS_SLIP_SECONDS, BONUS_NAME_SECONDS, BONUS_BLANK_SECONDS,
+  BONUS_REDACT_SECONDS, REDACT_MIN_POINTS,
   CHALLENGES, CHALLENGE_BY_ID, CHALLENGE_ORDER, CHALLENGE_SEALS, DARK_SIDE_IDS, DARK_SIDE_TODO,
   DARK_SIDE_MILESTONE, PERSIST_ATTEMPTS, TICKET_PRICE,
   IMPOSTOR_WORDS, IMPOSTOR_COUNT, DARK_IMPOSTOR_WORDS,
@@ -43,7 +44,7 @@ import { exportBraceletCard, copyBraceletCard, buildCardSVG, fontFaceCss } from 
 import { sfx } from "./sound.js";
 import { wordRegex as wordRegexCore, extractLineWithWord as extractLineWithWordCore, highlightWord as highlightWordCore, wordVariants } from "./match.js";
 import { buildLineIndex, buildSlipContext, buildSlipPuzzle, buildNamePuzzle,
-         buildBlankPuzzle, judgeBlank } from "./bonus.js";
+         buildBlankPuzzle, buildRedactedPuzzle, judgeBlank } from "./bonus.js";
 import { renderStreakPlacard } from "./placard.js";
 import {
   loadRecords, insertRecord, migrateRecordsFromStats, getPlayerName, setPlayerName,
@@ -3826,10 +3827,10 @@ function renderTitleStepper() {
 }
 
 /* ---------- Bonus games shelf ----------
-   A shelf of quick, self-contained mini-games away from the main association loop. Two are
-   built (Spot the Slip, Name That Song); the rest are shells — `ready:false` in BONUS_GAMES
-   renders a coming-soon card that launches nothing. To build one: flip `ready` and add its
-   branch to `selectBonusGame` + `renderBonusRound`.
+   A shelf of quick, self-contained mini-games away from the main association loop. Every
+   entry in BONUS_GAMES is gated by its `ready` flag: a false one can still sit on the deck,
+   where it says in words that it isn't written yet and offers no Play button. To build one:
+   flip `ready` and add its branch to `buildBonusPuzzle` + `renderBonusRound`.
 
    SANDBOXED, like Challenges/Album Focus/Custom. A bonus run is not a run of the association
    game and is never ranked beside one: nothing here touches stats, records, history, the song
@@ -3859,7 +3860,9 @@ let bonusLocked = false;   // round answered — ignore further input until the 
 let bonusRaf = null;       // clock handle (setInterval id — see startBonusClock)
 let bonusEnded = false;
 let bonusRecentFakes = []; // Spot the Slip: impostor words used recently, so a run doesn't repeat one
-let bonusRecentSongs = []; // Sing It Back: songs already blanked this run, so one doesn't come round twice
+let bonusRecentSongs = []; // Sing It Back / Redacted: songs already used this run, so one doesn't come round twice
+let redactWorth = 0;       // Redacted: what THIS page is still worth, one point per strip left unpeeled
+let redactPeeled = 0;      // ...and how many strips have come off it
 let bonusLog = [];         // one entry per settled round, for the end card's track listing
 // Bumped on every start. The between-rounds pause is a setTimeout, so without a token a run
 // that's quit and immediately restarted would have the old pause advance the NEW run a round.
@@ -3908,12 +3911,23 @@ function bonusPicked() {
       || BONUS_GAMES[0];
 }
 
+/* ---------- What a run is out of ----------
+   Most games score a page right or wrong, so a run is out of BONUS_ROUNDS. A game carrying
+   `points` scores each page on a scale instead (Redacted's ten-minus-what-you-peeled), so its
+   run is out of ten times that. Everywhere a score is shown goes through these two, which is
+   what stops a 63-point run being written up as "63 correct" out of ten. */
+function bonusPagePoints(g) { return (g && g.points) || 1; }
+function bonusMaxScore(g) { return BONUS_ROUNDS * bonusPagePoints(g); }
+function bonusScoreText() {
+  return `${bonusScore} ${bonusGame && bonusGame.points ? "points" : "correct"}`;
+}
+
 // What a game's record reads under its name: an unpressed record has no score to report,
 // only a promise.
 function bonusScoreLine(g) {
   const rec = bonusRecord(g.id);
   if (!g.ready) return "not pressed yet";
-  return rec.plays ? `best ${rec.best} / ${BONUS_ROUNDS} · played ${rec.plays}` : "unplayed";
+  return rec.plays ? `best ${rec.best} / ${bonusMaxScore(g)} · played ${rec.plays}` : "unplayed";
 }
 
 // The tonearm, resting on the record. Drawn here rather than in the sprite because it
@@ -4003,6 +4017,8 @@ function startBonusGame(g) {
   bonusRecentFakes = [];
   bonusRecentSongs = [];
   bonusLog = [];
+  redactWorth = 0;
+  redactPeeled = 0;
   bonusRunId++;
   stopBonusClock();
   stopBonusCountdown();
@@ -4017,6 +4033,7 @@ function bonusSeconds() {
   if (!bonusGame) return BONUS_NAME_SECONDS;
   if (bonusGame.id === "spot-the-slip") return BONUS_SLIP_SECONDS;
   if (bonusGame.id === "sing-it-back") return BONUS_BLANK_SECONDS;
+  if (bonusGame.id === "redacted") return BONUS_REDACT_SECONDS;
   return BONUS_NAME_SECONDS;
 }
 
@@ -4028,6 +4045,8 @@ function buildBonusPuzzle() {
     return buildSlipPuzzle(allSongs, playableWords, lineIndex, ctx, Math.random, 120, new Set(bonusRecentFakes));
   if (bonusGame.id === "sing-it-back")
     return buildBlankPuzzle(allSongs, ctx, Math.random, 120, new Set(bonusRecentSongs));
+  if (bonusGame.id === "redacted")
+    return buildRedactedPuzzle(allSongs, ctx, lineIndex, Math.random, 120, new Set(bonusRecentSongs));
   return buildNamePuzzle(allSongs, lineIndex);
 }
 
@@ -4044,7 +4063,11 @@ function nextBonusRound() {
     bonusRecentFakes.push(bonusPuzzle.fakeWord.toLowerCase());
     if (bonusRecentFakes.length > 6) bonusRecentFakes.shift();
   }
-  if (bonusGame.id === "sing-it-back") bonusRecentSongs.push(bonusPuzzle.song.title);
+  if (bonusGame.id === "sing-it-back" || bonusGame.id === "redacted")
+    bonusRecentSongs.push(bonusPuzzle.song.title);
+  // A fresh page opens worth the full ten and nothing has been spent on it yet.
+  redactWorth = bonusPagePoints(bonusGame);
+  redactPeeled = 0;
 
   // Everything that makes the new page: the shared chrome, then the game's own body.
   const lay = () => {
@@ -4052,7 +4075,7 @@ function nextBonusRound() {
     $("bonusFeedback").innerHTML = "";
     $("bonusFeedback").className = "bg-feedback";
     $("bonusProgress").textContent = `round ${bonusRound} / ${BONUS_ROUNDS}`;
-    $("bonusScore").textContent = `${bonusScore} correct`;
+    $("bonusScore").textContent = bonusScoreText();
     $("bonusTimer").style.display = "";
     renderBonusRound();
   };
@@ -4135,6 +4158,40 @@ function renderBonusRound() {
       if (e.key === "Enter") { e.preventDefault(); judgeGap(); }
     });
     input.focus();
+  } else if (bonusGame.id === "redacted") {
+    // Punctuation stays OUTSIDE the strip, on both counts: a comma is grammar rather than a
+    // secret, and real redaction blacks the word, not the line's furniture. The word itself is
+    // in the DOM under the tape, hidden rather than absent — which is what makes every block
+    // exactly its own word's width without the code guessing at letter widths in a
+    // handwriting face, and what lets a strip peel off to reveal something already there.
+    let bi = 0;
+    const rows = p.rows.map((toks) =>
+      `<div class="bg-rline">` + toks.map((t) => {
+        const core = t.hide
+          ? `<button type="button" class="bg-tape" data-i="${bi++}" data-w="${escapeHtml(t.key)}" ` +
+              `aria-label="peel a strip">` +
+              `<span class="bg-tape-word">${escapeHtml(t.core)}</span>` +
+              `<span class="bg-tape-strip" aria-hidden="true"></span></button>`
+          : escapeHtml(t.core);
+        return `<span class="bg-tok">${escapeHtml(t.pre)}${core}${escapeHtml(t.post)}</span>`;
+      }).join("") + `</div>`).join("");
+    body.innerHTML =
+      `<p class="bg-ask">name the song — every strip you peel costs a point</p>` +
+      label +
+      `<div class="bg-redact" role="group" aria-label="A verse with words taped over">${rows}</div>` +
+      `<p class="bg-worth">this page is worth <b id="bonusWorth">${redactWorth}</b></p>` +
+      bonusWritingLine({ placeholder: "type the title…", aria: "Type the song title",
+                         hint: "Enter accepts the top match", dropdown: true });
+    body.querySelectorAll(".bg-tape").forEach((b) => b.addEventListener("click", () => peelTape(b)));
+    const input = $("bonusInput");
+    input.addEventListener("input", updateBonusDropdown);
+    input.addEventListener("keydown", (e) => {
+      if (bonusDropdownKey(e)) return;
+      if (e.key === "Enter") { e.preventDefault(); judgeName(); }
+    });
+    // Deliberately NOT focused: the first thing to do on this page is read it and choose a
+    // strip, and a focused field on a phone would put a keyboard over the verse before the
+    // player had seen it.
   } else {
     body.innerHTML =
       `<p class="bg-ask">name the song this line is from</p>` +
@@ -4202,6 +4259,60 @@ function judgeSlip(i) {
   // Naming the impostor is worth saying either way: on a hit it confirms what was spotted, on a
   // miss it's the whole lesson. The real word is then shown in place on the card below.
   settleBonusRound(correct, `<b>${escapeHtml(bonusPuzzle.fakeWord)}</b> was the slip`);
+}
+
+/* ---------- Redacted: peeling a strip ----------
+   The only move on the page, and it is a purchase rather than an answer: the word underneath
+   comes back and the page is worth one point less for having it. Past the floor the peels are
+   free (see REDACT_MIN_POINTS) — the readout simply stops falling, so a page you have already
+   over-spent is still worth finishing rather than abandoning. */
+function peelTape(btn) {
+  if (bonusLocked || btn.classList.contains("is-open")) return;
+  // One WORD, one point. A verse that echoes a line back at itself covers the same word twice,
+  // and charging for the twin would be charging for something already on the page — so every
+  // strip hiding this word comes off together.
+  const twins = btn.dataset.w
+    ? [...$("bonusPlayBody").querySelectorAll(`.bg-tape[data-w="${CSS.escape(btn.dataset.w)}"]`)]
+    : [btn];
+  // The tape lifting off is the whole satisfaction of the game, so it gets a real peel — but
+  // it is also the reveal, so with motion reduced the strip simply goes.
+  twins.forEach((b) => {
+    b.classList.add("is-open");
+    b.disabled = true;
+    const s = b.querySelector(".bg-tape-strip");
+    if (!s) return;
+    if (motionReduced() || animInstant()) s.remove();
+    else { s.classList.add("is-peeling"); setTimeout(() => s.remove(), 340); }
+  });
+  redactPeeled++;
+  redactWorth = Math.max(REDACT_MIN_POINTS, bonusPagePoints(bonusGame) - redactPeeled);
+  const worth = $("bonusWorth");
+  if (worth) {
+    worth.textContent = redactWorth;
+    // A quick knock on the number, so a point going is something you see happen rather than
+    // something you notice later.
+    worth.classList.remove("is-spent"); void worth.offsetWidth; worth.classList.add("is-spent");
+  }
+  sfx.play("hint");   // the same quiet pip the round screen's hint ladder uses — this is one
+}
+
+// Everything still taped comes off when the page settles, so the verse is left whole and
+// readable. The strips the player never paid for are marked, which is the page's own
+// after-the-fact answer to "how much of it was I flying blind on?".
+function revealRedacted() {
+  $("bonusPlayBody").querySelectorAll(".bg-tape").forEach((b) => {
+    b.disabled = true;
+    if (b.classList.contains("is-open")) return;
+    b.classList.add("is-open", "was-taped");
+    const strip = b.querySelector(".bg-tape-strip");
+    if (strip) strip.remove();
+  });
+}
+
+// What the verdict says about a won page: what it paid out and what it cost.
+function redactDetail(points) {
+  return `<b>${points}</b> point${points === 1 ? "" : "s"} · ` +
+    (redactPeeled ? `${redactPeeled} strip${redactPeeled === 1 ? "" : "s"} peeled` : "not one strip peeled");
 }
 
 /* ---------- Name That Song's suggestions ----------
@@ -4307,8 +4418,12 @@ function judgeName(picked = null) {
   const correct = song.title === bonusPuzzle.song.title;
   $("bonusInput").disabled = true;
   // The card below names the right song, so the only thing left to say is what was written —
-  // and on a hit that's the same thing twice.
-  settleBonusRound(correct, correct ? "" : `you wrote <b>${escapeHtml(censor(song.title))}</b>`);
+  // and on a hit that's the same thing twice. Redacted is the exception: a won page there has
+  // a number on it, and the number is the whole brag.
+  const detail = correct
+    ? (bonusGame.id === "redacted" ? redactDetail(bonusPageScore(true)) : "")
+    : `you wrote <b>${escapeHtml(censor(song.title))}</b>`;
+  settleBonusRound(correct, detail);
 }
 
 function judgeGap() {
@@ -4331,10 +4446,13 @@ function judgeGap() {
    shows a DOCTORED line, so the card is where the line goes right (highlighting the real word
    the impostor stood in for), and Name That Song's page shows a real line but no song, so the
    card is the answer.
-   Sing It Back is the exception and gets no card: settleBonusRound writes the missing word back
-   into the gap, under a heading that already names the song and album, so a card would print the
-   same handwritten line again one inch below itself. What its page genuinely can't show is the
-   lines EITHER SIDE, so the context peek goes out on its own. */
+   Redacted takes the same card as Name That Song and for the same reason: its page ends up
+   fully peeled but still unattributed, so the card is where the verse finally gets a name. (It
+   is not Sing It Back's duplication problem — that page carries a heading naming the song, so a
+   card there would print the same line twice under the same title.)
+   Sing It Back is therefore the one exception and gets no card: settleBonusRound writes the
+   missing word back into the gap, under a heading that already names the song and album. What
+   its page genuinely can't show is the lines EITHER SIDE, so the context peek goes out alone. */
 function bonusAnswerCard() {
   const p = bonusPuzzle;
   if (bonusGame.id === "sing-it-back")
@@ -4346,10 +4464,20 @@ function bonusAnswerCard() {
 // The one place a bonus round ends: locks input, scores it, shows the verdict, moves on.
 // `detail` is trusted HTML (callers build it from escaped pieces) and may be empty when the
 // answer card below says everything worth saying.
+// What this page pays. One for a page cleared, unless the game scores on a scale — Redacted's
+// page is worth whatever is left of its ten, floored so a correct answer always beats a wrong
+// one however much of the verse it took.
+function bonusPageScore(correct) {
+  if (!correct) return 0;
+  if (bonusGame && bonusGame.id === "redacted") return Math.max(REDACT_MIN_POINTS, redactWorth);
+  return 1;
+}
+
 function settleBonusRound(correct, detail, isTimeout = false) {
   bonusLocked = true;
   stopBonusClock();
-  if (correct) bonusScore++;
+  const gained = bonusPageScore(correct);
+  bonusScore += gained;
   sfx.play(correct ? "correct" : "wrong");
 
   const input = $("bonusInput");
@@ -4359,7 +4487,7 @@ function settleBonusRound(correct, detail, isTimeout = false) {
   // The writing line has done its job, so put it away for the verdict — the round screen hides
   // its play area at exactly this beat. It also gives back the space the answer card wants, which
   // is what keeps the countdown on screen instead of below the fold.
-  $("bonusPlayBody").querySelectorAll(".bg-write, .bg-hint").forEach((el) => { el.style.display = "none"; });
+  $("bonusPlayBody").querySelectorAll(".bg-write, .bg-hint, .bg-worth").forEach((el) => { el.style.display = "none"; });
 
   // The run's track listing, written up on the end card. Each game notes the one thing worth
   // remembering about its page: the impostor you were hunting, the word that was missing, or
@@ -4368,6 +4496,9 @@ function settleBonusRound(correct, detail, isTimeout = false) {
     n: bonusRound, ok: correct, title: bonusPuzzle.song.title,
     note: bonusGame.id === "spot-the-slip" ? bonusPuzzle.fakeWord
         : bonusGame.id === "sing-it-back" ? bonusPuzzle.answer
+        // Redacted's pages are worth different amounts, and that number is the only thing the
+        // sleeve can't already work out — so it takes the note column outright.
+        : bonusGame.id === "redacted" ? `${gained} pts`
         : bonusPuzzle.song.album,
   });
   // Reveal the answer on a timeout too, whichever game we're in.
@@ -4375,6 +4506,8 @@ function settleBonusRound(correct, detail, isTimeout = false) {
     $("bonusPlayBody").querySelectorAll(".bg-word").forEach((b) => {
       if (+b.dataset.i === bonusPuzzle.answer) b.classList.add("is-answer");
     });
+  } else if (bonusGame.id === "redacted") {
+    revealRedacted();
   } else if (bonusGame.id === "sing-it-back") {
     // Whatever was in the gap — a wrong word, a half-typed one, nothing at all — the real
     // word goes in, so the line is left whole and correct on the page.
@@ -4404,7 +4537,7 @@ function settleBonusRound(correct, detail, isTimeout = false) {
     (detail ? `<p class="bg-detail">${detail}</p>` : "") +
     bonusAnswerCard() +
     advanceUI;
-  $("bonusScore").textContent = `${bonusScore} correct`;
+  $("bonusScore").textContent = bonusScoreText();
   bonusFeedbackAt = Date.now();
   $(auto ? "bonusSkipBtn" : "bonusNextBtn").addEventListener("click", advanceFromBonusFeedback);
   if (auto) runBonusCountdown();
@@ -4456,14 +4589,18 @@ function advanceFromBonusFeedback() {
 const BG_TICK = `<svg viewBox="0 0 16 16" class="bg-mark-svg" aria-hidden="true"><path d="M3 8.6 L6.4 12 L13 4.6" fill="none" stroke="#c7951f" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
 const BG_CROSS = `<svg viewBox="0 0 16 16" class="bg-mark-svg" aria-hidden="true"><path d="M4 4 L12 12 M12 4 L4 12" fill="none" stroke="#b23a3f" stroke-width="2" stroke-linecap="round"/></svg>`;
 
-// One line in pen under the game's name. Kept in the shelf's own record-shop voice, and
-// scored the same way for all three games so no game reads as the important one.
-function bonusRemark(score) {
-  if (score >= BONUS_ROUNDS) return "a perfect pressing";
-  if (score >= BONUS_ROUNDS - 1) return "one crackle, no more";
-  if (score >= BONUS_ROUNDS * 0.7) return "a clean side";
-  if (score >= BONUS_ROUNDS * 0.5) return "half the record";
-  if (score >= BONUS_ROUNDS * 0.3) return "a rough cut";
+// One line in pen under the game's name. Kept in the shelf's own record-shop voice, and read
+// off the same proportions for every game so no game reads as the important one.
+// `clean` — every page cleared — carries the top remark rather than a full score, because a
+// game scored in points has a maximum nobody will ever reach (Redacted's 100 would mean naming
+// ten songs off untouched verses) and the perfect run it CAN have is a run with no misses.
+function bonusRemark(score, max, clean) {
+  if (clean) return "a perfect pressing";
+  const r = max ? score / max : 0;
+  if (r >= 0.9) return "one crackle, no more";
+  if (r >= 0.7) return "a clean side";
+  if (r >= 0.5) return "half the record";
+  if (r >= 0.3) return "a rough cut";
   if (score > 0) return "mostly static";
   return "a blank tape";
 }
@@ -4475,11 +4612,14 @@ function endBonusRun() {
   const rec = recordBonusRun(bonusGame.id, bonusScore);
   $("bonusTimer").style.display = "none";
   $("bonusProgress").textContent = "run complete";
-  $("bonusScore").textContent = `${bonusScore} correct`;
+  $("bonusScore").textContent = bonusScoreText();
   $("bonusFeedback").innerHTML = "";
   $("bonusFeedback").className = "bg-feedback";
 
-  const perfect = bonusScore === BONUS_ROUNDS;
+  // A clean sweep is ten pages cleared, which on a right/wrong game is the same thing as a
+  // full score and on a points game is the only perfect run available (see bonusRemark).
+  const perfect = bonusLog.length === BONUS_ROUNDS && bonusLog.every((t) => t.ok);
+  const max = bonusMaxScore(bonusGame);
   // The run written up on the back of its own sleeve: the pressing, the score in pen, and the
   // ten tracks listed out with what each one turned on. A bonus run has no bracelet and no
   // stats to show for itself by design, so the track listing is the keepsake — and it doubles
@@ -4501,15 +4641,15 @@ function endBonusRun() {
           `<div class="bg-sleeve-titles">` +
             `<div class="bg-sleeve-kicker">${escapeHtml(bonusGame.kicker)}</div>` +
             `<h3 class="bg-sleeve-name">${escapeHtml(bonusGame.name)}</h3>` +
-            `<div class="bg-sleeve-remark">${escapeHtml(bonusRemark(bonusScore))}</div>` +
+            `<div class="bg-sleeve-remark">${escapeHtml(bonusRemark(bonusScore, max, perfect))}</div>` +
           `</div>` +
-          `<div class="bg-sleeve-score">${bonusScore}<span>/${BONUS_ROUNDS}</span></div>` +
+          `<div class="bg-sleeve-score">${bonusScore}<span>/${max}</span></div>` +
           (perfect ? `<i class="bg-stamp">clean sweep</i>`
             : rec.isBest && rec.plays > 1 ? `<i class="bg-stamp">new best</i>` : "") +
         `</div>` +
         `<div class="bg-sleeve-label">the run, track by track</div>` +
         `<ol class="bg-tracks">${tracks}</ol>` +
-        `<div class="bg-sleeve-foot">best ${rec.best} / ${BONUS_ROUNDS} · played ${rec.plays}</div>` +
+        `<div class="bg-sleeve-foot">best ${rec.best} / ${max} · played ${rec.plays}</div>` +
       `</div>` +
       `<div class="bg-end-actions">` +
         `<button type="button" id="bonusShelfBtn" class="btn-primary">← the shelf</button>` +
@@ -14773,6 +14913,12 @@ function buildDevApi() {
           if (id === "name-that-song") {
             const p = buildNamePuzzle(allSongs, lineIndex);
             out.push(p ? { line: p.line, song: p.song.title, album: p.song.album } : null);
+          } else if (id === "redacted") {
+            const p = buildRedactedPuzzle(allSongs, ctx, lineIndex, Math.random, 120, new Set(recent));
+            if (p) recent.push(p.song.title);
+            out.push(p ? {
+              verse: p.rows.map((r) => r.map((t) => t.pre + (t.hide ? "\u2588".repeat(t.core.length) : t.core) + t.post).join(" ")).join(" / "),
+              blocks: p.blocks, song: p.song.title } : null);
           } else if (id === "sing-it-back") {
             const p = buildBlankPuzzle(allSongs, ctx, Math.random, 120, new Set(recent));
             if (p) recent.push(p.song.title);
@@ -14794,13 +14940,27 @@ function buildDevApi() {
         let ok = 0;
         for (let i = 0; i < n; i++) {
           const p = id === "name-that-song" ? buildNamePuzzle(allSongs, lineIndex)
+            : id === "redacted" ? buildRedactedPuzzle(allSongs, ctx, lineIndex)
             : id === "sing-it-back" ? buildBlankPuzzle(allSongs, ctx)
             : buildSlipPuzzle(allSongs, playableWords, lineIndex, ctx);
           if (p) ok++;
         }
         return { tried: n, built: ok, rate: `${((ok / n) * 100).toFixed(1)}%` };
       },
-      score: (n) => { bonusScore = Math.max(0, Math.min(BONUS_ROUNDS, +n || 0)); return bonusScore; },
+      score: (n) => { bonusScore = Math.max(0, Math.min(bonusMaxScore(bonusGame), +n || 0)); return bonusScore; },
+      // Redacted: strip the page bare without paying for it, to reach the answer or to see what
+      // a fully peeled verse looks like. `worth` sets the page's remaining value outright.
+      peel: () => {
+        if (!bonusGame || bonusGame.id !== "redacted") return "not on a redacted page";
+        $("bonusPlayBody").querySelectorAll(".bg-tape:not(.is-open)").forEach((b) => peelTape(b));
+        return { worth: redactWorth, peeled: redactPeeled, song: bonusPuzzle.song.title };
+      },
+      worth: (n) => {
+        if (!bonusGame || bonusGame.id !== "redacted") return "not on a redacted page";
+        redactWorth = Math.max(REDACT_MIN_POINTS, Math.min(bonusPagePoints(bonusGame), +n || 0));
+        if ($("bonusWorth")) $("bonusWorth").textContent = redactWorth;
+        return redactWorth;
+      },
       // Sing It Back: read the gap's answer off the page, or fill it in and submit. Testing
       // the tenth round of a run you have to play honestly is nobody's idea of a dev tool.
       gap: () => (bonusGame && bonusGame.id === "sing-it-back" && bonusPuzzle) ? bonusPuzzle.answer : null,
@@ -14847,20 +15007,27 @@ function buildDevApi() {
       fill: (wins = 7) => {
         if (!bonusGame) return "start a bonus game first";
         bonusLog = [];
+        bonusScore = 0;
         for (let n = 1; n <= BONUS_ROUNDS; n++) {
           const p = buildBonusPuzzle();
           if (!p) continue;
-          if (bonusGame.id === "sing-it-back") bonusRecentSongs.push(p.song.title);
+          if (bonusGame.id === "sing-it-back" || bonusGame.id === "redacted") bonusRecentSongs.push(p.song.title);
+          const ok = n <= wins;
+          // Points games get a plausible spread rather than a flat number, so the track
+          // listing is eyeballed with the column it will really carry.
+          const pts = ok ? Math.max(REDACT_MIN_POINTS, bonusPagePoints(bonusGame) - (n % 6)) : 0;
           bonusLog.push({
-            n, ok: n <= wins, title: p.song.title,
+            n, ok, title: p.song.title,
             note: bonusGame.id === "spot-the-slip" ? p.fakeWord
-                : bonusGame.id === "sing-it-back" ? p.answer : p.song.album,
+                : bonusGame.id === "sing-it-back" ? p.answer
+                : bonusGame.id === "redacted" ? `${pts} pts` : p.song.album,
           });
+          if (bonusGame.points) bonusScore += pts;
         }
-        bonusScore = Math.max(0, Math.min(BONUS_ROUNDS, wins | 0));
+        if (!bonusGame.points) bonusScore = Math.max(0, Math.min(BONUS_ROUNDS, wins | 0));
         bonusRound = BONUS_ROUNDS;
         endBonusRun();
-        return `${bonusGame.name}: ${bonusScore}/${BONUS_ROUNDS}`;
+        return `${bonusGame.name}: ${bonusScore}/${bonusMaxScore(bonusGame)}`;
       },
       reset: () => { resetBonus(); if ($("bonusBody")) renderBonusPage(); },
     },

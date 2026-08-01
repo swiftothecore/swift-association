@@ -382,6 +382,118 @@ function swappedNeighbours(a, b) {
   return a[i] === b[i + 1] && a[i + 1] === b[i] &&
          a.slice(i + 2) === b.slice(i + 2);
 }
+/* ---------- Redacted ----------
+   A whole verse printed out with its telling words taped over, and the player peels the strips
+   off one at a time until they dare name the song. The page opens worth ten and every strip
+   costs one, so the tension is entirely self-inflicted: nothing here is racing you, you are
+   just spending.
+
+   WHICH WORDS GET COVERED is the only judgement the builder makes, and it is Sing It Back's
+   judgement read the other way round. That game refuses to blank a function word or a word the
+   catalogue leans on (over BLANK_MAX_FREQ uses), because either can be recovered from grammar
+   alone; here those same words are exactly what STAYS on the page. Three things follow from it
+   and all three are the point:
+     • the page reads like a genuine redacted document — the grammar survives, the secrets don't
+     • every strip left is worth peeling, so the choice is between good options rather than
+       between one good one and five duds
+     • a word too common to identify a song can't identify a song, so leaving it visible costs
+       the puzzle nothing
+   The one addition is that a word from the TITLE is always covered however common it is
+   ("love", "time" and "story" are all over the cap), because the page must never print its own
+   answer in plain sight.
+
+   The bars a verse must clear:
+     1. UNIQUE     — every line in the window is shared by the same one song, so the fully
+                     peeled verse has exactly one honest answer.
+     2. NO GIVEAWAY— no line contains the title. Name That Song bars these for the same reason,
+                     and here it would be worse: one lucky first tap would end the page before
+                     anything had happened. The comparison is run on the spaceless forms too,
+                     or a run-together title spells itself out in plain sight one word at a
+                     time ("but I'm gonna get you back" against imgonnagetyouback).
+     3. READABLE   — every line keeps at least one visible word, and the verse as a whole keeps
+                     REDACT_MIN_PLAIN of its words, so what is left is a document with holes in
+                     it rather than a wall with a few words stuck to it. The window is short
+                     enough to sit on the page too.
+     4. WORTH TEN  — at least REDACT_MIN_BLOCKS distinct words are covered, or the ten-point
+                     budget is never really spent and the decision the game is made of never
+                     gets asked. DISTINCT is the count that matters, because peeling a strip
+                     peels every strip of the same word (see the `key` on each token): a verse
+                     that repeats one line back at itself offers half as many choices as it has
+                     strips, and would otherwise pass this bar on an echo.
+   Returns null if nothing cleared the bars in `tries` attempts (the caller re-rolls). */
+const REDACT_LINES_MIN = 3;
+const REDACT_LINES_MAX = 5;
+const REDACT_MIN_BLOCKS = 6;
+const REDACT_MIN_PLAIN = 0.38;  // share of the verse's words left uncovered
+const REDACT_MAX_WORDS = 11;    // per line, so a verse stays a shape you can read at a glance
+
+export function buildRedactedPuzzle(songs, ctx, lineIndex, rng = Math.random, tries = 120, avoid = null) {
+  for (let t = 0; t < tries; t++) {
+    const song = pick(songs, rng);
+    if (!song || !Array.isArray(song.sections)) continue;
+    // Don't serve the same song twice in a run while there's catalogue left, then stop
+    // insisting near the end of the budget rather than fail the page over it (Sing It Back's
+    // rule, for the same reason).
+    if (avoid && avoid.has(song.title) && t < tries * 0.7) continue;
+
+    const titleKey = normalizeLyric(song.title);
+    const titleWords = new Set(titleKey.split(/\s+/).filter(Boolean));
+
+    const secs = song.sections.filter((s) => (s.lines || []).filter((l) => l && l.trim()).length >= REDACT_LINES_MIN);
+    if (!secs.length) continue;
+    const sec = pick(secs, rng);
+    const lines = (sec.lines || []).filter((l) => l && l.trim());
+    const want = REDACT_LINES_MIN + Math.floor(rng() * (REDACT_LINES_MAX - REDACT_LINES_MIN + 1));
+    const take = Math.min(lines.length, want);
+    const start = Math.floor(rng() * (lines.length - take + 1));
+    const win = lines.slice(start, start + take);
+
+    // Bars 1 and 2, walked together: intersect the owning songs line by line and drop the
+    // window the moment a line names the song out loud.
+    const titleFlat = titleKey.replace(/ /g, "");
+    let owners = null, bad = false;
+    for (const line of win) {
+      const key = normalizeLyric(line);
+      const set = key ? lineIndex.get(key) : null;
+      if (!set) { bad = true; break; }
+      if (titleKey && (key.includes(titleKey) || key.replace(/ /g, "").includes(titleFlat))) { bad = true; break; }
+      owners = owners === null ? new Set(set) : new Set([...owners].filter((x) => set.has(x)));
+    }
+    if (bad || !owners || owners.size !== 1) continue;
+
+    const rows = [];
+    const covered = new Set();
+    let strips = 0, words = 0;
+    for (const line of win) {
+      const raw = line.split(/\s+/).filter(Boolean);
+      if (raw.length > REDACT_MAX_WORDS) { bad = true; break; }
+      const toks = raw.map((w) => {
+        // A hyphenated compound ("oceans-deep") has punctuation in the middle, so it never
+        // splits into pre/core/post — and it is exactly the sort of word worth covering, so it
+        // is taken whole rather than left in plain sight. A token with no letters at all (a
+        // lone dash, a year) still can't be covered and stays as it is.
+        const p = splitWord(w);
+        const k = wordKey(p ? p.core : w);
+        if (k) words++;
+        const hide = k.length >= 3 && !FUNCTION_WORDS.has(k) && !FILLER.has(k) &&
+          ((ctx.freq.get(k) || 0) <= BLANK_MAX_FREQ || titleWords.has(k));
+        if (hide) { strips++; covered.add(k); }
+        return p
+          ? { pre: p.pre, core: p.core, post: p.post, key: k, hide }
+          : { pre: "", core: w, post: "", key: k, hide };
+      });
+      if (!toks.some((x) => !x.hide)) { bad = true; break; }              // bar 3
+      rows.push(toks);
+    }
+    if (bad) continue;
+    if (!words || (words - strips) / words < REDACT_MIN_PLAIN) continue;  // bar 3
+    if (covered.size < REDACT_MIN_BLOCKS) continue;                       // bar 4
+
+    return { song, label: sec.label || "", rows, blocks: covered.size, line: win[0] };
+  }
+  return null;
+}
+
 export function judgeBlank(typed, puzzle, vocab = null) {
   const got = wordKey(typed);
   if (!got) return false;

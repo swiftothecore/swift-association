@@ -1853,6 +1853,63 @@
     background: linear-gradient(rgba(178,58,63,0.12), rgba(178,58,63,0.12));
   }
 
+  /* Redacted — a verse with its telling words under strips of correction tape.
+     The word sits in the DOM under the strip rather than being left out, which is what makes
+     every block exactly its own word wide (no guessing at letter widths in a handwriting
+     face) and what lets a strip lift OFF something instead of a blank appearing. */
+  .bg-redact {
+    display: flex; flex-direction: column; align-items: center; gap: 3px;
+    max-width: min(54ch, 100%); margin: 0 auto 14px;
+  }
+  .bg-rline {
+    display: flex; flex-wrap: wrap; justify-content: center; align-items: baseline; gap: 1px 7px;
+  }
+  .bg-tok { font-family: var(--hand); font-size: 24px; line-height: 1.35; color: var(--ink); }
+  .bg-tape {
+    position: relative; display: inline-block; font: inherit; color: inherit;
+    background: none; border: 0; padding: 0; margin: 0; cursor: pointer;
+  }
+  .bg-tape-word { visibility: hidden; }
+  .bg-tape.is-open { cursor: default; }
+  .bg-tape.is-open .bg-tape-word { visibility: visible; }
+  /* Left taped to the end: the word comes back under a faint wash, so the finished verse
+     also reads as a record of how much of it was guessed at blind. */
+  .bg-tape.was-taped .bg-tape-word {
+    background: linear-gradient(rgba(199,149,31,0.16), rgba(199,149,31,0.16));
+  }
+  /* The strip itself. Correction tape, not marker ink: a flat opaque off-white a shade cooler
+     than the paper, laid over the word with a soft shadow so it reads as sitting ON the page,
+     and a slightly darker edge where the roller pressed it down. */
+  .bg-tape-strip {
+    position: absolute; left: -3px; right: -3px; top: 0.14em; bottom: 0.2em;
+    background:
+      linear-gradient(180deg, rgba(255,255,255,0.55), rgba(0,0,0,0.045) 62%, rgba(0,0,0,0.02)),
+      #f2eee2;
+    box-shadow: 0 1px 1.5px rgba(43,39,34,0.22), inset 0 0 0 0.5px rgba(43,39,34,0.14);
+    border-radius: 1px; transform-origin: 8% 60%;
+  }
+  .bg-tape:hover:not(.is-open) .bg-tape-strip { background-color: #f7f4ea; }
+  .bg-tape:active:not(.is-open) .bg-tape-strip { transform: translateY(1px); }
+  /* The peel: the strip lifts from its left edge and flicks away off the page. */
+  .bg-tape-strip.is-peeling { animation: bgPeel 0.34s ease-in forwards; pointer-events: none; }
+  @keyframes bgPeel {
+    0%   { transform: none; opacity: 1; }
+    45%  { transform: rotate(-13deg) translate(1px, -3px); opacity: 1; }
+    100% { transform: rotate(-34deg) translate(7px, -19px); opacity: 0; }
+  }
+  /* What the page still pays, in the typewriter voice the rest of the chrome uses. */
+  .bg-worth {
+    font-family: var(--type); font-size: 11px; letter-spacing: 1.2px; text-transform: lowercase;
+    color: var(--ink-soft); text-align: center; margin: 0 0 18px;
+  }
+  .bg-worth b { font-size: 15px; color: var(--ink); display: inline-block; }
+  .bg-worth b.is-spent { animation: bgSpend 0.32s ease; }
+  @keyframes bgSpend {
+    0% { transform: none; color: var(--margin); }
+    40% { transform: translateY(-3px) scale(1.14); color: var(--margin); }
+    100% { transform: none; }
+  }
+
   /* Name That Song — the line, quoted like a copied-out lyric. */
   .bg-lyric {
     font-family: var(--hand); font-size: 27px; line-height: 1.35; color: var(--ink);
@@ -2009,6 +2066,10 @@
   @media (max-width: 560px) {
     .bg-word, .bg-word-plain { font-size: 23px; }
     .bg-lyric { font-size: 23px; }
+    /* A redacted verse is several lines rather than one, and a block can't hyphenate, so it
+       comes down further than the single-line games to keep the words off each other. */
+    .bg-tok { font-size: 21px; }
+    .bg-rline { gap: 1px 6px; }
     .bg-sheet-title { font-size: 22px; }
     .bg-sleeve { padding: 18px 14px 13px; }
     .bg-sleeve-head { gap: 10px; }

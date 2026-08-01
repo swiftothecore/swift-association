@@ -328,12 +328,27 @@ export const BONUS_GAMES = [
   { id: "sing-it-back", name: "Sing It Back", ready: true,
     kicker: "fill the gap", tint: "#77485e", mark: "caret",
     blurb: "A word has been lifted out of one of the song's own lines. Write it back in." },
+  // The one game on the shelf scored in POINTS rather than pages cleared: `points` is what a
+  // page opens worth, and every other surface reads its maximum off it (see bonusMaxScore).
+  // Any future game that scores a page on a scale rather than right/wrong sets the same field.
+  { id: "redacted", name: "Redacted", ready: true, points: 10,
+    kicker: "how little do you need?", tint: "#4e5f3a", mark: "redact",
+    blurb: "A verse with the telling words taped over. Peel them off one at a time, and name the song before you have spent the page." },
 ];
 // A bonus run is short by design — these sit beside the main game, they don't replace it.
 export const BONUS_ROUNDS = 10;
 export const BONUS_SLIP_SECONDS = 20;   // reading a whole line takes longer than naming a title
 export const BONUS_NAME_SECONDS = 15;
 export const BONUS_BLANK_SECONDS = 20;  // read the line, find the gap, then type — slip's budget
+// Redacted's clock is deliberately the loosest on the shelf, and it is a backstop rather than
+// a pressure: the cost of thinking here is already the strips you peel while you think, and a
+// tight clock would just charge you twice for the same hesitation. Long enough to read a
+// verse, weigh four or five blocks and write a title; short enough that stalling is not free.
+export const BONUS_REDACT_SECONDS = 45;
+// A correct answer never scores nothing, however much of the verse was uncovered — otherwise a
+// page you have over-peeled becomes pointless to finish, which is the one thing the scoring
+// must not do. Peels past the floor are simply free.
+export const REDACT_MIN_POINTS = 1;
 
 /* ---------- Persistence tickets: the second challenge currency ----------
    Tokens only mint on a first-ever defeat, so a player who cannot beat what is in front of
