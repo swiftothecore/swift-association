@@ -494,6 +494,79 @@ export function buildRedactedPuzzle(songs, ctx, lineIndex, rng = Math.random, tr
   return null;
 }
 
+/* ---------- Invisible String ----------
+   Five lyric lines down one side, the same five songs shuffled down the other, and a thread
+   drawn from each line to where it belongs. Five pairs to a page, one point each.
+
+   What this offers that nothing else on the shelf does is ELIMINATION: a player who genuinely
+   knows three of the five still finishes the page, because the last two have nowhere else to
+   go. Every other game here is five or ten separate all-or-nothings. That is the whole reason
+   it exists, and it is why the page is scored per pair rather than per page — an
+   all-or-nothing page would throw the elimination away again.
+
+   The bars a page must clear:
+     1. UNIQUE     — every line belongs to exactly one song (Name That Song's guard, reused
+                     wholesale), or a "wrong" thread is defensibly right.
+     2. FIVE SONGS — the five come from five different songs, or two right-hand titles would
+                     accept the same line.
+     3. NO GIVEAWAY— no line contains its own title, for Name That Song's reason: a line that
+                     answers itself is a free pair, and here a free pair is worth more than
+                     elsewhere because it also shortens the elimination for everything left.
+     4. SPREAD     — at least STRING_MIN_ALBUMS albums are represented, so the page can't be
+                     solved as an album quiz and the album tags stay a hint rather than the
+                     answer.
+     5. SHORT      — the lines are kept short, because they have to sit in a column beside a
+                     second column and still be readable on a phone.
+   Returns null if nothing cleared the bars in `tries` attempts (the caller re-rolls). */
+export const STRING_PAIRS = 5;
+const STRING_MIN_ALBUMS = 3;
+const STRING_MIN_WORDS = 4;
+const STRING_MAX_WORDS = 9;
+
+export function buildStringPuzzle(songs, lineIndex, rng = Math.random, tries = 120, avoid = null) {
+  for (let t = 0; t < tries; t++) {
+    const pairs = [];
+    const used = new Set();
+    const albums = new Set();
+    // Draw one line from one song at a time. Each draw is cheap and independently guarded, so
+    // a page is built by five small decisions rather than one big search.
+    for (let guard = 0; guard < STRING_PAIRS * 12 && pairs.length < STRING_PAIRS; guard++) {
+      const song = pick(songs, rng);
+      if (!song || used.has(song.title)) continue;                        // bar 2
+      // Rest a song that has already been on this run's board, while there is catalogue left.
+      if (avoid && avoid.has(song.title) && guard < STRING_PAIRS * 8) continue;
+      const titleKey = normalizeLyric(song.title);
+
+      const candidates = songLines(song).filter(({ line }) => {
+        const n = line.split(/\s+/).filter(Boolean).length;
+        if (n < STRING_MIN_WORDS || n > STRING_MAX_WORDS) return false;   // bar 5
+        if (contentWords(line).length < 2) return false;
+        const key = normalizeLyric(line);
+        if (!key) return false;
+        const owners = lineIndex.get(key);
+        if (!owners || owners.size !== 1) return false;                   // bar 1
+        if (titleKey && key.includes(titleKey)) return false;             // bar 3
+        return true;
+      });
+      if (!candidates.length) continue;
+
+      const { line, label } = pick(candidates, rng);
+      used.add(song.title);
+      albums.add(song.album || "");
+      pairs.push({ song, line, label });
+    }
+    if (pairs.length < STRING_PAIRS) continue;
+    if (albums.size < STRING_MIN_ALBUMS) continue;                        // bar 4
+
+    // `order[slot]` is which pair's TITLE sits in that slot on the right. A slot lining up
+    // with its own line is left possible on purpose: a shuffle that guarantees nothing is in
+    // place is a shuffle a player can read, and this one has to look like nothing at all.
+    const order = shuffled(pairs.map((_, i) => i), rng);
+    return { pairs, order };
+  }
+  return null;
+}
+
 export function judgeBlank(typed, puzzle, vocab = null) {
   const got = wordKey(typed);
   if (!got) return false;

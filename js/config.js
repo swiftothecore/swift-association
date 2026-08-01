@@ -334,6 +334,9 @@ export const BONUS_GAMES = [
   { id: "redacted", name: "Redacted", ready: true, points: 10,
     kicker: "how little do you need?", tint: "#4e5f3a", mark: "redact",
     blurb: "A verse with the telling words taped over. Peel them off one at a time, and name the song before you have spent the page." },
+  { id: "invisible-string", name: "Invisible String", ready: true, points: 5,
+    kicker: "tie each line to its song", tint: "#8a6620", mark: "string",
+    blurb: "Five lines on one side, five songs on the other. Thread each one to where it belongs, and let the ones you know narrow down the ones you don't." },
 ];
 // A bonus run is short by design — these sit beside the main game, they don't replace it.
 export const BONUS_ROUNDS = 10;
@@ -349,6 +352,9 @@ export const BONUS_REDACT_SECONDS = 45;
 // page you have over-peeled becomes pointless to finish, which is the one thing the scoring
 // must not do. Peels past the floor are simply free.
 export const REDACT_MIN_POINTS = 1;
+// Five pairs to read, weigh against each other and place. Long enough that the elimination is
+// worth doing rather than guessed past, which is the only thing that makes the page a puzzle.
+export const BONUS_STRING_SECONDS = 45;
 
 /* ---------- Persistence tickets: the second challenge currency ----------
    Tokens only mint on a first-ever defeat, so a player who cannot beat what is in front of

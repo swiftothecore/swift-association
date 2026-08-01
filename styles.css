@@ -1853,6 +1853,51 @@
     background: linear-gradient(rgba(178,58,63,0.12), rgba(178,58,63,0.12));
   }
 
+  /* Invisible String — two columns with threads across the gutter. The columns are ordinary
+     flow content and the SVG is laid over the top of them, so the text wraps as it likes and
+     the threads are measured off wherever it ended up (see drawThreads). */
+  .bg-string {
+    position: relative; display: flex; align-items: stretch; gap: 42px;
+    max-width: min(60ch, 100%); margin: 0 auto 6px;
+  }
+  .bg-threads { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+  .bg-thread { fill: none; stroke-width: 1.6; stroke-linecap: round; }
+  /* Gold thread, the one this game is named after. A live thread is the thread you laid; the
+     reveal keeps the gold for the ones that held and puts the crossed ones in red pen, the
+     same pen that circles Spot the Slip's impostor. */
+  .bg-thread.th-live, .bg-thread.th-right, .bg-thread.th-missed { stroke: #c7951f; }
+  /* Faded, not red: on the reveal this thread is the correct pairing, and the only thing it
+     has to say about the player is "not this one" — which the margin's cross says better. */
+  .bg-thread.th-missed, .bg-knot.th-missed { opacity: 0.38; }
+  .bg-knot { stroke: none; fill: #c7951f; }
+  .bg-str-col { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6px; }
+  .bg-str-item {
+    flex: 1; position: relative; display: flex; flex-direction: column; justify-content: center;
+    background: none; border: 0; border-radius: 4px; padding: 6px 8px; cursor: pointer;
+    text-align: left; color: var(--ink); transition: background 0.14s, box-shadow 0.14s;
+  }
+  .bg-str-item:hover:not(:disabled) { background: rgba(199,149,31,0.14); }
+  .bg-str-item:disabled { cursor: default; }
+  /* Held: this end is waiting for its other end. The dotted outline is a pin, not a selection
+     highlight — nothing has been decided yet. */
+  .bg-str-item.is-held { box-shadow: 0 0 0 1.5px rgba(199,149,31,0.85); background: rgba(199,149,31,0.16); }
+  .bg-str-item.is-tied { background: rgba(199,149,31,0.09); }
+  /* Each box hugs its own words rather than filling the column, so a thread is tied to the
+     line and to the title instead of stopping in empty space short of them. It is also what
+     makes the gutter a real gutter: the space between the two columns is where the threads
+     live, and a full-width box would put the ends of them inside the text's margin. */
+  .bg-str-col-l .bg-str-item { align-self: flex-start; }
+  .bg-str-col-r .bg-str-item { align-self: flex-end; text-align: right; align-items: flex-end; }
+  .bg-str-text { font-family: var(--hand); font-size: 20px; line-height: 1.22; }
+  .bg-str-title .bg-str-text { font-weight: 700; }
+  .bg-str-album {
+    font-family: var(--type); font-size: 8.5px; letter-spacing: 1.2px; text-transform: uppercase;
+    color: var(--album-color, var(--ink-soft)); margin-top: 2px;
+  }
+  /* The reveal's margin mark, out in the red rule's gutter beside the line it judges. */
+  .bg-str-mark { position: absolute; left: -19px; top: 50%; transform: translateY(-50%); width: 14px; }
+  .bg-str-item.is-wrong .bg-str-text { color: var(--ink-soft); }
+
   /* Redacted — a verse with its telling words under strips of correction tape.
      The word sits in the DOM under the strip rather than being left out, which is what makes
      every block exactly its own word wide (no guessing at letter widths in a handwriting
@@ -2070,6 +2115,12 @@
        comes down further than the single-line games to keep the words off each other. */
     .bg-tok { font-size: 21px; }
     .bg-rline { gap: 1px 6px; }
+    /* Two columns on a phone: the gutter gives up what it can spare and the text comes down,
+       because the thread needs somewhere to be and the columns still have to hold words. */
+    .bg-string { gap: 22px; }
+    .bg-str-text { font-size: 17px; }
+    .bg-str-item { padding: 5px 4px; }
+    .bg-str-mark { left: -15px; }
     .bg-sheet-title { font-size: 22px; }
     .bg-sleeve { padding: 18px 14px 13px; }
     .bg-sleeve-head { gap: 10px; }
