@@ -13428,11 +13428,6 @@ function wireInput() {
 
 /* ---------- Settings modal ---------- */
 // Control builders — all keyed by a settings field; a change re-renders the body.
-function setToggleHTML(key, name, desc) {
-  return `<div class="set-row"><div class="set-label"><span class="set-name">${name}</span>` +
-    (desc ? `<span class="set-desc">${desc}</span>` : "") + `</div>` +
-    `<div class="set-control"><button type="button" class="set-toggle" data-toggle="${key}" aria-pressed="${!!settings[key]}" aria-label="${name}"></button></div></div>`;
-}
 function setChoiceHTML(key, name, desc, options) {
   const tabs = options.map((o) =>
     `<button type="button" class="mode-tab${o.val === settings[key] ? " active" : ""}" data-choice="${key}" data-val="${o.val}">${o.label}</button>`
@@ -13493,7 +13488,22 @@ function setBookplateHTML() {
     `</div>` +
   `</div>`;
 }
-function setSection(title, inner) { return `<div class="set-section"><p class="set-section-title">${title}</p>${inner}</div>`; }
+// A run of plain on/off settings reads better as one checklist than as N tall rows:
+// same decision shape, same weight, so they get boxes to tick rather than a column of
+// switches with a full name+desc row each. The button still carries data-toggle, so
+// wireSettingsBody's existing handler drives it.
+const SET_TICK_SVG = `<svg class="set-check-tick" viewBox="0 0 20 20" aria-hidden="true"><path d="M2.4 10.6 C4.6 12.1 6.3 13.8 7.6 16.4 C10.4 10.2 13.6 5.6 18.2 2.2"/></svg>`;
+function setCheckHTML(key, name, desc) {
+  return `<button type="button" class="set-check" data-toggle="${key}" aria-pressed="${!!settings[key]}">` +
+    `<span class="set-check-box">${SET_TICK_SVG}</span>` +
+    `<span class="set-check-lbl"><span class="set-check-name">${name}</span>` +
+    (desc ? `<span class="set-check-desc">${desc}</span>` : "") + `</span></button>`;
+}
+function setChecklistHTML(items) { return `<div class="set-checklist">${items.join("")}</div>`; }
+function setSection(title, inner) {
+  // An empty title means the divider tab already names this block — don't say it twice.
+  return `<div class="set-section">${title ? `<p class="set-section-title">${title}</p>` : ""}${inner}</div>`;
+}
 
 /* ---------- The danger zone: the ledger ----------
    An accounts book, not a row of alarm buttons. Every line says what it would
@@ -13560,6 +13570,63 @@ const COMMON_TZ_FALLBACK = [
   "Europe/Moscow", "Asia/Dubai", "Asia/Karachi", "Asia/Kolkata", "Asia/Bangkok",
   "Asia/Shanghai", "Asia/Tokyo", "Australia/Sydney", "Pacific/Auckland",
 ];
+/* The binder's divider tabs. Settings used to be one 2,600px scroll of eight
+   look-alike sections, with no way to see that "Data" or "About" existed. Now each
+   tab is a panel a screen or so tall. Order here is the rail's order; `label` names
+   the panel, so a panel's first block leaves its own heading off rather than saying
+   it twice. */
+const SETTINGS_PANELS = [
+  { id: "notebook", label: "Notebook" },
+  { id: "motion", label: "Motion" },
+  { id: "gameplay", label: "Gameplay" },
+  { id: "display", label: "Display" },
+  { id: "data", label: "Data" },
+  { id: "about", label: "About" },
+];
+// Module-level, because every toggle re-renders the whole body: without this the
+// player would be thrown back to Notebook each time they ticked a box.
+let settingsPanel = SETTINGS_PANELS[0].id;
+
+function renderSettingsTabs() {
+  const rail = $("settingsTabs");
+  if (!rail) return;
+  rail.innerHTML = SETTINGS_PANELS.map((p, i) => {
+    const on = p.id === settingsPanel;
+    return `<button type="button" class="set-tab${on ? " active" : ""}" id="set-tab-${p.id}" role="tab" ` +
+      `aria-selected="${on}" aria-controls="set-panel-${p.id}" tabindex="${on ? 0 : -1}" ` +
+      `data-panel="${p.id}" style="--tab-tint: var(--set-tab-${i + 1})">${p.label}</button>`;
+  }).join("");
+  rail.querySelectorAll("[data-panel]").forEach((b) => {
+    b.addEventListener("click", () => showSettingsPanel(b.dataset.panel));
+  });
+  // Roving tabindex: only the open divider is in the tab order, so the arrow keys
+  // are how a keyboard reaches the others (Tab walks past the rail into the page).
+  // The rail element outlives every re-render, so bind this once.
+  if (rail.dataset.wired) return;
+  rail.dataset.wired = "1";
+  rail.addEventListener("keydown", (e) => {
+    const step = { ArrowDown: 1, ArrowRight: 1, ArrowUp: -1, ArrowLeft: -1 }[e.key];
+    let next = null;
+    if (step) {
+      const i = SETTINGS_PANELS.findIndex((p) => p.id === settingsPanel);
+      next = SETTINGS_PANELS[(i + step + SETTINGS_PANELS.length) % SETTINGS_PANELS.length].id;
+    } else if (e.key === "Home") next = SETTINGS_PANELS[0].id;
+    else if (e.key === "End") next = SETTINGS_PANELS[SETTINGS_PANELS.length - 1].id;
+    if (!next) return;
+    e.preventDefault();
+    showSettingsPanel(next);
+  });
+}
+function showSettingsPanel(id) {
+  settingsPanel = id;
+  $("settingsBody").querySelectorAll(".set-panel").forEach((p) => { p.hidden = p.id !== `set-panel-${id}`; });
+  renderSettingsTabs();
+  const card = document.querySelector("#settingsModal .settings-card");
+  if (card) card.scrollTop = 0;   // a new divider opens at the top of its page
+  const tab = $(`set-tab-${id}`);
+  if (tab) { try { tab.focus({ preventScroll: true }); } catch (_) { tab.focus(); } }
+}
+
 function renderSettingsBody() {
   const diffOpts = [{ val: "last", label: "Last" }].concat(MODE_ORDER.map((m) => ({ val: m, label: MODES[m].label })));
   const statsOpts = [{ val: "all", label: "All" }, { val: "last", label: "Last" }].concat(MODE_ORDER.map((m) => ({ val: m, label: MODES[m].label })));
@@ -13567,31 +13634,37 @@ function renderSettingsBody() {
   const detectedTz = Intl.DateTimeFormat().resolvedOptions().timeZone;
   const tzOpts = [{ val: "auto", label: `Auto (detected: ${detectedTz})` }]
     .concat(zones.map((z) => ({ val: z, label: z.replace(/_/g, " ") })));
-  const body = $("settingsBody");
-  body.innerHTML =
-    setSection("Notebook",
+  const panels = {};
+  panels.notebook =
+    setSection("",
       setBookplateHTML() +
       setSelectHTML("favouriteAlbum", "Your era", "the album closest to your heart",
         [{ val: "", label: "No favourite yet" }].concat(STUDIO_ALBUMS.map((a) => ({ val: a, label: a }))))
-    ) +
-    setSection("Motion &amp; animation",
+    );
+  panels.motion =
+    setSection("",
       setChoiceHTML("reduceMotion", "Reduce motion", "Auto follows your system", [{ val: "auto", label: "Auto" }, { val: "on", label: "On" }, { val: "off", label: "Off" }]) +
       setChoiceHTML("animSpeed", "Animation speed", "", [{ val: "normal", label: "Normal" }, { val: "fast", label: "Fast" }, { val: "instant", label: "Instant" }]) +
-      setToggleHTML("pageTurn", "Page-turn animation", "the paper flip between rounds") +
-      setToggleHTML("penCircle", "Pen-circle confirm", "marks your pick in pen before the verdict") +
-      setToggleHTML("sparkles", "Sparkles", "a burst on a correct answer") +
-      setToggleHTML("timerTension", "Timer tension", "vignette + tremor as the clock runs low") +
-      setToggleHTML("snake", "Slithering snake", "the reputation-era easter egg") +
-      setToggleHTML("reducedFlashing", "Reduced flashing", "also mutes the perfect-game star shower")
-    ) +
-    setSection("Gameplay",
-      setToggleHTML("autoAdvance", "Auto-advance after a correct answer", "or wait and tap “next page”") +
+      setChecklistHTML([
+        setCheckHTML("pageTurn", "Page turn", "the paper flip between rounds"),
+        setCheckHTML("penCircle", "Pen-circle confirm", "marks your pick before the verdict"),
+        setCheckHTML("sparkles", "Sparkles", "a burst on a correct answer"),
+        setCheckHTML("timerTension", "Timer tension", "vignette + tremor as the clock runs low"),
+        setCheckHTML("snake", "Slithering snake", "the reputation-era easter egg"),
+        setCheckHTML("reducedFlashing", "Reduced flashing", "also mutes the perfect-game star shower"),
+      ])
+    );
+  panels.gameplay =
+    setSection("",
+      setChecklistHTML([
+        setCheckHTML("autoAdvance", "Auto-advance", "on a hit; or wait and tap “next page”"),
+        setCheckHTML("enterOnMiss", "Enter advances on a miss", "leaves the answer screen"),
+        setCheckHTML("showExamples", "Show example songs", "after a miss"),
+        setCheckHTML("stemMatching", "Match word variants", "off = exact word only (love won’t match loving)"),
+        setCheckHTML("enableHints", "Hints", "Easy &amp; Relaxed; a hinted run can’t set a personal best"),
+        setCheckHTML("censorExplicit", "Censor explicit words", "mask swearing in lyrics &amp; titles (f**k, s**t)"),
+      ]) +
       setSliderHTML() +
-      setToggleHTML("enterOnMiss", "Enter advances on a miss", "press Enter to leave the answer screen") +
-      setToggleHTML("showExamples", "Show example songs after a miss", "") +
-      setToggleHTML("stemMatching", "Match word variants", "off = exact word only (love won’t match loving)") +
-      setToggleHTML("enableHints", "Hints", "Easy &amp; Relaxed; a hinted run can’t set a personal best") +
-      setToggleHTML("censorExplicit", "Censor explicit words", "mask swearing in shown lyrics &amp; titles (f**k, s**t)") +
       setChoiceHTML("defaultGameType", "Default game type", "on launch", [{ val: "last", label: "Last" }, { val: "classic", label: "Classic" }, { val: "infinite", label: "Infinite" }, { val: "adaptive", label: "Adaptive" }, { val: "custom", label: "Custom" }]) +
       setChoiceHTML("defaultDifficulty", "Default difficulty", "on launch", diffOpts) +
       setChoiceHTML("defaultStatsTab", "Default stats tab", "which tab opens first", statsOpts)
@@ -13599,19 +13672,23 @@ function renderSettingsBody() {
     setSection("Daily challenge",
       setSelectHTML("timezone", "Time zone", "when the daily resets, your local day", tzOpts) +
       `<p class="set-note">Today here is <b>${todayKey()}</b>. The next puzzle drops in ${formatResetCountdown(msUntilDailyReset())}. Changing this shifts your daily’s reset time and can affect your streak.</p>`
-    ) +
-    setSection("Display &amp; accessibility",
+    );
+  panels.display =
+    setSection("",
       setChoiceHTML("weekStart", "Week starts on", "first row of the records calendar", [{ val: "mon", label: "Monday" }, { val: "sun", label: "Sunday" }]) +
-      setChoiceHTML("clock", "Time format", "how clock times are shown", [{ val: "12", label: "12-hour" }, { val: "24", label: "24-hour" }]) +
-      setToggleHTML("highContrast", "High contrast", "darker ink, whiter paper") +
-      setToggleHTML("colorBlindAlbums", "Colour-blind album colours", "a more distinguishable palette") +
-      setToggleHTML("hideDailyScore", "Hide daily score until reveal", "")
+      setChoiceHTML("clock", "Time format", "", [{ val: "12", label: "12-hour" }, { val: "24", label: "24-hour" }]) +
+      setChecklistHTML([
+        setCheckHTML("highContrast", "High contrast", "darker ink, whiter paper"),
+        setCheckHTML("colorBlindAlbums", "Colour-blind album colours", "a more distinguishable palette"),
+        setCheckHTML("hideDailyScore", "Hide daily score until reveal", ""),
+      ])
     ) +
     setSection("Sound",
-      setToggleHTML("sound", "Sound effects", "") +
+      setChecklistHTML([setCheckHTML("sound", "Sound effects", "off by default")]) +
       `<p class="set-note">a few little desk sounds: a real page turn, a small chime for a hit, a soft note for a miss, a quiet pip when a hint reveals, and a glockenspiel flourish when you unlock something. more to come.</p>`
-    ) +
-    setSection("Data",
+    );
+  panels.data =
+    setSection("",
       `<p class="set-note">Your stats, achievements, and records live in this browser’s storage. That’s safe day-to-day, but not fool-proof: clearing your browser data, switching devices, or some private-browsing modes can wipe it. If you’d hate to lose your progress, export a backup now and then.</p>` +
       `<div class="set-actions"><button class="btn-ghost" data-action="export">Export backup</button>` +
       `<button class="btn-ghost" data-action="import">Import backup</button></div>`
@@ -13620,8 +13697,9 @@ function renderSettingsBody() {
       `<p class="danger-head">the ledger</p>` +
       `<p class="danger-sub">stamped void, and void is forever</p>` +
       dangerRowsHTML() +
-    `</div>` +
-    setSection("About",
+    `</div>`;
+  panels.about =
+    setSection("",
       `<div class="set-about">` +
       `<p>Swift to the Song Association: a songwriter’s-notebook word game. Fan-made and unofficial; lyrics belong to their writers.</p>` +
       `<p> Inspired by ELLE.</p>` +
@@ -13647,7 +13725,25 @@ function renderSettingsBody() {
       `</div>` +
       `</div>`
     );
+
+  // An unknown id (a panel removed while one was open) falls back to the first tab.
+  if (!SETTINGS_PANELS.some((p) => p.id === settingsPanel)) settingsPanel = SETTINGS_PANELS[0].id;
+  // Every control re-renders the whole body, which throws focus back to <body>. Note
+  // where it was so a keyboard can tick three boxes in a row without re-Tabbing.
+  const was = document.activeElement;
+  const wasSel = (was && was.dataset && was.dataset.toggle) ? `[data-toggle="${was.dataset.toggle}"]`
+    : (was && was.dataset && was.dataset.choice) ? `[data-choice="${was.dataset.choice}"][data-val="${was.dataset.val}"]`
+    : null;
+  $("settingsBody").innerHTML = SETTINGS_PANELS.map((p) =>
+    `<div class="set-panel" id="set-panel-${p.id}" role="tabpanel" aria-labelledby="set-tab-${p.id}"` +
+    `${p.id === settingsPanel ? "" : " hidden"}>${panels[p.id]}</div>`
+  ).join("");
+  renderSettingsTabs();
   wireSettingsBody();
+  if (wasSel) {
+    const back = $("settingsBody").querySelector(wasSel);
+    if (back) { try { back.focus({ preventScroll: true }); } catch (_) { back.focus(); } }
+  }
 }
 
 let dangerTimer = null;
@@ -13835,6 +13931,7 @@ function openSettings() {
   unlock("i-look-in-windows");
   lastFocusedBeforeSettings = document.activeElement;
   pauseForSettings();
+  settingsPanel = SETTINGS_PANELS[0].id;   // always open on the first divider
   renderSettingsBody();
   const m = $("settingsModal");
   m.classList.add("open");
@@ -14599,7 +14696,7 @@ function showAskEra(force) {
 // Wheel over the dimmed backdrop (outside the dialog) still scrolls the dialog,
 // so the cursor doesn't have to be on the panel for the wheel to work.
 function routeSettingsWheel(e) {
-  const card = document.querySelector(".settings-card");
+  const card = document.querySelector("#settingsModal .settings-card");
   if (!card) return;
   if (card.contains(e.target)) return;   // already over the panel — let it scroll natively
   const factor = e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? card.clientHeight : 1;
@@ -16014,11 +16111,13 @@ async function init() {
   // Focus trap: keep Tab/Shift+Tab cycling within the open dialog.
   $("settingsModal").addEventListener("keydown", (e) => {
     if (e.key !== "Tab" || !$("settingsModal").classList.contains("open")) return;
-    const card = document.querySelector(".settings-card");
+    // The shell, not the card: the divider tabs sit outside the scrolling page and
+    // must still be inside the trap.
+    const card = document.querySelector("#settingsModal .settings-shell");
     if (!card) return;
     const focusables = Array.from(
       card.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])')
-    ).filter((el) => !el.disabled && el.offsetParent !== null);
+    ).filter((el) => !el.disabled && el.offsetParent !== null && el.tabIndex !== -1);
     if (!focusables.length) return;
     const first = focusables[0], last = focusables[focusables.length - 1];
     if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }

@@ -768,12 +768,18 @@ if (location.pathname.endsWith('/index.html')) {
 <!-- SETTINGS MODAL (openable from any screen) -->
 <div id="settingsModal" class="settings-modal" aria-hidden="true">
   <div class="settings-scrim" id="settingsScrim"></div>
-  <div class="settings-card card" role="dialog" aria-modal="true" aria-label="Settings">
-    <div class="settings-nav">
-      <span class="settings-title">Settings</span>
-      <button id="settingsCloseBtn" class="btn-link" aria-label="Close settings">✕ close</button>
+  <!-- The shell holds the page AND the binder's divider tabs, which stick out past the
+       paper's right edge. They can't live inside .settings-card: that scrolls, so
+       anything outside its padding box would be clipped or drag the scrollbar. -->
+  <div class="settings-shell">
+    <div class="settings-card card" role="dialog" aria-modal="true" aria-label="Settings">
+      <div class="settings-nav">
+        <span class="settings-title">Settings</span>
+        <button id="settingsCloseBtn" class="btn-link" aria-label="Close settings">✕ close</button>
+      </div>
+      <div id="settingsBody"></div>
     </div>
-    <div id="settingsBody"></div>
+    <div class="settings-tabs" id="settingsTabs" role="tablist" aria-label="Settings sections"></div>
   </div>
 </div>
 

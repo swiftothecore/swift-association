@@ -5942,6 +5942,77 @@
     padding: 22px 24px 28px 48px;
     --rule-x: 34px;   /* nudge the red margin rule left so it isn't squished against the text */
   }
+  /* ---------- Settings: the ring-binder divider tabs ----------
+     Settings is the one screen with more content than any single view can hold, so
+     it's a binder rather than a scroll: six card dividers down the right edge, one
+     page showing at a time. The tabs sit OUTSIDE .settings-card because that box
+     scrolls — anything hanging past its padding box would be clipped by the overflow.
+     So a shell does the centring, the card fills it, and the rail is absolutely
+     placed against the card's right edge. */
+  #settingsModal .settings-shell {
+    position: absolute; top: 50%; left: 50%;
+    /* the extra nudge is half the rail, so paper + tabs read as centred together */
+    transform: translate(calc(-50% - 42px), -50%);
+    width: min(594px, calc(100vw - 28px)); max-height: calc(100vh - 40px);
+  }
+  #settingsModal .settings-card {
+    position: static; transform: none; width: 100%; max-height: calc(100vh - 40px);
+  }
+  .settings-tabs {
+    position: absolute; left: 100%; top: 26px; display: flex; flex-direction: column;
+    align-items: flex-start; gap: 5px;
+  }
+  .set-tab {
+    /* tucked under the paper on the left, so the tab reads as bound into the page */
+    margin-left: -10px; padding: 7px 12px 7px 18px; min-width: 84px; text-align: left;
+    font-family: var(--type); font-size: 11px; letter-spacing: 1px; text-transform: uppercase;
+    color: var(--ink-soft); cursor: pointer;
+    background: var(--tab-tint, var(--paper-edge));
+    border: 1px solid rgba(43, 39, 34, 0.2); border-left: none;
+    border-radius: 0 5px 5px 0;
+    box-shadow: 1px 1px 0 rgba(43, 39, 34, 0.07);
+    transition: transform 0.14s ease, color 0.14s;
+  }
+  .set-tab:hover { transform: translateX(3px); color: var(--ink); }
+  .set-tab.active {
+    /* the open divider is pulled clear of the stack and pinned to the paper's colour,
+       so its tab and its page look like one sheet */
+    transform: translateX(6px); color: var(--ink); font-weight: 700;
+    background: var(--paper); box-shadow: 2px 1px 0 rgba(43, 39, 34, 0.09);
+  }
+  .set-tab:focus-visible { outline: 2px solid var(--ink-accent); outline-offset: 1px; }
+  body[data-reduce-motion="on"] .set-tab { transition: none; }
+  /* Muted stationery-divider tints. Deliberately washed out: they are wayfinding,
+     not decoration, and must never out-shout the page they open. */
+  :root {
+    --set-tab-1: #e6dcc4;   /* manila   */
+    --set-tab-2: #dfe3d3;   /* sage     */
+    --set-tab-3: #e8dcd0;   /* clay     */
+    --set-tab-4: #d9e0e6;   /* blue     */
+    --set-tab-5: #e5dae4;   /* lilac    */
+    --set-tab-6: #ece2cf;   /* buff     */
+  }
+  .set-panel[hidden] { display: none; }
+
+  /* Under the rail's width the tabs can't sit beside the paper, so they lie across
+     the top of it instead — same dividers, seen from the other edge. */
+  @media (max-width: 764px) {
+    #settingsModal .settings-shell { transform: translate(-50%, -50%); padding-top: 30px; }
+    #settingsModal .settings-card { max-height: calc(100vh - 70px); }
+    .settings-tabs {
+      left: 0; right: 0; top: 0; bottom: auto; flex-direction: row; gap: 4px;
+      overflow-x: auto; overscroll-behavior-x: contain; padding: 0 4px 0 10px;
+      scrollbar-width: none;
+    }
+    .settings-tabs::-webkit-scrollbar { display: none; }
+    .set-tab {
+      margin-left: 0; min-width: 0; flex: none; padding: 6px 11px 9px;
+      border: 1px solid rgba(43, 39, 34, 0.2); border-bottom: none;
+      border-radius: 5px 5px 0 0;
+    }
+    .set-tab:hover, .set-tab.active { transform: translateY(2px); }
+  }
+
   /* Freeze the page behind an open modal so the background can't scroll. */
   body.modal-open { overflow: hidden; }
   body[data-reduce-motion="on"] .settings-scrim { animation: none; }
@@ -6046,6 +6117,48 @@
   .set-toggle[aria-pressed="true"] { background: var(--highlighter); border-color: var(--ink); }
   .set-toggle[aria-pressed="true"]::after { transform: translateX(21px); background: var(--ink); }
   body[data-reduce-motion="on"] .set-toggle::after { transition: none; }
+
+  /* ---------- The checklist: a run of plain on/off settings ----------
+     A column of switches gives eight equal decisions eight full-height rows and no
+     rhythm. These are all the same shape of choice, so they get one block of ticked
+     boxes — a notebook checklist — which fits the same settings in half the height
+     and puts a real pen mark where an app switch used to be. */
+  .set-checklist {
+    display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 2px 16px; margin: 4px 0 2px;
+  }
+  @media (max-width: 520px) { .set-checklist { grid-template-columns: 1fr; } }
+  .set-check {
+    display: flex; align-items: flex-start; gap: 9px; text-align: left; width: 100%;
+    background: transparent; border: none; border-radius: 3px;
+    padding: 6px 6px 6px 4px; cursor: pointer;
+  }
+  .set-check:hover { background: rgba(255, 255, 255, 0.4); }
+  .set-check:focus-visible { outline: 2px solid var(--ink-accent); outline-offset: -1px; }
+  .set-check-box {
+    flex: 0 0 auto; position: relative; width: 19px; height: 19px; margin-top: 2px;
+    border: 1.5px solid var(--ink-soft); border-radius: 2px;
+    background: rgba(255, 255, 255, 0.35);
+    /* hand-ruled, not printed */
+    transform: rotate(-1.2deg);
+  }
+  .set-check:hover .set-check-box { border-color: var(--ink); }
+  .set-check-tick {
+    position: absolute; left: -3px; top: -5px; width: 25px; height: 25px;
+    fill: none; stroke: var(--ink-accent); stroke-width: 2.6;
+    stroke-linecap: round; stroke-linejoin: round;
+    /* the pen stroke is drawn on, not faded in: dashed out of sight until ticked */
+    stroke-dasharray: 34; stroke-dashoffset: 34;
+    transition: stroke-dashoffset 0.22s ease;
+  }
+  .set-check[aria-pressed="true"] .set-check-tick { stroke-dashoffset: 0; }
+  .set-check[aria-pressed="true"] .set-check-box { border-color: var(--ink); }
+  body[data-reduce-motion="on"] .set-check-tick { transition: none; }
+  .set-check-lbl { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+  .set-check-name { font-family: var(--hand); font-size: 19px; line-height: 1.15; color: var(--ink); }
+  .set-check-desc { font-family: var(--type); font-size: 10px; line-height: 1.35; color: var(--ink-soft); }
+  /* a ticked line is done: the ink settles, the note behind it recedes */
+  .set-check[aria-pressed="false"] .set-check-name { color: var(--ink-soft); }
 
   /* multi-choice — reuse the notebook tab look, compact */
   .set-choice { display: inline-flex; gap: 4px; flex-wrap: wrap; justify-content: flex-end; }
