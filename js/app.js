@@ -10210,6 +10210,10 @@ function riskMaxStake() { const n = currentChallenge && Number(currentChallenge.
 function riskStartBeads() { const n = currentChallenge && Number(currentChallenge.startBeads); return n > 0 ? n : 0; }
 function riskStartTokens() { const n = currentChallenge && Number(currentChallenge.tokens); return n > 0 ? n : RISK_TOKENS; }
 function riskTokenValue() { const n = currentChallenge && Number(currentChallenge.tokenValue); return n > 0 ? n : RISK_TOKEN_VALUE; }
+// Press Your Luck's dark side: the pot is LOCKED until the ride is this deep, so the
+// bank-or-ride offer isn't made below the floor and the pages inside a young ride are
+// committed before you see them. 0 (the base) means the offer comes after every won page.
+function pressMinRide() { const n = currentChallenge && Number(currentChallenge.pressMinRide); return n > 0 ? n : 0; }
 
 // The ONLY way a risk run's progress is ever phrased. See the invariant above: never "n / 13".
 function riskProgressText(n) {
@@ -10244,7 +10248,12 @@ function renderRiskBanner() {
   const el = ensureChallBanner();
   let left;
   if (pressRuleActive()) {
-    left = beadPot > 0 ? `${beadPot} riding` : "nothing riding";
+    // On the dark side the pot can't be banked yet, and the player has to be able to SEE that
+    // — otherwise the offer just stops appearing and reads as a bug rather than as the rule.
+    const floor = pressMinRide();
+    left = beadPot <= 0 ? "nothing riding"
+      : beadRide < floor ? `${beadPot} riding · locked until ${floor} deep`
+      : `${beadPot} riding`;
   } else if (wagerRuleActive()) {
     left = !stakeChosen ? "set your stake"
       : roundStake > 0 ? `${roundStake} staked` : "no stake this page";
@@ -10350,9 +10359,14 @@ function showWagerStake(done) {
       `<span class="rs-l">${n === 0 ? "no stake" : n === 1 ? "bead" : "beads"}</span></button>`;
   }
   const tease = wagerTease();
+  // Dark side: the card back keeps only your own record with the word and drops the rarity
+  // read, so the bet is on self-knowledge alone. `data-tier` goes WITH it — the tease is
+  // styled by rarity ([data-tier="scarce"|"singular"] reddens the first line), so leaving the
+  // attribute on would paint the rarity we just removed straight back onto the history line.
+  const selfOnly = !!(currentChallenge && currentChallenge.wagerTeaseSelf);
   panel.innerHTML =
-    `<div class="risk-tease" data-tier="${tease.tier}">` +
-      `<p class="rt-line">${escapeHtml(tease.spread)}</p>` +
+    `<div class="risk-tease"${selfOnly ? "" : ` data-tier="${tease.tier}"`}>` +
+      (selfOnly ? "" : `<p class="rt-line">${escapeHtml(tease.spread)}</p>`) +
       `<p class="rt-line rt-you">${escapeHtml(tease.history)}</p>` +
     `</div>` +
     `<p class="risk-stake-ask">how sure are you?</p>` +
@@ -10458,6 +10472,10 @@ function showRiskDecision() {
     // Nothing riding, or no pages left to risk it on: the run's end banks the pot anyway,
     // so asking would be a choice with only one real answer.
     if (beadPot <= 0 || isGameOver()) return false;
+    // Dark side: the pot is locked until the ride is deep enough, so there is no offer to make
+    // and the page turn simply carries on with everything still riding. Returning false is the
+    // right shape for that — it is the same "nothing worth asking" the guard above returns.
+    if (beadRide < pressMinRide()) return false;
     riskOverlay({
       title: "press your luck",
       sub: `page ${round} cleared — <b>${beadPot}</b> bead${beadPot === 1 ? "" : "s"} riding on the next one`,
@@ -15840,6 +15858,43 @@ function buildDevApi() {
         // base asks for 10, so the base target wouldn't be a win on a dark run.
         win: () => { score = (currentChallenge?.target) || CHALLENGE_BY_ID["whose-line"].target; endGame(); },
       },
+      // Wrapped Like A Chain — the letter the next title has to start with, and what can
+      // still extend it. `legal` matters because it is exactly what the base run's dropdown
+      // hands over (rankMatches filters through roundAcceptsSong): the dark side's whole lever
+      // is taking that list away, so being able to read it here is how you check a page was
+      // fair after playing it blind.
+      chain: {
+        state: () => ({ letter: chainLetter, chain: score,
+          target: (currentChallenge && currentChallenge.target) || 6,
+          suggestions: effectiveDropdown(), pool: effectivePool(), legal: currentSongs.length }),
+        legal: () => currentSongs.map((s) => s.title),
+        // Walk every letter the way pickChainWord does, under the run's LIVE pool and noTitle
+        // settings, and report which ones a word could still be drawn for. A dark run widens
+        // the bucket, so this should get fuller, not thinner — proof the guard didn't narrow.
+        letters: () => {
+          const bucket = wordBuckets[effectivePool()] || playableWords;
+          const out = {};
+          for (const L of "abcdefghijklmnopqrstuvwxyz".toUpperCase().split("")) {
+            out[L] = bucket.filter((w) => validSongs(w, effectiveStrict(), effectiveNoTitle())
+              .some((s) => firstAlphaLetter(s.title) === L)).length;
+          }
+          return out;
+        },
+        win: () => { score = (currentChallenge?.target) || CHALLENGE_BY_ID["wrapped-chain"].target; endGame(); },
+      },
+      // On Tour! — tonight's album and the songs that would clear this page. Same note as the
+      // chain above: `legal` is the list the base run's dropdown was quietly filtering to, and
+      // the dark side's lever is taking it away.
+      tour: {
+        setlist: () => tourSetlist.slice(),
+        tonight: () => tourSetlist[round - 1] || null,
+        legal: () => currentSongs.map((s) => s.title),
+        state: () => ({ tonight: tourSetlist[round - 1] || null, stop: round,
+          target: (currentChallenge && currentChallenge.target) || 9,
+          suggestions: effectiveDropdown(), legal: currentSongs.length,
+          distinct: new Set(tourSetlist).size }),
+        win: () => { score = (currentChallenge?.target) || CHALLENGE_BY_ID["on-tour"].target; endGame(); },
+      },
       // The risk batch — the shared bead economy behind Press Your Luck / Confidence Wager /
       // Double Or Nothing / Insurance. `state` is the one read-out that answers "where did
       // that number come from", and `beads` lets a run be dropped straight onto its target
@@ -15864,13 +15919,22 @@ function buildDevApi() {
       },
       // Press Your Luck — the escalating pot. `pot` shows what a bank would pay right now.
       press: {
-        pot: () => ({ pot: beadPot, ride: beadRide, nextWorth: (beadRide + 1) * PRESS_RIDE_STEP, banked: beadsBanked }),
+        pot: () => ({ pot: beadPot, ride: beadRide, nextWorth: (beadRide + 1) * PRESS_RIDE_STEP, banked: beadsBanked,
+          floor: pressMinRide(), locked: beadPot > 0 && beadRide < pressMinRide() }),
+        // The dark side's lever, on its own: is the pot banked-out-of-reach right now, and how
+        // many more pages have to be ridden before the offer comes back. On a base run the
+        // floor is 0, so this always reads unlocked — which is the honest control case.
+        lock: () => ({ floor: pressMinRide(), ride: beadRide,
+          locked: beadRide < pressMinRide(), ridesLeft: Math.max(0, pressMinRide() - beadRide) }),
         bank: () => bankPot(),                                  // bank whatever is riding
         wipe: () => { const n = beadPot; beadPot = 0; beadRide = 0; renderRiskBanner(); return n; },
         // Ride a pot up n pages headlessly, to check the escalation and the charm threshold.
-        simulate: (n) => { let pot = 0; const steps = [];
-          for (let k = 1; k <= (n || 5); k++) { pot += k * PRESS_RIDE_STEP; steps.push({ ride: k, pot }); }
-          return { steps, charmAt: PRESS_CHARM_RIDE }; },
+        // `bankable` is where the dark side's lock lifts, which is the number the target has to
+        // be set against: below it there is no bank, so a run's cycles can't be shorter.
+        simulate: (n) => { let pot = 0; const floor = pressMinRide(); const steps = [];
+          for (let k = 1; k <= (n || 5); k++) { pot += k * PRESS_RIDE_STEP;
+            steps.push({ ride: k, pot, bankable: k >= floor }); }
+          return { steps, charmAt: PRESS_CHARM_RIDE, floor, target: riskTarget() }; },
       },
       // Confidence Wager — the per-page stake. `set` skips the panel (or pre-answers it).
       wager: {
@@ -15883,7 +15947,13 @@ function buildDevApi() {
           renderRiskBanner(); return roundStake; },
         // What the card back is offering to bet on, and the word it is hiding — the one place
         // the two can be read side by side to check a band or a tally line reads true.
-        tease: () => (wagerRuleActive() ? { ...wagerTease(), word: currentWord, concealed: wordConcealed } : null),
+        // `shown` is what the panel would actually print: on the dark side the rarity half is
+        // dropped, so a `spread` that reads true but never reaches the card is the thing this
+        // has to make visible. `tier` going too is deliberate — the tease is styled by rarity,
+        // so leaving the attribute on would repaint the read we just took away.
+        tease: () => (wagerRuleActive() ? { ...wagerTease(), word: currentWord, concealed: wordConcealed,
+          selfOnly: !!currentChallenge.wagerTeaseSelf,
+          shown: currentChallenge.wagerTeaseSelf ? ["history"] : ["spread", "history"] } : null),
         reveal: () => { revealPromptWord(); return currentWord; },   // peek without staking
       },
       // Double Or Nothing — the same pot, doubling. Shelved with its challenge (see CHALLENGES
