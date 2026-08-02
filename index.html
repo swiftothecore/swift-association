@@ -153,6 +153,15 @@ if (location.pathname.endsWith('/index.html')) {
       <circle cx="58.5" cy="92.4" r="2.1" stroke="none"/>
       <circle cx="81.5" cy="92.4" r="2.1" stroke="none"/>
     </g>
+    <!-- a pin stuck in one spot, with the ground ruled either side of it: this word is here
+         and nowhere else on the map. -->
+    <g id="bd-mark-pin">
+      <path d="M70 100.6 C66.4 96.6 66 95.9 66 93.2 a4 4 0 1 1 8 0 c0 2.7 -0.4 3.4 -4 7.4 Z"
+            fill="none" stroke-width="1.8" stroke-linejoin="round"/>
+      <circle cx="70" cy="93.1" r="1.45" stroke="none"/>
+      <path d="M58.5 101.7 L64.2 101.7 M75.8 101.7 L81.5 101.7" fill="none"
+            stroke-width="1.5" stroke-linecap="round"/>
+    </g>
     <!-- the unreleased record: a bare white label with a rubber-stamped TEST PRESSING box.
          The title is pencilled on per game by renderBonusPage, so it isn't in here. -->
     <g id="bd-test-label">

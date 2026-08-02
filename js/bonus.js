@@ -571,6 +571,129 @@ export function buildStringPuzzle(songs, lineIndex, rng = Math.random, tries = 1
   return null;
 }
 
+/* ---------- Only Here ----------
+   The shelf's one game with no fail state. It shows you a song and asks for a word that is in
+   it; anything genuinely in there scores, and the fewer OTHER songs sing that word, the more
+   it scores. A word nothing else in the catalogue sings is the top of the page.
+
+   Everything about it runs off one index — `buildWordIndex`, a word to the set of songs that
+   sing it — read twice at judging time: once for "is this word in this song?" and once for
+   "how many songs is it in?". That is the whole validation, and it is why the game is generous
+   without being loose: the page can't be argued with, because the catalogue answers it.
+
+   The word is matched AS WRITTEN, not stemmed. Every other game here leans on the lenient
+   matcher, and this one must not: the score IS the song count of a particular word, so
+   accepting "lovers" for "lover" would pay out a number that belongs to a different word. The
+   page says so in as many words, and a word that isn't in the song is a soft reject rather
+   than a lost page — there is nothing to lose here but the clock.
+
+   The bars a page must clear:
+     1. ENOUGH TO SAY — the song has ONLY_MIN_WORDS eligible words, so there is a real search
+                        rather than a short list to exhaust. (Two-minute interludes fail this.)
+     2. REACHABLE TOP — at least one word is sung nowhere else, so "only here" is always on the
+                        table. Ten of 287 songs have no such word; they simply don't come up.
+     3. WORTH SHOWING — that word survives the babble filter, so the end card's "you could have
+                        played…" is a real word rather than a transcribed hook ("dadadada").
+   Returns null if nothing cleared the bars in `tries` attempts (the caller re-rolls). */
+export const ONLY_MIN_LETTERS = 3;   // the floor on an answer: no stray letter scores as a word
+const ONLY_MIN_WORDS = 20;
+// What a word pays, by how many songs in the whole catalogue sing it. 70% of eligible words sit
+// in ten songs or more, so the floor is where an unconsidered answer lands and the top three
+// tiers are the flex — which is the shape the game wants: always something, rarely much.
+const ONLY_TIERS = [[1, 5], [2, 4], [4, 3], [9, 2]];
+export function onlyHerePoints(count) {
+  for (const [upTo, pts] of ONLY_TIERS) if (count <= upTo) return pts;
+  return 1;
+}
+
+/* Word -> the set of song titles that sing it. One pass over the catalogue, like the line
+   index, and the only thing Only Here needs to be fair. */
+export function buildWordIndex(songs) {
+  const idx = new Map();
+  songs.forEach((song) => {
+    lyricTokens(song.lyrics || "").forEach(({ key }) => {
+      if (!idx.has(key)) idx.set(key, new Set());
+      idx.get(key).add(song.title);
+    });
+  });
+  return idx;
+}
+
+// Every token of a lyric blob, keyed and paired with the spelling it was sung in (the first
+// one seen, so the reveal writes "wonderstruck" the way the song does).
+function lyricTokens(text) {
+  const out = [], seen = new Set();
+  text.split(/\s+/).forEach((w) => {
+    const p = splitWord(w);
+    const key = wordKey(p ? p.core : w);
+    if (!key || seen.has(key)) return;
+    seen.add(key);
+    out.push({ key, word: p ? p.core : w });
+  });
+  return out;
+}
+
+// A transcribed hook ("dadadada", "mindindind") is unique to its song and looks like a find,
+// but nobody would ever write it and being shown it as the word you missed is a joke at the
+// player's expense. Two tells, both cheap: a bigram that comes round three times, or a word
+// spelled out of three letters or fewer.
+function babble(k) {
+  const seen = new Map();
+  for (let i = 0; i < k.length - 1; i++) {
+    const g = k.slice(i, i + 2);
+    seen.set(g, (seen.get(g) || 0) + 1);
+    if (seen.get(g) >= 3) return true;
+  }
+  return new Set(k).size <= 3;
+}
+
+export function buildOnlyHerePuzzle(songs, wordIndex, rng = Math.random, tries = 120, avoid = null) {
+  for (let t = 0; t < tries; t++) {
+    const song = pick(songs, rng);
+    if (!song) continue;
+    // Rest a song already played this run while there is catalogue left, then stop insisting
+    // near the end of the budget rather than fail the page over it (Sing It Back's rule).
+    if (avoid && avoid.has(song.title) && t < tries * 0.7) continue;
+
+    // The title is written across the top of the page, so a word out of it is the page reading
+    // itself back — barred here and soft-rejected at the input, for the same reason.
+    const titleWords = new Set(lyricTokens(song.title).map((x) => x.key));
+    const eligible = lyricTokens(song.lyrics || "")
+      .filter((x) => x.key.length >= ONLY_MIN_LETTERS && !titleWords.has(x.key));
+    if (eligible.length < ONLY_MIN_WORDS) continue;                       // bar 1
+
+    const uniques = eligible.filter((x) => (wordIndex.get(x.key) || { size: 99 }).size === 1);
+    if (!uniques.length) continue;                                        // bar 2
+    const showable = uniques.filter((x) => !babble(x.key) && !FILLER.has(x.key));
+    if (!showable.length) continue;                                       // bar 3
+
+    // The one the end card holds up: the longest of them, drawn from the top few so the same
+    // song doesn't always name the same word. Length is a rough proxy for "the word you'd
+    // remember the song by", and on this catalogue it is a good one — "wonderstruck",
+    // "situationship", "sweatshirt".
+    showable.sort((a, b) => b.key.length - a.key.length);
+    const best = pick(showable.slice(0, 3), rng);
+
+    return { song, uniques: uniques.length, eligible: eligible.length, best: best.word };
+  }
+  return null;
+}
+
+/* Judging a word written on an Only Here page. Every rejection here is a SOFT one — the page
+   is not lost, the clock just keeps running — so each says which of the three things went
+   wrong rather than a flat no. */
+export function judgeOnlyHere(typed, puzzle, wordIndex) {
+  const raw = String(typed).trim();
+  if (/\s/.test(raw)) return { ok: false, why: "one word only" };
+  const key = wordKey(raw);
+  if (!key || key.length < ONLY_MIN_LETTERS) return { ok: false, why: "too short to count" };
+  const titleWords = new Set(lyricTokens(puzzle.song.title).map((x) => x.key));
+  if (titleWords.has(key)) return { ok: false, why: "that one's in the title" };
+  const owners = wordIndex.get(key);
+  if (!owners || !owners.has(puzzle.song.title)) return { ok: false, why: "not in this one" };
+  return { ok: true, key, count: owners.size, points: onlyHerePoints(owners.size) };
+}
+
 export function judgeBlank(typed, puzzle, vocab = null) {
   const got = wordKey(typed);
   if (!got) return false;

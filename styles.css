@@ -1926,6 +1926,41 @@
   .bg-str-mark { position: absolute; left: -19px; top: 50%; transform: translateY(-50%); width: 14px; }
   .bg-str-item.is-wrong .bg-str-text { color: var(--ink-soft); }
 
+  /* Only Here — the page is a song's name and a blank line, so the only furniture it needs is
+     the price list: what a word pays, by how few other songs sing it. Pencilled small under the
+     heading rather than shouted, because it is reference the player reads once a run and then
+     plays from memory. One wrapped row, so five tiers cost four lines of page on a phone at
+     worst and one on the desk. */
+  .bg-scale {
+    /* Measured, not guessed: 320px is what puts the five tiers on two balanced rows (three
+       then two) at the type size below. Wider and it becomes one long row edge-to-edge on the
+       page; narrower and it breaks 2/2/1, which reads as a list that ran out of room. */
+    list-style: none; margin: -6px auto 20px; padding: 0; max-width: 320px;
+    display: flex; flex-wrap: wrap; justify-content: center; gap: 2px 12px;
+    font-family: var(--type); font-size: 10.5px; letter-spacing: 0.6px;
+    color: var(--ink-soft); text-transform: lowercase;
+  }
+  .bg-scale li { white-space: nowrap; }
+  .bg-scale b { font-size: 12.5px; color: var(--ink); margin-right: 3px; font-weight: 700; }
+  /* The reveal: what this song sings alone, one of those words in pen, and the line it lives
+     in underneath. It sits directly under the heading that already names the song, which is
+     why there is no lyric card on this game at all. */
+  .bg-only-reveal { text-align: center; margin: -8px auto 18px; max-width: 34ch; }
+  .bg-only-said {
+    font-family: var(--type); font-size: 11px; letter-spacing: 0.4px; line-height: 1.5;
+    color: var(--ink-soft); margin: 0;
+  }
+  .bg-only-said b { color: var(--ink); }
+  .bg-only-word {
+    font-family: var(--hand); font-weight: 700; font-size: 30px; line-height: 1.15;
+    color: var(--ink); margin: 4px 0 0;
+  }
+  .bg-only-line {
+    font-family: var(--hand); font-size: 19px; line-height: 1.3;
+    color: var(--ink-soft); margin: 7px 0 0;
+  }
+  .bg-only-line mark { background: var(--highlighter); color: var(--ink); padding: 0 3px; font-weight: 700; }
+
   /* Redacted — a verse with its telling words under strips of correction tape.
      The word sits in the DOM under the strip rather than being left out, which is what makes
      every block exactly its own word wide (no guessing at letter widths in a handwriting
