@@ -5958,9 +5958,13 @@
   #settingsModal .settings-card {
     position: static; transform: none; width: 100%; max-height: calc(100vh - 40px);
   }
+  /* The rail is centred on the card, not hung from its top edge. Panels differ by
+     360px of height, and since the card is vertically centred its TOP moves with
+     every tab while its MIDDLE never does — so anchoring the dividers to the middle
+     is what keeps them still as you page through the binder. */
   .settings-tabs {
-    position: absolute; left: 100%; top: 26px; display: flex; flex-direction: column;
-    align-items: flex-start; gap: 5px;
+    position: absolute; left: 100%; top: 50%; transform: translateY(-50%);
+    display: flex; flex-direction: column; align-items: flex-start; gap: 5px;
   }
   .set-tab {
     /* tucked under the paper on the left, so the tab reads as bound into the page */
@@ -5997,10 +6001,18 @@
   /* Under the rail's width the tabs can't sit beside the paper, so they lie across
      the top of it instead — same dividers, seen from the other edge. */
   @media (max-width: 764px) {
-    #settingsModal .settings-shell { transform: translate(-50%, -50%); padding-top: 30px; }
+    /* Here the rail LIES ALONG the top edge, so it can't be centred away from the
+       drift the way the side rail is. The shell is pinned to the top instead: the
+       paper's top edge and its tabs then hold still and only the bottom edge moves
+       as pages get longer, which is how a real binder behaves anyway. At these
+       widths the sheet nearly fills the screen regardless, so nothing is lost by
+       not centring it. */
+    #settingsModal .settings-shell {
+      top: 20px; transform: translateX(-50%); padding-top: 30px;
+    }
     #settingsModal .settings-card { max-height: calc(100vh - 70px); }
     .settings-tabs {
-      left: 0; right: 0; top: 0; bottom: auto; flex-direction: row; gap: 4px;
+      left: 0; right: 0; top: 0; bottom: auto; transform: none; flex-direction: row; gap: 4px;
       overflow-x: auto; overscroll-behavior-x: contain; padding: 0 4px 0 10px;
       scrollbar-width: none;
     }
