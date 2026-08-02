@@ -5968,6 +5968,7 @@
   }
   .set-tab {
     /* tucked under the paper on the left, so the tab reads as bound into the page */
+    position: relative;
     margin-left: -10px; padding: 7px 12px 7px 18px; min-width: 84px; text-align: left;
     font-family: var(--type); font-size: 11px; letter-spacing: 1px; text-transform: uppercase;
     color: var(--ink-soft); cursor: pointer;
@@ -5981,20 +5982,31 @@
   .set-tab.active {
     /* the open divider is pulled clear of the stack and pinned to the paper's colour,
        so its tab and its page look like one sheet */
-    transform: translateX(6px); color: var(--ink); font-weight: 700;
-    background: var(--paper); box-shadow: 2px 1px 0 rgba(43, 39, 34, 0.09);
+    transform: translateX(9px); color: var(--ink); font-weight: 700;
+    background: var(--paper); box-shadow: 3px 2px 0 rgba(43, 39, 34, 0.12);
+    border-color: rgba(43, 39, 34, 0.45);
+  }
+  /* The open divider taking the paper's colour is what makes it read as one sheet
+     with its page — but it also drains the one thing that told the tabs apart, so
+     on its own the active tab was the QUIETEST thing on the rail. The colour moves
+     to the outer edge instead: a mylar-edged binder divider, full-strength where a
+     real one is reinforced, and the only saturated ink in the whole stack. */
+  .set-tab.active::after {
+    content: ""; position: absolute; top: -1px; bottom: -1px; right: -1px; width: 5px;
+    background: var(--tab-ink, var(--ink-soft)); border-radius: 0 4px 4px 0;
   }
   .set-tab:focus-visible { outline: 2px solid var(--ink-accent); outline-offset: 1px; }
   body[data-reduce-motion="on"] .set-tab { transition: none; }
   /* Muted stationery-divider tints. Deliberately washed out: they are wayfinding,
-     not decoration, and must never out-shout the page they open. */
+     not decoration, and must never out-shout the page they open. The -deep pair is
+     the same colour with the water taken out, used only on the open tab's edge. */
   :root {
-    --set-tab-1: #e6dcc4;   /* manila   */
-    --set-tab-2: #dfe3d3;   /* sage     */
-    --set-tab-3: #e8dcd0;   /* clay     */
-    --set-tab-4: #d9e0e6;   /* blue     */
-    --set-tab-5: #e5dae4;   /* lilac    */
-    --set-tab-6: #ece2cf;   /* buff     */
+    --set-tab-1: #e6dcc4;   --set-tab-1-deep: #a8913f;   /* manila */
+    --set-tab-2: #dfe3d3;   --set-tab-2-deep: #6f8f5c;   /* sage   */
+    --set-tab-3: #e8dcd0;   --set-tab-3-deep: #b06a4c;   /* clay   */
+    --set-tab-4: #d9e0e6;   --set-tab-4-deep: #4f7f9e;   /* blue   */
+    --set-tab-5: #e5dae4;   --set-tab-5-deep: #8f6591;   /* lilac  */
+    --set-tab-6: #ece2cf;   --set-tab-6-deep: #9a6b3a;   /* buff   */
   }
   .set-panel[hidden] { display: none; }
 
@@ -6023,6 +6035,11 @@
       border-radius: 5px 5px 0 0;
     }
     .set-tab:hover, .set-tab.active { transform: translateY(2px); }
+    /* rail along the top edge, so the reinforced edge is the top one */
+    .set-tab.active::after {
+      top: -1px; bottom: auto; left: -1px; right: -1px; width: auto; height: 4px;
+      border-radius: 4px 4px 0 0;
+    }
   }
 
   /* Freeze the page behind an open modal so the background can't scroll. */
@@ -6113,6 +6130,23 @@
   .set-row:last-child { border-bottom: none; }
   .set-label { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
   .set-name { font-family: var(--hand); font-size: 20px; line-height: 1.1; color: var(--ink); }
+  /* ---------- Setting glyphs ----------
+     A mark to the left of every setting's name. Twenty rows of handwriting are read
+     by scanning, and a shape is found faster than a word, so these carry the search
+     and the name confirms it. Drawn in the same one-weight pen as everything else on
+     the desk, and kept at the soft ink so they guide the eye without pulling it. */
+  .set-name, .set-check-name {
+    /* flex-start, not centre: a name long enough to wrap would otherwise float its
+       glyph down to the middle of the block, away from the line it names. */
+    display: flex; align-items: flex-start; gap: 8px;
+  }
+  .set-ico {
+    flex: 0 0 auto; width: 16px; height: 16px; margin-top: 3px;
+    fill: none; stroke: currentColor; stroke-width: 1.6;
+    stroke-linecap: round; stroke-linejoin: round;
+    color: var(--ink-soft); opacity: 0.85;
+  }
+  .set-check[aria-pressed="true"] .set-ico { color: var(--ink-accent); opacity: 1; }
   .set-desc { font-family: var(--type); font-size: 10.5px; color: var(--ink-soft); }
   /* One control column, one axis. Sized rather than shrink-to-fit: a segmented
      control, a slider and a dropdown are all different widths, and letting each
@@ -6128,6 +6162,15 @@
   .set-row--stack { flex-direction: column; align-items: stretch; gap: 7px; }
   .set-row--stack .set-control { flex: 1 1 auto; width: 100%; justify-content: flex-start; }
   .set-row--stack .set-choice { justify-content: flex-start; }
+  /* On a phone the fixed control column eats nearly the whole sheet, leaving the
+     label a few characters wide and wrapping "Animation speed" down four lines. At
+     that width there is no room for two columns at all, so every row stacks. */
+  @media (max-width: 560px) {
+    #settingsBody { --set-ctrl-w: auto; }
+    #settingsBody .set-row { flex-direction: column; align-items: stretch; gap: 7px; }
+    #settingsBody .set-control { flex: 1 1 auto; width: 100%; justify-content: flex-start; }
+    #settingsBody .set-choice { justify-content: flex-start; }
+  }
 
   /* on/off toggle — an inked switch */
   .set-toggle {
@@ -6157,7 +6200,11 @@
     background: transparent; border: none; border-radius: 3px;
     padding: 6px 6px 6px 4px; cursor: pointer;
   }
-  .set-check:hover { background: rgba(255, 255, 255, 0.4); }
+  /* Hover marks the BOX, not the row. A wash behind the whole line made a checklist
+     item look like a menu item you were about to open, and lit up an area far bigger
+     than the thing you were actually about to tick. The box is the control, so the
+     box is what answers the pointer. (Focus is a different job — a keyboard needs to
+     see the whole item it has landed on, so that ring stays on the button.) */
   .set-check:focus-visible { outline: 2px solid var(--ink-accent); outline-offset: -1px; }
   .set-check-box {
     flex: 0 0 auto; position: relative; width: 19px; height: 19px; margin-top: 2px;
@@ -6165,8 +6212,13 @@
     background: rgba(255, 255, 255, 0.35);
     /* hand-ruled, not printed */
     transform: rotate(-1.2deg);
+    transition: border-color 0.14s, background 0.14s, box-shadow 0.14s;
   }
-  .set-check:hover .set-check-box { border-color: var(--ink); }
+  body[data-reduce-motion="on"] .set-check-box { transition: none; }
+  .set-check:hover .set-check-box {
+    border-color: var(--ink); background: rgba(255, 255, 255, 0.85);
+    box-shadow: 0 0 0 3px rgba(43, 39, 34, 0.07);
+  }
   .set-check-tick {
     position: absolute; left: -3px; top: -5px; width: 25px; height: 25px;
     fill: none; stroke: var(--ink-accent); stroke-width: 2.6;

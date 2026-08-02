@@ -13427,6 +13427,44 @@ function wireInput() {
 }
 
 /* ---------- Settings modal ---------- */
+/* Setting glyphs — one small line-art mark per setting, sitting to the left of its
+   name. A page of twenty near-identical text rows is read by scanning, and a shape
+   is found faster than a word is: the marks are what let you spot "hints" or "sound"
+   without reading the column. Drawn to the same rules as the rest of the desk:
+   one-weight pen strokes, no fills, no glyph fonts. Keyed by the settings field, so
+   every control builder can look its own icon up without being told. */
+const SET_ICONS = {
+  reduceMotion: `<path d="M4 8h12M4 12h8M4 16h12"/><path d="M20 6 8 19"/>`,
+  animSpeed: `<path d="M4 18a8 8 0 1 1 16 0"/><path d="M12 18l5-6"/>`,
+  pageTurn: `<path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4"/>`,
+  penCircle: `<ellipse cx="11.5" cy="12" rx="7.5" ry="5.5" transform="rotate(-10 11.5 12)"/><path d="M17 15.5l3.5 3.5"/>`,
+  sparkles: `<path d="M10 3.5l1.6 4.5 4.4 1.6-4.4 1.6L10 15.7 8.4 11.2 4 9.6l4.4-1.6z"/><path d="M17.5 14l.8 2.2 2.2.8-2.2.8-.8 2.2-.8-2.2-2.2-.8 2.2-.8z"/>`,
+  timerTension: `<circle cx="12" cy="13.5" r="6.5"/><path d="M12 13.5V10M9.5 3.5h5M18.6 7.4l1.4-1.4"/>`,
+  snake: `<path d="M4 15.5c1.8-4 3.6 4 5.4 0s3.6 4 5.4 0"/><path d="M14.8 15.5c1-2 2.6-2.5 4.2-1.7"/><circle cx="19.6" cy="13.4" r=".9" fill="currentColor" stroke="none"/>`,
+  reducedFlashing: `<path d="M13 3.5 7.5 13h4l-1 7.5L16.5 11h-4z"/><path d="M20 4 5 20"/>`,
+  autoAdvance: `<path d="M5 6l6 6-6 6M13 6l6 6-6 6"/>`,
+  enterOnMiss: `<path d="M20 5v7H6"/><path d="M10 8l-4 4 4 4"/>`,
+  showExamples: `<path d="M9 7h11M9 12h11M9 17h7"/><circle cx="5" cy="7" r="1.1"/><circle cx="5" cy="12" r="1.1"/><circle cx="5" cy="17" r="1.1"/>`,
+  stemMatching: `<path d="M12 21v-8"/><path d="M12 13c0-3-2-5-5-5 0 3 2 5 5 5z"/><path d="M12 13c0-3 2-5 5-5 0 3-2 5-5 5z"/>`,
+  enableHints: `<path d="M9.5 18h5M10.5 21h3"/><path d="M12 3a6 6 0 0 0-3.5 10.9c.6.5.9 1.2 1 1.9h5c.1-.7.4-1.4 1-1.9A6 6 0 0 0 12 3z"/>`,
+  censorExplicit: `<path d="M12 5v14M6 8.5l12 7M18 8.5l-12 7"/>`,
+  countdownSecs: `<path d="M6 3h12M6 21h12M8 3v3l4 6 4-6V3M8 21v-3l4-6 4 6v3"/>`,
+  defaultGameType: `<rect x="4" y="7" width="12" height="13" rx="1.5"/><path d="M8 4h10a2 2 0 0 1 2 2v10"/>`,
+  defaultDifficulty: `<path d="M5 20v-6M12 20V9M19 20V4"/>`,
+  defaultStatsTab: `<path d="M4 4v16h16"/><path d="M7.5 15l3.5-4.5 3 3 5-6.5"/>`,
+  timezone: `<circle cx="12" cy="12" r="8"/><path d="M4 12h16"/><ellipse cx="12" cy="12" rx="4" ry="8"/>`,
+  weekStart: `<rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/>`,
+  clock: `<circle cx="12" cy="12" r="8"/><path d="M12 7v5l3.5 2"/>`,
+  highContrast: `<circle cx="12" cy="12" r="8"/><path d="M12 4a8 8 0 0 0 0 16z" fill="currentColor" stroke="none"/>`,
+  colorBlindAlbums: `<circle cx="8.8" cy="9.2" r="4"/><circle cx="15.2" cy="9.2" r="4"/><circle cx="12" cy="15" r="4"/>`,
+  hideDailyScore: `<path d="M3.5 12S7 6.5 12 6.5 20.5 12 20.5 12 17 17.5 12 17.5 3.5 12 3.5 12z"/><circle cx="12" cy="12" r="2.4"/><path d="M4.5 19.5 19.5 4.5"/>`,
+  sound: `<path d="M4 9.5h3.5L12 5.5v13L7.5 14.5H4z"/><path d="M15.3 9.7a3.8 3.8 0 0 1 0 4.6"/><path d="M18 7.2a7.4 7.4 0 0 1 0 9.6"/>`,
+  favouriteAlbum: `<path d="M12 20.3S5 16 5 11.1A3.9 3.9 0 0 1 12 8.6a3.9 3.9 0 0 1 7 2.5c0 4.9-7 9.2-7 9.2z"/>`,
+};
+function setIco(key) {
+  const d = SET_ICONS[key];
+  return d ? `<svg class="set-ico" viewBox="0 0 24 24" aria-hidden="true">${d}</svg>` : "";
+}
 // Control builders — all keyed by a settings field; a change re-renders the body.
 // Two or three options sit beside their label like a segmented control. Past four they
 // stop fitting the control column and used to wrap back into the label, or give up and
@@ -13437,7 +13475,7 @@ function setChoiceHTML(key, name, desc, options) {
     `<button type="button" class="mode-tab${o.val === settings[key] ? " active" : ""}" data-choice="${key}" data-val="${o.val}">${o.label}</button>`
   ).join("");
   const stack = options.length > 4 ? " set-row--stack" : "";
-  return `<div class="set-row${stack}"><div class="set-label"><span class="set-name">${name}</span>` +
+  return `<div class="set-row${stack}"><div class="set-label"><span class="set-name">${setIco(key)}${name}</span>` +
     (desc ? `<span class="set-desc">${desc}</span>` : "") + `</div>` +
     `<div class="set-control set-choice">${tabs}</div></div>`;
 }
@@ -13456,7 +13494,7 @@ function setEraGridHTML() {
   const chips = STUDIO_ALBUMS.map((a) => chip(a, a, pal[a] || "#8b8272")).join("") +
     chip("", "No favourite yet", "");
   return `<div class="set-row set-row--stack"><div class="set-label">` +
-    `<span class="set-name">Your era</span>` +
+    `<span class="set-name">${setIco("favouriteAlbum")}Your era</span>` +
     `<span class="set-desc">the album closest to your heart</span></div>` +
     `<div class="set-control set-era-grid" role="group" aria-label="Your era">${chips}</div></div>`;
 }
@@ -13466,12 +13504,12 @@ function setSelectHTML(key, name, desc, options) {
   ).join("");
   // Always stacked: option labels here are long enough (four hundred zone names) that
   // the control column would ellipsis them down to nothing useful.
-  return `<div class="set-row set-row--stack"><div class="set-label"><span class="set-name">${name}</span>` +
+  return `<div class="set-row set-row--stack"><div class="set-label"><span class="set-name">${setIco(key)}${name}</span>` +
     (desc ? `<span class="set-desc">${desc}</span>` : "") + `</div>` +
     `<div class="set-control"><select class="set-select" id="set-${key}" data-select="${key}" aria-label="${name}">${opts}</select></div></div>`;
 }
 function setSliderHTML() {
-  return `<div class="set-row"><div class="set-label"><span class="set-name">Countdown length</span>` +
+  return `<div class="set-row"><div class="set-label"><span class="set-name">${setIco("countdownSecs")}Countdown length</span>` +
     `<span class="set-desc">seconds before the next page auto-turns</span></div>` +
     `<div class="set-control set-slider-row"><input type="range" id="countdownSlider" class="set-slider" min="3" max="8" step="1" value="${settings.countdownSecs}">` +
     `<span class="set-slider-val" id="countdownVal">${settings.countdownSecs}s</span></div></div>`;
@@ -13522,7 +13560,7 @@ const SET_TICK_SVG = `<svg class="set-check-tick" viewBox="0 0 20 20" aria-hidde
 function setCheckHTML(key, name, desc) {
   return `<button type="button" class="set-check" data-toggle="${key}" aria-pressed="${!!settings[key]}">` +
     `<span class="set-check-box">${SET_TICK_SVG}</span>` +
-    `<span class="set-check-lbl"><span class="set-check-name">${name}</span>` +
+    `<span class="set-check-lbl"><span class="set-check-name">${setIco(key)}${name}</span>` +
     (desc ? `<span class="set-check-desc">${desc}</span>` : "") + `</span></button>`;
 }
 function setChecklistHTML(items) { return `<div class="set-checklist">${items.join("")}</div>`; }
@@ -13620,7 +13658,7 @@ function renderSettingsTabs() {
     const on = p.id === settingsPanel;
     return `<button type="button" class="set-tab${on ? " active" : ""}" id="set-tab-${p.id}" role="tab" ` +
       `aria-selected="${on}" aria-controls="set-panel-${p.id}" tabindex="${on ? 0 : -1}" ` +
-      `data-panel="${p.id}" style="--tab-tint: var(--set-tab-${i + 1})">${p.label}</button>`;
+      `data-panel="${p.id}" style="--tab-tint: var(--set-tab-${i + 1}); --tab-ink: var(--set-tab-${i + 1}-deep)">${p.label}</button>`;
   }).join("");
   rail.querySelectorAll("[data-panel]").forEach((b) => {
     b.addEventListener("click", () => showSettingsPanel(b.dataset.panel));
