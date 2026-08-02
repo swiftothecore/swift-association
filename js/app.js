@@ -12800,7 +12800,7 @@ function runRoundEggs() {
   // One visitor at a time; the click-to-catch keepsake trigger lives in surfaceWhale.
   // Capped at one surfacing per game — a flat per-round roll made it show up several
   // times in a long infinite run, which cheapened the "rare" visitor it's meant to be.
-  if (!whaleSeenThisGame && !document.querySelector(".whale-egg") && chance(1 / 70)) {
+  if (!whaleSeenThisGame && !document.querySelector(".whale-egg") && chance(1 / 140)) {
     whaleSeenThisGame = true;
     surfaceWhale();
   }
@@ -12808,7 +12808,7 @@ function runRoundEggs() {
   // Message in a bottle — a rarer sibling roll, drifting in from the side edge. Never
   // shares a page with the whale (one off-page visitor at a time reads calmer).
   if (!document.querySelector(".whale-egg") && !document.querySelector(".bottle-egg") &&
-      chance(0.03)) surfaceBottle();
+      chance(0.015)) surfaceBottle();
 
   // A Mastery-chosen pen is the persistent default each round; otherwise the rare random swap.
   if (settings.masteryPen) {
