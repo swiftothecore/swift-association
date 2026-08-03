@@ -729,7 +729,9 @@ if (location.pathname.endsWith('/index.html')) {
      feedback first so the searcher, the wider of the two, has the free space on its right
      to expand into. Both vanish during play (see .corner-links in styles.css). -->
 <div class="corner-links">
-  <a id="feedbackLink" class="corner-link feedback-link" href="https://forms.gle/XhQHcLtvzrwLHuzQ8"
+  <!-- Points at our own /feedback stub, not the form's URL: the address lives in exactly
+       one file (feedback/index.html) so a form that moves is a one-line change. -->
+  <a id="feedbackLink" class="corner-link feedback-link" href="feedback/"
      target="_blank" rel="noopener" title="Tell me what you think: a short feedback form">
     <!-- A passed note: a dog-eared page with two lines of writing on it and a speech-bubble
          tail. An envelope would read "email" and a bare bubble is the SaaS cliché; grafting
