@@ -97,6 +97,7 @@ export const DEFAULT_SETTINGS = {
   defaultDifficulty: "last",// "last" | a MODES id
   defaultStatsTab: "all",   // which Stats tab opens first: "all" | "last" | a MODES id
   // display & accessibility
+  theme: "light",           // page theme: "light" | "system" (follow OS) | "dark" (a dark notebook for low light)
   highContrast: false,
   colorBlindAlbums: false,  // swap ALBUM_COLORS for a colour-blind-friendly palette
   hideDailyScore: false,    // hide the daily score until "reveal & copy"

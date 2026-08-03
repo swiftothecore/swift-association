@@ -90,6 +90,32 @@
   body[data-paper="blush"]     { --paper:#f6e4e4; --paper-edge:#efd6d6; --rule:rgba(120,62,72,0.09);  --margin:rgba(184,70,92,0.45); }
   body[data-paper="slate"]     { --paper:#dfe3e8; --paper-edge:#d4d9df; --rule:rgba(40,55,75,0.11);   --margin:rgba(160,62,62,0.42); }
 
+  /* ---- Dark notebook (Phase 1: base tokens; data-theme lives on <html>) ----
+     For genuine low-light reading: a warm dark paper with a warm off-white ink,
+     not a cold invert. data-paper is dropped in dark mode (see applySettings), so
+     these stand in for every earned paper stock. Era accents still float on top;
+     their dark tuning is Phase 2. Defined at :root so they beat the era/stock
+     overrides on <body> without a specificity fight. */
+  :root[data-theme="dark"] {
+    --paper: #211d17;
+    --paper-edge: #2b261e;
+    --desk: #14110d;
+    --ink: #ece5d6;            /* warm paper-white */
+    --ink-soft: #9d947f;       /* faded pencil, lifted for a dark page */
+    --rule: rgba(236, 229, 214, 0.08);
+    --margin: rgba(206, 86, 86, 0.5);  /* the red rule still reads as red */
+    --red-pen: #df6b64;                /* brightened so editor's ink stays legible */
+  }
+  /* The desk goes to night: a heavy dark wash over the same oak SVG (so the grain
+     survives, just dimmed) plus a warm pool of lamplight over where the notebook
+     sits — the "lamp on the desk" read, kept even though the paper itself is dark. */
+  :root[data-theme="dark"] body { background-color: #14110d; }
+  :root[data-theme="dark"] body::before {
+    background:
+      radial-gradient(ellipse 72% 56% at 50% 30%, rgba(255, 214, 150, 0.10), rgba(255, 214, 150, 0) 60%),
+      linear-gradient(rgba(9, 7, 5, 0.82), rgba(9, 7, 5, 0.88));
+  }
+
   * { box-sizing: border-box; }
 
   body {

@@ -274,8 +274,30 @@ function albumColor(name) { return albumPalette()[name] || null; }
 
 // Push the settings that are realised via CSS onto <body> data-attributes, and
 // keep the easter-egg / motion code paths reading the live `settings` object.
+// The three-way theme setting resolves to one of two real states. "system" asks the OS;
+// "light"/"dark" force it. Kept as a pure helper so the pre-paint script in index.html
+// (which can't import anything) and applySettings agree on the same rule.
+function effectiveTheme() {
+  const t = settings.theme || "light";
+  if (t === "dark") return "dark";
+  if (t === "system") {
+    return (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches) ? "dark" : "light";
+  }
+  return "light";
+}
+// The mobile browser chrome / status bar colour. Follows the desk in dark, the paper in light,
+// so the notch never stays cream over a dark page (or vice versa).
+function paintThemeColor(dark) {
+  const m = document.querySelector('meta[name="theme-color"]');
+  if (m) m.setAttribute("content", dark ? "#14110d" : "#f5efe1");
+}
 function applySettings() {
   const body = document.body;
+  const dark = effectiveTheme() === "dark";
+  // The attribute lives on <html> so the pre-paint script (which runs before <body> exists)
+  // and this function write to the same element, and CSS keys off :root[data-theme].
+  document.documentElement.setAttribute("data-theme", dark ? "dark" : "light");
+  paintThemeColor(dark);
   const rm = settings.reduceMotion === "on" ? "on"
            : settings.reduceMotion === "off" ? "off"
            : (prefersReducedMotion() ? "on" : "off");
@@ -283,7 +305,9 @@ function applySettings() {
   body.setAttribute("data-anim-speed", settings.animSpeed || "normal");
   if (settings.highContrast) body.setAttribute("data-contrast", "high");
   else body.removeAttribute("data-contrast");
-  if (settings.masteryPaper) body.setAttribute("data-paper", settings.masteryPaper);
+  // One universal dark paper: the earned paper stocks are a light-mode cosmetic, so in dark
+  // mode we drop data-paper entirely and let the dark tokens stand for every stock.
+  if (settings.masteryPaper && !dark) body.setAttribute("data-paper", settings.masteryPaper);
   else body.removeAttribute("data-paper");
   if (settings.masteryButton) body.setAttribute("data-startbtn", settings.masteryButton);
   else body.removeAttribute("data-startbtn");
@@ -13587,6 +13611,7 @@ const SET_ICONS = {
   timezone: `<circle cx="12" cy="12" r="8"/><path d="M4 12h16"/><ellipse cx="12" cy="12" rx="4" ry="8"/>`,
   weekStart: `<rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/>`,
   clock: `<circle cx="12" cy="12" r="8"/><path d="M12 7v5l3.5 2"/>`,
+  theme: `<path d="M20 14.2A7.5 7.5 0 1 1 10.4 4.6 6 6 0 0 0 20 14.2z"/>`,
   highContrast: `<circle cx="12" cy="12" r="8"/><path d="M12 4a8 8 0 0 0 0 16z" fill="currentColor" stroke="none"/>`,
   colorBlindAlbums: `<circle cx="8.8" cy="9.2" r="4"/><circle cx="15.2" cy="9.2" r="4"/><circle cx="12" cy="15" r="4"/>`,
   hideDailyScore: `<path d="M3.5 12S7 6.5 12 6.5 20.5 12 20.5 12 17 17.5 12 17.5 3.5 12 3.5 12z"/><circle cx="12" cy="12" r="2.4"/><path d="M4.5 19.5 19.5 4.5"/>`,
@@ -13870,6 +13895,7 @@ function renderSettingsBody() {
     );
   panels.display =
     setSection("",
+      setChoiceHTML("theme", "Theme", "a dark notebook for low light", [{ val: "light", label: "Light" }, { val: "system", label: "System" }, { val: "dark", label: "Dark" }]) +
       setChoiceHTML("weekStart", "Week starts on", "first row of the records calendar", [{ val: "mon", label: "Monday" }, { val: "sun", label: "Sunday" }]) +
       setChoiceHTML("clock", "Time format", "", [{ val: "12", label: "12-hour" }, { val: "24", label: "24-hour" }]) +
       setChecklistHTML([
@@ -16263,6 +16289,15 @@ function buildDevApi() {
       debug: (on) => window.__deskScatter && window.__deskScatter.debug(on),
       showcase: () => window.__deskScatter && window.__deskScatter.showcase(),
     },
+    // Theme (light / dark notebook). set() writes the real setting so a reload keeps it;
+    // toggle() flips light<->dark; cycle() walks light -> system -> dark for eyeballing all
+    // three. Returns the effective theme actually painted.
+    theme: {
+      get: () => ({ setting: settings.theme || "light", effective: effectiveTheme() }),
+      set: (t) => { settings.theme = ["light", "system", "dark"].includes(t) ? t : "light"; saveSettings(settings); applySettings(); if ($("settingsModal") && $("settingsModal").classList.contains("open")) renderSettingsBody(); return effectiveTheme(); },
+      toggle: () => window.__dev.theme.set(effectiveTheme() === "dark" ? "light" : "dark"),
+      cycle: () => { const order = ["light", "system", "dark"]; const i = order.indexOf(settings.theme || "light"); return window.__dev.theme.set(order[(i + 1) % order.length]); },
+    },
     // Misc
     setNoLog: (on) => { devNoLog = !!on; },
     reload: () => location.reload(),
@@ -16277,6 +16312,13 @@ async function init() {
   earnedAchievements = loadAchievements();
   settings = loadSettings();
   applySettings();
+  // When the theme is "system", track the OS toggle live so the page follows a day/night flip
+  // without a reload. Ignored while the setting is a forced "light"/"dark".
+  if (window.matchMedia) {
+    window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => {
+      if ((settings.theme || "light") === "system") applySettings();
+    });
+  }
   migrateRecordsFromStats();   // seed records from pre-existing stats once, before any game runs
   console.log("%c♡ written in the margins · 13 pages of you ♡", "font-size:14px;color:#a9791f;font-family:cursive;");
   currentMode = loadMode();
