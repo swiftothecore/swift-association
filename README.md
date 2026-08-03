@@ -47,4 +47,10 @@ If the game doesn’t seem like it’s in a finished state right now, that’s b
 
 no its becky
 
+## Licence
+
+The source code in this repository is © Corey Shurdington, all rights reserved. You are very welcome to read it, poke around it, and learn from it. It is not licensed for reuse, redistribution, or deployment, commercially or otherwise. If you want to do something with it, just ask me.
+
+This covers my code only. The lyrics and liner-note messages in `songs.json`, `guests/` and `secret-messages.json` belong to their respective writers and publishers. They are not mine, and nothing above grants any rights to them. The fonts and sound effects carry their own licences, which are set out in [NOTICE.md](NOTICE.md).
+
 Verdict sounds from [Google’s Material Design sound kit](https://archive.org/details/material-design-sound-resources) (CC-BY 4.0); the page turn and the glockenspiel (heard whole on an unlock, and as a single note when a hint reveals) are CC0 recordings from freesound.
