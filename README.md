@@ -1,4 +1,4 @@
-# Welcome to the ✨Swift To The Song Association✨ repository
+# Welcome to the ✨Swift to the Song Association✨ repository
 
 **[Play it now at swiftassociation.com](https://swiftassociation.com)** (alpha, and yes it works on your phone)
 
@@ -6,7 +6,7 @@
 
 I’m currently working on a game inspired by ELLE’s Song Association. Where, by default, you are given 10 seconds to name a song or lyric with a specific word in it. The twist? It’s all Taylor Swift songs 🫶
 
-pretty sure that's Taylor Swift
+*pretty sure that's Taylor Swift*
 
 A round is one word. You get 10 seconds to name a song containing it, or to type a lyric line containing it, and every word you land adds a bead to the friendship bracelet you finish the run with.
 
@@ -52,13 +52,13 @@ With many features in the works as we speak:
 - Polaroids in more places!
 - More achievements
 
-I want this game to have extensive replay value. I want it to be challenging. I want it to be as good as it can be for as many people as possible, so I’m working on adding accessibility features, and I’m open to all feedback/suggestions.
+I want this game to have extensive replay value. I want it to be challenging. I want it to be as good as it can be for as many people as possible, so I’m working on adding accessibility features, and I’m open to all feedback/suggestions. Submit feedback with the feedback button on the site or at https://swiftassociation.com/feedback
 
 Above all, I want it to be fun.
 
 If the game doesn’t seem like it’s in a finished state right now, that’s because it isn’t. We’re getting there lol. For now, thank you for reading, and you can play the game RIGHT NOW in its alpha stage at https://swiftassociation.com
 
-no its becky
+*no its becky*
 
 ## Licence
 
