@@ -1,29 +1,43 @@
 # Welcome to the ✨Swift To The Song Association✨ repository
 
+**[Play it now at swiftassociation.com](https://swiftassociation.com)** (alpha, and yes it works on your phone)
+
+[![A round in progress: the word "sad" on a notebook page, a timer running down, and a half-built friendship bracelet across the top](readme/hero.webp)](https://swiftassociation.com)
+
 I’m currently working on a game inspired by ELLE’s Song Association. Where, by default, you are given 10 seconds to name a song or lyric with a specific word in it. The twist? It’s all Taylor Swift songs 🫶
 
 pretty sure that's Taylor Swift
 
+A round is one word. You get 10 seconds to name a song containing it, or to type a lyric line containing it, and every word you land adds a bead to the friendship bracelet you finish the run with.
+
 The game is still a work in progress and is by no means 'done'.
 
-Standout features:
+## Standout features
 
-- Every era, plus holiday, movie, collaboration and some unreleased songs
-- Unique UI with a notebook theme, and lots and lots of easter eggs
-- Lyricist mode, where you answer by typing a lyric line instead of a song title
+**Ways to play**
+
 - Five difficulty options, with hints if you want them
 - Endless mode
 - Adaptive mode, where the word difficulty climbs and falls with how you play
 - Album focus mode so you can concentrate on ONE album only
-- A guest shelf of other artists' catalogues, played on their own and never mixed into Taylor's
-- Challenges mode with 32 challenges, most with a harder "dark side" to unlock, plus a super-hard tier unlocked through mastery
 - Daily challenge
 - The ability to make your own **custom modes**
+- A guest shelf of other artists' catalogues, played on their own and never mixed into Taylor's
+- A shelf of bonus mini-games, including one where you hunt a swapped word in a real lyric
+
+**The long game**
+
+- Challenges mode with 32 challenges, most with a harder "dark side" to unlock, plus a super-hard tier unlocked through mastery
 - A skills and mastery system full of rewards
 - Over 100 achievements
+
+**The details**
+
+- Every era, plus holiday, movie, collaboration and some unreleased songs
+- Unique UI with a notebook theme, and lots and lots of easter eggs
+- Lyricist mode, where you answer by typing a lyric line instead of a song title
 - Ability to save your friendship bracelet as a PNG to share your run!
-- A shelf of bonus mini-games, including one where you hunt a swapped word in a real lyric
-- A companion lyric searcher, Swift To The Lyric, for searching every line of every song
+- A companion lyric searcher, [Swift To The Lyric](https://swiftassociation.com/search), for searching every line of every song
 - Opt-in sound effects
 - Installable as a phone or desktop app and works offline once loaded
 
@@ -37,7 +51,6 @@ With many features in the works as we speak:
 - Dark mode
 - Polaroids in more places!
 - More achievements
-- And much more
 
 I want this game to have extensive replay value. I want it to be challenging. I want it to be as good as it can be for as many people as possible, so I’m working on adding accessibility features, and I’m open to all feedback/suggestions.
 
