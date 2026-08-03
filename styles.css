@@ -105,7 +105,29 @@
     --rule: rgba(236, 229, 214, 0.08);
     --margin: rgba(206, 86, 86, 0.5);  /* the red rule still reads as red */
     --red-pen: #df6b64;                /* brightened so editor's ink stays legible */
+    /* Default (no-era) accent, lifted for the dark page so the masthead gold and
+       "Your best" number don't sit muddy. Per-era dark tunings are below. */
+    --ink-accent: #e0a83a;
+    --highlighter: rgba(240, 196, 90, 0.32);
+    --bead: #e0a83a;
+    --page-wash: rgba(224, 168, 58, 0.06);
   }
+  /* ---- Dark era palettes ----
+     The light accents were tuned to sit dark on cream; several (reputation,
+     graphite, red, evermore) go invisible on a dark page. Each era gets a
+     lifted accent/bead readable on --paper, and a highlighter deep enough that
+     the light ink still reads on top of it while the mark still glows. Higher
+     specificity than body[data-era] so these win without !important. */
+  :root[data-theme="dark"] body[data-era="gold"]     { --ink-accent:#e6ad3d; --highlighter:rgba(240,196,90,0.32); --bead:#e6ad3d; --page-wash:rgba(224,168,58,0.06); }
+  :root[data-theme="dark"] body[data-era="lavender"] { --ink-accent:#bca6f0; --highlighter:rgba(176,150,230,0.30); --bead:#bca6f0; --page-wash:rgba(160,135,220,0.06); }
+  :root[data-theme="dark"] body[data-era="red"]      { --ink-accent:#eb6a66; --highlighter:rgba(224,96,96,0.30);  --bead:#eb6a66; --page-wash:rgba(210,80,80,0.06); }
+  :root[data-theme="dark"] body[data-era="denim"]    { --ink-accent:#74abe1; --highlighter:rgba(120,170,220,0.30); --bead:#74abe1; --page-wash:rgba(110,160,215,0.06); }
+  :root[data-theme="dark"] body[data-era="graphite"] { --ink-accent:#bcbcbc; --highlighter:rgba(180,180,180,0.26); --bead:#bcbcbc; --page-wash:rgba(170,170,170,0.05); }
+  :root[data-theme="dark"] body[data-era="midnight"] { --ink-accent:#8398da; --highlighter:rgba(120,142,215,0.30); --bead:#8398da; --page-wash:rgba(110,132,205,0.06); }
+  :root[data-theme="dark"] body[data-era="debut"]      { --ink-accent:#74c48b; --highlighter:rgba(120,190,140,0.30); --bead:#74c48b; --page-wash:rgba(110,180,130,0.06); }
+  :root[data-theme="dark"] body[data-era="reputation"] { --ink-accent:#cdccd2; --highlighter:rgba(150,150,160,0.26); --bead:#cdccd2; --page-wash:rgba(150,150,160,0.06); }
+  :root[data-theme="dark"] body[data-era="lover"]      { --ink-accent:#f194c1; --highlighter:rgba(235,150,196,0.30); --bead:#f194c1; --page-wash:rgba(225,140,186,0.06); }
+  :root[data-theme="dark"] body[data-era="evermore"]   { --ink-accent:#cb9568; --highlighter:rgba(190,140,90,0.30);  --bead:#cb9568; --page-wash:rgba(180,130,80,0.06); }
   /* The desk goes to night: a heavy dark wash over the same oak SVG (so the grain
      survives, just dimmed) plus a warm pool of lamplight over where the notebook
      sits — the "lamp on the desk" read, kept even though the paper itself is dark. */
@@ -156,6 +178,18 @@
     border-color: rgba(236, 229, 214, 0.16);
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
   }
+  /* Desk props are physical objects (a cream calendar, a brass placard), so they
+     keep their own colours — but at night the desk is barely lit, and a fully-lit
+     cream pad glows brighter than the notebook and steals the eye. Dim the fixed
+     props with brightness (their per-variant drop-shadows are preserved, just
+     deepened) and the scrolling scatter with opacity, so everything reads as
+     lit-but-dim. The multiply-blended stains (.desk-mark) are left alone. */
+  :root[data-theme="dark"] .desk-item {
+    filter: drop-shadow(3px 8px 8px rgba(0, 0, 0, 0.55)) saturate(0.82) brightness(0.6);
+  }
+  :root[data-theme="dark"] .desk-drop,
+  :root[data-theme="dark"] .bead-scatter { opacity: 0.58; }
+  :root[data-theme="dark"] .stamp { filter: brightness(0.82) saturate(0.9); }
 
   * { box-sizing: border-box; }
 
