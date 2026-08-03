@@ -97,9 +97,9 @@
      their dark tuning is Phase 2. Defined at :root so they beat the era/stock
      overrides on <body> without a specificity fight. */
   :root[data-theme="dark"] {
-    --paper: #211d17;
-    --paper-edge: #2b261e;
-    --desk: #14110d;
+    --paper: #2a241b;          /* lifted off the desk so the sheet reads as lit, not lost */
+    --paper-edge: #362e24;
+    --desk: #12100c;
     --ink: #ece5d6;            /* warm paper-white */
     --ink-soft: #9d947f;       /* faded pencil, lifted for a dark page */
     --rule: rgba(236, 229, 214, 0.08);
@@ -109,11 +109,52 @@
   /* The desk goes to night: a heavy dark wash over the same oak SVG (so the grain
      survives, just dimmed) plus a warm pool of lamplight over where the notebook
      sits — the "lamp on the desk" read, kept even though the paper itself is dark. */
-  :root[data-theme="dark"] body { background-color: #14110d; }
+  :root[data-theme="dark"] body { background-color: #12100c; }
   :root[data-theme="dark"] body::before {
     background:
-      radial-gradient(ellipse 72% 56% at 50% 30%, rgba(255, 214, 150, 0.10), rgba(255, 214, 150, 0) 60%),
-      linear-gradient(rgba(9, 7, 5, 0.82), rgba(9, 7, 5, 0.88));
+      radial-gradient(ellipse 66% 52% at 50% 26%, rgba(255, 212, 148, 0.12), rgba(255, 212, 148, 0) 62%),
+      linear-gradient(rgba(6, 5, 3, 0.88), rgba(6, 5, 3, 0.93));
+  }
+  /* The sheet lifts off the night desk on a warm hairline, not the light-mode
+     white inset + brown drop shadow (both vanish on dark). The ring does the
+     separating; a soft dark cast underneath gives it depth. */
+  :root[data-theme="dark"] .card {
+    box-shadow:
+      0 0 0 1px rgba(236, 229, 214, 0.09),
+      0 1px 0 rgba(236, 229, 214, 0.05) inset,
+      0 26px 60px rgba(0, 0, 0, 0.62),
+      0 4px 14px rgba(0, 0, 0, 0.45);
+  }
+  /* Masthead sits on the desk, not the paper, so its "carved brown" ink goes
+     invisible at night. Repaint the non-gold words as warm paper-white with a
+     dark underside; the gold word keeps riding --ink-accent. */
+  :root[data-theme="dark"] header.title h1 { color: #ece5d6; }
+  :root[data-theme="dark"] .mast-line {
+    background:
+      linear-gradient(180deg, #fbf4e6, #ece5d6 46%, #cabfa6);
+    -webkit-background-clip: text; background-clip: text;
+    -webkit-text-fill-color: transparent; color: transparent;
+    filter:
+      drop-shadow(0 1px 0 rgba(0, 0, 0, 0.45))
+      drop-shadow(0 2px 6px rgba(0, 0, 0, 0.5));
+  }
+  :root[data-theme="dark"] header.title p { color: #b7a888; }
+  /* Keepsake nav cards default to a cream stock; give them a dark card so they
+     stop glowing. Title/kicker already read from --ink/--ink-soft; the tinted
+     seat is lifted so the icon still has a disc to sit on. */
+  :root[data-theme="dark"] .nav-card {
+    --card-bg: #2f281f;
+    border-color: rgba(236, 229, 214, 0.14);
+    box-shadow: 0 2px 7px rgba(0, 0, 0, 0.45);
+  }
+  :root[data-theme="dark"] .nav-card-seat { background: rgba(var(--tint), 0.24); }
+  :root[data-theme="dark"] .nav-card:hover .nav-card-seat,
+  :root[data-theme="dark"] .nav-card:focus-visible .nav-card-seat { background: rgba(var(--tint), 0.34); }
+  :root[data-theme="dark"] .nav-card:hover,
+  :root[data-theme="dark"] .nav-card:focus-visible { box-shadow: 0 5px 12px rgba(0, 0, 0, 0.55); }
+  :root[data-theme="dark"] .see-also--row .nav-card-seat {
+    border-color: rgba(236, 229, 214, 0.16);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
   }
 
   * { box-sizing: border-box; }
