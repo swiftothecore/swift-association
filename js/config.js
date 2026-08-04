@@ -351,10 +351,6 @@ export const BONUS_GAMES = [
     kicker: "how little do you need?", tint: "#4e5f3a", mark: "redact",
     line: "Peel the tape off a verse, and name it cheap.",
     blurb: "A verse with the telling words taped over. Peel them off one at a time, and name the song before you have spent the page." },
-  { id: "invisible-string", name: "Invisible String", ready: true, points: 5,
-    kicker: "tie each line to its song", tint: "#8a6620", mark: "string",
-    line: "Thread five lines to the songs they came from.",
-    blurb: "Five lines on one side, five songs on the other. Thread each one to where it belongs, and let the ones you know narrow down the ones you don't." },
   // The one game on the shelf with no fail state: every card in the hand is really in the song,
   // so every pick pays, and the rarity is what the five points are for. See buildOnlyHerePuzzle.
   { id: "only-here", name: "Only Here", ready: true, points: 5,
@@ -391,9 +387,6 @@ export const BONUS_REDACT_SECONDS = 30;
 // page you have over-peeled becomes pointless to finish, which is the one thing the scoring
 // must not do. Peels past the floor are simply free.
 export const REDACT_MIN_POINTS = 1;
-// Five pairs to read, weigh against each other and place. Long enough that the elimination is
-// worth doing rather than guessed past, which is the only thing that makes the page a puzzle.
-export const BONUS_STRING_SECONDS = 45;
 // Only Here's clock is not decoration. Without one the optimal play is to sit and mentally scan
 // the song's whole lyric sheet, which is the free-recall failure the hand of six was built to
 // cure coming back in through the side door. Long enough to read six words and commit, short

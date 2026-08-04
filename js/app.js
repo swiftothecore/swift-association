@@ -8,7 +8,7 @@ import {
   ALBUM_COLORS, CB_ALBUM_COLORS, STUDIO_ALBUMS, TITLE_ALIASES, STAMP_INKS,
   ACHIEVEMENTS, ACH_ICONS, ACH_BY_ID, ACH_GROUPS, ACH_GROUP_COLORS, ACH_GROUP_OF,
   BONUS_GAMES, BONUS_ROUNDS, BONUS_SLIP_SECONDS, BONUS_NAME_SECONDS, BONUS_BLANK_SECONDS,
-  BONUS_REDACT_SECONDS, REDACT_MIN_POINTS, BONUS_STRING_SECONDS,
+  BONUS_REDACT_SECONDS, REDACT_MIN_POINTS,
   BONUS_ONLY_SECONDS, ONLY_WIDE_PAGES,
   BONUS_CHAIN_SECONDS, CHAIN_EASY_PAGES,
   RUTHLESS_WORD_MS, RUTHLESS_OPEN_WORDS, RUTHLESS_SKIP_AFTER, RUTHLESS_SKIP_PENALTY,
@@ -50,7 +50,7 @@ import { exportBraceletCard, copyBraceletCard, buildCardSVG, fontFaceCss } from 
 import { sfx } from "./sound.js";
 import { wordRegex as wordRegexCore, extractLineWithWord as extractLineWithWordCore, highlightWord as highlightWordCore, wordVariants } from "./match.js";
 import { buildLineIndex, buildSlipContext, buildSlipPuzzle, buildNamePuzzle,
-         buildBlankPuzzle, buildRedactedPuzzle, buildStringPuzzle, STRING_PAIRS,
+         buildBlankPuzzle, buildRedactedPuzzle,
          buildWordIndex, buildOnlyHerePuzzle, onlyHerePoints, ONLY_HAND,
          buildChainPuzzle, CHAIN_PICKS, CHAIN_CARDS, CHAIN_PAY, CHAIN_PAGE,
          buildRuthlessPuzzle, ruthlessPool,
@@ -3957,11 +3957,6 @@ let onlyPlayed = null;
 // Only Here: every word already DEALT this run, so a run can't teach you a word's count on page
 // 3 and then ask about it on page 8 — a hand that grades its own answer key.
 let onlyDealt = new Set();
-// Invisible String: `stringLinks[leftRow]` is the right-hand SLOT that row is threaded to
-// (-1 for unthreaded), and `stringSel` is whichever end is waiting for its other end.
-let stringLinks = [];
-let stringSel = null;
-let stringResizeHandler = null;
 /* Then What: which pick the page is on, what has been picked so far, and what the page has
    banked. `chainBusy` is the beat between a tap and the next three cards being dealt — it is
    NOT bonusLocked, which means the whole page is over; a pick being marked up must stop a
@@ -4190,7 +4185,6 @@ function startBonusGame(g) {
   // The longest chain belongs to the RUN, not the page, so it is reset here and nowhere else.
   chainNow = 0;
   chainRun = 0;
-  clearStringResize();
   bonusRunId++;
   stopBonusClock();
   stopBonusCountdown();
@@ -4206,7 +4200,6 @@ function bonusSeconds() {
   if (bonusGame.id === "spot-the-slip") return BONUS_SLIP_SECONDS;
   if (bonusGame.id === "sing-it-back") return BONUS_BLANK_SECONDS;
   if (bonusGame.id === "redacted") return BONUS_REDACT_SECONDS;
-  if (bonusGame.id === "invisible-string") return BONUS_STRING_SECONDS;
   if (bonusGame.id === "only-here") return BONUS_ONLY_SECONDS;
   // Then What's budget is spent per PICK rather than per page: the clock restarts under
   // every set of three cards, which is what keeps the answer an instinct rather than a
@@ -4228,8 +4221,6 @@ function buildBonusPuzzle() {
     return buildBlankPuzzle(allSongs, ctx, Math.random, 120, new Set(bonusRecentSongs));
   if (bonusGame.id === "redacted")
     return buildRedactedPuzzle(allSongs, ctx, lineIndex, Math.random, 120, new Set(bonusRecentSongs));
-  if (bonusGame.id === "invisible-string")
-    return buildStringPuzzle(allSongs, lineIndex, Math.random, 120, new Set(bonusRecentSongs));
   if (bonusGame.id === "only-here")
     // The run's ramp: the early pages deal a wide hand with an obvious outlier, the later ones
     // a compressed one where the answer is a judgement rather than a read.
@@ -4263,12 +4254,6 @@ function nextBonusRound() {
       bonusGame.id === "only-here" || bonusGame.id === "then-what" ||
       bonusGame.id === "ruthless-game")
     bonusRecentSongs.push(bonusPuzzle.song.title);
-  // A board's worth of songs at a time, so a run of ten pages doesn't put the same song up twice.
-  if (bonusGame.id === "invisible-string")
-    bonusPuzzle.pairs.forEach((pr) => bonusRecentSongs.push(pr.song.title));
-  // A fresh board starts with nothing threaded and nothing waiting for its other end.
-  stringLinks = new Array(STRING_PAIRS).fill(-1);
-  stringSel = null;
   // A fresh page opens worth the full ten and nothing has been spent on it yet.
   redactWorth = bonusPagePoints(bonusGame);
   redactPeeled = 0;
@@ -4382,20 +4367,6 @@ function renderBonusRound() {
       if (e.key === "Enter") { e.preventDefault(); judgeGap(); }
     });
     input.focus();
-  } else if (bonusGame.id === "invisible-string") {
-    body.innerHTML =
-      `<p class="bg-ask">thread each line to the song it came from</p>` +
-      `<div class="bg-string" id="bonusString"></div>` +
-      `<p class="bg-hint" id="bonusStringHint"></p>`;
-    renderStringBoard();
-    // The threads are drawn from measured positions, so they must be redrawn whenever the
-    // board's geometry moves under them — a rotated phone, a resized window, a late font.
-    clearStringResize();
-    // `bonusLocked` is also "the board has been revealed", which is exactly the mode a redraw
-    // needs to be in — otherwise a resize after the verdict would re-draw the live threads
-    // across an answer key.
-    stringResizeHandler = () => drawThreads(bonusLocked);
-    window.addEventListener("resize", stringResizeHandler);
   } else if (bonusGame.id === "then-what") {
     // The song is named at the top for Sing It Back's reason: the answer has to be pinned by a
     // real song rather than by whatever lines could be argued into. Solving it means singing
@@ -4696,8 +4667,6 @@ function bonusTimeout() {
   // shows the line as it really goes, with no sign of what stood in the gap).
   const detail = bonusGame && bonusGame.id === "spot-the-slip"
     ? `<b>${escapeHtml(bonusPuzzle.fakeWord)}</b> was the slip`
-    // Threads already laid still count when the clock goes, so the page has to say how many.
-    : bonusGame && bonusGame.id === "invisible-string" ? stringDetail(stringPairsRight())
     : "";
   settleBonusRound(false, detail, true);
 }
@@ -4717,167 +4686,6 @@ function judgeSlip(i) {
   // Naming the impostor is worth saying either way: on a hit it confirms what was spotted, on a
   // miss it's the whole lesson. The real word is then shown in place on the card below.
   settleBonusRound(correct, `<b>${escapeHtml(bonusPuzzle.fakeWord)}</b> was the slip`);
-}
-
-/* ---------- Invisible String: the board ----------
-   Two columns and a gutter with threads across it. TAP-THEN-TAP, never drag: dragging is where
-   this gets expensive and flaky (touch, scroll, hit targets) and it buys nothing the puzzle
-   needs. Either end can be tapped first, because half the time you spot the song and half the
-   time you spot the line.
-   The whole board is re-rendered on every change rather than patched. It is ten buttons, and a
-   rebuild keeps the DOM the single source of truth for what is threaded to what — the threads
-   themselves are then measured off the finished layout. */
-function clearStringResize() {
-  if (stringResizeHandler) window.removeEventListener("resize", stringResizeHandler);
-  stringResizeHandler = null;
-}
-
-// Which right-hand slot row `i` SHOULD be threaded to.
-function stringAnswerSlot(i) { return bonusPuzzle.order.indexOf(i); }
-function stringPairsRight() {
-  return stringLinks.reduce((n, slot, i) => n + (slot >= 0 && bonusPuzzle.order[slot] === i ? 1 : 0), 0);
-}
-
-/* `reveal` swaps the board for its answer key: the right column is put back into the LINE's
-   order, so every thread pulls straight, and each row is marked in the margin for whether the
-   player had it. Straightening the board is the reveal — it says what the answer was and what
-   you did about it in one read, where five crossed correction threads would say neither. */
-function renderStringBoard(reveal = false) {
-  const wrap = $("bonusString");
-  if (!wrap || !bonusPuzzle) return;
-  const p = bonusPuzzle;
-  const got = reveal ? stringLinks.map((slot, i) => slot >= 0 && p.order[slot] === i) : null;
-
-  const left = p.pairs.map((pr, i) => {
-    const linked = stringLinks[i] >= 0;
-    const cls = ["bg-str-item", "bg-str-line",
-      reveal ? (got[i] ? "is-right" : "is-wrong") : linked ? "is-tied" : "",
-      !reveal && stringSel && stringSel.side === "l" && stringSel.i === i ? "is-held" : ""]
-      .filter(Boolean).join(" ");
-    const mark = reveal
-      ? `<span class="bg-str-mark" aria-hidden="true">${got[i] ? BG_TICK : BG_CROSS}</span>` +
-        `<span class="sr-only">${got[i] ? "correct" : "missed"}</span>`
-      : "";
-    // The thread is a drawing, so it says nothing to a screen reader. What it means goes on
-    // the button instead: which song this line is currently tied to, and whether this end is
-    // the one being held.
-    const tiedTo = linked ? censor(p.pairs[p.order[stringLinks[i]]].song.title) : "";
-    const aria = censor(pr.line) +
-      (reveal ? (got[i] ? " — correct" : " — missed") : linked ? ` — threaded to ${tiedTo}` : " — not threaded");
-    return `<button type="button" class="${cls}" data-side="l" data-i="${i}"${reveal ? " disabled" : ""}` +
-      ` aria-label="${escapeHtml(aria)}"` +
-      (reveal ? "" : ` aria-pressed="${!!(stringSel && stringSel.side === "l" && stringSel.i === i)}"`) + `>` +
-      mark + `<span class="bg-str-text">${escapeHtml(censor(pr.line))}</span></button>`;
-  }).join("");
-
-  // On the reveal the right column is re-laid in line order; until then it wears the shuffle.
-  const slots = reveal ? p.pairs.map((_, i) => i) : p.order;
-  const right = slots.map((pairIdx, slot) => {
-    const song = p.pairs[pairIdx].song;
-    const linked = reveal || stringLinks.includes(slot);
-    const cls = ["bg-str-item", "bg-str-title", linked ? "is-tied" : "",
-      !reveal && stringSel && stringSel.side === "r" && stringSel.i === slot ? "is-held" : ""]
-      .filter(Boolean).join(" ");
-    const color = albumColor(song.album) || "var(--ink-soft)";
-    const aria = `${censor(song.title)}, ${song.album || ""}` +
-      (reveal ? "" : linked ? " — threaded" : " — not threaded");
-    return `<button type="button" class="${cls}" data-side="r" data-i="${slot}"${reveal ? " disabled" : ""}` +
-      ` aria-label="${escapeHtml(aria)}"` +
-      (reveal ? "" : ` aria-pressed="${!!(stringSel && stringSel.side === "r" && stringSel.i === slot)}"`) +
-      ` style="--album-color:${color}">` +
-      `<span class="bg-str-text">${escapeHtml(censor(song.title))}</span>` +
-      `<span class="bg-str-album">${escapeHtml(song.album || "")}</span></button>`;
-  }).join("");
-
-  wrap.innerHTML =
-    `<svg class="bg-threads" id="bonusThreads" aria-hidden="true"></svg>` +
-    `<div class="bg-str-col bg-str-col-l" role="group" aria-label="Lyric lines">${left}</div>` +
-    `<div class="bg-str-col bg-str-col-r" role="group" aria-label="Songs">${right}</div>`;
-  if (!reveal) wrap.querySelectorAll(".bg-str-item").forEach((b) =>
-    b.addEventListener("click", () => tapString(b.dataset.side, +b.dataset.i)));
-
-  const hint = $("bonusStringHint");
-  if (hint) {
-    const tied = stringLinks.filter((s) => s >= 0).length;
-    hint.innerHTML = reveal ? ""
-      : tied >= STRING_PAIRS
-        ? `<button type="button" id="bonusTieBtn" class="btn-ghost">tie it off →</button>`
-        : escapeHtml(stringSel ? "now tap the other end" : `${tied} of ${STRING_PAIRS} threaded`);
-    if ($("bonusTieBtn")) $("bonusTieBtn").addEventListener("click", judgeString);
-  }
-  // Straight after the markup, never off requestAnimationFrame: rAF does not fire in a
-  // backgrounded tab, so a board rendered while the player was on another tab would come back
-  // with no threads on it at all. Reading offsetLeft below forces the layout we need anyway.
-  drawThreads(reveal);
-}
-
-// Either end can be held. Tapping a threaded item cuts its thread and picks that end up, which
-// is the only undo the board needs.
-function tapString(side, i) {
-  if (bonusLocked) return;
-  const held = stringSel;
-  if (held && held.side !== side) {
-    const l = side === "l" ? i : held.i;
-    const r = side === "l" ? held.i : i;
-    // One thread per end: threading over an end that is already taken takes it.
-    stringLinks = stringLinks.map((slot, row) => (row === l || slot === r ? -1 : slot));
-    stringLinks[l] = r;
-    stringSel = null;
-    sfx.play("hint");
-  } else {
-    if (side === "l" && stringLinks[i] >= 0) stringLinks[i] = -1;
-    if (side === "r") stringLinks = stringLinks.map((slot) => (slot === i ? -1 : slot));
-    stringSel = held && held.side === side && held.i === i ? null : { side, i };
-  }
-  renderStringBoard();
-}
-
-/* The threads themselves. Drawn as SVG across the gutter and measured from the board's own
-   layout (offsetTop/offsetLeft against the board, which is the offsetParent), so the columns
-   stay ordinary flow content and the thread follows whatever the text does.
-   Each one sags: a straight line between two boxes reads as a diagram, and this is meant to
-   read as a length of thread laid on the page. On the reveal it is knotted at both ends. */
-function drawThreads(reveal = false) {
-  const wrap = $("bonusString");
-  const svg = $("bonusThreads");
-  if (!wrap || !svg || !bonusPuzzle) return;
-  const w = wrap.clientWidth, h = wrap.clientHeight;
-  svg.setAttribute("viewBox", `0 0 ${w} ${h}`);
-  const lefts = [...wrap.querySelectorAll(".bg-str-line")];
-  const rights = [...wrap.querySelectorAll(".bg-str-title")];
-  let out = "";
-  stringLinks.forEach((slot, row) => {
-    if (slot < 0) return;
-    const a = lefts[row];
-    const b = reveal ? rights[row] : rights[slot];
-    if (!a || !b) return;
-    const x1 = a.offsetLeft + a.offsetWidth, y1 = a.offsetTop + a.offsetHeight / 2;
-    const x2 = b.offsetLeft, y2 = b.offsetTop + b.offsetHeight / 2;
-    const sag = Math.max(6, Math.abs(x2 - x1) * 0.14);
-    // On the reveal EVERY thread is a true one — the board has been straightened out, so a
-    // thread there is the answer, not the player's answer. Colouring the missed ones red would
-    // draw a red cross through the correct pairing, which is the opposite of what happened;
-    // they are faded instead, and the margin's tick or cross is what reports the score.
-    const cls = reveal
-      ? (bonusPuzzle.order[slot] === row ? "th-right" : "th-missed")
-      : "th-live";
-    out += `<path class="bg-thread ${cls}" d="M${x1} ${y1} Q${(x1 + x2) / 2} ${(y1 + y2) / 2 + sag} ${x2} ${y2}"/>`;
-    if (reveal) out += `<circle class="bg-knot ${cls}" cx="${x1}" cy="${y1}" r="3"/>` +
-                       `<circle class="bg-knot ${cls}" cx="${x2}" cy="${y2}" r="3"/>`;
-  });
-  svg.innerHTML = out;
-}
-
-// A page is "cleared" only when all five are right — that is what the sleeve's tick and the
-// clean-sweep stamp mean everywhere else on the shelf. The pairs still score either way, which
-// is the whole point of scoring this one per pair.
-function judgeString() {
-  if (bonusLocked) return;
-  const right = stringPairsRight();
-  settleBonusRound(right === STRING_PAIRS, stringDetail(right));
-}
-function stringDetail(right) {
-  return `<b>${right}</b> of ${STRING_PAIRS} tied off`;
 }
 
 /* ---------- Then What: the chain ----------
@@ -5334,17 +5142,13 @@ function revealOnlyHere() {
    its page genuinely can't show is the lines EITHER SIDE, so the context peek goes out alone. */
 function bonusAnswerCard() {
   const p = bonusPuzzle;
-  // Invisible String has no card at all: its reveal straightens the whole board out, so every
-  // line is already sitting beside its own song with the album tag on it. A card could only
-  // repeat one fifth of that.
   // Then What has no card for Sing It Back's reason: the page finishes as a verse written out
   // under a heading that already names the song and album, so a card could only reprint a
   // quarter of what is sitting an inch above it.
   // Ruthless Game has none either, and most obviously of all: its reveal writes the song's name
   // over a page that is already the song, printed out further than any card could quote it.
-  if (bonusGame.id === "invisible-string" || bonusGame.id === "redacted" ||
-      bonusGame.id === "only-here" || bonusGame.id === "then-what" ||
-      bonusGame.id === "ruthless-game") return "";
+  if (bonusGame.id === "redacted" || bonusGame.id === "only-here" ||
+      bonusGame.id === "then-what" || bonusGame.id === "ruthless-game") return "";
   if (bonusGame.id === "sing-it-back")
     return `<div class="bg-ctx">${lyricCardContext(p.song, p.answer, p.line)}</div>`;
   const slip = bonusGame.id === "spot-the-slip";
@@ -5361,10 +5165,6 @@ function bonusPageScore(correct) {
   // A timed game's page doesn't pay, it CHARGES: what the run adds up is the seconds each page
   // took, penalty included, and the lowest total wins.
   if (bonusTimed(bonusGame)) return ruthlessFreeze();
-  // Invisible String is the one game whose page pays for what it got rather than for clearing:
-  // a board with three threads right is worth three whether or not the page was cleared, which
-  // is what makes solving three and eliminating your way to the rest worth doing.
-  if (bonusGame && bonusGame.id === "invisible-string") return stringPairsRight();
   // Only Here pays for the word that was written, whatever it was worth — the page is never
   // failed, only answered cheaply or not at all.
   if (bonusGame && bonusGame.id === "only-here") return onlyPlayed ? onlyPlayed.points : 0;
@@ -5377,15 +5177,11 @@ function bonusPageScore(correct) {
 }
 
 // The handwritten verdict over the page. A game whose page isn't a single right answer needs
-// its own words for a near miss — "not this one" is nonsense about a board of five threads.
+// its own words for a near miss — "not this one" is nonsense about a page of four picks.
 function bonusBannerText(correct, isTimeout) {
   // Nothing here times out and nothing here is wrong twice — a page is either named or handed
   // back, so the bad banner reports the decision rather than a mistake.
   if (bonusTimed(bonusGame)) return correct ? "named it" : "handed it back";
-  if (bonusGame && bonusGame.id === "invisible-string")
-    return correct ? "every line tied off" : isTimeout ? "the page ran out" : "some threads crossed";
-  // Nothing is ever wrong on an Only Here page — a word is either in the song or the clock beat
-  // you to it — so its good banner grades the find instead of confirming it.
   // Nothing is ever WRONG on an Only Here page — every card is real and every pick pays — so
   // the banners grade the read rather than the answer, and the bad one only ever means the
   // clock or a card that wasn't the rarest.
@@ -5418,22 +5214,14 @@ function settleBonusRound(correct, detail, isTimeout = false) {
   // The run's track listing, written up on the end card. Each game notes the one thing worth
   // remembering about its page: the impostor you were hunting, the word that was missing, or
   // (Name That Song, where the song IS the answer) which record it came off.
-  const strMiss = bonusGame.id === "invisible-string"
-    ? bonusPuzzle.pairs.find((_, i) => !(stringLinks[i] >= 0 && bonusPuzzle.order[stringLinks[i]] === i))
-    : null;
   bonusLog.push({
     n: bonusRound, ok: correct,
-    // A board has five songs rather than one, so its row names the first line that ended up on
-    // the wrong song — the only thing on that page worth carrying to the sleeve.
-    title: bonusGame.id === "invisible-string"
-      ? (strMiss ? strMiss.song.title : "every line tied off")
-      : bonusPuzzle.song.title,
+    title: bonusPuzzle.song.title,
     note: bonusGame.id === "spot-the-slip" ? bonusPuzzle.fakeWord
         : bonusGame.id === "sing-it-back" ? bonusPuzzle.answer
         // Redacted's pages are worth different amounts, and that number is the only thing the
         // sleeve can't already work out — so it takes the note column outright.
         : bonusGame.id === "redacted" ? `${gained} pts`
-        : bonusGame.id === "invisible-string" ? `${gained} of ${STRING_PAIRS}`
         // Every other game notes the answer it was hiding; this one never hid an answer, so
         // the useful keepsake is how the page went.
         : bonusGame.id === "then-what" ? `${gained} pts`
@@ -5456,8 +5244,6 @@ function settleBonusRound(correct, detail, isTimeout = false) {
     $("bonusPlayBody").querySelectorAll(".bg-word").forEach((b) => {
       if (+b.dataset.i === bonusPuzzle.answer) b.classList.add("is-answer");
     });
-  } else if (bonusGame.id === "invisible-string") {
-    renderStringBoard(true);
   } else if (bonusGame.id === "redacted") {
     revealRedacted();
   } else if (bonusGame.id === "only-here") {
@@ -5587,7 +5373,6 @@ function endBonusRun() {
   stopBonusClock();
   stopBonusCountdown();
   stopChainBeat();
-  clearStringResize();
   const timed = bonusTimed(bonusGame);
   const rec = recordBonusRun(bonusGame.id, bonusScore, bonusMaxScore(bonusGame), timed);
   $("bonusTimer").style.display = "none";
@@ -5655,7 +5440,6 @@ function leaveBonusGame() {
   stopBonusClock();
   stopBonusCountdown();
   stopChainBeat();
-  clearStringResize();
   bonusEnded = true;
   bonusGame = null;
   bonusPuzzle = null;
@@ -16413,11 +16197,6 @@ function buildDevApi() {
           if (id === "name-that-song") {
             const p = buildNamePuzzle(allSongs, lineIndex);
             out.push(p ? { line: p.line, song: p.song.title, album: p.song.album } : null);
-          } else if (id === "invisible-string") {
-            const p = buildStringPuzzle(allSongs, lineIndex, Math.random, 120, new Set(recent));
-            if (p) p.pairs.forEach((pr) => recent.push(pr.song.title));
-            out.push(p ? { board: p.pairs.map((pr) => `${pr.line}  ->  ${pr.song.title}`),
-                           albums: new Set(p.pairs.map((pr) => pr.song.album)).size } : null);
           } else if (id === "redacted") {
             const p = buildRedactedPuzzle(allSongs, ctx, lineIndex, Math.random, 120, new Set(recent));
             if (p) recent.push(p.song.title);
@@ -16469,7 +16248,6 @@ function buildDevApi() {
         let ok = 0;
         for (let i = 0; i < n; i++) {
           const p = id === "name-that-song" ? buildNamePuzzle(allSongs, lineIndex)
-            : id === "invisible-string" ? buildStringPuzzle(allSongs, lineIndex)
             : id === "redacted" ? buildRedactedPuzzle(allSongs, ctx, lineIndex)
             : id === "only-here" ? buildOnlyHerePuzzle(allSongs, bonusIndexes().wordIndex)
             : id === "then-what" ? buildChainPuzzle(allSongs)
@@ -16638,21 +16416,6 @@ function buildDevApi() {
         $("bonusBody").prepend(strip);
         return BONUS_GAMES.map((g) => `${g.id}: ${g.tint} ${g.mark}`);
       },
-      // Invisible String: thread the whole board without knowing a single line, so the reveal
-      // and the per-pair scoring can be checked without solving five pairs by hand. `right` is
-      // how many to get right; the rest are rotated onto each other's songs, which is the only
-      // way to be wrong on a board where everything must be threaded to something.
-      thread: (right = STRING_PAIRS) => {
-        if (!bonusGame || bonusGame.id !== "invisible-string" || !bonusPuzzle) return "no board on screen";
-        const n = Math.max(0, Math.min(STRING_PAIRS, right | 0));
-        // 4 right forces the 5th, so asking for 4 gets 5. That IS the game's elimination.
-        const wrong = bonusPuzzle.pairs.map((_, i) => i).slice(n);
-        stringLinks = bonusPuzzle.pairs.map((_, i) => stringAnswerSlot(i));
-        wrong.forEach((row, k) => { stringLinks[row] = stringAnswerSlot(wrong[(k + 1) % wrong.length]); });
-        stringSel = null;
-        renderStringBoard();
-        return { right: stringPairsRight(), of: STRING_PAIRS };
-      },
       /* Then What. The ramp is the whole design and NONE of it is visible on screen — three
          lines look the same whether they came from another album or from this very song — so
          `chain()` is the only way to see whether a page ramped at all: it prints each pick's
@@ -16735,22 +16498,18 @@ function buildDevApi() {
           const ok = n <= wins;
           // Points games get a plausible spread rather than a flat number, so the track
           // listing is eyeballed with the column it will really carry.
-          const pts = bonusGame.id === "invisible-string"
-            ? (ok ? STRING_PAIRS : Math.max(0, STRING_PAIRS - 1 - (n % 3)))
-            // Only Here never fails a page, so a "missed" one is a page the clock took, and a
-            // cleared one lands anywhere on the ladder rather than at the top of it.
-            : bonusGame.id === "only-here" ? (ok ? 1 + (n % 5) : 0)
+          // Only Here never fails a page, so a "missed" one is a page the clock took, and a
+          // cleared one lands anywhere on the ladder rather than at the top of it.
+          const pts = bonusGame.id === "only-here" ? (ok ? 1 + (n % 5) : 0)
             // A missed Then What page still banked whatever picks it made, which is the
             // column the sleeve has to show off.
             : bonusGame.id === "then-what" ? (ok ? CHAIN_PAGE : n % CHAIN_PAGE)
             : ok ? Math.max(REDACT_MIN_POINTS, bonusPagePoints(bonusGame) - (n % 6)) : 0;
           bonusLog.push({
-            n, ok, title: bonusGame.id === "invisible-string"
-              ? (ok ? "every line tied off" : p.pairs[0].song.title) : p.song.title,
+            n, ok, title: p.song.title,
             note: bonusGame.id === "spot-the-slip" ? p.fakeWord
                 : bonusGame.id === "sing-it-back" ? p.answer
                 : bonusGame.id === "redacted" ? `${pts} pts`
-                : bonusGame.id === "invisible-string" ? `${pts} of ${STRING_PAIRS}`
                 : bonusGame.id === "then-what" ? `${pts} pts`
                 : bonusGame.id === "only-here" ? (ok ? `${pts} · ${p.hand[p.optimal[0]].word.toLowerCase()}`
                                                         : p.hand[p.optimal[0]].word.toLowerCase())
