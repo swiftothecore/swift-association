@@ -711,74 +711,103 @@ export function judgeBlank(typed, puzzle, vocab = null) {
   return false;
 }
 
-/* ---------- Out of Order ----------
-   Four consecutive lines of one song, dealt out of order; put them back. It is the only game
-   on the shelf you solve by SINGING — the line you are looking for is the one your head plays
-   next — so everything here exists to make sure the song really does answer it.
+/* ---------- Then What ----------
+   One song, one line written out, and three lines that might follow it. Pick the one that
+   really does and it locks into the page; four picks and the page is a verse.
 
-   The song is NAMED on the page, for Sing It Back's reason: the answer has to be pinned by a
-   real thing rather than by whatever an arrangement of four lines could plausibly be. Nothing
-   is given away by naming it either, since the question is the order and not the song.
+   It is the only game on the shelf solved by SINGING — the line you are looking for is the one
+   your head plays next — so everything here exists to make sure the song really does answer it,
+   and to make sure it does so ONCE.
 
-   Scored by JOINS rather than by slots: three joins to a page, one point for each line that
-   leads into the one it really leads into. That is the unit of the knowledge being tested —
-   what you know here is what comes next — and it is the only measure that reads honestly,
-   since a permutation of four can never have exactly three slots right.
+   The song is NAMED on the page, and the reason is Sing It Back's: the answer has to be pinned
+   by a real song rather than by whatever four lines could be argued into. Nothing leaks either,
+   since the question was never which song.
+
+   The picks get harder as the page goes on, and the whole ramp lives in WHERE THE DECOYS COME
+   FROM, so the rules never change and the crescendo is felt rather than announced:
+     • pick 1  — other songs, other albums. A warm-up, often placeable on tone alone.
+     • pick 2  — other songs, same album. The era stops helping.
+     • picks 3 and 4 — THIS SAME SONG, lines the page hasn't shown. Vocabulary, voice, era and
+       mood all match, so vibe-matching stops working and only knowing the order gets you there.
+   A song too thin to supply its own decoys falls back to the album, and `fallbacks` counts how
+   often that happened so an audit can say how much of the ramp is quietly not ramping.
 
    The bars a page must clear:
-     1. ONE BREATH   — the four lines are consecutive inside ONE section, so the order is the
-                       song's own and not an editorial join across a section break.
-     2. READABLE     — each line is short enough to sit on a card and has real words in it; a
-                       window of "oh oh oh" has no order anybody could recover.
-     3. DISTINCT     — no two of the four are the same line, or two arrangements are equally
-                       right and one of them gets marked wrong.
-     4. SUNG ONE WAY — the song never sings these same four lines in any other order anywhere
-                       else, which a chorus that comes back rearranged otherwise does.
-     5. A REAL DEAL  — the shuffle it opens on has no line in its own slot AND no join already
-                       standing, so the page starts worth nothing and every point is earned.
+     1. READABLE     — every line on the page is short enough to sit on a card and has real
+                       words in it; "oh oh oh" is not a line anybody can be asked to follow.
+     2. DISTINCT     — the five lines of the chain are five different lines, and no candidate
+                       repeats another by NORMALIZED text, or one right answer is dealt twice.
+     3. ONE TRUE NEXT — every anchor in the chain is followed by the SAME line at every one of
+                       its appearances in the song. Choruses come back and hand off elsewhere,
+                       and two honest answers is the worst thing this game could ship.
+     4. NOT ITSELF   — no line is followed by a copy of itself, or the correct card is the line
+                       already sitting directly above it.
+     5. NO SECOND WAY — a decoy is barred if it legitimately follows its anchor anywhere in the
+                       song, which is bar 3 read from the other end.
+   Across a run the caller asks for a chain kept inside one section for the early pages and lets
+   the later ones cross a section boundary (`opts.cross`), which is a harder and more interesting
+   question: does the verse hand off to the chorus, the pre-chorus, the bridge? The section is
+   noted beside each line, so a boundary is discoverable on the page rather than a gotcha.
    Returns null if nothing cleared the bars in `tries` attempts (the caller re-rolls). */
-export const ORDER_LINES = 4;
-export const ORDER_JOINS = ORDER_LINES - 1;
-const ORDER_MIN_WORDS = 3;
-const ORDER_MAX_WORDS = 10;
-const ORDER_MIN_CONTENT = 6;   // content words across the whole window, so it isn't all filler
+export const CHAIN_PICKS = 4;
+export const CHAIN_CARDS = 3;
+/* What each pick pays. It escalates because the picks genuinely get harder, and a ramp the
+   player is asked to survive but never paid for reads as the game turning mean. The sum is the
+   page's worth and is what the roster entry's `points` has to say. */
+export const CHAIN_PAY = [1, 1, 2, 2];
+export const CHAIN_PAGE = CHAIN_PAY.reduce((a, b) => a + b, 0);
+const CHAIN_MIN_WORDS = 3;
+const CHAIN_MAX_WORDS = 11;
 
-function orderLineOk(line) {
-  const n = line.split(/\s+/).filter(Boolean).length;
-  return n >= ORDER_MIN_WORDS && n <= ORDER_MAX_WORDS && contentWords(line).length >= 1;
+function chainLineOk(line) {                                            // bar 1
+  const n = String(line).split(/\s+/).filter(Boolean).length;
+  return n >= CHAIN_MIN_WORDS && n <= CHAIN_MAX_WORDS && contentWords(line).length >= 1;
 }
 
-/* Bar 4. Every consecutive four-line window in the whole song is compared against ours by its
-   SET of lines: if the same four turn up anywhere else in a different sequence, the song sings
-   them both ways and the page has two honest answers. The flat line list is scanned rather
-   than each section on its own, which is the stricter read of "anywhere else". */
-function orderSungOneWay(song, keys) {
-  const sep = " || ";
-  const want = [...keys].sort().join(sep);
-  const mine = keys.join(sep);
-  const all = songLines(song).map(({ line }) => normalizeLyric(line));
-  for (let i = 0; i + ORDER_LINES <= all.length; i++) {
-    const win = all.slice(i, i + ORDER_LINES);
-    if ([...win].sort().join(sep) !== want) continue;
-    if (win.join(sep) !== mine) return false;
+/* Every line of the song in order, tagged with WHICH section it came from rather than just the
+   section's name. Two choruses running back to back share a label but are different sections,
+   and "did this chain cross a boundary?" has to mean the boundary and not the wording. */
+function chainFlat(song) {
+  const out = [];
+  (Array.isArray(song.sections) ? song.sections : []).forEach((sec, si) => {
+    (sec.lines || []).forEach((line) => out.push({ line, label: sec.label || "", si }));
+  });
+  return out;
+}
+
+/* Bar 3, precomputed for the whole song: what follows each line EVERY time it is sung. A line
+   whose set has more than one entry has more than one honest answer and can never be an anchor;
+   the empty string stands for "and once it ended the song", which counts as a second answer for
+   exactly the same reason. Read the other way round (bar 5), the same map says whether a decoy
+   is a line that legitimately follows the anchor somewhere else. */
+function chainSuccessors(keys) {
+  const succ = new Map();
+  keys.forEach((k, i) => {
+    if (!succ.has(k)) succ.set(k, new Set());
+    succ.get(k).add(i + 1 < keys.length ? keys[i + 1] : "");
+  });
+  return succ;
+}
+
+/* One pick's three cards. `from` travels with each decoy so the dev tools can see whether the
+   ramp actually ramped — the difference between a page's easy pick and its hard one is invisible
+   on screen by design, which means it is also invisible to anyone checking the design. */
+function chainCards(answer, taken, pool, rng) {
+  const cards = [{ text: answer.line, right: true, from: "answer" }];
+  const seen = new Set(taken);
+  for (let guard = 0; guard < 200 && cards.length < CHAIN_CARDS; guard++) {
+    const cand = pool();
+    if (!cand || !chainLineOk(cand.line)) continue;
+    const k = normalizeLyric(cand.line);
+    if (!k || seen.has(k)) continue;
+    seen.add(k);
+    cards.push({ text: cand.line, right: false, from: cand.from });
   }
-  return true;
+  return cards.length === CHAIN_CARDS ? shuffled(cards, rng) : null;
 }
 
-/* Bar 5. A shuffle that leaves a line where it belongs, or a pair already in sequence, hands
-   over a point the player never made a decision about. For four items there are plenty of
-   arrangements with neither, so this is cheap to insist on. */
-function orderDeal(n, rng) {
-  for (let t = 0; t < 60; t++) {
-    const perm = shuffled([...Array(n).keys()], rng);
-    if (perm.some((v, i) => v === i)) continue;
-    if (perm.some((v, i) => i > 0 && v === perm[i - 1] + 1)) continue;
-    return perm;
-  }
-  return null;
-}
-
-export function buildOrderPuzzle(songs, rng = Math.random, tries = 120, avoid = null) {
+export function buildChainPuzzle(songs, rng = Math.random, tries = 120, avoid = null, opts = {}) {
+  const need = CHAIN_PICKS + 1;
   for (let t = 0; t < tries; t++) {
     const song = pick(songs, rng);
     if (!song || !Array.isArray(song.sections)) continue;
@@ -786,33 +815,89 @@ export function buildOrderPuzzle(songs, rng = Math.random, tries = 120, avoid = 
     // near the end of the budget rather than fail the page over it (Sing It Back's rule).
     if (avoid && avoid.has(song.title) && t < tries * 0.7) continue;
 
-    const sections = song.sections.filter((s) => Array.isArray(s.lines) && s.lines.length >= ORDER_LINES);
-    if (!sections.length) continue;
-    const sec = pick(sections, rng);
-    const start = Math.floor(rng() * (sec.lines.length - ORDER_LINES + 1));
-    const lines = sec.lines.slice(start, start + ORDER_LINES);          // bar 1
+    const flat = chainFlat(song);
+    if (flat.length < need) continue;
+    const keys = flat.map((f) => normalizeLyric(f.line));
+    const succ = chainSuccessors(keys);
 
-    if (!lines.every(orderLineOk)) continue;                            // bar 2
-    if (lines.reduce((n, l) => n + contentWords(l).length, 0) < ORDER_MIN_CONTENT) continue;
-    const keys = lines.map(normalizeLyric);
-    if (keys.some((k) => !k)) continue;
-    if (new Set(keys).size !== ORDER_LINES) continue;                   // bar 3
-    if (!orderSungOneWay(song, keys)) continue;                         // bar 4
+    const at = Math.floor(rng() * (flat.length - need + 1));
+    const win = flat.slice(at, at + need);
+    const wk = keys.slice(at, at + need);
+    if (wk.some((k) => !k)) continue;
+    if (!win.every((f) => chainLineOk(f.line))) continue;                // bar 1
+    if (new Set(wk).size !== need) continue;                             // bar 2
 
-    const deal = orderDeal(ORDER_LINES, rng);                           // bar 5
-    if (!deal) continue;
-    return { song, label: sec.label || "", lines, deal };
+    // Bar 3 and bar 4, on every anchor the page will ask about.
+    let ok = true;
+    for (let j = 0; j < CHAIN_PICKS; j++) {
+      const s = succ.get(wk[j]);
+      if (!s || s.size !== 1 || !s.has(wk[j + 1])) { ok = false; break; }
+      if (wk[j] === wk[j + 1]) { ok = false; break; }                    // bar 4
+    }
+    if (!ok) continue;
+
+    // Early pages keep the chain inside one section; later ones want it to cross. Asked for
+    // rather than demanded, so a run near the end of its retry budget takes what it can get.
+    const crossed = new Set(win.map((f) => f.si)).size > 1;
+    if (opts.cross && !crossed && t < tries * 0.7) continue;
+    if (!opts.cross && crossed) continue;
+
+    // The three decoy pools. Same-song lines are the hard ones and must be lines the page has
+    // not shown and will not show — a decoy that turns up later as the true answer teaches the
+    // player something false — and bar 5 keeps out anything that really does follow the anchor.
+    const inChain = new Set(wk);
+    const mine = flat.filter((f, i) => !inChain.has(keys[i]) && chainLineOk(f.line));
+    const sameAlbum = songs.filter((s) => s !== song && s.album === song.album);
+    const farAlbum = songs.filter((s) => s.album !== song.album);
+    const fromSong = (anchorKey) => {
+      const f = mine.length ? pick(mine, rng) : null;
+      if (!f) return null;
+      const s = succ.get(anchorKey);
+      if (s && s.has(normalizeLyric(f.line))) return null;               // bar 5
+      return { line: f.line, from: "song" };
+    };
+    const fromSongs = (pool, tag) => () => {
+      const other = pool.length ? pick(pool, rng) : null;
+      if (!other) return null;
+      const lines = chainFlat(other);
+      if (!lines.length) return null;
+      return { line: pick(lines, rng).line, from: tag };
+    };
+    const fromAlbum = fromSongs(sameAlbum, "album");
+    const fromFar = fromSongs(farAlbum, "far");
+
+    // `hard` deals same-song decoys from pick 1, which is the shape a dev tool wants and no
+    // page ever opens on.
+    const wants = opts.hard ? ["song", "song", "song", "song"] : ["far", "album", "song", "song"];
+    const picks = [];
+    let fallbacks = 0;
+    for (let j = 0; j < CHAIN_PICKS; j++) {
+      const anchorKey = wk[j];
+      const want = wants[j];
+      let cards = null;
+      if (want === "song") {
+        cards = chainCards(win[j + 1], [anchorKey], () => fromSong(anchorKey), rng);
+        // A song with too few spare lines can't supply its own decoys. The album stands in, and
+        // the page says so in the only place it can: the count an audit reads.
+        if (!cards) { cards = chainCards(win[j + 1], [anchorKey], fromAlbum, rng); if (cards) fallbacks++; }
+      } else if (want === "album") {
+        cards = chainCards(win[j + 1], [anchorKey], fromAlbum, rng);
+        if (!cards) { cards = chainCards(win[j + 1], [anchorKey], fromFar, rng); if (cards) fallbacks++; }
+      } else {
+        cards = chainCards(win[j + 1], [anchorKey], fromFar, rng);
+      }
+      if (!cards) break;
+      picks.push({ answer: { text: win[j + 1].line, label: win[j + 1].label, si: win[j + 1].si }, cards });
+    }
+    if (picks.length !== CHAIN_PICKS) continue;
+
+    return {
+      song, label: win[0].label,
+      anchor: { text: win[0].line, label: win[0].label, si: win[0].si },
+      picks, crossed, fallbacks,
+    };
   }
   return null;
-}
-
-/* How many of the three joins an arrangement holds. `slots[s]` is which line is sitting in
-   slot s, so a join stands wherever the next slot holds the next line. Pure, so the board,
-   the reveal and the dev tools all count it the same way. */
-export function orderJoins(slots) {
-  let n = 0;
-  for (let s = 0; s < slots.length - 1; s++) if (slots[s + 1] === slots[s] + 1) n++;
-  return n;
 }
 
 /* ---------- Ruthless Game ----------

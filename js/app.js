@@ -9,7 +9,7 @@ import {
   ACHIEVEMENTS, ACH_ICONS, ACH_BY_ID, ACH_GROUPS, ACH_GROUP_COLORS, ACH_GROUP_OF,
   BONUS_GAMES, BONUS_ROUNDS, BONUS_SLIP_SECONDS, BONUS_NAME_SECONDS, BONUS_BLANK_SECONDS,
   BONUS_REDACT_SECONDS, REDACT_MIN_POINTS, BONUS_STRING_SECONDS, BONUS_ONLY_SECONDS,
-  BONUS_ORDER_SECONDS,
+  BONUS_CHAIN_SECONDS, CHAIN_EASY_PAGES,
   RUTHLESS_WORD_MS, RUTHLESS_OPEN_WORDS, RUTHLESS_SKIP_AFTER, RUTHLESS_SKIP_PENALTY,
   RUTHLESS_PACE_SECONDS,
   CHALLENGES, CHALLENGE_BY_ID, CHALLENGE_ORDER, CHALLENGE_SEALS, DARK_SIDE_IDS, DARK_SIDE_TODO,
@@ -51,7 +51,7 @@ import { wordRegex as wordRegexCore, extractLineWithWord as extractLineWithWordC
 import { buildLineIndex, buildSlipContext, buildSlipPuzzle, buildNamePuzzle,
          buildBlankPuzzle, buildRedactedPuzzle, buildStringPuzzle, STRING_PAIRS,
          buildWordIndex, buildOnlyHerePuzzle, judgeOnlyHere, onlyHerePoints,
-         buildOrderPuzzle, orderJoins, ORDER_LINES, ORDER_JOINS,
+         buildChainPuzzle, CHAIN_PICKS, CHAIN_CARDS, CHAIN_PAY, CHAIN_PAGE,
          buildRuthlessPuzzle, ruthlessPool,
          judgeBlank } from "./bonus.js";
 import { renderStreakPlacard } from "./placard.js";
@@ -3958,10 +3958,19 @@ let onlyPlayed = null;
 let stringLinks = [];
 let stringSel = null;
 let stringResizeHandler = null;
-// Out of Order: `orderSlots[slot]` is which of the four lines is sitting in that slot, and
-// `orderSel` is the slot being held while it waits for the one it swaps with.
-let orderSlots = [];
-let orderSel = null;
+/* Then What: which pick the page is on, what has been picked so far, and what the page has
+   banked. `chainBusy` is the beat between a tap and the next three cards being dealt — it is
+   NOT bonusLocked, which means the whole page is over; a pick being marked up must stop a
+   second tap without ending the run's page.
+   `chainNow` and `chainRun` are the longest unbroken chain: not scored, deliberately, and
+   carried across the whole run because a 0-60 total gives a run no personal chase. */
+let chainStep = 0;
+let chainTaken = [];       // per pick: { picked: card index or -1 for the clock, right }
+let chainPage = 0;         // points banked on THIS page
+let chainNow = 0;
+let chainRun = 0;
+let chainBusy = false;
+let chainBeatId = null;
 // Ruthless Game: how much of the stream is out, when this page started, what it has been fined
 // for a give-up, and the frozen cost of the page once it settles. `ruthlessSpent` exists so the
 // seconds are read off the clock exactly ONCE — the verdict line and bonusPageScore both want
@@ -4043,6 +4052,12 @@ function bonusBest(g) {
 }
 function bonusScoreText() {
   if (bonusTimed(bonusGame)) return `${fmtTime(bonusScore)} so far`;
+  // Then What carries its longest unbroken chain beside the score. It is not scored and never
+  // will be — it is there so a run has a personal chase that a 0-60 total cannot give it.
+  // The page's points are banked into bonusScore only when it settles, so while it is still
+  // being played they have to be added on here for the chrome to keep up with the taps.
+  if (bonusGame && bonusGame.id === "then-what")
+    return `${bonusScore + (bonusLocked ? 0 : chainPage)} points · chain ${Math.max(chainRun, chainNow)}`;
   return `${bonusScore} ${bonusGame && bonusGame.points ? "points" : "correct"}`;
 }
 
@@ -4166,6 +4181,9 @@ function startBonusGame(g) {
   ruthlessShown = 0;
   ruthlessPenalty = 0;
   ruthlessSpent = 0;
+  // The longest chain belongs to the RUN, not the page, so it is reset here and nowhere else.
+  chainNow = 0;
+  chainRun = 0;
   clearStringResize();
   bonusRunId++;
   stopBonusClock();
@@ -4184,7 +4202,10 @@ function bonusSeconds() {
   if (bonusGame.id === "redacted") return BONUS_REDACT_SECONDS;
   if (bonusGame.id === "invisible-string") return BONUS_STRING_SECONDS;
   if (bonusGame.id === "only-here") return BONUS_ONLY_SECONDS;
-  if (bonusGame.id === "out-of-order") return BONUS_ORDER_SECONDS;
+  // Then What's budget is spent per PICK rather than per page: the clock restarts under
+  // every set of three cards, which is what keeps the answer an instinct rather than a
+  // deliberation.
+  if (bonusGame.id === "then-what") return BONUS_CHAIN_SECONDS;
   // Ruthless Game has no budget: its page runs until it is named or given up on, and the
   // seconds it took ARE the score. Nothing asks this for a timed game (startBonusClock takes
   // the count-up branch before it gets here), so the value is never reached in practice.
@@ -4205,8 +4226,11 @@ function buildBonusPuzzle() {
     return buildStringPuzzle(allSongs, lineIndex, Math.random, 120, new Set(bonusRecentSongs));
   if (bonusGame.id === "only-here")
     return buildOnlyHerePuzzle(allSongs, bonusIndexes().wordIndex, Math.random, 120, new Set(bonusRecentSongs));
-  if (bonusGame.id === "out-of-order")
-    return buildOrderPuzzle(allSongs, Math.random, 120, new Set(bonusRecentSongs));
+  if (bonusGame.id === "then-what")
+    // The run's own ramp: the early pages keep the chain inside one section, the later ones
+    // ask for a chain that crosses a section boundary.
+    return buildChainPuzzle(allSongs, Math.random, 120, new Set(bonusRecentSongs),
+                            { cross: bonusRound > CHAIN_EASY_PAGES });
   if (bonusGame.id === "ruthless-game")
     return buildRuthlessPuzzle(allSongs, Math.random, 120, new Set(bonusRecentSongs));
   return buildNamePuzzle(allSongs, lineIndex);
@@ -4226,7 +4250,7 @@ function nextBonusRound() {
     if (bonusRecentFakes.length > 6) bonusRecentFakes.shift();
   }
   if (bonusGame.id === "sing-it-back" || bonusGame.id === "redacted" ||
-      bonusGame.id === "only-here" || bonusGame.id === "out-of-order" ||
+      bonusGame.id === "only-here" || bonusGame.id === "then-what" ||
       bonusGame.id === "ruthless-game")
     bonusRecentSongs.push(bonusPuzzle.song.title);
   // A board's worth of songs at a time, so a run of ten pages doesn't put the same song up twice.
@@ -4239,9 +4263,12 @@ function nextBonusRound() {
   redactWorth = bonusPagePoints(bonusGame);
   redactPeeled = 0;
   onlyPlayed = null;
-  // The lines as they were dealt, and nothing held. `deal[slot]` is which line landed there.
-  orderSlots = bonusPuzzle && bonusPuzzle.deal ? [...bonusPuzzle.deal] : [];
-  orderSel = null;
+  // A fresh chain: nothing picked, nothing banked. The longest run survives the page.
+  chainStep = 0;
+  chainTaken = [];
+  chainPage = 0;
+  chainBusy = false;
+  stopChainBeat();
   // Nothing of the song is out yet, nothing has been fined, and the page has cost nothing.
   ruthlessShown = 0;
   ruthlessPenalty = 0;
@@ -4357,16 +4384,18 @@ function renderBonusRound() {
     // across an answer key.
     stringResizeHandler = () => drawThreads(bonusLocked);
     window.addEventListener("resize", stringResizeHandler);
-  } else if (bonusGame.id === "out-of-order") {
-    // The song is named at the top for Sing It Back's reason: the order has to be pinned by a
-    // real song rather than by whatever four lines could plausibly be. Solving it means
-    // singing the thing in your head, and you can't sing a song you haven't been told.
+  } else if (bonusGame.id === "then-what") {
+    // The song is named at the top for Sing It Back's reason: the answer has to be pinned by a
+    // real song rather than by whatever lines could be argued into. Solving it means singing
+    // the thing in your head, and you can't sing a song you haven't been told.
     body.innerHTML =
-      `<p class="bg-ask">put these lines back in the order they are sung</p>` +
+      `<p class="bg-ask">tap the line that comes next</p>` +
       bonusSongHead(p.song, p.label) +
-      `<div class="bg-order" id="bonusOrder"></div>` +
-      `<p class="bg-hint" id="bonusOrderHint"></p>`;
-    renderOrderBoard();
+      `<div class="bg-chain" id="bonusChain"></div>` +
+      `<div class="bg-chain-cards" id="bonusChainCards"></div>` +
+      `<p class="bg-hint" id="bonusChainHint"></p>`;
+    renderChainSheet();
+    renderChainCards();
   } else if (bonusGame.id === "only-here") {
     // The whole page is the song's name and a blank line, which is the point: nothing here is
     // read, everything is recalled. The ladder is printed alongside because the game is a
@@ -4651,6 +4680,10 @@ function devRuthlessTitleAt(p) {
 
 function bonusTimeout() {
   if (bonusLocked) return;
+  // Then What's clock runs per PICK, so its timeout is a missed pick rather than a lost page:
+  // the correct line still locks in and the chain carries on. It is the one game here whose
+  // page cannot time out at all.
+  if (bonusGame && bonusGame.id === "then-what") { judgeChain(-1); return; }
   // Spot the Slip names the impostor even on a timeout: that word is the one thing the page
   // still has to teach, and unlike the other two games the answer card can't carry it (the card
   // shows the line as it really goes, with no sign of what stood in the gap).
@@ -4658,9 +4691,6 @@ function bonusTimeout() {
     ? `<b>${escapeHtml(bonusPuzzle.fakeWord)}</b> was the slip`
     // Threads already laid still count when the clock goes, so the page has to say how many.
     : bonusGame && bonusGame.id === "invisible-string" ? stringDetail(stringPairsRight())
-    // Same for a board left half-sorted: whatever joins were standing when the clock went are
-    // joins the player made, and they pay.
-    : bonusGame && bonusGame.id === "out-of-order" ? orderDetail(orderJoinsRight())
     : "";
   settleBonusRound(false, detail, true);
 }
@@ -4843,94 +4873,155 @@ function stringDetail(right) {
   return `<b>${right}</b> of ${STRING_PAIRS} tied off`;
 }
 
-/* ---------- Out of Order: the board ----------
-   Four lines dealt down the page, and the only move is to swap two of them: tap one, tap the
-   other. Tap-then-tap for Invisible String's reasons — dragging is where a reorder gets
-   expensive and flaky on touch, and it buys nothing this puzzle needs. Tapping a held card
-   again puts it back down, which is the only undo a swap board can want.
-   The numbers stay with the SLOT rather than with the line: they are the page's 1-2-3-4, and a
-   number that travelled with a card would be answering the question it is asking.
-   The whole board is re-rendered on every swap. It is four buttons, and a rebuild keeps the
-   DOM honest about what is sitting where. */
-function orderJoinsRight() { return orderJoins(orderSlots); }
+/* ---------- Then What: the chain ----------
+   Two halves of one page: the SHEET, a verse growing down the paper a line at a time, and the
+   CARDS, three lines under it of which one really comes next.
 
-// Which joins the player's arrangement held, keyed by the line the join leads OUT of — which
-// is what the reveal needs, since by then the board has been straightened back into the song's
-// order and the marks go in the gaps of that.
-function orderHeldJoins() {
-  const held = new Set();
-  for (let s = 0; s < orderSlots.length - 1; s++)
-    if (orderSlots[s + 1] === orderSlots[s] + 1) held.add(orderSlots[s]);
-  return held;
+   ONE TAP COMMITS. No confirm, no undo, and the verdict lands in the same instant — which is a
+   deliberate departure from the shelf's tap-then-tap rule. That rule exists for ARRANGING
+   (Invisible String), where nothing should be judged until the board is complete; here instant
+   judgement IS the design, and a confirm step would be actively hostile to it. The cards are
+   spaced to absorb the misclick, and a fat finger costs a point.
+
+   Whatever was picked, the RIGHT line locks into the sheet: a wrong pick goes into the margin
+   above it, struck through in pencil with a red cross, and the page carries on. So the page is
+   always building toward the truth and never has a wrong verse on it — which is why, unlike the
+   board it replaced, this game has nothing to straighten out at the end.
+
+   A miss does NOT end the page. Sudden death is more dramatic and was rejected: it makes a
+   clean sweep arithmetically unreachable, and it restores exactly the bimodal problem this
+   rebuild exists to solve, since a page on a song you don't know would end on pick 1. */
+const CHAIN_BEAT_MS = 780;   // long enough to read the mark before the next three deal
+
+function stopChainBeat() {
+  if (chainBeatId) clearTimeout(chainBeatId);
+  chainBeatId = null;
 }
 
-/* `reveal` STRAIGHTENS THE BOARD, the way Invisible String's does: the lines go back into the
-   song's own order, so the page finishes as a verse that can be read straight down, and the
-   margin marks report which joins the player had. Marking up their own arrangement instead
-   would leave a wrong verse as the last thing on screen — and the tick sitting in the GAP
-   between two lines is also what teaches the word "join" without a sentence explaining it. */
-function renderOrderBoard(reveal = false) {
-  const wrap = $("bonusOrder");
-  if (!wrap || !bonusPuzzle) return;
+/* The verse as it stands: the line the page opened on, then every pick's real successor, with
+   any wrong pick noted in the margin above the line that corrected it. Nothing here is the
+   player's arrangement — it is the song, annotated. */
+function chainSheetRows() {
   const p = bonusPuzzle;
-  const slots = reveal ? p.lines.map((_, i) => i) : orderSlots;
-  const held = reveal ? orderHeldJoins() : null;
+  const rows = [{ text: p.anchor.text, label: p.anchor.label, si: p.anchor.si }];
+  chainTaken.forEach((t, i) => {
+    if (!t.right) rows.push({ miss: true, text: t.picked >= 0 ? p.picks[i].cards[t.picked].text : null });
+    rows.push({ ...p.picks[i].answer, fresh: i === chainTaken.length - 1 });
+  });
+  return rows;
+}
 
-  wrap.innerHTML = slots.map((lineIdx, slot) => {
-    // On the reveal, the gap above this line carries the mark for the join into it.
-    const join = reveal && slot > 0
-      ? `<div class="bg-ord-join">` +
-          `<span class="bg-ord-mark" aria-hidden="true">${held.has(lineIdx - 1) ? BG_TICK : BG_CROSS}</span>` +
-          `<span class="sr-only">${held.has(lineIdx - 1) ? "you had this line following the one above" : "you had something else here"}</span>` +
-        `</div>`
-      : "";
-    const isHeld = !reveal && orderSel === slot;
-    const cls = ["bg-ord-item", isHeld ? "is-held" : ""].filter(Boolean).join(" ");
-    const aria = `${censor(p.lines[lineIdx])} — line ${slot + 1} of ${ORDER_LINES}`;
-    return join +
-      `<button type="button" class="${cls}" data-i="${slot}"${reveal ? " disabled" : ""}` +
-        ` aria-label="${escapeHtml(aria)}"` +
-        (reveal ? "" : ` aria-pressed="${isHeld}"`) + `>` +
-        `<span class="bg-ord-num" aria-hidden="true">${slot + 1}</span>` +
-        `<span class="bg-ord-text">${escapeHtml(censor(p.lines[lineIdx]))}</span>` +
-      `</button>`;
+function renderChainSheet() {
+  const wrap = $("bonusChain");
+  if (!wrap || !bonusPuzzle) return;
+  let seen = null;   // the section the last locked line belonged to
+  wrap.innerHTML = chainSheetRows().map((r) => {
+    if (r.miss)
+      // The clock taking a pick is not a wrong answer, so it isn't struck through like one —
+      // there was nothing written to strike out.
+      return `<div class="bg-chain-row is-miss">` +
+          `<span class="bg-chain-mark" aria-hidden="true">${BG_CROSS}</span>` +
+          (r.text
+            ? `<span class="bg-chain-text"><s>${escapeHtml(censor(r.text))}</s></span>` +
+              `<span class="sr-only">you picked this, and it was wrong</span>`
+            : `<span class="bg-chain-text is-late">the clock took this one</span>`) +
+        `</div>`;
+    // The section is noted in the margin only where it CHANGES, so a chain crossing a boundary
+    // shows where it crossed instead of repeating one word down the whole page.
+    const turn = r.si !== undefined && r.si !== seen;
+    if (turn) seen = r.si;
+    const sec = turn && r.label
+      ? `<span class="bg-chain-sec">${escapeHtml(r.label.toLowerCase())}</span>` : "";
+    // The newest line inks in. Nothing depends on the animation finishing, so reduced motion
+    // and instant speed simply have it there already.
+    const fresh = r.fresh && !motionReduced() && !animInstant() ? " is-new" : "";
+    return `<div class="bg-chain-row${fresh}">${sec}` +
+        `<span class="bg-chain-text">${escapeHtml(censor(r.text))}</span></div>`;
   }).join("");
-  if (!reveal) wrap.querySelectorAll(".bg-ord-item").forEach((b) =>
-    b.addEventListener("click", () => tapOrder(+b.dataset.i)));
-
-  const hint = $("bonusOrderHint");
-  if (hint) {
-    hint.innerHTML = reveal ? ""
-      : `<span class="bg-ord-say">${escapeHtml(orderSel === null ? "tap two lines to swap them" : "now tap the one to swap it with")}</span>` +
-        `<button type="button" id="bonusOrderBtn" class="btn-ghost">that's the order →</button>`;
-    if ($("bonusOrderBtn")) $("bonusOrderBtn").addEventListener("click", judgeOrder);
-  }
 }
 
-function tapOrder(slot) {
-  if (bonusLocked) return;
-  if (orderSel === null || orderSel === slot) {
-    orderSel = orderSel === slot ? null : slot;
-  } else {
-    const was = orderSlots[orderSel];
-    orderSlots[orderSel] = orderSlots[slot];
-    orderSlots[slot] = was;
-    orderSel = null;
-    sfx.play("hint");
-  }
-  renderOrderBoard();
+function renderChainCards() {
+  const wrap = $("bonusChainCards");
+  const hint = $("bonusChainHint");
+  if (!wrap || !bonusPuzzle) return;
+  const pick = bonusPuzzle.picks[chainStep];
+  if (!pick) { wrap.innerHTML = ""; if (hint) hint.textContent = ""; return; }
+  // Full-width lines rather than a row of columns: a lyric line wants to be read left to right,
+  // and squeezing three of them into thirds of the page makes all three unreadable.
+  wrap.innerHTML = pick.cards.map((c, i) =>
+    `<button type="button" class="bg-chain-card" data-i="${i}">` +
+      `<span class="bg-chain-text">${escapeHtml(censor(c.text))}</span></button>`).join("");
+  wrap.querySelectorAll(".bg-chain-card").forEach((b) =>
+    b.addEventListener("click", () => judgeChain(+b.dataset.i)));
+  // What this pick is worth is said out loud. The ramp is meant to be felt rather than
+  // explained, but being paid more for a harder pick is not a secret worth keeping.
+  if (hint) hint.textContent =
+    `pick ${chainStep + 1} of ${CHAIN_PICKS} · worth ${CHAIN_PAY[chainStep]}`;
 }
 
-// A page is "cleared" only when all three joins stand, which for four lines is the whole verse
-// back in order. The joins still pay either way — a player who heard two of the three lines
-// follow each other knew two thirds of this page, and the score should say so.
-function judgeOrder() {
-  if (bonusLocked) return;
-  const right = orderJoinsRight();
-  settleBonusRound(right === ORDER_JOINS, orderDetail(right));
+/* One tap, judged on the spot. `i` is -1 when the clock took the pick, which counts as a miss
+   in every way except that there is nothing to strike through: the correct line still locks in
+   and the chain carries on, exactly as a wrong tap does. */
+function judgeChain(i) {
+  if (bonusLocked || chainBusy || !bonusPuzzle) return;
+  const pick = bonusPuzzle.picks[chainStep];
+  if (!pick) return;
+  chainBusy = true;
+  stopBonusClock();
+
+  const right = i >= 0 && !!pick.cards[i].right;
+  if (right) {
+    chainPage += CHAIN_PAY[chainStep];
+    chainNow++;
+    if (chainNow > chainRun) chainRun = chainNow;
+  } else chainNow = 0;
+  chainTaken.push({ picked: i, right });
+  sfx.play(right ? "correct" : "wrong");
+
+  // Mark the cards where they sit: the real one either way, and the wrong tap struck out. The
+  // player's eye is on the cards at this moment, so that is where the verdict has to land.
+  $("bonusPlayBody").querySelectorAll(".bg-chain-card").forEach((b) => {
+    const idx = +b.dataset.i;
+    b.disabled = true;
+    if (pick.cards[idx].right) b.classList.add("is-answer");
+    else if (idx === i) b.classList.add("is-wrong");
+  });
+  chainStep++;
+  renderChainSheet();
+  $("bonusScore").textContent = bonusScoreText();
+
+  const on = () => {
+    chainBeatId = null;
+    chainBusy = false;
+    if (chainStep >= CHAIN_PICKS) { settleChain(); return; }
+    renderChainCards();
+    startBonusClock();
+  };
+  if (motionReduced() || animInstant()) on();
+  else chainBeatId = setTimeout(on, CHAIN_BEAT_MS);
 }
-function orderDetail(right) {
-  return `<b>${right}</b> of ${ORDER_JOINS} joins held`;
+
+// A page is CLEARED at the full six, which is the verse whole — that is what the sleeve's tick
+// and the clean-sweep stamp mean here, as everywhere else on the shelf. The picks still pay
+// either way: two lines heard out of four is half a page's knowledge and should read as it.
+function settleChain() {
+  const got = chainTaken.filter((t) => t.right).length;
+  settleBonusRound(chainPage === CHAIN_PAGE, chainDetail(got));
+}
+function chainDetail(got) {
+  return `<b>${got}</b> of ${CHAIN_PICKS} lines · <b>${chainPage}</b> point${chainPage === 1 ? "" : "s"}`;
+}
+
+/* Dev only: the page's whole chain written out, with each pick's true successor and where its
+   two decoys were mined from. The ramp is invisible on screen by design — three lines look the
+   same whatever song they came off — which means it is also invisible to anyone checking that
+   the ramp happened, so it has to be printable. Kept beside the game rather than in the dev
+   block because the builder's comment points at it. */
+function devChainLines(p) {
+  return [`0. ${p.anchor.text}   [${p.anchor.label}]`].concat(
+    p.picks.map((pk, i) =>
+      `${i + 1}. ${pk.answer.text}   [${pk.answer.label}] · pays ${CHAIN_PAY[i]} · decoys ` +
+      pk.cards.filter((c) => !c.right).map((c) => c.from).join("+")));
 }
 
 /* ---------- Redacted: peeling a strip ----------
@@ -5216,13 +5307,13 @@ function bonusAnswerCard() {
   // Invisible String has no card at all: its reveal straightens the whole board out, so every
   // line is already sitting beside its own song with the album tag on it. A card could only
   // repeat one fifth of that.
-  // Out of Order has no card for Sing It Back's reason: its reveal straightens the four lines
-  // back out under a heading that already names the song and album, so a card would reprint a
-  // quarter of the verse an inch below itself.
+  // Then What has no card for Sing It Back's reason: the page finishes as a verse written out
+  // under a heading that already names the song and album, so a card could only reprint a
+  // quarter of what is sitting an inch above it.
   // Ruthless Game has none either, and most obviously of all: its reveal writes the song's name
   // over a page that is already the song, printed out further than any card could quote it.
   if (bonusGame.id === "invisible-string" || bonusGame.id === "redacted" ||
-      bonusGame.id === "only-here" || bonusGame.id === "out-of-order" ||
+      bonusGame.id === "only-here" || bonusGame.id === "then-what" ||
       bonusGame.id === "ruthless-game") return "";
   if (bonusGame.id === "sing-it-back")
     return `<div class="bg-ctx">${lyricCardContext(p.song, p.answer, p.line)}</div>`;
@@ -5247,9 +5338,9 @@ function bonusPageScore(correct) {
   // Only Here pays for the word that was written, whatever it was worth — the page is never
   // failed, only answered cheaply or not at all.
   if (bonusGame && bonusGame.id === "only-here") return onlyPlayed ? onlyPlayed.points : 0;
-  // Out of Order pays per join for Invisible String's reason: two thirds of a verse heard is
-  // two thirds of the page, and an all-or-nothing board would throw that reading away.
-  if (bonusGame && bonusGame.id === "out-of-order") return orderJoinsRight();
+  // Then What pays per PICK, and the picks are not worth the same: 1, 1, 2, 2 up the page, so
+  // what the page banked is already added up in chainPage.
+  if (bonusGame && bonusGame.id === "then-what") return chainPage;
   if (!correct) return 0;
   if (bonusGame && bonusGame.id === "redacted") return Math.max(REDACT_MIN_POINTS, redactWorth);
   return 1;
@@ -5268,8 +5359,10 @@ function bonusBannerText(correct, isTimeout) {
   if (bonusGame && bonusGame.id === "only-here")
     return correct ? (onlyPlayed && onlyPlayed.count === 1 ? "only here" : "that's in there")
                    : "the page ran out";
-  if (bonusGame && bonusGame.id === "out-of-order")
-    return correct ? "back in order" : isTimeout ? "the page ran out" : "not the order it goes in";
+  // Nothing times out here at the page level — the clock takes single picks — so the bad
+  // banner reports a broken chain rather than a lost page.
+  if (bonusGame && bonusGame.id === "then-what")
+    return correct ? "sung it straight through" : "the chain broke";
   return correct ? "that's the one" : isTimeout ? "the page ran out" : "not this one";
 }
 
@@ -5287,7 +5380,7 @@ function settleBonusRound(correct, detail, isTimeout = false) {
   // The writing line has done its job, so put it away for the verdict — the round screen hides
   // its play area at exactly this beat. It also gives back the space the answer card wants, which
   // is what keeps the countdown on screen instead of below the fold.
-  $("bonusPlayBody").querySelectorAll(".bg-write, .bg-hint, .bg-worth, .bg-scale, .bg-giveup").forEach((el) => { el.style.display = "none"; });
+  $("bonusPlayBody").querySelectorAll(".bg-write, .bg-hint, .bg-worth, .bg-scale, .bg-giveup, .bg-chain-cards").forEach((el) => { el.style.display = "none"; });
 
   // The run's track listing, written up on the end card. Each game notes the one thing worth
   // remembering about its page: the impostor you were hunting, the word that was missing, or
@@ -5308,9 +5401,9 @@ function settleBonusRound(correct, detail, isTimeout = false) {
         // sleeve can't already work out — so it takes the note column outright.
         : bonusGame.id === "redacted" ? `${gained} pts`
         : bonusGame.id === "invisible-string" ? `${gained} of ${STRING_PAIRS}`
-        // The note column is clipped at 10ch, so this says it the way the board does and lets
-        // the game's own name supply the word "joins".
-        : bonusGame.id === "out-of-order" ? `${gained} of ${ORDER_JOINS}`
+        // Every other game notes the answer it was hiding; this one never hid an answer, so
+        // the useful keepsake is how the page went.
+        : bonusGame.id === "then-what" ? `${gained} pts`
         // What it paid and the word that paid it: this column is the run's own vocabulary,
         // which is the thing worth carrying off ten pages of it. The number leads because the
         // note is clipped from the right at 10ch, and a long word half-shown still reads. A page
@@ -5335,8 +5428,12 @@ function settleBonusRound(correct, detail, isTimeout = false) {
     revealRedacted();
   } else if (bonusGame.id === "only-here") {
     revealOnlyHere();
-  } else if (bonusGame.id === "out-of-order") {
-    renderOrderBoard(true);
+  } else if (bonusGame.id === "then-what") {
+    // Nothing to reveal: every correct line locked in as it was picked, so the sheet on screen
+    // is already the finished verse. All that is left is to take the spent cards away.
+    stopChainBeat();
+    const cards = $("bonusChainCards");
+    if (cards) cards.remove();
   } else if (bonusGame.id === "ruthless-game") {
     revealRuthless();
   } else if (bonusGame.id === "sing-it-back") {
@@ -5455,6 +5552,7 @@ function endBonusRun() {
   bonusEnded = true;
   stopBonusClock();
   stopBonusCountdown();
+  stopChainBeat();
   clearStringResize();
   const timed = bonusTimed(bonusGame);
   const rec = recordBonusRun(bonusGame.id, bonusScore, bonusMaxScore(bonusGame), timed);
@@ -5490,6 +5588,10 @@ function endBonusRun() {
             `<div class="bg-sleeve-kicker">${escapeHtml(bonusGame.kicker)}</div>` +
             `<h3 class="bg-sleeve-name">${escapeHtml(bonusGame.name)}</h3>` +
             `<div class="bg-sleeve-remark">${escapeHtml(bonusRemark(bonusScore, max, perfect))}</div>` +
+            // Then What's other number. It costs nothing and is scored by nothing, but it is
+            // the one thing about a run that a total out of sixty can't say.
+            (bonusGame.id === "then-what"
+              ? `<div class="bg-sleeve-chain">longest chain · ${chainRun} line${chainRun === 1 ? "" : "s"}</div>` : "") +
           `</div>` +
           // A time stands alone: there is no total for a run of seconds to be out of, and the
           // number is the whole of what the run was.
@@ -5518,6 +5620,7 @@ function endBonusRun() {
 function leaveBonusGame() {
   stopBonusClock();
   stopBonusCountdown();
+  stopChainBeat();
   clearStringResize();
   bonusEnded = true;
   bonusGame = null;
@@ -16291,11 +16394,13 @@ function buildDevApi() {
             const p = buildOnlyHerePuzzle(allSongs, bonusIndexes().wordIndex, Math.random, 120, new Set(recent));
             if (p) recent.push(p.song.title);
             out.push(p ? { song: p.song.title, eligible: p.eligible, uniques: p.uniques, best: p.best } : null);
-          } else if (id === "out-of-order") {
-            const p = buildOrderPuzzle(allSongs, Math.random, 120, new Set(recent));
+          } else if (id === "then-what") {
+            // Every page after the third is dealt as a run would deal it — allowed to cross a
+            // section — so a sample shows both shapes rather than ten of the easy one.
+            const p = buildChainPuzzle(allSongs, Math.random, 120, new Set(recent), { cross: i >= CHAIN_EASY_PAGES });
             if (p) recent.push(p.song.title);
-            out.push(p ? { song: p.song.title, section: p.label,
-                           order: p.lines, dealt: p.deal.map((i) => i + 1).join(" ") } : null);
+            out.push(p ? { song: p.song.title, crossed: p.crossed, fallbacks: p.fallbacks,
+                           chain: devChainLines(p) } : null);
           } else if (id === "ruthless-game") {
             const p = buildRuthlessPuzzle(allSongs, Math.random, 120, new Set(recent));
             if (p) recent.push(p.song.title);
@@ -16329,7 +16434,7 @@ function buildDevApi() {
             : id === "invisible-string" ? buildStringPuzzle(allSongs, lineIndex)
             : id === "redacted" ? buildRedactedPuzzle(allSongs, ctx, lineIndex)
             : id === "only-here" ? buildOnlyHerePuzzle(allSongs, bonusIndexes().wordIndex)
-            : id === "out-of-order" ? buildOrderPuzzle(allSongs)
+            : id === "then-what" ? buildChainPuzzle(allSongs)
             : id === "ruthless-game" ? buildRuthlessPuzzle(allSongs)
             : id === "sing-it-back" ? buildBlankPuzzle(allSongs, ctx)
             : buildSlipPuzzle(allSongs, playableWords, lineIndex, ctx);
@@ -16473,17 +16578,70 @@ function buildDevApi() {
         renderStringBoard();
         return { right: stringPairsRight(), of: STRING_PAIRS };
       },
-      // Out of Order: put the board into an arrangement holding exactly `right` joins, so the
-      // reveal and the per-join scoring can be checked without hearing the verse. The four
-      // arrangements are written out because "exactly k joins" is fiddlier to search for than
-      // to name, and at four lines there is one obvious representative of each.
-      arrange: (right = ORDER_JOINS) => {
-        if (!bonusGame || bonusGame.id !== "out-of-order" || !bonusPuzzle) return "no board on screen";
-        const shapes = { 0: [3, 2, 1, 0], 1: [2, 3, 1, 0], 2: [1, 2, 3, 0], 3: [0, 1, 2, 3] };
-        orderSlots = [...(shapes[Math.max(0, Math.min(ORDER_JOINS, right | 0))] || shapes[3])];
-        orderSel = null;
-        renderOrderBoard();
-        return { joins: orderJoinsRight(), of: ORDER_JOINS, lines: bonusPuzzle.lines };
+      /* Then What. The ramp is the whole design and NONE of it is visible on screen — three
+         lines look the same whether they came from another album or from this very song — so
+         `chain()` is the only way to see whether a page ramped at all: it prints each pick's
+         true successor and where every decoy was mined from.
+         `pick(n)` plays the page out with the first n picks right, which is the only sane way
+         to reach the settle. `hard()` re-deals the page with same-song decoys from pick 1, the
+         shape no page ever opens on. `chainAudit` reports how often a song was too thin to
+         supply its own decoys and the album had to stand in, since that fallback silently makes
+         the hardest picks easier than designed. */
+      chain: () => {
+        if (!bonusGame || bonusGame.id !== "then-what" || !bonusPuzzle) return "not on a then what page";
+        return { song: bonusPuzzle.song.title, album: bonusPuzzle.song.album,
+                 crossed: bonusPuzzle.crossed, fallbacks: bonusPuzzle.fallbacks,
+                 step: chainStep, banked: chainPage, chain: devChainLines(bonusPuzzle) };
+      },
+      pick: (right = CHAIN_PICKS) => {
+        if (!bonusGame || bonusGame.id !== "then-what" || !bonusPuzzle) return "not on a then what page";
+        const want = Math.max(0, Math.min(CHAIN_PICKS, right | 0));
+        // Straight through the real judge, one pick at a time, so the marks, the sheet and the
+        // settle all happen exactly as they would under a finger.
+        const step = () => {
+          if (bonusLocked || chainStep >= CHAIN_PICKS) return;
+          const cards = bonusPuzzle.picks[chainStep].cards;
+          const at = chainStep < want
+            ? cards.findIndex((c) => c.right)
+            : cards.findIndex((c) => !c.right);
+          chainBusy = false;
+          judgeChain(at);
+          // With motion reduced the beat is synchronous and the page may already have settled
+          // itself, so the pending beat is only ours to skip when it is still pending.
+          if (bonusLocked) return;
+          stopChainBeat();
+          chainBusy = false;
+          if (chainStep >= CHAIN_PICKS) { settleChain(); return; }
+          renderChainCards();
+          step();
+        };
+        step();
+        return { right: chainTaken.filter((t) => t.right).length, banked: chainPage, of: CHAIN_PAGE };
+      },
+      hard: () => {
+        if (!bonusGame || bonusGame.id !== "then-what") return "not on a then what page";
+        const p = buildChainPuzzle(allSongs, Math.random, 200, null, { hard: true });
+        if (!p) return "no page could be built with same-song decoys throughout";
+        bonusPuzzle = p;
+        chainStep = 0; chainTaken = []; chainPage = 0; chainBusy = false;
+        stopChainBeat();
+        renderBonusRound();
+        startBonusClock();
+        return { song: p.song.title, chain: devChainLines(p) };
+      },
+      chainAudit: (n = 200) => {
+        let built = 0, crossed = 0, fell = 0, picks = 0;
+        for (let i = 0; i < n; i++) {
+          const p = buildChainPuzzle(allSongs, Math.random, 120, null, { cross: i % 2 === 1 });
+          if (!p) continue;
+          built++;
+          if (p.crossed) crossed++;
+          fell += p.fallbacks;
+          picks += CHAIN_PICKS;
+        }
+        return { tried: n, built, crossed,
+                 fellBack: fell, ofPicks: picks,
+                 fallbackRate: picks ? `${((fell / picks) * 100).toFixed(1)}%` : "n/a" };
       },
       end: () => endBonusRun(),
       // Fabricate a finished run — real puzzles, `wins` of them ticked — and go straight to the
@@ -16497,7 +16655,7 @@ function buildDevApi() {
           const p = buildBonusPuzzle();
           if (!p) continue;
           if (bonusGame.id === "sing-it-back" || bonusGame.id === "redacted" ||
-              bonusGame.id === "only-here" || bonusGame.id === "out-of-order")
+              bonusGame.id === "only-here" || bonusGame.id === "then-what")
             bonusRecentSongs.push(p.song.title);
           const ok = n <= wins;
           // Points games get a plausible spread rather than a flat number, so the track
@@ -16507,9 +16665,9 @@ function buildDevApi() {
             // Only Here never fails a page, so a "missed" one is a page the clock took, and a
             // cleared one lands anywhere on the ladder rather than at the top of it.
             : bonusGame.id === "only-here" ? (ok ? 1 + (n % 5) : 0)
-            // A missed Out of Order page still held whatever joins it held, which is the
+            // A missed Then What page still banked whatever picks it made, which is the
             // column the sleeve has to show off.
-            : bonusGame.id === "out-of-order" ? (ok ? ORDER_JOINS : n % ORDER_JOINS)
+            : bonusGame.id === "then-what" ? (ok ? CHAIN_PAGE : n % CHAIN_PAGE)
             : ok ? Math.max(REDACT_MIN_POINTS, bonusPagePoints(bonusGame) - (n % 6)) : 0;
           bonusLog.push({
             n, ok, title: bonusGame.id === "invisible-string"
@@ -16518,7 +16676,7 @@ function buildDevApi() {
                 : bonusGame.id === "sing-it-back" ? p.answer
                 : bonusGame.id === "redacted" ? `${pts} pts`
                 : bonusGame.id === "invisible-string" ? `${pts} of ${STRING_PAIRS}`
-                : bonusGame.id === "out-of-order" ? `${pts} of ${ORDER_JOINS}`
+                : bonusGame.id === "then-what" ? `${pts} pts`
                 : bonusGame.id === "only-here" ? (ok ? `${pts} · ${p.best.toLowerCase()}` : p.best.toLowerCase())
                 : p.song.album,
           });

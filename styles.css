@@ -2027,35 +2027,61 @@
   .bg-str-mark { position: absolute; left: -19px; top: 50%; transform: translateY(-50%); width: 14px; }
   .bg-str-item.is-wrong .bg-str-text { color: var(--ink-soft); }
 
-  /* Out of Order — four lines dealt down the page as cards you swap. The slot numbers sit in
-     the margin ahead of the words, so the column reads as a numbered list of lines rather than
-     as four loose quotes, and the eye can check an order without counting. */
-  .bg-order { max-width: 40ch; margin: 0 auto 6px; display: flex; flex-direction: column; gap: 5px; }
-  .bg-ord-item {
-    position: relative; display: flex; align-items: baseline; gap: 10px; width: 100%;
-    background: none; border: 0; border-radius: 4px; padding: 6px 8px; cursor: pointer;
-    text-align: left; color: var(--ink); transition: background 0.14s, box-shadow 0.14s;
+  /* Then What — a verse growing down the page, and three lines under it of which one comes
+     next. The sheet reads as writing on paper; the cards read as loose lines waiting to be
+     chosen, which is why only the cards get an edge. */
+  .bg-chain { max-width: 40ch; margin: 0 auto 14px; display: flex; flex-direction: column; gap: 2px; }
+  .bg-chain-row { position: relative; padding: 1px 8px; }
+  .bg-chain-text { font-family: var(--hand); font-size: 20px; line-height: 1.28; color: var(--ink); }
+  /* A wrong pick, in the margin above the line that corrected it: pencil rather than pen,
+     smaller, struck through, with the red cross out in the rule's gutter. It is an annotation
+     on the page, never part of the verse. */
+  .bg-chain-row.is-miss { padding-top: 0; padding-bottom: 0; }
+  .bg-chain-row.is-miss .bg-chain-text {
+    font-size: 15px; color: rgba(43,39,34,0.42); line-height: 1.2;
   }
-  .bg-ord-item:hover:not(:disabled) { background: rgba(199,149,31,0.14); }
-  .bg-ord-item:disabled { cursor: default; }
-  /* Held: this card is waiting for the one it swaps with. Same gold outline Invisible String
-     puts on a held end, because it is the same half-made move. */
-  .bg-ord-item.is-held { box-shadow: 0 0 0 1.5px rgba(199,149,31,0.85); background: rgba(199,149,31,0.16); }
-  .bg-ord-num {
-    font-family: var(--type); font-size: 10px; letter-spacing: 1px; color: var(--ink-soft);
-    min-width: 1.2ch; flex: none;
+  .bg-chain-row.is-miss s { text-decoration-color: rgba(43,39,34,0.4); }
+  .bg-chain-row.is-miss .bg-chain-text.is-late { font-style: italic; }
+  .bg-chain-mark { position: absolute; left: -19px; top: 50%; transform: translateY(-50%); width: 13px; }
+  /* The section noted in the margin, and only where it changes — a chain that crosses a
+     boundary shows where it crossed. */
+  .bg-chain-sec {
+    display: block; font-family: var(--type); font-size: 8.5px; letter-spacing: 1.5px;
+    text-transform: uppercase; color: #4a8c87; margin: 5px 0 1px;
   }
-  .bg-ord-text { font-family: var(--hand); font-size: 20px; line-height: 1.22; }
-  /* The reveal's margin marks, one per JOIN — they sit in the GAP between two lines rather
-     than beside one, which is what says the score is about what follows what. Zero height, so
-     adding them to the straightened board doesn't shift a line off where it was. */
-  .bg-ord-join { position: relative; height: 0; }
-  .bg-ord-mark {
-    position: absolute; left: -19px; top: 50%; transform: translateY(-50%); width: 14px;
+  /* The newest line inks in. Nothing waits on it: the cards are dealt on their own beat. */
+  .bg-chain-row.is-new .bg-chain-text {
+    display: inline-block; animation: chainInk 0.34s ease-out both;
   }
-  /* The tap instruction above the button, so the hint line carries both without either
-     becoming a sentence you have to read twice. */
-  .bg-ord-say { display: block; margin-bottom: 5px; }
+  @keyframes chainInk {
+    from { opacity: 0; transform: translateY(-5px); }
+    to { opacity: 1; transform: none; }
+  }
+  /* The three candidates, stacked FULL WIDTH rather than side by side: a lyric line wants to
+     be read left to right, and thirds of the page make all three unreadable. The gap is
+     generous on purpose — one tap commits with no undo, so the misclick has to be designed
+     out rather than confirmed away. */
+  .bg-chain-cards {
+    max-width: 40ch; margin: 0 auto 4px; display: flex; flex-direction: column; gap: 8px;
+  }
+  .bg-chain-card {
+    display: block; width: 100%; text-align: left; cursor: pointer;
+    background: rgba(255,253,247,0.5); border: 1px solid rgba(43,39,34,0.16);
+    border-radius: 4px; padding: 8px 11px; color: var(--ink);
+    transition: background 0.14s, box-shadow 0.14s, transform 0.1s;
+  }
+  .bg-chain-card:hover:not(:disabled) { background: rgba(199,149,31,0.14); }
+  .bg-chain-card:active:not(:disabled) { transform: translateY(1px); }
+  .bg-chain-card:disabled { cursor: default; }
+  /* The verdict lands on the cards, where the eye already is: the real line ringed in gold,
+     the wrong tap struck out in the same pen that strikes Spot the Slip's. */
+  .bg-chain-card.is-answer {
+    background: rgba(199,149,31,0.16); box-shadow: inset 0 0 0 1.5px rgba(199,149,31,0.8);
+  }
+  .bg-chain-card.is-wrong { opacity: 0.6; }
+  .bg-chain-card.is-wrong .bg-chain-text {
+    text-decoration: line-through; text-decoration-color: rgba(178,58,63,0.6);
+  }
 
   /* Only Here — the page is a song's name and a blank line, so the only furniture it needs is
      the price list: what a word pays, by how few other songs sing it. Pencilled small under the
@@ -2243,6 +2269,12 @@
     color: var(--ink); margin: 1px 0 0;
   }
   .bg-sleeve-remark { font-family: var(--type); font-size: 11px; color: var(--ink-soft); margin-top: 3px; }
+  /* Then What's second number, under the remark: not scored, and set like the small print it
+     is, but it is the only thing about a run a total out of sixty cannot say. */
+  .bg-sleeve-chain {
+    font-family: var(--type); font-size: 9px; letter-spacing: 1.4px; text-transform: uppercase;
+    color: var(--ink-soft); opacity: 0.75; margin-top: 3px;
+  }
   .bg-sleeve-score {
     flex: none; font-family: var(--hand); font-weight: 700; font-size: 46px; line-height: 0.9;
     color: var(--ink);
@@ -2345,9 +2377,10 @@
     .bg-str-mark { left: -15px; }
     /* One column of full lines, so it only needs the type to come down and the marks to come
        in off a margin a phone hasn't got. */
-    .bg-ord-text { font-size: 17px; }
-    .bg-ord-item { padding: 5px 4px; gap: 8px; }
-    .bg-ord-mark { left: -15px; }
+    .bg-chain-text { font-size: 17px; }
+    .bg-chain-row.is-miss .bg-chain-text { font-size: 13.5px; }
+    .bg-chain-card { padding: 7px 9px; }
+    .bg-chain-mark { left: -15px; }
     .bg-sheet-title { font-size: 22px; }
     .bg-sleeve { padding: 18px 14px 13px; }
     .bg-sleeve-head { gap: 10px; }

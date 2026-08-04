@@ -361,13 +361,14 @@ export const BONUS_GAMES = [
     kicker: "the game backwards", tint: "#2b6b6a", mark: "pin",
     line: "Write a word from the song. Rarer pays more.",
     blurb: "The game backwards: here is the song, and you write a word that is in it. Anything in there scores, and a word nothing else in the catalogue sings is the top of the page." },
-  // Scored by JOINS, not by slots: three to a page, one for each line that leads into the one
-  // it really leads into. What is being tested is knowing what comes next, and a permutation
-  // of four can never have exactly three slots right. See buildOrderPuzzle.
-  { id: "out-of-order", name: "Out of Order", ready: true, points: 3,
-    kicker: "put the lines back", tint: "#5e4a86", mark: "order",
-    line: "Four lines, shuffled. Put them back in order.",
-    blurb: "Four lines that run one into the next, dealt face up in the wrong order. Put them back the way the song sings them." },
+  // Four picks down one song, worth 1, 1, 2 and 2 — the payout escalates because the decoys
+  // move closer to home as the page goes on (see buildChainPuzzle), and a ramp the player is
+  // asked to survive but never paid for reads as the game turning mean rather than exciting.
+  // The six is CHAIN_PAGE written out; the two must stay in step.
+  { id: "then-what", name: "Then What", ready: true, points: 6,
+    kicker: "what comes next?", tint: "#5e4a86", mark: "chain",
+    line: "Three lines. Pick the one that comes next.",
+    blurb: "One line of the song, and three that might follow it. Pick the right one and it locks into the page in pen; four picks and the verse is yours." },
   // The one game on the shelf scored in SECONDS, and the only one where a low number is the
   // good one (`timed`). Everything that shows a score reads that flag rather than assuming a
   // run counts upward — see bonusScoreText / bonusRemark / recordBonusRun's `lower`.
@@ -398,11 +399,15 @@ export const BONUS_STRING_SECONDS = 45;
 // first two words that come to mind and reach for a third, which is where the points are, and
 // short enough that a page you have nothing rare for is answered and moved on from.
 export const BONUS_ONLY_SECONDS = 30;
-// Out of Order is read first and rearranged second, and the rearranging costs taps as well as
-// thought. Long enough to read four lines, hear where they go and swap them into place; short
-// enough that a window you can't hear is left half-sorted rather than brute-forced, which at
-// four lines is a real temptation.
-export const BONUS_ORDER_SECONDS = 40;
+// Then What's clock is PER PICK, not per page, and it is load-bearing rather than decoration:
+// without it the optimal play is to sit and reason about three lines, which drains the
+// sing-it-forward instinct the whole game exists to test. Long enough to read three lines and
+// commit, short enough that deliberating costs you the pick.
+export const BONUS_CHAIN_SECONDS = 11;
+// Pages 1 to CHAIN_EASY_PAGES keep the chain inside one section; after that it is allowed to
+// cross a section boundary, which asks a harder question — does the verse hand off to the
+// chorus, the pre-chorus, the bridge? — and tests the song's architecture rather than its lines.
+export const CHAIN_EASY_PAGES = 3;
 
 /* ---------- Ruthless Game ----------
    The one game here with no clock to beat, because the clock IS the score: a page runs until
