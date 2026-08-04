@@ -40,7 +40,9 @@ import {
   MASTERY_TITLES, MASTERY_TITLE_BY_VALUE, masteryDefaultTitle,
   skillXpForLevel, skillLevelFromXp, masteryXpForLevel, masteryLevelFromXp,
   POLAROID_DEVELOP_MS, POLAROID_TOTAL,
+  RANDOM_CATEGORIES, RANDOM_UNPLAYED_WEIGHT,
 } from "./config.js";
+import { drawRandom, poolSummary } from "./random.js";
 import { POLAROIDS, POLAROID_BY_ID } from "./polaroids.js";
 import { buildBraceletSVG, charmPreviewSVG } from "./bracelet.js";
 import { exportBraceletCard, copyBraceletCard, buildCardSVG, fontFaceCss } from "./braceletcard.js";
@@ -67,6 +69,7 @@ import {
   markTypePlayed,
   markModeSeen, hasExploredEverything, loadModesSeen,
   markWeekdayPlayed, hasPlayedEveryWeekday, loadWeekdaysPlayed, resetBreadth,
+  loadRandomSeen, markRandomSeen, seedRandomSeen, randomSeeded, resetRandomSeen,
   loadSongTally, saveSongTally, recordGameTally,
   loadCustom, saveCustom, activeCustomPreset, resetCustom, defaultCustomPreset,
   loadMetrics, recordGameMetrics,
@@ -4131,6 +4134,7 @@ function selectBonusGame(id) {
 
 function startBonusGame(g) {
   bonusGame = g;
+  notePlayed("bonus", g.id);
   bonusRound = 0;
   bonusScore = 0;
   bonusEnded = false;
@@ -7543,8 +7547,152 @@ function useHint() {
   }
 }
 
+/* ---------- The randomiser ----------
+   One draw across everything the notebook can currently play, then the ordinary start call for
+   whatever came up. It adds no game type and no board of its own: a random Hard run is a Hard
+   run, banked and ranked exactly as if it had been picked off the shelf. See RANDOM_CATEGORIES
+   for the shape of the draw; js/random.js does the weighting.
+
+   Two things it must never do. It must never deal something the player cannot play — a locked
+   challenge, an undefeated challenge's dark side, a bonus game still in the works, a daily
+   already spent — because a draw that dead-ends is worse than no button. And it must never
+   SPEND anything: challenge tokens and persistence tickets are bought deliberately from a
+   challenge's own card, so the pool is built from what is already unlocked and the draw can't
+   reach a wallet. Both are enforced in buildRandomPool by filtering, never by a check after
+   the draw, so there is one place to look when something unplayable turns up. */
+
+// The ledger token for a configuration. NOT one per pool entry: what is being tracked is
+// whether a player has been SHOWN this corner of the notebook, and every difficulty of one
+// album is the same corner. See RANDOM_CATEGORIES.
+function randomToken(cat, key) { return key == null ? cat : cat + ":" + key; }
+
+// Marked at run START, from every start path, however the run was entered. See the ledger's
+// note in storage.js for why this isn't derived from the boards at draw time.
+function notePlayed(cat, key) { markRandomSeen(randomToken(cat, key)); }
+
+// One-time backfill of the ledger from the boards, at startup. Without it a notebook with
+// months of play behind it starts with an empty ledger, reads as "nothing has ever been
+// played", and leans the draw toward things this player has done a hundred times — the exact
+// opposite of the point. Deliberately approximate: Album Focus and the guest shelf only record
+// a best, so a run that scored zero left no trace and can't be recovered here. It under-counts
+// rather than over-counts, which errs toward offering something again rather than never.
+function seedRandomFromBoards() {
+  if (randomSeeded()) return;
+  const tokens = [];
+  for (const id of MODE_ORDER) if (loadStats(id).played > 0) tokens.push(randomToken("difficulty", id));
+  for (const v of ["3lives", "sudden"]) {
+    if (MODE_ORDER.some((m) => loadStats("inf-" + v + "-" + m).played > 0)) tokens.push(randomToken("infinite", v));
+  }
+  if (adaptiveRecord().played > 0) tokens.push(randomToken("adaptive"));
+  for (const a of STUDIO_ALBUMS) if (albumFocusRecord(a).bestDiff) tokens.push(randomToken("album", a));
+  for (const g of GUESTS) if (guestRecord(g.id).bestDiff) tokens.push(randomToken("guest", g.id));
+  for (const c of CHALLENGES) {
+    const r = challengeRecord(c.id);
+    if (r.attempts > 0) tokens.push(randomToken("challenge", c.id));
+    if (r.darkAttempts > 0) tokens.push(randomToken("dark", c.id));
+  }
+  for (const g of BONUS_GAMES) if (bonusRecord(g.id).plays > 0) tokens.push(randomToken("bonus", g.id));
+  if (Object.keys(dailyPlayedDates()).length) tokens.push(randomToken("daily"));
+  seedRandomSeen(tokens);
+}
+
+// Everything playable right now, one entry per configuration the draw can land on. A category
+// with nothing available contributes no entries and simply drops out of the draw.
+function buildRandomPool() {
+  const pool = [];
+  const push = (cat, key, label, payload) =>
+    pool.push({ cat, token: randomToken(cat, key), label, ...payload });
+
+  // The six difficulties, played as an ordinary classic run. The one category where the
+  // difficulty IS the thing drawn, so it tokenises per mode rather than collapsing.
+  for (const id of MODE_ORDER) push("difficulty", id, MODES[id].label, { mode: id });
+
+  // Infinite: the variant is the character of the run, the difficulty is a dial on it, so the
+  // variant carries the token and the difficulty is rolled fresh each time (as for albums).
+  push("infinite", "3lives", "Infinite · three lives", { variant: "3lives" });
+  push("infinite", "sudden", "Infinite · sudden death", { variant: "sudden" });
+
+  push("adaptive", null, "Adaptive", {});
+
+  for (const album of STUDIO_ALBUMS) push("album", album, "Album Focus · " + album, { album });
+
+  // A guest needs its catalogue fetched, which can fail on a bad connection. It stays in the
+  // pool regardless — the dispatcher handles a failed fetch by drawing again without guests.
+  for (const g of GUESTS) push("guest", g.id, "Guest · " + g.name, { guest: g.id });
+
+  // Unlocked challenges only, so the draw can never spend a token or a ticket.
+  for (const c of CHALLENGES) {
+    if (!challengeUnlocked(c.id)) continue;
+    push("challenge", c.id, "Challenge · " + c.name, { challenge: c.id });
+    // The dark side is a separate entry with its own token: beating a challenge and beating its
+    // dark side are two different things to have been shown, and darkSideUnlocked already
+    // requires the base one defeated.
+    if (darkSideUnlocked(c.id)) push("dark", c.id, "Dark side · " + c.name, { challenge: c.id, dark: true });
+  }
+
+  for (const g of BONUS_GAMES) {
+    if (!g.ready) continue;   // the shelf shows what's coming; the draw only deals what plays
+    push("bonus", g.id, "Bonus · " + g.name, { bonus: g.id });
+  }
+
+  // Today's daily, and only while it is still there to play. startDaily would otherwise show
+  // the result card, which is a dead end dressed as a run.
+  if (!loadDailyResult(todayKey())) push("daily", null, "The daily challenge", {});
+
+  return pool;
+}
+
+// A difficulty for the categories that take one but don't tokenise by it.
+function randomDiff(list) { return list[Math.floor(Math.random() * list.length)]; }
+
+// Start whatever was drawn. Returns false when the entry couldn't actually be started, which
+// today means only a guest catalogue that wouldn't load.
+async function dispatchRandom(entry) {
+  switch (entry.cat) {
+    case "difficulty":
+      // Set the mode WITHOUT persisting through DIFF_KEY: a random roll is one run, not a change
+      // of the player's saved preference. renderStartPickers restores their pick on the way back
+      // to the desk, the same way daily and challenge runs rely on.
+      currentMode = MODES[entry.mode];
+      startGame();
+      return true;
+    case "infinite":  startInfinite(entry.variant); return true;
+    case "adaptive":  startAdaptive(); return true;
+    case "album":     startAlbumFocus(entry.album, randomDiff(ALBUM_FOCUS_DIFFS)); return true;
+    case "guest": {
+      await startGuestRun(entry.guest, randomDiff(GUEST_DIFFS));
+      // startGuestRun toasts and bails on a failed fetch; the only honest read on whether it
+      // took is whether a guest run is actually live.
+      return gameType === "guest";
+    }
+    case "challenge": startChallenge(entry.challenge); return true;
+    case "dark":      startChallenge(entry.challenge, { dark: true }); return true;
+    case "bonus":     startBonusGame(BONUS_GAMES.find((g) => g.id === entry.bonus)); return true;
+    case "daily":     startDaily(); return true;
+    default: return false;
+  }
+}
+
+// The button. Draws, announces what came up, and starts it.
+async function rollRandom() {
+  let pool = buildRandomPool();
+  const seen = loadRandomSeen();
+  // One retry, and only for the one failure mode that exists: a guest whose catalogue wouldn't
+  // download. Re-drawing from a pool with guests removed can't loop, because every other
+  // category starts synchronously and cannot fail.
+  for (let attempt = 0; attempt < 2; attempt++) {
+    const entry = drawRandom(pool, seen);
+    if (!entry) break;
+    notifyNote("the draw", entry.label);
+    if (await dispatchRandom(entry)) return;
+    pool = pool.filter((e) => e.cat !== "guest");
+  }
+  notifyNote("the draw", "nothing to deal right now — try the shelves");
+}
+
 function startGame(opts) {
   gameType = "classic";
+  notePlayed("difficulty", currentMode.id);
   resetRunState();
   // Normal-mode coverage: snapshot which words this notebook has already shown, so pickWord can
   // lean the draw toward the ones it hasn't. Only Normal (medium) carries the bias — the rarity-
@@ -7593,6 +7741,7 @@ function maybeStartFromWordParam() {
 function startInfinite(variant, opts) {
   infiniteVariant = variant === "sudden" ? "sudden" : "3lives";
   gameType = "infinite";
+  notePlayed("infinite", infiniteVariant);
   lives = startingLives();
   const carry = !!(opts && opts.carry);
   if (!carry) resetRunState();
@@ -7612,6 +7761,7 @@ function startInfinite(variant, opts) {
 // the level. Sandboxed in its own board (peak level), never the difficulty records.
 function startAdaptive() {
   gameType = "adaptive";
+  notePlayed("adaptive");
   currentMode = { ...MODES.medium };   // baseline levers (10s · suggestions · not-in-title), not persisted via DIFF_KEY
   resetRunState();                     // sets adaptiveLevel/Peak = ADAPT_START_LEVEL, promo = 0
   applyInputHints();
@@ -7766,6 +7916,7 @@ function startDaily() {
   const existing = loadDailyResult(dateStr);
   if (existing) { showDailyResult(existing, dateStr); return; }
   gameType = "daily";
+  notePlayed("daily");
   currentMode = MODES.medium;   // daily is always Normal — override without persisting via DIFF_KEY
   resetRunState();
   dailyRng = mulberry32(dailySeed(dateStr));   // set AFTER resetRunState (which clears it)
@@ -7829,6 +7980,7 @@ function startChallenge(id, opts) {
             && (!!(opts && opts.force) || darkSideUnlocked(id));
   const c = resolveChallenge(base, dark);
   gameType = "challenge";
+  notePlayed(dark ? "dark" : "challenge", id);
   currentMode = MODES[c.mode] || MODES.medium;   // fixed by the challenge, not persisted via DIFF_KEY
   // Some challenges override a single lever of the borrowed mode (Revolving Door wants a
   // 20s clock; Shrinking Timer hides suggestions). Clone so the shared MODES object is
@@ -7881,6 +8033,7 @@ function startAlbumFocus(album, diffId) {
   if (!STUDIO_ALBUMS.includes(album)) return;
   const mode = MODES[ALBUM_FOCUS_DIFFS.includes(diffId) ? diffId : "medium"];
   gameType = "album";
+  notePlayed("album", album);   // per album, not per album+difficulty — knowing Midnights is knowing Midnights
   currentMode = { ...mode };               // clone — never mutate the shared MODES object
   resetRunState();
   focusAlbum = album;                      // set AFTER resetRunState (which nulls them)
@@ -7917,6 +8070,8 @@ async function startGuestRun(id, diffId) {
 
   const mode = MODES[GUEST_DIFFS.includes(diffId) ? diffId : "medium"];
   gameType = "guest";
+  // After the fetch, deliberately: a catalogue that never downloaded was never shown to you.
+  notePlayed("guest", id);
   currentMode = { ...mode };               // clone — never mutate the shared MODES object
   resetRunState();
   // AFTER resetRunState, which nulls the run fields and hands the globals back to Taylor.
@@ -16279,6 +16434,65 @@ function buildDevApi() {
       },
       reset: () => { resetBonus(); if ($("bonusBody")) renderBonusPage(); },
     },
+    // The randomiser. A weighted draw is untestable by clicking it — you'd need fifty runs to
+    // tell a working lean from a broken one — so everything here exists to read the distribution
+    // without starting a game. `sample` is the one that actually proves the weighting.
+    random: {
+      // The live pool: every configuration the draw can currently land on, unplayed first.
+      pool: () => buildRandomPool().map((e) => ({
+        cat: e.cat, label: e.label, token: e.token, played: !!loadRandomSeen()[e.token],
+      })).sort((a, b) => (a.played - b.played) || a.cat.localeCompare(b.cat)),
+      // Per-category shape of the draw: size, how much is still unplayed, and the share of the
+      // draw it commands once the lean is applied. The share is the number to read — a category
+      // whose entries are all unplayed should be visibly fatter than one that's exhausted.
+      summary: () => poolSummary(buildRandomPool(), loadRandomSeen()),
+      // Roll without launching, so a draw can be inspected. Repeat it to eyeball the spread.
+      peek: (n = 1) => {
+        const pool = buildRandomPool(), seen = loadRandomSeen(), out = [];
+        for (let i = 0; i < Math.max(1, n | 0); i++) {
+          const e = drawRandom(pool, seen);
+          out.push(e ? { cat: e.cat, label: e.label, played: !!seen[e.token] } : null);
+        }
+        return out.length === 1 ? out[0] : out;
+      },
+      // Draw n times and tally where they landed — the real check on the weighting. Compare the
+      // category counts against summary()'s shares, and `unplayed` against how much of the pool
+      // is unplayed: the lean is working when the first number is well above the second.
+      sample: (n = 1000) => {
+        const pool = buildRandomPool(), seen = loadRandomSeen();
+        n = Math.max(1, n | 0);
+        const cats = {}; let unplayed = 0;
+        for (let i = 0; i < n; i++) {
+          const e = drawRandom(pool, seen);
+          if (!e) continue;
+          cats[e.cat] = (cats[e.cat] || 0) + 1;
+          if (!seen[e.token]) unplayed++;
+        }
+        const pct = Object.fromEntries(Object.entries(cats).map(([k, v]) => [k, ((v / n) * 100).toFixed(1) + "%"]));
+        const poolUnplayed = pool.filter((e) => !seen[e.token]).length;
+        return {
+          n, categories: pct,
+          unplayed: ((unplayed / n) * 100).toFixed(1) + "%",
+          poolUnplayed: ((poolUnplayed / pool.length) * 100).toFixed(1) + "% of the pool",
+          weight: RANDOM_UNPLAYED_WEIGHT,
+        };
+      },
+      // Force a category, so a single shelf's dispatch can be exercised on demand. Ignores the
+      // weighting entirely — this is a dispatch test, not a draw test.
+      cat: (id) => {
+        const opts = buildRandomPool().filter((e) => e.cat === id);
+        if (!opts.length) return `nothing playable in "${id}" — try ${RANDOM_CATEGORIES.map((c) => c.id).join(", ")}`;
+        return dispatchRandom(opts[Math.floor(Math.random() * opts.length)]);
+      },
+      roll: () => rollRandom(),                        // the button, from the console
+      seen: () => loadRandomSeen(),                    // the raw ledger
+      // Mark everything playable as seen — the "played it all" end state, where the lean
+      // switches off and the draw is the category shares alone. Check with sample().
+      seeAll: () => { for (const e of buildRandomPool()) markRandomSeen(e.token); return poolSummary(buildRandomPool(), loadRandomSeen()); },
+      // Clear the ledger WITHOUT re-seeding: the next draw treats the whole notebook as
+      // unplayed, which is the fresh-notebook state. A reload re-seeds from the boards.
+      reset: () => { resetRandomSeen(); return "ledger cleared — reload to re-seed from the boards"; },
+    },
     // Normal-mode novelty bias — the coverage nudge that favours un-encountered words in Normal.
     // "Encountered" is read from the lifetime tally (words + misses), so there's no separate store
     // to reset; forget() clears the tally's word history (leaving song/album counts) to replay it.
@@ -16949,6 +17163,7 @@ async function init() {
     });
   }
   migrateRecordsFromStats();   // seed records from pre-existing stats once, before any game runs
+  seedRandomFromBoards();      // backfill the randomiser's ledger from play history, once
   console.log("%c♡ written in the margins · 13 pages of you ♡", "font-size:14px;color:#a9791f;font-family:cursive;");
   currentMode = loadMode();
   // Default game type on launch (or restore the last one clicked).
@@ -16987,6 +17202,7 @@ async function init() {
   $("masteryBackBtn").addEventListener("click", () => backToScreen(masteryBackTarget));
   // Keepsakes modal — opened from the camera icon beside the gear, closed by ✕, scrim, or ESC.
   $("keepsakesGear").addEventListener("click", openKeepsakes);
+  $("randomGear").addEventListener("click", () => { rollRandom(); });
   $("keepsakesCloseBtn").addEventListener("click", closeKeepsakes);
   $("keepsakesModalScrim").addEventListener("click", closeKeepsakes);
   $("keepsakesModal").addEventListener("keydown", (e) => {

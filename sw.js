@@ -16,7 +16,7 @@
  * Paths are relative so the worker works at the site root (swiftassociation.com)
  * and under any project subpath, without hardcoding the origin.
  */
-const CACHE = "stta-v36";
+const CACHE = "stta-v37";
 const ASSETS = [
   "./",
   "index.html",
@@ -33,6 +33,9 @@ const ASSETS = [
   "js/match.js",
   // Bonus-game puzzle builders (pure; see js/bonus.js).
   "js/bonus.js",
+  // The randomiser's weighting (pure; see js/random.js). app.js imports it at load, so an
+  // uncached copy would break a cold offline start rather than just the button.
+  "js/random.js",
   "js/bracelet.js",
   "js/braceletcard.js",
   "js/storage.js",

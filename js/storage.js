@@ -4,7 +4,7 @@
 import {
   HS_KEY, RECORDS_KEY, HISTORY_KEY, STATS_KEY, ACH_KEY, DIFF_KEY,
   DAILY_KEY, DAILY_PROGRESS_KEY, DAILY_BOARD_KEY, DAILY_STREAK_KEY, TYPES_KEY, TALLY_KEY,
-  BREADTH_KEY, WEEKDAYS_KEY, EXPLORER_TOKENS,
+  BREADTH_KEY, WEEKDAYS_KEY, EXPLORER_TOKENS, RANDOM_KEY,
   SETTINGS_KEY, METRICS_KEY, APP_PREFIX, DEFAULT_SETTINGS,
   CHALLENGES_KEY, CHALLENGE_TOKENS_KEY,
   ALBUM_FOCUS_KEY, ALBUM_FOCUS_TARGET, DIFF_RANK,
@@ -430,6 +430,53 @@ export function hasPlayedEveryWeekday(seen = loadWeekdaysPlayed()) {
 // Clear both breadth stores (dev tool; resetAchievements sweeps them too).
 export function resetBreadth() {
   try { localStorage.removeItem(BREADTH_KEY); localStorage.removeItem(WEEKDAYS_KEY); } catch (e) { /* ignore */ }
+}
+
+/* ---------- The randomiser's "already shown you" ledger ----------
+   Deliberately NOT derived from the boards at draw time. Three of them cannot answer the
+   question at all — Album Focus and the guest shelf record a best and a mark but no play count,
+   so a run that scored nothing is indistinguishable from one never played — and the ones that
+   can answer it disagree about when a run counts, since a board is written at the END of a run.
+   The randomiser's question is "have you been shown this", and a run you opened and walked out
+   of has been shown to you, so this is marked at run START from every start path instead.
+
+   Marked by every start path, not just the randomiser's own: a notebook where playing Midnights
+   from the album shelf didn't count would keep dealing you Midnights. Value: { [token]: true }.
+   Tokens are minted by app.js (randomToken) and never parsed back apart here. */
+export function loadRandomSeen() {
+  try {
+    const raw = localStorage.getItem(RANDOM_KEY);
+    if (raw) { const o = JSON.parse(raw); if (o && typeof o === "object") return o; }
+  } catch (e) { /* ignore */ }
+  return {};
+}
+// Record one token as shown; returns the updated record.
+export function markRandomSeen(token) {
+  const o = loadRandomSeen();
+  if (!token || o[token]) return o;
+  o[token] = true;
+  try { localStorage.setItem(RANDOM_KEY, JSON.stringify(o)); } catch (e) { /* ignore */ }
+  return o;
+}
+// Has the ledger ever been written? Distinguishes a notebook that has genuinely seen nothing
+// from one that simply predates this ledger — see seedRandomSeen.
+export function randomSeeded() {
+  try { return localStorage.getItem(RANDOM_KEY) !== null; } catch (e) { return false; }
+}
+// One-time backfill, run once at startup. The ledger arrives empty on a notebook that has been
+// played for months, and an empty ledger reads as "nothing has been played", which would tell
+// the randomiser to lean toward things this player has done a hundred times. So the play history
+// the boards CAN attest to is folded in once, and from then on the ledger keeps itself.
+// Writes even when `tokens` is empty, so the seeded flag is set and this never runs twice.
+export function seedRandomSeen(tokens) {
+  if (randomSeeded()) return loadRandomSeen();
+  const o = {};
+  for (const t of tokens || []) if (t) o[t] = true;
+  try { localStorage.setItem(RANDOM_KEY, JSON.stringify(o)); } catch (e) { /* ignore */ }
+  return o;
+}
+export function resetRandomSeen() {
+  try { localStorage.removeItem(RANDOM_KEY); } catch (e) { /* ignore */ }
 }
 
 /* ---------- Lifetime per-song / per-word tally ---------- */

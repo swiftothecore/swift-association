@@ -24,6 +24,7 @@ The game is still a work in progress and is by no means 'done'.
 - The ability to make your own **custom modes**
 - A guest shelf of other artists' catalogues, played on their own and never mixed into Taylor's
 - A shelf of bonus mini-games, including one where you hunt a swapped word in a real lyric
+- A randomiser that deals one run from anywhere in the notebook, leaning toward what you haven't played yet
 
 **The long game**
 

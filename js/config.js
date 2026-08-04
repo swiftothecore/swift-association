@@ -57,6 +57,7 @@ export const CUSTOM_KEY = "swiftSongAssociation.custom";               // player
 export const KEEPSAKES_KEY = "swiftSongAssociation.keepsakes";         // earned collectibles — { [polaroidId]: isoDate } (unlock time, mirrors achievements)
 export const BREADTH_KEY = "swiftSongAssociation.modesSeen";           // { [token]: true } — every mode/difficulty combination ever finished, for "Explorer"
 export const WEEKDAYS_KEY = "swiftSongAssociation.weekdaysPlayed";     // { [0-6]: true } — which weekdays you have finished a game on, for "Seven"
+export const RANDOM_KEY = "swiftSongAssociation.randomSeen";           // { [token]: true } — everything the randomiser has already shown you (see RANDOM_CATEGORIES)
 
 // Keepsakes — the collectible polaroid set (subjects + SVGs live in js/polaroids.js).
 // A polaroid develops like real instant film: solid black on unlock, the photo fading
@@ -425,6 +426,50 @@ export const RUTHLESS_SKIP_PENALTY = 90; // seconds added to the run for a page 
 // What the gauge fills over. Nothing happens when it fills — there is no deadline here — it is
 // purely a read on how expensive this page is getting, which a bar can say faster than a number.
 export const RUTHLESS_PACE_SECONDS = 45;
+
+/* ---------- The randomiser: one draw across everything the notebook can play ----------
+   A launcher, not a game type. It picks a configuration and calls the same start function the
+   player would have reached by hand, so a random run reports into its own mode's stats exactly
+   as if it had been chosen from the shelf. Nothing here is sandboxed, because nothing here is
+   new: the draw only decides WHICH existing run happens.
+
+   Two rules shape the draw, and they pull in opposite directions.
+
+   CATEGORY BALANCE. The leaves are wildly uneven — 32 challenges and 26 dark sides against one
+   Adaptive — so a flat roll over every playable configuration would be a challenge machine that
+   mentions Adaptive twice a year. Each category therefore carries its own share of the draw and
+   splits it between its own entries, which is why `weight` below is a share of the whole and not
+   a per-entry multiplier. The shares are an editorial hand, not a formula: they say roughly how
+   much of the notebook each shelf is, damped so the big shelves can't drown the small ones.
+
+   THE UNPLAYED LEAN. An entry you have never played counts RANDOM_UNPLAYED_WEIGHT times over
+   inside its category. Because a category's total weight is the sum of its entries', a shelf you
+   have barely touched also swells against one you have exhausted, so the lean works between
+   categories as well as within them without a second rule to say so. It is a lean and never a
+   filter: a played entry keeps a real share of the draw throughout. Once everything playable has
+   been seen once, every multiplier is 1 and the draw settles into the category shares alone,
+   which is the "completely random" end state.
+
+   Playedness is tracked per token by the RANDOM_KEY ledger (storage.js), NOT per configuration.
+   Album Focus is the reason: playing Midnights once is knowing Midnights, so it marks
+   `album:midnights` and every difficulty of it counts as seen. Guests and Infinite variants
+   follow the same reading. A plain difficulty run is the exception where the difficulty IS the
+   thing drawn, so it tokenises per mode. */
+export const RANDOM_UNPLAYED_WEIGHT = 4;
+// `weight` is a share of the draw; the numbers are relative and don't need to total anything.
+// `empty` categories (no unlocked entries yet, no guest fetched, today's daily already played)
+// simply contribute nothing and the rest re-normalise around them.
+export const RANDOM_CATEGORIES = [
+  { id: "difficulty", weight: 12, label: "a difficulty" },
+  { id: "infinite",   weight: 8,  label: "Infinite" },
+  { id: "adaptive",   weight: 5,  label: "Adaptive" },
+  { id: "album",      weight: 14, label: "Album Focus" },
+  { id: "guest",      weight: 5,  label: "a guest" },
+  { id: "challenge",  weight: 22, label: "a challenge" },
+  { id: "dark",       weight: 14, label: "a dark side" },
+  { id: "bonus",      weight: 12, label: "a bonus game" },
+  { id: "daily",      weight: 8,  label: "the daily" },
+];
 
 /* ---------- Persistence tickets: the second challenge currency ----------
    Tokens only mint on a first-ever defeat, so a player who cannot beat what is in front of

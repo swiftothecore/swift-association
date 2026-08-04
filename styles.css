@@ -6131,6 +6131,14 @@
   }
   .keepsakes-gear-badge.is-empty { display: none; }
 
+  /* Randomiser — PLACEHOLDER SEAT. The cluster is laid out right-to-left from the gear, so the
+     seat next to keepsakes is one step further out. Home and object are both still open (see
+     the markup); when the real thing is designed this rule is expected to go with it. Hidden
+     during play for the keepsakes icon's reason: it's a way into a run, not a mid-round tool. */
+  .random-gear { right: 164px; }
+  @media (min-width: 1040px) { .random-gear { right: 172px; } }
+  body.in-game .random-gear { display: none; }
+
   .settings-modal { position: fixed; inset: 0; z-index: 200; display: none; }
   .settings-modal.open { display: block; }
   .settings-scrim { position: absolute; inset: 0; background: rgba(34, 24, 12, 0.5); animation: fade 0.25s ease; }
