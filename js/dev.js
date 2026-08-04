@@ -51,6 +51,7 @@ export function initDev(api) {
   let revealOpen = false;
   body.append(section("inspect",
     row(btn("reveal answers", () => { revealOpen = !revealOpen; answerBox.style.display = revealOpen ? "" : "none"; renderReveal(); }),
+        btn("short lines", () => { revealOpen = true; answerBox.style.display = ""; renderShortLines(); }),
         btn("log state", () => console.log("[dev] state", api.getState()))),
     answerBox));
   function renderReveal() {
@@ -59,6 +60,16 @@ export function initDev(api) {
     if (!st.valid.length) { answerBox.textContent = `"${st.word || "—"}" — no valid songs (or not in a round)`; return; }
     answerBox.textContent = `"${st.word}" → ${st.valid.length} song(s)\n` +
       st.valid.map((v) => `• ${v.title}${v.album ? "  [" + v.album + "]" : ""}\n    “${v.line}”`).join("\n");
+  }
+  // Sub-floor lines of this round's valid songs: ✓ ones the whole-line exception accepts,
+  // ✗ ones a guard rejects (with the reason). Shares the reveal box, so it also spoils
+  // the answers — same drawer, same warning.
+  function renderShortLines() {
+    const rows = api.shortLines();
+    const st = api.getState();
+    if (!rows.length) { answerBox.textContent = `"${st.word || "—"}" — no sub-floor lines in this round's songs`; return; }
+    answerBox.textContent = `"${st.word}" — ${rows.filter((r) => r.accepted).length}/${rows.length} short lines accepted\n` +
+      rows.map((r) => `${r.accepted ? "✓" : "✗"} “${r.line}”  — ${r.title}${r.why ? "  (" + r.why + ")" : ""}`).join("\n");
   }
 
   // ---- Round control ---------------------------------------------------------

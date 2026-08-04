@@ -97,6 +97,25 @@ const MIN_LYRIC_WORDS = 4;
 // recalled line, not a bare-word cheat. Short trios ("i love you") still fall short.
 const MIN_LYRIC_WORDS_SHORT = 3;
 const MIN_LYRIC_SHORT_CHARS = 20;
+// Below even that floor sits one narrow exception, because plenty of real lines are
+// simply short ("say don't go", "come morning light", "down bad") and a player who
+// writes one out whole has done the thing the floor was asking for. A phrase under the
+// floor passes if it is a COMPLETE line of a valid song, verbatim — see shortLineSong,
+// which carries the guards that keep the old cheat shut.
+const SHORT_LINE_MIN_WORDS = 2;
+// Vocalise tokens. Almost every short line shared across several songs is one of these
+// ("oh oh" is a whole line in 15 of them), which is exactly what a player could blind-
+// type hoping one of the round's answers happens to contain it. A line made only of
+// these carries no recall, so it never clears the exception.
+const LYRIC_FILLER = new Set([
+  "oh", "ooh", "ohh", "o", "ah", "ahh", "aah", "woah", "whoa", "wo", "woo",
+  "yeah", "yea", "ya", "yah", "mm", "mmm", "hmm", "hm", "mmmm",
+  "la", "na", "da", "doo", "dee", "di", "ba", "ha", "haa", "uh", "huh",
+  "eh", "ay", "hey", "ooo", "oo",
+]);
+// Recall tiers are about feats of memory, so a line too short to be one ("in you") is
+// capped below "perfect" however completely it was typed. See gradeLyricRecall.
+const RECALL_TIER_MIN_WORDS = 3;
 const FUZZY_THRESHOLD = 0.8;
 // Recall grading: a typed line covering this fraction of the matched real line earns
 // a verse bonus; at the "perfect" mark (or verbatim) it earns the full bonus.
@@ -12080,10 +12099,43 @@ function rejectNewSong() {
 }
 
 /* ---------- Lyric-line answering ---------- */
+// A song's complete normalized lines, as a set. Built from the song object's OWN lyrics
+// the first time it's asked for, rather than indexed in loadData: a corpus swap (the
+// guest shelf) replaces the song objects wholesale, so a lazy per-object cache can never
+// be left pointing at the wrong catalogue's lines.
+function normLineSet(song) {
+  if (!song._normLineSet) {
+    song._normLineSet = new Set(song.lyrics.split("\n").map(normalizeLyric).filter(Boolean));
+  }
+  return song._normLineSet;
+}
+
+// Is this sub-floor phrase substantial enough to be worth accepting as a whole line?
+// Two guards, both aimed at the cheat the floor exists for: a bare prompt-word echo.
+// (1) one word is never enough — a song with a lone "Superstar" line would otherwise
+// hand the round to anyone who typed the prompt word; (2) the line has to carry a real
+// word that isn't the prompt word, so "oh baby" on the word "baby" stays shut.
+function shortLineSubstantial(normPhrase, word) {
+  const words = normPhrase.split(" ");
+  if (words.length < SHORT_LINE_MIN_WORDS) return false;
+  const normWord = word ? normalizeLyric(word) : "";
+  // Lenient regardless of the mode's strictness: here a wider notion of "that's just the
+  // prompt word again" makes the guard tighter, which is the direction to err in.
+  const rx = normWord ? wordRegex(normWord, false) : null;
+  return words.some((w) => !LYRIC_FILLER.has(w) && !(rx && rx.test(w)));
+}
+
+// The round's valid song that has this phrase as a COMPLETE line, or null. Verbatim
+// only — at this length a fuzzy window match would be noise, not recall.
+function shortLineSong(normPhrase) {
+  if (!shortLineSubstantial(normPhrase, currentWord)) return null;
+  return currentSongs.find((s) => normLineSet(s).has(normPhrase)) || null;
+}
+
 // A player can answer by typing a LYRIC LINE instead of the title. There is no lyric
 // autocomplete (that would hand them the answer); the line is blind-typed and only
 // JUDGED here. To pass it must (a) contain the prompt word, (b) be >= MIN_LYRIC_WORDS
-// (or a long-enough 3-word phrase, see below),
+// (or a long-enough 3-word phrase, see below, or a whole short line — shortLineSong),
 // and (c) closely match a real word-bearing lyric line of a valid song. Fuzzy so
 // typos / a slightly-off line still count. Returns { song, line } or null.
 function matchLyricLine(phrase) {
@@ -12093,7 +12145,14 @@ function matchLyricLine(phrase) {
   // Accept 4+ words, OR a 3-word phrase that's long enough by character count.
   if (wordCount < MIN_LYRIC_WORDS &&
       !(wordCount >= MIN_LYRIC_WORDS_SHORT && normPhrase.length >= MIN_LYRIC_SHORT_CHARS)) {
-    return null;
+    // Under the floor, the only way through is a complete short line, typed exactly.
+    // Resolved here rather than falling through, so the answer is credited to the song
+    // whose LINE it is — not to some other valid song that happens to carry the same
+    // few words mid-line — and never to the fuzzy path, which is meaningless this short.
+    const song = shortLineSong(normPhrase);
+    if (!song) return null;
+    const { text: line, lines } = recoverLyricLine(song, normPhrase);
+    return { song, line, fuzzy: false, ...gradeLyricRecall(normPhrase, line, lines) };
   }
   // NOTE: we deliberately do NOT require the prompt word to appear in the typed phrase.
   // Matching is already restricted to currentSongs (every one of which contains the
@@ -12201,6 +12260,15 @@ function gradeLyricRecall(normPhrase, line, lines = 1) {
   const verbatim = normPhrase === normLine;
   const coverage = total ? Math.min(typed / total, 1) : 0;
   const perfect = verbatim || coverage >= RECALL_PERFECT;
+  // A line of a word or two ("in you", "and the dancers") is a correct answer but not a
+  // feat of recall, so it can't reach the word-perfect rungs however completely it was
+  // typed — those tiers, their bonus beads and the charms hanging off them stay earned
+  // by real lines. It still grades "good" for covering what there was to cover.
+  if (total && total < RECALL_TIER_MIN_WORDS) {
+    return coverage >= RECALL_GOOD
+      ? { tier: "good", bonus: 1, coverage, lines }
+      : { tier: "base", bonus: 0, coverage, lines };
+  }
   if (perfect && lines >= WHOLE_VERSE_LINES) return { tier: "verse", bonus: 3, coverage, lines };
   if (perfect) return { tier: "perfect", bonus: 2, coverage, lines };
   if (coverage >= RECALL_GOOD) return { tier: "good", bonus: 1, coverage, lines };
@@ -12222,6 +12290,9 @@ function verseProgress(text) {
     const { text: line, lines } = recoverLyricLine(s, np);
     const total = normalizeLyric(line).split(" ").length;
     const coverage = total ? Math.min(np.split(" ").length / total, 1) : 0;
+    // Mirror gradeLyricRecall's cap on tiny lines, so the meter never promises a ★ the
+    // verdict won't pay out.
+    if (total && total < RECALL_TIER_MIN_WORDS) return coverage >= RECALL_GOOD ? "good" : "fragment";
     if (coverage >= RECALL_PERFECT && lines >= WHOLE_VERSE_LINES) return "verse";
     if (coverage >= RECALL_PERFECT) return "perfect";
     if (coverage >= RECALL_GOOD) return "good";
@@ -13660,7 +13731,8 @@ function handleTypingEggs(val) {
 }
 
 // Is the typed text a substantial, verbatim lyric line from any song? Mirrors
-// matchLyricLine's length gate (4+ words, or a long-enough 3-word phrase) but scans
+// matchLyricLine's length gate (4+ words, a long-enough 3-word phrase, or a whole
+// short line) but scans
 // allSongs and stops at the first hit. Cheap: an indexOf over precomputed blobs,
 // gated behind the input debounce and the word-count floor.
 function isKnownLyricPhrase(text) {
@@ -13668,7 +13740,13 @@ function isKnownLyricPhrase(text) {
   if (!np) return false;
   const wc = np.split(" ").length;
   if (wc < MIN_LYRIC_WORDS &&
-      !(wc >= MIN_LYRIC_WORDS_SHORT && np.length >= MIN_LYRIC_SHORT_CHARS)) return false;
+      !(wc >= MIN_LYRIC_WORDS_SHORT && np.length >= MIN_LYRIC_SHORT_CHARS)) {
+    // Same short-line exception the verdict grants — a whole little line is still a
+    // lyric you knew. No prompt-word guard here: this egg is song-agnostic by design,
+    // so there's no free round to protect, only "oh oh" to keep out.
+    if (!shortLineSubstantial(np, "")) return false;
+    return allSongs.some((s) => normLineSet(s).has(np));
+  }
   for (const s of allSongs) {
     if (s._normLyrics.includes(np)) return true;
   }
@@ -15809,6 +15887,25 @@ function buildDevApi() {
       })),
     }),
     words: () => playableWords.slice(),
+    // Every sub-floor line this round would accept as a whole-line answer, with the
+    // ones the guards throw out listed beside them and why. The rule is invisible from
+    // the game screen (nothing announces which short lines are live), so this is the
+    // only way to check a page's short answers without reading songs.json.
+    shortLines: () => currentSongs.flatMap((s) =>
+      [...normLineSet(s)]
+        .filter((l) => {
+          const wc = l.split(" ").length;
+          return wc < MIN_LYRIC_WORDS && !(wc >= MIN_LYRIC_WORDS_SHORT && l.length >= MIN_LYRIC_SHORT_CHARS);
+        })
+        .map((l) => ({
+          title: s.title,
+          line: l,
+          accepted: !!shortLineSong(l) && shortLineSong(l).title === s.title,
+          why: l.split(" ").length < SHORT_LINE_MIN_WORDS ? "one word"
+            : !shortLineSubstantial(l, currentWord) ? "filler / just the prompt word"
+            : shortLineSong(l) && shortLineSong(l).title !== s.title ? "credited to " + shortLineSong(l).title
+            : "",
+        }))),
     // Round control
     answer: devAnswer,
     advance: () => advanceFromFeedback(),
