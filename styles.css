@@ -2027,6 +2027,36 @@
   .bg-str-mark { position: absolute; left: -19px; top: 50%; transform: translateY(-50%); width: 14px; }
   .bg-str-item.is-wrong .bg-str-text { color: var(--ink-soft); }
 
+  /* Out of Order — four lines dealt down the page as cards you swap. The slot numbers sit in
+     the margin ahead of the words, so the column reads as a numbered list of lines rather than
+     as four loose quotes, and the eye can check an order without counting. */
+  .bg-order { max-width: 40ch; margin: 0 auto 6px; display: flex; flex-direction: column; gap: 5px; }
+  .bg-ord-item {
+    position: relative; display: flex; align-items: baseline; gap: 10px; width: 100%;
+    background: none; border: 0; border-radius: 4px; padding: 6px 8px; cursor: pointer;
+    text-align: left; color: var(--ink); transition: background 0.14s, box-shadow 0.14s;
+  }
+  .bg-ord-item:hover:not(:disabled) { background: rgba(199,149,31,0.14); }
+  .bg-ord-item:disabled { cursor: default; }
+  /* Held: this card is waiting for the one it swaps with. Same gold outline Invisible String
+     puts on a held end, because it is the same half-made move. */
+  .bg-ord-item.is-held { box-shadow: 0 0 0 1.5px rgba(199,149,31,0.85); background: rgba(199,149,31,0.16); }
+  .bg-ord-num {
+    font-family: var(--type); font-size: 10px; letter-spacing: 1px; color: var(--ink-soft);
+    min-width: 1.2ch; flex: none;
+  }
+  .bg-ord-text { font-family: var(--hand); font-size: 20px; line-height: 1.22; }
+  /* The reveal's margin marks, one per JOIN — they sit in the GAP between two lines rather
+     than beside one, which is what says the score is about what follows what. Zero height, so
+     adding them to the straightened board doesn't shift a line off where it was. */
+  .bg-ord-join { position: relative; height: 0; }
+  .bg-ord-mark {
+    position: absolute; left: -19px; top: 50%; transform: translateY(-50%); width: 14px;
+  }
+  /* The tap instruction above the button, so the hint line carries both without either
+     becoming a sentence you have to read twice. */
+  .bg-ord-say { display: block; margin-bottom: 5px; }
+
   /* Only Here — the page is a song's name and a blank line, so the only furniture it needs is
      the price list: what a word pays, by how few other songs sing it. Pencilled small under the
      heading rather than shouted, because it is reference the player reads once a run and then
@@ -2285,6 +2315,11 @@
     .bg-str-text { font-size: 17px; }
     .bg-str-item { padding: 5px 4px; }
     .bg-str-mark { left: -15px; }
+    /* One column of full lines, so it only needs the type to come down and the marks to come
+       in off a margin a phone hasn't got. */
+    .bg-ord-text { font-size: 17px; }
+    .bg-ord-item { padding: 5px 4px; gap: 8px; }
+    .bg-ord-mark { left: -15px; }
     .bg-sheet-title { font-size: 22px; }
     .bg-sleeve { padding: 18px 14px 13px; }
     .bg-sleeve-head { gap: 10px; }

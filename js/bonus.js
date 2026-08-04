@@ -710,3 +710,107 @@ export function judgeBlank(typed, puzzle, vocab = null) {
       (levenshtein(got, want) <= 1 || swappedNeighbours(got, want))) return true;
   return false;
 }
+
+/* ---------- Out of Order ----------
+   Four consecutive lines of one song, dealt out of order; put them back. It is the only game
+   on the shelf you solve by SINGING — the line you are looking for is the one your head plays
+   next — so everything here exists to make sure the song really does answer it.
+
+   The song is NAMED on the page, for Sing It Back's reason: the answer has to be pinned by a
+   real thing rather than by whatever an arrangement of four lines could plausibly be. Nothing
+   is given away by naming it either, since the question is the order and not the song.
+
+   Scored by JOINS rather than by slots: three joins to a page, one point for each line that
+   leads into the one it really leads into. That is the unit of the knowledge being tested —
+   what you know here is what comes next — and it is the only measure that reads honestly,
+   since a permutation of four can never have exactly three slots right.
+
+   The bars a page must clear:
+     1. ONE BREATH   — the four lines are consecutive inside ONE section, so the order is the
+                       song's own and not an editorial join across a section break.
+     2. READABLE     — each line is short enough to sit on a card and has real words in it; a
+                       window of "oh oh oh" has no order anybody could recover.
+     3. DISTINCT     — no two of the four are the same line, or two arrangements are equally
+                       right and one of them gets marked wrong.
+     4. SUNG ONE WAY — the song never sings these same four lines in any other order anywhere
+                       else, which a chorus that comes back rearranged otherwise does.
+     5. A REAL DEAL  — the shuffle it opens on has no line in its own slot AND no join already
+                       standing, so the page starts worth nothing and every point is earned.
+   Returns null if nothing cleared the bars in `tries` attempts (the caller re-rolls). */
+export const ORDER_LINES = 4;
+export const ORDER_JOINS = ORDER_LINES - 1;
+const ORDER_MIN_WORDS = 3;
+const ORDER_MAX_WORDS = 10;
+const ORDER_MIN_CONTENT = 6;   // content words across the whole window, so it isn't all filler
+
+function orderLineOk(line) {
+  const n = line.split(/\s+/).filter(Boolean).length;
+  return n >= ORDER_MIN_WORDS && n <= ORDER_MAX_WORDS && contentWords(line).length >= 1;
+}
+
+/* Bar 4. Every consecutive four-line window in the whole song is compared against ours by its
+   SET of lines: if the same four turn up anywhere else in a different sequence, the song sings
+   them both ways and the page has two honest answers. The flat line list is scanned rather
+   than each section on its own, which is the stricter read of "anywhere else". */
+function orderSungOneWay(song, keys) {
+  const sep = " || ";
+  const want = [...keys].sort().join(sep);
+  const mine = keys.join(sep);
+  const all = songLines(song).map(({ line }) => normalizeLyric(line));
+  for (let i = 0; i + ORDER_LINES <= all.length; i++) {
+    const win = all.slice(i, i + ORDER_LINES);
+    if ([...win].sort().join(sep) !== want) continue;
+    if (win.join(sep) !== mine) return false;
+  }
+  return true;
+}
+
+/* Bar 5. A shuffle that leaves a line where it belongs, or a pair already in sequence, hands
+   over a point the player never made a decision about. For four items there are plenty of
+   arrangements with neither, so this is cheap to insist on. */
+function orderDeal(n, rng) {
+  for (let t = 0; t < 60; t++) {
+    const perm = shuffled([...Array(n).keys()], rng);
+    if (perm.some((v, i) => v === i)) continue;
+    if (perm.some((v, i) => i > 0 && v === perm[i - 1] + 1)) continue;
+    return perm;
+  }
+  return null;
+}
+
+export function buildOrderPuzzle(songs, rng = Math.random, tries = 120, avoid = null) {
+  for (let t = 0; t < tries; t++) {
+    const song = pick(songs, rng);
+    if (!song || !Array.isArray(song.sections)) continue;
+    // Rest a song already played this run while there is catalogue left, then stop insisting
+    // near the end of the budget rather than fail the page over it (Sing It Back's rule).
+    if (avoid && avoid.has(song.title) && t < tries * 0.7) continue;
+
+    const sections = song.sections.filter((s) => Array.isArray(s.lines) && s.lines.length >= ORDER_LINES);
+    if (!sections.length) continue;
+    const sec = pick(sections, rng);
+    const start = Math.floor(rng() * (sec.lines.length - ORDER_LINES + 1));
+    const lines = sec.lines.slice(start, start + ORDER_LINES);          // bar 1
+
+    if (!lines.every(orderLineOk)) continue;                            // bar 2
+    if (lines.reduce((n, l) => n + contentWords(l).length, 0) < ORDER_MIN_CONTENT) continue;
+    const keys = lines.map(normalizeLyric);
+    if (keys.some((k) => !k)) continue;
+    if (new Set(keys).size !== ORDER_LINES) continue;                   // bar 3
+    if (!orderSungOneWay(song, keys)) continue;                         // bar 4
+
+    const deal = orderDeal(ORDER_LINES, rng);                           // bar 5
+    if (!deal) continue;
+    return { song, label: sec.label || "", lines, deal };
+  }
+  return null;
+}
+
+/* How many of the three joins an arrangement holds. `slots[s]` is which line is sitting in
+   slot s, so a join stands wherever the next slot holds the next line. Pure, so the board,
+   the reveal and the dev tools all count it the same way. */
+export function orderJoins(slots) {
+  let n = 0;
+  for (let s = 0; s < slots.length - 1; s++) if (slots[s + 1] === slots[s] + 1) n++;
+  return n;
+}

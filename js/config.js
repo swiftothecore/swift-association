@@ -360,6 +360,13 @@ export const BONUS_GAMES = [
     kicker: "the game backwards", tint: "#2b6b6a", mark: "pin",
     line: "Write a word from the song. Rarer pays more.",
     blurb: "The game backwards: here is the song, and you write a word that is in it. Anything in there scores, and a word nothing else in the catalogue sings is the top of the page." },
+  // Scored by JOINS, not by slots: three to a page, one for each line that leads into the one
+  // it really leads into. What is being tested is knowing what comes next, and a permutation
+  // of four can never have exactly three slots right. See buildOrderPuzzle.
+  { id: "out-of-order", name: "Out of Order", ready: true, points: 3,
+    kicker: "put the lines back", tint: "#5e4a86", mark: "order",
+    line: "Four lines, shuffled. Put them back in order.",
+    blurb: "Four lines that run one into the next, dealt face up in the wrong order. Put them back the way the song sings them." },
 ];
 // A bonus run is short by design — these sit beside the main game, they don't replace it.
 export const BONUS_ROUNDS = 10;
@@ -383,6 +390,11 @@ export const BONUS_STRING_SECONDS = 45;
 // first two words that come to mind and reach for a third, which is where the points are, and
 // short enough that a page you have nothing rare for is answered and moved on from.
 export const BONUS_ONLY_SECONDS = 30;
+// Out of Order is read first and rearranged second, and the rearranging costs taps as well as
+// thought. Long enough to read four lines, hear where they go and swap them into place; short
+// enough that a window you can't hear is left half-sorted rather than brute-forced, which at
+// four lines is a real temptation.
+export const BONUS_ORDER_SECONDS = 40;
 
 /* ---------- Persistence tickets: the second challenge currency ----------
    Tokens only mint on a first-ever defeat, so a player who cannot beat what is in front of

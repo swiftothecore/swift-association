@@ -9,6 +9,7 @@ import {
   ACHIEVEMENTS, ACH_ICONS, ACH_BY_ID, ACH_GROUPS, ACH_GROUP_COLORS, ACH_GROUP_OF,
   BONUS_GAMES, BONUS_ROUNDS, BONUS_SLIP_SECONDS, BONUS_NAME_SECONDS, BONUS_BLANK_SECONDS,
   BONUS_REDACT_SECONDS, REDACT_MIN_POINTS, BONUS_STRING_SECONDS, BONUS_ONLY_SECONDS,
+  BONUS_ORDER_SECONDS,
   CHALLENGES, CHALLENGE_BY_ID, CHALLENGE_ORDER, CHALLENGE_SEALS, DARK_SIDE_IDS, DARK_SIDE_TODO,
   DARK_SIDE_MILESTONE, PERSIST_ATTEMPTS, TICKET_PRICE,
   IMPOSTOR_WORDS, IMPOSTOR_COUNT, DARK_IMPOSTOR_WORDS,
@@ -46,6 +47,7 @@ import { wordRegex as wordRegexCore, extractLineWithWord as extractLineWithWordC
 import { buildLineIndex, buildSlipContext, buildSlipPuzzle, buildNamePuzzle,
          buildBlankPuzzle, buildRedactedPuzzle, buildStringPuzzle, STRING_PAIRS,
          buildWordIndex, buildOnlyHerePuzzle, judgeOnlyHere, onlyHerePoints,
+         buildOrderPuzzle, orderJoins, ORDER_LINES, ORDER_JOINS,
          judgeBlank } from "./bonus.js";
 import { renderStreakPlacard } from "./placard.js";
 import {
@@ -3900,6 +3902,10 @@ let onlyPlayed = null;
 let stringLinks = [];
 let stringSel = null;
 let stringResizeHandler = null;
+// Out of Order: `orderSlots[slot]` is which of the four lines is sitting in that slot, and
+// `orderSel` is the slot being held while it waits for the one it swaps with.
+let orderSlots = [];
+let orderSel = null;
 let bonusLog = [];         // one entry per settled round, for the end card's track listing
 // Bumped on every start. The between-rounds pause is a setTimeout, so without a token a run
 // that's quit and immediately restarted would have the old pause advance the NEW run a round.
@@ -4094,6 +4100,7 @@ function bonusSeconds() {
   if (bonusGame.id === "redacted") return BONUS_REDACT_SECONDS;
   if (bonusGame.id === "invisible-string") return BONUS_STRING_SECONDS;
   if (bonusGame.id === "only-here") return BONUS_ONLY_SECONDS;
+  if (bonusGame.id === "out-of-order") return BONUS_ORDER_SECONDS;
   return BONUS_NAME_SECONDS;
 }
 
@@ -4111,6 +4118,8 @@ function buildBonusPuzzle() {
     return buildStringPuzzle(allSongs, lineIndex, Math.random, 120, new Set(bonusRecentSongs));
   if (bonusGame.id === "only-here")
     return buildOnlyHerePuzzle(allSongs, bonusIndexes().wordIndex, Math.random, 120, new Set(bonusRecentSongs));
+  if (bonusGame.id === "out-of-order")
+    return buildOrderPuzzle(allSongs, Math.random, 120, new Set(bonusRecentSongs));
   return buildNamePuzzle(allSongs, lineIndex);
 }
 
@@ -4127,7 +4136,8 @@ function nextBonusRound() {
     bonusRecentFakes.push(bonusPuzzle.fakeWord.toLowerCase());
     if (bonusRecentFakes.length > 6) bonusRecentFakes.shift();
   }
-  if (bonusGame.id === "sing-it-back" || bonusGame.id === "redacted" || bonusGame.id === "only-here")
+  if (bonusGame.id === "sing-it-back" || bonusGame.id === "redacted" ||
+      bonusGame.id === "only-here" || bonusGame.id === "out-of-order")
     bonusRecentSongs.push(bonusPuzzle.song.title);
   // A board's worth of songs at a time, so a run of ten pages doesn't put the same song up twice.
   if (bonusGame.id === "invisible-string")
@@ -4139,6 +4149,9 @@ function nextBonusRound() {
   redactWorth = bonusPagePoints(bonusGame);
   redactPeeled = 0;
   onlyPlayed = null;
+  // The lines as they were dealt, and nothing held. `deal[slot]` is which line landed there.
+  orderSlots = bonusPuzzle && bonusPuzzle.deal ? [...bonusPuzzle.deal] : [];
+  orderSel = null;
 
   // Everything that makes the new page: the shared chrome, then the game's own body.
   const lay = () => {
@@ -4250,6 +4263,16 @@ function renderBonusRound() {
     // across an answer key.
     stringResizeHandler = () => drawThreads(bonusLocked);
     window.addEventListener("resize", stringResizeHandler);
+  } else if (bonusGame.id === "out-of-order") {
+    // The song is named at the top for Sing It Back's reason: the order has to be pinned by a
+    // real song rather than by whatever four lines could plausibly be. Solving it means
+    // singing the thing in your head, and you can't sing a song you haven't been told.
+    body.innerHTML =
+      `<p class="bg-ask">put these lines back in the order they are sung</p>` +
+      bonusSongHead(p.song, p.label) +
+      `<div class="bg-order" id="bonusOrder"></div>` +
+      `<p class="bg-hint" id="bonusOrderHint"></p>`;
+    renderOrderBoard();
   } else if (bonusGame.id === "only-here") {
     // The whole page is the song's name and a blank line, which is the point: nothing here is
     // read, everything is recalled. The ladder is printed alongside because the game is a
@@ -4361,6 +4384,9 @@ function bonusTimeout() {
     ? `<b>${escapeHtml(bonusPuzzle.fakeWord)}</b> was the slip`
     // Threads already laid still count when the clock goes, so the page has to say how many.
     : bonusGame && bonusGame.id === "invisible-string" ? stringDetail(stringPairsRight())
+    // Same for a board left half-sorted: whatever joins were standing when the clock went are
+    // joins the player made, and they pay.
+    : bonusGame && bonusGame.id === "out-of-order" ? orderDetail(orderJoinsRight())
     : "";
   settleBonusRound(false, detail, true);
 }
@@ -4541,6 +4567,96 @@ function judgeString() {
 }
 function stringDetail(right) {
   return `<b>${right}</b> of ${STRING_PAIRS} tied off`;
+}
+
+/* ---------- Out of Order: the board ----------
+   Four lines dealt down the page, and the only move is to swap two of them: tap one, tap the
+   other. Tap-then-tap for Invisible String's reasons — dragging is where a reorder gets
+   expensive and flaky on touch, and it buys nothing this puzzle needs. Tapping a held card
+   again puts it back down, which is the only undo a swap board can want.
+   The numbers stay with the SLOT rather than with the line: they are the page's 1-2-3-4, and a
+   number that travelled with a card would be answering the question it is asking.
+   The whole board is re-rendered on every swap. It is four buttons, and a rebuild keeps the
+   DOM honest about what is sitting where. */
+function orderJoinsRight() { return orderJoins(orderSlots); }
+
+// Which joins the player's arrangement held, keyed by the line the join leads OUT of — which
+// is what the reveal needs, since by then the board has been straightened back into the song's
+// order and the marks go in the gaps of that.
+function orderHeldJoins() {
+  const held = new Set();
+  for (let s = 0; s < orderSlots.length - 1; s++)
+    if (orderSlots[s + 1] === orderSlots[s] + 1) held.add(orderSlots[s]);
+  return held;
+}
+
+/* `reveal` STRAIGHTENS THE BOARD, the way Invisible String's does: the lines go back into the
+   song's own order, so the page finishes as a verse that can be read straight down, and the
+   margin marks report which joins the player had. Marking up their own arrangement instead
+   would leave a wrong verse as the last thing on screen — and the tick sitting in the GAP
+   between two lines is also what teaches the word "join" without a sentence explaining it. */
+function renderOrderBoard(reveal = false) {
+  const wrap = $("bonusOrder");
+  if (!wrap || !bonusPuzzle) return;
+  const p = bonusPuzzle;
+  const slots = reveal ? p.lines.map((_, i) => i) : orderSlots;
+  const held = reveal ? orderHeldJoins() : null;
+
+  wrap.innerHTML = slots.map((lineIdx, slot) => {
+    // On the reveal, the gap above this line carries the mark for the join into it.
+    const join = reveal && slot > 0
+      ? `<div class="bg-ord-join">` +
+          `<span class="bg-ord-mark" aria-hidden="true">${held.has(lineIdx - 1) ? BG_TICK : BG_CROSS}</span>` +
+          `<span class="sr-only">${held.has(lineIdx - 1) ? "you had this line following the one above" : "you had something else here"}</span>` +
+        `</div>`
+      : "";
+    const isHeld = !reveal && orderSel === slot;
+    const cls = ["bg-ord-item", isHeld ? "is-held" : ""].filter(Boolean).join(" ");
+    const aria = `${censor(p.lines[lineIdx])} — line ${slot + 1} of ${ORDER_LINES}`;
+    return join +
+      `<button type="button" class="${cls}" data-i="${slot}"${reveal ? " disabled" : ""}` +
+        ` aria-label="${escapeHtml(aria)}"` +
+        (reveal ? "" : ` aria-pressed="${isHeld}"`) + `>` +
+        `<span class="bg-ord-num" aria-hidden="true">${slot + 1}</span>` +
+        `<span class="bg-ord-text">${escapeHtml(censor(p.lines[lineIdx]))}</span>` +
+      `</button>`;
+  }).join("");
+  if (!reveal) wrap.querySelectorAll(".bg-ord-item").forEach((b) =>
+    b.addEventListener("click", () => tapOrder(+b.dataset.i)));
+
+  const hint = $("bonusOrderHint");
+  if (hint) {
+    hint.innerHTML = reveal ? ""
+      : `<span class="bg-ord-say">${escapeHtml(orderSel === null ? "tap two lines to swap them" : "now tap the one to swap it with")}</span>` +
+        `<button type="button" id="bonusOrderBtn" class="btn-ghost">that's the order →</button>`;
+    if ($("bonusOrderBtn")) $("bonusOrderBtn").addEventListener("click", judgeOrder);
+  }
+}
+
+function tapOrder(slot) {
+  if (bonusLocked) return;
+  if (orderSel === null || orderSel === slot) {
+    orderSel = orderSel === slot ? null : slot;
+  } else {
+    const was = orderSlots[orderSel];
+    orderSlots[orderSel] = orderSlots[slot];
+    orderSlots[slot] = was;
+    orderSel = null;
+    sfx.play("hint");
+  }
+  renderOrderBoard();
+}
+
+// A page is "cleared" only when all three joins stand, which for four lines is the whole verse
+// back in order. The joins still pay either way — a player who heard two of the three lines
+// follow each other knew two thirds of this page, and the score should say so.
+function judgeOrder() {
+  if (bonusLocked) return;
+  const right = orderJoinsRight();
+  settleBonusRound(right === ORDER_JOINS, orderDetail(right));
+}
+function orderDetail(right) {
+  return `<b>${right}</b> of ${ORDER_JOINS} joins held`;
 }
 
 /* ---------- Redacted: peeling a strip ----------
@@ -4809,8 +4925,11 @@ function bonusAnswerCard() {
   // Invisible String has no card at all: its reveal straightens the whole board out, so every
   // line is already sitting beside its own song with the album tag on it. A card could only
   // repeat one fifth of that.
+  // Out of Order has no card for Sing It Back's reason: its reveal straightens the four lines
+  // back out under a heading that already names the song and album, so a card would reprint a
+  // quarter of the verse an inch below itself.
   if (bonusGame.id === "invisible-string" || bonusGame.id === "redacted" ||
-      bonusGame.id === "only-here") return "";
+      bonusGame.id === "only-here" || bonusGame.id === "out-of-order") return "";
   if (bonusGame.id === "sing-it-back")
     return `<div class="bg-ctx">${lyricCardContext(p.song, p.answer, p.line)}</div>`;
   const slip = bonusGame.id === "spot-the-slip";
@@ -4831,6 +4950,9 @@ function bonusPageScore(correct) {
   // Only Here pays for the word that was written, whatever it was worth — the page is never
   // failed, only answered cheaply or not at all.
   if (bonusGame && bonusGame.id === "only-here") return onlyPlayed ? onlyPlayed.points : 0;
+  // Out of Order pays per join for Invisible String's reason: two thirds of a verse heard is
+  // two thirds of the page, and an all-or-nothing board would throw that reading away.
+  if (bonusGame && bonusGame.id === "out-of-order") return orderJoinsRight();
   if (!correct) return 0;
   if (bonusGame && bonusGame.id === "redacted") return Math.max(REDACT_MIN_POINTS, redactWorth);
   return 1;
@@ -4846,6 +4968,8 @@ function bonusBannerText(correct, isTimeout) {
   if (bonusGame && bonusGame.id === "only-here")
     return correct ? (onlyPlayed && onlyPlayed.count === 1 ? "only here" : "that's in there")
                    : "the page ran out";
+  if (bonusGame && bonusGame.id === "out-of-order")
+    return correct ? "back in order" : isTimeout ? "the page ran out" : "not the order it goes in";
   return correct ? "that's the one" : isTimeout ? "the page ran out" : "not this one";
 }
 
@@ -4884,6 +5008,9 @@ function settleBonusRound(correct, detail, isTimeout = false) {
         // sleeve can't already work out — so it takes the note column outright.
         : bonusGame.id === "redacted" ? `${gained} pts`
         : bonusGame.id === "invisible-string" ? `${gained} of ${STRING_PAIRS}`
+        // The note column is clipped at 10ch, so this says it the way the board does and lets
+        // the game's own name supply the word "joins".
+        : bonusGame.id === "out-of-order" ? `${gained} of ${ORDER_JOINS}`
         // What it paid and the word that paid it: this column is the run's own vocabulary,
         // which is the thing worth carrying off ten pages of it. The number leads because the
         // note is clipped from the right at 10ch, and a long word half-shown still reads. A page
@@ -4903,6 +5030,8 @@ function settleBonusRound(correct, detail, isTimeout = false) {
     revealRedacted();
   } else if (bonusGame.id === "only-here") {
     revealOnlyHere();
+  } else if (bonusGame.id === "out-of-order") {
+    renderOrderBoard(true);
   } else if (bonusGame.id === "sing-it-back") {
     // Whatever was in the gap — a wrong word, a half-typed one, nothing at all — the real
     // word goes in, so the line is left whole and correct on the page.
@@ -15522,6 +15651,11 @@ function buildDevApi() {
             const p = buildOnlyHerePuzzle(allSongs, bonusIndexes().wordIndex, Math.random, 120, new Set(recent));
             if (p) recent.push(p.song.title);
             out.push(p ? { song: p.song.title, eligible: p.eligible, uniques: p.uniques, best: p.best } : null);
+          } else if (id === "out-of-order") {
+            const p = buildOrderPuzzle(allSongs, Math.random, 120, new Set(recent));
+            if (p) recent.push(p.song.title);
+            out.push(p ? { song: p.song.title, section: p.label,
+                           order: p.lines, dealt: p.deal.map((i) => i + 1).join(" ") } : null);
           } else if (id === "sing-it-back") {
             const p = buildBlankPuzzle(allSongs, ctx, Math.random, 120, new Set(recent));
             if (p) recent.push(p.song.title);
@@ -15546,6 +15680,7 @@ function buildDevApi() {
             : id === "invisible-string" ? buildStringPuzzle(allSongs, lineIndex)
             : id === "redacted" ? buildRedactedPuzzle(allSongs, ctx, lineIndex)
             : id === "only-here" ? buildOnlyHerePuzzle(allSongs, bonusIndexes().wordIndex)
+            : id === "out-of-order" ? buildOrderPuzzle(allSongs)
             : id === "sing-it-back" ? buildBlankPuzzle(allSongs, ctx)
             : buildSlipPuzzle(allSongs, playableWords, lineIndex, ctx);
           if (p) ok++;
@@ -15641,6 +15776,18 @@ function buildDevApi() {
         renderStringBoard();
         return { right: stringPairsRight(), of: STRING_PAIRS };
       },
+      // Out of Order: put the board into an arrangement holding exactly `right` joins, so the
+      // reveal and the per-join scoring can be checked without hearing the verse. The four
+      // arrangements are written out because "exactly k joins" is fiddlier to search for than
+      // to name, and at four lines there is one obvious representative of each.
+      arrange: (right = ORDER_JOINS) => {
+        if (!bonusGame || bonusGame.id !== "out-of-order" || !bonusPuzzle) return "no board on screen";
+        const shapes = { 0: [3, 2, 1, 0], 1: [2, 3, 1, 0], 2: [1, 2, 3, 0], 3: [0, 1, 2, 3] };
+        orderSlots = [...(shapes[Math.max(0, Math.min(ORDER_JOINS, right | 0))] || shapes[3])];
+        orderSel = null;
+        renderOrderBoard();
+        return { joins: orderJoinsRight(), of: ORDER_JOINS, lines: bonusPuzzle.lines };
+      },
       end: () => endBonusRun(),
       // Fabricate a finished run — real puzzles, `wins` of them ticked — and go straight to the
       // sleeve. The end card's track listing is the one surface that needs ten SETTLED rounds
@@ -15652,7 +15799,8 @@ function buildDevApi() {
         for (let n = 1; n <= BONUS_ROUNDS; n++) {
           const p = buildBonusPuzzle();
           if (!p) continue;
-          if (bonusGame.id === "sing-it-back" || bonusGame.id === "redacted" || bonusGame.id === "only-here")
+          if (bonusGame.id === "sing-it-back" || bonusGame.id === "redacted" ||
+              bonusGame.id === "only-here" || bonusGame.id === "out-of-order")
             bonusRecentSongs.push(p.song.title);
           const ok = n <= wins;
           // Points games get a plausible spread rather than a flat number, so the track
@@ -15662,6 +15810,9 @@ function buildDevApi() {
             // Only Here never fails a page, so a "missed" one is a page the clock took, and a
             // cleared one lands anywhere on the ladder rather than at the top of it.
             : bonusGame.id === "only-here" ? (ok ? 1 + (n % 5) : 0)
+            // A missed Out of Order page still held whatever joins it held, which is the
+            // column the sleeve has to show off.
+            : bonusGame.id === "out-of-order" ? (ok ? ORDER_JOINS : n % ORDER_JOINS)
             : ok ? Math.max(REDACT_MIN_POINTS, bonusPagePoints(bonusGame) - (n % 6)) : 0;
           bonusLog.push({
             n, ok, title: bonusGame.id === "invisible-string"
@@ -15670,6 +15821,7 @@ function buildDevApi() {
                 : bonusGame.id === "sing-it-back" ? p.answer
                 : bonusGame.id === "redacted" ? `${pts} pts`
                 : bonusGame.id === "invisible-string" ? `${pts} of ${STRING_PAIRS}`
+                : bonusGame.id === "out-of-order" ? `${pts} of ${ORDER_JOINS}`
                 : bonusGame.id === "only-here" ? (ok ? `${pts} · ${p.best.toLowerCase()}` : p.best.toLowerCase())
                 : p.song.album,
           });
