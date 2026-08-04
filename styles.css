@@ -2149,6 +2149,34 @@
     100% { transform: none; }
   }
 
+  /* Ruthless Game — the song writing itself out, a word a second, against the red margin rule.
+     Handwriting rather than .bg-lyric's quoted treatment, and left-aligned: this is a sheet
+     being filled in as you watch, not a line held up for inspection.
+     The FIXED height is load-bearing rather than cosmetic. A page can run to fifty or sixty
+     words, and a box that grew with them would walk the writing line down the screen while the
+     player was typing into it — so the box is a window the stream scrolls inside (kept at the
+     bottom by revealRuthlessWord), and nothing under it ever moves. */
+  .bg-stream {
+    font-family: var(--hand); font-size: 22px; line-height: 1.5; color: var(--ink);
+    max-width: 34ch; margin: 0 auto 14px; padding: 2px 12px 2px 14px; text-align: left;
+    height: 8.5em; overflow-y: auto; overscroll-behavior: contain;
+    border-left: 2px solid rgba(178,58,63,0.35);
+  }
+  /* Each word arrives as its own inline-block so it can be animated in on its own; the margin
+     is what spaces them, since the DOM has no whitespace between them to collapse. */
+  .bg-drip { display: inline-block; margin-right: 0.3em; }
+  @media (prefers-reduced-motion: no-preference) {
+    .bg-drip { animation: bgDrip 0.26s ease both; }
+    @keyframes bgDrip { from { opacity: 0; transform: translateY(-3px); } to { opacity: 1; transform: none; } }
+  }
+  /* Answered: the page stops being the question and becomes the lyric sheet under its heading. */
+  .bg-stream.is-done { opacity: 0.78; border-left-color: rgba(43,39,34,0.18); }
+  .bg-giveup { display: block; width: max-content; max-width: 100%; margin: 12px auto 0; }
+  .bg-giveup[disabled] { opacity: 0.4; cursor: default; }
+  @media (max-width: 560px) {
+    .bg-stream { font-size: 20px; height: 8em; }
+  }
+
   /* Name That Song — the line, quoted like a copied-out lyric. */
   .bg-lyric {
     font-family: var(--hand); font-size: 27px; line-height: 1.35; color: var(--ink);

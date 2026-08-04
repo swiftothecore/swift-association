@@ -291,9 +291,22 @@ export function bonusRecord(id) {
 // pressing would then sit above everything the game can still score — quoted as "best 74 / 60"
 // and, worse, unbeatable, so no run could ever be a new best again. A stale best is therefore
 // retired down to the new maximum here, once, on the next run.
-export function recordBonusRun(id, score, max = Infinity) {
+// `lower` flips which way a best runs, for a game scored in seconds. It cannot be inferred
+// from the numbers: a stored 0 is an unplayed game on a points board and a perfect run on a
+// timed one, which is why the first run is taken as the best outright rather than compared
+// against a zero that means nothing. `max` is meaningless for those and simply goes unused.
+export function recordBonusRun(id, score, max = Infinity, lower = false) {
   const all = loadBonus();
   const e = all[id] || {};
+  if (lower) {
+    const isBest = !e.plays || score < e.best;
+    if (isBest) e.best = score;
+    e.plays = (e.plays || 0) + 1;
+    e.last = score;
+    all[id] = e;
+    saveBonus(all);
+    return { ...bonusRecord(id), isBest };
+  }
   if (e.best > max) e.best = max;
   const isBest = score > (e.best || 0);
   if (isBest) e.best = score;

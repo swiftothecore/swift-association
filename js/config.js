@@ -367,6 +367,13 @@ export const BONUS_GAMES = [
     kicker: "put the lines back", tint: "#5e4a86", mark: "order",
     line: "Four lines, shuffled. Put them back in order.",
     blurb: "Four lines that run one into the next, dealt face up in the wrong order. Put them back the way the song sings them." },
+  // The one game on the shelf scored in SECONDS, and the only one where a low number is the
+  // good one (`timed`). Everything that shows a score reads that flag rather than assuming a
+  // run counts upward — see bonusScoreText / bonusRemark / recordBonusRun's `lower`.
+  { id: "ruthless-game", name: "Ruthless Game", ready: true, timed: true,
+    kicker: "a word a second", tint: "#7d2b34", mark: "metro",
+    line: "A word a second until you name it.",
+    blurb: "The song writes itself out from its very first word, one word every second, and the clock never stops. Guess as often as you like, because a wrong answer costs nothing but the seconds it took." },
 ];
 // A bonus run is short by design — these sit beside the main game, they don't replace it.
 export const BONUS_ROUNDS = 10;
@@ -395,6 +402,29 @@ export const BONUS_ONLY_SECONDS = 30;
 // enough that a window you can't hear is left half-sorted rather than brute-forced, which at
 // four lines is a real temptation.
 export const BONUS_ORDER_SECONDS = 40;
+
+/* ---------- Ruthless Game ----------
+   The one game here with no clock to beat, because the clock IS the score: a page runs until
+   it is named, and the run is the seconds it took, lowest wins. So there is no per-page budget
+   in this block, only the pace the song comes out at and the price of walking away.
+
+   A word a second, from the song's own first word. Deliberately NOT player-paced: a "pull the
+   next word now" key was specified and cut, because pulling a word early either costs nothing
+   (and then mashing it is the correct play, which turns the game into a reading-speed test) or
+   costs exactly the second it saves (and then it is a comfort feature that hands the player the
+   metronome). The whole character of the thing is that the metronome does not care about you.
+
+   The give-up is an anti-deadlock valve rather than a fail state, and the price is set high on
+   purpose: above what a bad honest page costs, so it is never a shortcut, only a mercy for a
+   player who can already tell they are going to sit through another forty words to get there.
+   It unlocks only after a real attempt so it can never be a reflex. */
+export const RUTHLESS_WORD_MS = 1000;
+export const RUTHLESS_OPEN_WORDS = 1;    // on the page before the first tick, so it never opens blank
+export const RUTHLESS_SKIP_AFTER = 20;   // words that must be out before giving up is offered
+export const RUTHLESS_SKIP_PENALTY = 90; // seconds added to the run for a page given up on
+// What the gauge fills over. Nothing happens when it fills — there is no deadline here — it is
+// purely a read on how expensive this page is getting, which a bar can say faster than a number.
+export const RUTHLESS_PACE_SECONDS = 45;
 
 /* ---------- Persistence tickets: the second challenge currency ----------
    Tokens only mint on a first-ever defeat, so a player who cannot beat what is in front of

@@ -814,3 +814,43 @@ export function orderJoins(slots) {
   for (let s = 0; s < slots.length - 1; s++) if (slots[s + 1] === slots[s] + 1) n++;
   return n;
 }
+
+/* ---------- Ruthless Game ----------
+   The whole song laid out as one stream of words, in the order it is sung, starting at its own
+   first word. The screen reveals them one a second; this only has to hand over the stream and
+   say where the line breaks fall, so the page fills in like a lyric sheet being written rather
+   than like a sentence scrolling past.
+
+   The guards here are thinner than any other builder's on the shelf, and that is the design
+   rather than an oversight:
+     • NO UNIQUE-LINE GUARD. Every other game shows a fragment and has to prove the fragment
+       identifies one song. This one shows the song from the top and keeps going until it is
+       named, so a shared opening is a hard page, not an unfair one — the stream always
+       resolves.
+     • NO TITLE GIVEAWAY GUARD, deliberately. The stream WILL eventually spell the title out,
+       and that is the promise the game makes: you cannot be stuck forever, you can only be
+       slow. Barring songs that say their own name early would cut some of the best-known
+       songs in the catalogue out of a game about recognising songs. It does mean pages vary
+       wildly in what they cost, which is what the ten-page run averages out.
+   The one real bar is length: a stream has to be long enough that it can run to the title. */
+export const RUTHLESS_MIN_WORDS = 30;
+export function buildRuthlessPuzzle(songs, rng = Math.random, tries = 120, avoid = null) {
+  for (let t = 0; t < tries; t++) {
+    const song = pick(songs, rng);
+    if (!song) continue;
+    if (avoid && avoid.has(song.title)) continue;
+    const lines = songLines(song);
+    if (!lines.length) continue;
+    const stream = [];
+    lines.forEach(({ line }, li) => {
+      String(line).split(/\s+/).filter(Boolean).forEach((w, wi) => {
+        // `br` is "this word opens a new line", which is what lets the page break where the
+        // song breaks without the screen having to know anything about sections.
+        stream.push({ text: w, br: wi === 0 && li > 0 });
+      });
+    });
+    if (stream.length < RUTHLESS_MIN_WORDS) continue;
+    return { song, stream };
+  }
+  return null;
+}

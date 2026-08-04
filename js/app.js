@@ -10,6 +10,8 @@ import {
   BONUS_GAMES, BONUS_ROUNDS, BONUS_SLIP_SECONDS, BONUS_NAME_SECONDS, BONUS_BLANK_SECONDS,
   BONUS_REDACT_SECONDS, REDACT_MIN_POINTS, BONUS_STRING_SECONDS, BONUS_ONLY_SECONDS,
   BONUS_ORDER_SECONDS,
+  RUTHLESS_WORD_MS, RUTHLESS_OPEN_WORDS, RUTHLESS_SKIP_AFTER, RUTHLESS_SKIP_PENALTY,
+  RUTHLESS_PACE_SECONDS,
   CHALLENGES, CHALLENGE_BY_ID, CHALLENGE_ORDER, CHALLENGE_SEALS, DARK_SIDE_IDS, DARK_SIDE_TODO,
   DARK_SIDE_MILESTONE, PERSIST_ATTEMPTS, TICKET_PRICE,
   IMPOSTOR_WORDS, IMPOSTOR_COUNT, DARK_IMPOSTOR_WORDS,
@@ -48,6 +50,7 @@ import { buildLineIndex, buildSlipContext, buildSlipPuzzle, buildNamePuzzle,
          buildBlankPuzzle, buildRedactedPuzzle, buildStringPuzzle, STRING_PAIRS,
          buildWordIndex, buildOnlyHerePuzzle, judgeOnlyHere, onlyHerePoints,
          buildOrderPuzzle, orderJoins, ORDER_LINES, ORDER_JOINS,
+         buildRuthlessPuzzle,
          judgeBlank } from "./bonus.js";
 import { renderStreakPlacard } from "./placard.js";
 import {
@@ -3937,6 +3940,15 @@ let stringResizeHandler = null;
 // `orderSel` is the slot being held while it waits for the one it swaps with.
 let orderSlots = [];
 let orderSel = null;
+// Ruthless Game: how much of the stream is out, when this page started, what it has been fined
+// for a give-up, and the frozen cost of the page once it settles. `ruthlessSpent` exists so the
+// seconds are read off the clock exactly ONCE — the verdict line and bonusPageScore both want
+// them, and two reads a millisecond apart can round to different numbers.
+let ruthlessShown = 0;
+let ruthlessStart = 0;
+let ruthlessPenalty = 0;
+let ruthlessSpent = 0;
+let ruthlessDripId = null;
 let bonusLog = [];         // one entry per settled round, for the end card's track listing
 // Bumped on every start. The between-rounds pause is a setTimeout, so without a token a run
 // that's quit and immediately restarted would have the old pause advance the NEW run a round.
@@ -3992,12 +4004,23 @@ function bonusPicked() {
    what stops a 63-point run being written up as "63 correct" out of ten. */
 function bonusPagePoints(g) { return (g && g.points) || 1; }
 function bonusMaxScore(g) { return BONUS_ROUNDS * bonusPagePoints(g); }
+/* A game scored in SECONDS, where low is the good number. It has no maximum at all — a run is
+   as long as it takes — so every surface that quotes a score against a total has to ask this
+   first rather than reach for bonusMaxScore, which for a timed game would quote a meaningless
+   ten. This one flag is the whole difference; there is no second timed code path. */
+function bonusTimed(g) { return !!(g && g.timed); }
 // A best is read back through the maximum it is quoted against, because a game's `points` can
 // be retuned after a run has been banked — and a stored 74 shown as "best 74 / 60" is a
 // notebook contradicting itself. Clamped on the way out rather than rewritten in storage: the
 // run really did happen, and a later re-tune upwards should give the number back.
-function bonusBest(g) { return Math.min(bonusRecord(g.id).best, bonusMaxScore(g)); }
+// A timed game's best is a time, and there is nothing to clamp it against: it is not out of
+// anything, and a retune can't invalidate it the way a changed `points` scale can.
+function bonusBest(g) {
+  if (bonusTimed(g)) return bonusRecord(g.id).best;
+  return Math.min(bonusRecord(g.id).best, bonusMaxScore(g));
+}
 function bonusScoreText() {
+  if (bonusTimed(bonusGame)) return `${fmtTime(bonusScore)} so far`;
   return `${bonusScore} ${bonusGame && bonusGame.points ? "points" : "correct"}`;
 }
 
@@ -4006,7 +4029,11 @@ function bonusScoreText() {
 function bonusScoreLine(g) {
   const rec = bonusRecord(g.id);
   if (!g.ready) return "not pressed yet";
-  return rec.plays ? `best ${bonusBest(g)} / ${bonusMaxScore(g)} · played ${rec.plays}` : "unplayed";
+  if (!rec.plays) return "unplayed";
+  // A time is quoted on its own — "best 3:41 / 10" would be nonsense, and there is no total
+  // for it to be out of.
+  if (bonusTimed(g)) return `best ${fmtTime(bonusBest(g))} · played ${rec.plays}`;
+  return `best ${bonusBest(g)} / ${bonusMaxScore(g)} · played ${rec.plays}`;
 }
 
 // The tonearm, resting on the record. Drawn here rather than in the sprite because it
@@ -4113,6 +4140,9 @@ function startBonusGame(g) {
   redactWorth = 0;
   redactPeeled = 0;
   onlyPlayed = null;
+  ruthlessShown = 0;
+  ruthlessPenalty = 0;
+  ruthlessSpent = 0;
   clearStringResize();
   bonusRunId++;
   stopBonusClock();
@@ -4132,6 +4162,9 @@ function bonusSeconds() {
   if (bonusGame.id === "invisible-string") return BONUS_STRING_SECONDS;
   if (bonusGame.id === "only-here") return BONUS_ONLY_SECONDS;
   if (bonusGame.id === "out-of-order") return BONUS_ORDER_SECONDS;
+  // Ruthless Game has no budget: its page runs until it is named or given up on, and the
+  // seconds it took ARE the score. Nothing asks this for a timed game (startBonusClock takes
+  // the count-up branch before it gets here), so the value is never reached in practice.
   return BONUS_NAME_SECONDS;
 }
 
@@ -4151,6 +4184,8 @@ function buildBonusPuzzle() {
     return buildOnlyHerePuzzle(allSongs, bonusIndexes().wordIndex, Math.random, 120, new Set(bonusRecentSongs));
   if (bonusGame.id === "out-of-order")
     return buildOrderPuzzle(allSongs, Math.random, 120, new Set(bonusRecentSongs));
+  if (bonusGame.id === "ruthless-game")
+    return buildRuthlessPuzzle(allSongs, Math.random, 120, new Set(bonusRecentSongs));
   return buildNamePuzzle(allSongs, lineIndex);
 }
 
@@ -4168,7 +4203,8 @@ function nextBonusRound() {
     if (bonusRecentFakes.length > 6) bonusRecentFakes.shift();
   }
   if (bonusGame.id === "sing-it-back" || bonusGame.id === "redacted" ||
-      bonusGame.id === "only-here" || bonusGame.id === "out-of-order")
+      bonusGame.id === "only-here" || bonusGame.id === "out-of-order" ||
+      bonusGame.id === "ruthless-game")
     bonusRecentSongs.push(bonusPuzzle.song.title);
   // A board's worth of songs at a time, so a run of ten pages doesn't put the same song up twice.
   if (bonusGame.id === "invisible-string")
@@ -4183,6 +4219,10 @@ function nextBonusRound() {
   // The lines as they were dealt, and nothing held. `deal[slot]` is which line landed there.
   orderSlots = bonusPuzzle && bonusPuzzle.deal ? [...bonusPuzzle.deal] : [];
   orderSel = null;
+  // Nothing of the song is out yet, nothing has been fined, and the page has cost nothing.
+  ruthlessShown = 0;
+  ruthlessPenalty = 0;
+  ruthlessSpent = 0;
 
   // Everything that makes the new page: the shared chrome, then the game's own body.
   const lay = () => {
@@ -4324,6 +4364,37 @@ function renderBonusRound() {
       if (e.key === "Enter") { e.preventDefault(); judgeOnly(); }
     });
     input.focus();
+  } else if (bonusGame.id === "ruthless-game") {
+    // The song writes itself out into `.bg-stream`, a word a second, breaking where the song
+    // breaks. Nothing about the song is named anywhere on the page — no title, no album, no
+    // section — because the stream is the only evidence there is meant to be.
+    body.innerHTML =
+      `<p class="bg-ask">name the song — a word arrives every second</p>` +
+      `<div class="bg-stream" id="bonusStream" role="log" aria-live="polite" ` +
+           `aria-label="The song, one word at a time"></div>` +
+      `<p class="bg-worth"><b id="bonusWords">0</b> words · <b id="bonusSpent">0:00</b> on this page` +
+        `<span id="bonusOut" class="bg-out"></span></p>` +
+      bonusWritingLine({ placeholder: "type the title…", aria: "Type the song title",
+                         hint: "a wrong guess costs nothing but the seconds it took", dropdown: true }) +
+      `<button type="button" id="bonusGiveUp" class="btn-ghost bg-giveup"></button>`;
+    const input = $("bonusInput");
+    input.addEventListener("input", updateBonusDropdown);
+    input.addEventListener("keydown", (e) => {
+      if (bonusDropdownKey(e)) return;
+      if (e.key === "Enter") { e.preventDefault(); judgeName(); }
+    });
+    $("bonusGiveUp").addEventListener("click", giveUpRuthless);
+    /* Baselined HERE as well as in startRuthlessClock, which runs a page-flip later. The page is
+       live from the moment it is laid down — the input is rendered and focused — so an answer
+       given during the flip would otherwise be timed from the PREVIOUS page's baseline and
+       charged a minute it never took. The clock re-baselines when it starts a beat later, so
+       the flip itself is not charged to anyone who doesn't answer during it. */
+    ruthlessStart = performance.now();
+    // The first word is on the page before the clock's first tick, so it never opens blank and
+    // the player is reading something from the moment the sheet lands.
+    for (let i = 0; i < RUTHLESS_OPEN_WORDS; i++) revealRuthlessWord();
+    updateRuthlessMeta();
+    input.focus();
   } else if (bonusGame.id === "redacted") {
     // Punctuation stays OUTSIDE the strip, on both counts: a comma is grammar rather than a
     // secret, and real redaction blacks the word, not the line's furniture. The word itself is
@@ -4382,6 +4453,11 @@ function renderBonusRound() {
    player came back. An interval keeps ticking (throttled but firing) and stays accurate. */
 function startBonusClock() {
   stopBonusClock();
+  // A page answered during its own flip-in is already settled by the time this runs (it is
+  // turnPageSheet's after-callback), and restarting a clock over a verdict would run the drip
+  // on a page that is showing its answer.
+  if (bonusLocked) return;
+  if (bonusTimed(bonusGame)) { startRuthlessClock(); return; }
   const fill = $("bonusTimerFill");
   const label = $("bonusTimerLabel");
   const secs = bonusSeconds();
@@ -4404,6 +4480,150 @@ function startBonusClock() {
 function stopBonusClock() {
   if (bonusRaf) clearInterval(bonusRaf);
   bonusRaf = null;
+  stopRuthlessDrip();
+}
+
+/* ---------- Ruthless Game: the count-up clock and the drip ----------
+   Two intervals rather than one, because they are measuring different things and must not
+   drift into each other: the clock is a readout off a performance.now() baseline (so it stays
+   accurate however the interval is throttled), and the drip is a metronome that has to keep a
+   one-second beat. setInterval for both, matching every other clock here — rAF is suspended in
+   a background tab, and a game whose whole score is elapsed time cannot have its clock stop
+   when the tab does.
+
+   Nothing happens when the gauge fills. There is no deadline on this page, so the bar is a read
+   on how expensive the page is getting rather than a countdown, and it fills UP as the seconds
+   go on rather than draining away. */
+function startRuthlessClock() {
+  const fill = $("bonusTimerFill");
+  const label = $("bonusTimerLabel");
+  ruthlessStart = performance.now();
+  fill.style.width = "0%";
+  fill.classList.remove("low");
+  label.textContent = "0.0";
+  bonusRaf = setInterval(() => {
+    const spent = (performance.now() - ruthlessStart) / 1000;
+    label.textContent = spent.toFixed(1);
+    const pct = Math.min(100, (spent / RUTHLESS_PACE_SECONDS) * 100);
+    fill.style.width = pct + "%";
+    fill.classList.toggle("low", pct >= 75);
+    const el = $("bonusSpent");
+    if (el) el.textContent = fmtTime(spent);
+  }, 50);
+  startRuthlessDrip();
+}
+
+function startRuthlessDrip() {
+  stopRuthlessDrip();
+  ruthlessDripId = setInterval(() => {
+    if (bonusLocked) return;
+    revealRuthlessWord();
+  }, RUTHLESS_WORD_MS);
+}
+function stopRuthlessDrip() {
+  if (ruthlessDripId) clearInterval(ruthlessDripId);
+  ruthlessDripId = null;
+}
+
+// One more word onto the page. The stream simply stops when the song runs out — by then the
+// player is looking at the entire lyric, and there is nothing left to give them.
+function revealRuthlessWord() {
+  const p = bonusPuzzle;
+  const el = $("bonusStream");
+  if (!p || !el || ruthlessShown >= p.stream.length) return;
+  const tok = p.stream[ruthlessShown++];
+  if (tok.br) el.appendChild(document.createElement("br"));
+  const s = document.createElement("span");
+  s.className = "bg-drip";
+  s.textContent = tok.text;
+  el.appendChild(s);
+  el.scrollTop = el.scrollHeight;
+  updateRuthlessMeta();
+}
+
+// The word count, and what the give-up button is offering. The button says how far off it is
+// while it is still locked, so it never reads as broken — a disabled control with no
+// explanation is the same thing as a bug.
+function updateRuthlessMeta() {
+  const n = $("bonusWords");
+  if (n) n.textContent = ruthlessShown;
+  /* A page CAN run dry: 26 of the 287 songs never sing their own title, so for those the stream
+     ends without ever handing the answer over. Said out loud rather than left to look like a
+     stalled metronome — a page that has stopped giving and doesn't say so reads as broken, and
+     it is also the moment the give-up stops being a mercy and becomes the only move. */
+  const out = $("bonusOut");
+  if (out && bonusPuzzle)
+    out.textContent = ruthlessShown >= bonusPuzzle.stream.length ? " · that is the whole song" : "";
+  const b = $("bonusGiveUp");
+  if (!b) return;
+  const left = RUTHLESS_SKIP_AFTER - ruthlessShown;
+  b.disabled = left > 0;
+  b.textContent = left > 0
+    ? `give up in ${left} word${left === 1 ? "" : "s"}`
+    : `give up · +${fmtTime(RUTHLESS_SKIP_PENALTY)}`;
+}
+
+// What this page has cost, read off the clock ONCE and then held. A page is never free: a title
+// typed inside half a second still rounds up to a second, so ten pages can never total nothing.
+function ruthlessFreeze() {
+  if (!ruthlessSpent)
+    ruthlessSpent = Math.max(1, Math.round((performance.now() - ruthlessStart) / 1000)) + ruthlessPenalty;
+  return ruthlessSpent;
+}
+
+/* Walking away from a page. The penalty is banked BEFORE the page is frozen, so it lands in the
+   one number the run carries. Deliberately not a fail state in the run's terms — the page is
+   over and paid for, and the sleeve marks it with a cross so a given-up page can never pass for
+   a named one (which is also what stops it counting toward a clean sweep). */
+function giveUpRuthless() {
+  if (bonusLocked || !bonusTimed(bonusGame)) return;
+  if (ruthlessShown < RUTHLESS_SKIP_AFTER) return;
+  ruthlessPenalty = RUTHLESS_SKIP_PENALTY;
+  const input = $("bonusInput");
+  if (input) input.disabled = true;
+  settleRuthless(false);
+}
+
+// The verdict line: what the page cost and what it took to get there, or what walking away
+// cost. Both are the only number on screen that matters, so both are said in full.
+function settleRuthless(correct) {
+  const secs = ruthlessFreeze();
+  const detail = correct
+    ? `named in <b>${fmtTime(secs)}</b> off <b>${ruthlessShown}</b> word${ruthlessShown === 1 ? "" : "s"}`
+    : `given up after <b>${ruthlessShown}</b> words · <b>+${fmtTime(RUTHLESS_SKIP_PENALTY)}</b> on the run`;
+  settleBonusRound(correct, detail);
+}
+
+/* The reveal. The heading that every other page on this shelf opens with goes on at the END
+   here, because naming the song is the whole question — and once it is answered the page is
+   simply a lyric sheet with the song's name written over it. No answer card, for the usual
+   reason: the heading names it and the words are already all there. */
+function revealRuthless() {
+  const body = $("bonusPlayBody");
+  const ask = body.querySelector(".bg-ask");
+  if (ask) ask.remove();
+  const stream = $("bonusStream");
+  if (!stream) return;
+  stream.classList.add("is-done");
+  stream.insertAdjacentHTML("beforebegin", bonusSongHead(bonusPuzzle.song, ""));
+}
+
+/* Dev only: how many words in the stream first spells the song's own title out, or -1 if the
+   song never names itself. That number is the guarantee this game rests on — a page cannot be
+   unsolvable, only expensive — so it is worth being able to measure across a sample rather than
+   trusted. Kept beside the game rather than in the dev block because the builder's comment
+   points at it. */
+function devRuthlessTitleAt(p) {
+  const key = (s) => String(s).toLowerCase().replace(/[^\p{L}\p{N}]/gu, "");
+  const want = String(p.song.title).split(/\s+/).map(key).filter(Boolean);
+  if (!want.length) return -1;
+  const got = p.stream.map((w) => key(w.text));
+  for (let i = 0; i + want.length <= got.length; i++) {
+    let hit = true;
+    for (let j = 0; j < want.length; j++) if (got[i + j] !== want[j]) { hit = false; break; }
+    if (hit) return i + want.length;
+  }
+  return -1;
 }
 
 function bonusTimeout() {
@@ -4856,6 +5076,23 @@ function judgeName(picked = null) {
   }
   hideBonusDropdown();
   const correct = song.title === bonusPuzzle.song.title;
+  /* Ruthless Game judges the same title the same way, but a miss does not end the page: wrong
+     guesses are free there by design, so a wrong one is a SOFT reject (Only Here's pattern) —
+     say which song was rejected, clear the line, and leave the clock running. Guessing early
+     and often is the intended play, and it self-regulates because every guess is paid for in
+     the seconds it took to type. */
+  if (bonusTimed(bonusGame)) {
+    if (!correct) {
+      const r = $("bonusReject");
+      r.textContent = `not ${censor(song.title)}`;
+      r.classList.remove("show"); void r.offsetWidth; r.classList.add("show");
+      $("bonusInput").value = "";
+      return;
+    }
+    $("bonusInput").disabled = true;
+    settleRuthless(true);
+    return;
+  }
   $("bonusInput").disabled = true;
   // The card below names the right song, so the only thing left to say is what was written —
   // and on a hit that's the same thing twice. Redacted is the exception: a won page there has
@@ -4959,8 +5196,11 @@ function bonusAnswerCard() {
   // Out of Order has no card for Sing It Back's reason: its reveal straightens the four lines
   // back out under a heading that already names the song and album, so a card would reprint a
   // quarter of the verse an inch below itself.
+  // Ruthless Game has none either, and most obviously of all: its reveal writes the song's name
+  // over a page that is already the song, printed out further than any card could quote it.
   if (bonusGame.id === "invisible-string" || bonusGame.id === "redacted" ||
-      bonusGame.id === "only-here" || bonusGame.id === "out-of-order") return "";
+      bonusGame.id === "only-here" || bonusGame.id === "out-of-order" ||
+      bonusGame.id === "ruthless-game") return "";
   if (bonusGame.id === "sing-it-back")
     return `<div class="bg-ctx">${lyricCardContext(p.song, p.answer, p.line)}</div>`;
   const slip = bonusGame.id === "spot-the-slip";
@@ -4974,6 +5214,9 @@ function bonusAnswerCard() {
 // page is worth whatever is left of its six, floored so a correct answer always beats a wrong
 // one however much of the verse it took.
 function bonusPageScore(correct) {
+  // A timed game's page doesn't pay, it CHARGES: what the run adds up is the seconds each page
+  // took, penalty included, and the lowest total wins.
+  if (bonusTimed(bonusGame)) return ruthlessFreeze();
   // Invisible String is the one game whose page pays for what it got rather than for clearing:
   // a board with three threads right is worth three whether or not the page was cleared, which
   // is what makes solving three and eliminating your way to the rest worth doing.
@@ -4992,6 +5235,9 @@ function bonusPageScore(correct) {
 // The handwritten verdict over the page. A game whose page isn't a single right answer needs
 // its own words for a near miss — "not this one" is nonsense about a board of five threads.
 function bonusBannerText(correct, isTimeout) {
+  // Nothing here times out and nothing here is wrong twice — a page is either named or handed
+  // back, so the bad banner reports the decision rather than a mistake.
+  if (bonusTimed(bonusGame)) return correct ? "named it" : "handed it back";
   if (bonusGame && bonusGame.id === "invisible-string")
     return correct ? "every line tied off" : isTimeout ? "the page ran out" : "some threads crossed";
   // Nothing is ever wrong on an Only Here page — a word is either in the song or the clock beat
@@ -5018,7 +5264,7 @@ function settleBonusRound(correct, detail, isTimeout = false) {
   // The writing line has done its job, so put it away for the verdict — the round screen hides
   // its play area at exactly this beat. It also gives back the space the answer card wants, which
   // is what keeps the countdown on screen instead of below the fold.
-  $("bonusPlayBody").querySelectorAll(".bg-write, .bg-hint, .bg-worth, .bg-scale").forEach((el) => { el.style.display = "none"; });
+  $("bonusPlayBody").querySelectorAll(".bg-write, .bg-hint, .bg-worth, .bg-scale, .bg-giveup").forEach((el) => { el.style.display = "none"; });
 
   // The run's track listing, written up on the end card. Each game notes the one thing worth
   // remembering about its page: the impostor you were hunting, the word that was missing, or
@@ -5048,6 +5294,11 @@ function settleBonusRound(correct, detail, isTimeout = false) {
         // the clock took carries the word it was hiding instead, in red — every other game's
         // missed note is the answer you didn't have, and this is what that is here.
         : bonusGame.id === "only-here" ? (onlyPlayed ? `${gained} · ${onlyPlayed.word.toLowerCase()}` : bonusPuzzle.best.toLowerCase())
+        // The time alone. The word count is the more interesting number and it was tried here
+        // first, but the note column runs out around six characters on a two-up sleeve and
+        // "1:23 · 62w" came back as "1:23 · …" — so the column keeps the one that adds up to
+        // the score, and the verdict line is where a page's word count gets said in full.
+        : bonusGame.id === "ruthless-game" ? fmtTime(gained)
         : bonusPuzzle.song.album,
   });
   // Reveal the answer on a timeout too, whichever game we're in.
@@ -5063,6 +5314,8 @@ function settleBonusRound(correct, detail, isTimeout = false) {
     revealOnlyHere();
   } else if (bonusGame.id === "out-of-order") {
     renderOrderBoard(true);
+  } else if (bonusGame.id === "ruthless-game") {
+    revealRuthless();
   } else if (bonusGame.id === "sing-it-back") {
     // Whatever was in the gap — a wrong word, a half-typed one, nothing at all — the real
     // word goes in, so the line is left whole and correct on the page.
@@ -5150,6 +5403,7 @@ const BG_CROSS = `<svg viewBox="0 0 16 16" class="bg-mark-svg" aria-hidden="true
 // game scored in points has a maximum nobody will ever reach (Redacted's 100 would mean naming
 // ten songs off untouched verses) and the perfect run it CAN have is a run with no misses.
 function bonusRemark(score, max, clean) {
+  if (bonusTimed(bonusGame)) return ruthlessRemark(score, clean);
   if (clean) return "a perfect pressing";
   const r = max ? score / max : 0;
   if (r >= 0.9) return "one crackle, no more";
@@ -5160,12 +5414,27 @@ function bonusRemark(score, max, clean) {
   return "a blank tape";
 }
 
+/* The same remark in the shelf's voice, read off a time instead of a proportion — a run scored
+   in seconds has no maximum to be a fraction of, so it is graded on what a page averaged. The
+   top remark is reserved for a run with nothing given up, for every other game's reason: a
+   clean sweep is ten pages named, and a fast run built on two abandoned pages is not one. */
+function ruthlessRemark(secs, clean) {
+  const avg = secs / BONUS_ROUNDS;
+  if (clean && avg <= 10) return "you knew them cold";
+  if (avg <= 15) return "barely let it play";
+  if (avg <= 25) return "off the first verse, mostly";
+  if (avg <= 40) return "a chorus a song";
+  if (avg <= 60) return "you heard them out";
+  return "the record played you";
+}
+
 function endBonusRun() {
   bonusEnded = true;
   stopBonusClock();
   stopBonusCountdown();
   clearStringResize();
-  const rec = recordBonusRun(bonusGame.id, bonusScore, bonusMaxScore(bonusGame));
+  const timed = bonusTimed(bonusGame);
+  const rec = recordBonusRun(bonusGame.id, bonusScore, bonusMaxScore(bonusGame), timed);
   $("bonusTimer").style.display = "none";
   $("bonusProgress").textContent = "run complete";
   $("bonusScore").textContent = bonusScoreText();
@@ -5199,13 +5468,18 @@ function endBonusRun() {
             `<h3 class="bg-sleeve-name">${escapeHtml(bonusGame.name)}</h3>` +
             `<div class="bg-sleeve-remark">${escapeHtml(bonusRemark(bonusScore, max, perfect))}</div>` +
           `</div>` +
-          `<div class="bg-sleeve-score">${bonusScore}<span>/${max}</span></div>` +
+          // A time stands alone: there is no total for a run of seconds to be out of, and the
+          // number is the whole of what the run was.
+          `<div class="bg-sleeve-score">${timed ? fmtTime(bonusScore) : `${bonusScore}<span>/${max}</span>`}</div>` +
           (perfect ? `<i class="bg-stamp">clean sweep</i>`
             : rec.isBest && rec.plays > 1 ? `<i class="bg-stamp">new best</i>` : "") +
         `</div>` +
         `<div class="bg-sleeve-label">the run, track by track</div>` +
         `<ol class="bg-tracks">${tracks}</ol>` +
-        `<div class="bg-sleeve-foot">best ${Math.min(rec.best, max)} / ${max} · played ${rec.plays}</div>` +
+        `<div class="bg-sleeve-foot">` +
+          (timed ? `best ${fmtTime(rec.best)} · played ${rec.plays}`
+                 : `best ${Math.min(rec.best, max)} / ${max} · played ${rec.plays}`) +
+        `</div>` +
       `</div>` +
       `<div class="bg-end-actions">` +
         `<button type="button" id="bonusShelfBtn" class="btn-primary">← the shelf</button>` +
@@ -15770,6 +16044,15 @@ function buildDevApi() {
             if (p) recent.push(p.song.title);
             out.push(p ? { song: p.song.title, section: p.label,
                            order: p.lines, dealt: p.deal.map((i) => i + 1).join(" ") } : null);
+          } else if (id === "ruthless-game") {
+            const p = buildRuthlessPuzzle(allSongs, Math.random, 120, new Set(recent));
+            if (p) recent.push(p.song.title);
+            // `titleAt` is the number that matters: how many words in the stream finally says
+            // the song's own name, which is the worst case a page can cost. -1 means the song
+            // never names itself and the page runs to the end of the lyric.
+            out.push(p ? { song: p.song.title, words: p.stream.length,
+                           titleAt: devRuthlessTitleAt(p),
+                           opens: p.stream.slice(0, 12).map((w) => w.text).join(" ") } : null);
           } else if (id === "sing-it-back") {
             const p = buildBlankPuzzle(allSongs, ctx, Math.random, 120, new Set(recent));
             if (p) recent.push(p.song.title);
@@ -15795,13 +16078,51 @@ function buildDevApi() {
             : id === "redacted" ? buildRedactedPuzzle(allSongs, ctx, lineIndex)
             : id === "only-here" ? buildOnlyHerePuzzle(allSongs, bonusIndexes().wordIndex)
             : id === "out-of-order" ? buildOrderPuzzle(allSongs)
+            : id === "ruthless-game" ? buildRuthlessPuzzle(allSongs)
             : id === "sing-it-back" ? buildBlankPuzzle(allSongs, ctx)
             : buildSlipPuzzle(allSongs, playableWords, lineIndex, ctx);
           if (p) ok++;
         }
         return { tried: n, built: ok, rate: `${((ok / n) * 100).toFixed(1)}%` };
       },
-      score: (n) => { bonusScore = Math.max(0, Math.min(bonusMaxScore(bonusGame), +n || 0)); return bonusScore; },
+      // A timed run has no ceiling to clamp against, so it takes the number as given (in seconds).
+      score: (n) => {
+        bonusScore = bonusTimed(bonusGame)
+          ? Math.max(0, +n || 0)
+          : Math.max(0, Math.min(bonusMaxScore(bonusGame), +n || 0));
+        return bonusScore;
+      },
+      /* Ruthless Game. `drip(n)` pulls the next n words onto the page without waiting for the
+         metronome — the only way to reach the back half of a stream in less than a minute — and
+         `stream()` reports where the page stands, including the word the title finally lands on.
+         `name()` answers it and `giveup()` takes the penalty (unlocking the button first, since
+         the point of testing a give-up is the settle, not the twenty words in front of it). */
+      drip: (n = 10) => {
+        if (!bonusGame || !bonusTimed(bonusGame)) return "not on a ruthless page";
+        for (let i = 0; i < n; i++) revealRuthlessWord();
+        return { shown: ruthlessShown, of: bonusPuzzle.stream.length };
+      },
+      stream: () => {
+        if (!bonusGame || !bonusTimed(bonusGame) || !bonusPuzzle) return "not on a ruthless page";
+        return { song: bonusPuzzle.song.title, album: bonusPuzzle.song.album,
+                 shown: ruthlessShown, words: bonusPuzzle.stream.length,
+                 titleAt: devRuthlessTitleAt(bonusPuzzle),
+                 spent: ((performance.now() - ruthlessStart) / 1000).toFixed(1) + "s" };
+      },
+      name: () => {
+        if (!bonusGame || !bonusTimed(bonusGame) || !$("bonusInput")) return "not on a ruthless page";
+        $("bonusInput").value = bonusPuzzle.song.title;
+        judgeName();
+        return ruthlessSpent
+          ? `${fmtTime(ruthlessSpent)} off ${ruthlessShown} word${ruthlessShown === 1 ? "" : "s"}`
+          : "not settled";
+      },
+      giveup: () => {
+        if (!bonusGame || !bonusTimed(bonusGame)) return "not on a ruthless page";
+        ruthlessShown = Math.max(ruthlessShown, RUTHLESS_SKIP_AFTER);
+        giveUpRuthless();
+        return { penalty: RUTHLESS_SKIP_PENALTY, page: ruthlessSpent };
+      },
       // Redacted: strip the page bare without paying for it, to reach the answer or to see what
       // a fully peeled verse looks like. `worth` sets the page's remaining value outright.
       peel: () => {
