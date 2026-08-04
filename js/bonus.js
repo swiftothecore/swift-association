@@ -832,13 +832,21 @@ export function orderJoins(slots) {
        slow. Barring songs that say their own name early would cut some of the best-known
        songs in the catalogue out of a game about recognising songs. It does mean pages vary
        wildly in what they cost, which is what the ten-page run averages out.
-   The one real bar is length: a stream has to be long enough that it can run to the title. */
+   The one real bar is length: a stream has to be long enough that it can run to the title.
+
+   The one real EXCLUSION is the songs Taylor wrote for other artists to sing. Every other game
+   on the shelf shows you a line and lets you place it; this one bills you by the second until
+   you can name the thing, and a page that turns out to be a track Taylor has never sung isn't
+   a hard page, it is a page nobody can end except by paying the give-up. They stay in the
+   catalogue everywhere else, including as guesses here. */
 export const RUTHLESS_MIN_WORDS = 30;
+export const RUTHLESS_SKIP_ALBUMS = new Set(["Written for Others"]);
 export function buildRuthlessPuzzle(songs, rng = Math.random, tries = 120, avoid = null) {
   for (let t = 0; t < tries; t++) {
     const song = pick(songs, rng);
     if (!song) continue;
     if (avoid && avoid.has(song.title)) continue;
+    if (RUTHLESS_SKIP_ALBUMS.has(song.album)) continue;
     const lines = songLines(song);
     if (!lines.length) continue;
     const stream = [];
