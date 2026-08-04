@@ -4319,13 +4319,6 @@ function bonusSongHead(song, label) {
     `</div>`;
 }
 
-/* Only Here's price list, printed on the page. It is the same ladder onlyHerePoints scores by
-   (js/bonus.js) written out in words, and the two must stay in step — a game that pays a wager
-   differently from how it quoted it is the one unforgivable thing here. */
-const ONLY_LADDER = [
-  [5, "only here"], [4, "in two"], [3, "in three or four"], [2, "up to nine"], [1, "ten or more"],
-];
-
 function renderBonusRound() {
   const body = $("bonusPlayBody");
   const p = bonusPuzzle;
@@ -4380,17 +4373,14 @@ function renderBonusRound() {
     renderChainSheet();
     renderChainCards();
   } else if (bonusGame.id === "only-here") {
-    // A song's name and six of its own words. The ladder is printed alongside because the game
-    // is a wager on rarity and it cannot be made by a player who doesn't know the prices —
-    // and unlike Redacted's falling number this one never changes, so it is set as a pencilled
-    // price list rather than a readout.
+    // A song's name and six of its own words, and nothing else. The price ladder used to be
+    // pencilled in between the two, from the version where you WROTE a word and were betting
+    // on what it would turn out to be worth. Dealing the hand killed the bet: the rarest card
+    // is the right card at every price, so the ladder cannot change a single pick, and the
+    // reveal teaches it properly by writing each card's count and payout on the card itself.
     body.innerHTML =
       `<p class="bg-ask">pick the word the fewest other songs sing</p>` +
       bonusSongHead(p.song, "") +
-      `<ul class="bg-scale" aria-label="What a word pays">` +
-        ONLY_LADDER.map(([pts, what]) =>
-          `<li><b>${pts}</b> ${escapeHtml(what)}</li>`).join("") +
-      `</ul>` +
       `<div class="bg-hand" id="bonusHand"></div>` +
       `<p class="bg-hint">every one of them is in the song, spelled the way it is sung</p>`;
     renderOnlyHand();
@@ -5006,8 +4996,8 @@ function judgeName(picked = null) {
   hideBonusDropdown();
   const correct = song.title === bonusPuzzle.song.title;
   /* Ruthless Game judges the same title the same way, but a miss does not end the page: wrong
-     guesses are free there by design, so a wrong one is a SOFT reject (Only Here's pattern) —
-     say which song was rejected, clear the line, and leave the clock running. Guessing early
+     guesses are free there by design, so a wrong one is a SOFT reject — say which song was
+     rejected, clear the line, and leave the clock running. Guessing early
      and often is the intended play, and it self-regulates because every guess is paid for in
      the seconds it took to type. */
   if (bonusTimed(bonusGame)) {
@@ -5165,7 +5155,7 @@ function bonusPageScore(correct) {
   // A timed game's page doesn't pay, it CHARGES: what the run adds up is the seconds each page
   // took, penalty included, and the lowest total wins.
   if (bonusTimed(bonusGame)) return ruthlessFreeze();
-  // Only Here pays for the word that was written, whatever it was worth — the page is never
+  // Only Here pays for the card that was picked, whatever it was worth — the page is never
   // failed, only answered cheaply or not at all.
   if (bonusGame && bonusGame.id === "only-here") return onlyPlayed ? onlyPlayed.points : 0;
   // Then What pays per PICK, and the picks are not worth the same: 1, 1, 2, 2 up the page, so
@@ -5209,7 +5199,7 @@ function settleBonusRound(correct, detail, isTimeout = false) {
   // The writing line has done its job, so put it away for the verdict — the round screen hides
   // its play area at exactly this beat. It also gives back the space the answer card wants, which
   // is what keeps the countdown on screen instead of below the fold.
-  $("bonusPlayBody").querySelectorAll(".bg-write, .bg-hint, .bg-worth, .bg-scale, .bg-giveup, .bg-chain-cards").forEach((el) => { el.style.display = "none"; });
+  $("bonusPlayBody").querySelectorAll(".bg-write, .bg-hint, .bg-worth, .bg-giveup, .bg-chain-cards").forEach((el) => { el.style.display = "none"; });
 
   // The run's track listing, written up on the end card. Each game notes the one thing worth
   // remembering about its page: the impostor you were hunting, the word that was missing, or

@@ -2038,23 +2038,10 @@
     text-decoration: line-through; text-decoration-color: rgba(178,58,63,0.6);
   }
 
-  /* Only Here — a song's name, the price list, and six of its own words dealt face up. The
-     price list is pencilled small under the heading rather than shouted, because it is
-     reference the player reads once a run and then plays from memory, but it cannot go: a
-     wager on rarity can't be made by someone who doesn't know the prices. One wrapped row, so
-     five tiers cost four lines of page on a phone at worst and one on the desk. */
-  .bg-scale {
-    /* Measured, not guessed: 320px is what puts the five tiers on two balanced rows (three
-       then two) at the type size below. Wider and it becomes one long row edge-to-edge on the
-       page; narrower and it breaks 2/2/1, which reads as a list that ran out of room. */
-    list-style: none; margin: -6px auto 20px; padding: 0; max-width: 320px;
-    display: flex; flex-wrap: wrap; justify-content: center; gap: 2px 12px;
-    font-family: var(--type); font-size: 10.5px; letter-spacing: 0.6px;
-    color: var(--ink-soft); text-transform: lowercase;
-  }
-  .bg-scale li { white-space: nowrap; }
-  .bg-scale b { font-size: 12.5px; color: var(--ink); margin-right: 3px; font-weight: 700; }
-  /* The hand: six words as cut scraps rather than chips. Ransom-note energy fits the notebook,
+  /* Only Here — a song's name and six of its own words dealt face up, with nothing pencilled
+     in between them. (A price list lived there while the game was a typed wager; the hand
+     retired the bet, so the ladder is now taught on the cards at the reveal instead.)
+     The hand: six words as cut scraps rather than chips. Ransom-note energy fits the notebook,
      and more practically it makes them read as FOUND words rather than as UI buttons. Two rows
      of three — six in a line is a menu — with each scrap tilted a hair off true so the six of
      them look torn out rather than typeset. */
