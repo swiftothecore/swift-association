@@ -844,10 +844,13 @@ export function orderJoins(slots) {
        Collaborations are someone else's record with her on it — the stream can open on a verse
        she has no part in, and the title belongs to a song most of the catalogue's readers have
        never filed under her name at all.
-     • SECOND CUTS. An acoustic or piano re-recording sings the SAME WORDS as the album version
-       sitting beside it, so the stream is another song's stream and the honest answer ("State Of
-       Grace") is rejected for missing a parenthesis. There is no play that ends that page except
-       guessing at the packaging.
+     • SECOND CUTS. A re-recording or a remix sings the SAME WORDS as the album version sitting
+       beside it, so the stream is another song's stream and the honest answer ("State Of Grace")
+       is rejected for missing a parenthesis. There is no play that ends that page except
+       guessing at the packaging. A guest verse does not save it: Karma (Remix) opens on one
+       ad-lib line and is Karma's stream from the second line on, which is the same trap arriving
+       a few seconds later. What DOES save a remix is opening on words the album cut never sings
+       and staying there long enough to be placed, which is why the other four remixes stay.
      • UNHEARD. Songs that never got a proper release, or got one nobody saw. Naming them is not
        recall, it is trivia about what leaked.
    Everything else stays, including the songs that never sing their own title: those are slow,
@@ -860,6 +863,8 @@ export const RUTHLESS_SKIP_ALBUMS = new Map([
 export const RUTHLESS_SKIP_TITLES = new Map([
   ["State Of Grace (Acoustic Version)", "second cut"],
   ["Forever & Always (Piano Version)", "second cut"],
+  ["Snow On The Beach (Remix)", "second cut"],
+  ["Karma (Remix)", "second cut"],
   ["Need", "unheard"],
   ["I'd Lie", "unheard"],
   ["Beautiful Eyes", "unheard"],
