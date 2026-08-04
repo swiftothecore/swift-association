@@ -50,7 +50,7 @@ import { buildLineIndex, buildSlipContext, buildSlipPuzzle, buildNamePuzzle,
          buildBlankPuzzle, buildRedactedPuzzle, buildStringPuzzle, STRING_PAIRS,
          buildWordIndex, buildOnlyHerePuzzle, judgeOnlyHere, onlyHerePoints,
          buildOrderPuzzle, orderJoins, ORDER_LINES, ORDER_JOINS,
-         buildRuthlessPuzzle,
+         buildRuthlessPuzzle, ruthlessPool,
          judgeBlank } from "./bonus.js";
 import { renderStreakPlacard } from "./placard.js";
 import {
@@ -16116,6 +16116,16 @@ function buildDevApi() {
         return ruthlessSpent
           ? `${fmtTime(ruthlessSpent)} off ${ruthlessShown} word${ruthlessShown === 1 ? "" : "s"}`
           : "not settled";
+      },
+      /* What the deal can and cannot land on. A ten-page run never shows you a bar, so this is
+         the only way to check that an exclusion caught what it was written for — and, more to
+         the point, that it caught nothing else. Pass a reason to list those songs in full. */
+      pool: (why = null) => {
+        const { deal, barred } = ruthlessPool(allSongs);
+        if (why) return barred.filter((b) => b.why === why);
+        const by = {};
+        barred.forEach((b) => { by[b.why] = (by[b.why] || 0) + 1; });
+        return { dealable: deal.length, of: allSongs.length, barred: by };
       },
       giveup: () => {
         if (!bonusGame || !bonusTimed(bonusGame)) return "not on a ruthless page";

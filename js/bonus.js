@@ -834,29 +834,78 @@ export function orderJoins(slots) {
        wildly in what they cost, which is what the ten-page run averages out.
    The one real bar is length: a stream has to be long enough that it can run to the title.
 
-   The one real EXCLUSION is the songs Taylor wrote for other artists to sing. Every other game
-   on the shelf shows you a line and lets you place it; this one bills you by the second until
-   you can name the thing, and a page that turns out to be a track Taylor has never sung isn't
-   a hard page, it is a page nobody can end except by paying the give-up. They stay in the
-   catalogue everywhere else, including as guesses here. */
+   What this game does bar, and no other game here has to, is the ENDABLE-PAGE rule. Every other
+   game on the shelf shows you a line and lets you place it, so a page you cannot place is just a
+   page you lose. This one bills you by the second until you name the thing, and the answer is
+   judged on the exact title, so a page whose title cannot be arrived at is not a hard page — it
+   is a page with no ending in it except the ninety-second give-up. Three shapes of song fail
+   that, and all three stay in the catalogue everywhere else, including as guesses here:
+     • NOT HERS TO SING. The Written for Others tracks are hers on paper only, and the
+       Collaborations are someone else's record with her on it — the stream can open on a verse
+       she has no part in, and the title belongs to a song most of the catalogue's readers have
+       never filed under her name at all.
+     • SECOND CUTS. An acoustic or piano re-recording sings the SAME WORDS as the album version
+       sitting beside it, so the stream is another song's stream and the honest answer ("State Of
+       Grace") is rejected for missing a parenthesis. There is no play that ends that page except
+       guessing at the packaging.
+     • UNHEARD. Songs that never got a proper release, or got one nobody saw. Naming them is not
+       recall, it is trivia about what leaked.
+   Everything else stays, including the songs that never sing their own title: those are slow,
+   not impossible, and the give-up is the valve for them. */
 export const RUTHLESS_MIN_WORDS = 30;
-export const RUTHLESS_SKIP_ALBUMS = new Set(["Written for Others"]);
+export const RUTHLESS_SKIP_ALBUMS = new Map([
+  ["Written for Others", "not hers to sing"],
+  ["Collaborations", "not hers to sing"],
+]);
+export const RUTHLESS_SKIP_TITLES = new Map([
+  ["State Of Grace (Acoustic Version)", "second cut"],
+  ["Forever & Always (Piano Version)", "second cut"],
+  ["Need", "unheard"],
+  ["I'd Lie", "unheard"],
+  ["Beautiful Eyes", "unheard"],
+  ["I Heart ?", "unheard"],
+]);
+
+/* Why a song cannot be dealt, or null if it can. The builder and the dev tool both ask this one
+   question, so what the pool reports and what the pool actually is cannot drift apart. */
+export function ruthlessBar(song) {
+  if (!song) return "no song";
+  return RUTHLESS_SKIP_ALBUMS.get(song.album) || RUTHLESS_SKIP_TITLES.get(song.title) || null;
+}
+
+/* The song flattened into the stream the page writes out. `br` is "this word opens a new line",
+   which is what lets the page break where the song breaks without the screen having to know
+   anything about sections. */
+export function ruthlessStream(song) {
+  const stream = [];
+  songLines(song).forEach(({ line }, li) => {
+    String(line).split(/\s+/).filter(Boolean).forEach((w, wi) => {
+      stream.push({ text: w, br: wi === 0 && li > 0 });
+    });
+  });
+  return stream;
+}
+
+/* Every song the game can deal, and every song it can't with the reason. Dev-facing: it is the
+   only way to see the shape of the pool, since a run of ten pages never shows you the bars. */
+export function ruthlessPool(songs) {
+  const deal = [], barred = [];
+  (songs || []).forEach((song) => {
+    const why = ruthlessBar(song) ||
+      (ruthlessStream(song).length < RUTHLESS_MIN_WORDS ? "too short" : null);
+    if (why) barred.push({ title: song.title, album: song.album, why });
+    else deal.push(song);
+  });
+  return { deal, barred };
+}
+
 export function buildRuthlessPuzzle(songs, rng = Math.random, tries = 120, avoid = null) {
   for (let t = 0; t < tries; t++) {
     const song = pick(songs, rng);
     if (!song) continue;
     if (avoid && avoid.has(song.title)) continue;
-    if (RUTHLESS_SKIP_ALBUMS.has(song.album)) continue;
-    const lines = songLines(song);
-    if (!lines.length) continue;
-    const stream = [];
-    lines.forEach(({ line }, li) => {
-      String(line).split(/\s+/).filter(Boolean).forEach((w, wi) => {
-        // `br` is "this word opens a new line", which is what lets the page break where the
-        // song breaks without the screen having to know anything about sections.
-        stream.push({ text: w, br: wi === 0 && li > 0 });
-      });
-    });
+    if (ruthlessBar(song)) continue;
+    const stream = ruthlessStream(song);
     if (stream.length < RUTHLESS_MIN_WORDS) continue;
     return { song, stream };
   }
