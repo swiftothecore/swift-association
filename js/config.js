@@ -848,6 +848,12 @@ export const PRESS_RIDE_STEP = 1;
 /* How deep a ride has to be before the bead that banks it earns the horseshoe charm. Riding
    three pages is a pot of 6 against a target of 20, so it's a real commitment, not a shrug. */
 export const PRESS_CHARM_RIDE = 3;
+/* And how deep before it earns the CHARM (I Knew You Were Trouble). Kept separate from
+   PRESS_CHARM_RIDE on purpose: the horseshoe marks a bead worth marking and wants to be
+   reachable most runs, while the charm is a flourish and should ask for a ride that is
+   genuinely reckless. Five deep is a pot of 15 against a base target of 26, so banking it
+   is most of a win riding on one page. Move the two independently. */
+export const PRESS_FLOURISH_RIDE = 5;
 export const RISK_MAX_STAKE = 3;
 export const RISK_TOKENS = 3;
 export const RISK_TOKEN_VALUE = 2;
@@ -1978,6 +1984,11 @@ export const ACHIEVEMENTS = [
   { id: "sparks-fly",       name: "Sparks Fly",       desc: "Hit a 10-in-a-row streak",            secret: false, icon: "sparkler" },
   { id: "great-war",        name: "The Great War",    desc: "Win an Ultra game (10+ correct)",     secret: false, icon: "poppy" },
   { id: "long-live",        name: "Long Live",        desc: "Perfect 13/13 on Hard or Ultra",      secret: false, icon: "coronet" },
+  // The two hardest single runs the game can ask for, and the top of their own ladders: Long
+  // Live takes either of the top two difficulties, All Too Well only asks you to FINISH a
+  // Lyricist game. These stay unearned long after the rest of the collection is closed.
+  { id: "whos-afraid",      name: "Who’s Afraid Of Little Old Me?", desc: "Perfect 13/13 on Ultra", secret: false, icon: "placeholder" },
+  { id: "marjorie",         name: "Marjorie",         desc: "Perfect 13/13 in Lyricist",           secret: false, icon: "placeholder" },
   { id: "ready-for-it",     name: "…Ready For It?",   desc: "Nail round 1 in under 2s",            secret: false, icon: "rocket" },
   { id: "i-did-something-bad", name: "I Did Something Bad", desc: "Answer right with under 0.5s left", secret: true, icon: "match" },
   { id: "branch-out",       name: "Time To Branch Out?", desc: "3 correct in a row from one album", secret: true, icon: "branch" },
@@ -2059,18 +2070,38 @@ export const ACHIEVEMENTS = [
   { id: "blank-space",       name: "Blank Space",       desc: "Win Vanishing Word writing blind: every answer landed after the word had gone", secret: true, reveal: "vanishing-word", icon: "vanish" },
   { id: "you-belong-with-me", name: "You Belong With Me", desc: "Win Deep Cut loyal to one album: every correct answer of the run off the same record", secret: true, reveal: "deep-cut", icon: "heartlabel" },
   { id: "tied-together",     name: "Tied Together With A Smile", desc: "Win From A to Z on a chain that climbs every link: never twice on the same letter", secret: true, reveal: "alphabetical", icon: "ribbon" },
+  // The risk three. Flourishes like the rest, so they carry `reveal` and stay masked until
+  // their challenge is beaten — nobody rides a pot five deep by accident. Each one asks for
+  // the thing its rule is really about: depth on Press, restraint on Insurance, nerve on
+  // Wager. Deliberately NOT a rule that every challenge gets one; three of thirty-two.
+  { id: "i-knew-you-were-trouble", name: "I Knew You Were Trouble", desc: `Bank a pot on Press Your Luck ridden ${PRESS_FLOURISH_RIDE} pages deep`, secret: true, reveal: "press-your-luck", icon: "placeholder" },
+  { id: "untouchable",       name: "Untouchable",       desc: "Win Insurance with every shield still unspent", secret: true, reveal: "insurance", icon: "placeholder" },
+  { id: "the-man",           name: "The Man",           desc: "Win Confidence Wager having staked the most you could hold on every page", secret: true, reveal: "confidence-wager", icon: "placeholder" },
+  // Dark sides. A milestone rather than a flourish (no challenge named), so it stays visible.
+  { id: "mad-woman",        name: "Mad Woman",        desc: "Beat a dark side on your first attempt", secret: false, icon: "placeholder" },
   { id: "the-lakes",        name: "The Lakes",        desc: "Climb to the Rarest tier in Adaptive",  secret: false, icon: "lake" },
   { id: "stay-stay-stay",   name: "Stay Stay Stay",   desc: "Reach Rarest and finish there without slipping", secret: false, icon: "anchor" },
   { id: "a-place-in-this-world", name: "A Place In This World", desc: "Beat your first album in Album Focus", secret: false, icon: "map" },
   { id: "change",           name: "Change",           desc: "Beat all 12 albums in Album Focus",     secret: false, icon: "butterfly" },
   { id: "gold-rush",        name: "Gold Rush",        desc: "Perfect an album in Album Focus (13/13)", secret: false, icon: "coins" },
   { id: "starlight",        name: "Starlight",        desc: "Perfect all 12 albums in Album Focus",  secret: false, icon: "constellation" },
+  // Gold Rush perfects at any difficulty; these are the two top rungs, and they ask for
+  // different things — naming a record cold on a 5s clock, or having its words by heart.
+  { id: "king-of-my-heart", name: "King Of My Heart", desc: "Perfect an album on Ultra",            secret: false, icon: "placeholder" },
+  { id: "the-manuscript",   name: "The Manuscript",   desc: "Perfect an album in Lyricist",         secret: false, icon: "placeholder" },
   /* ---- Custom mode (your own levers, your own rules) ---- */
   { id: "ours",             name: "Ours",             desc: "Finish your first Custom run",         secret: false, icon: "levers" },
   { id: "mine",             name: "Mine",             desc: `Keep ${CUSTOM_PRESET_SHELF} custom presets on the shelf at once`, secret: false, icon: "presetbox" },
   { id: "forever-and-always", name: "Forever & Always", desc: `Reach round ${CUSTOM_ENDLESS_MILESTONE} of an endless Custom run`, secret: false, icon: "infinity" },
+  // The one Custom charm that rewards authoring something punishing rather than comfortable.
+  // "No easier than Ultra" is checked lever by lever against MODES.ultra (see customAtLeastUltra),
+  // so retuning Ultra retunes this with it rather than leaving a stale set of numbers here.
+  { id: "dear-reader",      name: "Dear Reader",      desc: "Perfect a full Custom run tuned no easier than Ultra", secret: false, icon: "placeholder" },
   /* ---- Guest shelf (other artists' catalogues) ---- */
   { id: "welcome-to-new-york", name: "Welcome To New York", desc: "Admit a guest to the shelf", secret: false, icon: "guestpass" },
+  // Admission already means a perfect, hint-free run, so these are the rungs above it.
+  { id: "better-man",       name: "Better Man",       desc: "Admit a guest on Hard or Ultra",       secret: false, icon: "placeholder" },
+  { id: "everything-has-changed", name: "Everything Has Changed", desc: "Admit a guest in Lyricist", secret: false, icon: "placeholder" },
   /* ---- Skills & Mastery ---- */
   { id: "bigger-than-the-whole-sky", name: "Bigger Than The Whole Sky", desc: "Press the wax and unlock Mastery", secret: false, icon: "waxpress" },
   { id: "superstar",        name: "Superstar",        desc: `Take a single skill all the way to level ${SKILL_MAX_LEVEL}`, secret: false, icon: "rosette" },
@@ -2129,10 +2160,13 @@ export const ACH_GROUP_OF = {
   "two-steps-ahead": "challenges", "walls-stood-tall": "challenges", "tick-tock": "challenges",
   "part-the-sea": "challenges", "knowing-all-the-words": "challenges", "two-is-better": "challenges",
   "blank-space": "challenges", "you-belong-with-me": "challenges", "tied-together": "challenges",
+  "i-knew-you-were-trouble": "challenges", "untouchable": "challenges", "the-man": "challenges",
+  "mad-woman": "challenges",
   "a-place-in-this-world": "albumFocus", "change": "albumFocus", "gold-rush": "albumFocus", "starlight": "albumFocus",
+  "king-of-my-heart": "albumFocus", "the-manuscript": "albumFocus",
   "the-lakes": "adaptive", "stay-stay-stay": "adaptive",
-  "ours": "custom", "mine": "custom", "forever-and-always": "custom",
-  "welcome-to-new-york": "guests",
+  "ours": "custom", "mine": "custom", "forever-and-always": "custom", "dear-reader": "custom",
+  "welcome-to-new-york": "guests", "better-man": "guests", "everything-has-changed": "guests",
   "bigger-than-the-whole-sky": "mastery", "superstar": "mastery", "call-it-what-you-want": "mastery",
   "nineteen-eighty-nine": "infinite", "mean": "catalogue",
 };

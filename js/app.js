@@ -17,7 +17,7 @@ import {
   COMMON_LINES, COMMON_MIN_SONGS, COMMON_MAX_SONGS, COMMON_GEN_ATTEMPTS, COMMON_MAX_ACCEPT,
   ODD_TILES, WHOSE_TILES, WHOSE_MIN_WORDS, WHOSE_GEN_ATTEMPTS, WHOSE_HARD_POOL,
   BOTH_WORDS, BOTH_MIN_SONGS, BOTH_PARTNER_TRIES, BOTH_REVEAL_SONGS,
-  PRESS_RIDE_STEP, PRESS_CHARM_RIDE, RISK_MAX_STAKE, RISK_TOKENS, RISK_TOKEN_VALUE,
+  PRESS_RIDE_STEP, PRESS_CHARM_RIDE, PRESS_FLOURISH_RIDE, RISK_MAX_STAKE, RISK_TOKENS, RISK_TOKEN_VALUE,
   ALBUM_FOCUS_DIFFS, ALBUM_FOCUS_TARGET,
   GUEST_SHELF_SLOTS, GUESTS, GUEST_DIFFS, GUEST_TARGET, TAYLOR_BUCKETS,
   ADAPTIVE_BUCKETS, ADAPTIVE_LEVELS, ADAPT_MAX_LEVEL, ADAPT_START_LEVEL, ADAPT_PROMO_STREAK, ADAPT_NODROP_LEVEL,
@@ -202,6 +202,12 @@ let wagerRestore = null;        // Confidence Wager: undoes the stake panel's bo
 let riskCharm = [];             // per-round: this page's bead was won at stake — hang a horseshoe
 let riskSkull = [];             // per-round: the miss that ended the run — string a skull, not a spacer
 let beadRideBest = 0;           // Press Your Luck / Double Or Nothing: deepest chain this run
+let beadRideBanked = 0;         // Press Your Luck: deepest chain actually BANKED — a ride wiped by a
+                                // miss set beadRideBest but was never carried home, and the charm is
+                                // for carrying it home (see bankPot / I Knew You Were Trouble)
+let wagerAlwaysMax = true;      // Confidence Wager: every page so far was staked at the most the run
+                                // could afford. Cap-relative, not RISK_MAX_STAKE — the dark side opens
+                                // on 1 bead, so an absolute bar would be unreachable there by design
 let insuranceTokens = 0;        // Insurance: shields still unspent
 let roundInsured = false;       // Insurance: a shield is covering THIS page
 let insuranceSpent = 0;         // Insurance: shields burned this run
@@ -1925,6 +1931,9 @@ function markChallengeDefeated(id, score, dark) {
     unlock("the-black-dog");
     if (beaten >= DARK_SIDE_MILESTONE) unlock("dont-blame-me");
     if (DARK_SIDE_IDS.length && beaten >= DARK_SIDE_IDS.length) unlock("darkest-paradise");
+    // Mad Woman — the dark mirror of State Of Grace. darkAttempts banks at run start, the
+    // way attempts does, so at this point it already counts the run that just won.
+    if (rec.darkAttempts === 1) unlock("mad-woman");
   }
   if (firstTime && !dark) {
     const wallet = loadChallengeTokens();
@@ -7070,6 +7079,8 @@ function resetRunState() {
   riskCharm = [];
   riskSkull = [];
   beadRideBest = 0;
+  beadRideBanked = 0;
+  wagerAlwaysMax = true;
   insuranceTokens = 0;
   roundInsured = false;
   insuranceSpent = 0;
@@ -9132,6 +9143,16 @@ function endChallenge() {
   // Tied Together With A Smile — From A to Z climbing on every link: the alphabet tied end to
   // end without ever resting twice on the same letter.
   if (c.rule === "alphabetical" && won && alphaEveryLetterNew) unlock("tied-together");
+  // The risk three. Read AFTER the settle above, which banks whatever was still riding when
+  // the pages ran out — a pot carried all the way home is banked like any other, so it counts.
+  // I Knew You Were Trouble — a pot ridden PRESS_FLOURISH_RIDE deep and actually banked.
+  // Not gated on the win: the ride is the feat, and a run that rode that deep and still fell
+  // short of the target has done the reckless thing the charm is named for.
+  if (c.rule === "press" && beadRideBanked >= PRESS_FLOURISH_RIDE) unlock("i-knew-you-were-trouble");
+  // Untouchable — won Insurance having never once bought your way out of trouble.
+  if (c.rule === "insurance" && won && insuranceSpent === 0) unlock("untouchable");
+  // The Man — won Confidence Wager with nothing held back on any page.
+  if (c.rule === "wager" && won && wagerAlwaysMax) unlock("the-man");
 
   // A dark run signs off the way it was announced: the briefing card's violet kicker,
   // repeated above the challenge name so the run opens and closes on the same note. The
@@ -9241,6 +9262,11 @@ function endAlbumFocus() {
   const perfectedCount = STUDIO_ALBUMS.filter((a) => board[a] && board[a].perfected).length;
   if (rec.beaten) unlock("a-place-in-this-world");
   if (rec.perfected) unlock("gold-rush");
+  // The two top rungs, judged on THIS run for the reason the guest ones are: a record already
+  // perfected on Easy would otherwise hand these over the moment the board was consulted.
+  const perfectedNow = score >= TOTAL_ROUNDS && hintFree;
+  if (perfectedNow && diff === "ultra") unlock("king-of-my-heart");
+  if (perfectedNow && diff === "lyricist") unlock("the-manuscript");
   if (beatenCount >= STUDIO_ALBUMS.length) unlock("change");
   if (perfectedCount >= STUDIO_ALBUMS.length) unlock("starlight");
 
@@ -9312,6 +9338,12 @@ function endGuest() {
   }
   const admittedCount = GUESTS.filter((x) => guestRecord(x.id).admitted).length;
   if (rec.admitted) unlock("welcome-to-new-york");
+  // The rungs above admission, judged on THIS run rather than off the board: a guest already
+  // admitted on Easy should still earn these the first time the same perfect, hint-free run
+  // is done further up the ladder, which a board already flagged `admitted` would swallow.
+  const admittedNow = score >= GUEST_TARGET && hintFree;
+  if (admittedNow && (diff === "hard" || diff === "ultra")) unlock("better-man");
+  if (admittedNow && diff === "lyricist") unlock("everything-has-changed");
 
   showScreen("results");
   applyEra(guestEra());   // endGame applies a random finale era; a guest keeps its own
@@ -9425,6 +9457,22 @@ function endAdaptive() {
 // shouldn't feed the lifetime catalogue. A finite run scores 0..rounds; an infinite run is
 // judged by how far you got before lives ran out. Only Instinct (resolve) earns XP, so a
 // deliberately soft config can't farm the specialised skills. (devNoLog skips the fold.)
+// Is this custom preset tuned no easier than Ultra on every lever that unambiguously hardens
+// a run? Compared against MODES.ultra rather than against a copied set of numbers, so retuning
+// Ultra retunes the bar with it. Four levers are deliberately NOT read: `rounds` and `lives`
+// set a run's LENGTH rather than its difficulty, `answer` is a modality (lyric-only is a
+// different game, not a harder one), and seconds:0 is Relaxed's no-clock — the easiest setting
+// on the slider, not the hardest, which is why the clock is bounded from BOTH sides here.
+function customAtLeastUltra(m) {
+  const u = MODES.ultra;
+  return m.seconds > 0 && m.seconds <= u.seconds
+    && m.pool === u.pool
+    && !m.dropdown
+    && (m.examples || 0) <= u.examples
+    && (m.hintBudget || 0) === 0
+    && !!m.noTitle;
+}
+
 function endCustom() {
   const preset = customPreset;
   if (!devNoLog) foldSkillXp(["resolve"]);
@@ -9440,6 +9488,10 @@ function endCustom() {
   }
   const total = infinite ? roundsPlayed : customSessionLen;
   const perfect = !infinite && total > 0 && score === total;
+  // Dear Reader — you wrote rules at least as unforgiving as Ultra's and then kept every page
+  // of them. The full-length bar matters as much as the levers: CUSTOM_ROUNDS_MIN is 1, so
+  // without it a one-page preset would hand this over for a single lucky answer.
+  if (!devNoLog && perfect && total >= TOTAL_ROUNDS && customAtLeastUltra(currentMode)) unlock("dear-reader");
 
   showScreen("results");
   $("resultBracelet").innerHTML = renderBraceletSVG(roundResults, 0, -1, roundAlbums,
@@ -10574,6 +10626,9 @@ function bankPot(quiet) {
   // Both rules share the depth: three deep is a pot of 6 riding on Press and 4 on Double,
   // either of which is a genuine commitment rather than a shrug.
   if (beadRide >= PRESS_CHARM_RIDE) riskCharm[round - 1] = true;
+  // The charm asks for a ride CARRIED HOME, so it is recorded here rather than off
+  // beadRideBest, which a ride wiped by a miss would have set just as high.
+  if (beadRide > beadRideBanked) beadRideBanked = beadRide;
   if (quiet) score += n; else adjustBeads(n);
   beadPot = 0;
   beadRide = 0;
@@ -10666,6 +10721,10 @@ function showWagerStake(done) {
   $("playArea").appendChild(panel);
   panel.querySelectorAll("[data-stake]").forEach((b) => b.addEventListener("click", () => {
     roundStake = Number(b.dataset.stake) || 0;
+    // Measured against `cap`, the most this page could actually be staked, not against the
+    // rule's ceiling: a run that has bled down to two beads and puts both in has held nothing
+    // back, and that is what the charm is asking about.
+    if (roundStake < cap) wagerAlwaysMax = false;
     stakeChosen = true;
     clearWagerStake();
     revealPromptWord();   // the bet is placed, so the card turns over — then `done` starts the clock
@@ -12807,6 +12866,10 @@ function endGame() {
     if (roundResults.includes(false) && trailingStreak >= 5) unlock("long-story-short");
     if (currentMode.id === "ultra" && score >= 10) unlock("great-war");
     if (score === TOTAL_ROUNDS && (currentMode.id === "hard" || currentMode.id === "ultra")) unlock("long-live");
+    // The top of those two ladders. Long Live takes either of the hardest difficulties and
+    // All Too Well only asks you to finish a Lyricist game; these ask for the perfect run.
+    if (score === TOTAL_ROUNDS && currentMode.id === "ultra") unlock("whos-afraid");
+    if (score === TOTAL_ROUNDS && currentMode.lyricOnly) unlock("marjorie");
     // Mirrorball — a perfect 13/13 logged in every difficulty (updateStats already folded this game).
     if (["easy", "medium", "hard", "ultra"].every((m) => loadStats(m).scoreCounts[TOTAL_ROUNDS] > 0)) unlock("mirrorball");
     // Everything & Nothing All At Once — a majority win (7+/13) logged in every difficulty.
@@ -16303,6 +16366,13 @@ function buildDevApi() {
         }),
         // Set the bead total outright (the currency IS score, so this is the honest lever).
         beads: (n) => { if (n != null) score = Math.max(0, n | 0); renderRiskBanner(); renderBracelet(); return score; },
+        // Fabricate a run of `n` won pages. Insurance's win check reads roundResults.length
+        // (surviving all thirteen is half of what it asks for), which `beads` alone can never
+        // satisfy — so without this, checking Untouchable or The Man means playing thirteen
+        // real pages by hand. Same idea as bonus.fill: the run's shape, without the sitting.
+        pages: (n) => { const k = Math.max(0, Math.min(TOTAL_ROUNDS, n == null ? TOTAL_ROUNDS : n | 0));
+          roundResults = Array.from({ length: k }, () => true);
+          renderBracelet(); return roundResults.length; },
         // Drop the run on its target and finish it — the win path, without 13 real pages.
         win: () => { if (!riskRuleActive()) return null; score = riskTarget(); return endGame(); },
       },
@@ -16310,6 +16380,11 @@ function buildDevApi() {
       press: {
         pot: () => ({ pot: beadPot, ride: beadRide, nextWorth: (beadRide + 1) * PRESS_RIDE_STEP, banked: beadsBanked,
           floor: pressMinRide(), locked: beadPot > 0 && beadRide < pressMinRide() }),
+        // The charm's own reading: the deepest ride actually CARRIED HOME this run, beside the
+        // deepest ridden at all. The two differ exactly when a deep ride was wiped by a miss,
+        // which is the case the charm has to refuse and the one worth being able to see.
+        flourish: () => ({ banked: beadRideBanked, best: beadRideBest, need: PRESS_FLOURISH_RIDE,
+          earned: beadRideBanked >= PRESS_FLOURISH_RIDE }),
         // The dark side's lever, on its own: is the pot banked-out-of-reach right now, and how
         // many more pages have to be ridden before the offer comes back. On a base run the
         // floor is 0, so this always reads unlocked — which is the honest control case.
@@ -16327,8 +16402,14 @@ function buildDevApi() {
       },
       // Confidence Wager — the per-page stake. `set` skips the panel (or pre-answers it).
       wager: {
-        stake: () => ({ stake: roundStake, chosen: stakeChosen, max: riskMaxStake(), affordable: Math.min(riskMaxStake(), score) }),
-        set: (n) => { roundStake = Math.max(0, Math.min(riskMaxStake(), score, n | 0)); stakeChosen = true;
+        stake: () => ({ stake: roundStake, chosen: stakeChosen, max: riskMaxStake(), affordable: Math.min(riskMaxStake(), score),
+          alwaysMax: wagerAlwaysMax }),
+        // Mirrors the panel's own bookkeeping, or a run staked entirely through this hatch
+        // would keep The Man's flag standing while visibly holding beads back.
+        set: (n) => { const cap = Math.min(riskMaxStake(), score);
+          roundStake = Math.max(0, Math.min(cap, n | 0));
+          if (roundStake < cap) wagerAlwaysMax = false;
+          stakeChosen = true;
           const open = !!$("wagerStake");
           clearWagerStake();
           revealPromptWord();                     // a stake answered is a card turned over
