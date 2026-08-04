@@ -34,6 +34,7 @@ the OFL requires of any Modified Version distributed under the Reserved Font Nam
 | `sounds/correct.mp3`, `sounds/wrong.mp3` | [Google Material Design sound resources](https://archive.org/details/material-design-sound-resources) | CC-BY 4.0 |
 | `sounds/page.mp3` | freesound | CC0 1.0 |
 | `sounds/unlock.mp3`, `sounds/hint.mp3` | freesound | CC0 1.0 |
+| `sounds/tick.mp3` | freesound | CC0 1.0 |
 
 The CC-BY 4.0 material requires attribution, which is given in the credit line at the
 foot of [README.md](README.md). That line stays as long as those files ship.

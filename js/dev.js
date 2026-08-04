@@ -159,9 +159,12 @@ export function initDev(api) {
 
   // ---- Sound -------------------------------------------------------------------
   // Audition buttons force each effect past the sound setting (api.sound.play).
+  // "countdown" plays the last-three-seconds ladder as a sequence, which is the only
+  // way to judge it: the "tick" button next to it is one third of the cue.
   body.append(section("sound",
     row(...api.sound.names().map((n) => btn("🔊 " + n, () => api.sound.play(n))),
         btn("all", () => api.sound.all()),
+        btn("countdown", () => api.sound.countdown()),
         btn("state", () => toast("audio: " + api.sound.state())))));
 
   // ---- Date ------------------------------------------------------------------

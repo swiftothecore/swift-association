@@ -12,6 +12,11 @@
  *   hint.mp3    - that same glockenspiel's first note alone, trimmed dry and
  *                 mixed quietest in the palette (-13 dBFS): a small pip when a
  *                 hint tier reveals, reading as a cousin of the unlock.
+ *   tick.mp3    - a real clock escapement, one tick (freesound #534094, CC0),
+ *                 trimmed to the strike and mixed to -12 dBFS. Played three
+ *                 times on the last three seconds of a round, and only ever
+ *                 through a rising gain (see app.js) - the file is the loudest
+ *                 of the three, the earlier two are attenuated at the call.
  * correct and wrong come from the same Material family on purpose: their
  * relative balance (bright yes / softer no) is the kit's own, preserved when
  * the files were level-matched. Keep the palette stationery, never arcade.
@@ -46,6 +51,7 @@ const SOUNDS = {
   page:    { url: new URL("../sounds/page.mp3", import.meta.url), gain: 1 },
   unlock:  { url: new URL("../sounds/unlock.mp3", import.meta.url), gain: 1 },
   hint:    { url: new URL("../sounds/hint.mp3", import.meta.url), gain: 1 },
+  tick:    { url: new URL("../sounds/tick.mp3", import.meta.url), gain: 1 },
 };
 
 const buffers = {}; // name -> Promise<AudioBuffer>
@@ -103,9 +109,12 @@ export const sfx = {
     if (ensureCtx()) for (const n of Object.keys(SOUNDS)) loadBuffer(n).catch(() => {});
   },
   // force=true bypasses the setting (the dev panel's audition buttons).
+  // level is a per-play attenuation for a sound that is deliberately played at
+  // more than one weight (the countdown tick's rising ladder); it multiplies
+  // the sound's own palette gain and is never used to level-match a file.
   // Returns whether the sound was scheduled (it plays as soon as its buffer
   // is decoded, which after the pre-warm means immediately).
-  play(name, force = false) {
+  play(name, force = false, level = 1) {
     if (!enabled && !force) return false;
     const spec = SOUNDS[name];
     if (!spec) return false;
@@ -116,9 +125,10 @@ export const sfx = {
       .then((buf) => {
         const src = c.createBufferSource();
         src.buffer = buf;
-        if (spec.gain !== 1) {
+        const gain = spec.gain * level;
+        if (gain !== 1) {
           const g = c.createGain();
-          g.gain.value = spec.gain;
+          g.gain.value = gain;
           src.connect(g); g.connect(master);
         } else {
           src.connect(master);

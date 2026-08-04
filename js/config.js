@@ -80,7 +80,7 @@ export const DEFAULT_SETTINGS = {
   pageTurn: true,           // page-flip between rounds
   penCircle: true,          // pen-circle confirm before the verdict
   sparkles: true,           // sparkle burst on a correct answer
-  timerTension: true,       // vignette / word tremor / red margin tally in the final seconds
+  timerTension: true,       // vignette / word tremor / red margin tally / countdown tick in the final seconds
   reducedFlashing: false,   // also suppress the perfect-game star shower
   snake: true,              // the reputation-era slithering snake
   // gameplay pacing

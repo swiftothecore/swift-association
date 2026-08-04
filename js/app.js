@@ -11272,6 +11272,24 @@ function startTimer(resume) {
   let lowAnnounced = false;
   const srTimer = $("srTimer");
   if (srTimer) srTimer.textContent = "";
+  // Countdown tick: which margin numeral has already sounded this round. Seeded from
+  // the clock we're starting at, so resuming a round mid-countdown doesn't re-tick a
+  // numeral the player already heard.
+  let tickedNumeral = begin <= 3 ? Math.ceil(begin) : 0;
+  // One tick per margin numeral over the last three seconds, on exactly the numerals
+  // updateTally scrawls (ceil of what's left), so the sound and the scrawl are one
+  // event. The three ticks rise, which is the whole cue: the same sample, leaning in.
+  // Skipped on a clock of 3s or less (a deliberately tiny custom/Shrinking Timer page
+  // is all "final seconds", and would open on a tick over the page turn) — the same
+  // guard the spoken low-time cue uses.
+  const tickCountdown = (remaining) => {
+    if (!settings.sound || !settings.timerTension || perkCalm) return;
+    if (!(total > 3) || !(remaining > 0) || remaining > 3) return;
+    const n = Math.ceil(remaining);
+    if (n === tickedNumeral) return;
+    tickedNumeral = n;
+    sfx.play("tick", false, COUNTDOWN_TICK_GAIN[n] || 1);
+  };
   timerSpark.start();
   startRevolve();   // Revolving Door: begin (or restart) the per-round word rotation, in sync with the clock
 
@@ -11290,6 +11308,7 @@ function startTimer(resume) {
     // the bridge build: ramp tension over the final 4 seconds
     setTension(remaining >= 4 ? 0 : (4 - remaining) / 4);
     updateTally(remaining);
+    tickCountdown(remaining);
     // past half-time, if no hint taken yet, nudge the hint affordance
     if (elapsed / total >= 0.5 && hintTier === 0 && hintsAllowed() && !motionReduced()) {
       const hb = $("hintBtn");
@@ -11320,6 +11339,10 @@ function startRevolve() {
 }
 
 /* ---------- Timer tension ---------- */
+// The countdown tick's rising ladder, keyed by the margin numeral it lands on. The
+// file itself is mixed for the last one; 3 and 2 are attenuated at the call, so the
+// three ticks are one sound leaning in rather than three separate alarms.
+const COUNTDOWN_TICK_GAIN = { 3: 0.55, 2: 0.78, 1: 1 };
 function setTension(t) {
   // Timer-tension setting off (or Choose Your Path's Steady Hands perk) → keep the
   // vignette/tremor at rest.
@@ -14020,7 +14043,7 @@ function renderSettingsBody() {
         setCheckHTML("pageTurn", "Page turn", "the paper flip between rounds"),
         setCheckHTML("penCircle", "Pen-circle confirm", "marks your pick before the verdict"),
         setCheckHTML("sparkles", "Sparkles", "a burst on a correct answer"),
-        setCheckHTML("timerTension", "Timer tension", "vignette + tremor as the clock runs low"),
+        setCheckHTML("timerTension", "Timer tension", "vignette, tremor and the countdown tick as the clock runs low"),
         setCheckHTML("snake", "Slithering snake", "the reputation-era easter egg"),
         setCheckHTML("reducedFlashing", "Reduced flashing", "also mutes the perfect-game star shower"),
       ])
@@ -15351,6 +15374,12 @@ function buildDevApi() {
       names: () => sfx.names.slice(),
       play: (n) => sfx.play(n, true),
       all: (gapMs = 800) => sfx.names.forEach((n, i) => setTimeout(() => sfx.play(n, true), i * gapMs)),
+      // The countdown is a sequence, not a sound: play() only ever gives you one tick of
+      // it. This walks the real ladder, on the real spacing, without needing a round in
+      // its last three seconds (use __dev.timer.set(3.4) to hear it in place instead).
+      countdown: () => {
+        [3, 2, 1].forEach((n, i) => setTimeout(() => sfx.play("tick", true, COUNTDOWN_TICK_GAIN[n]), i * 1000));
+      },
       state: () => sfx.state(),
     },
     // Sharing the daily result. The OS share sheet doesn't exist on most desktops, so
