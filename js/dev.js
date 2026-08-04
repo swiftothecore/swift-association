@@ -115,7 +115,12 @@ export function initDev(api) {
     row("tickets=", ticketN, btn("set wallet", () => {
           readout.textContent = `${api.challenge.persist.tickets(+ticketN.value)} persistence tickets`;
         }),
-        btn("clear persistence", () => { api.challenge.persist.reset(); readout.textContent = "persistence cleared"; }, "warn"))));
+        btn("clear persistence", () => { api.challenge.persist.reset(); readout.textContent = "persistence cleared"; }, "warn")),
+    // Flourish charms hide behind ??? until their challenge is defeated, so checking how one
+    // reads as a revealed target otherwise means actually beating the challenge first.
+    row(btn("defeat all (reveal flourishes)", () => { const n = api.challenge.defeat();
+          readout.textContent = `${n} challenges marked defeated — open Achievements`; }),
+        btn("clear defeats", () => { api.challenge.undefeat(); readout.textContent = "defeats cleared — flourishes masked again"; }, "warn"))));
 
   // ---- Word / Era / Mode -----------------------------------------------------
   const eraSel = select(api.ERAS, (x) => x, (x) => x);

@@ -2038,18 +2038,27 @@ export const ACHIEVEMENTS = [
   { id: "darkest-paradise", name: "Darkest Little Paradise", desc: "Beat every dark side",           secret: false, icon: "eden" },
   { id: "state-of-grace",   name: "State Of Grace",   desc: "Defeat a challenge on the first try",   secret: false, icon: "feather" },
   { id: "this-is-me-trying", name: "This Is Me Trying", desc: "Defeat a challenge after seeing it through 7 times", secret: true, icon: "crumple" },
-  { id: "shouldve-said-no",  name: "Should've Said No",  desc: "Defeat Impostor flawlessly: every impostor flagged, every real word named", secret: false, icon: "nosign" },
   { id: "smallest-man",      name: "The Smallest Man Who Ever Lived", desc: "Fall for the very first impostor you meet", secret: true, icon: "hooked" },
-  { id: "invisible-string",  name: "Invisible String",  desc: "Defeat Common Thread: pull the word through every line", secret: false, icon: "thread" },
-  { id: "two-steps-ahead",   name: "Two Steps Ahead",   desc: "Beat Revolving Door before a single swap: every answer on the first word", secret: true, icon: "twosteps" },
-  { id: "walls-stood-tall",  name: "My Walls Stood Tall", desc: "Win Home Invasion untouched: the clock never once shrinks", secret: true, icon: "wall" },
-  { id: "tick-tock",         name: "Tick-Tock",         desc: "Win Shrinking Timer, clearing every page once the clock hits single digits", secret: true, icon: "stopwatch" },
-  { id: "part-the-sea",      name: "Part The Sea",      desc: "Win Sea of Songs without ever tapping a decoy", secret: true, icon: "partedsea" },
-  { id: "knowing-all-the-words", name: "Knowing All The Words", desc: "Win Lyric Lover with every line word-perfect, no fuzzy recalls", secret: true, icon: "cassette" },
-  { id: "two-is-better",     name: "Two Is Better Than One", desc: "Clear all thirteen pages of Double Trouble: two songs each, none dropped", secret: true, icon: "cherries" },
-  { id: "blank-space",       name: "Blank Space",       desc: "Win Vanishing Word writing blind: every answer landed after the word had gone", secret: true, icon: "vanish" },
-  { id: "you-belong-with-me", name: "You Belong With Me", desc: "Win Deep Cut loyal to one album: every correct answer of the run off the same record", secret: true, icon: "heartlabel" },
-  { id: "tied-together",     name: "Tied Together With A Smile", desc: "Win From A to Z on a chain that climbs every link: never twice on the same letter", secret: true, icon: "ribbon" },
+  /* ---- Flourish charms: win one named challenge the hard way ----
+     Masked until that challenge has been DEFEATED (`reveal` names it), then they show as
+     ordinary locked targets in this theme. Every condition here demands deliberate play —
+     never tap a decoy, never a fuzzy recall, never twice on the same letter — so a
+     permanently secret flourish is one nobody would ever trip over by accident, and its
+     charm would go undrawn-on. Revealing on defeat makes each win hand you the next goal:
+     now do it properly. They stay deliberately selective, NOT one per challenge: only the
+     challenges with a flourish worth naming carry one. A revealed flourish is not counted
+     as hidden by Is It Over Now? (see HIDDEN_ACH_IDS in app.js). */
+  { id: "shouldve-said-no",  name: "Should've Said No",  desc: "Defeat Impostor flawlessly: every impostor flagged, every real word named", secret: true, reveal: "impostor", icon: "nosign" },
+  { id: "invisible-string",  name: "Invisible String",  desc: "Defeat Common Thread: pull the word through every line", secret: true, reveal: "common-thread", icon: "thread" },
+  { id: "two-steps-ahead",   name: "Two Steps Ahead",   desc: "Beat Revolving Door before a single swap: every answer on the first word", secret: true, reveal: "revolving-door", icon: "twosteps" },
+  { id: "walls-stood-tall",  name: "My Walls Stood Tall", desc: "Win Home Invasion untouched: the clock never once shrinks", secret: true, reveal: "home-invasion", icon: "wall" },
+  { id: "tick-tock",         name: "Tick-Tock",         desc: "Win Shrinking Timer, clearing every page once the clock hits single digits", secret: true, reveal: "shrinking-timer", icon: "stopwatch" },
+  { id: "part-the-sea",      name: "Part The Sea",      desc: "Win Sea of Songs without ever tapping a decoy", secret: true, reveal: "sea-of-songs", icon: "partedsea" },
+  { id: "knowing-all-the-words", name: "Knowing All The Words", desc: "Win Lyric Lover with every line word-perfect, no fuzzy recalls", secret: true, reveal: "lyric-lover", icon: "cassette" },
+  { id: "two-is-better",     name: "Two Is Better Than One", desc: "Clear all thirteen pages of Double Trouble: two songs each, none dropped", secret: true, reveal: "double-trouble", icon: "cherries" },
+  { id: "blank-space",       name: "Blank Space",       desc: "Win Vanishing Word writing blind: every answer landed after the word had gone", secret: true, reveal: "vanishing-word", icon: "vanish" },
+  { id: "you-belong-with-me", name: "You Belong With Me", desc: "Win Deep Cut loyal to one album: every correct answer of the run off the same record", secret: true, reveal: "deep-cut", icon: "heartlabel" },
+  { id: "tied-together",     name: "Tied Together With A Smile", desc: "Win From A to Z on a chain that climbs every link: never twice on the same letter", secret: true, reveal: "alphabetical", icon: "ribbon" },
   { id: "the-lakes",        name: "The Lakes",        desc: "Climb to the Rarest tier in Adaptive",  secret: false, icon: "lake" },
   { id: "stay-stay-stay",   name: "Stay Stay Stay",   desc: "Reach Rarest and finish there without slipping", secret: false, icon: "anchor" },
   { id: "a-place-in-this-world", name: "A Place In This World", desc: "Beat your first album in Album Focus", secret: false, icon: "map" },

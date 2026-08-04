@@ -1743,17 +1743,33 @@ function unlock(id) {
   checkMetaAchievements();
 }
 
+// The charms that count as hidden for Is It Over Now?. Frozen as a literal rather than
+// filtered off `secret` at runtime, because that made the capstone's price move every time
+// a charm's mask was reconsidered: unmasking anything quietly made "find every hidden charm"
+// cheaper for anyone still chasing it. Adding a new secret charm here is now a deliberate
+// decision, not a side effect. Excludes the two meta charms (circularity) and the flourish
+// charms, which carry `reveal` and are gated targets rather than things to be found.
+const HIDDEN_ACH_IDS = [
+  "getaway-car", "long-story-short", "champagne-problems", "anti-hero",
+  "i-did-something-bad", "branch-out", "midnights", "the-triangle",
+  "my-mind-is-alive", "cruel-summer", "i-cant-see-you", "thousand-cuts",
+  "spicy-drama", "i-look-in-windows", "look-what-you-made-me-do", "snow-on-the-beach",
+  "midnight-rain", "autumn-leaves-falling", "fav-song", "paris",
+  "mean", "raining-monday", "seven", "piano-was-hissing",
+  "the-bolter", "no-closure", "this-is-me-trying", "smallest-man",
+  "you-took-a-polaroid-of-us",
+];
+
 // Re-evaluated after every unlock (each unlock no-ops if already earned, so this is safe to
 // recurse). Covers the achievements whose condition is "you've earned other achievements":
 //   karma          — your 13th charm.
-//   is-it-over-now — every hidden (secret) achievement, the two meta ones excepted.
+//   is-it-over-now — every charm in HIDDEN_ACH_IDS.
 //   the-lucky-one  — 100%: every achievement but itself (is-it-over-now is earnable first,
 //                    so there's no circular deadlock between the two meta charms).
 const META_ACH = ["is-it-over-now", "the-lucky-one"];
 function checkMetaAchievements() {
   if (Object.keys(earnedAchievements).length >= 13) unlock("karma");
-  const hidden = ACHIEVEMENTS.filter((a) => a.secret && !META_ACH.includes(a.id));
-  if (hidden.length && hidden.every((a) => earnedAchievements[a.id])) unlock("is-it-over-now");
+  if (HIDDEN_ACH_IDS.every((id) => earnedAchievements[id])) unlock("is-it-over-now");
   const all = ACHIEVEMENTS.filter((a) => a.id !== "the-lucky-one");
   if (all.length && all.every((a) => earnedAchievements[a.id])) unlock("the-lucky-one");
 }
@@ -2270,13 +2286,19 @@ function celebrateMastery(res, host) {
   playUnlockChime();   // same grand chime as a charm; coalesced if charms unlocked this tick too
 }
 
-// One charm tile: earned (revealed), a still-locked secret (masked ???), or a visible
+// Is this charm still behind the ??? mask? Secret by default, but a flourish charm names a
+// challenge in `reveal` and unmasks the moment that challenge is defeated — from then on it
+// reads as an ordinary locked target and sits back in its own theme, not the Secret section.
+// Every masking decision on the achievements page goes through here, never `a.secret`.
+const achMasked = (a) => !!a.secret && !(a.reveal && challengeRecord(a.reveal).defeated);
+
+// One charm tile: earned (revealed), a still-masked secret (???), or a visible
 // locked target. Shared by the grid + secret section.
 function achTile(a) {
   if (earnedAchievements[a.id]) {
     return `<div class="ach ach--earned">${charmMarkup(a.icon, achColor(a))}<div class="ach-text"><div class="ach-nm">${escapeHtml(a.name)}</div><div class="ach-dc">${escapeHtml(a.desc)}</div></div></div>`;
   }
-  if (a.secret) {
+  if (achMasked(a)) {
     // Once the level-10 "secret hints" reward is earned, reveal the how-to (desc) while
     // keeping the name and charm a surprise; otherwise it stays fully masked.
     const dc = hiddenHintsUnlocked() ? escapeHtml(a.desc) : "a secret charm";
@@ -2343,10 +2365,10 @@ function renderAchievementsPage() {
   html += questCardHTML();
 
   // themed sections: earned (revealed, newest first) then visible locked targets.
-  // Still-locked secrets are held back for the trailing Secret section.
+  // Still-masked secrets are held back for the trailing Secret section.
   ACH_GROUPS.forEach((g) => {
     const members = ACHIEVEMENTS.filter((a) =>
-      achGroupOf(a.id) === g.id && (earnedAchievements[a.id] || !a.secret));
+      achGroupOf(a.id) === g.id && (earnedAchievements[a.id] || !achMasked(a)));
     if (!members.length) return;
     const earnedM = members.filter((a) => earnedAchievements[a.id])
       .sort((x, y) => (earnedAchievements[y.id] || "").localeCompare(earnedAchievements[x.id] || ""));
@@ -2356,7 +2378,7 @@ function renderAchievementsPage() {
       `<div class="ach-grid">${tiles}</div>`;
   });
 
-  const secretLocked = ACHIEVEMENTS.filter((a) => a.secret && !earnedAchievements[a.id]);
+  const secretLocked = ACHIEVEMENTS.filter((a) => achMasked(a) && !earnedAchievements[a.id]);
   if (secretLocked.length) {
     html += `<p class="histogram-label ach-section"><span class="ach-group-dot ach-group-dot--secret"></span>Secret charms · ${secretLocked.length}</p>` +
       `<div class="ach-grid">${secretLocked.map(achTile).join("")}</div>`;
@@ -15993,6 +16015,20 @@ function buildDevApi() {
       // non-free one. These open the door directly, without the token wallet or Paper Rings.
       unlock: (id) => { const st = loadChallengeState(); st[id] = { ...challengeRecord(id), unlocked: true };
         saveChallengeState(st); if ($("challengesBody")) renderChallengesPage(); return challengeUnlocked(id); },
+      // Mark challenges beaten so their flourish charms come out from behind the ??? mask
+      // (achMasked reads `defeated`). `id` targets one; omit for all. Writes storage direct
+      // rather than through markChallengeDefeated, so no charms, tokens or seals fire off a
+      // dev flip — the flourish itself still has to be earned by playing the run properly.
+      defeat: (id) => { const st = loadChallengeState();
+        const ids = id ? [id] : CHALLENGE_ORDER;
+        ids.forEach((k) => { st[k] = { ...challengeRecord(k), unlocked: true, defeated: true }; });
+        saveChallengeState(st); if ($("challengesBody")) renderChallengesPage();
+        if ($("achievementsBody")) renderAchievementsPage(); return ids.length; },
+      undefeat: (id) => { const st = loadChallengeState();
+        const ids = id ? [id] : CHALLENGE_ORDER;
+        ids.forEach((k) => { if (st[k]) st[k] = { ...challengeRecord(k), defeated: false }; });
+        saveChallengeState(st); if ($("challengesBody")) renderChallengesPage();
+        if ($("achievementsBody")) renderAchievementsPage(); return ids.length; },
       unlockAll: () => { const st = loadChallengeState();
         CHALLENGES.forEach((c) => { st[c.id] = { ...challengeRecord(c.id), unlocked: true }; });
         saveChallengeState(st); if ($("challengesBody")) renderChallengesPage();
