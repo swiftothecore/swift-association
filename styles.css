@@ -2083,11 +2083,11 @@
     text-decoration: line-through; text-decoration-color: rgba(178,58,63,0.6);
   }
 
-  /* Only Here — the page is a song's name and a blank line, so the only furniture it needs is
-     the price list: what a word pays, by how few other songs sing it. Pencilled small under the
-     heading rather than shouted, because it is reference the player reads once a run and then
-     plays from memory. One wrapped row, so five tiers cost four lines of page on a phone at
-     worst and one on the desk. */
+  /* Only Here — a song's name, the price list, and six of its own words dealt face up. The
+     price list is pencilled small under the heading rather than shouted, because it is
+     reference the player reads once a run and then plays from memory, but it cannot go: a
+     wager on rarity can't be made by someone who doesn't know the prices. One wrapped row, so
+     five tiers cost four lines of page on a phone at worst and one on the desk. */
   .bg-scale {
     /* Measured, not guessed: 320px is what puts the five tiers on two balanced rows (three
        then two) at the type size below. Wider and it becomes one long row edge-to-edge on the
@@ -2099,10 +2099,69 @@
   }
   .bg-scale li { white-space: nowrap; }
   .bg-scale b { font-size: 12.5px; color: var(--ink); margin-right: 3px; font-weight: 700; }
-  /* The reveal: what this song sings alone, one of those words in pen, and the line it lives
-     in underneath. It sits directly under the heading that already names the song, which is
-     why there is no lyric card on this game at all. */
-  .bg-only-reveal { text-align: center; margin: -8px auto 18px; max-width: 34ch; }
+  /* The hand: six words as cut scraps rather than chips. Ransom-note energy fits the notebook,
+     and more practically it makes them read as FOUND words rather than as UI buttons. Two rows
+     of three — six in a line is a menu — with each scrap tilted a hair off true so the six of
+     them look torn out rather than typeset. */
+  .bg-hand {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 9px;
+    max-width: 400px; margin: 0 auto 6px;
+  }
+  .bg-scrap {
+    position: relative; display: flex; flex-direction: column; align-items: center;
+    justify-content: center; gap: 2px; min-height: 56px; padding: 9px 6px; cursor: pointer;
+    color: var(--ink); background: #fbf6ea; border: 0;
+    /* Torn on all four sides rather than cut. The shadow has to be a FILTER rather than a
+       box-shadow: clip-path clips a box-shadow away with the corners, which leaves the scraps
+       reading as flat rounded rectangles and throws away the tear entirely. */
+    filter: drop-shadow(0 1px 0 rgba(43,39,34,0.2)) drop-shadow(0 2px 4px rgba(43,39,34,0.1));
+    transition: background 0.14s, transform 0.1s;
+  }
+  /* Three edges, dealt round by position, so no two scraps beside each other tore the same way
+     and none of them is symmetrical. */
+  .bg-scrap:nth-child(3n+1) {
+    transform: rotate(-1.1deg);
+    clip-path: polygon(0.5% 6%, 24% 0.5%, 51% 5%, 79% 0%, 99.5% 5%, 98% 30%, 100% 58%,
+                       98.5% 82%, 96% 99%, 70% 95%, 44% 100%, 19% 96%, 1.5% 99.5%,
+                       0% 74%, 2% 48%, 0% 24%);
+  }
+  .bg-scrap:nth-child(3n+2) {
+    transform: rotate(0.6deg);
+    clip-path: polygon(2% 2%, 28% 6%, 55% 0.5%, 76% 5%, 99% 1%, 97.5% 26%, 100% 52%,
+                       98% 78%, 99.5% 97%, 74% 100%, 47% 95%, 22% 99.5%, 0.5% 96%,
+                       2% 70%, 0% 45%, 1.5% 20%);
+  }
+  .bg-scrap:nth-child(3n) {
+    transform: rotate(1.3deg);
+    clip-path: polygon(1% 4%, 25% 1%, 49% 6%, 77% 1.5%, 98.5% 3%, 100% 27%, 97.5% 54%,
+                       100% 79%, 98% 98%, 71% 99.5%, 46% 94%, 20% 100%, 2.5% 97%,
+                       0.5% 71%, 2% 47%, 0% 21%);
+  }
+  .bg-scrap:hover:not(:disabled) { background: #fff8e6; }
+  .bg-scrap:active:not(:disabled) { transform: translateY(1px); }
+  .bg-scrap:disabled { cursor: default; }
+  .bg-scrap-word {
+    font-family: var(--hand); font-weight: 700; font-size: 21px; line-height: 1.1;
+    text-align: center; overflow-wrap: anywhere;
+  }
+  /* The reveal, written on the scrap itself: what the catalogue really thinks of that word. */
+  .bg-scrap-count {
+    font-family: var(--type); font-size: 8.5px; letter-spacing: 1.1px; text-transform: uppercase;
+    color: var(--ink-soft);
+  }
+  /* The rarest in the hand, in gold, so the perfect play is visible on every page including one
+     played badly. It is marked whether or not it was picked — that is the whole reveal. */
+  .bg-scrap.is-best { background: #f4e6bf; }
+  .bg-scrap.is-best .bg-scrap-count { color: #8a6a17; }
+  .bg-scrap.is-missed { opacity: 0.72; }
+  /* The player's own card, marked out in the scrap's corner rather than in a margin the grid
+     hasn't got. */
+  .bg-scrap-mark { position: absolute; top: 3px; right: 4px; width: 12px; }
+
+  /* The reveal's line: where the rarest word actually sits in the song. It goes under the hand
+     rather than under the heading, because by then the hand is the answer key and the line is
+     the footnote to it. There is no lyric card on this game at all. */
+  .bg-only-reveal { text-align: center; margin: 12px auto 18px; max-width: 34ch; }
   .bg-only-said {
     font-family: var(--type); font-size: 11px; letter-spacing: 0.4px; line-height: 1.5;
     color: var(--ink-soft); margin: 0;
@@ -2377,6 +2436,12 @@
     .bg-str-mark { left: -15px; }
     /* One column of full lines, so it only needs the type to come down and the marks to come
        in off a margin a phone hasn't got. */
+    /* Two rows of three still fit a phone, but the scraps have to give up their padding and
+       the words a couple of points. Three columns is the shape of the hand and must not become
+       two: a 3+3 hand you read in one glance is the whole reason it is six. */
+    .bg-hand { gap: 6px; }
+    .bg-scrap { min-height: 46px; padding: 6px 3px; }
+    .bg-scrap-word { font-size: 17px; }
     .bg-chain-text { font-size: 17px; }
     .bg-chain-row.is-miss .bg-chain-text { font-size: 13.5px; }
     .bg-chain-card { padding: 7px 9px; }

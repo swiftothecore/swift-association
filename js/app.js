@@ -8,7 +8,8 @@ import {
   ALBUM_COLORS, CB_ALBUM_COLORS, STUDIO_ALBUMS, TITLE_ALIASES, STAMP_INKS,
   ACHIEVEMENTS, ACH_ICONS, ACH_BY_ID, ACH_GROUPS, ACH_GROUP_COLORS, ACH_GROUP_OF,
   BONUS_GAMES, BONUS_ROUNDS, BONUS_SLIP_SECONDS, BONUS_NAME_SECONDS, BONUS_BLANK_SECONDS,
-  BONUS_REDACT_SECONDS, REDACT_MIN_POINTS, BONUS_STRING_SECONDS, BONUS_ONLY_SECONDS,
+  BONUS_REDACT_SECONDS, REDACT_MIN_POINTS, BONUS_STRING_SECONDS,
+  BONUS_ONLY_SECONDS, ONLY_WIDE_PAGES,
   BONUS_CHAIN_SECONDS, CHAIN_EASY_PAGES,
   RUTHLESS_WORD_MS, RUTHLESS_OPEN_WORDS, RUTHLESS_SKIP_AFTER, RUTHLESS_SKIP_PENALTY,
   RUTHLESS_PACE_SECONDS,
@@ -50,7 +51,7 @@ import { sfx } from "./sound.js";
 import { wordRegex as wordRegexCore, extractLineWithWord as extractLineWithWordCore, highlightWord as highlightWordCore, wordVariants } from "./match.js";
 import { buildLineIndex, buildSlipContext, buildSlipPuzzle, buildNamePuzzle,
          buildBlankPuzzle, buildRedactedPuzzle, buildStringPuzzle, STRING_PAIRS,
-         buildWordIndex, buildOnlyHerePuzzle, judgeOnlyHere, onlyHerePoints,
+         buildWordIndex, buildOnlyHerePuzzle, onlyHerePoints, ONLY_HAND,
          buildChainPuzzle, CHAIN_PICKS, CHAIN_CARDS, CHAIN_PAY, CHAIN_PAGE,
          buildRuthlessPuzzle, ruthlessPool,
          judgeBlank } from "./bonus.js";
@@ -3953,6 +3954,9 @@ let redactPeeled = 0;      // ...and how many strips have come off it
 // {word, count, points} — or null while the page is still open. It IS the page's score, so it
 // is also what bonusPageScore reads.
 let onlyPlayed = null;
+// Only Here: every word already DEALT this run, so a run can't teach you a word's count on page
+// 3 and then ask about it on page 8 — a hand that grades its own answer key.
+let onlyDealt = new Set();
 // Invisible String: `stringLinks[leftRow]` is the right-hand SLOT that row is threaded to
 // (-1 for unthreaded), and `stringSel` is whichever end is waiting for its other end.
 let stringLinks = [];
@@ -4178,6 +4182,8 @@ function startBonusGame(g) {
   redactWorth = 0;
   redactPeeled = 0;
   onlyPlayed = null;
+  // The dealt-word ban belongs to the RUN, so it is cleared here and nowhere else.
+  onlyDealt = new Set();
   ruthlessShown = 0;
   ruthlessPenalty = 0;
   ruthlessSpent = 0;
@@ -4225,7 +4231,11 @@ function buildBonusPuzzle() {
   if (bonusGame.id === "invisible-string")
     return buildStringPuzzle(allSongs, lineIndex, Math.random, 120, new Set(bonusRecentSongs));
   if (bonusGame.id === "only-here")
-    return buildOnlyHerePuzzle(allSongs, bonusIndexes().wordIndex, Math.random, 120, new Set(bonusRecentSongs));
+    // The run's ramp: the early pages deal a wide hand with an obvious outlier, the later ones
+    // a compressed one where the answer is a judgement rather than a read.
+    return buildOnlyHerePuzzle(allSongs, bonusIndexes().wordIndex, Math.random, 120,
+                               new Set(bonusRecentSongs),
+                               { tight: bonusRound > ONLY_WIDE_PAGES, words: onlyDealt });
   if (bonusGame.id === "then-what")
     // The run's own ramp: the early pages keep the chain inside one section, the later ones
     // ask for a chain that crosses a section boundary.
@@ -4263,6 +4273,8 @@ function nextBonusRound() {
   redactWorth = bonusPagePoints(bonusGame);
   redactPeeled = 0;
   onlyPlayed = null;
+  if (bonusGame.id === "only-here" && bonusPuzzle.hand)
+    bonusPuzzle.hand.forEach((c) => onlyDealt.add(c.key));
   // A fresh chain: nothing picked, nothing banked. The longest run survives the page.
   chainStep = 0;
   chainTaken = [];
@@ -4397,25 +4409,20 @@ function renderBonusRound() {
     renderChainSheet();
     renderChainCards();
   } else if (bonusGame.id === "only-here") {
-    // The whole page is the song's name and a blank line, which is the point: nothing here is
-    // read, everything is recalled. The ladder is printed alongside because the game is a
-    // gamble on rarity and a player can't weigh a word they don't know the price of — and
-    // unlike Redacted's falling number, this one never changes, so it is set as a pencilled
+    // A song's name and six of its own words. The ladder is printed alongside because the game
+    // is a wager on rarity and it cannot be made by a player who doesn't know the prices —
+    // and unlike Redacted's falling number this one never changes, so it is set as a pencilled
     // price list rather than a readout.
     body.innerHTML =
-      `<p class="bg-ask">write a word this song sings — the rarer, the better</p>` +
+      `<p class="bg-ask">pick the word the fewest other songs sing</p>` +
       bonusSongHead(p.song, "") +
       `<ul class="bg-scale" aria-label="What a word pays">` +
         ONLY_LADDER.map(([pts, what]) =>
           `<li><b>${pts}</b> ${escapeHtml(what)}</li>`).join("") +
       `</ul>` +
-      bonusWritingLine({ placeholder: "a word from it…", aria: "Type a word from this song",
-                         hint: "one word, spelled the way it is sung" });
-    const input = $("bonusInput");
-    input.addEventListener("keydown", (e) => {
-      if (e.key === "Enter") { e.preventDefault(); judgeOnly(); }
-    });
-    input.focus();
+      `<div class="bg-hand" id="bonusHand"></div>` +
+      `<p class="bg-hint">every one of them is in the song, spelled the way it is sung</p>`;
+    renderOnlyHand();
   } else if (bonusGame.id === "ruthless-game") {
     // The song writes itself out into `.bg-stream`, a word a second, breaking where the song
     // breaks. Nothing about the song is named anywhere on the page — no title, no album, no
@@ -5231,27 +5238,52 @@ function judgeGap() {
   settleBonusRound(correct, correct ? "" : `you wrote “<b>${escapeHtml(raw)}</b>”`);
 }
 
-/* ---------- Only Here: writing a word ----------
-   The one judge on the shelf that cannot fail a page. A word that isn't in the song, is in the
-   title, or isn't a word at all is a SOFT reject: the page stays open, the clock keeps running
-   and the reason is said out loud. The only way to score nothing here is to let the clock go,
-   which is what "no fail state" means in practice rather than in theory. */
-function judgeOnly() {
-  if (bonusLocked) return;
-  const input = $("bonusInput");
-  const raw = input.value.trim();
-  if (!raw) return;   // Enter on an empty line is a slip of the hand, never an answer
-  const res = judgeOnlyHere(raw, bonusPuzzle, bonusIndexes().wordIndex);
-  if (!res.ok) {
-    const r = $("bonusReject");
-    r.textContent = res.why;
-    r.classList.remove("show"); void r.offsetWidth; r.classList.add("show");
-    input.select();
-    return;
-  }
-  onlyPlayed = { word: raw, count: res.count, points: res.points };
-  input.disabled = true;
-  settleBonusRound(true, onlyDetail(onlyPlayed));
+/* ---------- Only Here: the hand ----------
+   Six real words off the song, dealt as cut scraps rather than as chips: ransom-note energy
+   fits the notebook, and more practically it makes them read as FOUND words rather than as UI
+   buttons. Two rows of three, because six in a line is a menu.
+   One tap answers the page and there is no fail state, so the only way to score nothing is to
+   let the clock go. */
+function renderOnlyHand(reveal = false) {
+  const wrap = $("bonusHand");
+  if (!wrap || !bonusPuzzle) return;
+  const p = bonusPuzzle;
+  const best = new Set(p.optimal);
+  wrap.innerHTML = p.hand.map((c, i) => {
+    const picked = !!onlyPlayed && onlyPlayed.i === i;
+    // The reveal turns the WHOLE hand over. Everything this game knows and used to keep to
+    // itself goes on the page, including on a page played badly — that is the whole redesign.
+    const cls = ["bg-scrap",
+      reveal ? (best.has(i) ? "is-best" : "") : "",
+      reveal && picked ? (best.has(i) ? "is-got" : "is-missed") : ""].filter(Boolean).join(" ");
+    const aria = censor(c.word) +
+      (reveal ? ` — sung by ${c.count} song${c.count === 1 ? "" : "s"}, worth ${c.points}` +
+                (best.has(i) ? ", the rarest in the hand" : "") + (picked ? ", your pick" : "")
+              : "");
+    return `<button type="button" class="bg-scrap ${cls}" data-i="${i}"${reveal ? " disabled" : ""}` +
+        ` aria-label="${escapeHtml(aria)}">` +
+        `<span class="bg-scrap-word">${escapeHtml(censor(c.word.toLowerCase()))}</span>` +
+        (reveal
+          ? `<span class="bg-scrap-count">${c.count === 1 ? "only here" : `in ${c.count}`} · ${c.points}</span>` +
+            (picked ? `<span class="bg-scrap-mark" aria-hidden="true">${best.has(i) ? BG_TICK : BG_CROSS}</span>` : "")
+          : "") +
+      `</button>`;
+  }).join("");
+  if (!reveal) wrap.querySelectorAll(".bg-scrap").forEach((b) =>
+    b.addEventListener("click", () => judgeOnly(+b.dataset.i)));
+}
+
+/* One tap, and the page is answered. Every card is real, so every pick banks at least a point
+   and nothing here can be WRONG — a page is CLEARED by picking the rarest word in the hand,
+   whatever it paid, not by scoring five. A hand's best word might only be worth 3, and a tick
+   should mean you played it perfectly rather than that the deal was generous. */
+function judgeOnly(i) {
+  if (bonusLocked || !bonusPuzzle) return;
+  const c = bonusPuzzle.hand[i];
+  if (!c) return;
+  onlyPlayed = { i, word: c.word, count: c.count, points: c.points,
+                 best: bonusPuzzle.optimal.includes(i) };
+  settleBonusRound(onlyPlayed.best, onlyDetail(onlyPlayed));
 }
 
 // What the verdict says about a played word: the word, what it cost the catalogue to keep
@@ -5262,30 +5294,28 @@ function onlyDetail(p) {
     ` · ${p.points} point${p.points === 1 ? "" : "s"}`;
 }
 
-/* The reveal, written under the song's own heading. There is no card here (see
-   bonusAnswerCard): the heading already names the song, so what the page still owes the player
-   is the thing they didn't reach — how many words this song alone sings, one of them, and the
-   line it lives in. A player who DID find one of them is shown their own word's line instead,
-   because the page has nothing better to hold up than what they just wrote. */
+/* The reveal. The hand turns over in place — every card's true count, the rarest marked in gold,
+   the player's own card ticked or crossed — and under it goes the line the rarest word lives in.
+   There is no lyric card (see bonusAnswerCard): the heading already names the song, and the one
+   thing the page still owes is where that word actually sits. A player who found it is shown
+   THEIR word's line, because the page has nothing better to hold up than what they just played. */
 function revealOnlyHere() {
   const body = $("bonusPlayBody");
   const ask = body.querySelector(".bg-ask");
   if (ask) ask.remove();
   const p = bonusPuzzle;
-  const found = !!onlyPlayed && onlyPlayed.count === 1;
-  const word = found ? onlyPlayed.word : p.best;
-  const line = extractLineWithWord(p.song.lyrics, word, true);
-  const lead = found
-    ? `one of the <b>${p.uniques}</b> word${p.uniques === 1 ? "" : "s"} only this song sings`
-    : `<b>${p.uniques}</b> word${p.uniques === 1 ? " is" : "s are"} sung here and nowhere else` +
-      (onlyPlayed ? ` — one you could have played:` : ` — one of them:`);
+  renderOnlyHand(true);
+  const best = p.hand[onlyPlayed && onlyPlayed.best ? onlyPlayed.i : p.optimal[0]];
+  const line = extractLineWithWord(p.song.lyrics, best.word, true);
+  const lead = best.count === 1
+    ? `nothing else in the catalogue sings it`
+    : `<b>${best.count}</b> songs sing it, and that was the fewest on the page`;
   const html = `<div class="bg-only-reveal">` +
       `<p class="bg-only-said">${lead}</p>` +
-      (found ? "" : `<p class="bg-only-word">${escapeHtml(censor(word.toLowerCase()))}</p>`) +
-      `<p class="bg-only-line">${highlightWord(line, word, true)}</p>` +
+      `<p class="bg-only-line">${highlightWord(line, best.word, true)}</p>` +
     `</div>`;
-  const sheet = body.querySelector(".bg-sheet");
-  if (sheet) sheet.insertAdjacentHTML("afterend", html);
+  const wrap = $("bonusHand");
+  if (wrap) wrap.insertAdjacentHTML("afterend", html);
   else body.insertAdjacentHTML("beforeend", html);
 }
 
@@ -5356,9 +5386,12 @@ function bonusBannerText(correct, isTimeout) {
     return correct ? "every line tied off" : isTimeout ? "the page ran out" : "some threads crossed";
   // Nothing is ever wrong on an Only Here page — a word is either in the song or the clock beat
   // you to it — so its good banner grades the find instead of confirming it.
+  // Nothing is ever WRONG on an Only Here page — every card is real and every pick pays — so
+  // the banners grade the read rather than the answer, and the bad one only ever means the
+  // clock or a card that wasn't the rarest.
   if (bonusGame && bonusGame.id === "only-here")
-    return correct ? (onlyPlayed && onlyPlayed.count === 1 ? "only here" : "that's in there")
-                   : "the page ran out";
+    return correct ? (onlyPlayed && onlyPlayed.count === 1 ? "only here" : "the rarest on the page")
+                   : isTimeout || !onlyPlayed ? "the page ran out" : "one of them was rarer";
   // Nothing times out here at the page level — the clock takes single picks — so the bad
   // banner reports a broken chain rather than a lost page.
   if (bonusGame && bonusGame.id === "then-what")
@@ -5409,7 +5442,8 @@ function settleBonusRound(correct, detail, isTimeout = false) {
         // note is clipped from the right at 10ch, and a long word half-shown still reads. A page
         // the clock took carries the word it was hiding instead, in red — every other game's
         // missed note is the answer you didn't have, and this is what that is here.
-        : bonusGame.id === "only-here" ? (onlyPlayed ? `${gained} · ${onlyPlayed.word.toLowerCase()}` : bonusPuzzle.best.toLowerCase())
+        : bonusGame.id === "only-here" ? (onlyPlayed ? `${gained} · ${onlyPlayed.word.toLowerCase()}`
+                                                     : bonusPuzzle.hand[bonusPuzzle.optimal[0]].word.toLowerCase())
         // The time alone. The word count is the more interesting number and it was tried here
         // first, but the note column runs out around six characters on a two-up sleeve and
         // "1:23 · 62w" came back as "1:23 · …" — so the column keeps the one that adds up to
@@ -16391,9 +16425,13 @@ function buildDevApi() {
               verse: p.rows.map((r) => r.map((t) => t.pre + (t.hide ? "\u2588".repeat(t.core.length) : t.core) + t.post).join(" ")).join(" / "),
               blocks: p.blocks, song: p.song.title } : null);
           } else if (id === "only-here") {
-            const p = buildOnlyHerePuzzle(allSongs, bonusIndexes().wordIndex, Math.random, 120, new Set(recent));
+            // Dealt as a run would deal it, so a sample shows the wide hands and the tight ones
+            // rather than ten of whichever shape happens to be the default.
+            const p = buildOnlyHerePuzzle(allSongs, bonusIndexes().wordIndex, Math.random, 120,
+                                          new Set(recent), { tight: i >= ONLY_WIDE_PAGES });
             if (p) recent.push(p.song.title);
-            out.push(p ? { song: p.song.title, eligible: p.eligible, uniques: p.uniques, best: p.best } : null);
+            out.push(p ? { song: p.song.title, shape: p.shape, fellBack: p.fallback,
+                           hand: p.hand.map((c) => `${c.word} (${c.count})`).join("  ") } : null);
           } else if (id === "then-what") {
             // Every page after the third is dealt as a run would deal it — allowed to cross a
             // section — so a sample shows both shapes rather than ten of the easy one.
@@ -16503,26 +16541,63 @@ function buildDevApi() {
         if ($("bonusWorth")) $("bonusWorth").textContent = redactWorth;
         return redactWorth;
       },
-      // Only Here: what the page will accept and what each word is worth. `words` is the whole
-      // priced list for the song on screen, rarest first, which is the only way to see what a
-      // page was really offering — the game itself never shows it. `write` plays a word.
-      only: (n = 12) => {
+      /* Only Here. `only()` prints the dealt hand with every card's true count and which one is
+         the optimal pick — the reveal shows all of that, but not before the page is over, and a
+         hand has to be checkable while it is still a question. `deal(shape)` forces a hand shape
+         ("wide", "tight" or "exotic", which is a tight hand re-rolled until it carries a false
+         exotic), and `write(w)` plays a card by word or by index.
+         `handAudit` is the one that matters: it reports how often the compressed late-page shape
+         could not be filled, since that fallback silently makes the last five pages easier than
+         they were designed to be. */
+      only: () => {
         if (!bonusGame || bonusGame.id !== "only-here" || !bonusPuzzle) return "not on an only here page";
+        const p = bonusPuzzle;
+        return { song: p.song.title, shape: p.shape, fellBack: p.fallback, eligible: p.eligible,
+                 hand: p.hand.map((c, i) => `${p.optimal.includes(i) ? "*" : " "} ${c.word} — in ${c.count}, worth ${c.points}`) };
+      },
+      deal: (shape = "tight") => {
+        if (!bonusGame || bonusGame.id !== "only-here") return "not on an only here page";
         const { wordIndex } = bonusIndexes();
-        const priced = [];
-        wordIndex.forEach((songs, w) => {
-          if (songs.has(bonusPuzzle.song.title)) priced.push({ word: w, songs: songs.size, pts: onlyHerePoints(songs.size) });
-        });
-        priced.sort((a, b) => a.songs - b.songs || b.word.length - a.word.length);
-        return { song: bonusPuzzle.song.title, uniques: bonusPuzzle.uniques,
-                 eligible: bonusPuzzle.eligible, best: bonusPuzzle.best, words: priced.slice(0, n) };
+        for (let t = 0; t < 200; t++) {
+          const p = buildOnlyHerePuzzle(allSongs, wordIndex, Math.random, 120, null,
+                                        { tight: shape !== "wide", words: onlyDealt });
+          if (!p) continue;
+          if (shape !== "wide" && p.fallback) continue;
+          // "exotic" wants the trap on the table: a card that looks like a find and is worth one.
+          if (shape === "exotic" && !p.hand.some((c) => c.word.length >= 7 && c.count >= 10)) continue;
+          bonusPuzzle = p;
+          onlyPlayed = null;
+          renderBonusRound();
+          startBonusClock();
+          return __dev.bonus.only();
+        }
+        return `no ${shape} hand in 200 tries`;
       },
       write: (w) => {
-        if (!bonusGame || bonusGame.id !== "only-here" || !bonusPuzzle || !$("bonusInput")) return "no word to write";
-        const input = $("bonusInput");
-        input.value = w || bonusPuzzle.best;
-        judgeOnly();
-        return onlyPlayed || "soft rejected — see the line under the input";
+        if (!bonusGame || bonusGame.id !== "only-here" || !bonusPuzzle) return "no hand on screen";
+        const i = typeof w === "number" ? w
+          : w ? bonusPuzzle.hand.findIndex((c) => c.key === String(w).toLowerCase())
+              : bonusPuzzle.optimal[0];
+        if (i < 0) return "that word isn't in this hand";
+        judgeOnly(i);
+        return onlyPlayed;
+      },
+      handAudit: (n = 200) => {
+        const { wordIndex } = bonusIndexes();
+        let built = 0, tight = 0, fell = 0, exotic = 0, noFive = 0, tied = 0;
+        for (let i = 0; i < n; i++) {
+          const p = buildOnlyHerePuzzle(allSongs, wordIndex, Math.random, 120, null, { tight: true });
+          if (!p) continue;
+          built++;
+          if (p.shape === "tight") tight++;
+          if (p.fallback) fell++;
+          if (p.hand.some((c) => c.word.length >= 7 && c.count >= 10)) exotic++;
+          if (!p.hand.some((c) => c.count === 1)) noFive++;
+          if (p.optimal.length > 1) tied++;
+        }
+        return { tried: n, built, tight, fellBackToWide: fell,
+                 fallbackRate: built ? `${((fell / built) * 100).toFixed(1)}%` : "n/a",
+                 withFalseExotic: exotic, noFiveInHand: noFive, tiedForRarest: tied };
       },
       // Sing It Back: read the gap's answer off the page, or fill it in and submit. Testing
       // the tenth round of a run you have to play honestly is nobody's idea of a dev tool.
@@ -16677,7 +16752,8 @@ function buildDevApi() {
                 : bonusGame.id === "redacted" ? `${pts} pts`
                 : bonusGame.id === "invisible-string" ? `${pts} of ${STRING_PAIRS}`
                 : bonusGame.id === "then-what" ? `${pts} pts`
-                : bonusGame.id === "only-here" ? (ok ? `${pts} · ${p.best.toLowerCase()}` : p.best.toLowerCase())
+                : bonusGame.id === "only-here" ? (ok ? `${pts} · ${p.hand[p.optimal[0]].word.toLowerCase()}`
+                                                        : p.hand[p.optimal[0]].word.toLowerCase())
                 : p.song.album,
           });
           if (bonusGame.points) bonusScore += pts;

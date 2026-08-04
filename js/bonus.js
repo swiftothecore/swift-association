@@ -572,30 +572,53 @@ export function buildStringPuzzle(songs, lineIndex, rng = Math.random, tries = 1
 }
 
 /* ---------- Only Here ----------
-   The shelf's one game with no fail state. It shows you a song and asks for a word that is in
-   it; anything genuinely in there scores, and the fewer OTHER songs sing that word, the more
-   it scores. A word nothing else in the catalogue sings is the top of the page.
+   The shelf's one game with no fail state, and the only one that rewards knowing the CATALOGUE
+   rather than one song's lines. A song is named and six of its own words are dealt face up;
+   pick the one you think the fewest other songs sing. Every card is real, so every pick scores
+   something, and the reveal turns the whole hand over: every word's true song count, your pick
+   ticked or crossed, and the rarest in the hand marked in gold.
 
-   Everything about it runs off one index — `buildWordIndex`, a word to the set of songs that
-   sing it — read twice at judging time: once for "is this word in this song?" and once for
-   "how many songs is it in?". That is the whole validation, and it is why the game is generous
-   without being loose: the page can't be argued with, because the catalogue answers it.
+   The verb used to be FREE RECALL — write a word from this song — and that was the thing wrong
+   with it. You cannot search your own memory by attribute ("an unusual word, in this song, not
+   in others"), only by cue, so the player stared at a blank line while a clock ran and
+   experienced their own mind returning nothing, which reads as personal failure rather than as
+   the puzzle beating them. The wager was a fiction too: the printed ladder gave the PRICES but
+   never the ODDS, so you typed the one word your brain produced and found out what it happened
+   to be worth. Dealing the hand fixes both. The reveal IS the game — everything the old version
+   knew and never showed you goes on the page every time, including on a page played badly.
 
-   The word is matched AS WRITTEN, not stemmed. Every other game here leans on the lenient
-   matcher, and this one must not: the score IS the song count of a particular word, so
-   accepting "lovers" for "lover" would pay out a number that belongs to a different word. The
-   page says so in as many words, and a word that isn't in the song is a soft reject rather
-   than a lost page — there is nothing to lose here but the clock.
+   FAKE WORDS WERE CONSIDERED AND CUT. An earlier design salted the hand with words that are not
+   in the song at all, so the weirdest-looking card was also the likeliest trap. It overcomplicates
+   it, and the trap survives without fabrication: the hand carries FALSE EXOTICS, real in-song
+   words that sound rare and are sung by twenty other songs. That punishes exactly the same
+   "sounds like something she'd sing here" instinct using nothing but the truth, and it is the
+   main tuning lever this game has.
 
-   The bars a page must clear:
-     1. ENOUGH TO SAY — the song has ONLY_MIN_WORDS eligible words, so there is a real search
-                        rather than a short list to exhaust. (Two-minute interludes fail this.)
-     2. REACHABLE TOP — at least one word is sung nowhere else, so "only here" is always on the
-                        table. Ten of 287 songs have no such word; they simply don't come up.
-     3. WORTH SHOWING — that word survives the babble filter, so the end card's "you could have
-                        played…" is a real word rather than a transcribed hook ("dadadada").
+   Everything runs off one index — `buildWordIndex`, a word to the set of songs that sing it —
+   and the count it reports is the whole game, which is why a RE-RECORDING DOES NOT COUNT AS
+   ANOTHER SONG. A variant collapses onto its base title whenever that base is in the catalogue,
+   so a word sung once and once again on the acoustic cut is still a word sung by one song. That
+   distinction is too fine to price a wager on, and without the collapse the game's top tier
+   would be quietly unreachable for eight songs that happen to have a second pressing.
+
+   The bars a hand must clear:
+     1. ENOUGH TO SAY  — the song has ONLY_MIN_WORDS eligible words, so the hand is a choice out
+                         of a real vocabulary. (Two-minute interludes fail this.)
+     2. NO STEM TWINS  — "lover" never sits beside "lovers": they pay different amounts for what
+                         looks like the same word.
+     3. NOTHING SAID TWICE — a word barred once it has been dealt this run, since a run that
+                         teaches you a word's count on page 3 and asks about it on page 8 is
+                         grading its own answer key.
+     4. NOTHING UNREADABLE — title words, transcribed babble and filler stay out, for the
+                         reasons they always did.
+   The old "the song must have a word nothing else sings" bar is GONE. It existed so a 5 was
+   always on the table, and the tick no longer depends on one: a page is cleared by picking the
+   rarest word in the hand, whatever it paid. Dropping it puts about ten more songs in the pool
+   and buys a good hand shape where nothing is unique and the page is a judgement between a 2
+   and a 3.
    Returns null if nothing cleared the bars in `tries` attempts (the caller re-rolls). */
-export const ONLY_MIN_LETTERS = 3;   // the floor on an answer: no stray letter scores as a word
+export const ONLY_HAND = 6;
+export const ONLY_MIN_LETTERS = 3;   // the floor on a word: no stray letter is dealt as one
 const ONLY_MIN_WORDS = 20;
 // What a word pays, by how many songs in the whole catalogue sing it. 70% of eligible words sit
 // in ten songs or more, so the floor is where an unconsidered answer lands and the top three
@@ -605,22 +628,39 @@ export function onlyHerePoints(count) {
   for (const [upTo, pts] of ONLY_TIERS) if (count <= upTo) return pts;
   return 1;
 }
+// What makes a card a FALSE EXOTIC: long enough to look like a find, sung by enough songs to be
+// worth the floor. Length is the only "sounds rare" signal the data has, and on this catalogue
+// it is a good one.
+const ONLY_EXOTIC_LETTERS = 7;
+const ONLY_EXOTIC_COUNT = 10;
+function onlyExotic(x) { return x.word.length >= ONLY_EXOTIC_LETTERS && x.count >= ONLY_EXOTIC_COUNT; }
 
-/* Word -> the set of song titles that sing it. One pass over the catalogue, like the line
-   index, and the only thing Only Here needs to be fair. */
+/* A variant's base title, when the base is really in the catalogue. "State Of Grace (Acoustic
+   Version)" is a second pressing of a song already here; "Mary's Song (Oh My My My)" is not a
+   variant of anything and keeps its own name. */
+function baseTitle(title, titles) {
+  const cut = String(title).replace(/\s*\([^()]*\)\s*$/, "").trim();
+  return cut && cut !== title && titles.has(cut) ? cut : title;
+}
+
+/* Word -> the set of SONGS that sing it, counting a re-recording as the song it re-records.
+   One pass over the catalogue, like the line index, and the only thing Only Here needs to be
+   fair — the number this returns is what a card pays. */
 export function buildWordIndex(songs) {
+  const titles = new Set(songs.map((s) => s.title));
   const idx = new Map();
   songs.forEach((song) => {
+    const owner = baseTitle(song.title, titles);
     lyricTokens(song.lyrics || "").forEach(({ key }) => {
       if (!idx.has(key)) idx.set(key, new Set());
-      idx.get(key).add(song.title);
+      idx.get(key).add(owner);
     });
   });
   return idx;
 }
 
 // Every token of a lyric blob, keyed and paired with the spelling it was sung in (the first
-// one seen, so the reveal writes "wonderstruck" the way the song does).
+// one seen, so the hand deals "wonderstruck" the way the song sings it).
 function lyricTokens(text) {
   const out = [], seen = new Set();
   text.split(/\s+/).forEach((w) => {
@@ -634,9 +674,9 @@ function lyricTokens(text) {
 }
 
 // A transcribed hook ("dadadada", "mindindind") is unique to its song and looks like a find,
-// but nobody would ever write it and being shown it as the word you missed is a joke at the
-// player's expense. Two tells, both cheap: a bigram that comes round three times, or a word
-// spelled out of three letters or fewer.
+// but nobody would ever call it a word and dealing it as a card is a joke at the player's
+// expense. Two tells, both cheap: a bigram that comes round three times, or a word spelled out
+// of three letters or fewer.
 function babble(k) {
   const seen = new Map();
   for (let i = 0; i < k.length - 1; i++) {
@@ -647,7 +687,73 @@ function babble(k) {
   return new Set(k).size <= 3;
 }
 
-export function buildOnlyHerePuzzle(songs, wordIndex, rng = Math.random, tries = 120, avoid = null) {
+/* Bar 2. Crude on purpose: what it has to catch is a pair the eye reads as one word, and
+   "lover"/"lovers"/"loving" all fold to the same root under this. It is never used to judge an
+   answer, only to keep two cards from looking like the same card. */
+function stemOf(k) {
+  const m = /(ings|ing|ies|ied|ed|es|in|s)$/.exec(k);
+  return m && k.length - m[1].length >= 3 ? k.slice(0, k.length - m[1].length) : k;
+}
+
+/* One hand, assembled to a SHAPE. The shape is the only ramp this game has left, and it is what
+   makes a late page feel different from an early one without a single rule changing:
+     • WIDE  (early pages) — one clear outlier sitting among words that are obviously common. A
+                             clear 5 next to a clear 1, readable on instinct.
+     • TIGHT (late pages)  — four or more words bunched in the same one-to-three band, at least
+                             two of them plausibly unique, and a false exotic in with them. The
+                             late pages should make you choose between two words you would swear
+                             were both unique, which is where the reveal has its best surprises.
+   Returns null when the song's vocabulary can't fill the shape; the caller records that, since
+   a fallback silently makes the last five pages easier than they were designed to be. */
+function onlyHand(priced, tight, rng) {
+  const take = (pool, n, not) => shuffled(pool.filter((x) => !not.has(x.key)), rng).slice(0, n);
+  const exotics = priced.filter(onlyExotic);
+
+  if (tight) {
+    // The anchor is the answer, and it is taken from the whole 1-to-3 band rather than only
+    // from the unique words: a hand whose best card is worth 3 is one of the good shapes, and
+    // a page that is a judgement between a 2 and a 3 is exactly what the late run wants.
+    const rare = priced.filter((x) => x.count <= 3);
+    if (rare.length < 1) return null;
+    const anchor = pick(rare, rng);
+    /* Everything else has to be STRICTLY commoner than the anchor. Two cards tied for rarest are
+       both right, and the reveal says so — but a tie also means the choice couldn't be lost, so
+       ties are left to happen where the vocabulary forces one rather than dealt on purpose. The
+       relaxed pool below is where they come from. */
+    const above = (min) => priced.filter((x) => x.key !== anchor.key && x.count > min);
+    let pool = above(anchor.count);
+    if (pool.length < ONLY_HAND - 1) pool = above(anchor.count - 1);
+    if (pool.length < ONLY_HAND - 1) return null;
+    // The near band is what makes it tight: cards close enough to the anchor to be argued for.
+    const near = pool.filter((x) => x.count <= Math.max(6, anchor.count + 3));
+    if (near.length < 3) return null;
+    const held = new Set([anchor.key]);
+    const hand = [anchor];
+    take(near, 3, held).forEach((x) => { hand.push(x); held.add(x.key); });
+    // The trap: a card that looks like a find and is worth the floor.
+    take(exotics.filter((x) => pool.includes(x)), 1, held).forEach((x) => { hand.push(x); held.add(x.key); });
+    take(pool, ONLY_HAND - hand.length, held).forEach((x) => { hand.push(x); held.add(x.key); });
+    return hand.length === ONLY_HAND ? hand : null;
+  }
+
+  // Wide: one word at the bottom of the hand and nothing near it. The outlier is picked from
+  // the rarest words the song has; everything else has to be a clear tier above it.
+  const sorted = priced.slice().sort((a, b) => a.count - b.count);
+  const anchor = pick(sorted.slice(0, 4), rng);
+  if (!anchor) return null;
+  const far = priced.filter((x) => x.count >= Math.max(5, anchor.count + 3));
+  if (far.length < ONLY_HAND - 1) return null;
+  const held = new Set([anchor.key]);
+  const hand = [anchor];
+  // A false exotic even here, so "the long word" is never a free read.
+  take(exotics.filter((x) => far.includes(x)), 1, held).forEach((x) => { hand.push(x); held.add(x.key); });
+  take(far, ONLY_HAND - hand.length, held).forEach((x) => { hand.push(x); held.add(x.key); });
+  return hand.length === ONLY_HAND ? hand : null;
+}
+
+export function buildOnlyHerePuzzle(songs, wordIndex, rng = Math.random, tries = 120,
+                                    avoid = null, opts = {}) {
+  const usedWords = opts.words || null;
   for (let t = 0; t < tries; t++) {
     const song = pick(songs, rng);
     if (!song) continue;
@@ -655,43 +761,43 @@ export function buildOnlyHerePuzzle(songs, wordIndex, rng = Math.random, tries =
     // near the end of the budget rather than fail the page over it (Sing It Back's rule).
     if (avoid && avoid.has(song.title) && t < tries * 0.7) continue;
 
-    // The title is written across the top of the page, so a word out of it is the page reading
-    // itself back — barred here and soft-rejected at the input, for the same reason.
+    // The title is written across the top of the page, so a card out of it is the page reading
+    // itself back.
     const titleWords = new Set(lyricTokens(song.title).map((x) => x.key));
-    const eligible = lyricTokens(song.lyrics || "")
-      .filter((x) => x.key.length >= ONLY_MIN_LETTERS && !titleWords.has(x.key));
-    if (eligible.length < ONLY_MIN_WORDS) continue;                       // bar 1
+    const stems = new Set();
+    const priced = [];
+    lyricTokens(song.lyrics || "").forEach((x) => {
+      if (x.key.length < ONLY_MIN_LETTERS) return;
+      if (titleWords.has(x.key) || babble(x.key) || FILLER.has(x.key)) return;      // bar 4
+      if (usedWords && usedWords.has(x.key)) return;                                // bar 3
+      const st = stemOf(x.key);
+      if (stems.has(st)) return;                                                    // bar 2
+      const owners = wordIndex.get(x.key);
+      if (!owners) return;
+      stems.add(st);
+      priced.push({ key: x.key, word: x.word, count: owners.size, points: onlyHerePoints(owners.size) });
+    });
+    if (priced.length < ONLY_MIN_WORDS) continue;                                   // bar 1
 
-    const uniques = eligible.filter((x) => (wordIndex.get(x.key) || { size: 99 }).size === 1);
-    if (!uniques.length) continue;                                        // bar 2
-    const showable = uniques.filter((x) => !babble(x.key) && !FILLER.has(x.key));
-    if (!showable.length) continue;                                       // bar 3
+    let fallback = false;
+    let hand = onlyHand(priced, !!opts.tight, rng);
+    // A song whose vocabulary can't make the shape asked for still deals a page — it deals the
+    // other shape and says so, because a page skipped is worse than a page a tier easier.
+    if (!hand && opts.tight) { hand = onlyHand(priced, false, rng); fallback = !!hand; }
+    if (!hand) continue;
 
-    // The one the end card holds up: the longest of them, drawn from the top few so the same
-    // song doesn't always name the same word. Length is a rough proxy for "the word you'd
-    // remember the song by", and on this catalogue it is a good one — "wonderstruck",
-    // "situationship", "sweatshirt".
-    showable.sort((a, b) => b.key.length - a.key.length);
-    const best = pick(showable.slice(0, 3), rng);
-
-    return { song, uniques: uniques.length, eligible: eligible.length, best: best.word };
+    hand = shuffled(hand, rng);
+    const low = Math.min(...hand.map((x) => x.count));
+    return {
+      song, hand,
+      // Ties count as one answer between them. Two words the catalogue sings equally rarely are
+      // equally right, and picking a winner between them arbitrarily would be a lie.
+      optimal: hand.map((x, i) => (x.count === low ? i : -1)).filter((i) => i >= 0),
+      shape: opts.tight && !fallback ? "tight" : "wide",
+      fallback, eligible: priced.length,
+    };
   }
   return null;
-}
-
-/* Judging a word written on an Only Here page. Every rejection here is a SOFT one — the page
-   is not lost, the clock just keeps running — so each says which of the three things went
-   wrong rather than a flat no. */
-export function judgeOnlyHere(typed, puzzle, wordIndex) {
-  const raw = String(typed).trim();
-  if (/\s/.test(raw)) return { ok: false, why: "one word only" };
-  const key = wordKey(raw);
-  if (!key || key.length < ONLY_MIN_LETTERS) return { ok: false, why: "too short to count" };
-  const titleWords = new Set(lyricTokens(puzzle.song.title).map((x) => x.key));
-  if (titleWords.has(key)) return { ok: false, why: "that one's in the title" };
-  const owners = wordIndex.get(key);
-  if (!owners || !owners.has(puzzle.song.title)) return { ok: false, why: "not in this one" };
-  return { ok: true, key, count: owners.size, points: onlyHerePoints(owners.size) };
 }
 
 export function judgeBlank(typed, puzzle, vocab = null) {

@@ -355,12 +355,12 @@ export const BONUS_GAMES = [
     kicker: "tie each line to its song", tint: "#8a6620", mark: "string",
     line: "Thread five lines to the songs they came from.",
     blurb: "Five lines on one side, five songs on the other. Thread each one to where it belongs, and let the ones you know narrow down the ones you don't." },
-  // The one game on the shelf with no fail state: any word that is genuinely in the song
-  // scores, and the rarity is what the five points are for. See buildOnlyHerePuzzle.
+  // The one game on the shelf with no fail state: every card in the hand is really in the song,
+  // so every pick pays, and the rarity is what the five points are for. See buildOnlyHerePuzzle.
   { id: "only-here", name: "Only Here", ready: true, points: 5,
     kicker: "the game backwards", tint: "#2b6b6a", mark: "pin",
-    line: "Write a word from the song. Rarer pays more.",
-    blurb: "The game backwards: here is the song, and you write a word that is in it. Anything in there scores, and a word nothing else in the catalogue sings is the top of the page." },
+    line: "Six words from the song. Pick the rarest.",
+    blurb: "The game backwards: here is the song, and here are six words out of it. Pick the one you think the fewest other songs sing, and the hand turns over to show you what they were all worth." },
   // Four picks down one song, worth 1, 1, 2 and 2 — the payout escalates because the decoys
   // move closer to home as the page goes on (see buildChainPuzzle), and a ramp the player is
   // asked to survive but never paid for reads as the game turning mean rather than exciting.
@@ -394,11 +394,15 @@ export const REDACT_MIN_POINTS = 1;
 // Five pairs to read, weigh against each other and place. Long enough that the elimination is
 // worth doing rather than guessed past, which is the only thing that makes the page a puzzle.
 export const BONUS_STRING_SECONDS = 45;
-// Only Here is a search of your own memory rather than a reading of what is on the page, and
-// nothing on the page helps: the title is all there is to work from. Long enough to reject the
-// first two words that come to mind and reach for a third, which is where the points are, and
-// short enough that a page you have nothing rare for is answered and moved on from.
-export const BONUS_ONLY_SECONDS = 30;
+// Only Here's clock is not decoration. Without one the optimal play is to sit and mentally scan
+// the song's whole lyric sheet, which is the free-recall failure the hand of six was built to
+// cure coming back in through the side door. Long enough to read six words and commit, short
+// enough that agonising is expensive. Down from the 30 the typed version needed.
+export const BONUS_ONLY_SECONDS = 20;
+// Pages 1 to ONLY_WIDE_PAGES deal a WIDE hand with an obvious outlier; after that the hand is
+// COMPRESSED, with several words in the same one-to-three band and a false exotic among them.
+// Hand composition is the only ramp this game has, since there is nothing else left to move.
+export const ONLY_WIDE_PAGES = 3;
 // Then What's clock is PER PICK, not per page, and it is load-bearing rather than decoration:
 // without it the optimal play is to sit and reason about three lines, which drains the
 // sing-it-forward instinct the whole game exists to test. Long enough to read three lines and
