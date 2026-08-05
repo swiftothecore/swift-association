@@ -17,6 +17,12 @@
  *                 times on the last three seconds of a round, and only ever
  *                 through a rising gain (see app.js) - the file is the loudest
  *                 of the three, the earlier two are attenuated at the call.
+ *   close.mp3   - a notebook being shut: pages settling, then the cover landing
+ *                 (freesound #425677, CC0), mixed to -11.9 dBFS peak. It marks
+ *                 the end of a run, taking the slot where a page turn would be
+ *                 if the run were going on: the last page never turns, the
+ *                 book closes. Softer than the verdict chime on purpose: it is
+ *                 the furniture moving, not a verdict on the run.
  *   scratch.mp3 - one dry graphite stroke (freesound #181056, CC0), trimmed to
  *                 a single mark and mixed quieter than anything else in the
  *                 palette (-15.8 dBFS peak, -34.5 RMS): it plays under the red
@@ -58,6 +64,7 @@ const SOUNDS = {
   hint:    { url: new URL("../sounds/hint.mp3", import.meta.url), gain: 1 },
   tick:    { url: new URL("../sounds/tick.mp3", import.meta.url), gain: 1 },
   scratch: { url: new URL("../sounds/scratch.mp3", import.meta.url), gain: 1 },
+  close:   { url: new URL("../sounds/close.mp3", import.meta.url), gain: 1 },
 };
 
 const buffers = {}; // name -> Promise<AudioBuffer>

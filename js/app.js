@@ -1776,7 +1776,30 @@ let unlockChimePending = false;
 function playUnlockChime() {
   if (unlockChimePending) return;
   unlockChimePending = true;
-  setTimeout(() => { unlockChimePending = false; sfx.play("unlock"); }, 300);
+  // A run that ends holding new charms fires both sounds in the same tick, and the
+  // flourish is the longer one, so the chime waits out whatever is left of it. Any
+  // other unlock keeps the small 300ms lead.
+  const sinceFlourish = Date.now() - flourishPlayedAt;
+  const lead = sinceFlourish < FLOURISH_MS + UNLOCK_LEAD_MS
+    ? FLOURISH_MS + UNLOCK_LEAD_MS - sinceFlourish
+    : UNLOCK_LEAD_MS;
+  setTimeout(() => { unlockChimePending = false; sfx.play("unlock"); }, lead);
+}
+
+// The results flourish: the notebook shutting as a run ends. Every page turn in a
+// run whooshes (see nextRound), but the page that ends the game never turns, so this
+// takes that slot rather than adding a beat of its own. It plays on EVERY finished
+// run, won or lost (it is the book closing, not a verdict), and once per run, since
+// several end paths can fold through here.
+const FLOURISH_MS = 490;      // length of close.mp3
+const UNLOCK_LEAD_MS = 300;   // the chime's ordinary lead off a mid-round unlock
+let flourishPlayedAt = -Infinity;
+let flourishThisRun = false;
+function playRunFlourish() {
+  if (flourishThisRun) return;
+  flourishThisRun = true;
+  flourishPlayedAt = Date.now();
+  sfx.play("close");
 }
 
 function unlock(id) {
@@ -4189,6 +4212,7 @@ function startBonusGame(g) {
   bonusRound = 0;
   bonusScore = 0;
   bonusEnded = false;
+  flourishThisRun = false;   // the shelf never touches resetRunState, so it re-arms its own flourish
   bonusRecentFakes = [];
   bonusRecentSongs = [];
   bonusLog = [];
@@ -5381,6 +5405,7 @@ function endBonusRun() {
   stopBonusClock();
   stopBonusCountdown();
   stopChainBeat();
+  playRunFlourish();   // the shelf turns pages like the notebook does, so it closes like it too
   const timed = bonusTimed(bonusGame);
   const rec = recordBonusRun(bonusGame.id, bonusScore, bonusMaxScore(bonusGame), timed);
   $("bonusTimer").style.display = "none";
@@ -7238,6 +7263,7 @@ function resetRunState() {
   hintsUsed = 0;
   hintBudgetLeft = Infinity;   // Custom mode overrides this to its hint budget in startCustom
   runFolded = false;
+  flourishThisRun = false;   // the closing flourish is once per run, and this is every run's start
   adaptiveLevel = ADAPT_START_LEVEL;
   adaptivePeak = ADAPT_START_LEVEL;
   adaptivePromo = 0;
@@ -13312,6 +13338,7 @@ function endGame() {
   clearTimeout(vanishTimer);
   clearWagerStake();  // a run can end with the stake panel still open (a loss settled elsewhere)
   resetTension();
+  playRunFlourish();  // before the routing below, so every sandboxed mode's end sounds too
   applyEra(FINALE_ERAS[Math.floor(Math.random() * FINALE_ERAS.length)]);
 
   // Challenges and Album Focus are sandboxed — their own self-contained results path,
@@ -16078,6 +16105,18 @@ function buildDevApi() {
         if (lives <= 0) return "no lives left to spend";
         lives--; renderLives(); sfx.play("scratch", true);
         return `${lives} left`;
+      },
+      // The flourish is the third of these: play("close") is the sample, but the cue is the
+      // sample landing in the gap after the last verdict chime, which is the only way to hear
+      // whether it reads as the book closing or as a second verdict. charm() adds the unlock
+      // chime on its real lead, the way a run that ends holding new charms sounds.
+      flourish: (charm = false) => {
+        sfx.play("correct", true);
+        setTimeout(() => {
+          sfx.play("close", true);
+          if (charm) setTimeout(() => sfx.play("unlock", true), FLOURISH_MS + UNLOCK_LEAD_MS);
+        }, 1100);
+        return charm ? "verdict, flourish, charm" : "verdict, flourish";
       },
       state: () => sfx.state(),
     },

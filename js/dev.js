@@ -173,12 +173,16 @@ export function initDev(api) {
   // "countdown" plays the last-three-seconds ladder as a sequence, which is the only
   // way to judge it: the "tick" button next to it is one third of the cue. "strike" is the
   // same idea for the pencil scratch — it spends a real life so the sound is heard under the
-  // mark it belongs to, which the bare "scratch" button can't show.
+  // mark it belongs to, which the bare "scratch" button can't show. "flourish" is the third:
+  // the closing sound only reads correctly in the gap after a verdict chime, and "+ charm"
+  // adds the unlock chime behind it, the way a run that ends holding new charms sounds.
   body.append(section("sound",
     row(...api.sound.names().map((n) => btn("🔊 " + n, () => api.sound.play(n))),
         btn("all", () => api.sound.all()),
         btn("countdown", () => api.sound.countdown()),
         btn("strike", () => toast("strike: " + api.sound.strike())),
+        btn("flourish", () => api.sound.flourish()),
+        btn("flourish + charm", () => api.sound.flourish(true)),
         btn("state", () => toast("audio: " + api.sound.state())))));
 
   // ---- Date ------------------------------------------------------------------

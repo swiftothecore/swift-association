@@ -16,7 +16,7 @@
  * Paths are relative so the worker works at the site root (swiftassociation.com)
  * and under any project subpath, without hardcoding the origin.
  */
-const CACHE = "stta-v38";
+const CACHE = "stta-v39";
 const ASSETS = [
   "./",
   "index.html",
@@ -60,6 +60,7 @@ const ASSETS = [
   "sounds/hint.mp3",
   "sounds/tick.mp3",
   "sounds/scratch.mp3",
+  "sounds/close.mp3",
   "songs.json",
   "words.json",
   // Taylor's liner-note secret messages — lazy-loaded when a message-in-a-bottle egg
