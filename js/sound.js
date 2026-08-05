@@ -17,8 +17,8 @@
  *                 times on the last three seconds of a round, and only ever
  *                 through a rising gain (see app.js) - the file is the loudest
  *                 of the three, the earlier two are attenuated at the call.
- *   close.mp3   - a notebook being shut: pages settling, then the cover landing
- *                 (freesound #425677, CC0), mixed to -11.9 dBFS peak. It marks
+ *   close.mp3   - a notebook being shut: a hand on the cover, then it lands
+ *                 (freesound #393842, CC0), mixed to -12.4 dBFS peak. It marks
  *                 the end of a run, taking the slot where a page turn would be
  *                 if the run were going on: the last page never turns, the
  *                 book closes. Softer than the verdict chime on purpose: it is

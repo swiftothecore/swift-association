@@ -1791,7 +1791,7 @@ function playUnlockChime() {
 // takes that slot rather than adding a beat of its own. It plays on EVERY finished
 // run, won or lost (it is the book closing, not a verdict), and once per run, since
 // several end paths can fold through here.
-const FLOURISH_MS = 490;      // length of close.mp3
+const FLOURISH_MS = 650;      // length of close.mp3
 const UNLOCK_LEAD_MS = 300;   // the chime's ordinary lead off a mid-round unlock
 let flourishPlayedAt = -Infinity;
 let flourishThisRun = false;
