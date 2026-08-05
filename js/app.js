@@ -12762,7 +12762,15 @@ function submitAnswer(song, isTimeout) {
   // The goat remix — a timeout that snaps a 5+ answer streak (the scream skyward).
   if (isTimeout && correctStreak >= 5) earnPolaroid("goat-remix");
   correctStreak = correct ? correctStreak + 1 : 0;
-  if ((gameType === "infinite" || customInfinite()) && !correct) { lives--; renderLives(); }
+  // A life is spent: the tally mark is struck out in the margin, and the pencil is heard doing
+  // it. The scratch is deliberately glued to the mark rather than given the unlock chime's lead,
+  // because it is the sound of THAT stroke being drawn — offset it and it stops being the mark.
+  // On the common wrong answer the pen circle buys it 640ms of clear air before the verdict
+  // chime; on a timeout the two land together, which is why it is mixed as the quietest thing
+  // in the palette (a dry texture under a soft tonal "no", not a second verdict).
+  if ((gameType === "infinite" || customInfinite()) && !correct) {
+    lives--; renderLives(); sfx.play("scratch");
+  }
   // Thirty-One: sudden death — one miss ends the run (checked at nextRound via isGameOver).
   if (surviveRuleActive() && !correct) lives--;
   // Home Invasion: every wrong answer permanently cuts the per-page clock; drying it out
@@ -16060,6 +16068,16 @@ function buildDevApi() {
       // its last three seconds (use __dev.timer.set(3.4) to hear it in place instead).
       countdown: () => {
         [3, 2, 1].forEach((n, i) => setTimeout(() => sfx.play("tick", true, COUNTDOWN_TICK_GAIN[n]), i * 1000));
+      },
+      // The pencil scratch is the same case as the countdown: play("scratch") gives you the
+      // sample, but the cue is the sample UNDER the mark being struck out, which is the only
+      // way to hear whether it is glued to the stroke. Spends a real life, so it needs a run
+      // that counts them (Infinite, or a custom infinite run).
+      strike: () => {
+        if (gameType !== "infinite" && !customInfinite()) return "no lives on this run";
+        if (lives <= 0) return "no lives left to spend";
+        lives--; renderLives(); sfx.play("scratch", true);
+        return `${lives} left`;
       },
       state: () => sfx.state(),
     },

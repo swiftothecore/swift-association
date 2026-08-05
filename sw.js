@@ -59,6 +59,7 @@ const ASSETS = [
   "sounds/unlock.mp3",
   "sounds/hint.mp3",
   "sounds/tick.mp3",
+  "sounds/scratch.mp3",
   "songs.json",
   "words.json",
   // Taylor's liner-note secret messages — lazy-loaded when a message-in-a-bottle egg

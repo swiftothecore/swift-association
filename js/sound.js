@@ -17,6 +17,11 @@
  *                 times on the last three seconds of a round, and only ever
  *                 through a rising gain (see app.js) - the file is the loudest
  *                 of the three, the earlier two are attenuated at the call.
+ *   scratch.mp3 - one dry graphite stroke (freesound #181056, CC0), trimmed to
+ *                 a single mark and mixed quieter than anything else in the
+ *                 palette (-15.8 dBFS peak, -34.5 RMS): it plays under the red
+ *                 slash that crosses out a spent infinite-mode life, so it is a
+ *                 texture beside the verdict chime, never a second verdict.
  * correct and wrong come from the same Material family on purpose: their
  * relative balance (bright yes / softer no) is the kit's own, preserved when
  * the files were level-matched. Keep the palette stationery, never arcade.
@@ -52,6 +57,7 @@ const SOUNDS = {
   unlock:  { url: new URL("../sounds/unlock.mp3", import.meta.url), gain: 1 },
   hint:    { url: new URL("../sounds/hint.mp3", import.meta.url), gain: 1 },
   tick:    { url: new URL("../sounds/tick.mp3", import.meta.url), gain: 1 },
+  scratch: { url: new URL("../sounds/scratch.mp3", import.meta.url), gain: 1 },
 };
 
 const buffers = {}; // name -> Promise<AudioBuffer>
