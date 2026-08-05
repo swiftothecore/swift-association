@@ -114,6 +114,10 @@ const LYRIC_FILLER = new Set([
   "la", "na", "da", "doo", "dee", "di", "ba", "ha", "haa", "uh", "huh",
   "eh", "ay", "hey", "ooo", "oo",
 ]);
+// A lyric answer has to sing the prompt word, and one typo in it is forgiven — but only
+// on a word this long, since at three letters a single edit is usually a DIFFERENT word
+// ("bad" / "bed", "sun" / "son") and forgiving it would quietly widen what counts.
+const LYRIC_TYPO_MIN_WORD = 4;
 // Recall tiers are about feats of memory, so a line too short to be one ("in you") is
 // capped below "perfect" however completely it was typed. See gradeLyricRecall.
 const RECALL_TIER_MIN_WORDS = 3;
@@ -125,12 +129,26 @@ const RECALL_PERFECT = 0.9;
 // The top rung of the ladder: recalling a word-perfect block this many real lines long
 // is a "whole verse" (+3) — the loudest reward, and the Overachiever trigger.
 const WHOLE_VERSE_LINES = 4;
+// How far from an occurrence of the page's word a typed fragment may sit and still light
+// the live verse gauge. The gauge is a climb, so it has to light BEFORE the word is typed
+// or it goes dark for every line that ends on the word — but every extra word of reach is
+// more of the song confirmed as an answer just for being typed at. Measured over the real
+// corpus (287 songs, 733 words, 13.4k word/song pairs, median line 7 words): at 10 the
+// gauge is live from the first keystroke on 97% of word occurrences when you start at the
+// top of the word's line, and lights as you cross into it when the line is split in two.
+// Deliberately NOT the lever that guards against title probing — the cost curve has no
+// knee (a title lights on 10% of pages at 4 words and 20% at 10), so no useful value is
+// safe. isTitleFragment does that job instead, which is why this one can be generous.
+const LYRIC_PROXIMITY = 10;
 
 let currentMode = MODES.medium;
 let wordBuckets = { easy: [], all: [], hard: [], ultra: [] };
 let recentEras = [];
 
 let allSongs = [];
+// Every word the catalogue actually sings. Used only to tell a typo from a different word
+// when forgiving a misspelled prompt word — see phraseSingsPromptWord.
+let lyricVocab = new Set();
 let titleIndex = new Map();   // normalizeTitle(title|alias) -> song, built in loadData
 let spacelessIndex = new Map(); // titleIndex key with spaces removed -> song (space-error fallback)
 let playableWords = [];
@@ -6561,13 +6579,13 @@ let activeCorpus = "taylor";          // which catalogue the globals currently h
 
 function snapshotCorpus() {
   return { allSongs, titleIndex, spacelessIndex, playableWords, titleWordList,
-           shortTitleWordLists, albumWordMap, albumOrder, wordBuckets };
+           shortTitleWordLists, albumWordMap, albumOrder, wordBuckets, lyricVocab };
 }
 function applyCorpus(c) {
   allSongs = c.allSongs; titleIndex = c.titleIndex; spacelessIndex = c.spacelessIndex;
   playableWords = c.playableWords; titleWordList = c.titleWordList;
   shortTitleWordLists = c.shortTitleWordLists; albumWordMap = c.albumWordMap;
-  albumOrder = c.albumOrder; wordBuckets = c.wordBuckets;
+  albumOrder = c.albumOrder; wordBuckets = c.wordBuckets; lyricVocab = c.lyricVocab;
 }
 // Put Taylor's catalogue back. Safe to call at any time, including when it is already
 // active — every exit from a guest run goes through it rather than trusting one path.
@@ -6601,9 +6619,16 @@ function installCorpus(grouped, words, opts = {}) {
   // answer matches regardless of punctuation / & / $ / numerals. Then fold in the
   // irregular aliases, never letting one shadow a genuine title.
   titleIndex = new Map();
+  lyricVocab = new Set();
   for (const s of allSongs) {
     s._norm = normalizeTitle(s.title);
     s._normLyrics = normalizeLyric(s.lyrics);   // flat blob for lyric-line matching
+    // The title in LYRIC normalization (not normalizeTitle's), so isTitleFragment can
+    // compare it against typed text on the same footing as a lyric fragment. A per-song
+    // field rather than a corpus-level index on purpose: it rides on allSongs, so a guest
+    // swap carries it automatically and there is nothing to add to snapshotCorpus.
+    s._normTitleLyric = normalizeLyric(s.title);
+    for (const t of s._normLyrics.split(" ")) lyricVocab.add(t);
     titleIndex.set(s._norm, s);
   }
   for (const [canonical, aliases] of Object.entries(opts.aliases ? TITLE_ALIASES : {})) {
@@ -7345,7 +7370,7 @@ function applyInputHints() {
   // answer type per PAGE, so a mode-level read would invite a title on its lyric pages and
   // submitAnswer would then refuse the very thing this line asked for.
   if (lyricModeNow()) {
-    input.placeholder = "type the lyric line…";
+    input.placeholder = "sing me the line with the word…";
     hint.textContent = "write more of the line for a bigger verse bonus — Enter to answer";
     return;
   }
@@ -7355,8 +7380,13 @@ function applyInputHints() {
     input.placeholder = suggesting ? "type the title…" : "the full title…";
     hint.textContent = suggesting ? "Enter accepts the top match — titles only" : "no suggestions — type the full title, then Enter";
   } else {
-    input.placeholder = suggesting ? "a title… or sing me a line" : "the full title… or a lyric line";
-    hint.textContent = suggesting ? "Enter accepts the top match — or write a lyric line for a verse bonus" : "no suggestions — type the full title or a real lyric line, then Enter";
+    // Both halves name the WORD, because a sung line only counts when it's the line the
+    // word is in — an invitation to write "a lyric line" would be promising more than the
+    // verdict pays, and the player would find that out the hard way with the clock running.
+    input.placeholder = suggesting ? "a title… or sing me the line" : "the full title… or the line with the word";
+    hint.textContent = suggesting
+      ? "Enter accepts the top match — or write the line the word is in, for a verse bonus"
+      : "no suggestions — type the full title, or the real line the word is in, then Enter";
   }
   if (settings.enableHints !== false && currentMode.hint && gameType !== "daily" && hintBudgetLeft > 0) {
     hint.textContent += hintBudgetActive()
@@ -11435,6 +11465,7 @@ function advanceRound() {
     if (roundWildcard && roundWildcard.accepts) currentSongs = currentSongs.filter(roundWildcard.accepts);
   }
   roundHintSong = pickHintSong();
+  wordSpotCache = new Map();            // the page's word moved, so where songs sing it did too
   applyEra(pickEra());
 
   // Confidence Wager: the word is face down for as long as the stake is still open, so it is
@@ -11923,9 +11954,12 @@ function firstAlphaLetter(title) {
 // Shared soft-reject flash: wipe the line, pulse the input, show a red margin note,
 // and keep the clock running — the round is NOT burned. Used by the off-limits,
 // alphabetical, wildcard, and One Of A Kind rejects.
-function softRejectFlash(html) {
+// `keep` leaves what was typed in the box. Every rule-based reject wipes it (the pick was
+// wrong, start again), but a nudge about a line the player is halfway through singing
+// shouldn't throw the line away — there, the fix is usually to keep going.
+function softRejectFlash(html, keep) {
   const input = $("songInput");
-  input.value = "";
+  if (!keep) input.value = "";
   dropdownItems = []; activeIndex = -1;
   hideDropdown();
   const el = $("rejectFlash");
@@ -12043,15 +12077,93 @@ function shortLineSong(normPhrase) {
   return currentSongs.find((s) => normLineSet(s).has(normPhrase)) || null;
 }
 
+// The word(s) a lyric answer has to actually sing. Normally the page's one word; on a
+// multi-word page any ONE of them is enough, since no single line is likely to carry all
+// three and the page's own rule already judges whether the SONG holds the rest.
+function lyricRequiredWords() {
+  if (bothRuleActive() && bothWords.length) return bothWords;
+  return currentWord ? [currentWord] : [];
+}
+
+// Does the typed phrase actually sing one of the page's words? Judged at the same
+// strictness the round judges answers by, so "golden" answers the prompt "gold" wherever
+// a lenient mode would have accepted it. A near miss on the word ITSELF is forgiven,
+// because the lyric path forgives typos everywhere else and it would be perverse for the
+// single word the player was asked to remember to be the one they must spell perfectly.
+//
+// But only a near miss that ISN'T a word the catalogue sings. "night" is one edit from
+// "right", "live" one from "love": forgive those and a page for "right" quietly accepts
+// any line with "night" in it, which is the loophole this function exists to shut, walked
+// back in through the tolerance meant to be kind about fat fingers. A real typo lands on a
+// non-word ("tuoch", "touc") and is forgiven; a real word is taken at its word.
+function phraseSingsPromptWord(normPhrase) {
+  const need = lyricRequiredWords();
+  if (!need.length) return true;                 // no word to sing (impostor page, guest oddity)
+  const tokens = normPhrase.split(" ");
+  return need.some((w) => {
+    const nw = normalizeLyric(w);
+    if (!nw) return false;
+    const rx = wordRegex(nw, effectiveStrict());
+    if (tokens.some((t) => rx.test(t))) return true;
+    return nw.length >= LYRIC_TYPO_MIN_WORD &&
+      tokens.some((t) => !lyricVocab.has(t) && oneTypoApart(t, nw));
+  });
+}
+
+// One typo apart: a single insertion, deletion or substitution, OR one pair of adjacent
+// letters swapped. The swap has to be checked separately because plain Levenshtein scores
+// a transposition as two edits ("tuoch" is distance 2 from "touch"), and fast fingers
+// transpose more than anything else — a tolerance that missed it would forgive the rare
+// typo and punish the common one.
+function oneTypoApart(a, b) {
+  if (a === b) return false;
+  if (Math.abs(a.length - b.length) <= 1 && levenshtein(a, b) === 1) return true;
+  if (a.length !== b.length) return false;
+  for (let i = 0; i < a.length - 1; i++) {
+    if (a[i] === b[i]) continue;
+    return a[i] === b[i + 1] && a[i + 1] === b[i] && a.slice(i + 2) === b.slice(i + 2);
+  }
+  return false;
+}
+
+// Something long enough to have been a sung line came back unresolved. If the reason was
+// that it never sang the page's word, say so — silence there reads as a broken game, since
+// the player typed a real Taylor line and watched nothing happen.
+//
+// Judged off the WORD alone, with no song lookup anywhere in it, and that is the whole
+// design: a nudge that could only appear for a REAL line of a VALID song would confirm the
+// song, which is the exact tell this work exists to close. This one fires for a real line,
+// an invented one and a half-remembered one alike, so seeing it tells you nothing.
+function nudgeLyricNeedsWord(raw) {
+  if (wordConcealed) return;                                   // the word isn't even face up yet
+  const np = normalizeLyric(raw || "");
+  if (!np || np.split(" ").length < MIN_LYRIC_WORDS) return;   // too short to have been a line
+  if (phraseSingsPromptWord(np)) return;                       // it sang the word; something else was wrong
+  if (isTitleFragment(np)) return;                             // a half-typed title, not a sung line
+  const which = bothRuleActive() && bothWords.length > 1
+    ? bothWordsPhrase(true)
+    : `“<b>${escapeHtml(currentWord)}</b>”`;
+  softRejectFlash(`a sung line has to be one with ${which} in it`, true);
+}
+
 // A player can answer by typing a LYRIC LINE instead of the title. There is no lyric
 // autocomplete (that would hand them the answer); the line is blind-typed and only
-// JUDGED here. To pass it must (a) contain the prompt word, (b) be >= MIN_LYRIC_WORDS
+// JUDGED here. To pass it must (a) sing the prompt word, (b) be >= MIN_LYRIC_WORDS
 // (or a long-enough 3-word phrase, see below, or a whole short line — shortLineSong),
-// and (c) closely match a real word-bearing lyric line of a valid song. Fuzzy so
-// typos / a slightly-off line still count. Returns { song, line } or null.
+// and (c) closely match a real lyric line of a valid song. Fuzzy so typos / a slightly-off
+// line still count. Returns { song, line } or null.
+//
+// (a) is not decoration. Matching is restricted to currentSongs, every one of which holds
+// the word, so ANY real lyric chunk of any of them identifies a correct song — which meant
+// a player who suspected "State of Grace" could type any line they remembered from it and
+// be credited for a word they never recalled. Naming the song is what the TITLE path is
+// for; this path is meant to be worth more because it asks for more. Always satisfiable:
+// validSongs admits a song on its LYRICS, so every valid song has a line a player could
+// sing, and a lyric-only mode stays winnable.
 function matchLyricLine(phrase) {
   const normPhrase = normalizeLyric(phrase);
   if (!normPhrase) return null;
+  if (!phraseSingsPromptWord(normPhrase)) return null;
   const wordCount = normPhrase.split(" ").length;
   // Accept 4+ words, OR a 3-word phrase that's long enough by character count.
   if (wordCount < MIN_LYRIC_WORDS &&
@@ -12065,12 +12177,9 @@ function matchLyricLine(phrase) {
     const { text: line, lines } = recoverLyricLine(song, normPhrase);
     return { song, line, fuzzy: false, ...gradeLyricRecall(normPhrase, line, lines) };
   }
-  // NOTE: we deliberately do NOT require the prompt word to appear in the typed phrase.
-  // Matching is already restricted to currentSongs (every one of which contains the
-  // word — they're the round's valid answers), so any real lyric chunk that matches is
-  // a correct answer regardless of which specific lines the player recalled. This makes
-  // multi-line recall "just work" when the word lives in a line they didn't type. The
-  // bare-word / word+filler cheat is still blocked by MIN_LYRIC_WORDS + a real-line match.
+  // Multi-line recall still "just works": the word only has to be somewhere in the block
+  // that was typed, not in one particular line of it. The bare-word / word+filler cheat
+  // stays shut by MIN_LYRIC_WORDS plus a real-line match, as it always was.
 
   // Fast path: a verbatim contiguous run anywhere in the lyrics (incl. across lines).
   for (const s of currentSongs) {
@@ -12186,26 +12295,75 @@ function gradeLyricRecall(normPhrase, line, lines = 1) {
   return { tier: "base", bonus: 0, coverage, lines };
 }
 
+// Is the typed text nothing but a piece of a song TITLE? Then the gauge stays dark. Almost
+// every song sings its own title, so without this a player could type a title they merely
+// SUSPECT, watch the gauge light, and have the song confirmed as an answer without recalling
+// a thing — the exact confirmation the whole no-lyric-autocomplete rule exists to withhold.
+// A fragment, not just a whole title, because a prefix of a title you already have in mind
+// is just as free to type. This only ever DELAYS the gauge for someone genuinely singing a
+// line that opens on a title: type one word past it and it lights. (Measured: 2.6% of real
+// 3-word lyric runs sit inside some title, 1.1% of 4-word runs.)
+function isTitleFragment(np) {
+  return allSongs.some((s) => s._normTitleLyric.includes(np));
+}
+
+// Where the page's word(s) actually fall in a song, as word offsets into its flat blob.
+// Built once per song per page and cached, since the answer can't change while the page is
+// up and rebuilding it on every keystroke would mean a regex per token per valid song.
+let wordSpotCache = new Map();
+function wordSpots(song) {
+  if (wordSpotCache.has(song.title)) return wordSpotCache.get(song.title);
+  const rxs = lyricRequiredWords().map((w) => wordRegex(normalizeLyric(w), effectiveStrict()));
+  const spots = [];
+  song._normLyrics.split(" ").forEach((t, i) => { if (rxs.some((rx) => rx.test(t))) spots.push(i); });
+  wordSpotCache.set(song.title, spots);
+  return spots;
+}
+
+// Is a hit at character `at` in a song's blob within LYRIC_PROXIMITY words of where the
+// page's word is actually sung? This is what keeps the gauge from lighting for any old
+// remembered fragment of a song: it reacts to text near the line you were asked for, not
+// to the whole catalogue entry. Measured in WORDS rather than lines because a line break
+// in songs.json is an editorial artifact — the same phrase is one line in one song and two
+// in another — so a rule built on lines would fire differently for no reason a player could see.
+function nearPromptWord(song, at, np) {
+  const spots = wordSpots(song);
+  if (!spots.length) return true;              // nothing to be near (impostor page, guest oddity)
+  let start = 0;
+  for (let i = 0; i < at; i++) if (song._normLyrics.charCodeAt(i) === 32) start++;
+  const end = start + np.split(" ").length - 1;
+  return spots.some((i) => (i < start ? start - i : i > end ? i - end : 0) <= LYRIC_PROXIMITY);
+}
+
 // Live verse-bonus gauge for what's CURRENTLY typed — drives #verseMeter so a player
 // sees the reward climb as they write more of the line. Deliberately non-revealing:
 // it only ever reacts to text the player has ALREADY typed (a real contiguous lyric
-// fragment of a valid song), and returns a QUANTIZED tier — never a word count, a line
-// length, or any un-typed text. Returns null when the text isn't yet a real fragment
-// (so the meter stays hidden until the player is genuinely on a line). Cheap: an
-// indexOf over currentSongs' precomputed _normLyrics blobs, gated behind the input debounce.
+// fragment of a valid song, near where that song sings the page's word, and not merely a
+// song title), and returns a QUANTIZED tier — never a word count, a line length, or any
+// un-typed text. Returns null when the text isn't yet a real fragment (so the meter stays
+// hidden until the player is genuinely on the line they were asked for). Cheap: an indexOf
+// over currentSongs' precomputed _normLyrics blobs, gated behind the input debounce.
 function verseProgress(text) {
   const np = normalizeLyric(text || "");
   if (!np || np.split(" ").length < 2) return null;
+  if (isTitleFragment(np)) return null;
   for (const s of currentSongs) {
-    if (!s._normLyrics.includes(np)) continue;
+    const at = s._normLyrics.indexOf(np);
+    if (at < 0) continue;
+    if (!nearPromptWord(s, at, np)) continue;
     const { text: line, lines } = recoverLyricLine(s, np);
     const total = normalizeLyric(line).split(" ").length;
     const coverage = total ? Math.min(np.split(" ").length / total, 1) : 0;
     // Mirror gradeLyricRecall's cap on tiny lines, so the meter never promises a ★ the
     // verdict won't pay out.
     if (total && total < RECALL_TIER_MIN_WORDS) return coverage >= RECALL_GOOD ? "good" : "fragment";
-    if (coverage >= RECALL_PERFECT && lines >= WHOLE_VERSE_LINES) return "verse";
-    if (coverage >= RECALL_PERFECT) return "perfect";
+    // The ★ rungs are the ones that pay beads, and the verdict won't pay them for a line
+    // that doesn't sing the page's word — so they stay dark until it does, however much of
+    // the line has been typed. Same invariant as the tiny-line cap above: the gauge may run
+    // ahead of the answer, but it must never promise more than the answer will honour.
+    const capped = !phraseSingsPromptWord(np);
+    if (coverage >= RECALL_PERFECT && lines >= WHOLE_VERSE_LINES) return capped ? "good" : "verse";
+    if (coverage >= RECALL_PERFECT) return capped ? "good" : "perfect";
     if (coverage >= RECALL_GOOD) return "good";
     return "fragment";
   }
@@ -12359,11 +12517,13 @@ function submitAnswer(song, isTimeout) {
   checkPianoEgg($("songInput").value);   // "rep tv" / "reputation tv" typed as an answer
 
   let lyricMatch = null;
+  let triedLyric = false;   // was the sung-line path actually open? (it isn't in title-only modes)
   // Resolving what was typed into a song — skipped by the answer paths that have no typed
   // input at all: Common Thread (a word) and the tap grids (a tile, already judged). Without
   // the exemption the empty box would bail out here and silently eat the answer.
   if (!song && !isTimeout && !commonRuleActive() && !tapKnowledgeActive()) {
     if (lyricModeNow()) {                   // Lyricist mode / Switch-Up lyric page: lyric line only
+      triedLyric = true;
       lyricMatch = matchLyricLine($("songInput").value);
       if (lyricMatch) song = lyricMatch.song;
     } else if (dropdownItems.length) {
@@ -12380,11 +12540,12 @@ function submitAnswer(song, isTimeout) {
       // so tier 3 narrows the round rather than closing it — and a lyric-only run can't
       // reach here at all, since hintsAllowed retires the ladder outright.
       if (!song && hintTier < 3 && !currentMode.titleOnly) {
+        triedLyric = true;
         lyricMatch = matchLyricLine(raw);
         if (lyricMatch) song = lyricMatch.song;
       }
     }
-    if (!song) return;
+    if (!song) { if (triedLyric) nudgeLyricNeedsWord($("songInput").value); return; }
   }
 
   // Impostor: you named a song for a fake word — you fell for it. Fatal. (Reaching any of the
@@ -15817,6 +15978,26 @@ function buildDevApi() {
             : shortLineSong(l) && shortLineSong(l).title !== s.title ? "credited to " + shortLineSong(l).title
             : "",
         }))),
+    // What this page would make of a typed line: whether it sings the page's word, whether
+    // the live gauge lights and at which rung, and whether the verdict takes it. Those three
+    // are allowed to disagree by design — the gauge runs ahead of the verdict and is blind to
+    // anything that's merely a title — so seeing them side by side is the only way to check
+    // the rule without typing into the box and watching a meter out of the corner of an eye.
+    tryLine: (phrase) => {
+      const np = normalizeLyric(phrase || "");
+      const m = matchLyricLine(phrase || "");
+      return {
+        phrase: np,
+        needs: lyricRequiredWords(),
+        singsWord: phraseSingsPromptWord(np),
+        titleFragment: isTitleFragment(np),
+        proximity: LYRIC_PROXIMITY,
+        meter: verseProgress(phrase || "") || "dark",
+        accepted: !!m,
+        song: m ? m.song.title : null,
+        tier: m ? m.tier : null,
+      };
+    },
     // Round control
     answer: devAnswer,
     advance: () => advanceFromFeedback(),
