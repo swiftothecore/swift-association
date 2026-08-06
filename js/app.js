@@ -47,6 +47,7 @@ import { drawRandom, poolSummary } from "./random.js";
 import { POLAROIDS, POLAROID_BY_ID } from "./polaroids.js";
 import { buildBraceletSVG, charmPreviewSVG } from "./bracelet.js";
 import { exportBraceletCard, copyBraceletCard, buildCardSVG, fontFaceCss } from "./braceletcard.js";
+import { exportSleeveCard, copySleeveCard, buildSleeveSVG } from "./sleevecard.js";
 import { sfx } from "./sound.js";
 import { wordRegex as wordRegexCore, extractLineWithWord as extractLineWithWordCore, highlightWord as highlightWordCore, wordVariants } from "./match.js";
 import { buildLineIndex, buildSlipContext, buildSlipPuzzle, buildNamePuzzle,
@@ -4152,6 +4153,11 @@ let ruthlessPenalty = 0;
 let ruthlessSpent = 0;
 let ruthlessDripId = null;
 let bonusLog = [];         // one entry per settled round, for the end card's track listing
+/* The finished run, written down as the strings the sleeve already shows, so the keepsake
+   PNG is the sleeve on screen rather than a second derivation of it. Snapshotted at the end
+   of the run instead of read live, because `bonusGame` and `bonusScore` are cleared the
+   moment the player leaves for the shelf while the sleeve is still the page they're on. */
+let bonusSleeveRun = null;
 // Bumped on every start. The between-rounds pause is a setTimeout, so without a token a run
 // that's quit and immediately restarted would have the old pause advance the NEW run a round.
 let bonusRunId = 0;
@@ -4347,6 +4353,7 @@ function startBonusGame(g) {
   bonusRecentFakes = [];
   bonusRecentSongs = [];
   bonusLog = [];
+  bonusSleeveRun = null;
   redactWorth = 0;
   redactPeeled = 0;
   onlyPlayed = null;
@@ -5553,6 +5560,22 @@ function endBonusRun() {
   // ten tracks listed out with what each one turned on. A bonus run has no bracelet and no
   // stats to show for itself by design, so the track listing is the keepsake — and it doubles
   // as the only place the missed answers are all readable at once.
+  // The chain line is Then What's alone, and the score sub is the "/60" a timed run doesn't
+  // have — both are pulled out here because the sleeve and its PNG have to agree exactly.
+  const aside = bonusGame.id === "then-what"
+    ? `longest chain · ${chainRun} line${chainRun === 1 ? "" : "s"}` : "";
+  const stampText = perfect ? "clean sweep" : (rec.isBest && rec.plays > 1 ? "new best" : "");
+  const foot = timed ? `best ${fmtTime(rec.best)} · played ${rec.plays}`
+                     : `best ${Math.min(rec.best, max)} / ${max} · played ${rec.plays}`;
+  bonusSleeveRun = {
+    game: bonusGame,
+    remark: bonusRemark(bonusScore, max, perfect),
+    aside, stamp: stampText, foot,
+    score: timed ? fmtTime(bonusScore) : String(bonusScore),
+    scoreSub: timed ? "" : "/" + max,
+    tracks: bonusLog.slice(),
+  };
+
   const tracks = bonusLog.map((t) =>
     `<li class="bg-track ${t.ok ? "ok" : "no"}">` +
       `<span class="bg-track-n">${t.n}</span>` +
@@ -5570,24 +5593,26 @@ function endBonusRun() {
           `<div class="bg-sleeve-titles">` +
             `<div class="bg-sleeve-kicker">${escapeHtml(bonusGame.kicker)}</div>` +
             `<h3 class="bg-sleeve-name">${escapeHtml(bonusGame.name)}</h3>` +
-            `<div class="bg-sleeve-remark">${escapeHtml(bonusRemark(bonusScore, max, perfect))}</div>` +
+            `<div class="bg-sleeve-remark">${escapeHtml(bonusSleeveRun.remark)}</div>` +
             // Then What's other number. It costs nothing and is scored by nothing, but it is
             // the one thing about a run that a total out of sixty can't say.
-            (bonusGame.id === "then-what"
-              ? `<div class="bg-sleeve-chain">longest chain · ${chainRun} line${chainRun === 1 ? "" : "s"}</div>` : "") +
+            (aside ? `<div class="bg-sleeve-chain">${escapeHtml(aside)}</div>` : "") +
           `</div>` +
           // A time stands alone: there is no total for a run of seconds to be out of, and the
           // number is the whole of what the run was.
-          `<div class="bg-sleeve-score">${timed ? fmtTime(bonusScore) : `${bonusScore}<span>/${max}</span>`}</div>` +
-          (perfect ? `<i class="bg-stamp">clean sweep</i>`
-            : rec.isBest && rec.plays > 1 ? `<i class="bg-stamp">new best</i>` : "") +
+          `<div class="bg-sleeve-score">${escapeHtml(bonusSleeveRun.score)}` +
+            (bonusSleeveRun.scoreSub ? `<span>${escapeHtml(bonusSleeveRun.scoreSub)}</span>` : "") + `</div>` +
+          (stampText ? `<i class="bg-stamp">${escapeHtml(stampText)}</i>` : "") +
         `</div>` +
         `<div class="bg-sleeve-label">the run, track by track</div>` +
         `<ol class="bg-tracks">${tracks}</ol>` +
-        `<div class="bg-sleeve-foot">` +
-          (timed ? `best ${fmtTime(rec.best)} · played ${rec.plays}`
-                 : `best ${Math.min(rec.best, max)} / ${max} · played ${rec.plays}`) +
-        `</div>` +
+        `<div class="bg-sleeve-foot">${escapeHtml(foot)}</div>` +
+      `</div>` +
+      // The run's only souvenir, taken off the page the way the bracelet is: click to copy
+      // the sleeve, shift-click to save it.
+      `<div class="bg-sleeve-save">` +
+        `<button type="button" id="saveSleeveBtn" class="btn-ghost"` +
+        ` data-tip="Copy sleeve to clipboard (shift-click to download)">Copy sleeve</button>` +
       `</div>` +
       `<div class="bg-end-actions">` +
         `<button type="button" id="bonusShelfBtn" class="btn-primary">← the shelf</button>` +
@@ -5596,6 +5621,7 @@ function endBonusRun() {
     `</div>`;
   $("bonusAgainBtn").addEventListener("click", () => startBonusGame(bonusGame));
   $("bonusShelfBtn").addEventListener("click", () => leaveBonusGame());
+  $("saveSleeveBtn").addEventListener("click", saveSleevePNG);
 }
 
 // Leaving a game (quit or from the end card) always lands back on the shelf, with the board
@@ -6564,52 +6590,120 @@ function buildCardMeta() {
   };
 }
 
-// Wired to the results-screen bracelet button. A plain click copies the keepsake PNG
-// to the clipboard; a shift- (or ⌘/ctrl-) click downloads it instead. If the browser
-// can't write images to the clipboard, the copy path quietly falls back to a download
-// so the button always does *something*. Guards against a double-click while rasterising.
-let braceletSaveBusy = false;
-async function saveBraceletPNG(e) {
-  if (braceletSaveBusy) return;
-  const btn = $("saveBraceletBtn");
-  if (!$("resultBracelet").innerHTML.trim()) return;   // nothing strung yet
+/* An exported SVG is rasterised through an <img>, in an isolated document that cannot see
+   index.html's #bd-* sprite — so every piece the disc points at has to travel WITH it. This
+   walks the disc markup's own hrefs and lifts those defs out of the live page, which means a
+   new mark added to the sprite is carried by the keepsake without anyone remembering to. */
+function discSpriteDefs(markup) {
+  const ids = new Set();
+  String(markup).replace(/href="#([\w-]+)"/g, (m, id) => (ids.add(id), m));
+  let out = "";
+  ids.forEach((id) => { const el = document.getElementById(id); if (el) out += el.outerHTML; });
+  return out;
+}
+
+/* The bonus sleeve's keepsake. Almost all of it was written down when the run ended (see
+   bonusSleeveRun); what's added here is what belongs to the moment the button is pressed —
+   the disc and its sprite pieces, the clock, the era's colours, and the player's signature. */
+function buildSleeveMeta() {
+  const r = bonusSleeveRun;
+  const dateKey = window.__devDate || todayKey();
+  const dateLabel = new Date(dateKey + "T00:00:00").toLocaleDateString("en-US",
+    { month: "long", day: "numeric", year: "numeric" });
+  const disc = bonusDisc(r.game);
+  return {
+    eyebrow: "Swift to the Song Association · bonus games",
+    name: r.game.name,
+    kicker: r.game.kicker,
+    tint: r.game.tint,
+    remark: r.remark,
+    aside: r.aside,
+    score: r.score,
+    scoreSub: r.scoreSub,
+    stamp: r.stamp,
+    foot: r.foot,
+    tracks: r.tracks.map((t) => ({ n: t.n, ok: t.ok, title: censor(t.title), note: t.note || "" })),
+    disc,
+    discDefs: discSpriteDefs(disc),
+    signature: (settings.playerName || "").trim(),
+    footer: dateLabel + " · " + fmtClock(new Date()) + " · swiftassociation.com",
+    filename: "swift-" + r.game.id + "-" + dateKey + ".png",
+    heartHands: HEART_HANDS_SVG,
+    vars: cardVars(),
+  };
+}
+
+/* ---------- Taking a keepsake off the page ----------
+   One handler behind every "save this" button on the site (the results bracelet, the bonus
+   shelf's sleeve). A plain click copies the PNG to the clipboard; a shift- (or ⌘/ctrl-)
+   click downloads it instead. If the browser can't write images to the clipboard, the copy
+   path quietly falls back to a download so the button always does *something*. Guards
+   against a double-click while rasterising.
+   The meta is built LATE (inside the handler) rather than passed in, so a button that has
+   been sitting on screen for a minute still exports what is on the page now. */
+let keepsakeSaveBusy = false;
+async function saveKeepsakePNG(e, { btn, meta, copy, download, noun, onKept }) {
+  if (keepsakeSaveBusy) return;
   const wantDownload = !!(e && (e.shiftKey || e.metaKey || e.ctrlKey));
-  braceletSaveBusy = true;
+  keepsakeSaveBusy = true;
   const label = btn ? btn.textContent : "";
-  let kept = false;   // did the keepsake actually make it out? ("You're On Your Own, Kid")
+  let kept = false;
   if (btn) { btn.disabled = true; btn.textContent = wantDownload ? "Saving…" : "Copying…"; }
   try {
-    if (wantDownload) {
-      await exportBraceletCard(buildCardMeta());
-      kept = true;
-      if (btn) btn.textContent = "Saved ✓";
-    } else {
-      await copyBraceletCard(buildCardMeta());
-      kept = true;
-      if (btn) btn.textContent = "Copied ✓";
-    }
+    // NOT awaited before the clipboard call: the write has to stay inside the user gesture.
+    if (wantDownload) await download(meta());
+    else await copy(meta());
+    kept = true;
+    if (btn) btn.textContent = wantDownload ? "Saved ✓" : "Copied ✓";
   } catch (e2) {
-    console.warn("bracelet PNG export failed:", e2);
+    console.warn(noun + " PNG export failed:", e2);
     if (!wantDownload) {
       // Clipboard-image writes aren't supported everywhere — fall back to a download.
       try {
-        await exportBraceletCard(buildCardMeta());
+        await download(meta());
         kept = true;
         if (btn) btn.textContent = "Saved ✓";
       } catch (e3) {
-        console.warn("bracelet PNG download fallback failed:", e3);
+        console.warn(noun + " PNG download fallback failed:", e3);
         if (btn) btn.textContent = "Couldn’t save";
-        notifyNote("couldn’t save the bracelet", "try again in a moment");
+        notifyNote("couldn’t save the " + noun, "try again in a moment");
       }
     } else {
       if (btn) btn.textContent = "Couldn’t save";
-      notifyNote("couldn’t save the bracelet", "try again in a moment");
+      notifyNote("couldn’t save the " + noun, "try again in a moment");
     }
   } finally {
-    braceletSaveBusy = false;
-    if (kept) unlock("youre-on-your-own-kid");
+    keepsakeSaveBusy = false;
+    if (kept && onKept) onKept();
     if (btn) setTimeout(() => { btn.disabled = false; btn.textContent = label; }, 1800);
   }
+}
+
+// Wired to the results-screen bracelet button.
+function saveBraceletPNG(e) {
+  if (!$("resultBracelet").innerHTML.trim()) return;   // nothing strung yet
+  return saveKeepsakePNG(e, {
+    btn: $("saveBraceletBtn"),
+    meta: buildCardMeta,
+    copy: copyBraceletCard,
+    download: exportBraceletCard,
+    noun: "bracelet",
+    onKept: () => unlock("youre-on-your-own-kid"),     // "You're On Your Own, Kid"
+  });
+}
+
+// Wired to the bonus sleeve's button. No `onKept`, and that is the sandbox rather than an
+// oversight: a bonus run writes nothing but its own best score, so keeping its sleeve must
+// not quietly hand out the charm a bracelet does.
+function saveSleevePNG(e) {
+  if (!bonusSleeveRun) return;
+  return saveKeepsakePNG(e, {
+    btn: $("saveSleeveBtn"),
+    meta: buildSleeveMeta,
+    copy: copySleeveCard,
+    download: exportSleeveCard,
+    noun: "sleeve",
+  });
 }
 
 function renderBracelet() {
@@ -16844,6 +16938,24 @@ function buildDevApi() {
                  fallbackRate: picks ? `${((fell / picks) * 100).toFixed(1)}%` : "n/a" };
       },
       end: () => endBonusRun(),
+      // The sleeve-as-PNG keepsake, mirroring __dev.card for the bracelet. Needs a finished
+      // run on screen — `fill()` below is the fastest way to one. `open()` is the one to
+      // reach for: it eyeballs the layout (and the ten titles' truncation, which is where
+      // this card breaks) without a download or a clipboard round trip.
+      sleeve: {
+        meta: () => (bonusSleeveRun ? buildSleeveMeta() : "no finished run on screen"),
+        copy: () => copySleeveCard(buildSleeveMeta()),
+        save: () => exportSleeveCard(buildSleeveMeta()),
+        svg: async () => buildSleeveSVG(buildSleeveMeta(), await fontFaceCss()),
+        open: async () => {
+          if (!bonusSleeveRun) return "no finished run on screen";
+          const svg = buildSleeveSVG(buildSleeveMeta(), await fontFaceCss());
+          const url = URL.createObjectURL(new Blob([svg], { type: "image/svg+xml" }));
+          window.open(url, "_blank");
+          setTimeout(() => URL.revokeObjectURL(url), 8000);
+          return url;
+        },
+      },
       // Fabricate a finished run — real puzzles, `wins` of them ticked — and go straight to the
       // sleeve. The end card's track listing is the one surface that needs ten SETTLED rounds
       // to look at, and playing ten out honestly to check a layout is a waste of an afternoon.

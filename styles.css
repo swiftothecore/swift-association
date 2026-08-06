@@ -2325,6 +2325,16 @@
     font-family: var(--type); font-size: 10px; letter-spacing: 0.9px; color: var(--ink-soft);
     margin-top: 11px; text-align: center;
   }
+  /* Taking the sleeve off the page — the results screen's bracelet-save button, worn the
+     same quiet way so the two keepsakes read as one gesture. */
+  .bg-sleeve-save { text-align: center; margin: 12px 0 0; }
+  .bg-sleeve-save .btn-ghost {
+    width: auto; margin: 0; padding: 6px 18px;
+    font-size: 12px; letter-spacing: 1px; color: var(--ink-soft);
+  }
+  .bg-sleeve-save .btn-ghost:hover { color: var(--ink); }
+  .bg-sleeve-save .btn-ghost[disabled] { opacity: 0.55; cursor: default; }
+
   /* The sleeve's two-up row, cut from the same cloth as the Challenges / Album Focus /
      Custom rows: half-width coloured-pencil washes under a hand-drawn pattern, with the
      replay on the RIGHT because the shelf is where you came from. The shelf's own pair is

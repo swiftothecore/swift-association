@@ -3,6 +3,11 @@
 // the already-rendered strand markup, the run's stat chips, and the live colour
 // tokens; this module frames it, embeds the notebook's own fonts, and downloads it.
 //
+// It is also the workshop the other keepsakes are built in: the fonts, the measuring
+// ruler, the washi tape, the rasteriser and the two ways out (download / clipboard)
+// are all exported, so `sleevecard.js` frames a bonus run's sleeve without owning a
+// second copy of any of it. Only `buildCardSVG` below is the bracelet's own.
+//
 // Why the fonts are inlined as base64: an SVG drawn through an <img> onto a canvas
 // renders in an isolated context that will NOT reach out for @font-face files, even
 // same-origin ones. So Caveat and Courier Prime are fetched once, base64'd, and
@@ -42,8 +47,19 @@ export function fontFaceCss() {
   return fontCssPromise;
 }
 
-function esc(s) {
+export function esc(s) {
   return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+// Trim a string until it fits `maxW` in `font`, appending an ellipsis. Measured rather
+// than counted: a card sets song titles in Caveat, where "Illicit Affairs" and "WWWWWWW"
+// are nowhere near the same width and a character budget would clip one and starve the
+// other.
+export function fitText(str, font, maxW) {
+  let s = String(str);
+  if (measureText(s, font) <= maxW) return s;
+  while (s.length > 1 && measureText(s + "…", font) > maxW) s = s.slice(0, -1);
+  return s.replace(/[ ,;:.\-]+$/, "") + "…";
 }
 
 // Build the full keepsake-card SVG string. `fontCss` is the inlined @font-face block.
@@ -53,7 +69,7 @@ function esc(s) {
 // bead as an inline `--bead`) still resolve exactly as they do on screen.
 // Measure a string in a given CSS font (the page's real Caveat/Courier are loaded),
 // so a heart can sit flush against the signature without guessing its width.
-function measureText(str, font) {
+export function measureText(str, font) {
   try {
     const ctx = measureText._c || (measureText._c = document.createElement("canvas").getContext("2d"));
     ctx.font = font;
@@ -77,19 +93,40 @@ function heartHandsMark(markup, x, y, w, h, fill) {
 // One strip of frosted washi tape with hand-torn edges, matching the app's real tape
 // (see styles.css .nav-tape): a warm translucent kraft strip that lifts off the page —
 // torn silhouette, translucent fill, a diagonal sheen, faint fibre grain, soft shadow.
-// Positioned by its top-left corner; `idx` disambiguates the per-strip clip id.
+// Positioned by its top-left corner; `idx` disambiguates the per-strip clip id. `tint`
+// is the colour washed through the strip — kraft by default, the game's own colour when
+// a bonus sleeve pins itself down.
 const TORN_TAPE = [[5,0],[96,0],[91,20],[97,40],[88,60],[96,80],[90,100],[8,100],[4,80],[10,60],[3,40],[7,20]];
-function washiTape(x, y, w, h, rot, idx) {
+export function washiTape(x, y, w, h, rot, idx, tint = "rgba(201,178,122,0.42)") {
   const poly = TORN_TAPE.map(([px, py]) => `${(px / 100 * w).toFixed(1)},${(py / 100 * h).toFixed(1)}`).join(" ");
   const clip = `tapeClip${idx}`;
   return `<g transform="translate(${x} ${y}) rotate(${rot})" filter="url(#tapeShadow)">` +
     `<clipPath id="${clip}"><polygon points="${poly}"/></clipPath>` +
     `<polygon points="${poly}" fill="rgba(252,248,238,0.72)"/>` +
-    `<polygon points="${poly}" fill="rgba(201,178,122,0.42)"/>` +
+    `<polygon points="${poly}" fill="${tint}"/>` +
     `<rect width="${w}" height="${h}" fill="url(#tapeFibre)" clip-path="url(#${clip})"/>` +
     `<rect width="${w}" height="${h}" fill="url(#tapeSheen)" clip-path="url(#${clip})"/>` +
   `</g>`;
 }
+
+// The surface bits every strip of tape needs, for the card's <defs>: the torn-edge
+// shadow, the raked sheen and the fibre grain. Kept beside washiTape so no card can
+// draw one without the other.
+export const TAPE_DEFS =
+  `<filter id="tapeShadow" x="-25%" y="-45%" width="150%" height="190%">` +
+    `<feDropShadow dx="0" dy="1" stdDeviation="1.1" flood-color="#2b2722" flood-opacity="0.30"/>` +
+  `</filter>` +
+  `<linearGradient id="tapeSheen" x1="0" y1="0" x2="1" y2="0.18">` +
+    `<stop offset="26%" stop-color="#fff" stop-opacity="0"/>` +
+    `<stop offset="40%" stop-color="#fff" stop-opacity="0.30"/>` +
+    `<stop offset="52%" stop-color="#fff" stop-opacity="0"/>` +
+    `<stop offset="66%" stop-color="#2b2722" stop-opacity="0.05"/>` +
+    `<stop offset="78%" stop-color="#fff" stop-opacity="0.14"/>` +
+    `<stop offset="90%" stop-color="#fff" stop-opacity="0"/>` +
+  `</linearGradient>` +
+  `<pattern id="tapeFibre" width="3" height="10" patternUnits="userSpaceOnUse">` +
+    `<rect width="1" height="10" fill="rgba(74,62,42,0.06)"/>` +
+  `</pattern>`;
 
 export function buildCardSVG(meta, fontCss) {
   const v = meta.vars;
@@ -164,20 +201,7 @@ export function buildCardSVG(meta, fontCss) {
       `.b-hint-h{fill:#fffdf6;font-family:"Courier Prime",monospace;font-weight:700}` +
     `</style>` +
     // washi-tape surface bits, mirroring styles.css .nav-tape (sheen + fibre + torn-edge shadow)
-    `<filter id="tapeShadow" x="-25%" y="-45%" width="150%" height="190%">` +
-      `<feDropShadow dx="0" dy="1" stdDeviation="1.1" flood-color="#2b2722" flood-opacity="0.30"/>` +
-    `</filter>` +
-    `<linearGradient id="tapeSheen" x1="0" y1="0" x2="1" y2="0.18">` +
-      `<stop offset="26%" stop-color="#fff" stop-opacity="0"/>` +
-      `<stop offset="40%" stop-color="#fff" stop-opacity="0.30"/>` +
-      `<stop offset="52%" stop-color="#fff" stop-opacity="0"/>` +
-      `<stop offset="66%" stop-color="#2b2722" stop-opacity="0.05"/>` +
-      `<stop offset="78%" stop-color="#fff" stop-opacity="0.14"/>` +
-      `<stop offset="90%" stop-color="#fff" stop-opacity="0"/>` +
-    `</linearGradient>` +
-    `<pattern id="tapeFibre" width="3" height="10" patternUnits="userSpaceOnUse">` +
-      `<rect width="1" height="10" fill="rgba(74,62,42,0.06)"/>` +
-    `</pattern></defs>` +
+    TAPE_DEFS + `</defs>` +
     `<rect width="${W}" height="${H}" fill="${v.paper}"/>` +
     rules +
     `<line x1="${marginX}" y1="0" x2="${marginX}" y2="${H}" stroke="${v.margin}" stroke-width="2"/>` +
@@ -188,11 +212,10 @@ export function buildCardSVG(meta, fontCss) {
   `</svg>`;
 }
 
-// Rasterise the card to a PNG blob (2x for a crisp file). Rejects on any font/render
-// failure so callers can surface it. Shared by the download and copy paths.
-export async function renderCardPng(meta) {
-  const fontCss = await fontFaceCss();
-  const svg = buildCardSVG(meta, fontCss);
+// Rasterise a card SVG string to a PNG blob (2x for a crisp file). Rejects on any
+// render failure so callers can surface it. Shared by every keepsake and by both the
+// download and the copy path.
+export async function rasterisePng(svg, fallbackW = 760, fallbackH = 430) {
   const scale = 2;
   const svgUrl = URL.createObjectURL(new Blob([svg], { type: "image/svg+xml;charset=utf-8" }));
   try {
@@ -203,7 +226,7 @@ export async function renderCardPng(meta) {
       img.onerror = () => reject(new Error("card SVG failed to render"));
       img.src = svgUrl;
     });
-    const w = img.naturalWidth || 760, h = img.naturalHeight || 430;
+    const w = img.naturalWidth || fallbackW, h = img.naturalHeight || fallbackH;
     const canvas = document.createElement("canvas");
     canvas.width = w * scale;
     canvas.height = h * scale;
@@ -217,13 +240,14 @@ export async function renderCardPng(meta) {
   }
 }
 
-// Download the keepsake as a PNG file.
-export async function exportBraceletCard(meta) {
-  const blob = await renderCardPng(meta);
+// Download a rendered keepsake as a PNG file. `render` is a function returning the
+// blob, so this is the same shape as copyPng below and the callers stay symmetrical.
+export async function downloadPng(render, filename) {
+  const blob = await render();
   const dl = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = dl;
-  a.download = meta.filename || "bracelet.png";
+  a.download = filename || "keepsake.png";
   document.body.appendChild(a);
   a.click();
   a.remove();
@@ -231,15 +255,23 @@ export async function exportBraceletCard(meta) {
   return true;
 }
 
-// Copy the keepsake PNG to the clipboard. Throws if the browser can't write images
+// Copy a rendered keepsake to the clipboard. Throws if the browser can't write images
 // to the clipboard (older Firefox), letting the caller fall back to a download. The
-// blob is handed to ClipboardItem as a promise so the write stays inside the user
-// gesture even while the fonts + raster resolve (required by Safari).
-export async function copyBraceletCard(meta) {
+// blob is handed to ClipboardItem as a PROMISE so the write stays inside the user
+// gesture even while the fonts + raster resolve (required by Safari) — which is why
+// `render` is passed in uncalled and must not be awaited here.
+export async function copyPng(render) {
   if (!navigator.clipboard || typeof window.ClipboardItem !== "function") {
     throw new Error("clipboard image write unsupported");
   }
-  const item = new window.ClipboardItem({ "image/png": renderCardPng(meta) });
+  const item = new window.ClipboardItem({ "image/png": render() });
   await navigator.clipboard.write([item]);
   return true;
 }
+
+export async function renderCardPng(meta) {
+  return rasterisePng(buildCardSVG(meta, await fontFaceCss()), 760, 430);
+}
+
+export function exportBraceletCard(meta) { return downloadPng(() => renderCardPng(meta), meta.filename || "bracelet.png"); }
+export function copyBraceletCard(meta)   { return copyPng(() => renderCardPng(meta)); }

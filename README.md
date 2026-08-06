@@ -37,7 +37,7 @@ The game is still a work in progress and is by no means 'done'.
 - Every era, plus holiday, movie, collaboration and some unreleased songs
 - Unique UI with a notebook theme, and lots and lots of easter eggs
 - Lyricist mode, where you answer by typing a lyric line instead of a song title
-- Ability to save your friendship bracelet as a PNG to share your run!
+- Ability to save your friendship bracelet, or a bonus run's record sleeve, as a PNG to share your run!
 - A companion lyric searcher, [Swift To The Lyric](https://swiftassociation.com/search), for searching every line of every song
 - Opt-in sound effects
 - Installable as a phone or desktop app and works offline once loaded

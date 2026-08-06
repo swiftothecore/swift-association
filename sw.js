@@ -38,6 +38,7 @@ const ASSETS = [
   "js/random.js",
   "js/bracelet.js",
   "js/braceletcard.js",
+  "js/sleevecard.js",
   "js/storage.js",
   "js/sound.js",
   // Share/copy plumbing — imported by both the game and the searcher.
