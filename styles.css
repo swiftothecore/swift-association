@@ -5191,6 +5191,54 @@
   .ach-group-dot { width: 9px; height: 9px; border-radius: 50%; flex: none; box-shadow: inset 0 0 0 1px rgba(43,39,34,0.25); }
   .ach-group-dot--secret { background: var(--ink-soft); opacity: 0.5; }
 
+  /* the pinned goal — one charm to actually go and get. Sits directly above the "long game"
+     quest card and shares its proportions, but reads as a note pinned to the page rather than
+     a panel: the red margin rule for an edge, no wash, and a paper-clip notch at the corner. */
+  .ach-goal {
+    position: relative; display: flex; gap: 16px; align-items: stretch;
+    margin: 14px 0 6px; padding: 15px 17px;
+    border: 1px solid var(--rule); border-left: 3px solid var(--margin); border-radius: 3px;
+    background: transparent;
+  }
+  .ach-goal.done { border-left-color: var(--ink-accent); }
+  .ach-goal-main { flex: 1; min-width: 0; }
+  .ach-goal-eyebrow {
+    font-family: var(--type); font-size: 9.5px; letter-spacing: 1.5px;
+    text-transform: uppercase; color: var(--margin);
+  }
+  .ach-goal.done .ach-goal-eyebrow { color: var(--ink-accent); }
+  .ach-goal-name {
+    font-family: var(--hand); font-weight: 700; font-size: 30px; color: var(--ink);
+    line-height: 1; margin: 2px 0 3px;
+  }
+  .ach-goal-desc { font-family: var(--type); font-size: 10.5px; color: var(--ink-soft); line-height: 1.5; }
+  .ach-goal-foot { display: flex; align-items: center; gap: 10px; margin-top: 12px; flex-wrap: wrap; }
+  .ach-goal-note { font-family: var(--hand); font-size: 17px; color: var(--ink-soft); }
+  .ach-goal.done .ach-goal-note { color: var(--ink-accent); }
+  .ach-goal-btn {
+    font-family: var(--type); font-size: 10px; letter-spacing: 0.8px; text-transform: uppercase;
+    cursor: pointer; color: var(--ink-soft); background: transparent;
+    border: 1px solid var(--rule); border-radius: 2px; padding: 6px 10px;
+    transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+  }
+  .ach-goal-btn span { font-family: var(--hand); font-size: 15px; letter-spacing: 0; }
+  .ach-goal-btn:hover { color: var(--ink); border-color: var(--bead); background: var(--page-wash); }
+  .ach-goal-btn:focus-visible { outline: 2px solid var(--ink-accent); outline-offset: 2px; }
+  .ach-goal-btn--go { color: var(--ink); border-color: var(--bead); border-width: 2px; padding: 5px 11px; }
+  .ach-goal-btn--go:hover { background: rgba(212,160,23,0.11); }
+  .ach-goal-aside { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; flex: none; }
+  .ach-goal-charm {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 52px; height: 52px; border-radius: 50%;
+    border: 1px dashed var(--rule); background: transparent;
+  }
+  .ach-goal-charm.earned { border-style: solid; border-color: var(--bead); background: var(--page-wash); }
+  .ach-goal-charm .charm { display: inline-flex; width: 30px; height: 30px; opacity: 0.4; }
+  .ach-goal-charm.earned .charm { opacity: 1; }
+  .ach-goal-charm:not(.earned) .charm::before { display: none; }
+  .ach-goal-state { font-family: var(--type); font-size: 8.5px; letter-spacing: 1px; text-transform: uppercase; color: var(--ink-soft); }
+  .ach-goal--empty .ach-goal-name { font-size: 26px; }
+
   /* the pinned "long game" quest card — catalogue completion ("I Hate It Here").
      Harmonises with the page's panel system but lifted: a gold accent edge, a faint
      wash, and the album-rainbow bar nothing else here carries. */
@@ -5262,6 +5310,10 @@
     .ach-themes-grid { grid-template-columns: 1fr; }
     .ach-quest { flex-direction: column; }
     .ach-quest-aside { flex-direction: row; align-self: flex-start; }
+    /* stacks the same way round as the quest card directly beneath it — charm below the
+       text, not above — so the two read as a pair rather than as mirror images. */
+    .ach-goal { flex-direction: column; }
+    .ach-goal-aside { flex-direction: row; align-self: flex-start; }
     .sb-list { grid-template-columns: 1fr; }
   }
 

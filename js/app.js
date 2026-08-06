@@ -71,6 +71,7 @@ import {
   markModeSeen, hasExploredEverything, loadModesSeen,
   markWeekdayPlayed, hasPlayedEveryWeekday, loadWeekdaysPlayed, resetBreadth,
   loadRandomSeen, markRandomSeen, seedRandomSeen, randomSeeded, resetRandomSeen,
+  loadGoal, saveGoal, clearGoal,
   loadSongTally, saveSongTally, recordGameTally,
   loadCustom, saveCustom, activeCustomPreset, resetCustom, defaultCustomPreset,
   loadMetrics, recordGameMetrics,
@@ -2438,6 +2439,7 @@ function renderAchievementsPage() {
   // quest card above the grid: live song-completion progress (the album-rainbow bar) and
   // a door into the songbook. It's the only charm with a browsable collection behind it,
   // so it's promoted out of its theme grid (it still counts toward Catalogue below).
+  html += goalCardHTML();
   html += questCardHTML();
 
   // themed sections: earned (revealed, newest first) then visible locked targets.
@@ -2463,6 +2465,15 @@ function renderAchievementsPage() {
   $("achievementsBody").innerHTML = html;
   $("achievementsBody").querySelectorAll("[data-open-songbook]").forEach((b) =>
     b.addEventListener("click", () => openSongbook(b.dataset.openSongbook)));
+  const repin = $("achievementsBody").querySelector("[data-goal-repin]");
+  if (repin) repin.addEventListener("click", () => {
+    const rec = loadGoal();
+    const id = pickGoal(rec && rec.id);
+    if (id) saveGoal(id); else clearGoal();
+    renderAchievementsPage();
+  });
+  const play = $("achievementsBody").querySelector("[data-goal-play]");
+  if (play) play.addEventListener("click", () => { playGoal(); });
 }
 
 // Shared album-rainbow segments for a {album: discoveredCount} split out of total.
@@ -2473,6 +2484,126 @@ function albumRainbowSegs(byAlbum, total) {
   return order.filter((a) => byAlbum[a]).map((a) =>
     `<div class="cat-seg" style="width:${(byAlbum[a] / total) * 100}%;background:${albumColor(a) || "var(--ink-soft)"}" title="${escapeHtml(a)}: ${byAlbum[a]}"></div>`
   ).join("");
+}
+
+/* ---------- The pinned goal — one charm to actually go and get ----------
+   Draws from the charms tagged `sitting: true` in config.js: unearned, never secret, and
+   plausibly closeable in one sitting. There is deliberately NO "closest one" ranking — there
+   is no per-charm progress model to rank by (unlocking is imperative `unlock()` calls), and
+   once the cumulative charms are excluded as status bars the rest are binary. So: a draw.
+
+   The draw picks a CATEGORY first and only then a charm inside it. Flat over charms would be
+   badly lopsided — 26 of the ~45 placeable charms are a plain classic run — and the goal would
+   read as "go play a difficulty" more than half the time. Weighting by category is what makes
+   Guest, Adaptive and Album goals show up as often as classic ones. */
+function goalPool() {
+  return ACHIEVEMENTS.filter((a) => a.sitting && !a.secret && !earnedAchievements[a.id]);
+}
+
+function pickGoal(exceptId) {
+  let pool = goalPool();
+  // Never re-pin what we're replacing, unless it's genuinely the last one left.
+  if (exceptId && pool.length > 1) pool = pool.filter((a) => a.id !== exceptId);
+  if (!pool.length) return null;
+  const byCat = {};
+  for (const a of pool) {
+    const k = a.earn ? a.earn.cat : "";   // "" = the no-destination charms, their own bucket
+    (byCat[k] = byCat[k] || []).push(a);
+  }
+  const cats = Object.keys(byCat);
+  const bucket = byCat[cats[Math.floor(Math.random() * cats.length)]];
+  return bucket[Math.floor(Math.random() * bucket.length)].id;
+}
+
+// The pinned charm, or null when the pool is empty. Re-pins when the stored id no longer
+// belongs on the card (retagged, or earned in a mode that doesn't route through this page) —
+// but NOT merely because it has been earned: an earned goal is a result the card should show.
+function currentGoal() {
+  const rec = loadGoal();
+  const a = rec && ACH_BY_ID[rec.id];
+  if (a && (earnedAchievements[a.id] || goalPool().some((p) => p.id === a.id))) return a;
+  const id = pickGoal(rec && rec.id);
+  if (!id) { if (rec) clearGoal(); return null; }
+  saveGoal(id);
+  return ACH_BY_ID[id];
+}
+
+/* Where to send someone chasing a goal. Answered by filtering the RANDOMISER's live pool
+   rather than by dispatching on `earn.cat` ourselves, which is the whole reason `earn.cat`
+   borrows that vocabulary: the pool already refuses to deal anything locked and already
+   refuses to spend a token or a ticket, and inheriting both beats re-deriving them here and
+   getting one of them subtly wrong. An empty result means the destination genuinely isn't
+   open yet, and the card says so instead of offering a door that isn't there. */
+function goalEntries(earn) {
+  if (!earn || !earn.cat) return [];
+  return buildRandomPool().filter((e) => {
+    if (e.cat !== earn.cat) return false;
+    // The difficulty category tokenises per mode, so a `diff` is matched against the entry
+    // itself. Every other category rolls its difficulty at dispatch, so it rides along there.
+    if (earn.diff && e.cat === "difficulty") return e.mode === earn.diff;
+    return true;
+  });
+}
+
+// Button text: "play Ultra", "play a challenge", "play Album Focus on Lyricist".
+function goalDestLabel(earn) {
+  const cat = RANDOM_CATEGORIES.find((c) => c.id === earn.cat);
+  const base = cat ? cat.label : earn.cat;
+  const diff = earn.diff && MODES[earn.diff] ? MODES[earn.diff].label : "";
+  if (earn.cat === "difficulty") return diff || base;
+  return diff ? base + " on " + diff : base;
+}
+
+function goalCardHTML() {
+  const a = currentGoal();
+  if (!a) {
+    return `<div class="ach-goal ach-goal--empty">
+      <div class="ach-goal-main">
+        <div class="ach-goal-eyebrow">your goal</div>
+        <div class="ach-goal-name">Nothing left to pin</div>
+        <div class="ach-goal-desc">Every charm a single sitting could close is already yours. What's left is the long hauls, the streaks that want a calendar, and the secrets.</div>
+      </div>
+    </div>`;
+  }
+  const done = !!earnedAchievements[a.id];
+  const entries = done ? [] : goalEntries(a.earn);
+  const foot = done
+    ? `<span class="ach-goal-note">earned ${escapeHtml(recordDateLabel(earnedAchievements[a.id]))} ★</span>` +
+      `<button type="button" class="ach-goal-btn" data-goal-repin="1">pin another <span aria-hidden="true">→</span></button>`
+    : (entries.length
+        ? `<button type="button" class="ach-goal-btn ach-goal-btn--go" data-goal-play="1">play ${escapeHtml(goalDestLabel(a.earn))} <span aria-hidden="true">→</span></button>`
+        // Two different truths, and they must not be collapsed. A charm WITH an `earn` whose
+        // pool came back empty has a destination that is locked (no dark side unlocked yet, say).
+        // A charm with no `earn` has no destination at all — Custom isn't in the randomiser's
+        // pool, and the desk actions aren't runs. Neither may pretend to be the other.
+        : `<span class="ach-goal-note">${escapeHtml(a.earn ? "not open to you yet" : "you'll have to go and find this one")}</span>`) +
+      `<button type="button" class="ach-goal-btn" data-goal-repin="1">pin something else</button>`;
+
+  return `<div class="ach-goal${done ? " done" : ""}">
+    <div class="ach-goal-main">
+      <div class="ach-goal-eyebrow">your goal${done ? " · met" : ""}</div>
+      <div class="ach-goal-name">${escapeHtml(a.name)}</div>
+      <div class="ach-goal-desc">${escapeHtml(a.desc)}</div>
+      <div class="ach-goal-foot">${foot}</div>
+    </div>
+    <div class="ach-goal-aside">
+      <span class="ach-goal-charm${done ? " earned" : ""}">${charmMarkup(a.icon, achColor(a))}</span>
+      <span class="ach-goal-state">${done ? "earned" : "pinned"}</span>
+    </div>
+  </div>`;
+}
+
+// Send the player at the pinned goal. Same dispatcher the randomiser uses, so a goal can
+// never open a door the randomiser wouldn't.
+async function playGoal() {
+  const a = currentGoal();
+  if (!a) return;
+  const entries = goalEntries(a.earn);
+  if (!entries.length) return;
+  const e = entries[Math.floor(Math.random() * entries.length)];
+  // A named difficulty on a category that rolls one at dispatch (album, guest) rides along
+  // on the entry; dispatchRandom prefers it over its own roll.
+  await dispatchRandom(a.earn.diff ? { ...e, diff: a.earn.diff } : e);
 }
 
 // The pinned catalogue-completion quest card on the Charm Collection page.
@@ -7644,9 +7775,12 @@ async function dispatchRandom(entry) {
       return true;
     case "infinite":  startInfinite(entry.variant); return true;
     case "adaptive":  startAdaptive(); return true;
-    case "album":     startAlbumFocus(entry.album, randomDiff(ALBUM_FOCUS_DIFFS)); return true;
+    // `entry.diff` is only ever set by the pinned goal, which sometimes needs a named
+    // difficulty ("Perfect an album on Ultra"). The randomiser itself never sets it and keeps
+    // rolling its own.
+    case "album":     startAlbumFocus(entry.album, entry.diff || randomDiff(ALBUM_FOCUS_DIFFS)); return true;
     case "guest": {
-      await startGuestRun(entry.guest, randomDiff(GUEST_DIFFS));
+      await startGuestRun(entry.guest, entry.diff || randomDiff(GUEST_DIFFS));
       // startGuestRun toasts and bails on a failed fetch; the only honest read on whether it
       // took is whether a guest run is actually live.
       return gameType === "guest";
@@ -16810,6 +16944,58 @@ function buildDevApi() {
       // Clear the ledger WITHOUT re-seeding: the next draw treats the whole notebook as
       // unplayed, which is the fresh-notebook state. A reload re-seeds from the boards.
       reset: () => { resetRandomSeen(); return "ledger cleared — reload to re-seed from the boards"; },
+    },
+    // The pinned goal. Like the randomiser, a draw you cannot judge by clicking it once —
+    // `sample` is the one that proves the category weighting is doing its job, and `pool`
+    // is where a mis-tagged charm shows up (wrong cat, or a `sitting` that shouldn't be).
+    goal: {
+      // Everything the goal could currently pin, with where each one would send you and
+      // whether that destination is actually open. `dest: 0` is the honest "no door" case.
+      pool: () => goalPool().map((a) => ({
+        id: a.id, name: a.name,
+        cat: a.earn ? a.earn.cat : "(no earn)", diff: (a.earn && a.earn.diff) || "",
+        dest: goalEntries(a.earn).length,
+      })).sort((x, y) => x.cat.localeCompare(y.cat) || x.id.localeCompare(y.id)),
+      // Per-category shape, and the share of the draw each commands. Because the draw picks a
+      // category first, every category here should come out at 1/n regardless of how many
+      // charms sit in it — that equality IS the fix for the classic-run lopsidedness.
+      summary: () => {
+        const pool = goalPool(), byCat = {};
+        for (const a of pool) {
+          const k = a.earn ? a.earn.cat : "(no earn)";
+          byCat[k] = (byCat[k] || 0) + 1;
+        }
+        const n = Object.keys(byCat).length || 1;
+        return Object.fromEntries(Object.entries(byCat).map(([k, v]) =>
+          [k, { charms: v, share: (100 / n).toFixed(1) + "%" }]));
+      },
+      // Draw n times without pinning anything, and tally where they landed. Compare against
+      // summary(): a category running far over its share means the weighting has broken.
+      sample: (n = 1000) => {
+        n = Math.max(1, n | 0);
+        const cats = {};
+        for (let i = 0; i < n; i++) {
+          const a = ACH_BY_ID[pickGoal()];
+          if (!a) continue;
+          const k = a.earn ? a.earn.cat : "(no earn)";
+          cats[k] = (cats[k] || 0) + 1;
+        }
+        return Object.fromEntries(Object.entries(cats)
+          .sort((x, y) => y[1] - x[1])
+          .map(([k, v]) => [k, ((v / n) * 100).toFixed(1) + "%"]));
+      },
+      // Force a specific charm onto the card, so its destination and its earned state can both
+      // be looked at on demand instead of waited for.
+      pin: (id) => {
+        if (!ACH_BY_ID[id]) return `no charm "${id}"`;
+        saveGoal(id);
+        if ($("achievementsBody")) renderAchievementsPage();
+        return `pinned ${ACH_BY_ID[id].name}`;
+      },
+      show: () => loadGoal(),                          // the raw record
+      repin: () => { const id = pickGoal((loadGoal() || {}).id); if (id) saveGoal(id); if ($("achievementsBody")) renderAchievementsPage(); return id; },
+      go: () => playGoal(),                            // the play button, from the console
+      clear: () => { clearGoal(); if ($("achievementsBody")) renderAchievementsPage(); return "pin cleared — next render draws fresh"; },
     },
     // Normal-mode novelty bias — the coverage nudge that favours un-encountered words in Normal.
     // "Encountered" is read from the lifetime tally (words + misses), so there's no separate store

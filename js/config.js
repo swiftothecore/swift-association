@@ -58,6 +58,7 @@ export const KEEPSAKES_KEY = "swiftSongAssociation.keepsakes";         // earned
 export const BREADTH_KEY = "swiftSongAssociation.modesSeen";           // { [token]: true } — every mode/difficulty combination ever finished, for "Explorer"
 export const WEEKDAYS_KEY = "swiftSongAssociation.weekdaysPlayed";     // { [0-6]: true } — which weekdays you have finished a game on, for "Seven"
 export const RANDOM_KEY = "swiftSongAssociation.randomSeen";           // { [token]: true } — everything the randomiser has already shown you (see RANDOM_CATEGORIES)
+export const GOAL_KEY = "swiftSongAssociation.pinnedGoal";             // { id, pinned } — the one charm pinned as a goal on the Charm Collection page
 
 // Keepsakes — the collectible polaroid set (subjects + SVGs live in js/polaroids.js).
 // A polaroid develops like real instant film: solid black on unlock, the photo fading

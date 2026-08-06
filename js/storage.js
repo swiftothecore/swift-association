@@ -4,7 +4,7 @@
 import {
   HS_KEY, RECORDS_KEY, HISTORY_KEY, STATS_KEY, ACH_KEY, DIFF_KEY,
   DAILY_KEY, DAILY_PROGRESS_KEY, DAILY_BOARD_KEY, DAILY_STREAK_KEY, TYPES_KEY, TALLY_KEY,
-  BREADTH_KEY, WEEKDAYS_KEY, EXPLORER_TOKENS, RANDOM_KEY,
+  BREADTH_KEY, WEEKDAYS_KEY, EXPLORER_TOKENS, RANDOM_KEY, GOAL_KEY,
   SETTINGS_KEY, METRICS_KEY, APP_PREFIX, DEFAULT_SETTINGS,
   CHALLENGES_KEY, CHALLENGE_TOKENS_KEY,
   ALBUM_FOCUS_KEY, ALBUM_FOCUS_TARGET, DIFF_RANK,
@@ -477,6 +477,26 @@ export function seedRandomSeen(tokens) {
 }
 export function resetRandomSeen() {
   try { localStorage.removeItem(RANDOM_KEY); } catch (e) { /* ignore */ }
+}
+
+/* ---------- The pinned goal (one charm, on the Charm Collection page) ---------- */
+// { id, pinned: isoDate }. Only ever ONE, deliberately: a wall of goals is the charm grid
+// again. The id is not validated here — a charm that has since been retagged or renamed is
+// caught at render time, where the pool is known.
+export function loadGoal() {
+  try {
+    const raw = localStorage.getItem(GOAL_KEY);
+    if (raw) { const o = JSON.parse(raw); if (o && typeof o === "object" && o.id) return o; }
+  } catch (e) { /* ignore */ }
+  return null;
+}
+export function saveGoal(id) {
+  const o = { id, pinned: new Date().toISOString() };
+  try { localStorage.setItem(GOAL_KEY, JSON.stringify(o)); } catch (e) { /* ignore */ }
+  return o;
+}
+export function clearGoal() {
+  try { localStorage.removeItem(GOAL_KEY); } catch (e) { /* ignore */ }
 }
 
 /* ---------- Lifetime per-song / per-word tally ---------- */
