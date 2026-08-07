@@ -5507,6 +5507,22 @@ function advanceFromBonusFeedback() {
 const BG_TICK = `<svg viewBox="0 0 16 16" class="bg-mark-svg" aria-hidden="true"><path d="M3 8.6 L6.4 12 L13 4.6" fill="none" stroke="#c7951f" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
 const BG_CROSS = `<svg viewBox="0 0 16 16" class="bg-mark-svg" aria-hidden="true"><path d="M4 4 L12 12 M12 4 L4 12" fill="none" stroke="#b23a3f" stroke-width="2" stroke-linecap="round"/></svg>`;
 
+/* The mark on the sleeve's copy button: a second sheet slipped out from behind the first,
+   ruled with the two lines every card on this desk is written on, and the gold tick the run
+   already uses for a page it got right. Both glyphs ship in the button and the state on the
+   element decides which one shows, so a landed copy needs no relayout and no second render. */
+const KEEPSAKE_COPY_MARK =
+  `<svg viewBox="0 0 24 24" class="keepsake-ic keepsake-ic--copy" aria-hidden="true">` +
+    `<path d="M9.7 7 L9.7 4.3 A1.8 1.8 0 0 1 11.5 2.5 L19.2 2.5 A1.8 1.8 0 0 1 21 4.3` +
+    ` L21 14.7 A1.8 1.8 0 0 1 19.2 16.5 L16.6 16.5"/>` +
+    `<rect x="3" y="7" width="13.5" height="14" rx="1.9"/>` +
+    // Two ruled lines, not three: at seventeen pixels a third closes the gaps up into a smudge.
+    `<path d="M6.2 12.4 L13.3 12.4 M6.2 16.2 L10.8 16.2"/>` +
+  `</svg>` +
+  `<svg viewBox="0 0 24 24" class="keepsake-ic keepsake-ic--kept" aria-hidden="true">` +
+    `<path d="M4.4 12.9 L9.6 18.2 L19.6 5.9"/>` +
+  `</svg>`;
+
 // One line in pen under the game's name. Kept in the shelf's own record-shop voice, and read
 // off the same proportions for every game so no game reads as the important one.
 // `clean` — every page cleared — carries the top remark rather than a full score, because a
@@ -5606,13 +5622,14 @@ function endBonusRun() {
         `</div>` +
         `<div class="bg-sleeve-label">the run, track by track</div>` +
         `<ol class="bg-tracks">${tracks}</ol>` +
-        `<div class="bg-sleeve-foot">${escapeHtml(foot)}</div>` +
-      `</div>` +
-      // The run's only souvenir, taken off the page the way the bracelet is: click to copy
-      // the sleeve, shift-click to save it.
-      `<div class="bg-sleeve-save">` +
-        `<button type="button" id="saveSleeveBtn" class="btn-ghost"` +
-        ` data-tip="Copy sleeve to clipboard (shift-click to download)">Copy sleeve</button>` +
+        // The run's only souvenir, taken off the page the way the bracelet is: click to copy
+        // the sleeve, shift-click to save it. It rides at the end of the sleeve's own small
+        // print rather than under the card, because what it copies is the card it sits in.
+        `<div class="bg-sleeve-foot"><span>${escapeHtml(foot)}</span>` +
+          `<button type="button" id="saveSleeveBtn" class="bg-sleeve-copy"` +
+          ` data-tip="Copy sleeve to clipboard (shift-click to download)">${KEEPSAKE_COPY_MARK}` +
+          `<span class="sr-only">Copy sleeve</span></button>` +
+        `</div>` +
       `</div>` +
       `<div class="bg-end-actions">` +
         `<button type="button" id="bonusShelfBtn" class="btn-primary">← the shelf</button>` +
@@ -6641,20 +6658,38 @@ function buildSleeveMeta() {
    against a double-click while rasterising.
    The meta is built LATE (inside the handler) rather than passed in, so a button that has
    been sitting on screen for a minute still exports what is on the page now. */
+
+/* Two shapes of button share that handler. The bracelet's is a worded one and says what it
+   is doing in its own label; the sleeve's is a mark set at the end of the card's footer, so
+   its wording lives in a hidden span and the visible answer is a state on the element (the
+   copy glyph swaps to a tick). Both read and write through this pair, and a button with no
+   hidden span keeps the old plain-text behaviour. */
+function keepsakeLabel(btn) {
+  const sr = btn.querySelector(".sr-only");
+  return sr ? sr.textContent : btn.textContent;
+}
+function setKeepsakeLabel(btn, text, state) {
+  const sr = btn.querySelector(".sr-only");
+  if (!sr) { btn.textContent = text; return; }
+  sr.textContent = text;
+  if (state) btn.setAttribute("data-state", state);
+  else btn.removeAttribute("data-state");
+}
+
 let keepsakeSaveBusy = false;
 async function saveKeepsakePNG(e, { btn, meta, copy, download, noun, onKept }) {
   if (keepsakeSaveBusy) return;
   const wantDownload = !!(e && (e.shiftKey || e.metaKey || e.ctrlKey));
   keepsakeSaveBusy = true;
-  const label = btn ? btn.textContent : "";
+  const label = btn ? keepsakeLabel(btn) : "";
   let kept = false;
-  if (btn) { btn.disabled = true; btn.textContent = wantDownload ? "Saving…" : "Copying…"; }
+  if (btn) { btn.disabled = true; setKeepsakeLabel(btn, wantDownload ? "Saving…" : "Copying…", "busy"); }
   try {
     // NOT awaited before the clipboard call: the write has to stay inside the user gesture.
     if (wantDownload) await download(meta());
     else await copy(meta());
     kept = true;
-    if (btn) btn.textContent = wantDownload ? "Saved ✓" : "Copied ✓";
+    if (btn) setKeepsakeLabel(btn, wantDownload ? "Saved ✓" : "Copied ✓", "kept");
   } catch (e2) {
     console.warn(noun + " PNG export failed:", e2);
     if (!wantDownload) {
@@ -6662,20 +6697,20 @@ async function saveKeepsakePNG(e, { btn, meta, copy, download, noun, onKept }) {
       try {
         await download(meta());
         kept = true;
-        if (btn) btn.textContent = "Saved ✓";
+        if (btn) setKeepsakeLabel(btn, "Saved ✓", "kept");
       } catch (e3) {
         console.warn(noun + " PNG download fallback failed:", e3);
-        if (btn) btn.textContent = "Couldn’t save";
+        if (btn) setKeepsakeLabel(btn, "Couldn’t save", "failed");
         notifyNote("couldn’t save the " + noun, "try again in a moment");
       }
     } else {
-      if (btn) btn.textContent = "Couldn’t save";
+      if (btn) setKeepsakeLabel(btn, "Couldn’t save", "failed");
       notifyNote("couldn’t save the " + noun, "try again in a moment");
     }
   } finally {
     keepsakeSaveBusy = false;
     if (kept && onKept) onKept();
-    if (btn) setTimeout(() => { btn.disabled = false; btn.textContent = label; }, 1800);
+    if (btn) setTimeout(() => { btn.disabled = false; setKeepsakeLabel(btn, label, ""); }, 1800);
   }
 }
 

@@ -2321,19 +2321,51 @@
   .bg-track.no .bg-track-title { color: var(--ink-soft); }
   /* On a missed track the note is the answer you didn't have, so it's written in red pen. */
   .bg-track.no .bg-track-note { color: rgba(160,62,46,0.82); }
+  /* Padded both sides by the width of the copy mark in the corner, so the small print stays
+     centred on the card rather than centred on what's left of it. */
   .bg-sleeve-foot {
+    position: relative; min-height: 28px;
+    display: flex; align-items: center; justify-content: center;
     font-family: var(--type); font-size: 10px; letter-spacing: 0.9px; color: var(--ink-soft);
-    margin-top: 11px; text-align: center;
+    margin-top: 9px; text-align: center; padding: 0 34px;
   }
-  /* Taking the sleeve off the page — the results screen's bracelet-save button, worn the
-     same quiet way so the two keepsakes read as one gesture. */
-  .bg-sleeve-save { text-align: center; margin: 12px 0 0; }
-  .bg-sleeve-save .btn-ghost {
-    width: auto; margin: 0; padding: 6px 18px;
-    font-size: 12px; letter-spacing: 1px; color: var(--ink-soft);
+  /* Taking the sleeve off the page. Not a worded button under the card but a small mark set
+     at the end of the sleeve's own small print: what it copies is the sleeve it sits in, and
+     it should read as part of that object rather than as a control floating beneath it. It
+     is taken out of the flow so the footer stays centred on the card, and answers by swapping
+     the stacked-sheets glyph for the same gold tick the track listing uses. */
+  .bg-sleeve-copy {
+    position: absolute; right: 0; top: 0; bottom: 0; margin: auto 0;
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 30px; height: 28px; padding: 0;
+    border: 1px solid rgba(43,39,34,0.16); border-radius: 4px;
+    background: rgba(43,39,34,0.035); color: var(--ink-soft); cursor: pointer;
+    transition: color 0.18s ease, background-color 0.18s ease, border-color 0.18s ease, transform 0.1s ease;
   }
-  .bg-sleeve-save .btn-ghost:hover { color: var(--ink); }
-  .bg-sleeve-save .btn-ghost[disabled] { opacity: 0.55; cursor: default; }
+  .keepsake-ic {
+    width: 17px; height: 17px; display: block;
+    fill: none; stroke: currentColor; stroke-width: 1.5;
+    stroke-linecap: round; stroke-linejoin: round;
+  }
+  .keepsake-ic--kept { display: none; }
+  .bg-sleeve-copy:hover {
+    color: var(--ink);
+    background: color-mix(in srgb, var(--bg-tint, #4a8c87) 14%, transparent);
+    border-color: color-mix(in srgb, var(--bg-tint, #4a8c87) 55%, rgba(43,39,34,0.28));
+  }
+  .bg-sleeve-copy:active { transform: translateY(1px); }
+  .bg-sleeve-copy:focus-visible { outline: 2px dotted rgba(43,39,34,0.5); outline-offset: 2px; }
+  .bg-sleeve-copy[data-state="busy"] { opacity: 0.5; }
+  .bg-sleeve-copy[data-state="kept"] {
+    color: #c7951f; border-color: rgba(199,149,31,0.5); background: rgba(199,149,31,0.12);
+  }
+  .bg-sleeve-copy[data-state="kept"] .keepsake-ic--copy { display: none; }
+  .bg-sleeve-copy[data-state="kept"] .keepsake-ic--kept { display: block; }
+  .bg-sleeve-copy[data-state="failed"] {
+    color: rgba(160,62,46,0.85); border-color: rgba(160,62,46,0.4); background: rgba(160,62,46,0.08);
+  }
+  .bg-sleeve-copy[disabled] { cursor: default; }
+  [data-reduce-motion="on"] .bg-sleeve-copy { transition: none; }
 
   /* The sleeve's two-up row, cut from the same cloth as the Challenges / Album Focus /
      Custom rows: half-width coloured-pencil washes under a hand-drawn pattern, with the
@@ -2401,6 +2433,12 @@
     .bg-sleeve-kicker { display: none; }
     .bg-sleeve-name { font-size: 21px; }
     .bg-sleeve-score { font-size: 34px; }
+    /* The copy mark comes in a size, and the small print gives back the padding it was
+       holding: on a phone the sleeve is narrow enough that the two together wrap the footer
+       onto a second line. */
+    .bg-sleeve-copy { width: 26px; height: 24px; }
+    .bg-sleeve-copy .keepsake-ic { width: 15px; height: 15px; }
+    .bg-sleeve-foot { padding: 0 26px; min-height: 24px; }
     .bg-tracks { columns: 1; }
     /* A ticked track needs no note, so the title gets the whole line. A missed one keeps it:
        that note is the answer you didn't have. */
