@@ -5935,11 +5935,6 @@
   .mh-nd.current .mh-dot { background: rgba(var(--m-accent), 0.95); border-color: rgba(var(--m-accent), 0.95); box-shadow: 0 0 0 3px rgba(var(--m-accent), 0.18); }
   .mh-lv { font-family: var(--type); font-size: 9.5px; color: var(--ink-soft); margin-top: 6px; }
   .mh-nd.reached .mh-lv { color: var(--ink); }
-  .mh-nib { position: absolute; top: 6px; transform: translateX(-50%); width: 16px; height: 16px; z-index: 2; }
-  .mh-nib .charm { display: inline-flex; width: 100%; height: 100%; transform: rotate(45deg); }
-  .mh-nib .charm svg { width: 100%; height: 100%; overflow: visible; }
-  .mh-nib .ink { fill: none; stroke: rgba(var(--m-accent), 0.95); stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
-  .mh-nib .ink-fill { fill: rgba(var(--m-accent), 0.9); stroke: rgba(var(--m-accent), 0.95); stroke-width: 1.2; }
 
   .ms-bar { height: 9px; border-radius: 5px; background: rgba(43, 39, 34, 0.1); overflow: hidden; margin: 12px auto 0; max-width: 320px; }
   .ms-bar i { display: block; height: 100%; border-radius: 5px; background: rgba(var(--m-accent), 0.7); }
@@ -6339,7 +6334,6 @@
     .mh-ic .charm { width: 12px; height: 12px; }
     .mh-dot { width: 10px; height: 10px; }
     .mh-lv { font-size: 8px; margin-top: 5px; }
-    .mh-nib { top: 4px; width: 13px; height: 13px; }
   }
 
   /* Daily-streak status line under the streak numbers on the Stats page. */

@@ -3693,7 +3693,7 @@ function masteryHeadComplete(mLevel) {
 }
 
 // Climbing — the ascent track. Pips are levels 1–13; reached ones ink gold, the current
-// one glows plum, and a nib rides the ink line at the exact fraction between levels.
+// one glows plum, and the ink line fills to the exact fraction between levels.
 function masteryHeadClimb(m, mLevel) {
   const cur = masteryXpForLevel(mLevel), next = masteryXpForLevel(mLevel + 1);
   const inCur = Math.max(0, m.masteryXp - cur), span = Math.max(1, next - cur);
@@ -3729,7 +3729,6 @@ function masteryHeadClimb(m, mLevel) {
     `<div class="mh-track">` +
       `<span class="mh-line"></span>` +
       `<span class="mh-fill" style="width:${fillPos}"></span>` +
-      `<span class="mh-nib" style="left:calc(8px + ${fillPos})">${masteryMarkup("nib")}</span>` +
       `<div class="mh-nodes">${pips}</div>` +
     `</div>` +
     `<div class="mh-sub"><b>${inCur} / ${span}</b> ink to level ${mLevel + 1}</div></div>`;
