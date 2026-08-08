@@ -156,6 +156,10 @@ export function initDev(api) {
       toast(api.onboarding.guideBeat(beatSel.value) ? beatSel.value + " shown" : "can't anchor — need an open round");
     })),
     row(obAlbumSel, btn("set era", () => { api.onboarding.setEra(obAlbumSel.value); toast("era → " + (obAlbumSel.value || "none")); })),
+    // The persistent testing flag (same switch as ?intro=0 / ?intro=1 on the URL): stop every
+    // one-time greeting getting in the way of a session, or hand them all back.
+    row(btn("silence intros (persists)", () => { api.onboarding.quiet(true); toast("first impressions silenced"); }),
+        btn("restore intros", () => { api.onboarding.quiet(false); toast("first impressions restored — reload"); })),
     row(btn("reset", () => { api.onboarding.reset(); toast("onboarding reset"); }, "warn"))));
 
   // ---- Timer -----------------------------------------------------------------

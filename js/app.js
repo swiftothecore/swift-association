@@ -15948,21 +15948,61 @@ function maybeGuideHint() {
   showGuideBeat("guideHint");
 }
 
+/* Quiet the one-time onboarding: the welcome, the era prompt, the ready-for-Normal nudge and
+   the guided-round beats, all spent up front so nothing stands in front of the game. Shared by
+   the established-player guard below and the ?intro=0 testing flag. */
+function silenceFirstImpressions() {
+  settings.firstRunDone = true;
+  saveSettings(settings);
+  markCoachmark("askEra");
+  markCoachmark("readyForNormal");
+  markCoachmark("guideType");
+  markCoachmark("guideMatch");
+  markCoachmark("guideHint");
+  markCoachmark("wordForms");
+}
+
+// Hand the notebook back its first impressions: forget the welcome and every one-time beat, so
+// the next boot greets you exactly as it greets a stranger.
+function restoreFirstImpressions() {
+  settings.firstRunDone = false;
+  settings.favouriteAlbum = "";
+  settings.seenCoachmarks = {};
+  settings.firstMatchDone = false;
+  saveSettings(settings);
+}
+
+/* ---------- First-impressions bypass (flag-gated) ----------
+   Automated browser testing opens a fresh notebook every time, and the welcome is captive, so
+   every session would have to click its way past the onboarding before it could reach anything
+   worth testing. Append ?intro=0 once to arm (persists in localStorage, and the param is
+   stripped from the URL afterwards); ?intro=1 disarms AND re-arms the real first-run flow, so
+   the greeting can always be seen again. Nothing but the one-time onboarding is affected. */
+const NO_INTRO_FLAG = "swiftSongAssociation.nointro";
+let introArmed = false;    // resolved once at boot, before anything can greet the player
+let introForced = false;   // ?intro=1 was asked for explicitly — show the welcome even to a veteran notebook
+function introSuppressed() {
+  try {
+    const params = new URLSearchParams(location.search);
+    if (params.has("intro")) {
+      const v = params.get("intro");
+      if (v === "0" || v === "off") localStorage.setItem(NO_INTRO_FLAG, "1");
+      else { localStorage.removeItem(NO_INTRO_FLAG); restoreFirstImpressions(); introForced = true; }
+      params.delete("intro");
+      const qs = params.toString();
+      history.replaceState(null, "", location.pathname + (qs ? "?" + qs : "") + location.hash);
+    }
+    return localStorage.getItem(NO_INTRO_FLAG) === "1";
+  } catch (e) { return false; }
+}
+
 function maybeRunFirstRun() {
   if (settings.firstRunDone) return;
   // Someone who has already played (this shipped after they started) isn't a first-timer —
   // mark them done silently so the welcome never ambushes an existing notebook, and mark the
   // era prompt + guided-round beats seen too so none of them spring on a long-time player.
-  if (loadMetrics().roundsTotal > 0) {
-    settings.firstRunDone = true;
-    saveSettings(settings);
-    markCoachmark("askEra");
-    markCoachmark("guideType");
-    markCoachmark("guideMatch");
-    markCoachmark("guideHint");
-    markCoachmark("wordForms");
-    return;
-  }
+  // A notebook running with the testing flag armed takes the same silent path.
+  if (!introForced && (introArmed || loadMetrics().roundsTotal > 0)) { silenceFirstImpressions(); return; }
   openFirstRun();
 }
 // Show the onboarding overlay with whatever #firstRunBody currently holds. Shared by the
@@ -16427,6 +16467,15 @@ function buildDevApi() {
         seenCoachmarks: { ...(settings.seenCoachmarks || {}) } }),
       replay: () => { settings.firstRunDone = false; saveSettings(settings); openFirstRun(); },
       markDone: () => { settings.firstRunDone = true; saveSettings(settings); },
+      // The ?intro=0 testing flag, from the panel: silence every one-time greeting on this
+      // notebook and keep it silenced across reloads, or hand the first impressions back.
+      quiet: (on) => {
+        try {
+          if (on === false) { localStorage.removeItem(NO_INTRO_FLAG); restoreFirstImpressions(); introArmed = false; }
+          else { localStorage.setItem(NO_INTRO_FLAG, "1"); silenceFirstImpressions(); introArmed = true; }
+        } catch (e) { /* storage unavailable — nothing to persist */ }
+        return introArmed;
+      },
       setEra: (album) => setFavouriteAlbum(album),
       normalNudge: () => { markCoachmark("readyForNormal"); showReadyForNormal(true); },
       eraPrompt: () => { markCoachmark("askEra"); showAskEra(true); },
@@ -18112,6 +18161,10 @@ async function init() {
 
   try {
     await loadData();
+    // Read (and consume) ?intro= before anything can greet the player, so the flag applies on
+    // the very boot that arms it and the param never survives into a shared URL.
+    introArmed = introSuppressed();
+    if (introArmed) silenceFirstImpressions();
     // "Play this word" deep-link from the searcher jumps straight into a round; only greet a
     // fresh player with the first-run welcome when we're not launching into a game.
     const startedFromWord = maybeStartFromWordParam();
