@@ -186,7 +186,12 @@ export function buildSleeveSVG(meta, fontCss) {
     tracks +
     `<text x="${(SL + SR) / 2}" y="${lastRow + 30}" text-anchor="middle" font-family="Courier Prime" font-size="10"` +
       ` letter-spacing="0.9" fill="${v.inkSoft}">${esc(meta.foot)}</text>` +
-    (meta.stamp ? stamp(meta.stamp, SX + SW - 6, SY - 12) : "") +
+    // The stamp is pressed INSIDE the sleeve's top-right corner, not over its edge. On screen
+    // .bg-stamp's "right:-4px; top:-12px" is read against .bg-sleeve-head, which is the
+    // positioned ancestor and sits inside the sleeve's own padding — so those two negative
+    // numbers still land the stamp well within the card. Measured against the sleeve's outer
+    // edge instead, as this card did, the same numbers hang it off the corner entirely.
+    (meta.stamp ? stamp(meta.stamp, SR + 4, headTop - 12) : "") +
     washiTape(W / 2 - 44, SY - 13, 88, 26, -2.4, 0, tintWash(tint, 0.4)) +
     sig +
     `<text x="${SX + SW - 4}" y="${sigY}" text-anchor="end" font-family="Courier Prime" font-size="12"` +
