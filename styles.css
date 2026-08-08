@@ -6042,10 +6042,12 @@
   .rb-swatches { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 15px; }
   .rb-sw-col { display: flex; flex-direction: column; align-items: center; gap: 7px; font: inherit; border: 0; background: none; padding: 0; cursor: pointer; }
   .rb-sw-col.locked { cursor: default; }
-  .rb-sw { width: 56px; height: 44px; border-radius: 8px; }
+  /* Sized to fit three across the tile: at this size a swatch reads as a sheet of the stock
+     rather than a colour chip, and the tile stops looking half-empty under its heading. */
+  .rb-sw { width: 72px; height: 56px; border-radius: 8px; }
   /* Re-assert the swatch size over the generic .paper-chip (26px) so unlocked chips match the locked slots. */
-  .rb-sw.paper-chip { width: 56px; height: 44px; border-radius: 8px; }
-  .rb-sw.paper-chip::before { left: 9px; }
+  .rb-sw.paper-chip { width: 72px; height: 56px; border-radius: 8px; }
+  .rb-sw.paper-chip::before { left: 12px; }
   .rb-sw-col.active .rb-sw { border-color: rgba(var(--m-accent), 0.7); box-shadow: 0 0 0 3px rgba(var(--m-accent), 0.16); }
   .rb-sw.locked { display: flex; align-items: center; justify-content: center; border: 1px dashed rgba(43, 39, 34, 0.25); background: rgba(43, 39, 34, 0.04); }
   .rb-sw.locked .rb-lock { opacity: 0.6; }
@@ -6127,7 +6129,8 @@
     .rb-bead { width: 34px; height: 34px; }
     .rb-bead .charm-preview { width: 24px; height: 24px; }
     .rb-swatches { gap: 10px; }
-    .rb-sw { width: 48px; height: 38px; }
+    .rb-sw, .rb-sw.paper-chip { width: 62px; height: 48px; }
+    .rb-sw.paper-chip::before { left: 10px; }
   }
   /* Prestige-title stepper: browse one title at a time; a star marks the worn title, a
      circle the one being viewed. Tier-grouped position dots below the name. */
