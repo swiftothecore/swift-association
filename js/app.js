@@ -365,8 +365,13 @@ function applySettings() {
   // mode we drop data-paper entirely and let the dark tokens stand for every stock.
   if (settings.masteryPaper && !dark) body.setAttribute("data-paper", settings.masteryPaper);
   else body.removeAttribute("data-paper");
-  if (settings.masteryButton) body.setAttribute("data-startbtn", settings.masteryButton);
-  else body.removeAttribute("data-startbtn");
+  // The start-button finish sits on the button itself, not the body: the Mastery reward board
+  // previews all four finishes at once, and each swatch is a real .play-cta carrying its own.
+  const playCta = $("playBtn");
+  if (playCta) {
+    if (settings.masteryButton) playCta.setAttribute("data-startbtn", settings.masteryButton);
+    else playCta.removeAttribute("data-startbtn");
+  }
   sfx.setEnabled(!!settings.sound);   // sound gate lives in js/sound.js
   paintSoundGear();                   // the corner icon is a view of settings.sound, never its own state
   refreshSnow();   // December snowfall follows the reduce-motion setting live
@@ -760,8 +765,8 @@ function showScreen(name) {
    offsets are real even when `src` is display:none). */
 function makeFlipSheet(src, at, sideClass, shadeClass) {
   const flip = src.cloneNode(true);
-  // Keep element ids on the clone: much of the look is keyed off ids (e.g. #playBtn's gold
-  // gradient + pencil ::before), so stripping them would render the sheet in an unstyled state.
+  // Keep element ids on the clone: some of the look is keyed off ids (e.g. #screen-start's
+  // backdrop, #againBtn), so stripping them would render the sheet in a half-unstyled state.
   // The real screens come earlier in the DOM, so getElementById still resolves to them; the
   // clone carries no event listeners (cloneNode) and is pointer-events:none and short-lived.
   flip.classList.remove("screen", "active");
@@ -3868,9 +3873,12 @@ function rbSwatch(attr, chip, name, active, available, level) {
 const paperChip = (paper) => (locked) => locked
   ? `<span class="rb-sw locked"><span class="rb-lock">${MASTERY_ICONS.lock}</span></span>`
   : `<span class="rb-sw paper-chip" data-paper="${paper}"></span>`;
+// The button chip is the real "start writing" CTA, markup and label and all, shrunk to fit:
+// it carries the same .play-cta the home screen does, so a finish looks here exactly as it
+// will look there, with no second description of the four fills to drift out of step.
 const buttonChip = (style) => (locked) => locked
   ? `<span class="rb-btn-sw locked"><span class="rb-lock">${MASTERY_ICONS.lock}</span></span>`
-  : `<span class="rb-btn-sw" data-startbtn="${style}">Aa</span>`;
+  : `<span class="rb-btn-sw"><span class="btn-primary play-cta"${style ? ` data-startbtn="${style}"` : ""} aria-hidden="true">Start writing</span></span>`;
 
 // A milestone tile — the shape both toggle-less rewards wear (super-hard challenges at 6,
 // secret hints at 10): a wax seal that stays shut until the milestone is reached, the level

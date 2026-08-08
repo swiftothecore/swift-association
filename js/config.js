@@ -1231,8 +1231,9 @@ export const MASTERY_REWARDS = [
   { level: 5,  id: "charm-snake",     kind: "charm", name: "Snake charm",     desc: "A reputation serpent.",          payload: { charm: "snake" } },
   { level: 6,  id: "hardmode-unlock", kind: "unlock", name: "Super-hard challenges", icon: "swords",  desc: "Unlocks a tier of brutal new challenges in Challenges mode." },
   // Start-writing button finishes — a set unlocked together at level 8. Each restyles the
-  // home-screen hero CTA (CSS body[data-startbtn="…"] over #playBtn). Selection persists in
-  // settings.masteryButton; applied globally via applySettings.
+  // home-screen hero CTA (CSS .play-cta[data-startbtn="…"], set on the button itself so the
+  // reward board can preview all four at once). Persists in settings.masteryButton, applied
+  // by applySettings.
   { level: 8,  id: "btn-ink",   kind: "button", name: "Ink press", desc: "A solid ink-stamped start button.", payload: { button: "ink" } },
   { level: 8,  id: "btn-blush", kind: "button", name: "Blush",     desc: "A soft rose marker start button.",  payload: { button: "rose" } },
   { level: 8,  id: "btn-sky",   kind: "button", name: "Sky",       desc: "A cool blue marker start button.",  payload: { button: "sky" } },
