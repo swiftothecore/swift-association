@@ -11,7 +11,7 @@ import {
   BONUS_REDACT_SECONDS, REDACT_MIN_POINTS,
   BONUS_ONLY_SECONDS, ONLY_WIDE_PAGES,
   BONUS_CHAIN_SECONDS, CHAIN_EASY_PAGES,
-  RUTHLESS_WORD_MS, RUTHLESS_OPEN_WORDS, RUTHLESS_SKIP_AFTER, RUTHLESS_SKIP_PENALTY,
+  RUTHLESS_WORD_MS, RUTHLESS_OPEN_WORDS,
   RUTHLESS_PACE_SECONDS,
   CHALLENGES, CHALLENGE_BY_ID, CHALLENGE_ORDER, CHALLENGE_SEALS, DARK_SIDE_IDS, DARK_SIDE_TODO,
   DARK_SIDE_MILESTONE, PERSIST_ATTEMPTS, TICKET_PRICE,
@@ -54,7 +54,8 @@ import { buildLineIndex, buildSlipContext, buildSlipPuzzle, buildNamePuzzle,
          buildBlankPuzzle, buildRedactedPuzzle,
          buildWordIndex, buildOnlyHerePuzzle, onlyHerePoints, ONLY_HAND,
          buildChainPuzzle, CHAIN_PICKS, CHAIN_CARDS, CHAIN_PAY, CHAIN_PAGE,
-         buildRuthlessPuzzle, ruthlessPool, ruthlessLens, ruthlessLensAudit, RUTHLESS_LENSES,
+         buildRuthlessPuzzle, ruthlessPool, ruthlessLens, ruthlessLensAudit, ruthlessGiveUp,
+         RUTHLESS_LENSES,
          judgeBlank } from "./bonus.js";
 import { renderStreakPlacard } from "./placard.js";
 import {
@@ -698,6 +699,7 @@ const screens = {
   bonusplay: $("screen-bonusplay"),
   songbook: $("screen-songbook"),
   albumfocus: $("screen-albumfocus"),
+  ruthless: $("screen-ruthless"),
   guests: $("screen-guests"),
   mastery: $("screen-mastery"),
 };
@@ -4148,6 +4150,12 @@ let chainBeatId = null;
 // for a give-up, and the frozen cost of the page once it settles. `ruthlessSpent` exists so the
 // seconds are read off the clock exactly ONCE — the verdict line and bonusPageScore both want
 // them, and two reads a millisecond apart can round to different numbers.
+/* The LENS this run opens its streams on, or null for the shelf's whole-song game. It is set
+   once at the start of a run and read everywhere the lens changes what a page does: which
+   section the stream opens on, and what walking away from a page costs. Null is also the only
+   marker of which of the two things is being played, so it must be cleared by the shelf's own
+   start path rather than only set by the mode's. */
+let ruthlessLensId = null;
 let ruthlessShown = 0;
 let ruthlessStart = 0;
 let ruthlessPenalty = 0;
@@ -4344,7 +4352,11 @@ function selectBonusGame(id) {
   if (disc) { disc.classList.remove("drop"); void disc.offsetWidth; disc.classList.add("drop"); }
 }
 
-function startBonusGame(g) {
+// `lensId` is the Ruthless mode's section lens, and null for every shelf game including the
+// shelf's own Ruthless. It is assigned HERE rather than by the mode's start function so that
+// walking from a lens run onto the shelf cannot leave the last lens applied to a shelf page.
+function startBonusGame(g, lensId = null) {
+  ruthlessLensId = lensId;
   bonusGame = g;
   notePlayed("bonus", g.id);
   bonusRound = 0;
@@ -4414,7 +4426,7 @@ function buildBonusPuzzle() {
     return buildChainPuzzle(allSongs, Math.random, 120, new Set(bonusRecentSongs),
                             { cross: bonusRound > CHAIN_EASY_PAGES });
   if (bonusGame.id === "ruthless-game")
-    return buildRuthlessPuzzle(allSongs, Math.random, 120, new Set(bonusRecentSongs));
+    return buildRuthlessPuzzle(allSongs, Math.random, 120, new Set(bonusRecentSongs), activeLens());
   return buildNamePuzzle(allSongs, lineIndex);
 }
 
@@ -4745,6 +4757,13 @@ function revealRuthlessWord() {
 // The word count, and what the give-up button is offering. The button says how far off it is
 // while it is still locked, so it never reads as broken — a disabled control with no
 // explanation is the same thing as a bug.
+// The run's lens object, or null on the shelf's whole-song game.
+function activeLens() { return ruthlessLensId ? ruthlessLens(ruthlessLensId) : null; }
+// What walking away costs on this run. Priced off the LENS's own median rather than one pair of
+// constants, because the chorus resolves at a median of 22 words and the second verse at 79: at
+// the shelf's 20-words-then-90-seconds the chorus would be offering the valve only after the
+// answer had already gone past, at a price nothing could make worth taking.
+function ruthlessSkip() { return ruthlessGiveUp(activeLens()); }
 function updateRuthlessMeta() {
   const n = $("bonusWords");
   if (n) n.textContent = ruthlessShown;
@@ -4757,11 +4776,12 @@ function updateRuthlessMeta() {
     out.textContent = ruthlessShown >= bonusPuzzle.stream.length ? " · that is the whole song" : "";
   const b = $("bonusGiveUp");
   if (!b) return;
-  const left = RUTHLESS_SKIP_AFTER - ruthlessShown;
+  const { after, penalty } = ruthlessSkip();
+  const left = after - ruthlessShown;
   b.disabled = left > 0;
   b.textContent = left > 0
     ? `give up in ${left} word${left === 1 ? "" : "s"}`
-    : `give up · +${fmtTime(RUTHLESS_SKIP_PENALTY)}`;
+    : `give up · +${fmtTime(penalty)}`;
 }
 
 // What this page has cost, read off the clock ONCE and then held. A page is never free: a title
@@ -4778,8 +4798,9 @@ function ruthlessFreeze() {
    a named one (which is also what stops it counting toward a clean sweep). */
 function giveUpRuthless() {
   if (bonusLocked || !bonusTimed(bonusGame)) return;
-  if (ruthlessShown < RUTHLESS_SKIP_AFTER) return;
-  ruthlessPenalty = RUTHLESS_SKIP_PENALTY;
+  const { after, penalty } = ruthlessSkip();
+  if (ruthlessShown < after) return;
+  ruthlessPenalty = penalty;
   const input = $("bonusInput");
   if (input) input.disabled = true;
   settleRuthless(false);
@@ -4791,7 +4812,7 @@ function settleRuthless(correct) {
   const secs = ruthlessFreeze();
   const detail = correct
     ? `named in <b>${fmtTime(secs)}</b> off <b>${ruthlessShown}</b> word${ruthlessShown === 1 ? "" : "s"}`
-    : `given up after <b>${ruthlessShown}</b> words · <b>+${fmtTime(RUTHLESS_SKIP_PENALTY)}</b> on the run`;
+    : `given up after <b>${ruthlessShown}</b> words · <b>+${fmtTime(ruthlessSkip().penalty)}</b> on the run`;
   settleBonusRound(correct, detail);
 }
 
@@ -6092,6 +6113,64 @@ function albumTileName(a) {
   if (a === "The Tortured Poets Department") return "TTPD";
   if (a === "The Life of a Showgirl") return "Life of a Showgirl";
   return a;
+}
+
+/* ---------- Ruthless: the lens picker ----------
+   Six lenses, one row each, and a row IS the play button. There is no detail panel and no
+   confirm step on purpose: unlike Album Focus there is nothing to choose once a lens is picked
+   (no difficulty, no variant), so a panel would exist only to hold a second tap.
+
+   Each row says what it is worth knowing before you pick: how many songs that lens can deal, and
+   your best time on it. The best is the only ranking, and a lens you have never played says so
+   rather than showing a zero, which on a low-wins board would read as a perfect run. */
+let ruthlessBackTarget = "start";
+function openRuthless(from) {
+  ruthlessBackTarget = from;
+  renderRuthlessPage();
+  flipAwayToScreen("ruthless");
+}
+
+function renderRuthlessPage() {
+  const played = RUTHLESS_LENSES.filter((l) => ruthlessRecord(l.id).plays).length;
+  let rows = "";
+  RUTHLESS_LENSES.forEach((lens) => {
+    const rec = ruthlessRecord(lens.id);
+    const pool = ruthlessPool(allSongs, lens).deal.length;
+    const best = rec.plays
+      ? `<span class="rl-best">${fmtTime(rec.best)}</span>`
+      : `<span class="rl-best rl-best--none">—</span>`;
+    // How the best was got. A time with pages handed back is the same record and a different
+    // run, so the line says which without making it a second board.
+    const note = rec.plays
+      ? (rec.bestGaveUp
+          ? `best · ${rec.bestGaveUp} given up`
+          : `best · named all ${BONUS_ROUNDS}`)
+      : `${pool} songs`;
+    rows += `<button type="button" class="rl-lens" data-lens="${lens.id}">` +
+      `<span class="rl-name">${escapeHtml(lens.label)}</span>${best}` +
+      `<span class="rl-note">${escapeHtml(note)}</span>` +
+      `</button>`;
+  });
+  const el = $("ruthlessBody");
+  el.innerHTML =
+    `<div class="chall-head">` +
+      `<div class="chall-head-sub">the song writes itself out, a word a second · name it</div>` +
+      `<span class="chall-tokens">played <b>${played}</b>/${RUTHLESS_LENSES.length}</span>` +
+    `</div>` +
+    `<div class="rl-board">${rows}</div>`;
+  el.querySelectorAll(".rl-lens").forEach((b) =>
+    b.addEventListener("click", () => startRuthlessMode(b.dataset.lens)));
+}
+
+/* A Ruthless mode run: ten pages whose streams all open on the chosen section. It runs on the
+   shelf's own machinery deliberately — the loop, the drip, the clock and the give-up are all
+   the same, and the lens plus the ending are the only differences. */
+function startRuthlessMode(lensId) {
+  const lens = ruthlessLens(lensId);
+  if (!lens) return;
+  const g = BONUS_GAMES.find((x) => x.id === "ruthless-game");
+  if (!g) return;
+  startBonusGame(g, lens.id);
 }
 
 function openAlbumFocus(from) {
@@ -16801,9 +16880,9 @@ function buildDevApi() {
       lenses: () => ruthlessLensAudit(allSongs),
       giveup: () => {
         if (!bonusGame || !bonusTimed(bonusGame)) return "not on a ruthless page";
-        ruthlessShown = Math.max(ruthlessShown, RUTHLESS_SKIP_AFTER);
+        ruthlessShown = Math.max(ruthlessShown, ruthlessSkip().after);
         giveUpRuthless();
-        return { penalty: RUTHLESS_SKIP_PENALTY, page: ruthlessSpent };
+        return { lens: ruthlessLensId || "whole song", penalty: ruthlessSkip().penalty, page: ruthlessSpent };
       },
       // Redacted: strip the page bare without paying for it, to reach the answer or to see what
       // a fully peeled verse looks like. `worth` sets the page's remaining value outright.
@@ -17910,6 +17989,8 @@ async function init() {
   $("bonusQuitBtn").addEventListener("click", () => leaveBonusGame());
   $("albumFocusBtn").addEventListener("click", () => openAlbumFocus("start"));
   $("albumFocusBackBtn").addEventListener("click", () => backToScreen(albumFocusBackTarget));
+  $("ruthlessBtn").addEventListener("click", () => openRuthless("start"));
+  $("ruthlessBackBtn").addEventListener("click", () => backToScreen(ruthlessBackTarget));
   frankGuestStamp();
   $("guestShelfBtn").addEventListener("click", () => openGuestShelf("start"));
   $("guestBackBtn").addEventListener("click", () => backToScreen(guestBackTarget));

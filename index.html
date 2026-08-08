@@ -59,7 +59,7 @@ if (location.pathname.endsWith('/index.html')) {
 <link rel="preload" href="fonts/courierprime-400-latin.woff2" as="font" type="font/woff2" crossorigin />
 <link rel="preload" href="fonts/courierprime-700-latin.woff2" as="font" type="font/woff2" crossorigin />
 <link rel="preload" href="fonts/courierprime-italic-latin.woff2" as="font" type="font/woff2" crossorigin />
-  <link rel="stylesheet" href="styles.css?v=51" />
+  <link rel="stylesheet" href="styles.css?v=52" />
 </head>
 <body data-era="gold">
 <!-- Hand-drawn wobble for the penned achievement charms. Referenced by .charm svg
@@ -1057,6 +1057,21 @@ if (location.pathname.endsWith('/index.html')) {
           <span class="nav-card-title">bonus games</span>
           <span class="nav-card-kicker">quick play</span>
         </button>
+        <button id="ruthlessBtn" class="nav-card" data-era-tint="rust">
+          <!-- PLACEHOLDER ICON. A stopwatch over a stave stands in until the real mark is
+               drawn; the mode's identity is not settled yet and this is not it. -->
+          <span class="nav-card-seat">
+            <svg class="nav-ic" width="50" height="50" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <circle cx="24" cy="26" r="13" fill="rgba(166,90,60,.14)" stroke-width="1.7"/>
+              <path d="M20 8 h8" stroke-width="1.7"/>
+              <path d="M24 8 v5" stroke-width="1.7"/>
+              <path d="M24 26 v-7" stroke-width="1.6"/>
+              <path d="M24 26 l5 3.5" stroke-width="1.6"/>
+            </svg>
+          </span>
+          <span class="nav-card-title">ruthless</span>
+          <span class="nav-card-kicker">a word a second</span>
+        </button>
       </div>
     </div>
   </section>
@@ -1385,6 +1400,15 @@ if (location.pathname.endsWith('/index.html')) {
       <button id="albumFocusBackBtn" class="btn-link">← back</button>
     </div>
     <div id="albumFocusBody"></div>
+  </section>
+
+  <!-- RUTHLESS SCREEN — the six section lenses, each with its own best time -->
+  <section id="screen-ruthless" class="screen card" tabindex="-1" aria-label="Ruthless">
+    <div class="stats-nav">
+      <span class="stats-title">Ruthless</span>
+      <button id="ruthlessBackBtn" class="btn-link">← back</button>
+    </div>
+    <div id="ruthlessBody"></div>
   </section>
 
   <!-- GUEST SHELF SCREEN — other artists' catalogues, hung as backstage passes -->
