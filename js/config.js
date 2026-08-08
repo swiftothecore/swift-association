@@ -1185,15 +1185,20 @@ export function skillLevelFromXp(xp) {
 
 // Mastery unlocks when the five skills' levels SUM to this (of a possible 50) — broad
 // progress without forcing any single skill to be maxed. Mastery itself starts at level 0
-// and caps at MASTERY_MAX_LEVEL (the top of the reward ladder — Ultimate Showgirl);
-// cumulative XP to reach a level: round(BASE * level^EXP).
+// and caps at MASTERY_MAX_LEVEL (the top of the reward ladder — Ultimate Showgirl).
+// Each level costs STEP more ink than the one before it, so the cost of the level itself
+// is BASE + STEP*(level-1) and the cumulative XP to REACH a level is the arithmetic
+// series: BASE*level + STEP*level*(level-1)/2. Deliberately not a power curve like the
+// skills above: this one has to stay sayable ("350 more each time"), it has to reach the
+// dense early reward tiers quickly, and level 13 has to be the most expensive level in
+// the game, which a flattening exponent could never do.
 export const MASTERY_GATE = 40;
 export const MASTERY_MAX_LEVEL = 13;
-export const MASTERY_LEVEL_BASE = 800;
-export const MASTERY_LEVEL_EXP = 1.5;
+export const MASTERY_LEVEL_BASE = 800;   // ink for level 1
+export const MASTERY_LEVEL_STEP = 350;   // extra ink each level asks over the last
 export function masteryXpForLevel(level) {
   if (level <= 0) return 0;
-  return Math.round(MASTERY_LEVEL_BASE * Math.pow(level, MASTERY_LEVEL_EXP));
+  return MASTERY_LEVEL_BASE * level + MASTERY_LEVEL_STEP * level * (level - 1) / 2;
 }
 export function masteryLevelFromXp(xp) {
   let lv = 0;

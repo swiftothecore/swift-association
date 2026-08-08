@@ -5896,6 +5896,9 @@
   .mh-next { font-family: var(--type); font-size: 10.5px; letter-spacing: 0.03em; color: rgba(var(--m-goldink), 1); margin-top: 5px; }
   .mh-sub { font-family: var(--type); font-size: 10.5px; letter-spacing: 0.04em; color: var(--ink-soft); margin-top: 10px; }
   .mh-sub b { color: var(--ink); font-weight: 700; }
+  /* The curve's rule, said aloud. Quieter than the count it trails, so the ink figure
+     still reads first and the track above it stays uncrowded. */
+  .mh-law { color: var(--ink-faint, var(--ink-soft)); opacity: 0.75; }
 
   /* Wax-seal medallion */
   .mh-seal { width: 62px; height: 62px; border-radius: 50%; flex: none; position: relative;

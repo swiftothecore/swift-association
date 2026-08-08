@@ -37,7 +37,7 @@ import {
   TEMPO_BASE, TEMPO_SPEED, LYRIC_TIER_XP, LYRIC_LEN_REF,
   ENDURANCE_GROWTH, ENDURANCE_RUN_CAP, RANGE_RATIO_XP, RANGE_PER_ALBUM,
   RESOLVE_BASE, RESOLVE_STREAK_CAP,
-  MASTERY_REWARDS, MASTERY_REWARD_BY_ID, MASTERY_GATE, MASTERY_MAX_LEVEL, SKILL_MAX_LEVEL,
+  MASTERY_REWARDS, MASTERY_REWARD_BY_ID, MASTERY_GATE, MASTERY_MAX_LEVEL, MASTERY_LEVEL_STEP, SKILL_MAX_LEVEL,
   MASTERY_TITLES, MASTERY_TITLE_BY_VALUE, masteryDefaultTitle, MASTERY_ICONS, MASTERY_LEVEL_ICONS,
   skillXpForLevel, skillLevelFromXp, masteryXpForLevel, masteryLevelFromXp,
   POLAROID_DEVELOP_MS, POLAROID_TOTAL,
@@ -3741,7 +3741,8 @@ function masteryHeadClimb(m, mLevel) {
       `<span class="mh-fill" style="width:${fillPos}"></span>` +
       `<div class="mh-nodes">${pips}</div>` +
     `</div>` +
-    `<div class="mh-sub"><b>${inCur} / ${span}</b> ink to level ${mLevel + 1}</div></div>`;
+    `<div class="mh-sub"><b>${inCur} / ${span}</b> ink to level ${mLevel + 1}` +
+      `<span class="mh-law"> · every level asks ${MASTERY_LEVEL_STEP} more ink than the last</span></div></div>`;
 }
 
 // ---- Reward bento ----
