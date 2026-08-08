@@ -6116,13 +6116,24 @@ function albumTileName(a) {
 }
 
 /* ---------- Ruthless: the lens picker ----------
-   Six lenses, one row each, and a row IS the play button. There is no detail panel and no
-   confirm step on purpose: unlike Album Focus there is nothing to choose once a lens is picked
-   (no difficulty, no variant), so a panel would exist only to hold a second tap.
+   The page is an ARRANGEMENT SHEET: the six lenses laid down the paper in the order a song
+   actually runs, verse into pre-chorus into chorus into post-chorus, second verse, bridge, hung
+   off a spine ruled down the margin. That order is the design. Listing them grouped (both verses,
+   then the choruses) says nothing; running them in song order says where in a song you are about
+   to be dropped, which is the only thing a lens really is.
 
-   Each row says what it is worth knowing before you pick: how many songs that lens can deal, and
-   your best time on it. The best is the only ranking, and a lens you have never played says so
-   rather than showing a zero, which on a low-wins board would read as a perfect run. */
+   A row IS the play button. Unlike Album Focus there is nothing left to choose once a lens is
+   picked — no difficulty, no variant — so a detail panel would exist only to hold a second tap.
+
+   Each row carries the one number worth knowing before picking, drawn rather than written: a
+   pencil rule as long as that lens's TYPICAL PAGE, all six to the same scale. It is measured
+   (the lens's median words to the title), so the chorus is visibly a sprint and the second verse
+   visibly the long way round, and the mode teaches itself without a paragraph of difficulty
+   ratings. Your best time sits at the end of the row in typewriter; a lens never played shows a
+   dash rather than a zero, which on a low-wins board would read as a perfect run. */
+// Song order, not roster order: this is the running order of an actual pop song, and it is what
+// makes the page an arrangement rather than a list.
+const RUTHLESS_RUNNING_ORDER = ["verse-1", "pre-chorus", "chorus", "post-chorus", "verse-2", "bridge"];
 let ruthlessBackTarget = "start";
 function openRuthless(from) {
   ruthlessBackTarget = from;
@@ -6131,33 +6142,52 @@ function openRuthless(from) {
 }
 
 function renderRuthlessPage() {
-  const played = RUTHLESS_LENSES.filter((l) => ruthlessRecord(l.id).plays).length;
+  const lenses = RUTHLESS_RUNNING_ORDER.map((id) => ruthlessLens(id)).filter(Boolean);
+  const played = lenses.filter((l) => ruthlessRecord(l.id).plays).length;
+  // One scale across all six, so the bars are comparable to each other rather than each being
+  // full width. Read off the longest lens, not off a hardcoded number, so adding a lens or
+  // re-measuring a median can never push a bar off the paper.
+  const longest = Math.max(...lenses.map((l) => l.median));
   let rows = "";
-  RUTHLESS_LENSES.forEach((lens) => {
+  lenses.forEach((lens) => {
     const rec = ruthlessRecord(lens.id);
     const pool = ruthlessPool(allSongs, lens).deal.length;
     const best = rec.plays
       ? `<span class="rl-best">${fmtTime(rec.best)}</span>`
       : `<span class="rl-best rl-best--none">—</span>`;
-    // How the best was got. A time with pages handed back is the same record and a different
-    // run, so the line says which without making it a second board.
+    // How the best was got, kept UNDER the time rather than beside the measurement. A time with
+    // pages handed back is the same record and a different run, so the row says which without
+    // making it a second board — and keeping it in the record's own column is what stops the row
+    // reading as one long sentence of unrelated numbers.
     const note = rec.plays
       ? (rec.bestGaveUp
-          ? `best · ${rec.bestGaveUp} given up`
-          : `best · named all ${BONUS_ROUNDS}`)
-      : `${pool} songs`;
-    rows += `<button type="button" class="rl-lens" data-lens="${lens.id}">` +
-      `<span class="rl-name">${escapeHtml(lens.label)}</span>${best}` +
+          ? `${rec.bestGaveUp} given up`
+          : `named all ${BONUS_ROUNDS}`)
+      : "not played";
+    rows += `<button type="button" class="rl-lens${rec.plays ? " is-played" : ""}" data-lens="${lens.id}"` +
+        ` aria-label="${escapeHtml(lens.label)}: ${rec.plays ? "best " + fmtTime(rec.best) + ", " : ""}${escapeHtml(note)}">` +
+      `<span class="rl-tick" aria-hidden="true"></span>` +
+      `<span class="rl-name">${escapeHtml(lens.label)}</span>` +
+      best +
+      `<span class="rl-meta">` +
+        `<span class="rl-bar" aria-hidden="true"><span class="rl-bar-fill" style="width:${(lens.median / longest * 100).toFixed(1)}%"></span></span>` +
+        `<span class="rl-len">~${lens.median} words<span class="rl-pool"> · ${pool} songs</span></span>` +
+      `</span>` +
       `<span class="rl-note">${escapeHtml(note)}</span>` +
       `</button>`;
   });
   const el = $("ruthlessBody");
   el.innerHTML =
-    `<div class="chall-head">` +
-      `<div class="chall-head-sub">the song writes itself out, a word a second · name it</div>` +
-      `<span class="chall-tokens">played <b>${played}</b>/${RUTHLESS_LENSES.length}</span>` +
+    `<div class="rl-head">` +
+      `<p class="rl-blurb">The song writes itself out from a section you choose, ` +
+      `one word a second. Name it.</p>` +
+      `<p class="rl-sub">ten pages · the clock is the score · low wins` +
+        `<span class="rl-count">played ${played}/${lenses.length}</span></p>` +
     `</div>` +
-    `<div class="rl-board">${rows}</div>`;
+    `<div class="rl-board">${rows}</div>` +
+    `<p class="rl-foot">a wrong guess costs nothing but the seconds it took. ` +
+      `the sections run down the page in the order a song does, and the bar is how long ` +
+      `that section's pages usually take.</p>`;
   el.querySelectorAll(".rl-lens").forEach((b) =>
     b.addEventListener("click", () => startRuthlessMode(b.dataset.lens)));
 }

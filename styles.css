@@ -2579,30 +2579,126 @@
     --btn-mark: rgba(245, 239, 225, 0.10);
   }
 
-  /* ---------- Ruthless page — the six section lenses ----------
-     A column of index-card rows rather than a board of tiles, because there is nothing
-     pictorial to show: a lens is a name and a time. One tap plays, so a row is the whole
-     control and wants to read as a pressed key, not as a label with a button beside it.
-     The name and the time share the top line and the note sits under both, which is the
-     bonus shelf's two-line strip rhythm and keeps six rows on one screen. */
-  .rl-board { display: grid; gap: 10px; padding: 14px 4px 22px; }
+  /* ---------- Ruthless page — the song's arrangement, read down the paper ----------
+     Not a board of tiles and not a list: the six lenses run down the page in the order a
+     song actually runs, hung off a spine ruled in the margin like the structure notes a
+     writer pencils beside a draft. The spine is what turns six buttons into one object,
+     so it is drawn on the board rather than on each row, and each row hangs a tick on it.
+
+     A row is the whole control, so it has to read as a card you can press rather than as a
+     label with a button beside it: paper lifted off the page, a hard offset shadow instead
+     of a blur, and it presses INTO the paper on :active.
+
+     The row is a 3-column grid — tick, everything, time — and the bar and the note span the
+     middle column under the name. The bar is data (the lens's typical page, all six to one
+     scale), so it is drawn in pencil grey and never in an accent colour: it is a measurement
+     on a page, not a progress meter, and colouring it would make a long bar look like an
+     achievement rather than like a long way round. */
+  .rl-head { padding: 4px 4px 0; }
+  .rl-blurb {
+    font-family: var(--hand); font-size: 1.18rem; line-height: 1.45;
+    color: var(--ink); margin: 0 0 10px; max-width: 46ch;
+  }
+  .rl-sub {
+    display: flex; align-items: baseline; justify-content: space-between; gap: 12px;
+    font-family: var(--type); font-size: .74rem; letter-spacing: .09em;
+    text-transform: uppercase; color: var(--ink-soft);
+    margin: 0 0 4px; padding-bottom: 8px; border-bottom: 1px solid var(--rule);
+  }
+  .rl-count { white-space: nowrap; }
+
+  /* The spine: one hairline ruled down the margin, with the rows' ticks sitting on it. */
+  .rl-board {
+    position: relative; display: grid; gap: 9px;
+    padding: 18px 2px 6px 0; margin-left: 15px;
+  }
+  .rl-board::before {
+    content: ""; position: absolute; left: 0; top: 4px; bottom: 4px; width: 1px;
+    background: var(--ink-soft); opacity: .28;
+  }
+
   .rl-lens {
-    display: grid; grid-template-columns: 1fr auto; align-items: baseline;
-    gap: 2px 10px; width: 100%; text-align: left; cursor: pointer;
-    padding: 12px 16px; border: 1.5px solid var(--ink-soft);
-    border-radius: 3px; background: var(--paper-edge);
-    box-shadow: 1px 2px 0 rgba(43, 39, 34, .16);
-    transition: transform .12s ease, box-shadow .12s ease;
+    position: relative; display: grid; align-items: baseline;
+    grid-template-columns: auto minmax(0, 1fr) auto; gap: 2px 14px;
+    width: 100%; text-align: left; cursor: pointer; margin-left: 14px;
+    padding: 9px 15px 10px; border: 1px solid var(--ink-soft);
+    border-radius: 2px; background: var(--paper-edge);
+    box-shadow: 2px 2px 0 rgba(43, 39, 34, .13);
+    transition: transform .13s ease, box-shadow .13s ease;
   }
-  .rl-lens:hover { transform: translate(-1px, -1px); box-shadow: 2px 3px 0 rgba(43, 39, 34, .2); }
-  .rl-lens:active { transform: translate(1px, 1px); box-shadow: 0 1px 0 rgba(43, 39, 34, .16); }
-  .rl-name { font-family: var(--hand); font-size: 1.32rem; line-height: 1.15; color: var(--ink); }
-  .rl-best { font-family: var(--type); font-size: 1.16rem; letter-spacing: .02em; color: var(--ink); }
-  .rl-best--none { opacity: .38; }
+  /* the tick that puts the row on the spine */
+  .rl-tick {
+    position: absolute; left: -15px; top: 1em; width: 14px; height: 1px;
+    background: var(--ink-soft); opacity: .38;
+  }
+  .rl-tick::before {
+    content: ""; position: absolute; left: -3px; top: -2.5px;
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--paper); border: 1px solid var(--ink-soft);
+  }
+  .rl-lens.is-played .rl-tick::before { background: var(--ink-soft); }
+  .rl-lens:hover { transform: translate(-1px, -1px); box-shadow: 3px 3px 0 rgba(43, 39, 34, .17); }
+  .rl-lens:active { transform: translate(2px, 2px); box-shadow: 0 0 0 rgba(43, 39, 34, .13); }
+  .rl-lens:focus-visible { outline: 1.5px dashed var(--ink-soft); outline-offset: 3px; }
+
+  .rl-name {
+    grid-column: 2; grid-row: 1; font-family: var(--hand); font-size: 1.3rem;
+    line-height: 1.1; color: var(--ink);
+  }
+  .rl-best {
+    grid-column: 3; grid-row: 1; text-align: right;
+    font-family: var(--type); font-size: 1.2rem; color: var(--ink);
+    font-variant-numeric: tabular-nums;
+  }
+  .rl-best--none { opacity: .3; }
+
+  /* The measurement: a pencil rule as long as that lens's typical page, with its own reading
+     set immediately after it. CAPPED WELL SHORT of the row so even the longest lens reads as a
+     bar someone drew and not as an underline under the name — at full width it was a rule. */
+  .rl-meta {
+    grid-column: 2; grid-row: 2; display: flex; align-items: center; gap: 9px;
+    min-width: 0; margin-top: 3px;
+  }
+  .rl-bar {
+    flex: 0 0 auto; width: 108px; max-width: 40%; height: 3px;
+    background: var(--rule); border-radius: 2px; overflow: hidden;
+  }
+  .rl-bar-fill { display: block; height: 100%; background: var(--ink-soft); opacity: .5; }
+  .rl-len {
+    font-family: var(--type); font-size: .68rem; letter-spacing: .04em;
+    color: var(--ink-soft); opacity: .8; white-space: nowrap;
+    overflow: hidden; text-overflow: ellipsis;
+  }
   .rl-note {
-    grid-column: 1 / -1; font-family: var(--type); color: var(--ink-soft);
-    font-size: .78rem; letter-spacing: .04em;
+    grid-column: 3; grid-row: 2; text-align: right; margin-top: 3px;
+    font-family: var(--type); font-size: .68rem; letter-spacing: .04em;
+    color: var(--ink-soft); opacity: .72; white-space: nowrap;
   }
+
+  .rl-foot {
+    font-family: var(--type); font-size: .68rem; letter-spacing: .04em;
+    color: var(--ink-soft); opacity: .62; margin: 12px 4px 4px;
+    padding-top: 9px; border-top: 1px solid var(--rule); max-width: 60ch;
+  }
+
+  @media (max-width: 480px) {
+    .rl-blurb { font-size: 1.06rem; }
+    .rl-board { margin-left: 11px; }
+    .rl-lens { margin-left: 11px; padding: 8px 11px 9px; gap: 2px 9px; }
+    .rl-tick { left: -12px; width: 11px; }
+    .rl-name { font-size: 1.16rem; }
+    .rl-best { font-size: 1.06rem; }
+    .rl-bar { width: 66px; }
+    /* The pool count is the first thing to go. A truncated "~78 words…" is worse than no
+       song count at all, and the count is context rather than something a pick turns on. */
+    .rl-pool { display: none; }
+    .rl-len { font-size: .64rem; }
+    .rl-note { font-size: .64rem; }
+    /* the strapline stacks rather than fighting the played count for one line */
+    .rl-sub { display: block; }
+    .rl-count { display: block; margin-top: 3px; }
+  }
+  [data-reduce-motion="true"] .rl-lens { transition: none; }
 
   /* ---------- Album Focus page — a pinned board of album snapshots ----------
      The 12 studio albums as squares tacked to the desk in a loose 3x4 grid. Each
@@ -6123,8 +6219,19 @@
   .stamp-cap {
     font-family: var(--type); font-weight: 700; letter-spacing: 0.6px;
   }
-  .stamp--focus { --stamp-rot: -4deg; --stamp-lean: -8deg; width: 50px; }
-  .stamp--guest { --stamp-rot: 3.5deg; --stamp-lean: 7.5deg; width: 62px; margin-left: -4px; }
+  .stamp--focus { --stamp-rot: -4deg; --stamp-lean: -8deg; width: 46px; }
+  /* PLACEHOLDER die. It leans the other way from the album sheet so three in a row read as
+     stamps torn off a sheet rather than as a toolbar, and it overlaps its neighbours slightly
+     for the same reason. Its ink follows the album-focus family rather than the guest's
+     per-load colour, since the mode has no era of its own. */
+  .stamp--ruthless {
+    --stamp-rot: 2.5deg; --stamp-lean: 6deg; width: 44px; margin-left: -3px;
+    --rs-ink: #8c4a34; --rs-paper: #fdfaf1;
+  }
+  .stamp--ruthless .rs-tint { fill: var(--rs-ink); }
+  .stamp--ruthless .rs-word { fill: var(--rs-paper); }
+  .stamp--ruthless .stamp-cap { fill: var(--rs-paper); }
+  .stamp--guest { --stamp-rot: 3.5deg; --stamp-lean: 7.5deg; width: 58px; margin-left: -4px; }
   /* The guest die is franked in one ink chosen per page load (STAMP_INKS in js/config.js,
      applied in app.js). The figure and the caption print in the paper colour and knock
      out of that ink, so the plate is a single colour on cream like real postage. The
@@ -6147,8 +6254,9 @@
   [data-reduce-motion="true"] .stamp:focus-visible { transform: rotate(var(--stamp-rot)); }
   @media (max-width: 480px) {
     .franking { top: 9px; right: 9px; }
-    .stamp--focus { width: 38px; }
-    .stamp--guest { width: 48px; margin-left: -3px; }
+    .stamp--focus { width: 34px; }
+    .stamp--ruthless { width: 33px; margin-left: -2px; }
+    .stamp--guest { width: 43px; margin-left: -3px; }
 
     /* Mastery hero — tighten the card and the 13-pip ascent track for narrow screens. */
     .mh-card { padding: 18px 16px 16px 30px; }
