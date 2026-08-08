@@ -6116,79 +6116,180 @@ function albumTileName(a) {
 }
 
 /* ---------- Ruthless: the lens picker ----------
-   The page is an ARRANGEMENT SHEET: the six lenses laid down the paper in the order a song
-   actually runs, verse into pre-chorus into chorus into post-chorus, second verse, bridge, hung
-   off a spine ruled down the margin. That order is the design. Listing them grouped (both verses,
-   then the choruses) says nothing; running them in song order says where in a song you are about
-   to be dropped, which is the only thing a lens really is.
+   The page is a LYRIC SHEET, not a board. One song is typed down the paper in the order a song
+   actually runs — verse into pre-chorus into chorus into post-chorus, second verse, bridge — with
+   the words greeked to pencil strokes so the sheet gives nothing away. Picking a lens is pointing
+   at a place in a song and saying start reading here, which is the only thing a lens really is.
+   That order is the design; listing them grouped (both verses, then the choruses) says nothing.
 
-   A row IS the play button. Unlike Album Focus there is nothing left to choose once a lens is
+   A section IS the play button. Unlike Album Focus there is nothing left to choose once a lens is
    picked — no difficulty, no variant — so a detail panel would exist only to hold a second tap.
 
-   Each row carries the one number worth knowing before picking, drawn rather than written: a
-   pencil rule as long as that lens's TYPICAL PAGE, all six to the same scale. It is measured
-   (the lens's median words to the title), so the chorus is visibly a sprint and the second verse
-   visibly the long way round, and the mode teaches itself without a paragraph of difficulty
-   ratings. Your best time sits at the end of the row in typewriter; a lens never played shows a
-   dash rather than a zero, which on a low-wins board would read as a perfect run. */
+   THE BLOCK IS THE MEASUREMENT. Each section is drawn as many stroke-lines as its typical page is
+   long, so the chorus is one line and the verses are four, all to one scale. That replaces the old
+   pencil bar and the "~78 words" beside it: the page says the same thing without a single number.
+   The strokes are seeded off the lens id, so the sheet looks the same every time you open it — a
+   document that redraws itself differently on each visit is not a document.
+
+   Your best time sits at the end of the section in typewriter; a lens never played shows a dash
+   rather than a zero, which on a low-wins board would read as a perfect run. */
 // Song order, not roster order: this is the running order of an actual pop song, and it is what
 // makes the page an arrangement rather than a list.
 const RUTHLESS_RUNNING_ORDER = ["verse-1", "pre-chorus", "chorus", "post-chorus", "verse-2", "bridge"];
+// Words of typical page per drawn stroke-line. Tuned so the six blocks add up to a document that
+// fits one screen while the shortest lens still gets a line of its own.
+const RL_LINE_WORDS = 22;
 let ruthlessBackTarget = "start";
+let rlDocEl = null;
 function openRuthless(from) {
   ruthlessBackTarget = from;
   renderRuthlessPage();
   flipAwayToScreen("ruthless");
+  // The measure needs the screen visible and laid out, so it waits for the flip to swap it in.
+  // Belt and braces on purpose: rAF is the fast path, and the timeout covers the case where
+  // frames are throttled (a backgrounded tab is the usual one) and the page would otherwise sit
+  // on the fallback height until something else moved.
+  requestAnimationFrame(fitRuthlessDoc);
+  setTimeout(fitRuthlessDoc, 80);
+}
+
+// A tiny seeded generator so a lens's strokes are stable across renders and differ between lenses.
+function rlRandom(seedStr) {
+  let h = 2166136261;
+  for (let i = 0; i < seedStr.length; i++) { h ^= seedStr.charCodeAt(i); h = Math.imul(h, 16777619); }
+  let s = h >>> 0;
+  return () => ((s = (Math.imul(s, 1103515245) + 12345) >>> 0) / 4294967296);
+}
+
+// One section's greeked page: whole lines of stroke-words, widths in % of the column so the
+// document reflows with the notebook instead of overflowing it.
+function rlStrokes(lens) {
+  const rnd = rlRandom(lens.id);
+  const lines = Math.max(1, Math.round(lens.median / RL_LINE_WORDS));
+  let out = "";
+  for (let i = 0; i < lines; i++) {
+    const target = 62 + Math.round(rnd() * 26);   // how far across the column this line runs
+    let words = "", used = 0;
+    while (used < target) {
+      const w = 3.4 + rnd() * 6.4;
+      words += `<span class="rl-w" style="width:${w.toFixed(1)}%"></span>`;
+      used += w + 1;
+    }
+    out += `<span class="rl-ln">${words}</span>`;
+  }
+  return out;
+}
+
+/* The page never scrolls. Measure what is actually left below the heading and hand it to the CSS
+   as --rl-h: the document is exactly that tall, spreads its six sections into it, and every size
+   inside scales off that one number. Measured from the document top rather than the viewport so
+   the answer does not depend on where the page happens to be scrolled. */
+function fitRuthlessPass() {
+  // Held references, never a fresh query: the page-turn clones the whole screen INCLUDING its id,
+  // so during a flip a lookup by id or class can hand back the throwaway sheet and the measure
+  // lands on a node that is about to be removed.
+  const doc = rlDocEl, card = screens.ruthless;
+  if (!doc || !card || !card.classList.contains("active")) return;
+  // Collapse the document, measure where the page ends without it, and hand back everything that
+  // is left. Measuring the CARD's foot rather than adding up paddings means the masthead, the
+  // blurb, the foot and the card's own bottom padding are all counted whatever they grow into.
+  // min-height:min-content has to come off for the measure too, or the document refuses to
+  // collapse and the page reads its own floor back as the space it has left.
+  doc.style.minHeight = "0";
+  doc.style.setProperty("--rl-h", "0px");
+  const restingBottom = card.getBoundingClientRect().bottom + window.scrollY;
+  doc.style.minHeight = "";
+  // ...plus the desk showing below the notebook, which is the last thing that can force a scrollbar.
+  const deskBelow = parseFloat(getComputedStyle(document.body).paddingBottom) || 0;
+  // No artificial floor: the CSS min-content is the real one, so a window too short to hold the
+  // sheet gives in and scrolls a little instead of the sections overlapping the footnote.
+  // 2px of slack: sub-pixel rounding in the measure is enough to put a scrollbar on a page that
+  // is otherwise exactly the height of the window, and a scrollbar for one pixel is still a scroll.
+  const room = Math.max(0, Math.round(window.innerHeight - restingBottom - deskBelow - 2));
+  // What must be true is that the DOCUMENT ends up inside the room — not that it matches the
+  // number we asked for. Asking for the whole room can overflow, because the type scales off the
+  // ask and drags the content's own minimum up with it, so binary search the ask instead. Height
+  // rises monotonically with the ask, which is what makes the search sound; comparing against the
+  // ask rather than the room does NOT, since below the clamp floors the content stops shrinking.
+  const heightAt = (h) => {
+    doc.style.setProperty("--rl-h", `${h}px`);
+    return doc.getBoundingClientRect().height;
+  };
+  if (heightAt(room) > room + 0.5) {
+    let lo = 0, hi = room;
+    while (hi - lo > 2) {
+      const mid = Math.round((lo + hi) / 2);
+      if (heightAt(mid) <= room + 0.5) lo = mid; else hi = mid;
+    }
+    doc.style.setProperty("--rl-h", `${lo}px`);
+  }
+}
+/* Two passes, and the second one A FRAME LATER. Straight after a window resize the first measure
+   reads chrome that is still laid out for the old height and comes back short — the vh-sized blurb,
+   strapline and footnote have not been re-resolved yet, and forcing layout inside the same task
+   does not make them so. A second pass on the next frame measures a page that has settled, and the
+   fit is idempotent once it has, so a third would change nothing. The timeout is the backstop for
+   throttled frames, the same reason openRuthless has one. */
+function fitRuthlessDoc() {
+  fitRuthlessPass();
+  requestAnimationFrame(fitRuthlessPass);
+  setTimeout(() => {
+    fitRuthlessPass();
+    // The notebook is a different height than it was when showScreen told the desk to re-fill, and
+    // gutter props left below a now-shorter page are enough to put the scrollbar back on their own.
+    window.dispatchEvent(new CustomEvent("deskscatter:refresh"));
+  }, 60);
+}
+let rlFitTimer = null;
+addEventListener("resize", () => {
+  if (!screens.ruthless.classList.contains("active")) return;
+  clearTimeout(rlFitTimer);
+  rlFitTimer = setTimeout(fitRuthlessDoc, 120);
+});
+
+// Re-paint the sheet under a board that changed beneath it (the dev panel's seeders), and re-fit,
+// since a lens gaining a time can change how tall the document wants to be.
+function repaintRuthless() {
+  if (!rlDocEl || !screens.ruthless.classList.contains("active")) return;
+  renderRuthlessPage();
+  fitRuthlessDoc();
 }
 
 function renderRuthlessPage() {
   const lenses = RUTHLESS_RUNNING_ORDER.map((id) => ruthlessLens(id)).filter(Boolean);
   const played = lenses.filter((l) => ruthlessRecord(l.id).plays).length;
-  // One scale across all six, so the bars are comparable to each other rather than each being
-  // full width. Read off the longest lens, not off a hardcoded number, so adding a lens or
-  // re-measuring a median can never push a bar off the paper.
-  const longest = Math.max(...lenses.map((l) => l.median));
-  let rows = "";
+  let secs = "";
   lenses.forEach((lens) => {
     const rec = ruthlessRecord(lens.id);
     const pool = ruthlessPool(allSongs, lens).deal.length;
     const best = rec.plays
       ? `<span class="rl-best">${fmtTime(rec.best)}</span>`
       : `<span class="rl-best rl-best--none">—</span>`;
-    // How the best was got, kept UNDER the time rather than beside the measurement. A time with
-    // pages handed back is the same record and a different run, so the row says which without
-    // making it a second board — and keeping it in the record's own column is what stops the row
-    // reading as one long sentence of unrelated numbers.
+    // How the best was got, kept UNDER the time. A time with pages handed back is the same record
+    // and a different run, so the section says which without making it a second board.
     const note = rec.plays
-      ? (rec.bestGaveUp
-          ? `${rec.bestGaveUp} given up`
-          : `named all ${BONUS_ROUNDS}`)
+      ? (rec.bestGaveUp ? `${rec.bestGaveUp} given up` : `named all ${BONUS_ROUNDS}`)
       : "not played";
-    rows += `<button type="button" class="rl-lens${rec.plays ? " is-played" : ""}" data-lens="${lens.id}"` +
-        ` aria-label="${escapeHtml(lens.label)}: ${rec.plays ? "best " + fmtTime(rec.best) + ", " : ""}${escapeHtml(note)}">` +
-      `<span class="rl-tick" aria-hidden="true"></span>` +
-      `<span class="rl-name">${escapeHtml(lens.label)}</span>` +
-      best +
-      `<span class="rl-meta">` +
-        `<span class="rl-bar" aria-hidden="true"><span class="rl-bar-fill" style="width:${(lens.median / longest * 100).toFixed(1)}%"></span></span>` +
-        `<span class="rl-len">~${lens.median} words<span class="rl-pool"> · ${pool} songs</span></span>` +
+    secs += `<button type="button" class="rl-sec" data-lens="${lens.id}"` +
+        ` aria-label="${escapeHtml(lens.label)}: ${pool} songs, ${rec.plays ? "best " + fmtTime(rec.best) + ", " : ""}${escapeHtml(note)}">` +
+      `<span>` +
+        `<span class="rl-h">[${escapeHtml(lens.label)}]<span class="rl-pool">${pool} songs</span></span>` +
+        `<span class="rl-lines" aria-hidden="true">${rlStrokes(lens)}</span>` +
       `</span>` +
-      `<span class="rl-note">${escapeHtml(note)}</span>` +
+      `<span class="rl-rec">${best}<span class="rl-note">${escapeHtml(note)}</span></span>` +
       `</button>`;
   });
   const el = $("ruthlessBody");
   el.innerHTML =
-    `<div class="rl-head">` +
-      `<p class="rl-blurb">The song writes itself out from a section you choose, ` +
-      `one word a second. Name it.</p>` +
-      `<p class="rl-sub">ten pages · the clock is the score · low wins` +
-        `<span class="rl-count">played ${played}/${lenses.length}</span></p>` +
-    `</div>` +
-    `<div class="rl-board">${rows}</div>` +
+    `<p class="rl-blurb">Ten songs will write themselves out from wherever you point, ` +
+    `one word a second. Name them.</p>` +
+    `<p class="rl-sub"><span>ten pages · the clock is the score · low wins</span>` +
+      `<span class="rl-count">played ${played}/${lenses.length}</span></p>` +
+    `<div class="rl-doc">${secs}</div>` +
     `<p class="rl-foot">a wrong guess costs nothing but the seconds it took. ` +
-      `the sections run down the page in the order a song does, and the bar is how long ` +
-      `that section's pages usually take.</p>`;
-  el.querySelectorAll(".rl-lens").forEach((b) =>
+      `each section is as long as its pages usually run.</p>`;
+  rlDocEl = el.querySelector(".rl-doc");
+  el.querySelectorAll(".rl-sec").forEach((b) =>
     b.addEventListener("click", () => startRuthlessMode(b.dataset.lens)));
 }
 
@@ -17207,9 +17308,19 @@ function buildDevApi() {
       board: () => RUTHLESS_LENSES.map((l) => ({ lens: l.id, ...ruthlessRecord(l.id) })),
       seed: (lensId, seconds, gaveUp = 0) => {
         if (!ruthlessLens(lensId)) return `no such lens — ${RUTHLESS_LENSES.map((l) => l.id).join(", ")}`;
-        return recordRuthlessRun(lensId, seconds, gaveUp, todayKey());
+        const out = recordRuthlessRun(lensId, seconds, gaveUp, todayKey());
+        repaintRuthless();
+        return out;
       },
-      reset: () => { resetRuthless(); return "ruthless board cleared"; },
+      // A whole board in one press: the sheet reads differently with records on it (times in the
+      // margin, the played count, and how a lens that was given up on sits beside one that wasn't),
+      // and seeding six lenses one at a time to look at that is six presses too many.
+      fill: () => {
+        RUTHLESS_LENSES.forEach((l, i) => recordRuthlessRun(l.id, 90 + l.median * 2, i % 3 === 0 ? 1 : 0, todayKey()));
+        repaintRuthless();
+        return "board filled — open Ruthless";
+      },
+      reset: () => { resetRuthless(); repaintRuthless(); return "ruthless board cleared"; },
     },
     // The randomiser. A weighted draw is untestable by clicking it — you'd need fifty runs to
     // tell a working lean from a broken one — so everything here exists to read the distribution

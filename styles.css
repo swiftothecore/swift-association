@@ -2579,126 +2579,144 @@
     --btn-mark: rgba(245, 239, 225, 0.10);
   }
 
-  /* ---------- Ruthless page — the song's arrangement, read down the paper ----------
-     Not a board of tiles and not a list: the six lenses run down the page in the order a
-     song actually runs, hung off a spine ruled in the margin like the structure notes a
-     writer pencils beside a draft. The spine is what turns six buttons into one object,
-     so it is drawn on the board rather than on each row, and each row hangs a tick on it.
+  /* ---------- Ruthless page — the lyric sheet you point at ----------
+     Not a board of six tiles: one document. The six lenses are the section headings of a
+     song typed down the page in the order a song runs, with the words themselves greeked
+     to pencil strokes so the sheet gives nothing away. You are not picking an item off a
+     list, you are pointing at a place in a song and saying start reading here.
 
-     A row is the whole control, so it has to read as a card you can press rather than as a
-     label with a button beside it: paper lifted off the page, a hard offset shadow instead
-     of a blur, and it presses INTO the paper on :active.
+     THE BLOCK IS THE MEASUREMENT. A section is drawn as many stroke-lines as its typical
+     page is long (median words / RL_LINE_WORDS in app.js), so Chorus is one line and the
+     verses are four. That is why there is no bar, no rating and no "~78 words" anywhere:
+     the page already says it, at a glance, in the only unit that matters here.
 
-     The row is a 3-column grid — tick, everything, time — and the bar and the note span the
-     middle column under the name. The bar is data (the lens's typical page, all six to one
-     scale), so it is drawn in pencil grey and never in an accent colour: it is a measurement
-     on a page, not a progress meter, and colouring it would make a long bar look like an
-     achievement rather than like a long way round. */
-  .rl-head { padding: 4px 4px 0; }
+     COLOUR IS A PEN, NOT A CODE. Each heading is inked in one colour from a desk drawer —
+     indigo biro, moss, red pen, ochre, plum, teal — and the colour touches the heading and
+     the hover wash and NOTHING ELSE. The strokes stay pencil grey. Colour is already the
+     album language in this game; keep it to six pen marks here and the two never collide.
+     Push the ink into the strokes and the page stops being a song someone wrote and starts
+     being six colour-coded categories, which is a different and worse screen.
+
+     THE PAGE NEVER SCROLLS. app.js measures what is left below the heading and writes it
+     to --rl-h; the document is exactly that tall, spreads the six sections into it, and
+     every size below scales off that one number. So a short laptop window tightens the
+     whole sheet instead of pushing the bridge past the fold. --rl-h has a vh fallback for
+     the first paint, before the measure has run. */
+  :root {
+    --rl-ink-verse-1:     #3b4a6b;   /* indigo biro */
+    --rl-ink-pre-chorus:  #55663f;   /* moss */
+    --rl-ink-chorus:      #a8402f;   /* the red pen everyone reaches for */
+    --rl-ink-post-chorus: #856526;   /* ochre */
+    --rl-ink-verse-2:     #67405c;   /* plum */
+    --rl-ink-bridge:      #35605b;   /* teal */
+  }
+  /* Lifted for the dark page: the light inks are all too deep to read on #2a241b. */
+  :root[data-theme="dark"] {
+    --rl-ink-verse-1:     #8ba4d4;
+    --rl-ink-pre-chorus:  #a3bd7f;
+    --rl-ink-chorus:      #e2857a;
+    --rl-ink-post-chorus: #d8ae5c;
+    --rl-ink-verse-2:     #cf9cc4;
+    --rl-ink-bridge:      #79c2ba;
+  }
+
+  #screen-ruthless { display: none; }
+  #screen-ruthless.active { display: flex; flex-direction: column; }
+  /* No min-height:0 here on purpose: the body must never shrink below its own content, or on a
+     window where the document lands on its min-content floor the footnote is pushed out through
+     the bottom of the notebook. */
+  #ruthlessBody { display: flex; flex-direction: column; }
+
   .rl-blurb {
-    font-family: var(--hand); font-size: 1.18rem; line-height: 1.45;
-    color: var(--ink); margin: 0 0 10px; max-width: 46ch;
+    font-family: var(--hand); font-size: clamp(1rem, 2.1vh, 1.18rem); line-height: 1.35;
+    color: var(--ink); margin: 0 0 clamp(5px, 1vh, 9px); max-width: 52ch; flex: 0 0 auto;
   }
   .rl-sub {
-    display: flex; align-items: baseline; justify-content: space-between; gap: 12px;
-    font-family: var(--type); font-size: .74rem; letter-spacing: .09em;
+    display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between;
+    gap: 2px 12px; line-height: 1.6; flex: 0 0 auto;
+    font-family: var(--type); font-size: clamp(.6rem, 1.25vh, .72rem); letter-spacing: .09em;
     text-transform: uppercase; color: var(--ink-soft);
-    margin: 0 0 4px; padding-bottom: 8px; border-bottom: 1px solid var(--rule);
+    margin: 0; padding-bottom: clamp(4px, .9vh, 8px); border-bottom: 1px solid var(--rule);
   }
   .rl-count { white-space: nowrap; }
 
-  /* The spine: one hairline ruled down the margin, with the rows' ticks sitting on it. */
-  .rl-board {
-    position: relative; display: grid; gap: 9px;
-    padding: 18px 2px 6px 0; margin-left: 15px;
+  /* The document: exactly the measured height, with the six sections spread into it. */
+  .rl-doc {
+    /* Everything inside scales off the measured height, not off vh: when the window is short the
+       block has to get shorter WITH its box, or the strokes keep their vh size and spill over the
+       foot. --rl-u is a thousandth of the box, so the sizes below read as per-mille of it.
+       min-content is the floor — on a window too short to hold the sheet at its smallest, the page
+       gives in and scrolls rather than letting the sections overlap the footnote. */
+    --rl-u: calc(var(--rl-h, 46vh) / 1000);
+    height: var(--rl-h, 46vh); min-height: min-content; flex: 0 0 auto;
+    display: flex; flex-direction: column; justify-content: space-evenly;
   }
-  .rl-board::before {
-    content: ""; position: absolute; left: 0; top: 4px; bottom: 4px; width: 1px;
-    background: var(--ink-soft); opacity: .28;
+  .rl-sec {
+    display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 0 14px; align-items: start;
+    width: 100%; text-align: left; cursor: pointer; background: transparent;
+    border: none; border-left: 2px solid transparent; border-radius: 2px;
+    padding: clamp(2px, calc(var(--rl-u) * 15), 7px) 8px clamp(3px, calc(var(--rl-u) * 18), 8px);
+    margin: 0 -8px;
+    transition: background .13s ease, border-color .13s ease;
   }
+  .rl-sec[data-lens="verse-1"]     { --rl-ink: var(--rl-ink-verse-1); }
+  .rl-sec[data-lens="pre-chorus"]  { --rl-ink: var(--rl-ink-pre-chorus); }
+  .rl-sec[data-lens="chorus"]      { --rl-ink: var(--rl-ink-chorus); }
+  .rl-sec[data-lens="post-chorus"] { --rl-ink: var(--rl-ink-post-chorus); }
+  .rl-sec[data-lens="verse-2"]     { --rl-ink: var(--rl-ink-verse-2); }
+  .rl-sec[data-lens="bridge"]      { --rl-ink: var(--rl-ink-bridge); }
+  .rl-sec:hover {
+    border-left-color: var(--rl-ink);
+    background: color-mix(in srgb, var(--rl-ink) 7%, transparent);
+  }
+  .rl-sec:focus-visible { outline: 1.5px dashed var(--rl-ink); outline-offset: 2px; }
 
-  .rl-lens {
-    position: relative; display: grid; align-items: baseline;
-    grid-template-columns: auto minmax(0, 1fr) auto; gap: 2px 14px;
-    width: 100%; text-align: left; cursor: pointer; margin-left: 14px;
-    padding: 9px 15px 10px; border: 1px solid var(--ink-soft);
-    border-radius: 2px; background: var(--paper-edge);
-    box-shadow: 2px 2px 0 rgba(43, 39, 34, .13);
-    transition: transform .13s ease, box-shadow .13s ease;
+  .rl-h {
+    display: block; font-family: var(--type); font-weight: 700;
+    font-size: clamp(.7rem, calc(var(--rl-u) * 37), .98rem); letter-spacing: .18em;
+    text-transform: uppercase; color: var(--rl-ink); white-space: nowrap;
+    margin-bottom: clamp(3px, calc(var(--rl-u) * 20), 8px);
   }
-  /* the tick that puts the row on the spine */
-  .rl-tick {
-    position: absolute; left: -15px; top: 1em; width: 14px; height: 1px;
-    background: var(--ink-soft); opacity: .38;
+  /* the one number the strokes cannot draw: how many songs even have this section */
+  .rl-pool {
+    font-weight: 400; letter-spacing: .06em; text-transform: none;
+    font-size: clamp(.5rem, calc(var(--rl-u) * 24), .6rem); color: var(--ink-soft); opacity: .7;
+    margin-left: 9px;
   }
-  .rl-tick::before {
-    content: ""; position: absolute; left: -3px; top: -2.5px;
-    width: 6px; height: 6px; border-radius: 50%;
-    background: var(--paper); border: 1px solid var(--ink-soft);
+  .rl-lines { display: grid; gap: clamp(3px, calc(var(--rl-u) * 19), 7px); }
+  .rl-ln {
+    display: flex; gap: 5px; align-items: center;
+    height: clamp(4px, calc(var(--rl-u) * 23), 9px); overflow: hidden;
   }
-  .rl-lens.is-played .rl-tick::before { background: var(--ink-soft); }
-  .rl-lens:hover { transform: translate(-1px, -1px); box-shadow: 3px 3px 0 rgba(43, 39, 34, .17); }
-  .rl-lens:active { transform: translate(2px, 2px); box-shadow: 0 0 0 rgba(43, 39, 34, .13); }
-  .rl-lens:focus-visible { outline: 1.5px dashed var(--ink-soft); outline-offset: 3px; }
+  .rl-w { height: 100%; border-radius: 2px; background: var(--ink-soft); opacity: .17; }
 
-  .rl-name {
-    grid-column: 2; grid-row: 1; font-family: var(--hand); font-size: 1.3rem;
-    line-height: 1.1; color: var(--ink);
-  }
+  .rl-rec { text-align: right; white-space: nowrap; }
   .rl-best {
-    grid-column: 3; grid-row: 1; text-align: right;
-    font-family: var(--type); font-size: 1.2rem; color: var(--ink);
-    font-variant-numeric: tabular-nums;
+    display: block; font-family: var(--type); font-size: clamp(.8rem, calc(var(--rl-u) * 42), 1.04rem);
+    color: var(--ink); font-variant-numeric: tabular-nums;
   }
-  .rl-best--none { opacity: .3; }
-
-  /* The measurement: a pencil rule as long as that lens's typical page, with its own reading
-     set immediately after it. CAPPED WELL SHORT of the row so even the longest lens reads as a
-     bar someone drew and not as an underline under the name — at full width it was a rule. */
-  .rl-meta {
-    grid-column: 2; grid-row: 2; display: flex; align-items: center; gap: 9px;
-    min-width: 0; margin-top: 3px;
-  }
-  .rl-bar {
-    flex: 0 0 auto; width: 108px; max-width: 40%; height: 3px;
-    background: var(--rule); border-radius: 2px; overflow: hidden;
-  }
-  .rl-bar-fill { display: block; height: 100%; background: var(--ink-soft); opacity: .5; }
-  .rl-len {
-    font-family: var(--type); font-size: .68rem; letter-spacing: .04em;
-    color: var(--ink-soft); opacity: .8; white-space: nowrap;
-    overflow: hidden; text-overflow: ellipsis;
-  }
+  .rl-best--none { opacity: .28; }
   .rl-note {
-    grid-column: 3; grid-row: 2; text-align: right; margin-top: 3px;
-    font-family: var(--type); font-size: .68rem; letter-spacing: .04em;
-    color: var(--ink-soft); opacity: .72; white-space: nowrap;
+    display: block; font-family: var(--type); font-size: clamp(.48rem, calc(var(--rl-u) * 24), .58rem);
+    letter-spacing: .04em; color: var(--ink-soft); opacity: .7; margin-top: 1px;
   }
 
   .rl-foot {
-    font-family: var(--type); font-size: .68rem; letter-spacing: .04em;
-    color: var(--ink-soft); opacity: .62; margin: 12px 4px 4px;
-    padding-top: 9px; border-top: 1px solid var(--rule); max-width: 60ch;
+    flex: 0 0 auto; font-family: var(--type); font-size: clamp(.56rem, 1.2vh, .66rem);
+    letter-spacing: .04em; color: var(--ink-soft); opacity: .62;
+    margin: 0; padding-top: clamp(5px, 1vh, 9px); border-top: 1px solid var(--rule);
+    max-width: 64ch; line-height: 1.5;
   }
 
+  /* On a window too short for the whole sheet, the footnote goes before the document does: it is
+     a reminder, and the six sections are the screen. */
+  @media (max-height: 700px) { .rl-foot { display: none; } }
   @media (max-width: 480px) {
-    .rl-blurb { font-size: 1.06rem; }
-    .rl-board { margin-left: 11px; }
-    .rl-lens { margin-left: 11px; padding: 8px 11px 9px; gap: 2px 9px; }
-    .rl-tick { left: -12px; width: 11px; }
-    .rl-name { font-size: 1.16rem; }
-    .rl-best { font-size: 1.06rem; }
-    .rl-bar { width: 66px; }
-    /* The pool count is the first thing to go. A truncated "~78 words…" is worse than no
-       song count at all, and the count is context rather than something a pick turns on. */
+    .rl-h { letter-spacing: .12em; }
+    /* the song count is the first thing to go: it is context, not what a pick turns on */
     .rl-pool { display: none; }
-    .rl-len { font-size: .64rem; }
-    .rl-note { font-size: .64rem; }
-    /* the strapline stacks rather than fighting the played count for one line */
-    .rl-sub { display: block; }
-    .rl-count { display: block; margin-top: 3px; }
   }
-  [data-reduce-motion="true"] .rl-lens { transition: none; }
+  [data-reduce-motion="true"] .rl-sec { transition: none; }
 
   /* ---------- Album Focus page — a pinned board of album snapshots ----------
      The 12 studio albums as squares tacked to the desk in a loose 3x4 grid. Each

@@ -106,6 +106,20 @@ export function initDev(api) {
     row(infVar, btn("start infinite", () => api.startInfinite(infVar.value)),
         btn("start daily", () => api.startDaily()))));
 
+  // ---- Ruthless board --------------------------------------------------------
+  // The lens sheet is drawn from the records, and its two states read quite differently: a lens
+  // with a time carries it in the margin and a note saying how it was got, an unplayed one shows
+  // a dash. Getting a real time on the board means playing ten pages at a word a second, so seed
+  // them instead — `fill` for the whole sheet, the row below for one lens at a chosen time.
+  const rlLens = select(api.ruthless.board().map((r) => r.lens), (x) => x, (x) => x);
+  const rlSecs = num(180);
+  body.append(section("ruthless board",
+    row(btn("fill board", () => { readout.textContent = api.ruthless.fill(); }),
+        btn("clear board", () => { readout.textContent = api.ruthless.reset(); }, "warn")),
+    row(rlLens, "best=", rlSecs, "s",
+        btn("seed", () => { api.ruthless.seed(rlLens.value, +rlSecs.value); readout.textContent = `${rlLens.value}: best ${rlSecs.value}s`; }),
+        btn("seed + gave up 1", () => { api.ruthless.seed(rlLens.value, +rlSecs.value, 1); readout.textContent = `${rlLens.value}: best ${rlSecs.value}s, 1 given up`; }))));
+
   // ---- Challenges ------------------------------------------------------------
   // Dark sides open only after the base challenge is beaten. This unlocks every one through
   // the real gate (base marked defeated + unlocked, dark progress left untouched) so they can
