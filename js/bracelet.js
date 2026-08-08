@@ -132,6 +132,26 @@ export const CHARMS = {
   },
 };
 
+// ---- Random strands ----
+// What a "random" strand draws from: the eight player-unlockable charms plus the star. The
+// star is in the pool deliberately, so it isn't the one charm random can never hand you.
+// The automatic keepsakes (nib, devil, horseshoe) are NOT here and never will be: those are
+// earned marks, and a random strand must never counterfeit one.
+export const RANDOM_CHARM_IDS = ["star", "heart", "moon", "daisy", "bow", "pick", "note", "lightning", "snake"];
+
+// Which charm a given bead wears on a random strand. Deterministic in (seed, index) and
+// nothing else, because the bracelet re-renders on EVERY page turn: anything reaching for
+// Math.random() here would reshuffle the whole strand in front of the player between pages.
+// The seed moves once a run (see resetRunState in app.js), which is what keeps this a
+// surprise rather than a fixed pattern where bead 3 is a moon on every bracelet forever.
+export function randomCharmForBead(seed, i) {
+  let h = ((seed >>> 0) ^ Math.imul(i + 1, 0x9e3779b1)) >>> 0;
+  h = Math.imul(h ^ (h >>> 16), 0x85ebca6b) >>> 0;
+  h = Math.imul(h ^ (h >>> 13), 0xc2b2ae35) >>> 0;
+  h = (h ^ (h >>> 16)) >>> 0;
+  return RANDOM_CHARM_IDS[h % RANDOM_CHARM_IDS.length];
+}
+
 // The bone bead. Not a dangling charm but a BEAD: it replaces the matte spacer on the one
 // page a sudden-death run actually died on (Insurance's uninsured miss), so the strand says
 // where it ended without a caption. Drawn in the miss bead's own muted paper, since it is
@@ -180,7 +200,14 @@ export function buildBraceletSVG(results, activeRound, freshIndex, albums, opts)
   // per-round flag (Insurance): the uninsured miss that ended the run — this page's bead is
   // a skull rather than the usual matte spacer. At most one page a run ever carries it.
   const skullMiss = (opts && opts.skullMiss) || [];
-  // opts.charm: the Mastery-chosen dangling charm id (see CHARMS); default "star".
+  // opts.charm: the Mastery-chosen dangling charm id (see CHARMS); default "star". The
+  // special value "random" gives every bead its own charm instead of the whole strand
+  // wearing one, shuffled per run by opts.charmSeed. Either way this only supplies a bead's
+  // DEFAULT charm: the earned overrides below (nib, devil, horseshoe) still win over it.
+  const wantRandom = !!(opts && opts.charm === "random");
+  const charmSeed = (opts && opts.charmSeed) || 0;
+  const pickedCharm = (opts && opts.charm && CHARMS[opts.charm]) ? opts.charm : "star";
+  const defaultCharm = wantRandom ? (i) => randomCharmForBead(charmSeed, i) : () => pickedCharm;
   const W = 520, H = 64, xL = 26, xR = W - 26;
   // the thread sags between its tied ends like a real bracelet laid on the page
   const yAt = (x) => 20 + 10 * Math.sin(Math.PI * ((x - xL) / (xR - xL)));
@@ -239,8 +266,7 @@ export function buildBraceletSVG(results, activeRound, freshIndex, albums, opts)
       // Word-perfect verse rounds always hang the reserved pen-nib; otherwise the
       // player's chosen charm (default star), drawn by the shared CHARMS renderer.
       const isNib = verseTiers[i] === "perfect" || verseTiers[i] === "verse";
-      const chosen = (opts && opts.charm && CHARMS[opts.charm]) ? opts.charm : "star";
-      const charmId = impostorCaught[i] ? "devil" : riskWon[i] ? "horseshoe" : (isNib ? "nib" : chosen);
+      const charmId = impostorCaught[i] ? "devil" : riskWon[i] ? "horseshoe" : (isNib ? "nib" : defaultCharm(i));
       const cr = s(7.4), csw = Math.max(0.7, cr * 0.15).toFixed(2);
       const charm = `<g${beadStyle}>${CHARMS[charmId](x, y + s(15.5), cr, csw)}</g>`;
       svg += `<g class="charm-dangle${fresh ? " fresh" : ""}"${delay}>` +

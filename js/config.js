@@ -1731,7 +1731,14 @@ export const ACH_ICONS = {
    pen, a glitter gel pen, swords, the four prestige tier marks) with no effect on charms.
    Read through masteryMarkup() in app.js; keys are named by MASTERY_LEVEL_ICONS, the
    `icon` field on a mastery reward, and SKILLS[].icon. */
-export const MASTERY_ICONS = Object.fromEntries([
+// Marks the mastery board draws itself, because nothing in ACH_ICONS means what they mean.
+// `die` is the random bracelet charm: a tumbled five-face, tilted like a thing dropped on
+// the desk rather than a symbol set square on the page.
+const MASTERY_OWN_ICONS = {
+  die: `<svg viewBox="0 0 24 24"><g transform="rotate(-13 12 12)"><rect class="ink-fill" x="4.4" y="4.4" width="15.2" height="15.2" rx="3.2" stroke-width="1.1"/><g fill="var(--paper)"><circle cx="8.5" cy="8.5" r="1.3"/><circle cx="15.5" cy="8.5" r="1.3"/><circle cx="12" cy="12" r="1.3"/><circle cx="8.5" cy="15.5" r="1.3"/><circle cx="15.5" cy="15.5" r="1.3"/></g></g></svg>`,
+};
+
+export const MASTERY_ICONS = Object.assign(Object.fromEntries([
   // pens (levels 1–3) and the two milestone seals
   "nib", "feather", "sparkle", "swords", "key",
   // level marks with no reward of their own: paper, charms, button finishes, flourishes
@@ -1742,7 +1749,7 @@ export const MASTERY_ICONS = Object.fromEntries([
   "drop", "tower", "note", "quote", "brain", "crown", "star",
   // skill emblems and the shared padlock
   "comet", "metronome", "heartline", "trail", "records", "lock",
-].map((k) => [k, ACH_ICONS[k]]));
+].map((k) => [k, ACH_ICONS[k]])), MASTERY_OWN_ICONS);
 
 /* ---------- Challenge wax seals ----------
    Every challenge's icon is a red sealing-wax stamp with its motif pressed in relief,

@@ -45,7 +45,7 @@ import {
 } from "./config.js";
 import { drawRandom, poolSummary } from "./random.js";
 import { POLAROIDS, POLAROID_BY_ID } from "./polaroids.js";
-import { buildBraceletSVG, charmPreviewSVG } from "./bracelet.js";
+import { buildBraceletSVG, charmPreviewSVG, randomCharmForBead } from "./bracelet.js";
 import { exportBraceletCard, copyBraceletCard, buildCardSVG, fontFaceCss } from "./braceletcard.js";
 import { exportSleeveCard, copySleeveCard, buildSleeveSVG } from "./sleevecard.js";
 import { sfx } from "./sound.js";
@@ -3820,29 +3820,42 @@ function buildPensTile(pens, m) {
     `<div class="rb-rows rb-rows--pen">${rows}</div></div>`;
 }
 
-// Charms — the hero tile: charms hang from a bracelet strand on alternating drops.
+// "random" is a VALUE of settings.masteryCharm, not a reward in the ladder — there is no
+// MASTERY_REWARDS entry behind it and there must not be, since it grants nothing on its own.
+// So it gates on the charm SET being unlocked, which is what earns all eight at once.
+const CHARM_RANDOM = "random";
+function charmSetUnlocked(m) {
+  const first = MASTERY_REWARDS.find((r) => r.kind === "charm");
+  return !!(first && m.unlocked[first.id]);
+}
+
+// Charms — the hero tile: charms hang from a bracelet strand on alternating drops. The last
+// bead is the random option, which hands each bead of a real strand its own charm.
 function buildCharmTile(charms, m) {
-  const setUnlocked = charms.length ? !!m.unlocked[charms[0].id] : false;
+  const setUnlocked = charmSetUnlocked(m);
   const active = settings.masteryCharm || "";
-  let beads = charmBead(`data-reward-reset="charm"`, "star", "star", active === "", true, 0);
+  let beads = charmBead(`data-reward-reset="charm"`, charmPreviewSVG("star"), "star", active === "", true, 0);
   charms.forEach((r, i) => {
-    beads += charmBead(`data-reward="${r.id}"`, r.payload.charm, r.payload.charm, active === r.payload.charm, setUnlocked, i + 1);
+    beads += charmBead(`data-reward="${r.id}"`, charmPreviewSVG(r.payload.charm), r.payload.charm, active === r.payload.charm, setUnlocked, i + 1);
   });
+  beads += charmBead(`data-reward="${CHARM_RANDOM}"`, masteryMarkup("die"), "random", active === CHARM_RANDOM, setUnlocked, charms.length + 1);
   return `<div class="rb-tile rb-charm" style="grid-area:charm">` +
     `<div class="rb-tile-top"><span class="rb-tt">Bracelet charms</span>${rbChip("Mastery 5")}</div>` +
-    `<div class="rb-tt-sub">Hangs from every bead you earn</div>` +
+    `<div class="rb-tt-sub">Hangs from every bead you earn · random gives each bead its own</div>` +
     `<div class="rb-strand"><span class="rb-cord"></span>` +
       `<span class="rb-clasp l"></span><span class="rb-clasp r"></span>` +
       `<div class="rb-beads">${beads}</div></div></div>`;
 }
-function charmBead(attr, id, name, active, available, idx) {
+// `glyph` is finished markup rather than a charm id, so the strand can hang a mark that
+// isn't a charm at all — the random die comes from MASTERY_ICONS, not from CHARMS.
+function charmBead(attr, glyph, name, active, available, idx) {
   const drop = idx % 2 === 0 ? "short" : "long";   // alternating hang, like a laid-out bracelet
   if (!available) {
     return `<span class="rb-bead-col ${drop} locked"><span class="rb-stem"></span>` +
       `<span class="rb-bead"><span class="rb-lock">${MASTERY_ICONS.lock}</span></span></span>`;
   }
   return `<button type="button" class="rb-bead-col ${drop}${active ? " active" : ""}" ${attr}>` +
-    `<span class="rb-stem"></span><span class="rb-bead">${charmPreviewSVG(id)}</span>` +
+    `<span class="rb-stem"></span><span class="rb-bead">${glyph}</span>` +
     `<span class="rb-bead-nm">${active ? "in use" : escapeHtml(name)}</span></button>`;
 }
 
@@ -4014,6 +4027,12 @@ function buildTitlesTile(m, unlocked) {
 // Apply a Mastery-unlocked cosmetic. Pens swap the writing hand; papers retint the page
 // (applied globally via applySettings). Persists in settings and re-renders the page.
 function chooseMasteryCosmetic(rewardId) {
+  // The random strand has no reward entry to look up (it grants nothing), so the ledger
+  // guard below would refuse it forever. It rides the charm set's own unlock instead.
+  if (rewardId === CHARM_RANDOM) {
+    if (charmSetUnlocked(loadMastery())) applyMasteryCosmetic("charm", CHARM_RANDOM);
+    return;
+  }
   const r = MASTERY_REWARD_BY_ID[rewardId];
   const cos = r && MASTERY_COSMETICS[r.kind];
   if (!cos || !loadMastery().unlocked[rewardId]) return;   // guard: must be an unlocked cosmetic
@@ -6995,6 +7014,15 @@ function syncCustomUI() {
 /* ---------- Bracelet (hand-strung SVG) ---------- */
 let justEarnedIndex = -1; // bead that just became a charm, for the swing-in
 
+// The shuffle behind a "random" charm strand. Per RUN, not per render and not per bead
+// index: the bracelet is rebuilt on every page turn, so a seed that moved with the render
+// would reshuffle the strand under the player between pages, and a seed that was only the
+// bead index would make bead 3 a moon on every bracelet forever. Never persisted — no
+// bracelet outlives its run. The one apparent exception is the saved daily snapshot, which
+// redraws a finished run's strand hours later; the daily overrides this with its own
+// date-derived seed at both ends so the two renders agree (see startDaily / showDailyResult).
+let braceletSeed = 0;
+
 // Wraps the pure buildBraceletSVG, injecting the Mastery-chosen dangling charm into
 // every render so app.js stays the single owner of that game-state default.
 function renderBraceletSVG(results, active, fresh, albums, opts) {
@@ -7007,7 +7035,7 @@ function renderBraceletSVG(results, active, fresh, albums, opts) {
   const riskWon = riskRuleActive() ? riskCharm.slice() : null;
   const skullMiss = riskRuleActive() ? riskSkull.slice() : null;
   return buildBraceletSVG(results, active, fresh, albums,
-    { ...opts, charm: settings.masteryCharm, impostorCaught, riskWon, skullMiss });
+    { ...opts, charm: settings.masteryCharm, charmSeed: braceletSeed, impostorCaught, riskWon, skullMiss });
 }
 
 // ---- Bracelet-as-PNG keepsake ----
@@ -8038,6 +8066,7 @@ function resetRunState() {
   adaptiveReachedTop = false;
   adaptiveHeldTop = true;
   adaptiveDropAnnounced = ADAPT_START_LEVEL < ADAPT_NODROP_LEVEL;   // suggestions on at the start level
+  braceletSeed = (Math.random() * 0x100000000) >>> 0;   // a fresh shuffle for a random charm strand
   dailyRng = null;
   dailyAlbumPool = null;
   dailyAlbum = null;
@@ -8677,6 +8706,10 @@ function startDaily() {
   currentMode = MODES.medium;   // daily is always Normal — override without persisting via DIFF_KEY
   resetRunState();
   dailyRng = mulberry32(dailySeed(dateStr));   // set AFTER resetRunState (which clears it)
+  // The daily is the one run whose strand gets redrawn after the fact, from a saved snapshot
+  // that stores scores and not beads. Seeding its random charms off the date instead of the
+  // clock is what lets showDailyResult rebuild the same strand the player finished on.
+  braceletSeed = dailySeed(dateStr);
   // On a real album anniversary, lean today's words toward that album (deterministic — the
   // album comes from the date, the skew is rolled on dailyRng). See pickWord.
   const annAlbum = anniversaryAlbumFor(dateStr);
@@ -10755,6 +10788,7 @@ function showDailyResult(data, dateStr) {
   roundAlbums = data.roundAlbums;
   score = data.score;
   dailyShareTime = typeof data.tm === "number" ? data.tm : null;   // restore completion time for the share (older saves lack it)
+  braceletSeed = dailySeed(dateStr);   // rebuild the same random-charm strand the run ended on
   showScreen("results");
   $("resultBracelet").innerHTML = renderBraceletSVG(roundResults, 0, -1, roundAlbums, { colors: albumPalette() });
   $("finalScore").textContent = settings.hideDailyScore ? "?" : score;
@@ -17156,8 +17190,21 @@ function buildDevApi() {
       reset: () => { resetMastery(); settings.masteryPen = ""; settings.masteryPaper = ""; settings.masteryCharm = ""; settings.masteryTitle = ""; settings.masteryButton = ""; settings.masterySignature = ""; saveSettings(settings); setPen(null); applySettings(); updateMasteryNav(); if ($("masteryBody")) renderMasteryPage(); },
       // Preview a paper stock without unlocking it: pass an id (manila/parchment/blush/slate) or "" to clear.
       paper: (id) => { settings.masteryPaper = id || ""; saveSettings(settings); applySettings(); if ($("masteryBody")) renderMasteryPage(); },
-      // Preview a bracelet charm without unlocking it: pass an id (heart/moon/daisy/bow/pick/note/lightning/snake) or "" for the default star.
-      charm: (id) => { settings.masteryCharm = id || ""; saveSettings(settings); if ($("masteryBody")) renderMasteryPage(); },
+      // Preview a bracelet charm without unlocking it: pass an id (heart/moon/daisy/bow/pick/
+      // note/lightning/snake), "random" for a per-bead strand, or "" for the default star.
+      charm: (id) => { settings.masteryCharm = id || ""; saveSettings(settings); renderBracelet(); if ($("masteryBody")) renderMasteryPage(); },
+      // Reshuffle a random strand without finishing a run. The seed normally moves only at
+      // resetRunState, which is exactly the thing that makes a mid-run strand hard to look
+      // at twice — this deals a new one in place and redraws whatever bracelet is on screen.
+      reshuffle: () => {
+        braceletSeed = (Math.random() * 0x100000000) >>> 0;
+        renderBracelet();
+        return braceletSeed;
+      },
+      // What a random strand of `n` beads would look like on the current seed (or one you
+      // pass), as a list of charm ids — the strand without playing the run that earns it.
+      strand: (n = TOTAL_ROUNDS, seed = braceletSeed) =>
+        Array.from({ length: n | 0 }, (_, i) => randomCharmForBead(seed, i)),
       // Preview a start-button finish without unlocking it: pass an id (ink/rose/sky) or "" for the default gold marker.
       button: (id) => { settings.masteryButton = id || ""; saveSettings(settings); applySettings(); if ($("masteryBody")) renderMasteryPage(); },
       // Preview a signature flourish without unlocking it: pass an id (swash/loop/rule/splatter/thirteen/crest) or "" for none.

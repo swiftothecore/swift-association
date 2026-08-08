@@ -6040,7 +6040,10 @@
   .rb-bead-col.long .rb-stem { height: 30px; }
   .rb-bead { width: 42px; height: 42px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
     background: rgba(255, 255, 255, 0.5); border: 1px solid rgba(43, 39, 34, 0.16); }
-  .rb-bead .charm-preview { width: 30px; height: 30px; color: var(--bead); }
+  /* Two kinds of mark hang here: a CHARMS glyph (.charm-preview) and, on the random bead,
+     a MASTERY_ICONS mark wrapped by masteryMarkup (.charm). Sized alike so the strand reads
+     as one row of beads whichever one a slot is wearing. */
+  .rb-bead .charm-preview, .rb-bead > .charm { width: 30px; height: 30px; color: var(--bead); }
   .rb-bead-col.active .rb-bead { border: 2px solid rgba(var(--m-accent), 0.75); box-shadow: 0 0 0 3px rgba(var(--m-accent), 0.15); background: #fff9ec; }
   .rb-bead-col.locked .rb-bead { border-style: dashed; background: rgba(43, 39, 34, 0.04); }
   .rb-bead-col.locked .rb-lock { width: 15px; height: 15px; opacity: 0.6; }
@@ -6144,7 +6147,7 @@
   @media (max-width: 560px) {
     .rb-grid { grid-template-columns: 1fr; grid-template-areas: "pens" "charm" "paper" "hard" "sig" "button" "hint" "title"; }
     .rb-bead { width: 34px; height: 34px; }
-    .rb-bead .charm-preview { width: 24px; height: 24px; }
+    .rb-bead .charm-preview, .rb-bead > .charm { width: 24px; height: 24px; }
     .rb-swatches { gap: 10px; }
     .rb-sw, .rb-sw.paper-chip { width: 62px; height: 48px; }
     .rb-sw.paper-chip::before { left: 10px; }
