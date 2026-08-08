@@ -10,7 +10,7 @@ import {
   ALBUM_FOCUS_KEY, ALBUM_FOCUS_TARGET, DIFF_RANK,
   ADAPTIVE_KEY,
   GUEST_KEY, GUEST_TARGET,
-  BONUS_KEY,
+  BONUS_KEY, RUTHLESS_KEY,
   CUSTOM_KEY, CUSTOM_DEFAULT_MODE,
   KEEPSAKES_KEY,
   MASTERY_KEY, SKILL_IDS, MASTERY_REWARDS, MASTERY_GATE,
@@ -318,6 +318,55 @@ export function recordBonusRun(id, score, max = Infinity, lower = false) {
 }
 export function resetBonus() {
   try { localStorage.removeItem(BONUS_KEY); } catch (e) { /* ignore */ }
+}
+
+/* ---------- Ruthless mode board: one best per lens ----------
+   { [lensId]: { best, bestGaveUp, plays, last, date } }, where a best is a TIME IN SECONDS and
+   LOW WINS. Six separate records rather than one, because the lenses are not a difficulty ladder
+   through the same puzzle: the chorus resolves at a median of 22 words and the second verse at
+   79, so a single combined record would only ever be somebody's chorus time.
+
+   Two things this shares with the shelf's timed game and must keep sharing. There is no `max`
+   and no clamp, since a time is not out of anything and there is no retune that could strand a
+   stored best above a reachable ceiling. And the FIRST RUN TAKES THE BEST OUTRIGHT rather than
+   being compared, because on a low-wins board a stored 0 cannot be told apart from an unplayed
+   one — hence `!e.plays` and not `score < e.best`.
+
+   `bestGaveUp` is how many of that run's ten pages were handed back. It is not a second record
+   and must not become one: the give-up already charges its seconds into the time, so the time is
+   the whole ranking. It is carried so the best LINE can say how the time was got, since "4:12,
+   named all ten" and "4:12 with two given up" are the same record and a different run. */
+export function loadRuthless() {
+  try {
+    const raw = localStorage.getItem(RUTHLESS_KEY);
+    if (raw) { const o = JSON.parse(raw); if (o && typeof o === "object") return o; }
+  } catch (e) { /* ignore */ }
+  return {};
+}
+export function saveRuthless(o) {
+  try { localStorage.setItem(RUTHLESS_KEY, JSON.stringify(o)); } catch (e) { /* ignore */ }
+}
+export function ruthlessRecord(lensId) {
+  const e = loadRuthless()[lensId] || {};
+  return {
+    best: e.best || 0, bestGaveUp: e.bestGaveUp || 0,
+    plays: e.plays || 0, last: e.last || 0, date: e.date || null,
+  };
+}
+// Fold a finished run into the board and return the updated record plus whether it set a best.
+export function recordRuthlessRun(lensId, seconds, gaveUp = 0, date = null) {
+  const all = loadRuthless();
+  const e = all[lensId] || {};
+  const isBest = !e.plays || seconds < e.best;
+  if (isBest) { e.best = seconds; e.bestGaveUp = gaveUp; e.date = date || null; }
+  e.plays = (e.plays || 0) + 1;
+  e.last = seconds;
+  all[lensId] = e;
+  saveRuthless(all);
+  return { ...ruthlessRecord(lensId), isBest };
+}
+export function resetRuthless() {
+  try { localStorage.removeItem(RUTHLESS_KEY); } catch (e) { /* ignore */ }
 }
 
 /* ---------- Custom mode: player-authored preset store ---------- */

@@ -84,6 +84,7 @@ import {
   loadGuests, saveGuests, guestRecord, recordGuestRun, resetGuests,
   adaptiveRecord, recordAdaptiveRun,
   bonusRecord, recordBonusRun, resetBonus,
+  ruthlessRecord, recordRuthlessRun, resetRuthless,
   resetRecords, resetStatsAll, resetAchievements, resetTally, resetDaily, clearAllData,
   loadMastery, saveMastery, recordSkillXp, resetMastery, totalSkillLevels, isMasteryUnlocked,
 } from "./storage.js";
@@ -17039,6 +17040,18 @@ function buildDevApi() {
         return `${bonusGame.name}: ${bonusScore}/${bonusMaxScore(bonusGame)}`;
       },
       reset: () => { resetBonus(); if ($("bonusBody")) renderBonusPage(); },
+    },
+    /* Ruthless mode's own board, one best per lens. The board is low-wins and its bests are
+       times, so the failure it is worth being able to see is the one a points board cannot have:
+       a stored 0 that is a perfect run being mistaken for an unplayed lens. `seed` writes a time
+       without playing four minutes of the game to get one. */
+    ruthless: {
+      board: () => RUTHLESS_LENSES.map((l) => ({ lens: l.id, ...ruthlessRecord(l.id) })),
+      seed: (lensId, seconds, gaveUp = 0) => {
+        if (!ruthlessLens(lensId)) return `no such lens — ${RUTHLESS_LENSES.map((l) => l.id).join(", ")}`;
+        return recordRuthlessRun(lensId, seconds, gaveUp, todayKey());
+      },
+      reset: () => { resetRuthless(); return "ruthless board cleared"; },
     },
     // The randomiser. A weighted draw is untestable by clicking it — you'd need fifty runs to
     // tell a working lean from a broken one — so everything here exists to read the distribution
