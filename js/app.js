@@ -84,7 +84,7 @@ import {
   loadAlbumFocus, saveAlbumFocus, albumFocusRecord, recordAlbumFocusRun, resetAlbumFocus,
   loadGuests, saveGuests, guestRecord, recordGuestRun, resetGuests,
   adaptiveRecord, recordAdaptiveRun,
-  bonusRecord, recordBonusRun, resetBonus,
+  bonusRecord, recordBonusRun, resetBonus, seedBonusSweep,
   ruthlessRecord, recordRuthlessRun, resetRuthless,
   resetRecords, resetStatsAll, resetAchievements, resetTally, resetDaily, clearAllData,
   loadMastery, saveMastery, recordSkillXp, resetMastery, totalSkillLevels, isMasteryUnlocked,
@@ -4161,6 +4161,12 @@ let ruthlessStart = 0;
 let ruthlessPenalty = 0;
 let ruthlessSpent = 0;
 let ruthlessDripId = null;
+/* When the RUN started, as a performance.now() baseline, for the games keeping a clean-sweep
+   time (bonusSweeps). Wall clock across the whole run rather than the sum of the page clocks:
+   the page turns and the verdict beats are part of what a sweep costs, and a total that skips
+   them would be a number the player cannot see themselves spending. It ticks nothing and is
+   read exactly once, at the end. */
+let bonusRunStart = 0;
 let bonusLog = [];         // one entry per settled round, for the end card's track listing
 /* The finished run, written down as the strings the sleeve already shows, so the keepsake
    PNG is the sleeve on screen rather than a second derivation of it. Snapshotted at the end
@@ -4234,6 +4240,13 @@ function bonusMaxScore(g) { return BONUS_ROUNDS * bonusPagePoints(g); }
    first rather than reach for bonusMaxScore, which for a timed game would quote a meaningless
    ten. This one flag is the whole difference; there is no second timed code path. */
 function bonusTimed(g) { return !!(g && g.timed); }
+/* A game that keeps a best CLEAN-SWEEP TIME beside its score, because its ceiling is reachable
+   and a tenth 10/10 is not a chase (see BONUS_GAMES). The clock runs on every run of one of
+   these and is thrown away on any run that drops a page: it is the sweep that is being timed,
+   not the run, so nothing below the ceiling is ever shown a number or asked to hurry. That is
+   also why there is no clock on screen while a run is in progress — a visible one would apply
+   exactly the pressure this design is avoiding. */
+function bonusSweeps(g) { return !!(g && g.sweep); }
 // A best is read back through the maximum it is quoted against, because a game's `points` can
 // be retuned after a run has been banked — and a stored 74 shown as "best 74 / 60" is a
 // notebook contradicting itself. Clamped on the way out rather than rewritten in storage: the
@@ -4257,14 +4270,22 @@ function bonusScoreText() {
 
 // What a game's record reads under its name: an unpressed record has no score to report,
 // only a promise.
-function bonusScoreLine(g) {
+// `short` is the shelf STRIP, which shares one line with the game's name and clips it rather
+// than wrapping. A game with a sweep on record spends that room on the sweep instead of on the
+// played count: the count is on the platter a tap away, and the sweep is the number the strip
+// exists to tempt you with. Before a first sweep the line is exactly what it always was, so
+// nothing on the shelf announces a ceiling the player has not reached yet.
+function bonusScoreLine(g, short = false) {
   const rec = bonusRecord(g.id);
   if (!g.ready) return "not pressed yet";
   if (!rec.plays) return "unplayed";
   // A time is quoted on its own — "best 3:41 / 10" would be nonsense, and there is no total
   // for it to be out of.
   if (bonusTimed(g)) return `best ${fmtTime(bonusBest(g))} · played ${rec.plays}`;
-  return `best ${bonusBest(g)} / ${bonusMaxScore(g)} · played ${rec.plays}`;
+  const score = `best ${bonusBest(g)} / ${bonusMaxScore(g)}`;
+  if (rec.sweep && short) return `${score} · swept ${fmtTime(rec.sweep)}`;
+  const swept = rec.sweep ? ` · swept ${fmtTime(rec.sweep)}` : "";
+  return `${score}${swept} · played ${rec.plays}`;
 }
 
 // The tonearm, resting on the record. Drawn here rather than in the sprite because it
@@ -4322,7 +4343,7 @@ function renderBonusPage() {
       `<span class="bonus-alt-text">` +
         `<span class="bonus-alt-top">` +
           `<span class="bonus-alt-name">${escapeHtml(x.name)}</span>` +
-          `<span class="bonus-alt-meta">${escapeHtml(bonusScoreLine(x))}</span>` +
+          `<span class="bonus-alt-meta">${escapeHtml(bonusScoreLine(x, true))}</span>` +
         `</span>` +
         // Falls back to the kicker rather than printing an empty row: a game added to the
         // roster before its shelf line is written should still say something true about
@@ -4387,6 +4408,9 @@ function startBonusGame(g, lensId = null) {
   chainNow = 0;
   chainRun = 0;
   bonusRunId++;
+  // Started for every game, read only by the ones that keep a sweep. A flag checked here and
+  // again at the end is two places for a game to be half-timed.
+  bonusRunStart = performance.now();
   stopBonusClock();
   stopBonusCountdown();
   // The pressing follows the game in from the shelf, so the play screen is visibly the
@@ -5601,16 +5625,24 @@ function endBonusRun() {
   stopChainBeat();
   playRunFlourish();   // the shelf turns pages like the notebook does, so it closes like it too
   const timed = bonusTimed(bonusGame);
-  const rec = recordBonusRun(bonusGame.id, bonusScore, bonusMaxScore(bonusGame), timed);
+  // A clean sweep is ten pages cleared, which on a right/wrong game is the same thing as a
+  // full score and on a points game is the only perfect run available (see bonusRemark).
+  const perfect = bonusLog.length === BONUS_ROUNDS && bonusLog.every((t) => t.ok);
+  // The sweep clock, banked only when the run actually swept. A time off a run that dropped a
+  // page is not a slower sweep, it is not a sweep, so it is thrown away rather than stored and
+  // compared — which is the whole reason the clock costs a player nothing to ignore.
+  const sweepSecs = (perfect && bonusSweeps(bonusGame))
+    ? (performance.now() - bonusRunStart) / 1000 : null;
+  // Read BEFORE the run is banked: a first sweep and a faster one are both `isSweepBest`, and
+  // only the second of them has beaten anything, so only the second may say so.
+  const hadSweep = bonusRecord(bonusGame.id).sweep;
+  const rec = recordBonusRun(bonusGame.id, bonusScore, bonusMaxScore(bonusGame), timed, sweepSecs);
   $("bonusTimer").style.display = "none";
   $("bonusProgress").textContent = "run complete";
   $("bonusScore").textContent = bonusScoreText();
   $("bonusFeedback").innerHTML = "";
   $("bonusFeedback").className = "bg-feedback";
 
-  // A clean sweep is ten pages cleared, which on a right/wrong game is the same thing as a
-  // full score and on a points game is the only perfect run available (see bonusRemark).
-  const perfect = bonusLog.length === BONUS_ROUNDS && bonusLog.every((t) => t.ok);
   const max = bonusMaxScore(bonusGame);
   // The run written up on the back of its own sleeve: the pressing, the score in pen, and the
   // ten tracks listed out with what each one turned on. A bonus run has no bracelet and no
@@ -5618,11 +5650,22 @@ function endBonusRun() {
   // as the only place the missed answers are all readable at once.
   // The chain line is Then What's alone, and the score sub is the "/60" a timed run doesn't
   // have — both are pulled out here because the sleeve and its PNG have to agree exactly.
+  /* The second line under the remark, and the two games that have one can never collide: Then
+     What is a points game and so never sweeps, and a sweep line only exists on a run that swept.
+     The stamp above it already says CLEAN SWEEP, so this line says what the sweep cost rather
+     than repeating that it happened. */
   const aside = bonusGame.id === "then-what"
-    ? `longest chain · ${chainRun} line${chainRun === 1 ? "" : "s"}` : "";
+    ? `longest chain · ${chainRun} line${chainRun === 1 ? "" : "s"}`
+    : sweepSecs != null
+    ? `in ${fmtTime(sweepSecs)}` + (rec.isSweepBest && hadSweep ? " · fastest yet" : "")
+    : "";
   const stampText = perfect ? "clean sweep" : (rec.isBest && rec.plays > 1 ? "new best" : "");
+  // The fastest sweep joins the small print only once there IS one. An empty slot on a game
+  // you have never swept advertises a ceiling you haven't reached, which is the opposite of
+  // what a second axis is for.
+  const sweepFoot = rec.sweep ? ` · swept ${fmtTime(rec.sweep)}` : "";
   const foot = timed ? `best ${fmtTime(rec.best)} · played ${rec.plays}`
-                     : `best ${Math.min(rec.best, max)} / ${max} · played ${rec.plays}`;
+                     : `best ${Math.min(rec.best, max)} / ${max}${sweepFoot} · played ${rec.plays}`;
   bonusSleeveRun = {
     game: bonusGame,
     remark: bonusRemark(bonusScore, max, perfect),
@@ -17035,6 +17078,36 @@ function buildDevApi() {
           ? Math.max(0, +n || 0)
           : Math.max(0, Math.min(bonusMaxScore(bonusGame), +n || 0));
         return bonusScore;
+      },
+      /* The clean-sweep clock, for the three games that keep one. It is the hardest thing on
+         the shelf to test honestly — a real one costs ten perfect pages — and it is invisible
+         while a run is in progress by design, so there is nothing on screen to check it against
+         either. `clock()` reads where the run stands, `sweep(n)` moves the run's own baseline so
+         the next sweep lands on a chosen time (pair it with `fill(10)`, which is a clean sweep),
+         and `seedSweep` writes a time onto the board for eyeballing the shelf and the sleeve
+         without a run at all. */
+      clock: () => {
+        if (!bonusGame) return "no run in progress";
+        return { game: bonusGame.id, sweeps: bonusSweeps(bonusGame),
+                 elapsed: fmtTime((performance.now() - bonusRunStart) / 1000) };
+      },
+      sweep: (n = 90) => {
+        if (!bonusGame) return "no run in progress";
+        if (!bonusSweeps(bonusGame)) return `${bonusGame.id} keeps no sweep time`;
+        bonusRunStart = performance.now() - Math.max(0, +n || 0) * 1000;
+        return { game: bonusGame.id, elapsed: fmtTime((performance.now() - bonusRunStart) / 1000) };
+      },
+      seedSweep: (id, secs = 120) => {
+        const g = BONUS_GAMES.find((x) => x.id === id);
+        if (!g) return `no such game — ${BONUS_GAMES.map((x) => x.id).join(", ")}`;
+        if (!bonusSweeps(g)) return `${id} keeps no sweep time`;
+        // A sweep with no play behind it is a state real play cannot reach, and the shelf reads
+        // it as UNPLAYED — so a seed meant for eyeballing the strip would show nothing at all.
+        // The run that swept is therefore banked too, at the full marks it must have scored.
+        if (!bonusRecord(id).plays) recordBonusRun(id, bonusMaxScore(g), bonusMaxScore(g));
+        const out = seedBonusSweep(id, Math.max(0, +secs || 0));
+        if ($("bonusBody")) renderBonusPage();
+        return out;
       },
       /* Ruthless Game. `drip(n)` pulls the next n words onto the page without waiting for the
          metronome — the only way to reach the back half of a stream in less than a minute — and

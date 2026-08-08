@@ -280,9 +280,13 @@ export function loadBonus() {
 export function saveBonus(o) {
   try { localStorage.setItem(BONUS_KEY, JSON.stringify(o)); } catch (e) { /* ignore */ }
 }
+// `sweep` is the best CLEAN-SWEEP TIME in seconds, for the games that carry one, and 0 means
+// no sweep has ever been recorded. A zero is unambiguous here in a way it is not on the timed
+// board: this number is only ever written alongside a ten-out-of-ten, so an unplayed game and
+// a swept one can never both read 0.
 export function bonusRecord(id) {
   const e = loadBonus()[id] || {};
-  return { best: e.best || 0, plays: e.plays || 0, last: e.last || 0 };
+  return { best: e.best || 0, plays: e.plays || 0, last: e.last || 0, sweep: e.sweep || 0 };
 }
 // Fold a finished bonus run into the board and return the updated record, plus whether the
 // run set a new best (the end card calls that out).
@@ -295,9 +299,18 @@ export function bonusRecord(id) {
 // from the numbers: a stored 0 is an unplayed game on a points board and a perfect run on a
 // timed one, which is why the first run is taken as the best outright rather than compared
 // against a zero that means nothing. `max` is meaningless for those and simply goes unused.
-export function recordBonusRun(id, score, max = Infinity, lower = false) {
+// `sweepSecs` is how long a CLEAN SWEEP took, and null on any run that wasn't one. It is a
+// second, independent best sitting beside the first, and deliberately not the same mechanism as
+// `lower`: that flag says the whole game is scored the other way up, whereas a sweep game is
+// scored in points and keeps a low-wins time alongside them. A game can want one and not the
+// other, and Ruthless and Spot the Slip are one of each.
+export function recordBonusRun(id, score, max = Infinity, lower = false, sweepSecs = null) {
   const all = loadBonus();
   const e = all[id] || {};
+  // Written before either branch, so a sweep is banked on whichever way the game's own score
+  // runs. Only ever improved, never overwritten by a slower sweep.
+  const isSweepBest = sweepSecs != null && (!e.sweep || sweepSecs < e.sweep);
+  if (isSweepBest) e.sweep = sweepSecs;
   if (lower) {
     const isBest = !e.plays || score < e.best;
     if (isBest) e.best = score;
@@ -305,7 +318,7 @@ export function recordBonusRun(id, score, max = Infinity, lower = false) {
     e.last = score;
     all[id] = e;
     saveBonus(all);
-    return { ...bonusRecord(id), isBest };
+    return { ...bonusRecord(id), isBest, isSweepBest };
   }
   if (e.best > max) e.best = max;
   const isBest = score > (e.best || 0);
@@ -314,7 +327,19 @@ export function recordBonusRun(id, score, max = Infinity, lower = false) {
   e.last = score;
   all[id] = e;
   saveBonus(all);
-  return { ...bonusRecord(id), isBest };
+  return { ...bonusRecord(id), isBest, isSweepBest };
+}
+// Dev only: put a clean-sweep time on the board without playing ten perfect pages for it.
+// Writes the sweep and nothing else, deliberately — going through recordBonusRun would bank a
+// play and a score too, and a board seeded that way stops being a board you can read.
+// Pass 0 to take a seeded sweep back off.
+export function seedBonusSweep(id, secs) {
+  const all = loadBonus();
+  const e = all[id] || {};
+  if (secs > 0) e.sweep = secs; else delete e.sweep;
+  all[id] = e;
+  saveBonus(all);
+  return bonusRecord(id);
 }
 export function resetBonus() {
   try { localStorage.removeItem(BONUS_KEY); } catch (e) { /* ignore */ }

@@ -329,16 +329,27 @@ export const CUSTOM_DEFAULT_MODE = {
 // one ever runs long — a shelf row that reflows is what made the old described list so tall.
 // The kicker below is the platter's, not the shelf's; on the shelf `line` stands in its place,
 // because a three-word tag and a real sentence are the same job done twice.
+/* `sweep: true` is the SECOND AXIS for a game whose ceiling is reachable. The three games
+   scored right/wrong over ten pages top out at 10/10 and then have nothing left to chase, so
+   clearing all ten additionally stamps a TIME and best clean-sweep time becomes the chase.
+   The clock scores the SWEEP and not the run: below the ceiling nothing changes at all, which
+   is what keeps it off a player still learning the game.
+
+   It is deliberately NOT on the three points games, and the reason is not that they don't need
+   it (they don't — 60/50/60 are unreachable by design and Then What already grew a second axis
+   in its longest chain) but that a clock would DELETE them. Only Here's 20s exists to force
+   judgement over recall, and Redacted is a game about deliberating over which strip to buy.
+   Nor is it on Ruthless, which is scored in seconds already. */
 export const BONUS_GAMES = [
-  { id: "spot-the-slip", name: "Spot the Slip", ready: true,
+  { id: "spot-the-slip", name: "Spot the Slip", ready: true, sweep: true,
     kicker: "find the wrong word", tint: "#cf6752", mark: "skip",
     line: "One word in the lyric is an impostor. Catch it.",
     blurb: "One word in the lyric has been swapped for an impostor. Catch it before the ink dries." },
-  { id: "name-that-song", name: "Name That Song", ready: true,
+  { id: "name-that-song", name: "Name That Song", ready: true, sweep: true,
     kicker: "lyric in, title out", tint: "#33486e", mark: "question",
     line: "Read the line, name the song, beat the clock.",
     blurb: "Read the line, name the song, and beat the clock. No prompt word to lean on but the lyric itself." },
-  { id: "sing-it-back", name: "Sing It Back", ready: true,
+  { id: "sing-it-back", name: "Sing It Back", ready: true, sweep: true,
     kicker: "fill the gap", tint: "#77485e", mark: "caret",
     line: "A word is missing from the line. Write it back.",
     blurb: "A word has been lifted out of one of the song's own lines. Write it back in." },
