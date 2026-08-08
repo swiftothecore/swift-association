@@ -6398,8 +6398,10 @@
   body[data-anim-speed="fast"] .cc-ring { animation-duration: 0.28s; }
   body[data-anim-speed="instant"] .screen.active { animation: none; }
 
-  /* High contrast — darker ink, whiter paper, a bolder margin rule, and punchier
-     era accents. Layered after the era palettes so it wins. */
+  /* High contrast — in light mode, darker ink on whiter paper, a bolder margin rule,
+     and punchier era accents. Layered after the era palettes so it wins.
+     The dark-mode half is a SEPARATE palette further down, not this one turned up:
+     see the note there for why it cannot simply cascade. */
   body[data-contrast="high"] {
     --paper: #ffffff;
     --paper-edge: #f0f0f0;
@@ -6415,6 +6417,59 @@
   body[data-contrast="high"][data-era="denim"]    { --ink-accent:#0d3f73; --highlighter:rgba(60,130,200,0.65); --bead:#0d3f73; }
   body[data-contrast="high"][data-era="graphite"] { --ink-accent:#222222; --highlighter:rgba(90,90,90,0.6);   --bead:#222222; }
   body[data-contrast="high"][data-era="midnight"] { --ink-accent:#101d4d; --highlighter:rgba(60,80,170,0.6);  --bead:#101d4d; }
+  body[data-contrast="high"][data-era="debut"]      { --ink-accent:#14512c; --highlighter:rgba(60,175,95,0.62); --bead:#14512c; }
+  body[data-contrast="high"][data-era="reputation"] { --ink-accent:#000000; --highlighter:rgba(64,64,72,0.6);   --bead:#000000; }
+  body[data-contrast="high"][data-era="lover"]      { --ink-accent:#8a0050; --highlighter:rgba(230,90,165,0.62); --bead:#8a0050; }
+  body[data-contrast="high"][data-era="evermore"]   { --ink-accent:#452a10; --highlighter:rgba(175,115,50,0.62); --bead:#452a10; }
+
+  /* ---- High contrast on the dark page ----
+     This block exists because the cascade had quietly switched the setting off at night.
+     `:root[data-theme="dark"]` (0,2,0) outranks `body[data-contrast="high"]` (0,1,1), and
+     the dark era rules (0,3,1) outrank the light high-contrast era rules (0,2,1), so in
+     dark mode high contrast changed precisely nothing — not the paper, not the ink, not
+     one accent. An accessibility control that silently does nothing is worse than one that
+     is merely absent, so it gets a real palette rather than a suppressed toggle.
+
+     It is NOT the light palette inverted, because the two are pulling in opposite
+     directions. In light mode contrast is bought by pushing the accent DOWN towards black
+     against white paper. Here the ink is white, so the accent has to come UP, and the
+     highlighter has a ceiling the light palette never meets: the mark sits UNDER white ink,
+     so every step of extra alpha that separates the mark from the paper also drags it
+     closer to the text on top of it. The alphas below (0.46–0.48) are the settled trade —
+     roughly 3:1 mark against paper while white ink still clears 5:1 against the mark. Do
+     not raise them to "match" the light palette's 0.6–0.7; that reads bolder and is less
+     legible, which is the exact opposite of what the setting is for. */
+  :root[data-theme="dark"] body[data-contrast="high"] {
+    --paper: #17130d;          /* the sheet drops nearly to the desk to buy ink contrast */
+    --paper-edge: #221c14;
+    --desk: #070605;           /* kept in step with the other two palettes; the desk is
+                                  actually painted below, since --desk has no consumers */
+    --ink: #ffffff;
+    --ink-soft: #cfc6b2;       /* pencil, but no longer faded — it has to survive too */
+    --rule: rgba(255, 255, 255, 0.18);
+    --margin: rgba(255, 118, 118, 0.9);
+    --red-pen: #ff8a80;
+  }
+  :root[data-theme="dark"] body[data-contrast="high"][data-era="gold"]     { --ink-accent:#ffc94a; --highlighter:rgba(255,205,80,0.46);  --bead:#ffc94a; }
+  :root[data-theme="dark"] body[data-contrast="high"][data-era="lavender"] { --ink-accent:#d3bcff; --highlighter:rgba(190,162,255,0.46); --bead:#d3bcff; }
+  :root[data-theme="dark"] body[data-contrast="high"][data-era="red"]      { --ink-accent:#ff8480; --highlighter:rgba(255,110,110,0.46); --bead:#ff8480; }
+  :root[data-theme="dark"] body[data-contrast="high"][data-era="denim"]    { --ink-accent:#8fc4ff; --highlighter:rgba(130,185,240,0.46); --bead:#8fc4ff; }
+  :root[data-theme="dark"] body[data-contrast="high"][data-era="graphite"] { --ink-accent:#dcdcdc; --highlighter:rgba(200,200,200,0.46); --bead:#dcdcdc; }
+  :root[data-theme="dark"] body[data-contrast="high"][data-era="midnight"] { --ink-accent:#9fb4ff; --highlighter:rgba(135,158,240,0.48); --bead:#9fb4ff; }
+  :root[data-theme="dark"] body[data-contrast="high"][data-era="debut"]      { --ink-accent:#8ee0a6; --highlighter:rgba(130,205,155,0.46); --bead:#8ee0a6; }
+  :root[data-theme="dark"] body[data-contrast="high"][data-era="reputation"] { --ink-accent:#e6e5ec; --highlighter:rgba(180,180,192,0.46); --bead:#e6e5ec; }
+  :root[data-theme="dark"] body[data-contrast="high"][data-era="lover"]      { --ink-accent:#ffaad3; --highlighter:rgba(255,165,210,0.46); --bead:#ffaad3; }
+  :root[data-theme="dark"] body[data-contrast="high"][data-era="evermore"]   { --ink-accent:#e8ad7c; --highlighter:rgba(208,155,100,0.48); --bead:#e8ad7c; }
+  /* The night desk goes darker still and the lamp pool comes down. The sheet has dropped
+     nearly to the desk's own value to buy ink contrast, so if the desk stayed where it was
+     the page would stop reading as a separate object sitting on it. The oak grain survives
+     underneath, as in ordinary dark mode — this only deepens the wash over it. */
+  :root[data-theme="dark"] body[data-contrast="high"] { background-color: #070605; }
+  :root[data-theme="dark"] body[data-contrast="high"]::before {
+    background:
+      radial-gradient(ellipse 66% 52% at 50% 26%, rgba(255, 212, 148, 0.07), rgba(255, 212, 148, 0) 62%),
+      linear-gradient(rgba(3, 2, 1, 0.94), rgba(3, 2, 1, 0.97));
+  }
 
   /* =========================================================
      SETTINGS — gear button, modal, and notebook-style controls

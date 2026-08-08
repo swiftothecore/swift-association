@@ -15489,7 +15489,10 @@ function renderSettingsBody() {
       setChoiceHTML("weekStart", "Week starts on", "first row of the records calendar", [{ val: "mon", label: "Monday" }, { val: "sun", label: "Sunday" }]) +
       setChoiceHTML("clock", "Time format", "", [{ val: "12", label: "12-hour" }, { val: "24", label: "24-hour" }]) +
       setChecklistHTML([
-        setCheckHTML("highContrast", "High contrast", "darker ink, whiter paper"),
+        // Deliberately theme-neutral: the old "darker ink, whiter paper" described the
+        // light palette only, and became a lie the moment high contrast started working
+        // on the dark page, where the ink goes lighter and the paper darker.
+        setCheckHTML("highContrast", "High contrast", "stronger ink, bolder accents"),
         setCheckHTML("colorBlindAlbums", "Colour-blind album colours", "a more distinguishable palette"),
         setCheckHTML("hideDailyScore", "Hide daily score until reveal", ""),
       ])
