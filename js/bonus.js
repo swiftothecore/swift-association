@@ -996,12 +996,59 @@ export function ruthlessBar(song) {
   return RUTHLESS_SKIP_ALBUMS.get(song.album) || RUTHLESS_SKIP_TITLES.get(song.title) || null;
 }
 
-/* The song flattened into the stream the page writes out. `br` is "this word opens a new line",
-   which is what lets the page break where the song breaks without the screen having to know
-   anything about sections. */
-export function ruthlessStream(song) {
+/* THE LENS: which section the stream OPENS on. Six of them, and they are lenses on the catalogue
+   the way Album Focus's albums are, not a difficulty slider — a chorus and a second verse are
+   different puzzles rather than the same puzzle at two settings.
+
+   The decision that makes the whole thing work is that a lens moves where the stream STARTS and
+   never where it ENDS: it runs on through the rest of the song exactly as it always has. That is
+   measured rather than chosen. Only 11 to 18% of verses and bridges ever sing the title inside
+   themselves, so a stream fenced into its own section would run dry unnamed on most pages and the
+   give-up would stop being a valve and start being the game. Running on puts every lens at 85 to
+   94% named, which is the same band as the whole-song game's own 91%, so no lens needs a guard
+   that the default does not already have.
+
+   `median` is the measured median words-to-the-title for that lens over the catalogue, and it is
+   here because the give-up has to be priced against it (see `ruthlessGiveUp`). It is the one
+   number to re-measure if the catalogue grows.
+
+   OUTRO IS NOT A LENS, and is barred by the endable-page rule above rather than by taste: 181
+   songs have one, but only 43% can be named from it and the median stream left behind it is 19
+   words, because an outro is at the end and there is nothing after it to run on into. Verse 3
+   (45 songs) and everything below it is too thin to deal ten pages from. */
+export const RUTHLESS_LENSES = [
+  { id: "verse-1",     label: "Verse 1",     section: "verse 1",     median: 78 },
+  { id: "verse-2",     label: "Verse 2",     section: "verse 2",     median: 79 },
+  { id: "chorus",      label: "Chorus",      section: "chorus",      median: 22 },
+  { id: "bridge",      label: "Bridge",      section: "bridge",      median: 68 },
+  { id: "pre-chorus",  label: "Pre-Chorus",  section: "pre-chorus",  median: 48 },
+  { id: "post-chorus", label: "Post-Chorus", section: "post-chorus", median: 39 },
+];
+
+export function ruthlessLens(id) {
+  return RUTHLESS_LENSES.find((l) => l.id === id) || null;
+}
+
+/* Where the lens opens, as an index into `songLines(song)`, or -1 if the song hasn't got that
+   section. The FIRST occurrence, always: Chorus appears 758 times over 260 songs and Pre-Chorus
+   279 over 139, but the repeats are usually the same words again, so picking among them is fake
+   variation that mostly just deals a shorter stream. */
+function lensOpensAt(song, lens) {
+  if (!lens) return 0;
+  const want = lens.section;
+  return songLines(song).findIndex(({ label }) => String(label).trim().toLowerCase() === want);
+}
+
+/* The song flattened into the stream the page writes out, opening at the lens's section. `br` is
+   "this word opens a new line", which is what lets the page break where the song breaks without
+   the screen having to know anything about sections — and the stream is never labelled with the
+   section it has run on into, because announcing the chorus is a tell when the title usually
+   lives there. No lens means the whole song from its first word, which is the shelf's game. */
+export function ruthlessStream(song, lens = null) {
+  const start = lensOpensAt(song, lens);
+  if (start < 0) return [];
   const stream = [];
-  songLines(song).forEach(({ line }, li) => {
+  songLines(song).slice(start).forEach(({ line }, li) => {
     String(line).split(/\s+/).filter(Boolean).forEach((w, wi) => {
       stream.push({ text: w, br: wi === 0 && li > 0 });
     });
@@ -1009,28 +1056,91 @@ export function ruthlessStream(song) {
   return stream;
 }
 
-/* Every song the game can deal, and every song it can't with the reason. Dev-facing: it is the
-   only way to see the shape of the pool, since a run of ten pages never shows you the bars. */
-export function ruthlessPool(songs) {
+/* What giving up costs under this lens. The shelf's numbers (20 words out, +90s) were priced
+   against a 73-word median so that quitting at the earliest allowed moment costs about one and a
+   half times an honest page, which is what keeps it a valve rather than a shortcut. Six lenses
+   whose medians run from 22 to 79 cannot share one pair of constants: on Chorus, 20 words is
+   already PAST the median answer and a 90s penalty makes giving up never correct, so the valve
+   would be welded shut on the one lens whose pages are meant to be quick. So hold the two RATIOS
+   and let each lens price itself off its own median. */
+export const RUTHLESS_SKIP_AFTER_RATIO = 0.27; // of the median, before the give-up is offered
+export const RUTHLESS_SKIP_TOTAL_RATIO = 1.5;  // of the median, for taking it at that moment
+export function ruthlessGiveUp(lens) {
+  const median = lens && lens.median ? lens.median : 73;
+  const after = Math.max(5, Math.round(median * RUTHLESS_SKIP_AFTER_RATIO));
+  return { after, penalty: Math.round(median * RUTHLESS_SKIP_TOTAL_RATIO) - after };
+}
+
+/* Every song the game can deal under this lens, and every song it can't with the reason.
+   Dev-facing: it is the only way to see the shape of the pool, since a run of ten pages never
+   shows you the bars. A lens adds exactly one bar of its own, "no <section>", and then leans on
+   the length bar the whole-song game already had. It adds NO names-itself bar, deliberately and
+   for the reason the endable-page rule gives above: a song that never sings its own title is slow,
+   not unendable, and the give-up is its valve. */
+export function ruthlessPool(songs, lens = null) {
   const deal = [], barred = [];
   (songs || []).forEach((song) => {
-    const why = ruthlessBar(song) ||
-      (ruthlessStream(song).length < RUTHLESS_MIN_WORDS ? "too short" : null);
+    let why = ruthlessBar(song);
+    if (!why && lens && lensOpensAt(song, lens) < 0) why = `no ${lens.label.toLowerCase()}`;
+    if (!why && ruthlessStream(song, lens).length < RUTHLESS_MIN_WORDS) why = "too short";
     if (why) barred.push({ title: song.title, album: song.album, why });
     else deal.push(song);
   });
   return { deal, barred };
 }
 
-export function buildRuthlessPuzzle(songs, rng = Math.random, tries = 120, avoid = null) {
+/* The word of the stream at which the song has finished spelling its own title out, or null if it
+   never does. Not a guard — nothing is barred for failing it — but it is the number the whole lens
+   design rests on, so it has to be measurable rather than remembered. Compared on the SPACELESS
+   normalized forms, since the stream arrives one word at a time and "imgonnagetyouback" only ever
+   matches once the spaces are gone. */
+export function ruthlessTitleAt(song, lens = null) {
+  const want = normalizeLyric(String(song.title).split("(")[0]).replace(/\s/g, "");
+  if (!want) return null;
+  const stream = ruthlessStream(song, lens);
+  let tail = "";
+  for (let i = 0; i < stream.length; i++) {
+    tail = (tail + normalizeLyric(stream[i].text).replace(/\s/g, "")).slice(-120);
+    if (tail.includes(want)) return i + 1;
+  }
+  return null;
+}
+
+/* Every lens's pool and its real cost, measured over the catalogue in one go. This is the audit
+   that matters for the lens design: each lens declares a `median` that prices its give-up, and
+   this is what shows that the declared number still matches the catalogue after songs are added.
+   `named` is the share of pages that can be ended by the stream alone rather than by the valve —
+   it wants to stay in the whole-song game's own 85-to-94% band, and a lens that falls out of it
+   is a lens whose give-up is doing too much of the work. */
+export function ruthlessLensAudit(songs) {
+  return RUTHLESS_LENSES.map((lens) => {
+    const { deal, barred } = ruthlessPool(songs, lens);
+    const at = deal.map((s) => ruthlessTitleAt(s, lens)).filter((n) => n != null).sort((a, b) => a - b);
+    const by = {};
+    barred.forEach((b) => { by[b.why] = (by[b.why] || 0) + 1; });
+    const { after, penalty } = ruthlessGiveUp(lens);
+    return {
+      lens: lens.id,
+      dealable: deal.length,
+      barred: by,
+      named: deal.length ? Math.round((at.length / deal.length) * 100) : 0,
+      declared: lens.median,
+      median: at.length ? at[Math.floor(at.length / 2)] : null,
+      p90: at.length ? at[Math.floor(at.length * 0.9)] : null,
+      giveUp: `${after}w +${penalty}s`,
+    };
+  });
+}
+
+export function buildRuthlessPuzzle(songs, rng = Math.random, tries = 120, avoid = null, lens = null) {
   for (let t = 0; t < tries; t++) {
     const song = pick(songs, rng);
     if (!song) continue;
     if (avoid && avoid.has(song.title)) continue;
     if (ruthlessBar(song)) continue;
-    const stream = ruthlessStream(song);
+    const stream = ruthlessStream(song, lens);
     if (stream.length < RUTHLESS_MIN_WORDS) continue;
-    return { song, stream };
+    return { song, stream, lens: lens ? lens.id : null };
   }
   return null;
 }

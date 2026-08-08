@@ -54,7 +54,7 @@ import { buildLineIndex, buildSlipContext, buildSlipPuzzle, buildNamePuzzle,
          buildBlankPuzzle, buildRedactedPuzzle,
          buildWordIndex, buildOnlyHerePuzzle, onlyHerePoints, ONLY_HAND,
          buildChainPuzzle, CHAIN_PICKS, CHAIN_CARDS, CHAIN_PAY, CHAIN_PAGE,
-         buildRuthlessPuzzle, ruthlessPool,
+         buildRuthlessPuzzle, ruthlessPool, ruthlessLens, ruthlessLensAudit, RUTHLESS_LENSES,
          judgeBlank } from "./bonus.js";
 import { renderStreakPlacard } from "./placard.js";
 import {
@@ -16784,13 +16784,20 @@ function buildDevApi() {
       /* What the deal can and cannot land on. A ten-page run never shows you a bar, so this is
          the only way to check that an exclusion caught what it was written for — and, more to
          the point, that it caught nothing else. Pass a reason to list those songs in full. */
-      pool: (why = null) => {
-        const { deal, barred } = ruthlessPool(allSongs);
+      pool: (why = null, lensId = null) => {
+        const lens = lensId ? ruthlessLens(lensId) : null;
+        if (lensId && !lens) return `no such lens — ${RUTHLESS_LENSES.map((l) => l.id).join(", ")}`;
+        const { deal, barred } = ruthlessPool(allSongs, lens);
         if (why) return barred.filter((b) => b.why === why);
         const by = {};
         barred.forEach((b) => { by[b.why] = (by[b.why] || 0) + 1; });
-        return { dealable: deal.length, of: allSongs.length, barred: by };
+        return { lens: lensId || "whole song", dealable: deal.length, of: allSongs.length, barred: by };
       },
+      /* Every lens measured at once: what it can deal, how often the stream can end the page on
+         its own, and whether the median each lens declares (which is what prices its give-up)
+         still matches the catalogue. Run it after adding songs — a lens whose `named` falls out
+         of the others' band is a lens leaning on the give-up instead of on the song. */
+      lenses: () => ruthlessLensAudit(allSongs),
       giveup: () => {
         if (!bonusGame || !bonusTimed(bonusGame)) return "not on a ruthless page";
         ruthlessShown = Math.max(ruthlessShown, RUTHLESS_SKIP_AFTER);
