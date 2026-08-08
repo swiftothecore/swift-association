@@ -55,7 +55,7 @@ import { buildLineIndex, buildSlipContext, buildSlipPuzzle, buildNamePuzzle,
          buildWordIndex, buildOnlyHerePuzzle, onlyHerePoints, ONLY_HAND,
          buildChainPuzzle, CHAIN_PICKS, CHAIN_CARDS, CHAIN_PAY, CHAIN_PAGE,
          buildRuthlessPuzzle, ruthlessPool, ruthlessLens, ruthlessLensAudit, ruthlessGiveUp,
-         RUTHLESS_LENSES,
+         ruthlessBar, RUTHLESS_LENSES,
          judgeBlank } from "./bonus.js";
 import { renderStreakPlacard } from "./placard.js";
 import {
@@ -5109,8 +5109,13 @@ let bonusDdIndex = -1;
 function bonusRankMatches(query) {
   const q = normalizeTitle(query);
   if (!q) return [];
+  // Ruthless bills you until you produce the EXACT title, so a song that can never be an honest
+  // answer (see ruthlessBar: not-hers, second cuts, unheard) has no business being suggested as
+  // one. Other dropdown games (Name That Song, Redacted) suggest the whole catalogue.
+  const barred = bonusGame && bonusGame.id === "ruthless-game";
   const scored = [];
   for (const song of allSongs) {
+    if (barred && ruthlessBar(song)) continue;
     const idx = song._norm.indexOf(q);
     if (idx === -1) continue;
     scored.push({ song, rank: idx === 0 ? 0 : 1, idx });
