@@ -175,7 +175,7 @@ let runFolded = false;   // partial/full stats already saved for the current run
 let hintTier = 0;        // hints revealed this round (0..3); reset each round
 let roundHintSong = null;// the valid song this round's hints zoom in on
 let hintUrgeTimer = null;// idle nudge timer for Relaxed (no clock)
-let gameType = "classic";       // "classic" (fixed 13) | "infinite" (until lives run out) | "adaptive" (fixed 13, floating rarity) | "daily" | "challenge" | "album" | "custom" (player-authored levers, sandboxed) | "guest" (another artist's catalogue, sandboxed)
+let gameType = "classic";       // "classic" (fixed 13) | "infinite" (until lives run out) | "adaptive" (fixed 13, floating rarity) | "daily" | "challenge" | "album" | "custom" (player-authored levers, sandboxed) | "guest" (another artist's catalogue, sandboxed) | "ruthless" (ten timed pages on a section lens, sandboxed)
 let customPreset = null;        // Custom mode: the active preset {id,name,mode} while gameType === "custom"
 let customSessionLen = 0;       // Custom mode: rounds this run (finite runs). 0 while running an infinite custom run
 let focusAlbum = null;          // Album Focus: the locked-in studio album while gameType === "album"
@@ -2729,6 +2729,10 @@ function modeLabel(token) {
     return c ? "Challenge · " + c.name : "Challenge";
   }
   if (token && token.startsWith("af-")) return "Album · " + token.slice(3);
+  if (token && token.startsWith("rl-")) {
+    const l = ruthlessLens(token.slice(3));
+    return l ? "Ruthless · " + l.label : "Ruthless";
+  }
   if (token === "adaptive") return "Adaptive";
   if (token && token.startsWith("inf-")) {
     const parts = token.split("-");   // ["inf", variant, mode]
@@ -2738,6 +2742,7 @@ function modeLabel(token) {
 }
 const isInfiniteToken = (token) => !!token && token.startsWith("inf-");
 const isAdaptiveToken = (token) => token === "adaptive";
+const isRuthlessToken = (token) => !!token && token.startsWith("rl-");
 // Compact "your best" line for a single mode (start screen + results). Shows the
 // mode's top personal record, or a target line if you've never finished a run in it.
 function renderBestLine(el, mode) {
@@ -2820,9 +2825,16 @@ function appendHistoryRows(hist) {
   const next = hist.slice(historyShown, historyShown + HISTORY_PAGE);
   rowsEl.insertAdjacentHTML("beforeend", next.map((h) => {
     const adaptive = isAdaptiveToken(h.m);
-    const unit = (isInfiniteToken(h.m) || adaptive) ? "" : "/" + TOTAL_ROUNDS;
+    // A Ruthless row is the one whose score is not out of thirteen: it counts the pages NAMED
+    // out of the ten the run dealt, and its RECORD is the time in the next column over.
+    const ruthless = isRuthlessToken(h.m);
+    const unit = (isInfiniteToken(h.m) || adaptive) ? "" : "/" + (ruthless ? (h.n || BONUS_ROUNDS) : TOTAL_ROUNDS);
     const scoreText = adaptive ? `<span class="lvl-prefix">L</span>${h.s}` : "" + h.s;
-    const isPB = h.s > 0 && h.s === _pbByMode[h.m];
+    // ...so the crown has to be won on the time, and won LOW. Crowning ten-out-of-ten would
+    // crown most rows of a lens and say nothing about which run was the good one.
+    const isPB = ruthless
+      ? h.tm != null && h.tm === ruthlessRecord(h.m.slice(3)).best
+      : h.s > 0 && h.s === _pbByMode[h.m];
     return `<div class="hist-row${isPB ? " hist-pb" : ""}">` +
       `<span class="hist-score">${isPB ? `<span class="hist-crown" aria-hidden="true">${ACH_ICONS.crown}</span>` : ""}${scoreText}${unit ? `<span class="hist-unit">${unit}</span>` : ""}</span>` +
       `<span class="hist-time">${h.tm != null ? fmtTime(h.tm) : "—"}</span>` +
@@ -4161,6 +4173,13 @@ let ruthlessStart = 0;
 let ruthlessPenalty = 0;
 let ruthlessSpent = 0;
 let ruthlessDripId = null;
+/* Skill XP earned by a Ruthless MODE run, accrued page by page. It is kept here rather than in
+   the main game's `gameTempoXp`/`gameResolveXp` because the bonus loop never calls
+   resetRunState, so writing into those would spend an abandoned classic run's accumulator or
+   leave this run's numbers lying in wait for the next one. foldSkillXp takes them as an
+   override instead. `ruthlessStreak` is this run's own correct-in-a-row, for the same reason. */
+let ruthlessXp = { resolve: 0, tempo: 0 };
+let ruthlessStreak = 0;
 /* When the RUN started, as a performance.now() baseline, for the games keeping a clean-sweep
    time (bonusSweeps). Wall clock across the whole run rather than the sum of the page clocks:
    the page turns and the verdict beats are part of what a sweep costs, and a total that skips
@@ -4173,6 +4192,10 @@ let bonusLog = [];         // one entry per settled round, for the end card's tr
    of the run instead of read live, because `bonusGame` and `bonusScore` are cleared the
    moment the player leaves for the shelf while the sleeve is still the page they're on. */
 let bonusSleeveRun = null;
+/* The same trick for the Ruthless mode's bracelet: the run written down as the card's own
+   strings at the moment it ends, because the keepsake is pressed off a results screen whose
+   bonus globals have already been handed back. */
+let ruthlessCard = null;
 // Bumped on every start. The between-rounds pause is a setTimeout, so without a token a run
 // that's quit and immediately restarted would have the old pause advance the NEW run a round.
 let bonusRunId = 0;
@@ -4386,6 +4409,13 @@ function selectBonusGame(id) {
 // walking from a lens run onto the shelf cannot leave the last lens applied to a shelf page.
 function startBonusGame(g, lensId = null) {
   ruthlessLensId = lensId;
+  /* A lens run is the Ruthless MODE, and it ends on the results screen the way every other
+     gameType does, so the flag has to say so — the era, the keepsake card and the sandbox
+     guards all read it. A shelf game is not a gameType at all, so it hands the flag back
+     rather than leaving a retired lens run's on it. */
+  if (lensId) gameType = "ruthless";
+  else if (gameType === "ruthless") gameType = "classic";
+  updateTagline();   // the masthead is shared, and a lens run's is not the last difficulty's
   bonusGame = g;
   notePlayed("bonus", g.id);
   bonusRound = 0;
@@ -4404,6 +4434,15 @@ function startBonusGame(g, lensId = null) {
   ruthlessShown = 0;
   ruthlessPenalty = 0;
   ruthlessSpent = 0;
+  // The run's own XP and streak, cleared here for the same reason the chain is: they belong to
+  // the run and nothing else clears them.
+  ruthlessXp = { resolve: 0, tempo: 0 };
+  ruthlessStreak = 0;
+  /* Both of these are the results screen's, and both are normally cleared by resetRunState —
+     which the shelf never calls. A Ruthless run ends on that screen, so without this it would
+     open showing the charms and the skill fold of whatever main run came before it. */
+  newlyUnlocked = [];
+  lastSkillFold = null;
   // The longest chain belongs to the RUN, not the page, so it is reset here and nowhere else.
   chainNow = 0;
   chainRun = 0;
@@ -4847,10 +4886,31 @@ function giveUpRuthless() {
 // cost. Both are the only number on screen that matters, so both are said in full.
 function settleRuthless(correct) {
   const secs = ruthlessFreeze();
+  accrueRuthlessXp(correct, secs);
   const detail = correct
     ? `named in <b>${fmtTime(secs)}</b> off <b>${ruthlessShown}</b> word${ruthlessShown === 1 ? "" : "s"}`
     : `given up after <b>${ruthlessShown}</b> words · <b>+${fmtTime(ruthlessSkip().penalty)}</b> on the run`;
   settleBonusRound(correct, detail);
+}
+
+/* Instinct and Quick Pen, page by page, in the main game's own formulas. Accrued here rather
+   than worked out at the end because a streak has to be watched as it happens, and because a
+   page's speed only means anything against the page it was.
+
+   The main game reads Quick Pen off what was LEFT on the buzzer; a Ruthless page has no buzzer,
+   so the lens's own measured median stands in for one. A page named at the median earns the
+   base and nothing more, a page named instantly earns the lot, and a page that ran long earns
+   the base — which is the right shape, since the median is what an honest page of that lens
+   costs and beating it is the only thing there is to be quick about. A given-up page earns
+   nothing and breaks the streak: it was not named, and nothing else here pretends otherwise. */
+function accrueRuthlessXp(correct, secs) {
+  if (!ruthlessLensId) return;   // the shelf's lens-less run is a bonus game and banks nothing
+  if (!correct) { ruthlessStreak = 0; return; }
+  ruthlessStreak++;
+  ruthlessXp.resolve += Math.round(RESOLVE_BASE * (1 + 0.1 * Math.min(ruthlessStreak, RESOLVE_STREAK_CAP)));
+  const median = (activeLens() && activeLens().median) || 60;
+  const speedFactor = Math.max(0, Math.min(1, 1 - secs / median));
+  ruthlessXp.tempo += Math.round(TEMPO_BASE + TEMPO_SPEED * speedFactor);
 }
 
 /* The reveal. The heading that every other page on this shelf opens with goes on at the END
@@ -5448,9 +5508,15 @@ function settleBonusRound(correct, detail, isTimeout = false) {
   // The run's track listing, written up on the end card. Each game notes the one thing worth
   // remembering about its page: the impostor you were hunting, the word that was missing, or
   // (Name That Song, where the song IS the answer) which record it came off.
+  // `album` and `words` are the Ruthless MODE's alone — the sleeve prints neither. They ride
+  // here rather than in a second log because the mode's results page needs exactly this list
+  // with two more columns on it: the album to tint the page's bead, and how many words were on
+  // the page when it was named.
   bonusLog.push({
     n: bonusRound, ok: correct,
     title: bonusPuzzle.song.title,
+    album: bonusPuzzle.song.album,
+    words: ruthlessShown,
     note: bonusGame.id === "spot-the-slip" ? bonusPuzzle.fakeWord
         : bonusGame.id === "sing-it-back" ? bonusPuzzle.answer
         // Redacted's pages are worth different amounts, and that number is the only thing the
@@ -5624,6 +5690,11 @@ function endBonusRun() {
   stopBonusCountdown();
   stopChainBeat();
   playRunFlourish();   // the shelf turns pages like the notebook does, so it closes like it too
+  /* A LENS run is the Ruthless mode and leaves here before a single line of the shelf's ending
+     runs — most of all before recordBonusRun, which would bank a mode run on the retired card's
+     shelf board. The lens-less run below it is the dev-only whole-song game, and that one still
+     ends on its sleeve. */
+  if (ruthlessLensId) { endRuthlessRun(); return; }
   const timed = bonusTimed(bonusGame);
   // A clean sweep is ten pages cleared, which on a right/wrong game is the same thing as a
   // full score and on a points game is the only perfect run available (see bonusRemark).
@@ -5722,6 +5793,119 @@ function endBonusRun() {
   $("bonusAgainBtn").addEventListener("click", () => startBonusGame(bonusGame));
   $("bonusShelfBtn").addEventListener("click", () => leaveBonusGame());
   $("saveSleeveBtn").addEventListener("click", saveSleevePNG);
+}
+
+/* ---------- Ruthless mode: the ending ----------
+   The mode's own results path, taken instead of the sleeve, and the whole reason the lens run
+   is a gameType rather than a card. It writes the lens's best time, a history row and skill XP,
+   and it strings a bracelet — which is the point of the promotion: the most fun thing here used
+   to leave one number behind on a shelf board nothing else could see.
+
+   Sandboxed like Custom and Guest, and for the same reasons. No lifetime tally: the ten songs
+   were DEALT rather than found from a word, so folding them into Songs Discovered would credit
+   the deal to the player. No difficulty records and no cross-game metrics: a run measured in
+   seconds cannot be ranked beside one measured out of thirteen. What it does write is its own
+   board, the history log (a run you finished happened, and the calendar should show it) and
+   skill XP, which is the line Custom and Guest already draw.
+
+   The skills it earns are Instinct and Quick Pen, and NOT Discography, which the roadmap
+   expected. Discography measures how far your ANSWERS reach across the albums, and a Ruthless
+   page gives you no answer to choose: the song is dealt and there is exactly one thing to type,
+   so the breadth on the strand is the deal's breadth and not the player's. That is Album
+   Focus's own reason for omitting it, arrived at from the other end. By Heart is out because
+   you name titles rather than sing lines, and The Long Game because ten pages is a sitting, not
+   a distance. */
+function endRuthlessRun() {
+  const lensId = ruthlessLensId, lens = ruthlessLens(lensId);
+  const secs = bonusScore;
+  const pages = bonusLog.slice();
+  const named = pages.filter((t) => t.ok).length;
+  const gaveUp = pages.length - named;
+
+  let rec = ruthlessRecord(lensId);
+  if (!devNoLog) {
+    rec = recordRuthlessRun(lensId, secs, gaveUp, todayKey());
+    // The score column is pages NAMED and the time column is the run — which is the honest way
+    // round, since the seconds are what the board ranks and the pages are what they bought.
+    appendHistory({
+      s: named, c: named, n: pages.length,
+      m: "rl-" + lensId, t: "ruthless",
+      d: new Date().toISOString(), tm: secs,
+    });
+    foldSkillXp(["resolve", "tempo"], ruthlessXp);
+  }
+
+  // The strand, one bead a page: tinted to the album the song came off, and a matte spacer
+  // wherever a page was handed back. Ten beads and no letter bead — the 13 belongs to a
+  // thirteen-round run and would be a borrowed flourish here.
+  const results = pages.map((t) => t.ok);
+  const albums = pages.map((t) => t.album || null);
+
+  showScreen("results");
+  applyEra(FINALE_ERAS[Math.floor(Math.random() * FINALE_ERAS.length)]);
+  $("resultBracelet").innerHTML = renderBraceletSVG(results, 0, -1, albums,
+    { colors: albumPalette(), total: pages.length, letterBead: false });
+  // A time is the whole result, so it takes the big number; the pages it took are the sub.
+  $("finalScore").textContent = fmtTime(secs);
+  $("finalSub").textContent = gaveUp
+    ? `${named} of ${pages.length} named` : `all ${pages.length} named`;
+  $("keepGoingBtn").style.display = "none";
+  $("namePrompt").style.display = "none";
+  $("verseAnthology").style.display = "none";
+  hideNewBestBanner();
+  document.querySelector("#screen-results .podium-title").textContent =
+    "Ruthless · " + (lens ? lens.label : "");
+
+  const beat = rec.isBest && rec.plays > 1;
+  let status;
+  if (beat) {
+    status = `<div class="chall-result-status win">a new best for ${escapeHtml(lens ? lens.label : "this lens")} ★</div>`;
+  } else if (rec.plays <= 1) {
+    status = `<div class="chall-result-status win">the first time down this lens — a time to beat</div>`;
+  } else {
+    // How far off the best, said in the same seconds the whole mode is counted in. A run that
+    // ties it is neither a beat nor a miss, and saying so is more use than rounding it either way.
+    const gap = secs - rec.best;
+    status = gap === 0
+      ? `<div class="chall-result-status">level with your best</div>`
+      : `<div class="chall-result-status">${fmtTime(gap)} off your best</div>`;
+  }
+  const note = rec.bestGaveUp
+    ? `${rec.bestGaveUp} given up` : `named all ${pages.length}`;
+  const meta = `<div class="chall-result-meta">best ${fmtTime(rec.best)} · ${escapeHtml(note)}` +
+    ` · played ${rec.plays}</div>`;
+
+  // The ten pages, kept BELOW the actions where the fine print goes: the run's own keepsake and
+  // the only place a given-up page is readable as the song it was. It rides inside the podium
+  // rather than in a block of its own so that every other end path, which rewrites the podium
+  // outright, is incapable of leaving a stale Ruthless listing behind it.
+  const rows = pages.map((t) =>
+    `<li class="rl-page ${t.ok ? "ok" : "no"}">` +
+      `<span class="rl-page-n">${t.n}</span>` +
+      `<span class="rl-page-title">${escapeHtml(censor(t.title))}</span>` +
+      `<span class="rl-page-words">${t.ok ? `${t.words}w` : "gave up"}</span>` +
+      `<span class="rl-page-time">${escapeHtml(t.note)}</span>` +
+    `</li>`).join("");
+
+  $("resultPodium").innerHTML = status + meta +
+    `<div class="chall-result-actions">` +
+      `<button id="backToRuthless" class="btn-primary">← ruthless</button>` +
+      `<button id="replayRuthless" class="btn-primary">replay ↺</button>` +
+    `</div>` +
+    `<div class="rl-pages"><p class="rl-pages-label">the run, page by page</p>` +
+      `<ol class="rl-page-list">${rows}</ol></div>`;
+  $("backToRuthless").addEventListener("click", () => openRuthless(ruthlessBackTarget));
+  $("replayRuthless").addEventListener("click", () => startRuthlessMode(lensId));
+
+  // The finished run, written down for the bracelet keepsake, which is pressed long after
+  // `bonusGame` and `bonusScore` have been cleared — the sleeve's snapshot for the same reason.
+  ruthlessCard = { lens: lens ? lens.label : "", secs, named, pages: pages.length };
+  bonusGame = null;
+  bonusPuzzle = null;
+
+  renderResultRecap();
+  renderSkillsRecap();
+  if (beat) celebratePerfect();
 }
 
 // Leaving a game (quit or from the end card) always lands back on the shelf, with the board
@@ -6849,6 +7033,15 @@ function buildCardMeta() {
     stats.push({ v: "Guest shelf", l: "mode" });
     stats.push({ v: (guest && guest.name) || "Guest", l: "the catalogue" });
     stats.push({ v: correct + "/" + TOTAL_ROUNDS, l: "strung" });
+  } else if (gameType === "ruthless" && ruthlessCard) {
+    // Read off the run's own snapshot rather than roundResults, which a Ruthless run never
+    // touches: the bonus loop keeps its pages in bonusLog and would otherwise hand the card
+    // the last classic run's thirteen.
+    const clean = ruthlessCard.named === ruthlessCard.pages;
+    title = clean ? "ten named, nothing handed back ★" : "ten pages against the clock";
+    stats.push({ v: "Ruthless", l: ruthlessCard.lens || "mode" });
+    stats.push({ v: fmtTime(ruthlessCard.secs), l: "the run" });
+    stats.push({ v: ruthlessCard.named + "/" + ruthlessCard.pages, l: "named" });
   } else if (gameType === "custom") {
     const finite = !customInfinite();
     title = "a bracelet on my terms";
@@ -7378,6 +7571,11 @@ function updateTagline() {
     // tagline is the only line on the game screen with room to say so.
     : gameType === "guest"
     ? `${TOTAL_ROUNDS} pages · ${clock} · ${(currentGuest() || {}).name || "a guest"}`
+    // Ruthless is the one run with no per-page clock at all, so quoting `clock` here would
+    // hang the last difficulty's seconds over a mode that doesn't have any. What it has
+    // instead is the only thing worth saying: the clock is not the limit, it is the result.
+    : gameType === "ruthless"
+    ? `${BONUS_ROUNDS} pages · the clock is the score`
     : `${TOTAL_ROUNDS} pages · ${clock}`;
   // Without this a dark run is indistinguishable from the base challenge: same tagline, same
   // page count, just quietly harder numbers. The eclipse + "dark side" is the only thing on
@@ -7907,7 +8105,7 @@ function foldRunProgress() {
   // Sandboxed modes never fold into difficulty stats. Daily is also skipped: it resumes
   // after a refresh/exit and folds its tally in full at completion (endGame), so folding
   // a partial here would double-count the same rounds once the run is finished.
-  if (gameType === "challenge" || gameType === "album" || gameType === "adaptive" || gameType === "daily" || gameType === "custom" || gameType === "guest") { runFolded = true; return; }
+  if (gameType === "challenge" || gameType === "album" || gameType === "adaptive" || gameType === "daily" || gameType === "custom" || gameType === "guest" || gameType === "ruthless") { runFolded = true; return; }
   runFolded = true;
   const partialScore = gameType === "infinite" ? roundResults.length : score;
   updateStats(partialScore, boardMode(), gameMaxStreak, false);
@@ -13798,12 +13996,16 @@ function runCountdown() {
 // ["resolve"], Album Focus omits "range", Adaptive omits "endurance". The per-answer skills
 // (tempo/lyricist/resolve) were accrued during play; endurance/range are derived here.
 // Surfaces level-up / mastery / unlock toasts. Caller gates on !devNoLog.
-function foldSkillXp(mask) {
+// `given` overrides the per-answer accumulators for a mode that doesn't run the main round
+// loop and so never fed them — today only Ruthless, which accrues its own (see
+// accrueRuthlessXp). It is a partial: anything it doesn't name still comes off the globals.
+function foldSkillXp(mask, given = null) {
   const allow = (id) => mask.includes(id);
+  const earned = { resolve: gameResolveXp, tempo: gameTempoXp, lyricist: gameLyricistXp, ...(given || {}) };
   const delta = { resolve: 0, tempo: 0, lyricist: 0, endurance: 0, range: 0 };
-  if (allow("resolve"))  delta.resolve  = gameResolveXp;
-  if (allow("tempo"))    delta.tempo    = gameTempoXp;
-  if (allow("lyricist")) delta.lyricist = gameLyricistXp;
+  if (allow("resolve"))  delta.resolve  = earned.resolve;
+  if (allow("tempo"))    delta.tempo    = earned.tempo;
+  if (allow("lyricist")) delta.lyricist = earned.lyricist;
   if (allow("endurance")) {
     const survived = roundResults.length;
     delta.endurance = Math.min(Math.round(2 * (Math.pow(ENDURANCE_GROWTH, survived) - 1)), ENDURANCE_RUN_CAP);

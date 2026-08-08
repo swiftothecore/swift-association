@@ -2718,6 +2718,43 @@
   }
   [data-reduce-motion="true"] .rl-sec { transition: none; }
 
+  /* The Ruthless results listing — the ten pages, sitting in the fine print BELOW the actions
+     so the page a player most often wants stays in reach. It is the only place a given-up page
+     is readable as the song it was, which the strand's matte spacer cannot say. Two ruled
+     columns on a wide page, one on a narrow one, exactly like the sleeve's listing it replaces. */
+  .rl-pages { margin-top: 18px; text-align: left; }
+  .rl-pages-label {
+    font-family: var(--type); font-size: 8.5px; letter-spacing: 1.8px; text-transform: uppercase;
+    color: var(--ink-soft); margin: 0 0 6px;
+  }
+  .rl-page-list { list-style: none; margin: 0; padding: 0; columns: 2; column-gap: 22px; }
+  .rl-page {
+    display: flex; align-items: baseline; gap: 6px; break-inside: avoid;
+    padding: 3px 0 4px; border-bottom: 1px dotted rgba(43,39,34,0.16);
+  }
+  .rl-page-n { flex: none; width: 1.5em; font-family: var(--type); font-size: 9px; color: var(--ink-soft); }
+  /* The title takes the room and the two small columns give way — a truncated song name is
+     worse than a truncated number. */
+  .rl-page-title {
+    flex: 1 1 auto; min-width: 0;
+    font-family: var(--hand); font-size: 16px; line-height: 1.15; color: var(--ink);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .rl-page-words, .rl-page-time {
+    flex: none; font-family: var(--type); font-size: 8.5px; letter-spacing: 0.7px;
+    text-transform: uppercase; color: var(--ink-soft); white-space: nowrap;
+  }
+  .rl-page-time {
+    min-width: 3.2em; text-align: right; color: var(--ink); font-variant-numeric: tabular-nums;
+  }
+  /* A page handed back goes quiet, and its words column says so in the red pen the sleeve
+     wrote its misses in. The seconds stay in black: they were still paid. */
+  .rl-page.no .rl-page-title { color: var(--ink-soft); }
+  .rl-page.no .rl-page-words { color: rgba(160,62,46,0.82); }
+  @media (max-width: 560px) {
+    .rl-page-list { columns: 1; }
+  }
+
   /* ---------- Album Focus page — a pinned board of album snapshots ----------
      The 12 studio albums as squares tacked to the desk in a loose 3x4 grid. Each
      picture "develops" with progress: blank when fresh, a faint era wash once
