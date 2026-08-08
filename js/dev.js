@@ -279,7 +279,8 @@ export function initDev(api) {
         btn("max all", () => { api.mastery.maxSkills(); toast("skills maxed"); })),
     row("frac", mFracN, btn("set skill frac", () => { api.mastery.setSkillFrac(mSkillSel.value, +mLvlN.value, +mFracN.value); toast("skill frac set"); })),
     row("mastery lvl", mMastN, btn("set", () => { api.mastery.setMasteryLevel(+mMastN.value); toast("mastery set"); }),
-        btn("unlock rewards", () => { api.mastery.unlockRewards(); toast("rewards unlocked"); })),
+        btn("unlock rewards", () => { api.mastery.unlockRewards(); toast("rewards unlocked"); }),
+        btn("lock rewards", () => { api.mastery.lockRewards(); toast("rewards locked"); })),
     row(btn("open page", () => api.mastery.open()),
         btn("reset mastery", () => { api.mastery.reset(); toast("mastery reset"); }, "warn"))));
 

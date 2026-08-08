@@ -38,7 +38,7 @@ import {
   ENDURANCE_GROWTH, ENDURANCE_RUN_CAP, RANGE_RATIO_XP, RANGE_PER_ALBUM,
   RESOLVE_BASE, RESOLVE_STREAK_CAP,
   MASTERY_REWARDS, MASTERY_REWARD_BY_ID, MASTERY_GATE, MASTERY_MAX_LEVEL, SKILL_MAX_LEVEL,
-  MASTERY_TITLES, MASTERY_TITLE_BY_VALUE, masteryDefaultTitle,
+  MASTERY_TITLES, MASTERY_TITLE_BY_VALUE, masteryDefaultTitle, MASTERY_ICONS, MASTERY_LEVEL_ICONS,
   skillXpForLevel, skillLevelFromXp, masteryXpForLevel, masteryLevelFromXp,
   POLAROID_DEVELOP_MS, POLAROID_TOTAL,
   RANDOM_CATEGORIES, RANDOM_UNPLAYED_WEIGHT,
@@ -1713,6 +1713,15 @@ function charmMarkup(icon, color) {
   return `<span class="charm" aria-hidden="true"${style}>${ACH_ICONS[icon]}</span>`;
 }
 
+// The same markup for a Mastery mark, drawn from the mastery-only MASTERY_ICONS namespace
+// rather than the achievement charm set. Every mastery surface — the ascent track, the reward
+// tiles, the title medallions, the skill emblems — goes through here, so a mark can be redrawn
+// for Mastery without a single achievement changing.
+function masteryMarkup(icon, color) {
+  const style = color ? ` style="--bead:${color}"` : "";
+  return `<span class="charm" aria-hidden="true"${style}>${MASTERY_ICONS[icon] || ""}</span>`;
+}
+
 // The theme colour an achievement's charm should render in (undefined for non-achievement icons).
 const achColor = (a) => ACH_GROUP_COLORS[achGroupOf(a.id)];
 
@@ -1915,6 +1924,14 @@ function unlockChallenge(id) {
 // True if the player's Mastery level has reached a mastery-gated challenge's requirement.
 function challengeMasteryReached(c) {
   return masteryLevelFromXp(loadMastery().masteryXp) >= c.mastery;
+}
+
+// True when the super-hard tier is actually open. Asked of the challenges themselves (the
+// `mastery` field on the tapes:4 entries) rather than of the Mastery reward ledger, so the
+// Mastery tile that advertises this tier can never disagree with the Challenges board.
+function superHardTierOpen() {
+  const gated = CHALLENGES.filter((c) => c.mastery);
+  return gated.length > 0 && gated.every(challengeMasteryReached);
 }
 
 // True if the player can start this challenge right now. Mastery-gated challenges open
@@ -2265,7 +2282,7 @@ function renderSkillsRecap() {
   const items = gained.map((sk) => {
     const up = levelTo[sk.id];
     return `<span class="sr-it${up ? " up" : ""}">` +
-      `<span class="sr-ic">${charmMarkup(sk.icon)}</span>` +
+      `<span class="sr-ic">${masteryMarkup(sk.icon)}</span>` +
       `<span class="sr-nm">${escapeHtml(sk.name)}</span>` +
       `<span class="sr-xp">+${delta[sk.id]}${up ? ` · lv ${up}` : ""}</span></span>`;
   }).join("");
@@ -3589,7 +3606,7 @@ function renderMasteryPage() {
     const lvlText = (maxed ? "★ " : "") + "Level " + lvl;
     const nextText = maxed ? "mastered" : `${xp - cur} ink to ${lvl + 1}`;
     return `<div class="skill-row" style="--c:rgb(${tint});--cs:rgba(${tint},0.14);--cr:rgba(${tint},0.42)">` +
-      `<span class="skill-emblem">${ACH_ICONS[sk.icon] || ""}</span>` +
+      `<span class="skill-emblem">${MASTERY_ICONS[sk.icon] || ""}</span>` +
       `<div class="skill-main">` +
         `<div class="skill-top"><span class="skill-name">${escapeHtml(sk.name)}</span><span class="skill-lvl">${lvlText}</span></div>` +
         `<div class="skill-bar">${pips}</div>` +
@@ -3627,9 +3644,9 @@ function renderMasteryPage() {
 //              markers, a pen nib riding the ink line at your exact progress)
 //   complete → a sealed gold medallion + a full gold bar
 
-// Which reward each mastery level introduces, for the ascent-track markers and the
-// "next reward" note. Only the levels that unlock something appear.
-const MASTERY_TRACK_ICONS = { 1: "nib", 4: "book", 5: "gem", 6: "swords", 7: "feather", 8: "rise", 10: "key", 12: "sparkle", 13: "crown" };
+// What each mastery level introduces, for the ascent-track markers and the "next reward"
+// note. Only the levels that unlock something appear. The marks themselves come from
+// MASTERY_LEVEL_ICONS in config.js, which the reward tiles read too.
 const MASTERY_LEVEL_LABEL = {
   1: "a new pen", 2: "a new pen", 3: "a new pen", 4: "paper stocks", 5: "bracelet charms",
   6: "super-hard challenges", 7: "a prestige title", 8: "a button finish",
@@ -3651,7 +3668,7 @@ function masteryHeadLocked(total) {
   const left = Math.max(0, MASTERY_GATE - total);
   return `<div class="mh-card mh-locked"><span class="mh-rule"></span>` +
     `<div class="mh-row">` +
-      `<div class="mh-seal locked"><span class="mh-seal-emblem">${charmMarkup("lock")}</span></div>` +
+      `<div class="mh-seal locked"><span class="mh-seal-emblem">${masteryMarkup("lock")}</span></div>` +
       `<div class="mh-body">` +
         `<div class="mh-kicker">Mastery</div>` +
         `<div class="mh-title">Not yet sealed</div>` +
@@ -3665,7 +3682,7 @@ function masteryHeadLocked(total) {
 function masteryHeadComplete(mLevel) {
   return `<div class="mh-card mh-complete"><span class="mh-rule"></span>` +
     `<div class="mh-row">` +
-      `<div class="mh-seal complete"><span class="mh-seal-emblem">${charmMarkup("crown")}</span></div>` +
+      `<div class="mh-seal complete"><span class="mh-seal-emblem">${masteryMarkup("crown")}</span></div>` +
       `<div class="mh-body">` +
         `<div class="mh-kicker">Mastery</div>` +
         `<div class="mh-title">Mastered</div>` +
@@ -3687,17 +3704,17 @@ function masteryHeadClimb(m, mLevel) {
   let pips = "";
   for (let i = 1; i <= MASTERY_MAX_LEVEL; i++) {
     const reached = i <= mLevel, current = i === mLevel;
-    const icon = MASTERY_TRACK_ICONS[i];
+    const icon = MASTERY_LEVEL_ICONS[i];
     const label = MASTERY_LEVEL_LABEL[i];
     const tip = `Level ${i}${label ? " · " + label : ""}`;
     pips += `<div class="mh-nd${reached ? " reached" : ""}${current ? " current" : ""}" title="${escapeHtml(tip)}">` +
-      `<span class="mh-ic">${icon ? charmMarkup(icon) : ""}</span>` +
+      `<span class="mh-ic">${icon ? masteryMarkup(icon) : ""}</span>` +
       `<span class="mh-dot"></span><span class="mh-lv">${i}</span></div>`;
   }
 
   const seal = mLevel >= 1
-    ? `<span class="mh-seal-star">${charmMarkup("star")}</span><span class="mh-seal-num">${mLevel}</span>`
-    : `<span class="mh-seal-emblem">${charmMarkup("star")}</span>`;
+    ? `<span class="mh-seal-star">${masteryMarkup("star")}</span><span class="mh-seal-num">${mLevel}</span>`
+    : `<span class="mh-seal-emblem">${masteryMarkup("star")}</span>`;
   const title = mLevel >= 1 ? `Level ${mLevel}` : "Freshly sealed";
 
   return `<div class="mh-card mh-climb"><span class="mh-rule"></span>` +
@@ -3712,7 +3729,7 @@ function masteryHeadClimb(m, mLevel) {
     `<div class="mh-track">` +
       `<span class="mh-line"></span>` +
       `<span class="mh-fill" style="width:${fillPos}"></span>` +
-      `<span class="mh-nib" style="left:calc(8px + ${fillPos})">${charmMarkup("nib")}</span>` +
+      `<span class="mh-nib" style="left:calc(8px + ${fillPos})">${masteryMarkup("nib")}</span>` +
       `<div class="mh-nodes">${pips}</div>` +
     `</div>` +
     `<div class="mh-sub"><b>${inCur} / ${span}</b> ink to level ${mLevel + 1}</div></div>`;
@@ -3743,10 +3760,20 @@ function buildRewardBento(m, mLevel, unlocked) {
       buildPensTile(groups.pen, m) +
       buildCharmTile(groups.charm, m) +
       buildPaperTile(groups.paper, m) +
-      buildHardTile(hardR, m) +
+      // The super-hard vault reports the real gate, not the ledger: `mastery: 6` on the
+      // tapes:4 challenges is what actually opens the tier.
+      buildMilestoneTile(hardR, {
+        area: "hard", tone: "dark", watermark: true, earned: superHardTierOpen(),
+        earnedCopy: "Unlocked — a tier of brutal new challenges awaits in Challenges.",
+        lockedCopy: `A tier of brutal new challenges. Reach Mastery ${hardR ? hardR.level : ""} to break the seal.`,
+      }) +
       buildButtonTile(groups.button, m) +
       buildSignatureTile(groups.signature, m) +
-      buildHintTile(hintR, m) +
+      buildMilestoneTile(hintR, {
+        area: "hint", tone: "light", earned: !!(hintR && m.unlocked[hintR.id]),
+        earnedCopy: "Earned — every secret charm now shows how to earn it.",
+        lockedCopy: `Reveal how to earn every secret charm. Reach Mastery ${hintR ? hintR.level : ""}.`,
+      }) +
       buildTitlesTile(m, unlocked) +
     `</div>` +
   `</div>`;
@@ -3755,27 +3782,32 @@ function buildRewardBento(m, mLevel, unlocked) {
 // Small level pill shown top-right of a tile.
 function rbChip(text) { return `<span class="rb-chip">${escapeHtml(text)}</span>`; }
 
+// A stacked pick-list row — the shape the pens tile and the signature tile both wear: a glyph,
+// a name, and a tag that reads "in use" on the row you're wearing. The two kinds differ only
+// in how much room the glyph needs, which the list's variant class handles.
+function rbRow(attr, glyphHTML, name, active) {
+  return `<button type="button" class="rb-row${active ? " active" : ""}" ${attr}>` +
+    `<span class="rb-row-ic">${glyphHTML}</span><span class="rb-row-nm">${escapeHtml(name)}</span>` +
+    `<span class="rb-row-tag">${active ? "in use" : "use"}</span></button>`;
+}
+// Its locked twin — an empty slot, so the reward stays a surprise until it's earned.
+function rbRowSlot(level) {
+  return `<div class="rb-row locked"><span class="rb-row-ic rb-lock">${MASTERY_ICONS.lock}</span>` +
+    `<span class="rb-row-nm">Locked</span><span class="rb-row-tag">Mastery ${level}</span></div>`;
+}
+
 // Pens — a stacked column. A "default" hand plus each unlockable pen; locked pens are slots.
 function buildPensTile(pens, m) {
   const active = settings.masteryPen || "";
-  let rows = penRow(`data-reward-reset="pen"`, charmMarkup("nib"), "Default", active === "");
+  let rows = rbRow(`data-reward-reset="pen"`, masteryMarkup("nib"), "Default", active === "");
   pens.forEach((r) => {
-    if (!m.unlocked[r.id]) rows += penSlot(r.level);
-    else rows += penRow(`data-reward="${r.id}"`, charmMarkup(r.icon), r.name, active === r.payload.pen);
+    if (!m.unlocked[r.id]) rows += rbRowSlot(r.level);
+    else rows += rbRow(`data-reward="${r.id}"`, masteryMarkup(r.icon), r.name, active === r.payload.pen);
   });
   return `<div class="rb-tile rb-pens" style="grid-area:pens">` +
     `<div class="rb-tile-top"><span class="rb-tt">Pens</span>${rbChip("Mastery 1–3")}</div>` +
     `<div class="rb-tt-sub">Your writing hand</div>` +
-    `<div class="rb-pen-list">${rows}</div></div>`;
-}
-function penRow(attr, iconHTML, name, active) {
-  return `<button type="button" class="rb-pen${active ? " active" : ""}" ${attr}>` +
-    `<span class="rb-pen-ic">${iconHTML}</span><span class="rb-pen-nm">${escapeHtml(name)}</span>` +
-    `<span class="rb-pen-tag">${active ? "in use" : "use"}</span></button>`;
-}
-function penSlot(level) {
-  return `<div class="rb-pen locked"><span class="rb-pen-ic rb-lock">${ACH_ICONS.lock}</span>` +
-    `<span class="rb-pen-nm">Locked</span><span class="rb-pen-tag">Mastery ${level}</span></div>`;
+    `<div class="rb-rows rb-rows--pen">${rows}</div></div>`;
 }
 
 // Charms — the hero tile: charms hang from a bracelet strand on alternating drops.
@@ -3797,7 +3829,7 @@ function charmBead(attr, id, name, active, available, idx) {
   const drop = idx % 2 === 0 ? "short" : "long";   // alternating hang, like a laid-out bracelet
   if (!available) {
     return `<span class="rb-bead-col ${drop} locked"><span class="rb-stem"></span>` +
-      `<span class="rb-bead"><span class="rb-lock">${ACH_ICONS.lock}</span></span></span>`;
+      `<span class="rb-bead"><span class="rb-lock">${MASTERY_ICONS.lock}</span></span></span>`;
   }
   return `<button type="button" class="rb-bead-col ${drop}${active ? " active" : ""}" ${attr}>` +
     `<span class="rb-stem"></span><span class="rb-bead">${charmPreviewSVG(id)}</span>` +
@@ -3808,37 +3840,48 @@ function charmBead(attr, id, name, active, available, idx) {
 function buildPaperTile(papers, m) {
   const setUnlocked = papers.length ? !!m.unlocked[papers[0].id] : false;
   const active = settings.masteryPaper || "";
-  let sw = paperSwatch(`data-reward-reset="paper"`, "default", "plain", active === "", true, 0);
+  let sw = rbSwatch(`data-reward-reset="paper"`, paperChip("default"), "plain", active === "", true, 0);
   papers.forEach((r) => {
-    sw += paperSwatch(`data-reward="${r.id}"`, r.payload.paper, r.payload.paper, active === r.payload.paper, setUnlocked, r.level);
+    sw += rbSwatch(`data-reward="${r.id}"`, paperChip(r.payload.paper), r.payload.paper, active === r.payload.paper, setUnlocked, r.level);
   });
   return `<div class="rb-tile rb-paper" style="grid-area:paper">` +
     `<div class="rb-tile-top"><span class="rb-tt">Paper stock</span>${rbChip("Mastery 4")}</div>` +
     `<div class="rb-tt-sub">Retints the whole page</div>` +
     `<div class="rb-swatches">${sw}</div></div>`;
 }
-function paperSwatch(attr, paper, name, active, available, level) {
+// A swatch column — the shape the paper tile and the start-button tile both wear: a chip of
+// the real thing above its name, or a dashed empty chip while the set is still locked. `chip`
+// is the kind's own chip renderer, called with the locked flag.
+function rbSwatch(attr, chip, name, active, available, level) {
   if (!available) {
-    return `<span class="rb-sw-col locked"><span class="rb-sw locked"><span class="rb-lock">${ACH_ICONS.lock}</span></span>` +
-      `<span class="rb-sw-nm">Mastery ${level}</span></span>`;
+    return `<span class="rb-sw-col locked">${chip(true)}<span class="rb-sw-nm">Mastery ${level}</span></span>`;
   }
   return `<button type="button" class="rb-sw-col${active ? " active" : ""}" ${attr}>` +
-    `<span class="rb-sw paper-chip" data-paper="${paper}"></span>` +
-    `<span class="rb-sw-nm">${active ? "in use" : escapeHtml(name)}</span></button>`;
+    `${chip(false)}<span class="rb-sw-nm">${active ? "in use" : escapeHtml(name)}</span></button>`;
 }
+// The two chips a swatch can wear: a sheet of the real paper stock, and a miniature of the
+// real start button. Each carries its own locked finish.
+const paperChip = (paper) => (locked) => locked
+  ? `<span class="rb-sw locked"><span class="rb-lock">${MASTERY_ICONS.lock}</span></span>`
+  : `<span class="rb-sw paper-chip" data-paper="${paper}"></span>`;
+const buttonChip = (style) => (locked) => locked
+  ? `<span class="rb-btn-sw locked"><span class="rb-lock">${MASTERY_ICONS.lock}</span></span>`
+  : `<span class="rb-btn-sw" data-startbtn="${style}">Aa</span>`;
 
-// Super-hard challenges — a single dark "vault" milestone tile: sealed while locked, earned
-// once reached. Grants no toggle; it just unlocks the tier over in Challenges mode.
-function buildHardTile(r, m) {
+// A milestone tile — the shape both toggle-less rewards wear (super-hard challenges at 6,
+// secret hints at 10): a wax seal that stays shut until the milestone is reached, the level
+// chip, the name, and one line of copy that changes with the state. `opts.tone` picks the
+// finish ("dark" for the vault, "light" for a tile that sits on the page's own paper) and
+// `opts.watermark` floats the reward's mark oversized behind the copy.
+function buildMilestoneTile(r, opts) {
   if (!r) return "";
-  const unlocked = !!m.unlocked[r.id];
-  return `<div class="rb-tile rb-hard${unlocked ? " earned" : ""}" style="grid-area:hard">` +
-    `<span class="rb-hard-swords">${ACH_ICONS.swords}</span>${rbChip("Mastery " + r.level)}` +
-    `<span class="rb-hard-seal">${unlocked ? ACH_ICONS.swords : ACH_ICONS.lock}</span>` +
-    `<div class="rb-hard-nm">${escapeHtml(r.name)}</div>` +
-    `<div class="rb-hard-sub">${unlocked
-      ? "Unlocked — a tier of brutal new challenges awaits in Challenges."
-      : "A tier of brutal new challenges. Reach Mastery " + r.level + " to break the seal."}</div></div>`;
+  const mark = MASTERY_ICONS[r.icon] || "";
+  return `<div class="rb-tile rb-ms rb-ms--${opts.tone}${opts.earned ? " earned" : ""}" style="grid-area:${opts.area}">` +
+    (opts.watermark ? `<span class="rb-ms-mark">${mark}</span>` : "") +
+    rbChip("Mastery " + r.level) +
+    `<span class="rb-ms-seal">${opts.earned ? mark : MASTERY_ICONS.lock}</span>` +
+    `<div class="rb-ms-nm">${escapeHtml(r.name)}</div>` +
+    `<div class="rb-ms-sub">${opts.earned ? opts.earnedCopy : opts.lockedCopy}</div></div>`;
 }
 
 // Start-writing button finishes — swatches of the real CTA (default plus each unlockable
@@ -3846,62 +3889,29 @@ function buildHardTile(r, m) {
 function buildButtonTile(buttons, m) {
   const setUnlocked = buttons.length ? !!m.unlocked[buttons[0].id] : false;
   const active = settings.masteryButton || "";
-  let sw = buttonSwatch(`data-reward-reset="button"`, "", "gold marker", active === "", true, 0);
+  let sw = rbSwatch(`data-reward-reset="button"`, buttonChip(""), "gold marker", active === "", true, 0);
   buttons.forEach((r) => {
-    sw += buttonSwatch(`data-reward="${r.id}"`, r.payload.button, r.name, active === r.payload.button, setUnlocked, r.level);
+    sw += rbSwatch(`data-reward="${r.id}"`, buttonChip(r.payload.button), r.name, active === r.payload.button, setUnlocked, r.level);
   });
   return `<div class="rb-tile rb-button" style="grid-area:button">` +
     `<div class="rb-tile-top"><span class="rb-tt">Start button</span>${rbChip("Mastery 8")}</div>` +
     `<div class="rb-tt-sub">Restyles your home-screen button</div>` +
     `<div class="rb-swatches">${sw}</div></div>`;
 }
-function buttonSwatch(attr, style, name, active, available, level) {
-  if (!available) {
-    return `<span class="rb-sw-col locked"><span class="rb-btn-sw locked"><span class="rb-lock">${ACH_ICONS.lock}</span></span>` +
-      `<span class="rb-sw-nm">Mastery ${level}</span></span>`;
-  }
-  return `<button type="button" class="rb-sw-col${active ? " active" : ""}" ${attr}>` +
-    `<span class="rb-btn-sw" data-startbtn="${style}">Aa</span>` +
-    `<span class="rb-sw-nm">${active ? "in use" : escapeHtml(name)}</span></button>`;
-}
-
 // Signature flourishes — a stacked column of hand-inked marks (default "no flourish" plus
 // each unlockable flourish). Selecting one draws it beneath your records signature.
 function buildSignatureTile(sigs, m) {
   const setUnlocked = sigs.length ? !!m.unlocked[sigs[0].id] : false;
   const active = settings.masterySignature || "";
-  let rows = sigRow(`data-reward-reset="signature"`, flourishSVG(""), "No flourish", active === "");
+  let rows = rbRow(`data-reward-reset="signature"`, flourishSVG(""), "No flourish", active === "");
   sigs.forEach((r) => {
-    if (!setUnlocked) rows += sigSlot(r.level);
-    else rows += sigRow(`data-reward="${r.id}"`, flourishSVG(r.payload.signature), r.name, active === r.payload.signature);
+    if (!setUnlocked) rows += rbRowSlot(r.level);
+    else rows += rbRow(`data-reward="${r.id}"`, flourishSVG(r.payload.signature), r.name, active === r.payload.signature);
   });
   return `<div class="rb-tile rb-sig" style="grid-area:sig">` +
     `<div class="rb-tile-top"><span class="rb-tt">Signature flourish</span>${rbChip("Mastery 12")}</div>` +
     `<div class="rb-tt-sub">Inked beneath your records signature</div>` +
-    `<div class="rb-sig-list">${rows}</div></div>`;
-}
-function sigRow(attr, glyphHTML, name, active) {
-  return `<button type="button" class="rb-sig-row${active ? " active" : ""}" ${attr}>` +
-    `<span class="rb-sig-ic">${glyphHTML}</span><span class="rb-sig-nm">${escapeHtml(name)}</span>` +
-    `<span class="rb-sig-tag">${active ? "in use" : "use"}</span></button>`;
-}
-function sigSlot(level) {
-  return `<div class="rb-sig-row locked"><span class="rb-sig-ic rb-lock">${ACH_ICONS.lock}</span>` +
-    `<span class="rb-sig-nm">Locked</span><span class="rb-sig-tag">Mastery ${level}</span></div>`;
-}
-
-// Secret hints — a level-10 milestone tile (grants no toggle). Sealed while locked, earned
-// once reached; when earned, the achievements page reveals each secret charm's how-to.
-function buildHintTile(r, m) {
-  if (!r) return "";
-  const unlocked = !!m.unlocked[r.id];
-  return `<div class="rb-tile rb-hint${unlocked ? " earned" : ""}" style="grid-area:hint">` +
-    `<span class="rb-hint-seal">${unlocked ? ACH_ICONS.key : ACH_ICONS.lock}</span>` +
-    `${rbChip("Mastery " + r.level)}` +
-    `<div class="rb-hint-nm">${escapeHtml(r.name)}</div>` +
-    `<div class="rb-hint-sub">${unlocked
-      ? "Earned — every secret charm now shows how to earn it."
-      : "Reveal how to earn every secret charm. Reach Mastery " + r.level + "."}</div></div>`;
+    `<div class="rb-rows rb-rows--sig">${rows}</div></div>`;
 }
 
 // The signature-flourish glyph for a given id (shared by the records page and the Mastery
@@ -3966,13 +3976,13 @@ function buildTitlesTile(m, unlocked) {
     const cls = reached ? (isWorn ? "reached worn" : "reached") : (isNext ? "next" : "locked");
     const flag = isWorn ? `<span class="rb-medal-flag">worn</span>`
       : isNext ? `<span class="rb-medal-flag">next</span>` : "";
-    return `<div class="rb-medal ${cls}"><span class="rb-medal-ic">${charmMarkup(t.icon)}</span>` +
+    return `<div class="rb-medal ${cls}"><span class="rb-medal-ic">${masteryMarkup(t.icon)}</span>` +
       `<span class="rb-medal-lv">${RB_TIER_ROMAN[i]} · L${t.level}</span>` +
       `<span class="rb-medal-nm">${RB_TIER_SHORT[i]}</span>${flag}</div>`;
   }).join("");
   const picker = unlocked
     ? `<div id="titleStepper" class="title-stepper"></div>`
-    : `<div class="rb-title-lock"><span class="rb-lock">${ACH_ICONS.lock}</span>Reach Mastery 7 to earn your first title</div>`;
+    : `<div class="rb-title-lock"><span class="rb-lock">${MASTERY_ICONS.lock}</span>Reach Mastery 7 to earn your first title</div>`;
   return `<div class="rb-tile rb-titles" style="grid-area:title">` +
     `<div class="rb-tile-top"><span class="rb-tt">Prestige titles</span>${rbChip("Mastery 7")}</div>` +
     `<div class="rb-tt-sub">Four ranks, fourteen titles. Engraved on your records signature.</div>` +
@@ -4049,14 +4059,14 @@ function renderTitleStepper() {
   const isWorn = r.payload.title === worn;
   const isCapstone = r.level >= 13;
 
-  const nameHTML = (isCapstone ? charmMarkup(r.icon) + "<span>" + escapeHtml(r.name) + "</span>" : escapeHtml(r.name)) +
+  const nameHTML = (isCapstone ? masteryMarkup(r.icon) + "<span>" + escapeHtml(r.name) + "</span>" : escapeHtml(r.name)) +
     (r.isDefault ? ` <span class="ts-def">default</span>` : "");
   const sub = isCapstone ? `the capstone · Mastery ${r.level}` : `Mastery ${r.level}`;
 
   let action;
   if (!isUnlocked) {
     const togo = Math.max(1, r.level - mLevel);
-    action = `<div class="ts-act lock"><span class="charm">${ACH_ICONS.lock}</span>${togo} level${togo === 1 ? "" : "s"} to go</div>`;
+    action = `<div class="ts-act lock"><span class="charm">${MASTERY_ICONS.lock}</span>${togo} level${togo === 1 ? "" : "s"} to go</div>`;
   } else if (isWorn) {
     action = `<div class="ts-act worn">currently worn</div>`;
   } else {
@@ -14065,7 +14075,7 @@ function emitSkillToast(sk, level, fallbackId) {
   t.className = "toast toast-skill";
   if (sk && sk.blurb) { t.setAttribute("data-tip", sk.blurb); t.setAttribute("data-tip-delay", "500"); }
   t.innerHTML =
-    `<div class="ts-medal">${sk ? charmMarkup(sk.icon) : ""}<span class="ts-lv">${level}</span></div>` +
+    `<div class="ts-medal">${sk ? masteryMarkup(sk.icon) : ""}<span class="ts-lv">${level}</span></div>` +
     `<div class="ts-body"><div class="t-label">skill leveled up</div>` +
     `<div class="t-name">${escapeHtml(sk ? sk.name : fallbackId)}</div>` +
     `<div class="ts-craft">reached level ${level}</div></div>`;
@@ -17108,9 +17118,19 @@ function buildDevApi() {
         for (const r of MASTERY_REWARDS) if (r.level <= lvl && !m.unlocked[r.id]) m.unlocked[r.id] = new Date().toISOString();
         saveMastery(m); updateMasteryNav(); if ($("masteryBody")) renderMasteryPage();
       },
-      unlockRewards: () => { const m = loadMastery(); for (const r of MASTERY_REWARDS) m.unlocked[r.id] = new Date().toISOString(); saveMastery(m); if ($("masteryBody")) renderMasteryPage(); },
-      // Re-lock every reward — preview the reward bento's locked/empty-slot tile states.
-      lockRewards: () => { const m = loadMastery(); m.unlocked = {}; saveMastery(m); updateMasteryNav(); if ($("masteryBody")) renderMasteryPage(); },
+      // Unlock every reward — and take the level with it. The super-hard vault reports the real
+      // challenge gate (Mastery 6 on the tapes:4 entries), not the ledger, so a ledger flipped
+      // without the level behind it would show a fully earned board with one tile still sealed.
+      unlockRewards: () => {
+        const m = loadMastery();
+        for (const r of MASTERY_REWARDS) m.unlocked[r.id] = new Date().toISOString();
+        m.masteryXp = Math.max(m.masteryXp, masteryXpForLevel(MASTERY_MAX_LEVEL));
+        SKILL_IDS.forEach((id) => { m.skills[id] = skillXpForLevel(SKILL_MAX_LEVEL); });   // clear the unlock gate
+        saveMastery(m); updateMasteryNav(); if ($("masteryBody")) renderMasteryPage();
+      },
+      // Re-lock every reward — preview the reward bento's locked/empty-slot tile states. Drops
+      // the mastery level with them, for the same reason unlockRewards raises it.
+      lockRewards: () => { const m = loadMastery(); m.unlocked = {}; m.masteryXp = 0; saveMastery(m); updateMasteryNav(); if ($("masteryBody")) renderMasteryPage(); },
       reset: () => { resetMastery(); settings.masteryPen = ""; settings.masteryPaper = ""; settings.masteryCharm = ""; settings.masteryTitle = ""; settings.masteryButton = ""; settings.masterySignature = ""; saveSettings(settings); setPen(null); applySettings(); updateMasteryNav(); if ($("masteryBody")) renderMasteryPage(); },
       // Preview a paper stock without unlocking it: pass an id (manila/parchment/blush/slate) or "" to clear.
       paper: (id) => { settings.masteryPaper = id || ""; saveSettings(settings); applySettings(); if ($("masteryBody")) renderMasteryPage(); },

@@ -1204,46 +1204,50 @@ export function masteryLevelFromXp(xp) {
 // Mastery rewards — one granted per Mastery level. `kind` drives how the Mastery screen
 // renders/applies it; `payload` is kind-specific. The ladder runs 1–13 (pens, papers,
 // charms, the super-hard unlock, then prestige titles) and 13 is the Mastery cap.
+// `icon` (a MASTERY_ICONS key) is only carried by the kinds that actually draw a mark:
+// pens, the two `unlock` milestones, and titles. The set kinds draw the thing itself
+// instead — paper draws its stock as a swatch, charms the charm, buttons an "Aa" chip,
+// signatures the flourish — so they carry no icon at all.
 export const MASTERY_REWARDS = [
   { level: 1, id: "pen-fountain", kind: "pen",  name: "Fountain pen",     icon: "nib",     desc: "Always write with a fountain pen.", payload: { pen: "fountain" } },
   { level: 2, id: "pen-quill",    kind: "pen",  name: "Feather quill",    icon: "feather", desc: "Trade your pen for a feather quill.", payload: { pen: "quill" } },
   { level: 3, id: "pen-glitter",  kind: "pen",  name: "Glitter gel pen",  icon: "sparkle", desc: "A glitter gel pen, for the sparkle.", payload: { pen: "glitter" } },
   // Paper stocks — a set unlocked together at level 4. Each retints the page surface
   // (CSS body[data-paper="…"]); the swatch chip + apply path live in app.js.
-  { level: 4,  id: "paper-manila",    kind: "paper", name: "Manila pad",      icon: "book", desc: "Warm kraft tan, like a legal pad.",   payload: { paper: "manila" } },
-  { level: 4,  id: "paper-parchment", kind: "paper", name: "Aged parchment",  icon: "book", desc: "Antique ivory, softly foxed.",        payload: { paper: "parchment" } },
-  { level: 4,  id: "paper-blush",     kind: "paper", name: "Blush leaf",      icon: "book", desc: "A soft rose stationery.",            payload: { paper: "blush" } },
-  { level: 4,  id: "paper-slate",     kind: "paper", name: "Slate pad",       icon: "book", desc: "Cool blue-grey engineer's stock.",   payload: { paper: "slate" } },
+  { level: 4,  id: "paper-manila",    kind: "paper", name: "Manila pad",     desc: "Warm kraft tan, like a legal pad.",   payload: { paper: "manila" } },
+  { level: 4,  id: "paper-parchment", kind: "paper", name: "Aged parchment", desc: "Antique ivory, softly foxed.",        payload: { paper: "parchment" } },
+  { level: 4,  id: "paper-blush",     kind: "paper", name: "Blush leaf",     desc: "A soft rose stationery.",            payload: { paper: "blush" } },
+  { level: 4,  id: "paper-slate",     kind: "paper", name: "Slate pad",      desc: "Cool blue-grey engineer's stock.",   payload: { paper: "slate" } },
   // Bracelet charms — a set unlocked together at level 5. Each swaps the charm that
   // dangles from every correct-answer bead (the CHARMS renderer in bracelet.js); the
   // verse pen-nib stays reserved. Selection persists in settings.masteryCharm.
-  { level: 5,  id: "charm-heart",     kind: "charm", name: "Heart charm",     icon: "heart",  desc: "Hang a friendship heart.",       payload: { charm: "heart" } },
-  { level: 5,  id: "charm-moon",      kind: "charm", name: "Moon charm",      icon: "moon",   desc: "A waxing crescent moon.",        payload: { charm: "moon" } },
-  { level: 5,  id: "charm-daisy",     kind: "charm", name: "Daisy charm",     icon: "branch", desc: "A little pressed daisy.",        payload: { charm: "daisy" } },
-  { level: 5,  id: "charm-bow",       kind: "charm", name: "Bow charm",       icon: "scarf",  desc: "A tied ribbon bow.",             payload: { charm: "bow" } },
-  { level: 5,  id: "charm-pick",      kind: "charm", name: "Pick charm",      icon: "note",   desc: "A guitar pick, for the stage.",  payload: { charm: "pick" } },
-  { level: 5,  id: "charm-note",      kind: "charm", name: "Note charm",      icon: "note",   desc: "A single eighth note.",          payload: { charm: "note" } },
-  { level: 5,  id: "charm-lightning", kind: "charm", name: "Lightning charm", icon: "bolt",   desc: "A bolt of lightning.",           payload: { charm: "lightning" } },
-  { level: 5,  id: "charm-snake",     kind: "charm", name: "Snake charm",     icon: "snake",  desc: "A reputation serpent.",          payload: { charm: "snake" } },
+  { level: 5,  id: "charm-heart",     kind: "charm", name: "Heart charm",     desc: "Hang a friendship heart.",       payload: { charm: "heart" } },
+  { level: 5,  id: "charm-moon",      kind: "charm", name: "Moon charm",      desc: "A waxing crescent moon.",        payload: { charm: "moon" } },
+  { level: 5,  id: "charm-daisy",     kind: "charm", name: "Daisy charm",     desc: "A little pressed daisy.",        payload: { charm: "daisy" } },
+  { level: 5,  id: "charm-bow",       kind: "charm", name: "Bow charm",       desc: "A tied ribbon bow.",             payload: { charm: "bow" } },
+  { level: 5,  id: "charm-pick",      kind: "charm", name: "Pick charm",      desc: "A guitar pick, for the stage.",  payload: { charm: "pick" } },
+  { level: 5,  id: "charm-note",      kind: "charm", name: "Note charm",      desc: "A single eighth note.",          payload: { charm: "note" } },
+  { level: 5,  id: "charm-lightning", kind: "charm", name: "Lightning charm", desc: "A bolt of lightning.",           payload: { charm: "lightning" } },
+  { level: 5,  id: "charm-snake",     kind: "charm", name: "Snake charm",     desc: "A reputation serpent.",          payload: { charm: "snake" } },
   { level: 6,  id: "hardmode-unlock", kind: "unlock", name: "Super-hard challenges", icon: "swords",  desc: "Unlocks a tier of brutal new challenges in Challenges mode." },
   // Start-writing button finishes — a set unlocked together at level 8. Each restyles the
   // home-screen hero CTA (CSS body[data-startbtn="…"] over #playBtn). Selection persists in
   // settings.masteryButton; applied globally via applySettings.
-  { level: 8,  id: "btn-ink",   kind: "button", name: "Ink press", icon: "drop", desc: "A solid ink-stamped start button.", payload: { button: "ink" } },
-  { level: 8,  id: "btn-blush", kind: "button", name: "Blush",     icon: "sun",  desc: "A soft rose marker start button.",  payload: { button: "rose" } },
-  { level: 8,  id: "btn-sky",   kind: "button", name: "Sky",       icon: "moon", desc: "A cool blue marker start button.",  payload: { button: "sky" } },
+  { level: 8,  id: "btn-ink",   kind: "button", name: "Ink press", desc: "A solid ink-stamped start button.", payload: { button: "ink" } },
+  { level: 8,  id: "btn-blush", kind: "button", name: "Blush",     desc: "A soft rose marker start button.",  payload: { button: "rose" } },
+  { level: 8,  id: "btn-sky",   kind: "button", name: "Sky",       desc: "A cool blue marker start button.",  payload: { button: "sky" } },
   // Secret hints — a level-10 milestone (grants no toggle). Once earned, the achievements
   // page reveals how to earn each still-locked secret charm (its desc, name kept masked).
   { level: 10, id: "reveal-hints", kind: "unlock", name: "Secret hints", icon: "key", desc: "Reveals how to earn every secret charm." },
   // Signature flourishes — a set unlocked together at level 12. Each draws a hand-inked mark
   // beneath your records-page notebook signature (flourishSVG in app.js; the crest is a wax
   // seal). Selection persists in settings.masterySignature; rendered on the records page.
-  { level: 12, id: "sig-swash",    kind: "signature", name: "Underline",    icon: "feather", desc: "A confident stroke under your name.",         payload: { signature: "swash" } },
-  { level: 12, id: "sig-loop",     kind: "signature", name: "Flourish",     icon: "feather", desc: "A looping swash with a tail.",                payload: { signature: "loop" } },
-  { level: 12, id: "sig-rule",     kind: "signature", name: "Double rule",  icon: "book",    desc: "Two clean rules, signed and official.",      payload: { signature: "rule" } },
-  { level: 12, id: "sig-splatter", kind: "signature", name: "Ink splatter", icon: "drop",    desc: "A charming spray of dropped ink.",            payload: { signature: "splatter" } },
-  { level: 12, id: "sig-thirteen", kind: "signature", name: "The 13",       icon: "star",    desc: "The sacred number, drawn by hand.",           payload: { signature: "thirteen" } },
-  { level: 12, id: "sig-crest",    kind: "signature", name: "Poet’s crest", icon: "feather", desc: "A wax seal, quill and laurel.",         payload: { signature: "crest" } },
+  { level: 12, id: "sig-swash",    kind: "signature", name: "Underline",    desc: "A confident stroke under your name.",         payload: { signature: "swash" } },
+  { level: 12, id: "sig-loop",     kind: "signature", name: "Flourish",     desc: "A looping swash with a tail.",                payload: { signature: "loop" } },
+  { level: 12, id: "sig-rule",     kind: "signature", name: "Double rule",  desc: "Two clean rules, signed and official.",      payload: { signature: "rule" } },
+  { level: 12, id: "sig-splatter", kind: "signature", name: "Ink splatter", desc: "A charming spray of dropped ink.",            payload: { signature: "splatter" } },
+  { level: 12, id: "sig-thirteen", kind: "signature", name: "The 13",       desc: "The sacred number, drawn by hand.",           payload: { signature: "thirteen" } },
+  { level: 12, id: "sig-crest",    kind: "signature", name: "Poet’s crest", desc: "A wax seal, quill and laurel.",         payload: { signature: "crest" } },
   // Prestige titles — worn on your records-page notebook signature. Unlocked in tiers as
   // Mastery climbs; each tier has one `isDefault` title that a player on the "follows your
   // mastery" auto setting wears automatically, plus alternates they can switch to via the
@@ -1265,6 +1269,24 @@ export const MASTERY_REWARDS = [
   { level: 13, id: "title-ultimate-swiftie",  kind: "title", name: "Ultimate Swiftie",                            icon: "star",    desc: "You know all the words.",        payload: { title: "ultimate-swiftie" } },
 ];
 export const MASTERY_REWARD_BY_ID = Object.fromEntries(MASTERY_REWARDS.map((r) => [r.id, r]));
+
+// The mark each Mastery level wears on the hero's ascent track, and the single source of
+// truth for it. Where a reward already defines the level's identity — the first pen, the two
+// milestones, a tier's default title — the level takes its mark FROM that reward rather than
+// naming a second one, so the track node and the tile it points at can never drift apart.
+// The set levels (paper, charms, button finishes, flourishes) draw their rewards rather than
+// a mark, so they name one here. Levels 2, 3, 9 and 11 are deliberately unmarked.
+export const MASTERY_LEVEL_ICONS = {
+  1:  MASTERY_REWARD_BY_ID["pen-fountain"].icon,
+  4:  "book",
+  5:  "gem",
+  6:  MASTERY_REWARD_BY_ID["hardmode-unlock"].icon,
+  7:  MASTERY_REWARD_BY_ID["title-certified-poet"].icon,
+  8:  "rise",
+  10: MASTERY_REWARD_BY_ID["reveal-hints"].icon,
+  12: "sparkle",
+  13: MASTERY_REWARD_BY_ID["title-ultimate-showgirl"].icon,
+};
 
 // Prestige titles, in tier order. `masteryDefaultTitle` resolves the title a "follows your
 // mastery" player wears: the default of the highest tier they've reached ("" before level 7).
@@ -1692,6 +1714,29 @@ export const ACH_ICONS = {
   nametag: `<svg viewBox="0 0 24 24"><g transform="rotate(-9 12 13)"><path class="ink-fill" d="M8.4 7.4 H19.4 a1.4 1.4 0 0 1 1.4 1.4 V17.4 a1.4 1.4 0 0 1 -1.4 1.4 H8.4 L3.6 13.1 Z"/><circle cx="7" cy="13.1" r="1.15" fill="var(--paper)" stroke="currentColor" stroke-width="1.1"/><g class="ink" stroke-width="1.1" opacity="0.6"><path d="M10.6 11.4 H18"/><path d="M10.6 14.6 H15.6"/></g></g><path class="ink" stroke-width="1.2" fill="none" d="M7.1 13.4 C4.4 10.4 5.4 5.4 9.6 3.6"/><circle cx="10.9" cy="3.2" r="1.4" fill="none" stroke="currentColor" stroke-width="1.2"/></svg>`,
 
 };
+
+/* ---------- Mastery marks ----------
+   Mastery iconography lives in its own namespace, apart from the achievement charm set.
+   The two sets answer different questions (a charm says what you did; a mastery mark says
+   how far you have climbed) and the charm set is crowded — `feather` alone is worn by seven
+   achievements — so a prestige mark can never be redrawn without collateral damage while
+   the two share a table. Every entry below currently ALIASES its ACH_ICONS glyph: the point
+   is the seam, not the drawing. A later pass replaces these one at a time (a real fountain
+   pen, a glitter gel pen, swords, the four prestige tier marks) with no effect on charms.
+   Read through masteryMarkup() in app.js; keys are named by MASTERY_LEVEL_ICONS, the
+   `icon` field on a mastery reward, and SKILLS[].icon. */
+export const MASTERY_ICONS = Object.fromEntries([
+  // pens (levels 1–3) and the two milestone seals
+  "nib", "feather", "sparkle", "swords", "key",
+  // level marks with no reward of their own: paper, charms, button finishes, flourishes
+  "book", "gem", "rise",
+  // prestige titles, four tiers. `crown` is deliberately doing double duty here — it is both
+  // the tier IV medallion and Ultimate Showgirl's own mark. Left unresolved on purpose: the
+  // redesign has to decide whether the capstone title and its tier want separate marks.
+  "drop", "tower", "note", "quote", "brain", "crown", "star",
+  // skill emblems and the shared padlock
+  "comet", "metronome", "heartline", "trail", "records", "lock",
+].map((k) => [k, ACH_ICONS[k]]));
 
 /* ---------- Challenge wax seals ----------
    Every challenge's icon is a red sealing-wax stamp with its motif pressed in relief,
