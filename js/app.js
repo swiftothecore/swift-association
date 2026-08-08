@@ -6177,7 +6177,6 @@ function renderChallengeDetail(id) {
   const cost = c.cost || 1;
   const tt = loadChallengeTokens().tickets;
   const price = ticketPrice(c);          // null = no number of tickets ever buys this one
-  const mode = MODES[c.mode];
 
   let action;
   if (!open && c.mastery) {
@@ -6246,36 +6245,28 @@ function renderChallengeDetail(id) {
   else if (rec.attempts) meta = `${rec.attempts} attempt${rec.attempts === 1 ? "" : "s"} · not yet beaten`;
 
   // "What changes on the dark side?" — the rules you're being offered, readable without
-  // committing to a run. It unfolds in place rather than switching the card into a dark
-  // "mode": the buttons below never move, so the card can't be misread as being about the
-  // dark side when you press Play. Same gate as the button — beating the base earns the
-  // reveal. Only genuinely different fields are listed, so it stays a diff, not a reprint.
+  // committing to a run. Rather than printing a diff underneath, it swaps the card's own
+  // rule/goal/mods text for the dark figures, written in violet: the same three lines in the
+  // same three places, so the change is legible as a change instead of as a second paragraph
+  // to cross-reference. Same gate as the button — beating the base earns the reveal.
+  //
+  // The card therefore does sit in a state, which an earlier tabs pass got badly wrong, so
+  // three things make the state impossible to miss or to be stuck in: every swapped line is
+  // violet, an eclipse + "dark side" flag rides beside the challenge name while it's showing,
+  // and the toggle below reads "show me the light side again". Crucially the ACTION ROW never
+  // changes — Play still starts the base run, Dark Side still starts the dark one, both one
+  // click away — so the state changes what you're reading, never what a button does.
+  const showDark = open && darkOpen && challDetailPeek;
+  const view = showDark ? resolveChallenge(c, true) : c;
+  const viewMode = MODES[view.mode];
   let darkPeek = "";
   if (open && darkOpen) {
-    const d = resolveChallenge(c, true);
-    const dMode = MODES[d.mode];
-    const dBlurb = d.blurb || dMode.blurb, cBlurb = c.blurb || mode.blurb;
-    const dMeta = rec.darkDefeated
-      ? `best ${rec.darkBest}${outOfFor(rec.darkBest)} · ${rec.darkAttempts} attempt${rec.darkAttempts === 1 ? "" : "s"}`
-      : rec.darkAttempts
-        ? `${rec.darkAttempts} attempt${rec.darkAttempts === 1 ? "" : "s"} · not yet beaten`
-        : "not yet attempted";
     darkPeek =
-      `<div class="chall-peek${challDetailPeek ? " is-open" : ""}">` +
+      `<div class="chall-peek">` +
         `<button type="button" class="chall-peek-toggle" data-peek aria-expanded="${challDetailPeek}">` +
           `<span class="chall-peek-mark">${CHALL_ECLIPSE}</span>` +
-          `<span class="chall-peek-lab">what changes on the dark side?</span>` +
-          `<span class="chall-peek-chev" aria-hidden="true">${challDetailPeek ? "▴" : "▾"}</span>` +
+          `<span class="chall-peek-lab">${showDark ? "show me the light side again" : "what changes on the dark side?"}</span>` +
         `</button>` +
-        (challDetailPeek
-          ? `<div class="chall-peek-body">` +
-              (d.desc !== c.desc ? `<div class="chall-peek-rule">${escapeHtml(d.desc)}</div>` : "") +
-              (d.win !== c.win ? `<div class="chall-peek-goal">${escapeHtml(d.win)}</div>` : "") +
-              (dBlurb !== cBlurb ? `<div class="chall-peek-mods">${escapeHtml(dBlurb)}</div>` : "") +
-              `<div class="chall-peek-meta">` +
-                `${rec.darkDefeated ? `<span class="chall-peek-stamp">defeated</span>` : ""}${dMeta}</div>` +
-            `</div>`
-          : "") +
       `</div>`;
   }
 
@@ -6299,33 +6290,46 @@ function renderChallengeDetail(id) {
       `</div>`;
   }
 
+  // While the dark rules are showing, the record line has to follow them: quoting the base
+  // best beside the dark goal would credit a run played on the easy version.
+  const shownMeta = showDark
+    ? (rec.darkDefeated
+        ? `best ${rec.darkBest}${outOfFor(rec.darkBest)} · ${rec.darkAttempts} attempt${rec.darkAttempts === 1 ? "" : "s"}`
+        : rec.darkAttempts
+          ? `${rec.darkAttempts} attempt${rec.darkAttempts === 1 ? "" : "s"} · not yet beaten`
+          : "dark side not yet attempted")
+    : meta;
+
   el.innerHTML =
     `<div class="chall-detail-head">` +
       `<span class="chall-detail-seal ${rec.darkDefeated ? "is-dark" : rec.defeated ? "is-beaten" : open ? "is-unbeaten" : "is-locked"}">` +
         `${sealMarkup((rec.darkDefeated ? CHALLENGE_SEALS_DARK : rec.defeated ? CHALLENGE_SEALS_AGED : CHALLENGE_SEALS)[c.id])}</span>` +
       `<span class="chall-detail-name">${escapeHtml(c.name)}</span>` +
-      (rec.defeated ? `<span class="chall-detail-star">${CHALL_STAR}</span><span class="chall-detail-stamp">defeated</span>` : "") +
+      (showDark
+        ? `<span class="chall-detail-dark">${CHALL_ECLIPSE}dark side</span>`
+        : rec.defeated ? `<span class="chall-detail-star">${CHALL_STAR}</span><span class="chall-detail-stamp">defeated</span>` : "") +
     `</div>` +
     `<div class="chall-diff">` +
       `<span class="chall-eyebrow">Difficulty</span>` +
       `${tapesMarkup(c.tapes)}` +
       `<span class="chall-diff-word">${TAPE_WORD[(c.tapes || 0) === 0 ? 0 : Math.max(1, Math.min(4, c.tapes))]}</span>` +
     `</div>` +
-    `<div class="chall-sec">` +
+    `<div class="chall-sec${showDark ? " is-dark" : ""}">` +
       `<div class="chall-eyebrow">The rule</div>` +
-      `<div class="chall-rule">${escapeHtml(c.desc)}</div>` +
+      `<div class="chall-rule">${escapeHtml(view.desc)}</div>` +
     `</div>` +
-    `<div class="chall-sec chall-sec--beat">` +
+    `<div class="chall-sec chall-sec--beat${showDark ? " is-dark" : ""}">` +
       `<div class="chall-eyebrow">To beat it</div>` +
-      `<div class="chall-goal">${escapeHtml(c.win)}</div>` +
-      `<div class="chall-mods">${escapeHtml(c.blurb || mode.blurb)}</div>` +
+      `<div class="chall-goal">${escapeHtml(view.win)}</div>` +
+      `<div class="chall-mods">${escapeHtml(view.blurb || viewMode.blurb)}</div>` +
     `</div>` +
     `<div class="chall-act">` +
-      `<span class="chall-meta">${meta}</span>` +
+      `<span class="chall-meta${showDark ? " is-dark" : ""}">` +
+        `${showDark && rec.darkDefeated ? `<span class="chall-meta-stamp">defeated</span>` : ""}${shownMeta}</span>` +
       `<span class="chall-act-btns">${darkAction}${action}</span>` +
     `</div>` +
-    // Below the actions on purpose: unfolding it must never shove the buttons off the page,
-    // and a note about the dark side reads best directly beneath the button it describes.
+    // Below the actions on purpose: the buttons never move when the card is flipped, and a
+    // note about the dark side reads best directly beneath the button it describes.
     // Persistence sits below both — it is about the runs behind you, not the run you're
     // about to start, and it must never crowd Play out of the row it shares with Dark Side.
     persist + darkPeek;
