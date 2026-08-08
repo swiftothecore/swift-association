@@ -2603,7 +2603,7 @@
      whole sheet instead of pushing the bridge past the fold. --rl-h has a vh fallback for
      the first paint, before the measure has run. */
   :root {
-    --rl-ink-verse-1:     #3b4a6b;   /* indigo biro */
+    --rl-ink-from-the-top:     #3b4a6b;   /* indigo biro */
     --rl-ink-pre-chorus:  #55663f;   /* moss */
     --rl-ink-chorus:      #a8402f;   /* the red pen everyone reaches for */
     --rl-ink-post-chorus: #856526;   /* ochre */
@@ -2612,7 +2612,7 @@
   }
   /* Lifted for the dark page: the light inks are all too deep to read on #2a241b. */
   :root[data-theme="dark"] {
-    --rl-ink-verse-1:     #8ba4d4;
+    --rl-ink-from-the-top:     #8ba4d4;
     --rl-ink-pre-chorus:  #a3bd7f;
     --rl-ink-chorus:      #e2857a;
     --rl-ink-post-chorus: #d8ae5c;
@@ -2659,7 +2659,7 @@
     margin: 0 -8px;
     transition: background .13s ease, border-color .13s ease;
   }
-  .rl-sec[data-lens="verse-1"]     { --rl-ink: var(--rl-ink-verse-1); }
+  .rl-sec[data-lens="from-the-top"] { --rl-ink: var(--rl-ink-from-the-top); }
   .rl-sec[data-lens="pre-chorus"]  { --rl-ink: var(--rl-ink-pre-chorus); }
   .rl-sec[data-lens="chorus"]      { --rl-ink: var(--rl-ink-chorus); }
   .rl-sec[data-lens="post-chorus"] { --rl-ink: var(--rl-ink-post-chorus); }

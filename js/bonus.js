@@ -1015,9 +1015,20 @@ export function ruthlessBar(song) {
    OUTRO IS NOT A LENS, and is barred by the endable-page rule above rather than by taste: 181
    songs have one, but only 43% can be named from it and the median stream left behind it is 19
    words, because an outro is at the end and there is nothing after it to run on into. Verse 3
-   (45 songs) and everything below it is too thin to deal ten pages from. */
+   (45 songs) and everything below it is too thin to deal ten pages from.
+
+   FROM THE TOP carries no `section` at all, and that is what makes it the song's own first word
+   rather than a seventh place to drop in. It was called Verse 1 and it should not have been:
+   opening on the first section labelled "verse 1" SKIPS THE INTRO, and 50 of 287 songs open on
+   something else (39 on an intro, 8 on a chorus, 3 on a refrain or an unnumbered verse). So the
+   old lens quietly started Cruel Summer, Getaway Car and Lavender Haze a few lines in, and for
+   the other 237 it was the top of the song wearing a name that only happened to be true. Naming
+   it for where it starts instead of for what is written there also drops the "no verse 1" bar,
+   which is why this lens deals 263 where Verse 1 dealt 260 — the whole endable pool, since every
+   song has a first word. It is the lens the shelf's own Ruthless Game used to be, which is why
+   that game left the shelf rather than sitting beside its own duplicate. */
 export const RUTHLESS_LENSES = [
-  { id: "verse-1",     label: "Verse 1",     section: "verse 1",     median: 78 },
+  { id: "from-the-top", label: "From the Top", section: null,         median: 76 },
   { id: "verse-2",     label: "Verse 2",     section: "verse 2",     median: 79 },
   { id: "chorus",      label: "Chorus",      section: "chorus",      median: 22 },
   { id: "bridge",      label: "Bridge",      section: "bridge",      median: 68 },
@@ -1032,9 +1043,12 @@ export function ruthlessLens(id) {
 /* Where the lens opens, as an index into `songLines(song)`, or -1 if the song hasn't got that
    section. The FIRST occurrence, always: Chorus appears 758 times over 260 songs and Pre-Chorus
    279 over 139, but the repeats are usually the same words again, so picking among them is fake
-   variation that mostly just deals a shorter stream. */
+   variation that mostly just deals a shorter stream.
+
+   A SECTIONLESS lens (From the Top) opens at word 0, the same answer as no lens at all. That is
+   the one case that can never return -1, which is what gives it the full pool. */
 function lensOpensAt(song, lens) {
-  if (!lens) return 0;
+  if (!lens || !lens.section) return 0;
   const want = lens.section;
   return songLines(song).findIndex(({ label }) => String(label).trim().toLowerCase() === want);
 }
@@ -1043,7 +1057,8 @@ function lensOpensAt(song, lens) {
    "this word opens a new line", which is what lets the page break where the song breaks without
    the screen having to know anything about sections — and the stream is never labelled with the
    section it has run on into, because announcing the chorus is a tell when the title usually
-   lives there. No lens means the whole song from its first word, which is the shelf's game. */
+   lives there. No lens means the whole song from its first word, which is what the From the Top
+   lens asks for by carrying no section. */
 export function ruthlessStream(song, lens = null) {
   const start = lensOpensAt(song, lens);
   if (start < 0) return [];
@@ -1074,7 +1089,8 @@ export function ruthlessGiveUp(lens) {
 /* Every song the game can deal under this lens, and every song it can't with the reason.
    Dev-facing: it is the only way to see the shape of the pool, since a run of ten pages never
    shows you the bars. A lens adds exactly one bar of its own, "no <section>", and then leans on
-   the length bar the whole-song game already had. It adds NO names-itself bar, deliberately and
+   the length bar the whole-song game already had — except From the Top, which carries no section
+   and so adds no bar at all and deals the whole endable pool. It adds NO names-itself bar, deliberately and
    for the reason the endable-page rule gives above: a song that never sings its own title is slow,
    not unendable, and the give-up is its valve. */
 export function ruthlessPool(songs, lens = null) {

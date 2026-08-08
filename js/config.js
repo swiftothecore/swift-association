@@ -367,10 +367,22 @@ export const BONUS_GAMES = [
     kicker: "what comes next?", tint: "#5e4a86", mark: "chain",
     line: "Three lines. Pick the one that comes next.",
     blurb: "One line of the song, and three that might follow it. Pick the right one and it locks into the page in pen; four picks and the verse is yours." },
-  // The one game on the shelf scored in SECONDS, and the only one where a low number is the
-  // good one (`timed`). Everything that shows a score reads that flag rather than assuming a
-  // run counts upward — see bonusScoreText / bonusRemark / recordBonusRun's `lower`.
-  { id: "ruthless-game", name: "Ruthless Game", ready: true, timed: true,
+  /* RETIRED FROM THE SHELF (`shelf: false`), and the only entry here that is not a shelf game.
+     It is scored in SECONDS and is the only one where a low number is the good one (`timed`);
+     everything that shows a score reads that flag rather than assuming a run counts upward — see
+     bonusScoreText / bonusRemark / recordBonusRun's `lower`.
+
+     It stays in the roster because it is not a card any more, it is the RUN DESCRIPTOR the
+     Ruthless mode plays through: `startRuthlessMode` hands this entry to `startBonusGame` with a
+     lens, and the loop, drip, clock, verdict and give-up are all still the shelf's. Deleting the
+     entry today would take the mode down with it. It leaves for good once the mode owns its own
+     end path (results page and board write instead of the record sleeve), which is the order
+     PLAN.md sets and the reason this is a flag rather than a deletion.
+
+     Why it left: the mode's From the Top lens opens on the song's first word, which is this
+     game's stream exactly. Two identical puzzles under two scoring rules is the worst of both,
+     so the from-the-top version lives in the mode, where a time is kept per lens. */
+  { id: "ruthless-game", name: "Ruthless Game", ready: true, timed: true, shelf: false,
     kicker: "a word a second", tint: "#7d2b34", mark: "metro",
     line: "A word a second until you name it.",
     blurb: "The song writes itself out from its very first word, one word every second, and the clock never stops. Guess as often as you like, because a wrong answer costs nothing but the seconds it took." },
@@ -425,8 +437,9 @@ export const CHAIN_EASY_PAGES = 3;
    It unlocks only after a real attempt so it can never be a reflex. */
 export const RUTHLESS_WORD_MS = 1000;
 export const RUTHLESS_OPEN_WORDS = 1;    // on the page before the first tick, so it never opens blank
-export const RUTHLESS_SKIP_AFTER = 20;   // words that must be out before giving up is offered
-export const RUTHLESS_SKIP_PENALTY = 90; // seconds added to the run for a page given up on
+// The give-up's two numbers are NOT constants any more and must not come back as a pair: six
+// lenses whose medians run from 22 to 79 words cannot share one price. They are derived per lens
+// from its own median by `ruthlessGiveUp` in js/bonus.js, holding the two ratios instead.
 // What the gauge fills over. Nothing happens when it fills — there is no deadline here — it is
 // purely a read on how expensive this page is getting, which a bar can say faster than a number.
 export const RUTHLESS_PACE_SECONDS = 45;

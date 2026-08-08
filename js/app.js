@@ -4208,10 +4208,18 @@ function bonusDisc(g, extra = "") {
    leaves your record where you left it. */
 let bonusPick = null;
 
+/* What the SHELF is, as opposed to what the roster is. They stopped being the same list when
+   Ruthless graduated to its own mode: its entry is still in BONUS_GAMES because the mode plays
+   through it, but it is not a record on the deck any more and nothing player-facing may offer it.
+   Every shelf surface and the randomiser go through here; the dev tools deliberately do NOT, so
+   `__dev.bonus.play("ruthless-game")` can still drive the lens-less run directly. */
+function shelfGames() { return BONUS_GAMES.filter((g) => g.shelf !== false); }
+
 function bonusPicked() {
-  return BONUS_GAMES.find((g) => g.id === bonusPick)
-      || BONUS_GAMES.find((g) => g.ready)
-      || BONUS_GAMES[0];
+  const shelf = shelfGames();
+  return shelf.find((g) => g.id === bonusPick)
+      || shelf.find((g) => g.ready)
+      || shelf[0];
 }
 
 /* ---------- What a run is out of ----------
@@ -4275,7 +4283,7 @@ const BONUS_TONEARM =
 function renderBonusPage() {
   const g = bonusPicked();
   bonusPick = g.id;
-  const others = BONUS_GAMES.filter((x) => x.id !== g.id);
+  const others = shelfGames().filter((x) => x.id !== g.id);
 
   const deck =
     `<div class="bonus-deck">` +
@@ -4327,7 +4335,7 @@ function renderBonusPage() {
   el.innerHTML =
     `<div class="bonus-head">` +
       `<p class="bonus-intro">Quick games kept apart from the main round. Put one on and play it.</p>` +
-      `<span class="bonus-count">${BONUS_GAMES.filter((x) => x.ready).length} in print</span>` +
+      `<span class="bonus-count">${shelfGames().filter((x) => x.ready).length} in print</span>` +
     `</div>` +
     deck +
     `<div class="bonus-shelf">` +
@@ -4344,7 +4352,7 @@ function renderBonusPage() {
 // written yet: its test pressing goes on the deck and the panel says so in words. Nothing
 // launches from here, so a shell can be read about without ever being playable.
 function selectBonusGame(id) {
-  const g = BONUS_GAMES.find((x) => x.id === id);
+  const g = shelfGames().find((x) => x.id === id);
   if (!g) return;
   bonusPick = id;
   renderBonusPage();
@@ -4382,8 +4390,13 @@ function startBonusGame(g, lensId = null) {
   stopBonusClock();
   stopBonusCountdown();
   // The pressing follows the game in from the shelf, so the play screen is visibly the
-  // same record you picked up rather than a generic titled page.
-  $("bonusPlayTitle").innerHTML = `${bonusDisc(g, "bonus-disc-sm")}<span>${escapeHtml(g.name)}</span>`;
+  // same record you picked up rather than a generic titled page. A LENS run is not off the shelf
+  // at all, so it is titled for the mode and the lens instead of for the roster entry it happens
+  // to be played through — "Ruthless Game" is a retired card, and with six lenses the one thing
+  // the header has to say is which of them you are on.
+  const lens = lensId ? ruthlessLens(lensId) : null;
+  const title = lens ? `Ruthless · ${lens.label}` : g.name;
+  $("bonusPlayTitle").innerHTML = `${bonusDisc(g, "bonus-disc-sm")}<span>${escapeHtml(title)}</span>`;
   flipAwayToScreen("bonusplay");
   nextBonusRound();
 }
@@ -6140,7 +6153,9 @@ function albumTileName(a) {
    rather than a zero, which on a low-wins board would read as a perfect run. */
 // Song order, not roster order: this is the running order of an actual pop song, and it is what
 // makes the page an arrangement rather than a list.
-const RUTHLESS_RUNNING_ORDER = ["verse-1", "pre-chorus", "chorus", "post-chorus", "verse-2", "bridge"];
+// The sheet reads as one song's running order, so From the Top sits where it belongs: first,
+// because it is the only lens that opens where the song itself does.
+const RUTHLESS_RUNNING_ORDER = ["from-the-top", "pre-chorus", "chorus", "post-chorus", "verse-2", "bridge"];
 // Words of typical page per drawn stroke-line. Tuned so the six blocks add up to a document that
 // fits one screen while the shortest lens still gets a line of its own.
 const RL_LINE_WORDS = 22;
@@ -8053,7 +8068,7 @@ function seedRandomFromBoards() {
     if (r.attempts > 0) tokens.push(randomToken("challenge", c.id));
     if (r.darkAttempts > 0) tokens.push(randomToken("dark", c.id));
   }
-  for (const g of BONUS_GAMES) if (bonusRecord(g.id).plays > 0) tokens.push(randomToken("bonus", g.id));
+  for (const g of shelfGames()) if (bonusRecord(g.id).plays > 0) tokens.push(randomToken("bonus", g.id));
   if (Object.keys(dailyPlayedDates()).length) tokens.push(randomToken("daily"));
   seedRandomSeen(tokens);
 }
@@ -8092,7 +8107,7 @@ function buildRandomPool() {
     if (darkSideUnlocked(c.id)) push("dark", c.id, "Dark side · " + c.name, { challenge: c.id, dark: true });
   }
 
-  for (const g of BONUS_GAMES) {
+  for (const g of shelfGames()) {
     if (!g.ready) continue;   // the shelf shows what's coming; the draw only deals what plays
     push("bonus", g.id, "Bonus · " + g.name, { bonus: g.id });
   }
