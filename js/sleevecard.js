@@ -69,11 +69,16 @@ function heartHandsMark(markup, x, y, w, h, fill) {
 
 // The rubber stamp pressed across the sleeve's corner ("clean sweep" / "new best"). Sized
 // off the measured text so a two-word stamp and a three-word one both sit in their box.
+// The tilt turns about the box's CENTRE, the way the on-screen .bg-stamp's CSS rotate()
+// does. An SVG rotate() with no centre given turns about the local origin, which after the
+// translate is the box's top-left corner, so the far end of the stamp was swung up by the
+// box's own width — clear of the sleeve on a wide stamp, less so on a narrow one, which is
+// how the same rule produced two different-looking stamps.
 function stamp(text, rightX, topY) {
   const font = '700 9.5px "Courier Prime", monospace';
   const tw = measureText(text.toUpperCase(), font) + text.length * 2.2;   // + letter-spacing
   const bw = tw + 16, bh = 20;
-  return `<g transform="translate(${(rightX - bw).toFixed(1)} ${topY}) rotate(-7)">` +
+  return `<g transform="translate(${(rightX - bw).toFixed(1)} ${topY}) rotate(-7 ${(bw / 2).toFixed(1)} ${bh / 2})">` +
     `<rect width="${bw.toFixed(1)}" height="${bh}" rx="2" fill="none" stroke="rgba(160,62,46,0.6)" stroke-width="1.4"/>` +
     `<text x="${(bw / 2).toFixed(1)}" y="13.6" text-anchor="middle" font-family="Courier Prime" font-weight="700"` +
     ` font-size="9.5" letter-spacing="2.2" fill="rgba(160,62,46,0.74)">${esc(text.toUpperCase())}</text>` +
