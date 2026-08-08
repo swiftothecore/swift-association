@@ -6093,7 +6093,9 @@
   /* Prestige titles — rank-medallion ladder above the picker */
   .rb-ladder { position: relative; display: flex; justify-content: space-between; align-items: flex-start; margin: 18px 4px 6px; padding: 0 6px; }
   .rb-ladder-rail { position: absolute; top: 22px; left: 40px; right: 40px; border-top: 1.5px dashed rgba(43, 39, 34, 0.2); }
-  .rb-medal { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; flex: 1; min-width: 0; }
+  .rb-medal { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; flex: 1; min-width: 0;
+    font: inherit; text-align: center; border: 0; background: none; padding: 0; }
+  button.rb-medal { cursor: pointer; }
   .rb-medal-ic { width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; padding: 11px;
     background: var(--paper); border: 1.5px solid rgba(43, 39, 34, 0.16); }
   .rb-medal-ic .charm { width: 100%; height: 100%; }
@@ -6104,7 +6106,19 @@
   .rb-medal-lv { font-family: var(--type); font-size: 8px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-soft); margin-top: 7px; }
   .rb-medal-nm { font-family: var(--hand); font-weight: 700; font-size: 13px; color: var(--ink); margin-top: 1px; }
   .rb-medal.locked .rb-medal-nm { color: var(--ink-soft); }
-  .rb-medal-flag { font-family: var(--type); font-size: 7.5px; letter-spacing: 0.1em; text-transform: uppercase; color: rgba(var(--m-accent), 0.95); margin-top: 3px; }
+  /* One fixed-height line under every medallion, so the four columns stay level whether or
+     not they carry a flag. It holds the state word at rest and cross-fades to the click cue
+     on hover, which is the only place the medallions say what they do. */
+  .rb-medal-flag { position: relative; width: 100%; height: 11px; margin-top: 3px;
+    font-family: var(--type); font-size: 7.5px; letter-spacing: 0.1em; text-transform: uppercase; }
+  .rb-medal-state, .rb-medal-hint { position: absolute; left: 0; right: 0; top: 0; font-style: normal; transition: opacity 0.16s ease; }
+  .rb-medal-state { color: rgba(var(--m-accent), 0.95); }
+  .rb-medal-hint { color: var(--ink-soft); opacity: 0; }
+  button.rb-medal:hover .rb-medal-hint, button.rb-medal:focus-visible .rb-medal-hint { opacity: 1; }
+  button.rb-medal:hover .rb-medal-state, button.rb-medal:focus-visible .rb-medal-state { opacity: 0; }
+  button.rb-medal:hover .rb-medal-ic, button.rb-medal:focus-visible .rb-medal-ic { border-color: rgba(var(--m-accent), 0.6); background: #fff9ec; }
+  button.rb-medal:hover .rb-medal-nm, button.rb-medal:focus-visible .rb-medal-nm { color: rgba(var(--m-accent), 0.95); }
+  button.rb-medal.locked:hover .rb-medal-ic, button.rb-medal.locked:focus-visible .rb-medal-ic { opacity: 0.75; }
   .rb-title-lock { display: inline-flex; align-items: center; gap: 8px; margin-top: 14px; padding: 8px 12px; border-radius: 9px;
     font-family: var(--type); font-size: 10.5px; color: var(--ink-soft); background: rgba(43, 39, 34, 0.04); border: 1px solid rgba(43, 39, 34, 0.14); }
   .rb-titles .title-stepper { margin-top: 14px; padding-top: 14px; border-top: 1px solid rgba(43, 39, 34, 0.1); }

@@ -3634,6 +3634,11 @@ function renderMasteryPage() {
   body.querySelectorAll("[data-reward-reset]").forEach((el) => {
     el.addEventListener("click", () => resetMasteryCosmetic(el.getAttribute("data-reward-reset")));
   });
+  // ...and the rank ladder above the stepper: data-title-tier scrolls the stepper to that
+  // tier's default title. Browsing only — it never changes which title you wear.
+  body.querySelectorAll("[data-title-tier]").forEach((el) => {
+    el.addEventListener("click", () => { _titleView = +el.getAttribute("data-title-tier"); renderTitleStepper(); });
+  });
 }
 
 // ---- Mastery hero ----
@@ -3973,11 +3978,20 @@ function buildTitlesTile(m, unlocked) {
     const isWorn = reached && t.level === wornTier;
     const isNext = !reached && nextLocked && t.level === nextLocked.level;
     const cls = reached ? (isWorn ? "reached worn" : "reached") : (isNext ? "next" : "locked");
-    const flag = isWorn ? `<span class="rb-medal-flag">worn</span>`
-      : isNext ? `<span class="rb-medal-flag">next</span>` : "";
-    return `<div class="rb-medal ${cls}"><span class="rb-medal-ic">${masteryMarkup(t.icon)}</span>` +
+    const state = isWorn ? "worn" : isNext ? "next" : "";
+    // The flag line is always rendered, even empty: it keeps the four columns the same
+    // height, and it is the slot the "see titles" hover cue swaps into.
+    const flag = `<span class="rb-medal-flag"><i class="rb-medal-state">${state}</i>` +
+      (unlocked ? `<i class="rb-medal-hint">see titles</i>` : "") + `</span>`;
+    const face = `<span class="rb-medal-ic">${masteryMarkup(t.icon)}</span>` +
       `<span class="rb-medal-lv">${RB_TIER_ROMAN[i]} · L${t.level}</span>` +
-      `<span class="rb-medal-nm">${RB_TIER_SHORT[i]}</span>${flag}</div>`;
+      `<span class="rb-medal-nm">${RB_TIER_SHORT[i]}</span>${flag}`;
+    // A medallion jumps the stepper to that tier's default title — including a tier you have
+    // not reached, since browsing ahead is what the stepper is for. Without the stepper on the
+    // page (mastery still locked) there is nothing to jump, so it stays a plain mark.
+    return unlocked
+      ? `<button type="button" class="rb-medal ${cls}" data-title-tier="${MASTERY_TITLES.indexOf(t)}">${face}</button>`
+      : `<div class="rb-medal ${cls}">${face}</div>`;
   }).join("");
   const picker = unlocked
     ? `<div id="titleStepper" class="title-stepper"></div>`
@@ -17104,9 +17118,9 @@ function buildDevApi() {
         for (const r of MASTERY_REWARDS) if (r.level <= lvl && !m.unlocked[r.id]) m.unlocked[r.id] = new Date().toISOString();
         saveMastery(m); updateMasteryNav(); if ($("masteryBody")) renderMasteryPage();
       },
-      // Set a partial mastery level to preview the ascent-track nib mid-segment: base level
-      // plus a 0–1 fraction toward the next (e.g. setMasteryFrac(5, 0.6) sits the nib 60%
-      // between levels 5 and 6). Clears the unlock gate and unlocks rewards through the base.
+      // Set a partial mastery level to preview the ascent track mid-segment: base level plus
+      // a 0–1 fraction toward the next (e.g. setMasteryFrac(5, 0.6) fills the ink line 60% of
+      // the way from 5 to 6). Clears the unlock gate and unlocks rewards through the base.
       setMasteryFrac: (lvl, frac) => {
         lvl = Math.max(0, Math.min(MASTERY_MAX_LEVEL, lvl | 0));
         frac = Math.max(0, Math.min(1, +frac || 0));
