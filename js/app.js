@@ -3797,10 +3797,13 @@ function buildRewardBento(m, mLevel, unlocked) {
       }) +
       buildButtonTile(groups.button, m) +
       buildSignatureTile(groups.signature, m) +
+      // The other vault. It guards knowledge rather than a tier, so it is made of different
+      // stuff — plum leather and rose foil against the super-hard tile's iron and brass —
+      // and it opens with the key it already wears rather than being broken into.
       buildMilestoneTile(hintR, {
-        area: "hint", tone: "light", earned: !!(hintR && m.unlocked[hintR.id]),
-        earnedCopy: "Earned — every secret charm now shows how to earn it.",
-        lockedCopy: `Reveal how to earn every secret charm. Reach Mastery ${hintR ? hintR.level : ""}.`,
+        area: "hint", tone: "ink", watermark: true, earned: !!(hintR && m.unlocked[hintR.id]),
+        earnedCopy: "Unlocked — every secret charm now shows how to earn it.",
+        lockedCopy: `What every secret charm wants from you, kept shut. Reach Mastery ${hintR ? hintR.level : ""} for the key.`,
       }) +
       buildTitlesTile(m, unlocked) +
     `</div>` +
@@ -3913,10 +3916,11 @@ const buttonChip = (style) => (locked) => locked
   : `<span class="rb-btn-sw"><span class="btn-primary play-cta"${style ? ` data-startbtn="${style}"` : ""} aria-hidden="true">Start writing</span></span>`;
 
 // A milestone tile — the shape both toggle-less rewards wear (super-hard challenges at 6,
-// secret hints at 10): a wax seal that stays shut until the milestone is reached, the level
-// chip, the name, and one line of copy that changes with the state. `opts.tone` picks the
-// finish ("dark" for the vault, "light" for a tile that sits on the page's own paper) and
-// `opts.watermark` floats the reward's mark oversized behind the copy. `opts.action`
+// secret hints at 10): a vault, sealed shut until the milestone is reached, with the level
+// chip, the name, and one line of copy that changes with the state.
+// Both tones are vaults; `opts.tone` only says what this one is made of ("dark" iron and
+// brass, "ink" plum leather and rose foil), which is the whole of the difference between
+// them. `opts.watermark` floats the reward's mark oversized behind the copy. `opts.action`
 // ({label, attr}) adds a door out of the tile to wherever the reward actually lives, and is
 // drawn only once the milestone is earned — a sealed tile offers nothing.
 function buildMilestoneTile(r, opts) {

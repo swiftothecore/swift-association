@@ -6082,43 +6082,49 @@
   .rb-sw-nm { font-family: var(--type); font-size: 8.5px; letter-spacing: 0.03em; color: var(--ink-soft); }
   .rb-sw-col.active .rb-sw-nm { color: rgba(var(--m-accent), 0.95); }
 
-  /* Milestone tiles — the two rewards that grant no toggle (the super-hard vault, secret
-     hints). One tile in two finishes: --dark is the pressed-shut vault with its mark floated
-     oversized behind the copy, --light sits on the page's own paper. */
-  .rb-ms { overflow: hidden; }
-  .rb-ms .rb-chip { position: absolute; top: 13px; right: 14px; }
+  /* Milestone tiles — the two rewards that grant no toggle. Both are vaults: something
+     pressed shut that you are being kept out of, with the reward's mark floated oversized
+     behind the copy and the seal brightening the moment it opens. They guard different
+     things, so they are made of different things, and that is the ONLY difference between
+     them: every rule below is shared, and a tone class supplies the finish. --dark is the
+     iron-and-brass strongbox holding a tier of brutal challenges; --ink is the plum-leather
+     archive holding what the secret charms are, opened with a key rather than forced. */
+  .rb-ms { overflow: hidden; background-color: var(--v-bg); background-image: none; border-color: var(--v-edge); }
+  .rb-ms .rb-chip { position: absolute; top: 13px; right: 14px; color: var(--v-foil); background: transparent; border: 1px solid var(--v-edge); }
   .rb-ms-mark { position: absolute; right: -8px; bottom: -22px; width: 132px; height: 132px; opacity: 0.09; }
-  .rb-ms-seal { display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 34px; border-radius: 50%; padding: 8px; }
-  .rb-ms-nm { font-family: var(--hand); font-weight: 700; font-size: 18px; margin-top: 10px; }
-  .rb-ms-sub { position: relative; font-family: var(--type); font-size: 10px; line-height: 1.5; margin-top: 5px; max-width: 240px; }
-  .rb-ms--dark { background-color: #26221d; background-image: none; border-color: #3d372e; }
-  .rb-ms--dark .rb-chip { color: #c99a45; background: transparent; border: 1px solid #5c4b2c; }
-  .rb-ms--dark .rb-ms-mark .ink, .rb-ms--dark .rb-ms-mark .ink-fill { stroke: #c8951f; fill: #c8951f; }
-  .rb-ms--dark .rb-ms-seal { background: #2f2921; border: 1.5px solid #5c4b2c; }
-  .rb-ms--dark .rb-ms-seal .ink { stroke: #c99a45; }
-  .rb-ms--dark .rb-ms-seal .ink-fill { fill: #c99a45; stroke: #c99a45; }
-  .rb-ms--dark .rb-ms-nm { color: #f3e7d0; }
-  .rb-ms--dark .rb-ms-sub { color: #b4a488; }
-  .rb-ms--dark.earned .rb-ms-mark { opacity: 0.16; }
-  .rb-ms--dark.earned .rb-ms-seal { border-color: #7a6330; }
-  .rb-ms--dark.earned .rb-ms-seal .ink, .rb-ms--dark.earned .rb-ms-seal .ink-fill { stroke: #e8c37a; fill: #e8c37a; }
-  .rb-ms--light .rb-ms-seal { background: rgba(var(--m-accent), 0.1); border: 1.5px solid rgba(var(--m-accent), 0.4); }
-  .rb-ms--light .rb-ms-seal .ink { stroke: rgba(var(--m-accent), 0.95); }
-  .rb-ms--light .rb-ms-seal .ink-fill { fill: rgba(var(--m-accent), 0.9); stroke: rgba(var(--m-accent), 0.95); }
-  .rb-ms--light .rb-ms-nm { font-size: 17px; color: var(--ink); }
-  .rb-ms--light .rb-ms-sub { color: var(--ink-soft); }
-  .rb-ms--light.earned .rb-ms-seal { background: rgba(var(--m-accent), 0.18); border-color: rgba(var(--m-accent), 0.6); }
-  /* The door out of a milestone tile to wherever the reward actually lives. Drawn only on an
-     earned tile, so it never has a locked state to dress: a small brass plate on the vault. */
+  .rb-ms-mark .ink, .rb-ms-mark .ink-fill { stroke: var(--v-foil); fill: var(--v-foil); }
+  .rb-ms-seal {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 34px; height: 34px; border-radius: 50%; padding: 8px;
+    background: var(--v-seal); border: 1.5px solid var(--v-edge);
+  }
+  .rb-ms-seal .ink { stroke: var(--v-foil); }
+  .rb-ms-seal .ink-fill { fill: var(--v-foil); stroke: var(--v-foil); }
+  .rb-ms-nm { font-family: var(--hand); font-weight: 700; font-size: 18px; margin-top: 10px; color: var(--v-text); }
+  .rb-ms-sub { position: relative; font-family: var(--type); font-size: 10px; line-height: 1.5; margin-top: 5px; max-width: 240px; color: var(--v-sub); }
+  /* Open: the mark behind the copy comes up out of the dark and the seal catches the light. */
+  .rb-ms.earned .rb-ms-mark { opacity: 0.16; }
+  .rb-ms.earned .rb-ms-seal { border-color: var(--v-edge-lit); }
+  .rb-ms.earned .rb-ms-seal .ink, .rb-ms.earned .rb-ms-seal .ink-fill { stroke: var(--v-foil-lit); fill: var(--v-foil-lit); }
+  /* Iron and brass — the tier of brutal challenges. */
+  .rb-ms--dark {
+    --v-bg: #26221d; --v-edge: #3d372e; --v-edge-lit: #7a6330; --v-seal: #2f2921;
+    --v-foil: #c99a45; --v-foil-lit: #e8c37a; --v-text: #f3e7d0; --v-sub: #b4a488;
+  }
+  /* Plum leather and rose foil — the archive of what the secret charms are. */
+  .rb-ms--ink {
+    --v-bg: #2a2029; --v-edge: #45333f; --v-edge-lit: #7d5068; --v-seal: #342634;
+    --v-foil: #bf87a4; --v-foil-lit: #e2add0; --v-text: #f2e2ea; --v-sub: #ab93a2;
+  }
+  /* The door out of a vault to wherever the reward actually lives. Drawn only on an earned
+     tile, so it never has a locked state to dress: a small plate in the vault's own metal. */
   .rb-ms-go {
     position: relative; display: inline-block; margin-top: 12px; cursor: pointer;
     font-family: var(--type); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase;
     padding: 7px 15px; border-radius: 3px;
+    color: var(--v-foil-lit); background: var(--v-seal); border: 1px solid var(--v-edge-lit);
   }
-  .rb-ms--dark .rb-ms-go { color: #f0d79b; background: #3a3125; border: 1px solid #7a6330; }
-  .rb-ms--dark .rb-ms-go:hover { background: #473c2c; border-color: #a1854a; }
-  .rb-ms--light .rb-ms-go { color: rgba(var(--m-accent), 0.95); background: rgba(var(--m-accent), 0.1); border: 1px solid rgba(var(--m-accent), 0.45); }
-  .rb-ms--light .rb-ms-go:hover { background: rgba(var(--m-accent), 0.18); }
+  .rb-ms-go:hover { border-color: var(--v-foil); }
 
   /* Start-writing button — swatches of the real CTA (reuses .rb-sw-col). Four finishes, so
      they sit 2x2 and centred rather than wrapping 3+1; the grid is scoped to this tile
