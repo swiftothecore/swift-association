@@ -6944,6 +6944,23 @@
      box sits entirely to the left of it and can never be overlapped; it's also a layer
      below the name as a belt-and-suspenders guard. */
   .np-hands { flex: 0 0 auto; position: relative; z-index: 1; color: var(--ink-accent); margin-bottom: 3px; }
+  /* The worn prestige title, engraved under the signature. Same register as the records
+     signature's .rec-sig-title — letterspaced type caps in the plum — but the plate's type
+     scale is smaller, and the signature rule directly above already does the job of a top
+     border, so this takes only the hairline below rather than copying both rules across. */
+  .bp-title {
+    display: flex; align-items: baseline; justify-content: space-between; gap: 10px;
+    margin: 6px 2px 0; padding-bottom: 4px;
+    border-bottom: 1px solid rgba(168, 87, 122, 0.35);
+  }
+  .bp-title-nm {
+    font-family: var(--type); font-weight: 700; font-size: 10.5px;
+    letter-spacing: 0.14em; text-transform: uppercase; color: #7a3d59;
+  }
+  .bp-title-src {
+    flex: 0 0 auto; font-family: var(--type); font-size: 9.5px;
+    color: var(--ink-soft); opacity: 0.8;
+  }
   .np-hint {
     font-family: var(--type); font-size: 10.5px; color: var(--ink-soft);
     margin: 7px 2px 0;

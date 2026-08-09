@@ -15360,6 +15360,16 @@ function setBookplateHTML() {
         `<button type="button" class="bp-act" data-avatar="remove">Remove</button>` +
       `</div>`
     : `<button type="button" class="bp-add" data-avatar="change" aria-label="add a photo"></button>`;
+  // The worn prestige title, engraved on the plate under the signature. It is part of who
+  // this notebook belongs to, so it belongs beside the name and the photo — but it is an
+  // engraving, not a control: Mastery stays the only place a title is chosen, which is all
+  // the source note says. Nothing is drawn at all before the first title exists (Mastery 7),
+  // since an empty band would advertise a reward the player has not met.
+  const title = wornTitleName();
+  const titleHTML = title
+    ? `<p class="bp-title"><span class="bp-title-nm">${escapeHtml(title)}</span>` +
+      `<span class="bp-title-src">chosen in Mastery</span></p>`
+    : "";
   return `<div class="bookplate">` +
     `<div class="bp-photo${photo ? "" : " is-empty"}">` +
       polaroidHTML(photo, getPlayerName(), { tilt: 0 }) +
@@ -15374,6 +15384,7 @@ function setBookplateHTML() {
         `data-1p-ignore data-lpignore="true" data-bwignore data-form-type="other">` +
         HEART_HANDS_SVG +
       `</div>` +
+      titleHTML +
       `<p class="np-hint">signed on every personal record · photo stays on this device</p>` +
     `</div>` +
   `</div>`;
