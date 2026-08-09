@@ -3651,6 +3651,14 @@ function renderMasteryPage() {
   body.querySelectorAll("[data-title-tier]").forEach((el) => {
     el.addEventListener("click", () => { _titleView = +el.getAttribute("data-title-tier"); renderTitleStepper(); });
   });
+  // The super-hard vault's door: straight to the brutal group on the Challenges board. NOT
+  // the bottom of that list — the groups render [1,2,3,4,0], so the bottom is the UNRATED
+  // tier and scrolling there would land the player nowhere near what they just unlocked.
+  const brutal = body.querySelector("[data-open-brutal]");
+  if (brutal) brutal.addEventListener("click", () => {
+    const id = firstSuperHardChallenge();
+    if (id) openChallenges("mastery", id);
+  });
 }
 
 // ---- Mastery hero ----
@@ -3781,8 +3789,11 @@ function buildRewardBento(m, mLevel, unlocked) {
       // tapes:4 challenges is what actually opens the tier.
       buildMilestoneTile(hardR, {
         area: "hard", tone: "dark", watermark: true, earned: superHardTierOpen(),
-        earnedCopy: "Unlocked — a tier of brutal new challenges awaits in Challenges.",
+        // With the button below carrying the verb, the copy no longer has to point at
+        // Challenges in words as well.
+        earnedCopy: "Unlocked — a whole tier of brutal challenges.",
         lockedCopy: `A tier of brutal new challenges. Reach Mastery ${hardR ? hardR.level : ""} to break the seal.`,
+        action: { label: "Take one on", attr: `data-open-brutal` },
       }) +
       buildButtonTile(groups.button, m) +
       buildSignatureTile(groups.signature, m) +
@@ -3905,16 +3916,21 @@ const buttonChip = (style) => (locked) => locked
 // secret hints at 10): a wax seal that stays shut until the milestone is reached, the level
 // chip, the name, and one line of copy that changes with the state. `opts.tone` picks the
 // finish ("dark" for the vault, "light" for a tile that sits on the page's own paper) and
-// `opts.watermark` floats the reward's mark oversized behind the copy.
+// `opts.watermark` floats the reward's mark oversized behind the copy. `opts.action`
+// ({label, attr}) adds a door out of the tile to wherever the reward actually lives, and is
+// drawn only once the milestone is earned — a sealed tile offers nothing.
 function buildMilestoneTile(r, opts) {
   if (!r) return "";
   const mark = MASTERY_ICONS[r.icon] || "";
+  const act = (opts.earned && opts.action)
+    ? `<button type="button" class="rb-ms-go" ${opts.action.attr}>${escapeHtml(opts.action.label)}</button>`
+    : "";
   return `<div class="rb-tile rb-ms rb-ms--${opts.tone}${opts.earned ? " earned" : ""}" style="grid-area:${opts.area}">` +
     (opts.watermark ? `<span class="rb-ms-mark">${mark}</span>` : "") +
     rbChip("Mastery " + r.level) +
     `<span class="rb-ms-seal">${opts.earned ? mark : MASTERY_ICONS.lock}</span>` +
     `<div class="rb-ms-nm">${escapeHtml(r.name)}</div>` +
-    `<div class="rb-ms-sub">${opts.earned ? opts.earnedCopy : opts.lockedCopy}</div></div>`;
+    `<div class="rb-ms-sub">${opts.earned ? opts.earnedCopy : opts.lockedCopy}</div>${act}</div>`;
 }
 
 // Start-writing button finishes — swatches of the real CTA (default plus each unlockable
@@ -6099,13 +6115,53 @@ function tapesMarkup(n) {
   return `<span class="chall-tapes t${t}" aria-label="difficulty ${t} of 4">${TAPE_GLYPH.repeat(t)}</span>`;
 }
 
-function openChallenges(from) {
+function openChallenges(from, focusId) {
   challengesBackTarget = from;
   // Arriving at the page always starts with the dark rules folded away — they're an aside
   // you go looking for, not the first thing the card says.
   challDetailPeek = false;
+  // A caller can point the page at one challenge (the Mastery super-hard tile does): it
+  // becomes the selection, so the detail panel is already showing the right thing, and the
+  // list scrolls its GROUP into view once the screen has a height to scroll within.
+  if (focusId && CHALLENGE_BY_ID[focusId]) challSelectedId = focusId;
   renderChallengesPage();
   flipAwayToScreen("challenges");
+  if (focusId && CHALLENGE_BY_ID[focusId]) scrollChallengeGroupIntoView(focusId);
+}
+
+// The first challenge of the super-hard tier worth landing on: the first one still
+// undefeated, else the first of the tier. "" if the tier doesn't exist.
+function firstSuperHardChallenge() {
+  const tier = CHALLENGES.filter((c) => (c.tapes || 0) === 4);
+  if (!tier.length) return "";
+  return (tier.find((c) => !challengeRecord(c.id).defeated) || tier[0]).id;
+}
+
+// Scroll the challenge list so a challenge's DIFFICULTY GROUP sits at the top of the
+// scroller — the group header first, not the row, because a caller arriving from Mastery
+// is being shown a tier rather than one entry. The list is the only thing that scrolls
+// (the notebook page itself never grows) and it has no height at all until the screen is
+// shown and fitPeek has snapped it to the half-row peek, so wait for a real height rather
+// than guessing at the flip's duration. The jump is instant on purpose: the page is already
+// arriving on a page turn, and a scroll animating underneath that turn is two motions at
+// once — the list should simply be where it belongs by the time the flip lands.
+function scrollChallengeGroupIntoView(id) {
+  let tries = 40;
+  const step = () => {
+    const listEl = document.querySelector("#challengesBody .chall-list");
+    const item = listEl && listEl.querySelector(`.chall-item[data-id="${id}"]`);
+    if (!listEl || !item || !listEl.clientHeight) {
+      if (--tries > 0) requestAnimationFrame(step);
+      return;
+    }
+    const group = item.closest(".chall-group");
+    const head = (group && group.querySelector(".chall-group-head")) || item;
+    const top = head.getBoundingClientRect().top - listEl.getBoundingClientRect().top + listEl.scrollTop;
+    // Clamped by the scroller itself: the last groups can't reach the top edge, and landing
+    // as high as they go is exactly right. The edge fade follows on the list's scroll handler.
+    listEl.scrollTop = Math.max(0, top - 4);
+  };
+  requestAnimationFrame(step);
 }
 
 function renderChallengesPage() {

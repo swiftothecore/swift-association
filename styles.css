@@ -6092,6 +6092,17 @@
   .rb-ms--light .rb-ms-nm { font-size: 17px; color: var(--ink); }
   .rb-ms--light .rb-ms-sub { color: var(--ink-soft); }
   .rb-ms--light.earned .rb-ms-seal { background: rgba(var(--m-accent), 0.18); border-color: rgba(var(--m-accent), 0.6); }
+  /* The door out of a milestone tile to wherever the reward actually lives. Drawn only on an
+     earned tile, so it never has a locked state to dress: a small brass plate on the vault. */
+  .rb-ms-go {
+    position: relative; display: inline-block; margin-top: 12px; cursor: pointer;
+    font-family: var(--type); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase;
+    padding: 7px 15px; border-radius: 3px;
+  }
+  .rb-ms--dark .rb-ms-go { color: #f0d79b; background: #3a3125; border: 1px solid #7a6330; }
+  .rb-ms--dark .rb-ms-go:hover { background: #473c2c; border-color: #a1854a; }
+  .rb-ms--light .rb-ms-go { color: rgba(var(--m-accent), 0.95); background: rgba(var(--m-accent), 0.1); border: 1px solid rgba(var(--m-accent), 0.45); }
+  .rb-ms--light .rb-ms-go:hover { background: rgba(var(--m-accent), 0.18); }
 
   /* Start-writing button — swatches of the real CTA (reuses .rb-sw-col). Four finishes, so
      they sit 2x2 and centred rather than wrapping 3+1; the grid is scoped to this tile
