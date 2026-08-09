@@ -1154,7 +1154,7 @@ export const SKILLS = [
   { id: "resolve",   name: "Instinct",      icon: "comet",     tint: "61, 79, 134",   blurb: "Grows with every word you match to the right song." },
   { id: "tempo",     name: "Quick Pen",     icon: "metronome", tint: "178, 58, 63",   blurb: "Grows when you beat the clock to your answer." },
   { id: "lyricist",  name: "By Heart",      icon: "heartline", tint: "200, 95, 151",  blurb: "Grows when you recall the full lyric line, word for word." },
-  { id: "endurance", name: "The Long Game", icon: "trail",     tint: "78, 143, 99",   blurb: "Grows the further a single Infinite run carries you." },
+  { id: "endurance", name: "The Long Game", icon: "trail",     tint: "78, 143, 99",   blurb: "Grows with the longest unbroken streak you hold in a run." },
   { id: "range",     name: "Discography",   icon: "records",   tint: "125, 104, 184", blurb: "Grows as your answers reach across more albums." },
 ];
 export const SKILL_IDS = SKILLS.map((s) => s.id);
@@ -1164,7 +1164,13 @@ export const SKILL_BY_ID = Object.fromEntries(SKILLS.map((s) => [s.id, s]));
 export const TEMPO_BASE = 10, TEMPO_SPEED = 40;            // per fast correct answer: BASE + SPEED*speedFactor
 export const LYRIC_TIER_XP = { base: 5, good: 15, perfect: 35, verse: 80 }; // keyed by gradeLyricRecall tier
 export const LYRIC_LEN_REF = 8;                            // typed words for the 2x length-factor cap
-export const ENDURANCE_GROWTH = 1.12, ENDURANCE_RUN_CAP = 1500; // exponential feel, capped per run
+// Endurance reads the run's longest unbroken correct streak (gameMaxStreak), not its length:
+// a fixed-13 mode would otherwise pay the same constant every time, which is attendance
+// rather than skill. BASE is set for PARITY with range, the other skill derived at the fold,
+// so a clean 13-round run pays each of them about 115-120. GROWTH is gentle because the curve
+// now has to mean something from round one instead of spending thirty rounds on runway. A deep
+// Infinite streak still pays roughly 7x a clean classic, and the cap binds at a streak of 48.
+export const ENDURANCE_BASE = 115, ENDURANCE_GROWTH = 1.055, ENDURANCE_RUN_CAP = 1500;
 export const RANGE_RATIO_XP = 60, RANGE_PER_ALBUM = 8;     // breadth ratio bonus + flat per distinct album
 export const RESOLVE_BASE = 10, RESOLVE_STREAK_CAP = 10;   // streakMult = 1 + 0.1*min(streak, CAP)
 

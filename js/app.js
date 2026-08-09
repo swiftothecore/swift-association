@@ -35,7 +35,7 @@ import {
   BOTTLE_SURFACE_MS, BOTTLE_SVG, BOTTLE_WAVE_SVG,
   SKILLS, SKILL_IDS, SKILL_BY_ID,
   TEMPO_BASE, TEMPO_SPEED, LYRIC_TIER_XP, LYRIC_LEN_REF,
-  ENDURANCE_GROWTH, ENDURANCE_RUN_CAP, RANGE_RATIO_XP, RANGE_PER_ALBUM,
+  ENDURANCE_BASE, ENDURANCE_GROWTH, ENDURANCE_RUN_CAP, RANGE_RATIO_XP, RANGE_PER_ALBUM,
   RESOLVE_BASE, RESOLVE_STREAK_CAP,
   MASTERY_REWARDS, MASTERY_REWARD_BY_ID, MASTERY_GATE, MASTERY_MAX_LEVEL, MASTERY_LEVEL_STEP, SKILL_MAX_LEVEL,
   MASTERY_TITLES, MASTERY_TITLE_BY_VALUE, masteryDefaultTitle, MASTERY_ICONS, MASTERY_LEVEL_ICONS, MASTERY_TIER_ICONS,
@@ -10580,7 +10580,7 @@ function endAlbumFocus() {
     // "a hinted run can't set a personal best" rule); best score still updates.
     rec = recordAlbumFocusRun(album, score, diff, hintFree);
     // Single-album by construction, so Discography can't earn; the rest do.
-    foldSkillXp(["resolve", "tempo", "lyricist"]);
+    foldSkillXp(["resolve", "tempo", "lyricist", "endurance"]);
   }
 
   // Album Focus achievements (post-run, off the updated board — not sandbox-gated).
@@ -10659,9 +10659,9 @@ function endGuest() {
     // best"); the best score still updates either way.
     rec = recordGuestRun(id, score, diff, hintFree);
     // Range is albums-covered, measured here over a three-record guest rather than sixteen,
-    // so it would read as breadth it isn't; endurance belongs to runs that go long. Album
-    // Focus omits the same two, for the same reason.
-    foldSkillXp(["resolve", "tempo", "lyricist"]);
+    // so it would read as breadth it isn't. Album Focus omits it for the same reason.
+    // Endurance earns: a streak held on a catalogue you know less well is still a streak.
+    foldSkillXp(["resolve", "tempo", "lyricist", "endurance"]);
   }
   const admittedCount = GUESTS.filter((x) => guestRecord(x.id).admitted).length;
   if (rec.admitted) unlock("welcome-to-new-york");
@@ -10753,8 +10753,9 @@ function endAdaptive() {
     // Stay Stay Stay: reached the Rarest tier and finished there without ever slipping off it.
     if (adaptiveReachedTop && adaptiveHeldTop && adaptiveLevel >= ADAPT_MAX_LEVEL) unlock("stay-stay-stay");
     rec = recordAdaptiveRun(peak, score, todayKey());
-    // A fair fixed-13 run; everything but endurance (not Infinite) earns.
-    foldSkillXp(["resolve", "tempo", "lyricist", "range"]);
+    // A fair fixed-13 run, so the whole set earns. Endurance included: it reads the streak,
+    // and holding one while the rarity floats up under you is exactly what it means to measure.
+    foldSkillXp(["resolve", "tempo", "lyricist", "range", "endurance"]);
   }
 
   showScreen("results");
@@ -14170,9 +14171,11 @@ function runCountdown() {
 
 /* ---------- Skills & Mastery folding ---------- */
 // Fold this game's skill XP into the mastery record. `mask` is the list of skills allowed to
-// earn in this mode (the contribution matrix — see PLAN/CLAUDE): a Challenge run passes only
-// ["resolve"], Album Focus omits "range", Adaptive omits "endurance". The per-answer skills
-// (tempo/lyricist/resolve) were accrued during play; endurance/range are derived here.
+// earn in this mode (the contribution matrix, see PLAN/CLAUDE): a Challenge run passes only
+// ["resolve"], Album Focus and a guest omit "range", Ruthless earns resolve/tempo alone. The
+// per-answer skills (tempo/lyricist/resolve) were accrued during play; endurance/range are
+// derived here. Endurance is masked off only where there is no honest streak to read: the
+// rule-bending sandboxes (Challenges, Custom) and Ruthless, which never runs the round loop.
 // Surfaces level-up / mastery / unlock toasts. Caller gates on !devNoLog.
 // `given` overrides the per-answer accumulators for a mode that doesn't run the main round
 // loop and so never fed them — today only Ruthless, which accrues its own (see
@@ -14185,8 +14188,9 @@ function foldSkillXp(mask, given = null) {
   if (allow("tempo"))    delta.tempo    = earned.tempo;
   if (allow("lyricist")) delta.lyricist = earned.lyricist;
   if (allow("endurance")) {
-    const survived = roundResults.length;
-    delta.endurance = Math.min(Math.round(2 * (Math.pow(ENDURANCE_GROWTH, survived) - 1)), ENDURANCE_RUN_CAP);
+    // The longest unbroken correct streak, not the round count: pages SEEN paid the same for a
+    // fumbled run as a clean one, and paid a fixed-13 mode an identical constant every time.
+    delta.endurance = Math.min(Math.round(ENDURANCE_BASE * (Math.pow(ENDURANCE_GROWTH, gameMaxStreak) - 1)), ENDURANCE_RUN_CAP);
   }
   if (allow("range")) {
     const used = new Set();
@@ -14354,12 +14358,11 @@ function endGame() {
     if (metrics.versePerfect >= 100) unlock("where-i-start");
     if (metrics.versePerfect >= 1000) unlock("clearly-ready");
   }
-  // Skills & Mastery: classic/infinite/daily earn the full skill set; endurance only in Infinite.
-  if (!devNoLog) {
-    const mask = ["resolve", "tempo", "lyricist", "range"];
-    if (isInfinite) mask.push("endurance");
-    foldSkillXp(mask);
-  }
+  // Skills & Mastery: classic/infinite/daily all earn the full skill set. Endurance used to be
+  // Infinite-only, which left it unreachable for anyone who played anything else and quietly
+  // made the mastery gate a perfect sweep of the other four. It reads a streak now, so every
+  // mode can grow it and Infinite still wins on merit by having room for the longest ones.
+  if (!devNoLog) foldSkillXp(["resolve", "tempo", "lyricist", "range", "endurance"]);
   const played = totalPlayed();   // classic modes only — infinite/daily tracked separately
 
   // Record this game type; "Hits Different" needs all three (classic + infinite + daily).
@@ -17369,7 +17372,7 @@ function buildDevApi() {
           newUnlocks: MASTERY_REWARDS.filter((r) => r.level === Math.max(1, lvl)).map((r) => r.id),
           mastery: fakeM,
         };
-        lastSkillFold = { delta: { resolve: 118, tempo: 44, lyricist: 30, endurance: 0, range: 26 }, res };
+        lastSkillFold = { delta: { resolve: 118, tempo: 44, lyricist: 30, endurance: 71, range: 26 }, res };
         showScreen("results");
         renderSkillsRecap();
       },
