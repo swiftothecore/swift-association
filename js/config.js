@@ -1217,8 +1217,8 @@ export function masteryLevelFromXp(xp) {
 // charms, the super-hard unlock, then prestige titles) and 13 is the Mastery cap.
 // `icon` (a MASTERY_ICONS key) is only carried by the kinds that actually draw a mark:
 // pens, the two `unlock` milestones, and titles. The set kinds draw the thing itself
-// instead — paper draws its stock as a swatch, charms the charm, buttons an "Aa" chip,
-// signatures the flourish — so they carry no icon at all.
+// instead — paper draws its stock as a swatch, charms the charm, buttons a real start
+// button in miniature, signatures the flourish — so they carry no icon at all.
 export const MASTERY_REWARDS = [
   { level: 1, id: "pen-fountain", kind: "pen",  name: "Fountain pen",     icon: "fountainpen", desc: "Always write with a fountain pen.", payload: { pen: "fountain" } },
   { level: 2, id: "pen-quill",    kind: "pen",  name: "Feather quill",    icon: "feather", desc: "Trade your pen for a feather quill.", payload: { pen: "quill" } },
@@ -1243,11 +1243,13 @@ export const MASTERY_REWARDS = [
   { level: 6,  id: "hardmode-unlock", kind: "unlock", name: "Super-hard challenges", icon: "swords",  desc: "Unlocks a tier of brutal new challenges in Challenges mode." },
   // Start-writing button finishes — a set unlocked together at level 8. Each restyles the
   // home-screen hero CTA (CSS .play-cta[data-startbtn="…"], set on the button itself so the
-  // reward board can preview all four at once). Persists in settings.masteryButton, applied
-  // by applySettings.
-  { level: 8,  id: "btn-ink",   kind: "button", name: "Ink press", desc: "A solid ink-stamped start button.", payload: { button: "ink" } },
-  { level: 8,  id: "btn-blush", kind: "button", name: "Blush",     desc: "A soft rose marker start button.",  payload: { button: "rose" } },
-  { level: 8,  id: "btn-sky",   kind: "button", name: "Sky",       desc: "A cool blue marker start button.",  payload: { button: "sky" } },
+  // reward board can preview them all side by side). Persists in settings.masteryButton,
+  // applied by applySettings.
+  { level: 8,  id: "btn-ink",    kind: "button", name: "Ink press", desc: "A solid ink-stamped start button.",   payload: { button: "ink" } },
+  { level: 8,  id: "btn-blush",  kind: "button", name: "Blush",     desc: "A soft rose marker start button.",    payload: { button: "rose" } },
+  { level: 8,  id: "btn-sky",    kind: "button", name: "Sky",       desc: "Cool blue, with little white clouds.", payload: { button: "sky" } },
+  { level: 8,  id: "btn-meadow", kind: "button", name: "Meadow",    desc: "Spring green, with grass at the hem.", payload: { button: "meadow" } },
+  { level: 8,  id: "btn-pride",  kind: "button", name: "Pride",     desc: "Six marker stripes, bleeding into each other.", payload: { button: "pride" } },
   // Secret hints — a level-10 milestone (grants no toggle). Once earned, the achievements
   // page reveals how to earn each still-locked secret charm (its desc, name kept masked).
   { level: 10, id: "reveal-hints", kind: "unlock", name: "Secret hints", icon: "key", desc: "Reveals how to earn every secret charm." },

@@ -866,9 +866,14 @@
     /* Solid colour fill + a CONSTANT translucent sheen as the image layer. Hover only
        swaps background-COLOR (gold → ink), so the fill stays opaque the whole time and
        there's no flash of the paper showing through (which happened when the old gradient
-       background-image was wiped out instantly on hover). */
+       background-image was wiped out instantly on hover).
+       --cta-art is the slot a Mastery finish drops a DRAWING into (clouds, grass, stripes).
+       It sits below the sheen, which is why the sheen is listed first, and it defaults to
+       `none` so the plain gold button needs no special case. A finish that wants art sets
+       the property rather than restating this stack, so the sheen can never drift between
+       the six finishes. */
     background-color: #efb73e;
-    background-image: linear-gradient(168deg, rgba(255, 255, 255, 0.34) 0%, rgba(255, 255, 255, 0) 46%, rgba(43, 39, 34, 0.12) 100%);
+    background-image: linear-gradient(168deg, rgba(255, 255, 255, 0.34) 0%, rgba(255, 255, 255, 0) 46%, rgba(43, 39, 34, 0.12) 100%), var(--cta-art, none);
     border-color: var(--ink);
     box-shadow: 3px 3px 0 rgba(43, 39, 34, 0.22);
     transition: background-color 0.24s ease, color 0.2s ease, transform 0.12s, box-shadow 0.2s;
@@ -897,9 +902,16 @@
   body[data-reduce-motion="on"] .btn-primary.play-cta::before { animation: none; }
   /* Mastery-unlocked "start writing" finishes (level 8). The finish rides on the button's own
      data-startbtn, not the body's, so the reward board's swatches can each wear a different
-     one on a page whose real button is already wearing a fourth. Only the resting fill
-     changes; the generic hover already inverts to ink, so rose/sky invert for free. Ink starts
-     inverted, so it needs its own hover back to gold. */
+     one on a page whose real button is already wearing a sixth. A plain fill only sets
+     background-color, and the generic hover (invert to ink) then carries it for free — that's
+     rose. Ink starts inverted, so it needs its own hover back to gold.
+     The three drawn finishes fill --cta-art instead, and each one needs its own hover, since a
+     drawing does not invert the way a flat fill does. Meadow's grass would vanish into the ink,
+     so it swaps to a pale sage; sky's white clouds survive the ink but then compete with the
+     paper-coloured label, so they take a veil; pride's stripes ARE the fill, so a colour change
+     underneath them would do nothing visible at all, and it takes a heavier veil. Each keeps
+     its drawing in a property of its own so the hover can restate the stack without a second
+     copy of the SVG or the colour ramp. */
   .play-cta[data-startbtn="ink"] {
     background-color: var(--ink); color: var(--paper);
     background-image: linear-gradient(168deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0) 60%);
@@ -908,7 +920,91 @@
     background-color: #efb73e; color: var(--ink);
   }
   .play-cta[data-startbtn="rose"] { background-color: #e79ab5; }
-  .play-cta[data-startbtn="sky"] { background-color: #7fb0dd; }
+  /* Sky — a handful of soft white clouds drifting across the blue, sized by the SVG's own
+     width/height so background-size can stay `auto` and the tile repeats horizontally. */
+  .play-cta[data-startbtn="sky"] {
+    background-color: #7fb0dd;
+    --cta-clouds: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='150' height='46' viewBox='0 0 150 46'><g fill='white'><g opacity='.82' transform='translate(10 8)'><circle cx='9' cy='7' r='6'/><circle cx='19' cy='5.5' r='7.5'/><circle cx='29' cy='7.5' r='5.5'/><rect x='3' y='8' width='32' height='5' rx='2.5'/></g><g opacity='.5' transform='translate(58 4) scale(.55)'><circle cx='9' cy='7' r='6'/><circle cx='19' cy='5.5' r='7.5'/><circle cx='29' cy='7.5' r='5.5'/><rect x='3' y='8' width='32' height='5' rx='2.5'/></g><g opacity='.62' transform='translate(92 22) scale(.78)'><circle cx='9' cy='7' r='6'/><circle cx='19' cy='5.5' r='7.5'/><circle cx='29' cy='7.5' r='5.5'/><rect x='3' y='8' width='32' height='5' rx='2.5'/></g></g></svg>");
+    /* The veil is always in the stack and only its COLOUR changes, so the layer count — and
+       with it the repeat/position lists below — never has to be restated per state. */
+    --cta-veil: transparent;
+    --cta-art: linear-gradient(var(--cta-veil), var(--cta-veil)), var(--cta-clouds);
+    background-repeat: repeat, repeat, repeat-x;
+    background-position: 0 0, 0 0, 0 50%;
+  }
+  /* Two states put a LIGHT label over the clouds, and a word that crosses one disappears into
+     it unless the clouds are pushed back: hovered on the light page (the fill inverts to ink
+     and the label to paper) and at rest on the dark page (where --ink, the label's colour, is
+     the warm paper-white). Each veils with whichever token is the dark one there. Hovered on
+     the DARK page needs no veil at all — the fill is already the pale --ink and the label the
+     dark --paper — and its rule is only here to undo the dark-rest veil it inherits. */
+  .play-cta[data-startbtn="sky"]:hover, .play-cta[data-startbtn="sky"]:focus-visible {
+    --cta-veil: color-mix(in srgb, var(--ink) 62%, transparent);
+  }
+  :root[data-theme="dark"] .play-cta[data-startbtn="sky"] {
+    --cta-veil: color-mix(in srgb, var(--paper) 62%, transparent);
+  }
+  :root[data-theme="dark"] .play-cta[data-startbtn="sky"]:hover,
+  :root[data-theme="dark"] .play-cta[data-startbtn="sky"]:focus-visible {
+    --cta-veil: transparent;
+  }
+  /* Meadow — a hem of pen-stroke grass along the bottom edge, blades drawn as strokes rather
+     than filled shapes so they keep the hand-inked look the rest of the notebook has. It is
+     drawn twice, deep and pale, because a data: URI cannot be recoloured from CSS: the deep
+     blades read on the green fill and on the pale --ink the dark page hovers to, the pale ones
+     on the dark --ink the light page hovers to. */
+  .play-cta[data-startbtn="meadow"] {
+    background-color: #82b061;
+    --cta-grass-deep: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='76' height='14' viewBox='0 0 76 14'><g fill='none' stroke='%234a7a3f' stroke-width='1.6' stroke-linecap='round'><path d='M3 15Q3.6 8 6 3'/><path d='M8 15Q7.8 11 9 7.5'/><path d='M13 15Q14.6 8.5 12.6 1.8'/><path d='M18 15Q17.6 10.5 19.4 7'/><path d='M25 15Q26.2 8 24.6 2.6'/><path d='M30 15Q29.4 11 31.6 8'/><path d='M37 15Q37.8 7.5 36 1.5'/><path d='M42 15Q41.4 10 43.6 6.5'/><path d='M48 15Q49.4 8.5 47.6 3'/><path d='M54 15Q53.4 11.5 55.4 8.5'/><path d='M60 15Q60.8 8 59.2 2.2'/><path d='M65 15Q64.2 10.5 66.6 7'/><path d='M71 15Q72.4 8.5 70.6 2.8'/></g></svg>");
+    --cta-grass-pale: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='76' height='14' viewBox='0 0 76 14'><g fill='none' stroke='%23bcd6a4' stroke-width='1.6' stroke-linecap='round'><path d='M3 15Q3.6 8 6 3'/><path d='M8 15Q7.8 11 9 7.5'/><path d='M13 15Q14.6 8.5 12.6 1.8'/><path d='M18 15Q17.6 10.5 19.4 7'/><path d='M25 15Q26.2 8 24.6 2.6'/><path d='M30 15Q29.4 11 31.6 8'/><path d='M37 15Q37.8 7.5 36 1.5'/><path d='M42 15Q41.4 10 43.6 6.5'/><path d='M48 15Q49.4 8.5 47.6 3'/><path d='M54 15Q53.4 11.5 55.4 8.5'/><path d='M60 15Q60.8 8 59.2 2.2'/><path d='M65 15Q64.2 10.5 66.6 7'/><path d='M71 15Q72.4 8.5 70.6 2.8'/></g></svg>");
+    --cta-art: var(--cta-grass-deep);
+    background-repeat: repeat, repeat-x;
+    background-position: 0 0, 0 100%;
+  }
+  .play-cta[data-startbtn="meadow"]:hover, .play-cta[data-startbtn="meadow"]:focus-visible {
+    --cta-art: var(--cta-grass-pale);
+  }
+  /* On the dark page the label is the pale --ink, so the field drops to a dusk green to carry
+     it and the blades go pale to stay off the darker field. Hover then inverts as usual and
+     the rule below puts the deep blades back. */
+  :root[data-theme="dark"] .play-cta[data-startbtn="meadow"] {
+    background-color: #4e7b42;
+    --cta-art: var(--cta-grass-pale);
+  }
+  /* This one has to restate background-color: the dusk-green rule above out-specifies the
+     generic hover, so without it the button would keep its green and only the label would
+     flip, leaving dark type on a mid green. */
+  :root[data-theme="dark"] .play-cta[data-startbtn="meadow"]:hover,
+  :root[data-theme="dark"] .play-cta[data-startbtn="meadow"]:focus-visible {
+    background-color: var(--ink);
+    --cta-art: var(--cta-grass-deep);
+  }
+  /* Pride — six marker stripes laid across the button, with the colour stops deliberately
+     left short of each other so the bands bleed together the way felt-tips do on paper. The
+     stripes are the fill here, so nothing underneath them shows and every state is a change of
+     veil over the same ramp: a light wash at rest on the light page (which also keeps the ink
+     label off the fully saturated bands), a darkening one at rest on the dark page (whose
+     label is the pale --ink, and would otherwise sit invisible on the yellow), and a heavy one
+     either way on hover, tinted to whichever token the label is NOT. */
+  .play-cta[data-startbtn="pride"] {
+    background-color: #d4574d;
+    --cta-stripes: linear-gradient(to bottom,
+      #d4574d 0 15%, #dd8b3e 19% 32%, #e4bf4c 36% 48%,
+      #6da668 53% 65%, #5b8fc7 69% 82%, #8b6cb2 86% 100%);
+    --cta-veil: rgba(255, 255, 255, 0.2);
+    --cta-art: linear-gradient(var(--cta-veil), var(--cta-veil)), var(--cta-stripes);
+  }
+  .play-cta[data-startbtn="pride"]:hover, .play-cta[data-startbtn="pride"]:focus-visible {
+    color: var(--paper);
+    --cta-veil: color-mix(in srgb, var(--ink) 78%, transparent);
+  }
+  :root[data-theme="dark"] .play-cta[data-startbtn="pride"] {
+    --cta-veil: color-mix(in srgb, var(--paper) 45%, transparent);
+  }
+  :root[data-theme="dark"] .play-cta[data-startbtn="pride"]:hover,
+  :root[data-theme="dark"] .play-cta[data-startbtn="pride"]:focus-visible {
+    --cta-veil: color-mix(in srgb, var(--ink) 78%, transparent);
+  }
   @keyframes playBob {
     0%, 100% { transform: rotate(-0.6deg) translateY(0); box-shadow: 3px 3px 0 rgba(43, 39, 34, 0.22); }
     50%      { transform: rotate(-0.6deg) translateY(-3px); box-shadow: 3px 6px 0 rgba(43, 39, 34, 0.18); }
@@ -6182,9 +6278,11 @@
   }
   .rb-ms-go:hover { border-color: var(--v-foil); }
 
-  /* Start-writing button — swatches of the real CTA (reuses .rb-sw-col). Four finishes, so
-     they sit 2x2 and centred rather than wrapping 3+1; the grid is scoped to this tile
-     because the paper tile shares .rb-swatches and wants its own free-flowing wrap. */
+  /* Start-writing button — swatches of the real CTA (reuses .rb-sw-col). Six finishes, so
+     they sit 2x3 and centred rather than wrapping; the grid is scoped to this tile because
+     the paper tile shares .rb-swatches and wants its own free-flowing wrap. Two columns, not
+     three: each swatch is a real button scaled down, so it is ~116px wide however narrow its
+     column gets, and a third column would have them overlapping each other. */
   .rb-button .rb-swatches { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); justify-items: center; }
   .rb-button .rb-sw-col { width: 100%; }
   /* Each swatch is a real .play-cta drawn at a fixed width and scaled down to fit, so the

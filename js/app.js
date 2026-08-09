@@ -366,7 +366,7 @@ function applySettings() {
   if (settings.masteryPaper && !dark) body.setAttribute("data-paper", settings.masteryPaper);
   else body.removeAttribute("data-paper");
   // The start-button finish sits on the button itself, not the body: the Mastery reward board
-  // previews all four finishes at once, and each swatch is a real .play-cta carrying its own.
+  // previews every finish at once, and each swatch is a real .play-cta carrying its own.
   const playCta = $("playBtn");
   if (playCta) {
     if (settings.masteryButton) playCta.setAttribute("data-startbtn", settings.masteryButton);
