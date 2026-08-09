@@ -1214,9 +1214,9 @@ export function masteryLevelFromXp(xp) {
 // instead — paper draws its stock as a swatch, charms the charm, buttons an "Aa" chip,
 // signatures the flourish — so they carry no icon at all.
 export const MASTERY_REWARDS = [
-  { level: 1, id: "pen-fountain", kind: "pen",  name: "Fountain pen",     icon: "nib",     desc: "Always write with a fountain pen.", payload: { pen: "fountain" } },
+  { level: 1, id: "pen-fountain", kind: "pen",  name: "Fountain pen",     icon: "fountainpen", desc: "Always write with a fountain pen.", payload: { pen: "fountain" } },
   { level: 2, id: "pen-quill",    kind: "pen",  name: "Feather quill",    icon: "feather", desc: "Trade your pen for a feather quill.", payload: { pen: "quill" } },
-  { level: 3, id: "pen-glitter",  kind: "pen",  name: "Glitter gel pen",  icon: "sparkle", desc: "A glitter gel pen, for the sparkle.", payload: { pen: "glitter" } },
+  { level: 3, id: "pen-glitter",  kind: "pen",  name: "Glitter gel pen",  icon: "gelpen",  desc: "A glitter gel pen, for the sparkle.", payload: { pen: "glitter" } },
   // Paper stocks — a set unlocked together at level 4. Each retints the page surface
   // (CSS body[data-paper="…"]); the swatch chip + apply path live in app.js.
   { level: 4,  id: "paper-manila",    kind: "paper", name: "Manila pad",     desc: "Warm kraft tan, like a legal pad.",   payload: { paper: "manila" } },
@@ -1271,27 +1271,39 @@ export const MASTERY_REWARDS = [
   { level: 11, id: "title-verse-architect",   kind: "title", name: "Verse Architect",                             icon: "tower",   desc: "Builder of the structure.",      payload: { title: "verse-architect" } },
   { level: 11, id: "title-mastermind",        kind: "title", name: "Mastermind",                                  icon: "brain",   desc: "You saw it all coming.",         payload: { title: "mastermind" } },
   { level: 11, id: "title-poet-laureate",     kind: "title", name: "Poet Laureate",                               icon: "feather", desc: "Laurelled for the words.",       payload: { title: "poet-laureate" } },
-  { level: 13, id: "title-ultimate-showgirl", kind: "title", isDefault: true, name: "Ultimate Showgirl",          icon: "crown",   desc: "The capstone. Take a bow.",      payload: { title: "ultimate-showgirl" } },
-  { level: 13, id: "title-ultimate-swiftie",  kind: "title", name: "Ultimate Swiftie",                            icon: "star",    desc: "You know all the words.",        payload: { title: "ultimate-swiftie" } },
+  { level: 13, id: "title-ultimate-showgirl", kind: "title", isDefault: true, name: "Ultimate Showgirl",          icon: "mic",     desc: "The capstone. Take a bow.",      payload: { title: "ultimate-showgirl" } },
+  { level: 13, id: "title-ultimate-swiftie",  kind: "title", name: "Ultimate Swiftie",                            icon: "braceletring", desc: "You know all the words.",   payload: { title: "ultimate-swiftie" } },
 ];
 export const MASTERY_REWARD_BY_ID = Object.fromEntries(MASTERY_REWARDS.map((r) => [r.id, r]));
 
+// The mark each prestige TIER wears, in tier order (I–IV), and the single source of truth
+// for it: the medallion rail reads it, and so do the two levels on the ascent track that
+// open a tier. A tier's mark used to be derived from its default title's mark, which was
+// fine until tier IV and Ultimate Showgirl were decided to be two distinct icons — a tier is
+// a rank, a title is one of the several names you may wear inside it, and the capstone title
+// had earned a mark of its own. Rather than special-case tier IV, all four tiers now take
+// their mark from here. The anti-drift property is unchanged, just re-pointed: the track node
+// and the medallion still read one source, this one.
+export const MASTERY_TIER_ICONS = ["laurel", "bridge", "chair", "plumes"];
+
 // The mark each Mastery level wears on the hero's ascent track, and the single source of
 // truth for it. Where a reward already defines the level's identity — the first pen, the two
-// milestones, a tier's default title — the level takes its mark FROM that reward rather than
-// naming a second one, so the track node and the tile it points at can never drift apart.
-// The set levels (paper, charms, button finishes, flourishes) draw their rewards rather than
-// a mark, so they name one here. Levels 2, 3, 9 and 11 are deliberately unmarked.
+// milestones — the level takes its mark FROM that reward rather than naming a second one, so
+// the track node and the tile it points at can never drift apart; the two title levels here
+// take the TIER's mark on the same principle, because a track node marks what the level
+// opens (a whole tier) rather than one title inside it. The set levels (paper, charms, button
+// finishes, flourishes) draw their rewards rather than a mark, so they name one here.
+// Levels 2, 3, 9 and 11 are deliberately unmarked.
 export const MASTERY_LEVEL_ICONS = {
   1:  MASTERY_REWARD_BY_ID["pen-fountain"].icon,
   4:  "book",
   5:  "gem",
   6:  MASTERY_REWARD_BY_ID["hardmode-unlock"].icon,
-  7:  MASTERY_REWARD_BY_ID["title-certified-poet"].icon,
+  7:  MASTERY_TIER_ICONS[0],
   8:  "rise",
   10: MASTERY_REWARD_BY_ID["reveal-hints"].icon,
   12: "sparkle",
-  13: MASTERY_REWARD_BY_ID["title-ultimate-showgirl"].icon,
+  13: MASTERY_TIER_ICONS[3],
 };
 
 // Prestige titles, in tier order. `masteryDefaultTitle` resolves the title a "follows your
@@ -1726,26 +1738,59 @@ export const ACH_ICONS = {
    The two sets answer different questions (a charm says what you did; a mastery mark says
    how far you have climbed) and the charm set is crowded — `feather` alone is worn by seven
    achievements — so a prestige mark can never be redrawn without collateral damage while
-   the two share a table. Every entry below currently ALIASES its ACH_ICONS glyph: the point
-   is the seam, not the drawing. A later pass replaces these one at a time (a real fountain
-   pen, a glitter gel pen, swords, the four prestige tier marks) with no effect on charms.
-   Read through masteryMarkup() in app.js; keys are named by MASTERY_LEVEL_ICONS, the
-   `icon` field on a mastery reward, and SKILLS[].icon. */
+   the two share a table. The entries below either ALIAS an ACH_ICONS glyph (where the
+   achievement drawing genuinely means the same thing) or are drawn here for Mastery alone.
+   Read through masteryMarkup() in app.js; keys are named by MASTERY_LEVEL_ICONS,
+   MASTERY_TIER_ICONS, the `icon` field on a mastery reward, and SKILLS[].icon.
+
+   DRAWING NOTES for anything added to MASTERY_OWN_ICONS. A mark renders in two different
+   ways depending on the surface, and has to work in both: on the reward tiles and the tier
+   medallions it is a `.charm`, where `.ink-fill` is fill:none + a 1.7 stroke, so the mark is
+   a pure outline; on the ascent track and the header seals `.ink-fill` really is filled. So
+   a shape must read as both a line drawing and a silhouette, thin features must stay wider
+   than about 2.5 units or the outline closes up, and a `var(--paper)` knockout is expendable
+   detail only (it disappears entirely in outline mode). Detail that must always show is an
+   `ink` stroke. And the size that decides everything is the small one: 15px on the ascent
+   track, 12px in the mobile query. */
 // Marks the mastery board draws itself, because nothing in ACH_ICONS means what they mean.
-// `die` is the random bracelet charm: a tumbled five-face, tilted like a thing dropped on
-// the desk rather than a symbol set square on the page.
+// Objects dropped or pressed on a desk, tilted off square, not symbols set straight.
 const MASTERY_OWN_ICONS = {
+  // the random bracelet charm: a tumbled five-face, mid-roll
   die: `<svg viewBox="0 0 24 24"><g transform="rotate(-13 12 12)"><rect class="ink-fill" x="4.4" y="4.4" width="15.2" height="15.2" rx="3.2" stroke-width="1.1"/><g fill="var(--paper)"><circle cx="8.5" cy="8.5" r="1.3"/><circle cx="15.5" cy="8.5" r="1.3"/><circle cx="12" cy="12" r="1.3"/><circle cx="8.5" cy="15.5" r="1.3"/><circle cx="15.5" cy="15.5" r="1.3"/></g></g></svg>`,
+
+  /* The three pens (levels 1–3) are one family: the same 45° lay across the page, the same
+     barrel depth, the same cap band and clip, nib end at the bottom left. `feather` (the
+     quill, level 2) sets the diagonal they both follow. Only the writing end differs — a
+     slit nib, a plume, a gel cone — which is the whole point of the ladder. */
+  fountainpen: `<svg viewBox="0 0 24 24"><g transform="rotate(-45 12 12)"><path class="ink-fill" d="M1.2 12 L8.6 9.5 L8.6 14.5 Z"/><circle cx="7" cy="12" r="0.8" fill="var(--paper)"/><path class="ink" stroke-width="0.9" d="M2 12 H5.8"/><rect class="ink-fill" x="8.4" y="9.9" width="2.2" height="4.2" rx="0.6"/><rect class="ink-fill" x="10.4" y="9.2" width="12" height="5.6" rx="1.7"/><path class="ink" stroke-width="1" d="M13.8 9.6 V14.4"/><path class="ink" stroke-width="1.1" d="M20.9 10.6 H17.6 V12.4"/></g></svg>`,
+  // the glitter gel pen: same pen, a fine plastic cone instead of a nib, throwing sparkle
+  gelpen: `<svg viewBox="0 0 24 24"><g transform="rotate(-45 12 12)"><path class="ink-fill" d="M1.6 12 L7 10.1 L7 13.9 Z"/><rect class="ink-fill" x="6.6" y="9.9" width="2.2" height="4.2" rx="0.6"/><rect class="ink-fill" x="8.6" y="9.2" width="13.8" height="5.6" rx="1.7"/><path class="ink" stroke-width="1" d="M11.8 9.6 V14.4"/><path class="ink" stroke-width="1.1" d="M20.9 10.6 H17.6 V12.4"/></g><g class="ink-fill"><path d="M6 3.4 C6.4 6 7.2 6.8 9.8 7.2 C7.2 7.6 6.4 8.4 6 11 C5.6 8.4 4.8 7.6 2.2 7.2 C4.8 6.8 5.6 6 6 3.4 Z"/><path d="M11.4 1.6 C11.6 3.2 12 3.6 13.6 3.8 C12 4 11.6 4.4 11.4 6 C11.2 4.4 10.8 4 9.2 3.8 C10.8 3.6 11.2 3.2 11.4 1.6 Z"/></g></svg>`,
+  // the super-hard seal (level 6): two real blades, hilted and crossed off square, the
+  // upper one carrying a paper-coloured gap so the crossing reads as depth at any size
+  swords: `<svg viewBox="0 0 24 24"><g transform="rotate(-134 12 12)"><circle class="ink-fill" cx="3.9" cy="12" r="1.5"/><rect class="ink-fill" x="4.4" y="11.05" width="3.6" height="1.9" rx="0.7"/><rect class="ink-fill" x="7.8" y="8.2" width="1.6" height="7.6" rx="0.7"/><path class="ink-fill" d="M9.4 9.9 L17.4 10.5 L21 12 L17.4 13.5 L9.4 14.1 Z"/></g><g transform="rotate(-44 12 12)" fill="var(--paper)" stroke="var(--paper)" stroke-width="2.4" stroke-linejoin="round"><path d="M9.4 9.9 L17.4 10.5 L21 12 L17.4 13.5 L9.4 14.1 Z"/><rect x="7.8" y="8.2" width="1.6" height="7.6" rx="0.7"/></g><g transform="rotate(-44 12 12)"><circle class="ink-fill" cx="3.9" cy="12" r="1.5"/><rect class="ink-fill" x="4.4" y="11.05" width="3.6" height="1.9" rx="0.7"/><rect class="ink-fill" x="7.8" y="8.2" width="1.6" height="7.6" rx="0.7"/><path class="ink-fill" d="M9.4 9.9 L17.4 10.5 L21 12 L17.4 13.5 L9.4 14.1 Z"/></g></svg>`,
+
+  /* The four prestige tier marks (MASTERY_TIER_ICONS). Four objects off one desk rather than
+     four ranks of the same badge, each drawn from its tier's name: a pressed laurel sprig,
+     an arched bridge, the department chair, a showgirl's plume fan. Deliberately four
+     different silhouettes, because on the rail they are read side by side. */
+  laurel: `<svg viewBox="0 0 24 24"><g transform="rotate(-5 12 12)"><path class="ink" stroke-width="1.4" fill="none" d="M5.4 21.4 C9 18 13.6 12.2 17 3.4"/><g class="ink-fill"><ellipse cx="5.2" cy="15.4" rx="3.2" ry="1.6" transform="rotate(-26 5.2 15.4)"/><ellipse cx="8.8" cy="9.9" rx="3.2" ry="1.6" transform="rotate(-34 8.8 9.9)"/><ellipse cx="12.2" cy="17.9" rx="3.2" ry="1.6" transform="rotate(34 12.2 17.9)"/><ellipse cx="15.2" cy="11.9" rx="3.2" ry="1.6" transform="rotate(26 15.2 11.9)"/><ellipse cx="17" cy="5.6" rx="2.9" ry="1.45" transform="rotate(16 17 5.6)"/></g></g></svg>`,
+  bridge: `<svg viewBox="0 0 24 24"><g transform="rotate(-3 12 12)"><path class="ink" stroke-width="1.7" fill="none" d="M1.4 17.6 C4.2 7.4 19.8 7.4 22.6 17.6"/><path class="ink" stroke-width="1.2" fill="none" d="M1.4 14 C4.6 4.6 19.4 4.6 22.6 14"/><g class="ink" stroke-width="1" opacity="0.8"><path d="M5.4 12.6 V9"/><path d="M12 10.9 V7.2"/><path d="M18.6 12.6 V9"/></g><path class="ink" stroke-width="1.3" fill="none" d="M7.2 17.7 C8.2 13 15.8 13 16.8 17.7"/><g class="ink" stroke-width="1.1" opacity="0.7"><path d="M2 20.4 C4.2 19.2 6 21.2 8.2 20 C10.4 18.8 12.2 20.8 14.4 19.6 C16.6 18.4 18.4 20.4 20.6 19.2"/><path d="M3.6 22.8 C5.8 21.6 7.6 23.6 9.8 22.4 C12 21.2 13.8 23.2 16 22"/></g></g></svg>`,
+  chair: `<svg viewBox="0 0 24 24"><g transform="rotate(-5 12 12)"><rect class="ink-fill" x="6.8" y="2.4" width="10.4" height="10" rx="2.6"/><g class="ink" stroke-width="0.9" opacity="0.75"><path d="M10 5.2 V9.8"/><path d="M14 5.2 V9.8"/></g><rect class="ink-fill" x="4.4" y="12.6" width="15.2" height="2.8" rx="1"/><g class="ink" stroke-width="1.6"><path d="M6.6 15.6 V21.2"/><path d="M17.4 15.6 V21.2"/></g></g></svg>`,
+  plumes: `<svg viewBox="0 0 24 24"><g transform="rotate(-4 12 12)"><g transform="rotate(-38 12 19.6)"><path class="ink-fill" d="M12 15.9 C9.3 13.7 8.9 8.8 10.7 5.6 C11.6 4 13.5 3.7 14.3 5.3 C15.9 8.4 15.1 13.5 12 15.9 Z"/><path class="ink" stroke-width="1" fill="none" d="M12 19.6 C11.9 18.2 11.9 17 12 15.9 C11.6 13.2 11.8 9.4 12.6 6.4"/></g><g transform="rotate(36 12 19.6)"><path class="ink-fill" d="M12 15.9 C9.3 13.7 8.9 8.8 10.7 5.6 C11.6 4 13.5 3.7 14.3 5.3 C15.9 8.4 15.1 13.5 12 15.9 Z"/><path class="ink" stroke-width="1" fill="none" d="M12 19.6 C11.9 18.2 11.9 17 12 15.9 C11.6 13.2 11.8 9.4 12.6 6.4"/></g><g transform="rotate(-1 12 19.6) translate(12 19.6) scale(1.12) translate(-12 -19.6)"><path class="ink-fill" d="M12 15.9 C9.3 13.7 8.9 8.8 10.7 5.6 C11.6 4 13.5 3.7 14.3 5.3 C15.9 8.4 15.1 13.5 12 15.9 Z"/><path class="ink" stroke-width="1" fill="none" d="M12 19.6 C11.9 18.2 11.9 17 12 15.9 C11.6 13.2 11.8 9.4 12.6 6.4"/></g><rect class="ink-fill" x="9.2" y="18.6" width="5.6" height="3.2" rx="1.1"/><path class="ink" stroke-width="0.8" opacity="0.55" d="M9.4 20.2 H14.6"/></g></svg>`,
+
+  /* The two capstones (level 13), the last marks in the game. The Showgirl takes the stage:
+     a stand mic, tipped back the way one is left after a bow. The Swiftie takes the bracelet:
+     a finished strand tied into a closed ring, knot and tails still hanging. */
+  mic: `<svg viewBox="0 0 24 24"><g transform="rotate(-11 12 12)"><circle class="ink-fill" cx="12" cy="7.6" r="5"/><g class="ink" stroke-width="0.9" opacity="0.75"><path d="M8.4 5.4 H15.6"/><path d="M7.4 7.6 H16.6"/><path d="M8.4 9.8 H15.6"/></g><rect class="ink-fill" x="10.6" y="12.2" width="2.8" height="4.8" rx="1"/><path class="ink-fill" d="M6.6 21.2 C7.2 18 16.8 18 17.4 21.2 Z"/></g></svg>`,
+  braceletring: `<svg viewBox="0 0 24 24"><g transform="rotate(-14 12 12)"><ellipse class="ink" cx="12" cy="11.6" rx="7.5" ry="6.6" fill="none" stroke-width="1.2"/><g class="ink-fill"><circle cx="19.5" cy="11.6" r="1.55"/><circle cx="17.3" cy="16.3" r="1.15"/><circle cx="12" cy="18.2" r="1.55"/><circle cx="6.7" cy="16.3" r="1.15"/><circle cx="4.5" cy="11.6" r="1.55"/><circle cx="6.7" cy="6.9" r="1.15"/><circle cx="12" cy="5" r="1.55"/><circle cx="17.3" cy="6.9" r="1.15"/></g><path class="ink" stroke-width="1.2" fill="none" d="M10.4 19.2 C9.6 21 8.8 21.8 7.4 22.4 M13.2 19 C13.4 20.8 14 21.8 15.2 22.6"/></g></svg>`,
 };
 
 export const MASTERY_ICONS = Object.assign(Object.fromEntries([
-  // pens (levels 1–3) and the two milestone seals
-  "nib", "feather", "sparkle", "swords", "key",
+  // the quill (level 2) — the one pen of the three that ACH_ICONS already draws right
+  "feather", "sparkle", "key",
   // level marks with no reward of their own: paper, charms, button finishes, flourishes
-  "book", "gem", "rise",
-  // prestige titles, four tiers. `crown` is deliberately doing double duty here — it is both
-  // the tier IV medallion and Ultimate Showgirl's own mark. Left unresolved on purpose: the
-  // redesign has to decide whether the capstone title and its tier want separate marks.
+  "nib", "book", "gem", "rise",
+  // the marks worn by prestige titles in the stepper (the TIERS have their own, drawn above)
   "drop", "tower", "note", "quote", "brain", "crown", "star",
   // skill emblems and the shared padlock
   "comet", "metronome", "heartline", "trail", "records", "lock",

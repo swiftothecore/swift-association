@@ -38,7 +38,7 @@ import {
   ENDURANCE_GROWTH, ENDURANCE_RUN_CAP, RANGE_RATIO_XP, RANGE_PER_ALBUM,
   RESOLVE_BASE, RESOLVE_STREAK_CAP,
   MASTERY_REWARDS, MASTERY_REWARD_BY_ID, MASTERY_GATE, MASTERY_MAX_LEVEL, MASTERY_LEVEL_STEP, SKILL_MAX_LEVEL,
-  MASTERY_TITLES, MASTERY_TITLE_BY_VALUE, masteryDefaultTitle, MASTERY_ICONS, MASTERY_LEVEL_ICONS,
+  MASTERY_TITLES, MASTERY_TITLE_BY_VALUE, masteryDefaultTitle, MASTERY_ICONS, MASTERY_LEVEL_ICONS, MASTERY_TIER_ICONS,
   skillXpForLevel, skillLevelFromXp, masteryXpForLevel, masteryLevelFromXp,
   POLAROID_DEVELOP_MS, POLAROID_TOTAL,
   RANDOM_CATEGORIES, RANDOM_UNPLAYED_WEIGHT,
@@ -4005,7 +4005,9 @@ function buildTitlesTile(m, unlocked) {
     // height, and it is the slot the "see titles" hover cue swaps into.
     const flag = `<span class="rb-medal-flag"><i class="rb-medal-state">${state}</i>` +
       (unlocked ? `<i class="rb-medal-hint">see titles</i>` : "") + `</span>`;
-    const face = `<span class="rb-medal-ic">${masteryMarkup(t.icon)}</span>` +
+    // The medallion wears the TIER's mark (MASTERY_TIER_ICONS), not the default title's:
+    // the rail is a rank ladder, and tier IV and Ultimate Showgirl are two different things.
+    const face = `<span class="rb-medal-ic">${masteryMarkup(MASTERY_TIER_ICONS[i])}</span>` +
       `<span class="rb-medal-lv">${RB_TIER_ROMAN[i]} · L${t.level}</span>` +
       `<span class="rb-medal-nm">${RB_TIER_SHORT[i]}</span>${flag}`;
     // A medallion jumps the stepper to that tier's default title — including a tier you have
