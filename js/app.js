@@ -2484,7 +2484,14 @@ function renderAchievementsPage() {
 
   const secretLocked = ACHIEVEMENTS.filter((a) => achMasked(a) && !earnedAchievements[a.id]);
   if (secretLocked.length) {
-    html += `<p class="histogram-label ach-section"><span class="ach-group-dot ach-group-dot--secret"></span>Secret charms · ${secretLocked.length}</p>` +
+    // This group only ever holds LOCKED secrets (an earned one moves into its real theme),
+    // so once the level-10 reveal has spelled out how to earn each of them, the word goes
+    // in quotation marks and the count gives way to the joke.
+    const revealed = hiddenHintsUnlocked();
+    const secretLabel = revealed
+      ? `“Secret” charms · in name only`
+      : `Secret charms · ${secretLocked.length}`;
+    html += `<p class="histogram-label ach-section"><span class="ach-group-dot ach-group-dot--secret"></span>${secretLabel}</p>` +
       `<div class="ach-grid">${secretLocked.map(achTile).join("")}</div>`;
   }
 
