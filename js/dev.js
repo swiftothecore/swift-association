@@ -152,7 +152,13 @@ export function initDev(api) {
   const modeSel = select(api.MODE_ORDER, (x) => x, (x) => x);
   body.append(section("era / mode",
     row(eraSel, btn("apply era", () => api.setEra(eraSel.value)),
-        modeSel, btn("set mode", () => api.setMode(modeSel.value)))));
+        modeSel, btn("set mode", () => api.setMode(modeSel.value))),
+    // "Start writing" is a very slightly different gold on every load, by design. Rolling it on
+    // demand is the only way to watch the spread without reloading a hundred times, and pinning
+    // it to the nominal fill is how you check a suspect shade really is just the jitter.
+    row("start gold:", btn("re-roll", () => { api.ctaGold.roll(); readout.textContent = api.ctaGold.state(); }),
+        btn("pin to nominal", () => { api.ctaGold.fix(); readout.textContent = api.ctaGold.state(); }),
+        btn("state", () => { readout.textContent = api.ctaGold.state(); }))));
 
   // ---- Onboarding / first-run ------------------------------------------------
   const obAlbumSel = select(["", ...api.STUDIO_ALBUMS], (x) => x, (x) => x || "no favourite");

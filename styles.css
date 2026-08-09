@@ -872,7 +872,7 @@
        `none` so the plain gold button needs no special case. A finish that wants art sets
        the property rather than restating this stack, so the sheen can never drift between
        the six finishes. */
-    background-color: #efb73e;
+    background-color: var(--cta-gold, #efb73e);
     background-image: linear-gradient(168deg, rgba(255, 255, 255, 0.34) 0%, rgba(255, 255, 255, 0) 46%, rgba(43, 39, 34, 0.12) 100%), var(--cta-art, none);
     border-color: var(--ink);
     box-shadow: 3px 3px 0 rgba(43, 39, 34, 0.22);
@@ -917,7 +917,7 @@
     background-image: linear-gradient(168deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0) 60%);
   }
   .play-cta[data-startbtn="ink"]:hover, .play-cta[data-startbtn="ink"]:focus-visible {
-    background-color: #efb73e; color: var(--ink);
+    background-color: var(--cta-gold, #efb73e); color: var(--ink);
   }
   .play-cta[data-startbtn="rose"] { background-color: #e79ab5; }
   /* Sky — a handful of soft white clouds drifting across the blue, sized by the SVG's own
