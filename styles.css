@@ -5922,8 +5922,64 @@
   /* Flat bar (locked + complete states) */
   .mh-bar { position: relative; height: 9px; border-radius: 5px; background: rgba(43, 39, 34, 0.1); margin: 13px 0 9px; }
   .mh-bar i { position: absolute; left: 0; top: 0; height: 100%; border-radius: 5px; background: rgba(var(--m-accent), 0.72); }
-  .mh-complete .mh-bar i { background: rgba(var(--m-gold), 0.85); }
   .mh-gate { position: absolute; right: -1px; top: -4px; bottom: -4px; width: 2px; border-radius: 1px; background: rgba(var(--m-goldink), 0.95); }
+
+  /* ---- The finale: Mastery 13 ----
+     At the cap the bar stops being a meter and becomes a strip of gold leaf pressed into
+     the page. It is the last thing in the game, seen once, so it is allowed some ceremony —
+     but the ceremony is foil and paper and ink, the notebook's own materials, never glow.
+     What each layer answers to is decided in masteryHeadComplete (app.js): the flecks are
+     printed and always drawn, .mh-foil-sheen is only emitted when motion is allowed, and
+     the seal's .glint also wants reduced flashing off. */
+  .mh-card.mh-complete {
+    /* a faint scatter of leaf caught in the card's own paper */
+    background-image:
+      radial-gradient(circle at 24% 36%, rgba(199, 149, 31, 0.20) 0 1px, transparent 1.4px),
+      radial-gradient(circle at 71% 68%, rgba(199, 149, 31, 0.15) 0 0.9px, transparent 1.3px),
+      radial-gradient(circle at 88% 18%, rgba(150, 105, 20, 0.13) 0 0.8px, transparent 1.2px),
+      linear-gradient(rgba(255, 253, 246, 0.4), rgba(255, 253, 246, 0.4));
+    background-size: 173px 121px, 227px 149px, 139px 97px, 100% 100%;
+  }
+  .mh-complete .mh-bar {
+    height: 14px; border-radius: 7px; margin: 15px 0 11px;
+    background: rgba(var(--m-goldink), 0.14);
+    box-shadow: inset 0 0 0 1px rgba(var(--m-goldink), 0.4), 0 1px 0 rgba(255, 255, 255, 0.5);
+  }
+  .mh-complete .mh-bar i {
+    overflow: hidden; border-radius: 7px; background-color: #c8951f;
+    /* leaf grain over beaten gold: the flecks tile on co-prime widths so no repeat is
+       visible across the bar, and the base gradient is the fold-and-shadow of real foil. */
+    background-image:
+      radial-gradient(circle at 18% 30%, rgba(255, 248, 222, 0.95) 0 0.7px, transparent 1px),
+      radial-gradient(circle at 62% 72%, rgba(255, 248, 222, 0.75) 0 0.6px, transparent 0.9px),
+      radial-gradient(circle at 85% 24%, rgba(110, 74, 10, 0.45) 0 0.6px, transparent 0.9px),
+      radial-gradient(circle at 41% 80%, rgba(110, 74, 10, 0.35) 0 0.5px, transparent 0.8px),
+      linear-gradient(100deg, #b7841c 0%, #e6c471 16%, #c8951f 32%, #f4e0a6 50%, #bf891b 66%, #e3c072 84%, #b7841c 100%);
+    background-size: 37px 100%, 53px 100%, 29px 100%, 61px 100%, 100% 100%;
+  }
+  /* The sheen: one slow pass of light down the length of the foil, then a long rest. */
+  .mh-foil-sheen {
+    position: absolute; inset: 0; pointer-events: none;
+    background: linear-gradient(100deg, transparent 38%, rgba(255, 252, 238, 0.75) 50%, transparent 62%);
+    transform: translateX(-115%);
+    animation: mh-foil-travel 6s ease-in-out infinite;
+  }
+  @keyframes mh-foil-travel {
+    0%, 22% { transform: translateX(-115%); }
+    66%, 100% { transform: translateX(115%); }
+  }
+  /* The seal catches the same light a beat before it reaches the bar, so one pass reads as
+     one light crossing the whole card rather than as two separate effects. */
+  .mh-seal.glint::after {
+    content: ""; position: absolute; inset: 0; border-radius: 50%; pointer-events: none;
+    background: linear-gradient(112deg, transparent 40%, rgba(255, 253, 242, 0.8) 50%, transparent 60%);
+    background-size: 320% 100%; background-position: 160% 0;
+    animation: mh-seal-glint 6s ease-in-out infinite;
+  }
+  @keyframes mh-seal-glint {
+    0%, 10% { background-position: 160% 0; }
+    40%, 100% { background-position: -60% 0; }
+  }
 
   /* Ascent track (climbing state) */
   .mh-track { position: relative; margin: 22px 2px 6px; }

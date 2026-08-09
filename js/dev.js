@@ -288,6 +288,12 @@ export function initDev(api) {
         btn("charms: star", () => { api.mastery.charm(""); toast("back to the star"); }),
         btn("reshuffle", () => toast("seed " + api.mastery.reshuffle())),
         btn("peek strand", () => toast(api.mastery.strand().join(" · ")))),
+    // The level-13 finale: the gold-foil hero only ever renders at the cap, which is the one
+    // state a testing session can't reach honestly. Each button also sets the motion pair
+    // that decides how much of it draws, so all three renders are one press apart.
+    row("finale", btn("full", () => toast(api.mastery.finale("full"))),
+        btn("reduce motion", () => toast(api.mastery.finale("reduce"))),
+        btn("reduced flashing", () => toast(api.mastery.finale("flash")))),
     row(btn("open page", () => api.mastery.open()),
         btn("reset mastery", () => { api.mastery.reset(); toast("mastery reset"); }, "warn"))));
 

@@ -3703,15 +3703,28 @@ function masteryHeadLocked(total) {
     `</div></div>`;
 }
 
-// Complete — sealed at the cap.
+// Complete — sealed at the cap. The last thing in the game and seen exactly once, so the bar
+// stops being a progress meter and becomes a strip of gold leaf pressed into the page. The
+// drama is built out of the notebook's own materials: foil, paper grain, and ink.
+//
+// Three layers, and each answers to a different setting, because they are different things:
+//   flecks — fine gold specks in the leaf and in the card's paper. Printed, not moving, so
+//            no motion setting has anything to say about them; they are always drawn.
+//   sheen  — a slow highlight travelling the length of the foil. That is motion, so
+//            reduceMotion takes it away (and on "auto" the system preference does).
+//   glint  — the seal catching that same light as it passes. A specular flash on top of the
+//            motion, so it needs reducedFlashing off as well: the same pairing every other
+//            sparkle in the game is gated by.
 function masteryHeadComplete(mLevel) {
+  const sheen = !motionReduced();
+  const glint = sheen && !settings.reducedFlashing;
   return `<div class="mh-card mh-complete"><span class="mh-rule"></span>` +
     `<div class="mh-row">` +
-      `<div class="mh-seal complete"><span class="mh-seal-emblem">${masteryMarkup("crown")}</span></div>` +
+      `<div class="mh-seal complete${glint ? " glint" : ""}"><span class="mh-seal-emblem">${masteryMarkup("crown")}</span></div>` +
       `<div class="mh-body">` +
         `<div class="mh-kicker">Mastery</div>` +
         `<div class="mh-title">Mastered</div>` +
-        `<div class="mh-bar"><i style="width:100%"></i></div>` +
+        `<div class="mh-bar"><i style="width:100%">${sheen ? `<span class="mh-foil-sheen"></span>` : ""}</i></div>` +
         `<div class="mh-sub"><b>Level ${mLevel}</b> · every reward earned</div>` +
       `</div>` +
     `</div></div>`;
@@ -17324,6 +17337,24 @@ function buildDevApi() {
       title: (slug) => { settings.masteryTitle = slug || ""; saveSettings(settings); if ($("masteryBody")) renderMasteryPage(); if (screens.records.classList.contains("active")) renderRecordsPage(); },
       titles: () => MASTERY_TITLES.map((t) => `${t.payload.title} (L${t.level}${t.isDefault ? ", default" : ""})`),
       open: () => openMastery("start"),
+      // The finale in one press: the cap, every reward, and the Mastery page open on it.
+      // Level 13 is the one state that can't be reached honestly in a testing session, and
+      // the gold-foil hero only exists there. Pass a motion mode to see the other two
+      // renders of it: "reduce" drops the travelling sheen, "flash" keeps the sheen but
+      // drops the seal's glint, "" (or nothing) restores whatever you had.
+      finale: (mode) => {
+        if (mode === "reduce") { settings.reduceMotion = "on"; settings.reducedFlashing = false; }
+        else if (mode === "flash") { settings.reduceMotion = "off"; settings.reducedFlashing = true; }
+        else if (mode === "full") { settings.reduceMotion = "off"; settings.reducedFlashing = false; }
+        if (mode) { saveSettings(settings); applySettings(); }
+        const m = loadMastery();
+        SKILL_IDS.forEach((id) => { m.skills[id] = skillXpForLevel(SKILL_MAX_LEVEL); });
+        m.masteryXp = masteryXpForLevel(MASTERY_MAX_LEVEL);
+        for (const r of MASTERY_REWARDS) m.unlocked[r.id] = m.unlocked[r.id] || new Date().toISOString();
+        saveMastery(m); updateMasteryNav();
+        if (screens.mastery.classList.contains("active")) renderMasteryPage(); else openMastery("start");
+        return `level ${MASTERY_MAX_LEVEL} · sheen ${motionReduced() ? "off" : "on"} · glint ${(!motionReduced() && !settings.reducedFlashing) ? "on" : "off"}`;
+      },
       // Preview the results-screen skills recap + the level-up celebration without a real
       // game. Pass a mastery level (>=1) for a level-up beat; pass 0 for the first-unlock beat.
       // Fabricates a fold (persists nothing) and shows it on the results card.
