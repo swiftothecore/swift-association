@@ -3451,7 +3451,7 @@ function renderRecordsPage() {
   const title = wornTitleName();
   const titleHTML = (name && title) ? `<span class="rec-sig-title">${escapeHtml(title)}</span>` : "";
   const floId = settings.masterySignature || "";
-  const floHTML = (name && floId) ? `<span class="rec-flourish" data-fl="${floId}">${flourishSVG(floId)}</span>` : "";
+  const floHTML = name ? flourishInkHTML(floId) : "";
   const sigText = name
     ? `<span class="rec-sig-name">${escapeHtml(name)}’s notebook</span>${floHTML}<span class="rec-sig-sub">best scores &amp; history</span>${titleHTML}`
     : `<div class="rec-sign-row"><input id="recSignInput" class="set-text" maxlength="20" placeholder="sign your notebook" autocomplete="off" spellcheck="false" data-1p-ignore data-lpignore="true" data-bwignore data-form-type="other" /><button id="recSignSave" class="btn-ghost">sign</button></div>`;
@@ -3947,20 +3947,46 @@ function buildButtonTile(buttons, m) {
     `<div class="rb-tt-sub">Restyles your home-screen button</div>` +
     `<div class="rb-swatches">${sw}</div></div>`;
 }
-// Signature flourishes — a stacked column of hand-inked marks (default "no flourish" plus
-// each unlockable flourish). Selecting one draws it beneath your records signature.
+// One row's preview: your own name in the writing hand with the flourish inked beneath it,
+// exactly as the records page draws the pair. All six are on the page at once, so choosing is
+// a matter of looking rather than of trying each one and going to check.
+//
+// The name is optional and plenty of notebooks won't have one. Rather than collapse to a bare
+// mark, an unsigned notebook previews against the same "your name" placeholder the bookplate
+// puts in its input, so the rows still read as signatures and the missing piece is obvious.
+//
+// The default row is the odd one out now that every row carries a name: with no flourish to
+// draw, the slot under the name says what the row is instead of showing it.
+function signaturePreviewHTML(name, floId) {
+  const signed = !!name;
+  const body = floId
+    ? flourishInkHTML(floId)
+    : `<span class="rb-sig-none">just your name</span>`;
+  return `<span class="rec-sig-name${signed ? "" : " is-unsigned"}">${escapeHtml(signed ? name : "your name")}</span>${body}`;
+}
+
+// Signature flourishes — a stacked column of live signature previews (default "no flourish"
+// plus each unlockable flourish). Selecting one draws it beneath your records signature.
 function buildSignatureTile(sigs, m) {
   const setUnlocked = sigs.length ? !!m.unlocked[sigs[0].id] : false;
   const active = settings.masterySignature || "";
-  let rows = rbRow(`data-reward-reset="signature"`, flourishSVG(""), "No flourish", active === "");
+  const name = getPlayerName();
+  let rows = rbRow(`data-reward-reset="signature"`, signaturePreviewHTML(name, ""), "No flourish", active === "");
   sigs.forEach((r) => {
     if (!setUnlocked) rows += rbRowSlot(r.level);
-    else rows += rbRow(`data-reward="${r.id}"`, flourishSVG(r.payload.signature), r.name, active === r.payload.signature);
+    else rows += rbRow(`data-reward="${r.id}"`, signaturePreviewHTML(name, r.payload.signature), r.name, active === r.payload.signature);
   });
   return `<div class="rb-tile rb-sig" style="grid-area:sig">` +
     `<div class="rb-tile-top"><span class="rb-tt">Signature flourish</span>${rbChip("Mastery 12")}</div>` +
     `<div class="rb-tt-sub">Inked beneath your records signature</div>` +
     `<div class="rb-rows rb-rows--sig">${rows}</div></div>`;
+}
+
+// A flourish inked under a signature, in its records-page wrapper. The records page and the
+// Mastery picker both draw it through here, so the preview in the picker IS the thing, not a
+// second description of it that can drift. "" (no flourish) draws nothing at all.
+function flourishInkHTML(floId) {
+  return floId ? `<span class="rec-flourish" data-fl="${floId}">${flourishSVG(floId)}</span>` : "";
 }
 
 // The signature-flourish glyph for a given id (shared by the records page and the Mastery

@@ -6018,13 +6018,29 @@
   .rb-row.locked .rb-row-nm { color: var(--ink-soft); }
   .rb-row-tag { font-family: var(--type); font-size: 8.5px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-soft); }
   .rb-row.active .rb-row-tag { color: rgba(var(--m-accent), 0.95); }
-  /* Signature rows: a wide inked mark instead of a small charm, so the row runs a touch tighter. */
-  .rb-rows--sig .rb-row { padding: 6px 11px; min-height: 40px; }
-  .rb-rows--sig .rb-row-ic { width: 96px; height: 28px; display: flex; align-items: center; color: var(--ink); }
-  .rb-rows--sig .rb-row-ic.rb-lock { width: 15px; height: 15px; color: var(--ink-soft); }
-  .rb-rows--sig .rb-row-ic .fl-stroke { width: 96px; height: 15px; }
-  .rb-rows--sig .rb-row-ic .fl-13 { width: 36px; height: 24px; }
-  .rb-rows--sig .rb-row-ic .fl-crest { width: 28px; height: 28px; }
+  /* Signature rows: each row previews the real thing — your name in the writing hand with the
+     flourish inked under it, drawn by the very .rec-sig-name / .rec-flourish the records page
+     uses, so nothing here is a second description of a flourish. Only the scale is the tile's
+     own: the records signature is set at 30px against a whole page, which would swamp a row. */
+  .rb-rows--sig .rb-row { padding: 7px 11px; min-height: 52px; }
+  .rb-rows--sig .rb-row-ic {
+    flex: 0 0 136px; width: 136px; height: auto; min-height: 40px;
+    display: flex; flex-direction: column; align-items: flex-start; justify-content: center;
+    color: var(--ink);
+  }
+  .rb-rows--sig .rb-row-ic.rb-lock { flex: 0 0 15px; width: 15px; height: 15px; min-height: 0; color: var(--ink-soft); }
+  .rb-rows--sig .rec-sig-name { font-size: 19px; line-height: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+  /* An unsigned notebook previews against the bookplate's own "your name" placeholder, so a
+     row without a name still reads as a signature rather than as a blank. */
+  .rb-rows--sig .rec-sig-name.is-unsigned { color: var(--ink-soft); opacity: 0.55; }
+  .rb-rows--sig .rec-flourish { margin: 3px 0 0; }
+  .rb-rows--sig .rec-flourish .fl-stroke { width: 118px; max-width: 100%; height: 11px; }
+  .rb-rows--sig .rec-flourish[data-fl="thirteen"] .fl-13 { width: 30px; height: 19px; }
+  .rb-rows--sig .rec-flourish[data-fl="crest"] .fl-crest { width: 32px; height: 32px; }
+  /* The preview eats enough of the row that "in use" would otherwise break across two lines. */
+  .rb-rows--sig .rb-row-tag { white-space: nowrap; }
+  /* The default row has no flourish to show, so the slot says what it is instead. */
+  .rb-sig-none { font-family: var(--type); font-size: 8.5px; letter-spacing: 0.06em; color: var(--ink-soft); opacity: 0.8; margin-top: 5px; }
 
   /* Charms — bracelet strand hero */
   .rb-strand { position: relative; margin-top: 16px; padding-top: 8px; }
