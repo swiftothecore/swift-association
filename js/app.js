@@ -3523,7 +3523,7 @@ function renderRecordsPage() {
   const saveBtn = $("recSignSave");
   if (saveBtn) saveBtn.addEventListener("click", () => {
     const v = ($("recSignInput").value || "").trim().slice(0, 20);
-    if (v) { settings.playerName = setPlayerName(v); checkPianoEgg(v); refreshStartBoard(); renderRecordsPage(); }
+    if (v) { settings.playerName = setPlayerName(v); checkPianoEgg(v); refreshStartBoard(); renderRecordsPage(); if ($("masteryBody")) renderMasteryPage(); }
   });
   const signInput = $("recSignInput");
   if (signInput) signInput.addEventListener("keydown", (e) => { if (e.key === "Enter") saveBtn.click(); });
@@ -15793,6 +15793,7 @@ function wireSettingsBody() {
     checkPianoEgg(settings.playerName);
     refreshStartBoard();   // re-sign the start-screen records live
     if (screens.records.classList.contains("active")) renderRecordsPage();
+    if ($("masteryBody")) renderMasteryPage();   // re-sign the mastery signature previews live
   });
   body.querySelectorAll("[data-avatar]").forEach((b) => b.addEventListener("click", () => {
     if (b.dataset.avatar === "remove") applyAvatar("");
@@ -17254,7 +17255,7 @@ function buildDevApi() {
     },
     // Skills & Mastery
     mastery: {
-      grant: (n) => { const d = {}; SKILL_IDS.forEach((id) => { d[id] = n | 0; }); announceSkillProgress(recordSkillXp(d)); updateMasteryNav(); },
+      grant: (n) => { const d = {}; SKILL_IDS.forEach((id) => { d[id] = n | 0; }); announceSkillProgress(recordSkillXp(d)); updateMasteryNav(); if ($("masteryBody")) renderMasteryPage(); },
       setSkillLevel: (id, lvl) => {
         const m = loadMastery();
         m.skills[id] = skillXpForLevel(Math.max(0, Math.min(SKILL_MAX_LEVEL, lvl | 0)));
@@ -17273,7 +17274,7 @@ function buildDevApi() {
       maxSkills: () => {
         const m = loadMastery();
         SKILL_IDS.forEach((id) => { m.skills[id] = skillXpForLevel(SKILL_MAX_LEVEL); });
-        saveMastery(m); updateMasteryNav();
+        saveMastery(m); updateMasteryNav(); if ($("masteryBody")) renderMasteryPage();
       },
       setMasteryLevel: (lvl) => {
         lvl = Math.max(0, Math.min(MASTERY_MAX_LEVEL, lvl | 0));   // Mastery caps at level 13
