@@ -15612,8 +15612,8 @@ const COMMON_TZ_FALLBACK = [
    it twice. */
 const SETTINGS_PANELS = [
   { id: "notebook", label: "Notebook", icon: `<path d="M6 3.5h9.5l3 3V20.5H6z"/><path d="M15.5 3.5v3h3M9 10h6M9 14h6"/>` },
-  { id: "motion", label: "Motion", icon: `<path d="M4 8h10M4 12h16M4 16h10"/><path d="M17 5.5 20 8l-3 2.5"/>` },
-  { id: "gameplay", label: "Gameplay", icon: `<rect x="4" y="8" width="16" height="9" rx="3"/><path d="M8 12.5h4M10 10.5v4M16 12h.01M18 14h.01"/>` },
+  { id: "motion", label: "Motion", icon: `<path d="M4 8h10a2 2 0 1 0-2-2"/><path d="M4 12h15a2.5 2.5 0 1 1-2.5 2.5"/><path d="M4 16h7"/>` },
+  { id: "gameplay", label: "Gameplay", icon: `<rect x="5" y="5" width="14" height="14" rx="2.5"/><circle cx="9" cy="9" r="1" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1" fill="currentColor" stroke="none"/><circle cx="15" cy="15" r="1" fill="currentColor" stroke="none"/>` },
   { id: "display", label: "Display", icon: `<rect x="4" y="5" width="16" height="12" rx="1.5"/><path d="M9 20h6M12 17v3"/>` },
   { id: "data", label: "Data", icon: `<ellipse cx="12" cy="6.5" rx="6.5" ry="2.5"/><path d="M5.5 6.5v5c0 1.4 2.9 2.5 6.5 2.5s6.5-1.1 6.5-2.5v-5M5.5 11.5v5c0 1.4 2.9 2.5 6.5 2.5s6.5-1.1 6.5-2.5v-5"/>` },
   { id: "about", label: "About", icon: `<circle cx="12" cy="12" r="8"/><path d="M12 10.5v5M12 7.5h.01"/>` },
