@@ -1298,18 +1298,35 @@ export const CTA_MARKS = {
 };
 
 // The Pride finish is one Mastery-8 reward with a small collection inside it, rather than
-// eight near-identical full-size CTA swatches on the reward board. These values persist in
+// eight near-identical full-size CTA swatches on the reward board. These ids persist in
 // settings.masteryButton just like every other button finish.
+//
+// Each flag carries its own colour ramp as data rather than as a CSS rule, and prideStripes
+// below turns it into the gradient that the button wears in an inline --cta-stripes. That is
+// what lets ONE ramp serve both the real start button and every preview of it: a per-flag CSS
+// rule would have to be written again for the picker's chips, and eight ramps kept in two
+// places is eight chances for a flag to be drawn wrong in one of them.
+//
+// The stops are deliberately left short of each other (a band ends at 15%, the next starts at
+// 19%) so the colours bleed together the way felt-tips do on paper, matching the rest of the
+// notebook. Widen a gap and you get a wash; close it and you get vinyl.
 export const PRIDE_BUTTONS = [
-  { id: "pride-rainbow",    name: "Rainbow Pride",  shortName: "Rainbow" },
-  { id: "pride-trans",      name: "Transgender",    shortName: "Trans" },
-  { id: "pride-lesbian",    name: "Lesbian",        shortName: "Lesbian" },
-  { id: "pride-gay-men",    name: "Gay men's",      shortName: "Gay men's" },
-  { id: "pride-bi",         name: "Bisexual",       shortName: "Bisexual" },
-  { id: "pride-pan",        name: "Pansexual",      shortName: "Pansexual" },
-  { id: "pride-nonbinary",  name: "Nonbinary",      shortName: "Nonbinary" },
-  { id: "pride-asexual",    name: "Asexual",        shortName: "Asexual" },
+  { id: "pride-rainbow",   name: "Rainbow Pride", stops: ["#d4574d 0 15%", "#dd8b3e 19% 32%", "#e4bf4c 36% 48%", "#6da668 53% 65%", "#5b8fc7 69% 82%", "#8b6cb2 86% 100%"] },
+  { id: "pride-trans",     name: "Transgender",   stops: ["#5bcefa 0 20%", "#f5a9b8 24% 38%", "#fff 42% 58%", "#f5a9b8 62% 76%", "#5bcefa 80% 100%"] },
+  { id: "pride-lesbian",   name: "Lesbian",       stops: ["#d52d00 0 17%", "#ef7627 21% 36%", "#ff9a56 40% 48%", "#fff 52% 57%", "#d162a4 61% 77%", "#a30262 81% 100%"] },
+  { id: "pride-gay-men",   name: "Gay men's",     stops: ["#078d70 0 15%", "#26ceaa 19% 31%", "#98e8c1 35% 47%", "#fff 51% 58%", "#7bade2 62% 74%", "#5049cc 78% 89%", "#3d1a78 93% 100%"] },
+  { id: "pride-bi",        name: "Bisexual",      stops: ["#d60270 0 40%", "#9b4f96 45% 57%", "#0038a8 62% 100%"] },
+  { id: "pride-pan",       name: "Pansexual",     stops: ["#ff218c 0 30%", "#ffd800 35% 65%", "#21b1ff 70% 100%"] },
+  { id: "pride-nonbinary", name: "Nonbinary",     stops: ["#fff430 0 23%", "#fff 28% 47%", "#9c59d1 52% 72%", "#222 77% 100%"] },
+  { id: "pride-asexual",   name: "Asexual",       stops: ["#222 0 22%", "#a3a3a3 27% 47%", "#fff 52% 72%", "#800080 77% 100%"] },
 ];
+export const PRIDE_BUTTON_BY_ID = Object.fromEntries(PRIDE_BUTTONS.map((f) => [f.id, f]));
+// The gradient for a button finish, or "" if that finish is not a flag (every other finish
+// paints itself from CSS and wants no inline stripes at all).
+export function prideStripes(finish) {
+  const flag = PRIDE_BUTTON_BY_ID[finish];
+  return flag ? `linear-gradient(to bottom, ${flag.stops.join(", ")})` : "";
+}
 
 // Mastery rewards — one granted per Mastery level. `kind` drives how the Mastery screen
 // renders/applies it; `payload` is kind-specific. The ladder runs 1–13 (pens, papers,
@@ -1348,7 +1365,10 @@ export const MASTERY_REWARDS = [
   { level: 8,  id: "btn-blush",  kind: "button", name: "Blush",     desc: "A soft rose marker start button.",    payload: { button: "rose" } },
   { level: 8,  id: "btn-sky",    kind: "button", name: "Sky",       desc: "Cool blue, with little white clouds.", payload: { button: "sky" } },
   { level: 8,  id: "btn-meadow", kind: "button", name: "Meadow",    desc: "Spring green, with grass at the hem.", payload: { button: "meadow" } },
-  { level: 8,  id: "btn-pride",  kind: "button", name: "Pride flags", desc: "Choose a flag for your start button.", payload: { button: "pride-rainbow" } },
+  // The only reward with a set inside it. `variants` is what chooseMasteryCosmetic will
+  // accept in place of the payload's default, so a flag pick runs through the same unlock
+  // guard as every other cosmetic instead of a picker of its own.
+  { level: 8,  id: "btn-pride",  kind: "button", name: "Pride flags", desc: "Choose a flag for your start button.", payload: { button: "pride-rainbow" }, variants: PRIDE_BUTTONS },
   // Secret hints — a level-10 milestone (grants no toggle). Once earned, the achievements
   // page reveals how to earn each still-locked secret charm (its desc, name kept masked).
   { level: 10, id: "reveal-hints", kind: "unlock", name: "Secret hints", icon: "key", desc: "Reveals how to earn every secret charm." },

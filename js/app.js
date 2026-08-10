@@ -39,7 +39,7 @@ import {
   ENDURANCE_BASE, ENDURANCE_GROWTH, ENDURANCE_RUN_CAP, RANGE_RATIO_XP, RANGE_PER_ALBUM,
   RESOLVE_BASE, RESOLVE_STREAK_CAP,
   MASTERY_REWARDS, MASTERY_REWARD_BY_ID, MASTERY_GATE, MASTERY_MAX_LEVEL, MASTERY_LEVEL_STEP, SKILL_MAX_LEVEL,
-  CTA_LABELS, CTA_MARKS, PRIDE_BUTTONS,
+  CTA_LABELS, CTA_MARKS, PRIDE_BUTTONS, PRIDE_BUTTON_BY_ID, prideStripes,
   MASTERY_TITLES, MASTERY_TITLE_BY_VALUE, masteryDefaultTitle, MASTERY_ICONS, MASTERY_LEVEL_ICONS, MASTERY_TIER_ICONS,
   skillXpForLevel, skillLevelFromXp, masteryXpForLevel, masteryLevelFromXp,
   POLAROID_DEVELOP_MS, POLAROID_TOTAL,
@@ -428,6 +428,11 @@ function applySettings() {
   if (playCta) {
     if (settings.masteryButton) playCta.setAttribute("data-startbtn", settings.masteryButton);
     else playCta.removeAttribute("data-startbtn");
+    // A Pride finish brings its ramp with it; every other finish paints from CSS and must be
+    // left with no inline stripes at all, or a stale gradient would outlive the switch away.
+    const stripes = prideStripes(settings.masteryButton);
+    if (stripes) playCta.style.setProperty("--cta-stripes", stripes);
+    else playCta.style.removeProperty("--cta-stripes");
     writeCtaLabel(playCta, settings.masteryLabel);
   }
   sfx.setEnabled(!!settings.sound);   // sound gate lives in js/sound.js
@@ -3628,7 +3633,6 @@ function openAchievements(from) {
   flipAwayToScreen("achievements");
 }
 let masteryBackTarget = "start";       // where the Mastery page's ← back returns to
-let pridePickerOpen = false;            // the small Level-8 flag tray, open only on request
 function openMastery(from) {
   masteryBackTarget = from;
   _titleView = null;   // recenter the title stepper on the worn title each time the page opens
@@ -3720,19 +3724,22 @@ function renderMasteryPage() {
   // Wire cosmetic selection: data-reward chooses that reward; data-reward-reset reverts a
   // whole kind (pen / paper / charm) to its default.
   body.querySelectorAll("[data-reward]").forEach((el) => {
-    el.addEventListener("click", () => chooseMasteryCosmetic(el.getAttribute("data-reward")));
+    el.addEventListener("click", () => chooseMasteryCosmetic(el.getAttribute("data-reward"), el.getAttribute("data-variant")));
   });
   body.querySelectorAll("[data-reward-reset]").forEach((el) => {
     el.addEventListener("click", () => resetMasteryCosmetic(el.getAttribute("data-reward-reset")));
   });
+  // The Pride tray is pure disclosure: it opens and shuts in the DOM without re-rendering,
+  // and picking a flag re-renders the page from scratch with it shut again.
+  const prideTray = body.querySelector("#pridePicker");
+  const prideDoor = body.querySelector("[data-open-pride-picker][aria-controls]");
   body.querySelectorAll("[data-open-pride-picker]").forEach((el) => {
-    el.addEventListener("click", () => { pridePickerOpen = !pridePickerOpen; renderMasteryPage(); });
-  });
-  body.querySelectorAll("[data-pride-button]").forEach((el) => {
     el.addEventListener("click", () => {
-      if (!loadMastery().unlocked["btn-pride"]) return;
-      pridePickerOpen = false;
-      applyMasteryCosmetic("button", el.getAttribute("data-pride-button"));
+      if (!prideTray) return;
+      prideTray.hidden = !prideTray.hidden;
+      if (prideDoor) prideDoor.setAttribute("aria-expanded", String(!prideTray.hidden));
+      if (!prideTray.hidden) prideTray.scrollIntoView({ block: "nearest", behavior: "smooth" });
+      else if (prideDoor) prideDoor.focus();
     });
   });
   // ...and the rank ladder above the stepper: data-title-tier scrolls the stepper to that
@@ -3998,12 +4005,16 @@ function buildPaperTile(papers, m) {
 // A swatch column — the shape the paper tile and the start-button tile both wear: a chip of
 // the real thing above its name, or a dashed empty chip while the set is still locked. `chip`
 // is the kind's own chip renderer, called with the locked flag.
-function rbSwatch(attr, chip, name, active, available, level) {
+//
+// The worn swatch says "in use" instead of its name, which the chip above it has already
+// shown. `activeName` overrides that for the one swatch where the name is NOT redundant: the
+// Pride doorway, whose chip shows a flag the swatch would otherwise leave unnamed.
+function rbSwatch(attr, chip, name, active, available, level, activeName) {
   if (!available) {
     return `<span class="rb-sw-col locked">${chip(true)}<span class="rb-sw-nm">Mastery ${level}</span></span>`;
   }
   return `<button type="button" class="rb-sw-col${active ? " active" : ""}" ${attr}>` +
-    `${chip(false)}<span class="rb-sw-nm">${active ? "in use" : escapeHtml(name)}</span></button>`;
+    `${chip(false)}<span class="rb-sw-nm">${escapeHtml(active ? (activeName || "in use") : name)}</span></button>`;
 }
 // The two chips a swatch can wear: a sheet of the real paper stock, and a miniature of the
 // real start button. Each carries its own locked finish.
@@ -4015,7 +4026,17 @@ const paperChip = (paper) => (locked) => locked
 // will look there, with no second description of the four fills to drift out of step.
 const buttonChip = (style) => (locked) => locked
   ? `<span class="rb-btn-sw locked"><span class="rb-lock">${MASTERY_ICONS.lock}</span></span>`
-  : `<span class="rb-btn-sw"><span class="btn-primary play-cta"${style ? ` data-startbtn="${style}"` : ""} aria-hidden="true">Start writing</span></span>`;
+  : `<span class="rb-btn-sw"><span class="btn-primary play-cta"${finishAttrs(style)} aria-hidden="true">Start writing</span></span>`;
+// What a .play-cta has to be told to wear a finish: the finish itself, plus — for the Pride
+// set, whose eight ramps live in PRIDE_BUTTONS rather than in CSS — that flag's gradient.
+// Everything that previews a start button goes through this, so a preview cannot wear a
+// finish differently from the real button.
+function finishAttrs(finish) {
+  if (!finish) return "";
+  const stripes = prideStripes(finish);
+  return ` data-startbtn="${escapeHtml(finish)}"` +
+    (stripes ? ` style="--cta-stripes:${stripes}"` : "");
+}
 
 // A milestone tile — the shape both toggle-less rewards wear (super-hard challenges at 6,
 // secret hints at 10): a vault, sealed shut until the milestone is reached, with the level
@@ -4041,33 +4062,40 @@ function buildMilestoneTile(r, opts) {
 
 // Start-writing button finishes — swatches of the real CTA (default plus each unlockable
 // finish). Selecting one restyles the home-screen hero button globally.
+// Pride is the one finish that is a set, so its swatch is a doorway rather than a choice: it
+// opens a tray of the eight flags below the grid. The tray is always in the markup and merely
+// hidden, so opening it is a DOM change and not app state — the only thing that re-renders
+// this page is picking a flag, which closes the tray anyway.
 function buildButtonTile(buttons, m) {
   const setUnlocked = buttons.length ? !!m.unlocked[buttons[0].id] : false;
   const active = settings.masteryButton || "";
-  const prideActive = PRIDE_BUTTONS.some((flag) => flag.id === active) || active === "pride";
-  const wornPride = PRIDE_BUTTONS.find((flag) => flag.id === active) || PRIDE_BUTTONS[0];
+  const wornFlag = PRIDE_BUTTON_BY_ID[active] || null;
   let sw = rbSwatch(`data-reward-reset="button"`, buttonChip(""), "gold marker", active === "", true, 0);
+  let pride = "";
   buttons.forEach((r) => {
     if (r.id === "btn-pride") {
-      sw += rbSwatch(`data-open-pride-picker`, buttonChip(prideActive ? wornPride.id : "pride-rainbow"),
-        prideActive ? `Pride · ${wornPride.shortName}` : "Pride flags", prideActive, setUnlocked, r.level);
+      sw += rbSwatch(`data-open-pride-picker aria-expanded="false" aria-controls="pridePicker"`,
+        buttonChip(wornFlag ? wornFlag.id : r.payload.button),
+        "Pride flags", !!wornFlag, setUnlocked, r.level, wornFlag ? wornFlag.name : "");
+      // Flag rows are the same swatch shape as the tile's own, and route through the same
+      // data-reward guard: the variant is the flag, the unlock is still btn-pride's.
+      if (!setUnlocked) return;   // no doorway while the set is locked, so no tray behind it
+      const flags = PRIDE_BUTTONS.map((flag) =>
+        rbSwatch(`data-reward="${r.id}" data-variant="${flag.id}"`, buttonChip(flag.id),
+          flag.name, active === flag.id, setUnlocked, r.level)
+      ).join("");
+      pride = `<div class="pride-picker" id="pridePicker" hidden>` +
+        `<div class="pride-picker-top"><span>Pride flags</span>` +
+        `<button type="button" data-open-pride-picker>‹ button finishes</button></div>` +
+        `<div class="rb-swatches">${flags}</div></div>`;
     } else {
       sw += rbSwatch(`data-reward="${r.id}"`, buttonChip(r.payload.button), r.name, active === r.payload.button, setUnlocked, r.level);
     }
   });
-  const flags = PRIDE_BUTTONS.map((flag) =>
-    `<button type="button" class="pride-flag${active === flag.id ? " active" : ""}" data-pride-button="${flag.id}" aria-pressed="${active === flag.id}">` +
-      `<span class="pride-flag-stripes" data-startbtn="${flag.id}" aria-hidden="true"></span>` +
-      `<span>${escapeHtml(flag.name)}</span>${active === flag.id ? `<i>in use</i>` : ""}</button>`
-  ).join("");
-  const picker = pridePickerOpen
-    ? `<div class="pride-picker"><div class="pride-picker-top"><span>Pride flags</span><button type="button" data-open-pride-picker>‹ button finishes</button></div>` +
-      `<div class="pride-flag-grid">${flags}</div></div>`
-    : "";
   return `<div class="rb-tile rb-button" style="grid-area:button">` +
     `<div class="rb-tile-top"><span class="rb-tt">Start button</span>${rbChip("Mastery 8")}</div>` +
     `<div class="rb-tt-sub">Restyles your home-screen button</div>` +
-    `<div class="rb-swatches">${sw}</div>${picker}</div>`;
+    `<div class="rb-swatches">${sw}</div>${pride}</div>`;
 }
 // One row's preview: a real start button, scaled down, wearing the words on offer and the
 // mark that comes with them. It is the button itself rather than a picture of one, for the
@@ -4088,7 +4116,7 @@ function ctaPreviewHTML(labelId, finish) {
   // glyph. Blank page gets .cta-mk with no mark child, which is the point of it.
   const cls = opt ? " cta-mk" : "";
   return `<span class="cta-prev"><span class="btn-primary play-cta${cls}"` +
-    `${finish ? ` data-startbtn="${escapeHtml(finish)}"` : ""} aria-hidden="true">${mark}${text}</span></span>`;
+    `${finishAttrs(finish)} aria-hidden="true">${mark}${text}</span></span>`;
 }
 
 // A start-button words row. The preview is aria-hidden (it is a decorative copy of a button
@@ -4175,7 +4203,10 @@ function buildTitlesTile(m, unlocked) {
 
 // Apply a Mastery-unlocked cosmetic. Pens swap the writing hand; papers retint the page
 // (applied globally via applySettings). Persists in settings and re-renders the page.
-function chooseMasteryCosmetic(rewardId) {
+// `variant` is for a reward that holds a SET rather than one value (Pride's eight flags): it
+// is honoured only if the reward itself declares it, so a variant can never smuggle in a
+// value the reward does not own, and the unlock guard below is still the reward's own.
+function chooseMasteryCosmetic(rewardId, variant) {
   // The random strand has no reward entry to look up (it grants nothing), so the ledger
   // guard below would refuse it forever. It rides the charm set's own unlock instead.
   if (rewardId === CHARM_RANDOM) {
@@ -4185,7 +4216,8 @@ function chooseMasteryCosmetic(rewardId) {
   const r = MASTERY_REWARD_BY_ID[rewardId];
   const cos = r && MASTERY_COSMETICS[r.kind];
   if (!cos || !loadMastery().unlocked[rewardId]) return;   // guard: must be an unlocked cosmetic
-  applyMasteryCosmetic(r.kind, (r.payload && r.payload[cos.field]) || "");
+  const owned = variant && (r.variants || []).some((v) => v.id === variant);
+  applyMasteryCosmetic(r.kind, (owned ? variant : (r.payload && r.payload[cos.field])) || "");
 }
 // Reset a cosmetic kind to its default ("" clears the setting).
 function resetMasteryCosmetic(kind) {
@@ -17546,8 +17578,12 @@ function buildDevApi() {
       // pass), as a list of charm ids — the strand without playing the run that earns it.
       strand: (n = TOTAL_ROUNDS, seed = braceletSeed) =>
         Array.from({ length: n | 0 }, (_, i) => randomCharmForBead(seed, i)),
-      // Preview a start-button finish without unlocking it: pass an id (ink/rose/sky) or "" for the default gold marker.
+      // Preview a start-button finish without unlocking it: pass an id (ink/rose/sky/meadow, or
+      // any dev.mastery.flags() id) or "" for the default gold marker.
       button: (id) => { settings.masteryButton = id || ""; saveSettings(settings); applySettings(); if ($("masteryBody")) renderMasteryPage(); },
+      // The Pride flag ids, for feeding to button() above — the one finish that is a set, so
+      // the ids are not guessable from the reward ladder.
+      flags: () => PRIDE_BUTTONS.map((f) => f.id),
       // Preview a signature flourish without unlocking it: pass an id (swash/loop/rule/splatter/thirteen/crest) or "" for none.
       // The start button's words. Takes a CTA_LABELS key ("pen", "blank", …) or "" for the
       // default; applySettings is what actually rewrites the button, so it has to run.

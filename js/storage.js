@@ -985,7 +985,16 @@ export function effectiveDailyStreak(today) {
 export function loadSettings() {
   try {
     const raw = localStorage.getItem(SETTINGS_KEY);
-    if (raw) { const o = JSON.parse(raw); if (o && typeof o === "object") return { ...DEFAULT_SETTINGS, ...o }; }
+    if (raw) {
+      const o = JSON.parse(raw);
+      if (o && typeof o === "object") {
+        // The single Pride button became a set of flags, and the rainbow is the one that was
+        // being worn under the old id. Migrating here rather than tolerating "pride" at every
+        // point of use keeps one spelling of a flag finish in the codebase.
+        if (o.masteryButton === "pride") o.masteryButton = "pride-rainbow";
+        return { ...DEFAULT_SETTINGS, ...o };
+      }
+    }
   } catch (e) { /* ignore */ }
   return { ...DEFAULT_SETTINGS };
 }
