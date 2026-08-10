@@ -1109,12 +1109,12 @@
 
   /* ---------- Difficulty picker — notebook tabs ---------- */
   .mode-picker { margin: 0 0 20px; }
-  /* ---------- Randomiser: a thrown pair at the notebook edge ----------
-     On a full desk the pair bridges wood and paper, just left and above MODE. Once the desk
-     props clear away, the dice move inside the printed margin instead of falling off-screen.
-     The button keeps a full tap target even when its physical art scales down on a phone. */
+  /* ---------- Randomiser: a thrown pair in the notebook's top-left corner ----------
+     The pair sits fully on the paper, tucked into the top-left corner just above and left of
+     MODE, straddling the printed margin rule rather than the paper's edge. On a phone it stays
+     inside the printed margin. The button keeps a full tap target even when its art scales down. */
   .random-dice {
-    position: absolute; z-index: 7; top: 16px; left: -18px;
+    position: absolute; z-index: 7; top: 30px; left: 8px;
     width: 62px; height: 50px; padding: 0; border: 0; background: none;
     color: var(--ink); cursor: pointer; appearance: none;
     -webkit-tap-highlight-color: transparent;
