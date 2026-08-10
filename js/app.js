@@ -1,5 +1,6 @@
 "use strict";
 import { $, escapeRegExp, escapeHtml, prefersReducedMotion, shuffle, chance, normalizeTitle, normalizeLyric, fuzzySubstringRatio, levenshtein, mulberry32, dailySeed, censorText, anniversaryNote, thirteenNote } from "./util.js";
+import "./credential-guard.js";
 import { SITE_URL, canShare, shareOrCopy, simulateShare } from "./share.js";
 import {
   TOTAL_ROUNDS, RECENT_WINDOW, NOVELTY_BOOST, DAILY_ALBUM_SKEW, DAILY_ALBUM_WEIGHT_EXP, DIFF_KEY, DEFAULT_SETTINGS,
@@ -3485,7 +3486,7 @@ function renderRecordsPage() {
   const floHTML = name ? flourishInkHTML(floId) : "";
   const sigText = name
     ? `<span class="rec-sig-name">${escapeHtml(name)}’s notebook</span>${floHTML}<span class="rec-sig-sub">best scores &amp; history</span>${titleHTML}`
-    : `<div class="rec-sign-row"><input id="recSignInput" class="set-text" maxlength="20" placeholder="sign your notebook" autocomplete="off" spellcheck="false" data-1p-ignore data-lpignore="true" data-bwignore data-form-type="other" /><button id="recSignSave" class="btn-ghost">sign</button></div>`;
+    : `<div class="rec-sign-row"><input id="recSignInput" class="set-text" maxlength="20" placeholder="sign your notebook" autocomplete="off" spellcheck="false" data-1p-ignore data-lpignore="true" data-bwignore="true" data-protonpass-ignore="true" data-dashlane-ignore="true" data-form-type="other" /><button id="recSignSave" class="btn-ghost">sign</button></div>`;
   const sig =
     `<button type="button" id="recPolBtn" class="rec-pol-btn" aria-label="${avatar ? "change your photo" : "add a photo"}">${polaroidHTML(avatar, name)}</button>` +
     `<div class="rec-sig-text">${sigText}</div>`;
@@ -4715,7 +4716,7 @@ function nextBonusRound() {
 function bonusWritingLine({ placeholder, aria, hint, dropdown = false }) {
   return `<div class="input-area bg-write${dropdown ? " bg-write--sug" : ""}">` +
       `<input id="bonusInput" class="song-input" type="search" autocomplete="off" autocapitalize="off" ` +
-             `data-1p-ignore data-lpignore="true" data-bwignore data-form-type="other" ` +
+             `data-1p-ignore data-lpignore="true" data-bwignore="true" data-protonpass-ignore="true" data-dashlane-ignore="true" data-form-type="other" ` +
              `spellcheck="false" placeholder="${escapeHtml(placeholder)}" aria-label="${escapeHtml(aria)}"` +
              (dropdown
                ? ` role="combobox" aria-expanded="false" aria-controls="bonusDropdown" ` +
@@ -15514,7 +15515,7 @@ function setBookplateHTML() {
         `<input type="text" class="np-name-input" id="set-playerName" maxlength="20" ` +
         `value="${escapeHtml(settings.playerName || "")}" placeholder="your name" ` +
         `aria-label="Your name" autocomplete="off" spellcheck="false" ` +
-        `data-1p-ignore data-lpignore="true" data-bwignore data-form-type="other">` +
+        `data-1p-ignore data-lpignore="true" data-bwignore="true" data-protonpass-ignore="true" data-dashlane-ignore="true" data-form-type="other">` +
         HEART_HANDS_SVG +
       `</div>` +
       titleHTML +
@@ -16120,7 +16121,7 @@ function renderCustomModalBody() {
       `<div class="cm-preset-head">` +
         `<input type="text" id="cmNameInput" class="cm-name-input" maxlength="${CUSTOM_NAME_MAX}" ` +
           `value="${escapeHtml(preset.name || "")}" placeholder="name this mode" aria-label="Preset name" autocomplete="off" spellcheck="false" ` +
-          `data-1p-ignore data-lpignore="true" data-bwignore data-form-type="other">` +
+          `data-1p-ignore data-lpignore="true" data-bwignore="true" data-protonpass-ignore="true" data-dashlane-ignore="true" data-form-type="other">` +
         `<div class="cm-preset-acts">` +
           `<button type="button" class="btn-ghost" data-cm-act="new"${atCap ? " disabled" : ""}>+ New</button>` +
           `<button type="button" class="btn-ghost" data-cm-act="delete"${canDelete ? "" : " disabled"}>Delete</button>` +

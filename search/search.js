@@ -5,6 +5,7 @@
 // itself and works off the structured `sections` (label + lines) so every hit knows
 // its section and per-section line number without re-parsing strings.
 import { escapeHtml, escapeRegExp, fuzzySubstringRatio } from "../js/util.js";
+import "../js/credential-guard.js";
 import { wordRegex, wordVariants } from "../js/match.js";
 import { ALBUM_COLORS, SEARCH_KEY } from "../js/config.js";
 import { canShare, shareOrCopy } from "../js/share.js";
