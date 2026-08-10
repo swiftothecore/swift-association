@@ -228,9 +228,9 @@ export const GUESTS = [
     id: "wicked-soundtrack",
     name: "Wicked",
     file: "guests/wicked.json",
-    // Emerald, rose, and gold evoke Oz without borrowing album artwork.
+    // Two shades each of emerald and rose keep the pass rooted in Elphaba and Glinda.
     ink: { deep: "#234b3f", accent: "#c5799b", strap: "#527a50", pen: "#315746",
-           ticks: ["#4f8b63", "#c5799b", "#d5a94b"] },
+           ticks: ["#4f8b63", "#c5799b", "#315746", "#a85e82"] },
     era: "evermore",
   },
   {
