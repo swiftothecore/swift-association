@@ -7881,7 +7881,7 @@ function updateTagline() {
     // instead is the only thing worth saying: the clock is not the limit, it is the result.
     : gameType === "ruthless"
     ? `${BONUS_ROUNDS} pages · the clock is the score`
-    : `${TOTAL_ROUNDS} pages · ${clock}`;
+    : `${TOTAL_ROUNDS} pages · ${clock} · ${currentMode.label} difficulty`;
   // Without this a dark run is indistinguishable from the base challenge: same tagline, same
   // page count, just quietly harder numbers. The eclipse + "dark side" is the only thing on
   // the game screen that says which variant you're actually in.
@@ -8669,6 +8669,20 @@ function buildRandomPool() {
 // A difficulty for the categories that take one but don't tokenise by it.
 function randomDiff(list) { return list[Math.floor(Math.random() * list.length)]; }
 
+// Some randomiser categories choose a difficulty as a second part of the same draw. Resolve it
+// before announcing the result, so the toast and the game always agree about what was dealt.
+function resolveRandomDifficulty(entry) {
+  if (entry.cat === "infinite") entry.diff = randomDiff(MODE_ORDER);
+  if (entry.cat === "album") entry.diff = entry.diff || randomDiff(ALBUM_FOCUS_DIFFS);
+  if (entry.cat === "guest") entry.diff = entry.diff || randomDiff(GUEST_DIFFS);
+}
+
+function randomDrawLabel(entry) {
+  const mode = entry.diff ? MODES[entry.diff] : null;
+  if (entry.cat === "difficulty") return entry.label + " difficulty";
+  return mode ? entry.label + " · " + mode.label + " difficulty" : entry.label;
+}
+
 // Start whatever was drawn. Returns false when the entry couldn't actually be started, which
 // today means only a guest catalogue that wouldn't load.
 async function dispatchRandom(entry) {
@@ -8680,11 +8694,13 @@ async function dispatchRandom(entry) {
       currentMode = MODES[entry.mode];
       startGame();
       return true;
-    case "infinite":  startInfinite(entry.variant); return true;
+    case "infinite":
+      currentMode = MODES[entry.diff];
+      startInfinite(entry.variant);
+      return true;
     case "adaptive":  startAdaptive(); return true;
-    // `entry.diff` is only ever set by the pinned goal, which sometimes needs a named
-    // difficulty ("Perfect an album on Ultra"). The randomiser itself never sets it and keeps
-    // rolling its own.
+    // A pinned goal can name a difficulty ("Perfect an album on Ultra"). Otherwise the
+    // randomiser resolves one before announcing the draw.
     case "album":     startAlbumFocus(entry.album, entry.diff || randomDiff(ALBUM_FOCUS_DIFFS)); return true;
     case "guest": {
       await startGuestRun(entry.guest, entry.diff || randomDiff(GUEST_DIFFS));
@@ -8710,7 +8726,8 @@ async function rollRandom() {
   for (let attempt = 0; attempt < 2; attempt++) {
     const entry = drawRandom(pool, seen);
     if (!entry) break;
-    notifyNote("the draw", entry.label);
+    resolveRandomDifficulty(entry);
+    notifyNote("the draw", randomDrawLabel(entry));
     if (await dispatchRandom(entry)) return;
     pool = pool.filter((e) => e.cat !== "guest");
   }
