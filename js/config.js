@@ -246,9 +246,9 @@ export const GUESTS = [
     id: "billie-eilish",
     name: "Billie Eilish",
     file: "guests/billie-eilish.json",
-    // Black, acid green, and cool blue: a nocturnal palette translated into pass ink.
-    ink: { deep: "#182a26", accent: "#9aad3a", strap: "#466858", pen: "#294a41",
-           ticks: ["#9aad3a", "#6d9c8f", "#31534a", "#d1cf94"] },
+    // Near-black, acid green, and cold grey-green: a nocturnal palette translated into pass ink.
+    ink: { deep: "#101512", accent: "#b6d62b", strap: "#26332b", pen: "#17211c",
+           ticks: ["#b6d62b", "#6f8d37", "#26332b", "#899788"] },
     era: "folklore",
   },
 ];
