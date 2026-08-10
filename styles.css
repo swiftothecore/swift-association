@@ -6823,6 +6823,10 @@
     box-shadow: 1px 1px 0 rgba(43, 39, 34, 0.07);
     transition: transform 0.14s ease, color 0.14s;
   }
+  .set-tab-icon {
+    width: 15px; height: 15px; margin-right: 6px; vertical-align: -3px;
+    fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round;
+  }
   .set-tab:hover { transform: translateX(3px); color: var(--ink); }
   .set-tab.active {
     /* the open divider is pulled clear of the stack and pinned to the paper's colour,
@@ -6879,6 +6883,7 @@
       border: 1px solid rgba(43, 39, 34, 0.2); border-bottom: none;
       border-radius: 5px 5px 0 0;
     }
+    .set-tab-icon { width: 13px; height: 13px; margin-right: 4px; }
     .set-tab:hover, .set-tab.active { transform: translateY(2px); }
     /* rail along the top edge, so the reinforced edge is the top one */
     .set-tab.active::after {

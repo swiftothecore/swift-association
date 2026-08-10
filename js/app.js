@@ -15611,12 +15611,12 @@ const COMMON_TZ_FALLBACK = [
    the panel, so a panel's first block leaves its own heading off rather than saying
    it twice. */
 const SETTINGS_PANELS = [
-  { id: "notebook", label: "Notebook" },
-  { id: "motion", label: "Motion" },
-  { id: "gameplay", label: "Gameplay" },
-  { id: "display", label: "Display" },
-  { id: "data", label: "Data" },
-  { id: "about", label: "About" },
+  { id: "notebook", label: "Notebook", icon: `<path d="M6 3.5h9.5l3 3V20.5H6z"/><path d="M15.5 3.5v3h3M9 10h6M9 14h6"/>` },
+  { id: "motion", label: "Motion", icon: `<path d="M4 8h10M4 12h16M4 16h10"/><path d="M17 5.5 20 8l-3 2.5"/>` },
+  { id: "gameplay", label: "Gameplay", icon: `<rect x="4" y="8" width="16" height="9" rx="3"/><path d="M8 12.5h4M10 10.5v4M16 12h.01M18 14h.01"/>` },
+  { id: "display", label: "Display", icon: `<rect x="4" y="5" width="16" height="12" rx="1.5"/><path d="M9 20h6M12 17v3"/>` },
+  { id: "data", label: "Data", icon: `<ellipse cx="12" cy="6.5" rx="6.5" ry="2.5"/><path d="M5.5 6.5v5c0 1.4 2.9 2.5 6.5 2.5s6.5-1.1 6.5-2.5v-5M5.5 11.5v5c0 1.4 2.9 2.5 6.5 2.5s6.5-1.1 6.5-2.5v-5"/>` },
+  { id: "about", label: "About", icon: `<circle cx="12" cy="12" r="8"/><path d="M12 10.5v5M12 7.5h.01"/>` },
 ];
 // Module-level, because every toggle re-renders the whole body: without this the
 // player would be thrown back to Notebook each time they ticked a box.
@@ -15629,7 +15629,8 @@ function renderSettingsTabs() {
     const on = p.id === settingsPanel;
     return `<button type="button" class="set-tab${on ? " active" : ""}" id="set-tab-${p.id}" role="tab" ` +
       `aria-selected="${on}" aria-controls="set-panel-${p.id}" tabindex="${on ? 0 : -1}" ` +
-      `data-panel="${p.id}" style="--tab-tint: var(--set-tab-${i + 1}); --tab-ink: var(--set-tab-${i + 1}-deep)">${p.label}</button>`;
+      `data-panel="${p.id}" style="--tab-tint: var(--set-tab-${i + 1}); --tab-ink: var(--set-tab-${i + 1}-deep)">` +
+      `<svg class="set-tab-icon" viewBox="0 0 24 24" aria-hidden="true">${p.icon}</svg><span>${p.label}</span></button>`;
   }).join("");
   rail.querySelectorAll("[data-panel]").forEach((b) => {
     b.addEventListener("click", () => showSettingsPanel(b.dataset.panel));
