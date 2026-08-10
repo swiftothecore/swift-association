@@ -898,6 +898,22 @@
     content: "✎"; margin-right: 9px; font-size: calc(19px + var(--text-size-adjust)); vertical-align: -1px;
     display: inline-block; transform-origin: 70% 90%;
   }
+  /* The Mastery level-12 words bring their own mark as a real SVG child, so the glyph stands
+     down — the two must never both be present. .cta-mk is set by writeCtaLabel, and "Blank
+     page" wears it with no mark child at all, which is the point of that option. */
+  .btn-primary.play-cta.cta-mk::before { content: none; }
+  /* Drawn to stand in for that ✎: 10px of ink in a 19px box, matched to the glyph's weight,
+     and following --text-size-adjust exactly as the glyph's font-size does. currentColor is
+     what makes the gold→ink hover inversion free, so nothing here may name a colour — and see
+     .reward-bento .cta-mark further down, where that has to be defended. The marks do NOT
+     take the playPencil wiggle: it was drawn for a pencil in a hand. */
+  .cta-mark {
+    display: inline-block; margin-right: 9px; vertical-align: -3px;
+    width: calc(19px + var(--text-size-adjust)); height: calc(19px + var(--text-size-adjust));
+  }
+  .cta-mark svg { display: block; width: 100%; height: 100%; overflow: visible; }
+  .cta-mark .ink-fill { fill: currentColor; stroke: none; }
+  .cta-mark .ink { fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; }
   /* sketchy underline that "draws" under the label on hover/focus */
   .btn-primary.play-cta::after {
     content: ""; position: absolute; left: 16%; right: 16%; bottom: 9px; height: 2px;
@@ -1293,13 +1309,6 @@
   .rec-sig { display: flex; align-items: center; gap: 18px; margin: 2px 0 16px; padding-bottom: 16px; border-bottom: 1px dashed rgba(43,39,34,0.16); }
   .rec-sig-text { min-width: 0; }
   .rec-sig-name { font-family: var(--hand); font-weight: 700; font-size: calc(30px + var(--text-size-adjust)); color: var(--ink); display: block; line-height: 1.05; transform: rotate(-0.6deg); }
-  /* Mastery-unlocked signature flourish (level 12), inked beneath your name. */
-  .rec-flourish { display: block; color: var(--ink); margin: 4px 0 2px; line-height: 0; }
-  .rec-flourish .fl-stroke { display: block; width: 200px; max-width: 72%; height: 16px; }
-  .rec-flourish[data-fl="thirteen"] .fl-13 { width: 48px; height: 30px; transform: rotate(-3deg); }
-  .rec-flourish[data-fl="crest"] .fl-crest { width: 54px; height: 54px; }
-  .fl { display: block; }
-  .fl-13 text { font-family: var(--hand); font-weight: 700; font-size: calc(22px + var(--text-size-adjust)); fill: currentColor; }
   .rec-sig-sub { font-family: var(--type); font-size: calc(11px + var(--text-size-adjust)); letter-spacing: 0.5px; color: var(--ink-soft); display: block; margin-top: 5px; }
   .rec-sign-row { display: flex; align-items: center; gap: 8px; }
   .rec-sign-row .set-text { text-align: left; width: 190px; }
@@ -6282,8 +6291,8 @@
       "pens pens paper paper"
       "charm charm charm charm"
       "hard hard hard hard"
-      "button button sig sig"
-      "hint hint sig sig"
+      "button button cta cta"
+      "hint hint cta cta"
       "title title title title"; }
 
   .rb-tile { position: relative; border-radius: 12px; padding: 14px 16px;
@@ -6316,29 +6325,36 @@
   .rb-row.locked .rb-row-nm { color: var(--ink-soft); }
   .rb-row-tag { font-family: var(--type); font-size: calc(8.5px + var(--text-size-adjust)); letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-soft); }
   .rb-row.active .rb-row-tag { color: rgba(var(--m-accent), 0.95); }
-  /* Signature rows: each row previews the real thing — your name in the writing hand with the
-     flourish inked under it, drawn by the very .rec-sig-name / .rec-flourish the records page
-     uses, so nothing here is a second description of a flourish. Only the scale is the tile's
-     own: the records signature is set at 30px against a whole page, which would swamp a row. */
-  .rb-rows--sig .rb-row { padding: 7px 11px; min-height: 52px; }
-  .rb-rows--sig .rb-row-ic {
-    flex: 0 0 136px; width: 136px; height: auto; min-height: 40px;
-    display: flex; flex-direction: column; align-items: flex-start; justify-content: center;
+  /* Start-button words rows: each row previews the real button, scaled, wearing the words on
+     offer. It is a live .play-cta and not a picture of one, for the same reason the paper and
+     finish swatches are — a preview that is the thing cannot drift from it.
+     The button is held at a fixed 280px and scaled rather than reflowed, so "I'll write your
+     name" keeps the real button's proportions instead of wrapping to two lines at row width;
+     --cta-x then centres it in the slot. */
+  .rb-rows--cta .rb-row { padding: 7px 11px; min-height: 52px; }
+  .rb-rows--cta .rb-row-ic {
+    flex: 1 1 auto; width: auto; height: auto; min-width: 0; min-height: 40px;
+    display: flex; flex-direction: column; align-items: stretch; justify-content: center;
     color: var(--ink);
   }
-  .rb-rows--sig .rb-row-ic.rb-lock { flex: 0 0 15px; width: 15px; height: 15px; min-height: 0; color: var(--ink-soft); }
-  .rb-rows--sig .rec-sig-name { font-size: calc(19px + var(--text-size-adjust)); line-height: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
-  /* An unsigned notebook previews against the bookplate's own "your name" placeholder, so a
-     row without a name still reads as a signature rather than as a blank. */
-  .rb-rows--sig .rec-sig-name.is-unsigned { color: var(--ink-soft); opacity: 0.55; }
-  .rb-rows--sig .rec-flourish { margin: 3px 0 0; }
-  .rb-rows--sig .rec-flourish .fl-stroke { width: 118px; max-width: 100%; height: 11px; }
-  .rb-rows--sig .rec-flourish[data-fl="thirteen"] .fl-13 { width: 30px; height: 19px; }
-  .rb-rows--sig .rec-flourish[data-fl="crest"] .fl-crest { width: 32px; height: 32px; }
+  .rb-rows--cta .rb-row-ic.rb-lock { flex: 0 0 15px; width: 15px; height: 15px; min-height: 0; color: var(--ink-soft); }
+  .cta-prev { position: relative; display: block; width: 100%; height: var(--cta-h, 39px); overflow: hidden; }
+  .cta-prev .play-cta {
+    position: absolute; top: 0; left: var(--cta-x, calc((100% - 280px * var(--cta-k, 0.63)) / 2));
+    width: 280px; margin: 0; text-align: center; white-space: nowrap; pointer-events: none;
+    transform: scale(var(--cta-k, 0.63)) rotate(-0.6deg); transform-origin: left top;
+  }
+  /* A shelf of nine buttons all bobbing and wiggling at once is a fairground, not a notebook.
+     The idle animations belong to the ONE real button on the start screen. */
+  .cta-prev .play-cta, .cta-prev .play-cta::before { animation: none; }
+  /* The bento paints ACH_ICONS glyphs in bead gold over an ink outline, which is right for a
+     charm sitting on paper and wrong for a mark sitting INSIDE the gold button — it would
+     paint the mark the same colour as the button it sits on. The CTA marks are currentColor
+     by design (that is what makes the hover inversion free), so they are exempted here. */
+  .reward-bento .cta-mark .ink-fill { fill: currentColor; stroke: none; }
+  .reward-bento .cta-mark .ink { fill: none; stroke: currentColor; }
   /* The preview eats enough of the row that "in use" would otherwise break across two lines. */
-  .rb-rows--sig .rb-row-tag { white-space: nowrap; }
-  /* The default row has no flourish to show, so the slot says what it is instead. */
-  .rb-sig-none { font-family: var(--type); font-size: calc(8.5px + var(--text-size-adjust)); letter-spacing: 0.06em; color: var(--ink-soft); opacity: 0.8; margin-top: 5px; }
+  .rb-rows--cta .rb-row-tag { white-space: nowrap; }
 
   /* Charms — bracelet strand hero */
   .rb-strand { position: relative; margin-top: 16px; padding-top: 8px; }
@@ -6478,7 +6494,7 @@
     font-family: var(--type); font-size: calc(10.5px + var(--text-size-adjust)); color: var(--ink-soft); background: rgba(43, 39, 34, 0.04); border: 1px solid rgba(43, 39, 34, 0.14); }
   .rb-titles .title-stepper { margin-top: 14px; padding-top: 14px; border-top: 1px solid rgba(43, 39, 34, 0.1); }
   @media (max-width: 560px) {
-    .rb-grid { grid-template-columns: 1fr; grid-template-areas: "pens" "charm" "paper" "hard" "sig" "button" "hint" "title"; }
+    .rb-grid { grid-template-columns: 1fr; grid-template-areas: "pens" "charm" "paper" "hard" "button" "cta" "hint" "title"; }
     .rb-bead { width: 34px; height: 34px; }
     .rb-bead .charm-preview, .rb-bead > .charm { width: 24px; height: 24px; }
     .rb-swatches { gap: 10px; }

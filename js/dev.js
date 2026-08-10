@@ -275,6 +275,7 @@ export function initDev(api) {
 
   // ---- Skills & Mastery ------------------------------------------------------
   const mSkillSel = select(api.SKILL_IDS, (x) => x, (x) => x);
+  const mLabelSel = select(["", ...api.mastery.labels()], (x) => x, (x) => x || "default");
   const mLvlN = num(10);
   const mFracN = num(0.5);
   const mMastN = num(5);
@@ -294,6 +295,12 @@ export function initDev(api) {
         btn("charms: star", () => { api.mastery.charm(""); toast("back to the star"); }),
         btn("reshuffle", () => toast("seed " + api.mastery.reshuffle())),
         btn("peek strand", () => toast(api.mastery.strand().join(" · ")))),
+    // The start button's words (level 12). The reward board previews them all, but only the
+    // real button shows a label at full size in its actual slot, and only these buttons get
+    // there without unlocking the tier first. "default" puts the ✎ glyph back.
+    row("start words", mLabelSel,
+        btn("set", () => { api.mastery.label(mLabelSel.value); toast("button says: " + (mLabelSel.value || "Start writing")); }),
+        btn("default", () => { api.mastery.label(""); toast("back to Start writing"); })),
     // The level-13 finale: the gold-foil hero only ever renders at the cap, which is the one
     // state a testing session can't reach honestly. Each button also sets the motion pair
     // that decides how much of it draws, so all three renders are one press apart.

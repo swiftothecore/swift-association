@@ -39,6 +39,7 @@ import {
   ENDURANCE_BASE, ENDURANCE_GROWTH, ENDURANCE_RUN_CAP, RANGE_RATIO_XP, RANGE_PER_ALBUM,
   RESOLVE_BASE, RESOLVE_STREAK_CAP,
   MASTERY_REWARDS, MASTERY_REWARD_BY_ID, MASTERY_GATE, MASTERY_MAX_LEVEL, MASTERY_LEVEL_STEP, SKILL_MAX_LEVEL,
+  CTA_LABELS, CTA_MARKS,
   MASTERY_TITLES, MASTERY_TITLE_BY_VALUE, masteryDefaultTitle, MASTERY_ICONS, MASTERY_LEVEL_ICONS, MASTERY_TIER_ICONS,
   skillXpForLevel, skillLevelFromXp, masteryXpForLevel, masteryLevelFromXp,
   POLAROID_DEVELOP_MS, POLAROID_TOTAL,
@@ -378,6 +379,29 @@ function rollCtaGold(fixed) {
   return ctaGoldRoll;
 }
 
+// Write the chosen words (and their mark) into the start button — the level-12 reward.
+//
+// Unlike the level-8 finish, which is one attribute, this owns the button's CONTENTS, so it
+// is the only thing allowed to write them: index.html ships the default and this replaces it.
+// `.cta-mk` suppresses the ✎ pseudo-element, because a chosen mark is a real SVG child and
+// the two must never both be present. The default ("" and, defensively, any label id that is
+// no longer in CTA_LABELS) puts the shipped markup back, glyph and all.
+//
+// The glyph keeps its playPencil wiggle and the SVG marks do not. The rotation was drawn for
+// a pencil held in a hand; a nametag or a turned page rocking 12° reads as a wobble rather
+// than as writing, and the ones it would suit are not worth a per-mark opt-in.
+function writeCtaLabel(btn, labelId) {
+  const opt = labelId ? CTA_LABELS[labelId] : null;
+  if (!opt) {
+    btn.classList.remove("cta-mk");
+    btn.textContent = "Start writing";
+    return;
+  }
+  btn.classList.add("cta-mk");
+  const mark = opt.mark ? `<span class="cta-mark" aria-hidden="true">${CTA_MARKS[opt.mark] || ""}</span>` : "";
+  btn.innerHTML = mark + escapeHtml(opt.text);
+}
+
 function applySettings() {
   const body = document.body;
   const dark = effectiveTheme() === "dark";
@@ -404,6 +428,7 @@ function applySettings() {
   if (playCta) {
     if (settings.masteryButton) playCta.setAttribute("data-startbtn", settings.masteryButton);
     else playCta.removeAttribute("data-startbtn");
+    writeCtaLabel(playCta, settings.masteryLabel);
   }
   sfx.setEnabled(!!settings.sound);   // sound gate lives in js/sound.js
   paintSoundGear();                   // the corner icon is a view of settings.sound, never its own state
@@ -3505,10 +3530,8 @@ function renderRecordsPage() {
   const avatar = getAvatar();
   const title = wornTitleName();
   const titleHTML = (name && title) ? `<span class="rec-sig-title">${escapeHtml(title)}</span>` : "";
-  const floId = settings.masterySignature || "";
-  const floHTML = name ? flourishInkHTML(floId) : "";
   const sigText = name
-    ? `<span class="rec-sig-name">${escapeHtml(name)}’s notebook</span>${floHTML}<span class="rec-sig-sub">best scores &amp; history</span>${titleHTML}`
+    ? `<span class="rec-sig-name">${escapeHtml(name)}’s notebook</span><span class="rec-sig-sub">best scores &amp; history</span>${titleHTML}`
     : `<div class="rec-sign-row"><input id="recSignInput" class="set-text" maxlength="20" placeholder="sign your notebook" autocomplete="off" spellcheck="false" data-1p-ignore data-lpignore="true" data-bwignore="true" data-protonpass-ignore="true" data-dashlane-ignore="true" data-form-type="other" /><button id="recSignSave" class="btn-ghost">sign</button></div>`;
   const sig =
     `<button type="button" id="recPolBtn" class="rec-pol-btn" aria-label="${avatar ? "change your photo" : "add a photo"}">${polaroidHTML(avatar, name)}</button>` +
@@ -3629,7 +3652,7 @@ const MASTERY_COSMETICS = {
   paper:     { setting: "masteryPaper",     field: "paper",     resetLabel: "Plain paper",    resetMeta: "the everyday page" },
   charm:     { setting: "masteryCharm",     field: "charm",     resetLabel: "Star charm",     resetMeta: "the default keepsake" },
   button:    { setting: "masteryButton",    field: "button",    resetLabel: "Gold marker",    resetMeta: "the everyday button" },
-  signature: { setting: "masterySignature", field: "signature", resetLabel: "No flourish",    resetMeta: "just your name" },
+  label:     { setting: "masteryLabel",     field: "label",     resetLabel: "Start writing", resetMeta: "the everyday words" },
 };
 
 // True once the level-10 "secret hints" milestone has been earned (reveals the how-to on
@@ -3835,7 +3858,7 @@ function masteryHeadClimb(m, mLevel) {
 // Each group carries its own "default" option so a kind can always be reverted; still-locked
 // items read as empty slots (a lock, no glyph) so the reward stays a surprise until earned.
 function buildRewardBento(m, mLevel, unlocked) {
-  const groups = { pen: [], paper: [], charm: [], unlock: [], button: [], signature: [] };
+  const groups = { pen: [], paper: [], charm: [], unlock: [], button: [], label: [] };
   MASTERY_REWARDS.forEach((r) => { if (groups[r.kind]) groups[r.kind].push(r); });
   const all = MASTERY_REWARDS.filter((r) => r.kind !== "title");
   const earned = all.filter((r) => m.unlocked[r.id]).length;
@@ -3864,7 +3887,7 @@ function buildRewardBento(m, mLevel, unlocked) {
         action: { label: "Take one on", attr: `data-open-brutal` },
       }) +
       buildButtonTile(groups.button, m) +
-      buildSignatureTile(groups.signature, m) +
+      buildCtaTile(groups.label, m) +
       // The other vault. It guards knowledge rather than a tier, so it is made of different
       // stuff — plum leather and rose foil against the super-hard tile's iron and brass —
       // and it opens with the key it already wears rather than being broken into.
@@ -4019,91 +4042,67 @@ function buildButtonTile(buttons, m) {
     `<div class="rb-tt-sub">Restyles your home-screen button</div>` +
     `<div class="rb-swatches">${sw}</div></div>`;
 }
-// One row's preview: your own name in the writing hand with the flourish inked beneath it,
-// exactly as the records page draws the pair. All six are on the page at once, so choosing is
-// a matter of looking rather than of trying each one and going to check.
+// One row's preview: a real start button, scaled down, wearing the words on offer and the
+// mark that comes with them. It is the button itself rather than a picture of one, for the
+// same reason the paper and finish swatches are — the preview cannot drift from the thing.
 //
-// The name is optional and plenty of notebooks won't have one. Rather than collapse to a bare
-// mark, an unsigned notebook previews against the same "your name" placeholder the bookplate
-// puts in its input, so the rows still read as signatures and the missing piece is obvious.
+// The finish comes along for free: the preview carries no data-startbtn of its own, so it
+// inherits nothing and must be told. Level 8 owns how the button looks and level 12 owns what
+// it says, and the pair only reads as one object if a label previews in the finish you are
+// actually wearing.
 //
-// The default row is the odd one out now that every row carries a name: with no flourish to
-// draw, the slot under the name says what the row is instead of showing it.
-function signaturePreviewHTML(name, floId) {
-  const signed = !!name;
-  const body = floId
-    ? flourishInkHTML(floId)
-    : `<span class="rb-sig-none">just your name</span>`;
-  return `<span class="rec-sig-name${signed ? "" : " is-unsigned"}">${escapeHtml(signed ? name : "your name")}</span>${body}`;
+// The button is held at a fixed 280px and scaled, so a long label ("I'll write your name")
+// keeps the real button's proportions instead of wrapping. --cta-x centres it in the slot.
+function ctaPreviewHTML(labelId, finish) {
+  const opt = labelId ? CTA_LABELS[labelId] : null;
+  const mark = opt && opt.mark ? `<span class="cta-mark">${CTA_MARKS[opt.mark] || ""}</span>` : "";
+  const text = opt ? escapeHtml(opt.text) : "Start writing";
+  // .cta-mk suppresses the ✎ pseudo-element on every row except the default, which IS the
+  // glyph. Blank page gets .cta-mk with no mark child, which is the point of it.
+  const cls = opt ? " cta-mk" : "";
+  return `<span class="cta-prev"><span class="btn-primary play-cta${cls}"` +
+    `${finish ? ` data-startbtn="${escapeHtml(finish)}"` : ""} aria-hidden="true">${mark}${text}</span></span>`;
 }
 
-// Signature flourishes — a stacked column of live signature previews (default "no flourish"
-// plus each unlockable flourish). Selecting one draws it beneath your records signature.
-function buildSignatureTile(sigs, m) {
-  const setUnlocked = sigs.length ? !!m.unlocked[sigs[0].id] : false;
-  const active = settings.masterySignature || "";
-  const name = getPlayerName();
-  let rows = rbRow(`data-reward-reset="signature"`, signaturePreviewHTML(name, ""), "No flourish", active === "");
-  sigs.forEach((r) => {
-    if (!setUnlocked) rows += rbRowSlot(r.level);
-    else rows += rbRow(`data-reward="${r.id}"`, signaturePreviewHTML(name, r.payload.signature), r.name, active === r.payload.signature);
-  });
-  return `<div class="rb-tile rb-sig" style="grid-area:sig">` +
-    `<div class="rb-tile-top"><span class="rb-tt">Signature flourish</span>${rbChip("Mastery 12")}</div>` +
-    `<div class="rb-tt-sub">Inked beneath your records signature</div>` +
-    `<div class="rb-rows rb-rows--sig">${rows}</div></div>`;
+// A start-button words row. The preview is aria-hidden (it is a decorative copy of a button
+// that already exists on the start screen), so the row has to state its own name for anyone
+// not looking at it — hence the aria-label rather than a visible .rb-row-nm. Every other
+// pick-list row in the bento names itself on screen; here the preview says the words out
+// loud already, and printing them twice reads as a stutter.
+function ctaRow(attr, labelId, name, active, finish) {
+  return `<button type="button" class="rb-row${active ? " active" : ""}" ${attr} aria-label="${escapeHtml(name)}">` +
+    `<span class="rb-row-ic">${ctaPreviewHTML(labelId, finish)}</span>` +
+    `<span class="rb-row-tag">${active ? "in use" : "use"}</span></button>`;
 }
 
-// A flourish inked under a signature, in its records-page wrapper. The records page and the
-// Mastery picker both draw it through here, so the preview in the picker IS the thing, not a
-// second description of it that can drift. "" (no flourish) draws nothing at all.
-function flourishInkHTML(floId) {
-  return floId ? `<span class="rec-flourish" data-fl="${floId}">${flourishSVG(floId)}</span>` : "";
-}
-
-// The signature-flourish glyph for a given id (shared by the records page and the Mastery
-// picker). Strokes ink in currentColor; the crest is a fixed oxblood wax seal. "" = nothing.
-const WAX = "#8f2a2e", WAX_DARK = "#651d20", WAX_LITE = "#c25e62";
-function flourishSVG(id) {
-  switch (id) {
-    case "swash":
-      return `<svg class="fl fl-stroke" viewBox="0 0 220 16" preserveAspectRatio="xMidYMid meet" aria-hidden="true"><path d="M4 10 C42 3 84 15 122 8 C150 3 188 13 216 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>`;
-    case "loop":
-      return `<svg class="fl fl-stroke" viewBox="0 0 220 20" preserveAspectRatio="xMidYMid meet" aria-hidden="true"><path d="M4 12 C38 5 78 16 112 10 C140 5 164 3 178 8 C190 12 184 19 175 17 C168 15 172 9 185 9 C202 9 214 6 216 4" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></svg>`;
-    case "rule":
-      return `<svg class="fl fl-stroke" viewBox="0 0 220 12" preserveAspectRatio="xMidYMid meet" aria-hidden="true"><path d="M3 3.5 H217" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><path d="M9 9 H198" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" opacity="0.72"/></svg>`;
-    case "splatter":
-      return `<svg class="fl fl-stroke" viewBox="0 0 220 20" preserveAspectRatio="xMidYMid meet" aria-hidden="true"><path d="M4 10 C56 4 116 14 182 8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><g fill="currentColor"><circle cx="190" cy="6" r="1.9"/><circle cx="198" cy="12" r="1.3"/><circle cx="185" cy="15" r="1"/><circle cx="204" cy="5" r="0.9"/><circle cx="196" cy="17" r="0.8"/></g></svg>`;
-    case "thirteen":
-      return `<svg class="fl fl-13" viewBox="0 0 42 26" preserveAspectRatio="xMidYMid meet" aria-hidden="true"><text x="3" y="21">13</text></svg>`;
-    case "crest":
-      return crestSealSVG();
-    default:
-      return "";
+// Start-button words — a stacked column of live button previews (the default "Start writing"
+// plus each unlockable label). Selecting one rewrites the home-screen button.
+//
+// The default row and the first option are the same thing here, unlike pens or paper where
+// the default is a distinct fifth object. So it renders as the RESET row and there is no
+// separate "Start writing" entry in the ladder, or the words would appear twice.
+function buildCtaTile(labels, m) {
+  const setUnlocked = labels.length ? !!m.unlocked[labels[0].id] : false;
+  const active = settings.masteryLabel || "";
+  const finish = settings.masteryButton || "";
+  let rows = ctaRow(`data-reward-reset="label"`, "", "Start writing", active === "", finish);
+  if (!setUnlocked) {
+    // One slot for the whole set, not eight. The pens tile locks a row at a time because its
+    // three arrive on three separate levels; these eight arrive together, and eight identical
+    // "Locked / Mastery 12" rows stacked in a column is a wall rather than a promise.
+    const level = labels.length ? labels[0].level : 12;
+    rows += `<div class="rb-row locked"><span class="rb-row-ic rb-lock">${MASTERY_ICONS.lock}</span>` +
+      `<span class="rb-row-nm">${labels.length} more ways to say it</span>` +
+      `<span class="rb-row-tag">Mastery ${level}</span></div>`;
+  } else {
+    labels.forEach((r) => {
+      rows += ctaRow(`data-reward="${r.id}"`, r.payload.label, r.name, active === r.payload.label, finish);
+    });
   }
-}
-// The Poet's crest wax seal: an oxblood disc with a beaded rim, an embossed quill, and two
-// laurel fronds — built programmatically so the beaded ring stays compact.
-function crestSealSVG() {
-  let dots = "";
-  for (let i = 0; i < 30; i++) {
-    const a = (i / 30) * Math.PI * 2;
-    dots += `<circle cx="${(50 + 33 * Math.cos(a)).toFixed(1)}" cy="${(50 + 33 * Math.sin(a)).toFixed(1)}" r="1.3" fill="${WAX_LITE}"/>`;
-  }
-  const laurel =
-    `<path d="M28 72 C 20 62 20 48 27 38" fill="none" stroke="${WAX_LITE}" stroke-width="2" stroke-linecap="round"/>` +
-    `<path d="M72 72 C 80 62 80 48 73 38" fill="none" stroke="${WAX_LITE}" stroke-width="2" stroke-linecap="round"/>` +
-    `<g fill="${WAX_LITE}"><ellipse cx="24" cy="60" rx="3.4" ry="1.7" transform="rotate(40 24 60)"/><ellipse cx="24" cy="50" rx="3.4" ry="1.7" transform="rotate(20 24 50)"/><ellipse cx="27" cy="42" rx="3.2" ry="1.6"/>` +
-    `<ellipse cx="76" cy="60" rx="3.4" ry="1.7" transform="rotate(-40 76 60)"/><ellipse cx="76" cy="50" rx="3.4" ry="1.7" transform="rotate(-20 76 50)"/><ellipse cx="73" cy="42" rx="3.2" ry="1.6"/></g>`;
-  const feather =
-    `<g transform="translate(30,30) scale(1.75)" fill="${WAX_LITE}" stroke="${WAX_DARK}" stroke-width="0.5">` +
-    `<path d="M19 3 C10 4 5 10 4.5 17 L8 13.5 C10 16 14 15 16 11 C13 12 11.5 11 11 9.5 C13 11 16 10 17 6.5 C14.5 7.5 13 6.8 12.5 5.5 C15 7 18 5.5 19 3 Z"/>` +
-    `<path d="M4 20 L8 13.5" stroke="${WAX_LITE}" stroke-width="1.4" stroke-linecap="round" fill="none"/></g>`;
-  return `<svg class="fl fl-crest" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet" aria-hidden="true">` +
-    `<circle cx="50" cy="50" r="40" fill="${WAX}"/>` +
-    `<circle cx="50" cy="50" r="40" fill="none" stroke="${WAX_DARK}" stroke-width="3"/>` +
-    `<circle cx="50" cy="50" r="36" fill="none" stroke="${WAX_DARK}" stroke-width="1" opacity="0.5"/>` +
-    dots + laurel + feather + `</svg>`;
+  return `<div class="rb-tile rb-cta" style="grid-area:cta">` +
+    `<div class="rb-tile-top"><span class="rb-tt">Start button words</span>${rbChip("Mastery 12")}</div>` +
+    `<div class="rb-tt-sub">Rewrites the label on your home-screen button</div>` +
+    `<div class="rb-rows rb-rows--cta">${rows}</div></div>`;
 }
 
 // Prestige titles — the rank ladder (four tier medallions along a rail) above the title
@@ -17477,7 +17476,7 @@ function buildDevApi() {
       // Re-lock every reward — preview the reward bento's locked/empty-slot tile states. Drops
       // the mastery level with them, for the same reason unlockRewards raises it.
       lockRewards: () => { const m = loadMastery(); m.unlocked = {}; m.masteryXp = 0; saveMastery(m); updateMasteryNav(); if ($("masteryBody")) renderMasteryPage(); },
-      reset: () => { resetMastery(); settings.masteryPen = ""; settings.masteryPaper = ""; settings.masteryCharm = ""; settings.masteryTitle = ""; settings.masteryButton = ""; settings.masterySignature = ""; saveSettings(settings); setPen(null); applySettings(); updateMasteryNav(); if ($("masteryBody")) renderMasteryPage(); },
+      reset: () => { resetMastery(); settings.masteryPen = ""; settings.masteryPaper = ""; settings.masteryCharm = ""; settings.masteryTitle = ""; settings.masteryButton = ""; settings.masteryLabel = ""; saveSettings(settings); setPen(null); applySettings(); updateMasteryNav(); if ($("masteryBody")) renderMasteryPage(); },
       // Preview a paper stock without unlocking it: pass an id (manila/parchment/blush/slate) or "" to clear.
       paper: (id) => { settings.masteryPaper = id || ""; saveSettings(settings); applySettings(); if ($("masteryBody")) renderMasteryPage(); },
       // Preview a bracelet charm without unlocking it: pass an id (heart/moon/daisy/bow/pick/
@@ -17498,7 +17497,10 @@ function buildDevApi() {
       // Preview a start-button finish without unlocking it: pass an id (ink/rose/sky) or "" for the default gold marker.
       button: (id) => { settings.masteryButton = id || ""; saveSettings(settings); applySettings(); if ($("masteryBody")) renderMasteryPage(); },
       // Preview a signature flourish without unlocking it: pass an id (swash/loop/rule/splatter/thirteen/crest) or "" for none.
-      signature: (id) => { settings.masterySignature = id || ""; saveSettings(settings); if ($("masteryBody")) renderMasteryPage(); if (screens.records.classList.contains("active")) renderRecordsPage(); },
+      // The start button's words. Takes a CTA_LABELS key ("pen", "blank", …) or "" for the
+      // default; applySettings is what actually rewrites the button, so it has to run.
+      label: (id) => { settings.masteryLabel = id || ""; saveSettings(settings); applySettings(); if ($("masteryBody")) renderMasteryPage(); },
+      labels: () => Object.keys(CTA_LABELS),
       // Toggle the level-10 "secret hints" reward without changing your level: hints(true) reveals
       // each secret charm's how-to on the achievements page, hints(false) re-masks them.
       hints: (on) => { const m = loadMastery(); if (on === false) delete m.unlocked["reveal-hints"]; else m.unlocked["reveal-hints"] = new Date().toISOString(); saveMastery(m); if ($("masteryBody")) renderMasteryPage(); if (screens.achievements.classList.contains("active")) renderAchievementsPage(); },

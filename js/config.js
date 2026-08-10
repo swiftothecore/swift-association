@@ -131,7 +131,7 @@ export const DEFAULT_SETTINGS = {
   masteryCharm: "",         // chosen bracelet charm, unlocked via Mastery ("" = the default star)
   masteryTitle: "",         // chosen prestige title, unlocked via Mastery ("" = follows your mastery: the highest tier's default)
   masteryButton: "",        // chosen "start writing" button finish, unlocked via Mastery ("" = the default gold marker)
-  masterySignature: "",     // chosen records-signature flourish, unlocked via Mastery ("" = no flourish, just your name)
+  masteryLabel: "",         // chosen start-button words (a CTA_LABELS key), unlocked via Mastery ("" = the default "Start writing")
 };
 
 /* Difficulty modes — each just re-tunes existing levers (timer, dropdown,
@@ -1248,13 +1248,62 @@ export function masteryLevelFromXp(xp) {
   return lv;
 }
 
+// The words the home-screen start button can wear (the level-12 reward), and the mark each
+// one brings with it. Keyed by the reward's `payload.label`; "" is not in here, because the
+// default is the button's own markup — the ✎ glyph and "Start writing" — and applySettings
+// restores that rather than looking a default up.
+//
+// `mark` names a CTA_MARKS drawing, or "" for the deliberately unmarked one. Blank page is
+// not a missing icon: the CTA centres its contents, so with the glyph suppressed and no mark
+// child it reads as a clean bare button, which is the whole joke.
+export const CTA_LABELS = {
+  pen:     { text: "Grab a pen",           mark: "nib" },
+  notepad: { text: "Write this down",      mark: "notepad" },
+  nametag: { text: "I’ll write your name", mark: "nametag" },
+  eye:     { text: "Draw the cat eye",     mark: "wingedeye" },
+  paint:   { text: "Paint me golden",      mark: "paintbrush" },
+  page:    { text: "Turn the page",        mark: "pagecurl" },
+  blank:   { text: "Blank page",           mark: "" },
+  begin:   { text: "Begin",                mark: "inkwell" },
+};
+
+// The marks those labels wear, in a namespace of their own — NOT ACH_ICONS or MASTERY_ICONS.
+// Those two sets have to survive rendering as outlines AND filled; a CTA mark only ever
+// renders one way, at 19px, on the gold button, so it is drawn for that single job.
+//
+// Every one of them is measured against the ✎ glyph the default still uses: 10.00px of ink
+// height and ~33.98 ink area at 19px. That matching is the whole reason they read as a family
+// beside it — a mark drawn at ordinary icon weight came out 138% of its height and 236% of
+// its ink, and bullied the pencil badly. If you redraw one, measure it; do not eyeball it.
+//
+// Two rules hold them up. `currentColor` only, so the button's gold→ink hover inversion is
+// inherited for free. And holes are `fill-rule="evenodd"` cuts, NEVER a var(--paper) knockout:
+// on a dark page in the inverted state the knockout colour equals the mark colour, and the
+// hole vanishes (this killed an earlier nib, which became a solid diamond). Rotation and
+// scale are baked into the coordinates rather than carried on a transform wrapper.
+//
+// Stroke weights are INLINE STYLES, not stroke-width attributes, and have to stay that way.
+// Each mark carries its own measured weight, but a presentation attribute loses to any CSS
+// declaration — and the reward bento sets `.reward-bento .ink { stroke-width: 1.6 }` for the
+// achievement glyphs it shows. On the attribute, all seven marks would silently thicken to
+// 1.6 inside the Mastery picker and nowhere else; an inline style outranks the selector.
+export const CTA_MARKS = {
+  nib: `<svg viewBox="0 0 24 24"><path class="ink-fill" fill-rule="evenodd" d="M8.56 6.35L11.92 5.38A0.66 0.66 -16 0 1 12.74 5.84L12.97 6.65C14.4 7.93 15.37 9.78 15.32 11.8C15.28 13.82 14.44 15.93 13.71 17.96C12.01 16.63 10.18 15.28 9.07 13.59C7.96 11.9 7.81 9.82 8.34 7.98L8.11 7.17A0.66 0.66 -16 0 1 8.56 6.35Z M10.34 10.91A1.29 1.29 -16 1 0 12.83 10.2A1.29 1.29 -16 1 0 10.34 10.91Z M11.61 12.05L12.36 11.83L13.6 16.17L13.51 17.27L12.85 16.39Z"/></svg>`,
+  notepad: `<svg viewBox="0 0 24 24"><path class="ink" style="stroke-width:1.05" d="M8.71 8.45L14.77 8.03A0.83 0.83 -4 0 1 15.65 8.79L16.19 16.5A0.83 0.83 -4 0 1 15.42 17.39L9.36 17.81A0.83 0.83 -4 0 1 8.48 17.04L7.94 9.33A0.83 0.83 -4 0 1 8.71 8.45Z"/><path class="ink" style="stroke-width:1.05" d="M9.51 6.73L9.71 9.58"/><path class="ink" style="stroke-width:1.05" d="M11.62 6.59L11.82 9.43"/><path class="ink" style="stroke-width:1.05" d="M13.73 6.44L13.93 9.28"/><path class="ink" style="stroke-width:1.05" d="M9.55 12.54L14.5 12.19"/><path class="ink" style="stroke-width:1.05" d="M9.73 15.11L13.4 14.85"/></svg>`,
+  nametag: `<svg viewBox="0 0 24 24"><path class="ink" style="stroke-width:0.74" d="M6.42 7.32L16.68 6.42A1.23 1.23 -5 0 1 18.02 7.54L18.7 15.35A1.23 1.23 -5 0 1 17.58 16.68L7.32 17.58A1.23 1.23 -5 0 1 5.98 16.46L5.3 8.65A1.23 1.23 -5 0 1 6.42 7.32Z"/><path class="ink-fill" fill-rule="evenodd" d="M5.7 8.39L17.57 7.35L17.67 8.41L5.8 9.45Z"/><path class="ink" style="stroke-width:0.74" d="M8.14 14.14C9.27 11.68 10.9 14.79 12.16 13.79C13.2 12.91 13.52 11.42 14.77 12.77C15.5 13.49 16.2 13.77 16.85 13.49"/></svg>`,
+  wingedeye: `<svg viewBox="0 0 24 24"><path class="ink-fill" fill-rule="evenodd" d="M2.77 13.56C6.28 7.71 13.56 6.41 17.98 9.79L22.14 6.28C20.97 9.66 19.41 12 17.33 13.69C16.68 10.83 14.86 8.88 12.39 8.1C8.75 6.93 5.24 9.92 2.77 13.56Z"/><path class="ink" style="stroke-width:1.2" d="M2.77 13.56C5.5 17.98 12.91 19.28 17.59 15.77"/><path class="ink-fill" fill-rule="evenodd" d="M7.38 12.52A2.02 2.02 0 1 0 11.42 12.52A2.02 2.02 0 1 0 7.38 12.52Z"/></svg>`,
+  paintbrush: `<svg viewBox="0 0 24 24"><path class="ink-fill" fill-rule="evenodd" d="M6.35 16.43L11.16 10.55L13.45 12.84L7.57 17.65Z M10.09 10.09L12.27 7.38L16.62 11.73L13.91 13.91Z M11.31 9.25L11.79 8.66L15.34 12.21L14.75 12.69Z M12.15 7.27L15.89 4.9L19.48 7.72L16.73 11.85Z M14.1 8.14L16.81 6.27L17.35 6.81L14.71 8.75Z M15.63 9.67L17.77 7.15L18.3 7.69L16.24 10.28Z"/></svg>`,
+  pagecurl: `<svg viewBox="0 0 24 24"><path class="ink" style="stroke-width:1.16" d="M8.05 6.65L15.12 6.28A0.73 0.73 -3 0 1 15.89 6.97L16.1 11.05L11.32 17.72L8.64 17.86A0.73 0.73 -3 0 1 7.87 17.16L7.36 7.42A0.73 0.73 -3 0 1 8.05 6.65Z"/><path class="ink-fill" fill-rule="evenodd" d="M16.1 11.05L11.32 17.72C10.5 15.99 9.99 14.37 9.96 12.78C12.02 12.37 14.06 11.77 16.1 11.05Z"/></svg>`,
+  inkwell: `<svg viewBox="0 0 24 24"><path class="ink" style="stroke-width:1" d="M10.04 7.53L10.04 10.47L6.88 12.98L6.55 16.69A1.31 1.31 0 0 0 7.86 18.1L16.14 18.1A1.31 1.31 0 0 0 17.45 16.69L17.12 12.98L13.96 10.47L13.96 7.53Z"/><path class="ink-fill" fill-rule="evenodd" d="M8.95 6.01L15.05 6.01L15.05 7.53L8.95 7.53Z"/><path class="ink" style="stroke-width:1" d="M7.64 15.27L16.36 15.27"/></svg>`,
+};
+
 // Mastery rewards — one granted per Mastery level. `kind` drives how the Mastery screen
 // renders/applies it; `payload` is kind-specific. The ladder runs 1–13 (pens, papers,
 // charms, the super-hard unlock, then prestige titles) and 13 is the Mastery cap.
 // `icon` (a MASTERY_ICONS key) is only carried by the kinds that actually draw a mark:
 // pens, the two `unlock` milestones, and titles. The set kinds draw the thing itself
 // instead — paper draws its stock as a swatch, charms the charm, buttons a real start
-// button in miniature, signatures the flourish — so they carry no icon at all.
+// button in miniature, label words a real button wearing them — so they carry no icon at all.
 export const MASTERY_REWARDS = [
   { level: 1, id: "pen-fountain", kind: "pen",  name: "Fountain pen",     icon: "fountainpen", desc: "Always write with a fountain pen.", payload: { pen: "fountain" } },
   { level: 2, id: "pen-quill",    kind: "pen",  name: "Feather quill",    icon: "feather", desc: "Trade your pen for a feather quill.", payload: { pen: "quill" } },
@@ -1289,15 +1338,19 @@ export const MASTERY_REWARDS = [
   // Secret hints — a level-10 milestone (grants no toggle). Once earned, the achievements
   // page reveals how to earn each still-locked secret charm (its desc, name kept masked).
   { level: 10, id: "reveal-hints", kind: "unlock", name: "Secret hints", icon: "key", desc: "Reveals how to earn every secret charm." },
-  // Signature flourishes — a set unlocked together at level 12. Each draws a hand-inked mark
-  // beneath your records-page notebook signature (flourishSVG in app.js; the crest is a wax
-  // seal). Selection persists in settings.masterySignature; rendered on the records page.
-  { level: 12, id: "sig-swash",    kind: "signature", name: "Underline",    desc: "A confident stroke under your name.",         payload: { signature: "swash" } },
-  { level: 12, id: "sig-loop",     kind: "signature", name: "Flourish",     desc: "A looping swash with a tail.",                payload: { signature: "loop" } },
-  { level: 12, id: "sig-rule",     kind: "signature", name: "Double rule",  desc: "Two clean rules, signed and official.",      payload: { signature: "rule" } },
-  { level: 12, id: "sig-splatter", kind: "signature", name: "Ink splatter", desc: "A charming spray of dropped ink.",            payload: { signature: "splatter" } },
-  { level: 12, id: "sig-thirteen", kind: "signature", name: "The 13",       desc: "The sacred number, drawn by hand.",           payload: { signature: "thirteen" } },
-  { level: 12, id: "sig-crest",    kind: "signature", name: "Poet’s crest", desc: "A wax seal, quill and laurel.",         payload: { signature: "crest" } },
+  // Start-button words — a set unlocked together at level 12. Each rewrites the label on the
+  // home-screen hero CTA, and brings its own mark with it (CTA_LABELS below). Selection
+  // persists in settings.masteryLabel; applied by applySettings, which owns the button's
+  // contents. The pair with level 8 is deliberate: that tier owns how the button LOOKS, this
+  // one owns what it SAYS, and a chosen label wears whichever finish is already selected.
+  { level: 12, id: "cta-pen",     kind: "label", name: "Grab a pen",           desc: "Ask for a pen instead of a page.",     payload: { label: "pen" } },
+  { level: 12, id: "cta-notepad", kind: "label", name: "Write this down",      desc: "An instruction, not an invitation.",   payload: { label: "notepad" } },
+  { level: 12, id: "cta-nametag", kind: "label", name: "I’ll write your name", desc: "The notebook makes you a promise.",    payload: { label: "nametag" } },
+  { level: 12, id: "cta-eye",     kind: "label", name: "Draw the cat eye",     desc: "A liner flick, drawn by hand.",        payload: { label: "eye" } },
+  { level: 12, id: "cta-paint",   kind: "label", name: "Paint me golden",      desc: "For the button that already is.",      payload: { label: "paint" } },
+  { level: 12, id: "cta-page",    kind: "label", name: "Turn the page",        desc: "The notebook, said plainly.",          payload: { label: "page" } },
+  { level: 12, id: "cta-blank",   kind: "label", name: "Blank page",           desc: "The quiet one. No mark at all.",       payload: { label: "blank" } },
+  { level: 12, id: "cta-begin",   kind: "label", name: "Begin",                desc: "One word, all momentum.",              payload: { label: "begin" } },
   // Prestige titles — worn on your records-page notebook signature. Unlocked in tiers as
   // Mastery climbs; each tier has one `isDefault` title that a player on the "follows your
   // mastery" auto setting wears automatically, plus alternates they can switch to via the
