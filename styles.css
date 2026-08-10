@@ -1084,6 +1084,93 @@
 
   /* ---------- Difficulty picker — notebook tabs ---------- */
   .mode-picker { margin: 0 0 20px; }
+  /* ---------- Randomiser: a thrown pair at the notebook edge ----------
+     On a full desk the pair bridges wood and paper, just left and above MODE. Once the desk
+     props clear away, the dice move inside the printed margin instead of falling off-screen.
+     The button keeps a full tap target even when its physical art scales down on a phone. */
+  .random-dice {
+    position: absolute; z-index: 7; top: 16px; left: -18px;
+    width: 62px; height: 50px; padding: 0; border: 0; background: none;
+    color: var(--ink); cursor: pointer; appearance: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .random-dice-art {
+    position: absolute; inset: 0; display: block;
+    filter: drop-shadow(1px 3px 2px rgba(39, 27, 14, 0.28));
+    transition: transform 0.12s ease, filter 0.12s ease;
+    transform-origin: 50% 56%;
+  }
+  .random-die {
+    position: absolute; display: block; border: 1px solid #85765f; border-radius: 5px;
+    background: linear-gradient(135deg, #fffdf4, #d7ccb4);
+    box-shadow: 1px 3px 4px rgba(47, 32, 17, 0.3), inset -2px -2px 3px rgba(92, 72, 46, 0.16);
+  }
+  .random-die i {
+    position: absolute; width: 4px; height: 4px; border-radius: 50%;
+    background: #433a30; box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.45);
+  }
+  .random-die--three { left: 2px; top: 4px; width: 32px; height: 32px; transform: rotate(-17deg); }
+  .random-die--five { right: 0; bottom: 0; width: 36px; height: 36px; transform: rotate(14deg); }
+  .random-die--three i:nth-child(1),
+  .random-die--five i:nth-child(1) { left: 6px; top: 6px; }
+  .random-die--three i:nth-child(2),
+  .random-die--five i:nth-child(3) { left: 50%; top: 50%; transform: translate(-50%, -50%); }
+  .random-die--three i:nth-child(3),
+  .random-die--five i:nth-child(5) { right: 6px; bottom: 6px; }
+  .random-die--five i:nth-child(2) { right: 6px; top: 6px; }
+  .random-die--five i:nth-child(4) { left: 6px; bottom: 6px; }
+  .random-dice-label {
+    position: absolute; top: 52px; left: -4px; width: max-content;
+    font-family: var(--hand); font-size: 14px; line-height: 1; color: var(--ink-soft);
+    opacity: 0; transform: translateY(-2px) rotate(-2deg);
+    transition: opacity 0.12s ease, transform 0.12s ease; pointer-events: none;
+  }
+  .random-dice:hover .random-dice-art,
+  .random-dice:focus-visible .random-dice-art {
+    transform: translateY(-2px) rotate(-1deg);
+    filter: drop-shadow(2px 5px 3px rgba(39, 27, 14, 0.32));
+  }
+  .random-dice:hover .random-dice-label,
+  .random-dice:focus-visible .random-dice-label { opacity: 1; transform: translateY(0) rotate(-2deg); }
+  .random-dice:active .random-dice-art { transform: translateY(2px) rotate(3deg) scale(0.95); }
+  .random-dice:focus-visible { outline: 1.5px dashed var(--ink-soft); outline-offset: 4px; border-radius: 6px; }
+  :root[data-theme="dark"] .random-dice-art {
+    filter: drop-shadow(1px 4px 3px rgba(0, 0, 0, 0.58)) brightness(0.86) saturate(0.78);
+  }
+  :root[data-theme="dark"] .random-dice:hover .random-dice-art,
+  :root[data-theme="dark"] .random-dice:focus-visible .random-dice-art {
+    filter: drop-shadow(2px 6px 4px rgba(0, 0, 0, 0.65)) brightness(0.94) saturate(0.82);
+  }
+  @media (max-width: 760px) {
+    .random-dice { top: 6px; left: 2px; width: 54px; height: 46px; }
+    .random-dice-art { transform: scale(0.82); transform-origin: top left; }
+    .random-dice:hover .random-dice-art,
+    .random-dice:focus-visible .random-dice-art { transform: scale(0.82) translateY(-2px) rotate(-1deg); }
+    .random-dice:active .random-dice-art { transform: scale(0.78) translateY(2px) rotate(3deg); }
+    .random-dice-label { display: none; }
+  }
+  @media (max-width: 480px) {
+    .random-dice { top: 4px; left: 1px; width: 48px; height: 44px; }
+    .random-dice-art { transform: scale(0.7); }
+    .random-dice:hover .random-dice-art,
+    .random-dice:focus-visible .random-dice-art { transform: scale(0.7) translateY(-2px) rotate(-1deg); }
+    .random-dice:active .random-dice-art { transform: scale(0.67) translateY(2px) rotate(3deg); }
+  }
+  body[data-reduce-motion="on"] .random-dice-art,
+  body[data-reduce-motion="on"] .random-dice-label { transition: none; }
+  body[data-reduce-motion="on"] .random-dice:hover .random-dice-art,
+  body[data-reduce-motion="on"] .random-dice:focus-visible .random-dice-art,
+  body[data-reduce-motion="on"] .random-dice:active .random-dice-art { transform: none; }
+  @media (max-width: 760px) {
+    body[data-reduce-motion="on"] .random-dice:hover .random-dice-art,
+    body[data-reduce-motion="on"] .random-dice:focus-visible .random-dice-art,
+    body[data-reduce-motion="on"] .random-dice:active .random-dice-art { transform: scale(0.82); }
+  }
+  @media (max-width: 480px) {
+    body[data-reduce-motion="on"] .random-dice:hover .random-dice-art,
+    body[data-reduce-motion="on"] .random-dice:focus-visible .random-dice-art,
+    body[data-reduce-motion="on"] .random-dice:active .random-dice-art { transform: scale(0.7); }
+  }
   .mode-picker-label {
     font-family: var(--type); font-size: 10px; letter-spacing: 1.5px;
     text-transform: uppercase; color: var(--ink-soft); margin: 0 0 7px;
@@ -6768,14 +6855,6 @@
     text-align: center; box-shadow: 0 1px 3px rgba(43, 39, 34, 0.3);
   }
   .keepsakes-gear-badge.is-empty { display: none; }
-
-  /* Randomiser — PLACEHOLDER SEAT. The cluster is laid out right-to-left from the gear, so the
-     seat next to keepsakes is one step further out. Home and object are both still open (see
-     the markup); when the real thing is designed this rule is expected to go with it. Hidden
-     during play for the keepsakes icon's reason: it's a way into a run, not a mid-round tool. */
-  .random-gear { right: 164px; }
-  @media (min-width: 1040px) { .random-gear { right: 172px; } }
-  body.in-game .random-gear { display: none; }
 
   .settings-modal { position: fixed; inset: 0; z-index: 200; display: none; }
   .settings-modal.open { display: block; }
