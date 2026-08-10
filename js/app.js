@@ -391,6 +391,8 @@ function applySettings() {
            : (prefersReducedMotion() ? "on" : "off");
   body.setAttribute("data-reduce-motion", rm);
   body.setAttribute("data-anim-speed", settings.animSpeed || "normal");
+  body.setAttribute("data-text-size", ["small", "large"].includes(settings.textSize) ? settings.textSize : "standard");
+  body.setAttribute("data-desk-density", ["quiet", "bare"].includes(settings.deskDensity) ? settings.deskDensity : "full");
   if (settings.highContrast) body.setAttribute("data-contrast", "high");
   else body.removeAttribute("data-contrast");
   // One universal dark paper: the earned paper stocks are a light-mode cosmetic, so in dark
@@ -409,6 +411,7 @@ function applySettings() {
   refreshSnow();   // December snowfall follows the reduce-motion setting live
   refreshRain();   // midnight rain follows the reduce-motion setting live too
   refreshLeaves(); // autumn leaves follow the reduce-motion setting live too
+  window.dispatchEvent(new CustomEvent("deskscatter:refresh"));
 }
 
 /* ---------- Sound icon (corner) ----------
@@ -432,7 +435,27 @@ function setSound(on) {
   settings.sound = !!on;
   saveSettings(settings);
   applySettings();
-  if (settings.sound) sfx.play("correct");
+  if (settings.sound) playSound("correct");
+}
+
+// Category gates sit above the palette's master switch. Dev auditions still call sfx.play
+// directly so a muted category can be inspected without rewriting the player's preferences.
+const SOUND_CATEGORIES = {
+  correct: "soundFeedback", wrong: "soundFeedback", hint: "soundFeedback",
+  page: "soundPaper", scratch: "soundPaper", close: "soundPaper",
+  tick: "soundTimer", unlock: "soundUnlocks",
+};
+function playSound(name, force = false, level = 1) {
+  const key = SOUND_CATEGORIES[name];
+  if (key && settings[key] === false) return false;
+  return sfx.play(name, force, level);
+}
+
+function phoneViewport() {
+  return !!(window.matchMedia && window.matchMedia("(max-width: 760px)").matches);
+}
+function focusRoundInput(input) {
+  if (input && (!phoneViewport() || settings.openKeyboard !== false)) input.focus();
 }
 
 /* ---------- December snowfall ---------- */
@@ -444,7 +467,7 @@ let snowRaf = null, snowFlakes = [], snowCanvas = null, snowCtx = null,
 // December (or dev-forced), and only when motion is allowed. The dev override
 // bypasses the calendar but still respects reduce-motion, so it exercises the
 // real gate rather than a special case.
-function snowActive() { return (devForceSnow || todayKey().slice(5, 7) === "12") && !motionReduced(); }
+function snowActive() { return settings.seasonalEffects !== false && (devForceSnow || todayKey().slice(5, 7) === "12") && !motionReduced(); }
 function sizeSnowCanvas() {
   if (!snowCanvas) return;
   const dpr = Math.min(window.devicePixelRatio || 1, 2);
@@ -527,7 +550,7 @@ let rainRaf = null, rainDrops = [], rainCanvas = null, rainCtx = null,
 // reduce-motion, exercising the real gate rather than a special case.
 function rainActive() {
   const now = new Date();
-  return (devForceRain || (now.getHours() === 0 && now.getMinutes() === 0)) && !motionReduced();
+  return settings.seasonalEffects !== false && (devForceRain || (now.getHours() === 0 && now.getMinutes() === 0)) && !motionReduced();
 }
 function sizeRainCanvas() {
   if (!rainCanvas) return;
@@ -618,7 +641,7 @@ const LEAF_HUES = ["#b5651d", "#a0522d", "#c68a3e", "#8a5a2b", "#9e4a34", "#c9a2
 // respects reduce-motion, exercising the real gate rather than a special case.
 const LEAF_DAYS = new Set(["10-28", "10-29", "10-30", "10-31", "11-01", "11-02", "11-03"]);
 function leavesActive() {
-  return (devForceLeaves || LEAF_DAYS.has(todayKey().slice(5, 10))) && !motionReduced();
+  return settings.seasonalEffects !== false && (devForceLeaves || LEAF_DAYS.has(todayKey().slice(5, 10))) && !motionReduced();
 }
 function makeLeaf(w, h) {
   const d = Math.random();   // 0 = far/small/slow, 1 = near/big/fast (faked depth)
@@ -1834,7 +1857,7 @@ function playUnlockChime() {
   const lead = sinceFlourish < FLOURISH_MS + UNLOCK_LEAD_MS
     ? FLOURISH_MS + UNLOCK_LEAD_MS - sinceFlourish
     : UNLOCK_LEAD_MS;
-  setTimeout(() => { unlockChimePending = false; sfx.play("unlock"); }, lead);
+  setTimeout(() => { unlockChimePending = false; playSound("unlock"); }, lead);
 }
 
 // The results flourish: the notebook shutting as a run ends. Every page turn in a
@@ -1850,7 +1873,7 @@ function playRunFlourish() {
   if (flourishThisRun) return;
   flourishThisRun = true;
   flourishPlayedAt = Date.now();
-  sfx.play("close");
+  playSound("close");
 }
 
 function unlock(id) {
@@ -4559,6 +4582,7 @@ function selectBonusGame(id) {
 // shelf's own Ruthless. It is assigned HERE rather than by the mode's start function so that
 // walking from a lens run onto the shelf cannot leave the last lens applied to a shelf page.
 function startBonusGame(g, lensId = null) {
+  disarmBonusQuit();
   ruthlessLensId = lensId;
   /* A lens run is the Ruthless MODE, and it ends on the results screen the way every other
      gameType does, so the flag has to say so — the era, the keepsake card and the sandbox
@@ -4704,7 +4728,7 @@ function nextBonusRound() {
   // The same page turn the round screen uses, and the same whoosh — a bonus page is a page of
   // this notebook too. Page 1 lays down instantly: startBonusGame has just turned the whole
   // card in, so there is no answered page to lift (the round screen's round-0 case exactly).
-  sfx.play("page");
+  playSound("page");
   if (bonusRound === 1 || !pageTurnAnimated()) { lay(); startBonusClock(); return; }
   turnPageSheet($("screen-bonusplay"), lay, startBonusClock);
 }
@@ -4779,7 +4803,7 @@ function renderBonusRound() {
     input.addEventListener("keydown", (e) => {
       if (e.key === "Enter") { e.preventDefault(); judgeGap(); }
     });
-    input.focus();
+    focusRoundInput(input);
   } else if (bonusGame.id === "then-what") {
     // The song is named at the top for Sing It Back's reason: the answer has to be pinned by a
     // real song rather than by whatever lines could be argued into. Solving it means singing
@@ -4834,7 +4858,7 @@ function renderBonusRound() {
     // the player is reading something from the moment the sheet lands.
     for (let i = 0; i < RUTHLESS_OPEN_WORDS; i++) revealRuthlessWord();
     updateRuthlessMeta();
-    input.focus();
+    focusRoundInput(input);
   } else if (bonusGame.id === "redacted") {
     // Punctuation stays OUTSIDE the strip, on both counts: a comma is grammar rather than a
     // secret, and real redaction blacks the word, not the line's furniture. The word itself is
@@ -4882,7 +4906,7 @@ function renderBonusRound() {
       if (bonusDropdownKey(e)) return;
       if (e.key === "Enter") { e.preventDefault(); judgeName(); }
     });
-    input.focus();
+    focusRoundInput(input);
   }
 }
 
@@ -5231,7 +5255,7 @@ function judgeChain(i) {
     if (chainNow > chainRun) chainRun = chainNow;
   } else chainNow = 0;
   chainTaken.push({ picked: i, right });
-  sfx.play(right ? "correct" : "wrong");
+  playSound(right ? "correct" : "wrong");
 
   // Mark the cards where they sit: the real one either way, and the wrong tap struck out. The
   // player's eye is on the cards at this moment, so that is where the verdict has to land.
@@ -5311,7 +5335,7 @@ function peelTape(btn) {
     // something you notice later.
     worth.classList.remove("is-spent"); void worth.offsetWidth; worth.classList.add("is-spent");
   }
-  sfx.play("hint");   // the same quiet pip the round screen's hint ladder uses — this is one
+  playSound("hint");   // the same quiet pip the round screen's hint ladder uses — this is one
 }
 
 // Everything still taped comes off when the page settles, so the verse is left whole and
@@ -5645,7 +5669,7 @@ function settleBonusRound(correct, detail, isTimeout = false) {
   stopBonusClock();
   const gained = bonusPageScore(correct);
   bonusScore += gained;
-  sfx.play(correct ? "correct" : "wrong");
+  playSound(correct ? "correct" : "wrong");
 
   const input = $("bonusInput");
   if (input) input.disabled = true;
@@ -6062,6 +6086,7 @@ function endRuthlessRun() {
 // Leaving a game (quit or from the end card) always lands back on the shelf, with the board
 // re-rendered so a new best shows immediately.
 function leaveBonusGame() {
+  disarmBonusQuit();
   stopBonusClock();
   stopBonusCountdown();
   stopChainBeat();
@@ -6070,6 +6095,25 @@ function leaveBonusGame() {
   bonusPuzzle = null;
   renderBonusPage();
   flipInToScreen("bonus");
+}
+
+let bonusQuitTimer = null;
+function disarmBonusQuit() {
+  clearTimeout(bonusQuitTimer);
+  bonusQuitTimer = null;
+  const btn = $("bonusQuitBtn");
+  if (!btn) return;
+  btn.classList.remove("armed");
+  btn.textContent = btn.dataset.label || "← quit";
+}
+function armBonusQuit() {
+  const btn = $("bonusQuitBtn");
+  if (!btn) return;
+  if (settings.confirmLeave === false) { leaveBonusGame(); return; }
+  if (btn.classList.contains("armed")) { leaveBonusGame(); return; }
+  btn.classList.add("armed");
+  btn.textContent = "give up? tap again";
+  bonusQuitTimer = setTimeout(disarmBonusQuit, 3000);
 }
 
 /* ---------- Challenges page ---------- */
@@ -8450,7 +8494,7 @@ function useHint() {
     tiers.push(`<blockquote class="hint-tier hint-line">${highlightWord(line, currentWord)}</blockquote>`);
   }
   box.innerHTML = tiers.join("");
-  sfx.play("hint");   // a small pip as the clue reveals (quietest in the palette; see sound.js)
+  playSound("hint");   // a small pip as the clue reveals (quietest in the palette; see sound.js)
 
   const outOfBudget = hintBudgetActive() && hintBudgetLeft <= 0;
   if (btn && hintTier >= 3) {
@@ -9465,7 +9509,7 @@ function revealTapKnowledge(correct) {
     `<p class="red-note">${note}</p>` +
     advanceUI;
   feedbackShownAt = Date.now();
-  sfx.play(correct ? "correct" : "wrong");
+  playSound(correct ? "correct" : "wrong");
   $(auto ? "skipBtn" : "continueBtn").addEventListener("click", advanceFromFeedback);
   if (correct) celebrateCorrect(correctStreak, 0);
   if (auto) runCountdown();
@@ -9707,7 +9751,7 @@ function revealCommon(correct) {
     `<div class="common-reveal">${cards}</div>` +
     advanceUI;
   feedbackShownAt = Date.now();
-  sfx.play(correct ? "correct" : "wrong");
+  playSound(correct ? "correct" : "wrong");
   $(auto ? "skipBtn" : "continueBtn").addEventListener("click", advanceFromFeedback);
   if (correct) celebrateCorrect(correctStreak, 0);
   if (auto) runCountdown();
@@ -11365,7 +11409,7 @@ function nextRound() {
   if (isGameOver()) { endGame(); return; }
   // Every page turn whooshes, both the animated flip and the instant paths
   // (round 1 included: that is the notebook opening).
-  sfx.play("page");
+  playSound("page");
   // First round (from the start screen) advances instantly; so do reduced motion,
   // "instant" animation speed, and the page-turn setting being off.
   if (round === 0 || !pageTurnAnimated()) {
@@ -11592,7 +11636,7 @@ function beginRoundClock() {
   const onDone = () => {
     // A button-gated card took the focus off the answer line; hand it back now the word is up.
     const input = $("songInput");
-    if (!input.disabled) input.focus();
+    if (!input.disabled) focusRoundInput(input);
     beginTimedRoundEffects();
     if (isWildcardRound() && roundWildcard.display && !roundWildcard.instant) roundWildcard.display(wrap);
     startPlay();
@@ -12488,7 +12532,7 @@ function advanceRound() {
   $("rejectFlash").classList.remove("show");
   hideDropdown();
   renderVerseMeter("");                 // reset the live verse gauge for the new round
-  input.focus();
+  focusRoundInput(input);
 
   resetTension();
   renderHintAffordance();
@@ -12709,7 +12753,7 @@ function startTimer(resume) {
     const n = Math.ceil(remaining);
     if (n === tickedNumeral) return;
     tickedNumeral = n;
-    sfx.play("tick", false, COUNTDOWN_TICK_GAIN[n] || 1);
+    playSound("tick", false, COUNTDOWN_TICK_GAIN[n] || 1);
   };
   timerSpark.start();
   startRevolve();   // Revolving Door: begin (or restart) the per-round word rotation, in sync with the clock
@@ -13407,7 +13451,7 @@ function flagImpostor() {
     `<div class="impostor-caught">“<b>${escapeHtml(currentWord)}</b>” appears in no Taylor song. Good instinct.</div>` +
     `<button id="continueBtn" class="btn-ghost">next page →</button>`;
   feedbackShownAt = Date.now();
-  sfx.play("correct");
+  playSound("correct");
   $("continueBtn").addEventListener("click", advanceFromFeedback);
 }
 // A fatal misjudgement ends the run. `kind`: "answered" (named a song for a fake) / "timeout"
@@ -13741,7 +13785,7 @@ function submitAnswer(song, isTimeout) {
   // chime; on a timeout the two land together, which is why it is mixed as the quietest thing
   // in the palette (a dry texture under a soft tonal "no", not a second verdict).
   if ((gameType === "infinite" || customInfinite()) && !correct) {
-    lives--; renderLives(); sfx.play("scratch");
+    lives--; renderLives(); playSound("scratch");
   }
   // Thirty-One: sudden death — one miss ends the run (checked at nextRound via isGameOver).
   if (surviveRuleActive() && !correct) lives--;
@@ -14118,7 +14162,7 @@ function showCorrectFeedback(song, lyricMatch) {
   if (formsNote) markCoachmark("wordForms");   // it's on screen now — spend the one-time note
   feedbackShownAt = Date.now();
   $(auto ? "skipBtn" : "continueBtn").addEventListener("click", advanceFromFeedback);
-  sfx.play("correct");
+  playSound("correct");
   celebrateCorrect(correctStreak, bonus);
   if (auto) runCountdown();
 }
@@ -14170,7 +14214,7 @@ function showWrongFeedback(song, isTimeout) {
     ${help}
     <button id="continueBtn" class="btn-ghost">next page →</button>`;
   feedbackShownAt = Date.now();
-  sfx.play("wrong");
+  playSound("wrong");
   $("continueBtn").addEventListener("click", advanceFromFeedback);
 }
 
@@ -14581,6 +14625,7 @@ let quitTimer = null;
 function armQuit() {
   const btn = $("quitBtn");
   if (!btn) return;
+  if (settings.confirmLeave === false) { quitGame(); return; }
   if (btn.classList.contains("armed")) {
     clearTimeout(quitTimer);
     btn.classList.remove("armed");
@@ -15405,6 +15450,8 @@ const SET_ICONS = {
   enterOnMiss: `<path d="M20 5v7H6"/><path d="M10 8l-4 4 4 4"/>`,
   showExamples: `<path d="M9 7h11M9 12h11M9 17h7"/><circle cx="5" cy="7" r="1.1"/><circle cx="5" cy="12" r="1.1"/><circle cx="5" cy="17" r="1.1"/>`,
   stemMatching: `<path d="M12 21v-8"/><path d="M12 13c0-3-2-5-5-5 0 3 2 5 5 5z"/><path d="M12 13c0-3 2-5 5-5 0 3-2 5-5 5z"/>`,
+  openKeyboard: `<rect x="3" y="6" width="18" height="13" rx="2"/><path d="M6 10h.01M10 10h.01M14 10h.01M18 10h.01M7 14h10"/>`,
+  confirmLeave: `<path d="M5 4h10v16H5zM15 8h4v8h-4"/><path d="M8 12h7M12 9l3 3-3 3"/>`,
   enableHints: `<path d="M9.5 18h5M10.5 21h3"/><path d="M12 3a6 6 0 0 0-3.5 10.9c.6.5.9 1.2 1 1.9h5c.1-.7.4-1.4 1-1.9A6 6 0 0 0 12 3z"/>`,
   censorExplicit: `<path d="M12 5v14M6 8.5l12 7M18 8.5l-12 7"/>`,
   countdownSecs: `<path d="M6 3h12M6 21h12M8 3v3l4 6 4-6V3M8 21v-3l4-6 4 6v3"/>`,
@@ -15415,10 +15462,17 @@ const SET_ICONS = {
   weekStart: `<rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/>`,
   clock: `<circle cx="12" cy="12" r="8"/><path d="M12 7v5l3.5 2"/>`,
   theme: `<path d="M20 14.2A7.5 7.5 0 1 1 10.4 4.6 6 6 0 0 0 20 14.2z"/>`,
+  textSize: `<path d="M4 7V4h8v3M8 4v16M15 9V7h6v2M18 7v13"/>`,
   highContrast: `<circle cx="12" cy="12" r="8"/><path d="M12 4a8 8 0 0 0 0 16z" fill="currentColor" stroke="none"/>`,
   colorBlindAlbums: `<circle cx="8.8" cy="9.2" r="4"/><circle cx="15.2" cy="9.2" r="4"/><circle cx="12" cy="15" r="4"/>`,
+  deskDensity: `<path d="M3 17h18M5 17V9h14v8M8 9V5h8v4"/>`,
+  seasonalEffects: `<path d="M12 3v18M4.2 7.5l15.6 9M19.8 7.5l-15.6 9"/><path d="M9 4.8 12 7l3-2.2M9 19.2l3-2.2 3 2.2"/>`,
   hideDailyScore: `<path d="M3.5 12S7 6.5 12 6.5 20.5 12 20.5 12 17 17.5 12 17.5 3.5 12 3.5 12z"/><circle cx="12" cy="12" r="2.4"/><path d="M4.5 19.5 19.5 4.5"/>`,
   sound: `<path d="M4 9.5h3.5L12 5.5v13L7.5 14.5H4z"/><path d="M15.3 9.7a3.8 3.8 0 0 1 0 4.6"/><path d="M18 7.2a7.4 7.4 0 0 1 0 9.6"/>`,
+  soundFeedback: `<path d="M5 14l4 4L19 7"/><path d="M4 5h8"/>`,
+  soundPaper: `<path d="M6 3h8l4 4v14H6zM14 3v4h4"/><path d="M9 16l6-6"/>`,
+  soundTimer: `<circle cx="12" cy="13" r="7"/><path d="M12 13V8M9 3h6"/>`,
+  soundUnlocks: `<path d="M7 11V8a5 5 0 0 1 10 0v3M5 11h14v10H5z"/><path d="M12 14v4"/>`,
   favouriteAlbum: `<path d="M12 20.3S5 16 5 11.1A3.9 3.9 0 0 1 12 8.6a3.9 3.9 0 0 1 7 2.5c0 4.9-7 9.2-7 9.2z"/>`,
 };
 function setIco(key) {
@@ -15698,6 +15752,8 @@ function renderSettingsBody() {
         setCheckHTML("stemMatching", "Match word variants", "off = exact word only (love won’t match loving)"),
         setCheckHTML("enableHints", "Hints", "Easy &amp; Relaxed; a hinted run can’t set a personal best"),
         setCheckHTML("censorExplicit", "Censor explicit words", "mask swearing in lyrics &amp; titles (f**k, s**t)"),
+        ...(phoneViewport() ? [setCheckHTML("openKeyboard", "Open keyboard each round", "focus the answer line as a new page opens")] : []),
+        setCheckHTML("confirmLeave", "Confirm before leaving a run", "requires a second tap before giving up"),
       ]) +
       setSliderHTML() +
       setChoiceHTML("defaultGameType", "Default game type", "on launch", [{ val: "last", label: "Last" }, { val: "classic", label: "Classic" }, { val: "infinite", label: "Infinite" }, { val: "adaptive", label: "Adaptive" }, { val: "custom", label: "Custom" }]) +
@@ -15711,6 +15767,8 @@ function renderSettingsBody() {
   panels.display =
     setSection("",
       setChoiceHTML("theme", "Theme", "a dark notebook for low light", [{ val: "light", label: "Light" }, { val: "system", label: "System" }, { val: "dark", label: "Dark" }]) +
+      setChoiceHTML("textSize", "Text size", "across the notebook and menus", [{ val: "small", label: "Small" }, { val: "standard", label: "Standard" }, { val: "large", label: "Large" }]) +
+      setChoiceHTML("deskDensity", "Desk decorations", "objects and bracelet-making incidents beside the page", [{ val: "full", label: "Full" }, { val: "quiet", label: "Quiet" }, { val: "bare", label: "Bare" }]) +
       setChoiceHTML("weekStart", "Week starts on", "first row of the records calendar", [{ val: "mon", label: "Monday" }, { val: "sun", label: "Sunday" }]) +
       setChoiceHTML("clock", "Time format", "", [{ val: "12", label: "12-hour" }, { val: "24", label: "24-hour" }]) +
       setChecklistHTML([
@@ -15719,12 +15777,18 @@ function renderSettingsBody() {
         // on the dark page, where the ink goes lighter and the paper darker.
         setCheckHTML("highContrast", "High contrast", "stronger ink, bolder accents"),
         setCheckHTML("colorBlindAlbums", "Colour-blind album colours", "a more distinguishable palette"),
+        setCheckHTML("seasonalEffects", "Seasonal effects", "December snow, midnight rain and autumn leaves"),
         setCheckHTML("hideDailyScore", "Hide daily score until reveal", ""),
       ])
     ) +
     setSection("Sound",
-      setChecklistHTML([setCheckHTML("sound", "Sound effects", "off by default")]) +
-      `<p class="set-note">a few little desk sounds: a real page turn, a small chime for a hit, a soft note for a miss, a quiet pip when a hint reveals, and a glockenspiel flourish when you unlock something. more to come.</p>`
+      setChecklistHTML([
+        setCheckHTML("sound", "Sound effects", "master switch; off by default"),
+        setCheckHTML("soundFeedback", "Answers &amp; hints", "hit, miss and hint sounds"),
+        setCheckHTML("soundPaper", "Paper &amp; pencil", "page turns, graphite strikes and closing the notebook"),
+        setCheckHTML("soundTimer", "Countdown tick", "the final three seconds when timer tension is on"),
+        setCheckHTML("soundUnlocks", "Unlock chimes", "achievements and Mastery rewards"),
+      ])
     );
   panels.data =
     setSection("",
@@ -18757,7 +18821,7 @@ async function init() {
   $("bonusBtn").addEventListener("click", () => openBonus("start"));
   $("viewBonusBtn").addEventListener("click", () => openBonus("results"));
   $("bonusBackBtn").addEventListener("click", () => backToScreen(bonusBackTarget));
-  $("bonusQuitBtn").addEventListener("click", () => leaveBonusGame());
+  $("bonusQuitBtn").addEventListener("click", armBonusQuit);
   $("albumFocusBtn").addEventListener("click", () => openAlbumFocus("start"));
   $("albumFocusBackBtn").addEventListener("click", () => backToScreen(albumFocusBackTarget));
   $("ruthlessBtn").addEventListener("click", () => openRuthless("start"));

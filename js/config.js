@@ -92,6 +92,8 @@ export const DEFAULT_SETTINGS = {
   enterOnMiss: true,        // Enter advances past the miss screen
   showExamples: true,       // show example songs after a wrong answer
   stemMatching: true,       // match word variants (love→loving, gold→golden); off = exact word only
+  openKeyboard: true,       // phones only: focus the answer line when each new round opens
+  confirmLeave: true,       // require a second tap before abandoning an in-progress run
 
   enableHints: true,        // show progressive hints in Easy/Normal/Relaxed (a hinted run can't set a personal best)
   censorExplicit: false,    // mask general profanity (fuck→f**k) in shown lyrics/titles; the racial slur is always masked regardless
@@ -101,8 +103,11 @@ export const DEFAULT_SETTINGS = {
   defaultStatsTab: "all",   // which Stats tab opens first: "all" | "last" | a MODES id
   // display & accessibility
   theme: "light",           // page theme: "light" | "system" (follow OS) | "dark" (a dark notebook for low light)
+  textSize: "standard",     // "small" | "standard" | "large"
   highContrast: false,
   colorBlindAlbums: false,  // swap ALBUM_COLORS for a colour-blind-friendly palette
+  deskDensity: "full",      // "full" | "quiet" | "bare" decorative desk dressing
+  seasonalEffects: true,    // calendar-driven snow, midnight rain and autumn leaves
   hideDailyScore: false,    // hide the daily score until "reveal & copy"
   timezone: "auto",         // daily-reset zone: "auto" (detect) | an IANA id e.g. "America/New_York"
   weekStart: "mon",         // first row/column of week-based views (the records calendar): "mon" | "sun"
@@ -114,6 +119,10 @@ export const DEFAULT_SETTINGS = {
   seenCoachmarks: {},       // { [coachmarkId]: true } — just-in-time tips already shown, so each fires once
   // meta
   sound: false,             // opt-in; the synthesized palette lives in js/sound.js
+  soundFeedback: true,      // correct, wrong and hint sounds
+  soundPaper: true,         // page turns, pencil strikes and the closing book
+  soundTimer: true,         // final-seconds clock ticks
+  soundUnlocks: true,       // achievement and mastery unlock flourish
   lastGameType: "classic",  // runtime memory backing defaultGameType: "last" — the last type clicked (not shown in UI)
   playerName: "",           // notebook signature — set once, reused on every personal record
   avatar: "",               // profile polaroid — a center-cropped data-URL, stays on this device

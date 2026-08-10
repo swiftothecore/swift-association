@@ -75,6 +75,7 @@ const LOOSE_GLYPHS = "LUCKYKARMALOVERSTAYPEACECLEANGOLDAEIORSTLNVW13♥★♥13"
 
 let seed = 0x9e3d71b1;   // fixed default → a stable, curated-looking layout
 let densityMult = 1;     // dev knob: <1 denser, >1 sparser
+let preferenceDensityMult = 1; // player-facing Quiet mode, kept separate from the dev knob
 let showProps = true;
 let showMarks = true;
 let onlyType = "";       // dev: restrict the walk to one incident type
@@ -543,7 +544,7 @@ function placeMarks(frag, r, bands, H, startY) {
       frag.appendChild(el);
       stats.marks++;
     }
-    y += rangeR(r, 230, 640) * densityMult;
+    y += rangeR(r, 230, 640) * densityMult * preferenceDensityMult;
   }
 }
 
@@ -567,7 +568,9 @@ function rebuild() {
   const el = ensureContainer();
   stats = { beads: 0, props: 0, marks: 0, incidents: 0 };
   usedWords = new Set();
-  if (!DESKTOP.matches) { el.replaceChildren(); el.style.height = "0px"; return; }
+  const preference = document.body.dataset.deskDensity || "full";
+  preferenceDensityMult = preference === "quiet" ? 1.8 : 1;
+  if (!DESKTOP.matches || preference === "bare") { el.replaceChildren(); el.style.height = "0px"; return; }
 
   const W = window.innerWidth;
   const H = pageHeight();
@@ -639,7 +642,7 @@ function rebuild() {
           const used = placeProp(frag, r, band, y, bag);
           if (used) {
             propYs.push(y);
-            y += used + rangeR(r, 40, 130) * densityMult;
+            y += used + rangeR(r, 40, 130) * densityMult * preferenceDensityMult;
             continue;
           }
         }
@@ -650,13 +653,13 @@ function rebuild() {
         stats.incidents++;
         // Short gap inside a group: these things are near each other because
         // they are part of the same moment.
-        y += used * rangeR(r, 0.35, 0.8) + rangeR(r, 20, 120) * densityMult;
+        y += used * rangeR(r, 0.35, 0.8) + rangeR(r, 20, 120) * densityMult * preferenceDensityMult;
       }
 
       // --- then the void. Bare wood is what makes everything above it read as
       // an incident rather than as wallpaper, so it is generous. It is also the
       // number to reach for first if this ever feels too busy or too bare. ---
-      y += rangeR(r, 200, 620) * densityMult;
+      y += rangeR(r, 200, 620) * densityMult * preferenceDensityMult;
     }
   }
 
