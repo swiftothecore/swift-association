@@ -1297,6 +1297,20 @@ export const CTA_MARKS = {
   inkwell: `<svg viewBox="0 0 24 24"><path class="ink" style="stroke-width:1" d="M10.04 7.53L10.04 10.47L6.88 12.98L6.55 16.69A1.31 1.31 0 0 0 7.86 18.1L16.14 18.1A1.31 1.31 0 0 0 17.45 16.69L17.12 12.98L13.96 10.47L13.96 7.53Z"/><path class="ink-fill" fill-rule="evenodd" d="M8.95 6.01L15.05 6.01L15.05 7.53L8.95 7.53Z"/><path class="ink" style="stroke-width:1" d="M7.64 15.27L16.36 15.27"/></svg>`,
 };
 
+// The Pride finish is one Mastery-8 reward with a small collection inside it, rather than
+// eight near-identical full-size CTA swatches on the reward board. These values persist in
+// settings.masteryButton just like every other button finish.
+export const PRIDE_BUTTONS = [
+  { id: "pride-rainbow",    name: "Rainbow Pride",  shortName: "Rainbow" },
+  { id: "pride-trans",      name: "Transgender",    shortName: "Trans" },
+  { id: "pride-lesbian",    name: "Lesbian",        shortName: "Lesbian" },
+  { id: "pride-gay-men",    name: "Gay men's",      shortName: "Gay men's" },
+  { id: "pride-bi",         name: "Bisexual",       shortName: "Bisexual" },
+  { id: "pride-pan",        name: "Pansexual",      shortName: "Pansexual" },
+  { id: "pride-nonbinary",  name: "Nonbinary",      shortName: "Nonbinary" },
+  { id: "pride-asexual",    name: "Asexual",        shortName: "Asexual" },
+];
+
 // Mastery rewards — one granted per Mastery level. `kind` drives how the Mastery screen
 // renders/applies it; `payload` is kind-specific. The ladder runs 1–13 (pens, papers,
 // charms, the super-hard unlock, then prestige titles) and 13 is the Mastery cap.
@@ -1334,7 +1348,7 @@ export const MASTERY_REWARDS = [
   { level: 8,  id: "btn-blush",  kind: "button", name: "Blush",     desc: "A soft rose marker start button.",    payload: { button: "rose" } },
   { level: 8,  id: "btn-sky",    kind: "button", name: "Sky",       desc: "Cool blue, with little white clouds.", payload: { button: "sky" } },
   { level: 8,  id: "btn-meadow", kind: "button", name: "Meadow",    desc: "Spring green, with grass at the hem.", payload: { button: "meadow" } },
-  { level: 8,  id: "btn-pride",  kind: "button", name: "Pride",     desc: "Six marker stripes, bleeding into each other.", payload: { button: "pride" } },
+  { level: 8,  id: "btn-pride",  kind: "button", name: "Pride flags", desc: "Choose a flag for your start button.", payload: { button: "pride-rainbow" } },
   // Secret hints — a level-10 milestone (grants no toggle). Once earned, the achievements
   // page reveals how to earn each still-locked secret charm (its desc, name kept masked).
   { level: 10, id: "reveal-hints", kind: "unlock", name: "Secret hints", icon: "key", desc: "Reveals how to earn every secret charm." },

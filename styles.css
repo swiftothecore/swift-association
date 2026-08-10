@@ -1018,7 +1018,7 @@
      label off the fully saturated bands), a darkening one at rest on the dark page (whose
      label is the pale --ink, and would otherwise sit invisible on the yellow), and a heavy one
      either way on hover, tinted to whichever token the label is NOT. */
-  .play-cta[data-startbtn="pride"] {
+  .play-cta[data-startbtn="pride"], .play-cta[data-startbtn^="pride-"] {
     background-color: #d4574d;
     --cta-stripes: linear-gradient(to bottom,
       #d4574d 0 15%, #dd8b3e 19% 32%, #e4bf4c 36% 48%,
@@ -1026,15 +1026,39 @@
     --cta-veil: rgba(255, 255, 255, 0.2);
     --cta-art: linear-gradient(var(--cta-veil), var(--cta-veil)), var(--cta-stripes);
   }
-  .play-cta[data-startbtn="pride"]:hover, .play-cta[data-startbtn="pride"]:focus-visible {
+  .play-cta[data-startbtn="pride-trans"] {
+    --cta-stripes: linear-gradient(to bottom, #5bcefa 0 20%, #f5a9b8 24% 38%, #fff 42% 58%, #f5a9b8 62% 76%, #5bcefa 80% 100%);
+  }
+  .play-cta[data-startbtn="pride-lesbian"] {
+    --cta-stripes: linear-gradient(to bottom, #d52d00 0 17%, #ef7627 21% 36%, #ff9a56 40% 48%, #fff 52% 57%, #d162a4 61% 77%, #a30262 81% 100%);
+  }
+  .play-cta[data-startbtn="pride-gay-men"] {
+    --cta-stripes: linear-gradient(to bottom, #078d70 0 15%, #26ceaa 19% 31%, #98e8c1 35% 47%, #fff 51% 58%, #7bade2 62% 74%, #5049cc 78% 89%, #3d1a78 93% 100%);
+  }
+  .play-cta[data-startbtn="pride-bi"] {
+    --cta-stripes: linear-gradient(to bottom, #d60270 0 40%, #9b4f96 45% 57%, #0038a8 62% 100%);
+  }
+  .play-cta[data-startbtn="pride-pan"] {
+    --cta-stripes: linear-gradient(to bottom, #ff218c 0 30%, #ffd800 35% 65%, #21b1ff 70% 100%);
+  }
+  .play-cta[data-startbtn="pride-nonbinary"] {
+    --cta-stripes: linear-gradient(to bottom, #fff430 0 23%, #fff 28% 47%, #9c59d1 52% 72%, #222 77% 100%);
+  }
+  .play-cta[data-startbtn="pride-asexual"] {
+    --cta-stripes: linear-gradient(to bottom, #222 0 22%, #a3a3a3 27% 47%, #fff 52% 72%, #800080 77% 100%);
+  }
+  .play-cta[data-startbtn="pride"], .play-cta[data-startbtn^="pride-"] { background-image: linear-gradient(var(--cta-veil), var(--cta-veil)), var(--cta-stripes); }
+  .play-cta[data-startbtn="pride"]:hover, .play-cta[data-startbtn^="pride-"]:hover, .play-cta[data-startbtn="pride"]:focus-visible, .play-cta[data-startbtn^="pride-"]:focus-visible {
     color: var(--paper);
     --cta-veil: color-mix(in srgb, var(--ink) 78%, transparent);
   }
-  :root[data-theme="dark"] .play-cta[data-startbtn="pride"] {
+  :root[data-theme="dark"] .play-cta[data-startbtn="pride"], :root[data-theme="dark"] .play-cta[data-startbtn^="pride-"] {
     --cta-veil: color-mix(in srgb, var(--paper) 45%, transparent);
   }
   :root[data-theme="dark"] .play-cta[data-startbtn="pride"]:hover,
-  :root[data-theme="dark"] .play-cta[data-startbtn="pride"]:focus-visible {
+  :root[data-theme="dark"] .play-cta[data-startbtn^="pride-"]:hover,
+  :root[data-theme="dark"] .play-cta[data-startbtn="pride"]:focus-visible,
+  :root[data-theme="dark"] .play-cta[data-startbtn^="pride-"]:focus-visible {
     --cta-veil: color-mix(in srgb, var(--ink) 78%, transparent);
   }
   @keyframes playBob {
@@ -6452,6 +6476,29 @@
   .rb-btn-sw.locked { background: rgba(43, 39, 34, 0.04); border: 1px dashed rgba(43, 39, 34, 0.25); color: var(--ink-soft); }
   .rb-btn-sw.locked .rb-lock { opacity: 0.6; }
 
+  /* Pride lives behind one of the six button-finish swatches, then opens a small tray below
+     the grid. The flag samples are deliberately tags rather than miniature CTAs: eight near-
+     identical button previews would make the flag differences harder to recognise, not easier. */
+  .pride-picker { margin-top: 14px; padding-top: 13px; border-top: 1px dashed rgba(43, 39, 34, 0.2); }
+  .pride-picker-top { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 10px; }
+  .pride-picker-top > span { font-family: var(--hand); font-size: calc(19px + var(--text-size-adjust)); font-weight: 700; color: var(--ink); }
+  .pride-picker-top button { border: 0; background: none; padding: 2px 0; cursor: pointer; color: var(--ink-soft); font-family: var(--type); font-size: calc(9px + var(--text-size-adjust)); letter-spacing: 0.08em; text-transform: uppercase; }
+  .pride-picker-top button:hover, .pride-picker-top button:focus-visible { color: rgb(var(--m-accent)); text-decoration: underline; text-underline-offset: 3px; }
+  .pride-flag-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  .pride-flag { position: relative; display: grid; grid-template-columns: 45px minmax(0, 1fr); align-items: center; column-gap: 9px; min-height: 47px; padding: 6px 8px; text-align: left; cursor: pointer; border-radius: 5px; border: 1px solid rgba(43, 39, 34, 0.16); background: rgba(255, 255, 255, 0.28); color: var(--ink); font-family: var(--type); font-size: calc(9px + var(--text-size-adjust)); letter-spacing: 0.03em; }
+  .pride-flag:hover, .pride-flag:focus-visible { border-color: rgba(var(--m-accent), 0.7); background: rgba(var(--m-accent), 0.07); }
+  .pride-flag.active { border: 2px solid rgba(var(--m-accent), 0.78); padding: 5px 7px; background: rgba(var(--m-accent), 0.1); }
+  .pride-flag i { grid-column: 2; font-style: normal; font-size: calc(7px + var(--text-size-adjust)); letter-spacing: 0.1em; text-transform: uppercase; color: rgb(var(--m-accent)); margin-top: 1px; }
+  .pride-flag-stripes { display: block; width: 45px; height: 27px; border-radius: 2px; border: 1px solid rgba(43, 39, 34, 0.28); background: #d4574d; }
+  .pride-flag-stripes[data-startbtn="pride-rainbow"] { background: linear-gradient(to bottom, #d4574d 0 15%, #dd8b3e 19% 32%, #e4bf4c 36% 48%, #6da668 53% 65%, #5b8fc7 69% 82%, #8b6cb2 86% 100%); }
+  .pride-flag-stripes[data-startbtn="pride-trans"] { background: linear-gradient(to bottom, #5bcefa 0 20%, #f5a9b8 24% 38%, #fff 42% 58%, #f5a9b8 62% 76%, #5bcefa 80% 100%); }
+  .pride-flag-stripes[data-startbtn="pride-lesbian"] { background: linear-gradient(to bottom, #d52d00 0 17%, #ef7627 21% 36%, #ff9a56 40% 48%, #fff 52% 57%, #d162a4 61% 77%, #a30262 81% 100%); }
+  .pride-flag-stripes[data-startbtn="pride-gay-men"] { background: linear-gradient(to bottom, #078d70 0 15%, #26ceaa 19% 31%, #98e8c1 35% 47%, #fff 51% 58%, #7bade2 62% 74%, #5049cc 78% 89%, #3d1a78 93% 100%); }
+  .pride-flag-stripes[data-startbtn="pride-bi"] { background: linear-gradient(to bottom, #d60270 0 40%, #9b4f96 45% 57%, #0038a8 62% 100%); }
+  .pride-flag-stripes[data-startbtn="pride-pan"] { background: linear-gradient(to bottom, #ff218c 0 30%, #ffd800 35% 65%, #21b1ff 70% 100%); }
+  .pride-flag-stripes[data-startbtn="pride-nonbinary"] { background: linear-gradient(to bottom, #fff430 0 23%, #fff 28% 47%, #9c59d1 52% 72%, #222 77% 100%); }
+  .pride-flag-stripes[data-startbtn="pride-asexual"] { background: linear-gradient(to bottom, #222 0 22%, #a3a3a3 27% 47%, #fff 52% 72%, #800080 77% 100%); }
+
   /* Prestige titles — rank-medallion ladder above the picker */
   .rb-ladder { position: relative; display: flex; justify-content: space-between; align-items: flex-start; margin: 18px 4px 6px; padding: 0 6px; }
   .rb-ladder-rail { position: absolute; top: 22px; left: 40px; right: 40px; border-top: 1.5px dashed rgba(43, 39, 34, 0.2); }
@@ -6491,6 +6538,7 @@
     .rb-swatches { gap: 10px; }
     .rb-sw, .rb-sw.paper-chip { width: 62px; height: 48px; }
     .rb-sw.paper-chip::before { left: 10px; }
+    .pride-flag-grid { grid-template-columns: 1fr; }
   }
   /* Prestige-title stepper: browse one title at a time; a star marks the worn title, a
      circle the one being viewed. Tier-grouped position dots below the name. */

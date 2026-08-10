@@ -39,7 +39,7 @@ import {
   ENDURANCE_BASE, ENDURANCE_GROWTH, ENDURANCE_RUN_CAP, RANGE_RATIO_XP, RANGE_PER_ALBUM,
   RESOLVE_BASE, RESOLVE_STREAK_CAP,
   MASTERY_REWARDS, MASTERY_REWARD_BY_ID, MASTERY_GATE, MASTERY_MAX_LEVEL, MASTERY_LEVEL_STEP, SKILL_MAX_LEVEL,
-  CTA_LABELS, CTA_MARKS,
+  CTA_LABELS, CTA_MARKS, PRIDE_BUTTONS,
   MASTERY_TITLES, MASTERY_TITLE_BY_VALUE, masteryDefaultTitle, MASTERY_ICONS, MASTERY_LEVEL_ICONS, MASTERY_TIER_ICONS,
   skillXpForLevel, skillLevelFromXp, masteryXpForLevel, masteryLevelFromXp,
   POLAROID_DEVELOP_MS, POLAROID_TOTAL,
@@ -3628,6 +3628,7 @@ function openAchievements(from) {
   flipAwayToScreen("achievements");
 }
 let masteryBackTarget = "start";       // where the Mastery page's ← back returns to
+let pridePickerOpen = false;            // the small Level-8 flag tray, open only on request
 function openMastery(from) {
   masteryBackTarget = from;
   _titleView = null;   // recenter the title stepper on the worn title each time the page opens
@@ -3723,6 +3724,16 @@ function renderMasteryPage() {
   });
   body.querySelectorAll("[data-reward-reset]").forEach((el) => {
     el.addEventListener("click", () => resetMasteryCosmetic(el.getAttribute("data-reward-reset")));
+  });
+  body.querySelectorAll("[data-open-pride-picker]").forEach((el) => {
+    el.addEventListener("click", () => { pridePickerOpen = !pridePickerOpen; renderMasteryPage(); });
+  });
+  body.querySelectorAll("[data-pride-button]").forEach((el) => {
+    el.addEventListener("click", () => {
+      if (!loadMastery().unlocked["btn-pride"]) return;
+      pridePickerOpen = false;
+      applyMasteryCosmetic("button", el.getAttribute("data-pride-button"));
+    });
   });
   // ...and the rank ladder above the stepper: data-title-tier scrolls the stepper to that
   // tier's default title. Browsing only — it never changes which title you wear.
@@ -4033,14 +4044,30 @@ function buildMilestoneTile(r, opts) {
 function buildButtonTile(buttons, m) {
   const setUnlocked = buttons.length ? !!m.unlocked[buttons[0].id] : false;
   const active = settings.masteryButton || "";
+  const prideActive = PRIDE_BUTTONS.some((flag) => flag.id === active) || active === "pride";
+  const wornPride = PRIDE_BUTTONS.find((flag) => flag.id === active) || PRIDE_BUTTONS[0];
   let sw = rbSwatch(`data-reward-reset="button"`, buttonChip(""), "gold marker", active === "", true, 0);
   buttons.forEach((r) => {
-    sw += rbSwatch(`data-reward="${r.id}"`, buttonChip(r.payload.button), r.name, active === r.payload.button, setUnlocked, r.level);
+    if (r.id === "btn-pride") {
+      sw += rbSwatch(`data-open-pride-picker`, buttonChip(prideActive ? wornPride.id : "pride-rainbow"),
+        prideActive ? `Pride · ${wornPride.shortName}` : "Pride flags", prideActive, setUnlocked, r.level);
+    } else {
+      sw += rbSwatch(`data-reward="${r.id}"`, buttonChip(r.payload.button), r.name, active === r.payload.button, setUnlocked, r.level);
+    }
   });
+  const flags = PRIDE_BUTTONS.map((flag) =>
+    `<button type="button" class="pride-flag${active === flag.id ? " active" : ""}" data-pride-button="${flag.id}" aria-pressed="${active === flag.id}">` +
+      `<span class="pride-flag-stripes" data-startbtn="${flag.id}" aria-hidden="true"></span>` +
+      `<span>${escapeHtml(flag.name)}</span>${active === flag.id ? `<i>in use</i>` : ""}</button>`
+  ).join("");
+  const picker = pridePickerOpen
+    ? `<div class="pride-picker"><div class="pride-picker-top"><span>Pride flags</span><button type="button" data-open-pride-picker>‹ button finishes</button></div>` +
+      `<div class="pride-flag-grid">${flags}</div></div>`
+    : "";
   return `<div class="rb-tile rb-button" style="grid-area:button">` +
     `<div class="rb-tile-top"><span class="rb-tt">Start button</span>${rbChip("Mastery 8")}</div>` +
     `<div class="rb-tt-sub">Restyles your home-screen button</div>` +
-    `<div class="rb-swatches">${sw}</div></div>`;
+    `<div class="rb-swatches">${sw}</div>${picker}</div>`;
 }
 // One row's preview: a real start button, scaled down, wearing the words on offer and the
 // mark that comes with them. It is the button itself rather than a picture of one, for the
