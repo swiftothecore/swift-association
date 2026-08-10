@@ -226,7 +226,7 @@ export const GUESTS = [
   },
   {
     id: "wicked-soundtrack",
-    name: "Wicked: The Soundtrack",
+    name: "Wicked",
     file: "guests/wicked.json",
     // Emerald, rose, and gold evoke Oz without borrowing album artwork.
     ink: { deep: "#234b3f", accent: "#c5799b", strap: "#527a50", pen: "#315746",

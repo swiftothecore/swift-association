@@ -71,7 +71,7 @@
   ],
   "albums": [
     {
-      "album": "Wicked: The Soundtrack",
+      "album": "Wicked",
       "songs": [
         {
           "title": "No One Mourns the Wicked",
@@ -2185,7 +2185,12 @@
               ]
             }
           ]
-        },
+        }
+      ]
+    },
+    {
+      "album": "Wicked: For Good",
+      "songs": [
         {
           "title": "Every Day More Wicked",
           "sections": [
