@@ -15762,7 +15762,11 @@ function renderSettingsBody() {
           `</span>` +
         `</a>` +
       `</div>` +
-      `<a class="about-feedback" href="feedback/" target="_blank" rel="noopener">Send feedback</a>` +
+      `<a class="about-feedback" href="feedback/" target="_blank" rel="noopener">` +
+        `<svg class="about-feedback-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">` +
+          `<path d="M4 4.4 H14 L20 10.4 V16.4 H10 L6.5 19.6 L8 16.4 H4 Z"/>` +
+          `<path d="M8 8.9 H11.5"/><path d="M8 12.9 H15"/>` +
+        `</svg>Send feedback</a>` +
       `</div>`
     );
 

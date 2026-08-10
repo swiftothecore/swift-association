@@ -7469,10 +7469,11 @@
   /* A quiet postscript beneath the pinned credits: feedback already has its own
      form, so this is only the invitation and opens that form in a fresh tab. */
   .about-feedback {
-    display: block; width: fit-content; margin: 15px auto 3px;
+    display: flex; align-items: center; gap: 5px; width: fit-content; margin: 15px auto 3px;
     font-family: var(--type); font-size: 11px; text-decoration: underline;
     text-underline-offset: 3px;
   }
+  .about-feedback-ico { width: 15px; height: 15px; flex: none; }
   .about-feedback:focus-visible { outline: 2px solid var(--ink-accent); outline-offset: 4px; }
 
   @media (prefers-reduced-motion: reduce) {
