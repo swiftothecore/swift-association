@@ -5388,9 +5388,14 @@ let bonusDdIndex = -1;
 function bonusRankMatches(query) {
   const q = normalizeTitle(query);
   if (!q) return [];
+  const compactQuery = q.replace(/ /g, "");
   const scored = [];
   for (const song of bonusSongs()) {
-    const idx = song._norm.indexOf(q);
+    const normalIdx = song._norm.indexOf(q);
+    // The final title judge already forgives missing or misplaced spaces. Mirror that
+    // leniency here so "illicita" can suggest "illicit affairs" as the player types.
+    const compactIdx = normalIdx === -1 ? song._norm.replace(/ /g, "").indexOf(compactQuery) : normalIdx;
+    const idx = normalIdx === -1 ? compactIdx : normalIdx;
     if (idx === -1) continue;
     scored.push({ song, rank: idx === 0 ? 0 : 1, idx });
   }
@@ -12896,10 +12901,15 @@ function titleWordCount(title) {
 function rankMatches(query) {
   const q = normalizeTitle(query);
   if (!q) return [];
+  const compactQuery = q.replace(/ /g, "");
   const scored = [];
   for (const song of allSongs) {
     const t = song._norm;
-    const idx = t.indexOf(q);
+    const normalIdx = t.indexOf(q);
+    // Match the same compact title form used by the submission fallback, while
+    // preserving ordinary spaced matching and its existing ranking where possible.
+    const compactIdx = normalIdx === -1 ? t.replace(/ /g, "").indexOf(compactQuery) : normalIdx;
+    const idx = normalIdx === -1 ? compactIdx : normalIdx;
     if (idx === -1) continue;
     if (!roundAcceptsSong(song)) continue;   // hide rule-breaking suggestions
     const rank = idx === 0 ? 0 : 1;
