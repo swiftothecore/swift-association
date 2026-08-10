@@ -7064,7 +7064,7 @@ function guestPassMarkup(g, slot) {
           `<span class="guest-face">` +
             `<span class="guest-name">${escapeHtml(g.name).replace(" ", "<br>")}</span>` +
             `<span class="guest-ticks" aria-hidden="true">${ticks}</span>` +
-            `<span class="guest-line"><span data-count="songs">— songs</span></span>` +
+            `<span class="guest-line"><span data-count="songs"><strong class="guest-song-count">—</strong> songs</span></span>` +
             stub +
           `</span>` +
         `</span>` +
@@ -7097,8 +7097,8 @@ function paintGuestCounts(id, counts) {
   if (!body) return;
   const pass = body.querySelector(`.guest-pass[data-guest="${CSS.escape(id)}"]`);
   if (pass) {
-    const songs = pass.querySelector('[data-count="songs"]');
-    if (songs) songs.textContent = `${counts.songs} songs`;
+    const songs = pass.querySelector('.guest-song-count');
+    if (songs) songs.textContent = counts.songs;
   }
   if (guestSelected === id) renderGuestDetail(id);
 }

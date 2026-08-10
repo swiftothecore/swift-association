@@ -3173,6 +3173,7 @@
     color: var(--ink-soft); text-transform: uppercase;
     border-top: 1px solid rgba(43,39,34,0.16); padding-top: 6px;
   }
+  .guest-song-count { font-weight: 700; }
   /* the tear-off stub at the foot — printed, never actually torn */
   .guest-stub {
     position: relative; display: block; height: 26px; margin: 8px -8px -8px;
