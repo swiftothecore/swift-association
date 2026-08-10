@@ -6329,9 +6329,16 @@ function renderChallengesPage() {
     else if (rec.defeated) { mark = CHALL_TICK; stateCls = "is-defeated"; }
     else if (open)      { mark = CHALL_RING; stateCls = "is-open"; }
     else                { mark = CHALL_LOCK; stateCls = "is-locked"; }
-    return `<button type="button" class="chall-item ${stateCls}" data-id="${c.id}">` +
-      `<span class="chall-item-name">${escapeHtml(c.name)}</span>` +
-      `<span class="chall-item-mark">${mark}</span></button>`;
+    const pinLimitReached = !rec.pinned && pinnedChallenges().length >= CHALLENGE_PIN_LIMIT;
+    const pin = open
+      ? `<button type="button" class="chall-item-pin${rec.pinned ? " is-pinned" : ""}" data-pin="${c.id}"` +
+          `${pinLimitReached ? " disabled aria-disabled=\"true\"" : ""}` +
+          ` aria-pressed="${rec.pinned}" aria-label="${rec.pinned ? "Remove " : "Pin "}${escapeHtml(c.name)}${pinLimitReached ? "; pin limit reached" : ""}"` +
+          ` title="${rec.pinned ? "remove from pinned challenges" : pinLimitReached ? "you can pin up to three challenges" : "pin this challenge"}">${CHALL_PIN}</button>`
+      : "";
+    return `<div class="chall-item ${stateCls}">` +
+      `<button type="button" class="chall-item-select" data-id="${c.id}"><span class="chall-item-name">${escapeHtml(c.name)}</span></button>` +
+      `<span class="chall-item-mark">${mark}</span>${pin}</div>`;
   };
   let list = "";
   const pinned = pinnedChallenges();
@@ -6380,8 +6387,10 @@ function renderChallengesPage() {
 
   const el = $("challengesBody");
   el.innerHTML = html;
-  el.querySelectorAll(".chall-item").forEach((b) =>
+  el.querySelectorAll(".chall-item-select").forEach((b) =>
     b.addEventListener("click", () => selectChallenge(b.dataset.id)));
+  el.querySelectorAll(".chall-item-pin").forEach((b) =>
+    b.addEventListener("click", () => { if (toggleChallengePin(b.dataset.pin)) renderChallengesPage(); }));
 
   // The list scrolls internally; cue that with a soft edge fade plus a half-row
   // "peek" — trim the visible height so the bottom edge bisects the next row, so
@@ -6445,14 +6454,6 @@ function renderChallengeDetail(id) {
   const cost = c.cost || 1;
   const tt = loadChallengeTokens().tickets;
   const price = ticketPrice(c);          // null = no number of tickets ever buys this one
-  const pinned = rec.pinned;
-  const pinLimitReached = !pinned && pinnedChallenges().length >= CHALLENGE_PIN_LIMIT;
-  const pinControl = open
-    ? `<button type="button" class="chall-pin${pinned ? " is-pinned" : ""}" data-pin="${id}"` +
-        `${pinLimitReached ? " disabled aria-disabled=\"true\"" : ""}` +
-        ` aria-pressed="${pinned}" title="${pinned ? "remove from pinned challenges" : pinLimitReached ? "you can pin up to three challenges" : "pin this challenge"}">` +
-        `${CHALL_PIN}<span>${pinned ? "Pinned" : "Pin"}</span></button>`
-    : "";
 
   let action;
   if (!open && c.mastery) {
@@ -6581,7 +6582,6 @@ function renderChallengeDetail(id) {
       `<span class="chall-detail-seal ${rec.darkDefeated ? "is-dark" : rec.defeated ? "is-beaten" : open ? "is-unbeaten" : "is-locked"}">` +
         `${sealMarkup((rec.darkDefeated ? CHALLENGE_SEALS_DARK : rec.defeated ? CHALLENGE_SEALS_AGED : CHALLENGE_SEALS)[c.id])}</span>` +
       `<span class="chall-detail-name">${escapeHtml(c.name)}</span>` +
-      pinControl +
       (showDark
         ? `<span class="chall-detail-dark">${CHALL_ECLIPSE}dark side</span>`
         : rec.defeated ? `<span class="chall-detail-star">${CHALL_STAR}</span><span class="chall-detail-stamp">defeated</span>` : "") +
@@ -6625,8 +6625,6 @@ function renderChallengeDetail(id) {
   if (pb) pb.addEventListener("click", () => startChallenge(pb.dataset.play));
   const db = el.querySelector("[data-dark]");
   if (db) db.addEventListener("click", () => startChallenge(db.dataset.dark, { dark: true }));
-  const pin = el.querySelector("[data-pin]");
-  if (pin) pin.addEventListener("click", () => { if (toggleChallengePin(pin.dataset.pin)) renderChallengesPage(); });
 }
 
 /* ---------- Album Focus page (master/detail; the 12-album completion board) ---------- */

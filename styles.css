@@ -1600,7 +1600,7 @@
   .chall-item {
     position: relative; display: grid; grid-template-columns: 1fr 20px;
     align-items: center; column-gap: 6px; width: 100%;
-    padding: 8px 8px 8px 4px; min-height: 40px; cursor: pointer;
+    padding: 0 8px 0 4px; min-height: 40px;
     background: none; border: none; border-radius: 2px; text-align: left;
     font: inherit; color: var(--ink); transition: background 0.12s;
   }
@@ -1610,11 +1610,30 @@
     content: "\25B6"; position: absolute; left: -12px; top: 50%; transform: translateY(-50%);
     color: #b23a3a; font-size: calc(11px + var(--text-size-adjust)); line-height: 1;
   }
+  .chall-item-select {
+    grid-column: 1; min-width: 0; padding: 8px 0; border: none; background: transparent;
+    text-align: left; font: inherit; color: inherit; cursor: pointer;
+  }
+  .chall-item-select:focus-visible { outline: 1px dashed #274560; outline-offset: 2px; border-radius: 2px; }
   .chall-item-num { font-family: var(--type); font-size: calc(11px + var(--text-size-adjust)); color: var(--ink-soft); text-align: right; }
   .chall-item-name { font-family: var(--hand); font-weight: 700; font-size: calc(22px + var(--text-size-adjust)); line-height: 1; color: var(--ink); }
   .chall-item.selected .chall-item-name { color: #1f3a52; }
-  .chall-item-mark { display: flex; justify-content: center; }
+  .chall-item-mark { grid-column: 2; grid-row: 1; display: flex; justify-content: center; }
   .chall-mark-svg { width: 20px; height: 20px; display: block; }
+  /* The progress mark owns the quiet state. On hover or keyboard focus, it gives its small
+     right-hand square to a pin, keeping the list to one deliberate action at a time. */
+  .chall-item-pin {
+    grid-column: 2; grid-row: 1; z-index: 1; display: flex; align-items: center; justify-content: center;
+    width: 24px; height: 24px; padding: 0; color: #50677c; background: rgba(245,239,225,0.86);
+    border: 1px dashed rgba(39,69,96,0.48); border-radius: 50%; cursor: pointer; opacity: 0;
+    transform: rotate(2deg) scale(0.76); transition: opacity 0.12s, transform 0.12s, background 0.12s;
+  }
+  .chall-item:hover .chall-item-mark, .chall-item:focus-within .chall-item-mark { opacity: 0; }
+  .chall-item:hover .chall-item-pin, .chall-item:focus-within .chall-item-pin { opacity: 1; transform: rotate(2deg) scale(1); }
+  .chall-item-pin:hover, .chall-item-pin:focus-visible { color: #1f3a52; background: #e7eef3; border-style: solid; outline: none; }
+  .chall-item-pin.is-pinned { opacity: 1; color: #274560; background: #dce8f0; border-style: solid; }
+  .chall-item-pin:disabled { color: #aaa18f; background: rgba(245,239,225,0.76); border-color: #c9c0ad; cursor: default; }
+  @media (hover: none) { .chall-item-pin { opacity: 1; transform: rotate(2deg) scale(1); } }
 
   /* difficulty: cassette tapes, coloured by tier (green → orange → red) */
   .chall-tapes { display: inline-flex; align-items: center; gap: 3px; }
@@ -1685,17 +1704,7 @@
      (darkSealSvg) — the same wax poured black with a lilac rim. Also baked into the SVG. */
   .chall-detail-seal.is-locked svg   { filter: grayscale(1) opacity(0.42); }
   .chall-detail-name { font-family: var(--hand); font-weight: 700; font-size: calc(32px + var(--text-size-adjust)); line-height: 1; color: var(--ink); }
-  /* A pin, not a star: the star beside a defeated card remains a victory mark. */
-  .chall-pin {
-    display: inline-flex; align-items: center; gap: 4px; padding: 3px 6px 3px 4px;
-    font-family: var(--type); font-size: calc(9px + var(--text-size-adjust)); letter-spacing: 0.8px; text-transform: uppercase;
-    color: #50677c; background: transparent; border: 1px dashed rgba(39,69,96,0.45); border-radius: 2px;
-    cursor: pointer; transform: rotate(1.5deg);
-  }
   .chall-pin-svg { display: block; width: 15px; height: 15px; }
-  .chall-pin:hover, .chall-pin:focus-visible { color: #1f3a52; background: rgba(39,69,96,0.09); border-style: solid; outline: none; }
-  .chall-pin.is-pinned { color: #274560; border-style: solid; background: rgba(39,69,96,0.12); }
-  .chall-pin:disabled { color: #aaa18f; border-color: #c9c0ad; background: transparent; cursor: default; transform: none; }
   .chall-detail-star { display: flex; }
   .chall-star-svg { width: 18px; height: 18px; display: block; }
   .chall-detail-stamp {
