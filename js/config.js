@@ -233,6 +233,15 @@ export const GUESTS = [
            ticks: ["#4f8b63", "#c5799b", "#d5a94b"] },
     era: "evermore",
   },
+  {
+    id: "hannah-montana",
+    name: "Hannah Montana",
+    file: "guests/hannah-montana.json",
+    // The show's violet wordmark and warm yellow star translated into the pass hardware.
+    ink: { deep: "#56346f", accent: "#e2b63d", strap: "#76528e", pen: "#5a3971",
+           ticks: ["#8a63a2", "#e2b63d", "#c78b35", "#6a4c88"] },
+    era: "speak-now",
+  },
 ];
 // A guest is played at a chosen difficulty, from the same ladder Album Focus offers:
 // deliberately the same list, since a guest round IS Album Focus pointed at another corpus.

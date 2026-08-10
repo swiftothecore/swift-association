@@ -7630,6 +7630,17 @@ function installCorpus(grouped, words, opts = {}) {
     s._normTitleLyric = normalizeLyric(s.title);
     for (const t of s._normLyrics.split(" ")) lyricVocab.add(t);
     titleIndex.set(s._norm, s);
+    // A catalogue may retain an official display title while accepting its common
+    // short form. Keep aliases with the song so guest catalogues remain self-contained.
+    for (const alias of s.aliases || []) {
+      const key = normalizeTitle(alias);
+      const existing = titleIndex.get(key);
+      if (existing && existing !== s) {
+        console.warn(`Song alias: "${alias}" collides with "${existing.title}"; skipped`);
+        continue;
+      }
+      titleIndex.set(key, s);
+    }
   }
   for (const [canonical, aliases] of Object.entries(opts.aliases ? TITLE_ALIASES : {})) {
     const song = allSongs.find((s) => s.title === canonical);

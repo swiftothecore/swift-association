@@ -1,0 +1,5000 @@
+{
+  "id": "hannah-montana",
+  "name": "Hannah Montana",
+  "buckets": {
+    "easy": 7,
+    "hard": [
+      3,
+      8
+    ],
+    "ultra": [
+      1,
+      2
+    ]
+  },
+  "albums": [
+    {
+      "album": "Hannah Montana",
+      "songs": [
+        {
+          "title": "The Best of Both Worlds",
+          "sections": [
+            {
+              "label": "Intro",
+              "lines": [
+                "Oh, yeah",
+                "Come on"
+              ]
+            },
+            {
+              "label": "Verse 1",
+              "lines": [
+                "You get the limo out front (Ooh-whoa)",
+                "Hottest styles, every shoe, every color",
+                "Yeah, when you're famous, it can be kinda fun",
+                "It's really you but no one ever discovers"
+              ]
+            },
+            {
+              "label": "Pre-Chorus",
+              "lines": [
+                "In some ways, you're just like all your friends",
+                "But on stage, you're a star"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "You get the best of both worlds",
+                "Chill it out, take it slow",
+                "Then you rock out the show",
+                "You get the best of both worlds",
+                "Mix it all together and you know that it's the best of both worlds",
+                "The best of both worlds (Yeah)"
+              ]
+            },
+            {
+              "label": "Verse 2",
+              "lines": [
+                "You go to movie premieres (Was that Orlando Bloom?)",
+                "Hear your songs on the radio (Ooh-whoa)",
+                "Livin' two lives is a little weird (Yeah)",
+                "But school's cool, 'cause nobody knows (Nobody knows)"
+              ]
+            },
+            {
+              "label": "Pre-Chorus",
+              "lines": [
+                "Yeah, you get to be a small town girl",
+                "But big time when you play your guitar"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "You get the best of both worlds",
+                "Chill it out, take it slow",
+                "Then you rock out the show",
+                "You get the best of both worlds",
+                "Mix it all together and you know that it's the best of both—",
+                "You know the best of both worlds"
+              ]
+            },
+            {
+              "label": "Bridge",
+              "lines": [
+                "Pictures and autographs",
+                "You get your face in all the magazines",
+                "The best part is that",
+                "You get to be whoever you wanna be",
+                "(Best! Best!) Yeah, the best of both—",
+                "(Best! Best!) You got the best of both—",
+                "(Best! Best!) Come on, the best of both—"
+              ]
+            },
+            {
+              "label": "Pre-Chorus",
+              "lines": [
+                "Who would've thought that a girl like me",
+                "Would double as a superstar? (Wow!)"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "You get the best of both worlds",
+                "Chill it out, take it slow",
+                "Then you rock out the show",
+                "You get the best of both worlds",
+                "Mix it all together and you know that it's the best—"
+              ]
+            },
+            {
+              "label": "Outro",
+              "lines": [
+                "You get the best of both worlds",
+                "Without the shades and the hair, you can go anywhere",
+                "You get the best of both girls",
+                "Mix it all together, oh yeah",
+                "It's so much better",
+                "'Cause you know you got the best of both worlds"
+              ]
+            }
+          ]
+        },
+        {
+          "title": "Who Said",
+          "sections": [
+            {
+              "label": "Verse 1",
+              "lines": [
+                "I'm more than just your average girl",
+                "I like to turn me up and show the world (Aw, yeah)",
+                "'Cause some can talk the talk",
+                "But this girl just wants to rock (Rock)",
+                "I'm individual, I'm not like anyone"
+              ]
+            },
+            {
+              "label": "Pre-Chorus",
+              "lines": [
+                "I can be glamorous, just like you see in all the magazines",
+                "I can be cool as ice or anything I wanna be (Woo)"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "Who said, who said I can't be Superman?",
+                "I say, I say that I know I can",
+                "Who said, who said I won't be president?",
+                "I say, I say, \"You ain't seen nothin' yet\""
+              ]
+            },
+            {
+              "label": "Post-Chorus",
+              "lines": [
+                "Aw, yeah",
+                "Yeah"
+              ]
+            },
+            {
+              "label": "Verse 2",
+              "lines": [
+                "Go on and make some noise",
+                "Every girl has her choice (Choice)",
+                "To lead their own parade",
+                "I do it my way (Ow)"
+              ]
+            },
+            {
+              "label": "Pre-Chorus",
+              "lines": [
+                "I can be soft and sweet or louder than the radio (Radio)",
+                "I can be sophisticated or totally go (Totally go, totally go)",
+                "Outta control (Outta control), oh"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "Who said, who said I can't be Superman?",
+                "I say, I say that I know I can",
+                "Who said, who said I'm not electrified?",
+                "I say, I say—"
+              ]
+            },
+            {
+              "label": "Bridge",
+              "lines": [
+                "There's no holdin' back",
+                "Stayin' right on track",
+                "'Cause you control the game",
+                "So let 'em know your name",
+                "No limitations on imagination",
+                "Imagine that (Woo)",
+                "Yeah"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "Who said, who said I can't be worldwide?",
+                "I say, I say time is on my side",
+                "Who said, who said I can't be ten feet tall?",
+                "I say, I say that I can have it all",
+                "Who said, who said I can't be Superman?",
+                "I say, I say that I know I can",
+                "Who said, who said I won't be president?",
+                "I say, I say, \"You ain't seen nothin' yet\"",
+                "You ain't seen nothin' yet"
+              ]
+            },
+            {
+              "label": "Outro",
+              "lines": [
+                "Woah",
+                "Yeah",
+                "Who said?",
+                "C'mon, yeah",
+                "That's right"
+              ]
+            }
+          ]
+        },
+        {
+          "title": "Just Like You",
+          "sections": [
+            {
+              "label": "Intro",
+              "lines": [
+                "(Yeah, yeah)"
+              ]
+            },
+            {
+              "label": "Verse 1",
+              "lines": [
+                "So what you see is only half the story",
+                "There's another side of me (Yeah)",
+                "I'm the girl you know, but I'm someone else too",
+                "If you only knew"
+              ]
+            },
+            {
+              "label": "Pre-Chorus",
+              "lines": [
+                "It's a crazy life (Crazy life)",
+                "But I'm alright"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "I got everything I've always wanted",
+                "Livin' the dream",
+                "So yeah, everything I've always wanted",
+                "Isn't always what it seems",
+                "I'm a lucky girl",
+                "Whose dreams came true",
+                "But underneath it all, I'm just like you"
+              ]
+            },
+            {
+              "label": "Post-Chorus",
+              "lines": [
+                "(Yeah, yeah)"
+              ]
+            },
+            {
+              "label": "Verse 2",
+              "lines": [
+                "Don't wanna be treated differently",
+                "I wanna keep it all inside",
+                "Half the time, I've got my name in lights",
+                "The other half, I'm by your side"
+              ]
+            },
+            {
+              "label": "Pre-Chorus",
+              "lines": [
+                "It's a crazy life (Crazy life)",
+                "But I'm just fine"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "I got everything I've always wanted",
+                "Livin' the dream",
+                "So yeah, everything I've always wanted",
+                "Isn't always what it seems",
+                "I'm a lucky girl",
+                "Whose dreams came true",
+                "But underneath it all, I'm just like you",
+                "Yeah, yeah"
+              ]
+            },
+            {
+              "label": "Bridge",
+              "lines": [
+                "Can't you see I'm just an ordinary girl? (Ah)",
+                "Livin' in an extraordinary world",
+                "Trying to live (Trying to live)",
+                "Trying to learn (Trying to learn)",
+                "Trying to just be who I am",
+                "Who I am"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "I got everything I've always wanted",
+                "Livin' the dream (The dream)",
+                "So yeah, everything I've always wanted",
+                "Isn't always what it seems",
+                "I'm a lucky girl (Lucky girl)",
+                "Whose dreams came true",
+                "But underneath it all, I'm just like you",
+                "I got everything I've always wanted",
+                "Livin' the dream (Livin' the dream)",
+                "So yeah, everything I've always wanted (I've always wanted)",
+                "Isn't always what it seems",
+                "I'm a lucky girl (Lucky girl)",
+                "Whose dreams came true",
+                "But underneath it all, I'm just like you"
+              ]
+            }
+          ]
+        },
+        {
+          "title": "Pumpin' Up the Party",
+          "sections": [
+            {
+              "label": "Chorus",
+              "lines": [
+                "Hey, get up, get loud",
+                "Start pumpin' up the party now",
+                "Hey, get up, get loud",
+                "Start pumpin' up the party now"
+              ]
+            },
+            {
+              "label": "Verse 1",
+              "lines": [
+                "It's the same old, same grind",
+                "But we don't feel we're wasting time",
+                "Not so bored that we can't find a better way",
+                "My friends, my kind",
+                "No one's gettin' left behind",
+                "If they did, it'd be a crime, that's why we say"
+              ]
+            },
+            {
+              "label": "Pre-Chorus",
+              "lines": [
+                "Let the music start a revolution (Revolution)",
+                "No time to play it safe"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "Hey, get up, get loud",
+                "Start pumpin' up the party now",
+                "Hey, get up, get loud",
+                "Start pumpin' up the party now"
+              ]
+            },
+            {
+              "label": "Verse 2",
+              "lines": [
+                "They can't, we can",
+                "Parents might not understand",
+                "Havin' fun without a plan, but that's what we do",
+                "We're all here (Let's go)",
+                "Gonna make this party grow",
+                "Together we can make it blow (Right through the roof)"
+              ]
+            },
+            {
+              "label": "Pre-Chorus",
+              "lines": [
+                "The music's gonna start a revolution (Revolution)",
+                "Too late to play it safe"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "Hey, get up, get loud",
+                "Start pumpin' up the party now",
+                "Hey, get up, get loud",
+                "Start pumpin' up the party now"
+              ]
+            },
+            {
+              "label": "Bridge",
+              "lines": [
+                "We don't have to paint by numbers",
+                "Let our voice come out from under",
+                "Hear it rise, feel the thunder",
+                "It's time to lose control"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "Hey, get up, get loud",
+                "Start pumpin' up the party now",
+                "Hey, get up, get loud",
+                "Start pumpin' up the party now",
+                "Pumpin' up the party now, party now, party now",
+                "Hey, get up, get loud",
+                "Start pumpin' up the party now",
+                "Hey, get up, get loud",
+                "Start pumpin' up the party now",
+                "Hey, get up, get loud",
+                "Start pumpin' up the party now",
+                "Hey, get up, get loud",
+                "Start pumpin' up the party now"
+              ]
+            }
+          ]
+        },
+        {
+          "title": "If We Were a Movie",
+          "sections": [
+            {
+              "label": "Verse 1",
+              "lines": [
+                "Uh-oh, there you go again, talkin' cinematic",
+                "Yeah, you, you're charming, got everybody starstruck",
+                "I know how you always seem to go",
+                "For the obvious, instead of me",
+                "But get a ticket and you'll see"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "If we were a movie, you'd be the right guy",
+                "And I'd be the best friend that you'd fall in love with",
+                "In the end, we'd be laughin', watchin' the sunset",
+                "Fade to black, show the names, play the happy song (Yeah)"
+              ]
+            },
+            {
+              "label": "Verse 2",
+              "lines": [
+                "Yeah, yeah, when you call me, I can hear it in your voice",
+                "Oh, sure, wanna see me and tell me all about her",
+                "La-la, I'll be actin' through my tears",
+                "Guess you'll never know that I should win",
+                "An Oscar for this scene I'm in"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "If we were a movie, you'd be the right guy",
+                "And I'd be the best friend that you'd fall in love with",
+                "In the end, we'd be laughin', watchin' the sunset",
+                "Fade to black, show the names, play the happy song"
+              ]
+            },
+            {
+              "label": "Bridge",
+              "lines": [
+                "Wish I could tell you there's a twist",
+                "Some kind of hero in disguise",
+                "And we're together, it's for real, now playing",
+                "Wish I could tell you there's a kiss",
+                "Like something more than in my mind",
+                "I see it, could be amazing (Could be amazing)",
+                "If we were a movie"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "If we were a movie, you'd be the right guy (Right guy)",
+                "And I'd be the best friend that you'd fall in love with",
+                "In the end, we'd be laughin', watchin' the sunset",
+                "Fade to black, show the names, play the happy song (If we were)",
+                "If we were a movie (If we were)",
+                "You'd be the right guy (You'd be right)",
+                "And I'd be the best friend (And I'd be)",
+                "That you'd fall in love with",
+                "In the end, we'd be laughin' (We would laugh)",
+                "Watchin' the sunset (Watch the sun)",
+                "Fade to black, show the names, play the happy song (Oh)",
+                "If we were a movie (If we were)",
+                "You'd be the right guy (You'd be right)",
+                "And I'd be the best friend (And I'd be)",
+                "That you'd fall in love with",
+                "In the end, we'd be laughin' (We would laugh)",
+                "Watchin' the sunset (Watch the sun)",
+                "Fade to black, show the names, play the happy song"
+              ]
+            }
+          ]
+        },
+        {
+          "title": "I Got Nerve",
+          "sections": [
+            {
+              "label": "Verse 1",
+              "lines": [
+                "We haven't met, and that's okay",
+                "'Cause you will be askin' for me one day",
+                "Don't wanna wait in line",
+                "The moment is mine, believe me"
+              ]
+            },
+            {
+              "label": "Pre-Chorus",
+              "lines": [
+                "Don't close your eyes",
+                "'Cause it's a chance worth takin'",
+                "And I think that I can shake you"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "I know where I stand, I know who I am",
+                "I would never run away when life gets bad",
+                "It's everything I see, every part of me",
+                "Gonna get what I deserve",
+                "I got nerve (I got, I got, I got)"
+              ]
+            },
+            {
+              "label": "Verse 2",
+              "lines": [
+                "Electrified, I'm on a wire",
+                "Gettin' together and we're on fire",
+                "What I said, you heard",
+                "Now I got you spinnin'"
+              ]
+            },
+            {
+              "label": "Pre-Chorus",
+              "lines": [
+                "Don't close your mind",
+                "The words I use are open",
+                "And I think that I can show you"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "I know where I stand, I know who I am",
+                "I would never run away when life gets bad",
+                "It's everything I see, every part of me",
+                "I know I can change the world, yeah, yeah, yeah (I know)",
+                "I know what you like, I know what you think",
+                "Not afraid to stare you down until you blink",
+                "It's everything I see, every part of me",
+                "Gonna get what I deserve",
+                "I got nerve"
+              ]
+            },
+            {
+              "label": "Bridge",
+              "lines": [
+                "You (You), you need to discover (To discover)",
+                "Who can make you feel free",
+                "And I, I need to uncover",
+                "The part of you that's reachin' out for me, hey"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "I know where I stand, I know who I am",
+                "I would never run away, when life gets bad",
+                "It's everything I see, every part of me",
+                "I know I can change the world, yeah, yeah, yeah",
+                "I know what you like, I know what you think",
+                "Not afraid to stare you down until you blink",
+                "It's everything I see, every part of me",
+                "Gonna get what I deserve",
+                "I got nerve"
+              ]
+            },
+            {
+              "label": "Outro",
+              "lines": [
+                "(I'm what you want)",
+                "Yeah, yeah, yeah (I'm what you need)",
+                "I got nerve (I'm what you want, I'm what you need)",
+                "I know what you like, I know what you think",
+                "Not afraid to stare you down until you blink",
+                "It's everything I see, every part of me",
+                "Gonna get what I deserve",
+                "(I got) I got nerve"
+              ]
+            }
+          ]
+        },
+        {
+          "title": "The Other Side of Me",
+          "sections": [
+            {
+              "label": "Intro",
+              "lines": [
+                "The other side (The other side), the other side (The other side)",
+                "The other side of me (Side of me)"
+              ]
+            },
+            {
+              "label": "Verse 1",
+              "lines": [
+                "By day, I play the part in every way",
+                "Of simple, sweet, calm and collected",
+                "Pretend, to my friends, I'm a chameleon",
+                "Can make a girl feel disconnected"
+              ]
+            },
+            {
+              "label": "Pre-Chorus",
+              "lines": [
+                "Feel like a star, a superhero",
+                "Sometimes it's hard to separate",
+                "(Got too much on my plate)"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "If you could see the other side of me",
+                "I'm just like anybody else, can't you tell?",
+                "I hold the key (The key) to both realities",
+                "The girl that I want you to know, if only I could show",
+                "The other side (The other side), the other side (The other side)",
+                "I want you to see (Oh)",
+                "The other side (The other side), the other side (The other side)",
+                "The other side of me (Woo!)"
+              ]
+            },
+            {
+              "label": "Verse 2",
+              "lines": [
+                "Inside (Inside), I try to make the pieces fit right",
+                "A jigsaw puzzle everywhere",
+                "'Cause I flip (I flip) the script (The script)",
+                "So many times I forget (Oh)",
+                "Who's on stage, who's in the mirror"
+              ]
+            },
+            {
+              "label": "Pre-Chorus",
+              "lines": [
+                "Back in the spotlight, the crowd is calling",
+                "The paparazzi and the fame",
+                "(It can drive a girl insane)"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "If you could see the other side of me",
+                "I'm just like anybody else, can't you tell?",
+                "I hold the key to both realities",
+                "The girl that I want you to know, if only I could show",
+                "The other side (The other side), the other side (The other side)",
+                "I want you to see",
+                "The other side (The other side), the other side (The other side)",
+                "The other side of me"
+              ]
+            },
+            {
+              "label": "Bridge",
+              "lines": [
+                "Down inside, I'm not that different",
+                "Like everyone, I have a dream (Have a dream)",
+                "Don't wanna hide, just wanna fit in",
+                "Sometimes it's harder than it seems"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "If you could see the other side of me",
+                "I'm just like anybody else, can't you tell?",
+                "I hold the key to both realities (Oh)",
+                "The girl that I want you to know"
+              ]
+            },
+            {
+              "label": "Chorus 2",
+              "lines": [
+                "If you could see (C'mon)",
+                "The other side of me (The other side of me)",
+                "I'm just like (Just like) anybody else, can't you tell?",
+                "I hold the key (The key) to both realities (Both realities)",
+                "The girl that I want you to know, if only I could show (Yeah)",
+                "The other side (The other side), the other side (The other side)",
+                "I want you to see (Yeah)",
+                "The other side (The other side), the other side (The other side)",
+                "The other side of me"
+              ]
+            },
+            {
+              "label": "Outro",
+              "lines": [
+                "The other side (The other side), the other side (The other side)",
+                "I want you to see (Oh)",
+                "The other side (The other side)",
+                "The other side of me"
+              ]
+            }
+          ]
+        },
+        {
+          "title": "This Is the Life",
+          "sections": [
+            {
+              "label": "Verse 1",
+              "lines": [
+                "Take the world, shake and stir",
+                "And that's what I got goin' on",
+                "I throw my cares up in the air",
+                "And I don't think they're coming down",
+                "Yeah, I love how it feels right now"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "This is the life, hold on tight",
+                "And this is the dream, it's all I need",
+                "You never know where you'll find it",
+                "And I'm gonna take my time, yeah",
+                "I'm still getting it right",
+                "This is the life"
+              ]
+            },
+            {
+              "label": "Verse 2",
+              "lines": [
+                "Takin' in a whole new scene",
+                "And I'm swimmin' with a new crowd (Crowd)",
+                "Breaking down the old four walls",
+                "And I'm building them up from the ground (Ground)",
+                "Yeah, I love how it feels right now (Now)"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "This is the life (Yeah)",
+                "Hold on tight (Hold on)",
+                "And this is the dream (Yeah, yeah)",
+                "It's all I need (Hold on)",
+                "You never know where you'll find it",
+                "And I'm gonna take my time, yeah",
+                "I'm still getting it right",
+                "This is the life"
+              ]
+            },
+            {
+              "label": "Bridge",
+              "lines": [
+                "I'm gonna follow my own lead, yeah",
+                "Kick back and feel the breeze",
+                "Nothing but the blue sky",
+                "As far as I can see"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "This is the life, hold on tight",
+                "And this is the dream, it's all I need",
+                "You never know where you'll find it",
+                "And I'm gonna take my time, yeah",
+                "I'm still getting it right"
+              ]
+            },
+            {
+              "label": "Outro",
+              "lines": [
+                "This is the life (Oh, yeah)",
+                "Hold on tight (Hold on, hold on)",
+                "And this is the dream (Yeah, yeah)",
+                "It's all I need (Hold on)",
+                "You never know where you'll find it",
+                "I'm gonna take my time, yeah",
+                "I'm still getting it right",
+                "This is the life"
+              ]
+            }
+          ]
+        },
+        {
+          "title": "I Learned from You",
+          "sections": [
+            {
+              "label": "Intro",
+              "lines": [
+                "Ooh, oh, yeah"
+              ]
+            },
+            {
+              "label": "Verse 1",
+              "lines": [
+                "I didn't wanna listen to what you were sayin'",
+                "I thought that I knew all I need to know",
+                "I didn't realize that, somewhere inside me",
+                "I knew you were right, but I couldn't say so"
+              ]
+            },
+            {
+              "label": "Pre-Chorus",
+              "lines": [
+                "And I can take care of myself, yeah",
+                "You taught me well"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "I learned from you that I do not crumble",
+                "I learned that strength is something you choose",
+                "All of the reasons to keep on believing",
+                "There's no question, that's a lesson that I learned from you"
+              ]
+            },
+            {
+              "label": "Verse 2",
+              "lines": [
+                "We always don't agree on what is the best way",
+                "To get to the place that we're going from here",
+                "But I can really trust you and give you the distance",
+                "To make your decisions without any fear"
+              ]
+            },
+            {
+              "label": "Pre-Chorus",
+              "lines": [
+                "I'm grateful for all of the times",
+                "You opened my eyes"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "I learned from you that I do not crumble",
+                "I learned that strength is something you choose",
+                "All of the reasons to keep on believing",
+                "There's no question, that's a lesson I learned from you"
+              ]
+            },
+            {
+              "label": "Bridge",
+              "lines": [
+                "You taught me to stand on my own",
+                "And I thank you for that",
+                "It saved me, it made me",
+                "And now that I'm lookin' back",
+                "I can say, whoa-oh, oh, oh",
+                "Mmm, yeah"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "I learned from you (I learned from you) that I do not crumble",
+                "I learned that strength is something you choose (Something you choose, oh)",
+                "All of the reasons to keep on believing (Keep on believing)",
+                "There's no question, that's a lesson I learned from you",
+                "I learned from you, oh, I learned from you"
+              ]
+            },
+            {
+              "label": "Outro",
+              "lines": [
+                "I learned that strength is something you choose (Something you choose)",
+                "All of the reasons to keep on believing",
+                "There's no question, that's a lesson I learned from you, yeah, yeah",
+                "I learned from you"
+              ]
+            }
+          ]
+        },
+        {
+          "title": "We Got the Party",
+          "sections": [
+            {
+              "label": "Verse 1",
+              "lines": [
+                "Come on, guys, tell me what we're doing",
+                "We're hanging 'round, when we could be all over the place",
+                "The sun is shining, just the way we like it",
+                "Let's get out of this hallway, show the world our face"
+              ]
+            },
+            {
+              "label": "Pre-Chorus 1",
+              "lines": [
+                "It's Friday, but there's nowhere to go",
+                "Anywhere is cool, but we're not going home",
+                "And we could do anything we wanna do",
+                "It's all up to me and you"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "Turn this park into a club",
+                "The stars are lights and the moon is the vibe from above",
+                "Skateboard, here's our ride, so pull on up",
+                "Everyone is waiting for us",
+                "Anywhere we are, anywhere we go",
+                "Everybody knows we got the party with us",
+                "Anywhere we are, anywhere we go",
+                "Everybody knows we got the party with us",
+                "We got the party with us",
+                "We got the party with us"
+              ]
+            },
+            {
+              "label": "Verse 2",
+              "lines": [
+                "Radio, let me be a DJ",
+                "I'll turn you up, keep us moving 'til we're on a roll",
+                "Everyone is dancing to their own beat and letting go",
+                "Everybody here's got a soul"
+              ]
+            },
+            {
+              "label": "Pre-Chorus 2",
+              "lines": [
+                "It's Friday, and there's nowhere to be",
+                "We're kicking it together, it's so good to be free",
+                "We got each other, and that's all we need",
+                "The rest is up to you and me"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "Turn this park into a club",
+                "The stars are lights and the moon is the vibe from above",
+                "Skateboard, here's our ride, so pull on up",
+                "Everyone is waiting for us",
+                "Anywhere we are, anywhere we go",
+                "Everybody knows we got the party with us",
+                "Anywhere we are, anywhere we go",
+                "Everybody knows we got the party with us"
+              ]
+            },
+            {
+              "label": "Post-Chorus",
+              "lines": [
+                "We got the party with us",
+                "We got the party, we got the party"
+              ]
+            },
+            {
+              "label": "Bridge",
+              "lines": [
+                "Life is for dreamers and I'm a believer",
+                "That nothing can stand in our way today",
+                "Let's find a place to play, yeah"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "Turn this park into a club",
+                "The stars are lights and the moon is the vibe from above",
+                "Skateboard, here's our ride, so pull on up",
+                "Everyone is waiting for us",
+                "Anywhere we are, anywhere we go",
+                "Everybody knows we got the party with us",
+                "Anywhere we are, anywhere we go",
+                "Everybody knows we got the party with us",
+                "Turn this park into a club",
+                "The stars are lights and the moon is the vibe from above",
+                "Skateboard, here's our ride, so pull on up",
+                "Everyone is waiting for us",
+                "Anywhere we are, anywhere we go",
+                "Everybody knows we got the party with us",
+                "Anywhere we are, anywhere we go",
+                "Everybody knows we got the party with us"
+              ]
+            },
+            {
+              "label": "Outro",
+              "lines": [
+                "We got the party, we got the party, we got the party",
+                "We got the party with us",
+                "We got the party with us"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "album": "Hannah Montana 2: Meet Miley Cyrus",
+      "songs": [
+        {
+          "title": "Nobody's Perfect",
+          "sections": [
+            {
+              "label": "Intro",
+              "lines": [
+                "Everybody makes mistakes",
+                "Everybody has those days",
+                "One, two, three, four!"
+              ]
+            },
+            {
+              "label": "Refrain",
+              "lines": [
+                "Everybody makes mistakes",
+                "Everybody has those days (Oh yeah)",
+                "Everybody knows what, what I'm talkin' 'bout",
+                "Everybody gets that way (That's right)",
+                "Everybody makes mistakes (Uh huh)",
+                "Everybody has those days",
+                "Everybody knows what, what I'm talkin' 'bout",
+                "Everybody gets that way, yeah"
+              ]
+            },
+            {
+              "label": "Verse 1",
+              "lines": [
+                "Sometimes I'm in a jam, I've gotta make a plan",
+                "It might be crazy, I do it anyway",
+                "No way to know for sure, I figure out a cure",
+                "I'm patching up the holes, but then it overflows"
+              ]
+            },
+            {
+              "label": "Pre-Chorus",
+              "lines": [
+                "If I'm not doing too well",
+                "Why be so hard on myself? (Whoo!)"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "Nobody's perfect, I gotta work it",
+                "Again and again, 'til I get it right",
+                "Nobody's perfect, you live and you learn it",
+                "And if I mess it up sometimes (Hey)",
+                "Nobody's perfect"
+              ]
+            },
+            {
+              "label": "Verse 2",
+              "lines": [
+                "Sometimes I work a scheme, but then it flips on me (Oh)",
+                "Doesn't turn out how I planned, gets stuck in quicksand",
+                "But no problem can't be solved once I get involved",
+                "I try to be delicate, then crash right into it"
+              ]
+            },
+            {
+              "label": "Pre-Chorus",
+              "lines": [
+                "But my intentions are good (Yeah, yeah, yeah)",
+                "Sometimes just misunderstood (Whoo!)"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "Nobody's perfect, I gotta work it (Work it)",
+                "Again and again, 'til I get it right (That's right)",
+                "Nobody's perfect, (Whoo!) you live and you learn it",
+                "And if I mess it up sometimes (Oh)",
+                "Nobody's perfect, I gotta work it (C'mon)",
+                "I know in time I'll find a way (Oh)",
+                "Nobody's perfect"
+              ]
+            },
+            {
+              "label": "Bridge",
+              "lines": [
+                "Sometimes I fix things up, and they fall apart again",
+                "(Nobody's perfect)",
+                "I might mix things up, but I always get it right in the end",
+                "(You know I do)"
+              ]
+            },
+            {
+              "label": "Spoken Interlude",
+              "lines": [
+                "Next time you feel like it's just one of those days",
+                "When you just can't seem to win",
+                "If things don't turn out the way you planned",
+                "Figure something else out, don't stay down, try again",
+                "Yeah"
+              ]
+            },
+            {
+              "label": "Refrain",
+              "lines": [
+                "Everybody makes mistakes",
+                "Everybody has those days (That's right)",
+                "Everybody knows what, what I'm talkin' 'bout",
+                "Everybody gets that way (Whoo!)",
+                "Everybody makes mistakes  (Here we go)",
+                "Everybody has those days (Uh huh)",
+                "Everybody knows what, what I'm talkin' 'bout",
+                "Everybody gets that way"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "Nobody's perfect, I gotta work it (Work it)",
+                "Again and again, 'til I get it right (Whoo!)",
+                "Nobody's perfect, you live and you learn it",
+                "And if I mess it up sometimes",
+                "Oh, nobody's perfect, I gotta work it",
+                "I know in time I'll find a way (Oww!)",
+                "Nobody's perfect, you live and you learn it",
+                "'Cause everybody makes mistakes (Oh)",
+                "Nobody's perfect (Nobody's perfect)"
+              ]
+            },
+            {
+              "label": "Outro",
+              "lines": [
+                "No, no",
+                "Nobody's perfect"
+              ]
+            }
+          ]
+        },
+        {
+          "title": "Make Some Noise",
+          "sections": [
+            {
+              "label": "Verse 1",
+              "lines": [
+                "It's easy to feel like you're all alone",
+                "To feel like nobody knows",
+                "The great that you are, the good that's inside you",
+                "Is tryin' so hard to break through"
+              ]
+            },
+            {
+              "label": "Pre-Chorus 1",
+              "lines": [
+                "Maybe it's your time to lift off and fly",
+                "You won't know if you never try",
+                "I will be there with you all of the way",
+                "You'll be fine"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "Don't let anyone tell you that you're not strong enough (Strong enough)",
+                "Don't give up, there's nothing wrong with just being yourself",
+                "That's more than enough",
+                "So come on and raise your voice",
+                "Speak your mind and make some noise",
+                "And sing—hey, hey",
+                "Make some noise—hey, hey, yeah"
+              ]
+            },
+            {
+              "label": "Verse 2",
+              "lines": [
+                "You want to be known, you want to be heard",
+                "And know you are beautiful",
+                "You have so much to give, some change you wanna live",
+                "So shout it out and let it show"
+              ]
+            },
+            {
+              "label": "Pre-Chorus 2",
+              "lines": [
+                "You have a diamond inside of your heart",
+                "A light that shines bright as the stars",
+                "Don't be afraid to be all that you are",
+                "You'll be fine"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "Don't let anyone tell you that you're not strong enough",
+                "Don't give up, there's nothing wrong with just being yourself",
+                "That's more than enough",
+                "So come on and raise your voice",
+                "Speak your mind and make some noise",
+                "And sing—hey, hey",
+                "Make some noise—hey, hey, yeah"
+              ]
+            },
+            {
+              "label": "Bridge",
+              "lines": [
+                "You can't just sit back and watch the world change",
+                "It matters what you've got to say",
+                "There's no one else who can stand in your place",
+                "So come on, it's never too late"
+              ]
+            },
+            {
+              "label": "Breakdown",
+              "lines": [
+                "Maybe it's your time to lift off and fly",
+                "You won't know if you never try"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "Don't let anyone tell you that you're not strong enough",
+                "Don't give up, there's nothing wrong with just being yourself",
+                "That's more than enough",
+                "So come on and raise your voice",
+                "Speak your mind and make some noise",
+                "And sing—hey, hey",
+                "Make some noise—hey, hey, yeah",
+                "Hey, hey—Make some noise",
+                "Speak your mind and make some noise"
+              ]
+            },
+            {
+              "label": "Outro",
+              "lines": [
+                "And sing—hey yeah, hey yeah, hey yeah",
+                "Make some noise",
+                "Hey yeah, hey yeah, hey yeah",
+                "Make some noise",
+                "Hey yeah, hey yeah, hey yeah",
+                "Make some noise",
+                "Hey yeah, hey yeah, hey yeah",
+                "Make some noise"
+              ]
+            }
+          ]
+        },
+        {
+          "title": "Rock Star",
+          "sections": [
+            {
+              "label": "Intro",
+              "lines": [
+                "Yeah",
+                "Uh-oh, uh-oh, uh-oh",
+                "Yeah, hey, hey, yeah",
+                "Woo"
+              ]
+            },
+            {
+              "label": "Verse 1",
+              "lines": [
+                "Sometimes I walk a little faster in the school hallway",
+                "Just to get next to you",
+                "Some days I spend a little extra time in the morning",
+                "Just to impress you"
+              ]
+            },
+            {
+              "label": "Pre-Chorus 1",
+              "lines": [
+                "Guess you don't notice",
+                "Guess you don't need this",
+                "Sad, you're not seeing what you're missing",
+                "On the outside shyin' away",
+                "On the inside dyin' to say"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "I'm unusual, not so typical",
+                "Way too smart to be waiting around",
+                "Tai Chi practicing, snowboard champion",
+                "I could fix the flat on your car",
+                "I might even be a rockstar",
+                "I might even be a rockstar"
+              ]
+            },
+            {
+              "label": "Verse 2",
+              "lines": [
+                "Sometimes I wish when the phone rings",
+                "That it would be you saying, \"Let's hang out\"",
+                "Then you confess that there's something special",
+                "Between us, why don't we find out?"
+              ]
+            },
+            {
+              "label": "Pre-Chorus 2",
+              "lines": [
+                "But you don't even know me",
+                "Guess you don't need me",
+                "Why you're not seeing what you're missing?",
+                "On the outside shying away",
+                "On the inside dying to say (Woo)"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "I'm unusual, not so typical",
+                "Way too smart to be waiting around",
+                "Tai Chi practicing, snowboard champion",
+                "I could fix the flat on your car",
+                "I might even be a rockstar (A rockstar)"
+              ]
+            },
+            {
+              "label": "Bridge",
+              "lines": [
+                "If you only knew the real me",
+                "I might even be a rockstar",
+                "I'm telling you that we are meant to be",
+                "That wouldn't it be nice if you could see",
+                "That I really am a rockstar",
+                "Yeah-yeah (Woo)",
+                "Yeah, I really am a rockstar",
+                "Hey, hey, hey"
+              ]
+            },
+            {
+              "label": "Breakdown",
+              "lines": [
+                "(Woo)",
+                "Ha, a rockstar"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "I'm unusual, not so typical",
+                "Way too smart to be waiting around ('Round)",
+                "Tai Chi practicing, snowboard champion",
+                "I could fix the flat on your car",
+                "Rocking it wherever we are",
+                "Yeah, yeah, 'cause I really am a rockstar (Yeah)",
+                "'Cause I really am a rockstar"
+              ]
+            },
+            {
+              "label": "Outro",
+              "lines": [
+                "I am a rockstar",
+                "Whoa-oh-oh",
+                "Yeah",
+                "Goodnight, everybody"
+              ]
+            }
+          ]
+        },
+        {
+          "title": "Old Blue Jeans",
+          "sections": [
+            {
+              "label": "Verse 1",
+              "lines": [
+                "You walk away from me tonight",
+                "Not knowing the real me",
+                "'Cause you believe in all the hype",
+                "I just stepped out of a magazine"
+              ]
+            },
+            {
+              "label": "Pre-Chorus 1",
+              "lines": [
+                "Take away the glamour, the world that is show",
+                "And forget everything you know",
+                "Take away the mirrors, the limos, the lights",
+                "'Cause I don't wanna dress up tonight"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "I'm gonna put on my old blue jeans",
+                "Gonna walk out of here and into the street",
+                "Would you put up resistance?",
+                "Would it make a difference?",
+                "Would you know the real me?",
+                "Me in my old blue jeans"
+              ]
+            },
+            {
+              "label": "Verse 2",
+              "lines": [
+                "You think I'm unapproachable",
+                "That I don't feel enough",
+                "Should read a book cover to cover",
+                "And not be so quick to judge"
+              ]
+            },
+            {
+              "label": "Pre-Chorus 2",
+              "lines": [
+                "Take away the glamour, the makeup, the clothes",
+                "And forget everything you know",
+                "Take away the ego, the trick of the light",
+                "'Cause I don't wanna dress up tonight"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "I'm gonna put on my old blue jeans",
+                "Gonna walk out here into the street",
+                "Would you put up resistance?",
+                "Would it make a difference?",
+                "Would you know the real me?",
+                "Me in my old blue jeans",
+                "I'm gonna put on my old blue jeans",
+                "Gonna walk out here into the street",
+                "Would you put up resistance?",
+                "Would it make a difference?",
+                "Would you know the real me?",
+                "Me in my old blue jeans"
+              ]
+            },
+            {
+              "label": "Interlude",
+              "lines": [
+                "I wanna show you what you get"
+              ]
+            },
+            {
+              "label": "Breakdown",
+              "lines": [
+                "I'm gonna put on my old blue jeans",
+                "Gonna walk out here into the street",
+                "Would you put up resistance?",
+                "Would it make a difference?",
+                "Would you know the real me?",
+                "Me in my old"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "I'm gonna put on my old blue jeans",
+                "Gonna walk out here into the street",
+                "Would you put up resistance?",
+                "Would it make a difference?",
+                "Would you know the real me?",
+                "Me in my old blue jeans",
+                "I'm gonna put on my old blue jeans",
+                "Gonna walk out here into the street",
+                "Would you put up resistance?",
+                "Would it make a difference?",
+                "Would you know the real me?",
+                "Me in my old blue jeans"
+              ]
+            }
+          ]
+        },
+        {
+          "title": "Life's What You Make It",
+          "sections": [
+            {
+              "label": "Intro",
+              "lines": [
+                "Put your hands together, everybody",
+                "Yeah"
+              ]
+            },
+            {
+              "label": "Verse 1",
+              "lines": [
+                "Don't let no small frustration ever bring you down",
+                "No, no, no, no",
+                "Just take a situation and turn it all around",
+                "Yeah"
+              ]
+            },
+            {
+              "label": "Pre-Chorus 1",
+              "lines": [
+                "With a new attitude everything can change",
+                "Make it how you want it to be",
+                "Staying mad, why do that?",
+                "Give yourself a break",
+                "Laugh about it and you'll see",
+                "C'mon!"
+              ]
+            },
+            {
+              "label": "Chorus 1",
+              "lines": [
+                "Life's what you make it",
+                "So let's make it rock (Make it rock)",
+                "Life's what you make it",
+                "So c'mon (C'mon), c'mon, everybody now"
+              ]
+            },
+            {
+              "label": "Post-Chorus",
+              "lines": [
+                "We can do better than that",
+                "Aw yeah",
+                "Don't stop"
+              ]
+            },
+            {
+              "label": "Verse 2",
+              "lines": [
+                "Why be sad, brokenhearted?",
+                "There's so much to do",
+                "Yeah, yeah, yeah, yeah",
+                "Life is hard or it's a party (It's a party)",
+                "The choice is up to you"
+              ]
+            },
+            {
+              "label": "Pre-Chorus 2",
+              "lines": [
+                "With a new attitude everything can change",
+                "Make it how you want it to be",
+                "Staying sad, why do that?",
+                "Give yourself a break",
+                "I know you wanna party with me",
+                "Woo"
+              ]
+            },
+            {
+              "label": "Chorus 2",
+              "lines": [
+                "Life's what you make it",
+                "So let's make it rock",
+                "Life's what you make it",
+                "So c'mon (C'mon), c'mon, everybody now",
+                "Let's celebrate it",
+                "Join in everyone",
+                "You decide (You decide) 'cause life's ('Cause life's) what you make it"
+              ]
+            },
+            {
+              "label": "Bridge",
+              "lines": [
+                "Aw yeah!",
+                "Things are looking up anytime you want",
+                "All you gotta do is realize that",
+                "It's under your control",
+                "So let the good times rock 'n roll",
+                "Ow"
+              ]
+            },
+            {
+              "label": "Bridge",
+              "lines": [
+                "C'mon everybody",
+                "Do it now",
+                "Ow",
+                "Alright",
+                "Let's get the party started",
+                "Yeah, yeah, yeah, now that's a party",
+                "Yeah, yeah, put your hands together",
+                "Woo"
+              ]
+            },
+            {
+              "label": "Chorus 2",
+              "lines": [
+                "Life's what you make it",
+                "So let's make it rock (Let's make it rock)",
+                "Life's what you make it",
+                "So c'mon (C'mon), c'mon, everybody now",
+                "Let's celebrate it",
+                "Join in everyone",
+                "You decide (You decide) 'cause life's ('Cause life's) what you make it"
+              ]
+            },
+            {
+              "label": "Outro",
+              "lines": [
+                "Aw yeah",
+                "Life is what you make it"
+              ]
+            }
+          ]
+        },
+        {
+          "title": "One In a Million",
+          "sections": [
+            {
+              "label": "Verse 1",
+              "lines": [
+                "How did I get here?",
+                "Turned around and there you were",
+                "I didn't think twice or rationalize",
+                "'Cause somehow I knew",
+                "That there was more than just chemistry",
+                "I mean, I knew you were kind of into me",
+                "But I figured it's too good to be true",
+                "I said, \"Pinch me",
+                "Where's the catch this time?\"",
+                "Can't find a single cloud in the sky",
+                "Help me before I get used to this guy"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "They say that good things take time",
+                "But really great things happen in the blink of an eye",
+                "Thought the chances to meet somebody like you were a million to one",
+                "I can't believe it",
+                "Oh, whoa",
+                "You're one in a million"
+              ]
+            },
+            {
+              "label": "Post-Chorus",
+              "lines": [
+                "All this time, I was looking for love",
+                "Trying to make things work",
+                "That weren't good enough",
+                "'Til I thought I'm through, said I'm done",
+                "And stumbled into the arms of the one"
+              ]
+            },
+            {
+              "label": "Verse 2",
+              "lines": [
+                "You're making me laugh about the silliest stuff",
+                "Say that I'm your diamond in the rough",
+                "When I'm mad at you, you come with your velvet touch",
+                "Can't believe that I'm so lucky",
+                "I have never felt so happy",
+                "Every time I see that sparkle in your eyes"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "They say that good things take time (Whoo)",
+                "But really great things happen in the blink of an eye",
+                "Thought the chances to meet somebody like you were a million to one",
+                "I can't believe it",
+                "Oh, whoa",
+                "You're one in a million, yeah, yeah"
+              ]
+            },
+            {
+              "label": "Post-Chorus",
+              "lines": [
+                "All this time, I was looking for love",
+                "Trying to make things work",
+                "That weren't good enough",
+                "'Til I thought I'm through, said I'm done",
+                "And stumbled into the arms, of the one"
+              ]
+            },
+            {
+              "label": "Bridge",
+              "lines": [
+                "I said, \"Pinch me",
+                "Where's the catch this time?\"",
+                "Can't find a single cloud in the sky",
+                "Help me before I get used to this guy"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "They say that good things take time",
+                "But really great things happen in the blink of an eye",
+                "Thought the chances to meet somebody like you were a million to one",
+                "I can't believe it",
+                "Oh, whoa, yeah, yeah"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "They say that good things take time (Whoo)",
+                "But really great things happen in the blink of an eye",
+                "Thought the chances to meet somebody like you were a million to one",
+                "I can't believe it",
+                "Oh, whoa",
+                "You're one in a million",
+                "Yeah, you're one in a million",
+                "Yeah, you're one in a million"
+              ]
+            }
+          ]
+        },
+        {
+          "title": "Bigger Than Us",
+          "sections": [
+            {
+              "label": "Intro",
+              "lines": [
+                "L-O-V-E, love",
+                "L-O-V-E",
+                "L-O-V-E, love",
+                "L-O-V-E"
+              ]
+            },
+            {
+              "label": "Verse 1",
+              "lines": [
+                "I see your face, I look in your eyes",
+                "What you feel is no surprise",
+                "Everyone needs something to believe in",
+                "Tell me your dreams, I'll tell you mine",
+                "In our hearts, we'll look inside",
+                "And see all the colors of the rainbow",
+                "I know"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "We all wanna believe in love",
+                "We all wanna believe in something",
+                "Bigger than just us",
+                "We all wanna be a part of the greater picture",
+                "That's hanging in our hearts (Our hearts)",
+                "Yeah, it's bigger than us"
+              ]
+            },
+            {
+              "label": "Verse 2",
+              "lines": [
+                "I wanna see beyond my own little world",
+                "Grab your hand so we can twirl around the galaxy",
+                "See the world with clarity, oh-oh",
+                "Oh oh, we have such a long way to go",
+                "But I know we're getting closer every day",
+                "Every day"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "We all wanna believe in love",
+                "We all wanna believe in something",
+                "Bigger than just us",
+                "We all wanna be a part of the greater picture",
+                "That's hanging in our hearts"
+              ]
+            },
+            {
+              "label": "Bridge",
+              "lines": [
+                "Yeah, it's bigger than us",
+                "It fills the universe",
+                "It lights the skies above",
+                "It rescues all our hearts with love (L-O-V-E, love)",
+                "With love (L-O-V-E, love)",
+                "That's what's bigger than us",
+                "(Bigger than us, c'mon)"
+              ]
+            },
+            {
+              "label": "Refrain",
+              "lines": [
+                "It's love, it's love that's bigger than us (C'mon)",
+                "It's love, it's love that's bigger than us (Whoo)",
+                "It's love, it's love (It's love, it's love, it's love, it's love)"
+              ]
+            },
+            {
+              "label": "Outro",
+              "lines": [
+                "We all wanna believe in love",
+                "We all wanna believe in something",
+                "Bigger than just us"
+              ]
+            }
+          ]
+        },
+        {
+          "title": "You and Me Together",
+          "sections": [
+            {
+              "label": "Verse 1",
+              "lines": [
+                "Looks like we found ourselves up against a wall",
+                "In need of a little help, but no one wants to call",
+                "After all we've been through",
+                "Should we let our friendship end?",
+                "You need me and I need you",
+                "No, we will not break",
+                "Never break",
+                "But even if we bend"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "Yeah, it's you and me together (Together, together, together)",
+                "Yeah, I'm always on your side (On your side)",
+                "No one, no one, no one can ever change it",
+                "C'mon, let 'em try (Let 'em try)",
+                "'Cause it's you (It's you) and me together now"
+              ]
+            },
+            {
+              "label": "Verse 2",
+              "lines": [
+                "Anyone can have the day when their heart is on their sleeve",
+                "No one wants to see it our way",
+                "Can agree to disagree",
+                "You think it'd be easier",
+                "But it feels like you just can't win",
+                "But somehow we'll make it work",
+                "'Cause we deserve it",
+                "You know we're worth it",
+                "You can't give up on friends"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "Cause, it's you and me together (Together, together, together)",
+                "Yeah, I'm always on your side (On your side)",
+                "No one, no one, no one can ever change it",
+                "C'mon, let 'em try (C'mon let 'em try)",
+                "'Cause it's you (It's you) and me together now"
+              ]
+            },
+            {
+              "label": "Interlude",
+              "lines": [
+                "Now (Oh, now, now, now)"
+              ]
+            },
+            {
+              "label": "Breakdown",
+              "lines": [
+                "It's you and me (And me) and me together (Together, together)",
+                "Yeah, I'm always (I'm always) on your side",
+                "On your, on your side",
+                "Oh-oh-oh, oh-oh"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "No one, no one, no one can ever change it",
+                "C'mon, let 'em try (C'mon, let 'em try)",
+                "It's you and me (And me) and me together (Together, together)",
+                "Yeah, I'm always on your side (On your side, I'm on your side)",
+                "No one, no one, no one can ever change it",
+                "C'mon, let 'em try (C'mon, let 'em try)",
+                "Cause it's you and me together now",
+                "(Together now!) Now",
+                "(Together now!) Now"
+              ]
+            }
+          ]
+        },
+        {
+          "title": "True Friend",
+          "sections": [
+            {
+              "label": "Verse 1",
+              "lines": [
+                "We sign our cards and letters 'BFF' (Uh-huh)",
+                "You've got a million ways to make me laugh (Yeah)",
+                "You're looking out for me, you've got my back",
+                "It's so good to have you around",
+                "You know the secrets I could never tell (Uh-huh)",
+                "And when I'm quiet, you break through my shell",
+                "Don't feel the need to do a rebel yell",
+                "'Cause you keep my feet on the ground"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "You're a true friend (Oh)",
+                "You're here 'til the end (Oh)",
+                "You pull me aside when somethin' ain't right",
+                "Talk with me now and into the night",
+                "'Til it's alright again",
+                "You're a true friend"
+              ]
+            },
+            {
+              "label": "Verse 2",
+              "lines": [
+                "You don't get angry when I change the plans (Mm-mm)",
+                "Somehow you're never out of second chances",
+                "Won't say \"I told you\" when I'm wrong again",
+                "I'm so lucky (Yeah) that I found"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "A true friend (Oh)",
+                "You're here 'til the end ('Til the end)",
+                "You pull me aside when something ain't right",
+                "Talk with me now and into the night",
+                "'Til it's alright again (Oh)"
+              ]
+            },
+            {
+              "label": "Bridge",
+              "lines": [
+                "True friends will go to the end of the earth",
+                "'Til they find the things you need (The things you need)",
+                "Friends hang on through the ups and the downs",
+                "'Cause they've got someone to believe in (Oh)"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "A true friend",
+                "You're here 'til the end",
+                "You pull me aside when something ain't right",
+                "Talk with me now and in through the night",
+                "No need to pretend (You're a true friend)",
+                "Oh, you're a true friend",
+                "You're here 'til the end ('Til the end, you're a true friend)",
+                "You pull me aside when something ain't right",
+                "Talk with me now and into the night",
+                "'Til it's alright again"
+              ]
+            },
+            {
+              "label": "Outro",
+              "lines": [
+                "You're a true friend",
+                "You're a true friend",
+                "You're a true friend"
+              ]
+            }
+          ]
+        },
+        {
+          "title": "It's All Right Here",
+          "sections": [
+            {
+              "label": "Chorus",
+              "lines": [
+                "Why would you rather be anywhere else with me?",
+                "I tell you, man, it's all right here",
+                "(Wherever we are, wherever we are)",
+                "Check out the scenery",
+                "We won the lottery",
+                "I tell you, man, it's all right here",
+                "And I can't believe you'd even think",
+                "Of being any place, any place but right here",
+                "The grass may be greener in the end, I swear",
+                "But you'll be wishing you were here if you were there",
+                "It's wherever we go"
+              ]
+            },
+            {
+              "label": "Interlude",
+              "lines": [
+                "(Wherever we are, wherever we are",
+                "Wherever we are, wherever we are",
+                "It's all right here)",
+                "Excuse me, officer"
+              ]
+            },
+            {
+              "label": "Verse 1",
+              "lines": [
+                "If you're smart",
+                "You know you wanna be in the mix of white hot energy",
+                "It's all to welcome you",
+                "Time so good, it's moving way too fast",
+                "If we could, I know we'd make it last",
+                "It's all here for you, it's all here for you, it's all here for you",
+                "It's all right here"
+              ]
+            },
+            {
+              "label": "Interlude 2",
+              "lines": [
+                "(Wherever we are, wherever we are",
+                "Wherever we are, wherever we are",
+                "It's all right here)",
+                "It's all right here",
+                "It's all right here",
+                "(Wherever we are, wherever we are",
+                "Wherever we are, wherever we are)",
+                "C'mon",
+                "C'mon, let us go",
+                "It's all right here"
+              ]
+            },
+            {
+              "label": "Verse 2",
+              "lines": [
+                "Any open road (Any open road) will take us anywhere",
+                "And as long as I'm with you, I won't care where",
+                "And we can choose the desert or the sea",
+                "'Cause the good times are in front of you and me (Me)"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "Why would you rather be anywhere else with me?",
+                "I tell you, man, it's all right here",
+                "(Wherever we are, wherever we are)",
+                "Check out the scenery",
+                "We won the lottery",
+                "I tell you man, it's all right here",
+                "And I can't believe you'd even think (And I can't believe you'd even think)",
+                "Of being any place, any place but right here (Of being any place, any place but right here)",
+                "The grass may be greener in the end, I swear (The grass may be greener in the end, I swear)",
+                "But you'll be wishing you were here if you were there (If you were there)",
+                "You wish you were here (If you were there)",
+                "You wish you were here (If you were there)"
+              ]
+            },
+            {
+              "label": "Bridge",
+              "lines": [
+                "And if I could make you want to stay just one more day",
+                "Maybe everything would be okay",
+                "C'mon",
+                "Oh, c'mon",
+                "Oh, c'mon"
+              ]
+            },
+            {
+              "label": "Outro",
+              "lines": [
+                "It's all right here",
+                "(Wherever we are, wherever we are",
+                "Wherever we are, wherever we are",
+                "It's all right here)",
+                "It's all right here",
+                "(Wherever we are, wherever we are",
+                "Wherever we are, wherever we are",
+                "It's all right here)"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "album": "Hannah Montana 3",
+      "songs": [
+        {
+          "title": "Let's Do This",
+          "sections": [
+            {
+              "label": "Verse 1",
+              "lines": [
+                "I rode all night on a big old bus",
+                "You came a long way to be with us",
+                "You pay good money to see a show",
+                "Yeah, let's get ready 'cause here we go",
+                "Get on your feet 'cause I'm plugged in",
+                "So come on, let's do this"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "I turn it on, I crank it up",
+                "I'll show you all what I'm made of",
+                "I'll get loud, I'll wear it out",
+                "I'll bring the roof in this house down",
+                "I know just what you came here for",
+                "And I want to hear you scream this more",
+                "Get on your feet, you know you can't resist",
+                "Yeah, let's do this",
+                "(Na-na-na-na-na-na, aha-aha, na-na-na-na-na-na-na)",
+                "Let's do this",
+                "(Na-na-na-na-na-na, aha-aha, na-na-na-na-na-na-na)"
+              ]
+            },
+            {
+              "label": "Verse 2",
+              "lines": [
+                "Got all this work but I'm paid to play",
+                "And the real party starts backstage",
+                "And all my friends, they sing my song",
+                "I wish you all could come along",
+                "To take a picture to show your friends",
+                "So come on, let's do this"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "I turn it on, I crank it up",
+                "I'll show you all what I'm made of",
+                "I'll get loud, I'll wear it out",
+                "I'll bring the roof in this house down",
+                "I know just what you came here for",
+                "And I want to hear you scream this more",
+                "Get on your feet, you know you can't resist",
+                "Yeah, let's do this",
+                "(Na-na-na-na-na-na, aha-aha, na-na-na-na-na-na-na)",
+                "Let's do this",
+                "(Na-na-na-na-na-na, aha-aha, na-na-na-na-na-na-na)"
+              ]
+            },
+            {
+              "label": "Bridge",
+              "lines": [
+                "Everybody, c'mon, now's the time to get loud",
+                "Throw your hands up, let me hear you shout it out",
+                "All my people, let me see you jumping up and down",
+                "Let me hear the words, you know you know 'em, sing 'em out",
+                "Freak out, scream, shout",
+                "This is what it's all about",
+                "Let me hear the hook now"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "I turn it on, I crank it up",
+                "I'll show you all what I'm made of",
+                "I'll get loud, I'll wear it out",
+                "I'll bring the roof in this house down",
+                "I know just what you came here for",
+                "And I want to hear you scream this more",
+                "Get on your feet, you know you can't resist",
+                "Let's do this",
+                "(Na-na-na-na-na-na, aha-aha, na-na-na-na-na-na-na)",
+                "Let's do this",
+                "(Na-na-na-na-na-na, na-na-na-na-na-na-na)",
+                "Let's do this",
+                "(Na-na-na-na-na-na, aha-aha, na-na-na-na-na-na-na)",
+                "Let's do this",
+                "(Na-na-na-na-na-na)",
+                "Let's do this"
+              ]
+            }
+          ]
+        },
+        {
+          "title": "Mixed Up",
+          "sections": [
+            {
+              "label": "Intro",
+              "lines": [
+                "La, la, la",
+                "La, la, la",
+                "La, la, la"
+              ]
+            },
+            {
+              "label": "Verse 1",
+              "lines": [
+                "How come everything turns out",
+                "Leaving me with more doubts?",
+                "I feel like I'm upside down and I don't wanna be here",
+                "I go right, should've gone left",
+                "And I say things I should have not said",
+                "Look at me in this big mess",
+                "I don't wanna be here"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "Everything I do is making me more confused",
+                "Oh, it used to be easy, all I had to be was me",
+                "Now I'm mixed up",
+                "Everywhere I go is somewhere that I don't know",
+                "Oh, I hope that I'm dreaming, 'cause I'm sick of this feeling",
+                "I'm mixed up",
+                "Somebody help me"
+              ]
+            },
+            {
+              "label": "Post-Chorus",
+              "lines": [
+                "La, la, la",
+                "La, la"
+              ]
+            },
+            {
+              "label": "Verse 2",
+              "lines": [
+                "Tell me how to fix this",
+                "I'd would trade my world for one wish",
+                "To go back to my other life",
+                "Oh, and get it right"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "Everything I do is making me more confused",
+                "Oh, it used to be easy, all I had to be was me",
+                "Now I'm mixed up",
+                "Everywhere I go is somewhere that I don't know",
+                "Oh, I hope that I'm dreaming, 'cause I'm sick of this feeling",
+                "I'm mixed up, could somebody help me?"
+              ]
+            },
+            {
+              "label": "Bridge",
+              "lines": [
+                "To hold me, tell me everything's gonna be okay",
+                "'Cause today, it feels like I won't make it through the darkness",
+                "Don't know how to get out of this",
+                "I'm so mixed up, could somebody help me?"
+              ]
+            },
+            {
+              "label": "Pre-Chorus",
+              "lines": [
+                "La, la, la",
+                "La, la"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "Everything I do is making me more confused",
+                "Oh, it used to be easy, all I had to be was me",
+                "Now I'm mixed up",
+                "Everywhere I go is somewhere that I don't know (Everywhere I go)",
+                "Oh, I hope that I'm dreaming, 'cause I'm sick of this feeling",
+                "I'm mixed up, could somebody help me?",
+                "Somebody help me"
+              ]
+            }
+          ]
+        },
+        {
+          "title": "He Could Be the One",
+          "sections": [
+            {
+              "label": "Verse 1",
+              "lines": [
+                "Smooth talking, so rocking",
+                "He's got everything that a girl's wanting",
+                "Guitar cutie, he plays it groovy",
+                "And I can't keep myself from doing something stupid",
+                "Think I'm really falling for his smile",
+                "Get butterflies when he says my name"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "He's got something special",
+                "He's got something special",
+                "And when he's looking at me, I wanna get all sentimental",
+                "He's got something special",
+                "He's got something special",
+                "I can hardly breathe, something's telling me",
+                "Telling me maybe he could be the one",
+                "He could be the one, he could be the one",
+                "He could be the one, he could be the one, he could be the one"
+              ]
+            },
+            {
+              "label": "Verse 2",
+              "lines": [
+                "He's lightning, sparks are flying",
+                "Everywhere I go, he's always on my mind",
+                "And I'm going crazy about him lately",
+                "And I can't help myself from how my heart is racing",
+                "Think I'm really digging on his vibe",
+                "He really blows me away (Hey!)"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "He's got something special",
+                "He's got something special",
+                "And when he's looking at me, I wanna get all sentimental",
+                "He's got something special",
+                "He's got something special",
+                "I can hardly breathe, something's telling me",
+                "Telling me maybe he could be the one",
+                "He could be the one, he could be the one",
+                "He could be the one, he could be the one, he could be the one"
+              ]
+            },
+            {
+              "label": "Bridge",
+              "lines": [
+                "And he's got a way of making me feel",
+                "Like everything I do is perfectly fine",
+                "The stars are aligned when I'm with him",
+                "And I'm so into him"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "He's got something special (Something)",
+                "He's got something special (Something)",
+                "And when he's looking at me, I wanna get all sentimental",
+                "He's got something special (Something)",
+                "He's got something special",
+                "I can hardly breathe, something's telling me",
+                "Telling me maybe he could be the one",
+                "He could be the one, he could be the one (He could be the one)",
+                "He could be the one, he could be the one (Something), he could be the one",
+                "(He could be the one)"
+              ]
+            }
+          ]
+        },
+        {
+          "title": "Just a Girl",
+          "sections": [
+            {
+              "label": "Verse 1",
+              "lines": [
+                "Finally, I have been waiting for this moment",
+                "For you to see the real me (Oh)",
+                "It's being an illusion, but I never meant to fool you",
+                "I got caught up in a fantasy"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "I'm just a girl with a dream that got the best of me",
+                "In a world that believes fame is everything, yeah, yeah",
+                "Got out of touch with the ones who gave me my wings to fly",
+                "To fly"
+              ]
+            },
+            {
+              "label": "Verse 2",
+              "lines": [
+                "People say that the world is like a stage",
+                "Guess I confused the roles I play",
+                "I've been away from home for so long, that I",
+                "I almost forgot where I belong",
+                "Yeah, yeah, yeah"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "I'm just a girl with a dream that got the best of me, yeah",
+                "In a world that believes fame is everything",
+                "Got out of touch with the ones who gave me my wings to fly",
+                "To fly"
+              ]
+            },
+            {
+              "label": "Bridge",
+              "lines": [
+                "It's so easy to forget what really matters in this life",
+                "It's so hard to live with regrets, but I promise I will try",
+                "To be a better me from now on",
+                "I'm sorry, I didn't mean to do you wrong"
+              ]
+            },
+            {
+              "label": "Breakdown",
+              "lines": [
+                "I am just a girl with a dream that got the best of me, yeah yeah",
+                "In a world that believes fame is everything, yeah yeah (Fame is everything)",
+                "Got out of touch with the ones who gave me my wings to fly",
+                "To fly, to fly, to fly",
+                "You gave me my wings so I can fly, I can fly",
+                "Yeah, yeah, yeah"
+              ]
+            },
+            {
+              "label": "Outro",
+              "lines": [
+                "I'm just a girl"
+              ]
+            }
+          ]
+        },
+        {
+          "title": "Supergirl",
+          "sections": [
+            {
+              "label": "Verse 1",
+              "lines": [
+                "When I feel all alone and nobody knows",
+                "Still gotta smile for a while, I can't let it show",
+                "Dry my tears (Dry my tears)",
+                "Hide my fears (Hide my fears)",
+                "And when I'm (And when I'm) backstage",
+                "Feeling down and the lights come on",
+                "No time to worry",
+                "Gotta hurry, gotta sing my song",
+                "Gotta shake it off (Shake it off)",
+                "And strike a pose (Strike a pose, here I go)"
+              ]
+            },
+            {
+              "label": "Pre-Chorus",
+              "lines": [
+                "Snap my fingers just like that",
+                "Don't get what I want and that's a fact",
+                "Snap my fingers just like that",
+                "Don't get what I want just 'cause I want it",
+                "(Just 'cause I want it)"
+              ]
+            },
+            {
+              "label": "Chorus 1",
+              "lines": [
+                "I'm super cool, super hot, living like a rockstar",
+                "You think I'm super, you think I'm super",
+                "On the cover of your magazines",
+                "Wherever I go they make a scene",
+                "I'm super, super, I'm super duper",
+                "So you wanna be just like",
+                "So you wanna be just like",
+                "Think you wanna be just like me?",
+                "Everybody's watching me",
+                "It's never as easy as it seems",
+                "To be super, super, to be super, Supergirl"
+              ]
+            },
+            {
+              "label": "Verse 2",
+              "lines": [
+                "When I walk in the room, everybody stops",
+                "Cameras flashing, people fighting for the best shot",
+                "They like my hair (They like my hair)",
+                "The clothes I wear (The clothes I wear)",
+                "Everybody wants to know what I'm doing next",
+                "Sometimes I wish I could stay home, just be by myself",
+                "I wanna be (I wanna be)",
+                "More carefree (More carefree), can't you see?"
+              ]
+            },
+            {
+              "label": "Pre-Chorus",
+              "lines": [
+                "Snap my fingers just like that",
+                "Don't get what I want and that's a fact",
+                "Snap my fingers just like that",
+                "Don't get what I want just 'cause I want it",
+                "(Just 'cause I want it)"
+              ]
+            },
+            {
+              "label": "Chorus 1",
+              "lines": [
+                "I'm super cool, super hot, living like a rockstar",
+                "You think I'm super, you think I'm super",
+                "On the cover of your magazines",
+                "Wherever I go they make a scene",
+                "I'm super, super, I'm super duper",
+                "So you wanna be just like",
+                "So you wanna be just like",
+                "Think you wanna be just like me?",
+                "Everybody's watching me",
+                "It's never as easy as it seems",
+                "To be super, super, to be super, Supergirl"
+              ]
+            },
+            {
+              "label": "Bridge",
+              "lines": [
+                "Wish you could see I'm like everybody else",
+                "Struggling to let go and always be myself"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "I'm super cool, super hot (Super)",
+                "I'm super, super, super, super",
+                "On the cover of your magazines",
+                "Wherever I go they make a scene",
+                "I'm super, super, I'm super, super",
+                "So you wanna be just like",
+                "So you wanna be just like",
+                "Think you wanna be just like me?",
+                "Everybody's watching me",
+                "It's never as easy as it seems",
+                "To be super, super, to be super, Supergirl"
+              ]
+            }
+          ]
+        },
+        {
+          "title": "Every Part of Me",
+          "sections": [
+            {
+              "label": "Intro",
+              "lines": [
+                "Oh"
+              ]
+            },
+            {
+              "label": "Verse 1",
+              "lines": [
+                "I feel like I'm a million miles away from myself",
+                "More and more these days",
+                "I've been down, so many open roads",
+                "But they never lead me home",
+                "And now I just don't know",
+                "Who I really am, how it's gonna be",
+                "Is there something that I can't see?",
+                "I wanna understand"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "Maybe I will never be who I was before",
+                "Maybe I don't even know her anymore",
+                "Or maybe who I am today ain't so far from yesterday",
+                "Can I find a way to be every part of me?"
+              ]
+            },
+            {
+              "label": "Verse 2",
+              "lines": [
+                "So I'll try, try to slow things down and find myself",
+                "Get my feet back on the ground",
+                "It'll take time, but I know I'll be alright",
+                "'Cause nothing much has changed on the inside",
+                "It's hard to figure out how it's gonna be",
+                "'Cause I don't really know now",
+                "I wanna understand"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "Maybe I will never be who I was before",
+                "Maybe I don't even know her anymore",
+                "Or maybe who I am today ain't so far from yesterday",
+                "Can I find a way to be every part of me? Yeah"
+              ]
+            },
+            {
+              "label": "Bridge",
+              "lines": [
+                "I don't wanna wait too long",
+                "To find out where I'm meant to belong",
+                "I've always wanted to be where I am today",
+                "But I never thought I'd feel this way"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "Maybe I will never be who I was before",
+                "Maybe I don't even know her anymore",
+                "Or maybe who I am today ain't so far from yesterday",
+                "Can I find a way to be every part of me?"
+              ]
+            },
+            {
+              "label": "Outro",
+              "lines": [
+                "Every part of me"
+              ]
+            }
+          ]
+        },
+        {
+          "title": "Ice Cream Freeze (Let's Chill)",
+          "sections": [
+            {
+              "label": "Intro",
+              "lines": [
+                "Alright, here we go",
+                "Follow me now",
+                "C'mon, hit it"
+              ]
+            },
+            {
+              "label": "Verse 1",
+              "lines": [
+                "Everybody do your dance",
+                "Ain't nothing better than an all out jam, no ha",
+                "Are you ready for a little something new tonight? (Oh yeah)",
+                "I got a brand new step I think you are gonna like"
+              ]
+            },
+            {
+              "label": "Pre-Chorus",
+              "lines": [
+                "C'mon boys",
+                "Gotta do like I do",
+                "Just follow my lead",
+                "Everybody, let's chill"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "Do the ice cream freeze",
+                "Strike your pose",
+                "Then you do the milkshake",
+                "Shake it, shake it down low",
+                "Do the snow cone slide",
+                "Left to right",
+                "Put your hands in the air",
+                "We can party all night",
+                "Do the ice cream freeze",
+                "Strike your pose",
+                "Then you do the milkshake",
+                "Shake it, shake it down low",
+                "Do the snow cone slide",
+                "Left to right",
+                "Put your hands in the air",
+                "We can party all night"
+              ]
+            },
+            {
+              "label": "Post-Chorus",
+              "lines": [
+                "Shake it, shake it, shake it",
+                "Shake it, shake it, shake it down low",
+                "And do the ice cream freeze, ha"
+              ]
+            },
+            {
+              "label": "Verse 2",
+              "lines": [
+                "All kinda stepping make you feel good",
+                "(Make you feel real good)",
+                "Triple step, butterfly, sugar foot",
+                "(Sugar, sugar, sugar foot)",
+                "But I'm coming up with the new thing",
+                "What you need",
+                "Now everybody wanna do the ice cream freeze"
+              ]
+            },
+            {
+              "label": "Pre-Chorus",
+              "lines": [
+                "C'mon boys",
+                "Gotta do like I do",
+                "Just follow my lead",
+                "Everybody, let's chill"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "Do the ice cream freeze",
+                "Strike your pose",
+                "Then you do the milkshake",
+                "Shake it, shake it down low",
+                "Do the snow cone slide",
+                "Left to right",
+                "Put your hands in the air",
+                "We can party all night",
+                "Do the ice cream freeze",
+                "Strike your pose",
+                "Then you do the milkshake",
+                "Shake it, shake it down low",
+                "Do the snow cone slide",
+                "Left to right",
+                "Put your hands in the air",
+                "We can party all night (Party all night)"
+              ]
+            },
+            {
+              "label": "Bridge",
+              "lines": [
+                "Did I hear someone say \"Party\"? (Party)",
+                "We're just getting started",
+                "Wanna take it from the top?",
+                "Well, you know I will",
+                "Now everybody, let's chill",
+                "Lights, camera, freeze",
+                "Everybody, let's go"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "Do the ice cream freeze",
+                "Strike your pose",
+                "Then you do the milkshake",
+                "Shake it, shake it down low",
+                "Do the snow cone slide",
+                "Left to right",
+                "Put your hands in the air",
+                "We can party all night",
+                "Do the ice cream freeze",
+                "Strike your pose",
+                "Then you do the milkshake",
+                "Shake it, shake it down low",
+                "Do the snow cone slide",
+                "Left to right",
+                "Put your hands in the air",
+                "We can party all night"
+              ]
+            },
+            {
+              "label": "Outro",
+              "lines": [
+                "(Do the ice cream freeze)",
+                "Do the ice cream freeze",
+                "(Do the ice cream freeze)",
+                "Then you do the milkshake",
+                "Shake it, shake it",
+                "Shake it, shake it, shake it",
+                "(Snow cone slide)",
+                "Do the now cone slide",
+                "(Do the snow cone slide)",
+                "Put your hands in the air",
+                "Go crazy",
+                "Everybody, let's chill"
+              ]
+            }
+          ],
+          "aliases": [
+            "Ice Cream Freeze"
+          ]
+        },
+        {
+          "title": "Don't Wanna Be Torn",
+          "sections": [
+            {
+              "label": "Verse 1",
+              "lines": [
+                "Maybe it's the things I say",
+                "Maybe I should think before I speak",
+                "But I thought that I knew enough",
+                "To know myself and do what's right for me"
+              ]
+            },
+            {
+              "label": "Pre-Chorus 1",
+              "lines": [
+                "And these walls I'm building now",
+                "You used to bring 'em down",
+                "And the tears I'm cryin' out",
+                "You used to wipe away"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "I thought you said it was easy listening to your heart",
+                "I thought you said I'd be okay",
+                "So why'm I breaking apart?",
+                "Don't wanna be torn, don't wanna be torn",
+                "Don't wanna be torn, don't wanna be torn"
+              ]
+            },
+            {
+              "label": "Verse 2",
+              "lines": [
+                "Don't make me choose between",
+                "What I want and what you think I need",
+                "'Cause I'll always be your little girl",
+                "But even little girls have got to dream"
+              ]
+            },
+            {
+              "label": "Pre-Chorus 2",
+              "lines": [
+                "Now it all feels like a fight",
+                "You were always on my side",
+                "And the lonely I feel now",
+                "You used to make it go away"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "I thought you said it was easy listening to your heart",
+                "I thought you said I'd be okay",
+                "So why'm I breaking apart?",
+                "Don't wanna be torn"
+              ]
+            },
+            {
+              "label": "Bridge",
+              "lines": [
+                "Why is all this so confusing, complicated and consuming?",
+                "Why does all this make me angry?",
+                "I wanna go back to being happy",
+                "These tears I'm crying now, you used to wipe away"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "I thought you said it was easy listening to your heart",
+                "I thought you said I would be okay",
+                "So why'm I breaking apart?",
+                "Don't wanna be torn, don't wanna be torn",
+                "Don't wanna be torn, don't wanna be torn",
+                "Don't wanna be torn, don't wanna be torn",
+                "Don't wanna be torn, don't wanna be torn"
+              ]
+            }
+          ]
+        },
+        {
+          "title": "Let's Get Crazy",
+          "sections": [
+            {
+              "label": "Intro",
+              "lines": [
+                "You ready?",
+                "Woo",
+                "Here we go"
+              ]
+            },
+            {
+              "label": "Verse 1",
+              "lines": [
+                "Life is just a party, so come as you are",
+                "Dress it up or dress it down, don't forget your guitar (Yeah)",
+                "Just be courageous, 'cause style's contagious",
+                "Everyone can rock out like a superstar"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "Let's get crazy",
+                "Get up and dance",
+                "Take a swing, do your thing",
+                "It's worth takin' a chance, let's get crazy",
+                "Yeah, just kick up your heels",
+                "Don't miss out, time to shout",
+                "Always keepin' it real, let's get crazy",
+                "Crazy"
+              ]
+            },
+            {
+              "label": "Post-Chorus",
+              "lines": [
+                "Our songs, our style, our hair, our smile",
+                "Our laughs, our heart, our grace, our smarts"
+              ]
+            },
+            {
+              "label": "Verse 2",
+              "lines": [
+                "You see me on the cover of a magazine (Remember)",
+                "Things are always different than the way that they seem (Ha)",
+                "Here's an invitation to every nation",
+                "Meet me on the dancefloor and we'll make the scene"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "Let's get crazy",
+                "Get up and dance",
+                "Take a swing, do your thing",
+                "It's worth takin' a chance, let's get crazy",
+                "Yeah, just kick up your heels",
+                "Don't miss out, time to shout",
+                "Always keepin' it real, let's get crazy (Crazy, crazy, crazy)"
+              ]
+            },
+            {
+              "label": "Post-Chorus",
+              "lines": [
+                "La-la-la-la-la, la-la-la-la-la-la-la",
+                "Oh-oh, woah",
+                "Our songs, our style, our hair, our smile",
+                "Our laughs, our heart, our grace, our smarts"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "Let's get crazy (Let's get crazy)",
+                "Get up and dance",
+                "Take a swing, do your thing",
+                "It's worth takin' a chance, let's get crazy (Crazy)",
+                "Turn the music up loud",
+                "Now's the time to unwind",
+                "Lose yourself in the crowd, let's get crazy (Crazy, crazy)"
+              ]
+            },
+            {
+              "label": "Outro",
+              "lines": [
+                "Yeah, the fun's just begun, come on dance everyone",
+                "(Let's get crazy) Here's an invitation to every nation",
+                "Oh, oh, yeah",
+                "Oh, oh, yeah",
+                "(Let's get crazy) Crazy",
+                "(Get up and dance) Take a swing, do your thing",
+                "It's worth takin' a chance, let's get crazy (Yeah, yeah)",
+                "Yeah, just kick up your heels",
+                "Don't miss out, time to shout",
+                "Always keepin' it real, let's get crazy"
+              ]
+            }
+          ]
+        },
+        {
+          "title": "I Wanna Know You",
+          "sections": [
+            {
+              "label": "Intro",
+              "lines": [
+                "Whoa, whoa, oh",
+                "Whoa, oh",
+                "Whoa, whoa, oh",
+                "Whoa, oh",
+                "Whoa, whoa, oh",
+                "Whoa, oh"
+              ]
+            },
+            {
+              "label": "Verse 1",
+              "lines": [
+                "When I saw you over there, I didn't mean to stare",
+                "But my mind was everywhere, I wanna know you",
+                "Gonna guess that you're the kind to say what's on your mind",
+                "But you listen when I have something to show you",
+                "There's a mark above your eye, you got it in July",
+                "Fightin' for your sister's reputation",
+                "You remember people's names and valentines are lame",
+                "So you bring me flowers just for no occasion"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "Whoa, whoa, oh",
+                "Whoa, oh, I wanna know you",
+                "Whoa, whoa, oh",
+                "Whoa, oh, I wanna go there where you go",
+                "I wanna find out what you know",
+                "And maybe someday down the road",
+                "I'll sit back and say to myself, \"Yeah, I thought so\""
+              ]
+            },
+            {
+              "label": "Verse 2",
+              "lines": [
+                "You smile, never shout",
+                "You stand out in a crowd",
+                "You make the best of every situation",
+                "Correct me if I'm wrong",
+                "You're fragile and you're strong",
+                "A beautiful and perfect combination (Yeah)"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "Whoa, whoa, oh",
+                "Whoa, oh, I wanna know you",
+                "Whoa, whoa, oh",
+                "Whoa, oh, I wanna go there where you go",
+                "I wanna find out what you know",
+                "And maybe someday down the road",
+                "I'll sit back and say to myself",
+                "I like how you are with me",
+                "In our future history",
+                "And maybe someday down the road",
+                "I'll sit back and say to myself, \"Yeah, I thought so\""
+              ]
+            },
+            {
+              "label": "Bridge",
+              "lines": [
+                "Ooh",
+                "Yeah",
+                "Yeah (Whoa, whoa, oh)",
+                "Yeah (Whoa, oh)",
+                "I wanna know you",
+                "Yeah (Whoa, whoa, oh)",
+                "Yeah (Whoa, oh)"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "I wanna go there where you go (Whoa, whoa, oh)",
+                "I wanna find out what you know (Whoa, oh, I wanna know you)",
+                "And maybe someday down the road",
+                "I'll sit back and say to myself (Ooh, yeah)",
+                "I like how you are with me (Yeah)",
+                "In our future history (Yeah)",
+                "And maybe someday down the road (Yeah)",
+                "I'll sit back and say to myself (Yeah)",
+                "\"Yeah, I thought so\""
+              ]
+            }
+          ]
+        },
+        {
+          "title": "You'll Always Find Your Way Back Home",
+          "sections": [
+            {
+              "label": "Intro",
+              "lines": [
+                "Ow"
+              ]
+            },
+            {
+              "label": "Verse 1",
+              "lines": [
+                "You wake up",
+                "It's raining and it's Monday",
+                "Looks like one of those rough days",
+                "Time's up",
+                "You're late again, so get out the door (Out the door)",
+                "Sometimes you feel like running",
+                "Find a whole new life and jump in",
+                "Let go, get up and hit the dance-floor"
+              ]
+            },
+            {
+              "label": "Pre-Chorus 1",
+              "lines": [
+                "But when the lights go down, it's the ending of the show (Ending of the show)",
+                "And you're feeling like you got nowhere to go",
+                "Don't you know"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "You can change your hair and you can change your clothes",
+                "You can change your mind, that's just the way it goes",
+                "You can say \"Goodbye,\" and you can say \"Hello\"",
+                "But you'll always find your way back home",
+                "You can change your style, you can change your jeans",
+                "You can learn to fly and you can chase your dreams",
+                "You can laugh and cry, but everybody knows",
+                "You'll always find your way back home"
+              ]
+            },
+            {
+              "label": "Verse 2",
+              "lines": [
+                "Your best friends, your little hometown",
+                "Are waiting up wherever you go now (Mm)",
+                "You know that you can always turn around (Turn around)",
+                "'Cause this world is big and it's crazy (It's crazy)",
+                "And this girl is thinking that maybe",
+                "This life is what some people dream about (Dream about)"
+              ]
+            },
+            {
+              "label": "Pre-Chorus 2",
+              "lines": [
+                "'Cause when I'm feeling down and I'm all alone",
+                "(I am all alone) Whoa, oh",
+                "I've always got a place where I can go",
+                "'Cause I know"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "You can change your hair and you can change your clothes",
+                "You can change your mind, that's just the way it goes",
+                "You can say \"Goodbye,\" and you can say \"Hello\"",
+                "But you'll always find your way back home",
+                "You can change your style, you can change your jeans",
+                "You can learn to fly and you can chase your dreams (Chase your dreams)",
+                "You can laugh and cry, but everybody knows (Everybody knows)",
+                "You'll always find your way back home"
+              ]
+            },
+            {
+              "label": "Bridge",
+              "lines": [
+                "Where they know exactly who you are",
+                "Back home, where the real you is the superstar",
+                "Back home, you know it's never too far away"
+              ]
+            },
+            {
+              "label": "Breakdown",
+              "lines": [
+                "You can change your hair and you can change your clothes",
+                "You can change your mind, that's just the way it goes",
+                "You can say \"Goodbye,\" and you can say \"Hello\"",
+                "But you'll always find your way back"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "You can change your hair and you can change your clothes",
+                "You can change your mind, that's just the way it goes (That's just the way it goes)",
+                "You can say \"Goodbye,\" and you can say \"Hello\" (Say \"Hello\")",
+                "But you'll always find your way back home",
+                "You can change your style, you can change your jeans (Change your jeans)",
+                "You can learn to fly and you can chase your dreams",
+                "You can laugh and cry, but everybody knows (Everybody knows)",
+                "You'll always find your way back home"
+              ]
+            },
+            {
+              "label": "Outro",
+              "lines": [
+                "You'll always find your way back home (Oh)",
+                "You'll always find your way back home",
+                "You'll always find your way back home",
+                "You'll always find your way back home",
+                "You'll always, you'll always find your way",
+                "You'll always find your way (Back home) back home"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "album": "Hannah Montana Forever",
+      "songs": [
+        {
+          "title": "The Good Life",
+          "sections": [
+            {
+              "label": "Verse 1",
+              "lines": [
+                "I tell you what we're gonna do",
+                "What you need to know",
+                "What you've gotta get to get where you wanna go",
+                "Never ever miss an aisle",
+                "Keep your eye on all displays",
+                "When you find your style, every day's a holiday"
+              ]
+            },
+            {
+              "label": "Pre-Chorus 1",
+              "lines": [
+                "I'll show you how to work it",
+                "To find the fit that's perfect",
+                "You know that you deserve it",
+                "Woah, woah, woah (Woah)"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "This is the good life",
+                "Take a good look, have anything you want",
+                "This is the good life",
+                "Dining with your friends at the fancy restaurants",
+                "Living the good life, we have such a good time, I know"
+              ]
+            },
+            {
+              "label": "Verse 2",
+              "lines": [
+                "Grab a little Gucci bag and some Prada shoes",
+                "Here, take my credit card, they're all here to wait on you",
+                "Jimmy Choo calls out your name, D&G on every wall",
+                "When you can't decide, that's okay, just buy them all"
+              ]
+            },
+            {
+              "label": "Pre-Chorus 2",
+              "lines": [
+                "There's no better feeling (Oh)",
+                "There's nothing more appealing (Hey)",
+                "Couture from floor to ceiling",
+                "Woah, woah, woah (Whoa)"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "This is the good life",
+                "Take a good look, have anything you want",
+                "This is the good life",
+                "Dining with your friends at the fancy restaurants",
+                "Living the good life, we have such a good time, I know"
+              ]
+            },
+            {
+              "label": "Bridge",
+              "lines": [
+                "Can't be slow, never stop",
+                "Fill those bags up to the top (Woo)",
+                "Turn around, try it on",
+                "Now off to the hair salon",
+                "Don't needs sales, I'll just pay",
+                "There's no need for layaway (Haha)",
+                "Slide your plastic, flash your cash",
+                "Ring it up, it's such a blast",
+                "(One, two, three, four)"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "This is the good life (Good life)",
+                "Take a good look, have anything you want",
+                "This is the good life (Good life)",
+                "Dining with your friends at the fancy restaurants (Yeah)",
+                "Living the good life, we have such a good time, I know (The good life)"
+              ]
+            },
+            {
+              "label": "Outro",
+              "lines": [
+                "Oh-oh, woah-oh, woah-oh (Oh), the good life",
+                "Oh-oh, woah-oh, woah, I'm living the good life (Whoa)",
+                "Oh-oh, woah-oh, woah-oh, oh, the good life (Good life)",
+                "Oh-oh, woah-oh, woah, I'm living the good life",
+                "Woah-oh, woo",
+                "The good life, yeah"
+              ]
+            }
+          ]
+        },
+        {
+          "title": "Spotlight",
+          "sections": [
+            {
+              "label": "Verse 1",
+              "lines": [
+                "So, may I have your attention?",
+                "Look in my direction",
+                "Here you'll see the sun never sets",
+                "No, we don't have to worry",
+                "Never in a hurry",
+                "One-by-one, the stars go to bed",
+                "And I'll step into the spotlight again"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "Can't help myself",
+                "I've got to be where the lights are shining down on me",
+                "I wanna feel the sun",
+                "So turn that walk into a run",
+                "Gonna bring the party when I come",
+                "Sing it out if you wanna have some fun",
+                "And into the spotlight, we will go",
+                "Follow me, 'cause baby, life's a show",
+                "Into the spotlight",
+                "You will see, it's the only place to be (Cha-cha-cha)"
+              ]
+            },
+            {
+              "label": "Verse 2",
+              "lines": [
+                "Oh, the music's like a magnet",
+                "The best thing on the planet",
+                "It's pulling us together again",
+                "So let's cause a commotion",
+                "Soundwaves on the ocean",
+                "Wake the moon and grab your best friend",
+                "Let's step into the spotlight again"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "Can't help myself",
+                "I've got to be where the lights are shining down on me",
+                "I wanna feel the sun",
+                "So turn that walk into a run",
+                "Gonna bring the party when I come",
+                "Sing it out if you wanna have some fun",
+                "And into the spotlight, we will go",
+                "Follow me, 'cause baby, life's a show",
+                "Into the spotlight",
+                "You will see, it's the only place to be (Cha-cha-cha)"
+              ]
+            },
+            {
+              "label": "Bridge",
+              "lines": [
+                "Turn it up if your downhearted",
+                "Let the music get us started",
+                "Gotta let it go once in a while",
+                "Turn it up, there's nothing to it",
+                "When it's done, we'll just redo it",
+                "Might as well have fun, have fun in this life"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "Can't help myself",
+                "I've gotta be where the lights are shining down on me",
+                "I wanna feel the sun",
+                "So turn that walk into a run",
+                "Gonna bring the party when I come",
+                "Sing it out if you wanna have some fun",
+                "Can't help myself",
+                "I've gotta be where the lights are shining down on me",
+                "I wanna feel the sun",
+                "So turn that walk into a run",
+                "Gonna bring the party when I come",
+                "Sing it out if you wanna have some fun",
+                "And into the spotlight, we will go",
+                "Follow me, 'cause baby, life's a show",
+                "Into the spotlight",
+                "You will see, it's the only place to be (Cha-cha-cha)"
+              ]
+            },
+            {
+              "label": "Outro",
+              "lines": [
+                "Into the spotlight",
+                "You will see, it's the only place for me"
+              ]
+            }
+          ]
+        },
+        {
+          "title": "What's Not to Like",
+          "sections": [
+            {
+              "label": "Intro",
+              "lines": [
+                "Do-do-do-do-do",
+                "Yeah, yeah, yeah, yeah",
+                "Do-do-do-do-do"
+              ]
+            },
+            {
+              "label": "Verse 1",
+              "lines": [
+                "When you're a superstar",
+                "They know your name wherever you are",
+                "Life is crazy and I like it",
+                "Pictures on magazines",
+                "Autographs and ninety-thousand screams",
+                "Get the dream and then you live it"
+              ]
+            },
+            {
+              "label": "Pre-Chorus",
+              "lines": [
+                "Oh, wouldn't you want that too?",
+                "Who could blame you?",
+                "Oh, 'cause what I say is true, oh yeah"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "When you're a VIP, you get whatever you please",
+                "What's not to like?",
+                "The fans screaming your name",
+                "All the fortune and fame",
+                "What's not to, what's not, what's not to like?"
+              ]
+            },
+            {
+              "label": "Post-Chorus",
+              "lines": [
+                "Yeah",
+                "Do-do-do-do-do",
+                "Yeah, yeah, yeah, yeah (Yeah, yeah, yeah, yeah)",
+                "Do-do-do-do-do"
+              ]
+            },
+            {
+              "label": "Verse 2",
+              "lines": [
+                "Life in the spotlight (Oh)",
+                "Designer clothes you wear one time",
+                "Tell me, now who wouldn't love it?",
+                "Hollywood celebrity (Yeah)",
+                "Coast to coast, sold out every CD (Yeah)",
+                "Loving every minute of it"
+              ]
+            },
+            {
+              "label": "Pre-Chorus",
+              "lines": [
+                "Oh, wouldn't you want that too?",
+                "Who could blame you?",
+                "Oh, 'cause what I say is true, oh yeah"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "When you're a VIP, you get whatever you please",
+                "What's not to like?",
+                "The fans screaming your name",
+                "All the fortune and fame (Fame)",
+                "What's not to like?",
+                "You party all the time, you get to live the life",
+                "What's not to, what's not, what's not to like?"
+              ]
+            },
+            {
+              "label": "Bridge",
+              "lines": [
+                "Signing pictures 'til the end of the line",
+                "Smiling every time (Smiling every time)",
+                "The song, you wanna hear them sing it",
+                "Feels good, gonna bring it",
+                "Videos, live shows",
+                "Be the star in movie roles",
+                "(Woo) What's not to like?",
+                "Oh-oh-oh-oh"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "When you're a VIP, you get whatever you please",
+                "What's not to like?",
+                "The fans screaming your name",
+                "All the fortune and fame (Fame)",
+                "Doesn't that sound nice?",
+                "You party all the time",
+                "You get to live the life (Live the life)",
+                "What's not to like? (Oh)",
+                "When you're a superstar",
+                "Everyone knows who you are",
+                "What's not to, what's not, what's not to like?"
+              ]
+            }
+          ]
+        },
+        {
+          "title": "Gonna Get This",
+          "sections": [
+            {
+              "label": "Intro",
+              "lines": [
+                "I think we got something",
+                "Hey, it's my girl Hannah (Yeah, ah-ah)",
+                "And Iyaz on the track right now",
+                "Let's go",
+                "Tonight, we're gonna get this",
+                "Tonight, we're gonna get this",
+                "Tonight, we're gonna get this",
+                "We're gonna get this, we're gonna get this"
+              ]
+            },
+            {
+              "label": "Verse 1",
+              "lines": [
+                "I can hear you cranking up them speakers",
+                "I don't really wanna show up any later",
+                "Because soon, we're gonna party like it's New Years",
+                "(Oh-oh, oh-oh)",
+                "Yo, I'm loving all the music that they're playing",
+                "But I ain't hearing anything you're saying",
+                "Tonight we're gonna get this, gonna live exquisite",
+                "(Oh-oh, oh-oh)"
+              ]
+            },
+            {
+              "label": "Pre-Chorus 1",
+              "lines": [
+                "Somebody dance beside me",
+                "'Cause I'm feeling good at this party",
+                "Yeah, I'm fly, just like Bob Marley",
+                "So here we go, girl, just turn it up"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "Are you the boy, the boy, the boy?",
+                "The honest truth, the Real McCoy?",
+                "If you're the boy, the boy, the boy",
+                "Then make me feel like a movie",
+                "This girl, this girl, this girl",
+                "Can be the one to rock my world",
+                "So be my girl, my girl, my girl",
+                "And love me just like a movie"
+              ]
+            },
+            {
+              "label": "Verse 2",
+              "lines": [
+                "I can see you hanging out in the corner (Ayy)",
+                "Looking fly, and you're finally coming over",
+                "I've been checking out you, but you didn't notice",
+                "(Oh-oh, oh-oh)",
+                "Yeah, I did and it's really nice to meet ya",
+                "One, two, three, could you smile for a picture?",
+                "Tonight we're gonna get this, gonna really live it",
+                "(Oh-oh, oh-oh)"
+              ]
+            },
+            {
+              "label": "Pre-Chorus 2",
+              "lines": [
+                "Somebody just said, \"Hannah, do you already have a man?",
+                "'Cause I'm smooth, like Carlos Santana.\"",
+                "Well, here we go, boy, just crank it up"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "Are you the boy, the boy, the boy",
+                "The honest truth, the Real McCoy?",
+                "If you're the boy, the boy, the boy",
+                "Then make me feel like a movie",
+                "This girl, this girl, this girl",
+                "Can be the one to rock my world",
+                "So be my girl, my girl, my girl",
+                "And love me just like a movie"
+              ]
+            },
+            {
+              "label": "Bridge",
+              "lines": [
+                "Yeah, I'm gonna sing my melody",
+                "If you wanna join in, go ahead and sing",
+                "We can dance all night, baby, you and me",
+                "Oh oh, oh oh",
+                "Yeah, we gonna get down and party",
+                "Celebrate with everybody",
+                "Have a crazy good time, Yeah, the time of our lives",
+                "Oh oh, oh oh"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "Are you the boy, the boy, the boy (Boy..)",
+                "The honest truth, the Real McCoy? (We're gonna get this! My boy..)",
+                "If you're the boy, the boy, the boy",
+                "Then make me feel like a movie",
+                "This girl, this girl, this girl (Oh-oh-oh-oh)",
+                "Can be the one to rock my world (Your world)",
+                "So be my girl, my girl, my girl",
+                "And love me just like a movie",
+                "(Everybody)"
+              ]
+            },
+            {
+              "label": "Outro",
+              "lines": [
+                "Uh-oh-uh-oh-uh-oh-oh",
+                "Ooh-ooh-ooh-ooh-ooh-ooh-ooh",
+                "Uh-oh-uh-oh-uh-oh-oh",
+                "This boy, this boy, this boy",
+                "Ooh-ooh-ooh-ooh-ooh-ooh-ooh",
+                "Uh-oh-uh-oh-uh-oh-oh",
+                "(Said, \"Hannah on the track right now\")",
+                "Ooh-ooh-ooh-ooh-ooh-ooh-ooh",
+                "That girl, that girl, that girl",
+                "This boy, that girl",
+                "This boy, that girl",
+                "This boy, that girl"
+              ]
+            }
+          ]
+        },
+        {
+          "title": "Que Sera",
+          "sections": [
+            {
+              "label": "Intro",
+              "lines": [
+                "Ha",
+                "Whatever will be, will be"
+              ]
+            },
+            {
+              "label": "Verse 1",
+              "lines": [
+                "Delete me from your friends, I don't care what you think",
+                "Let's forget we ever met, don't you worry 'bout me",
+                "So sick to my stomach when I think about the wasted time",
+                "We spent together plannin' on forever (Whatever)",
+                "Cheat me once, shame on you",
+                "Cheat me twice, shame on me",
+                "I'm an idiot that I couldn't see what's underneath that beautiful face",
+                "Thought these were my worst days",
+                "But surprise, surprise, I'm doing just fine (Woo)"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "Ah-ah-ah-ah, qué será, será?",
+                "Ah-ah-ah-ah, qué será, será?",
+                "Whatever comes, I'll be okay",
+                "Whatever life throws my way",
+                "You wish I'd hurt",
+                "But I'm as free as a bird",
+                "And I'm happier now (Yeah)",
+                "Ah-ah-ah-ah"
+              ]
+            },
+            {
+              "label": "Verse 2",
+              "lines": [
+                "I could never go back to a thing that didn't last",
+                "And I'm sorry to say that you're living in the past (Aww)",
+                "And if you'd ever believe I would take you back (No)",
+                "It took you long to get in, but now you're out so fast (Bye, bye)",
+                "The way you played your cards should've told me who you are",
+                "Always going all in and then you hated when I'd win",
+                "This time you went too far, I should've known from the start",
+                "That you'd gamble with my heart (Huh)"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "Ah-ah-ah-ah, qué será, será",
+                "Ah-ah-ah-ah, qué será, será",
+                "Whatever comes, I'll be okay",
+                "Whatever life throws my way",
+                "You wish I'd hurt, but I'm as free as a bird",
+                "And I'm happier now",
+                "(Woo, ha, ha)"
+              ]
+            },
+            {
+              "label": "Bridge",
+              "lines": [
+                "Ooh, I feel it in the air (I feel it in the air, babe)",
+                "Ooh, there's something better out there",
+                "Ooh, hello to the new me (Hello, hello, hello)",
+                "Ooh, so goodbye, baby",
+                "Goodbye"
+              ]
+            },
+            {
+              "label": "Verse 3",
+              "lines": [
+                "I could never go back to a thing that didn't last (Nope)",
+                "And I'm sorry to say that you're living in the past (Aww)",
+                "And if you'd ever believe I would take you back (No)",
+                "It took you long to get in, but now you're out so fast (Bye, bye)",
+                "The way you played your cards, should've told me who you are",
+                "Always going all in, and then you hated when I'd win",
+                "This time you went too far, I should've known from the start",
+                "That you'd gamble with my heart (Mwah)"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "Ah-ah-ah-ah, qué será, será",
+                "Ah-ah-ah-ah, qué será, será (Woo)",
+                "Whatever comes, I'll be okay",
+                "Whatever life throws my way",
+                "You wish I'd hurt, but I'm as free as a bird",
+                "And I'm happier now (Woo)"
+              ]
+            },
+            {
+              "label": "Outro",
+              "lines": [
+                "Ah-ah-ah-ah, qué será, será",
+                "Ah-ah-ah-ah, qué será"
+              ]
+            }
+          ]
+        },
+        {
+          "title": "Ordinary Girl",
+          "sections": [
+            {
+              "label": "Intro",
+              "lines": [
+                "Oh-oh-oh, yeah",
+                "Mm",
+                "La-da-da-da"
+              ]
+            },
+            {
+              "label": "Verse 1",
+              "lines": [
+                "Don't get me wrong, I love who I am",
+                "I don't wanna be ungrateful",
+                "It probably sounds strange",
+                "I really love the role I play, the songs I sing",
+                "But with all the fame",
+                "The things that seemed so simple",
+                "Are suddenly so far out of reach",
+                "Wish that they could see that underneath"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "I'm just an ordinary girl",
+                "Sometimes I'm lazy, I get bored",
+                "I get scared, I feel ignored",
+                "I feel happy, I get silly",
+                "I choke on my own words",
+                "I make wishes, I have dreams",
+                "And I still want to believe",
+                "Anything can happen in this world",
+                "For an ordinary girl"
+              ]
+            },
+            {
+              "label": "Post-Chorus",
+              "lines": [
+                "Like you, like me",
+                "For an ordinary girl",
+                "Like you, like me"
+              ]
+            },
+            {
+              "label": "Verse 2",
+              "lines": [
+                "\"How are you?\" \"Hello\" \"Goodbye\"",
+                "One day here, one day there",
+                "And again, it's time to go",
+                "Miss Popular, always on the road",
+                "Put my best foot forward",
+                "Gotta get on with the show",
+                "Strike a pose for the front cover of a magazine",
+                "Everywhere I arrive, I get high fives",
+                "They paint me larger than life (Yeah)"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "I'm just an ordinary girl",
+                "Sometimes I'm lazy, I get bored",
+                "I get scared, I feel ignored (Yeah)",
+                "I feel happy, I get silly",
+                "I choke on my own words",
+                "I make wishes, I have dreams",
+                "And I still want to believe",
+                "Anything can happen in this world",
+                "For an ordinary girl"
+              ]
+            },
+            {
+              "label": "Bridge",
+              "lines": [
+                "So give it everything or nothing at all",
+                "And get back on your feet",
+                "When you stumble and fall",
+                "A little luck can go a long way",
+                "So don't you worry about what people say",
+                "Who knows when the wind may blow",
+                "For an ordinary girl, mm"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "I'm just an ordinary girl",
+                "Sometimes I'm lazy, I get bored",
+                "I get scared, I feel ignored",
+                "I feel happy, I get silly",
+                "I choke on my own words",
+                "I make wishes, I have dreams",
+                "And I still want to believe",
+                "Anything can happen in this world",
+                "For an ordinary girl"
+              ]
+            },
+            {
+              "label": "Post-Chorus",
+              "lines": [
+                "Like you, like me, yeah",
+                "For an ordinary girl",
+                "Like you, like me",
+                "For an ordinary girl"
+              ]
+            },
+            {
+              "label": "Outro",
+              "lines": [
+                "Mm-mm",
+                "For an ordinary girl",
+                "Like me, like you"
+              ]
+            }
+          ]
+        },
+        {
+          "title": "Kiss It Goodbye",
+          "sections": [
+            {
+              "label": "Intro",
+              "lines": [
+                "Kiss it goodbye",
+                "Kiss it goodbye (Kiss it goodbye)"
+              ]
+            },
+            {
+              "label": "Verse 1",
+              "lines": [
+                "Whatcha waiting for, an opportunity to knock?",
+                "C'mon, it's at your door",
+                "You're crazy if you leave it locked",
+                "You know you got to let it in, and finally I know it too",
+                "The question's what it's always been",
+                "So, what are you gonna do?"
+              ]
+            },
+            {
+              "label": "Pre-Chorus",
+              "lines": [
+                "Blow another chance?",
+                "No, I understand",
+                "Yo, if you're coming, hello"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "Kiss it goodbye",
+                "Your fear is holding you back",
+                "Kiss it goodbye",
+                "Your little panic attack",
+                "Kiss it goodbye",
+                "I, I did it, and it's OMG",
+                "I'm a different girl",
+                "Kiss it goodbye",
+                "Kiss it goodbye"
+              ]
+            },
+            {
+              "label": "Verse 2",
+              "lines": [
+                "You procrastinate the world, it's gonna pass you by",
+                "Already running late, instead of running, better fly",
+                "You crashed into the ground, and hard",
+                "You pick yourself up and laugh (Ha)",
+                "You keep on shooting for the stars",
+                "What other choice do you have?"
+              ]
+            },
+            {
+              "label": "Pre-Chorus",
+              "lines": [
+                "Blow another chance?",
+                "No, I understand",
+                "Yo, if you're coming, hello"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "Kiss it goodbye",
+                "Your fear is holding you back",
+                "Kiss it goodbye",
+                "Your little panic attack",
+                "Kiss it goodbye",
+                "I, I did it, and it's OMG",
+                "I'm a different girl",
+                "Kiss it goodbye",
+                "Kiss it goodbye (Kiss it goodbye)",
+                "Kiss it goodbye (Ha)",
+                "Kiss it goodbye"
+              ]
+            },
+            {
+              "label": "Bridge",
+              "lines": [
+                "Kiss, kiss, kiss it all goodbye-bye (Goodbye)",
+                "Kiss, kiss, kiss it all goodbye-bye",
+                "Kiss, kiss, kiss it all goodbye-bye",
+                "Kiss, kiss, kiss it all goodbye"
+              ]
+            },
+            {
+              "label": "Interlude",
+              "lines": [
+                "Kiss",
+                "Yeah, yeah",
+                "Kiss it all goodbye (Goodbye)",
+                "Yeah"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "Kiss it goodbye",
+                "Your fear is holding you back",
+                "Kiss it goodbye",
+                "Your little panic attack (yeah, yeah, yeah, yeah)",
+                "Kiss it goodbye",
+                "I, I did it, and it's OMG (Did it, OMG)",
+                "I'm a different girl",
+                "Kiss it all goodbye",
+                "Kiss it all goodbye",
+                "Mm, kiss it goodbye",
+                "Kiss it all goodbye"
+              ]
+            }
+          ]
+        },
+        {
+          "title": "I'll Always Remember You",
+          "sections": [
+            {
+              "label": "Verse 1",
+              "lines": [
+                "I always knew this day would come",
+                "We'd be standing one by one",
+                "With our future in our hands",
+                "So many dreams, so many plans",
+                "I always knew after all these years",
+                "There'd be laughter, there'd be tears",
+                "But never thought that I'd walk away",
+                "With so much joy but so much pain",
+                "And it's so hard to say goodbye"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "But yesterday's gone, we gotta keep moving on",
+                "I'm so thankful for the moments",
+                "So glad I got to know ya",
+                "The times that we had, I'll keep like a photograph",
+                "And hold you in my heart forever",
+                "I'll always remember you"
+              ]
+            },
+            {
+              "label": "Post-Chorus",
+              "lines": [
+                "Na-na, na-na",
+                "Na-na, na-na",
+                "Na-na, na-na-na"
+              ]
+            },
+            {
+              "label": "Verse 2",
+              "lines": [
+                "Another chapter in the book",
+                "Can't go back, but you can look",
+                "And there we are on every page",
+                "Memories I'll always save",
+                "Up ahead, only open doors",
+                "Who knows what we're heading towards",
+                "I wish you love, I wish you luck",
+                "For you, the world just opens up",
+                "But it's so hard to say goodbye"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "Yesterday's gone, we gotta keep moving on",
+                "I'm so thankful for the moments",
+                "So glad I got to know ya",
+                "The times that we had, I'll keep like a photograph",
+                "And hold you in my heart forever",
+                "I'll always remember you"
+              ]
+            },
+            {
+              "label": "Bridge",
+              "lines": [
+                "Every day that we had, all the good, all the bad",
+                "I'll keep 'em here inside",
+                "All the times that we shared, every place, everywhere",
+                "You touched my life",
+                "Yeah, one day we'll look back, we'll smile, and we'll laugh",
+                "But right now, we just cry",
+                "'Cause it's so hard to say goodbye"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "Yesterday's gone, we gotta keep moving on",
+                "I'm so thankful for the moments",
+                "So glad I got to know ya",
+                "The times that we had, I'll keep like a photograph",
+                "And hold you in my heart forever",
+                "I'll always remember you, oh-oh",
+                "(Na-na, na-na, na-na, na-na, na-na, na-na-na)"
+              ]
+            },
+            {
+              "label": "Outro",
+              "lines": [
+                "I'll always remember you, yeah",
+                "(Na-na, na-na, na-na, na-na, na-na na-na)",
+                "I'll always remember you"
+              ]
+            }
+          ]
+        },
+        {
+          "title": "Need a Little Love",
+          "sections": [
+            {
+              "label": "Intro",
+              "lines": [
+                "Oh, oh-oh, oh, oh, oh, oh-oh"
+              ]
+            },
+            {
+              "label": "Verse 1",
+              "lines": [
+                "When the darkness leaves you lonely",
+                "Or the world tries to push you away",
+                "When your sky is looking troubled",
+                "You can count on me, 'cause I'm gonna stay",
+                "(I'm gonna stay)"
+              ]
+            },
+            {
+              "label": "Pre-Chorus 1",
+              "lines": [
+                "Put your worries in my pocket (Mmm)",
+                "I got a key so we can lock it (Ah)",
+                "I swear that I won't let them escape"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "Love, it's always worth it",
+                "Love, everyone deserves it",
+                "It's the friend that you holds your hand",
+                "When nobody understands",
+                "Love, it wants to heal you, love",
+                "And see the real you",
+                "But you have to open up when you need a little love"
+              ]
+            },
+            {
+              "label": "Post-Chorus",
+              "lines": [
+                "(Na, na-na, na, na-na) Yeah",
+                "(Na, na-na, na, na-na) Yeah",
+                "(Na, na-na, na, na-na) Oh"
+              ]
+            },
+            {
+              "label": "Verse 2",
+              "lines": [
+                "If there's something you're in need of",
+                "(You're in need of)",
+                "You only have to let me know",
+                "I've got a shoulder you can lean on",
+                "And I'm always, always, right up the road"
+              ]
+            },
+            {
+              "label": "Pre-Chorus 2",
+              "lines": [
+                "Put your fears in my pocket",
+                "I've got a key so we can lock it",
+                "You know I, know I won't let them escape"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "Love, it's always worth it",
+                "Love, everyone deserves it",
+                "It's the friend that you holds your hand",
+                "When nobody understands",
+                "Love, it wants to heal you, love",
+                "And see the real you",
+                "But you have to open up when you need a little love"
+              ]
+            },
+            {
+              "label": "Bridge",
+              "lines": [
+                "Every night, when your heart is praying for peace",
+                "From the noise in your head",
+                "There's a light that is yours to keep",
+                "That's brighter than all the rest"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "Love, it's always worth it",
+                "Love, everyone deserves it",
+                "It's the friend that you holds your hand",
+                "When nobody understands",
+                "Love, it wants to heal you, love",
+                "And see the real you",
+                "But you have to open up when you need a little love",
+                "(Na, na-na, na, na-na)"
+              ]
+            },
+            {
+              "label": "Outro",
+              "lines": [
+                "Yeah, when you need a little love",
+                "Oh, need a little love",
+                "Oh-oh, oh, oh, oh, oh-oh, oh, oh, yeah, yeah",
+                "Ooh-ooh",
+                "Need a little love"
+              ]
+            }
+          ]
+        },
+        {
+          "title": "Are You Ready",
+          "sections": [
+            {
+              "label": "Verse 1",
+              "lines": [
+                "Put on your coolest dress",
+                "And your hottest pair of shoes",
+                "Come on, let's go, oh (Let's go)",
+                "Get in my car, turn the radio on up high",
+                "I said high (Ow)",
+                "At the red light, boys trying to get the digits",
+                "But we say bye, b-b-bye",
+                "'Cause we're heading to the club",
+                "Nothing's gonna stop us now",
+                "Let's go (Let's go, let's go)",
+                "Oh"
+              ]
+            },
+            {
+              "label": "Pre-Chorus",
+              "lines": [
+                "Are you ready, are you ready",
+                "Are you ready? Let's go",
+                "Are you ready, are you ready",
+                "Are you ready? Let's go",
+                "Are you ready, are you-"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "Yeah! I'm coming up with all my girls (Hey!)",
+                "We're gonna party like there's never a worry",
+                "'Cause good times rule, so no curfew",
+                "We're showing off our moves, the breeze so cool",
+                "Let your hair down",
+                "Tonight you get to be a superstar",
+                "You're livin' like a superstar, ah-ah-ah"
+              ]
+            },
+            {
+              "label": "Verse 2",
+              "lines": [
+                "So we're flirting with the dude at the door",
+                "'Til he says we're okay, hey (Say word, okay)",
+                "Move the velvet rope, back off",
+                "Get out of our way, hey-ey-ey-hey (Come on, come on)",
+                "All the guys got their eyes on us",
+                "As we're moving up to the floor (To the floor-oor-oor)",
+                "Oh (Floor)",
+                "Trying to waste our time",
+                "But we're doing what we came here for",
+                "(We're here to dance, baby)",
+                "Oh"
+              ]
+            },
+            {
+              "label": "Pre-Chorus",
+              "lines": [
+                "Are you ready, are you ready",
+                "Are you ready? Let's go",
+                "Are you ready, are you ready",
+                "Are you ready? Let's go",
+                "Are you ready, are you-"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "Yeah! I'm coming up with all my girls (All my girls)",
+                "We're gonna party like there's never a worry",
+                "'Cause good times rule, so no curfew",
+                "We're showing off our moves, the breeze so cool",
+                "Let your hair down",
+                "Tonight you get to be a superstar",
+                "Ah-ah-oh",
+                "Are you re-e-e-eady?..."
+              ]
+            },
+            {
+              "label": "Bridge",
+              "lines": [
+                "We get red carpet, love",
+                "When we come stepping up",
+                "The boys keep dropping their jaws",
+                "Can never get enough",
+                "We make 'em stop and stare",
+                "We see them everywhere",
+                "And now you know who we are",
+                "Tonight you're livin' like a superstar"
+              ]
+            },
+            {
+              "label": "Pre-Chorus",
+              "lines": [
+                "Are you ready, are you ready",
+                "Are you ready? Let's go",
+                "Are you ready, are you ready",
+                "Are you ready? Let's go",
+                "Are you ready, are you-"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "Yeah! I'm coming up with all my girls (My girls)",
+                "We're gonna party like there's never a worry",
+                "'Cause good times rule, so no curfew",
+                "We're showing off our moves, the breeze so cool",
+                "Yeah! I'm coming up with all my girls (Hey!)",
+                "We're gonna party like there's never a worry",
+                "'Cause good times rule, so no curfew",
+                "We're showing off our moves, the breeze so cool",
+                "Let your hair down",
+                "Tonight you get to be a superstar",
+                "You're livin' like a superstar, ah-ah-ah",
+                "Tonight you get-get-get to get to be a-be a-..",
+                "You're livin' like a superstar, ah-ah-ah"
+              ]
+            }
+          ]
+        },
+        {
+          "title": "Love That Lets Go",
+          "sections": [
+            {
+              "label": "Verse 1",
+              "lines": [
+                "There's a gold frame that sits by the window",
+                "And my heart breaks a little more each time I try",
+                "To picture the memory inside",
+                "There's a notebook, it's too hard to read it",
+                "But if you look, you'd see how you look through my eyes",
+                "But now one more chapter's gone by, and I know"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "It's time to move on",
+                "Even though I'm not ready",
+                "I've got to be strong",
+                "And trust where you're heading",
+                "Even though it's not easy (It's not easy)",
+                "Right now the right kind of love is the love that lets go, go"
+              ]
+            },
+            {
+              "label": "Verse 2",
+              "lines": [
+                "There's an old dance that we've done forever",
+                "You give me your hand",
+                "But let me decide when to reach",
+                "You always let me be me",
+                "But now's my time to take chances and find my own wings",
+                "And whatever happens, I know you'll be there waiting for me"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "It's time to move on",
+                "Even though I'm not ready",
+                "I've got to be strong",
+                "And trust where I'm heading",
+                "And even though it's not easy (It's not easy)",
+                "I know the right kind of love",
+                "Doesn't wanna miss the future by staying in the past",
+                "It will always hold on, but never hold you back",
+                "And even though it's not easy (It's not easy)",
+                "Right now the right kind of love is the love that lets go, go (Oh)"
+              ]
+            },
+            {
+              "label": "Outro",
+              "lines": [
+                "It's time that I let you",
+                "With a love that lets go"
+              ]
+            }
+          ]
+        },
+        {
+          "title": "I'm Still Good",
+          "sections": [
+            {
+              "label": "Intro",
+              "lines": [
+                "So I might slip again, let it in now and then",
+                "That don't mean anything, I'm still good"
+              ]
+            },
+            {
+              "label": "Verse 1",
+              "lines": [
+                "I look around me, how did I get here?",
+                "Not part of my plan",
+                "I ended up in a situation",
+                "Wasn't in my hands"
+              ]
+            },
+            {
+              "label": "Pre-Chorus",
+              "lines": [
+                "I think about it when I wanna give up",
+                "How to keep on going, how to keep my chin up",
+                "Somehow I know it, I'm not gonna give up",
+                "Never gonna give up"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "So I might slip again, let it in now and then",
+                "That don't mean anything, I'm still good",
+                "Trying to be my best, when I fall, it's a mess",
+                "Pick myself up again, I'm still good",
+                "I'm still good",
+                "I'm still good"
+              ]
+            },
+            {
+              "label": "Verse 2",
+              "lines": [
+                "When days are like that and I can shake 'em",
+                "It's weighin' on my mind",
+                "So I'm just sayin', I'm only human",
+                "Life gets you down sometimes"
+              ]
+            },
+            {
+              "label": "Pre-Chorus",
+              "lines": [
+                "I think about it when I wanna give up",
+                "How to keep on going, how to keep my chin up",
+                "Somehow I know it, I'm not gonna give up",
+                "Never gonna give up"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "So I might slip again, let it in now and then",
+                "That don't mean anything, I'm still good (Oh yeah)",
+                "Trying to be my best, when I fall, it's a mess (Whoa)",
+                "Pick myself up again, I'm still good",
+                "So I might slip again, let it in now and then",
+                "That don't mean anything, I'm still good (still good)",
+                "Trying to be my best, when I fall, it's a mess",
+                "Pick myself up again, I'm still good"
+              ]
+            },
+            {
+              "label": "Bridge",
+              "lines": [
+                "Life puts up a fight with me",
+                "But I can take on anything (Anything)",
+                "I'm gonna make it real, this dream I believe in"
+              ]
+            },
+            {
+              "label": "Pre-Chorus",
+              "lines": [
+                "I think about it when I wanna give up",
+                "How to keep on going, how to keep my chin up",
+                "Somehow I know it, I'm not gonna give up",
+                "Never gonna give up, oh, oh"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "So I might slip again, let it in now and then",
+                "That don't mean anything, I'm still good",
+                "Trying to be my best, when I fall, it's a mess",
+                "Pick myself up again, I'm still good (Still good)",
+                "So I might slip again, let it in now and then (Let it all out)",
+                "That don't mean anything, I'm still good",
+                "Trying to be my best, when I fall, it's a mess (Ooh, yeah)",
+                "Pick myself up again, I'm still good (I'm still good)"
+              ]
+            },
+            {
+              "label": "Outro",
+              "lines": [
+                "Pick myself up again",
+                "I'm still good",
+                "I'm still, I'm still good",
+                "I'm still, I'm still good"
+              ]
+            }
+          ]
+        },
+        {
+          "title": "Been Here All Along",
+          "sections": [
+            {
+              "label": "Intro",
+              "lines": [
+                "Mmm, yeah"
+              ]
+            },
+            {
+              "label": "Verse 1",
+              "lines": [
+                "Sunrise, and I lift up my head",
+                "Then I smile at your picture sitting next to my bed",
+                "Sunset, and you're feeling okay",
+                "'Cause you smile at the letter that I sent you today",
+                "And I can't wait 'til I see you again",
+                "And we both say, \"Remember when",
+                "The band played on the 4th of July",
+                "And you held me on your shoulders way up high?\""
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "You're still there for me",
+                "Wherever \"there\" might be",
+                "And if an ocean lies between us",
+                "I'll send a message across the sea",
+                "That you can sleep tonight knowing it's alright",
+                "I believe that you are listening to my song",
+                "You're with me",
+                "You've been here all along",
+                "You've been here all along"
+              ]
+            },
+            {
+              "label": "Verse 2",
+              "lines": [
+                "Back then, you walked me to school",
+                "Told me to be careful and to follow the rules",
+                "Fast forward, you taught me to drive",
+                "You gave me the keys and we went for a ride",
+                "And I can't wait 'til I see you again",
+                "And we both say, \"Remember when",
+                "I'm holding onto moments like that",
+                "And I know that they're coming back?\""
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "You're still there for me",
+                "Wherever there might be",
+                "And if an ocean lies between us",
+                "I'll send a message across the sea",
+                "That you can sleep tonight knowing it's alright",
+                "I believe that you are listening to my song",
+                "You're with me",
+                "You've been here all along, yeah"
+              ]
+            },
+            {
+              "label": "Bridge",
+              "lines": [
+                "All along the way, I keep you in my heart and in my prayers",
+                "You'll always be the one who cares the most",
+                "Counting on the day I see you running up to say",
+                "I missed you, I missed you"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "You're still there for me",
+                "Wherever there might be",
+                "And if an ocean lies between us",
+                "I'll send a message across the sea",
+                "That you can sleep tonight knowing it's alright",
+                "I believe that you are listening to my song",
+                "You're still there for me",
+                "Wherever there might be",
+                "And if an ocean lies between us",
+                "I'll send a message across the sea",
+                "That you can sleep tonight knowing it's alright",
+                "I believe that you are listening to my song",
+                "You're with me",
+                "'Cause you're with me",
+                "You've been here all along",
+                "You've been here all along, yeah"
+              ]
+            }
+          ]
+        },
+        {
+          "title": "Barefoot Cinderella",
+          "sections": [
+            {
+              "label": "Intro",
+              "lines": [
+                "Oh-oh, yeah-yeah",
+                "Ha"
+              ]
+            },
+            {
+              "label": "Verse 1",
+              "lines": [
+                "Every morning, I wake up to find I always dream the same",
+                "Every night, I come to my window when you call my name",
+                "Love the way the words you say just fall like rain",
+                "'Til I'm drowning in the sound of your invitation"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "When you ask, \"Do you wanna dance, my Barefoot Cinderella? Don't need no slippers or a party dress",
+                "The way you're looking right now's what I like the best.\"",
+                "And then you'll say, \"Do you wanna take a chance",
+                "And stay with me forever?",
+                "No one'll ever be more beautiful",
+                "My barefoot, barefoot Cinderella.\"",
+                "Yeah, oh"
+              ]
+            },
+            {
+              "label": "Verse 2",
+              "lines": [
+                "A dream world is always perfect, but that's not my real life",
+                "Wish you did, but you don't know the me I am inside",
+                "I pray that you'll come looking, and I won't hide (I won't hide)",
+                "I'll be smiling when you find me",
+                "'Cause I've been waiting (Waiting)"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "For you to ask, \"Do you wanna dance, my Barefoot Cinderella? Don't need no slippers or a party dress",
+                "The way you're looking right now's what I like the best.\"",
+                "And then you'll say, \"Do you wanna take a chance",
+                "And stay with me forever?",
+                "No one'll ever be more beautiful (Beautiful)",
+                "My barefoot, barefoot Cinderella.\""
+              ]
+            },
+            {
+              "label": "Bridge",
+              "lines": [
+                "When I close my eyes it starts, yeah",
+                "Like a movie for my heart",
+                "Here comes my favorite part",
+                "Yeah, yeah, oh"
+              ]
+            },
+            {
+              "label": "Breakdown",
+              "lines": [
+                "When you ask, \"Do you wanna dance, my Barefoot Cinderella? Don't need no slippers or a party dress",
+                "You're what I like the best.\"",
+                "And then you'll say, \"Do you wanna take a chance",
+                "And stay with me forever?",
+                "No one will ever be more beautiful.\"",
+                "Cinderella"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "When you ask, \"Do you wanna dance, my Barefoot Cinderella? Don't need no slippers or a party dress",
+                "The way you're looking right now's what I like the best.\"",
+                "And then you'll say, \"Do you wanna take a chance",
+                "And stay with me forever? (Forever)",
+                "No one'll ever be more beautiful",
+                "My barefoot, barefoot Cinderella.\"",
+                "When you ask, \"Do you wanna dance, my Barefoot Cinderella? Don't need no slippers or a party dress (Yeah)",
+                "The way you're looking right now's what I like the best.\" (Ah, ah)",
+                "And then you'll say, \"Do you want to take a chance (That chance)",
+                "And stay with me forever?",
+                "No one will ever be more beautiful",
+                "My barefoot, barefoot Cinderella.\""
+              ]
+            }
+          ]
+        },
+        {
+          "title": "Wherever I Go",
+          "sections": [
+            {
+              "label": "Intro",
+              "lines": [
+                "Oh yeah"
+              ]
+            },
+            {
+              "label": "Verse 1",
+              "lines": [
+                "Here we are now",
+                "Everything's about to change",
+                "We face tomorrow",
+                "As we say goodbye to yesterday",
+                "A chapter ending",
+                "But the story's only just begun",
+                "A page is turning for everyone"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "So I'm moving on, letting go",
+                "Holding onto tomorrow",
+                "I've always got the memories",
+                "While I'm finding out who I'm gonna be",
+                "We might be apart",
+                "But I hope you always know",
+                "You'll be with me wherever I go",
+                "Wherever I go"
+              ]
+            },
+            {
+              "label": "Verse 2",
+              "lines": [
+                "So excited",
+                "I can barely even catch my breath",
+                "We have each other",
+                "To lean on for the road ahead",
+                "This happy ending",
+                "Is the start of all our dreams",
+                "And I know your heart is with me"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "So I'm moving on, letting go",
+                "Holding onto tomorrow",
+                "I've always got the memories",
+                "While I'm finding out who I'm gonna be",
+                "We might be apart",
+                "But I hope you always know",
+                "You'll be with me wherever I go"
+              ]
+            },
+            {
+              "label": "Bridge",
+              "lines": [
+                "It's time to show the world",
+                "We've got something to say",
+                "A song to sing out loud",
+                "We'll never fade away",
+                "I know I'll miss you, but we'll meet again someday",
+                "We'll never fade away"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "So I'm moving on, letting go",
+                "Holding onto tomorrow",
+                "I've always got the memories",
+                "While I'm finding out who I'm gonna be",
+                "We might be apart",
+                "But I hope you always know",
+                "You'll be with me (Wherever I go)",
+                "So I'm moving on, letting go",
+                "Holding onto tomorrow (Wherever I go)",
+                "I've always got the memories",
+                "While I'm finding out who I'm gonna be",
+                "We might be apart, but I hope you always know",
+                "You'll be with me, yeah",
+                "Wherever I go"
+              ]
+            },
+            {
+              "label": "Outro",
+              "lines": [
+                "Wherever I, wherever I go"
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "words": [
+    "afraid",
+    "agree",
+    "air",
+    "alone",
+    "alright",
+    "angry",
+    "autographs",
+    "away",
+    "baby",
+    "back",
+    "bad",
+    "beautiful",
+    "bed",
+    "begun",
+    "believe",
+    "belong",
+    "best",
+    "better",
+    "big",
+    "blink",
+    "blow",
+    "blue",
+    "book",
+    "bored",
+    "break",
+    "breeze",
+    "bring",
+    "building",
+    "bye",
+    "call",
+    "car",
+    "catch",
+    "celebrate",
+    "choice",
+    "close",
+    "clothes",
+    "club",
+    "comes",
+    "coming",
+    "confused",
+    "control",
+    "cool",
+    "could",
+    "cover",
+    "crank",
+    "crazy",
+    "crowd",
+    "cry",
+    "dance",
+    "darkness",
+    "day",
+    "decide",
+    "deserve",
+    "diamond",
+    "different",
+    "done",
+    "door",
+    "dream",
+    "dress",
+    "drive",
+    "easy",
+    "electrified",
+    "else",
+    "end",
+    "enough",
+    "everybody",
+    "eye",
+    "face",
+    "fade",
+    "fall",
+    "fame",
+    "far",
+    "fast",
+    "fear",
+    "feel",
+    "feet",
+    "fight",
+    "figure",
+    "finally",
+    "find",
+    "fine",
+    "fit",
+    "fix",
+    "floor",
+    "fly",
+    "follow",
+    "foot",
+    "forever",
+    "forget",
+    "forward",
+    "four",
+    "free",
+    "friend",
+    "front",
+    "fun",
+    "future",
+    "getting",
+    "girl",
+    "going",
+    "good",
+    "grab",
+    "great",
+    "ground",
+    "guitar",
+    "guy",
+    "hair",
+    "hallway",
+    "hand",
+    "hang",
+    "happy",
+    "hard",
+    "head",
+    "hear",
+    "hello",
+    "help",
+    "here",
+    "hide",
+    "high",
+    "hit",
+    "hold",
+    "home",
+    "hope",
+    "hot",
+    "hurry",
+    "ice",
+    "inside",
+    "invitation",
+    "jam",
+    "jeans",
+    "join",
+    "july",
+    "keep",
+    "key",
+    "kick",
+    "kind",
+    "kiss",
+    "knowing",
+    "known",
+    "last",
+    "late",
+    "laugh",
+    "lead",
+    "lean",
+    "learn",
+    "left",
+    "let",
+    "life",
+    "lift",
+    "light",
+    "line",
+    "listen",
+    "little",
+    "live",
+    "lonely",
+    "long",
+    "look",
+    "lose",
+    "loud",
+    "love",
+    "luck",
+    "mad",
+    "magazine",
+    "making",
+    "man",
+    "matters",
+    "mean",
+    "meet",
+    "mess",
+    "million",
+    "mind",
+    "miss",
+    "mix",
+    "moment",
+    "moon",
+    "morning",
+    "move",
+    "movie",
+    "music",
+    "name",
+    "needs",
+    "new",
+    "next",
+    "nice",
+    "night",
+    "nobody",
+    "noise",
+    "notice",
+    "now",
+    "ocean",
+    "okay",
+    "old",
+    "open",
+    "ordinary",
+    "page",
+    "part",
+    "past",
+    "pay",
+    "people",
+    "perfect",
+    "pick",
+    "picture",
+    "place",
+    "plan",
+    "play",
+    "pose",
+    "pretend",
+    "pull",
+    "put",
+    "radio",
+    "reach",
+    "read",
+    "real",
+    "remember",
+    "rest",
+    "ride",
+    "right",
+    "road",
+    "rock",
+    "roll",
+    "roof",
+    "rough",
+    "round",
+    "run",
+    "sad",
+    "say",
+    "scene",
+    "school",
+    "sea",
+    "see",
+    "shake",
+    "shining",
+    "should",
+    "shout",
+    "show",
+    "sick",
+    "side",
+    "simple",
+    "sing",
+    "sit",
+    "sky",
+    "slide",
+    "slow",
+    "small",
+    "smart",
+    "smile",
+    "smooth",
+    "somebody",
+    "someday",
+    "song",
+    "sorry",
+    "sound",
+    "speak",
+    "special",
+    "spotlight",
+    "stage",
+    "stand",
+    "star",
+    "stay",
+    "step",
+    "stop",
+    "strike",
+    "strong",
+    "style",
+    "sun",
+    "sure",
+    "surprise",
+    "swear",
+    "sweet",
+    "take",
+    "talk",
+    "taught",
+    "tears",
+    "tell",
+    "thing",
+    "think",
+    "three",
+    "through",
+    "throw",
+    "time",
+    "today",
+    "together",
+    "tonight",
+    "top",
+    "touch",
+    "track",
+    "true",
+    "trust",
+    "try",
+    "turn",
+    "two",
+    "understand",
+    "velvet",
+    "vibe",
+    "voice",
+    "wait",
+    "wake",
+    "walk",
+    "wall",
+    "want",
+    "watch",
+    "way",
+    "wear",
+    "where",
+    "whole",
+    "whoo",
+    "win",
+    "wish",
+    "woo",
+    "work",
+    "world",
+    "worry",
+    "worth",
+    "would",
+    "wrong",
+    "years",
+    "yesterday"
+  ]
+}
