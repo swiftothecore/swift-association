@@ -760,6 +760,7 @@ const screens = {
   albumfocus: $("screen-albumfocus"),
   ruthless: $("screen-ruthless"),
   guests: $("screen-guests"),
+  guestdetail: $("screen-guest-detail"),
   mastery: $("screen-mastery"),
 };
 function showScreen(name) {
@@ -6926,6 +6927,7 @@ const GUEST_STAR =
 let guestBackTarget = "start";        // where the shelf's back link returns to
 let guestSelected = null;             // id of the pass whose detail is open, or null
 let guestSelectedDiff = "medium";     // the difficulty tab the detail panel has picked
+let guestShelfScrollY = 0;             // restored after returning from a visiting catalogue
 const guestFiles = new Map();         // id -> Promise<catalogue json>, one fetch per session
 
 // Lazy-load a guest's catalogue. Rejections are swallowed by the caller (the pass just keeps
@@ -7020,8 +7022,7 @@ function renderGuestShelfPage() {
       `<div class="chall-head-sub">visiting catalogues</div>` +
       `<span class="chall-tokens">on the rail <b>${GUESTS.length}</b>/${GUEST_SHELF_SLOTS}</span>` +
     `</div>` +
-    `<div class="guest-rack">${rails}</div>` +
-    `<div class="chall-detail guest-detail" id="guestDetail"></div>`;
+    `<div class="guest-rack">${rails}</div>`;
 
   el.querySelectorAll(".guest-pass").forEach((b) =>
     b.addEventListener("click", () => selectGuest(b.dataset.guest)));
@@ -7034,7 +7035,6 @@ function renderGuestShelfPage() {
       .catch(() => {});
   });
 
-  selectGuest(guestSelected || (GUESTS[0] && GUESTS[0].id) || null);
 }
 
 // One hanger: a ring, a woven strap of its own length, and the pass. The strap length and
@@ -7100,28 +7100,32 @@ function paintGuestCounts(id, counts) {
     const songs = pass.querySelector('.guest-song-count');
     if (songs) songs.textContent = counts.songs;
   }
-  if (guestSelected === id) renderGuestDetail(id);
 }
 
 function selectGuest(id) {
   guestSelected = id;
-  const body = $("guestBody");
-  if (!body) return;
-  body.querySelectorAll(".guest-pass").forEach((b) =>
-    b.classList.toggle("selected", b.dataset.guest === id));
+  guestShelfScrollY = window.scrollY;
   renderGuestDetail(id);
+  flipAwayToScreen("guestdetail");
+  window.scrollTo({ top: 0, behavior: "instant" });
+}
+
+function closeGuestDetail() {
+  renderGuestShelfPage();
+  flipInToScreen("guests");
+  requestAnimationFrame(() => window.scrollTo({ top: guestShelfScrollY, behavior: "instant" }));
 }
 
 // The pass turned over: what is actually in this catalogue. The record list comes straight
 // from the file, so it can never drift from what a guest round would draw on.
 function renderGuestDetail(id) {
-  const el = $("guestDetail");
+  const el = $("guestDetailBody");
   if (!el) return;
   const g = GUESTS.find((x) => x.id === id);
   if (!g) { el.innerHTML = ""; return; }
 
   loadGuest(id).then((c) => {
-    if (guestSelected !== id || !$("guestDetail")) return;
+    if (guestSelected !== id || !$("guestDetailBody")) return;
     const counts = guestCounts(c);
     const rec = guestRecord(id);
     const records = (c.albums || []).map((a) =>
@@ -7137,7 +7141,8 @@ function renderGuestDetail(id) {
       meta = `best ${rec.best}/${TOTAL_ROUNDS}`;
       if (rec.admittedDiff) meta += ` · admitted on ${(MODES[rec.admittedDiff] || {}).label || rec.admittedDiff}`;
     }
-    $("guestDetail").innerHTML =
+    $("guestDetailBody").innerHTML =
+      `<div class="chall-detail guest-detail">` +
       `<div class="guest-detail-head" style="--g-pen:${g.ink.pen}">` +
         `<span class="guest-detail-name">${escapeHtml(g.name)}</span>${stamp}` +
         `<span class="guest-detail-nums">${counts.songs} songs · ${counts.records} records · ${counts.words} words</span>` +
@@ -7156,15 +7161,15 @@ function renderGuestDetail(id) {
       `<div class="chall-act">` +
         `<span class="chall-meta">${escapeHtml(meta)}</span>` +
         `<button type="button" class="chall-go" data-play="${escapeHtml(id)}">${rec.best > 0 ? "Play again" : "Start writing"}</button>` +
-      `</div>`;
-    const el2 = $("guestDetail");
+      `</div></div>`;
+    const el2 = $("guestDetailBody");
     el2.querySelectorAll(".af-diff").forEach((b) =>
       b.addEventListener("click", () => { guestSelectedDiff = b.dataset.diff; renderGuestDetail(id); }));
     const pb = el2.querySelector("[data-play]");
     if (pb) pb.addEventListener("click", () => startGuestRun(pb.dataset.play, guestSelectedDiff));
   }).catch(() => {
-    if (guestSelected !== id || !$("guestDetail")) return;
-    $("guestDetail").innerHTML =
+    if (guestSelected !== id || !$("guestDetailBody")) return;
+    $("guestDetailBody").innerHTML =
       `<p class="guest-detail-note">couldn't fetch this catalogue — check your connection and reopen the shelf</p>`;
   });
   if (!el.innerHTML) el.innerHTML = `<p class="guest-detail-note">reading the sleeve…</p>`;
@@ -18844,6 +18849,7 @@ async function init() {
   frankGuestStamp();
   $("guestShelfBtn").addEventListener("click", () => openGuestShelf("start"));
   $("guestBackBtn").addEventListener("click", () => backToScreen(guestBackTarget));
+  $("guestDetailBackBtn").addEventListener("click", closeGuestDetail);
   // The rail's pass-per-rail count is a layout decision made in markup (a pass cannot shrink
   // past its own name), so a width change that crosses a breakpoint has to re-render. Only
   // while the shelf is the visible screen, and only when the count actually changes.

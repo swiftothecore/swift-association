@@ -3077,6 +3077,8 @@
      (app.js) picks the count in markup and a breakpoint crossing re-renders. Nothing here
      reflows the passes on its own. */
   .guest-rack { margin: 4px 0 6px; }
+  #guestDetailBody { padding-top: 4px; }
+  #guestDetailBody .guest-detail { margin-top: 0; }
   .guest-rail {
     position: relative; display: flex; justify-content: center; align-items: flex-start;
     gap: 14px; padding: 6px 0 34px;
