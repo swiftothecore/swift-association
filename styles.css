@@ -6851,10 +6851,10 @@
      the same colour with the water taken out, used only on the open tab's edge. */
   :root {
     --set-tab-1: #e6dcc4;   --set-tab-1-deep: #a8913f;   /* manila */
-    --set-tab-2: #dfe3d3;   --set-tab-2-deep: #6f8f5c;   /* sage   */
+    --set-tab-2: #e5dae4;   --set-tab-2-deep: #8f6591;   /* lilac  */
     --set-tab-3: #e8dcd0;   --set-tab-3-deep: #b06a4c;   /* clay   */
     --set-tab-4: #d9e0e6;   --set-tab-4-deep: #4f7f9e;   /* blue   */
-    --set-tab-5: #e5dae4;   --set-tab-5-deep: #8f6591;   /* lilac  */
+    --set-tab-5: #dfe3d3;   --set-tab-5-deep: #6f8f5c;   /* sage   */
     --set-tab-6: #ece2cf;   --set-tab-6-deep: #9a6b3a;   /* buff   */
   }
   .set-panel[hidden] { display: none; }
