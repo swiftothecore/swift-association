@@ -883,7 +883,12 @@
               ]
             }
           ]
-        },
+        }
+      ]
+    },
+    {
+      "album": "Hannah Montana 2",
+      "songs": [
         {
           "title": "We Got the Party",
           "sections": [
@@ -996,12 +1001,7 @@
               ]
             }
           ]
-        }
-      ]
-    },
-    {
-      "album": "Hannah Montana 2: Meet Miley Cyrus",
-      "songs": [
+        },
         {
           "title": "Nobody's Perfect",
           "sections": [
@@ -1937,7 +1937,12 @@
               ]
             }
           ]
-        },
+        }
+      ]
+    },
+    {
+      "album": "Hannah Montana 3",
+      "songs": [
         {
           "title": "It's All Right Here",
           "sections": [
@@ -2043,12 +2048,7 @@
               ]
             }
           ]
-        }
-      ]
-    },
-    {
-      "album": "Hannah Montana 3",
-      "songs": [
+        },
         {
           "title": "Let's Do This",
           "sections": [
@@ -2994,7 +2994,12 @@
               ]
             }
           ]
-        },
+        }
+      ]
+    },
+    {
+      "album": "Hannah Montana: The Movie",
+      "songs": [
         {
           "title": "You'll Always Find Your Way Back Home",
           "sections": [
@@ -3113,12 +3118,7 @@
               ]
             }
           ]
-        }
-      ]
-    },
-    {
-      "album": "Hannah Montana Forever",
-      "songs": [
+        },
         {
           "title": "The Good Life",
           "sections": [
@@ -3425,7 +3425,12 @@
               ]
             }
           ]
-        },
+        }
+      ]
+    },
+    {
+      "album": "Hannah Montana Forever",
+      "songs": [
         {
           "title": "Gonna Get This",
           "sections": [
