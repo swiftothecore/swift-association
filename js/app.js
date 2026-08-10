@@ -15762,6 +15762,7 @@ function renderSettingsBody() {
           `</span>` +
         `</a>` +
       `</div>` +
+      `<a class="about-feedback" href="feedback/" target="_blank" rel="noopener">Send feedback</a>` +
       `</div>`
     );
 

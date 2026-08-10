@@ -7466,6 +7466,15 @@
   .about-note--elle .about-note-ico--yt path { fill: #d6342a; }
   .about-note--elle .about-note-lbl { color: #8a2b22; }
 
+  /* A quiet postscript beneath the pinned credits: feedback already has its own
+     form, so this is only the invitation and opens that form in a fresh tab. */
+  .about-feedback {
+    display: block; width: fit-content; margin: 15px auto 3px;
+    font-family: var(--type); font-size: 11px; text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+  .about-feedback:focus-visible { outline: 2px solid var(--ink-accent); outline-offset: 4px; }
+
   @media (prefers-reduced-motion: reduce) {
     .about-note, .about-note::after { transition: none; }
   }
