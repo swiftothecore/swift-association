@@ -249,10 +249,14 @@ function shuffled(arr, rng) {
        re-recordings) would mark a correct answer wrong.
      • NO GIVEAWAY — a line containing the song's own title answers itself, so those are
        skipped. This is what keeps it a recall test rather than a reading test. */
-export function buildNamePuzzle(songs, lineIndex, rng = Math.random, tries = 120) {
+export function buildNamePuzzle(songs, lineIndex, rng = Math.random, tries = 120, avoid = null) {
   for (let t = 0; t < tries; t++) {
     const song = pick(songs, rng);
     if (!song) continue;
+    // A Name That Song run is ten distinct songs, not ten chances to recognise the same
+    // chorus. Unlike the older builders' soft rests, this is an absolute bar: the catalogue
+    // comfortably supplies a full run, and a repeated song would make the answer free.
+    if (avoid && avoid.has(song.title)) continue;
     const titleKey = normalizeLyric(song.title);
 
     const candidates = songLines(song).filter(({ line }) => {

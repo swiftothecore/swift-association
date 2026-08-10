@@ -4299,6 +4299,12 @@ function bonusIndexes() {
   return { lineIndex: bonusLineIndex, ctx: bonusSlipCtx, wordIndex: bonusWordIndex };
 }
 
+// The Ruthless exclusions are catalogue-wide bonus-game exclusions. The full catalogue still
+// builds the fairness indexes above, so a barred song's duplicate line cannot accidentally make
+// an eligible Name That Song or Redacted page look unique; it simply cannot be dealt or named
+// anywhere on the bonus shelf.
+function bonusSongs() { return allSongs.filter((song) => !ruthlessBar(song)); }
+
 /* In-run state. Deliberately separate from the main game's state (score/round/currentSongs):
    a bonus run must never be mistaken for an association run by any shared code path. */
 let bonusGame = null;      // the BONUS_GAMES entry being played
@@ -4309,7 +4315,7 @@ let bonusLocked = false;   // round answered — ignore further input until the 
 let bonusRaf = null;       // clock handle (setInterval id — see startBonusClock)
 let bonusEnded = false;
 let bonusRecentFakes = []; // Spot the Slip: impostor words used recently, so a run doesn't repeat one
-let bonusRecentSongs = []; // Sing It Back / Redacted: songs already used this run, so one doesn't come round twice
+let bonusRecentSongs = []; // Name That Song / Sing It Back / Redacted: songs already used this run, so one doesn't come round twice
 let redactWorth = 0;       // Redacted: what THIS page is still worth, one point per strip left unpeeled
 let redactPeeled = 0;      // ...and how many strips have come off it
 // Only Here: the word this page was answered with, once one has been accepted —
@@ -4659,26 +4665,27 @@ function bonusSeconds() {
 // dev tools can build a page's worth without driving the screen.
 function buildBonusPuzzle() {
   const { lineIndex, ctx } = bonusIndexes();
+  const songs = bonusSongs();
   if (bonusGame.id === "spot-the-slip")
-    return buildSlipPuzzle(allSongs, playableWords, lineIndex, ctx, Math.random, 120, new Set(bonusRecentFakes));
+    return buildSlipPuzzle(songs, playableWords, lineIndex, ctx, Math.random, 120, new Set(bonusRecentFakes));
   if (bonusGame.id === "sing-it-back")
-    return buildBlankPuzzle(allSongs, ctx, Math.random, 120, new Set(bonusRecentSongs));
+    return buildBlankPuzzle(songs, ctx, Math.random, 120, new Set(bonusRecentSongs));
   if (bonusGame.id === "redacted")
-    return buildRedactedPuzzle(allSongs, ctx, lineIndex, Math.random, 120, new Set(bonusRecentSongs));
+    return buildRedactedPuzzle(songs, ctx, lineIndex, Math.random, 120, new Set(bonusRecentSongs));
   if (bonusGame.id === "only-here")
     // The run's ramp: the early pages deal a wide hand with an obvious outlier, the later ones
     // a compressed one where the answer is a judgement rather than a read.
-    return buildOnlyHerePuzzle(allSongs, bonusIndexes().wordIndex, Math.random, 120,
+    return buildOnlyHerePuzzle(songs, bonusIndexes().wordIndex, Math.random, 120,
                                new Set(bonusRecentSongs),
                                { tight: bonusRound > ONLY_WIDE_PAGES, words: onlyDealt });
   if (bonusGame.id === "then-what")
     // The run's own ramp: the early pages keep the chain inside one section, the later ones
     // ask for a chain that crosses a section boundary.
-    return buildChainPuzzle(allSongs, Math.random, 120, new Set(bonusRecentSongs),
+    return buildChainPuzzle(songs, Math.random, 120, new Set(bonusRecentSongs),
                             { cross: bonusRound > CHAIN_EASY_PAGES });
   if (bonusGame.id === "ruthless-game")
-    return buildRuthlessPuzzle(allSongs, Math.random, 120, new Set(bonusRecentSongs), activeLens());
-  return buildNamePuzzle(allSongs, lineIndex);
+    return buildRuthlessPuzzle(songs, Math.random, 120, new Set(bonusRecentSongs), activeLens());
+  return buildNamePuzzle(songs, lineIndex, Math.random, 120, new Set(bonusRecentSongs));
 }
 
 function nextBonusRound() {
@@ -4694,7 +4701,7 @@ function nextBonusRound() {
     bonusRecentFakes.push(bonusPuzzle.fakeWord.toLowerCase());
     if (bonusRecentFakes.length > 6) bonusRecentFakes.shift();
   }
-  if (bonusGame.id === "sing-it-back" || bonusGame.id === "redacted" ||
+  if (bonusGame.id === "name-that-song" || bonusGame.id === "sing-it-back" || bonusGame.id === "redacted" ||
       bonusGame.id === "only-here" || bonusGame.id === "then-what" ||
       bonusGame.id === "ruthless-game")
     bonusRecentSongs.push(bonusPuzzle.song.title);
@@ -5381,13 +5388,8 @@ let bonusDdIndex = -1;
 function bonusRankMatches(query) {
   const q = normalizeTitle(query);
   if (!q) return [];
-  // Ruthless bills you until you produce the EXACT title, so a song that can never be an honest
-  // answer (see ruthlessBar: not-hers, second cuts, unheard) has no business being suggested as
-  // one. Other dropdown games (Name That Song, Redacted) suggest the whole catalogue.
-  const barred = bonusGame && bonusGame.id === "ruthless-game";
   const scored = [];
-  for (const song of allSongs) {
-    if (barred && ruthlessBar(song)) continue;
+  for (const song of bonusSongs()) {
     const idx = song._norm.indexOf(q);
     if (idx === -1) continue;
     scored.push({ song, rank: idx === 0 ? 0 : 1, idx });
@@ -17567,14 +17569,16 @@ function buildDevApi() {
       play: (id) => { const g = BONUS_GAMES.find((x) => x.id === id); if (g && g.ready) startBonusGame(g); return g ? g.name : null; },
       sample: (id, n = 10) => {
         const { lineIndex, ctx } = bonusIndexes();
+        const songs = bonusSongs();
         const out = [];
         const recent = [];   // mirrors the in-run avoid list, so samples read like a real run
         for (let i = 0; i < n; i++) {
           if (id === "name-that-song") {
-            const p = buildNamePuzzle(allSongs, lineIndex);
+            const p = buildNamePuzzle(songs, lineIndex, Math.random, 120, new Set(recent));
+            if (p) recent.push(p.song.title);
             out.push(p ? { line: p.line, song: p.song.title, album: p.song.album } : null);
           } else if (id === "redacted") {
-            const p = buildRedactedPuzzle(allSongs, ctx, lineIndex, Math.random, 120, new Set(recent));
+            const p = buildRedactedPuzzle(songs, ctx, lineIndex, Math.random, 120, new Set(recent));
             if (p) recent.push(p.song.title);
             out.push(p ? {
               verse: p.rows.map((r) => r.map((t) => t.pre + (t.hide ? "\u2588".repeat(t.core.length) : t.core) + t.post).join(" ")).join(" / "),
@@ -17582,7 +17586,7 @@ function buildDevApi() {
           } else if (id === "only-here") {
             // Dealt as a run would deal it, so a sample shows the wide hands and the tight ones
             // rather than ten of whichever shape happens to be the default.
-            const p = buildOnlyHerePuzzle(allSongs, bonusIndexes().wordIndex, Math.random, 120,
+            const p = buildOnlyHerePuzzle(songs, bonusIndexes().wordIndex, Math.random, 120,
                                           new Set(recent), { tight: i >= ONLY_WIDE_PAGES });
             if (p) recent.push(p.song.title);
             out.push(p ? { song: p.song.title, shape: p.shape, fellBack: p.fallback,
@@ -17590,12 +17594,12 @@ function buildDevApi() {
           } else if (id === "then-what") {
             // Every page after the third is dealt as a run would deal it — allowed to cross a
             // section — so a sample shows both shapes rather than ten of the easy one.
-            const p = buildChainPuzzle(allSongs, Math.random, 120, new Set(recent), { cross: i >= CHAIN_EASY_PAGES });
+            const p = buildChainPuzzle(songs, Math.random, 120, new Set(recent), { cross: i >= CHAIN_EASY_PAGES });
             if (p) recent.push(p.song.title);
             out.push(p ? { song: p.song.title, crossed: p.crossed, fallbacks: p.fallbacks,
                            chain: devChainLines(p) } : null);
           } else if (id === "ruthless-game") {
-            const p = buildRuthlessPuzzle(allSongs, Math.random, 120, new Set(recent));
+            const p = buildRuthlessPuzzle(songs, Math.random, 120, new Set(recent));
             if (p) recent.push(p.song.title);
             // `titleAt` is the number that matters: how many words in the stream finally says
             // the song's own name, which is the worst case a page can cost. -1 means the song
@@ -17604,12 +17608,12 @@ function buildDevApi() {
                            titleAt: devRuthlessTitleAt(p),
                            opens: p.stream.slice(0, 12).map((w) => w.text).join(" ") } : null);
           } else if (id === "sing-it-back") {
-            const p = buildBlankPuzzle(allSongs, ctx, Math.random, 120, new Set(recent));
+            const p = buildBlankPuzzle(songs, ctx, Math.random, 120, new Set(recent));
             if (p) recent.push(p.song.title);
             out.push(p ? { gap: p.tokens.map((t) => t.pre + (t.blank ? "____" : t.core) + t.post).join(" "),
                            answer: p.answer, song: p.song.title } : null);
           } else {
-            const p = buildSlipPuzzle(allSongs, playableWords, lineIndex, ctx, Math.random, 120, new Set(recent));
+            const p = buildSlipPuzzle(songs, playableWords, lineIndex, ctx, Math.random, 120, new Set(recent));
             if (p) { recent.push(p.fakeWord.toLowerCase()); if (recent.length > 6) recent.shift(); }
             out.push(p ? { slip: p.tokens.map((t) => t.text).join(" "), real: p.realLine,
                            swap: `${p.realWord} -> ${p.fakeWord}`, song: p.song.title } : null);
@@ -17621,15 +17625,16 @@ function buildDevApi() {
       // fairness guards have been tightened past what the catalogue can serve.
       audit: (id, n = 200) => {
         const { lineIndex, ctx } = bonusIndexes();
+        const songs = bonusSongs();
         let ok = 0;
         for (let i = 0; i < n; i++) {
-          const p = id === "name-that-song" ? buildNamePuzzle(allSongs, lineIndex)
-            : id === "redacted" ? buildRedactedPuzzle(allSongs, ctx, lineIndex)
-            : id === "only-here" ? buildOnlyHerePuzzle(allSongs, bonusIndexes().wordIndex)
-            : id === "then-what" ? buildChainPuzzle(allSongs)
-            : id === "ruthless-game" ? buildRuthlessPuzzle(allSongs)
-            : id === "sing-it-back" ? buildBlankPuzzle(allSongs, ctx)
-            : buildSlipPuzzle(allSongs, playableWords, lineIndex, ctx);
+          const p = id === "name-that-song" ? buildNamePuzzle(songs, lineIndex)
+            : id === "redacted" ? buildRedactedPuzzle(songs, ctx, lineIndex)
+            : id === "only-here" ? buildOnlyHerePuzzle(songs, bonusIndexes().wordIndex)
+            : id === "then-what" ? buildChainPuzzle(songs)
+            : id === "ruthless-game" ? buildRuthlessPuzzle(songs)
+            : id === "sing-it-back" ? buildBlankPuzzle(songs, ctx)
+            : buildSlipPuzzle(songs, playableWords, lineIndex, ctx);
           if (p) ok++;
         }
         return { tried: n, built: ok, rate: `${((ok / n) * 100).toFixed(1)}%` };
