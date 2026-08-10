@@ -170,6 +170,13 @@
     box-shadow: 0 2px 7px rgba(0, 0, 0, 0.45);
   }
   :root[data-theme="dark"] .nav-card-seat { background: rgba(var(--tint), 0.24); }
+  /* The icon fills are alphas of the card tint over paper. On a dark card the same alphas
+     land on #2f281f and the washed shapes all but vanish, leaving bare outlines, so each
+     step is lifted. The stroke weights are NOT touched: they read the same either way. */
+  :root[data-theme="dark"] .nav-ic .wash  { fill: rgba(var(--tint), 0.3); }
+  :root[data-theme="dark"] .nav-ic .mid   { fill: rgba(var(--tint), 0.45); }
+  :root[data-theme="dark"] .nav-ic .solid { fill: rgba(var(--tint), 0.65); }
+  :root[data-theme="dark"] .nav-ic .deep  { fill: rgba(var(--tint), 0.85); }
   :root[data-theme="dark"] .nav-card:hover .nav-card-seat,
   :root[data-theme="dark"] .nav-card:focus-visible .nav-card-seat { background: rgba(var(--tint), 0.34); }
   :root[data-theme="dark"] .nav-card:hover,
@@ -5904,7 +5911,30 @@
     display: flex; align-items: center; justify-content: center;
     background: rgba(var(--tint), 0.13);
   }
-  .nav-ic { display: block; }
+  /* ===== One drawing rule for the whole keepsake icon set ==========================
+     Every mark in all six icons is drawn to these weights and these fills, and the
+     markup carries nothing but classes. The reason is that the previous set was six
+     independently hand-tuned drawings: stroke widths had spread from 1.0 to 1.9 with no
+     rule behind the spread, so records read as heavy black linework beside a challenges
+     target that had gone invisible, and every colour was a hardcoded rgba() repeated
+     twelve times across the two rows. Weights: 1.7 for an object's contour, 1.2 for
+     interior detail, 0.9 for a hairline. Fills: the CARD'S OWN --tint at four strengths,
+     so an icon takes the era colour of the card it sits on and a retint is one edit here
+     rather than twelve in the markup. Only the charm bracelet's beads opt out, and they
+     say so in the markup. */
+  .nav-ic {
+    display: block; fill: none; stroke: currentColor; stroke-width: 1.7;
+    stroke-linecap: round; stroke-linejoin: round;
+  }
+  .nav-ic .fine  { stroke-width: 1.2; }
+  .nav-ic .hair  { stroke-width: 0.9; }
+  .nav-ic .flat  { stroke: none; }
+  .nav-ic .wash  { fill: rgba(var(--tint), 0.16); }
+  .nav-ic .mid   { fill: rgba(var(--tint), 0.3); }
+  .nav-ic .solid { fill: rgba(var(--tint), 0.55); }
+  .nav-ic .deep  { fill: rgba(var(--tint), 0.78); }
+  .nav-ic .paper { fill: var(--card-bg); }
+  .nav-ic .tintstroke { stroke: rgba(var(--tint), 0.95); }
   .nav-card-title {
     grid-area: title; align-self: end; justify-self: start;
     display: inline-block; font-family: var(--hand); font-weight: 700;
