@@ -1,0 +1,3320 @@
+{
+ "id": "wicked-soundtrack",
+ "name": "Wicked: The Soundtrack",
+ "buckets": {
+  "easy": 5,
+  "hard": [2, 5],
+  "ultra": [1, 2]
+ },
+ "words": [
+  "air", "alone", "animals", "beautiful", "brainless", "bright", "celebration", "chance",
+  "change", "cold", "dark", "dead", "dreams", "elphaba", "eyes", "face", "family", "father",
+  "feeling", "fight", "fly", "friend", "future", "glinda", "goodness", "green", "hair", "heart",
+  "high", "home", "joy", "kiss", "land", "life", "magic", "melt", "moment", "mourns", "night",
+  "people", "pink", "place", "promise", "school", "sky", "strange", "sweet", "terror", "truth",
+  "voice", "west", "wicked", "witch", "wizard", "wonderful", "wrong"
+ ],
+ "albums": [
+  {
+   "album": "Wicked: The Soundtrack",
+   "songs": [
+  {
+    "title": "No One Mourns the Wicked",
+    "sections": [
+      {
+        "label": "CHILD, spoken",
+        "lines": [
+          "Good news! The Witch, she's dead!",
+          "Come out, come out, she's gone!"
+        ]
+      },
+      {
+        "label": "CITIZENS OF OZ",
+        "lines": [
+          "Good news",
+          "She's dead",
+          "The Witch of the West is dead",
+          "The wickedest witch there ever was",
+          "The enemy of all of us here in Oz",
+          "Is dead",
+          "Good news",
+          "Good news"
+        ]
+      },
+      {
+        "label": "SOMEONE IN THE CROWD, spoken",
+        "lines": [
+          "Look! It's Glinda!"
+        ]
+      },
+      {
+        "label": "GLINDA",
+        "lines": [
+          "Let us be glad",
+          "Let us be grateful",
+          "Let us rejoicify that goodness could subdue",
+          "The wicked workings of you-know-who",
+          "Isn't it nice to know?",
+          "That good will conquer evil?",
+          "The truth we all believe'll by and by",
+          "Outlive a lie",
+          "For you and—"
+        ]
+      },
+      {
+        "label": "SOMEONE IN THE CROWD",
+        "lines": [
+          "No one mourns the Wicked"
+        ]
+      },
+      {
+        "label": "ANOTHER PERSON",
+        "lines": [
+          "No one cries, \"They won't return\""
+        ]
+      },
+      {
+        "label": "ALL",
+        "lines": [
+          "No one lays a lily on their grave"
+        ]
+      },
+      {
+        "label": "MAN",
+        "lines": [
+          "The good man scorns the Wicked"
+        ]
+      },
+      {
+        "label": "WOMEN",
+        "lines": [
+          "Through their lives, our children learn"
+        ]
+      },
+      {
+        "label": "ALL",
+        "lines": [
+          "What we miss when we misbehave"
+        ]
+      },
+      {
+        "label": "GLINDA",
+        "lines": [
+          "And Goodness knows the Wicked's lives are lonely",
+          "Goodness knows the Wicked die alone",
+          "It just shows, when you're wicked",
+          "You're left only on your own"
+        ]
+      },
+      {
+        "label": "ALL",
+        "lines": [
+          "Yes, Goodness knows the Wicked's lives are lonely",
+          "Goodness knows the Wicked cry alone",
+          "Nothing grows for the Wicked",
+          "They reap only what they've sown"
+        ]
+      },
+      {
+        "label": "CHILD IN THE CROWD, spoken",
+        "lines": [
+          "Miss Glinda",
+          "Why does Wickedness happen?"
+        ]
+      },
+      {
+        "label": "GLINDA, spoken",
+        "lines": [
+          "That's a good question",
+          "Are people born Wicked?",
+          "Or do they have Wickedness thrust upon them?",
+          "After all, the Wicked Witch had a childhood",
+          "She had a father, who by the way, had been appointed Governor of Munchkinland"
+        ]
+      },
+      {
+        "label": "FREXSPAR, spoken",
+        "lines": [
+          "I'm off to the assembly, dear"
+        ]
+      },
+      {
+        "label": "GLINDA, spoken",
+        "lines": [
+          "And she had a mother, as so many do"
+        ]
+      },
+      {
+        "label": "FREXSPAR",
+        "lines": [
+          "How I hate to go and leave you lonely"
+        ]
+      },
+      {
+        "label": "MELENA",
+        "lines": [
+          "That's alright, it's only just one night"
+        ]
+      },
+      {
+        "label": "FREXSPAR",
+        "lines": [
+          "But know that you're here in my heart",
+          "While I'm out of your sight"
+        ]
+      },
+      {
+        "label": "GLINDA, spoken",
+        "lines": [
+          "And, like every family, they had their secrets"
+        ]
+      },
+      {
+        "label": "LOVER",
+        "lines": [
+          "Have another drink, my dark-eyed beauty",
+          "I've got one more night left here in town",
+          "So have another drink of green elixir",
+          "And we'll have ourselves a little mixer",
+          "Have another little swallow, little lady",
+          "And follow me down"
+        ]
+      },
+      {
+        "label": "GLINDA, spoken",
+        "lines": [
+          "And one thing led to another, as it so often does"
+        ]
+      },
+      {
+        "label": "MELENA, spoken",
+        "lines": [
+          "No!"
+        ]
+      },
+      {
+        "label": "GLINDA, spoken",
+        "lines": [
+          "But from the moment the witch was born, she was, well, different"
+        ]
+      },
+      {
+        "label": "MIDWIFE, spoken",
+        "lines": [
+          "It's coming"
+        ]
+      },
+      {
+        "label": "FREXSPAR, spoken",
+        "lines": [
+          "Now?"
+        ]
+      },
+      {
+        "label": "MIDWIFE, spoken",
+        "lines": [
+          "The baby is coming"
+        ]
+      },
+      {
+        "label": "FREXSPAR, spoken",
+        "lines": [
+          "Oh, and how!"
+        ]
+      },
+      {
+        "label": "MIDWIFE",
+        "lines": [
+          "I see a nose"
+        ]
+      },
+      {
+        "label": "FREXSPAR",
+        "lines": [
+          "I see a curl"
+        ]
+      },
+      {
+        "label": "FREXSPAR & MIDWIFE",
+        "lines": [
+          "It's a healthy, perfect, lovely, little—"
+        ]
+      },
+      {
+        "label": "MIDWIFE, spoken",
+        "lines": [
+          "Oh!"
+        ]
+      },
+      {
+        "label": "FREXSPAR, spoken",
+        "lines": [
+          "Oh! Sweet Oz! Oh!"
+        ]
+      },
+      {
+        "label": "MIDWIFE",
+        "lines": [
+          "How can it be?"
+        ]
+      },
+      {
+        "label": "FREXSPAR",
+        "lines": [
+          "What does it mean?"
+        ]
+      },
+      {
+        "label": "MIDWIFE",
+        "lines": [
+          "It's uncanny"
+        ]
+      },
+      {
+        "label": "FREXSPAR",
+        "lines": [
+          "It's obscene"
+        ]
+      },
+      {
+        "label": "MIDWIFE & FREXSPAR",
+        "lines": [
+          "Like a froggy, ferny cabbage",
+          "The baby is unnaturally"
+        ]
+      },
+      {
+        "label": "FREXSPAR",
+        "lines": [
+          "Green"
+        ]
+      },
+      {
+        "label": "FREXSPAR, spoken",
+        "lines": [
+          "Take it away",
+          "Take it away!"
+        ]
+      },
+      {
+        "label": "GLINDA, spoken",
+        "lines": [
+          "And so, it couldn't have been easy"
+        ]
+      },
+      {
+        "label": "ALL",
+        "lines": [
+          "No one mourns the Wicked",
+          "Now, at last, she's dead and gone",
+          "Now, at last, there's joy throughout the land",
+          "And Goodness knows"
+        ]
+      },
+      {
+        "label": "GLINDA",
+        "lines": [
+          "Goodness knows"
+        ]
+      },
+      {
+        "label": "ALL",
+        "lines": [
+          "We know what Goodness is"
+        ]
+      },
+      {
+        "label": "GLINDA",
+        "lines": [
+          "Oh, ooh"
+        ]
+      },
+      {
+        "label": "ALL",
+        "lines": [
+          "Goodness knows the Wicked die alone"
+        ]
+      },
+      {
+        "label": "GLINDA",
+        "lines": [
+          "She died alone"
+        ]
+      },
+      {
+        "label": "ALL",
+        "lines": [
+          "Woe to those (Woe to those)",
+          "Who spurn what Goodnesses",
+          "They are shown",
+          "No one mourns the Wicked"
+        ]
+      },
+      {
+        "label": "GLINDA",
+        "lines": [
+          "Good news"
+        ]
+      },
+      {
+        "label": "ALL",
+        "lines": [
+          "No one mourns the Wicked"
+        ]
+      },
+      {
+        "label": "GLINDA",
+        "lines": [
+          "Good news"
+        ]
+      },
+      {
+        "label": "ALL",
+        "lines": [
+          "No one mourns the Wicked",
+          "Wicked",
+          "Wicked"
+        ]
+      }
+    ]
+  },
+  {
+    "title": "Dear Old Shiz",
+    "sections": [
+      {
+        "label": "OZIAN IN THE CROWD, spoken",
+        "lines": [
+          "Glinda, is it true you were her friend?"
+        ]
+      },
+      {
+        "label": "GLINDA, spoken",
+        "lines": [
+          "Yes"
+        ]
+      },
+      {
+        "label": "GLINDA, spoken",
+        "lines": [
+          "I-I mean, I did know her",
+          "That is, our paths did cross",
+          "At school"
+        ]
+      },
+      {
+        "label": "SHIZ UNIVERSITY CHOIR",
+        "lines": [
+          "O hallowed halls and vine-draped walls",
+          "The proudliest sight there is (Sight there is)",
+          "When grey and sere our hair hath turned",
+          "We shall still revere the lessons learned",
+          "In our days at dear old Shiz (Dear old Shiz)",
+          "Our days at dear old"
+        ]
+      },
+      {
+        "label": "GALINDA",
+        "lines": [
+          "Old"
+        ]
+      },
+      {
+        "label": "GALINDA & SHIZ UNIVERSITY CHOIR",
+        "lines": [
+          "Shiz (Dear old Shiz)"
+        ]
+      }
+    ]
+  },
+  {
+    "title": "The Wizard And I",
+    "sections": [
+      {
+        "label": "MADAME MORRIBLE, spoken",
+        "lines": [
+          "Oh, Miss Elphaba"
+        ]
+      },
+      {
+        "label": "MADAME MORRIBLE",
+        "lines": [
+          "Many years I have waited",
+          "For a gift like yours to appear",
+          "Why, I predict the Wizard might make you his",
+          "Magic grand vizier",
+          "My dear, my dear",
+          "I'll write at once to the Wizard",
+          "Tell him of you in advance",
+          "With a talent like yours, dear, there is",
+          "A definish chance",
+          "If you work as you should",
+          "You'll be making good"
+        ]
+      },
+      {
+        "label": "MADAME MORRIBLE, spoken",
+        "lines": [
+          "Welcome to Shiz!"
+        ]
+      },
+      {
+        "label": "ELPHABA",
+        "lines": [
+          "Did that really just happen?",
+          "Have I actually understood?",
+          "This weird quirk I've tried to suppress or hide",
+          "Is a talent that could help me meet the Wizard",
+          "If I make good",
+          "So I'll make good",
+          "When I meet the Wizard",
+          "Once I prove my worth",
+          "And then I meet the Wizard",
+          "What I've waited for since, well, since birth",
+          "And with all his Wizard wisdom",
+          "By my looks, he won't be blinded",
+          "Do you think the Wizard is dumb?",
+          "Or, like Munchkins, so small-minded? No!",
+          "He'll say to me, \"I see who you truly are",
+          "A girl on whom I can rely\"",
+          "And that's how we'll begin",
+          "The Wizard and I",
+          "Once I'm with the Wizard",
+          "My whole life will change",
+          "'Cause once you're with the Wizard",
+          "No one thinks you're strange",
+          "No father is not proud of you",
+          "No sister acts ashamed",
+          "And all of Oz has to love you",
+          "When, by the Wizard, you're acclaimed",
+          "And this gift or this curse I have inside",
+          "Maybe, at last, I'll know why",
+          "As we work hand in hand",
+          "The Wizard and I",
+          "And one day, he'll say to me, \"Elphaba",
+          "A girl who is so superior",
+          "Shouldn't a girl who's so good inside",
+          "Have a matching exterior?",
+          "And since folks here to an absurd degree",
+          "Seem fixated on your verdigris",
+          "Would it be alright by you",
+          "If I de-greenify you?\"",
+          "And though, of course, that's not important to me",
+          "\"Alright, why not?\", I'll reply",
+          "Oh, what a pair we'll be",
+          "The Wizard and I",
+          "Yes, what a pair we'll be",
+          "The Wizard and—",
+          "Unlimited",
+          "My future is unlimited",
+          "And I've just had a vision, almost like a prophecy",
+          "I know it sounds truly crazy",
+          "And true, the vision's hazy",
+          "But I swear, someday, there'll be",
+          "A celebration throughout Oz",
+          "That's all to do with me",
+          "And I'll stand there with the Wizard",
+          "Feeling the things I've never felt",
+          "And though I'd never show it",
+          "I'd be so happy I could melt",
+          "And so it will be for the rest of my life",
+          "And I'll want nothing else 'til I die",
+          "Held in such high esteem",
+          "When people see me, they will scream",
+          "For half of Oz's favorite team",
+          "The Wizard and I"
+        ]
+      }
+    ]
+  },
+  {
+    "title": "What Is This Feeling?",
+    "sections": [
+      {
+        "label": "GALINDA, spoken",
+        "lines": [
+          "Dearest, darlingest Momsie and Popsicle"
+        ]
+      },
+      {
+        "label": "ELPHABA, spoken",
+        "lines": [
+          "My dear father"
+        ]
+      },
+      {
+        "label": "GALINDA & ELPHABA",
+        "lines": [
+          "There's been some confusion over rooming here at Shiz"
+        ]
+      },
+      {
+        "label": "ELPHABA",
+        "lines": [
+          "But of course, I'll care for Nessa"
+        ]
+      },
+      {
+        "label": "GALINDA",
+        "lines": [
+          "But of course, I'll rise above it"
+        ]
+      },
+      {
+        "label": "GALINDA & ELPHABA",
+        "lines": [
+          "For I know that's how you'd want me to respond"
+        ]
+      },
+      {
+        "label": "GALINDA & ELPHABA, spoken",
+        "lines": [
+          "Yes"
+        ]
+      },
+      {
+        "label": "GALINDA & ELPHABA",
+        "lines": [
+          "There's been some confusion for, you see, my roommate is"
+        ]
+      },
+      {
+        "label": "GALINDA",
+        "lines": [
+          "Unusually and exceedingly peculiar",
+          "And altogether quite impossible to describe"
+        ]
+      },
+      {
+        "label": "ELPHABA, spoken",
+        "lines": [
+          "Blonde"
+        ]
+      },
+      {
+        "label": "GALINDA",
+        "lines": [
+          "What is this feeling, so sudden and new?"
+        ]
+      },
+      {
+        "label": "ELPHABA",
+        "lines": [
+          "I felt the moment I laid eyes on you"
+        ]
+      },
+      {
+        "label": "GALINDA",
+        "lines": [
+          "My pulse is rushing"
+        ]
+      },
+      {
+        "label": "ELPHABA",
+        "lines": [
+          "My head is reeling"
+        ]
+      },
+      {
+        "label": "GALINDA, spoken",
+        "lines": [
+          "Yeah, well, my face is flushing"
+        ]
+      },
+      {
+        "label": "GALINDA & ELPHABA",
+        "lines": [
+          "What is this feeling",
+          "Fervid as a flame?",
+          "Does it have a name?",
+          "Yes",
+          "Loathing",
+          "Unadulterated loathing"
+        ]
+      },
+      {
+        "label": "GALINDA",
+        "lines": [
+          "For your face"
+        ]
+      },
+      {
+        "label": "ELPHABA",
+        "lines": [
+          "Your voice"
+        ]
+      },
+      {
+        "label": "GALINDA",
+        "lines": [
+          "Your clothing"
+        ]
+      },
+      {
+        "label": "GALINDA & ELPHABA",
+        "lines": [
+          "Let's just say",
+          "I loathe it all",
+          "Every little trait, however small",
+          "Makes my very flesh begin to crawl",
+          "With simple, utter loathing",
+          "There's a strange exhilaration",
+          "In such total detestation",
+          "It's so pure, so strong",
+          "Though I do admit, it came on fast",
+          "Still, I do believe that it can last",
+          "And I will be loathing",
+          "Loathing you my whole life long"
+        ]
+      },
+      {
+        "label": "SHIZ STUDENTS",
+        "lines": [
+          "Dear Galinda, you are just too good",
+          "How do you stand it? I don't think I could",
+          "She's a terror, she's a tartar, we don't mean to show a bias",
+          "But, Galinda, you're a martyr"
+        ]
+      },
+      {
+        "label": "GALINDA",
+        "lines": [
+          "Well, these things are sent to try us"
+        ]
+      },
+      {
+        "label": "SHIZ STUDENTS",
+        "lines": [
+          "Poor Galinda, forced to reside",
+          "With someone so disgusticified",
+          "We just want to tell you, we're all on your side",
+          "We share your loathing"
+        ]
+      },
+      {
+        "label": "GALINDA & ELPHABA",
+        "lines": [
+          "What is this feeling, so sudden and new?"
+        ]
+      },
+      {
+        "label": "SHIZ STUDENTS",
+        "lines": [
+          "Unadulterated loathing"
+        ]
+      },
+      {
+        "label": "GALINDA & ELPHABA",
+        "lines": [
+          "I felt the moment I laid eyes on you"
+        ]
+      },
+      {
+        "label": "SHIZ STUDENTS",
+        "lines": [
+          "For her face, her voice, her clothing"
+        ]
+      },
+      {
+        "label": "GALINDA & ELPHABA, SHIZ STUDENTS",
+        "lines": [
+          "My pulse is rushing, my head is reeling (Let's just say)"
+        ]
+      },
+      {
+        "label": "SHIZ STUDENTS",
+        "lines": [
+          "We loathe it all"
+        ]
+      },
+      {
+        "label": "GALINDA & ELPHABA",
+        "lines": [
+          "Oh, what is this feeling?"
+        ]
+      },
+      {
+        "label": "SHIZ STUDENTS",
+        "lines": [
+          "Every little trait, however small"
+        ]
+      },
+      {
+        "label": "GALINDA & ELPHABA",
+        "lines": [
+          "Does it have a name?"
+        ]
+      },
+      {
+        "label": "SHIZ STUDENTS",
+        "lines": [
+          "Makes our very flesh begin to crawl"
+        ]
+      },
+      {
+        "label": "GALINDA & ELPHABA",
+        "lines": [
+          "Yes"
+        ]
+      },
+      {
+        "label": "ALL",
+        "lines": [
+          "Ah"
+        ]
+      },
+      {
+        "label": "GALINDA & ELPHABA",
+        "lines": [
+          "Loathing"
+        ]
+      },
+      {
+        "label": "SHIZ STUDENTS",
+        "lines": [
+          "Loathing"
+        ]
+      },
+      {
+        "label": "GALINDA & ELPHABA",
+        "lines": [
+          "There's a strange exhilaration"
+        ]
+      },
+      {
+        "label": "SHIZ STUDENTS",
+        "lines": [
+          "Loathing"
+        ]
+      },
+      {
+        "label": "GALINDA & ELPHABA",
+        "lines": [
+          "In such total detestation"
+        ]
+      },
+      {
+        "label": "SHIZ STUDENTS",
+        "lines": [
+          "Loathing"
+        ]
+      },
+      {
+        "label": "GALINDA & ELPHABA",
+        "lines": [
+          "It's so pure, so strong"
+        ]
+      },
+      {
+        "label": "SHIZ STUDENTS",
+        "lines": [
+          "So strong"
+        ]
+      },
+      {
+        "label": "GALINDA & ELPHABA",
+        "lines": [
+          "Though I do admit, it came on fast",
+          "Still, I do believe that it can last"
+        ]
+      },
+      {
+        "label": "GALINDA & ELPHABA, ALL, SHIZ STUDENTS",
+        "lines": [
+          "And I will be loathing for forever",
+          "Loathing truly deeply",
+          "Loathing you (Loathing you)"
+        ]
+      },
+      {
+        "label": "GALINDA & ELPHABA",
+        "lines": [
+          "My whole life long"
+        ]
+      },
+      {
+        "label": "SHIZ STUDENTS",
+        "lines": [
+          "Loathing",
+          "Unadulterated loathing"
+        ]
+      },
+      {
+        "label": "ELPHABA, spoken",
+        "lines": [
+          "Boo!"
+        ]
+      },
+      {
+        "label": "GALINDA, spoken",
+        "lines": [
+          "Ah!"
+        ]
+      }
+    ]
+  },
+  {
+    "title": "Something Bad",
+    "sections": [
+      {
+        "label": "DOCTOR DILLAMOND, spoken",
+        "lines": [
+          "We Animals are now being blamed for everything that goes wrong",
+          "Forced from our jobs, told to keep silent"
+        ]
+      },
+      {
+        "label": "DOCTOR DILLAMOND",
+        "lines": [
+          "I've heard of an Ox, a professor from Quox",
+          "No longer permitted to teach",
+          "Who has lost all powers of speech",
+          "And an Owl in Munchkin Rock",
+          "A vicar with a thriving flock",
+          "Forbidden to preach",
+          "Now he only can screech",
+          "Only rumors, but still enough to give pause",
+          "To anyone with paws",
+          "Something bad is happening in Oz"
+        ]
+      },
+      {
+        "label": "ANIMALS",
+        "lines": [
+          "Something bad happening in—"
+        ]
+      },
+      {
+        "label": "LION, spoken",
+        "lines": [
+          "That's it, I'm leaving Oz while I can still speak the word \"goodbye\""
+        ]
+      },
+      {
+        "label": "ELPHABA, spoken",
+        "lines": [
+          "Doctor Dillamond",
+          "If animals are losing the ability to speak, leaving Oz, then",
+          "Someone's got to tell the Wizard",
+          "That's why we have a Wizard"
+        ]
+      },
+      {
+        "label": "ELPHABA",
+        "lines": [
+          "So nothing bad"
+        ]
+      },
+      {
+        "label": "DOCTOR DILLAMOND, spoken",
+        "lines": [
+          "Perhaps you're right"
+        ]
+      },
+      {
+        "label": "DOCTOR DILLAMOND & ELPHABA",
+        "lines": [
+          "Nothing all that bad"
+        ]
+      },
+      {
+        "label": "DOCTOR DILLAMOND",
+        "lines": [
+          "Nothing truly bad"
+        ]
+      },
+      {
+        "label": "DOCTOR DILLAMOND, spoken",
+        "lines": [
+          "Sorry! Bad",
+          "Must be catching a cold"
+        ]
+      },
+      {
+        "label": "ELPHABA",
+        "lines": [
+          "It couldn't happen here",
+          "In Oz"
+        ]
+      }
+    ]
+  },
+  {
+    "title": "Dancing Through Life",
+    "sections": [
+      {
+        "label": "FIYERO, spoken",
+        "lines": [
+          "I see that, once again, the responsibility to corrupt my fellow students falls to me"
+        ]
+      },
+      {
+        "label": "FIYERO",
+        "lines": [
+          "The trouble with schools is they always try to teach the wrong lesson",
+          "Believe me, I've been kicked out of enough of them to know",
+          "They want you to become less callow, less shallow",
+          "But I say, why invite stress in?",
+          "Stop studying strife",
+          "And learn to live the unexamined life",
+          "Dancing through life, skimming the surface",
+          "Gliding where turf is smooth",
+          "Life's more painless for the brainless",
+          "Why think too hard when it's so soothing?",
+          "Dancing through life, no need to tough it",
+          "When you can slough it off as I do",
+          "Nothing matters, but knowing nothing matters",
+          "It's just life, so keep dancing through",
+          "Dancing through life, swaying and sweeping",
+          "And always keeping cool",
+          "Life is fraughtless when you're thoughtless",
+          "Those who don't try never look foolish",
+          "Dancing through life, mindless and careless",
+          "Make sure you're where less trouble is rife",
+          "Woes are fleeting, blows are glancing",
+          "When you're dancing through life",
+          "Let's go down to the Ozdust Ballroom",
+          "We'll meet there later tonight",
+          "We can dance till it's light",
+          "Find the prettiest girl, give her a whirl",
+          "Right on down to the Ozdust Ballroom",
+          "Come on, follow me",
+          "You'll be happy to be there"
+        ]
+      },
+      {
+        "label": "ALL",
+        "lines": [
+          "Dancing through life down at the Ozdust"
+        ]
+      },
+      {
+        "label": "FIYERO",
+        "lines": [
+          "If only because dust is what we come to"
+        ]
+      },
+      {
+        "label": "ALL",
+        "lines": [
+          "Nothing matters, but knowing nothing matters"
+        ]
+      },
+      {
+        "label": "FIYERO, ALL",
+        "lines": [
+          "It's just life (Ah, ah)",
+          "It's just life",
+          "So keep dancing through"
+        ]
+      },
+      {
+        "label": "BOQ, spoken",
+        "lines": [
+          "Galinda",
+          "Um, I'll hope you'll save a dance for me tonight",
+          "I'll be right there, waiting all night"
+        ]
+      },
+      {
+        "label": "GALINDA, spoken",
+        "lines": [
+          "That's so kind",
+          "But you know what would be even kinder?"
+        ]
+      },
+      {
+        "label": "GALINDA",
+        "lines": [
+          "See that tragically beautiful girl?",
+          "The one in the chair",
+          "It seems so unfair",
+          "We should go on a spree",
+          "And not she, gee!",
+          "I know someone would be my hero",
+          "If that someone were",
+          "To go invite her"
+        ]
+      },
+      {
+        "label": "BOQ, spoken",
+        "lines": [
+          "Well",
+          "Maybe I could invite her"
+        ]
+      },
+      {
+        "label": "GALINDA, spoken",
+        "lines": [
+          "Oh, Biq, really?"
+        ]
+      },
+      {
+        "label": "GALINDA",
+        "lines": [
+          "You would do that for me?"
+        ]
+      },
+      {
+        "label": "BOQ, spoken",
+        "lines": [
+          "I would do anything for you"
+        ]
+      },
+      {
+        "label": "FIYERO, spoken",
+        "lines": [
+          "You're good!"
+        ]
+      },
+      {
+        "label": "GALINDA, spoken",
+        "lines": [
+          "I don't know what you mean",
+          "I love helping others",
+          "Oh, and I happen to be free tonight, after all"
+        ]
+      },
+      {
+        "label": "GALINDA",
+        "lines": [
+          "Now that we've met one another"
+        ]
+      },
+      {
+        "label": "FIYERO & GALINDA",
+        "lines": [
+          "It's clear we deserve each other"
+        ]
+      },
+      {
+        "label": "GALINDA",
+        "lines": [
+          "You're perfect"
+        ]
+      },
+      {
+        "label": "FIYERO",
+        "lines": [
+          "You're perfect"
+        ]
+      },
+      {
+        "label": "FIYERO & GALINDA",
+        "lines": [
+          "So we're perfect together",
+          "Born to be forever",
+          "Dancing through life"
+        ]
+      },
+      {
+        "label": "NESSAROSE, spoken",
+        "lines": [
+          "You'll never guess what just happened to me",
+          "That perfectly adorable Munchkin boy just asked me out",
+          "He said he was too shy to ask me out first, but then, Galinda emboldened him"
+        ]
+      },
+      {
+        "label": "ELPHABA, spoken",
+        "lines": [
+          "Wait, Galinda?"
+        ]
+      },
+      {
+        "label": "NESSAROSE, spoken",
+        "lines": [
+          "Don't",
+          "Don't you dare say another word against her",
+          "I'm about to have the happiest night of my life",
+          "Thanks to Galinda"
+        ]
+      },
+      {
+        "label": "NESSAROSE",
+        "lines": [
+          "Finally, for this one night",
+          "I'm about to have a fun night",
+          "With this Munchkin boy Galinda found for me",
+          "And I only wish there were",
+          "Something I could do for her",
+          "To repay her",
+          "Elphaba, see?",
+          "We deserve each other",
+          "And Galinda helped it come true",
+          "We deserve each other, me and Boq"
+        ]
+      },
+      {
+        "label": "NESSAROSE, spoken",
+        "lines": [
+          "Please, Elphaba, try to understand"
+        ]
+      },
+      {
+        "label": "ELPHABA",
+        "lines": [
+          "I do"
+        ]
+      },
+      {
+        "label": "ELPHABA, spoken",
+        "lines": [
+          "Galinda, um",
+          "Nessa and I were talking about you just now and—"
+        ]
+      },
+      {
+        "label": "GALINDA, spoken",
+        "lines": [
+          "Oh, well, we were just talking about you",
+          "How you should join us tonight at the Ozdust",
+          "And don't tell me you have nothing to wear",
+          "'Cause you could wear this",
+          "I mean, it goes with everything you own"
+        ]
+      },
+      {
+        "label": "GALINDA",
+        "lines": [
+          "It's really, uh, sharp, don't you think?",
+          "You know black is this year's pink",
+          "You deserve each other",
+          "This hat and you, you're both so smart",
+          "You deserve each other",
+          "So here, out of the goodness of my heart"
+        ]
+      },
+      {
+        "label": "BOQ",
+        "lines": [
+          "Listen, Nessa?"
+        ]
+      },
+      {
+        "label": "NESSAROSE, spoken",
+        "lines": [
+          "Yes?"
+        ]
+      },
+      {
+        "label": "BOQ",
+        "lines": [
+          "Uh, Nessa",
+          "I've got something to confess a",
+          "Reason why, well",
+          "Why I asked you here tonight",
+          "And I know it isn't fair"
+        ]
+      },
+      {
+        "label": "NESSAROSE, spoken",
+        "lines": [
+          "Boq, I know why"
+        ]
+      },
+      {
+        "label": "BOQ, spoken",
+        "lines": [
+          "You do?"
+        ]
+      },
+      {
+        "label": "NESSAROSE",
+        "lines": [
+          "It's because I'm in this chair",
+          "And you felt sorry for me"
+        ]
+      },
+      {
+        "label": "NESSAROSE, spoken",
+        "lines": [
+          "Well, isn't that right?"
+        ]
+      },
+      {
+        "label": "BOQ, spoken",
+        "lines": [
+          "No! No, no, no, I don't feel sorry for you",
+          "You're great",
+          "I asked you because",
+          "Because"
+        ]
+      },
+      {
+        "label": "BOQ",
+        "lines": [
+          "Because you are so beautiful"
+        ]
+      },
+      {
+        "label": "NESSAROSE",
+        "lines": [
+          "Boq, I think you're wonderful",
+          "And we deserve each other",
+          "Don't you see this is our chance?",
+          "We deserve each other",
+          "Don't we, Boq?"
+        ]
+      },
+      {
+        "label": "BOQ, spoken",
+        "lines": [
+          "You know what?",
+          "Let's dance"
+        ]
+      },
+      {
+        "label": "NESSAROSE, spoken",
+        "lines": [
+          "What?"
+        ]
+      },
+      {
+        "label": "BOQ",
+        "lines": [
+          "Let's dance"
+        ]
+      },
+      {
+        "label": "ALL",
+        "lines": [
+          "Dancing through life here at the Ozdust",
+          "If only because dust is what we come to",
+          "And here's the strange thing, your life could end up changing",
+          "While you're dancing through"
+        ]
+      }
+    ]
+  },
+  {
+    "title": "Popular",
+    "sections": [
+      {
+        "label": "GALINDA, spoken",
+        "lines": [
+          "Elphie",
+          "Now that we're friends, I've decided to make you my new project"
+        ]
+      },
+      {
+        "label": "ELPHABA, spoken",
+        "lines": [
+          "Oh, you really don't have to do that"
+        ]
+      },
+      {
+        "label": "GALINDA, spoken",
+        "lines": [
+          "I know!",
+          "That's what makes me so nice"
+        ]
+      },
+      {
+        "label": "GALINDA",
+        "lines": [
+          "Whenever I see someone less fortunate than I",
+          "And let's face it, right? Who isn't less fortunate than I?",
+          "My tender heart tends to start to bleed",
+          "And when someone needs a makeover, I simply have to take over",
+          "I know, I know exactly what they need",
+          "And even in your case",
+          "Though it's the toughest case I've yet to face",
+          "Don't worry, I'm determined to succeed",
+          "Follow my lead",
+          "And yes, indeed",
+          "You will be, ah",
+          "Popular",
+          "You're gonna be popular",
+          "I'll teach you the proper ploys when you talk to boys",
+          "Little ways to flirt and flounce, ooh!",
+          "I'll show you what shoes to wear, how to fix your hair",
+          "Everything that really counts to be popular",
+          "I'll help you be popular",
+          "You'll hang with the right cohorts, you'll be good at sports",
+          "Know the slang you've got to know",
+          "So let's start 'cause you've got an awfully long way to go",
+          "Don't be offended by my frank analysis",
+          "Think of it as personality dialysis",
+          "Now that I've chosen to become a pal",
+          "A sister and adviser, there's nobody wiser",
+          "Not when it comes to",
+          "Popular",
+          "I know about popular",
+          "And with an assist from me to be who you'll be",
+          "Instead of dreary who-you-were"
+        ]
+      },
+      {
+        "label": "GALINDA, spoken",
+        "lines": [
+          "Well, are!"
+        ]
+      },
+      {
+        "label": "GALINDA",
+        "lines": [
+          "There's nothing that can stop you from becoming populer… —lar!",
+          "La-la, la-la",
+          "We're gonna make you popular",
+          "When I see depressing creatures",
+          "With unprepossessing features",
+          "I remind them on their own behalf to think of",
+          "Celebrated heads of state",
+          "Or especially great communicators",
+          "Did they have brains or knowledge?"
+        ]
+      },
+      {
+        "label": "GALINDA, spoken",
+        "lines": [
+          "Don't make me laugh"
+        ]
+      },
+      {
+        "label": "GALINDA",
+        "lines": [
+          "They were"
+        ]
+      },
+      {
+        "label": "ELPHABA, spoken",
+        "lines": [
+          "Popular"
+        ]
+      },
+      {
+        "label": "GALINDA, spoken",
+        "lines": [
+          "Right!"
+        ]
+      },
+      {
+        "label": "GALINDA",
+        "lines": [
+          "It's all about popular",
+          "It's not about aptitude, it's the way you're viewed",
+          "So it's very shrewd to be",
+          "Very, very popular like me, me",
+          "And though you protest",
+          "Your disinterest",
+          "I know clandestinely",
+          "You're gonna grin and bear it, your newfound popularity (Woo!)",
+          "La-la, la-la",
+          "La-la, la-la",
+          "La-la, ooh",
+          "You'll be popular",
+          "Just not quite as popular as me"
+        ]
+      }
+    ]
+  },
+  {
+    "title": "I'm Not That Girl",
+    "sections": [
+      {
+        "label": "ELPHABA",
+        "lines": [
+          "Hands touch, eyes meet",
+          "Sudden silence, sudden heat",
+          "Hearts leap in a giddy whirl",
+          "He could be that boy, but I'm not that girl",
+          "Don't dream too far",
+          "Don't lose sight of who you are",
+          "Don't remember that rush of joy",
+          "He could be that boy",
+          "I'm not that girl",
+          "Every so often, we long to steal",
+          "To the land of what-might-have-been",
+          "But that doesn't soften the ache we feel",
+          "When reality sets back in",
+          "Blithe smile, lithe limb",
+          "She who's winsome, she wins him",
+          "Gold hair with a gentle curl",
+          "That's the girl he chose",
+          "And Heaven knows",
+          "I'm not that girl",
+          "Don't wish, don't start",
+          "Wishing only wounds the heart",
+          "I wasn't born for the rose and pearl",
+          "There's a girl I know",
+          "He loves her so",
+          "Mm",
+          "I'm not that girl"
+        ]
+      }
+    ]
+  },
+  {
+    "title": "One Short Day",
+    "sections": [
+      {
+        "label": "TOURISTS",
+        "lines": [
+          "One short day",
+          "If you only have, if you only have one short day",
+          "One short day in the Emerald City",
+          "One short day in the Emerald City",
+          "One short day, one short day, one short day, one short day",
+          "In the Emerald City",
+          "Emerald City",
+          "One short day in the Emerald City",
+          "One short day full of so much to do",
+          "Every way that you look in this city",
+          "There's something exquisite you'll want to visit",
+          "Before the day's through"
+        ]
+      },
+      {
+        "label": "ELPHABA",
+        "lines": [
+          "There are buildings tall as Quoxwood trees"
+        ]
+      },
+      {
+        "label": "GLINDA",
+        "lines": [
+          "Dress salons"
+        ]
+      },
+      {
+        "label": "ELPHABA",
+        "lines": [
+          "And libraries"
+        ]
+      },
+      {
+        "label": "GLINDA",
+        "lines": [
+          "Palaces"
+        ]
+      },
+      {
+        "label": "ELPHABA",
+        "lines": [
+          "Museums"
+        ]
+      },
+      {
+        "label": "ELPHABA & GLINDA",
+        "lines": [
+          "A hundred strong",
+          "There are wonders like I've never seen"
+        ]
+      },
+      {
+        "label": "GLINDA",
+        "lines": [
+          "It's all grand"
+        ]
+      },
+      {
+        "label": "ELPHABA",
+        "lines": [
+          "And it's all green"
+        ]
+      },
+      {
+        "label": "ELPHABA & GLINDA",
+        "lines": [
+          "I think we've found the place where we belong",
+          "I wanna be in this hoi polloi"
+        ]
+      },
+      {
+        "label": "ELPHABA",
+        "lines": [
+          "So I'll be back for good someday"
+        ]
+      },
+      {
+        "label": "GLINDA",
+        "lines": [
+          "To make my life and make my way"
+        ]
+      },
+      {
+        "label": "ELPHABA & GLINDA",
+        "lines": [
+          "But for today, we'll wander and enjoy"
+        ]
+      },
+      {
+        "label": "ALL",
+        "lines": [
+          "One short day in the Emerald City",
+          "One short day to have a lifetime of fun",
+          "One short day"
+        ]
+      },
+      {
+        "label": "ELPHABA & GLINDA",
+        "lines": [
+          "And we're warning the city",
+          "Now that we're in here",
+          "You'll know we've been here"
+        ]
+      },
+      {
+        "label": "ALL",
+        "lines": [
+          "Before we are done"
+        ]
+      },
+      {
+        "label": "ANNOUNCER",
+        "lines": [
+          "Presenting the absolute factual story of our wonderful Wizard of Oz",
+          "Starring the Emerald City players"
+        ]
+      },
+      {
+        "label": "PRESENTER",
+        "lines": [
+          "Long, long ago, long before we can recall",
+          "There lived here in Oz the magical wise ones"
+        ]
+      },
+      {
+        "label": "WIZOMANIA CHOIR",
+        "lines": [
+          "Ah, the magical wise ones"
+        ]
+      },
+      {
+        "label": "WIZOMANIA CHOIR & PRESENTER",
+        "lines": [
+          "The wisest of them all"
+        ]
+      },
+      {
+        "label": "WIZOMANIA SINGER 1",
+        "lines": [
+          "We will not live forever",
+          "That, I can foresee"
+        ]
+      },
+      {
+        "label": "WIZOMANIA SINGER 2",
+        "lines": [
+          "So let us set all of our magic"
+        ]
+      },
+      {
+        "label": "WIZOMANIA SINGER 1",
+        "lines": [
+          "In a strange and secret language"
+        ]
+      },
+      {
+        "label": "WIZOMANIA SINGER 1 & 2",
+        "lines": [
+          "In a book"
+        ]
+      },
+      {
+        "label": "WIZOMANIA SINGER 2 & CHOIR",
+        "lines": [
+          "The Grimmerie"
+        ]
+      },
+      {
+        "label": "WIZOMANIA SINGER 1 & CHOIR",
+        "lines": [
+          "The Grimmerie"
+        ]
+      },
+      {
+        "label": "PRESENTER",
+        "lines": [
+          "But time ticked ever onward day by day"
+        ]
+      },
+      {
+        "label": "WIZOMANIA CHOIR",
+        "lines": [
+          "Oh"
+        ]
+      },
+      {
+        "label": "PRESENTER",
+        "lines": [
+          "And all those who could read it passed away"
+        ]
+      },
+      {
+        "label": "WIZOMANIA CHOIR",
+        "lines": [
+          "Oh"
+        ]
+      },
+      {
+        "label": "PRESENTER & WIZOMANIA CHOIR",
+        "lines": [
+          "'Til one day, no one could"
+        ]
+      },
+      {
+        "label": "PRESENTER",
+        "lines": [
+          "But the wise ones left a prophecy"
+        ]
+      },
+      {
+        "label": "WIZOMANIA SINGER 1",
+        "lines": [
+          "In Oz's darkest hour",
+          "Though we cannot say when"
+        ]
+      },
+      {
+        "label": "WIZOMANIA SINGER 2",
+        "lines": [
+          "There will come one with the power",
+          "To read the Grimmerie again"
+        ]
+      },
+      {
+        "label": "WIZOMANIA SINGER 1",
+        "lines": [
+          "And Oz, which had been sad and blah"
+        ]
+      },
+      {
+        "label": "WIZOMANIA SINGER 2 & CHOIR",
+        "lines": [
+          "Once more will sing a joyous"
+        ]
+      },
+      {
+        "label": "WIZOMANIA SINGER 1",
+        "lines": [
+          "Oh"
+        ]
+      },
+      {
+        "label": "PRESENTER, spoken",
+        "lines": [
+          "Look!",
+          "A man in a balloon arriving from the sky",
+          "Maybe he is here to fulfill the prophecy",
+          "But can he read the Grimmerie?"
+        ]
+      },
+      {
+        "label": "WIZOMANIA CHOIR",
+        "lines": [
+          "This man who comes out of the blue",
+          "Is he the prophecy?"
+        ]
+      },
+      {
+        "label": "PRESENTER",
+        "lines": [
+          "There's one way we'll know if it's true"
+        ]
+      },
+      {
+        "label": "PRESENTER & WIZOMANIA CHOIR, WIZOMANIA CHOIR",
+        "lines": [
+          "Fetch the Grimmerie (The Grimmerie)"
+        ]
+      },
+      {
+        "label": "WIZARD OF OZ, spoken",
+        "lines": [
+          "Omaha",
+          "Omaha"
+        ]
+      },
+      {
+        "label": "WOMAN, spoken",
+        "lines": [
+          "He can read it",
+          "He must be",
+          "A Wizard"
+        ]
+      },
+      {
+        "label": "WIZOMANIA SINGER 1",
+        "lines": [
+          "The prophecy fulfilled"
+        ]
+      },
+      {
+        "label": "WIZOMANIA SINGER 2",
+        "lines": [
+          "What merriness he'll bring"
+        ]
+      },
+      {
+        "label": "WIZOMANIA SINGER 1 & 2",
+        "lines": [
+          "Now every Ozian raise a voice and sing",
+          "And sing, and sing"
+        ]
+      },
+      {
+        "label": "WIZOMANIA SINGER 2",
+        "lines": [
+          "Who's the mage whose major",
+          "Itinerary is making all Oz merrier?"
+        ]
+      },
+      {
+        "label": "WIZOMANIA SINGER 1",
+        "lines": [
+          "Who's the sage who sagely",
+          "Sailed in to save our posteriors?"
+        ]
+      },
+      {
+        "label": "WIZOMANIA CHOIR",
+        "lines": [
+          "Whose enthuse for hot-air ballooning",
+          "Has all of Oz honeymooning?",
+          "Ooh, isn't he wonderful?",
+          "Our wonderful Wizard"
+        ]
+      },
+      {
+        "label": "ELPHABA & GLINDA, WIZOMANIA CHOIR",
+        "lines": [
+          "One short day (Who's the mage whose major)",
+          "In the Emerald City (Itinerary is making all Oz merrier?)",
+          "One short day (Who's the sage who sagely)",
+          "To have a lifetime of fun (Sailed in to save our posteriors?)"
+        ]
+      },
+      {
+        "label": "ALL",
+        "lines": [
+          "What a way to be seeing the city"
+        ]
+      },
+      {
+        "label": "ELPHABA & GLINDA",
+        "lines": [
+          "Where so many roam to",
+          "We'll call it home too",
+          "And then, just like now, we can say",
+          "We're just two friends"
+        ]
+      },
+      {
+        "label": "ELPHABA",
+        "lines": [
+          "Two good friends"
+        ]
+      },
+      {
+        "label": "GLINDA",
+        "lines": [
+          "Two best friends"
+        ]
+      },
+      {
+        "label": "ALL",
+        "lines": [
+          "Sharing one wonderful",
+          "One short"
+        ]
+      },
+      {
+        "label": "GUARD, spoken",
+        "lines": [
+          "The Wizard will see you now!"
+        ]
+      },
+      {
+        "label": "ALL",
+        "lines": [
+          "Day"
+        ]
+      }
+    ]
+  },
+  {
+    "title": "A Sentimental Man",
+    "sections": [
+      {
+        "label": "ELPHABA, spoken",
+        "lines": [
+          "My heart's desire is for you to help the animals"
+        ]
+      },
+      {
+        "label": "WIZARD, spoken",
+        "lines": [
+          "I had a feeling you were gonna say that",
+          "And I agree wholeheartedly"
+        ]
+      },
+      {
+        "label": "ELPHABA, spoken",
+        "lines": [
+          "That makes me so happy"
+        ]
+      },
+      {
+        "label": "WIZARD, spoken",
+        "lines": [
+          "Well, that's what I love best",
+          "Makin' people happy"
+        ]
+      },
+      {
+        "label": "WIZARD",
+        "lines": [
+          "I am a sentimental man",
+          "Who always longed to be a father",
+          "That's why I do the best I can",
+          "To treat each citizen of Oz as son or daughter",
+          "So, Elphaba, I'd like to raise you high",
+          "'Cause I think everyone deserves the chance to fly",
+          "And helping you with your ascent allows me to feel so",
+          "Parental",
+          "For I am",
+          "A sentimental man"
+        ]
+      }
+    ]
+  },
+  {
+    "title": "Defying Gravity",
+    "sections": [
+      {
+        "label": "GLINDA, spoken",
+        "lines": [
+          "Elphaba",
+          "Why couldn't you have stayed calm for once",
+          "Instead of flying off the handle?",
+          "I hope you're happy"
+        ]
+      },
+      {
+        "label": "GLINDA",
+        "lines": [
+          "I hope you're happy now",
+          "I hope you're happy how you've hurt your cause forever",
+          "I hope you think you're clever"
+        ]
+      },
+      {
+        "label": "ELPHABA, spoken",
+        "lines": [
+          "I hope you're happy"
+        ]
+      },
+      {
+        "label": "ELPHABA",
+        "lines": [
+          "I hope you're happy too",
+          "I hope you're proud how you would",
+          "Grovel in submission to feed your own ambition"
+        ]
+      },
+      {
+        "label": "GLINDA & ELPHABA",
+        "lines": [
+          "So though I can't imagine how",
+          "I hope you're happy right now"
+        ]
+      },
+      {
+        "label": "GLINDA, spoken",
+        "lines": [
+          "Elphie, listen to me",
+          "Just say you're sorry"
+        ]
+      },
+      {
+        "label": "GLINDA",
+        "lines": [
+          "You can still be with the Wizard",
+          "What you've worked and waited for",
+          "You can have all you ever wanted"
+        ]
+      },
+      {
+        "label": "ELPHABA, spoken",
+        "lines": [
+          "I know"
+        ]
+      },
+      {
+        "label": "ELPHABA",
+        "lines": [
+          "But I don't want it",
+          "No, I can't want it anymore",
+          "Something has changed within me",
+          "Something is not the same",
+          "I'm through with playing by",
+          "The rules of someone else's game",
+          "Too late for second-guessing",
+          "Too late to go back to sleep",
+          "It's time to trust my instincts",
+          "Close my eyes and leap",
+          "It's time to try defying gravity",
+          "I think I'll try defying gravity",
+          "And you can't pull me down"
+        ]
+      },
+      {
+        "label": "GLINDA",
+        "lines": [
+          "Can't I make you understand",
+          "You're having delusions of grandeur?"
+        ]
+      },
+      {
+        "label": "ELPHABA",
+        "lines": [
+          "I'm through accepting limits",
+          "'Cause someone says they're so",
+          "Some things I cannot change",
+          "But 'til I try, I'll never know",
+          "Too long, I've been afraid of",
+          "Losing love, I guess I've lost",
+          "Well, if that's love",
+          "It comes at much too high a cost",
+          "I'd sooner buy defying gravity",
+          "Kiss me goodbye, I'm defying gravity",
+          "And you can't pull me down"
+        ]
+      },
+      {
+        "label": "ELPHABA, spoken",
+        "lines": [
+          "Come with me",
+          "Think of what we could do together"
+        ]
+      },
+      {
+        "label": "ELPHABA",
+        "lines": [
+          "Unlimited",
+          "Together, we're unlimited",
+          "Together, we'll be the greatest team there's ever been, Glinda",
+          "Dreams the way we planned 'em"
+        ]
+      },
+      {
+        "label": "GLINDA",
+        "lines": [
+          "If we work in tandem"
+        ]
+      },
+      {
+        "label": "GLINDA & ELPHABA",
+        "lines": [
+          "There's no fight we cannot win",
+          "Just you and I defying gravity",
+          "With you and I defying gravity"
+        ]
+      },
+      {
+        "label": "ELPHABA",
+        "lines": [
+          "They'll never bring us down"
+        ]
+      },
+      {
+        "label": "ELPHABA, spoken",
+        "lines": [
+          "Are you coming?"
+        ]
+      },
+      {
+        "label": "GLINDA",
+        "lines": [
+          "I hope you're happy",
+          "Now that you're choosing this"
+        ]
+      },
+      {
+        "label": "ELPHABA, spoken",
+        "lines": [
+          "You, too"
+        ]
+      },
+      {
+        "label": "ELPHABA",
+        "lines": [
+          "I hope it brings you bliss"
+        ]
+      },
+      {
+        "label": "GLINDA & ELPHABA",
+        "lines": [
+          "I really hope you get it",
+          "And you don't live to regret it",
+          "I hope you're happy in the end",
+          "I hope you're happy, my friend"
+        ]
+      },
+      {
+        "label": "ELPHABA, spoken",
+        "lines": [
+          "No, leave her alone!",
+          "She hasn't done anything wrong",
+          "I'm the one you want",
+          "I'm the one you want!",
+          "It's me!"
+        ]
+      },
+      {
+        "label": "ELPHABA",
+        "lines": [
+          "It's me",
+          "So if you care to find me",
+          "Look to the western sky",
+          "As someone told me lately",
+          "\"Everyone deserves the chance to fly\"",
+          "And if I'm flying solo",
+          "At least, I'm flying free",
+          "To those who'd ground me",
+          "Take a message back from me",
+          "Tell them how I'm defying gravity",
+          "I'm flying high, defying gravity",
+          "And soon, I'll match them in renown",
+          "Unlimited",
+          "Unlimited",
+          "Unlimited"
+        ]
+      },
+      {
+        "label": "ELPHABA, spoken",
+        "lines": [
+          "And, nobody in all of Oz"
+        ]
+      },
+      {
+        "label": "ELPHABA",
+        "lines": [
+          "No wizard that there is or was",
+          "Is ever gonna bring me down"
+        ]
+      },
+      {
+        "label": "GLINDA",
+        "lines": [
+          "I hope you're happy"
+        ]
+      },
+      {
+        "label": "CITIZENS OF OZ",
+        "lines": [
+          "Look at her! She's wicked!",
+          "Kill her!"
+        ]
+      },
+      {
+        "label": "CITIZENS OF OZ & ELPHABA",
+        "lines": [
+          "No one mourns the wicked (Bring me down)",
+          "So we've got to bring her"
+        ]
+      },
+      {
+        "label": "ELPHABA",
+        "lines": [
+          "Oh"
+        ]
+      },
+      {
+        "label": "CITIZENS OF OZ",
+        "lines": [
+          "Down",
+          "Down",
+          "Woah"
+        ]
+      }
+    ]
+  },
+  {
+    "title": "Every Day More Wicked",
+    "sections": [
+      {
+        "label": "OZIANS",
+        "lines": [
+          "Every day more wicked",
+          "Every day, the terror grows",
+          "All of Oz is ever on alert",
+          "That's the way with wicked",
+          "Spreading fear where'er she goes",
+          "Seeking out new victims she can hurt"
+        ]
+      },
+      {
+        "label": "MADAME MORRIBLE",
+        "lines": [
+          "Like some terrible green blizzard",
+          "Throughout the land she flies",
+          "Defaming our poor Wizard",
+          "With her calumnies and lies"
+        ]
+      },
+      {
+        "label": "ALL",
+        "lines": [
+          "She lies",
+          "She lies"
+        ]
+      },
+      {
+        "label": "OZIANS",
+        "lines": [
+          "Save us from the wicked",
+          "Shield us so we won't be hexed",
+          "Give us warning, where will she strike next?",
+          "Where will she strike next?",
+          "Where will she strike next?"
+        ]
+      },
+      {
+        "label": "ELPHABA",
+        "lines": [
+          "When I stop the Wizard",
+          "All Oz will applaud",
+          "How I saved them from the Wizard",
+          "By revealing he's a fraud",
+          "If I can just make them believe in the truth",
+          "That all that he says is a lie",
+          "That's when they'll finally bid",
+          "The Wizard goodbye"
+        ]
+      },
+      {
+        "label": "PFANNEE, SHENSHEN & STAFF",
+        "lines": [
+          "Dearest Glinda, you are still the best",
+          "Others are good, but you're the goodliest",
+          "We feel merry, we feel cheery",
+          "Just to gaze on your reflection",
+          "Only you disprove the theory",
+          "That you can't improve perfection"
+        ]
+      },
+      {
+        "label": "GLINDA",
+        "lines": [
+          "La, la, la, la"
+        ]
+      },
+      {
+        "label": "SOLDIERS",
+        "lines": [
+          "La, la, la, la",
+          "La, la, la, la",
+          "La, la, la, la (La-la-la, la, la, la, la, la-la-la-la-la-la-la, la, la)",
+          "La, la, la, la (La-la-la, la, la, la, la, la-la-la-la-la-la-la, la, la)"
+        ]
+      },
+      {
+        "label": "OZIANS",
+        "lines": [
+          "Save us from the wicked",
+          "Every night, our voices wail",
+          "Save us from this fear and victimhood",
+          "We believe in Glinda",
+          "With her magic, she'll prevail",
+          "She will make it end the way it should",
+          "When at last, the wicked is defeated by the good",
+          "The good",
+          "Wicked is defeated by the good"
+        ]
+      }
+    ]
+  },
+  {
+    "title": "Thank Goodness / I Couldn't Be Happier",
+    "sections": [
+      {
+        "label": "GLINDA",
+        "lines": [
+          "Oh, what a celebration we'll have today"
+        ]
+      },
+      {
+        "label": "CITIZENS OF OZ",
+        "lines": [
+          "Thank goodness"
+        ]
+      },
+      {
+        "label": "GLINDA",
+        "lines": [
+          "Let's have a celebration the Glinda way"
+        ]
+      },
+      {
+        "label": "CITIZENS OF OZ",
+        "lines": [
+          "Thank goodness"
+        ]
+      },
+      {
+        "label": "MADAME MORRIBLE",
+        "lines": [
+          "Finally a day that's totally wicked witch free"
+        ]
+      },
+      {
+        "label": "CITIZENS OF OZ",
+        "lines": [
+          "We couldn't be happier, thank goodness"
+        ]
+      },
+      {
+        "label": "MADAME MORRIBLE, spoken",
+        "lines": [
+          "Thank goodness for you, Glinda",
+          "And your handsome swain, Prince Fiyero",
+          "Newly appointed captain of the Gale Force",
+          "Tell us, Captain, how does it feel being engaged?"
+        ]
+      },
+      {
+        "label": "FIYERO, spoken",
+        "lines": [
+          "We're engaged?"
+        ]
+      },
+      {
+        "label": "GLINDA, spoken",
+        "lines": [
+          "Surprised?"
+        ]
+      },
+      {
+        "label": "FIYERO, spoken",
+        "lines": [
+          "Yes"
+        ]
+      },
+      {
+        "label": "GLINDA, spoken",
+        "lines": [
+          "Good, we hoped you'd be",
+          "The wizard and I"
+        ]
+      },
+      {
+        "label": "GLINDA",
+        "lines": [
+          "We couldn't be happier, right, dear?",
+          "Couldn't be happier right here",
+          "Look what we've got, a fairy tale plot",
+          "Our very own happy ending",
+          "Where we couldn't be happier, true, dear?",
+          "Couldn't be happier",
+          "And we're happy to share our ending",
+          "Vicariously with all of you",
+          "He couldn't look handsomer",
+          "I couldn't feel humbler",
+          "We couldn't be happier",
+          "Because happy is what happens",
+          "When all your dreams come true"
+        ]
+      },
+      {
+        "label": "MADAME MORRIBLE, spoken",
+        "lines": [
+          "And Glinda dear, we are happy for you",
+          "As press secretary, I've striven to ensure that all of Oz knows the story of your braverism",
+          "In the face of the terrifying Wicked Witch of the West"
+        ]
+      },
+      {
+        "label": "SOMEONE IN CROWD",
+        "lines": [
+          "I hear she has an extra eye that always remains awake"
+        ]
+      },
+      {
+        "label": "ANOTHER PERSON",
+        "lines": [
+          "I hear that she can shed her skin as easily as a snake"
+        ]
+      },
+      {
+        "label": "THIRD PERSON",
+        "lines": [
+          "I hear some rebel animals are giving her food and shelter"
+        ]
+      },
+      {
+        "label": "FOURTH PERSON",
+        "lines": [
+          "I hear her soul is so unclean, pure water can melt her"
+        ]
+      },
+      {
+        "label": "CROWD",
+        "lines": [
+          "Melt her?",
+          "Please, somebody go and melt her"
+        ]
+      },
+      {
+        "label": "FIYERO, spoken",
+        "lines": [
+          "I can't just stand there grinning, pretending to go along with all this"
+        ]
+      },
+      {
+        "label": "GLINDA, spoken",
+        "lines": [
+          "Fiyero",
+          "Thanks plenty, dearest",
+          "He's, um, he's gone to fetch me a refreshment",
+          "He's so thoughtful that way"
+        ]
+      },
+      {
+        "label": "GLINDA",
+        "lines": [
+          "That's why I couldn't be happier",
+          "No, I couldn't be happier",
+          "Though it is, I admit, the tiniest bit",
+          "Unlike I anticipated",
+          "But I couldn't be happier",
+          "Simply couldn't be happier",
+          "Well, not simply",
+          "'Cause getting your dreams, it's strange",
+          "But it seems a little, well, complicated",
+          "There's a kind of a sort of cost",
+          "There's a couple of things get lost",
+          "There are bridges you cross you didn't know you crossed until you've crossed",
+          "And if that joy, that thrill",
+          "Doesn't thrill like you think it will",
+          "Still, with this perfect finale, the cheers and the ballyhoo",
+          "Who wouldn't be happier?",
+          "So I couldn't be happier",
+          "Because happy is what happens when all your dreams come true",
+          "Well, isn't it?",
+          "Happy is what happens when your dreams come true"
+        ]
+      },
+      {
+        "label": "CROWD",
+        "lines": [
+          "We love you, Glinda, if we may be so frank"
+        ]
+      },
+      {
+        "label": "GLINDA",
+        "lines": [
+          "Thank goodness"
+        ]
+      },
+      {
+        "label": "CROWD",
+        "lines": [
+          "For all this joy, we know who we've got to thank",
+          "Thank goodness",
+          "That means the Wizard, Glinda"
+        ]
+      },
+      {
+        "label": "GLINDA",
+        "lines": [
+          "And fiancé"
+        ]
+      },
+      {
+        "label": "CROWD",
+        "lines": [
+          "They couldn't be goodlier",
+          "She couldn't be lovelier",
+          "We couldn't be luckier"
+        ]
+      },
+      {
+        "label": "GLINDA",
+        "lines": [
+          "I couldn't be happier"
+        ]
+      },
+      {
+        "label": "CROWD",
+        "lines": [
+          "Thank goodness (Thank goodness)"
+        ]
+      },
+      {
+        "label": "GLINDA & CROWD",
+        "lines": [
+          "Today"
+        ]
+      },
+      {
+        "label": "CROWD",
+        "lines": [
+          "Thank goodness for today",
+          "Thank goodness for today"
+        ]
+      }
+    ]
+  },
+  {
+    "title": "No Place Like Home",
+    "sections": [
+      {
+        "label": "ELPHABA",
+        "lines": [
+          "Why do I love this place",
+          "That's never loved me?",
+          "A place that seems to be devolving",
+          "And even wanting to?",
+          "But Oz is more than just a place",
+          "It's a promise, an idea",
+          "And I want to help make it come true",
+          "Why should a land have so much meaning",
+          "When dark times befall it?",
+          "It's only land, made of dirt and rock and loam",
+          "It's just a place that's familiar",
+          "And home's just what we call it",
+          "But there's no place like home",
+          "Don't we all know",
+          "There's no place like home?",
+          "When you feel you can't fight anymore",
+          "Just tell yourself",
+          "There's no place like home",
+          "When you feel it's not worth fighting for",
+          "Compel yourself",
+          "Because there's no place like home",
+          "When you want to leave",
+          "Discouraged and resigned",
+          "That's what they want you to do",
+          "But think how you will grieve",
+          "For all you leave behind",
+          "Oz belongs to you too",
+          "Those who would take it from you",
+          "Spout a lie to sell yourself",
+          "You go their way or go",
+          "It's them we'll be defeating",
+          "If we keep on repeating",
+          "\"There's no place like home\"",
+          "There's no place like home",
+          "There's no place like home",
+          "If we just keep fighting for it",
+          "We will win back and restore it",
+          "There's no place like home"
+        ]
+      }
+    ]
+  },
+  {
+    "title": "The Wicked Witch of the East",
+    "sections": [
+      {
+        "label": "NESSAROSE, spoken",
+        "lines": [
+          "I want to go back to the way we were at school"
+        ]
+      },
+      {
+        "label": "NESSAROSE",
+        "lines": [
+          "That night at the Ozdust",
+          "Boq danced with me there",
+          "And it felt like he loved me then",
+          "That night, when I felt I was floating on air",
+          "I want to feel that again"
+        ]
+      },
+      {
+        "label": "NESSAROSE, spoken",
+        "lines": [
+          "Make me feel that again"
+        ]
+      },
+      {
+        "label": "ELPHABA, spoken",
+        "lines": [
+          "Oh, Nessa, at last"
+        ]
+      },
+      {
+        "label": "ELPHABA",
+        "lines": [
+          "I'd always been unsure I could",
+          "But finally, from these powers, something good",
+          "Finally something good"
+        ]
+      },
+      {
+        "label": "BOQ, spoken",
+        "lines": [
+          "Nessa, there's something I have to—"
+        ]
+      },
+      {
+        "label": "NESSAROSE, spoken",
+        "lines": [
+          "Look"
+        ]
+      },
+      {
+        "label": "BOQ, spoken",
+        "lines": [
+          "You did this? To make her happy?"
+        ]
+      },
+      {
+        "label": "BOQ",
+        "lines": [
+          "Nessa"
+        ]
+      },
+      {
+        "label": "NESSAROSE, spoken",
+        "lines": [
+          "Yes?"
+        ]
+      },
+      {
+        "label": "BOQ",
+        "lines": [
+          "Uh, Nessa",
+          "Surely now I'll matter less to you",
+          "And you won't mind my leaving here tonight"
+        ]
+      },
+      {
+        "label": "NESSAROSE, spoken",
+        "lines": [
+          "Leaving?"
+        ]
+      },
+      {
+        "label": "BOQ",
+        "lines": [
+          "The moment when I read",
+          "Glinda's going to be wed to Fiyero"
+        ]
+      },
+      {
+        "label": "NESSAROSE, spoken",
+        "lines": [
+          "Glinda?"
+        ]
+      },
+      {
+        "label": "BOQ",
+        "lines": [
+          "Yes, Nessa, that's right",
+          "And I've got to go appeal to her",
+          "Express the way I feel to her"
+        ]
+      },
+      {
+        "label": "BOQ, spoken",
+        "lines": [
+          "I lost my heart to Glinda the moment I first saw her"
+        ]
+      },
+      {
+        "label": "NESSAROSE, spoken",
+        "lines": [
+          "Lost your heart?",
+          "Well, we'll see about that"
+        ]
+      },
+      {
+        "label": "BOQ, spoken",
+        "lines": [
+          "Ah, my heart",
+          "It feels like it's, like it's shrinking"
+        ]
+      },
+      {
+        "label": "NESSAROSE",
+        "lines": [
+          "Save him, please, just save him",
+          "My poor Boq, my sweet, my brave him",
+          "Don't leave me till my sorry life has ceased",
+          "Alone and loveless here",
+          "With just the girl in the mirror",
+          "Just her and me",
+          "The Wicked Witch of the East",
+          "We deserve each other"
+        ]
+      }
+    ]
+  },
+  {
+    "title": "Wonderful",
+    "sections": [
+      {
+        "label": "WIZARD",
+        "lines": [
+          "Take it from a wise old carny",
+          "Once folks buy into your blarney",
+          "It becomes the thing they'll most hold onto",
+          "Once they've swallowed sham and hokum",
+          "Facts and logic won't unchoke 'em",
+          "They'll go on believing what they want to",
+          "Show them exactly what's the score",
+          "They'll just believe it even more",
+          "\"Wonderful\"",
+          "They called me \"Wonderful\"",
+          "So I said, \"Wonderful\"",
+          "If you insist",
+          "\"Wonderful\"",
+          "I will be wonderful"
+        ]
+      },
+      {
+        "label": "GLINDA & WIZARD",
+        "lines": [
+          "Believe me, it's hard to resist",
+          "'Cause it feels wonderful"
+        ]
+      },
+      {
+        "label": "GLINDA",
+        "lines": [
+          "They think he's wonderful"
+        ]
+      },
+      {
+        "label": "WIZARD",
+        "lines": [
+          "Hey, look who's wonderful",
+          "This corn-fed hick",
+          "Who said, \"It might be keen",
+          "To build a town of green",
+          "And a wonderful road of yellow brick\""
+        ]
+      },
+      {
+        "label": "WIZARD, spoken",
+        "lines": [
+          "You know, we could be like a—, like a family",
+          "You know, I never really had a family"
+        ]
+      },
+      {
+        "label": "ELPHABA, spoken",
+        "lines": [
+          "Lucky you"
+        ]
+      },
+      {
+        "label": "WIZARD, spoken",
+        "lines": [
+          "That's why I've wanted to give the citizens of Oz everything"
+        ]
+      },
+      {
+        "label": "ELPHABA, spoken",
+        "lines": [
+          "So you lied to them?"
+        ]
+      },
+      {
+        "label": "WIZARD",
+        "lines": [
+          "The truth is not a thing of fact or reason",
+          "The truth is just what everyone agrees on"
+        ]
+      },
+      {
+        "label": "WIZARD, spoken",
+        "lines": [
+          "You see, back where I come from, we got a whole lot of people who believe all sorts of things that aren't true",
+          "You know what we call it?",
+          "History"
+        ]
+      },
+      {
+        "label": "WIZARD",
+        "lines": [
+          "A man's called a traitor or liberator",
+          "A rich man's a thief or philanthropist",
+          "Is one an invader or noble crusader?",
+          "It's all in which label is able to persist",
+          "There are precious few at ease with moral ambiguities",
+          "So we act as though they don't exist"
+        ]
+      },
+      {
+        "label": "GLINDA",
+        "lines": [
+          "They call him, \"Wonderful\""
+        ]
+      },
+      {
+        "label": "WIZARD",
+        "lines": [
+          "So I am wonderful"
+        ]
+      },
+      {
+        "label": "GLINDA",
+        "lines": [
+          "He is so wonderful",
+          "It's part of his name"
+        ]
+      },
+      {
+        "label": "GLINDA & WIZARD",
+        "lines": [
+          "And with our help, you can be the same"
+        ]
+      },
+      {
+        "label": "GLINDA, spoken",
+        "lines": [
+          "Elphie, think of what we could do",
+          "Together"
+        ]
+      },
+      {
+        "label": "GLINDA",
+        "lines": [
+          "Unlimited",
+          "Together, we're unlimited",
+          "Together, we'll be the greatest team there's ever been, Elphie"
+        ]
+      },
+      {
+        "label": "ELPHABA",
+        "lines": [
+          "Dreams the way we planned 'em"
+        ]
+      },
+      {
+        "label": "GLINDA",
+        "lines": [
+          "If we work in tandem"
+        ]
+      },
+      {
+        "label": "GLINDA & ELPHABA",
+        "lines": [
+          "There's no fight we cannot win"
+        ]
+      },
+      {
+        "label": "WIZARD",
+        "lines": [
+          "At long, long last, recieve your due"
+        ]
+      },
+      {
+        "label": "GLINDA",
+        "lines": [
+          "Long overdue"
+        ]
+      },
+      {
+        "label": "WIZARD",
+        "lines": [
+          "Elphaba",
+          "A celebration throughout Oz that's all to do",
+          "With you"
+        ]
+      },
+      {
+        "label": "GLINDA & WIZARD",
+        "lines": [
+          "Wonderful",
+          "They'll call you, \"Wonderful\""
+        ]
+      },
+      {
+        "label": "GLINDA",
+        "lines": [
+          "Come and be wonderful"
+        ]
+      },
+      {
+        "label": "WIZARD",
+        "lines": [
+          "Trust me, it's fun"
+        ]
+      },
+      {
+        "label": "GLINDA",
+        "lines": [
+          "We will be wonderful"
+        ]
+      },
+      {
+        "label": "WIZARD",
+        "lines": [
+          "You'll make me wonderful"
+        ]
+      },
+      {
+        "label": "GLINDA & WIZARD",
+        "lines": [
+          "Wonderful, wonderful"
+        ]
+      }
+    ]
+  },
+  {
+    "title": "I’m Not That Girl (Reprise)",
+    "sections": [
+      {
+        "label": "GLINDA",
+        "lines": [
+          "Don't wish",
+          "Don't start",
+          "Wishing only wounds the heart",
+          "There's a girl I know",
+          "He loves her so",
+          "I'm not that girl"
+        ]
+      }
+    ]
+  },
+  {
+    "title": "As Long as You’re Mine",
+    "sections": [
+      {
+        "label": "ELPHABA",
+        "lines": [
+          "Kiss me too fiercely",
+          "Hold me too tight",
+          "I need help believing",
+          "You're with me tonight",
+          "My wildest dreamings",
+          "Could not foresee",
+          "Lying beside you",
+          "With you wanting me",
+          "Just for this moment",
+          "As long as you're mine",
+          "I've lost all resistance",
+          "And crossed some borderline",
+          "And if it turns out",
+          "It's over too fast",
+          "I'll make every last moment last",
+          "As long as you're mine"
+        ]
+      },
+      {
+        "label": "FIYERO",
+        "lines": [
+          "Maybe I'm brainless",
+          "Maybe I'm wise",
+          "But you've got me seeing",
+          "Through different eyes",
+          "Somehow I've fallen",
+          "Under your spell",
+          "And somehow, I'm feeling",
+          "It's up that I fell"
+        ]
+      },
+      {
+        "label": "ELPHABA & FIYERO",
+        "lines": [
+          "Every moment",
+          "As long as you're mine",
+          "I'll wake up my body",
+          "And make up for lost time"
+        ]
+      },
+      {
+        "label": "FIYERO",
+        "lines": [
+          "Say there's no future",
+          "For us as a pair"
+        ]
+      },
+      {
+        "label": "ELPHABA & FIYERO",
+        "lines": [
+          "And though I may know",
+          "I don't care",
+          "Just for this moment",
+          "As long as you're mine",
+          "Come be how you want to",
+          "And see how bright we shine",
+          "Borrow the moonlight",
+          "Until it is through",
+          "And know I'll be here",
+          "Holding you",
+          "As long as you're mine"
+        ]
+      },
+      {
+        "label": "FIYERO, spoken",
+        "lines": [
+          "What is it?"
+        ]
+      },
+      {
+        "label": "ELPHABA, spoken",
+        "lines": [
+          "For the first time",
+          "I feel Wicked"
+        ]
+      }
+    ]
+  },
+  {
+    "title": "No Good Deed",
+    "sections": [
+      {
+        "label": "ELPHABA",
+        "lines": [
+          "Eleka nahmen nahmen",
+          "Ah tum ah tum eleka nahmen",
+          "Eleka nahmen nahmen",
+          "Ah tum ah tum eleka nahmen",
+          "Let his flesh not be torn",
+          "Let his blood leave no stain",
+          "Though they beat him",
+          "Let him feel no pain",
+          "Let his bones never break",
+          "And however they try",
+          "To destroy him",
+          "Let him never die",
+          "Let him never die",
+          "Eleka nahmen nahmen",
+          "Ah tum ah tum eleka nahmen",
+          "Eleka nahmen nahmen",
+          "Ah tum ah tum eleka eleka",
+          "What good is this chanting?",
+          "I don't even know what I'm reading",
+          "I don't even know what trick I ought to try",
+          "Fiyero, where are you?",
+          "Already dead or bleeding?",
+          "One more disaster I can add to my",
+          "Generous supply",
+          "No good deed goes unpunished",
+          "No act of charity goes unresented",
+          "No good deed goes unpunished",
+          "That's my new creed",
+          "My road of good intentions",
+          "Led where such roads always lead",
+          "No good deed goes unpunished",
+          "Nessa",
+          "Doctor Dillamond",
+          "Fiyero",
+          "Fiyero",
+          "One question haunts and hurts",
+          "Too much, too much to mention",
+          "Was I really seeking good",
+          "Or just seeking attention?",
+          "Is that all good deeds are",
+          "When looked at with an ice-cold eye?",
+          "If that's all good deeds are",
+          "Maybe that's the reason why",
+          "No good deed goes unpunished",
+          "All helpful urges should be circumvented",
+          "No good deed goes unpunished",
+          "Sure, I meant well",
+          "Well, look at what well-meant did",
+          "All right, enough, so be it",
+          "So be it then",
+          "Let all Oz be agreed",
+          "I'm wicked through and through",
+          "And since I can't succeed",
+          "Fiyero, saving you",
+          "I promise no good deed",
+          "Will I attempt to do again",
+          "Ever again",
+          "No good deed",
+          "Will I do",
+          "Again"
+        ]
+      }
+    ]
+  },
+  {
+    "title": "March of the Witch Hunters",
+    "sections": [
+      {
+        "label": "CITIZENS OF OZ",
+        "lines": [
+          "Go and hunt her, and find her, and kill her",
+          "Go and hunt her, and find her, and kill her",
+          "Kill her!",
+          "Wickedness must be punished",
+          "Evil effectively eliminated",
+          "Wickedness must be punished",
+          "Kill the Witch!",
+          "Melt the Witch!"
+        ]
+      },
+      {
+        "label": "TIN MAN, spoken",
+        "lines": [
+          "And this is more than just a service to the Wizard",
+          "I have a personal score to settle with El—",
+          "With the Witch!"
+        ]
+      },
+      {
+        "label": "TIN MAN",
+        "lines": [
+          "It's due to her I'm made of tin",
+          "Her spell made this occur",
+          "So for once, I'm glad I'm heartless",
+          "I'll be heartless killing her!"
+        ]
+      },
+      {
+        "label": "TIN MAN, spoken",
+        "lines": [
+          "And I'm not the only one",
+          "Tell them what she did to you",
+          "How you were just a cub",
+          "And she cub-napped you"
+        ]
+      },
+      {
+        "label": "TIN MAN",
+        "lines": [
+          "You see, the lion also",
+          "Has a grievance to repay",
+          "If she'd let him fight his own battles when he was young",
+          "He wouldn't be a coward today"
+        ]
+      },
+      {
+        "label": "CITIZENS OF OZ, spoken",
+        "lines": [
+          "Kill her!"
+        ]
+      },
+      {
+        "label": "CITIZENS OF OZ",
+        "lines": [
+          "Wickedness must be punished",
+          "Brave Witch Hunters, I would join you if I could",
+          "Because Wickedness must be punished, punished, punished",
+          "But good",
+          "Kill her, go! Melt her, go! Kill her, go! Melt her, go!",
+          "Kill her, go! Melt her, go! Kill her, go! Melt her, go!",
+          "Kill her, go! Melt her, go! Kill her, go! Melt her, go!",
+          "Kill her, go! Melt her, go! Kill her!",
+          "Melt her!"
+        ]
+      }
+    ]
+  },
+  {
+    "title": "The Girl in the Bubble",
+    "sections": [
+      {
+        "label": "GLINDA, spoken",
+        "lines": [
+          "Look"
+        ]
+      },
+      {
+        "label": "GLINDA",
+        "lines": [
+          "There's that beautiful girl",
+          "With a beautiful life",
+          "Such a beautiful life",
+          "Built on lies",
+          "'Cause all that's required",
+          "To live in a dream",
+          "Is endlessly closing your eyes",
+          "She spins such beautiful stories",
+          "To sing her to sleep",
+          "Full of magic and glory and love",
+          "She's the girl in the bubble",
+          "The bright shiny bubble",
+          "Blissfully floating above",
+          "Ah, but the truth has a way",
+          "Of seeping on in",
+          "Beneath the surface and sheen",
+          "And blind as you try to be",
+          "Eventually",
+          "It's hard to unsee what you've seen",
+          "And so that beautiful girl",
+          "With a beautiful life",
+          "Has a question that haunts her somehow",
+          "If she comes down from the sky",
+          "Gives the real world a try",
+          "Who in the world is she now?",
+          "And though so much of her wishes",
+          "That she could float on",
+          "And the beautiful lies never stop",
+          "For the girl in the bubble",
+          "The pink shiny bubble",
+          "It's time for her bubble to pop",
+          "For the popular girl",
+          "High in the bubble",
+          "Isn't it high time",
+          "For her bubble to pop?"
+        ]
+      }
+    ]
+  },
+  {
+    "title": "For Good",
+    "sections": [
+      {
+        "label": "ELPHABA",
+        "lines": [
+          "I'm limited"
+        ]
+      },
+      {
+        "label": "ELPHABA, spoken",
+        "lines": [
+          "Just look at me",
+          "Not with your eyes, with theirs"
+        ]
+      },
+      {
+        "label": "ELPHABA",
+        "lines": [
+          "I'm limited",
+          "And just look at you",
+          "You can do all I couldn't do, Glinda"
+        ]
+      },
+      {
+        "label": "ELPHABA, spoken",
+        "lines": [
+          "Here, take it"
+        ]
+      },
+      {
+        "label": "GLINDA, spoken",
+        "lines": [
+          "What? But you know I, I can't read this, I—"
+        ]
+      },
+      {
+        "label": "ELPHABA, spoken",
+        "lines": [
+          "Well, you have to learn"
+        ]
+      },
+      {
+        "label": "ELPHABA",
+        "lines": [
+          "Because now it's up to you",
+          "For both of us",
+          "Now it's up to you"
+        ]
+      },
+      {
+        "label": "GLINDA",
+        "lines": [
+          "I've heard it said",
+          "That people come into our lives for a reason",
+          "Bringing something we must learn",
+          "And we are led",
+          "To those who help us most to grow",
+          "If we let them",
+          "And we help them in return",
+          "Well, I don't know if I believe that's true",
+          "But I know I'm who I am today",
+          "Because I knew you",
+          "Like a comet pulled from orbit",
+          "As it passes a sun",
+          "Like a stream that meets a boulder",
+          "Halfway through the wood",
+          "Who can say if I've been changed for the better? But",
+          "Because I knew you",
+          "I have been changed for good"
+        ]
+      },
+      {
+        "label": "ELPHABA",
+        "lines": [
+          "It well may be",
+          "That we will never meet again",
+          "In this lifetime",
+          "So let me say before we part",
+          "So much of me",
+          "Is made of what I learned from you",
+          "You'll be with me",
+          "Like a handprint on my heart",
+          "And now whatever way our stories end",
+          "I know you have rewritten mine",
+          "By being my friend",
+          "Like a ship blown from its mooring",
+          "By a wind off the sea",
+          "Like a seed dropped by a skybird",
+          "In a distant wood",
+          "Who can say if I've been changed for the better? But",
+          "Because I knew you"
+        ]
+      },
+      {
+        "label": "GLINDA",
+        "lines": [
+          "Because I knew you"
+        ]
+      },
+      {
+        "label": "GLINDA & ELPHABA",
+        "lines": [
+          "I have been changed for good"
+        ]
+      },
+      {
+        "label": "ELPHABA",
+        "lines": [
+          "And just to clear the air",
+          "I ask forgiveness for the things I've done you blame me for"
+        ]
+      },
+      {
+        "label": "GLINDA",
+        "lines": [
+          "But then, I guess we know there's blame to share"
+        ]
+      },
+      {
+        "label": "GLINDA & ELPHABA",
+        "lines": [
+          "And none of it seems to matter anymore"
+        ]
+      },
+      {
+        "label": "GLINDA & ELPHABA",
+        "lines": [
+          "Like a comet pulled from orbit (Like a ship blown from its mooring)",
+          "As it passes a sun (By a wind off the sea)",
+          "Like a stream that meets a boulder (Like a seed dropped by a bird)",
+          "Halfway through the wood (In the wood)"
+        ]
+      },
+      {
+        "label": "GLINDA & ELPHABA",
+        "lines": [
+          "Who can say if I've been changed for the better?",
+          "I do believe I have been changed for the better"
+        ]
+      },
+      {
+        "label": "GLINDA",
+        "lines": [
+          "And because I knew you"
+        ]
+      },
+      {
+        "label": "ELPHABA",
+        "lines": [
+          "Because I knew you"
+        ]
+      },
+      {
+        "label": "GLINDA & ELPHABA",
+        "lines": [
+          "Because I knew you",
+          "I have been changed",
+          "For good"
+        ]
+      }
+    ]
+  }
+   ]
+  }
+ ]
+}

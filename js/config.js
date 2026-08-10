@@ -224,6 +224,15 @@ export const GUESTS = [
     // dress someone else's catalogue in her colours. One era per guest, chosen for mood.
     era: "lavender",
   },
+  {
+    id: "wicked-soundtrack",
+    name: "Wicked: The Soundtrack",
+    file: "guests/wicked.json",
+    // Emerald, rose, and gold evoke Oz without borrowing album artwork.
+    ink: { deep: "#234b3f", accent: "#c5799b", strap: "#527a50", pen: "#315746",
+           ticks: ["#4f8b63", "#c5799b", "#d5a94b"] },
+    era: "evermore",
+  },
 ];
 // A guest is played at a chosen difficulty, from the same ladder Album Focus offers:
 // deliberately the same list, since a guest round IS Album Focus pointed at another corpus.
