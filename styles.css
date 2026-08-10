@@ -1638,6 +1638,12 @@
   /* brutal tier group-head: oxblood accent on the divider + label */
   .chall-group-head.t4 { border-bottom-color: #a86a6a; }
   .chall-group-head.t4 .chall-group-label { color: #7a2b2b; }
+  /* Pinning is a small personal shortlist, not a new completion tier. It gets blue pencil
+     rather than a cassette colour so it cannot be mistaken for difficulty. */
+  .chall-group--pinned { margin-bottom: 16px; }
+  .chall-group-head--pinned { border-bottom-color: rgba(39,69,96,0.42); }
+  .chall-group-head--pinned .chall-group-label { color: #274560; }
+  .chall-group-head--pinned .chall-pin-svg { width: 17px; height: 17px; color: #274560; }
   /* tier 0 "unrated" — placeholder while a freshly-built challenge's real difficulty is
      decided. A single ghosted, dashed cassette; the group sits last in the list. */
   .chall-tapes.t0 { opacity: 0.8; }
@@ -1670,6 +1676,17 @@
      (darkSealSvg) — the same wax poured black with a lilac rim. Also baked into the SVG. */
   .chall-detail-seal.is-locked svg   { filter: grayscale(1) opacity(0.42); }
   .chall-detail-name { font-family: var(--hand); font-weight: 700; font-size: calc(32px + var(--text-size-adjust)); line-height: 1; color: var(--ink); }
+  /* A pin, not a star: the star beside a defeated card remains a victory mark. */
+  .chall-pin {
+    display: inline-flex; align-items: center; gap: 4px; padding: 3px 6px 3px 4px;
+    font-family: var(--type); font-size: calc(9px + var(--text-size-adjust)); letter-spacing: 0.8px; text-transform: uppercase;
+    color: #50677c; background: transparent; border: 1px dashed rgba(39,69,96,0.45); border-radius: 2px;
+    cursor: pointer; transform: rotate(1.5deg);
+  }
+  .chall-pin-svg { display: block; width: 15px; height: 15px; }
+  .chall-pin:hover, .chall-pin:focus-visible { color: #1f3a52; background: rgba(39,69,96,0.09); border-style: solid; outline: none; }
+  .chall-pin.is-pinned { color: #274560; border-style: solid; background: rgba(39,69,96,0.12); }
+  .chall-pin:disabled { color: #aaa18f; border-color: #c9c0ad; background: transparent; cursor: default; transform: none; }
   .chall-detail-star { display: flex; }
   .chall-star-svg { width: 18px; height: 18px; display: block; }
   .chall-detail-stamp {

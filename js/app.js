@@ -6136,6 +6136,7 @@ const CHALL_TICK_DARK = `<svg viewBox="0 0 20 20" class="chall-mark-svg" aria-hi
 const CHALL_RING = `<svg viewBox="0 0 20 20" class="chall-mark-svg" aria-hidden="true"><circle cx="10" cy="10" r="8.5" fill="none" stroke="#b6a98d" stroke-width="1.6"/></svg>`;
 const CHALL_LOCK = `<svg viewBox="0 0 20 20" class="chall-mark-svg" aria-hidden="true"><rect x="4.5" y="9" width="11" height="8" rx="1.4" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M6.8 9 V6.7 a3.2 3.2 0 0 1 6.4 0 V9" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>`;
 const CHALL_STAR = `<svg viewBox="0 0 24 24" class="chall-star-svg" aria-hidden="true"><path d="M12 2.3 L14.94 7.96 L21.22 9 L16.76 13.55 L17.7 19.85 L12 17 L6.3 19.85 L7.24 13.55 L2.78 9 L9.06 7.96 Z" fill="#e0a32f" stroke="#b9821f" stroke-width="1.1" stroke-linejoin="round" stroke-linecap="round"/></svg>`;
+const CHALL_PIN = `<svg viewBox="0 0 20 20" class="chall-pin-svg" aria-hidden="true"><path d="M6.2 3.4h7.6l-1.1 4 2.3 2.3v1H7.4v-1l2.3-2.3zM10 10.7v5.9M8.1 16.6h3.8" fill="none" stroke="currentColor" stroke-width="1.45" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
 // The dark side's mark: an eclipse — the blotted disc with its corona still showing. Drawn
 // in currentColor so the same glyph greys out with the button in its locked state.
 const CHALL_ECLIPSE = `<svg viewBox="0 0 20 20" class="chall-mark-svg" aria-hidden="true"><circle cx="10" cy="10" r="8.1" fill="none" stroke="currentColor" stroke-width="1.1" opacity="0.5"/><circle cx="10" cy="10" r="5.6" fill="currentColor"/></svg>`;
@@ -6290,6 +6291,22 @@ function scrollChallengeGroupIntoView(id) {
   requestAnimationFrame(step);
 }
 
+const CHALLENGE_PIN_LIMIT = 3;
+
+function pinnedChallenges() {
+  return CHALLENGES.filter((c) => challengeRecord(c.id).pinned && challengeUnlocked(c.id));
+}
+
+function toggleChallengePin(id) {
+  if (!challengeUnlocked(id)) return false;
+  const rec = challengeRecord(id);
+  if (!rec.pinned && pinnedChallenges().length >= CHALLENGE_PIN_LIMIT) return false;
+  const st = loadChallengeState();
+  st[id] = { ...rec, pinned: !rec.pinned };
+  saveChallengeState(st);
+  return true;
+}
+
 function renderChallengesPage() {
   const wallet = loadChallengeTokens();
   const tk = wallet.balance, tt = wallet.tickets;
@@ -6302,9 +6319,30 @@ function renderChallengesPage() {
     challSelectedId = (firstOpen || CHALLENGES[0]).id;
   }
 
-  // Grouped by difficulty: three tape tiers (easy → tough), each a coloured
-  // header over its challenges (kept in registry order within the tier).
+  // Grouped by difficulty, with a small local shortlist above it. Pins deliberately
+  // change no game state beyond this shelf: they do not affect the randomiser,
+  // unlock economy, records, or the completion tally.
+  const challengeRow = (c) => {
+    const rec = challengeRecord(c.id);
+    const open = challengeUnlocked(c.id);
+    let mark, stateCls;
+    if (rec.darkDefeated) { mark = CHALL_TICK_DARK; stateCls = "is-defeated is-dark-defeated"; }
+    else if (rec.defeated) { mark = CHALL_TICK; stateCls = "is-defeated"; }
+    else if (open)      { mark = CHALL_RING; stateCls = "is-open"; }
+    else                { mark = CHALL_LOCK; stateCls = "is-locked"; }
+    return `<button type="button" class="chall-item ${stateCls}" data-id="${c.id}">` +
+      `<span class="chall-item-name">${escapeHtml(c.name)}</span>` +
+      `<span class="chall-item-mark">${mark}</span></button>`;
+  };
   let list = "";
+  const pinned = pinnedChallenges();
+  if (pinned.length) {
+    list += `<div class="chall-group chall-group--pinned">` +
+      `<div class="chall-group-head chall-group-head--pinned">${CHALL_PIN}` +
+      `<span class="chall-group-label">Pinned</span>` +
+      `<span class="chall-group-count">${pinned.length} / ${CHALLENGE_PIN_LIMIT}</span></div>` +
+      pinned.map(challengeRow).join("") + `</div>`;
+  }
   [1, 2, 3, 4, 0].forEach((tier) => {
     const inTier = CHALLENGES.filter((c) => (c.tapes || 0) === tier);
     if (!inTier.length) return;
@@ -6314,18 +6352,7 @@ function renderChallengesPage() {
         `<span class="chall-group-label">${TAPE_WORD[tier]}</span>` +
         `<span class="chall-group-count">${inTier.length}</span>` +
       `</div>`;
-    inTier.forEach((c) => {
-      const rec = challengeRecord(c.id);
-      const open = challengeUnlocked(c.id);
-      let mark, stateCls;
-      if (rec.darkDefeated) { mark = CHALL_TICK_DARK; stateCls = "is-defeated is-dark-defeated"; }
-      else if (rec.defeated) { mark = CHALL_TICK; stateCls = "is-defeated"; }
-      else if (open)      { mark = CHALL_RING; stateCls = "is-open"; }
-      else                { mark = CHALL_LOCK; stateCls = "is-locked"; }
-      list += `<button type="button" class="chall-item ${stateCls}" data-id="${c.id}">` +
-        `<span class="chall-item-name">${escapeHtml(c.name)}</span>` +
-        `<span class="chall-item-mark">${mark}</span></button>`;
-    });
+    inTier.forEach((c) => { list += challengeRow(c); });
     list += `</div>`;
   });
 
@@ -6419,6 +6446,14 @@ function renderChallengeDetail(id) {
   const cost = c.cost || 1;
   const tt = loadChallengeTokens().tickets;
   const price = ticketPrice(c);          // null = no number of tickets ever buys this one
+  const pinned = rec.pinned;
+  const pinLimitReached = !pinned && pinnedChallenges().length >= CHALLENGE_PIN_LIMIT;
+  const pinControl = open
+    ? `<button type="button" class="chall-pin${pinned ? " is-pinned" : ""}" data-pin="${id}"` +
+        `${pinLimitReached ? " disabled aria-disabled=\"true\"" : ""}` +
+        ` aria-pressed="${pinned}" title="${pinned ? "remove from pinned challenges" : pinLimitReached ? "you can pin up to three challenges" : "pin this challenge"}">` +
+        `${CHALL_PIN}<span>${pinned ? "Pinned" : "Pin"}</span></button>`
+    : "";
 
   let action;
   if (!open && c.mastery) {
@@ -6547,6 +6582,7 @@ function renderChallengeDetail(id) {
       `<span class="chall-detail-seal ${rec.darkDefeated ? "is-dark" : rec.defeated ? "is-beaten" : open ? "is-unbeaten" : "is-locked"}">` +
         `${sealMarkup((rec.darkDefeated ? CHALLENGE_SEALS_DARK : rec.defeated ? CHALLENGE_SEALS_AGED : CHALLENGE_SEALS)[c.id])}</span>` +
       `<span class="chall-detail-name">${escapeHtml(c.name)}</span>` +
+      pinControl +
       (showDark
         ? `<span class="chall-detail-dark">${CHALL_ECLIPSE}dark side</span>`
         : rec.defeated ? `<span class="chall-detail-star">${CHALL_STAR}</span><span class="chall-detail-stamp">defeated</span>` : "") +
@@ -6590,6 +6626,8 @@ function renderChallengeDetail(id) {
   if (pb) pb.addEventListener("click", () => startChallenge(pb.dataset.play));
   const db = el.querySelector("[data-dark]");
   if (db) db.addEventListener("click", () => startChallenge(db.dataset.dark, { dark: true }));
+  const pin = el.querySelector("[data-pin]");
+  if (pin) pin.addEventListener("click", () => { if (toggleChallengePin(pin.dataset.pin)) renderChallengesPage(); });
 }
 
 /* ---------- Album Focus page (master/detail; the 12-album completion board) ---------- */

@@ -101,7 +101,7 @@ export function resetKeepsakes() {
 /* ---------- Challenges mode (progress + tokens) ---------- */
 // Per-challenge progress, keyed by challenge id:
 //   { unlocked, defeated, attempts, best, darkDefeated, darkAttempts, darkBest,
-//     earnest, ticketClaimed }
+//     earnest, ticketClaimed, pinned }
 // The dark* fields track the challenge's dark side as a separate line of progress against the
 // same id, so beating the base and beating the dark side stay independently recorded. Records
 // written before dark sides existed simply lack them and default cleanly — no migration.
@@ -124,7 +124,7 @@ export function challengeRecord(id) {
   return {
     unlocked: !!e.unlocked, defeated: !!e.defeated, attempts: e.attempts || 0, best: e.best || 0,
     darkDefeated: !!e.darkDefeated, darkAttempts: e.darkAttempts || 0, darkBest: e.darkBest || 0,
-    earnest: e.earnest || 0, ticketClaimed: !!e.ticketClaimed,
+    earnest: e.earnest || 0, ticketClaimed: !!e.ticketClaimed, pinned: !!e.pinned,
   };
 }
 // The two challenge wallets. `balance` is tokens, seeded with one starting token on first read
