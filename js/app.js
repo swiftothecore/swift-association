@@ -304,7 +304,6 @@ let timerStart = 0;
 let roundLocked = false;
 let feedbackShownAt = 0;        // ms timestamp the verdict appeared — Enter-to-advance is held off for ENTER_SKIP_GRACE after it
 const ENTER_SKIP_GRACE = 250;   // so a held/late Enter from the answer screen can't instantly blow past the result
-let debounceId = null;
 let statsBackTarget = "start";
 let settings = { ...{} };       // populated from loadSettings() in init
 let pausedRemaining = null;     // timer seconds left when the settings modal paused play
@@ -15327,12 +15326,7 @@ function wireInput() {
   input.addEventListener("input", () => {
     // Hard/Ultra have no autocomplete — you type the full title.
     if (effectiveDropdown()) {
-      if (debounceId) clearTimeout(debounceId);
-      // Null debounceId when it fires so the Enter handler can tell a *genuinely
-      // pending* edit (flush + reset selection) from an already-settled list (leave
-      // the arrow-key selection alone). Without this, debounceId stays truthy after
-      // firing, so every Enter re-ran updateDropdown and snapped activeIndex back to 0.
-      debounceId = setTimeout(() => { debounceId = null; updateDropdown(); }, 120);
+      updateDropdown();
     }
     clearTimeout(hintUrgeTimer);            // typing cancels the Relaxed idle nudge
     $("hintBtn").classList.remove("urge");
@@ -15348,11 +15342,6 @@ function wireInput() {
     } else if (e.key === "Enter") {
       e.preventDefault();
       e.stopPropagation();        // this keypress submits — don't let it also bubble to the page-advance handler
-      // The dropdown refresh is debounced (120ms). If a keystroke is still
-      // pending, flush it now so Enter accepts a match for what's *currently*
-      // typed — not the previous query's stale top result. With the dropdown
-      // off, dropdownItems stays empty and submitAnswer takes the exact-title path.
-      if (effectiveDropdown() && debounceId) { clearTimeout(debounceId); debounceId = null; updateDropdown(); }
       submitAnswer(null, false);
     } else if (e.key === "ArrowDown") {
       e.preventDefault();
