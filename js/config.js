@@ -242,6 +242,15 @@ export const GUESTS = [
            ticks: ["#8a63a2", "#e2b63d", "#c78b35", "#6a4c88"] },
     era: "speak-now",
   },
+  {
+    id: "billie-eilish",
+    name: "Billie Eilish",
+    file: "guests/billie-eilish.json",
+    // Black, acid green, and cool blue: a nocturnal palette translated into pass ink.
+    ink: { deep: "#182a26", accent: "#9aad3a", strap: "#466858", pen: "#294a41",
+           ticks: ["#9aad3a", "#6d9c8f", "#31534a", "#d1cf94"] },
+    era: "folklore",
+  },
 ];
 // A guest is played at a chosen difficulty, from the same ladder Album Focus offers:
 // deliberately the same list, since a guest round IS Album Focus pointed at another corpus.

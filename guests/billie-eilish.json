@@ -1,0 +1,5458 @@
+{
+  "id": "billie-eilish",
+  "name": "Billie Eilish",
+  "buckets": {
+    "easy": 8,
+    "hard": [
+      3,
+      10
+    ],
+    "ultra": [
+      1,
+      2
+    ]
+  },
+  "words": [
+    "admit",
+    "afraid",
+    "air",
+    "album",
+    "alive",
+    "alone",
+    "angel",
+    "answer",
+    "art",
+    "away",
+    "babe",
+    "baby",
+    "back",
+    "ball",
+    "beautiful",
+    "bed",
+    "best",
+    "birthday",
+    "black",
+    "blame",
+    "bleed",
+    "blind",
+    "block",
+    "blood",
+    "blue",
+    "body",
+    "bone",
+    "born",
+    "bottle",
+    "boy",
+    "breath",
+    "bridge",
+    "burn",
+    "bury",
+    "cage",
+    "calm",
+    "car",
+    "chain",
+    "change",
+    "chest",
+    "child",
+    "city",
+    "class",
+    "clothes",
+    "coffee",
+    "cold",
+    "corner",
+    "could",
+    "couple",
+    "cover",
+    "crazy",
+    "crime",
+    "crowd",
+    "crown",
+    "cry",
+    "dad",
+    "damn",
+    "dance",
+    "dare",
+    "dark",
+    "daughter",
+    "dead",
+    "deal",
+    "death",
+    "deserve",
+    "devil",
+    "die",
+    "different",
+    "dirty",
+    "dog",
+    "door",
+    "drag",
+    "dream",
+    "dress",
+    "drive",
+    "drown",
+    "drunk",
+    "ear",
+    "easy",
+    "else",
+    "empty",
+    "end",
+    "enough",
+    "escape",
+    "eye",
+    "face",
+    "fade",
+    "fake",
+    "father",
+    "fear",
+    "feel",
+    "feet",
+    "fence",
+    "fifteen",
+    "fifty",
+    "fight",
+    "filled",
+    "find",
+    "fine",
+    "finger",
+    "fire",
+    "first",
+    "five",
+    "flame",
+    "floor",
+    "fly",
+    "focus",
+    "fool",
+    "forever",
+    "forget",
+    "forgot",
+    "four",
+    "free",
+    "friend",
+    "fun",
+    "garden",
+    "girl",
+    "glad",
+    "glass",
+    "god",
+    "gold",
+    "grave",
+    "green",
+    "guilty",
+    "guy",
+    "hair",
+    "hand",
+    "happy",
+    "hard",
+    "hate",
+    "head",
+    "heaven",
+    "hell",
+    "hero",
+    "hide",
+    "high",
+    "hold",
+    "hollow",
+    "home",
+    "honey",
+    "hope",
+    "hospital",
+    "house",
+    "hundred",
+    "hurt",
+    "ignore",
+    "internet",
+    "invitation",
+    "jealous",
+    "kid",
+    "kill",
+    "kingdom",
+    "kiss",
+    "kitchen",
+    "knife",
+    "land",
+    "laugh",
+    "learn",
+    "least",
+    "left",
+    "let",
+    "lie",
+    "life",
+    "light",
+    "line",
+    "liquor",
+    "listen",
+    "live",
+    "lock",
+    "lonely",
+    "lose",
+    "loud",
+    "love",
+    "mad",
+    "mama",
+    "man",
+    "men",
+    "mind",
+    "mirror",
+    "mistake",
+    "morning",
+    "mother",
+    "motion",
+    "mouth",
+    "move",
+    "movie",
+    "music",
+    "nails",
+    "neck",
+    "nerve",
+    "night",
+    "notice",
+    "now",
+    "number",
+    "ocean",
+    "okay",
+    "open",
+    "outside",
+    "pain",
+    "paper",
+    "paradise",
+    "park",
+    "people",
+    "phone",
+    "picture",
+    "pink",
+    "plastic",
+    "play",
+    "please",
+    "poison",
+    "pool",
+    "power",
+    "pray",
+    "present",
+    "pretend",
+    "pride",
+    "promise",
+    "pull",
+    "quiet",
+    "rain",
+    "rare",
+    "real",
+    "red",
+    "right",
+    "ring",
+    "roof",
+    "room",
+    "run",
+    "sacred",
+    "sad",
+    "say",
+    "scared",
+    "scream",
+    "sea",
+    "self",
+    "shame",
+    "shirt",
+    "should",
+    "sick",
+    "sign",
+    "silence",
+    "sinking",
+    "sit",
+    "six",
+    "skin",
+    "skip",
+    "sleep",
+    "smell",
+    "smile",
+    "smoke",
+    "snow",
+    "son",
+    "sorry",
+    "soul",
+    "sound",
+    "space",
+    "stage",
+    "stairs",
+    "star",
+    "state",
+    "step",
+    "stick",
+    "stone",
+    "stop",
+    "storm",
+    "straight",
+    "street",
+    "strong",
+    "stupid",
+    "summer",
+    "surprise",
+    "swear",
+    "sweet",
+    "table",
+    "take",
+    "talk",
+    "taste",
+    "tattoo",
+    "team",
+    "tell",
+    "ten",
+    "thank",
+    "think",
+    "thousand",
+    "three",
+    "through",
+    "throw",
+    "time",
+    "together",
+    "tongue",
+    "tonight",
+    "top",
+    "tore",
+    "touch",
+    "town",
+    "traffic",
+    "trip",
+    "truth",
+    "try",
+    "turn",
+    "two",
+    "type",
+    "wake",
+    "walk",
+    "wall",
+    "war",
+    "watch",
+    "water",
+    "weak",
+    "weather",
+    "where",
+    "white",
+    "wife",
+    "wild",
+    "wish",
+    "woman",
+    "work",
+    "world",
+    "would",
+    "write",
+    "year",
+    "young"
+  ],
+  "albums": [
+    {
+      "album": "dont smile at me",
+      "songs": [
+        {
+          "title": "COPYCAT",
+          "sections": [
+            {
+              "label": "Verse 1",
+              "lines": [
+                "Don't be cautious, don't be kind",
+                "You committed, I'm your crime",
+                "Push my button anytime",
+                "You got your finger on the trigger, but your trigger finger's mine"
+              ]
+            },
+            {
+              "label": "Verse 2",
+              "lines": [
+                "Silver dollar, golden flame",
+                "Dirty water, poison rain",
+                "Perfect murder, take your aim",
+                "I don't belong to anyone, but everybody knows my name"
+              ]
+            },
+            {
+              "label": "Pre-Chorus",
+              "lines": [
+                "By the way, you've been uninvited",
+                "'Cause all you say are all the same things I did"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "Copycat tryna cop my manner",
+                "Watch your back when you can't watch mine",
+                "Copycat tryna cop my glamour",
+                "Why so sad, bunny? Can't have mine"
+              ]
+            },
+            {
+              "label": "Verse 3",
+              "lines": [
+                "Call me calloused, call me cold",
+                "You're italic, I'm in bold",
+                "Call me cocky, watch your tone",
+                "You better love me, 'cause you're just a clone"
+              ]
+            },
+            {
+              "label": "Pre-Chorus",
+              "lines": [
+                "By the way, you've been uninvited",
+                "'Cause all you say are all the same things I did"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "Copycat tryna cop my manner",
+                "Watch your back when you can't watch mine",
+                "Copycat tryna cop my glamour",
+                "Why so sad, bunny? Can't have mine"
+              ]
+            },
+            {
+              "label": "Bridge",
+              "lines": [
+                "Mine",
+                "I would hate to see you go",
+                "Hate to be the one that told you so",
+                "You just crossed the line",
+                "You've run out of time",
+                "I'm so sorry, now you know",
+                "Sorry I'm the one that told you so",
+                "Sorry, sorry, I'm sorry, sorry",
+                "Psych"
+              ]
+            },
+            {
+              "label": "Pre-Chorus",
+              "lines": [
+                "By the way, you've been uninvited",
+                "'Cause all you say are all the same things I did"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "Copycat tryna cop my manner",
+                "Watch your back when you can't watch mine",
+                "Copycat tryna cop my glamour",
+                "Why so sad, bunny? Can't have mine"
+              ]
+            }
+          ]
+        },
+        {
+          "title": "idontwannabeyouanymore",
+          "sections": [
+            {
+              "label": "Intro",
+              "lines": [
+                "Ba-da-da-da-da",
+                "Ba-da-da-da-da"
+              ]
+            },
+            {
+              "label": "Verse 1",
+              "lines": [
+                "Don't be that way",
+                "Fall apart twice a day",
+                "I just wish you could feel what you say",
+                "Show, never tell",
+                "But I know you too well",
+                "Got a mood that you wish you could sell"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "If teardrops could be bottled",
+                "There'd be swimming pools filled by models",
+                "Told, \"A tight dress is what makes you a whore\"",
+                "If \"I love you\" was a promise",
+                "Would you break it, if you're honest?",
+                "Tell the mirror what you know she's heard before",
+                "I don't wanna be you",
+                "Anymore"
+              ]
+            },
+            {
+              "label": "Verse 2",
+              "lines": [
+                "Hands getting cold",
+                "Losing feeling is getting old",
+                "Was I made from a broken mold?",
+                "Hurt, I can't shake",
+                "We've made every mistake",
+                "Only you know the way that I break"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "If teardrops could be bottled",
+                "There'd be swimming pools filled by models",
+                "Told, \"A tight dress is what makes you a whore\"",
+                "If \"I love you\" was a promise",
+                "Would you break it, if you're honest?",
+                "Tell the mirror what you know she's heard before",
+                "I, I don't wanna be you",
+                "I don't wanna be you",
+                "I don't wanna be you",
+                "Anymore"
+              ]
+            }
+          ]
+        },
+        {
+          "title": "my boy",
+          "sections": [
+            {
+              "label": "Intro",
+              "lines": [
+                "(Three and four and)",
+                "Ba-ba-da, ba-ba-da-ba-da",
+                "Mmm, mmm"
+              ]
+            },
+            {
+              "label": "Verse 1",
+              "lines": [
+                "My boy's bein' sus, he was shady enough",
+                "But now he's just a shadow",
+                "My boy loves his friends like I love my split ends",
+                "And by that, I mean he cuts 'em off",
+                "(What?)"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "My boy, my boy, my boy",
+                "Don't love me like he promised",
+                "My boy, my boy, my boy",
+                "He ain't a man and sure as hell ain't honest"
+              ]
+            },
+            {
+              "label": "Verse 2",
+              "lines": [
+                "My boy's bein' sus and he don't know how to cuss",
+                "He just sounds like he's tryna be his father (Who are you?)",
+                "My boy's an ugly crier but he's such a pretty liar",
+                "And by that, I mean he said he'd change"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "My boy, my boy, my boy",
+                "Don't love me like he promised",
+                "My boy, my boy, my boy",
+                "He ain't a man and sure as hell ain't honest"
+              ]
+            },
+            {
+              "label": "Bridge",
+              "lines": [
+                "My boy, my-my boy, my friends",
+                "I love-love, I-I love-love my split ends",
+                "My boy (Love, love, love, love, love, love)",
+                "My-my boy (Love, love, love, love, love, love)",
+                "My boy, my (Love, love, love, love, love, love, love, love)",
+                "(Alright, dude, go trip over a knife)"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "My boy, my boy, my boy",
+                "Don't love me like he promised",
+                "My boy, my boy, my boy",
+                "He ain't a man and sure as hell ain't honest"
+              ]
+            },
+            {
+              "label": "Outro",
+              "lines": [
+                "You want me to be yours? Well, then you gotta be mine",
+                "And if you want a good girl, then goodbye",
+                "You want me to be yours? Well, then you gotta be mine",
+                "And if you want a good girl, then goodbye"
+              ]
+            }
+          ]
+        },
+        {
+          "title": "watch",
+          "sections": [
+            {
+              "label": "Verse 1",
+              "lines": [
+                "Lips meet teeth and tongue",
+                "My heart skips eight beats at once",
+                "If we were meant to be, we would have been by now",
+                "See what you wanna see, but all I see is him right now"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "I'll sit and watch your car burn",
+                "With the fire that you started in me",
+                "But you never came back to ask it out",
+                "Go ahead and watch my heart burn",
+                "With the fire that you started in me",
+                "But I'll never let you back to put it out"
+              ]
+            },
+            {
+              "label": "Verse 2",
+              "lines": [
+                "Your love feels so fake",
+                "And my demands aren't high to make",
+                "If I could get to sleep, I would have slept by now",
+                "Your lies will never keep, I think you need to blow 'em out"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "I'll sit and watch your car burn",
+                "With the fire that you started in me",
+                "But you never came back to ask it out",
+                "Go ahead and watch my heart burn",
+                "With the fire that you started in me",
+                "But I'll never let you back to put it out"
+              ]
+            },
+            {
+              "label": "Bridge",
+              "lines": [
+                "When you call my name",
+                "Do you think I'll come runnin'?",
+                "You never did the same",
+                "So good at givin' me nothin'",
+                "When you close your eyes, do you picture me?",
+                "When you fantasize, am I your fantasy?",
+                "Now you know",
+                "Now I'm free"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "I'll sit and watch your car burn",
+                "With the fire that you started in me",
+                "But you never came back to ask it out",
+                "Watch my heart burn",
+                "With the fire that you started in me",
+                "But I'll never let you back to put it out"
+              ]
+            },
+            {
+              "label": "Outro",
+              "lines": [
+                "Ooh, never let you back",
+                "Let you back, let you back",
+                "Never gonna let you back, let you back"
+              ]
+            }
+          ]
+        },
+        {
+          "title": "party favor",
+          "sections": [
+            {
+              "label": "Intro",
+              "lines": [
+                "Hey, leave a message"
+              ]
+            },
+            {
+              "label": "Verse 1",
+              "lines": [
+                "Hey, call me back when ya get this",
+                "Or when you've got a minute",
+                "We really need to talk",
+                "Wait, you know what?",
+                "Maybe just forget it",
+                "'Cause by the time you get this",
+                "Your number might be blocked"
+              ]
+            },
+            {
+              "label": "Pre-Chorus",
+              "lines": [
+                "\"Stay\" and \"blah blah blah\"",
+                "You just want what you can't have",
+                "No way",
+                "I'll call the cops",
+                "If you don't stop, I'll call your dad"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "And I hate to do this to you on your birthday",
+                "Happy birthday, by the way",
+                "\"It's not you, it's me\" and all that other bullshit",
+                "You know that's bullshit",
+                "Don'tcha, babe?",
+                "I'm not your party favor"
+              ]
+            },
+            {
+              "label": "Verse 2",
+              "lines": [
+                "Look, now I know we coulda done it better",
+                "But we can't change the weather",
+                "When the weather's come and gone",
+                "Books don't make sense if you read 'em backwards",
+                "You'll single out the wrong words",
+                "Like you mishear all my songs"
+              ]
+            },
+            {
+              "label": "Pre-Chorus",
+              "lines": [
+                "You'll hear \"stay\" and \"blah blah blah\"",
+                "You just want what you can't have",
+                "No way",
+                "I'll call the cops",
+                "If you don't stop, I'll call your dad"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "And I hate to do this to you on your birthday",
+                "Happy birthday by the way",
+                "\"It's not you, it's me\" and all that other bullshit",
+                "You know that's bullshit",
+                "Don'tcha, babe?",
+                "I'm not your party favor"
+              ]
+            }
+          ]
+        },
+        {
+          "title": "bellyache",
+          "sections": [
+            {
+              "label": "Intro",
+              "lines": [
+                "Mind",
+                "Mind"
+              ]
+            },
+            {
+              "label": "Verse 1",
+              "lines": [
+                "Sittin' all alone",
+                "Mouth full of gum",
+                "In the driveway",
+                "My friends aren't far",
+                "In the back of my car",
+                "Lay their bodies"
+              ]
+            },
+            {
+              "label": "Pre-Chorus",
+              "lines": [
+                "Where's my mind?",
+                "Where's my mind?"
+              ]
+            },
+            {
+              "label": "Verse 2",
+              "lines": [
+                "They'll be here pretty soon",
+                "Lookin' through my room",
+                "For the money",
+                "I'm bitin' my nails",
+                "I'm too young to go to jail",
+                "It's kinda funny"
+              ]
+            },
+            {
+              "label": "Pre-Chorus",
+              "lines": [
+                "Where's my mind?",
+                "Where's my mind?",
+                "Where's my mind?",
+                "Where's my mind?"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "Maybe it's in the gutter",
+                "Where I left my lover",
+                "What an expensive fake",
+                "My V is for Vendetta",
+                "Thought that I'd feel better",
+                "But now I got a bellyache",
+                "(Mind)"
+              ]
+            },
+            {
+              "label": "Verse 3",
+              "lines": [
+                "Everything I do",
+                "The way I wear my noose",
+                "Like a necklace",
+                "I wanna make 'em scared",
+                "Like I could be anywhere",
+                "Like I'm reckless"
+              ]
+            },
+            {
+              "label": "Pre-Chorus",
+              "lines": [
+                "I lost my mind",
+                "I don't mind",
+                "Where's my mind?",
+                "Where's my mind?"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "Maybe it's in the gutter",
+                "Where I left my lover",
+                "What an expensive fake",
+                "My V is for Vendetta",
+                "Thought that I'd feel better",
+                "But now I got a bellyache",
+                "(Bellyache, bellyache, bellyache, bellyache, bellyache, bellyache)",
+                "Maybe it's in the gutter (Mind)",
+                "Where I left my lover",
+                "What an expensive fake (Mind)",
+                "My V is for Vendetta (Mind)",
+                "Thought that I'd feel better",
+                "But now I got a bellyache"
+              ]
+            }
+          ]
+        },
+        {
+          "title": "ocean eyes",
+          "sections": [
+            {
+              "label": "Intro",
+              "lines": [
+                "(Ah-ah-ah, ah-ah-ah)",
+                "(Ah-ah-ah, ah-ah-mm)"
+              ]
+            },
+            {
+              "label": "Verse 1",
+              "lines": [
+                "I've been watchin' you for some time",
+                "Can't stop starin' at those ocean eyes",
+                "Burning cities and napalm skies",
+                "Fifteen flares inside those ocean eyes",
+                "Your ocean eyes"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "No fair",
+                "You really know how to make me cry",
+                "When you give me those ocean eyes",
+                "I'm scared",
+                "I've never fallen from quite this high",
+                "Fallin' into your ocean eyes",
+                "Those ocean eyes"
+              ]
+            },
+            {
+              "label": "Verse 2",
+              "lines": [
+                "I've been walkin' through a world gone blind",
+                "Can't stop thinkin' of your diamond mind",
+                "Careful creature made friends with time",
+                "He left her lonely with a diamond mind",
+                "And those ocean eyes"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "No fair (No fair)",
+                "You really know how to make me cry",
+                "When you give me those ocean eyes (Those ocean eyes)",
+                "I'm scared (I'm scared)",
+                "I've never fallen from quite this high",
+                "Fallin' into your ocean eyes",
+                "Those ocean eyes"
+              ]
+            },
+            {
+              "label": "Bridge",
+              "lines": [
+                "(seye naeco esohT)",
+                "(seye naeco ruoy otni 'nillaF)",
+                "Da-da-da-da-da, da-da-da-da-da (hgih siht etiuq morf nellaf reven ev'I)",
+                "(deracs m'I) Da-da-da-da-da-da",
+                "Da-da-da (seye naeco esoht em evig uoy nehW)",
+                "Mm (yrc em ekam ot woh wonk yllaer uoY)",
+                "Mm (riaf oN)"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "No fair",
+                "You really know how to make me cry",
+                "When you give me those ocean eyes",
+                "I'm scared",
+                "I've never fallen from quite this high",
+                "Fallin' into your ocean eyes",
+                "Those ocean eyes"
+              ]
+            }
+          ]
+        },
+        {
+          "title": "hostage",
+          "sections": [
+            {
+              "label": "Verse 1",
+              "lines": [
+                "I wanna be alone",
+                "Alone with you, does that make sense?",
+                "I wanna steal your soul",
+                "And hide you in my treasure chest",
+                "I don't know what to do",
+                "To do with your kiss on my neck",
+                "I don't know what feels true",
+                "But this feels right, so stay a sec",
+                "Yeah, you feel right, so stay a sec"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "And let me crawl inside your veins",
+                "I'll build a wall, give you a ball and chain",
+                "It's not like me to be so mean, you're all I wanted",
+                "Just let me hold you",
+                "Like a hostage"
+              ]
+            },
+            {
+              "label": "Verse 2",
+              "lines": [
+                "Gold on your fingertips",
+                "Fingertips against my cheek",
+                "Gold leaf across your lips",
+                "Kiss me until I can't speak",
+                "Gold chain beneath your shirt",
+                "The shirt that you let me wear home",
+                "Gold's fake and real love hurts",
+                "But nothing hurts when I'm alone",
+                "When you're with me and we're alone"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "And let me crawl inside your veins",
+                "I'll build a wall, give you a ball and chain",
+                "It's not like me to be so mean, you're all I wanted",
+                "Just let me hold you",
+                "Hold you",
+                "Like a hostage",
+                "Like a hostage"
+              ]
+            }
+          ]
+        },
+        {
+          "title": "&burn",
+          "sections": [
+            {
+              "label": "Verse 1",
+              "lines": [
+                "Lips meet teeth and tongue",
+                "My heart skips eight beats at once (That's better)",
+                "If we were meant to be, we would have been by now",
+                "See what you wanna see, all I see is him right now",
+                "H-h-him right now"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "I'll sit and watch your car burn",
+                "With the fire that you started in me",
+                "But you never came back to ask it out",
+                "Go ahead and watch my heart burn",
+                "With the fire that you started in me",
+                "But I'll never let you back to put it out",
+                "(Thanks)"
+              ]
+            },
+            {
+              "label": "Verse 2",
+              "lines": [
+                "Your love feels so fake",
+                "My demands aren't high to make",
+                "If I could get to sleep, I would have slept by now (Ah)",
+                "Your lies will never keep, I think you need to blow them out",
+                "(B-b-blow them out)"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "I'll sit and watch your car burn",
+                "With the fire that you started in me",
+                "But you never came back to ask it out",
+                "Go ahead and watch my heart burn",
+                "With the fire that you started in me",
+                "But I'll never let you back to put it out"
+              ]
+            },
+            {
+              "label": "Verse 3",
+              "lines": [
+                "7-4-2008",
+                "I still remember that",
+                "Heaven sent a present my way",
+                "I won't forget your laugh",
+                "Packing everything when you leave",
+                "You know you coming back",
+                "Wanna see me down on my knees",
+                "But that was made for a ring",
+                "I try to wait for the storm to calm down",
+                "But that's stubborn, baby, leading to war",
+                "We droned down on each other",
+                "Tryin' to even the score",
+                "We all been found guilty in the court of aorta"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "And I'll watch your car burn",
+                "With the fire that you started in me",
+                "But you never came back to ask it out",
+                "Go ahead and watch my heart burn",
+                "With the fire that you started in me",
+                "But I'll never let you back to put it out"
+              ]
+            },
+            {
+              "label": "Outro",
+              "lines": [
+                "Watch your car, watch your car burn",
+                "I won't forget your laugh",
+                "Go ahead and watch my heart, watch my heart burn",
+                "You know you coming back, you know you coming back",
+                "Watch your car, watch your car burn",
+                "(Go ahead and watch my heart, watch my heart burn)",
+                "Tryna even the score",
+                "Go ahead and watch my heart, watch my heart burn",
+                "Found guilty in the court of aorta"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "album": "WHEN WE ALL FALL ASLEEP, WHERE DO WE GO?",
+      "songs": [
+        {
+          "title": "!!!!!!!",
+          "sections": [
+            {
+              "label": "Spoken",
+              "lines": [
+                "My Invisalign has finally— (I have taken out my Invisalign)",
+                "I have taken out my Invisalign and this is the album",
+                "Ah"
+              ]
+            }
+          ]
+        },
+        {
+          "title": "bad guy",
+          "sections": [
+            {
+              "label": "Verse 1",
+              "lines": [
+                "White shirt now red, my bloody nose",
+                "Sleepin', you're on your tippy toes",
+                "Creepin' around like no one knows",
+                "Think you're so criminal",
+                "Bruises on both my knees for you",
+                "Don't say thank you or please",
+                "I do what I want when I'm wanting to",
+                "My soul? So cynical"
+              ]
+            },
+            {
+              "label": "Pre-Chorus",
+              "lines": [
+                "So you're a tough guy",
+                "Like it really rough guy",
+                "Just can't get enough guy",
+                "Chest always so puffed guy",
+                "I'm that bad type",
+                "Make your mama sad type",
+                "Make your girlfriend mad tight",
+                "Might seduce your dad type",
+                "I'm the bad guy",
+                "Duh"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "I'm the bad guy"
+              ]
+            },
+            {
+              "label": "Verse 2",
+              "lines": [
+                "I like it when you take control",
+                "Even if you know that you don't",
+                "Own me, I'll let you play the role",
+                "I'll be your animal",
+                "My mommy likes to sing along with me",
+                "But she won't sing this song",
+                "If she reads all the lyrics",
+                "She'll pity the men I know"
+              ]
+            },
+            {
+              "label": "Pre-Chorus",
+              "lines": [
+                "So you're a tough guy",
+                "Like it really rough guy",
+                "Just can't get enough guy",
+                "Chest always so puffed guy",
+                "I'm that bad type",
+                "Make your mama sad type",
+                "Make your girlfriend mad tight",
+                "Might seduce your dad type",
+                "I'm the bad guy",
+                "Duh"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "I'm the bad guy, duh",
+                "I'm only good at bein' bad, bad"
+              ]
+            },
+            {
+              "label": "Bridge",
+              "lines": [
+                "I like when you get mad",
+                "I guess I'm pretty glad that you're alone",
+                "You said she's scared of me?",
+                "I mean, I don't see what she sees",
+                "But maybe it's 'cause I'm wearing your cologne"
+              ]
+            },
+            {
+              "label": "Outro",
+              "lines": [
+                "I'm a bad guy",
+                "I'm, I'm a bad guy",
+                "Bad guy, bad guy",
+                "I'm a bad"
+              ]
+            }
+          ]
+        },
+        {
+          "title": "xanny",
+          "sections": [
+            {
+              "label": "Verse 1",
+              "lines": [
+                "What is it about them?",
+                "I must be missing something",
+                "They just keep doing nothing",
+                "Too intoxicated to be scared",
+                "Better off without them",
+                "They're nothing but unstable",
+                "Bring ashtrays to the table",
+                "And that's about the only thing they share"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "I'm in their secondhand smoke",
+                "Still just drinking canned Coke",
+                "I don't need a Xanny to feel better",
+                "On designated drives home",
+                "Only one who's not stoned",
+                "Don't give me a Xanny, now or ever"
+              ]
+            },
+            {
+              "label": "Interlude",
+              "lines": [
+                "Can you check your Uber rating? Oh my god",
+                "(And it's like, wait, like, when?)"
+              ]
+            },
+            {
+              "label": "Verse 2",
+              "lines": [
+                "Wakin' up at sundown (Ooh)",
+                "They're late to every party (Ooh)",
+                "Nobody's ever sorry (Ooh)",
+                "Too inebriated now to dance",
+                "Morning as they come down (Come down)",
+                "Their pretty heads are hurting (Hurting)",
+                "They're awfully bad at learning (Learning)",
+                "Make the same mistakes, blame circumstance"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "I'm in their secondhand smoke",
+                "Still just drinking canned Coke",
+                "I don't need a Xanny to feel better",
+                "On designated drives home",
+                "Only one who's not stoned",
+                "Don't give me a Xanny, now or ever"
+              ]
+            },
+            {
+              "label": "Bridge",
+              "lines": [
+                "Please don't try to kiss me on the sidewalk",
+                "On your cigarette break",
+                "I can't afford to love someone",
+                "Who isn't dying by mistake in Silver Lake"
+              ]
+            },
+            {
+              "label": "Outro",
+              "lines": [
+                "What is it about them?",
+                "I must be missing something",
+                "They just keep doin' nothing",
+                "Too intoxicated to be scared",
+                "Hmm, hmm",
+                "Hmm, mmm, mmm, mmm, mmm",
+                "Come down",
+                "Hurting",
+                "Learning"
+              ]
+            }
+          ]
+        },
+        {
+          "title": "you should see me in a crown",
+          "sections": [
+            {
+              "label": "Verse 1",
+              "lines": [
+                "Bite my tongue, bide my time",
+                "Wearing a warning sign",
+                "Wait 'til the world is mine",
+                "Visions I vandalize",
+                "Cold in my kingdom size",
+                "Fell for these ocean eyes"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "You should see me in a crown",
+                "I'm gonna run this nothing town",
+                "Watch me make 'em bow",
+                "One by one by one",
+                "One by one by",
+                "You should see me in a crown",
+                "Your silence is my favorite sound",
+                "Watch me make 'em bow",
+                "One by one by one",
+                "One by one by one"
+              ]
+            },
+            {
+              "label": "Verse 2",
+              "lines": [
+                "Count my cards, watch them fall",
+                "Blood on a marble wall",
+                "I like the way they all scream",
+                "Tell me which one is worse",
+                "Living or dying first",
+                "Sleeping inside a hearse (I don't dream)"
+              ]
+            },
+            {
+              "label": "Pre-Chorus",
+              "lines": [
+                "You say, \"Come over, baby",
+                "I think you're pretty\"",
+                "I'm okay, I'm not your baby",
+                "If you think I'm pretty"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "You should see me in a crown",
+                "I'm gonna run this nothing town",
+                "Watch me make 'em bow",
+                "One by one by one",
+                "One by one by",
+                "You should see me in a crown",
+                "Your silence is my favorite sound",
+                "Watch me make 'em bow",
+                "One by one by one",
+                "One by one by one"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "Crown",
+                "I'm gonna run this nothing town",
+                "Watch me make 'em bow",
+                "One by one by one",
+                "One by one by",
+                "You should see me in a crown (You should see me, see me)",
+                "Your silence is my favorite sound (You should see me, see me)",
+                "Watch me make 'em bow",
+                "One by one by one",
+                "One by one by one"
+              ]
+            }
+          ]
+        },
+        {
+          "title": "all the good girls go to hell",
+          "sections": [
+            {
+              "label": "Intro",
+              "lines": [
+                "My Lucifer is lonely"
+              ]
+            },
+            {
+              "label": "Verse 1",
+              "lines": [
+                "Standing there, killing time",
+                "Can't commit to anything but a crime",
+                "Peter's on vacation, an open invitation",
+                "Animals, evidence",
+                "Pearly Gates look more like a picket fence",
+                "Once you get inside 'em",
+                "Got friends but can't invite them"
+              ]
+            },
+            {
+              "label": "Pre-Chorus",
+              "lines": [
+                "Hills burn in California",
+                "My turn to ignore ya",
+                "Don't say I didn't warn ya"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "All the good girls go to Hell",
+                "'Cause even God herself has enemies",
+                "And once the water starts to rise",
+                "And Heaven's out of sight",
+                "She'll want the Devil on her team"
+              ]
+            },
+            {
+              "label": "Post-Chorus",
+              "lines": [
+                "My Lucifer is lonely"
+              ]
+            },
+            {
+              "label": "Verse 2",
+              "lines": [
+                "Look at you needing me",
+                "You know I'm not your friend without some greenery",
+                "Walk in wearin' fetters",
+                "Peter should know better",
+                "Your cover up is caving in",
+                "Man is such a fool, why are we saving him?",
+                "Poisoning themselves now",
+                "Begging for our help, wow"
+              ]
+            },
+            {
+              "label": "Pre-Chorus",
+              "lines": [
+                "Hills burn in California",
+                "My turn to ignore ya",
+                "Don't say I didn't warn ya"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "All the good girls go to Hell (All the good girls go to Hell)",
+                "'Cause even God herself (God herself) has enemies",
+                "And once the water starts to rise (Water starts to rise)",
+                "And Heaven's out of sight",
+                "She'll want the Devil on her team"
+              ]
+            },
+            {
+              "label": "Post-Chorus",
+              "lines": [
+                "My Lucifer is lonely",
+                "There's nothing left to save now",
+                "My god is gonna owe me",
+                "There's nothing left to save now"
+              ]
+            },
+            {
+              "label": "Outro",
+              "lines": [
+                "Haha!",
+                "I cannot do the snowflake"
+              ]
+            }
+          ]
+        },
+        {
+          "title": "wish you were gay",
+          "sections": [
+            {
+              "label": "Verse 1",
+              "lines": [
+                "\"Baby, I don't feel so good,\" six words you never understood",
+                "\"I'll never let you go,\" five words you'll never say (Aww)",
+                "I laugh along like nothing's wrong, four days has never felt so long",
+                "If three's a crowd and two was us, one slipped away (Hahahahahahahaha)"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "I just wanna make you feel okay",
+                "But all you do is look the other way",
+                "I can't tell you how much I wish I didn't wanna stay",
+                "I just kinda wish you were gay"
+              ]
+            },
+            {
+              "label": "Verse 2",
+              "lines": [
+                "Is there a reason we're not through?",
+                "Is there a 12 step just for you?",
+                "Our conversation's all in blue",
+                "11 \"heys\" (Hey, hey, hey, hey)",
+                "Ten fingers tearin' out my hair",
+                "Nine times you never made it there",
+                "I ate alone at 7, you were six minutes away",
+                "(Yay)"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "How am I supposed to make you feel okay",
+                "When all you do is walk the other way?",
+                "I can't tell you how much I wish I didn't wanna stay",
+                "I just kinda wish you were gay"
+              ]
+            },
+            {
+              "label": "Bridge",
+              "lines": [
+                "To spare my pride",
+                "To give your lack of interest an explanation",
+                "Don't say I'm not your type",
+                "Just say that I'm not your preferred sexual orientation",
+                "I'm so selfish",
+                "But you make me feel helpless, yeah",
+                "And I can't stand another day",
+                "Stand another day"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "I just wanna make you feel okay",
+                "But all you do is look the other way, hmm",
+                "I can't tell you how much I wish I didn't wanna stay",
+                "I just kinda wish you were gay",
+                "I just kinda wish you were gay",
+                "I just kinda wish you were gay"
+              ]
+            }
+          ]
+        },
+        {
+          "title": "when the party’s over",
+          "sections": [
+            {
+              "label": "Verse 1",
+              "lines": [
+                "Don't you know I'm no good for you?",
+                "I've learned to lose, you can't afford to",
+                "Tore my shirt to stop you bleedin'",
+                "But nothin' ever stops you leavin'"
+              ]
+            },
+            {
+              "label": "Pre-Chorus",
+              "lines": [
+                "Quiet when I'm coming home and I'm on my own"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "I could lie, say I like it like that, like it like that",
+                "I could lie, say I like it like that, like it like that"
+              ]
+            },
+            {
+              "label": "Verse 2",
+              "lines": [
+                "Don't you know too much already?",
+                "I'll only hurt you if you let me",
+                "Call me friend, but keep me closer (Call me back)",
+                "And I'll call you when the party's over"
+              ]
+            },
+            {
+              "label": "Pre-Chorus",
+              "lines": [
+                "Quiet when I'm coming home and I'm on my own"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "And I could lie, say I like it like that, like it like that",
+                "Yeah, I could lie, say I like it like that, like it like that"
+              ]
+            },
+            {
+              "label": "Bridge",
+              "lines": [
+                "But nothin' is better sometimes",
+                "Once we've both said our goodbyes",
+                "Let's just let it go",
+                "Let me let you go"
+              ]
+            },
+            {
+              "label": "Pre-Chorus",
+              "lines": [
+                "Quiet when I'm coming home and I'm on my own"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "I could lie, say I like it like that, like it like that",
+                "I could lie, say I like it like that, like it like that"
+              ]
+            }
+          ]
+        },
+        {
+          "title": "8",
+          "sections": [
+            {
+              "label": "Verse 1",
+              "lines": [
+                "Wait a minute, let me finish",
+                "I know you don't care",
+                "But can you listen?",
+                "I came committed, guess I overdid it",
+                "Wore my heart out on a chain",
+                "Around my neck, but now it's missin', hmm"
+              ]
+            },
+            {
+              "label": "Refrain",
+              "lines": [
+                "Da-da-da-da-da-da (Hmm)",
+                "Da-da-da-da-da-da-da (Hmm, hmm, hmm, hmm)",
+                "Oh, hmm, hmm"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "So I think I better go",
+                "I never really know how to please you",
+                "You're lookin' at me like I'm see-through",
+                "I guess I'm gonna go",
+                "I just never know how you feel",
+                "Do you even feel anything?"
+              ]
+            },
+            {
+              "label": "Refrain",
+              "lines": [
+                "Da-da-da-da-da-da-da",
+                "Da-da-da-da-da-da-da",
+                "Oh, hmm, hmm"
+              ]
+            },
+            {
+              "label": "Verse 2",
+              "lines": [
+                "You said, \"Don't treat me badly\"",
+                "But you said it so sadly",
+                "So I did the best I could",
+                "Not thinkin' you would have left me gladly",
+                "I know you're not sorry",
+                "Why should you be?",
+                "'Cause who am I to be in love",
+                "When your love never is for me?",
+                "Me"
+              ]
+            },
+            {
+              "label": "Refrain",
+              "lines": [
+                "Da-da-da-da-da-da-da (Hmm)",
+                "Da-da-da-da-da-da-da (Hmm, hmm, hmm, hmm)",
+                "Oh, hmm, hmm"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "So I think I better go",
+                "I never really know how to please you",
+                "You're lookin' at me like I'm see-through",
+                "I guess I'm gonna go",
+                "I just never know how you feel",
+                "Do you even feel anything?"
+              ]
+            }
+          ]
+        },
+        {
+          "title": "my strange addiction",
+          "sections": [
+            {
+              "label": "Intro",
+              "lines": [
+                "No, Billy, I haven't done that dance since my wife died",
+                "There's a whole crowd of people out there who need to learn how to do The Scarn"
+              ]
+            },
+            {
+              "label": "Verse 1",
+              "lines": [
+                "Don't ask questions you don't wanna know",
+                "Learned my lesson way too long ago",
+                "To be talkin' to you, belladonna",
+                "Shoulda taken a break, not an Oxford comma",
+                "Take what I want when I wanna",
+                "And I want ya"
+              ]
+            },
+            {
+              "label": "Pre-Chorus",
+              "lines": [
+                "Bad, bad news",
+                "One of us is gonna lose",
+                "I'm the powder, you're the fuse",
+                "Just add some friction"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "You are my strange addiction",
+                "You are my strange addiction",
+                "My doctors can't explain",
+                "My symptoms or my pain",
+                "But you are my strange addiction"
+              ]
+            },
+            {
+              "label": "Interlude",
+              "lines": [
+                "I'm really, really sorry, I think I was just relieved",
+                "To see that Michael Scarn got his confidence back",
+                "Yeah, Michael, the movie is amazing",
+                "It's like, one of the best movies I've ever seen in my life"
+              ]
+            },
+            {
+              "label": "Verse 2",
+              "lines": [
+                "Deadly fever, please don't ever break",
+                "Be my reliever 'cause I don't self medicate",
+                "And it burns like a gin and I like it",
+                "Put your lips on my skin and you might ignite it",
+                "Hurts, but I know how to hide it, and I like it (Teh)"
+              ]
+            },
+            {
+              "label": "Pre-Chorus",
+              "lines": [
+                "Bad, bad news",
+                "One of us is gonna lose",
+                "I'm the powder, you're the fuse",
+                "Just add some friction"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "You are my strange addiction",
+                "You are my strange addiction",
+                "My doctors can't explain",
+                "My symptoms or my pain",
+                "But you are my strange addiction"
+              ]
+            },
+            {
+              "label": "Bridge",
+              "lines": [
+                "Bite my glass, set myself on fire",
+                "Can't you tell I'm crass? Can't you tell I'm wired?",
+                "Tell me nothing lasts, like I don't know",
+                "You could kiss my— asking about my motto"
+              ]
+            },
+            {
+              "label": "Interlude",
+              "lines": [
+                "You should enter it in festivals or carnivals",
+                "Well, that’s a pretty good reaction",
+                "Pretty cool... right?"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "You are my strange addiction",
+                "You are my strange addiction",
+                "My doctors can't explain",
+                "My symptoms or my pain",
+                "But you are my strange addiction"
+              ]
+            },
+            {
+              "label": "Outro",
+              "lines": [
+                "Did you like it? Did you like that?",
+                "Um, which part?"
+              ]
+            }
+          ]
+        },
+        {
+          "title": "bury a friend",
+          "sections": [
+            {
+              "label": "Intro",
+              "lines": [
+                "Billie"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "What do you want from me? Why don't you run from me?",
+                "What are you wondering? What do you know?",
+                "Why aren't you scared of me? Why do you care for me?",
+                "When we all fall asleep, where do we go?"
+              ]
+            },
+            {
+              "label": "Verse 1",
+              "lines": [
+                "Come here",
+                "Say it, spit it out, what is it exactly",
+                "You're payin'? Is the amount cleanin' you out? Am I satisfactory?",
+                "Today, I'm thinkin' about the things that are deadly",
+                "The way I'm drinkin' you down",
+                "Like I wanna drown, like I wanna end me"
+              ]
+            },
+            {
+              "label": "Refrain",
+              "lines": [
+                "Step on the glass, staple your tongue (Ahh)",
+                "Bury a friend, try to wake up (Ah-ahh)",
+                "Cannibal class, killing the son (Ahh)",
+                "Bury a friend, I wanna end me"
+              ]
+            },
+            {
+              "label": "Pre-Chorus",
+              "lines": [
+                "I wanna end me",
+                "I wanna, I wanna, I wanna end me",
+                "I wanna, I wanna, I wanna"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "What do you want from me? Why don't you run from me?",
+                "What are you wondering? What do you know?",
+                "Why aren't you scared of me? Why do you care for me?",
+                "When we all fall asleep, where do we go?"
+              ]
+            },
+            {
+              "label": "Verse 2",
+              "lines": [
+                "Listen",
+                "Keep you in the dark, what had you expected?",
+                "Me to make you my art and make you a star",
+                "And get you connected?",
+                "I'll meet you in the park, I'll be calm and collected",
+                "But we knew right from the start that you'd fall apart",
+                "'Cause I'm too expensive",
+                "Your talk'll be somethin' that shouldn't be said out loud",
+                "Honestly, I thought that I would be dead by now (Wow)",
+                "Calling security, keepin' my head held down",
+                "Bury the hatchet or bury a friend right now"
+              ]
+            },
+            {
+              "label": "Bridge",
+              "lines": [
+                "For the debt I owe, gotta sell my soul",
+                "'Cause I can't say no, no, I can't say no",
+                "Then my limbs all froze and my eyes won't close",
+                "And I can't say no, I can't say no",
+                "Careful"
+              ]
+            },
+            {
+              "label": "Refrain",
+              "lines": [
+                "Step on the glass, staple your tongue (Ahh)",
+                "Bury a friend, try to wake up (Ah-ahh)",
+                "Cannibal class, killing the son (Ahh)",
+                "Bury a friend, I wanna end me"
+              ]
+            },
+            {
+              "label": "Pre-Chorus",
+              "lines": [
+                "I wanna end me",
+                "I wanna, I wanna, I wanna end me",
+                "I wanna, I wanna, I wanna"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "What do you want from me? Why don't you run from me?",
+                "What are you wondering? What do you know?",
+                "Why aren't you scared of me? Why do you care for me?",
+                "When we all fall asleep, where do we go?"
+              ]
+            }
+          ]
+        },
+        {
+          "title": "ilomilo",
+          "sections": [
+            {
+              "label": "Verse 1",
+              "lines": [
+                "Told you not to worry",
+                "But maybe that's a lie",
+                "Honey, what's your hurry?",
+                "Won't you stay inside?"
+              ]
+            },
+            {
+              "label": "Pre-Chorus",
+              "lines": [
+                "Remember not to get too close to stars",
+                "They're never gonna give you love like ours"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "Where did you go?",
+                "I should know, but it's cold",
+                "And I don't wanna be lonely",
+                "So show me the way home",
+                "I can't lose another life"
+              ]
+            },
+            {
+              "label": "Refrain",
+              "lines": [
+                "Hurry, I'm worried"
+              ]
+            },
+            {
+              "label": "Verse 2",
+              "lines": [
+                "The world's a little blurry",
+                "Or maybe it's my eyes",
+                "The friends I've had to bury",
+                "They keep me up at night"
+              ]
+            },
+            {
+              "label": "Pre-Chorus",
+              "lines": [
+                "Said I couldn't love someone 'cause I might break",
+                "If you're gonna die, not by mistake"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "So, where did you go?",
+                "I should know, but it's cold",
+                "And I don't wanna be lonely",
+                "So tell me you'll come home",
+                "Even if it's just a lie"
+              ]
+            },
+            {
+              "label": "Bridge",
+              "lines": [
+                "I tried not to upset you",
+                "Let you rescue me the day I met you",
+                "I just wanted to protect you",
+                "But now I'll never get to"
+              ]
+            },
+            {
+              "label": "Refrain",
+              "lines": [
+                "Hurry, I'm worried"
+              ]
+            },
+            {
+              "label": "Outro",
+              "lines": [
+                "Where did you go?",
+                "I should know, but it's cold",
+                "And I don't wanna be lonely",
+                "Was hoping you'd come home",
+                "I don't care if it's a lie"
+              ]
+            }
+          ]
+        },
+        {
+          "title": "listen before i go",
+          "sections": [
+            {
+              "label": "Verse 1",
+              "lines": [
+                "Take me to the rooftop",
+                "I wanna see the world when I stop breathing",
+                "Turnin' blue (Blue)",
+                "Tell me love is endless, don't be so pretentious",
+                "Leave me like you do (Like you do)"
+              ]
+            },
+            {
+              "label": "Pre-Chorus",
+              "lines": [
+                "If you need me, wanna see me",
+                "Better hurry 'cause I'm leavin' soon"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "Sorry can't save me now",
+                "Sorry I don't know how",
+                "Sorry there's no way out (Sorry)",
+                "But down",
+                "Hmm, down"
+              ]
+            },
+            {
+              "label": "Verse 2",
+              "lines": [
+                "Taste me, the salty tears on my cheek",
+                "That's what a year-long headache",
+                "Does to you (You)",
+                "I'm not okay, I feel so scattered",
+                "Don't say I'm all that matters",
+                "Leave me, déjà vu (Hmm)"
+              ]
+            },
+            {
+              "label": "Pre-Chorus",
+              "lines": [
+                "If you need me, wanna see me",
+                "You better hurry, I'm leavin' soon"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "Sorry can't save me now (Sorry)",
+                "Sorry I don't know how (Sorry)",
+                "Sorry there's no way out (Sorry)",
+                "But down",
+                "Hmm, down"
+              ]
+            },
+            {
+              "label": "Outro",
+              "lines": [
+                "Call my friends and tell them that I love them",
+                "And I'll miss them",
+                "But I'm not sorry",
+                "Call my friends and tell them that I love them",
+                "And I'll miss them",
+                "Sorry"
+              ]
+            }
+          ]
+        },
+        {
+          "title": "i love you",
+          "sections": [
+            {
+              "label": "Verse 1",
+              "lines": [
+                "It's not true",
+                "Tell me I've been lied to",
+                "Crying isn't like you, ooh",
+                "What the hell did I do?",
+                "Never been the type to",
+                "Let someone see right through, ooh"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "Maybe won't you take it back?",
+                "Say you were tryna make me laugh",
+                "And nothing has to change today",
+                "You didn't mean to say \"I love you\"",
+                "I love you and I don't want to, ooh"
+              ]
+            },
+            {
+              "label": "Verse 2",
+              "lines": [
+                "Up all night on another red-eye",
+                "I wish we never learned to fly",
+                "Maybe we should just try",
+                "To tell ourselves a good lie",
+                "Didn't mean to make you cry"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "Maybe won't you take it back?",
+                "Say you were tryna make me laugh",
+                "And nothing has to change today",
+                "You didn't mean to say \"I love you\"",
+                "I love you and I don't want to, ooh"
+              ]
+            },
+            {
+              "label": "Bridge",
+              "lines": [
+                "The smile that you gave me",
+                "Even when you felt like dying"
+              ]
+            },
+            {
+              "label": "Outro",
+              "lines": [
+                "We fall apart as it gets dark",
+                "I'm in your arms in Central Park",
+                "There's nothing you could do or say",
+                "I can't escape the way I love you",
+                "I don't want to, but I love you, ooh",
+                "Ooh, ooh",
+                "Ooh, ooh"
+              ]
+            }
+          ]
+        },
+        {
+          "title": "goodbye",
+          "sections": [
+            {
+              "label": "Intro",
+              "lines": [
+                "Please, please",
+                "Don't leave﻿ me",
+                "Be"
+              ]
+            },
+            {
+              "label": "Verse",
+              "lines": [
+                "It's not true",
+                "Take me to the roof",
+                "Told you not to worry",
+                "What do you want from me?",
+                "Don't ask questions",
+                "Wait a minute",
+                "Don't you know I'm no good for you?",
+                "Baby, I don't feel so good",
+                "And all the good girls go ﻿to Hell",
+                "Bite my tongue, bide my time",
+                "What is it about them?",
+                "I'm the bad guy"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "album": "Happier Than Ever",
+      "songs": [
+        {
+          "title": "Getting Older",
+          "sections": [
+            {
+              "label": "Verse 1",
+              "lines": [
+                "I'm gettin' older, I think I'm agin' well",
+                "I wish someone had told me I'd be doin' this by myself",
+                "There's reasons that I'm thankful, there's a lot I'm grateful for",
+                "But it's different when a stranger's always waitin' at your door",
+                "Which is ironic 'cause the strangers seem to want me more",
+                "Than anyone before (Anyone before)",
+                "Too bad they're usually deranged"
+              ]
+            },
+            {
+              "label": "Verse 2",
+              "lines": [
+                "Last week, I realized I crave pity",
+                "When I retell a story, I make everything sound worse",
+                "Can't shake the feeling that I'm just bad at healing",
+                "And maybe that's the reason every sentence sounds rehearsed",
+                "Which is ironic because when I wasn't honest",
+                "I was still bein' ignored (Lyin' for attention just to get neglection)",
+                "Now we're estranged"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "Things I once enjoyed",
+                "Just keep me employed now",
+                "Things I'm longing for",
+                "Someday, I'll be bored of",
+                "It's so weird",
+                "That we care so much until we don't"
+              ]
+            },
+            {
+              "label": "Verse 3",
+              "lines": [
+                "I'm gettin' older, I've got more on my shoulders",
+                "But I'm gettin' better at admitting when I'm wrong",
+                "I'm happier than ever, at least, that's my endeavor",
+                "To keep myself together and prioritize my pleasure",
+                "'Cause, to be honest, I just wish that what I promise",
+                "Would depend on what I'm given, mmm (Not on his permission)",
+                "(Wasn't my decision) To be abused, mmm"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "Things I once enjoyed",
+                "Just keep me employed now, mmm",
+                "Things I'm longing for, mmm",
+                "Someday, I'll be bored of",
+                "It's so weird",
+                "That we care so much until we don't"
+              ]
+            },
+            {
+              "label": "Outro",
+              "lines": [
+                "But next week, I hope I'm somewhere laughing",
+                "For anybody asking, I promise I'll be fine",
+                "I've had some trauma, did things I didn't wanna",
+                "Was too afraid to tell ya, but now, I think it's time"
+              ]
+            }
+          ]
+        },
+        {
+          "title": "I Didn't Change My Number",
+          "sections": [
+            {
+              "label": "Intro",
+              "lines": [
+                "Okay",
+                "Mm-mm, I"
+              ]
+            },
+            {
+              "label": "Verse 1",
+              "lines": [
+                "I didn't change my number",
+                "I only changed who I reply to",
+                "Laura said I should be nicer",
+                "But not to you",
+                "I love a \"You mad at me?\" text",
+                "Shoulda guessed",
+                "That you would think I was upset (Haha)",
+                "You're obsessed"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "Don't take it out on me",
+                "I'm out of sympathy for you",
+                "Maybe you should leave",
+                "Before I get too mean"
+              ]
+            },
+            {
+              "label": "Verse 2",
+              "lines": [
+                "I didn't change my number",
+                "I only changed who I believe in",
+                "You were easy on the eyes, eyes, eyes (Eyes, eyes)",
+                "But looks can be deceivin'",
+                "I gotta work, I go to work",
+                "You don't deserve to feel so hurt",
+                "You got a lot of fuckin' nerve",
+                "I don't deserve, so"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "Don't take it out on me",
+                "I'm out of sympathy for you",
+                "Maybe you should leave",
+                "Before I get too mean",
+                "And take it out on you",
+                "And your best friend, too",
+                "I should have left when Drew",
+                "Said you were bad news"
+              ]
+            },
+            {
+              "label": "Outro",
+              "lines": [
+                "Mm-mm-mm",
+                "Mm-mm-mm",
+                "Mm-mm-mm",
+                "Mm-mm-mm",
+                "Mm-mm-mm",
+                "Mm-mm-mm"
+              ]
+            }
+          ]
+        },
+        {
+          "title": "Billie Bossa Nova",
+          "sections": [
+            {
+              "label": "Intro",
+              "lines": [
+                "Mm-mm-mm, mm-mm",
+                "Da-da-da-da"
+              ]
+            },
+            {
+              "label": "Verse 1",
+              "lines": [
+                "Love when it comes without a warning",
+                "'Cause waiting for it gets so boring",
+                "A lot can change in twenty seconds",
+                "A lot can happen in the dark",
+                "Love when it makes you lose your bearings",
+                "Some information's not for sharing",
+                "Use different names at hotel check-ins",
+                "It's hard to stop it once it starts (It starts)"
+              ]
+            },
+            {
+              "label": "Pre-Chorus",
+              "lines": [
+                "I'm not sentimental",
+                "But there's somethin' 'bout the way you look tonight, mm",
+                "Makes me wanna take a picture",
+                "Make a movie with you that we'd have to hide"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "You better lock your phone (Oh)",
+                "And look at me when you're alone",
+                "Won't take a lot to get you goin' (Oh)",
+                "I'm sorry if it's torture though",
+                "I know, I know"
+              ]
+            },
+            {
+              "label": "Verse 2",
+              "lines": [
+                "It might be more of an obsession",
+                "You really make a strong impression (A strong impression)",
+                "Nobody saw me in the lobby (Saw me in the lobby)",
+                "Nobody saw me in your arms, mm"
+              ]
+            },
+            {
+              "label": "Pre-Chorus",
+              "lines": [
+                "I'm not sentimental",
+                "But there's somethin' 'bout the way you look tonight, mm ('Bout the way you look tonight)",
+                "Makes me wanna make 'em jealous",
+                "I'm the only one who does it how you like (Only one who does it how you—)"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "You better lock your phone (Oh)",
+                "And look at me when you're alone (You're alone, you're alone)",
+                "Won't take a lot to get you goin' (Get me goin', get me goin')",
+                "I'm sorry if it's torture though (Torture though)",
+                "I know, I know",
+                "You better lock your door (Oh)",
+                "And look at me a little more",
+                "We both know I'm worth waitin' for (Waitin' for)",
+                "That heavy breathin' on the floor (On the floor)",
+                "I'm yours, I'm yours (I'm yours)"
+              ]
+            },
+            {
+              "label": "Outro",
+              "lines": [
+                "I'm not sentimental",
+                "I'm not sentimental",
+                "I'm not sentimental"
+              ]
+            }
+          ]
+        },
+        {
+          "title": "my future",
+          "sections": [
+            {
+              "label": "Verse 1",
+              "lines": [
+                "I can't seem to focus",
+                "And you don't seem to notice I'm not here",
+                "I'm just a mirror",
+                "You check your complexion",
+                "To find your reflection's all alone",
+                "I had to go"
+              ]
+            },
+            {
+              "label": "Pre-Chorus",
+              "lines": [
+                "Can't you hear me?",
+                "I'm not comin' home",
+                "Do you understand?",
+                "I've changed my plans"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "'Cause I, I'm in love",
+                "With my future",
+                "Can't wait to meet her",
+                "And I (I), I'm in love",
+                "But not with anybody else",
+                "Just wanna get to know myself"
+              ]
+            },
+            {
+              "label": "Verse 2",
+              "lines": [
+                "I know supposedly I'm lonely now (Lonely now)",
+                "Know I'm supposed to be unhappy",
+                "Without someone (Someone)",
+                "But aren't I someone? (Aren't I someone? Yeah)",
+                "I'd (I'd) like to be your answer (Be your answer)",
+                "'Cause you're so handsome (You're so handsome)"
+              ]
+            },
+            {
+              "label": "Pre-Chorus",
+              "lines": [
+                "But I know better",
+                "Than to drive you home",
+                "'Cause you'd invite me in",
+                "And I'd be yours again"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "But I (I), I'm in love (Love, love, love, love)",
+                "With my future",
+                "And you don't know her (Ooh)",
+                "And I, I'm in love (Love, love)",
+                "But not with anybody here",
+                "I'll see you in a couple years"
+              ]
+            }
+          ]
+        },
+        {
+          "title": "Oxytocin",
+          "sections": [
+            {
+              "label": "Verse 1",
+              "lines": [
+                "Can't take it back once it's been set in motion",
+                "You know I love to rub it in like lotion",
+                "If you only pray on Sunday, could you come my way on Monday?",
+                "'Cause I like to do things God doesn't approve of if She saw us"
+              ]
+            },
+            {
+              "label": "Pre-Chorus",
+              "lines": [
+                "She couldn't look away, look away, look away",
+                "She'd wanna get involved, involved, involved",
+                "And what would people say, people say, people say",
+                "If they listen through the wall, the wall, the wall?"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "I can see it clear as day",
+                "You don't really need a break",
+                "Wanna see what you can take",
+                "You should really run away"
+              ]
+            },
+            {
+              "label": "Post-Chorus",
+              "lines": [
+                "I wanna do bad things to you (To you)",
+                "I wanna make you yell (Yell)",
+                "I wanna do bad things to you (To you)",
+                "Don't wanna treat you well (Well)"
+              ]
+            },
+            {
+              "label": "Verse 2",
+              "lines": [
+                "Can't take it back once it's been set in motion",
+                "You know I need you for the oxytocin",
+                "If you find it hard to swallow, I can loosen up your collar",
+                "'Cause as long as you're still breathing",
+                "Don't you even think of leaving"
+              ]
+            },
+            {
+              "label": "Pre-Chorus",
+              "lines": [
+                "Not gonna wanna look away, look away, look away",
+                "You're gonna wanna get involved, involved, involved",
+                "And what would people say, people say, people say",
+                "If they listen through the wall, the wall, the wall?"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "I can see it clear as day",
+                "You don't really need a break",
+                "Wanna see what you can take",
+                "You should really run away",
+                "Other people wouldn't stay",
+                "Other people don't obey",
+                "You and me are both the same",
+                "You should really run away"
+              ]
+            },
+            {
+              "label": "Outro",
+              "lines": [
+                "Bad things",
+                "To you",
+                "I wanna do bad things to you",
+                "I wanna make you yell",
+                "I wanna do bad things to you",
+                "Don't wanna treat you well"
+              ]
+            }
+          ]
+        },
+        {
+          "title": "GOLDWING",
+          "sections": [
+            {
+              "label": "Intro",
+              "lines": [
+                "\"He hath come to the bosom of his beloved",
+                "Smiling on him, she beareth him to highest heav'n",
+                "With yearning heart\"",
+                "\"On thee we gaze, O' gold-wing'd messenger of mighty Gods\""
+              ]
+            },
+            {
+              "label": "Verse 1",
+              "lines": [
+                "Gold-winged angel",
+                "Go home, don't tell",
+                "Anyone what you are",
+                "You're sacred and they're starved",
+                "And their art is gettin' dark",
+                "And there you are to tear apart",
+                "Tear apart, tear apart, tear apart"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "You better keep your head down-down",
+                "Da-da-down-down, da-da-down-down",
+                "Better keep your head down-down",
+                "Da-da-down-down, da-da-down-down"
+              ]
+            },
+            {
+              "label": "Verse 2",
+              "lines": [
+                "They're gonna tell you what you wanna hear",
+                "Then they're gonna disappear",
+                "Gonna claim you like a souvenir",
+                "Just to sell you in a year"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "You better keep your head down-down",
+                "Da-da-down-down, da-da-down-down",
+                "Keep your head down-down (Down)",
+                "Da-da-down-down, da-da-down-down",
+                "Better keep your head down-down",
+                "Da-da-down-down, da-da-down-down",
+                "Keep your head down-down",
+                "Da-da-down-down, da-da-down-down"
+              ]
+            },
+            {
+              "label": "Outro",
+              "lines": [
+                "That's good"
+              ]
+            }
+          ]
+        },
+        {
+          "title": "Lost Cause",
+          "sections": [
+            {
+              "label": "Intro",
+              "lines": [
+                "Something's in the—"
+              ]
+            },
+            {
+              "label": "Verse 1",
+              "lines": [
+                "Something's in the air right now",
+                "Like I'm losin' track of time (Time, time)",
+                "Like I don't really care right now",
+                "But maybe that's fine",
+                "You weren't even there that day",
+                "I was waitin' on you (You, you)",
+                "I wonder if you were aware that day",
+                "Was the last straw for me and I knew"
+              ]
+            },
+            {
+              "label": "Pre-Chorus",
+              "lines": [
+                "I sent you flowers",
+                "Did you even care?",
+                "You ran the shower",
+                "And left them by the stairs",
+                "Ooh-ooh-ooh, a-a-a-ayy",
+                "Thought you had your shit together, but damn, I was wrong (Wrong)"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "You ain't nothin' but a lost cause (Cause, cause)",
+                "And this ain't nothin' like it once was (Was, was)",
+                "I know you think you're such an outlaw",
+                "But you got no job (Job)",
+                "You ain't nothin' but a lost cause (Cause)",
+                "And this ain't nothin' like it once was (Was)",
+                "I know you think you're such an outlaw",
+                "But you got no job"
+              ]
+            },
+            {
+              "label": "Verse 2",
+              "lines": [
+                "I used to think you were shy (Shy)",
+                "But maybe you just had nothing on your mind",
+                "Maybe you were thinkin' 'bout yourself all the time",
+                "I used to wish you were mine (Mine)",
+                "But that was way before I realized",
+                "Someone like you would always be so easy to find",
+                "(So) So easy (So, so)",
+                "Hee, mm-mm-mm, mm"
+              ]
+            },
+            {
+              "label": "Pre-Chorus",
+              "lines": [
+                "Gave me no flowers",
+                "Wish I didn't care",
+                "You'd be gone for hours",
+                "Could be anywhere",
+                "Ooh-ooh-ooh",
+                "Ah-ah-ah-ah-ah",
+                "Thought you would've grown eventually, but you proved me wrong (Wrong)"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "You ain't nothing but a lost cause (Cause)",
+                "And this ain't nothing like it once was (Was)",
+                "I know you think you're such an outlaw (Yeah)",
+                "But you got no job (No job)",
+                "You ain't nothing but a lost cause (Cause)",
+                "And this ain't nothing like it once was (Was)",
+                "I know you think you're such an outlaw (Think you're such a lost cause)",
+                "But you got no job"
+              ]
+            },
+            {
+              "label": "Outro",
+              "lines": [
+                "(What did I tell you?)",
+                "(Don't get complacent)",
+                "(It's time to face it now, na-na, na-na, na-na)",
+                "(What did I tell you?)",
+                "(Don't get complacent)",
+                "(It's time to face it now, na-na, na-na, na-na)"
+              ]
+            }
+          ]
+        },
+        {
+          "title": "Halley's Comet",
+          "sections": [
+            {
+              "label": "Verse 1",
+              "lines": [
+                "I don't want it",
+                "And I don't want to want you",
+                "But in my dreams, I seem to be more honest",
+                "And I must admit you've been in quite a few"
+              ]
+            },
+            {
+              "label": "Verse 2",
+              "lines": [
+                "Halley's Comet",
+                "Comes around more than I do",
+                "But you're all it takes for me to break a promise",
+                "Silly me to fall in love with you"
+              ]
+            },
+            {
+              "label": "Verse 3",
+              "lines": [
+                "I haven't slept since Sunday",
+                "Midnight for me is 3 a.m. for you",
+                "But my sleepless nights are better",
+                "With you than nights could ever be alone, ooh-ooh",
+                "I was good at feeling nothin', now I'm hopeless",
+                "What a drag to love you like I do",
+                "Ooh-ooh-ooh-ooh-ooh"
+              ]
+            },
+            {
+              "label": "Verse 4",
+              "lines": [
+                "I've been loved before, but right now, in this moment",
+                "I feel more and more like I was made for you",
+                "For you"
+              ]
+            },
+            {
+              "label": "Outro",
+              "lines": [
+                "I'm sitting in my brother's room",
+                "Haven't slept in a week or two, or two",
+                "I think I might have fallen in love",
+                "What am I to do?"
+              ]
+            }
+          ]
+        },
+        {
+          "title": "Not My Responsibility",
+          "sections": [
+            {
+              "label": "Spoken",
+              "lines": [
+                "Do you know me?",
+                "Really know me?",
+                "You have opinions about my opinions",
+                "About my music",
+                "About my clothes",
+                "About my body",
+                "Some people hate what I wear",
+                "Some people praise it",
+                "Some people use it to shame others",
+                "Some people use it to shame me",
+                "But I feel you watching",
+                "Always",
+                "And nothing I do goes unseen",
+                "So while I feel your stares, your disapproval or your sigh of relief",
+                "If I lived by them, I'd never be able to move",
+                "Would you like me to be smaller, weaker, softer, taller?",
+                "Would you like me to be quiet?",
+                "Do my shoulders provoke you? Does my chest?",
+                "Am I my stomach? My hips?",
+                "The body I was born with",
+                "Is it not what you wanted?",
+                "If I wear what is comfortable, I am not a woman",
+                "If I shed the layers, I'm a slut",
+                "Though you've never seen my body, you still judge it",
+                "And judge me for it",
+                "Why?",
+                "We make assumptions about people based on their size",
+                "We decide who they are",
+                "We decide what they're worth",
+                "If I wear more, if I wear less",
+                "Who decides what that makes me? What that means?",
+                "Is my value based only on your perception?",
+                "Or is your opinion of me not my responsibility?"
+              ]
+            }
+          ]
+        },
+        {
+          "title": "OverHeated",
+          "sections": [
+            {
+              "label": "Verse 1",
+              "lines": [
+                "I don't really even know how it happened",
+                "I started talkin', they started laughin'",
+                "I don't really even know how it happened",
+                "I started watchin' them photographin'",
+                "I don't really (I don't really), how it happened",
+                "Instead of stoppin', they still were flashin' (I don't really)",
+                "I started walkin' (I don't really), gave no reaction",
+                "No reaction"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "I'm overheated, can't be defeated",
+                "Can't be deleted, can't un-believe it",
+                "I'm overheated, can't be defeated",
+                "Can't be deleted, can't be repeated",
+                "I'm overheated",
+                "I'm overheated"
+              ]
+            },
+            {
+              "label": "Verse 2",
+              "lines": [
+                "I don't really wanna know why it went there (Why it went there)",
+                "I kinda don't care (Kinda don't care)",
+                "You wanna kill me? (You wanna kill me?)",
+                "You wanna hurt me? (Mmm)",
+                "Stop bein' flirty",
+                "It's kinda workin'",
+                "Did you really think \"This is the right thing to do\"?",
+                "(Is it news? News to who?)",
+                "That I really look just like the rest of you"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "I'm overheated, can't be defeated",
+                "Can't be deleted, can't un-believe it",
+                "I'm overheated, can't be defeated",
+                "Can't be deleted, can't be repeated",
+                "I'm overheated"
+              ]
+            },
+            {
+              "label": "Bridge",
+              "lines": [
+                "And everybody said it was a letdown",
+                "I was only built like everybody else now",
+                "But I didn't get a surgery to help out",
+                "'Cause I'm not about to redesign myself now, am I?",
+                "(Am I?) Am I?",
+                "All these other inanimate bitches, it's none of my business",
+                "But don't you get sick of posin' for pictures",
+                "With that plastic body?"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "Man, I'm overheated, can't be defeated",
+                "Can't be deleted, can't un-believe it",
+                "I'm overheated, can't be defeated",
+                "Can't be deleted, can't be repeated",
+                "I'm overheated"
+              ]
+            }
+          ]
+        },
+        {
+          "title": "Everybody Dies",
+          "sections": [
+            {
+              "label": "Verse 1",
+              "lines": [
+                "Everybody dies, surprise, surprise",
+                "We tell each other lies, sometimes, we try",
+                "To make it feel like we might be right",
+                "We might not be alone",
+                "Be alone"
+              ]
+            },
+            {
+              "label": "Verse 2",
+              "lines": [
+                "\"Everybody dies,\" that's what they say",
+                "And maybe, in a couple hundred years, they'll find another way",
+                "I just wonder why you'd wanna stay",
+                "If everybody goes",
+                "You'd still be alone"
+              ]
+            },
+            {
+              "label": "Verse 3",
+              "lines": [
+                "I don't wanna cry, some days I do",
+                "But not about you",
+                "It's just a lot to think about the world I'm used to",
+                "The one I can't get back, at least not for a while",
+                "I sure have a knack for seein' life more like a child",
+                "It's not my fault, it's not so wrong to wonder why",
+                "Everybody dies",
+                "And when will I?"
+              ]
+            },
+            {
+              "label": "Verse 4",
+              "lines": [
+                "You oughta know",
+                "That even when it's time, you might not wanna go",
+                "But it's okay to cry and it's alright to fold",
+                "But you are not alone",
+                "You are not unknown"
+              ]
+            }
+          ]
+        },
+        {
+          "title": "Your Power",
+          "sections": [
+            {
+              "label": "Chorus",
+              "lines": [
+                "Try not to abuse your power",
+                "I know we didn't choose to change",
+                "You might not wanna lose your power",
+                "But havin' it's so strange"
+              ]
+            },
+            {
+              "label": "Verse 1",
+              "lines": [
+                "She said you were a hero",
+                "You played the part",
+                "But you ruined her in a year",
+                "Don't act like it was hard",
+                "And you swear you didn't know (Didn't know)",
+                "No wonder why you didn't ask",
+                "She was sleepin' in your clothes (In your clothes)",
+                "But now she's got to get to class"
+              ]
+            },
+            {
+              "label": "Pre-Chorus",
+              "lines": [
+                "How dare you?",
+                "And how could you?",
+                "Will you only feel bad when they find out?",
+                "If you could take it all back",
+                "Would you?"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "Try not to abuse your power",
+                "I know we didn't choose to change",
+                "You might not wanna lose your power",
+                "But havin' it's so strange"
+              ]
+            },
+            {
+              "label": "Verse 2",
+              "lines": [
+                "I thought that I was special",
+                "You made me feel",
+                "Like it was my fault, you were the devil",
+                "Lost your appeal",
+                "Does it keep you in control? (In control)",
+                "For you to keep her in a cage?",
+                "And you swear you didn't know (Didn't know)",
+                "You said you thought she was your age"
+              ]
+            },
+            {
+              "label": "Pre-Chorus",
+              "lines": [
+                "How dare you?",
+                "And how could you?",
+                "Will you only feel bad if it turns out",
+                "That they kill your contract?",
+                "Would you?"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "Try not to abuse your power",
+                "I know we didn't choose to change",
+                "You might not wanna lose your power",
+                "But power isn't pain"
+              ]
+            },
+            {
+              "label": "Outro",
+              "lines": [
+                "Mmm",
+                "Ooh",
+                "La-la-la-la-la, hmm",
+                "La-la-la-la-la-la, la-la"
+              ]
+            }
+          ]
+        },
+        {
+          "title": "NDA",
+          "sections": [
+            {
+              "label": "Verse 1",
+              "lines": [
+                "Did you think I'd show up in a limousine? (No)",
+                "Had to save my money for security",
+                "Got a stalker walkin' up and down the street",
+                "Says he's Satan and he'd like to meet",
+                "I bought a secret house when I was seventeen (Ha)",
+                "Haven't had a party since I got the keys",
+                "Had a pretty boy over, but he couldn't stay",
+                "On his way out, made him sign an NDA, mm",
+                "Yeah, I made him sign an NDA",
+                "Once was good enough",
+                "'Cause I don't want him havin' shit to say, oh-oh-oh"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "You couldn't save me, but you can't let me go, oh, no",
+                "I can crave you, but you don't need to know, oh-oh"
+              ]
+            },
+            {
+              "label": "Verse 2",
+              "lines": [
+                "Mm, mm-mm, mm",
+                "30 Under 30 for another year (Another year)",
+                "I can barely go outside, I think I hate it here (I think I hate it here)",
+                "Maybe I should think about a new career (Uh)",
+                "Somewhere in Kauai where I can disappear",
+                "I've been havin' fun gettin' older now",
+                "Didn't change my number, made him shut his mouth (Shut his mouth, yeah)",
+                "At least I gave him somethin' he can cry about",
+                "I thought about my future, but I want it now, oh-oh-oh",
+                "Want it now, mm-mm-mm",
+                "You can't give me up"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "You couldn't save me, but you can't let me go, oh, no",
+                "I can crave you, but you don't need to know, oh-oh"
+              ]
+            },
+            {
+              "label": "Outro",
+              "lines": [
+                "Did I take it too far?",
+                "Now I know what you are",
+                "You hit me so hard",
+                "I saw stars",
+                "Think I took it too far",
+                "When I sold you my heart",
+                "How'd it get so dark?",
+                "I saw stars",
+                "Stars"
+              ]
+            }
+          ]
+        },
+        {
+          "title": "Therefore I Am",
+          "sections": [
+            {
+              "label": "Chorus",
+              "lines": [
+                "I'm not your friend",
+                "Or anything, damn",
+                "You think that you're the man",
+                "I think, therefore, I am",
+                "I'm not your friend",
+                "Or anything, damn",
+                "You think that you're the man",
+                "I think, therefore, I am"
+              ]
+            },
+            {
+              "label": "Verse 1",
+              "lines": [
+                "Stop, what the hell are you talking about? Ha",
+                "Get my pretty name out of your mouth",
+                "We are not the same with or without",
+                "Don't talk 'bout me like how you might know how I feel",
+                "Top of the world, but your world isn't real",
+                "Your world's an ideal"
+              ]
+            },
+            {
+              "label": "Pre-Chorus",
+              "lines": [
+                "So go have fun",
+                "I really couldn't care less",
+                "And you can give 'em my best, but just know"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "I'm not your friend",
+                "Or anything, damn",
+                "You think that you're the man",
+                "I think, therefore, I am",
+                "I'm not your friend",
+                "Or anything, damn",
+                "You think that you're the man",
+                "I think, therefore, I am"
+              ]
+            },
+            {
+              "label": "Verse 2",
+              "lines": [
+                "I don't want press to put your name next to mine",
+                "We're on different lines, so I",
+                "Wanna be nice enough, they don't call my bluff",
+                "'Cause I hate to find",
+                "Articles, articles, articles",
+                "Rather you remain unremarkable (Got a lotta)",
+                "Interviews, interviews, interviews",
+                "When they say your name, I just act confused"
+              ]
+            },
+            {
+              "label": "Pre-Chorus",
+              "lines": [
+                "Did you have fun?",
+                "I really couldn't care less",
+                "And you can give 'em my best, but just know"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "I'm not your friend",
+                "Or anything, damn",
+                "You think that you're the man",
+                "I think, therefore, I am",
+                "I'm not your friend",
+                "Or anything, damn",
+                "You think that you're the man",
+                "I think, therefore, I am"
+              ]
+            },
+            {
+              "label": "Bridge",
+              "lines": [
+                "I'm sorry",
+                "I don't think I caught your name",
+                "I'm sorry",
+                "I don't think I caught your name"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "I'm not your friend (I'm not your friend)",
+                "Or anything, damn",
+                "You think that you're the man (They wanna, they can try)",
+                "I think, therefore, I am",
+                "I'm not your friend (I'm not your friend)",
+                "Or anything, damn (They wanna)",
+                "You think that you're the man",
+                "I think, therefore, I am"
+              ]
+            }
+          ]
+        },
+        {
+          "title": "Happier Than Ever",
+          "sections": [
+            {
+              "label": "Chorus",
+              "lines": [
+                "When I'm away from you",
+                "I'm happier than ever",
+                "Wish I could explain it better",
+                "I wish it wasn't true"
+              ]
+            },
+            {
+              "label": "Verse 1",
+              "lines": [
+                "Give me a day or two to think of something clever",
+                "To write myself a letter",
+                "To tell me what to do, mm-mm",
+                "Do you read my interviews?",
+                "Or do you skip my avenue?",
+                "When you said you were passin' through",
+                "Was I even on your way?",
+                "I knew when I asked you to (When I asked you to)",
+                "Be cool about what I was tellin' you",
+                "You'd do the opposite of what you said you'd do (What you said you'd do)",
+                "And I'd end up more afraid",
+                "Don't say it isn't fair",
+                "You clearly weren't aware that you made me miserable",
+                "So if you really wanna know"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "When I'm away from you (When I'm away from you)",
+                "I'm happier than ever (Happier than ever)",
+                "Wish I could explain it better (Wish I could explain it better)",
+                "I wish it wasn't true, mm-mm"
+              ]
+            },
+            {
+              "label": "Verse 2",
+              "lines": [
+                "You call me again, drunk in your Benz",
+                "Drivin' home under the influence",
+                "You scared me to death, but I'm wastin' my breath",
+                "'Cause you only listen to your fuckin' friends",
+                "I don't relate to you",
+                "I don't relate to you, no",
+                "'Cause I'd never treat me this shitty",
+                "You made me hate this city"
+              ]
+            },
+            {
+              "label": "Verse 3",
+              "lines": [
+                "And I don't talk shit about you on the internet",
+                "Never told anyone anything bad",
+                "'Cause that shit's embarrassing, you were my everything",
+                "And all that you did was make me fuckin' sad",
+                "So don't waste the time I don't have",
+                "And don't try to make me feel bad",
+                "I could talk about every time that you showed up on time",
+                "But I'd have an empty line 'cause you never did",
+                "Never paid any mind to my mother or friends, so I",
+                "Shut 'em all out for you 'cause I was a kid"
+              ]
+            },
+            {
+              "label": "Outro",
+              "lines": [
+                "You ruined everything good",
+                "Always said you were misunderstood",
+                "Made all my moments your own",
+                "Just fuckin' leave me alone, yeah (Fuck you)",
+                "(Ah)",
+                "(Goddamn)",
+                "(Ah)",
+                "(Fuck you)",
+                "(Fuck you)"
+              ]
+            }
+          ]
+        },
+        {
+          "title": "Male Fantasy",
+          "sections": [
+            {
+              "label": "Verse 1",
+              "lines": [
+                "Home alone, tryin' not to eat",
+                "Distract myself with pornography",
+                "I hate the way she looks at me",
+                "I can't stand the dialogue, she would never be",
+                "That satisfied, it's a male fantasy",
+                "I'm goin' back to therapy"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "'Cause I loved you then and I love you now",
+                "And I don't know how",
+                "Guess it's hard to know when nobody else comes around",
+                "If I'm getting over you",
+                "Or just pretending to",
+                "Be alright, convince myself I hate you"
+              ]
+            },
+            {
+              "label": "Interlude",
+              "lines": [
+                "(You want me to put it here?)",
+                "(Okay)"
+              ]
+            },
+            {
+              "label": "Verse 2",
+              "lines": [
+                "I got a call from a girl I used to know",
+                "We were inseparable years ago",
+                "Thought we'd get along, but it wasn't so",
+                "And it's all I think about when I'm behind the wheel",
+                "I worry this is how I'm always gonna feel",
+                "But nothing lasts, I know the deal"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "But I loved you then and I love you now",
+                "And I don't know how",
+                "Guess it's hard to know when nobody else comes around",
+                "If I'm getting over you",
+                "Or just pretending to",
+                "Be alright, convince myself I hate you"
+              ]
+            },
+            {
+              "label": "Outro",
+              "lines": [
+                "Can't get over you",
+                "No matter what I do",
+                "I know I should, but I could never hate you"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "album": "Guitar Songs",
+      "songs": [
+        {
+          "title": "TV",
+          "sections": [
+            {
+              "label": "Verse 1",
+              "lines": [
+                "I don't wanna talk right now",
+                "I just wanna watch TV",
+                "I'll stay in the pool and drown",
+                "So I don't have to watch you leave",
+                "I put on Survivor just to watch somebody suffer",
+                "Maybe I should get some sleep",
+                "Sinking in the sofa while they all betray each other",
+                "What's the point of anything?"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "All of my friends are missing again",
+                "That's what happens when you fall in love",
+                "You don't have the time, you leave them all behind",
+                "You tell yourself, \"It's fine, you're just in love\""
+              ]
+            },
+            {
+              "label": "Verse 2",
+              "lines": [
+                "Don't know where you are right now",
+                "Did you see me on TV?",
+                "I'll try not to starve myself",
+                "Just because you're mad at me",
+                "And I'll be in denial for at least a little while",
+                "What about the plans we made?",
+                "The internet's gone wild watching movie stars on trial",
+                "While they're overturning Roe v. Wade"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "Now all of my friends are missing again",
+                "'Cause that's what happens when you fall in love",
+                "You don't have the time, you leave them all behind",
+                "And you tell yourself, \"It's fine, you're just in love\""
+              ]
+            },
+            {
+              "label": "Bridge",
+              "lines": [
+                "And I don't get along with anyone"
+              ]
+            },
+            {
+              "label": "Outro",
+              "lines": [
+                "Maybe I'm the problem",
+                "Maybe I'm the problem",
+                "Maybe I, maybe I, maybe I'm the problem",
+                "Maybe I, maybe I, maybe I'm the problem",
+                "Maybe I, maybe I, maybe I'm the problem",
+                "Maybe I, maybe I, maybe I'm the problem",
+                "Maybe I, maybe I, maybe I'm the problem",
+                "Maybe I, maybe I, maybe I'm the problem",
+                "Baby, I, baby, I, baby, I'm the problem",
+                "Baby, I, baby, I, baby, I'm the problem",
+                "Baby, I, baby, I, baby, I'm the problem",
+                "Baby, I, baby, I, baby, I'm the problem",
+                "Baby, I, baby, I, baby, I'm the problem"
+              ]
+            }
+          ]
+        },
+        {
+          "title": "The 30th",
+          "sections": [
+            {
+              "label": "Verse 1",
+              "lines": [
+                "Sometimes, you look the same",
+                "Just like you did before the accident",
+                "When you're starin' into space",
+                "It's hard to believe you don't remember it",
+                "Woke up in the ambulance",
+                "You pieced it all together on the drive"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "I know you don't remember calling me",
+                "But I told you even then you looked so pretty",
+                "In a hospital bed, I remember you said",
+                "You were scared",
+                "And so was I"
+              ]
+            },
+            {
+              "label": "Verse 2",
+              "lines": [
+                "In a standstill on the 5",
+                "Thought it was unusually early traffic",
+                "Usually, I don't panic",
+                "I just wanted to be on time",
+                "When I saw the ambulances on the shoulder",
+                "I didn't even think of pullin' over",
+                "I pieced it all together late that night"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "And I know you don't remember calling me",
+                "But I told you even then you looked so pretty",
+                "In a hospital bed, I remember you said",
+                "You were scared",
+                "And so was I"
+              ]
+            },
+            {
+              "label": "Bridge",
+              "lines": [
+                "What if it happened to you on a different day?",
+                "On a bridge where there wasn't a rail in the way?",
+                "Or a neighborhood street where the little kids play?",
+                "Or the Angeles Crest in the snow or the rain?",
+                "What if you weren't alone? There were kids in the car",
+                "What if you were remote? No one knows where you are",
+                "If you changed anything, would you not have survived?",
+                "You're alive, you're alive, you're alive"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "And I know you don't remember calling me",
+                "But I told you even then you looked so pretty",
+                "In your hospital bed, I remember you said",
+                "You were scared",
+                "And so am I"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "album": "HIT ME HARD AND SOFT",
+      "songs": [
+        {
+          "title": "SKINNY",
+          "sections": [
+            {
+              "label": "Intro",
+              "lines": [
+                "Hmm, hmm"
+              ]
+            },
+            {
+              "label": "Verse 1",
+              "lines": [
+                "I fell in love for the first time",
+                "With a friend, it's a good sign",
+                "Feelin' off when I feel fine",
+                "Twenty-one took a lifetime",
+                "People say I look happy",
+                "Just because I got skinny",
+                "But the old me is still me and maybe the real me",
+                "And I think she's pretty"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "And I still cry",
+                "Cry",
+                "And you know why"
+              ]
+            },
+            {
+              "label": "Verse 2",
+              "lines": [
+                "Am I acting my age now?",
+                "Am I already on the way out?",
+                "When I step off the stage, I'm a bird in a cage",
+                "I'm a dog in a dog pound",
+                "And you said I was your secret",
+                "And you didn't get to keep it",
+                "And the internet is hungry for the meanest kind of funny",
+                "And somebody's gotta feed it"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "Oh, do you still cry?",
+                "Still cry",
+                "Cry"
+              ]
+            },
+            {
+              "label": "Bridge",
+              "lines": [
+                "I never did you wrong (Never did you wrong)",
+                "And my (Oh), my patience is gone (Is gone)",
+                "And I (I), I never did you wrong (You)",
+                "I, I loved you for so long (Hmm)"
+              ]
+            }
+          ]
+        },
+        {
+          "title": "LUNCH",
+          "sections": [
+            {
+              "label": "Intro",
+              "lines": [
+                "Oh, mm-mm"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "I could eat that girl for lunch",
+                "Yeah, she dances on my tongue",
+                "Tastes like she might be the one",
+                "And I could never get enough",
+                "I could buy her so much stuff",
+                "It's a craving, not a crush, huh",
+                "\"Call me when you're there\"",
+                "Said, \"I bought you somethin' rare",
+                "And I left it under 'Claire'\"",
+                "So now, she's comin' up the stairs",
+                "So I'm pullin' up a chair",
+                "And I'm puttin' up my hair"
+              ]
+            },
+            {
+              "label": "Verse 1",
+              "lines": [
+                "Baby, I think you were made for me",
+                "Somebody write down the recipe",
+                "Been tryin' hard not to overeat",
+                "You're just so sweet",
+                "I'll run a shower for you like you want",
+                "Clothes on the counter for you, try 'em on",
+                "If I'm allowed, I'll help you take 'em off",
+                "Huh"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "I could eat that girl for lunch",
+                "Yeah, she dances on my tongue",
+                "Tastes like she might be the one",
+                "And I could never get enough",
+                "I could buy her so much stuff",
+                "It's a craving, not a crush, huh"
+              ]
+            },
+            {
+              "label": "Post-Chorus",
+              "lines": [
+                "Oh, I just wanna get her off, oh",
+                "Oh",
+                "Oh, oh",
+                "Oh"
+              ]
+            },
+            {
+              "label": "Verse 2",
+              "lines": [
+                "She's takin' pictures in the mirror",
+                "Oh, my God, her skin's so clear",
+                "Tell her, \"Bring that over here\"",
+                "You need a seat? I'll volunteer",
+                "Now she's smilin' ear to ear",
+                "She's the headlights, I'm the deer"
+              ]
+            },
+            {
+              "label": "Bridge",
+              "lines": [
+                "I've said it all before, but I'll say it again",
+                "I'm interested in more than just bein' your friend",
+                "I don't wanna break it, just want it to bend",
+                "Do you know how to bend?"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "I could eat that girl for lunch",
+                "She dances on my tongue",
+                "I know it's just a hunch",
+                "But she might be the one"
+              ]
+            },
+            {
+              "label": "Outro",
+              "lines": [
+                "I could",
+                "Eat that girl for lunch",
+                "Yeah, she",
+                "Tastes like she might be the one",
+                "I could",
+                "I could",
+                "Eat that girl for lunch",
+                "Yeah, she",
+                "Yeah, she",
+                "Tastes like she might be the one"
+              ]
+            }
+          ]
+        },
+        {
+          "title": "CHIHIRO",
+          "sections": [
+            {
+              "label": "Verse 1",
+              "lines": [
+                "To take my love away",
+                "When I come back around, will I know what to say?",
+                "Said you won't forget my name",
+                "Not today, not tomorrow",
+                "Kinda strange, feelin' sorrow",
+                "I got change (Yup), you could borrow (Borrow, borrow, borrow)",
+                "When I come back around, will I know what to say?",
+                "Not today, maybe tomorrow"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "Open up the door, can you open up the door?",
+                "I know you said before you can't cope with any more",
+                "You told me it was war, said you'd show me what's in store",
+                "I hope it's not for sure, can you open up the door?"
+              ]
+            },
+            {
+              "label": "Refrain",
+              "lines": [
+                "Did you take",
+                "My love away",
+                "From me? Me",
+                "Me"
+              ]
+            },
+            {
+              "label": "Verse 2",
+              "lines": [
+                "Saw your seat at the counter when I looked away",
+                "Saw you turn around, but it wasn't your face",
+                "Said, \"I need to be alone now, I'm takin' a break\"",
+                "How come when I returned, you were gone away?"
+              ]
+            },
+            {
+              "label": "Bridge",
+              "lines": [
+                "I don't, I don't know why I called",
+                "I don't know you at all",
+                "I don't know you",
+                "Not at all",
+                "I don't, I don't know why I called",
+                "I don't know you at all",
+                "I don't know you"
+              ]
+            },
+            {
+              "label": "Refrain",
+              "lines": [
+                "Did you take",
+                "My love away",
+                "From me? Me"
+              ]
+            },
+            {
+              "label": "Verse 3",
+              "lines": [
+                "And that's when you found me",
+                "I was waitin' in the garden",
+                "Contemplatin', beg your pardon",
+                "But there's a part of me that recognizes you",
+                "Do you feel it too?",
+                "When you told me it was serious",
+                "Were you serious? Mm",
+                "They told me they were only curious",
+                "Now it's serious, mm"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "Open up the door, can you open up the door?",
+                "I know you said before you can't cope with any more",
+                "You told me it was war, said you'd show me what's in store",
+                "I hope it's not for sure, can you open up the door?"
+              ]
+            },
+            {
+              "label": "Outro",
+              "lines": [
+                "Wringing my hands in my lap",
+                "And they tell me it's all been a trap",
+                "And you don't know if you'll make it back",
+                "I said, \"No, don't say that\"",
+                "(Wringing my hands in my lap)",
+                "(And you tell me it's all been a trap)",
+                "(And you don't know if you'll make it back)",
+                "(But I said, \"No, don't say that\")",
+                "(Wringing my hands in my lap)",
+                "(Tell me it's all been a trap)",
+                "(Don't know if you'll make it back)",
+                "(Don't say that)",
+                "Hm-hm"
+              ]
+            }
+          ]
+        },
+        {
+          "title": "BIRDS OF A FEATHER",
+          "sections": [
+            {
+              "label": "Intro",
+              "lines": [
+                "(But I wanna stay)"
+              ]
+            },
+            {
+              "label": "Verse 1",
+              "lines": [
+                "I want you to stay",
+                "'Til I'm in the grave",
+                "'Til I rot away, dead and buried",
+                "'Til I'm in the casket you carry",
+                "If you go, I'm goin' too, uh",
+                "'Cause it was always you (Alright)",
+                "And if I'm turnin' blue, please don't save me",
+                "Nothin' left to lose without my baby"
+              ]
+            },
+            {
+              "label": "Refrain",
+              "lines": [
+                "Birds of a feather, we should stick together, I know",
+                "I said I'd never think I wasn't better alone",
+                "Can't change the weather, might not be forever",
+                "But if it's forever, it's even better"
+              ]
+            },
+            {
+              "label": "Pre-Chorus",
+              "lines": [
+                "And I don't know what I'm cryin' for",
+                "I don't think I could love you more",
+                "It might not be long, but baby, I"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "I'll love you 'til the day that I die",
+                "'Til the day that I die",
+                "'Til the light leaves my eyes",
+                "'Til the day that I die"
+              ]
+            },
+            {
+              "label": "Verse 2",
+              "lines": [
+                "I want you to see, hm",
+                "How you look to me, hm",
+                "You wouldn't believe if I told ya",
+                "You would keep the compliments I throw ya",
+                "But you're so full of shit, uh",
+                "Tell me it's a bit, oh",
+                "Say you don't see it, your mind's polluted",
+                "Say you wanna quit, don't be stupid"
+              ]
+            },
+            {
+              "label": "Pre-Chorus",
+              "lines": [
+                "And I don't know what I'm cryin' for",
+                "I don't think I could love you more",
+                "It might not be long, but baby, I",
+                "Don't wanna say goodbye"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "Birds of a feather, we should stick together, I know ('Til the day that I die)",
+                "I said I'd never think I wasn't better alone ('Til the light leaves my eyes)",
+                "Can't change the weather, might not be forever ('Til the day that I die)",
+                "But if it's forever, it's even better"
+              ]
+            },
+            {
+              "label": "Post-Chorus",
+              "lines": [
+                "I knew you in another life",
+                "You had that same look in your eyes",
+                "I love you, don't act so surprised"
+              ]
+            }
+          ]
+        },
+        {
+          "title": "WILDFLOWER",
+          "sections": [
+            {
+              "label": "Verse 1",
+              "lines": [
+                "Things fall apart, and time breaks your heart",
+                "I wasn't there, but I know",
+                "She was your girl, you showed her the world",
+                "But fell out of love and you both let go"
+              ]
+            },
+            {
+              "label": "Pre-Chorus",
+              "lines": [
+                "She was cryin' on my shoulder, all I could do was hold her",
+                "Only made us closer until July",
+                "Now, I know that you love me, you don't need to remind me",
+                "I should put it all behind me, shouldn't I?"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "But I see her in the back of my mind all the time",
+                "Like a fever, like I'm burning alive, like a sign",
+                "Did I cross the line?"
+              ]
+            },
+            {
+              "label": "Post-Chorus",
+              "lines": [
+                "(Mm) Hmm"
+              ]
+            },
+            {
+              "label": "Verse 2",
+              "lines": [
+                "Well, good things don't last (Good things don't last)",
+                "And life moves so fast (Life moves so fast)",
+                "I'd never ask who was better (I'd never ask who was better)",
+                "'Cause she couldn't be (Couldn't)",
+                "More different from me (Different)",
+                "Happy and free in leather (Happy in leather)"
+              ]
+            },
+            {
+              "label": "Pre-Chorus",
+              "lines": [
+                "And I know that you love me (You love me)",
+                "You don't need to remind me (Remind me)",
+                "Wanna put it all behind me, but baby"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "I see her in the back of my mind (Back of my mind) all the time (All the time)",
+                "Feels like a fever (Like a fever), like I'm burning alive (Burning alive), like a sign",
+                "Did I cross the line?"
+              ]
+            },
+            {
+              "label": "Bridge",
+              "lines": [
+                "You say no one knows you so well (Oh)",
+                "But every time you touch me, I just wonder how she felt",
+                "Valentine's Day, cryin' in the hotel",
+                "I know you didn't mean to hurt me, so I kept it to myself"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "And I wonder",
+                "Do you see her in the back of your mind in my eyes?"
+              ]
+            },
+            {
+              "label": "Outro",
+              "lines": [
+                "You say no one knows you so well",
+                "But every time you touch me, I just wonder how she felt",
+                "Valentine's Day, cryin' in the hotel",
+                "I know you didn't mean to hurt me, so I kept it to myself"
+              ]
+            }
+          ]
+        },
+        {
+          "title": "THE GREATEST",
+          "sections": [
+            {
+              "label": "Verse 1",
+              "lines": [
+                "I'm trying my best",
+                "To keep you satisfied",
+                "Let you get your rest",
+                "While I stayed up all night"
+              ]
+            },
+            {
+              "label": "Pre-Chorus",
+              "lines": [
+                "And you don't wanna know",
+                "How alone I've been",
+                "Let you come and go",
+                "Whatever state I'm in, ah"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "Man, am I the greatest?",
+                "My congratulations",
+                "All my love and patience",
+                "All my admiration",
+                "All the times I waited",
+                "For you to want me naked",
+                "Made it all look painless",
+                "Man, am I the greatest?"
+              ]
+            },
+            {
+              "label": "Post-Chorus",
+              "lines": [
+                "Hm",
+                "Oh-oh, hm"
+              ]
+            },
+            {
+              "label": "Verse 2",
+              "lines": [
+                "Doing what's right",
+                "Without a reward",
+                "And we don't have to fight",
+                "When it's not worth fighting for (Fighting for), mm"
+              ]
+            },
+            {
+              "label": "Pre-Chorus",
+              "lines": [
+                "And you don't wanna know (Know)",
+                "What I would've done (Done), hm",
+                "Anything at all",
+                "Worse than anyone",
+                "Mm, ooh"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "And man, am I the greatest? (Greatest)",
+                "My congratulations (Congratulations)",
+                "All my love and patience",
+                "All my admiration (Admiration)",
+                "All the times I waited (Waited)",
+                "For you to want me naked (Naked)",
+                "I made it all look painless",
+                "Man, am I the greatest?"
+              ]
+            },
+            {
+              "label": "Bridge",
+              "lines": [
+                "The greatest",
+                "The greatest, ah-oh",
+                "I, I",
+                "I loved you",
+                "And I still do",
+                "Just wanted passion from you",
+                "Just wanted what I gave you",
+                "I waited",
+                "And waited (Oh)"
+              ]
+            },
+            {
+              "label": "Outro",
+              "lines": [
+                "Man, am I the greatest?",
+                "God, I hate it",
+                "All my love and patience",
+                "Unappreciated",
+                "You said your heart was jaded",
+                "You couldn't even break it",
+                "I shouldn't have to say it",
+                "You could've been the greatest"
+              ]
+            }
+          ]
+        },
+        {
+          "title": "L'AMOUR DE MA VIE",
+          "sections": [
+            {
+              "label": "Chorus",
+              "lines": [
+                "I wish you the best for the rest of your life",
+                "Felt sorry for you when I looked in your eyes",
+                "But I need to confess, I told you a lie",
+                "I said you",
+                "You were the love of my life",
+                "The love of my life"
+              ]
+            },
+            {
+              "label": "Verse",
+              "lines": [
+                "Did I break your heart?",
+                "Did I waste your time?",
+                "I tried to be there for you",
+                "Then you tried to break mine"
+              ]
+            },
+            {
+              "label": "Refrain",
+              "lines": [
+                "It isn't asking for a lot for an apology",
+                "For making me feel like it'd kill you if I tried to leave",
+                "You said you'd never fall in love again because of me",
+                "Then you moved on immediately (Bum, bum, bum)"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "But I wish you the best for the rest of your life",
+                "Felt sorry for you when I looked in your eyes",
+                "But I need to confess, I told you a lie (Told you a lie)",
+                "When I said you (I said you)",
+                "You (You) were the love of my life",
+                "The love of my life"
+              ]
+            },
+            {
+              "label": "Bridge",
+              "lines": [
+                "So you found her, now go fall in love (Go fall in love)",
+                "Just like we were if I ever was (If I ever was)",
+                "It's not my fault, I did what I could (Did what I could)",
+                "You made it so hard, like I knew you would"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "Thought I was depressed or losing my mind",
+                "My stomach upset almost all of the time",
+                "But after I left, it was obvious why (Oh), mm",
+                "Because for you, you",
+                "I was the love of your life, mm",
+                "But you were not mine (But you were not mine)"
+              ]
+            },
+            {
+              "label": "Refrain",
+              "lines": [
+                "It isn't asking for a lot for an apology",
+                "For making me feel like it'd kill you if I tried to leave",
+                "You said you'd never fall in love again because of me",
+                "Then you moved on, then you moved on",
+                "Then you moved on, then you moved on",
+                "Then you moved on, then you moved on"
+              ]
+            },
+            {
+              "label": "Verse",
+              "lines": [
+                "Ooh",
+                "You wanted to keep it",
+                "Like somethin' you found",
+                "'Til you didn't need it",
+                "But you should've seen it",
+                "The way it went down",
+                "Wouldn't believe it"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "Wanna know what I told her",
+                "With her hand on my shoulder?",
+                "You were so mediocre",
+                "And we're so glad it's over now",
+                "It's over now",
+                "It's over now",
+                "It's over now"
+              ]
+            },
+            {
+              "label": "Outro",
+              "lines": [
+                "Camera",
+                "Caught on camera",
+                "The girl's on camera",
+                "Your girl's a fan of—",
+                "You miss me",
+                "Say you miss me",
+                "It's such a pity",
+                "We're both so pretty"
+              ]
+            }
+          ]
+        },
+        {
+          "title": "THE DINER",
+          "sections": [
+            {
+              "label": "Intro",
+              "lines": [
+                "Don't be afraid of me",
+                "I'm what you need"
+              ]
+            },
+            {
+              "label": "Verse 1",
+              "lines": [
+                "I saw you on the screens",
+                "I know we're meant to be",
+                "You're starrin' in my dreams",
+                "In magazines",
+                "You're lookin' right at me (You're lookin' right at me)",
+                "I'm here around the clock",
+                "I'm waitin' on your block (I'm waitin' on your block)",
+                "But please don't call the cops",
+                "They'll make me stop",
+                "And I just wanna talk (I just wanna talk)"
+              ]
+            },
+            {
+              "label": "Pre-Chorus",
+              "lines": [
+                "Bet I could change your life",
+                "You could be my wife",
+                "Could get into a fight",
+                "I'll say, \"You're right\"",
+                "And you'll kiss me goodnight"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "I waited on the corner 'til I saw the sitter leave",
+                "Was easy getting over and I landed on my feet",
+                "I came in through the kitchen lookin' for something to eat",
+                "I left a calling card so they would know that it was me"
+              ]
+            },
+            {
+              "label": "Post-Chorus",
+              "lines": [
+                "(Ah, ah, ah)"
+              ]
+            },
+            {
+              "label": "Verse 2",
+              "lines": [
+                "I tried to save you, but I failed",
+                "Two fifty thousand dollar bail (Two hundred fifty thousand dollar)",
+                "While I'm away, don't read my mail (Don't read my mail)",
+                "Just bring a veil (Just bring a veil)",
+                "And come visit me in jail (Visit me in jail)"
+              ]
+            },
+            {
+              "label": "Pre-Chorus",
+              "lines": [
+                "I'll go back to the diner",
+                "I'll write another letter (I'll write another letter)",
+                "I hope you'll read it this time",
+                "You better"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "The cops around the corner stopped me when I tried to leave",
+                "They told me I was crazy and they knocked me off my feet (They told me I was crazy)",
+                "They came in through the kitchen lookin' for something discreet",
+                "I left a calling card so they would know that it was me"
+              ]
+            },
+            {
+              "label": "Post-Chorus",
+              "lines": [
+                "(Ah, ah, know that it was me)"
+              ]
+            },
+            {
+              "label": "Bridge",
+              "lines": [
+                "I memorized your number, now I call you when I please",
+                "I tried to end it all, but now I'm back up on my feet",
+                "I saw you in the car with someone else and couldn't sleep",
+                "If somethin' happens to him, you can bet that it was me"
+              ]
+            },
+            {
+              "label": "Outro",
+              "lines": [
+                "3956",
+                "310-807-3956",
+                "310-807-3956"
+              ]
+            }
+          ]
+        },
+        {
+          "title": "BITTERSUITE",
+          "sections": [
+            {
+              "label": "Intro",
+              "lines": [
+                "I can't fall in love with you"
+              ]
+            },
+            {
+              "label": "Verse",
+              "lines": [
+                "I've been overseas",
+                "I've been havin' dreams",
+                "You were in the foyer",
+                "I was on my knees",
+                "Outside of my body",
+                "Watchin' from above",
+                "I see the way you want me",
+                "I wanna be the one"
+              ]
+            },
+            {
+              "label": "Pre-Chorus",
+              "lines": [
+                "But I gotta be careful",
+                "Gotta watch what I say",
+                "God, I hope it all goes away"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "'Cause I can't fall in love with you",
+                "No matter how bad I want to"
+              ]
+            },
+            {
+              "label": "Intro",
+              "lines": [
+                "Mm",
+                "Ah, uh, uh, uh",
+                "Ah, uh, uh",
+                "Mm"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "I don't need to breathe when you look at me, all I see is green",
+                "And I think that we're in between everything I've seen",
+                "In my dream, have it once a week, can't land on my feet",
+                "Can't sleep, have you underneath all of my beliefs",
+                "Keep it brief",
+                "I'll wait in the suite",
+                "Keep me off my feet, mm"
+              ]
+            },
+            {
+              "label": "Verse 1",
+              "lines": [
+                "You seem so paranoid",
+                "I'm looking at the boys",
+                "I've never filled the void",
+                "Out of spite",
+                "You seem so paralyzed",
+                "It's so romanticized",
+                "If this is how I die",
+                "That's alright"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "I've been overseas",
+                "I don't need to breathe when you look at me, all I see is green (I've been overseas)",
+                "And I think that we're in between everything I've seen",
+                "In my dream, have it once a week, can't land on my feet (I've been overseas)",
+                "Can't sleep, have you underneath all of my beliefs",
+                "Keep it brief",
+                "I'll see you in the suite",
+                "We can be discreet"
+              ]
+            },
+            {
+              "label": "Verse 2",
+              "lines": [
+                "But I've been overseas",
+                "And I've been havin' dreams",
+                "L'amour de ma vie",
+                "Love so bittersweet, mm",
+                "Open up the door for me, for me",
+                "'Cause I'm still on my knees",
+                "I'm stayin' off my feet"
+              ]
+            },
+            {
+              "label": "Drop",
+              "lines": [
+                "(Will you come with me?)",
+                "(Just want you to tell the truth)",
+                "(Come on now, ha)",
+                "(And I know it seems like something even bitter)",
+                "(Listen up, hm)",
+                "(I've watched you keep on doing better)",
+                "(It's someone I don't know)",
+                "(Pay close attention to it, right now)"
+              ]
+            }
+          ]
+        },
+        {
+          "title": "BLUE",
+          "sections": [
+            {
+              "label": "Intro",
+              "lines": [
+                "Mm, mm, mm"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "I try to live in black and white, but I'm so blue",
+                "I'd like to mean it when I say I'm over you",
+                "But that's still not true (Blue)",
+                "And I'm still so blue, oh"
+              ]
+            },
+            {
+              "label": "Verse",
+              "lines": [
+                "I thought we were the same",
+                "Birds of a feather, now I'm ashamed",
+                "I told you a lie, désolée, mon amour",
+                "I'm tryin' my best, don't know what's in store",
+                "Open up the door (Blue)",
+                "In the back of my mind, I'm still overseas",
+                "A bird in a cage, thought you were made for me"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "I try (I'm not what) to live in black and white, but I'm so blue (But I'm not what you need)",
+                "I'd like (Not what you need) to mean it when I say I'm over you",
+                "But that's still not true, true",
+                "And I'm still so blue (And it's not true)",
+                "I'm true blue, true blue",
+                "I'm true blue"
+              ]
+            },
+            {
+              "label": "Outro",
+              "lines": [
+                "(Blue) Mm, mm, mm"
+              ]
+            },
+            {
+              "label": "Intro",
+              "lines": [
+                "Ah-ah",
+                "Ah-ah",
+                "Ah-ah",
+                "Ah-ah"
+              ]
+            },
+            {
+              "label": "Verse 1",
+              "lines": [
+                "You were born bluer than a butterfly",
+                "Beautiful and so deprived of oxygen",
+                "Colder than your father's eyes",
+                "He never learned to sympathize with anyone"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "I don't blame you",
+                "But I can't change you",
+                "Don't hate you (Don't hate you)",
+                "But we can't save you (But we can't save you)"
+              ]
+            },
+            {
+              "label": "Verse 2",
+              "lines": [
+                "You were born reachin' for your mother's hands",
+                "Victim of your father's plans to rule the world",
+                "Too afraid to step outside",
+                "Paranoid and petrified of what you've heard"
+              ]
+            },
+            {
+              "label": "Bridge",
+              "lines": [
+                "But they could say the same 'bout me",
+                "I sleep 'bout three hours each night",
+                "Means only twenty-one a week now, now",
+                "And I could say the same 'bout you",
+                "Born blameless, grew up famous too",
+                "Just a baby born blue now, now"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "I don't blame you",
+                "But I can't change you",
+                "Don't hate you",
+                "But we can't save you"
+              ]
+            },
+            {
+              "label": "Bridge",
+              "lines": [
+                "(Same 'bout me)",
+                "(I sleep 'bout three hours each night)",
+                "(Means only twenty-one a week now)",
+                "(Same 'bout me)",
+                "(I sleep 'bout three hours each night)",
+                "(Means only twenty-one a week now)",
+                "(Same 'bout me)",
+                "(I sleep 'bout three hours each night)",
+                "(Means only twenty-one a week now)",
+                "(Same 'bout me)",
+                "(I sleep 'bout three hours each night)",
+                "(Means only twenty-one a week now)",
+                "Ooh-ooh",
+                "It's over now",
+                "It's over now",
+                "It's over now",
+                "(Ah-ah-ah, ah)"
+              ]
+            },
+            {
+              "label": "Outro",
+              "lines": [
+                "But when can I hear the next one?"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "album": "Soundtracks",
+      "songs": [
+        {
+          "title": "Bored",
+          "sections": [
+            {
+              "label": "Intro",
+              "lines": [
+                "Ah, ah"
+              ]
+            },
+            {
+              "label": "Verse 1",
+              "lines": [
+                "The games you played were never fun (Mm)",
+                "You'd say you'd stay, but then you'd run (Ah)"
+              ]
+            },
+            {
+              "label": "Pre-Chorus",
+              "lines": [
+                "Givin' you what you're beggin' for",
+                "Givin' you what you say I need",
+                "I don't want any settled scores",
+                "I just want you to set me free",
+                "Givin' you what you're beggin' for",
+                "Givin' you what you say I need, say I need"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "I'm not afraid anymore",
+                "What makes you sure you're all I need? (I need)",
+                "Forget about it",
+                "When you walk out the door and leave me torn",
+                "You're teachin' me to live without it"
+              ]
+            },
+            {
+              "label": "Post-Chorus",
+              "lines": [
+                "Bored",
+                "I'm so bored",
+                "I'm so bored",
+                "So bored"
+              ]
+            },
+            {
+              "label": "Verse 2",
+              "lines": [
+                "I'm home alone, you're God-knows-where (Mm)",
+                "I hope you don't think that shit's fair (Ah)"
+              ]
+            },
+            {
+              "label": "Pre-Chorus",
+              "lines": [
+                "Givin' you all you want and more",
+                "Givin' you every piece of me",
+                "I don't want love, I can't afford",
+                "I just want you to love for free",
+                "Can't you see that I'm gettin' bored?",
+                "Givin' you every piece of me, piece of me"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "I'm not afraid anymore",
+                "What makes you sure you're all I need?",
+                "Forget about it",
+                "When you walk out the door and leave me torn",
+                "You're teachin' me to live without it"
+              ]
+            },
+            {
+              "label": "Post-Chorus",
+              "lines": [
+                "Bored",
+                "I'm so bored",
+                "I'm so bored",
+                "So bored"
+              ]
+            },
+            {
+              "label": "Pre-Chorus",
+              "lines": [
+                "Givin' you what you're beggin' for",
+                "Givin' you what you say I need",
+                "I don't want any settled scores",
+                "I just want you to set me free",
+                "Givin' you what you're beggin' for",
+                "Givin' you what you say I need, say I need"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "I'm not afraid anymore",
+                "What makes you sure you're all I need?",
+                "Forget about it",
+                "And when you walk out the door and leave me torn",
+                "You're teachin' me to live without it"
+              ]
+            }
+          ]
+        },
+        {
+          "title": "lovely",
+          "sections": [
+            {
+              "label": "Verse 1",
+              "lines": [
+                "Thought I found a way",
+                "Thought I found a way out (Found)",
+                "But you never go away (Never go away)",
+                "So I guess I gotta stay now"
+              ]
+            },
+            {
+              "label": "Pre-Chorus",
+              "lines": [
+                "Oh, I hope some day I'll make it out of here",
+                "Even if it takes all night or a hundred years",
+                "Need a place to hide, but I can't find one near",
+                "Wanna feel alive, outside I can't fight my fear"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "Isn't it lovely, all alone?",
+                "Heart made of glass, my mind of stone",
+                "Tear me to pieces, skin to bone",
+                "Hello, welcome home"
+              ]
+            },
+            {
+              "label": "Verse 2",
+              "lines": [
+                "Walking out of time",
+                "Looking for a better place (Looking for a better place)",
+                "Something's on my mind (Mind)",
+                "Always in my head space"
+              ]
+            },
+            {
+              "label": "Pre-Chorus",
+              "lines": [
+                "But I know someday I'll make it out of here",
+                "Even if it takes all night or a hundred years",
+                "Need a place to hide, but I can't find one near",
+                "Wanna feel alive, outside I can't fight my fear"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "Isn't it lovely, all alone?",
+                "Heart made of glass, my mind of stone",
+                "Tear me to pieces, skin to bone",
+                "Hello, welcome home"
+              ]
+            },
+            {
+              "label": "Outro",
+              "lines": [
+                "Woah, yeah",
+                "Yeah, ah",
+                "Woah, woah",
+                "Hello, welcome home"
+              ]
+            }
+          ]
+        },
+        {
+          "title": "WHEN I WAS OLDER",
+          "sections": [
+            {
+              "label": "Chorus",
+              "lines": [
+                "When I was older",
+                "I was a sailor on an open sea",
+                "But now I'm underwater",
+                "And my skin is paler than it should ever be",
+                "Hmm"
+              ]
+            },
+            {
+              "label": "Verse",
+              "lines": [
+                "I'm on my back again",
+                "Dreaming of a time and place",
+                "Where you and I remain the best of friends",
+                "Even after all this ends",
+                "Can we pretend?",
+                "I'm on my, I'm on my back again",
+                "It's seeming more and more",
+                "Like all we ever do is see how far it bends",
+                "Before it breaks in half and then",
+                "We bend it back again"
+              ]
+            },
+            {
+              "label": "Pre-Chorus",
+              "lines": [
+                "Guess I got caught in the middle of it",
+                "Yes I've been taught, got a little of it",
+                "In my blood, in my blood",
+                "Memories burn like a forest fire",
+                "Heavy rain turns any funeral pyre to mud",
+                "In the flood"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "When I was older",
+                "I was a sailor on an open sea",
+                "But now I'm underwater",
+                "And my skin is paler than it should ever be"
+              ]
+            },
+            {
+              "label": "Bridge",
+              "lines": [
+                "I'm watching movies back to back in black and white, I never",
+                "Seen anybody do it like I do it any better",
+                "Been goin' over you, I'm overdue for new endeavors",
+                "Nobody lonely like I'm lonely and I don't know whether",
+                "You'd really like it in the limelight",
+                "You'd sympathize with all the bad guys",
+                "I'm still a victim in my own right",
+                "But I'm the villain in my own eyes, yeah"
+              ]
+            },
+            {
+              "label": "Outro",
+              "lines": [
+                "When I was older",
+                "I was a sailor on an open sea"
+              ]
+            }
+          ]
+        },
+        {
+          "title": "No Time To Die",
+          "sections": [
+            {
+              "label": "Verse 1",
+              "lines": [
+                "I should have known",
+                "I'd leave alone",
+                "Just goes to show",
+                "That the blood you bleed is just the blood you owe",
+                "We were a pair",
+                "But I saw you there",
+                "Too much to bear",
+                "You were my life, but life is far away from fair",
+                "Was I stupid to love you?",
+                "Was I reckless to help?",
+                "Was it obvious to everybody else?"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "That I'd fallen for a lie",
+                "You were never on my side",
+                "Fool me once, fool me twice",
+                "Are you death or paradise?",
+                "Now you'll never see me cry",
+                "There's just no time to die"
+              ]
+            },
+            {
+              "label": "Verse 2",
+              "lines": [
+                "I let it burn",
+                "You're no longer my concern, mmm",
+                "Faces from my past return",
+                "Another lesson yet to learn"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "That I'd fallen for a lie",
+                "You were never on my side",
+                "Fool me once, fool me twice",
+                "Are you death or paradise?",
+                "Now you'll never see me cry",
+                "There's just no time to die"
+              ]
+            },
+            {
+              "label": "Refrain",
+              "lines": [
+                "No time to die, mmm",
+                "No time to die, ooh"
+              ]
+            },
+            {
+              "label": "Outro",
+              "lines": [
+                "Fool me once, fool me twice",
+                "Are you death or paradise?",
+                "Now you'll never see me cry",
+                "There's just no time to die"
+              ]
+            }
+          ]
+        },
+        {
+          "title": "Lo Vas A Olvidar",
+          "sections": [
+            {
+              "label": "Verso 1",
+              "lines": [
+                "Dime si me echas de meno' aún",
+                "Dime si no me perdonas aún",
+                "¿Qué harás con to' este veneno? Na' bueno",
+                "Dime si me echas de meno' aún"
+              ]
+            },
+            {
+              "label": "Coro",
+              "lines": [
+                "¿Lo va' a olvidar? Can you let it go? Can you let it go?",
+                "¿Lo va' a olvidar? Can you let it go? ¿Lo va' a olvidar?",
+                "¿Lo va' a olvidar? Can you let it go? Can you let it go?",
+                "¿Lo va' a olvidar? Can you let it go? ¿Lo va' a olvidar?"
+              ]
+            },
+            {
+              "label": "Interludio",
+              "lines": [
+                "Isn't good",
+                "And, yeah, that's it",
+                "Ah, besitos, hahaha",
+                "Take care, please"
+              ]
+            },
+            {
+              "label": "Verso 2",
+              "lines": [
+                "Dime que no te arrepientes aún",
+                "Dime si aún queda algo en común",
+                "El tiempo que se pierde no vuelve",
+                "Dame un beso y bájame de la cru'"
+              ]
+            },
+            {
+              "label": "Coro",
+              "lines": [
+                "¿Lo va' a olvidar? Can you let it go? Can you let it go?",
+                "¿Lo va' a olvidar? Can you let it go? ¿Lo va' a olvidar?",
+                "¿Lo va' a olvidar? Can you let it go? Can you let it go?",
+                "¿Lo va' a olvidar? Can you let it go? ¿Lo va' a olvidar?"
+              ]
+            },
+            {
+              "label": "Puente",
+              "lines": [
+                "Ay, ay",
+                "Ay, ay, ay, ah-ah"
+              ]
+            },
+            {
+              "label": "Outro",
+              "lines": [
+                "El amor no puede medirse en paso' firme'",
+                "Un día soy un Dio' y al otro puedo partirme",
+                "I needed to go 'cause I needed to know you don't need me",
+                "You reap what you sow, but it seems like you don't even see me",
+                "El amor no puede medirse en paso' firme'",
+                "Un día soy un Dio' y al otro puedo partirme",
+                "You say it to me like it's something I have any choice in",
+                "If I wasn't important, then why would you waste all your poison?"
+              ]
+            }
+          ]
+        },
+        {
+          "title": "What Was I Made For?",
+          "sections": [
+            {
+              "label": "Verse 1",
+              "lines": [
+                "I used to float, now I just fall down",
+                "I used to know, but I'm not sure now",
+                "What I was made for",
+                "What was I made for?"
+              ]
+            },
+            {
+              "label": "Verse 2",
+              "lines": [
+                "Takin' a drive, I was an ideal",
+                "Looked so alive, turns out I'm not real",
+                "Just somethin' you paid for",
+                "What was I made for?"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "'Cause I, I",
+                "I don't know how to feel",
+                "But I wanna try",
+                "I don't know how to feel",
+                "But someday, I might",
+                "Someday, I might"
+              ]
+            },
+            {
+              "label": "Post-Chorus",
+              "lines": [
+                "Mm, mm, ah",
+                "Mm, mm, mm"
+              ]
+            },
+            {
+              "label": "Verse 3",
+              "lines": [
+                "When did it end? All the enjoyment",
+                "I'm sad again, don't tell my boyfriend",
+                "It's not what he's made for",
+                "What was I made for?"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "'Cause I, 'cause I",
+                "I don't know how to feel",
+                "But I wanna try",
+                "I don't know how to feel",
+                "But someday, I might",
+                "Someday, I might"
+              ]
+            },
+            {
+              "label": "Outro",
+              "lines": [
+                "Think I forgot how to be happy",
+                "Somethin' I'm not, but somethin' I can be",
+                "Somethin' I wait for",
+                "Somethin' I'm made for",
+                "Somethin' I'm made for"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "album": "Standalone Singles",
+      "songs": [
+        {
+          "title": "Six Feet Under",
+          "sections": [
+            {
+              "label": "Verse 1",
+              "lines": [
+                "Help, I lost myself again",
+                "But I remember you",
+                "Don't come back, it won't end well",
+                "But I wish you'd tell me to"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "Our love is six feet under",
+                "I can't help but wonder",
+                "If our grave was watered by the rain",
+                "Would roses bloom?",
+                "Could roses bloom again?"
+              ]
+            },
+            {
+              "label": "Verse 2",
+              "lines": [
+                "Retrace my lips, erase your touch",
+                "It's all too much for me",
+                "Blow away like smoke in air",
+                "How can you die carelessly?"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "Our love is six feet under",
+                "I can't help but wonder",
+                "If our grave was watered by the rain",
+                "Would roses bloom?",
+                "Could roses bloom?"
+              ]
+            },
+            {
+              "label": "Bridge",
+              "lines": [
+                "They're playin' us out",
+                "Layin' us down tonight",
+                "And all of these clouds",
+                "Cryin' us back to life",
+                "But you're cold as a knife"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "Six feet under",
+                "I can't help but wonder",
+                "If our grave was watered by the rain",
+                "Bloom",
+                "Bloom again"
+              ]
+            },
+            {
+              "label": "Outro",
+              "lines": [
+                "Help, I lost myself again",
+                "But I remember you"
+              ]
+            }
+          ]
+        },
+        {
+          "title": "bitches broken hearts",
+          "sections": [
+            {
+              "label": "Chorus",
+              "lines": [
+                "You can pretend you don't miss me (Me)",
+                "You can pretend you don't care",
+                "All you wanna do is kiss me (Me)",
+                "Oh, what a shame I'm not there",
+                "You can pretend you don't miss me (Me)",
+                "You can pretend you don't care",
+                "All you wanna do is kiss me (Me)",
+                "Oh, what a shame I'm not there"
+              ]
+            },
+            {
+              "label": "Verse 1",
+              "lines": [
+                "What is it you want?",
+                "You can lie, but I know that you're not fine (Don't, all you)",
+                "Every time you talk",
+                "It's all 'bout me, but you swear I'm not on your mind (Don't)"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "You can pretend you don't miss me (All you, me)",
+                "You can pretend you don't care",
+                "All you wanna do is kiss me (Me)",
+                "Oh, what a shame I'm not there"
+              ]
+            },
+            {
+              "label": "Verse 2",
+              "lines": [
+                "Everybody knows",
+                "You and I are suicide and stolen art (Don't, all you)",
+                "Pretty mama sews",
+                "Stitches into all your bitches' broken hearts (Don't)"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "You can pretend you don't miss me (All you, me)",
+                "You can pretend you don't care",
+                "All you wanna do is kiss me (Me)",
+                "Oh, what a shame I'm not there"
+              ]
+            },
+            {
+              "label": "Bridge",
+              "lines": [
+                "Somebody new is gonna comfort you",
+                "Like you want me to",
+                "Somebody new is gonna comfort me",
+                "Like you never do"
+              ]
+            },
+            {
+              "label": "Outro",
+              "lines": [
+                "Every now and then, it hits me",
+                "That I'm the one that got away",
+                "But I guess being lonely fits me",
+                "And you were made for begging, \"stay\""
+              ]
+            }
+          ]
+        },
+        {
+          "title": "come out and play",
+          "sections": [
+            {
+              "label": "Intro",
+              "lines": [
+                "Hmm-mm"
+              ]
+            },
+            {
+              "label": "Verse 1",
+              "lines": [
+                "Wake up and smell the coffee",
+                "Is your cup half full or empty?",
+                "When we talk, you say it softly",
+                "But I love it when you're awfully quiet",
+                "Hmm-mm, quiet",
+                "Hmm-mm"
+              ]
+            },
+            {
+              "label": "Verse 2",
+              "lines": [
+                "You see a piece of paper",
+                "Could be a little greater",
+                "Show me what you could make her",
+                "You'll never know until you try it",
+                "Hmm-mm",
+                "And you don't have to keep it quiet"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "And I know it makes you nervous",
+                "But I promise you, it's worth it",
+                "To show 'em everything you kept inside",
+                "Don't hide, don't hide",
+                "Too shy to say, but I hope you stay",
+                "Don't hide away",
+                "Come out and play"
+              ]
+            },
+            {
+              "label": "Verse 3",
+              "lines": [
+                "Look up out of your window",
+                "See snow, won't let it in though",
+                "Leave home, feel the wind blow",
+                "'Cause it's colder here inside in silence",
+                "And you don't have to keep it quiet"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "Yeah, I know it makes you nervous",
+                "But I promise you, it's worth it",
+                "To show 'em everything you kept inside",
+                "Don't hide, don't hide",
+                "Too shy to say, but I hope you stay",
+                "Don't hide away",
+                "Come out and play"
+              ]
+            }
+          ]
+        },
+        {
+          "title": "everything i wanted",
+          "sections": [
+            {
+              "label": "Verse 1",
+              "lines": [
+                "I had a dream",
+                "I got everything I wanted",
+                "Not what you'd think",
+                "And if I'm bein' honest",
+                "It might've been a nightmare",
+                "To anyone who might care",
+                "Thought I could fly (Fly)",
+                "So I stepped off the Golden, mm",
+                "Nobody cried (Cried, cried, cried, cried)",
+                "Nobody even noticed",
+                "I saw them standing right there",
+                "Kinda thought they might care (Might care, might care)"
+              ]
+            },
+            {
+              "label": "Pre-Chorus",
+              "lines": [
+                "I had a dream",
+                "I got everything I wanted",
+                "But when I wake up, I see",
+                "You with me"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "And you say, \"As long as I'm here, no one can hurt you",
+                "Don't wanna lie here, but you can learn to",
+                "If I could change the way that you see yourself",
+                "You wouldn't wonder why you hear",
+                "'They don't deserve you'\""
+              ]
+            },
+            {
+              "label": "Verse 2",
+              "lines": [
+                "I tried to scream",
+                "But my head was underwater",
+                "They called me weak",
+                "Like I'm not just somebody's daughter",
+                "Coulda been a nightmare",
+                "But it felt like they were right there",
+                "And it feels like yesterday was a year ago",
+                "But I don't wanna let anybody know",
+                "'Cause everybody wants something from me now",
+                "And I don't wanna let 'em down"
+              ]
+            },
+            {
+              "label": "Pre-Chorus",
+              "lines": [
+                "I had a dream",
+                "I got everything I wanted",
+                "But when I wake up, I see",
+                "You with me"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "And you say, \"As long as I'm here, no one can hurt you",
+                "Don't wanna lie here, but you can learn to",
+                "If I could change the way that you see yourself",
+                "You wouldn't wonder why you hear",
+                "'They don't deserve you'\""
+              ]
+            },
+            {
+              "label": "Outro",
+              "lines": [
+                "If I knew it all then, would I do it again?",
+                "Would I do it again?",
+                "If they knew what they said would go straight to my head",
+                "What would they say instead?",
+                "If I knew it all then, would I do it again?",
+                "Would I do it again?",
+                "If they knew what they said would go straight to my head",
+                "What would they say instead?"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "album": "Collaborations",
+      "songs": [
+        {
+          "title": "Guess featuring billie eilish",
+          "sections": [
+            {
+              "label": "Intro",
+              "lines": [
+                "Hey, Billie, you there?",
+                "Uh-uh"
+              ]
+            },
+            {
+              "label": "Verse 1",
+              "lines": [
+                "You wanna guess the colour of my underwear?",
+                "You wanna know what I got goin' on down there?",
+                "Is it pretty in pink or all see-through?",
+                "Is it showin' off my brand-new lower-back tattoo?",
+                "You wanna put 'em in your mouth, pull 'em all down south",
+                "You wanna turn this shit out, that's what I'm talkin' about",
+                "Pu-pu-pu-put 'em in your mouth, pull 'em all down south",
+                "You wanna turn this shit out, that's what I'm talkin' about (Yeah)"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "Try it, bite it, lick it, spit it",
+                "Pull it to the side and get all up in it",
+                "Wear 'em, post 'em, might remix it",
+                "Send 'em to The Dare, yeah, I think he's with it",
+                "Try it, bite it, lick it, spit it",
+                "Pull it to the side and get all up in it",
+                "Wear 'em, post 'em, might remix it",
+                "Eat it up for lunch, yeah, it's so delicious",
+                "(Work it out)"
+              ]
+            },
+            {
+              "label": "Verse 2",
+              "lines": [
+                "Don't have to guess the color of your underwear",
+                "Already know what you've got goin' on down there",
+                "It's that lacy black pair with the little bows",
+                "The ones I picked out for you in Tokyo",
+                "I saw them when you sat down, they were peekin' out",
+                "I'm gonna tell you right now, they're all I'm thinkin' about"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "I wanna try it, bite it, lick it, spit it",
+                "Pull it to the side and get all up in it",
+                "Kiss it, ride it, can I fit it?",
+                "Charli likes boys, but she knows I'd hit it",
+                "(Knows I'd hit it)",
+                "Charli, call me if you're with it"
+              ]
+            },
+            {
+              "label": "Bridge",
+              "lines": [
+                "(Yeah) Guess, guess, guess, guess, guess, guess, guess, guess",
+                "Guess, guess, guess, guess, guess, guess, guess, guess",
+                "Guess, guess, guess, guess, guess, guess, guess, guess",
+                "Guess, guess, guess, guess, guess, guess, guess, guess"
+              ]
+            },
+            {
+              "label": "Outro",
+              "lines": [
+                "You wanna guess what me and Billie have been textin' about? (We've been disrespectful)",
+                "Still tryin' to guess the password to my Google Drive (Are you obsessed with me?)",
+                "You wanna guess the address of the party we're at (You know you're not invited)",
+                "You wanna guess if we're serious about this song"
+              ]
+            }
+          ]
+        },
+        {
+          "title": "Never Felt So Alone",
+          "sections": [
+            {
+              "label": "Intro",
+              "lines": [
+                "Oh-oh, oh-oh",
+                "Oh-oh, oh-oh"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "And I never felt so alone, felt so alone, na-na",
+                "And I never felt so alone, felt so alone, na-na",
+                "And I never felt so alone, felt so alone, na-na",
+                "And I never felt so alone, felt so alone, na-na"
+              ]
+            },
+            {
+              "label": "Verse 1",
+              "lines": [
+                "In a whip (Woah), thinkin', \"What if (Woah)",
+                "You and this (Woah) never existed?\"",
+                "Hollow kiss (Woah), bottle liquor (Oh)",
+                "Man, I'm sick, man, I'm schizo"
+              ]
+            },
+            {
+              "label": "Pre-Chorus",
+              "lines": [
+                "All white leather",
+                "You know this man ain't shit without you in the interior (I'm dyin' somewhere in the dark)",
+                "All white leather",
+                "And I think, \"What if we weren't ridin' and dyin' together?\"",
+                "The whole world would fall apart"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "And I never felt so alone, felt so alone, na-na (Never felt so alone, woo! Alone)",
+                "And I never felt so alone, felt so alone, na-na"
+              ]
+            },
+            {
+              "label": "Verse 2",
+              "lines": [
+                "I thought you were my new best friend (My)",
+                "Wish I knew better then",
+                "Who knew you were just out to get me?",
+                "My whole world just fell apart"
+              ]
+            },
+            {
+              "label": "Outro",
+              "lines": [
+                "'Cause I never felt so alone, felt so alone, na-na",
+                "I could never be more alone than when I ain't got you here"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "album": "Unreleased",
+      "songs": [
+        {
+          "title": "Blind Faith",
+          "sections": [
+            {
+              "label": "Chorus",
+              "lines": [
+                "It's okay, okay to miss me",
+                "It's okay to say that you made a mistake",
+                "You loved me, love just don't fade away (Okay, okay)",
+                "It's okay, okay to miss me (Okay, okay)",
+                "It's okay, okay to miss me"
+              ]
+            },
+            {
+              "label": "Verse 1",
+              "lines": [
+                "24/7, now, I know you'll never stop",
+                "Thinking of a heaven that you know you never got",
+                "Wanted to believe you that I'm needed but I'm not",
+                "Just in case you wondered how I made it to the top",
+                "I'll never spend the summer telling mean girls that I'm hot",
+                "You can buy them diamonds with the money you don't got (It's okay)",
+                "If you don't stay I won't complain",
+                "I don't want you here anyway",
+                "It's not the same",
+                "I'm in so low that I can't go out",
+                "Can't let them see that I'm not proud to wear your chain"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "It's okay, okay to miss me",
+                "Trying not to make you complacent",
+                "You loved me, love just don't fade away (Okay, okay)",
+                "It's okay, okay to miss me",
+                "It's okay, okay to miss me",
+                "It's okay to say that you made a mistake",
+                "You loved me, love just don't fade away",
+                "It's okay, okay to miss me"
+              ]
+            },
+            {
+              "label": "Bridge",
+              "lines": [
+                "I don't like to spend time by myself",
+                "I know you're engaged with somebody else",
+                "If you don't think I'll survive on my own",
+                "Why won't, why won't you just let me go?"
+              ]
+            },
+            {
+              "label": "Verse 2",
+              "lines": [
+                "You don't think I'll survive on my own",
+                "That's what you tell yourself, lyin' alone",
+                "Who knows? Maybe you're fine you're okay",
+                "I don't really care anyway",
+                "Anyway, it's not like me to stay",
+                "Plus, I don't want to take you with me",
+                "I could, I could lie say I can't",
+                "But I could, but I'd rather you just miss me"
+              ]
+            },
+            {
+              "label": "Bridge",
+              "lines": [
+                "It's okay, okay to miss me",
+                "Trying not to make you complacent",
+                "I have never known you to be that way",
+                "Trying hard to work on my patience",
+                "If you wanted me then you could make me stay"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "But it's okay, okay to miss me",
+                "It's okay to say that you made a mistake",
+                "You loved me, love just don't fade away",
+                "It's okay, okay to miss me",
+                "It's okay, okay to miss me",
+                "It's okay to say that you made a mistake",
+                "You loved me, love just don't fade away"
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
