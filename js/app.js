@@ -7121,6 +7121,22 @@ let guestSelectedDiff = "medium";     // the difficulty tab the detail panel has
 let guestShelfScrollY = 0;             // restored after returning from a visiting catalogue
 const guestFiles = new Map();         // id -> Promise<catalogue json>, one fetch per session
 
+// Deal the five established strap lengths out in a fresh order on every page load. Keying the
+// result by guest keeps a pass fixed through shelf re-renders (navigation and responsive rail
+// changes), while a full reload makes the rack look newly hung. Tilts use the same restrained
+// seven-step range as the old slot formula, so randomising never makes a pass look untidy.
+const GUEST_STRAP_LENGTHS = [96, 113, 130, 147, 164];
+const guestHangLayout = new Map();
+for (let offset = 0; offset < GUESTS.length; offset += GUEST_STRAP_LENGTHS.length) {
+  const lengths = shuffle(GUEST_STRAP_LENGTHS.slice());
+  GUESTS.slice(offset, offset + lengths.length).forEach((guest, i) => {
+    guestHangLayout.set(guest.id, {
+      len: lengths[i],
+      tilt: (Math.floor(Math.random() * 7) - 3) * 0.7,
+    });
+  });
+}
+
 // Lazy-load a guest's catalogue. Rejections are swallowed by the caller (the pass just keeps
 // its em-dashes) but NOT cached as a failure, so a flaky first fetch can be retried by
 // reopening the shelf.
@@ -7229,11 +7245,10 @@ function renderGuestShelfPage() {
 }
 
 // One hanger: a ring, a woven strap of its own length, and the pass. The strap length and
-// tilt are derived from the slot so the rail reads as hung rather than laid out on a grid,
-// and so a given guest always hangs the same way.
+// tilt come from the page-load layout above, so the rail reads as hung rather than laid out
+// on a grid without moving around during the same visit.
 function guestPassMarkup(g, slot) {
-  const len = 96 + ((slot * 37) % 5) * 17;
-  const tilt = (((slot * 53) % 7) - 3) * 0.7;
+  const { len, tilt } = guestHangLayout.get(g.id) || { len: 130, tilt: 0 };
   const ticks = g.ink.ticks.map((c) => `<i style="background:${c}"></i>`).join("");
   // The stub is printed "admit one" until the guest is admitted, then franked across. The
   // stamp angle is derived from the slot too, so it sits like a hand-pressed one and, like
