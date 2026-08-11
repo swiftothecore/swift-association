@@ -400,7 +400,9 @@ export function initDev(api) {
         btn("sparkle", () => api.eggs.sparkle())),
     row(btn("star shower", () => api.eggs.starShower()), btn("blue wash", () => api.eggs.blueWash()),
         btn("secret 13", () => api.eggs.secret13())),
-    row(btn("yes whale", () => api.eggs.whale())),
+    row(btn("yes whale", () => api.eggs.whale()),
+        btn("bottle left", () => api.eggs.bottle("left")),
+        btn("bottle right", () => api.eggs.bottle("right"))),
     row(snowBtn, rainBtn, leafBtn),
     row(penSel, btn("set pen", () => api.eggs.pen(penSel.value)))));
 

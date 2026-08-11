@@ -5252,10 +5252,10 @@
   body[data-reduce-motion="on"] .whale-egg.caught .whale-splash { animation: none; opacity: 1; }
 
   /* Message in a bottle — the whale's sibling, drifting in from behind a SIDE edge
-     of the notebook into the desk gutter. .bottle-window is an overflow-hidden clip
-     flush with the card's left/right edge, so the bottle is cut off at the paper line
-     while it floats out — the same "behind the page" trick as the whale, sideways.
-     The note is a free sibling of the window so it can unroll out over the desk. */
+     of the notebook into the desk gutter. Its wrapper is a direct child of .app, not
+     the card, so the page-turn clone cannot pick it up; surfaceBottle pins the wrapper
+     to the table coordinate beside the card. .bottle-window is the overflow-hidden clip
+     at the paper line, and the note is its free sibling so it can unroll over the desk. */
   .bottle-egg { position: absolute; z-index: 2; pointer-events: none; }
   .bottle-egg.on-right { left: 100%; }
   .bottle-egg.on-left  { right: 100%; }

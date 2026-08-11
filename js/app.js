@@ -15273,9 +15273,11 @@ function surfaceWhale() {
 // scrollable now, so there is no fixed bottom to surface at). The wrapper is an
 // overflow-hidden window flush with the card's left OR right edge; the bottle floats
 // out horizontally into the desk gutter, bobs on its little wake for
-// BOTTLE_SURFACE_MS, then drifts back behind the page. Like the whale it lives
-// outside the doodle layer and clearEggs, so a visit survives page turns and only
-// ends on its own clock or the catch. Catch it → cork pops, the note unrolls with a
+// BOTTLE_SURFACE_MS, then drifts back behind the page. Unlike the whale, its wrapper
+// is mounted on the stable app/table layer rather than on the card: a page turn clones
+// the whole card, so keeping the bottle as its sibling is what makes the visit survive
+// without being duplicated or carried by the turning sheet. It only ends on its own
+// clock or the catch. Catch it → cork pops, the note unrolls with a
 // real Taylor liner-note secret message, and (once the keepsake is wired)
 // earnPolaroid fires.
 let bottleTimers = [];
@@ -15319,7 +15321,8 @@ function stopBottle() {
 }
 function surfaceBottle(side) {
   const card = document.querySelector(".screen.card.active") || $("screen-game");
-  if (!card) return;
+  const table = document.querySelector(".app");
+  if (!card || !table) return;
   stopBottle();
   loadSecretMessages();   // prewarm so the note is ready by the time it's caught
   // Left or right edge, chosen at random unless the caller pins a side (dev tools).
@@ -15327,8 +15330,17 @@ function surfaceBottle(side) {
   const wrap = document.createElement("div");
   wrap.className = "bottle-egg " + (onLeft ? "on-left" : "on-right");
   wrap.setAttribute("aria-hidden", "true");          // a pointer-only secret, like the whale
-  // A different height along the page edge each visit, kept clear of the very top/bottom.
-  wrap.style.top = (24 + Math.random() * 46) + "%";
+  // Pin this visit to one table coordinate beside the visible page. Page turns can change
+  // the card's contents and height, but never get another chance to reposition the bottle.
+  const tableRect = table.getBoundingClientRect();
+  const cardRect = card.getBoundingClientRect();
+  const heightRatio = 0.24 + Math.random() * 0.46;
+  wrap.style.top = (cardRect.top - tableRect.top + cardRect.height * heightRatio) + "px";
+  if (onLeft) {
+    wrap.style.right = (tableRect.right - cardRect.left) + "px";
+  } else {
+    wrap.style.left = (cardRect.right - tableRect.left) + "px";
+  }
   // .bottle-window clips the drift at the paper line; the note is a free sibling so
   // it can unroll out over the desk without being clipped.
   wrap.innerHTML =
@@ -15337,7 +15349,7 @@ function surfaceBottle(side) {
       `<button type="button" class="bottle-glass" tabindex="-1">${BOTTLE_SVG}</button>` +
     `</span>` +
     `<span class="bottle-note" role="status"></span>`;
-  card.appendChild(wrap);
+  table.appendChild(wrap);
   wrap.querySelector(".bottle-glass").addEventListener("click", () => {
     if (wrap.classList.contains("caught")) return;
     wrap.classList.add("caught");                    // cork pop + note unroll (CSS)
