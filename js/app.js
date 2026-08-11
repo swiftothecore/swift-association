@@ -6347,27 +6347,73 @@ function firstSuperHardChallenge() {
 
 // Scroll the challenge list so a challenge's DIFFICULTY GROUP sits at the top of the
 // scroller — the group header first, not the row, because a caller arriving from Mastery
-// is being shown a tier rather than one entry. The list is the only thing that scrolls
-// (the notebook page itself never grows) and it has no height at all until the screen is
-// shown and fitPeek has snapped it to the half-row peek, so wait for a real height rather
-// than guessing at the flip's duration. The jump is instant on purpose: the page is already
-// arriving on a page turn, and a scroll animating underneath that turn is two motions at
-// once — the list should simply be where it belongs by the time the flip lands.
+// is being shown a tier rather than one entry.
+//
+// The row's data-id lives on the inner .chall-item-select button, not on the .chall-item
+// wrapper. A pinned challenge is also drawn TWICE (once in the local Pinned shortlist above the
+// tiers, once in its own tier), and the shortlist copy comes first in the DOM — so take the last
+// match, which is always the one sitting under a real difficulty header. Landing on "Pinned"
+// would be the same failure as landing at the top: a caller sent here to be shown the brutal
+// tier has to arrive at the brutal tier.
 function scrollChallengeGroupIntoView(id) {
-  let tries = 40;
+  revealAfterFlip(
+    () => {
+      const rows = document.querySelectorAll(`#challengesBody .chall-list .chall-item-select[data-id="${CSS.escape(id)}"]`);
+      const row = rows[rows.length - 1];
+      const group = row && row.closest(".chall-group");
+      return (group && group.querySelector(".chall-group-head")) || row || null;
+    },
+    { within: () => document.querySelector("#challengesBody .chall-list"), pad: 4 }
+  );
+}
+
+// Arrive on a screen you have just flipped to and bring one thing on it into view. Both doors
+// out of the Mastery reward vaults land somewhere specific on a page they don't own, and the
+// two pages scroll differently: the challenge list is its own scroller inside a notebook page
+// that never grows, while the charm collection has no inner scroller at all and moves the
+// window. `opts.within` names a scroller to move; without it the window moves.
+//
+// Three things this has to survive, all of them consequences of the flip:
+//   • The window is left exactly where the page you came FROM was scrolled to (showScreen
+//     doesn't reset it, and focuses with preventScroll so nothing resets it by accident). A
+//     tile sitting a screenful down the Mastery page would otherwise hand you a destination
+//     scrolled past its own top — worst on narrow layouts, where a page is at its tallest.
+//     So the window goes to the top first, before anything is measured.
+//   • The destination has no layout at the moment it's asked for: it was display:none a tick
+//     ago, and the challenge list in particular has no height until fitPeek has snapped it.
+//     Hence the retry loop — wait for a real measurement rather than guessing at the flip's
+//     duration. `find` returns null until its target exists, so it can be re-run each frame.
+//   • The jump is instant on purpose. The page is already arriving on a page turn, and a
+//     scroll animating underneath that turn is two motions at once — the destination should
+//     simply be where it belongs by the time the flip lands.
+function revealAfterFlip(find, opts) {
+  const o = opts || {};
+  const pad = o.pad || 0;
+  window.scrollTo({ top: 0, behavior: "instant" });
+  let tries = 40, settled = -1;
   const step = () => {
-    const listEl = document.querySelector("#challengesBody .chall-list");
-    const item = listEl && listEl.querySelector(`.chall-item[data-id="${id}"]`);
-    if (!listEl || !item || !listEl.clientHeight) {
+    const el = find();
+    const scroller = o.within ? o.within() : null;
+    // Not laid out yet (or, for an inner scroller, not yet given a height) — try again next frame.
+    if (!el || (o.within && (!scroller || !scroller.clientHeight)) || !el.getClientRects().length) {
       if (--tries > 0) requestAnimationFrame(step);
       return;
     }
-    const group = item.closest(".chall-group");
-    const head = (group && group.querySelector(".chall-group-head")) || item;
-    const top = head.getBoundingClientRect().top - listEl.getBoundingClientRect().top + listEl.scrollTop;
-    // Clamped by the scroller itself: the last groups can't reach the top edge, and landing
-    // as high as they go is exactly right. The edge fade follows on the list's scroll handler.
-    listEl.scrollTop = Math.max(0, top - 4);
+    if (scroller) {
+      const top = el.getBoundingClientRect().top - scroller.getBoundingClientRect().top + scroller.scrollTop;
+      // Clamped by the scroller itself: the last groups can't reach the top edge, and landing
+      // as high as they go is exactly right. The edge fade follows on the list's scroll handler.
+      scroller.scrollTop = Math.max(0, top - pad);
+    } else {
+      window.scrollTo({ top: Math.max(0, window.scrollY + el.getBoundingClientRect().top - pad), behavior: "instant" });
+    }
+    // One placement isn't enough: the destination's geometry is still settling for a frame or
+    // two. The challenge list's fitPeek trims the scroller's height AFTER this first runs, and
+    // a shorter scroller can reach further down its own content — so a target clamped against
+    // the taller measurement is left stranded mid-list. Re-place it until a frame measures the
+    // same as the one before it.
+    const now = scroller ? scroller.clientHeight : document.documentElement.scrollHeight;
+    if (now !== settled) { settled = now; if (--tries > 0) requestAnimationFrame(step); }
   };
   requestAnimationFrame(step);
 }
@@ -6522,8 +6568,10 @@ function selectChallenge(id) {
   challSelectedId = id;
   const body = $("challengesBody");
   if (!body) return;
-  body.querySelectorAll(".chall-item").forEach((b) =>
-    b.classList.toggle("selected", b.dataset.id === id));
+  // The row's data-id is on its select button, not on the .chall-item wrapper that carries the
+  // selected styling, so read the id from the button and mark its row.
+  body.querySelectorAll(".chall-item-select").forEach((b) =>
+    b.closest(".chall-item").classList.toggle("selected", b.dataset.id === id));
   renderChallengeDetail(id);
 }
 
