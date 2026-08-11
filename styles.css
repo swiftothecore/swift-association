@@ -706,7 +706,7 @@
     100% { opacity: 0; transform: rotate(-9deg) scale(1.15) translateY(-8px); }
   }
 
-  /* Thirteen small pencil strokes in the notebook margin form a quiet page register.
+  /* Small pencil strokes in the notebook margin form a quiet page register.
      The irregular lengths and angles keep it handwritten rather than reading as app chrome. */
   .page-register {
     position: absolute; left: 14px; top: 88px; z-index: 6;
@@ -723,7 +723,7 @@
   }
   .page-register-mark.is-complete { opacity: 0.62; }
   .page-register-mark.is-current {
-    width: 14px; height: 3px; background: var(--ink-accent); opacity: 0.95;
+    width: 14px; height: 3px; background: var(--register-accent, var(--ink-accent)); opacity: 0.95;
     box-shadow: 0 0.5px 0 rgba(43, 39, 34, 0.12);
   }
   body[data-reduce-motion="on"] .page-register-mark { transition: none; }
@@ -2149,6 +2149,9 @@
 
 
   /* ---------- Bonus game play screen (shared chrome for every bonus game) ---------- */
+  /* Spot the Slip's short prompt should still open as a full notebook page. This is a
+     minimum only: its answer card and narrow layouts remain free to extend the paper. */
+  #screen-bonusplay[data-bonus-game="spot-the-slip"] { min-height: 540px; }
   .bg-hud {
     display: flex; justify-content: space-between; align-items: baseline;
     font-family: var(--type); font-size: calc(10.5px + var(--text-size-adjust)); letter-spacing: 1.2px; text-transform: uppercase;

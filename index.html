@@ -1443,6 +1443,7 @@ if (location.pathname.endsWith('/index.html')) {
   <!-- BONUS GAME PLAY SCREEN — shared chrome (name · progress · clock) for every bonus game;
        each game fills #bonusPlayBody and the end card renders there too. -->
   <section id="screen-bonusplay" class="screen card" tabindex="-1" aria-label="Bonus game">
+    <div id="bonusPageRegister" class="page-register" aria-hidden="true"></div>
     <div class="stats-nav">
       <span class="stats-title" id="bonusPlayTitle">Bonus game</span>
       <button id="bonusQuitBtn" class="btn-link" data-label="← quit">← quit</button>

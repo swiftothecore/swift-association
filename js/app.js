@@ -4738,6 +4738,7 @@ function startBonusGame(g, lensId = null) {
   // the header has to say is which of them you are on.
   const lens = lensId ? ruthlessLens(lensId) : null;
   const title = lens ? `Ruthless · ${lens.label}` : g.name;
+  screens.bonusplay.dataset.bonusGame = lens ? "ruthless" : g.id;
   $("bonusPlayTitle").innerHTML = `${bonusDisc(g, "bonus-disc-sm")}<span>${escapeHtml(title)}</span>`;
   flipAwayToScreen("bonusplay");
   nextBonusRound();
@@ -4828,6 +4829,7 @@ function nextBonusRound() {
     $("bonusProgress").textContent = `round ${bonusRound} / ${BONUS_ROUNDS}`;
     $("bonusScore").textContent = bonusScoreText();
     $("bonusTimer").style.display = "";
+    renderBonusPageRegister();
     renderBonusRound();
   };
   // The same page turn the round screen uses, and the same whoosh — a bonus page is a page of
@@ -4836,6 +4838,15 @@ function nextBonusRound() {
   playSound("page");
   if (bonusRound === 1 || !pageTurnAnimated()) { lay(); startBonusClock(); return; }
   turnPageSheet($("screen-bonusplay"), lay, startBonusClock);
+}
+
+// Shelf games are ten-page notebook stacks. Ruthless only borrows their loop and keeps its
+// own mode furniture, so it deliberately does not inherit the shelf's margin register.
+function renderBonusPageRegister() {
+  const el = $("bonusPageRegister");
+  const shelfRun = bonusGame && bonusGame.shelf !== false && !ruthlessLensId && !bonusEnded;
+  renderNotebookPageRegister(el, bonusRound, shelfRun ? BONUS_ROUNDS : 0,
+                             shelfRun ? bonusGame.tint : "");
 }
 
 /* The writing line, borrowed wholesale from the round screen: same `.input-area` (which is
@@ -5966,6 +5977,7 @@ function ruthlessRemark(secs, clean) {
 
 function endBonusRun() {
   bonusEnded = true;
+  renderBonusPageRegister();
   stopBonusClock();
   stopBonusCountdown();
   stopChainBeat();
@@ -6198,6 +6210,7 @@ function leaveBonusGame() {
   bonusEnded = true;
   bonusGame = null;
   bonusPuzzle = null;
+  renderBonusPageRegister();
   renderBonusPage();
   flipInToScreen("bonus");
 }
@@ -7702,20 +7715,33 @@ function renderBracelet() {
 // Other run lengths already have their own progress language, so they do not borrow this motif.
 function renderPageRegister(page, uncapped) {
   const el = $("pageRegister");
-  if (!el) return;
   if (uncapped || sessionRounds() !== TOTAL_ROUNDS) {
+    renderNotebookPageRegister(el, 0, 0);
+    return;
+  }
+  renderNotebookPageRegister(el, page, TOTAL_ROUNDS);
+}
+
+// Shared painter for the main game's 13-page register and the bonus shelf's ten-page one.
+function renderNotebookPageRegister(el, page, total, accent = "") {
+  if (!el) return;
+  if (!total) {
     el.classList.remove("show");
     el.innerHTML = "";
+    el.style.removeProperty("--register-accent");
     return;
   }
   const widths = [8, 10, 7, 9, 8, 11, 7, 9, 8, 10, 7, 9, 8];
   const tilts = [-2, 1, -1, 2, 0, -2, 1, -1, 2, -1, 1, -2, 0];
   const shifts = [1, 0, 2, 0, 1, 0, 2, 1, 0, 1, 2, 0, 1];
-  el.innerHTML = widths.map((width, i) => {
+  const current = Math.min(Math.max(page, 1), total);
+  el.innerHTML = Array.from({ length: total }, (_, i) => {
     const pageNumber = i + 1;
-    const state = pageNumber < page ? " is-complete" : pageNumber === page ? " is-current" : "";
-    return `<span class="page-register-mark${state}" style="--register-width:${width}px;--register-tilt:${tilts[i]}deg;--register-x:${shifts[i]}px"></span>`;
+    const state = pageNumber < current ? " is-complete" : pageNumber === current ? " is-current" : "";
+    return `<span class="page-register-mark${state}" style="--register-width:${widths[i % widths.length]}px;--register-tilt:${tilts[i % tilts.length]}deg;--register-x:${shifts[i % shifts.length]}px"></span>`;
   }).join("");
+  if (accent) el.style.setProperty("--register-accent", accent);
+  else el.style.removeProperty("--register-accent");
   el.classList.add("show");
 }
 
