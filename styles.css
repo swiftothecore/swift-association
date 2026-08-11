@@ -6726,17 +6726,18 @@
     font-family: var(--type); font-weight: 700; letter-spacing: 0.6px;
   }
   .stamp--focus { --stamp-rot: -4deg; --stamp-lean: -8deg; width: 46px; }
-  /* PLACEHOLDER die. It leans the other way from the album sheet so three in a row read as
-     stamps torn off a sheet rather than as a toolbar, and it overlaps its neighbours slightly
-     for the same reason. Its ink follows the album-focus family rather than the guest's
-     per-load colour, since the mode has no era of its own. */
+  /* The Ruthless die: a pencil nib printed big and cropped by the vignette, over the line it
+     has just written and the one already arriving. It leans the other way from the album sheet
+     so three in a row read as stamps torn off a sheet rather than as a toolbar, and it overlaps
+     its neighbours slightly for the same reason. Its ink is fixed rather than franked per load
+     like the guest's, since the mode has no era of its own; the caption and the pencil's point
+     are the family graphite and are baked into the markup. */
   .stamp--ruthless {
     --stamp-rot: 2.5deg; --stamp-lean: 6deg; width: 44px; margin-left: -3px;
-    --rs-ink: #8c4a34; --rs-paper: #fdfaf1;
+    --rs-ink: #8c4a34;
   }
-  .stamp--ruthless .rs-tint { fill: var(--rs-ink); }
-  .stamp--ruthless .rs-word { fill: var(--rs-paper); }
-  .stamp--ruthless .stamp-cap { fill: var(--rs-paper); }
+  .stamp--ruthless .rs-ink { fill: var(--rs-ink); }
+  .stamp--ruthless .rs-line { stroke: var(--rs-ink); }
   .stamp--guest { --stamp-rot: 3.5deg; --stamp-lean: 7.5deg; width: 58px; margin-left: -4px; }
   /* The guest die is franked in one ink chosen per page load (STAMP_INKS in js/config.js,
      applied in app.js). The figure and the caption print in the paper colour and knock
