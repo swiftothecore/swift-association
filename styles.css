@@ -6347,7 +6347,7 @@
      back in rather than as one lozenge with a bulge on the end — which is what an overlap
      gives you, and what this deliberately is not. Widen the gap past about 3px and the neck
      snaps; close it and the waist disappears. */
-  .rb-fuse { --fuse-r: 11px; --fuse-pill: 17px; --fuse-lap: -2px;
+  .rb-fuse { --fuse-r: 9.5px; --fuse-pill: 15px; --fuse-lap: -2px;
     --fuse-fill: rgb(var(--m-accent)); --fuse-wash: 0.13;
     position: relative; display: inline-flex; align-items: center; flex: 0 0 auto; }
   .rb-fuse::before {
@@ -6366,18 +6366,32 @@
     appearance: none; border: 0; background: none; padding: 0; border-radius: 50%; }
   /* The die is sized to sit WELL inside the circle: it is rotated, so its corners swing wider
      than its own box, and a die tight to the rim reads as clipped even when nothing clips it. */
-  .rb-rand svg { width: 15px; height: 15px; overflow: visible; }
+  .rb-rand svg { width: 13px; height: 13px; overflow: visible; }
   /* Beats .reward-bento .ink-fill, which would otherwise ink the die in the charms' era-gold:
      the die is a control, and the only colour a control on this board wears is the rose. */
   .rb-fuse .rb-rand .ink-fill { fill: rgba(var(--m-accent), 0.85); stroke: rgba(var(--m-accent), 0.85); }
   .rb-fuse:hover { --fuse-wash: 0.2; }
   .rb-fuse .rb-rand:hover .ink-fill { fill: rgb(var(--m-accent)); stroke: rgb(var(--m-accent)); }
-  /* Worn: the die goes to the deep rose, which is the one thing on the tile that colour is
-     used for. The pips stay paper, so the face still reads at 15px. */
-  .rb-fuse.active { --fuse-wash: 0.26; }
+  /* Worn: the circle inks solid and the die knocks out of it in paper — a pressed stamp. It is
+     the loudest state on the board on purpose. Random is the one setting that NOTHING below
+     the header can show as selected: every other choice lights its own row or bead, so a quiet
+     mark here leaves the tile looking like nothing is chosen at all.
+     The solid disc is its own layer rather than a fourth state of --fuse-wash, because the
+     goo layer has to stay washed for the neck to keep reading as a melt. */
+  .rb-fuse::after {
+    content: ""; position: absolute; z-index: 0; pointer-events: none; opacity: 0;
+    left: 0; top: 50%; width: calc(var(--fuse-r) * 2); height: calc(var(--fuse-r) * 2);
+    transform: translateY(-50%); border-radius: 50%; background: rgb(var(--m-accent-deep));
+  }
+  .rb-fuse.active { --fuse-wash: 0.28; }
+  .rb-fuse.active::after { opacity: 1; }
   .rb-fuse.active .rb-rand .ink-fill,
-  .rb-fuse.active .rb-rand:hover .ink-fill { fill: rgb(var(--m-accent-deep)); stroke: rgb(var(--m-accent-deep)); }
-  .rb-fuse.active .rb-chip { color: rgb(var(--m-accent-deep)); }
+  .rb-fuse.active .rb-rand:hover .ink-fill { fill: var(--paper); stroke: var(--paper); }
+  /* The pips are the die's only detail and they invert with it: the SVG paints them
+     var(--paper) inline on the parent <g>, which the children merely inherit, so a rule on the
+     circles themselves wins without touching the markup. */
+  .rb-fuse.active .rb-rand svg circle { fill: rgb(var(--m-accent-deep)); }
+  .rb-fuse.active .rb-chip { color: rgb(var(--m-accent-deep)); font-weight: 700; }
   .rb-rand:focus-visible { outline: 2px solid rgba(var(--m-accent), 0.75); outline-offset: 2px; }
   .rb-tt-sub { font-family: var(--type); font-size: calc(10px + var(--text-size-adjust)); letter-spacing: 0.04em; color: var(--ink-soft); margin-top: 3px; }
   .rb-chip { font-family: var(--type); font-size: calc(9px + var(--text-size-adjust)); letter-spacing: 0.08em; text-transform: uppercase; white-space: nowrap;

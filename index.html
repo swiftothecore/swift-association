@@ -60,7 +60,7 @@ if (location.pathname.endsWith('/index.html')) {
 <link rel="preload" href="fonts/courierprime-700-latin.woff2" as="font" type="font/woff2" crossorigin />
 <link rel="preload" href="fonts/courierprime-italic-latin.woff2" as="font" type="font/woff2" crossorigin />
   <link rel="stylesheet" href="ink.css" />
-  <link rel="stylesheet" href="styles.css?v=59" />
+  <link rel="stylesheet" href="styles.css?v=60" />
   <script src="js/ink.js" defer></script>
 </head>
 <body data-era="gold">
@@ -79,7 +79,7 @@ if (location.pathname.endsWith('/index.html')) {
        Applied to a background LAYER only (.rb-fuse::before), never to the die or the words,
        which have to stay crisp. -->
   <filter id="fuseGoo" x="-20%" y="-40%" width="140%" height="180%" color-interpolation-filters="sRGB">
-    <feGaussianBlur in="SourceGraphic" stdDeviation="2.4" result="blur"/>
+    <feGaussianBlur in="SourceGraphic" stdDeviation="2" result="blur"/>
     <feColorMatrix in="blur" type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 20 -9"/>
   </filter>
   <!-- Brushed nickel for the guest shelf's hardware: the split ring every pass hangs from
