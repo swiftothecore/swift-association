@@ -877,7 +877,12 @@ function scheduleFlipRemoval(flip, onEnd) {
   flip.addEventListener("animationend", (e) => { if (e.target === flip) finish(); });
   setTimeout(finish, 500 * animScale() || 250);
 }
+// One-shot suppressor for the next page turn. Set where two navigations run back to back
+// (the bookplate's Mastery door quits a live run and then opens Mastery), so only the second
+// one turns the page instead of two flips animating over each other in the same frames.
+let skipNextFlip = false;
 function flipDisabled(name, current) {
+  if (skipNextFlip) { skipNextFlip = false; return true; }
   return !current || current === screens[name] || !pageTurnAnimated();
 }
 // FORWARD: the leaving page turns away to reveal the destination beneath it.
@@ -15849,14 +15854,19 @@ function setBookplateHTML() {
       `</div>`
     : `<button type="button" class="bp-add" data-avatar="change" aria-label="add a photo"></button>`;
   // The worn prestige title, engraved on the plate under the signature. It is part of who
-  // this notebook belongs to, so it belongs beside the name and the photo — but it is an
-  // engraving, not a control: Mastery stays the only place a title is chosen, which is all
-  // the source note says. Nothing is drawn at all before the first title exists (Mastery 7),
-  // since an empty band would advertise a reward the player has not met.
+  // this notebook belongs to, so it belongs beside the name and the photo. Mastery is still
+  // the only place a title is CHOSEN, so the source line under it is a door rather than a
+  // caption: it says where the choosing happens and then takes you there, instead of leaving
+  // you to shut the modal and go hunting for the nav card. It is a real button, not a span
+  // wearing a click handler, so it is reachable by keyboard like the rest of the plate; see
+  // bookplateTitleToMastery for what it has to do about the back arrow and a live run.
+  // Nothing is drawn at all before the first title exists (Mastery 7), since an empty band
+  // would advertise a reward the player has not met, so this control has no locked state.
   const title = wornTitleName();
   const titleHTML = title
     ? `<p class="bp-title"><span class="bp-title-nm">${escapeHtml(title)}</span>` +
-      `<span class="bp-title-src">chosen in Mastery</span></p>`
+      `<button type="button" class="bp-title-src" data-bp-title data-label="chosen in Mastery" ` +
+      `aria-label="Choose your title in Mastery">chosen in Mastery</button></p>`
     : "";
   return `<div class="bookplate">` +
     `<div class="bp-photo${photo ? "" : " is-empty"}">` +
@@ -15876,6 +15886,50 @@ function setBookplateHTML() {
       `<p class="np-hint">signed on every personal record · photo stays on this device</p>` +
     `</div>` +
   `</div>`;
+}
+/* The bookplate's "chosen in Mastery" door. Two things it has to get right beyond shutting
+   the modal. The BACK ARROW: the gear is global, so Mastery must return to whichever screen
+   was sitting under the modal, never a hardcoded start. And a LIVE RUN: the modal only pauses
+   the clock, so walking off to Mastery mid-game would leave a run open with its timer about to
+   restart. Mid-run the line therefore behaves as the quit button does, arming on the first tap
+   and leaving on a second within 3s (both skipped when confirmLeave is off), then quitting the
+   run for real. That is also why its back arrow points at start in that case: the screen it
+   came from no longer holds a game. The arm state lives on this button rather than being
+   borrowed from #quitBtn, whose armed label says "give up" and belongs to a different act. */
+let bpTitleTimer = null;
+function bpTitleBtn() { return document.querySelector("#settingsBody [data-bp-title]"); }
+function disarmBookplateTitle() {
+  clearTimeout(bpTitleTimer);
+  bpTitleTimer = null;
+  const btn = bpTitleBtn();
+  if (btn) { btn.classList.remove("armed"); btn.textContent = btn.dataset.label; }
+}
+function bookplateTitleToMastery() {
+  const btn = bpTitleBtn();
+  if (!btn) return;
+  const inRun = screens.game.classList.contains("active");
+  if (inRun && settings.confirmLeave !== false && !btn.classList.contains("armed")) {
+    btn.classList.add("armed");
+    btn.textContent = "leave this run? tap again";
+    bpTitleTimer = setTimeout(disarmBookplateTitle, 3000);
+    return;
+  }
+  disarmBookplateTitle();
+  // Opened the gear while already on Mastery: there is nowhere to go, so just get out of the
+  // way and leave the back arrow pointing wherever it was already pointing.
+  if (screens.mastery.classList.contains("active")) {
+    closeSettings();
+    try { screens.mastery.focus({ preventScroll: true }); } catch (_) { screens.mastery.focus(); }
+    return;
+  }
+  const from = inRun ? "start"
+    : (Object.keys(screens).find((k) => screens[k].classList.contains("active")) || "start");
+  // Quit BEFORE the modal closes, so resumeFromSettings finds no game screen to hand the
+  // paused clock back to, and suppress the quit's own turn back to the desk: the only page
+  // turn the player should see is the one into Mastery.
+  if (inRun) { skipNextFlip = true; quitGame(); }
+  closeSettings();
+  openMastery(from);   // its showScreen focuses the Mastery page, after closeSettings' restore
 }
 // A run of plain on/off settings reads better as one checklist than as N tall rows:
 // same decision shape, same weight, so they get boxes to tick rather than a column of
@@ -16019,6 +16073,7 @@ function showSettingsPanel(id) {
 }
 
 function renderSettingsBody() {
+  disarmBookplateTitle();   // the re-render replaces the bookplate, so no arm may outlive it
   const diffOpts = [{ val: "last", label: "Last" }].concat(MODE_ORDER.map((m) => ({ val: m, label: MODES[m].label })));
   const statsOpts = [{ val: "all", label: "All" }, { val: "last", label: "Last" }].concat(MODE_ORDER.map((m) => ({ val: m, label: MODES[m].label })));
   const zones = (typeof Intl.supportedValuesOf === "function") ? Intl.supportedValuesOf("timeZone") : COMMON_TZ_FALLBACK;
@@ -16198,6 +16253,8 @@ function wireSettingsBody() {
     if (screens.records.classList.contains("active")) renderRecordsPage();
     if ($("masteryBody")) renderMasteryPage();   // re-sign the mastery signature previews live
   });
+  const titleDoor = body.querySelector("[data-bp-title]");
+  if (titleDoor) titleDoor.addEventListener("click", bookplateTitleToMastery);
   body.querySelectorAll("[data-avatar]").forEach((b) => b.addEventListener("click", () => {
     if (b.dataset.avatar === "remove") applyAvatar("");
     else chooseAvatar((url) => applyAvatar(url));
@@ -16366,6 +16423,7 @@ function closeSettings() {
   m.classList.remove("open");
   m.setAttribute("aria-hidden", "true");
   document.body.classList.remove("modal-open");
+  disarmBookplateTitle();   // an armed bookplate door must never survive the modal closing
   resumeFromSettings();
   // Restore focus to wherever it was before opening (falls back to the gear).
   const back = lastFocusedBeforeSettings;
