@@ -2528,10 +2528,10 @@ function renderAchievementsPage() {
     const got = members.filter((a) => earnedAchievements[a.id]).length;
     const tot = members.length;
     const col = ACH_GROUP_COLORS[g.id];
-    return `<div class="ach-theme">` +
+    return `<button type="button" class="ach-theme" data-ach-theme="${g.id}" aria-label="Go to ${escapeHtml(g.label)} charms">` +
       `<div class="ach-theme-head"><span class="ach-theme-name"><span class="ach-group-dot" style="background:${col}"></span>${g.short}</span><span>${got} / ${tot}</span></div>` +
       `<div class="ach-theme-bar"><div style="width:${tot ? (got / tot) * 100 : 0}%;background:${col}"></div></div>` +
-      `</div>`;
+      `</button>`;
   }).join("");
   html += `<div class="ach-themes"><div class="ach-themes-label">by theme</div>` +
     `<div class="ach-themes-grid">${themeRows}</div></div>`;
@@ -2574,7 +2574,7 @@ function renderAchievementsPage() {
       .sort((x, y) => (earnedAchievements[y.id] || "").localeCompare(earnedAchievements[x.id] || ""));
     const lockedM = members.filter((a) => !earnedAchievements[a.id]);
     const tiles = [...earnedM, ...lockedM].map(achTile).join("");
-    html += `<p class="histogram-label ach-section" style="--group:${ACH_GROUP_COLORS[g.id]}"><span class="ach-group-dot" style="background:${ACH_GROUP_COLORS[g.id]}"></span>${g.label}</p>` +
+    html += `<p class="histogram-label ach-section" id="achTheme-${g.id}" style="--group:${ACH_GROUP_COLORS[g.id]}"><span class="ach-group-dot" style="background:${ACH_GROUP_COLORS[g.id]}"></span>${g.label}</p>` +
       `<div class="ach-grid">${tiles}</div>`;
   });
 
@@ -2594,6 +2594,14 @@ function renderAchievementsPage() {
   }
 
   $("achievementsBody").innerHTML = html;
+  $("achievementsBody").querySelectorAll("[data-ach-theme]").forEach((theme) =>
+    theme.addEventListener("click", () => {
+      const section = document.getElementById(`achTheme-${theme.dataset.achTheme}`);
+      if (section) section.scrollIntoView({
+        behavior: motionReduced() ? "auto" : "smooth",
+        block: "start",
+      });
+    }));
   $("achievementsBody").querySelectorAll("[data-open-songbook]").forEach((b) =>
     b.addEventListener("click", () => openSongbook(b.dataset.openSongbook)));
   const repin = $("achievementsBody").querySelector("[data-goal-repin]");
