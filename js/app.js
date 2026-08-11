@@ -2563,7 +2563,7 @@ function renderAchievementsPage() {
       .sort((x, y) => (earnedAchievements[y.id] || "").localeCompare(earnedAchievements[x.id] || ""));
     const lockedM = members.filter((a) => !earnedAchievements[a.id]);
     const tiles = [...earnedM, ...lockedM].map(achTile).join("");
-    html += `<p class="histogram-label ach-section"><span class="ach-group-dot" style="background:${ACH_GROUP_COLORS[g.id]}"></span>${g.label}</p>` +
+    html += `<p class="histogram-label ach-section" style="--group:${ACH_GROUP_COLORS[g.id]}"><span class="ach-group-dot" style="background:${ACH_GROUP_COLORS[g.id]}"></span>${g.label}</p>` +
       `<div class="ach-grid">${tiles}</div>`;
   });
 
@@ -2576,7 +2576,7 @@ function renderAchievementsPage() {
     const secretLabel = revealed
       ? `“Secret” charms · in name only`
       : `Secret charms · ${secretLocked.length}`;
-    html += `<p class="histogram-label ach-section"><span class="ach-group-dot ach-group-dot--secret"></span>${secretLabel}</p>` +
+    html += `<p class="histogram-label ach-section ach-section--secret"><span class="ach-group-dot ach-group-dot--secret"></span>${secretLabel}</p>` +
       `<div class="ach-grid">${secretLocked.map(achTile).join("")}</div>`;
   }
 
