@@ -3661,11 +3661,19 @@ function openAchievements(from, focus) {
   }
 }
 let masteryBackTarget = "start";       // where the Mastery page's ← back returns to
-function openMastery(from) {
+function openMastery(from, focus) {
   masteryBackTarget = from;
   _titleView = null;   // recenter the title stepper on the worn title each time the page opens
   renderMasteryPage();
   flipAwayToScreen("mastery");
+  if (focus === "titles") scrollMasteryTitlesIntoView();
+}
+
+// The settings bookplate links to the place where its engraved title is chosen. The reward
+// board is at the bottom of a long page, so wait for the page turn and its layout before
+// placing the Prestige titles tile at the top of the viewport.
+function scrollMasteryTitlesIntoView() {
+  revealAfterFlip(() => document.querySelector("#masteryBody .rb-titles"), { pad: 18 });
 }
 // Keep the live indicator on the mastery nav-cards (both start + results) current: the
 // Mastery level once unlocked, otherwise progress toward the unlock gate.
@@ -16014,11 +16022,12 @@ function bookplateTitleToMastery() {
     return;
   }
   disarmBookplateTitle();
-  // Opened the gear while already on Mastery: there is nowhere to go, so just get out of the
-  // way and leave the back arrow pointing wherever it was already pointing.
+  // Opened the gear while already on Mastery: close it and bring the title picker into view,
+  // leaving the back arrow pointing wherever it was already pointing.
   if (screens.mastery.classList.contains("active")) {
     closeSettings();
     try { screens.mastery.focus({ preventScroll: true }); } catch (_) { screens.mastery.focus(); }
+    scrollMasteryTitlesIntoView();
     return;
   }
   const from = inRun ? "start"
@@ -16028,7 +16037,7 @@ function bookplateTitleToMastery() {
   // turn the player should see is the one into Mastery.
   if (inRun) { skipNextFlip = true; quitGame(); }
   closeSettings();
-  openMastery(from);   // its showScreen focuses the Mastery page, after closeSettings' restore
+  openMastery(from, "titles");   // its showScreen focuses Mastery after closeSettings' restore
 }
 // A run of plain on/off settings reads better as one checklist than as N tall rows:
 // same decision shape, same weight, so they get boxes to tick rather than a column of
