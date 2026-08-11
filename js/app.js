@@ -2480,6 +2480,12 @@ function celebrateMastery(res, host) {
 // Every masking decision on the achievements page goes through here, never `a.secret`.
 const achMasked = (a) => !!a.secret && !(a.reveal && challengeRecord(a.reveal).defeated);
 
+// Everything the trailing Secret section holds — the still-masked charms you haven't earned.
+// An earned secret leaves it (it moves into its real theme), so the section empties out and
+// eventually stops rendering at all. The Mastery hints vault asks the same question, because a
+// door pointing at a section that no longer exists is worse than no door.
+const secretCharmsLeft = () => ACHIEVEMENTS.filter((a) => achMasked(a) && !earnedAchievements[a.id]);
+
 // One charm tile: earned (revealed), a still-masked secret (???), or a visible
 // locked target. Shared by the grid + secret section.
 function achTile(a) {
@@ -2567,7 +2573,7 @@ function renderAchievementsPage() {
       `<div class="ach-grid">${tiles}</div>`;
   });
 
-  const secretLocked = ACHIEVEMENTS.filter((a) => achMasked(a) && !earnedAchievements[a.id]);
+  const secretLocked = secretCharmsLeft();
   if (secretLocked.length) {
     // This group only ever holds LOCKED secrets (an earned one moves into its real theme),
     // so once the level-10 reveal has spelled out how to earn each of them, the word goes
@@ -2576,7 +2582,9 @@ function renderAchievementsPage() {
     const secretLabel = revealed
       ? `“Secret” charms · in name only`
       : `Secret charms · ${secretLocked.length}`;
-    html += `<p class="histogram-label ach-section ach-section--secret"><span class="ach-group-dot ach-group-dot--secret"></span>${secretLabel}</p>` +
+    // The id is an anchor rather than a hook for styling: the Mastery hints vault's door scrolls
+    // the window here, since this section is far below the fold on a full charm collection.
+    html += `<p class="histogram-label ach-section ach-section--secret" id="achSecretSection"><span class="ach-group-dot ach-group-dot--secret"></span>${secretLabel}</p>` +
       `<div class="ach-grid">${secretLocked.map(achTile).join("")}</div>`;
   }
 
@@ -3627,10 +3635,16 @@ function openRecords(from) {
   requestAnimationFrame(() => fitHeatGrid());      // and again next frame, in case layout wasn't flushed
 }
 let achievementsBackTarget = "start";  // where the Charm Collection's ← back returns to
-function openAchievements(from) {
+// `focus` is the one place a caller can ask to land somewhere other than the top of the charm
+// collection: "secret" brings the trailing Secret section up, which is what the Mastery hints
+// vault's door is for. The page has no inner scroller, so it's the window that moves.
+function openAchievements(from, focus) {
   achievementsBackTarget = from;
   renderAchievementsPage();
   flipAwayToScreen("achievements");
+  if (focus === "secret") {
+    revealAfterFlip(() => document.getElementById("achSecretSection"), { pad: 18 });
+  }
 }
 let masteryBackTarget = "start";       // where the Mastery page's ← back returns to
 function openMastery(from) {
@@ -3755,6 +3769,10 @@ function renderMasteryPage() {
     const id = firstSuperHardChallenge();
     if (id) openChallenges("mastery", id);
   });
+  // The hints vault's door: the Secret section of the charm collection, which is where the
+  // reward actually shows itself. Only drawn while that section still has something in it.
+  const hints = body.querySelector("[data-open-secret-charms]");
+  if (hints) hints.addEventListener("click", () => openAchievements("mastery", "secret"));
 }
 
 // ---- Mastery hero ----
@@ -3883,6 +3901,7 @@ function buildRewardBento(m, mLevel, unlocked) {
   const pct = Math.round((earned / all.length) * 100);
   const hardR = groups.unlock.find((r) => r.id === "hardmode-unlock");
   const hintR = groups.unlock.find((r) => r.id === "reveal-hints");
+  const secretsLeft = secretCharmsLeft().length > 0;
 
   return `<div class="reward-bento">` +
     `<div class="rb-head">` +
@@ -3909,10 +3928,17 @@ function buildRewardBento(m, mLevel, unlocked) {
       // The other vault. It guards knowledge rather than a tier, so it is made of different
       // stuff — plum leather and rose foil against the super-hard tile's iron and brass —
       // and it opens with the key it already wears rather than being broken into.
+      // Its earned state has two readings, because the thing it points at can run out: the
+      // Secret section only holds charms you haven't earned yet, and it stops rendering once
+      // you've found them all. A door to a section that isn't there is worse than no door, so
+      // the tile spends its last state saying so and offers nothing.
       buildMilestoneTile(hintR, {
         area: "hint", tone: "ink", watermark: true, earned: !!(hintR && m.unlocked[hintR.id]),
-        earnedCopy: "Unlocked — every secret charm now shows how to earn it.",
+        earnedCopy: secretsLeft
+          ? "Unlocked — every secret charm now shows how to earn it."
+          : "Every secret charm found. The hints have nothing left to reveal.",
         lockedCopy: `What every secret charm wants from you, kept shut. Reach Mastery ${hintR ? hintR.level : ""} for the key.`,
+        action: secretsLeft ? { label: "Read the hints", attr: `data-open-secret-charms` } : null,
       }) +
       buildTitlesTile(m, unlocked) +
     `</div>` +
