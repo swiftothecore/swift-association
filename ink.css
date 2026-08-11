@@ -1,0 +1,59 @@
+/* Handwritten text should carry the tiny inconsistencies of real ink by default.
+   js/ink.js marks the outer edge of each rendered Caveat run, including content
+   added after load. Keep the values quiet: the handwriting should feel human,
+   never visibly crooked. Use .ink-steady or data-ink="steady" to opt a subtree out. */
+.ink-varied {
+  letter-spacing: var(--ink-space, 0);
+  opacity: var(--ink-opacity, 1);
+  rotate: var(--ink-rotate, 0deg);
+  translate: 0 var(--ink-baseline, 0);
+}
+
+.ink-varied[data-ink-variant="0"] {
+  --ink-rotate: -0.28deg;
+  --ink-baseline: 0.35px;
+  --ink-opacity: 0.98;
+  --ink-space: -0.002em;
+}
+
+.ink-varied[data-ink-variant="1"] {
+  --ink-rotate: 0.2deg;
+  --ink-baseline: -0.3px;
+  --ink-opacity: 0.99;
+  --ink-space: 0.003em;
+}
+
+.ink-varied[data-ink-variant="2"] {
+  --ink-rotate: -0.1deg;
+  --ink-baseline: 0.55px;
+  --ink-opacity: 0.97;
+  --ink-space: 0.001em;
+}
+
+.ink-varied[data-ink-variant="3"] {
+  --ink-rotate: 0.34deg;
+  --ink-baseline: 0.1px;
+  --ink-opacity: 0.985;
+  --ink-space: -0.003em;
+}
+
+.ink-varied[data-ink-variant="4"] {
+  --ink-rotate: -0.22deg;
+  --ink-baseline: -0.4px;
+  --ink-opacity: 0.995;
+  --ink-space: 0.002em;
+}
+
+.ink-varied[data-ink-variant="5"] {
+  --ink-rotate: 0.13deg;
+  --ink-baseline: 0.3px;
+  --ink-opacity: 0.975;
+  --ink-space: -0.001em;
+}
+
+.ink-varied[data-ink-variant="6"] {
+  --ink-rotate: 0.03deg;
+  --ink-baseline: -0.2px;
+  --ink-opacity: 0.985;
+  --ink-space: 0.004em;
+}

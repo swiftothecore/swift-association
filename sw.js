@@ -20,6 +20,7 @@ const CACHE = "stta-v41";
 const ASSETS = [
   "./",
   "index.html",
+  "ink.css",
   "styles.css",
   // Self-hosted fonts (latin subset). Precached so first offline load has the
   // real faces; declared via @font-face in styles.css / search.css.
@@ -28,6 +29,7 @@ const ASSETS = [
   "fonts/courierprime-700-latin.woff2",
   "fonts/courierprime-italic-latin.woff2",
   "js/app.js",
+  "js/ink.js",
   "js/util.js",
   "js/config.js",
   "js/match.js",
