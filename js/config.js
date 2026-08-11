@@ -1345,6 +1345,7 @@ export const MASTERY_REWARDS = [
   { level: 4,  id: "paper-parchment", kind: "paper", name: "Aged parchment", desc: "Antique ivory, softly foxed.",        payload: { paper: "parchment" } },
   { level: 4,  id: "paper-blush",     kind: "paper", name: "Blush leaf",     desc: "A soft rose stationery.",            payload: { paper: "blush" } },
   { level: 4,  id: "paper-slate",     kind: "paper", name: "Slate pad",      desc: "Cool blue-grey engineer's stock.",   payload: { paper: "slate" } },
+  { level: 4,  id: "paper-sage",      kind: "paper", name: "Sage ledger",     desc: "A cool green bookkeeper's stock.", payload: { paper: "sage" } },
   // Bracelet charms — a set unlocked together at level 5. Each swaps the charm that
   // dangles from every correct-answer bead (the CHARMS renderer in bracelet.js); the
   // verse pen-nib stays reserved. Selection persists in settings.masteryCharm.

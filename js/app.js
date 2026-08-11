@@ -17562,7 +17562,7 @@ function buildDevApi() {
       // the mastery level with them, for the same reason unlockRewards raises it.
       lockRewards: () => { const m = loadMastery(); m.unlocked = {}; m.masteryXp = 0; saveMastery(m); updateMasteryNav(); if ($("masteryBody")) renderMasteryPage(); },
       reset: () => { resetMastery(); settings.masteryPen = ""; settings.masteryPaper = ""; settings.masteryCharm = ""; settings.masteryTitle = ""; settings.masteryButton = ""; settings.masteryLabel = ""; saveSettings(settings); setPen(null); applySettings(); updateMasteryNav(); if ($("masteryBody")) renderMasteryPage(); },
-      // Preview a paper stock without unlocking it: pass an id (manila/parchment/blush/slate) or "" to clear.
+      // Preview a paper stock without unlocking it: pass an id (manila/parchment/blush/slate/sage) or "" to clear.
       paper: (id) => { settings.masteryPaper = id || ""; saveSettings(settings); applySettings(); if ($("masteryBody")) renderMasteryPage(); },
       // Preview a bracelet charm without unlocking it: pass an id (heart/moon/daisy/bow/pick/
       // note/lightning/snake), "random" for a per-bead strand, or "" for the default star.

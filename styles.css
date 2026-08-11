@@ -93,6 +93,7 @@
   body[data-paper="parchment"] { --paper:#f1e4c9; --paper-edge:#e9dab9; --rule:rgba(92,70,40,0.11);  --margin:rgba(158,58,46,0.42); }
   body[data-paper="blush"]     { --paper:#f6e4e4; --paper-edge:#efd6d6; --rule:rgba(120,62,72,0.09);  --margin:rgba(184,70,92,0.45); }
   body[data-paper="slate"]     { --paper:#dfe3e8; --paper-edge:#d4d9df; --rule:rgba(40,55,75,0.11);   --margin:rgba(160,62,62,0.42); }
+  body[data-paper="sage"] { --paper:#e2e8d8; --paper-edge:#d6ddcb; --rule:rgba(48,66,44,0.11); --margin:rgba(160,62,46,0.42); }
 
   /* ---- Dark notebook (Phase 1: base tokens; data-theme lives on <html>) ----
      For genuine low-light reading: a warm dark paper with a warm off-white ink,
@@ -6565,6 +6566,7 @@
   .paper-chip[data-paper="parchment"] { background: #f1e4c9; }
   .paper-chip[data-paper="blush"]     { background: #f6e4e4; }
   .paper-chip[data-paper="slate"]     { background: #dfe3e8; }
+  .paper-chip[data-paper="sage"] { background: #e2e8d8; }
   /* Bracelet-charm glyph in the reward ladder (reuses the global .b-bead/.b-gloss styling). */
   .charm-preview { overflow: visible; }
 
