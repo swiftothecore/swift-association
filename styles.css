@@ -6189,7 +6189,7 @@
   .mh-seal.climb, .mh-seal.complete { background: rgba(var(--m-gold), 0.92); border: 2px solid rgba(var(--m-goldink), 0.9); }
   .mh-seal.climb::before, .mh-seal.complete::before { content: ""; position: absolute; inset: 5px; border-radius: 50%; border: 1px dashed rgba(63, 44, 16, 0.4); }
   .mh-seal-num { font-family: var(--hand); font-weight: 700; font-size: calc(33px + var(--text-size-adjust)); line-height: 1; color: #3f2c10;
-    transform: translate(-2px, -2px); }
+    transform: translate(-4px, -2px); }
   .mh-seal.complete .mh-seal-emblem { transform: translateY(2px); }
   .mh-seal-emblem .charm { width: 26px; height: 26px; }
   .mh-seal .charm { display: inline-flex; }
