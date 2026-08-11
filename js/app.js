@@ -3847,7 +3847,7 @@ function masteryHeadClimb(m, mLevel) {
   }
 
   const seal = mLevel >= 1
-    ? `<span class="mh-seal-star">${masteryMarkup("star")}</span><span class="mh-seal-num">${mLevel}</span>`
+    ? `<span class="mh-seal-num">${mLevel}</span>`
     : `<span class="mh-seal-emblem">${masteryMarkup("star")}</span>`;
   const title = mLevel >= 1 ? `Level ${mLevel}` : "Freshly sealed";
 
