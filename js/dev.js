@@ -281,6 +281,7 @@ export function initDev(api) {
     row(btn("share native", () => { api.share.simulate(null); toast("native sharing restored"); }),
         btn("share fallback", () => { api.share.simulate(false); toast("share fallback forced"); }),
         btn("share pretend", () => { api.share.simulate(true); toast("pretend share forced"); })),
+    row(btn("fly the flock", () => { api.share.flock(); toast("messengers away"); })),
     row(btn("card meta", () => { console.log("[dev] bracelet card", api.card.meta()); toast("card meta in console"); }),
         btn("open card SVG", () => api.card.open()))));
 

@@ -6795,9 +6795,80 @@
   .cal-ink { position: absolute; left: 5px; right: 5px; top: 5px; bottom: 5px; pointer-events: none; }
   .cal-mark { position: absolute; left: 0; top: 0; width: 100%; height: 100%; overflow: visible; }
 
-  /* Share/copy button on the results screen — sits just below the bracelet. */
-  .daily-share-btn { display: block; width: 100%; margin: 14px 0 10px; padding: 11px; font-size: calc(13px + var(--text-size-adjust)); letter-spacing: 1px; color: var(--ink-accent); border-color: var(--ink-accent); }
-  .daily-share-btn:hover { background: var(--highlighter); border-style: solid; color: var(--ink); }
+  /* ---------- The share stub (daily results) ----------
+     The result prints as a perforated ticket at the foot of the page: the emoji
+     grid and the score are ON the button, so pressing it sends the thing you can
+     already read. Above it sits the perforation — punched holes with a dashed
+     rule through them — which becomes a torn fibre edge once the stub has been
+     off the page. Nothing here idles; the flock only flies on a press. */
+  /* Ticket-width, not page-width: at full measure the perforation reads as the page
+     itself tearing in half, and the score floats in a banner. */
+  .share-stub { max-width: 340px; margin: 18px auto 14px; }
+  .stub-perf {
+    height: 11px; margin: 0 6px -1px;
+    border-top: 1px dashed rgba(43, 39, 34, 0.34);
+    background-image: radial-gradient(circle at center,
+      var(--paper-edge) 0 2.4px, rgba(43, 39, 34, 0.20) 2.4px 3.2px, transparent 3.3px);
+    background-size: 17px 11px; background-position: center top;
+  }
+  .stub-perf--torn { border-top: none; background-image: none; height: 9px; }
+  .stub-perf--torn svg { display: block; width: 100%; height: 9px; }
+
+  .stub-body {
+    display: block; width: 100%; padding: 11px 14px 12px;
+    background: var(--paper); color: var(--ink);
+    border: 1px solid rgba(43, 39, 34, 0.32); border-top-color: rgba(43, 39, 34, 0.16);
+    border-radius: 0 0 3px 3px; cursor: pointer; text-align: center;
+    box-shadow: 0 4px 10px rgba(40, 32, 22, 0.14);
+    transform-origin: 12% 0;
+    transition: transform 0.22s ease, box-shadow 0.22s ease, background 0.22s ease;
+  }
+  .stub-body:hover, .stub-body:focus-visible {
+    /* a corner lifting off the page, not a colour change */
+    transform: rotate(-1.1deg) translateY(2px);
+    box-shadow: 0 9px 18px rgba(40, 32, 22, 0.2);
+    background: var(--paper-edge);
+  }
+  .stub-body[disabled] { cursor: default; }
+  /* Two lines, not one: at phone width "daily challenge · August 11, 2026" wraps
+     mid-date and the ticket loses its head. */
+  .stub-head { display: block; font-family: var(--type); font-size: calc(10px + var(--text-size-adjust)); letter-spacing: 1.6px; text-transform: uppercase; color: var(--ink-soft); }
+  .stub-date { display: block; margin-top: 2px; font-family: var(--type); font-size: calc(11px + var(--text-size-adjust)); letter-spacing: 0.4px; color: var(--ink); }
+  .stub-grid { display: block; margin-top: 7px; font-size: calc(13px + var(--text-size-adjust)); letter-spacing: 2px; line-height: 1.1; word-break: break-all; }
+  .stub-score { display: block; margin-top: 4px; font-family: var(--hand); font-weight: 700; font-size: calc(26px + var(--text-size-adjust)); line-height: 1.1; }
+  .stub-sealed { display: block; margin: 9px 0 3px; font-family: var(--hand); font-size: calc(23px + var(--text-size-adjust)); color: var(--ink-soft); }
+  .stub-cta { display: block; margin-top: 7px; font-family: var(--type); font-size: calc(10px + var(--text-size-adjust)); letter-spacing: 2px; text-transform: uppercase; color: var(--ink-accent); }
+
+  /* The tear. The stub leaves up and to the right, taking the flock's direction with
+     it; the perforation stays behind on the page. */
+  .share-stub.tearing .stub-body { animation: stub-away 0.62s cubic-bezier(0.4, 0, 0.75, 0.4) forwards; }
+  @keyframes stub-away {
+    0%   { transform: rotate(0) translate(0, 0) scale(1); opacity: 1; }
+    22%  { transform: rotate(-3deg) translate(-4px, 5px) scale(1.02); opacity: 1; }
+    100% { transform: rotate(16deg) translate(90px, -120px) scale(0.72); opacity: 0; }
+  }
+  .share-stub.returning .stub-body { animation: stub-back 0.5s ease-out; }
+  @keyframes stub-back {
+    0%   { transform: translateY(-9px) scale(0.97); opacity: 0; }
+    100% { transform: none; opacity: 1; }
+  }
+
+  /* The messenger flock (js/messengers.js). One layer, above everything, alive for
+     under two seconds and removed by its own launcher. */
+  .flock-layer { position: fixed; inset: 0; z-index: 90; pointer-events: none; overflow: hidden; }
+  .flock-obj {
+    position: absolute; transform-origin: 50% 50%;
+    animation: flock-away var(--fdur, 1.2s) cubic-bezier(0.35, 0, 0.6, 0.35) var(--fdel, 0s) both;
+    filter: drop-shadow(0 3px 5px rgba(40, 32, 22, 0.22));
+  }
+  .flock-obj svg { display: block; }
+  @keyframes flock-away {
+    0%   { transform: translate(-50%, -50%) scale(0.5) rotate(0); opacity: 0; }
+    18%  { transform: translate(-50%, -50%) scale(1) rotate(calc(var(--frot) * 0.2)); opacity: 1; }
+    100% { transform: translate(calc(-50% + var(--fdx)), calc(-50% + var(--fdy))) scale(0.86) rotate(var(--frot)); opacity: 0; }
+  }
+  body[data-reduce-motion="on"] .share-stub .stub-body { transition: none; }
+  body[data-reduce-motion="on"] .stub-body:hover { transform: none; }
 
   /* Reduced motion is attribute-driven so the in-app "reduce motion" setting can
      OVERRIDE the OS preference (force ON beats a media query; force OFF restores

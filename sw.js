@@ -45,6 +45,9 @@ const ASSETS = [
   "js/sound.js",
   // Share/copy plumbing — imported by both the game and the searcher.
   "js/share.js",
+  // The messenger flock that flies the daily result off the page when the share
+  // stub is torn (see js/messengers.js). app.js imports it at load.
+  "js/messengers.js",
   // The desk calendar draws every date itself; index.html only holds its blank
   // card. Precached so a fresh offline install can't render a dateless pad.
   "js/calendar.js",

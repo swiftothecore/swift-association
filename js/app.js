@@ -2,6 +2,7 @@
 import { $, escapeRegExp, escapeHtml, prefersReducedMotion, shuffle, chance, normalizeTitle, normalizeLyric, fuzzySubstringRatio, levenshtein, mulberry32, dailySeed, censorText, anniversaryNote, thirteenNote } from "./util.js";
 import "./credential-guard.js";
 import { SITE_URL, canShare, shareOrCopy, simulateShare } from "./share.js";
+import { launchFlock } from "./messengers.js";
 import {
   TOTAL_ROUNDS, RECENT_WINDOW, NOVELTY_BOOST, DAILY_ALBUM_SKEW, DAILY_ALBUM_WEIGHT_EXP, DIFF_KEY, DEFAULT_SETTINGS,
   MODES, MODE_ORDER, MODE_COLORS, DIFFICULTY_LADDER, MODALITY_MODES, EXPLORER_TOKENS,
@@ -11309,52 +11310,142 @@ function renderDailyResultPanel() {
     `</div>` + note;
 }
 
+/* The three pieces of the shared summary, derived once and used twice: they are what
+   the stub PRINTS and what the share sheet SENDS, so a stub that shows one thing while
+   pasting another is impossible by construction. */
+const shareDateLabel = (dateStr) =>
+  new Date(dateStr + "T00:00:00Z").toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric", timeZone: "UTC" });
+const shareGrid = () => roundResults.map((r) => (r ? "⭐" : "⬜")).join("");
+// Active solving time (sum of per-round answer seconds, capped per round) rides on the
+// score line — a fair, comparable number since everyone gets the same words. m:ss so
+// pasted results sort and compare cleanly.
+const shareScoreLine = () => {
+  const time = fmtTime(dailyShareTime);
+  return time ? `${score}/${TOTAL_ROUNDS} · ${time}` : `${score}/${TOTAL_ROUNDS}`;
+};
+
 // Wordle-style shareable summary built from the per-round results. The site address is
 // NOT in here — it travels as the share sheet's `url` field (which platforms render as a
 // link preview) and only gets appended to the text on the clipboard path.
 function buildShareString(dateStr) {
-  const dateObj = new Date(dateStr + "T00:00:00Z");
-  const label = dateObj.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric", timeZone: "UTC" });
-  const emoji = roundResults.map((r) => (r ? "⭐" : "⬜")).join("");
-  // Active solving time (sum of per-round answer seconds, capped per round) rides on the
-  // score line — a fair, comparable number since everyone gets the same words. m:ss so
-  // pasted results sort and compare cleanly.
-  const time = fmtTime(dailyShareTime);
-  const scoreLine = time ? `${score}/${TOTAL_ROUNDS} · ${time}` : `${score}/${TOTAL_ROUNDS}`;
-  return `Swift Song Association 🎵\nDaily Challenge · ${label}\n${emoji}\n${scoreLine}`;
+  return `Swift Song Association 🎵\nDaily Challenge · ${shareDateLabel(dateStr)}\n${shareGrid()}\n${shareScoreLine()}`;
 }
 
+// The ragged edge left behind once the stub has been torn off. Jittered from the day's
+// own seed, so re-opening a finished daily shows the same tear rather than a new one,
+// and drawn as a fibre line rather than a silhouette: page and stub are both paper, so
+// the tear reads by its roughness, not by a change of colour.
+function tornEdgePath(seed) {
+  let s = seed % 9973 || 7;
+  const rnd = () => { s = (s * 9301 + 49297) % 233280; return s / 233280; };
+  let d = "M0 6";
+  for (let x = 4; x <= 100; x += 4) d += ` L${x} ${(2 + rnd() * 6).toFixed(1)}`;
+  return d;
+}
+
+/* The share stub — the daily result printed as a perforated ticket at the foot of the
+   page, with the emoji grid and the score right there on it. Tearing it off IS the
+   share: the button shows exactly what lands in the paste, and the flock of messengers
+   (js/messengers.js) carries it away.
+
+   Two things it must keep honest:
+     - the wording promises only what this browser can do, an OS share sheet where one
+       exists and the clipboard where it doesn't;
+     - `hidden` is the held-back-score variant. The stub prints no grid and no score
+       until it is torn, because a stub that showed them would spoil the very thing the
+       setting exists to hide. Spent on the first tear — a score reveals once.
+
+   shareOrCopy MUST be reached straight from the click with nothing awaited before it,
+   or the browser rejects the share sheet. The tear and the flock come after, and only
+   on an outcome that actually left the notebook. */
 function renderShareButton(dateStr, hidden) {
-  const existing = $("shareBtn");
+  const existing = $("shareStub");
   if (existing) existing.remove();
+
+  let held = hidden;
+  let torn = false;
+
+  const wrap = document.createElement("div");
+  wrap.id = "shareStub";
+  wrap.className = "share-stub";
+
+  const perf = document.createElement("div");
+  perf.className = "stub-perf";
+  perf.setAttribute("aria-hidden", "true");
+
   const btn = document.createElement("button");
   btn.id = "shareBtn";
-  btn.className = "btn-ghost daily-share-btn";
-  // The button has to promise what this browser can actually deliver: an OS share sheet
-  // where one exists, the clipboard where it doesn't. `hidden` is the held-back-score
-  // variant, and it's spent on the first click — the score can only be revealed once.
-  let held = hidden;
-  const baseLabel = () => (held ? (canShare() ? "Reveal & share" : "Reveal & copy")
-                                : (canShare() ? "Share result" : "Copy result"));
-  const settle = (now, then) => {
-    btn.textContent = now;
-    setTimeout(() => { btn.textContent = then; }, 2000);
+  btn.type = "button";
+  btn.className = "stub-body";
+
+  const cta = () => {
+    if (held) return canShare() ? "tear to reveal & send" : "tear to reveal & copy";
+    if (torn) return canShare() ? "tear again to send" : "tear again to copy";
+    return canShare() ? "tear here to send" : "tear here to copy";
   };
-  btn.textContent = baseLabel();
+  const paint = (ctaText) => {
+    btn.innerHTML =
+      `<span class="stub-head">daily challenge</span>` +
+      `<span class="stub-date">${escapeHtml(shareDateLabel(dateStr))}</span>` +
+      (held ? `<span class="stub-sealed">score sealed</span>`
+            : `<span class="stub-grid">${shareGrid()}</span>` +
+              `<span class="stub-score">${escapeHtml(shareScoreLine())}</span>`) +
+      `<span class="stub-cta">${escapeHtml(ctaText || cta())}</span>`;
+    btn.setAttribute("aria-label", held
+      ? `${cta()}. Your score is hidden until you do.`
+      : `${cta()}. ${shareScoreLine()}.`);
+  };
+  paint();
+
+  const settle = (now) => {
+    paint(now);
+    setTimeout(() => paint(), 2200);
+  };
+
   btn.addEventListener("click", async () => {
-    if (held) { $("finalScore").textContent = score; held = false; }   // reveal the held-back score
+    if (btn.disabled) return;
     const outcome = await shareOrCopy({
       title: "Swift Song Association",
       text: buildShareString(dateStr),
       url: SITE_URL,
     });
-    if (outcome === "shared") settle("Shared!", "Shared ✓");
-    else if (outcome === "copied") settle("Copied!", "Copied ✓");
-    else if (outcome === "failed") settle("Copy failed", baseLabel());
-    else btn.textContent = baseLabel();   // cancelled — they dismissed the sheet; say nothing
+    if (outcome === "cancelled") return;              // they dismissed the sheet; say nothing
+    if (outcome === "failed") { settle("copy failed"); return; }
+
+    if (held) { $("finalScore").textContent = score; held = false; }   // reveal the held-back score
+    btn.disabled = true;
+    await tearOff(wrap, perf, btn, dateStr);
+    torn = true;
+    settle(outcome === "shared" ? "sent ✓" : "copied ✓");
+    btn.disabled = false;
   });
+
+  wrap.append(perf, btn);
   const braceletEl = $("resultBracelet");
-  braceletEl.parentNode.insertBefore(btn, braceletEl.nextSibling);
+  braceletEl.parentNode.insertBefore(wrap, braceletEl.nextSibling);
+}
+
+/* Tear the stub off, fly the flock, and bring the stub back with a torn top edge so it
+   can be sent again. Purely presentational: the payload is already gone by the time this
+   runs, so the reduced-motion path just swaps the edge and returns. */
+async function tearOff(wrap, perf, btn, dateStr) {
+  const reduced = document.body.dataset.reduceMotion === "on";
+  if (!reduced) {
+    wrap.classList.add("tearing");
+    await launchFlock(btn, { reduced });
+    wrap.classList.remove("tearing");
+  }
+  if (!perf.classList.contains("stub-perf--torn")) {
+    perf.classList.add("stub-perf--torn");
+    perf.innerHTML =
+      `<svg viewBox="0 0 100 10" preserveAspectRatio="none" aria-hidden="true" focusable="false">` +
+      `<path d="${tornEdgePath(dailySeed(dateStr))}" fill="none" stroke="rgba(43,39,34,0.42)" stroke-width="0.7" vector-effect="non-scaling-stroke"/>` +
+      `</svg>`;
+  }
+  if (!reduced) {
+    wrap.classList.add("returning");
+    setTimeout(() => wrap.classList.remove("returning"), 520);
+  }
 }
 
 // The studio album whose anniversary falls on `dateKey` (re-records borrow their original
@@ -17593,6 +17684,13 @@ function buildDevApi() {
       native: () => typeof navigator.share === "function",
       simulate: (v) => simulateShare(v),   // true = pretend | false = hide | null = tell the truth
       payload: () => ({ text: buildShareString(todayKey()), url: SITE_URL }),   // needs a daily result on screen
+      // Fly the flock without sending anything. Off the stub when one is on screen,
+      // otherwise from the middle of the page, so the drawings can be judged in place
+      // without winning a daily first.
+      flock: () => {
+        const from = $("shareBtn") || $("screen-results") || document.body;
+        return launchFlock(from, { reduced: false });
+      },
     },
     // The bracelet-as-PNG keepsake. Reads whatever finished strand is on the results
     // screen, so it needs a run to have just ended (any mode). meta() shows what the
