@@ -1,5 +1,7 @@
 // Sharing — the one place that knows how to get something out of the notebook and into
-// someone else's hands. Shared by the game's daily result and the searcher's deep link.
+// someone else's hands. The searcher's deep link goes through shareOrCopy; the game's
+// daily stub deliberately calls copyToClipboard alone, because tearing the stub is a
+// single deliberate gesture and an OS sheet on top of it is just a modal to dismiss.
 //
 // Two paths, in order of preference:
 //  1. navigator.share() — hands the payload to the OS share sheet (Messages, WhatsApp,
@@ -17,16 +19,10 @@ export const SITE_URL = "https://swiftassociation.com";
 // Does this browser really have the sheet?
 const hasNativeShare = () => typeof navigator !== "undefined" && typeof navigator.share === "function";
 
-// Dev override (see __dev.share) — null tells the truth, true/false force a branch. The
-// sheet is invisible on a desktop dev machine, so without this the "Share"-worded half
-// of every label can only be seen on a phone.
-let simulated = null;
-export function simulateShare(v) { simulated = (v == null ? null : !!v); return simulated; }
-
 // Is the OS share sheet available at all? Cheap and synchronous, so it's safe to call
 // while building markup.
 export function canShare() {
-  return simulated === null ? hasNativeShare() : simulated;
+  return hasNativeShare();
 }
 
 // Copy text to the clipboard, preferring the async Clipboard API and falling back to a
@@ -72,13 +68,6 @@ export async function shareOrCopy({ title, text, url, copyText } = {}) {
   if (title) payload.title = title;
   if (text) payload.text = text;
   if (url) payload.url = url;
-
-  // Dev: a simulated sheet on a machine that has none. Print what would have gone out
-  // and report success, so the "shared" label path is reachable off a phone.
-  if (simulated === true && !hasNativeShare()) {
-    console.log("[share] simulated sheet — payload:", payload);
-    return "shared";
-  }
 
   // canShare(data) is the payload-level check (a browser can have share() but refuse
   // these fields); when it's absent, the try/catch below is the safety net.

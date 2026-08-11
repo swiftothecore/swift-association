@@ -183,7 +183,7 @@ export function messengerSVG(m, px) {
 
 /* Fly the flock away from `originEl`.
 
-   The caller has already handed the payload to the share sheet — this is pure
+   The caller has already put the payload on the clipboard — this is pure
    theatre and deliberately owns nothing but its own layer, which it removes when
    the last messenger is off-screen. Returns a promise that settles when the layer
    is gone, so a caller can restore its button afterwards.

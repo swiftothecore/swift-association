@@ -1,7 +1,7 @@
 "use strict";
 import { $, escapeRegExp, escapeHtml, prefersReducedMotion, shuffle, chance, normalizeTitle, normalizeLyric, fuzzySubstringRatio, levenshtein, mulberry32, dailySeed, censorText, anniversaryNote, thirteenNote } from "./util.js";
 import "./credential-guard.js";
-import { SITE_URL, canShare, shareOrCopy, simulateShare } from "./share.js";
+import { SITE_URL, copyToClipboard } from "./share.js";
 import { launchFlock } from "./messengers.js";
 import {
   TOTAL_ROUNDS, RECENT_WINDOW, NOVELTY_BOOST, DAILY_ALBUM_SKEW, DAILY_ALBUM_WEIGHT_EXP, DIFF_KEY, DEFAULT_SETTINGS,
@@ -11379,7 +11379,7 @@ function renderDailyResultPanel() {
 }
 
 /* The three pieces of the shared summary, derived once and used twice: they are what
-   the stub PRINTS and what the share sheet SENDS, so a stub that shows one thing while
+   the stub PRINTS and what the tear COPIES, so a stub that shows one thing while
    pasting another is impossible by construction. */
 const shareDateLabel = (dateStr) =>
   new Date(dateStr + "T00:00:00Z").toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric", timeZone: "UTC" });
@@ -11393,8 +11393,8 @@ const shareScoreLine = () => {
 };
 
 // Wordle-style shareable summary built from the per-round results. The site address is
-// NOT in here — it travels as the share sheet's `url` field (which platforms render as a
-// link preview) and only gets appended to the text on the clipboard path.
+// NOT in here: the searcher's share sheet carries it as the `url` field (which platforms
+// render as a link preview), and the daily's clipboard path appends it as a last line.
 function buildShareString(dateStr) {
   return `Swift Song Association 🎵\nDaily Challenge · ${shareDateLabel(dateStr)}\n${shareGrid()}\n${shareScoreLine()}`;
 }
@@ -11416,16 +11416,13 @@ function tornEdgePath(seed) {
    share: the button shows exactly what lands in the paste, and the flock of messengers
    (js/messengers.js) carries it away.
 
-   Two things it must keep honest:
-     - the wording promises only what this browser can do, an OS share sheet where one
-       exists and the clipboard where it doesn't;
-     - `hidden` is the held-back-score variant. The stub prints no grid and no score
-       until it is torn, because a stub that showed them would spoil the very thing the
-       setting exists to hide. Spent on the first tear — a score reveals once.
+   One tear, one clipboard write. Deliberately NOT the OS share sheet: a sheet turns a
+   single deliberate gesture into a modal to dismiss, and the stub already says what it
+   is doing. `hidden` is the held-back-score variant — the stub prints no grid and no
+   score until it is torn, because a stub that showed them would spoil the very thing
+   the setting exists to hide. Spent on the first tear: a score reveals once.
 
-   shareOrCopy MUST be reached straight from the click with nothing awaited before it,
-   or the browser rejects the share sheet. The tear and the flock come after, and only
-   on an outcome that actually left the notebook. */
+   The tear and the flock come after the copy, and only once it actually succeeded. */
 function renderShareButton(dateStr, hidden) {
   const existing = $("shareStub");
   if (existing) existing.remove();
@@ -11447,9 +11444,9 @@ function renderShareButton(dateStr, hidden) {
   btn.className = "stub-body";
 
   const cta = () => {
-    if (held) return canShare() ? "tear to reveal & send" : "tear to reveal & copy";
-    if (torn) return canShare() ? "tear again to send" : "tear again to copy";
-    return canShare() ? "tear here to send" : "tear here to copy";
+    if (held) return "tear to reveal & copy";
+    if (torn) return "tear again to copy";
+    return "tear here to copy";
   };
   const paint = (ctaText) => {
     btn.innerHTML =
@@ -11472,19 +11469,14 @@ function renderShareButton(dateStr, hidden) {
 
   btn.addEventListener("click", async () => {
     if (btn.disabled) return;
-    const outcome = await shareOrCopy({
-      title: "Swift Song Association",
-      text: buildShareString(dateStr),
-      url: SITE_URL,
-    });
-    if (outcome === "cancelled") return;              // they dismissed the sheet; say nothing
-    if (outcome === "failed") { settle("copy failed"); return; }
+    const ok = await copyToClipboard(`${buildShareString(dateStr)}\n${SITE_URL}`);
+    if (!ok) { settle("copy failed"); return; }
 
     if (held) { $("finalScore").textContent = score; held = false; }   // reveal the held-back score
     btn.disabled = true;
     await tearOff(wrap, perf, btn, dateStr);
     torn = true;
-    settle(outcome === "shared" ? "sent ✓" : "copied ✓");
+    settle("copied ✓");
     btn.disabled = false;
   });
 
@@ -17743,15 +17735,10 @@ function buildDevApi() {
       },
       state: () => sfx.state(),
     },
-    // Sharing the daily result. The OS share sheet doesn't exist on most desktops, so
-    // `simulate(true)` fakes one (the payload goes to the console instead) and
-    // `simulate(false)` hides a real one — that's the only way to see both wordings of
-    // the button on one machine. Re-open the daily result to re-render its label.
-    // Session-only: it lives in the module, never in storage.
+    // Sharing the daily result. The stub copies and never opens a share sheet, so there
+    // is nothing to simulate here — payload() shows exactly what a tear puts on the
+    // clipboard.
     share: {
-      can: () => canShare(),
-      native: () => typeof navigator.share === "function",
-      simulate: (v) => simulateShare(v),   // true = pretend | false = hide | null = tell the truth
       payload: () => ({ text: buildShareString(todayKey()), url: SITE_URL }),   // needs a daily result on screen
       // Fly the flock without sending anything. Off the stub when one is on screen,
       // otherwise from the middle of the page, so the drawings can be judged in place
