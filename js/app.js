@@ -18379,6 +18379,7 @@ function buildDevApi() {
     // Challenges (start any one; Impostor helpers for the fake-word minigame)
     challenge: {
       list: () => CHALLENGE_ORDER.slice(),
+      open: () => openChallenges("start"),
       start: (id) => startChallenge(id),
       // startChallenge silently refuses a locked challenge, so `start` alone can't reach any
       // non-free one. These open the door directly, without the token wallet or Paper Rings.
@@ -18872,6 +18873,24 @@ function buildDevApi() {
       set: (t) => { settings.theme = ["light", "system", "dark"].includes(t) ? t : "light"; saveSettings(settings); applySettings(); if ($("settingsModal") && $("settingsModal").classList.contains("open")) renderSettingsBody(); return effectiveTheme(); },
       toggle: () => window.__dev.theme.set(effectiveTheme() === "dark" ? "light" : "dark"),
       cycle: () => { const order = ["light", "system", "dark"]; const i = order.indexOf(settings.theme || "light"); return window.__dev.theme.set(order[(i + 1) % order.length]); },
+    },
+    // Accessibility controls, kept beside theme because both repaint the current screen.
+    // These write the ordinary Settings values so every effect is exercised through its real
+    // preference path rather than through a dev-only class.
+    accessibility: {
+      get: () => ({ motion: settings.reduceMotion || "auto", flashing: !!settings.reducedFlashing }),
+      motion: (value) => {
+        settings.reduceMotion = ["auto", "on", "off"].includes(value) ? value : "auto";
+        saveSettings(settings); applySettings();
+        if ($("settingsModal") && $("settingsModal").classList.contains("open")) renderSettingsBody();
+        return window.__dev.accessibility.get();
+      },
+      flash: (value) => {
+        settings.reducedFlashing = value == null ? !settings.reducedFlashing : !!value;
+        saveSettings(settings); applySettings();
+        if ($("settingsModal") && $("settingsModal").classList.contains("open")) renderSettingsBody();
+        return window.__dev.accessibility.get();
+      },
     },
     // Misc
     setNoLog: (on) => { devNoLog = !!on; },

@@ -130,6 +130,12 @@ export function initDev(api) {
   const persistSel = select(api.challenge.list(), (x) => x, (x) => x);
   const ticketN = num(2);
   body.append(section("challenges",
+    row(btn("open shelf", () => api.challenge.open()),
+        btn("unlock all", () => { readout.textContent = `${api.challenge.unlockAll()} challenges unlocked`; }),
+        btn("tokens 9", () => { readout.textContent = `${api.challenge.tokens(9)} tokens`; })),
+    row(persistSel, btn("start", () => api.challenge.start(persistSel.value)),
+        btn("start dark", () => api.challenge.dark.start(persistSel.value)),
+        btn("dark diff", () => { console.log("[dev] dark diff", persistSel.value, api.challenge.dark.diff(persistSel.value)); toast("dark diff in console"); })),
     row(btn("unlock all dark sides", () => { const n = api.challenge.dark.unlockAll(); readout.textContent = `${n} dark sides unlocked — open Challenges`; }),
         btn("relock dark progress", () => { api.challenge.dark.reset(); readout.textContent = "dark progress cleared"; }, "warn")),
     row(persistSel, btn("ready a ticket", () => {
@@ -159,6 +165,17 @@ export function initDev(api) {
     row("start gold:", btn("re-roll", () => { api.ctaGold.roll(); readout.textContent = api.ctaGold.state(); }),
         btn("pin to nominal", () => { api.ctaGold.fix(); readout.textContent = api.ctaGold.state(); }),
         btn("state", () => { readout.textContent = api.ctaGold.state(); }))));
+
+  // ---- Appearance / accessibility -------------------------------------------
+  // These are visual QA controls, not a replacement Settings surface: the point is to
+  // switch the real persisted settings while checking a screen without navigating away.
+  const themeSel = select(["light", "system", "dark"], (x) => x, (x) => x);
+  const motionSel = select(["auto", "on", "off"], (x) => x, (x) => x);
+  body.append(section("appearance",
+    row(themeSel, btn("set theme", () => { readout.textContent = `theme: ${api.theme.set(themeSel.value)}`; }),
+        btn("cycle", () => { readout.textContent = `theme: ${api.theme.cycle()}`; })),
+    row("motion", motionSel, btn("set", () => { readout.textContent = `motion: ${api.accessibility.motion(motionSel.value).motion}`; }),
+        btn("toggle flash", () => { const s = api.accessibility.flash(); readout.textContent = `flashing: ${s.flashing ? "reduced" : "full"}`; }))));
 
   // ---- Onboarding / first-run ------------------------------------------------
   const obAlbumSel = select(["", ...api.STUDIO_ALBUMS], (x) => x, (x) => x || "no favourite");
@@ -256,6 +273,17 @@ export function initDev(api) {
           toast(`${y.album}: ${y.distinct}/${y.of} distinct — see console`);
         }))));
 
+  // ---- Dated marginalia / sharing ------------------------------------------
+  body.append(section("marginalia / share",
+    row(btn("next sacred 13", () => { const n = api.thirteen.next(); if (n) { api.thirteen.preview(n.date); showDate(n.date); } }),
+        btn("milestones", () => { console.table(api.milestone.dates()); toast("milestones in console"); }),
+        btn("13 dates", () => { console.table(api.thirteen.dates()); toast("sacred dates in console"); })),
+    row(btn("share native", () => { api.share.simulate(null); toast("native sharing restored"); }),
+        btn("share fallback", () => { api.share.simulate(false); toast("share fallback forced"); }),
+        btn("share pretend", () => { api.share.simulate(true); toast("pretend share forced"); })),
+    row(btn("card meta", () => { console.log("[dev] bracelet card", api.card.meta()); toast("card meta in console"); }),
+        btn("open card SVG", () => api.card.open()))));
+
   // ---- Seeding ---------------------------------------------------------------
   const achSel = select(api.ACHIEVEMENTS, (a) => a.id, (a) => a.name + (a.secret ? " (hidden)" : ""));
   const histN = num(25);
@@ -309,6 +337,55 @@ export function initDev(api) {
         btn("reduced flashing", () => toast(api.mastery.finale("flash")))),
     row(btn("open page", () => api.mastery.open()),
         btn("reset mastery", () => { api.mastery.reset(); toast("mastery reset"); }, "warn"))));
+
+  // ---- Collections and alternate shelves ------------------------------------
+  const polaroidSel = select(api.keepsakes.list(), (p) => p.id, (p) => p.name);
+  const albumSel = select(api.STUDIO_ALBUMS, (x) => x, (x) => x);
+  const shelfStateSel = select(["fresh", "played", "beaten", "perfect"], (x) => x, (x) => x);
+  const shelfDiffSel = select(api.MODE_ORDER, (x) => x, (x) => x);
+  const guestSel = select(api.guest.list(), (g) => g.id, (g) => g.name);
+  const guestStateSel = select(["fresh", "played", "admitted"], (x) => x, (x) => x);
+  body.append(section("collections / shelves",
+    row(polaroidSel, btn("develop", () => { api.keepsakes.develop(polaroidSel.value); toast("polaroid developed"); }),
+        btn("developing", () => { api.keepsakes.earn(polaroidSel.value); toast("polaroid developing"); }),
+        btn("open keepsakes", () => api.keepsakes.open())),
+    row(btn("all developed", () => { api.keepsakes.all(); toast("all polaroids developed"); }),
+        btn("clear keepsakes", () => { api.keepsakes.reset(); toast("keepsakes cleared"); }, "warn")),
+    row(albumSel, shelfDiffSel, btn("play album", () => api.album.play(albumSel.value, shelfDiffSel.value)),
+        btn("open albums", () => api.album.open())),
+    row(shelfStateSel, btn("fill albums", () => { api.album.fill(shelfStateSel.value, shelfDiffSel.value); toast("album board filled"); }),
+        btn("clear albums", () => { api.album.reset(); toast("album board cleared"); }, "warn")),
+    row(guestSel, btn("play guest", () => api.guest.play(guestSel.value, shelfDiffSel.value)),
+        btn("open guests", () => api.guest.open()),
+        btn("inspect", () => api.guest.inspect(guestSel.value).then((r) => { console.log("[dev] guest", r); toast("guest report in console"); }))),
+    row(guestStateSel, btn("fill guests", () => { api.guest.fill(guestStateSel.value, shelfDiffSel.value); toast("guest board filled"); }),
+        btn("clear guests", () => { api.guest.reset(); toast("guest board cleared"); }, "warn"))));
+
+  // ---- Custom mode / breadth -------------------------------------------------
+  body.append(section("custom / breadth",
+    row(btn("open custom", () => api.custom.open()), btn("play active", () => api.custom.play()),
+        btn("new dev preset", () => { const p = api.custom.seed(); toast(`preset: ${p.name}`); }),
+        btn("reset custom", () => { api.custom.reset(); toast("custom reset"); }, "warn")),
+    row(btn("active preset", () => { console.log("[dev] custom", api.custom.active()); toast("active preset in console"); }),
+        btn("explore all", () => { const r = api.breadth.exploreAll(); toast(`${r.seen.length}/${r.seen.length + r.missing.length} explored`); }),
+        btn("week all", () => { api.breadth.weekAll(); toast("all weekdays marked"); }),
+        btn("reset breadth", () => { api.breadth.reset(); toast("breadth reset"); }, "warn"))));
+
+  // ---- Bonus games / random goals -------------------------------------------
+  const bonusSel = select(api.bonus.list(), (g) => g.id, (g) => g.name);
+  const bonusN = num(10);
+  body.append(section("bonus / random",
+    row(bonusSel, btn("play", () => api.bonus.play(bonusSel.value)), btn("open shelf", () => api.bonus.open()),
+        btn("fill sleeve", () => toast(api.bonus.fill(10)))),
+    row("sample", bonusN, btn("show", () => { console.table(api.bonus.sample(bonusSel.value, +bonusN.value)); toast("bonus sample in console"); }),
+        btn("audit", () => { console.log("[dev] bonus audit", api.bonus.audit(bonusSel.value, 200)); toast("audit in console"); }),
+        btn("pressings", () => toast(api.bonus.discs()))),
+    row(btn("random sample", () => { console.log("[dev] random", api.random.sample(1000)); toast("random sample in console"); }),
+        btn("reset random", () => toast(api.random.reset()), "warn"),
+        btn("goal sample", () => { console.log("[dev] goals", api.goal.sample(1000)); toast("goal sample in console"); }),
+        btn("clear goal", () => toast(api.goal.clear()), "warn")),
+    row(btn("novelty report", () => { console.log("[dev] novelty", api.novelty.coverage()); toast("novelty in console"); }),
+        btn("forget words", () => { api.novelty.forget(); toast("word coverage cleared"); }, "warn"))));
 
   // ---- Visual eggs -----------------------------------------------------------
   const penSel = select(["", "quill", "fountain", "glitter"], (x) => x, (x) => x || "no pen");
