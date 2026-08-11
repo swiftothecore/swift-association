@@ -6321,9 +6321,12 @@
   /* Start-button words rows: each row previews the real button, scaled, wearing the words on
      offer. It is a live .play-cta and not a picture of one, for the same reason the paper and
      finish swatches are — a preview that is the thing cannot drift from it.
-     The button is held at a fixed 280px and scaled rather than reflowed, so "I'll write your
-     name" keeps the real button's proportions instead of wrapping to two lines at row width;
-     --cta-x then centres it in the slot. */
+     The button is laid out at full size and scaled rather than reflowed, so "I'll write your
+     name" keeps the real button's proportions instead of wrapping to two lines at row width.
+     280px is a FLOOR, not a width: the label is nowrap and the mark takes 28px of the content
+     box, so a fixed 280 shoved the longest label straight through the right border — and worse
+     as --text-size-adjust climbs. max-content lets the widest words push the button out
+     instead, and left:50% + translateX keeps whatever width results centred in the slot. */
   .rb-rows--cta .rb-row { padding: 7px 11px; min-height: 52px; }
   .rb-rows--cta .rb-row-ic {
     flex: 1 1 auto; width: auto; height: auto; min-width: 0; min-height: 40px;
@@ -6331,11 +6334,15 @@
     color: var(--ink);
   }
   .rb-rows--cta .rb-row-ic.rb-lock { flex: 0 0 15px; width: 15px; height: 15px; min-height: 0; color: var(--ink-soft); }
-  .cta-prev { position: relative; display: block; width: 100%; height: var(--cta-h, 39px); overflow: hidden; }
+  /* overflow stays visible: the scaled button is far narrower than the slot at every width, and
+     the only things reaching outside its box are the drawn shadow and the corner the -0.6deg
+     tilt lifts — both of which the real button on the start screen also puts outside its box. */
+  .cta-prev { position: relative; display: block; width: 100%; height: var(--cta-h, 39px); }
   .cta-prev .play-cta {
-    position: absolute; top: 0; left: var(--cta-x, calc((100% - 280px * var(--cta-k, 0.63)) / 2));
-    width: 280px; margin: 0; text-align: center; white-space: nowrap; pointer-events: none;
-    transform: scale(var(--cta-k, 0.63)) rotate(-0.6deg); transform-origin: left top;
+    position: absolute; top: 2px; left: 50%;
+    width: max-content; min-width: 280px; max-width: none;
+    margin: 0; text-align: center; white-space: nowrap; pointer-events: none;
+    transform: translateX(-50%) scale(var(--cta-k, 0.63)) rotate(-0.6deg); transform-origin: center top;
   }
   /* A shelf of nine buttons all bobbing and wiggling at once is a fairground, not a notebook.
      The idle animations belong to the ONE real button on the start screen. */

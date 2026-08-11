@@ -4106,8 +4106,9 @@ function buildButtonTile(buttons, m) {
 // it says, and the pair only reads as one object if a label previews in the finish you are
 // actually wearing.
 //
-// The button is held at a fixed 280px and scaled, so a long label ("I'll write your name")
-// keeps the real button's proportions instead of wrapping. --cta-x centres it in the slot.
+// The button is laid out at full size and scaled, so a long label ("I'll write your name")
+// keeps the real button's proportions instead of wrapping. 280px is its floor rather than its
+// width, or the longest label would run through the right border.
 function ctaPreviewHTML(labelId, finish) {
   const opt = labelId ? CTA_LABELS[labelId] : null;
   const mark = opt && opt.mark ? `<span class="cta-mark">${CTA_MARKS[opt.mark] || ""}</span>` : "";
