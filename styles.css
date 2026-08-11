@@ -706,6 +706,28 @@
     100% { opacity: 0; transform: rotate(-9deg) scale(1.15) translateY(-8px); }
   }
 
+  /* Thirteen small pencil strokes in the notebook margin form a quiet page register.
+     The irregular lengths and angles keep it handwritten rather than reading as app chrome. */
+  .page-register {
+    position: absolute; left: 14px; top: 88px; z-index: 6;
+    display: none; flex-direction: column; align-items: flex-start; gap: 7px;
+    width: 20px; pointer-events: none; user-select: none;
+  }
+  .page-register.show { display: flex; }
+  .page-register-mark {
+    display: block; width: var(--register-width, 8px); height: 2px;
+    border-radius: 999px; background: var(--ink-soft); opacity: 0.22;
+    transform: translateX(var(--register-x, 0)) rotate(var(--register-tilt, 0deg));
+    transform-origin: left center;
+    transition: width 0.24s ease, background-color 0.24s ease, opacity 0.24s ease;
+  }
+  .page-register-mark.is-complete { opacity: 0.62; }
+  .page-register-mark.is-current {
+    width: 14px; height: 3px; background: var(--ink-accent); opacity: 0.95;
+    box-shadow: 0 0.5px 0 rgba(43, 39, 34, 0.12);
+  }
+  body[data-reduce-motion="on"] .page-register-mark { transition: none; }
+
   /* infinite-mode lives: pencil tally strokes scrawled down the outer margin,
      each crossed out as a life is spent */
   .lives-tally {

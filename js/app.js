@@ -7688,6 +7688,7 @@ function renderBracelet() {
     ? Math.max(round, 1)
     : Math.min(Math.max(round, 1), sessionRounds());
   $("pageNum").textContent = pg;
+  renderPageRegister(pg, uncapped);
   // Voice the progress the bracelet shows visually (the SVG is aria-hidden). Only
   // re-announces when the text changes, so it fires on round advance and after a verdict.
   const sr = $("srStatus");
@@ -7695,6 +7696,27 @@ function renderBracelet() {
     sr.textContent = (uncapped ? `Round ${pg}. ` : `Page ${pg} of ${sessionRounds()}. `)
       + `${correct} correct so far.`;
   }
+}
+
+// A quiet, hand-drawn register in the paper margin for the notebook's canonical 13 pages.
+// Other run lengths already have their own progress language, so they do not borrow this motif.
+function renderPageRegister(page, uncapped) {
+  const el = $("pageRegister");
+  if (!el) return;
+  if (uncapped || sessionRounds() !== TOTAL_ROUNDS) {
+    el.classList.remove("show");
+    el.innerHTML = "";
+    return;
+  }
+  const widths = [8, 10, 7, 9, 8, 11, 7, 9, 8, 10, 7, 9, 8];
+  const tilts = [-2, 1, -1, 2, 0, -2, 1, -1, 2, -1, 1, -2, 0];
+  const shifts = [1, 0, 2, 0, 1, 0, 2, 1, 0, 1, 2, 0, 1];
+  el.innerHTML = widths.map((width, i) => {
+    const pageNumber = i + 1;
+    const state = pageNumber < page ? " is-complete" : pageNumber === page ? " is-current" : "";
+    return `<span class="page-register-mark${state}" style="--register-width:${width}px;--register-tilt:${tilts[i]}deg;--register-x:${shifts[i]}px"></span>`;
+  }).join("");
+  el.classList.add("show");
 }
 
 // Pencil tally in the margin: one mark per starting life, spent ones struck out.
