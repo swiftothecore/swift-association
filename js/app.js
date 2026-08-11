@@ -427,14 +427,17 @@ function applySettings() {
   // previews every finish at once, and each swatch is a real .play-cta carrying its own.
   const playCta = $("playBtn");
   if (playCta) {
-    if (settings.masteryButton) playCta.setAttribute("data-startbtn", settings.masteryButton);
+    // activeButtonFinish/activeCtaLabel, not the raw settings: either may hold "random", in
+    // which case what the button wears is this page load's roll.
+    const finish = activeButtonFinish();
+    if (finish) playCta.setAttribute("data-startbtn", finish);
     else playCta.removeAttribute("data-startbtn");
     // A Pride finish brings its ramp with it; every other finish paints from CSS and must be
     // left with no inline stripes at all, or a stale gradient would outlive the switch away.
-    const stripes = prideStripes(settings.masteryButton);
+    const stripes = prideStripes(finish);
     if (stripes) playCta.style.setProperty("--cta-stripes", stripes);
     else playCta.style.removeProperty("--cta-stripes");
-    writeCtaLabel(playCta, settings.masteryLabel);
+    writeCtaLabel(playCta, activeCtaLabel());
   }
   sfx.setEnabled(!!settings.sound);   // sound gate lives in js/sound.js
   paintSoundGear();                   // the corner icon is a view of settings.sound, never its own state
@@ -3758,12 +3761,17 @@ function renderMasteryPage() {
   renderTitleStepper();   // fills #titleStepper inside the titles tile (present only once unlocked)
 
   // Wire cosmetic selection: data-reward chooses that reward; data-reward-reset reverts a
-  // whole kind (pen / paper / charm) to its default.
+  // whole kind (pen / paper / charm) to its default; data-reward-random hands a kind over to
+  // chance. The three are separate attributes rather than sentinel reward ids so that neither
+  // "default" nor "random" can ever be mistaken for something in the ledger.
   body.querySelectorAll("[data-reward]").forEach((el) => {
     el.addEventListener("click", () => chooseMasteryCosmetic(el.getAttribute("data-reward"), el.getAttribute("data-variant")));
   });
   body.querySelectorAll("[data-reward-reset]").forEach((el) => {
     el.addEventListener("click", () => resetMasteryCosmetic(el.getAttribute("data-reward-reset")));
+  });
+  body.querySelectorAll("[data-reward-random]").forEach((el) => {
+    el.addEventListener("click", () => chooseRandomCosmetic(el.getAttribute("data-reward-random")));
   });
   // The Pride tray is pure disclosure: it opens and shuts in the DOM without re-rendering,
   // and picking a flag re-renders the page from scratch with it shut again.
@@ -3970,15 +3978,24 @@ function buildRewardBento(m, mLevel, unlocked) {
 // Small level pill shown top-right of a tile.
 function rbChip(text) { return `<span class="rb-chip">${escapeHtml(text)}</span>`; }
 
-// A dice control that hands its tile's whole set over to chance. It lives in the
-// tile header beside the level chip rather than among the options, because it is
-// an action on the set, not one more member of it. Shared shape: the paper and
-// start-button tiles can take one later without a second drawing.
-function rbRandomiser(attr, active, available, label) {
-  if (!available) return "";
-  return `<button type="button" class="rb-rand${active ? " active" : ""}" ${attr}` +
-    ` aria-pressed="${active ? "true" : "false"}" title="${escapeHtml(label)}"` +
-    ` aria-label="${escapeHtml(label)}">${masteryMarkup("die")}</button>`;
+// A tile's level pill with a die fused to its left end: the control that hands that tile's
+// whole set over to chance. Drawn as ONE object rather than two, because the randomiser is
+// not one more member of the set — it is a state the tile itself can be in. The die's circle
+// stands slightly proud of the pill and melts into it (#fuseGoo, painted on .rb-fuse::before
+// so the die and the words above it stay crisp).
+//
+// The die is raw MASTERY_ICONS markup, deliberately NOT run through masteryMarkup: that wraps
+// every icon in .charm, whose ::before lays a roundish highlighter smudge behind it, and a
+// square die on a round smudge reads as a clipped icon. A control is not a keepsake anyway.
+//
+// Falls back to a bare chip while the set is still locked — there is nothing to randomise yet.
+function rbRandChip(kind, text, active, available, label) {
+  if (!available) return rbChip(text);
+  return `<span class="rb-fuse${active ? " active" : ""}">` +
+    `<button type="button" class="rb-rand" data-reward-random="${kind}"` +
+      ` aria-pressed="${active ? "true" : "false"}" title="${escapeHtml(label)}"` +
+      ` aria-label="${escapeHtml(label)}">${MASTERY_ICONS.die}</button>` +
+    rbChip(text) + `</span>`;
 }
 
 // A stacked pick-list row — the shape the pens tile and the signature tile both wear: a glyph,
@@ -4009,13 +4026,48 @@ function buildPensTile(pens, m) {
     `<div class="rb-rows rb-rows--pen">${rows}</div></div>`;
 }
 
-// "random" is a VALUE of settings.masteryCharm, not a reward in the ladder — there is no
+// "random" is a VALUE a cosmetic setting can hold, not a reward in the ladder — there is no
 // MASTERY_REWARDS entry behind it and there must not be, since it grants nothing on its own.
-// So it gates on the charm SET being unlocked, which is what earns all eight at once.
-const CHARM_RANDOM = "random";
-function charmSetUnlocked(m) {
-  const first = MASTERY_REWARDS.find((r) => r.kind === "charm");
+// So it gates on that kind's SET being unlocked, which is what earns all its members at once.
+const COSMETIC_RANDOM = "random";
+function rewardSetUnlocked(m, kind) {
+  const first = MASTERY_REWARDS.find((r) => r.kind === kind);
   return !!(first && m.unlocked[first.id]);
+}
+const charmSetUnlocked = (m) => rewardSetUnlocked(m, "charm");
+
+// A random start button is a different animal from a random charm strand. The strand hangs
+// nine beads at once, so chance there is visible standing still. There is only ever ONE start
+// button, so its randomness has to be a cadence instead — and that cadence is the page load:
+// rolled once here, then held for the life of the tab. Rolling inside applySettings would
+// reshuffle the button every time the theme, the text size or a sound toggle changed, which
+// reads as a glitch rather than a surprise.
+//
+// The pools include the DEFAULT finish and the default words, the same way a random charm
+// strand can still deal a plain star: "random" means any of them, not any of the earned ones.
+//
+// The Pride flags are deliberately NOT in the finish pool. They are a set behind a doorway
+// rather than four more inks, and a flag worn without anyone having chosen it is a different
+// kind of thing from a random colour.
+const randomFinishPool = () => ["", ...MASTERY_REWARDS
+  .filter((r) => r.kind === "button" && r.id !== "btn-pride").map((r) => r.payload.button)];
+const randomLabelPool = () => ["", ...MASTERY_REWARDS
+  .filter((r) => r.kind === "label").map((r) => r.payload.label)];
+const pickOne = (arr) => arr[Math.floor(Math.random() * arr.length)] || "";
+let rolledFinish = "", rolledLabel = "";
+function rollRandomCosmetics() {
+  rolledFinish = pickOne(randomFinishPool());
+  rolledLabel = pickOne(randomLabelPool());
+}
+rollRandomCosmetics();
+// What the start button ACTUALLY wears right now: the stored pick, or this load's roll when
+// the stored pick is "random". Every surface that paints or previews the button reads these
+// rather than the raw setting, so a preview can never disagree with the button itself.
+function activeButtonFinish() {
+  return settings.masteryButton === COSMETIC_RANDOM ? rolledFinish : (settings.masteryButton || "");
+}
+function activeCtaLabel() {
+  return settings.masteryLabel === COSMETIC_RANDOM ? rolledLabel : (settings.masteryLabel || "");
 }
 
 // Charms hang from a bracelet strand on alternating drops. The random action lives in the
@@ -4029,10 +4081,8 @@ function buildCharmTile(charms, m) {
   });
   return `<div class="rb-tile rb-charm" style="grid-area:charm">` +
     `<div class="rb-tile-top"><span class="rb-tt">Bracelet charms</span>` +
-      `<span class="rb-tt-actions">` +
-        rbRandomiser(`data-reward="${CHARM_RANDOM}"`, active === CHARM_RANDOM, setUnlocked, "Give every bead its own charm") +
-        rbChip("Mastery 5") +
-      `</span></div>` +
+      rbRandChip("charm", "Mastery 5", active === COSMETIC_RANDOM, setUnlocked, "Give every bead its own charm") +
+    `</div>` +
     `<div class="rb-tt-sub">Hangs from every bead you earn · random gives each bead its own</div>` +
     `<div class="rb-strand"><span class="rb-cord"></span>` +
       `<span class="rb-clasp l"></span><span class="rb-clasp r"></span>` +
@@ -4154,8 +4204,10 @@ function buildButtonTile(buttons, m) {
     }
   });
   return `<div class="rb-tile rb-button" style="grid-area:button">` +
-    `<div class="rb-tile-top"><span class="rb-tt">Start button</span>${rbChip("Mastery 8")}</div>` +
-    `<div class="rb-tt-sub">Restyles your home-screen button</div>` +
+    `<div class="rb-tile-top"><span class="rb-tt">Start button</span>` +
+      rbRandChip("button", "Mastery 8", active === COSMETIC_RANDOM, setUnlocked, "A different finish every visit") +
+    `</div>` +
+    `<div class="rb-tt-sub">Restyles your home-screen button · random redraws it every visit</div>` +
     `<div class="rb-swatches">${sw}</div>${pride}</div>`;
 }
 // One row's preview: a real start button, scaled down, wearing the words on offer and the
@@ -4201,7 +4253,9 @@ function ctaRow(attr, labelId, name, active, finish) {
 function buildCtaTile(labels, m) {
   const setUnlocked = labels.length ? !!m.unlocked[labels[0].id] : false;
   const active = settings.masteryLabel || "";
-  const finish = settings.masteryButton || "";
+  // The finish the previews wear is the one the real button is wearing right now, which on a
+  // randomised button is this load's roll rather than the word "random".
+  const finish = activeButtonFinish();
   let rows = ctaRow(`data-reward-reset="label"`, "", "Start writing", active === "", finish);
   if (!setUnlocked) {
     // One slot for the whole set, not eight. The pens tile locks a row at a time because its
@@ -4217,8 +4271,10 @@ function buildCtaTile(labels, m) {
     });
   }
   return `<div class="rb-tile rb-cta" style="grid-area:cta">` +
-    `<div class="rb-tile-top"><span class="rb-tt">Start button words</span>${rbChip("Mastery 12")}</div>` +
-    `<div class="rb-tt-sub">Rewrites the label on your home-screen button</div>` +
+    `<div class="rb-tile-top"><span class="rb-tt">Start button words</span>` +
+      rbRandChip("label", "Mastery 12", active === COSMETIC_RANDOM, setUnlocked, "Different words every visit") +
+    `</div>` +
+    `<div class="rb-tt-sub">Rewrites the label on your home-screen button · random rewrites it every visit</div>` +
     `<div class="rb-rows rb-rows--cta">${rows}</div></div>`;
 }
 
@@ -4269,17 +4325,21 @@ function buildTitlesTile(m, unlocked) {
 // is honoured only if the reward itself declares it, so a variant can never smuggle in a
 // value the reward does not own, and the unlock guard below is still the reward's own.
 function chooseMasteryCosmetic(rewardId, variant) {
-  // The random strand has no reward entry to look up (it grants nothing), so the ledger
-  // guard below would refuse it forever. It rides the charm set's own unlock instead.
-  if (rewardId === CHARM_RANDOM) {
-    if (charmSetUnlocked(loadMastery())) applyMasteryCosmetic("charm", CHARM_RANDOM);
-    return;
-  }
   const r = MASTERY_REWARD_BY_ID[rewardId];
   const cos = r && MASTERY_COSMETICS[r.kind];
   if (!cos || !loadMastery().unlocked[rewardId]) return;   // guard: must be an unlocked cosmetic
   const owned = variant && (r.variants || []).some((v) => v.id === variant);
   applyMasteryCosmetic(r.kind, (owned ? variant : (r.payload && r.payload[cos.field])) || "");
+}
+// Hand a whole cosmetic kind over to chance. "random" has no reward entry to look up (it
+// grants nothing), so the ledger guard in chooseMasteryCosmetic would refuse it forever — it
+// rides its own set's unlock instead, the same unlock that earned every member it deals from.
+// Pressing it again while it is already on turns it back off, since the die is the only thing
+// marked "in use" while random is worn and there would otherwise be nothing to press.
+function chooseRandomCosmetic(kind) {
+  if (!MASTERY_COSMETICS[kind] || !rewardSetUnlocked(loadMastery(), kind)) return;
+  const worn = settings[MASTERY_COSMETICS[kind].setting] === COSMETIC_RANDOM;
+  applyMasteryCosmetic(kind, worn ? "" : COSMETIC_RANDOM);
 }
 // Reset a cosmetic kind to its default ("" clears the setting).
 function resetMasteryCosmetic(kind) {
@@ -17920,6 +17980,16 @@ function buildDevApi() {
       // The Pride flag ids, for feeding to button() above — the one finish that is a set, so
       // the ids are not guessable from the reward ladder.
       flags: () => PRIDE_BUTTONS.map((f) => f.id),
+      // Re-roll a randomised start button without reloading the page. The roll normally moves
+      // only at page load, which is exactly what makes a random finish or a random label hard
+      // to look at twice — this deals a new pair in place and repaints the button. Returns
+      // what it rolled; a kind not set to "random" ignores its half of the roll as usual.
+      reroll: () => {
+        rollRandomCosmetics();
+        applySettings();
+        if ($("masteryBody")) renderMasteryPage();
+        return { finish: rolledFinish || "(gold marker)", label: rolledLabel || "(start writing)" };
+      },
       // Preview a signature flourish without unlocking it: pass an id (swash/loop/rule/splatter/thirteen/crest) or "" for none.
       // The start button's words. Takes a CTA_LABELS key ("pen", "blank", …) or "" for the
       // default; applySettings is what actually rewrites the button, so it has to run.

@@ -60,7 +60,7 @@ if (location.pathname.endsWith('/index.html')) {
 <link rel="preload" href="fonts/courierprime-700-latin.woff2" as="font" type="font/woff2" crossorigin />
 <link rel="preload" href="fonts/courierprime-italic-latin.woff2" as="font" type="font/woff2" crossorigin />
   <link rel="stylesheet" href="ink.css" />
-  <link rel="stylesheet" href="styles.css?v=58" />
+  <link rel="stylesheet" href="styles.css?v=59" />
   <script src="js/ink.js" defer></script>
 </head>
 <body data-era="gold">
@@ -71,6 +71,16 @@ if (location.pathname.endsWith('/index.html')) {
   <filter id="charmWobble" x="-15%" y="-15%" width="130%" height="130%">
     <feTurbulence type="fractalNoise" baseFrequency="0.045" numOctaves="2" seed="7" result="noise"/>
     <feDisplacementMap in="SourceGraphic" in2="noise" scale="1.8" xChannelSelector="R" yChannelSelector="G"/>
+  </filter>
+  <!-- Metaball goo for the Mastery reward board's randomiser: the die's circle sits proud of
+       its level pill and melts into it, rather than floating beside it as a second object.
+       Blur the alpha, then slam the midtones back to opaque with the colour matrix — the
+       overlap of two blurred edges crosses the threshold and fuses; the outer edges stay put.
+       Applied to a background LAYER only (.rb-fuse::before), never to the die or the words,
+       which have to stay crisp. -->
+  <filter id="fuseGoo" x="-20%" y="-40%" width="140%" height="180%" color-interpolation-filters="sRGB">
+    <feGaussianBlur in="SourceGraphic" stdDeviation="2.4" result="blur"/>
+    <feColorMatrix in="blur" type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 20 -9"/>
   </filter>
   <!-- Brushed nickel for the guest shelf's hardware: the split ring every pass hangs from
        and the crimp at the foot of its strap. The hard stop mid-gradient is the specular
