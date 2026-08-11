@@ -1690,6 +1690,16 @@ export const ACH_ICONS = {
   // a thread climbing bead over bead, no rung repeated, tied off in a ribbon at the top
   // (NB: "bow" is taken by the archery charm further down)
   ribbon:  `<svg viewBox="0 0 24 24"><path class="ink" stroke-width="1.5" fill="none" d="M2.8 21.4 C8 20.4 12.4 15.6 15.4 8.6"/><g class="ink-fill"><circle cx="6" cy="20.5" r="1.1"/><circle cx="9.3" cy="18.1" r="1.2"/><circle cx="12" cy="14.6" r="1.3"/><circle cx="14" cy="11" r="1.4"/></g><path class="ink-fill" d="M16.2 7.4 C13.6 4.6 10.9 5 11.5 7.3 C12 9.3 14.3 9.2 16.2 7.4 Z"/><path class="ink-fill" d="M16.2 7.4 C18.8 4.6 21.5 5 20.9 7.3 C20.4 9.3 18.1 9.2 16.2 7.4 Z"/><circle class="ink-fill" cx="16.2" cy="7.4" r="1.2"/><path class="ink" stroke-width="1.3" fill="none" d="M17.4 8.5 C18 9.6 17.9 10.7 17.3 11.8"/></svg>`,
+  // The risk three, drawn as one family: beads are the score on those boards, so all three
+  // marks are about where the beads ended up rather than about the rule that moved them.
+  // the pot banked from a long way up — a column of beads falling the depth you rode, into
+  // the tin's slot. The height IS the achievement; the tin is the part you chose to do.
+  bankedpot:`<svg viewBox="0 0 24 24"><path class="ink" stroke-width="0.9" opacity="0.3" fill="none" stroke-dasharray="0.1 1.5" stroke-linecap="round" d="M13.4 3 C10.4 6 14 9 11 12.4"/><g class="ink-fill"><circle cx="13.6" cy="2.5" r="0.95"/><circle cx="10.4" cy="5.6" r="1.1"/><circle cx="13.4" cy="8.7" r="1.25"/><circle cx="10.6" cy="11.9" r="1.4"/></g><rect class="ink-fill" x="4.4" y="15.2" width="15.2" height="6.2" rx="1.2"/><path class="ink" stroke-width="1.05" d="M4.8 17.9 H19.2"/><rect x="9.4" y="15.9" width="5.2" height="1.2" rx="0.6" fill="currentColor" stroke="none"/><rect class="ink-fill" x="11" y="19.2" width="2" height="1.9" rx="0.5"/></svg>`,
+  // the shields never spent: three beads sitting under a bell jar, the glass unlifted
+  belljar: `<svg viewBox="0 0 24 24"><circle class="ink-fill" cx="12" cy="3.1" r="1.25"/><path class="ink" stroke-width="1" d="M12 4.35 V5.3"/><path class="ink-fill" d="M5.6 19 V11.6 C5.6 7.9 8.5 5.1 12 5.1 C15.5 5.1 18.4 7.9 18.4 11.6 V19 Z"/><path class="ink" stroke-width="0.95" opacity="0.45" fill="none" d="M8.3 13.8 C7.6 11.3 8.4 8.9 10.4 7.4"/><g class="ink-fill"><circle cx="9.1" cy="17.3" r="1.5"/><circle cx="12" cy="17.3" r="1.5"/><circle cx="14.9" cy="17.3" r="1.5"/></g><rect class="ink-fill" x="3.4" y="19" width="17.2" height="2.3" rx="0.9"/></svg>`,
+  // the lot shoved over the line, page after page — a heap of beads pushed to the edge of
+  // the rule, with the shove still hanging in the air behind it
+  allin:   `<svg viewBox="0 0 24 24"><g class="ink" stroke-width="1.1" opacity="0.5"><path d="M1.4 11.6 H3.9"/><path d="M1 14.4 H3.5"/><path d="M1.6 17.2 H4.1"/></g><g class="ink-fill" transform="rotate(5 12.6 15)"><circle cx="8.2" cy="17.5" r="1.9"/><circle cx="12.1" cy="17.5" r="1.9"/><circle cx="16" cy="17.5" r="1.9"/><circle cx="10.15" cy="14.1" r="1.9"/><circle cx="14.05" cy="14.1" r="1.9"/><circle cx="12.1" cy="10.7" r="1.9"/></g><path class="ink" stroke-width="1.7" d="M2.6 20.4 H21.4"/></svg>`,
 
   /* ---- Dark side milestone charms (the black seal's keepsakes) ---- */
   // the pub-sign dog, sat and waiting — your first walk into the dark
@@ -1698,6 +1708,10 @@ export const ACH_ICONS = {
   halo: `<svg viewBox="0 0 24 24"><path class="ink-fill" d="M12 20.8 C12 20.8 4.4 15.5 4.4 10.4 C4.4 7.7 6.4 6.1 8.5 6.1 C10 6.1 11.3 7 12 8.3 C12.7 7 14 6.1 15.5 6.1 C17.6 6.1 19.6 7.7 19.6 10.4 C19.6 15.5 12 20.8 12 20.8 Z"/><ellipse class="ink" cx="15.8" cy="3.6" rx="4.2" ry="1.45" transform="rotate(-17 15.8 3.6)" fill="none"/><path class="ink" stroke-width="1.1" opacity="0.6" d="M8.8 2.2 L10.4 2.7 M8.4 4.3 L10.0 4.5"/></svg>`,
   // the serpent wound around the apple — every dark side beaten, Eden yours
   eden: `<svg viewBox="0 0 24 24"><path class="ink" stroke-width="1.4" fill="none" d="M12 7.4 C11.9 6.0 12.5 4.9 13.7 4.1"/><path class="ink-fill" d="M12 7.9 C10 5.9 6.3 6.6 5.3 10.1 C4.3 13.8 6.9 18.5 9.5 19.6 C10.5 20 11.4 19.7 12 19.2 C12.6 19.7 13.5 20 14.5 19.6 C17.1 18.5 19.7 13.8 18.7 10.1 C17.7 6.6 14 5.9 12 7.9 Z"/><path class="ink" fill="none" stroke-width="1.8" d="M4.5 14.0 C8.4 16.8 11.6 12.4 14.6 13.6 C16.6 14.4 17.8 13.2 17.9 11.5 C18.0 10.2 17.6 9.2 16.8 8.5"/><circle class="ink-fill" cx="16.5" cy="7.3" r="1.3"/><path class="ink" stroke-width="1" d="M17.4 6.3 L18.4 5.2 M18.4 5.2 L19.1 5.8 M18.4 5.2 L17.8 4.5"/></svg>`,
+
+  // the desk after the temper: the inkwell over on its side, its mouth still running. Drawn
+  // as an outline puddle rather than a solid blot so it stays a charm and not a hole.
+  inkspill:`<svg viewBox="0 0 24 24"><g transform="rotate(-122 13.2 9.6)"><path class="ink-fill" d="M9 14.6 V10.2 C9 8.8 11.2 8.7 11.4 7.6 V5.6 H14.8 V7.6 C15 8.7 17.2 8.8 17.2 10.2 V14.6 Z"/><rect class="ink-fill" x="10.7" y="3.6" width="4.8" height="2" rx="0.6"/></g><path class="ink" stroke-width="1" opacity="0.6" fill="none" d="M8.6 13.9 C8.2 15 8.4 15.9 9.1 16.6"/><path class="ink-fill" d="M8.4 15.9 C5.9 16.2 4.2 17.4 4.7 18.7 C5.4 20.4 9.6 21.3 13.6 20.9 C16.7 20.6 19.7 20.1 20.3 18.8 C20.9 17.5 18.5 16.5 16.2 16.5 C14.1 16.5 13.2 17.7 11.2 17.4 C9.9 17.2 9.6 15.8 8.4 15.9 Z"/><g fill="currentColor" stroke="none"><circle cx="20.4" cy="13.6" r="0.6"/><circle cx="21.8" cy="15.9" r="0.45"/><circle cx="17.9" cy="11.4" r="0.4"/></g></svg>`,
 
   // TEMPORARY placeholder charm — a dashed frame around a question mark. Any icon set to
   // "placeholder" is art-pending (new challenges / achievements before their real icon is
@@ -1862,6 +1876,24 @@ export const ACH_ICONS = {
   // a tag on a string, written up in your own hand — call it what you want
   nametag: `<svg viewBox="0 0 24 24"><g transform="rotate(-9 12 13)"><path class="ink-fill" d="M8.4 7.4 H19.4 a1.4 1.4 0 0 1 1.4 1.4 V17.4 a1.4 1.4 0 0 1 -1.4 1.4 H8.4 L3.6 13.1 Z"/><circle cx="7" cy="13.1" r="1.15" fill="var(--paper)" stroke="currentColor" stroke-width="1.1"/><g class="ink" stroke-width="1.1" opacity="0.6"><path d="M10.6 11.4 H18"/><path d="M10.6 14.6 H15.6"/></g></g><path class="ink" stroke-width="1.2" fill="none" d="M7.1 13.4 C4.4 10.4 5.4 5.4 9.6 3.6"/><circle cx="10.9" cy="3.2" r="1.4" fill="none" stroke="currentColor" stroke-width="1.2"/></svg>`,
 
+  /* ---- The top rungs of the difficulty, album, Custom and guest ladders ---- */
+  // the cage with its middle bars sprung — tame and gentle until the circus life made her
+  // mean. The gap is the whole mark, so nothing is drawn inside it.
+  cage:    `<svg viewBox="0 0 24 24"><circle cx="12" cy="2.3" r="1.3" fill="none" stroke="currentColor" stroke-width="1.1"/><path class="ink" stroke-width="1.1" d="M12 3.6 V5.2"/><path class="ink-fill" fill="none" d="M7 19.5 V12.4 C7 8.5 9.2 5.2 12 5.2 C14.8 5.2 17 8.5 17 12.4 V19.5"/><g class="ink" stroke-width="1.1" fill="none"><path d="M9.4 6.6 V12.6"/><path d="M11.8 5.3 V12.6"/><path d="M14.2 6 V19.5"/><path d="M16.2 8.6 V19.5"/><path d="M7 12.6 H12.2"/><path d="M12.2 12.6 V19.5"/></g><path class="ink" stroke-width="2" d="M5.4 20 H18.6"/><circle cx="7" cy="12.8" r="0.65" fill="currentColor" stroke="none"/><g transform="rotate(-26 6.6 13.4)"><rect x="1.9" y="12.2" width="4.7" height="6.6" rx="0.5" fill="var(--paper)" stroke="currentColor" stroke-width="1.4"/><path class="ink" stroke-width="0.95" d="M3.5 12.9 V18.1 M5 12.9 V18.1"/></g><path class="ink-fill" d="M21.2 3.4 L21.7 4.6 L22.9 5.1 L21.7 5.6 L21.2 6.8 L20.7 5.6 L19.5 5.1 L20.7 4.6 Z"/></svg>`,
+  // the grandmother's cameo brooch, her profile cut into it — the singer in the family, kept
+  // on a pin. The beaded rim is a round-capped dashed ellipse, not thirteen little circles.
+  cameo:   `<svg viewBox="0 0 24 24"><ellipse class="ink-fill" cx="12" cy="12.2" rx="6.9" ry="8.5"/><ellipse cx="12" cy="12.2" rx="6" ry="7.6" fill="none" stroke="currentColor" stroke-width="0.9" stroke-dasharray="0.1 1.7" stroke-linecap="round" stroke-opacity="0.6"/><ellipse cx="12" cy="12.2" rx="5.1" ry="6.7" fill="var(--paper)" stroke="currentColor" stroke-width="0.85" stroke-opacity="0.45"/><path d="M10.2 8.2 C11.2 6.5 13.6 6.2 15.1 7.5 C16.6 8.8 16.8 10.8 16.2 12.6 C15.9 13.7 15.4 14.4 14.8 15.1 L15.1 16.4 C16.6 17 17.6 17.9 18 19 H6.6 C7 17.9 8.2 17 9.7 16.4 L10 15.2 C9.5 14.7 9.2 14.1 9.15 13.5 C8.75 13.7 8.35 13.5 8.5 13.05 C8.6 12.75 8.9 12.6 9 12.3 C8.6 12.2 8.2 11.9 8.45 11.5 L9.35 10.2 C9.4 9.5 9.7 8.8 10.2 8.2 Z" fill="currentColor" stroke="none"/></svg>`,
+  // the King of Hearts, dealt face up — the album named, on the hardest clock
+  kingcard:`<svg viewBox="0 0 24 24"><g transform="rotate(-7 12 12)"><rect class="ink-fill" x="4.4" y="2.6" width="15.2" height="18.8" rx="1.6"/><path class="ink" stroke-width="1.15" fill="none" d="M8.9 8.9 L9.6 5.1 L11.1 7.2 L12 4.4 L12.9 7.2 L14.4 5.1 L15.1 8.9 Z"/><path class="ink-fill" d="M12 18 C12 18 8 14.9 8 12.3 C8 11 9 10.2 10.05 10.2 C10.85 10.2 11.6 10.7 12 11.4 C12.4 10.7 13.15 10.2 13.95 10.2 C15 10.2 16 11 16 12.3 C16 14.9 12 18 12 18 Z"/><g fill="currentColor" stroke="none"><path d="M6.7 6.6 C6.7 6.6 5.3 5.5 5.3 4.7 C5.3 4.3 5.65 4.05 6 4.05 C6.3 4.05 6.55 4.25 6.7 4.5 C6.85 4.25 7.1 4.05 7.4 4.05 C7.75 4.05 8.1 4.3 8.1 4.7 C8.1 5.5 6.7 6.6 6.7 6.6 Z"/><path d="M17.3 17.4 C17.3 17.4 18.7 18.5 18.7 19.3 C18.7 19.7 18.35 19.95 18 19.95 C17.7 19.95 17.45 19.75 17.3 19.5 C17.15 19.75 16.9 19.95 16.6 19.95 C16.25 19.95 15.9 19.7 15.9 19.3 C15.9 18.5 17.3 17.4 17.3 17.4 Z"/></g></g></svg>`,
+  // the typed pages, clipped — an album's worth of words, given back word for word
+  manuscript:`<svg viewBox="0 0 24 24"><rect x="6.6" y="2.4" width="13.4" height="18" rx="0.9" fill="var(--paper)" stroke="currentColor" stroke-width="1.3" transform="rotate(6 13.3 11.4)"/><g transform="rotate(-4 11 12.4)"><rect x="4" y="3.4" width="13.6" height="18" rx="0.9" fill="var(--paper)" stroke="currentColor" stroke-width="1.7"/><rect x="6.2" y="9.6" width="8.6" height="1.5" rx="0.4" fill="currentColor" stroke="none" opacity="0.85"/><g class="ink" stroke-width="0.95" opacity="0.5"><path d="M6.2 13.4 H15.4"/><path d="M6.2 15.6 H15.4"/><path d="M6.2 17.8 H14.2"/><path d="M6.2 20 H11"/></g><path class="ink" stroke-width="1.1" fill="none" d="M9.8 8.2 V3.9 a1.9 1.9 0 0 0 -3.8 0 V8.6 a1.25 1.25 0 0 0 2.5 0 V4.9"/></g></svg>`,
+  // a letter out of its envelope, the salutation still in your own hand — you wrote the rules
+  // this run was played by, so the note on the card is handwriting, not type
+  letter:  `<svg viewBox="0 0 24 24"><g transform="rotate(4 12 9)"><rect x="5.8" y="2.6" width="12.4" height="12.6" rx="0.9" fill="var(--paper)" stroke="currentColor" stroke-width="1.4"/><path class="ink" stroke-width="1" opacity="0.7" fill="none" d="M8 6.2 C8.7 5.2 9.3 6.8 10.1 6 C10.8 5.3 11.4 6.5 12.2 6"/><circle cx="13.2" cy="6.4" r="0.5" fill="currentColor" stroke="none" opacity="0.7"/><g class="ink" stroke-width="0.95" opacity="0.45"><path d="M8 9.4 H16"/><path d="M8 11.6 H13.8"/></g></g><path d="M3 11.4 H21 V20.1 a1.1 1.1 0 0 1 -1.1 1.1 H4.1 A1.1 1.1 0 0 1 3 20.1 Z" fill="var(--paper)" stroke="currentColor" stroke-width="1.7"/><path class="ink" stroke-width="1.1" opacity="0.75" fill="none" d="M3.3 11.8 L12 17.5 L20.7 11.8"/></svg>`,
+  // the stamp that admits them, and the mark it left on the page
+  handstamp:`<svg viewBox="0 0 24 24"><g transform="rotate(-8 12 10)"><path class="ink-fill" d="M8.4 4.6 C8.4 2.7 10 1.6 12 1.6 C14 1.6 15.6 2.7 15.6 4.6 C15.6 5.9 14.7 6.5 13.7 6.8 H10.3 C9.3 6.5 8.4 5.9 8.4 4.6 Z"/><rect class="ink-fill" x="10.4" y="6.6" width="3.2" height="2.9" rx="0.6"/><rect class="ink-fill" x="5.6" y="9.4" width="12.8" height="4.3" rx="1"/><path class="ink" stroke-width="1.2" d="M6.6 13.9 H17.4"/></g><path class="ink" stroke-width="1.6" d="M2.8 20.6 H21.2"/><path class="ink-fill" stroke-width="1.1" opacity="0.55" d="M17.6 14.4 L18.5 16.2 L20.5 16.5 L19.05 17.9 L19.4 19.8 L17.6 18.9 L15.8 19.8 L16.15 17.9 L14.7 16.5 L16.7 16.2 Z"/></svg>`,
+  // their record, sung back off their own words — a ribbon mic with a voice either side of it
+  duetmic: `<svg viewBox="0 0 24 24"><g opacity="0.85"><g class="ink-fill" stroke-width="1.3"><ellipse cx="2.5" cy="7.5" rx="1.25" ry="0.95" transform="rotate(-20 2.5 7.5)"/><ellipse cx="19.7" cy="7" rx="1.25" ry="0.95" transform="rotate(-20 19.7 7)"/></g><g class="ink" stroke-width="0.95" fill="none"><path d="M3.7 7.1 V3.2 C4.5 3.7 5.1 4.1 5.2 5"/><path d="M20.9 6.6 V2.7 C21.7 3.2 22.3 3.6 22.4 4.5"/></g></g><rect class="ink-fill" x="8.4" y="3" width="7.2" height="9.4" rx="3.2"/><g class="ink" stroke-width="0.85" opacity="0.5"><path d="M8.7 6 H15.3"/><path d="M8.5 8 H15.5"/><path d="M8.7 10 H15.3"/></g><path class="ink" stroke-width="1.2" fill="none" d="M6.7 6.6 V10.2 a5.3 5.3 0 0 0 10.6 0 V6.6"/><path class="ink" stroke-width="1.5" d="M12 15.5 V19.2"/><path class="ink-fill" d="M8.3 21.2 C8.7 19.8 9.9 19.3 12 19.3 C14.1 19.3 15.3 19.8 15.7 21.2 Z"/></svg>`,
 };
 
 /* ---------- Mastery marks ----------
@@ -2331,8 +2363,8 @@ export const ACHIEVEMENTS = [
   // The two hardest single runs the game can ask for, and the top of their own ladders: Long
   // Live takes either of the top two difficulties, All Too Well only asks you to FINISH a
   // Lyricist game. These stay unearned long after the rest of the collection is closed.
-  { id: "whos-afraid",      name: "Who’s Afraid Of Little Old Me?", desc: "Perfect 13/13 on Ultra", secret: false, icon: "placeholder", sitting: true, earn: { cat: "difficulty", diff: "ultra" } },
-  { id: "marjorie",         name: "Marjorie",         desc: "Perfect 13/13 in Lyricist",           secret: false, icon: "placeholder", sitting: true, earn: { cat: "difficulty", diff: "lyricist" } },
+  { id: "whos-afraid",      name: "Who’s Afraid Of Little Old Me?", desc: "Perfect 13/13 on Ultra", secret: false, icon: "cage", sitting: true, earn: { cat: "difficulty", diff: "ultra" } },
+  { id: "marjorie",         name: "Marjorie",         desc: "Perfect 13/13 in Lyricist",           secret: false, icon: "cameo", sitting: true, earn: { cat: "difficulty", diff: "lyricist" } },
   { id: "ready-for-it",     name: "…Ready For It?",   desc: "Nail round 1 in under 2s",            secret: false, icon: "rocket", sitting: true, earn: { cat: "difficulty" } },
   { id: "i-did-something-bad", name: "I Did Something Bad", desc: "Answer right with under 0.5s left", secret: true, icon: "match" },
   { id: "branch-out",       name: "Time To Branch Out?", desc: "3 correct in a row from one album", secret: true, icon: "branch" },
@@ -2418,11 +2450,11 @@ export const ACHIEVEMENTS = [
   // their challenge is beaten — nobody rides a pot five deep by accident. Each one asks for
   // the thing its rule is really about: depth on Press, restraint on Insurance, nerve on
   // Wager. Deliberately NOT a rule that every challenge gets one; three of thirty-two.
-  { id: "i-knew-you-were-trouble", name: "I Knew You Were Trouble", desc: `Bank a pot on Press Your Luck ridden ${PRESS_FLOURISH_RIDE} pages deep`, secret: true, reveal: "press-your-luck", icon: "placeholder" },
-  { id: "untouchable",       name: "Untouchable",       desc: "Win Insurance with every shield still unspent", secret: true, reveal: "insurance", icon: "placeholder" },
-  { id: "the-man",           name: "The Man",           desc: "Win Confidence Wager having staked the most you could hold on every page", secret: true, reveal: "confidence-wager", icon: "placeholder" },
+  { id: "i-knew-you-were-trouble", name: "I Knew You Were Trouble", desc: `Bank a pot on Press Your Luck ridden ${PRESS_FLOURISH_RIDE} pages deep`, secret: true, reveal: "press-your-luck", icon: "bankedpot" },
+  { id: "untouchable",       name: "Untouchable",       desc: "Win Insurance with every shield still unspent", secret: true, reveal: "insurance", icon: "belljar" },
+  { id: "the-man",           name: "The Man",           desc: "Win Confidence Wager having staked the most you could hold on every page", secret: true, reveal: "confidence-wager", icon: "allin" },
   // Dark sides. A milestone rather than a flourish (no challenge named), so it stays visible.
-  { id: "mad-woman",        name: "Mad Woman",        desc: "Beat a dark side on your first attempt", secret: false, icon: "placeholder", sitting: true, earn: { cat: "dark" } },
+  { id: "mad-woman",        name: "Mad Woman",        desc: "Beat a dark side on your first attempt", secret: false, icon: "inkspill", sitting: true, earn: { cat: "dark" } },
   { id: "the-lakes",        name: "The Lakes",        desc: "Climb to the Rarest tier in Adaptive",  secret: false, icon: "lake", sitting: true, earn: { cat: "adaptive" } },
   { id: "stay-stay-stay",   name: "Stay Stay Stay",   desc: "Reach Rarest and finish there without slipping", secret: false, icon: "anchor", sitting: true, earn: { cat: "adaptive" } },
   { id: "a-place-in-this-world", name: "A Place In This World", desc: "Beat your first album in Album Focus", secret: false, icon: "map", sitting: true, earn: { cat: "album" } },
@@ -2431,8 +2463,8 @@ export const ACHIEVEMENTS = [
   { id: "starlight",        name: "Starlight",        desc: "Perfect all 12 albums in Album Focus",  secret: false, icon: "constellation" },
   // Gold Rush perfects at any difficulty; these are the two top rungs, and they ask for
   // different things — naming a record cold on a 5s clock, or having its words by heart.
-  { id: "king-of-my-heart", name: "King Of My Heart", desc: "Perfect an album on Ultra",            secret: false, icon: "placeholder", sitting: true, earn: { cat: "album", diff: "ultra" } },
-  { id: "the-manuscript",   name: "The Manuscript",   desc: "Perfect an album in Lyricist",         secret: false, icon: "placeholder", sitting: true, earn: { cat: "album", diff: "lyricist" } },
+  { id: "king-of-my-heart", name: "King Of My Heart", desc: "Perfect an album on Ultra",            secret: false, icon: "kingcard", sitting: true, earn: { cat: "album", diff: "ultra" } },
+  { id: "the-manuscript",   name: "The Manuscript",   desc: "Perfect an album in Lyricist",         secret: false, icon: "manuscript", sitting: true, earn: { cat: "album", diff: "lyricist" } },
   /* ---- Custom mode (your own levers, your own rules) ---- */
   { id: "ours",             name: "Ours",             desc: "Finish your first Custom run",         secret: false, icon: "levers", sitting: true },
   { id: "mine",             name: "Mine",             desc: `Keep ${CUSTOM_PRESET_SHELF} custom presets on the shelf at once`, secret: false, icon: "presetbox", sitting: true },
@@ -2440,12 +2472,12 @@ export const ACHIEVEMENTS = [
   // The one Custom charm that rewards authoring something punishing rather than comfortable.
   // "No easier than Ultra" is checked lever by lever against MODES.ultra (see customAtLeastUltra),
   // so retuning Ultra retunes this with it rather than leaving a stale set of numbers here.
-  { id: "dear-reader",      name: "Dear Reader",      desc: "Perfect a full Custom run tuned no easier than Ultra", secret: false, icon: "placeholder", sitting: true },
+  { id: "dear-reader",      name: "Dear Reader",      desc: "Perfect a full Custom run tuned no easier than Ultra", secret: false, icon: "letter", sitting: true },
   /* ---- Guest shelf (other artists' catalogues) ---- */
   { id: "welcome-to-new-york", name: "Welcome To New York", desc: "Admit a guest to the shelf", secret: false, icon: "guestpass", sitting: true, earn: { cat: "guest" } },
   // Admission already means a perfect, hint-free run, so these are the rungs above it.
-  { id: "better-man",       name: "Better Man",       desc: "Admit a guest on Hard or Ultra",       secret: false, icon: "placeholder", sitting: true, earn: { cat: "guest", diff: "hard" } },
-  { id: "everything-has-changed", name: "Everything Has Changed", desc: "Admit a guest in Lyricist", secret: false, icon: "placeholder", sitting: true, earn: { cat: "guest", diff: "lyricist" } },
+  { id: "better-man",       name: "Better Man",       desc: "Admit a guest on Hard or Ultra",       secret: false, icon: "handstamp", sitting: true, earn: { cat: "guest", diff: "hard" } },
+  { id: "everything-has-changed", name: "Everything Has Changed", desc: "Admit a guest in Lyricist", secret: false, icon: "duetmic", sitting: true, earn: { cat: "guest", diff: "lyricist" } },
   /* ---- Skills & Mastery ---- */
   { id: "bigger-than-the-whole-sky", name: "Bigger Than The Whole Sky", desc: "Press the wax and unlock Mastery", secret: false, icon: "waxpress" },
   { id: "superstar",        name: "Superstar",        desc: `Take a single skill all the way to level ${SKILL_MAX_LEVEL}`, secret: false, icon: "rosette" },
