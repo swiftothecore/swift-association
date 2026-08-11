@@ -3922,6 +3922,17 @@ function buildRewardBento(m, mLevel, unlocked) {
 // Small level pill shown top-right of a tile.
 function rbChip(text) { return `<span class="rb-chip">${escapeHtml(text)}</span>`; }
 
+// A dice control that hands its tile's whole set over to chance. It lives in the
+// tile header beside the level chip rather than among the options, because it is
+// an action on the set, not one more member of it. Shared shape: the paper and
+// start-button tiles can take one later without a second drawing.
+function rbRandomiser(attr, active, available, label) {
+  if (!available) return "";
+  return `<button type="button" class="rb-rand${active ? " active" : ""}" ${attr}` +
+    ` aria-pressed="${active ? "true" : "false"}" title="${escapeHtml(label)}"` +
+    ` aria-label="${escapeHtml(label)}">${masteryMarkup("die")}</button>`;
+}
+
 // A stacked pick-list row — the shape the pens tile and the signature tile both wear: a glyph,
 // a name, and a tag that reads "in use" on the row you're wearing. The two kinds differ only
 // in how much room the glyph needs, which the list's variant class handles.
@@ -3959,8 +3970,8 @@ function charmSetUnlocked(m) {
   return !!(first && m.unlocked[first.id]);
 }
 
-// Charms — the hero tile: charms hang from a bracelet strand on alternating drops. The last
-// bead is the random option, which hands each bead of a real strand its own charm.
+// Charms hang from a bracelet strand on alternating drops. The random action lives in the
+// tile header because it changes the whole strand rather than selecting one charm.
 function buildCharmTile(charms, m) {
   const setUnlocked = charmSetUnlocked(m);
   const active = settings.masteryCharm || "";
@@ -3968,16 +3979,18 @@ function buildCharmTile(charms, m) {
   charms.forEach((r, i) => {
     beads += charmBead(`data-reward="${r.id}"`, charmPreviewSVG(r.payload.charm), r.payload.charm, active === r.payload.charm, setUnlocked, i + 1);
   });
-  beads += charmBead(`data-reward="${CHARM_RANDOM}"`, masteryMarkup("die"), "random", active === CHARM_RANDOM, setUnlocked, charms.length + 1);
   return `<div class="rb-tile rb-charm" style="grid-area:charm">` +
-    `<div class="rb-tile-top"><span class="rb-tt">Bracelet charms</span>${rbChip("Mastery 5")}</div>` +
+    `<div class="rb-tile-top"><span class="rb-tt">Bracelet charms</span>` +
+      `<span class="rb-tt-actions">` +
+        rbRandomiser(`data-reward="${CHARM_RANDOM}"`, active === CHARM_RANDOM, setUnlocked, "Give every bead its own charm") +
+        rbChip("Mastery 5") +
+      `</span></div>` +
     `<div class="rb-tt-sub">Hangs from every bead you earn · random gives each bead its own</div>` +
     `<div class="rb-strand"><span class="rb-cord"></span>` +
       `<span class="rb-clasp l"></span><span class="rb-clasp r"></span>` +
       `<div class="rb-beads">${beads}</div></div></div>`;
 }
-// `glyph` is finished markup rather than a charm id, so the strand can hang a mark that
-// isn't a charm at all — the random die comes from MASTERY_ICONS, not from CHARMS.
+// `glyph` is finished markup rather than a charm id so the shared bead shape can render it.
 function charmBead(attr, glyph, name, active, available, idx) {
   const drop = idx % 2 === 0 ? "short" : "long";   // alternating hang, like a laid-out bracelet
   if (!available) {
