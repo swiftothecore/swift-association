@@ -1898,6 +1898,78 @@ export const ACH_ICONS = {
   handstamp:`<svg viewBox="0 0 24 24"><g transform="rotate(-8 12 10)"><path class="ink-fill" d="M8.4 4.6 C8.4 2.7 10 1.6 12 1.6 C14 1.6 15.6 2.7 15.6 4.6 C15.6 5.9 14.7 6.5 13.7 6.8 H10.3 C9.3 6.5 8.4 5.9 8.4 4.6 Z"/><rect class="ink-fill" x="10.4" y="6.6" width="3.2" height="2.9" rx="0.6"/><rect class="ink-fill" x="5.6" y="9.4" width="12.8" height="4.3" rx="1"/><path class="ink" stroke-width="1.2" d="M6.6 13.9 H17.4"/></g><path class="ink" stroke-width="1.6" d="M2.8 20.6 H21.2"/><path class="ink-fill" stroke-width="1.1" opacity="0.55" d="M17.6 14.4 L18.5 16.2 L20.5 16.5 L19.05 17.9 L19.4 19.8 L17.6 18.9 L15.8 19.8 L16.15 17.9 L14.7 16.5 L16.7 16.2 Z"/></svg>`,
   // their record, sung back off their own words — a ribbon mic with a voice either side of it
   duetmic: `<svg viewBox="0 0 24 24"><g opacity="0.85"><g class="ink-fill" stroke-width="1.3"><ellipse cx="2.5" cy="7.5" rx="1.25" ry="0.95" transform="rotate(-20 2.5 7.5)"/><ellipse cx="19.7" cy="7" rx="1.25" ry="0.95" transform="rotate(-20 19.7 7)"/></g><g class="ink" stroke-width="0.95" fill="none"><path d="M3.7 7.1 V3.2 C4.5 3.7 5.1 4.1 5.2 5"/><path d="M20.9 6.6 V2.7 C21.7 3.2 22.3 3.6 22.4 4.5"/></g></g><rect class="ink-fill" x="8.4" y="3" width="7.2" height="9.4" rx="3.2"/><g class="ink" stroke-width="0.85" opacity="0.5"><path d="M8.7 6 H15.3"/><path d="M8.5 8 H15.5"/><path d="M8.7 10 H15.3"/></g><path class="ink" stroke-width="1.2" fill="none" d="M6.7 6.6 V10.2 a5.3 5.3 0 0 0 10.6 0 V6.6"/><path class="ink" stroke-width="1.5" d="M12 15.5 V19.2"/><path class="ink-fill" d="M8.3 21.2 C8.7 19.8 9.9 19.3 12 19.3 C14.1 19.3 15.3 19.8 15.7 21.2 Z"/></svg>`,
+
+  /* ---- Bonus games shelf ----
+     Drawn off the SHELF's own furniture — the disc, the crate, the sleeve, the tape, the
+     hand of cards — rather than off Taylor's. A bonus run is never ranked beside a main one,
+     and its keepsakes should not look like they were.
+     Three deliberate pairs sit in here, and they are pairs on purpose:
+       · `taped` / `peeled` are one object in two states — Redacted with every strip still
+         down, and Redacted with every strip bought.
+       · `ringedword` / `mask` split Spot the Slip between the catch and the speed of it.
+       · `highcard` / `receipt` are the same hand played well and played badly.
+     Note these render on charm surfaces as PURE OUTLINE (.charm strokes both ink and
+     ink-fill and fills neither), so nothing here relies on one shape hiding another: the
+     disc leaving its sleeve is a half-disc flush to the sleeve's mouth rather than a whole
+     circle tucked behind it, and the fanned hand is the one place overlap is drawn on
+     purpose, because a fan of cards in line art shows every card's outline anyway. Secondary
+     detail is classless `stroke="currentColor"`, which is the only way to keep a hairline
+     hairline once the charm rules have set every ink stroke to 1.5. ---- */
+  // the needle down in the grooves — your first run played through. Drawn as the arm and
+  // the record it is sitting on rather than as a deck seen whole, because a disc with a
+  // stick across it is `dart` at 30px, and these two live in the same section.
+  tonearm: `<svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.2" opacity="0.5" stroke-linecap="round"><path d="M1.8 13.8 C6.4 12 14.6 11.6 21.4 12.8"/><path d="M1.8 16.5 C6.4 14.7 14.6 14.3 21.4 15.5"/><path d="M1.8 19.2 C6.4 17.4 14.6 17 21.4 18.2"/><path d="M1.8 21.9 C6.4 20.1 14.6 19.7 21.4 20.9"/></g><path class="ink" fill="none" stroke-width="1.6" d="M22.4 2.6 C20.8 3.8 20.4 5.6 18.8 6.9"/><circle class="ink-fill" cx="22.8" cy="2.1" r="1.2"/><g transform="rotate(28 16.4 8.2)"><rect class="ink-fill" x="14.4" y="6.2" width="4" height="4" rx="0.8"/></g><path class="ink" stroke-width="1.4" d="M15 9.9 L13.9 11.5"/><circle class="ink-fill" cx="13.6" cy="12.1" r="0.8"/></svg>`,
+  // the crate flipped through to the back: five sleeves still filed, the sixth stood up out
+  // of it. Five and one is the shelf's own count, not a decorative number.
+  crate:   `<svg viewBox="0 0 24 24"><rect class="ink-fill" x="15.2" y="2.4" width="6.2" height="7.4" rx="0.6"/><circle cx="18.3" cy="6.1" r="2" fill="var(--paper)" stroke="currentColor" stroke-width="0.9"/><circle cx="18.3" cy="6.1" r="0.5" fill="currentColor" stroke="none"/><rect class="ink-fill" x="2.4" y="9.8" width="19.2" height="11.6" rx="1.3"/><g fill="none" stroke="currentColor" stroke-width="1.3" opacity="0.55"><path d="M5.2 11.1 V15.8"/><path d="M7.8 11.1 V15.8"/><path d="M10.4 11.1 V15.8"/><path d="M13 11.1 V15.8"/><path d="M15.6 11.1 V15.8"/></g><rect x="8.6" y="17.8" width="6.8" height="1.9" rx="0.95" fill="var(--paper)" stroke="currentColor" stroke-width="0.95"/></svg>`,
+  // the whisk brush mid-stroke with the last crumbs going ahead of it — a game swept clean
+  broom:   `<svg viewBox="0 0 24 24"><g transform="rotate(-22 12 11)"><rect class="ink-fill" x="10.9" y="3.2" width="2.2" height="7.4" rx="1.1"/><path class="ink-fill" d="M9.3 10.6 H14.7 L16.2 18.8 H7.8 Z"/><path class="ink" stroke-width="1.1" d="M8.95 13.6 H15.05"/><g fill="none" stroke="currentColor" stroke-width="0.85" opacity="0.55"><path d="M10.5 14.2 L9.9 18.5"/><path d="M12 14.2 V18.7"/><path d="M13.5 14.2 L14.1 18.5"/></g></g><g fill="currentColor" stroke="none"><circle cx="20.4" cy="20.3" r="0.65"/><circle cx="22.3" cy="18.5" r="0.5"/><circle cx="21.5" cy="21.9" r="0.45"/></g></svg>`,
+  // the whole shelf swept, so the disc comes off the crate and goes on the wall: framed,
+  // matted, with its little plate under it
+  goldrecord:`<svg viewBox="0 0 24 24"><rect class="ink-fill" x="3.4" y="2.4" width="17.2" height="19.2" rx="1.2"/><circle cx="12" cy="10.4" r="6" fill="var(--paper)" stroke="currentColor" stroke-width="1.3"/><circle cx="12" cy="10.4" r="4.4" fill="none" stroke="currentColor" stroke-width="0.7" opacity="0.45"/><circle cx="12" cy="10.4" r="2.2" fill="none" stroke="currentColor" stroke-width="0.9"/><circle cx="12" cy="10.4" r="0.6" fill="currentColor" stroke="none"/><rect x="7" y="17.8" width="10" height="2.6" rx="0.5" fill="var(--paper)" stroke="currentColor" stroke-width="1.2"/></svg>`,
+  // the sleeve taken off the page and its record stood against it, the writing still on the
+  // face and the left edge torn where it came away from the notebook. The disc sits BESIDE
+  // the sleeve rather than rising out of its mouth: a dome on a flat top edge is a
+  // carrier-bag handle at charm size, however many grooves get drawn into it.
+  sleeve:  `<svg viewBox="0 0 24 24"><circle class="ink-fill" cx="17" cy="13.8" r="5.9"/><circle cx="17" cy="13.8" r="4.2" fill="none" stroke="currentColor" stroke-width="0.8" opacity="0.45"/><circle cx="17" cy="13.8" r="2.1" fill="var(--paper)" stroke="currentColor" stroke-width="1"/><circle cx="17" cy="13.8" r="0.5" fill="currentColor" stroke="none"/><g transform="rotate(-4 9 13.4)"><path class="ink-fill" d="M15.4 6.6 V20.4 H4.6 L3.3 18.1 L4.6 15.8 L3.3 13.5 L4.6 11.2 L3.3 8.9 L4.6 6.6 Z"/><g fill="none" stroke="currentColor" stroke-width="0.95" opacity="0.45" stroke-linecap="round"><path d="M6.6 10.4 H11.4"/><path d="M6.6 13 H9.8"/></g></g></svg>`,
+  // one word out of the line ringed in a loop that runs well past where it started, the way
+  // you ring a word you have already spotted. The tilt and the overshoot are load-bearing:
+  // a closed symmetric oval with a bar through it is an eye, not a ring.
+  ringedword:`<svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.05" opacity="0.42" stroke-linecap="round"><path d="M3.4 5 H8.6"/><path d="M10 5 H14.6"/><path d="M16 5 H20.6"/><path d="M3.2 12.2 H5.8"/><path d="M17.8 12.6 H20.8"/><path d="M3.4 19.4 H7.4"/><path d="M8.8 19.4 H13.6"/><path d="M15 19.4 H19"/></g><rect class="ink-fill" x="7.8" y="10.7" width="6.8" height="2.6" rx="0.6" transform="rotate(-7 11.2 12)"/><g transform="rotate(-7 11.6 12.3)"><path class="ink" fill="none" d="M15.4 9.8 C17.6 10.9 16.9 14.4 12.6 15.2 C9 15.8 6.4 14.8 6.7 12.5 C7 10.2 10.6 8.9 13.9 9.4 C15.9 9.7 17.2 10.5 17.9 11.7"/></g></svg>`,
+  // the fork struck and still ringing — you had the song off one line, which is as close to
+  // knowing it from the pitch alone as this game gets. Narrow tines and a stub of a foot:
+  // widen the bowl or sit it on a saucer and the whole thing turns into a trophy.
+  tuningfork:`<svg viewBox="0 0 24 24"><path class="ink" fill="none" stroke-width="1.7" d="M9.2 2.4 V11.4 a2.8 2.8 0 0 0 5.6 0 V2.4"/><path class="ink" stroke-width="1.7" d="M12 14.2 V19.6"/><rect class="ink-fill" x="10.4" y="19.4" width="3.2" height="2.2" rx="0.9"/><g fill="none" stroke="currentColor" stroke-width="1.05" opacity="0.6" stroke-linecap="round"><path d="M6.6 4 C5.3 5.3 5.3 7.5 6.6 8.8"/><path d="M17.4 4 C18.7 5.3 18.7 7.5 17.4 8.8"/></g><g fill="none" stroke="currentColor" stroke-width="0.95" opacity="0.32" stroke-linecap="round"><path d="M4 2.6 C2 4.8 2 8 4 10.2"/><path d="M20 2.6 C22 4.8 22 8 20 10.2"/></g></svg>`,
+  // the lifted word dropped back into its own gap and sitting square in it — the ruled line
+  // runs into one side of the slot and out of the other, and the block carries a scrap of
+  // handwriting so it reads as a WORD put back rather than a part clicked into a fitting.
+  // Square is the rest of the charm: this is earned by spelling every word exactly.
+  slotback:`<svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.05" opacity="0.42" stroke-linecap="round"><path d="M3.2 4.4 H20.8"/><path d="M3.2 19.8 H16.4"/><path d="M2.6 12 H4"/><path d="M20 12 H21.4"/></g><rect x="4.2" y="7.6" width="15.6" height="8.8" rx="1" fill="none" stroke="currentColor" stroke-width="1.1" stroke-dasharray="1.9 1.6" opacity="0.6"/><rect class="ink-fill" x="5.6" y="9" width="12.8" height="6" rx="0.8"/><path fill="none" stroke="currentColor" stroke-width="1.2" opacity="0.8" stroke-linecap="round" d="M7.4 12.4 C8.2 10.8 8.8 13.4 9.8 12.6 C10.6 11.9 11 13.2 12 12.4 C13 11.6 13.6 13.2 14.6 12.4 C15.2 11.9 15.9 12.2 16.4 12.7"/></svg>`,
+  // Redacted with the tape never touched: the verse taped shut end to end, and the title
+  // signed underneath it anyway. Laid slightly askew, the way tape goes on by hand.
+  taped:   `<svg viewBox="0 0 24 24"><g class="ink-fill"><rect x="3.4" y="3.6" width="7.6" height="3" rx="0.4" transform="rotate(-1.6 7.2 5.1)"/><rect x="12.4" y="3.6" width="8.2" height="3" rx="0.4" transform="rotate(1.1 16.5 5.1)"/><rect x="3.4" y="8.8" width="5.4" height="3" rx="0.4" transform="rotate(1.3 6.1 10.3)"/><rect x="10.2" y="8.8" width="10.4" height="3" rx="0.4" transform="rotate(-1 15.4 10.3)"/><rect x="3.4" y="14" width="9.4" height="3" rx="0.4" transform="rotate(-1.2 8.1 15.5)"/><rect x="14.2" y="14" width="6.4" height="3" rx="0.4" transform="rotate(1.4 17.4 15.5)"/></g><path class="ink" fill="none" stroke-width="1.6" d="M4.2 21 C5.8 17.8 6.8 21.6 8.5 19.8 C9.9 18.4 10.7 21.4 12.4 20.1 C14.1 18.8 15.4 21 17.2 19.5 C18.3 18.6 19.4 19.4 20.4 20.4"/></svg>`,
+  // the rarest card taken out of the fan and held up clear of it. The gap under it is doing
+  // the work — the pip alone would only say "a card", not "the thin air above the hand".
+  highcard:`<svg viewBox="0 0 24 24"><g class="ink-fill"><rect x="2.8" y="15" width="6" height="8.2" rx="0.8" transform="rotate(-16 5.8 19.1)"/><rect x="7.3" y="15" width="6" height="8.2" rx="0.8" transform="rotate(-5 10.3 19.1)"/><rect x="10.7" y="15" width="6" height="8.2" rx="0.8" transform="rotate(6 13.7 19.1)"/><rect x="15.2" y="15" width="6" height="8.2" rx="0.8" transform="rotate(17 18.2 19.1)"/></g><g transform="rotate(-6 12 6.4)"><rect class="ink-fill" x="8.6" y="1.8" width="6.8" height="9.2" rx="0.9"/><path d="M12 3.9 L13.4 6.4 L12 8.9 L10.6 6.4 Z" fill="currentColor" stroke="none"/></g></svg>`,
+  // four links running up the page and not one of them open, with the sparks off the last
+  // one still in the air. The links alternate face-on and edge-on, which is the only thing
+  // separating a chain from a row of beads once everything is drawn in outline.
+  chain:   `<svg viewBox="0 0 24 24"><g class="ink" fill="none"><ellipse cx="5.6" cy="18.4" rx="3.4" ry="2.1" transform="rotate(-45 5.6 18.4)"/><ellipse cx="9.7" cy="14.3" rx="3.4" ry="1.15" transform="rotate(-45 9.7 14.3)"/><ellipse cx="13.8" cy="10.2" rx="3.4" ry="2.1" transform="rotate(-45 13.8 10.2)"/><ellipse cx="17.9" cy="6.1" rx="3.4" ry="1.15" transform="rotate(-45 17.9 6.1)"/></g><g fill="none" stroke="currentColor" stroke-width="1.2" opacity="0.8" stroke-linecap="round"><path d="M21 3.4 L22.4 2"/><path d="M21.6 6.2 L23.2 5.7"/><path d="M18.6 1.8 L19.1 0.5"/></g><g fill="currentColor" stroke="none"><circle cx="8.4" cy="9.2" r="0.55"/><circle cx="5.6" cy="11.6" r="0.45"/></g></svg>`,
+  // the till roll for a card everybody already had: torn top and bottom, three lines of
+  // nothing much, and a total ruled under it
+  receipt: `<svg viewBox="0 0 24 24"><g transform="rotate(-5 12 12)"><path class="ink-fill" d="M6.6 3.4 L8.2 4.3 L9.8 3.4 L11.4 4.3 L13 3.4 L14.6 4.3 L16.2 3.4 L17.4 4.2 V19.5 L16.2 20.6 L14.6 19.7 L13 20.6 L11.4 19.7 L9.8 20.6 L8.2 19.7 L6.6 20.6 Z"/><g fill="none" stroke="currentColor" stroke-width="0.9" opacity="0.45" stroke-linecap="round"><path d="M8.4 7.9 H15.6"/><path d="M8.4 10.1 H13.9"/><path d="M8.4 12.3 H15.2"/></g><path fill="none" stroke="currentColor" stroke-width="0.9" opacity="0.7" d="M8.4 14.4 H15.6"/><path fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.9" stroke-linecap="round" d="M8.4 17 H12.2"/></g></svg>`,
+  // the same page after you bought the lot: every strip off and heaped up any old how, the
+  // verse above finally readable. The twin of `taped`, and meant to be read against it —
+  // that one is a block laid straight, this one is a mess, and that is the whole difference.
+  peeled:  `<svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.05" opacity="0.4" stroke-linecap="round"><path d="M3.6 4 H20.4"/><path d="M3.6 7 H16.8"/><path d="M3.6 10 H19.2"/></g><g class="ink-fill"><rect x="3.2" y="12.4" width="11.6" height="2.7" rx="0.6" transform="rotate(-13 9 13.75)"/><rect x="9" y="15.4" width="12.4" height="2.7" rx="0.6" transform="rotate(9 15.2 16.75)"/><rect x="2.6" y="18.6" width="10.2" height="2.7" rx="0.6" transform="rotate(-5 7.7 19.95)"/><rect x="13.8" y="19" width="7.8" height="2.7" rx="0.6" transform="rotate(16 17.7 20.35)"/></g></svg>`,
+  // ten hands dealt and not one card played: the web got there first
+  cobweb:  `<svg viewBox="0 0 24 24"><g transform="rotate(-6 12 12)"><rect class="ink-fill" x="5.6" y="3.4" width="12.8" height="17.2" rx="1.3"/><g fill="none" stroke="currentColor" stroke-width="1.05" opacity="0.85" stroke-linecap="round"><path d="M6.1 3.9 L15.1 3.9"/><path d="M6.1 3.9 L13.7 8.6"/><path d="M6.1 3.9 L10.5 12.1"/><path d="M6.1 3.9 V13.3"/><path d="M9.7 3.9 C8.8 5.6 7.8 6.6 6.1 7.5"/><path d="M13 3.9 C11.9 6.8 9.6 9.3 6.1 10.7"/></g></g></svg>`,
+  // one ring out. The whole charm is the couple of millimetres between the tip and the
+  // middle, so nothing else on the board is allowed to be interesting.
+  dart:    `<svg viewBox="0 0 24 24"><circle class="ink-fill" cx="10.6" cy="13.4" r="7.6"/><circle cx="10.6" cy="13.4" r="4.9" fill="var(--paper)" stroke="currentColor" stroke-width="1"/><circle cx="10.6" cy="13.4" r="2.1" fill="none" stroke="currentColor" stroke-width="1"/><circle cx="10.6" cy="13.4" r="0.75" fill="currentColor" stroke="none"/><path class="ink" stroke-width="2.4" d="M14.1 10.2 L16.7 8"/><path class="ink" stroke-width="1.2" d="M12.5 11.6 L14.1 10.2"/><path class="ink" stroke-width="1.2" d="M16.7 8 L19.1 5.9"/><path class="ink-fill" d="M18.6 6.9 L21.1 2.6 L22.9 4.1 L20.4 8.4 Z"/></svg>`,
+  // the mask off before it was ever properly on. The ties streaming and the air behind them
+  // are the two seconds — a mask sitting still would only say "impostor", not "caught".
+  mask:    `<svg viewBox="0 0 24 24"><g transform="rotate(-10 13 12)"><path class="ink-fill" d="M4.6 11.2 C4.6 8.7 6.5 7.4 9.2 7.4 C10.9 7.4 12.2 7.9 13 8.6 C13.8 7.9 15.1 7.4 16.8 7.4 C19.5 7.4 21.4 8.7 21.4 11.2 C21.4 14.5 19.2 17 16.4 17 C14.3 17 13.4 15.2 13 13.7 C12.6 15.2 11.7 17 9.6 17 C6.8 17 4.6 14.5 4.6 11.2 Z"/><ellipse cx="8.9" cy="11.6" rx="2" ry="1.45" fill="var(--paper)" stroke="currentColor" stroke-width="0.9" transform="rotate(-7 8.9 11.6)"/><ellipse cx="17.1" cy="11.6" rx="2" ry="1.45" fill="var(--paper)" stroke="currentColor" stroke-width="0.9" transform="rotate(7 17.1 11.6)"/></g><g fill="none" stroke="currentColor" stroke-width="1.1" opacity="0.7" stroke-linecap="round"><path d="M4.8 13 C3.4 14.6 2.2 15.8 1 16.2"/><path d="M5.6 15.2 C4.6 17.2 3.6 18.8 2.4 20"/></g><g fill="none" stroke="currentColor" stroke-width="1" opacity="0.4" stroke-linecap="round"><path d="M0.8 6.2 H4.6"/><path d="M0.4 9 H3.2"/></g></svg>`,
 };
 
 /* ---------- Mastery marks ----------
@@ -2490,28 +2562,28 @@ export const ACHIEVEMENTS = [
      it writes outside BONUS_KEY, and that is deliberate: a charm is a collection entry, never
      a ranking, so it doesn't breach the rule that a bonus run is never ranked beside the main
      game. Nothing here may fold stats, history, records or skill XP. */
-  { id: "play-it-again",    name: "Play It Again",    desc: "Finish your first bonus run",          secret: false, icon: "placeholder", sitting: true, earn: { cat: "bonus" } },
-  { id: "vinyl-shelf",      name: "Vinyl Shelf",      desc: "Play every game on the shelf",         secret: false, icon: "placeholder" },
-  { id: "a-clean-kill",     name: "A Clean Kill",     desc: "Clean-sweep a bonus game: ten pages cleared", secret: false, icon: "placeholder", sitting: true, earn: { cat: "bonus" } },
-  { id: "every-single-one", name: "Every Single One", desc: "Clean-sweep every game on the shelf",  secret: false, icon: "placeholder" },
-  { id: "one-last-souvenir", name: "One Last Souvenir", desc: "Take a sleeve off the page and keep it", secret: false, icon: "placeholder", sitting: true, earn: { cat: "bonus" } },
+  { id: "play-it-again",    name: "Play It Again",    desc: "Finish your first bonus run",          secret: false, icon: "tonearm", sitting: true, earn: { cat: "bonus" } },
+  { id: "vinyl-shelf",      name: "Vinyl Shelf",      desc: "Play every game on the shelf",         secret: false, icon: "crate" },
+  { id: "a-clean-kill",     name: "A Clean Kill",     desc: "Clean-sweep a bonus game: ten pages cleared", secret: false, icon: "broom", sitting: true, earn: { cat: "bonus" } },
+  { id: "every-single-one", name: "Every Single One", desc: "Clean-sweep every game on the shelf",  secret: false, icon: "goldrecord" },
+  { id: "one-last-souvenir", name: "One Last Souvenir", desc: "Take a sleeve off the page and keep it", secret: false, icon: "sleeve", sitting: true, earn: { cat: "bonus" } },
   // One per game, and four of the six are that game's clean sweep said in its own voice. The
   // two that aren't ask for something a sweep doesn't: exactness on Sing It Back, nerve on
   // Redacted. They are NOT masked like the challenge flourishes — a bonus game has no defeat
   // to reveal them on, so they stand as ordinary named targets from the start.
-  { id: "somethings-changed", name: "Something’s Changed", desc: "Sweep Spot the Slip",             secret: false, icon: "placeholder", sitting: true, earn: { cat: "bonus" } },
-  { id: "the-first-note",   name: "The First Note",   desc: "Sweep Name That Song: all ten off one line each", secret: false, icon: "placeholder", sitting: true, earn: { cat: "bonus" } },
-  { id: "right-where-you-left-me", name: "Right Where You Left Me", desc: "Sweep Sing It Back with every word exact, not one typo forgiven", secret: false, icon: "placeholder", sitting: true, earn: { cat: "bonus" } },
-  { id: "blind-faith",      name: "Blind Faith",      desc: "Name a Redacted song with every strip still down", secret: false, icon: "placeholder", sitting: true, earn: { cat: "bonus" } },
-  { id: "rarest-air",       name: "Rarest Air",       desc: "Take the rarest card on all ten pages of Only Here", secret: false, icon: "placeholder", sitting: true, earn: { cat: "bonus" } },
-  { id: "follow-the-sparks", name: "Follow The Sparks", desc: "Sing a whole Then What run on one unbroken chain", secret: false, icon: "placeholder", sitting: true, earn: { cat: "bonus" } },
+  { id: "somethings-changed", name: "Something’s Changed", desc: "Sweep Spot the Slip",             secret: false, icon: "ringedword", sitting: true, earn: { cat: "bonus" } },
+  { id: "the-first-note",   name: "The First Note",   desc: "Sweep Name That Song: all ten off one line each", secret: false, icon: "tuningfork", sitting: true, earn: { cat: "bonus" } },
+  { id: "right-where-you-left-me", name: "Right Where You Left Me", desc: "Sweep Sing It Back with every word exact, not one typo forgiven", secret: false, icon: "slotback", sitting: true, earn: { cat: "bonus" } },
+  { id: "blind-faith",      name: "Blind Faith",      desc: "Name a Redacted song with every strip still down", secret: false, icon: "taped", sitting: true, earn: { cat: "bonus" } },
+  { id: "rarest-air",       name: "Rarest Air",       desc: "Take the rarest card on all ten pages of Only Here", secret: false, icon: "highcard", sitting: true, earn: { cat: "bonus" } },
+  { id: "follow-the-sparks", name: "Follow The Sparks", desc: "Sing a whole Then What run on one unbroken chain", secret: false, icon: "chain", sitting: true, earn: { cat: "bonus" } },
   // The secrets. Three of them are failures worn well (Anti-Hero's register), which is the
   // shelf's own tone: these games have soft edges and losing on them is funny rather than sore.
-  { id: "i-bought-it",      name: "I Bought It",      desc: "Take the commonest card in an Only Here hand", secret: true, icon: "placeholder" },
-  { id: "knew-the-price",   name: "Knew The Price",   desc: "Buy every strip on a Redacted page and still name the song", secret: true, icon: "placeholder" },
-  { id: "never-heard-silence", name: "Never Heard Silence", desc: "Let all ten Only Here clocks run out without a card played", secret: true, icon: "placeholder" },
-  { id: "almost-had-it",    name: "Almost Had It",    desc: "Finish one page shy of a clean sweep", secret: true, icon: "placeholder" },
-  { id: "saw-it-coming",    name: "Saw It Coming",    desc: "Flag a Spot the Slip impostor inside two seconds", secret: true, icon: "placeholder" },
+  { id: "i-bought-it",      name: "I Bought It",      desc: "Take the commonest card in an Only Here hand", secret: true, icon: "receipt" },
+  { id: "knew-the-price",   name: "Knew The Price",   desc: "Buy every strip on a Redacted page and still name the song", secret: true, icon: "peeled" },
+  { id: "never-heard-silence", name: "Never Heard Silence", desc: "Let all ten Only Here clocks run out without a card played", secret: true, icon: "cobweb" },
+  { id: "almost-had-it",    name: "Almost Had It",    desc: "Finish one page shy of a clean sweep", secret: true, icon: "dart" },
+  { id: "saw-it-coming",    name: "Saw It Coming",    desc: "Flag a Spot the Slip impostor inside two seconds", secret: true, icon: "mask" },
   /* ---- Skills & Mastery ---- */
   { id: "bigger-than-the-whole-sky", name: "Bigger Than The Whole Sky", desc: "Press the wax and unlock Mastery", secret: false, icon: "waxpress" },
   { id: "superstar",        name: "Superstar",        desc: `Take a single skill all the way to level ${SKILL_MAX_LEVEL}`, secret: false, icon: "rosette" },
