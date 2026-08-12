@@ -174,6 +174,17 @@ let roundWords = [];     // per-round prompt word (for the lifetime tally / Neme
 let roundSongs = [];     // per-round answered song title, null on a miss (lifetime tally)
 let roundHinted = [];    // per-round true if a hint was taken (a hinted run can't set a PB)
 let roundTimes = [];     // per-round seconds spent on the page, EVERY mode including Relaxed (see roundStart)
+// The run-scoped charm batch. Nothing here is persisted (the daily snapshot excepted, which has
+// to carry them or a resumed run judges thirteen pages off half of them — see
+// dailyProgressSnapshot), and nothing here is read outside the run that wrote it.
+let roundRejects = [];   // per round: the submissions that did NOT resolve the page — [{ key, title, word }]
+let roundTyped = [];     // per round: the page was ended by something the player sent, not by the clock
+let roundFirstPick = []; // per round: the page was resolved by taking the TOP suggestion off the dropdown
+let roundFirstKeyLeft = []; // per round: seconds left on the clock at the first keystroke (-1 = no clock)
+let gameHitHalfClock = false; // any round answered with less than half the clock left (The Whole Way Home)
+let quickAnswerRun = 0;  // correct answers under a second, back to back (Just Like That)
+let suggestionIndex = -1;// which rung of the dropdown the live submission came off (-1 = not a suggestion)
+let roundClockTotal = 0; // this page's clock in seconds, as startTimer built it (0 = no clock at all)
 let hintsUsed = 0;       // count of rounds this game where a hint was taken
 let hintBudgetLeft = Infinity; // Custom mode: total hint reveals still allowed this run (Infinity = uncapped, every other mode)
 let runFolded = false;   // partial/full stats already saved for the current run (quit / unload / endGame)
@@ -8751,6 +8762,14 @@ function resetRunState() {
   roundSongs = [];
   roundHinted = [];
   roundTimes = [];
+  roundRejects = [];
+  roundTyped = [];
+  roundFirstPick = [];
+  roundFirstKeyLeft = [];
+  gameHitHalfClock = false;
+  quickAnswerRun = 0;
+  suggestionIndex = -1;
+  roundClockTotal = 0;
   hintsUsed = 0;
   hintBudgetLeft = Infinity;   // Custom mode overrides this to its hint budget in startCustom
   runFolded = false;
@@ -9369,9 +9388,17 @@ function dailyProgressSnapshot(dateStr) {
     // Load-bearing. Without it a mid-run refresh leaves the timing charms reading a short array
     // and judging a full run off half its pages — silently, and unreproducibly.
     roundTimes: roundTimes.slice(),
+    // Load-bearing for the same reason, and one of them the other way round: a lost roundRejects
+    // reads as a run that never fumbled, so dropping it would hand out One For The Money for a
+    // refresh rather than for a clean thirteen. Rejects are plain objects, so a deep-enough copy
+    // is a slice of slices.
+    roundRejects: roundRejects.map((list) => (list || []).slice()),
+    roundTyped: roundTyped.slice(),
+    roundFirstPick: roundFirstPick.slice(),
+    gameHitHalfClock,
     usedWords: usedWords.slice(),
     recentEras: recentEras.slice(),
-    correctStreak, gameMaxStreak, gameTimeouts,
+    correctStreak, gameMaxStreak, gameTimeouts, quickAnswerRun,
     gameTimeSum, gameTimedRounds, gameFastestMs, gameHitRedZone,
     lyricLineAnswers, verseBonus, gameVersePerfect, gameWholeVerses, gameFuzzyMatches,
     rareStreak,
@@ -9391,6 +9418,11 @@ function restoreDailyProgress(p) {
   roundSongs = Array.isArray(p.roundSongs) ? p.roundSongs.slice() : [];
   roundVerseTier = Array.isArray(p.roundVerseTier) ? p.roundVerseTier.slice() : [];
   roundTimes = Array.isArray(p.roundTimes) ? p.roundTimes.slice() : [];
+  roundRejects = Array.isArray(p.roundRejects) ? p.roundRejects.map((list) => (Array.isArray(list) ? list.slice() : [])) : [];
+  roundTyped = Array.isArray(p.roundTyped) ? p.roundTyped.slice() : [];
+  roundFirstPick = Array.isArray(p.roundFirstPick) ? p.roundFirstPick.slice() : [];
+  gameHitHalfClock = !!p.gameHitHalfClock;
+  quickAnswerRun = p.quickAnswerRun || 0;
   usedWords = Array.isArray(p.usedWords) ? p.usedWords.slice() : [];
   recentEras = Array.isArray(p.recentEras) ? p.recentEras.slice() : [];
   correctStreak = p.correctStreak || 0;
@@ -13141,6 +13173,8 @@ function advanceRound() {
   if (revolveId) { clearInterval(revolveId); revolveId = null; }   // stop the prior round's rotation
   revolveIndex = 0;                            // Revolving Door: this round's word is slot 0
   roundNamed = [];                             // Double Trouble: no songs named on the fresh page yet
+  suggestionIndex = -1;                        // nothing has been taken off the dropdown on this page yet
+  roundClockTotal = 0;                         // and no clock is running until startTimer builds one
   roundStake = 0;                              // Confidence Wager: this page's stake isn't set yet
   stakeChosen = false;                         // (beginRoundClock gates the clock until it is)
   roundInsured = false;                        // Insurance: a shield covers one page only
@@ -13359,12 +13393,14 @@ function startTimer(resume) {
     // Relaxed mode (seconds <= 0): no clock at all — hide the bar and never time out.
     if (!(total > 0)) {
       if (wrap) wrap.style.display = "none";
+      roundClockTotal = 0;
       return;
     }
     if (wrap) wrap.style.display = "";
     begin = (resume != null && resume > 0 && resume < total) ? resume : total;
   }
   timerStart = performance.now() - (total - begin) * 1000;
+  roundClockTotal = total;   // what "how long is left?" is measured against this page (see clockRemaining)
   fill.style.width = (begin / total * 100) + "%";
   fill.classList.remove("low");
   label.textContent = begin.toFixed(1);
@@ -13422,6 +13458,14 @@ function startTimer(resume) {
       else submitAnswer(null, true);
     }
   }, 100);
+}
+// Seconds still on this page's clock, right now — the same reading the countdown is showing.
+// null in Relaxed and anywhere else without a clock, which callers must treat as "no answer",
+// never as zero. Read off the total startTimer actually built, so a Shrinking Timer page or a
+// Slow Down Time perk is measured against its own clock rather than the mode's nominal one.
+function clockRemaining() {
+  if (!(roundClockTotal > 0)) return null;
+  return Math.max(0, roundClockTotal - (performance.now() - timerStart) / 1000);
 }
 function clearTimer() {
   if (timerId) { clearInterval(timerId); timerId = null; }
@@ -13608,7 +13652,12 @@ function renderDropdown() {
     div.innerHTML = `${escapeHtml(censor(song.title))}` + (off ? `<span class="dd-tag">in the title</span>` : "");
     div.addEventListener("mousedown", (e) => {
       e.preventDefault();
+      // Took The Money reads which rung of the list was taken. Set around the call and cleared
+      // straight after it, so a pick that gets soft-rejected can't leave a stale rung behind for
+      // whatever the player types next (submitAnswer reads it synchronously, before any reveal).
+      suggestionIndex = i;
       submitAnswer(song, false);   // off-limits picks route through the soft-reject in submitAnswer
+      suggestionIndex = -1;
     });
     dd.appendChild(div);
   });
@@ -13622,6 +13671,26 @@ function hideDropdown() {
   const input = $("songInput");
   input.setAttribute("aria-expanded", "false");
   input.removeAttribute("aria-activedescendant");
+}
+
+// Every submission that did NOT clear the page, logged per page. Three charms read this one
+// list: One For The Money (a perfect thirteen that never fumbled once), I Once Was Poison Ivy
+// (the same wrong answer sent five times on a single page) and Lost In Translation (a song you
+// handed in wrongly earlier finally landing on a word it fits).
+//
+// Called BEFORE the reject flash, because every soft reject wipes the line it is about to read.
+// `burned` marks the page's own losing answer: it belongs in the log for Lost In Translation,
+// but it is the last submission the page will ever take, so counting it toward "five times on
+// one page" would only ever be counting to one.
+function noteWrongSubmission(song, { burned = false } = {}) {
+  // A song is logged by title so the same pick typed, tabbed and clicked all count as one
+  // answer; anything that resolved to no song at all is logged by what was actually written.
+  const key = song ? "song:" + song.title : normalizeTitle($("songInput").value || "");
+  if (!key) return;   // an empty line is not an answer — Enter on a blank box costs nothing
+  const list = roundRejects[round - 1] || (roundRejects[round - 1] = []);
+  list.push({ key, title: song ? song.title : null, word: currentWord });
+  if (burned) return;
+  if (list.filter((r) => r.key === key).length >= 5) unlock("submit-same-wrong-answer-5-times-one-round");
 }
 
 // A pick is off-limits when the active mode bars title songs and the word sits in
@@ -14224,12 +14293,14 @@ function submitAnswer(song, isTimeout) {
   // input at all: Common Thread (a word) and the tap grids (a tile, already judged). Without
   // the exemption the empty box would bail out here and silently eat the answer.
   if (!song && !isTimeout && !commonRuleActive() && !tapKnowledgeActive()) {
+    suggestionIndex = -1;   // typed, not taken off the list — until the dropdown branch says otherwise
     if (lyricModeNow()) {                   // Lyricist mode / Switch-Up lyric page: lyric line only
       triedLyric = true;
       lyricMatch = matchLyricLine($("songInput").value);
       if (lyricMatch) song = lyricMatch.song;
     } else if (dropdownItems.length) {
-      song = dropdownItems[activeIndex >= 0 ? activeIndex : 0];
+      suggestionIndex = activeIndex >= 0 ? activeIndex : 0;
+      song = dropdownItems[suggestionIndex];
     } else {
       const raw = $("songInput").value;
       song = resolveTypedTitle(raw);   // exact, then misplaced spaces, then a single typo
@@ -14245,7 +14316,9 @@ function submitAnswer(song, isTimeout) {
         if (lyricMatch) song = lyricMatch.song;
       }
     }
-    if (!song) { if (triedLyric) nudgeLyricNeedsWord($("songInput").value); return; }
+    // Nothing the catalogue recognises. The page isn't burned, but something WAS sent, so it
+    // goes in the log: a run that spent three pages guessing at spellings isn't a clean one.
+    if (!song) { noteWrongSubmission(null); if (triedLyric) nudgeLyricNeedsWord($("songInput").value); return; }
   }
 
   // Impostor: you named a song for a fake word — you fell for it. Fatal. (Reaching any of the
@@ -14256,7 +14329,7 @@ function submitAnswer(song, isTimeout) {
   // noTitle mode where the word is in this song's title, don't burn the round —
   // flash, wipe the line, and let them keep typing the same word. A timeout still
   // counts as a miss; lyric answers resolve only to valid songs, so they're exempt.
-  if (song && !isTimeout && !lyricMatch && isOffLimitsPick(song)) { rejectOffLimits(song); return; }
+  if (song && !isTimeout && !lyricMatch && isOffLimitsPick(song)) { noteWrongSubmission(song); rejectOffLimits(song); return; }
 
   // From A to Z: a valid answer earlier in the alphabet than the last accepted one is
   // soft-rejected (doesn't burn the round), so the player can keep the sequence going.
@@ -14265,7 +14338,7 @@ function submitAnswer(song, isTimeout) {
     const L = firstAlphaLetter(song.title);
     // Dark: a REPEAT of the last letter is rejected too, not just a step backwards.
     const stalled = currentChallenge.strictAlpha ? L <= lastAlphaLetter : L < lastAlphaLetter;
-    if (lastAlphaLetter && L && stalled) { rejectAlpha(L); return; }
+    if (lastAlphaLetter && L && stalled) { noteWrongSubmission(song); rejectAlpha(L); return; }
   }
 
   // One Of A Kind: trying the named target song on a round where it doesn't fit the
@@ -14275,7 +14348,7 @@ function submitAnswer(song, isTimeout) {
   if (song && !isTimeout && currentChallenge && currentChallenge.rule === "newsong"
       && challengeTargetSong && song.title === challengeTargetSong.title
       && !currentSongs.some((s) => s.title === song.title)) {
-    rejectNewSong(); return;
+    noteWrongSubmission(song); rejectNewSong(); return;
   }
 
   // Wildcard: a song that's valid by lyrics but breaks this round's rule is soft-
@@ -14285,7 +14358,7 @@ function submitAnswer(song, isTimeout) {
       && roundWildcard && roundWildcard.accepts
       && currentLyricSongs.some((s) => s.title === song.title)
       && !roundWildcard.accepts(song)) {
-    rejectWildcard(roundWildcard.label); return;
+    noteWrongSubmission(song); rejectWildcard(roundWildcard.label); return;
   }
 
   // Title...?: a song whose lyrics hold the word but whose TITLE doesn't is soft-
@@ -14293,7 +14366,7 @@ function submitAnswer(song, isTimeout) {
   // falls through and scores wrong.
   if (song && !isTimeout && currentChallenge && currentChallenge.rule === "titleHas") {
     const rx = wordRegex(currentWord, effectiveStrict());
-    if (!rx.test(song.title) && rx.test(song.lyrics)) { rejectTitleHas(); return; }
+    if (!rx.test(song.title) && rx.test(song.lyrics)) { noteWrongSubmission(song); rejectTitleHas(); return; }
   }
 
   // Short n' Sweet: a song valid by lyrics but with a 3+-word title is soft-rejected so
@@ -14301,7 +14374,7 @@ function submitAnswer(song, isTimeout) {
   if (song && !isTimeout && currentChallenge && currentChallenge.rule === "shorttitle"
       && currentLyricSongs.some((s) => s.title === song.title)
       && titleWordCount(song.title) > maxTitleWordsNow()) {
-    rejectShortTitle(); return;
+    noteWrongSubmission(song); rejectShortTitle(); return;
   }
 
   // Wrapped Like A Chain: a valid-by-lyrics answer that doesn't start with the required
@@ -14310,7 +14383,7 @@ function submitAnswer(song, isTimeout) {
       && chainLetter
       && currentLyricSongs.some((s) => s.title === song.title)
       && firstAlphaLetter(song.title) !== chainLetter) {
-    rejectChain(); return;
+    noteWrongSubmission(song); rejectChain(); return;
   }
 
   // On Tour!: a valid-by-lyrics answer from the wrong album is soft-rejected so the
@@ -14318,14 +14391,14 @@ function submitAnswer(song, isTimeout) {
   if (song && !isTimeout && currentChallenge && currentChallenge.rule === "setlist"
       && currentLyricSongs.some((s) => s.title === song.title)
       && song.album !== tourSetlist[round - 1]) {
-    rejectTour(); return;
+    noteWrongSubmission(song); rejectTour(); return;
   }
 
   // Album Focus: a named song from another album is soft-rejected (no burned round) so the
   // player keeps looking within the chosen album. Lyric/dropdown answers are already album-
   // gated; this catches a deliberately typed off-album title.
   if (song && !isTimeout && gameType === "album" && focusAlbum && song.album !== focusAlbum) {
-    rejectAlbumFocus(); return;
+    noteWrongSubmission(song); rejectAlbumFocus(); return;
   }
 
   // Devil's Path: a song valid by lyrics but blocked by an active curse (banned album /
@@ -14333,7 +14406,7 @@ function submitAnswer(song, isTimeout) {
   // wholly unrelated song still falls through and scores wrong.
   if (song && !isTimeout && currentChallenge && currentChallenge.rule === "devil"
       && currentLyricSongs.some((s) => s.title === song.title) && !devilAllowsSong(song)) {
-    rejectDevil(song); return;
+    noteWrongSubmission(song); rejectDevil(song); return;
   }
 
   // Both Of Us: a song that sings SOME of the page's words but not all of them is soft-rejected
@@ -14342,7 +14415,7 @@ function submitAnswer(song, isTimeout) {
   // and scores the page wrong, exactly as a wrong answer does anywhere else.
   if (song && !isTimeout && bothRuleActive() && !currentSongs.some((s) => s.title === song.title)) {
     const missing = bothWordsMissing(song);
-    if (missing.length && missing.length < bothWords.length) { rejectBoth(missing); return; }
+    if (missing.length && missing.length < bothWords.length) { noteWrongSubmission(song); rejectBoth(missing); return; }
   }
 
   // Double Trouble / Name Three: a page resolves only once `need` DIFFERENT valid songs are named.
@@ -14353,6 +14426,7 @@ function submitAnswer(song, isTimeout) {
       && currentSongs.some((s) => s.title === song.title)) {
     const need = currentChallenge.need || 2;
     if (roundNamed.includes(song.title)) {
+      noteWrongSubmission(song);
       softRejectFlash(`already named <b>${escapeHtml(song.title)}</b> — name a different song`);
       return;
     }
@@ -14404,6 +14478,27 @@ function submitAnswer(song, isTimeout) {
   // "storm + diamond" is no evidence at all about "storm". The song still logs normally.
   roundWords[round - 1] = (whoseLineRuleActive() || bothRuleActive()) ? null : currentWord;
   roundSongs[round - 1] = correct && song ? song.title : null;  // credited song — for the lifetime tally
+  // How the page was ended, for the two charms that ask about the manner rather than the result:
+  // whether the player sent something at all (I Was Wrong), and whether they simply took the top
+  // line of the dropdown (Took The Money). A timeout is neither, whatever is left in the box.
+  roundTyped[round - 1] = !isTimeout;
+  roundFirstPick[round - 1] = !isTimeout && suggestionIndex === 0;
+  // Lost In Translation — a song you handed in wrongly for an EARLIER word this game turns out to
+  // be the answer to this one. Both kinds of wrong count, a soft-rejected pick and a page-burning
+  // miss, because the log holds both; the word check is what keeps it about a song that travelled.
+  if (correct && song && roundRejects.some((list) => (list || []).some((r) => r.title === song.title && r.word !== currentWord))) {
+    unlock("answer-right-with-song-given-wrongly-earlier");
+  }
+  // The page's own losing answer joins the log, so a LATER page can see it travel (above).
+  if (!correct && song && !isTimeout) noteWrongSubmission(song, { burned: true });
+  // The Words I Held Back — the clock died with the answer already written out, unsent. Read off
+  // the box exactly as a real submission would have been, title path or sung line, so it can
+  // never credit something the player would then have watched get rejected.
+  if (isTimeout && !tapGridActive() && !commonRuleActive()) {
+    const typed = $("songInput").value;
+    const held = lyricModeNow() ? (matchLyricLine(typed) || {}).song : resolveTypedTitle(typed);
+    if (held && currentSongs.some((s) => s.title === held.title)) unlock("time-out-with-right-answer-typed");
+  }
   justEarnedIndex = correct ? round - 1 : -1;
   if (correct) score++;
   // The risk batch corrects that baseline bead into whatever the bet actually paid (and
@@ -14539,6 +14634,14 @@ function submitAnswer(song, isTimeout) {
     const spent = (performance.now() - roundStart) / 1000;
     roundTimes[round - 1] = currentMode.seconds > 0 ? Math.min(spent, currentMode.seconds) : spent;
   }
+  // Just Like That — three correct answers in a row, each inside a second. Off the page stopwatch
+  // rather than the countdown, so Relaxed can win it too: a second is a second with or without a
+  // clock. Anything else at all breaks the run, a miss and a slow correct answer alike.
+  if (correct && roundTimes[round - 1] < 1) {
+    if (++quickAnswerRun >= 3) unlock("answer-under-1s-three-rounds-running");
+  } else {
+    quickAnswerRun = 0;
+  }
 
   // The correct-in-a-row streak that outlives the game it started in. Written per answer, so it
   // lives here rather than in the end-of-run fold. It follows noTimeoutStreak's rule about
@@ -14556,6 +14659,9 @@ function submitAnswer(song, isTimeout) {
     gameTimeSum += Math.min(elapsed, currentMode.seconds);   // for Perfect Storm
     gameTimedRounds++;                                       // for the lifetime avg answer time
     if (remaining <= 3) gameHitRedZone = true;               // for Peace (timeouts count too)
+    // The Whole Way Home's half-clock reading, kept deliberately parallel to the red zone above:
+    // same gate, same "timeouts count too", just a different line on the bar.
+    if (remaining <= currentMode.seconds / 2) gameHitHalfClock = true;
     if (correct) {
       const ms = Math.min(elapsed, currentMode.seconds) * 1000;
       if (gameFastestMs == null || ms < gameFastestMs) gameFastestMs = ms;   // lifetime fastest answer
@@ -14563,6 +14669,11 @@ function submitAnswer(song, isTimeout) {
       if (round === 1 && elapsed < 2) unlock("round-1-under-2s");
       if (remaining < 1) { unlock("answer-under-1s-left"); earnPolaroid("getaway-car"); }   // same beat, both fire
       if (remaining < 0.5) unlock("answer-under-half-second-left");
+      // Holding My Breath — the page sat untouched until the last two seconds, and then landed.
+      // The stamp is the clock reading at the FIRST keystroke, so deleting and retyping can't
+      // launder a page you started early; -1 means there was no clock, which cannot qualify.
+      const firstKey = roundFirstKeyLeft[round - 1];
+      if (firstKey != null && firstKey >= 0 && firstKey < 2) unlock("type-nothing-until-2s-left-then-answer-right");
       // Quick Pen skill: faster answers earn more (full at instant, zero at the buzzer).
       const speedFactor = Math.max(0, Math.min(1, remaining / currentMode.seconds));
       gameTempoXp += Math.round(TEMPO_BASE + TEMPO_SPEED * speedFactor);
@@ -15191,6 +15302,43 @@ function endGame() {
     if (timedMode && !gameHitRedZone) unlock("finish-without-timer-red-zone");
     if (timedMode && gameTimeSum / TOTAL_ROUNDS < 3) unlock("average-under-3s-per-answer");
     if (gameTimeouts === TOTAL_ROUNDS) unlock("finish-with-no-answers");
+
+    /* ---- The run-scoped batch: how the thirteen pages were played ----
+       Every one of these reads this run's own arrays and nothing else, so they are all winnable
+       again on the next game. They ask for a FULL thirteen pages: a run that ended short would
+       otherwise satisfy "every answer was quick" by having had almost no answers. `win` is the
+       majority-win bar Finally Clean already uses, so "win" means the same thing across the
+       collection. The stopwatch charms read roundTimes, which runs in every mode including
+       Relaxed — deliberately NOT the `timed` gate above, which four shipped charms are priced
+       against (see roundStart). */
+    const fullRun = roundResults.length === TOTAL_ROUNDS;
+    const win = score >= 7;
+    // Holes in a sparse array are skipped by .every, which would read a missing page as a fast
+    // one, so the count is checked as well as the predicate.
+    const timesLogged = roundTimes.filter((t) => typeof t === "number" && isFinite(t)).length;
+    const everyPage = (fn) => fullRun && timesLogged === TOTAL_ROUNDS && roundTimes.every(fn);
+    // Faster Than The Wind — thirteen answers, not one of them slower than three seconds.
+    if (gameTimeouts === 0 && everyPage((t) => t < 3)) unlock("answer-all-13-rounds-under-3s");
+    // You Are The Best Thing — the same idea two seconds tighter, and every page right.
+    if (score === TOTAL_ROUNDS && everyPage((t) => t < 2)) unlock("perfect-13-every-answer-under-2s");
+    // Slow Motion — the opposite feat, and only Easy (15s) and Relaxed (no clock) have room for
+    // it: Normal's clock IS ten seconds, and Hard and Ultra are shorter still.
+    if (win && gameTimeouts === 0 && (currentMode.id === "easy" || currentMode.id === "relaxed")
+        && everyPage((t) => t > 10)) unlock("win-with-every-answer-over-10s");
+    // I Take My Time — every page answered inside its final second. Needs a clock to be late
+    // against, and no timeouts: roundTimes caps at the mode's seconds, so a page nobody answered
+    // reads exactly like one answered on the buzzer.
+    if (timedMode && gameTimeouts === 0 && everyPage((t) => t > currentMode.seconds - 1)) unlock("answer-in-final-second-all-13-rounds");
+    // The Whole Way Home — the clock never once fell past halfway.
+    if (timedMode && win && fullRun && !gameHitHalfClock) unlock("win-without-clock-dropping-below-half");
+    // One For The Money — a perfect thirteen with nothing sent that wasn't an answer: no
+    // soft-rejected picks, no guesses at a spelling, nothing.
+    if (score === TOTAL_ROUNDS && roundRejects.every((list) => !list || list.length === 0)) unlock("perfect-13-no-wrong-submissions");
+    // I Was Wrong — thirteen misses, every one of them a real answer sent in. Sitting on your
+    // hands for thirteen timeouts is I Can't See You, and it is a different charm.
+    if (score === 0 && fullRun && roundTyped.length === TOTAL_ROUNDS && roundTyped.every(Boolean)) unlock("answer-13-wrong-having-typed-every-round");
+    // Took The Money — the top line of the dropdown taken on all thirteen pages, right or wrong.
+    if (fullRun && roundFirstPick.length === TOTAL_ROUNDS && roundFirstPick.every(Boolean)) unlock("take-first-suggestion-all-13-rounds");
   }
   if (isInfinite) {
     if (roundsSurvived >= 20) unlock("survive-20-rounds-infinite");
@@ -16037,6 +16185,13 @@ function wireInput() {
     }
     clearTimeout(hintUrgeTimer);            // typing cancels the Relaxed idle nudge
     $("hintBtn").classList.remove("urge");
+    // Holding My Breath: when the player first put pen to paper on this page, recorded as the
+    // seconds still on the clock. Once per page, and only while the page is live — the verdict
+    // screen leaves the box disabled, so nothing typed after it can rewrite the stamp.
+    if (round > 0 && !roundLocked && input.value && roundFirstKeyLeft[round - 1] == null) {
+      const left = clockRemaining();
+      roundFirstKeyLeft[round - 1] = left == null ? -1 : left;   // -1: no clock to hold your breath against
+    }
     handleTypingEggs(input.value);
     renderVerseMeter(input.value);          // live verse-bonus gauge (non-revealing)
   });
@@ -18423,6 +18578,24 @@ function buildDevApi() {
       round: () => roundTimes.map((t) => (typeof t === "number" ? +t.toFixed(2) : t)),
       sum: () => relaxedStopwatch(),
       elapsed: () => +((performance.now() - roundStart) / 1000).toFixed(2),
+      // Seconds still on THIS page's clock, as the run-scoped charms read it (null in Relaxed).
+      left: () => { const l = clockRemaining(); return l == null ? null : +l.toFixed(2); },
+    },
+    // The live run's run-scoped charm state — everything the "how the thirteen pages were
+    // played" batch will be judged on when the last page turns. The dev panel can force-unlock
+    // any charm by id, but it cannot manufacture a run, and this is the cheap way to see WHY one
+    // of them is not going to fire without replaying thirteen pages to find out.
+    run: {
+      flags: () => ({
+        round, score, rounds: roundResults.length,
+        timeouts: gameTimeouts, hitHalfClock: gameHitHalfClock, quickAnswerRun,
+        typed: roundTyped.slice(), tookFirstSuggestion: roundFirstPick.slice(),
+        firstKeyLeft: roundFirstKeyLeft.map((s) => (typeof s === "number" ? +s.toFixed(2) : s)),
+        suggestionIndex, roundClockTotal,
+      }),
+      // Every submission this run that didn't clear its page, page by page. An empty list on
+      // every page is what One For The Money is asking for.
+      rejects: () => roundRejects.map((list, i) => ({ round: i + 1, sent: (list || []).map((r) => r.title || r.key) })),
     },
     // Bonus games shelf. `sample` is the useful one: it dry-runs a builder N times without
     // touching the UI, so the fairness guards and (for Spot the Slip) the quality of the

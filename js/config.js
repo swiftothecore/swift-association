@@ -2509,6 +2509,29 @@ export const ACHIEVEMENTS = [
   { id: "type-reputation-tv", name: "The Piano Was Hissing", desc: "Type “reputation tv” somewhere",    secret: true,  icon: "piano" },
   { id: "quit-round-1-before-typing",       name: "She Must Bolt",    desc: "Quit before typing anything in round 1", secret: true,  icon: "door" },
   { id: "give-up-after-12-before-13",       name: "No Closure",       desc: "Give up after 12, never answer the 13th", secret: true, icon: "unclasped" },
+  /* ---- Run-scoped charms: how the thirteen pages were played ----
+     None of these read a stored counter. They are judged off the run's own arrays — the
+     per-page stopwatch (roundTimes) and the log of submissions that never resolved a page
+     (roundRejects) — so every one of them is winnable again on the very next game and none
+     can be missed by having already passed some milestone. The end-of-run half all demand a
+     FULL thirteen pages, and the mid-run half unlock the moment they happen. Icons are
+     placeholders pending the batch's real marks. */
+  { id: "answer-all-13-rounds-under-3s", name: "Faster Than The Wind", desc: "Answer all 13 rounds in under 3s each", secret: false, icon: "placeholder" },
+  // Easy and Relaxed only, and that is the charm rather than a limitation of it: Normal's
+  // clock is 10s, so "every answer over 10 seconds" cannot happen there, and Hard and Ultra
+  // are shorter still. Sitting on a page you have already solved is the whole feat.
+  { id: "win-with-every-answer-over-10s", name: "Slow Motion", desc: "Win with every answer over 10s (Easy or Relaxed)", secret: true, icon: "placeholder" },
+  { id: "answer-in-final-second-all-13-rounds", name: "I Take My Time", desc: "Answer in the final second on all 13 rounds", secret: true, icon: "placeholder" },
+  { id: "answer-under-1s-three-rounds-running", name: "Just Like That", desc: "Answer in under a second three rounds running", secret: false, icon: "placeholder" },
+  { id: "perfect-13-every-answer-under-2s", name: "You Are The Best Thing", desc: "Perfect 13/13 with every answer under 2s", secret: false, icon: "placeholder" },
+  { id: "win-without-clock-dropping-below-half", name: "The Whole Way Home", desc: "Win without the clock dropping below half", secret: false, icon: "placeholder" },
+  { id: "perfect-13-no-wrong-submissions", name: "One For The Money", desc: "Perfect 13/13 with no wrong submissions", secret: false, icon: "placeholder" },
+  { id: "submit-same-wrong-answer-5-times-one-round", name: "I Once Was Poison Ivy", desc: "Submit the same wrong answer 5 times in one round", secret: true, icon: "placeholder" },
+  { id: "answer-right-with-song-given-wrongly-earlier", name: "Lost In Translation", desc: "Answer right with a song you gave wrongly earlier", secret: true, icon: "placeholder" },
+  { id: "answer-13-wrong-having-typed-every-round", name: "I Was Wrong", desc: "Answer 13 wrong, having typed something every round", secret: true, icon: "placeholder" },
+  { id: "time-out-with-right-answer-typed", name: "The Words I Held Back", desc: "Run out of time with the right answer typed", secret: true, icon: "placeholder" },
+  { id: "type-nothing-until-2s-left-then-answer-right", name: "Holding My Breath", desc: "Type nothing until under 2s left, then answer right", secret: true, icon: "placeholder" },
+  { id: "take-first-suggestion-all-13-rounds", name: "Took The Money", desc: "Take the first suggestion on all 13 rounds", secret: true, icon: "placeholder" },
   { id: "defeat-first-challenge",       name: "Ready For Combat", desc: "Defeat your first challenge",           secret: false, icon: "bow", sitting: true, earn: { cat: "challenge" } },
   { id: "defeat-every-challenge",      name: "Get The Crown",    desc: "Defeat every challenge",                secret: false, icon: "flask" },
   { id: "unlock-every-challenge",      name: "I Like Shiny Things", desc: "Unlock every challenge",                secret: false, icon: "rings" },
