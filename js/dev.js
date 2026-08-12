@@ -7,6 +7,101 @@
 import { ACHIEVEMENTS, ACH_ICONS, ACH_GROUPS, ACH_GROUP_OF, ACH_GROUP_COLORS,
          CHALLENGES, CHALLENGE_SEALS, WAX_SEEDS, WAX_AUTO_IDS, reseedSeal, waxPourFaults } from "./config.js";
 
+function auditAchievementIdSources(config, app) {
+  const failures = [];
+  const captures = (source, pattern, group = 1) => [...source.matchAll(pattern)].map((match) => match[group]);
+  const duplicates = (values) => {
+    const counts = new Map();
+    values.forEach((value) => counts.set(value, (counts.get(value) || 0) + 1));
+    return [...counts].filter(([, count]) => count > 1).map(([value]) => value).sort();
+  };
+  const sliceBetween = (source, start, end, label) => {
+    const from = source.indexOf(start);
+    const to = source.indexOf(end, from + start.length);
+    if (from < 0 || to < 0) {
+      failures.push(`Could not find ${label}`);
+      return "";
+    }
+    return source.slice(from, to);
+  };
+  const literalArray = (name) => {
+    const match = app.match(new RegExp(`const\\s+${name}\\s*=\\s*\\[([\\s\\S]*?)\\];`));
+    if (!match) {
+      failures.push(`Could not find ${name} in js/app.js`);
+      return [];
+    }
+    return captures(match[1], /["']([a-z0-9-]+)["']/g);
+  };
+
+  const achievementBlock = sliceBetween(
+    config,
+    "export const ACHIEVEMENTS = [",
+    "export const ACH_BY_ID =",
+    "the ACHIEVEMENTS table in js/config.js",
+  );
+  const achievementIds = captures(achievementBlock, /\bid\s*:\s*["']([a-z0-9-]+)["']/g);
+  const achievementSet = new Set(achievementIds);
+  const duplicateIds = duplicates(achievementIds);
+  if (duplicateIds.length) failures.push(`Duplicate achievement ids: ${duplicateIds.join(", ")}`);
+
+  const groupBlock = sliceBetween(
+    config,
+    "export const ACH_GROUP_OF = {",
+    "/* ---------- Easter-egg art ---------- */",
+    "the ACH_GROUP_OF table in js/config.js",
+  );
+  const groupIds = captures(groupBlock, /["']([a-z0-9-]+)["']\s*:/g);
+  groupIds.forEach((id) => {
+    if (!achievementSet.has(id)) failures.push(`ACH_GROUP_OF has unknown achievement id: ${id}`);
+  });
+
+  const appRefs = [];
+  captures(app, /\bunlock\(\s*["']([a-z0-9-]+)["']\s*\)/g)
+    .forEach((id) => appRefs.push({ id, source: "unlock()" }));
+  ["HIDDEN_ACH_IDS", "META_ACH"].forEach((name) => {
+    literalArray(name).forEach((id) => appRefs.push({ id, source: name }));
+  });
+  captures(app, /ACH_BY_ID\[\s*["']([a-z0-9-]+)["']\s*\]/g)
+    .forEach((id) => appRefs.push({ id, source: "ACH_BY_ID[]" }));
+  captures(app, /\ba\.id\s*(?:===|!==)\s*["']([a-z0-9-]+)["']/g)
+    .forEach((id) => appRefs.push({ id, source: "achievement id comparison" }));
+  const sweepMatch = app.match(/const\s+sweepCharm\s*=\s*\{([\s\S]*?)\}\[bonusGame\.id\]/);
+  if (!sweepMatch) {
+    failures.push("Could not find the sweepCharm map in js/app.js");
+  } else {
+    captures(sweepMatch[1], /:\s*["']([a-z0-9-]+)["']/g)
+      .forEach((id) => appRefs.push({ id, source: "sweepCharm" }));
+  }
+  appRefs.forEach(({ id, source }) => {
+    if (!achievementSet.has(id)) failures.push(`js/app.js ${source} has unknown achievement id: ${id}`);
+  });
+
+  const migrationMatch = config.match(/export const ACH_ID_MIGRATIONS\s*=\s*\{([\s\S]*?)\};/);
+  let migrationCount = 0;
+  if (migrationMatch) {
+    const migrationKeys = captures(migrationMatch[1], /["']?([a-z0-9-]+)["']?\s*:/g);
+    const migrationValues = captures(migrationMatch[1], /:\s*["']([a-z0-9-]+)["']/g);
+    migrationCount = migrationKeys.length;
+    const duplicateKeys = duplicates(migrationKeys);
+    const duplicateTargets = duplicates(migrationValues);
+    if (duplicateKeys.length) failures.push(`Duplicate ACH_ID_MIGRATIONS keys: ${duplicateKeys.join(", ")}`);
+    if (duplicateTargets.length) failures.push(`Duplicate ACH_ID_MIGRATIONS values: ${duplicateTargets.join(", ")}`);
+    migrationKeys.forEach((id) => {
+      if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(id)) failures.push(`Unknown migration key format: ${id}`);
+      if (achievementSet.has(id)) failures.push(`ACH_ID_MIGRATIONS key is still a current id: ${id}`);
+    });
+    migrationValues.forEach((id) => {
+      if (!achievementSet.has(id)) failures.push(`ACH_ID_MIGRATIONS has unknown target id: ${id}`);
+    });
+  }
+
+  return {
+    failures,
+    summary: `${achievementIds.length} achievements, ${appRefs.length} app references, ` +
+      `${groupIds.length} group keys, ${migrationCount} migrations`,
+  };
+}
+
 export function initDev(api) {
   injectStyles();
 
@@ -54,6 +149,29 @@ export function initDev(api) {
         btn("short lines", () => { revealOpen = true; answerBox.style.display = ""; renderShortLines(); }),
         btn("log state", () => console.log("[dev] state", api.getState()))),
     answerBox));
+
+  // ---- Achievement ids ------------------------------------------------------
+  const achAuditOut = mk("pre", { class: "dv-pre" }, "checking achievement ids...");
+  const runAchievementAudit = async () => {
+    achAuditOut.textContent = "checking achievement ids...";
+    try {
+      const [configResponse, appResponse] = await Promise.all([
+        fetch(new URL("./config.js", import.meta.url), { cache: "no-store" }),
+        fetch(new URL("./app.js", import.meta.url), { cache: "no-store" }),
+      ]);
+      if (!configResponse.ok || !appResponse.ok) throw new Error("source fetch failed");
+      const report = auditAchievementIdSources(await configResponse.text(), await appResponse.text());
+      achAuditOut.textContent = report.failures.length
+        ? `ID drift found (${report.failures.length})\n${report.failures.map((failure) => `• ${failure}`).join("\n")}`
+        : `✓ no ID drift or unresolved ids\n${report.summary}`;
+    } catch (error) {
+      achAuditOut.textContent = `achievement id audit could not run: ${error.message}`;
+    }
+  };
+  body.append(section("achievement ids",
+    row(btn("rerun audit", runAchievementAudit)),
+    achAuditOut));
+  runAchievementAudit();
   function renderReveal() {
     if (!revealOpen) return;
     const st = api.getState();
