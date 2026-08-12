@@ -14737,7 +14737,9 @@ function showCorrectFeedback(song, lyricMatch) {
 function showWrongFeedback(song, isTimeout) {
   const fb = $("feedback");
   const reason = isTimeout ? "the page ran out" : "not this verse";
-  // Ultra offers no help (examples 0); the "show examples" setting can also force 0.
+  // Ultra reveals one song rather than three — every lever that makes it hard bites during
+  // the page, and the reveal is post-mortem, so it teaches without softening the round. The
+  // "show examples" setting can force 0 in any mode.
   // The tap grids reveal their answers on the grid itself (green tiles), so skip the example
   // cards — and on Whose Line? the "songs with this word" cards would be nonsense anyway.
   const n = (settings.showExamples && !tapGridActive()) ? currentMode.examples : 0;
