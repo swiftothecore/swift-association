@@ -508,6 +508,10 @@ export function initDev(api) {
         btn("clear guests", () => { api.guest.reset(); toast("guest board cleared"); }, "warn"))));
 
   // ---- Custom mode / breadth -------------------------------------------------
+  // The calendar row is the one that can't be waited out: a seven-day streak is a real week and
+  // all twelve months is a real year, so the seeder is the only way those charms get tested.
+  const daysN = num(7);
+  const streakN = num(50);
   body.append(section("custom / breadth",
     row(btn("open custom", () => api.custom.open()), btn("play active", () => api.custom.play()),
         btn("new dev preset", () => { const p = api.custom.seed(); toast(`preset: ${p.name}`); }),
@@ -515,7 +519,14 @@ export function initDev(api) {
     row(btn("active preset", () => { console.log("[dev] custom", api.custom.active()); toast("active preset in console"); }),
         btn("explore all", () => { const r = api.breadth.exploreAll(); toast(`${r.seen.length}/${r.seen.length + r.missing.length} explored`); }),
         btn("week all", () => { api.breadth.weekAll(); toast("all weekdays marked"); }),
-        btn("reset breadth", () => { api.breadth.reset(); toast("breadth reset"); }, "warn"))));
+        btn("reset breadth", () => { api.breadth.reset(); toast("breadth reset"); }, "warn")),
+    row("seed last", daysN, "days",
+        btn("seed", () => { const r = api.breadth.seedDays(+daysN.value); toast(`${r.days} days · streak ${r.streak} · ${r.months.length}/12 months`); }),
+        btn("dates", () => { console.log("[dev] dates", api.breadth.dates()); toast("date ledger in console"); })),
+    row("cross-game streak", streakN,
+        btn("set", () => toast(`streak = ${api.metrics.setStreak(+streakN.value)}`)),
+        btn("scarf +13", () => toast(`scarf taps = ${api.metrics.setScarf(api.metrics.scarf() + 13)}`)),
+        btn("metrics", () => { console.log("[dev] metrics", api.metrics.all()); toast("metrics in console"); }))));
 
   // ---- Bonus games / random goals -------------------------------------------
   const bonusSel = select(api.bonus.list(), (g) => g.id, (g) => g.name);

@@ -4,7 +4,7 @@
 import {
   HS_KEY, RECORDS_KEY, HISTORY_KEY, STATS_KEY, ACH_KEY, DIFF_KEY,
   DAILY_KEY, DAILY_PROGRESS_KEY, DAILY_BOARD_KEY, DAILY_STREAK_KEY, TYPES_KEY, TALLY_KEY,
-  BREADTH_KEY, WEEKDAYS_KEY, EXPLORER_TOKENS, RANDOM_KEY, GOAL_KEY,
+  BREADTH_KEY, WEEKDAYS_KEY, DATES_KEY, EXPLORER_TOKENS, RANDOM_KEY, GOAL_KEY,
   SETTINGS_KEY, METRICS_KEY, APP_PREFIX, DEFAULT_SETTINGS,
   CHALLENGES_KEY, CHALLENGE_TOKENS_KEY,
   ALBUM_FOCUS_KEY, ALBUM_FOCUS_TARGET, DIFF_RANK,
@@ -519,9 +519,67 @@ export function hasPlayedEveryWeekday(seen = loadWeekdaysPlayed()) {
   for (let d = 0; d < 7; d++) if (!seen[d]) return false;
   return true;
 }
-// Clear both breadth stores (dev tool; resetAchievements sweeps them too).
+/* ---------- The calendar ledger (days and months ever played on) ----------
+   Value: { days: { [YYYY-MM-DD]: true }, months: { [1-12]: true } }. Months are keyed by
+   month NUMBER, not year-month: "played in all twelve months" is a lifetime collection, so a
+   player who starts in July can finish it the following June rather than being told to wait for
+   a calendar year they can no longer complete. See DATES_KEY for why this isn't derived from
+   the history log. */
+export function loadDatesPlayed() {
+  const d = { days: {}, months: {} };
+  try {
+    const raw = localStorage.getItem(DATES_KEY);
+    if (raw) {
+      const o = JSON.parse(raw);
+      if (o && typeof o === "object") {
+        return {
+          days: (o.days && typeof o.days === "object") ? o.days : {},
+          months: (o.months && typeof o.months === "object") ? o.months : {},
+        };
+      }
+    }
+  } catch (e) { /* ignore */ }
+  return d;
+}
+// Record one ISO date (YYYY-MM-DD) as played; returns the updated ledger. Takes the date as a
+// string rather than a Date so the caller's todayKey() — and with it the dev date override —
+// is the single source of what "today" means.
+export function markDatePlayed(iso) {
+  const o = loadDatesPlayed();
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(iso || "")) return o;
+  const month = String(+iso.slice(5, 7));
+  if (o.days[iso] && o.months[month]) return o;
+  o.days[iso] = true;
+  o.months[month] = true;
+  try { localStorage.setItem(DATES_KEY, JSON.stringify(o)); } catch (e) { /* ignore */ }
+  return o;
+}
+// How many distinct calendar days have ever been played on.
+export function distinctDaysPlayed(led = loadDatesPlayed()) { return Object.keys(led.days).length; }
+// Have all twelve month numbers been ticked off?
+export function hasPlayedEveryMonth(led = loadDatesPlayed()) {
+  for (let m = 1; m <= 12; m++) if (!led.months[String(m)]) return false;
+  return true;
+}
+// Length of the run of consecutive days ending on `iso` (0 if that day wasn't played).
+// Walks the date at local noon, so neither a DST shift nor a timezone past UTC+12 can roll a
+// step onto its neighbour — hence the local field read rather than toISOString, which would
+// hand back the previous day for anyone east of UTC+12.
+export function dayStreakEnding(iso, led = loadDatesPlayed()) {
+  if (!led.days[iso]) return 0;
+  const key = (d) => d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+  let n = 0;
+  const d = new Date(iso + "T12:00:00");
+  while (led.days[key(d)]) { n++; d.setDate(d.getDate() - 1); }
+  return n;
+}
+// Clear the breadth stores (dev tool; resetAchievements sweeps them too).
 export function resetBreadth() {
-  try { localStorage.removeItem(BREADTH_KEY); localStorage.removeItem(WEEKDAYS_KEY); } catch (e) { /* ignore */ }
+  try {
+    localStorage.removeItem(BREADTH_KEY);
+    localStorage.removeItem(WEEKDAYS_KEY);
+    localStorage.removeItem(DATES_KEY);
+  } catch (e) { /* ignore */ }
 }
 
 /* ---------- The randomiser's "already shown you" ledger ----------
@@ -647,8 +705,11 @@ export function recordGameTally(rounds) {
 //   bestVerseBonus — most verse-bonus points earned in a single game
 //   roundsTotal / roundsCorrect — lifetime rounds played / answered right (accuracy)
 //   dailyPlayed / dailyPerfect  — lifetime daily challenges finished / perfected
+//   noTimeoutStreak — consecutive non-infinite games finished with zero timeouts
+//   correctRunStreak — correct answers in a row ACROSS game boundaries (see bumpCorrectRunStreak)
+//   scarfClicks — lifetime taps on the scarf margin doodle
 export function loadMetrics() {
-  const d = { fastestMs: null, answerSumMs: 0, answerN: 0, lyricLines: 0, versePerfect: 0, wholeVerses: 0, bestVerseBonus: 0, roundsTotal: 0, roundsCorrect: 0, dailyPlayed: 0, dailyPerfect: 0, noTimeoutStreak: 0 };
+  const d = { fastestMs: null, answerSumMs: 0, answerN: 0, lyricLines: 0, versePerfect: 0, wholeVerses: 0, bestVerseBonus: 0, roundsTotal: 0, roundsCorrect: 0, dailyPlayed: 0, dailyPerfect: 0, noTimeoutStreak: 0, correctRunStreak: 0, scarfClicks: 0 };
   try {
     const raw = localStorage.getItem(METRICS_KEY);
     if (raw) { const o = JSON.parse(raw); if (o && typeof o === "object") return { ...d, ...o }; }
@@ -677,6 +738,27 @@ export function recordGameMetrics(g) {
   if (!g.isInfinite) m.noTimeoutStreak = (g.timeouts === 0) ? (m.noTimeoutStreak || 0) + 1 : 0;
   saveMetrics(m);
   return m;
+}
+
+// The correct-in-a-row streak that survives the end of a game. Written per ANSWER rather than
+// per run, so it lives here instead of in recordGameMetrics. The same rule noTimeoutStreak
+// follows applies: some game types are INVISIBLE to it — they neither extend it nor break it —
+// and the caller decides which by simply not calling (see app.js's streakVisible). Returns the
+// updated streak.
+export function bumpCorrectRunStreak(correct) {
+  const m = loadMetrics();
+  m.correctRunStreak = correct ? (m.correctRunStreak || 0) + 1 : 0;
+  saveMetrics(m);
+  return m.correctRunStreak;
+}
+
+// One tap on the scarf doodle. In METRICS rather than a key of its own: it is a lifetime
+// counter of a thing the player did, which is exactly what this record is for.
+export function bumpScarfClicks() {
+  const m = loadMetrics();
+  m.scarfClicks = (m.scarfClicks || 0) + 1;
+  saveMetrics(m);
+  return m.scarfClicks;
 }
 
 /* ---------- Skills & Mastery progression ---------- */

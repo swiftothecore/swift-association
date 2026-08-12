@@ -58,6 +58,11 @@ export const CUSTOM_KEY = "swiftSongAssociation.custom";               // player
 export const KEEPSAKES_KEY = "swiftSongAssociation.keepsakes";         // earned collectibles — { [polaroidId]: isoDate } (unlock time, mirrors achievements)
 export const BREADTH_KEY = "swiftSongAssociation.modesSeen";           // { [token]: true } — every mode/difficulty combination ever finished, for "Explorer"
 export const WEEKDAYS_KEY = "swiftSongAssociation.weekdaysPlayed";     // { [0-6]: true } — which weekdays you have finished a game on, for "Seven"
+// The calendar ledger — { days: { [YYYY-MM-DD]: true }, months: { [1-12]: true } }. Deliberately
+// its own key rather than derived from HISTORY_KEY, which is capped at HISTORY_CAP runs: a heavy
+// year can push January off the end before December arrives, so a derived answer would be wrong
+// exactly for the player who earned it. Uncapped on purpose — a year of daily play is ~5KB.
+export const DATES_KEY = "swiftSongAssociation.datesPlayed";
 export const RANDOM_KEY = "swiftSongAssociation.randomSeen";           // { [token]: true } — everything the randomiser has already shown you (see RANDOM_CATEGORIES)
 export const GOAL_KEY = "swiftSongAssociation.pinnedGoal";             // { id, pinned } — the one charm pinned as a goal on the Charm Collection page
 

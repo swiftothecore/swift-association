@@ -75,11 +75,12 @@ import {
   markTypePlayed,
   markModeSeen, hasExploredEverything, loadModesSeen,
   markWeekdayPlayed, hasPlayedEveryWeekday, loadWeekdaysPlayed, resetBreadth,
+  loadDatesPlayed, markDatePlayed, distinctDaysPlayed, hasPlayedEveryMonth, dayStreakEnding,
   loadRandomSeen, markRandomSeen, seedRandomSeen, randomSeeded, resetRandomSeen,
   loadGoal, saveGoal, clearGoal,
   loadSongTally, saveSongTally, recordGameTally,
   loadCustom, saveCustom, activeCustomPreset, resetCustom, defaultCustomPreset,
-  loadMetrics, recordGameMetrics,
+  loadMetrics, saveMetrics, recordGameMetrics, bumpCorrectRunStreak, bumpScarfClicks,
   loadSettings, saveSettings,
   exportData, importData,
   loadChallengeState, saveChallengeState, challengeRecord,
@@ -172,6 +173,7 @@ let roundAlbums = [];    // per-round album of the picked song (for the final br
 let roundWords = [];     // per-round prompt word (for the lifetime tally / Nemesis Word)
 let roundSongs = [];     // per-round answered song title, null on a miss (lifetime tally)
 let roundHinted = [];    // per-round true if a hint was taken (a hinted run can't set a PB)
+let roundTimes = [];     // per-round seconds spent on the page, EVERY mode including Relaxed (see roundStart)
 let hintsUsed = 0;       // count of rounds this game where a hint was taken
 let hintBudgetLeft = Infinity; // Custom mode: total hint reveals still allowed this run (Infinity = uncapped, every other mode)
 let runFolded = false;   // partial/full stats already saved for the current run (quit / unload / endGame)
@@ -303,12 +305,22 @@ let activeIndex = -1;
 let timerId = null;
 let countdownId = null;
 let timerStart = 0;
+// The page stopwatch, deliberately SEPARATE from timerStart. Two reasons it can't share it:
+// startTimer returns early when a mode has no clock, so timerStart is stale rubbish all through
+// a Relaxed run; and the `timed` gate at the verdict is load-bearing for four shipped charms
+// (Perfect Storm, Peace, Don't Wait, Let The Games Begin) that are unreachable in Relaxed BY
+// CONSTRUCTION — widening it would retroactively change what they cost. This runs in every mode
+// and feeds roundTimes and the Relaxed results stopwatch, nothing else. Set wherever a page goes
+// live: advanceRound as the baseline, startPlay once any curtain has lifted, and the two
+// fresh-clock retries (Mulligan, Second Chance).
+let roundStart = 0;
 let roundLocked = false;
 let feedbackShownAt = 0;        // ms timestamp the verdict appeared — Enter-to-advance is held off for ENTER_SKIP_GRACE after it
 const ENTER_SKIP_GRACE = 250;   // so a held/late Enter from the answer screen can't instantly blow past the result
 let statsBackTarget = "start";
 let settings = { ...{} };       // populated from loadSettings() in init
 let pausedRemaining = null;     // timer seconds left when the settings modal paused play
+let pausedStopwatchAt = null;   // performance.now() when that pause began, so roundStart can skip the gap
 
 // Dev cheats (only active behind the ?dev flag; see devActive / js/dev.js).
 let devNoLog = false;           // when true, endGame skips folding the run into history/stats/records
@@ -1975,6 +1987,10 @@ function markRunBreadth(token) {
   // Noon, so neither the timezone nor a DST shift can roll the parsed date onto its neighbour.
   const day = new Date(todayKey() + "T12:00:00").getDay();
   if (hasPlayedEveryWeekday(markWeekdayPlayed(day))) unlock("play-all-seven-weekdays");
+  // The calendar ledger rides alongside the weekday for the same reason and off the same date:
+  // every finished run counts, whatever mode it was, because all three charms it backs only ask
+  // that you turned up. The charms themselves read it later; this just keeps the record.
+  markDatePlayed(todayKey());
 }
 
 /* ---------- Challenges mode: token wallet + progress mutators ----------
@@ -2863,6 +2879,25 @@ function fmtTime(sec) {
   if (sec == null) return null;
   const s = Math.round(sec);
   return Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0");
+}
+// Does this run's game type count toward the cross-game correct streak? Modelled on the rule
+// noTimeoutStreak already follows: the sandboxed types are INVISIBLE to it — they neither extend
+// it nor break it — because a streak that a Challenge run could snap would make the sandbox a lie
+// in the one direction that costs the player something. A dev test run records nothing, exactly
+// as stats and history don't. Bonus games never reach this path at all.
+function crossGameStreakCounts() {
+  if (devNoLog) return false;
+  return gameType === "classic" || gameType === "infinite" || gameType === "adaptive"
+      || gameType === "daily" || gameType === "album";
+}
+
+// How long a clock-less run took, summed off roundTimes — Relaxed's stopwatch. null in any mode
+// that has a clock (those report gameTimeSum instead) and on a run with no pages behind it.
+function relaxedStopwatch() {
+  if (currentMode.seconds > 0) return null;
+  let sum = 0, n = 0;
+  for (const t of roundTimes) if (typeof t === "number" && isFinite(t)) { sum += t; n++; }
+  return n ? sum : null;
 }
 // Time of day in the player's chosen clock format (settings.clock: "12" | "24").
 // One resolver behind every clock-time surface, so a future one just calls this.
@@ -8715,6 +8750,7 @@ function resetRunState() {
   roundWords = [];
   roundSongs = [];
   roundHinted = [];
+  roundTimes = [];
   hintsUsed = 0;
   hintBudgetLeft = Infinity;   // Custom mode overrides this to its hint budget in startCustom
   runFolded = false;
@@ -9330,6 +9366,9 @@ function dailyProgressSnapshot(dateStr) {
     roundWords: roundWords.slice(),
     roundSongs: roundSongs.slice(),
     roundVerseTier: roundVerseTier.slice(),
+    // Load-bearing. Without it a mid-run refresh leaves the timing charms reading a short array
+    // and judging a full run off half its pages — silently, and unreproducibly.
+    roundTimes: roundTimes.slice(),
     usedWords: usedWords.slice(),
     recentEras: recentEras.slice(),
     correctStreak, gameMaxStreak, gameTimeouts,
@@ -9351,6 +9390,7 @@ function restoreDailyProgress(p) {
   roundWords = Array.isArray(p.roundWords) ? p.roundWords.slice() : [];
   roundSongs = Array.isArray(p.roundSongs) ? p.roundSongs.slice() : [];
   roundVerseTier = Array.isArray(p.roundVerseTier) ? p.roundVerseTier.slice() : [];
+  roundTimes = Array.isArray(p.roundTimes) ? p.roundTimes.slice() : [];
   usedWords = Array.isArray(p.usedWords) ? p.usedWords.slice() : [];
   recentEras = Array.isArray(p.recentEras) ? p.recentEras.slice() : [];
   correctStreak = p.correctStreak || 0;
@@ -12217,7 +12257,11 @@ function beginRoundClock() {
   };
   // Confidence Wager stakes AFTER the word is up but BEFORE the clock runs — this is the one
   // place that owns that gap, so the gate lives here rather than in the rule.
-  const startPlay = () => { if (wagerRuleActive()) showWagerStake(startTimer); else startTimer(); };
+  // The page stopwatch starts with the clock, never before it: the curtain above and the wager
+  // below are read-and-decide time, not answering time. Relaxed has no clock to draw that line
+  // for it, so it has to be drawn here.
+  const go = () => { roundStart = performance.now(); startTimer(); };
+  const startPlay = () => { if (wagerRuleActive()) showWagerStake(go); else go(); };
   if (!queue) { beginTimedRoundEffects(); startPlay(); return; }
   if (!Array.isArray(queue)) queue = [queue];
   showTimerFull();   // pin the clock at a paused full bar beneath the curtain — no leftover time shows through the lift
@@ -13128,6 +13172,10 @@ function advanceRound() {
   renderInsuranceBtn();                        // Insurance: the shield action (hidden elsewhere)
   runRoundEggs();
   maybeGuideType();   // Beat A: teach the core action on the first game's opening page
+  // The page stopwatch's baseline. Every start path reaches advanceRound, so no round can be
+  // left reading the previous page's stamp; the paths that go through beginRoundClock re-stamp
+  // it in startPlay so a curtain or a wager isn't billed to the player's answer.
+  roundStart = performance.now();
   // Note: the timer is started by the caller (nextRound) — for a page turn it
   // only starts once the flip finishes, so no time is lost during the animation.
 }
@@ -14340,6 +14388,7 @@ function submitAnswer(song, isTimeout) {
     $("songInput").disabled = false;
     $("playArea").style.display = "";
     softRejectFlash(`second chance — try again (${pathMulligans} left)`);
+    roundStart = performance.now();   // a fresh clock is a fresh page as far as the stopwatch is concerned
     startTimer();
     return;
   }
@@ -14480,6 +14529,22 @@ function submitAnswer(song, isTimeout) {
   } else {
     rareStreak = 0;
   }
+
+  // How long this page took, recorded for EVERY mode. Capped at the clock where there is one, so
+  // a timeout reads as exactly the round length rather than the stray milliseconds the verdict
+  // took to arrive; uncapped in Relaxed, which has nothing to cap against and where the honest
+  // number is the point. Deliberately above the `timed` gate below and deliberately not part of
+  // it: see roundStart for why that gate must not widen.
+  {
+    const spent = (performance.now() - roundStart) / 1000;
+    roundTimes[round - 1] = currentMode.seconds > 0 ? Math.min(spent, currentMode.seconds) : spent;
+  }
+
+  // The correct-in-a-row streak that outlives the game it started in. Written per answer, so it
+  // lives here rather than in the end-of-run fold. It follows noTimeoutStreak's rule about
+  // invisible game types (see crossGameStreakCounts): a sandboxed run neither extends it nor
+  // breaks it, which is what "sandboxed" has to mean for a counter as well as for a charm.
+  if (crossGameStreakCounts()) bumpCorrectRunStreak(correct);
 
   // achievements: timing + streak signals (mid-game unlocks toast immediately).
   // Timing signals only apply to timed modes — Relaxed has no clock, so they're skipped.
@@ -14993,6 +15058,12 @@ function endGame() {
   // Completion time (sum of per-round answer seconds, capped per round). Only meaningful
   // when there's a clock — Relaxed (seconds 0) has no time. Used as the records speed metric.
   const runTime = currentMode.seconds > 0 ? gameTimeSum : null;
+  // Relaxed's stopwatch. The mode's whole premise is that nothing is taken away, so it gets a
+  // count-up rather than a countdown, read off roundTimes. DISPLAY ONLY, and that restraint is
+  // the point: runTime above still feeds history, the records speed metric and the lifetime
+  // answer averages, all of which stay clock-only. A mode with no clock joining the "average
+  // answer" figure would quietly change what that number means.
+  const shownTime = runTime != null ? runTime : relaxedStopwatch();
 
   // Log every finished run to the chronological history (classic / infinite / daily).
   // devNoLog (a dev cheat) skips every persistence fold so test runs don't dirty the data.
@@ -15149,7 +15220,7 @@ function endGame() {
   // Verse bonus (fuller lyric recall) rides alongside the score, never folded into it.
   // Hidden on a held-back daily score — it would leak how well the round went.
   const bonusSuffix = (verseBonus > 0 && !(isDaily && settings.hideDailyScore)) ? " · +" + verseBonus + " verse bonus" : "";
-  const timeSuffix = (runTime != null && !(isDaily && settings.hideDailyScore)) ? " · " + fmtTime(runTime) : "";
+  const timeSuffix = (shownTime != null && !(isDaily && settings.hideDailyScore)) ? " · " + fmtTime(shownTime) : "";
   $("finalSub").textContent = (isInfinite ? "rounds · " + score + " correct" : "out of " + TOTAL_ROUNDS) + timeSuffix + bonusSuffix;
   $("keepGoingBtn").style.display = (isInfinite || isDaily) ? "none" : "";
   renderVerseAnthology();
@@ -15377,6 +15448,14 @@ function addDoodle(kind, posClass) {
   d.className = "doodle " + posClass + (kind === "snake" ? " snake" : "");
   d.style.width = w + "px"; d.style.height = h + "px";
   d.innerHTML = DOODLE_SVG[kind];
+  // The scarf is the one doodle you can touch: it counts taps, lifetime, across every run. The
+  // counter is kept here rather than in run state because the scarf only turns up on a 14% roll
+  // in one branch of the margin-doodle chain, so a per-run target would be luck, not a feat.
+  // Nothing is unlocked here yet — this is the ledger the charm will read.
+  if (kind === "scarf") {
+    d.classList.add("doodle-tappable");
+    d.addEventListener("click", () => { bumpScarfClicks(); });
+  }
   layer.appendChild(d);
 }
 
@@ -16655,6 +16734,10 @@ function exportBackup() {
 // Pause the round timer while the modal is open; resume from where it left off.
 function pauseForSettings() {
   pausedRemaining = null;
+  pausedStopwatchAt = null;
+  // The stopwatch pauses on any live page, clock or not: time spent in the settings modal was
+  // never spent answering, and in Relaxed there is no countdown to freeze in its place.
+  if (screens.game.classList.contains("active") && !roundLocked) pausedStopwatchAt = performance.now();
   if (timerId && screens.game.classList.contains("active") && !roundLocked && currentMode.seconds > 0) {
     const elapsed = (performance.now() - timerStart) / 1000;
     pausedRemaining = Math.max(0.1, currentMode.seconds - elapsed);
@@ -16662,6 +16745,10 @@ function pauseForSettings() {
   }
 }
 function resumeFromSettings() {
+  if (pausedStopwatchAt != null) {
+    roundStart += performance.now() - pausedStopwatchAt;   // push the page's start forward by the time spent in the modal
+    pausedStopwatchAt = null;
+  }
   if (pausedRemaining == null) return;
   const r = pausedRemaining;
   pausedRemaining = null;
@@ -17756,6 +17843,29 @@ function devWeekdayReport() {
     missing: DEV_DAY_NAMES.filter((n, d) => !seen[d]),
   };
 }
+const DEV_MONTH_NAMES = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+function devDatesReport() {
+  const led = loadDatesPlayed();
+  return {
+    days: distinctDaysPlayed(led),
+    streak: dayStreakEnding(todayKey(), led),
+    everyMonth: hasPlayedEveryMonth(led),
+    months: DEV_MONTH_NAMES.filter((n, i) => led.months[String(i + 1)]),
+    missingMonths: DEV_MONTH_NAMES.filter((n, i) => !led.months[String(i + 1)]),
+  };
+}
+// Walk `n` days back from `from` (default today) and mark every one played. The seeder for the
+// calendar charms: a seven-day streak is otherwise a week of real waiting, and twelve months is
+// a year of it. Marks the days themselves, so it seeds the months too.
+function devSeedDates(n, from) {
+  const start = new Date((from || todayKey()) + "T12:00:00");
+  for (let i = 0; i < Math.max(0, n | 0); i++) {
+    const d = new Date(start);
+    d.setDate(d.getDate() - i);
+    markDatePlayed(d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"));
+  }
+  return devDatesReport();
+}
 
 // The single curated surface handed to the dev panel. Getters read live module
 // state on each call; the rest are thin wrappers over the game's own functions.
@@ -18284,7 +18394,35 @@ function buildDevApi() {
       day: (d) => { markWeekdayPlayed(Math.max(0, Math.min(6, d | 0))); return devWeekdayReport(); },
       // Fill the whole week and take the charm.
       weekAll: () => { for (let d = 0; d < 7; d++) markWeekdayPlayed(d); if (hasPlayedEveryWeekday()) unlock("play-all-seven-weekdays"); return devWeekdayReport(); },
-      reset: () => { resetBreadth(); return { explorer: devExplorerReport(), weekdays: devWeekdayReport() }; },
+      // The calendar ledger: distinct days, the live consecutive-day streak, and the months.
+      dates: devDatesReport,
+      // Mark one date played, e.g. breadth.date("2026-03-09"). Defaults to today.
+      date: (iso) => { markDatePlayed(iso || todayKey()); return devDatesReport(); },
+      // Mark the last N days back from today (or from `iso`) — breadth.seedDays(7) is a week's
+      // streak, breadth.seedDays(400) fills every month.
+      seedDays: (n, iso) => devSeedDates(n == null ? 7 : n, iso),
+      reset: () => { resetBreadth(); return { explorer: devExplorerReport(), weekdays: devWeekdayReport(), dates: devDatesReport() }; },
+    },
+    // The lifetime cross-game counters. Read-only for most of them — they are earned, and a
+    // setter would only ever be used to lie about accuracy. The two exceptions are the counters
+    // that take a very long time to fill honestly and have no other way in.
+    metrics: {
+      all: () => loadMetrics(),
+      // The correct-in-a-row streak that survives a game ending. Fifty in a row is four clean
+      // games, so it wants a setter to be testable at all.
+      streak: () => loadMetrics().correctRunStreak || 0,
+      setStreak: (n) => { const m = loadMetrics(); m.correctRunStreak = Math.max(0, n | 0); saveMetrics(m); return m.correctRunStreak; },
+      // Scarf taps. The doodle itself only appears on a 14% roll, so waiting for thirteen of
+      // them is not a test plan.
+      scarf: () => loadMetrics().scarfClicks || 0,
+      setScarf: (n) => { const m = loadMetrics(); m.scarfClicks = Math.max(0, n | 0); saveMetrics(m); return m.scarfClicks; },
+    },
+    // The live run's per-page stopwatch. Reads the array the timing charms will judge; `sum` is
+    // what Relaxed's results line shows (null in any mode that has a clock of its own).
+    times: {
+      round: () => roundTimes.map((t) => (typeof t === "number" ? +t.toFixed(2) : t)),
+      sum: () => relaxedStopwatch(),
+      elapsed: () => +((performance.now() - roundStart) / 1000).toFixed(2),
     },
     // Bonus games shelf. `sample` is the useful one: it dry-runs a builder N times without
     // touching the UI, so the fairness guards and (for Spot the Slip) the quality of the
