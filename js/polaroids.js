@@ -739,47 +739,6 @@ export const POLAROIDS = [
 </svg>`,
   },
   {
-    id: "not-asleep",
-    name: "i'm not asleep",
-    sub: "my mind is alive",
-    art: `<svg viewBox="0 0 200 200" role="img"><title>A banana and safety goggles on a bedside table with a tissue box, tissues and a bunch of bananas behind</title>
-  <rect width="200" height="200" fill="#ddd3c4"/>
-  <circle cx="190" cy="10" r="60" fill="#e8dba3" opacity=".12"/>
-  <rect y="104" width="200" height="96" fill="#c9a86b"/>
-  <g stroke="#b3915a" stroke-width="2" opacity=".6" fill="none"><path d="M0 130 q50 5 100 0 t100 3 M0 168 q60 -6 120 0 t80 -3 M0 190 q50 4 100 0 t100 2"/></g>
-  <rect x="24" y="76" width="48" height="34" rx="3" fill="#b8a8d4"/>
-  <ellipse cx="48" cy="82" rx="12" ry="4.5" fill="#6f6386"/>
-  <path d="M42 82 q2 -10 6 -10 q5 0 6 10 q-3 -4 -6 -3 q-4 1 -6 3 z" fill="#f6f2e7"/>
-  <g stroke="#a394c4" stroke-width="1.2" fill="none" opacity=".8"><path d="M28 92 q20 4 40 0 M28 100 q20 4 40 0"/></g>
-  <path d="M26 124 q-6 -8 2 -12 q7 -4 12 2 q6 -3 8 3 q2 6 -5 8 q2 5 -6 6 q-8 0 -11 -7 z" fill="#f2eee2"/>
-  <g stroke="#d8d0bc" stroke-width="1" fill="none"><path d="M28 118 q6 2 12 0 M30 124 q5 -4 10 -1"/></g>
-  <path d="M40 140 q-5 -7 2 -10 q6 -3 10 2 q5 -2 6 3 q1 5 -4 6 q1 4 -5 5 q-7 0 -9 -6 z" fill="#ede8da"/>
-  <g stroke="#b9c6cc" stroke-width="2" fill="none"><path d="M152 70 L154 108 M176 70 L174 108"/></g>
-  <ellipse cx="164" cy="70" rx="12" ry="3.5" fill="none" stroke="#b9c6cc" stroke-width="2"/>
-  <ellipse cx="164" cy="108" rx="10" ry="3" fill="#b9c6cc" opacity=".7"/>
-  <path d="M153.5 92 Q164 96 174.5 92" stroke="#a3c2ce" stroke-width="2" fill="none"/>
-  <path d="M118 70 q-2 -8 4 -10" stroke="#8a5a33" stroke-width="4" fill="none" stroke-linecap="round"/>
-  <path d="M96 100 C96 78 104 66 118 62 L124 68 C112 74 106 86 106 102 Z" fill="#e0b93a"/>
-  <path d="M110 100 C112 80 118 68 128 64 L134 70 C124 78 120 88 120 102 Z" fill="#d9ae2e"/>
-  <path d="M124 102 C128 84 134 72 142 68 L146 76 C138 84 134 94 132 104 Z" fill="#e0b93a"/>
-  <path d="M46 146 C58 120 96 102 148 108 L146 118 C98 112 66 126 56 150 Z" fill="#e8c23a"/>
-  <path d="M46 146 q-4 4 2 6 q5 1 8 -2 z" fill="#6f4a2a"/>
-  <path d="M148 108 q6 0 4 6 l-6 5 -2 -10 z" fill="#8a5a33"/>
-  <path d="M52 140 C66 118 96 106 138 110" stroke="#c9992c" stroke-width="1.6" fill="none"/>
-  <g fill="#a8752c" opacity=".8"><ellipse cx="80" cy="126" rx="1.6" ry="1"/><ellipse cx="100" cy="117" rx="1.5" ry="0.9"/><ellipse cx="120" cy="112" rx="1.4" ry="0.9"/></g>
-  <ellipse cx="66" cy="134" rx="5" ry="3.5" fill="#6f8a78" transform="rotate(-18 66 134)"/>
-  <circle cx="66" cy="134" r="1" fill="#f2eee2"/>
-  <circle cx="118" cy="158" r="11" fill="#cdd8de" stroke="#8b8272" stroke-width="3"/>
-  <circle cx="146" cy="156" r="11" fill="#cdd8de" stroke="#8b8272" stroke-width="3"/>
-  <path d="M128 155 q4 -3 8 0" stroke="#8b8272" stroke-width="3" fill="none"/>
-  <path d="M107 160 q-14 6 -10 16 q3 8 14 6" stroke="#6f675a" stroke-width="2.5" fill="none"/>
-  <path d="M157 158 q12 8 6 18" stroke="#6f675a" stroke-width="2.5" fill="none"/>
-  <path d="M112 152 q3 -3 6 -2 M140 150 q3 -3 6 -2" stroke="#f2eee2" stroke-width="1.6" fill="none"/>
-  <rect width="200" height="200" fill="#d9c7a3" opacity=".06"/>
-  <rect x="0.5" y="0.5" width="199" height="199" fill="none" stroke="#3f3a2e" opacity=".12"/>
-</svg>`,
-  },
-  {
     id: "goat-remix",
     name: "the goat remix",
     sub: "i knew you were trouble",

@@ -2019,9 +2019,18 @@ function unlockChallenge(id) {
   saveChallengeTokens(wallet);
   st[id] = { ...challengeRecord(id), unlocked: true };
   saveChallengeState(st);
-  // I Like Shiny Things — every challenge in the registry is now unlocked (free ones count).
-  if (CHALLENGES.every((ch) => challengeUnlocked(ch.id))) unlock("paper-rings");
+  checkChallengeBoardCharms();
   return true;
+}
+
+// I Like Shiny Things — every challenge in the registry is now open (free ones count).
+// Deliberately NOT confined to unlockChallenge, which only runs on a purchase: the four
+// mastery-gated challenges open off a Mastery level with no purchase behind them, so on the
+// ordinary path (buy all the purchasable ones, reach Mastery months later) the last locks fall
+// with no buy left to notice it, and the charm would sit unearned forever. Called from the
+// challenges page render too, so simply looking at the board closes it.
+function checkChallengeBoardCharms() {
+  if (CHALLENGES.every((ch) => challengeUnlocked(ch.id))) unlock("paper-rings");
 }
 
 // True if the player's Mastery level has reached a mastery-gated challenge's requirement.
@@ -2061,17 +2070,26 @@ function recordChallengeAttempt(id, dark) {
    An EARNEST attempt is a run that reached the end screen, won or lost; quitting earns
    nothing. This counter therefore banks at the END of a run, which is the exact opposite of
    `attempts` above (banked at run START). They want opposite definitions because they defend
-   against opposite exploits: banking at the start is what keeps State Of Grace honest, and
-   banking at the end is what stops seven start-and-quit cycles minting a free ticket. Keep
-   both — a quit at round 12 then costs the first-try shot AND earns no ticket progress.
+   against opposite exploits: banking at the start is what keeps the attempt history honest,
+   and banking at the end is what stops seven start-and-quit cycles minting a free ticket.
    Dark runs never count: a dark side only opens once the base is beaten, so its attempts
-   would be minting against a challenge that has already paid out. */
+   would be minting against a challenge that has already paid out.
+
+   `runs` rides along here and is the third counter, deliberately: it is At Least I'm Trying's
+   tally and NOTHING else's. It counts every base run seen through and never freezes, because
+   freezing it the way `earnest` does is exactly what made that charm lockable — beat a
+   challenge inside seven runs and its count could never rise again, so every challenge you
+   beat quickly burned one of a finite supply of chances. `earnest` keeps its own frozen
+   semantics because it is the TICKET's tally, and a ticket minted after a challenge was
+   already beaten would turn an anti-deadlock valve into a second payout on every card. */
 function recordEarnestAttempt(id, dark) {
   const rec = challengeRecord(id);
-  // Stop once the challenge is beaten (it has already paid a token) or the seven are banked.
-  if (dark || rec.defeated || rec.earnest >= PERSIST_ATTEMPTS) return rec.earnest;
+  if (dark) return rec.earnest;
+  // Earnest stops once the challenge is beaten (it has already paid a token) or the seven are
+  // banked; runs keeps going regardless.
+  const frozen = rec.defeated || rec.earnest >= PERSIST_ATTEMPTS;
   const st = loadChallengeState();
-  st[id] = { ...rec, earnest: rec.earnest + 1 };
+  st[id] = { ...rec, runs: rec.runs + 1, earnest: frozen ? rec.earnest : rec.earnest + 1 };
   saveChallengeState(st);
   return st[id].earnest;
 }
@@ -2123,20 +2141,12 @@ function markChallengeDefeated(id, score, dark) {
     unlock("the-black-dog");
     if (beaten >= DARK_SIDE_MILESTONE) unlock("dont-blame-me");
     if (DARK_SIDE_IDS.length && beaten >= DARK_SIDE_IDS.length) unlock("darkest-paradise");
-    // Now I Breathe Flames — the dark mirror of Our Slates Are Clean. darkAttempts banks at run start, the
-    // way attempts does, so at this point it already counts the run that just won.
-    if (rec.darkAttempts === 1) unlock("mad-woman");
   }
   if (firstTime && !dark) {
     const wallet = loadChallengeTokens();
     wallet.balance += 1;                              // the self-feeding reward
     saveChallengeTokens(wallet);
     unlock("the-archer");                             // first challenge ever defeated
-    if (rec.attempts === 1) unlock("state-of-grace"); // beat it on the first try
-    // Persistence, counted the persistence way: the EARNEST tally (runs seen through to the
-    // end), not `attempts`, which banks at run start and would credit seven quits. Same seven
-    // as the ticket, so the charm honestly means "you saw this through seven times and won".
-    if (rec.earnest >= PERSIST_ATTEMPTS) unlock("this-is-me-trying");
     if (CHALLENGES.every((ch) => challengeRecord(ch.id).defeated)) unlock("the-alchemy");
   }
   return firstTime;
@@ -6658,6 +6668,7 @@ function toggleChallengePin(id) {
 }
 
 function renderChallengesPage() {
+  checkChallengeBoardCharms();   // mastery-gated locks fall with no purchase to notice them
   const wallet = loadChallengeTokens();
   const tk = wallet.balance, tt = wallet.tickets;
   const defeated = CHALLENGES.filter((c) => challengeRecord(c.id).defeated).length;
@@ -10988,8 +10999,8 @@ function endChallenge() {
   $("verseAnthology").style.display = "none";
   hideNewBestBanner();
 
-  // Bank the earnest attempt BEFORE the defeat is recorded, so the winning run itself counts
-  // as the seventh: At Least I'm Trying reads the tally inside markChallengeDefeated.
+  // Bank the run BEFORE the defeat is recorded, so the winning run itself counts as the
+  // seventh: At Least I'm Trying reads the `runs` tally just below.
   const earnestBefore = challengeRecord(c.id).earnest;
   if (!devNoLog) recordEarnestAttempt(c.id, challengeDark);
   const ticketJustReady = !devNoLog && earnestBefore < PERSIST_ATTEMPTS && ticketReady(c.id);
@@ -10997,6 +11008,20 @@ function endChallenge() {
   const won = challengeWinCheck(c);
   const firstTime = won ? markChallengeDefeated(c.id, score, challengeDark) : false;
   const rec = challengeRecord(c.id);
+  /* The three charms about HOW a challenge was beaten rather than which one. All three used to
+     hang off the first-ever defeat of a given challenge, which made each one a single
+     non-renewable chance per card and, with the roster finite, something the player could lose
+     for good: lose your opening run everywhere and Our Slates Are Clean died; win everything
+     inside seven runs and At Least I'm Trying died. They are judged on THIS run now, so a
+     challenge already on the board can always be gone back to and done properly. */
+  const cleanSheet = won && roundResults.length > 0 && roundResults.every(Boolean);
+  // Our Slates Are Clean — a defeat with nothing scratched out: every page of the run cleared.
+  if (cleanSheet && !challengeDark) unlock("state-of-grace");
+  // Now I Breathe Flames — the dark mirror of it, on a dark side.
+  if (cleanSheet && challengeDark) unlock("mad-woman");
+  // At Least I'm Trying — won a challenge you had already seen through seven times. `runs`
+  // never freezes (see recordEarnestAttempt), so this stays winnable on any card, forever.
+  if (won && !challengeDark && rec.runs >= PERSIST_ATTEMPTS) unlock("this-is-me-trying");
   // Should've Known That Word — a flawless Impostor run: every impostor flagged (implied by surviving)
   // and every real word named. challengeRunActive is already false, so the charm fires normally.
   if (c.rule === "impostor" && won && impostorMissed === 0) unlock("shouldve-said-no");
@@ -17561,6 +17586,16 @@ function devSetEarnest(id, n) {
   return st[id].earnest;
 }
 
+// The same for `runs`, At Least I'm Trying's tally. Separate setter because the two counters
+// separate: `earnest` freezes on defeat and this one never does.
+function devSetRuns(id, n) {
+  const st = loadChallengeState();
+  st[id] = { ...challengeRecord(id), runs: Math.max(0, n | 0) };
+  saveChallengeState(st);
+  if ($("challengesBody")) renderChallengesPage();
+  return st[id].runs;
+}
+
 // Re-point the *current* live round to a chosen prompt word without advancing.
 function devApplyWord(word) {
   if (!word) return;
@@ -19016,10 +19051,14 @@ function buildDevApi() {
       // charm or fires a claim the player didn't make.
       persist: {
         state: (id) => { const r = challengeRecord(id);
-          return { earnest: r.earnest, need: PERSIST_ATTEMPTS, claimed: r.ticketClaimed,
+          return { earnest: r.earnest, runs: r.runs, need: PERSIST_ATTEMPTS, claimed: r.ticketClaimed,
             ready: ticketReady(id), price: ticketPrice(CHALLENGE_BY_ID[id]),
             wallet: loadChallengeTokens().tickets }; },
         earnest: (id, n) => devSetEarnest(id, n),
+        // The charm's own tally, separate from the ticket's on purpose: set it past the seven
+        // on a challenge that is already defeated to test that At Least I'm Trying is still
+        // winnable there, which is the whole point of `runs` not freezing.
+        runs: (id, n) => devSetRuns(id, n),
         ready: (id) => devSetEarnest(id, PERSIST_ATTEMPTS),
         claim: (id) => { const ok = claimTicket(id);
           if ($("challengesBody")) renderChallengesPage(); return ok; },
@@ -19028,7 +19067,7 @@ function buildDevApi() {
           return loadChallengeTokens().tickets; },
         reset: (id) => { const st = loadChallengeState();
           const ids = id ? [id] : CHALLENGE_ORDER;
-          ids.forEach((k) => { if (st[k]) st[k] = { ...challengeRecord(k), earnest: 0, ticketClaimed: false }; });
+          ids.forEach((k) => { if (st[k]) st[k] = { ...challengeRecord(k), earnest: 0, runs: 0, ticketClaimed: false }; });
           saveChallengeState(st);
           const w = loadChallengeTokens(); w.tickets = 0; saveChallengeTokens(w);
           if ($("challengesBody")) renderChallengesPage(); return ids.length; },

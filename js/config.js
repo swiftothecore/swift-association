@@ -65,9 +65,13 @@ export const GOAL_KEY = "swiftSongAssociation.pinnedGoal";             // { id, 
 // A polaroid develops like real instant film: solid black on unlock, the photo fading
 // in POLAROID_DEVELOP_MS later. "developed" is derived from unlock+this at render time,
 // never a running timer, so it survives reloads and self-heals. POLAROID_TOTAL is the
-// counter denominator (a Taylor number); the set grows toward it.
+// counter denominator. It was a Taylor number (22) that the set grew toward, and it MUST go
+// back to 22 the day the retired "i'm not asleep" polaroid is rebuilt (PLAN.md holds its art
+// and its trigger). It sits at the true count meanwhile because You Took A Polaroid Of Us
+// fires off POLAROIDS.length: a denominator running ahead of the set would hand the player
+// "every polaroid found" over a counter reading 21 / 22.
 export const POLAROID_DEVELOP_MS = 13 * 60 * 1000;   // 13 real minutes
-export const POLAROID_TOTAL = 22;
+export const POLAROID_TOTAL = 21;
 
 // Every persisted key shares this namespace; export/import and "clear everything"
 // sweep all keys under it.
@@ -2507,7 +2511,7 @@ export const ACHIEVEMENTS = [
   { id: "the-black-dog",    name: "Old Habits Die Screaming", desc: "Beat your first dark side",             secret: false, icon: "blackdog", sitting: true, earn: { cat: "dark" } },
   { id: "dont-blame-me",    name: "Cross The Line",   desc: `Beat ${DARK_SIDE_MILESTONE} dark sides`, secret: false, icon: "halo" },
   { id: "darkest-paradise", name: "Darkest Little Paradise", desc: "Beat every dark side",           secret: false, icon: "eden" },
-  { id: "state-of-grace",   name: "Our Slates Are Clean", desc: "Defeat a challenge on the first try",   secret: false, icon: "feather", sitting: true, earn: { cat: "challenge" } },
+  { id: "state-of-grace",   name: "Our Slates Are Clean", desc: "Defeat a challenge without missing a single page", secret: false, icon: "feather", sitting: true, earn: { cat: "challenge" } },
   { id: "this-is-me-trying", name: "At Least I'm Trying", desc: "Defeat a challenge after seeing it through 7 times", secret: true, icon: "crumple" },
   { id: "smallest-man",      name: "In Plain Sight",                  desc: "Fall for the very first impostor you meet", secret: true, icon: "hooked" },
   /* ---- Flourish charms: win one named challenge the hard way ----
@@ -2538,7 +2542,7 @@ export const ACHIEVEMENTS = [
   { id: "untouchable",       name: "Untouchable",       desc: "Win Insurance with every shield still unspent", secret: true, reveal: "insurance", icon: "belljar" },
   { id: "the-man",           name: "Let The Players Play", desc: "Win Confidence Wager having staked the most you could hold on every page", secret: true, reveal: "confidence-wager", icon: "allin" },
   // Dark sides. A milestone rather than a flourish (no challenge named), so it stays visible.
-  { id: "mad-woman",        name: "Now I Breathe Flames", desc: "Beat a dark side on your first attempt", secret: false, icon: "inkspill", sitting: true, earn: { cat: "dark" } },
+  { id: "mad-woman",        name: "Now I Breathe Flames", desc: "Beat a dark side without missing a single page", secret: false, icon: "inkspill", sitting: true, earn: { cat: "dark" } },
   { id: "the-lakes",        name: "Those Windermere Peaks", desc: "Climb to the Rarest tier in Adaptive",  secret: false, icon: "lake", sitting: true, earn: { cat: "adaptive" } },
   { id: "stay-stay-stay",   name: "Held On Tight",    desc: "Reach Rarest and finish there without slipping", secret: false, icon: "anchor", sitting: true, earn: { cat: "adaptive" } },
   { id: "a-place-in-this-world", name: "Girl On A Mission",     desc: "Beat your first album in Album Focus", secret: false, icon: "map", sitting: true, earn: { cat: "album" } },

@@ -124,7 +124,7 @@ export function challengeRecord(id) {
   return {
     unlocked: !!e.unlocked, defeated: !!e.defeated, attempts: e.attempts || 0, best: e.best || 0,
     darkDefeated: !!e.darkDefeated, darkAttempts: e.darkAttempts || 0, darkBest: e.darkBest || 0,
-    earnest: e.earnest || 0, ticketClaimed: !!e.ticketClaimed, pinned: !!e.pinned,
+    earnest: e.earnest || 0, runs: e.runs || 0, ticketClaimed: !!e.ticketClaimed, pinned: !!e.pinned,
   };
 }
 // The two challenge wallets. `balance` is tokens, seeded with one starting token on first read
