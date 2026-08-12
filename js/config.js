@@ -2421,11 +2421,12 @@ export function reseedSeal(id, seed) {
 /* Charm names are LYRIC FRAGMENTS, not song titles: every name below is a real contiguous
    phrase in songs.json, so reading the collection rewards knowing the words rather than the
    tracklist. A handful of titles survive because the title IS the joke and no fragment beats
-   it — Fearless and its (Taylor's Version) pair, Who's Afraid Of Little Old Me?, Two Is Better
-   Than One, Is It Over Now?, The Lucky One — and several of those are sung lines anyway. New
-   charms follow the fragment rule; keep the phrase to two or three words where you can, and
-   check it against the catalogue before you use it. Ids are storage keys and NEVER change with
-   a rename. */
+   it: Fearless and its (Taylor's Version) pair, Who's Afraid Of Little Old Me?, Two Is Better
+   Than One, Is It Over Now?, The Lucky One. Several of those are sung lines anyway. New charms
+   follow the fragment rule; keep the phrase to two or three words where you can, and check it
+   against the catalogue before you use it. Names describe flavour and are free to change. Ids
+   describe the feat in lowercase kebab-case, are derived from desc, and are permanent storage
+   keys. Change an existing id only through an appended ACH_ID_MIGRATIONS row. */
 export const ACHIEVEMENTS = [
   { id: "first-game-finished",        name: "The Very First Page", desc: "Finish your first game",              secret: false, icon: "wand", sitting: true, earn: { cat: "difficulty" } },
   { id: "perfect-13",       name: "All By Design",    desc: "Score a perfect 13/13",               secret: false, icon: "queen", sitting: true, earn: { cat: "difficulty" } },
