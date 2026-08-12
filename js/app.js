@@ -255,7 +255,7 @@ let riskSkull = [];             // per-round: the miss that ended the run — st
 let beadRideBest = 0;           // Press Your Luck / Double Or Nothing: deepest chain this run
 let beadRideBanked = 0;         // Press Your Luck: deepest chain actually BANKED — a ride wiped by a
                                 // miss set beadRideBest but was never carried home, and the charm is
-                                // for carrying it home (see bankPot / I Knew You Were Trouble)
+                                // for carrying it home (see bankPot / Devils Roll The Dice)
 let wagerAlwaysMax = true;      // Confidence Wager: every page so far was staked at the most the run
                                 // could afford. Cap-relative, not RISK_MAX_STAKE — the dark side opens
                                 // on 1 bead, so an absolute bar would be unreachable there by design
@@ -1420,7 +1420,7 @@ function lifetimeStatsHTML() {
   const albColor = favAlbum ? (albumColor(favAlbum.key) || "var(--ink-soft)") : "var(--ink-soft)";
 
   // The meter doubles as the door into the songbook (the missing-songs checklist that
-  // backs the "I Hate It Here" charm) — same tally, drilled into per-album detail.
+  // backs the "Know What's What" charm) — same tally, drilled into per-album detail.
   const remaining = total - discovered;
   const meter = `
     <button type="button" class="cat-meter cat-meter--btn" data-open-songbook="stats">
@@ -1848,7 +1848,7 @@ function distinctStudioAlbumsHit(results, albums) {
   return set.size;
 }
 
-// Misses followed immediately by a correct answer — a "bounce back" (Shake It Off).
+// Misses followed immediately by a correct answer — a "bounce back" (I Keep Cruisin').
 function recoveryCount(results) {
   let n = 0;
   for (let i = 1; i < results.length; i++) if (results[i] && !results[i - 1]) n++;
@@ -1870,7 +1870,7 @@ function longestBTitleRun(results, songs) {
   return best;
 }
 
-// Lifetime missed rounds across the whole catalog tally (Death By A Thousand Cuts).
+// Lifetime missed rounds across the whole catalog tally (A Thousand Cuts).
 function totalLifetimeMisses() {
   const misses = loadSongTally().misses || {};
   return Object.values(misses).reduce((a, b) => a + b, 0);
@@ -2019,7 +2019,7 @@ function unlockChallenge(id) {
   saveChallengeTokens(wallet);
   st[id] = { ...challengeRecord(id), unlocked: true };
   saveChallengeState(st);
-  // Paper Rings — every challenge in the registry is now unlocked (free ones count).
+  // I Like Shiny Things — every challenge in the registry is now unlocked (free ones count).
   if (CHALLENGES.every((ch) => challengeUnlocked(ch.id))) unlock("paper-rings");
   return true;
 }
@@ -2123,7 +2123,7 @@ function markChallengeDefeated(id, score, dark) {
     unlock("the-black-dog");
     if (beaten >= DARK_SIDE_MILESTONE) unlock("dont-blame-me");
     if (DARK_SIDE_IDS.length && beaten >= DARK_SIDE_IDS.length) unlock("darkest-paradise");
-    // Mad Woman — the dark mirror of State Of Grace. darkAttempts banks at run start, the
+    // Now I Breathe Flames — the dark mirror of Our Slates Are Clean. darkAttempts banks at run start, the
     // way attempts does, so at this point it already counts the run that just won.
     if (rec.darkAttempts === 1) unlock("mad-woman");
   }
@@ -2348,7 +2348,7 @@ function renderResultRecap() {
   syncRecapBand();
 }
 
-// "Word For Word, Wordsmith and Getaway Car" — or, past three, "…and 3 more", where the
+// "Word For Word, Wordsmith and The Great Escape" — or, past three, "…and 3 more", where the
 // count is the button that unfolds the rest. Reads as a sentence under the charm row so an
 // unlock is still legible without a hover.
 const ACH_NAMES_SHOWN = 3;
@@ -2565,7 +2565,7 @@ function renderAchievementsPage() {
 
   html += `<div class="ach-head-row">${meter}${latestCard}</div>`;
 
-  // "The long game" — the catalogue-completion charm ("I Hate It Here") gets a pinned
+  // "The long game" — the catalogue-completion charm ("Know What's What") gets a pinned
   // quest card above the grid: live song-completion progress (the album-rainbow bar) and
   // a door into the songbook. It's the only charm with a browsable collection behind it,
   // so it's promoted out of its theme grid (it still counts toward Catalogue below).
@@ -2783,7 +2783,7 @@ function questCardHTML() {
   </button>`;
 }
 
-/* ---------- Songbook — the missing-songs checklist (backs "I Hate It Here") ---------- */
+/* ---------- Songbook — the missing-songs checklist (backs "Know What's What") ---------- */
 let songbookBackTarget = "stats";  // where the Songbook's ← back returns to
 function openSongbook(from) {
   songbookBackTarget = from;
@@ -6131,7 +6131,7 @@ function foldBonusRunCharms(perfect, cleared) {
   unlock("play-it-again");
   if (perfect) unlock("a-clean-kill");
   // One page shy, and only on the three games that keep a sweep clock — the shelf's own
-  // Champagne Problems, and it stings most exactly where a ceiling is reachable.
+  // Crestfallen On The Landing, and it stings most exactly where a ceiling is reachable.
   if (!perfect && cleared === BONUS_ROUNDS - 1 && bonusSweeps(bonusGame)) unlock("almost-had-it");
   // Only Here has no fail state, so every card played banks at least a point: a run that
   // scores nothing is a run where all ten clocks ran out with nothing on the table.
@@ -7856,7 +7856,7 @@ function saveBraceletPNG(e) {
 }
 
 // Wired to the bonus sleeve's button. `onKept` is the SLEEVE's own charm and deliberately not
-// the bracelet's: keeping a sleeve must never hand out You're On Your Own, Kid, which is the
+// the bracelet's: keeping a sleeve must never hand out Make The Friendship Bracelets, which is the
 // keepsake charm of a main run and would put a bonus run's takings beside it. The two are
 // separate keepsakes and stay separately earned. (This handler was empty for exactly that
 // reason before One Last Souvenir existed — the emptiness was the sandbox, not an oversight,
@@ -7969,7 +7969,7 @@ function adaptiveAdjust(correct) {
     if (adaptiveLevel > 1) adaptiveLevel--;
   }
   adaptivePeak = Math.max(adaptivePeak, adaptiveLevel);
-  // Adaptive charms: The Lakes the moment you touch the Rarest tier; Stay Stay Stay stays
+  // Adaptive charms: Those Windermere Peaks the moment you touch the Rarest tier; But You Stayed stays
   // alive only while no miss has landed since reaching the top (judged at endAdaptive).
   if (adaptiveLevel >= ADAPT_MAX_LEVEL) { adaptiveReachedTop = true; unlock("the-lakes"); }
   if (!correct && adaptiveReachedTop) adaptiveHeldTop = false;
@@ -10960,7 +10960,7 @@ function endChallenge() {
       album: roundAlbums[i] || null,
       word: roundWords[i] || null,
     })));
-    // "I Hate It Here" — every catalogue song answered correctly at least once.
+    // "Know What's What" — every catalogue song answered correctly at least once.
     // challengeRunActive is already false above, so this unlock fires normally.
     if (allSongs.length && allSongs.every((s) => tally.songs[s.title])) unlock("i-hate-it-here"); checkSongKeepsakes(tally);
     recordGameMetrics({
@@ -10988,7 +10988,7 @@ function endChallenge() {
   hideNewBestBanner();
 
   // Bank the earnest attempt BEFORE the defeat is recorded, so the winning run itself counts
-  // as the seventh: This Is Me Trying reads the tally inside markChallengeDefeated.
+  // as the seventh: At Least I'm Trying reads the tally inside markChallengeDefeated.
   const earnestBefore = challengeRecord(c.id).earnest;
   if (!devNoLog) recordEarnestAttempt(c.id, challengeDark);
   const ticketJustReady = !devNoLog && earnestBefore < PERSIST_ATTEMPTS && ticketReady(c.id);
@@ -10996,10 +10996,10 @@ function endChallenge() {
   const won = challengeWinCheck(c);
   const firstTime = won ? markChallengeDefeated(c.id, score, challengeDark) : false;
   const rec = challengeRecord(c.id);
-  // Should've Said No — a flawless Impostor run: every impostor flagged (implied by surviving)
+  // Should've Known That Word — a flawless Impostor run: every impostor flagged (implied by surviving)
   // and every real word named. challengeRunActive is already false, so the charm fires normally.
   if (c.rule === "impostor" && won && impostorMissed === 0) unlock("shouldve-said-no");
-  // Invisible String — defeat Common Thread (the word is the string tying the lines together).
+  // One Single Thread — defeat Common Thread (the word is the string tying the lines together).
   if (c.rule === "common" && won) unlock("invisible-string");
   // Per-challenge flourish charms: winning the harder way, native to each challenge's twist.
   // Two Steps Ahead — every correct Revolving Door answer landed before the word swapped.
@@ -11017,10 +11017,10 @@ function endChallenge() {
   // Keyed on the id, not the rule: Name Three borrows the same `multi` rule, and a perfect run
   // of THREE songs a page is a different feat that shouldn't quietly claim this charm.
   if (c.id === "double-trouble" && score === TOTAL_ROUNDS) unlock("two-is-better");
-  // Blank Space — won Vanishing Word writing into the blank: every correct answer came after
+  // I'll Write Your Name — won Vanishing Word writing into the blank: every correct answer came after
   // the word had already gone.
   if (c.rule === "vanishing" && won && vanishAnsweredBlind) unlock("blank-space");
-  // You Belong With Me — total loyalty in Deep Cut: not just five from one album, but every
+  // Been Here All Along — total loyalty in Deep Cut: not just five from one album, but every
   // correct answer of the run off that same album, no strays.
   if (c.rule === "album5" && won && score === deepCutLeader().count) unlock("you-belong-with-me");
   // Tied Together With A Smile — From A to Z climbing on every link: the alphabet tied end to
@@ -11028,13 +11028,13 @@ function endChallenge() {
   if (c.rule === "alphabetical" && won && alphaEveryLetterNew) unlock("tied-together");
   // The risk three. Read AFTER the settle above, which banks whatever was still riding when
   // the pages ran out — a pot carried all the way home is banked like any other, so it counts.
-  // I Knew You Were Trouble — a pot ridden PRESS_FLOURISH_RIDE deep and actually banked.
+  // Devils Roll The Dice — a pot ridden PRESS_FLOURISH_RIDE deep and actually banked.
   // Not gated on the win: the ride is the feat, and a run that rode that deep and still fell
   // short of the target has done the reckless thing the charm is named for.
   if (c.rule === "press" && beadRideBanked >= PRESS_FLOURISH_RIDE) unlock("i-knew-you-were-trouble");
   // Untouchable — won Insurance having never once bought your way out of trouble.
   if (c.rule === "insurance" && won && insuranceSpent === 0) unlock("untouchable");
-  // The Man — won Confidence Wager with nothing held back on any page.
+  // Let The Players Play — won Confidence Wager with nothing held back on any page.
   if (c.rule === "wager" && won && wagerAlwaysMax) unlock("the-man");
 
   // A dark run signs off the way it was announced: the briefing card's violet kicker,
@@ -11306,7 +11306,7 @@ function endAdaptive() {
       isDaily: false, dailyPerfect: false,
       isInfinite: false, timeouts: gameTimeouts,
     });
-    // Stay Stay Stay: reached the Rarest tier and finished there without ever slipping off it.
+    // But You Stayed: reached the Rarest tier and finished there without ever slipping off it.
     if (adaptiveReachedTop && adaptiveHeldTop && adaptiveLevel >= ADAPT_MAX_LEVEL) unlock("stay-stay-stay");
     rec = recordAdaptiveRun(peak, score, todayKey());
     // A fair fixed-13 run, so the whole set earns. Endurance included: it reads the streak,
@@ -11372,7 +11372,7 @@ function endCustom() {
   }
   const total = infinite ? roundsPlayed : customSessionLen;
   const perfect = !infinite && total > 0 && score === total;
-  // Dear Reader — you wrote rules at least as unforgiving as Ultra's and then kept every page
+  // Aim At The Devil — you wrote rules at least as unforgiving as Ultra's and then kept every page
   // of them. The full-length bar matters as much as the levers: CUSTOM_ROUNDS_MIN is 1, so
   // without it a one-page preset would hand this over for a single lucky answer.
   if (!devNoLog && perfect && total >= TOTAL_ROUNDS && customAtLeastUltra(currentMode)) unlock("dear-reader");
@@ -14296,7 +14296,7 @@ function submitAnswer(song, isTimeout) {
   // clear it whether they got it or not.
   dismissCoachmark();
   // Impostor: a missed real page (wrong/timeout) can't fail the run, but it spoils a flawless
-  // one (Should've Said No). Impostor pages were already intercepted, so this is a real page.
+  // one (Should've Known That Word). Impostor pages were already intercepted, so this is a real page.
   if (impostorRuleActive() && !correct) impostorMissed++;
   if (correct && song && song.title === "If This Was A Movie") unlock("spicy-drama");
   // It's A Clock!: bank the time left on the shared clock; a correct answer winds it
@@ -14326,7 +14326,7 @@ function submitAnswer(song, isTimeout) {
     if (L && L === lastAlphaLetter) alphaEveryLetterNew = false;
     lastAlphaLetter = L;
   }
-  // Blank Space: a correct answer landed while the word was still on the page — the run was
+  // I'll Write Your Name: a correct answer landed while the word was still on the page — the run was
   // no longer written blind. The vanish timeout is untouched by submit, so the class is the
   // honest reading of what was showing at the moment they answered.
   if (correct && currentChallenge && currentChallenge.rule === "vanishing"
@@ -14941,7 +14941,7 @@ function endGame() {
   // record, not a per-mode board). Powers Favourite Song, Songs Discovered,
   // Favourite Album, Nemesis Word.
   if (!devNoLog) {
-    // "Mean" — the nemesis word is whichever word you've missed most, so it has to be read
+    // "The Cycle Ends" — the nemesis word is whichever word you've missed most, so it has to be read
     // BEFORE this game folds in, or a word missed again this run could crown itself and be
     // "beaten" in the same breath. A word needs a real history of beating you (MEAN_GRUDGE
     // misses) before overcoming it means anything.
@@ -14955,7 +14955,7 @@ function endGame() {
       album: roundAlbums[i] || null,
       word: roundWords[i] || null,
     })));
-    // "I Hate It Here" — every song in the catalogue answered correctly at least once.
+    // "Know What's What" — every song in the catalogue answered correctly at least once.
     // Count discovered against allSongs (not raw tally keys) so it's exact.
     if (allSongs.length && allSongs.every((s) => tally.songs[s.title])) unlock("i-hate-it-here"); checkSongKeepsakes(tally);
   }
@@ -15026,7 +15026,7 @@ function endGame() {
     if (score === 0) unlock("anti-hero");
     if (gameTimeouts === 0) unlock("fearless");
     if (metrics.noTimeoutStreak >= 2) unlock("fearless-tv");   // two no-timeout games in a row
-    // Clean — a majority win (7+/13) on the clock, no timeouts and no hints leaned on.
+    // Finally Clean — a majority win (7+/13) on the clock, no timeouts and no hints leaned on.
     if (timedMode && score >= 7 && gameTimeouts === 0 && hintsUsed === 0) unlock("clean");
     if (currentMode.lyricOnly) unlock("all-too-well");
     if (played >= 1) unlock("enchanted");
@@ -15036,11 +15036,11 @@ function endGame() {
     if (roundResults.includes(false) && trailingStreak >= 5) unlock("long-story-short");
     if (currentMode.id === "ultra" && score >= 10) unlock("great-war");
     if (score === TOTAL_ROUNDS && (currentMode.id === "hard" || currentMode.id === "ultra")) unlock("long-live");
-    // The top of those two ladders. Long Live takes either of the hardest difficulties and
-    // All Too Well only asks you to finish a Lyricist game; these ask for the perfect run.
+    // The top of those two ladders. The Mountains We Moved takes either of the hardest difficulties and
+    // I Remember It All only asks you to finish a Lyricist game; these ask for the perfect run.
     if (score === TOTAL_ROUNDS && currentMode.id === "ultra") unlock("whos-afraid");
     if (score === TOTAL_ROUNDS && currentMode.lyricOnly) unlock("marjorie");
-    // Mirrorball — a perfect 13/13 logged in every difficulty (updateStats already folded this game).
+    // Every Version Of Yourself — a perfect 13/13 logged in every difficulty (updateStats already folded this game).
     if (["easy", "medium", "hard", "ultra"].every((m) => loadStats(m).scoreCounts[TOTAL_ROUNDS] > 0)) unlock("mirrorball");
     // Everything & Nothing All At Once — a majority win (7+/13) logged in every difficulty.
     if (["easy", "medium", "hard", "ultra"].every((m) => loadStats(m).best >= 7)) unlock("everything-nothing");
@@ -15065,7 +15065,7 @@ function endGame() {
   if (longestBTitleRun(roundResults, roundSongs) >= 3) unlock("my-mind-is-alive");
   if (totalLifetimeMisses() >= 1000) unlock("thousand-cuts");
   if (new Date().getHours() === 0) unlock("midnights");   // played in the midnight hour
-  // Safe & Sound — the three most recent finished runs were all classic Easy.
+  // You'll Be Alright — the three most recent finished runs were all classic Easy.
   const recent = loadHistory();
   if (recent.length >= 3 && recent.slice(0, 3).every((h) => h.m === "easy")) unlock("safe-and-sound");
 
@@ -15217,7 +15217,7 @@ function quitGame() {
   // Quit achievements — checked against the live run state, before teardown. Skipped
   // for challenges (sandboxed — a challenge run never fires global achievements).
   if (gameType !== "challenge") {
-    // The Bolter: bail in round 1 having typed nothing.
+    // She Must Bolt: bail in round 1 having typed nothing.
     if (round === 1 && roundResults.length === 0 && !($("songInput").value || "").trim()) {
       unlock("the-bolter");
     }
@@ -16803,7 +16803,7 @@ function renderCustomModalBody() {
   const m = normalizeCustomMode(preset.mode);
   const atCap = store.presets.length >= CUSTOM_MAX_PRESETS;
   const canDelete = store.presets.length > 1;
-  // "Mine" — checked on every render of the modal, so it catches a shelf that filled up via
+  // "A Drawer Of My Things" — checked on every render of the modal, so it catches a shelf that filled up via
   // + New, via an import, or on any later visit, not just the click that crossed the line.
   if (store.presets.length >= CUSTOM_PRESET_SHELF) unlock("mine");
 
@@ -18917,7 +18917,7 @@ function buildDevApi() {
       open: () => openChallenges("start"),
       start: (id) => startChallenge(id),
       // startChallenge silently refuses a locked challenge, so `start` alone can't reach any
-      // non-free one. These open the door directly, without the token wallet or Paper Rings.
+      // non-free one. These open the door directly, without the token wallet or I Like Shiny Things.
       unlock: (id) => { const st = loadChallengeState(); st[id] = { ...challengeRecord(id), unlocked: true };
         saveChallengeState(st); if ($("challengesBody")) renderChallengesPage(); return challengeUnlocked(id); },
       // Mark challenges beaten so their flourish charms come out from behind the ??? mask
@@ -19181,7 +19181,7 @@ function buildDevApi() {
         beads: (n) => { if (n != null) score = Math.max(0, n | 0); renderRiskBanner(); renderBracelet(); return score; },
         // Fabricate a run of `n` won pages. Insurance's win check reads roundResults.length
         // (surviving all thirteen is half of what it asks for), which `beads` alone can never
-        // satisfy — so without this, checking Untouchable or The Man means playing thirteen
+        // satisfy — so without this, checking Untouchable or Let The Players Play means playing thirteen
         // real pages by hand. Same idea as bonus.fill: the run's shape, without the sitting.
         pages: (n) => { const k = Math.max(0, Math.min(TOTAL_ROUNDS, n == null ? TOTAL_ROUNDS : n | 0));
           roundResults = Array.from({ length: k }, () => true);
@@ -19218,7 +19218,7 @@ function buildDevApi() {
         stake: () => ({ stake: roundStake, chosen: stakeChosen, max: riskMaxStake(), affordable: Math.min(riskMaxStake(), score),
           alwaysMax: wagerAlwaysMax }),
         // Mirrors the panel's own bookkeeping, or a run staked entirely through this hatch
-        // would keep The Man's flag standing while visibly holding beads back.
+        // would keep Let The Players Play's flag standing while visibly holding beads back.
         set: (n) => { const cap = Math.min(riskMaxStake(), score);
           roundStake = Math.max(0, Math.min(cap, n | 0));
           if (roundStake < cap) wagerAlwaysMax = false;
@@ -19264,7 +19264,7 @@ function buildDevApi() {
         // As if an uninsured miss had landed: the run is dead and this page wears the skull.
         kill: () => { insuranceDead = true; riskSkull[Math.max(0, round - 1)] = true; renderBracelet(); return insuranceDead; },
       },
-      // Vanishing Word — the word blanks after revealMs. Blank Space wants a run written
+      // Vanishing Word — the word blanks after revealMs. I'll Write Your Name wants a run written
       // entirely into that blank, so `win(false)` is the spoiled control case.
       vanishing: {
         blind: () => vanishAnsweredBlind,               // is Blank Space still alive this run?
@@ -19272,7 +19272,7 @@ function buildDevApi() {
         win: (blind) => { vanishAnsweredBlind = blind !== false;
           score = (CHALLENGE_BY_ID["vanishing-word"].target) || 10; endGame(); },
       },
-      // Deep Cut — five correct off one album. You Belong With Me wants the WHOLE run off it,
+      // Deep Cut — five correct off one album. Been Here All Along wants the WHOLE run off it,
       // so `win(false)` adds a stray from a second album to prove the charm withholds.
       deepCut: {
         leader: () => deepCutLeader(),                  // {album, count} the tally is building on

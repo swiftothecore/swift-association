@@ -580,7 +580,7 @@ export function clearGoal() {
 
 /* ---------- Lifetime per-song / per-word tally ---------- */
 // One record across every game type & difficulty. Powers Favourite Song,
-// Songs Discovered, Favourite Album, Nemesis Word — and later "I Hate It Here".
+// Songs Discovered, Favourite Album, Nemesis Word — and later "Know What's What".
 // Key: swiftSongAssociation.songTally
 //   songs:  { [title]:  correctCount }  — times this song was a correct answer
 //   albums: { [album]:  correctCount }  — times a correct answer came from this album

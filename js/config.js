@@ -991,7 +991,7 @@ export const PRESS_RIDE_STEP = 1;
 /* How deep a ride has to be before the bead that banks it earns the horseshoe charm. Riding
    three pages is a pot of 6 against a target of 20, so it's a real commitment, not a shrug. */
 export const PRESS_CHARM_RIDE = 3;
-/* And how deep before it earns the CHARM (I Knew You Were Trouble). Kept separate from
+/* And how deep before it earns the CHARM (Devils Roll The Dice). Kept separate from
    PRESS_CHARM_RIDE on purpose: the horseshoe marks a bead worth marking and wants to be
    reachable most runs, while the charm is a flourish and should ask for a ride that is
    genuinely reckless. Five deep is a pot of 15 against a base target of 26, so banking it
@@ -1654,7 +1654,7 @@ export const ACH_ICONS = {
   nib:     `<svg viewBox="0 0 24 24"><path class="ink-fill" d="M12 2 L17 13 L12 22 L7 13 Z"/><circle cx="12" cy="10.5" r="1.7" fill="var(--paper)"/><path class="ink" stroke-width="1.2" d="M12 12.5 V21"/></svg>`,
   eyeclosed: `<svg viewBox="0 0 24 24"><path class="ink" fill="none" stroke-width="2" d="M3.2 9.4 C7.2 15.2 16.8 15.2 20.8 9.4"/><g class="ink" stroke-width="1.5"><path d="M5.2 12.8 L4 15.6"/><path d="M8.8 14.4 L8.2 17.2"/><path d="M12 15 V17.9"/><path d="M15.2 14.4 L15.8 17.2"/><path d="M18.8 12.8 L20 15.6"/></g><path class="ink-fill" d="M12 4.2 L12.5 5.4 L13.7 5.9 L12.5 6.4 L12 7.6 L11.5 6.4 L10.3 5.9 L11.5 5.4 Z"/></svg>`,
   tower:   `<svg viewBox="0 0 24 24"><path class="ink-fill" d="M12 1.6 L12.7 4.2 H11.3 Z"/><g class="ink" stroke-width="1.4" fill="none"><path d="M11.2 4.5 C11 9 9.6 14.2 5.6 20.6"/><path d="M12.8 4.5 C13 9 14.4 14.2 18.4 20.6"/></g><g class="ink" stroke-width="1.1" fill="none"><path d="M10.2 8.6 H13.8"/><path d="M8.9 12.8 H15.1"/><path d="M7.6 16.9 C10.2 14.7 13.8 14.7 16.4 16.9"/><path d="M10.7 9.6 L13.4 11.9 M13.3 9.6 L10.6 11.9"/></g><path class="ink" stroke-width="1.4" d="M4.4 20.9 H19.6"/></svg>`,
-  // a single water droplet — "Clean" (the rain washed it all away)
+  // a single water droplet — "Finally Clean" (the rain washed it all away)
   drop:    `<svg viewBox="0 0 24 24"><path class="ink-fill" d="M12 2.2 C12 2.2 5.2 10.2 5.2 15 a6.8 6.8 0 0 0 13.6 0 C18.8 10.2 12 2.2 12 2.2 Z"/><path d="M8.9 14.4 a3.2 3.2 0 0 0 2.3 3.5" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><circle cx="10" cy="11.8" r="0.75" fill="var(--paper)" stroke="none"/></svg>`,
   // yin-yang — everything & nothing, all at once (the gold half is the bead fill,
   // the other half solid ink; two eyes complete the taijitu)
@@ -1684,7 +1684,7 @@ export const ACH_ICONS = {
   quote:   `<svg viewBox="0 0 24 24"><path class="ink-fill" d="M3.2 4.6 H10.4 V11.2 C10.4 15.4 8.2 17.8 4.2 19 L3 16.1 C5.4 15.4 6.7 14.2 7.1 12.4 H3.2 Z"/><path d="M13.6 4.6 H20.8 V11.2 C20.8 15.4 18.6 17.8 14.6 19 L13.4 16.1 C15.8 15.4 17.1 14.2 17.5 12.4 H13.6 Z" fill="currentColor" stroke="none"/></svg>`,
   // an umbrella — it's raining and it's Monday
   umbrella:`<svg viewBox="0 0 24 24"><path class="ink" stroke-width="1.3" d="M12 1 V2.6"/><path class="ink-fill" d="M12 2.4 C6.2 2.4 2.4 6.8 2.4 11.6 L21.6 11.6 C21.6 6.8 17.8 2.4 12 2.4 Z"/><g stroke="currentColor" stroke-width="1" fill="none"><path d="M7.2 11.6 C7.2 7.4 8.8 3.8 12 2.8"/><path d="M16.8 11.6 C16.8 7.4 15.2 3.8 12 2.8"/><path d="M12 2.8 V11.6"/></g><path class="ink" stroke-width="1.6" fill="none" d="M12 11.6 V18.6 a2.4 2.4 0 0 1 -4.8 0"/><path class="ink-fill" d="M19.6 13.6 C20.3 14.6 20.6 15.3 20.6 15.9 A1.05 1.05 0 0 1 18.6 15.9 C18.6 15.3 18.9 14.5 19.6 13.6 Z"/><path class="ink-fill" d="M16.2 17.4 C16.7 18.1 16.9 18.6 16.9 19 A0.78 0.78 0 0 1 15.5 19 C15.5 18.6 15.7 18.1 16.2 17.4 Z"/></svg>`,
-  // a ticked checklist page — every song in the catalogue, named (I Hate It Here)
+  // a ticked checklist page — every song in the catalogue, named (Know What's What)
   checklist:`<svg viewBox="0 0 24 24"><rect class="ink-fill" x="4.2" y="2.8" width="15.6" height="18.4" rx="1.8"/><rect class="ink-fill" x="9.6" y="1.4" width="4.8" height="2.8" rx="1.2"/><g stroke="currentColor" stroke-width="1.35" fill="none"><path d="M6.7 7.8 l1.2 1.2 L10.3 6.6"/><path d="M6.7 12.6 l1.2 1.2 L10.3 11.4"/><path d="M6.7 17.4 l1.2 1.2 L10.3 16.2"/><path d="M12.6 8.2 H17.2"/><path d="M12.6 13 H17.2"/><path d="M12.6 17.8 H16"/></g></svg>`,
   /* ---- Challenge flourish charms (won the hard way) ---- */
   // the ruled line stays put; the word lifts off it in pieces and winks out, and you wrote into the blank
@@ -2414,61 +2414,69 @@ export function reseedSeal(id, seed) {
   const m = WAX_SEAL_MOTIFS[id];
   return m ? waxSealSvg(id, m, seed) : "";
 }
+/* Charm names are LYRIC FRAGMENTS, not song titles: every name below is a real contiguous
+   phrase in songs.json, so reading the collection rewards knowing the words rather than the
+   tracklist. A handful of titles survive because the title IS the joke and no fragment beats
+   it — Fearless and its (Taylor's Version) pair, Who's Afraid Of Little Old Me?, Two Is Better
+   Than One, Is It Over Now?, The Lucky One — and several of those are sung lines anyway. New
+   charms follow the fragment rule; keep the phrase to two or three words where you can, and
+   check it against the catalogue before you use it. Ids are storage keys and NEVER change with
+   a rename. */
 export const ACHIEVEMENTS = [
-  { id: "enchanted",        name: "Enchanted",        desc: "Finish your first game",              secret: false, icon: "wand", sitting: true, earn: { cat: "difficulty" } },
-  { id: "mastermind",       name: "Mastermind",       desc: "Score a perfect 13/13",               secret: false, icon: "queen", sitting: true, earn: { cat: "difficulty" } },
+  { id: "enchanted",        name: "The Very First Page", desc: "Finish your first game",              secret: false, icon: "wand", sitting: true, earn: { cat: "difficulty" } },
+  { id: "mastermind",       name: "All By Design",    desc: "Score a perfect 13/13",               secret: false, icon: "queen", sitting: true, earn: { cat: "difficulty" } },
   { id: "fearless",         name: "Fearless",         desc: "Finish with no timeouts",             secret: false, icon: "dress", sitting: true, earn: { cat: "difficulty" } },
-  { id: "speak-now",        name: "Speak Now",        desc: "Answer correctly in under 2s",        secret: false, icon: "speech", sitting: true, earn: { cat: "difficulty" } },
-  { id: "begin-again",      name: "Begin Again",      desc: "Play 5 games",                        secret: false, icon: "tally" },
-  { id: "getaway-car",      name: "Getaway Car",      desc: "Answer correctly with under 1s left", secret: true,  icon: "car" },
-  { id: "bejeweled",        name: "Bejeweled",        desc: "Hit a 5-in-a-row streak",             secret: false, icon: "strand", sitting: true, earn: { cat: "difficulty" } },
-  { id: "long-story-short", name: "Long Story Short", desc: "Come back to finish on a 5+ streak",  secret: true,  icon: "scribbleline" },
+  { id: "speak-now",        name: "Don't Wait",       desc: "Answer correctly in under 2s",        secret: false, icon: "speech", sitting: true, earn: { cat: "difficulty" } },
+  { id: "begin-again",      name: "Watched It Begin Again", desc: "Play 5 games",                        secret: false, icon: "tally" },
+  { id: "getaway-car",      name: "The Great Escape", desc: "Answer correctly with under 1s left", secret: true,  icon: "car" },
+  { id: "bejeweled",        name: "I Polish Up Nice", desc: "Hit a 5-in-a-row streak",             secret: false, icon: "strand", sitting: true, earn: { cat: "difficulty" } },
+  { id: "long-story-short", name: "Climbed Right Back Up", desc: "Come back to finish on a 5+ streak",  secret: true,  icon: "scribbleline" },
   { id: "today-was-a-fairytale", name: "Today Was A Fairytale", desc: "Finish your first Daily Challenge", secret: false, icon: "slipper", sitting: true, earn: { cat: "daily" } },
-  { id: "all-too-well",     name: "All Too Well",     desc: "Finish a full Lyricist game",          secret: false, icon: "scarf", sitting: true, earn: { cat: "difficulty", diff: "lyricist" } },
-  { id: "champagne-problems", name: "Champagne Problems", desc: "Finish one shy (12/13)",            secret: true,  icon: "flute" },
-  { id: "anti-hero",        name: "Anti-Hero",        desc: "Score 0/13",                          secret: true,  icon: "mirror" },
+  { id: "all-too-well",     name: "I Remember It All", desc: "Finish a full Lyricist game",          secret: false, icon: "scarf", sitting: true, earn: { cat: "difficulty", diff: "lyricist" } },
+  { id: "champagne-problems", name: "Crestfallen On The Landing", desc: "Finish one shy (12/13)",            secret: true,  icon: "flute" },
+  { id: "anti-hero",        name: "I'm The Problem",  desc: "Score 0/13",                          secret: true,  icon: "mirror" },
   { id: "hits-different",   name: "Hits Different",   desc: "Play all three game types",           secret: false, icon: "shapes", sitting: true },
-  { id: "fifteen",          name: "Fifteen",          desc: "Play 15 games",                       secret: false, icon: "locker" },
+  { id: "fifteen",          name: "When You're Fifteen", desc: "Play 15 games",                       secret: false, icon: "locker" },
   { id: "you-knew-the-line", name: "You Knew The Line", desc: "Recall 5 lyric lines in one game",  secret: false, icon: "note", sitting: true, earn: { cat: "difficulty", diff: "lyricist" } },
-  { id: "out-of-the-woods", name: "Out Of The Woods", desc: "Survive 20+ rounds in Infinite",      secret: false, icon: "pines", sitting: true, earn: { cat: "infinite" } },
-  { id: "twenty-two",       name: "22",               desc: "Reach exactly round 22 in Infinite",  secret: false, icon: "balloons", sitting: true, earn: { cat: "infinite" } },
+  { id: "out-of-the-woods", name: "In The Clear Yet?", desc: "Survive 20+ rounds in Infinite",      secret: false, icon: "pines", sitting: true, earn: { cat: "infinite" } },
+  { id: "twenty-two",       name: "Feelin' Twenty-Two", desc: "Reach exactly round 22 in Infinite",  secret: false, icon: "balloons", sitting: true, earn: { cat: "infinite" } },
   { id: "nineteen-eighty-nine", name: "1989",         desc: "Reach round 89 in Infinite",          secret: false, icon: "skyline", sitting: true, earn: { cat: "infinite" } },
-  { id: "sparks-fly",       name: "Sparks Fly",       desc: "Hit a 10-in-a-row streak",            secret: false, icon: "sparkler", sitting: true, earn: { cat: "difficulty" } },
-  { id: "great-war",        name: "The Great War",    desc: "Win an Ultra game (10+ correct)",     secret: false, icon: "poppy", sitting: true, earn: { cat: "difficulty", diff: "ultra" } },
-  { id: "long-live",        name: "Long Live",        desc: "Perfect 13/13 on Hard or Ultra",      secret: false, icon: "coronet", sitting: true, earn: { cat: "difficulty", diff: "hard" } },
-  // The two hardest single runs the game can ask for, and the top of their own ladders: Long
-  // Live takes either of the top two difficulties, All Too Well only asks you to FINISH a
+  { id: "sparks-fly",       name: "The Lights Go Wild", desc: "Hit a 10-in-a-row streak",            secret: false, icon: "sparkler", sitting: true, earn: { cat: "difficulty" } },
+  { id: "great-war",        name: "We Survived",      desc: "Win an Ultra game (10+ correct)",     secret: false, icon: "poppy", sitting: true, earn: { cat: "difficulty", diff: "ultra" } },
+  { id: "long-live",        name: "The Mountains We Moved", desc: "Perfect 13/13 on Hard or Ultra",      secret: false, icon: "coronet", sitting: true, earn: { cat: "difficulty", diff: "hard" } },
+  // The two hardest single runs the game can ask for, and the top of their own ladders: The Mountains
+  // We Moved takes either of the top two difficulties, I Remember It All only asks you to FINISH a
   // Lyricist game. These stay unearned long after the rest of the collection is closed.
   { id: "whos-afraid",      name: "Who’s Afraid Of Little Old Me?", desc: "Perfect 13/13 on Ultra", secret: false, icon: "cage", sitting: true, earn: { cat: "difficulty", diff: "ultra" } },
-  { id: "marjorie",         name: "Marjorie",         desc: "Perfect 13/13 in Lyricist",           secret: false, icon: "cameo", sitting: true, earn: { cat: "difficulty", diff: "lyricist" } },
-  { id: "ready-for-it",     name: "…Ready For It?",   desc: "Nail round 1 in under 2s",            secret: false, icon: "rocket", sitting: true, earn: { cat: "difficulty" } },
-  { id: "i-did-something-bad", name: "I Did Something Bad", desc: "Answer right with under 0.5s left", secret: true, icon: "match" },
+  { id: "marjorie",         name: "Alive In My Head", desc: "Perfect 13/13 in Lyricist",           secret: false, icon: "cameo", sitting: true, earn: { cat: "difficulty", diff: "lyricist" } },
+  { id: "ready-for-it",     name: "Let The Games Begin", desc: "Nail round 1 in under 2s",            secret: false, icon: "rocket", sitting: true, earn: { cat: "difficulty" } },
+  { id: "i-did-something-bad", name: "It Just Felt So Good", desc: "Answer right with under 0.5s left", secret: true, icon: "match" },
   { id: "branch-out",       name: "Time To Branch Out?", desc: "3 correct in a row from one album", secret: true, icon: "branch" },
   { id: "eras-tour",        name: "The Eras Tour",    desc: "Score from nearly every studio album in one game", secret: false, icon: "ticket", sitting: true, earn: { cat: "difficulty" } },
-  { id: "daylight",         name: "Daylight",         desc: "Score a perfect Daily",               secret: false, icon: "sunrise", sitting: true, earn: { cat: "daily" } },
-  { id: "story-of-us",      name: "The Story Of Us",  desc: "Keep a 7-day Daily streak",           secret: false, icon: "openbook" },
-  { id: "evermore",         name: "Evermore",         desc: "Reach a 30-day Daily streak",         secret: false, icon: "sprig" },
-  { id: "karma",            name: "Karma",            desc: "Earn 13 achievements",                secret: false, icon: "cat" },
-  { id: "midnights",        name: "Midnights",        desc: "Play between 12 and 1am",             secret: true,  icon: "clock" },
-  { id: "shake-it-off",     name: "Shake It Off",     desc: "Bounce back from a miss 3× in one game", secret: false, icon: "bounce", sitting: true, earn: { cat: "difficulty" } },
-  { id: "peace",            name: "Peace",            desc: "Finish a game without the timer hitting the red",  secret: false, icon: "dove", sitting: true, earn: { cat: "difficulty" } },
+  { id: "daylight",         name: "Golden Like Daylight", desc: "Score a perfect Daily",               secret: false, icon: "sunrise", sitting: true, earn: { cat: "daily" } },
+  { id: "story-of-us",      name: "Next Chapter",     desc: "Keep a 7-day Daily streak",           secret: false, icon: "openbook" },
+  { id: "evermore",         name: "Ever And Evermore", desc: "Reach a 30-day Daily streak",         secret: false, icon: "sprig" },
+  { id: "karma",            name: "What I Earned",    desc: "Earn 13 achievements",                secret: false, icon: "cat" },
+  { id: "midnights",        name: "Midnights Become My Afternoons", desc: "Play between 12 and 1am",             secret: true,  icon: "clock" },
+  { id: "shake-it-off",     name: "I Keep Cruisin'",  desc: "Bounce back from a miss 3× in one game", secret: false, icon: "bounce", sitting: true, earn: { cat: "difficulty" } },
+  { id: "peace",            name: "Take My Time",     desc: "Finish a game without the timer hitting the red",  secret: false, icon: "dove", sitting: true, earn: { cat: "difficulty" } },
   { id: "perfect-storm",    name: "Perfect Storm",    desc: "Average under 3s per answer in a game", secret: false, icon: "storm", sitting: true, earn: { cat: "difficulty" } },
   { id: "the-triangle",     name: "The Triangle",     desc: "Answer cardigan, betty and august in one game", secret: true, icon: "trihearts" },
   { id: "my-mind-is-alive", name: "My Mind Is Alive", desc: "3 correct in a row (titles starting with B)", secret: true, icon: "bee" },
-  { id: "cruel-summer",     name: "Cruel Summer",     desc: "Lose all 3 lives in the first 4 rounds", secret: true, icon: "lolly" },
+  { id: "cruel-summer",     name: "Summer's A Knife", desc: "Lose all 3 lives in the first 4 rounds", secret: true, icon: "lolly" },
   { id: "i-cant-see-you",   name: "I Can't See You",  desc: "Finish a game without answering once", secret: true, icon: "blindfold" },
-  { id: "thousand-cuts",    name: "Death By A Thousand Cuts", desc: "1,000 lifetime missed rounds", secret: true, icon: "scissors" },
-  { id: "holy-ground",      name: "Holy Ground",      desc: "Reach round 13 from scratch in Infinite", secret: false, icon: "rays", sitting: true, earn: { cat: "infinite" } },
+  { id: "thousand-cuts",    name: "A Thousand Cuts",          desc: "1,000 lifetime missed rounds", secret: true, icon: "scissors" },
+  { id: "holy-ground",      name: "Where We Stood",   desc: "Reach round 13 from scratch in Infinite", secret: false, icon: "rays", sitting: true, earn: { cat: "infinite" } },
   { id: "spicy-drama",      name: "Spicy Drama",      desc: "Answer with \"If This Was A Movie\" — Fearless or Speak Now? Fans still argue", secret: true, icon: "clapper" },
   { id: "word-for-word",    name: "Word For Word",    desc: "Recall a lyric line word-perfect",     secret: false, icon: "quote", sitting: true, earn: { cat: "difficulty", diff: "lyricist" } },
   { id: "i-look-in-windows", name: "I Look In People's Windows", desc: "Open the settings menu",      secret: true,  icon: "window" },
   { id: "look-what-you-made-me-do", name: "Look What You Made Me Do", desc: "Make the snake appear",  secret: true,  icon: "snake" },
-  { id: "snow-on-the-beach",   name: "Snow On The Beach",   desc: "Watch the snow fall on the page",        secret: true,  icon: "palm" },
-  { id: "midnight-rain",       name: "Midnight Rain",       desc: "Keep the page company past midnight",    secret: true,  icon: "nightrain" },
+  { id: "snow-on-the-beach",   name: "It's Comin' Down",    desc: "Watch the snow fall on the page",        secret: true,  icon: "palm" },
+  { id: "midnight-rain",       name: "Midnights Like This", desc: "Keep the page company past midnight",    secret: true,  icon: "nightrain" },
   { id: "autumn-leaves-falling", name: "Autumn Leaves Falling", desc: "Watch the autumn leaves fall on the page", secret: true, icon: "leaf" },
-  { id: "safe-and-sound",   name: "Safe & Sound",     desc: "Play Easy three times in a row",       secret: false, icon: "lantern", sitting: true, earn: { cat: "difficulty", diff: "easy" } },
+  { id: "safe-and-sound",   name: "You'll Be Alright", desc: "Play Easy three times in a row",       secret: false, icon: "lantern", sitting: true, earn: { cat: "difficulty", diff: "easy" } },
   { id: "revenge",          name: "R-E-V-E-N-G-E",    desc: "Beat your own best score on any board", secret: false, icon: "megaphone", sitting: true, earn: { cat: "difficulty" } },
-  { id: "mirrorball",       name: "Mirrorball",       desc: "Score a perfect 13/13 in every difficulty", secret: false, icon: "mirrorball" },
+  { id: "mirrorball",       name: "Every Version Of Yourself", desc: "Score a perfect 13/13 in every difficulty", secret: false, icon: "mirrorball" },
   { id: "diamonds",         name: "Diamonds Are Forever", desc: "3 rare words right in a row (no Ultra)", secret: false, icon: "diamond", sitting: true, earn: { cat: "difficulty" } },
   { id: "wordsmith",        name: "Wordsmith",        desc: "Win a round on a fuzzy lyric match",    secret: false, icon: "anvil", sitting: true, earn: { cat: "difficulty", diff: "lyricist" } },
   { id: "got-you-down",     name: "I've Got You Down", desc: "Recall 10 lyric lines word-perfect",   secret: false, icon: "pencil" },
@@ -2478,30 +2486,30 @@ export const ACHIEVEMENTS = [
   { id: "overachiever",     name: "Overachiever",     desc: "Recall a whole verse (four lines word-perfect)", secret: false, icon: "aplus", sitting: true, earn: { cat: "difficulty", diff: "lyricist" } },
   { id: "fav-song",         name: "Someone Has A Favourite Song", desc: "Answer three rounds with lyrics from the same song", secret: true, icon: "repeat" },
   { id: "eyes-closed",      name: "Eyes Closed",      desc: "10 fuzzy lyric matches in one Lyricist game", secret: false, icon: "eyeclosed", sitting: true, earn: { cat: "difficulty", diff: "lyricist" } },
-  { id: "paris",            name: "Paris",            desc: "Answer “Paris” when the word is “somewhere”", secret: true, icon: "tower" },
-  { id: "i-hate-it-here",   name: "I Hate It Here",   desc: "Answer every song in the catalogue at least once", secret: false, icon: "checklist" },
-  { id: "mean",             name: "Mean",             desc: "Finally answer your nemesis word right", secret: true, icon: "banjo" },
+  { id: "paris",            name: "We Were Somewhere Else", desc: "Answer “Paris” when the word is “somewhere”", secret: true, icon: "tower" },
+  { id: "i-hate-it-here",   name: "Know What's What", desc: "Answer every song in the catalogue at least once", secret: false, icon: "checklist" },
+  { id: "mean",             name: "The Cycle Ends",   desc: "Finally answer your nemesis word right", secret: true, icon: "banjo" },
   { id: "raining-monday",   name: "It's Raining And It's Monday", desc: "Answer “rain” correctly on a Monday", secret: true, icon: "umbrella" },
-  { id: "clean",            name: "Clean",            desc: "Win without hints or a single timeout",  secret: false, icon: "drop", sitting: true, earn: { cat: "difficulty" } },
+  { id: "clean",            name: "Finally Clean",    desc: "Win without hints or a single timeout",  secret: false, icon: "drop", sitting: true, earn: { cat: "difficulty" } },
   { id: "everything-nothing", name: "Everything & Nothing All At Once", desc: "Win a game in every difficulty", secret: false, icon: "yinyang" },
   { id: "fearless-tv",      name: "Fearless (Taylor's Version)", desc: "Two games in a row with no timeouts", secret: false, icon: "vinyl", sitting: true, earn: { cat: "difficulty" } },
   { id: "explorer",         name: "Explorer",         desc: "Play every difficulty in Classic and in both Infinite variants, plus Adaptive and Custom", secret: false, icon: "compass" },
   { id: "seven",            name: "Seven",            desc: "Play on all seven days of the week", secret: true,  icon: "swing" },
-  { id: "youre-on-your-own-kid", name: "You're On Your Own, Kid", desc: "Save your first bracelet keepsake", secret: false, icon: "keepsake", sitting: true },
+  { id: "youre-on-your-own-kid", name: "Make The Friendship Bracelets", desc: "Save your first bracelet keepsake", secret: false, icon: "keepsake", sitting: true },
   { id: "piano-was-hissing", name: "The Piano Was Hissing", desc: "Type “reputation tv” somewhere",    secret: true,  icon: "piano" },
-  { id: "the-bolter",       name: "The Bolter",       desc: "Quit before typing anything in round 1", secret: true,  icon: "door" },
+  { id: "the-bolter",       name: "She Must Bolt",    desc: "Quit before typing anything in round 1", secret: true,  icon: "door" },
   { id: "no-closure",       name: "No Closure",       desc: "Give up after 12, never answer the 13th", secret: true, icon: "unclasped" },
-  { id: "the-archer",       name: "The Archer",       desc: "Defeat your first challenge",           secret: false, icon: "bow", sitting: true, earn: { cat: "challenge" } },
-  { id: "the-alchemy",      name: "The Alchemy",      desc: "Defeat every challenge",                secret: false, icon: "flask" },
-  { id: "paper-rings",      name: "Paper Rings",      desc: "Unlock every challenge",                secret: false, icon: "rings" },
+  { id: "the-archer",       name: "Ready For Combat", desc: "Defeat your first challenge",           secret: false, icon: "bow", sitting: true, earn: { cat: "challenge" } },
+  { id: "the-alchemy",      name: "Get The Crown",    desc: "Defeat every challenge",                secret: false, icon: "flask" },
+  { id: "paper-rings",      name: "I Like Shiny Things", desc: "Unlock every challenge",                secret: false, icon: "rings" },
   // Dark sides. Milestones only — a challenge's own dark reward is its black wax seal and
   // violet tick, so there is deliberately no per-challenge charm here.
-  { id: "the-black-dog",    name: "The Black Dog",    desc: "Beat your first dark side",             secret: false, icon: "blackdog", sitting: true, earn: { cat: "dark" } },
-  { id: "dont-blame-me",    name: "Don't Blame Me",   desc: `Beat ${DARK_SIDE_MILESTONE} dark sides`, secret: false, icon: "halo" },
+  { id: "the-black-dog",    name: "Old Habits Die Screaming", desc: "Beat your first dark side",             secret: false, icon: "blackdog", sitting: true, earn: { cat: "dark" } },
+  { id: "dont-blame-me",    name: "Cross The Line",   desc: `Beat ${DARK_SIDE_MILESTONE} dark sides`, secret: false, icon: "halo" },
   { id: "darkest-paradise", name: "Darkest Little Paradise", desc: "Beat every dark side",           secret: false, icon: "eden" },
-  { id: "state-of-grace",   name: "State Of Grace",   desc: "Defeat a challenge on the first try",   secret: false, icon: "feather", sitting: true, earn: { cat: "challenge" } },
-  { id: "this-is-me-trying", name: "This Is Me Trying", desc: "Defeat a challenge after seeing it through 7 times", secret: true, icon: "crumple" },
-  { id: "smallest-man",      name: "The Smallest Man Who Ever Lived", desc: "Fall for the very first impostor you meet", secret: true, icon: "hooked" },
+  { id: "state-of-grace",   name: "Our Slates Are Clean", desc: "Defeat a challenge on the first try",   secret: false, icon: "feather", sitting: true, earn: { cat: "challenge" } },
+  { id: "this-is-me-trying", name: "At Least I'm Trying", desc: "Defeat a challenge after seeing it through 7 times", secret: true, icon: "crumple" },
+  { id: "smallest-man",      name: "In Plain Sight",                  desc: "Fall for the very first impostor you meet", secret: true, icon: "hooked" },
   /* ---- Flourish charms: win one named challenge the hard way ----
      Masked until that challenge has been DEFEATED (`reveal` names it), then they show as
      ordinary locked targets in this theme. Every condition here demands deliberate play —
@@ -2511,53 +2519,50 @@ export const ACHIEVEMENTS = [
      now do it properly. They stay deliberately selective, NOT one per challenge: only the
      challenges with a flourish worth naming carry one. A revealed flourish is not counted
      as hidden by Is It Over Now? (see HIDDEN_ACH_IDS in app.js). */
-  { id: "shouldve-said-no",  name: "Should've Said No",  desc: "Defeat Impostor flawlessly: every impostor flagged, every real word named", secret: true, reveal: "impostor", icon: "nosign" },
-  { id: "invisible-string",  name: "Invisible String",  desc: "Defeat Common Thread: pull the word through every line", secret: true, reveal: "common-thread", icon: "thread" },
+  { id: "shouldve-said-no",  name: "Should've Known That Word", desc: "Defeat Impostor flawlessly: every impostor flagged, every real word named", secret: true, reveal: "impostor", icon: "nosign" },
+  { id: "invisible-string",  name: "One Single Thread", desc: "Defeat Common Thread: pull the word through every line", secret: true, reveal: "common-thread", icon: "thread" },
   { id: "two-steps-ahead",   name: "Two Steps Ahead",   desc: "Beat Revolving Door before a single swap: every answer on the first word", secret: true, reveal: "revolving-door", icon: "twosteps" },
   { id: "walls-stood-tall",  name: "My Walls Stood Tall", desc: "Win Home Invasion untouched: the clock never once shrinks", secret: true, reveal: "home-invasion", icon: "wall" },
   { id: "tick-tock",         name: "Tick-Tock",         desc: "Win Shrinking Timer, clearing every page once the clock hits single digits", secret: true, reveal: "shrinking-timer", icon: "stopwatch" },
   { id: "part-the-sea",      name: "Part The Sea",      desc: "Win Sea of Songs without ever tapping a decoy", secret: true, reveal: "sea-of-songs", icon: "partedsea" },
   { id: "knowing-all-the-words", name: "Knowing All The Words", desc: "Win Lyric Lover with every line word-perfect, no fuzzy recalls", secret: true, reveal: "lyric-lover", icon: "cassette" },
   { id: "two-is-better",     name: "Two Is Better Than One", desc: "Clear all thirteen pages of Double Trouble: two songs each, none dropped", secret: true, reveal: "double-trouble", icon: "cherries" },
-  { id: "blank-space",       name: "Blank Space",       desc: "Win Vanishing Word writing blind: every answer landed after the word had gone", secret: true, reveal: "vanishing-word", icon: "vanish" },
-  { id: "you-belong-with-me", name: "You Belong With Me", desc: "Win Deep Cut loyal to one album: every correct answer of the run off the same record", secret: true, reveal: "deep-cut", icon: "heartlabel" },
+  { id: "blank-space",       name: "I'll Write Your Name", desc: "Win Vanishing Word writing blind: every answer landed after the word had gone", secret: true, reveal: "vanishing-word", icon: "vanish" },
+  { id: "you-belong-with-me", name: "Been Here All Along", desc: "Win Deep Cut loyal to one album: every correct answer of the run off the same record", secret: true, reveal: "deep-cut", icon: "heartlabel" },
   { id: "tied-together",     name: "Tied Together With A Smile", desc: "Win From A to Z on a chain that climbs every link: never twice on the same letter", secret: true, reveal: "alphabetical", icon: "ribbon" },
   // The risk three. Flourishes like the rest, so they carry `reveal` and stay masked until
   // their challenge is beaten — nobody rides a pot five deep by accident. Each one asks for
   // the thing its rule is really about: depth on Press, restraint on Insurance, nerve on
   // Wager. Deliberately NOT a rule that every challenge gets one; three of thirty-two.
-  { id: "i-knew-you-were-trouble", name: "I Knew You Were Trouble", desc: `Bank a pot on Press Your Luck ridden ${PRESS_FLOURISH_RIDE} pages deep`, secret: true, reveal: "press-your-luck", icon: "bankedpot" },
+  { id: "i-knew-you-were-trouble", name: "Devils Roll The Dice",    desc: `Bank a pot on Press Your Luck ridden ${PRESS_FLOURISH_RIDE} pages deep`, secret: true, reveal: "press-your-luck", icon: "bankedpot" },
   { id: "untouchable",       name: "Untouchable",       desc: "Win Insurance with every shield still unspent", secret: true, reveal: "insurance", icon: "belljar" },
-  { id: "the-man",           name: "The Man",           desc: "Win Confidence Wager having staked the most you could hold on every page", secret: true, reveal: "confidence-wager", icon: "allin" },
+  { id: "the-man",           name: "Let The Players Play", desc: "Win Confidence Wager having staked the most you could hold on every page", secret: true, reveal: "confidence-wager", icon: "allin" },
   // Dark sides. A milestone rather than a flourish (no challenge named), so it stays visible.
-  { id: "mad-woman",        name: "Mad Woman",        desc: "Beat a dark side on your first attempt", secret: false, icon: "inkspill", sitting: true, earn: { cat: "dark" } },
-  { id: "the-lakes",        name: "The Lakes",        desc: "Climb to the Rarest tier in Adaptive",  secret: false, icon: "lake", sitting: true, earn: { cat: "adaptive" } },
-  { id: "stay-stay-stay",   name: "Stay Stay Stay",   desc: "Reach Rarest and finish there without slipping", secret: false, icon: "anchor", sitting: true, earn: { cat: "adaptive" } },
-  { id: "a-place-in-this-world", name: "A Place In This World", desc: "Beat your first album in Album Focus", secret: false, icon: "map", sitting: true, earn: { cat: "album" } },
-  { id: "change",           name: "Change",           desc: "Beat all 12 albums in Album Focus",     secret: false, icon: "butterfly" },
-  { id: "gold-rush",        name: "Gold Rush",        desc: "Perfect an album in Album Focus (13/13)", secret: false, icon: "coins", sitting: true, earn: { cat: "album" } },
-  { id: "starlight",        name: "Starlight",        desc: "Perfect all 12 albums in Album Focus",  secret: false, icon: "constellation" },
-  // Gold Rush perfects at any difficulty; these are the two top rungs, and they ask for
+  { id: "mad-woman",        name: "Now I Breathe Flames", desc: "Beat a dark side on your first attempt", secret: false, icon: "inkspill", sitting: true, earn: { cat: "dark" } },
+  { id: "the-lakes",        name: "Those Windermere Peaks", desc: "Climb to the Rarest tier in Adaptive",  secret: false, icon: "lake", sitting: true, earn: { cat: "adaptive" } },
+  { id: "stay-stay-stay",   name: "But You Stayed",   desc: "Reach Rarest and finish there without slipping", secret: false, icon: "anchor", sitting: true, earn: { cat: "adaptive" } },
+  { id: "a-place-in-this-world", name: "Girl On A Mission",     desc: "Beat your first album in Album Focus", secret: false, icon: "map", sitting: true, earn: { cat: "album" } },
+  { id: "change",           name: "Stand Up Champions", desc: "Beat all 12 albums in Album Focus",     secret: false, icon: "butterfly" },
+  { id: "gold-rush",        name: "Gleaming, Twinkling", desc: "Perfect an album in Album Focus (13/13)", secret: false, icon: "coins", sitting: true, earn: { cat: "album" } },
+  { id: "starlight",        name: "Made Of Starlight", desc: "Perfect all 12 albums in Album Focus",  secret: false, icon: "constellation" },
+  // Gleaming, Twinkling perfects at any difficulty; these are the two top rungs, and they ask for
   // different things — naming a record cold on a 5s clock, or having its words by heart.
-  { id: "king-of-my-heart", name: "King Of My Heart", desc: "Perfect an album on Ultra",            secret: false, icon: "kingcard", sitting: true, earn: { cat: "album", diff: "ultra" } },
-  { id: "the-manuscript",   name: "The Manuscript",   desc: "Perfect an album in Lyricist",         secret: false, icon: "manuscript", sitting: true, earn: { cat: "album", diff: "lyricist" } },
+  { id: "king-of-my-heart", name: "Salute To Me",     desc: "Perfect an album on Ultra",            secret: false, icon: "kingcard", sitting: true, earn: { cat: "album", diff: "ultra" } },
+  { id: "the-manuscript",   name: "Write What You Know", desc: "Perfect an album in Lyricist",         secret: false, icon: "manuscript", sitting: true, earn: { cat: "album", diff: "lyricist" } },
   /* ---- Custom mode (your own levers, your own rules) ---- */
-  { id: "ours",             name: "Ours",             desc: "Finish your first Custom run",         secret: false, icon: "levers", sitting: true },
-  { id: "mine",             name: "Mine",             desc: `Keep ${CUSTOM_PRESET_SHELF} custom presets on the shelf at once`, secret: false, icon: "presetbox", sitting: true },
+  { id: "ours",             name: "My Choice Is You", desc: "Finish your first Custom run",         secret: false, icon: "levers", sitting: true },
+  { id: "mine",             name: "A Drawer Of My Things", desc: `Keep ${CUSTOM_PRESET_SHELF} custom presets on the shelf at once`, secret: false, icon: "presetbox", sitting: true },
   { id: "forever-and-always", name: "Forever & Always", desc: `Reach round ${CUSTOM_ENDLESS_MILESTONE} of an endless Custom run`, secret: false, icon: "infinity", sitting: true },
   // The one Custom charm that rewards authoring something punishing rather than comfortable.
   // "No easier than Ultra" is checked lever by lever against MODES.ultra (see customAtLeastUltra),
   // so retuning Ultra retunes this with it rather than leaving a stale set of numbers here.
-  { id: "dear-reader",      name: "Dear Reader",      desc: "Perfect a full Custom run tuned no easier than Ultra", secret: false, icon: "letter", sitting: true },
+  { id: "dear-reader",      name: "Aim At The Devil", desc: "Perfect a full Custom run tuned no easier than Ultra", secret: false, icon: "letter", sitting: true },
   /* ---- Guest shelf (other artists' catalogues) ---- */
-  { id: "welcome-to-new-york", name: "Welcome To New York", desc: "Admit a guest to the shelf", secret: false, icon: "guestpass", sitting: true, earn: { cat: "guest" } },
+  { id: "welcome-to-new-york", name: "Been Waitin' For You", desc: "Admit a guest to the shelf", secret: false, icon: "guestpass", sitting: true, earn: { cat: "guest" } },
   // Admission already means a perfect, hint-free run, so these are the rungs above it.
-  { id: "better-man",       name: "Better Man",       desc: "Admit a guest on Hard or Ultra",       secret: false, icon: "handstamp", sitting: true, earn: { cat: "guest", diff: "hard" } },
-  { id: "everything-has-changed", name: "Everything Has Changed", desc: "Admit a guest in Lyricist", secret: false, icon: "duetmic", sitting: true, earn: { cat: "guest", diff: "lyricist" } },
+  { id: "better-man",       name: "The Bravest Thing", desc: "Admit a guest on Hard or Ultra",       secret: false, icon: "handstamp", sitting: true, earn: { cat: "guest", diff: "hard" } },
+  { id: "everything-has-changed", name: "Know You Better",        desc: "Admit a guest in Lyricist", secret: false, icon: "duetmic", sitting: true, earn: { cat: "guest", diff: "lyricist" } },
   /* ---- Bonus games shelf ----
-     Named off LYRIC FRAGMENTS rather than song titles, which is this group's own convention
-     and not an accident: every name here is a real 2-3 word phrase in songs.json, so each one
-     is a searchable thing in the catalogue rather than a pun. Keep it up if the group grows.
      A bonus run is otherwise sandboxed to its own best score — these charms are the ONE thing
      it writes outside BONUS_KEY, and that is deliberate: a charm is a collection entry, never
      a ranking, so it doesn't breach the rule that a bonus run is never ranked beside the main
@@ -2577,7 +2582,7 @@ export const ACHIEVEMENTS = [
   { id: "blind-faith",      name: "Blind Faith",      desc: "Name a Redacted song with every strip still down", secret: false, icon: "taped", sitting: true, earn: { cat: "bonus" } },
   { id: "rarest-air",       name: "Rarest Air",       desc: "Take the rarest card on all ten pages of Only Here", secret: false, icon: "highcard", sitting: true, earn: { cat: "bonus" } },
   { id: "follow-the-sparks", name: "Follow The Sparks", desc: "Sing a whole Then What run on one unbroken chain", secret: false, icon: "chain", sitting: true, earn: { cat: "bonus" } },
-  // The secrets. Three of them are failures worn well (Anti-Hero's register), which is the
+  // The secrets. Three of them are failures worn well (the register of I'm The Problem), which is the
   // shelf's own tone: these games have soft edges and losing on them is funny rather than sore.
   { id: "i-bought-it",      name: "I Bought It",      desc: "Take the commonest card in an Only Here hand", secret: true, icon: "receipt" },
   { id: "knew-the-price",   name: "Knew The Price",   desc: "Buy every strip on a Redacted page and still name the song", secret: true, icon: "peeled" },
