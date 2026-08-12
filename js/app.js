@@ -185,6 +185,7 @@ let gameHitHalfClock = false; // any round answered with less than half the cloc
 let quickAnswerRun = 0;  // correct answers under a second, back to back (Just Like That)
 let suggestionIndex = -1;// which rung of the dropdown the live submission came off (-1 = not a suggestion)
 let roundClockTotal = 0; // this page's clock in seconds, as startTimer built it (0 = no clock at all)
+let runStartHour = -1;   // wall-clock hour the run opened on (3 AM And I'm Still Awake wants BOTH ends)
 let hintsUsed = 0;       // count of rounds this game where a hint was taken
 let hintBudgetLeft = Infinity; // Custom mode: total hint reveals still allowed this run (Infinity = uncapped, every other mode)
 let runFolded = false;   // partial/full stats already saved for the current run (quit / unload / endGame)
@@ -1979,9 +1980,15 @@ const HIDDEN_ACH_IDS = [
 //   is-it-over-now — every charm in HIDDEN_ACH_IDS.
 //   the-lucky-one  — 100%: every achievement but itself (is-it-over-now is earnable first,
 //                    so there's no circular deadlock between the two meta charms).
+//   things-i-love  — one charm from every theme in ACH_GROUPS. Self-referential like the others,
+//                    and its price moves on its own whenever a theme is added to that list.
 const META_ACH = ["earn-every-hidden-achievement", "earn-every-other-achievement"];
 function checkMetaAchievements() {
   if (Object.keys(earnedAchievements).length >= 13) unlock("earn-13-achievements");
+  // Read off the earned ids rather than walking every charm per theme: one pass, and a theme
+  // with no charms in it at all could never be collected anyway.
+  const themesHeld = new Set(Object.keys(earnedAchievements).filter((id) => ACH_BY_ID[id]).map(achGroupOf));
+  if (ACH_GROUPS.every((g) => themesHeld.has(g.id))) unlock("earn-charm-in-every-theme");
   if (HIDDEN_ACH_IDS.every((id) => earnedAchievements[id])) unlock("earn-every-hidden-achievement");
   const all = ACHIEVEMENTS.filter((a) => a.id !== "earn-every-other-achievement");
   if (all.length && all.every((a) => earnedAchievements[a.id])) unlock("earn-every-other-achievement");
@@ -2184,6 +2191,28 @@ function markChallengeDefeated(id, score, dark) {
 function checkPianoEgg(s) {
   const k = (s || "").toLowerCase().replace(/[^a-z]/g, "");
   if (k === "reptv" || k === "reputationtv") unlock("type-reputation-tv");
+}
+
+// JE SUIS CALME — an answer sent in at full volume. Read off the RAW line, which is the whole
+// point: every path that resolves a submission lowercases it almost immediately, so by the time
+// there is a song to talk about the shouting is gone. Two letters minimum, so a lone "A" typed
+// at the box isn't a shout, and the string has to actually HAVE a case to be in — a line of
+// digits and punctuation is unchanged by toUpperCase and would otherwise qualify.
+function checkCapsEgg(raw) {
+  const s = String(raw || "");
+  if ((s.match(/[A-Za-z]/g) || []).length < 2) return;
+  if (s === s.toUpperCase() && s !== s.toLowerCase()) unlock("submit-answer-in-all-caps");
+}
+
+// A Wrinkle In Time — 13:13 on the 13th, caught while a game is actually running. Cheap enough
+// to call from both ends of a page (the turn and the verdict), which between them give a run
+// several looks inside any given minute. The DATE comes off todayKey so the dev date override
+// moves it like every other dated surface; the time of day is the real wall clock, since
+// nothing overrides that.
+function checkWrinkleEgg() {
+  if (todayKey().slice(8, 10) !== "13") return;
+  const now = new Date();
+  if (now.getHours() === 13 && now.getMinutes() === 13) unlock("play-at-1313-on-the-13th");
 }
 
 /* ---------- Custom tooltips (data-tip; controllable delay, no clipping) ---------- */
@@ -8770,6 +8799,7 @@ function resetRunState() {
   quickAnswerRun = 0;
   suggestionIndex = -1;
   roundClockTotal = 0;
+  runStartHour = new Date().getHours();   // the hour this run opened on, for the whole-game clock charms
   hintsUsed = 0;
   hintBudgetLeft = Infinity;   // Custom mode overrides this to its hint budget in startCustom
   runFolded = false;
@@ -9395,7 +9425,7 @@ function dailyProgressSnapshot(dateStr) {
     roundRejects: roundRejects.map((list) => (list || []).slice()),
     roundTyped: roundTyped.slice(),
     roundFirstPick: roundFirstPick.slice(),
-    gameHitHalfClock,
+    gameHitHalfClock, runStartHour,
     usedWords: usedWords.slice(),
     recentEras: recentEras.slice(),
     correctStreak, gameMaxStreak, gameTimeouts, quickAnswerRun,
@@ -9422,6 +9452,9 @@ function restoreDailyProgress(p) {
   roundTyped = Array.isArray(p.roundTyped) ? p.roundTyped.slice() : [];
   roundFirstPick = Array.isArray(p.roundFirstPick) ? p.roundFirstPick.slice() : [];
   gameHitHalfClock = !!p.gameHitHalfClock;
+  // The hour the run OPENED on, not the hour it was resumed in: a game picked up at 4am was
+  // still not played whole inside the 3am hour, and resetting this would say it was.
+  runStartHour = typeof p.runStartHour === "number" ? p.runStartHour : -1;
   quickAnswerRun = p.quickAnswerRun || 0;
   usedWords = Array.isArray(p.usedWords) ? p.usedWords.slice() : [];
   recentEras = Array.isArray(p.recentEras) ? p.recentEras.slice() : [];
@@ -13095,6 +13128,10 @@ function advanceRound() {
     currentWord = forcedFirstWord;
     if (!usedWords.includes(currentWord)) usedWords.push(currentWord);
     forcedFirstWord = "";
+    // You Drew Stars — a word looked up in the searcher and then walked straight back into the
+    // game. Unlocked here rather than at the deep link, so it takes only when the word actually
+    // reaches a page: startFromWord turns away anything that isn't a real prompt word.
+    unlock("play-word-from-searcher");
   } else {
     currentWord = challengeForcedWord(round) || pickWord();   // One Of A Kind forces its target word
   }
@@ -13175,6 +13212,7 @@ function advanceRound() {
   roundNamed = [];                             // Double Trouble: no songs named on the fresh page yet
   suggestionIndex = -1;                        // nothing has been taken off the dropdown on this page yet
   roundClockTotal = 0;                         // and no clock is running until startTimer builds one
+  checkWrinkleEgg();                           // 13:13 on the 13th, caught at the page-turn end
   roundStake = 0;                              // Confidence Wager: this page's stake isn't set yet
   stakeChosen = false;                         // (beginRoundClock gates the clock until it is)
   roundInsured = false;                        // Insurance: a shield covers one page only
@@ -14286,6 +14324,18 @@ function submitAnswer(song, isTimeout) {
   // Fires on the attempt regardless of whether it's a correct match for the round.
   if (currentWord === "somewhere" && normalizeTitle($("songInput").value || "") === "paris") unlock("answer-paris-for-somewhere");
   checkPianoEgg($("songInput").value);   // "rep tv" / "reputation tv" typed as an answer
+  // Two charms about WHAT was written rather than what it resolved to, so they read the line
+  // here, before anything downstream normalises it — and only on a real submission, since a
+  // timeout leaves whatever half-thought is in the box and never sent it.
+  if (!isTimeout) {
+    checkCapsEgg($("songInput").value);
+    // A Crook Who Was Caught — handing the prompt word back as though it were the answer. Not on
+    // Common Thread, where the answer genuinely IS a word and typing the thread is just playing
+    // the page properly.
+    const said = normalizeTitle($("songInput").value || "");
+    if (said && currentWord && !commonRuleActive() && said === normalizeTitle(currentWord)) unlock("submit-prompt-word-as-answer");
+  }
+  checkWrinkleEgg();   // 13:13 on the 13th, caught at the verdict end of the page
 
   let lyricMatch = null;
   let triedLyric = false;   // was the sung-line path actually open? (it isn't in title-only modes)
@@ -14489,6 +14539,20 @@ function submitAnswer(song, isTimeout) {
   if (correct && song && roundRejects.some((list) => (list || []).some((r) => r.title === song.title && r.word !== currentWord))) {
     unlock("answer-right-with-song-given-wrongly-earlier");
   }
+  // Over And Over / Here We Go Again — the same song credited again. Off roundSongs, which only
+  // holds CORRECT answers, so a title that keeps being wrong never counts; "twice in a row" is
+  // literally the page before, so a miss between them breaks it.
+  if (correct && song) {
+    if (round >= 2 && roundSongs[round - 2] === song.title) unlock("answer-same-song-twice-in-row");
+    if (roundSongs.filter((t) => t === song.title).length >= 3) unlock("answer-same-song-3-times-one-game");
+    // August Slipped Away — the folklore song, in the month it is named after. "august" is a song
+    // title and not a prompt word (there is no "august" in words.json), so the credited answer is
+    // the only reading of this that can ever fire. The month comes off todayKey, dev override and all.
+    if (song.title === "august" && todayKey().slice(5, 7) === "08") unlock("answer-august-in-august");
+  }
+  // Bullet Holes — every rung of the hint ladder burned on this page and the page missed anyway.
+  // A timeout counts: the hints were still spent, and the page was still lost.
+  if (!correct && hintTier >= 3) unlock("miss-round-after-every-hint");
   // The page's own losing answer joins the log, so a LATER page can see it travel (above).
   if (!correct && song && !isTimeout) noteWrongSubmission(song, { burned: true });
   // The Words I Held Back — the clock died with the answer already written out, unsent. Read off
@@ -15176,6 +15240,14 @@ function endGame() {
   // answer" figure would quietly change what that number means.
   const shownTime = runTime != null ? runTime : relaxedStopwatch();
 
+  // The runs before this one, of THIS game type. Three charms compare a run against the ones
+  // that came before it, and they all mean "in a row" the way noTimeoutStreak means it: runs of
+  // other game types are invisible, neither extending a chain nor breaking one, so a challenge
+  // played between two perfect classic games doesn't quietly cost you Two For The Show. Read
+  // here rather than after the append below, so the list means the same thing under devNoLog
+  // (which skips the append) as it does in a real run.
+  const priorRuns = loadHistory().filter((h) => h && h.t === gameType);
+
   // Log every finished run to the chronological history (classic / infinite / daily).
   // devNoLog (a dev cheat) skips every persistence fold so test runs don't dirty the data.
   if (!devNoLog) appendHistory({
@@ -15198,9 +15270,19 @@ function endGame() {
     // BEFORE this game folds in, or a word missed again this run could crown itself and be
     // "beaten" in the same breath. A word needs a real history of beating you (MEAN_GRUDGE
     // misses) before overcoming it means anything.
-    const nemesisBefore = topTallyEntry(loadSongTally().misses);
+    const before = loadSongTally();
+    const nemesisBefore = topTallyEntry(before.misses);
     if (nemesisBefore && nemesisBefore.count >= MEAN_GRUDGE
         && roundResults.some((correct, i) => correct && roundWords[i] === nemesisBefore.key)) unlock("answer-nemesis-word");
+    // I Just Know — the lower rung of the same ladder, and read off the same pre-fold snapshot for
+    // the same reason: this asks only that the word you have missed MOST has finally fallen, where
+    // The Cycle Ends holds out for one that has beaten you MEAN_GRUDGE times first.
+    if (nemesisBefore && roundResults.some((correct, i) => correct && roundWords[i] === nemesisBefore.key)) unlock("answer-most-missed-word");
+    // The Moment I Knew — any word that has ever beaten you, answered. Also pre-fold, or a word
+    // missed on page three and answered on page nine would qualify inside the same run.
+    if (roundResults.some((correct, i) => correct && roundWords[i] && (before.misses[roundWords[i]] || 0) >= 1)) {
+      unlock("answer-word-missed-in-earlier-game");
+    }
 
     const tally = recordGameTally(roundResults.map((correct, i) => ({
       correct,
@@ -15211,6 +15293,17 @@ function endGame() {
     // "I Knew Everything" — every song in the catalogue answered correctly at least once.
     // Count discovered against allSongs (not raw tally keys) so it's exact.
     if (allSongs.length && allSongs.every((s) => tally.songs[s.title])) unlock("answer-every-catalogue-song"); checkSongKeepsakes(tally);
+    // Haunted — the POST-fold reading, and deliberately so: the tally folds once per finished
+    // game, so three misses on one word means three separate games by construction.
+    if (roundResults.some((correct, i) => !correct && roundWords[i] && (tally.misses[roundWords[i]] || 0) >= 3)) {
+      unlock("miss-same-word-in-3-games");
+    }
+    // You Learn My Secrets — every word in the list has been dealt to you at least once. The union
+    // of the answered and the missed keys IS every word ever put in front of you, and it's checked
+    // against playableWords rather than the tally's own keys so the count is exact.
+    if (playableWords.length && playableWords.every((w) => tally.words[w] || tally.misses[w])) {
+      unlock("be-dealt-every-prompt-word");
+    }
   }
 
   // Keepsakes — end-of-game polaroids (classic/infinite/daily; test runs never earn).
@@ -15253,6 +15346,10 @@ function endGame() {
     if (metrics.versePerfect >= 50) unlock("recall-50-lyric-lines-word-perfect");
     if (metrics.versePerfect >= 100) unlock("recall-100-lyric-lines-word-perfect");
     if (metrics.versePerfect >= 1000) unlock("recall-1000-lyric-lines-word-perfect");
+    // The long-haul volume pair, off the same record and folded by the same call. Rounds rather
+    // than games, so every mode's pages count toward them at the rate it deals them.
+    if (metrics.roundsCorrect >= 500) unlock("answer-500-rounds-correct-lifetime");
+    if (metrics.roundsTotal >= 1989) unlock("play-1989-rounds-lifetime");
   }
   // Skills & Mastery: classic/infinite/daily all earn the full skill set. Endurance used to be
   // Infinite-only, which left it unreachable for anyone who played anything else and quietly
@@ -15285,6 +15382,7 @@ function endGame() {
     if (played >= 1) unlock("first-game-finished");
     if (played >= 5) unlock("play-5-games");
     if (played >= 15) unlock("play-15-games");
+    if (played >= 89) unlock("play-89-games");   // the top of that ladder
     const trailingStreak = (() => { let n = 0; for (let i = roundResults.length - 1; i >= 0 && roundResults[i]; i--) n++; return n; })();
     if (roundResults.includes(false) && trailingStreak >= 5) unlock("finish-on-5-streak-after-miss");
     if (currentMode.id === "ultra" && score >= 10) unlock("win-ultra-10-correct");
@@ -15339,6 +15437,23 @@ function endGame() {
     if (score === 0 && fullRun && roundTyped.length === TOTAL_ROUNDS && roundTyped.every(Boolean)) unlock("answer-13-wrong-having-typed-every-round");
     // Took The Money — the top line of the dropdown taken on all thirteen pages, right or wrong.
     if (fullRun && roundFirstPick.length === TOTAL_ROUNDS && roundFirstPick.every(Boolean)) unlock("take-first-suggestion-all-13-rounds");
+
+    /* ---- The free batch, end-of-run half: this run measured against the ones before it ---- */
+    const perfect = score === TOTAL_ROUNDS && fullRun;
+    // This Is Our Place — a perfect thirteen that never once left an album. Album Focus has its
+    // own end path and never reaches here, so this is always the ordinary game finding the seam
+    // by itself. Every page is correct, so every roundAlbums entry is a real answered album.
+    if (perfect && new Set(roundAlbums.filter(Boolean)).size === 1) unlock("perfect-13-all-one-album");
+    // I Hit My Peak At Seven — exactly seven, on the seventh. Off todayKey, so the dev date moves it.
+    if (fullRun && score === 7 && todayKey().slice(8, 10) === "07") unlock("score-7-on-the-7th");
+    // The pair that read the previous run. `c === n === TOTAL_ROUNDS` is how a perfect run looks
+    // in the history log: the headline `s` is the same number for classic but not for every type,
+    // so the correct/played pair is the one that means the same thing everywhere.
+    const last = priorRuns[0];
+    const wasPerfect = (h) => h && h.c === TOTAL_ROUNDS && h.n === TOTAL_ROUNDS;
+    if (perfect && wasPerfect(last)) unlock("perfect-13-two-games-in-row");
+    // What Died Didn't Stay Dead — nothing at all, then everything, with no run of this type between.
+    if (perfect && last && last.c === 0 && last.n === TOTAL_ROUNDS) unlock("score-zero-then-perfect-13-next-game");
   }
   if (isInfinite) {
     if (roundsSurvived >= 20) unlock("survive-20-rounds-infinite");
@@ -15358,6 +15473,29 @@ function endGame() {
   // Safe & Sound — the three most recent finished runs were all classic Easy.
   const recent = loadHistory();
   if (recent.length >= 3 && recent.slice(0, 3).every((h) => h.m === "easy")) unlock("play-easy-3-times-in-row");
+
+  /* ---- The free batch, the parts that don't care which game type this was ---- */
+  // It's All The Same — three finishes on the same headline number. `s` is the headline score,
+  // which is rounds survived in Infinite and correct answers everywhere else, so this asks the
+  // same question of each mode in that mode's own units.
+  if (priorRuns.length >= 2 && priorRuns[0].s === boardScore && priorRuns[1].s === boardScore) {
+    unlock("same-final-score-3-games-in-row");
+  }
+  // 3 AM And I'm Still Awake — the WHOLE game inside that hour, so both ends are checked. A run
+  // resumed after a refresh keeps the hour it opened on (see restoreDailyProgress).
+  if (runStartHour === 3 && new Date().getHours() === 3) unlock("play-whole-game-in-3am-hour");
+  // Happy Birthday To You — off TS_MILESTONES, which the dated marginalia already reads, rather
+  // than a second hardcoded 13 December that would then be free to drift from the first.
+  const birthday = TS_MILESTONES.find((m) => m.kind === "birthday");
+  if (birthday && todayKey().slice(5) === birthday.md) unlock("play-on-taylors-birthday");
+  // The calendar ledger, just written by markRunBreadth above. Gated on devNoLog because that is
+  // exactly what it skipped: a test run neither records a day nor should be told it reached one.
+  if (!devNoLog) {
+    const led = loadDatesPlayed();
+    if (dayStreakEnding(todayKey(), led) >= 7) unlock("play-7-days-in-row");
+    if (distinctDaysPlayed(led) >= 13) unlock("play-on-13-different-days");
+    if (hasPlayedEveryMonth(led)) unlock("play-in-every-month");
+  }
 
   showScreen("results");
   const keepsakeOpts = isInfinite
@@ -18572,6 +18710,52 @@ function buildDevApi() {
       scarf: () => loadMetrics().scarfClicks || 0,
       setScarf: (n) => { const m = loadMetrics(); m.scarfClicks = Math.max(0, n | 0); saveMetrics(m); return m.scarfClicks; },
     },
+    // The lifetime per-word tally, which the nemesis charms are judged on. Nothing here can be
+    // filled honestly in a test session: Haunted wants the same word missed in three separate
+    // games, and You Learn My Secrets wants every one of seven hundred words dealt to you. The
+    // seeders write the tally directly, exactly as a run of finished games would have left it.
+    tally: {
+      // Read: the whole record, or just the nemesis standings.
+      all: () => loadSongTally(),
+      nemesis: () => {
+        const t = loadSongTally();
+        const top = topTallyEntry(t.misses);
+        return { word: top ? top.key : null, misses: top ? top.count : 0, grudge: MEAN_GRUDGE,
+          missed: Object.keys(t.misses).length, answered: Object.keys(t.words).length };
+      },
+      // Blame a word n times, e.g. tally.miss("storm", 3) to make it a three-game curse. The word
+      // is checked against the playable pool so a typo doesn't silently seed a nemesis that can
+      // never be dealt to you again.
+      miss: (word, n = 1) => {
+        const w = playableWords.find((x) => x.toLowerCase() === String(word || "").toLowerCase());
+        if (!w) return `not a playable prompt word: ${word}`;
+        const t = loadSongTally();
+        t.misses[w] = Math.max(0, (t.misses[w] || 0) + (n | 0));
+        saveSongTally(t);
+        return { word: w, misses: t.misses[w] };
+      },
+      // Credit a word n times, the mirror of miss().
+      hit: (word, n = 1) => {
+        const w = playableWords.find((x) => x.toLowerCase() === String(word || "").toLowerCase());
+        if (!w) return `not a playable prompt word: ${word}`;
+        const t = loadSongTally();
+        t.words[w] = Math.max(0, (t.words[w] || 0) + (n | 0));
+        saveSongTally(t);
+        return { word: w, correct: t.words[w] };
+      },
+      // Mark every playable word as having been DEALT (answered once), one call, for You Learn My
+      // Secrets. `leave` holds that many words back so the last few can be played for real.
+      seeAll: (leave = 0) => {
+        const t = loadSongTally();
+        const pool = playableWords.slice(0, Math.max(0, playableWords.length - (leave | 0)));
+        for (const w of pool) if (!t.words[w] && !t.misses[w]) t.words[w] = 1;
+        saveSongTally(t);
+        const seen = playableWords.filter((w) => t.words[w] || t.misses[w]).length;
+        return { seen, total: playableWords.length, remaining: playableWords.length - seen };
+      },
+      // Wipe the word history only, leaving the song/album counts (same reach as novelty.forget).
+      forget: () => { const t = loadSongTally(); t.words = {}; t.misses = {}; saveSongTally(t); return loadSongTally(); },
+    },
     // The live run's per-page stopwatch. Reads the array the timing charms will judge; `sum` is
     // what Relaxed's results line shows (null in any mode that has a clock of its own).
     times: {
@@ -18588,7 +18772,7 @@ function buildDevApi() {
     run: {
       flags: () => ({
         round, score, rounds: roundResults.length,
-        timeouts: gameTimeouts, hitHalfClock: gameHitHalfClock, quickAnswerRun,
+        timeouts: gameTimeouts, hitHalfClock: gameHitHalfClock, quickAnswerRun, runStartHour,
         typed: roundTyped.slice(), tookFirstSuggestion: roundFirstPick.slice(),
         firstKeyLeft: roundFirstKeyLeft.map((s) => (typeof s === "number" ? +s.toFixed(2) : s)),
         suggestionIndex, roundClockTotal,

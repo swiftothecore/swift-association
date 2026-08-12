@@ -2532,6 +2532,58 @@ export const ACHIEVEMENTS = [
   { id: "time-out-with-right-answer-typed", name: "The Words I Held Back", desc: "Run out of time with the right answer typed", secret: true, icon: "placeholder" },
   { id: "type-nothing-until-2s-left-then-answer-right", name: "Holding My Breath", desc: "Type nothing until under 2s left, then answer right", secret: true, icon: "placeholder" },
   { id: "take-first-suggestion-all-13-rounds", name: "Took The Money", desc: "Take the first suggestion on all 13 rounds", secret: true, icon: "placeholder" },
+  /* ---- The free charms of the Core batch: readings, not new state ----
+     Every one of these is a read against something the notebook already keeps — the lifetime
+     per-word tally, the run history, the metrics record, the calendar ledger, or the run's own
+     arrays. Nothing here adds a stored field, and nothing here can be locked out: each is a
+     standing condition that comes round again rather than a window that closes. Icons are
+     placeholders pending the batch's real marks; the secret ones join HIDDEN_ACH_IDS in the
+     batch's secrecy phase, which is a deliberate edit of its own. */
+  { id: "perfect-13-all-one-album", name: "This Is Our Place", desc: "Score 13/13 all from one album", secret: false, icon: "placeholder" },
+  /* The nemesis thread. The tally is folded once per finished game, so a word missed three
+     times in one run counts once — which is exactly what "three separate games" wants. */
+  { id: "answer-word-missed-in-earlier-game", name: "The Moment I Knew", desc: "Answer a word you missed in an earlier game", secret: false, icon: "placeholder" },
+  { id: "miss-same-word-in-3-games", name: "Haunted", desc: "Miss the same word in 3 separate games", secret: true, icon: "placeholder" },
+  // The lower rung of a two-step ladder with The Cycle Ends: this one asks only that the word
+  // you have missed MOST has finally fallen, where The Cycle Ends holds out for a word that
+  // has beaten you MEAN_GRUDGE times first.
+  { id: "answer-most-missed-word", name: "I Just Know", desc: "Finally crack your most-missed word", secret: false, icon: "placeholder" },
+  { id: "be-dealt-every-prompt-word", name: "You Learn My Secrets", desc: "Be dealt every prompt word in the game", secret: false, icon: "placeholder" },
+  /* Charms judged against the runs BEFORE this one. "In a row" means among runs of the same
+     game type: the sandboxed types are invisible to them, neither extending nor breaking a
+     chain, which is the rule noTimeoutStreak already set for a cross-run counter. */
+  { id: "score-zero-then-perfect-13-next-game", name: "What Died Didn't Stay Dead", desc: "Score 0/13, then 13/13 the next game", secret: true, icon: "placeholder" },
+  { id: "perfect-13-two-games-in-row", name: "Two For The Show", desc: "Score two perfect 13/13 games in a row", secret: false, icon: "placeholder" },
+  { id: "same-final-score-3-games-in-row", name: "It's All The Same", desc: "Finish on the same score three games running", secret: true, icon: "placeholder" },
+  /* The long haul. The three dated ones read the calendar ledger rather than the run history,
+     which is capped — see DATES_KEY. */
+  { id: "play-7-days-in-row", name: "Running Like Water", desc: "Play seven days in a row", secret: false, icon: "placeholder" },
+  { id: "play-on-13-different-days", name: "I'm Thirteen Now", desc: "Play on 13 different days", secret: false, icon: "placeholder" },
+  { id: "play-in-every-month", name: "Brave The Seasons", desc: "Play in all twelve months of the year", secret: false, icon: "placeholder" },
+  { id: "answer-500-rounds-correct-lifetime", name: "The Rest Is History", desc: "Answer 500 rounds correctly, lifetime", secret: false, icon: "placeholder" },
+  { id: "play-1989-rounds-lifetime", name: "A Thousand Memories", desc: "Play 1,989 rounds in total", secret: false, icon: "placeholder" },
+  { id: "play-89-games", name: "I Was Born In 19—", desc: "Play 89 games", secret: false, icon: "placeholder" },
+  /* Answered with the same song more than once. Distinct from Someone Has A Favourite Song,
+     which counts sung LINES from one song; these count the credited answer however it arrived. */
+  { id: "answer-same-song-twice-in-row", name: "Over And Over", desc: "Answer with the same song twice in a row", secret: true, icon: "placeholder" },
+  { id: "answer-same-song-3-times-one-game", name: "Here We Go Again", desc: "Answer with the same song 3 times in one game", secret: true, icon: "placeholder" },
+  { id: "miss-round-after-every-hint", name: "Bullet Holes", desc: "Burn every hint in a round and still miss it", secret: true, icon: "placeholder" },
+  // Read off the RAW line, before the matcher lowercases it — which it does very early.
+  { id: "submit-answer-in-all-caps", name: "JE SUIS CALME", desc: "Submit an answer in full caps", secret: true, icon: "placeholder" },
+  { id: "submit-prompt-word-as-answer", name: "A Crook Who Was Caught", desc: "Submit the prompt word itself as your answer", secret: true, icon: "placeholder" },
+  /* The dated ones. "august" is the folklore song, not a prompt word — there is no "august"
+     in words.json, so the song title is the only reading of this that can ever fire. */
+  { id: "answer-august-in-august", name: "August Slipped Away", desc: "Answer with “august” in the month of August", secret: true, icon: "placeholder" },
+  { id: "score-7-on-the-7th", name: "I Hit My Peak At Seven", desc: "Score exactly 7/13 on the 7th of a month", secret: true, icon: "placeholder" },
+  { id: "play-whole-game-in-3am-hour", name: "3 AM And I'm Still Awake", desc: "Play a whole game between 3am and 4am", secret: true, icon: "placeholder" },
+  { id: "play-at-1313-on-the-13th", name: "A Wrinkle In Time", desc: "Play at 13:13 on the 13th", secret: true, icon: "placeholder" },
+  // The date comes off TS_MILESTONES, which already knows her birthday — see the dated
+  // marginalia. Hardcoding 13 December a second time is how the two drift apart.
+  { id: "play-on-taylors-birthday", name: "Happy Birthday To You", desc: "Play on Taylor's birthday", secret: true, icon: "placeholder" },
+  // Self-referential, so it is evaluated after every unlock alongside the other meta charms,
+  // and its price moves whenever a theme is added to ACH_GROUPS.
+  { id: "earn-charm-in-every-theme", name: "The Things That I Love", desc: "Earn a charm in every theme", secret: false, icon: "placeholder" },
+  { id: "play-word-from-searcher", name: "You Drew Stars", desc: "Play a word straight from the lyric searcher", secret: true, icon: "placeholder" },
   { id: "defeat-first-challenge",       name: "Ready For Combat", desc: "Defeat your first challenge",           secret: false, icon: "bow", sitting: true, earn: { cat: "challenge" } },
   { id: "defeat-every-challenge",      name: "Get The Crown",    desc: "Defeat every challenge",                secret: false, icon: "flask" },
   { id: "unlock-every-challenge",      name: "I Like Shiny Things", desc: "Unlock every challenge",                secret: false, icon: "rings" },
