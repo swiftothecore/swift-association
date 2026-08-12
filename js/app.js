@@ -557,7 +557,7 @@ function startSnow() {
   snowCanvas.style.display = "block";
   snowLast = 0;
   if (!snowRaf) snowRaf = requestAnimationFrame(snowFrame);
-  unlock("snow-on-the-beach");   // weird but beautiful — you caught the December snow
+  unlock("watch-snow-fall");   // weird but beautiful — you caught the December snow
 }
 function stopSnow() {
   if (snowRaf) { cancelAnimationFrame(snowRaf); snowRaf = null; }
@@ -645,7 +645,7 @@ function startRain() {
   rainCanvas.style.display = "block";
   rainLast = 0;
   if (!rainRaf) rainRaf = requestAnimationFrame(rainFrame);
-  unlock("midnight-rain");   // you kept the page company past midnight
+  unlock("keep-page-company-past-midnight");   // you kept the page company past midnight
 }
 function stopRain() {
   if (rainRaf) { cancelAnimationFrame(rainRaf); rainRaf = null; }
@@ -764,7 +764,7 @@ function startLeaves() {
   leafCanvas.style.display = "block";
   leafLast = 0;
   if (!leafRaf) leafRaf = requestAnimationFrame(leafFrame);
-  unlock("autumn-leaves-falling");   // you stayed with the page through the autumn leaves
+  unlock("watch-autumn-leaves-fall");   // you stayed with the page through the autumn leaves
 }
 function stopLeaves() {
   if (leafRaf) { cancelAnimationFrame(leafRaf); leafRaf = null; }
@@ -1936,18 +1936,18 @@ function unlock(id) {
 // decision, not a side effect. Excludes the two meta charms (circularity) and the flourish
 // charms, which carry `reveal` and are gated targets rather than things to be found.
 const HIDDEN_ACH_IDS = [
-  "getaway-car", "long-story-short", "champagne-problems", "anti-hero",
-  "i-did-something-bad", "branch-out", "midnights", "the-triangle",
-  "my-mind-is-alive", "cruel-summer", "i-cant-see-you", "thousand-cuts",
-  "spicy-drama", "i-look-in-windows", "look-what-you-made-me-do", "snow-on-the-beach",
-  "midnight-rain", "autumn-leaves-falling", "fav-song", "paris",
-  "mean", "raining-monday", "seven", "piano-was-hissing",
-  "the-bolter", "no-closure", "this-is-me-trying", "smallest-man",
-  "you-took-a-polaroid-of-us",
+  "answer-under-1s-left", "finish-on-5-streak-after-miss", "score-12", "score-zero",
+  "answer-under-half-second-left", "streak-3-same-album", "play-between-midnight-and-1am", "answer-cardigan-betty-august-one-game",
+  "streak-3-b-titles", "lose-3-lives-first-4-rounds", "finish-with-no-answers", "miss-1000-rounds-lifetime",
+  "answer-if-this-was-a-movie", "open-settings-menu", "make-snake-appear", "watch-snow-fall",
+  "keep-page-company-past-midnight", "watch-autumn-leaves-fall", "answer-3-rounds-same-song", "answer-paris-for-somewhere",
+  "answer-nemesis-word", "answer-rain-on-monday", "play-all-seven-weekdays", "type-reputation-tv",
+  "quit-round-1-before-typing", "give-up-after-12-before-13", "defeat-challenge-after-7-runs", "fall-for-first-impostor",
+  "find-every-polaroid-keepsake",
   // The bonus shelf's five. Added deliberately, which is what this list is for: each one makes
   // Is It Over Now? cost a little more, and three of them are failures you have to go and
   // commit on purpose once you know they exist.
-  "i-bought-it", "knew-the-price", "never-heard-silence", "almost-had-it", "saw-it-coming",
+  "take-commonest-only-here-card", "name-redacted-song-after-buying-all-strips", "time-out-all-10-only-here-pages", "finish-bonus-run-one-page-short-of-sweep", "flag-spot-the-slip-impostor-under-2s",
 ];
 
 // Re-evaluated after every unlock (each unlock no-ops if already earned, so this is safe to
@@ -1956,12 +1956,12 @@ const HIDDEN_ACH_IDS = [
 //   is-it-over-now — every charm in HIDDEN_ACH_IDS.
 //   the-lucky-one  — 100%: every achievement but itself (is-it-over-now is earnable first,
 //                    so there's no circular deadlock between the two meta charms).
-const META_ACH = ["is-it-over-now", "the-lucky-one"];
+const META_ACH = ["earn-every-hidden-achievement", "earn-every-other-achievement"];
 function checkMetaAchievements() {
-  if (Object.keys(earnedAchievements).length >= 13) unlock("karma");
-  if (HIDDEN_ACH_IDS.every((id) => earnedAchievements[id])) unlock("is-it-over-now");
-  const all = ACHIEVEMENTS.filter((a) => a.id !== "the-lucky-one");
-  if (all.length && all.every((a) => earnedAchievements[a.id])) unlock("the-lucky-one");
+  if (Object.keys(earnedAchievements).length >= 13) unlock("earn-13-achievements");
+  if (HIDDEN_ACH_IDS.every((id) => earnedAchievements[id])) unlock("earn-every-hidden-achievement");
+  const all = ACHIEVEMENTS.filter((a) => a.id !== "earn-every-other-achievement");
+  if (all.length && all.every((a) => earnedAchievements[a.id])) unlock("earn-every-other-achievement");
 }
 
 // Breadth charms — called once from the end of every finished run. `token` is this run's
@@ -1971,10 +1971,10 @@ function checkMetaAchievements() {
 // surface. Test runs (devNoLog) record nothing, exactly as stats and history don't.
 function markRunBreadth(token) {
   if (devNoLog) return;
-  if (token && hasExploredEverything(markModeSeen(token))) unlock("explorer");
+  if (token && hasExploredEverything(markModeSeen(token))) unlock("play-every-required-mode");
   // Noon, so neither the timezone nor a DST shift can roll the parsed date onto its neighbour.
   const day = new Date(todayKey() + "T12:00:00").getDay();
-  if (hasPlayedEveryWeekday(markWeekdayPlayed(day))) unlock("seven");
+  if (hasPlayedEveryWeekday(markWeekdayPlayed(day))) unlock("play-all-seven-weekdays");
 }
 
 /* ---------- Challenges mode: token wallet + progress mutators ----------
@@ -2030,7 +2030,7 @@ function unlockChallenge(id) {
 // with no buy left to notice it, and the charm would sit unearned forever. Called from the
 // challenges page render too, so simply looking at the board closes it.
 function checkChallengeBoardCharms() {
-  if (CHALLENGES.every((ch) => challengeUnlocked(ch.id))) unlock("paper-rings");
+  if (CHALLENGES.every((ch) => challengeUnlocked(ch.id))) unlock("unlock-every-challenge");
 }
 
 // True if the player's Mastery level has reached a mastery-gated challenge's requirement.
@@ -2138,16 +2138,16 @@ function markChallengeDefeated(id, score, dark) {
   // it re-targets itself as more dark sides get authored.
   if (firstTime && dark) {
     const beaten = DARK_SIDE_IDS.filter((k) => challengeRecord(k).darkDefeated).length;
-    unlock("the-black-dog");
-    if (beaten >= DARK_SIDE_MILESTONE) unlock("dont-blame-me");
-    if (DARK_SIDE_IDS.length && beaten >= DARK_SIDE_IDS.length) unlock("darkest-paradise");
+    unlock("beat-first-dark-side");
+    if (beaten >= DARK_SIDE_MILESTONE) unlock("beat-5-dark-sides");
+    if (DARK_SIDE_IDS.length && beaten >= DARK_SIDE_IDS.length) unlock("beat-every-dark-side");
   }
   if (firstTime && !dark) {
     const wallet = loadChallengeTokens();
     wallet.balance += 1;                              // the self-feeding reward
     saveChallengeTokens(wallet);
-    unlock("the-archer");                             // first challenge ever defeated
-    if (CHALLENGES.every((ch) => challengeRecord(ch.id).defeated)) unlock("the-alchemy");
+    unlock("defeat-first-challenge");                             // first challenge ever defeated
+    if (CHALLENGES.every((ch) => challengeRecord(ch.id).defeated)) unlock("defeat-every-challenge");
   }
   return firstTime;
 }
@@ -2156,7 +2156,7 @@ function markChallengeDefeated(id, score, dark) {
 // Letters-only so spacing/case/punctuation don't matter.
 function checkPianoEgg(s) {
   const k = (s || "").toLowerCase().replace(/[^a-z]/g, "");
-  if (k === "reptv" || k === "reputationtv") unlock("piano-was-hissing");
+  if (k === "reptv" || k === "reputationtv") unlock("type-reputation-tv");
 }
 
 /* ---------- Custom tooltips (data-tip; controllable delay, no clipping) ---------- */
@@ -2765,7 +2765,7 @@ async function playGoal() {
 
 // The pinned catalogue-completion quest card on the Charm Collection page.
 function questCardHTML() {
-  const a = ACH_BY_ID["i-hate-it-here"];
+  const a = ACH_BY_ID["answer-every-catalogue-song"];
   if (!a) return "";
   const found = (loadSongTally().songs) || {};
   const total = allSongs.length || 1;
@@ -3375,7 +3375,7 @@ function showKeepsakeToast(p) {
 // You Took A Polaroid Of Us — every polaroid earned. Keys off what actually EXISTS (POLAROIDS),
 // so it re-targets automatically as the set grows toward POLAROID_TOTAL and needs no migration.
 function checkKeepsakeMeta(earned = loadKeepsakes()) {
-  if (POLAROIDS.length && POLAROIDS.every((p) => earned[p.id])) unlock("you-took-a-polaroid-of-us");
+  if (POLAROIDS.length && POLAROIDS.every((p) => earned[p.id])) unlock("find-every-polaroid-keepsake");
 }
 
 // Song-discovery keepsakes — checked from every end-of-game tally (main + sandboxed paths),
@@ -6115,18 +6115,18 @@ function foldBonusPageCharms(correct, isTimeout) {
     // Timed off the page's own baseline rather than off the clock's remaining seconds, so it
     // still means "on sight" if this game's clock is ever retuned.
     if (correct && !isTimeout && performance.now() - bonusPageStart < BONUS_SNAP_MS)
-      unlock("saw-it-coming");
+      unlock("flag-spot-the-slip-impostor-under-2s");
   } else if (bonusGame.id === "redacted") {
     // Both of these are about what the page COST, so they are mutually exclusive by
     // construction — a page cannot be both untouched and bought out.
-    if (correct && redactPeeled === 0) unlock("blind-faith");
-    if (correct && bonusPuzzle.blocks && redactPeeled >= bonusPuzzle.blocks) unlock("knew-the-price");
+    if (correct && redactPeeled === 0) unlock("name-redacted-song-no-strips-removed");
+    if (correct && bonusPuzzle.blocks && redactPeeled >= bonusPuzzle.blocks) unlock("name-redacted-song-after-buying-all-strips");
   } else if (bonusGame.id === "only-here" && onlyPlayed) {
     // The commonest card in the hand, and NOT when that card is also the rarest: a hand where
     // every word is sung equally often is a tie the player cannot lose, and charging them with
     // a wrong call for winning it would be a lie about what they did.
     const top = Math.max(...bonusPuzzle.hand.map((c) => c.count));
-    if (!onlyPlayed.best && onlyPlayed.count === top) unlock("i-bought-it");
+    if (!onlyPlayed.best && onlyPlayed.count === top) unlock("take-commonest-only-here-card");
   }
 }
 
@@ -6139,31 +6139,31 @@ function foldBonusRunCharms(perfect, cleared) {
      which would make every dev-only lens-less run a "clean sweep" of ten cleared pages. Anything
      the shelf's own list excludes, this excludes. */
   if (bonusGame.shelf === false) return;
-  unlock("play-it-again");
-  if (perfect) unlock("a-clean-kill");
+  unlock("finish-first-bonus-run");
+  if (perfect) unlock("clean-sweep-bonus-game");
   // One page shy, and only on the three games that keep a sweep clock — the shelf's own
   // Crestfallen On The Landing, and it stings most exactly where a ceiling is reachable.
-  if (!perfect && cleared === BONUS_ROUNDS - 1 && bonusSweeps(bonusGame)) unlock("almost-had-it");
+  if (!perfect && cleared === BONUS_ROUNDS - 1 && bonusSweeps(bonusGame)) unlock("finish-bonus-run-one-page-short-of-sweep");
   // Only Here has no fail state, so every card played banks at least a point: a run that
   // scores nothing is a run where all ten clocks ran out with nothing on the table.
   if (bonusGame.id === "only-here" && bonusScore === 0 && bonusLog.length === BONUS_ROUNDS)
-    unlock("never-heard-silence");
+    unlock("time-out-all-10-only-here-pages");
   if (perfect) {
     // Four games say their sweep in their own voice. Sing It Back's asks for more than a sweep
     // (every word exact), and Redacted's charm is a single page rather than a run, so neither
     // is in this table.
-    const sweepCharm = { "spot-the-slip": "somethings-changed", "name-that-song": "the-first-note",
-                         "only-here": "rarest-air", "then-what": "follow-the-sparks" }[bonusGame.id];
+    const sweepCharm = { "spot-the-slip": "sweep-spot-the-slip", "name-that-song": "sweep-name-that-song-one-line-each",
+                         "only-here": "take-rarest-only-here-card-all-10-pages", "then-what": "finish-then-what-unbroken-chain" }[bonusGame.id];
     if (sweepCharm) unlock(sweepCharm);
-    if (bonusGame.id === "sing-it-back" && blankExactRun) unlock("right-where-you-left-me");
+    if (bonusGame.id === "sing-it-back" && blankExactRun) unlock("sweep-sing-it-back-all-words-exact");
   }
   // The two shelf-wide ledger charms, read off the board rather than off this run, so they
   // close on whichever game happens to be the last one. shelfGames() and not BONUS_GAMES:
   // Ruthless carries shelf:false and asking for a sweep of a retired card would make both of
   // these permanently unearnable.
   const shelf = shelfGames();
-  if (shelf.every((g) => bonusRecord(g.id).plays > 0)) unlock("vinyl-shelf");
-  if (shelf.every((g) => bonusRecord(g.id).swept)) unlock("every-single-one");
+  if (shelf.every((g) => bonusRecord(g.id).plays > 0)) unlock("play-every-bonus-game");
+  if (shelf.every((g) => bonusRecord(g.id).swept)) unlock("clean-sweep-every-bonus-game");
 }
 
 function endBonusRun() {
@@ -7863,7 +7863,7 @@ function saveBraceletPNG(e) {
     copy: copyBraceletCard,
     download: exportBraceletCard,
     noun: "bracelet",
-    onKept: () => unlock("youre-on-your-own-kid"),     // "You're On Your Own, Kid"
+    onKept: () => unlock("save-first-bracelet-keepsake"),     // "You're On Your Own, Kid"
   });
 }
 
@@ -7881,7 +7881,7 @@ function saveSleevePNG(e) {
     copy: copySleeveCard,
     download: exportSleeveCard,
     noun: "sleeve",
-    onKept: () => unlock("one-last-souvenir"),
+    onKept: () => unlock("keep-bonus-sleeve"),
   });
 }
 
@@ -7983,7 +7983,7 @@ function adaptiveAdjust(correct) {
   adaptivePeak = Math.max(adaptivePeak, adaptiveLevel);
   // Adaptive charms: Those Windermere Peaks the moment you touch the Rarest tier; Held On Tight stays
   // alive only while no miss has landed since reaching the top (judged at endAdaptive).
-  if (adaptiveLevel >= ADAPT_MAX_LEVEL) { adaptiveReachedTop = true; unlock("the-lakes"); }
+  if (adaptiveLevel >= ADAPT_MAX_LEVEL) { adaptiveReachedTop = true; unlock("reach-rarest-tier-adaptive"); }
   if (!correct && adaptiveReachedTop) adaptiveHeldTop = false;
   renderAdaptiveGauge();
 }
@@ -10974,7 +10974,7 @@ function endChallenge() {
     })));
     // "I Knew Everything" — every catalogue song answered correctly at least once.
     // challengeRunActive is already false above, so this unlock fires normally.
-    if (allSongs.length && allSongs.every((s) => tally.songs[s.title])) unlock("i-hate-it-here"); checkSongKeepsakes(tally);
+    if (allSongs.length && allSongs.every((s) => tally.songs[s.title])) unlock("answer-every-catalogue-song"); checkSongKeepsakes(tally);
     recordGameMetrics({
       rounds: roundResults.length, correct: logged,
       timeSumMs: gameTimeSum * 1000, timedRounds: gameTimedRounds,
@@ -11016,52 +11016,52 @@ function endChallenge() {
      challenge already on the board can always be gone back to and done properly. */
   const cleanSheet = won && roundResults.length > 0 && roundResults.every(Boolean);
   // Our Slates Are Clean — a defeat with nothing scratched out: every page of the run cleared.
-  if (cleanSheet && !challengeDark) unlock("state-of-grace");
+  if (cleanSheet && !challengeDark) unlock("defeat-challenge-no-misses");
   // Now I Breathe Flames — the dark mirror of it, on a dark side.
-  if (cleanSheet && challengeDark) unlock("mad-woman");
+  if (cleanSheet && challengeDark) unlock("beat-dark-side-no-misses");
   // At Least I'm Trying — won a challenge you had already seen through seven times. `runs`
   // never freezes (see recordEarnestAttempt), so this stays winnable on any card, forever.
-  if (won && !challengeDark && rec.runs >= PERSIST_ATTEMPTS) unlock("this-is-me-trying");
+  if (won && !challengeDark && rec.runs >= PERSIST_ATTEMPTS) unlock("defeat-challenge-after-7-runs");
   // Should've Known That Word — a flawless Impostor run: every impostor flagged (implied by surviving)
   // and every real word named. challengeRunActive is already false, so the charm fires normally.
-  if (c.rule === "impostor" && won && impostorMissed === 0) unlock("shouldve-said-no");
+  if (c.rule === "impostor" && won && impostorMissed === 0) unlock("defeat-impostor-flawlessly");
   // One Single Thread — defeat Common Thread (the word is the string tying the lines together).
-  if (c.rule === "common" && won) unlock("invisible-string");
+  if (c.rule === "common" && won) unlock("defeat-common-thread-every-line");
   // Per-challenge flourish charms: winning the harder way, native to each challenge's twist.
   // Two Steps Ahead — every correct Revolving Door answer landed before the word swapped.
-  if (c.rule === "revolving" && won && revolveBeatEverySwap) unlock("two-steps-ahead");
+  if (c.rule === "revolving" && won && revolveBeatEverySwap) unlock("beat-revolving-door-before-swap");
   // My Walls Stood Tall — a flawless Home Invasion: no miss ever cut the per-page clock.
-  if (c.rule === "spite" && won && spiteSeconds === (c.seconds || 10)) unlock("walls-stood-tall");
+  if (c.rule === "spite" && won && spiteSeconds === (c.seconds || 10)) unlock("win-home-invasion-clock-untouched");
   // Tick-Tock — cleared every single-digit-clock page of Shrinking Timer (rounds 9-13).
   if (c.rule === "accelerate" && won && roundResults.slice(8).length === 5
-      && roundResults.slice(8).every(Boolean)) unlock("tick-tock");
+      && roundResults.slice(8).every(Boolean)) unlock("win-shrinking-timer-all-pages-under-10s");
   // Part The Sea — won Sea of Songs without ever tapping a decoy tile.
-  if (c.rule === "sea" && won && seaDecoyTaps === 0) unlock("part-the-sea");
+  if (c.rule === "sea" && won && seaDecoyTaps === 0) unlock("win-sea-of-songs-no-decoys");
   // Knowing All The Words — every scored Lyric Lover line was recalled word-perfect.
-  if (c.rule === "verse" && won && score > 0 && gameVersePerfect === score) unlock("knowing-all-the-words");
+  if (c.rule === "verse" && won && score > 0 && gameVersePerfect === score) unlock("win-lyric-lover-all-lines-word-perfect");
   // Two Is Better Than One — a perfect Double Trouble run: all 13 pages cleared with two songs.
   // Keyed on the id, not the rule: Name Three borrows the same `multi` rule, and a perfect run
   // of THREE songs a page is a different feat that shouldn't quietly claim this charm.
-  if (c.id === "double-trouble" && score === TOTAL_ROUNDS) unlock("two-is-better");
+  if (c.id === "double-trouble" && score === TOTAL_ROUNDS) unlock("clear-double-trouble-all-13-two-songs-each");
   // Blank Space — won Vanishing Word writing into the blank: every correct answer came after
   // the word had already gone.
-  if (c.rule === "vanishing" && won && vanishAnsweredBlind) unlock("blank-space");
+  if (c.rule === "vanishing" && won && vanishAnsweredBlind) unlock("win-vanishing-word-all-answers-blind");
   // Been Here All Along — total loyalty in Deep Cut: not just five from one album, but every
   // correct answer of the run off that same album, no strays.
-  if (c.rule === "album5" && won && score === deepCutLeader().count) unlock("you-belong-with-me");
+  if (c.rule === "album5" && won && score === deepCutLeader().count) unlock("win-deep-cut-all-correct-same-album");
   // Tied Together With A Smile — From A to Z climbing on every link: the alphabet tied end to
   // end without ever resting twice on the same letter.
-  if (c.rule === "alphabetical" && won && alphaEveryLetterNew) unlock("tied-together");
+  if (c.rule === "alphabetical" && won && alphaEveryLetterNew) unlock("win-from-a-to-z-no-repeated-letters");
   // The risk three. Read AFTER the settle above, which banks whatever was still riding when
   // the pages ran out — a pot carried all the way home is banked like any other, so it counts.
   // Devils Roll The Dice — a pot ridden PRESS_FLOURISH_RIDE deep and actually banked.
   // Not gated on the win: the ride is the feat, and a run that rode that deep and still fell
   // short of the target has done the reckless thing the charm is named for.
-  if (c.rule === "press" && beadRideBanked >= PRESS_FLOURISH_RIDE) unlock("i-knew-you-were-trouble");
+  if (c.rule === "press" && beadRideBanked >= PRESS_FLOURISH_RIDE) unlock("bank-press-your-luck-pot-5-pages-deep");
   // Untouchable — won Insurance having never once bought your way out of trouble.
-  if (c.rule === "insurance" && won && insuranceSpent === 0) unlock("untouchable");
+  if (c.rule === "insurance" && won && insuranceSpent === 0) unlock("win-insurance-no-shields-spent");
   // Let The Players Play — won Confidence Wager with nothing held back on any page.
-  if (c.rule === "wager" && won && wagerAlwaysMax) unlock("the-man");
+  if (c.rule === "wager" && won && wagerAlwaysMax) unlock("win-confidence-wager-max-every-page");
 
   // A dark run signs off the way it was announced: the briefing card's violet kicker,
   // repeated above the challenge name so the run opens and closes on the same note. The
@@ -11149,7 +11149,7 @@ function endAlbumFocus() {
       album: roundAlbums[i] || null,
       word: roundWords[i] || null,
     })));
-    if (allSongs.length && allSongs.every((s) => tally.songs[s.title])) unlock("i-hate-it-here"); checkSongKeepsakes(tally);
+    if (allSongs.length && allSongs.every((s) => tally.songs[s.title])) unlock("answer-every-catalogue-song"); checkSongKeepsakes(tally);
     recordGameMetrics({
       rounds: roundResults.length, correct: score,
       timeSumMs: gameTimeSum * 1000, timedRounds: gameTimedRounds,
@@ -11169,15 +11169,15 @@ function endAlbumFocus() {
   const board = loadAlbumFocus();
   const beatenCount = STUDIO_ALBUMS.filter((a) => board[a] && board[a].beaten).length;
   const perfectedCount = STUDIO_ALBUMS.filter((a) => board[a] && board[a].perfected).length;
-  if (rec.beaten) unlock("a-place-in-this-world");
-  if (rec.perfected) unlock("gold-rush");
+  if (rec.beaten) unlock("beat-first-album-focus");
+  if (rec.perfected) unlock("perfect-album-focus");
   // The two top rungs, judged on THIS run for the reason the guest ones are: a record already
   // perfected on Easy would otherwise hand these over the moment the board was consulted.
   const perfectedNow = score >= TOTAL_ROUNDS && hintFree;
-  if (perfectedNow && diff === "ultra") unlock("king-of-my-heart");
-  if (perfectedNow && diff === "lyricist") unlock("the-manuscript");
-  if (beatenCount >= STUDIO_ALBUMS.length) unlock("change");
-  if (perfectedCount >= STUDIO_ALBUMS.length) unlock("starlight");
+  if (perfectedNow && diff === "ultra") unlock("perfect-album-focus-ultra");
+  if (perfectedNow && diff === "lyricist") unlock("perfect-album-focus-lyricist");
+  if (beatenCount >= STUDIO_ALBUMS.length) unlock("beat-all-12-album-focus");
+  if (perfectedCount >= STUDIO_ALBUMS.length) unlock("perfect-all-12-album-focus");
 
   showScreen("results");
   $("resultBracelet").innerHTML = renderBraceletSVG(roundResults, 0, -1, roundAlbums,
@@ -11246,13 +11246,13 @@ function endGuest() {
     foldSkillXp(["resolve", "tempo", "lyricist", "endurance"]);
   }
   const admittedCount = GUESTS.filter((x) => guestRecord(x.id).admitted).length;
-  if (rec.admitted) unlock("welcome-to-new-york");
+  if (rec.admitted) unlock("admit-guest");
   // The rungs above admission, judged on THIS run rather than off the board: a guest already
   // admitted on Easy should still earn these the first time the same perfect, hint-free run
   // is done further up the ladder, which a board already flagged `admitted` would swallow.
   const admittedNow = score >= GUEST_TARGET && hintFree;
-  if (admittedNow && (diff === "hard" || diff === "ultra")) unlock("better-man");
-  if (admittedNow && diff === "lyricist") unlock("everything-has-changed");
+  if (admittedNow && (diff === "hard" || diff === "ultra")) unlock("admit-guest-hard");
+  if (admittedNow && diff === "lyricist") unlock("admit-guest-lyricist");
 
   showScreen("results");
   applyEra(guestEra());   // endGame applies a random finale era; a guest keeps its own
@@ -11323,7 +11323,7 @@ function endAdaptive() {
       album: roundAlbums[i] || null,
       word: roundWords[i] || null,
     })));
-    if (allSongs.length && allSongs.every((s) => tally.songs[s.title])) unlock("i-hate-it-here"); checkSongKeepsakes(tally);
+    if (allSongs.length && allSongs.every((s) => tally.songs[s.title])) unlock("answer-every-catalogue-song"); checkSongKeepsakes(tally);
     recordGameMetrics({
       rounds: roundResults.length, correct: score,
       timeSumMs: gameTimeSum * 1000, timedRounds: gameTimedRounds,
@@ -11333,7 +11333,7 @@ function endAdaptive() {
       isInfinite: false, timeouts: gameTimeouts,
     });
     // Held On Tight: reached the Rarest tier and finished there without ever slipping off it.
-    if (adaptiveReachedTop && adaptiveHeldTop && adaptiveLevel >= ADAPT_MAX_LEVEL) unlock("stay-stay-stay");
+    if (adaptiveReachedTop && adaptiveHeldTop && adaptiveLevel >= ADAPT_MAX_LEVEL) unlock("finish-at-rarest-adaptive-without-slipping");
     rec = recordAdaptiveRun(peak, score, todayKey());
     // A fair fixed-13 run, so the whole set earns. Endurance included: it reads the streak,
     // and holding one while the rarity floats up under you is exactly what it means to measure.
@@ -11393,15 +11393,15 @@ function endCustom() {
   // are exempt from it the same way Challenges' are — a run you finished still happened.
   markRunBreadth("custom");
   if (!devNoLog) {
-    unlock("ours");
-    if (infinite && roundsPlayed >= CUSTOM_ENDLESS_MILESTONE) unlock("forever-and-always");
+    unlock("finish-first-custom-run");
+    if (infinite && roundsPlayed >= CUSTOM_ENDLESS_MILESTONE) unlock("reach-round-50-endless-custom");
   }
   const total = infinite ? roundsPlayed : customSessionLen;
   const perfect = !infinite && total > 0 && score === total;
   // Aim At The Devil — you wrote rules at least as unforgiving as Ultra's and then kept every page
   // of them. The full-length bar matters as much as the levers: CUSTOM_ROUNDS_MIN is 1, so
   // without it a one-page preset would hand this over for a single lucky answer.
-  if (!devNoLog && perfect && total >= TOTAL_ROUNDS && customAtLeastUltra(currentMode)) unlock("dear-reader");
+  if (!devNoLog && perfect && total >= TOTAL_ROUNDS && customAtLeastUltra(currentMode)) unlock("perfect-custom-at-least-ultra");
 
   showScreen("results");
   $("resultBracelet").innerHTML = renderBraceletSVG(roundResults, 0, -1, roundAlbums,
@@ -14100,7 +14100,7 @@ function impostorGameOver(kind) {
   impostorFailed = true;
   if (kind === "answered" || kind === "timeout") {
     impostorSeen++;                                   // this fake page counts as met
-    if (impostorSeen === 1) unlock("smallest-man");   // fell for the very first impostor you met
+    if (impostorSeen === 1) unlock("fall-for-first-impostor");   // fell for the very first impostor you met
   }
   recordImpostorPage(false);                          // the fatal page is a miss
   renderBracelet();
@@ -14167,7 +14167,7 @@ function submitAnswer(song, isTimeout) {
 
   // Paris easter egg — answering "Paris" when the prompt word is "somewhere".
   // Fires on the attempt regardless of whether it's a correct match for the round.
-  if (currentWord === "somewhere" && normalizeTitle($("songInput").value || "") === "paris") unlock("paris");
+  if (currentWord === "somewhere" && normalizeTitle($("songInput").value || "") === "paris") unlock("answer-paris-for-somewhere");
   checkPianoEgg($("songInput").value);   // "rep tv" / "reputation tv" typed as an answer
 
   let lyricMatch = null;
@@ -14367,7 +14367,7 @@ function submitAnswer(song, isTimeout) {
   // Impostor: a missed real page (wrong/timeout) can't fail the run, but it spoils a flawless
   // one (Should've Known That Word). Impostor pages were already intercepted, so this is a real page.
   if (impostorRuleActive() && !correct) impostorMissed++;
-  if (correct && song && song.title === "If This Was A Movie") unlock("spicy-drama");
+  if (correct && song && song.title === "If This Was A Movie") unlock("answer-if-this-was-a-movie");
   // It's A Clock!: bank the time left on the shared clock; a correct answer winds it
   // back up (capped). The timer is already cleared, so comboRemaining() is the reading
   // at the moment of the answer. Next round's startTimer resumes from comboClock.
@@ -14458,16 +14458,16 @@ function submitAnswer(song, isTimeout) {
       gameVersePerfect++;                // lifetime versePerfect / milestone achievements
       verseKeepsake.push({ line: lyricMatch.line, word: currentWord, tier: lyricMatch.tier });
     }
-    if (lyricMatch.tier === "verse") { gameWholeVerses++; unlock("overachiever"); earnPolaroid("typewriter"); }
+    if (lyricMatch.tier === "verse") { gameWholeVerses++; unlock("recall-whole-verse-word-perfect"); earnPolaroid("typewriter"); }
     // The neighbor's dog — the "dyed it key lime green" line recalled word-perfect (or better).
     if (versePlus && lyricMatch.line && /dyed it key lime green/i.test(lyricMatch.line)) earnPolaroid("neighbors-dog");
     // Someone Has A Favourite Song — 3 lyric answers from the same song in one game.
     lyricAnswerSongs.push(song.title);
-    if (lyricAnswerSongs.filter((t) => t === song.title).length >= 3) unlock("fav-song");
-    if (lyricMatch.tier === "perfect") unlock("word-for-word");
+    if (lyricAnswerSongs.filter((t) => t === song.title).length >= 3) unlock("answer-3-rounds-same-song");
+    if (lyricMatch.tier === "perfect") unlock("recall-lyric-line-word-perfect");
     if (lyricMatch.fuzzy) {              // landed it without the line being verbatim
       gameFuzzyMatches++;
-      unlock("wordsmith");
+      unlock("win-fuzzy-lyric-match");
     }
   }
 
@@ -14476,7 +14476,7 @@ function submitAnswer(song, isTimeout) {
   const rar = rarityTier(currentSongs.length);
   if (currentMode.id !== "ultra" && correct && !commonRuleActive() && (rar.name === "rare" || rar.name === "scarce" || rar.name === "singular")) {
     rareStreak++;
-    if (rareStreak >= 3) unlock("diamonds");
+    if (rareStreak >= 3) unlock("streak-3-rare-words-no-ultra");
   } else {
     rareStreak = 0;
   }
@@ -14494,10 +14494,10 @@ function submitAnswer(song, isTimeout) {
     if (correct) {
       const ms = Math.min(elapsed, currentMode.seconds) * 1000;
       if (gameFastestMs == null || ms < gameFastestMs) gameFastestMs = ms;   // lifetime fastest answer
-      if (elapsed < 2) unlock("speak-now");
-      if (round === 1 && elapsed < 2) unlock("ready-for-it");
-      if (remaining < 1) { unlock("getaway-car"); earnPolaroid("getaway-car"); }   // same beat, both fire
-      if (remaining < 0.5) unlock("i-did-something-bad");
+      if (elapsed < 2) unlock("answer-under-2s");
+      if (round === 1 && elapsed < 2) unlock("round-1-under-2s");
+      if (remaining < 1) { unlock("answer-under-1s-left"); earnPolaroid("getaway-car"); }   // same beat, both fire
+      if (remaining < 0.5) unlock("answer-under-half-second-left");
       // Quick Pen skill: faster answers earn more (full at instant, zero at the buzzer).
       const speedFactor = Math.max(0, Math.min(1, remaining / currentMode.seconds));
       gameTempoXp += Math.round(TEMPO_BASE + TEMPO_SPEED * speedFactor);
@@ -14506,11 +14506,11 @@ function submitAnswer(song, isTimeout) {
   gameMaxStreak = Math.max(gameMaxStreak, correctStreak);
   // Instinct skill: every correct answer, scaled by the live correct-in-a-row streak.
   if (correct) gameResolveXp += Math.round(RESOLVE_BASE * (1 + 0.1 * Math.min(correctStreak, RESOLVE_STREAK_CAP)));
-  if (correctStreak >= 5) unlock("bejeweled");
+  if (correctStreak >= 5) unlock("streak-5");
   if (correctStreak >= 7) earnPolaroid("seven");         // picture me in the trees
-  if (correctStreak >= 10) unlock("sparks-fly");
+  if (correctStreak >= 10) unlock("streak-10");
   // It's Raining And It's Monday — answer the word "rain" right on a Monday.
-  if (correct && !commonRuleActive() && currentWord === "rain" && new Date().getDay() === 1) unlock("raining-monday");
+  if (correct && !commonRuleActive() && currentWord === "rain" && new Date().getDay() === 1) unlock("answer-rain-on-monday");
 
   // Daily: persist the run so a refresh/exit resumes here instead of restarting. Saved
   // after the round is recorded but before the next word is drawn, so the stored PRNG
@@ -14924,8 +14924,8 @@ function foldSkillXp(mask, given = null) {
   // levelUps), so a player who cleared the gate or capped a skill before these charms existed
   // still earns them on their next finished run instead of being locked out by the timing.
   if (res) {
-    if (isMasteryUnlocked(res.mastery)) unlock("bigger-than-the-whole-sky");
-    if (SKILL_IDS.some((id) => skillLevelFromXp(res.mastery.skills[id] || 0) >= SKILL_MAX_LEVEL)) unlock("superstar");
+    if (isMasteryUnlocked(res.mastery)) unlock("unlock-mastery");
+    if (SKILL_IDS.some((id) => skillLevelFromXp(res.mastery.skills[id] || 0) >= SKILL_MAX_LEVEL)) unlock("reach-level-10-one-skill");
     checkTitleCharm(res.mastery);
   }
   return res;
@@ -14934,7 +14934,7 @@ function foldSkillXp(mask, given = null) {
 // "Call It What You Want" — worn the moment a prestige title is actually on the signature,
 // whether the player picked it in the stepper or their mastery handed them a tier default.
 function checkTitleCharm(m = loadMastery()) {
-  if (wornTitleValue(m)) unlock("call-it-what-you-want");
+  if (wornTitleValue(m)) unlock("wear-prestige-title");
 }
 
 // Toast the small, frequent skill level-ups (they float over any screen the same way
@@ -15018,7 +15018,7 @@ function endGame() {
     // misses) before overcoming it means anything.
     const nemesisBefore = topTallyEntry(loadSongTally().misses);
     if (nemesisBefore && nemesisBefore.count >= MEAN_GRUDGE
-        && roundResults.some((correct, i) => correct && roundWords[i] === nemesisBefore.key)) unlock("mean");
+        && roundResults.some((correct, i) => correct && roundWords[i] === nemesisBefore.key)) unlock("answer-nemesis-word");
 
     const tally = recordGameTally(roundResults.map((correct, i) => ({
       correct,
@@ -15028,7 +15028,7 @@ function endGame() {
     })));
     // "I Knew Everything" — every song in the catalogue answered correctly at least once.
     // Count discovered against allSongs (not raw tally keys) so it's exact.
-    if (allSongs.length && allSongs.every((s) => tally.songs[s.title])) unlock("i-hate-it-here"); checkSongKeepsakes(tally);
+    if (allSongs.length && allSongs.every((s) => tally.songs[s.title])) unlock("answer-every-catalogue-song"); checkSongKeepsakes(tally);
   }
 
   // Keepsakes — end-of-game polaroids (classic/infinite/daily; test runs never earn).
@@ -15067,10 +15067,10 @@ function endGame() {
   });
   // Lifetime word-perfect-recall milestones (verse-bonus prestige ladder).
   if (!devNoLog) {
-    if (metrics.versePerfect >= 10) unlock("got-you-down");
-    if (metrics.versePerfect >= 50) unlock("by-heart");
-    if (metrics.versePerfect >= 100) unlock("where-i-start");
-    if (metrics.versePerfect >= 1000) unlock("clearly-ready");
+    if (metrics.versePerfect >= 10) unlock("recall-10-lyric-lines-word-perfect");
+    if (metrics.versePerfect >= 50) unlock("recall-50-lyric-lines-word-perfect");
+    if (metrics.versePerfect >= 100) unlock("recall-100-lyric-lines-word-perfect");
+    if (metrics.versePerfect >= 1000) unlock("recall-1000-lyric-lines-word-perfect");
   }
   // Skills & Mastery: classic/infinite/daily all earn the full skill set. Endurance used to be
   // Infinite-only, which left it unreachable for anyone who played anything else and quietly
@@ -15081,7 +15081,7 @@ function endGame() {
 
   // Record this game type; "Hits Different" needs all three (classic + infinite + daily).
   const typesPlayed = devNoLog ? { classic: false, infinite: false, daily: false } : markTypePlayed(gameType);
-  if (typesPlayed.classic && typesPlayed.infinite && typesPlayed.daily) unlock("hits-different");
+  if (typesPlayed.classic && typesPlayed.infinite && typesPlayed.daily) unlock("play-all-three-game-types");
 
   // Explorer / Seven. Daily passes through here too, but forces Normal and only runs once a
   // day, so it earns no Explorer token — it would gate the charm behind the calendar.
@@ -15092,53 +15092,53 @@ function endGame() {
   // end-of-game achievements (daily counts toward the game-quality ones; infinite deferred)
   const timedMode = currentMode.seconds > 0;   // Relaxed (no clock) skips timing achievements
   if (!isInfinite) {
-    if (score === TOTAL_ROUNDS) unlock("mastermind");
-    if (score === TOTAL_ROUNDS - 1) unlock("champagne-problems");
-    if (score === 0) unlock("anti-hero");
-    if (gameTimeouts === 0) unlock("fearless");
-    if (metrics.noTimeoutStreak >= 2) unlock("fearless-tv");   // two no-timeout games in a row
+    if (score === TOTAL_ROUNDS) unlock("perfect-13");
+    if (score === TOTAL_ROUNDS - 1) unlock("score-12");
+    if (score === 0) unlock("score-zero");
+    if (gameTimeouts === 0) unlock("finish-with-no-timeouts");
+    if (metrics.noTimeoutStreak >= 2) unlock("finish-no-timeouts-2-games-in-row");   // two no-timeout games in a row
     // Finally Clean — a majority win (7+/13) on the clock, no timeouts and no hints leaned on.
-    if (timedMode && score >= 7 && gameTimeouts === 0 && hintsUsed === 0) unlock("clean");
-    if (currentMode.lyricOnly) unlock("all-too-well");
-    if (played >= 1) unlock("enchanted");
-    if (played >= 5) unlock("begin-again");
-    if (played >= 15) unlock("fifteen");
+    if (timedMode && score >= 7 && gameTimeouts === 0 && hintsUsed === 0) unlock("win-with-no-hints-or-timeouts");
+    if (currentMode.lyricOnly) unlock("finish-lyricist-game");
+    if (played >= 1) unlock("first-game-finished");
+    if (played >= 5) unlock("play-5-games");
+    if (played >= 15) unlock("play-15-games");
     const trailingStreak = (() => { let n = 0; for (let i = roundResults.length - 1; i >= 0 && roundResults[i]; i--) n++; return n; })();
-    if (roundResults.includes(false) && trailingStreak >= 5) unlock("long-story-short");
-    if (currentMode.id === "ultra" && score >= 10) unlock("great-war");
-    if (score === TOTAL_ROUNDS && (currentMode.id === "hard" || currentMode.id === "ultra")) unlock("long-live");
+    if (roundResults.includes(false) && trailingStreak >= 5) unlock("finish-on-5-streak-after-miss");
+    if (currentMode.id === "ultra" && score >= 10) unlock("win-ultra-10-correct");
+    if (score === TOTAL_ROUNDS && (currentMode.id === "hard" || currentMode.id === "ultra")) unlock("perfect-13-hard");
     // The top of those two ladders. Mountains We Moved takes either of the hardest difficulties and
     // I Remember It All only asks you to finish a Lyricist game; these ask for the perfect run.
-    if (score === TOTAL_ROUNDS && currentMode.id === "ultra") unlock("whos-afraid");
-    if (score === TOTAL_ROUNDS && currentMode.lyricOnly) unlock("marjorie");
+    if (score === TOTAL_ROUNDS && currentMode.id === "ultra") unlock("perfect-13-ultra");
+    if (score === TOTAL_ROUNDS && currentMode.lyricOnly) unlock("perfect-13-lyricist");
     // Every Version Of Yourself — a perfect 13/13 logged in every difficulty (updateStats already folded this game).
-    if (["easy", "medium", "hard", "ultra"].every((m) => loadStats(m).scoreCounts[TOTAL_ROUNDS] > 0)) unlock("mirrorball");
+    if (["easy", "medium", "hard", "ultra"].every((m) => loadStats(m).scoreCounts[TOTAL_ROUNDS] > 0)) unlock("perfect-13-every-mode");
     // Everything & Nothing All At Once — a majority win (7+/13) logged in every difficulty.
-    if (["easy", "medium", "hard", "ultra"].every((m) => loadStats(m).best >= 7)) unlock("everything-nothing");
-    if (longestAlbumRun(roundResults, roundAlbums) >= 3) unlock("branch-out");
-    if (distinctStudioAlbumsHit(roundResults, roundAlbums) >= STUDIO_ALBUMS.length - 1) unlock("eras-tour");
-    if (timedMode && !gameHitRedZone) unlock("peace");
-    if (timedMode && gameTimeSum / TOTAL_ROUNDS < 3) unlock("perfect-storm");
-    if (gameTimeouts === TOTAL_ROUNDS) unlock("i-cant-see-you");
+    if (["easy", "medium", "hard", "ultra"].every((m) => loadStats(m).best >= 7)) unlock("win-every-difficulty");
+    if (longestAlbumRun(roundResults, roundAlbums) >= 3) unlock("streak-3-same-album");
+    if (distinctStudioAlbumsHit(roundResults, roundAlbums) >= STUDIO_ALBUMS.length - 1) unlock("score-nearly-every-studio-album-one-game");
+    if (timedMode && !gameHitRedZone) unlock("finish-without-timer-red-zone");
+    if (timedMode && gameTimeSum / TOTAL_ROUNDS < 3) unlock("average-under-3s-per-answer");
+    if (gameTimeouts === TOTAL_ROUNDS) unlock("finish-with-no-answers");
   }
   if (isInfinite) {
-    if (roundsSurvived >= 20) unlock("out-of-the-woods");
-    if (roundsSurvived === 22) unlock("twenty-two");
-    if (roundsSurvived >= 89) unlock("nineteen-eighty-nine");
-    if (roundResults.length >= 13 && roundResults.slice(0, 13).every(Boolean)) unlock("holy-ground");
-    if (infiniteVariant === "3lives" && lives <= 0 && roundsSurvived <= 4) unlock("cruel-summer");
+    if (roundsSurvived >= 20) unlock("survive-20-rounds-infinite");
+    if (roundsSurvived === 22) unlock("reach-round-22-infinite");
+    if (roundsSurvived >= 89) unlock("reach-round-89-infinite");
+    if (roundResults.length >= 13 && roundResults.slice(0, 13).every(Boolean)) unlock("reach-round-13-infinite-from-scratch");
+    if (infiniteVariant === "3lives" && lives <= 0 && roundsSurvived <= 4) unlock("lose-3-lives-first-4-rounds");
   }
   // Game-type-agnostic signals (classic / infinite / daily all count).
-  if (lyricLineAnswers >= 5) unlock("you-knew-the-line");
-  if (currentMode.lyricOnly && gameFuzzyMatches >= 10) unlock("eyes-closed");
-  if (recoveryCount(roundResults) >= 3) unlock("shake-it-off");
-  if (hasTriangle(roundSongs)) unlock("the-triangle");
-  if (longestBTitleRun(roundResults, roundSongs) >= 3) unlock("my-mind-is-alive");
-  if (totalLifetimeMisses() >= 1000) unlock("thousand-cuts");
-  if (new Date().getHours() === 0) unlock("midnights");   // played in the midnight hour
+  if (lyricLineAnswers >= 5) unlock("recall-5-lyric-lines-one-game");
+  if (currentMode.lyricOnly && gameFuzzyMatches >= 10) unlock("make-10-fuzzy-matches-one-lyricist-game");
+  if (recoveryCount(roundResults) >= 3) unlock("recover-after-miss-3-times-one-game");
+  if (hasTriangle(roundSongs)) unlock("answer-cardigan-betty-august-one-game");
+  if (longestBTitleRun(roundResults, roundSongs) >= 3) unlock("streak-3-b-titles");
+  if (totalLifetimeMisses() >= 1000) unlock("miss-1000-rounds-lifetime");
+  if (new Date().getHours() === 0) unlock("play-between-midnight-and-1am");   // played in the midnight hour
   // Safe & Sound — the three most recent finished runs were all classic Easy.
   const recent = loadHistory();
-  if (recent.length >= 3 && recent.slice(0, 3).every((h) => h.m === "easy")) unlock("safe-and-sound");
+  if (recent.length >= 3 && recent.slice(0, 3).every((h) => h.m === "easy")) unlock("play-easy-3-times-in-row");
 
   showScreen("results");
   const keepsakeOpts = isInfinite
@@ -15162,10 +15162,10 @@ function endGame() {
     saveDailyResult(dateStr, { score, roundResults: roundResults.slice(), roundAlbums: roundAlbums.slice(), tm: runTime });
     clearDailyProgress(dateStr);   // run finished — drop the resumable in-progress record
     const streak = bumpDailyStreak(dateStr);   // extend (or reset) the consecutive-days streak
-    unlock("today-was-a-fairytale");   // finished a Daily Challenge
-    if (score === TOTAL_ROUNDS) unlock("daylight");
-    if (streak.current >= 7) unlock("story-of-us");
-    if (streak.current >= 30) unlock("evermore");
+    unlock("first-daily-finished");   // finished a Daily Challenge
+    if (score === TOTAL_ROUNDS) unlock("perfect-daily");
+    if (streak.current >= 7) unlock("daily-streak-7");
+    if (streak.current >= 30) unlock("daily-streak-30");
     renderResultRecap();
     renderSkillsRecap();   // (hidden by renderSkillsRecap itself when the daily score is held back)
     dailyRng = null;   // back to Math.random() for any subsequent Classic game
@@ -15204,7 +15204,7 @@ function endGame() {
       showNewBestBanner((improvedScore ? "a new personal best ★" : "a new best time ★") +
         (recTime != null ? " · " + fmtTime(recTime) : ""));
       // R-E-V-E-N-G-E — actually beat a previous high score (not just shaved time).
-      if (prevBest && improvedScore) unlock("revenge");
+      if (prevBest && improvedScore) unlock("beat-personal-best-score");
     }
   } else {
     renderBestLine($("resultPodium"), mode);
@@ -15290,11 +15290,11 @@ function quitGame() {
   if (gameType !== "challenge") {
     // She Must Bolt: bail in round 1 having typed nothing.
     if (round === 1 && roundResults.length === 0 && !($("songInput").value || "").trim()) {
-      unlock("the-bolter");
+      unlock("quit-round-1-before-typing");
     }
     // No Closure: answered the first 12 of a 13-round run, then leave the 13th blank.
     if ((gameType === "classic" || gameType === "daily") && roundResults.length === TOTAL_ROUNDS - 1) {
-      unlock("no-closure");
+      unlock("give-up-after-12-before-13");
     }
   }
 
@@ -15558,7 +15558,7 @@ function stopSnake() {
 function slitherSnake() {
   const card = $("screen-game");
   if (!card) return;
-  unlock("look-what-you-made-me-do");
+  unlock("make-snake-appear");
   if (motionReduced()) { addDoodle("snake", "corner-br"); return; }
   stopSnake();
 
@@ -16739,7 +16739,7 @@ function closeFullSong() {
 }
 
 function openSettings() {
-  unlock("i-look-in-windows");
+  unlock("open-settings-menu");
   lastFocusedBeforeSettings = document.activeElement;
   pauseForSettings();
   settingsPanel = SETTINGS_PANELS[0].id;   // always open on the first divider
@@ -16876,7 +16876,7 @@ function renderCustomModalBody() {
   const canDelete = store.presets.length > 1;
   // "A Drawer Of My Things" — checked on every render of the modal, so it catches a shelf that filled up via
   // + New, via an import, or on any later visit, not just the click that crossed the line.
-  if (store.presets.length >= CUSTOM_PRESET_SHELF) unlock("mine");
+  if (store.presets.length >= CUSTOM_PRESET_SHELF) unlock("keep-5-custom-presets");
 
   const chips = store.presets.map((p) =>
     `<button type="button" class="cm-preset-chip${p.id === preset.id ? " active" : ""}" data-cm-preset="${escapeHtml(p.id)}">${escapeHtml(p.name || "Custom")}</button>`
@@ -18277,13 +18277,13 @@ function buildDevApi() {
       // Tick off one token by hand, e.g. breadth.see("inf-sudden:ultra").
       see: (token) => { markModeSeen(token); return devExplorerReport(); },
       // Fill every Explorer token and take the charm.
-      exploreAll: () => { EXPLORER_TOKENS.forEach((t) => markModeSeen(t)); if (hasExploredEverything()) unlock("explorer"); return devExplorerReport(); },
+      exploreAll: () => { EXPLORER_TOKENS.forEach((t) => markModeSeen(t)); if (hasExploredEverything()) unlock("play-every-required-mode"); return devExplorerReport(); },
       // Which weekdays have been played (Sunday = 0).
       weekdays: devWeekdayReport,
       // Tick off one weekday by hand, e.g. breadth.day(3) for Wednesday.
       day: (d) => { markWeekdayPlayed(Math.max(0, Math.min(6, d | 0))); return devWeekdayReport(); },
       // Fill the whole week and take the charm.
-      weekAll: () => { for (let d = 0; d < 7; d++) markWeekdayPlayed(d); if (hasPlayedEveryWeekday()) unlock("seven"); return devWeekdayReport(); },
+      weekAll: () => { for (let d = 0; d < 7; d++) markWeekdayPlayed(d); if (hasPlayedEveryWeekday()) unlock("play-all-seven-weekdays"); return devWeekdayReport(); },
       reset: () => { resetBreadth(); return { explorer: devExplorerReport(), weekdays: devWeekdayReport() }; },
     },
     // Bonus games shelf. `sample` is the useful one: it dry-runs a builder N times without

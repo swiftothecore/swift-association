@@ -15,7 +15,7 @@ import {
   KEEPSAKES_KEY,
   MASTERY_KEY, SKILL_IDS, MASTERY_REWARDS, MASTERY_GATE,
   skillLevelFromXp, masteryLevelFromXp,
-  MODES, MODE_ORDER, TOTAL_ROUNDS,
+  MODES, MODE_ORDER, TOTAL_ROUNDS, ACH_ID_MIGRATIONS,
 } from "./config.js";
 
 const HISTORY_CAP = 1000;   // keep the most recent N runs; older ones drop off
@@ -73,7 +73,20 @@ export function updateStats(gameScore, mode, bestRun, countBest = true) {
 export function loadAchievements() {
   try {
     const raw = localStorage.getItem(ACH_KEY);
-    if (raw) { const o = JSON.parse(raw); if (o && typeof o === "object") return o; }
+    if (raw) {
+      const o = JSON.parse(raw);
+      if (o && typeof o === "object") {
+        let migrated = false;
+        for (const [oldId, newId] of Object.entries(ACH_ID_MIGRATIONS)) {
+          if (!Object.prototype.hasOwnProperty.call(o, oldId)) continue;
+          if (!Object.prototype.hasOwnProperty.call(o, newId)) o[newId] = o[oldId];
+          delete o[oldId];
+          migrated = true;
+        }
+        if (migrated) saveAchievements(o);
+        return o;
+      }
+    }
   } catch (e) { /* ignore */ }
   return {};
 }
