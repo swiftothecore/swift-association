@@ -88,6 +88,31 @@ export function initDev(api) {
         "score=", scoreN, btn("set", () => api.setScore(+scoreN.value)),
         btn("end now", () => api.endNow(), "warn"))));
 
+  // ---- Typed answers ---------------------------------------------------------
+  // The typo allowance is a fairness lever on the modes that make you type the whole
+  // title, so it wants judging by feel: play a stretch with it off, a stretch with it on.
+  // The box beside it resolves a string without spending a page, and says which allowance
+  // took it (exact / spaces / typo) — the interesting reads are the ones that resolve to
+  // a song you did not mean.
+  const typoBtn = btn(`typo forgiveness: ${api.typos.state() ? "on" : "off"}`, () => {
+    const on = api.typos.set();
+    typoBtn.textContent = `typo forgiveness: ${on ? "on" : "off"}`;
+    typoBtn.classList.toggle("on", on);
+  });
+  typoBtn.classList.toggle("on", api.typos.state());
+  const tryInput = mk("input", { class: "dv-text", placeholder: "type a title…", style: "width:150px" });
+  const tryOut = mk("span", { class: "dv-note" }, "—");
+  const runTry = () => {
+    const r = api.typos.try(tryInput.value);
+    tryOut.textContent = !r.key ? "—"
+      : r.song ? `${r.song}  (${r.via})`
+      : `no song${r.forgiving ? "" : " — forgiveness off"}`;
+  };
+  tryInput.addEventListener("keydown", (e) => { if (e.key === "Enter") runTry(); });
+  body.append(section("typed answers",
+    row(typoBtn, `min title ${api.typos.minLen()} chars`),
+    row(tryInput, btn("resolve", runTry), tryOut)));
+
   // ---- Simulate --------------------------------------------------------------
   const simN = num(13);
   const simType = select(["classic", "infinite", "daily"], (x) => x, (x) => x);
@@ -693,6 +718,7 @@ function injectStyles() {
     border-radius: 5px; padding: 2px 4px; font: inherit; }
   .dv-num { text-align: center; }
   .dv-check { display: inline-flex; align-items: center; gap: 3px; color: #9aa3b3; }
+  .dv-note { color: #8a93a3; }
   .dv-pre { background: #0f1115; border: 1px solid #2c313c; border-radius: 5px; padding: 6px;
     margin: 2px 0 0; max-height: 160px; overflow: auto; white-space: pre-wrap; color: #aeb6c4; font-size: 10px; }
   .dv-toast { position: absolute; left: 9px; bottom: 9px; right: 9px; background: #1d4e54; color: #d6f6fa;

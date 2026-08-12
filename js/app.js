@@ -1,5 +1,5 @@
 "use strict";
-import { $, escapeRegExp, escapeHtml, prefersReducedMotion, shuffle, chance, normalizeTitle, normalizeLyric, fuzzySubstringRatio, levenshtein, mulberry32, dailySeed, censorText, anniversaryNote, thirteenNote } from "./util.js";
+import { $, escapeRegExp, escapeHtml, prefersReducedMotion, shuffle, chance, normalizeTitle, normalizeLyric, fuzzySubstringRatio, levenshtein, swappedNeighbours, mulberry32, dailySeed, censorText, anniversaryNote, thirteenNote } from "./util.js";
 import "./credential-guard.js";
 import { SITE_URL, copyToClipboard } from "./share.js";
 import { launchFlock } from "./messengers.js";
@@ -5680,8 +5680,9 @@ function judgeName(picked = null) {
   if (bonusLocked) return;
   const raw = $("bonusInput").value;
   const key = normalizeTitle(raw);
-  // Same forgiving title resolution the main game uses, so aliases and misplaced spaces work.
-  const typed = key ? (titleIndex.get(key) || spacelessIndex.get(key.replace(/ /g, "")) || null) : null;
+  // Same forgiving title resolution the main game uses, so aliases, misplaced spaces and a
+  // single typo all work — Ruthless is racing the same clock the typing has to beat.
+  const typed = resolveTypedTitle(raw);
   const song = picked || bonusDdItems[bonusDdIndex] || typed;
   if (!song) {
     if (!key) return;
@@ -13441,6 +13442,55 @@ function titleWordCount(title) {
   return (title || "").trim().split(/\s+/).filter(Boolean).length;
 }
 
+/* ---------- Resolving a typed title ---------- */
+/* Typo forgiveness on a typed title. On top of the aliases and misplaced spaces already
+   forgiven, a title is taken with ONE letter wrong — substituted, missing, extra, or a
+   pair of neighbours swapped — because Hard and Ultra ask for a whole title against a 7-
+   or 5-second clock, and losing a page you knew to a slipped finger is the game measuring
+   the wrong thing. Difficulty there is recall under a clock, not orthography.
+
+   It forgives fingers, never memory. Levenshtein puts "all too" five edits from "All Too
+   Well", so abbreviations, prefixes and half-remembered titles all still fail, and none of
+   this quietly turns recall back into recognition.
+
+   Three guards stop it ever handing over a song that wasn't named:
+     • an exact hit wins first (resolveTypedTitle's order), so a string that IS a title is
+       never reinterpreted as a slip for another one — judgeBlank's vocab rule, applied to
+       titles instead of words
+     • titles under TYPO_MIN_TITLE normalized characters are exempt. At that length one
+       edit is a guess rather than a slip — "Red"/"Run", "Clean"/"Mean", "ME!"/"Mine" —
+       and nobody ever lost Ultra to mistyping a three-letter title anyway
+     • the match must be unique. Measured across the catalogue, no two titles sit within
+       one edit of each other at any length, so today this can only ever land on one song;
+       the check is there because a guest catalogue is a different corpus, and it makes
+       adding one safe without anybody re-measuring first. */
+const TYPO_MIN_TITLE = 6;
+let typosForgiven = true;   // dev toggle only — see buildDevApi().typos
+function typoTitleSong(key) {
+  if (!typosForgiven || !key) return null;
+  let found = null;
+  for (const [k, song] of titleIndex) {
+    if (k.length < TYPO_MIN_TITLE) continue;
+    if (Math.abs(k.length - key.length) > 1) continue;   // one edit can't span more than that
+    if (!oneTypoApart(k, key)) continue;
+    if (found && found !== song) return null;            // ambiguous: refuse to guess
+    found = song;
+  }
+  return found;
+}
+
+// The one place that turns typed text into a song, in order of how much it forgives:
+// the title as written, then misplaced spaces, then a single typo. Shared by the game's
+// answer box and the bonus shelf's, so the two can never disagree about what counts as
+// naming a song.
+function resolveTypedTitle(raw) {
+  const key = normalizeTitle(raw || "");
+  if (!key) return null;
+  return titleIndex.get(key)
+    || spacelessIndex.get(key.replace(/ /g, ""))
+    || typoTitleSong(key);
+}
+
 /* ---------- Dropdown (searches whole catalog) ---------- */
 function rankMatches(query) {
   const q = normalizeTitle(query);
@@ -13697,16 +13747,12 @@ function phraseSingsPromptWord(normPhrase) {
 // letters swapped. The swap has to be checked separately because plain Levenshtein scores
 // a transposition as two edits ("tuoch" is distance 2 from "touch"), and fast fingers
 // transpose more than anything else — a tolerance that missed it would forgive the rare
-// typo and punish the common one.
+// typo and punish the common one. Shared by the sung line's prompt-word tolerance and by
+// typoTitleSong: what counts as a slip should not depend on which box it was typed into.
 function oneTypoApart(a, b) {
   if (a === b) return false;
   if (Math.abs(a.length - b.length) <= 1 && levenshtein(a, b) === 1) return true;
-  if (a.length !== b.length) return false;
-  for (let i = 0; i < a.length - 1; i++) {
-    if (a[i] === b[i]) continue;
-    return a[i] === b[i + 1] && a[i + 1] === b[i] && a.slice(i + 2) === b.slice(i + 2);
-  }
-  return false;
+  return swappedNeighbours(a, b);
 }
 
 // Something long enough to have been a sung line came back unresolved. If the reason was
@@ -14113,9 +14159,7 @@ function submitAnswer(song, isTimeout) {
       song = dropdownItems[activeIndex >= 0 ? activeIndex : 0];
     } else {
       const raw = $("songInput").value;
-      const key = normalizeTitle(raw);
-      song = key ? (titleIndex.get(key) || null) : null;
-      if (!song && key) song = spacelessIndex.get(key.replace(/ /g, "")) || null;  // forgive misplaced spaces
+      song = resolveTypedTitle(raw);   // exact, then misplaced spaces, then a single typo
       // Not a title — try it as a lyric line. EXCEPT: a custom title-only preset never
       // accepts a sung line (you must name the title), and when this round's tier-3 line
       // hint has been revealed the line is on screen, so accepting a typed line would just
@@ -17735,6 +17779,30 @@ function buildDevApi() {
         song: m ? m.song.title : null,
         tier: m ? m.tier : null,
       };
+    },
+    // Typed-title typo forgiveness. Turning it off restores the strict resolution (exact
+    // title / alias / misplaced spaces only), so a stretch of Hard or Ultra can be played
+    // both ways and compared — the point of the lever is judging whether the allowance is
+    // rescuing slips or quietly rescuing guesses.
+    typos: {
+      state: () => typosForgiven,
+      set: (on) => { typosForgiven = on === undefined ? !typosForgiven : !!on; return typosForgiven; },
+      minLen: () => TYPO_MIN_TITLE,
+      // What the answer box would make of a string, and by which allowance it got there.
+      // Reports what the game would ACTUALLY do, so with forgiveness off a typo reads as
+      // unresolved — checking a candidate slip costs no page either way.
+      try: (text) => {
+        const key = normalizeTitle(text || "");
+        const exact = key ? titleIndex.get(key) || null : null;
+        const spaced = !exact && key ? spacelessIndex.get(key.replace(/ /g, "")) || null : null;
+        const typo = !exact && !spaced ? typoTitleSong(key) : null;
+        const song = exact || spaced || typo;
+        return {
+          key, song: song ? song.title : null,
+          via: exact ? "exact" : spaced ? "spaces" : typo ? "typo" : null,
+          forgiving: typosForgiven,
+        };
+      },
     },
     // Round control
     answer: devAnswer,

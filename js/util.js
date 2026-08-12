@@ -80,6 +80,21 @@ export function levenshtein(a, b) {
   return prev[b.length];
 }
 
+// True when `a` and `b` are the same string but for one pair of adjacent letters
+// swapped ("waitign" / "waiting"). A swap is TWO substitutions to plain Levenshtein,
+// so anywhere that forgives a single typo has to ask this separately — and it is the
+// commonest slip of all, the hand getting ahead of the eye. Lives here rather than in
+// either caller because both the bonus shelf's written words and the game's typed
+// titles forgive exactly this, and two copies would drift.
+export function swappedNeighbours(a, b) {
+  if (a.length !== b.length) return false;
+  let i = 0;
+  while (i < a.length && a[i] === b[i]) i++;
+  if (i >= a.length - 1) return false;
+  return a[i] === b[i + 1] && a[i + 1] === b[i] &&
+         a.slice(i + 2) === b.slice(i + 2);
+}
+
 // Approximate SUBSTRING match: how well `pattern` matches its best-aligned window of
 // `text`, in [0,1] (1 = a clean substring; less for typos / partial). The DP's first
 // row stays 0 so the pattern may start anywhere in `text`, and leftover `text` past

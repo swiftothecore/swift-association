@@ -7,7 +7,7 @@
    All three games work off REAL lyric lines, so all three need the same guarantee: the
    puzzle handed to the player must have exactly one defensible answer. Enforcing that is
    most of what this file does. */
-import { normalizeLyric, levenshtein } from "./util.js";
+import { normalizeLyric, levenshtein, swappedNeighbours } from "./util.js";
 
 /* Words never worth swapping or counting as a line's content. Swapping a function word
    ("the" -> "a") is invisible rather than hard, and a line whose only meat is filler makes a
@@ -377,15 +377,9 @@ export function buildBlankPuzzle(songs, ctx, rng = Math.random, tries = 120, avo
        plain Levenshtein, so it needs saying separately. But typos are only forgiven for a
        string that isn't itself a word Taylor sings: that keeps "teh" for "the" while never
        quietly accepting "night" for "right", which is a different answer rather than a slip.
-   `vocab` is a Set of catalogue word keys (the slip context's `freq` map serves). */
-function swappedNeighbours(a, b) {
-  if (a.length !== b.length) return false;
-  let i = 0;
-  while (i < a.length && a[i] === b[i]) i++;
-  if (i >= a.length - 1) return false;
-  return a[i] === b[i + 1] && a[i + 1] === b[i] &&
-         a.slice(i + 2) === b.slice(i + 2);
-}
+   `vocab` is a Set of catalogue word keys (the slip context's `freq` map serves).
+   The neighbour-swap test itself is shared with the game's typed-title forgiveness and
+   lives in util.js. */
 /* ---------- Redacted ----------
    A whole verse printed out with its telling words taped over, and the player peels the strips
    off one at a time until they dare name the song. The page opens worth six and every strip
