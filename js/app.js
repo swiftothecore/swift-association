@@ -1420,7 +1420,7 @@ function lifetimeStatsHTML() {
   const albColor = favAlbum ? (albumColor(favAlbum.key) || "var(--ink-soft)") : "var(--ink-soft)";
 
   // The meter doubles as the door into the songbook (the missing-songs checklist that
-  // backs the "Know What's What" charm) — same tally, drilled into per-album detail.
+  // backs the "I Knew Everything" charm) — same tally, drilled into per-album detail.
   const remaining = total - discovered;
   const meter = `
     <button type="button" class="cat-meter cat-meter--btn" data-open-songbook="stats">
@@ -2565,7 +2565,7 @@ function renderAchievementsPage() {
 
   html += `<div class="ach-head-row">${meter}${latestCard}</div>`;
 
-  // "The long game" — the catalogue-completion charm ("Know What's What") gets a pinned
+  // "The long game" — the catalogue-completion charm ("I Knew Everything") gets a pinned
   // quest card above the grid: live song-completion progress (the album-rainbow bar) and
   // a door into the songbook. It's the only charm with a browsable collection behind it,
   // so it's promoted out of its theme grid (it still counts toward Catalogue below).
@@ -2783,7 +2783,7 @@ function questCardHTML() {
   </button>`;
 }
 
-/* ---------- Songbook — the missing-songs checklist (backs "Know What's What") ---------- */
+/* ---------- Songbook — the missing-songs checklist (backs "I Knew Everything") ---------- */
 let songbookBackTarget = "stats";  // where the Songbook's ← back returns to
 function openSongbook(from) {
   songbookBackTarget = from;
@@ -7969,7 +7969,7 @@ function adaptiveAdjust(correct) {
     if (adaptiveLevel > 1) adaptiveLevel--;
   }
   adaptivePeak = Math.max(adaptivePeak, adaptiveLevel);
-  // Adaptive charms: Those Windermere Peaks the moment you touch the Rarest tier; But You Stayed stays
+  // Adaptive charms: Those Windermere Peaks the moment you touch the Rarest tier; Held On Tight stays
   // alive only while no miss has landed since reaching the top (judged at endAdaptive).
   if (adaptiveLevel >= ADAPT_MAX_LEVEL) { adaptiveReachedTop = true; unlock("the-lakes"); }
   if (!correct && adaptiveReachedTop) adaptiveHeldTop = false;
@@ -10960,7 +10960,7 @@ function endChallenge() {
       album: roundAlbums[i] || null,
       word: roundWords[i] || null,
     })));
-    // "Know What's What" — every catalogue song answered correctly at least once.
+    // "I Knew Everything" — every catalogue song answered correctly at least once.
     // challengeRunActive is already false above, so this unlock fires normally.
     if (allSongs.length && allSongs.every((s) => tally.songs[s.title])) unlock("i-hate-it-here"); checkSongKeepsakes(tally);
     recordGameMetrics({
@@ -11017,7 +11017,7 @@ function endChallenge() {
   // Keyed on the id, not the rule: Name Three borrows the same `multi` rule, and a perfect run
   // of THREE songs a page is a different feat that shouldn't quietly claim this charm.
   if (c.id === "double-trouble" && score === TOTAL_ROUNDS) unlock("two-is-better");
-  // I'll Write Your Name — won Vanishing Word writing into the blank: every correct answer came after
+  // Blank Space — won Vanishing Word writing into the blank: every correct answer came after
   // the word had already gone.
   if (c.rule === "vanishing" && won && vanishAnsweredBlind) unlock("blank-space");
   // Been Here All Along — total loyalty in Deep Cut: not just five from one album, but every
@@ -11306,7 +11306,7 @@ function endAdaptive() {
       isDaily: false, dailyPerfect: false,
       isInfinite: false, timeouts: gameTimeouts,
     });
-    // But You Stayed: reached the Rarest tier and finished there without ever slipping off it.
+    // Held On Tight: reached the Rarest tier and finished there without ever slipping off it.
     if (adaptiveReachedTop && adaptiveHeldTop && adaptiveLevel >= ADAPT_MAX_LEVEL) unlock("stay-stay-stay");
     rec = recordAdaptiveRun(peak, score, todayKey());
     // A fair fixed-13 run, so the whole set earns. Endurance included: it reads the streak,
@@ -14326,7 +14326,7 @@ function submitAnswer(song, isTimeout) {
     if (L && L === lastAlphaLetter) alphaEveryLetterNew = false;
     lastAlphaLetter = L;
   }
-  // I'll Write Your Name: a correct answer landed while the word was still on the page — the run was
+  // Blank Space: a correct answer landed while the word was still on the page — the run was
   // no longer written blind. The vanish timeout is untouched by submit, so the class is the
   // honest reading of what was showing at the moment they answered.
   if (correct && currentChallenge && currentChallenge.rule === "vanishing"
@@ -14955,7 +14955,7 @@ function endGame() {
       album: roundAlbums[i] || null,
       word: roundWords[i] || null,
     })));
-    // "Know What's What" — every song in the catalogue answered correctly at least once.
+    // "I Knew Everything" — every song in the catalogue answered correctly at least once.
     // Count discovered against allSongs (not raw tally keys) so it's exact.
     if (allSongs.length && allSongs.every((s) => tally.songs[s.title])) unlock("i-hate-it-here"); checkSongKeepsakes(tally);
   }
@@ -15036,7 +15036,7 @@ function endGame() {
     if (roundResults.includes(false) && trailingStreak >= 5) unlock("long-story-short");
     if (currentMode.id === "ultra" && score >= 10) unlock("great-war");
     if (score === TOTAL_ROUNDS && (currentMode.id === "hard" || currentMode.id === "ultra")) unlock("long-live");
-    // The top of those two ladders. The Mountains We Moved takes either of the hardest difficulties and
+    // The top of those two ladders. Mountains We Moved takes either of the hardest difficulties and
     // I Remember It All only asks you to finish a Lyricist game; these ask for the perfect run.
     if (score === TOTAL_ROUNDS && currentMode.id === "ultra") unlock("whos-afraid");
     if (score === TOTAL_ROUNDS && currentMode.lyricOnly) unlock("marjorie");
@@ -15065,7 +15065,7 @@ function endGame() {
   if (longestBTitleRun(roundResults, roundSongs) >= 3) unlock("my-mind-is-alive");
   if (totalLifetimeMisses() >= 1000) unlock("thousand-cuts");
   if (new Date().getHours() === 0) unlock("midnights");   // played in the midnight hour
-  // You'll Be Alright — the three most recent finished runs were all classic Easy.
+  // Safe & Sound — the three most recent finished runs were all classic Easy.
   const recent = loadHistory();
   if (recent.length >= 3 && recent.slice(0, 3).every((h) => h.m === "easy")) unlock("safe-and-sound");
 
@@ -19264,7 +19264,7 @@ function buildDevApi() {
         // As if an uninsured miss had landed: the run is dead and this page wears the skull.
         kill: () => { insuranceDead = true; riskSkull[Math.max(0, round - 1)] = true; renderBracelet(); return insuranceDead; },
       },
-      // Vanishing Word — the word blanks after revealMs. I'll Write Your Name wants a run written
+      // Vanishing Word — the word blanks after revealMs. Blank Space wants a run written
       // entirely into that blank, so `win(false)` is the spoiled control case.
       vanishing: {
         blind: () => vanishAnsweredBlind,               // is Blank Space still alive this run?

@@ -1684,7 +1684,7 @@ export const ACH_ICONS = {
   quote:   `<svg viewBox="0 0 24 24"><path class="ink-fill" d="M3.2 4.6 H10.4 V11.2 C10.4 15.4 8.2 17.8 4.2 19 L3 16.1 C5.4 15.4 6.7 14.2 7.1 12.4 H3.2 Z"/><path d="M13.6 4.6 H20.8 V11.2 C20.8 15.4 18.6 17.8 14.6 19 L13.4 16.1 C15.8 15.4 17.1 14.2 17.5 12.4 H13.6 Z" fill="currentColor" stroke="none"/></svg>`,
   // an umbrella — it's raining and it's Monday
   umbrella:`<svg viewBox="0 0 24 24"><path class="ink" stroke-width="1.3" d="M12 1 V2.6"/><path class="ink-fill" d="M12 2.4 C6.2 2.4 2.4 6.8 2.4 11.6 L21.6 11.6 C21.6 6.8 17.8 2.4 12 2.4 Z"/><g stroke="currentColor" stroke-width="1" fill="none"><path d="M7.2 11.6 C7.2 7.4 8.8 3.8 12 2.8"/><path d="M16.8 11.6 C16.8 7.4 15.2 3.8 12 2.8"/><path d="M12 2.8 V11.6"/></g><path class="ink" stroke-width="1.6" fill="none" d="M12 11.6 V18.6 a2.4 2.4 0 0 1 -4.8 0"/><path class="ink-fill" d="M19.6 13.6 C20.3 14.6 20.6 15.3 20.6 15.9 A1.05 1.05 0 0 1 18.6 15.9 C18.6 15.3 18.9 14.5 19.6 13.6 Z"/><path class="ink-fill" d="M16.2 17.4 C16.7 18.1 16.9 18.6 16.9 19 A0.78 0.78 0 0 1 15.5 19 C15.5 18.6 15.7 18.1 16.2 17.4 Z"/></svg>`,
-  // a ticked checklist page — every song in the catalogue, named (Know What's What)
+  // a ticked checklist page — every song in the catalogue, named (I Knew Everything)
   checklist:`<svg viewBox="0 0 24 24"><rect class="ink-fill" x="4.2" y="2.8" width="15.6" height="18.4" rx="1.8"/><rect class="ink-fill" x="9.6" y="1.4" width="4.8" height="2.8" rx="1.2"/><g stroke="currentColor" stroke-width="1.35" fill="none"><path d="M6.7 7.8 l1.2 1.2 L10.3 6.6"/><path d="M6.7 12.6 l1.2 1.2 L10.3 11.4"/><path d="M6.7 17.4 l1.2 1.2 L10.3 16.2"/><path d="M12.6 8.2 H17.2"/><path d="M12.6 13 H17.2"/><path d="M12.6 17.8 H16"/></g></svg>`,
   /* ---- Challenge flourish charms (won the hard way) ---- */
   // the ruled line stays put; the word lifts off it in pieces and winks out, and you wrote into the blank
@@ -2443,9 +2443,9 @@ export const ACHIEVEMENTS = [
   { id: "nineteen-eighty-nine", name: "1989",         desc: "Reach round 89 in Infinite",          secret: false, icon: "skyline", sitting: true, earn: { cat: "infinite" } },
   { id: "sparks-fly",       name: "The Lights Go Wild", desc: "Hit a 10-in-a-row streak",            secret: false, icon: "sparkler", sitting: true, earn: { cat: "difficulty" } },
   { id: "great-war",        name: "We Survived",      desc: "Win an Ultra game (10+ correct)",     secret: false, icon: "poppy", sitting: true, earn: { cat: "difficulty", diff: "ultra" } },
-  { id: "long-live",        name: "The Mountains We Moved", desc: "Perfect 13/13 on Hard or Ultra",      secret: false, icon: "coronet", sitting: true, earn: { cat: "difficulty", diff: "hard" } },
-  // The two hardest single runs the game can ask for, and the top of their own ladders: The Mountains
-  // We Moved takes either of the top two difficulties, I Remember It All only asks you to FINISH a
+  { id: "long-live",        name: "Mountains We Moved", desc: "Perfect 13/13 on Hard or Ultra",      secret: false, icon: "coronet", sitting: true, earn: { cat: "difficulty", diff: "hard" } },
+  // The two hardest single runs the game can ask for, and the top of their own ladders: Mountains We
+  // Moved takes either of the top two difficulties, I Remember It All only asks you to FINISH a
   // Lyricist game. These stay unearned long after the rest of the collection is closed.
   { id: "whos-afraid",      name: "Who’s Afraid Of Little Old Me?", desc: "Perfect 13/13 on Ultra", secret: false, icon: "cage", sitting: true, earn: { cat: "difficulty", diff: "ultra" } },
   { id: "marjorie",         name: "Alive In My Head", desc: "Perfect 13/13 in Lyricist",           secret: false, icon: "cameo", sitting: true, earn: { cat: "difficulty", diff: "lyricist" } },
@@ -2456,10 +2456,10 @@ export const ACHIEVEMENTS = [
   { id: "daylight",         name: "Golden Like Daylight", desc: "Score a perfect Daily",               secret: false, icon: "sunrise", sitting: true, earn: { cat: "daily" } },
   { id: "story-of-us",      name: "Next Chapter",     desc: "Keep a 7-day Daily streak",           secret: false, icon: "openbook" },
   { id: "evermore",         name: "Ever And Evermore", desc: "Reach a 30-day Daily streak",         secret: false, icon: "sprig" },
-  { id: "karma",            name: "What I Earned",    desc: "Earn 13 achievements",                secret: false, icon: "cat" },
+  { id: "karma",            name: "Coming Back Around", desc: "Earn 13 achievements",                secret: false, icon: "cat" },
   { id: "midnights",        name: "Midnights Become My Afternoons", desc: "Play between 12 and 1am",             secret: true,  icon: "clock" },
   { id: "shake-it-off",     name: "I Keep Cruisin'",  desc: "Bounce back from a miss 3× in one game", secret: false, icon: "bounce", sitting: true, earn: { cat: "difficulty" } },
-  { id: "peace",            name: "Take My Time",     desc: "Finish a game without the timer hitting the red",  secret: false, icon: "dove", sitting: true, earn: { cat: "difficulty" } },
+  { id: "peace",            name: "I Kept Calm",      desc: "Finish a game without the timer hitting the red",  secret: false, icon: "dove", sitting: true, earn: { cat: "difficulty" } },
   { id: "perfect-storm",    name: "Perfect Storm",    desc: "Average under 3s per answer in a game", secret: false, icon: "storm", sitting: true, earn: { cat: "difficulty" } },
   { id: "the-triangle",     name: "The Triangle",     desc: "Answer cardigan, betty and august in one game", secret: true, icon: "trihearts" },
   { id: "my-mind-is-alive", name: "My Mind Is Alive", desc: "3 correct in a row (titles starting with B)", secret: true, icon: "bee" },
@@ -2471,10 +2471,10 @@ export const ACHIEVEMENTS = [
   { id: "word-for-word",    name: "Word For Word",    desc: "Recall a lyric line word-perfect",     secret: false, icon: "quote", sitting: true, earn: { cat: "difficulty", diff: "lyricist" } },
   { id: "i-look-in-windows", name: "I Look In People's Windows", desc: "Open the settings menu",      secret: true,  icon: "window" },
   { id: "look-what-you-made-me-do", name: "Look What You Made Me Do", desc: "Make the snake appear",  secret: true,  icon: "snake" },
-  { id: "snow-on-the-beach",   name: "It's Comin' Down",    desc: "Watch the snow fall on the page",        secret: true,  icon: "palm" },
+  { id: "snow-on-the-beach",   name: "Snow On The Page",    desc: "Watch the snow fall",                   secret: true,  icon: "palm" },
   { id: "midnight-rain",       name: "Midnights Like This", desc: "Keep the page company past midnight",    secret: true,  icon: "nightrain" },
   { id: "autumn-leaves-falling", name: "Autumn Leaves Falling", desc: "Watch the autumn leaves fall on the page", secret: true, icon: "leaf" },
-  { id: "safe-and-sound",   name: "You'll Be Alright", desc: "Play Easy three times in a row",       secret: false, icon: "lantern", sitting: true, earn: { cat: "difficulty", diff: "easy" } },
+  { id: "safe-and-sound",   name: "Safe & Sound",     desc: "Play Easy three times in a row",       secret: false, icon: "lantern", sitting: true, earn: { cat: "difficulty", diff: "easy" } },
   { id: "revenge",          name: "R-E-V-E-N-G-E",    desc: "Beat your own best score on any board", secret: false, icon: "megaphone", sitting: true, earn: { cat: "difficulty" } },
   { id: "mirrorball",       name: "Every Version Of Yourself", desc: "Score a perfect 13/13 in every difficulty", secret: false, icon: "mirrorball" },
   { id: "diamonds",         name: "Diamonds Are Forever", desc: "3 rare words right in a row (no Ultra)", secret: false, icon: "diamond", sitting: true, earn: { cat: "difficulty" } },
@@ -2487,7 +2487,7 @@ export const ACHIEVEMENTS = [
   { id: "fav-song",         name: "Someone Has A Favourite Song", desc: "Answer three rounds with lyrics from the same song", secret: true, icon: "repeat" },
   { id: "eyes-closed",      name: "Eyes Closed",      desc: "10 fuzzy lyric matches in one Lyricist game", secret: false, icon: "eyeclosed", sitting: true, earn: { cat: "difficulty", diff: "lyricist" } },
   { id: "paris",            name: "We Were Somewhere Else", desc: "Answer “Paris” when the word is “somewhere”", secret: true, icon: "tower" },
-  { id: "i-hate-it-here",   name: "Know What's What", desc: "Answer every song in the catalogue at least once", secret: false, icon: "checklist" },
+  { id: "i-hate-it-here",   name: "I Knew Everything", desc: "Answer every song in the catalogue at least once", secret: false, icon: "checklist" },
   { id: "mean",             name: "The Cycle Ends",   desc: "Finally answer your nemesis word right", secret: true, icon: "banjo" },
   { id: "raining-monday",   name: "It's Raining And It's Monday", desc: "Answer “rain” correctly on a Monday", secret: true, icon: "umbrella" },
   { id: "clean",            name: "Finally Clean",    desc: "Win without hints or a single timeout",  secret: false, icon: "drop", sitting: true, earn: { cat: "difficulty" } },
@@ -2527,7 +2527,7 @@ export const ACHIEVEMENTS = [
   { id: "part-the-sea",      name: "Part The Sea",      desc: "Win Sea of Songs without ever tapping a decoy", secret: true, reveal: "sea-of-songs", icon: "partedsea" },
   { id: "knowing-all-the-words", name: "Knowing All The Words", desc: "Win Lyric Lover with every line word-perfect, no fuzzy recalls", secret: true, reveal: "lyric-lover", icon: "cassette" },
   { id: "two-is-better",     name: "Two Is Better Than One", desc: "Clear all thirteen pages of Double Trouble: two songs each, none dropped", secret: true, reveal: "double-trouble", icon: "cherries" },
-  { id: "blank-space",       name: "I'll Write Your Name", desc: "Win Vanishing Word writing blind: every answer landed after the word had gone", secret: true, reveal: "vanishing-word", icon: "vanish" },
+  { id: "blank-space",       name: "Blank Space",       desc: "Win Vanishing Word writing blind: every answer landed after the word had gone", secret: true, reveal: "vanishing-word", icon: "vanish" },
   { id: "you-belong-with-me", name: "Been Here All Along", desc: "Win Deep Cut loyal to one album: every correct answer of the run off the same record", secret: true, reveal: "deep-cut", icon: "heartlabel" },
   { id: "tied-together",     name: "Tied Together With A Smile", desc: "Win From A to Z on a chain that climbs every link: never twice on the same letter", secret: true, reveal: "alphabetical", icon: "ribbon" },
   // The risk three. Flourishes like the rest, so they carry `reveal` and stay masked until
@@ -2540,7 +2540,7 @@ export const ACHIEVEMENTS = [
   // Dark sides. A milestone rather than a flourish (no challenge named), so it stays visible.
   { id: "mad-woman",        name: "Now I Breathe Flames", desc: "Beat a dark side on your first attempt", secret: false, icon: "inkspill", sitting: true, earn: { cat: "dark" } },
   { id: "the-lakes",        name: "Those Windermere Peaks", desc: "Climb to the Rarest tier in Adaptive",  secret: false, icon: "lake", sitting: true, earn: { cat: "adaptive" } },
-  { id: "stay-stay-stay",   name: "But You Stayed",   desc: "Reach Rarest and finish there without slipping", secret: false, icon: "anchor", sitting: true, earn: { cat: "adaptive" } },
+  { id: "stay-stay-stay",   name: "Held On Tight",    desc: "Reach Rarest and finish there without slipping", secret: false, icon: "anchor", sitting: true, earn: { cat: "adaptive" } },
   { id: "a-place-in-this-world", name: "Girl On A Mission",     desc: "Beat your first album in Album Focus", secret: false, icon: "map", sitting: true, earn: { cat: "album" } },
   { id: "change",           name: "Stand Up Champions", desc: "Beat all 12 albums in Album Focus",     secret: false, icon: "butterfly" },
   { id: "gold-rush",        name: "Gleaming, Twinkling", desc: "Perfect an album in Album Focus (13/13)", secret: false, icon: "coins", sitting: true, earn: { cat: "album" } },
