@@ -748,6 +748,15 @@ export function judgeBlank(typed, puzzle, vocab = null) {
   return false;
 }
 
+// The word as written, with nothing forgiven — the answer judgeBlank would take on its
+// strictest setting. It lives here rather than at the call site so there is ONE definition of
+// what a word is: a copy of wordKey in app.js would drift the first time punctuation or an
+// apostrophe form was reconsidered, and then the two would quietly disagree about the same page.
+export function blankExact(typed, puzzle) {
+  const got = wordKey(typed);
+  return !!got && got === wordKey(puzzle.answer);
+}
+
 /* ---------- Then What ----------
    One song, one line written out, and three lines that might follow it. Pick the one that
    really does and it locks into the page; four picks and the page is a verse.

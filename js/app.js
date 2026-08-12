@@ -12,7 +12,7 @@ import {
   BONUS_GAMES, BONUS_ROUNDS, BONUS_SLIP_SECONDS, BONUS_NAME_SECONDS, BONUS_BLANK_SECONDS,
   BONUS_REDACT_SECONDS, REDACT_MIN_POINTS,
   BONUS_ONLY_SECONDS, ONLY_WIDE_PAGES,
-  BONUS_CHAIN_SECONDS, CHAIN_EASY_PAGES,
+  BONUS_CHAIN_SECONDS, CHAIN_EASY_PAGES, BONUS_SNAP_MS,
   RUTHLESS_WORD_MS, RUTHLESS_OPEN_WORDS,
   RUTHLESS_PACE_SECONDS,
   CHALLENGES, CHALLENGE_BY_ID, CHALLENGE_ORDER, CHALLENGE_SEALS, DARK_SIDE_IDS, DARK_SIDE_TODO,
@@ -59,7 +59,7 @@ import { buildLineIndex, buildSlipContext, buildSlipPuzzle, buildNamePuzzle,
          buildChainPuzzle, CHAIN_PICKS, CHAIN_CARDS, CHAIN_PAY, CHAIN_PAGE,
          buildRuthlessPuzzle, ruthlessPool, ruthlessLens, ruthlessLensAudit, ruthlessGiveUp,
          ruthlessBar, RUTHLESS_LENSES,
-         judgeBlank } from "./bonus.js";
+         judgeBlank, blankExact } from "./bonus.js";
 import { renderStreakPlacard } from "./placard.js";
 import {
   loadRecords, insertRecord, migrateRecordsFromStats, getPlayerName, setPlayerName,
@@ -1944,6 +1944,10 @@ const HIDDEN_ACH_IDS = [
   "mean", "raining-monday", "seven", "piano-was-hissing",
   "the-bolter", "no-closure", "this-is-me-trying", "smallest-man",
   "you-took-a-polaroid-of-us",
+  // The bonus shelf's five. Added deliberately, which is what this list is for: each one makes
+  // Is It Over Now? cost a little more, and three of them are failures you have to go and
+  // commit on purpose once you know they exist.
+  "i-bought-it", "knew-the-price", "never-heard-silence", "almost-had-it", "saw-it-coming",
 ];
 
 // Re-evaluated after every unlock (each unlock no-ops if already earned, so this is safe to
@@ -4498,6 +4502,15 @@ let bonusRecentFakes = []; // Spot the Slip: impostor words used recently, so a 
 let bonusRecentSongs = []; // Name That Song / Sing It Back / Redacted: songs already used this run, so one doesn't come round twice
 let redactWorth = 0;       // Redacted: what THIS page is still worth, one point per strip left unpeeled
 let redactPeeled = 0;      // ...and how many strips have come off it
+/* When THIS page went live, for the charms that ask how fast a page was answered. Baselined
+   TWICE for ruthlessStart's reason and it is the same bug: the page is rendered and focused a
+   page-flip before the clock starts, so an answer given in that window would otherwise be timed
+   from the PREVIOUS page's baseline and read as impossibly quick. */
+let bonusPageStart = 0;
+/* Sing It Back: has every blank this run been written EXACTLY, with no typo forgiven? Right
+   Where You Left Me asks for the run judgeBlank would have passed on its strictest setting, so
+   this rides the whole run and any forgiven page kills it. */
+let blankExactRun = true;
 // Only Here: the word this page was answered with, once one has been accepted —
 // {word, count, points} — or null while the page is still open. It IS the page's score, so it
 // is also what bonusPageScore reads.
@@ -4807,6 +4820,8 @@ function startBonusGame(g, lensId = null) {
   // The longest chain belongs to the RUN, not the page, so it is reset here and nowhere else.
   chainNow = 0;
   chainRun = 0;
+  // Same: a run is exact until a page is forgiven, so it starts true once per run.
+  blankExactRun = true;
   bonusRunId++;
   // Started for every game, read only by the ones that keep a sweep. A flag checked here and
   // again at the end is two places for a game to be half-timed.
@@ -4890,6 +4905,9 @@ function nextBonusRound() {
   redactWorth = bonusPagePoints(bonusGame);
   redactPeeled = 0;
   onlyPlayed = null;
+  // First of the two baselines (see bonusPageStart). This one covers the flip-in window, where
+  // the page can already be answered but the clock has not started.
+  bonusPageStart = performance.now();
   if (bonusGame.id === "only-here" && bonusPuzzle.hand)
     bonusPuzzle.hand.forEach((c) => onlyDealt.add(c.key));
   // A fresh chain: nothing picked, nothing banked. The longest run survives the page.
@@ -5120,6 +5138,9 @@ function startBonusClock() {
   // on a page that is showing its answer.
   if (bonusLocked) return;
   if (bonusTimed(bonusGame)) { startRuthlessClock(); return; }
+  // Second baseline: the page is really live now, so anything timed off it is timed off the
+  // clock the player can see rather than off the page turn that preceded it.
+  bonusPageStart = performance.now();
   const fill = $("bonusTimerFill");
   const label = $("bonusTimerLabel");
   const secs = bonusSeconds();
@@ -5708,6 +5729,10 @@ function judgeGap() {
   // The catalogue's word frequencies double as its vocabulary, which is what lets judgeBlank
   // forgive a typo without forgiving a genuinely different word (see judgeBlank).
   const correct = judgeBlank(raw, bonusPuzzle, ctx.freq);
+  // A page passed on a stem or a forgiven typo is still a correct page — it just isn't an exact
+  // one, and Right Where You Left Me asks for a run of exact ones. Written here rather than at
+  // the settle because this is the only place that still has what was typed.
+  if (!blankExact(raw, bonusPuzzle)) blankExactRun = false;
   // The gap is filled with the real word either way, and the card below highlights it in the
   // whole line — so on a miss the only thing worth adding is what was written instead.
   settleBonusRound(correct, correct ? "" : `you wrote “<b>${escapeHtml(raw)}</b>”`);
@@ -5912,6 +5937,7 @@ function settleBonusRound(correct, detail, isTimeout = false) {
         : bonusGame.id === "ruthless-game" ? fmtTime(gained)
         : bonusPuzzle.song.album,
   });
+  foldBonusPageCharms(correct, isTimeout);
   // Reveal the answer on a timeout too, whichever game we're in.
   if (bonusGame.id === "spot-the-slip") {
     $("bonusPlayBody").querySelectorAll(".bg-word").forEach((b) => {
@@ -6057,6 +6083,78 @@ function ruthlessRemark(secs, clean) {
   return "the record played you";
 }
 
+/* ---------- The shelf's charms ----------
+   The ONE thing a bonus run writes outside its own board. Everything else about the sandbox
+   holds: no stats, no records, no history, no tally, no metrics, no skill XP. A charm is a
+   collection entry rather than a ranking, so it doesn't put a bonus run beside the main game —
+   which is the part of the sandbox that actually matters.
+
+   TWO RULES GOVERN EVERY CALL BELOW, and both are easy to break by accident:
+   1. A LENS run is Ruthless mode, not a shelf game. It leaves endBonusRun before any of this,
+      but the PAGE fold runs inside the shared loop, so it has to check ruthlessLensId itself —
+      without that, naming a song fast on a lens run would hand out a Spot the Slip charm.
+   2. Nothing here may reach for the main game's unlock conditions. These games are unbalanced
+      against it on purpose, so a bonus page must never satisfy a difficulty charm. */
+
+// The charms one PAGE can earn, folded as it settles because none of them survive to the end
+// card: what a page cost, how fast it was answered, and which card came off the table.
+function foldBonusPageCharms(correct, isTimeout) {
+  if (!bonusGame || ruthlessLensId) return;
+  if (bonusGame.id === "spot-the-slip") {
+    // Timed off the page's own baseline rather than off the clock's remaining seconds, so it
+    // still means "on sight" if this game's clock is ever retuned.
+    if (correct && !isTimeout && performance.now() - bonusPageStart < BONUS_SNAP_MS)
+      unlock("saw-it-coming");
+  } else if (bonusGame.id === "redacted") {
+    // Both of these are about what the page COST, so they are mutually exclusive by
+    // construction — a page cannot be both untouched and bought out.
+    if (correct && redactPeeled === 0) unlock("blind-faith");
+    if (correct && bonusPuzzle.blocks && redactPeeled >= bonusPuzzle.blocks) unlock("knew-the-price");
+  } else if (bonusGame.id === "only-here" && onlyPlayed) {
+    // The commonest card in the hand, and NOT when that card is also the rarest: a hand where
+    // every word is sung equally often is a tie the player cannot lose, and charging them with
+    // a wrong call for winning it would be a lie about what they did.
+    const top = Math.max(...bonusPuzzle.hand.map((c) => c.count));
+    if (!onlyPlayed.best && onlyPlayed.count === top) unlock("i-bought-it");
+  }
+}
+
+// The charms a whole RUN earns. Called from endBonusRun below the lens fork, with the run
+// already banked — `swept` has to be on the board before Every Single One reads it, or a
+// player's sixth sweep would not count itself.
+function foldBonusRunCharms(perfect, cleared) {
+  /* Not just the lens run: the RETIRED card is barred here too. Ruthless Game carries
+     shelf:false, so it is not one of the six these charms are about — and it has no fail state,
+     which would make every dev-only lens-less run a "clean sweep" of ten cleared pages. Anything
+     the shelf's own list excludes, this excludes. */
+  if (bonusGame.shelf === false) return;
+  unlock("play-it-again");
+  if (perfect) unlock("a-clean-kill");
+  // One page shy, and only on the three games that keep a sweep clock — the shelf's own
+  // Champagne Problems, and it stings most exactly where a ceiling is reachable.
+  if (!perfect && cleared === BONUS_ROUNDS - 1 && bonusSweeps(bonusGame)) unlock("almost-had-it");
+  // Only Here has no fail state, so every card played banks at least a point: a run that
+  // scores nothing is a run where all ten clocks ran out with nothing on the table.
+  if (bonusGame.id === "only-here" && bonusScore === 0 && bonusLog.length === BONUS_ROUNDS)
+    unlock("never-heard-silence");
+  if (perfect) {
+    // Four games say their sweep in their own voice. Sing It Back's asks for more than a sweep
+    // (every word exact), and Redacted's charm is a single page rather than a run, so neither
+    // is in this table.
+    const sweepCharm = { "spot-the-slip": "somethings-changed", "name-that-song": "the-first-note",
+                         "only-here": "rarest-air", "then-what": "follow-the-sparks" }[bonusGame.id];
+    if (sweepCharm) unlock(sweepCharm);
+    if (bonusGame.id === "sing-it-back" && blankExactRun) unlock("right-where-you-left-me");
+  }
+  // The two shelf-wide ledger charms, read off the board rather than off this run, so they
+  // close on whichever game happens to be the last one. shelfGames() and not BONUS_GAMES:
+  // Ruthless carries shelf:false and asking for a sweep of a retired card would make both of
+  // these permanently unearnable.
+  const shelf = shelfGames();
+  if (shelf.every((g) => bonusRecord(g.id).plays > 0)) unlock("vinyl-shelf");
+  if (shelf.every((g) => bonusRecord(g.id).swept)) unlock("every-single-one");
+}
+
 function endBonusRun() {
   bonusEnded = true;
   renderBonusPageRegister();
@@ -6081,7 +6179,10 @@ function endBonusRun() {
   // Read BEFORE the run is banked: a first sweep and a faster one are both `isSweepBest`, and
   // only the second of them has beaten anything, so only the second may say so.
   const hadSweep = bonusRecord(bonusGame.id).sweep;
-  const rec = recordBonusRun(bonusGame.id, bonusScore, bonusMaxScore(bonusGame), timed, sweepSecs);
+  const rec = recordBonusRun(bonusGame.id, bonusScore, bonusMaxScore(bonusGame), timed, sweepSecs, perfect);
+  // After the run is banked, so a sweep that completes the set counts itself (see the note in
+  // foldBonusRunCharms), and after the lens fork above, so Ruthless earns none of them.
+  foldBonusRunCharms(perfect, bonusLog.filter((t) => t.ok).length);
   $("bonusTimer").style.display = "none";
   $("bonusProgress").textContent = "run complete";
   $("bonusScore").textContent = bonusScoreText();
@@ -7754,9 +7855,12 @@ function saveBraceletPNG(e) {
   });
 }
 
-// Wired to the bonus sleeve's button. No `onKept`, and that is the sandbox rather than an
-// oversight: a bonus run writes nothing but its own best score, so keeping its sleeve must
-// not quietly hand out the charm a bracelet does.
+// Wired to the bonus sleeve's button. `onKept` is the SLEEVE's own charm and deliberately not
+// the bracelet's: keeping a sleeve must never hand out You're On Your Own, Kid, which is the
+// keepsake charm of a main run and would put a bonus run's takings beside it. The two are
+// separate keepsakes and stay separately earned. (This handler was empty for exactly that
+// reason before One Last Souvenir existed — the emptiness was the sandbox, not an oversight,
+// and naming a second charm here is what replaces it rather than a loosening of it.)
 function saveSleevePNG(e) {
   if (!bonusSleeveRun) return;
   return saveKeepsakePNG(e, {
@@ -7765,6 +7869,7 @@ function saveSleevePNG(e) {
     copy: copySleeveCard,
     download: exportSleeveCard,
     noun: "sleeve",
+    onKept: () => unlock("one-last-souvenir"),
   });
 }
 
@@ -18484,6 +18589,43 @@ function buildDevApi() {
         return `${bonusGame.name}: ${bonusScore}/${bonusMaxScore(bonusGame)}`;
       },
       reset: () => { resetBonus(); if ($("bonusBody")) renderBonusPage(); },
+      /* The shelf's charms. Nine of the sixteen come off a finished run and `fill(10)` already
+         reaches those; these are the ones a run cannot be fabricated into, because they turn on
+         something that happens DURING a page and is gone by the end card. `charms.state()` is
+         the one to read first — it reports what the live page and run currently satisfy, which
+         is the only way to tell "the condition didn't hold" from "the unlock isn't wired".
+         Use __dev.seed.removeAch(id) to un-earn one and test it again. Note that a fabricated
+         run earns charms for real, exactly as it banks a score for real — the shelf has never
+         honoured devNoLog, and one half of a fake run counting is worse than both halves. */
+      charms: {
+        state: () => ({
+          game: bonusGame ? bonusGame.id : null,
+          lens: ruthlessLensId,       // non-null = a Ruthless run, which earns NONE of these
+          pageMs: bonusGame ? Math.round(performance.now() - bonusPageStart) : null,
+          snapUnder: BONUS_SNAP_MS,
+          peeled: redactPeeled, blocks: bonusPuzzle ? bonusPuzzle.blocks : null,
+          blankExactRun,
+          chainRun, chainNeeded: BONUS_ROUNDS * CHAIN_PAY.length,
+          cleared: bonusLog.filter((t) => t.ok).length,
+          shelfPlayed: shelfGames().filter((g) => bonusRecord(g.id).plays > 0).map((g) => g.id),
+          shelfSwept: shelfGames().filter((g) => bonusRecord(g.id).swept).map((g) => g.id),
+        }),
+        // Bank a sweep on every shelf game without playing sixty pages for it, so Every Single
+        // One and the shelf's ledger charms can be seen closing. Writes real board entries.
+        sweepAll: () => { shelfGames().forEach((g) =>
+            recordBonusRun(g.id, bonusMaxScore(g), bonusMaxScore(g), bonusTimed(g), null, true));
+          if ($("bonusBody")) renderBonusPage();
+          return shelfGames().map((g) => g.id); },
+        // Answer the live Only Here page with the COMMONEST card in the hand — I Bought It,
+        // which is otherwise a mistake you have to make on purpose.
+        worst: () => {
+          if (!bonusGame || bonusGame.id !== "only-here" || !bonusPuzzle) return "no hand on screen";
+          const top = Math.max(...bonusPuzzle.hand.map((c) => c.count));
+          const i = bonusPuzzle.hand.findIndex((c) => c.count === top);
+          judgeOnly(i);
+          return onlyPlayed;
+        },
+      },
     },
     /* Ruthless mode's own board, one best per lens. The board is low-wins and its bests are
        times, so the failure it is worth being able to see is the one a points board cannot have:

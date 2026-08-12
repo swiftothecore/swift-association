@@ -286,7 +286,7 @@ export function saveBonus(o) {
 // a swept one can never both read 0.
 export function bonusRecord(id) {
   const e = loadBonus()[id] || {};
-  return { best: e.best || 0, plays: e.plays || 0, last: e.last || 0, sweep: e.sweep || 0 };
+  return { best: e.best || 0, plays: e.plays || 0, last: e.last || 0, sweep: e.sweep || 0, swept: !!e.swept };
 }
 // Fold a finished bonus run into the board and return the updated record, plus whether the
 // run set a new best (the end card calls that out).
@@ -304,13 +304,18 @@ export function bonusRecord(id) {
 // `lower`: that flag says the whole game is scored the other way up, whereas a sweep game is
 // scored in points and keeps a low-wins time alongside them. A game can want one and not the
 // other, and Ruthless and Spot the Slip are one of each.
-export function recordBonusRun(id, score, max = Infinity, lower = false, sweepSecs = null) {
+export function recordBonusRun(id, score, max = Infinity, lower = false, sweepSecs = null, swept = false) {
   const all = loadBonus();
   const e = all[id] || {};
   // Written before either branch, so a sweep is banked on whichever way the game's own score
   // runs. Only ever improved, never overwritten by a slower sweep.
   const isSweepBest = sweepSecs != null && (!e.sweep || sweepSecs < e.sweep);
   if (isSweepBest) e.sweep = sweepSecs;
+  // "This game has been swept at least once", which is NOT the same as `sweep` and cannot be
+  // derived from it: `sweep` is a TIME, and only the three sweeps:true games keep one. The
+  // other three top out below their own maximum by design, so on a points game no stored
+  // number can ever say a run cleared ten pages. Only Every Single One reads this.
+  if (swept) e.swept = true;
   if (lower) {
     const isBest = !e.plays || score < e.best;
     if (isBest) e.best = score;

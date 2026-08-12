@@ -466,6 +466,10 @@ export const BONUS_CHAIN_SECONDS = 11;
 // cross a section boundary, which asks a harder question — does the verse hand off to the
 // chorus, the pre-chorus, the bridge? — and tests the song's architecture rather than its lines.
 export const CHAIN_EASY_PAGES = 3;
+// What counts as spotting the impostor on sight (the Saw It Coming charm). Read against the
+// page's own baseline, not the clock's remaining seconds, so it stays honest if a game's clock
+// is ever retuned under it.
+export const BONUS_SNAP_MS = 2000;
 
 /* ---------- Ruthless Game ----------
    The one game here with no clock to beat, because the clock IS the score: a page runs until
@@ -2478,6 +2482,36 @@ export const ACHIEVEMENTS = [
   // Admission already means a perfect, hint-free run, so these are the rungs above it.
   { id: "better-man",       name: "Better Man",       desc: "Admit a guest on Hard or Ultra",       secret: false, icon: "handstamp", sitting: true, earn: { cat: "guest", diff: "hard" } },
   { id: "everything-has-changed", name: "Everything Has Changed", desc: "Admit a guest in Lyricist", secret: false, icon: "duetmic", sitting: true, earn: { cat: "guest", diff: "lyricist" } },
+  /* ---- Bonus games shelf ----
+     Named off LYRIC FRAGMENTS rather than song titles, which is this group's own convention
+     and not an accident: every name here is a real 2-3 word phrase in songs.json, so each one
+     is a searchable thing in the catalogue rather than a pun. Keep it up if the group grows.
+     A bonus run is otherwise sandboxed to its own best score — these charms are the ONE thing
+     it writes outside BONUS_KEY, and that is deliberate: a charm is a collection entry, never
+     a ranking, so it doesn't breach the rule that a bonus run is never ranked beside the main
+     game. Nothing here may fold stats, history, records or skill XP. */
+  { id: "play-it-again",    name: "Play It Again",    desc: "Finish your first bonus run",          secret: false, icon: "placeholder", sitting: true, earn: { cat: "bonus" } },
+  { id: "vinyl-shelf",      name: "Vinyl Shelf",      desc: "Play every game on the shelf",         secret: false, icon: "placeholder" },
+  { id: "a-clean-kill",     name: "A Clean Kill",     desc: "Clean-sweep a bonus game: ten pages cleared", secret: false, icon: "placeholder", sitting: true, earn: { cat: "bonus" } },
+  { id: "every-single-one", name: "Every Single One", desc: "Clean-sweep every game on the shelf",  secret: false, icon: "placeholder" },
+  { id: "one-last-souvenir", name: "One Last Souvenir", desc: "Take a sleeve off the page and keep it", secret: false, icon: "placeholder", sitting: true, earn: { cat: "bonus" } },
+  // One per game, and four of the six are that game's clean sweep said in its own voice. The
+  // two that aren't ask for something a sweep doesn't: exactness on Sing It Back, nerve on
+  // Redacted. They are NOT masked like the challenge flourishes — a bonus game has no defeat
+  // to reveal them on, so they stand as ordinary named targets from the start.
+  { id: "somethings-changed", name: "Something’s Changed", desc: "Sweep Spot the Slip",             secret: false, icon: "placeholder", sitting: true, earn: { cat: "bonus" } },
+  { id: "the-first-note",   name: "The First Note",   desc: "Sweep Name That Song: all ten off one line each", secret: false, icon: "placeholder", sitting: true, earn: { cat: "bonus" } },
+  { id: "right-where-you-left-me", name: "Right Where You Left Me", desc: "Sweep Sing It Back with every word exact, not one typo forgiven", secret: false, icon: "placeholder", sitting: true, earn: { cat: "bonus" } },
+  { id: "blind-faith",      name: "Blind Faith",      desc: "Name a Redacted song with every strip still down", secret: false, icon: "placeholder", sitting: true, earn: { cat: "bonus" } },
+  { id: "rarest-air",       name: "Rarest Air",       desc: "Take the rarest card on all ten pages of Only Here", secret: false, icon: "placeholder", sitting: true, earn: { cat: "bonus" } },
+  { id: "follow-the-sparks", name: "Follow The Sparks", desc: "Sing a whole Then What run on one unbroken chain", secret: false, icon: "placeholder", sitting: true, earn: { cat: "bonus" } },
+  // The secrets. Three of them are failures worn well (Anti-Hero's register), which is the
+  // shelf's own tone: these games have soft edges and losing on them is funny rather than sore.
+  { id: "i-bought-it",      name: "I Bought It",      desc: "Take the commonest card in an Only Here hand", secret: true, icon: "placeholder" },
+  { id: "knew-the-price",   name: "Knew The Price",   desc: "Buy every strip on a Redacted page and still name the song", secret: true, icon: "placeholder" },
+  { id: "never-heard-silence", name: "Never Heard Silence", desc: "Let all ten Only Here clocks run out without a card played", secret: true, icon: "placeholder" },
+  { id: "almost-had-it",    name: "Almost Had It",    desc: "Finish one page shy of a clean sweep", secret: true, icon: "placeholder" },
+  { id: "saw-it-coming",    name: "Saw It Coming",    desc: "Flag a Spot the Slip impostor inside two seconds", secret: true, icon: "placeholder" },
   /* ---- Skills & Mastery ---- */
   { id: "bigger-than-the-whole-sky", name: "Bigger Than The Whole Sky", desc: "Press the wax and unlock Mastery", secret: false, icon: "waxpress" },
   { id: "superstar",        name: "Superstar",        desc: `Take a single skill all the way to level ${SKILL_MAX_LEVEL}`, secret: false, icon: "rosette" },
@@ -2501,6 +2535,7 @@ export const ACH_GROUPS = [
   { id: "adaptive",  label: "Adaptive mode",          short: "Adaptive" },
   { id: "custom",    label: "Custom mode",            short: "Custom" },
   { id: "guests",    label: "Guest shelf",            short: "Guests" },
+  { id: "bonus",     label: "Bonus games",            short: "Bonus" },
   { id: "mastery",   label: "Skills & Mastery",       short: "Mastery" },
 ];
 // One muted notebook hue per theme — the section dots and the by-theme breakdown bars.
@@ -2515,6 +2550,7 @@ export const ACH_GROUP_COLORS = {
   adaptive:  "#7d5a3f",
   custom:    "#4a6b8a",
   guests:    "#6b5a92",
+  bonus:     "#2f6f6a",
   mastery:   "#8a6d1f",
 };
 // Membership: only the non-core ids are listed; everything else defaults to "core"
@@ -2543,6 +2579,12 @@ export const ACH_GROUP_OF = {
   "the-lakes": "adaptive", "stay-stay-stay": "adaptive",
   "ours": "custom", "mine": "custom", "forever-and-always": "custom", "dear-reader": "custom",
   "welcome-to-new-york": "guests", "better-man": "guests", "everything-has-changed": "guests",
+  "play-it-again": "bonus", "vinyl-shelf": "bonus", "a-clean-kill": "bonus",
+  "every-single-one": "bonus", "one-last-souvenir": "bonus", "somethings-changed": "bonus",
+  "the-first-note": "bonus", "right-where-you-left-me": "bonus", "blind-faith": "bonus",
+  "rarest-air": "bonus", "follow-the-sparks": "bonus", "i-bought-it": "bonus",
+  "knew-the-price": "bonus", "never-heard-silence": "bonus", "almost-had-it": "bonus",
+  "saw-it-coming": "bonus",
   "bigger-than-the-whole-sky": "mastery", "superstar": "mastery", "call-it-what-you-want": "mastery",
   "nineteen-eighty-nine": "infinite", "mean": "catalogue",
 };
