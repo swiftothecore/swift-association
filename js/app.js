@@ -11981,6 +11981,13 @@ function pickAlbumWord(album) {
 function turnPageSheet(card, fill, done) {
   card.style.transform = "";
   const flip = card.cloneNode(true);
+  // The live body changes era while `fill` prepares the next page. Freeze the outgoing
+  // sheet's inherited era tokens first, otherwise the old page briefly takes on the new
+  // page's colour before it has finished turning away.
+  const oldPageStyle = getComputedStyle(card);
+  ["--ink-accent", "--highlighter", "--bead", "--page-wash"].forEach((token) => {
+    flip.style.setProperty(token, oldPageStyle.getPropertyValue(token));
+  });
   flip.removeAttribute("id");
   flip.querySelectorAll("[id]").forEach((e) => e.removeAttribute("id"));
   flip.classList.remove("screen", "active");
