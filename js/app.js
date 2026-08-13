@@ -1972,6 +1972,9 @@ const HIDDEN_ACH_IDS = [
   // Is It Over Now? cost a little more, and three of them are failures you have to go and
   // commit on purpose once you know they exist.
   "take-commonest-only-here-card", "name-redacted-song-after-buying-all-strips", "time-out-all-10-only-here-pages", "finish-bonus-run-one-page-short-of-sweep", "flag-spot-the-slip-impostor-under-2s",
+  // The scarf. First of the Core batch's secrets to be listed here; the rest join it when that
+  // pass is done, which is what makes Is It Over Now? dearer by design rather than by drift.
+  "tap-scarf-doodle-13-times",
 ];
 
 // Re-evaluated after every unlock (each unlock no-ops if already earned, so this is safe to
@@ -14711,7 +14714,11 @@ function submitAnswer(song, isTimeout) {
   // lives here rather than in the end-of-run fold. It follows noTimeoutStreak's rule about
   // invisible game types (see crossGameStreakCounts): a sandboxed run neither extends it nor
   // breaks it, which is what "sandboxed" has to mean for a counter as well as for a charm.
-  if (crossGameStreakCounts()) bumpCorrectRunStreak(correct);
+  // The Walls We Crashed Through reads the running total straight back out of the bump, so the
+  // charm is judged on the same number that was just stored rather than a re-read of it.
+  if (crossGameStreakCounts() && bumpCorrectRunStreak(correct) >= 50) {
+    unlock("answer-50-correct-in-a-row-across-games");
+  }
 
   // achievements: timing + streak signals (mid-game unlocks toast immediately).
   // Timing signals only apply to timed modes — Relaxed has no clock, so they're skipped.
@@ -15737,10 +15744,12 @@ function addDoodle(kind, posClass) {
   // The scarf is the one doodle you can touch: it counts taps, lifetime, across every run. The
   // counter is kept here rather than in run state because the scarf only turns up on a 14% roll
   // in one branch of the margin-doodle chain, so a per-run target would be luck, not a feat.
-  // Nothing is unlocked here yet — this is the ledger the charm will read.
+  // Thirteen taps, however they are spread, hands over You Keep My Old Scarf.
   if (kind === "scarf") {
     d.classList.add("doodle-tappable");
-    d.addEventListener("click", () => { bumpScarfClicks(); });
+    d.addEventListener("click", () => {
+      if (bumpScarfClicks() >= 13) unlock("tap-scarf-doodle-13-times");
+    });
   }
   layer.appendChild(d);
 }

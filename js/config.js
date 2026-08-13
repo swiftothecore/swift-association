@@ -2484,6 +2484,10 @@ export const ACHIEVEMENTS = [
   { id: "watch-snow-fall",   name: "Snow On The Page",    desc: "Watch the snow fall",                   secret: true,  icon: "palm" },
   { id: "keep-page-company-past-midnight",       name: "Midnights Like This", desc: "Keep the page company past midnight",    secret: true,  icon: "nightrain" },
   { id: "watch-autumn-leaves-fall", name: "Autumn Leaves Falling", desc: "Watch the autumn leaves fall on the page", secret: true, icon: "leaf" },
+  /* The scarf doodle is the one drawing you can touch, and its tally is lifetime rather than
+     per-run: it only turns up on a roll in one branch of the margin-doodle chain, so thirteen
+     taps in a single game would be luck rather than a feat. Counted in METRICS_KEY. */
+  { id: "tap-scarf-doodle-13-times", name: "You Keep My Old Scarf", desc: "Tap the scarf doodle 13 times", secret: true, icon: "placeholder" },
   { id: "play-easy-3-times-in-row",   name: "Safe & Sound",     desc: "Play Easy three times in a row",       secret: false, icon: "lantern", sitting: true, earn: { cat: "difficulty", diff: "easy" } },
   { id: "beat-personal-best-score",          name: "R-E-V-E-N-G-E",    desc: "Beat your own best score on any board", secret: false, icon: "megaphone", sitting: true, earn: { cat: "difficulty" } },
   { id: "perfect-13-every-mode",       name: "Every Version Of Yourself", desc: "Score a perfect 13/13 in every difficulty", secret: false, icon: "mirrorball" },
@@ -2563,6 +2567,11 @@ export const ACHIEVEMENTS = [
   { id: "answer-500-rounds-correct-lifetime", name: "The Rest Is History", desc: "Answer 500 rounds correctly, lifetime", secret: false, icon: "placeholder" },
   { id: "play-1989-rounds-lifetime", name: "A Thousand Memories", desc: "Play 1,989 rounds in total", secret: false, icon: "placeholder" },
   { id: "play-89-games", name: "I Was Born In 19—", desc: "Play 89 games", secret: false, icon: "placeholder" },
+  /* The streak that outlives the run it started in — fifty correct answers with the game
+     boundaries counting for nothing. Only the game types the cross-game counter can see
+     extend it (see crossGameStreakCounts), and the sandboxed ones can neither feed it nor
+     snap it. Counted in METRICS_KEY, per answer rather than per run. */
+  { id: "answer-50-correct-in-a-row-across-games", name: "The Walls We Crashed Through", desc: "Answer 50 in a row correctly, across as many games as it takes", secret: false, icon: "placeholder" },
   /* Answered with the same song more than once. Distinct from Someone Has A Favourite Song,
      which counts sung LINES from one song; these count the credited answer however it arrived. */
   { id: "answer-same-song-twice-in-row", name: "Over And Over", desc: "Answer with the same song twice in a row", secret: true, icon: "placeholder" },
