@@ -7580,10 +7580,19 @@ function guestRailPlan() {
 // then left alone: a stamp that changed colour while you looked at it would read as a bug,
 // and the point is the small pleasure of noticing a different plate on the next visit. The
 // figure and caption knock out in the paper colour, so one property does the whole plate.
+// Keep the ink on the page root: the shelf and catalogue mastheads consume the same variable,
+// so the mark beside their title is always franked in the stamp's current colour too.
+function setGuestShelfInk(ink) {
+  document.documentElement.style.setProperty("--guest-shelf-ink", ink);
+  return ink;
+}
+
+function guestShelfInk() {
+  return getComputedStyle(document.documentElement).getPropertyValue("--guest-shelf-ink").trim();
+}
+
 function frankGuestStamp() {
-  const btn = $("guestShelfBtn");
-  if (!btn) return;
-  btn.style.setProperty("--gs-ink", STAMP_INKS[Math.floor(Math.random() * STAMP_INKS.length)]);
+  setGuestShelfInk(STAMP_INKS[Math.floor(Math.random() * STAMP_INKS.length)]);
 }
 
 function openGuestShelf(from) {
@@ -20015,9 +20024,9 @@ function buildDevApi() {
     // how you see all nine plates without reloading nine times.
     stamp: {
       inks: () => STAMP_INKS.slice(),
-      current: () => ($("guestShelfBtn") ? $("guestShelfBtn").style.getPropertyValue("--gs-ink").trim() : ""),
-      ink: (hex) => { const b = $("guestShelfBtn"); if (b) b.style.setProperty("--gs-ink", hex); return hex; },
-      reroll: () => { frankGuestStamp(); const b = $("guestShelfBtn"); return b ? b.style.getPropertyValue("--gs-ink").trim() : ""; },
+      current: guestShelfInk,
+      ink: setGuestShelfInk,
+      reroll: () => { frankGuestStamp(); return guestShelfInk(); },
     },
     // The scrolling desk (js/scatter.js) — cosmetic gutter incidents, props and
     // marks. All cosmetic: nothing here touches game state or storage.

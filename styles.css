@@ -4969,7 +4969,7 @@
   /* The rust of the Ruthless plate goes dusty at the standard 42% and starts reading as
      Mastery's rose, so its swipe is laid on heavier to keep the ink's brick in it. */
   .page-mark.mark-ruthless   { --mark-tint: #8c4a34; --mark-wash: 56%; }  /* the ruthless stamp's ink */
-  .page-mark.mark-guests     { --mark-tint: #35618f; }  /* the guest stamp's default plate */
+  .page-mark.mark-guests     { --mark-tint: var(--guest-shelf-ink, #35618f); }  /* this load's guest stamp plate */
   .page-mark.mark-songbook   { --mark-tint: #5f7d5a; }
   /* The mark and the "← back" link share one row, so the mark is spending the
      title's headroom. On a narrow screen at the large text size the worst case
@@ -6933,7 +6933,7 @@
      applied in app.js). The figure and the caption print in the paper colour and knock
      out of that ink, so the plate is a single colour on cream like real postage. The
      fallback here is what a page with no JS gets, so it has to be a real ink, not white. */
-  .stamp--guest { --gs-ink: #35618f; --gs-paper: #fdfaf1; }
+  .stamp--guest { --gs-ink: var(--guest-shelf-ink, #35618f); --gs-paper: #fdfaf1; }
   .stamp--guest .gs-tint { fill: var(--gs-ink); }
   .stamp--guest .gs-fig,
   .stamp--guest .stamp-cap { fill: var(--gs-paper); }
