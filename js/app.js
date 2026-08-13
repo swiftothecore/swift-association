@@ -13204,6 +13204,13 @@ function advanceRound() {
   if (revolveId) { clearInterval(revolveId); revolveId = null; }   // stop the prior round's rotation
   revolveIndex = 0;                            // Revolving Door: this round's word is slot 0
   roundNamed = [];                             // Double Trouble: no songs named on the fresh page yet
+  // Suggestions belong to the page that produced them. This must clear the backing array as
+  // well as hide the list: when a following run disables autocomplete (for example Wrapped
+  // Like A Chain's dark side), typing does not call updateDropdown, and submitAnswer would
+  // otherwise keep resolving Enter to the previous run's last suggestion instead of the title
+  // now in the input.
+  dropdownItems = [];
+  activeIndex = -1;
   suggestionIndex = -1;                        // nothing has been taken off the dropdown on this page yet
   roundClockTotal = 0;                         // and no clock is running until startTimer builds one
   checkWrinkleEgg();                           // 13:13 on the 13th, caught at the page-turn end
