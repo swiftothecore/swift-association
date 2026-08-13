@@ -65,6 +65,9 @@ export const WEEKDAYS_KEY = "swiftSongAssociation.weekdaysPlayed";     // { [0-6
 export const DATES_KEY = "swiftSongAssociation.datesPlayed";
 export const RANDOM_KEY = "swiftSongAssociation.randomSeen";           // { [token]: true } — everything the randomiser has already shown you (see RANDOM_CATEGORIES)
 export const GOAL_KEY = "swiftSongAssociation.pinnedGoal";             // { id, pinned } — the one charm pinned as a goal on the Charm Collection page
+// Which themed sections of the Charm Collection are folded shut. Only the FOLDED ids are
+// stored, so a section added later opens by default and an empty record means "all open".
+export const ACH_FOLD_KEY = "swiftSongAssociation.charmFolds";         // [sectionId] — e.g. ["core", "secret"]
 
 // Keepsakes — the collectible polaroid set (subjects + SVGs live in js/polaroids.js).
 // A polaroid develops like real instant film: solid black on unlock, the photo fading

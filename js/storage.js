@@ -4,7 +4,7 @@
 import {
   HS_KEY, RECORDS_KEY, HISTORY_KEY, STATS_KEY, ACH_KEY, DIFF_KEY,
   DAILY_KEY, DAILY_PROGRESS_KEY, DAILY_BOARD_KEY, DAILY_STREAK_KEY, TYPES_KEY, TALLY_KEY,
-  BREADTH_KEY, WEEKDAYS_KEY, DATES_KEY, EXPLORER_TOKENS, RANDOM_KEY, GOAL_KEY,
+  BREADTH_KEY, WEEKDAYS_KEY, DATES_KEY, EXPLORER_TOKENS, RANDOM_KEY, GOAL_KEY, ACH_FOLD_KEY,
   SETTINGS_KEY, METRICS_KEY, APP_PREFIX, DEFAULT_SETTINGS,
   CHALLENGES_KEY, CHALLENGE_TOKENS_KEY,
   ALBUM_FOCUS_KEY, ALBUM_FOCUS_TARGET, DIFF_RANK,
@@ -647,6 +647,28 @@ export function saveGoal(id) {
 }
 export function clearGoal() {
   try { localStorage.removeItem(GOAL_KEY); } catch (e) { /* ignore */ }
+}
+
+/* ---------- Folded sections on the Charm Collection ---------- */
+// Only the folded ids are kept. Storing the closed set rather than the open one means a
+// theme added to ACH_GROUPS later arrives open, and a cleared notebook reads as all open.
+export function loadCharmFolds() {
+  try {
+    const raw = localStorage.getItem(ACH_FOLD_KEY);
+    if (raw) { const a = JSON.parse(raw); if (Array.isArray(a)) return a.filter((id) => typeof id === "string"); }
+  } catch (e) { /* ignore */ }
+  return [];
+}
+export function setCharmFold(id, folded) {
+  const next = loadCharmFolds().filter((x) => x !== id);
+  if (folded) next.push(id);
+  try { localStorage.setItem(ACH_FOLD_KEY, JSON.stringify(next)); } catch (e) { /* ignore */ }
+  return next;
+}
+export function saveCharmFolds(ids) {
+  const next = (ids || []).filter((id) => typeof id === "string");
+  try { localStorage.setItem(ACH_FOLD_KEY, JSON.stringify(next)); } catch (e) { /* ignore */ }
+  return next;
 }
 
 /* ---------- Lifetime per-song / per-word tally ---------- */

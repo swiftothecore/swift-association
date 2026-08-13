@@ -5717,14 +5717,37 @@
   .ach-section { margin-top: 22px; display: flex; align-items: center; gap: 7px; scroll-margin-top: 18px; }
   .ach-group-dot { width: 9px; height: 9px; border-radius: 50%; flex: none; box-shadow: inset 0 0 0 1px rgba(43,39,34,0.25); }
   .ach-group-dot--secret { background: var(--ink-soft); opacity: 0.5; }
-  /* the dot's colour drawn out as a ruled line across the rest of the row. It stops flush
-     with the right edge of the charm grid below it, so the heading and its section share
-     one column edge. */
-  .ach-section::after {
-    content: ""; flex: 1 1 auto; height: 2px; border-radius: 1px; margin-left: 2px;
+  /* the dot's colour drawn out as a ruled line across the rest of the row. It runs to the
+     right edge of the charm grid below it — bar the corner it gives up to the fold toggle —
+     so the heading and its section share one column edge. */
+  .ach-section-rule {
+    flex: 1 1 auto; height: 2px; border-radius: 1px; margin-left: 2px;
     background: var(--group, var(--ink-soft)); opacity: 0.5;
   }
-  .ach-section--secret::after { opacity: 0.3; }
+  .ach-section--secret .ach-section-rule { opacity: 0.3; }
+
+  /* fold toggle: a small chevron in the corner the rule leaves free. The count beside it is
+     the folded section's receipt — it only shows once the grid is shut, so a closed theme
+     still says how much is under it. */
+  .ach-section-count {
+    font-family: var(--type); font-size: calc(9.5px + var(--text-size-adjust));
+    letter-spacing: 0.5px; color: var(--ink-soft); flex: none;
+    max-width: 0; overflow: hidden; opacity: 0;
+    transition: max-width 0.18s ease, opacity 0.18s ease;
+  }
+  .ach-section.is-folded .ach-section-count { max-width: 4ch; opacity: 0.75; }
+  .ach-section-fold {
+    flex: none; width: 22px; height: 22px; padding: 0; margin-left: 1px;
+    display: inline-flex; align-items: center; justify-content: center;
+    border: 0; border-radius: 50%; background: transparent; color: var(--ink-soft);
+    cursor: pointer; transition: color 0.15s ease, background 0.15s ease;
+  }
+  .ach-section-fold svg { width: 14px; height: 14px; transition: transform 0.18s ease; }
+  .ach-section.is-folded .ach-section-fold svg { transform: rotate(-90deg); }
+  .ach-section-fold:hover { color: var(--ink); background: rgba(43,39,34,0.07); }
+  .ach-section-fold:focus-visible { outline: 2px solid var(--ink-accent); outline-offset: 1px; }
+
+  .ach-grid--folded { display: none; }
 
   /* the pinned goal — one charm to actually go and get. Sits directly above the "long game"
      quest card and shares its proportions, but reads as a note pinned to the page rather than

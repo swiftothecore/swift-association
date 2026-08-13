@@ -78,6 +78,7 @@ import {
   loadDatesPlayed, markDatePlayed, distinctDaysPlayed, hasPlayedEveryMonth, dayStreakEnding,
   loadRandomSeen, markRandomSeen, seedRandomSeen, randomSeeded, resetRandomSeen,
   loadGoal, saveGoal, clearGoal,
+  loadCharmFolds, setCharmFold, saveCharmFolds,
   loadSongTally, saveSongTally, recordGameTally,
   loadCustom, saveCustom, activeCustomPreset, resetCustom, defaultCustomPreset,
   loadMetrics, saveMetrics, recordGameMetrics, bumpCorrectRunStreak, bumpScarfClicks,
@@ -2609,6 +2610,41 @@ function achTile(a) {
 
 const achGroupOf = (id) => ACH_GROUP_OF[id] || "core";
 
+/* One themed section of the Charm Collection: the ruled heading and the grid beneath it,
+   with a fold button parked at the far right of the rule. The rule is a real element rather
+   than the heading's ::after so the button can sit outside it and still hold the right edge
+   of the grid below — the ruled line stops short and hands the corner to the toggle.
+   `folded` only hides the grid; the heading, its count and its anchor id all stay put, so a
+   theme jump or the hints vault's door still lands somewhere meaningful. */
+function achSectionHTML(id, label, dotHTML, tiles, count, folded, headStyle = "", extraClass = "", anchorId = "", name = label) {
+  const chevron = `<svg viewBox="0 0 14 14" aria-hidden="true"><path d="M3.2 5.4 L7 9.1 L10.8 5.4" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+  return `<p class="histogram-label ach-section${folded ? " is-folded" : ""}${extraClass ? " " + extraClass : ""}" id="${anchorId || `achTheme-${id}`}"${headStyle}>` +
+    dotHTML + label +
+    `<span class="ach-section-rule"></span>` +
+    (count == null ? "" : `<span class="ach-section-count">${count}</span>`) +
+    `<button type="button" class="ach-section-fold" data-ach-fold="${id}" data-ach-fold-name="${escapeHtml(name)}"` +
+    ` aria-controls="achGrid-${id}" aria-expanded="${folded ? "false" : "true"}"` +
+    ` aria-label="${folded ? "Show" : "Hide"} ${escapeHtml(name)} charms">${chevron}</button>` +
+    `</p>` +
+    `<div class="ach-grid${folded ? " ach-grid--folded" : ""}" id="achGrid-${id}">${tiles}</div>`;
+}
+
+const isSectionFolded = (id) => loadCharmFolds().includes(id);
+
+// Fold or unfold one section of the Charm Collection, in the DOM and in storage at once.
+// Safe to call for a section that isn't on the page (the hints vault can fold "secret"
+// before the page has ever been drawn) and safe to call for a state already set.
+function setSectionFold(id, folded) {
+  setCharmFold(id, folded);
+  const btn = document.querySelector(`[data-ach-fold="${id}"]`);
+  const grid = document.getElementById(`achGrid-${id}`);
+  if (!btn || !grid) return;
+  btn.closest(".ach-section").classList.toggle("is-folded", folded);
+  btn.setAttribute("aria-expanded", folded ? "false" : "true");
+  btn.setAttribute("aria-label", `${folded ? "Show" : "Hide"} ${btn.dataset.achFoldName || ""} charms`.replace(/\s+/g, " "));
+  grid.classList.toggle("ach-grid--folded", folded);
+}
+
 function renderAchievementsPage() {
   const total = ACHIEVEMENTS.length;
   // earned, oldest → newest (the newest is the "latest charm")
@@ -2666,6 +2702,7 @@ function renderAchievementsPage() {
 
   // themed sections: earned (revealed, newest first) then visible locked targets.
   // Still-masked secrets are held back for the trailing Secret section.
+  const folded = loadCharmFolds();
   ACH_GROUPS.forEach((g) => {
     const members = ACHIEVEMENTS.filter((a) =>
       achGroupOf(a.id) === g.id && (earnedAchievements[a.id] || !achMasked(a)));
@@ -2674,8 +2711,9 @@ function renderAchievementsPage() {
       .sort((x, y) => (earnedAchievements[y.id] || "").localeCompare(earnedAchievements[x.id] || ""));
     const lockedM = members.filter((a) => !earnedAchievements[a.id]);
     const tiles = [...earnedM, ...lockedM].map(achTile).join("");
-    html += `<p class="histogram-label ach-section" id="achTheme-${g.id}" style="--group:${ACH_GROUP_COLORS[g.id]}"><span class="ach-group-dot" style="background:${ACH_GROUP_COLORS[g.id]}"></span>${g.label}</p>` +
-      `<div class="ach-grid">${tiles}</div>`;
+    const dot = `<span class="ach-group-dot" style="background:${ACH_GROUP_COLORS[g.id]}"></span>`;
+    html += achSectionHTML(g.id, g.label, dot, tiles, members.length,
+      folded.includes(g.id), ` style="--group:${ACH_GROUP_COLORS[g.id]}"`);
   });
 
   const secretLocked = secretCharmsLeft();
@@ -2689,8 +2727,11 @@ function renderAchievementsPage() {
       : `Secret charms · ${secretLocked.length}`;
     // The id is an anchor rather than a hook for styling: the Mastery hints vault's door scrolls
     // the window here, since this section is far below the fold on a full charm collection.
-    html += `<p class="histogram-label ach-section ach-section--secret" id="achSecretSection"><span class="ach-group-dot ach-group-dot--secret"></span>${secretLabel}</p>` +
-      `<div class="ach-grid">${secretLocked.map(achTile).join("")}</div>`;
+    html += achSectionHTML("secret", secretLabel,
+      `<span class="ach-group-dot ach-group-dot--secret"></span>`,
+      // the unrevealed label already carries the count, so the folded receipt would double it
+      secretLocked.map(achTile).join(""), revealed ? secretLocked.length : null,
+      folded.includes("secret"), "", "ach-section--secret", "achSecretSection", "secret");
   }
 
   $("achievementsBody").innerHTML = html;
@@ -2720,9 +2761,16 @@ function renderAchievementsPage() {
     next.addEventListener("click", () => { latestIndex += 1; showLatestCharm(); });
     showLatestCharm();
   }
+  // Folding is done in place rather than by re-rendering: the page is long, and a re-render
+  // would throw away the reader's scroll position on the very gesture meant to shorten it.
+  $("achievementsBody").querySelectorAll("[data-ach-fold]").forEach((btn) =>
+    btn.addEventListener("click", () => setSectionFold(btn.dataset.achFold, !isSectionFolded(btn.dataset.achFold))));
   $("achievementsBody").querySelectorAll("[data-ach-theme]").forEach((theme) =>
     theme.addEventListener("click", () => {
       const section = document.getElementById(`achTheme-${theme.dataset.achTheme}`);
+      // Jumping to a theme you folded shut should open it — otherwise the jump lands on a
+      // heading with nothing under it and reads as a broken link.
+      setSectionFold(theme.dataset.achTheme, false);
       if (section) section.scrollIntoView({
         behavior: motionReduced() ? "auto" : "smooth",
         block: "start",
@@ -3801,6 +3849,7 @@ function openAchievements(from, focus) {
   renderAchievementsPage();
   flipAwayToScreen("achievements");
   if (focus === "secret") {
+    setSectionFold("secret", false);   // a door that opens onto a folded section opens onto nothing
     revealAfterFlip(() => document.getElementById("achSecretSection"), { pad: 18 });
   }
 }
@@ -19417,6 +19466,16 @@ function buildDevApi() {
       repin: () => { const id = pickGoal((loadGoal() || {}).id); if (id) saveGoal(id); if ($("achievementsBody")) renderAchievementsPage(); return id; },
       go: () => playGoal(),                            // the play button, from the console
       clear: () => { clearGoal(); if ($("achievementsBody")) renderAchievementsPage(); return "pin cleared — next render draws fresh"; },
+    },
+    // Folded sections on the Charm Collection. Folding by hand takes a click per theme, which
+    // is a slow way to reach the two states worth eyeballing: everything shut (does the page
+    // still read as a page?) and everything open again.
+    folds: {
+      show: () => ({ folded: loadCharmFolds(), sections: [...ACH_GROUPS.map((g) => g.id), "secret"] }),
+      // Fold or unfold one section by id — a group id, or "secret" for the trailing one.
+      set: (id, folded = true) => { setSectionFold(id, !!folded); return loadCharmFolds(); },
+      all: () => { [...ACH_GROUPS.map((g) => g.id), "secret"].forEach((id) => setSectionFold(id, true)); return loadCharmFolds(); },
+      none: () => { saveCharmFolds([]); if ($("achievementsBody")) renderAchievementsPage(); return "all sections open"; },
     },
     // Normal-mode novelty bias — the coverage nudge that favours un-encountered words in Normal.
     // "Encountered" is read from the lifetime tally (words + misses), so there's no separate store
