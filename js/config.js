@@ -2520,16 +2520,16 @@ export const ACHIEVEMENTS = [
      can be missed by having already passed some milestone. The end-of-run half all demand a
      FULL thirteen pages, and the mid-run half unlock the moment they happen. Icons are
      placeholders pending the batch's real marks. */
-  { id: "answer-all-13-rounds-under-3s", name: "Faster Than The Wind", desc: "Answer all 13 rounds in under 3s each", secret: false, icon: "placeholder" },
+  { id: "answer-all-13-rounds-under-3s", name: "Faster Than The Wind", desc: "Answer all 13 rounds in under 3s each", secret: false, icon: "placeholder", sitting: true, earn: { cat: "difficulty" } },
   // Easy and Relaxed only, and that is the charm rather than a limitation of it: Normal's
   // clock is 10s, so "every answer over 10 seconds" cannot happen there, and Hard and Ultra
   // are shorter still. Sitting on a page you have already solved is the whole feat.
   { id: "win-with-every-answer-over-10s", name: "Slow Motion", desc: "Win with every answer over 10s (Easy or Relaxed)", secret: true, icon: "placeholder" },
   { id: "answer-in-final-second-all-13-rounds", name: "I Take My Time", desc: "Answer in the final second on all 13 rounds", secret: true, icon: "placeholder" },
-  { id: "answer-under-1s-three-rounds-running", name: "Just Like That", desc: "Answer in under a second three rounds running", secret: false, icon: "placeholder" },
-  { id: "perfect-13-every-answer-under-2s", name: "You Are The Best Thing", desc: "Perfect 13/13 with every answer under 2s", secret: false, icon: "placeholder" },
-  { id: "win-without-clock-dropping-below-half", name: "The Whole Way Home", desc: "Win without the clock dropping below half", secret: false, icon: "placeholder" },
-  { id: "perfect-13-no-wrong-submissions", name: "One For The Money", desc: "Perfect 13/13 with no wrong submissions", secret: false, icon: "placeholder" },
+  { id: "answer-under-1s-three-rounds-running", name: "Just Like That", desc: "Answer in under a second three rounds running", secret: false, icon: "placeholder", sitting: true, earn: { cat: "difficulty" } },
+  { id: "perfect-13-every-answer-under-2s", name: "You Are The Best Thing", desc: "Perfect 13/13 with every answer under 2s", secret: false, icon: "placeholder", sitting: true, earn: { cat: "difficulty" } },
+  { id: "win-without-clock-dropping-below-half", name: "The Whole Way Home", desc: "Win without the clock dropping below half", secret: false, icon: "placeholder", sitting: true, earn: { cat: "difficulty" } },
+  { id: "perfect-13-no-wrong-submissions", name: "One For The Money", desc: "Perfect 13/13 with no wrong submissions", secret: false, icon: "placeholder", sitting: true, earn: { cat: "difficulty" } },
   { id: "submit-same-wrong-answer-5-times-one-round", name: "I Once Was Poison Ivy", desc: "Submit the same wrong answer 5 times in one round", secret: true, icon: "placeholder" },
   { id: "answer-right-with-song-given-wrongly-earlier", name: "Lost In Translation", desc: "Answer right with a song you gave wrongly earlier", secret: true, icon: "placeholder" },
   { id: "answer-13-wrong-having-typed-every-round", name: "I Was Wrong", desc: "Answer 13 wrong, having typed something every round", secret: true, icon: "placeholder" },
@@ -2543,10 +2543,10 @@ export const ACHIEVEMENTS = [
      standing condition that comes round again rather than a window that closes. Icons are
      placeholders pending the batch's real marks; the secret ones join HIDDEN_ACH_IDS in the
      batch's secrecy phase, which is a deliberate edit of its own. */
-  { id: "perfect-13-all-one-album", name: "This Is Our Place", desc: "Score 13/13 all from one album", secret: false, icon: "placeholder" },
+  { id: "perfect-13-all-one-album", name: "This Is Our Place", desc: "Score 13/13 all from one album", secret: false, icon: "placeholder", sitting: true, earn: { cat: "difficulty" } },
   /* The nemesis thread. The tally is folded once per finished game, so a word missed three
      times in one run counts once — which is exactly what "three separate games" wants. */
-  { id: "answer-word-missed-in-earlier-game", name: "The Moment I Knew", desc: "Answer a word you missed in an earlier game", secret: false, icon: "placeholder" },
+  { id: "answer-word-missed-in-earlier-game", name: "The Moment I Knew", desc: "Answer a word you missed in an earlier game", secret: false, icon: "placeholder", sitting: true, earn: { cat: "difficulty" } },
   { id: "miss-same-word-in-3-games", name: "Haunted", desc: "Miss the same word in 3 separate games", secret: true, icon: "placeholder" },
   // The lower rung of a two-step ladder with The Cycle Ends: this one asks only that the word
   // you have missed MOST has finally fallen, where The Cycle Ends holds out for a word that
@@ -2557,10 +2557,13 @@ export const ACHIEVEMENTS = [
      game type: the sandboxed types are invisible to them, neither extending nor breaking a
      chain, which is the rule noTimeoutStreak already set for a cross-run counter. */
   { id: "score-zero-then-perfect-13-next-game", name: "What Died Didn't Stay Dead", desc: "Score 0/13, then 13/13 the next game", secret: true, icon: "placeholder" },
-  { id: "perfect-13-two-games-in-row", name: "Two For The Show", desc: "Score two perfect 13/13 games in a row", secret: false, icon: "placeholder" },
+  { id: "perfect-13-two-games-in-row", name: "Two For The Show", desc: "Score two perfect 13/13 games in a row", secret: false, icon: "placeholder", sitting: true, earn: { cat: "difficulty" } },
   { id: "same-final-score-3-games-in-row", name: "It's All The Same", desc: "Finish on the same score three games running", secret: true, icon: "placeholder" },
   /* The long haul. The three dated ones read the calendar ledger rather than the run history,
-     which is capped — see DATES_KEY. */
+     which is capped — see DATES_KEY. None of these carry `sitting`, and neither does I Just
+     Know or You Learn My Secrets: the goal card only ever pins what an evening could actually
+     close, and a charm measured in months or in a word you cannot ask to be dealt would sit
+     there as a reproach rather than a destination. */
   { id: "play-7-days-in-row", name: "Running Like Water", desc: "Play seven days in a row", secret: false, icon: "placeholder" },
   { id: "play-on-13-different-days", name: "I'm Thirteen Now", desc: "Play on 13 different days", secret: false, icon: "placeholder" },
   { id: "play-in-every-month", name: "Brave The Seasons", desc: "Play in all twelve months of the year", secret: false, icon: "placeholder" },
