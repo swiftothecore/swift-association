@@ -1972,9 +1972,22 @@ const HIDDEN_ACH_IDS = [
   // Is It Over Now? cost a little more, and three of them are failures you have to go and
   // commit on purpose once you know they exist.
   "take-commonest-only-here-card", "name-redacted-song-after-buying-all-strips", "time-out-all-10-only-here-pages", "finish-bonus-run-one-page-short-of-sweep", "flag-spot-the-slip-impostor-under-2s",
-  // The scarf. First of the Core batch's secrets to be listed here; the rest join it when that
-  // pass is done, which is what makes Is It Over Now? dearer by design rather than by drift.
+  /* The Core batch's twenty-three secrets, the scarf first. Listing them roughly two-thirds
+     again on the capstone's price, which is the deliberate reading of it: leaving them out
+     would make Is It Over Now?'s own description untrue the moment they shipped. Grouped the
+     way the batch was classified — how a page was answered, how a run went, what was typed,
+     and what the calendar said — rather than in file order, so a future reconsideration can
+     see the shape of what it is arguing with. */
   "tap-scarf-doodle-13-times",
+  "win-with-every-answer-over-10s", "answer-in-final-second-all-13-rounds", "time-out-with-right-answer-typed",
+  "type-nothing-until-2s-left-then-answer-right", "take-first-suggestion-all-13-rounds",
+  "submit-same-wrong-answer-5-times-one-round", "answer-right-with-song-given-wrongly-earlier",
+  "answer-13-wrong-having-typed-every-round", "miss-round-after-every-hint",
+  "miss-same-word-in-3-games", "score-zero-then-perfect-13-next-game", "same-final-score-3-games-in-row",
+  "answer-same-song-twice-in-row", "answer-same-song-3-times-one-game",
+  "submit-answer-in-all-caps", "submit-prompt-word-as-answer", "play-word-from-searcher",
+  "answer-august-in-august", "score-7-on-the-7th", "play-whole-game-in-3am-hour",
+  "play-at-1313-on-the-13th", "play-on-taylors-birthday",
 ];
 
 // Re-evaluated after every unlock (each unlock no-ops if already earned, so this is safe to
