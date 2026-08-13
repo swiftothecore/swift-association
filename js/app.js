@@ -2632,13 +2632,13 @@ function renderAchievementsPage() {
     `<div class="cat-bar"><div class="cat-seg" style="width:${(earnedCount / total) * 100}%;background:var(--ink-accent)"></div></div>` +
     `</div>`;
 
-  // newest charm as a proper keepsake — its real icon, the name (wraps), and the date.
+  // Newest charm as a proper keepsake. Once there is more than one, the corner buttons let
+  // the player leaf back through the earned set and then forward to the newest again.
   const latest = earnedAsc[earnedAsc.length - 1];
-  const latestCard = latest ? `<div class="ach-latest">` +
-    `<span class="ach-latest-charm">${charmMarkup(latest.icon, achColor(latest))}</span>` +
-    `<div class="ach-latest-text"><div class="ach-latest-label">your newest charm</div>` +
-    `<div class="ach-latest-name">${escapeHtml(latest.name)}</div>` +
-    `<div class="ach-latest-meta">${escapeHtml(latest.desc)} · ${recordDateLabel(earnedAchievements[latest.id])}</div></div>` +
+  const latestCard = latest ? `<div class="ach-latest" data-ach-latest>` +
+    `<div class="ach-latest-view" data-ach-latest-view aria-live="polite"></div>` +
+    `<button type="button" class="ach-latest-nav ach-latest-prev" data-ach-latest-prev aria-label="Show previous charm">←</button>` +
+    `<button type="button" class="ach-latest-nav ach-latest-next" data-ach-latest-next aria-label="Show next charm">→</button>` +
     `</div>` :
     `<div class="ach-latest ach-latest--empty"><div class="ach-latest-text">` +
     `<div class="ach-latest-label">your newest charm</div>` +
@@ -2684,6 +2684,29 @@ function renderAchievementsPage() {
   }
 
   $("achievementsBody").innerHTML = html;
+  const latestView = $("achievementsBody").querySelector("[data-ach-latest-view]");
+  if (latestView) {
+    let latestIndex = earnedAsc.length - 1;
+    const previous = $("achievementsBody").querySelector("[data-ach-latest-prev]");
+    const next = $("achievementsBody").querySelector("[data-ach-latest-next]");
+    const showLatestCharm = () => {
+      const charm = earnedAsc[latestIndex];
+      const isNewest = latestIndex === earnedAsc.length - 1;
+      const label = isNewest
+        ? "your newest charm"
+        : `earlier charm · ${latestIndex + 1} of ${earnedAsc.length}`;
+      latestView.innerHTML =
+        `<span class="ach-latest-charm">${charmMarkup(charm.icon, achColor(charm))}</span>` +
+        `<div class="ach-latest-text"><div class="ach-latest-label">${label}</div>` +
+        `<div class="ach-latest-name">${escapeHtml(charm.name)}</div>` +
+        `<div class="ach-latest-meta">${escapeHtml(charm.desc)} · ${recordDateLabel(earnedAchievements[charm.id])}</div></div>`;
+      previous.disabled = latestIndex === 0;
+      next.disabled = isNewest;
+    };
+    previous.addEventListener("click", () => { latestIndex -= 1; showLatestCharm(); });
+    next.addEventListener("click", () => { latestIndex += 1; showLatestCharm(); });
+    showLatestCharm();
+  }
   $("achievementsBody").querySelectorAll("[data-ach-theme]").forEach((theme) =>
     theme.addEventListener("click", () => {
       const section = document.getElementById(`achTheme-${theme.dataset.achTheme}`);
