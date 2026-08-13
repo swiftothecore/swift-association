@@ -5701,9 +5701,11 @@
   }
   .ach-section--secret .ach-section-rule { opacity: 0.3; }
 
-  /* fold toggle: a small chevron in the corner the rule leaves free. The count beside it is
-     the folded section's receipt — it only shows once the grid is shut, so a closed theme
-     still says how much is under it. */
+  /* fold toggle: a small chevron in the corner the rule leaves free, inked in the section's
+     own colour so the dot, the rule and the toggle read as one heading. It sits a touch
+     stronger than the rule's 0.5 because a 14px stroke needs it, and goes to full on hover.
+     The count beside it is the folded section's receipt — it only shows once the grid is
+     shut, so a closed theme still says how much is under it. */
   .ach-section-count {
     font-family: var(--type); font-size: calc(9.5px + var(--text-size-adjust));
     letter-spacing: 0.5px; color: var(--ink-soft); flex: none;
@@ -5714,12 +5716,14 @@
   .ach-section-fold {
     flex: none; width: 22px; height: 22px; padding: 0; margin-left: 1px;
     display: inline-flex; align-items: center; justify-content: center;
-    border: 0; border-radius: 50%; background: transparent; color: var(--ink-soft);
-    cursor: pointer; transition: color 0.15s ease, background 0.15s ease;
+    border: 0; border-radius: 50%; background: transparent;
+    color: var(--group, var(--ink-soft)); opacity: 0.7;
+    cursor: pointer; transition: opacity 0.15s ease, background 0.15s ease;
   }
+  .ach-section--secret .ach-section-fold { opacity: 0.45; }
   .ach-section-fold svg { width: 14px; height: 14px; transition: transform 0.18s ease; }
   .ach-section.is-folded .ach-section-fold svg { transform: rotate(-90deg); }
-  .ach-section-fold:hover { color: var(--ink); background: rgba(43,39,34,0.07); }
+  .ach-section-fold:hover { opacity: 1; background: rgba(43,39,34,0.07); }
   .ach-section-fold:focus-visible { outline: 2px solid var(--ink-accent); outline-offset: 1px; }
 
   .ach-grid--folded { display: none; }
