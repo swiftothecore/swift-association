@@ -5654,7 +5654,7 @@
   .ach-theme-bar { height: 7px; border-radius: 4px; background: rgba(43,39,34,0.10); overflow: hidden; }
   .ach-theme-bar > div { height: 100%; border-radius: 4px; }
 
-  .ach-head-row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; align-items: stretch; margin-bottom: 8px; }
+  .ach-head-row { display: grid; grid-template-columns: minmax(0, 0.88fr) minmax(0, 1.12fr); gap: 12px; align-items: stretch; margin-bottom: 8px; }
   .ach-head-row .cat-meter { margin-bottom: 0; }
 
   /* latest charm — a proper keepsake: real icon + wrapping name + date */
