@@ -25,7 +25,7 @@ import {
   PRESS_RIDE_STEP, PRESS_CHARM_RIDE, PRESS_FLOURISH_RIDE, RISK_MAX_STAKE, RISK_TOKENS, RISK_TOKEN_VALUE,
   ALBUM_FOCUS_DIFFS, ALBUM_FOCUS_TARGET,
   GUEST_SHELF_SLOTS, GUESTS, GUEST_DIFFS, GUEST_TARGET, TAYLOR_BUCKETS,
-  ADAPTIVE_BUCKETS, ADAPTIVE_LEVELS, ADAPT_MAX_LEVEL, ADAPT_START_LEVEL, ADAPT_PROMO_STREAK, ADAPT_NODROP_LEVEL,
+  ADAPT_BUCKETS, ADAPT_LEVELS, ADAPT_MAX_LEVEL, ADAPT_START_LEVEL, ADAPT_PROMO_STREAK,
   CUSTOM_SECONDS_MIN, CUSTOM_SECONDS_MAX, CUSTOM_SECONDS_TYPED_MAX, CUSTOM_HINT_MAX,
   CUSTOM_HINT_TYPED_MAX, CUSTOM_HINT_UNLIMITED, CUSTOM_POOLS,
   CUSTOM_EXAMPLES_MAX, CUSTOM_MAX_PRESETS, CUSTOM_NAME_MAX, CUSTOM_DEFAULT_MODE,
@@ -88,7 +88,7 @@ import {
   loadChallengeTokens, saveChallengeTokens, resetChallenges,
   loadAlbumFocus, saveAlbumFocus, albumFocusRecord, recordAlbumFocusRun, resetAlbumFocus,
   loadGuests, saveGuests, guestRecord, recordGuestRun, resetGuests,
-  adaptiveRecord, recordAdaptiveRun,
+  purgeAdaptive,
   bonusRecord, recordBonusRun, resetBonus, seedBonusSweep,
   ruthlessRecord, recordRuthlessRun, resetRuthless,
   resetRecords, resetStatsAll, resetAchievements, resetTally, resetDaily, clearAllData,
@@ -193,7 +193,7 @@ let runFolded = false;   // partial/full stats already saved for the current run
 let hintTier = 0;        // hints revealed this round (0..3); reset each round
 let roundHintSong = null;// the valid song this round's hints zoom in on
 let hintUrgeTimer = null;// idle nudge timer for Relaxed (no clock)
-let gameType = "classic";       // "classic" (fixed 13) | "infinite" (until lives run out) | "adaptive" (fixed 13, floating rarity) | "daily" | "challenge" | "album" | "custom" (player-authored levers, sandboxed) | "guest" (another artist's catalogue, sandboxed) | "ruthless" (ten timed pages on a section lens, sandboxed)
+let gameType = "classic";       // "classic" (fixed 13) | "infinite" (until lives run out) | "daily" | "challenge" | "album" | "custom" (player-authored levers, sandboxed) | "guest" (another artist's catalogue, sandboxed) | "ruthless" (ten timed pages on a section lens, sandboxed)
 let customPreset = null;        // Custom mode: the active preset {id,name,mode} while gameType === "custom"
 let customSessionLen = 0;       // Custom mode: rounds this run (finite runs). 0 while running an infinite custom run
 let focusAlbum = null;          // Album Focus: the locked-in studio album while gameType === "album"
@@ -201,12 +201,8 @@ let focusDifficulty = null;     // Album Focus / guest run: the chosen MODES id 
 let guestRunId = null;          // Guest shelf: the guest whose catalogue is loaded while gameType === "guest"
 let infiniteVariant = "3lives"; // "3lives" | "sudden"
 let lives = 0;                  // remaining lives in infinite mode
-let adaptiveLevel = ADAPT_START_LEVEL; // Adaptive: current rarity level (1..4), floats with performance
-let adaptivePeak = ADAPT_START_LEVEL;  // Adaptive: highest level reached this run (the board metric)
-let adaptivePromo = 0;          // Adaptive: correct-in-a-row at the current level toward promotion
-let adaptiveReachedTop = false; // Adaptive: ever hit the Rarest tier this run (for The Lakes)
-let adaptiveHeldTop = true;     // Adaptive: still true if no miss has landed since reaching the top (for Stay Stay Stay)
-let adaptiveDropAnnounced = true; // Adaptive: the dropdown state the player was last shown a curtain for (starts on, at L2)
+let floatLevel = ADAPT_START_LEVEL; // Floating rarity pool: current level (1..4), climbs and falls with performance
+let floatPromo = 0;             // Floating rarity pool: correct-in-a-row at the current level toward promotion
 let dailyRng = null;            // seeded PRNG, non-null only during a daily game
 let dailyAlbumPool = null;      // on an album-anniversary daily: [{ w, songs, catalogue, score }] the album's words by distinctiveness-desc; null otherwise
 let dailyAlbum = null;          // the album that daily leans toward, non-null only alongside dailyAlbumPool (locks the run's era wash)
@@ -1088,7 +1084,7 @@ function pickEra() {
   if (gameType === "daily" && dailyAlbum) return ALBUM_ERA[dailyAlbum] || "gold";
   let pool;
   // Round-5/round-13 biases apply to any fixed 13-round run (classic + daily + challenge).
-  const fixedRun = gameType === "classic" || gameType === "daily" || gameType === "challenge" || gameType === "adaptive";
+  const fixedRun = gameType === "classic" || gameType === "daily" || gameType === "challenge";
   if (fixedRun && round === 5) pool = TENDER_ERAS;
   else if (fixedRun && round === TOTAL_ROUNDS) pool = FINALE_ERAS;
   else pool = ERAS.filter((e) => !recentEras.includes(e));
@@ -1125,7 +1121,8 @@ function effectiveNoTitle() {
   return currentMode.noTitle;
 }
 function effectivePool() {
-  if (gameType === "adaptive") return ADAPTIVE_BUCKETS[adaptiveLevel] || "all";   // Adaptive: level drives the rarity bucket
+  // Custom's "Floating" stop: the level drives the rarity bucket instead of a pinned one.
+  if (floatingPoolNow()) return ADAPT_BUCKETS[floatLevel] || "all";
   if (perkPoolOverride) return perkPoolOverride;   // Choose Your Path: Crowd Pleaser
   if (gameType === "challenge" && currentChallenge) {
     if (currentChallenge.rule === "devil" && devilPoolHard) return "hard";   // Devil's Path: Rarer Air
@@ -1139,9 +1136,15 @@ function effectivePool() {
 function effectiveDropdown() {
   if (lyricModeNow()) return false;
   if (gameType === "challenge" && currentChallenge && currentChallenge.rule === "devil" && devilDropOff) return false;
-  // Adaptive: the rarest tiers switch suggestions off so they test recall, not recognition.
-  if (gameType === "adaptive" && adaptiveLevel >= ADAPT_NODROP_LEVEL) return false;
   return currentMode.dropdown;
+}
+// Is this run riding the floating rarity ladder? Only Custom offers it, and only when the
+// player picked that stop on the rarity lever. Deliberately reads the LIVE mode rather than
+// the stored preset, so a normalised-away value can't leave the gauge showing on a run whose
+// pool is pinned. Rarity is all it touches: suggestions, hints and the clock stay exactly as
+// the preset authored them, because a stop on one lever must not silently move another.
+function floatingPoolNow() {
+  return gameType === "custom" && currentMode.pool === "float";
 }
 // Whether THIS page accepts only a sung lyric line (no title): Lyricist mode always, and
 // Switch-Up on a lyric page.
@@ -1290,16 +1293,14 @@ function renderStats(lastScore, viewMode = defaultStatsView()) {
   if (viewMode === "classic") viewMode = lastStatsDifficulty || currentMode.id;
   const isAll = viewMode === "all";
   const isInf = viewMode === "infinite";
-  const isAdaptive = viewMode === "adaptive";
-  const isClassic = !isAll && !isInf && !isAdaptive; // a difficulty mode id
+  const isClassic = !isAll && !isInf;   // a difficulty mode id
   if (isClassic) lastStatsDifficulty = viewMode;
   // Two-tier tabs (mirrors the start screen). Tier 1 = view / game type:
-  // All · Classic · Infinite · Adaptive. Tier 2 = difficulty, shown only under Classic.
+  // All · Classic · Infinite. Tier 2 = difficulty, shown only under Classic.
   const tier1 = `<div class="mode-tabs stats-tabs">` +
     `<button type="button" class="mode-tab${isAll ? " active" : ""}" data-statmode="all">All</button>` +
     `<button type="button" class="mode-tab${isClassic ? " active" : ""}" data-statmode="classic">Classic</button>` +
     `<button type="button" class="mode-tab mode-tab--inf${isInf ? " active" : ""}" data-statmode="infinite">${INF_GLYPH}Infinite</button>` +
-    `<button type="button" class="mode-tab${isAdaptive ? " active" : ""}" data-statmode="adaptive">Adaptive</button>` +
     `</div>`;
   const tier2 = isClassic
     ? `<div class="mode-tabs stats-subtabs">` + MODE_ORDER.map((m) =>
@@ -1311,14 +1312,6 @@ function renderStats(lastScore, viewMode = defaultStatsView()) {
   // Infinite is its own game type — its own headline + ledger, not the 0–13 histogram.
   if (isInf) {
     el.innerHTML = tabs + infiniteTabHTML();
-    el.querySelectorAll("[data-statmode]").forEach((b) =>
-      b.addEventListener("click", () => renderStats(lastScore, b.dataset.statmode)));
-    return;
-  }
-
-  // Adaptive is its own game type too — ranked on the peak level reached, not a 0–13 score.
-  if (isAdaptive) {
-    el.innerHTML = tabs + adaptiveTabHTML();
     el.querySelectorAll("[data-statmode]").forEach((b) =>
       b.addEventListener("click", () => renderStats(lastScore, b.dataset.statmode)));
     return;
@@ -1790,41 +1783,6 @@ function infiniteTabHTML() {
     `<table class="inf-ledger"><thead><tr><th></th>${colHead("3lives")}${colHead("sudden")}</tr></thead>` +
     `<tbody>${rows}</tbody></table>` +
     `<p class="inf-foot">${totalGames} infinite game${totalGames === 1 ? "" : "s"} played · the circle marks your all-time best</p>`;
-}
-
-// Adaptive stats: the headline is the highest level ever reached (the board metric),
-// with the four-rung ladder shown so the player can see where they've topped out.
-function adaptiveTabHTML() {
-  const rec = adaptiveRecord();
-  if (!rec.played) {
-    return `<p class="stats-empty">no adaptive runs yet — try Adaptive mode!</p>`;
-  }
-  const peakName = ADAPTIVE_LEVELS[rec.bestPeak] || "";
-  const hero = `
-    <div class="inf-hero">
-      <div class="inf-medallion">
-        <b>${rec.bestPeak}</b><span>level</span>
-      </div>
-      <div class="inf-hero-text">
-        <div class="inf-hero-title">highest you've climbed</div>
-        <div class="inf-hero-sub">${escapeHtml(peakName)} · ${rec.bestScore}/${TOTAL_ROUNDS} that run</div>
-      </div>
-    </div>`;
-  // The ladder: each rung lit up to the best peak, the top one circled.
-  const rungs = [];
-  for (let lvl = ADAPT_MAX_LEVEL; lvl >= 1; lvl--) {
-    const reached = lvl <= rec.bestPeak;
-    const top = lvl === rec.bestPeak;
-    rungs.push(
-      `<tr class="adapt-rung${reached ? " reached" : ""}${top ? " peak" : ""}">` +
-      `<th class="adapt-rung-lvl">L${lvl}</th>` +
-      `<td class="adapt-rung-name">${escapeHtml(ADAPTIVE_LEVELS[lvl] || "")}</td>` +
-      `<td class="adapt-rung-mark">${top ? "★ your peak" : reached ? "reached" : "—"}</td></tr>`
-    );
-  }
-  return hero +
-    `<table class="adapt-ladder"><tbody>${rungs.join("")}</tbody></table>` +
-    `<p class="inf-foot">${rec.played} adaptive game${rec.played === 1 ? "" : "s"} played · ranked on the level you reach, not your score</p>`;
 }
 
 /* ---------- Achievements ---------- */
@@ -2808,7 +2766,7 @@ function albumRainbowSegs(byAlbum, total) {
    The draw picks a CATEGORY first and only then a charm inside it. Flat over charms would be
    badly lopsided — 26 of the ~45 placeable charms are a plain classic run — and the goal would
    read as "go play a difficulty" more than half the time. Weighting by category is what makes
-   Guest, Adaptive and Album goals show up as often as classic ones. */
+   Guest, Custom and Album goals show up as often as classic ones. */
 function goalPool() {
   return ACHIEVEMENTS.filter((a) => a.sitting && !a.secret && !earnedAchievements[a.id]);
 }
@@ -3027,7 +2985,7 @@ function fmtTime(sec) {
 // as stats and history don't. Bonus games never reach this path at all.
 function crossGameStreakCounts() {
   if (devNoLog) return false;
-  return gameType === "classic" || gameType === "infinite" || gameType === "adaptive"
+  return gameType === "classic" || gameType === "infinite"
       || gameType === "daily" || gameType === "album";
 }
 
@@ -3061,7 +3019,6 @@ function modeLabel(token) {
     const l = ruthlessLens(token.slice(3));
     return l ? "Ruthless · " + l.label : "Ruthless";
   }
-  if (token === "adaptive") return "Adaptive";
   if (token && token.startsWith("inf-")) {
     const parts = token.split("-");   // ["inf", variant, mode]
     return (VARIANT_LABELS[parts[1]] || parts[1]) + " · " + (MODES[parts[2]] ? MODES[parts[2]].label : parts[2]);
@@ -3069,7 +3026,6 @@ function modeLabel(token) {
   return MODES[token] ? MODES[token].label : (token || "—");
 }
 const isInfiniteToken = (token) => !!token && token.startsWith("inf-");
-const isAdaptiveToken = (token) => token === "adaptive";
 const isRuthlessToken = (token) => !!token && token.startsWith("rl-");
 // Compact "your best" line for a single mode (start screen + results). Shows the
 // mode's top personal record, or a target line if you've never finished a run in it.
@@ -3152,12 +3108,11 @@ function appendHistoryRows(hist) {
   if (!rowsEl) return;
   const next = hist.slice(historyShown, historyShown + HISTORY_PAGE);
   rowsEl.insertAdjacentHTML("beforeend", next.map((h) => {
-    const adaptive = isAdaptiveToken(h.m);
     // A Ruthless row is the one whose score is not out of thirteen: it counts the pages NAMED
     // out of the ten the run dealt, and its RECORD is the time in the next column over.
     const ruthless = isRuthlessToken(h.m);
-    const unit = (isInfiniteToken(h.m) || adaptive) ? "" : "/" + (ruthless ? (h.n || BONUS_ROUNDS) : TOTAL_ROUNDS);
-    const scoreText = adaptive ? `<span class="lvl-prefix">L</span>${h.s}` : "" + h.s;
+    const unit = isInfiniteToken(h.m) ? "" : "/" + (ruthless ? (h.n || BONUS_ROUNDS) : TOTAL_ROUNDS);
+    const scoreText = "" + h.s;
     // ...so the crown has to be won on the time, and won LOW. Crowning ten-out-of-ten would
     // crown most rows of a lens and say nothing about which run was the good one.
     const isPB = ruthless
@@ -3799,7 +3754,7 @@ function renderRecordsPage() {
 
   const hist = loadHistory();
   _pbByMode = {};
-  for (const h of hist) if (!(h.m in _pbByMode)) _pbByMode[h.m] = h.m === "daily" ? db : h.m === "adaptive" ? (adaptiveRecord().bestPeak || -1) : (loadRecords(h.m)[0] ? loadRecords(h.m)[0].score : -1);
+  for (const h of hist) if (!(h.m in _pbByMode)) _pbByMode[h.m] = h.m === "daily" ? db : (loadRecords(h.m)[0] ? loadRecords(h.m)[0].score : -1);
   const histBlock = hist.length
     ? `<p class="rec-group-label">history — ${hist.length} run${hist.length === 1 ? "" : "s"}</p>` +
       `<div class="hist-head"><span>score</span><span>time</span><span>verse</span><span>mode</span><span>date</span></div>` +
@@ -7863,12 +7818,6 @@ function buildCardMeta() {
     stats.push({ v: String(roundResults.length), l: "rounds" });
     stats.push({ v: String(correct), l: "strung" });
     if (runTime != null) stats.push({ v: fmtTime(runTime), l: "on the clock" });
-  } else if (gameType === "adaptive") {
-    const name = ADAPTIVE_LEVELS[adaptivePeak] || "";
-    title = adaptivePeak >= ADAPT_MAX_LEVEL ? "climbed all the way up ★" : "how high you climbed";
-    stats.push({ v: "Adaptive", l: "mode" });
-    stats.push({ v: "L" + adaptivePeak, l: name || "peak level" });
-    stats.push({ v: correct + "/" + TOTAL_ROUNDS, l: "strung" });
   } else if (gameType === "album" && focusAlbum) {
     const perfect = correct === TOTAL_ROUNDS;
     title = perfect ? focusAlbum + ", start to finish ★" : "an album, in beads";
@@ -8139,52 +8088,47 @@ function renderLives() {
   el.classList.add("show");
 }
 
-/* ---------- Adaptive level ---------- */
+/* ---------- Floating rarity level (Custom's "Floating" pool) ---------- */
 // Move the rarity level after a verdict: promote-slow (ADAPT_PROMO_STREAK correct at a
 // level climbs one), demote-fast (any miss/timeout drops one). The visible level maps
 // exactly onto the bucket in play; the promo sub-meter shows progress toward the next.
-function adaptiveAdjust(correct) {
+function floatAdjust(correct) {
   if (correct) {
-    adaptivePromo++;
-    if (adaptivePromo >= ADAPT_PROMO_STREAK && adaptiveLevel < ADAPT_MAX_LEVEL) {
-      adaptiveLevel++;
-      adaptivePromo = 0;
-    } else if (adaptiveLevel >= ADAPT_MAX_LEVEL) {
-      adaptivePromo = 0;   // already at the ceiling — keep the meter empty, no overflow
+    floatPromo++;
+    if (floatPromo >= ADAPT_PROMO_STREAK && floatLevel < ADAPT_MAX_LEVEL) {
+      floatLevel++;
+      floatPromo = 0;
+    } else if (floatLevel >= ADAPT_MAX_LEVEL) {
+      floatPromo = 0;   // already at the ceiling — keep the meter empty, no overflow
     }
   } else {
-    adaptivePromo = 0;
-    if (adaptiveLevel > 1) adaptiveLevel--;
+    floatPromo = 0;
+    if (floatLevel > 1) floatLevel--;
   }
-  adaptivePeak = Math.max(adaptivePeak, adaptiveLevel);
-  // Adaptive charms: Those Windermere Peaks the moment you touch the Rarest tier; Held On Tight stays
-  // alive only while no miss has landed since reaching the top (judged at endAdaptive).
-  if (adaptiveLevel >= ADAPT_MAX_LEVEL) { adaptiveReachedTop = true; unlock("reach-rarest-tier-adaptive"); }
-  if (!correct && adaptiveReachedTop) adaptiveHeldTop = false;
-  renderAdaptiveGauge();
+  renderFloatGauge();
 }
 
 // The visible rarity gauge: four tier pips lit up to the current level, with a promo
-// sub-meter filling toward the next. Only shown in Adaptive; every other mode hides it.
-function renderAdaptiveGauge() {
-  const el = $("adaptiveGauge");
+// sub-meter filling toward the next. Shown only on a run riding the floating pool.
+function renderFloatGauge() {
+  const el = $("floatGauge");
   if (!el) return;
-  if (gameType !== "adaptive") { el.classList.remove("show"); el.innerHTML = ""; return; }
-  const atTop = adaptiveLevel >= ADAPT_MAX_LEVEL;
+  if (!floatingPoolNow()) { el.classList.remove("show"); el.innerHTML = ""; return; }
+  const atTop = floatLevel >= ADAPT_MAX_LEVEL;
   const pips = [];
   for (let lvl = 1; lvl <= ADAPT_MAX_LEVEL; lvl++) {
-    const on = lvl <= adaptiveLevel ? " on" : "";
-    const cur = lvl === adaptiveLevel ? " cur" : "";
+    const on = lvl <= floatLevel ? " on" : "";
+    const cur = lvl === floatLevel ? " cur" : "";
     pips.push(`<span class="adapt-pip${on}${cur}" aria-hidden="true"></span>`);
   }
   // Promo meter: fraction of the way to the next level (hidden at the ceiling).
-  const frac = atTop ? 1 : Math.min(1, adaptivePromo / ADAPT_PROMO_STREAK);
+  const frac = atTop ? 1 : Math.min(1, floatPromo / ADAPT_PROMO_STREAK);
   const meter = atTop
     ? `<span class="adapt-meter adapt-meter--top" aria-hidden="true"></span>`
     : `<span class="adapt-meter" aria-hidden="true"><i style="width:${Math.round(frac * 100)}%"></i></span>`;
-  const name = ADAPTIVE_LEVELS[adaptiveLevel] || "";
+  const name = ADAPT_LEVELS[floatLevel] || "";
   el.innerHTML =
-    `<span class="adapt-label">Level ${adaptiveLevel} · ${name}</span>` +
+    `<span class="adapt-label">Level ${floatLevel} · ${name}</span>` +
     `<span class="adapt-pips">${pips.join("")}</span>` +
     meter;
   el.classList.add("show");
@@ -8368,11 +8312,10 @@ function setMode(id) {
   renderModePicker();
   refreshStartBoard();
 }
-const GAMETYPE_LABELS = { classic: "Classic", infinite: "Infinite", adaptive: "Adaptive", custom: "Custom" };
+const GAMETYPE_LABELS = { classic: "Classic", infinite: "Infinite", custom: "Custom" };
 // Glyphs that sit before a game type's label in the start-screen picker. A mark
-// only earns a spot when it IS the concept: Infinite's endless ∞, Adaptive's
-// self-adjusting gauge (rarity floats on a visible level), and Custom's levers
-// (the mode is a board of levers you drag). Classic stays plain — the default.
+// only earns a spot when it IS the concept: Infinite's endless ∞, and Custom's
+// levers (the mode is a board of levers you drag). Classic stays plain — the default.
 // All are pen-stroke SVGs that inherit the tab's ink via currentColor, so they
 // flip to paper on an inked-active tab exactly as the old Unicode ∞ did. INF_GLYPH
 // is shared with the stats mode tabs (renderStatsTabs) so the two ∞s never drift.
@@ -8383,13 +8326,11 @@ const TYPE_GLYPHS = {
     `<circle class="head" cx="8.9" cy="17.5" r="2.8"/><path d="M10.7 17.5 L10.7 4.8"/>` +
     `<path d="M10.7 4.8 C 13.8 6, 16 8.1, 15.4 11.5"/></svg>`,
   infinite: INF_GLYPH,
-  adaptive: `<svg class="type-glyph type-glyph--gauge" viewBox="0 0 24 24" aria-hidden="true">` +
-    `<path d="M4 17a8 8 0 0 1 16 0"/><path d="M12 17l4.6 -5.2"/><circle class="hub" cx="12" cy="17" r="1.3"/></svg>`,
   custom: `<svg class="type-glyph type-glyph--levers" viewBox="0 0 24 24" aria-hidden="true">` +
     `<path d="M4 6h6"/><path d="M14 6h6"/><path d="M4 12h8"/><path d="M16 12h4"/><path d="M4 18h3"/><path d="M11 18h9"/>` +
     `<circle cx="12" cy="6" r="2.1"/><circle cx="14" cy="12" r="2.1"/><circle cx="9" cy="18" r="2.1"/></svg>`,
 };
-const GAME_TYPES = ["classic", "infinite", "adaptive", "custom"];
+const GAME_TYPES = ["classic", "infinite", "custom"];
 const VARIANT_LABELS = { "3lives": "3 lives", sudden: "Sudden death" };
 
 // The start-screen "your best" line follows the selected mode (+ infinite variant).
@@ -8403,43 +8344,22 @@ function refreshStartBoard() {
     return;
   }
   if (t) t.textContent = "Your best";
-  if (gameType === "adaptive") { renderAdaptiveBest($("startBest")); return; }
   renderBestLine($("startBest"), boardMode());
 }
 // The active custom preset's playable lever set (clamped + derived). Reused by the start-row
 // summary, the tagline, and startCustom.
 function activeCustomMode() { return normalizeCustomMode(activeCustomPreset().mode); }
-// Adaptive's "your best" line — the highest level ever reached (its board metric),
-// with the score on that run as the tie-break detail.
-function renderAdaptiveBest(el) {
-  const rec = adaptiveRecord();
-  if (!rec.played) {
-    el.innerHTML = `<div class="best-empty">no climbs yet — see how high you reach <span class="best-empty-star">${STAR_SVG}</span></div>`;
-    return;
-  }
-  const name = ADAPTIVE_LEVELS[rec.bestPeak] || "";
-  el.innerHTML =
-    `<div class="best-line"><span class="best-num"><span class="lvl-prefix">L</span>${rec.bestPeak}<span class="best-unit"> · ${escapeHtml(name)}</span></span>` +
-    `<span class="best-meta">★ highest level · ${rec.bestScore}/${TOTAL_ROUNDS} that run${rec.date ? " · " + recordDateLabel(rec.date) : ""}</span></div>`;
-}
-// Show/hide the start-screen rows that only apply to a particular game type:
-// the lives variant row (Infinite only) and the difficulty picker vs the Adaptive
-// explainer (difficulty floats in Adaptive, so its picker is meaningless).
+// Show/hide the start-screen rows that only apply to a particular game type: the lives
+// variant row (Infinite only) and the difficulty picker (Custom brings its own lever set).
 function applyTypeLayout() {
-  const isAdaptive = gameType === "adaptive";
   const isCustom = gameType === "custom";
   const vr = $("variantRow"); if (vr) vr.style.display = gameType === "infinite" ? "" : "none";
-  // Neither Adaptive (difficulty floats) nor Custom (its own lever set) uses the difficulty ladder.
-  const dr = $("difficultyRow"); if (dr) dr.style.display = (isAdaptive || isCustom) ? "none" : "";
-  const an = $("adaptiveNote"); if (an) an.style.display = isAdaptive ? "" : "none";
+  const dr = $("difficultyRow"); if (dr) dr.style.display = isCustom ? "none" : "";
   const cr = $("customRow"); if (cr) cr.style.display = isCustom ? "" : "none";
 }
 function updateBlurb() {
   if (gameType === "custom") {
     renderCustomRow();   // the custom row carries its own summary; there's no shared blurb line
-  } else if (gameType === "adaptive") {
-    const an = $("adaptiveNote");
-    if (an) an.textContent = "Start in the middle. Every right answer climbs you toward rarer words; a miss drops you back. Your level is shown as you play.";
   } else {
     const b = $("modeBlurb");
     if (b) {
@@ -8462,8 +8382,6 @@ function updateTagline() {
   const clock = cm.seconds > 0 ? `${cm.seconds} seconds each` : "no timer";
   const line = gameType === "infinite"
     ? `endless pages · ${clock}`
-    : gameType === "adaptive"
-    ? `${TOTAL_ROUNDS} pages · difficulty that climbs with you`
     : gameType === "custom"
     ? `${cm.rounds === 0 ? "endless pages" : cm.rounds + " pages"} · ${clock} · your own rules`
     // A guest run is the one place where "name the song" doesn't mean a Taylor song, and the
@@ -8850,7 +8768,6 @@ function isGameOver() {
 function boardMode() {
   if (gameType === "infinite") return "inf-" + infiniteVariant + "-" + currentMode.id;
   if (gameType === "daily") return null;
-  if (gameType === "adaptive") return null;   // Adaptive has its own board (peak level), not a per-difficulty one
   return currentMode.id;
 }
 
@@ -8905,12 +8822,8 @@ function resetRunState() {
   hintBudgetLeft = Infinity;   // Custom mode overrides this to its hint budget in startCustom
   runFolded = false;
   flourishThisRun = false;   // the closing flourish is once per run, and this is every run's start
-  adaptiveLevel = ADAPT_START_LEVEL;
-  adaptivePeak = ADAPT_START_LEVEL;
-  adaptivePromo = 0;
-  adaptiveReachedTop = false;
-  adaptiveHeldTop = true;
-  adaptiveDropAnnounced = ADAPT_START_LEVEL < ADAPT_NODROP_LEVEL;   // suggestions on at the start level
+  floatLevel = ADAPT_START_LEVEL;   // only read on a run riding Custom's floating rarity pool
+  floatPromo = 0;
   braceletSeed = (Math.random() * 0x100000000) >>> 0;   // a fresh shuffle for a random charm strand
   dailyRng = null;
   dailyAlbumPool = null;
@@ -9015,7 +8928,7 @@ function foldRunProgress() {
   // Sandboxed modes never fold into difficulty stats. Daily is also skipped: it resumes
   // after a refresh/exit and folds its tally in full at completion (endGame), so folding
   // a partial here would double-count the same rounds once the run is finished.
-  if (gameType === "challenge" || gameType === "album" || gameType === "adaptive" || gameType === "daily" || gameType === "custom" || gameType === "guest" || gameType === "ruthless") { runFolded = true; return; }
+  if (gameType === "challenge" || gameType === "album" || gameType === "daily" || gameType === "custom" || gameType === "guest" || gameType === "ruthless") { runFolded = true; return; }
   runFolded = true;
   const partialScore = gameType === "infinite" ? roundResults.length : score;
   updateStats(partialScore, boardMode(), gameMaxStreak, false);
@@ -9211,7 +9124,6 @@ function seedRandomFromBoards() {
   for (const v of ["3lives", "sudden"]) {
     if (MODE_ORDER.some((m) => loadStats("inf-" + v + "-" + m).played > 0)) tokens.push(randomToken("infinite", v));
   }
-  if (adaptiveRecord().played > 0) tokens.push(randomToken("adaptive"));
   for (const a of STUDIO_ALBUMS) if (albumFocusRecord(a).bestDiff) tokens.push(randomToken("album", a));
   for (const g of GUESTS) if (guestRecord(g.id).bestDiff) tokens.push(randomToken("guest", g.id));
   for (const c of CHALLENGES) {
@@ -9239,8 +9151,6 @@ function buildRandomPool() {
   // variant carries the token and the difficulty is rolled fresh each time (as for albums).
   push("infinite", "3lives", "Infinite · three lives", { variant: "3lives" });
   push("infinite", "sudden", "Infinite · sudden death", { variant: "sudden" });
-
-  push("adaptive", null, "Adaptive", {});
 
   for (const album of STUDIO_ALBUMS) push("album", album, "Album Focus · " + album, { album });
 
@@ -9302,7 +9212,6 @@ async function dispatchRandom(entry) {
       currentMode = MODES[entry.diff];
       startInfinite(entry.variant);
       return true;
-    case "adaptive":  startAdaptive(); return true;
     // A pinned goal can name a difficulty ("Perfect an album on Ultra"). Otherwise the
     // randomiser resolves one before announcing the draw.
     case "album":     startAlbumFocus(entry.album, entry.diff || randomDiff(ALBUM_FOCUS_DIFFS)); return true;
@@ -9403,24 +9312,6 @@ function startInfinite(variant, opts) {
   else nextRound();
 }
 
-// Adaptive mode: a fixed 13-round run where the word-rarity level floats with the
-// player's live performance, on a visible gauge. Levers stay at Normal's baseline
-// (clone so the shared MODES object is never mutated); only the draw pool moves with
-// the level. Sandboxed in its own board (peak level), never the difficulty records.
-function startAdaptive() {
-  gameType = "adaptive";
-  notePlayed("adaptive");
-  currentMode = { ...MODES.medium };   // baseline levers (10s · suggestions · not-in-title), not persisted via DIFF_KEY
-  resetRunState();                     // sets adaptiveLevel/Peak = ADAPT_START_LEVEL, promo = 0
-  applyInputHints();
-  updateTagline();
-  $("pageTotalWrap").style.display = "";
-  $("pageTotal").textContent = TOTAL_ROUNDS;
-  showScreen("game");
-  renderAdaptiveGauge();
-  nextRound();
-}
-
 // Coerce a stored preset's lever object into a safe, playable MODES-shaped clone: clamp the
 // numeric levers to their allowed ranges, keep only a known rarity pool, and derive `hint`
 // from the budget (a 0 budget means no hints at all). Defensive against hand-edited storage.
@@ -9494,6 +9385,7 @@ function startCustom() {
   if (infinite) lives = currentMode.lives;           // infinite custom counts down lives like Infinite mode
   applyInputHints();
   renderLives();
+  renderFloatGauge();   // shows itself only if this preset's rarity lever is on "float"
   updateTagline();
   $("pageTotalWrap").style.display = infinite ? "none" : "";
   if (!infinite) $("pageTotal").textContent = customSessionLen;
@@ -9504,7 +9396,7 @@ function startCustom() {
 // Snapshot of the daily run's accumulators, persisted after each completed round so a
 // refresh/exit resumes a faithful run (same score, streaks, verse bonus, timing) rather
 // than a fresh restart. Daily forces Normal and disables hints, so none of the broader
-// challenge/path/adaptive run state applies here. rngState pins the seeded PRNG position
+// challenge/path run state applies here. rngState pins the seeded PRNG position
 // so the remaining words match what everyone else gets on the date.
 function dailyProgressSnapshot(dateStr) {
   return {
@@ -11503,71 +11395,6 @@ function endGuest() {
   if (admitted) celebratePerfect();
 }
 
-// Adaptive results: sandboxed like Album Focus. Folds into the lifetime catalogue
-// tally + cross-game metrics (real play), but its own board is the PEAK LEVEL reached,
-// never the difficulty records. The headline is "how high you climbed", not a 0-13 score.
-function endAdaptive() {
-  const peak = adaptivePeak;
-  markRunBreadth("adaptive");
-  const name = ADAPTIVE_LEVELS[peak] || "";
-  const reachedTop = peak >= ADAPT_MAX_LEVEL;
-  const prev = adaptiveRecord();                       // before this run folds in
-  const isBest = !prev.played || peak > prev.bestPeak || (peak === prev.bestPeak && score > prev.bestScore);
-  let rec = prev;
-  if (!devNoLog) {
-    const runTime = currentMode.seconds > 0 ? gameTimeSum : null;
-    appendHistory({
-      s: peak, c: score, n: roundResults.length,
-      m: "adaptive", t: "adaptive",
-      d: new Date().toISOString(), tm: runTime,
-      ...(verseBonus > 0 ? { v: verseBonus } : {}),
-      ...(hintsUsed > 0 ? { h: 1 } : {}),
-    });
-    const tally = recordGameTally(roundResults.map((correct, i) => ({
-      correct,
-      title: roundSongs[i] || null,
-      album: roundAlbums[i] || null,
-      word: roundWords[i] || null,
-    })));
-    if (allSongs.length && allSongs.every((s) => tally.songs[s.title])) unlock("answer-every-catalogue-song"); checkSongKeepsakes(tally);
-    recordGameMetrics({
-      rounds: roundResults.length, correct: score,
-      timeSumMs: gameTimeSum * 1000, timedRounds: gameTimedRounds,
-      fastestMs: gameFastestMs, lyricLines: lyricLineAnswers,
-      versePerfect: gameVersePerfect, wholeVerses: gameWholeVerses, verseBonus,
-      isDaily: false, dailyPerfect: false,
-      isInfinite: false, timeouts: gameTimeouts,
-    });
-    // Held On Tight: reached the Rarest tier and finished there without ever slipping off it.
-    if (adaptiveReachedTop && adaptiveHeldTop && adaptiveLevel >= ADAPT_MAX_LEVEL) unlock("finish-at-rarest-adaptive-without-slipping");
-    rec = recordAdaptiveRun(peak, score, todayKey());
-    // A fair fixed-13 run, so the whole set earns. Endurance included: it reads the streak,
-    // and holding one while the rarity floats up under you is exactly what it means to measure.
-    foldSkillXp(["resolve", "tempo", "lyricist", "range", "endurance"]);
-  }
-
-  showScreen("results");
-  $("resultBracelet").innerHTML = renderBraceletSVG(roundResults, 0, -1, roundAlbums,
-    { colors: albumPalette(), hinted: roundHinted, verseTiers: roundVerseTier });
-  $("finalScore").textContent = "L" + peak;
-  $("finalSub").textContent = name + " · " + score + "/" + TOTAL_ROUNDS + " correct";
-  $("keepGoingBtn").style.display = "none";
-  $("namePrompt").style.display = "none";
-  hideNewBestBanner();
-  renderVerseAnthology();
-
-  document.querySelector("#screen-results .podium-title").textContent = "Adaptive";
-  const status = reachedTop
-    ? `<div class="chall-result-status win">you climbed all the way to ${escapeHtml(name)} ★</div>`
-    : `<div class="chall-result-status">peaked at level ${peak} · ${escapeHtml(name)}</div>`;
-  const meta = `<div class="chall-result-meta">highest level reached · best L${rec.bestPeak} ${escapeHtml(ADAPTIVE_LEVELS[rec.bestPeak] || "")}</div>`;
-  $("resultPodium").innerHTML = status + meta;
-  if (isBest && !devNoLog) showNewBestBanner("a new height ★ · level " + peak + " " + name);
-
-  renderResultRecap();
-  renderSkillsRecap();
-}
-
 // End a Custom run. Sandboxed like Challenges: it folds skill XP + achievements ONLY, never
 // records/stats/history/tally/metrics/play-counts — a player-tuned config can't be ranked and
 // shouldn't feed the lifetime catalogue. A finite run scores 0..rounds; an infinite run is
@@ -11663,7 +11490,7 @@ function customLeverSummary(m) {
     : m.lyricOnly ? "lyric lines only"
     : (m.dropdown ? "suggestions" : "title or line");
   parts.push(answerLabel);
-  const poolLabel = { easy: "common words", all: "all words", hard: "rare words", ultra: "rarest words" };
+  const poolLabel = { easy: "common words", all: "all words", hard: "rare words", ultra: "rarest words", float: "floating rarity" };
   parts.push(poolLabel[m.pool] || "all words");
   if (m.noTitle) parts.push("not in the title");
   // Lyric-only runs have no hint lever at all (see hintsAllowed), so listing it would read as
@@ -12270,7 +12097,6 @@ function wildcardPageCardHTML() {
 //  • Wildcard — every round, naming the active rule.
 //  • On Tour! — every later round, announcing tonight's album.
 function roundCurtainHTML() {
-  if (gameType === "adaptive") return adaptiveCurtainHTML();
   if (gameType !== "challenge" || !currentChallenge) return null;
   const c = currentChallenge;
   // Round 1 of any challenge opens with an explanatory intro (button-gated — see
@@ -12298,25 +12124,6 @@ function roundCurtainHTML() {
       sub: album ? `name a song from <b style="color:${col}">${escapeHtml(album)}</b>` : "" });
   }
   return null;
-}
-
-// Adaptive's curtain: shown only on the round where the suggestions dropdown flips state
-// (off as you climb into the rarest tiers, back on if you slip below them). Acknowledged
-// with a tap so the rule change is never a silent surprise. No change means no curtain.
-function adaptiveCurtainHTML() {
-  const live = effectiveDropdown();
-  if (live === adaptiveDropAnnounced) return null;
-  const name = (ADAPTIVE_LEVELS[adaptiveLevel] || "").toLowerCase();
-  if (!live) {
-    return curtainCardHTML({ kicker: `level ${adaptiveLevel} · ${name}`, tag: "suggestions off",
-      headline: "type the full title now",
-      sub: "these words are rare enough that the dropdown comes down. Type the whole title, or sing a real lyric line.",
-      cue: "you know these", button: "got it" });
-  }
-  return curtainCardHTML({ kicker: `level ${adaptiveLevel} · ${name}`, tag: "suggestions back",
-    headline: "the dropdown returns",
-    sub: "back to a gentler tier. Pick from the suggestions again, or sing a line.",
-    cue: "carry on", button: "got it" });
 }
 
 // The round-1 intro curtain for a challenge: names it, restates the rule + win condition,
@@ -12408,10 +12215,6 @@ function mountCurtain(innerHTML) {
 // animation. Every other path starts the clock immediately.
 function beginRoundClock() {
   let queue = roundCurtainHTML();
-  // Adaptive: remember the dropdown state we've now surfaced, so the curtain only fires
-  // again on the next genuine flip. Committed after roundCurtainHTML so the pre-flip mount
-  // (nextRound) and this call agree on the same round's curtain.
-  if (gameType === "adaptive") adaptiveDropAnnounced = effectiveDropdown();
   const wrap = $("wordDisplay").parentNode;
   const beginTimedRoundEffects = () => {
     if (gameType === "challenge" && currentChallenge
@@ -12476,9 +12279,8 @@ function beginRoundClock() {
     };
     const nextBtn = ov.querySelector(".chall-curtain-next");
     if (nextBtn) {
-      // Button-gated cards (every challenge's round-1 intro; Adaptive's suggestions-toggle
-      // notice) wait for an explicit tap — the whole-overlay tap is intentionally NOT wired
-      // so a stray click can't skip the notice unread.
+      // Button-gated cards (every challenge's round-1 intro) wait for an explicit tap — the
+      // whole-overlay tap is intentionally NOT wired so a stray click can't skip it unread.
       nextBtn.addEventListener("click", next);
       // Enter acknowledges the card. Handled here at the document rather than by focusing
       // the button, so the key works wherever focus happens to sit (the answer line keeps
@@ -13328,7 +13130,7 @@ function advanceRound() {
   $("playArea").style.display = "";
   renderBracelet();
   renderLives();
-  renderAdaptiveGauge();
+  renderFloatGauge();
   const input = $("songInput");
   input.value = "";
   input.disabled = false;
@@ -14740,7 +14542,7 @@ function submitAnswer(song, isTimeout) {
     spiteSeconds = Math.max(0, spiteSeconds - (currentChallenge.penalty || 3));
     renderSpiteBanner();
   }
-  if (gameType === "adaptive") adaptiveAdjust(correct);
+  if (floatingPoolNow()) floatAdjust(correct);
   // A word-perfect+ recall earns a pen-nib bead (set BEFORE renderBracelet so the
   // charm shows on the bead the moment it's earned, not a round late).
   const versePlus = lyricMatch && (lyricMatch.tier === "perfect" || lyricMatch.tier === "verse");
@@ -15325,7 +15127,6 @@ function endGame() {
   // before any stats/records/achievement fold runs.
   if (gameType === "challenge") { endChallenge(); return; }
   if (gameType === "album") { endAlbumFocus(); return; }
-  if (gameType === "adaptive") { endAdaptive(); return; }
   if (gameType === "custom") { endCustom(); return; }
   if (gameType === "guest") { endGuest(); return; }
 
@@ -16927,7 +16728,7 @@ function renderSettingsBody() {
         setCheckHTML("confirmLeave", "Confirm before leaving a run", "requires a second tap before giving up"),
       ]) +
       setSliderHTML() +
-      setChoiceHTML("defaultGameType", "Default game type", "on launch", [{ val: "last", label: "Last" }, { val: "classic", label: "Classic" }, { val: "infinite", label: "Infinite" }, { val: "adaptive", label: "Adaptive" }, { val: "custom", label: "Custom" }]) +
+      setChoiceHTML("defaultGameType", "Default game type", "on launch", [{ val: "last", label: "Last" }, { val: "classic", label: "Classic" }, { val: "infinite", label: "Infinite" }, { val: "custom", label: "Custom" }]) +
       setChoiceHTML("defaultDifficulty", "Default difficulty", "on launch", diffOpts) +
       setChoiceHTML("defaultStatsTab", "Default stats tab", "which tab opens first", statsOpts)
     ) +
@@ -17392,8 +17193,9 @@ function renderCustomModalBody() {
         m.hintBudget, m.lyricOnly, "cm-tile--half") +
       cmChoiceTile("answer", "Answering", "how a page can be answered", [
         { val: "title", label: "Titles" }, { val: "lyric", label: "Lyric lines" }, { val: "either", label: "Either" }], m.answer, "cm-tile--wide") +
-      cmChoiceTile("pool", "Word rarity", "which words you'll be asked", [
-        { val: "all", label: "All" }, { val: "easy", label: "Common" }, { val: "hard", label: "Rare" }, { val: "ultra", label: "Rarest" }], m.pool, "cm-tile--half") +
+      cmChoiceTile("pool", "Word rarity", m.pool === "float" ? "climbs and falls as you play" : "which words you'll be asked", [
+        { val: "all", label: "All" }, { val: "easy", label: "Common" }, { val: "hard", label: "Rare" }, { val: "ultra", label: "Rarest" },
+        { val: "float", label: "Floating" }], m.pool, "cm-tile--wide") +
       cmChoiceTile("examples", "Examples after a miss", "songs revealed", [
         { val: 0, label: "0" }, { val: 1, label: "1" }, { val: 2, label: "2" }, { val: 3, label: "3" }], m.examples, "cm-tile--half") +
       cmToggleTile("dropdown", "Suggestions", m.lyricOnly ? "off while answering by line" : "title dropdown as you type", m.dropdown, m.lyricOnly, "cm-tile--half") +
@@ -18773,6 +18575,17 @@ function buildDevApi() {
         return np;
       },
       hintsLeft: () => hintBudgetLeft,                         // live hint budget remaining during a run
+      // The floating rarity level mid-run. Reading it is the only way to see where the ladder
+      // actually is; setting it saves answering a streak by hand to reach the top tier. Clamped
+      // to 1..ADAPT_MAX_LEVEL and it re-renders the gauge, so a set is what the run really uses.
+      level: (n) => {
+        if (n != null) {
+          floatLevel = Math.max(1, Math.min(ADAPT_MAX_LEVEL, Math.round(Number(n)) || 1));
+          floatPromo = 0;
+          renderFloatGauge();
+        }
+        return { level: floatLevel, promo: floatPromo, pool: effectivePool(), floating: floatingPoolNow() };
+      },
       play: () => startCustom(),                               // start a run on the active preset
       open: () => { gameType = "custom"; rememberGameType("custom"); renderStartPickers(); showScreen("start"); $("startContent").style.display = ""; },
       reset: () => { resetCustom(); syncCustomUI(); },
@@ -20160,6 +19973,9 @@ async function init() {
   showScreen("start");
   rollCtaGold();   // today's gold, decided once per load and never mentioned to anyone
   applyEra("gold");
+  // Before the first read of either store: the purge rewrites achievements and settings, and a
+  // copy loaded ahead of it would keep the dead values in memory and save them straight back.
+  purgeAdaptive();
   earnedAchievements = loadAchievements();
   settings = loadSettings();
   applySettings();
@@ -20184,7 +20000,6 @@ async function init() {
   });
   $("playBtn").addEventListener("click", () => {
     if (gameType === "infinite") startInfinite(infiniteVariant);
-    else if (gameType === "adaptive") startAdaptive();
     else if (gameType === "custom") startCustom();
     else startGame();
   });

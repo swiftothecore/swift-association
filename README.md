@@ -18,10 +18,9 @@ The game is still a work in progress and is by no means 'done'.
 
 - Five difficulty options, with hints if you want them
 - Endless mode
-- Adaptive mode, where the word difficulty climbs and falls with how you play
 - Album focus mode so you can concentrate on ONE album only
 - Daily challenge
-- The ability to make your own **custom modes**
+- The ability to make your own **custom modes**, including a floating word rarity that climbs and falls with how you play
 - A guest shelf of other artists' catalogues, played on their own and never mixed into Taylor's
 - A shelf of bonus mini-games, including one where you hunt a swapped word in a real lyric
 - A randomiser that deals one run from anywhere in the notebook, leaning toward what you haven't played yet

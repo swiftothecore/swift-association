@@ -48,7 +48,9 @@ export const METRICS_KEY = "swiftSongAssociation.metrics";    // lifetime cross-
 export const CHALLENGES_KEY = "swiftSongAssociation.challenges";        // per-challenge progress — { [id]: {unlocked, defeated, attempts, best} }
 export const CHALLENGE_TOKENS_KEY = "swiftSongAssociation.challengeTokens"; // { balance } — tokens spent to unlock challenges
 export const ALBUM_FOCUS_KEY = "swiftSongAssociation.albumFocus";       // per-album best/beaten board — { [album]: {best, bestDiff, beaten, beatenDiff, perfected, perfectedDiff} }
-export const ADAPTIVE_KEY = "swiftSongAssociation.adaptive";            // Adaptive mode board — { bestPeak, bestScore, date, played }
+// Retired: the Adaptive mode board. Named here only so purgeAdaptive (storage.js) has one
+// place to read the dead key from; nothing writes it any more.
+export const ADAPTIVE_LEGACY_KEY = "swiftSongAssociation.adaptive";
 export const GUEST_KEY = "swiftSongAssociation.guests";                 // guest shelf board — { [guestId]: {best, bestDiff, admitted, admittedDiff} }
 export const BONUS_KEY = "swiftSongAssociation.bonus";                  // bonus games shelf — { [gameId]: {best, plays, last} }
 export const RUTHLESS_KEY = "swiftSongAssociation.ruthless";            // Ruthless mode board, one best per lens — { [lensId]: {best, bestGaveUp, plays, last, date} }
@@ -110,7 +112,7 @@ export const DEFAULT_SETTINGS = {
   enableHints: true,        // show progressive hints in Easy/Normal/Relaxed (a hinted run can't set a personal best)
   censorExplicit: false,    // mask general profanity (fuck→f**k) in shown lyrics/titles; the racial slur is always masked regardless
 
-  defaultGameType: "last",  // "last" | "classic" | "infinite" | "adaptive"
+  defaultGameType: "last",  // "last" | "classic" | "infinite" | "custom"
   defaultDifficulty: "last",// "last" | a MODES id
   defaultStatsTab: "all",   // which Stats tab opens first: "all" | "last" | a MODES id
   // display & accessibility
@@ -179,7 +181,7 @@ export const EXPLORER_TOKENS = [
   ...DIFFICULTY_LADDER.map((m) => "classic:" + m),
   ...DIFFICULTY_LADDER.map((m) => "inf-3lives:" + m),
   ...DIFFICULTY_LADDER.map((m) => "inf-sudden:" + m),
-  "adaptive", "custom",
+  "custom",
 ];
 // Per-mode accent for the index-card record tiles (label + tape tint). Keyed by mode id;
 // infinite tokens borrow the colour of their underlying difficulty.
@@ -276,21 +278,18 @@ export const GUEST_TARGET = TOTAL_ROUNDS;
 // 42 songs `easy >= 18` matches nine words and `ultra` swallows most of the vocabulary.
 export const TAYLOR_BUCKETS = { easy: 18, hard: [3, 9], ultra: [1, 3] };
 
-/* ---------- Adaptive mode ----------
-   A third gameType beside Classic and Infinite. A fixed 13-round run where word RARITY
-   alone floats with live performance, on a visible level. The level maps straight onto the
-   four rarity buckets; every other lever stays fixed at Normal's baseline. Sandboxed in its
-   own board (ADAPTIVE_KEY), ranked on the peak level reached (a floating 0-13 score is not
-   comparable, so it is never ranked against the difficulty boards). See PLAN.md section 5. */
-export const ADAPTIVE_BUCKETS = [null, "easy", "all", "hard", "ultra"];   // level 1..4 -> wordBuckets key (index 0 unused)
-export const ADAPTIVE_LEVELS = [null, "Common", "Deeper", "Rare", "Rarest"]; // level 1..4 -> readable tier name
+/* ---------- Floating rarity (Custom's "Floating" pool) ----------
+   Not a mode: a stop on Custom's rarity picker. Instead of pinning one bucket for the whole
+   run, the pool rides a visible 1..4 level that climbs on a correct streak and drops a rung
+   on any miss. The level maps straight onto the four rarity buckets; every other lever is
+   whatever the player authored, untouched. Deliberately affects RARITY ONLY — it never
+   overrides the suggestions or hints levers, because a preset that quietly disabled the
+   controls you set would be lying about what it does. */
+export const ADAPT_BUCKETS = [null, "easy", "all", "hard", "ultra"];   // level 1..4 -> wordBuckets key (index 0 unused)
+export const ADAPT_LEVELS = [null, "Common", "Deeper", "Rare", "Rarest"]; // level 1..4 -> readable tier name
 export const ADAPT_MAX_LEVEL = 4;       // top level (ultra bucket)
 export const ADAPT_START_LEVEL = 2;     // start in the middle (the "all" bucket)
 export const ADAPT_PROMO_STREAK = 2;    // correct answers at a level needed to climb one (a single miss demotes)
-// Anti-too-soft knob: at this level and above, the title dropdown switches off, so the
-// rarest tiers test RECALL (type the full title) not just recognition. Set above
-// ADAPT_MAX_LEVEL to keep suggestions on for the whole run.
-export const ADAPT_NODROP_LEVEL = 3;    // suggestions off from Rare (L3) upward
 
 /* ---------- Custom mode (player-authored "workshop" modes) ----------
    A sandboxed gameType. The player builds a MODES-shaped lever object in the Change modal,
@@ -309,7 +308,11 @@ export const CUSTOM_SECONDS_TYPED_MAX = 600;
 export const CUSTOM_HINT_MAX = 13;       // slider's finite top (0 = no hints); one stop past = unlimited (-1)
 export const CUSTOM_HINT_TYPED_MAX = 99; // typed finite hint budgets can climb this high
 export const CUSTOM_HINT_UNLIMITED = -1; // sentinel: hints never run out this run
-export const CUSTOM_POOLS = ["easy", "all", "hard", "ultra"];   // word-rarity buckets the picker offers
+// Word-rarity stops the picker offers. The first four pin one bucket for the whole run;
+// "float" rides the level ladder above instead (see ADAPT_BUCKETS). "float" is never
+// "at least Ultra" for customAtLeastUltra — it opens at Common, and the lever comparison
+// there (m.pool === MODES.ultra.pool) rules it out on its own.
+export const CUSTOM_POOLS = ["easy", "all", "hard", "ultra", "float"];
 export const CUSTOM_EXAMPLES_MAX = 3;    // example songs shown after a miss (0..3)
 export const CUSTOM_MAX_PRESETS = 12;    // keep the saved list manageable
 export const MEAN_GRUDGE = 5;            // times a word must have beaten you before answering it right earns "Mean"
@@ -516,8 +519,8 @@ export const RUTHLESS_PACE_SECONDS = 45;
    Two rules shape the draw, and they pull in opposite directions.
 
    CATEGORY BALANCE. The leaves are wildly uneven — 32 challenges and 26 dark sides against one
-   Adaptive — so a flat roll over every playable configuration would be a challenge machine that
-   mentions Adaptive twice a year. Each category therefore carries its own share of the draw and
+   Custom preset — so a flat roll over every playable configuration would be a challenge machine
+   that mentions Custom twice a year. Each category therefore carries its own share of the draw and
    splits it between its own entries, which is why `weight` below is a share of the whole and not
    a per-entry multiplier. The shares are an editorial hand, not a formula: they say roughly how
    much of the notebook each shelf is, damped so the big shelves can't drown the small ones.
@@ -542,7 +545,6 @@ export const RANDOM_UNPLAYED_WEIGHT = 4;
 export const RANDOM_CATEGORIES = [
   { id: "difficulty", weight: 12, label: "a difficulty" },
   { id: "infinite",   weight: 8,  label: "Infinite" },
-  { id: "adaptive",   weight: 5,  label: "Adaptive" },
   { id: "album",      weight: 14, label: "Album Focus" },
   { id: "guest",      weight: 5,  label: "a guest" },
   { id: "challenge",  weight: 22, label: "a challenge" },
@@ -2652,7 +2654,7 @@ export const ACHIEVEMENTS = [
   { id: "win-with-no-hints-or-timeouts",            name: "Finally Clean",    desc: "Win without hints or a single timeout",  secret: false, icon: "drop", sitting: true, earn: { cat: "difficulty" } },
   { id: "win-every-difficulty", name: "Everything & Nothing All At Once", desc: "Win a game in every difficulty", secret: false, icon: "yinyang" },
   { id: "finish-no-timeouts-2-games-in-row",      name: "Fearless (Taylor's Version)", desc: "Two games in a row with no timeouts", secret: false, icon: "vinyl", sitting: true, earn: { cat: "difficulty" } },
-  { id: "play-every-required-mode",         name: "Explorer",         desc: "Play every difficulty in Classic and in both Infinite variants, plus Adaptive and Custom", secret: false, icon: "compass" },
+  { id: "play-every-required-mode",         name: "Explorer",         desc: "Play every difficulty in Classic and in both Infinite variants, plus Custom", secret: false, icon: "compass" },
   { id: "play-all-seven-weekdays",            name: "Seven",            desc: "Play on all seven days of the week", secret: true,  icon: "swing" },
   { id: "save-first-bracelet-keepsake", name: "Make The Friendship Bracelets", desc: "Save your first bracelet keepsake", secret: false, icon: "keepsake", sitting: true },
   { id: "type-reputation-tv", name: "The Piano Was Hissing", desc: "Type “reputation tv” somewhere",    secret: true,  icon: "piano" },
@@ -2781,8 +2783,6 @@ export const ACHIEVEMENTS = [
   { id: "win-confidence-wager-max-every-page",           name: "Let The Players Play", desc: "Win Confidence Wager having staked the most you could hold on every page", secret: true, reveal: "confidence-wager", icon: "allin" },
   // Dark sides. A milestone rather than a flourish (no challenge named), so it stays visible.
   { id: "beat-dark-side-no-misses",        name: "Now I Breathe Flames", desc: "Beat a dark side without missing a single page", secret: false, icon: "inkspill", sitting: true, earn: { cat: "dark" } },
-  { id: "reach-rarest-tier-adaptive",        name: "Those Windermere Peaks", desc: "Climb to the Rarest tier in Adaptive",  secret: false, icon: "lake", sitting: true, earn: { cat: "adaptive" } },
-  { id: "finish-at-rarest-adaptive-without-slipping",   name: "Held On Tight",    desc: "Reach Rarest and finish there without slipping", secret: false, icon: "anchor", sitting: true, earn: { cat: "adaptive" } },
   { id: "beat-first-album-focus", name: "Girl On A Mission",     desc: "Beat your first album in Album Focus", secret: false, icon: "map", sitting: true, earn: { cat: "album" } },
   { id: "beat-all-12-album-focus",           name: "Stand Up Champions", desc: "Beat all 12 albums in Album Focus",     secret: false, icon: "butterfly" },
   { id: "perfect-album-focus",        name: "Gleaming, Twinkling", desc: "Perfect an album in Album Focus (13/13)", secret: false, icon: "coins", sitting: true, earn: { cat: "album" } },
@@ -2941,8 +2941,6 @@ export const ACH_ID_MIGRATIONS = {
   "untouchable": "win-insurance-no-shields-spent",
   "the-man": "win-confidence-wager-max-every-page",
   "mad-woman": "beat-dark-side-no-misses",
-  "the-lakes": "reach-rarest-tier-adaptive",
-  "stay-stay-stay": "finish-at-rarest-adaptive-without-slipping",
   "a-place-in-this-world": "beat-first-album-focus",
   "change": "beat-all-12-album-focus",
   "gold-rush": "perfect-album-focus",
@@ -2991,7 +2989,6 @@ export const ACH_GROUPS = [
   { id: "nemesis",   label: "Nemesis words",          short: "Nemesis" },
   { id: "challenges", label: "Challenges",             short: "Challenge" },
   { id: "albumFocus", label: "Album Focus",            short: "Album" },
-  { id: "adaptive",  label: "Adaptive mode",          short: "Adaptive" },
   { id: "custom",    label: "Custom mode",            short: "Custom" },
   { id: "guests",    label: "Guest shelf",            short: "Guests" },
   { id: "bonus",     label: "Bonus games",            short: "Bonus" },
@@ -3008,7 +3005,6 @@ export const ACH_GROUP_COLORS = {
   nemesis:   "#6d3f5c",
   challenges: "#2b2722",
   albumFocus: "#a8577a",
-  adaptive:  "#7d5a3f",
   custom:    "#4a6b8a",
   guests:    "#6b5a92",
   bonus:     "#2f6f6a",
@@ -3038,7 +3034,6 @@ export const ACH_GROUP_OF = {
   "beat-dark-side-no-misses": "challenges",
   "beat-first-album-focus": "albumFocus", "beat-all-12-album-focus": "albumFocus", "perfect-album-focus": "albumFocus", "perfect-all-12-album-focus": "albumFocus",
   "perfect-album-focus-ultra": "albumFocus", "perfect-album-focus-lyricist": "albumFocus",
-  "reach-rarest-tier-adaptive": "adaptive", "finish-at-rarest-adaptive-without-slipping": "adaptive",
   "finish-first-custom-run": "custom", "keep-5-custom-presets": "custom", "reach-round-50-endless-custom": "custom", "perfect-custom-at-least-ultra": "custom",
   "admit-guest": "guests", "admit-guest-hard": "guests", "admit-guest-lyricist": "guests",
   "finish-first-bonus-run": "bonus", "play-every-bonus-game": "bonus", "clean-sweep-bonus-game": "bonus",

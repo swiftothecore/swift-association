@@ -24,7 +24,7 @@ const CAT_WEIGHT = new Map(RANDOM_CATEGORIES.map((c) => [c.id, c.weight]));
 //
 // An entry's weight is its category's share divided between that category's entries, times the
 // unplayed multiplier. Dividing by the category size first is what stops 32 challenges from
-// outvoting one Adaptive; multiplying after is what makes a barely-touched shelf swell against
+// outvoting two Infinite variants; multiplying after is what makes a barely-touched shelf swell against
 // an exhausted one, because a category's total is the sum of its entries'.
 export function weighPool(pool, seen = {}, unplayedWeight = RANDOM_UNPLAYED_WEIGHT) {
   const sized = new Map();

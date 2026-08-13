@@ -8,7 +8,7 @@ import {
   SETTINGS_KEY, METRICS_KEY, APP_PREFIX, DEFAULT_SETTINGS,
   CHALLENGES_KEY, CHALLENGE_TOKENS_KEY,
   ALBUM_FOCUS_KEY, ALBUM_FOCUS_TARGET, DIFF_RANK,
-  ADAPTIVE_KEY,
+  ADAPTIVE_LEGACY_KEY,
   GUEST_KEY, GUEST_TARGET,
   BONUS_KEY, RUTHLESS_KEY,
   CUSTOM_KEY, CUSTOM_DEFAULT_MODE,
@@ -248,35 +248,69 @@ export function resetGuests() {
   try { localStorage.removeItem(GUEST_KEY); } catch (e) { /* ignore */ }
 }
 
-/* ---------- Adaptive board (sandboxed, like challenges/album focus) ----------
-   { bestPeak, bestScore, date, played }. Ranked on the peak level reached in a run
-   (1..4); ties keep the higher score. A floating 0-13 score is not comparable across
-   runs, so Adaptive never touches the difficulty boards/stats. */
-export function loadAdaptive() {
+/* ---------- Purging the retired Adaptive mode ----------
+   Adaptive was a third gameType (a fixed 13-round run whose word rarity floated on a visible
+   level) and it is gone: the mechanic now lives on as Custom's "Floating" rarity stop, and
+   nothing in the game reads or writes an Adaptive anything. This clears what a notebook that
+   played it still has lying around, so no surface has to keep understanding a mode that no
+   longer exists — its board, its history rows, its two retired charms, and its two ledger
+   tokens. Runs once (the key is the flag) and is cheap enough not to matter if it runs again.
+
+   Note that this cannot be a complete erasure and isn't trying to be. Adaptive folded into
+   recordGameTally, recordGameMetrics and all five skill tracks, and those are aggregate
+   counters with no per-run provenance — the lifetime accuracy, the catalogue coverage and
+   the banked XP its runs contributed can't be told apart from every other run's. Unwinding
+   them would mean wiping those systems wholesale, which costs the player far more than the
+   stale contribution is worth.
+
+   The two charm ids deliberately do NOT go through ACH_ID_MIGRATIONS: that map moves an old
+   id onto a CURRENT one, and dev.js's audit fails a row whose target isn't a live charm.
+   These have no successor, so they're deleted outright.
+
+   No "already purged" flag on purpose: every step below writes only when it actually finds
+   something, so the steady-state cost is a few reads and the pass stays correct if an older
+   backup is ever restored over the top. A flag would be one more key naming a dead mode. */
+export function purgeAdaptive() {
+  try { localStorage.removeItem(ADAPTIVE_LEGACY_KEY); } catch (e) { /* ignore */ }
+
+  // History rows. The renderer no longer knows the "adaptive" token, so these have to go
+  // rather than sit there rendering as a blank mode.
   try {
-    const raw = localStorage.getItem(ADAPTIVE_KEY);
-    if (raw) { const o = JSON.parse(raw); if (o && typeof o === "object") return o; }
+    const hist = loadHistory();
+    const kept = hist.filter((h) => h.m !== "adaptive" && h.t !== "adaptive");
+    if (kept.length !== hist.length) localStorage.setItem(HISTORY_KEY, JSON.stringify(kept));
   } catch (e) { /* ignore */ }
-  return {};
-}
-export function adaptiveRecord() {
-  const e = loadAdaptive();
-  return { bestPeak: e.bestPeak || 0, bestScore: e.bestScore || 0, date: e.date || null, played: e.played || 0 };
-}
-// Fold a finished Adaptive run into the board. `peak` is the highest level reached (1..4),
-// `score` the 0..TOTAL_ROUNDS correct count. The best run is the highest peak, ties broken
-// by the higher score. Returns the updated record.
-export function recordAdaptiveRun(peak, score, date) {
-  const e = loadAdaptive();
-  e.played = (e.played || 0) + 1;
-  if (peak > (e.bestPeak || 0) || (peak === (e.bestPeak || 0) && score > (e.bestScore || 0))) {
-    e.bestPeak = peak; e.bestScore = score; e.date = date;
+
+  // The two retired charms, cleared as if they had never been minted.
+  try {
+    const earned = loadAchievements();
+    let hit = false;
+    for (const id of ["reach-rarest-tier-adaptive", "finish-at-rarest-adaptive-without-slipping"]) {
+      if (Object.prototype.hasOwnProperty.call(earned, id)) { delete earned[id]; hit = true; }
+    }
+    if (hit) saveAchievements(earned);
+  } catch (e) { /* ignore */ }
+
+  // Ledger tokens: the Explorer breadth token and the randomiser's playedness token. Both
+  // are keyed by a token string no live code emits any more, so they'd linger forever.
+  for (const [key, token] of [[BREADTH_KEY, "adaptive"], [RANDOM_KEY, "adaptive"]]) {
+    try {
+      const raw = localStorage.getItem(key);
+      if (!raw) continue;
+      const o = JSON.parse(raw);
+      if (o && typeof o === "object" && token in o) {
+        delete o[token];
+        localStorage.setItem(key, JSON.stringify(o));
+      }
+    } catch (e) { /* ignore */ }
   }
-  try { localStorage.setItem(ADAPTIVE_KEY, JSON.stringify(e)); } catch (err) { /* ignore */ }
-  return adaptiveRecord();
-}
-export function resetAdaptive() {
-  try { localStorage.removeItem(ADAPTIVE_KEY); } catch (e) { /* ignore */ }
+
+  // A stored default of "adaptive" would leave the settings picker showing nothing selected.
+  try {
+    const s = loadSettings();
+    if (s.defaultGameType === "adaptive") { s.defaultGameType = "last"; saveSettings(s); }
+  } catch (e) { /* ignore */ }
+
 }
 
 /* ---------- Bonus games board (sandboxed, like challenges/album focus/custom) ----------
@@ -473,7 +507,7 @@ export function markTypePlayed(type) {
 
 /* ---------- Modes ever played (for "Explorer") ---------- */
 // Finer-grained than TYPES_KEY, which only knows classic/infinite/daily. A token is one
-// way the game can be played: "classic:hard", "inf-sudden:ultra", "adaptive", "custom".
+// way the game can be played: "classic:hard", "inf-sudden:ultra", "custom".
 // EXPLORER_TOKENS lists the set Explorer wants; anything else recorded here (lyricist,
 // daily) is harmless breadth we simply don't ask for.
 // Value: { [token]: true }

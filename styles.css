@@ -756,16 +756,17 @@
     to   { width: 20px; opacity: 1; }
   }
 
-  /* adaptive-mode level gauge: the rarity level you're riding, shown as four lit
-     pips with a promo sub-meter filling toward the next. Notebook-honest, not an XP bar. */
-  .adaptive-gauge {
+  /* Floating-rarity level gauge (Custom's "Floating" pool): the rarity level you're riding,
+     shown as four lit pips with a promo sub-meter filling toward the next. Notebook-honest,
+     not an XP bar. */
+  .float-gauge {
     display: none; align-items: center; justify-content: center; gap: 10px;
     flex-wrap: wrap; margin: 2px auto 10px; padding: 5px 12px;
     width: max-content; max-width: 90%;
     border: 1.4px solid rgba(43,39,34,0.18); border-radius: 16px;
     background: rgba(247,201,72,0.07);
   }
-  .adaptive-gauge.show { display: flex; }
+  .float-gauge.show { display: flex; }
   .adapt-label {
     font-family: var(--type); font-size: calc(11px + var(--text-size-adjust)); letter-spacing: 0.4px;
     text-transform: uppercase; color: var(--ink); font-weight: 700; white-space: nowrap;
@@ -1238,8 +1239,6 @@
   /* Levers: paper-filled knobs so the rails read as sliders you can slide. */
   .type-glyph--levers circle { fill: var(--paper); }
   /* Gauge: its content sits low in the box, so nudge it up; the hub is inked. */
-  .type-glyph--gauge { vertical-align: -2px; }
-  .type-glyph--gauge .hub { fill: currentColor; }
   /* Eighth note (Classic): a solid inked notehead, no stroke so it stays a
      clean dot at tab size rather than fattening by a stroke-width. */
   .type-glyph--note .head { fill: currentColor; stroke: none; }
@@ -1263,7 +1262,6 @@
   .mode-tab.active[data-mode="hard"]     { background: rgba(202,92,74,0.34);   border-color: rgba(155,54,46,0.5); }
   .mode-tab.active[data-mode="ultra"]    { background: rgba(122,98,182,0.34);   border-color: rgba(90,72,152,0.5); }
   .mode-tab.active[data-type="infinite"] { background: rgba(64,150,146,0.34);   border-color: rgba(40,120,116,0.52); }
-  .mode-tab.active[data-type="adaptive"] { background: rgba(206,132,58,0.34);   border-color: rgba(160,96,36,0.52); }
   .mode-tab.active[data-type="custom"]   { background: rgba(176,104,150,0.32);  border-color: rgba(150,74,124,0.52); }
   /* The two Infinite variants read as the stakes they set. "3 lives" wears a green→gold→coral
      wash — a health meter draining from safe to danger. "Sudden death" takes the same wash +
@@ -1308,10 +1306,6 @@
   .best-empty { font-family: var(--hand); font-size: calc(20px + var(--text-size-adjust)); color: var(--ink-soft); opacity: 0.85; padding: 4px 0 8px; }
   .best-empty-star { display: inline-block; width: 0.92em; height: 0.92em; vertical-align: -0.14em; color: var(--ink-soft); opacity: 0.9; }
   .best-empty-star svg { width: 100%; height: 100%; display: block; }
-  /* Adaptive level marker ("L3"): the bare "L" is set in the typewriter face so the big
-     handwritten numeral doesn't render it as an oversized swash capital. */
-  .lvl-prefix { font-family: var(--hand); font-weight: 700; font-size: 0.62em; color: var(--ink-accent); margin-right: 2px; }
-
   /* ---------- Records page (personal bests + history) ---------- */
   .rec-sig { display: flex; align-items: center; gap: 18px; margin: 2px 0 16px; padding-bottom: 16px; border-bottom: 1px dashed rgba(43,39,34,0.16); }
   .rec-sig-text { min-width: 0; }
@@ -5182,25 +5176,6 @@
     font-family: var(--type); font-size: calc(10px + var(--text-size-adjust)); color: var(--ink-soft);
     margin: 12px 0 4px; text-align: right;
   }
-
-  /* adaptive stats ladder: the four rungs, lit up to the best peak reached */
-  .adapt-ladder { width: 100%; border-collapse: collapse; table-layout: fixed; }
-  .adapt-ladder tbody tr { border-top: 1px solid rgba(43,39,34,0.12); }
-  .adapt-ladder tbody tr:last-child { border-bottom: 1px solid rgba(43,39,34,0.12); }
-  .adapt-rung { opacity: 0.4; }
-  .adapt-rung.reached { opacity: 1; }
-  .adapt-rung-lvl {
-    font-family: var(--hand); font-size: calc(22px + var(--text-size-adjust)); font-weight: 700; text-align: left;
-    color: var(--ink); padding: 10px 0; width: 18%;
-  }
-  .adapt-rung-name {
-    font-family: var(--hand); font-size: calc(22px + var(--text-size-adjust)); font-weight: 400; color: var(--ink); padding: 10px 0;
-  }
-  .adapt-rung-mark {
-    font-family: var(--type); font-size: calc(11px + var(--text-size-adjust)); letter-spacing: 0.5px; color: var(--ink-soft);
-    text-align: right; padding: 10px 0;
-  }
-  .adapt-rung.peak .adapt-rung-mark { color: var(--ink); font-weight: 700; }
 
   /* ---------- Easter eggs (Phase 8) ---------- */
   /* Margin doodles — faint hand-drawn ink scribbles in the page corners */
