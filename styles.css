@@ -3945,13 +3945,53 @@
      more saturated swipe while the hue stays era-driven. */
   .word::before {
     content: ""; position: absolute; z-index: -1;
-    left: -2px; right: -2px;
-    top: calc(38% - var(--rarity, 0) * 9%); bottom: 8%;
-    background: var(--highlighter);
+    left: -5px; right: -7px;
+    top: calc(43% - var(--rarity, 0) * 9%); bottom: 9%;
+    background:
+      linear-gradient(178deg,
+        rgba(255, 255, 255, 0.09) 0 15%,
+        transparent 25% 66%,
+        rgba(43, 39, 34, 0.035) 78% 100%),
+      var(--highlighter);
     opacity: calc(0.7 + var(--rarity, 0) * 0.3);
-    transform: rotate(-1.6deg) skewX(-6deg);
-    border-radius: 40% 55% 45% 50% / 60% 50% 55% 45%;
+    transform: rotate(-1.8deg) skewX(-3deg);
+    border-radius: 46% 57% 43% 54% / 58% 47% 62% 43%;
+    --swipe-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' preserveAspectRatio='none'%3E%3Cpath d='M1 49 C1 34 5 24 13 20 C24 16 34 21 45 17 C58 13 68 19 80 16 C91 15 98 25 99 41 C101 56 97 69 89 76 C79 82 68 77 57 82 C45 87 34 80 22 83 C11 85 3 74 1 59 C0 55 0 52 1 49 Z'/%3E%3C/svg%3E");
+    -webkit-mask: var(--swipe-mask) center / 100% 100% no-repeat;
+    mask: var(--swipe-mask) center / 100% 100% no-repeat;
+    filter: url(#highlighterWobble);
     transition: background 0.4s ease, opacity 0.4s ease, top 0.4s ease;
+  }
+  /* Five marker gestures, with one chosen when a new prompt is dealt. The selected shape stays
+     on the element through feedback and page-turn clones, while successive prompts stop looking
+     as though the same digital stamp was pressed behind every one. */
+  .word-wrap[data-swipe="1"] .word::before {
+    left: -8px; right: -3px;
+    top: calc(46% - var(--rarity, 0) * 9%); bottom: 7%;
+    transform: rotate(0.8deg) skewX(2deg);
+    border-radius: 58% 42% 55% 45% / 48% 61% 42% 57%;
+    --swipe-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' preserveAspectRatio='none'%3E%3Cpath d='M0 43 C2 29 9 21 20 20 C32 20 40 15 52 18 C65 21 76 15 87 20 C95 23 99 33 100 47 C100 60 96 70 88 77 C78 84 66 78 55 81 C43 84 34 79 23 82 C12 85 4 76 1 64 C0 57 -1 49 0 43 Z'/%3E%3C/svg%3E");
+  }
+  .word-wrap[data-swipe="2"] .word::before {
+    left: -4px; right: -10px;
+    top: calc(40% - var(--rarity, 0) * 9%); bottom: 12%;
+    transform: rotate(-0.5deg) skewX(-7deg);
+    border-radius: 39% 61% 47% 53% / 63% 41% 59% 46%;
+    --swipe-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' preserveAspectRatio='none'%3E%3Cpath d='M1 54 C0 39 4 28 12 22 C21 16 31 22 42 18 C54 14 64 20 75 17 C87 14 96 22 99 35 C102 48 98 61 91 69 C83 78 72 75 62 80 C50 86 39 78 28 82 C17 86 7 78 3 68 C1 63 1 58 1 54 Z'/%3E%3C/svg%3E");
+  }
+  .word-wrap[data-swipe="3"] .word::before {
+    left: -9px; right: -6px;
+    top: calc(45% - var(--rarity, 0) * 9%); bottom: 5%;
+    transform: rotate(-2.7deg) skewX(4deg);
+    border-radius: 52% 48% 62% 38% / 44% 58% 47% 63%;
+    --swipe-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' preserveAspectRatio='none'%3E%3Cpath d='M0 45 C2 30 8 20 18 18 C29 15 38 22 49 18 C62 13 72 19 84 17 C94 17 99 28 100 42 C101 58 96 72 86 78 C75 85 64 78 52 83 C40 88 29 81 18 84 C8 86 2 75 1 62 C0 56 -1 50 0 45 Z'/%3E%3C/svg%3E");
+  }
+  .word-wrap[data-swipe="4"] .word::before {
+    left: -3px; right: -9px;
+    top: calc(42% - var(--rarity, 0) * 9%); bottom: 10%;
+    transform: rotate(1.3deg) skewX(-2deg);
+    border-radius: 43% 55% 40% 60% / 61% 45% 56% 39%;
+    --swipe-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' preserveAspectRatio='none'%3E%3Cpath d='M1 51 C0 37 4 25 14 21 C25 17 35 23 46 18 C58 13 69 20 81 17 C92 15 98 26 99 40 C101 53 98 65 90 73 C81 82 70 77 59 81 C47 85 37 79 26 83 C15 87 6 78 2 67 C0 62 0 56 1 51 Z'/%3E%3C/svg%3E");
   }
 
   /* Both Of Us — two or three prompt words sharing the line. Each word keeps its own

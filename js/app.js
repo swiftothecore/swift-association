@@ -10864,6 +10864,7 @@ function revolveWord() {
   const rar = rarityTier(currentSongs.length);
   wrap.dataset.rarity = rar.name;
   wrap.style.setProperty("--rarity", rar.t);
+  renderPromptSwipe();
   $("wordDisplay").textContent = currentWord;
   // re-fire the swap animation (motion-safe)
   wrap.classList.remove("revolve-in");
@@ -13024,6 +13025,14 @@ function rarityTier(n) {
   return { name: "singular", t: 1, stamp: "one of one" };
 }
 
+// Deal one of five hand-drawn highlighter gestures with each new prompt. It is written once to
+// the wrapper, so feedback and cloned page turns keep the same mark; seeing the word again in a
+// later run can still look like a genuinely fresh swipe rather than its permanently assigned icon.
+function renderPromptSwipe() {
+  const wrap = $("wordDisplay") && $("wordDisplay").parentNode;
+  if (wrap) wrap.dataset.swipe = String(Math.floor(Math.random() * 5));
+}
+
 // Paint the rarity stamp beside the prompt word, and the swipe weight that scales with it.
 // Impostor: rarity would betray a fake outright (0 songs → "one of one"), and even a real
 // word's scarcity is a tell, so flatten the swipe and show no stamp for the run.
@@ -13157,6 +13166,7 @@ function advanceRound() {
   // and revealPromptWord turns it over once the stake is down.
   wordConcealed = wagerRuleActive();
   const wrap = $("wordDisplay").parentNode;   // .word-wrap
+  renderPromptSwipe();
   renderRarityStamp();
 
   $("wordDisplay").textContent = currentWord;
@@ -17955,6 +17965,7 @@ function devApplyWord(word) {
   if (!usedWords.includes(word)) usedWords.push(word);
   currentSongs = validSongs(currentWord, effectiveStrict(), effectiveNoTitle());
   roundHintSong = pickHintSong();
+  renderPromptSwipe();
   if (!wordConcealed) $("wordDisplay").textContent = currentWord;   // a face-down page stays face down
   renderExcludedNote();
   renderHintAffordance();
