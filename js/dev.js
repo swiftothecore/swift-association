@@ -526,7 +526,11 @@ export function initDev(api) {
     row("cross-game streak", streakN,
         btn("set", () => toast(`streak = ${api.metrics.setStreak(+streakN.value)}`)),
         btn("scarf +13", () => toast(`scarf taps = ${api.metrics.setScarf(api.metrics.scarf() + 13)}`)),
-        btn("metrics", () => { console.log("[dev] metrics", api.metrics.all()); toast("metrics in console"); }))));
+        btn("metrics", () => { console.log("[dev] metrics", api.metrics.all()); toast("metrics in console"); })),
+    row("page marks",
+        btn("poke all", () => toast(`${api.metrics.allMarks()} marks poked`)),
+        btn("poked", () => { const m = api.metrics.marks(); console.log("[dev] marks poked", m); toast(`${m.length}/${api.metrics.markKinds().length} poked`); }),
+        btn("clear marks", () => { api.metrics.clearMarks(); toast("page marks cleared"); }, "warn"))));
 
   // ---- Bonus games / random goals -------------------------------------------
   const bonusSel = select(api.bonus.list(), (g) => g.id, (g) => g.name);

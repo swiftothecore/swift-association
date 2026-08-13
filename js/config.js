@@ -193,6 +193,15 @@ export const EXPLORER_TOKENS = [
      main-game charm. It has play-every-bonus-game of its own and that is where its breadth lives.
    - ruthless, which is a mode whose card left the shelf, not a type you can go and choose. */
 export const SHELF_TYPES = ["classic", "infinite", "daily", "album", "challenge", "custom", "guest"];
+/* The inked marks drawn beside each inside page's title (the `.page-mark.mark-*` spans in
+   index.html). Ten kinds across eleven spans: the guest shelf and a guest's catalogue page
+   share one mark, so the set is by KIND, not by element. Tapping all ten is a secret charm
+   (tap-every-page-mark), so a new inside page with a new mark makes that charm cost one more
+   tap — add the kind here only when the page is a permanent fixture everyone can reach. */
+export const PAGE_MARK_KINDS = [
+  "stats", "records", "charms", "mastery", "challenges",
+  "bonus", "album", "ruthless", "guests", "songbook",
+];
 // Per-mode accent for the index-card record tiles (label + tape tint). Keyed by mode id;
 // infinite tokens borrow the colour of their underlying difficulty.
 export const MODE_COLORS = {
@@ -2645,6 +2654,11 @@ export const ACHIEVEMENTS = [
      per-run: it only turns up on a roll in one branch of the margin-doodle chain, so thirteen
      taps in a single game would be luck rather than a feat. Counted in METRICS_KEY. */
   { id: "tap-scarf-doodle-13-times", name: "You Keep My Old Scarf", desc: "Tap the scarf doodle 13 times", secret: true, icon: "scarftap" },
+  /* The other drawings you can touch: the little inked mark beside every inside page's title
+     (see PAGE_MARK_KINDS). Lifetime and set-shaped — ten distinct marks, in any order, across
+     any number of sittings. Nothing invites the tap and the cursor never changes, so this one
+     is found by fidgeting; the mark jumps when you press it so at least the fidgeting answers. */
+  { id: "tap-every-page-mark", name: "Marked Every Page", desc: "Poke the little mark beside every page's title", secret: true, icon: "placeholder" },
   { id: "play-easy-3-times-in-row",   name: "Safe & Sound",     desc: "Play Easy three times in a row",       secret: false, icon: "lantern", sitting: true, earn: { cat: "difficulty", diff: "easy" } },
   { id: "beat-personal-best-score",          name: "R-E-V-E-N-G-E",    desc: "Beat your own best score on any board", secret: false, icon: "megaphone", sitting: true, earn: { cat: "difficulty" } },
   { id: "perfect-13-every-mode",       name: "Every Version Of Yourself", desc: "Score a perfect 13/13 in every difficulty", secret: false, icon: "mirrorball" },
@@ -3150,7 +3164,8 @@ export const ACH_GROUP_OF = {
      looking for, the keepsakes, and the coincidences of clock and calendar — a charm here is
      about when or where you were sitting, never how well you played. */
   "make-snake-appear": "margins", "watch-snow-fall": "margins", "watch-autumn-leaves-fall": "margins",
-  "tap-scarf-doodle-13-times": "margins", "type-reputation-tv": "margins", "open-settings-menu": "margins",
+  "tap-scarf-doodle-13-times": "margins", "tap-every-page-mark": "margins",
+  "type-reputation-tv": "margins", "open-settings-menu": "margins",
   "save-first-bracelet-keepsake": "margins", "find-every-polaroid-keepsake": "margins",
   "play-word-from-searcher": "margins", "play-between-midnight-and-1am": "margins",
   "keep-page-company-past-midnight": "margins", "play-whole-game-in-3am-hour": "margins",

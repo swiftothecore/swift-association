@@ -4976,6 +4976,39 @@
   .page-mark.mark-ruthless   { --mark-tint: #8c4a34; --mark-wash: 56%; }  /* the ruthless stamp's ink */
   .page-mark.mark-guests     { --mark-tint: var(--guest-shelf-ink, #35618f); }  /* this load's guest stamp plate */
   .page-mark.mark-songbook   { --mark-tint: #5f7d5a; }
+  /* The one thing on an inside page you can prod. Nothing advertises it — no pointer
+     cursor, no hover state, no title — but a press makes the drawing kick off the paper
+     and its highlighter swipe puff out behind it, so a stray click gets an answer. Poking
+     all ten distinct marks is a secret charm; see wirePageMarks in js/app.js.
+     The element's own transform IS the mark's resting tilt, so the kick has to go on the
+     inner <svg> and the puff on ::before — animating .page-mark itself would straighten
+     the mark up for the duration and then drop it back, which reads as a glitch. */
+  .page-mark svg { transform-origin: 50% 80%; }
+  .page-mark.mark-poked svg { animation: markKick 0.62s cubic-bezier(0.34, 1.56, 0.64, 1); }
+  .page-mark.mark-poked::before { animation: markPuff 0.62s ease-out; }
+  @keyframes markKick {
+    0%   { transform: none; }
+    22%  { transform: translateY(-3px) rotate(-8deg) scale(1.16); }
+    52%  { transform: translateY(0) rotate(5deg) scale(1.03); }
+    78%  { transform: rotate(-2.5deg); }
+    100% { transform: none; }
+  }
+  @keyframes markPuff {
+    0%   { opacity: 1; transform: rotate(-3.5deg) scale(1); }
+    38%  { opacity: 0.7; transform: rotate(-7deg) scale(1.4); }
+    100% { opacity: 1; transform: rotate(-3.5deg) scale(1); }
+  }
+  /* Reduce-motion still gets an acknowledgement, just not a moving one: the swipe
+     winks. A poke that does nothing at all would read as a dead element. */
+  @media (prefers-reduced-motion: reduce) {
+    .page-mark.mark-poked svg { animation: none; }
+    .page-mark.mark-poked::before { animation: markWink 0.5s ease-out; }
+    @keyframes markWink {
+      0%   { opacity: 1; }
+      30%  { opacity: 0.25; }
+      100% { opacity: 1; }
+    }
+  }
   /* The mark and the "← back" link share one row, so the mark is spending the
      title's headroom. On a narrow screen at the large text size the worst case
      ("Achievements") comes within a few pixels of the link, so give the width back

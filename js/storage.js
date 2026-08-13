@@ -821,8 +821,9 @@ export function recordGameTally(rounds) {
 //   noTimeoutStreak — consecutive non-infinite games finished with zero timeouts
 //   correctRunStreak — correct answers in a row ACROSS game boundaries (see bumpCorrectRunStreak)
 //   scarfClicks — lifetime taps on the scarf margin doodle
+//   marksTapped — { [markKind]: true } for each page-header mark poked, lifetime
 export function loadMetrics() {
-  const d = { fastestMs: null, answerSumMs: 0, answerN: 0, lyricLines: 0, versePerfect: 0, wholeVerses: 0, bestVerseBonus: 0, roundsTotal: 0, roundsCorrect: 0, dailyPlayed: 0, dailyPerfect: 0, noTimeoutStreak: 0, correctRunStreak: 0, scarfClicks: 0 };
+  const d = { fastestMs: null, answerSumMs: 0, answerN: 0, lyricLines: 0, versePerfect: 0, wholeVerses: 0, bestVerseBonus: 0, roundsTotal: 0, roundsCorrect: 0, dailyPlayed: 0, dailyPerfect: 0, noTimeoutStreak: 0, correctRunStreak: 0, scarfClicks: 0, marksTapped: {} };
   try {
     const raw = localStorage.getItem(METRICS_KEY);
     if (raw) { const o = JSON.parse(raw); if (o && typeof o === "object") return { ...d, ...o }; }
@@ -872,6 +873,20 @@ export function bumpScarfClicks() {
   m.scarfClicks = (m.scarfClicks || 0) + 1;
   saveMetrics(m);
   return m.scarfClicks;
+}
+// The margin mark at the top of each inside page. Lifetime and set-shaped rather than a
+// count, because the feat is having touched all ten of them, in any order and across any
+// number of sittings — a tally would let ten pokes at one mark stand in for the collection.
+export function tapPageMark(kind) {
+  const m = loadMetrics();
+  m.marksTapped = { ...(m.marksTapped || {}) };
+  if (m.marksTapped[kind]) return m.marksTapped;
+  m.marksTapped[kind] = true;
+  saveMetrics(m);
+  return m.marksTapped;
+}
+export function pageMarksTapped() {
+  return loadMetrics().marksTapped || {};
 }
 
 /* ---------- Skills & Mastery progression ---------- */

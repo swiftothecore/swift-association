@@ -5,7 +5,7 @@ import { SITE_URL, copyToClipboard } from "./share.js";
 import { launchFlock } from "./messengers.js";
 import {
   TOTAL_ROUNDS, RECENT_WINDOW, NOVELTY_BOOST, DAILY_ALBUM_SKEW, DAILY_ALBUM_WEIGHT_EXP, DIFF_KEY, DEFAULT_SETTINGS,
-  MODES, MODE_ORDER, MODE_COLORS, DIFFICULTY_LADDER, MODALITY_MODES, EXPLORER_TOKENS, SHELF_TYPES,
+  MODES, MODE_ORDER, MODE_COLORS, DIFFICULTY_LADDER, MODALITY_MODES, EXPLORER_TOKENS, SHELF_TYPES, PAGE_MARK_KINDS,
   ERAS, TENDER_ERAS, FINALE_ERAS, ALBUM_ERA, TS_MILESTONES, TS_LORE_DAYS, SALT_SHAKER_D, SALT_CAP_D,
   ALBUM_COLORS, CB_ALBUM_COLORS, STUDIO_ALBUMS, TITLE_ALIASES, STAMP_INKS,
   ACHIEVEMENTS, ACH_ICONS, ACH_BY_ID, ACH_GROUPS, ACH_GROUP_COLORS, ACH_GROUP_OF,
@@ -82,7 +82,7 @@ import {
   loadCharmFolds, setCharmFold, saveCharmFolds,
   loadSongTally, saveSongTally, recordGameTally,
   loadCustom, saveCustom, activeCustomPreset, resetCustom, defaultCustomPreset,
-  loadMetrics, saveMetrics, recordGameMetrics, bumpCorrectRunStreak, bumpScarfClicks,
+  loadMetrics, saveMetrics, recordGameMetrics, bumpCorrectRunStreak, bumpScarfClicks, tapPageMark, pageMarksTapped,
   loadSettings, saveSettings,
   exportData, importData,
   loadChallengeState, saveChallengeState, challengeRecord,
@@ -1953,7 +1953,7 @@ const HIDDEN_ACH_IDS = [
      way the batch was classified — how a page was answered, how a run went, what was typed,
      and what the calendar said — rather than in file order, so a future reconsideration can
      see the shape of what it is arguing with. */
-  "tap-scarf-doodle-13-times",
+  "tap-scarf-doodle-13-times", "tap-every-page-mark",
   "win-with-every-answer-over-10s", "answer-in-final-second-all-13-rounds", "time-out-with-right-answer-typed",
   "type-nothing-until-2s-left-then-answer-right", "take-first-suggestion-all-13-rounds",
   "submit-same-wrong-answer-5-times-one-round", "answer-right-with-song-given-wrongly-earlier",
@@ -15743,6 +15743,36 @@ function addDoodle(kind, posClass) {
   layer.appendChild(d);
 }
 
+/* The margin marks beside each inside page's title are the other drawings you can touch, and
+   the only ones that are always there. Nothing invites the tap: the cursor stays an arrow and
+   there is no hover state, because the point is that you find it by fidgeting. What a poke
+   gets you is the kick animation (see .page-mark.mark-poked in styles.css); what ten distinct
+   pokes get you is Marked Every Page.
+   Tracked as a SET in lifetime metrics, so the ten can be spread over any number of sittings
+   and in any order — and so ten pokes at the same mark cannot stand in for the collection. */
+const MARK_POKE_MS = 620;   // must outlast the markKick / markPuff animations
+function markPoked(tapped) {
+  if (PAGE_MARK_KINDS.every((k) => tapped[k])) unlock("tap-every-page-mark");
+}
+function wirePageMarks() {
+  document.querySelectorAll(".page-mark").forEach((el) => {
+    // By kind, not by element: the guest shelf and a guest's catalogue page draw the same
+    // mark, and asking the player to find both would be asking them to find one twice.
+    const kind = PAGE_MARK_KINDS.find((k) => el.classList.contains("mark-" + k));
+    if (!kind) return;
+    el.addEventListener("click", () => {
+      el.classList.remove("mark-poked");
+      void el.offsetWidth;   // reflow, so a second poke restarts the animation rather than ignoring it
+      el.classList.add("mark-poked");
+      setTimeout(() => el.classList.remove("mark-poked"), MARK_POKE_MS);
+      markPoked(tapPageMark(kind));
+    });
+  });
+  // Backfill: the tenth poke may have landed inside a sandbox, where unlock() was gated. The
+  // taps were still recorded, so a complete set still hands the charm over on the next load.
+  markPoked(pageMarksTapped());
+}
+
 function addMarginNote(text) {
   const layer = $("doodleLayer");
   if (!layer) return;
@@ -18746,6 +18776,12 @@ function buildDevApi() {
       // them is not a test plan.
       scarf: () => loadMetrics().scarfClicks || 0,
       setScarf: (n) => { const m = loadMetrics(); m.scarfClicks = Math.max(0, n | 0); saveMetrics(m); return m.scarfClicks; },
+      // Page-header marks poked. Collecting the set by hand means visiting ten screens, and
+      // the reset is the only way to see the charm land again once it has been earned.
+      marks: () => PAGE_MARK_KINDS.filter((k) => pageMarksTapped()[k]),
+      markKinds: () => PAGE_MARK_KINDS.slice(),
+      allMarks: () => { PAGE_MARK_KINDS.forEach(tapPageMark); markPoked(pageMarksTapped()); return PAGE_MARK_KINDS.length; },
+      clearMarks: () => { const m = loadMetrics(); m.marksTapped = {}; saveMetrics(m); return 0; },
     },
     // The lifetime per-word tally, which the nemesis charms are judged on. Nothing here can be
     // filled honestly in a test session: Haunted wants the same word missed in three separate
@@ -20268,6 +20304,7 @@ async function init() {
     reader.readAsText(file);
   });
   wireInput();
+  wirePageMarks();
   setupTooltips();
   wireFirstRun();
 
