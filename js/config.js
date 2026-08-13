@@ -2840,12 +2840,14 @@ export const ACH_GROUPS = [
   { id: "infinite",  label: "Infinite mode",          short: "Infinite" },
   { id: "lyricist",  label: "Lyricist & lyric lines", short: "Lyricist" },
   { id: "catalogue", label: "Catalogue knowledge",    short: "Catalogue" },
+  { id: "nemesis",   label: "Nemesis words",          short: "Nemesis" },
   { id: "challenges", label: "Challenges",             short: "Challenge" },
   { id: "albumFocus", label: "Album Focus",            short: "Album" },
   { id: "adaptive",  label: "Adaptive mode",          short: "Adaptive" },
   { id: "custom",    label: "Custom mode",            short: "Custom" },
   { id: "guests",    label: "Guest shelf",            short: "Guests" },
   { id: "bonus",     label: "Bonus games",            short: "Bonus" },
+  { id: "longhaul",  label: "The long haul",          short: "Long haul" },
   { id: "mastery",   label: "Skills & Mastery",       short: "Mastery" },
 ];
 // One muted notebook hue per theme — the section dots and the by-theme breakdown bars.
@@ -2855,12 +2857,14 @@ export const ACH_GROUP_COLORS = {
   infinite:  "#2f4d7a",
   lyricist:  "#9b6b9e",
   catalogue: "#b23a3a",
+  nemesis:   "#6d3f5c",
   challenges: "#2b2722",
   albumFocus: "#a8577a",
   adaptive:  "#7d5a3f",
   custom:    "#4a6b8a",
   guests:    "#6b5a92",
   bonus:     "#2f6f6a",
+  longhaul:  "#4a6b3f",
   mastery:   "#8a6d1f",
 };
 // Membership: only the non-core ids are listed; everything else defaults to "core"
@@ -2896,7 +2900,21 @@ export const ACH_GROUP_OF = {
   "name-redacted-song-after-buying-all-strips": "bonus", "time-out-all-10-only-here-pages": "bonus", "finish-bonus-run-one-page-short-of-sweep": "bonus",
   "flag-spot-the-slip-impostor-under-2s": "bonus",
   "unlock-mastery": "mastery", "reach-level-10-one-skill": "mastery", "wear-prestige-title": "mastery",
-  "reach-round-89-infinite": "infinite", "answer-nemesis-word": "catalogue",
+  "reach-round-89-infinite": "infinite",
+  /* Nemesis: the charms that read your own per-word history back to you. The Cycle Ends sits
+     here rather than under Catalogue because it is the lower rung of a ladder whose upper rung
+     is answer-most-missed-word, and a ladder split across two themes reads as two unrelated
+     charms. */
+  "answer-nemesis-word": "nemesis", "answer-word-missed-in-earlier-game": "nemesis",
+  "miss-same-word-in-3-games": "nemesis", "answer-most-missed-word": "nemesis",
+  "be-dealt-every-prompt-word": "nemesis",
+  /* The long haul: everything priced in days on the calendar or rounds on the clock rather than
+     in one good run. Pulled out of Core so it does not carry 78 charms while the next largest
+     theme carries 21. */
+  "play-7-days-in-row": "longhaul", "play-on-13-different-days": "longhaul",
+  "play-in-every-month": "longhaul", "answer-500-rounds-correct-lifetime": "longhaul",
+  "play-1989-rounds-lifetime": "longhaul", "play-89-games": "longhaul",
+  "answer-50-correct-in-a-row-across-games": "longhaul",
 };
 
 /* ---------- Easter-egg art ---------- */
