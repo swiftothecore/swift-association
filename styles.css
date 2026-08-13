@@ -4906,18 +4906,31 @@
   /* the swipe: the same blobby marker smudge an earned charm sits on */
   .page-mark::before {
     content: ""; position: absolute; inset: 4%; z-index: -1;
-    background: color-mix(in srgb, var(--mark-tint) 42%, transparent);
+    background: color-mix(in srgb, var(--mark-tint) var(--mark-wash, 42%), transparent);
     border-radius: 52% 40% 55% 45% / 62% 48% 58% 42%;
     transform: rotate(-3.5deg);
   }
-  /* Section families. Fixed hues, deliberately NOT the era tokens: these say which
-     part of the notebook you are standing in, and must not change when the album
-     does. Gold has the least tonal separation from paper, so its pen goes deeper
-     than the others or the drawing dissolves into its own swipe. */
-  .page-mark.fam-progress { --mark-tint: #c8951f; --mark-tone: 52%; }
-  .page-mark.fam-rewards  { --mark-tint: #8b73c9; }
-  .page-mark.fam-play     { --mark-tint: #b23a3f; }
-  .page-mark.fam-songbook { --mark-tint: #5f7d5a; }
+  /* One hue per page, and it is the hue of whatever you pressed to get here: the six
+     nav cards' era tints, and the franking stamps' own inks for the three screens
+     reached from the corner. Grouping these into section families instead was the
+     first attempt and it read as an error, because the front page has already told
+     you stats is the denim card and charms is the lavender one — a gold mark at the
+     top of Stats simply looks like the wrong icon. Fixed values rather than the era
+     tokens: they must not change when the album does. Gold has the least tonal
+     separation from paper, so its pen goes deeper or the drawing dissolves into its
+     own swipe. */
+  .page-mark.mark-stats      { --mark-tint: #5b87b8; }  /* denim card */
+  .page-mark.mark-records    { --mark-tint: #c7951f; --mark-tone: 52%; }  /* gold card */
+  .page-mark.mark-charms     { --mark-tint: #8b73c9; }  /* lavender card */
+  .page-mark.mark-mastery    { --mark-tint: #a8577a; }  /* rose card */
+  .page-mark.mark-challenges { --mark-tint: #2b2722; }  /* graphite card */
+  .page-mark.mark-bonus      { --mark-tint: #4a8c87; }  /* teal card */
+  .page-mark.mark-album      { --mark-tint: #2b3a5e; }  /* the framed tile on the album stamp */
+  /* The rust of the Ruthless plate goes dusty at the standard 42% and starts reading as
+     Mastery's rose, so its swipe is laid on heavier to keep the ink's brick in it. */
+  .page-mark.mark-ruthless   { --mark-tint: #8c4a34; --mark-wash: 56%; }  /* the ruthless stamp's ink */
+  .page-mark.mark-guests     { --mark-tint: #35618f; }  /* the guest stamp's default plate */
+  .page-mark.mark-songbook   { --mark-tint: #5f7d5a; }
   /* The mark and the "← back" link share one row, so the mark is spending the
      title's headroom. On a narrow screen at the large text size the worst case
      ("Achievements") comes within a few pixels of the link, so give the width back
