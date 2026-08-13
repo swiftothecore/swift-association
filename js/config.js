@@ -2145,6 +2145,13 @@ export const ACH_ICONS = {
   // a word carried over from the searcher and played: the word lifted out of the glass and
   // set down on the line, with the way it came still faintly there
   lenstoline:`<svg viewBox="0 0 24 24"><circle class="ink-fill" cx="10.4" cy="7.4" r="6.2"/><path class="ink" fill="none" stroke-width="1.45" stroke-linecap="round" d="M7.4 7 C8.4 5.8 9.2 7.6 10.2 6.6 C11 5.8 12 7.4 13.2 6.6"/><path class="ink" stroke-width="2.2" stroke-linecap="round" d="M6 11.8 L2.8 15"/><path class="ink" fill="none" stroke-width="1.05" opacity="0.45" stroke-dasharray="0.1 1.9" stroke-linecap="round" d="M15.6 11 C17.8 13.2 18.6 15.4 18.6 17.6"/><path class="ink" stroke-width="1.05" opacity="0.4" stroke-linecap="round" d="M8.6 21.2 H22.4"/><path class="ink" fill="none" stroke-width="1.55" stroke-linecap="round" d="M13.4 20 C14.4 18.8 15.2 20.6 16.2 19.6 C17 18.8 18 20.4 19 19.6 C19.8 19 20.6 19.8 21.2 20.2"/></svg>`,
+  // every margin mark found and poked: a manicule, the pointing hand a reader has inked into
+  // the margin beside a line worth noting since long before this notebook. It is the one
+  // drawing that is BOTH a margin mark and the act of touching one, which is why the hand is
+  // the whole charm and the mark it pokes is nowhere in frame: a second doodle out at the
+  // fingertip only shrank the hand until it read as a stick.
+  // The two ticks off the tip are the poke landing; without them the hand merely points.
+  manicule:`<svg viewBox="0 0 24 24"><path class="ink-fill" d="M5 8.9 L13.2 8.7 C12.8 7 13.8 5.8 15.3 6.1 C16.8 6.4 17.3 7.8 16.4 9.1 L19 8.7 L21.3 8.3 L21.7 17.6 L19.1 17.4 C15.6 18.9 12.4 17.8 12.2 15.2 C12.1 13.9 12.7 13.2 13.5 13 C12.4 12.7 11.9 11.9 12.2 10.9 L5 11.9 A1.5 1.5 0 0 1 5 8.9 Z"/><g class="ink"><path d="M19 8.9 L18.9 17.4"/><path d="M13.2 13.1 C14.6 12.9 15.7 13.1 16.5 13.6"/><path d="M13.1 15.8 C14.3 15.6 15.4 15.7 16.2 16.1"/></g><g class="ink"><path d="M2.6 5.9 L3.5 7.3"/><path d="M6.4 4.8 L6.2 6.4"/></g></svg>`,
 };
 
 /* ---------- Mastery marks ----------
@@ -2658,7 +2665,7 @@ export const ACHIEVEMENTS = [
      (see PAGE_MARK_KINDS). Lifetime and set-shaped — ten distinct marks, in any order, across
      any number of sittings. Nothing invites the tap and the cursor never changes, so this one
      is found by fidgeting; the mark jumps when you press it so at least the fidgeting answers. */
-  { id: "tap-every-page-mark", name: "Marked Every Page", desc: "Poke the little mark beside every page's title", secret: true, icon: "placeholder" },
+  { id: "tap-every-page-mark", name: "Marked Every Page", desc: "Poke the little mark beside every page's title", secret: true, icon: "manicule" },
   { id: "play-easy-3-times-in-row",   name: "Safe & Sound",     desc: "Play Easy three times in a row",       secret: false, icon: "lantern", sitting: true, earn: { cat: "difficulty", diff: "easy" } },
   { id: "beat-personal-best-score",          name: "R-E-V-E-N-G-E",    desc: "Beat your own best score on any board", secret: false, icon: "megaphone", sitting: true, earn: { cat: "difficulty" } },
   { id: "perfect-13-every-mode",       name: "Every Version Of Yourself", desc: "Score a perfect 13/13 in every difficulty", secret: false, icon: "mirrorball" },
