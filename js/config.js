@@ -2982,6 +2982,9 @@ export const ACH_ID_MIGRATIONS = {
 // the section order. The final "Secret charms" section is render-only (not a group).
 export const ACH_GROUPS = [
   { id: "core",      label: "Core",                   short: "Core" },
+  { id: "perfect",   label: "Perfect pages",          short: "Perfect" },
+  { id: "clock",     label: "Against the clock",      short: "Clock" },
+  { id: "misfires",  label: "The crossed-out lines",  short: "Misfires" },
   { id: "daily",     label: "Daily challenge",        short: "Daily" },
   { id: "infinite",  label: "Infinite mode",          short: "Infinite" },
   { id: "lyricist",  label: "Lyricist & lyric lines", short: "Lyricist" },
@@ -2993,11 +2996,15 @@ export const ACH_GROUPS = [
   { id: "guests",    label: "Guest shelf",            short: "Guests" },
   { id: "bonus",     label: "Bonus games",            short: "Bonus" },
   { id: "longhaul",  label: "The long haul",          short: "Long haul" },
+  { id: "margins",   label: "In the margins",         short: "Margins" },
   { id: "mastery",   label: "Skills & Mastery",       short: "Mastery" },
 ];
 // One muted notebook hue per theme — the section dots and the by-theme breakdown bars.
 export const ACH_GROUP_COLORS = {
   core:      "#c8951f",
+  perfect:   "#c2622a",
+  clock:     "#55707f",
+  misfires:  "#8a3b2f",
   daily:     "#3f7d6e",
   infinite:  "#2f4d7a",
   lyricist:  "#9b6b9e",
@@ -3009,6 +3016,7 @@ export const ACH_GROUP_COLORS = {
   guests:    "#6b5a92",
   bonus:     "#2f6f6a",
   longhaul:  "#4a6b3f",
+  margins:   "#7d5a3f",
   mastery:   "#8a6d1f",
 };
 // Membership: only the non-core ids are listed; everything else defaults to "core"
@@ -3032,6 +3040,9 @@ export const ACH_GROUP_OF = {
   "win-vanishing-word-all-answers-blind": "challenges", "win-deep-cut-all-correct-same-album": "challenges", "win-from-a-to-z-no-repeated-letters": "challenges",
   "bank-press-your-luck-pot-5-pages-deep": "challenges", "win-insurance-no-shields-spent": "challenges", "win-confidence-wager-max-every-page": "challenges",
   "beat-dark-side-no-misses": "challenges",
+  /* Dark sides are a challenge's hard mode, so the three rungs of the dark ladder sit in
+     Challenges beside the base ones rather than off in a section of their own. */
+  "beat-first-dark-side": "challenges", "beat-5-dark-sides": "challenges", "beat-every-dark-side": "challenges",
   "beat-first-album-focus": "albumFocus", "beat-all-12-album-focus": "albumFocus", "perfect-album-focus": "albumFocus", "perfect-all-12-album-focus": "albumFocus",
   "perfect-album-focus-ultra": "albumFocus", "perfect-album-focus-lyricist": "albumFocus",
   "finish-first-custom-run": "custom", "keep-5-custom-presets": "custom", "reach-round-50-endless-custom": "custom", "perfect-custom-at-least-ultra": "custom",
@@ -3052,12 +3063,53 @@ export const ACH_GROUP_OF = {
   "miss-same-word-in-3-games": "nemesis", "answer-most-missed-word": "nemesis",
   "be-dealt-every-prompt-word": "nemesis",
   /* The long haul: everything priced in days on the calendar or rounds on the clock rather than
-     in one good run. Pulled out of Core so it does not carry 78 charms while the next largest
-     theme carries 21. */
+     in one good run. Pulled out of Core, which used to hold nearly half the roster on its own. */
   "play-7-days-in-row": "longhaul", "play-on-13-different-days": "longhaul",
   "play-in-every-month": "longhaul", "answer-500-rounds-correct-lifetime": "longhaul",
   "play-1989-rounds-lifetime": "longhaul", "play-89-games": "longhaul",
   "answer-50-correct-in-a-row-across-games": "longhaul",
+  /* Perfect pages: the 13/13 board and the streaks that lead to it. A charm belongs here when
+     the feat is "nothing dropped", whatever mode it was dropped in — so the mode-flavoured
+     perfects (Ultra, Lyricist, one album) sit with their siblings rather than in their modes,
+     where each would be the odd perfectionist out. */
+  "perfect-13": "perfect", "perfect-13-hard": "perfect", "perfect-13-ultra": "perfect",
+  "perfect-13-lyricist": "perfect", "perfect-13-every-mode": "perfect", "perfect-13-all-one-album": "perfect",
+  "perfect-13-no-wrong-submissions": "perfect", "perfect-13-two-games-in-row": "perfect",
+  "win-ultra-10-correct": "perfect", "beat-personal-best-score": "perfect",
+  "win-with-no-hints-or-timeouts": "perfect", "streak-5": "perfect", "streak-10": "perfect",
+  /* Against the clock: everything priced in seconds. Both directions count — the sub-second
+     answers and the deliberate crawls — because what they share is that the timer, not the
+     song, is the thing being played. */
+  "answer-under-2s": "clock", "round-1-under-2s": "clock", "answer-under-1s-left": "clock",
+  "answer-under-half-second-left": "clock", "average-under-3s-per-answer": "clock",
+  "answer-all-13-rounds-under-3s": "clock", "answer-under-1s-three-rounds-running": "clock",
+  "perfect-13-every-answer-under-2s": "clock", "win-without-clock-dropping-below-half": "clock",
+  "finish-without-timer-red-zone": "clock", "answer-in-final-second-all-13-rounds": "clock",
+  "win-with-every-answer-over-10s": "clock", "time-out-with-right-answer-typed": "clock",
+  "type-nothing-until-2s-left-then-answer-right": "clock", "finish-with-no-timeouts": "clock",
+  "finish-no-timeouts-2-games-in-row": "clock",
+  /* The crossed-out lines: the charms you earn by getting it wrong, giving up, or repeating
+     yourself. Nearly all of them are secret, so the section stays empty until the first one
+     lands — recover-after-miss keeps it from being a theme with no visible way in. */
+  "recover-after-miss-3-times-one-game": "misfires", "score-zero": "misfires", "score-12": "misfires",
+  "finish-with-no-answers": "misfires", "submit-same-wrong-answer-5-times-one-round": "misfires",
+  "answer-13-wrong-having-typed-every-round": "misfires", "miss-round-after-every-hint": "misfires",
+  "submit-answer-in-all-caps": "misfires", "submit-prompt-word-as-answer": "misfires",
+  "quit-round-1-before-typing": "misfires", "give-up-after-12-before-13": "misfires",
+  "take-first-suggestion-all-13-rounds": "misfires", "answer-same-song-twice-in-row": "misfires",
+  "answer-same-song-3-times-one-game": "misfires", "same-final-score-3-games-in-row": "misfires",
+  "answer-right-with-song-given-wrongly-earlier": "misfires", "score-zero-then-perfect-13-next-game": "misfires",
+  /* In the margins: everything earned off the answer line. The eggs and props you have to go
+     looking for, the keepsakes, and the coincidences of clock and calendar — a charm here is
+     about when or where you were sitting, never how well you played. */
+  "make-snake-appear": "margins", "watch-snow-fall": "margins", "watch-autumn-leaves-fall": "margins",
+  "tap-scarf-doodle-13-times": "margins", "type-reputation-tv": "margins", "open-settings-menu": "margins",
+  "save-first-bracelet-keepsake": "margins", "find-every-polaroid-keepsake": "margins",
+  "play-word-from-searcher": "margins", "play-between-midnight-and-1am": "margins",
+  "keep-page-company-past-midnight": "margins", "play-whole-game-in-3am-hour": "margins",
+  "answer-rain-on-monday": "margins", "answer-august-in-august": "margins",
+  "score-7-on-the-7th": "margins", "play-at-1313-on-the-13th": "margins",
+  "play-on-taylors-birthday": "margins", "play-all-seven-weekdays": "margins",
 };
 
 /* ---------- Easter-egg art ---------- */

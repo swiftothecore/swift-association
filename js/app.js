@@ -2616,7 +2616,7 @@ function renderAchievementsPage() {
     `</div>`;
 
   // by-theme breakdown — one small colour-coded bar per group (denominators count
-  // every charm in the theme, secret ones included, so the five sum to the total).
+  // every charm in the theme, secret ones included, so the themes sum to the total).
   const themeRows = ACH_GROUPS.map((g) => {
     const members = ACHIEVEMENTS.filter((a) => achGroupOf(a.id) === g.id);
     const got = members.filter((a) => earnedAchievements[a.id]).length;
