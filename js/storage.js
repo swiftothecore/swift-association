@@ -5,6 +5,7 @@ import {
   HS_KEY, RECORDS_KEY, HISTORY_KEY, STATS_KEY, ACH_KEY, DIFF_KEY,
   DAILY_KEY, DAILY_PROGRESS_KEY, DAILY_BOARD_KEY, DAILY_STREAK_KEY, TYPES_KEY, TALLY_KEY,
   BREADTH_KEY, WEEKDAYS_KEY, DATES_KEY, EXPLORER_TOKENS, RANDOM_KEY, GOAL_KEY, ACH_FOLD_KEY,
+  DAY_TYPES_KEY, DICE_KEY, SHELF_TYPES,
   SETTINGS_KEY, METRICS_KEY, APP_PREFIX, DEFAULT_SETTINGS,
   CHALLENGES_KEY, CHALLENGE_TOKENS_KEY,
   ALBUM_FOCUS_KEY, ALBUM_FOCUS_TARGET, DIFF_RANK,
@@ -505,6 +506,57 @@ export function markTypePlayed(type) {
   return o;
 }
 
+// How many of the seven shelf types have ever been finished. Reads the same record as
+// loadTypesPlayed but counts only SHELF_TYPES, so a stray key (an old build's type, a
+// bonus run if one ever slipped in) can never inflate the breadth rungs.
+export function shelfTypesPlayed(o = loadTypesPlayed()) {
+  return SHELF_TYPES.filter((t) => o[t]).length;
+}
+
+/* ---------- Game types played TODAY (for "Every Single Day") ----------
+   Value: { d: "YYYY-MM-DD", types: { [type]: true } }. Kept one day deep — a record whose
+   date isn't today is thrown away and started again rather than merged, which is what makes
+   this a sitting rather than a lifetime. The date is passed in (never read off `new Date`
+   here) so the dev date override moves it like every other dated surface. */
+export function loadDayTypes(dateKey) {
+  try {
+    const raw = localStorage.getItem(DAY_TYPES_KEY);
+    if (raw) {
+      const o = JSON.parse(raw);
+      if (o && typeof o === "object" && o.d === dateKey && o.types && typeof o.types === "object") return o.types;
+    }
+  } catch (e) { /* ignore */ }
+  return {};
+}
+// Record one type against today; returns how many DISTINCT shelf types today now holds.
+export function markDayTypePlayed(dateKey, type) {
+  const types = loadDayTypes(dateKey);
+  if (type && !types[type]) {
+    types[type] = true;
+    try { localStorage.setItem(DAY_TYPES_KEY, JSON.stringify({ d: dateKey, types })); } catch (e) { /* ignore */ }
+  }
+  return SHELF_TYPES.filter((t) => types[t]).length;
+}
+
+/* ---------- Runs the randomiser has dealt (for the two dice charms) ----------
+   Value: { n }. A plain count, deliberately NOT derived from RANDOM_KEY: that ledger stores
+   which tokens the dice has already shown you, so re-dealing something it has dealt before
+   would not move it, and "13 runs the dice picked" would then be uncompletable for a player
+   whose pool is small. */
+export function loadDicePicks() {
+  try {
+    const raw = localStorage.getItem(DICE_KEY);
+    if (raw) { const o = JSON.parse(raw); if (o && typeof o === "object" && Number.isFinite(o.n)) return o.n; }
+  } catch (e) { /* ignore */ }
+  return 0;
+}
+// Count one dealt run; returns the new total.
+export function markDicePick() {
+  const n = loadDicePicks() + 1;
+  try { localStorage.setItem(DICE_KEY, JSON.stringify({ n })); } catch (e) { /* ignore */ }
+  return n;
+}
+
 /* ---------- Modes ever played (for "Explorer") ---------- */
 // Finer-grained than TYPES_KEY, which only knows classic/infinite/daily. A token is one
 // way the game can be played: "classic:hard", "inf-sudden:ultra", "custom".
@@ -613,6 +665,11 @@ export function resetBreadth() {
     localStorage.removeItem(BREADTH_KEY);
     localStorage.removeItem(WEEKDAYS_KEY);
     localStorage.removeItem(DATES_KEY);
+    // The shelf ladder and the dice are breadth too, and a reset that left them standing would
+    // have breadth.reset() report a clean slate its own shelf readout disagreed with.
+    localStorage.removeItem(TYPES_KEY);
+    localStorage.removeItem(DAY_TYPES_KEY);
+    localStorage.removeItem(DICE_KEY);
   } catch (e) { /* ignore */ }
 }
 
@@ -1201,7 +1258,9 @@ export function resetRecords() {
   removeByPrefix(HS_KEY);
 }
 export function resetStatsAll()   { removeByPrefix(STATS_KEY); try { localStorage.removeItem(METRICS_KEY); } catch (e) { /* ignore */ } }
-export function resetAchievements() { try { localStorage.removeItem(ACH_KEY); localStorage.removeItem(TYPES_KEY); localStorage.removeItem(BREADTH_KEY); localStorage.removeItem(WEEKDAYS_KEY); } catch (e) { /* ignore */ } }
+// Clears the charms AND every ledger that only exists to feed one — otherwise a reset leaves
+// the breadth charms instantly re-earnable off records the player is being told were wiped.
+export function resetAchievements() { try { localStorage.removeItem(ACH_KEY); localStorage.removeItem(TYPES_KEY); localStorage.removeItem(BREADTH_KEY); localStorage.removeItem(WEEKDAYS_KEY); localStorage.removeItem(DAY_TYPES_KEY); localStorage.removeItem(DICE_KEY); } catch (e) { /* ignore */ } }
 export function resetTally()      { try { localStorage.removeItem(TALLY_KEY); } catch (e) { /* ignore */ } }
 export function resetDaily() {
   try { localStorage.removeItem(DAILY_STREAK_KEY); } catch (e) { /* ignore */ }

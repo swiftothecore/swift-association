@@ -5,7 +5,7 @@ import { SITE_URL, copyToClipboard } from "./share.js";
 import { launchFlock } from "./messengers.js";
 import {
   TOTAL_ROUNDS, RECENT_WINDOW, NOVELTY_BOOST, DAILY_ALBUM_SKEW, DAILY_ALBUM_WEIGHT_EXP, DIFF_KEY, DEFAULT_SETTINGS,
-  MODES, MODE_ORDER, MODE_COLORS, DIFFICULTY_LADDER, MODALITY_MODES, EXPLORER_TOKENS,
+  MODES, MODE_ORDER, MODE_COLORS, DIFFICULTY_LADDER, MODALITY_MODES, EXPLORER_TOKENS, SHELF_TYPES,
   ERAS, TENDER_ERAS, FINALE_ERAS, ALBUM_ERA, TS_MILESTONES, TS_LORE_DAYS, SALT_SHAKER_D, SALT_CAP_D,
   ALBUM_COLORS, CB_ALBUM_COLORS, STUDIO_ALBUMS, TITLE_ALIASES, STAMP_INKS,
   ACHIEVEMENTS, ACH_ICONS, ACH_BY_ID, ACH_GROUPS, ACH_GROUP_COLORS, ACH_GROUP_OF,
@@ -72,7 +72,8 @@ import {
   loadDailyResult, saveDailyResult, clearDailyResult, dailyTotals, dailyPlayedDates,
   loadDailyProgress, saveDailyProgress, clearDailyProgress,
   bumpDailyStreak, effectiveDailyStreak, saveDailyStreak,
-  markTypePlayed,
+  markTypePlayed, loadTypesPlayed, shelfTypesPlayed,
+  loadDayTypes, markDayTypePlayed, loadDicePicks, markDicePick,
   markModeSeen, hasExploredEverything, loadModesSeen,
   markWeekdayPlayed, hasPlayedEveryWeekday, loadWeekdaysPlayed, resetBreadth,
   loadDatesPlayed, markDatePlayed, distinctDaysPlayed, hasPlayedEveryMonth, dayStreakEnding,
@@ -1920,6 +1921,11 @@ function unlock(id) {
   showToast(ACH_BY_ID[id]);
   playUnlockChime();
   checkMetaAchievements();
+  // All At Once — three charms off a single run. Checked here rather than at an end path so it
+  // lands the moment the third one does, which is the whole flavour of it; the recursion is safe
+  // because the re-entry no-ops on `earnedAchievements`. The shelf is excluded by hand: a bonus
+  // run may not satisfy a main-game charm, and this is one.
+  if (!bonusGame && newlyUnlocked.length >= 3) unlock("earn-3-achievements-one-run");
 }
 
 // The charms that count as hidden for Is It Over Now?. Frozen as a literal rather than
@@ -1969,11 +1975,26 @@ const HIDDEN_ACH_IDS = [
 //                    and its price moves on its own whenever a theme is added to that list.
 const META_ACH = ["earn-every-hidden-achievement", "earn-every-other-achievement"];
 function checkMetaAchievements() {
-  if (Object.keys(earnedAchievements).length >= 13) unlock("earn-13-achievements");
+  // The charm-count ladder. Counts the stored keys rather than the roster, which is right:
+  // a charm earned under an id that has since been migrated away still counts as one you have.
+  const held = Object.keys(earnedAchievements).length;
+  if (held >= 13) unlock("earn-13-achievements");
+  if (held >= 40) unlock("earn-40-achievements");
+  if (held >= 80) unlock("earn-80-achievements");
   // Read off the earned ids rather than walking every charm per theme: one pass, and a theme
   // with no charms in it at all could never be collected anyway.
   const themesHeld = new Set(Object.keys(earnedAchievements).filter((id) => ACH_BY_ID[id]).map(achGroupOf));
   if (ACH_GROUPS.every((g) => themesHeld.has(g.id))) unlock("earn-charm-in-every-theme");
+  /* The rung above that one: whole themes, not one charm from each. Counted off the roster this
+     time, because "every charm in a theme" is a question about the theme's full membership and
+     only the roster knows it. A theme with no charms at all would be vacuously complete, so it
+     is excluded — otherwise adding an empty theme to ACH_GROUPS would hand both of these out. */
+  const themesDone = ACH_GROUPS.filter((g) => {
+    const members = ACHIEVEMENTS.filter((a) => achGroupOf(a.id) === g.id);
+    return members.length > 0 && members.every((a) => earnedAchievements[a.id]);
+  }).length;
+  if (themesDone >= 1) unlock("complete-one-charm-theme");
+  if (themesDone >= 3) unlock("complete-three-charm-themes");
   if (HIDDEN_ACH_IDS.every((id) => earnedAchievements[id])) unlock("earn-every-hidden-achievement");
   const all = ACHIEVEMENTS.filter((a) => a.id !== "earn-every-other-achievement");
   if (all.length && all.every((a) => earnedAchievements[a.id])) unlock("earn-every-other-achievement");
@@ -1984,9 +2005,14 @@ function checkMetaAchievements() {
 // those still tick their weekday off, since Seven only cares that you played at all.
 // The weekday comes off todayKey so the dev date override moves it like every other dated
 // surface. Test runs (devNoLog) record nothing, exactly as stats and history don't.
-function markRunBreadth(token) {
+// `type` is this run's SHELF_TYPES entry — a different axis from the token, which walks the
+// difficulty ladder inside classic and infinite. Every end path passes one except the bonus
+// shelf, which does not call this at all and must not: its sandbox forbids a bonus run
+// satisfying a main-game charm, and the breadth ladder here is a main-game charm.
+function markRunBreadth(token, type) {
   if (devNoLog) return;
   if (token && hasExploredEverything(markModeSeen(token))) unlock("play-every-required-mode");
+  if (type) foldShelfBreadth(type);
   // Noon, so neither the timezone nor a DST shift can roll the parsed date onto its neighbour.
   const day = new Date(todayKey() + "T12:00:00").getDay();
   if (hasPlayedEveryWeekday(markWeekdayPlayed(day))) unlock("play-all-seven-weekdays");
@@ -1994,6 +2020,24 @@ function markRunBreadth(token) {
   // every finished run counts, whatever mode it was, because all three charms it backs only ask
   // that you turned up. The charms themselves read it later; this just keeps the record.
   markDatePlayed(todayKey());
+}
+
+/* Record one finished run's game type and take whatever the shelf-breadth ladder now owes.
+   Split out of markRunBreadth so the dev tools can drive it directly: that function refuses to
+   write anything under devNoLog, which is right for a test run and useless for a tool whose
+   whole job is to fill the ledger by hand. */
+function foldShelfBreadth(type) {
+  const seen = markTypePlayed(type);
+  // Hits Different, then the two rungs above it. The first still asks for its own three named
+  // types rather than a count — it is "you have tried the three ways in", not "three of
+  // anything", and a count would let Album Focus plus two challenges stand in for it.
+  if (seen.classic && seen.infinite && seen.daily) unlock("play-all-three-game-types");
+  const breadth = shelfTypesPlayed(seen);
+  if (breadth >= 5) unlock("finish-run-in-5-game-types");
+  if (breadth >= SHELF_TYPES.length) unlock("finish-run-in-every-game-type");
+  // The same reading scoped to today, which is the whole difference between this charm and the
+  // two above: three types in one sitting, and it comes round again tomorrow.
+  if (markDayTypePlayed(todayKey(), type) >= 3) unlock("finish-3-game-types-one-day");
 }
 
 /* ---------- Challenges mode: token wallet + progress mutators ----------
@@ -9230,6 +9274,19 @@ async function dispatchRandom(entry) {
 }
 
 // The button. Draws, announces what came up, and starts it.
+/* The dice charms. Counted at the DRAW, not at the end of whatever was dealt, for two reasons:
+   the feat is pulling the dice rather than finishing the run it opened, and counting at the end
+   would mean a draw that dealt a bonus game had a bonus run satisfying a main-game charm — the
+   one thing the shelf's sandbox forbids. Only a dispatch that actually took is counted, so a
+   guest whose catalogue wouldn't download costs the player nothing.
+   No devNoLog guard, for the same reason foldShelfBreadth has none — the caller carries it, and
+   the dev tools want to drive this directly. */
+function foldDicePick() {
+  const n = markDicePick();
+  unlock("play-first-dice-pick");
+  if (n >= 13) unlock("play-13-dice-picks");
+}
+
 async function rollRandom() {
   let pool = buildRandomPool();
   const seen = loadRandomSeen();
@@ -9241,7 +9298,7 @@ async function rollRandom() {
     if (!entry) break;
     resolveRandomDifficulty(entry);
     notifyNote("the draw", randomDrawLabel(entry));
-    if (await dispatchRandom(entry)) return;
+    if (await dispatchRandom(entry)) { if (!devNoLog) foldDicePick(); return; }
     pool = pool.filter((e) => e.cat !== "guest");
   }
   notifyNote("the draw", "nothing to deal right now — try the shelves");
@@ -11024,7 +11081,7 @@ function challengeWinCheck(c) {
 function endChallenge() {
   const c = currentChallenge;
   challengeRunActive = false;   // run is over — let defeat/meta charms fire normally
-  markRunBreadth(null);         // no Explorer token (Challenges bend the rules), but the day still counts
+  markRunBreadth(null, "challenge");   // no Explorer token (Challenges bend the rules), but the day and the shelf breadth still count
 
   // The risk batch settles up BEFORE anything reads the score. Press Your Luck and Double Or
   // Nothing bank whatever was still riding when the pages ran out (the run ending is not a
@@ -11229,7 +11286,7 @@ function endChallenge() {
 // global catalogue stores only; the per-album board (beaten/perfected) is its own store.
 function endAlbumFocus() {
   const album = focusAlbum, diff = focusDifficulty;
-  markRunBreadth(null);   // one album, not a difficulty of the main game — the day counts, the token doesn't
+  markRunBreadth(null, "album");   // one album, not a difficulty of the main game — the day and the shelf breadth count, the token doesn't
   const hintFree = hintsUsed === 0;
   let rec = albumFocusRecord(album);
   if (!devNoLog) {
@@ -11331,7 +11388,7 @@ function endGuest() {
   const id = guestRunId, diff = focusDifficulty;
   const g = GUESTS.find((x) => x.id === id) || { name: "Guest" };
   const palette = guestPalette(id);
-  markRunBreadth(null);   // someone else's catalogue, not a difficulty of the main game
+  markRunBreadth(null, "guest");   // someone else's catalogue, not a difficulty of the main game
   const hintFree = hintsUsed === 0;
   let rec = guestRecord(id);
   if (!devNoLog) {
@@ -11424,7 +11481,7 @@ function endCustom() {
   const roundsPlayed = roundResults.length;
   // Custom's own charms. The sandbox keeps stats, records and history out, but achievements
   // are exempt from it the same way Challenges' are — a run you finished still happened.
-  markRunBreadth("custom");
+  markRunBreadth("custom", "custom");
   if (!devNoLog) {
     unlock("finish-first-custom-run");
     if (infinite && roundsPlayed >= CUSTOM_ENDLESS_MILESTONE) unlock("reach-round-50-endless-custom");
@@ -15271,15 +15328,14 @@ function endGame() {
   if (!devNoLog) foldSkillXp(["resolve", "tempo", "lyricist", "range", "endurance"]);
   const played = totalPlayed();   // classic modes only — infinite/daily tracked separately
 
-  // Record this game type; "Hits Different" needs all three (classic + infinite + daily).
-  const typesPlayed = devNoLog ? { classic: false, infinite: false, daily: false } : markTypePlayed(gameType);
-  if (typesPlayed.classic && typesPlayed.infinite && typesPlayed.daily) unlock("play-all-three-game-types");
-
-  // Explorer / Seven. Daily passes through here too, but forces Normal and only runs once a
+  // Explorer / Seven / the shelf-breadth ladder — all of it inside markRunBreadth now, which
+  // is the one function every end path in the game already calls. Recording the game type
+  // here as well would have been a second, classic-only copy of the same ledger write.
+  // Daily passes through here too, but forces Normal and only runs once a
   // day, so it earns no Explorer token — it would gate the charm behind the calendar.
   markRunBreadth(gameType === "classic" ? "classic:" + currentMode.id
     : gameType === "infinite" ? "inf-" + infiniteVariant + ":" + currentMode.id
-    : null);
+    : null, gameType);
 
   // end-of-game achievements (daily counts toward the game-quality ones; infinite deferred)
   const timedMode = currentMode.seconds > 0;   // Relaxed (no clock) skips timing achievements
@@ -18043,6 +18099,21 @@ function devExplorerReport() {
     missing: EXPLORER_TOKENS.filter((t) => !seen[t]),
   };
 }
+// The shelf-breadth ladder and the dice, which are the two ledgers behind the Core theme's
+// breadth charms. Both are otherwise only reachable by actually finishing seven kinds of run
+// and pulling the dice thirteen times, which is not a thing to click through by hand.
+function devShelfReport() {
+  const seen = loadTypesPlayed();
+  const today = loadDayTypes(todayKey());
+  return {
+    played: SHELF_TYPES.filter((t) => seen[t]),
+    missing: SHELF_TYPES.filter((t) => !seen[t]),
+    count: shelfTypesPlayed(seen),
+    of: SHELF_TYPES.length,
+    today: SHELF_TYPES.filter((t) => today[t]),
+    dice: loadDicePicks(),
+  };
+}
 const DEV_DAY_NAMES = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 function devWeekdayReport() {
   const seen = loadWeekdaysPlayed();
@@ -18621,7 +18692,18 @@ function buildDevApi() {
       // Mark the last N days back from today (or from `iso`) — breadth.seedDays(7) is a week's
       // streak, breadth.seedDays(400) fills every month.
       seedDays: (n, iso) => devSeedDates(n == null ? 7 : n, iso),
-      reset: () => { resetBreadth(); return { explorer: devExplorerReport(), weekdays: devWeekdayReport(), dates: devDatesReport() }; },
+      // The shelf ladder: which of the seven game types this notebook has finished, which it
+      // has finished TODAY, and the dice count.
+      shelf: devShelfReport,
+      // Tick off one game type by hand, e.g. breadth.type("guest"). Runs the same unlock checks
+      // a real end path would, today's ledger included, so the charms land off it.
+      type: (t) => { foldShelfBreadth(t); return devShelfReport(); },
+      // Fill the whole shelf and take both breadth charms. Marks each type against today too,
+      // which is why this also hands over Every Single Day.
+      shelfAll: () => { SHELF_TYPES.forEach((t) => foldShelfBreadth(t)); return devShelfReport(); },
+      // Deal N dice picks without opening anything — breadth.dice(13) takes both dice charms.
+      dice: (n) => { for (let i = 0; i < (n == null ? 1 : n); i++) foldDicePick(); return devShelfReport(); },
+      reset: () => { resetBreadth(); return { explorer: devExplorerReport(), weekdays: devWeekdayReport(), dates: devDatesReport(), shelf: devShelfReport() }; },
     },
     // The lifetime cross-game counters. Read-only for most of them — they are earned, and a
     // setter would only ever be used to lie about accuracy. The two exceptions are the counters

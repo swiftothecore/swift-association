@@ -41,7 +41,9 @@ export const DAILY_KEY = "swiftSongAssociation.daily";
 export const DAILY_PROGRESS_KEY = "swiftSongAssociation.dailyProgress";  // in-progress daily run, so a refresh/exit resumes instead of restarting
 export const DAILY_BOARD_KEY = "swiftSongAssociation.dailyBoard";
 export const DAILY_STREAK_KEY = "swiftSongAssociation.dailyStreak";
-export const TYPES_KEY = "swiftSongAssociation.typesPlayed";   // {classic,infinite,daily} — for "Hits Different"
+export const TYPES_KEY = "swiftSongAssociation.typesPlayed";   // { [type]: true } — every game type ever finished, for Hits Different and the breadth rungs above it (see SHELF_TYPES)
+export const DAY_TYPES_KEY = "swiftSongAssociation.dayTypes";  // { d: "YYYY-MM-DD", types: {…} } — TODAY's game types only, for Every Single Day. One day deep on purpose: the charm asks about a sitting, so yesterday's is dead weight.
+export const DICE_KEY = "swiftSongAssociation.dicePicks";      // { n } — how many runs the randomiser has dealt you, for the two dice charms
 export const TALLY_KEY = "swiftSongAssociation.songTally";     // lifetime per-song/per-word tally — Favourite Song, Songs Discovered, Nemesis Word, I Hate It Here
 export const SETTINGS_KEY = "swiftSongAssociation.settings";   // user preferences (see DEFAULT_SETTINGS)
 export const METRICS_KEY = "swiftSongAssociation.metrics";    // lifetime cross-game counters — fastest/avg answer, accuracy, lyric lines, daily totals
@@ -183,6 +185,14 @@ export const EXPLORER_TOKENS = [
   ...DIFFICULTY_LADDER.map((m) => "inf-sudden:" + m),
   "custom",
 ];
+/* The seven game types the notebook itself can be played as — the breadth ladder in the Core
+   theme (five of them, then all seven) counts these and nothing else. Different axis from
+   EXPLORER_TOKENS, which walks the DIFFICULTY ladder inside two of them; this walks the shelf.
+   Two deliberate absences:
+   - bonus, because the shelf's sandbox is explicit that nothing a bonus run does may satisfy a
+     main-game charm. It has play-every-bonus-game of its own and that is where its breadth lives.
+   - ruthless, which is a mode whose card left the shelf, not a type you can go and choose. */
+export const SHELF_TYPES = ["classic", "infinite", "daily", "album", "challenge", "custom", "guest"];
 // Per-mode accent for the index-card record tiles (label + tape tint). Keyed by mode id;
 // infinite tokens borrow the colour of their underlying difficulty.
 export const MODE_COLORS = {
@@ -2743,6 +2753,39 @@ export const ACHIEVEMENTS = [
   // and its price moves whenever a theme is added to ACH_GROUPS.
   { id: "earn-charm-in-every-theme", name: "The Things That I Love", desc: "Earn a charm in every theme", secret: false, icon: "fullbracelet" },
   { id: "play-word-from-searcher", name: "You Drew Stars", desc: "Play a word straight from the lyric searcher", secret: true, icon: "lenstoline" },
+  /* ---- The whole notebook: the Core theme's own batch (2026-08-13) ----
+     Core stopped meaning anything when the four-way split carved Perfect, Clock, Misfires and
+     The long haul out of it and left eleven charms behind as residue. This batch is what Core
+     is FOR, written down: breadth across the shelf, and the collection talking about itself.
+     Nothing here is about how one mode plays — that is what every other theme is for — and
+     nothing here is mode-flavoured enough to be repatriated later.
+
+     None can be locked out. The two ledgers they read (SHELF_TYPES and the dice counter) only
+     ever grow, the day-scoped one comes round again every day, and the meta rungs are
+     re-evaluated after every unlock. Icons are placeholders pending the batch's real marks. */
+  { id: "finish-run-in-5-game-types", name: "On Every Corner", desc: "Finish a run in five different game types", secret: false, icon: "placeholder" },
+  { id: "finish-run-in-every-game-type", name: "I Can Go Anywhere", desc: "Finish a run in every game type", secret: false, icon: "placeholder" },
+  // The only one of the three scoped to a sitting rather than a lifetime, which is why it is
+  // the only one of the three worth pinning as a goal.
+  { id: "finish-3-game-types-one-day", name: "Every Single Day", desc: "Finish runs in three different game types in one day", secret: false, icon: "placeholder", sitting: true },
+  /* The dice. The randomiser has never earned a single charm despite being the one launcher
+     that can open every door in the notebook, which is exactly the breadth Core is about. Two
+     halves of one line, for the two rungs. */
+  { id: "play-first-dice-pick", name: "Devils Roll The Dice", desc: "Play a run the dice picked for you", secret: false, icon: "placeholder", sitting: true },
+  { id: "play-13-dice-picks", name: "Angels Roll Their Eyes", desc: "Play 13 runs the dice picked for you", secret: false, icon: "placeholder" },
+  /* The collection talking about itself. Self-referential like the four meta charms already
+     here, so they are evaluated after every unlock and their price moves on its own as the
+     roster grows — which is the honest behaviour for a charm whose subject IS the roster. */
+  { id: "earn-40-achievements", name: "Still Bejeweled", desc: "Earn 40 achievements", secret: false, icon: "placeholder" },
+  { id: "earn-80-achievements", name: "A String Of Lights", desc: "Earn 80 achievements", secret: false, icon: "placeholder" },
+  // A whole theme, not a charm from each — the rung above The Things That I Love rather than a
+  // second reading of it. The smallest themes run to three charms, so this is real but not a wall.
+  { id: "complete-one-charm-theme", name: "One Single Thread Of Gold", desc: "Earn every charm in one theme", secret: false, icon: "placeholder" },
+  { id: "complete-three-charm-themes", name: "We Gather Stones", desc: "Earn every charm in three themes", secret: false, icon: "placeholder" },
+  // Not "All At Once", which is the obvious name and sits one row from Everything & Nothing All
+  // At Once on this very page. Three Times is the same line's other half of the idea and reads
+  // as its own charm.
+  { id: "earn-3-achievements-one-run", name: "Three Times", desc: "Earn three charms in a single run", secret: false, icon: "placeholder", sitting: true, earn: { cat: "difficulty" } },
   { id: "defeat-first-challenge",       name: "Ready For Combat", desc: "Defeat your first challenge",           secret: false, icon: "bow", sitting: true, earn: { cat: "challenge" } },
   { id: "defeat-every-challenge",      name: "Get The Crown",    desc: "Defeat every challenge",                secret: false, icon: "flask" },
   { id: "unlock-every-challenge",      name: "I Like Shiny Things", desc: "Unlock every challenge",                secret: false, icon: "rings" },
@@ -3067,6 +3110,10 @@ export const ACH_GROUP_OF = {
   "play-7-days-in-row": "longhaul", "play-on-13-different-days": "longhaul",
   "play-in-every-month": "longhaul", "answer-500-rounds-correct-lifetime": "longhaul",
   "play-1989-rounds-lifetime": "longhaul", "play-89-games": "longhaul",
+  /* The games-played ladder, whole. 5 and 15 sat in Core while 89 sat here, which read as two
+     unrelated charms rather than three rungs of one — the same split the Nemesis note above
+     argues against. A game count is priced in runs on the clock, so all three belong here. */
+  "play-5-games": "longhaul", "play-15-games": "longhaul",
   "answer-50-correct-in-a-row-across-games": "longhaul",
   /* Perfect pages: the 13/13 board and the streaks that lead to it. A charm belongs here when
      the feat is "nothing dropped", whatever mode it was dropped in — so the mode-flavoured
