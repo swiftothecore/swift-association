@@ -1511,7 +1511,7 @@
 
   /* ---------- Challenges page — a master/detail entry in the notebook ----------
      Left: a contents list of challenges (gold tick / hollow ring / lock marks; the
-     selected row flagged with a red play-arrow). Right: the selected challenge's
+     selected row pointed out by a hand-inked return arrow). Right: the selected challenge's
      rule + win written out. One ruled sheet (the .card paper) — no cork, no scraps. */
   .chall-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 0 0 14px; }
   .chall-head-sub { font-family: var(--type); font-size: calc(10px + var(--text-size-adjust)); letter-spacing: 1.5px; text-transform: uppercase; color: var(--ink-soft); }
@@ -1579,8 +1579,7 @@
   .chall-list {
     overflow-y: auto; max-height: calc(100vh - 340px); padding-right: 2px; margin-right: -14px; scrollbar-gutter: stable;
     /* The list is pulled left and padded back by the same amount: content lands where
-       .chall-col puts it, but the selected row's red play-arrow (at left:-12px) now has
-       paintable room inside the scroller instead of being clipped by its overflow. */
+       .chall-col puts it while the scroll surface reaches into the unused left gutter. */
     padding-left: 14px; margin-left: -14px;
     --fade-top: 0px; --fade-bot: 30px;
     -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 var(--fade-top), #000 calc(100% - var(--fade-bot)), transparent 100%);
@@ -1607,10 +1606,16 @@
   }
   .chall-item:hover { background: rgba(43,39,34,0.05); }
   .chall-item.selected { background: rgba(39,69,96,0.10); }
-  .chall-item.selected::before {
-    content: "\25B6"; position: absolute; left: -12px; top: 50%; transform: translateY(-50%);
-    color: #b23a3a; font-size: calc(11px + var(--text-size-adjust)); line-height: 1;
+  /* A carriage-return shape turning into the selected title. It is a real `.charm`, so the
+     rounded ink and subtle turbulence wobble are the achievement treatment rather than a
+     lookalike CSS texture. Its highlighter swipe is omitted here: at 19px it read as a circle. */
+  .chall-item > .chall-selector-arrow {
+    position: absolute; z-index: 2; left: -16px; top: 50%;
+    width: 19px; height: 19px; color: #943338;
+    opacity: 0; pointer-events: none; transform: translateY(-50%) rotate(-4deg);
   }
+  .chall-item > .chall-selector-arrow::before { display: none; }
+  .chall-item.selected .chall-selector-arrow { opacity: 1; }
   .chall-item-select {
     grid-column: 1; min-width: 0; padding: 8px 0; border: none; background: transparent;
     text-align: left; font: inherit; color: inherit; cursor: pointer;

@@ -6858,6 +6858,13 @@ function renderChallengesPage() {
   // Grouped by difficulty, with a small local shortlist above it. Pins deliberately
   // change no game state beyond this shelf: they do not affect the randomiser,
   // unlock economy, records, or the completion tally.
+  // The return arrow uses the achievement charm's exact ink classes and wobble filter.
+  // Every row owns one so changing selection stays a class toggle.
+  const selectorArrow = `<span class="charm chall-selector-arrow" aria-hidden="true">` +
+    `<svg viewBox="0 0 24 24" focusable="false">` +
+      `<path class="ink" d="M5 3.4 V8.2 C5 11.3 6.9 13 10 13 H20"/>` +
+      `<path class="ink" d="M15.5 8.7 C17.3 10.3 18.8 11.7 20.4 13 C18.8 14.4 17.2 15.8 15.3 17.4"/>` +
+    `</svg></span>`;
   const challengeRow = (c) => {
     const rec = challengeRecord(c.id);
     const open = challengeUnlocked(c.id);
@@ -6874,6 +6881,7 @@ function renderChallengesPage() {
           ` title="${rec.pinned ? "remove from pinned challenges" : pinLimitReached ? "you can pin up to three challenges" : "pin this challenge"}">${CHALL_PIN}</button>`
       : "";
     return `<div class="chall-item ${stateCls}">` +
+      selectorArrow +
       `<button type="button" class="chall-item-select" data-id="${c.id}"><span class="chall-item-name">${escapeHtml(c.name)}</span></button>` +
       `<span class="chall-item-mark">${mark}</span>${pin}</div>`;
   };
