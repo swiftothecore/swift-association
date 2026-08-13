@@ -1,59 +1,255 @@
-/* Handwritten text should carry the tiny inconsistencies of real ink by default.
-   js/ink.js marks the outer edge of each rendered Caveat run, including content
-   added after load. Keep the values quiet: the handwriting should feel human,
-   never visibly crooked. Use .ink-steady or data-ink="steady" to opt a subtree out. */
-.ink-varied {
-  letter-spacing: var(--ink-space, 0);
-  opacity: var(--ink-opacity, 1);
-  rotate: var(--ink-rotate, 0deg);
-  translate: 0 var(--ink-baseline, 0);
+/* Handwritten text should carry the tiny inconsistencies of real ink.
+
+   Loaded by all three pages that render handwriting (index.html, search/index.html,
+   404.html), which is why it sits at the root rather than inside styles.css: those
+   three share no stylesheet. It is linked BEFORE each page's own stylesheet, so
+   anything here can be overridden by the rule that owns the element.
+
+   WHAT IS TARGETED. The list below is every rule in styles.css, search.css and
+   404.html that declares `font-family: var(--hand)`. Handwriting is authored in
+   exactly one way in this project, through that token, so this list is derived from
+   the stylesheets rather than guessed at runtime. Add a new `var(--hand)` rule and
+   its selector belongs here too. 404's selectors are page-generic, so they are
+   scoped to `.nf` on its body; `.stamp` means something else in the game.
+
+   Deliberately NOT listed: containers that hand --hand to a whole subtree (the
+   searcher's `body`, `.song-modal-body`), since tilting one of those tilts a page
+   rather than a run of writing, and text fields, since a field that is off-axis is
+   unpleasant to type in. The last rule resets a run nested inside another run, so
+   the effect never compounds: only the outer edge of a piece of handwriting is inked.
+
+   WHAT IT DOES. Two quiet axes, a sub-degree tilt and a sub-pixel baseline shift.
+   Nothing else. An earlier version also varied letter-spacing and opacity; both were
+   imperceptible at these magnitudes and both lost to whatever styles.css had already
+   set on the same element, so they are gone.
+
+   The variant is three coprime cycles summed: the element's own index among its
+   siblings (7), its parent's (5), and its grandparent's (11). The extra axes are what
+   stop a column of repeated rows tilting as one. A run is typically the only child of
+   a wrapper inside a card, so its own and its parent's index are both fixed across the
+   whole list and only the grandparent varies, which is why that cycle is the longest.
+   385 combinations, all read off the live DOM, so a rerender re-inks a screen the same
+   way it was inked before. Amplitudes are picked so the three can never sum past about
+   0.43deg and 0.54px, which is the ceiling the effect was designed around.
+
+   `rotate` and `translate` do not apply to inline non-replaced boxes, so a run that
+   is `display: inline` takes no tilt. That is deliberate: forcing inline-block would
+   stop the run breaking across lines, which is a worse bug than a level word. */
+
+/* The element's own index among its siblings. */
+*:nth-child(7n+1) { --ink-jit: -0.16deg; --ink-lift: 0.22px; }
+*:nth-child(7n+2) { --ink-jit: 0.11deg; --ink-lift: -0.18px; }
+*:nth-child(7n+3) { --ink-jit: -0.05deg; --ink-lift: 0.12px; }
+*:nth-child(7n+4) { --ink-jit: 0.16deg; --ink-lift: 0.06px; }
+*:nth-child(7n+5) { --ink-jit: -0.12deg; --ink-lift: -0.22px; }
+*:nth-child(7n+6) { --ink-jit: 0.07deg; --ink-lift: 0.19px; }
+*:nth-child(7n+7) { --ink-jit: 0.02deg; --ink-lift: -0.09px; }
+
+/* The parent's index, handed down as a second axis. */
+*:nth-child(5n+1) > * { --ink-jit2: 0.09deg; --ink-lift2: -0.12px; }
+*:nth-child(5n+2) > * { --ink-jit2: -0.12deg; --ink-lift2: 0.09px; }
+*:nth-child(5n+3) > * { --ink-jit2: 0.04deg; --ink-lift2: 0.14px; }
+*:nth-child(5n+4) > * { --ink-jit2: -0.06deg; --ink-lift2: -0.07px; }
+*:nth-child(5n+5) > * { --ink-jit2: 0.12deg; --ink-lift2: 0.03px; }
+
+/* The grandparent's index. In a list of cards this is the card itself, so it is
+   the axis that keeps a column of names from tilting as one. */
+*:nth-child(11n+1) > * > * { --ink-jit3: -0.12deg; --ink-lift3: 0.16px; }
+*:nth-child(11n+2) > * > * { --ink-jit3: 0.07deg; --ink-lift3: -0.11px; }
+*:nth-child(11n+3) > * > * { --ink-jit3: 0.15deg; --ink-lift3: 0.05px; }
+*:nth-child(11n+4) > * > * { --ink-jit3: -0.05deg; --ink-lift3: 0.18px; }
+*:nth-child(11n+5) > * > * { --ink-jit3: 0.11deg; --ink-lift3: -0.15px; }
+*:nth-child(11n+6) > * > * { --ink-jit3: -0.15deg; --ink-lift3: 0.09px; }
+*:nth-child(11n+7) > * > * { --ink-jit3: 0.03deg; --ink-lift3: -0.04px; }
+*:nth-child(11n+8) > * > * { --ink-jit3: 0.13deg; --ink-lift3: 0.13px; }
+*:nth-child(11n+9) > * > * { --ink-jit3: -0.09deg; --ink-lift3: -0.18px; }
+*:nth-child(11n+10) > * > * { --ink-jit3: 0.05deg; --ink-lift3: 0.02px; }
+*:nth-child(11n+11) > * > * { --ink-jit3: -0.02deg; --ink-lift3: 0.11px; }
+
+/* Every authored run of handwriting (174 selectors). */
+.about-note-lbl, .ach .ach-nm, .ach-goal-btn span,
+.ach-goal-name, .ach-goal-note, .ach-latest-name,
+.ach-page-title, .ach-quest-cta span, .ach-quest-meterhead b,
+.ach-quest-name, .ach-quest-note, .ach-recap-names,
+.ach.secret .charm-q, .af-tile-cap, .af-tile-score,
+.an-headline, .an-note, .bd-pencil,
+.best-empty, .best-num, .bg-chain-text,
+.bg-feedback .banner.bad, .bg-feedback .banner.good, .bg-lyric,
+.bg-only-line, .bg-only-word, .bg-scrap-word,
+.bg-sheet-title, .bg-sleeve-name, .bg-sleeve-score,
+.bg-stream, .bg-tok, .bg-track-title,
+.bg-word, .bg-word-plain, .bonus-alt-name,
+.bonus-now-name, .bottle-note-msg, .bracelet-caption,
+.cal-month, .cat-card-val, .cat-fm-val,
+.cat-meter-cta span, .cat-meter-num, .cat-nemesis-word span,
+.cc-box .cc-text, .chall-curtain-rule, .chall-detail-name,
+.chall-diff-word, .chall-goal, .chall-item-name,
+.chall-path-title, .chall-result-status, .chall-rule,
+.cm-tile-name, .common-line-text, .common-reveal-text,
+.countdown b, .cpc-name, .cseal-name,
+.custom-active-name, .daily-btn .daily-countdown, .daily-btn .daily-star,
+.daily-btn .daily-tab, .danger-head, .doodle-note,
+.error, .excluded-note .ex-title, .feedback .banner.bad,
+.feedback .banner.good, .feedback .red-note, .final-score .big,
+.flag-btn, .forms-firstnote, .fr-era,
+.fr-title, .guest-detail-name, .guest-detail-note,
+.guest-name, .heat-foot, .hint,
+.hint-btn, .hint-line, .hint-tier,
+.hist-score, .impostor-caught, .inf-cell--empty,
+.inf-cell-num, .inf-hero-title, .inf-medallion b,
+.inf-row-h, .iw-big, .keep-counter-d,
+.keep-counter-n, .lc-line, .led-item,
+.loading, .lyric-card .lyric-line, .margin-tally,
+.mc-reward, .mc-title, .mh-seal-num,
+.mh-title, .mode-tab, .ms-cap,
+.name-prompt p, .nav-card-title, .nb-cover-title,
+.new-best-banner, .nf .stamp, .nf a.link,
+.nf h1, .num-count, .num-ring-val,
+.num-val, .pb-score, .pen-label,
+.podium-title, .pol-lip, .pol-lip-main,
+.pol-lip-sub, .pride-picker-top > span, .random-dice-label,
+.rb-medal-nm, .rb-ms-nm, .rb-row-nm,
+.rb-title, .rb-tt, .rec-sig-name,
+.reject-flash, .risk-stake-ask, .rl-blurb,
+.rl-page-title, .rs-n, .rt-line,
+.sb-album-count, .sb-sub, .sb-title,
+.secret-13, .set-check-name, .set-name,
+.set-text, .settings-title, .skill-name,
+.song-modal-title, .sr-mtop span:first-child, .sr-nm,
+.statE-val, .stats-empty, .stats-nav .stats-title,
+.sticker-amt, .streak-cell .stat-val, .stub-score,
+.stub-sealed, .sx-album-era, .sx-ctx,
+.sx-flat-title, .sx-hint, .sx-ln,
+.sx-main, .sx-recent-item, .sx-sec,
+.sx-song-title, .sx-title, .tap-tile-title,
+.toast .t-name, .ts-title, .va-row,
+.verse-firstnote, .vm-label, .whose-line-text,
+.word, .word-amp, header.title h1 {
+  rotate: calc(var(--ink-jit, 0deg) + var(--ink-jit2, 0deg) + var(--ink-jit3, 0deg));
+  translate: 0 calc(var(--ink-lift, 0px) + var(--ink-lift2, 0px) + var(--ink-lift3, 0px));
 }
 
-.ink-varied[data-ink-variant="0"] {
-  --ink-rotate: -0.28deg;
-  --ink-baseline: 0.35px;
-  --ink-opacity: 0.98;
-  --ink-space: -0.002em;
-}
-
-.ink-varied[data-ink-variant="1"] {
-  --ink-rotate: 0.2deg;
-  --ink-baseline: -0.3px;
-  --ink-opacity: 0.99;
-  --ink-space: 0.003em;
-}
-
-.ink-varied[data-ink-variant="2"] {
-  --ink-rotate: -0.1deg;
-  --ink-baseline: 0.55px;
-  --ink-opacity: 0.97;
-  --ink-space: 0.001em;
-}
-
-.ink-varied[data-ink-variant="3"] {
-  --ink-rotate: 0.34deg;
-  --ink-baseline: 0.1px;
-  --ink-opacity: 0.985;
-  --ink-space: -0.003em;
-}
-
-.ink-varied[data-ink-variant="4"] {
-  --ink-rotate: -0.22deg;
-  --ink-baseline: -0.4px;
-  --ink-opacity: 0.995;
-  --ink-space: 0.002em;
-}
-
-.ink-varied[data-ink-variant="5"] {
-  --ink-rotate: 0.13deg;
-  --ink-baseline: 0.3px;
-  --ink-opacity: 0.975;
-  --ink-space: -0.001em;
-}
-
-.ink-varied[data-ink-variant="6"] {
-  --ink-rotate: 0.03deg;
-  --ink-baseline: -0.2px;
-  --ink-opacity: 0.985;
-  --ink-space: 0.004em;
+/* A run inside a run is not a second piece of handwriting. */
+:is(
+  .about-note-lbl, .ach .ach-nm, .ach-goal-btn span,
+  .ach-goal-name, .ach-goal-note, .ach-latest-name,
+  .ach-page-title, .ach-quest-cta span, .ach-quest-meterhead b,
+  .ach-quest-name, .ach-quest-note, .ach-recap-names,
+  .ach.secret .charm-q, .af-tile-cap, .af-tile-score,
+  .an-headline, .an-note, .bd-pencil,
+  .best-empty, .best-num, .bg-chain-text,
+  .bg-feedback .banner.bad, .bg-feedback .banner.good, .bg-lyric,
+  .bg-only-line, .bg-only-word, .bg-scrap-word,
+  .bg-sheet-title, .bg-sleeve-name, .bg-sleeve-score,
+  .bg-stream, .bg-tok, .bg-track-title,
+  .bg-word, .bg-word-plain, .bonus-alt-name,
+  .bonus-now-name, .bottle-note-msg, .bracelet-caption,
+  .cal-month, .cat-card-val, .cat-fm-val,
+  .cat-meter-cta span, .cat-meter-num, .cat-nemesis-word span,
+  .cc-box .cc-text, .chall-curtain-rule, .chall-detail-name,
+  .chall-diff-word, .chall-goal, .chall-item-name,
+  .chall-path-title, .chall-result-status, .chall-rule,
+  .cm-tile-name, .common-line-text, .common-reveal-text,
+  .countdown b, .cpc-name, .cseal-name,
+  .custom-active-name, .daily-btn .daily-countdown, .daily-btn .daily-star,
+  .daily-btn .daily-tab, .danger-head, .doodle-note,
+  .error, .excluded-note .ex-title, .feedback .banner.bad,
+  .feedback .banner.good, .feedback .red-note, .final-score .big,
+  .flag-btn, .forms-firstnote, .fr-era,
+  .fr-title, .guest-detail-name, .guest-detail-note,
+  .guest-name, .heat-foot, .hint,
+  .hint-btn, .hint-line, .hint-tier,
+  .hist-score, .impostor-caught, .inf-cell--empty,
+  .inf-cell-num, .inf-hero-title, .inf-medallion b,
+  .inf-row-h, .iw-big, .keep-counter-d,
+  .keep-counter-n, .lc-line, .led-item,
+  .loading, .lyric-card .lyric-line, .margin-tally,
+  .mc-reward, .mc-title, .mh-seal-num,
+  .mh-title, .mode-tab, .ms-cap,
+  .name-prompt p, .nav-card-title, .nb-cover-title,
+  .new-best-banner, .nf .stamp, .nf a.link,
+  .nf h1, .num-count, .num-ring-val,
+  .num-val, .pb-score, .pen-label,
+  .podium-title, .pol-lip, .pol-lip-main,
+  .pol-lip-sub, .pride-picker-top > span, .random-dice-label,
+  .rb-medal-nm, .rb-ms-nm, .rb-row-nm,
+  .rb-title, .rb-tt, .rec-sig-name,
+  .reject-flash, .risk-stake-ask, .rl-blurb,
+  .rl-page-title, .rs-n, .rt-line,
+  .sb-album-count, .sb-sub, .sb-title,
+  .secret-13, .set-check-name, .set-name,
+  .set-text, .settings-title, .skill-name,
+  .song-modal-title, .sr-mtop span:first-child, .sr-nm,
+  .statE-val, .stats-empty, .stats-nav .stats-title,
+  .sticker-amt, .streak-cell .stat-val, .stub-score,
+  .stub-sealed, .sx-album-era, .sx-ctx,
+  .sx-flat-title, .sx-hint, .sx-ln,
+  .sx-main, .sx-recent-item, .sx-sec,
+  .sx-song-title, .sx-title, .tap-tile-title,
+  .toast .t-name, .ts-title, .va-row,
+  .verse-firstnote, .vm-label, .whose-line-text,
+  .word, .word-amp, header.title h1
+)
+:is(
+  .about-note-lbl, .ach .ach-nm, .ach-goal-btn span,
+  .ach-goal-name, .ach-goal-note, .ach-latest-name,
+  .ach-page-title, .ach-quest-cta span, .ach-quest-meterhead b,
+  .ach-quest-name, .ach-quest-note, .ach-recap-names,
+  .ach.secret .charm-q, .af-tile-cap, .af-tile-score,
+  .an-headline, .an-note, .bd-pencil,
+  .best-empty, .best-num, .bg-chain-text,
+  .bg-feedback .banner.bad, .bg-feedback .banner.good, .bg-lyric,
+  .bg-only-line, .bg-only-word, .bg-scrap-word,
+  .bg-sheet-title, .bg-sleeve-name, .bg-sleeve-score,
+  .bg-stream, .bg-tok, .bg-track-title,
+  .bg-word, .bg-word-plain, .bonus-alt-name,
+  .bonus-now-name, .bottle-note-msg, .bracelet-caption,
+  .cal-month, .cat-card-val, .cat-fm-val,
+  .cat-meter-cta span, .cat-meter-num, .cat-nemesis-word span,
+  .cc-box .cc-text, .chall-curtain-rule, .chall-detail-name,
+  .chall-diff-word, .chall-goal, .chall-item-name,
+  .chall-path-title, .chall-result-status, .chall-rule,
+  .cm-tile-name, .common-line-text, .common-reveal-text,
+  .countdown b, .cpc-name, .cseal-name,
+  .custom-active-name, .daily-btn .daily-countdown, .daily-btn .daily-star,
+  .daily-btn .daily-tab, .danger-head, .doodle-note,
+  .error, .excluded-note .ex-title, .feedback .banner.bad,
+  .feedback .banner.good, .feedback .red-note, .final-score .big,
+  .flag-btn, .forms-firstnote, .fr-era,
+  .fr-title, .guest-detail-name, .guest-detail-note,
+  .guest-name, .heat-foot, .hint,
+  .hint-btn, .hint-line, .hint-tier,
+  .hist-score, .impostor-caught, .inf-cell--empty,
+  .inf-cell-num, .inf-hero-title, .inf-medallion b,
+  .inf-row-h, .iw-big, .keep-counter-d,
+  .keep-counter-n, .lc-line, .led-item,
+  .loading, .lyric-card .lyric-line, .margin-tally,
+  .mc-reward, .mc-title, .mh-seal-num,
+  .mh-title, .mode-tab, .ms-cap,
+  .name-prompt p, .nav-card-title, .nb-cover-title,
+  .new-best-banner, .nf .stamp, .nf a.link,
+  .nf h1, .num-count, .num-ring-val,
+  .num-val, .pb-score, .pen-label,
+  .podium-title, .pol-lip, .pol-lip-main,
+  .pol-lip-sub, .pride-picker-top > span, .random-dice-label,
+  .rb-medal-nm, .rb-ms-nm, .rb-row-nm,
+  .rb-title, .rb-tt, .rec-sig-name,
+  .reject-flash, .risk-stake-ask, .rl-blurb,
+  .rl-page-title, .rs-n, .rt-line,
+  .sb-album-count, .sb-sub, .sb-title,
+  .secret-13, .set-check-name, .set-name,
+  .set-text, .settings-title, .skill-name,
+  .song-modal-title, .sr-mtop span:first-child, .sr-nm,
+  .statE-val, .stats-empty, .stats-nav .stats-title,
+  .sticker-amt, .streak-cell .stat-val, .stub-score,
+  .stub-sealed, .sx-album-era, .sx-ctx,
+  .sx-flat-title, .sx-hint, .sx-ln,
+  .sx-main, .sx-recent-item, .sx-sec,
+  .sx-song-title, .sx-title, .tap-tile-title,
+  .toast .t-name, .ts-title, .va-row,
+  .verse-firstnote, .vm-label, .whose-line-text,
+  .word, .word-amp, header.title h1
+) {
+  rotate: 0deg;
+  translate: none;
 }

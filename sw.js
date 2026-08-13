@@ -16,7 +16,7 @@
  * Paths are relative so the worker works at the site root (swiftassociation.com)
  * and under any project subpath, without hardcoding the origin.
  */
-const CACHE = "stta-v44";
+const CACHE = "stta-v45";
 const ASSETS = [
   "./",
   "index.html",
@@ -29,7 +29,6 @@ const ASSETS = [
   "fonts/courierprime-700-latin.woff2",
   "fonts/courierprime-italic-latin.woff2",
   "js/app.js",
-  "js/ink.js",
   "js/util.js",
   "js/config.js",
   "js/match.js",
