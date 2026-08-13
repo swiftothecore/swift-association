@@ -1979,6 +1979,148 @@ export const ACH_ICONS = {
   // the mask off before it was ever properly on. The ties streaming and the air behind them
   // are the two seconds — a mask sitting still would only say "impostor", not "caught".
   mask:    `<svg viewBox="0 0 24 24"><g transform="rotate(-10 13 12)"><path class="ink-fill" d="M4.6 11.2 C4.6 8.7 6.5 7.4 9.2 7.4 C10.9 7.4 12.2 7.9 13 8.6 C13.8 7.9 15.1 7.4 16.8 7.4 C19.5 7.4 21.4 8.7 21.4 11.2 C21.4 14.5 19.2 17 16.4 17 C14.3 17 13.4 15.2 13 13.7 C12.6 15.2 11.7 17 9.6 17 C6.8 17 4.6 14.5 4.6 11.2 Z"/><ellipse cx="8.9" cy="11.6" rx="2" ry="1.45" fill="var(--paper)" stroke="currentColor" stroke-width="0.9" transform="rotate(-7 8.9 11.6)"/><ellipse cx="17.1" cy="11.6" rx="2" ry="1.45" fill="var(--paper)" stroke="currentColor" stroke-width="0.9" transform="rotate(7 17.1 11.6)"/></g><g fill="none" stroke="currentColor" stroke-width="1.1" opacity="0.7" stroke-linecap="round"><path d="M4.8 13 C3.4 14.6 2.2 15.8 1 16.2"/><path d="M5.6 15.2 C4.6 17.2 3.6 18.8 2.4 20"/></g><g fill="none" stroke="currentColor" stroke-width="1" opacity="0.4" stroke-linecap="round"><path d="M0.8 6.2 H4.6"/><path d="M0.4 9 H3.2"/></g></svg>`,
+
+  /* ---- The Core batch: the clock charms ----
+     Five marks that all say "time" and must not say it the same way, so each one owns a
+     different piece of the dial: the wedge, the half, the crease. Anything that wants a
+     clock and can do without one takes the lamp or the wind instead. */
+  // thirteen pages gone before the third second — the sheet lifted on a gust with its corner
+  // still curling, and the air it came through ruled in behind it
+  gustpage:`<svg viewBox="0 0 24 24"><g transform="rotate(11 14 12)"><path class="ink-fill" d="M8.6 3.2 H19.4 V20.8 H8.6 Z"/><path d="M19.4 14.8 L14.8 20.8 H19.4 Z" fill="var(--paper)" stroke="none"/><path class="ink" stroke-width="1.2" fill="none" d="M19.4 14.8 C17 15.2 15.4 17.4 14.8 20.8"/><g fill="none" stroke="currentColor" stroke-width="1" opacity="0.5"><path d="M10.8 7.4 H17"/><path d="M10.8 10.4 H16"/></g></g><g class="ink" stroke-width="1.3" opacity="0.7" fill="none" stroke-linecap="round"><path d="M1.4 6.6 H6.4"/><path d="M0.9 11 H5.2"/><path d="M2 15.4 H6"/></g></svg>`,
+  // the answer written into the last grain, thirteen times over: the dial's final wedge
+  // inked and the hand stood at the top. The wedge is the whole charm, so the rest of the
+  // face is kept as plain as a face can be
+  lasttick:`<svg viewBox="0 0 24 24"><circle class="ink-fill" cx="12" cy="12.4" r="8.8"/><path d="M12 12.4 V3.6 A8.8 8.8 0 0 0 6.3 5.7 Z" fill="currentColor" stroke="none"/><g class="ink" stroke-width="1" opacity="0.5"><path d="M20.8 12.4 H19.3"/><path d="M12 21.2 V19.7"/><path d="M3.2 12.4 H4.7"/></g><path class="ink" stroke-width="1.7" d="M12 12.4 V4.8"/><circle cx="12" cy="12.4" r="0.95" fill="currentColor" stroke="none"/></svg>`,
+  // three pages inside a second each — three strokes leaning the same way off the line, one
+  // spark struck over each
+  snapthree:`<svg viewBox="0 0 24 24"><g class="ink" fill="none" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.4 L7 14.6 L9.8 8.4"/><path d="M11.4 12.4 L13.4 14.6 L16.2 8.4"/><path d="M17.8 12.4 L19.8 14.6 L22.6 8.4"/></g><g class="ink" stroke-width="1.3" opacity="0.5" stroke-linecap="round"><path d="M0.8 9.4 H3.4"/><path d="M0.4 12.4 H2.8"/><path d="M1.2 15.4 H3.2"/></g><path class="ink" stroke-width="1.2" opacity="0.35" d="M3.4 19.6 H21.6"/></svg>`,
+  // perfect and gone before the ink dried: the star with the air it went through drawn in
+  // behind it. The streaks stop short of the point — touching it turns the whole thing into
+  // a shooting star, which is `comet`'s job
+  blurstar:`<svg viewBox="0 0 24 24"><path class="ink-fill" stroke-width="1.1" d="M14 3 L16.5 8.1 L22.1 8.9 L18.05 12.85 L19 18.4 L14 15.8 L9 18.4 L9.95 12.85 L5.9 8.9 L11.5 8.1 Z"/><g class="ink" stroke-width="1.3" opacity="0.6" stroke-linecap="round"><path d="M0.8 7.6 H4.2"/><path d="M0.4 11.6 H3.4"/><path d="M1.4 15.6 H4.2"/></g></svg>`,
+  // the clock never let past halfway: the top half of the dial inked and the hand parked
+  // flat on the line it never crossed
+  halfdial:`<svg viewBox="0 0 24 24"><circle class="ink-fill" cx="12" cy="12" r="8.8"/><path d="M3.2 12 A8.8 8.8 0 0 1 20.8 12 Z" fill="currentColor" stroke="none" opacity="0.75"/><path class="ink" stroke-width="1.4" d="M3.2 12 H20.8"/><path class="ink" stroke-width="1.8" d="M12 12 H19.6"/><circle cx="12" cy="12" r="1.05" fill="var(--paper)" stroke="currentColor" stroke-width="0.9"/><g class="ink" stroke-width="1" opacity="0.5"><path d="M12 20.8 V19.3"/><path d="M6.1 19.1 L6.85 17.8"/><path d="M17.9 19.1 L17.15 17.8"/></g></svg>`,
+  // a clean sheet: thirteen ticks down the page and not one crossing-out beside them. The
+  // margin rule is load-bearing — this is the notebook's own page, where `checklist` is a
+  // clipboard of songs
+  cleanpage:`<svg viewBox="0 0 24 24"><rect class="ink-fill" x="4" y="2.6" width="16" height="18.8" rx="1.4"/><path class="ink" stroke-width="1.05" opacity="0.45" d="M7.4 3.2 V20.8"/><g fill="none" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"><path d="M9 6.2 l1.1 1.1 L12.2 5"/><path d="M13.4 6.2 l1.1 1.1 L16.6 5"/><path d="M9 10.2 l1.1 1.1 L12.2 9"/><path d="M13.4 10.2 l1.1 1.1 L16.6 9"/><path d="M9 14.2 l1.1 1.1 L12.2 13"/><path d="M13.4 14.2 l1.1 1.1 L16.6 13"/><path d="M9 18.2 l1.1 1.1 L12.2 17"/><path d="M13.4 18.2 l1.1 1.1 L16.6 17"/></g></svg>`,
+  // sitting on a page you have already solved: the nib parked on the line with the ink
+  // pooling under it and the rings of a long wait spreading out. Not `inkspill` — the pen
+  // is still in the picture, which is the difference between a mess and a wait
+  dwell:`<svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.05" opacity="0.4" stroke-linecap="round"><path d="M2.4 17.4 H21.6"/><path d="M2.4 21 H15.6"/></g><g transform="rotate(30 12.6 8.4)"><path class="ink-fill" d="M10.6 1.4 H14.6 L14.2 10.2 L12.6 13.6 L11 10.2 Z"/><path class="ink" stroke-width="1" d="M12.6 8 V12.2"/><circle cx="12.6" cy="7.2" r="1.1" fill="var(--paper)" stroke="none"/></g><path class="ink-fill" d="M16.4 14.8 C19.2 15.4 20.8 16.6 20.8 18.2 C20.8 19.9 19 21 17.2 20.4 C15.6 19.9 15.2 18.6 14.2 17.9 C13.2 17.2 13.8 15.2 16.4 14.8 Z"/><g fill="currentColor" stroke="none" opacity="0.45"><circle cx="21.6" cy="21.4" r="0.6"/><circle cx="12.6" cy="20.4" r="0.45"/></g></svg>`,
+  /* ---- The Core batch: the wrong-answer charms ----
+     Four marks that are all a word struck through, so each carries something else to be
+     read by: ivy, a second sleeve, a full page, a fade. */
+  // the same wrong answer five times over — the ivy up the word, a leaf for every go
+  ivyword:`<svg viewBox="0 0 24 24"><rect class="ink-fill" x="2.8" y="14.8" width="18.4" height="3.6" rx="0.8"/><path class="ink" stroke-width="1.6" stroke-linecap="round" d="M2 19 L22 14"/><path class="ink" fill="none" stroke-width="1.2" d="M4.6 21.4 C7.4 19.4 8.8 15.6 11 11.4 C12.6 8.2 15 5 18.8 2.4"/><g class="ink-fill" stroke-width="1.2"><path d="M9.4 18.8 C10.8 18.4 12 19.4 11.8 20.8 C10.2 21.2 9 20.4 9.4 18.8 Z"/><path d="M8 13.6 C6.6 13.2 5.4 14 5.6 15.6 C7.2 16 8.4 15.2 8 13.6 Z"/><path d="M13.6 11.6 C15 11.2 16.2 12.2 16 13.6 C14.4 14 13.2 13.2 13.6 11.6 Z"/><path d="M12.6 6.8 C11.2 6.4 10 7.2 10.2 8.8 C11.8 9.2 13 8.4 12.6 6.8 Z"/><path d="M18.4 5 C19.8 4.6 21 5.6 20.8 7 C19.2 7.4 18 6.6 18.4 5 Z"/></g></svg>`,
+  // a song you handed over wrongly once and got right later — the sleeve struck out above,
+  // the same sleeve ticked below
+  rightsong:`<svg viewBox="0 0 24 24"><rect class="ink-fill" x="2.2" y="2.2" width="9.2" height="9.2" rx="0.9"/><circle cx="6.8" cy="6.8" r="2.5" fill="var(--paper)" stroke="currentColor" stroke-width="0.95"/><circle cx="6.8" cy="6.8" r="0.5" fill="currentColor" stroke="none"/><path class="ink" stroke-width="1.7" stroke-linecap="round" d="M2.6 11 L11 2.6"/><rect class="ink-fill" x="12.6" y="12.6" width="9.2" height="9.2" rx="0.9"/><circle cx="17.2" cy="17.2" r="2.5" fill="var(--paper)" stroke="currentColor" stroke-width="0.95"/><circle cx="17.2" cy="17.2" r="0.5" fill="currentColor" stroke="none"/><path class="ink" stroke-width="1.9" fill="none" stroke-linecap="round" d="M2.8 17.6 L5.6 20.4 L10.4 13.8"/></svg>`,
+  // thirteen wrong with something written every single time — the page full of tries and
+  // every one of them ruled out. The handwriting is the point: nothing here was skipped
+  everycrossed:`<svg viewBox="0 0 24 24"><rect class="ink-fill" x="3.6" y="2.4" width="16.8" height="19.2" rx="1.3"/><g fill="none" stroke="currentColor" stroke-width="1.05" opacity="0.85" stroke-linecap="round"><path d="M6 5.4 C7 4.4 7.6 6 8.6 5.2 C9.4 4.6 10 5.8 11 5.2 C12 4.6 12.8 5.8 13.8 5.2"/><path d="M6 9 C7 8 7.6 9.6 8.6 8.8 C9.4 8.2 10 9.4 11 8.8 C12 8.2 13.4 9.4 14.6 8.8"/><path d="M6 12.6 C7 11.6 7.6 13.2 8.6 12.4 C9.4 11.8 10.6 13 11.8 12.4"/><path d="M6 16.2 C7 15.2 7.6 16.8 8.6 16 C9.4 15.4 10.4 16.6 11.6 16"/><path d="M6 19.8 C7 18.8 7.6 20.4 8.6 19.6 C9.4 19 10.8 20.2 12.2 19.6"/></g><g class="ink" stroke-width="1.4" stroke-linecap="round"><path d="M5.2 5.9 L14.8 4.7"/><path d="M5.2 9.5 L15.6 8.3"/><path d="M5.2 13.1 L12.8 11.9"/><path d="M5.2 16.7 L12.6 15.5"/><path d="M5.2 20.3 L13.2 19.1"/></g></svg>`,
+  // the word that has beaten you three times: the same block written out again and again,
+  // struck out again and again, the older two fading behind the one in front
+  hauntword:`<svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round"><g opacity="0.28" stroke-width="1.35"><path d="M4.4 4.6 C5.6 3.2 6.4 5.4 7.6 4.2 C8.6 3.2 9.6 5.2 10.8 4.2 C12 3.2 13.2 5.2 14.4 4.4"/><path d="M3.4 5.6 L15.6 3"/></g><g opacity="0.55" stroke-width="1.5"><path d="M5.8 12 C7 10.6 7.8 12.8 9 11.6 C10 10.6 11 12.6 12.2 11.6 C13.4 10.6 14.6 12.6 15.8 11.8"/><path d="M4.8 13 L17 10.4"/></g><g stroke-width="1.7"><path d="M7.2 19.4 C8.4 18 9.2 20.2 10.4 19 C11.4 18 12.4 20 13.6 19 C14.8 18 16 20 17.2 19.2"/><path d="M6.2 20.4 L18.4 17.8"/></g></g></svg>`,
+  /* ---- The Core batch: the word charms ---- */
+  // right, having lost it to that same word before: the old attempt struck and faded on the
+  // line above, the word ringed on the line below
+  wordreturned:`<svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.05" opacity="0.35" stroke-linecap="round"><path d="M2.6 8.4 H21.4"/><path d="M2.6 20.2 H21.4"/></g><g fill="none" stroke="currentColor" stroke-width="1.35" opacity="0.45" stroke-linecap="round"><path d="M6 6.6 C7.2 5.2 8 7.4 9.2 6.2 C10.2 5.2 11.2 7.2 12.4 6.2 C13.6 5.2 14.8 7.2 16 6.4"/><path d="M4.8 7.4 L17.2 4.8"/></g><path class="ink" fill="none" stroke-width="1.7" stroke-linecap="round" d="M6 18.4 C7.2 16.8 8 19.4 9.2 18 C10.2 16.8 11.2 19.2 12.4 18 C13.6 16.8 14.8 19.2 16 18.2"/><path class="ink" fill="none" stroke-width="1.2" d="M17 14.6 C19.4 15.6 18.6 19.8 13.8 20.8 C9.2 21.7 3.8 20.6 4.2 17.9 C4.6 15.4 9.6 13.8 14.2 14.4"/></svg>`,
+  // the word you have missed most, finally gone: the block broken clean through the middle,
+  // with the give of it drawn out either side
+  crackedword:`<svg viewBox="0 0 24 24"><path class="ink-fill" d="M3.2 8.6 H10.6 L9 12 L10.6 15.4 H3.2 Z"/><path class="ink-fill" d="M20.8 8.6 H13.4 L15 12 L13.4 15.4 H20.8 Z"/><g class="ink" stroke-width="1.2" opacity="0.55" stroke-linecap="round"><path d="M12 5.4 V2.6"/><path d="M8.6 6.2 L7 4"/><path d="M15.4 6.2 L17 4"/><path d="M12 18.6 V21.4"/><path d="M8.6 17.8 L7 20"/><path d="M15.4 17.8 L17 20"/></g></svg>`,
+  // every word in the pool dealt at least once: the page gone through with all of it ringed,
+  // nothing on it left unturned
+  everyword:`<svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"><path d="M3.6 5.6 C4.4 4.6 5 6 5.8 5.2 C6.4 4.6 7.2 5.8 8 5.2"/><path d="M14.2 5.6 C15 4.6 15.6 6 16.4 5.2 C17 4.6 18 5.8 19 5.2"/><path d="M3.6 12.6 C4.4 11.6 5 13 5.8 12.2 C6.4 11.6 7.4 12.8 8.4 12.2"/><path d="M14.6 12.6 C15.4 11.6 16 13 16.8 12.2 C17.4 11.6 18.2 12.8 19 12.2"/><path d="M3.6 19.6 C4.4 18.6 5 20 5.8 19.2 C6.4 18.6 7.2 19.8 8 19.2"/><path d="M14.2 19.6 C15 18.6 15.6 20 16.4 19.2 C17 18.6 18 19.8 19 19.2"/></g><g class="ink" fill="none" stroke-width="1.05" opacity="0.85"><ellipse cx="5.9" cy="5.2" rx="3.7" ry="2.6" transform="rotate(-5 5.9 5.2)"/><ellipse cx="16.6" cy="5.2" rx="3.9" ry="2.6" transform="rotate(4 16.6 5.2)"/><ellipse cx="6" cy="12.2" rx="3.9" ry="2.6" transform="rotate(3 6 12.2)"/><ellipse cx="16.8" cy="12.2" rx="3.7" ry="2.6" transform="rotate(-4 16.8 12.2)"/><ellipse cx="5.9" cy="19.2" rx="3.7" ry="2.6" transform="rotate(-3 5.9 19.2)"/><ellipse cx="16.6" cy="19.2" rx="3.9" ry="2.6" transform="rotate(4 16.6 19.2)"/></g></svg>`,
+  /* ---- The Core batch: the run-against-run charms ---- */
+  // nothing, and then everything: the candle snuffed and still smoking beside the one lit
+  // straight back off it
+  relit:`<svg viewBox="0 0 24 24"><rect class="ink-fill" x="3.2" y="10.6" width="5.6" height="10.4" rx="0.9"/><path class="ink" stroke-width="1.2" d="M6 10.6 V8.8"/><g class="ink" fill="none" stroke-width="1.05" opacity="0.45" stroke-linecap="round"><path d="M6 8.4 C7.6 6.8 4.6 5.6 6 3.6 C6.7 2.6 6.4 1.9 5.8 1.4"/></g><rect class="ink-fill" x="14.4" y="10.6" width="6.2" height="10.4" rx="0.9"/><path class="ink" stroke-width="1.2" d="M17.5 10.6 V8.6"/><path class="ink-fill" d="M17.5 2.6 C19.5 5 20.4 6.4 20.4 7.7 A2.9 2.9 0 0 1 14.6 7.7 C14.6 6.4 15.5 5 17.5 2.6 Z"/><path d="M17.5 5.8 C18.4 7.1 18.7 7.7 18.7 8.2 A1.2 1.2 0 0 1 16.3 8.2 C16.3 7.7 16.6 7.1 17.5 5.8 Z" fill="var(--paper)" stroke="none"/></svg>`,
+  // two perfect games back to back — the second star out of the first one's shadow, not a
+  // pair sat side by side, because side by side reads as a rating
+  twostars:`<svg viewBox="0 0 24 24"><path class="ink-fill" stroke-width="1.1" d="M8.2 2.4 L10.1 6.3 L14.4 6.9 L11.3 9.9 L12 14.2 L8.2 12.2 L4.4 14.2 L5.1 9.9 L2 6.9 L6.3 6.3 Z"/><path class="ink-fill" stroke-width="1.1" d="M15.8 9.6 L17.7 13.5 L22 14.1 L18.9 17.1 L19.6 21.4 L15.8 19.4 L12 21.4 L12.7 17.1 L9.6 14.1 L13.9 13.5 Z"/></svg>`,
+  // three games finished on the very same score: three cards, three identical tallies, and
+  // the equals sign put in between them so it cannot read as "three games played"
+  samescore:`<svg viewBox="0 0 24 24"><g class="ink-fill"><rect x="1.6" y="6.4" width="6.2" height="11.2" rx="0.9"/><rect x="8.9" y="6.4" width="6.2" height="11.2" rx="0.9"/><rect x="16.2" y="6.4" width="6.2" height="11.2" rx="0.9"/></g><g class="ink" stroke-width="1.1" stroke-linecap="round"><path d="M3.2 10 V14"/><path d="M4.7 10 V14"/><path d="M6.2 10 V14"/><path d="M10.5 10 V14"/><path d="M12 10 V14"/><path d="M13.5 10 V14"/><path d="M17.8 10 V14"/><path d="M19.3 10 V14"/><path d="M20.8 10 V14"/></g><g class="ink" stroke-width="1.1" opacity="0.55"><path d="M8.05 11.2 H8.75"/><path d="M8.05 12.8 H8.75"/><path d="M15.35 11.2 H16.05"/><path d="M15.35 12.8 H16.05"/></g></svg>`,
+  // the same song handed in twice running — two sleeves off the same press, and the loop
+  // that took you back round to it
+  twinsleeve:`<svg viewBox="0 0 24 24"><g transform="rotate(-7 7.4 8.4)"><rect class="ink-fill" x="2.6" y="3.6" width="9.6" height="9.6" rx="0.9"/><circle cx="7.4" cy="8.4" r="2.7" fill="var(--paper)" stroke="currentColor" stroke-width="1"/><circle cx="7.4" cy="8.4" r="0.55" fill="currentColor" stroke="none"/></g><g transform="rotate(7 16.4 15.4)"><rect class="ink-fill" x="11.6" y="10.6" width="9.6" height="9.6" rx="0.9"/><circle cx="16.4" cy="15.4" r="2.7" fill="var(--paper)" stroke="currentColor" stroke-width="1"/><circle cx="16.4" cy="15.4" r="0.55" fill="currentColor" stroke="none"/></g><path class="ink" fill="none" stroke-width="1.3" d="M3.2 16.6 C3.4 19.8 6.4 21.6 9.6 20.8"/><path class="ink-fill" d="M1.9 18.2 L4.6 17.6 L3.2 15.2 Z"/></svg>`,
+  // and then a third time in the one game — the twin of `twinsleeve`, and meant to be read
+  // against it: one more sleeve and the loop closed right over the top of the lot
+  triplesleeve:`<svg viewBox="0 0 24 24"><g transform="rotate(-8 5.6 6.4)"><rect class="ink-fill" x="1.6" y="2.4" width="8" height="8" rx="0.8"/><circle cx="5.6" cy="6.4" r="2.1" fill="var(--paper)" stroke="currentColor" stroke-width="0.95"/><circle cx="5.6" cy="6.4" r="0.45" fill="currentColor" stroke="none"/></g><rect class="ink-fill" x="8" y="8" width="8" height="8" rx="0.8"/><circle cx="12" cy="12" r="2.1" fill="var(--paper)" stroke="currentColor" stroke-width="0.95"/><circle cx="12" cy="12" r="0.45" fill="currentColor" stroke="none"/><g transform="rotate(8 18.4 17.6)"><rect class="ink-fill" x="14.4" y="13.6" width="8" height="8" rx="0.8"/><circle cx="18.4" cy="17.6" r="2.1" fill="var(--paper)" stroke="currentColor" stroke-width="0.95"/><circle cx="18.4" cy="17.6" r="0.45" fill="currentColor" stroke="none"/></g></svg>`,
+  /* ---- The Core batch: the long-haul charms ----
+     Three counters that are all "a lot of it", so none of them is allowed to be a stack:
+     ticked pages, a bound ledger, a line of finished cards. */
+  // five hundred pages answered: the stack of them with the top sheet still ticked
+  pagestack:`<svg viewBox="0 0 24 24"><g class="ink-fill"><rect x="4.4" y="16.4" width="15.2" height="4.6" rx="0.9" transform="rotate(2 12 18.7)"/><rect x="3.8" y="12" width="15.2" height="4.6" rx="0.9" transform="rotate(-2.5 11.4 14.3)"/><rect x="4.8" y="7.6" width="15.2" height="4.6" rx="0.9" transform="rotate(1.6 12.4 9.9)"/></g><g transform="rotate(-3 12 5)"><rect class="ink-fill" x="4.4" y="2.4" width="15.2" height="5.2" rx="0.9"/><g fill="none" stroke="currentColor" stroke-width="1.05" stroke-linecap="round"><path d="M6.6 5 l0.8 0.9 L9 3.8"/><path d="M10.4 5 l0.8 0.9 L13 3.8"/><path d="M14.2 5 l0.8 0.9 L16.8 3.8"/></g></g></svg>`,
+  // one thousand nine hundred and eighty-nine rounds, which is a book rather than a pile:
+  // the ledger shut with its ribbon in, and the edge of every page it took
+  ledger:`<svg viewBox="0 0 24 24"><path class="ink-fill" d="M4.2 3 a1.8 1.8 0 0 1 1.8 -1.8 H19.4 V20.4 H6 a1.8 1.8 0 0 0 -1.8 1.8 Z"/><path class="ink" stroke-width="1.05" d="M6.4 1.6 V19.6"/><g fill="none" stroke="currentColor" stroke-width="0.8" opacity="0.5"><path d="M19.4 3.4 H21"/><path d="M19.4 5.4 H21"/><path d="M19.4 7.4 H21"/><path d="M19.4 9.4 H21"/><path d="M19.4 11.4 H21"/><path d="M19.4 13.4 H21"/><path d="M19.4 15.4 H21"/><path d="M19.4 17.4 H21"/></g><g fill="none" stroke="currentColor" stroke-width="0.9" opacity="0.45"><path d="M8.8 6 H17"/><path d="M8.8 8.6 H17"/><path d="M8.8 11.2 H14.6"/></g><path class="ink-fill" d="M11.4 1.4 H14.2 V9.4 L12.8 8 L11.4 9.4 Z"/></svg>`,
+  // eighty-nine games seen through: the scorecards pegged out along the line, the way you
+  // keep the ones that are finished with
+  pegged:`<svg viewBox="0 0 24 24"><path class="ink" stroke-width="1.3" fill="none" d="M0.8 5.2 C6.6 7.8 17.4 7.8 23.2 5.2"/><g transform="rotate(-6 4.6 13.4)"><rect class="ink-fill" x="1.6" y="9" width="6" height="8.4" rx="0.8"/><g fill="none" stroke="currentColor" stroke-width="0.9" opacity="0.5"><path d="M3.1 12 H6.1"/><path d="M3.1 14.2 H5.3"/></g></g><g transform="rotate(3 12 14.6)"><rect class="ink-fill" x="9" y="10.2" width="6" height="8.4" rx="0.8"/><g fill="none" stroke="currentColor" stroke-width="0.9" opacity="0.5"><path d="M10.5 13.2 H13.5"/><path d="M10.5 15.4 H12.7"/></g></g><g transform="rotate(-3 19.4 13.6)"><rect class="ink-fill" x="16.4" y="9.2" width="6" height="8.4" rx="0.8"/><g fill="none" stroke="currentColor" stroke-width="0.9" opacity="0.5"><path d="M17.9 12.2 H20.9"/><path d="M17.9 14.4 H20.1"/></g></g><g class="ink-fill"><rect x="3.6" y="5.8" width="1.9" height="3.6" rx="0.75"/><rect x="11.1" y="7.2" width="1.9" height="3.6" rx="0.75"/><rect x="18.5" y="6.2" width="1.9" height="3.6" rx="0.75"/></g></svg>`,
+  // fifty right on the trot, however many games that takes — the thread of them running
+  // clean through the break between one game and the next
+  carriedover:`<svg viewBox="0 0 24 24"><path class="ink" stroke-width="1.1" fill="none" opacity="0.4" stroke-linecap="round" stroke-dasharray="2 2" d="M12 1.6 V22.4"/><path class="ink" stroke-width="1.5" fill="none" d="M1.4 17.8 C6 17.4 9 14.1 12 12 C15 9.9 18 6.6 22.6 6.2"/><g class="ink-fill"><circle cx="3.6" cy="17.5" r="1.35"/><circle cx="7.4" cy="15.7" r="1.35"/><circle cx="12" cy="12" r="1.5"/><circle cx="16.6" cy="8.3" r="1.35"/><circle cx="20.4" cy="6.5" r="1.35"/></g></svg>`,
+
+  /* ---- The Core batch: the habit and calendar charms ----
+     Five dated marks that would all default to "a calendar", so each takes a different piece
+     of one: the week strip, the month grid, the year's wheel, a torn leaf, a single square. */
+  // seven days without missing one: the week hung up with every day of it ticked off
+  sevendays:`<svg viewBox="0 0 24 24"><rect class="ink-fill" x="1.4" y="5.2" width="21.2" height="14" rx="1.3"/><g fill="none" stroke="currentColor" stroke-width="0.85" opacity="0.3"><path d="M4.4 5.6 V18.8"/><path d="M7.4 5.6 V18.8"/><path d="M10.4 5.6 V18.8"/><path d="M13.4 5.6 V18.8"/><path d="M16.4 5.6 V18.8"/><path d="M19.4 5.6 V18.8"/></g><g fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M2 13.4 l1.1 1.4 L4.6 9.6"/><path d="M5 13.4 l1.1 1.4 L7.6 9.6"/><path d="M8 13.4 l1.1 1.4 L10.6 9.6"/><path d="M11 13.4 l1.1 1.4 L13.6 9.6"/><path d="M14 13.4 l1.1 1.4 L16.6 9.6"/><path d="M17 13.4 l1.1 1.4 L19.6 9.6"/><path d="M20 13.4 l1.1 1.4 L22.6 9.6"/></g><g class="ink" stroke-width="1.3"><path d="M5.6 2.4 V5.2"/><path d="M18.4 2.4 V5.2"/></g></svg>`,
+  // thirteen days on the calendar, scattered where they fell — thirteen squares filled and
+  // no attempt made to line them up, because the run is not the charm here
+  thirteendays:`<svg viewBox="0 0 24 24"><rect class="ink-fill" x="2.4" y="4" width="19.2" height="17.6" rx="1.3"/><path class="ink" stroke-width="1.05" d="M2.6 8.4 H21.4"/><g class="ink" stroke-width="1.2"><path d="M7.4 1.8 V5"/><path d="M16.6 1.8 V5"/></g><g fill="currentColor" stroke="none"><rect x="4.4" y="10" width="2.4" height="2.4" rx="0.5"/><rect x="11" y="10" width="2.4" height="2.4" rx="0.5"/><rect x="14.3" y="10" width="2.4" height="2.4" rx="0.5"/><rect x="17.6" y="10" width="2.4" height="2.4" rx="0.5"/><rect x="4.4" y="13.6" width="2.4" height="2.4" rx="0.5"/><rect x="7.7" y="13.6" width="2.4" height="2.4" rx="0.5"/><rect x="14.3" y="13.6" width="2.4" height="2.4" rx="0.5"/><rect x="17.6" y="13.6" width="2.4" height="2.4" rx="0.5"/><rect x="4.4" y="17.2" width="2.4" height="2.4" rx="0.5"/><rect x="7.7" y="17.2" width="2.4" height="2.4" rx="0.5"/><rect x="11" y="17.2" width="2.4" height="2.4" rx="0.5"/><rect x="14.3" y="17.2" width="2.4" height="2.4" rx="0.5"/><rect x="17.6" y="17.2" width="2.4" height="2.4" rx="0.5"/></g></svg>`,
+  // all twelve months of it: the year drawn as its own dial, one tick a month the whole way
+  // round, with the season sat in the middle of it
+  twelvemonths:`<svg viewBox="0 0 24 24"><circle class="ink" fill="none" cx="12" cy="12" r="8.4" stroke-width="1" opacity="0.3"/><g class="ink-fill"><rect x="10.75" y="2.35" width="2.5" height="2.5" rx="0.6"/><rect x="14.95" y="3.47" width="2.5" height="2.5" rx="0.6"/><rect x="18.02" y="6.55" width="2.5" height="2.5" rx="0.6"/><rect x="19.15" y="10.75" width="2.5" height="2.5" rx="0.6"/><rect x="18.02" y="14.95" width="2.5" height="2.5" rx="0.6"/><rect x="14.95" y="18.02" width="2.5" height="2.5" rx="0.6"/><rect x="10.75" y="19.15" width="2.5" height="2.5" rx="0.6"/><rect x="6.55" y="18.02" width="2.5" height="2.5" rx="0.6"/><rect x="3.48" y="14.95" width="2.5" height="2.5" rx="0.6"/><rect x="2.35" y="10.75" width="2.5" height="2.5" rx="0.6"/><rect x="3.48" y="6.55" width="2.5" height="2.5" rx="0.6"/><rect x="6.55" y="3.47" width="2.5" height="2.5" rx="0.6"/></g><circle class="ink-fill" cx="12" cy="12" r="1.9"/></svg>`,
+  // "august" answered in August: the month torn off the pad and going, the sheet under it
+  // already the next one
+  tornmonth:`<svg viewBox="0 0 24 24"><path class="ink-fill" d="M3.6 4.2 H16.4 V13.4 L13.6 11.4 L10 13.8 L6.8 11.6 L3.6 13.6 Z"/><g class="ink" stroke-width="1.2"><path d="M6.6 1.8 V4.6"/><path d="M13.4 1.8 V4.6"/></g><path class="ink" stroke-width="1" opacity="0.5" d="M4 7.6 H16"/><g transform="rotate(24 16 18)"><path class="ink-fill" d="M11.6 14.4 H20.4 V21.6 L18.2 20.2 L16 21.8 L13.8 20.2 L11.6 21.6 Z"/><path fill="none" stroke="currentColor" stroke-width="0.9" opacity="0.5" d="M13.2 17.6 H18.8"/></g><g class="ink" fill="none" stroke-width="1" opacity="0.4" stroke-linecap="round"><path d="M2.4 16.6 C4.2 17.6 5.4 18.8 6.2 20.4"/></g></svg>`,
+  // seven, on the seventh: the one square off the calendar with the seven marks it took
+  sevenseven:`<svg viewBox="0 0 24 24"><rect class="ink-fill" x="3" y="4.6" width="18" height="16.8" rx="1.4"/><g class="ink" stroke-width="1.2"><path d="M7.6 2 V5.6"/><path d="M16.4 2 V5.6"/></g><path class="ink" stroke-width="1.05" d="M3.2 9 H20.8"/><g class="ink" stroke-width="1.3" stroke-linecap="round"><path d="M6.2 11.8 V16.2"/><path d="M8.2 11.8 V16.2"/><path d="M10.2 11.8 V16.2"/><path d="M12.2 11.8 V16.2"/><path d="M5.4 16.6 L13 11.4"/><path d="M15.4 11.8 V16.2"/><path d="M17.4 11.8 V16.2"/></g><path class="ink" stroke-width="1" opacity="0.45" d="M6.4 18.8 H17.6"/></svg>`,
+  // a whole game between three and four in the morning: the lamp still on over the page and
+  // the sky it is on against
+  nightlamp:`<svg viewBox="0 0 24 24"><path class="ink-fill" d="M3.4 8.6 L9.4 2.8 L13.4 7.4 L6.6 11.8 Z"/><path class="ink" stroke-width="1.5" fill="none" d="M8.2 10.6 C9.4 14.4 8.6 17.6 6.6 20.4"/><path class="ink" stroke-width="1.4" d="M2.8 20.8 H10.4"/><g class="ink" fill="none" stroke-width="0.95" opacity="0.32" stroke-linecap="round"><path d="M6.2 12.6 L3.2 19.4"/><path d="M12.2 11.6 L15.2 18.4"/></g><path class="ink-fill" d="M21.6 8.6 A4.6 4.6 0 1 1 17.4 3.6 A3.6 3.6 0 0 0 21.6 8.6 Z"/><g fill="currentColor" stroke="none" opacity="0.65"><circle cx="15" cy="2.6" r="0.55"/><circle cx="21.6" cy="12.8" r="0.45"/></g><path class="ink" stroke-width="1" opacity="0.45" d="M12.6 20.8 H21.8"/></svg>`,
+  // thirteen minutes past one on the thirteenth, which is the day folding over on itself:
+  // the dial with the crease straight through it
+  wrinkletime:`<svg viewBox="0 0 24 24"><circle class="ink-fill" cx="12" cy="12" r="8.8"/><path class="ink" stroke-width="1.6" d="M12 12 V6.2"/><path class="ink" stroke-width="1.4" d="M12 12 L16.4 14.4"/><circle cx="12" cy="12" r="0.9" fill="currentColor" stroke="none"/><path class="ink" stroke-width="1.15" opacity="0.7" fill="none" d="M4.6 6.8 C8.6 9.2 10.4 13.4 9.6 19.8"/><path class="ink" stroke-width="1" opacity="0.4" fill="none" d="M6.6 5.2 C10.4 8.6 12 13 11.4 20.6"/><g class="ink" stroke-width="1" opacity="0.5"><path d="M12 3.2 V4.8"/><path d="M20.8 12 H19.2"/></g></svg>`,
+  // played on the thirteenth of December, and the one candle is the point: the day is hers,
+  // so the charm keeps to a slice rather than turning into a party
+  cakeslice:`<svg viewBox="0 0 24 24"><path class="ink-fill" d="M12 1.6 C13 3 13.4 3.7 13.4 4.3 A1.4 1.4 0 0 1 10.6 4.3 C10.6 3.7 11 3 12 1.6 Z"/><path class="ink" stroke-width="1.4" d="M12 5.6 V8.8"/><path class="ink-fill" d="M3.4 9.2 H20.6 V12.8 H3.4 Z"/><path class="ink-fill" d="M3.4 12.8 H20.6 V19.4 a1.2 1.2 0 0 1 -1.2 1.2 H4.6 a1.2 1.2 0 0 1 -1.2 -1.2 Z"/><path class="ink" fill="none" stroke-width="1.05" opacity="0.5" d="M3.6 16 C6 14.4 8.4 17.4 10.8 15.8 C13.2 14.2 15.6 17.4 18 15.8 C19.2 15 20 15.4 20.4 16"/><g fill="currentColor" stroke="none" opacity="0.65"><circle cx="7" cy="11" r="0.5"/><circle cx="12" cy="11" r="0.5"/><circle cx="17" cy="11" r="0.5"/></g></svg>`,
+
+  /* ---- The Core batch: the odds and ends ---- */
+  // thirteen taps on the one drawing you are allowed to touch: the scarf hung up, with the
+  // touch still going out of it in rings
+  scarftap:`<svg viewBox="0 0 24 24"><g opacity="0.9"><path class="ink" fill="none" stroke-width="1.35" d="M2.6 3.4 C5.6 6.2 9.2 6.2 12.2 3.4"/><path class="ink-fill" d="M6.4 5.4 L5.4 11.6 H8 L9 5.7 Z"/><g class="ink" stroke-width="0.95"><path d="M5.6 11.6 V13.6"/><path d="M6.6 11.6 V14"/><path d="M7.6 11.6 V13.5"/></g></g><path class="ink-fill" d="M13.4 21.6 C11.4 20.2 10.6 18.4 11 16.8 C11.3 15.6 12.4 15.4 13 16.2 L13.8 17.4 V11 A1.15 1.15 0 0 1 16.1 11 V14.8 A1.05 1.05 0 0 1 18.2 14.8 V15.4 A1.05 1.05 0 0 1 20.3 15.4 V16.2 A1.05 1.05 0 0 1 22.4 16.2 V18.2 C22.4 20.2 21.2 21.6 19.6 21.6 Z"/><g class="ink" stroke-width="1.05" opacity="0.5" fill="none"><path d="M11.6 8.6 C10.4 9.6 10.2 11 10.6 12.2"/><path d="M14.4 7.6 C12.8 8.8 12.4 10.6 12.8 12.2"/></g></svg>`,
+  // the right answer typed out and never sent: the words sat in the bubble, and what was
+  // left of the round going out from under it
+  unsentword:`<svg viewBox="0 0 24 24"><path class="ink-fill" d="M3.2 4.4 H20.6 a1.4 1.4 0 0 1 1.4 1.4 V13.6 a1.4 1.4 0 0 1 -1.4 1.4 H10.4 L6.2 18.6 V15 H3.2 A1.4 1.4 0 0 1 1.8 13.6 V5.8 A1.4 1.4 0 0 1 3.2 4.4 Z"/><g fill="none" stroke="currentColor" stroke-width="1.15" opacity="0.85" stroke-linecap="round"><path d="M5 8.2 C6.2 7 7 8.9 8.2 7.9 C9.2 7.1 10 8.6 11.2 7.9 C12.4 7.2 13.6 8.7 14.8 8"/><path d="M5 11.6 C6.2 10.4 7 12.3 8.2 11.3 C9.2 10.5 10.4 12 11.6 11.3"/></g><g fill="currentColor" stroke="none" opacity="0.45"><circle cx="8.4" cy="20.4" r="0.75"/><circle cx="11.4" cy="21.4" r="0.6"/><circle cx="14.2" cy="20.8" r="0.5"/></g></svg>`,
+  // nothing written until the clock was nearly out, and then all of it at once: the line
+  // flat the whole way across and the hand let go right at the end of it
+  heldbreath:`<svg viewBox="0 0 24 24"><path class="ink" stroke-width="2" fill="none" stroke-linecap="round" d="M1.4 14.6 H12.4"/><path class="ink" stroke-width="2" fill="none" stroke-linecap="round" d="M12.4 14.6 C13.4 8.4 14.6 15.2 15.8 11 C16.8 7.6 18 15.6 19.2 12.2 C20 9.8 21.2 13.8 22.6 11.2"/><path class="ink" stroke-width="1" opacity="0.35" fill="none" stroke-linecap="round" d="M1.4 20.6 H22.6"/><path class="ink" stroke-width="1.05" opacity="0.45" stroke-dasharray="1.4 1.8" d="M12.4 5.4 V13.4"/></svg>`,
+  // the top of the list taken every time it was offered: the suggestions down, the first row
+  // inked, and the pointer already on it
+  topofthelist:`<svg viewBox="0 0 24 24"><rect class="ink" fill="none" x="2.6" y="2.4" width="18.8" height="4.4" rx="1"/><path class="ink" stroke-width="1.2" opacity="0.6" d="M5 4.6 H10"/><rect class="ink" fill="none" x="2.6" y="8" width="18.8" height="13.4" rx="1"/><rect class="ink-fill" x="3.6" y="9" width="16.8" height="3.6" rx="0.6"/><g fill="none" stroke="currentColor" stroke-width="1.05" opacity="0.45"><path d="M5 15.2 H16"/><path d="M5 18.4 H13.4"/></g><path class="ink-fill" d="M14.8 10.2 L20 14 L17.4 14.4 L18.4 16.9 L16.9 17.5 L15.9 15 L14.2 16.5 Z"/></svg>`,
+  // thirteen out of thirteen and every one of them off the same record: the sleeve with the
+  // whole game tallied onto it
+  onesleeve:`<svg viewBox="0 0 24 24"><rect class="ink-fill" x="2.6" y="2.6" width="18.8" height="18.8" rx="1.2"/><circle cx="12" cy="8" r="3.2" fill="var(--paper)" stroke="currentColor" stroke-width="1.05"/><circle cx="12" cy="8" r="0.6" fill="currentColor" stroke="none"/><g class="ink" stroke-width="1.2" stroke-linecap="round"><path d="M5.4 13.6 V16.2"/><path d="M7.1 13.6 V16.2"/><path d="M8.8 13.6 V16.2"/><path d="M10.5 13.6 V16.2"/><path d="M4.8 16.4 L11.1 13.4"/><path d="M13.8 13.6 V16.2"/><path d="M15.5 13.6 V16.2"/><path d="M17.2 13.6 V16.2"/><path d="M5.4 17.8 V20.4"/><path d="M7.1 17.8 V20.4"/><path d="M8.8 17.8 V20.4"/><path d="M10.5 17.8 V20.4"/><path d="M4.8 20.6 L11.1 17.6"/></g></svg>`,
+  // every hint in the round burnt and the page missed anyway: three matches spent to the
+  // head, and the word struck out under them all the same
+  hintsburnt:`<svg viewBox="0 0 24 24"><g transform="rotate(-10 5 9.4)"><rect class="ink-fill" x="3.9" y="6" width="2.2" height="8.2" rx="0.9"/><path d="M5 3.2 C6.9 4.4 7.2 5.5 6.7 6.4 C6.1 7.5 3.9 7.5 3.3 6.4 C2.8 5.5 3.1 4.4 5 3.2 Z" fill="currentColor" stroke="none"/></g><g transform="rotate(2 12 9.4)"><rect class="ink-fill" x="10.9" y="6" width="2.2" height="8.2" rx="0.9"/><path d="M12 3.2 C13.9 4.4 14.2 5.5 13.7 6.4 C13.1 7.5 10.9 7.5 10.3 6.4 C9.8 5.5 10.1 4.4 12 3.2 Z" fill="currentColor" stroke="none"/></g><g transform="rotate(12 19 9.4)"><rect class="ink-fill" x="17.9" y="6" width="2.2" height="8.2" rx="0.9"/><path d="M19 3.2 C20.9 4.4 21.2 5.5 20.7 6.4 C20.1 7.5 17.9 7.5 17.3 6.4 C16.8 5.5 17.1 4.4 19 3.2 Z" fill="currentColor" stroke="none"/></g><path class="ink" fill="none" stroke-width="0.95" opacity="0.3" stroke-linecap="round" d="M14.4 3.4 C16 2.8 14.8 1.8 16 1"/><path class="ink" stroke-width="1.5" opacity="0.75" fill="none" stroke-linecap="round" d="M5.6 18.8 C7 17.4 7.8 19.4 9.2 18.2 C10.4 17.2 11.6 19 13 17.8 C14.2 16.8 15.6 18.4 17 17.4"/><path class="ink" stroke-width="1.7" stroke-linecap="round" d="M4 20.4 L20 16.4"/></svg>`,
+  // an answer sent in capitals: the letters all stood to the same height between the rules,
+  // which is the only thing on a written line that shouting looks like
+  shoutcaps:`<svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.05" opacity="0.4" stroke-linecap="round"><path d="M2.6 17.6 H21.4"/><path d="M2.6 6.4 H21.4"/></g><g class="ink-fill"><path d="M4 17.4 L6.2 6.6 L8.4 17.4 Z"/><rect x="10.2" y="6.6" width="4.8" height="10.8" rx="1.6"/><path d="M17 6.6 H20.8 V17.4 H17 Z"/></g><rect x="11.5" y="9.4" width="2.2" height="5.2" rx="1.1" fill="var(--paper)" stroke="none"/><g class="ink" stroke-width="1.2" opacity="0.7" stroke-linecap="round"><path d="M12.6 3.8 V1.8"/><path d="M8.8 4.4 L7.8 2.6"/><path d="M16.4 4.4 L17.4 2.6"/></g></svg>`,
+  // the prompt word handed straight back as the answer: the word off the top of the page
+  // walked down into the box it came out of
+  caughtout:`<svg viewBox="0 0 24 24"><rect class="ink" fill="none" x="5.4" y="1.8" width="15.2" height="5" rx="1"/><path class="ink" fill="none" stroke-width="1.45" stroke-linecap="round" d="M8.2 4.6 C9.2 3.4 10 5.2 11 4.2 C11.8 3.4 12.8 5 13.8 4.2 C14.8 3.4 16 4.8 17.2 4.2"/><path class="ink" fill="none" stroke-width="1.3" d="M4.8 7.6 C1.8 10.2 2 14 4.4 15.8"/><path class="ink-fill" d="M6 14.2 L5.2 17.4 L2.6 15.2 Z"/><rect class="ink" fill="none" x="5.4" y="17" width="15.2" height="5" rx="1"/><path class="ink" fill="none" stroke-width="1.45" stroke-linecap="round" d="M8.2 19.8 C9.2 18.6 10 20.4 11 19.4 C11.8 18.6 12.8 20.2 13.8 19.4 C14.8 18.6 16 20 17.2 19.4"/></svg>`,
+  // a charm from every theme on the board: the bracelet with one of each hung off it, which
+  // is the only charm here whose subject is the collection itself
+  fullbracelet:`<svg viewBox="0 0 24 24"><path class="ink" stroke-width="1.4" fill="none" d="M1.4 6.8 C6.4 3.8 17.6 3.8 22.6 6.8"/><g class="ink-fill"><circle cx="4.4" cy="5.8" r="1.15"/><circle cx="8.8" cy="4.6" r="1.15"/><circle cx="12" cy="4.3" r="1.15"/><circle cx="15.2" cy="4.6" r="1.15"/><circle cx="19.6" cy="5.8" r="1.15"/></g><g class="ink" stroke-width="1" opacity="0.6"><path d="M6.4 7 V9.2"/><path d="M12 6.9 V9.6"/><path d="M17.6 7 V9.4"/></g><path class="ink-fill" stroke-width="1.1" d="M6.4 9.2 L7.5 11.6 L10.1 11.9 L8.2 13.7 L8.7 16.3 L6.4 15 L4.1 16.3 L4.6 13.7 L2.7 11.9 L5.3 11.6 Z"/><path class="ink-fill" d="M12 9.6 C13.6 11 14.4 12.3 14.4 13.5 A2.4 2.4 0 0 1 9.6 13.5 C9.6 12.3 10.4 11 12 9.6 Z"/><path class="ink-fill" d="M17.6 9.4 L20 12.8 L17.6 16.2 L15.2 12.8 Z"/></svg>`,
+  // a word carried over from the searcher and played: the word lifted out of the glass and
+  // set down on the line, with the way it came still faintly there
+  lenstoline:`<svg viewBox="0 0 24 24"><circle class="ink-fill" cx="10.4" cy="7.4" r="6.2"/><path class="ink" fill="none" stroke-width="1.45" stroke-linecap="round" d="M7.4 7 C8.4 5.8 9.2 7.6 10.2 6.6 C11 5.8 12 7.4 13.2 6.6"/><path class="ink" stroke-width="2.2" stroke-linecap="round" d="M6 11.8 L2.8 15"/><path class="ink" fill="none" stroke-width="1.05" opacity="0.45" stroke-dasharray="0.1 1.9" stroke-linecap="round" d="M15.6 11 C17.8 13.2 18.6 15.4 18.6 17.6"/><path class="ink" stroke-width="1.05" opacity="0.4" stroke-linecap="round" d="M8.6 21.2 H22.4"/><path class="ink" fill="none" stroke-width="1.55" stroke-linecap="round" d="M13.4 20 C14.4 18.8 15.2 20.6 16.2 19.6 C17 18.8 18 20.4 19 19.6 C19.8 19 20.6 19.8 21.2 20.2"/></svg>`,
 };
 
 /* ---------- Mastery marks ----------
@@ -2487,7 +2629,7 @@ export const ACHIEVEMENTS = [
   /* The scarf doodle is the one drawing you can touch, and its tally is lifetime rather than
      per-run: it only turns up on a roll in one branch of the margin-doodle chain, so thirteen
      taps in a single game would be luck rather than a feat. Counted in METRICS_KEY. */
-  { id: "tap-scarf-doodle-13-times", name: "You Keep My Old Scarf", desc: "Tap the scarf doodle 13 times", secret: true, icon: "placeholder" },
+  { id: "tap-scarf-doodle-13-times", name: "You Keep My Old Scarf", desc: "Tap the scarf doodle 13 times", secret: true, icon: "scarftap" },
   { id: "play-easy-3-times-in-row",   name: "Safe & Sound",     desc: "Play Easy three times in a row",       secret: false, icon: "lantern", sitting: true, earn: { cat: "difficulty", diff: "easy" } },
   { id: "beat-personal-best-score",          name: "R-E-V-E-N-G-E",    desc: "Beat your own best score on any board", secret: false, icon: "megaphone", sitting: true, earn: { cat: "difficulty" } },
   { id: "perfect-13-every-mode",       name: "Every Version Of Yourself", desc: "Score a perfect 13/13 in every difficulty", secret: false, icon: "mirrorball" },
@@ -2520,22 +2662,22 @@ export const ACHIEVEMENTS = [
      can be missed by having already passed some milestone. The end-of-run half all demand a
      FULL thirteen pages, and the mid-run half unlock the moment they happen. Icons are
      placeholders pending the batch's real marks. */
-  { id: "answer-all-13-rounds-under-3s", name: "Faster Than The Wind", desc: "Answer all 13 rounds in under 3s each", secret: false, icon: "placeholder", sitting: true, earn: { cat: "difficulty" } },
+  { id: "answer-all-13-rounds-under-3s", name: "Faster Than The Wind", desc: "Answer all 13 rounds in under 3s each", secret: false, icon: "gustpage", sitting: true, earn: { cat: "difficulty" } },
   // Easy and Relaxed only, and that is the charm rather than a limitation of it: Normal's
   // clock is 10s, so "every answer over 10 seconds" cannot happen there, and Hard and Ultra
   // are shorter still. Sitting on a page you have already solved is the whole feat.
-  { id: "win-with-every-answer-over-10s", name: "Slow Motion", desc: "Win with every answer over 10s (Easy or Relaxed)", secret: true, icon: "placeholder" },
-  { id: "answer-in-final-second-all-13-rounds", name: "I Take My Time", desc: "Answer in the final second on all 13 rounds", secret: true, icon: "placeholder" },
-  { id: "answer-under-1s-three-rounds-running", name: "Just Like That", desc: "Answer in under a second three rounds running", secret: false, icon: "placeholder", sitting: true, earn: { cat: "difficulty" } },
-  { id: "perfect-13-every-answer-under-2s", name: "You Are The Best Thing", desc: "Perfect 13/13 with every answer under 2s", secret: false, icon: "placeholder", sitting: true, earn: { cat: "difficulty" } },
-  { id: "win-without-clock-dropping-below-half", name: "The Whole Way Home", desc: "Win without the clock dropping below half", secret: false, icon: "placeholder", sitting: true, earn: { cat: "difficulty" } },
-  { id: "perfect-13-no-wrong-submissions", name: "One For The Money", desc: "Perfect 13/13 with no wrong submissions", secret: false, icon: "placeholder", sitting: true, earn: { cat: "difficulty" } },
-  { id: "submit-same-wrong-answer-5-times-one-round", name: "I Once Was Poison Ivy", desc: "Submit the same wrong answer 5 times in one round", secret: true, icon: "placeholder" },
-  { id: "answer-right-with-song-given-wrongly-earlier", name: "Lost In Translation", desc: "Answer right with a song you gave wrongly earlier", secret: true, icon: "placeholder" },
-  { id: "answer-13-wrong-having-typed-every-round", name: "I Was Wrong", desc: "Answer 13 wrong, having typed something every round", secret: true, icon: "placeholder" },
-  { id: "time-out-with-right-answer-typed", name: "The Words I Held Back", desc: "Run out of time with the right answer typed", secret: true, icon: "placeholder" },
-  { id: "type-nothing-until-2s-left-then-answer-right", name: "Holding My Breath", desc: "Type nothing until under 2s left, then answer right", secret: true, icon: "placeholder" },
-  { id: "take-first-suggestion-all-13-rounds", name: "Took The Money", desc: "Take the first suggestion on all 13 rounds", secret: true, icon: "placeholder" },
+  { id: "win-with-every-answer-over-10s", name: "Slow Motion", desc: "Win with every answer over 10s (Easy or Relaxed)", secret: true, icon: "dwell" },
+  { id: "answer-in-final-second-all-13-rounds", name: "I Take My Time", desc: "Answer in the final second on all 13 rounds", secret: true, icon: "lasttick" },
+  { id: "answer-under-1s-three-rounds-running", name: "Just Like That", desc: "Answer in under a second three rounds running", secret: false, icon: "snapthree", sitting: true, earn: { cat: "difficulty" } },
+  { id: "perfect-13-every-answer-under-2s", name: "You Are The Best Thing", desc: "Perfect 13/13 with every answer under 2s", secret: false, icon: "blurstar", sitting: true, earn: { cat: "difficulty" } },
+  { id: "win-without-clock-dropping-below-half", name: "The Whole Way Home", desc: "Win without the clock dropping below half", secret: false, icon: "halfdial", sitting: true, earn: { cat: "difficulty" } },
+  { id: "perfect-13-no-wrong-submissions", name: "One For The Money", desc: "Perfect 13/13 with no wrong submissions", secret: false, icon: "cleanpage", sitting: true, earn: { cat: "difficulty" } },
+  { id: "submit-same-wrong-answer-5-times-one-round", name: "I Once Was Poison Ivy", desc: "Submit the same wrong answer 5 times in one round", secret: true, icon: "ivyword" },
+  { id: "answer-right-with-song-given-wrongly-earlier", name: "Lost In Translation", desc: "Answer right with a song you gave wrongly earlier", secret: true, icon: "rightsong" },
+  { id: "answer-13-wrong-having-typed-every-round", name: "I Was Wrong", desc: "Answer 13 wrong, having typed something every round", secret: true, icon: "everycrossed" },
+  { id: "time-out-with-right-answer-typed", name: "The Words I Held Back", desc: "Run out of time with the right answer typed", secret: true, icon: "unsentword" },
+  { id: "type-nothing-until-2s-left-then-answer-right", name: "Holding My Breath", desc: "Type nothing until under 2s left, then answer right", secret: true, icon: "heldbreath" },
+  { id: "take-first-suggestion-all-13-rounds", name: "Took The Money", desc: "Take the first suggestion on all 13 rounds", secret: true, icon: "topofthelist" },
   /* ---- The free charms of the Core batch: readings, not new state ----
      Every one of these is a read against something the notebook already keeps — the lifetime
      per-word tally, the run history, the metrics record, the calendar ledger, or the run's own
@@ -2543,59 +2685,59 @@ export const ACHIEVEMENTS = [
      standing condition that comes round again rather than a window that closes. Icons are
      placeholders pending the batch's real marks; the secret ones join HIDDEN_ACH_IDS in the
      batch's secrecy phase, which is a deliberate edit of its own. */
-  { id: "perfect-13-all-one-album", name: "This Is Our Place", desc: "Score 13/13 all from one album", secret: false, icon: "placeholder", sitting: true, earn: { cat: "difficulty" } },
+  { id: "perfect-13-all-one-album", name: "This Is Our Place", desc: "Score 13/13 all from one album", secret: false, icon: "onesleeve", sitting: true, earn: { cat: "difficulty" } },
   /* The nemesis thread. The tally is folded once per finished game, so a word missed three
      times in one run counts once — which is exactly what "three separate games" wants. */
-  { id: "answer-word-missed-in-earlier-game", name: "The Moment I Knew", desc: "Answer a word you missed in an earlier game", secret: false, icon: "placeholder", sitting: true, earn: { cat: "difficulty" } },
-  { id: "miss-same-word-in-3-games", name: "Haunted", desc: "Miss the same word in 3 separate games", secret: true, icon: "placeholder" },
+  { id: "answer-word-missed-in-earlier-game", name: "The Moment I Knew", desc: "Answer a word you missed in an earlier game", secret: false, icon: "wordreturned", sitting: true, earn: { cat: "difficulty" } },
+  { id: "miss-same-word-in-3-games", name: "Haunted", desc: "Miss the same word in 3 separate games", secret: true, icon: "hauntword" },
   // The lower rung of a two-step ladder with The Cycle Ends: this one asks only that the word
   // you have missed MOST has finally fallen, where The Cycle Ends holds out for a word that
   // has beaten you MEAN_GRUDGE times first.
-  { id: "answer-most-missed-word", name: "I Just Know", desc: "Finally crack your most-missed word", secret: false, icon: "placeholder" },
-  { id: "be-dealt-every-prompt-word", name: "You Learn My Secrets", desc: "Be dealt every prompt word in the game", secret: false, icon: "placeholder" },
+  { id: "answer-most-missed-word", name: "I Just Know", desc: "Finally crack your most-missed word", secret: false, icon: "crackedword" },
+  { id: "be-dealt-every-prompt-word", name: "You Learn My Secrets", desc: "Be dealt every prompt word in the game", secret: false, icon: "everyword" },
   /* Charms judged against the runs BEFORE this one. "In a row" means among runs of the same
      game type: the sandboxed types are invisible to them, neither extending nor breaking a
      chain, which is the rule noTimeoutStreak already set for a cross-run counter. */
-  { id: "score-zero-then-perfect-13-next-game", name: "What Died Didn't Stay Dead", desc: "Score 0/13, then 13/13 the next game", secret: true, icon: "placeholder" },
-  { id: "perfect-13-two-games-in-row", name: "Two For The Show", desc: "Score two perfect 13/13 games in a row", secret: false, icon: "placeholder", sitting: true, earn: { cat: "difficulty" } },
-  { id: "same-final-score-3-games-in-row", name: "It's All The Same", desc: "Finish on the same score three games running", secret: true, icon: "placeholder" },
+  { id: "score-zero-then-perfect-13-next-game", name: "What Died Didn't Stay Dead", desc: "Score 0/13, then 13/13 the next game", secret: true, icon: "relit" },
+  { id: "perfect-13-two-games-in-row", name: "Two For The Show", desc: "Score two perfect 13/13 games in a row", secret: false, icon: "twostars", sitting: true, earn: { cat: "difficulty" } },
+  { id: "same-final-score-3-games-in-row", name: "It's All The Same", desc: "Finish on the same score three games running", secret: true, icon: "samescore" },
   /* The long haul. The three dated ones read the calendar ledger rather than the run history,
      which is capped — see DATES_KEY. None of these carry `sitting`, and neither does I Just
      Know or You Learn My Secrets: the goal card only ever pins what an evening could actually
      close, and a charm measured in months or in a word you cannot ask to be dealt would sit
      there as a reproach rather than a destination. */
-  { id: "play-7-days-in-row", name: "Running Like Water", desc: "Play seven days in a row", secret: false, icon: "placeholder" },
-  { id: "play-on-13-different-days", name: "I'm Thirteen Now", desc: "Play on 13 different days", secret: false, icon: "placeholder" },
-  { id: "play-in-every-month", name: "Brave The Seasons", desc: "Play in all twelve months of the year", secret: false, icon: "placeholder" },
-  { id: "answer-500-rounds-correct-lifetime", name: "The Rest Is History", desc: "Answer 500 rounds correctly, lifetime", secret: false, icon: "placeholder" },
-  { id: "play-1989-rounds-lifetime", name: "A Thousand Memories", desc: "Play 1,989 rounds in total", secret: false, icon: "placeholder" },
-  { id: "play-89-games", name: "I Was Born In 19—", desc: "Play 89 games", secret: false, icon: "placeholder" },
+  { id: "play-7-days-in-row", name: "Running Like Water", desc: "Play seven days in a row", secret: false, icon: "sevendays" },
+  { id: "play-on-13-different-days", name: "I'm Thirteen Now", desc: "Play on 13 different days", secret: false, icon: "thirteendays" },
+  { id: "play-in-every-month", name: "Brave The Seasons", desc: "Play in all twelve months of the year", secret: false, icon: "twelvemonths" },
+  { id: "answer-500-rounds-correct-lifetime", name: "The Rest Is History", desc: "Answer 500 rounds correctly, lifetime", secret: false, icon: "pagestack" },
+  { id: "play-1989-rounds-lifetime", name: "A Thousand Memories", desc: "Play 1,989 rounds in total", secret: false, icon: "ledger" },
+  { id: "play-89-games", name: "I Was Born In 19—", desc: "Play 89 games", secret: false, icon: "pegged" },
   /* The streak that outlives the run it started in — fifty correct answers with the game
      boundaries counting for nothing. Only the game types the cross-game counter can see
      extend it (see crossGameStreakCounts), and the sandboxed ones can neither feed it nor
      snap it. Counted in METRICS_KEY, per answer rather than per run. */
-  { id: "answer-50-correct-in-a-row-across-games", name: "The Walls We Crashed Through", desc: "Answer 50 in a row correctly, across as many games as it takes", secret: false, icon: "placeholder" },
+  { id: "answer-50-correct-in-a-row-across-games", name: "The Walls We Crashed Through", desc: "Answer 50 in a row correctly, across as many games as it takes", secret: false, icon: "carriedover" },
   /* Answered with the same song more than once. Distinct from Someone Has A Favourite Song,
      which counts sung LINES from one song; these count the credited answer however it arrived. */
-  { id: "answer-same-song-twice-in-row", name: "Over And Over", desc: "Answer with the same song twice in a row", secret: true, icon: "placeholder" },
-  { id: "answer-same-song-3-times-one-game", name: "Here We Go Again", desc: "Answer with the same song 3 times in one game", secret: true, icon: "placeholder" },
-  { id: "miss-round-after-every-hint", name: "Bullet Holes", desc: "Burn every hint in a round and still miss it", secret: true, icon: "placeholder" },
+  { id: "answer-same-song-twice-in-row", name: "Over And Over", desc: "Answer with the same song twice in a row", secret: true, icon: "twinsleeve" },
+  { id: "answer-same-song-3-times-one-game", name: "Here We Go Again", desc: "Answer with the same song 3 times in one game", secret: true, icon: "triplesleeve" },
+  { id: "miss-round-after-every-hint", name: "Bullet Holes", desc: "Burn every hint in a round and still miss it", secret: true, icon: "hintsburnt" },
   // Read off the RAW line, before the matcher lowercases it — which it does very early.
-  { id: "submit-answer-in-all-caps", name: "JE SUIS CALME", desc: "Submit an answer in full caps", secret: true, icon: "placeholder" },
-  { id: "submit-prompt-word-as-answer", name: "A Crook Who Was Caught", desc: "Submit the prompt word itself as your answer", secret: true, icon: "placeholder" },
+  { id: "submit-answer-in-all-caps", name: "JE SUIS CALME", desc: "Submit an answer in full caps", secret: true, icon: "shoutcaps" },
+  { id: "submit-prompt-word-as-answer", name: "A Crook Who Was Caught", desc: "Submit the prompt word itself as your answer", secret: true, icon: "caughtout" },
   /* The dated ones. "august" is the folklore song, not a prompt word — there is no "august"
      in words.json, so the song title is the only reading of this that can ever fire. */
-  { id: "answer-august-in-august", name: "August Slipped Away", desc: "Answer with “august” in the month of August", secret: true, icon: "placeholder" },
-  { id: "score-7-on-the-7th", name: "I Hit My Peak At Seven", desc: "Score exactly 7/13 on the 7th of a month", secret: true, icon: "placeholder" },
-  { id: "play-whole-game-in-3am-hour", name: "3 AM And I'm Still Awake", desc: "Play a whole game between 3am and 4am", secret: true, icon: "placeholder" },
-  { id: "play-at-1313-on-the-13th", name: "A Wrinkle In Time", desc: "Play at 13:13 on the 13th", secret: true, icon: "placeholder" },
+  { id: "answer-august-in-august", name: "August Slipped Away", desc: "Answer with “august” in the month of August", secret: true, icon: "tornmonth" },
+  { id: "score-7-on-the-7th", name: "I Hit My Peak At Seven", desc: "Score exactly 7/13 on the 7th of a month", secret: true, icon: "sevenseven" },
+  { id: "play-whole-game-in-3am-hour", name: "3 AM And I'm Still Awake", desc: "Play a whole game between 3am and 4am", secret: true, icon: "nightlamp" },
+  { id: "play-at-1313-on-the-13th", name: "A Wrinkle In Time", desc: "Play at 13:13 on the 13th", secret: true, icon: "wrinkletime" },
   // The date comes off TS_MILESTONES, which already knows her birthday — see the dated
   // marginalia. Hardcoding 13 December a second time is how the two drift apart.
-  { id: "play-on-taylors-birthday", name: "Happy Birthday To You", desc: "Play on Taylor's birthday", secret: true, icon: "placeholder" },
+  { id: "play-on-taylors-birthday", name: "Happy Birthday To You", desc: "Play on Taylor's birthday", secret: true, icon: "cakeslice" },
   // Self-referential, so it is evaluated after every unlock alongside the other meta charms,
   // and its price moves whenever a theme is added to ACH_GROUPS.
-  { id: "earn-charm-in-every-theme", name: "The Things That I Love", desc: "Earn a charm in every theme", secret: false, icon: "placeholder" },
-  { id: "play-word-from-searcher", name: "You Drew Stars", desc: "Play a word straight from the lyric searcher", secret: true, icon: "placeholder" },
+  { id: "earn-charm-in-every-theme", name: "The Things That I Love", desc: "Earn a charm in every theme", secret: false, icon: "fullbracelet" },
+  { id: "play-word-from-searcher", name: "You Drew Stars", desc: "Play a word straight from the lyric searcher", secret: true, icon: "lenstoline" },
   { id: "defeat-first-challenge",       name: "Ready For Combat", desc: "Defeat your first challenge",           secret: false, icon: "bow", sitting: true, earn: { cat: "challenge" } },
   { id: "defeat-every-challenge",      name: "Get The Crown",    desc: "Defeat every challenge",                secret: false, icon: "flask" },
   { id: "unlock-every-challenge",      name: "I Like Shiny Things", desc: "Unlock every challenge",                secret: false, icon: "rings" },
