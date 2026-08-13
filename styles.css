@@ -1621,18 +1621,19 @@
   .chall-item.selected .chall-item-name { color: #1f3a52; }
   .chall-item-mark { grid-column: 2; grid-row: 1; display: flex; justify-content: center; }
   .chall-mark-svg { width: 20px; height: 20px; display: block; }
-  /* The progress mark owns the quiet state. On hover or keyboard focus, it gives its small
-     right-hand square to a pin, keeping the list to one deliberate action at a time. */
+  /* The progress mark owns the quiet state. Hover gives its small right-hand square to a pin,
+     keeping the list to one deliberate action at a time. Keyboard focus reveals the pin only
+     when the pin itself is reached, so selecting a challenge does not leave the icon showing. */
   .chall-item-pin {
     grid-column: 2; grid-row: 1; z-index: 1; display: flex; align-items: center; justify-content: center;
     width: 24px; height: 24px; padding: 0; color: #50677c; background: rgba(245,239,225,0.86);
     border: 1px dashed rgba(39,69,96,0.48); border-radius: 50%; cursor: pointer; opacity: 0;
     transform: rotate(2deg) scale(0.76); transition: opacity 0.12s, transform 0.12s, background 0.12s;
   }
-  .chall-item:hover .chall-item-mark, .chall-item:focus-within .chall-item-mark { opacity: 0; }
-  .chall-item:hover .chall-item-pin, .chall-item:focus-within .chall-item-pin { opacity: 1; transform: rotate(2deg) scale(1); }
+  .chall-item:hover .chall-item-mark, .chall-item:has(.chall-item-pin:focus-visible) .chall-item-mark { opacity: 0; }
+  .chall-item:hover .chall-item-pin, .chall-item-pin:focus-visible { opacity: 1; transform: rotate(2deg) scale(1); }
   .chall-item-pin:hover, .chall-item-pin:focus-visible { color: #1f3a52; background: #e7eef3; border-style: solid; outline: none; }
-  .chall-item-pin.is-pinned { opacity: 1; color: #274560; background: #dce8f0; border-style: solid; }
+  .chall-item-pin.is-pinned { color: #274560; background: #dce8f0; border-style: solid; }
   .chall-item-pin:disabled { color: #aaa18f; background: rgba(245,239,225,0.76); border-color: #c9c0ad; cursor: default; }
   @media (hover: none) { .chall-item-pin { opacity: 1; transform: rotate(2deg) scale(1); } }
 
