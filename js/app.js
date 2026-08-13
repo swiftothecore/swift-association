@@ -1836,6 +1836,16 @@ function charmMarkup(icon, color) {
   return `<span class="charm" aria-hidden="true"${style}>${ACH_ICONS[icon]}</span>`;
 }
 
+// A small hand-inked arrow for paging through the keepsake card. It uses the same `.charm`
+// paint rules as achievement glyphs, including their wobble and tinted marker swipe.
+function charmHistoryArrow(next = false) {
+  const turn = next ? ` transform="translate(32 0) scale(-1 1)"` : "";
+  return `<span class="charm ach-latest-arrow" aria-hidden="true"><svg viewBox="0 0 32 20"><g${turn}>` +
+    `<path class="ink" d="M27.5 10.2C20.4 9.7 13.5 10.5 4.7 10.1"/>` +
+    `<path class="ink" d="M11.2 4.3C8.5 6.1 6.4 8.1 4.4 10.1C6.8 12 8.9 14 11.5 15.6"/>` +
+    `</g></svg></span>`;
+}
+
 // The same markup for a Mastery mark, drawn from the mastery-only MASTERY_ICONS namespace
 // rather than the achievement charm set. Every mastery surface — the ascent track, the reward
 // tiles, the title medallions, the skill emblems — goes through here, so a mark can be redrawn
@@ -2637,8 +2647,8 @@ function renderAchievementsPage() {
   const latest = earnedAsc[earnedAsc.length - 1];
   const latestCard = latest ? `<div class="ach-latest" data-ach-latest>` +
     `<div class="ach-latest-view" data-ach-latest-view aria-live="polite"></div>` +
-    `<button type="button" class="ach-latest-nav ach-latest-prev" data-ach-latest-prev aria-label="Show previous charm">←</button>` +
-    `<button type="button" class="ach-latest-nav ach-latest-next" data-ach-latest-next aria-label="Show next charm">→</button>` +
+    `<button type="button" class="ach-latest-nav ach-latest-prev" data-ach-latest-prev aria-label="Show previous charm">${charmHistoryArrow()}</button>` +
+    `<button type="button" class="ach-latest-nav ach-latest-next" data-ach-latest-next aria-label="Show next charm">${charmHistoryArrow(true)}</button>` +
     `</div>` :
     `<div class="ach-latest ach-latest--empty"><div class="ach-latest-text">` +
     `<div class="ach-latest-label">your newest charm</div>` +
@@ -2692,14 +2702,17 @@ function renderAchievementsPage() {
     const showLatestCharm = () => {
       const charm = earnedAsc[latestIndex];
       const isNewest = latestIndex === earnedAsc.length - 1;
-      const label = isNewest
-        ? "your newest charm"
-        : `earlier charm · ${latestIndex + 1} of ${earnedAsc.length}`;
+      const label = isNewest ? "your newest charm" : "earlier charm";
+      const position = `${latestIndex + 1} / ${earnedAsc.length}`;
       latestView.innerHTML =
         `<span class="ach-latest-charm">${charmMarkup(charm.icon, achColor(charm))}</span>` +
-        `<div class="ach-latest-text"><div class="ach-latest-label">${label}</div>` +
+        `<div class="ach-latest-text"><div class="ach-latest-label"><span>${label}</span><span class="ach-latest-position">${position}</span></div>` +
         `<div class="ach-latest-name">${escapeHtml(charm.name)}</div>` +
-        `<div class="ach-latest-meta">${escapeHtml(charm.desc)} · ${recordDateLabel(earnedAchievements[charm.id])}</div></div>`;
+        `<div class="ach-latest-meta"><span class="ach-latest-desc">${escapeHtml(charm.desc)}</span> ` +
+        `<span class="ach-latest-date">${recordDateLabel(earnedAchievements[charm.id])}</span></div></div>`;
+      const color = achColor(charm);
+      previous.style.setProperty("--bead", color);
+      next.style.setProperty("--bead", color);
       previous.disabled = latestIndex === 0;
       next.disabled = isNewest;
     };
