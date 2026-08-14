@@ -4250,18 +4250,22 @@ const charmSetUnlocked = (m) => rewardSetUnlocked(m, "charm");
 // The pools include the DEFAULT finish and the default words, the same way a random charm
 // strand can still deal a plain star: "random" means any of them, not any of the earned ones.
 //
-// A set-valued reward contributes each of its variants. Pride's flags are persisted finish
-// ids just like the ordinary inks, and random is itself the player's choice, so every flag
-// belongs in the draw even though manual selection reaches them through a nested picker.
-const randomFinishPool = () => ["", ...MASTERY_REWARDS
-  .filter((r) => r.kind === "button")
-  .flatMap((r) => r.variants ? r.variants.map((v) => v.id) : [r.payload.button])];
+// The first draw mirrors the reward board's six top-level choices. A set-valued reward then
+// makes its own second draw, so Pride has the same overall chance as an ink rather than eight
+// times its weight merely because its doorway contains eight flags.
+const randomFinishChoices = () => ["", ...MASTERY_REWARDS.filter((r) => r.kind === "button")];
 const randomLabelPool = () => ["", ...MASTERY_REWARDS
   .filter((r) => r.kind === "label").map((r) => r.payload.label)];
 const pickOne = (arr) => arr[Math.floor(Math.random() * arr.length)] || "";
+function rollRandomFinish() {
+  const choice = pickOne(randomFinishChoices());
+  if (!choice) return "";
+  const variant = choice.variants ? pickOne(choice.variants) : null;
+  return variant ? variant.id : choice.payload.button;
+}
 let rolledFinish = "", rolledLabel = "";
 function rollRandomCosmetics() {
-  rolledFinish = pickOne(randomFinishPool());
+  rolledFinish = rollRandomFinish();
   rolledLabel = pickOne(randomLabelPool());
 }
 rollRandomCosmetics();
