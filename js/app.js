@@ -7150,19 +7150,9 @@ function renderChallengeDetail(id) {
     : "";
   const sealFire = rec.darkDefeated
     ? `<span class="chall-seal-fire" aria-hidden="true">` +
-        `<svg viewBox="0 0 80 92" focusable="false">` +
-          `<g class="chall-fire-flame">` +
-            `<path class="chall-fire-outer" d="M8 76C5 66 12 60 15 51c3-9-2-15 4-25 1 9 8 12 8 22 8-10 9-26 6-38 16 11 19 28 14 42 8-5 13-14 14-24 9 10 9 23 5 32 7 1 11 8 7 16Z"/>` +
-            `<path class="chall-fire-inner" d="M22 76c-3-9 7-14 8-23 1-6-2-10 1-17 10 8 12 17 8 26 7-5 11-12 12-21 8 8 8 19 4 27 4 1 6 4 6 8Z"/>` +
-            `<path class="chall-fire-core" d="M33 76c-2-6 5-10 6-16 0-4-1-7 1-10 6 5 8 12 5 18 4-3 6-7 7-11 4 6 3 13 1 19Z"/>` +
-          `</g>` +
-          `<g class="chall-fire-embers">` +
-            `<circle cx="18" cy="42" r="2.1"/><circle cx="59" cy="43" r="1.7"/>` +
-            `<circle cx="27" cy="29" r="1.35"/><circle cx="51" cy="22" r="1.15"/>` +
-          `</g>` +
-        `</svg>` +
         `<span class="chall-fire-particles">` +
-          `<i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>` +
+          `<i></i><i></i><i></i><i></i><i></i><i></i>` +
+          `<i></i><i></i><i></i><i></i><i></i><i></i>` +
         `</span>` +
       `</span>`
     : "";

@@ -1699,81 +1699,57 @@
   .chall-detail-seal.is-charred > svg {
     filter: grayscale(1) saturate(0) brightness(0.28) contrast(1.55) drop-shadow(1px 2px 3px rgba(20,16,15,0.36));
   }
-  /* A single flame front grows out of the wax, with a pale core and a few rising embers.
-     Screen blending lets its heat colour the dark seal instead of sitting on top like a row
-     of stickers. The charred class arrives after one second and remains in memory only. */
+  /* The burn belongs to the wax rather than sitting behind it as a separate fire icon. A
+     compact heat bloom and twelve soft particles lick upward through the seal while its
+     violet drains away. The charred class arrives after one second and stays in memory. */
   .chall-seal-fire {
-    position: absolute; z-index: 2; left: -13px; bottom: -5px; width: 80px; height: 92px;
+    position: absolute; z-index: 2; left: -5px; bottom: -3px; width: 63px; height: 72px;
     overflow: visible; pointer-events: none; opacity: 0; mix-blend-mode: screen;
   }
   .chall-seal-fire::after {
-    content: ""; position: absolute; z-index: -1; left: 17px; bottom: 11px; width: 47px; height: 43px;
-    border-radius: 50%; background: radial-gradient(ellipse, rgba(255,196,62,0.72), rgba(239,72,21,0.2) 48%, transparent 72%);
-    filter: blur(5px); transform: scale(0.65); opacity: 0;
+    content: ""; position: absolute; z-index: 0; left: 7px; bottom: 5px; width: 49px; height: 45px;
+    border-radius: 50%; opacity: 0; transform: scale(0.72);
+    background: radial-gradient(ellipse at 50% 64%, rgba(255,240,157,0.8) 0 9%, rgba(255,151,34,0.5) 24%, rgba(225,56,18,0.22) 47%, transparent 70%);
+    filter: blur(3.5px);
   }
-  .chall-seal-fire svg {
-    position: absolute; inset: 0; z-index: 1; display: block; width: 80px; height: 92px;
-    overflow: visible; filter: drop-shadow(0 0 3px rgba(239,76,21,0.85));
-  }
-  .chall-fire-flame { transform-box: fill-box; transform-origin: 50% 100%; }
-  .chall-fire-outer { fill: #e83c16; }
-  .chall-fire-inner { fill: #ff9f1f; }
-  .chall-fire-core  { fill: #fff5b3; }
-  .chall-fire-embers { fill: #ffc64a; }
-  .chall-fire-embers circle { transform-box: fill-box; transform-origin: center; opacity: 0; }
-  /* A restrained version of the classic radial-particle fire technique: nine soft discs,
-     hand-placed rather than generated, rise through the drawn flame and add irregular heat
-     without turning a 53px seal into a particle system. */
-  .chall-fire-particles { position: absolute; z-index: 2; inset: 0; }
+  .chall-fire-particles { position: absolute; z-index: 1; inset: 0; }
   .chall-fire-particles i {
-    position: absolute; bottom: 12px; left: var(--fire-x); width: var(--fire-size); height: var(--fire-size);
+    position: absolute; bottom: 9px; left: var(--fire-x); width: var(--fire-size); height: var(--fire-size);
     border-radius: 50%; opacity: 0; mix-blend-mode: screen;
-    background: radial-gradient(circle, rgba(255,249,190,0.98) 0 10%, rgba(255,166,35,0.88) 28%, rgba(239,67,18,0.42) 48%, rgba(239,67,18,0) 72%);
-    filter: blur(0.35px); transform-origin: center;
+    background: radial-gradient(circle, rgba(255,244,174,0.9) 0 8%, rgba(255,155,32,0.72) 27%, rgba(228,61,18,0.3) 49%, rgba(228,61,18,0) 72%);
+    filter: blur(0.7px); transform-origin: center;
   }
-  .chall-fire-particles i:nth-child(1) { --fire-x: 10px; --fire-size: 22px; --fire-dx: -3px; --fire-rise: -34px; --fire-delay: 0.02s; --fire-dur: 0.52s; }
-  .chall-fire-particles i:nth-child(2) { --fire-x: 20px; --fire-size: 26px; --fire-dx: 2px;  --fire-rise: -46px; --fire-delay: 0.08s; --fire-dur: 0.66s; }
-  .chall-fire-particles i:nth-child(3) { --fire-x: 34px; --fire-size: 23px; --fire-dx: -2px; --fire-rise: -40px; --fire-delay: 0.01s; --fire-dur: 0.58s; }
-  .chall-fire-particles i:nth-child(4) { --fire-x: 47px; --fire-size: 21px; --fire-dx: 3px;  --fire-rise: -32px; --fire-delay: 0.13s; --fire-dur: 0.5s; }
-  .chall-fire-particles i:nth-child(5) { --fire-x: 16px; --fire-size: 19px; --fire-dx: 4px;  --fire-rise: -29px; --fire-delay: 0.28s; --fire-dur: 0.48s; }
-  .chall-fire-particles i:nth-child(6) { --fire-x: 29px; --fire-size: 24px; --fire-dx: -4px; --fire-rise: -43px; --fire-delay: 0.24s; --fire-dur: 0.61s; }
-  .chall-fire-particles i:nth-child(7) { --fire-x: 43px; --fire-size: 18px; --fire-dx: 2px;  --fire-rise: -36px; --fire-delay: 0.34s; --fire-dur: 0.49s; }
-  .chall-fire-particles i:nth-child(8) { --fire-x: 24px; --fire-size: 17px; --fire-dx: 3px;  --fire-rise: -31px; --fire-delay: 0.46s; --fire-dur: 0.44s; }
-  .chall-fire-particles i:nth-child(9) { --fire-x: 39px; --fire-size: 16px; --fire-dx: -3px; --fire-rise: -28px; --fire-delay: 0.51s; --fire-dur: 0.4s; }
-  .chall-detail-seal.is-burning .chall-seal-fire { animation: challSealFireRise 1s ease-out both; }
+  .chall-fire-particles i:nth-child(1)  { --fire-x: 3px;  --fire-size: 18px; --fire-dx: -2px; --fire-rise: -23px; --fire-delay: 0.01s; --fire-dur: 0.47s; }
+  .chall-fire-particles i:nth-child(2)  { --fire-x: 12px; --fire-size: 20px; --fire-dx: 2px;  --fire-rise: -33px; --fire-delay: 0.05s; --fire-dur: 0.59s; }
+  .chall-fire-particles i:nth-child(3)  { --fire-x: 23px; --fire-size: 18px; --fire-dx: -2px; --fire-rise: -27px; --fire-delay: 0.1s;  --fire-dur: 0.51s; }
+  .chall-fire-particles i:nth-child(4)  { --fire-x: 34px; --fire-size: 20px; --fire-dx: 2px;  --fire-rise: -36px; --fire-delay: 0.02s; --fire-dur: 0.61s; }
+  .chall-fire-particles i:nth-child(5)  { --fire-x: 45px; --fire-size: 17px; --fire-dx: 3px;  --fire-rise: -25px; --fire-delay: 0.14s; --fire-dur: 0.48s; }
+  .chall-fire-particles i:nth-child(6)  { --fire-x: 8px;  --fire-size: 15px; --fire-dx: 3px;  --fire-rise: -20px; --fire-delay: 0.27s; --fire-dur: 0.43s; }
+  .chall-fire-particles i:nth-child(7)  { --fire-x: 18px; --fire-size: 17px; --fire-dx: -3px; --fire-rise: -30px; --fire-delay: 0.25s; --fire-dur: 0.51s; }
+  .chall-fire-particles i:nth-child(8)  { --fire-x: 30px; --fire-size: 16px; --fire-dx: 2px;  --fire-rise: -24px; --fire-delay: 0.33s; --fire-dur: 0.45s; }
+  .chall-fire-particles i:nth-child(9)  { --fire-x: 41px; --fire-size: 18px; --fire-dx: -2px; --fire-rise: -32px; --fire-delay: 0.3s;  --fire-dur: 0.53s; }
+  .chall-fire-particles i:nth-child(10) { --fire-x: 14px; --fire-size: 14px; --fire-dx: 2px;  --fire-rise: -23px; --fire-delay: 0.45s; --fire-dur: 0.39s; }
+  .chall-fire-particles i:nth-child(11) { --fire-x: 27px; --fire-size: 15px; --fire-dx: -2px; --fire-rise: -28px; --fire-delay: 0.44s; --fire-dur: 0.43s; }
+  .chall-fire-particles i:nth-child(12) { --fire-x: 39px; --fire-size: 14px; --fire-dx: 2px;  --fire-rise: -21px; --fire-delay: 0.54s; --fire-dur: 0.37s; }
+  .chall-detail-seal.is-burning .chall-seal-fire { animation: challSealFireVeil 1s ease-out both; }
   .chall-detail-seal.is-burning .chall-seal-fire::after { animation: challSealHeatBloom 1s ease-out both; }
-  .chall-detail-seal.is-burning .chall-fire-flame { animation: challSealFlame 0.18s ease-in-out infinite alternate; }
   .chall-detail-seal.is-burning .chall-fire-particles i {
     animation: challSealParticle var(--fire-dur) var(--fire-delay) ease-in both;
   }
-  .chall-detail-seal.is-burning .chall-fire-embers circle:nth-child(1) { animation: challSealEmber 0.48s 0.05s ease-out both; }
-  .chall-detail-seal.is-burning .chall-fire-embers circle:nth-child(2) { animation: challSealEmber 0.56s 0.12s ease-out both; }
-  .chall-detail-seal.is-burning .chall-fire-embers circle:nth-child(3) { animation: challSealEmber 0.5s 0.3s ease-out both; }
-  .chall-detail-seal.is-burning .chall-fire-embers circle:nth-child(4) { animation: challSealEmber 0.42s 0.45s ease-out both; }
   .chall-detail-seal.is-burning > svg { animation: challSealScorch 1s ease-in both; }
-  @keyframes challSealFlame {
-    from { transform: skewX(-2deg) scale(0.96, 1.02); }
-    to { transform: skewX(3deg) scale(1.02, 0.96); }
-  }
-  @keyframes challSealFireRise {
-    0% { opacity: 0; transform: translateY(12px) scale(0.66, 0.35); }
-    16% { opacity: 1; transform: translateY(2px) scale(0.96, 0.9); }
-    30%, 72% { opacity: 1; transform: translateY(0) scale(1); }
-    100% { opacity: 0; transform: translateY(-8px) scale(0.78, 1.08); }
+  @keyframes challSealFireVeil {
+    0%, 100% { opacity: 0; }
+    10%, 82% { opacity: 1; }
   }
   @keyframes challSealHeatBloom {
     0%, 100% { opacity: 0; transform: scale(0.6); }
-    24%, 70% { opacity: 1; transform: scale(1.08); }
-  }
-  @keyframes challSealEmber {
-    0% { opacity: 0; transform: translate(0, 9px) scale(0.4); }
-    22% { opacity: 1; }
-    100% { opacity: 0; transform: translate(3px, -15px) scale(0.15); }
+    18%, 68% { opacity: 0.85; transform: scale(1); }
   }
   @keyframes challSealParticle {
-    0% { opacity: 0; transform: translate(0, 8px) scale(0.72); }
-    24% { opacity: 0.9; }
-    100% { opacity: 0; transform: translate(var(--fire-dx), var(--fire-rise)) scale(0.08); }
+    0% { opacity: 0; transform: translate(0, 5px) scale(0.78); }
+    20% { opacity: 0.72; }
+    58% { opacity: 0.46; }
+    100% { opacity: 0; transform: translate(var(--fire-dx), var(--fire-rise)) scale(0.16, 0.48); }
   }
   @keyframes challSealScorch {
     0%, 30% { filter: drop-shadow(1px 2px 3px rgba(40,25,60,0.3)); }
