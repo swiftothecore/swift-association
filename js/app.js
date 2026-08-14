@@ -8580,9 +8580,9 @@ function refreshDateSurfaces() {
   // have to be redrawn with it.
   renderDailyButtonState();
 }
-// Dated marginalia at the top of today's page: on a real Taylor milestone (an album
-// release or her birthday) a torn slip is taped to the page, the album name tinted to its
-// era. Most days it's silent (hidden). Keyed on todayKey() so it flips on the player's day.
+// Dated marginalia at the top of today's page: a torn slip for real Taylor milestones and
+// sacred-13 days, with milestone album names tinted to their eras. Most days it is silent
+// (hidden). Keyed on todayKey() so it flips on the player's day.
 function renderAnniversaryNote() {
   const el = $("anniversaryNote");
   if (!el) return;
@@ -8593,12 +8593,35 @@ function renderAnniversaryNote() {
     ? `<span class="an-name" style="color:${accent}">${escapeHtml(note.headline)}</span>`
     : `<span class="an-name">${escapeHtml(note.headline)}</span>`;
   el.innerHTML =
-    `<div class="an-slip${note.tone === "minor" ? " an-slip--minor" : ""}">` +
-      `<span class="an-tape an-tape-l"></span><span class="an-tape an-tape-r"></span>` +
-      `<div class="an-eyebrow">${escapeHtml(note.eyebrow)}</div>` +
-      `<div class="an-headline">${name}${note.headlineRest ? " " + escapeHtml(note.headlineRest) : ""}</div>` +
-      (note.note ? `<div class="an-note">${escapeHtml(note.note)}</div>` : "") +
+    `<div class="an-reveal">` +
+      `<div class="an-secret" aria-hidden="true" aria-live="polite">` +
+        `<span class="an-secret-mark" aria-hidden="true">p.s.</span>` +
+        `<span>Some dates are written in ink.<br>The good ones get written in songs.</span>` +
+      `</div>` +
+      `<div class="an-slip${note.tone === "minor" ? " an-slip--minor" : ""}">` +
+        `<button type="button" class="an-tape an-tape-l" aria-label="Remove the left piece of tape"></button>` +
+        `<button type="button" class="an-tape an-tape-r" aria-label="Remove the right piece of tape"></button>` +
+        `<div class="an-eyebrow">${escapeHtml(note.eyebrow)}</div>` +
+        `<div class="an-headline">${name}${note.headlineRest ? " " + escapeHtml(note.headlineRest) : ""}</div>` +
+        (note.note ? `<div class="an-note">${escapeHtml(note.note)}</div>` : "") +
+      `</div>` +
     `</div>`;
+  const reveal = el.querySelector(".an-reveal");
+  const slip = reveal.querySelector(".an-slip");
+  const secret = reveal.querySelector(".an-secret");
+  let tapesLeft = 2;
+  reveal.querySelectorAll(".an-tape").forEach((tape) => {
+    tape.addEventListener("click", () => {
+      if (tape.disabled) return;
+      tape.disabled = true;
+      tape.classList.add("is-falling");
+      tapesLeft -= 1;
+      if (tapesLeft) return;
+      reveal.classList.add("is-revealed");
+      slip.classList.add("is-falling");
+      secret.removeAttribute("aria-hidden");
+    });
+  });
   el.hidden = false;
 }
 // The game-screen counterpart: a tiny taped corner sticky on a milestone day. An era-

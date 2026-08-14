@@ -4153,7 +4153,7 @@
     color: var(--ink-soft); margin-top: 16px;
   }
 
-  /* ---------- Anniversary marginalia (start screen, milestone days only) ----------
+  /* ---------- Dated marginalia (start screen, milestone and sacred-13 days) ----------
      A torn slip taped to today's page with two strips of highlighter "washi". It sits in
      the empty margin to the right of the podium, bottom-aligned with it so it lands just
      above the Start writing button. Sharing the podium's row means it fills whitespace
@@ -4164,6 +4164,21 @@
   .start-podium-col { flex: 1 1 auto; min-width: 0; }
   .anniversary-note[hidden] { display: none; }
   .anniversary-note { flex: none; margin: 0; }
+  .an-reveal {
+    position: relative; display: grid; width: min(29ch, 100%); text-align: center;
+  }
+  .an-reveal > * { grid-area: 1 / 1; }
+  .an-secret {
+    align-self: center; padding: 18px 20px 12px;
+    font-family: var(--hand); font-size: calc(19px + var(--text-size-adjust)); line-height: 1.18;
+    color: var(--ink-soft); opacity: 0; transform: rotate(0.7deg) scale(0.97);
+  }
+  .an-secret-mark {
+    display: block; margin-bottom: 3px; color: var(--ink); font-size: 0.82em;
+  }
+  .an-reveal.is-revealed .an-secret {
+    animation: anSecretReveal 0.42s 0.48s ease-out forwards;
+  }
   .an-slip {
     position: relative; max-width: 29ch; text-align: center;
     background: #fbf6e9; border: 1px solid var(--paper-edge); border-radius: 3px;
@@ -4173,12 +4188,34 @@
   /* Two strips of the shared realistic washi (kraft tan); see .nav-tape surface rule. */
   .an-tape {
     position: absolute; top: -9px; z-index: 3; width: 46px; height: 15px;
-    pointer-events: none; --tape-color: #c9b27a;
+    display: block; padding: 0; border: 0; appearance: none; cursor: default;
+    --tape-color: #c9b27a;
   }
+  .an-tape:focus-visible { outline: 2px dotted var(--ink-soft); outline-offset: 3px; }
   .an-tape-l { left: 15%; transform: rotate(-7deg); }
   .an-tape-r {
     right: 13%; transform: rotate(5deg);
     --tape-clip: polygon(4% 0%, 95% 0%, 99% 25%, 90% 50%, 97% 75%, 93% 100%, 6% 100%, 10% 75%, 2% 50%, 9% 25%);
+  }
+  .an-tape-l.is-falling { animation: anTapeFallLeft 0.48s ease-in forwards; }
+  .an-tape-r.is-falling { animation: anTapeFallRight 0.48s ease-in forwards; }
+  .an-slip.is-falling {
+    pointer-events: none; animation: anSlipFall 0.72s 0.3s cubic-bezier(0.55, 0.05, 0.72, 0.38) forwards;
+  }
+  @keyframes anTapeFallLeft {
+    18% { transform: translate(-4px, 2px) rotate(-13deg); }
+    to { opacity: 0; transform: translate(-26px, 76px) rotate(-42deg); }
+  }
+  @keyframes anTapeFallRight {
+    18% { transform: translate(4px, 2px) rotate(11deg); }
+    to { opacity: 0; transform: translate(30px, 80px) rotate(48deg); }
+  }
+  @keyframes anSlipFall {
+    12% { transform: translateY(3px) rotate(-0.5deg); }
+    to { opacity: 0; transform: translate(36px, 150px) rotate(12deg); }
+  }
+  @keyframes anSecretReveal {
+    to { opacity: 1; transform: rotate(0.7deg) scale(1); }
   }
   .an-eyebrow {
     font-family: var(--type); font-size: calc(10px + var(--text-size-adjust)); letter-spacing: 2px;
@@ -4195,6 +4232,16 @@
   @media (max-width: 700px) {
     .start-podium-row { display: block; }
     .anniversary-note { display: flex; justify-content: flex-end; margin: 14px 0 0; }
+  }
+  body[data-reduce-motion="on"] .an-tape.is-falling,
+  body[data-reduce-motion="on"] .an-slip.is-falling,
+  body[data-reduce-motion="on"] .an-reveal.is-revealed .an-secret {
+    animation-duration: 0.01ms; animation-delay: 0s;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .an-tape.is-falling, .an-slip.is-falling, .an-reveal.is-revealed .an-secret {
+      animation-duration: 0.01ms; animation-delay: 0s;
+    }
   }
 
   /* ---------- Milestone sticky (game screen, milestone days only) ----------
