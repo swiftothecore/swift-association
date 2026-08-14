@@ -7623,13 +7623,18 @@ function renderGuestShelfPage() {
     rails += `<div class="guest-rail">${pegs}</div>`;
   }
 
+  // The rack shows its occupancy directly, so keep the count out of the visible header. The
+  // group label preserves the same information for screen readers without adding more UI.
+  const openSlots = Math.max(0, GUEST_SHELF_SLOTS - GUESTS.length);
+  const rackLabel = `${GUESTS.length} guest catalogue${GUESTS.length === 1 ? "" : "s"}; ` +
+    `${openSlots} empty shelf slot${openSlots === 1 ? "" : "s"}`;
+
   const el = $("guestBody");
   el.innerHTML =
     `<div class="chall-head">` +
       `<div class="chall-head-sub">visiting catalogues</div>` +
-      `<span class="chall-tokens">on the rail <b>${GUESTS.length}</b>/${GUEST_SHELF_SLOTS}</span>` +
     `</div>` +
-    `<div class="guest-rack">${rails}</div>`;
+    `<div class="guest-rack" role="group" aria-label="${rackLabel}">${rails}</div>`;
 
   el.querySelectorAll(".guest-pass").forEach((b) =>
     b.addEventListener("click", () => selectGuest(b.dataset.guest)));
