@@ -1614,6 +1614,10 @@
   .chall-item:hover .chall-item-pin, .chall-item-pin:focus-visible { opacity: 1; transform: rotate(2deg) scale(1); }
   .chall-item-pin:hover, .chall-item-pin:focus-visible { color: #1f3a52; background: #e7eef3; border-style: solid; outline: none; }
   .chall-item-pin.is-pinned { color: #274560; background: #dce8f0; border-style: solid; }
+  .chall-unpin-svg { display: none; width: 16px; height: 16px; }
+  .chall-item:hover .chall-item-pin.is-pinned { color: #9b2f35; background: #f4d9d8; border-color: #b64a4f; }
+  .chall-item:hover .chall-item-pin.is-pinned .chall-pin-svg { display: none; }
+  .chall-item:hover .chall-item-pin.is-pinned .chall-unpin-svg { display: block; }
   .chall-item-pin:disabled { color: #aaa18f; background: rgba(245,239,225,0.76); border-color: #c9c0ad; cursor: default; }
   @media (hover: none) { .chall-item-pin { opacity: 1; transform: rotate(2deg) scale(1); } }
 
