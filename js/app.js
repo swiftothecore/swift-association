@@ -6629,6 +6629,10 @@ let challSelectedId = null;          // which challenge the detail panel is show
 let challDetailPeek = false;         // ...and whether its "what changes on the dark side?" is unfolded
 let challReturnConfirmId = null;      // first tap arms a return; the explicit second tap confirms it
 let challListResizeHandler = null;   // window-resize handler that re-snaps the list peek
+// A defeated dark seal can be burned down to black as a small, page-local reward. These
+// sets deliberately never touch storage: the violet wax returns on the next page load.
+const challBurningSeals = new Set();
+const challCharredSeals = new Set();
 
 // Status marks for the contents list (gold tick = defeated, violet tick = dark side also
 // defeated, hollow ring = open, lock = locked).
@@ -7132,10 +7136,23 @@ function renderChallengeDetail(id) {
           : "dark side not yet attempted")
     : meta;
 
+  const sealIsBurning = challBurningSeals.has(id);
+  const sealIsCharred = challCharredSeals.has(id);
+  const sealClass = rec.darkDefeated
+    ? `is-dark is-burnable${sealIsBurning ? " is-burning" : ""}${sealIsCharred ? " is-charred" : ""}`
+    : rec.defeated ? "is-beaten" : open ? "is-unbeaten" : "is-locked";
+  const sealTag = rec.darkDefeated ? "button" : "span";
+  const sealAttrs = rec.darkDefeated
+    ? ` type="button" data-burn-seal="${id}" aria-label="Set the defeated ${escapeHtml(c.name)} Dark Side seal on fire"${sealIsBurning ? " disabled" : ""}`
+    : "";
+  const sealFire = rec.darkDefeated
+    ? `<span class="chall-seal-fire" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>`
+    : "";
+
   el.innerHTML =
     `<div class="chall-detail-head">` +
-      `<span class="chall-detail-seal ${rec.darkDefeated ? "is-dark" : rec.defeated ? "is-beaten" : open ? "is-unbeaten" : "is-locked"}">` +
-        `${sealMarkup((rec.darkDefeated ? CHALLENGE_SEALS_DARK : rec.defeated ? CHALLENGE_SEALS_AGED : CHALLENGE_SEALS)[c.id])}</span>` +
+      `<${sealTag} class="chall-detail-seal ${sealClass}"${sealAttrs}>` +
+        `${sealMarkup((rec.darkDefeated ? CHALLENGE_SEALS_DARK : rec.defeated ? CHALLENGE_SEALS_AGED : CHALLENGE_SEALS)[c.id])}${sealFire}</${sealTag}>` +
       `<span class="chall-detail-name">${escapeHtml(c.name)}</span>` +
       (showDark
         ? `<span class="chall-detail-dark">${CHALL_ECLIPSE}dark side</span>`
@@ -7196,6 +7213,19 @@ function renderChallengeDetail(id) {
   if (pb) pb.addEventListener("click", () => startChallenge(pb.dataset.play));
   const db = el.querySelector("[data-dark]");
   if (db) db.addEventListener("click", () => startChallenge(db.dataset.dark, { dark: true }));
+  const burnSeal = el.querySelector("[data-burn-seal]");
+  if (burnSeal) burnSeal.addEventListener("click", () => {
+    const burnId = burnSeal.dataset.burnSeal;
+    if (challBurningSeals.has(burnId)) return;
+    challBurningSeals.add(burnId);
+    burnSeal.classList.add("is-burning");
+    burnSeal.disabled = true;
+    setTimeout(() => {
+      challBurningSeals.delete(burnId);
+      challCharredSeals.add(burnId);
+      if (challSelectedId === burnId) renderChallengeDetail(burnId);
+    }, 1000);
+  });
 }
 
 /* ---------- Album Focus page (master/detail; the 12-album completion board) ---------- */
@@ -19753,7 +19783,7 @@ function buildDevApi() {
           return took;
         },
       },
-      // Dark sides. There is no unlock path and no UI yet, so these are the ONLY way in.
+      // Dark-side inspectors and seeders for states that would otherwise require full runs.
       dark: {
         // Which challenges have a dark side authored, and which still need rule code
         // before their full design is expressed (see DARK_SIDE_TODO in config.js).
@@ -19779,6 +19809,11 @@ function buildDevApi() {
         // Per-challenge dark progress, and a way to clear it.
         record: (id) => { const r = challengeRecord(id);
           return { darkDefeated: r.darkDefeated, darkAttempts: r.darkAttempts, darkBest: r.darkBest }; },
+        defeat: (id) => { const st = loadChallengeState();
+          const ids = id ? [id] : DARK_SIDE_IDS;
+          ids.forEach((k) => { st[k] = { ...challengeRecord(k), unlocked: true, defeated: true, darkDefeated: true }; });
+          saveChallengeState(st); if ($("challengesBody")) renderChallengesPage();
+          return ids.length; },
         reset: (id) => { const st = loadChallengeState();
           const ids = id ? [id] : CHALLENGE_ORDER;
           ids.forEach((k) => { if (st[k]) st[k] = { ...challengeRecord(k), darkDefeated: false, darkAttempts: 0, darkBest: 0 }; });

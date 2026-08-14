@@ -1673,8 +1673,11 @@
   /* ---- right: the selected challenge ---- */
   .chall-detail { padding-left: 22px; min-width: 0; }
   .chall-detail-head { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; }
-  .chall-detail-seal { display: flex; }
-  .chall-detail-seal svg { display: block; width: 53px; height: 53px; }
+  .chall-detail-seal {
+    position: relative; display: flex; flex: 0 0 53px; width: 53px; height: 53px;
+    padding: 0; color: inherit; background: transparent; border: 0;
+  }
+  .chall-detail-seal svg { position: relative; z-index: 1; display: block; width: 53px; height: 53px; }
   /* The seal reads three states by how alive the wax looks. Locked sits cold and
      fully drained: a flat grayscale of the red seal, faded back, no colour left, so the
      challenge isn't yours yet. Unlocked but not beaten runs the fresh, full oxblood:
@@ -1685,6 +1688,45 @@
      needs no CSS here. A fourth state, the dark side beaten, swaps in the DARK seal art
      (darkSealSvg) — the same wax poured black with a lilac rim. Also baked into the SVG. */
   .chall-detail-seal.is-locked svg   { filter: grayscale(1) opacity(0.42); }
+  .chall-detail-seal.is-burnable { cursor: pointer; border-radius: 50%; }
+  .chall-detail-seal.is-burnable:focus-visible { outline: 2px dashed #7a4bb0; outline-offset: 4px; }
+  .chall-detail-seal.is-charred svg {
+    filter: grayscale(1) saturate(0) brightness(0.28) contrast(1.55) drop-shadow(1px 2px 3px rgba(20,16,15,0.36));
+  }
+  /* Five small paper-flame shapes lick across the wax while its violet drains away. The
+     charred class is applied by JS after exactly one second and kept in memory only. */
+  .chall-seal-fire {
+    position: absolute; z-index: 2; inset: -12px -8px -5px; overflow: visible;
+    pointer-events: none; opacity: 0;
+  }
+  .chall-seal-fire i {
+    position: absolute; bottom: 5px; width: 13px; height: 29px;
+    border-radius: 52% 48% 46% 54% / 68% 68% 32% 32%;
+    background: radial-gradient(circle at 50% 72%, #fff3a2 0 16%, #ffc33d 17% 42%, #e8511f 65%, rgba(176,35,18,0) 68%);
+    filter: drop-shadow(0 0 4px rgba(239,90,25,0.78)); transform-origin: 50% 100%;
+  }
+  .chall-seal-fire i:nth-child(1) { left: 3px;  --fire-scale: 0.78; --fire-delay: -0.08s; }
+  .chall-seal-fire i:nth-child(2) { left: 15px; --fire-scale: 1.08; --fire-delay: -0.19s; }
+  .chall-seal-fire i:nth-child(3) { left: 28px; --fire-scale: 0.9;  --fire-delay: -0.03s; }
+  .chall-seal-fire i:nth-child(4) { left: 41px; --fire-scale: 1.15; --fire-delay: -0.24s; }
+  .chall-seal-fire i:nth-child(5) { left: 53px; --fire-scale: 0.72; --fire-delay: -0.13s; }
+  .chall-detail-seal.is-burning .chall-seal-fire { opacity: 1; animation: challSealFireOut 1s ease-in both; }
+  .chall-detail-seal.is-burning .chall-seal-fire i {
+    animation: challSealFlame 0.24s ease-in-out var(--fire-delay) infinite alternate;
+  }
+  .chall-detail-seal.is-burning svg { animation: challSealScorch 1s ease-in both; }
+  @keyframes challSealFlame {
+    from { transform: translateY(4px) rotate(-5deg) scale(var(--fire-scale)); }
+    to { transform: translateY(-5px) rotate(6deg) scale(var(--fire-scale)) scale(0.82, 1.16); }
+  }
+  @keyframes challSealFireOut {
+    0% { opacity: 0; } 12%, 74% { opacity: 1; } 100% { opacity: 0; }
+  }
+  @keyframes challSealScorch {
+    0%, 30% { filter: drop-shadow(1px 2px 3px rgba(40,25,60,0.3)); }
+    65% { filter: sepia(0.7) saturate(1.7) brightness(0.68) drop-shadow(0 0 6px rgba(230,83,24,0.72)); }
+    100% { filter: grayscale(1) saturate(0) brightness(0.28) contrast(1.55) drop-shadow(1px 2px 3px rgba(20,16,15,0.36)); }
+  }
   .chall-detail-name { font-family: var(--hand); font-weight: 700; font-size: calc(32px + var(--text-size-adjust)); line-height: 1; color: var(--ink); }
   .chall-pin-svg { display: block; width: 15px; height: 15px; }
   .chall-detail-star { display: flex; }
@@ -1954,6 +1996,10 @@
     .chall-tokens, .chall-return, .chall-go { transform: none; }
     .chall-go:active, .chall-return:active { transform: translateY(1px); }
   }
+  body[data-reduce-motion="on"] .chall-detail-seal.is-burning .chall-seal-fire,
+  body[data-reduce-motion="on"] .chall-detail-seal.is-burning .chall-seal-fire i,
+  body[data-reduce-motion="on"] .chall-detail-seal.is-burning svg { animation: none; }
+  body[data-reduce-motion="on"] .chall-detail-seal.is-burning .chall-seal-fire { opacity: 0.9; }
 
   /* ---------- Bonus games shelf ----------
      Not a grid of cards: a record deck on the desk. One game sits on the platter under the
