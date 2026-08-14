@@ -4885,7 +4885,31 @@
   }
   .stats-nav .stats-title {
     font-family: var(--hand); font-weight: 700; font-size: calc(26px + var(--text-size-adjust));
-    color: var(--ink); transform: rotate(-0.8deg);
+    color: var(--ink); transform: rotate(-0.8deg); cursor: default;
+  }
+  /* A clicked inside-page title skips across the paper one letter at a time. The
+     title keeps its resting handwritten tilt while each generated letter supplies
+     the vertical motion, so the word never snaps square during the wave. */
+  .stats-title-letter { display: inline-block; }
+  .stats-title-waving .stats-title-letter {
+    animation: pageTitleWave 0.48s cubic-bezier(0.34, 1.45, 0.64, 1)
+      calc(var(--title-letter-index) * 42ms) both;
+  }
+  @keyframes pageTitleWave {
+    0%, 100% { transform: translateY(0); }
+    42% { transform: translateY(-0.38em) rotate(-2deg); }
+    68% { transform: translateY(0.07em) rotate(1deg); }
+  }
+  @keyframes pageTitleWink {
+    0%, 100% { color: var(--ink); }
+    45% { color: var(--ink-accent); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .stats-title-waving .stats-title-letter { animation: pageTitleWink 0.45s ease both; }
+  }
+  body[data-reduce-motion="on"] .stats-title-waving .stats-title-letter {
+    animation-name: pageTitleWink;
+    animation-duration: 0.45s;
   }
   /* ---------- Page marks ----------
      A doodle beside each page's handwritten title, drawn on the same pipeline as

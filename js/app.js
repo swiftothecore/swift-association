@@ -15804,6 +15804,36 @@ function wirePageMarks() {
   markPoked(pageMarksTapped());
 }
 
+/* Inside-page titles are plain text, including the bonus-game title that changes
+   between runs. Split the current text only when it is clicked, then lift its
+   letters in sequence. Rebuilding on every click keeps dynamic titles honest and
+   lets a second click restart the wave immediately. */
+const PAGE_TITLE_LETTER_MS = 42;
+const PAGE_TITLE_WAVE_MS = 480;
+const pageTitleWaveTimers = new WeakMap();
+function wavePageTitle(title) {
+  const label = title.textContent;
+  title.replaceChildren(...Array.from(label, (character, index) => {
+    const letter = document.createElement("span");
+    letter.className = "stats-title-letter";
+    letter.style.setProperty("--title-letter-index", index);
+    letter.textContent = /\s/.test(character) ? "\u00a0" : character;
+    return letter;
+  }));
+  title.classList.remove("stats-title-waving");
+  void title.offsetWidth;
+  title.classList.add("stats-title-waving");
+  clearTimeout(pageTitleWaveTimers.get(title));
+  pageTitleWaveTimers.set(title, setTimeout(() => title.classList.remove("stats-title-waving"),
+    PAGE_TITLE_WAVE_MS + Math.max(0, label.length - 1) * PAGE_TITLE_LETTER_MS));
+}
+function wirePageTitles() {
+  document.addEventListener("click", (event) => {
+    const title = event.target.closest(".stats-nav .stats-title");
+    if (title) wavePageTitle(title);
+  });
+}
+
 function addMarginNote(text) {
   const layer = $("doodleLayer");
   if (!layer) return;
@@ -20329,6 +20359,7 @@ async function init() {
   });
   wireInput();
   wirePageMarks();
+  wirePageTitles();
   setupTooltips();
   wireFirstRun();
 
