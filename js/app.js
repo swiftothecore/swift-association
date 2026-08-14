@@ -16,7 +16,7 @@ import {
   RUTHLESS_WORD_MS, RUTHLESS_OPEN_WORDS,
   RUTHLESS_PACE_SECONDS,
   CHALLENGES, CHALLENGE_BY_ID, CHALLENGE_ORDER, CHALLENGE_SEALS, DARK_SIDE_IDS, DARK_SIDE_TODO,
-  DARK_SIDE_MILESTONE, PERSIST_ATTEMPTS, TICKET_PRICE,
+  DARK_SIDE_MILESTONE, CHALLENGE_RETURN_RUNS,
   IMPOSTOR_WORDS, IMPOSTOR_COUNT, DARK_IMPOSTOR_WORDS,
   SEA_GRID_SIZE, SEA_MIN_VALID, SEA_MAX_VALID,
   COMMON_LINES, COMMON_MIN_SONGS, COMMON_MAX_SONGS, COMMON_GEN_ATTEMPTS, COMMON_MAX_ACCEPT,
@@ -2072,40 +2072,25 @@ function foldShelfBreadth(type) {
    challenge achievements they unlock don't violate the run sandbox. */
 function tokenBalance() { return loadChallengeTokens().balance; }
 
-// What this challenge costs in persistence tickets, or null when no number of tickets can
-// ever buy it. Mastery-gated challenges are the null case: that gate is a requirement, not a
-// price, so neither currency reaches it.
-function ticketPrice(c) {
-  if (!c || c.mastery) return null;
-  const p = TICKET_PRICE[c.tapes || 0];
-  return p == null ? null : p;
-}
-
-// Which currency an unlock would actually spend, or null if neither can cover it.
-// Persistence first, no part-payment and no mixing: tickets pay whenever they cover the WHOLE
-// price, otherwise a regular token does. Holding one ticket against a two-ticket challenge
-// contributes nothing to that purchase — it waits until it is a whole price on its own.
+// The token price an unlock would spend, or null when the wallet cannot cover it.
 function unlockPayment(c) {
   if (!c || c.mastery) return null;
   const wallet = loadChallengeTokens();
-  const price = ticketPrice(c);
-  if (price != null && wallet.tickets >= price) return { kind: "ticket", price };
   const cost = c.cost || 1;
-  if (wallet.balance >= cost) return { kind: "token", price: cost };
-  return null;
+  return wallet.balance >= cost ? cost : null;
 }
 
-// Spend a token (or a whole ticket price) to unlock a challenge. Returns true on success.
+// Spend a token to unlock a challenge. Returns true on success.
 function unlockChallenge(id) {
   const c = CHALLENGE_BY_ID[id];
   if (!c) return false;
   if (c.mastery) return challengeMasteryReached(c);  // mastery-gated: never purchasable
   const st = loadChallengeState();
   if (st[id] && st[id].unlocked) return true;       // already open
-  const pay = unlockPayment(c);
-  if (!pay) return false;                            // can't afford in either currency
+  const price = unlockPayment(c);
+  if (!price) return false;
   const wallet = loadChallengeTokens();
-  if (pay.kind === "ticket") wallet.tickets -= pay.price; else wallet.balance -= pay.price;
+  wallet.balance -= price;
   saveChallengeTokens(wallet);
   st[id] = { ...challengeRecord(id), unlocked: true };
   saveChallengeState(st);
@@ -2156,58 +2141,59 @@ function recordChallengeAttempt(id, dark) {
   return dark ? rec.darkAttempts : rec.attempts;
 }
 
-/* ---------- Persistence tickets ----------
-   An EARNEST attempt is a run that reached the end screen, won or lost; quitting earns
-   nothing. This counter therefore banks at the END of a run, which is the exact opposite of
+/* ---------- Challenge returns ----------
+   A completed run reached the end screen, won or lost; quitting earns nothing. The return
+   counter therefore banks at the END of a run, which is the exact opposite of
    `attempts` above (banked at run START). They want opposite definitions because they defend
    against opposite exploits: banking at the start is what keeps the attempt history honest,
-   and banking at the end is what stops seven start-and-quit cycles minting a free ticket.
+   and banking at the end is what stops seven start-and-quit cycles recovering a token.
    Dark runs never count: a dark side only opens once the base is beaten, so its attempts
-   would be minting against a challenge that has already paid out.
+   cannot contribute to returning an undefeated base challenge.
 
    `runs` rides along here and is the third counter, deliberately: it is At Least I'm Trying's
    tally and NOTHING else's. It counts every base run seen through and never freezes, because
-   freezing it the way `earnest` does is exactly what made that charm lockable — beat a
+   freezing it the way `returnRuns` does is exactly what made that charm lockable: beat a
    challenge inside seven runs and its count could never rise again, so every challenge you
-   beat quickly burned one of a finite supply of chances. `earnest` keeps its own frozen
-   semantics because it is the TICKET's tally, and a ticket minted after a challenge was
-   already beaten would turn an anti-deadlock valve into a second payout on every card. */
-function recordEarnestAttempt(id, dark) {
+   beat quickly burned one of a finite supply of chances. `returnRuns` freezes because a
+   defeated challenge no longer needs an escape route, and seven permanently earns the option
+   to put an undefeated token-bought challenge back on the shelf. */
+function recordCompletedChallengeRun(id, dark) {
   const rec = challengeRecord(id);
-  if (dark) return rec.earnest;
-  // Earnest stops once the challenge is beaten (it has already paid a token) or the seven are
-  // banked; runs keeps going regardless.
-  const frozen = rec.defeated || rec.earnest >= PERSIST_ATTEMPTS;
+  if (dark) return rec.returnRuns;
+  const frozen = rec.defeated || rec.returnRuns >= CHALLENGE_RETURN_RUNS;
   const st = loadChallengeState();
-  st[id] = { ...rec, runs: rec.runs + 1, earnest: frozen ? rec.earnest : rec.earnest + 1 };
+  st[id] = { ...rec, runs: rec.runs + 1,
+    returnRuns: frozen ? rec.returnRuns : rec.returnRuns + 1 };
   saveChallengeState(st);
-  return st[id].earnest;
+  return st[id].returnRuns;
 }
 
-// A ticket is not granted, it is claimed: it waits on the challenge's own card until the
-// player takes it. It stays claimable after the challenge is finally beaten, because it was
-// earned by trying and confiscating it for succeeding would only reward sitting on the claim.
-function ticketReady(id) {
+// Returning is a swap, never a payout: only an open, undefeated challenge that originally
+// required a token can recover one. Free and Mastery-gated entries can never mint currency.
+function challengeReturnReady(id) {
+  const c = CHALLENGE_BY_ID[id];
   const rec = challengeRecord(id);
-  return !rec.ticketClaimed && rec.earnest >= PERSIST_ATTEMPTS;
+  return !!c && !c.free && !c.mastery && rec.unlocked && !rec.defeated
+    && rec.returnRuns >= CHALLENGE_RETURN_RUNS;
 }
 
-// Claim the waiting ticket. One per challenge, ever — without the cap a stuck player farms a
-// single challenge forever and the seven stops meaning anything.
-function claimTicket(id) {
-  if (!ticketReady(id)) return false;
+// Put an eligible challenge back on the locked shelf and refund its token. Progress stays,
+// including permanent return eligibility, so buying it again never erases the seven runs.
+function returnChallenge(id) {
+  if (!challengeReturnReady(id)) return false;
+  const c = CHALLENGE_BY_ID[id];
   const st = loadChallengeState();
-  st[id] = { ...challengeRecord(id), ticketClaimed: true };
+  st[id] = { ...challengeRecord(id), unlocked: false, pinned: false };
   saveChallengeState(st);
   const wallet = loadChallengeTokens();
-  wallet.tickets += 1;
+  wallet.balance += c.cost || 1;
   saveChallengeTokens(wallet);
   return true;
 }
 
 // Record a defeat. First-ever defeat awards a token and the milestone charms.
 // A dark-side defeat is recorded against the dark* fields and deliberately awards none of
-// the base milestones: those charms are about first-ever/one-try/persistence on the base
+// the base milestones: those charms are about first-ever/one-try/return runs on the base
 // roster, and re-firing them off a dark run would double-count the same beat. Dark-side
 // rewards are a separate, selective set still to be designed (see PLAN.md).
 function markChallengeDefeated(id, score, dark) {
@@ -6636,6 +6622,7 @@ function armBonusQuit() {
 let challengesBackTarget = "start";  // where the Challenges' back link returns to
 let challSelectedId = null;          // which challenge the detail panel is showing
 let challDetailPeek = false;         // ...and whether its "what changes on the dark side?" is unfolded
+let challReturnConfirmId = null;      // first tap arms a return; the explicit second tap confirms it
 let challListResizeHandler = null;   // window-resize handler that re-snaps the list peek
 
 // Status marks for the contents list (gold tick = defeated, violet tick = dark side also
@@ -6765,6 +6752,7 @@ function openChallenges(from, focusId) {
   // Arriving at the page always starts with the dark rules folded away — they're an aside
   // you go looking for, not the first thing the card says.
   challDetailPeek = false;
+  challReturnConfirmId = null;
   // A caller can point the page at one challenge (the Mastery super-hard tile does): it
   // becomes the selection, so the detail panel is already showing the right thing, and the
   // list scrolls its GROUP into view once the screen has a height to scroll within.
@@ -6874,7 +6862,7 @@ function toggleChallengePin(id) {
 function renderChallengesPage() {
   checkChallengeBoardCharms();   // mastery-gated locks fall with no purchase to notice them
   const wallet = loadChallengeTokens();
-  const tk = wallet.balance, tt = wallet.tickets;
+  const tk = wallet.balance;
   const defeated = CHALLENGES.filter((c) => challengeRecord(c.id).defeated).length;
 
   // Default selection: keep the current pick if still valid, else the first
@@ -6939,17 +6927,9 @@ function renderChallengesPage() {
   const html =
     `<div class="chall-head">` +
       `<div class="chall-head-sub">spend a token · defeat the rule</div>` +
-      // Both wallets in one right-hand group, because the row is space-between and the
-      // sub-label owns the left. The punch card sits to the left of the kraft stub: it is
-      // the quieter currency, and the ticket stub stays the thing your eye lands on.
-      `<span class="chall-wallet">` +
-        `<span class="chall-tickets" title="persistence tickets — see a challenge through seven times to earn one">` +
-          `<span class="chall-tick-punch" aria-hidden="true"></span>` +
-          `<b>${tt}</b><span class="chall-tick-label">persist</span></span>` +
-        `<span class="chall-tokens" title="spend a token to unlock a challenge">` +
-          `<span class="chall-tok-perf"></span>` +
-          `🎟 <b>${tk}</b> <span class="chall-tok-label">token${tk === 1 ? "" : "s"}</span></span>` +
-      `</span>` +
+      `<span class="chall-tokens" title="spend a token to unlock a challenge">` +
+        `<span class="chall-tok-perf"></span>` +
+        `🎟 <b>${tk}</b> <span class="chall-tok-label">token${tk === 1 ? "" : "s"}</span></span>` +
     `</div>` +
     `<div class="chall-layout">` +
       `<div class="chall-col">` +
@@ -7010,7 +6990,10 @@ function renderChallengesPage() {
 function selectChallenge(id) {
   // Picking a different challenge folds the dark rules away again; re-rendering the same one
   // (a page refresh after a win, say) leaves what you were reading open.
-  if (id !== challSelectedId) challDetailPeek = false;
+  if (id !== challSelectedId) {
+    challDetailPeek = false;
+    challReturnConfirmId = null;
+  }
   challSelectedId = id;
   const body = $("challengesBody");
   if (!body) return;
@@ -7028,43 +7011,26 @@ function renderChallengeDetail(id) {
   const rec = challengeRecord(id);
   const open = challengeUnlocked(id);
   const cost = c.cost || 1;
-  const tt = loadChallengeTokens().tickets;
-  const price = ticketPrice(c);          // null = no number of tickets ever buys this one
 
   let action;
   if (!open && c.mastery) {
-    // Mastery-gated tier: never purchasable in either currency. Show a clear
+    // Mastery-gated tier: never purchasable with currency. Show a clear
     // "unlocks at Mastery L{n}" state.
     action = `<div class="chall-need chall-need--mastery">${CHALL_LOCK} Unlocks at Mastery level ${c.mastery}</div>`;
   } else if (!open) {
-    const pay = unlockPayment(c);
-    if (pay) {
-      // One button either way — what changes is which currency it tears. Paying in tickets
-      // swaps the kraft stub's wash and stamp for the punch card's, so the button says what
-      // it is about to spend without a second control to read.
-      const persist = pay.kind === "ticket";
+    const price = unlockPayment(c);
+    if (price) {
       action = `<div class="chall-buy">` +
-        `<button type="button" class="chall-go is-unlock${persist ? " is-persist" : ""}" data-unlock="${id}"` +
-          ` title="${persist ? "spend persistence to unlock" : "tear a ticket to unlock"}">` +
+        `<button type="button" class="chall-go is-unlock" data-unlock="${id}" title="tear a ticket to unlock">` +
           `<span class="chall-unlock-perf"></span>` +
-          `<span class="chall-unlock-stamp">${persist ? "persistence" : "admit one"}</span>` +
+          `<span class="chall-unlock-stamp">admit one</span>` +
           `<span class="chall-unlock-lab">unlock</span></button>` +
-        `<div class="chall-buy-cost">${persist
-          ? `spends ${pay.price} persistence ticket${pay.price === 1 ? "" : "s"}`
-          : `spends 🎟 ${pay.price} token${pay.price === 1 ? "" : "s"}`}</div>` +
+        `<div class="chall-buy-cost">spends 🎟 ${price} token${price === 1 ? "" : "s"}</div>` +
       `</div>`;
     } else {
-      // Can't afford it. The hint names the route that is actually open to you: how to earn
-      // a token when you hold no tickets at all, and how far off the ticket price is when
-      // you hold some but not the whole price (holding 1 against a 2 buys nothing).
-      const hint = price == null
-        ? "this one only opens with a token — persistence tickets don't reach its tier"
-        : tt > 0
-          ? `or ${price} persistence ticket${price === 1 ? "" : "s"} — you have ${tt}`
-          : "beat any challenge for the first time, or see one through seven times, to earn one";
       action = `<div class="chall-need-wrap">` +
           `<div class="chall-need">need a token · 🎟 ${cost}</div>` +
-          `<div class="chall-need-hint">${hint}</div>` +
+          `<div class="chall-need-hint">beat a challenge for the first time, or return an eligible challenge to the shelf</div>` +
         `</div>`;
     }
   } else {
@@ -7123,23 +7089,31 @@ function renderChallengeDetail(id) {
       `</div>`;
   }
 
-  // Persistence, below the action row. Either the claim — a ticket is not granted, you take
-  // it deliberately from the card of the challenge that cost you the seven runs — or, while
-  // the runs are still stacking up, the tally, so the seven is something you can see coming
-  // rather than a hidden threshold that pays out by surprise.
-  let persist = "";
-  if (ticketReady(id)) {
-    persist =
-      `<button type="button" class="chall-claim" data-claim="${id}">` +
-        `<span class="chall-claim-punch" aria-hidden="true"></span>` +
-        `<span class="chall-claim-lab">Claim your persistence ticket</span>` +
-        `<span class="chall-claim-sub">seven runs seen through</span>` +
-      `</button>`;
-  } else if (!rec.ticketClaimed && rec.earnest > 0 && !rec.defeated) {
-    persist =
-      `<div class="chall-persist">` +
-        `<span class="chall-persist-count">${rec.earnest} / ${PERSIST_ATTEMPTS}</span>` +
-        `<span class="chall-persist-lab">runs seen through — ${PERSIST_ATTEMPTS} earns a persistence ticket</span>` +
+  // Return path, below the action row. Eligibility stays on the card forever once earned,
+  // but the button only appears while the undefeated token-bought challenge is open.
+  let returnPanel = "";
+  if (challengeReturnReady(id)) {
+    if (challReturnConfirmId === id) {
+      returnPanel =
+        `<div class="chall-return-confirm" role="group" aria-label="Confirm challenge return">` +
+          `<div class="chall-return-warning">Return ${escapeHtml(c.name)} to the locked shelf? Your scores and attempts stay recorded.</div>` +
+          `<div class="chall-return-actions">` +
+            `<button type="button" class="chall-return-cancel" data-return-cancel>keep access</button>` +
+            `<button type="button" class="chall-return-final" data-return-confirm="${id}">return it · 🎟 +${cost}</button>` +
+          `</div>` +
+        `</div>`;
+    } else {
+      returnPanel =
+        `<button type="button" class="chall-return" data-return="${id}">` +
+          `<span class="chall-return-lab">Return challenge to the shelf</span>` +
+          `<span class="chall-return-sub">relock it and recover your token · progress stays</span>` +
+        `</button>`;
+    }
+  } else if (open && !c.free && !c.mastery && !rec.defeated && rec.returnRuns > 0) {
+    returnPanel =
+      `<div class="chall-return-progress">` +
+        `<span class="chall-return-count">${rec.returnRuns} / ${CHALLENGE_RETURN_RUNS}</span>` +
+        `<span class="chall-return-progress-lab">completed runs · ${CHALLENGE_RETURN_RUNS} lets you return it for your token</span>` +
       `</div>`;
   }
 
@@ -7183,9 +7157,9 @@ function renderChallengeDetail(id) {
     `</div>` +
     // Below the actions on purpose: the buttons never move when the card is flipped, and a
     // note about the dark side reads best directly beneath the button it describes.
-    // Persistence sits below both — it is about the runs behind you, not the run you're
-    // about to start, and it must never crowd Play out of the row it shares with Dark Side.
-    persist + darkPeek;
+    // The return path sits below both because it is about access to the challenge, never the
+    // light/dark rules being previewed, and it must not crowd Play out of the action row.
+    returnPanel + darkPeek;
 
   const peek = el.querySelector("[data-peek]");
   if (peek) peek.addEventListener("click", () => {
@@ -7194,9 +7168,25 @@ function renderChallengeDetail(id) {
   });
   const ub = el.querySelector("[data-unlock]");
   if (ub) ub.addEventListener("click", () => { if (unlockChallenge(ub.dataset.unlock)) renderChallengesPage(); });
-  // Re-render the whole page, not just the card: claiming moves the header counter too.
-  const cb = el.querySelector("[data-claim]");
-  if (cb) cb.addEventListener("click", () => { if (claimTicket(cb.dataset.claim)) renderChallengesPage(); });
+  const armReturn = el.querySelector("[data-return]");
+  if (armReturn) armReturn.addEventListener("click", () => {
+    challReturnConfirmId = armReturn.dataset.return;
+    renderChallengeDetail(id);
+    requestAnimationFrame(() => el.querySelector("[data-return-cancel]")?.focus());
+  });
+  const cancelReturn = el.querySelector("[data-return-cancel]");
+  if (cancelReturn) cancelReturn.addEventListener("click", () => {
+    challReturnConfirmId = null;
+    renderChallengeDetail(id);
+    requestAnimationFrame(() => el.querySelector("[data-return]")?.focus());
+  });
+  const confirmReturn = el.querySelector("[data-return-confirm]");
+  if (confirmReturn) confirmReturn.addEventListener("click", () => {
+    if (!returnChallenge(confirmReturn.dataset.returnConfirm)) return;
+    challReturnConfirmId = null;
+    renderChallengesPage();
+    requestAnimationFrame(() => $("challDetail")?.querySelector("[data-unlock]")?.focus());
+  });
   const pb = el.querySelector("[data-play]");
   if (pb) pb.addEventListener("click", () => startChallenge(pb.dataset.play));
   const db = el.querySelector("[data-dark]");
@@ -9192,10 +9182,10 @@ function useHint() {
    Two things it must never do. It must never deal something the player cannot play — a locked
    challenge, an undefeated challenge's dark side, a bonus game still in the works, a daily
    already spent — because a draw that dead-ends is worse than no button. And it must never
-   SPEND anything: challenge tokens and persistence tickets are bought deliberately from a
-   challenge's own card, so the pool is built from what is already unlocked and the draw can't
-   reach a wallet. Both are enforced in buildRandomPool by filtering, never by a check after
-   the draw, so there is one place to look when something unplayable turns up. */
+   SPEND anything: challenge tokens are spent deliberately from a challenge card, so the pool
+   is built from what is already unlocked and the draw can't reach a wallet. Both are enforced
+   in buildRandomPool by filtering, never by a check after the draw, so there is one place to
+   look when something unplayable turns up. */
 
 // The ledger token for a configuration. NOT one per pool entry: what is being tracked is
 // whether a player has been SHOWN this corner of the notebook, and every difficulty of one
@@ -11206,13 +11196,15 @@ function endChallenge() {
   $("verseAnthology").style.display = "none";
   hideNewBestBanner();
 
-  // Bank the run BEFORE the defeat is recorded, so the winning run itself counts as the
-  // seventh: At Least I'm Trying reads the `runs` tally just below.
-  const earnestBefore = challengeRecord(c.id).earnest;
-  if (!devNoLog) recordEarnestAttempt(c.id, challengeDark);
-  const ticketJustReady = !devNoLog && earnestBefore < PERSIST_ATTEMPTS && ticketReady(c.id);
-
   const won = challengeWinCheck(c);
+  // Bank the run before the defeat is recorded, so the winning run itself counts toward the
+  // achievement tally. A seventh-run win does not offer a return because the challenge pays
+  // its ordinary first-defeat token instead.
+  const returnRunsBefore = challengeRecord(c.id).returnRuns;
+  if (!devNoLog) recordCompletedChallengeRun(c.id, challengeDark);
+  const returnJustReady = !devNoLog && !won && returnRunsBefore < CHALLENGE_RETURN_RUNS
+    && challengeReturnReady(c.id);
+
   const firstTime = won ? markChallengeDefeated(c.id, score, challengeDark) : false;
   const rec = challengeRecord(c.id);
   /* The three charms about HOW a challenge was beaten rather than which one. All three used to
@@ -11227,8 +11219,8 @@ function endChallenge() {
   // Now I Breathe Flames — the dark mirror of it, on a dark side.
   if (cleanSheet && challengeDark) unlock("beat-dark-side-no-misses");
   // At Least I'm Trying — won a challenge you had already seen through seven times. `runs`
-  // never freezes (see recordEarnestAttempt), so this stays winnable on any card, forever.
-  if (won && !challengeDark && rec.runs >= PERSIST_ATTEMPTS) unlock("defeat-challenge-after-7-runs");
+  // never freezes (see recordCompletedChallengeRun), so this stays winnable on any card, forever.
+  if (won && !challengeDark && rec.runs >= CHALLENGE_RETURN_RUNS) unlock("defeat-challenge-after-7-runs");
   // Should've Known That Word — a flawless Impostor run: every impostor flagged (implied by surviving)
   // and every real word named. challengeRunActive is already false, so the charm fires normally.
   if (c.rule === "impostor" && won && impostorMissed === 0) unlock("defeat-impostor-flawlessly");
@@ -11286,10 +11278,8 @@ function endChallenge() {
       ? `<div class="chall-result-status">out of guesses — the song got away</div>`
       : `<div class="chall-result-status">not yet — ${escapeHtml(c.win)}</div>`;
   const tokenLine = firstTime ? `<div class="chall-result-token">🎟 +1 token earned</div>` : "";
-  // The seventh run seen through. The ticket is claimed from the challenge's card, not handed
-  // over here, so this says where it is waiting rather than pretending to be a payout.
-  const persistLine = ticketJustReady
-    ? `<div class="chall-result-token">a persistence ticket is waiting on this challenge's card</div>` : "";
+  const returnLine = returnJustReady
+    ? `<div class="chall-result-token">you can now return this challenge for your token</div>` : "";
   // Lyric Lover is judged on word-perfect recall, not the 0–13 score — surface that count.
   const verseLine = c.rule === "verse"
     ? `<div class="chall-result-meta">${gameVersePerfect} line${gameVersePerfect === 1 ? "" : "s"} recalled word-for-word</div>`
@@ -11313,7 +11303,7 @@ function endChallenge() {
     `${bestLine}</div>`;
   // A two-up row sitting above the full-width "front page" button: back to the list on the
   // left, replay this same challenge on the right — each half the width of the button below.
-  $("resultPodium").innerHTML = status + tokenLine + persistLine + verseLine + impostorLine + riskResultLine() + meta +
+  $("resultPodium").innerHTML = status + tokenLine + returnLine + verseLine + impostorLine + riskResultLine() + meta +
     `<div class="chall-result-actions">` +
       `<button id="backToChallenges" class="btn-primary">← challenges</button>` +
       `<button id="replayChallenge" class="btn-primary">replay ↺</button>` +
@@ -15287,7 +15277,7 @@ function endGame() {
   const priorRuns = loadHistory().filter((h) => h && h.t === gameType);
 
   // Log every finished run to the chronological history (classic / infinite / daily).
-  // devNoLog (a dev cheat) skips every persistence fold so test runs don't dirty the data.
+  // devNoLog (a dev cheat) skips every challenge-return fold so test runs don't dirty the data.
   if (!devNoLog) appendHistory({
     s: boardScore, c: score, n: roundsSurvived,
     m: isDaily ? "daily" : mode, t: gameType,
@@ -18025,19 +18015,18 @@ function devActive() {
   } catch (e) { return false; }
 }
 
-// Drive a challenge's earnest tally straight to a number, so the claimable edge can be
-// reached without playing seven runs out. Writes storage directly: no charm fires, and no
-// ticket is claimed on the player's behalf.
-function devSetEarnest(id, n) {
+// Drive a challenge's completed-run tally straight to a number so the return edge can be
+// reached without playing seven runs out. Writes storage directly and fires no charm.
+function devSetReturnRuns(id, n) {
   const st = loadChallengeState();
-  st[id] = { ...challengeRecord(id), earnest: Math.max(0, n | 0) };
+  st[id] = { ...challengeRecord(id), returnRuns: Math.max(0, n | 0) };
   saveChallengeState(st);
   if ($("challengesBody")) renderChallengesPage();
-  return st[id].earnest;
+  return st[id].returnRuns;
 }
 
 // The same for `runs`, At Least I'm Trying's tally. Separate setter because the two counters
-// separate: `earnest` freezes on defeat and this one never does.
+// separate: `returnRuns` freezes on defeat and this one never does.
 function devSetRuns(id, n) {
   const st = loadChallengeState();
   st[id] = { ...challengeRecord(id), runs: Math.max(0, n | 0) };
@@ -19664,31 +19653,25 @@ function buildDevApi() {
         return CHALLENGES.filter((c) => challengeUnlocked(c.id)).length; },
       tokens: (n) => { const w = loadChallengeTokens(); if (n != null) { w.balance = n | 0; saveChallengeTokens(w);
         if ($("challengesBody")) renderChallengesPage(); } return loadChallengeTokens().balance; },
-      // Persistence tickets. `earnest` drives a challenge's end-screen tally without playing
-      // the runs, `ready` parks it one short of nothing (straight on the claimable edge), and
-      // `tickets` is the wallet setter. All write storage directly, so nothing here mints the
-      // charm or fires a claim the player didn't make.
-      persist: {
+      // Challenge returns. The completed-run setter reaches the eligibility edge without
+      // playing seven runs, while `giveBack` exercises the real relock + refund path.
+      returns: {
         state: (id) => { const r = challengeRecord(id);
-          return { earnest: r.earnest, runs: r.runs, need: PERSIST_ATTEMPTS, claimed: r.ticketClaimed,
-            ready: ticketReady(id), price: ticketPrice(CHALLENGE_BY_ID[id]),
-            wallet: loadChallengeTokens().tickets }; },
-        earnest: (id, n) => devSetEarnest(id, n),
-        // The charm's own tally, separate from the ticket's on purpose: set it past the seven
+          return { completed: r.returnRuns, runs: r.runs, need: CHALLENGE_RETURN_RUNS,
+            ready: challengeReturnReady(id), open: challengeUnlocked(id),
+            wallet: loadChallengeTokens().balance }; },
+        completed: (id, n) => devSetReturnRuns(id, n),
+        // The charm's own tally, separate from return eligibility on purpose: set it past seven
         // on a challenge that is already defeated to test that At Least I'm Trying is still
         // winnable there, which is the whole point of `runs` not freezing.
         runs: (id, n) => devSetRuns(id, n),
-        ready: (id) => devSetEarnest(id, PERSIST_ATTEMPTS),
-        claim: (id) => { const ok = claimTicket(id);
+        ready: (id) => devSetReturnRuns(id, CHALLENGE_RETURN_RUNS),
+        giveBack: (id) => { const ok = returnChallenge(id);
           if ($("challengesBody")) renderChallengesPage(); return ok; },
-        tickets: (n) => { const w = loadChallengeTokens(); if (n != null) { w.tickets = Math.max(0, n | 0);
-          saveChallengeTokens(w); if ($("challengesBody")) renderChallengesPage(); }
-          return loadChallengeTokens().tickets; },
         reset: (id) => { const st = loadChallengeState();
           const ids = id ? [id] : CHALLENGE_ORDER;
-          ids.forEach((k) => { if (st[k]) st[k] = { ...challengeRecord(k), earnest: 0, runs: 0, ticketClaimed: false }; });
+          ids.forEach((k) => { if (st[k]) st[k] = { ...challengeRecord(k), returnRuns: 0, runs: 0 }; });
           saveChallengeState(st);
-          const w = loadChallengeTokens(); w.tickets = 0; saveChallengeTokens(w);
           if ($("challengesBody")) renderChallengesPage(); return ids.length; },
       },
       // Devil's Path — inspect the curse categories and the offer pool the cap allows.

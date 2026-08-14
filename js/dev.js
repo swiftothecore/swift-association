@@ -267,29 +267,27 @@ export function initDev(api) {
   // Dark sides open only after the base challenge is beaten. This unlocks every one through
   // the real gate (base marked defeated + unlocked, dark progress left untouched) so they can
   // be played from the Challenges screen — then reports the count in the readout.
-  // Persistence tickets need seven finished runs to become claimable, which is not something
-  // anyone is going to sit through to check the card — `ready` parks the chosen challenge on
-  // the claimable edge, and the wallet setter reaches the buy states from the other side.
-  const persistSel = select(api.challenge.list(), (x) => x, (x) => x);
-  const ticketN = num(2);
+  // Challenge returns need seven completed runs, which is not something anyone is going to sit
+  // through for a card check. `ready` parks the selected challenge at the eligibility edge;
+  // `giveBack` exercises the actual relock + refund mutation.
+  const returnSel = select(api.challenge.list(), (x) => x, (x) => x);
   body.append(section("challenges",
     row(btn("open shelf", () => api.challenge.open()),
         btn("unlock all", () => { readout.textContent = `${api.challenge.unlockAll()} challenges unlocked`; }),
         btn("tokens 9", () => { readout.textContent = `${api.challenge.tokens(9)} tokens`; })),
-    row(persistSel, btn("start", () => api.challenge.start(persistSel.value)),
-        btn("start dark", () => api.challenge.dark.start(persistSel.value)),
-        btn("dark diff", () => { console.log("[dev] dark diff", persistSel.value, api.challenge.dark.diff(persistSel.value)); toast("dark diff in console"); })),
+    row(returnSel, btn("start", () => api.challenge.start(returnSel.value)),
+        btn("start dark", () => api.challenge.dark.start(returnSel.value)),
+        btn("dark diff", () => { console.log("[dev] dark diff", returnSel.value, api.challenge.dark.diff(returnSel.value)); toast("dark diff in console"); })),
     row(btn("unlock all dark sides", () => { const n = api.challenge.dark.unlockAll(); readout.textContent = `${n} dark sides unlocked — open Challenges`; }),
         btn("relock dark progress", () => { api.challenge.dark.reset(); readout.textContent = "dark progress cleared"; }, "warn")),
-    row(persistSel, btn("ready a ticket", () => {
-          api.challenge.persist.ready(persistSel.value);
-          readout.textContent = `${persistSel.value}: ticket claimable — open its card`;
+    row(returnSel, btn("ready return", () => {
+          api.challenge.returns.ready(returnSel.value);
+          readout.textContent = `${returnSel.value}: return eligible · open its card`;
         }),
-        btn("state", () => { readout.textContent = JSON.stringify(api.challenge.persist.state(persistSel.value)); })),
-    row("tickets=", ticketN, btn("set wallet", () => {
-          readout.textContent = `${api.challenge.persist.tickets(+ticketN.value)} persistence tickets`;
-        }),
-        btn("clear persistence", () => { api.challenge.persist.reset(); readout.textContent = "persistence cleared"; }, "warn")),
+        btn("return now", () => { readout.textContent = api.challenge.returns.giveBack(returnSel.value)
+          ? `${returnSel.value}: returned to shelf` : `${returnSel.value}: not eligible`; }),
+        btn("state", () => { readout.textContent = JSON.stringify(api.challenge.returns.state(returnSel.value)); }),
+        btn("clear return runs", () => { api.challenge.returns.reset(); readout.textContent = "return runs cleared"; }, "warn")),
     // Flourish charms hide behind ??? until their challenge is defeated, so checking how one
     // reads as a revealed target otherwise means actually beating the challenge first.
     row(btn("defeat all (reveal flourishes)", () => { const n = api.challenge.defeat();

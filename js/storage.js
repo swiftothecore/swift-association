@@ -115,13 +115,13 @@ export function resetKeepsakes() {
 /* ---------- Challenges mode (progress + tokens) ---------- */
 // Per-challenge progress, keyed by challenge id:
 //   { unlocked, defeated, attempts, best, darkDefeated, darkAttempts, darkBest,
-//     earnest, ticketClaimed, pinned }
+//     returnRuns, runs, pinned }
 // The dark* fields track the challenge's dark side as a separate line of progress against the
 // same id, so beating the base and beating the dark side stay independently recorded. Records
 // written before dark sides existed simply lack them and default cleanly — no migration.
-// `earnest` counts runs played through to the end screen (persistence tickets); it is
-// deliberately NOT the same tally as `attempts`, which banks at run start. `ticketClaimed`
-// caps the ticket at one per challenge, ever.
+// `returnRuns` counts base runs played through to the end screen for challenge returns; it is
+// deliberately NOT the same tally as `attempts`, which banks at run start. `runs` never
+// freezes because it supports the separate At Least I'm Trying achievement.
 export function loadChallengeState() {
   try {
     const raw = localStorage.getItem(CHALLENGES_KEY);
@@ -138,22 +138,26 @@ export function challengeRecord(id) {
   return {
     unlocked: !!e.unlocked, defeated: !!e.defeated, attempts: e.attempts || 0, best: e.best || 0,
     darkDefeated: !!e.darkDefeated, darkAttempts: e.darkAttempts || 0, darkBest: e.darkBest || 0,
-    earnest: e.earnest || 0, runs: e.runs || 0, ticketClaimed: !!e.ticketClaimed, pinned: !!e.pinned,
+    // `earnest` was the completed-run counter under the retired persistence-ticket system.
+    // Carry it forward so an already-earned seven-run return is never erased by the rename.
+    returnRuns: e.returnRuns || e.earnest || 0, runs: e.runs || 0, pinned: !!e.pinned,
   };
 }
-// The two challenge wallets. `balance` is tokens, seeded with one starting token on first read
-// (persisted on first save); `tickets` is persistence tickets and is deliberately NOT seeded —
-// a ticket only ever arrives by seeing a challenge through seven times. Saves written before
-// tickets existed simply lack the field and normalise to zero here, so nothing backfills.
+// The challenge wallet, seeded with one starting token on first read (persisted on first save).
+// Retired persistence tickets convert one-for-one on read. The next wallet write drops the old
+// field, preserving the player's earned currency without keeping a second economy alive.
 export function loadChallengeTokens() {
   try {
     const raw = localStorage.getItem(CHALLENGE_TOKENS_KEY);
     if (raw) {
       const o = JSON.parse(raw);
-      if (o && typeof o.balance === "number") return { ...o, tickets: o.tickets || 0 };
+      if (o && typeof o.balance === "number") {
+        const { tickets = 0, ...wallet } = o;
+        return { ...wallet, balance: o.balance + Math.max(0, tickets || 0) };
+      }
     }
   } catch (e) { /* ignore */ }
-  return { balance: 1, tickets: 0 };   // the starting token, and no starting ticket
+  return { balance: 1 };
 }
 export function saveChallengeTokens(o) {
   try { localStorage.setItem(CHALLENGE_TOKENS_KEY, JSON.stringify(o)); } catch (e) { /* ignore */ }

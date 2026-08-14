@@ -572,18 +572,12 @@ export const RANDOM_CATEGORIES = [
   { id: "daily",      weight: 8,  label: "the daily" },
 ];
 
-/* ---------- Persistence tickets: the second challenge currency ----------
+/* ---------- Challenge returns ----------
    Tokens only mint on a first-ever defeat, so a player who cannot beat what is in front of
-   them has no route to anything else. Tickets are the anti-deadlock valve: seven earnest
-   attempts (a run played through to the end screen, won or lost) at a challenge you have not
-   beaten makes a ticket claimable from that challenge's own card, once per challenge ever.
-   They are a genuinely separate wallet, never a second view of the token balance. */
-export const PERSIST_ATTEMPTS = 7;
-// Ticket price by difficulty tier, so a regular token is worth two tickets at tough and one
-// at easy/tricky. The asymmetry is the point — tickets are the grinder's currency. Four tapes
-// is absent on purpose: that tier is Mastery-gated, and a Mastery gate is a requirement, not
-// a price, so no currency buys it. An unrated challenge is priced with the cheap tiers.
-export const TICKET_PRICE = { 0: 1, 1: 1, 2: 1, 3: 2 };
+   them needs a route back out. After seven completed base runs, an undefeated token-bought
+   challenge can be returned to the locked shelf for its token. The challenge keeps its
+   history and can be unlocked again later; quitting and dark-side runs never count. */
+export const CHALLENGE_RETURN_RUNS = 7;
 
 export const CHALLENGES = [
   { id: "vanishing-word", name: "Vanishing Word", rule: "vanishing", mode: "medium",
