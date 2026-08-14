@@ -1681,9 +1681,9 @@
   .chall-detail-head { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; }
   .chall-detail-seal {
     position: relative; display: flex; flex: 0 0 53px; width: 53px; height: 53px;
-    padding: 0; color: inherit; background: transparent; border: 0;
+    padding: 0; color: inherit; background: transparent; border: 0; isolation: isolate;
   }
-  .chall-detail-seal svg { position: relative; z-index: 1; display: block; width: 53px; height: 53px; }
+  .chall-detail-seal > svg { position: relative; z-index: 1; display: block; width: 53px; height: 53px; }
   /* The seal reads three states by how alive the wax looks. Locked sits cold and
      fully drained: a flat grayscale of the red seal, faded back, no colour left, so the
      challenge isn't yours yet. Unlocked but not beaten runs the fresh, full oxblood:
@@ -1693,40 +1693,60 @@
      filter (body and beads are both red at source), so it's baked into the SVG and
      needs no CSS here. A fourth state, the dark side beaten, swaps in the DARK seal art
      (darkSealSvg) — the same wax poured black with a lilac rim. Also baked into the SVG. */
-  .chall-detail-seal.is-locked svg   { filter: grayscale(1) opacity(0.42); }
+  .chall-detail-seal.is-locked > svg { filter: grayscale(1) opacity(0.42); }
   .chall-detail-seal.is-burnable { cursor: pointer; border-radius: 50%; }
   .chall-detail-seal.is-burnable:focus-visible { outline: 2px dashed #7a4bb0; outline-offset: 4px; }
-  .chall-detail-seal.is-charred svg {
+  .chall-detail-seal.is-charred > svg {
     filter: grayscale(1) saturate(0) brightness(0.28) contrast(1.55) drop-shadow(1px 2px 3px rgba(20,16,15,0.36));
   }
-  /* Five small paper-flame shapes lick across the wax while its violet drains away. The
-     charred class is applied by JS after exactly one second and kept in memory only. */
+  /* A single flame front grows out of the wax, with a pale core and a few rising embers.
+     Screen blending lets its heat colour the dark seal instead of sitting on top like a row
+     of stickers. The charred class arrives after one second and remains in memory only. */
   .chall-seal-fire {
-    position: absolute; z-index: 2; inset: -12px -8px -5px; overflow: visible;
-    pointer-events: none; opacity: 0;
+    position: absolute; z-index: 2; left: -13px; bottom: -5px; width: 80px; height: 92px;
+    overflow: visible; pointer-events: none; opacity: 0; mix-blend-mode: screen;
   }
-  .chall-seal-fire i {
-    position: absolute; bottom: 5px; width: 13px; height: 29px;
-    border-radius: 52% 48% 46% 54% / 68% 68% 32% 32%;
-    background: radial-gradient(circle at 50% 72%, #fff3a2 0 16%, #ffc33d 17% 42%, #e8511f 65%, rgba(176,35,18,0) 68%);
-    filter: drop-shadow(0 0 4px rgba(239,90,25,0.78)); transform-origin: 50% 100%;
+  .chall-seal-fire::after {
+    content: ""; position: absolute; z-index: -1; left: 17px; bottom: 11px; width: 47px; height: 43px;
+    border-radius: 50%; background: radial-gradient(ellipse, rgba(255,196,62,0.72), rgba(239,72,21,0.2) 48%, transparent 72%);
+    filter: blur(5px); transform: scale(0.65); opacity: 0;
   }
-  .chall-seal-fire i:nth-child(1) { left: 3px;  --fire-scale: 0.78; --fire-delay: -0.08s; }
-  .chall-seal-fire i:nth-child(2) { left: 15px; --fire-scale: 1.08; --fire-delay: -0.19s; }
-  .chall-seal-fire i:nth-child(3) { left: 28px; --fire-scale: 0.9;  --fire-delay: -0.03s; }
-  .chall-seal-fire i:nth-child(4) { left: 41px; --fire-scale: 1.15; --fire-delay: -0.24s; }
-  .chall-seal-fire i:nth-child(5) { left: 53px; --fire-scale: 0.72; --fire-delay: -0.13s; }
-  .chall-detail-seal.is-burning .chall-seal-fire { opacity: 1; animation: challSealFireOut 1s ease-in both; }
-  .chall-detail-seal.is-burning .chall-seal-fire i {
-    animation: challSealFlame 0.24s ease-in-out var(--fire-delay) infinite alternate;
+  .chall-seal-fire svg {
+    position: absolute; inset: 0; z-index: 1; display: block; width: 80px; height: 92px;
+    overflow: visible; filter: drop-shadow(0 0 3px rgba(239,76,21,0.85));
   }
-  .chall-detail-seal.is-burning svg { animation: challSealScorch 1s ease-in both; }
+  .chall-fire-flame { transform-box: fill-box; transform-origin: 50% 100%; }
+  .chall-fire-outer { fill: #e83c16; }
+  .chall-fire-inner { fill: #ff9f1f; }
+  .chall-fire-core  { fill: #fff5b3; }
+  .chall-fire-embers { fill: #ffc64a; }
+  .chall-fire-embers circle { transform-box: fill-box; transform-origin: center; opacity: 0; }
+  .chall-detail-seal.is-burning .chall-seal-fire { animation: challSealFireRise 1s ease-out both; }
+  .chall-detail-seal.is-burning .chall-seal-fire::after { animation: challSealHeatBloom 1s ease-out both; }
+  .chall-detail-seal.is-burning .chall-fire-flame { animation: challSealFlame 0.18s ease-in-out infinite alternate; }
+  .chall-detail-seal.is-burning .chall-fire-embers circle:nth-child(1) { animation: challSealEmber 0.48s 0.05s ease-out both; }
+  .chall-detail-seal.is-burning .chall-fire-embers circle:nth-child(2) { animation: challSealEmber 0.56s 0.12s ease-out both; }
+  .chall-detail-seal.is-burning .chall-fire-embers circle:nth-child(3) { animation: challSealEmber 0.5s 0.3s ease-out both; }
+  .chall-detail-seal.is-burning .chall-fire-embers circle:nth-child(4) { animation: challSealEmber 0.42s 0.45s ease-out both; }
+  .chall-detail-seal.is-burning > svg { animation: challSealScorch 1s ease-in both; }
   @keyframes challSealFlame {
-    from { transform: translateY(4px) rotate(-5deg) scale(var(--fire-scale)); }
-    to { transform: translateY(-5px) rotate(6deg) scale(var(--fire-scale)) scale(0.82, 1.16); }
+    from { transform: skewX(-2deg) scale(0.96, 1.02); }
+    to { transform: skewX(3deg) scale(1.02, 0.96); }
   }
-  @keyframes challSealFireOut {
-    0% { opacity: 0; } 12%, 74% { opacity: 1; } 100% { opacity: 0; }
+  @keyframes challSealFireRise {
+    0% { opacity: 0; transform: translateY(12px) scale(0.66, 0.35); }
+    16% { opacity: 1; transform: translateY(2px) scale(0.96, 0.9); }
+    30%, 72% { opacity: 1; transform: translateY(0) scale(1); }
+    100% { opacity: 0; transform: translateY(-8px) scale(0.78, 1.08); }
+  }
+  @keyframes challSealHeatBloom {
+    0%, 100% { opacity: 0; transform: scale(0.6); }
+    24%, 70% { opacity: 1; transform: scale(1.08); }
+  }
+  @keyframes challSealEmber {
+    0% { opacity: 0; transform: translate(0, 9px) scale(0.4); }
+    22% { opacity: 1; }
+    100% { opacity: 0; transform: translate(3px, -15px) scale(0.15); }
   }
   @keyframes challSealScorch {
     0%, 30% { filter: drop-shadow(1px 2px 3px rgba(40,25,60,0.3)); }
@@ -2003,8 +2023,9 @@
     .chall-go:active, .chall-return:active { transform: translateY(1px); }
   }
   body[data-reduce-motion="on"] .chall-detail-seal.is-burning .chall-seal-fire,
-  body[data-reduce-motion="on"] .chall-detail-seal.is-burning .chall-seal-fire i,
-  body[data-reduce-motion="on"] .chall-detail-seal.is-burning svg { animation: none; }
+  body[data-reduce-motion="on"] .chall-detail-seal.is-burning .chall-seal-fire::after,
+  body[data-reduce-motion="on"] .chall-detail-seal.is-burning .chall-seal-fire *,
+  body[data-reduce-motion="on"] .chall-detail-seal.is-burning > svg { animation: none; }
   body[data-reduce-motion="on"] .chall-detail-seal.is-burning .chall-seal-fire { opacity: 0.9; }
 
   /* ---------- Bonus games shelf ----------
