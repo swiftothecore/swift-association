@@ -1796,6 +1796,33 @@ function charmMarkup(icon, color) {
   return `<span class="charm" aria-hidden="true"${style}>${ACH_ICONS[icon]}</span>`;
 }
 
+// Earned charms on the collection page are as fidgetable as its header doodle. Keep this
+// opt-in to the earned wrappers so a locked charm stays inert, and bind the glyph itself so
+// clicking the surrounding tile still behaves like ordinary page content.
+const charmPokeTimers = new WeakMap();
+function wireAchievementCharmPokes(root) {
+  root.querySelectorAll(
+    ".ach--earned > .charm, .ach-latest-charm > .charm, " +
+    ".ach-goal-charm.earned > .charm, .ach-quest-charm.earned > .charm"
+  ).forEach((charm) => {
+    if (charm.dataset.pokeWired) return;
+    charm.dataset.pokeWired = "1";
+    charm.addEventListener("click", (e) => {
+      // The completed catalogue charm lives inside the songbook button. Its glyph is the
+      // fidget target; the rest of that card remains the door into the songbook.
+      if (charm.closest("button")) e.stopPropagation();
+      clearTimeout(charmPokeTimers.get(charm));
+      charm.classList.remove("charm-poked");
+      void charm.offsetWidth;
+      charm.classList.add("charm-poked");
+      charmPokeTimers.set(charm, setTimeout(() => {
+        charm.classList.remove("charm-poked");
+        charmPokeTimers.delete(charm);
+      }, MARK_POKE_MS));
+    });
+  });
+}
+
 // A small hand-inked arrow for paging through the keepsake card. It uses the same `.charm`
 // paint rules as achievement glyphs, including their wobble and tinted marker swipe.
 function charmHistoryArrow(next = false) {
@@ -2758,6 +2785,7 @@ function renderAchievementsPage() {
       next.style.setProperty("--bead", color);
       previous.disabled = latestIndex === 0;
       next.disabled = isNewest;
+      wireAchievementCharmPokes(latestView);
     };
     previous.addEventListener("click", () => { latestIndex -= 1; showLatestCharm(); });
     next.addEventListener("click", () => { latestIndex += 1; showLatestCharm(); });
@@ -2789,6 +2817,7 @@ function renderAchievementsPage() {
   });
   const play = $("achievementsBody").querySelector("[data-goal-play]");
   if (play) play.addEventListener("click", () => { playGoal(); });
+  wireAchievementCharmPokes($("achievementsBody"));
 }
 
 // Shared album-rainbow segments for a {album: discoveredCount} split out of total.
