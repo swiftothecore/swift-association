@@ -4250,11 +4250,12 @@ const charmSetUnlocked = (m) => rewardSetUnlocked(m, "charm");
 // The pools include the DEFAULT finish and the default words, the same way a random charm
 // strand can still deal a plain star: "random" means any of them, not any of the earned ones.
 //
-// The Pride flags are deliberately NOT in the finish pool. They are a set behind a doorway
-// rather than four more inks, and a flag worn without anyone having chosen it is a different
-// kind of thing from a random colour.
+// A set-valued reward contributes each of its variants. Pride's flags are persisted finish
+// ids just like the ordinary inks, and random is itself the player's choice, so every flag
+// belongs in the draw even though manual selection reaches them through a nested picker.
 const randomFinishPool = () => ["", ...MASTERY_REWARDS
-  .filter((r) => r.kind === "button" && r.id !== "btn-pride").map((r) => r.payload.button)];
+  .filter((r) => r.kind === "button")
+  .flatMap((r) => r.variants ? r.variants.map((v) => v.id) : [r.payload.button])];
 const randomLabelPool = () => ["", ...MASTERY_REWARDS
   .filter((r) => r.kind === "label").map((r) => r.payload.label)];
 const pickOne = (arr) => arr[Math.floor(Math.random() * arr.length)] || "";
