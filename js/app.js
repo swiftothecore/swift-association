@@ -7161,6 +7161,9 @@ function renderChallengeDetail(id) {
             `<circle cx="27" cy="29" r="1.35"/><circle cx="51" cy="22" r="1.15"/>` +
           `</g>` +
         `</svg>` +
+        `<span class="chall-fire-particles">` +
+          `<i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>` +
+        `</span>` +
       `</span>`
     : "";
 
