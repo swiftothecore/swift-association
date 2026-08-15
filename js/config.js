@@ -1894,9 +1894,10 @@ export const ACH_ICONS = {
   // your own levers, each slid somewhere different. The knobs are beads, not handles, so the
   // panel stays notebook rather than mixing desk.
   levers:  `<svg viewBox="0 0 24 24"><g class="ink" stroke-width="1.3" fill="none"><path d="M3.2 6.6 H20.8"/><path d="M3.2 12 H20.8"/><path d="M3.2 17.4 H20.8"/></g><g class="ink-fill"><circle cx="15.4" cy="6.6" r="2.1"/><circle cx="7.6" cy="12" r="2.1"/><circle cx="16.8" cy="17.4" r="2.1"/></g></svg>`,
-  // PLACEHOLDER — a backstage pass on its strap, stamped. Stands in until the real charm
-  // is drawn; it is a blocked-out shape, not a considered mark.
-  guestpass:`<svg viewBox="0 0 24 24"><path class="ink" stroke-width="1.3" fill="none" d="M9.4 3.4 C9.4 6.4 14.6 6.4 14.6 9.4"/><rect class="ink-fill" x="5.4" y="9" width="13.2" height="11.6" rx="1.2"/><g class="ink" stroke-width="1" opacity="0.5"><path d="M7.8 15.4 H16.2"/><path d="M7.8 17.6 H13.4"/></g><rect x="7.8" y="11.2" width="8.4" height="2.2" rx="0.6" fill="var(--paper)" stroke="none"/></svg>`,
+  // room made on the shelf and the guest's sleeve going into it — the act in the desc,
+  // drawn as the shelf rather than as a pass, because nothing about a guest run is
+  // backstage: their catalogue stands in the row like everyone else's
+  guestpass:`<svg viewBox="0 0 24 24"><path class="ink" stroke-width="1.6" d="M2 20.8 H22"/><g class="ink-fill"><rect x="3.2" y="8.4" width="2.6" height="11.9" rx="0.4"/><rect x="6.4" y="7.8" width="2.6" height="12.5" rx="0.4"/><rect x="9.6" y="8.6" width="2.6" height="11.7" rx="0.4"/></g><g transform="rotate(15 15.6 20.2)"><rect class="ink-fill" x="14.3" y="7.4" width="2.8" height="12.8" rx="0.4"/><circle cx="15.7" cy="10.4" r="0.55" fill="currentColor" stroke="none"/></g><g class="ink" stroke-width="1.1" opacity="0.45"><path d="M20.4 10 L22.2 9"/><path d="M20.8 13 L22.6 12.2"/></g></svg>`,
   // the shelf itself: written-up preset cards stood in an open holder
   presetbox:`<svg viewBox="0 0 24 24"><g class="ink-fill"><rect x="4.4" y="3" width="10.4" height="11.4" rx="0.8" transform="rotate(-9 9.6 8.7)"/><rect x="9.6" y="2.4" width="10.4" height="12" rx="0.8" transform="rotate(7 14.8 8.4)"/></g><g class="ink" stroke-width="1" opacity="0.55" transform="rotate(7 14.8 8.4)"><path d="M11.6 6 H18"/><path d="M11.6 8.4 H16.4"/><path d="M11.6 10.8 H17.4"/></g><path class="ink-fill" d="M2.8 13.4 L4.1 20.4 a1 1 0 0 0 1 0.8 H18.9 a1 1 0 0 0 1 -0.8 L21.2 13.4"/></svg>`,
   // one pen stroke looped twice and carried past itself — a run with no last page
@@ -2147,6 +2148,37 @@ export const ACH_ICONS = {
   // fingertip only shrank the hand until it read as a stick.
   // The two ticks off the tip are the poke landing; without them the hand merely points.
   manicule:`<svg viewBox="0 0 24 24"><path class="ink-fill" d="M5 8.9 L13.2 8.7 C12.8 7 13.8 5.8 15.3 6.1 C16.8 6.4 17.3 7.8 16.4 9.1 L19 8.7 L21.3 8.3 L21.7 17.6 L19.1 17.4 C15.6 18.9 12.4 17.8 12.2 15.2 C12.1 13.9 12.7 13.2 13.5 13 C12.4 12.7 11.9 11.9 12.2 10.9 L5 11.9 A1.5 1.5 0 0 1 5 8.9 Z"/><g class="ink"><path d="M19 8.9 L18.9 17.4"/><path d="M13.2 13.1 C14.6 12.9 15.7 13.1 16.5 13.6"/><path d="M13.1 15.8 C14.3 15.6 15.4 15.7 16.2 16.1"/></g><g class="ink"><path d="M2.6 5.9 L3.5 7.3"/><path d="M6.4 4.8 L6.2 6.4"/></g></svg>`,
+
+  /* ---- The Core batch's own marks (2026-08-15) ----
+     Ten charms shipped on the dashed-question-mark placeholder while their art was pending.
+     Core is about breadth across the shelf and about the collection talking about itself, so
+     the marks split the same way: four objects that mean "everywhere" (the signpost, the case,
+     the day sheet, the dice), and six that are the bracelet looking at itself.
+     Detail inside a solid shape is drawn in currentColor rather than knocked out in --paper,
+     because .charm renders `ink-fill` as outline only and a paper knockout would vanish. */
+
+  // a five-armed fingerpost, one arm per game type — five ways off the same corner
+  signpost:`<svg viewBox="0 0 24 24"><path class="ink" stroke-width="1.4" d="M5 21.4 H19"/><rect class="ink-fill" x="11.2" y="1.8" width="1.6" height="19.6" rx="0.6"/><g class="ink" fill="none" stroke-width="1.2"><path d="M11.4 2.6 H6.1 L4.1 4.1 L6.1 5.6 H11.4"/><path d="M12.6 6.5 H18.6 L20.6 8 L18.6 9.5 H12.6"/><path d="M11.4 10.4 H5 L3 11.9 L5 13.4 H11.4"/><path d="M12.6 14.3 H19.2 L21.2 15.8 L19.2 17.3 H12.6"/><path d="M11.4 18.2 H6.7 L4.7 19.7 L6.7 21.2 H11.4"/></g></svg>`,
+  // the case, packed and stickered — every corner of the shelf, visited
+  suitcase:`<svg viewBox="0 0 24 24"><path class="ink" fill="none" stroke-width="1.4" d="M9.4 7.4 V6 A2.6 2.6 0 0 1 14.6 6 V7.4"/><rect class="ink-fill" x="2.6" y="7.4" width="18.8" height="13.2" rx="1.8"/><g class="ink" stroke-width="1.15"><path d="M6.6 7.6 V20.4"/><path d="M8.3 7.6 V20.4"/></g><g fill="currentColor" stroke="none"><rect x="6.2" y="12.6" width="2.5" height="1.6" rx="0.6"/><path d="M13.4 10.6 L14.2 12.25 L16 12.5 L14.7 13.8 L15 15.6 L13.4 14.75 L11.8 15.6 L12.1 13.8 L10.8 12.5 L12.6 12.25 Z"/><circle cx="18.6" cy="11.4" r="1.35"/><rect x="16.8" y="16.2" width="3.6" height="2.4" rx="0.5"/></g></svg>`,
+  // one day torn off the block, three different marks stamped on it before it came off
+  daysheet:`<svg viewBox="0 0 24 24"><g class="ink-fill"><rect x="7.5" y="1.4" width="1.8" height="4" rx="0.9"/><rect x="14.7" y="1.4" width="1.8" height="4" rx="0.9"/></g><path class="ink-fill" d="M3.8 5.2 H20.2 V18.8 L17.4 21.6 L14.6 19.2 L12 21.6 L9.4 19.2 L6.6 21.6 L3.8 18.8 Z"/><path class="ink" stroke-width="1.1" d="M4 8.6 H20"/><g fill="currentColor" stroke="none"><path d="M7.5 11.4 L8.2 12.9 L9.85 13.15 L8.65 14.3 L8.95 15.9 L7.5 15.15 L6.05 15.9 L6.35 14.3 L5.15 13.15 L6.8 12.9 Z"/><path d="M12 16.1 C12 16.1 10.1 14.7 10.1 13.4 C10.1 12.7 10.65 12.25 11.2 12.25 C11.55 12.25 11.83 12.43 12 12.75 C12.17 12.43 12.45 12.25 12.8 12.25 C13.35 12.25 13.9 12.7 13.9 13.4 C13.9 14.7 12 16.1 12 16.1 Z"/><path d="M16.5 11.7 L18.4 14.2 L16.5 16.7 L14.6 14.2 Z"/></g></svg>`,
+  // one die still in the air, the throw drawn in behind it — the first pick you did not make
+  diecast:`<svg viewBox="0 0 24 24"><path class="ink" fill="none" stroke-width="1.1" opacity="0.4" stroke-linecap="round" stroke-dasharray="0.1 2" d="M2.4 13.2 C1.8 6.8 6.2 2.4 12.6 2.8"/><g transform="rotate(-13 13.4 13.6)"><rect class="ink-fill" x="7.4" y="7.6" width="12" height="12" rx="2.4"/><g fill="currentColor" stroke="none"><circle cx="10.4" cy="10.6" r="1.15"/><circle cx="16.4" cy="10.6" r="1.15"/><circle cx="13.4" cy="13.6" r="1.15"/><circle cx="10.4" cy="16.6" r="1.15"/><circle cx="16.4" cy="16.6" r="1.15"/></g></g><g class="ink" stroke-width="1.15" opacity="0.5"><path d="M1.4 16.8 H3.4"/><path d="M2.4 19.6 H4.6"/></g></svg>`,
+  // two dice landed on double six and a halo tilting over them — twelve, one short of thirteen,
+  // which is exactly the number the angels are rolling their eyes at
+  dicehalo:`<svg viewBox="0 0 24 24"><ellipse class="ink" fill="none" cx="12" cy="4.2" rx="4.6" ry="1.5" transform="rotate(-13 12 4.2)"/><g transform="rotate(-8 7.2 15.4)"><rect class="ink-fill" x="2.4" y="10.6" width="9.6" height="9.6" rx="2"/><g fill="currentColor" stroke="none"><circle cx="4.9" cy="13.1" r="0.82"/><circle cx="9.5" cy="13.1" r="0.82"/><circle cx="4.9" cy="15.4" r="0.82"/><circle cx="9.5" cy="15.4" r="0.82"/><circle cx="4.9" cy="17.7" r="0.82"/><circle cx="9.5" cy="17.7" r="0.82"/></g></g><g transform="rotate(9 17 14.4)"><rect class="ink-fill" x="12.2" y="9.6" width="9.6" height="9.6" rx="2"/><g fill="currentColor" stroke="none"><circle cx="14.7" cy="12.1" r="0.82"/><circle cx="19.3" cy="12.1" r="0.82"/><circle cx="14.7" cy="14.4" r="0.82"/><circle cx="19.3" cy="14.4" r="0.82"/><circle cx="14.7" cy="16.7" r="0.82"/><circle cx="19.3" cy="16.7" r="0.82"/></g></g></svg>`,
+  // a ring with the stones set right round the band — forty of them and still shining
+  jewelring:`<svg viewBox="0 0 24 24"><circle class="ink" fill="none" stroke-width="1.8" cx="12" cy="15.6" r="6"/><path class="ink-fill" d="M9.4 3.8 H14.6 L17.2 7.8 L12 11.4 L6.8 7.8 Z"/><g class="ink" stroke-width="0.85" opacity="0.7"><path d="M6.8 7.8 H17.2"/><path d="M9.4 3.8 L8.5 7.8 L12 11.4"/><path d="M14.6 3.8 L15.5 7.8 L12 11.4"/></g><g class="ink" stroke-width="0.95" opacity="0.5"><path d="M20 4 L18.9 5.2"/><path d="M21.4 7.8 L19.9 8.1"/></g></svg>`,
+  // the wire strung across the desk with the bulbs hung off it — eighty lit, and counting
+  fairylights:`<svg viewBox="0 0 24 24"><path class="ink" fill="none" stroke-width="1.25" d="M0.8 4.4 C5.4 10.6 18.6 10.6 23.2 4.4"/><path class="ink" stroke-width="1" d="M3.39 6.77 V8.27"/><rect class="ink-fill" x="2.54" y="8.27" width="1.7" height="1.3" rx="0.35"/><path class="ink-fill" d="M2.64 9.47 C0.49 10.47, 0.69 14.47, 3.39 14.47 C6.09 14.47, 6.29 10.47, 4.14 9.47 Z"/><path class="ink" stroke-width="1" d="M8.83 8.78 V11.18"/><rect class="ink-fill" x="7.98" y="11.18" width="1.7" height="1.3" rx="0.35"/><path class="ink-fill" d="M8.08 12.38 C5.93 13.38, 6.13 17.38, 8.83 17.38 C11.53 17.38, 11.73 13.38, 9.58 12.38 Z"/><path class="ink" stroke-width="1" d="M15.17 8.78 V9.68"/><rect class="ink-fill" x="14.32" y="9.68" width="1.7" height="1.3" rx="0.35"/><path class="ink-fill" d="M14.42 10.88 C12.27 11.88, 12.47 15.88, 15.17 15.88 C17.87 15.88, 18.07 11.88, 15.92 10.88 Z"/><path class="ink" stroke-width="1" d="M20.61 6.77 V8.57"/><rect class="ink-fill" x="19.76" y="8.57" width="1.7" height="1.3" rx="0.35"/><path class="ink-fill" d="M19.86 9.77 C17.71 10.77, 17.91 14.77, 20.61 14.77 C23.31 14.77, 23.51 10.77, 21.36 9.77 Z"/><g class="ink" stroke-width="0.9" opacity="0.4"><path d="M1.2 12.6 L2.3 12.9"/><path d="M6.4 17.2 L7.4 16.4"/><path d="M17.6 17.6 L16.6 16.8"/><path d="M22.6 12.6 L21.5 12.9"/></g></svg>`,
+  // the open signature sewn shut down its fold, one thread doing the whole gathering and
+  // knotted off at the head — a theme finished end to end
+  boundthread:`<svg viewBox="0 0 24 24"><g class="ink" fill="none" stroke-width="1.25"><path d="M11.3 4.6 C8.7 3.4 5.8 3.3 3.2 4.4 V19.2 C5.8 18.1 8.7 18.2 11.3 19.4"/><path d="M12.7 4.6 C15.3 3.4 18.2 3.3 20.8 4.4 V19.2 C18.2 18.1 15.3 18.2 12.7 19.4"/></g><path class="ink" fill="none" stroke-width="2" stroke-linecap="round" stroke-dasharray="2.3 2.1" d="M12 5.6 V19.8"/><path class="ink" fill="none" stroke-width="1.2" stroke-linecap="round" d="M12 5 C13.7 3.8 14.7 2.7 14.3 1.6"/><circle class="ink-fill" cx="12" cy="5.1" r="0.9"/></svg>`,
+  // three stones stacked and left standing — one per theme, gathered
+  cairn:`<svg viewBox="0 0 24 24"><path class="ink-fill" d="M4 20.6 L5 18.2 L10.2 17.4 L18.6 18.1 L20 20 L18.2 21.5 L5.6 21.4 Z"/><path class="ink-fill" d="M6.2 15.6 L6.8 12.9 L11 12.1 L16.4 12.8 L17.4 14.8 L15.8 16.1 Z"/><path class="ink-fill" d="M8.8 10.6 L9.4 8 L12.2 7.1 L15 7.9 L15.6 9.7 L14.3 10.9 Z"/><circle class="ink-fill" cx="21" cy="20.4" r="1.05"/></svg>`,
+  // three charms coming down onto the same page at once, the drop still showing above them
+  threecharms:`<svg viewBox="0 0 24 24"><path class="ink" stroke-width="1.5" d="M2.6 21 H21.4"/><g class="ink" stroke-width="1" opacity="0.42"><path d="M3.4 6.2 L4.7 8"/><path d="M9.2 7.6 L10.5 9.4"/><path d="M15 6.6 L16.3 8.4"/></g><path class="ink-fill" d="M6.2 9.9 L7.3 12.2 L9.8 12.55 L8 14.3 L8.42 16.75 L6.2 15.6 L3.98 16.75 L4.4 14.3 L2.6 12.55 L5.1 12.2 Z"/><path class="ink-fill" d="M12 18.6 C12 18.6 9 16.4 9 14.5 C9 13.4 9.85 12.7 10.75 12.7 C11.3 12.7 11.75 13 12 13.45 C12.25 13 12.7 12.7 13.25 12.7 C14.15 12.7 15 13.4 15 14.5 C15 16.4 12 18.6 12 18.6 Z"/><path class="ink-fill" d="M17.8 10.4 L20.4 13.6 L17.8 16.8 L15.2 13.6 Z"/></svg>`,
 };
 
 /* ---------- Mastery marks ----------
@@ -2691,8 +2723,7 @@ export const ACHIEVEMENTS = [
      per-page stopwatch (roundTimes) and the log of submissions that never resolved a page
      (roundRejects) — so every one of them is winnable again on the very next game and none
      can be missed by having already passed some milestone. The end-of-run half all demand a
-     FULL thirteen pages, and the mid-run half unlock the moment they happen. Icons are
-     placeholders pending the batch's real marks. */
+     FULL thirteen pages, and the mid-run half unlock the moment they happen. */
   { id: "answer-all-13-rounds-under-3s", name: "Faster Than The Wind", desc: "Answer all 13 rounds in under 3s each", secret: false, icon: "gustpage", sitting: true, earn: { cat: "difficulty" } },
   // Easy and Relaxed only, and that is the charm rather than a limitation of it: Normal's
   // clock is 10s, so "every answer over 10 seconds" cannot happen there, and Hard and Ultra
@@ -2713,9 +2744,9 @@ export const ACHIEVEMENTS = [
      Every one of these is a read against something the notebook already keeps — the lifetime
      per-word tally, the run history, the metrics record, the calendar ledger, or the run's own
      arrays. Nothing here adds a stored field, and nothing here can be locked out: each is a
-     standing condition that comes round again rather than a window that closes. Icons are
-     placeholders pending the batch's real marks; the secret ones join HIDDEN_ACH_IDS in the
-     batch's secrecy phase, which is a deliberate edit of its own. */
+     standing condition that comes round again rather than a window that closes. The secret
+     ones join HIDDEN_ACH_IDS in the batch's secrecy phase, which is a deliberate edit of its
+     own. */
   { id: "perfect-13-all-one-album", name: "This Is Our Place", desc: "Score 13/13 all from one album", secret: false, icon: "onesleeve", sitting: true, earn: { cat: "difficulty" } },
   /* The nemesis thread. The tally is folded once per finished game, so a word missed three
      times in one run counts once — which is exactly what "three separate games" wants. */
@@ -2778,30 +2809,30 @@ export const ACHIEVEMENTS = [
 
      None can be locked out. The two ledgers they read (SHELF_TYPES and the dice counter) only
      ever grow, the day-scoped one comes round again every day, and the meta rungs are
-     re-evaluated after every unlock. Icons are placeholders pending the batch's real marks. */
-  { id: "finish-run-in-5-game-types", name: "On Every Corner", desc: "Finish a run in five different game types", secret: false, icon: "placeholder" },
-  { id: "finish-run-in-every-game-type", name: "I Can Go Anywhere", desc: "Finish a run in every game type", secret: false, icon: "placeholder" },
+     re-evaluated after every unlock. */
+  { id: "finish-run-in-5-game-types", name: "On Every Corner", desc: "Finish a run in five different game types", secret: false, icon: "signpost" },
+  { id: "finish-run-in-every-game-type", name: "I Can Go Anywhere", desc: "Finish a run in every game type", secret: false, icon: "suitcase" },
   // The only one of the three scoped to a sitting rather than a lifetime, which is why it is
   // the only one of the three worth pinning as a goal.
-  { id: "finish-3-game-types-one-day", name: "Every Single Day", desc: "Finish runs in three different game types in one day", secret: false, icon: "placeholder", sitting: true },
+  { id: "finish-3-game-types-one-day", name: "Every Single Day", desc: "Finish runs in three different game types in one day", secret: false, icon: "daysheet", sitting: true },
   /* The dice. The randomiser has never earned a single charm despite being the one launcher
      that can open every door in the notebook, which is exactly the breadth Core is about. Two
      halves of one line, for the two rungs. */
-  { id: "play-first-dice-pick", name: "Devils Roll The Dice", desc: "Play a run the dice picked for you", secret: false, icon: "placeholder", sitting: true },
-  { id: "play-13-dice-picks", name: "Angels Roll Their Eyes", desc: "Play 13 runs the dice picked for you", secret: false, icon: "placeholder" },
+  { id: "play-first-dice-pick", name: "Devils Roll The Dice", desc: "Play a run the dice picked for you", secret: false, icon: "diecast", sitting: true },
+  { id: "play-13-dice-picks", name: "Angels Roll Their Eyes", desc: "Play 13 runs the dice picked for you", secret: false, icon: "dicehalo" },
   /* The collection talking about itself. Self-referential like the four meta charms already
      here, so they are evaluated after every unlock and their price moves on its own as the
      roster grows — which is the honest behaviour for a charm whose subject IS the roster. */
-  { id: "earn-40-achievements", name: "Still Bejeweled", desc: "Earn 40 achievements", secret: false, icon: "placeholder" },
-  { id: "earn-80-achievements", name: "A String Of Lights", desc: "Earn 80 achievements", secret: false, icon: "placeholder" },
+  { id: "earn-40-achievements", name: "Still Bejeweled", desc: "Earn 40 achievements", secret: false, icon: "jewelring" },
+  { id: "earn-80-achievements", name: "A String Of Lights", desc: "Earn 80 achievements", secret: false, icon: "fairylights" },
   // A whole theme, not a charm from each — the rung above The Things That I Love rather than a
   // second reading of it. The smallest themes run to three charms, so this is real but not a wall.
-  { id: "complete-one-charm-theme", name: "One Single Thread Of Gold", desc: "Earn every charm in one theme", secret: false, icon: "placeholder" },
-  { id: "complete-three-charm-themes", name: "We Gather Stones", desc: "Earn every charm in three themes", secret: false, icon: "placeholder" },
+  { id: "complete-one-charm-theme", name: "One Single Thread Of Gold", desc: "Earn every charm in one theme", secret: false, icon: "boundthread" },
+  { id: "complete-three-charm-themes", name: "We Gather Stones", desc: "Earn every charm in three themes", secret: false, icon: "cairn" },
   // Not "All At Once", which is the obvious name and sits one row from Everything & Nothing All
   // At Once on this very page. Three Times is the same line's other half of the idea and reads
   // as its own charm.
-  { id: "earn-3-achievements-one-run", name: "Three Times", desc: "Earn three charms in a single run", secret: false, icon: "placeholder", sitting: true, earn: { cat: "difficulty" } },
+  { id: "earn-3-achievements-one-run", name: "Three Times", desc: "Earn three charms in a single run", secret: false, icon: "threecharms", sitting: true, earn: { cat: "difficulty" } },
   { id: "defeat-first-challenge",       name: "Ready For Combat", desc: "Defeat your first challenge",           secret: false, icon: "bow", sitting: true, earn: { cat: "challenge" } },
   { id: "defeat-every-challenge",      name: "Get The Crown",    desc: "Defeat every challenge",                secret: false, icon: "flask" },
   { id: "unlock-every-challenge",      name: "I Like Shiny Things", desc: "Unlock every challenge",                secret: false, icon: "rings" },
