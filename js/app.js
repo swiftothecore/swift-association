@@ -5805,16 +5805,13 @@ let bonusDdIndex = -1;
 function bonusRankMatches(query) {
   const q = normalizeTitle(query);
   if (!q) return [];
-  const compactQuery = q.replace(/ /g, "");
   const scored = [];
   for (const song of bonusSongs()) {
-    const normalIdx = song._norm.indexOf(q);
     // The final title judge already forgives missing or misplaced spaces. Mirror that
     // leniency here so "illicita" can suggest "illicit affairs" as the player types.
-    const compactIdx = normalIdx === -1 ? song._norm.replace(/ /g, "").indexOf(compactQuery) : normalIdx;
-    const idx = normalIdx === -1 ? compactIdx : normalIdx;
-    if (idx === -1) continue;
-    scored.push({ song, rank: idx === 0 ? 0 : 1, idx });
+    const match = titleMatchScore(song._norm, q);
+    if (!match) continue;
+    scored.push({ song, ...match });
   }
   scored.sort((a, b) => a.rank - b.rank || a.idx - b.idx || a.song.title.localeCompare(b.song.title));
   return scored.slice(0, 6).map((s) => s.song);
@@ -13738,22 +13735,32 @@ function resolveTypedTitle(raw) {
 }
 
 /* ---------- Dropdown (searches whole catalog) ---------- */
+// Rank a normalized title against a normalized query by how much forgiveness the
+// match needed. In particular, a real exact title must beat a prefix found only after
+// removing spaces ("Ours" before "Our Song" for "ours").
+function titleMatchScore(title, query) {
+  const compactTitle = title.replace(/ /g, "");
+  const compactQuery = query.replace(/ /g, "");
+  if (title === query) return { rank: 0, idx: 0 };
+  if (compactTitle === compactQuery) return { rank: 1, idx: 0 };
+  const normalIdx = title.indexOf(query);
+  if (normalIdx === 0) return { rank: 2, idx: 0 };
+  const compactIdx = compactTitle.indexOf(compactQuery);
+  if (compactIdx === 0) return { rank: 3, idx: 0 };
+  if (normalIdx > 0) return { rank: 4, idx: normalIdx };
+  if (compactIdx > 0) return { rank: 5, idx: compactIdx };
+  return null;
+}
+
 function rankMatches(query) {
   const q = normalizeTitle(query);
   if (!q) return [];
-  const compactQuery = q.replace(/ /g, "");
   const scored = [];
   for (const song of allSongs) {
-    const t = song._norm;
-    const normalIdx = t.indexOf(q);
-    // Match the same compact title form used by the submission fallback, while
-    // preserving ordinary spaced matching and its existing ranking where possible.
-    const compactIdx = normalIdx === -1 ? t.replace(/ /g, "").indexOf(compactQuery) : normalIdx;
-    const idx = normalIdx === -1 ? compactIdx : normalIdx;
-    if (idx === -1) continue;
+    const match = titleMatchScore(song._norm, q);
+    if (!match) continue;
     if (!roundAcceptsSong(song)) continue;   // hide rule-breaking suggestions
-    const rank = idx === 0 ? 0 : 1;
-    scored.push({ song, rank, idx });
+    scored.push({ song, ...match });
   }
   scored.sort((a, b) => a.rank - b.rank || a.idx - b.idx || a.song.title.localeCompare(b.song.title));
   return scored.slice(0, 6).map((s) => s.song);
