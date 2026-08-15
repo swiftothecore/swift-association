@@ -42,12 +42,44 @@ export function wordVariants(word) {
   return alts;
 }
 
+// A handful of prompt words have an UNRELATED word sitting one silent "e" away, and English
+// spells that other word's inflections as the prompt word plus an ordinary suffix: star + ed
+// and stare + d are the same five letters, so "he stared at me" answered the word "star".
+// No rule separates these — the consonant-doubling rule that wrongly gives car→carry is the
+// same one that rightly gives star→starry — so the collisions are named instead.
+// Each list is the OTHER word's family, never the prompt word's own: scar keeps scarred,
+// scarring and scars, it only loses the forms that belong to "scare".
+// Not listed, deliberately: breath/breathe, which are one family (breathed is a form of the
+// prompt word, not a false friend), and mad/made, bar/bare-as-a-noun and suit/suite, which
+// can't collide because the tail has no bare "e" to reach the other word's base form.
+export const FALSE_FRIENDS = {
+  bar:  ["bared", "bares", "baring", "barer", "barest"],                        // bare
+  car:  ["cared", "cares", "caring", "carer", "carers",                         // care
+         "carry", "carried", "carries", "carrier"],                             // carry
+  plan: ["planed", "planes", "planing"],                                        // plane
+  scar: ["scared", "scares", "scaring", "scary", "scarier", "scariest"],        // scare
+  spin: ["spines"],                                                             // spine
+  star: ["stared", "stares", "staring", "starin"],                              // stare
+};
+// A zero-width veto to sit just inside the leading \b, so a false friend can never be the
+// token the alternation lands on. Empty for the ~727 words with nothing to disown.
+export function falseFriendGuard(word) {
+  const bad = FALSE_FRIENDS[word.toLowerCase()];
+  return bad ? "(?!(?:" + bad.map(escapeRegExp).join("|") + ")\\b)" : "";
+}
+// The lenient alternation, guarded, ready to drop inside a group. Every caller that builds
+// its own regex out of wordVariants should use this instead, so a form the matcher refuses
+// can never still be the one a card highlights.
+export function variantBody(word) {
+  return falseFriendGuard(word) + "(?:" + wordVariants(word).join("|") + ")";
+}
+
 // Lenient (strict falsy) also matches the inflected forms above (cheat→cheats);
 // strict requires the exact word. `strict` is an explicit boolean here — the game
 // wrapper resolves its default from effectiveStrict() before calling.
 export function wordRegex(word, strict) {
   if (strict) return new RegExp("\\b" + escapeRegExp(word) + "\\b", "i");
-  return new RegExp("\\b(?:" + wordVariants(word).join("|") + ")\\b", "i");
+  return new RegExp("\\b" + variantBody(word) + "\\b", "i");
 }
 
 // The first lyric line bearing the word (trimmed). Prioritise a line with the *exact*
@@ -75,7 +107,7 @@ export function highlightWord(line, word, strict) {
   if (strict) body = escapeRegExp(word);
   else {
     const exactRx = new RegExp("\\b" + escapeRegExp(word) + "\\b", "i");
-    body = exactRx.test(line) ? escapeRegExp(word) : wordVariants(word).join("|");
+    body = exactRx.test(line) ? escapeRegExp(word) : variantBody(word);
   }
   const rx = new RegExp("\\b(" + body + ")\\b", "ig");
   return escapeHtml(line).replace(rx, "<mark>$1</mark>");

@@ -6,7 +6,7 @@
 // its section and per-section line number without re-parsing strings.
 import { escapeHtml, escapeRegExp, fuzzySubstringRatio } from "../js/util.js";
 import "../js/credential-guard.js";
-import { wordRegex, wordVariants } from "../js/match.js";
+import { wordRegex, variantBody } from "../js/match.js";
 import { ALBUM_COLORS, SEARCH_KEY } from "../js/config.js";
 import { canShare, shareOrCopy } from "../js/share.js";
 
@@ -154,7 +154,7 @@ function markRanges(line, ranges) {
 function termBody(line, term, strict) {
   if (strict) return escapeRegExp(term);
   const exactRx = new RegExp("\\b" + escapeRegExp(term) + "\\b", "i");
-  return exactRx.test(line) ? escapeRegExp(term) : wordVariants(term).join("|");
+  return exactRx.test(line) ? escapeRegExp(term) : variantBody(term);
 }
 function highlightTerms(line, terms, strict) {
   const body = terms.map((t) => termBody(line, t, strict)).join("|");

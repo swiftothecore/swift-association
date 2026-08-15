@@ -52,7 +52,7 @@ import { buildBraceletSVG, charmPreviewSVG, randomCharmForBead } from "./bracele
 import { exportBraceletCard, copyBraceletCard, buildCardSVG, fontFaceCss } from "./braceletcard.js";
 import { exportSleeveCard, copySleeveCard, buildSleeveSVG } from "./sleevecard.js";
 import { sfx } from "./sound.js";
-import { wordRegex as wordRegexCore, extractLineWithWord as extractLineWithWordCore, highlightWord as highlightWordCore, wordVariants } from "./match.js";
+import { wordRegex as wordRegexCore, extractLineWithWord as extractLineWithWordCore, highlightWord as highlightWordCore, variantBody } from "./match.js";
 import { buildLineIndex, buildSlipContext, buildSlipPuzzle, buildNamePuzzle,
          buildBlankPuzzle, buildRedactedPuzzle,
          buildWordIndex, buildOnlyHerePuzzle, onlyHerePoints, ONLY_HAND,
@@ -1099,7 +1099,7 @@ function pickEra() {
 function applyEra(era) { document.body.setAttribute("data-era", era); }
 
 /* ---------- Matching helpers ---------- */
-// The pure matching core (wordVariants/wordRegex/extractLineWithWord/highlightWord)
+// The pure matching core (variantBody/wordRegex/extractLineWithWord/highlightWord)
 // lives in js/match.js so the searcher reuses the exact same logic. The wrappers below
 // add the game's defaults — strictness from effectiveStrict() and display censoring —
 // then delegate to that core.
@@ -1213,7 +1213,7 @@ function highlightWord(line, word, strict) {
 function matchedVariant(line, word) {
   if (effectiveStrict()) return "";
   if (new RegExp("\\b" + escapeRegExp(word) + "\\b", "i").test(line)) return "";
-  const m = line.match(new RegExp("\\b(" + wordVariants(word).join("|") + ")\\b", "i"));
+  const m = line.match(new RegExp("\\b(" + variantBody(word) + ")\\b", "i"));
   return m ? m[1] : "";
 }
 // How squarely a song answers the word, for ordering a reveal: 0 holds the word itself,
@@ -18486,7 +18486,7 @@ function buildDevApi() {
     forms: (word) => {
       const w = (word || currentWord || "").toLowerCase();
       if (!w) return null;
-      const rx = new RegExp("\\b(?:" + wordVariants(w).join("|") + ")\\b", "ig");
+      const rx = new RegExp("\\b" + variantBody(w) + "\\b", "ig");
       const tiers = { exact: new Set(), plural: new Set(), other: new Set() };
       const plRx = new RegExp("^" + escapeRegExp(w) + "e?s$", "i");
       for (const s of allSongs) {
