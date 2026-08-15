@@ -8070,11 +8070,9 @@ function buildSleeveMeta() {
    The meta is built LATE (inside the handler) rather than passed in, so a button that has
    been sitting on screen for a minute still exports what is on the page now. */
 
-/* Two shapes of button share that handler. The bracelet's is a worded one and says what it
-   is doing in its own label; the sleeve's is a mark set at the end of the card's footer, so
-   its wording lives in a hidden span and the visible answer is a state on the element (the
-   copy glyph swaps to a tick). Both read and write through this pair, and a button with no
-   hidden span keeps the old plain-text behaviour. */
+/* Both keepsake buttons are compact marks beside the object they copy, so their wording lives
+   in a hidden span and the visible answer is a state on the element (the copy glyph swaps to
+   a tick). These helpers still support a plain-text button if another keepsake needs one. */
 function keepsakeLabel(btn) {
   const sr = btn.querySelector(".sr-only");
   return sr ? sr.textContent : btn.textContent;

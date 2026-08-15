@@ -1338,12 +1338,22 @@ if (location.pathname.endsWith('/index.html')) {
       <div class="sub" id="finalSub">out of 13</div>
     </div>
 
-    <p class="bracelet-caption">the bracelet you made</p>
-    <div id="resultBracelet" class="bracelet bracelet-finished"></div>
-    <div class="bracelet-save">
-      <button id="saveBraceletBtn" class="btn-ghost" type="button"
-              data-tip="Copy bracelet to clipboard (shift-click to download)">Copy bracelet</button>
+    <div class="bracelet-caption-row">
+      <p class="bracelet-caption">the bracelet you made</p>
+      <button id="saveBraceletBtn" class="bracelet-copy" type="button"
+              data-tip="Copy bracelet to clipboard (shift-click to download)">
+        <svg viewBox="0 0 24 24" class="keepsake-ic keepsake-ic--copy" aria-hidden="true">
+          <path d="M9.7 7 L9.7 4.3 A1.8 1.8 0 0 1 11.5 2.5 L19.2 2.5 A1.8 1.8 0 0 1 21 4.3 L21 14.7 A1.8 1.8 0 0 1 19.2 16.5 L16.6 16.5"/>
+          <rect x="3" y="7" width="13.5" height="14" rx="1.9"/>
+          <path d="M6.2 12.4 L13.3 12.4 M6.2 16.2 L10.8 16.2"/>
+        </svg>
+        <svg viewBox="0 0 24 24" class="keepsake-ic keepsake-ic--kept" aria-hidden="true">
+          <path d="M4.4 12.9 L9.6 18.2 L19.6 5.9"/>
+        </svg>
+        <span class="sr-only">Copy bracelet</span>
+      </button>
     </div>
+    <div id="resultBracelet" class="bracelet bracelet-finished"></div>
 
     <div id="namePrompt" class="name-prompt" style="display:none;">
       <p>sign your notebook — you will be remembered</p>

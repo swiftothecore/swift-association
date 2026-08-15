@@ -3924,19 +3924,33 @@
   }
 
   .bracelet-finished { max-width: 440px; margin: 0 auto 10px; }
+  .bracelet-caption-row {
+    display: flex; align-items: center; justify-content: center; gap: 7px;
+    margin: 14px 0 0;
+  }
   .bracelet-caption {
     text-align: center; font-family: var(--hand); font-size: calc(19px + var(--text-size-adjust));
-    color: var(--ink-soft); margin: 14px 0 0;
+    color: var(--ink-soft); margin: 0;
   }
 
-  /* "Save as PNG" — a quiet keepsake action tucked under the finished strand */
-  .bracelet-save { text-align: center; margin: 10px 0 0; }
-  .bracelet-save .btn-ghost {
-    width: auto; margin: 0; padding: 6px 18px;
-    font-size: calc(12px + var(--text-size-adjust)); letter-spacing: 1px; color: var(--ink-soft);
+  /* A quiet keepsake action beside the finished strand's handwritten caption. */
+  .bracelet-copy {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 28px; height: 28px; padding: 0; flex: none;
+    border: 0; border-radius: 4px; background: transparent;
+    color: var(--ink-soft); cursor: pointer;
+    transition: color 0.18s ease, background-color 0.18s ease, transform 0.1s ease;
   }
-  .bracelet-save .btn-ghost:hover { color: var(--ink); }
-  .bracelet-save .btn-ghost[disabled] { opacity: 0.55; cursor: default; }
+  .bracelet-copy:hover { color: var(--ink); background: rgba(43,39,34,0.055); }
+  .bracelet-copy:active { transform: translateY(1px); }
+  .bracelet-copy:focus-visible { outline: 2px dotted rgba(43,39,34,0.5); outline-offset: 2px; }
+  .bracelet-copy[data-state="busy"] { opacity: 0.5; }
+  .bracelet-copy[data-state="kept"] { color: #c7951f; background: rgba(199,149,31,0.12); }
+  .bracelet-copy[data-state="kept"] .keepsake-ic--copy { display: none; }
+  .bracelet-copy[data-state="kept"] .keepsake-ic--kept { display: block; }
+  .bracelet-copy[data-state="failed"] { color: rgba(160,62,46,0.85); background: rgba(160,62,46,0.08); }
+  .bracelet-copy[disabled] { cursor: default; }
+  [data-reduce-motion="on"] .bracelet-copy { transition: none; }
 
   /* ---------- Results anthology — lines you wrote from memory (pressed-flower keepsake) ---------- */
   .verse-anthology {
