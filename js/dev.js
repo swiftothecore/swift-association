@@ -341,6 +341,20 @@ export function initDev(api) {
         btn("restore intros", () => { api.onboarding.quiet(false); toast("first impressions restored — reload"); })),
     row(btn("reset", () => { api.onboarding.reset(); toast("onboarding reset"); }, "warn"))));
 
+  // ---- The typing hint's fade -------------------------------------------------
+  // The instruction under the answer line teaches, then abbreviates, then retires, segment by
+  // segment, over dozens of pages. That is far too slow to watch, so age it by hand: pick a
+  // tier and, optionally, one segment. Applies to the open round immediately.
+  const thTierSel = select(["full", "short", "off"], (x) => x, (x) => x + " form");
+  const thSegSel = select(["", ...api.typingHint.ids()], (x) => x, (x) => x || "every segment");
+  body.append(section("typing hint",
+    row(thTierSel, thSegSel, btn("age to", () => {
+      api.typingHint.age(thTierSel.value, thSegSel.value || null);
+      toast(`${thSegSel.value || "all segments"} → ${thTierSel.value}`);
+    })),
+    row(btn("show pages seen", () => { readout.textContent = JSON.stringify(api.typingHint.state()); }),
+        btn("reset (teach again)", () => { api.typingHint.reset(); toast("typing hint reset"); }, "warn"))));
+
   // ---- Timer -----------------------------------------------------------------
   let frozen = false;
   const freezeBtn = btn("freeze", () => {

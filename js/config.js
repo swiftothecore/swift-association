@@ -133,6 +133,7 @@ export const DEFAULT_SETTINGS = {
   favouriteAlbum: "",       // era chosen in the first-run question ("" = never asked or skipped); surfaced on the profile
   firstMatchDone: false,    // has the player ever landed a correct answer (guards the one-time first-match celebration)
   seenCoachmarks: {},       // { [coachmarkId]: true } — just-in-time tips already shown, so each fires once
+  typingHintsSeen: {},      // { [segmentId]: pages shown } — the typing hint under the answer line fades per segment (see applyInputHints)
   // meta
   sound: false,             // opt-in; the synthesized palette lives in js/sound.js
   soundFeedback: true,      // correct, wrong and hint sounds

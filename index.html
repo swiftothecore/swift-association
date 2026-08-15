@@ -1313,7 +1313,10 @@ if (location.pathname.endsWith('/index.html')) {
       <!-- The shared tap grid for every tap-to-answer challenge (Sea of Songs, Odd One Out,
            Whose Line?). Each rule fills it with its own tiles; no typing on these pages. -->
       <div id="tapGrid" class="tap-grid" role="group" aria-label="Tap a song" hidden></div>
-      <p id="gameHint" class="hint">Enter accepts the top match</p>
+      <!-- The typing hint. Written by applyInputHints, which decides what this page accepts and
+           how much of it still needs saying — so it ships empty rather than with a default line
+           that could contradict the round about to open. -->
+      <p id="gameHint" class="hint" hidden></p>
       <button id="hintBtn" class="hint-btn" type="button" hidden>need a hint?</button>
       <div id="hintBox" class="hint-box" aria-live="polite"></div>
       <p id="excludedNote" class="excluded-note" aria-live="polite" style="display:none;"></p>

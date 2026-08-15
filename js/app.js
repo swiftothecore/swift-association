@@ -9087,41 +9087,138 @@ function foldRunProgress() {
     word: roundWords[i] || null,
   })));
 }
-function applyInputHints() {
-  const input = $("songInput");
-  const hint = $("gameHint");
+/* ---------- The typing hint under the answer line ----------
+   This used to be one long handwritten sentence, spliced together with a "·", printed under
+   every page forever. Nobody needs "Enter accepts the top match" on their four hundredth page,
+   and a run-on instruction is not a thing a songwriter's notebook would have on it.
+
+   So it is treated as what it is — functional UI — set in typewriter with the keys as little
+   pressed caps, and it FADES. It is built from SEGMENTS, each carrying its own id and its own
+   seen-count (settings.typingHintsSeen), and each segment teaches, then abbreviates to its
+   chips, then gets out of the way. Counting per segment rather than per player is the whole
+   point: a rule met for the first time on the five hundredth page still gets the full sentence,
+   because that segment's own count is still zero.
+
+   `sticky` segments never retire past the short form. Those are the ones saying THIS page is
+   not the usual page (a sung line, Common Thread, the switch after the last hint) or reading
+   out a resource that's running down (a hint budget). Both are news however long you've played.
+   Everything else — Enter takes the top match, Tab is a hint — is muscle memory, and goes. */
+const TYPE_HINT_FULL_PAGES = 8;    // pages a segment stays a full sentence
+const TYPE_HINT_SHORT_PAGES = 30;  // ...then chips only, until this many; then gone, unless sticky
+// Every segment id typeHintSegments can produce. Only the dev panel reads this (nothing in the
+// fade itself needs the roster) — keep it in step when a segment is added.
+const TYPE_HINT_IDS = ["common-word", "after-hint", "sing-line", "top-match", "no-suggestions",
+                       "verse-bonus", "hint-budget", "hint-key"];
+
+function keycap(label) { return `<kbd class="keycap">${label}</kbd>`; }
+// Touch, with no keyboard attached — a shortcut named here is a key the player doesn't have.
+function noKeyboard() {
+  return typeof matchMedia === "function" && matchMedia("(hover: none) and (pointer: coarse)").matches;
+}
+
+function typeHintSeen(id) {
+  const seen = settings.typingHintsSeen;
+  return (seen && typeof seen[id] === "number") ? seen[id] : 0;
+}
+function typeHintTier(seg) {
+  const n = typeHintSeen(seg.id);
+  if (n < TYPE_HINT_FULL_PAGES) return "full";
+  if (seg.sticky || n < TYPE_HINT_SHORT_PAGES) return "short";
+  return "off";
+}
+// Bank one showing of each segment currently on the page. Armed once per fresh round by
+// renderHintAffordance, so the re-renders within a page (a hint tier landing, a wager panel
+// coming down) can't spend a page's worth of teaching several times over.
+let typeHintCountArmed = false;
+function noteTypeHintsSeen(segs) {
+  if (!typeHintCountArmed) return;
+  typeHintCountArmed = false;
+  if (!segs.length) return;
+  if (!settings.typingHintsSeen || typeof settings.typingHintsSeen !== "object") settings.typingHintsSeen = {};
+  for (const seg of segs) settings.typingHintsSeen[seg.id] = typeHintSeen(seg.id) + 1;
+  saveSettings(settings);
+}
+
+// What this page will accept, as segments. Also sets the placeholder, which never fades: it
+// lives inside the empty input and vanishes the moment you type, so it costs nothing to keep.
+function typeHintSegments(input) {
   if (commonRuleActive()) {   // Common Thread: the answer is the one word running through the lines
     input.placeholder = "the word they all share…";
-    hint.textContent = "type the one word in all three lines, then Enter";
-    return;
+    return [{ id: "common-word", sticky: true,
+      full: `Type the one word running through all three lines, <span class="nowrap">then ${keycap("Enter")}.</span>`,
+      short: `${keycap("Enter")} the word all three share` }];
+  }
+  // The last hint puts the line itself on the page, which closes lyric-line answering (see
+  // submitAnswer) — so this is a genuine mid-page rule change and says so.
+  if (hintTier >= 3) {
+    input.placeholder = "now name the song…";
+    return [{ id: "after-hint", sticky: true,
+      full: "The line below is your clue. Name the song it comes from.",
+      short: "name the song the line is from" }];
   }
   // lyricModeNow, not currentMode.lyricOnly: Switch-Up borrows Normal's levers and picks the
   // answer type per PAGE, so a mode-level read would invite a title on its lyric pages and
   // submitAnswer would then refuse the very thing this line asked for.
   if (lyricModeNow()) {
     input.placeholder = "sing me the line with the word…";
-    hint.textContent = "write more of the line for a bigger verse bonus — Enter to answer";
-    return;
+    return [{ id: "sing-line", sticky: true,
+      full: "Sing the line the word is in. The more you write, the bigger the verse bonus.",
+      short: "sing the line the word is in" }];
   }
+  const segs = [];
   const suggesting = effectiveDropdown();
-  if (currentMode.titleOnly) {
-    // Title-only custom preset: a sung line is never accepted, so don't invite one.
-    input.placeholder = suggesting ? "type the title…" : "the full title…";
-    hint.textContent = suggesting ? "Enter accepts the top match — titles only" : "no suggestions — type the full title, then Enter";
+  if (suggesting) {
+    input.placeholder = currentMode.titleOnly ? "type the title…" : "a title… or sing me the line";
+    segs.push({ id: "top-match",
+      full: `Pick a suggestion, or <span class="nowrap">press ${keycap("Enter")}</span> for the top match.`,
+      short: `${keycap("Enter")} top match` });
   } else {
-    // Both halves name the WORD, because a sung line only counts when it's the line the
-    // word is in — an invitation to write "a lyric line" would be promising more than the
-    // verdict pays, and the player would find that out the hard way with the clock running.
-    input.placeholder = suggesting ? "a title… or sing me the line" : "the full title… or the line with the word";
-    hint.textContent = suggesting
-      ? "Enter accepts the top match — or write the line the word is in, for a verse bonus"
-      : "no suggestions — type the full title, or the real line the word is in, then Enter";
+    input.placeholder = currentMode.titleOnly ? "the full title…" : "the full title… or the line with the word";
+    segs.push({ id: "no-suggestions",
+      full: `No suggestions here. Type the full title, <span class="nowrap">then ${keycap("Enter")}.</span>`,
+      short: `${keycap("Enter")} the full title` });
+  }
+  // Title-only custom preset: a sung line is never accepted, so don't invite one. Everywhere
+  // else both halves name the WORD, because a sung line only counts when it's the line the
+  // word is in — an invitation to write "a lyric line" would be promising more than the
+  // verdict pays, and the player would find that out the hard way with the clock running.
+  if (!currentMode.titleOnly) {
+    segs.push({ id: "verse-bonus",
+      full: "Or write the line the word is in, for a verse bonus.",
+      short: "or the line, for a verse bonus" });
   }
   if (settings.enableHints !== false && currentMode.hint && gameType !== "daily" && hintBudgetLeft > 0) {
-    hint.textContent += hintBudgetActive()
-      ? ` · Tab for a hint (${hintBudgetLeft} left)`
-      : " · Tab for a hint";
+    // On a phone there is no Tab key to press and the "need a hint?" button is right there, so
+    // the shortcut is dead copy on touch. What isn't dead is a budget: that's a resource
+    // reading rather than an instruction, so it's worded without the key and never retires.
+    if (hintBudgetActive()) {
+      segs.push({ id: "hint-budget", sticky: true,
+        full: noKeyboard() ? `${hintBudgetLeft} hint${hintBudgetLeft === 1 ? "" : "s"} left on this run.`
+                           : `${keycap("Tab")} for a hint (${hintBudgetLeft} left)`,
+        short: noKeyboard() ? `${hintBudgetLeft} left` : `${keycap("Tab")} hint (${hintBudgetLeft})` });
+    } else if (!noKeyboard()) {
+      segs.push({ id: "hint-key",
+        full: `${keycap("Tab")} for a hint`,
+        short: `${keycap("Tab")} hint` });
+    }
   }
+  return segs;
+}
+
+function applyInputHints() {
+  const input = $("songInput");
+  const hint = $("gameHint");
+  const segs = typeHintSegments(input);
+  const shown = segs.filter((s) => typeHintTier(s) !== "off");
+  hint.innerHTML = shown.map((s) => `<span class="hint-bit">${s[typeHintTier(s)]}</span>`).join("");
+  // Sentences stack, chips sit in a row. Set off the whole caption rather than per segment:
+  // a sentence beside a chip on the same line reads as one broken sentence, which is exactly
+  // the run-on this replaced.
+  hint.dataset.form = shown.some((s) => typeHintTier(s) === "full") ? "long" : "short";
+  // Empty means empty: an all-retired hint must take its margin with it, or the input keeps
+  // sitting above a gap that nothing is in any more.
+  hint.hidden = shown.length === 0;
+  noteTypeHintsSeen(segs);
 }
 
 // Impostor: show the 🚩 flag bar for the whole run and re-enable it each fresh page.
@@ -9159,6 +9256,7 @@ function renderHintAffordance() {
   const box = $("hintBox");
   box.innerHTML = "";
   hintTier = 0;
+  typeHintCountArmed = true;   // one fresh page = one showing banked against the typing hint's fade
   applyInputHints();   // restore the default placeholder/hint (a prior round's tier-3 may have changed it)
   if (!btn) return;
   btn.classList.remove("urge");
@@ -9219,14 +9317,13 @@ function useHint() {
   playSound("hint");   // a small pip as the clue reveals (quietest in the palette; see sound.js)
 
   const outOfBudget = hintBudgetActive() && hintBudgetLeft <= 0;
+  // Re-read the typing hint against the new state: past tier 3 the line itself is on screen,
+  // which closes lyric-line answering (see submitAnswer), and on the way there a spent hint
+  // has just moved the budget the hint chip is reading out.
+  applyInputHints();
   if (btn && hintTier >= 3) {
     btn.textContent = "no more hints";
     btn.disabled = true;
-    // The line is now on screen, so lyric-line answering is off (see submitAnswer) —
-    // tell the player to name the song instead of typing back what they're reading.
-    const input = $("songInput");
-    input.placeholder = "now name the song…";
-    $("gameHint").textContent = "type the song title — the line below is your clue";
   } else if (btn && outOfBudget) {
     // Custom mode ran the hint budget dry before the full ladder — retire the affordance.
     btn.textContent = "no more hints";
@@ -18485,6 +18582,23 @@ function buildDevApi() {
       reset: () => {
         settings.firstRunDone = false; settings.favouriteAlbum = ""; settings.firstMatchDone = false; settings.seenCoachmarks = {};
         saveSettings(settings);
+      },
+    },
+    // The typing hint under the answer line (see applyInputHints). Its fade is measured in
+    // dozens of pages per segment, which is unwatchable in a sitting, so age it by hand: pass
+    // a tier ("full" | "short" | "off") and optionally one segment id from TYPE_HINT_IDS.
+    // Takes effect on the next page, or immediately if a game is already open.
+    typingHint: {
+      ids: () => TYPE_HINT_IDS.slice(),
+      state: () => Object.fromEntries(TYPE_HINT_IDS.map((id) => [id, typeHintSeen(id)])),
+      reset: () => { settings.typingHintsSeen = {}; saveSettings(settings); applyInputHints(); },
+      age: (tier = "short", id = null) => {
+        const pages = tier === "off" ? TYPE_HINT_SHORT_PAGES : tier === "short" ? TYPE_HINT_FULL_PAGES : 0;
+        if (!settings.typingHintsSeen || typeof settings.typingHintsSeen !== "object") settings.typingHintsSeen = {};
+        for (const key of (id ? [id] : TYPE_HINT_IDS)) settings.typingHintsSeen[key] = pages;
+        saveSettings(settings);
+        applyInputHints();
+        return window.__dev.typingHint.state();
       },
     },
     // Timer

@@ -4224,9 +4224,43 @@
   }
   body[data-reduce-motion="on"] .song-input.reject-pulse { animation: none; }
 
+  /* The typing hint under the answer line. Functional UI, so typewriter, not handwriting —
+     and the keys are drawn as keys instead of being spelled out mid-sentence. Segments are
+     laid out as a wrapping row so the fade from sentences to bare chips needs no separate
+     layout: the same row just carries shorter children. See applyInputHints for the fade. */
   .hint {
-    text-align: center; font-family: var(--hand); font-size: calc(17px + var(--text-size-adjust));
-    color: var(--ink-soft); margin-top: 16px;
+    display: flex; flex-wrap: wrap; justify-content: center; align-items: baseline;
+    column-gap: 18px; row-gap: 4px;
+    font-family: var(--type); font-size: calc(12px + var(--text-size-adjust));
+    line-height: 1.7; letter-spacing: 0.2px; color: var(--ink-soft); margin-top: 16px;
+  }
+  /* Whole sentences stack, one per line, on a measure short enough to stay readable; the
+     retired-to-chips form is a single centred row. */
+  .hint[data-form="long"] {
+    flex-direction: column; align-items: center; row-gap: 2px;
+    max-width: 68ch; margin-left: auto; margin-right: auto; text-align: center;
+  }
+  .hint[hidden] { display: none; }
+  .hint-bit { display: inline-flex; flex-wrap: wrap; justify-content: center; align-items: baseline; gap: 5px; }
+  /* A whole sentence is text, not a row of parts: let it wrap and centre as text, or a long
+     line breaks into flex lines that ragged-left themselves under a centred first line. */
+  .hint[data-form="long"] .hint-bit { display: block; }
+  /* A cap is an inline-block, so a line can break between it and the verb that introduces it,
+     stranding "press" at the end of one line and the key at the start of the next. */
+  .hint .nowrap { white-space: nowrap; }
+  /* A pressed key: a stamped cap on the page, sitting on its own shadow. Deliberately a touch
+     darker than the caption around it — it names a real key, so it should read as an object. */
+  .keycap {
+    display: inline-block; font-family: var(--type); font-size: calc(10px + var(--text-size-adjust));
+    line-height: 1; padding: 3px 5px 4px; color: var(--ink);
+    background: var(--paper-edge); border: 1px solid rgba(43, 39, 34, 0.28);
+    border-radius: 3px; box-shadow: 0 1px 0 rgba(43, 39, 34, 0.28);
+    transform: translateY(-1px);
+  }
+  /* Graphite edges disappear into a dark page, and a cap with no edge is just a word in a
+     different colour. Re-cut it in paper-white on the dark stock. */
+  :root[data-theme="dark"] .keycap {
+    border-color: rgba(236, 229, 214, 0.30); box-shadow: 0 1px 0 rgba(236, 229, 214, 0.20);
   }
 
   /* ---------- Dated marginalia (start screen, milestone and sacred-13 days) ----------
