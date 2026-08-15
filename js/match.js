@@ -6,23 +6,37 @@
 // app.js (they resolve effectiveStrict()/censor() and then delegate here).
 import { escapeRegExp, escapeHtml } from "./util.js";
 
-// Prefix-stem match: the word as the start of a token, plus any trailing letters,
-// so "gold" matches "golden", "dream" matches "dreamer". The leading \b keeps it
-// safe (e.g. "love" won't match "glove"/"clover"; "rain" won't match "train").
-// The plain [a-z']* tail only catches forms that ADD letters (love→lover/loved/loves,
-// gold→golden). These are the common inflections that CHANGE the stem first and so
-// slip past it: silent-e drop (love→loving), consonant+y→i (city→cities), and
-// final-consonant doubling (run→running). Each mutated stem is followed by a BOUNDED
-// inflectional suffix set (not [a-z']*), so time→timing matches but "timber" never does.
+// Prefix-stem match: the word as the start of a token, plus a suffix, so "gold"
+// matches "golden", "dream" matches "dreamer". The leading \b keeps it safe (e.g.
+// "love" won't match "glove"/"clover"; "rain" won't match "train").
+//
+// The tail is a BOUNDED suffix set, never [a-z']*. An open tail reads as harmless
+// until you count it: on the real catalogue it made "start/started/starting" answer
+// the word "star" (80 of star's 83 songs held no "star" at all), "since/sing" answer
+// "sin", "tears/teach" answer "tea", "earned" answer "ear". Over a hundred playable
+// words had a MAJORITY of their valid songs be words unrelated to the prompt. Bounding
+// the tail costs ~7% of matches, leaves every word still playable, and keeps the honest
+// derivations (gold→golden, dream→dreamer, slow→slowly, blood→bloody).
+// Deliberately absent: a bare "d". It would buy die→died but also car→card, men→mend,
+// ten→tend; the silent-e rule below buys the same three-letter past tenses cleanly.
+export const STEM_TAIL =
+  "(?:s|es|ed|ing|in|ings|er|ers|est|y|ies|ied|ier|iest|able|en|ly|less|ness|ful|'s|'d|'ll|'re|'ve)?";
+// These are the common inflections that CHANGE the stem first and so slip past even an
+// open tail: silent-e drop (love→loving), consonant+y→i (city→cities), and final-consonant
+// doubling (run→running). Each mutated stem is followed by its own bounded suffix set, so
+// time→timing matches but "timber" never does.
 // Bare "in" (not "in'") so it still matches before a trailing apostrophe — \bin'\b
 // can't (the apostrophe is non-word, killing the closing boundary), but \bin\b
 // backtracks onto the "n" inside "lovin'". Covers g-dropped forms either way.
 export const INFLECT = "(?:ing|in|ings|ed|er|ers|es|y|ies|ied|ier|iest|able)";
 export function wordVariants(word) {
   const w = word.toLowerCase();
-  const alts = [escapeRegExp(w) + "[a-z']*"];   // base: word + any added tail (unchanged behaviour)
+  const alts = [escapeRegExp(w) + STEM_TAIL];   // base: word + one bounded suffix
   if (w.length >= 5 && w.endsWith("ing")) alts.push(escapeRegExp(w.slice(0, -1)) + "'?");
-  if (w.length >= 4 && w.endsWith("e")) alts.push(escapeRegExp(w.slice(0, -1)) + INFLECT);
+  // Length 3, not 4: the three-letter -e words are exactly the ones the missing bare "d"
+  // would otherwise strand (die→died, lie→lied, eye→eyed, ice→icy), and shortening it here
+  // adds nothing else on the catalogue.
+  if (w.length >= 3 && w.endsWith("e")) alts.push(escapeRegExp(w.slice(0, -1)) + INFLECT);
   if (w.length >= 3 && /[^aeiou]y$/.test(w)) alts.push(escapeRegExp(w.slice(0, -1) + "i") + INFLECT);
   if (w.length >= 3 && /[^aeiou][aeiou][^aeiouwxy]$/.test(w)) alts.push(escapeRegExp(w + w.slice(-1)) + INFLECT);
   return alts;

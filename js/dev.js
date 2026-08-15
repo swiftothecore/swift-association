@@ -144,9 +144,21 @@ export function initDev(api) {
   // ---- Inspect ---------------------------------------------------------------
   const answerBox = mk("pre", { class: "dv-pre", style: "display:none" });
   let revealOpen = false;
+  // Which of the three readouts the shared box is showing. It has to be state, not just
+  // whatever the last click drew: the live tick below repaints the box every 600ms, so a
+  // renderer that only ran on click would flash and be overwritten before it could be read.
+  let revealView = "answers";
+  const showReveal = (view) => {
+    // Re-clicking the open view closes the drawer; clicking a different one switches to it.
+    revealOpen = !(revealOpen && revealView === view);
+    revealView = view;
+    answerBox.style.display = revealOpen ? "" : "none";
+    renderRevealBox();
+  };
   body.append(section("inspect",
-    row(btn("reveal answers", () => { revealOpen = !revealOpen; answerBox.style.display = revealOpen ? "" : "none"; renderReveal(); }),
-        btn("short lines", () => { revealOpen = true; answerBox.style.display = ""; renderShortLines(); }),
+    row(btn("reveal answers", () => showReveal("answers")),
+        btn("short lines", () => showReveal("shortLines")),
+        btn("word forms", () => showReveal("forms")),
         btn("log state", () => console.log("[dev] state", api.getState()))),
     answerBox));
 
@@ -172,8 +184,13 @@ export function initDev(api) {
     row(btn("rerun audit", runAchievementAudit)),
     achAuditOut));
   runAchievementAudit();
-  function renderReveal() {
+  function renderRevealBox() {
     if (!revealOpen) return;
+    if (revealView === "shortLines") renderShortLines();
+    else if (revealView === "forms") renderWordForms();
+    else renderReveal();
+  }
+  function renderReveal() {
     const st = api.getState();
     if (!st.valid.length) { answerBox.textContent = `"${st.word || "—"}" — no valid songs (or not in a round)`; return; }
     answerBox.textContent = `"${st.word}" → ${st.valid.length} song(s)\n` +
@@ -188,6 +205,18 @@ export function initDev(api) {
     if (!rows.length) { answerBox.textContent = `"${st.word || "—"}" — no sub-floor lines in this round's songs`; return; }
     answerBox.textContent = `"${st.word}" — ${rows.filter((r) => r.accepted).length}/${rows.length} short lines accepted\n` +
       rows.map((r) => `${r.accepted ? "✓" : "✗"} “${r.line}”  — ${r.title}${r.why ? "  (" + r.why + ")" : ""}`).join("\n");
+  }
+  // Which tokens the lenient matcher actually credits to this page's word, in the same
+  // three tiers the wrong-answer reveal sorts its cards by. The headline is the ratio:
+  // songs holding the word itself vs songs that only hold a form of it. A word whose
+  // ratio is lopsided is a page that can be won without ever meeting the prompt.
+  function renderWordForms() {
+    const f = api.forms();
+    if (!f) { answerBox.textContent = "no word on the page"; return; }
+    const tier = (label, list) => `${label}: ${list.length ? list.join(", ") : "—"}`;
+    answerBox.textContent =
+      `"${f.word}" → ${f.songs} song(s), ${f.holdingTheWord} holding the word itself\n` +
+      [tier("exact", f.exact), tier("plural", f.plural), tier("other forms", f.other)].join("\n");
   }
 
   // ---- Round control ---------------------------------------------------------
@@ -804,7 +833,7 @@ export function initDev(api) {
     const s = api.getState();
     readout.textContent = `${s.screen} · r${s.round}/${s.total} · ${s.score}pt · ${s.mode}/${s.gameType} · ${s.era || "—"}` +
       (s.word ? ` · “${s.word}”` : "") + (s.devDate ? ` · date:${s.devDate}` : "") + (s.devNoLog ? " · NOLOG" : "");
-    renderReveal();
+    renderRevealBox();
   }
   tick();
   setInterval(tick, 600);

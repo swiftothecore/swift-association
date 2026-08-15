@@ -1216,6 +1216,27 @@ function matchedVariant(line, word) {
   const m = line.match(new RegExp("\\b(" + wordVariants(word).join("|") + ")\\b", "i"));
   return m ? m[1] : "";
 }
+// How squarely a song answers the word, for ordering a reveal: 0 holds the word itself,
+// 1 holds only the plural / third-person ("ears"), 2 holds only a further-off form
+// ("early"). Shuffling the whole valid pool was showing a stem variant as the headline
+// example of a word the song never says, which reads as a mistake even when it isn't.
+// Sorting can't invent a closer song, so a word whose only holders are variants still
+// reveals variants — it just never leads with one while a real match is sitting behind it.
+function wordProximity(song, word) {
+  const lyrics = song.lyrics || "";
+  if (new RegExp("\\b" + escapeRegExp(word) + "\\b", "i").test(lyrics)) return 0;
+  if (new RegExp("\\b" + escapeRegExp(word) + "e?s\\b", "i").test(lyrics)) return 1;
+  return 2;
+}
+// Shuffle first, then sort by proximity — a stable sort keeps the shuffle as the
+// tiebreak, so the reveal stays varied within each tier instead of showing the same
+// song every time a word comes round. Strict rounds have no variants to sort.
+function rankByProximity(songs, word) {
+  const pool = shuffle(songs.slice());
+  if (effectiveStrict()) return pool;
+  const rank = new Map(pool.map((s) => [s, wordProximity(s, word)]));
+  return pool.sort((a, b) => rank.get(a) - rank.get(b));
+}
 
 /* ---------- Stats ---------- */
 // Collated view across every difficulty: summed plays / score distribution, the best
@@ -15266,7 +15287,9 @@ function showWrongFeedback(song, isTimeout) {
     for (const s of [deepCutRevealSong(pool), revealedHintSong()]) {
       if (s && pool.includes(s) && !leads.includes(s)) leads.push(s);
     }
-    const rest = shuffle(pool.filter((s) => !leads.includes(s)));
+    // Then the songs that hold the word most squarely, so the cards never lead with a
+    // stem variant while a song saying the actual word goes unshown.
+    const rest = rankByProximity(pool.filter((s) => !leads.includes(s)), currentWord);
     const ordered = [...leads, ...rest];
     if (bothRuleActive() && bothWords.length > 1) {
       // Both Of Us: the useful reveal isn't three more songs for one word, it's songs shown
@@ -18454,6 +18477,32 @@ function buildDevApi() {
       })),
     }),
     words: () => playableWords.slice(),
+    // Every distinct token in the catalogue the lenient matcher credits to a word, split by
+    // the same proximity tiers the reveal sorts on. The stem tail is the one rule whose cost
+    // is invisible from any screen — a word can look perfectly playable while nearly all its
+    // "valid" songs hold something else entirely (the open tail used to give "star" 83 songs,
+    // 80 of which never say it) — so any tweak to STEM_TAIL/INFLECT should be judged here
+    // first, on a handful of short words, before it is judged by playing.
+    forms: (word) => {
+      const w = (word || currentWord || "").toLowerCase();
+      if (!w) return null;
+      const rx = new RegExp("\\b(?:" + wordVariants(w).join("|") + ")\\b", "ig");
+      const tiers = { exact: new Set(), plural: new Set(), other: new Set() };
+      const plRx = new RegExp("^" + escapeRegExp(w) + "e?s$", "i");
+      for (const s of allSongs) {
+        for (const m of s.lyrics.matchAll(rx)) {
+          const tok = m[0].toLowerCase();
+          tiers[tok === w ? "exact" : plRx.test(tok) ? "plural" : "other"].add(tok);
+        }
+      }
+      const songs = validSongs(w, false, false);
+      return {
+        word: w,
+        songs: songs.length,
+        holdingTheWord: songs.filter((s) => wordProximity(s, w) === 0).length,
+        exact: [...tiers.exact], plural: [...tiers.plural].sort(), other: [...tiers.other].sort(),
+      };
+    },
     // Every sub-floor line this round would accept as a whole-line answer, with the
     // ones the guards throw out listed beside them and why. The rule is invisible from
     // the game screen (nothing announces which short lines are live), so this is the
