@@ -2064,6 +2064,13 @@ function checkMetaAchievements() {
 // satisfying a main-game charm, and the breadth ladder here is a main-game charm.
 function markRunBreadth(token, type) {
   if (devNoLog) return;
+  // The Very First Page. It lives here rather than in endGame's difficulty block because it
+  // asks for a finished game and nothing narrower, and every end path that counts as a game
+  // comes through this function. Hanging it off totalPlayed() meant a player whose first run
+  // was the daily — the friendliest way in — finished thirteen pages and got nothing, since
+  // daily deliberately skips the per-mode boards. The bonus shelf still can't earn it, for
+  // the same sandbox reason it doesn't call this at all.
+  unlock("first-game-finished");
   if (token && hasExploredEverything(markModeSeen(token))) unlock("play-every-required-mode");
   if (type) foldShelfBreadth(type);
   // Noon, so neither the timezone nor a DST shift can roll the parsed date onto its neighbour.
@@ -15727,7 +15734,9 @@ function endGame() {
     // Finally Clean — a majority win (7+/13) on the clock, no timeouts and no hints leaned on.
     if (timedMode && score >= 7 && gameTimeouts === 0 && hintsUsed === 0) unlock("win-with-no-hints-or-timeouts");
     if (currentMode.lyricOnly) unlock("finish-lyricist-game");
-    if (played >= 1) unlock("first-game-finished");
+    // The Very First Page used to sit at the head of this ladder on `played >= 1`. It moved to
+    // markRunBreadth, which every game-shaped end path calls, so the daily can earn it too. The
+    // rungs below are volume charms off the difficulty boards and stay counted that way.
     if (played >= 5) unlock("play-5-games");
     if (played >= 15) unlock("play-15-games");
     if (played >= 89) unlock("play-89-games");   // the top of that ladder
