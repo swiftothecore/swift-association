@@ -5996,7 +5996,11 @@
   .ach-latest-prev { left: 8px; }
   .ach-latest-next { right: 8px; }
   .ach-latest-arrow { width: 32px; height: 20px; }
-  .ach-latest-arrow::before { inset: 3% 0; transform: rotate(-2deg); }
+  /* These borrow .charm for the inked glyph only. The highlighter swipe is the notebook's
+     "you earned this" mark, and a nav button has earned nothing — worse, the real charm
+     wearing one sits an inch away, so the arrows would read as keepsakes too. Plain ink:
+     the corner position and the hover wash are affordance enough. */
+  .ach-latest-arrow::before { display: none; }
   .ach-latest:hover .ach-latest-nav:not(:disabled),
   .ach-latest:focus-within .ach-latest-nav:not(:disabled) { opacity: 1; transform: translateY(0); }
   .ach-latest-nav:hover { background: rgba(43,39,34,0.06); }
