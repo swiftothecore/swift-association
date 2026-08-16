@@ -15898,7 +15898,7 @@ function endGame() {
 
   // Reset any daily-only chrome left over from a previous daily results view.
   document.querySelector("#screen-results .podium-title").textContent = "Your best";
-  const staleShare = $("shareBtn");
+  const staleShare = $("shareStub");
   if (staleShare) staleShare.remove();
   $("namePrompt").style.display = "none";
   hideNewBestBanner();
