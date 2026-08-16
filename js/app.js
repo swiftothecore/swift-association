@@ -16108,10 +16108,10 @@ function addDoodle(kind, posClass) {
 /* The margin marks beside each inside page's title are the other drawings you can touch, and
    the only ones that are always there. Nothing invites the tap: the cursor stays an arrow and
    there is no hover state, because the point is that you find it by fidgeting. What a poke
-   gets you is the kick animation (see .page-mark.mark-poked in styles.css); what ten distinct
-   pokes get you is Marked Every Page.
-   Tracked as a SET in lifetime metrics, so the ten can be spread over any number of sittings
-   and in any order — and so ten pokes at the same mark cannot stand in for the collection. */
+   gets you is the kick animation (see .page-mark.mark-poked in styles.css); what a poke on
+   every distinct mark gets you is Marked Every Page.
+   Tracked as a SET in lifetime metrics, so the collection can be spread over any number of
+   sittings and in any order — and so a pile of pokes at one mark cannot stand in for it. */
 const MARK_POKE_MS = 620;   // must outlast the markKick / markPuff animations
 function markPoked(tapped) {
   if (PAGE_MARK_KINDS.every((k) => tapped[k])) unlock("tap-every-page-mark");

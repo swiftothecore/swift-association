@@ -195,13 +195,13 @@ export const EXPLORER_TOKENS = [
    - ruthless, which is a mode whose card left the shelf, not a type you can go and choose. */
 export const SHELF_TYPES = ["classic", "infinite", "daily", "album", "challenge", "custom", "guest"];
 /* The inked marks drawn beside each inside page's title (the `.page-mark.mark-*` spans in
-   index.html). Ten kinds across eleven spans: the guest shelf and a guest's catalogue page
-   share one mark, so the set is by KIND, not by element. Tapping all ten is a secret charm
+   index.html). Eleven kinds across twelve spans: the guest shelf and a guest's catalogue page
+   share one mark, so the set is by KIND, not by element. Tapping all eleven is a secret charm
    (tap-every-page-mark), so a new inside page with a new mark makes that charm cost one more
    tap — add the kind here only when the page is a permanent fixture everyone can reach. */
 export const PAGE_MARK_KINDS = [
   "stats", "records", "charms", "mastery", "challenges",
-  "bonus", "album", "ruthless", "guests", "songbook",
+  "bonus", "album", "ruthless", "guests", "songbook", "howto",
 ];
 // Per-mode accent for the index-card record tiles (label + tape tint). Keyed by mode id;
 // infinite tokens borrow the colour of their underlying difficulty.
