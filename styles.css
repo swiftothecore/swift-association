@@ -5996,14 +5996,21 @@
   .ach-latest-prev { left: 8px; }
   .ach-latest-next { right: 8px; }
   .ach-latest-arrow { width: 32px; height: 20px; }
-  /* These borrow .charm for the inked glyph only. The highlighter swipe is the notebook's
-     "you earned this" mark, and a nav button has earned nothing — worse, the real charm
-     wearing one sits an inch away, so the arrows would read as keepsakes too. Plain ink:
-     the corner position and the hover wash are affordance enough. */
-  .ach-latest-arrow::before { display: none; }
+  /* Keeps .charm's highlighter swipe, spread wider and laid flatter than a charm's so it
+     reads as a marker stroke under an arrow rather than a keepsake's blob. Deliberate:
+     the swipe is what makes these findable as hand-drawn marks on a hand-drawn page. */
+  .ach-latest-arrow::before {
+    inset: 3% 0; transform: rotate(-2deg); transition: background 0.15s ease;
+  }
+  /* Hover presses the marker down harder rather than drawing a box behind it: the same
+     swipe, mixed nearer to full strength. A rectangular wash is a web control's idea of
+     hover and it squared off the one shape on the button that isn't square. */
+  .ach-latest-nav:hover .ach-latest-arrow::before,
+  .ach-latest-nav:focus-visible .ach-latest-arrow::before {
+    background: color-mix(in srgb, var(--bead, var(--highlighter)) 88%, transparent);
+  }
   .ach-latest:hover .ach-latest-nav:not(:disabled),
   .ach-latest:focus-within .ach-latest-nav:not(:disabled) { opacity: 1; transform: translateY(0); }
-  .ach-latest-nav:hover { background: rgba(43,39,34,0.06); }
   .ach-latest-nav:focus-visible { opacity: 1; transform: translateY(0); outline: 2px solid var(--ink-accent); outline-offset: 1px; }
   .ach-latest-nav:disabled { opacity: 0; cursor: default; }
   @media (hover: none) {
