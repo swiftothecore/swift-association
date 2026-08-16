@@ -150,6 +150,11 @@ const WHOLE_VERSE_LINES = 4;
 // knee (a title lights on 10% of pages at 4 words and 20% at 10), so no useful value is
 // safe. isTitleFragment does that job instead, which is why this one can be generous.
 const LYRIC_PROXIMITY = 10;
+// Floors on prising a closed-up token back into two words (repairJoinedPromptWord). A
+// token shorter than this can't be a compound of two words worth the name, and neither
+// half may be a single letter — "iron" is not "i" beside "ron".
+const JOIN_MIN_TOKEN = 5;
+const JOIN_MIN_PART = 2;
 
 let currentMode = MODES.medium;
 let wordBuckets = { easy: [], all: [], hard: [], ultra: [] };
@@ -13379,6 +13384,7 @@ function advanceRound() {
   }
   roundHintSong = pickHintSong();
   wordSpotCache = new Map();            // the page's word moved, so where songs sing it did too
+  joinFixCache = new Map();             // and so did which joined-up tokens hide it
   applyEra(pickEra());
 
   // Confidence Wager: the word is face down for as long as the stake is still open, so it is
@@ -14137,6 +14143,79 @@ function phraseSingsPromptWord(normPhrase) {
   });
 }
 
+// Token -> the two words it was really singing (or null for "it's just a word"), rebuilt
+// each page along with wordSpotCache, since which split counts depends on the page's word.
+let joinFixCache = new Map();
+
+// Lyric sheets and players disagree about spaces. songs.json sings "sand castles"; a player
+// who remembers the line perfectly types "sandcastles", and every token-by-token rule here
+// then swears the line never sang "sand" — so the page rejects a real line and then reveals
+// it as the answer, which reads as the game lying rather than as a spelling quibble. Same
+// shape for "day dream", "some day", "no one".
+//
+// So before anything is judged, put back a space the player closed: a token that ISN'T a word
+// the catalogue sings, split into the page's word plus a remainder that the catalogue actually
+// sings NEXT TO it. Both halves have to be real and really adjacent, so this only ever undoes
+// a missing space — it never invents one. The vocab guard is what keeps "nowhere" whole on a
+// page for "now": a word the catalogue sings is taken as the word it is.
+//
+// Scoped to the page's word on purpose. Any other joined-up token is already survivable — the
+// verdict's fuzzy path compares characters, so one absent space costs a fraction of a ratio —
+// and it is only the prompt-word gate that turns a small spelling difference into a rejection.
+function repairJoinedPromptWord(normPhrase) {
+  const need = lyricRequiredWords().map((w) => normalizeLyric(w)).filter(Boolean);
+  if (!need.length || !normPhrase) return normPhrase;
+  let changed = false;
+  const out = normPhrase.split(" ").map((t) => {
+    if (t.length < JOIN_MIN_TOKEN || lyricVocab.has(t)) return t;
+    if (joinFixCache.has(t)) { const f = joinFixCache.get(t); if (f) changed = true; return f || t; }
+    const fixed = splitOnPromptWord(t, need);
+    joinFixCache.set(t, fixed);
+    if (fixed) changed = true;
+    return fixed || t;
+  });
+  return changed ? out.join(" ") : normPhrase;
+}
+
+// The one split of `token` that yields the page's word beside a word the catalogue sings
+// next to it, or null. Candidate splits are pruned by the word first, so the corpus scan
+// runs once or twice per unknown token rather than once per letter.
+function splitOnPromptWord(token, need) {
+  for (const nw of need) {
+    const rx = wordRegex(nw, effectiveStrict());
+    for (let i = JOIN_MIN_PART; i <= token.length - JOIN_MIN_PART; i++) {
+      const a = token.slice(0, i), b = token.slice(i);
+      if (!rx.test(a) && !rx.test(b)) continue;
+      if (corpusSingsAdjacent(a, b)) return a + " " + b;
+    }
+  }
+  return null;
+}
+
+// Does ANY song in the catalogue sing these two words back to back, as whole words? Read
+// off allSongs rather than the page's valid set, deliberately: the answer is the same on
+// every page that shows this word, so nothing about which songs are valid leaks through it
+// — which is what lets nudgeLyricNeedsWord keep its no-song-lookup promise while still
+// speaking about the repaired phrase.
+function corpusSingsAdjacent(a, b) {
+  const pair = a + " " + b;
+  return allSongs.some((s) => {
+    const blob = s._normLyrics;
+    for (let at = blob.indexOf(pair); at >= 0; at = blob.indexOf(pair, at + 1)) {
+      const end = at + pair.length;
+      if ((at === 0 || blob[at - 1] === " ") && (end === blob.length || blob[end] === " ")) return true;
+    }
+    return false;
+  });
+}
+
+// A typed line, normalized and with any closed-up prompt word prised back apart, ready for
+// every rule that follows. One funnel so the gauge, the verdict and the nudge can never end
+// up judging three different spellings of what the player typed.
+function normalizeSungPhrase(text) {
+  return repairJoinedPromptWord(normalizeLyric(text || ""));
+}
+
 // One typo apart: a single insertion, deletion or substitution, OR one pair of adjacent
 // letters swapped. The swap has to be checked separately because plain Levenshtein scores
 // a transposition as two edits ("tuoch" is distance 2 from "touch"), and fast fingers
@@ -14159,7 +14238,7 @@ function oneTypoApart(a, b) {
 // an invented one and a half-remembered one alike, so seeing it tells you nothing.
 function nudgeLyricNeedsWord(raw) {
   if (wordConcealed) return;                                   // the word isn't even face up yet
-  const np = normalizeLyric(raw || "");
+  const np = normalizeSungPhrase(raw);
   if (!np || np.split(" ").length < MIN_LYRIC_WORDS) return;   // too short to have been a line
   if (phraseSingsPromptWord(np)) return;                       // it sang the word; something else was wrong
   if (isTitleFragment(np)) return;                             // a half-typed title, not a sung line
@@ -14184,7 +14263,7 @@ function nudgeLyricNeedsWord(raw) {
 // validSongs admits a song on its LYRICS, so every valid song has a line a player could
 // sing, and a lyric-only mode stays winnable.
 function matchLyricLine(phrase) {
-  const normPhrase = normalizeLyric(phrase);
+  const normPhrase = normalizeSungPhrase(phrase);
   if (!normPhrase) return null;
   if (!phraseSingsPromptWord(normPhrase)) return null;
   const wordCount = normPhrase.split(" ").length;
@@ -14367,7 +14446,7 @@ function nearPromptWord(song, at, np) {
 // hidden until the player is genuinely on the line they were asked for). Cheap: an indexOf
 // over currentSongs' precomputed _normLyrics blobs, gated behind the input debounce.
 function verseProgress(text) {
-  const np = normalizeLyric(text || "");
+  const np = normalizeSungPhrase(text);
   if (!np || np.split(" ").length < 2) return null;
   if (isTitleFragment(np)) return null;
   for (const s of currentSongs) {
@@ -16123,7 +16202,7 @@ function handleTypingEggs(val) {
 // allSongs and stops at the first hit. Cheap: an indexOf over precomputed blobs,
 // gated behind the input debounce and the word-count floor.
 function isKnownLyricPhrase(text) {
-  const np = normalizeLyric(text || "");
+  const np = normalizeSungPhrase(text);
   if (!np) return false;
   const wc = np.split(" ").length;
   if (wc < MIN_LYRIC_WORDS &&
@@ -18526,10 +18605,15 @@ function buildDevApi() {
     // anything that's merely a title — so seeing them side by side is the only way to check
     // the rule without typing into the box and watching a meter out of the corner of an eye.
     tryLine: (phrase) => {
-      const np = normalizeLyric(phrase || "");
+      const typed = normalizeLyric(phrase || "");
+      const np = normalizeSungPhrase(phrase);
       const m = matchLyricLine(phrase || "");
       return {
         phrase: np,
+        // What the player actually typed, when a closed-up prompt word was prised apart
+        // before judging. Reported only when it differs, so the repair is visible rather
+        // than something the other three fields silently disagree about.
+        typed: typed === np ? undefined : typed,
         needs: lyricRequiredWords(),
         singsWord: phraseSingsPromptWord(np),
         titleFragment: isTitleFragment(np),
