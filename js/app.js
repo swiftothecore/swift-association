@@ -13383,8 +13383,7 @@ function advanceRound() {
     if (roundWildcard && roundWildcard.accepts) currentSongs = currentSongs.filter(roundWildcard.accepts);
   }
   roundHintSong = pickHintSong();
-  wordSpotCache = new Map();            // the page's word moved, so where songs sing it did too
-  joinFixCache = new Map();             // and so did which joined-up tokens hide it
+  resetWordCaches();
   applyEra(pickEra());
 
   // Confidence Wager: the word is face down for as long as the stake is still open, so it is
@@ -14147,6 +14146,16 @@ function phraseSingsPromptWord(normPhrase) {
 // each page along with wordSpotCache, since which split counts depends on the page's word.
 let joinFixCache = new Map();
 
+// Everything derived from WHICH WORD the page is asking for. They all have to fall together:
+// a cache built for the last word is not merely stale here, it quietly answers questions
+// about a different page. Called wherever the word changes — the round turning, and the dev
+// panel forcing a word, which is a page change in every way that matters to these.
+function resetWordCaches() {
+  wordSpotCache = new Map();            // where the valid songs sing it
+  joinFixCache = new Map();             // which joined-up tokens were hiding it
+  joinNeighbours = null;                // what the catalogue sings on either side of it
+}
+
 // Lyric sheets and players disagree about spaces. songs.json sings "sand castles"; a player
 // who remembers the line perfectly types "sandcastles", and every token-by-token rule here
 // then swears the line never sang "sand" — so the page rejects a real line and then reveals
@@ -14183,30 +14192,72 @@ function repairJoinedPromptWord(normPhrase) {
 function splitOnPromptWord(token, need) {
   for (const nw of need) {
     const rx = wordRegex(nw, effectiveStrict());
+    const { after, before } = promptWordNeighbours().get(nw) || { after: EMPTY_SET, before: EMPTY_SET };
     for (let i = JOIN_MIN_PART; i <= token.length - JOIN_MIN_PART; i++) {
       const a = token.slice(0, i), b = token.slice(i);
-      if (!rx.test(a) && !rx.test(b)) continue;
-      if (corpusSingsAdjacent(a, b)) return a + " " + b;
+      if (rx.test(a) && sungBeside(b, after)) return a + " " + b;
+      if (rx.test(b) && sungBeside(a, before)) return a + " " + b;
     }
   }
   return null;
 }
 
-// Does ANY song in the catalogue sing these two words back to back, as whole words? Read
-// off allSongs rather than the page's valid set, deliberately: the answer is the same on
-// every page that shows this word, so nothing about which songs are valid leaks through it
-// — which is what lets nudgeLyricNeedsWord keep its no-song-lookup promise while still
-// speaking about the repaired phrase.
-function corpusSingsAdjacent(a, b) {
-  const pair = a + " " + b;
-  return allSongs.some((s) => {
-    const blob = s._normLyrics;
-    for (let at = blob.indexOf(pair); at >= 0; at = blob.indexOf(pair, at + 1)) {
-      const end = at + pair.length;
-      if ((at === 0 || blob[at - 1] === " ") && (end === blob.length || blob[end] === " ")) return true;
+// Every word the catalogue sings immediately after / before the page's word, kept PER
+// required word: on a multi-word page, pairing a token's remainder with the other word's
+// neighbours would repair a compound the catalogue never sings.
+//
+// Read off allSongs rather than the page's valid set, deliberately: the lists are the same
+// on every page that shows this word, so nothing about which songs are valid leaks through
+// them — which is what lets nudgeLyricNeedsWord keep its no-song-lookup promise while still
+// speaking about the repaired phrase. Built once per page, and only when an unrecognised
+// token actually turns up, since walking the whole catalogue's tokens isn't free.
+const EMPTY_SET = new Set();
+let joinNeighbours = null;
+function promptWordNeighbours() {
+  if (joinNeighbours) return joinNeighbours;
+  joinNeighbours = new Map();
+  for (const w of lyricRequiredWords()) {
+    const nw = normalizeLyric(w);
+    if (!nw || joinNeighbours.has(nw)) continue;
+    const rx = wordRegex(nw, effectiveStrict());
+    // Which VOCABULARY entries count as this word, resolved once, so the walk below is a set
+    // membership test per token instead of a regex per token. On a word as common as "in"
+    // that is the difference between a visible hitch and nothing.
+    const hits = new Set();
+    for (const t of lyricVocab) if (rx.test(t)) hits.add(t);
+    const after = new Set(), before = new Set();
+    for (const s of hits.size ? allSongs : []) {
+      const t = s._normLyrics.split(" ");
+      for (let i = 0; i < t.length; i++) {
+        if (!hits.has(t[i])) continue;
+        if (i + 1 < t.length) after.add(t[i + 1]);
+        if (i > 0) before.add(t[i - 1]);
+      }
     }
-    return false;
-  });
+    joinNeighbours.set(nw, { after, before });
+  }
+  return joinNeighbours;
+}
+
+// Is this half of a joined-up token the word the catalogue sings beside the page's word?
+// Forgiving in exactly the ways the rest of the lyric path already is, because a player who
+// closed a space is no more likely to have the OTHER half letter-perfect than they were to
+// have spaced it: an inflection ("sandcastle" for "sand castles") counts, and so does one
+// slip ("sandcastels"). The slip allowance carries the lyricVocab guard from the prompt-word
+// tolerance, so a word the catalogue sings in its own right is never read as a misspelling
+// of a different one — but an INFLECTION is checked first and freely, since "castle" beside
+// "castles" is not a typo, it is the same word wearing a different ending.
+//
+// None of this widens what counts as singing the page's word: the other half still has to
+// match it outright. It only decides whether a token was a closed-up pair to begin with.
+function sungBeside(half, neighbours) {
+  for (const n of neighbours) {
+    if (n === half) return true;
+    if (wordRegex(n, false).test(half) || wordRegex(half, false).test(n)) return true;
+  }
+  if (lyricVocab.has(half) || half.length < LYRIC_TYPO_MIN_WORD) return false;
+  for (const n of neighbours) if (oneTypoApart(half, n)) return true;
+  return false;
 }
 
 // A typed line, normalized and with any closed-up prompt word prised back apart, ready for
@@ -18342,6 +18393,7 @@ function devApplyWord(word) {
   if (!usedWords.includes(word)) usedWords.push(word);
   currentSongs = validSongs(currentWord, effectiveStrict(), effectiveNoTitle());
   roundHintSong = pickHintSong();
+  resetWordCaches();                    // a forced word is a new page as far as these are concerned
   renderPromptSwipe();
   if (!wordConcealed) $("wordDisplay").textContent = currentWord;   // a face-down page stays face down
   renderExcludedNote();
