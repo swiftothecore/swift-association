@@ -823,6 +823,7 @@ const screens = {
   guests: $("screen-guests"),
   guestdetail: $("screen-guest-detail"),
   mastery: $("screen-mastery"),
+  howto: $("screen-howto"),
 };
 function showScreen(name) {
   // Defensive: clear any stray inline animation a flip sheet helper might have left on a real
@@ -17891,6 +17892,115 @@ function closeCustomModal() {
   if (target) { try { target.focus({ preventScroll: true }); } catch (_) { target.focus(); } }
 }
 
+/* ---------- How to play ----------
+   A short stack of cards, one idea each, leafed through with the same corner arrows the charm
+   keepsake uses. Four cards where one page of prose would have fitted, on purpose: a reader who
+   clicks to continue is a reader who is still reading, and each card gets to be short.
+
+   Two rules hold this page honest and both are easy to erode:
+   - It is NEVER shown unprompted. No auto-open, no first-run step, no badge. The welcome
+     already covers the game in a sentence; this is the door for players who want more.
+   - It spoils nothing. Discovery is the best thing this notebook has, so the shelves are
+     described by shape rather than listed, and no secret charm, dark side or egg is named
+     here. If a card can't be written without giving something away, it doesn't get written. */
+const HOWTO_PAGES = [
+  {
+    label: "the whole game",
+    title: "One word at a time",
+    body: `Each page of the notebook gives you a single word. Name a Taylor Swift song with that ` +
+      `word somewhere in its lyrics, and you've taken the page. That really is the whole game.`,
+    note: `A run is ${TOTAL_ROUNDS} pages long. Difficulty decides how much help you get and ` +
+      `whether there's a clock running.`,
+  },
+  {
+    label: "answering",
+    title: "More than one way in",
+    body: `Type a song title and the notebook will meet you halfway: it forgives near-misses and ` +
+      `offers matching titles as you go. Stuck on a name but sure of the song? Sing it instead: ` +
+      `type a line of lyrics containing the word and that counts too.`,
+    note: `Stuck properly? {HINT} spends a hint, in the modes that carry them. Every page has more ` +
+      `than one right answer, so the one you half-remember may well be one of them.`,
+  },
+  {
+    label: "when you're ready",
+    title: "The desk has drawers",
+    body: `Beyond the difficulties there's a daily page everyone plays the same, a stack of ` +
+      `rule-bending challenges, quick games on the bonus shelf, single-album runs, other ` +
+      `artists' catalogues, and a mode you write the rules for yourself.`,
+    note: `Nothing there needs learning first. If you'd rather not choose, the dice in the ` +
+      `corner will deal you something.`,
+  },
+  {
+    label: "what you keep",
+    title: "It all goes in the notebook",
+    body: `Finished runs leave something behind: charms on the bracelet, records and streaks, ` +
+      `and experience across five skills that unlocks as it climbs. None of it is spent by ` +
+      `playing badly, so there's no wrong way to start.`,
+    note: `Everything lives on this device alone. There's no account, and nothing to sign up for.`,
+  },
+];
+let howToBackTarget = "start";   // where the How to play page's ← back returns to
+let howToIndex = 0;              // which card is face-up; always reset to 0 on open
+
+// Render the face-up card. Called on open and on every page turn — cheap enough to redo whole,
+// and re-rendering is what lets the body cross-fade without a second code path.
+function renderHowTo() {
+  const el = $("howToBody");
+  if (!el) return;
+  const total = HOWTO_PAGES.length;
+  howToIndex = Math.max(0, Math.min(total - 1, howToIndex));
+  const page = HOWTO_PAGES[howToIndex];
+  const last = howToIndex === total - 1;
+  // The hint key is a key the player may not have: on touch there is no Tab to press.
+  const note = page.note.replace("{HINT}", noKeyboard() ? "the hint button" : `${keycap("Tab")}`);
+  el.innerHTML =
+    `<div class="howto-card" data-howto-card>` +
+      `<div class="howto-view" data-howto-view aria-live="polite">` +
+        `<div class="howto-text">` +
+          `<div class="ach-latest-label"><span>${escapeHtml(page.label)}</span>` +
+            `<span class="ach-latest-position">${howToIndex + 1} / ${total}</span></div>` +
+          `<div class="howto-title">${escapeHtml(page.title)}</div>` +
+          `<p class="howto-body">${page.body}</p>` +
+          `<p class="howto-note">${note}</p>` +
+        `</div>` +
+      `</div>` +
+      `<button type="button" class="ach-latest-nav ach-latest-prev" data-howto-prev` +
+        ` aria-label="Previous card"${howToIndex === 0 ? " disabled" : ""}>${charmHistoryArrow()}</button>` +
+      // The next arrow is REPLACED on the last card rather than merely disabled. A browsing
+      // control can dead-end; a sequence you were invited to click through has to end on an
+      // action, or the reader is left holding a greyed-out arrow wondering if that was it.
+      (last ? "" : `<button type="button" class="ach-latest-nav ach-latest-next" data-howto-next` +
+        ` aria-label="Next card">${charmHistoryArrow(true)}</button>`) +
+    `</div>` +
+    (last ? `<div class="howto-done">${playCTA("go and play")}</div>` : "");
+}
+function turnHowTo(step) {
+  const next = howToIndex + step;
+  if (next < 0 || next >= HOWTO_PAGES.length) return;
+  howToIndex = next;
+  renderHowTo();
+  // Keep focus inside the card across a turn. The re-render destroys whichever button was
+  // focused, and focus falling to <body> would strand the reader: the arrow-key handler is bound
+  // to the screen, so a body-focused keydown never reaches it and the keys go dead. Prefer the
+  // arrow they were travelling in, then the other one, then the screen itself — the last card
+  // has no next button and the first has a disabled prev, and neither can hold focus.
+  if (!screens.howto.classList.contains("active")) return;
+  const el = $("howToBody");
+  const usable = (b) => b && !b.disabled;
+  const wanted = el.querySelector(step > 0 ? "[data-howto-next]" : "[data-howto-prev]");
+  const other = el.querySelector(step > 0 ? "[data-howto-prev]" : "[data-howto-next]");
+  const keep = usable(wanted) ? wanted : (usable(other) ? other : screens.howto);
+  try { keep.focus({ preventScroll: true }); } catch (_) { keep.focus(); }
+}
+// Always opens on card one. Deliberately keeps no "you've read this" state: it is a reference
+// you can reopen, not a task with a completion.
+function openHowTo(from, page = 0) {
+  howToBackTarget = from;
+  howToIndex = page;
+  renderHowTo();
+  flipAwayToScreen("howto");
+}
+
 /* ---------- First-run welcome (onboarding) ----------
    A one-time captive flow shown to genuinely new players (never to established players who
    predate the feature — guarded on lifetime rounds). Built as a small step machine so later
@@ -18232,6 +18342,9 @@ function firstRunWelcomeHTML() {
     `<h2 class="fr-title">Let's ease you in</h2>` +
     `<p class="fr-sub">Here's the whole game: you'll see a word, and you name a Taylor Swift song that has it somewhere in the lyrics. That's it.</p>` +
     `<p class="fr-sub">First time? We'd start you in <b>Relaxed</b>, so there's no clock, suggestions and hints stay on, and every song is in play. You can turn the difficulty up whenever you're ready.</p>` +
+    // A pointer, not a fourth button. Nothing here needs the longer version to get started, and
+    // an extra control on the welcome buys a slower first two minutes for very little.
+    `<p class="fr-sub fr-aside">Want more than that? There's a <b>how to play</b> card in the bottom-left corner, whenever you fancy it.</p>` +
     `<div class="fr-actions">` +
       `<button type="button" class="btn-primary" data-fr="relaxed">Start me in Relaxed &rarr;</button>` +
       `<button type="button" class="btn-link" data-fr="knowit">I already know this game</button>` +
@@ -18750,6 +18863,10 @@ function buildDevApi() {
         return introArmed;
       },
       setEra: (album) => setFavouriteAlbum(album),
+      // How to play opens on card one for players; the panel can land on any card, since
+      // proofreading card four should not cost three clicks.
+      howTo: (page = 0) => openHowTo("start", page),
+      howToCards: () => HOWTO_PAGES.length,
       normalNudge: () => { markCoachmark("readyForNormal"); showReadyForNormal(true); },
       eraPrompt: () => { markCoachmark("askEra"); showAskEra(true); },
       // Guided first round: clear every beat gate (+ the first-match flag) so they re-arm on the
@@ -20611,6 +20728,22 @@ async function init() {
   $("achievementsBtn").addEventListener("click", () => openAchievements("start"));
   $("viewAchievementsBtn").addEventListener("click", () => openAchievements("results"));
   $("achievementsBackBtn").addEventListener("click", () => backToScreen(achievementsBackTarget));
+  // How to play — the bottom-left corner link, and the card's own paging. The arrows are
+  // delegated because renderHowTo replaces them on every turn.
+  $("howToPlayLink").addEventListener("click", () => openHowTo("start"));
+  $("howToBackBtn").addEventListener("click", () => backToScreen(howToBackTarget));
+  $("howToBody").addEventListener("click", (e) => {
+    if (e.target.closest("[data-howto-prev]")) turnHowTo(-1);
+    else if (e.target.closest("[data-howto-next]")) turnHowTo(1);
+  });
+  // Arrow keys turn the cards too. Scoped to the screen, and left alone when the player is
+  // in a field or on a control that wants its own arrow behaviour.
+  $("screen-howto").addEventListener("keydown", (e) => {
+    if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
+    if (e.target.closest("input, textarea, select")) return;
+    e.preventDefault();
+    turnHowTo(e.key === "ArrowRight" ? 1 : -1);
+  });
   $("masteryBtn").addEventListener("click", () => openMastery("start"));
   $("viewMasteryBtn").addEventListener("click", () => openMastery("results"));
   $("masteryBackBtn").addEventListener("click", () => backToScreen(masteryBackTarget));

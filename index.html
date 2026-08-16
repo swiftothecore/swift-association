@@ -189,6 +189,16 @@ if (location.pathname.endsWith('/index.html')) {
     <path d="M22 5.2 C22.8 6.8 23.5 8 24.2 8.8 C25 7.9 25.7 6.7 26.3 5.1"/>
     <path d="M20.8 9 C22.7 8.8 25.7 8.8 27.6 9 C27.9 11.6 27.8 14.6 27.6 16.8 C25.7 17 22.7 17 20.8 16.8 C20.5 14.6 20.5 11.4 20.8 9 Z"/>
   </symbol>
+  <!-- a fingerpost: one leaning post with two arms, the upper pointing back and the lower
+       pointing on. It is the only post in the set, so it can't be mistaken for the folded
+       notes or the pressings, and its two arms are a picture of the card's own paging.
+       A question mark was tried first and read as a help-desk icon, not as stationery. -->
+  <symbol id="mark-howto" viewBox="0 0 36 24">
+    <path d="M18.6 3.4 C18.2 9.4 17.9 15.4 17.4 21.4"/>
+    <path d="M18.4 6.4 C22 6.1 26.6 6 30 6.2 C30.9 7.3 31.7 8.2 32.6 9.1 C31.6 10 30.8 10.9 30 11.9 C26.6 12.1 22 12 18.2 11.7"/>
+    <path d="M18.1 14 C14.6 13.8 10.2 13.7 6.9 13.9 C6 15 5.2 15.9 4.3 16.8 C5.3 17.7 6.1 18.6 6.9 19.6 C10.2 19.8 14.6 19.7 17.7 19.4"/>
+    <path d="M15.6 22 C17.6 21.6 19.4 21.6 21.2 21.9"/>
+  </symbol>
   <!-- an open book, finally at the proportions a book actually has -->
   <symbol id="mark-songbook" viewBox="0 0 36 24">
     <path d="M18 8.2 C14.6 6.2 9.4 5.4 3.6 5.7 C3.4 9.8 3.4 14.6 3.6 18.6 C9.4 18.3 14.6 19.1 18 21 C21.4 19.1 26.6 18.3 32.4 18.6 C32.6 14.6 32.6 9.8 32.4 5.7 C26.6 5.4 21.4 6.2 18 8.2 Z"/>
@@ -855,10 +865,24 @@ if (location.pathname.endsWith('/index.html')) {
 <!-- Light-touch guided-round coachmarks: a small pencil note pinned near the thing it
      teaches. Non-modal, never covers the board. Positioned + filled by app.js. -->
 <div id="coachmark" class="coachmark" role="status" aria-live="polite" hidden></div>
-<!-- Bottom-left corner chrome: the two links that take you off the board. Ordered with
-     feedback first so the searcher, the wider of the two, has the free space on its right
-     to expand into. Both vanish during play (see .corner-links in styles.css). -->
+<!-- Bottom-left corner chrome: how to play, plus the two links that take you off the board.
+     Ordered shortest label to longest so the widest one, the searcher, has the free space on
+     its right to expand into. All three vanish during play (see .corner-links in styles.css).
+     How to play is a button rather than an anchor: it opens a screen, it doesn't leave. -->
 <div class="corner-links">
+  <!-- Deliberately NOT auto-shown to anyone, ever. The first-run welcome already explains the
+       game in a line, and a fifth onboarding beat would just make the first two minutes longer;
+       this is the door the welcome points at for players who want the longer version. -->
+  <button id="howToPlayLink" class="corner-link howto-link" type="button" title="How to play: a few cards on the basics">
+    <!-- An open book with a bookmark ribbon hanging out of it. The ribbon is what stops this
+         reading as the songbook mark: a plain open book is already spoken for. -->
+    <svg class="corner-link-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M12 7.4 C9.7 5.9 6.4 5.3 3 5.5 V17.6 C6.4 17.4 9.7 18 12 19.5 C14.3 18 17.6 17.4 21 17.6 V5.5 C17.6 5.3 14.3 5.9 12 7.4 Z"/>
+      <path d="M12 7.4 V19.5"/>
+      <path d="M16.4 5.7 V11.4 L18.4 9.9 L20.4 11.4 V5.6"/>
+    </svg>
+    <span class="corner-link-label">how to play</span>
+  </button>
   <!-- Points at our own /feedback stub, not the form's URL: the address lives in exactly
        one file (feedback/index.html) so a form that moves is a one-line change. -->
   <a id="feedbackLink" class="corner-link feedback-link" href="feedback/"
@@ -1547,6 +1571,20 @@ if (location.pathname.endsWith('/index.html')) {
       <button id="achievementsBackBtn" class="btn-link">← back</button>
     </div>
     <div id="achievementsBody"></div>
+  </section>
+
+  <!-- HOW TO PLAY SCREEN — a small stack of cards you leaf through, one idea per card, rather
+       than one wall of text. Opt-in only, from the bottom-left corner link. Body is rendered
+       by renderHowTo() in app.js so the copy lives beside the rest of the page text. -->
+  <section id="screen-howto" class="screen card" tabindex="-1" aria-label="How to play">
+    <div class="stats-nav">
+      <span class="title-group">
+        <span class="page-mark mark-howto" aria-hidden="true"><svg viewBox="0 0 36 24"><use href="#mark-howto"/></svg></span>
+        <span class="stats-title">How to play</span>
+      </span>
+      <button id="howToBackBtn" class="btn-link">← back</button>
+    </div>
+    <div id="howToBody"></div>
   </section>
 
   <!-- MASTERY SCREEN -->

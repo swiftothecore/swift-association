@@ -353,6 +353,7 @@ export function initDev(api) {
   // Each guided beat is placement-sensitive (it must dodge the word and the input), so give
   // every one its own button — checking them across viewport widths is the whole point.
   const beatSel = select(api.GUIDE_BEAT_IDS, (x) => x, (x) => x.replace("guide", "").toLowerCase() + " beat");
+  const howToSel = select([...Array(api.onboarding.howToCards()).keys()], (x) => String(x), (x) => `card ${x + 1}`);
   body.append(section("onboarding",
     row(btn("replay first-run", () => api.onboarding.replay()),
         btn("ready-for-normal nudge", () => api.onboarding.normalNudge())),
@@ -364,6 +365,9 @@ export function initDev(api) {
       toast(api.onboarding.guideBeat(beatSel.value) ? beatSel.value + " shown" : "can't anchor — need an open round");
     })),
     row(obAlbumSel, btn("set era", () => { api.onboarding.setEra(obAlbumSel.value); toast("era → " + (obAlbumSel.value || "none")); })),
+    // How to play opens on card one for players, so proofreading the last card would otherwise
+    // cost three clicks every time. Jump straight to any of them.
+    row(howToSel, btn("open how to play", () => api.onboarding.howTo(Number(howToSel.value)))),
     // The persistent testing flag (same switch as ?intro=0 / ?intro=1 on the URL): stop every
     // one-time greeting getting in the way of a session, or hand them all back.
     row(btn("silence intros (persists)", () => { api.onboarding.quiet(true); toast("first impressions silenced"); }),
