@@ -2694,13 +2694,7 @@ function achThemesByProximity(themeIds) {
     .map((x) => x.id);
 }
 
-// Which families are peeled open in the panel. Deliberately not persisted: the four rows
-// are the resting state of that widget and the themes under them are a peek, so a fresh
-// visit should always open on the summary. Module-level so a mid-page unlock re-render
-// does not snap shut whatever the reader was just looking at.
-const openAchFamilies = new Set();
-
-// The one chevron used by every fold on this page — section rules, family tabs, panel rows.
+// The one chevron used by every fold on this page — section rules and family tabs.
 const achFoldChevron = () =>
   `<svg viewBox="0 0 14 14" aria-hidden="true"><path d="M3.2 5.4 L7 9.1 L10.8 5.4" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
 
@@ -2783,51 +2777,44 @@ function renderAchievementsPage() {
     `<div class="ach-page-sub">${earnedCount} / ${total} charms collected</div>` +
     `</div>`;
 
-  /* At a glance: one row per family rather than seventeen equal rows per theme. The family's
-     bar is segmented, one segment per theme, each segment as wide as that theme is big and
-     filled as far as you have got — so a single row answers both "how far along is this part
-     of the game" and "which corner of it is the empty one". The seventeen theme rows are
-     still here, folded away under the family that owns them. */
+  /* At a glance: all seventeen themes, always, gathered into four labelled blocks. The
+     grouping is the whole point of the panel, so it is carried by the headings rather than
+     by a gesture — nothing here is worth making the reader click for. What made seventeen
+     rows feel like a wall was never the count, it was that each row spent two lines (name
+     and fraction stacked over a full-width bar); on one line, with the bar flexing in the
+     middle, the lot fits in nine. */
   const themeRowHTML = (id) => {
     const g = ACH_GROUPS.find((x) => x.id === id);
     if (!g) return "";
     const { got, tot } = achThemeTally(id);
     const col = ACH_GROUP_COLORS[id];
     return `<button type="button" class="ach-theme" data-ach-theme="${id}" aria-label="Go to ${escapeHtml(g.label)} charms">` +
-      `<div class="ach-theme-head"><span class="ach-theme-name"><span class="ach-group-dot" style="background:${col}"></span>${g.short}</span><span>${got} / ${tot}</span></div>` +
-      `<div class="ach-theme-bar"><div style="width:${tot ? (got / tot) * 100 : 0}%;background:${col}"></div></div>` +
+      `<span class="ach-group-dot" style="background:${col}"></span>` +
+      `<span class="ach-theme-name">${g.short}</span>` +
+      `<span class="ach-theme-bar"><i style="width:${tot ? (got / tot) * 100 : 0}%;background:${col}"></i></span>` +
+      `<span class="ach-theme-count">${got} / ${tot}</span>` +
       `</button>`;
   };
-  const familyRows = achFamilies().map((f) => {
-    const ordered = achThemesByProximity(f.themes);
-    const tallies = f.themes.map((id) => ({ id, ...achThemeTally(id) }));
+  const familyBlocks = achFamilies().map((f) => {
+    const tallies = f.themes.map((id) => achThemeTally(id));
     const got = tallies.reduce((n, t) => n + t.got, 0);
     const tot = tallies.reduce((n, t) => n + t.tot, 0);
-    const open = openAchFamilies.has(f.id);
     const fam = ACH_FAMILY_COLORS[f.id] || "var(--ink-soft)";
-    // Segments keep the AUTHORED theme order, not the proximity order: the bar is a picture
-    // of the family and it should hold still while the rows beneath it re-sort.
-    const segs = tallies.filter((t) => t.tot).map((t) => {
-      const g = ACH_GROUPS.find((x) => x.id === t.id);
-      return `<span class="ach-fam-seg" style="flex-grow:${t.tot};--seg:${ACH_GROUP_COLORS[t.id]}"` +
-        ` title="${escapeHtml(g ? g.short : t.id)} — ${t.got} / ${t.tot}">` +
-        `<i style="width:${(t.got / t.tot) * 100}%"></i></span>`;
-    }).join("");
-    return `<div class="ach-fam${open ? " is-open" : ""}" style="--fam:${fam}">` +
-      `<button type="button" class="ach-fam-head" data-ach-family="${f.id}"` +
-      ` aria-expanded="${open ? "true" : "false"}" aria-controls="achFamThemes-${f.id}">` +
-      `${achFoldChevron()}` +
+    // The heading carries one honest aggregate and a rule in the family's hue, the same rule
+    // its index tab wears further down the page. The detail is the real bars right beneath it,
+    // so there is nothing here for a second, cleverer bar to add.
+    return `<div class="ach-fam" style="--fam:${fam}">` +
+      `<div class="ach-fam-head">` +
       `<span class="ach-fam-name">${escapeHtml(f.label)}</span>` +
       `<span class="ach-fam-blurb">${escapeHtml(f.blurb)}</span>` +
+      `<span class="ach-fam-rule"></span>` +
       `<span class="ach-fam-count">${got} / ${tot}</span>` +
-      `</button>` +
-      `<div class="ach-fam-bar">${segs}</div>` +
-      `<div class="ach-fam-themes" id="achFamThemes-${f.id}"${open ? "" : " hidden"}>` +
-      ordered.map(themeRowHTML).join("") + `</div>` +
+      `</div>` +
+      `<div class="ach-fam-themes">${achThemesByProximity(f.themes).map(themeRowHTML).join("")}</div>` +
       `</div>`;
   }).join("");
   html += `<div class="ach-themes"><div class="ach-themes-label">at a glance</div>` +
-    `<div class="ach-families">${familyRows}</div></div>`;
+    `<div class="ach-families">${familyBlocks}</div></div>`;
 
   const meter = `<div class="cat-meter">` +
     `<div class="cat-meter-head"><span>charms collected</span><span>${pct}%</span></div>` +
@@ -2955,18 +2942,6 @@ function renderAchievementsPage() {
       const shut = ids.some((id) => !isSectionFolded(id));
       ids.forEach((id) => setSectionFold(id, shut));
       syncAchFamilyDividers($("achievementsBody"));
-    }));
-  // Peeling a family open in the panel: in place, like the section folds, so the reader does
-  // not lose their scroll to the gesture that was meant to show them more.
-  $("achievementsBody").querySelectorAll("[data-ach-family]").forEach((btn) =>
-    btn.addEventListener("click", () => {
-      const id = btn.dataset.achFamily;
-      const open = !openAchFamilies.has(id);
-      if (open) openAchFamilies.add(id); else openAchFamilies.delete(id);
-      btn.setAttribute("aria-expanded", open ? "true" : "false");
-      btn.closest(".ach-fam").classList.toggle("is-open", open);
-      const box = document.getElementById(`achFamThemes-${id}`);
-      if (box) box.hidden = !open;
     }));
   $("achievementsBody").querySelectorAll("[data-ach-theme]").forEach((theme) =>
     theme.addEventListener("click", () => {
@@ -20164,7 +20139,6 @@ function buildDevApi() {
           themes: f.themes.length,
           charms: `${t.reduce((n, x) => n + x.got, 0)} / ${t.reduce((n, x) => n + x.tot, 0)}`,
           order: achThemesByProximity(f.themes).join(", "),
-          openInPanel: openAchFamilies.has(f.id),
         };
       }),
       check: () => {
@@ -20176,11 +20150,13 @@ function buildDevApi() {
           ? { orphans, ghosts, dupes }
           : "every theme claimed by exactly one family";
       },
-      // Peel every family open in the panel at once, or shut them all again.
-      open: (on = true) => {
-        ACH_FAMILIES.forEach((f) => { if (on) openAchFamilies.add(f.id); else openAchFamilies.delete(f.id); });
-        if ($("achievementsBody")) renderAchievementsPage();
-        return on ? "all families peeled open" : "all families shut";
+      // Fold or unfold a whole family's run of sections, the index tab's gesture from the console.
+      fold: (id, shut = true) => {
+        const f = achFamilies().find((x) => x.id === id);
+        if (!f) return `no such family — try ${ACH_FAMILIES.map((x) => x.id).join(", ")}`;
+        f.themes.forEach((t) => setSectionFold(t, !!shut));
+        syncAchFamilyDividers();
+        return `${f.label}: ${f.themes.length} themes ${shut ? "shut" : "open"}`;
       },
     },
     // Normal-mode novelty bias — the coverage nudge that favours un-encountered words in Normal.

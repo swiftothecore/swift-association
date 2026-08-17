@@ -5959,41 +5959,38 @@
   .ach-page-title { font-family: var(--hand); font-weight: 700; font-size: calc(44px + var(--text-size-adjust)); color: var(--ink); line-height: 0.95; }
   .ach-page-sub { font-family: var(--type); font-size: calc(12px + var(--text-size-adjust)); letter-spacing: 1px; color: var(--ink-soft); }
 
-  /* At a glance — four family rows, each a segmented bar of the themes it holds. The
-     seventeen theme rows live folded under the family that owns them. */
-  .ach-themes { border: 1.5px solid rgba(43,39,34,0.12); border-radius: 3px; padding: 14px 16px; margin-bottom: 14px; }
-  .ach-themes-label { font-family: var(--type); font-size: calc(10px + var(--text-size-adjust)); letter-spacing: 1px; text-transform: uppercase; color: var(--ink-soft); margin-bottom: 12px; }
-  .ach-families { display: flex; flex-direction: column; gap: 13px; }
-  .ach-fam + .ach-fam { border-top: 1px solid rgba(43,39,34,0.08); padding-top: 13px; }
-  .ach-fam-head {
-    display: flex; align-items: baseline; gap: 8px; width: 100%; padding: 0 0 5px;
-    border: 0; background: transparent; color: inherit; text-align: left; cursor: pointer;
+  /* At a glance — every theme on show, gathered into four labelled blocks. The hierarchy is
+     carried by the headings, not by a gesture: the grouping IS the point of the panel, so
+     making the reader click for it would be charging them for the fix. */
+  .ach-themes {
+    border: 1.5px solid rgba(43,39,34,0.12); border-radius: 3px; padding: 14px 16px; margin-bottom: 14px;
+    /* The unfilled remainder has to stay visible: on these bars it is the half carrying the
+       information. A flat ink wash disappeared entirely on the dark notebook, which left the
+       filled stubs floating with nothing to measure them against. */
+    --bar-track: color-mix(in srgb, var(--ink-soft) 20%, transparent);
   }
-  .ach-fam-head > svg { width: 12px; height: 12px; flex: none; align-self: center; color: var(--ink-soft); transform: rotate(-90deg); transition: transform 0.18s ease; }
-  .ach-fam.is-open .ach-fam-head > svg { transform: none; }
-  .ach-fam-head:hover .ach-fam-name { color: var(--fam); }
-  .ach-fam-head:focus-visible { outline: 2px solid var(--ink-accent); outline-offset: 4px; border-radius: 2px; }
-  .ach-fam-name { font-family: var(--type); font-size: calc(12px + var(--text-size-adjust)); letter-spacing: 0.5px; color: var(--ink); }
-  .ach-fam-count { margin-left: auto; font-family: var(--type); font-size: calc(11px + var(--text-size-adjust)); color: var(--ink-soft); }
-  .ach-fam-blurb { font-family: var(--type); font-size: calc(10px + var(--text-size-adjust)); color: var(--ink-soft); opacity: 0.75; }
-  /* One segment per theme, as wide as the theme is big and filled as far as you have got.
-     min-width keeps a three-charm theme from collapsing to a sliver nobody can read. */
-  .ach-fam-bar { display: flex; gap: 2px; height: 8px; }
-  .ach-fam-seg { flex: 1 0 0; min-width: 9px; border-radius: 3px; background: var(--bar-track); overflow: hidden; }
-  .ach-fam-seg > i { display: block; height: 100%; border-radius: 3px; background: var(--seg); }
-  .ach-fam-themes { display: grid; grid-template-columns: 1fr 1fr; gap: 11px 22px; margin-top: 13px; }
-  .ach-fam-themes[hidden] { display: none; }
-  .ach-theme { display: block; width: 100%; min-width: 0; padding: 0; border: 0; color: inherit; background: transparent; text-align: left; cursor: pointer; }
+  .ach-themes-label { font-family: var(--type); font-size: calc(10px + var(--text-size-adjust)); letter-spacing: 1px; text-transform: uppercase; color: var(--ink-soft); margin-bottom: 12px; }
+  .ach-families { display: flex; flex-direction: column; gap: 15px; }
+  .ach-fam-head { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+  .ach-fam-name { font-family: var(--type); font-size: calc(11px + var(--text-size-adjust)); letter-spacing: 0.8px; text-transform: uppercase; color: var(--fam); flex: none; }
+  .ach-fam-count { flex: none; font-family: var(--type); font-size: calc(11px + var(--text-size-adjust)); color: var(--ink-soft); }
+  .ach-fam-blurb { flex: none; font-family: var(--type); font-size: calc(10px + var(--text-size-adjust)); color: var(--ink-soft); opacity: 0.75; }
+
+  /* One line per theme: dot, name, the bar taking up whatever is left, fraction. Two lines
+     apiece was what made seventeen rows feel like a wall — on one they fit in nine. The name
+     and fraction columns are fixed so every bar in a column starts and ends on the same x. */
+  .ach-fam-themes { display: grid; grid-template-columns: 1fr 1fr; gap: 9px 26px; }
+  .ach-theme {
+    display: flex; align-items: center; gap: 8px; width: 100%; min-width: 0;
+    padding: 0; border: 0; color: inherit; background: transparent; text-align: left; cursor: pointer;
+    font-family: var(--type); font-size: calc(11px + var(--text-size-adjust)); color: var(--ink-soft);
+  }
   .ach-theme:hover .ach-theme-name { color: var(--ink); }
   .ach-theme:focus-visible { outline: 2px solid var(--ink-accent); outline-offset: 5px; border-radius: 2px; }
-  .ach-theme-head { display: flex; justify-content: space-between; align-items: baseline; font-family: var(--type); font-size: calc(11px + var(--text-size-adjust)); color: var(--ink-soft); margin-bottom: 4px; }
-  .ach-theme-name { display: flex; align-items: center; gap: 6px; }
-  /* The unfilled remainder has to stay visible: on these bars it is the half carrying the
-     information. A flat ink wash disappeared entirely on the dark notebook, which left the
-     filled stubs floating with nothing to measure them against. */
-  .ach-themes { --bar-track: color-mix(in srgb, var(--ink-soft) 20%, transparent); }
-  .ach-theme-bar { height: 7px; border-radius: 4px; background: var(--bar-track); overflow: hidden; }
-  .ach-theme-bar > div { height: 100%; border-radius: 4px; }
+  .ach-theme-name { flex: none; min-width: 9ch; }
+  .ach-theme-count { flex: none; min-width: 7ch; text-align: right; font-variant-numeric: tabular-nums; }
+  .ach-theme-bar { flex: 1 1 auto; min-width: 24px; height: 7px; border-radius: 4px; background: var(--bar-track); overflow: hidden; }
+  .ach-theme-bar > i { display: block; height: 100%; border-radius: 4px; }
 
   .ach-head-row { display: grid; grid-template-columns: minmax(0, 0.88fr) minmax(0, 1.12fr); gap: 12px; align-items: stretch; margin-bottom: 8px; }
   .ach-head-row .cat-meter { margin-bottom: 0; }
