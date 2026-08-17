@@ -784,10 +784,9 @@ export const CHALLENGES = [
     blurb: "the word is tiny, tilted, and never quite where you look",
     desc: "The word shrinks to almost nothing, good luck finding it when it's slanted off-axis and drifting somewhere on the page.",
     win: "Score 9 / 13 hunting the tiny word." },
-  // ---- Tier C minigames (own input / lose-state). free:true so they're playable now;
-  //      full gating slots in later. ----
+  // ---- Tier C minigames (own input / lose-state). ----
   { id: "impostor", name: "Impostor", rule: "impostor", mode: "medium",
-    free: true, cost: 1, target: 7, seconds: 15, tapes: 2,
+    free: false, cost: 1, target: 7, seconds: 15, tapes: 2,
     // Dark: more fakes, and cannier ones. `impostorCount` lifts the fakes from 4 to 5 (read
     // through impostorCountNow — one more chance to mis-flag, still one real page of slack
     // against the target of 7), `impostorHardWords` swaps the decoy pool for DARK_IMPOSTOR_WORDS
@@ -800,7 +799,7 @@ export const CHALLENGES = [
     desc: "Most pages will show a real word that appears in lyrics, but some are IMPOSTORS that don't appear in any real Taylor songs. Flag the impostors and answer the real ones, but don't flag a real word or fail to flag an impostor because you'll instantly lose.",
     win: "Survive the run: flag every impostor and answer 7 real words." },
   { id: "sea-of-songs", name: "Sea of Songs", rule: "sea", mode: "medium",
-    free: true, cost: 1, target: 9, seconds: 10, noTitle: false, tapes: 3,
+    free: false, cost: 1, target: 9, seconds: 10, noTitle: false, tapes: 3,
     // Dark: fewer needles AND less time. `seaMinValid`/`seaMaxValid` (read through
     // seaMinValidNow/seaMaxValidNow) cut the genuine answers per grid from 2-4 down to 1-2, so
     // the same 16-tile sea hides as little as a SINGLE right song, and the clock drops 10s->7s.
@@ -818,7 +817,7 @@ export const CHALLENGES = [
     desc: "No typing this time. Instead, each page shows a sea of song titles, click one whose lyrics contain the word. There are multiple correct answers, but most are decoys.",
     win: "Score 9 / 13 fishing the right song out of the sea." },
   { id: "common-thread", name: "Common Thread", rule: "common", mode: "medium",
-    free: true, cost: 1, target: 9, seconds: 3.5, noTitle: false, dropdown: false, tapes: 2,
+    free: false, cost: 1, target: 9, seconds: 3.5, noTitle: false, dropdown: false, tapes: 2,
     // Dark: a fourth line AND a tighter thread. `commonLines` (read through commonLinesNow) shows
     // four lyrics instead of three, so there's more to scan and a fourth constraint on the shared
     // word; `commonMaxAccept: 1` (commonMaxAcceptNow) makes the generator hunt for a page where
