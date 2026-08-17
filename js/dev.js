@@ -597,6 +597,10 @@ export function initDev(api) {
     row(btn("random sample", () => { console.log("[dev] random", api.random.sample(1000)); toast("random sample in console"); }),
         btn("reset random", () => toast(api.random.reset()), "warn"),
         btn("goal sample", () => { console.log("[dev] goals", api.goal.sample(1000)); toast("goal sample in console"); }),
+        // The goal plate takes its colour from the pinned charm's theme, so the only way to
+        // see the band in anything but today's draw is to keep re-drawing it. (For a specific
+        // one, including an earned charm to check the stamp, the console has goal.pin(id).)
+        btn("redraw goal", () => { const id = api.goal.repin(); toast(id ? `goal: ${id}` : "nothing left to pin"); }),
         btn("clear goal", () => toast(api.goal.clear()), "warn")),
     row(btn("novelty report", () => { console.log("[dev] novelty", api.novelty.coverage()); toast("novelty in console"); }),
         btn("forget words", () => { api.novelty.forget(); toast("word coverage cleared"); }, "warn"))));

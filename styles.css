@@ -6234,53 +6234,107 @@
 
   .ach-grid--folded { display: none; }
 
-  /* the pinned goal — one charm to actually go and get. Sits directly above the "long game"
-     quest card and shares its proportions, but reads as a note pinned to the page rather than
-     a panel: the red margin rule for an edge, no wash, and a paper-clip notch at the corner. */
-  .ach-goal {
-    position: relative; display: flex; gap: 16px; align-items: stretch;
-    margin: 14px 0 6px; padding: 15px 17px;
-    border: 1px solid var(--rule); border-left: 3px solid var(--margin); border-radius: 3px;
-    background: transparent;
+  /* the pinned goal — one charm to actually go and get, set as a printer's plate.
+
+     Two decisions worth keeping. First, the band carries the CHARM'S OWN theme colour in
+     --plate (ACH_GROUP_COLORS, set inline by goalCardHTML) rather than the era accent: it is
+     the one thing here that carries information, naming the shelf the goal lives on and
+     changing on every re-draw. Second, the glyph is blown up to 212px and bled off the right
+     edge as a ghost, which is the only place on this page the charm art is drawn at a size
+     where the drawing reads at all. It is decorative and aria-hidden; the collection grid
+     below is where a charm is a thing you can point at.
+
+     Deliberately NOT what this replaced: no aside column, no dashed ring around the glyph
+     (a dashed circle reads as a missing image, not as an unearned charm), and no second
+     outlined button beside the door — the re-draw is a pencilled aside, because the two are
+     not peers. */
+  .ach-plate {
+    --plate: var(--ink);
+    position: relative; overflow: hidden;
+    /* Pulled out of the page's text column on both sides, but not symmetrically, because the
+       two edges mean different things: -14px lands the left edge exactly on the red margin
+       rule, where the writing starts, and -30px cancels .card's right padding so the band runs
+       clean off the paper's right edge and takes the ghost with it. Both numbers are tied to
+       .card's own padding (58px left, 30px right); move that and these follow. */
+    margin: 16px -30px 10px -14px; padding: 20px 22px 20px 24px;
+    border-top: 3px solid var(--plate);
+    border-bottom: 1px solid rgba(43, 39, 34, 0.28);
+    background: linear-gradient(100deg,
+      color-mix(in srgb, var(--plate) 13%, transparent),
+      color-mix(in srgb, var(--plate) 3%, transparent) 58%, transparent);
   }
-  .ach-goal.done { border-left-color: var(--ink-accent); }
-  .ach-goal-main { flex: 1; min-width: 0; }
-  .ach-goal-eyebrow {
-    font-family: var(--type); font-size: calc(9.5px + var(--text-size-adjust)); letter-spacing: 1.5px;
-    text-transform: uppercase; color: var(--margin);
+  .ach-plate-kicker {
+    display: flex; align-items: center; gap: 9px;
+    font-family: var(--type); font-size: calc(9px + var(--text-size-adjust));
+    letter-spacing: 2.4px; text-transform: uppercase; color: var(--plate);
   }
-  .ach-goal.done .ach-goal-eyebrow { color: var(--ink-accent); }
-  .ach-goal-name {
-    font-family: var(--hand); font-weight: 700; font-size: calc(30px + var(--text-size-adjust)); color: var(--ink);
-    line-height: 1; margin: 2px 0 3px;
+  /* the printer's dash trailing off the kicker, cropped so it never reaches the ghost */
+  .ach-plate-kicker::after { content: ""; flex: 1; max-width: 92px; height: 1px; background: currentColor; opacity: 0.45; }
+  .ach-plate-name {
+    position: relative; font-family: var(--hand); font-weight: 700;
+    font-size: calc(48px + var(--text-size-adjust)); line-height: 0.95; color: var(--ink);
+    margin: 6px 0 4px; max-width: 22ch;
   }
-  .ach-goal-desc { font-family: var(--type); font-size: calc(10.5px + var(--text-size-adjust)); color: var(--ink-soft); line-height: 1.5; }
-  .ach-goal-foot { display: flex; align-items: center; gap: 10px; margin-top: 12px; flex-wrap: wrap; }
-  .ach-goal-note { font-family: var(--hand); font-size: calc(17px + var(--text-size-adjust)); color: var(--ink-soft); }
-  .ach-goal.done .ach-goal-note { color: var(--ink-accent); }
-  .ach-goal-btn {
-    font-family: var(--type); font-size: calc(10px + var(--text-size-adjust)); letter-spacing: 0.8px; text-transform: uppercase;
-    cursor: pointer; color: var(--ink-soft); background: transparent;
-    border: 1px solid var(--rule); border-radius: 2px; padding: 6px 10px;
-    transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+  .ach-plate-name--long { font-size: calc(40px + var(--text-size-adjust)); max-width: 26ch; }
+  .ach-plate-desc {
+    position: relative; font-family: var(--type); font-size: calc(11px + var(--text-size-adjust));
+    color: var(--ink-soft); line-height: 1.5; max-width: 42ch;
   }
-  .ach-goal-btn span { font-family: var(--hand); font-size: calc(15px + var(--text-size-adjust)); letter-spacing: 0; }
-  .ach-goal-btn:hover { color: var(--ink); border-color: var(--bead); background: var(--page-wash); }
-  .ach-goal-btn:focus-visible { outline: 2px solid var(--ink-accent); outline-offset: 2px; }
-  .ach-goal-btn--go { color: var(--ink); border-color: var(--bead); border-width: 2px; padding: 5px 11px; }
-  .ach-goal-btn--go:hover { background: rgba(212,160,23,0.11); }
-  .ach-goal-aside { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; flex: none; }
-  .ach-goal-charm {
-    display: inline-flex; align-items: center; justify-content: center;
-    width: 52px; height: 52px; border-radius: 50%;
-    border: 1px dashed var(--rule); background: transparent;
+  .ach-plate-foot { position: relative; display: flex; align-items: center; gap: 16px; flex-wrap: wrap; margin-top: 15px; }
+  /* the door: a stationery stamp, and the only object on the plate with weight */
+  .ach-plate-go {
+    font-family: var(--type); font-weight: 700; font-size: calc(11.5px + var(--text-size-adjust));
+    letter-spacing: 1.4px; text-transform: uppercase; color: #33291a; cursor: pointer;
+    padding: 10px 17px; border: 2.5px solid var(--bead); border-radius: 2px;
+    background:
+      repeating-linear-gradient(-45deg, rgba(200, 149, 31, 0.13) 0 2px, transparent 2px 7px),
+      rgba(212, 160, 23, 0.14);
+    box-shadow: 2px 2px 0 rgba(169, 121, 31, 0.36);
+    transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.15s ease;
   }
-  .ach-goal-charm.earned { border-style: solid; border-color: var(--bead); background: var(--page-wash); }
-  .ach-goal-charm .charm { display: inline-flex; width: 30px; height: 30px; opacity: 0.4; }
-  .ach-goal-charm.earned .charm { opacity: 1; }
-  .ach-goal-charm:not(.earned) .charm::before { display: none; }
-  .ach-goal-state { font-family: var(--type); font-size: calc(8.5px + var(--text-size-adjust)); letter-spacing: 1px; text-transform: uppercase; color: var(--ink-soft); }
-  .ach-goal--empty .ach-goal-name { font-size: calc(26px + var(--text-size-adjust)); }
+  .ach-plate-go:hover { background: rgba(212, 160, 23, 0.24); transform: translate(-1px, -1px); box-shadow: 3px 3px 0 rgba(169, 121, 31, 0.36); }
+  .ach-plate-go:focus-visible { outline: 2px solid var(--ink-accent); outline-offset: 3px; }
+  .ach-plate-go span { font-family: var(--hand); font-size: calc(17px + var(--text-size-adjust)); letter-spacing: 0; }
+  /* the re-draw, and the locked/no-destination notes: pencil, never chrome */
+  .ach-plate-swap {
+    border: 0; background: transparent; padding: 2px 0; cursor: pointer;
+    font-family: var(--hand); font-size: calc(19px + var(--text-size-adjust)); color: var(--ink-soft);
+    text-decoration: underline; text-decoration-color: rgba(43, 39, 34, 0.24); text-underline-offset: 4px;
+  }
+  .ach-plate-swap:hover { color: var(--ink); }
+  .ach-plate-swap:focus-visible { outline: 2px solid var(--ink-accent); outline-offset: 2px; }
+  .ach-plate-note { font-family: var(--hand); font-size: calc(19px + var(--text-size-adjust)); color: var(--ink-soft); }
+  .ach-plate-earned { font-family: var(--hand); font-size: calc(21px + var(--text-size-adjust)); color: var(--ink-accent); }
+  /* the ghost — the charm at printing scale, inked in the theme colour and bled off the edge */
+  .ach-plate-ghost {
+    position: absolute; right: -32px; top: -14px; width: 212px; height: 212px;
+    pointer-events: none; transform: rotate(-9deg);
+  }
+  .ach-plate-ghost .charm { width: 100%; height: 100%; color: var(--plate); opacity: 0.14; }
+  /* the highlighter swipe is the collection grid's language for "earned". At this size it
+     would be a colour field across a quarter of the band, so the ghost never wears one. */
+  .ach-plate-ghost .charm::before { display: none; }
+  .ach-plate.done .ach-plate-ghost .charm { opacity: 0.2; }
+  /* earned: a red rubber impression across the plate, over the ghost */
+  .ach-plate-stamp {
+    position: absolute; right: 26px; top: 50%; z-index: 1;
+    transform: translateY(-50%) rotate(-6deg);
+    display: flex; flex-direction: column; align-items: center; gap: 1px;
+    padding: 10px 20px 11px; border: 3.5px solid rgba(155, 47, 43, 0.5); border-radius: 2px;
+    color: var(--red-pen); opacity: 0.9; pointer-events: none;
+  }
+  .ach-plate-stamp b {
+    font-family: var(--type); font-weight: 700; font-size: calc(18px + var(--text-size-adjust));
+    letter-spacing: 3.5px; text-transform: uppercase;
+  }
+  .ach-plate-stamp i {
+    font-family: var(--type); font-style: normal; font-size: calc(10px + var(--text-size-adjust));
+    letter-spacing: 2.2px; text-transform: uppercase;
+  }
+  /* nothing to pin: no colour, no ghost, no stamp — the plate is blank stock */
+  .ach-plate--empty { border-top-color: rgba(43, 39, 34, 0.3); background: none; }
+  .ach-plate--empty .ach-plate-kicker { color: var(--margin); }
+  .ach-plate--empty .ach-plate-desc { max-width: 60ch; }
 
   /* the pinned "long game" quest card — catalogue completion ("I Hate It Here").
      Harmonises with the page's panel system but lifted: a gold accent edge, a faint
@@ -6356,10 +6410,22 @@
     .ach-fam-blurb { display: none; }
     .ach-quest { flex-direction: column; }
     .ach-quest-aside { flex-direction: row; align-self: flex-start; }
-    /* stacks the same way round as the quest card directly beneath it — charm below the
-       text, not above — so the two read as a pair rather than as mirror images. */
-    .ach-goal { flex-direction: column; }
-    .ach-goal-aside { flex-direction: row; align-self: flex-start; }
+    /* The plate keeps its shape; only the two things that need the width give way. The ghost
+       shrinks and pulls in so it stops sitting under the desc, and the stamp comes out of its
+       float to sit under the foot — a rubber impression across narrow body text is unreadable,
+       and above the kicker (its DOM position) it would read as a heading. */
+    .ach-plate { display: flex; flex-direction: column; padding: 18px 16px 18px 18px; }
+    .ach-plate-name { font-size: calc(36px + var(--text-size-adjust)); }
+    .ach-plate-name--long { font-size: calc(31px + var(--text-size-adjust)); }
+    /* at this width the ghost sits behind the type rather than beside it, so it drops back
+       to where it reads as tone on the paper and never as competition for the words. */
+    .ach-plate-ghost { right: -20px; top: -8px; width: 150px; height: 150px; }
+    .ach-plate-ghost .charm, .ach-plate.done .ach-plate-ghost .charm { opacity: 0.1; }
+    .ach-plate-foot { gap: 12px; margin-top: 12px; }
+    .ach-plate-stamp {
+      position: static; order: 9; align-self: flex-start; margin-top: 14px;
+      transform: rotate(-3.5deg); transform-origin: 0 50%;
+    }
     .sb-list { grid-template-columns: 1fr; }
   }
 

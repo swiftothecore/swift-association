@@ -1830,8 +1830,9 @@ function charmMarkup(icon, color) {
 const charmPokeTimers = new WeakMap();
 function wireAchievementCharmPokes(root) {
   root.querySelectorAll(
-    ".ach--earned > .charm, .ach-latest-charm > .charm, " +
-    ".ach-goal-charm.earned > .charm, .ach-quest-charm.earned > .charm"
+    // The goal plate's charm is deliberately absent: it is a 212px background ghost bled off
+    // the edge, not a token, and a fidget on it would be a fidget on the wallpaper.
+    ".ach--earned > .charm, .ach-latest-charm > .charm, .ach-quest-charm.earned > .charm"
   ).forEach((charm) => {
     if (charm.dataset.pokeWired) return;
     charm.dataset.pokeWired = "1";
@@ -3047,42 +3048,51 @@ function goalDestLabel(earn) {
   return diff ? base + " on " + diff : base;
 }
 
+/* Set as a printer's plate: one band carrying the charm's OWN theme colour, with the glyph
+   blown up as a ghost bleeding off the right edge. The colour is the informative part — it
+   says which shelf the goal lives on before a word of it is read, and it changes on every
+   re-draw — so it comes from ACH_GROUP_COLORS via the same achColor() the rest of the page
+   uses, never from the era accent. --plate is the only hook the CSS needs. */
 function goalCardHTML() {
   const a = currentGoal();
   if (!a) {
-    return `<div class="ach-goal ach-goal--empty">
-      <div class="ach-goal-main">
-        <div class="ach-goal-eyebrow">your goal</div>
-        <div class="ach-goal-name">Nothing left to pin</div>
-        <div class="ach-goal-desc">Every charm a single sitting could close is already yours. What's left is the long hauls, the streaks that want a calendar, and the secrets.</div>
-      </div>
+    return `<div class="ach-plate ach-plate--empty">
+      <div class="ach-plate-kicker">your goal</div>
+      <div class="ach-plate-name ach-plate-name--long">Nothing left to pin</div>
+      <div class="ach-plate-desc">Every charm a single sitting could close is already yours. What's left is the long hauls, the streaks that want a calendar, and the secrets.</div>
     </div>`;
   }
   const done = !!earnedAchievements[a.id];
   const entries = done ? [] : goalEntries(a.earn);
   const foot = done
-    ? `<span class="ach-goal-note">earned ${escapeHtml(recordDateLabel(earnedAchievements[a.id]))} ★</span>` +
-      `<button type="button" class="ach-goal-btn" data-goal-repin="1">pin another <span aria-hidden="true">→</span></button>`
+    ? `<span class="ach-plate-earned">earned ${escapeHtml(recordDateLabel(earnedAchievements[a.id]))} ★</span>` +
+      `<button type="button" class="ach-plate-swap" data-goal-repin="1">pin the next one</button>`
     : (entries.length
-        ? `<button type="button" class="ach-goal-btn ach-goal-btn--go" data-goal-play="1">play ${escapeHtml(goalDestLabel(a.earn))} <span aria-hidden="true">→</span></button>`
+        ? `<button type="button" class="ach-plate-go" data-goal-play="1">play ${escapeHtml(goalDestLabel(a.earn))} <span aria-hidden="true">→</span></button>`
         // Two different truths, and they must not be collapsed. A charm WITH an `earn` whose
         // pool came back empty has a destination that is locked (no dark side unlocked yet, say).
         // A charm with no `earn` has no destination at all — Custom isn't in the randomiser's
         // pool, and the desk actions aren't runs. Neither may pretend to be the other.
-        : `<span class="ach-goal-note">${escapeHtml(a.earn ? "not open to you yet" : "you'll have to go and find this one")}</span>`) +
-      `<button type="button" class="ach-goal-btn" data-goal-repin="1">pin something else</button>`;
+        : `<span class="ach-plate-note">${escapeHtml(a.earn ? "not open to you yet" : "you'll have to go and find this one")}</span>`) +
+      `<button type="button" class="ach-plate-swap" data-goal-repin="1">pin me something else</button>`;
 
-  return `<div class="ach-goal${done ? " done" : ""}">
-    <div class="ach-goal-main">
-      <div class="ach-goal-eyebrow">your goal${done ? " · met" : ""}</div>
-      <div class="ach-goal-name">${escapeHtml(a.name)}</div>
-      <div class="ach-goal-desc">${escapeHtml(a.desc)}</div>
-      <div class="ach-goal-foot">${foot}</div>
-    </div>
-    <div class="ach-goal-aside">
-      <span class="ach-goal-charm${done ? " earned" : ""}">${charmMarkup(a.icon, achColor(a))}</span>
-      <span class="ach-goal-state">${done ? "earned" : "pinned"}</span>
-    </div>
+  const group = ACH_GROUPS.find((g) => g.id === achGroupOf(a.id));
+  // The plate is a fixed-height band until a long name wraps it. Names run from "Three Times"
+  // to "Everything & Nothing All At Once", so the display size steps down rather than letting
+  // the band grow a whole line for the long half of the roster.
+  const long = a.name.length > 20 ? " ach-plate-name--long" : "";
+  const stamp = done
+    ? `<span class="ach-plate-stamp" aria-hidden="true"><b>earned</b>` +
+      `<i>${escapeHtml(recordDateLabel(earnedAchievements[a.id]))}</i></span>`
+    : "";
+
+  return `<div class="ach-plate${done ? " done" : ""}" style="--plate:${achColor(a)}">
+    <span class="ach-plate-ghost" aria-hidden="true">${charmMarkup(a.icon, achColor(a))}</span>
+    ${stamp}
+    <div class="ach-plate-kicker">${group ? `<b>${escapeHtml(group.label)}</b> · ` : ""}${done ? "and it's yours" : "go and get this one"}</div>
+    <div class="ach-plate-name${long}">${escapeHtml(a.name)}</div>
+    <div class="ach-plate-desc">${escapeHtml(a.desc)}</div>
+    <div class="ach-plate-foot">${foot}</div>
   </div>`;
 }
 
