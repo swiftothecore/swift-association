@@ -73,7 +73,15 @@ const WORDS_LONG = ["FEARLESS", "EVERMORE", "FOLKLORE", "DAYLIGHT", "DELICATE",
 // weighted to the letters those words use, plus the number every bracelet has.
 const LOOSE_GLYPHS = "LUCKYKARMALOVERSTAYPEACECLEANGOLDAEIORSTLNVW13♥★♥13".split("");
 
-let seed = 0x9e3d71b1;   // fixed default → a stable, curated-looking layout
+// One seed per page load. Every rebuild during that load replays the same desk,
+// while a fresh visit still gets a desk of its own. crypto is preferred so two
+// tabs opened together do not inherit suspiciously similar layouts.
+let seed = (() => {
+  if (globalThis.crypto && typeof globalThis.crypto.getRandomValues === "function") {
+    return globalThis.crypto.getRandomValues(new Uint32Array(1))[0];
+  }
+  return (Math.random() * 0x100000000) >>> 0;
+})();
 let densityMult = 1;     // dev knob: <1 denser, >1 sparser
 let preferenceDensityMult = 1; // player-facing Quiet mode, kept separate from the dev knob
 let showProps = true;
@@ -92,6 +100,15 @@ function makeRng(a) {
     return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
   };
 }
+// Give each independent walk its own deterministic stream. If marks or one
+// gutter consume more draws because the page grew, they must not shift the
+// already-visible incidents in another layer or gutter.
+function forkSeed(base, stream) {
+  let x = (base ^ stream) >>> 0;
+  x = Math.imul(x ^ (x >>> 16), 0x21f0aaad);
+  x = Math.imul(x ^ (x >>> 15), 0x735a2d97);
+  return (x ^ (x >>> 15)) >>> 0;
+}
 const rangeR = (r, lo, hi) => lo + r() * (hi - lo);
 const pick = (r, arr) => arr[(r() * arr.length) | 0];
 const clamp = (v, lo, hi) => (v < lo ? lo : v > hi ? hi : v);
@@ -108,12 +125,9 @@ let stats = { beads: 0, props: 0, marks: 0, incidents: 0 };
 // Words already strung on this page. Two strands reading FEARLESS in the same
 // screenful is the moment the desk stops being a desk and becomes a generator,
 // so a word is spent once it has been used and only comes back when the pool
-// runs dry.
-let usedWords = new Set();
-
-// Draw a word that has not been strung yet on this page, refilling when the
-// list is exhausted (a very long page can outlast the vocabulary).
-function takeWord(r, list) {
+// runs dry. Draw from a passed-in set so rebuild and showcase each own their
+// complete, deterministic word history.
+function takeWord(r, list, usedWords) {
   const fresh = list.filter((w) => !usedWords.has(w));
   const from = fresh.length ? fresh : (usedWords.clear(), list);
   const w = from[(r() * from.length) | 0];
@@ -299,7 +313,7 @@ function incSpill(frag, r, band, y, opts) {
 // and they spell something.
 function incStrand(frag, r, band, y, opts) {
   const bw = band[1] - band[0];
-  const word = takeWord(r, bw > 150 ? WORDS_LONG : WORDS_SHORT).replace(/ /g, "");
+  const word = takeWord(r, bw > 150 ? WORDS_LONG : WORDS_SHORT, opts.usedWords).replace(/ /g, "");
   const n = Math.min(word.length, 11);
   const len = rangeR(r, 190, 280);
 
@@ -365,7 +379,7 @@ function incRow(frag, r, band, y, opts) {
   const c = pick(r, ROUND_COLORS);
   const n = 4 + ((r() * 3) | 0);
   const spellIt = chance(r, 0.45);
-  const word = spellIt ? takeWord(r, WORDS_SHORT).replace(/ /g, "") : "";
+  const word = spellIt ? takeWord(r, WORDS_SHORT, opts.usedWords).replace(/ /g, "") : "";
   const tilt = rangeR(r, -26, 26) * Math.PI / 180;
   const step = rangeR(r, 21, 27);
   const runW = Math.abs(Math.cos(tilt)) * step * (n - 1) * 1.24;
@@ -567,7 +581,6 @@ function chooseIncident(r, bw, canLead) {
 function rebuild() {
   const el = ensureContainer();
   stats = { beads: 0, props: 0, marks: 0, incidents: 0 };
-  usedWords = new Set();
   const preference = document.body.dataset.deskDensity || "full";
   preferenceDensityMult = preference === "quiet" ? 1.8 : 1;
   if (!DESKTOP.matches || preference === "bare") { el.replaceChildren(); el.style.height = "0px"; return; }
@@ -584,11 +597,15 @@ function rebuild() {
   const bands = [leftBand, rightBand].filter((b) => b[1] - b[0] > MIN_BAND);
   if (!bands.length) { el.replaceChildren(); return; }
 
-  const r = makeRng(seed);
+  // Layout, marks and each gutter use separate streams. Page height is only a
+  // stopping point, never an input to random placement, so a taller page is an
+  // extension of the shorter composition rather than a fresh composition.
+  const layoutR = makeRng(forkSeed(seed, 0x4c41594f));
+  const marksR = makeRng(forkSeed(seed, 0x4d41524b));
   const frag = document.createDocumentFragment();
 
   // Start below the first screenful so we never collide with the fixed props.
-  const startY = VH * 0.98 + rangeR(r, 30, 120);
+  const startY = VH * 0.98 + rangeR(layoutR, 30, 120);
 
   if (debugBands) {
     for (const b of bands) {
@@ -602,13 +619,14 @@ function rebuild() {
     }
   }
 
-  if (showMarks) placeMarks(frag, r, bands, H, startY + rangeR(r, -180, 120));
+  if (showMarks) placeMarks(frag, marksR, bands, H, startY + rangeR(marksR, -180, 120));
 
   // A bag of props, refilled when it runs dry, so a long page cycles the whole
   // set before repeating anything. The tin is held out of it: the tin is a
   // spill's cause, placed by incSpill at the mouth of the fan, and letting it
   // also turn up on its own made it the one object you saw three times a page.
   let bag = DESK_PROPS.filter((p) => p.id !== "tin");
+  const usedWords = new Set();
   // Props are rationed across the WHOLE desk rather than per gutter, so the two
   // walks below cannot each place one at the same height and hand you two
   // objects in one glance.
@@ -621,46 +639,65 @@ function rebuild() {
   // one thing at a time on a strip of desk that is 450px wide and thousands
   // long. Two independent walks have no rhythm between them to notice, and each
   // one's density can answer to the width it actually has.
-  for (const band of bands) {
-    const bw = band[1] - band[0];
-    // Wide gutter, more per group: the budget follows the area, not the height.
-    const roomy = clamp(bw / 260, 0.7, 1.7);
-    let y = startY + rangeR(r, 0, 260);
+  // Process those independent walks in document order. Besides making the
+  // shared prop bag and word pool read naturally across both gutters, this is
+  // what makes their combined prefix stable: extending H only adds later
+  // groups and can never insert extra random draws before an existing group.
+  const walks = bands.map((band) => {
+    const r = makeRng(forkSeed(seed, band.side === 0 ? 0x4c454654 : 0x52474854));
+    return {
+      band,
+      r,
+      bw: band[1] - band[0],
+      roomy: clamp((band[1] - band[0]) / 260, 0.7, 1.7),
+      y: startY + rangeR(r, 0, 260),
+    };
+  });
 
-    while (y < H - 90 && stats.beads < BEAD_CAP) {
-      // --- one group: a busy patch, a few things from the same moment ---
-      const members = Math.max(1, Math.round(rangeR(r, 1.4, 3.6) * roomy));
+  while (stats.beads < BEAD_CAP) {
+    const walk = walks.reduce((next, candidate) =>
+      candidate.y < H - 90 && (!next || candidate.y < next.y) ? candidate : next, null);
+    if (!walk) break;
+    const { band, r, bw, roomy } = walk;
+    let { y } = walk;
 
-      for (let i = 0; i < members && y < H - 90; i++) {
-        // Spread across the full width of the gutter. Everything used to be laid
-        // out around the band's centre line, which quietly turned a 450px strip
-        // of desk into a 100px column with empty margins either side of it.
-        const cx = rangeR(r, band[0] + 26, band[1] - 26);
+    // --- one group: a busy patch, a few things from the same moment ---
+    const members = Math.max(1, Math.round(rangeR(r, 1.4, 3.6) * roomy));
 
-        if (showProps && propAllowed(y) && chance(r, 0.42)) {
-          if (!bag.length) bag = DESK_PROPS.filter((p) => p.id !== "tin");
-          const used = placeProp(frag, r, band, y, bag);
-          if (used) {
-            propYs.push(y);
-            y += used + rangeR(r, 40, 130) * densityMult * preferenceDensityMult;
-            continue;
-          }
+    // Once a group has begun, finish it even if its tail falls below the
+    // current container. Cutting a group at H would consume its void early;
+    // after a height increase that would change the cross-gutter walk order.
+    // overflow clips the tail until the page is tall enough to reveal it.
+    for (let i = 0; i < members; i++) {
+      // Spread across the full width of the gutter. Everything used to be laid
+      // out around the band's centre line, which quietly turned a 450px strip
+      // of desk into a 100px column with empty margins either side of it.
+      const cx = rangeR(r, band[0] + 26, band[1] - 26);
+
+      if (showProps && propAllowed(y) && chance(r, 0.42)) {
+        if (!bag.length) bag = DESK_PROPS.filter((p) => p.id !== "tin");
+        const used = placeProp(frag, r, band, y, bag);
+        if (used) {
+          propYs.push(y);
+          y += used + rangeR(r, 40, 130) * densityMult * preferenceDensityMult;
+          continue;
         }
-
-        const type = chooseIncident(r, bw, i > 0);
-        if (!type) break;
-        const used = INCIDENTS[type].fn(frag, r, band, y, { allowProp: showProps, cx });
-        stats.incidents++;
-        // Short gap inside a group: these things are near each other because
-        // they are part of the same moment.
-        y += used * rangeR(r, 0.35, 0.8) + rangeR(r, 20, 120) * densityMult * preferenceDensityMult;
       }
 
-      // --- then the void. Bare wood is what makes everything above it read as
-      // an incident rather than as wallpaper, so it is generous. It is also the
-      // number to reach for first if this ever feels too busy or too bare. ---
-      y += rangeR(r, 200, 620) * densityMult * preferenceDensityMult;
+      const type = chooseIncident(r, bw, i > 0);
+      if (!type) break;
+      const used = INCIDENTS[type].fn(frag, r, band, y, { allowProp: showProps, cx, usedWords });
+      stats.incidents++;
+      // Short gap inside a group: these things are near each other because
+      // they are part of the same moment.
+      y += used * rangeR(r, 0.35, 0.8) + rangeR(r, 20, 120) * densityMult * preferenceDensityMult;
     }
+
+    // --- then the void. Bare wood is what makes everything above it read as
+    // an incident rather than as wallpaper, so it is generous. It is also the
+    // number to reach for first if this ever feels too busy or too bare. ---
+    y += rangeR(r, 200, 620) * densityMult * preferenceDensityMult;
+    walk.y = y;
   }
 
   el.replaceChildren(frag);
@@ -722,7 +759,7 @@ window.__deskScatter = {
     const r = makeRng(seed);
     const frag = document.createDocumentFragment();
     stats = { beads: 0, props: 0, marks: 0, incidents: 0 };
-    usedWords = new Set();
+    const usedWords = new Set();
     let y = window.innerHeight * 0.35, side = 0;
     const put = (node, band, h) => {
       node.style.left = ((band[0] + band[1]) / 2).toFixed(1) + "px";
@@ -743,7 +780,7 @@ window.__deskScatter = {
     }
     for (const t of Object.keys(INCIDENTS)) {
       const band = side ? rightBand : leftBand;
-      y += INCIDENTS[t].fn(frag, r, band, y, { allowProp: true, cx: (band[0] + band[1]) / 2 }) + 80;
+      y += INCIDENTS[t].fn(frag, r, band, y, { allowProp: true, cx: (band[0] + band[1]) / 2, usedWords }) + 80;
       side = 1 - side;
     }
     el.style.height = (y + 240) + "px";
