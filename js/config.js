@@ -3110,6 +3110,39 @@ export const ACH_GROUP_COLORS = {
   margins:   "#7d5a3f",
   mastery:   "#8a6d1f",
 };
+
+/* Families: one layer ABOVE the themes, so seventeen equal rows read as four groups of
+   related ones. Nothing merges. A family is only a bag of theme ids, which means
+   ACH_GROUPS stays the unit a charm belongs to and the unit the theme-completion charms
+   (The Things That I Love, One Single Thread Of Gold, We Gather Stones) count — adding a
+   family can never change what any of them cost.
+   The split is by what the charm is priced in, not by which screen you were on: craft is
+   how well you played, shelf is what you played, catalogue is what you know, and off the
+   page is where you were sitting. A theme left out of every family here is not lost — see
+   achFamilies() in app.js, which sweeps orphans into the last family rather than dropping
+   them off the page. */
+export const ACH_FAMILIES = [
+  { id: "craft",     label: "The craft",     blurb: "how well you played",
+    themes: ["core", "perfect", "clock", "misfires", "longhaul"] },
+  { id: "shelf",     label: "The shelf",     blurb: "what you played",
+    themes: ["daily", "infinite", "lyricist", "albumFocus", "custom", "guests", "bonus", "challenges"] },
+  { id: "knowledge", label: "The catalogue", blurb: "what you know",
+    themes: ["catalogue", "nemesis"] },
+  { id: "offpage",   label: "Off the page",  blurb: "where you were sitting",
+    themes: ["margins", "mastery"] },
+];
+// One hue per family, for the index tabs down the collection. Deliberately drawn from the
+// middle of each family's own themes so a tab and the dots beneath it read as one run.
+export const ACH_FAMILY_COLORS = {
+  craft:     "#b07d2a",
+  shelf:     "#3f6b7d",
+  knowledge: "#a33a3a",
+  offpage:   "#6b5a3f",
+  // Not a family in ACH_FAMILIES: the trailing Secret section gets a tab of its own, and it
+  // takes the plain ink of the masked charms rather than a hue that would hint at a theme.
+  sealed:    "#6f6a60",
+};
+
 // Membership: only the non-core ids are listed; everything else defaults to "core"
 // (groupOf in app.js). Keeps this in sync without re-listing every achievement.
 export const ACH_GROUP_OF = {

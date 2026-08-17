@@ -5959,16 +5959,40 @@
   .ach-page-title { font-family: var(--hand); font-weight: 700; font-size: calc(44px + var(--text-size-adjust)); color: var(--ink); line-height: 0.95; }
   .ach-page-sub { font-family: var(--type); font-size: calc(12px + var(--text-size-adjust)); letter-spacing: 1px; color: var(--ink-soft); }
 
-  /* by-theme breakdown — a small colour-coded progress bar per group */
+  /* At a glance — four family rows, each a segmented bar of the themes it holds. The
+     seventeen theme rows live folded under the family that owns them. */
   .ach-themes { border: 1.5px solid rgba(43,39,34,0.12); border-radius: 3px; padding: 14px 16px; margin-bottom: 14px; }
   .ach-themes-label { font-family: var(--type); font-size: calc(10px + var(--text-size-adjust)); letter-spacing: 1px; text-transform: uppercase; color: var(--ink-soft); margin-bottom: 12px; }
-  .ach-themes-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 11px 22px; }
+  .ach-families { display: flex; flex-direction: column; gap: 13px; }
+  .ach-fam + .ach-fam { border-top: 1px solid rgba(43,39,34,0.08); padding-top: 13px; }
+  .ach-fam-head {
+    display: flex; align-items: baseline; gap: 8px; width: 100%; padding: 0 0 5px;
+    border: 0; background: transparent; color: inherit; text-align: left; cursor: pointer;
+  }
+  .ach-fam-head > svg { width: 12px; height: 12px; flex: none; align-self: center; color: var(--ink-soft); transform: rotate(-90deg); transition: transform 0.18s ease; }
+  .ach-fam.is-open .ach-fam-head > svg { transform: none; }
+  .ach-fam-head:hover .ach-fam-name { color: var(--fam); }
+  .ach-fam-head:focus-visible { outline: 2px solid var(--ink-accent); outline-offset: 4px; border-radius: 2px; }
+  .ach-fam-name { font-family: var(--type); font-size: calc(12px + var(--text-size-adjust)); letter-spacing: 0.5px; color: var(--ink); }
+  .ach-fam-count { margin-left: auto; font-family: var(--type); font-size: calc(11px + var(--text-size-adjust)); color: var(--ink-soft); }
+  .ach-fam-blurb { font-family: var(--type); font-size: calc(10px + var(--text-size-adjust)); color: var(--ink-soft); opacity: 0.75; }
+  /* One segment per theme, as wide as the theme is big and filled as far as you have got.
+     min-width keeps a three-charm theme from collapsing to a sliver nobody can read. */
+  .ach-fam-bar { display: flex; gap: 2px; height: 8px; }
+  .ach-fam-seg { flex: 1 0 0; min-width: 9px; border-radius: 3px; background: var(--bar-track); overflow: hidden; }
+  .ach-fam-seg > i { display: block; height: 100%; border-radius: 3px; background: var(--seg); }
+  .ach-fam-themes { display: grid; grid-template-columns: 1fr 1fr; gap: 11px 22px; margin-top: 13px; }
+  .ach-fam-themes[hidden] { display: none; }
   .ach-theme { display: block; width: 100%; min-width: 0; padding: 0; border: 0; color: inherit; background: transparent; text-align: left; cursor: pointer; }
   .ach-theme:hover .ach-theme-name { color: var(--ink); }
   .ach-theme:focus-visible { outline: 2px solid var(--ink-accent); outline-offset: 5px; border-radius: 2px; }
   .ach-theme-head { display: flex; justify-content: space-between; align-items: baseline; font-family: var(--type); font-size: calc(11px + var(--text-size-adjust)); color: var(--ink-soft); margin-bottom: 4px; }
   .ach-theme-name { display: flex; align-items: center; gap: 6px; }
-  .ach-theme-bar { height: 7px; border-radius: 4px; background: rgba(43,39,34,0.10); overflow: hidden; }
+  /* The unfilled remainder has to stay visible: on these bars it is the half carrying the
+     information. A flat ink wash disappeared entirely on the dark notebook, which left the
+     filled stubs floating with nothing to measure them against. */
+  .ach-themes { --bar-track: color-mix(in srgb, var(--ink-soft) 20%, transparent); }
+  .ach-theme-bar { height: 7px; border-radius: 4px; background: var(--bar-track); overflow: hidden; }
   .ach-theme-bar > div { height: 100%; border-radius: 4px; }
 
   .ach-head-row { display: grid; grid-template-columns: minmax(0, 0.88fr) minmax(0, 1.12fr); gap: 12px; align-items: stretch; margin-bottom: 8px; }
@@ -6060,6 +6084,35 @@
   @media (max-width: 560px) {
     .howto-card { padding: 14px 15px 38px; min-height: 0; }
   }
+
+  /* Index tabs: the divider that opens one family's run of themes. The tab is a paper tab
+     stuck to the page, square on the left where it meets the margin and rounded off on the
+     right, with the family's hue washed through it and drawn on across the rule. */
+  .ach-fam-divider {
+    display: flex; align-items: center; gap: 9px;
+    margin: 38px 0 4px; scroll-margin-top: 18px;
+  }
+  .ach-fam-divider:first-of-type { margin-top: 26px; }
+  .ach-fam-tab {
+    flex: none; padding: 4px 13px 4px 11px; border-radius: 2px 10px 10px 2px;
+    font-family: var(--type); font-size: calc(11px + var(--text-size-adjust));
+    letter-spacing: 1.2px; text-transform: uppercase; color: var(--fam);
+    background: color-mix(in srgb, var(--fam) 13%, transparent);
+    box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--fam) 32%, transparent);
+  }
+  .ach-fam-divider .ach-fam-blurb { flex: none; font-style: italic; }
+  .ach-fam-rule { flex: 1 1 auto; height: 2px; border-radius: 1px; background: var(--fam); opacity: 0.28; }
+  .ach-fam-foldall {
+    flex: none; display: grid; place-items: center; width: 22px; height: 22px; padding: 0;
+    border: 0; border-radius: 3px; background: transparent; color: var(--fam);
+    opacity: 0.65; cursor: pointer;
+  }
+  .ach-fam-foldall svg { width: 14px; height: 14px; transition: transform 0.18s ease; }
+  .ach-fam-divider.is-folded .ach-fam-foldall svg { transform: rotate(-90deg); }
+  .ach-fam-foldall:hover { opacity: 1; background: color-mix(in srgb, var(--fam) 12%, transparent); }
+  .ach-fam-foldall:focus-visible { outline: 2px solid var(--ink-accent); outline-offset: 1px; }
+  /* a theme heading directly under its own tab does not need the full gap again */
+  .ach-fam-divider + .ach-section { margin-top: 14px; }
 
   .ach-section { margin-top: 22px; display: flex; align-items: center; gap: 7px; scroll-margin-top: 18px; }
   .ach-group-dot { width: 9px; height: 9px; border-radius: 50%; flex: none; box-shadow: inset 0 0 0 1px rgba(43,39,34,0.25); }
@@ -6216,7 +6269,10 @@
 
   @media (max-width: 560px) {
     .ach-head-row { grid-template-columns: 1fr; }
-    .ach-themes-grid { grid-template-columns: 1fr; }
+    .ach-fam-themes { grid-template-columns: 1fr; }
+    /* the name and the count keep the row; the aside is the first thing to go when it gets
+       tight, in the panel and on the tabs alike */
+    .ach-fam-blurb { display: none; }
     .ach-quest { flex-direction: column; }
     .ach-quest-aside { flex-direction: row; align-self: flex-start; }
     /* stacks the same way round as the quest card directly beneath it — charm below the
