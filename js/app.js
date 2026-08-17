@@ -2792,16 +2792,24 @@ function renderAchievementsPage() {
      by a gesture — nothing here is worth making the reader click for. What made seventeen
      rows feel like a wall was never the count, it was that each row spent two lines (name
      and fraction stacked over a full-width bar); on one line, with the bar flexing in the
-     middle, the lot fits in nine. */
+     middle, the lot fits in nine.
+     A row wears its FAMILY'S hue, not its theme's, and has no dot. Seventeen hues, each
+     spent twice a row on a dot and a bar, was colour carrying no information: nobody can
+     learn why Clock is blue, so it read as decoration at the density where decoration turns
+     into noise. Four hues say the one thing the panel means by colour — which block you are
+     in — and the theme keeps its own hue where hue is actually an identifier, on the section
+     dots down the page. The bar takes var(--fam) off .ach-fam rather than an inline colour. */
   const themeRowHTML = (id) => {
     const g = ACH_GROUPS.find((x) => x.id === id);
     if (!g) return "";
     const { got, tot } = achThemeTally(id);
-    const col = ACH_GROUP_COLORS[id];
+    // No <i> at all on an untouched theme, so the fill can carry a min-width without a
+    // dead nub appearing on the zeroes. "Barely started" and "not started" have to look
+    // like different states: 2/31 drew a 5px dot the eye read as a rendering fault.
+    const fill = got > 0 ? `<i style="width:${(got / tot) * 100}%"></i>` : "";
     return `<button type="button" class="ach-theme" data-ach-theme="${id}" aria-label="Go to ${escapeHtml(g.label)} charms">` +
-      `<span class="ach-group-dot" style="background:${col}"></span>` +
       `<span class="ach-theme-name">${g.short}</span>` +
-      `<span class="ach-theme-bar"><i style="width:${tot ? (got / tot) * 100 : 0}%;background:${col}"></i></span>` +
+      `<span class="ach-theme-bar">${fill}</span>` +
       `<span class="ach-theme-count">${got} / ${tot}</span>` +
       `</button>`;
   };
