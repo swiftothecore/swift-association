@@ -666,8 +666,11 @@ export const CHALLENGES = [
     win: "Score 9 / 13 as the clock keeps shrinking." },
   { id: "title-in", name: "Title...?", rule: "titleHas", mode: "medium",
     free: false, cost: 1, target: 9, noTitle: false, dropdown: false, tapes: 2,
-    blurb: "10s · no suggestions · the word must be in the title",
-    desc: "Flip the script, name a song where the TITLE contains the word.",
+    blurb: "10s · no suggestions · the word itself must be in the title",
+    // Titles are judged strictly here whatever the notebook's stem setting says (see the
+    // titleHas branch in refreshRound): "crazy" wants a title with "crazy" in it, not
+    // "Crazier". The pool is built strictly to match, so every page still has an answer.
+    desc: "Flip the script, name a song where the TITLE contains the word itself.",
     win: "Score 9 / 13, each answer's title holding the word." },
   { id: "short-title", name: "Short n' Sweet", rule: "shorttitle", mode: "medium",
     free: false, cost: 1, target: 9, pool: "easy", noTitle: false, tapes: 1,

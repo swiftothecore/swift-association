@@ -8542,8 +8542,10 @@ function installCorpus(grouped, words, opts = {}) {
   playableWords = words.filter((w) => songsContainingWord(w, false).length >= 1);
   if (!playableWords.length) throw new Error("No playable words found in data");
   // Title...? challenge pool: words that appear in at least one song title (so every
-  // round can be won by naming a title that holds the word).
-  titleWordList = playableWords.filter((w) => titleSongsForWord(w, false).length >= 1);
+  // round can be won by naming a title that holds the word). Strict, because the challenge
+  // judges titles strictly — a word whose only title is a derived form ("crazy" → "Crazier")
+  // has no legal answer and must never be dealt.
+  titleWordList = playableWords.filter((w) => titleSongsForWord(w, true).length >= 1);
   // Short n' Sweet pool: words with at least one valid (lyrics) song whose title is ≤2 words,
   // so every round can be won with a one- or two-word title.
   // One pool per title-length rule, so the dark side's one-word-only run is guaranteed a
@@ -11064,7 +11066,7 @@ function renderTitleRuleBanner() {
   if (gameType !== "challenge" || !currentChallenge) return;
   const el = ensureChallBanner();
   const msg = currentChallenge.rule === "titleHas"
-    ? "the word must be in the title"
+    ? "the word itself must be in the title"
     : maxTitleWordsNow() === 1 ? "one-word titles only" : "one- or two-word titles only";
   el.innerHTML = `<span class="chall-prog-name">${msg}</span>`;
 }
@@ -13487,8 +13489,11 @@ function advanceRound() {
     currentLyricSongs = bothUnionSongs();
   }
   // Title...?: flip the rule — the only valid answers are songs whose TITLE holds the word.
+  // Always the strict regex, whatever the notebook's stem setting says: on a page reading
+  // "crazy" the lenient matcher would make "Crazier" the one legal answer, which reads as a
+  // trick rather than a rule. The word has to be in the title as printed.
   if (gameType === "challenge" && currentChallenge && currentChallenge.rule === "titleHas")
-    currentSongs = titleSongsForWord(currentWord, effectiveStrict());
+    currentSongs = titleSongsForWord(currentWord, true);
   // Short n' Sweet: only one- or two-word titles are acceptable answers — so the rarity
   // count, the suggestion pool and the example pool all reflect the SHORT-title subset.
   if (gameType === "challenge" && currentChallenge && currentChallenge.rule === "shorttitle")
@@ -13926,7 +13931,7 @@ function roundAcceptsSong(song) {
     return !L || (currentChallenge.strictAlpha ? L > lastAlphaLetter : L >= lastAlphaLetter);
   }
   if (currentChallenge.rule === "titleHas")
-    return wordRegex(currentWord, effectiveStrict()).test(song.title);
+    return wordRegex(currentWord, true).test(song.title);
   if (currentChallenge.rule === "shorttitle")
     return titleWordCount(song.title) <= maxTitleWordsNow();
   if (currentChallenge.rule === "chain")
@@ -14162,6 +14167,11 @@ function rejectAlpha(letter) {
 // Title...?: the word's in the lyrics but not the title they named.
 function rejectTitleHas() {
   softRejectFlash(`that's in the lyrics — name a <b>title</b> with the word`);
+}
+// Title...?: the title holds a different form of the word ("Crazier" for "crazy"), and the
+// rule wants the word as printed.
+function rejectTitleForm() {
+  softRejectFlash(`close — the title needs <b>${escapeHtml(currentWord)}</b> itself`);
 }
 // Short n' Sweet: the named title is too long.
 function rejectShortTitle() {
@@ -14896,8 +14906,15 @@ function submitAnswer(song, isTimeout) {
   // rejected (keep hunting for a title with the word) — a wholly unrelated song still
   // falls through and scores wrong.
   if (song && !isTimeout && currentChallenge && currentChallenge.rule === "titleHas") {
-    const rx = wordRegex(currentWord, effectiveStrict());
-    if (!rx.test(song.title) && rx.test(song.lyrics)) { noteWrongSubmission(song); rejectTitleHas(); return; }
+    const strictRx = wordRegex(currentWord, true);
+    const looseRx = wordRegex(currentWord, effectiveStrict());
+    if (!strictRx.test(song.title) && (looseRx.test(song.title) || looseRx.test(song.lyrics))) {
+      // A title holding only a derived form ("Crazier" for "crazy") is the near miss most
+      // likely to be tried, so it gets its own line rather than the lyrics one.
+      noteWrongSubmission(song);
+      looseRx.test(song.title) ? rejectTitleForm() : rejectTitleHas();
+      return;
+    }
   }
 
   // Short n' Sweet: a song valid by lyrics but with a 3+-word title is soft-rejected so
