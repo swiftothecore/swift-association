@@ -1525,6 +1525,9 @@
     box-shadow: 0 3px 6px rgba(0,0,0,0.22); white-space: nowrap; transform: rotate(1.2deg);
   }
   .chall-tokens b { font-size: calc(16px + var(--text-size-adjust)); color: #8a2f22; }
+  /* an SVG has no baseline of its own, so centre it against the flex row instead of letting it
+     hang off its bottom edge next to the count */
+  .chall-tokens .chall-ticket-svg { width: 22px; height: 15px; align-self: center; }
   .chall-tok-label { color: #a9713e; }
   /* the perforation: a dashed rule down the stub with a notch bitten from each edge */
   .chall-tok-perf {
@@ -1601,6 +1604,9 @@
   .chall-item.selected .chall-item-name { color: #1f3a52; }
   .chall-item-mark { grid-column: 2; grid-row: 1; display: flex; justify-content: center; }
   .chall-mark-svg { width: 20px; height: 20px; display: block; }
+  /* The token mark. Inline-block with a text-relative nudge so it sits on the line wherever a
+     sentence mentions a token, and in currentColor so it inks itself from its surroundings. */
+  .chall-ticket-svg { width: 21px; height: 14px; display: inline-block; vertical-align: -0.24em; color: currentColor; }
   /* The progress mark owns the quiet state. Hover gives its small right-hand square to a pin,
      keeping the list to one deliberate action at a time. Keyboard focus reveals the pin only
      when the pin itself is reached, so selecting a challenge does not leave the icon showing. */
@@ -1980,41 +1986,119 @@
   }
 
   /* ---- challenge return, below the action row ----
-     Completed runs lead to a reversible shelf decision, not a second currency. */
-  .chall-return-progress {
-    display: flex; align-items: baseline; gap: 8px; margin-top: 14px;
-    padding-top: 10px; border-top: 1px dashed rgba(60,40,18,0.22);
-    font-family: var(--type); color: var(--ink-soft);
-  }
-  .chall-return-count { font-size: calc(12px + var(--text-size-adjust)); font-weight: 700; color: #4a5b66; }
-  .chall-return-progress-lab { font-size: calc(10px + var(--text-size-adjust)); letter-spacing: 0.3px; line-height: 1.4; }
-  .chall-return {
-    position: relative; display: flex; flex-direction: column; align-items: flex-start; gap: 3px;
-    width: 100%; box-sizing: border-box; margin-top: 14px; padding: 10px 14px;
-    font-family: var(--type); color: var(--ink); text-align: left;
-    background: color-mix(in srgb, var(--paper) 92%, #a9845c); border: 1px dashed rgba(60,40,18,0.45); border-radius: 2px;
-    box-shadow: 2px 2px 0 rgba(43,39,34,0.12); transform: rotate(0.25deg); cursor: pointer;
+     Completed runs lead to a reversible shelf decision, not a second currency, so the whole
+     path is ONE object, the admission stub the wallet and the unlock button are already made
+     of, in three states. `.is-filling` is the ticket not yet valid (pale stock, seven punch
+     holes, no stamp), `.is-ready` is it stamped REFUND and clickable, `.is-asking` is the same
+     stamped stub holding the question. Shell, perforation, stamp position and footprint are
+     shared, so the states read as one ticket changing rather than three widgets swapping. */
+  .chall-return-slot { margin-top: 15px; padding-top: 12px; border-top: 1px dashed rgba(60,40,18,0.24); }
+  .chall-return-card {
+    position: relative; width: 100%; box-sizing: border-box;
+    display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 0 12px;
+    padding: 10px 13px 10px 26px; text-align: left;
+    font-family: var(--type); color: #6a3b1e;
+    background: #e6d3ab; border: 1.5px solid rgba(106,59,30,0.42); border-radius: 3px;
+    box-shadow: 2px 2px 0 rgba(43,39,34,0.15); transform: rotate(-0.4deg);
     transition: background-color 0.24s ease, color 0.2s ease, transform 0.12s, box-shadow 0.2s;
   }
-  .chall-return-lab { font-size: calc(13px + var(--text-size-adjust)); letter-spacing: 0.5px; font-weight: 700; }
-  .chall-return-sub { font-size: calc(9.5px + var(--text-size-adjust)); letter-spacing: 0.7px; color: var(--ink-soft); }
-  .chall-return:hover, .chall-return:focus-visible { background: color-mix(in srgb, var(--paper) 78%, #c9ad84); }
-  .chall-return:active { transform: rotate(0.25deg) translateY(1px); box-shadow: 1px 1px 0 rgba(43,39,34,0.12); }
-  .chall-return-confirm {
-    margin-top: 14px; padding: 11px 12px; border-top: 1px dashed rgba(60,40,18,0.32);
-    background: rgba(164,79,60,0.07); font-family: var(--type);
+  /* the perforation: the wallet stub's dashed rule and bitten notches, on the ticket's left
+     edge because this is the half you keep handing back */
+  .chall-return-perf {
+    position: absolute; left: 15px; top: 6px; bottom: 6px;
+    border-left: 2px dashed rgba(106,59,30,0.42);
   }
-  .chall-return-warning { color: var(--ink); font-size: calc(11px + var(--text-size-adjust)); line-height: 1.45; }
-  .chall-return-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 9px; }
+  /* the notches are bites out of the stock, not punched rings: filled with the paper behind
+     and left unoutlined, exactly as the wallet stub does it */
+  .chall-return-perf::before, .chall-return-perf::after {
+    content: ""; position: absolute; left: -5px; width: 9px; height: 9px;
+    border-radius: 50%; background: var(--paper);
+  }
+  .chall-return-perf::before { top: -10px; }
+  .chall-return-perf::after { bottom: -10px; }
+  /* the stamp, the twin of the unlock ticket's "admit one" */
+  .chall-return-stamp {
+    font-size: calc(8.5px + var(--text-size-adjust)); letter-spacing: 1.4px; text-transform: uppercase;
+    color: #8a2f22; border: 1.5px solid rgba(138,47,34,0.55); border-radius: 2px; padding: 1px 5px;
+    transform: rotate(-3deg); white-space: nowrap;
+  }
+  .chall-return-body { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+  /* balanced so the confirm question, which is the one line here long enough to wrap in a
+     ~300px column, breaks into two even lines instead of leaving "shelf?" stranded alone */
+  .chall-return-lab {
+    font-size: calc(12px + var(--text-size-adjust)); letter-spacing: 0.4px; font-weight: 700; line-height: 1.25;
+    text-wrap: balance;
+  }
+  .chall-return-sub { font-size: calc(9.5px + var(--text-size-adjust)); letter-spacing: 0.5px; line-height: 1.4; color: #a9713e; }
+  /* what the stub is worth, inked in the wallet's own stamp red */
+  .chall-return-pay {
+    display: inline-flex; align-items: center; gap: 4px; white-space: nowrap;
+    font-size: calc(12px + var(--text-size-adjust)); font-weight: 700; color: #8a2f22;
+  }
+  .chall-return-pay .chall-ticket-svg { width: 19px; height: 13px; }
+
+  /* ready: a real ticket you can hand over */
+  button.chall-return-card { cursor: pointer; }
+  .chall-return-card.is-ready:hover, .chall-return-card.is-ready:focus-visible {
+    background: #efe0be; border-color: rgba(106,59,30,0.62);
+    box-shadow: 3px 3px 0 rgba(43,39,34,0.2);
+  }
+  .chall-return-card.is-ready:active { transform: rotate(-0.4deg) translateY(1px); box-shadow: 1px 1px 0 rgba(43,39,34,0.15); }
+
+  /* filling: the same stub before it is worth anything, in paper-pale stock and pencil ink, flat on
+     the desk. Nothing here is red, because nothing here is spendable yet. */
+  .chall-return-card.is-filling {
+    color: #6b6252; background: #e7e0cd; border-color: rgba(60,40,18,0.22);
+    box-shadow: 1px 1px 0 rgba(43,39,34,0.08); transform: none;
+  }
+  .chall-return-card.is-filling .chall-return-perf,
+  .chall-return-card.is-filling .chall-return-perf::before,
+  .chall-return-card.is-filling .chall-return-perf::after { border-color: rgba(60,40,18,0.24); }
+  .chall-return-card.is-filling .chall-return-sub { color: #8b8375; }
+  /* the holes, punched left to right as runs are finished. One row whatever
+     CHALLENGE_RETURN_RUNS is: wrapped into a block they stop reading as a punched strip and
+     start reading as a dice face. */
+  .chall-return-punches { display: flex; gap: 3px; }
+  .chall-return-punches i {
+    width: 6px; height: 6px; flex: none; border-radius: 50%;
+    border: 1.5px solid rgba(60,40,18,0.3); background: transparent;
+  }
+  .chall-return-punches i.is-punched { background: #6b6252; border-color: #6b6252; box-shadow: inset 0 1px 0 rgba(0,0,0,0.35); }
+
+  /* asking: the stamped stub, still in place, now holding the question. The body simply
+     grows a row of actions: the card does not move, so nothing jumps under the pointer. */
+  .chall-return-card.is-asking { grid-template-columns: auto 1fr; align-items: start; }
+  .chall-return-card.is-asking .chall-return-stamp { margin-top: 2px; }
+  .chall-return-card.is-asking .chall-return-lab { color: var(--ink); }
+  .chall-return-actions {
+    grid-column: 1 / -1; display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; margin-top: 11px;
+  }
   .chall-return-actions button {
-    padding: 7px 10px; border-radius: 2px; font-family: var(--type); font-size: calc(10px + var(--text-size-adjust)); cursor: pointer;
+    font-family: var(--type); font-size: calc(10.5px + var(--text-size-adjust)); letter-spacing: 0.5px; font-weight: 700;
+    padding: 7px 11px; border-radius: 2px; cursor: pointer; white-space: nowrap;
+    transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
   }
-  .chall-return-cancel { color: var(--ink-soft); background: transparent; border: 1px solid rgba(60,40,18,0.28); }
-  .chall-return-final { color: #f5efe1; background: #8a3b32; border: 1px solid #743128; }
-  .chall-return-cancel:hover, .chall-return-cancel:focus-visible { color: var(--ink); border-color: var(--ink-soft); }
-  .chall-return-final:hover, .chall-return-final:focus-visible { background: #713027; }
+  .chall-return-cancel { color: #6a3b1e; background: rgba(255,255,255,0.34); border: 1.5px solid rgba(106,59,30,0.42); }
+  .chall-return-cancel:hover, .chall-return-cancel:focus-visible { background: rgba(255,255,255,0.66); border-color: rgba(106,59,30,0.7); }
+  .chall-return-final {
+    display: inline-flex; align-items: center; gap: 6px;
+    color: #f7ecd8; background: #8a2f22; border: 1.5px solid #6d2419;
+  }
+  .chall-return-final .chall-return-pay { color: inherit; font-size: inherit; }
+  .chall-return-final:hover, .chall-return-final:focus-visible { background: #74251a; }
 
   @media (max-width: 620px) {
+    /* On a phone the stub has ~210px of usable width, and three columns squeeze the label into
+       "Return to / the shelf". Fold it to two rows instead, the stamp and what it is worth on
+       top and the words underneath with the whole width to themselves, and give the confirm's two
+       actions a full-width row each, which is the better tap target anyway. */
+    .chall-return-card { grid-template-columns: auto 1fr; gap: 7px 10px; }
+    .chall-return-card > .chall-return-stamp,
+    .chall-return-card > .chall-return-punches { grid-area: 1 / 1; }
+    .chall-return-card > .chall-return-pay { grid-area: 1 / 2; justify-self: end; }
+    .chall-return-card > .chall-return-body { grid-area: 2 / 1 / auto / -1; }
+    .chall-return-actions { margin-top: 3px; }
+    .chall-return-actions button { flex: 1 1 100%; justify-content: center; }
     .chall-layout { grid-template-columns: 1fr; }
     .chall-col { border-right: none; border-bottom: 1px solid rgba(60,40,18,0.16); padding-bottom: 8px; margin-bottom: 14px; }
     .chall-list { padding-right: 0; margin-right: 0; padding-left: 14px; margin-left: -14px; }
@@ -2022,8 +2106,8 @@
     .af-board { grid-template-columns: repeat(3, 1fr); gap: 24px 12px; }
   }
   @media (prefers-reduced-motion: reduce) {
-    .chall-tokens, .chall-return, .chall-go { transform: none; }
-    .chall-go:active, .chall-return:active { transform: translateY(1px); }
+    .chall-tokens, .chall-return-card, .chall-go { transform: none; }
+    .chall-go:active, .chall-return-card.is-ready:active { transform: translateY(1px); }
   }
   body[data-reduce-motion="on"] .chall-detail-seal.is-burning .chall-seal-fire,
   body[data-reduce-motion="on"] .chall-detail-seal.is-burning .chall-seal-fire::after,

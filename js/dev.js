@@ -298,8 +298,11 @@ export function initDev(api) {
   // be played from the Challenges screen — then reports the count in the readout.
   // Challenge returns need seven completed runs, which is not something anyone is going to sit
   // through for a card check. `ready` parks the selected challenge at the eligibility edge;
-  // `giveBack` exercises the actual relock + refund mutation.
+  // `giveBack` exercises the actual relock + refund mutation. `punches` sets any count in
+  // between, which `ready` and `clear` cannot: the return stub spends most of its life part
+  // filled, and each punch count is its own thing to look at.
   const returnSel = select(api.challenge.list(), (x) => x, (x) => x);
+  const returnRunsNum = num(4);
   body.append(section("challenges",
     row(btn("open shelf", () => api.challenge.open()),
         btn("unlock all", () => { readout.textContent = `${api.challenge.unlockAll()} challenges unlocked`; }),
@@ -318,6 +321,10 @@ export function initDev(api) {
           ? `${returnSel.value}: returned to shelf` : `${returnSel.value}: not eligible`; }),
         btn("state", () => { readout.textContent = JSON.stringify(api.challenge.returns.state(returnSel.value)); }),
         btn("clear return runs", () => { api.challenge.returns.reset(); readout.textContent = "return runs cleared"; }, "warn")),
+    row("punches", returnRunsNum, btn("set", () => {
+          const n = api.challenge.returns.completed(returnSel.value, +returnRunsNum.value);
+          readout.textContent = `${returnSel.value}: ${n} completed runs · open its card`;
+        })),
     // Flourish charms hide behind ??? until their challenge is defeated, so checking how one
     // reads as a revealed target otherwise means actually beating the challenge first.
     row(btn("defeat all (reveal flourishes)", () => { const n = api.challenge.defeat();

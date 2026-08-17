@@ -6801,6 +6801,16 @@ const CHALL_TICK_DARK = `<svg viewBox="0 0 20 20" class="chall-mark-svg" aria-hi
 const CHALL_RING = `<svg viewBox="0 0 20 20" class="chall-mark-svg" aria-hidden="true"><circle cx="10" cy="10" r="8.5" fill="none" stroke="#b6a98d" stroke-width="1.6"/></svg>`;
 const CHALL_LOCK = `<svg viewBox="0 0 20 20" class="chall-mark-svg" aria-hidden="true"><rect x="4.5" y="9" width="11" height="8" rx="1.4" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M6.8 9 V6.7 a3.2 3.2 0 0 1 6.4 0 V9" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>`;
 const CHALL_STAR = `<svg viewBox="0 0 24 24" class="chall-star-svg" aria-hidden="true"><path d="M12 2.3 L14.94 7.96 L21.22 9 L16.76 13.55 L17.7 19.85 L12 17 L6.3 19.85 L7.24 13.55 L2.78 9 L9.06 7.96 Z" fill="#e0a32f" stroke="#b9821f" stroke-width="1.1" stroke-linejoin="round" stroke-linecap="round"/></svg>`;
+// The token itself: an admission ticket with a notch bitten out of the top and bottom of its
+// stub line, the same object the wallet and the unlock button are already built from in CSS.
+// Drawn rather than set as 🎟 because every other mark on these cards is drawn: the emoji
+// arrives as a colour glyph that ignores the palette, renders at a different weight in every
+// font stack, and was the loudest reason the token surfaces refused to sit together. In
+// currentColor throughout, so it inks itself from whatever it is sitting inside.
+const CHALL_TICKET = `<svg viewBox="0 0 24 16" class="chall-ticket-svg" aria-hidden="true">` +
+  `<path d="M3.2 2.4 H14 A2 2 0 0 0 18 2.4 H20.8 A1.4 1.4 0 0 1 22.2 3.8 V12.2 A1.4 1.4 0 0 1 20.8 13.6 H18 A2 2 0 0 0 14 13.6 H3.2 A1.4 1.4 0 0 1 1.8 12.2 V3.8 A1.4 1.4 0 0 1 3.2 2.4 Z" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/>` +
+  `<path d="M16 5.4 V10.6" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-dasharray="1.5 1.7" opacity="0.75"/>` +
+  `</svg>`;
 // The pin: a drawing pin pushed in at an angle, grip up and needle running down to the
 // corner, so the glyph reads as a pin at a glance instead of needing to be worked out —
 // which the old head-on tack did not, at the 15px it renders inside a 24px button. This
@@ -7101,7 +7111,7 @@ function renderChallengesPage() {
       `<div class="chall-head-sub">spend a token · defeat the rule</div>` +
       `<span class="chall-tokens" title="spend a token to unlock a challenge">` +
         `<span class="chall-tok-perf"></span>` +
-        `🎟 <b>${tk}</b> <span class="chall-tok-label">token${tk === 1 ? "" : "s"}</span></span>` +
+        `${CHALL_TICKET}<b>${tk}</b> <span class="chall-tok-label">token${tk === 1 ? "" : "s"}</span></span>` +
     `</div>` +
     `<div class="chall-layout">` +
       `<div class="chall-col">` +
@@ -7197,11 +7207,11 @@ function renderChallengeDetail(id) {
           `<span class="chall-unlock-perf"></span>` +
           `<span class="chall-unlock-stamp">admit one</span>` +
           `<span class="chall-unlock-lab">unlock</span></button>` +
-        `<div class="chall-buy-cost">spends 🎟 ${price} token${price === 1 ? "" : "s"}</div>` +
+        `<div class="chall-buy-cost">spends ${CHALL_TICKET} ${price} token${price === 1 ? "" : "s"}</div>` +
       `</div>`;
     } else {
       action = `<div class="chall-need-wrap">` +
-          `<div class="chall-need">need a token · 🎟 ${cost}</div>` +
+          `<div class="chall-need">need a token · ${CHALL_TICKET} ${cost}</div>` +
           `<div class="chall-need-hint">beat a challenge for the first time, or return an eligible challenge to the shelf</div>` +
         `</div>`;
     }
@@ -7261,32 +7271,69 @@ function renderChallengeDetail(id) {
       `</div>`;
   }
 
-  // Return path, below the action row. Eligibility stays on the card forever once earned,
-  // but the button only appears while the undefeated token-bought challenge is open.
+  // Return path, below the action row.
+  //
+  // One kraft stub in three states, not the three unrelated widgets this used to be (a
+  // slate-blue counter rule, a dashed tan panel, a red confirm box, none of which shared a
+  // colour, an edge or an alignment with each other or with the wallet they were talking
+  // about). A return is the unlock run backwards, so the object is the unlock's own object:
+  // the admission stub, with the same punched perforation down its edge that the wallet and
+  // the unlock button already carry. The three states are that one ticket being filled in,
+  // stamped, and handed back.
+  //
+  // The stub keeps one position and one footprint in every state, so arming the return and
+  // cancelling it never shove the card around underneath the pointer. Eligibility stays on the
+  // card forever once earned, but the stub only appears while the undefeated token-bought
+  // challenge is open.
+  const returnPerf = `<span class="chall-return-perf" aria-hidden="true"></span>`;
+  const returnPay = `<span class="chall-return-pay">${CHALL_TICKET}<b>+${cost}</b></span>`;
+  const returnSlot = (inner) => `<div class="chall-return-slot">${inner}</div>`;
   let returnPanel = "";
   if (challengeReturnReady(id)) {
     if (challReturnConfirmId === id) {
-      returnPanel =
-        `<div class="chall-return-confirm" role="group" aria-label="Confirm challenge return">` +
-          `<div class="chall-return-warning">Return ${escapeHtml(c.name)} to the locked shelf? Your scores and attempts stay recorded.</div>` +
-          `<div class="chall-return-actions">` +
-            `<button type="button" class="chall-return-cancel" data-return-cancel>keep access</button>` +
-            `<button type="button" class="chall-return-final" data-return-confirm="${id}">return it · 🎟 +${cost}</button>` +
-          `</div>` +
-        `</div>`;
+      returnPanel = returnSlot(
+        `<div class="chall-return-card is-asking" role="group" aria-label="Confirm challenge return">` +
+          returnPerf +
+          `<span class="chall-return-stamp">refund</span>` +
+          `<span class="chall-return-body">` +
+            `<span class="chall-return-lab">Put ${escapeHtml(c.name)} back on the shelf?</span>` +
+            `<span class="chall-return-sub">it relocks · your scores and attempts stay recorded</span>` +
+          `</span>` +
+          // Outside the text column on purpose: as a grid child it spans the whole stub, which
+          // is the only way both actions fit on one line in a ~300px detail column.
+          `<span class="chall-return-actions">` +
+            `<button type="button" class="chall-return-cancel" data-return-cancel>keep it</button>` +
+            `<button type="button" class="chall-return-final" data-return-confirm="${id}">return it ${returnPay}</button>` +
+          `</span>` +
+        `</div>`);
     } else {
-      returnPanel =
-        `<button type="button" class="chall-return" data-return="${id}">` +
-          `<span class="chall-return-lab">Return challenge to the shelf</span>` +
-          `<span class="chall-return-sub">relock it and recover your token · progress stays</span>` +
-        `</button>`;
+      returnPanel = returnSlot(
+        `<button type="button" class="chall-return-card is-ready" data-return="${id}">` +
+          returnPerf +
+          `<span class="chall-return-stamp">refund</span>` +
+          `<span class="chall-return-body">` +
+            `<span class="chall-return-lab">Return to the shelf</span>` +
+            `<span class="chall-return-sub">your scores stay</span>` +
+          `</span>` +
+          returnPay +
+        `</button>`);
     }
   } else if (open && !c.free && !c.mastery && !rec.defeated && rec.returnRuns > 0) {
-    returnPanel =
-      `<div class="chall-return-progress">` +
-        `<span class="chall-return-count">${rec.returnRuns} / ${CHALLENGE_RETURN_RUNS}</span>` +
-        `<span class="chall-return-progress-lab">completed runs · ${CHALLENGE_RETURN_RUNS} lets you return it for your token</span>` +
-      `</div>`;
+    // The unvalidated stub: pale stock, no stamp, and the count told as punches rather than
+    // as "4 / 7": the same seven holes the finished ticket would have, so the wait reads as
+    // this exact object filling up rather than as a progress bar for something unrelated.
+    const done = Math.min(rec.returnRuns, CHALLENGE_RETURN_RUNS);
+    const punches = Array.from({ length: CHALLENGE_RETURN_RUNS },
+      (_, i) => `<i${i < done ? ` class="is-punched"` : ""}></i>`).join("");
+    returnPanel = returnSlot(
+      `<div class="chall-return-card is-filling">` +
+        returnPerf +
+        `<span class="chall-return-punches" aria-hidden="true">${punches}</span>` +
+        `<span class="chall-return-body">` +
+          `<span class="chall-return-lab">${done} of ${CHALLENGE_RETURN_RUNS} runs finished</span>` +
+          `<span class="chall-return-sub">at ${CHALLENGE_RETURN_RUNS} you can trade it back for its token</span>` +
+        `</span>` +
+      `</div>`);
   }
 
   // While the dark rules are showing, the record line has to follow them: quoting the base
@@ -11600,9 +11647,11 @@ function endChallenge() {
     : outOfGuesses
       ? `<div class="chall-result-status">out of guesses — the song got away</div>`
       : `<div class="chall-result-status">not yet — ${escapeHtml(c.win)}</div>`;
-  const tokenLine = firstTime ? `<div class="chall-result-token">🎟 +1 token earned</div>` : "";
+  const tokenLine = firstTime ? `<div class="chall-result-token">${CHALL_TICKET} +1 token earned</div>` : "";
+  // Same ticket mark as the stub this line is pointing at, so the sentence and the object it
+  // sends you to are recognisably about the same thing.
   const returnLine = returnJustReady
-    ? `<div class="chall-result-token">you can now return this challenge for your token</div>` : "";
+    ? `<div class="chall-result-token">${CHALL_TICKET} this challenge can now be returned for its token</div>` : "";
   // Lyric Lover is judged on word-perfect recall, not the 0–13 score — surface that count.
   const verseLine = c.rule === "verse"
     ? `<div class="chall-result-meta">${gameVersePerfect} line${gameVersePerfect === 1 ? "" : "s"} recalled word-for-word</div>`
