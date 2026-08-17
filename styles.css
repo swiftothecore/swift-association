@@ -4155,10 +4155,18 @@
     padding: 0 2px; transform: rotate(-1.2deg) translateY(-0.15em);
   }
 
-  /* rubber-stamp rarity badge — a faded, rotated ink stamp pressed onto the
-     page for notable (non-common) words. Colour deepens with rarity; common
-     words show no stamp. mix-blend multiply lets the paper grain read through. */
+  /* rubber-stamp rarity badge — a rotated ink stamp pressed onto the page for
+     notable (non-common) words. Common words show no stamp. mix-blend multiply
+     lets the paper grain read through.
+     The tiers separate on TWO axes, not one. Hue climbs off the desk's own
+     pencil taupe into gold, red and then a deep purple, and --stamp-op presses
+     each tier harder into the paper than the last, so the rarest word looks
+     like the pad was re-inked for it. The weight axis is load-bearing rather
+     than decorative: at the old flat 0.58 every colour was washed 42% back
+     toward cream, which is what turned a real red into dusty rose. A saturated
+     hue only survives here if the ink is laid down heavily enough to keep it. */
   .rarity-stamp {
+    --stamp-op: 0.58;
     position: absolute; top: -14px; right: 6%; z-index: 2;
     font-family: var(--type); font-weight: 700; font-size: calc(14px + var(--text-size-adjust));
     letter-spacing: 2px; text-transform: uppercase; white-space: nowrap;
@@ -4168,15 +4176,25 @@
     transform: rotate(7deg) scale(1.35);
     box-shadow: inset 0 0 0 1px currentColor;
   }
-  .word-wrap[data-rarity="rare"]     .rarity-stamp { color: #b0512f; }
-  .word-wrap[data-rarity="scarce"]   .rarity-stamp { color: #9e2b2b; }
-  .word-wrap[data-rarity="singular"] .rarity-stamp { color: #7a1d1d; }
+  /* the gold is pulled toward amber rather than the notebook's own accent gold,
+     which the masthead and hint pill already own — a stamp is ink, not accent */
+  .word-wrap[data-rarity="rare"]     .rarity-stamp { color: #af760b; --stamp-op: 0.80; }
+  .word-wrap[data-rarity="scarce"]   .rarity-stamp { color: #c02026; --stamp-op: 0.86; }
+  .word-wrap[data-rarity="singular"] .rarity-stamp { color: #4a1f66; --stamp-op: 0.92; }
   .rarity-stamp.show { animation: stamp-in 0.45s cubic-bezier(.2,1.4,.4,1) forwards; }
   @keyframes stamp-in {
-    0%   { opacity: 0;    transform: rotate(7deg) scale(1.6); }
-    60%  { opacity: 0.7;  transform: rotate(7deg) scale(0.92); }
-    100% { opacity: 0.58; transform: rotate(7deg) scale(1); }
+    0%   { opacity: 0; transform: rotate(7deg) scale(1.6); }
+    /* overshoot past the settled weight — the press before the pad lifts */
+    60%  { opacity: calc(var(--stamp-op) + 0.12); transform: rotate(7deg) scale(0.92); }
+    100% { opacity: var(--stamp-op); transform: rotate(7deg) scale(1); }
   }
+  /* Dark page: multiply against a near-black sheet drives every one of these to
+     mud, and a deep purple worst of all. Lay the ink on normally instead, in
+     lifted variants of the same four hues so the ladder still reads. */
+  :root[data-theme="dark"] .rarity-stamp { mix-blend-mode: normal; color: #9d947f; --stamp-op: 0.62; }
+  :root[data-theme="dark"] .word-wrap[data-rarity="rare"]     .rarity-stamp { color: #e0aa3c; --stamp-op: 0.80; }
+  :root[data-theme="dark"] .word-wrap[data-rarity="scarce"]   .rarity-stamp { color: #e8635c; --stamp-op: 0.86; }
+  :root[data-theme="dark"] .word-wrap[data-rarity="singular"] .rarity-stamp { color: #b493ea; --stamp-op: 0.92; }
 
   /* ---------- Off-limits note (Hard/Ultra "not in the title" rule) ---------- */
   /* soft red-tinted pills — one per song whose title holds the prompt word */
@@ -7596,7 +7614,7 @@
   body[data-reduce-motion="on"] .kg-ghost { transition: none; }
   body[data-reduce-motion="on"] .margin-tally.show { animation: none; opacity: 0.9; }
   body[data-reduce-motion="on"] .life-mark.spent::after { animation: none; }
-  body[data-reduce-motion="on"] .rarity-stamp.show { animation: none; opacity: 0.58; transform: rotate(7deg) scale(1); }
+  body[data-reduce-motion="on"] .rarity-stamp.show { animation: none; opacity: var(--stamp-op); transform: rotate(7deg) scale(1); }
   body[data-reduce-motion="on"] .cc-ring { animation: none; stroke-dashoffset: 0; }
   body[data-reduce-motion="on"] .page-flip-sheet { display: none; }
   body[data-reduce-motion="on"] .card,
