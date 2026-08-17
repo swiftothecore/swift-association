@@ -14160,6 +14160,7 @@ function isOffLimitsPick(song) {
 // keep the clock running so the player can answer the same word with a valid song.
 let rejectFlashTimer = null;
 function rejectOffLimits(song) {
+  unlock("submit-title-answer-off-limits");
   const input = $("songInput");
   input.value = "";
   dropdownItems = []; activeIndex = -1;

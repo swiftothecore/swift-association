@@ -2800,6 +2800,9 @@ export const ACHIEVEMENTS = [
   // Read off the RAW line, before the matcher lowercases it — which it does very early.
   { id: "submit-answer-in-all-caps", name: "JE SUIS CALME", desc: "Submit an answer in full caps", secret: true, icon: "shoutcaps" },
   { id: "submit-prompt-word-as-answer", name: "A Crook Who Was Caught", desc: "Submit the prompt word itself as your answer", secret: true, icon: "caughtout" },
+  // Fires on the soft-reject itself (rejectOffLimits), so it catches every path a title pick
+  // can arrive by — dropdown, Enter, exact-title — not just a clean typed submission.
+  { id: "submit-title-answer-off-limits", name: "It's Me, Hi", desc: "Try an answer with the word right there in the title, on a mode that won't allow it", secret: true, icon: "placeholder" },
   /* The dated ones. "august" is the folklore song, not a prompt word — there is no "august"
      in words.json, so the song title is the only reading of this that can ever fire. */
   { id: "answer-august-in-august", name: "August Slipped Away", desc: "Answer with “august” in the month of August", secret: true, icon: "tornmonth" },
@@ -3235,6 +3238,7 @@ export const ACH_GROUP_OF = {
   "finish-with-no-answers": "misfires", "submit-same-wrong-answer-5-times-one-round": "misfires",
   "answer-13-wrong-having-typed-every-round": "misfires", "miss-round-after-every-hint": "misfires",
   "submit-answer-in-all-caps": "misfires", "submit-prompt-word-as-answer": "misfires",
+  "submit-title-answer-off-limits": "misfires",
   "quit-round-1-before-typing": "misfires", "give-up-after-12-before-13": "misfires",
   "take-first-suggestion-all-13-rounds": "misfires", "answer-same-song-twice-in-row": "misfires",
   "answer-same-song-3-times-one-game": "misfires", "same-final-score-3-games-in-row": "misfires",
