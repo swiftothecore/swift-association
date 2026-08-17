@@ -235,6 +235,23 @@ export function initDev(api) {
         "score=", scoreN, btn("set", () => api.setScore(+scoreN.value)),
         btn("end now", () => api.endNow(), "warn"))));
 
+  // ---- Answer reveal ---------------------------------------------------------
+  // The verdict's cards and the expansion under them. The two things worth a control here are
+  // both hard to reach by playing: a page wide enough to hit the cap and show the searcher
+  // tail (which "widest page" deals on demand), and the reason a page offers no expansion at
+  // all, since Ultra, a tap grid, Both Of Us and the settings toggle all look identical from
+  // the outside — the readout names whichever one refused.
+  const revOut = mk("span", { class: "dv-note" }, "—");
+  const readReveal = () => {
+    const s = api.reveal.state();
+    revOut.textContent = !s.word ? "no live page"
+      : `"${s.word}" · ${s.valid} valid · ${s.cards} card${s.cards === 1 ? "" : "s"} · ` +
+        (s.expandable ? `expands (cap ${s.cap})` : `no expansion${s.refusedBy ? ` — ${s.refusedBy}` : ""}`);
+  };
+  body.append(section("answer reveal",
+    row(btn("widest page", () => { api.reveal.widest(); readReveal(); }),
+        btn("read", readReveal), revOut)));
+
   // ---- Typed answers ---------------------------------------------------------
   // The typo allowance is a fairness lever on the modes that make you type the whole
   // title, so it wants judging by feel: play a stretch with it off, a stretch with it on.

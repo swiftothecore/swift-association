@@ -158,7 +158,11 @@ export const MODES = {
   easy:   { id: "easy",   label: "Easy",   seconds: 15, dropdown: true,  pool: "easy",  strict: false, noTitle: false, examples: 3, hint: true,  blurb: "15s · suggestions & hints · common words" },
   medium: { id: "medium", label: "Normal", seconds: 10, dropdown: true,  pool: "all",   strict: false, noTitle: true,  examples: 3, hint: false, blurb: "10s · suggestions · all words · not in the title" },
   hard:   { id: "hard",   label: "Hard",   seconds: 7,  dropdown: false, pool: "hard",  strict: false, noTitle: true,  examples: 3, hint: false, blurb: "7s · type the full title · rarer words · not in the title" },
-  ultra:  { id: "ultra",  label: "Ultra",  seconds: 5,  dropdown: false, pool: "ultra", strict: false, noTitle: true,  examples: 1, hint: false, blurb: "5s · type the full title · rarest · not in the title" },
+  // `moreExamples: false` is Ultra's alone: every other mode lets a missed page open out into
+  // the rest of the field (see MORE_EXAMPLES_MAX). Ultra shows its one card and closes. The
+  // reveal is post-mortem either way, so this isn't about difficulty — it's that Ultra's whole
+  // manner is one glance and gone, and a page you can sit and study contradicts it.
+  ultra:  { id: "ultra",  label: "Ultra",  seconds: 5,  dropdown: false, pool: "ultra", strict: false, noTitle: true,  examples: 1, hint: false, moreExamples: false, blurb: "5s · type the full title · rarest · not in the title" },
   // Lyric-only: no title input (lyricOnly), longer clock. You answer by typing a lyric
   // line (a few words around the prompt word are enough — the matcher is fuzzy).
   lyricist: { id: "lyricist", label: "Lyricist", seconds: 20, dropdown: false, pool: "all", strict: false, noTitle: false, examples: 3, hint: false, lyricOnly: true, blurb: "20s · type a lyric line, not the title" },
@@ -166,6 +170,12 @@ export const MODES = {
   // forgiving levers as Normal; the only difference is the clock never runs.
   relaxed: { id: "relaxed", label: "Relaxed", seconds: 0, dropdown: true, pool: "all", strict: false, noTitle: false, examples: 3, hint: true,  blurb: "no timer · suggestions & hints · all words" },
 };
+/* How many of the round's remaining songs the verdict will list when the player opens out the
+   reveal. The example CARDS carry a lyric line each, which is why there are only ever a few of
+   them; this list carries titles alone, so it can afford a dozen. Past that the answer stops
+   being "here's the field" and starts being a concordance, which is what the lyric searcher is
+   for — over the cap the list shows this many and hands the tail to /search. */
+export const MORE_EXAMPLES_MAX = 12;
 export const MODE_ORDER = ["relaxed", "easy", "medium", "hard", "ultra", "lyricist"];
 // The start-screen picker presents two groups. The ladder (relaxed→ultra) is one axis —
 // naming the song, tuned harder or softer. Lyricist is a different MODALITY (answer by a

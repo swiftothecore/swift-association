@@ -4957,6 +4957,48 @@
     border: none; padding: 2px 0; cursor: pointer;
   }
   .lyric-fullsong:hover { text-decoration: underline; }
+
+  /* The rest of the page's field (see moreSongsBlock). The toggle borrows the context peek's
+     dashed-underline vocabulary so the verdict has one quiet-control language rather than two,
+     and the list it opens is deliberately the plainest thing on the screen: a margin-ruled
+     column of titles, no lyric, no card. Cards are the proof and they keep the weight; this is
+     an index, and an index that competed with them would defeat the point of folding it away. */
+  .more-songs-toggle {
+    display: inline-block; margin: 2px 0 0; padding: 1px 0;
+    font-family: var(--type); font-size: calc(10px + var(--text-size-adjust)); letter-spacing: 0.8px; text-transform: uppercase;
+    color: var(--ink-soft); background: transparent;
+    border: none; border-bottom: 1px dashed var(--ink-soft);
+    cursor: pointer;
+  }
+  .more-songs-toggle:hover { color: var(--ink); }
+  .more-songs { margin-top: 10px; text-align: left; }
+  .more-songs-list { list-style: none; margin: 0 0 8px; padding: 0; }
+  /* One rule down the left, the album colour carried by a bead of a dot per row — the same
+     colour-only era language the cards use, at index scale. */
+  .ms-row {
+    display: flex; align-items: baseline; gap: 7px;
+    padding: 3px 0 3px 12px; border-left: 1px solid rgba(43,39,34,0.12);
+  }
+  .ms-dot {
+    flex: none; width: 6px; height: 6px; border-radius: 50%;
+    background: var(--album-color, var(--ink-soft)); opacity: 0.85;
+    transform: translateY(-1px);
+  }
+  .ms-title { font-family: var(--hand); font-size: calc(18px + var(--text-size-adjust)); color: var(--ink); line-height: 1.3; }
+  /* Sits straight after the title, exactly as the cards' .album-tag does. Right-aligning it to
+     the margin instead turns the list into a table of contents with a gap wide enough to read
+     as a mistake, and breaks the one album-naming pattern the verdict already had. */
+  .ms-album {
+    font-family: var(--type); font-size: calc(9px + var(--text-size-adjust)); letter-spacing: 0.8px; text-transform: uppercase;
+    color: var(--album-color, var(--ink-soft)); opacity: 0.8;
+  }
+  .more-songs-all {
+    display: inline-block;
+    font-family: var(--type); font-size: calc(10px + var(--text-size-adjust)); letter-spacing: 0.8px; text-transform: uppercase;
+    color: var(--ink-soft); text-decoration: none; border-bottom: 1px dashed var(--ink-soft);
+  }
+  .more-songs-all:hover { color: var(--ink); }
+
   .cd-paused { font-family: var(--type); font-size: calc(12px + var(--text-size-adjust)); color: var(--ink-soft); font-style: italic; }
 
   .countdown {

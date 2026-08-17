@@ -22,7 +22,7 @@ import {
   SEA_GRID_SIZE, SEA_MIN_VALID, SEA_MAX_VALID,
   COMMON_LINES, COMMON_MIN_SONGS, COMMON_MAX_SONGS, COMMON_GEN_ATTEMPTS, COMMON_MAX_ACCEPT,
   ODD_TILES, WHOSE_TILES, WHOSE_MIN_WORDS, WHOSE_GEN_ATTEMPTS, WHOSE_HARD_POOL,
-  BOTH_WORDS, BOTH_MIN_SONGS, BOTH_PARTNER_TRIES, BOTH_REVEAL_SONGS,
+  BOTH_WORDS, BOTH_MIN_SONGS, BOTH_PARTNER_TRIES, BOTH_REVEAL_SONGS, MORE_EXAMPLES_MAX,
   PRESS_RIDE_STEP, PRESS_CHARM_RIDE, PRESS_FLOURISH_RIDE, RISK_MAX_STAKE, RISK_TOKENS, RISK_TOKEN_VALUE,
   ALBUM_FOCUS_DIFFS, ALBUM_FOCUS_TARGET,
   GUEST_SHELF_SLOTS, GUESTS, GUEST_DIFFS, GUEST_TARGET, TAYLOR_BUCKETS,
@@ -15524,6 +15524,51 @@ function lyricCardContext(song, word, anchorLine) {
     `</div>`;
 }
 
+/* The rest of the page's field, folded away under the example cards. "What else held that
+   word?" is a question the verdict couldn't answer before: the cards stop at three (one on
+   Ultra) because each one carries a lyric line, and a fourth and fifth card push the advance
+   button off the screen. So the expansion answers it in the other currency — titles only, no
+   lyric — which is cheap enough to list a dozen of. Cards are the proof; this is the field.
+   `shown` is the songs already on cards, excluded so the list is strictly what the player
+   hasn't seen. Returns "" whenever there's nothing to add or the mode/settings refuse it:
+     - examples switched off: the player asked for no reveal, so don't offer a bigger one. Two
+       separate ways to say that — the notebook-wide setting, and a Custom preset that turned
+       its own `examples` lever down to 0 (CUSTOM_EXAMPLES_MAX allows it). A run that shows no
+       cards must not offer to list the field instead; that's the lever being ignored.
+     - Ultra: `moreExamples: false`, see MODES.
+     - the tap grids: their answers light up on the grid itself, and the grid IS the reveal.
+     - Both Of Us: its cards are per-word proof that the page was findable, and a bare title
+       list can't carry that — it would read as a fourth answer to a different question.
+   Draws from the pool the CALLER narrowed, never a fresh word lookup: on Deep Cut, Album
+   Focus, the alphabet chain and the rest, `currentSongs` is already the subset the rule would
+   have accepted, and listing songs the page would have rejected teaches the wrong rule. */
+function moreSongsBlock(pool, shown, word) {
+  if (!settings.showExamples || !(currentMode.examples > 0)) return "";
+  if (currentMode.moreExamples === false) return "";
+  if (tapGridActive()) return "";
+  if (bothRuleActive() && bothWords.length > 1) return "";
+  const seen = new Set((shown || []).map((s) => s.title));
+  const rest = (pool || []).filter((s) => !seen.has(s.title));
+  if (!rest.length) return "";
+  const picks = rest.slice(0, MORE_EXAMPLES_MAX);
+  const rows = picks.map((s) => {
+    const color = albumColor(s.album) || "var(--ink-soft)";
+    const album = s.album ? `<span class="ms-album">${escapeHtml(s.album)}</span>` : "";
+    return `<li class="ms-row" style="--album-color:${color}">` +
+      `<span class="ms-dot" aria-hidden="true"></span>` +
+      `<span class="ms-title">${escapeHtml(censor(s.title))}</span>${album}</li>`;
+  }).join("");
+  // Over the cap, the tail goes where an exhaustive answer belongs. Opened in a new tab so a
+  // run in progress survives the curiosity.
+  const tail = rest.length > picks.length && word
+    ? `<a class="more-songs-all" href="search/#q=${encodeURIComponent(word)}" target="_blank" rel="noopener"` +
+      ` title="See every song with “${escapeHtml(word)}” in the lyric searcher">all ${rest.length} in the searcher →</a>`
+    : "";
+  const label = rest.length === 1 ? "1 more song" : `${rest.length} more songs`;
+  return `<button type="button" class="more-songs-toggle" aria-expanded="false" aria-controls="moreSongs">${label}</button>` +
+    `<div class="more-songs" id="moreSongs" hidden><ul class="more-songs-list">${rows}</ul>${tail}</div>`;
+}
+
 const LYRIC_BANNERS = { base: "✓ you knew the line", good: "✓ nicely recalled", perfect: "✓ word-perfect", verse: "✓ the whole verse" };
 
 // A reusable peel-and-stick foil star — the teacher's gold star, pressed into the
@@ -15599,6 +15644,14 @@ function showCorrectFeedback(song, lyricMatch) {
   // rule — the card above is already showing the highlighted variant, so it lands with the
   // evidence in view. Once, then silent. Skipped when the verse note is already talking.
   const formsNote = firstNote ? "" : wordFormsNote((multi || both) ? null : song, multi ? null : (lyricMatch ? lyricMatch.line : null));
+  // "What else held that word?" — the same expansion a missed page offers, because the
+  // curiosity is at least as strong on a page you just landed as on one you lost. Shuffled:
+  // with the answer already found there's no lead card to earn its place at the top, so the
+  // rest of the field arrives in no particular order.
+  const shownSongs = multi
+    ? roundNamed.map((t) => currentSongs.find((s) => s.title === t)).filter(Boolean)
+    : song ? [song] : [];
+  const more = moreSongsBlock(shuffle(currentSongs.slice()), shownSongs, currentWord);
   // Auto-advance setting on → a countdown + skip; off → a plain "next page" button.
   const auto = settings.autoAdvance;
   const advanceUI = auto
@@ -15609,6 +15662,7 @@ function showCorrectFeedback(song, lyricMatch) {
     ${firstNote}
     ${card}
     ${formsNote}
+    ${more}
     ${advanceUI}`;
   if (formsNote) markCoachmark("wordForms");   // it's on screen now — spend the one-time note
   feedbackShownAt = Date.now();
@@ -15661,7 +15715,10 @@ function showWrongFeedback(song, isTimeout) {
     } else {
       const examples = ordered.slice(0, n);
       const cards = examples.map((s) => lyricCard(s, currentWord, true, null, true)).join("");
-      help = `<span class="red-note">songs that hold "<b>${escapeHtml(currentWord)}</b>"</span>${cards}`;
+      // The expansion continues `ordered`, so the list picks up exactly where the cards left
+      // off instead of re-shuffling the same songs into a different sequence.
+      help = `<span class="red-note">songs that hold "<b>${escapeHtml(currentWord)}</b>"</span>${cards}` +
+        moreSongsBlock(ordered, examples, currentWord);
     }
   }
   fb.innerHTML = `
@@ -17061,6 +17118,24 @@ function wireInput() {
       }
       return;
     }
+    // The rest of the page's field. Same pairing as the context peek — the list is the
+    // toggle's next sibling — and the same reason to pause an auto-advance: a list that
+    // scrolls away mid-read is worse than no list at all.
+    const more = e.target.closest(".more-songs-toggle");
+    if (more) {
+      const box = more.nextElementSibling;
+      if (box && box.classList.contains("more-songs")) {
+        const showing = box.hidden;
+        box.hidden = !showing;
+        more.setAttribute("aria-expanded", String(showing));
+        // The count is worth keeping in the collapsed label and worth dropping from the open
+        // one, where the list itself is the count.
+        if (showing) { more.dataset.label = more.textContent; more.textContent = "hide the rest"; }
+        else if (more.dataset.label) more.textContent = more.dataset.label;
+        if (showing) pauseAutoAdvanceForReading();
+      }
+      return;
+    }
     const full = e.target.closest(".lyric-fullsong");
     if (full) openFullSong(full.dataset.song, full.dataset.word);
   }));
@@ -17451,7 +17526,7 @@ function renderSettingsBody() {
       setChecklistHTML([
         setCheckHTML("autoAdvance", "Auto-advance", "on a hit; or wait and tap “next page”"),
         setCheckHTML("enterOnMiss", "Enter advances on a miss", "leaves the answer screen"),
-        setCheckHTML("showExamples", "Show example songs", "after a miss"),
+        setCheckHTML("showExamples", "Show example songs", "cards after a miss, and the rest of the field on either verdict"),
         setCheckHTML("stemMatching", "Match word variants", "off = exact word only (love won’t match loving)"),
         setCheckHTML("enableHints", "Hints", "Easy &amp; Relaxed; a hinted run can’t set a personal best"),
         setCheckHTML("censorExplicit", "Censor explicit words", "mask swearing in lyrics &amp; titles (f**k, s**t)"),
@@ -18741,6 +18816,22 @@ function devApplyWord(word) {
   renderHintAffordance();
 }
 
+/* The widest page in the corpus under the round's own levers — the word the most songs hold.
+   The reveal expansion is the reason this exists: MORE_EXAMPLES_MAX and the "all N in the
+   searcher" tail only appear on a page with more answers than the cap, and normal play deals
+   one rarely and never on demand. Judged with the live round's strictness and title rule so the
+   count it reports is the count the verdict will show. Returns null if nothing qualifies.
+   Like devApplyWord, this thinks in base-mode terms: it does not know about a challenge's
+   narrowing rules, so use it in the difficulty ladder. */
+function devWidestWord(min = 0) {
+  let best = null, bestN = min;
+  for (const w of playableWords) {
+    const n = validSongs(w, effectiveStrict(), effectiveNoTitle()).length;
+    if (n > bestN) { best = w; bestN = n; }
+  }
+  return best;
+}
+
 // Answer the current live round. kind: "correct" | "wrong" | "timeout".
 function devAnswer(kind) {
   if (!screens.game.classList.contains("active")) return;
@@ -19046,6 +19137,33 @@ function buildDevApi() {
     advance: () => advanceFromFeedback(),
     setWord: devApplyWord,
     setScore: (n) => { score = Math.max(0, n | 0); },
+    /* The verdict's answer reveal: the example cards and the expansion under them. `state`
+       reports what THIS page will offer and, when it offers nothing, which gate said no —
+       the three refusals (Ultra, a tap grid, Both Of Us) and the settings toggle are otherwise
+       indistinguishable from a page that simply had no songs left. `widest` re-points the live
+       round to the word the most songs hold, which is the only reliable way to reach the cap
+       and the searcher tail. */
+    reveal: {
+      state: () => ({
+        word: currentWord || null,
+        valid: currentSongs.length,
+        cards: (settings.showExamples && !tapGridActive()) ? currentMode.examples : 0,
+        cap: MORE_EXAMPLES_MAX,
+        expandable: !!moreSongsBlock(currentSongs, currentSongs.slice(0, currentMode.examples), currentWord),
+        refusedBy: !settings.showExamples ? "showExamples setting"
+          : !(currentMode.examples > 0) ? `examples lever is 0 (${currentMode.id})`
+          : currentMode.moreExamples === false ? `mode: ${currentMode.id}`
+          : tapGridActive() ? "tap grid reveals on the grid"
+          : (bothRuleActive() && bothWords.length > 1) ? "Both Of Us proof cards"
+          : null,
+      }),
+      widest: (min = 0) => {
+        const w = devWidestWord(min);
+        if (!w) return null;
+        devApplyWord(w);
+        return { word: w, valid: currentSongs.length };
+      },
+    },
     jumpToRound: (n) => { round = Math.max(0, (n | 0) - 1); clearTimer(); advanceRound(); startTimer(); },
     endNow: () => endGame(),
     simulate: devSimulate,
