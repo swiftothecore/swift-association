@@ -13603,11 +13603,11 @@ function advanceRound() {
   if (revolveId) { clearInterval(revolveId); revolveId = null; }   // stop the prior round's rotation
   revolveIndex = 0;                            // Revolving Door: this round's word is slot 0
   roundNamed = [];                             // Double Trouble: no songs named on the fresh page yet
-  // Suggestions belong to the page that produced them. This must clear the backing array as
-  // well as hide the list: when a following run disables autocomplete (for example Wrapped
-  // Like A Chain's dark side), typing does not call updateDropdown, and submitAnswer would
-  // otherwise keep resolving Enter to the previous run's last suggestion instead of the title
-  // now in the input.
+  // Suggestions belong to the page that produced them, so the backing array goes with the
+  // list rather than being left behind it. Tidiness now, not a correctness guard: submitAnswer
+  // re-ranks the line it is judging instead of trusting this array, so a leftover here can no
+  // longer be answered with (it used to be, on any page where typing does not call
+  // updateDropdown — a run with autocomplete off, such as Wrapped Like A Chain's dark side).
   dropdownItems = [];
   activeIndex = -1;
   suggestionIndex = -1;                        // nothing has been taken off the dropdown on this page yet
@@ -14888,22 +14888,36 @@ function submitAnswer(song, isTimeout) {
       triedLyric = true;
       lyricMatch = matchLyricLine($("songInput").value);
       if (lyricMatch) song = lyricMatch.song;
-    } else if (dropdownItems.length) {
-      suggestionIndex = activeIndex >= 0 ? activeIndex : 0;
-      song = dropdownItems[suggestionIndex];
     } else {
-      const raw = $("songInput").value;
-      song = resolveTypedTitle(raw);   // exact, then misplaced spaces, then a single typo
-      // Not a title — try it as a lyric line. EXCEPT: a custom title-only preset never
-      // accepts a sung line (you must name the title), and when this round's tier-3 line
-      // hint has been revealed the line is on screen, so accepting a typed line would just
-      // be copying the hint. Naming the title stays open on this branch whatever the mode,
-      // so tier 3 narrows the round rather than closing it — and a lyric-only run can't
-      // reach here at all, since hintsAllowed retires the ladder outright.
-      if (!song && hintTier < 3 && !currentMode.titleOnly) {
-        triedLyric = true;
-        lyricMatch = matchLyricLine(raw);
-        if (lyricMatch) song = lyricMatch.song;
+      /* Enter accepts a suggestion, so the list it accepts from has to be the one the line as
+         it stands right now would produce — never a stored one. Re-ranked here rather than
+         trusted because `dropdownItems` is module-level and outlives the keystroke that filled
+         it: on any page where typing does not call updateDropdown (a mode with autocomplete
+         off) a leftover array would resolve Enter to an older page's pick instead of the title
+         now in the input. Several callers clear the array by hand to prevent that; none of them
+         is load-bearing any more.
+         When the line has not changed this ranks identically, so an arrow-key pick — and the
+         rung of the list that Took The Money reads — survives untouched. An index left pointing
+         past a list that HAS changed is meaningless, so it falls back to the top match. */
+      dropdownItems = effectiveDropdown() ? rankMatches($("songInput").value) : [];
+      if (activeIndex >= dropdownItems.length) activeIndex = -1;
+      if (dropdownItems.length) {
+        suggestionIndex = activeIndex >= 0 ? activeIndex : 0;
+        song = dropdownItems[suggestionIndex];
+      } else {
+        const raw = $("songInput").value;
+        song = resolveTypedTitle(raw);   // exact, then misplaced spaces, then a single typo
+        // Not a title — try it as a lyric line. EXCEPT: a custom title-only preset never
+        // accepts a sung line (you must name the title), and when this round's tier-3 line
+        // hint has been revealed the line is on screen, so accepting a typed line would just
+        // be copying the hint. Naming the title stays open on this branch whatever the mode,
+        // so tier 3 narrows the round rather than closing it — and a lyric-only run can't
+        // reach here at all, since hintsAllowed retires the ladder outright.
+        if (!song && hintTier < 3 && !currentMode.titleOnly) {
+          triedLyric = true;
+          lyricMatch = matchLyricLine(raw);
+          if (lyricMatch) song = lyricMatch.song;
+        }
       }
     }
     // Nothing the catalogue recognises. The page isn't burned, but something WAS sent, so it
