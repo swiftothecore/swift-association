@@ -500,6 +500,24 @@ export function initDev(api) {
     row(btn("card meta", () => { console.log("[dev] bracelet card", api.card.meta()); toast("card meta in console"); }),
         btn("open card SVG", () => api.card.open()))));
 
+  /* ---- Catalogue charms ------------------------------------------------------
+     The batch that waits on one particular word being dealt, which normal play will not do on
+     request. Arming sets the live page's word and writes a working answer into the box without
+     sending it, so the charm is still earned by pressing Enter like anyone else. The note line
+     carries whatever a single page cannot cover: a run-long condition, a page number, a day of
+     the week, or a warning that this one is an egg and will spend the page. */
+  const catRecipes = api.catalogue.recipes();
+  const catSel = select(catRecipes, (r) => r.id, (r) => r.name + (r.egg ? " (egg — burns the page)" : ""));
+  const catOut = mk("pre", { class: "dv-pre" }, "arm a page, then press Enter in the box");
+  body.append(section("catalogue charms",
+    row(catSel, btn("arm page", () => {
+      const r = api.catalogue.arm(catSel.value);
+      if (!r) { catOut.textContent = "needs a live, unlocked page — start a run first"; return; }
+      catOut.textContent = `“${r.word}” → ${r.answer}` + (r.egg ? " · wrong on purpose" : "") + (r.more ? ` · ${r.more}` : "");
+      toast("page armed");
+    })),
+    catOut));
+
   // ---- Seeding ---------------------------------------------------------------
   const achSel = select(api.ACHIEVEMENTS, (a) => a.id, (a) => a.name + (a.secret ? " (hidden)" : ""));
   const histN = num(25);

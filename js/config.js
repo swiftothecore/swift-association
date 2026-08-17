@@ -1598,6 +1598,27 @@ export const STUDIO_ALBUMS = [
   "Lover", "folklore", "evermore", "Midnights",
   "The Tortured Poets Department", "The Life of a Showgirl",
 ];
+/* Three named slices of the catalogue, for the Catalogue-knowledge charms that ask you to
+   know where a song SITS rather than what it says. Held here as literals because none of
+   them is derivable from songs.json: the vault list is a fact about the re-recordings, and
+   the Album of the Year list is a fact about the Grammys.
+   VAULT_TRACKS is the 26 From The Vault songs. They sit in a contiguous block at the tail of
+   each Taylor's Version album in songs.json but carry no flag of their own, and deriving them
+   from position would quietly break the first time a track is inserted. Deliberately excludes
+   the two Red-era strays that share that tail without being vault tracks: "Ronan" (a charity
+   single) and "State Of Grace (Acoustic Version)" (an alternate take of a standard track). */
+export const VAULT_TRACKS = new Set([
+  "You All Over Me", "Mr. Perfectly Fine", "We Were Happy", "That's When", "Don't You", "Bye Bye Baby",
+  "Electric Touch", "When Emma Falls In Love", "I Can See You", "Castles Crumbling", "Foolish One", "Timeless",
+  "Better Man", "Nothing New", "Babe", "Message In A Bottle", "I Bet You Think About Me", "Forever Winter",
+  "Run", "The Very First Night", "All Too Well (10 Minute Version)",
+  '"Slut!"', "Say Don't Go", "Now That We Don't Talk", "Suburban Legends", "Is It Over Now?",
+]);
+// The four albums that have won Album of the Year, and the four re-recordings that carry a
+// vault. Both are ALBUM keys, so they read straight off a song's `album`.
+export const AOTY_ALBUMS = ["Fearless", "1989", "folklore", "Midnights"];
+export const VAULT_ALBUMS = ["Fearless", "Speak Now", "Red", "1989"];
+
 export const ALBUM_COLORS = {
   "Taylor Swift":                     "#5a9ea6",
   "Fearless":                         "#b8943a",
@@ -2937,6 +2958,59 @@ export const ACHIEVEMENTS = [
   { id: "time-out-all-10-only-here-pages", name: "Never Heard Silence", desc: "Let all ten Only Here clocks run out without a card played", secret: true, icon: "cobweb" },
   { id: "finish-bonus-run-one-page-short-of-sweep",    name: "Almost Had It",    desc: "Finish one page shy of a clean sweep", secret: true, icon: "dart" },
   { id: "flag-spot-the-slip-impostor-under-2s",    name: "Saw It Coming",    desc: "Flag a Spot the Slip impostor inside two seconds", secret: true, icon: "mask" },
+  /* ---- Catalogue knowledge: what you know about the records (2026-08-18 batch) ----
+     Twenty-two charms, all in the Catalogue theme, and every one of them is priced in a fact
+     about the catalogue rather than in how well the run was played. Three shapes:
+
+       - the named pair, where one specific word wants one specific song;
+       - the structural read, where the answer's PLACE in the catalogue is the feat (a fifth
+         track, a thirteenth, a vault track, an alternate take, the first or last line);
+       - the egg, four charms earned by getting the page WRONG on purpose, because the thing
+         being tested is not in the lyrics at all (see the block at the end).
+
+     Every condition is gated on the guest shelf being off: "the thirteenth track" and "a
+     vault track" are facts about Taylor's records and mean nothing on a guest's, so they are
+     judged against her catalogue or not at all.
+
+     Nothing here can be locked out. Each is a standing condition on a page that comes round
+     again, the two dated ones come round weekly, and the single lifetime set (Say The Quiet
+     Part) only ever grows. `sitting` is deliberately sparse: it is only on the ones an evening
+     can actually chase, never on the ones that need a particular word to be dealt first. */
+  { id: "answer-song-titled-the-prompt-word", name: "Well, Yes!", desc: "Answer with the song whose title is the prompt word", secret: false, icon: "placeholder" },
+  { id: "answer-5-songs-titled-the-prompt-word", name: "Say The Quiet Part", desc: "Answer the song-titled-the-word for five different words", secret: false, icon: "placeholder" },
+  { id: "answer-alternate-version-when-base-would-do", name: "Acoustic Version Is Better", desc: "Name an alternate version when the original would have counted", secret: false, icon: "placeholder", sitting: true, earn: { cat: "difficulty" } },
+  { id: "answer-3-fifth-tracks-one-game", name: "Track 5 Lover", desc: "Answer three fifth tracks in one game", secret: false, icon: "placeholder", sitting: true, earn: { cat: "difficulty" } },
+  { id: "answer-thirteenth-track-on-page-13", name: "Right On Thirteen", desc: "Answer page 13 with an album's thirteenth track", secret: false, icon: "placeholder", sitting: true, earn: { cat: "difficulty" } },
+  { id: "answer-aoty-word-from-another-aoty-album", name: "Albums Of The Year", desc: "Take a word that titles an Album of the Year track with a song off a different Album of the Year", secret: false, icon: "placeholder" },
+  { id: "answer-vault-track-for-tv-track-title", name: "Exploring The Vault", desc: "Take a word that titles a Taylor's Version track with a song From The Vault", secret: false, icon: "placeholder" },
+  { id: "answer-song-saying-word-20-times", name: "A Hundred Times", desc: "Answer with a song that sings the word 20 times or more", secret: false, icon: "placeholder", sitting: true, earn: { cat: "difficulty" } },
+  { id: "answer-song-with-word-in-first-line", name: "Opening Line", desc: "Answer with a song that holds the word in its very first line", secret: false, icon: "placeholder", sitting: true, earn: { cat: "difficulty" } },
+  { id: "answer-song-with-word-in-last-line", name: "Closing Line", desc: "Answer with a song that holds the word in its very last line", secret: false, icon: "placeholder", sitting: true, earn: { cat: "difficulty" } },
+  { id: "answer-shortest-and-longest-titles-one-game", name: "Long Story Short", desc: "Answer with the shortest and the longest title in the catalogue, in one game", secret: false, icon: "placeholder" },
+  // Read off the RAW line, before the matcher drops the punctuation — the same trick JE SUIS
+  // CALME plays with capitals. A dropdown CLICK never fills the box, so demanding that the
+  // line itself spell the title out is what keeps this something the player typed.
+  { id: "type-title-punctuation-exactly", name: "Once Again With Feeling", desc: "Write a title's punctuation out in full, exactly as it's printed", secret: false, icon: "placeholder" },
+  { id: "answer-title-starting-with-last-word-of-previous", name: "I Always Get The Last Word", desc: "Follow an answer with a title that starts on its last word", secret: false, icon: "placeholder" },
+  /* The named pairs. Secret to a charm: each one is a joke that only lands if you find it,
+     and a visible card naming the song would be the answer printed on the box. */
+  { id: "answer-karma-for-cat", name: "Karma Is A Cat", desc: "Answer “Karma” when the word is “cat”", secret: true, icon: "placeholder" },
+  { id: "answer-gold-rush-for-folklore", name: "Don't Be Fooled", desc: "Answer “gold rush” when the word is “folklore”", secret: true, icon: "placeholder" },
+  { id: "answer-way-back-home", name: "Taylor Wrote That?! Talent.", desc: "Answer with “You'll Always Find Your Way Back Home”", secret: true, icon: "placeholder" },
+  // The two dated pairs, both written into the line itself: Begin Again watches it begin again
+  // on a Wednesday, and I'm Only Me is a Friday night beneath the stars. Weekly, so neither
+  // can be missed — see also It's Raining And It's Monday, which set this shape.
+  { id: "answer-begin-again-for-wednesday-on-a-wednesday", name: "Wednesday In A Cafe", desc: "Answer “Begin Again” for “Wednesday”, on a Wednesday", secret: true, icon: "placeholder" },
+  { id: "answer-only-me-for-friday-on-a-friday-night", name: "Friday Night Beneath The Stars", desc: "Answer “I'm Only Me When I'm With You” for “Friday”, on a Friday night", secret: true, icon: "placeholder" },
+  /* The eggs. Four charms for knowing something the lyrics don't say, which means all four are
+     WRONG answers that spend the page: a graffitied wall in a music video, a song about a
+     wedding that never says the word, and the album a same-named track sits on. Deliberately
+     capped at four — the joke is only funny while it is rare, and every one of them costs a
+     page. They fire on the attempt rather than the verdict, exactly as the Paris egg does. */
+  { id: "submit-the-man-for-karma", name: "13th Street Station", desc: "Answer “The Man” when the word is “karma”", secret: true, icon: "placeholder" },
+  { id: "submit-speak-now-for-wedding", name: "Crash The Wedding", desc: "Answer “Speak Now” when the word is “wedding”", secret: true, icon: "placeholder" },
+  { id: "submit-lwymmd-for-grave", name: "Here Lies Your Answer Streak", desc: "Answer “Look What You Made Me Do” when the word is “grave”", secret: true, icon: "placeholder" },
+  { id: "submit-wrong-song-from-same-titled-albums-record", name: "Burning Red (With Anger)", desc: "Miss a word that titles a song with another song off that song's album", secret: true, icon: "placeholder" },
   /* ---- Skills & Mastery ---- */
   { id: "unlock-mastery", name: "Bigger Than The Whole Sky", desc: "Press the wax and unlock Mastery", secret: false, icon: "waxpress" },
   { id: "reach-level-10-one-skill",        name: "Superstar",        desc: `Take a single skill all the way to level ${SKILL_MAX_LEVEL}`, secret: false, icon: "rosette" },
@@ -3171,6 +3245,18 @@ export const ACH_GROUP_OF = {
   "streak-3-same-album": "catalogue", "score-nearly-every-studio-album-one-game": "catalogue", "answer-cardigan-betty-august-one-game": "catalogue",
   "streak-3-b-titles": "catalogue", "miss-1000-rounds-lifetime": "catalogue", "answer-if-this-was-a-movie": "catalogue",
   "streak-3-rare-words-no-ultra": "catalogue", "answer-paris-for-somewhere": "catalogue", "answer-every-catalogue-song": "catalogue",
+  /* The 2026-08-18 batch, all one theme: every charm in it is a fact about the records. */
+  "answer-song-titled-the-prompt-word": "catalogue", "answer-5-songs-titled-the-prompt-word": "catalogue",
+  "answer-alternate-version-when-base-would-do": "catalogue", "answer-3-fifth-tracks-one-game": "catalogue",
+  "answer-thirteenth-track-on-page-13": "catalogue", "answer-aoty-word-from-another-aoty-album": "catalogue",
+  "answer-vault-track-for-tv-track-title": "catalogue", "answer-song-saying-word-20-times": "catalogue",
+  "answer-song-with-word-in-first-line": "catalogue", "answer-song-with-word-in-last-line": "catalogue",
+  "answer-shortest-and-longest-titles-one-game": "catalogue", "type-title-punctuation-exactly": "catalogue",
+  "answer-title-starting-with-last-word-of-previous": "catalogue", "answer-karma-for-cat": "catalogue",
+  "answer-gold-rush-for-folklore": "catalogue", "answer-way-back-home": "catalogue",
+  "answer-begin-again-for-wednesday-on-a-wednesday": "catalogue", "answer-only-me-for-friday-on-a-friday-night": "catalogue",
+  "submit-the-man-for-karma": "catalogue", "submit-speak-now-for-wedding": "catalogue",
+  "submit-lwymmd-for-grave": "catalogue", "submit-wrong-song-from-same-titled-albums-record": "catalogue",
   "defeat-first-challenge": "challenges", "defeat-every-challenge": "challenges", "unlock-every-challenge": "challenges",
   "defeat-challenge-no-misses": "challenges", "defeat-challenge-after-7-runs": "challenges",
   "defeat-impostor-flawlessly": "challenges", "fall-for-first-impostor": "challenges", "defeat-common-thread-every-line": "challenges",

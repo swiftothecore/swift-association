@@ -827,7 +827,7 @@ export function recordGameTally(rounds) {
 //   scarfClicks — lifetime taps on the scarf margin doodle
 //   marksTapped — { [markKind]: true } for each page-header mark poked, lifetime
 export function loadMetrics() {
-  const d = { fastestMs: null, answerSumMs: 0, answerN: 0, lyricLines: 0, versePerfect: 0, wholeVerses: 0, bestVerseBonus: 0, roundsTotal: 0, roundsCorrect: 0, dailyPlayed: 0, dailyPerfect: 0, noTimeoutStreak: 0, correctRunStreak: 0, scarfClicks: 0, marksTapped: {} };
+  const d = { fastestMs: null, answerSumMs: 0, answerN: 0, lyricLines: 0, versePerfect: 0, wholeVerses: 0, bestVerseBonus: 0, roundsTotal: 0, roundsCorrect: 0, dailyPlayed: 0, dailyPerfect: 0, noTimeoutStreak: 0, correctRunStreak: 0, scarfClicks: 0, marksTapped: {}, selfTitled: {} };
   try {
     const raw = localStorage.getItem(METRICS_KEY);
     if (raw) { const o = JSON.parse(raw); if (o && typeof o === "object") return { ...d, ...o }; }
@@ -891,6 +891,18 @@ export function tapPageMark(kind) {
 }
 export function pageMarksTapped() {
   return loadMetrics().marksTapped || {};
+}
+
+// Say The Quiet Part: the WORDS you have taken with the song of the same name, one slot each.
+// Set-shaped for the same reason marksTapped is — answering "red" with "Red" on fifty separate
+// evenings is one piece of knowledge, not fifty. Returns how many distinct words are held.
+export function noteSelfTitledWord(word) {
+  const m = loadMetrics();
+  const key = String(word || "").toLowerCase();
+  if (!key) return Object.keys(m.selfTitled || {}).length;
+  m.selfTitled = { ...(m.selfTitled || {}) };
+  if (!m.selfTitled[key]) { m.selfTitled[key] = true; saveMetrics(m); }
+  return Object.keys(m.selfTitled).length;
 }
 
 /* ---------- Skills & Mastery progression ---------- */

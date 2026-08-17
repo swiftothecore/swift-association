@@ -29,7 +29,7 @@ The game is still a work in progress and is by no means 'done'.
 
 - Challenges mode with 32 challenges, most with a harder "dark side" to unlock, plus a super-hard tier unlocked through mastery
 - A skills and mastery system full of rewards
-- Over 180 achievements, one of which is pinned as a goal you can jump straight into
+- Over 200 achievements, one of which is pinned as a goal you can jump straight into
 
 **The details**
 

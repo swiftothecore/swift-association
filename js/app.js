@@ -8,6 +8,7 @@ import {
   MODES, MODE_ORDER, MODE_COLORS, DIFFICULTY_LADDER, MODALITY_MODES, EXPLORER_TOKENS, SHELF_TYPES, PAGE_MARK_KINDS,
   ERAS, TENDER_ERAS, FINALE_ERAS, ALBUM_ERA, TS_MILESTONES, TS_LORE_DAYS, SALT_SHAKER_D, SALT_CAP_D,
   ALBUM_COLORS, CB_ALBUM_COLORS, STUDIO_ALBUMS, TITLE_ALIASES, STAMP_INKS,
+  VAULT_TRACKS, AOTY_ALBUMS, VAULT_ALBUMS,
   ACHIEVEMENTS, ACH_ICONS, ACH_BY_ID, ACH_GROUPS, ACH_GROUP_COLORS, ACH_GROUP_OF,
   ACH_FAMILIES, ACH_FAMILY_COLORS,
   BONUS_GAMES, BONUS_ROUNDS, BONUS_SLIP_SECONDS, BONUS_NAME_SECONDS, BONUS_BLANK_SECONDS,
@@ -84,6 +85,7 @@ import {
   loadSongTally, saveSongTally, recordGameTally,
   loadCustom, saveCustom, activeCustomPreset, resetCustom, defaultCustomPreset,
   loadMetrics, saveMetrics, recordGameMetrics, bumpCorrectRunStreak, bumpScarfClicks, tapPageMark, pageMarksTapped,
+  noteSelfTitledWord,
   loadSettings, saveSettings,
   exportData, importData,
   loadChallengeState, saveChallengeState, challengeRecord,
@@ -2019,6 +2021,13 @@ const HIDDEN_ACH_IDS = [
   "submit-answer-in-all-caps", "submit-prompt-word-as-answer", "play-word-from-searcher",
   "answer-august-in-august", "score-7-on-the-7th", "play-whole-game-in-3am-hour",
   "play-at-1313-on-the-13th", "play-on-taylors-birthday",
+  /* The Catalogue batch's nine masked charms: the five named pairs, whose card would otherwise
+     print the answer next to the question, and the four eggs, which are wrong answers nobody
+     would ever hand in by accident. The batch's other thirteen are ordinary visible targets. */
+  "answer-karma-for-cat", "answer-gold-rush-for-folklore", "answer-way-back-home",
+  "answer-begin-again-for-wednesday-on-a-wednesday", "answer-only-me-for-friday-on-a-friday-night",
+  "submit-the-man-for-karma", "submit-speak-now-for-wedding", "submit-lwymmd-for-grave",
+  "submit-wrong-song-from-same-titled-albums-record",
 ];
 
 // Re-evaluated after every unlock (each unlock no-ops if already earned, so this is safe to
@@ -8534,9 +8543,13 @@ function installCorpus(grouped, words, opts = {}) {
   // `sections` stay on the song object (line numbers + verse/chorus/bridge) for the
   // lyrics searcher. The flatten is byte-identical to the old flat `lyrics` field.
   allSongs = grouped.flatMap(({ album, songs }) =>
-    songs.map((s) => ({
+    songs.map((s, i) => ({
       ...s,
       album,
+      // Where the song sits on its record, 1-based. Only the Catalogue charms about track
+      // position read it (a fifth track, a thirteenth), and they check the album is a studio
+      // one first — the pseudo-albums are ordered lists, not tracklistings.
+      track: i + 1,
       lyrics: Array.isArray(s.sections)
         ? s.sections.flatMap((sec) => sec.lines || []).join("\n")
         : (s.lyrics || ""),
@@ -14843,6 +14856,189 @@ function showImpostorLoseWipe(kind) {
   setTimeout(() => { ov.remove(); endGame(); }, hold);
 }
 
+/* ---------- Catalogue-knowledge charms ----------
+   The 2026-08-18 batch (see the block in ACHIEVEMENTS). Everything here is a read against the
+   catalogue as it is loaded — no new run state, no new storage but the one lifetime set behind
+   Say The Quiet Part — and every one of them is judged only while Taylor's own corpus is
+   installed. `catalogueCharmsLive` is that gate plus the pages that HAVE no ordinary word and
+   song to judge: the tap grids, Common Thread's word answer, Both Of Us's set of words. A
+   song-only charm can still fire on a Both Of Us page, so the two halves are asked separately. */
+function catalogueCharmsLive() {
+  return gameType !== "guest" && activeCorpus === "taylor";
+}
+function cataloguePageHasWord() {
+  return catalogueCharmsLive() && !!currentWord && !commonRuleActive() && !bothRuleActive() && !whoseLineRuleActive();
+}
+// A title with its trailing parenthetical or bracketed qualifier removed: "Karma (Remix)" ->
+// "Karma", "All Too Well (10 Minute Version)" -> "All Too Well". Only a TRAILING one, so
+// "Mary's Song (Oh My My My)" loses its parenthetical too but nothing mid-title is touched.
+function baseTitleOf(title) {
+  return String(title || "").replace(/\s*[([][^()[\]]*[)\]]\s*$/, "").trim();
+}
+// The song a variant is a variant OF, or null when the title has no qualifier or the base is
+// not itself in the catalogue (which is what separates "State Of Grace (Acoustic Version)"
+// from a one-off like "Mary's Song (Oh My My My)").
+function baseVersionOf(song) {
+  const base = baseTitleOf(song.title);
+  if (!base || base === song.title) return null;
+  const found = titleIndex.get(normalizeTitle(base));
+  return found && found.title !== song.title ? found : null;
+}
+// Title words, lowercased, with any parenthetical dropped — the units the last-word chain
+// links on. "Cold As You" -> ["cold","as","you"].
+function titleWords(title) {
+  return (baseTitleOf(title).toLowerCase().match(/[a-z0-9']+/g) || []);
+}
+// How many times a song sings the word. Strict: the page may have been won on a stem variant,
+// but "sings it twenty times" is a claim about the word itself.
+function timesSung(song, word) {
+  const rx = new RegExp("\\b" + escapeRegExp(word) + "\\b", "gi");
+  return (String(song.lyrics || "").match(rx) || []).length;
+}
+// The songs that are named after this word — the whole point of Well, Yes!, and the album
+// lookup Burning Red (With Anger) needs.
+function songsTitledExactly(word) {
+  const key = normalizeTitle(word || "");
+  return key ? allSongs.filter((s) => s._norm === key) : [];
+}
+// Is this song a track from an album's own tracklisting, at position `n`? Studio albums only:
+// the Holiday Collection and the pseudo-groups are ordered lists rather than records, and a
+// "fifth track" off Songs From Movies would be a fact about songs.json, not about Taylor.
+function isTrackNumber(song, n) {
+  return song.track === n && STUDIO_ALBUMS.includes(song.album);
+}
+// Judged on a CORRECT page, after the run's arrays are written for this round. `song` is the
+// credited answer, which several of these read alongside the pages before it.
+function checkCatalogueCharms(song) {
+  if (!catalogueCharmsLive() || !song) return;
+  const wordPage = cataloguePageHasWord();
+  const rx = wordPage ? wordRegex(currentWord, effectiveStrict()) : null;
+
+  // Taylor Wrote That?! Talent. — the Hannah Montana song nobody remembers is hers.
+  if (song.title === "You'll Always Find Your Way Back Home") unlock("answer-way-back-home");
+
+  // Track 5 Lover / Right On Thirteen — where the answer sits on its record.
+  if (isTrackNumber(song, 5)) {
+    const fifths = roundSongs.filter((t) => {
+      const s = t && titleIndex.get(normalizeTitle(t));
+      return s && isTrackNumber(s, 5);
+    }).length;
+    if (fifths >= 3) unlock("answer-3-fifth-tracks-one-game");
+  }
+  if (round === 13 && isTrackNumber(song, 13)) unlock("answer-thirteenth-track-on-page-13");
+
+  /* Long Story Short — the two ends of the tracklisting in one run. Both ends are measured off
+     the catalogue rather than named here, so the pair moves on its own if a shorter or longer
+     title is ever added. A tie at either end means several titles qualify, which is the honest
+     reading of "the shortest": nothing here promises there is only one. */
+  const lens = allSongs.map((s) => s.title.length);
+  const shortest = Math.min(...lens), longest = Math.max(...lens);
+  const named = roundSongs.filter(Boolean);
+  if (named.some((t) => t.length === shortest) && named.some((t) => t.length === longest)) {
+    unlock("answer-shortest-and-longest-titles-one-game");
+  }
+
+  /* I Always Get The Last Word — this title starts on the last word of the previous page's.
+     Off roundSongs, so both pages have to have been ANSWERED: a miss between them is a break
+     in the chain, not a link in it. */
+  const prev = round >= 2 ? roundSongs[round - 2] : null;
+  if (prev) {
+    const a = titleWords(prev), b = titleWords(song.title);
+    if (a.length && b.length && a[a.length - 1] === b[0]) unlock("answer-title-starting-with-last-word-of-previous");
+  }
+
+  /* Once Again With Feeling — the punctuation written out in full. Read off the RAW line, which
+     is the only place it survives: normalizeTitle drops . ! ? and … before anything is matched.
+     A dropdown click never writes to the box, so a line that spells the whole title out is one
+     the player typed. Apostrophes and ellipsis characters are normalised on both sides, and the
+     wrapping quotes of "Slut!" are optional; the marks themselves are not. */
+  if (/[!?…]|\.\.\.|\.$/.test(song.title)) {
+    const tidy = (s) => String(s || "").trim().replace(/[’]/g, "'").replace(/…/g, "...").replace(/^"+|"+$/g, "").toLowerCase();
+    if (tidy($("songInput").value) === tidy(song.title)) unlock("type-title-punctuation-exactly");
+  }
+
+  if (!wordPage) return;
+
+  // Well, Yes! — the song is called the word. Say The Quiet Part is the same feat kept as a
+  // lifetime set of WORDS, so a hundred answers of "Red" for "red" is still one of the five.
+  if (song._norm === normalizeTitle(currentWord)) {
+    unlock("answer-song-titled-the-prompt-word");
+    if (noteSelfTitledWord(currentWord) >= 5) unlock("answer-5-songs-titled-the-prompt-word");
+  }
+
+  // Acoustic Version Is Better — the alternate take when the original would have counted too.
+  const base = baseVersionOf(song);
+  if (base && rx.test(base.lyrics)) unlock("answer-alternate-version-when-base-would-do");
+
+  // A Hundred Times — the song that will not stop saying it.
+  if (timesSung(song, currentWord) >= 20) unlock("answer-song-saying-word-20-times");
+
+  // Opening Line / Closing Line — where in the song the word actually falls.
+  const lines = String(song.lyrics || "").split("\n").filter((l) => l.trim());
+  if (lines.length) {
+    if (rx.test(lines[0])) unlock("answer-song-with-word-in-first-line");
+    if (rx.test(lines[lines.length - 1])) unlock("answer-song-with-word-in-last-line");
+  }
+
+  /* Albums Of The Year — the word titles a track on one of the four, and the answer is off a
+     DIFFERENT one of the four. "fifteen" is a Fearless track, so Question...? takes it; "karma"
+     titles a Midnights track and appears on no other winner, so that word simply never lands
+     this one. */
+  const titled = songsTitledExactly(currentWord);
+  if (AOTY_ALBUMS.includes(song.album)
+      && titled.some((s) => AOTY_ALBUMS.includes(s.album) && s.album !== song.album)) {
+    unlock("answer-aoty-word-from-another-aoty-album");
+  }
+
+  /* Exploring The Vault — the word titles a track on a re-recording, and the answer is a vault
+     track. The same-named song is excluded even when it IS a vault track (answering "Run" for
+     "run" is Well, Yes! wearing a different hat), so this always means a second song. */
+  if (VAULT_TRACKS.has(song.title) && song._norm !== normalizeTitle(currentWord)
+      && titled.some((s) => VAULT_ALBUMS.includes(s.album))) {
+    unlock("answer-vault-track-for-tv-track-title");
+  }
+
+  // The named pairs, and the two dated ones. A weekday comes off the real clock, like the rest
+  // of the day-of-the-week charms; Friday's window is the evening the line describes.
+  const w = currentWord.toLowerCase();
+  const now = new Date();
+  if (w === "cat" && baseTitleOf(song.title) === "Karma") unlock("answer-karma-for-cat");
+  if (w === "folklore" && song.title === "gold rush") unlock("answer-gold-rush-for-folklore");
+  if (w === "wednesday" && song.title === "Begin Again" && now.getDay() === 3) {
+    unlock("answer-begin-again-for-wednesday-on-a-wednesday");
+  }
+  if (w === "friday" && song.title === "I'm Only Me When I'm With You" && now.getDay() === 5 && now.getHours() >= 18) {
+    unlock("answer-only-me-for-friday-on-a-friday-night");
+  }
+}
+
+/* The four eggs, judged on the ATTEMPT rather than the verdict, exactly as the Paris egg is:
+   three of them name a song whose lyrics do not hold the word at all, so there is no correct
+   page to hang them on and the answer is always a miss. That is the trade, and it is the joke:
+   you knew a thing the lyrics don't say and you paid a page for it.
+     13th Street Station — "karma" is spray-painted on the wall in The Man's video, not sung in it.
+     Crash The Wedding   — Speak Now is about crashing one and never once says the word.
+     Here Lies Your Answer Streak — the gravestone in Look What You Made Me Do's video.
+   `raw` is the line as written, so any spelling the matcher would accept counts.
+   Burning Red (With Anger) is the odd one out and needs the RESOLVED song: the word titles a
+   song, and what was handed in is a different song off that same record. */
+function checkCatalogueEggs(raw, song, correct) {
+  if (!cataloguePageHasWord()) return;
+  const said = normalizeTitle(raw || "");
+  const w = currentWord.toLowerCase();
+  if (said) {
+    if (w === "karma" && said === normalizeTitle("The Man")) unlock("submit-the-man-for-karma");
+    if (w === "wedding" && said === normalizeTitle("Speak Now")) unlock("submit-speak-now-for-wedding");
+    if (w === "grave" && said === normalizeTitle("Look What You Made Me Do")) unlock("submit-lwymmd-for-grave");
+  }
+  if (!correct && song) {
+    const titled = songsTitledExactly(currentWord);
+    if (titled.length && titled.some((s) => s.album === song.album && s.title !== song.title)) {
+      unlock("submit-wrong-song-from-same-titled-albums-record");
+    }
+  }
+}
+
 function submitAnswer(song, isTimeout) {
   if (roundLocked) return;
 
@@ -15122,6 +15318,12 @@ function submitAnswer(song, isTimeout) {
     // the only reading of this that can ever fire. The month comes off todayKey, dev override and all.
     if (song.title === "august" && todayKey().slice(5, 7) === "08") unlock("answer-august-in-august");
   }
+  /* The Catalogue-knowledge batch. Both halves sit here, after the run's arrays are written for
+     this page, so the charms that compare against earlier pages (a third fifth track, a title
+     that starts on the last one's last word) read a log that already includes this answer. The
+     eggs need the page to have been really sent: a timeout leaves whatever was in the box. */
+  if (correct) checkCatalogueCharms(song);
+  if (!isTimeout) checkCatalogueEggs($("songInput").value, song, correct);
   // Bullet Holes — every rung of the hint ladder burned on this page and the page missed anyway.
   // A timeout counts: the hints were still spent, and the page was still lost.
   if (!correct && hintTier >= 3) unlock("miss-round-after-every-hint");
@@ -18803,6 +19005,50 @@ function devSetRuns(id, n) {
   return st[id].runs;
 }
 
+/* Dev: one worked page per Catalogue-knowledge charm. Every row is a real word-and-song pair
+   checked against songs.json, which is the point — these charms are the hardest thing in the
+   notebook to test by playing, since most of them wait on one particular word being dealt.
+   `more` is the part a single page cannot do: the charms that want three fifth tracks, both
+   ends of the tracklisting, two pages in a row, five different words, page thirteen, or a
+   particular day of the week. The eggs are marked because arming one means spending the page. */
+const CATALOGUE_RECIPES = [
+  { id: "answer-song-titled-the-prompt-word", word: "red", answer: "Red" },
+  { id: "answer-5-songs-titled-the-prompt-word", word: "red", answer: "Red", more: "five different words, lifetime: red, seven, clean, peace, change" },
+  { id: "answer-alternate-version-when-base-would-do", word: "grace", answer: "State Of Grace (Acoustic Version)" },
+  { id: "answer-3-fifth-tracks-one-game", word: "cold", answer: "Cold As You", more: "three in one run: then angel → White Horse, again → Dear John" },
+  { id: "answer-thirteenth-track-on-page-13", word: "change", answer: "Change", more: "jump to page 13 first" },
+  { id: "answer-aoty-word-from-another-aoty-album", word: "fifteen", answer: "Question...?" },
+  { id: "answer-vault-track-for-tv-track-title", word: "red", answer: "Nothing New" },
+  { id: "answer-song-saying-word-20-times", word: "red", answer: "Red", more: "Red sings it 43 times" },
+  { id: "answer-song-with-word-in-first-line", word: "night", answer: "22" },
+  { id: "answer-song-with-word-in-last-line", word: "too", answer: "All Too Well" },
+  { id: "answer-shortest-and-longest-titles-one-game", word: "dress", answer: "22", more: "same run: then change → We Are Never Ever Getting Back Together" },
+  { id: "type-title-punctuation-exactly", word: "afraid", answer: "Who's Afraid of Little Old Me?", more: "the line has to be typed, question mark and all" },
+  { id: "answer-title-starting-with-last-word-of-previous", word: "cold", answer: "Cold As You", more: "next page: best → You All Over Me" },
+  { id: "answer-karma-for-cat", word: "cat", answer: "Karma" },
+  { id: "answer-gold-rush-for-folklore", word: "folklore", answer: "gold rush" },
+  { id: "answer-way-back-home", word: "Monday", answer: "You'll Always Find Your Way Back Home" },
+  { id: "answer-begin-again-for-wednesday-on-a-wednesday", word: "Wednesday", answer: "Begin Again", more: "only lands on a real Wednesday" },
+  { id: "answer-only-me-for-friday-on-a-friday-night", word: "Friday", answer: "I'm Only Me When I'm With You", more: "only lands on a Friday, 6pm to midnight" },
+  { id: "submit-the-man-for-karma", word: "karma", answer: "The Man", egg: true },
+  { id: "submit-speak-now-for-wedding", word: "wedding", answer: "Speak Now", egg: true },
+  { id: "submit-lwymmd-for-grave", word: "grave", answer: "Look What You Made Me Do", egg: true },
+  { id: "submit-wrong-song-from-same-titled-albums-record", word: "clean", answer: "Style", egg: true },
+];
+/* Set the live page to a recipe's word and write its answer into the box WITHOUT sending it:
+   the last keystroke stays the player's, so the charm is still earned by the ordinary path
+   rather than fabricated. Returns the recipe (with its `more` note) or null. */
+function devArmCatalogue(id) {
+  const r = CATALOGUE_RECIPES.find((x) => x.id === id);
+  if (!r || !screens.game.classList.contains("active") || roundLocked) return null;
+  devApplyWord(r.word);
+  const input = $("songInput");
+  input.value = r.answer;
+  input.dispatchEvent(new Event("input", { bubbles: true }));
+  input.focus();
+  return { ...r, name: (ACH_BY_ID[r.id] || {}).name || r.id };
+}
+
 // Re-point the *current* live round to a chosen prompt word without advancing.
 function devApplyWord(word) {
   if (!word) return;
@@ -19164,6 +19410,12 @@ function buildDevApi() {
         devApplyWord(w);
         return { word: w, valid: currentSongs.length };
       },
+    },
+    catalogue: {
+      recipes: () => CATALOGUE_RECIPES.map((r) => ({
+        ...r, name: (ACH_BY_ID[r.id] || {}).name || r.id, earned: !!earnedAchievements[r.id],
+      })),
+      arm: devArmCatalogue,
     },
     jumpToRound: (n) => { round = Math.max(0, (n | 0) - 1); clearTimer(); advanceRound(); startTimer(); },
     endNow: () => endGame(),
