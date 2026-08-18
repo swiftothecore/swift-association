@@ -1011,12 +1011,14 @@ function backToScreen(prev) {
   // button and the browser's back button leave the same trail behind them. popstate does the
   // actual page turn a tick later. (Only when we own the entry — see openBootRoute.)
   //
-  // Strictly `prev === "start"`, because that is the only return a route describes. A panel can
-  // also be opened FROM a panel — Mastery's vault door opens the charm collection, its reward
-  // board opens a challenge — and those keep the origin panel's URL, so backing out of one is
-  // an ordinary flip that lands on the screen the URL already names. The pop is saved for the
-  // last step, out of the routed panel and onto the front page.
+  // Strictly `prev === "start"`, because that is the only return the history stack describes:
+  // panel -> panel replaced the bar rather than pushing it, so the pop is saved for the last
+  // step, out of the routed chain and onto the front page.
   if (!routing && routeOwned && prev === "start" && currentRouteSlug()) { history.back(); return; }
+  // Stepping back to the panel underneath (Mastery from the charms it opened, the charms from
+  // the Songbook) puts that panel's slug back in the bar, so the URL keeps naming the screen on
+  // show and the next ← back pops to a front page rather than reopening the panel we left.
+  if (!routing && currentRouteSlug() && ROUTE_SLUGS[prev]) pushRoute(ROUTE_SLUGS[prev]);
   if (prev === "start") {
     $("startContent").style.display = "";
     renderStartPickers();
@@ -1063,6 +1065,9 @@ let routing = false;
 // unowned, and openBootRoute immediately fixes that by synthesising a front-page entry beneath
 // it — so from then on there is always somewhere for back to land inside the notebook.
 let routeOwned = false;
+// Screen key -> slug, the inverse of PANEL_ROUTES. Panel openers and back-targets speak in
+// screen keys ("achievements"), the bar speaks in slugs ("charms"); this is the translation.
+const ROUTE_SLUGS = Object.fromEntries(Object.entries(PANEL_ROUTES).map(([slug, screen]) => [screen, slug]));
 // The slug currently in the address bar, or null when the bar is on the plain front page.
 function currentRouteSlug() {
   try {
@@ -1088,10 +1093,14 @@ function clearRoute() {
   if (routing || !currentRouteSlug()) return;
   try { history.replaceState(null, "", "/" + location.search + location.hash); } catch (e) {}
 }
-// Called by every panel opener. `from` is the opener's own back-target, and only the front
-// page earns a URL — a panel opened off the results page belongs to that run, not to a link.
+// Called by every panel opener. `from` is the opener's own back-target. The front page always
+// earns a URL. A panel opened FROM another panel, like Mastery's vault door into the charms or
+// the catalogue meter into the Songbook, inherits the bar instead: pushRoute replaces, so the
+// chain stays one history entry deep and the bar names the screen you are actually looking at.
+// A panel opened off the results page still earns nothing, because a run clears the bar first
+// and so there is no slug to inherit; that panel belongs to the run, not to a link.
 function routeTo(slug, from) {
-  if (from === "start") pushRoute(slug);
+  if (from === "start" || (ROUTE_SLUGS[from] && currentRouteSlug())) pushRoute(slug);
 }
 // Browser back/forward. Reads the bar and makes the screen agree with it, using the same page
 // turns as the buttons so a swipe-back looks like a tap on ← back.
@@ -21831,11 +21840,7 @@ async function init() {
   // Backfill the collection meta in case the final polaroid was earned inside a sandbox (where
   // its unlock() was gated) on a previous run, so a complete set still lights up its charm.
   checkKeepsakeMeta();
-  $("songbookBackBtn").addEventListener("click", () => {
-    const prev = songbookBackTarget;
-    if (prev === "start") { $("startContent").style.display = ""; }
-    flipInToScreen(prev);
-  });
+  $("songbookBackBtn").addEventListener("click", () => backToScreen(songbookBackTarget));
   $("challengesBtn").addEventListener("click", () => openChallenges("start"));
   $("viewChallengesBtn").addEventListener("click", () => openChallenges("results"));
   $("challengesBackBtn").addEventListener("click", () => backToScreen(challengesBackTarget));
