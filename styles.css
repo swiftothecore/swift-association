@@ -6156,7 +6156,7 @@
   .ach-fam-themes { display: grid; grid-template-columns: 1fr 1fr; gap: 9px 26px; }
   .ach-theme {
     display: flex; align-items: center; gap: 8px; width: 100%; min-width: 0;
-    padding: 0; border: 0; color: inherit; background: transparent; text-align: left; cursor: default;
+    padding: 0; border: 0; color: inherit; background: transparent; text-align: left; cursor: pointer;
     font-family: var(--type); font-size: calc(11px + var(--text-size-adjust)); color: var(--ink-soft);
   }
   .ach-theme:hover .ach-theme-name { color: var(--ink); }
