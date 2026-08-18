@@ -911,6 +911,16 @@ export function noteSelfTitledWord(word) {
 // `masteryXp` only accrues once the unlock gate is cleared. `unlocked` mirrors the
 // achievements shape — { [rewardId]: isoDate }. Spread-merge defaults like loadMetrics, so
 // players with no key (or a future new skill) get sensible values with no migration step.
+/* The level-5 bracelet set shipped as "charm-heart", "charm-moon" and so on, and was renamed
+   to "trinket-*" when the dangle stopped answering to the same word as an achievement charm.
+   The ledger is keyed by reward id, so an un-migrated notebook would show all eight re-locked
+   with the level already paid for. Rewrites in place on load and leaves everything else. */
+function migrateTrinketRewards(unlocked) {
+  const out = {};
+  for (const [id, v] of Object.entries(unlocked)) out[id.startsWith("charm-") ? "trinket-" + id.slice(6) : id] = v;
+  return out;
+}
+
 export function loadMastery() {
   const d = { skills: { resolve: 0, tempo: 0, lyricist: 0, endurance: 0, range: 0 }, masteryXp: 0, unlocked: {} };
   try {
@@ -921,7 +931,7 @@ export function loadMastery() {
         return {
           skills: { ...d.skills, ...(o.skills || {}) },
           masteryXp: o.masteryXp || 0,
-          unlocked: (o.unlocked && typeof o.unlocked === "object") ? o.unlocked : {},
+          unlocked: migrateTrinketRewards((o.unlocked && typeof o.unlocked === "object") ? o.unlocked : {}),
         };
       }
     }
@@ -1236,6 +1246,13 @@ export function loadSettings() {
         // being worn under the old id. Migrating here rather than tolerating "pride" at every
         // point of use keeps one spelling of a flag finish in the codebase.
         if (o.masteryButton === "pride") o.masteryButton = "pride-rainbow";
+        // The bracelet dangle used to be called a charm, which collided with the achievement
+        // charms on the same results screen. It is a trinket now; the ids it holds (heart,
+        // moon, "random") never changed, only the setting it lives in.
+        if (o.masteryCharm !== undefined) {
+          if (o.masteryTrinket === undefined) o.masteryTrinket = o.masteryCharm;
+          delete o.masteryCharm;
+        }
         return { ...DEFAULT_SETTINGS, ...o };
       }
     }

@@ -172,7 +172,7 @@ export const DEFAULT_SETTINGS = {
   avatar: "",               // profile polaroid — a center-cropped data-URL, stays on this device
   masteryPen: "",           // chosen writing pen, unlocked via Mastery ("" = the default random egg)
   masteryPaper: "",         // chosen paper stock, unlocked via Mastery ("" = the default cream page)
-  masteryCharm: "",         // chosen bracelet charm, unlocked via Mastery ("" = the default star)
+  masteryTrinket: "",         // chosen bracelet trinket, unlocked via Mastery ("" = the default star)
   masteryTitle: "",         // chosen prestige title, unlocked via Mastery ("" = follows your mastery: the highest tier's default)
   masteryButton: "",        // chosen "start writing" button finish, unlocked via Mastery ("" = the default gold marker)
   masteryLabel: "",         // chosen start-button words (a CTA_LABELS key), unlocked via Mastery ("" = the default "Start writing")
@@ -968,7 +968,7 @@ export const CHALLENGES = [
   //      working untouched — a wager just moves the number up or down. Two consequences the
   //      rest of the code has to respect: a run can END on more beads than it has pages (so
   //      nothing may render "20 / 13", see riskProgressText), and the bracelet still strings
-  //      exactly one bead per page (a bead won at stake wears a horseshoe charm instead).
+  //      exactly one bead per page (a bead won at stake wears a horseshoe trinket instead).
   //      ONE RULE FOR EVERY DARK SIDE HERE: never tighten the answer. These rules multiply
   //      risk (a Press pot at depth n survives with p^n, an Insurance run needs p^13), so a
   //      dropped answer probability doesn't make the decision harder, it deletes the decision.
@@ -1074,11 +1074,11 @@ export const BOTH_REVEAL_SONGS = 2;
    `maxStake` / `tokens` / `tokenValue` levers. (`startBeads` has no shared default: a run
    opens on nothing unless its own entry says otherwise.) */
 export const PRESS_RIDE_STEP = 1;
-/* How deep a ride has to be before the bead that banks it earns the horseshoe charm. Riding
+/* How deep a ride has to be before the bead that banks it earns the horseshoe trinket. Riding
    three pages is a pot of 6 against a target of 20, so it's a real commitment, not a shrug. */
-export const PRESS_CHARM_RIDE = 3;
+export const PRESS_TRINKET_RIDE = 3;
 /* And how deep before it earns the CHARM (Bonnie And Clyde). Kept separate from
-   PRESS_CHARM_RIDE on purpose: the horseshoe marks a bead worth marking and wants to be
+   PRESS_TRINKET_RIDE on purpose: the horseshoe marks a bead worth marking and wants to be
    reachable most runs, while the charm is a flourish and should ask for a ride that is
    genuinely reckless. Five deep is a pot of 15 against a base target of 26, so banking it
    is most of a win riding on one page. Move the two independently. */
@@ -1420,10 +1420,10 @@ export function prideStripes(finish) {
 
 // Mastery rewards — one granted per Mastery level. `kind` drives how the Mastery screen
 // renders/applies it; `payload` is kind-specific. The ladder runs 1–13 (pens, papers,
-// charms, the super-hard unlock, then prestige titles) and 13 is the Mastery cap.
+// trinkets, the super-hard unlock, then prestige titles) and 13 is the Mastery cap.
 // `icon` (a MASTERY_ICONS key) is only carried by the kinds that actually draw a mark:
 // pens, the two `unlock` milestones, and titles. The set kinds draw the thing itself
-// instead — paper draws its stock as a swatch, charms the charm, buttons a real start
+// instead — paper draws its stock as a swatch, trinkets the trinket, buttons a real start
 // button in miniature, label words a real button wearing them — so they carry no icon at all.
 export const MASTERY_REWARDS = [
   { level: 1, id: "pen-fountain", kind: "pen",  name: "Fountain pen",     icon: "fountainpen", desc: "Always write with a fountain pen.", payload: { pen: "fountain" } },
@@ -1436,17 +1436,17 @@ export const MASTERY_REWARDS = [
   { level: 4,  id: "paper-blush",     kind: "paper", name: "Blush leaf",     desc: "A soft rose stationery.",            payload: { paper: "blush" } },
   { level: 4,  id: "paper-slate",     kind: "paper", name: "Slate pad",      desc: "Cool blue-grey engineer's stock.",   payload: { paper: "slate" } },
   { level: 4,  id: "paper-sage",      kind: "paper", name: "Sage ledger",     desc: "A cool green bookkeeper's stock.", payload: { paper: "sage" } },
-  // Bracelet charms — a set unlocked together at level 5. Each swaps the charm that
-  // dangles from every correct-answer bead (the CHARMS renderer in bracelet.js); the
-  // verse pen-nib stays reserved. Selection persists in settings.masteryCharm.
-  { level: 5,  id: "charm-heart",     kind: "charm", name: "Heart charm",     desc: "Hang a friendship heart.",       payload: { charm: "heart" } },
-  { level: 5,  id: "charm-moon",      kind: "charm", name: "Moon charm",      desc: "A waxing crescent moon.",        payload: { charm: "moon" } },
-  { level: 5,  id: "charm-daisy",     kind: "charm", name: "Daisy charm",     desc: "A little pressed daisy.",        payload: { charm: "daisy" } },
-  { level: 5,  id: "charm-bow",       kind: "charm", name: "Bow charm",       desc: "A tied ribbon bow.",             payload: { charm: "bow" } },
-  { level: 5,  id: "charm-pick",      kind: "charm", name: "Pick charm",      desc: "A guitar pick, for the stage.",  payload: { charm: "pick" } },
-  { level: 5,  id: "charm-note",      kind: "charm", name: "Note charm",      desc: "A single eighth note.",          payload: { charm: "note" } },
-  { level: 5,  id: "charm-lightning", kind: "charm", name: "Lightning charm", desc: "A bolt of lightning.",           payload: { charm: "lightning" } },
-  { level: 5,  id: "charm-snake",     kind: "charm", name: "Snake charm",     desc: "A reputation serpent.",          payload: { charm: "snake" } },
+  // Bracelet trinkets — a set unlocked together at level 5. Each swaps the trinket that
+  // dangles from every correct-answer bead (the TRINKETS renderer in bracelet.js); the
+  // verse pen-nib stays reserved. Selection persists in settings.masteryTrinket.
+  { level: 5,  id: "trinket-heart",     kind: "trinket", name: "Heart trinket",     desc: "Hang a friendship heart.",       payload: { trinket: "heart" } },
+  { level: 5,  id: "trinket-moon",      kind: "trinket", name: "Moon trinket",      desc: "A waxing crescent moon.",        payload: { trinket: "moon" } },
+  { level: 5,  id: "trinket-daisy",     kind: "trinket", name: "Daisy trinket",     desc: "A little pressed daisy.",        payload: { trinket: "daisy" } },
+  { level: 5,  id: "trinket-bow",       kind: "trinket", name: "Bow trinket",       desc: "A tied ribbon bow.",             payload: { trinket: "bow" } },
+  { level: 5,  id: "trinket-pick",      kind: "trinket", name: "Pick trinket",      desc: "A guitar pick, for the stage.",  payload: { trinket: "pick" } },
+  { level: 5,  id: "trinket-note",      kind: "trinket", name: "Note trinket",      desc: "A single eighth note.",          payload: { trinket: "note" } },
+  { level: 5,  id: "trinket-lightning", kind: "trinket", name: "Lightning trinket", desc: "A bolt of lightning.",           payload: { trinket: "lightning" } },
+  { level: 5,  id: "trinket-snake",     kind: "trinket", name: "Snake trinket",     desc: "A reputation serpent.",          payload: { trinket: "snake" } },
   { level: 6,  id: "hardmode-unlock", kind: "unlock", name: "Super-hard challenges", icon: "swords",  desc: "Unlocks a tier of brutal new challenges in Challenges mode." },
   // Start-writing button finishes — a set unlocked together at level 8. Each restyles the
   // home-screen hero CTA (CSS .play-cta[data-startbtn="…"], set on the button itself so the
@@ -1513,7 +1513,7 @@ export const MASTERY_TIER_ICONS = ["laurel", "bridge", "chair", "plumes"];
    by rewardTileMarkHTML in app.js.
 
    One hue per TILE, not per reward. There are around forty rewards on that board and only
-   eight things they can be — a pen, a paper, a charm, a tier, a finish, some words, a hint, a
+   eight things they can be — a pen, a paper, a trinket, a tier, a finish, some words, a hint, a
    title — so colouring the members would have painted forty arbitrary hues onto a page whose
    whole job is to show you five sets. The hue is a label for the set, and the members below it
    already show you exactly what they are.
@@ -1524,7 +1524,7 @@ export const MASTERY_TIER_ICONS = ["laurel", "bridge", "chair", "plumes"];
    here is allowed to be brighter than the ink it sits next to. */
 export const MASTERY_TILE_MARKS = {
   pens:   "#3f5d8a",   // ink blue: the writing hand
-  charm:  "#a8577a",   // friendship-bracelet rose
+  trinket: "#a8577a",  // friendship-bracelet rose
   paper:  "#8a6d3f",   // kraft tan, the colour of the stock itself
   hard:   "#8a3b2f",   // brick, for the brutal tier
   button: "#c8951f",   // the gold the start button already is
@@ -1538,7 +1538,7 @@ export const MASTERY_TILE_MARKS = {
 // milestones — the level takes its mark FROM that reward rather than naming a second one, so
 // the track node and the tile it points at can never drift apart; the two title levels here
 // take the TIER's mark on the same principle, because a track node marks what the level
-// opens (a whole tier) rather than one title inside it. The set levels (paper, charms, button
+// opens (a whole tier) rather than one title inside it. The set levels (paper, trinkets, button
 // finishes, flourishes) draw their rewards rather than a mark, so they name one here.
 // Levels 2, 3, 9 and 11 are deliberately unmarked.
 export const MASTERY_LEVEL_ICONS = {
@@ -1750,7 +1750,7 @@ export const TITLE_ALIASES = {
 
 /* ---------- Achievements ---------- */
 export const ACH_ICONS = {
-  // hung charms: filled bead bodies (ink-fill) with inked detail (ink)
+  // hung trinkets: filled bead bodies (ink-fill) with inked detail (ink)
   star:    `<svg viewBox="0 0 24 24"><path class="ink-fill" stroke-width="1.1" stroke-linejoin="round" stroke-linecap="round" d="M12 2.3 L14.94 7.96 L21.22 9 L16.76 13.55 L17.7 19.85 L12 17 L6.3 19.85 L7.24 13.55 L2.78 9 L9.06 7.96 Z"/><path class="ink" stroke-width="0.9" opacity="0.7" d="M12 6.4 L13.1 9.2 L16 9.5"/></svg>`,
   // the whole set found: three polaroids fanned out of the shoebox, the top one face up.
   // Each card is paper-filled rather than class="ink-fill" so the front of the fan masks
@@ -2405,7 +2405,7 @@ export const ACH_ICONS = {
 // Marks the mastery board draws itself, because nothing in ACH_ICONS means what they mean.
 // Objects dropped or pressed on a desk, tilted off square, not symbols set straight.
 const MASTERY_OWN_ICONS = {
-  // the random bracelet charm: a tumbled five-face, mid-roll
+  // the random bracelet trinket: a tumbled five-face, mid-roll
   die: `<svg viewBox="0 0 24 24"><g transform="rotate(-13 12 12)"><rect class="ink-fill" x="4.4" y="4.4" width="15.2" height="15.2" rx="3.2" stroke-width="1.1"/><g fill="var(--paper)"><circle cx="8.5" cy="8.5" r="1.3"/><circle cx="15.5" cy="8.5" r="1.3"/><circle cx="12" cy="12" r="1.3"/><circle cx="8.5" cy="15.5" r="1.3"/><circle cx="15.5" cy="15.5" r="1.3"/></g></g></svg>`,
 
   /* The three pens (levels 1–3) are one family: the same 45° lay across the page, the same
@@ -2526,7 +2526,7 @@ const WAX_SEAL_MOTIFS = {
   "both-of-us": { wax: 37, fr: "evenodd", d: "M17 32 a9 9 0 1 1 18 0 a9 9 0 1 1 -18 0 M29 32 a9 9 0 1 1 18 0 a9 9 0 1 1 -18 0 M30.2 32 a1.8 1.8 0 1 1 3.6 0 a1.8 1.8 0 1 1 -3.6 0" },
   // three eighth notes on one beam: Double Trouble's pair, plus the one that proves it
   "name-three": { wax: 29, fr: "nonzero", d: "M20.6 39.6 a3 3 0 1 1 6 0 a3 3 0 1 1 -6 0 M28.4 38.5 a3 3 0 1 1 6 0 a3 3 0 1 1 -6 0 M36.2 37.4 a3 3 0 1 1 6 0 a3 3 0 1 1 -6 0 M25.6 25.1 H27.5 V39.6 H25.6 Z M33.4 24.1 H35.3 V38.5 H33.4 Z M41.1 22.9 H43 V37.4 H41.1 Z M25.6 24.9 L43 22.6 L43 26.1 L25.6 28.4 Z" },
-  // a lucky horseshoe: the same luck a stake-won bead's charm wears on the bracelet
+  // a lucky horseshoe: the same luck a stake-won bead's trinket wears on the bracelet
   "press-your-luck": { wax: 30, fr: "evenodd", d: "M26.9 41.4 A12 12 0 1 1 37.1 41.4 L35.2 37.3 A7.5 7.5 0 1 0 28.8 37.3 Z M21.1 30.5 a1.15 1.15 0 1 0 2.3 0 a1.15 1.15 0 1 0 -2.3 0 M23.95 23.6 a1.15 1.15 0 1 0 2.3 0 a1.15 1.15 0 1 0 -2.3 0 M30.85 20.75 a1.15 1.15 0 1 0 2.3 0 a1.15 1.15 0 1 0 -2.3 0 M37.75 23.6 a1.15 1.15 0 1 0 2.3 0 a1.15 1.15 0 1 0 -2.3 0 M40.6 30.5 a1.15 1.15 0 1 0 2.3 0 a1.15 1.15 0 1 0 -2.3 0" },
   // a stack of chips with one more tossed on top: the stake laid before the clock runs
   "confidence-wager": { wax: 31, fr: "nonzero", d: "M23.5 25.9 L39 22.3 A2.4 2.4 0 0 0 38 17.7 L22.5 21.3 A2.4 2.4 0 0 0 23.5 25.9 Z M24.9 27.1 a2.4 2.4 0 0 0 0 4.8 H38.1 a2.4 2.4 0 0 0 0 -4.8 Z M27.4 32.7 a2.4 2.4 0 0 0 0 4.8 H40.6 a2.4 2.4 0 0 0 0 -4.8 Z M25.4 38.3 a2.4 2.4 0 0 0 0 4.8 H38.6 a2.4 2.4 0 0 0 0 -4.8 Z" },

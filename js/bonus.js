@@ -1094,7 +1094,7 @@ export function ruthlessGiveUp(lens) {
 }
 
 /* What counts as naming a page ON SIGHT under this lens — the bar the results strand hangs its
-   stopwatch charm on. Scaled off the lens's own median for the same reason the give-up is, and
+   stopwatch trinket on. Scaled off the lens's own median for the same reason the give-up is, and
    then CLAMPED, which the give-up is not: a snap has to be few words in the plain sense as well
    as few words relative to the lens, and 0.12 of From the Top's 76-word median is nine, which is
    already a line and a half of a song rather than a glance. So the ratio decides the ORDER (the

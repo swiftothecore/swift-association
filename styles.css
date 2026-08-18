@@ -3689,7 +3689,7 @@
      the only thing standing between you and the end of the run. */
   .risk-shield-btn { color: #9c3b2e; border-color: rgba(156, 59, 46, 0.6); }
   .risk-shield-btn:hover { color: #7d2f24; border-color: #7d2f24; }
-  /* The bead swing a bet just paid (or cost), called out beside the strand's charm count. */
+  /* The bead swing a bet just paid (or cost), called out beside the strand's trinket count. */
   .bead-delta {
     margin-left: 8px; font-family: var(--type); font-weight: 700; font-size: calc(12px + var(--text-size-adjust));
     color: #4f7a3a; animation: bead-delta-in 1.5s ease both;
@@ -3979,7 +3979,7 @@
     font-family: var(--type); font-size: calc(12px + var(--text-size-adjust)); color: var(--ink-soft);
     margin-bottom: 8px; letter-spacing: 0.5px;
   }
-  .bracelet-meta .charms { color: var(--ink-accent); font-weight: 700; }
+  .bracelet-meta .trinkets { color: var(--ink-accent); font-weight: 700; }
   .bracelet { position: relative; padding: 4px 0 2px; }
   .bracelet svg { width: 100%; height: auto; display: block; overflow: visible; }
 
@@ -3998,10 +3998,10 @@
   .b-skull-line { fill: none; stroke: var(--ink-soft); stroke-linecap: round; opacity: 0.75; }
   .b-bead { fill: var(--bead); stroke: var(--ink); }
   .b-gloss { fill: #fff; opacity: 0.55; }
-  /* pen-nib charm (word-perfect recall): a vent hole punched out + the slit */
+  /* pen-nib trinket (word-perfect recall): a vent hole punched out + the slit */
   .b-nib-hole { fill: var(--paper); }
   .b-nib-slit { fill: none; stroke: var(--ink); opacity: 0.7; stroke-linecap: round; }
-  /* the "H" stamped on a charm whose round used a hint */
+  /* the "H" stamped on a trinket whose round used a hint */
   .b-hint-h { fill: #fffdf6; font-family: "Courier Prime", "Courier New", monospace; font-weight: 700; pointer-events: none; }
 
   .b-halo {
@@ -4015,9 +4015,9 @@
     100% { transform: scale(1.55); opacity: 0; }
   }
 
-  /* charms dangle from the thread and sway gently; a fresh one swings in */
-  .charm-dangle { transform-box: fill-box; transform-origin: 50% 0%; animation: sway 5.5s ease-in-out infinite; }
-  .charm-dangle.fresh { animation: swingIn 1.4s cubic-bezier(.34,1.56,.64,1), sway 5.5s ease-in-out 1.4s infinite; }
+  /* trinkets dangle from the thread and sway gently; a fresh one swings in */
+  .trinket-dangle { transform-box: fill-box; transform-origin: 50% 0%; animation: sway 5.5s ease-in-out infinite; }
+  .trinket-dangle.fresh { animation: swingIn 1.4s cubic-bezier(.34,1.56,.64,1), sway 5.5s ease-in-out 1.4s infinite; }
   @keyframes sway {
     0%, 100% { transform: rotate(2.4deg); }
     50%      { transform: rotate(-2.4deg); }
@@ -6944,7 +6944,7 @@
      twelve times across the two rows. Weights: 1.7 for an object's contour, 1.2 for
      interior detail, 0.9 for a hairline. Fills: the CARD'S OWN --tint at four strengths,
      so an icon takes the era colour of the card it sits on and a retint is one edit here
-     rather than twelve in the markup. Only the charm bracelet's beads opt out, and they
+     rather than twelve in the markup. Only the trinket bracelet's beads opt out, and they
      say so in the markup. */
   .nav-ic {
     display: block; fill: none; stroke: currentColor; stroke-width: 1.7;
@@ -7176,9 +7176,9 @@
   .skill-foot { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
   .skill-blurb { font-family: var(--type); font-size: calc(10.5px + var(--text-size-adjust)); line-height: 1.4; color: var(--ink-soft); }
   .skill-next { font-family: var(--type); font-size: calc(9.5px + var(--text-size-adjust)); letter-spacing: 0.03em; color: var(--ink-soft); opacity: 0.85; white-space: nowrap; }
-  /* ---- Reward bento: cosmetics grouped into weight-sized tiles (pens, charms, paper, the
+  /* ---- Reward bento: cosmetics grouped into weight-sized tiles (pens, trinkets, paper, the
      super-hard milestone) plus the prestige-titles tile. Replaces the old flat reward list.
-     Uses the mastery rose (--m-accent) for state; charms keep their era-gold (--bead). ---- */
+     Uses the mastery rose (--m-accent) for state; trinkets keep their era-gold (--bead). ---- */
   .reward-bento { margin-top: 22px; }
   .rb-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; margin: 0 2px 14px; }
   .rb-title { font-family: var(--hand); font-weight: 700; font-size: calc(22px + var(--text-size-adjust)); line-height: 1; color: var(--ink); }
@@ -7191,7 +7191,7 @@
   .rb-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;
     grid-template-areas:
       "pens pens paper paper"
-      "charm charm charm charm"
+      "trinket trinket trinket trinket"
       "hard hard hard hard"
       "button button cta cta"
       "hint hint cta cta"
@@ -7281,7 +7281,7 @@
   /* The die is sized to sit WELL inside the circle: it is rotated, so its corners swing wider
      than its own box, and a die tight to the rim reads as clipped even when nothing clips it. */
   .rb-rand svg { width: 13px; height: 13px; overflow: visible; }
-  /* Beats .reward-bento .ink-fill, which would otherwise ink the die in the charms' era-gold:
+  /* Beats .reward-bento .ink-fill, which would otherwise ink the die in the trinkets' era-gold:
      the die is a control, and the only colour a control on this board wears is the rose. */
   .rb-fuse .rb-rand .ink-fill { fill: rgba(var(--m-accent), 0.85); stroke: rgba(var(--m-accent), 0.85); }
   .rb-fuse:hover { --fuse-wash: 0.2; }
@@ -7384,10 +7384,10 @@
   .rb-bead-col.long .rb-stem { height: 30px; }
   .rb-bead { width: 42px; height: 42px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
     background: rgba(255, 255, 255, 0.5); border: 1px solid rgba(43, 39, 34, 0.16); }
-  /* Two kinds of mark hang here: a CHARMS glyph (.charm-preview) and, on the random bead,
+  /* Two kinds of mark hang here: a TRINKETS glyph (.trinket-preview) and, on the random bead,
      a MASTERY_ICONS mark wrapped by masteryMarkup (.charm). Sized alike so the strand reads
      as one row of beads whichever one a slot is wearing. */
-  .rb-bead .charm-preview, .rb-bead > .charm { width: 30px; height: 30px; color: var(--bead); }
+  .rb-bead .trinket-preview, .rb-bead > .charm { width: 30px; height: 30px; color: var(--bead); }
   .rb-bead-col.active .rb-bead { border: 2px solid rgba(var(--m-accent), 0.75); box-shadow: 0 0 0 3px rgba(var(--m-accent), 0.15); background: #fff9ec; }
   .rb-bead-col.locked .rb-bead { border-style: dashed; background: rgba(43, 39, 34, 0.04); }
   .rb-bead-col.locked .rb-lock { width: 15px; height: 15px; opacity: 0.6; }
@@ -7521,9 +7521,9 @@
     font-family: var(--type); font-size: calc(10.5px + var(--text-size-adjust)); color: var(--ink-soft); background: rgba(43, 39, 34, 0.04); border: 1px solid rgba(43, 39, 34, 0.14); }
   .rb-titles .title-stepper { margin-top: 14px; padding-top: 14px; border-top: 1px solid rgba(43, 39, 34, 0.1); }
   @media (max-width: 560px) {
-    .rb-grid { grid-template-columns: 1fr; grid-template-areas: "pens" "charm" "paper" "hard" "button" "cta" "hint" "title"; }
+    .rb-grid { grid-template-columns: 1fr; grid-template-areas: "pens" "trinket" "paper" "hard" "button" "cta" "hint" "title"; }
     .rb-bead { width: 34px; height: 34px; }
-    .rb-bead .charm-preview, .rb-bead > .charm { width: 24px; height: 24px; }
+    .rb-bead .trinket-preview, .rb-bead > .charm { width: 24px; height: 24px; }
     .rb-swatches { gap: 10px; }
     .rb-sw, .rb-sw.paper-chip { width: 62px; height: 48px; }
     .rb-sw.paper-chip::before { left: 10px; }
@@ -7575,8 +7575,8 @@
   .paper-chip[data-paper="blush"]     { background: #f6e4e4; }
   .paper-chip[data-paper="slate"]     { background: #dfe3e8; }
   .paper-chip[data-paper="sage"] { background: #e2e8d8; }
-  /* Bracelet-charm glyph in the reward ladder (reuses the global .b-bead/.b-gloss styling). */
-  .charm-preview { overflow: visible; }
+  /* Bracelet-trinket glyph in the reward ladder (reuses the global .b-bead/.b-gloss styling). */
+  .trinket-preview { overflow: visible; }
 
   /* ---- Results-screen skills recap — a compact margin note (one inline row of skill
      earnings + a one-line mastery status). The full mastery bar only appears on a
@@ -7850,8 +7850,8 @@
      value: the setting when explicit, else the OS preference. */
   body[data-reduce-motion="on"] .screen.active { animation: none; }
   body[data-reduce-motion="on"] .b-halo,
-  body[data-reduce-motion="on"] .charm-dangle,
-  body[data-reduce-motion="on"] .charm-dangle.fresh { animation: none; }
+  body[data-reduce-motion="on"] .trinket-dangle,
+  body[data-reduce-motion="on"] .trinket-dangle.fresh { animation: none; }
   body[data-reduce-motion="on"] .word-wrap { animation: none; }
   body[data-reduce-motion="on"] .kg-press,
   body[data-reduce-motion="on"] .kg-ghost { transition: none; }

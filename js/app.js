@@ -25,7 +25,7 @@ import {
   COMMON_LINES, COMMON_MIN_SONGS, COMMON_MAX_SONGS, COMMON_GEN_ATTEMPTS, COMMON_MAX_ACCEPT,
   ODD_TILES, WHOSE_TILES, WHOSE_MIN_WORDS, WHOSE_GEN_ATTEMPTS, WHOSE_HARD_POOL,
   BOTH_WORDS, BOTH_MIN_SONGS, BOTH_PARTNER_TRIES, BOTH_REVEAL_SONGS, MORE_EXAMPLES_MAX,
-  PRESS_RIDE_STEP, PRESS_CHARM_RIDE, PRESS_FLOURISH_RIDE, RISK_MAX_STAKE, RISK_TOKENS, RISK_TOKEN_VALUE,
+  PRESS_RIDE_STEP, PRESS_TRINKET_RIDE, PRESS_FLOURISH_RIDE, RISK_MAX_STAKE, RISK_TOKENS, RISK_TOKEN_VALUE,
   ALBUM_FOCUS_DIFFS, ALBUM_FOCUS_TARGET,
   GUEST_SHELF_SLOTS, GUESTS, GUEST_DIFFS, GUEST_TARGET, TAYLOR_BUCKETS,
   ADAPT_BUCKETS, ADAPT_LEVELS, ADAPT_MAX_LEVEL, ADAPT_START_LEVEL, ADAPT_PROMO_STREAK,
@@ -51,7 +51,7 @@ import {
 } from "./config.js";
 import { drawRandom, poolSummary } from "./random.js";
 import { POLAROIDS, POLAROID_BY_ID } from "./polaroids.js";
-import { buildBraceletSVG, charmPreviewSVG, randomCharmForBead } from "./bracelet.js";
+import { buildBraceletSVG, trinketPreviewSVG, randomTrinketForBead } from "./bracelet.js";
 import { exportBraceletCard, copyBraceletCard, buildCardSVG, fontFaceCss } from "./braceletcard.js";
 import { exportSleeveCard, copySleeveCard, buildSleeveSVG } from "./sleevecard.js";
 import { sfx } from "./sound.js";
@@ -271,7 +271,7 @@ let roundStake = 0;             // Confidence Wager: beads staked on this page (
 let stakeChosen = false;        // Confidence Wager: this page's stake is locked in, the clock may run
 let wordConcealed = false;      // Confidence Wager: the word is face down until the stake is down
 let wagerRestore = null;        // Confidence Wager: undoes the stake panel's board lockdown (see clearWagerStake)
-let riskCharm = [];             // per-round: this page's bead was won at stake — hang a horseshoe
+let riskTrinket = [];             // per-round: this page's bead was won at stake — hang a horseshoe
 let riskSkull = [];             // per-round: the miss that ended the run — string a skull, not a spacer
 let beadRideBest = 0;           // Press Your Luck / Double Or Nothing: deepest chain this run
 let beadRideBanked = 0;         // Press Your Luck: deepest chain actually BANKED — a ride wiped by a
@@ -4409,7 +4409,7 @@ function updateMasteryNav() {
 const MASTERY_COSMETICS = {
   pen:       { setting: "masteryPen",       field: "pen",       resetLabel: "Default pen",    resetMeta: "the everyday hand", resetIcon: "nib" },
   paper:     { setting: "masteryPaper",     field: "paper",     resetLabel: "Plain paper",    resetMeta: "the everyday page" },
-  charm:     { setting: "masteryCharm",     field: "charm",     resetLabel: "Star charm",     resetMeta: "the default keepsake" },
+  trinket:   { setting: "masteryTrinket",   field: "trinket",   resetLabel: "Star trinket",   resetMeta: "the everyday trinket" },
   button:    { setting: "masteryButton",    field: "button",    resetLabel: "Gold marker",    resetMeta: "the everyday button" },
   label:     { setting: "masteryLabel",     field: "label",     resetLabel: "Start writing", resetMeta: "the everyday words" },
 };
@@ -4532,7 +4532,7 @@ function renderMasteryPage() {
 // note. Only the levels that unlock something appear. The marks themselves come from
 // MASTERY_LEVEL_ICONS in config.js, which the reward tiles read too.
 const MASTERY_LEVEL_LABEL = {
-  1: "a new pen", 2: "a new pen", 3: "a new pen", 4: "paper stocks", 5: "bracelet charms",
+  1: "a new pen", 2: "a new pen", 3: "a new pen", 4: "paper stocks", 5: "bracelet trinkets",
   6: "super-hard challenges", 7: "a prestige title", 8: "a button finish",
   9: "a prestige title", 10: "secret hints", 11: "a prestige title",
   12: "a signature flourish", 13: "your final title",
@@ -4634,12 +4634,12 @@ function masteryHeadClimb(m, mLevel) {
 
 // ---- Reward bento ----
 // The reward board groups the cosmetics into tiles sized by weight: pens as a stacked
-// column, charms hung from a bracelet strand (the hero), paper as live-tinted swatches,
+// column, trinkets hung from a bracelet strand (the hero), paper as live-tinted swatches,
 // the super-hard milestone as a sealed vault, and the prestige titles as a rank ladder.
 // Each group carries its own "default" option so a kind can always be reverted; still-locked
 // items read as empty slots (a lock, no glyph) so the reward stays a surprise until earned.
 function buildRewardBento(m, mLevel, unlocked) {
-  const groups = { pen: [], paper: [], charm: [], unlock: [], button: [], label: [] };
+  const groups = { pen: [], paper: [], trinket: [], unlock: [], button: [], label: [] };
   MASTERY_REWARDS.forEach((r) => { if (groups[r.kind]) groups[r.kind].push(r); });
   const all = MASTERY_REWARDS.filter((r) => r.kind !== "title");
   const earned = all.filter((r) => m.unlocked[r.id]).length;
@@ -4656,7 +4656,7 @@ function buildRewardBento(m, mLevel, unlocked) {
     `</div>` +
     `<div class="rb-grid">` +
       buildPensTile(groups.pen, m) +
-      buildCharmTile(groups.charm, m) +
+      buildTrinketTile(groups.trinket, m) +
       buildPaperTile(groups.paper, m) +
       // The super-hard vault reports the real gate, not the ledger: `mastery: 6` on the
       // tapes:4 challenges is what actually opens the tier.
@@ -4762,9 +4762,9 @@ function rewardSetUnlocked(m, kind) {
   const first = MASTERY_REWARDS.find((r) => r.kind === kind);
   return !!(first && m.unlocked[first.id]);
 }
-const charmSetUnlocked = (m) => rewardSetUnlocked(m, "charm");
+const trinketSetUnlocked = (m) => rewardSetUnlocked(m, "trinket");
 
-// A random start button is a different animal from a random charm strand. The strand hangs
+// A random start button is a different animal from a random trinket strand. The strand hangs
 // nine beads at once, so chance there is visible standing still. There is only ever ONE start
 // button, so its randomness has to be a cadence instead — and that cadence is the page load:
 // rolled once here, then held for the life of the tab. Rolling inside applySettings would
@@ -4803,26 +4803,26 @@ function activeCtaLabel() {
   return settings.masteryLabel === COSMETIC_RANDOM ? rolledLabel : (settings.masteryLabel || "");
 }
 
-// Charms hang from a bracelet strand on alternating drops. The random action lives in the
-// tile header because it changes the whole strand rather than selecting one charm.
-function buildCharmTile(charms, m) {
-  const setUnlocked = charmSetUnlocked(m);
-  const active = settings.masteryCharm || "";
-  let beads = charmBead(`data-reward-reset="charm"`, charmPreviewSVG("star"), "star", active === "", true, 0);
-  charms.forEach((r, i) => {
-    beads += charmBead(`data-reward="${r.id}"`, charmPreviewSVG(r.payload.charm), r.payload.charm, active === r.payload.charm, setUnlocked, i + 1);
+// Trinkets hang from a bracelet strand on alternating drops. The random action lives in the
+// tile header because it changes the whole strand rather than selecting one trinket.
+function buildTrinketTile(trinkets, m) {
+  const setUnlocked = trinketSetUnlocked(m);
+  const active = settings.masteryTrinket || "";
+  let beads = trinketBead(`data-reward-reset="trinket"`, trinketPreviewSVG("star"), "star", active === "", true, 0);
+  trinkets.forEach((r, i) => {
+    beads += trinketBead(`data-reward="${r.id}"`, trinketPreviewSVG(r.payload.trinket), r.payload.trinket, active === r.payload.trinket, setUnlocked, i + 1);
   });
-  return `<div class="rb-tile rb-charm" style="grid-area:charm">` +
-    `<div class="rb-tile-top">${rewardTileMarkHTML("charm")}<span class="rb-tt">Bracelet charms</span>` +
-      rbRandChip("charm", "Mastery 5", active === COSMETIC_RANDOM, setUnlocked, "Give every bead its own charm") +
+  return `<div class="rb-tile rb-trinket" style="grid-area:trinket">` +
+    `<div class="rb-tile-top">${rewardTileMarkHTML("trinket")}<span class="rb-tt">Bracelet trinkets</span>` +
+      rbRandChip("trinket", "Mastery 5", active === COSMETIC_RANDOM, setUnlocked, "Give every bead its own trinket") +
     `</div>` +
     `<div class="rb-tt-sub">Hangs from every bead you earn · random gives each bead its own</div>` +
     `<div class="rb-strand"><span class="rb-cord"></span>` +
       `<span class="rb-clasp l"></span><span class="rb-clasp r"></span>` +
       `<div class="rb-beads">${beads}</div></div></div>`;
 }
-// `glyph` is finished markup rather than a charm id so the shared bead shape can render it.
-function charmBead(attr, glyph, name, active, available, idx) {
+// `glyph` is finished markup rather than a trinket id so the shared bead shape can render it.
+function trinketBead(attr, glyph, name, active, available, idx) {
   const drop = idx % 2 === 0 ? "short" : "long";   // alternating hang, like a laid-out bracelet
   if (!available) {
     return `<span class="rb-bead-col ${drop} locked"><span class="rb-stem"></span>` +
@@ -7075,7 +7075,7 @@ function endRuthlessRun() {
   // thirteen-round run and would be a borrowed flourish here.
   const results = pages.map((t) => t.ok);
   const albums = pages.map((t) => t.album || null);
-  // A page named inside the lens's snap window hangs a stopwatch instead of the usual charm.
+  // A page named inside the lens's snap window hangs a stopwatch instead of the usual trinket.
   // It is read off the words that were ON the page when it was named, not off the seconds,
   // which are the same number here and would stop being if the drip were ever retuned.
   const snapWords = ruthlessSnap(lens);
@@ -7128,8 +7128,8 @@ function endRuthlessRun() {
       `<span class="rl-page-words">${t.ok ? `${t.words}w` : "gave up"}</span>` +
       `<span class="rl-page-time">${escapeHtml(t.note)}</span>` +
     `</li>`).join("");
-  // What the stopwatch charms on the strand mean, said once and in the lens's own number.
-  // A charm nobody can read is decoration, and the window moves per lens, so the line has to
+  // What the stopwatch trinkets on the strand mean, said once and in the lens's own number.
+  // A trinket nobody can read is decoration, and the window moves per lens, so the line has to
   // carry the figure rather than describe the rule in words.
   const snapFoot = snaps
     ? `<p class="rl-pages-foot">${snaps} named inside ${snapWords} word${snapWords === 1 ? "" : "s"}` +
@@ -8496,9 +8496,9 @@ function syncCustomUI() {
 }
 
 /* ---------- Bracelet (hand-strung SVG) ---------- */
-let justEarnedIndex = -1; // bead that just became a charm, for the swing-in
+let justEarnedIndex = -1; // bead that just became a trinket, for the swing-in
 
-// The shuffle behind a "random" charm strand. Per RUN, not per render and not per bead
+// The shuffle behind a "random" trinket strand. Per RUN, not per render and not per bead
 // index: the bracelet is rebuilt on every page turn, so a seed that moved with the render
 // would reshuffle the strand under the player between pages, and a seed that was only the
 // bead index would make bead 3 a moon on every bracelet forever. Never persisted — no
@@ -8507,19 +8507,19 @@ let justEarnedIndex = -1; // bead that just became a charm, for the swing-in
 // date-derived seed at both ends so the two renders agree (see startDaily / showDailyResult).
 let braceletSeed = 0;
 
-// Wraps the pure buildBraceletSVG, injecting the Mastery-chosen dangling charm into
+// Wraps the pure buildBraceletSVG, injecting the Mastery-chosen dangling trinket into
 // every render so app.js stays the single owner of that game-state default.
 function renderBraceletSVG(results, active, fresh, albums, opts) {
   // Impostor challenge: a bead that flagged a fake dangles a little devil, not the star.
   const impostorCaught = impostorRuleActive()
     ? results.map((ok, i) => ok === true && impostorRounds.has(i + 1))
     : null;
-  // Risk challenges: a bead won at stake dangles a horseshoe instead of the usual charm,
+  // Risk challenges: a bead won at stake dangles a horseshoe instead of the usual trinket,
   // and the uninsured miss that ended an Insurance run strings a skull in place of a spacer.
-  const riskWon = riskRuleActive() ? riskCharm.slice() : null;
+  const riskWon = riskRuleActive() ? riskTrinket.slice() : null;
   const skullMiss = riskRuleActive() ? riskSkull.slice() : null;
   return buildBraceletSVG(results, active, fresh, albums,
-    { ...opts, charm: settings.masteryCharm, charmSeed: braceletSeed, impostorCaught, riskWon, skullMiss });
+    { ...opts, trinket: settings.masteryTrinket, trinketSeed: braceletSeed, impostorCaught, riskWon, skullMiss });
 }
 
 // ---- Bracelet-as-PNG keepsake ----
@@ -8760,7 +8760,7 @@ function renderBracelet() {
     : { colors: albumPalette(), hinted: roundHinted, verseTiers: roundVerseTier };
   $("bracelet").innerHTML = renderBraceletSVG(roundResults, round, justEarnedIndex, roundAlbums, opts);
   const correct = roundResults.filter(Boolean).length;
-  $("charmCount").textContent = correct;
+  $("trinketCount").textContent = correct;
   const uncapped = gameType === "infinite" || customInfinite()
     || (gameType === "challenge" && currentChallenge && currentChallenge.rule === "survive");
   const pg = uncapped
@@ -9595,7 +9595,7 @@ function resetRunState() {
   flourishThisRun = false;   // the closing flourish is once per run, and this is every run's start
   floatLevel = ADAPT_START_LEVEL;   // only read on a run riding Custom's floating rarity pool
   floatPromo = 0;
-  braceletSeed = (Math.random() * 0x100000000) >>> 0;   // a fresh shuffle for a random charm strand
+  braceletSeed = (Math.random() * 0x100000000) >>> 0;   // a fresh shuffle for a random trinket strand
   dailyRng = null;
   dailyAlbumPool = null;
   dailyAlbum = null;
@@ -9661,7 +9661,7 @@ function resetRunState() {
   roundStake = 0;
   stakeChosen = false;
   clearWagerStake();      // a stake panel abandoned by the last run must not greet the next one
-  riskCharm = [];
+  riskTrinket = [];
   riskSkull = [];
   beadRideBest = 0;
   beadRideBanked = 0;
@@ -10369,7 +10369,7 @@ function startDaily() {
   resetRunState();
   dailyRng = mulberry32(dailySeed(dateStr));   // set AFTER resetRunState (which clears it)
   // The daily is the one run whose strand gets redrawn after the fact, from a saved snapshot
-  // that stores scores and not beads. Seeding its random charms off the date instead of the
+  // that stores scores and not beads. Seeding its random trinkets off the date instead of the
   // clock is what lets showDailyResult rebuild the same strand the player finished on.
   braceletSeed = dailySeed(dateStr);
   // On a real album anniversary, lean today's words toward that album (deterministic — the
@@ -12403,7 +12403,7 @@ function showDailyResult(data, dateStr) {
   roundAlbums = data.roundAlbums;
   score = data.score;
   dailyShareTime = typeof data.tm === "number" ? data.tm : null;   // restore completion time for the share (older saves lack it)
-  braceletSeed = dailySeed(dateStr);   // rebuild the same random-charm strand the run ended on
+  braceletSeed = dailySeed(dateStr);   // rebuild the same random-trinket strand the run ended on
   showScreen("results");
   $("resultBracelet").innerHTML = renderBraceletSVG(roundResults, 0, -1, roundAlbums, { colors: albumPalette() });
   $("finalScore").textContent = settings.hideDailyScore ? "?" : score;
@@ -13437,7 +13437,7 @@ function showDevilFork(forkRound) {
      ceiling. Everything goes through riskProgressText ("20 beads · need 9") instead, and the
      history log records pages won rather than beads (see endChallenge).
    • The bracelet still strings exactly ONE BEAD PER PAGE. A bead won at stake shows its stakes
-     by wearing a horseshoe charm (riskCharm), never by adding beads to the strand. */
+     by wearing a horseshoe trinket (riskTrinket), never by adding beads to the strand. */
 const RISK_RULES = new Set(["press", "wager", "doubleup", "insurance"]);
 function riskRuleActive() {
   return gameType === "challenge" && !!currentChallenge && RISK_RULES.has(currentChallenge.rule);
@@ -13470,7 +13470,7 @@ function adjustBeads(n) {
   score = Math.max(0, score + n);
   flashBeadDelta(n);
 }
-// A bead swing, called out where the eye already is: beside the strand's charm count.
+// A bead swing, called out where the eye already is: beside the strand's trinket count.
 // Also used for beads lost from a pot that never reached `score` at all (Press Your Luck),
 // which is why it takes the delta rather than reading the score itself.
 function flashBeadDelta(n) {
@@ -13528,7 +13528,7 @@ function bankPot(quiet) {
   // A pot only ever survives on a page that was won, so round - 1 is always a real bead.
   // Both rules share the depth: three deep is a pot of 6 riding on Press and 4 on Double,
   // either of which is a genuine commitment rather than a shrug.
-  if (beadRide >= PRESS_CHARM_RIDE) riskCharm[round - 1] = true;
+  if (beadRide >= PRESS_TRINKET_RIDE) riskTrinket[round - 1] = true;
   // The charm asks for a ride CARRIED HOME, so it is recorded here rather than off
   // beadRideBest, which a ride wiped by a miss would have set just as high.
   if (beadRide > beadRideBanked) beadRideBanked = beadRide;
@@ -13793,7 +13793,7 @@ function applyRiskScoring(correct) {
     // same arithmetic as "stake it, get it back doubled", with nothing to refund.
     if (roundStake > 0) {
       adjustBeads(correct ? roundStake : -roundStake);
-      if (correct && roundStake >= riskMaxStake()) riskCharm[round - 1] = true;
+      if (correct && roundStake >= riskMaxStake()) riskTrinket[round - 1] = true;
     }
   } else if (rule === "doubleup") {
     // The same pot as Press Your Luck, escalating by doubling instead of adding: the page you
@@ -13814,7 +13814,7 @@ function applyRiskScoring(correct) {
   } else if (rule === "insurance") {
     if (correct) {
       // Every page played with no shields left is a genuine sudden-death page.
-      if (insuranceTokens === 0 && !roundInsured) riskCharm[round - 1] = true;
+      if (insuranceTokens === 0 && !roundInsured) riskTrinket[round - 1] = true;
     } else if (roundInsured) {
       roundInsured = false;          // the shield absorbs the miss; the run lives on
     } else {
@@ -15052,7 +15052,7 @@ function gradeLyricRecall(normPhrase, line, lines = 1) {
   const perfect = verbatim || coverage >= RECALL_PERFECT;
   // A line of a word or two ("in you", "and the dancers") is a correct answer but not a
   // feat of recall, so it can't reach the word-perfect rungs however completely it was
-  // typed — those tiers, their bonus beads and the charms hanging off them stay earned
+  // typed — those tiers, their bonus beads and the trinkets hanging off them stay earned
   // by real lines. It still grades "good" for covering what there was to cover.
   if (total && total < RECALL_TIER_MIN_WORDS) {
     return coverage >= RECALL_GOOD
@@ -15812,7 +15812,7 @@ function submitAnswer(song, isTimeout) {
   }
   if (floatingPoolNow()) floatAdjust(correct);
   // A word-perfect+ recall earns a pen-nib bead (set BEFORE renderBracelet so the
-  // charm shows on the bead the moment it's earned, not a round late).
+  // trinket shows on the bead the moment it's earned, not a round late).
   const versePlus = lyricMatch && (lyricMatch.tier === "perfect" || lyricMatch.tier === "verse");
   if (versePlus) roundVerseTier[round - 1] = lyricMatch.tier;
   renderBracelet();
@@ -16931,7 +16931,7 @@ let verseBonus = 0;              // verse-bonus points this game (fuller lyric r
 let gameVersePerfect = 0;        // word-perfect-or-better lines this game (lifetime versePerfect / milestones)
 let gameWholeVerses = 0;         // whole-verse (4-line) recalls this game (Overachiever fires per-round)
 let verseKeepsake = [];          // { line, word, tier } for each perfect+ recall — results-page anthology
-let roundVerseTier = [];         // per-round verse tier ("perfect"/"verse") → nib bracelet charm
+let roundVerseTier = [];         // per-round verse tier ("perfect"/"verse") → nib bracelet trinket
 let lyricAnswerSongs = [];       // titles answered via a lyric line this game (for Someone Has A Favourite Song)
 let gameTimeSum = 0;             // total answer time this game, secs (for Perfect Storm)
 let gameHitRedZone = false;      // any round answered with ≤3s left this game (for Peace)
@@ -18827,7 +18827,7 @@ const HOWTO_PAGES = [
   {
     label: "what you keep",
     title: "It all goes in the notebook",
-    body: `Finished runs leave something behind: charms on the bracelet, records and streaks, ` +
+    body: `Finished runs leave something behind: trinkets on the bracelet, records and streaks, ` +
       `and experience across five skills that unlocks as it climbs. None of it is spent by ` +
       `playing badly, so there's no wrong way to start.`,
     note: `Everything lives on this device alone. There's no account, and nothing to sign up for.`,
@@ -19061,7 +19061,7 @@ const GUIDE_BEATS = {
   guideMatch: {
     anchor: () => document.querySelector(".bracelet-wrap") || $("bracelet"),
     kicker: "nice",
-    body: () => 'Match every song on the page to finish, and each match adds a charm to your <b>bracelet</b>.',
+    body: () => 'Match every song on the page to finish, and each match adds a trinket to your <b>bracelet</b>.',
     got: null,
     autoMs: () => (animInstant() ? 0 : 6500),   // brief and self-clearing; also cleared on the next page
     // The bracelet sits at the top of the page with the word directly beneath it, so "below"
@@ -20145,12 +20145,12 @@ function buildDevApi() {
       // Re-lock every reward — preview the reward bento's locked/empty-slot tile states. Drops
       // the mastery level with them, for the same reason unlockRewards raises it.
       lockRewards: () => { const m = loadMastery(); m.unlocked = {}; m.masteryXp = 0; saveMastery(m); updateMasteryNav(); if ($("masteryBody")) renderMasteryPage(); },
-      reset: () => { resetMastery(); settings.masteryPen = ""; settings.masteryPaper = ""; settings.masteryCharm = ""; settings.masteryTitle = ""; settings.masteryButton = ""; settings.masteryLabel = ""; saveSettings(settings); setPen(null); applySettings(); updateMasteryNav(); if ($("masteryBody")) renderMasteryPage(); },
+      reset: () => { resetMastery(); settings.masteryPen = ""; settings.masteryPaper = ""; settings.masteryTrinket = ""; settings.masteryTitle = ""; settings.masteryButton = ""; settings.masteryLabel = ""; saveSettings(settings); setPen(null); applySettings(); updateMasteryNav(); if ($("masteryBody")) renderMasteryPage(); },
       // Preview a paper stock without unlocking it: pass an id (manila/parchment/blush/slate/sage) or "" to clear.
       paper: (id) => { settings.masteryPaper = id || ""; saveSettings(settings); applySettings(); if ($("masteryBody")) renderMasteryPage(); },
-      // Preview a bracelet charm without unlocking it: pass an id (heart/moon/daisy/bow/pick/
+      // Preview a bracelet trinket without unlocking it: pass an id (heart/moon/daisy/bow/pick/
       // note/lightning/snake), "random" for a per-bead strand, or "" for the default star.
-      charm: (id) => { settings.masteryCharm = id || ""; saveSettings(settings); renderBracelet(); if ($("masteryBody")) renderMasteryPage(); },
+      trinket: (id) => { settings.masteryTrinket = id || ""; saveSettings(settings); renderBracelet(); if ($("masteryBody")) renderMasteryPage(); },
       // Reshuffle a random strand without finishing a run. The seed normally moves only at
       // resetRunState, which is exactly the thing that makes a mid-run strand hard to look
       // at twice — this deals a new one in place and redraws whatever bracelet is on screen.
@@ -20160,9 +20160,9 @@ function buildDevApi() {
         return braceletSeed;
       },
       // What a random strand of `n` beads would look like on the current seed (or one you
-      // pass), as a list of charm ids — the strand without playing the run that earns it.
+      // pass), as a list of trinket ids — the strand without playing the run that earns it.
       strand: (n = TOTAL_ROUNDS, seed = braceletSeed) =>
-        Array.from({ length: n | 0 }, (_, i) => randomCharmForBead(seed, i)),
+        Array.from({ length: n | 0 }, (_, i) => randomTrinketForBead(seed, i)),
       // Preview a start-button finish without unlocking it: pass an id (ink/rose/sky/meadow, or
       // any dev.mastery.flags() id) or "" for the default gold marker.
       button: (id) => { settings.masteryButton = id || ""; saveSettings(settings); applySettings(); if ($("masteryBody")) renderMasteryPage(); },
@@ -21523,7 +21523,7 @@ function buildDevApi() {
           stake: roundStake, stakeChosen,
           deepest: beadRideBest,
           tokens: insuranceTokens, insured: roundInsured, spent: insuranceSpent, dead: insuranceDead,
-          charms: riskCharm.map((v, i) => (v ? i + 1 : 0)).filter(Boolean),   // pages wearing a horseshoe
+          trinkets: riskTrinket.map((v, i) => (v ? i + 1 : 0)).filter(Boolean),   // pages wearing a horseshoe
           skull: riskSkull.map((v, i) => (v ? i + 1 : 0)).filter(Boolean),    // the page the run died on
         }),
         // Set the bead total outright (the currency IS score, so this is the honest lever).
@@ -21560,7 +21560,7 @@ function buildDevApi() {
         simulate: (n) => { let pot = 0; const floor = pressMinRide(); const steps = [];
           for (let k = 1; k <= (n || 5); k++) { pot += k * PRESS_RIDE_STEP;
             steps.push({ ride: k, pot, bankable: k >= floor }); }
-          return { steps, charmAt: PRESS_CHARM_RIDE, floor, target: riskTarget() }; },
+          return { steps, trinketAt: PRESS_TRINKET_RIDE, floor, target: riskTarget() }; },
       },
       // Confidence Wager — the per-page stake. `set` skips the panel (or pre-answers it).
       wager: {
@@ -21602,7 +21602,7 @@ function buildDevApi() {
       //   ride: () => { const ov = document.querySelector(".chall-path-overlay");
       //     if (!ov) return null; ov.remove(); renderRiskBanner(); nextRound(); return beadPot; },
       //   wipe: () => { const n = beadPot; beadPot = 0; beadRide = 0; renderRiskBanner(); return n; },
-      //   simulate: (n) => ({ charmAt: PRESS_CHARM_RIDE, target: riskTarget(),
+      //   simulate: (n) => ({ trinketAt: PRESS_TRINKET_RIDE, target: riskTarget(),
       //     steps: Array.from({ length: n || 6 }, (_, k) => ({ ride: k + 1, pages: k + 1, pot: 2 ** k })) }),
       // },
       // Insurance — sudden death and the shields against it.

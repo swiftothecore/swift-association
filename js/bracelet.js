@@ -15,13 +15,13 @@ export function starPath(cx, cy, rOut, rIn) {
   return d + "Z";
 }
 
-// ---- Dangling charms (Mastery level-5 reward) ----
-// Each draws a charm centred at (cx,cy) with "radius" r, in the bracelet's bead
-// style (fill via .b-bead → var(--bead); the caller wraps the charm in a group
+// ---- Dangling trinkets (Mastery level-5 reward) ----
+// Each draws a trinket centred at (cx,cy) with "radius" r, in the bracelet's bead
+// style (fill via .b-bead → var(--bead); the caller wraps the trinket in a group
 // carrying the album --bead tint). `sw` is the ink stroke width. "star" is the
 // default keepsake; "nib" is reserved for word-perfect verse rounds and "stopwatch"
 // for a Ruthless page named on sight; the rest are player-selectable via
-// settings.masteryCharm.
+// settings.masteryTrinket.
 function cFill(d, sw) { return `<path d="${d}" class="b-bead" stroke-width="${sw}" stroke-linejoin="round"/>`; }
 function cEllipse(cx, cy, rx, ry, rot, sw) {
   return `<ellipse cx="${cx.toFixed(2)}" cy="${cy.toFixed(2)}" rx="${rx.toFixed(2)}" ry="${ry.toFixed(2)}" transform="rotate(${rot.toFixed(1)} ${cx.toFixed(2)} ${cy.toFixed(2)})" class="b-bead" stroke-width="${sw}"/>`;
@@ -29,7 +29,7 @@ function cEllipse(cx, cy, rx, ry, rot, sw) {
 function cCircle(cx, cy, rr, sw) { return `<circle cx="${cx.toFixed(2)}" cy="${cy.toFixed(2)}" r="${rr.toFixed(2)}" class="b-bead" stroke-width="${sw}"/>`; }
 function cGloss(cx, cy, rr) { return `<circle cx="${cx.toFixed(2)}" cy="${cy.toFixed(2)}" r="${rr.toFixed(2)}" class="b-gloss"/>`; }
 
-export const CHARMS = {
+export const TRINKETS = {
   star(cx, cy, r, sw) {
     return cFill(starPath(cx, cy, r, r * 0.419), sw) + cGloss(cx - 0.257 * r, cy - 0.392 * r, 0.162 * r);
   },
@@ -126,8 +126,8 @@ export const CHARMS = {
   },
   // A pocket stopwatch, crown up, hands at a few seconds past twelve — the keepsake for a
   // Ruthless page named on sight (see snapPage / ruthlessSnap). Not player-selectable: it is an
-  // earned mark like the nib and the horseshoe, which is why it is out of RANDOM_CHARM_IDS.
-  // The case sits low in the charm's box so the crown has room without the whole thing reading
+  // earned mark like the nib and the horseshoe, which is why it is out of RANDOM_TRINKET_IDS.
+  // The case sits low in the trinket's box so the crown has room without the whole thing reading
   // small, and the hands are drawn short and stubby, because at a bead's scale a fine minute
   // hand is one grey pixel.
   stopwatch(cx, cy, r, sw) {
@@ -150,26 +150,26 @@ export const CHARMS = {
 };
 
 // ---- Random strands ----
-// What a "random" strand draws from: the eight player-unlockable charms plus the star. The
-// star is in the pool deliberately, so it isn't the one charm random can never hand you.
+// What a "random" strand draws from: the eight player-unlockable trinkets plus the star. The
+// star is in the pool deliberately, so it isn't the one trinket random can never hand you.
 // The automatic keepsakes (nib, devil, horseshoe, stopwatch) are NOT here and never will be:
 // those are earned marks, and a random strand must never counterfeit one.
-export const RANDOM_CHARM_IDS = ["star", "heart", "moon", "daisy", "bow", "pick", "note", "lightning", "snake"];
+export const RANDOM_TRINKET_IDS = ["star", "heart", "moon", "daisy", "bow", "pick", "note", "lightning", "snake"];
 
-// Which charm a given bead wears on a random strand. Deterministic in (seed, index) and
+// Which trinket a given bead wears on a random strand. Deterministic in (seed, index) and
 // nothing else, because the bracelet re-renders on EVERY page turn: anything reaching for
 // Math.random() here would reshuffle the whole strand in front of the player between pages.
 // The seed moves once a run (see resetRunState in app.js), which is what keeps this a
 // surprise rather than a fixed pattern where bead 3 is a moon on every bracelet forever.
-export function randomCharmForBead(seed, i) {
+export function randomTrinketForBead(seed, i) {
   let h = ((seed >>> 0) ^ Math.imul(i + 1, 0x9e3779b1)) >>> 0;
   h = Math.imul(h ^ (h >>> 16), 0x85ebca6b) >>> 0;
   h = Math.imul(h ^ (h >>> 13), 0xc2b2ae35) >>> 0;
   h = (h ^ (h >>> 16)) >>> 0;
-  return RANDOM_CHARM_IDS[h % RANDOM_CHARM_IDS.length];
+  return RANDOM_TRINKET_IDS[h % RANDOM_TRINKET_IDS.length];
 }
 
-// The bone bead. Not a dangling charm but a BEAD: it replaces the matte spacer on the one
+// The bone bead. Not a dangling trinket but a BEAD: it replaces the matte spacer on the one
 // page a sudden-death run actually died on (Insurance's uninsured miss), so the strand says
 // where it ended without a caption. Drawn in the miss bead's own muted paper, since it is
 // still a page that was lost — the shape does the talking, not the colour.
@@ -188,13 +188,13 @@ export function skullBead(cx, cy, r, sw) {
   return jaw + cranium + socket(-0.40) + socket(0.40) + nose + teeth;
 }
 
-// A standalone charm glyph for the Mastery picker (no bead or thread). `tint` sets
+// A standalone trinket glyph for the Mastery picker (no bead or thread). `tint` sets
 // the --bead fill; omit to inherit the current era tint.
-export function charmPreviewSVG(id, tint) {
-  const fn = CHARMS[id] || CHARMS.star;
+export function trinketPreviewSVG(id, tint) {
+  const fn = TRINKETS[id] || TRINKETS.star;
   const r = 6.8, sw = Math.max(0.7, r * 0.15).toFixed(2);
   const style = tint ? ` style="--bead:${tint}"` : "";
-  return `<svg viewBox="0 0 24 24" class="charm-preview" aria-hidden="true"><g${style} transform="translate(12 12.5)">${fn(0, 0, r, sw)}</g></svg>`;
+  return `<svg viewBox="0 0 24 24" class="trinket-preview" aria-hidden="true"><g${style} transform="translate(12 12.5)">${fn(0, 0, r, sw)}</g></svg>`;
 }
 
 export function buildBraceletSVG(results, activeRound, freshIndex, albums, opts) {
@@ -203,15 +203,15 @@ export function buildBraceletSVG(results, activeRound, freshIndex, albums, opts)
   // Album→colour map; callers pass the active palette (colour-blind variant when
   // that setting is on), defaulting to the standard album colours.
   const colors = (opts && opts.colors) || ALBUM_COLORS;
-  // per-round flags: was a hint taken that round? marks the charm with a small "H".
+  // per-round flags: was a hint taken that round? marks the trinket with a small "H".
   const hinted = (opts && opts.hinted) || [];
   // per-round verse tier ("perfect"/"verse"): a word-perfect recall hangs a pen-nib
-  // charm instead of the usual star — a keepsake of writing the line from memory.
+  // trinket instead of the usual star — a keepsake of writing the line from memory.
   const verseTiers = (opts && opts.verseTiers) || [];
   // per-round flag (Impostor challenge): this bead flagged a fake, so it dangles a devil.
   const impostorCaught = (opts && opts.impostorCaught) || [];
   // per-round flag (the risk challenges): this bead was won at stake, so it dangles a
-  // horseshoe. The strand stays one bead per page whatever a bet paid — the charm is how
+  // horseshoe. The strand stays one bead per page whatever a bet paid — the trinket is how
   // a high-stakes page shows what it was worth.
   const riskWon = (opts && opts.riskWon) || [];
   // per-round flag (Insurance): the uninsured miss that ended the run — this page's bead is
@@ -221,14 +221,14 @@ export function buildBraceletSVG(results, activeRound, freshIndex, albums, opts)
   // a stopwatch. The strand is otherwise silent about HOW a page went — one bead a page, tinted
   // by album — and this is the one thing about a Ruthless page worth carrying off it.
   const snapPage = (opts && opts.snapPage) || [];
-  // opts.charm: the Mastery-chosen dangling charm id (see CHARMS); default "star". The
-  // special value "random" gives every bead its own charm instead of the whole strand
-  // wearing one, shuffled per run by opts.charmSeed. Either way this only supplies a bead's
-  // DEFAULT charm: the earned overrides below (nib, devil, horseshoe) still win over it.
-  const wantRandom = !!(opts && opts.charm === "random");
-  const charmSeed = (opts && opts.charmSeed) || 0;
-  const pickedCharm = (opts && opts.charm && CHARMS[opts.charm]) ? opts.charm : "star";
-  const defaultCharm = wantRandom ? (i) => randomCharmForBead(charmSeed, i) : () => pickedCharm;
+  // opts.trinket: the Mastery-chosen dangling trinket id (see TRINKETS); default "star". The
+  // special value "random" gives every bead its own trinket instead of the whole strand
+  // wearing one, shuffled per run by opts.trinketSeed. Either way this only supplies a bead's
+  // DEFAULT trinket: the earned overrides below (nib, devil, horseshoe) still win over it.
+  const wantRandom = !!(opts && opts.trinket === "random");
+  const trinketSeed = (opts && opts.trinketSeed) || 0;
+  const pickedTrinket = (opts && opts.trinket && TRINKETS[opts.trinket]) ? opts.trinket : "star";
+  const defaultTrinket = wantRandom ? (i) => randomTrinketForBead(trinketSeed, i) : () => pickedTrinket;
   const W = 520, H = 64, xL = 26, xR = W - 26;
   // the thread sags between its tied ends like a real bracelet laid on the page
   const yAt = (x) => 20 + 10 * Math.sin(Math.PI * ((x - xL) / (xR - xL)));
@@ -274,7 +274,7 @@ export function buildBraceletSVG(results, activeRound, freshIndex, albums, opts)
     const beadStyle = albumCol ? ` style="--bead:${albumCol}"` : "";
 
     if (answered === true) {
-      // a small bead on the thread, with a star charm dangling from a jump ring.
+      // a small bead on the thread, with a star trinket dangling from a jump ring.
       // a hinted round is flagged: the bead grows a touch and is stamped with an "H".
       const wasHinted = !!hinted[i];
       const beadR = wasHinted ? s(5.2) : s(4.1);
@@ -285,15 +285,15 @@ export function buildBraceletSVG(results, activeRound, freshIndex, albums, opts)
       const fresh = i === freshIndex;
       const delay = fresh ? "" : ` style="animation-delay:${(-(i * 0.9) % 5.5).toFixed(2)}s"`;
       // Word-perfect verse rounds always hang the reserved pen-nib; otherwise the
-      // player's chosen charm (default star), drawn by the shared CHARMS renderer.
+      // player's chosen trinket (default star), drawn by the shared TRINKETS renderer.
       const isNib = verseTiers[i] === "perfect" || verseTiers[i] === "verse";
-      const charmId = impostorCaught[i] ? "devil" : riskWon[i] ? "horseshoe"
-        : snapPage[i] ? "stopwatch" : (isNib ? "nib" : defaultCharm(i));
+      const trinketId = impostorCaught[i] ? "devil" : riskWon[i] ? "horseshoe"
+        : snapPage[i] ? "stopwatch" : (isNib ? "nib" : defaultTrinket(i));
       const cr = s(7.4), csw = Math.max(0.7, cr * 0.15).toFixed(2);
-      const charm = `<g${beadStyle}>${CHARMS[charmId](x, y + s(15.5), cr, csw)}</g>`;
-      svg += `<g class="charm-dangle${fresh ? " fresh" : ""}"${delay}>` +
+      const trinket = `<g${beadStyle}>${TRINKETS[trinketId](x, y + s(15.5), cr, csw)}</g>`;
+      svg += `<g class="trinket-dangle${fresh ? " fresh" : ""}"${delay}>` +
         `<circle cx="${x}" cy="${y + s(5.4)}" r="${s(2.3)}" fill="none" stroke="var(--ink)" stroke-width="1" opacity="0.7"/>` +
-        charm +
+        trinket +
         `</g>`;
     } else if (answered === false && skullMiss[i]) {
       // the page the run died on: a bone bead, a little larger than a spacer so the eye

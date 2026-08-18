@@ -314,7 +314,7 @@ export function initDev(api) {
   // quickly live here: `play` opens a real run on the chosen lens (the picker is no longer the
   // only door, which matters when the picker is the thing under test), and `finish` fabricates a
   // settled one and jumps to the results — the only sane way to look at the strand's album
-  // tints, its stopwatch charms and the page listing more than once an afternoon.
+  // tints, its stopwatch trinkets and the page listing more than once an afternoon.
   const rlRunLens = select(api.ruthless.board().map((r) => r.lens), (x) => x, (x) => x);
   const rlNamed = num(8);
   const rlSnaps = num(3);
@@ -583,11 +583,11 @@ export function initDev(api) {
     row("mastery lvl", mMastN, btn("set", () => { api.mastery.setMasteryLevel(+mMastN.value); toast("mastery set"); }),
         btn("unlock rewards", () => { api.mastery.unlockRewards(); toast("rewards unlocked"); }),
         btn("lock rewards", () => { api.mastery.lockRewards(); toast("rewards locked"); })),
-    // Random charm strands. The seed moves once a run, so without these the only way to see
+    // Random trinket strands. The seed moves once a run, so without these the only way to see
     // a second strand is to finish a first one; "reshuffle" deals a new one mid-run and
-    // "peek" prints the 13 charms it would hang without needing a bracelet on screen.
-    row(btn("charms: random", () => { api.mastery.charm("random"); toast("random strand on"); }),
-        btn("charms: star", () => { api.mastery.charm(""); toast("back to the star"); }),
+    // "peek" prints the 13 trinkets it would hang without needing a bracelet on screen.
+    row(btn("trinkets: random", () => { api.mastery.trinket("random"); toast("random strand on"); }),
+        btn("trinkets: star", () => { api.mastery.trinket(""); toast("back to the star"); }),
         btn("reshuffle", () => toast("seed " + api.mastery.reshuffle())),
         btn("peek strand", () => toast(api.mastery.strand().join(" · ")))),
     // The start button's words (level 12). The reward board previews them all, but only the
