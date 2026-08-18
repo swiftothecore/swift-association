@@ -3250,7 +3250,7 @@ export const ACH_GROUPS = [
   { id: "margins",   label: "In the margins",         short: "Margins" },
   { id: "mastery",   label: "Skills & Mastery",       short: "Mastery" },
 ];
-// One muted notebook hue per theme — the section dots and the by-theme breakdown bars.
+// One muted notebook hue per theme — the section marks and the by-theme breakdown bars.
 export const ACH_GROUP_COLORS = {
   core:      "#c8951f",
   perfect:   "#c2622a",

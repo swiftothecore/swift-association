@@ -2714,10 +2714,23 @@ const achFoldChevron = () =>
    of the grid below — the ruled line stops short and hands the corner to the toggle.
    `folded` only hides the grid; the heading, its count and its anchor id all stay put, so a
    theme jump or the hints vault's door still lands somewhere meaningful. */
-function achSectionHTML(id, label, dotHTML, tiles, count, folded, headStyle = "", extraClass = "", anchorId = "", name = label) {
+/* The theme mark, built exactly like a charm: a wash underneath, the drawing over it. The
+   drawing is deliberately bigger than its wash and breaks out past the triangle's edges, so
+   the triangle reads as something the mark was set down on rather than a box it is held in.
+   Both halves are <use> references and carry no colour of their own, so the same markup can
+   take the family's hue in the at-a-glance panel and the theme's own hue on the section
+   headings down the page — see the theme marks block in index.html. */
+function achThemeMarkHTML(id, cls) {
+  return `<span class="${cls}" aria-hidden="true">` +
+    `<svg class="ach-mark-wash" viewBox="0 0 24 21"><use href="#theme-tri"/></svg>` +
+    `<svg class="ach-mark-glyph" viewBox="0 0 24 24"><use href="#theme-${id}"/></svg>` +
+    `</span>`;
+}
+
+function achSectionHTML(id, label, markHTML, tiles, count, folded, headStyle = "", extraClass = "", anchorId = "", name = label) {
   const chevron = achFoldChevron();
   return `<p class="histogram-label ach-section${folded ? " is-folded" : ""}${extraClass ? " " + extraClass : ""}" id="${anchorId || `achTheme-${id}`}"${headStyle}>` +
-    dotHTML + label +
+    markHTML + label +
     `<span class="ach-section-rule"></span>` +
     (count == null ? "" : `<span class="ach-section-count">${count}</span>`) +
     `<button type="button" class="ach-section-fold" data-ach-fold="${id}" data-ach-fold-name="${escapeHtml(name)}"` +
@@ -2797,8 +2810,9 @@ function renderAchievementsPage() {
      spent twice a row on a dot and a bar, was colour carrying no information: nobody can
      learn why Clock is blue, so it read as decoration at the density where decoration turns
      into noise. Four hues say the one thing the panel means by colour — which block you are
-     in — and the theme keeps its own hue where hue is actually an identifier, on the section
-     dots down the page. The bar takes var(--fam) off .ach-fam rather than an inline colour. */
+     in — and the theme keeps its own hue further down the page, where the section heading it
+     points at wears the same drawn mark this row does, inked in it. The bar takes var(--fam)
+     off .ach-fam rather than an inline colour. */
   const themeRowHTML = (id) => {
     const g = ACH_GROUPS.find((x) => x.id === id);
     if (!g) return "";
@@ -2807,15 +2821,7 @@ function renderAchievementsPage() {
     // dead nub appearing on the zeroes. "Barely started" and "not started" have to look
     // like different states: 2/31 drew a 5px dot the eye read as a rendering fault.
     const fill = got > 0 ? `<i style="width:${(got / tot) * 100}%"></i>` : "";
-    /* The mark is built exactly like a charm: a wash underneath, the drawing over it. The
-       one difference is that the drawing is bigger than its wash and deliberately breaks
-       out past the triangle's edges, so the triangle reads as something the mark was set
-       down on rather than a box it is being held in. Both halves are <use> references, so
-       neither carries colour of its own — see the theme marks block in index.html. */
-    const mark = `<span class="ach-theme-mark" aria-hidden="true">` +
-      `<svg class="ach-theme-wash" viewBox="0 0 24 21"><use href="#theme-tri"/></svg>` +
-      `<svg class="ach-theme-glyph" viewBox="0 0 24 24"><use href="#theme-${id}"/></svg>` +
-      `</span>`;
+    const mark = achThemeMarkHTML(id, "ach-theme-mark");
     return `<button type="button" class="ach-theme" data-ach-theme="${id}" aria-label="Go to ${escapeHtml(g.label)} charms">` +
       mark +
       `<span class="ach-theme-name">${g.short}</span>` +
@@ -2897,8 +2903,11 @@ function renderAchievementsPage() {
         .sort((x, y) => (earnedAchievements[y.id] || "").localeCompare(earnedAchievements[x.id] || ""));
       const lockedM = members.filter((a) => !earnedAchievements[a.id]);
       const tiles = [...earnedM, ...lockedM].map(achTile).join("");
-      const dot = `<span class="ach-group-dot" style="background:${ACH_GROUP_COLORS[g.id]}"></span>`;
-      html += achSectionHTML(g.id, g.label, dot, tiles, members.length,
+      // The same drawn mark the at-a-glance panel uses, in the theme's own hue rather than
+      // its family's: here it is the one thing identifying the section, and a reader who
+      // learned the mark upstairs can find its heading without reading the label.
+      const mark = achThemeMarkHTML(g.id, "ach-group-mark");
+      html += achSectionHTML(g.id, g.label, mark, tiles, members.length,
         folded.includes(g.id), ` style="--group:${ACH_GROUP_COLORS[g.id]}"`);
     });
   });
@@ -2921,7 +2930,7 @@ function renderAchievementsPage() {
     // The id is an anchor rather than a hook for styling: the Mastery hints vault's door scrolls
     // the window here, since this section is far below the fold on a full charm collection.
     html += achSectionHTML("secret", secretLabel,
-      `<span class="ach-group-dot ach-group-dot--secret"></span>`,
+      achThemeMarkHTML("secret", "ach-group-mark ach-group-mark--secret"),
       // the unrevealed label already carries the count, so the folded receipt would double it
       secretLocked.map(achTile).join(""), revealed ? secretLocked.length : null,
       folded.includes("secret"), "", "ach-section--secret", "achSecretSection", "secret");
