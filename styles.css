@@ -6338,7 +6338,7 @@
   .ach-group-mark {
     flex: none; position: relative; isolation: isolate;
     display: inline-flex; align-items: center; justify-content: center;
-    width: 18px; height: 17px; cursor: pointer;
+    width: 18px; height: 17px; cursor: default;
     color: color-mix(in srgb, var(--group, var(--ink-soft)) 80%, var(--ink));
   }
   .ach-group-mark .ach-mark-wash { fill: color-mix(in srgb, var(--group, var(--ink-soft)) 40%, transparent); }
