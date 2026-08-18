@@ -6182,9 +6182,10 @@
     stroke-linecap: round; stroke-linejoin: round; filter: url(#charmWobble);
   }
   .ach-theme:hover .ach-theme-mark { color: color-mix(in srgb, var(--fam) 88%, var(--ink)); }
-  /* A click on the theme icon jumps the page, but the icon itself gets a little fun out of
-     the tap too: an overshoot bounce with a full spin along for the ride. Purely decorative,
-     so it is the first thing reduced motion switches off. */
+  /* A click on the at-a-glance icon jumps the page, and the icon itself gets a little fun out
+     of the tap too: an overshoot bounce with a full spin along for the ride. The same mark on
+     a section heading below has no other job, so there the spin is the whole point of the
+     click. Purely decorative either way, so it is the first thing reduced motion switches off. */
   @keyframes achThemeMarkPop {
     0% { transform: scale(1) rotate(0deg); }
     35% { transform: scale(1.4) rotate(-20deg); }
@@ -6192,9 +6193,11 @@
     80% { transform: scale(1.12) rotate(330deg); }
     100% { transform: scale(1) rotate(360deg); }
   }
-  .ach-theme-mark.is-popping { animation: achThemeMarkPop 0.6s cubic-bezier(.34, 1.56, .64, 1); }
+  .ach-theme-mark.is-popping, .ach-group-mark.is-popping {
+    animation: achThemeMarkPop 0.6s cubic-bezier(.34, 1.56, .64, 1);
+  }
   @media (prefers-reduced-motion: reduce) {
-    .ach-theme-mark.is-popping { animation: none; }
+    .ach-theme-mark.is-popping, .ach-group-mark.is-popping { animation: none; }
   }
 
   .ach-theme-name { flex: none; min-width: 9ch; }
@@ -6335,11 +6338,12 @@
   .ach-group-mark {
     flex: none; position: relative; isolation: isolate;
     display: inline-flex; align-items: center; justify-content: center;
-    width: 18px; height: 17px;
+    width: 18px; height: 17px; cursor: pointer;
     color: color-mix(in srgb, var(--group, var(--ink-soft)) 80%, var(--ink));
   }
   .ach-group-mark .ach-mark-wash { fill: color-mix(in srgb, var(--group, var(--ink-soft)) 40%, transparent); }
   .ach-group-mark .ach-mark-glyph { width: 21px; height: 21px; }
+  .ach-group-mark:hover { color: color-mix(in srgb, var(--group, var(--ink-soft)) 95%, var(--ink)); }
   /* The locked drawer has no theme colour of its own, and shouldn't borrow one: it is the
      only section drawn from every family at once. It takes the page's soft ink, held back
      the same amount its rule is. */

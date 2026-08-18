@@ -2866,6 +2866,17 @@ function achThemeMarkHTML(id, cls) {
     `</span>`;
 }
 
+// A little fun for any drawn theme mark, at-a-glance row or section heading alike: an
+// overshoot bounce with a full spin riding along, restarted cleanly if it's clicked again
+// before the last spin finished. Off entirely under reduced motion.
+function popAchMark(mark) {
+  if (!mark || motionReduced()) return;
+  mark.classList.remove("is-popping");
+  void mark.offsetWidth;
+  mark.classList.add("is-popping");
+  mark.addEventListener("animationend", () => mark.classList.remove("is-popping"), { once: true });
+}
+
 function achSectionHTML(id, label, markHTML, tiles, count, folded, headStyle = "", extraClass = "", anchorId = "", name = label) {
   const chevron = achFoldChevron();
   return `<p class="histogram-label ach-section${folded ? " is-folded" : ""}${extraClass ? " " + extraClass : ""}" id="${anchorId || `achTheme-${id}`}"${headStyle}>` +
@@ -3136,20 +3147,17 @@ function renderAchievementsPage() {
         block: "start",
       });
     }));
+  // The section headings wear the same drawn mark as the at-a-glance rows above them, and
+  // it's just as fun to click: the heading itself already has a real job (folding sits on
+  // its own chevron), so the mark here does nothing but spin.
+  $("achievementsBody").querySelectorAll(".ach-group-mark").forEach((mark) =>
+    mark.addEventListener("click", () => popAchMark(mark)));
   $("achievementsBody").querySelectorAll("[data-ach-theme]").forEach((theme) =>
     theme.addEventListener("click", () => {
       const section = document.getElementById(`achTheme-${theme.dataset.achTheme}`);
       // A little fun on the tap itself: the icon bounces and spins, restarted cleanly if the
       // player clicks again before the last spin finished.
-      if (!motionReduced()) {
-        const mark = theme.querySelector(".ach-theme-mark");
-        if (mark) {
-          mark.classList.remove("is-popping");
-          void mark.offsetWidth;
-          mark.classList.add("is-popping");
-          mark.addEventListener("animationend", () => mark.classList.remove("is-popping"), { once: true });
-        }
-      }
+      popAchMark(theme.querySelector(".ach-theme-mark"));
       // Jumping to a theme you folded shut should open it — otherwise the jump lands on a
       // heading with nothing under it and reads as a broken link.
       setSectionFold(theme.dataset.achTheme, false);
