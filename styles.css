@@ -4272,7 +4272,10 @@
   .song-input {
     width: 100%; padding: 10px 4px 10px 26px;
     font-family: var(--type); font-size: calc(17px + var(--text-size-adjust));
-    border: none; border-bottom: 2px solid var(--ink); border-radius: 0;
+    /* 3px, not the 2px a plain form field would take: this is the one line on the page you
+       actually write on, so it should be the heaviest rule on the paper. It also carries
+       the weight the old border+shadow pair used to carry between them. */
+    border: none; border-bottom: 3px solid var(--ink); border-radius: 0;
     background: transparent; color: var(--ink); outline: none;
     caret-color: var(--ink-accent);
     -webkit-appearance: none; appearance: none;
