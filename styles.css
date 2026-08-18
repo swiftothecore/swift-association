@@ -6396,10 +6396,16 @@
     flex: none; font-family: var(--type); font-size: calc(9.5px + var(--text-size-adjust));
     letter-spacing: 0.5px; color: var(--fam);
     max-width: 0; overflow: hidden; opacity: 0;
-    transition: max-width 0.18s ease, opacity 0.18s ease;
+    /* A zero-width box still gets its share of the head's gap, which stopped every family
+       rule 8px short of the panel's right edge while the rule above them ran the whole way.
+       Four rules ending on one x and a fifth ending on another read as a misalignment, not
+       as a hierarchy. Pulled back over the gap the collapsed count owns, so all five finish
+       together; the fold hands the 8px back with the fraction. */
+    margin-left: -8px;
+    transition: max-width 0.18s ease, opacity 0.18s ease, margin-left 0.18s ease;
   }
   .ach-fam-divider .ach-fam-count { font-size: calc(11.5px + var(--text-size-adjust)); }
-  .ach-fam-divider.is-folded .ach-fam-count { max-width: 7ch; opacity: 0.7; }
+  .ach-fam-divider.is-folded .ach-fam-count { max-width: 7ch; opacity: 0.7; margin-left: 0; }
   /* The family shut all the way: its theme headings go with it. Leaving five headings standing
      under a closed tab kept the rows the at-a-glance panel above already covers, on the one
      gesture whose job is to give the scroll back. */
