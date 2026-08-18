@@ -7191,8 +7191,53 @@
   .rb-tile { position: relative; border-radius: 12px; padding: 14px 16px;
     background-color: var(--paper); background-image: linear-gradient(rgba(255, 255, 255, 0.32), rgba(255, 255, 255, 0.32));
     border: 1px solid rgba(43, 39, 34, 0.16); box-shadow: 0 1px 2px rgba(43, 39, 34, 0.05); }
-  .rb-tile-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  /* Left-aligned rather than space-between now the heading is a mark AND a name: with three
+     children space-between would push the mark, the name and the pill to three corners. The
+     pill takes the right edge for itself instead. */
+  .rb-tile-top { display: flex; align-items: center; justify-content: flex-start; gap: 8px; }
+  .rb-tile-top > .rb-chip, .rb-tile-top > .rb-fuse { margin-left: auto; }
   .rb-tt { font-family: var(--hand); font-weight: 700; font-size: calc(17px + var(--text-size-adjust)); color: var(--ink); }
+
+  /* The tile's mark — the same construction as the Charm Collection's theme and family marks
+     and deliberately sharing their two inner classes, so a change to the hand is made once:
+     .ach-mark-wash is the filled six-sided ground, .ach-mark-glyph the pen line over it. Only
+     the box and the hue live here.
+
+     Two things that will look like mistakes and are not, both inherited from that page for the
+     same reasons: the glyph is 23px over a 21px wash and OVERFLOWS it on every side, because a
+     drawing contained inside the hexagon has about a stroke-width of usable area and the wash
+     stops reading as a ground and starts reading as a cage. And the box is smaller than the
+     glyph it holds, so the heading's height comes from the drawing — do not put overflow:hidden
+     anywhere up this chain.
+
+     The overflow is a couple of pixels, though, and it has to stay that way. Pushed to the 124%
+     the theme marks use, the six-sided wash disappeared entirely behind the solider drawings
+     here — a shield and a heart fill their box where a pencil and a tick do not — and eight
+     tiles were left wearing eight plain glyphs with a smudge somewhere underneath.
+
+     The other half of that fix is in the drawings rather than here: every reward glyph is
+     normalised to the same 13.4-unit extent inside its 24-unit box (~56%, against the theme
+     marks' ~71%) and recentred, which is what leaves the hexagon's corners showing. Redraw one
+     by measuring against that number, not by eye, or it will quietly out-grow the other seven.
+
+     Drawn a touch larger than the theme marks (21px against 15px) because this heading is
+     17px handwriting rather than an 11px typewriter row; a 15px mark beside it reads as a
+     bullet point that failed to load. */
+  .rb-tt-mark {
+    flex: none; position: relative; isolation: isolate;
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 22px; height: 21px;
+    color: color-mix(in srgb, var(--fam) 74%, var(--ink));
+  }
+  .rb-tt-mark .ach-mark-glyph { width: 23px; height: 23px; }
+
+  /* The vaults hang their mark off the tile NAME rather than a heading row, since that is
+     where their name is. Both are dark stock, so the mark cannot mix toward --ink the way it
+     does on paper — it would go dark on dark. It mixes toward the vault's own foil instead,
+     which is also what keeps the plum hex legible on the plum leather one. */
+  .rb-ms-nm { display: flex; align-items: center; gap: 8px; }
+  .rb-ms .rb-tt-mark { color: color-mix(in srgb, var(--fam) 40%, var(--v-foil-lit)); }
+  .rb-ms .rb-tt-mark .ach-mark-wash { fill: color-mix(in srgb, color-mix(in srgb, var(--fam) 74%, var(--v-foil)) 82%, transparent); }
   /* The randomiser: a die in a circle fused to the left end of its tile's level pill, so the
      two read as one object. .rb-fuse::before carries BOTH shapes as gradients on a single
      layer and wears the #fuseGoo metaball filter, which pulls a melted neck between them

@@ -44,7 +44,7 @@ import {
   RESOLVE_BASE, RESOLVE_STREAK_CAP,
   MASTERY_REWARDS, MASTERY_REWARD_BY_ID, MASTERY_GATE, MASTERY_MAX_LEVEL, MASTERY_LEVEL_STEP, SKILL_MAX_LEVEL,
   CTA_LABELS, CTA_MARKS, PRIDE_BUTTONS, PRIDE_BUTTON_BY_ID, prideStripes,
-  MASTERY_TITLES, MASTERY_TITLE_BY_VALUE, masteryDefaultTitle, MASTERY_ICONS, MASTERY_LEVEL_ICONS, MASTERY_TIER_ICONS,
+  MASTERY_TITLES, MASTERY_TITLE_BY_VALUE, masteryDefaultTitle, MASTERY_ICONS, MASTERY_LEVEL_ICONS, MASTERY_TIER_ICONS, MASTERY_TILE_MARKS,
   skillXpForLevel, skillLevelFromXp, masteryXpForLevel, masteryLevelFromXp,
   POLAROID_DEVELOP_MS, POLAROID_TOTAL,
   RANDOM_CATEGORIES, RANDOM_UNPLAYED_WEIGHT,
@@ -4690,6 +4690,19 @@ function buildRewardBento(m, mLevel, unlocked) {
   `</div>`;
 }
 
+/* A reward tile's mark: the hexagonal wash with that tile's drawing over it. Built exactly
+   like the Charm Collection's theme and family marks — a filled wash underneath, a pen line
+   on top, both <use> references carrying no colour of their own so the pair takes the tile's
+   hue off --fam. See the reward marks block in index.html for why the wash has six sides and
+   why the drawing is allowed to break out past them.
+   `key` is the tile's grid-area name, which is what MASTERY_TILE_MARKS is keyed by. */
+function rewardTileMarkHTML(key) {
+  return `<span class="rb-tt-mark" style="--fam:${MASTERY_TILE_MARKS[key]}" aria-hidden="true">` +
+    `<svg class="ach-mark-wash" viewBox="0 0 24 22"><use href="#reward-hex"/></svg>` +
+    `<svg class="ach-mark-glyph" viewBox="0 0 24 24"><use href="#reward-${key}"/></svg>` +
+    `</span>`;
+}
+
 // Small level pill shown top-right of a tile.
 function rbChip(text) { return `<span class="rb-chip">${escapeHtml(text)}</span>`; }
 
@@ -4736,7 +4749,7 @@ function buildPensTile(pens, m) {
     else rows += rbRow(`data-reward="${r.id}"`, masteryMarkup(r.icon), r.name, active === r.payload.pen);
   });
   return `<div class="rb-tile rb-pens" style="grid-area:pens">` +
-    `<div class="rb-tile-top"><span class="rb-tt">Pens</span>${rbChip("Mastery 1–3")}</div>` +
+    `<div class="rb-tile-top">${rewardTileMarkHTML("pens")}<span class="rb-tt">Pens</span>${rbChip("Mastery 1–3")}</div>` +
     `<div class="rb-tt-sub">Your writing hand</div>` +
     `<div class="rb-rows rb-rows--pen">${rows}</div></div>`;
 }
@@ -4800,7 +4813,7 @@ function buildCharmTile(charms, m) {
     beads += charmBead(`data-reward="${r.id}"`, charmPreviewSVG(r.payload.charm), r.payload.charm, active === r.payload.charm, setUnlocked, i + 1);
   });
   return `<div class="rb-tile rb-charm" style="grid-area:charm">` +
-    `<div class="rb-tile-top"><span class="rb-tt">Bracelet charms</span>` +
+    `<div class="rb-tile-top">${rewardTileMarkHTML("charm")}<span class="rb-tt">Bracelet charms</span>` +
       rbRandChip("charm", "Mastery 5", active === COSMETIC_RANDOM, setUnlocked, "Give every bead its own charm") +
     `</div>` +
     `<div class="rb-tt-sub">Hangs from every bead you earn · random gives each bead its own</div>` +
@@ -4829,7 +4842,7 @@ function buildPaperTile(papers, m) {
     sw += rbSwatch(`data-reward="${r.id}"`, paperChip(r.payload.paper), r.payload.paper, active === r.payload.paper, setUnlocked, r.level);
   });
   return `<div class="rb-tile rb-paper" style="grid-area:paper">` +
-    `<div class="rb-tile-top"><span class="rb-tt">Paper stock</span>${rbChip("Mastery 4")}</div>` +
+    `<div class="rb-tile-top">${rewardTileMarkHTML("paper")}<span class="rb-tt">Paper stock</span>${rbChip("Mastery 4")}</div>` +
     `<div class="rb-tt-sub">Retints the whole page</div>` +
     `<div class="rb-swatches">${sw}</div></div>`;
 }
@@ -4887,7 +4900,7 @@ function buildMilestoneTile(r, opts) {
     (opts.watermark ? `<span class="rb-ms-mark">${mark}</span>` : "") +
     rbChip("Mastery " + r.level) +
     `<span class="rb-ms-seal">${opts.earned ? mark : MASTERY_ICONS.lock}</span>` +
-    `<div class="rb-ms-nm">${escapeHtml(r.name)}</div>` +
+    `<div class="rb-ms-nm">${rewardTileMarkHTML(opts.area)}<span>${escapeHtml(r.name)}</span></div>` +
     `<div class="rb-ms-sub">${opts.earned ? opts.earnedCopy : opts.lockedCopy}</div>${act}</div>`;
 }
 
@@ -4924,7 +4937,7 @@ function buildButtonTile(buttons, m) {
     }
   });
   return `<div class="rb-tile rb-button" style="grid-area:button">` +
-    `<div class="rb-tile-top"><span class="rb-tt">Start button</span>` +
+    `<div class="rb-tile-top">${rewardTileMarkHTML("button")}<span class="rb-tt">Start button</span>` +
       rbRandChip("button", "Mastery 8", active === COSMETIC_RANDOM, setUnlocked, "A different finish every visit") +
     `</div>` +
     `<div class="rb-tt-sub">Restyles your home-screen button · random redraws it every visit</div>` +
@@ -4991,7 +5004,7 @@ function buildCtaTile(labels, m) {
     });
   }
   return `<div class="rb-tile rb-cta" style="grid-area:cta">` +
-    `<div class="rb-tile-top"><span class="rb-tt">Start button words</span>` +
+    `<div class="rb-tile-top">${rewardTileMarkHTML("cta")}<span class="rb-tt">Start button words</span>` +
       rbRandChip("label", "Mastery 12", active === COSMETIC_RANDOM, setUnlocked, "Different words every visit") +
     `</div>` +
     `<div class="rb-tt-sub">Rewrites the label on your home-screen button · random rewrites it every visit</div>` +
@@ -5034,7 +5047,7 @@ function buildTitlesTile(m, unlocked) {
     ? `<div id="titleStepper" class="title-stepper"></div>`
     : `<div class="rb-title-lock"><span class="rb-lock">${MASTERY_ICONS.lock}</span>Reach Mastery 7 to earn your first title</div>`;
   return `<div class="rb-tile rb-titles" style="grid-area:title">` +
-    `<div class="rb-tile-top"><span class="rb-tt">Prestige titles</span>${rbChip("Mastery 7")}</div>` +
+    `<div class="rb-tile-top">${rewardTileMarkHTML("title")}<span class="rb-tt">Prestige titles</span>${rbChip("Mastery 7")}</div>` +
     `<div class="rb-tt-sub">Four ranks, fourteen titles. Engraved on your records signature.</div>` +
     `<div class="rb-ladder"><span class="rb-ladder-rail"></span>${medals}</div>${picker}</div>`;
 }

@@ -1508,6 +1508,31 @@ export const MASTERY_REWARD_BY_ID = Object.fromEntries(MASTERY_REWARDS.map((r) =
 // and the medallion still read one source, this one.
 export const MASTERY_TIER_ICONS = ["laurel", "bridge", "chair", "plumes"];
 
+/* The reward board's eight tiles, each with a drawn mark beside its name. The hue is all that
+   lives here; the drawings are the `#reward-*` symbols in index.html and the pair is assembled
+   by rewardTileMarkHTML in app.js.
+
+   One hue per TILE, not per reward. There are around forty rewards on that board and only
+   eight things they can be — a pen, a paper, a charm, a tier, a finish, some words, a hint, a
+   title — so colouring the members would have painted forty arbitrary hues onto a page whose
+   whole job is to show you five sets. The hue is a label for the set, and the members below it
+   already show you exactly what they are.
+
+   Keyed by the tile's grid-area name, which is also the reward `kind` everywhere a kind
+   exists: the two vaults are the exception, since "unlock" covers both and they are two very
+   different promises. Notebook hues only, in the register ACH_GROUP_COLORS uses — nothing
+   here is allowed to be brighter than the ink it sits next to. */
+export const MASTERY_TILE_MARKS = {
+  pens:   "#3f5d8a",   // ink blue: the writing hand
+  charm:  "#a8577a",   // friendship-bracelet rose
+  paper:  "#8a6d3f",   // kraft tan, the colour of the stock itself
+  hard:   "#8a3b2f",   // brick, for the brutal tier
+  button: "#c8951f",   // the gold the start button already is
+  cta:    "#2f6f6a",   // teal, so the words never read as the finish
+  hint:   "#6d3f5c",   // plum, matching the vault it opens
+  title:  "#4a6b3f",   // laurel green, for the rank
+};
+
 // The mark each Mastery level wears on the hero's ascent track, and the single source of
 // truth for it. Where a reward already defines the level's identity — the first pen, the two
 // milestones — the level takes its mark FROM that reward rather than naming a second one, so
