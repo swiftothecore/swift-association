@@ -6343,7 +6343,6 @@
   }
   .ach-group-mark .ach-mark-wash { fill: color-mix(in srgb, var(--group, var(--ink-soft)) 40%, transparent); }
   .ach-group-mark .ach-mark-glyph { width: 21px; height: 21px; }
-  .ach-group-mark:hover { color: color-mix(in srgb, var(--group, var(--ink-soft)) 95%, var(--ink)); }
   /* The locked drawer has no theme colour of its own, and shouldn't borrow one: it is the
      only section drawn from every family at once. It takes the page's soft ink, held back
      the same amount its rule is. */
