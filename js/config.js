@@ -3095,23 +3095,23 @@ export const ACHIEVEMENTS = [
      never do again, so it asks you to beat your LAST run down that lens instead. That is the
      same decision (cut the loss, come out ahead) against a mark that moves every time you
      play. */
-  { id: "name-ruthless-page-off-one-word",     name: "Sparks Fly",           desc: "Name a Ruthless Game page off a single word", secret: false, icon: "placeholder", sitting: true, earn: { cat: "ruthless" } },
-  { id: "finish-ruthless-run-naming-all-ten",  name: "Stood My Ground",      desc: "Finish a Ruthless Game run with all ten pages named, none handed back", secret: false, icon: "placeholder", sitting: true, earn: { cat: "ruthless" } },
-  { id: "finish-ruthless-run-with-no-wrong-guess", name: "No Second Guesses", desc: "Finish a Ruthless Game run without typing a single wrong song", secret: false, icon: "placeholder", sitting: true, earn: { cat: "ruthless" } },
+  { id: "name-ruthless-page-off-one-word",                 name: "One Look",           desc: "Name a Ruthless Game page off a single word", secret: false, icon: "placeholder", sitting: true, earn: { cat: "ruthless" } },
+  { id: "finish-ruthless-run-naming-all-ten",              name: "Never Gave In",      desc: "Finish a Ruthless Game run with all ten pages named, none handed back", secret: false, icon: "placeholder", sitting: true, earn: { cat: "ruthless" } },
+  { id: "finish-ruthless-run-with-no-wrong-guess",         name: "Sure Of Everything", desc: "Finish a Ruthless Game run without typing a single wrong song", secret: false, icon: "placeholder", sitting: true, earn: { cat: "ruthless" } },
   // The ladder, read off the BOARD and not off the run that happened to close it. Three rungs of
   // the same shape so the descriptions can be read side by side and the only thing that changes
   // is the number, which is the whole point of a ladder.
-  { id: "every-ruthless-lens-best-under-90s",  name: "Getaway Car",          desc: "Hold a best under 90 seconds on all six Ruthless Game lenses", secret: false, icon: "placeholder", earn: { cat: "ruthless" } },
-  { id: "every-ruthless-lens-best-under-60s",  name: "Ready For It",         desc: "Hold a best under 60 seconds on all six Ruthless Game lenses", secret: false, icon: "placeholder", earn: { cat: "ruthless" } },
-  { id: "every-ruthless-lens-best-under-45s",  name: "State Of Grace",       desc: "Hold a best under 45 seconds on all six Ruthless Game lenses", secret: false, icon: "placeholder", earn: { cat: "ruthless" } },
+  { id: "every-ruthless-lens-best-under-90s",              name: "Green Light, Go",    desc: "Hold a best under 90 seconds on all six Ruthless Game lenses", secret: false, icon: "placeholder", earn: { cat: "ruthless" } },
+  { id: "every-ruthless-lens-best-under-60s",              name: "Time Moves Faster",  desc: "Hold a best under 60 seconds on all six Ruthless Game lenses", secret: false, icon: "placeholder", earn: { cat: "ruthless" } },
+  { id: "every-ruthless-lens-best-under-45s",              name: "Blink Of An Eye",    desc: "Hold a best under 45 seconds on all six Ruthless Game lenses", secret: false, icon: "placeholder", earn: { cat: "ruthless" } },
   // Walking away, priced as the decision it is rather than the surrender it looks like.
-  { id: "give-up-a-page-and-still-beat-last-ruthless-run", name: "Better Than Ever", desc: "Hand a page back and still finish faster than your last run down that lens", secret: false, icon: "placeholder", sitting: true, earn: { cat: "ruthless" } },
+  { id: "give-up-a-page-and-still-beat-last-ruthless-run", name: "Smart To Walk Away", desc: "Hand a page back and still finish faster than your last run down that lens", secret: false, icon: "placeholder", sitting: true, earn: { cat: "ruthless" } },
   /* The secret, and the only charm in the notebook for being told the answer. The stream runs
      on past your lens into the rest of the song, so a page you cannot place will eventually
      sing its own name at you — and taking it within a few words is a visible, specific, faintly
      embarrassing moment rather than a slow page. Secret because a card that described it would
      be teaching a tactic, and because the shelf writes its failures this way. */
-  { id: "name-ruthless-page-just-after-its-title-appears", name: "Should've Known", desc: "Take the answer within moments of the song singing its own name outside your lens", secret: true, icon: "placeholder" },
+  { id: "name-ruthless-page-just-after-its-title-appears", name: "Say My Name",        desc: "Take the answer within moments of the song singing its own name outside your lens", secret: true, icon: "placeholder" },
   /* ---- Catalogue knowledge: what you know about the records (2026-08-18 batch) ----
      Twenty-two charms, all in the Catalogue theme, and every one of them is priced in a fact
      about the catalogue rather than in how well the run was played. Three shapes:
