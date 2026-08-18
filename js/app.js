@@ -17,7 +17,7 @@ import {
   BONUS_ONLY_SECONDS, ONLY_WIDE_PAGES,
   BONUS_CHAIN_SECONDS, CHAIN_EASY_PAGES, BONUS_SNAP_MS,
   RUTHLESS_WORD_MS, RUTHLESS_OPEN_WORDS,
-  RUTHLESS_PACE_SECONDS, RUTHLESS_SNAP_RUN,
+  RUTHLESS_PACE_SECONDS,
   CHALLENGES, CHALLENGE_BY_ID, CHALLENGE_ORDER, CHALLENGE_SEALS, DARK_SIDE_IDS, DARK_SIDE_TODO,
   DARK_SIDE_MILESTONE, CHALLENGE_RETURN_RUNS,
   IMPOSTOR_WORDS, IMPOSTOR_COUNT, DARK_IMPOSTOR_WORDS,
@@ -6995,27 +6995,6 @@ function endBonusRun() {
    Focus's own reason for omitting it, arrived at from the other end. By Heart is out because
    you name titles rather than sing lines, and The Long Game because ten pages is a sitting, not
    a distance. */
-/* The mode's own charms, folded once a run has been banked so the board-wide one can count
-   itself. Priced in how few words the run needed, which is the only thing this mode measures —
-   and every one of them is a standing condition on a lens that is always open, so none can be
-   locked out. Called AFTER recordRuthlessRun, for the same reason the shelf's ledger charms are:
-   the sixth lens's own run is the one that completes the set.
-
-   Nothing else may be folded here. A Ruthless run is sandboxed to its board, its history row and
-   two skills, and charms are the single exception, exactly as they are on the shelf. */
-function foldRuthlessCharms({ snaps, gaveUp, named, beat }) {
-  if (snaps >= 1) unlock("name-ruthless-page-on-sight");
-  if (snaps >= RUTHLESS_SNAP_RUN) unlock("name-5-ruthless-pages-on-sight-one-run");
-  if (!gaveUp && named === BONUS_ROUNDS) unlock("finish-ruthless-run-naming-all-ten");
-  if (beat) unlock("beat-your-own-ruthless-best");
-  // The whole sheet played, read off the BOARD rather than off this run, so it closes on
-  // whichever lens happens to be the last one down.
-  if (RUTHLESS_LENSES.every((l) => ruthlessRecord(l.id).plays > 0)) unlock("play-every-ruthless-lens");
-  // The secret, and it has to be the whole run: giving up on nine pages and naming one is a bad
-  // run, and giving up on all ten is a decision.
-  if (!named) unlock("give-up-every-page-one-ruthless-run");
-}
-
 function endRuthlessRun() {
   const lensId = ruthlessLensId, lens = ruthlessLens(lensId);
   const secs = bonusScore;
@@ -7064,7 +7043,6 @@ function endRuthlessRun() {
     "Ruthless Game · " + (lens ? lens.label : "");
 
   const beat = rec.isBest && rec.plays > 1;
-  foldRuthlessCharms({ snaps, gaveUp, named, beat });
   let status;
   if (beat) {
     status = `<div class="chall-result-status win">a new best for ${escapeHtml(lens ? lens.label : "this lens")} ★</div>`;
