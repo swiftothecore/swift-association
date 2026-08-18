@@ -2670,6 +2670,28 @@ function achTile(a) {
 
 const achGroupOf = (id) => ACH_GROUP_OF[id] || "core";
 
+// How many of a theme's charms are sitting in the locked drawer rather than in the theme's
+// own grid — still masked, still unearned. A theme with any of these draws fewer tiles than
+// the at-a-glance panel's denominator says it has, and a player counting tiles would be
+// counting a lie; the stub below is what closes that gap. The number is deliberately not a
+// secret: the drawer's own count already gives it away to anyone who subtracts.
+const achSealedInTheme = (themeId) => ACHIEVEMENTS.filter((a) =>
+  achGroupOf(a.id) === themeId && achMasked(a) && !earnedAchievements[a.id]).length;
+
+/* The tail tile of a theme whose grid is short a charm or two: an empty slot in the same
+   geometry as its neighbours, ruled with a pencil dash instead of a border, saying how many
+   of this theme's charms are sealed and taking you to them. It is a signpost, not a charm —
+   no ??? name, no charm well — because a second masked tile in the grid would read as a
+   sixth charm you could be told about, when the point is that it is filed somewhere else. */
+function achSealedStubHTML(themeId, n) {
+  const plural = n === 1 ? "charm" : "charms";
+  return `<button type="button" class="ach ach-sealed" data-ach-sealed="${themeId}"` +
+    ` aria-label="${n} secret ${plural} from this theme, kept in the locked drawer below">` +
+    achThemeMarkHTML("secret", "ach-group-mark ach-group-mark--secret") +
+    `<div class="ach-text"><div class="ach-nm">${n} sealed</div>` +
+    `<div class="ach-dc">In the locked drawer</div></div></button>`;
+}
+
 /* The families of ACH_FAMILIES, with any theme nobody claimed swept into the last one. A
    theme added to ACH_GROUPS and forgotten here would otherwise vanish from both the panel
    and the sections, which is a much worse failure than sitting under a slightly wrong tab. */
@@ -2902,12 +2924,17 @@ function renderAchievementsPage() {
       const earnedM = members.filter((a) => earnedAchievements[a.id])
         .sort((x, y) => (earnedAchievements[y.id] || "").localeCompare(earnedAchievements[x.id] || ""));
       const lockedM = members.filter((a) => !earnedAchievements[a.id]);
-      const tiles = [...earnedM, ...lockedM].map(achTile).join("");
+      const sealed = achSealedInTheme(g.id);
+      const tiles = [...earnedM, ...lockedM].map(achTile).join("") +
+        (sealed ? achSealedStubHTML(g.id, sealed) : "");
       // The same drawn mark the at-a-glance panel uses, in the theme's own hue rather than
       // its family's: here it is the one thing identifying the section, and a reader who
       // learned the mark upstairs can find its heading without reading the label.
       const mark = achThemeMarkHTML(g.id, "ach-group-mark");
-      html += achSectionHTML(g.id, g.label, mark, tiles, members.length,
+      // The folded receipt counts what the open grid actually shows, sealed slot included,
+      // so shutting a section never quietly drops a charm the player was just told about.
+      html += achSectionHTML(g.id, g.label, mark, tiles,
+        sealed ? `${members.length}+${sealed}` : members.length,
         folded.includes(g.id), ` style="--group:${ACH_GROUP_COLORS[g.id]}"`);
     });
   });
@@ -2979,6 +3006,18 @@ function renderAchievementsPage() {
       const shut = ids.some((id) => !isSectionFolded(id));
       ids.forEach((id) => setSectionFold(id, shut));
       syncAchFamilyDividers($("achievementsBody"));
+    }));
+  // A sealed stub is a door to the drawer, and a door onto a folded section opens onto
+  // nothing — so it unfolds the drawer on the way, exactly as the theme jumps do.
+  $("achievementsBody").querySelectorAll("[data-ach-sealed]").forEach((btn) =>
+    btn.addEventListener("click", () => {
+      setSectionFold("secret", false);
+      syncAchFamilyDividers($("achievementsBody"));
+      const section = document.getElementById("achSecretSection");
+      if (section) section.scrollIntoView({
+        behavior: motionReduced() ? "auto" : "smooth",
+        block: "start",
+      });
     }));
   $("achievementsBody").querySelectorAll("[data-ach-theme]").forEach((theme) =>
     theme.addEventListener("click", () => {
