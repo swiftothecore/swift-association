@@ -276,7 +276,7 @@ let riskSkull = [];             // per-round: the miss that ended the run — st
 let beadRideBest = 0;           // Press Your Luck / Double Or Nothing: deepest chain this run
 let beadRideBanked = 0;         // Press Your Luck: deepest chain actually BANKED — a ride wiped by a
                                 // miss set beadRideBest but was never carried home, and the charm is
-                                // for carrying it home (see bankPot / Devils Roll The Dice)
+                                // for carrying it home (see bankPot / Bonnie And Clyde)
 let wagerAlwaysMax = true;      // Confidence Wager: every page so far was staked at the most the run
                                 // could afford. Cap-relative, not RISK_MAX_STAKE — the dark side opens
                                 // on 1 bead, so an absolute bar would be unreachable there by design
@@ -12043,7 +12043,7 @@ function endChallenge() {
   if (c.rule === "alphabetical" && won && alphaEveryLetterNew) unlock("win-from-a-to-z-no-repeated-letters");
   // The risk three. Read AFTER the settle above, which banks whatever was still riding when
   // the pages ran out — a pot carried all the way home is banked like any other, so it counts.
-  // Devils Roll The Dice — a pot ridden PRESS_FLOURISH_RIDE deep and actually banked.
+  // Bonnie And Clyde — a pot ridden PRESS_FLOURISH_RIDE deep and actually banked.
   // Not gated on the win: the ride is the feat, and a run that rode that deep and still fell
   // short of the target has done the reckless thing the charm is named for.
   if (c.rule === "press" && beadRideBanked >= PRESS_FLOURISH_RIDE) unlock("bank-press-your-luck-pot-5-pages-deep");

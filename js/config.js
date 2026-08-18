@@ -1077,7 +1077,7 @@ export const PRESS_RIDE_STEP = 1;
 /* How deep a ride has to be before the bead that banks it earns the horseshoe charm. Riding
    three pages is a pot of 6 against a target of 20, so it's a real commitment, not a shrug. */
 export const PRESS_CHARM_RIDE = 3;
-/* And how deep before it earns the CHARM (Devils Roll The Dice). Kept separate from
+/* And how deep before it earns the CHARM (Bonnie And Clyde). Kept separate from
    PRESS_CHARM_RIDE on purpose: the horseshoe marks a bead worth marking and wants to be
    reachable most runs, while the charm is a flourish and should ask for a ride that is
    genuinely reckless. Five deep is a pot of 15 against a base target of 26, so banking it
@@ -1828,9 +1828,10 @@ export const ACH_ICONS = {
   ribbon:  `<svg viewBox="0 0 24 24"><path class="ink" stroke-width="1.5" fill="none" d="M2.8 21.4 C8 20.4 12.4 15.6 15.4 8.6"/><g class="ink-fill"><circle cx="6" cy="20.5" r="1.1"/><circle cx="9.3" cy="18.1" r="1.2"/><circle cx="12" cy="14.6" r="1.3"/><circle cx="14" cy="11" r="1.4"/></g><path class="ink-fill" d="M16.2 7.4 C13.6 4.6 10.9 5 11.5 7.3 C12 9.3 14.3 9.2 16.2 7.4 Z"/><path class="ink-fill" d="M16.2 7.4 C18.8 4.6 21.5 5 20.9 7.3 C20.4 9.3 18.1 9.2 16.2 7.4 Z"/><circle class="ink-fill" cx="16.2" cy="7.4" r="1.2"/><path class="ink" stroke-width="1.3" fill="none" d="M17.4 8.5 C18 9.6 17.9 10.7 17.3 11.8"/></svg>`,
   // The risk three, drawn as one family: beads are the score on those boards, so all three
   // marks are about where the beads ended up rather than about the rule that moved them.
-  // the pot banked from a long way up — a column of beads falling the depth you rode, into
-  // the tin's slot. The height IS the achievement; the tin is the part you chose to do.
-  bankedpot:`<svg viewBox="0 0 24 24"><path class="ink" stroke-width="0.9" opacity="0.3" fill="none" stroke-dasharray="0.1 1.5" stroke-linecap="round" d="M13.4 3 C10.4 6 14 9 11 12.4"/><g class="ink-fill"><circle cx="13.6" cy="2.5" r="0.95"/><circle cx="10.4" cy="5.6" r="1.1"/><circle cx="13.4" cy="8.7" r="1.25"/><circle cx="10.6" cy="11.9" r="1.4"/></g><rect class="ink-fill" x="4.4" y="15.2" width="15.2" height="6.2" rx="1.2"/><path class="ink" stroke-width="1.05" d="M4.8 17.9 H19.2"/><rect x="9.4" y="15.9" width="5.2" height="1.2" rx="0.6" fill="currentColor" stroke="none"/><rect class="ink-fill" x="11" y="19.2" width="2" height="1.9" rx="0.5"/></svg>`,
+  // the pot driven off with: the beads you rode five deep piled on the roof of a getaway
+  // car, wheels already turning. Still a mark about where the beads ended up, so it holds
+  // the family; the loot being ON the car is the part you chose to do.
+  getaway: `<svg viewBox="0 0 24 24"><g class="ink" stroke-width="1.15" opacity="0.5"><path d="M0.9 10.2 H3.1"/><path d="M0.6 13 H2.8"/><path d="M1.2 15.8 H3.4"/></g><g class="ink-fill"><circle cx="12.5" cy="6.6" r="1.35"/><circle cx="15.4" cy="6.6" r="1.35"/><circle cx="13.95" cy="4.1" r="1.35"/></g><path class="ink-fill" d="M4.8 17.6 V14.9 C4.8 14.1 5.3 13.6 6.1 13.5 L8.6 13.2 L10.8 10.2 C11.2 9.6 11.8 9.3 12.5 9.3 H16.3 C17.1 9.3 17.8 9.7 18.1 10.4 L19.2 13.1 L21 13.9 C21.7 14.2 22 14.7 22 15.4 V17.6 Z"/><g fill="currentColor" stroke="none"><path d="M12.4 10.7 H13.8 V13 H10.4 Z"/><path d="M14.7 10.7 H16.2 C16.5 10.7 16.7 10.9 16.8 11.1 L17.6 13 H14.7 Z"/></g><g class="ink-fill"><circle cx="8.7" cy="17.6" r="2.5"/><circle cx="18.4" cy="17.6" r="2.5"/></g><g fill="currentColor" stroke="none"><circle cx="8.7" cy="17.6" r="0.9"/><circle cx="18.4" cy="17.6" r="0.9"/></g><path class="ink" stroke-width="1.7" d="M2.4 20.6 H21.8"/></svg>`,
   // the shields never spent: three beads sitting under a bell jar, the glass unlifted
   belljar: `<svg viewBox="0 0 24 24"><circle class="ink-fill" cx="12" cy="3.1" r="1.25"/><path class="ink" stroke-width="1" d="M12 4.35 V5.3"/><path class="ink-fill" d="M5.6 19 V11.6 C5.6 7.9 8.5 5.1 12 5.1 C15.5 5.1 18.4 7.9 18.4 11.6 V19 Z"/><path class="ink" stroke-width="0.95" opacity="0.45" fill="none" d="M8.3 13.8 C7.6 11.3 8.4 8.9 10.4 7.4"/><g class="ink-fill"><circle cx="9.1" cy="17.3" r="1.5"/><circle cx="12" cy="17.3" r="1.5"/><circle cx="14.9" cy="17.3" r="1.5"/></g><rect class="ink-fill" x="3.4" y="19" width="17.2" height="2.3" rx="0.9"/></svg>`,
   // the lot shoved over the line, page after page — a heap of beads pushed to the edge of
@@ -3047,7 +3048,7 @@ export const ACHIEVEMENTS = [
   // their challenge is beaten — nobody rides a pot five deep by accident. Each one asks for
   // the thing its rule is really about: depth on Press, restraint on Insurance, nerve on
   // Wager. Deliberately NOT a rule that every challenge gets one; three of thirty-two.
-  { id: "bank-press-your-luck-pot-5-pages-deep", name: "Devils Roll The Dice",    desc: `Bank a pot on Press Your Luck ridden ${PRESS_FLOURISH_RIDE} pages deep`, secret: true, reveal: "press-your-luck", icon: "bankedpot" },
+  { id: "bank-press-your-luck-pot-5-pages-deep", name: "Bonnie And Clyde",       desc: `Bank a pot on Press Your Luck ridden ${PRESS_FLOURISH_RIDE} pages deep`, secret: true, reveal: "press-your-luck", icon: "getaway" },
   { id: "win-insurance-no-shields-spent",       name: "Untouchable",       desc: "Win Insurance with every shield still unspent", secret: true, reveal: "insurance", icon: "belljar" },
   { id: "win-confidence-wager-max-every-page",           name: "Let The Players Play", desc: "Win Confidence Wager having staked the most you could hold on every page", secret: true, reveal: "confidence-wager", icon: "allin" },
   // Dark sides. A milestone rather than a flourish (no challenge named), so it stays visible.
