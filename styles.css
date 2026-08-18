@@ -5957,12 +5957,18 @@
   }
   .charm .ink { stroke-width: 1.5; }
   .charm .ink-fill { stroke-width: 1.7; }
-  /* the earned highlighter swipe — a blobby marker smudge laid down slightly askew */
+  /* The earned highlighter swipe — a blobby marker smudge laid down slightly askew. Its
+     shape, tilt and inset arrive per charm from charmBlob() in util.js, seeded off the
+     achievement's id, so no two charms sit on quite the same blob (one shape repeated 200
+     times reads as a printed stamp, not as marker). The values below are the single
+     hand-picked shape this grew out of, kept as the fallback for the charms with no id to
+     seed from: Mastery marks and the keepsake arrows. */
   .charm::before {
-    content: ""; position: absolute; inset: 8%; z-index: -1;
+    content: ""; position: absolute; z-index: -1;
+    inset: var(--blob-inset, 8%);
     background: color-mix(in srgb, var(--bead, var(--highlighter)) 42%, transparent);
-    border-radius: 52% 40% 55% 45% / 62% 48% 58% 42%;
-    transform: rotate(-3.5deg);
+    border-radius: var(--blob, 52% 40% 55% 45% / 62% 48% 58% 42%);
+    transform: rotate(var(--blob-rot, -3.5deg));
   }
 
   .toast .charm { width: 34px; height: 34px; flex: none; }

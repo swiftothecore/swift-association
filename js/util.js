@@ -134,6 +134,35 @@ export function mulberry32(seed) {
   return rng;
 }
 
+// FNV-1a over a string, to a uint32. The workhorse for turning an identity that already
+// exists (an achievement id, a keepsake id) into a seed, so a stable per-thing variation
+// needs nothing stored and nothing hand-authored.
+export function fnv1a(str) {
+  let h = 2166136261;
+  for (let i = 0; i < str.length; i++) { h = Math.imul(h ^ str.charCodeAt(i), 16777619); }
+  return h >>> 0;
+}
+
+// The highlighter smudge sitting behind an earned charm, shaped from the achievement's own
+// id. A marker swipe is a one-off gesture, so 200-odd charms wearing one identical blob read
+// as a printed stamp repeated; giving each its own shape is what keeps them hand-laid. The
+// numbers wander about as far as the single hand-picked shape this replaced (radii either
+// side of a 50% circle, the tilt either side of its -3.5deg, the inset either side of 8%),
+// so the family still reads as one marker held the same way. Consumed by charmMarkup as the
+// --blob / --blob-rot / --blob-inset custom properties; .charm::before in styles.css keeps
+// the old hand-picked values as its fallback for the charms that carry no id (the Mastery
+// marks, the keepsake arrows).
+export function charmBlob(id) {
+  const rng = mulberry32(fnv1a(id));
+  const j = (base, spread) => base + (rng() * 2 - 1) * spread;
+  const r = () => `${Math.round(j(50, 11))}%`;
+  return {
+    radius: `${r()} ${r()} ${r()} ${r()} / ${r()} ${r()} ${r()} ${r()}`,
+    rot: `${j(-3.5, 6).toFixed(1)}deg`,
+    inset: `${j(8, 1.6).toFixed(1)}%`,
+  };
+}
+
 // Hash a "YYYY-MM-DD" date string to a uint32 seed (djb2-style).
 export function dailySeed(dateStr) {
   let h = 5381;

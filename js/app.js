@@ -1,5 +1,5 @@
 "use strict";
-import { $, escapeRegExp, escapeHtml, prefersReducedMotion, shuffle, chance, normalizeTitle, normalizeLyric, fuzzySubstringRatio, levenshtein, swappedNeighbours, mulberry32, dailySeed, censorText, anniversaryNote, thirteenNote } from "./util.js";
+import { $, escapeRegExp, escapeHtml, prefersReducedMotion, shuffle, chance, normalizeTitle, normalizeLyric, fuzzySubstringRatio, levenshtein, swappedNeighbours, mulberry32, fnv1a, charmBlob, dailySeed, censorText, anniversaryNote, thirteenNote } from "./util.js";
 import "./credential-guard.js";
 import { SITE_URL, copyToClipboard } from "./share.js";
 import { launchFlock } from "./messengers.js";
@@ -1962,9 +1962,18 @@ let earnedAchievements = {};   // persisted: { id: "YYYY-MM-DD" }
 let newlyUnlocked = [];        // ids unlocked this game (for the results recap)
 let lastSkillFold = null;      // { delta, res } from this game's foldSkillXp — the results skills recap
 
-function charmMarkup(icon, color) {
-  const style = color ? ` style="--bead:${color}"` : "";
-  return `<span class="charm" aria-hidden="true"${style}>${ACH_ICONS[icon]}</span>`;
+// `seed` is the achievement's id, and it shapes the highlighter smudge behind the glyph:
+// see charmBlob in util.js. Pass it for anything that IS an achievement, earned or not, so
+// a charm keeps the same blob wherever it is drawn. Leave it off for the charms that borrow
+// this markup without being achievements (Mastery marks, the keepsake arrows); they fall
+// back to the one hand-picked shape in styles.css.
+function charmMarkup(icon, color, seed) {
+  let css = color ? `--bead:${color};` : "";
+  if (seed) {
+    const b = charmBlob(seed);
+    css += `--blob:${b.radius};--blob-rot:${b.rot};--blob-inset:${b.inset};`;
+  }
+  return `<span class="charm" aria-hidden="true"${css ? ` style="${css}"` : ""}>${ACH_ICONS[icon]}</span>`;
 }
 
 // Earned charms on the collection page are as fidgetable as its header doodle. Keep this
@@ -2515,7 +2524,7 @@ function showToast(a) {
   t.className = "toast";
   t.setAttribute("data-tip", a.desc);
   t.setAttribute("data-tip-delay", "500");
-  t.innerHTML = charmMarkup(a.icon, achColor(a)) +
+  t.innerHTML = charmMarkup(a.icon, achColor(a), a.id) +
     `<div><div class="t-label">achievement unlocked</div><div class="t-name">${escapeHtml(a.name)}</div></div>`;
   layer.appendChild(t);
   scheduleToastDismiss();
@@ -2617,7 +2626,7 @@ function renderResultRecap() {
   const chips = ids.map((id, i) => {
     const a = ACH_BY_ID[id];
     return `<button type="button" class="ach-chip${i >= ACH_RECAP_SHOWN ? " ach-folded" : ""}" aria-label="${escapeHtml(a.name)}" ` +
-      `data-tip="${escapeHtml(a.name)} · ${escapeHtml(a.desc)}" data-tip-delay="120">${charmMarkup(a.icon, achColor(a))}</button>`;
+      `data-tip="${escapeHtml(a.name)} · ${escapeHtml(a.desc)}" data-tip-delay="120">${charmMarkup(a.icon, achColor(a), a.id)}</button>`;
   }).join("");
   const folded = ids.length > ACH_RECAP_SHOWN;
   const extra = folded
@@ -2797,7 +2806,7 @@ const secretCharmsLeft = () => ACHIEVEMENTS.filter((a) => achMasked(a) && !earne
 // locked target. Shared by the grid + secret section.
 function achTile(a) {
   if (earnedAchievements[a.id]) {
-    return `<div class="ach ach--earned">${charmMarkup(a.icon, achColor(a))}<div class="ach-text"><div class="ach-nm">${escapeHtml(a.name)}</div><div class="ach-dc">${escapeHtml(a.desc)}</div></div></div>`;
+    return `<div class="ach ach--earned">${charmMarkup(a.icon, achColor(a), a.id)}<div class="ach-text"><div class="ach-nm">${escapeHtml(a.name)}</div><div class="ach-dc">${escapeHtml(a.desc)}</div></div></div>`;
   }
   if (achMasked(a)) {
     // Once the level-10 "secret hints" reward is earned, reveal the how-to (desc) while
@@ -2806,7 +2815,7 @@ function achTile(a) {
     const cls = hiddenHintsUnlocked() ? "ach locked secret hinted" : "ach locked secret";
     return `<div class="${cls}"><span class="charm-q" aria-hidden="true">?</span><div class="ach-text"><div class="ach-nm">???</div><div class="ach-dc">${dc}</div></div></div>`;
   }
-  return `<div class="ach locked">${charmMarkup(a.icon)}<div class="ach-text"><div class="ach-nm">${escapeHtml(a.name)}</div><div class="ach-dc">${escapeHtml(a.desc)}</div></div></div>`;
+  return `<div class="ach locked">${charmMarkup(a.icon, undefined, a.id)}<div class="ach-text"><div class="ach-nm">${escapeHtml(a.name)}</div><div class="ach-dc">${escapeHtml(a.desc)}</div></div></div>`;
 }
 
 const achGroupOf = (id) => ACH_GROUP_OF[id] || "core";
@@ -3187,7 +3196,7 @@ function renderAchievementsPage() {
       const label = isNewest ? "your newest charm" : "earlier charm";
       const position = `${latestIndex + 1} / ${earnedAsc.length}`;
       latestView.innerHTML =
-        `<span class="ach-latest-charm">${charmMarkup(charm.icon, achColor(charm))}</span>` +
+        `<span class="ach-latest-charm">${charmMarkup(charm.icon, achColor(charm), charm.id)}</span>` +
         `<div class="ach-latest-text"><div class="ach-latest-label"><span>${label}</span><span class="ach-latest-position">${position}</span></div>` +
         `<div class="ach-latest-name">${escapeHtml(charm.name)}</div>` +
         `<div class="ach-latest-meta"><span class="ach-latest-desc">${escapeHtml(charm.desc)}</span> ` +
@@ -3377,7 +3386,7 @@ function goalCardHTML() {
     : "";
 
   return `<div class="ach-plate${done ? " done" : ""}" style="--plate:${achColor(a)}">
-    <span class="ach-plate-ghost" aria-hidden="true">${charmMarkup(a.icon, achColor(a))}</span>
+    <span class="ach-plate-ghost" aria-hidden="true">${charmMarkup(a.icon, achColor(a), a.id)}</span>
     ${stamp}
     <div class="ach-plate-kicker">${group ? `<b>${escapeHtml(group.label)}</b> · ` : ""}${done ? "and it's yours" : "go and get this one"}</div>
     <div class="ach-plate-name${long}">${escapeHtml(a.name)}</div>
@@ -3423,7 +3432,7 @@ function questCardHTML() {
       </div>
     </div>
     <div class="ach-quest-aside">
-      <span class="ach-quest-charm${done ? " earned" : ""}">${charmMarkup(a.icon, achColor(a))}</span>
+      <span class="ach-quest-charm${done ? " earned" : ""}">${charmMarkup(a.icon, achColor(a), a.id)}</span>
       <span class="ach-quest-state">${done ? "earned" : "locked"}</span>
     </div>
   </button>`;
@@ -4062,9 +4071,7 @@ function updateKeepsakesNav() {
 // A stable per-polaroid tilt + vertical nudge so the wall reads as hand-pinned rather than
 // gridded — deterministic (hashed from the id), so it never reshuffles between renders.
 function polaroidJitter(id) {
-  let h = 2166136261;
-  for (let i = 0; i < id.length; i++) { h = Math.imul(h ^ id.charCodeAt(i), 16777619); }
-  const rng = mulberry32(h >>> 0);
+  const rng = mulberry32(fnv1a(id));
   const tilt = (rng() * 14 - 7).toFixed(2);  // -7deg .. +7deg — pinned any-old-how
   const dy = (rng() * 22 - 7).toFixed(1);    // -7px .. +15px
   const dx = (rng() * 16 - 8).toFixed(1);    // -8px .. +8px
@@ -7806,9 +7813,7 @@ function openRuthless(from) {
 
 // A tiny seeded generator so a lens's strokes are stable across renders and differ between lenses.
 function rlRandom(seedStr) {
-  let h = 2166136261;
-  for (let i = 0; i < seedStr.length; i++) { h ^= seedStr.charCodeAt(i); h = Math.imul(h, 16777619); }
-  let s = h >>> 0;
+  let s = fnv1a(seedStr);
   return () => ((s = (Math.imul(s, 1103515245) + 12345) >>> 0) / 4294967296);
 }
 
