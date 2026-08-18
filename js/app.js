@@ -4286,6 +4286,30 @@ function renderRecordsPage() {
         `</div></div>`
     : "";
 
+  // Ruthless — six lenses, six low-wins times. Only the lenses actually played get a tile: the
+  // mode's own sheet is where all six live with dashes against the unplayed ones, and this page
+  // is a record of what has been done. LOW WINS is said in the group label rather than on every
+  // tile, because six tiles each carrying "seconds, lower is better" is the same sentence six
+  // times on a page whose other tiles all count upwards.
+  const rlPlayed = RUTHLESS_RUNNING_ORDER
+    .map((id) => ruthlessLens(id)).filter(Boolean)
+    .filter((lens) => ruthlessRecord(lens.id).plays);
+  const ruthlessBlock = rlPlayed.length
+    ? `<p class="rec-group-label">ruthless — fastest run, lowest wins</p><div class="pb-grid">` +
+      rlPlayed.map((lens) => {
+        const rec = ruthlessRecord(lens.id);
+        // How the time was got and when, in that order: two runs can post the same seconds with
+        // a different number of pages handed back, and that is the more interesting half.
+        const how = rec.bestGaveUp
+          ? `${rec.bestGaveUp} given up` : `named all ${BONUS_ROUNDS}`;
+        return `<div class="pb-tile pb-ruthless" style="--pb-accent:#8c4a34">` +
+          `<span class="pb-mode">${escapeHtml(lens.label)}</span>` +
+          `<span class="pb-score">${fmtTime(rec.best)}</span>` +
+          `<span class="pb-sub">${escapeHtml(how)} · ${escapeHtml(recordDateLabel(rec.date))}</span>` +
+        `</div>`;
+      }).join("") + `</div>`
+    : "";
+
   const hist = loadHistory();
   _pbByMode = {};
   for (const h of hist) if (!(h.m in _pbByMode)) _pbByMode[h.m] = h.m === "daily" ? db : (loadRecords(h.m)[0] ? loadRecords(h.m)[0].score : -1);
@@ -4299,7 +4323,7 @@ function renderRecordsPage() {
   $("recordsBody").innerHTML =
     `<div class="rec-sig">${sig}</div>` +
     `<p class="rec-group-label">personal bests</p><div class="pb-grid">${classicTiles}</div>` +
-    infBlock + dailyBlock + verseBlock + darkBlock + heatSectionHTML() + histBlock;
+    infBlock + dailyBlock + verseBlock + ruthlessBlock + darkBlock + heatSectionHTML() + histBlock;
 
   renderHeatBody();
   const heatSel = $("heatRange");
