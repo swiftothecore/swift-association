@@ -2807,7 +2807,17 @@ function renderAchievementsPage() {
     // dead nub appearing on the zeroes. "Barely started" and "not started" have to look
     // like different states: 2/31 drew a 5px dot the eye read as a rendering fault.
     const fill = got > 0 ? `<i style="width:${(got / tot) * 100}%"></i>` : "";
+    /* The mark is built exactly like a charm: a wash underneath, the drawing over it. The
+       one difference is that the drawing is bigger than its wash and deliberately breaks
+       out past the triangle's edges, so the triangle reads as something the mark was set
+       down on rather than a box it is being held in. Both halves are <use> references, so
+       neither carries colour of its own — see the theme marks block in index.html. */
+    const mark = `<span class="ach-theme-mark" aria-hidden="true">` +
+      `<svg class="ach-theme-wash" viewBox="0 0 24 21"><use href="#theme-tri"/></svg>` +
+      `<svg class="ach-theme-glyph" viewBox="0 0 24 24"><use href="#theme-${id}"/></svg>` +
+      `</span>`;
     return `<button type="button" class="ach-theme" data-ach-theme="${id}" aria-label="Go to ${escapeHtml(g.label)} charms">` +
+      mark +
       `<span class="ach-theme-name">${g.short}</span>` +
       `<span class="ach-theme-bar">${fill}</span>` +
       `<span class="ach-theme-count">${got} / ${tot}</span>` +

@@ -6120,11 +6120,13 @@
   .ach-fam-count { flex: none; font-family: var(--type); font-size: calc(11px + var(--text-size-adjust)); color: var(--ink-soft); }
   .ach-fam-blurb { flex: none; font-family: var(--type); font-size: calc(10px + var(--text-size-adjust)); color: var(--ink-soft); opacity: 0.75; }
 
-  /* One line per theme: name, the bar taking up whatever is left, fraction. Two lines
+  /* One line per theme: mark, name, the bar taking up whatever is left, fraction. Two lines
      apiece was what made seventeen rows feel like a wall — on one they fit in nine. The name
      and fraction columns are fixed so every bar in a column starts and ends on the same x.
      No dot, and the fill is the family hue: see themeRowHTML for why seventeen hues twice a
-     row was the panel's real noise. */
+     row was the panel's real noise. The mark that replaced the dot carries the theme in a
+     channel colour was never able to carry here, because a drawing can be learned from one
+     look and an arbitrary hue cannot. */
   .ach-fam-themes { display: grid; grid-template-columns: 1fr 1fr; gap: 9px 26px; }
   .ach-theme {
     display: flex; align-items: center; gap: 8px; width: 100%; min-width: 0;
@@ -6133,6 +6135,38 @@
   }
   .ach-theme:hover .ach-theme-name { color: var(--ink); }
   .ach-theme:focus-visible { outline: 2px solid var(--ink-accent); outline-offset: 5px; border-radius: 2px; }
+  /* The charm's own construction — wash underneath, drawing on top — with the blob swapped
+     for a triangle. Two things here are deliberate and will look like mistakes:
+
+     The glyph is 19px over a 15px wash and OVERFLOWS it on every side. Contained inside the
+     triangle it had about 8px of usable area, which is four stroke-widths, and every motif
+     collapsed into the same grey smudge; worse, the triangle then read as a cage. Letting
+     the drawing break the edges is what turns the triangle back into a ground.
+
+     The wash is a wedge-round shape, not a triangle with corners. A chisel-tip marker cannot
+     make a point and a hand cannot rule a straight 15px edge, so a geometrically exact
+     triangle was the one ruled object on a page that has no other ruled objects.
+
+     The mark box is 16x15 but the drawing spills past it, so the row's height comes from the
+     glyph, not the box. Do not add overflow:hidden anywhere up this chain. */
+  .ach-theme-mark {
+    flex: none; position: relative; isolation: isolate;
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 16px; height: 15px;
+    color: color-mix(in srgb, var(--fam) 72%, var(--ink));
+  }
+  .ach-theme-wash {
+    position: absolute; inset: 0; z-index: -1; width: 100%; height: 100%; overflow: visible;
+    fill: color-mix(in srgb, var(--fam) 42%, transparent); stroke: none;
+    filter: url(#themeWash);
+  }
+  .ach-theme-glyph {
+    position: relative; width: 19px; height: 19px; transform: translateY(0.5px);
+    overflow: visible; fill: none; stroke: currentColor; stroke-width: 1.7;
+    stroke-linecap: round; stroke-linejoin: round; filter: url(#charmWobble);
+  }
+  .ach-theme:hover .ach-theme-mark { color: color-mix(in srgb, var(--fam) 88%, var(--ink)); }
+
   .ach-theme-name { flex: none; min-width: 9ch; }
   .ach-theme-count { flex: none; min-width: 7ch; text-align: right; font-variant-numeric: tabular-nums; }
   .ach-theme-bar { flex: 1 1 auto; min-width: 24px; height: 7px; border-radius: 4px; background: var(--bar-track); overflow: hidden; }
