@@ -229,7 +229,10 @@ export const EXPLORER_TOKENS = [
    Two deliberate absences:
    - bonus, because the shelf's sandbox is explicit that nothing a bonus run does may satisfy a
      main-game charm. It has play-every-bonus-game of its own and that is where its breadth lives.
-   - ruthless, which is a mode whose card left the shelf, not a type you can go and choose. */
+   - ruthless, for the same reason as the shelf and not because it is hard to reach: it is
+     sandboxed the same way, folding no run progress at all (see foldRunProgress), and it has
+     charms of its own where its breadth lives. It IS a first-class gameType and a door on the
+     front page — that is not what this ladder is counting. */
 export const SHELF_TYPES = ["classic", "infinite", "daily", "album", "challenge", "custom", "guest"];
 /* The inked marks drawn beside each inside page's title (the `.page-mark.mark-*` spans in
    index.html). Eleven kinds across twelve spans: the guest shelf and a guest's catalogue page
@@ -486,26 +489,31 @@ export const BONUS_GAMES = [
     kicker: "what comes next?", tint: "#5e4a86", mark: "chain",
     line: "Three lines. Pick the one that comes next.",
     blurb: "One line of the song, and three that might follow it. Pick the right one and it locks into the page in pen; four picks and the verse is yours." },
-  /* RETIRED FROM THE SHELF (`shelf: false`), and the only entry here that is not a shelf game.
-     It is scored in SECONDS and is the only one where a low number is the good one (`timed`);
-     everything that shows a score reads that flag rather than assuming a run counts upward — see
-     bonusScoreText / bonusRemark / recordBonusRun's `lower`.
-
-     It stays in the roster because it is not a card any more, it is the RUN DESCRIPTOR the
-     Ruthless mode plays through: `startRuthlessMode` hands this entry to `startBonusGame` with a
-     lens, and the loop, drip, clock, verdict and give-up are all still the shelf's. Deleting the
-     entry today would take the mode down with it. It leaves for good once the mode owns its own
-     end path (results page and board write instead of the record sleeve), which is the order
-     PLAN.md sets and the reason this is a flag rather than a deletion.
-
-     Why it left: the mode's From the Top lens opens on the song's first word, which is this
-     game's stream exactly. Two identical puzzles under two scoring rules is the worst of both,
-     so the from-the-top version lives in the mode, where a time is kept per lens. */
-  { id: "ruthless-game", name: "Ruthless Game", ready: true, timed: true, shelf: false,
-    kicker: "a word a second", tint: "#7d2b34", mark: "metro",
-    line: "A word a second until you name it.",
-    blurb: "The song writes itself out from its very first word, one word every second, and the clock never stops. Guess as often as you like, because a wrong answer costs nothing but the seconds it took." },
 ];
+/* ---------- The Ruthless run descriptor ----------
+   NOT a bonus game and no longer in the roster above (2026-08-18). It is the object the Ruthless
+   MODE hands to `startBonusGame`, because the mode still plays on the shelf's machinery: the same
+   loop, drip, clock, verdict, countdown and give-up. Only the lens and the ending differ.
+
+   It sat in BONUS_GAMES behind a `shelf: false` flag while the mode was being built, which cost
+   every player-facing surface and the randomiser a filter (`shelfGames()`) to keep a card off the
+   deck that was not a card any more. The mode owns its end path now, so the flag and the filter
+   are both gone and the roster is the shelf again.
+
+   `timed` is the flag that matters and it stays: this run is scored in SECONDS and a LOW number
+   is the good one. Everything that reads a score reads that flag rather than assuming a run
+   counts upward — see bonusScoreText / bonusPageScore / bonusTimed.
+
+   Why it left the shelf at all: the mode's From the Top lens opens on the song's own first word,
+   which was this card's stream exactly. Two identical puzzles under two scoring rules is the
+   worst of both, so the whole-song version lives in the mode now, where a time is kept per lens.
+   That is also why nothing was lost when the card went: From the Top IS the shelf game. */
+export const RUTHLESS_GAME = {
+  id: "ruthless-game", name: "Ruthless Game", ready: true, timed: true,
+  kicker: "a word a second", tint: "#7d2b34", mark: "metro",
+  line: "A word a second until you name it.",
+  blurb: "The song writes itself out from its very first word, one word every second, and the clock never stops. Guess as often as you like, because a wrong answer costs nothing but the seconds it took.",
+};
 // A bonus run is short by design — these sit beside the main game, they don't replace it.
 export const BONUS_ROUNDS = 10;
 export const BONUS_SLIP_SECONDS = 20;   // reading a whole line takes longer than naming a title

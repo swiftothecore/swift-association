@@ -12,7 +12,7 @@ import {
   VAULT_TRACKS, AOTY_ALBUMS, VAULT_ALBUMS,
   ACHIEVEMENTS, ACH_ICONS, ACH_BY_ID, ACH_GROUPS, ACH_GROUP_COLORS, ACH_GROUP_OF,
   ACH_FAMILIES, ACH_FAMILY_COLORS,
-  BONUS_GAMES, BONUS_ROUNDS, BONUS_SLIP_SECONDS, BONUS_NAME_SECONDS, BONUS_BLANK_SECONDS,
+  BONUS_GAMES, RUTHLESS_GAME, BONUS_ROUNDS, BONUS_SLIP_SECONDS, BONUS_NAME_SECONDS, BONUS_BLANK_SECONDS,
   BONUS_REDACT_SECONDS, REDACT_MIN_POINTS,
   BONUS_ONLY_SECONDS, ONLY_WIDE_PAGES,
   BONUS_CHAIN_SECONDS, CHAIN_EASY_PAGES, BONUS_SNAP_MS,
@@ -5318,18 +5318,17 @@ function bonusDisc(g, extra = "") {
    leaves your record where you left it. */
 let bonusPick = null;
 
-/* What the SHELF is, as opposed to what the roster is. They stopped being the same list when
-   Ruthless graduated to its own mode: its entry is still in BONUS_GAMES because the mode plays
-   through it, but it is not a record on the deck any more and nothing player-facing may offer it.
-   Every shelf surface and the randomiser go through here; the dev tools deliberately do NOT, so
-   `__dev.bonus.play("ruthless-game")` can still drive the lens-less run directly. */
-function shelfGames() { return BONUS_GAMES.filter((g) => g.shelf !== false); }
+/* Is the run on screen the Ruthless MODE rather than a game off the shelf? The two share every
+   piece of machinery below — the loop, the drip, the clock, the verdict, the countdown — so the
+   lens is the only thing that tells them apart, and it is set before the first puzzle is built.
+   Ruthless used to answer this with a `shelf: false` flag on a roster entry; the roster and the
+   shelf are the same list again now that its descriptor lives outside BONUS_GAMES. */
+function isRuthlessRun() { return !!ruthlessLensId; }
 
 function bonusPicked() {
-  const shelf = shelfGames();
-  return shelf.find((g) => g.id === bonusPick)
-      || shelf.find((g) => g.ready)
-      || shelf[0];
+  return BONUS_GAMES.find((g) => g.id === bonusPick)
+      || BONUS_GAMES.find((g) => g.ready)
+      || BONUS_GAMES[0];
 }
 
 /* ---------- What a run is out of ----------
@@ -5408,7 +5407,7 @@ const BONUS_TONEARM =
 function renderBonusPage() {
   const g = bonusPicked();
   bonusPick = g.id;
-  const others = shelfGames().filter((x) => x.id !== g.id);
+  const others = BONUS_GAMES.filter((x) => x.id !== g.id);
 
   const deck =
     `<div class="bonus-deck">` +
@@ -5460,7 +5459,7 @@ function renderBonusPage() {
   el.innerHTML =
     `<div class="bonus-head">` +
       `<p class="bonus-intro">Quick games kept apart from the main round. Put one on and play it.</p>` +
-      `<span class="bonus-count">${shelfGames().filter((x) => x.ready).length} in print</span>` +
+      `<span class="bonus-count">${BONUS_GAMES.filter((x) => x.ready).length} in print</span>` +
     `</div>` +
     deck +
     `<div class="bonus-shelf">` +
@@ -5477,7 +5476,7 @@ function renderBonusPage() {
 // written yet: its test pressing goes on the deck and the panel says so in words. Nothing
 // launches from here, so a shell can be read about without ever being playable.
 function selectBonusGame(id) {
-  const g = shelfGames().find((x) => x.id === id);
+  const g = BONUS_GAMES.find((x) => x.id === id);
   if (!g) return;
   bonusPick = id;
   renderBonusPage();
@@ -5587,7 +5586,7 @@ function buildBonusPuzzle() {
     // ask for a chain that crosses a section boundary.
     return buildChainPuzzle(songs, Math.random, 120, new Set(bonusRecentSongs),
                             { cross: bonusRound > CHAIN_EASY_PAGES });
-  if (bonusGame.id === "ruthless-game")
+  if (isRuthlessRun())
     return buildRuthlessPuzzle(songs, Math.random, 120, new Set(bonusRecentSongs), activeLens());
   return buildNamePuzzle(songs, lineIndex, Math.random, 120, new Set(bonusRecentSongs));
 }
@@ -5607,7 +5606,7 @@ function nextBonusRound() {
   }
   if (bonusGame.id === "name-that-song" || bonusGame.id === "sing-it-back" || bonusGame.id === "redacted" ||
       bonusGame.id === "only-here" || bonusGame.id === "then-what" ||
-      bonusGame.id === "ruthless-game")
+      isRuthlessRun())
     bonusRecentSongs.push(bonusPuzzle.song.title);
   // A fresh page opens worth the full ten and nothing has been spent on it yet.
   redactWorth = bonusPagePoints(bonusGame);
@@ -5652,7 +5651,7 @@ function nextBonusRound() {
 // own mode furniture, so it deliberately does not inherit the shelf's margin register.
 function renderBonusPageRegister() {
   const el = $("bonusPageRegister");
-  const shelfRun = bonusGame && bonusGame.shelf !== false && !ruthlessLensId && !bonusEnded;
+  const shelfRun = bonusGame && !isRuthlessRun() && !bonusEnded;
   renderNotebookPageRegister(el, bonusRound, shelfRun ? BONUS_ROUNDS : 0,
                              shelfRun ? bonusGame.tint : "");
 }
@@ -5752,7 +5751,7 @@ function renderBonusRound() {
       `<div class="bg-hand" id="bonusHand"></div>` +
       `<p class="bg-hint">every one of them is in the song, spelled the way it is sung</p>`;
     renderOnlyHand();
-  } else if (bonusGame.id === "ruthless-game") {
+  } else if (isRuthlessRun()) {
     // The song writes itself out into `.bg-stream`, a word a second, breaking where the song
     // breaks. Nothing about the song is named anywhere on the page — no title, no album, no
     // section — because the stream is the only evidence there is meant to be.
@@ -6546,7 +6545,7 @@ function bonusAnswerCard() {
   // Ruthless Game has none either, and most obviously of all: its reveal writes the song's name
   // over a page that is already the song, printed out further than any card could quote it.
   if (bonusGame.id === "redacted" || bonusGame.id === "only-here" ||
-      bonusGame.id === "then-what" || bonusGame.id === "ruthless-game") return "";
+      bonusGame.id === "then-what" || isRuthlessRun()) return "";
   if (bonusGame.id === "sing-it-back")
     return `<div class="bg-ctx">${lyricCardContext(p.song, p.answer, p.line)}</div>`;
   const slip = bonusGame.id === "spot-the-slip";
@@ -6640,7 +6639,7 @@ function settleBonusRound(correct, detail, isTimeout = false) {
         // first, but the note column runs out around six characters on a two-up sleeve and
         // "1:23 · 62w" came back as "1:23 · …" — so the column keeps the one that adds up to
         // the score, and the verdict line is where a page's word count gets said in full.
-        : bonusGame.id === "ruthless-game" ? fmtTime(gained)
+        : isRuthlessRun() ? fmtTime(gained)
         : bonusPuzzle.song.album,
   });
   foldBonusPageCharms(correct, isTimeout);
@@ -6659,7 +6658,7 @@ function settleBonusRound(correct, detail, isTimeout = false) {
     stopChainBeat();
     const cards = $("bonusChainCards");
     if (cards) cards.remove();
-  } else if (bonusGame.id === "ruthless-game") {
+  } else if (isRuthlessRun()) {
     revealRuthless();
   } else if (bonusGame.id === "sing-it-back") {
     // Whatever was in the gap — a wrong word, a half-typed one, nothing at all — the real
@@ -6833,7 +6832,7 @@ function foldBonusRunCharms(perfect, cleared) {
      shelf:false, so it is not one of the six these charms are about — and it has no fail state,
      which would make every dev-only lens-less run a "clean sweep" of ten cleared pages. Anything
      the shelf's own list excludes, this excludes. */
-  if (bonusGame.shelf === false) return;
+  if (isRuthlessRun()) return;
   unlock("finish-first-bonus-run");
   if (perfect) unlock("clean-sweep-bonus-game");
   // One page shy, and only on the three games that keep a sweep clock — the shelf's own
@@ -6853,12 +6852,12 @@ function foldBonusRunCharms(perfect, cleared) {
     if (bonusGame.id === "sing-it-back" && blankExactRun) unlock("sweep-sing-it-back-all-words-exact");
   }
   // The two shelf-wide ledger charms, read off the board rather than off this run, so they
-  // close on whichever game happens to be the last one. shelfGames() and not BONUS_GAMES:
-  // Ruthless carries shelf:false and asking for a sweep of a retired card would make both of
-  // these permanently unearnable.
-  const shelf = shelfGames();
-  if (shelf.every((g) => bonusRecord(g.id).plays > 0)) unlock("play-every-bonus-game");
-  if (shelf.every((g) => bonusRecord(g.id).swept)) unlock("clean-sweep-every-bonus-game");
+  // close on whichever game happens to be the last one. The roster is the shelf again now that
+  // Ruthless's descriptor lives outside it, so these count BONUS_GAMES straight — and the
+  // orphaned "ruthless-game" record an early notebook may still carry in BONUS_KEY is simply
+  // never asked about, which is the right amount of attention to pay it.
+  if (BONUS_GAMES.every((g) => bonusRecord(g.id).plays > 0)) unlock("play-every-bonus-game");
+  if (BONUS_GAMES.every((g) => bonusRecord(g.id).swept)) unlock("clean-sweep-every-bonus-game");
 }
 
 function endBonusRun() {
@@ -8019,9 +8018,7 @@ function renderRuthlessPage() {
 function startRuthlessMode(lensId) {
   const lens = ruthlessLens(lensId);
   if (!lens) return;
-  const g = BONUS_GAMES.find((x) => x.id === "ruthless-game");
-  if (!g) return;
-  startBonusGame(g, lens.id);
+  startBonusGame(RUTHLESS_GAME, lens.id);
 }
 
 function openAlbumFocus(from) {
@@ -9968,7 +9965,7 @@ function seedRandomFromBoards() {
     if (r.attempts > 0) tokens.push(randomToken("challenge", c.id));
     if (r.darkAttempts > 0) tokens.push(randomToken("dark", c.id));
   }
-  for (const g of shelfGames()) if (bonusRecord(g.id).plays > 0) tokens.push(randomToken("bonus", g.id));
+  for (const g of BONUS_GAMES) if (bonusRecord(g.id).plays > 0) tokens.push(randomToken("bonus", g.id));
   if (Object.keys(dailyPlayedDates()).length) tokens.push(randomToken("daily"));
   seedRandomSeen(tokens);
 }
@@ -10005,7 +10002,7 @@ function buildRandomPool() {
     if (darkSideUnlocked(c.id)) push("dark", c.id, "Dark side · " + c.name, { challenge: c.id, dark: true });
   }
 
-  for (const g of shelfGames()) {
+  for (const g of BONUS_GAMES) {
     if (!g.ready) continue;   // the shelf shows what's coming; the draw only deals what plays
     push("bonus", g.id, "Bonus · " + g.name, { bonus: g.id });
   }
@@ -20414,15 +20411,6 @@ function buildDevApi() {
             if (p) recent.push(p.song.title);
             out.push(p ? { song: p.song.title, crossed: p.crossed, fallbacks: p.fallbacks,
                            chain: devChainLines(p) } : null);
-          } else if (id === "ruthless-game") {
-            const p = buildRuthlessPuzzle(songs, Math.random, 120, new Set(recent));
-            if (p) recent.push(p.song.title);
-            // `titleAt` is the number that matters: how many words in the stream finally says
-            // the song's own name, which is the worst case a page can cost. -1 means the song
-            // never names itself and the page runs to the end of the lyric.
-            out.push(p ? { song: p.song.title, words: p.stream.length,
-                           titleAt: devRuthlessTitleAt(p),
-                           opens: p.stream.slice(0, 12).map((w) => w.text).join(" ") } : null);
           } else if (id === "sing-it-back") {
             const p = buildBlankPuzzle(songs, ctx, Math.random, 120, new Set(recent));
             if (p) recent.push(p.song.title);
@@ -20448,7 +20436,6 @@ function buildDevApi() {
             : id === "redacted" ? buildRedactedPuzzle(songs, ctx, lineIndex)
             : id === "only-here" ? buildOnlyHerePuzzle(songs, bonusIndexes().wordIndex)
             : id === "then-what" ? buildChainPuzzle(songs)
-            : id === "ruthless-game" ? buildRuthlessPuzzle(songs)
             : id === "sing-it-back" ? buildBlankPuzzle(songs, ctx)
             : buildSlipPuzzle(songs, playableWords, lineIndex, ctx);
           if (p) ok++;
@@ -20745,15 +20732,15 @@ function buildDevApi() {
           blankExactRun,
           chainRun, chainNeeded: BONUS_ROUNDS * CHAIN_PAY.length,
           cleared: bonusLog.filter((t) => t.ok).length,
-          shelfPlayed: shelfGames().filter((g) => bonusRecord(g.id).plays > 0).map((g) => g.id),
-          shelfSwept: shelfGames().filter((g) => bonusRecord(g.id).swept).map((g) => g.id),
+          shelfPlayed: BONUS_GAMES.filter((g) => bonusRecord(g.id).plays > 0).map((g) => g.id),
+          shelfSwept: BONUS_GAMES.filter((g) => bonusRecord(g.id).swept).map((g) => g.id),
         }),
         // Bank a sweep on every shelf game without playing sixty pages for it, so Every Single
         // One and the shelf's ledger charms can be seen closing. Writes real board entries.
-        sweepAll: () => { shelfGames().forEach((g) =>
+        sweepAll: () => { BONUS_GAMES.forEach((g) =>
             recordBonusRun(g.id, bonusMaxScore(g), bonusMaxScore(g), bonusTimed(g), null, true));
           if ($("bonusBody")) renderBonusPage();
-          return shelfGames().map((g) => g.id); },
+          return BONUS_GAMES.map((g) => g.id); },
         // Answer the live Only Here page with the COMMONEST card in the hand — I Bought It,
         // which is otherwise a mistake you have to make on purpose.
         worst: () => {
@@ -20778,6 +20765,34 @@ function buildDevApi() {
         if (!lens) return `no such lens — ${RUTHLESS_LENSES.map((l) => l.id).join(", ")}`;
         startRuthlessMode(lensId);
         return `${lens.label}: snap at ${ruthlessSnap(lens)}w, give up after ${ruthlessGiveUp(lens).after}w`;
+      },
+      /* A batch of pages as the lens would deal them, without playing any of them. `titleAt` is
+         the number that matters: how many words in before the stream says the song's own name,
+         which is the worst case a page can cost — -1 meaning the song never names itself and the
+         page runs to the end of the lyric. It took a lens argument the moment it moved off
+         __dev.bonus.sample, since a sample of the wrong section is a sample of nothing. */
+      sample: (n = 10, lensId = null) => {
+        const lens = lensId ? ruthlessLens(lensId) : null;
+        if (lensId && !lens) return `no such lens — ${RUTHLESS_LENSES.map((l) => l.id).join(", ")}`;
+        const songs = bonusSongs(), recent = [], out = [];
+        for (let i = 0; i < n; i++) {
+          const p = buildRuthlessPuzzle(songs, Math.random, 120, new Set(recent), lens);
+          if (p) recent.push(p.song.title);
+          out.push(p ? { song: p.song.title, words: p.stream.length,
+                         titleAt: devRuthlessTitleAt(p),
+                         opens: p.stream.slice(0, 12).map((w) => w.text).join(" ") } : null);
+        }
+        return out;
+      },
+      // How often the builder succeeds within its own retry budget, per lens. A rate that has
+      // slipped means the bars have been tightened past what that section can serve.
+      audit: (n = 200, lensId = null) => {
+        const lens = lensId ? ruthlessLens(lensId) : null;
+        if (lensId && !lens) return `no such lens — ${RUTHLESS_LENSES.map((l) => l.id).join(", ")}`;
+        const songs = bonusSongs();
+        let ok = 0;
+        for (let i = 0; i < n; i++) if (buildRuthlessPuzzle(songs, Math.random, 120, null, lens)) ok++;
+        return { lens: lensId || "whole song", tried: n, built: ok, rate: `${((ok / n) * 100).toFixed(1)}%` };
       },
       /* Fabricate a finished run and go straight to the results, the sleeve's `fill` for the
          mode that no longer ends on a sleeve. Ten honest pages is four minutes of metronome, and
