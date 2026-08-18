@@ -309,6 +309,23 @@ export function initDev(api) {
         btn("seed", () => { api.ruthless.seed(rlLens.value, +rlSecs.value); readout.textContent = `${rlLens.value}: best ${rlSecs.value}s`; }),
         btn("seed + gave up 1", () => { api.ruthless.seed(rlLens.value, +rlSecs.value, 1); readout.textContent = `${rlLens.value}: best ${rlSecs.value}s, 1 given up`; }))));
 
+  // ---- Ruthless runs ---------------------------------------------------------
+  // Playing a lens honestly is ten pages at a word a second, so the two ways to reach one
+  // quickly live here: `play` opens a real run on the chosen lens (the picker is no longer the
+  // only door, which matters when the picker is the thing under test), and `finish` fabricates a
+  // settled one and jumps to the results — the only sane way to look at the strand's album
+  // tints, its stopwatch charms and the page listing more than once an afternoon.
+  const rlRunLens = select(api.ruthless.board().map((r) => r.lens), (x) => x, (x) => x);
+  const rlNamed = num(8);
+  const rlSnaps = num(3);
+  body.append(section("ruthless runs",
+    row(rlRunLens, btn("play lens", () => { readout.textContent = api.ruthless.play(rlRunLens.value); })),
+    row("named=", rlNamed, "on sight=", rlSnaps,
+        btn("finish a run", () => { readout.textContent = api.ruthless.finish(+rlNamed.value, +rlSnaps.value, rlRunLens.value); })),
+    row(btn("drip 10", () => { readout.textContent = JSON.stringify(api.ruthless.drip(10)); }),
+        btn("name it", () => { readout.textContent = api.ruthless.name(); }),
+        btn("give up", () => { readout.textContent = JSON.stringify(api.ruthless.giveup()); }, "warn"))));
+
   // ---- Challenges ------------------------------------------------------------
   // Dark sides open only after the base challenge is beaten. This unlocks every one through
   // the real gate (base marked defeated + unlocked, dark progress left untouched) so they can

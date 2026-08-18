@@ -19,8 +19,9 @@ export function starPath(cx, cy, rOut, rIn) {
 // Each draws a charm centred at (cx,cy) with "radius" r, in the bracelet's bead
 // style (fill via .b-bead → var(--bead); the caller wraps the charm in a group
 // carrying the album --bead tint). `sw` is the ink stroke width. "star" is the
-// default keepsake; "nib" is reserved for word-perfect verse rounds; the rest are
-// player-selectable via settings.masteryCharm.
+// default keepsake; "nib" is reserved for word-perfect verse rounds and "stopwatch"
+// for a Ruthless page named on sight; the rest are player-selectable via
+// settings.masteryCharm.
 function cFill(d, sw) { return `<path d="${d}" class="b-bead" stroke-width="${sw}" stroke-linejoin="round"/>`; }
 function cEllipse(cx, cy, rx, ry, rot, sw) {
   return `<ellipse cx="${cx.toFixed(2)}" cy="${cy.toFixed(2)}" rx="${rx.toFixed(2)}" ry="${ry.toFixed(2)}" transform="rotate(${rot.toFixed(1)} ${cx.toFixed(2)} ${cy.toFixed(2)})" class="b-bead" stroke-width="${sw}"/>`;
@@ -123,6 +124,22 @@ export const CHARMS = {
     }).join("");
     return cFill(d + "Z", sw) + holes + cGloss(cx - 0.62 * r, cy - 0.42 * r, r * 0.12);
   },
+  // A pocket stopwatch, crown up, hands at a few seconds past twelve — the keepsake for a
+  // Ruthless page named on sight (see snapPage / ruthlessSnap). Not player-selectable: it is an
+  // earned mark like the nib and the horseshoe, which is why it is out of RANDOM_CHARM_IDS.
+  // The case sits low in the charm's box so the crown has room without the whole thing reading
+  // small, and the hands are drawn short and stubby, because at a bead's scale a fine minute
+  // hand is one grey pixel.
+  stopwatch(cx, cy, r, sw) {
+    const X = (p) => (cx + p * r).toFixed(2), Y = (p) => (cy + p * r).toFixed(2);
+    const crown = `M${X(-0.20)},${Y(-1.14)} L${X(0.20)},${Y(-1.14)} L${X(0.20)},${Y(-0.80)} L${X(-0.20)},${Y(-0.80)} Z`;
+    const case_ = cCircle(cx, cy + 0.14 * r, 0.86 * r, sw);
+    const hand = Math.max(Number(sw) * 1.05, r * 0.13).toFixed(2);
+    const hands =
+      `<path d="M${X(0)},${Y(0.14)} L${X(0)},${Y(-0.50)}" stroke="var(--ink)" stroke-width="${hand}" fill="none" stroke-linecap="round"/>` +
+      `<path d="M${X(0)},${Y(0.14)} L${X(0.42)},${Y(0.36)}" stroke="var(--ink)" stroke-width="${hand}" fill="none" stroke-linecap="round"/>`;
+    return cFill(crown, sw) + case_ + hands + cGloss(cx - 0.42 * r, cy - 0.22 * r, r * 0.13);
+  },
   nib(cx, cy, r, sw) {
     const h = 1.108 * r, w = 0.649 * r;
     const d = `M${cx},${cy - h} L${cx + w},${cy - h * 0.15} L${cx},${cy + h} L${cx - w},${cy - h * 0.15} Z`;
@@ -135,8 +152,8 @@ export const CHARMS = {
 // ---- Random strands ----
 // What a "random" strand draws from: the eight player-unlockable charms plus the star. The
 // star is in the pool deliberately, so it isn't the one charm random can never hand you.
-// The automatic keepsakes (nib, devil, horseshoe) are NOT here and never will be: those are
-// earned marks, and a random strand must never counterfeit one.
+// The automatic keepsakes (nib, devil, horseshoe, stopwatch) are NOT here and never will be:
+// those are earned marks, and a random strand must never counterfeit one.
 export const RANDOM_CHARM_IDS = ["star", "heart", "moon", "daisy", "bow", "pick", "note", "lightning", "snake"];
 
 // Which charm a given bead wears on a random strand. Deterministic in (seed, index) and
@@ -200,6 +217,10 @@ export function buildBraceletSVG(results, activeRound, freshIndex, albums, opts)
   // per-round flag (Insurance): the uninsured miss that ended the run — this page's bead is
   // a skull rather than the usual matte spacer. At most one page a run ever carries it.
   const skullMiss = (opts && opts.skullMiss) || [];
+  // per-round flag (Ruthless): this page was named inside its lens's snap window, so it dangles
+  // a stopwatch. The strand is otherwise silent about HOW a page went — one bead a page, tinted
+  // by album — and this is the one thing about a Ruthless page worth carrying off it.
+  const snapPage = (opts && opts.snapPage) || [];
   // opts.charm: the Mastery-chosen dangling charm id (see CHARMS); default "star". The
   // special value "random" gives every bead its own charm instead of the whole strand
   // wearing one, shuffled per run by opts.charmSeed. Either way this only supplies a bead's
@@ -266,7 +287,8 @@ export function buildBraceletSVG(results, activeRound, freshIndex, albums, opts)
       // Word-perfect verse rounds always hang the reserved pen-nib; otherwise the
       // player's chosen charm (default star), drawn by the shared CHARMS renderer.
       const isNib = verseTiers[i] === "perfect" || verseTiers[i] === "verse";
-      const charmId = impostorCaught[i] ? "devil" : riskWon[i] ? "horseshoe" : (isNib ? "nib" : defaultCharm(i));
+      const charmId = impostorCaught[i] ? "devil" : riskWon[i] ? "horseshoe"
+        : snapPage[i] ? "stopwatch" : (isNib ? "nib" : defaultCharm(i));
       const cr = s(7.4), csw = Math.max(0.7, cr * 0.15).toFixed(2);
       const charm = `<g${beadStyle}>${CHARMS[charmId](x, y + s(15.5), cr, csw)}</g>`;
       svg += `<g class="charm-dangle${fresh ? " fresh" : ""}"${delay}>` +

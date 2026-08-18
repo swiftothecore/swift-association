@@ -3159,6 +3159,18 @@
      wrote its misses in. The seconds stay in black: they were still paid. */
   .rl-page.no .rl-page-title { color: var(--ink-soft); }
   .rl-page.no .rl-page-words { color: rgba(160,62,46,0.82); }
+  /* A page named on sight: its word count goes to full ink and gets the underline a marked
+     figure would get in a notebook, so the listing agrees with the stopwatch on the strand
+     without printing a second glyph an inch below the first one. */
+  .rl-page.snap .rl-page-words {
+    color: var(--ink); font-weight: 700;
+    border-bottom: 1.4px solid rgba(43,39,34,0.5);
+  }
+  .rl-pages-foot {
+    margin: 8px 0 0; font-family: var(--type);
+    font-size: calc(8.5px + var(--text-size-adjust)); letter-spacing: 0.6px;
+    color: var(--ink-soft);
+  }
   @media (max-width: 560px) {
     .rl-page-list { columns: 1; }
   }

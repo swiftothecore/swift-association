@@ -60,7 +60,7 @@ import { buildLineIndex, buildSlipContext, buildSlipPuzzle, buildNamePuzzle,
          buildBlankPuzzle, buildRedactedPuzzle,
          buildWordIndex, buildOnlyHerePuzzle, onlyHerePoints, ONLY_HAND,
          buildChainPuzzle, CHAIN_PICKS, CHAIN_CARDS, CHAIN_PAY, CHAIN_PAGE,
-         buildRuthlessPuzzle, ruthlessPool, ruthlessLens, ruthlessLensAudit, ruthlessGiveUp,
+         buildRuthlessPuzzle, ruthlessPool, ruthlessLens, ruthlessLensAudit, ruthlessGiveUp, ruthlessSnap,
          ruthlessBar, RUTHLESS_LENSES,
          judgeBlank, blankExact } from "./bonus.js";
 import { renderStreakPlacard } from "./placard.js";
@@ -6997,11 +6997,17 @@ function endRuthlessRun() {
   // thirteen-round run and would be a borrowed flourish here.
   const results = pages.map((t) => t.ok);
   const albums = pages.map((t) => t.album || null);
+  // A page named inside the lens's snap window hangs a stopwatch instead of the usual charm.
+  // It is read off the words that were ON the page when it was named, not off the seconds,
+  // which are the same number here and would stop being if the drip were ever retuned.
+  const snapWords = ruthlessSnap(lens);
+  const snapPage = pages.map((t) => t.ok && t.words <= snapWords);
+  const snaps = snapPage.filter(Boolean).length;
 
   showScreen("results");
   applyEra(FINALE_ERAS[Math.floor(Math.random() * FINALE_ERAS.length)]);
   $("resultBracelet").innerHTML = renderBraceletSVG(results, 0, -1, albums,
-    { colors: albumPalette(), total: pages.length, letterBead: false });
+    { colors: albumPalette(), total: pages.length, letterBead: false, snapPage });
   // A time is the whole result, so it takes the big number; the pages it took are the sub.
   $("finalScore").textContent = fmtTime(secs);
   $("finalSub").textContent = gaveUp
@@ -7036,13 +7042,21 @@ function endRuthlessRun() {
   // the only place a given-up page is readable as the song it was. It rides inside the podium
   // rather than in a block of its own so that every other end path, which rewrites the podium
   // outright, is incapable of leaving a stale Ruthless listing behind it.
-  const rows = pages.map((t) =>
-    `<li class="rl-page ${t.ok ? "ok" : "no"}">` +
+  const rows = pages.map((t, i) =>
+    `<li class="rl-page ${t.ok ? "ok" : "no"}${snapPage[i] ? " snap" : ""}">` +
       `<span class="rl-page-n">${t.n}</span>` +
       `<span class="rl-page-title">${escapeHtml(censor(t.title))}</span>` +
       `<span class="rl-page-words">${t.ok ? `${t.words}w` : "gave up"}</span>` +
       `<span class="rl-page-time">${escapeHtml(t.note)}</span>` +
     `</li>`).join("");
+  // What the stopwatch charms on the strand mean, said once and in the lens's own number.
+  // A charm nobody can read is decoration, and the window moves per lens, so the line has to
+  // carry the figure rather than describe the rule in words.
+  const snapFoot = snaps
+    ? `<p class="rl-pages-foot">${snaps} named inside ${snapWords} word${snapWords === 1 ? "" : "s"}` +
+      ` — a stopwatch on the strand</p>`
+    : `<p class="rl-pages-foot">name one inside ${snapWords} word${snapWords === 1 ? "" : "s"}` +
+      ` and its bead wears a stopwatch</p>`;
 
   $("resultPodium").innerHTML = status + meta +
     `<div class="chall-result-actions">` +
@@ -7050,7 +7064,7 @@ function endRuthlessRun() {
       `<button id="replayRuthless" class="btn-primary">replay ↺</button>` +
     `</div>` +
     `<div class="rl-pages"><p class="rl-pages-label">the run, page by page</p>` +
-      `<ol class="rl-page-list">${rows}</ol></div>`;
+      `<ol class="rl-page-list">${rows}</ol>${snapFoot}</div>`;
   $("backToRuthless").addEventListener("click", () => openRuthless(ruthlessBackTarget));
   $("replayRuthless").addEventListener("click", () => startRuthlessMode(lensId));
 
@@ -20425,54 +20439,6 @@ function buildDevApi() {
         if ($("bonusBody")) renderBonusPage();
         return out;
       },
-      /* Ruthless Game. `drip(n)` pulls the next n words onto the page without waiting for the
-         metronome — the only way to reach the back half of a stream in less than a minute — and
-         `stream()` reports where the page stands, including the word the title finally lands on.
-         `name()` answers it and `giveup()` takes the penalty (unlocking the button first, since
-         the point of testing a give-up is the settle, not the twenty words in front of it). */
-      drip: (n = 10) => {
-        if (!bonusGame || !bonusTimed(bonusGame)) return "not on a ruthless page";
-        for (let i = 0; i < n; i++) revealRuthlessWord();
-        return { shown: ruthlessShown, of: bonusPuzzle.stream.length };
-      },
-      stream: () => {
-        if (!bonusGame || !bonusTimed(bonusGame) || !bonusPuzzle) return "not on a ruthless page";
-        return { song: bonusPuzzle.song.title, album: bonusPuzzle.song.album,
-                 shown: ruthlessShown, words: bonusPuzzle.stream.length,
-                 titleAt: devRuthlessTitleAt(bonusPuzzle),
-                 spent: ((performance.now() - ruthlessStart) / 1000).toFixed(1) + "s" };
-      },
-      name: () => {
-        if (!bonusGame || !bonusTimed(bonusGame) || !$("bonusInput")) return "not on a ruthless page";
-        $("bonusInput").value = bonusPuzzle.song.title;
-        judgeName();
-        return ruthlessSpent
-          ? `${fmtTime(ruthlessSpent)} off ${ruthlessShown} word${ruthlessShown === 1 ? "" : "s"}`
-          : "not settled";
-      },
-      /* What the deal can and cannot land on. A ten-page run never shows you a bar, so this is
-         the only way to check that an exclusion caught what it was written for — and, more to
-         the point, that it caught nothing else. Pass a reason to list those songs in full. */
-      pool: (why = null, lensId = null) => {
-        const lens = lensId ? ruthlessLens(lensId) : null;
-        if (lensId && !lens) return `no such lens — ${RUTHLESS_LENSES.map((l) => l.id).join(", ")}`;
-        const { deal, barred } = ruthlessPool(allSongs, lens);
-        if (why) return barred.filter((b) => b.why === why);
-        const by = {};
-        barred.forEach((b) => { by[b.why] = (by[b.why] || 0) + 1; });
-        return { lens: lensId || "whole song", dealable: deal.length, of: allSongs.length, barred: by };
-      },
-      /* Every lens measured at once: what it can deal, how often the stream can end the page on
-         its own, and whether the median each lens declares (which is what prices its give-up)
-         still matches the catalogue. Run it after adding songs — a lens whose `named` falls out
-         of the others' band is a lens leaning on the give-up instead of on the song. */
-      lenses: () => ruthlessLensAudit(allSongs),
-      giveup: () => {
-        if (!bonusGame || !bonusTimed(bonusGame)) return "not on a ruthless page";
-        ruthlessShown = Math.max(ruthlessShown, ruthlessSkip().after);
-        giveUpRuthless();
-        return { lens: ruthlessLensId || "whole song", penalty: ruthlessSkip().penalty, page: ruthlessSpent };
-      },
       // Redacted: strip the page bare without paying for it, to reach the answer or to see what
       // a fully peeled verse looks like. `worth` sets the page's remaining value outright.
       peel: () => {
@@ -20752,6 +20718,104 @@ function buildDevApi() {
        without playing four minutes of the game to get one. */
     ruthless: {
       board: () => RUTHLESS_LENSES.map((l) => ({ lens: l.id, ...ruthlessRecord(l.id) })),
+      // Start a lens run without going through the picker. Everything else here was tested by
+      // clicking the sheet, which is fine until the thing under test is the sheet itself.
+      play: (lensId = "chorus") => {
+        const lens = ruthlessLens(lensId);
+        if (!lens) return `no such lens — ${RUTHLESS_LENSES.map((l) => l.id).join(", ")}`;
+        startRuthlessMode(lensId);
+        return `${lens.label}: snap at ${ruthlessSnap(lens)}w, give up after ${ruthlessGiveUp(lens).after}w`;
+      },
+      /* Fabricate a finished run and go straight to the results, the sleeve's `fill` for the
+         mode that no longer ends on a sleeve. Ten honest pages is four minutes of metronome, and
+         the surfaces that need ten SETTLED pages — the strand's tints and stopwatches, the page
+         listing, the best-time copy — are the ones you want to look at twenty times in a row.
+         `named` is how many were named and `snaps` how many of those were named on sight, so
+         the charm can be seen at none, some and all without waiting for a lucky run. It is
+         `finish` rather than `fill` because `fill` on this block is the BOARD's, and a run and a
+         board of six records are not the same fabrication. */
+      finish: (named = 8, snaps = 3, lensId = "chorus") => {
+        const lens = ruthlessLens(lensId);
+        if (!lens) return `no such lens — ${RUTHLESS_LENSES.map((l) => l.id).join(", ")}`;
+        const { deal } = ruthlessPool(allSongs, lens);
+        if (!deal.length) return `${lens.label} deals nothing`;
+        const snapAt = ruthlessSnap(lens), giveUp = ruthlessGiveUp(lens);
+        ruthlessLensId = lensId;
+        gameType = "ruthless";
+        bonusLog = [];
+        bonusScore = 0;
+        // The skills recap is part of what this is for, so the run earns its XP the same way a
+        // played one does — page by page, through the real accumulator — rather than arriving
+        // at the results with whatever the last run happened to leave behind.
+        ruthlessXp = { resolve: 0, tempo: 0 };
+        ruthlessStreak = 0;
+        for (let n = 1; n <= BONUS_ROUNDS; n++) {
+          const song = deal[(n * 7) % deal.length];
+          const ok = n <= named;
+          // A snapped page is named inside the window, an ordinary one somewhere past it, and a
+          // given-up one costs what the valve really costs — so the run's total is a time a real
+          // run could have posted rather than a number that only looks like one.
+          const words = ok ? (n <= snaps ? Math.max(1, snapAt - (n % 2))
+                                         : snapAt + 6 + (n % 17))
+                           : giveUp.after;
+          const secs = ok ? words : words + giveUp.penalty;
+          bonusScore += secs;
+          accrueRuthlessXp(ok, secs);
+          bonusLog.push({ n, ok, title: song.title, album: song.album, words, note: fmtTime(secs) });
+        }
+        bonusRound = BONUS_ROUNDS;
+        endRuthlessRun();
+        return `${lens.label}: ${fmtTime(bonusScore)}, ${named} named, ${Math.min(snaps, named)} on sight`;
+      },
+      /* Ruthless Game. `drip(n)` pulls the next n words onto the page without waiting for the
+         metronome — the only way to reach the back half of a stream in less than a minute — and
+         `stream()` reports where the page stands, including the word the title finally lands on.
+         `name()` answers it and `giveup()` takes the penalty (unlocking the button first, since
+         the point of testing a give-up is the settle, not the twenty words in front of it). */
+      drip: (n = 10) => {
+        if (!bonusGame || !bonusTimed(bonusGame)) return "not on a ruthless page";
+        for (let i = 0; i < n; i++) revealRuthlessWord();
+        return { shown: ruthlessShown, of: bonusPuzzle.stream.length };
+      },
+      stream: () => {
+        if (!bonusGame || !bonusTimed(bonusGame) || !bonusPuzzle) return "not on a ruthless page";
+        return { song: bonusPuzzle.song.title, album: bonusPuzzle.song.album,
+                 shown: ruthlessShown, words: bonusPuzzle.stream.length,
+                 titleAt: devRuthlessTitleAt(bonusPuzzle),
+                 spent: ((performance.now() - ruthlessStart) / 1000).toFixed(1) + "s" };
+      },
+      name: () => {
+        if (!bonusGame || !bonusTimed(bonusGame) || !$("bonusInput")) return "not on a ruthless page";
+        $("bonusInput").value = bonusPuzzle.song.title;
+        judgeName();
+        return ruthlessSpent
+          ? `${fmtTime(ruthlessSpent)} off ${ruthlessShown} word${ruthlessShown === 1 ? "" : "s"}`
+          : "not settled";
+      },
+      /* What the deal can and cannot land on. A ten-page run never shows you a bar, so this is
+         the only way to check that an exclusion caught what it was written for — and, more to
+         the point, that it caught nothing else. Pass a reason to list those songs in full. */
+      pool: (why = null, lensId = null) => {
+        const lens = lensId ? ruthlessLens(lensId) : null;
+        if (lensId && !lens) return `no such lens — ${RUTHLESS_LENSES.map((l) => l.id).join(", ")}`;
+        const { deal, barred } = ruthlessPool(allSongs, lens);
+        if (why) return barred.filter((b) => b.why === why);
+        const by = {};
+        barred.forEach((b) => { by[b.why] = (by[b.why] || 0) + 1; });
+        return { lens: lensId || "whole song", dealable: deal.length, of: allSongs.length, barred: by };
+      },
+      /* Every lens measured at once: what it can deal, how often the stream can end the page on
+         its own, and whether the median each lens declares (which is what prices its give-up)
+         still matches the catalogue. Run it after adding songs — a lens whose `named` falls out
+         of the others' band is a lens leaning on the give-up instead of on the song. */
+      lenses: () => ruthlessLensAudit(allSongs),
+      giveup: () => {
+        if (!bonusGame || !bonusTimed(bonusGame)) return "not on a ruthless page";
+        ruthlessShown = Math.max(ruthlessShown, ruthlessSkip().after);
+        giveUpRuthless();
+        return { lens: ruthlessLensId || "whole song", penalty: ruthlessSkip().penalty, page: ruthlessSpent };
+      },
+
       seed: (lensId, seconds, gaveUp = 0) => {
         if (!ruthlessLens(lensId)) return `no such lens — ${RUTHLESS_LENSES.map((l) => l.id).join(", ")}`;
         const out = recordRuthlessRun(lensId, seconds, gaveUp, todayKey());

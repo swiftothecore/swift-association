@@ -1093,6 +1093,27 @@ export function ruthlessGiveUp(lens) {
   return { after, penalty: Math.round(median * RUTHLESS_SKIP_TOTAL_RATIO) - after };
 }
 
+/* What counts as naming a page ON SIGHT under this lens — the bar the results strand hangs its
+   stopwatch charm on. Scaled off the lens's own median for the same reason the give-up is, and
+   then CLAMPED, which the give-up is not: a snap has to be few words in the plain sense as well
+   as few words relative to the lens, and 0.12 of From the Top's 76-word median is nine, which is
+   already a line and a half of a song rather than a glance. So the ratio decides the ORDER (the
+   easy lens is the tight one, because a chorus hands you the hook in three words and naming a
+   song from that is not the same feat as naming one three words into a second verse) and the
+   clamp decides the SCALE. Chorus lands at 3, From the Top and Verse 2 at the 8-word ceiling.
+
+   Deliberately NOT the give-up's own `after`, which was the obvious anchor and is wrong: naming
+   a page before the valve opened is what a player who knows the catalogue does on most pages, and
+   a keepsake most beads wear is not a keepsake. */
+export const RUTHLESS_SNAP_RATIO = 0.12;   // of the median, before the clamp
+export const RUTHLESS_SNAP_MIN = 3;
+export const RUTHLESS_SNAP_MAX = 8;
+export function ruthlessSnap(lens) {
+  const median = lens && lens.median ? lens.median : 73;
+  const words = Math.round(median * RUTHLESS_SNAP_RATIO);
+  return Math.max(RUTHLESS_SNAP_MIN, Math.min(RUTHLESS_SNAP_MAX, words));
+}
+
 /* Every song the game can deal under this lens, and every song it can't with the reason.
    Dev-facing: it is the only way to see the shape of the pool, since a run of ten pages never
    shows you the bars. A lens adds exactly one bar of its own, "no <section>", and then leans on
