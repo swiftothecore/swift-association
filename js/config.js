@@ -619,7 +619,7 @@ export const RANDOM_CATEGORIES = [
   { id: "challenge",  weight: 22, label: "a challenge" },
   { id: "dark",       weight: 14, label: "a dark side" },
   { id: "bonus",      weight: 12, label: "a bonus game" },
-  { id: "ruthless",   weight: 8,  label: "Ruthless" },
+  { id: "ruthless",   weight: 8,  label: "Ruthless Game" },
   { id: "daily",      weight: 8,  label: "the daily" },
 ];
 
@@ -3079,14 +3079,14 @@ export const ACHIEVEMENTS = [
      lens is always open, always dealt fresh, and beating your own time is a standing condition
      rather than a window. Even the two that read like milestones — every lens played, a whole
      run named — are simply runs you can go and have again. */
-  { id: "name-ruthless-page-on-sight",         name: "I Knew You",           desc: "Name a Ruthless page on sight, inside its lens's few words", secret: false, icon: "placeholder", sitting: true, earn: { cat: "ruthless" } },
-  { id: "name-5-ruthless-pages-on-sight-one-run", name: "Ready For It",      desc: "Name five pages on sight in one Ruthless run", secret: false, icon: "placeholder", sitting: true, earn: { cat: "ruthless" } },
-  { id: "finish-ruthless-run-naming-all-ten",  name: "Stood My Ground",      desc: "Finish a Ruthless run with all ten pages named, none handed back", secret: false, icon: "placeholder", sitting: true, earn: { cat: "ruthless" } },
-  { id: "beat-your-own-ruthless-best",         name: "Better Than Revenge",  desc: "Beat your own best time down a Ruthless lens", secret: false, icon: "placeholder", sitting: true, earn: { cat: "ruthless" } },
-  { id: "play-every-ruthless-lens",            name: "Every Way In",         desc: "Play all six Ruthless lenses", secret: false, icon: "placeholder", earn: { cat: "ruthless" } },
+  { id: "name-ruthless-page-on-sight",         name: "I Knew You",           desc: "Name a Ruthless Game page on sight, inside its lens's few words", secret: false, icon: "placeholder", sitting: true, earn: { cat: "ruthless" } },
+  { id: "name-5-ruthless-pages-on-sight-one-run", name: "Ready For It",      desc: "Name five pages on sight in one Ruthless Game run", secret: false, icon: "placeholder", sitting: true, earn: { cat: "ruthless" } },
+  { id: "finish-ruthless-run-naming-all-ten",  name: "Stood My Ground",      desc: "Finish a Ruthless Game run with all ten pages named, none handed back", secret: false, icon: "placeholder", sitting: true, earn: { cat: "ruthless" } },
+  { id: "beat-your-own-ruthless-best",         name: "Better Than Revenge",  desc: "Beat your own best time down a Ruthless Game lens", secret: false, icon: "placeholder", sitting: true, earn: { cat: "ruthless" } },
+  { id: "play-every-ruthless-lens",            name: "Every Way In",         desc: "Play all six Ruthless Game lenses", secret: false, icon: "placeholder", earn: { cat: "ruthless" } },
   // The secret is a failure worn well, the register the shelf's own three are written in: a
   // run where the valve was pulled on all ten pages is a bad time and a funny story.
-  { id: "give-up-every-page-one-ruthless-run", name: "I Gave It All Back",   desc: "Hand back all ten pages of a Ruthless run", secret: true, icon: "placeholder" },
+  { id: "give-up-every-page-one-ruthless-run", name: "I Gave It All Back",   desc: "Hand back all ten pages of a Ruthless Game run", secret: true, icon: "placeholder" },
   /* ---- Catalogue knowledge: what you know about the records (2026-08-18 batch) ----
      Twenty-two charms, all in the Catalogue theme, and every one of them is priced in a fact
      about the catalogue rather than in how well the run was played. Three shapes:
@@ -3304,7 +3304,7 @@ export const ACH_GROUPS = [
   { id: "custom",    label: "Custom mode",            short: "Custom" },
   { id: "guests",    label: "Guest shelf",            short: "Guests" },
   { id: "bonus",     label: "Bonus games",            short: "Bonus" },
-  { id: "ruthless",  label: "Ruthless",               short: "Ruthless" },
+  { id: "ruthless",  label: "Ruthless Game",          short: "Ruthless" },
   { id: "longhaul",  label: "The long haul",          short: "Long haul" },
   { id: "margins",   label: "In the margins",         short: "Margins" },
   { id: "mastery",   label: "Skills & Mastery",       short: "Mastery" },

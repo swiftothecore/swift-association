@@ -3553,7 +3553,7 @@ function modeLabel(token) {
   if (token && token.startsWith("af-")) return "Album · " + token.slice(3);
   if (token && token.startsWith("rl-")) {
     const l = ruthlessLens(token.slice(3));
-    return l ? "Ruthless · " + l.label : "Ruthless";
+    return l ? "Ruthless Game · " + l.label : "Ruthless Game";
   }
   if (token && token.startsWith("inf-")) {
     const parts = token.split("-");   // ["inf", variant, mode]
@@ -4295,7 +4295,7 @@ function renderRecordsPage() {
     .map((id) => ruthlessLens(id)).filter(Boolean)
     .filter((lens) => ruthlessRecord(lens.id).plays);
   const ruthlessBlock = rlPlayed.length
-    ? `<p class="rec-group-label">ruthless — fastest run, lowest wins</p><div class="pb-grid">` +
+    ? `<p class="rec-group-label">ruthless game — fastest run, lowest wins</p><div class="pb-grid">` +
       rlPlayed.map((lens) => {
         const rec = ruthlessRecord(lens.id);
         // How the time was got and when, in that order: two runs can post the same seconds with
@@ -5538,10 +5538,10 @@ function startBonusGame(g, lensId = null) {
   // The pressing follows the game in from the shelf, so the play screen is visibly the
   // same record you picked up rather than a generic titled page. A LENS run is not off the shelf
   // at all, so it is titled for the mode and the lens instead of for the roster entry it happens
-  // to be played through — "Ruthless Game" is a retired card, and with six lenses the one thing
-  // the header has to say is which of them you are on.
+  // to be played through — the shelf's Ruthless Game card is retired, and with six lenses the one
+  // thing the header has to say is which of them you are on.
   const lens = lensId ? ruthlessLens(lensId) : null;
-  const title = lens ? `Ruthless · ${lens.label}` : g.name;
+  const title = lens ? `Ruthless Game · ${lens.label}` : g.name;
   screens.bonusplay.dataset.bonusGame = lens ? "ruthless" : g.id;
   $("bonusPlayTitle").innerHTML = `${bonusDisc(g, "bonus-disc-sm")}<span>${escapeHtml(title)}</span>`;
   flipAwayToScreen("bonusplay");
@@ -6828,10 +6828,10 @@ function foldBonusPageCharms(correct, isTimeout) {
 // already banked — `swept` has to be on the board before Every Single One reads it, or a
 // player's sixth sweep would not count itself.
 function foldBonusRunCharms(perfect, cleared) {
-  /* Not just the lens run: the RETIRED card is barred here too. Ruthless Game carries
-     shelf:false, so it is not one of the six these charms are about — and it has no fail state,
-     which would make every dev-only lens-less run a "clean sweep" of ten cleared pages. Anything
-     the shelf's own list excludes, this excludes. */
+  /* Not just the lens run: the RETIRED card is barred here too. Ruthless Game is not one of the
+     six these charms are about — and it has no fail state, which would make every dev-only
+     lens-less run a "clean sweep" of ten cleared pages. Anything the shelf's own list excludes,
+     this excludes. */
   if (isRuthlessRun()) return;
   unlock("finish-first-bonus-run");
   if (perfect) unlock("clean-sweep-bonus-game");
@@ -7061,7 +7061,7 @@ function endRuthlessRun() {
   $("verseAnthology").style.display = "none";
   hideNewBestBanner();
   document.querySelector("#screen-results .podium-title").textContent =
-    "Ruthless · " + (lens ? lens.label : "");
+    "Ruthless Game · " + (lens ? lens.label : "");
 
   const beat = rec.isBest && rec.plays > 1;
   foldRuthlessCharms({ snaps, gaveUp, named, beat });
@@ -7105,7 +7105,7 @@ function endRuthlessRun() {
 
   $("resultPodium").innerHTML = status + meta +
     `<div class="chall-result-actions">` +
-      `<button id="backToRuthless" class="btn-primary">← ruthless</button>` +
+      `<button id="backToRuthless" class="btn-primary">← ruthless game</button>` +
       `<button id="replayRuthless" class="btn-primary">replay ↺</button>` +
     `</div>` +
     `<div class="rl-pages"><p class="rl-pages-label">the run, page by page</p>` +
@@ -8547,7 +8547,7 @@ function buildCardMeta() {
     // the last classic run's thirteen.
     const clean = ruthlessCard.named === ruthlessCard.pages;
     title = clean ? "ten named, nothing handed back ★" : "ten pages against the clock";
-    stats.push({ v: "Ruthless", l: ruthlessCard.lens || "mode" });
+    stats.push({ v: "Ruthless Game", l: ruthlessCard.lens || "mode" });
     stats.push({ v: fmtTime(ruthlessCard.secs), l: "the run" });
     stats.push({ v: ruthlessCard.named + "/" + ruthlessCard.pages, l: "named" });
   } else if (gameType === "custom") {
@@ -10011,7 +10011,7 @@ function buildRandomPool() {
   // games in the way six albums are — and none of them can ever be locked, so there is nothing
   // to filter. It fell out of the draw entirely when the card left the bonus shelf, which was an
   // accident of the graduation rather than a decision: the randomiser deals everything playable.
-  for (const lens of RUTHLESS_LENSES) push("ruthless", lens.id, "Ruthless · " + lens.label, { lens: lens.id });
+  for (const lens of RUTHLESS_LENSES) push("ruthless", lens.id, "Ruthless Game · " + lens.label, { lens: lens.id });
 
   // Today's daily, and only while it is still there to play. startDaily would otherwise show
   // the result card, which is a dead end dressed as a run.
@@ -20896,7 +20896,7 @@ function buildDevApi() {
       fill: () => {
         RUTHLESS_LENSES.forEach((l, i) => recordRuthlessRun(l.id, 90 + l.median * 2, i % 3 === 0 ? 1 : 0, todayKey()));
         repaintRuthless();
-        return "board filled — open Ruthless";
+        return "board filled — open Ruthless Game";
       },
       reset: () => { resetRuthless(); repaintRuthless(); return "ruthless board cleared"; },
     },

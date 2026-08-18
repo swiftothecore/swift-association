@@ -23,7 +23,7 @@ The game is still a work in progress and is by no means 'done'.
 - The ability to make your own **custom modes**, including a floating word rarity that climbs and falls with how you play
 - A guest shelf of other artists' catalogues, played on their own and never mixed into Taylor's
 - A shelf of bonus mini-games, including one where you hunt a swapped word in a real lyric
-- Ruthless mode, where the song writes itself out a word a second from a section you pick, and your time is the score
+- Ruthless Game, where the song writes itself out a word a second from a section you pick, and your time is the score
 - A randomiser that deals one run from anywhere in the notebook, leaning toward what you haven't played yet
 
 **The long game**
