@@ -3080,7 +3080,11 @@ function renderAchievementsPage() {
       `<div class="ach-fam-themes">${achThemesByProximity(f.themes).map(themeRowHTML).join("")}</div>` +
       `</div>`;
   }).join("");
-  html += `<div class="ach-themes"><div class="ach-themes-label">at a glance</div>` +
+  // The panel's own label wears a rule out to the edge, the same gesture the four family
+  // heads below it use. It is the one line here with nothing to its right, so without it the
+  // top of the panel reads as an unfinished row rather than as a heading.
+  html += `<div class="ach-themes"><div class="ach-themes-label">` +
+    `<span>at a glance</span><span class="ach-themes-rule"></span></div>` +
     `<div class="ach-families">${familyBlocks}</div></div>`;
 
   const meter = `<div class="cat-meter">` +

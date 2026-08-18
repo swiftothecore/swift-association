@@ -6145,7 +6145,12 @@
        filled stubs floating with nothing to measure them against. */
     --bar-track: color-mix(in srgb, var(--ink-soft) 20%, transparent);
   }
-  .ach-themes-label { font-family: var(--type); font-size: calc(10px + var(--text-size-adjust)); letter-spacing: 1px; text-transform: uppercase; color: var(--ink-soft); margin-bottom: 12px; }
+  .ach-themes-label { display: flex; align-items: center; gap: 10px; font-family: var(--type); font-size: calc(10px + var(--text-size-adjust)); letter-spacing: 1px; text-transform: uppercase; color: var(--ink-soft); margin-bottom: 12px; }
+  /* The same rule the family heads wear, in ink rather than a family hue and a shade fainter.
+     It has to be the quietest of the five: it is the widest line in the panel, and at the
+     family heads' weight a neutral rule up here read as a divider cutting the label off from
+     the blocks it names. */
+  .ach-themes-rule { flex: 1 1 auto; height: 2px; border-radius: 1px; background: var(--ink-soft); opacity: 0.22; }
   /* Proximity does half the ranking here. A head used to sit 8px above its own rows inside
      a 15px gap between families, which is near enough to equidistant that it read as floating
      between two blocks rather than belonging to the one under it. Bound tight to its rows and
