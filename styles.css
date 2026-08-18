@@ -6324,8 +6324,23 @@
   .ach-fam-divider.is-folded .ach-fam-foldall svg { transform: rotate(-90deg); }
   .ach-fam-foldall:hover { opacity: 1; background: color-mix(in srgb, var(--fam) 12%, transparent); }
   .ach-fam-foldall:focus-visible { outline: 2px solid var(--ink-accent); outline-offset: 1px; }
+  /* the shut family's receipt, held back until the fold like .ach-section-count is: an open
+     tab has the real fractions sitting a few rows below it and does not need a second one. */
+  .ach-fam-count {
+    flex: none; font-family: var(--type); font-size: calc(9.5px + var(--text-size-adjust));
+    letter-spacing: 0.5px; color: var(--fam);
+    max-width: 0; overflow: hidden; opacity: 0;
+    transition: max-width 0.18s ease, opacity 0.18s ease;
+  }
+  .ach-fam-divider.is-folded .ach-fam-count { max-width: 7ch; opacity: 0.7; }
+  /* The family shut all the way: its theme headings go with it. Leaving five headings standing
+     under a closed tab kept the rows the at-a-glance panel above already covers, on the one
+     gesture whose job is to give the scroll back. */
+  .ach-fam-body--folded { display: none; }
+  /* four shut tabs in a row are a list, not four sections, so they close ranks a little */
+  .ach-fam-body--folded + .ach-fam-divider { margin-top: 22px; }
   /* a theme heading directly under its own tab does not need the full gap again */
-  .ach-fam-divider + .ach-section { margin-top: 14px; }
+  .ach-fam-body > .ach-section:first-child { margin-top: 14px; }
 
   .ach-section { margin-top: 22px; display: flex; align-items: center; gap: 7px; scroll-margin-top: 18px; }
   /* The section heading wears the same drawn mark as its row in the at-a-glance panel, in

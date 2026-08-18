@@ -98,7 +98,7 @@ export const RANDOM_KEY = "swiftSongAssociation.randomSeen";           // { [tok
 export const GOAL_KEY = "swiftSongAssociation.pinnedGoal";             // { id, pinned } — the one charm pinned as a goal on the Charm Collection page
 // Which themed sections of the Charm Collection are folded shut. Only the FOLDED ids are
 // stored, so a section added later opens by default and an empty record means "all open".
-export const ACH_FOLD_KEY = "swiftSongAssociation.charmFolds";         // [sectionId] — e.g. ["core", "secret"]
+export const ACH_FOLD_KEY = "swiftSongAssociation.charmFolds";         // [sectionId] — theme ids plus "fam:<family>", e.g. ["core", "secret", "fam:craft"]
 
 // Keepsakes — the collectible polaroid set (subjects + SVGs live in js/polaroids.js).
 // A polaroid develops like real instant film: solid black on unlock, the photo fading

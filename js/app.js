@@ -2892,34 +2892,69 @@ function achSectionHTML(id, label, markHTML, tiles, count, folded, headStyle = "
 
 /* An index tab down the side of the collection: the divider that opens one family's run of
    themes. The tab carries the family's hue, the rule carries it away across the page, and the
-   fold at the end takes the whole family shut in one gesture. `themes` rides along in the
-   dataset so the fold-all handler does not have to re-derive which sections actually drew. */
-function achFamilyDividerHTML(f, themeIds, allFolded) {
+   fold at the end takes the whole family off the page, headings and all rather than only the
+   grids under them. Half-shutting it left five theme headings standing that said nothing the
+   at-a-glance panel at the top of the same page had not already said better, with a bar and a
+   fraction besides: duplicate chrome, left behind by the one gesture whose whole job is to
+   shorten the scroll. The per-theme chevrons still do the finer work, so the split is coarse
+   control on the tab and fine control on the headings, and a third state on the same chevron
+   (open, themes shut, family shut) never has to be guessed at. `count` is the folded receipt,
+   the same promise .ach-section makes: a shut family still says how much is under it. */
+function achFamilyDividerHTML(f, folded, count) {
   const col = ACH_FAMILY_COLORS[f.id] || "var(--ink-soft)";
-  return `<div class="ach-fam-divider${allFolded ? " is-folded" : ""}" style="--fam:${col}"` +
+  return `<div class="ach-fam-divider${folded ? " is-folded" : ""}" style="--fam:${col}"` +
     ` data-ach-fam-divider="${f.id}" id="achFamily-${f.id}">` +
     `<span class="ach-fam-tab">${escapeHtml(f.label)}</span>` +
     `<span class="ach-fam-blurb">${escapeHtml(f.blurb)}</span>` +
     `<span class="ach-fam-rule"></span>` +
+    `<span class="ach-fam-count">${count}</span>` +
     `<button type="button" class="ach-fam-foldall" data-ach-fam-fold="${f.id}"` +
-    ` data-ach-fam-themes="${themeIds.join(",")}" data-ach-fam-name="${escapeHtml(f.label)}"` +
-    ` aria-label="${allFolded ? "Show" : "Hide"} everything under ${escapeHtml(f.label)}">` +
+    ` data-ach-fam-name="${escapeHtml(f.label)}" aria-controls="achFamilyBody-${f.id}"` +
+    ` aria-expanded="${folded ? "false" : "true"}"` +
+    ` aria-label="${folded ? "Show" : "Hide"} everything under ${escapeHtml(f.label)}">` +
     achFoldChevron() + `</button>` +
     `</div>`;
 }
 
-// Redraw the family dividers' folded state after any fold change. A divider reads folded only
-// when every theme under it is, so folding the last open theme by hand shuts its tab too.
-function syncAchFamilyDividers(root = $("achievementsBody")) {
-  if (!root) return;
-  const closed = loadCharmFolds();
-  root.querySelectorAll("[data-ach-fam-fold]").forEach((btn) => {
-    const ids = (btn.dataset.achFamThemes || "").split(",").filter(Boolean);
-    const allFolded = ids.length > 0 && ids.every((id) => closed.includes(id));
-    btn.closest(".ach-fam-divider").classList.toggle("is-folded", allFolded);
+// Which family a theme's section sits under, for the jumps that have to open a family before
+// they can land inside it. The trailing secret section is in no family in ACH_FAMILIES, since
+// it is drawn from all of them; it takes the "sealed" tab the page draws it under.
+function achFamilyOf(themeId) {
+  if (themeId === "secret") return "sealed";
+  const f = achFamilies().find((x) => x.themes.includes(themeId));
+  return f ? f.id : null;
+}
+
+/* Families live in the same closed-set list as the themes, under a "fam:" prefix rather than a
+   store of their own: a family added later then arrives open for free, exactly as a new theme
+   does, and one cleared notebook opens the lot. */
+const famFoldKey = (id) => `fam:${id}`;
+const isFamilyFolded = (id) => loadCharmFolds().includes(famFoldKey(id));
+
+// Fold or unfold a whole family, in the DOM and in storage at once. Safe to call for a family
+// that isn't on the page, and safe to call for a state already set.
+function setFamilyFold(id, folded) {
+  setCharmFold(famFoldKey(id), folded);
+  const divider = document.querySelector(`[data-ach-fam-divider="${id}"]`);
+  const body = document.getElementById(`achFamilyBody-${id}`);
+  if (!divider || !body) return;
+  divider.classList.toggle("is-folded", folded);
+  const btn = divider.querySelector("[data-ach-fam-fold]");
+  if (btn) {
+    btn.setAttribute("aria-expanded", folded ? "false" : "true");
     btn.setAttribute("aria-label",
-      `${allFolded ? "Show" : "Hide"} everything under ${btn.dataset.achFamName || ""}`.replace(/\s+/g, " "));
-  });
+      `${folded ? "Show" : "Hide"} everything under ${btn.dataset.achFamName || ""}`.replace(/\s+/g, " "));
+  }
+  body.classList.toggle("ach-fam-body--folded", folded);
+}
+
+// Everything a jump into a theme has to open before it lands: the section itself, and the family
+// tab it sits under. A heading with nothing beneath it and a family that isn't drawn at all both
+// read as a broken link, and the second one reads as a worse bug than the first.
+function revealTheme(id) {
+  const fam = achFamilyOf(id);
+  if (fam) setFamilyFold(fam, false);
+  setSectionFold(id, false);
 }
 
 const isSectionFolded = (id) => loadCharmFolds().includes(id);
@@ -3044,10 +3079,16 @@ function renderAchievementsPage() {
       return members.length ? { g, members } : null;
     }).filter(Boolean);
     if (!drawn.length) return;
-    // The tab reads folded only when every theme beneath it is, so the chevron never claims
-    // the family is shut while one of its themes is sitting open.
-    const allFolded = drawn.every((d) => folded.includes(d.g.id));
-    html += achFamilyDividerHTML(f, drawn.map((d) => d.g.id), allFolded);
+    /* The family's own receipt, counted the way each section counts its own: what the grids
+       actually draw, sealed slots included. Shutting the tab is the one gesture that takes a
+       whole run of themes off the page, so it is also the one that most owes the reader a
+       number for what went with it. */
+    const famShown = drawn.reduce((n, d) => n + d.members.length, 0);
+    const famSealed = drawn.reduce((n, d) => n + achSealedInTheme(d.g.id), 0);
+    html += achFamilyDividerHTML(f, folded.includes(famFoldKey(f.id)),
+      famSealed ? `${famShown}+${famSealed}` : `${famShown}`);
+    html += `<div class="ach-fam-body${folded.includes(famFoldKey(f.id)) ? " ach-fam-body--folded" : ""}"` +
+      ` id="achFamilyBody-${f.id}">`;
     drawn.forEach(({ g, members }) => {
       const earnedM = members.filter((a) => earnedAchievements[a.id])
         .sort((x, y) => (earnedAchievements[y.id] || "").localeCompare(earnedAchievements[x.id] || ""));
@@ -3065,6 +3106,7 @@ function renderAchievementsPage() {
         sealed ? `${members.length}+${sealed}` : members.length,
         folded.includes(g.id), ` style="--group:${ACH_GROUP_COLORS[g.id]}"`);
     });
+    html += `</div>`;
   });
 
   const secretLocked = secretCharmsLeft();
@@ -3072,9 +3114,11 @@ function renderAchievementsPage() {
     /* Its own tab, not the tail of the last family's. The secrets are drawn from every theme
        at once, so sitting them under "Off the page" would file them all in the one family
        that happens to come last — and the blurb answers the same question the other four do. */
+    const sealedFolded = folded.includes(famFoldKey("sealed"));
     html += achFamilyDividerHTML(
-      { id: "sealed", label: "The locked drawer", blurb: "who knows" }, ["secret"],
-      folded.includes("secret"));
+      { id: "sealed", label: "The locked drawer", blurb: "who knows" },
+      sealedFolded, `${secretLocked.length}`);
+    html += `<div class="ach-fam-body${sealedFolded ? " ach-fam-body--folded" : ""}" id="achFamilyBody-sealed">`;
     // This group only ever holds LOCKED secrets (an earned one moves into its real theme),
     // so once the level-10 reveal has spelled out how to earn each of them, the word goes
     // in quotation marks and the count gives way to the joke.
@@ -3089,6 +3133,7 @@ function renderAchievementsPage() {
       // the unrevealed label already carries the count, so the folded receipt would double it
       secretLocked.map(achTile).join(""), revealed ? secretLocked.length : null,
       folded.includes("secret"), "", "ach-section--secret", "achSecretSection", "secret");
+    html += `</div>`;
   }
 
   $("achievementsBody").innerHTML = html;
@@ -3122,25 +3167,18 @@ function renderAchievementsPage() {
   // Folding is done in place rather than by re-rendering: the page is long, and a re-render
   // would throw away the reader's scroll position on the very gesture meant to shorten it.
   $("achievementsBody").querySelectorAll("[data-ach-fold]").forEach((btn) =>
-    btn.addEventListener("click", () => {
-      setSectionFold(btn.dataset.achFold, !isSectionFolded(btn.dataset.achFold));
-      syncAchFamilyDividers($("achievementsBody"));
-    }));
-  // Fold-all: if anything under the tab is open, the gesture shuts the family; only once it
-  // is entirely shut does the same tab open it again.
+    btn.addEventListener("click", () =>
+      setSectionFold(btn.dataset.achFold, !isSectionFolded(btn.dataset.achFold))));
+  // The tab's own fold: the whole family away, or the whole family back. It does not touch the
+  // themes' own folds, so a family opened again comes back exactly as the reader left it.
   $("achievementsBody").querySelectorAll("[data-ach-fam-fold]").forEach((btn) =>
-    btn.addEventListener("click", () => {
-      const ids = (btn.dataset.achFamThemes || "").split(",").filter(Boolean);
-      const shut = ids.some((id) => !isSectionFolded(id));
-      ids.forEach((id) => setSectionFold(id, shut));
-      syncAchFamilyDividers($("achievementsBody"));
-    }));
+    btn.addEventListener("click", () =>
+      setFamilyFold(btn.dataset.achFamFold, !isFamilyFolded(btn.dataset.achFamFold))));
   // A sealed stub is a door to the drawer, and a door onto a folded section opens onto
   // nothing — so it unfolds the drawer on the way, exactly as the theme jumps do.
   $("achievementsBody").querySelectorAll("[data-ach-sealed]").forEach((btn) =>
     btn.addEventListener("click", () => {
-      setSectionFold("secret", false);
-      syncAchFamilyDividers($("achievementsBody"));
+      revealTheme("secret");
       const section = document.getElementById("achSecretSection");
       if (section) section.scrollIntoView({
         behavior: motionReduced() ? "auto" : "smooth",
@@ -3158,10 +3196,10 @@ function renderAchievementsPage() {
       // A little fun on the tap itself: the icon bounces and spins, restarted cleanly if the
       // player clicks again before the last spin finished.
       popAchMark(theme.querySelector(".ach-theme-mark"));
-      // Jumping to a theme you folded shut should open it — otherwise the jump lands on a
-      // heading with nothing under it and reads as a broken link.
-      setSectionFold(theme.dataset.achTheme, false);
-      syncAchFamilyDividers($("achievementsBody"));
+      // Jumping to a theme you folded shut should open it, and open the family tab it sits
+      // under — otherwise the jump lands on a heading with nothing beneath it, or on nothing
+      // at all, and either reads as a broken link.
+      revealTheme(theme.dataset.achTheme);
       if (section) section.scrollIntoView({
         behavior: motionReduced() ? "auto" : "smooth",
         block: "start",
@@ -4250,7 +4288,7 @@ function openAchievements(from, focus) {
   renderAchievementsPage();
   flipAwayToScreen("achievements");
   if (focus === "secret") {
-    setSectionFold("secret", false);   // a door that opens onto a folded section opens onto nothing
+    revealTheme("secret");             // a door that opens onto a folded section opens onto nothing
     revealAfterFlip(() => document.getElementById("achSecretSection"), { pad: 18 });
   }
 }
@@ -20795,11 +20833,23 @@ function buildDevApi() {
     // is a slow way to reach the two states worth eyeballing: everything shut (does the page
     // still read as a page?) and everything open again.
     folds: {
-      show: () => ({ folded: loadCharmFolds(), sections: [...ACH_GROUPS.map((g) => g.id), "secret"] }),
+      // The stored list holds both, themes by id and families under a "fam:" prefix, so it is
+      // reported split rather than as one bag of strings the reader has to sort by eye.
+      show: () => ({
+        themes: loadCharmFolds().filter((id) => !id.startsWith("fam:")),
+        families: loadCharmFolds().filter((id) => id.startsWith("fam:")).map((id) => id.slice(4)),
+        sections: [...ACH_GROUPS.map((g) => g.id), "secret"],
+      }),
       // Fold or unfold one section by id — a group id, or "secret" for the trailing one.
-      set: (id, folded = true) => { setSectionFold(id, !!folded); syncAchFamilyDividers(); return loadCharmFolds(); },
-      all: () => { [...ACH_GROUPS.map((g) => g.id), "secret"].forEach((id) => setSectionFold(id, true)); syncAchFamilyDividers(); return loadCharmFolds(); },
-      none: () => { saveCharmFolds([]); if ($("achievementsBody")) renderAchievementsPage(); return "all sections open"; },
+      set: (id, folded = true) => { setSectionFold(id, !!folded); return loadCharmFolds(); },
+      all: () => { [...ACH_GROUPS.map((g) => g.id), "secret"].forEach((id) => setSectionFold(id, true)); return loadCharmFolds(); },
+      // Every family shut at once: the state the tabs were rebuilt for, and the fastest way to
+      // ask whether four rows and a header still read as a page.
+      tabs: () => {
+        [...achFamilies().map((f) => f.id), "sealed"].forEach((id) => setFamilyFold(id, true));
+        return loadCharmFolds();
+      },
+      none: () => { saveCharmFolds([]); if ($("achievementsBody")) renderAchievementsPage(); return "all sections and families open"; },
     },
     /* The four families above the themes. `check` is the one worth running after editing
        ACH_FAMILIES: it reports any theme no family claimed, which the page will still draw
@@ -20823,13 +20873,13 @@ function buildDevApi() {
           ? { orphans, ghosts, dupes }
           : "every theme claimed by exactly one family";
       },
-      // Fold or unfold a whole family's run of sections, the index tab's gesture from the console.
+      // Fold or unfold a whole family, the index tab's own gesture from the console. "sealed" is
+      // accepted too: the locked drawer wears a tab like the other four without being in them.
       fold: (id, shut = true) => {
         const f = achFamilies().find((x) => x.id === id);
-        if (!f) return `no such family — try ${ACH_FAMILIES.map((x) => x.id).join(", ")}`;
-        f.themes.forEach((t) => setSectionFold(t, !!shut));
-        syncAchFamilyDividers();
-        return `${f.label}: ${f.themes.length} themes ${shut ? "shut" : "open"}`;
+        if (!f && id !== "sealed") return `no such family — try ${ACH_FAMILIES.map((x) => x.id).join(", ")}, sealed`;
+        setFamilyFold(id, !!shut);
+        return `${f ? f.label : "The locked drawer"} ${shut ? "shut" : "open"}`;
       },
     },
     // Normal-mode novelty bias — the coverage nudge that favours un-encountered words in Normal.
