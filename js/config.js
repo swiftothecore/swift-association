@@ -566,6 +566,10 @@ export const RUTHLESS_OPEN_WORDS = 1;    // on the page before the first tick, s
 // What the gauge fills over. Nothing happens when it fills — there is no deadline here — it is
 // purely a read on how expensive this page is getting, which a bar can say faster than a number.
 export const RUTHLESS_PACE_SECONDS = 45;
+// How many pages named on sight make a run's worth of them (the Ready For It charm). Half the
+// sitting: enough that it can't fall out of a run that went well by accident, low enough that it
+// doesn't quietly become "sweep the run on sight", which is a different and much rarer charm.
+export const RUTHLESS_SNAP_RUN = 5;
 
 /* ---------- The randomiser: one draw across everything the notebook can play ----------
    A launcher, not a game type. It picks a configuration and calls the same start function the
@@ -607,6 +611,7 @@ export const RANDOM_CATEGORIES = [
   { id: "challenge",  weight: 22, label: "a challenge" },
   { id: "dark",       weight: 14, label: "a dark side" },
   { id: "bonus",      weight: 12, label: "a bonus game" },
+  { id: "ruthless",   weight: 8,  label: "Ruthless" },
   { id: "daily",      weight: 8,  label: "the daily" },
 ];
 
@@ -3056,6 +3061,24 @@ export const ACHIEVEMENTS = [
   { id: "time-out-all-10-only-here-pages", name: "Never Heard Silence", desc: "Let all ten Only Here clocks run out without a card played", secret: true, icon: "cobweb" },
   { id: "finish-bonus-run-one-page-short-of-sweep",    name: "Almost Had It",    desc: "Finish one page shy of a clean sweep", secret: true, icon: "dart" },
   { id: "flag-spot-the-slip-impostor-under-2s",    name: "Saw It Coming",    desc: "Flag a Spot the Slip impostor inside two seconds", secret: true, icon: "mask" },
+  /* ---- Ruthless: the mode where the clock is the score (2026-08-18) ----
+     Six charms, and every one is priced in the thing this mode is actually about — how few
+     words of a song you needed. A Ruthless run is sandboxed like the shelf it came off (its own
+     board, its own history row, Instinct and Quick Pen and nothing else), and charms are the
+     same exception here as there: a collection entry, never a ranking.
+
+     NOTHING HERE CAN BE LOCKED OUT, and the low-wins board is what makes that easy to hold: a
+     lens is always open, always dealt fresh, and beating your own time is a standing condition
+     rather than a window. Even the two that read like milestones — every lens played, a whole
+     run named — are simply runs you can go and have again. */
+  { id: "name-ruthless-page-on-sight",         name: "I Knew You",           desc: "Name a Ruthless page on sight, inside its lens's few words", secret: false, icon: "placeholder", sitting: true, earn: { cat: "ruthless" } },
+  { id: "name-5-ruthless-pages-on-sight-one-run", name: "Ready For It",      desc: "Name five pages on sight in one Ruthless run", secret: false, icon: "placeholder", sitting: true, earn: { cat: "ruthless" } },
+  { id: "finish-ruthless-run-naming-all-ten",  name: "Stood My Ground",      desc: "Finish a Ruthless run with all ten pages named, none handed back", secret: false, icon: "placeholder", sitting: true, earn: { cat: "ruthless" } },
+  { id: "beat-your-own-ruthless-best",         name: "Better Than Revenge",  desc: "Beat your own best time down a Ruthless lens", secret: false, icon: "placeholder", sitting: true, earn: { cat: "ruthless" } },
+  { id: "play-every-ruthless-lens",            name: "Every Way In",         desc: "Play all six Ruthless lenses", secret: false, icon: "placeholder", earn: { cat: "ruthless" } },
+  // The secret is a failure worn well, the register the shelf's own three are written in: a
+  // run where the valve was pulled on all ten pages is a bad time and a funny story.
+  { id: "give-up-every-page-one-ruthless-run", name: "I Gave It All Back",   desc: "Hand back all ten pages of a Ruthless run", secret: true, icon: "placeholder" },
   /* ---- Catalogue knowledge: what you know about the records (2026-08-18 batch) ----
      Twenty-two charms, all in the Catalogue theme, and every one of them is priced in a fact
      about the catalogue rather than in how well the run was played. Three shapes:
@@ -3273,6 +3296,7 @@ export const ACH_GROUPS = [
   { id: "custom",    label: "Custom mode",            short: "Custom" },
   { id: "guests",    label: "Guest shelf",            short: "Guests" },
   { id: "bonus",     label: "Bonus games",            short: "Bonus" },
+  { id: "ruthless",  label: "Ruthless",               short: "Ruthless" },
   { id: "longhaul",  label: "The long haul",          short: "Long haul" },
   { id: "margins",   label: "In the margins",         short: "Margins" },
   { id: "mastery",   label: "Skills & Mastery",       short: "Mastery" },
@@ -3293,6 +3317,7 @@ export const ACH_GROUP_COLORS = {
   custom:    "#4a6b8a",
   guests:    "#6b5a92",
   bonus:     "#2f6f6a",
+  ruthless:  "#8c4a34",   // the Ruthless stamp's own rust, so the section mark matches the door in
   longhaul:  "#4a6b3f",
   margins:   "#7d5a3f",
   mastery:   "#8a6d1f",
@@ -3312,7 +3337,7 @@ export const ACH_FAMILIES = [
   { id: "craft",     label: "The craft",     blurb: "how well you played",
     themes: ["core", "perfect", "clock", "misfires", "longhaul"] },
   { id: "shelf",     label: "The shelf",     blurb: "what you played",
-    themes: ["daily", "infinite", "lyricist", "albumFocus", "custom", "guests", "bonus", "challenges"] },
+    themes: ["daily", "infinite", "lyricist", "albumFocus", "custom", "guests", "bonus", "ruthless", "challenges"] },
   { id: "knowledge", label: "The catalogue", blurb: "what you know",
     themes: ["catalogue", "nemesis"] },
   { id: "offpage",   label: "Off the page",  blurb: "where you were sitting",
@@ -3355,6 +3380,9 @@ export const ACH_GROUP_OF = {
   "answer-begin-again-for-wednesday-on-a-wednesday": "catalogue", "answer-only-me-for-friday-on-a-friday-night": "catalogue",
   "submit-the-man-for-karma": "catalogue", "submit-speak-now-for-wedding": "catalogue",
   "submit-lwymmd-for-grave": "catalogue", "submit-wrong-song-from-same-titled-albums-record": "catalogue",
+  "name-ruthless-page-on-sight": "ruthless", "name-5-ruthless-pages-on-sight-one-run": "ruthless",
+  "finish-ruthless-run-naming-all-ten": "ruthless", "beat-your-own-ruthless-best": "ruthless",
+  "play-every-ruthless-lens": "ruthless", "give-up-every-page-one-ruthless-run": "ruthless",
   "defeat-first-challenge": "challenges", "defeat-every-challenge": "challenges", "unlock-every-challenge": "challenges",
   "defeat-challenge-no-misses": "challenges", "defeat-challenge-after-7-runs": "challenges",
   "defeat-impostor-flawlessly": "challenges", "fall-for-first-impostor": "challenges", "defeat-common-thread-every-line": "challenges",
