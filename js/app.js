@@ -3022,6 +3022,17 @@ function renderAchievementsPage() {
   $("achievementsBody").querySelectorAll("[data-ach-theme]").forEach((theme) =>
     theme.addEventListener("click", () => {
       const section = document.getElementById(`achTheme-${theme.dataset.achTheme}`);
+      // A little fun on the tap itself: the icon bounces and spins, restarted cleanly if the
+      // player clicks again before the last spin finished.
+      if (!motionReduced()) {
+        const mark = theme.querySelector(".ach-theme-mark");
+        if (mark) {
+          mark.classList.remove("is-popping");
+          void mark.offsetWidth;
+          mark.classList.add("is-popping");
+          mark.addEventListener("animationend", () => mark.classList.remove("is-popping"), { once: true });
+        }
+      }
       // Jumping to a theme you folded shut should open it — otherwise the jump lands on a
       // heading with nothing under it and reads as a broken link.
       setSectionFold(theme.dataset.achTheme, false);
