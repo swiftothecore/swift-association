@@ -871,6 +871,8 @@ function showScreen(name) {
       try { sec.focus({ preventScroll: true }); } catch (_) { sec.focus(); }
     }
   }
+  // The masthead doubles as the way home from any sub-page (see mastheadHome).
+  updateMastheadHome(name);
   // Nudge the decorative gutter beads (js/scatter.js): the page height changes
   // between screens, so the scatter re-fills to match whatever is now shown.
   window.dispatchEvent(new CustomEvent("deskscatter:refresh"));
@@ -973,6 +975,28 @@ function flipInToScreen(name) {
   backdrop.style.transition = `opacity ${(0.16 * s).toFixed(3)}s linear ${(0.32 * s).toFixed(3)}s`;
   backdrop.style.opacity = "0";
   scheduleFlipRemoval(incoming, () => { backdrop.remove(); dest.style.opacity = ""; });
+}
+
+/* ---------- The masthead as a way home ----------
+   Every browsable panel now has a URL, and a titled page whose title is also its site name
+   invites a click — so from any sub-page the masthead is a second, larger ← back. It is only
+   live where "home" is unambiguous: not on the start screen (already there), and never over a
+   live board or a results page, where leaving is a decision the run's own buttons own. The
+   ← back button remains the keyboard/screen-reader route out, so this stays a pointer
+   affordance and the h1 keeps its plain heading semantics. */
+const HOME_LINK_OFF = { start: 1, game: 1, bonusplay: 1, results: 1 };
+const mastheadEl = document.querySelector("header.title");
+function updateMastheadHome(name) {
+  if (!mastheadEl) return;
+  const on = !HOME_LINK_OFF[name];
+  mastheadEl.classList.toggle("is-home", on);
+  const h1 = mastheadEl.querySelector("h1");
+  if (h1) { if (on) h1.title = "Back to the notebook"; else h1.removeAttribute("title"); }
+}
+if (mastheadEl) {
+  mastheadEl.querySelector("h1")?.addEventListener("click", () => {
+    if (mastheadEl.classList.contains("is-home")) backToScreen("start");
+  });
 }
 
 /* The back tap out of a sub-page (stats/records/achievements/mastery/challenges/album focus),

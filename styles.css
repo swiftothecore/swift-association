@@ -565,6 +565,16 @@
        lift) so the gold word never has a brown shadow cast behind it. */
     transform: rotate(-1.4deg);
   }
+  /* On a sub-page the masthead is a way back to the notebook. Keep it quiet: the ink
+     itself never changes colour (the same restraint the section-heading marks learned),
+     it only lifts a hair off the desk the way a card does under the cursor. */
+  header.title.is-home h1 { cursor: pointer; transition: transform 0.18s ease; }
+  header.title.is-home h1:hover { transform: rotate(-1.4deg) translateY(-1.5px) scale(1.012); }
+  header.title.is-home h1:active { transform: rotate(-1.4deg) translateY(0) scale(0.996); }
+  @media (prefers-reduced-motion: reduce) {
+    header.title.is-home h1, header.title.is-home h1:hover, header.title.is-home h1:active { transition: none; transform: rotate(-1.4deg); }
+  }
+
   /* wet-ink gloss: a sheen at the top of the strokes fading into deeper ink below */
   /* NOTE: these gradients span the full line box, and lowercase glyphs only
      sample the middle-to-lower band of it. Keep that band close to the base
