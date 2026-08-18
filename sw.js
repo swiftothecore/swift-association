@@ -16,7 +16,14 @@
  * Paths are relative so the worker works at the site root (swiftassociation.com)
  * and under any project subpath, without hardcoding the origin.
  */
-const CACHE = "stta-v48";
+const CACHE = "stta-v49";
+// The game's panel routes. These are sections of index.html, not files, so a navigation to one
+// has nothing on the server to fetch: 404.html bounces it back through a ?/slug marker. Once
+// this worker is installed we can do better and answer with index.html directly, so a deep link
+// (or an offline one) opens the notebook with no bounce at all. Same list as PANEL_ROUTES in
+// js/config.js and ROUTES in 404.html — a slug added to one must be added to all three.
+const ROUTES = ["records", "charms", "stats", "mastery", "challenges", "bonus", "guests", "songbook", "how-to-play"];
+const isRoute = (url) => ROUTES.includes(url.pathname.replace(/^\/+|\/+$/g, ""));
 const ASSETS = [
   "./",
   "index.html",
@@ -118,7 +125,19 @@ self.addEventListener("fetch", (e) => {
   const url = new URL(req.url);
   const isFont = url.origin === location.origin && url.pathname.endsWith(".woff2");
 
-  if (isFont) {
+  if (url.origin === location.origin && req.mode === "navigate" && isRoute(url)) {
+    // Serve the notebook itself for a panel URL. index.html is precached, and `cache: "reload"`
+    // keeps the network copy authoritative when there is one, exactly like the branch below.
+    e.respondWith(
+      fetch("index.html", { cache: "reload" })
+        .then((res) => {
+          const copy = res.clone();
+          caches.open(CACHE).then((c) => c.put("index.html", copy));
+          return res;
+        })
+        .catch(() => caches.match("index.html").then((hit) => hit || Response.error()))
+    );
+  } else if (isFont) {
     // Immutable + latency-critical: hand over the precached copy, and only touch
     // the network for a face this cache has never seen (then keep it).
     e.respondWith(

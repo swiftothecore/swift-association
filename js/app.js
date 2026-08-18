@@ -4,6 +4,7 @@ import "./credential-guard.js";
 import { SITE_URL, copyToClipboard } from "./share.js";
 import { launchFlock } from "./messengers.js";
 import {
+  PANEL_ROUTES,
   TOTAL_ROUNDS, RECENT_WINDOW, NOVELTY_BOOST, DAILY_ALBUM_SKEW, DAILY_ALBUM_WEIGHT_EXP, DIFF_KEY, DEFAULT_SETTINGS,
   MODES, MODE_ORDER, MODE_COLORS, DIFFICULTY_LADDER, MODALITY_MODES, EXPLORER_TOKENS, SHELF_TYPES, PAGE_MARK_KINDS,
   ERAS, TENDER_ERAS, FINALE_ERAS, ALBUM_ERA, TS_MILESTONES, TS_LORE_DAYS, SALT_SHAKER_D, SALT_CAP_D,
@@ -846,6 +847,9 @@ function showScreen(name) {
   // backstop for the ones that don't, like a challenge or Album Focus result heading back to
   // its own list.
   if (name !== "game" && name !== "results") applyEra("gold");
+  // A run is not a place: drop any panel URL the moment a board goes live, so the browser's
+  // back button can't close a game the player is in the middle of (see clearRoute).
+  if (name === "game" || name === "bonusplay") clearRoute();
   // Hide the bottom-left lyric-search chrome during active play, so it doesn't clutter the board.
   document.body.classList.toggle("in-game", name === "game");
   if (name !== "game") dismissCoachmark();   // no guided-round note should outlive the board
@@ -979,11 +983,122 @@ function flipInToScreen(name) {
    finished run's levers — e.g. challenge results → ← challenges → back → Infinite handed you
    Revolving Door's 20s clock on a Normal board. Always route back-to-start through here. */
 function backToScreen(prev) {
+  // A panel that put its own URL in the bar closes through the history stack, so the ← back
+  // button and the browser's back button leave the same trail behind them. popstate does the
+  // actual page turn a tick later. (Only when we own the entry — see openBootRoute.)
+  //
+  // Strictly `prev === "start"`, because that is the only return a route describes. A panel can
+  // also be opened FROM a panel — Mastery's vault door opens the charm collection, its reward
+  // board opens a challenge — and those keep the origin panel's URL, so backing out of one is
+  // an ordinary flip that lands on the screen the URL already names. The pop is saved for the
+  // last step, out of the routed panel and onto the front page.
+  if (!routing && routeOwned && prev === "start" && currentRouteSlug()) { history.back(); return; }
   if (prev === "start") {
     $("startContent").style.display = "";
     renderStartPickers();
   }
   flipInToScreen(prev);
+}
+
+/* ---------- Address-bar routes ----------
+   The notebook never navigates: every panel is a section of the one index.html, shown by
+   showScreen. But a panel you can browse is a place, and a place should have a URL — so
+   opening Records from the front page writes /records into the address bar with pushState,
+   and the browser's back button closes it again. Nothing is fetched and nothing reloads.
+
+   The other direction (someone typing swiftassociation.com/records, or following a link)
+   is the awkward half, because GitHub Pages has no rewrite rule and there is no /records
+   file to serve. Pages does serve 404.html for it, and that file is ours: it recognises a
+   panel slug and bounces to /?/records, whose marker index.html's head script turns back
+   into /records before first paint. Once the service worker is installed the bounce stops
+   happening at all — sw.js answers a route navigation with the cached index.html directly.
+   Either way the player lands on the notebook with the panel already open.
+
+   PANEL_ROUTES (js/config.js) is the slug list; this is the half that knows how to open one.
+   Two rules hold the whole thing together:
+     • a route only ever opens a panel FROM the front page, so back always means "back to the
+       notebook" and a route can never restore a half-finished board; and
+     • a live run has no URL, so browser back can't yank a game off the board mid-page. */
+const routeOpeners = {
+  records: () => openRecords("start"),
+  charms: () => openAchievements("start"),
+  stats: () => { statsBackTarget = "start"; renderStats(null); flipAwayToScreen("stats"); },
+  mastery: () => openMastery("start"),
+  challenges: () => openChallenges("start"),
+  bonus: () => openBonus("start"),
+  guests: () => openGuestShelf("start"),
+  songbook: () => openSongbook("start"),
+  "how-to-play": () => openHowTo("start"),
+};
+// True while a popstate (or the boot deep-link) is driving the screen change, so the opener
+// it calls doesn't push the very entry we're already sitting on back onto the stack.
+let routing = false;
+// Whether the /slug entry in the bar is one this session created. A cold deep-link starts out
+// unowned, and openBootRoute immediately fixes that by synthesising a front-page entry beneath
+// it — so from then on there is always somewhere for back to land inside the notebook.
+let routeOwned = false;
+// The slug currently in the address bar, or null when the bar is on the plain front page.
+function currentRouteSlug() {
+  try {
+    const path = location.pathname.replace(/^\/+|\/+$/g, "");
+    return Object.prototype.hasOwnProperty.call(PANEL_ROUTES, path) ? path : null;
+  } catch (e) { return null; }
+}
+// Put a panel's URL in the bar. Replaces rather than pushes when a panel URL is already
+// showing (panel → panel is one step sideways, not two steps deeper).
+function pushRoute(slug) {
+  if (routing || !Object.prototype.hasOwnProperty.call(PANEL_ROUTES, slug)) return;
+  try {
+    const url = "/" + slug + location.search + location.hash;
+    if (currentRouteSlug()) history.replaceState({ panel: slug }, "", url);
+    else history.pushState({ panel: slug }, "", url);
+    routeOwned = true;
+  } catch (e) { /* history blocked (file://, sandbox) — the panel still opens */ }
+}
+// Drop the panel URL without touching the history stack. Used when a run starts: a game is
+// not a place, and leaving /challenges in the bar under a live board would mean back closes
+// the game the player is in the middle of.
+function clearRoute() {
+  if (routing || !currentRouteSlug()) return;
+  try { history.replaceState(null, "", "/" + location.search + location.hash); } catch (e) {}
+}
+// Called by every panel opener. `from` is the opener's own back-target, and only the front
+// page earns a URL — a panel opened off the results page belongs to that run, not to a link.
+function routeTo(slug, from) {
+  if (from === "start") pushRoute(slug);
+}
+// Browser back/forward. Reads the bar and makes the screen agree with it, using the same page
+// turns as the buttons so a swipe-back looks like a tap on ← back.
+window.addEventListener("popstate", () => {
+  // A live run owns the screen. Its URL was already cleared, so this is someone reaching back
+  // past the run; let the browser do whatever it was going to do and leave the board alone.
+  if (screens.game.classList.contains("active") || screens.bonusplay.classList.contains("active")) return;
+  const slug = currentRouteSlug();
+  routing = true;
+  try {
+    if (slug) {
+      if (!screens[PANEL_ROUTES[slug]].classList.contains("active")) routeOpeners[slug]();
+    } else if (!screens.start.classList.contains("active")) {
+      backToScreen("start");
+    }
+  } finally { routing = false; }
+});
+// Boot: open the panel a deep link asked for. Returns true when it took the screen, so the
+// first-run welcome doesn't ambush someone who followed a link to a specific page.
+function openBootRoute() {
+  const slug = currentRouteSlug();
+  if (!slug) return false;
+  try {
+    // Synthesise the front page beneath this entry, so back lands on the notebook instead of
+    // leaving the site — the one thing a deep-linked visitor has no other way to reach.
+    history.replaceState(null, "", "/" + location.search + location.hash);
+    history.pushState({ panel: slug }, "", "/" + slug + location.search + location.hash);
+    routeOwned = true;
+  } catch (e) {}
+  skipNextFlip = true;   // the notebook just opened; don't turn a second page on top of that
+  routing = true;
+  try { routeOpeners[slug](); } finally { routing = false; }
+  return true;
 }
 
 /* First paint after loadData(): swap the closed notebook cover for the real start board.
@@ -3229,6 +3344,7 @@ function questCardHTML() {
 let songbookBackTarget = "stats";  // where the Songbook's ← back returns to
 function openSongbook(from) {
   songbookBackTarget = from;
+  routeTo("songbook", from);
   renderSongbook();
   flipAwayToScreen("songbook");
 }
@@ -4108,6 +4224,7 @@ function renderRecordsPage() {
 }
 function openRecords(from) {
   recordsBackTarget = from;
+  routeTo("records", from);
   renderRecordsPage();
   flipAwayToScreen("records");
   fitHeatGrid();                                   // now visible (display:block) → size to the real width
@@ -4119,6 +4236,7 @@ let achievementsBackTarget = "start";  // where the Charm Collection's ← back 
 // vault's door is for. The page has no inner scroller, so it's the window that moves.
 function openAchievements(from, focus) {
   achievementsBackTarget = from;
+  routeTo("charms", from);
   renderAchievementsPage();
   flipAwayToScreen("achievements");
   if (focus === "secret") {
@@ -4129,6 +4247,7 @@ function openAchievements(from, focus) {
 let masteryBackTarget = "start";       // where the Mastery page's ← back returns to
 function openMastery(from, focus) {
   masteryBackTarget = from;
+  routeTo("mastery", from);
   _titleView = null;   // recenter the title stepper on the worn title each time the page opens
   renderMasteryPage();
   flipAwayToScreen("mastery");
@@ -5039,6 +5158,7 @@ let bonusRunId = 0;
 
 function openBonus(from) {
   bonusBackTarget = from;
+  routeTo("bonus", from);
   renderBonusPage();
   flipAwayToScreen("bonus");
 }
@@ -7027,6 +7147,7 @@ function tapesMarkup(n) {
 
 function openChallenges(from, focusId) {
   challengesBackTarget = from;
+  routeTo("challenges", from);
   // Arriving at the page always starts with the dark rules folded away — they're an aside
   // you go looking for, not the first thing the card says.
   challDetailPeek = false;
@@ -7970,6 +8091,7 @@ function frankGuestStamp() {
 
 function openGuestShelf(from) {
   guestBackTarget = from;
+  routeTo("guests", from);
   // Arriving straight off a finished run, the masthead is still advertising it by name
   // ("… · Olivia Rodrigo"). The shelf is the desk, not a live run, so drop the run's game type
   // the same way renderStartPickers does on the way back to the front page.
@@ -18570,6 +18692,7 @@ function turnHowTo(step) {
 // you can reopen, not a task with a completion.
 function openHowTo(from, page = 0) {
   howToBackTarget = from;
+  routeTo("how-to-play", from);
   howToIndex = page;
   renderHowTo();
   flipAwayToScreen("howto");
@@ -21367,6 +21490,22 @@ function buildDevApi() {
         return window.__dev.accessibility.get();
       },
     },
+    // Address-bar routes. The panel URLs are easy to get wrong in exactly one direction —
+    // a slug that opens fine in-app but 404s when pasted cold, because the copy in 404.html
+    // or sw.js was never updated. `open` exercises the in-app half; `link` hands you the URL
+    // to paste into a fresh tab, which is the half that actually proves the bounce works.
+    route: {
+      slugs: () => Object.keys(PANEL_ROUTES),
+      get: () => currentRouteSlug(),
+      open: (slug) => {
+        if (!routeOpeners[slug]) return "unknown route: " + slug;
+        backToScreen("start");                       // always enter a route from the front page
+        setTimeout(() => routeOpeners[slug](), 0);   // after the page turn claims the screen
+        return "/" + slug;
+      },
+      link: (slug) => SITE_URL.replace(/\/+$/, "") + "/" + slug,
+      clear: () => { clearRoute(); return currentRouteSlug(); },
+    },
     // Misc
     setNoLog: (on) => { devNoLog = !!on; },
     reload: () => location.reload(),
@@ -21410,7 +21549,7 @@ async function init() {
     else startGame();
   });
   $("dailyBtn").addEventListener("click", startDaily);
-  $("statsBtn").addEventListener("click", () => { statsBackTarget = "start"; renderStats(null); flipAwayToScreen("stats"); });
+  $("statsBtn").addEventListener("click", () => { statsBackTarget = "start"; routeTo("stats", "start"); renderStats(null); flipAwayToScreen("stats"); });
   $("resultsStatsBtn").addEventListener("click", () => { statsBackTarget = "results"; renderStats(score); flipAwayToScreen("stats"); });
   $("statsBackBtn").addEventListener("click", () => backToScreen(statsBackTarget));
   // Empty-state "start writing →" affordance: wherever a zero-data screen renders one, send the
@@ -21587,9 +21726,12 @@ async function init() {
     // "Play this word" deep-link from the searcher jumps straight into a round; only greet a
     // fresh player with the first-run welcome when we're not launching into a game.
     const startedFromWord = maybeStartFromWordParam();
-    // Reveal the notebook, and only once its page-turn has fully settled bring up the first-run
-    // splash — otherwise the overlay flashes in mid-layout before snapping to centre.
-    revealNotebook(startedFromWord ? null : maybeRunFirstRun);
+    // Reveal the notebook, and only once its page-turn has fully settled open whatever the URL
+    // asked for — or, failing that, bring up the first-run splash (waiting for the turn to settle
+    // stops the overlay flashing in mid-layout before it snaps to centre). Someone who followed a
+    // link to /records asked for a page, not an introduction, so a deep link silences the welcome
+    // the same way a ?word= link does.
+    revealNotebook(startedFromWord ? null : () => { if (!openBootRoute()) maybeRunFirstRun(); });
   } catch (err) {
     $("screen-start").classList.remove("is-booting");   // show the error on the normal paper card
     $("loading").outerHTML = `

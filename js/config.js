@@ -30,6 +30,29 @@ export const DAILY_ALBUM_SKEW = 1.0;
 // and nothing else. Re-measure with __dev.daily.years if the score changes again.
 export const DAILY_ALBUM_WEIGHT_EXP = 3;
 
+/* ---------- Address-bar routes ---------- */
+// The notebook is a single page, but its standing panels each get a URL of their own, so
+// /records is a link you can send someone and a place the browser's back button understands.
+// Slug -> the `screens` key in app.js that the slug opens. Deliberately only the panels you
+// browse: nothing here starts a run, so a route can never drop someone into a live game or a
+// half-finished board. Mode boards (Album Focus, Ruthless) are launchers, not places, so they
+// stay out.
+//
+// GitHub Pages has no server-side rewrite, so this list is duplicated, on purpose, in two
+// places that cannot import a module: the bounce script in 404.html and the navigation
+// branch in sw.js. Add a slug here and it must be added to both, or the deep link 404s.
+export const PANEL_ROUTES = {
+  records: "records",
+  charms: "achievements",
+  stats: "stats",
+  mastery: "mastery",
+  challenges: "challenges",
+  bonus: "bonus",
+  guests: "guests",
+  songbook: "songbook",
+  "how-to-play": "howto",
+};
+
 /* ---------- localStorage keys ---------- */
 export const HS_KEY = "swiftSongAssociation.highscores";        // legacy fake-celebrity board (dormant; kept for old backups)
 export const RECORDS_KEY = "swiftSongAssociation.records";      // personal best runs per mode — { score, date }[]

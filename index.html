@@ -2,11 +2,29 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
+<!-- Every asset below is written relative, and a panel route (/records) puts a directory in the
+     address bar that those relative paths would then resolve against. Pin the base to the site
+     root so `styles.css` means /styles.css whatever the bar says. This is the one place the app
+     assumes it is served from a domain root rather than a project subpath, which is true:
+     swiftassociation.com via CNAME, and the local preview server at its own root. -->
+<base href="/" />
 <script>
 // Canonicalise /index.html to the bare directory URL.
 if (location.pathname.endsWith('/index.html')) {
   location.replace(location.pathname.slice(0, -'index.html'.length) + location.search + location.hash);
 }
+// A panel deep link (swiftassociation.com/records) has no file to serve on GitHub Pages, so
+// 404.html recognises the slug and bounces it here as /?/records. Put the real path back in the
+// bar before anything paints; js/app.js reads it on boot and opens the panel. Runs ahead of the
+// theme script below so the URL is settled before first paint either way.
+(function () {
+  var q = location.search;
+  if (q.slice(0, 2) !== '?/') return;
+  var rest = q.slice(2), amp = rest.indexOf('&');
+  var slug = amp === -1 ? rest : rest.slice(0, amp);
+  var extra = amp === -1 ? '' : '?' + rest.slice(amp + 1);   // ?word=, ?dev= etc. survive the bounce
+  try { history.replaceState(null, '', '/' + slug + extra + location.hash); } catch (e) {}
+})();
 </script>
 <meta name="theme-color" content="#f5efe1" />
 <script>

@@ -39,6 +39,7 @@ The game is still a work in progress and is by no means 'done'.
 - Typed titles forgive a slip, so one wrong letter or two swapped ones still names the song
 - Ability to save your friendship bracelet, or a bonus run's record sleeve, as a PNG to share your run!
 - A companion lyric searcher, [Swift To The Lyric](https://swiftassociation.com/search), for searching every line of every song
+- Every panel has its own link, so /records or /charms opens straight onto that page
 - Opt-in sound effects
 - Installable as a phone or desktop app and works offline once loaded
 

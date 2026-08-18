@@ -2,6 +2,25 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
+<script>
+// GitHub Pages serves this file for any path it has no file for, which includes the game's
+// panel routes (/records, /charms, …) — those are sections of index.html, not files. Recognise
+// one and bounce it to the front page carrying a ?/slug marker, which index.html's head script
+// turns back into /records before first paint. Everything ELSE falls straight through to the
+// real 404 below, so a genuine dead link still gets the torn-out-of-the-notebook page.
+//
+// The list is a literal on purpose: this runs before paint and cannot afford to fetch a module
+// first. It is the same list as PANEL_ROUTES in js/config.js and ROUTES in sw.js, and all three
+// must be edited together. Never widen this to "any single segment" — that would swallow the
+// 404 page whole.
+(function () {
+  var ROUTES = ['records', 'charms', 'stats', 'mastery', 'challenges', 'bonus', 'guests', 'songbook', 'how-to-play'];
+  var slug = location.pathname.replace(/^\/+|\/+$/g, '');
+  if (ROUTES.indexOf(slug) === -1) return;
+  var extra = location.search ? '&' + location.search.slice(1) : '';
+  location.replace('/?/' + slug + extra + location.hash);
+})();
+</script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Page not found · Swift to the Song Association</title>
 <meta name="description" content="This page slipped out of the notebook. Head back to the front page." />

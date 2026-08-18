@@ -372,6 +372,22 @@ export function initDev(api) {
     row("motion", motionSel, btn("set", () => { readout.textContent = `motion: ${api.accessibility.motion(motionSel.value).motion}`; }),
         btn("toggle flash", () => { const s = api.accessibility.flash(); readout.textContent = `flashing: ${s.flashing ? "reduced" : "full"}`; }))));
 
+  // ---- Address-bar routes ----------------------------------------------------
+  // Opening a panel from here checks the pushState half. The copy button is the one that
+  // matters: paste the link into a fresh tab and you are testing 404.html's bounce (or the
+  // service worker's route branch), which is where a half-added slug actually breaks.
+  const routeSel = select(api.route.slugs(), (x) => x, (x) => "/" + x);
+  body.append(section("routes",
+    row(routeSel, btn("open", () => { readout.textContent = api.route.open(routeSel.value); }),
+        btn("copy link", () => {
+          const url = api.route.link(routeSel.value);
+          readout.textContent = url;
+          if (navigator.clipboard) navigator.clipboard.writeText(url).then(() => toast("link copied"), () => toast("link in the readout"));
+          else toast("link in the readout");
+        })),
+    row(btn("what's in the bar?", () => { readout.textContent = "url: /" + (api.route.get() || ""); }),
+        btn("clear url", () => { api.route.clear(); toast("url back to the front page"); }))));
+
   // ---- Onboarding / first-run ------------------------------------------------
   const obAlbumSel = select(["", ...api.STUDIO_ALBUMS], (x) => x, (x) => x || "no favourite");
   // Each guided beat is placement-sensitive (it must dodge the word and the input), so give
