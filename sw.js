@@ -16,13 +16,14 @@
  * Paths are relative so the worker works at the site root (swiftassociation.com)
  * and under any project subpath, without hardcoding the origin.
  */
-const CACHE = "stta-v49";
+const CACHE = "stta-v50";
 // The game's panel routes. These are sections of index.html, not files, so a navigation to one
 // has nothing on the server to fetch: 404.html bounces it back through a ?/slug marker. Once
 // this worker is installed we can do better and answer with index.html directly, so a deep link
 // (or an offline one) opens the notebook with no bounce at all. Same list as PANEL_ROUTES in
 // js/config.js and ROUTES in 404.html — a slug added to one must be added to all three.
-const ROUTES = ["records", "charms", "stats", "mastery", "challenges", "bonus", "guests", "songbook", "how-to-play"];
+const ROUTES = ["records", "charms", "stats", "mastery", "challenges", "bonus", "guests", "songbook",
+                "album-focus", "ruthless", "how-to-play"];
 const isRoute = (url) => ROUTES.includes(url.pathname.replace(/^\/+|\/+$/g, ""));
 const ASSETS = [
   "./",

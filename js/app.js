@@ -1028,6 +1028,8 @@ const routeOpeners = {
   bonus: () => openBonus("start"),
   guests: () => openGuestShelf("start"),
   songbook: () => openSongbook("start"),
+  "album-focus": () => openAlbumFocus("start"),
+  ruthless: () => openRuthless("start"),
   "how-to-play": () => openHowTo("start"),
 };
 // True while a popstate (or the boot deep-link) is driving the screen change, so the opener
@@ -7704,6 +7706,7 @@ let ruthlessBackTarget = "start";
 let rlDocEl = null;
 function openRuthless(from) {
   ruthlessBackTarget = from;
+  routeTo("ruthless", from);
   renderRuthlessPage();
   flipAwayToScreen("ruthless");
   // The measure needs the screen visible and laid out, so it waits for the flip to swap it in.
@@ -7867,6 +7870,7 @@ function startRuthlessMode(lensId) {
 
 function openAlbumFocus(from) {
   albumFocusBackTarget = from;
+  routeTo("album-focus", from);
   renderAlbumFocusPage();
   flipAwayToScreen("albumfocus");
 }

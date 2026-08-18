@@ -33,10 +33,12 @@ export const DAILY_ALBUM_WEIGHT_EXP = 3;
 /* ---------- Address-bar routes ---------- */
 // The notebook is a single page, but its standing panels each get a URL of their own, so
 // /records is a link you can send someone and a place the browser's back button understands.
-// Slug -> the `screens` key in app.js that the slug opens. Deliberately only the panels you
-// browse: nothing here starts a run, so a route can never drop someone into a live game or a
-// half-finished board. Mode boards (Album Focus, Ruthless) are launchers, not places, so they
-// stay out.
+// Slug -> the `screens` key in app.js that the slug opens. The test for belonging here is that
+// the slug never starts a run and never restores run state — landing on one shows a board, and
+// the player still has to press play. That takes in the mode boards (Album Focus, Ruthless)
+// alongside the shelves, since a board with a play button on it is still a board: /bonus and
+// /challenges have one too. What stays out is anything that IS a run: the game screen, a bonus
+// board mid-play, a results page.
 //
 // GitHub Pages has no server-side rewrite, so this list is duplicated, on purpose, in two
 // places that cannot import a module: the bounce script in 404.html and the navigation
@@ -50,6 +52,8 @@ export const PANEL_ROUTES = {
   bonus: "bonus",
   guests: "guests",
   songbook: "songbook",
+  "album-focus": "albumfocus",
+  ruthless: "ruthless",
   "how-to-play": "howto",
 };
 

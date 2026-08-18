@@ -14,7 +14,8 @@
 // must be edited together. Never widen this to "any single segment" — that would swallow the
 // 404 page whole.
 (function () {
-  var ROUTES = ['records', 'charms', 'stats', 'mastery', 'challenges', 'bonus', 'guests', 'songbook', 'how-to-play'];
+  var ROUTES = ['records', 'charms', 'stats', 'mastery', 'challenges', 'bonus', 'guests', 'songbook',
+                'album-focus', 'ruthless', 'how-to-play'];
   var slug = location.pathname.replace(/^\/+|\/+$/g, '');
   if (ROUTES.indexOf(slug) === -1) return;
   var extra = location.search ? '&' + location.search.slice(1) : '';
