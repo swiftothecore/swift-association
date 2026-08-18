@@ -2356,6 +2356,31 @@ export const ACH_ICONS = {
   headstone:`<svg viewBox="0 0 24 24"><path class="ink-fill" d="M6 20.4 V11.6 A6 6 0 0 1 18 11.6 V20.4 Z"/><g class="ink" stroke-width="1.1" opacity="0.8"><path d="M8.8 11.6 H15.2"/><path d="M8.8 14.4 H15.2"/><path d="M9.6 17.2 H14.4"/></g><path class="ink" stroke-width="1.5" d="M2.6 20.8 H21.4"/><g class="ink" stroke-width="1" opacity="0.6" fill="none"><path d="M4.4 20.6 C4.1 19.2 4.6 18.2 5.6 17.6"/><path d="M19.6 20.6 C19.9 19.2 19.4 18.2 18.4 17.6"/></g></svg>`,
   // the sleeve going up, with the record still in it. Burning red, and it was the right album
   burningsleeve:`<svg viewBox="0 0 24 24"><path class="ink" fill="none" stroke-width="1.3" d="M18.4 11.6 A4.4 4.4 0 0 1 18.4 18.4"/><rect class="ink-fill" x="4" y="8.8" width="14.4" height="12.2" rx="0.6"/><path class="ink" stroke-width="0.9" opacity="0.5" d="M6.4 8.9 V21"/><g class="ink-fill"><path d="M6.2 8.6 C5.4 6.6 7.1 5.6 6.6 3.6 C8.5 5 8.9 7.1 8 8.6 Z"/><path d="M10.4 8.6 C9.4 6 11.6 4.6 10.9 2 C13.4 3.8 13.9 6.6 12.6 8.6 Z"/><path d="M14.8 8.6 C14 6.8 15.6 5.8 15.1 4 C17 5.3 17.4 7.2 16.5 8.6 Z"/></g></svg>`,
+  /* The Ruthless batch: eight marks for the mode where the clock is the score. Judged at 30px
+     first (scripts/ruthless-batch-icons.html) rather than large, which is what caught five of
+     them — footprints that read as a string of beads, a knot that read as a squiggle, an
+     eraser that read as a book. Every one is drawn against its nearest existing neighbour. */
+  // one word in longhand on its rule, and the spark of placing it. No page around it
+  // deliberately: a sheet with a margin down the left is already three other marks in this table
+  oneword:    `<svg viewBox="0 0 24 24"><path class="ink" stroke-width="1.15" opacity="0.4" d="M2.8 19 H21.2"/><path class="ink-fill" stroke-width="2" fill="none" d="M3.8 16.4 c1.3 -3 2.3 -0.2 3.3 -2.2 c1 -2 2.2 0.9 3.3 -1 c1.1 -1.9 2.3 1 3.4 -0.9 c0.9 -1.6 1.9 0.3 2.6 -0.5"/><path class="ink-fill" d="M18.9 3 L19.75 5.15 L21.9 6 L19.75 6.85 L18.9 9 L18.05 6.85 L15.9 6 L18.05 5.15 Z"/></svg>`,
+  // a cord tied off, two loops and two tails. A bracelet is a thing you knot on
+  heldknot:   `<svg viewBox="0 0 24 24"><g class="ink-fill" fill="none"><path d="M1.6 18.2 C4.8 18.2 6.8 15.4 9.4 13.6"/><path d="M22.4 18.2 C19.2 18.2 17.2 15.4 14.6 13.6"/><path d="M10.6 11.6 C7 6.6 3.2 10.4 6.4 12.6 C8.2 13.85 10.1 12.9 10.6 11.6 Z"/><path d="M13.4 11.6 C17 6.6 20.8 10.4 17.6 12.6 C15.8 13.85 13.9 12.9 13.4 11.6 Z"/></g><ellipse class="ink-fill" cx="12" cy="12.4" rx="1.6" ry="1.9"/></svg>`,
+  // the eraser never picked up — bevelled tip, paper sleeve. An untouched tool is how you
+  // draw an absence
+  eraser:     `<svg viewBox="0 0 24 24"><g transform="rotate(-9 12 12)"><path class="ink-fill" d="M2.6 10.4 L6.4 7 H20.2 a1.2 1.2 0 0 1 1.2 1.2 V15.8 a1.2 1.2 0 0 1 -1.2 1.2 H6.4 Z"/><path class="ink" stroke-width="1.35" d="M13.2 7 V17"/><path class="ink" stroke-width="1.05" opacity="0.45" d="M6.4 7 V17"/><path class="ink" stroke-width="1.05" opacity="0.45" d="M16.4 8.9 V15.1 M18.9 8.9 V15.1"/></g></svg>`,
+  // bottom lamp lit and the other two left faint, so the mark says GO rather than "traffic light"
+  greenlight: `<svg viewBox="0 0 24 24"><rect class="ink-fill" x="5.6" y="2.2" width="10" height="17.2" rx="2.4"/><g class="ink" stroke-width="1.15" opacity="0.4" fill="none"><circle cx="10.6" cy="6.4" r="1.7"/><circle cx="10.6" cy="10.8" r="1.7"/></g><circle class="ink-fill" cx="10.6" cy="15.3" r="2.5"/><path class="ink" stroke-width="1.4" d="M10.6 19.4 V22"/><g class="ink" stroke-width="1.3" stroke-linecap="round" opacity="0.7"><path d="M18 13.4 H21.4"/><path d="M18.4 16.4 H22.4"/></g></svg>`,
+  // a clock knocked off true with its hands already swept round. Tilted because the upright
+  // clock is taken, and one that is not level reads as being dragged
+  clockrush:  `<svg viewBox="0 0 24 24"><g transform="rotate(-14 10.4 12.2)"><circle class="ink-fill" cx="10.4" cy="12.2" r="7.4"/><path class="ink" stroke-width="1.5" stroke-linecap="round" d="M10.4 12.2 V7.4 M10.4 12.2 L14 14.4"/><circle cx="10.4" cy="12.2" r="0.85" fill="currentColor" stroke="none"/><path class="ink" stroke-width="1.4" d="M8.8 4.1 H12"/></g><g class="ink" stroke-width="1.25" stroke-linecap="round" opacity="0.6" fill="none"><path d="M19.8 8.8 C21.4 10.8 21.4 13.6 19.9 15.6"/><path d="M22.2 7.2 C24.3 9.9 24.3 14.5 22.4 17.2"/></g></svg>`,
+  // caught mid-blink rather than shut: a sliver of iris still showing, flicks above. The closed
+  // eye with lashes below is eyeclosed
+  blink:      `<svg viewBox="0 0 24 24"><path class="ink-fill" fill="none" d="M2.6 13.6 C6.8 18.4 17.2 18.4 21.4 13.6"/><path class="ink-fill" fill="none" d="M2.6 13.6 C6.8 11.2 17.2 11.2 21.4 13.6"/><path class="ink" stroke-width="1.4" fill="none" d="M9.4 13.6 A2.6 2.6 0 0 0 14.6 13.6 Z"/><g class="ink" stroke-width="1.25" stroke-linecap="round" opacity="0.7"><path d="M5.8 8.6 L4.4 6"/><path d="M12 7.8 V4.8"/><path d="M18.2 8.6 L19.6 6"/></g></svg>`,
+  // two prints heading off, the far one smaller. The toe pads are what stop a footprint
+  // reading as a bead
+  walkedaway: `<svg viewBox="0 0 24 24"><g transform="translate(7.2 15.6) rotate(-19)"><path class="ink-fill" fill="none" d="M0 -5.6 c2.6 0 3.7 2 3.3 3.9 c-0.36 1.85 -1.75 2.55 -1.95 4.5 c-0.2 2.05 0.62 3.5 -1.35 3.5 c-1.97 0 -1.15 -1.45 -1.35 -3.5 c-0.2 -1.95 -1.59 -2.65 -1.95 -4.5 C-3.7 -3.6 -2.6 -5.6 0 -5.6 Z"/><g class="ink-fill"><ellipse cx="-2.3" cy="-7.3" rx="0.85" ry="0.7"/><ellipse cx="-0.1" cy="-7.9" rx="0.78" ry="0.65"/><ellipse cx="1.9" cy="-7.4" rx="0.68" ry="0.58"/></g></g><g transform="translate(16.8 7.8) rotate(-19) scale(0.78)"><path class="ink-fill" fill="none" d="M0 -5.6 c2.6 0 3.7 2 3.3 3.9 c-0.36 1.85 -1.75 2.55 -1.95 4.5 c-0.2 2.05 0.62 3.5 -1.35 3.5 c-1.97 0 -1.15 -1.45 -1.35 -3.5 c-0.2 -1.95 -1.59 -2.65 -1.95 -4.5 C-3.7 -3.6 -2.6 -5.6 0 -5.6 Z"/><g class="ink-fill"><ellipse cx="-2.3" cy="-7.3" rx="0.85" ry="0.7"/><ellipse cx="-0.1" cy="-7.9" rx="0.78" ry="0.65"/><ellipse cx="1.9" cy="-7.4" rx="0.68" ry="0.58"/></g></g></svg>`,
+  // an ear with two notes drifting in. You did not know it, you heard it
+  heardit:    `<svg viewBox="0 0 24 24"><path class="ink-fill" fill="none" d="M7.4 21.4 C7.4 18.4 5.4 17.2 4.6 14.4 C3.3 10 5.7 4.8 10.4 4.8 C14.4 4.8 16.6 8 16 11.4 C15.4 14.6 12 14.4 11.6 16.6 C11.3 18.3 12.7 19 13.9 18.3"/><path class="ink" stroke-width="1.35" fill="none" d="M10.2 8.8 C12.5 8.8 13.1 11.1 12 12.5"/><g class="ink-fill"><ellipse cx="17.9" cy="11.5" rx="1.25" ry="1" transform="rotate(-22 17.9 11.5)"/><ellipse cx="21.6" cy="10.3" rx="1.25" ry="1" transform="rotate(-22 21.6 10.3)"/></g><g class="ink" stroke-width="1.3" fill="none"><path d="M19 11.1 V5 L22.7 3.8 V9.9"/><path d="M19 6.6 L22.7 5.4"/></g></svg>`,
 };
 
 /* ---------- Mastery marks ----------
@@ -3121,23 +3146,23 @@ export const ACHIEVEMENTS = [
      never do again, so it asks you to beat your LAST run down that lens instead. That is the
      same decision (cut the loss, come out ahead) against a mark that moves every time you
      play. */
-  { id: "name-ruthless-page-off-one-word",                 name: "One Look",           desc: "Name a Ruthless Game page off a single word", secret: false, icon: "placeholder", sitting: true, earn: { cat: "ruthless" } },
-  { id: "finish-ruthless-run-naming-all-ten",              name: "Never Gave In",      desc: "Finish a Ruthless Game run with all ten pages named, none handed back", secret: false, icon: "placeholder", sitting: true, earn: { cat: "ruthless" } },
-  { id: "finish-ruthless-run-with-no-wrong-guess",         name: "Sure Of Everything", desc: "Finish a Ruthless Game run without typing a single wrong song", secret: false, icon: "placeholder", sitting: true, earn: { cat: "ruthless" } },
+  { id: "name-ruthless-page-off-one-word",                 name: "One Look",           desc: "Name a Ruthless Game page off a single word", secret: false, icon: "oneword", sitting: true, earn: { cat: "ruthless" } },
+  { id: "finish-ruthless-run-naming-all-ten",              name: "Never Gave In",      desc: "Finish a Ruthless Game run with all ten pages named, none handed back", secret: false, icon: "heldknot", sitting: true, earn: { cat: "ruthless" } },
+  { id: "finish-ruthless-run-with-no-wrong-guess",         name: "Sure Of Everything", desc: "Finish a Ruthless Game run without typing a single wrong song", secret: false, icon: "eraser", sitting: true, earn: { cat: "ruthless" } },
   // The ladder, read off the BOARD and not off the run that happened to close it. Three rungs of
   // the same shape so the descriptions can be read side by side and the only thing that changes
   // is the number, which is the whole point of a ladder.
-  { id: "every-ruthless-lens-best-under-90s",              name: "Green Light, Go",    desc: "Hold a best under 90 seconds on all six Ruthless Game lenses", secret: false, icon: "placeholder", earn: { cat: "ruthless" } },
-  { id: "every-ruthless-lens-best-under-60s",              name: "Time Moves Faster",  desc: "Hold a best under 60 seconds on all six Ruthless Game lenses", secret: false, icon: "placeholder", earn: { cat: "ruthless" } },
-  { id: "every-ruthless-lens-best-under-45s",              name: "Blink Of An Eye",    desc: "Hold a best under 45 seconds on all six Ruthless Game lenses", secret: false, icon: "placeholder", earn: { cat: "ruthless" } },
+  { id: "every-ruthless-lens-best-under-90s",              name: "Green Light, Go",    desc: "Hold a best under 90 seconds on all six Ruthless Game lenses", secret: false, icon: "greenlight", earn: { cat: "ruthless" } },
+  { id: "every-ruthless-lens-best-under-60s",              name: "Time Moves Faster",  desc: "Hold a best under 60 seconds on all six Ruthless Game lenses", secret: false, icon: "clockrush", earn: { cat: "ruthless" } },
+  { id: "every-ruthless-lens-best-under-45s",              name: "Blink Of An Eye",    desc: "Hold a best under 45 seconds on all six Ruthless Game lenses", secret: false, icon: "blink", earn: { cat: "ruthless" } },
   // Walking away, priced as the decision it is rather than the surrender it looks like.
-  { id: "give-up-a-page-and-still-beat-last-ruthless-run", name: "Smart To Walk Away", desc: "Hand a page back and still finish faster than your last run down that lens", secret: false, icon: "placeholder", sitting: true, earn: { cat: "ruthless" } },
+  { id: "give-up-a-page-and-still-beat-last-ruthless-run", name: "Smart To Walk Away", desc: "Hand a page back and still finish faster than your last run down that lens", secret: false, icon: "walkedaway", sitting: true, earn: { cat: "ruthless" } },
   /* The secret, and the only charm in the notebook for being told the answer. The stream runs
      on past your lens into the rest of the song, so a page you cannot place will eventually
      sing its own name at you — and taking it within a few words is a visible, specific, faintly
      embarrassing moment rather than a slow page. Secret because a card that described it would
      be teaching a tactic, and because the shelf writes its failures this way. */
-  { id: "name-ruthless-page-just-after-its-title-appears", name: "Say My Name",        desc: "Take the answer within moments of the song singing its own name outside your lens", secret: true, icon: "placeholder" },
+  { id: "name-ruthless-page-just-after-its-title-appears", name: "Say My Name",        desc: "Take the answer within moments of the song singing its own name outside your lens", secret: true, icon: "heardit" },
   /* ---- Catalogue knowledge: what you know about the records (2026-08-18 batch) ----
      Twenty-two charms, all in the Catalogue theme, and every one of them is priced in a fact
      about the catalogue rather than in how well the run was played. Three shapes:
