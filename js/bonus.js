@@ -1176,6 +1176,68 @@ export function ruthlessLensAudit(songs) {
   });
 }
 
+/* WHERE THE SONG GIVES ITSELF AWAY, and whether it did so outside the lens you chose.
+
+   The stream runs on past its section into the rest of the song (see ruthlessStream), so most
+   pages eventually just sing their own title and hand the answer over. That moment is the one
+   thing about a Ruthless page the mode never says out loud, and it is worth knowing because
+   taking the handout is a different act from naming the song — the sheepish half of the mode,
+   and the charm on it is written in that register.
+
+   `at` is the count of words that will be ON the page when the title finishes arriving, which
+   is the same number `ruthlessShown` holds, so the two can be compared directly. -1 when the
+   song never sings its own title at all (26 of them don't) or when the title's words never line
+   up with the lyric's — a title we cannot find simply never fires the charm, which is the safe
+   direction for a comparison this one to fail in.
+
+   `outside` asks whether that word fell past the lens's OWN opening section, which is what the
+   charm actually means by a handout: you sat through your pre-chorus, the stream wandered into
+   the chorus, and the chorus said the name. A sectionless lens (From the Top) opens on the whole
+   song, so nothing can be outside it and `outside` is always false there — that lens is
+   deliberately excluded rather than special-cased at the fold.
+
+   Matching is per raw token so the index can't drift from the stream's own count, but a token is
+   normalized and may expand to several words ("half-moon" -> "half moon"), so the walk keeps a
+   word-to-token map rather than assuming the two run in step. */
+export const RUTHLESS_HANDOUT_WORDS = 5;   // named within this many words of the title landing
+export function ruthlessHandout(song, lens = null) {
+  const miss = { at: -1, outside: false };
+  if (!song || !song.title) return miss;
+  const start = lensOpensAt(song, lens);
+  if (start < 0) return miss;
+  const lines = songLines(song).slice(start);
+  const want = normalizeLyric(String(song.title).replace(/\([^)]*\)/g, " ")).split(" ").filter(Boolean);
+  if (!want.length) return miss;
+
+  // The lens's own opening run of lines, measured in the same raw tokens the page counts.
+  const open = lens && lens.section ? lens.section : null;
+  let lensWords = 0;
+  if (open) {
+    for (const { line, label } of lines) {
+      if (String(label).trim().toLowerCase() !== open) break;
+      lensWords += String(line).split(/\s+/).filter(Boolean).length;
+    }
+  }
+
+  const words = [], owner = [];   // normalized word -> the raw token it came out of
+  let tok = 0;
+  lines.forEach(({ line }) => {
+    String(line).split(/\s+/).filter(Boolean).forEach((w) => {
+      tok++;
+      normalizeLyric(w).split(" ").filter(Boolean).forEach((n) => { words.push(n); owner.push(tok); });
+    });
+  });
+
+  for (let i = 0; i + want.length <= words.length; i++) {
+    let hit = true;
+    for (let j = 0; j < want.length; j++) if (words[i + j] !== want[j]) { hit = false; break; }
+    if (!hit) continue;
+    const at = owner[i + want.length - 1];
+    return { at, outside: open !== null && at > lensWords };
+  }
+  return miss;
+}
+
 export function buildRuthlessPuzzle(songs, rng = Math.random, tries = 120, avoid = null, lens = null) {
   for (let t = 0; t < tries; t++) {
     const song = pick(songs, rng);
@@ -1184,7 +1246,8 @@ export function buildRuthlessPuzzle(songs, rng = Math.random, tries = 120, avoid
     if (ruthlessBar(song)) continue;
     const stream = ruthlessStream(song, lens);
     if (stream.length < RUTHLESS_MIN_WORDS) continue;
-    return { song, stream, lens: lens ? lens.id : null };
+    const { at, outside } = ruthlessHandout(song, lens);
+    return { song, stream, lens: lens ? lens.id : null, titleAt: at, titleOutside: outside };
   }
   return null;
 }

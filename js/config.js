@@ -574,6 +574,16 @@ export const RUTHLESS_OPEN_WORDS = 1;    // on the page before the first tick, s
 // What the gauge fills over. Nothing happens when it fills — there is no deadline here — it is
 // purely a read on how expensive this page is getting, which a bar can say faster than a number.
 export const RUTHLESS_PACE_SECONDS = 45;
+/* The board ladder: a run total, in seconds, that every one of the six lenses has to come in
+   under. Deliberately FLAT rather than scaled off each lens's median, which is the one place
+   this mode breaks its own house rule and does so knowingly — the give-up and the snap are
+   priced per lens because they are offers the mode makes to the player, and an offer has to be
+   fair on the lens it is made on. A standard is not an offer. Verse 2 at a 79-word median is
+   genuinely harder to bring under 45 seconds than Chorus at 22, and that gap IS the ladder:
+   the top rung is meant to be a lens you dread, and knowing your second verses is what the
+   mode is for. Absolute numbers also survive a lens being retuned, which per-lens rungs
+   would not. */
+export const RUTHLESS_RUN_RUNGS = [90, 60, 45];
 
 /* ---------- The randomiser: one draw across everything the notebook can play ----------
    A launcher, not a game type. It picks a configuration and calls the same start function the
@@ -3065,6 +3075,43 @@ export const ACHIEVEMENTS = [
   { id: "time-out-all-10-only-here-pages", name: "Never Heard Silence", desc: "Let all ten Only Here clocks run out without a card played", secret: true, icon: "cobweb" },
   { id: "finish-bonus-run-one-page-short-of-sweep",    name: "Almost Had It",    desc: "Finish one page shy of a clean sweep", secret: true, icon: "dart" },
   { id: "flag-spot-the-slip-impostor-under-2s",    name: "Saw It Coming",    desc: "Flag a Spot the Slip impostor inside two seconds", secret: true, icon: "mask" },
+  /* ---- Ruthless: the mode where the clock is the score (2026-08-18) ----
+     Eight charms. The first roster went in unvetted and came back out the same day, and the
+     lesson it left is the rule this one is built on: NOTHING HERE MAY BE PRICED IN A NUMBER THE
+     MODE NEVER SHOWS YOU. The old batch charged for naming a page inside a snap window the
+     player could only learn afterwards from a bead. Every threshold below is either on screen
+     while you play (the word count, the title arriving) or on the board you just came off.
+
+     Three registers, which is what stops eight charms in one mode reading as one charm eight
+     times. The FLEX is what you knew — one word, and the clean ten. The LADDER is what you can
+     do to the board, three rungs of it, the only place this mode keeps a standard. And the two
+     SHEEPISH ones are what the mode costs you: the page the song had to name for you, and the
+     page you walked away from.
+
+     NOTHING HERE CAN BE LOCKED OUT. The board is the reason: a lens is always open, always
+     dealt fresh, and a best is a thing you go and beat rather than a window that shuts. The one
+     that had to be re-cut for this is the give-up charm — it was going to ask you to hand a page
+     back and still post a new lens best, which a notebook with six near-perfect bests on it can
+     never do again, so it asks you to beat your LAST run down that lens instead. That is the
+     same decision (cut the loss, come out ahead) against a mark that moves every time you
+     play. */
+  { id: "name-ruthless-page-off-one-word",     name: "Sparks Fly",           desc: "Name a Ruthless Game page off a single word", secret: false, icon: "placeholder", sitting: true, earn: { cat: "ruthless" } },
+  { id: "finish-ruthless-run-naming-all-ten",  name: "Stood My Ground",      desc: "Finish a Ruthless Game run with all ten pages named, none handed back", secret: false, icon: "placeholder", sitting: true, earn: { cat: "ruthless" } },
+  { id: "finish-ruthless-run-with-no-wrong-guess", name: "No Second Guesses", desc: "Finish a Ruthless Game run without typing a single wrong song", secret: false, icon: "placeholder", sitting: true, earn: { cat: "ruthless" } },
+  // The ladder, read off the BOARD and not off the run that happened to close it. Three rungs of
+  // the same shape so the descriptions can be read side by side and the only thing that changes
+  // is the number, which is the whole point of a ladder.
+  { id: "every-ruthless-lens-best-under-90s",  name: "Getaway Car",          desc: "Hold a best under 90 seconds on all six Ruthless Game lenses", secret: false, icon: "placeholder", earn: { cat: "ruthless" } },
+  { id: "every-ruthless-lens-best-under-60s",  name: "Ready For It",         desc: "Hold a best under 60 seconds on all six Ruthless Game lenses", secret: false, icon: "placeholder", earn: { cat: "ruthless" } },
+  { id: "every-ruthless-lens-best-under-45s",  name: "State Of Grace",       desc: "Hold a best under 45 seconds on all six Ruthless Game lenses", secret: false, icon: "placeholder", earn: { cat: "ruthless" } },
+  // Walking away, priced as the decision it is rather than the surrender it looks like.
+  { id: "give-up-a-page-and-still-beat-last-ruthless-run", name: "Better Than Ever", desc: "Hand a page back and still finish faster than your last run down that lens", secret: false, icon: "placeholder", sitting: true, earn: { cat: "ruthless" } },
+  /* The secret, and the only charm in the notebook for being told the answer. The stream runs
+     on past your lens into the rest of the song, so a page you cannot place will eventually
+     sing its own name at you — and taking it within a few words is a visible, specific, faintly
+     embarrassing moment rather than a slow page. Secret because a card that described it would
+     be teaching a tactic, and because the shelf writes its failures this way. */
+  { id: "name-ruthless-page-just-after-its-title-appears", name: "Should've Known", desc: "Take the answer within moments of the song singing its own name outside your lens", secret: true, icon: "placeholder" },
   /* ---- Catalogue knowledge: what you know about the records (2026-08-18 batch) ----
      Twenty-two charms, all in the Catalogue theme, and every one of them is priced in a fact
      about the catalogue rather than in how well the run was played. Three shapes:
@@ -3282,6 +3329,7 @@ export const ACH_GROUPS = [
   { id: "custom",    label: "Custom mode",            short: "Custom" },
   { id: "guests",    label: "Guest shelf",            short: "Guests" },
   { id: "bonus",     label: "Bonus games",            short: "Bonus" },
+  { id: "ruthless",  label: "Ruthless Game",          short: "Ruthless" },
   { id: "longhaul",  label: "The long haul",          short: "Long haul" },
   { id: "margins",   label: "In the margins",         short: "Margins" },
   { id: "mastery",   label: "Skills & Mastery",       short: "Mastery" },
@@ -3302,6 +3350,7 @@ export const ACH_GROUP_COLORS = {
   custom:    "#4a6b8a",
   guests:    "#6b5a92",
   bonus:     "#2f6f6a",
+  ruthless:  "#8c4a34",   // the Ruthless stamp's own rust, so the section mark matches the door in
   longhaul:  "#4a6b3f",
   margins:   "#7d5a3f",
   mastery:   "#8a6d1f",
@@ -3321,7 +3370,7 @@ export const ACH_FAMILIES = [
   { id: "craft",     label: "The craft",     blurb: "how well you played",
     themes: ["core", "perfect", "clock", "misfires", "longhaul"] },
   { id: "shelf",     label: "The shelf",     blurb: "what you played",
-    themes: ["daily", "infinite", "lyricist", "albumFocus", "custom", "guests", "bonus", "challenges"] },
+    themes: ["daily", "infinite", "lyricist", "albumFocus", "custom", "guests", "bonus", "ruthless", "challenges"] },
   { id: "knowledge", label: "The catalogue", blurb: "what you know",
     themes: ["catalogue", "nemesis"] },
   { id: "offpage",   label: "Off the page",  blurb: "where you were sitting",
@@ -3384,6 +3433,11 @@ export const ACH_GROUP_OF = {
   "sweep-name-that-song-one-line-each": "bonus", "sweep-sing-it-back-all-words-exact": "bonus", "name-redacted-song-no-strips-removed": "bonus",
   "take-rarest-only-here-card-all-10-pages": "bonus", "finish-then-what-unbroken-chain": "bonus", "take-commonest-only-here-card": "bonus",
   "name-redacted-song-after-buying-all-strips": "bonus", "time-out-all-10-only-here-pages": "bonus", "finish-bonus-run-one-page-short-of-sweep": "bonus",
+  "name-ruthless-page-off-one-word": "ruthless", "finish-ruthless-run-naming-all-ten": "ruthless",
+  "finish-ruthless-run-with-no-wrong-guess": "ruthless", "every-ruthless-lens-best-under-90s": "ruthless",
+  "every-ruthless-lens-best-under-60s": "ruthless", "every-ruthless-lens-best-under-45s": "ruthless",
+  "give-up-a-page-and-still-beat-last-ruthless-run": "ruthless",
+  "name-ruthless-page-just-after-its-title-appears": "ruthless",
   "flag-spot-the-slip-impostor-under-2s": "bonus",
   "unlock-mastery": "mastery", "reach-level-10-one-skill": "mastery", "wear-prestige-title": "mastery",
   "reach-round-89-infinite": "infinite",

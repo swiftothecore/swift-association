@@ -17,7 +17,7 @@ import {
   BONUS_ONLY_SECONDS, ONLY_WIDE_PAGES,
   BONUS_CHAIN_SECONDS, CHAIN_EASY_PAGES, BONUS_SNAP_MS,
   RUTHLESS_WORD_MS, RUTHLESS_OPEN_WORDS,
-  RUTHLESS_PACE_SECONDS,
+  RUTHLESS_PACE_SECONDS, RUTHLESS_RUN_RUNGS,
   CHALLENGES, CHALLENGE_BY_ID, CHALLENGE_ORDER, CHALLENGE_SEALS, DARK_SIDE_IDS, DARK_SIDE_TODO,
   DARK_SIDE_MILESTONE, CHALLENGE_RETURN_RUNS,
   IMPOSTOR_WORDS, IMPOSTOR_COUNT, DARK_IMPOSTOR_WORDS,
@@ -61,7 +61,7 @@ import { buildLineIndex, buildSlipContext, buildSlipPuzzle, buildNamePuzzle,
          buildWordIndex, buildOnlyHerePuzzle, onlyHerePoints, ONLY_HAND,
          buildChainPuzzle, CHAIN_PICKS, CHAIN_CARDS, CHAIN_PAY, CHAIN_PAGE,
          buildRuthlessPuzzle, ruthlessPool, ruthlessLens, ruthlessLensAudit, ruthlessGiveUp, ruthlessSnap,
-         ruthlessBar, RUTHLESS_LENSES,
+         ruthlessBar, RUTHLESS_LENSES, RUTHLESS_HANDOUT_WORDS,
          judgeBlank, blankExact } from "./bonus.js";
 import { renderStreakPlacard } from "./placard.js";
 import {
@@ -5269,6 +5269,12 @@ let ruthlessDripId = null;
    override instead. `ruthlessStreak` is this run's own correct-in-a-row, for the same reason. */
 let ruthlessXp = { resolve: 0, tempo: 0 };
 let ruthlessStreak = 0;
+/* Wrong titles typed across the RUN. Wrong guesses here cost seconds rather than lives, so a
+   run spent flailing and a run answered cleanly can post very similar times and the board
+   cannot tell them apart — this is the only place the difference is written down. Run-level and
+   not page-level on purpose: the charm asks for a whole run with nothing wrong in it, and a
+   per-page counter would have to be summed back up anyway. */
+let ruthlessWrong = 0;
 /* When the RUN started, as a performance.now() baseline, for the games keeping a clean-sweep
    time (bonusSweeps). Wall clock across the whole run rather than the sum of the page clocks:
    the page turns and the verdict beats are part of what a sweep costs, and a total that skips
@@ -5528,6 +5534,7 @@ function startBonusGame(g, lensId = null) {
   // the run and nothing else clears them.
   ruthlessXp = { resolve: 0, tempo: 0 };
   ruthlessStreak = 0;
+  ruthlessWrong = 0;
   /* Both of these are the results screen's, and both are normally cleared by resetRunState —
      which the shelf never calls. A Ruthless run ends on that screen, so without this it would
      open showing the charms and the skill fold of whatever main run came before it. */
@@ -6037,24 +6044,6 @@ function revealRuthless() {
   stream.insertAdjacentHTML("beforebegin", bonusSongHead(bonusPuzzle.song, ""));
 }
 
-/* Dev only: how many words in the stream first spells the song's own title out, or -1 if the
-   song never names itself. That number is the guarantee this game rests on — a page cannot be
-   unsolvable, only expensive — so it is worth being able to measure across a sample rather than
-   trusted. Kept beside the game rather than in the dev block because the builder's comment
-   points at it. */
-function devRuthlessTitleAt(p) {
-  const key = (s) => String(s).toLowerCase().replace(/[^\p{L}\p{N}]/gu, "");
-  const want = String(p.song.title).split(/\s+/).map(key).filter(Boolean);
-  if (!want.length) return -1;
-  const got = p.stream.map((w) => key(w.text));
-  for (let i = 0; i + want.length <= got.length; i++) {
-    let hit = true;
-    for (let j = 0; j < want.length; j++) if (got[i + j] !== want[j]) { hit = false; break; }
-    if (hit) return i + want.length;
-  }
-  return -1;
-}
-
 function bonusTimeout() {
   if (bonusLocked) return;
   // Then What's clock runs per PICK, so its timeout is a missed pick rather than a lost page:
@@ -6414,6 +6403,7 @@ function judgeName(picked = null) {
      the seconds it took to type. */
   if (bonusTimed(bonusGame)) {
     if (!correct) {
+      ruthlessWrong++;
       const r = $("bonusReject");
       r.textContent = `not ${censor(song.title)}`;
       r.classList.remove("show"); void r.offsetWidth; r.classList.add("show");
@@ -6624,11 +6614,18 @@ function settleBonusRound(correct, detail, isTimeout = false) {
   // here rather than in a second log because the mode's results page needs exactly this list
   // with two more columns on it: the album to tint the page's bead, and how many words were on
   // the page when it was named.
+  /* Did the song name itself and did you take it. Frozen HERE rather than worked out at the end
+     because it is a fact about the page as it stood when the answer went in, and `ruthlessShown`
+     is about to be reset by the next page. `titleAt` is -1 on a song that never sings its title
+     and on the From the Top lens, both of which simply never qualify. */
+  const handout = correct && bonusPuzzle.titleOutside && bonusPuzzle.titleAt > 0 &&
+    ruthlessShown >= bonusPuzzle.titleAt && ruthlessShown <= bonusPuzzle.titleAt + RUTHLESS_HANDOUT_WORDS;
   bonusLog.push({
     n: bonusRound, ok: correct,
     title: bonusPuzzle.song.title,
     album: bonusPuzzle.song.album,
     words: ruthlessShown,
+    handout,
     note: bonusGame.id === "spot-the-slip" ? bonusPuzzle.fakeWord
         : bonusGame.id === "sing-it-back" ? bonusPuzzle.answer
         // Redacted's pages are worth different amounts, and that number is the only thing the
@@ -7004,6 +7001,40 @@ function endBonusRun() {
    Focus's own reason for omitting it, arrived at from the other end. By Heart is out because
    you name titles rather than sing lines, and The Long Game because ten pages is a sitting, not
    a distance. */
+/* The mode's own charms, folded once the run has been banked so the board-wide ones can read a
+   board this run is already in. Nothing else may be folded here: a Ruthless Game run is
+   sandboxed to its board, its history row and two skills, and charms are the single exception,
+   exactly as they are on the shelf it plays on.
+
+   `prevLast` is the board as it stood BEFORE this run was written, which the caller has to hand
+   over because recordRuthlessRun has already overwritten it by the time anything here runs. */
+function foldRuthlessCharms({ pages, named, gaveUp, secs, prevLast }) {
+  // One word on the page and you had it. The purest thing this mode can ask for, and the only
+  // number in the batch the player can watch arrive.
+  if (pages.some((t) => t.ok && t.words === 1)) unlock("name-ruthless-page-off-one-word");
+  if (!gaveUp && named === BONUS_ROUNDS) unlock("finish-ruthless-run-naming-all-ten");
+  // A clean run costs nothing to have and is invisible on the board, which is why it is a charm:
+  // every wrong title typed is paid for in seconds, so this is the run where none of them were.
+  if (!ruthlessWrong) unlock("finish-ruthless-run-with-no-wrong-guess");
+  if (pages.some((t) => t.handout)) unlock("name-ruthless-page-just-after-its-title-appears");
+  /* The loss cut correctly: a page handed back, penalty and all, and the run still came in under
+     the LAST one down this lens. Deliberately not under the best — a notebook with six sharp
+     bests on it could never again beat one while carrying a give-up penalty, and a charm that
+     good play can permanently close is exactly what this batch is not allowed to contain. The
+     last run is a mark that moves every time you play, so the condition stands forever. */
+  if (gaveUp && prevLast != null && secs < prevLast)
+    unlock("give-up-a-page-and-still-beat-last-ruthless-run");
+  /* The ladder, read off the BOARD rather than off this run, so it closes on whichever lens
+     happens to be the last one brought under the rung. A lens with no plays has no best to be
+     under, so `plays` is checked as well as the number. */
+  const board = RUTHLESS_LENSES.map((l) => ruthlessRecord(l.id));
+  const allUnder = (secs) => board.every((r) => r.plays > 0 && r.best < secs);
+  const [rung90, rung60, rung45] = RUTHLESS_RUN_RUNGS;
+  if (allUnder(rung90)) unlock("every-ruthless-lens-best-under-90s");
+  if (allUnder(rung60)) unlock("every-ruthless-lens-best-under-60s");
+  if (allUnder(rung45)) unlock("every-ruthless-lens-best-under-45s");
+}
+
 function endRuthlessRun() {
   const lensId = ruthlessLensId, lens = ruthlessLens(lensId);
   const secs = bonusScore;
@@ -7012,6 +7043,8 @@ function endRuthlessRun() {
   const gaveUp = pages.length - named;
 
   let rec = ruthlessRecord(lensId);
+  // The previous run down this lens, read before recordRuthlessRun overwrites it.
+  const prevLast = rec.plays > 0 ? rec.last : null;
   if (!devNoLog) {
     rec = recordRuthlessRun(lensId, secs, gaveUp, todayKey());
     // The score column is pages NAMED and the time column is the run — which is the honest way
@@ -7052,6 +7085,7 @@ function endRuthlessRun() {
     "Ruthless Game · " + (lens ? lens.label : "");
 
   const beat = rec.isBest && rec.plays > 1;
+  foldRuthlessCharms({ pages, named, gaveUp, secs, prevLast });
   let status;
   if (beat) {
     status = `<div class="chall-result-status win">a new best for ${escapeHtml(lens ? lens.label : "this lens")} ★</div>`;
@@ -20766,7 +20800,7 @@ function buildDevApi() {
           const p = buildRuthlessPuzzle(songs, Math.random, 120, new Set(recent), lens);
           if (p) recent.push(p.song.title);
           out.push(p ? { song: p.song.title, words: p.stream.length,
-                         titleAt: devRuthlessTitleAt(p),
+                         titleAt: p.titleAt, outsideLens: p.titleOutside,
                          opens: p.stream.slice(0, 12).map((w) => w.text).join(" ") } : null);
         }
         return out;
@@ -20786,10 +20820,13 @@ function buildDevApi() {
          the surfaces that need ten SETTLED pages — the strand's tints and stopwatches, the page
          listing, the best-time copy — are the ones you want to look at twenty times in a row.
          `named` is how many were named and `snaps` how many of those were named on sight, so
-         the charm can be seen at none, some and all without waiting for a lucky run. It is
-         `finish` rather than `fill` because `fill` on this block is the BOARD's, and a run and a
-         board of six records are not the same fabrication. */
-      finish: (named = 8, snaps = 3, lensId = "chorus") => {
+         the strand's stopwatch can be seen at none, some and all without waiting for a lucky
+         run. `wrong` and `handouts` are the two things the charms need and a fabricated run
+         cannot otherwise have: how many wrong titles were typed across the run, and how many
+         pages took the answer off the song. It is `finish` rather than `fill` because `fill` on
+         this block is the BOARD's, and a run and a board of six records are not the same
+         fabrication. */
+      finish: (named = 8, snaps = 3, lensId = "chorus", wrong = 0, handouts = 0) => {
         const lens = ruthlessLens(lensId);
         if (!lens) return `no such lens — ${RUTHLESS_LENSES.map((l) => l.id).join(", ")}`;
         const { deal } = ruthlessPool(allSongs, lens);
@@ -20804,6 +20841,7 @@ function buildDevApi() {
         // at the results with whatever the last run happened to leave behind.
         ruthlessXp = { resolve: 0, tempo: 0 };
         ruthlessStreak = 0;
+        ruthlessWrong = wrong;
         for (let n = 1; n <= BONUS_ROUNDS; n++) {
           const song = deal[(n * 7) % deal.length];
           const ok = n <= named;
@@ -20816,11 +20854,15 @@ function buildDevApi() {
           const secs = ok ? words : words + giveUp.penalty;
           bonusScore += secs;
           accrueRuthlessXp(ok, secs);
-          bonusLog.push({ n, ok, title: song.title, album: song.album, words, note: fmtTime(secs) });
+          // The handouts are taken off the BACK of the named pages so they never collide with the
+          // snapped ones at the front: a page cannot be both named on sight and told to you.
+          const handout = ok && n > named - handouts;
+          bonusLog.push({ n, ok, title: song.title, album: song.album, words, handout, note: fmtTime(secs) });
         }
         bonusRound = BONUS_ROUNDS;
         endRuthlessRun();
-        return `${lens.label}: ${fmtTime(bonusScore)}, ${named} named, ${Math.min(snaps, named)} on sight`;
+        return `${lens.label}: ${fmtTime(bonusScore)}, ${named} named, ${Math.min(snaps, named)} on sight, ` +
+          `${Math.min(handouts, named)} handed to you, ${wrong} wrong typed`;
       },
       /* Ruthless Game. `drip(n)` pulls the next n words onto the page without waiting for the
          metronome — the only way to reach the back half of a stream in less than a minute — and
@@ -20836,7 +20878,7 @@ function buildDevApi() {
         if (!bonusGame || !bonusTimed(bonusGame) || !bonusPuzzle) return "not on a ruthless page";
         return { song: bonusPuzzle.song.title, album: bonusPuzzle.song.album,
                  shown: ruthlessShown, words: bonusPuzzle.stream.length,
-                 titleAt: devRuthlessTitleAt(bonusPuzzle),
+                 titleAt: bonusPuzzle.titleAt, outsideLens: bonusPuzzle.titleOutside,
                  spent: ((performance.now() - ruthlessStart) / 1000).toFixed(1) + "s" };
       },
       name: () => {
