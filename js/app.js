@@ -2890,6 +2890,19 @@ function achThemeMarkHTML(id, cls) {
     `</span>`;
 }
 
+/* The family's mark, one rank above the theme marks and built exactly like them: a wash
+   underneath, a drawing over it, both <use> references carrying no colour of their own so
+   the pair takes the family's hue off --fam. The wash is a five-sided one, which is the
+   whole point — a tab and the headings under it were sharing an anatomy AND a silhouette,
+   and scale alone was carrying the rank. Sides, not size, is the cheaper signal.
+   See the family marks block in index.html for why none of the glyphs is a pentagon. */
+function achFamilyMarkHTML(id) {
+  return `<span class="ach-fam-mark" aria-hidden="true">` +
+    `<svg class="ach-mark-wash" viewBox="0 0 24 22"><use href="#fam-pent"/></svg>` +
+    `<svg class="ach-mark-glyph" viewBox="0 0 24 24"><use href="#fam-${id}"/></svg>` +
+    `</span>`;
+}
+
 // A little fun for any drawn theme mark, at-a-glance row or section heading alike: an
 // overshoot bounce with a full spin riding along, restarted cleanly if it's clicked again
 // before the last spin finished. Off entirely under reduced motion.
@@ -2928,7 +2941,8 @@ function achFamilyDividerHTML(f, folded, count) {
   const col = ACH_FAMILY_COLORS[f.id] || "var(--ink-soft)";
   return `<div class="ach-fam-divider${folded ? " is-folded" : ""}" style="--fam:${col}"` +
     ` data-ach-fam-divider="${f.id}" id="achFamily-${f.id}">` +
-    `<span class="ach-fam-tab">${escapeHtml(f.label)}</span>` +
+    `<span class="ach-fam-tab">${achFamilyMarkHTML(f.id)}` +
+    `<span class="ach-fam-tab-text">${escapeHtml(f.label)}</span></span>` +
     `<span class="ach-fam-blurb">${escapeHtml(f.blurb)}</span>` +
     `<span class="ach-fam-rule"></span>` +
     `<span class="ach-fam-count">${count}</span>` +
@@ -3048,6 +3062,7 @@ function renderAchievementsPage() {
     // so there is nothing here for a second, cleverer bar to add.
     return `<div class="ach-fam" style="--fam:${fam}">` +
       `<div class="ach-fam-head">` +
+      achFamilyMarkHTML(f.id) +
       `<span class="ach-fam-name">${escapeHtml(f.label)}</span>` +
       `<span class="ach-fam-blurb">${escapeHtml(f.blurb)}</span>` +
       `<span class="ach-fam-rule"></span>` +
@@ -3196,8 +3211,10 @@ function renderAchievementsPage() {
   // The tab's own fold: the whole family away, or the whole family back. It does not touch the
   // themes' own folds, so a family opened again comes back exactly as the reader left it.
   $("achievementsBody").querySelectorAll("[data-ach-fam-fold]").forEach((btn) =>
-    btn.addEventListener("click", () =>
-      setFamilyFold(btn.dataset.achFamFold, !isFamilyFolded(btn.dataset.achFamFold))));
+    btn.addEventListener("click", () => {
+      popAchMark(btn.closest(".ach-fam-divider")?.querySelector(".ach-fam-mark"));
+      setFamilyFold(btn.dataset.achFamFold, !isFamilyFolded(btn.dataset.achFamFold));
+    }));
   // A sealed stub is a door to the drawer, and a door onto a folded section opens onto
   // nothing — so it unfolds the drawer on the way, exactly as the theme jumps do.
   $("achievementsBody").querySelectorAll("[data-ach-sealed]").forEach((btn) =>
