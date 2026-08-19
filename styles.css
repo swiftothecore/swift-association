@@ -643,14 +643,16 @@
     position: absolute; top: 50%;
     /* the cluster is a touch shorter than the title's cap height */
     width: 1.2em; height: auto; overflow: visible;
-    transform: translateY(-50%);
+    /* nudged below the optical centre: the title's mass sits above its
+       baseline, so a mark on the true centre reads as riding high */
+    transform: translateY(calc(-50% + 0.08em));
     pointer-events: none;
     fill: none; stroke: var(--ink-accent);
     stroke-width: 2.3; stroke-linecap: round;
     opacity: 0.9;
   }
-  .mast-flank--l { left: -0.95em; }
-  .mast-flank--r { right: -1.15em; transform: translateY(-50%) scaleX(-1); }
+  .mast-flank--l { left: -1.18em; }
+  .mast-flank--r { right: -1.38em; transform: translateY(calc(-50% + 0.08em)) scaleX(-1); }
   /* below the font-size cap the title scales with the viewport, and the doodle
      tips ride ~2% in from the screen edges; under ~620px that air runs out */
   @media (max-width: 620px) { .mast-flank { display: none; } }
