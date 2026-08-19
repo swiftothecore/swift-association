@@ -633,21 +633,24 @@
        end of the line climbs into the letters at wide sizes. */
     stroke: var(--ink-accent); opacity: 0.85; pointer-events: none;
   }
-  /* pen doodles flanking the title: sparkle, radiating strokes, an inked heart */
+  /* four short pen strokes flanking the title, the marks you rule beside a
+     line you mean. deliberately uneven: the lengths differ, the angles are not
+     evenly spaced, the inner ends do not sit on one arc, each stroke carries
+     its own weight, and the two sides are separate drawings rather than one
+     mirrored twice. a perfect fan reads as clip art next to a hand-lettered
+     title. per-stroke widths live on the paths; this is only the fallback */
   .mast-flank {
     position: absolute; top: 50%;
-    /* compact cluster that hugs the title height (the drawing is ~1.3x taller
-       than wide, so keep the width modest or it pokes past the masthead) */
-    width: 1.1em; height: auto; overflow: visible;
-    transform: translateY(-38%);
+    /* the cluster is a touch shorter than the title's cap height */
+    width: 1.2em; height: auto; overflow: visible;
+    transform: translateY(-50%);
     pointer-events: none;
-    stroke: var(--ink-accent); fill: none;
-    stroke-width: 3.2; stroke-linecap: round; stroke-linejoin: round;
+    fill: none; stroke: var(--ink-accent);
+    stroke-width: 2.3; stroke-linecap: round;
     opacity: 0.9;
   }
   .mast-flank--l { left: -0.95em; }
-  .mast-flank--r { right: -1.15em; transform: translateY(-38%) scaleX(-1); }
-  .mast-flank .mf-spark { fill: var(--ink-accent); stroke: none; }
+  .mast-flank--r { right: -1.15em; transform: translateY(-50%) scaleX(-1); }
   /* below the font-size cap the title scales with the viewport, and the doodle
      tips ride ~2% in from the screen edges; under ~620px that air runs out */
   @media (max-width: 620px) { .mast-flank { display: none; } }
