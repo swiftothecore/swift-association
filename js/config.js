@@ -1,6 +1,11 @@
 // Pure constants & data tables. No state, no DOM — safe to import anywhere.
 
 export const TOTAL_ROUNDS = 13;
+// The day block's serial: how many days the game has been public. Derived, never
+// stored, so the same date carries the same serial for everybody. null until launch,
+// which keeps a fake serial off the card during development.
+export const LAUNCH_DATE = null;    // set to "YYYY-MM-DD" on the day it goes public
+export const SERIAL_DIGITS = 4;     // "No. 0001"
 export const ROUND_SECONDS = 10;
 export const RECENT_WINDOW = 5;
 // Normal-mode coverage bias: in a Normal (classic · medium) run each draw favours prompt

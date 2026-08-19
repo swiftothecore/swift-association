@@ -1197,7 +1197,7 @@ export function dailyPlayedDates() {
 
 /* ---------- Daily streak (consecutive calendar days played) ---------- */
 // Key: swiftSongAssociation.dailyStreak  Value: { current, best, lastPlayed }
-const yesterdayOf = (dateStr) => {
+export const yesterdayOf = (dateStr) => {
   const d = new Date(dateStr + "T00:00:00Z");
   d.setUTCDate(d.getUTCDate() - 1);
   return d.toISOString().slice(0, 10);
@@ -1231,6 +1231,42 @@ export function effectiveDailyStreak(today) {
   if (!d.lastPlayed) return { current: 0, best: d.best, lastPlayed: null, playedToday: false };
   const alive = d.lastPlayed === today || d.lastPlayed === yesterdayOf(today);
   return { current: alive ? d.current : 0, best: d.best, lastPlayed: d.lastPlayed, playedToday: d.lastPlayed === today };
+}
+
+// A day's bead (see recentDailyAlbums) takes the album the player got the most songs
+// right from that day. Ties go to whichever album got there first in the run, so the
+// answer is order-independent rather than depending on object key order. A day with
+// nothing right has no album at all — a streak counts days PLAYED, not days scored,
+// so that is a real state, not something to colour in with a lie.
+function dominantDailyAlbum(roundResults, roundAlbums) {
+  const count = new Map(), firstAt = new Map();
+  for (let i = 0; i < roundResults.length; i++) {
+    const a = roundAlbums[i];
+    if (!roundResults[i] || !a) continue;
+    count.set(a, (count.get(a) || 0) + 1);
+    if (!firstAt.has(a)) firstAt.set(a, i);
+  }
+  let best = null;
+  for (const [a, n] of count) {
+    if (!best || n > best.n || (n === best.n && firstAt.get(a) < best.at)) best = { a, n, at: firstAt.get(a) };
+  }
+  return best ? best.a : null;
+}
+// The day block's streak strand: up to `n` consecutive played days ending at `endDate`
+// (inclusive), oldest to newest, each entry the day's dominant album (or null). Stops
+// at the first missing day — a streak is consecutive by definition, so a gap ends the
+// walk rather than being skipped over. No storage schema change: every input here is
+// already on disk in the per-day result saveDailyResult writes.
+export function recentDailyAlbums(endDate, n) {
+  const out = [];
+  let d = endDate;
+  for (let i = 0; i < n; i++) {
+    const r = loadDailyResult(d);
+    if (!r) break;
+    out.push(dominantDailyAlbum(r.roundResults || [], r.roundAlbums || []));
+    d = yesterdayOf(d);
+  }
+  return out.reverse();
 }
 
 /* ---------- Settings ---------- */

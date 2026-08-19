@@ -6,6 +6,7 @@ import { launchFlock } from "./messengers.js";
 import {
   PANEL_ROUTES,
   TOTAL_ROUNDS, RECENT_WINDOW, NOVELTY_BOOST, DAILY_ALBUM_SKEW, DAILY_ALBUM_WEIGHT_EXP, DIFF_KEY, DEFAULT_SETTINGS,
+  LAUNCH_DATE, SERIAL_DIGITS,
   MODES, MODE_ORDER, MODE_COLORS, DIFFICULTY_LADDER, MODALITY_MODES, EXPLORER_TOKENS, SHELF_TYPES, PAGE_MARK_KINDS,
   ERAS, TENDER_ERAS, FINALE_ERAS, ALBUM_ERA, TS_MILESTONES, TS_LORE_DAYS, SALT_SHAKER_D, SALT_CAP_D,
   ALBUM_COLORS, CB_ALBUM_COLORS, STUDIO_ALBUMS, TITLE_ALIASES, STAMP_INKS,
@@ -74,7 +75,7 @@ import {
   loadMode,
   loadDailyResult, saveDailyResult, clearDailyResult, dailyTotals, dailyPlayedDates,
   loadDailyProgress, saveDailyProgress, clearDailyProgress,
-  bumpDailyStreak, effectiveDailyStreak, saveDailyStreak,
+  bumpDailyStreak, effectiveDailyStreak, saveDailyStreak, loadDailyStreak, recentDailyAlbums, yesterdayOf,
   markTypePlayed, loadTypesPlayed, shelfTypesPlayed,
   loadDayTypes, markDayTypePlayed, loadDicePicks, markDicePick,
   markModeSeen, hasExploredEverything, loadModesSeen,
@@ -9509,102 +9510,181 @@ function cakeSvg() {
     `<path d="M7 12.4Q7 11.7 8 11.7H23" fill="none" stroke="rgba(255,255,255,0.45)" stroke-width="0.8"/>` +
     `</g></svg>`;
 }
-// The Daily Challenge button wears an obvious "not done yet" coat (a sketchy dashed
-// ink border, a pinned "today!" sticky note, and 13 twinkling margin stars — Taylor's
-// number) until today's puzzle is played; once played it falls back to its quiet denim
-// resting state, so the difference reads at a glance.
-// Scatter spots ([left%, top%]) hug the button's edges, clear of the centred label.
-const DAILY_STAR_SPOTS = [
-  [5, 24], [10, 64], [15, 32], [21, 72], [27, 18],
-  [50, 14], [50, 84], [36, 80], [64, 80],
-  [73, 22], [80, 66], [88, 30], [93, 70],
-];
+// The Daily Challenge button is "the day block": a day printed on cheap stock and
+// pasted under the gold CTA. An era-inked date chip, a paper well carrying the title
+// and kicker (or the score + streak once played), and — while unplayed — a punched
+// hem reading "tear here to play". Playing tears the hem off THIS card; the date
+// never changes, so the card never looks stale, only used. Design notes in full:
+// scripts/dev/daily-button-handoff.md + scripts/dev/daily-btn-dayblock.html (both
+// gitignored).
+const DAY_STRAND_CAP = 7;
+const DAY_HOLE_COUNT = 13;
+const DAY_SPECK_COUNT = 9;
+const DAY_BEAD_YS = [11, 13, 12, 11, 12, 11, 12];
+
+// The day block's serial: how many days the game has been public. Derived, never
+// stored, so the same date carries the same serial for everybody. null before
+// LAUNCH_DATE is set (or on a future one), which keeps a fake serial off the card
+// during development.
+function dailySerial(dateStr) {
+  if (!LAUNCH_DATE) return null;
+  // Parse both as UTC midnight, exactly as yesterdayOf() does, so DST can never
+  // shift the count by a day.
+  const from = Date.parse(LAUNCH_DATE + "T00:00:00Z");
+  const to = Date.parse(dateStr + "T00:00:00Z");
+  const n = Math.floor((to - from) / 86400000) + 1;   // launch day itself is 1
+  return n >= 1 ? String(n).padStart(SERIAL_DIGITS, "0") : null;
+}
+// The chip's month/day/weekday, read off the literal YYYY-MM-DD as UTC-noon fields —
+// never re-interpreted through the viewer's own timezone, so what prints always
+// matches todayKey() exactly regardless of the active zone setting.
+function dayChipFields(dateStr) {
+  const [y, m, day] = dateStr.split("-").map(Number);
+  const d = new Date(Date.UTC(y, m - 1, day, 12));
+  const month = new Intl.DateTimeFormat("en-US", { timeZone: "UTC", month: "short" }).format(d).toUpperCase();
+  const dow = new Intl.DateTimeFormat("en-US", { timeZone: "UTC", weekday: "short" }).format(d).toUpperCase();
+  return { month, day, dow };
+}
+// Thirteen punched holes, evenly spread and each nudged a little off the grid — a
+// hand-fed punch never lands on a perfect pitch, and a perfect pitch is exactly what
+// makes CSS dots look like CSS dots.
+function dayHolesHTML() {
+  let html = "";
+  for (let i = 0; i < DAY_HOLE_COUNT; i++) {
+    const left = (5 + (i * 90) / (DAY_HOLE_COUNT - 1) + (Math.random() - 0.5) * 1.1).toFixed(2);
+    const top = (-3.2 + (Math.random() - 0.5) * 1.2).toFixed(2);
+    html += `<span class="day-hole" style="left:${left}%;top:${top}px"></span>`;
+  }
+  return html;
+}
+// Loose fibre specks along the torn edge, once played.
+function daySpecksHTML() {
+  let html = "";
+  for (let i = 0; i < DAY_SPECK_COUNT; i++) {
+    const left = (4 + Math.random() * 92).toFixed(2);
+    const top = (Math.random() * 7).toFixed(2);
+    const op = (0.35 + Math.random() * 0.5).toFixed(2);
+    html += `<i style="left:${left}%;top:${top}px;opacity:${op}"></i>`;
+  }
+  return html;
+}
+// The streak strand: one bead per day kept, on the game's own waxed cord, coloured by
+// each day's dominant album (albumColor(), so the colour-blind palette is honoured
+// for free). Under the cap the beads already say the number, so a numeral beside them
+// would say it twice — the caption underneath carries the count instead, and only
+// past the cap does the cord run off the left edge to say "more, back there".
+function dayStrandHTML(albums, days) {
+  if (!albums.length) return `<b>${days}-DAY STREAK</b>`;
+  const over = days > albums.length;
+  const pitch = 15, r = 4.8, x0 = 8;
+  const pts = albums.map((a, i) => ({ x: x0 + i * pitch, y: DAY_BEAD_YS[i % DAY_BEAD_YS.length], album: a }));
+  const lastY = pts[pts.length - 1].y;
+  const knotX = pts[pts.length - 1].x + 9;
+  const startX = over ? -3 : x0 - 7;   // over the cap the cord runs off the edge
+  let d = `M${startX} ${pts[0].y}`;
+  pts.forEach((p, i) => {
+    const prevX = i === 0 ? startX : pts[i - 1].x;
+    d += ` Q${((prevX + p.x) / 2).toFixed(1)} ${p.y + (i % 2 ? -3.4 : 3.4)} ${p.x} ${p.y}`;
+  });
+  d += ` Q${(knotX - 5).toFixed(1)} ${lastY - 3.4} ${knotX} ${lastY}`;
+  const beads = pts.map((p) => {
+    const ink = p.album ? albumColor(p.album) : null;
+    return ink
+      ? `<circle cx="${p.x}" cy="${p.y}" r="${r}" fill="${ink}"/>`
+      // nothing right that day: an unstrung bead, outline only
+      : `<circle cx="${p.x}" cy="${p.y}" r="${r}" fill="#f7f1e2" stroke-dasharray="2.6 2.2"/>`;
+  }).join("");
+  const w = Math.ceil(knotX + 5);
+  return `<svg viewBox="0 0 ${w} 22" width="${w}" height="22" role="img"><title>${days}-day streak</title>` +
+    `<path d="${d}" fill="none" stroke="#8a7f6b" stroke-width="1.9" stroke-linecap="round"/>` +
+    `<g stroke="#2b2722" stroke-width="1.3">${beads}` +
+      `<circle cx="${knotX}" cy="${lastY}" r="2.4" fill="#8a7f6b" stroke-width="0"/></g></svg>` +
+    `<b>${days}-DAY STREAK</b>`;
+}
+// Optically centre a chip numeral on its own ink rather than its advance width — Caveat
+// is a slanted script whose ink sits well right of its metric box, by an amount that
+// varies with which digits are on the card. Waits on document.fonts so it never
+// measures the fallback face; the CSS median default covers the frame before this
+// resolves, so it lands a beat late on first paint rather than looking broken.
+async function centreDayNumerals() {
+  if (document.fonts && document.fonts.ready) await document.fonts.ready;
+  const cx = document.createElement("canvas").getContext("2d");
+  document.querySelectorAll(".day-chip .n").forEach((el) => {
+    const cs = getComputedStyle(el);
+    cx.font = `${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`;
+    if ("letterSpacing" in cx) cx.letterSpacing = cs.letterSpacing;
+    const m = cx.measureText(el.textContent.trim());
+    if (!("actualBoundingBoxLeft" in m)) return;   // keep the CSS default
+    const inkCentre = (-m.actualBoundingBoxLeft + m.actualBoundingBoxRight) / 2;
+    el.style.setProperty("--n-nudge", (m.width / 2 - inkCentre).toFixed(2) + "px");
+  });
+}
 function renderDailyButtonState() {
   const btn = $("dailyBtn");
   if (!btn) return;
-  const undone = !loadDailyResult(todayKey());
-  btn.classList.toggle("undone", undone);
-  // Played today: a quieter, slightly muted "done" coat (it's still clickable to
-  // re-open today's result, so it dims rather than disabling).
-  btn.classList.toggle("done", !undone);
-  // Wrap the label once so it always stacks above the decorative stars.
-  let label = btn.querySelector(".daily-label");
-  if (!label) {
-    const text = btn.textContent.trim() || "Daily Challenge";
-    btn.textContent = "";
-    label = document.createElement("span");
-    label.className = "daily-label";
-    label.textContent = text;
-    btn.appendChild(label);
-  }
-  // Sticky note: "today!" while unplayed, "✓ done" once today's puzzle is in.
-  let tab = btn.querySelector(".daily-tab");
-  if (!tab) {
-    tab = document.createElement("span");
-    tab.className = "daily-tab";
-    btn.appendChild(tab);
-  }
-  tab.textContent = undone ? "today!" : "✓ done";
-  const hasStars = btn.querySelector(".daily-star");
-  if (undone && !hasStars) {
-    DAILY_STAR_SPOTS.forEach((p) => {
-      const s = document.createElement("span");
-      s.className = "daily-star";
-      s.textContent = "✦";
-      s.style.left = p[0] + "%";
-      s.style.top = p[1] + "%";
-      // Randomise each star's phase + speed so they sparkle independently rather
-      // than rippling left-to-right. Negative delay starts them mid-twinkle.
-      s.style.animationDelay = (-Math.random() * 3).toFixed(2) + "s";
-      s.style.animationDuration = (1.5 + Math.random() * 1.6).toFixed(2) + "s";
-      btn.appendChild(s);
-    });
-  } else if (!undone && hasStars) {
-    btn.querySelectorAll(".daily-star").forEach((s) => s.remove());
-  }
-  // Inline streak under the label once played (matches the "🔥 N day streak" phrasing
-  // used on the Stats and Records pages).
-  let streak = btn.querySelector(".daily-streak-inline");
-  const live = effectiveDailyStreak(todayKey());
+  const dateStr = todayKey();
+  const result = loadDailyResult(dateStr);
+  const undone = !result;
+  btn.classList.toggle("day--done", !undone);
+
+  const live = effectiveDailyStreak(dateStr);
   // The desk placard runs off the same number, but shows it whether or not today's
   // puzzle is in: a streak stays alive until the day after it was last fed, and the
   // whole point of the plaque is standing there reminding you of that.
   renderStreakPlacard(live);
-  const d = !undone ? live : null;
-  if (d && d.current > 0) {
-    if (!streak) {
-      streak = document.createElement("span");
-      streak.className = "daily-streak-inline";
-      label.insertAdjacentElement("afterend", streak);
-    }
-    streak.textContent = `🔥 ${d.current}-day streak`;
-  } else if (streak) {
-    streak.remove();
-  }
-  // Left sticky note: a live "next in …" countdown to the reset, shown only once
-  // today's puzzle is played (the right note answers "done?", this one "when's next?").
-  let cd = btn.querySelector(".daily-countdown");
-  if (!undone) {
-    if (!cd) {
-      cd = document.createElement("span");
-      cd.className = "daily-countdown";
-      btn.appendChild(cd);
-    }
-    startResetCountdown();
+
+  const { month, day, dow } = dayChipFields(dateStr);
+  const chipHTML = `<span class="day-chip"><span class="m">${month}</span><span class="n">${day}</span><span class="d">${dow}</span></span>`;
+  const serial = dailySerial(dateStr);
+  const serialHTML = serial ? `<span class="day-serial">No. ${serial}</span>` : "";
+
+  let wellHTML, tailHTML, ariaLabel;
+  if (undone) {
+    wellHTML =
+      `<span class="day-well">` +
+        `<span class="day-name">DAILY CHALLENGE</span><span class="day-ruled"></span>` +
+        `<span class="day-kick">thirteen words · the same for everybody</span>` +
+        serialHTML +
+      `</span>`;
+    tailHTML = `<span class="day-hem"><b>tear here to play</b>${dayHolesHTML()}</span>`;
+    ariaLabel = `Daily Challenge for ${month} ${day}, thirteen words, the same for everybody. Not played yet.`;
   } else {
-    if (cd) cd.remove();
-    stopResetCountdown();
+    const scoreText = settings.hideDailyScore ? "?" : String(result.score);
+    const best = dailyBest();
+    // Beads read oldest → newest; if today isn't played yet the strand should still
+    // end yesterday rather than truncate to nothing while the streak waits to be fed.
+    const endDate = live.playedToday ? dateStr : yesterdayOf(dateStr);
+    const albums = live.current > 0 ? recentDailyAlbums(endDate, DAY_STRAND_CAP) : [];
+    const strandHTML = live.current > 0 ? `<span class="day-strand">${dayStrandHTML(albums, live.current)}</span>` : "";
+    wellHTML =
+      `<span class="day-well">` +
+        `<span class="day-name">DAILY CHALLENGE</span><span class="day-ruled"></span>` +
+        `<span class="day-score">${scoreText} / ${TOTAL_ROUNDS}${best > 0 ? ` <em>best ${best}</em>` : ""}</span>` +
+        `<span class="day-next">next block in ${formatResetCountdown(msUntilDailyReset())}</span>` +
+        strandHTML + serialHTML +
+      `</span>`;
+    tailHTML = "";
+    ariaLabel = `Daily Challenge for ${month} ${day}, played` +
+      (settings.hideDailyScore ? ", score hidden" : `, ${scoreText} out of ${TOTAL_ROUNDS}`) +
+      (live.current > 0 ? `, ${live.current}-day streak` : "") + ".";
   }
+  btn.setAttribute("aria-label", ariaLabel);
+  btn.innerHTML = undone
+    ? `<span class="day-body"><span class="day-card">${chipHTML}${wellHTML}</span>${tailHTML}</span><span class="day-curl"></span>`
+    : `<span class="day-body"><span class="day-card">${chipHTML}${wellHTML}</span></span><span class="day-specks">${daySpecksHTML()}</span>`;
+  centreDayNumerals();
+
+  if (!undone) startResetCountdown(); else stopResetCountdown();
 }
 let dailyCountdownTimer = null;
 function startResetCountdown() {
   stopResetCountdown();
   const tick = () => {
-    const note = document.querySelector("#dailyBtn .daily-countdown");
+    const note = document.querySelector("#dailyBtn .day-next");
     if (!note) { stopResetCountdown(); return; }
     const ms = msUntilDailyReset();
     if (ms <= 1000) { renderDailyButtonState(); return; }   // rolled into a new local day → flip to undone
-    note.textContent = "next in " + formatResetCountdown(ms);
+    note.textContent = "next block in " + formatResetCountdown(ms);
   };
   tick();
   dailyCountdownTimer = setInterval(tick, 1000);
@@ -20200,6 +20280,32 @@ function buildDevApi() {
         saveDailyStreak({ current: current | 0, best: Math.max(best | 0, current | 0),
           lastPlayed: lastPlayed || todayKey() });
         renderDailyButtonState();
+      },
+      // setStreak only writes the counter, so the day block's bead strand (which reads
+      // each day's own saved result) has nothing to draw from. This writes `n` fake but
+      // shaped-right PLAYED days ending today (or `endDate`), one bead colour each —
+      // cycling the studio albums unless a list is given — and sets the streak to match.
+      // Nothing here touches dailyProgress. Un-fake with dev.daily.resetToday() per day
+      // or dev.data-style bulk clears; this doesn't undo itself.
+      fakeStrand: (n, endDate, albums) => {
+        const end = endDate || todayKey();
+        const list = Array.isArray(albums) && albums.length ? albums : STUDIO_ALBUMS;
+        const days = [];
+        let d = end;
+        for (let i = 0; i < (n | 0); i++) { days.unshift(d); d = yesterdayOf(d); }
+        days.forEach((dateKey, i) => {
+          const album = list[i % list.length];
+          const score = 8 + (i % 6);
+          saveDailyResult(dateKey, {
+            score,
+            roundResults: Array.from({ length: TOTAL_ROUNDS }, (_, r) => r < score),
+            roundAlbums: Array(TOTAL_ROUNDS).fill(album),
+            tm: 60000,
+          });
+        });
+        saveDailyStreak({ current: n | 0, best: Math.max(loadDailyStreak().best, n | 0), lastPlayed: end });
+        renderDailyButtonState();
+        return days;
       },
       // Preview an album-anniversary daily without playing it: the album the date resolves to,
       // the pool left after the rarity-bucket intersection, whether the FLOOR relax path had to

@@ -6718,71 +6718,177 @@
     .sb-list { grid-template-columns: 1fr; }
   }
 
-  /* Daily Challenge — a pinned "second card" action: solid, denim-washed, lightly skewed
-     so it reads as a sibling of the gold primary button without competing with it. */
-  .daily-btn {
-    position: relative;
-    display: block; width: 100%; margin-top: 12px; padding: 12px;
-    font-family: var(--type); font-size: calc(14px + var(--text-size-adjust)); letter-spacing: 1px; font-weight: 700;
-    color: var(--ink); background: rgba(91, 135, 184, 0.28);
-    border: 2px solid var(--ink); border-radius: 2px;
-    box-shadow: 2px 2px 0 rgba(43, 39, 34, 0.16);
-    transform: rotate(0.5deg);
+  /* =====================================================================
+     Daily Challenge — "the day block": a day printed on cheap stock and
+     pasted into the notebook, sitting under the gold primary CTA. Built in
+     JS by renderDailyButtonState() (js/app.js); see scripts/dev/daily-btn-
+     dayblock.html (gitignored) for the design session this shipped from.
+       · the chip is a letterpress hit, not a filled box — ink pools at the
+         plate edges, a fine roller grain runs vertical, and the numeral
+         carries a second-colour hit knocked out of register. The chip
+         takes the round's era ink (--ink-accent), same as everywhere else.
+       · the well is paper: two low-alpha speckle layers, and a hand-ruled
+         underline that overshoots its word.
+       · the hem is punched, not dashed — the holes show the PAGE behind
+         the card, so it reads as having thickness.
+       · playing tears the hem off. The date underneath never changes —
+         only the hem is gone and the card is genuinely shorter. The chip
+         goes to --ink-soft ("faded pencil") but keeps its misregistration,
+         so the played card reads as the same object, used.
+     The --day-* tokens carry the stock's own ink/paper alphas, redefined
+     for dark so the fibre lip (the one detail that would visibly glow on a
+     dark page if left alone) and the ruled lines invert with the theme.
+     ===================================================================== */
+  .day {
+    --day-paper: #fdfaf1; --day-hem-bg: #f8f2e2;
+    --day-lip: rgba(255, 253, 246, 0.8);
+    --day-fibre-1: rgba(43, 39, 34, 0.05); --day-fibre-2: rgba(43, 39, 34, 0.045);
+    --day-ink-1: rgba(43, 39, 34, 0.6); --day-ink-2: rgba(43, 39, 34, 0.5);
+    --day-ink-3: rgba(43, 39, 34, 0.45); --day-ink-4: rgba(43, 39, 34, 0.34);
+    position: relative; display: block; width: 100%; margin-top: 12px; padding: 0;
+    border: 0; background: none; font: inherit; color: inherit; text-align: left; cursor: pointer;
   }
-  .daily-btn:hover { background: rgba(91, 135, 184, 0.42); }
+  :root[data-theme="dark"] .day {
+    --day-paper: #2f281f; --day-hem-bg: #262019;
+    --day-lip: rgba(236, 229, 214, 0.3);
+    --day-fibre-1: rgba(236, 229, 214, 0.07); --day-fibre-2: rgba(236, 229, 214, 0.06);
+    --day-ink-1: rgba(236, 229, 214, 0.55); --day-ink-2: rgba(236, 229, 214, 0.45);
+    --day-ink-3: rgba(236, 229, 214, 0.4); --day-ink-4: rgba(236, 229, 214, 0.34);
+  }
+  .day span { display: block; }
+  .day-body { position: relative; transform: rotate(-0.35deg); transition: transform 0.18s ease; }
+  .day:hover .day-body { transform: rotate(-0.35deg) translateY(-1.5px); }
+  .day-card {
+    position: relative; z-index: 2; display: flex; overflow: hidden;
+    background: var(--day-paper); border: 2px solid var(--ink); border-radius: 2px;
+    box-shadow: 2px 3px 0 rgba(43, 39, 34, 0.17), 0 7px 16px rgba(43, 39, 34, 0.13);
+    transition: box-shadow 0.18s ease;
+  }
+  .day:hover .day-card { box-shadow: 2px 5px 0 rgba(43, 39, 34, 0.17), 0 11px 22px rgba(43, 39, 34, 0.17); }
+  /* paper fibre: two speckle layers at different scales, both nearly invisible alone */
+  .day-card::before {
+    content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 1; opacity: 0.55;
+    background-image:
+      radial-gradient(circle at 20% 30%, var(--day-fibre-1) 0.6px, transparent 0.7px),
+      radial-gradient(circle at 70% 65%, var(--day-fibre-2) 0.5px, transparent 0.6px);
+    background-size: 17px 13px, 11px 19px;
+  }
 
-  /* "Not done today" state: a sketchy dashed ink border over a warm paper tint, with
-     13 twinkling margin stars and a pinned sticky note — unmistakable next to the gold
-     primary. Resets to the solid denim resting state (rules above) once played. */
-  .daily-btn.undone {
-    background: rgba(224, 120, 48, 0.12);
-    border-style: dashed;
+  /* ---- the ink block: the chip wears the round's own era ink ---- */
+  .day-chip {
+    position: relative; z-index: 2; flex: 0 0 74px; padding: 5px 0 6px; text-align: center;
+    display: flex; flex-direction: column; justify-content: center;
+    color: #fdf6e6; background: var(--ink-accent);
+    background-image:
+      linear-gradient(90deg, rgba(0, 0, 0, 0.22) 0, transparent 7%, transparent 93%, rgba(0, 0, 0, 0.26) 100%),
+      linear-gradient(180deg, rgba(255, 255, 255, 0.13) 0, transparent 40%, rgba(0, 0, 0, 0.14) 100%),
+      repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.05) 0 1px, transparent 1px 3px);
+    box-shadow: inset -1px 0 0 rgba(0, 0, 0, 0.45);
   }
-  .daily-btn.undone:hover { background: rgba(224, 120, 48, 0.2); }
-  /* Played-today resting state: dimmed and desaturated (not disabled — it still
-     opens today's result), brightening back to full on hover. */
-  .daily-btn.done { opacity: 0.66; filter: saturate(0.9); }
-  .daily-btn.done:hover { opacity: 1; filter: none; }
-  .daily-btn .daily-label { position: relative; z-index: 2; }
-  .daily-btn .daily-streak-inline {
-    display: block; position: relative; z-index: 2; margin-top: 3px;
-    font-family: var(--type); font-weight: 400; font-size: calc(11px + var(--text-size-adjust)); letter-spacing: 0.5px;
-    color: var(--ink-soft);
+  /* tracking adds a space after the LAST letter too, so a centred tracked word sits
+     half its tracking left of true centre — padding-left of one tracking unit fixes
+     it. The hairlines sit against the padding box so they don't drift with the word. */
+  .day-chip .m { font-size: calc(8.5px + var(--text-size-adjust)); letter-spacing: 3px; opacity: 0.92; position: relative; padding-left: 3px; }
+  .day-chip .m::before, .day-chip .m::after {
+    content: ""; position: absolute; top: 50%; width: 9px; height: 1px; background: rgba(253, 246, 230, 0.5);
   }
-  .daily-btn .daily-star {
-    position: absolute; z-index: 1; pointer-events: none;
-    font-family: var(--hand); font-size: calc(15px + var(--text-size-adjust)); line-height: 1; color: #e07830;
-    transform: translate(-50%, -50%);
+  .day-chip .m::before { left: 7px; } .day-chip .m::after { right: 7px; }
+  /* Caveat's ink sits well right of its advance width, and by an amount that varies
+     by which digits are on the card — see centreDayNumeral() in app.js, which
+     measures the real ink and writes --n-nudge. -5px is the median, so the chip
+     still looks right on the frame before the script runs. */
+  .day-chip .n {
+    font-family: var(--hand); font-size: calc(37px + var(--text-size-adjust)); font-weight: 700; line-height: 0.96; letter-spacing: -1px;
+    transform: translateX(var(--n-nudge, -5px));
+    text-shadow: -1.5px -1px 0 rgba(0, 0, 0, 0.32);   /* the misregistered second hit */
+  }
+  .day-chip .d { font-size: calc(8px + var(--text-size-adjust)); letter-spacing: 2.4px; opacity: 0.86; margin-top: -1px; padding-left: 2.4px; }
+
+  /* ---- the paper well ---- */
+  .day-well { position: relative; z-index: 2; flex: 1 1 auto; padding: 9px 13px 8px 14px; min-width: 0; }
+  .day-name { font-family: var(--type); font-size: calc(12.5px + var(--text-size-adjust)); font-weight: 700; letter-spacing: 2.6px; display: inline-block; }
+  /* hand-ruled underline, its own row: overshoots the word and thins to nothing, the
+     way a line drawn against a straightedge runs on past where you meant to stop. */
+  .day-ruled {
+    height: 1.6px; width: 100%; max-width: 172px; margin-top: 4px;
+    background: linear-gradient(90deg, var(--day-ink-1) 0, var(--day-ink-2) 72%, transparent 100%);
+    transform: rotate(-0.45deg); transform-origin: left center;
+  }
+  .day-kick { font-size: calc(10px + var(--text-size-adjust)); color: var(--ink-soft); letter-spacing: 1.05px; margin-top: 5px; }
+  .day-serial { position: absolute; right: 11px; bottom: 7px; font-size: calc(8.5px + var(--text-size-adjust)); letter-spacing: 2.2px; color: var(--day-ink-4); }
+
+  /* ---- the punched hem ---- */
+  .day-hem {
+    position: relative; z-index: 2; height: 29px; margin-top: -2px;
+    background: var(--day-hem-bg); border: 2px solid var(--ink); border-radius: 0 0 2px 2px;
+    border-top: 0; box-shadow: 2px 3px 0 rgba(43, 39, 34, 0.14);
+  }
+  .day-hem::before {
+    content: ""; position: absolute; left: 0; right: 0; top: 0; height: 1.4px;
+    background: repeating-linear-gradient(90deg, var(--day-ink-3) 0 4px, transparent 4px 8px);
+  }
+  .day-hole {
+    position: absolute; top: -3.2px; width: 6.4px; height: 6.4px; border-radius: 50%;
+    background: var(--paper); box-shadow: inset 0 1px 1.5px rgba(43, 39, 34, 0.34);
+  }
+  /* the tear line sits at the hem's own optical centre rather than pinned to its top —
+     Caveat's ascenders and descenders both need clearance, and this way neither the
+     punch line above nor the card's bottom edge below is ever crowded */
+  .day-hem b {
+    position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+    padding-top: 3px; text-align: center; font-family: var(--hand); font-weight: 400;
+    font-size: calc(15px + var(--text-size-adjust)); line-height: 1; color: var(--ink-soft); letter-spacing: 0.3px;
+  }
+  .day:hover .day-hem b { color: var(--red-pen); }
+  .day-curl {
+    position: absolute; right: 0; bottom: 0; z-index: 5; width: 30px; height: 30px;
+    background: linear-gradient(135deg, transparent 50%, var(--day-hem-bg) 50%, var(--day-paper) 100%);
+    box-shadow: -2px -2px 5px rgba(43, 39, 34, 0.2);
+    clip-path: polygon(100% 0, 100% 100%, 0 100%);
   }
   @media (prefers-reduced-motion: no-preference) {
-    .daily-btn .daily-star { animation: dailyStarTwinkle 1.9s ease-in-out infinite; }
+    .day-curl { animation: dayCurl 3.6s ease-in-out infinite; }
   }
-  @keyframes dailyStarTwinkle {
-    0%, 100% { opacity: 0.35; transform: translate(-50%, -50%) scale(0.8); }
-    50%      { opacity: 1;    transform: translate(-50%, -50%) scale(1.18); }
+  body[data-reduce-motion="on"] .day-curl { animation: none; }
+  @keyframes dayCurl { 0%, 100% { width: 26px; height: 26px; } 50% { width: 36px; height: 36px; } }
+
+  /* =====================================================================
+     PLAYED — the hem is gone and the card is genuinely shorter. The torn
+     edge is three layers: an irregular silhouette (never a repeat), a pale
+     fibre lip just inside it (torn stock shows its uncoloured core), and
+     loose specks below. The date does not change; the chip goes to
+     --ink-soft ("faded pencil") but keeps its misregistration, so the
+     played card is recognisably the unplayed one, used — not a redesign.
+     ===================================================================== */
+  .day--done .day-card {
+    background: var(--day-paper); padding-bottom: 26px; border-bottom: 0; box-shadow: none;
+    clip-path: polygon(0 0, 100% 0, 100% 80%, 97% 95%, 94% 78%, 90% 98%, 86% 83%, 82% 100%, 77% 84%, 73% 96%, 69% 79%, 64% 99%, 60% 85%, 56% 97%, 51% 80%, 47% 100%, 42% 83%, 38% 96%, 33% 78%, 29% 98%, 25% 85%, 20% 97%, 16% 80%, 11% 99%, 7% 83%, 3% 95%, 0 79%);
   }
-  .daily-btn .daily-tab {
-    position: absolute; top: -14px; right: -8px;
-    font-family: var(--hand); font-weight: 700; font-size: calc(15px + var(--text-size-adjust)); letter-spacing: 0;
-    color: #5a3a3a; background: #f4e58a;
-    padding: 5px 12px; transform: rotate(6deg);
-    box-shadow: 1px 2px 4px rgba(43, 39, 34, 0.22);
+  .day--done .day-card::after {
+    content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 13px; z-index: 4; pointer-events: none;
+    background: linear-gradient(to top, var(--day-lip), transparent);
   }
-  @media (prefers-reduced-motion: no-preference) {
-    .daily-btn.undone .daily-tab { animation: dailyTabNudge 2.6s ease-in-out infinite; }
+  .day--done .day-body { transform: rotate(-0.5deg); }
+  .day--done .day-chip { background: var(--ink-soft); }
+  .day--done .day-chip .n { text-shadow: -1.5px -1px 0 rgba(43, 39, 34, 0.28); }
+  .day-specks { position: absolute; z-index: 3; left: 0; right: 0; bottom: -5px; height: 8px; pointer-events: none; }
+  .day-specks i { position: absolute; width: 2px; height: 2px; border-radius: 50%; background: var(--day-ink-3); }
+  .day-score { font-family: var(--hand); font-size: calc(24px + var(--text-size-adjust)); font-weight: 700; line-height: 1; margin-top: 5px; color: var(--ink); }
+  .day-score em { font-style: normal; font-size: calc(15px + var(--text-size-adjust)); color: var(--ink-soft); margin-left: 7px; letter-spacing: 0; }
+  .day-next { font-size: calc(8.5px + var(--text-size-adjust)); letter-spacing: 2.1px; color: var(--day-ink-4); margin-top: 7px; }
+  /* the streak, drawn rather than captioned: one bead per day kept, on the game's own
+     waxed cord. Caps at seven beads + a written count, so a long run never overflows. */
+  .day-strand { position: absolute; right: 10px; top: 26px; z-index: 3; text-align: right; }
+  .day-strand svg { display: block; height: 22px; overflow: visible; margin-left: auto; }
+  .day-strand b {
+    display: block; font-family: var(--type); font-weight: 400; font-size: calc(8.5px + var(--text-size-adjust));
+    letter-spacing: 2.1px; color: var(--day-ink-4); margin-top: 3px;
   }
-  @keyframes dailyTabNudge {
-    0%, 92%, 100% { transform: rotate(6deg); }
-    96% { transform: rotate(2deg); }
-  }
-  /* Left-side "next in …" reset countdown — a denim sticky note (distinct from the
-     yellow done note), mirrored to the left. Inherits the .done dimming + hover. */
-  .daily-btn .daily-countdown {
-    position: absolute; top: -14px; left: -8px; z-index: 3;
-    font-family: var(--hand); font-weight: 700; font-size: calc(15px + var(--text-size-adjust)); letter-spacing: 0;
-    color: #2e3f52; background: #cfe0ef;
-    padding: 5px 12px; transform: rotate(-6deg);
-    box-shadow: -1px 2px 4px rgba(43, 39, 34, 0.22);
+
+  @media (max-width: 480px) {
+    .day-chip { flex-basis: 62px; }
+    .day-chip .n { font-size: calc(31px + var(--text-size-adjust)); }
+    .day-well { padding: 8px 10px 7px 11px; }
   }
 
   /* records / charms / stats — three taped index cards pinned to the page. Each is a
