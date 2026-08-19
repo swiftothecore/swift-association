@@ -6099,17 +6099,32 @@
      not, so any other wrapper — the keepsake card, the unlock toast — earns the same finish
      by taking the class alone, without also inheriting a tile's border and lift. */
 
-  /* Tier 2, "mounted": the pen pressed harder and the card is mounted. A second hairline rule
-     inside the border and a hard 2px paper lift. Structural only, so it survives all twelve
-     era palettes and both themes untouched. */
-  .ach.ach--mounted { border-color: var(--tier-rule); box-shadow: 2px 2px 0 var(--tier-lift); }
-  .ach.ach--mounted::after {
-    content: ""; position: absolute; inset: 3px;
-    border: 1px solid rgba(43,39,34,0.12); border-radius: 1px; pointer-events: none;
+  /* Tier 2, "punched": a cream disc punched out of card and lifted off the page, with the
+     highlighter smudge shrunk down to ride on top of it. Punched paper against tier 3's struck
+     metal — the two bands name their manufacture, and that is the whole reason this works.
+     The FIRST attempt at this band mounted the tile instead (a hairline rule inside the border,
+     a heavier pen) and it could not be seen at all. The lesson is worth keeping, because it was
+     not a matter of turning the signal up: tier 3 changes what the glyph SITS ON, so a band
+     that decorates the frame and the stroke instead is on a different axis and the eye has
+     nothing to rank the two on. Anything that replaces this must stay on the backing axis. The
+     stroke-weight bump went with it — .charm svg runs through charmWobble, and displacing a
+     fatter line costs legibility at 30px while buying no rank at all. */
+  .ach--punched .charm::after {
+    content: ""; position: absolute; z-index: -2; inset: -16%; border-radius: 50%;
+    background: var(--paper-edge); pointer-events: none;
+    box-shadow: 0 1.5px 3px rgba(0,0,0,0.26), inset 0 0 0 1px rgba(43,39,34,0.14),
+                inset 0 1px 0 rgba(255,255,255,0.5);
   }
-  :root[data-theme="dark"] .ach.ach--mounted::after { border-color: rgba(236,229,214,0.13); }
-  .ach--mounted .charm .ink { stroke-width: 2; }
-  .ach--mounted .charm .ink-fill { stroke-width: 2.25; }
+  :root[data-theme="dark"] .ach--punched .charm::after {
+    box-shadow: 0 1.5px 3px rgba(0,0,0,0.5), inset 0 0 0 1px rgba(236,229,214,0.16),
+                inset 0 1px 0 rgba(236,229,214,0.10);
+  }
+  /* The smudge pulls in to sit ON the disc rather than spilling over its edge, which is what
+     keeps this reading as marker-on-a-token and not as a leaking highlighter. */
+  .ach--punched .charm::before { inset: 14%; }
+  /* Locked keeps the disc: an unearned charm still shows the card it would be punched into,
+     the same way an unearned tier 3 shows its blank. Only the smudge goes (.locked, above). */
+  .ach--punched.locked .charm::after { opacity: 0.8; }
 
   /* Tier 3, "struck": the highlighter swipe becomes a stamped metal disc. The alloy is mixed
      FROM --bead, so the charm's group colour survives as the metal instead of being painted

@@ -2848,7 +2848,7 @@ export function reseedSeal(id, seed) {
      absent — pencil. The floor: one-sitting feats, counters, and the odd secret you trip
               over. It gets no decoration at all, because a tier system that dresses up its
               floor has no floor.
-     2      — mounted. Needs more than one sitting, OR is a peak single-run performance that
+     2      — punched. Needs more than one sitting, OR is a peak single-run performance that
               is not the top of its own ladder.
      3      — struck. The top of a ladder (no strictly harder version of the same feat exists
               in the roster) or a commitment measured in weeks. Keep this band small; every

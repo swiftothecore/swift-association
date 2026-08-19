@@ -2815,11 +2815,14 @@ const achMasked = (a) => !!a.secret && !(a.reveal && challengeRecord(a.reveal).d
 const secretCharmsLeft = () => ACHIEVEMENTS.filter((a) => achMasked(a) && !earnedAchievements[a.id]);
 
 // The material a charm's tile is finished in, from its authored `tier` (see ACHIEVEMENTS in
-// config.js). Tier 1 is the floor and is deliberately undecorated, so it returns nothing.
+// config.js): a punched paper disc at 2, a struck metal one at 3. Both bands work on the same
+// axis — what the glyph SITS ON — which is what makes them rankable against each other at a
+// glance; see the note in styles.css before moving either onto some other axis.
+// Tier 1 is the floor and is deliberately undecorated, so it returns nothing.
 // A still-masked secret gets no finish either: the tier would leak how heavy the feat is
 // while the charm is meant to be a surprise, which is the one place this signal must not
 // speak. It arrives with the reveal, along with the name and the glyph.
-const achFinish = (a) => (a.tier === 3 ? " ach--struck" : a.tier === 2 ? " ach--mounted" : "");
+const achFinish = (a) => (a.tier === 3 ? " ach--struck" : a.tier === 2 ? " ach--punched" : "");
 
 // One charm tile: earned (revealed), a still-masked secret (???), or a visible
 // locked target. Shared by the grid + secret section.
@@ -21305,7 +21308,7 @@ function buildDevApi() {
       },
     },
     /* Charm tiers — the authored `tier` on each ACHIEVEMENTS row, drawn as a material finish on
-       the tile (mounted at 2, struck at 3). There is no telemetry behind this and there never
+       the tile (punched at 2, struck at 3). There is no telemetry behind this and there never
        will be, so the only thing that can be checked mechanically is the SHAPE of the pass:
        stray values, and whether band 3 has quietly stopped being a handful. The judgement calls
        themselves are only reviewable by reading show(3) and disagreeing with it. */
@@ -21324,7 +21327,7 @@ function buildDevApi() {
         const pct = (v) => ((v / ACHIEVEMENTS.length) * 100).toFixed(1) + "%";
         return {
           pencil: `${n(1)} (${pct(n(1))})`,
-          mounted: `${n(2)} (${pct(n(2))})`,
+          punched: `${n(2)} (${pct(n(2))})`,
           struck: `${n(3)} (${pct(n(3))})`,
           // Band 3 is the one with a real ceiling: it is worth something only while it stays
           // rare, and there is no automatic way to notice it creeping except this number.
@@ -21340,10 +21343,10 @@ function buildDevApi() {
       preview: (t) => {
         const body = $("achievementsBody");
         if (!body || !screens.achievements.classList.contains("active")) return "open the charms page first";
-        const cls = t === 3 ? "ach--struck" : t === 2 ? "ach--mounted" : null;
+        const cls = t === 3 ? "ach--struck" : t === 2 ? "ach--punched" : null;
         const tiles = body.querySelectorAll(".ach");
         tiles.forEach((el) => {
-          el.classList.remove("ach--struck", "ach--mounted");
+          el.classList.remove("ach--struck", "ach--punched");
           if (cls) el.classList.add(cls);
         });
         return `${tiles.length} tiles drawn as ${cls || "pencil"} — re-render the page to restore`;
