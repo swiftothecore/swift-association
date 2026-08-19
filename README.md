@@ -44,20 +44,20 @@ The game is still a work in progress and is by no means 'done'.
 - Opt-in sound effects
 - Installable as a phone or desktop app and works offline once loaded
 
-With many features in the works as we speak:
+**There are many features in the works as we speak:**
 
 - More bonus mini-games
 - Global leaderboards
 - More easter eggs
 - More sound design
 - Stickers!!
-- Dark mode
+- Fixing up dark mode
 - Polaroids in more places!
-- More achievements
+- More achievements (always)
 
 I want this game to have extensive replay value. I want it to be challenging. I want it to be as good as it can be for as many people as possible, so I’m working on adding accessibility features, and I’m open to all feedback/suggestions. Submit feedback with the feedback button on the site or at https://swiftassociation.com/feedback
 
-Above all, I want it to be fun.
+Above all, **I want it to be fun.**
 
 If the game doesn’t seem like it’s in a finished state right now, that’s because it isn’t. We’re getting there lol. For now, thank you for reading, and you can play the game RIGHT NOW in its alpha stage at https://swiftassociation.com
 
