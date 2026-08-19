@@ -2357,7 +2357,7 @@ export const ACH_ICONS = {
   // the sleeve going up, with the record still in it. Burning red, and it was the right album
   burningsleeve:`<svg viewBox="0 0 24 24"><path class="ink" fill="none" stroke-width="1.3" d="M18.4 11.6 A4.4 4.4 0 0 1 18.4 18.4"/><rect class="ink-fill" x="4" y="8.8" width="14.4" height="12.2" rx="0.6"/><path class="ink" stroke-width="0.9" opacity="0.5" d="M6.4 8.9 V21"/><g class="ink-fill"><path d="M6.2 8.6 C5.4 6.6 7.1 5.6 6.6 3.6 C8.5 5 8.9 7.1 8 8.6 Z"/><path d="M10.4 8.6 C9.4 6 11.6 4.6 10.9 2 C13.4 3.8 13.9 6.6 12.6 8.6 Z"/><path d="M14.8 8.6 C14 6.8 15.6 5.8 15.1 4 C17 5.3 17.4 7.2 16.5 8.6 Z"/></g></svg>`,
   /* The Ruthless batch: eight marks for the mode where the clock is the score. Judged at 30px
-     first (scripts/ruthless-batch-icons.html) rather than large, which is what caught five of
+     first (scripts/ruthless/ruthless-batch-icons.html) rather than large, which is what caught five of
      them — footprints that read as a string of beads, a knot that read as a squiggle, an
      eraser that read as a book. Every one is drawn against its nearest existing neighbour. */
   // one word in longhand on its rule, and the spark of placing it. No page around it
