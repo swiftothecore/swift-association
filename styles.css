@@ -165,6 +165,11 @@
       drop-shadow(0 1px 0 rgba(0, 0, 0, 0.45))
       drop-shadow(0 2px 6px rgba(0, 0, 0, 0.5));
   }
+  /* On the night desk there is no light to cast an underside, and the accent gold
+     is already bright against near-black, so the seating shadow only thickens the
+     letter. Take it off and let the gold word sit flat. Same for the star. */
+  :root[data-theme="dark"] .mast-gold,
+  :root[data-theme="dark"] .mast-i .mast-star { filter: none; }
   :root[data-theme="dark"] header.title p { color: #b7a888; }
   /* Keepsake nav cards default to a cream stock; give them a dark card so they
      stop glowing. Title/kicker already read from --ink/--ink-soft; the tinted
@@ -600,13 +605,14 @@
        colour paints the whole glyph, descender and all. */
     color: var(--ink-accent);
     -webkit-text-fill-color: var(--ink-accent);
-    /* A bright near-white highlight edge (brighter than .mast-line's, because a
-       light edge reads dimmer over gold than over dark brown), then a dark-gold
-       underside for depth and the same recessive ambient the brown letters use. */
-    filter:
-      drop-shadow(0 1px 0 rgba(255,250,240,0.44))
-      drop-shadow(0 1.5px 1px color-mix(in srgb, var(--ink-accent), #000 42%))
-      drop-shadow(0 3px 5px rgba(58,30,8,0.14));
+    /* ONE tight underside and nothing else. The brown words can carry a light top
+       edge, a dark underside and a wide ambient because brown on tan has the
+       contrast to survive them; mid-gold on tan does not. Stacking a near-white
+       edge above a blurred dark edge below softened the glyph from both sides at
+       once, and the word went to mush at a distance. So: no light edge, no wide
+       ambient, and the remaining shadow is a half-pixel blur rather than a glow,
+       just enough to seat the gold on the wood instead of floating over it. */
+    filter: drop-shadow(0 1px 0.5px color-mix(in srgb, var(--ink-accent), #000 55%));
   }
   /* the dot on the first i becomes the game's gold star */
   .mast-i { position: relative; }
@@ -618,7 +624,7 @@
     fill: var(--ink-accent);
     stroke: var(--ink-accent); stroke-width: 1.1;
     stroke-linejoin: round; stroke-linecap: round;
-    filter: drop-shadow(0 1px 0 rgba(255,248,232,0.45)) drop-shadow(0 2px 5px rgba(58,30,8,0.28));
+    filter: drop-shadow(0 1px 0.5px color-mix(in srgb, var(--ink-accent), #000 55%));
   }
   /* a songwriter's underline flourish, drawn in the same pen as the era ink,
      now finishing in a little cursive loop at the right */
