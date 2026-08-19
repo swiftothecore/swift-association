@@ -167,9 +167,9 @@
   }
   /* On the night desk there is no light to cast an underside, and the accent gold
      is already bright against near-black, so the seating shadow only thickens the
-     letter. Take it off and let the gold word sit flat. Same for the star. */
-  :root[data-theme="dark"] .mast-gold,
-  :root[data-theme="dark"] .mast-i .mast-star { filter: none; }
+     letter. Take it off and let the gold word sit flat. The star keeps its own
+     edge: it is a solid mark rather than a stroke, so the highlight still reads. */
+  :root[data-theme="dark"] .mast-gold { filter: none; }
   :root[data-theme="dark"] header.title p { color: #b7a888; }
   /* Keepsake nav cards default to a cream stock; give them a dark card so they
      stop glowing. Title/kicker already read from --ink/--ink-soft; the tinted
@@ -620,11 +620,13 @@
     position: absolute; left: 0.185em; top: 0.44em;  /* measured onto the i stem top */
     width: 0.27em; height: 0.27em;
     transform: translate(-50%, -50%) rotate(-8deg);
-    /* wears the same gold and lifted-ink edge as the "Song" letters */
+    /* wears the same gold as the "Song" letters but keeps its own lifted edge:
+       a star is a solid little mark, not a run of thin strokes, so the near-white
+       top edge that blurred the word reads as a highlight on it instead. */
     fill: var(--ink-accent);
     stroke: var(--ink-accent); stroke-width: 1.1;
     stroke-linejoin: round; stroke-linecap: round;
-    filter: drop-shadow(0 1px 0.5px color-mix(in srgb, var(--ink-accent), #000 55%));
+    filter: drop-shadow(0 1px 0 rgba(255,248,232,0.45)) drop-shadow(0 2px 5px rgba(58,30,8,0.28));
   }
   /* a songwriter's underline flourish, drawn in the same pen as the era ink,
      now finishing in a little cursive loop at the right */
@@ -6730,7 +6732,7 @@
   /* =====================================================================
      Daily Challenge — "the day block": a day printed on cheap stock and
      pasted into the notebook, sitting under the gold primary CTA. Built in
-     JS by renderDailyButtonState() (js/app.js); see scripts/dev/daily-btn-
+     JS by renderDailyButtonState() (js/app.js); see scripts/ui/daily-btn-
      dayblock.html (gitignored) for the design session this shipped from.
        · the chip is a letterpress hit, not a filled box — ink pools at the
          plate edges, a fine roller grain runs vertical, and the numeral
