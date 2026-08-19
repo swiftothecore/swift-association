@@ -544,7 +544,12 @@ export function initDev(api) {
         }),
         btn("fly the flock", () => { api.share.flock(); toast("messengers away"); })),
     row(btn("card meta", () => { console.log("[dev] bracelet card", api.card.meta()); toast("card meta in console"); }),
-        btn("open card SVG", () => api.card.open()))));
+        btn("open card SVG", () => api.card.open())),
+    // The strand's own gallery: a bead's finish carries meaning now (matte for a hint, pearl
+    // for a word-perfect line, frosted for a miss, a bone bead for an Insurance death), and
+    // waiting for a run to deal all of them is not a way to check they still read apart.
+    row(btn("bracelet preview", () => api.bracelet.preview()),
+        btn("close preview", () => api.bracelet.close()))));
 
   /* ---- Catalogue charms ------------------------------------------------------
      The batch that waits on one particular word being dealt, which normal play will not do on

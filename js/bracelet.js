@@ -197,16 +197,143 @@ export function trinketPreviewSVG(id, tint) {
   return `<svg viewBox="0 0 24 24" class="trinket-preview" aria-hidden="true"><g${style} transform="translate(12 12.5)">${fn(0, 0, r, sw)}</g></svg>`;
 }
 
+// ---- The strand's materials ----
+// PEN is deliberately not var(--ink). A white bead is a white OBJECT, not ink on paper: in
+// dark mode var(--ink) becomes a warm paper-white, and every near-white piece here — the
+// alphabet cubes and their lettering, the pearls, the frosted misses, the spacer discs —
+// would lose both its outline and its letters against its own body. Coloured beads keep
+// var(--ink), where the theme-aware pen line still reads.
+const PEN = "#2b2722";
+const CORD = "#cfc3ab", CORD_HI = "#efe6d2", DISC = "#efe6d2", CUBE = "#fffdf6";
+
+const n = (v) => (+v).toFixed(2);
+
+// Stable per-bead wobble. Seeded from the bead's index and nothing else, because the strand
+// is rebuilt on EVERY page turn: anything random here would reshuffle every bead's tilt in
+// front of the player between pages.
+function jitter(i, salt, amp) {
+  let h = (Math.imul(i + 1, 0x9e3779b1) ^ Math.imul(salt + 1, 0x85ebca6b)) >>> 0;
+  h = Math.imul(h ^ (h >>> 15), 0xc2b2ae35) >>> 0;
+  h = (h ^ (h >>> 16)) >>> 0;
+  return ((h & 0xffff) / 0xffff - 0.5) * amp;
+}
+
+// Ids have to be unique across the DOCUMENT, not just within one <svg> — the results screen
+// can hold a strand while another is still mounted, and the keepsake card nests a third.
+let BR_UID = 0;
+
+// The light on the beads is colour-agnostic on purpose: one white overlay and one graphite
+// overlay, reused by every bead whatever colour it is. That means a bead can be filled with
+// var(--bead) — a CSS variable no arithmetic could interpolate — and still be lit exactly
+// like the album-coloured ones beside it.
+function beadDefs(u) {
+  return `<linearGradient id="${u}lit" x1="0.12" y1="0" x2="0.72" y2="0.9">` +
+      `<stop offset="0" stop-color="#fff" stop-opacity="0.44"/>` +
+      `<stop offset="0.42" stop-color="#fff" stop-opacity="0.07"/>` +
+      `<stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>` +
+    `<linearGradient id="${u}dim" x1="0.28" y1="0.12" x2="0.92" y2="1">` +
+      `<stop offset="0" stop-color="${PEN}" stop-opacity="0"/>` +
+      `<stop offset="0.55" stop-color="${PEN}" stop-opacity="0.07"/>` +
+      `<stop offset="1" stop-color="${PEN}" stop-opacity="0.34"/></linearGradient>`;
+}
+
+// ---- One pony bead ----
+// A 9x6mm barrel reads TALLER THAN IT IS WIDE on a cord — a short fat cylinder, not a
+// lozenge lying down. `finish` is the strand's second channel, on top of album colour:
+//   gloss  a page you named        matte  a page where a hint was taken (sanded, so it
+//   pearl  a line written from     |      still reads on the albums that are already grey)
+//   |      memory, word-perfect    clear  a page you missed
+function ponyBead(x, y, fill, sc, rot, finish, u, idx) {
+  const w = 24 * sc, h = 28 * sc, rx = 7.6 * sc;
+  const box = `x="${n(x - w / 2)}" y="${n(y - h / 2)}" width="${n(w)}" height="${n(h)}" rx="${n(rx)}"`;
+  const lit = `<rect ${box} fill="url(#${u}lit)"/>`;
+  const dim = `<rect ${box} fill="url(#${u}dim)"/>`;
+  // light coming back up through the bottom of the plastic off the paper
+  const bounce = `<path d="M${n(x - w * 0.30)},${n(y + h * 0.36)} q${n(w * 0.30)},${n(h * 0.14)} ${n(w * 0.60)},0" ` +
+    `fill="none" stroke="#fff" stroke-width="${n(2.6 * sc)}" stroke-linecap="round" opacity="0.34"/>`;
+  const spec = `<rect x="${n(x - w * 0.33)}" y="${n(y - h * 0.34)}" width="${n(w * 0.30)}" height="${n(h * 0.24)}" ` +
+      `rx="${n(3.4 * sc)}" fill="#fff" opacity="0.30"/>` +
+    `<circle cx="${n(x - w * 0.25)}" cy="${n(y - h * 0.27)}" r="${n(1.7 * sc)}" fill="#fff" opacity="0.82"/>`;
+  const bore = `<ellipse cx="${n(x - w / 2 + 2.2 * sc)}" cy="${n(y)}" rx="${n(2.1 * sc)}" ry="${n(h * 0.19)}" fill="${PEN}" opacity="0.30"/>` +
+    `<ellipse cx="${n(x + w / 2 - 2.2 * sc)}" cy="${n(y)}" rx="${n(2.1 * sc)}" ry="${n(h * 0.19)}" fill="${PEN}" opacity="0.22"/>`;
+  // packed beads shade each other along the touching edge; without it a row of barrels
+  // reads as one flat printed strip rather than as separate objects
+  const contact = `<rect x="${n(x - w / 2)}" y="${n(y - h / 2)}" width="${n(w * 0.26)}" height="${n(h)}" ` +
+    `rx="${n(rx * 0.9)}" fill="${PEN}" opacity="0.10"/>`;
+
+  let body;
+  if (finish === "clear") {
+    body = `<rect ${box} fill="#fff" fill-opacity="0.34" stroke="${PEN}" stroke-opacity="0.55" stroke-width="${n(1.25 * sc)}"/>` +
+      `<rect ${box} fill="${fill}" fill-opacity="0.13"/>` +
+      `<rect x="${n(x - w / 2 + 3 * sc)}" y="${n(y - h / 2 + 3 * sc)}" width="${n(w - 6 * sc)}" height="${n(h - 6 * sc)}" ` +
+        `rx="${n(rx * 0.6)}" fill="none" stroke="#fff" stroke-width="${n(1.6 * sc)}" opacity="0.7"/>` + lit + spec;
+  } else if (finish === "matte") {
+    // Sanded, not merely flat. Three albums are already grey or near-grey, so a matte bead
+    // that differed from a gloss one by hue alone would be invisible on exactly the pages
+    // where it matters most. The texture is what carries it, at any colour.
+    body = `<rect ${box} fill="${fill}" stroke="var(--ink)" stroke-width="${n(1.3 * sc)}"/>` +
+      `<rect ${box} fill="#fff" opacity="0.13"/>` +
+      `<rect x="${n(x - w * 0.32)}" y="${n(y - h * 0.34)}" width="${n(w * 0.28)}" height="${n(h * 0.20)}" rx="${n(3 * sc)}" fill="#fff" opacity="0.15"/>`;
+    for (let k = 0; k < 16; k++) {
+      const gx = x + jitter(idx, k * 2 + 1, w * 0.74), gy = y + jitter(idx, k * 2 + 2, h * 0.72);
+      body += `<circle cx="${n(gx)}" cy="${n(gy)}" r="${n((0.55 + Math.abs(jitter(idx, k + 40, 0.9))) * sc)}" ` +
+        `fill="${k % 2 ? "#fff" : PEN}" opacity="0.18"/>`;
+    }
+  } else if (finish === "pearl") {
+    // Ivory body, a broad band of the album colour blushing through it, one long sheen. The
+    // blush has to be STRONG: a pale one leaves a pearl indistinguishable from a frosted miss
+    // at strand size, which reads the rarest page on the strand as the worst one. No dim
+    // overlay here either — greying an ivory bead is what pushed it back toward the misses.
+    body = `<rect ${box} fill="#f7f1e3" stroke="${PEN}" stroke-width="${n(1.3 * sc)}"/>` +
+      `<rect x="${n(x - w * 0.40)}" y="${n(y - h * 0.14)}" width="${n(w * 0.80)}" height="${n(h * 0.52)}" rx="${n(5 * sc)}" fill="${fill}" opacity="0.58"/>` +
+      `<rect x="${n(x - w * 0.40)}" y="${n(y + h * 0.20)}" width="${n(w * 0.80)}" height="${n(h * 0.20)}" rx="${n(4 * sc)}" fill="${fill}" opacity="0.34"/>` +
+      `<path d="M${n(x - w * 0.30)},${n(y - h * 0.30)} q${n(w * 0.30)},${n(-h * 0.06)} ${n(w * 0.58)},${n(h * 0.04)}" ` +
+        `fill="none" stroke="#fff" stroke-width="${n(3.4 * sc)}" stroke-linecap="round" opacity="0.85"/>` +
+      `<circle cx="${n(x - w * 0.25)}" cy="${n(y - h * 0.30)}" r="${n(1.7 * sc)}" fill="#fff" opacity="0.95"/>`;
+  } else {
+    body = `<rect ${box} fill="${fill}" stroke="var(--ink)" stroke-width="${n(1.3 * sc)}"/>` + lit + dim + bounce + spec;
+  }
+  return `<g transform="rotate(${n(rot)} ${n(x)} ${n(y)})">${body}${contact}${bore}</g>`;
+}
+
+// A flat pearl disc: the spacer that stops thirteen barrels reading as one long tube.
+function heishi(x, y, sc, rot) {
+  const w = 4.6 * sc, h = 16 * sc;
+  return `<g transform="rotate(${n(rot)} ${n(x)} ${n(y)})">` +
+    `<rect x="${n(x - w / 2)}" y="${n(y - h / 2)}" width="${n(w)}" height="${n(h)}" rx="${n(1.8 * sc)}" fill="${DISC}" stroke="${PEN}" stroke-width="${n(sc)}"/>` +
+    `<path d="M${n(x - w * 0.18)},${n(y - h * 0.28)} L${n(x - w * 0.18)},${n(y + h * 0.24)}" stroke="#fff" stroke-width="${n(1.1 * sc)}" opacity="0.75" stroke-linecap="round"/></g>`;
+}
+
+// An alphabet cube: square, white, letter cut in typewriter caps.
+function alphaCube(x, y, ch, sc, rot) {
+  const s = 25 * sc;
+  return `<g transform="rotate(${n(rot)} ${n(x)} ${n(y)})">` +
+    `<rect x="${n(x - s / 2)}" y="${n(y - s / 2)}" width="${n(s)}" height="${n(s)}" rx="${n(4.4 * sc)}" fill="${CUBE}" stroke="${PEN}" stroke-width="${n(1.3 * sc)}"/>` +
+    `<rect x="${n(x - s * 0.30)}" y="${n(y - s * 0.36)}" width="${n(s * 0.44)}" height="${n(s * 0.15)}" rx="${n(2 * sc)}" fill="#fff" opacity="0.95"/>` +
+    `<text x="${n(x)}" y="${n(y + s * 0.21)}" text-anchor="middle" font-size="${n(s * 0.62)}" fill="${PEN}" class="b-cube-text">${ch}</text>` +
+    `<ellipse cx="${n(x - s / 2 + 2.2 * sc)}" cy="${n(y)}" rx="${n(2 * sc)}" ry="${n(s * 0.16)}" fill="${PEN}" opacity="0.22"/></g>`;
+}
+
+// The knot the strand is tied off with, plus the tail nobody trimmed. `dir` is which way
+// the tail falls away from the beads.
+function tieKnot(x, y, dir) {
+  return `<ellipse cx="${n(x)}" cy="${n(y)}" rx="4.6" ry="3.6" fill="${CORD}" stroke="${PEN}" stroke-width="1.1" transform="rotate(${dir * 13} ${n(x)} ${n(y)})"/>` +
+    `<path d="M${n(x + dir * 3)},${n(y + 2)} c${dir * 6},7 ${dir * 12},8 ${dir * 18},7" fill="none" stroke="${CORD}" stroke-width="2.6" stroke-linecap="round"/>`;
+}
+
 export function buildBraceletSVG(results, activeRound, freshIndex, albums, opts) {
   const total = (opts && opts.total) || TOTAL_ROUNDS;
+  // letterBead:false marks an uncapped run (infinite, custom-infinite, Ruthless). It no
+  // longer draws a finale slot — it decides what the TIE BEADS say when the run ends:
+  // a fixed-length run ties off with "13", an uncapped one with the pages it reached.
   const letterBead = !opts || opts.letterBead !== false;
   // Album→colour map; callers pass the active palette (colour-blind variant when
   // that setting is on), defaulting to the standard album colours.
   const colors = (opts && opts.colors) || ALBUM_COLORS;
-  // per-round flags: was a hint taken that round? marks the trinket with a small "H".
+  // per-round flags: was a hint taken that round? the bead is strung sanded rather than glossy.
   const hinted = (opts && opts.hinted) || [];
-  // per-round verse tier ("perfect"/"verse"): a word-perfect recall hangs a pen-nib
-  // trinket instead of the usual star — a keepsake of writing the line from memory.
+  // per-round verse tier ("perfect"/"verse"): both hang the reserved pen-nib trinket, and a
+  // word-perfect one is additionally strung as a pearl — the two tiers used to look identical.
   const verseTiers = (opts && opts.verseTiers) || [];
   // per-round flag (Impostor challenge): this bead flagged a fake, so it dangles a devil.
   const impostorCaught = (opts && opts.impostorCaught) || [];
@@ -215,111 +342,147 @@ export function buildBraceletSVG(results, activeRound, freshIndex, albums, opts)
   // a high-stakes page shows what it was worth.
   const riskWon = (opts && opts.riskWon) || [];
   // per-round flag (Insurance): the uninsured miss that ended the run — this page's bead is
-  // a skull rather than the usual matte spacer. At most one page a run ever carries it.
+  // a skull rather than a frosted spacer. At most one page a run ever carries it.
   const skullMiss = (opts && opts.skullMiss) || [];
   // per-round flag (Ruthless): this page was named inside its lens's snap window, so it dangles
-  // a stopwatch. The strand is otherwise silent about HOW a page went — one bead a page, tinted
-  // by album — and this is the one thing about a Ruthless page worth carrying off it.
+  // a stopwatch.
   const snapPage = (opts && opts.snapPage) || [];
+  // compact: the in-run strip, where gameplay has to stay visually dominant. Same beads,
+  // charms tucked up close, no tie beads yet.
+  const compact = !!(opts && opts.compact);
   // opts.trinket: the Mastery-chosen dangling trinket id (see TRINKETS); default "star". The
   // special value "random" gives every bead its own trinket instead of the whole strand
   // wearing one, shuffled per run by opts.trinketSeed. Either way this only supplies a bead's
-  // DEFAULT trinket: the earned overrides below (nib, devil, horseshoe) still win over it.
+  // DEFAULT trinket: the earned overrides below (nib, devil, horseshoe, stopwatch) still win.
   const wantRandom = !!(opts && opts.trinket === "random");
   const trinketSeed = (opts && opts.trinketSeed) || 0;
   const pickedTrinket = (opts && opts.trinket && TRINKETS[opts.trinket]) ? opts.trinket : "star";
   const defaultTrinket = wantRandom ? (i) => randomTrinketForBead(trinketSeed, i) : () => pickedTrinket;
-  const W = 520, H = 64, xL = 26, xR = W - 26;
-  // the thread sags between its tied ends like a real bracelet laid on the page
-  const yAt = (x) => 20 + 10 * Math.sin(Math.PI * ((x - xL) / (xR - xL)));
-  const tx0 = xL - 16, tx1 = xR + 16;
 
-  // Beads shrink as the strand grows, so a long infinite run still fits the
-  // viewBox. Scale is the gap between mains relative to the classic 13-bead gap.
-  const classicStep = (xR - xL) / (TOTAL_ROUNDS - 1);
-  const step = total > 1 ? (xR - xL) / (total - 1) : classicStep;
-  const scale = Math.max(0.45, Math.min(1, step / classicStep));
-  const s = (v) => +(v * scale).toFixed(2);
-  // single bead sits centred; otherwise spread evenly between the tied ends
-  const beadX = (i) => total > 1
-    ? +(xL + ((xR - xL) * i) / (total - 1)).toFixed(1)
-    : +((xL + xR) / 2).toFixed(1);
+  const u = "br" + (++BR_UID);
+  const W = 520, X0 = 46, XEND = 494;
+  const BH = compact ? 88 : 132;
+  const yMid = compact ? 38 : 44;
+  // Shrink-to-fit, uncapped: thirteen beads sit at full size and a long infinite run packs
+  // down instead of running off the page. Beads, spacers, charms and drops all ride this one
+  // scale, so a long strand reads as the same object seen smaller. The 386 is the run of page
+  // the beads get once the tie beads and both knots have taken their room.
+  const sc = Math.max(0.28, Math.min(1, 386 / (total * 29)));
+  const PITCH = 29 * sc;
+  const yAt = (x) => yMid + 5 * Math.sin(Math.PI * ((x - 14) / (XEND - 14)));
+  const slotX = (i) => X0 + PITCH * i;
 
-  let d = "";
-  for (let k = 0; k <= 48; k++) {
-    const x = tx0 + ((tx1 - tx0) * k) / 48;
-    d += (k ? "L" : "M") + x.toFixed(1) + "," + yAt(x).toFixed(1);
+  const live = activeRound > 0;
+  // how far the strung part reaches, so the bare elastic can start there
+  const filled = results.reduce((m, v, i) => (v == null ? m : i + 1), 0);
+  const lastX = slotX(Math.max(1, filled, live ? activeRound : 0) - 1);
+  const tie = live ? null
+    : (opts && opts.tie) || (letterBead ? ["1", "3"] : String(total).split(""));
+
+  // ---- the elastic ----
+  // On a live run the bare end lies in a loose curl rather than running dead straight off the
+  // edge: elastic just cut off the reel does not lie flat, and the curl is what stops an
+  // unfinished bracelet reading as an empty progress track. The curl is a fixed hand's length,
+  // never stretched to fill the strip, and shortens rather than backing up under the beads
+  // once the strand has nearly filled the page.
+  const curlAt = Math.min(XEND - 44, lastX + PITCH * 0.95);
+  const curlW = Math.min(128, XEND - 8 - curlAt);
+  let tieX = 0, knotX = 0;
+  if (tie) {
+    tieX = lastX + PITCH * 0.9;
+    knotX = tieX + (tie.length - 1) * 27 * sc + 30;
   }
-  // two offset strands read as twisted floss
-  let svg = `<path class="b-thread" d="${d}" stroke-width="1.7" opacity="0.55"/>` +
-            `<path class="b-thread" d="${d}" stroke-width="1" opacity="0.35" stroke-dasharray="6 4" transform="translate(0 1.3)"/>`;
-
-  const knot = (x, y, dir) =>
-    `<path class="b-knot" stroke-width="1.3" opacity="0.65" d="M${x},${y} q${5 * dir},-7 ${2 * dir},-11 M${x},${y} q${7 * dir},1 ${11 * dir},-4"/>` +
-    `<circle cx="${x}" cy="${y}" r="2.2" fill="var(--ink-soft)" opacity="0.7"/>`;
-  svg += knot(tx0, yAt(tx0), -1) + knot(tx1, yAt(tx1), 1);
-
-  // tiny seed beads strung between the main beads
-  for (let i = 0; i < total - 1; i++) {
-    const x = xL + ((xR - xL) * (i + 0.5)) / (total - 1);
-    svg += `<circle class="b-seed" cx="${x.toFixed(1)}" cy="${yAt(x).toFixed(1)}" r="${s(1.9)}"/>`;
+  const elEnd = live ? curlAt : knotX + 4;
+  let el = "";
+  for (let k = 0; k <= 50; k++) {
+    const x = 14 + ((elEnd - 14) * k) / 50;
+    el += (k ? "L" : "M") + n(x) + "," + n(yAt(x));
   }
+  let tipX = curlAt + curlW, tipY = yAt(curlAt) + 3;
+  if (live) {
+    const y = yAt(curlAt), r = curlW;
+    el += ` C${n(curlAt + r * 0.26)},${n(y - 7)} ${n(curlAt + r * 0.40)},${n(y + 13)} ${n(curlAt + r * 0.56)},${n(y + 14)}` +
+      ` C${n(curlAt + r * 0.73)},${n(y + 15)} ${n(curlAt + r * 0.81)},${n(y + 1)} ${n(curlAt + r * 0.66)},${n(y - 3)}` +
+      ` C${n(curlAt + r * 0.53)},${n(y - 7)} ${n(curlAt + r * 0.49)},${n(y + 8)} ${n(curlAt + r * 0.64)},${n(y + 12)}` +
+      ` C${n(curlAt + r * 0.82)},${n(y + 17)} ${n(curlAt + r * 0.95)},${n(y + 9)} ${n(curlAt + r)},${n(y + 3)}`;
+    tipY = y + 3;
+  }
+  let svg = `<path class="b-cord" d="${el}" stroke-width="3.6"/>` +
+    `<path class="b-cord-shade" d="${el}" stroke-width="3.6"/>` +
+    `<path class="b-cord-hi" d="${el}" stroke-width="1" transform="translate(0 -1)"/>`;
 
+  // the knot the whole thing is strung off
+  svg += tieKnot(X0 - 22, yAt(X0 - 22), -1);
+
+  // ---- the beads ----
   for (let i = 0; i < total; i++) {
-    const x = beadX(i);
-    const y = +yAt(x).toFixed(1);
+    const x = slotX(i), y = yAt(x);
     const answered = results[i];
-    // colour this bead by the album of the song picked that round (final bracelet)
     const albumCol = (albums && albums[i]) ? (colors[albums[i]] || null) : null;
-    const beadStyle = albumCol ? ` style="--bead:${albumCol}"` : "";
+    const fill = albumCol || "var(--bead)";
+    // The trinket takes its tint from an inherited --bead, so the override may only be written
+    // when there IS an album colour: `--bead:var(--bead)` is a self-reference, which makes the
+    // whole property guaranteed-invalid and drops the trinket to black. A bead without an album
+    // (an unplayed slot, a page whose song was never picked) must simply inherit the era's.
+    const tint = albumCol ? ` style="--bead:${albumCol}"` : "";
+    const rot = jitter(i, 1, 9);
+    // the spacer disc that sits in the gap before this bead
+    const gx = x - PITCH * 0.5;
+    if (i && (answered != null || i + 1 === activeRound)) svg += heishi(gx, yAt(gx), sc, jitter(i, 2, 10));
 
     if (answered === true) {
-      // a small bead on the thread, with a star trinket dangling from a jump ring.
-      // a hinted round is flagged: the bead grows a touch and is stamped with an "H".
-      const wasHinted = !!hinted[i];
-      const beadR = wasHinted ? s(5.2) : s(4.1);
-      svg += `<circle cx="${x}" cy="${y}" r="${beadR}" class="b-bead" stroke-width="1"${beadStyle}/>`;
-      if (wasHinted) {
-        svg += `<text x="${x}" y="${y + s(2.3)}" text-anchor="middle" font-size="${s(6.4)}" class="b-hint-h">H</text>`;
-      }
+      const tier = verseTiers[i];
+      const finish = tier === "perfect" ? "pearl" : hinted[i] ? "matte" : "gloss";
+      svg += ponyBead(x, y, fill, sc, rot, finish, u, i);
       const fresh = i === freshIndex;
       const delay = fresh ? "" : ` style="animation-delay:${(-(i * 0.9) % 5.5).toFixed(2)}s"`;
-      // Word-perfect verse rounds always hang the reserved pen-nib; otherwise the
-      // player's chosen trinket (default star), drawn by the shared TRINKETS renderer.
-      const isNib = verseTiers[i] === "perfect" || verseTiers[i] === "verse";
-      const trinketId = impostorCaught[i] ? "devil" : riskWon[i] ? "horseshoe"
+      // Verse rounds always hang the reserved pen-nib; otherwise the player's chosen trinket
+      // (default star), drawn by the shared TRINKETS renderer.
+      const isNib = tier === "perfect" || tier === "verse";
+      const id = impostorCaught[i] ? "devil" : riskWon[i] ? "horseshoe"
         : snapPage[i] ? "stopwatch" : (isNib ? "nib" : defaultTrinket(i));
-      const cr = s(7.4), csw = Math.max(0.7, cr * 0.15).toFixed(2);
-      const trinket = `<g${beadStyle}>${TRINKETS[trinketId](x, y + s(15.5), cr, csw)}</g>`;
+      const drop = (compact ? 18 : 32) * Math.max(sc, 0.55) + (i % 2 ? 8 * sc : 0);
+      const cr = Math.max(4.4, (compact ? 7 : 10.2) * Math.max(sc, 0.62));
+      const csw = Math.max(0.7, cr * 0.15).toFixed(2);
+      const hy = y + 14 * sc;
       svg += `<g class="trinket-dangle${fresh ? " fresh" : ""}"${delay}>` +
-        `<circle cx="${x}" cy="${y + s(5.4)}" r="${s(2.3)}" fill="none" stroke="var(--ink)" stroke-width="1" opacity="0.7"/>` +
-        trinket +
-        `</g>`;
+        `<circle cx="${n(x)}" cy="${n(hy + 3.2)}" r="${n(2.5 * Math.max(sc, 0.7))}" fill="none" stroke="var(--ink)" stroke-width="1.1" opacity="0.75"/>` +
+        `<path d="M${n(x)},${n(hy + 3.2)} L${n(x)},${n(hy + drop - cr)}" stroke="var(--ink)" stroke-width="0.9" opacity="0.45"/>` +
+        `<g${tint}>${TRINKETS[id](x, hy + drop, cr, csw)}</g></g>`;
     } else if (answered === false && skullMiss[i]) {
-      // the page the run died on: a bone bead, a little larger than a spacer so the eye
-      // lands on it. No album tint — this bead is about the run ending, not the song.
-      svg += `<g class="b-skull-bead">${skullBead(x, y, s(5.4), 1)}</g>`;
+      // the page the run died on: a bone bead in place of the frosted one. Sized and nudged
+      // to fill a bead's slot — skullBead hangs its jaw below the centre it is given, so a
+      // skull placed on the bead's own centre floats high and reads as a charm, not a bead.
+      svg += `<g class="b-skull-bead">${skullBead(x, y - 1.8 * sc, 13.4 * sc, 1)}</g>`;
     } else if (answered === false) {
-      // a quiet matte spacer bead — tinted to the picked album, kept muted
-      const missStyle = albumCol ? ` style="fill:${albumCol}" fill-opacity="0.5"` : "";
-      svg += `<circle cx="${x}" cy="${y}" r="${s(4.9)}" class="b-miss" stroke-width="1"${missStyle}/>` +
-             `<circle cx="${x}" cy="${y}" r="${s(1.1)}" class="b-miss-dot"/>`;
+      svg += ponyBead(x, y, fill, sc, rot, "clear", u, i);
     } else if (i + 1 === activeRound) {
-      // the bead being strung right now: bigger, glossy, with a soft halo pulse
-      svg += `<circle cx="${x}" cy="${y}" r="${s(9)}" class="b-halo" stroke-width="2"/>` +
-             `<circle cx="${x}" cy="${y}" r="${s(8.4)}" class="b-bead" stroke-width="1.4"/>` +
-             `<ellipse cx="${x - s(2.6)}" cy="${y - s(3.1)}" rx="${s(3)}" ry="${s(1.8)}" class="b-gloss" transform="rotate(-20 ${x - s(2.6)} ${y - s(3.1)})"/>`;
-    } else if (letterBead && i === total - 1) {
-      // the finale slot is a classic white letter bead (classic mode only)
-      const h = s(7);
-      svg += `<g transform="rotate(6 ${x} ${y})">` +
-        `<rect x="${x - h}" y="${y - h}" width="${s(14)}" height="${s(14)}" rx="${s(3.5)}" class="b-letter" stroke-width="1.1" opacity="0.8"/>` +
-        `<text x="${x}" y="${y + s(2.6)}" text-anchor="middle" font-size="${s(7.5)}" class="b-letter-text">13</text>` +
-        `</g>`;
-    } else {
-      svg += `<circle cx="${x}" cy="${y}" r="${s(5.6)}" class="b-future" stroke-width="1.1"/>`;
+      svg += `<rect class="b-halo" x="${n(x - 19 * sc)}" y="${n(y - 21 * sc)}" width="${n(38 * sc)}" height="${n(42 * sc)}" ` +
+        `rx="${n(13 * sc)}" stroke-width="2"/>` +
+        ponyBead(x, y, "var(--bead)", sc * 1.06, rot, "gloss", u, i);
     }
   }
 
-  return `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">${svg}</svg>`;
+  // ---- the tie beads ----
+  // They only exist once the run is over: the bracelet is unfinished until the run is.
+  if (tie) {
+    const sx = tieX - PITCH * 0.42;
+    svg += heishi(sx, yAt(sx), sc, 5);
+    tie.forEach((ch, k) => {
+      const x = tieX + k * 27 * sc;
+      svg += alphaCube(x, yAt(x), ch, sc, k % 2 ? 5.5 : -6);
+    });
+    const ex = tieX + (tie.length - 1) * 27 * sc + 17 * sc;
+    svg += heishi(ex, yAt(ex), sc, -4) + tieKnot(knotX, yAt(knotX), 1);
+  } else {
+    // still on the needle: the beading needle, threaded, waiting for the next page
+    svg += `<path class="b-needle" d="M${n(tipX - 2)},${n(tipY + 0.5)} L${n(tipX + 31)},${n(tipY - 6.5)}" stroke-width="2.1"/>` +
+      `<path class="b-needle" d="M${n(tipX + 31)},${n(tipY - 6.5)} L${n(tipX + 40)},${n(tipY - 8.4)}" stroke-width="1.1"/>` +
+      `<ellipse cx="${n(tipX + 4.5)}" cy="${n(tipY - 0.9)}" rx="3.6" ry="2.3" fill="var(--paper)" stroke="var(--ink-soft)" stroke-width="1.2" transform="rotate(-12 ${n(tipX + 4.5)} ${n(tipY - 0.9)})"/>`;
+  }
+
+  return `<svg viewBox="0 0 ${W} ${BH}" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">` +
+    `<defs>${beadDefs(u)}<filter id="${u}drop" x="-10%" y="-30%" width="120%" height="185%">` +
+    `<feDropShadow dx="1.4" dy="3.4" stdDeviation="2.2" flood-color="${PEN}" flood-opacity="0.28"/></filter></defs>` +
+    `<g filter="url(#${u}drop)">${svg}</g></svg>`;
 }

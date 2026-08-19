@@ -8665,14 +8665,19 @@ let braceletSeed = 0;
 // Wraps the pure buildBraceletSVG, injecting the Mastery-chosen dangling trinket into
 // every render so app.js stays the single owner of that game-state default.
 function renderBraceletSVG(results, active, fresh, albums, opts) {
+  // Each of these is read off live run state UNLESS the caller supplied it. The caller wins
+  // because these used to be computed unconditionally and then spread on top of `opts`, which
+  // silently swallowed anything passed in — the strand preview asked for a devil, a horseshoe
+  // and a skull and got none of them, with no error to say why.
+  const given = (k) => opts && opts[k] != null;
   // Impostor challenge: a bead that flagged a fake dangles a little devil, not the star.
-  const impostorCaught = impostorRuleActive()
-    ? results.map((ok, i) => ok === true && impostorRounds.has(i + 1))
-    : null;
+  const impostorCaught = given("impostorCaught") ? opts.impostorCaught
+    : impostorRuleActive() ? results.map((ok, i) => ok === true && impostorRounds.has(i + 1)) : null;
   // Risk challenges: a bead won at stake dangles a horseshoe instead of the usual trinket,
-  // and the uninsured miss that ended an Insurance run strings a skull in place of a spacer.
-  const riskWon = riskRuleActive() ? riskTrinket.slice() : null;
-  const skullMiss = riskRuleActive() ? riskSkull.slice() : null;
+  // and the uninsured miss that ended an Insurance run strings a bone bead in place of a
+  // frosted one.
+  const riskWon = given("riskWon") ? opts.riskWon : riskRuleActive() ? riskTrinket.slice() : null;
+  const skullMiss = given("skullMiss") ? opts.skullMiss : riskRuleActive() ? riskSkull.slice() : null;
   return buildBraceletSVG(results, active, fresh, albums,
     { ...opts, trinket: settings.masteryTrinket, trinketSeed: braceletSeed, impostorCaught, riskWon, skullMiss });
 }
@@ -8908,11 +8913,15 @@ function saveSleevePNG(e) {
 }
 
 function renderBracelet() {
+  // compact: the in-run strip is the SHORT strand — same beads, charms tucked up close, no
+  // tie beads. Gameplay stays visually dominant, and the full drop is saved for results,
+  // where the bracelet is the point rather than the furniture above the word.
+  const base = { compact: true, colors: albumPalette(), hinted: roundHinted, verseTiers: roundVerseTier };
   const opts = (gameType === "infinite" || customInfinite())
-    ? { total: Math.max(round, 1), letterBead: false, colors: albumPalette(), hinted: roundHinted, verseTiers: roundVerseTier }
+    ? { ...base, total: Math.max(round, 1), letterBead: false }
     : gameType === "custom"
-    ? { total: customSessionLen, colors: albumPalette(), hinted: roundHinted, verseTiers: roundVerseTier }
-    : { colors: albumPalette(), hinted: roundHinted, verseTiers: roundVerseTier };
+    ? { ...base, total: customSessionLen }
+    : base;
   $("bracelet").innerHTML = renderBraceletSVG(roundResults, round, justEarnedIndex, roundAlbums, opts);
   const correct = roundResults.filter(Boolean).length;
   $("trinketCount").textContent = correct;
@@ -20221,6 +20230,54 @@ function buildDevApi() {
         const from = $("shareBtn") || $("screen-results") || document.body;
         return launchFlock(from, { reduced: false });
       },
+    },
+    /* The strand itself, strung by hand. Every finish and every earned override at once, on
+       one sheet, at both the in-run and results sizes — because a bead's FINISH is now a
+       second channel beside album colour (matte for a hint, pearl for a word-perfect line,
+       frosted for a miss, a bone bead for the page an Insurance run died on) and the only
+       other way to see them together is to play until the game happens to deal them.
+       `strand(n, opts)` strings an arbitrary run for one-off checks — `strand(34)` is the
+       shrink-to-fit case, `strand(13, { compact: true, active: 6 })` the live one. */
+    bracelet: {
+      preview: () => {
+        const al = STUDIO_ALBUMS.slice(0, 13);
+        const done = [true, true, false, true, true, true, false, true, true, true, false, true, true];
+        const hinted = []; hinted[3] = true;
+        const verseTiers = []; verseTiers[7] = "perfect"; verseTiers[11] = "verse";
+        const skullMiss = []; skullMiss[6] = true;
+        const impostorCaught = []; impostorCaught[1] = true;
+        const riskWon = []; riskWon[4] = true;
+        const snapPage = []; snapPage[9] = true;
+        const rows = [
+          ["every finish + every earned trinket", renderBraceletSVG(done, 0, -1, al,
+            { colors: albumPalette(), hinted, verseTiers, skullMiss, impostorCaught, riskWon, snapPage })],
+          ["live, page 6 of 13 (the in-run strip)", renderBraceletSVG(done.slice(0, 5).concat([null, null, null, null, null, null, null, null]), 6, -1, al,
+            { colors: albumPalette(), compact: true, hinted })],
+          ["live, page 13 of 13 (the curl must not back under the beads)", renderBraceletSVG(done.slice(0, 12).concat([null]), 13, -1, al,
+            { colors: albumPalette(), compact: true })],
+          ["infinite, 34 pages (shrink-to-fit)", renderBraceletSVG(
+            Array.from({ length: 34 }, (_, i) => (i * 7 + 3) % 9 !== 0), 0, -1,
+            Array.from({ length: 34 }, (_, i) => al[i % al.length]),
+            { colors: albumPalette(), total: 34, letterBead: false })],
+        ];
+        const box = document.createElement("div");
+        box.id = "devBraceletPreview";
+        box.style.cssText = "position:fixed;inset:0;z-index:99998;background:var(--paper);overflow:auto;padding:20px 24px";
+        box.innerHTML = rows.map(([label, svg]) =>
+          `<div style="font:11px var(--type);letter-spacing:1.4px;text-transform:uppercase;color:var(--ink-soft);margin:14px 0 2px">${label}</div>` +
+          `<div style="width:100%;max-width:760px">${svg}</div>`).join("") +
+          `<button type="button" style="position:fixed;top:14px;right:18px;font:12px var(--type);padding:6px 12px">close</button>`;
+        box.querySelector("button").onclick = () => box.remove();
+        box.querySelectorAll("svg").forEach((s) => { s.style.width = "100%"; s.style.height = "auto"; s.style.overflow = "visible"; });
+        document.getElementById("devBraceletPreview")?.remove();
+        document.body.appendChild(box);
+        return "click close, or __dev.bracelet.close()";
+      },
+      close: () => { document.getElementById("devBraceletPreview")?.remove(); return "closed"; },
+      strand: (n = 13, o = {}) => renderBraceletSVG(
+        Array.from({ length: n }, (_, i) => (o.active ? i < o.active - 1 : true) && i % 5 !== 2),
+        o.active || 0, -1, Array.from({ length: n }, (_, i) => STUDIO_ALBUMS[i % STUDIO_ALBUMS.length]),
+        { colors: albumPalette(), total: n, letterBead: n !== TOTAL_ROUNDS, ...o }),
     },
     // The bracelet-as-PNG keepsake. Reads whatever finished strand is on the results
     // screen, so it needs a run to have just ended (any mode). meta() shows what the

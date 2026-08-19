@@ -3928,15 +3928,15 @@
   .bracelet { position: relative; padding: 4px 0 2px; }
   .bracelet svg { width: 100%; height: auto; display: block; overflow: visible; }
 
-  /* SVG bracelet parts (colours flow from the era tokens) */
-  .b-thread { fill: none; stroke: var(--ink-soft); stroke-linecap: round; }
-  .b-knot { fill: none; stroke: var(--ink-soft); stroke-linecap: round; }
-  .b-seed { fill: var(--bead); opacity: 0.45; }
-  .b-future { fill: var(--paper); stroke: var(--ink-soft); opacity: 0.5; }
-  .b-letter { fill: #fffdf6; stroke: var(--ink-soft); }
-  .b-letter-text { fill: var(--ink-soft); font-family: "Courier Prime", "Courier New", monospace; font-weight: 700; }
-  .b-miss { fill: var(--paper-edge); stroke: var(--ink-soft); }
-  .b-miss-dot { fill: var(--ink-soft); opacity: 0.7; }
+  /* SVG bracelet parts. The beads are drawn objects, not ink: their bodies, lighting and
+     spacer discs are inlined by the renderer so a bead can be lit identically whether it
+     carries an album hex or the era's --bead variable. Only the pieces that must track the
+     page's tokens live here. */
+  .b-cord { fill: none; stroke: #cfc3ab; stroke-linecap: round; }
+  .b-cord-shade { fill: none; stroke: #2b2722; stroke-linecap: round; opacity: 0.16; }
+  .b-cord-hi { fill: none; stroke: #fff; stroke-linecap: round; opacity: 0.35; }
+  .b-needle { fill: none; stroke: var(--ink-soft); stroke-linecap: round; opacity: 0.9; }
+  .b-cube-text { font-family: "Courier Prime", "Courier New", monospace; font-weight: 700; }
   /* the bone bead on the page a sudden-death run died (Insurance) */
   .b-skull { fill: #f3ece0; stroke: var(--ink-soft); stroke-linejoin: round; }
   .b-skull-hole { fill: var(--ink-soft); }
@@ -3946,9 +3946,6 @@
   /* pen-nib trinket (word-perfect recall): a vent hole punched out + the slit */
   .b-nib-hole { fill: var(--paper); }
   .b-nib-slit { fill: none; stroke: var(--ink); opacity: 0.7; stroke-linecap: round; }
-  /* the "H" stamped on a trinket whose round used a hint */
-  .b-hint-h { fill: #fffdf6; font-family: "Courier Prime", "Courier New", monospace; font-weight: 700; pointer-events: none; }
-
   .b-halo {
     fill: none; stroke: var(--bead);
     transform-box: fill-box; transform-origin: center;

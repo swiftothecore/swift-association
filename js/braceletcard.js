@@ -130,27 +130,33 @@ export const TAPE_DEFS =
 
 export function buildCardSVG(meta, fontCss) {
   const v = meta.vars;
-  const W = 760, H = 430;
+  const W = 760;
   const marginX = 54;                       // the red margin rule
   const contentL = 74, contentR = W - 48;   // text column, right of the margin
   const contentW = contentR - contentL;
+
+  // The finished strand, nested and scaled into place. Its aspect is READ OFF the markup
+  // rather than assumed: the strand's own viewBox height is a property of the bracelet's
+  // design and has changed once already, and a hardcoded ratio here silently overlaps the
+  // stat row with the signature when it does.
+  const bx = 62, by = 148, bw = W - bx - 46;
+  const vb = /viewBox="0 0 ([\d.]+) ([\d.]+)"/.exec(meta.braceletMarkup || "");
+  const bh = +(bw * (vb ? +vb[2] / +vb[1] : 132 / 520)).toFixed(1);
+  const strand = (meta.braceletMarkup || "").replace(
+    "<svg ",
+    `<svg x="${bx}" y="${by}" width="${bw}" height="${bh}" preserveAspectRatio="xMidYMid meet" `
+  );
+
+  // stat chips, spread evenly under the strand; the page is then cut to fit them
+  const stats = (meta.stats || []).slice(0, 4);
+  const sy = by + bh + 66;
+  const H = Math.round(sy + 116);
 
   // faint ruled feint across the page
   let rules = "";
   for (let y = 132; y < H - 20; y += 30) {
     rules += `<line x1="0" y1="${y}" x2="${W}" y2="${y}" stroke="${v.rule}" stroke-width="1"/>`;
   }
-
-  // the finished strand, nested and scaled into place (its own viewBox is 520x64)
-  const bx = 62, by = 158, bw = W - bx - 46, bh = +(bw * 64 / 520).toFixed(1);
-  const strand = meta.braceletMarkup.replace(
-    "<svg ",
-    `<svg x="${bx}" y="${by}" width="${bw}" height="${bh}" preserveAspectRatio="xMidYMid meet" `
-  );
-
-  // stat chips, spread evenly under the strand
-  const stats = (meta.stats || []).slice(0, 4);
-  const sy = by + bh + 66;
   const colW = stats.length ? contentW / stats.length : contentW;
   let statSvg = "";
   stats.forEach((s, i) => {
@@ -183,14 +189,11 @@ export function buildCardSVG(meta, fontCss) {
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">` +
     `<defs><style>${fontCss}` +
       `svg{--ink:${v.ink};--ink-soft:${v.inkSoft};--bead:${v.bead};--paper:${v.paper};--paper-edge:${v.paperEdge}}` +
-      `.b-thread{fill:none;stroke:var(--ink-soft);stroke-linecap:round}` +
-      `.b-knot{fill:none;stroke:var(--ink-soft);stroke-linecap:round}` +
-      `.b-seed{fill:var(--bead);opacity:.45}` +
-      `.b-future{fill:var(--paper);stroke:var(--ink-soft);opacity:.5}` +
-      `.b-letter{fill:#fffdf6;stroke:var(--ink-soft)}` +
-      `.b-letter-text{fill:var(--ink-soft);font-family:"Courier Prime",monospace;font-weight:700}` +
-      `.b-miss{fill:var(--paper-edge);stroke:var(--ink-soft)}` +
-      `.b-miss-dot{fill:var(--ink-soft);opacity:.7}` +
+      `.b-cord{fill:none;stroke:#cfc3ab;stroke-linecap:round}` +
+      `.b-cord-shade{fill:none;stroke:#2b2722;stroke-linecap:round;opacity:.16}` +
+      `.b-cord-hi{fill:none;stroke:#fff;stroke-linecap:round;opacity:.35}` +
+      `.b-needle{fill:none;stroke:var(--ink-soft);stroke-linecap:round;opacity:.9}` +
+      `.b-cube-text{font-family:"Courier Prime",monospace;font-weight:700}` +
       `.b-skull{fill:#f3ece0;stroke:var(--ink-soft);stroke-linejoin:round}` +
       `.b-skull-hole{fill:var(--ink-soft)}` +
       `.b-skull-line{fill:none;stroke:var(--ink-soft);stroke-linecap:round;opacity:.75}` +
@@ -198,7 +201,6 @@ export function buildCardSVG(meta, fontCss) {
       `.b-gloss{fill:#fff;opacity:.55}` +
       `.b-nib-hole{fill:var(--paper)}` +
       `.b-nib-slit{fill:none;stroke:var(--ink);opacity:.7;stroke-linecap:round}` +
-      `.b-hint-h{fill:#fffdf6;font-family:"Courier Prime",monospace;font-weight:700}` +
     `</style>` +
     // washi-tape surface bits, mirroring styles.css .nav-tape (sheen + fibre + torn-edge shadow)
     TAPE_DEFS + `</defs>` +
@@ -270,7 +272,7 @@ export async function copyPng(render) {
 }
 
 export async function renderCardPng(meta) {
-  return rasterisePng(buildCardSVG(meta, await fontFaceCss()), 760, 430);
+  return rasterisePng(buildCardSVG(meta, await fontFaceCss()), 760, 496);
 }
 
 export function exportBraceletCard(meta) { return downloadPng(() => renderCardPng(meta), meta.filename || "bracelet.png"); }
