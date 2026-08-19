@@ -337,6 +337,7 @@ export function initDev(api) {
   // filled, and each punch count is its own thing to look at.
   const returnSel = select(api.challenge.list(), (x) => x, (x) => x);
   const returnRunsNum = num(4);
+  const albumBeatenNum = num(5);
   body.append(section("challenges",
     row(btn("open shelf", () => api.challenge.open()),
         btn("unlock all", () => { readout.textContent = `${api.challenge.unlockAll()} challenges unlocked`; }),
@@ -355,10 +356,17 @@ export function initDev(api) {
           ? `${returnSel.value}: returned to shelf` : `${returnSel.value}: not eligible`; }),
         btn("state", () => { readout.textContent = JSON.stringify(api.challenge.returns.state(returnSel.value)); }),
         btn("clear return runs", () => { api.challenge.returns.reset(); readout.textContent = "return runs cleared"; }, "warn")),
-    row("punches", returnRunsNum, btn("set", () => {
+    row("tally marks", returnRunsNum, btn("set", () => {
           const n = api.challenge.returns.completed(returnSel.value, +returnRunsNum.value);
           readout.textContent = `${returnSel.value}: ${n} completed runs · open its card`;
         })),
+    // The album board's beaten figure grows a side per album, so there are thirteen drawings
+    // between an empty board and a full one and no reasonable way to see them by playing.
+    row("albums beaten", albumBeatenNum, btn("set", () => {
+          api.albumBoard.beaten(+albumBeatenNum.value);
+          readout.textContent = `album board: ${albumBeatenNum.value} beaten · open Album Focus`;
+        }),
+        btn("clear board", () => { api.albumBoard.clear(); readout.textContent = "album board cleared"; }, "warn")),
     // Flourish charms hide behind ??? until their challenge is defeated, so checking how one
     // reads as a revealed target otherwise means actually beating the challenge first.
     row(btn("defeat all (reveal flourishes)", () => { const n = api.challenge.defeat();

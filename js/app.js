@@ -7220,6 +7220,154 @@ const CHALL_TICKET = `<svg viewBox="0 0 24 16" class="chall-ticket-svg" aria-hid
   `<path d="M3.2 2.4 H14 A2 2 0 0 0 18 2.4 H20.8 A1.4 1.4 0 0 1 22.2 3.8 V12.2 A1.4 1.4 0 0 1 20.8 13.6 H18 A2 2 0 0 0 14 13.6 H3.2 A1.4 1.4 0 0 1 1.8 12.2 V3.8 A1.4 1.4 0 0 1 3.2 2.4 Z" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/>` +
   `<path d="M16 5.4 V10.6" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-dasharray="1.5 1.7" opacity="0.75"/>` +
   `</svg>`;
+
+/* ---- the pencil behind the token surfaces ---------------------------------
+   The wallet stubs, the return tally and the album board's figure are drawn rather
+   than boxed, and all three wobble off the same seeded pen. Seeded and never
+   Math.random(): these panels re-render on every row you select, and a mark that
+   redraws differently each time stops reading as something somebody drew once and
+   starts reading as noise. */
+function penRng(seed) { let s = (seed * 9301 + 49297) % 233280; return () => (s = (s * 9301 + 49297) % 233280) / 233280; }
+
+/* An admission stub with the notch cut OUT of the outline, so the silhouette itself
+   is torn. The old stub was a rounded div with two paper-coloured circles floating
+   off its edge, which never read as a tear because the shape underneath stayed a
+   plain rectangle. `filled` inks the kraft stock; the unlock button leaves it hollow
+   so the sticker can invert cleanly on hover. */
+function challStub(cls, filled) {
+  return `<svg class="${cls}" viewBox="0 0 92 60" aria-hidden="true">` +
+    `<path d="M5 2 H87 A3 3 0 0 1 90 5 V18 A12 12 0 0 0 90 42 V55 A3 3 0 0 1 87 58 H5 A3 3 0 0 1 2 55 V42 A12 12 0 0 0 2 18 V5 A3 3 0 0 1 5 2 Z" fill="${filled ? "#dcc396" : "none"}" stroke="currentColor" stroke-width="2.6" stroke-linejoin="round"/>` +
+    `<path d="M2 9 H90 M2 51 H90" fill="none" stroke="currentColor" stroke-width="1.1" opacity="0.28"/>` +
+    `<path d="M30 12 V48" fill="none" stroke="currentColor" stroke-width="1.8" stroke-dasharray="3 4.5" opacity="0.6"/>` +
+    `</svg>`;
+}
+
+/* The wallet's fan. One stub per token up to three, because past three nobody counts
+   the objects — they read the numeral standing next to them. An empty wallet still
+   draws one, ghosted in CSS, so the corner of the page is never simply blank. */
+function walletStubs(n) {
+  const drawn = Math.max(1, Math.min(3, n));
+  let out = "";
+  for (let i = 0; i < drawn; i++) out += challStub("chall-stub", true);
+  return out;
+}
+
+/* ---- tally marks ----
+   One stroke per run, cut by hand: its own height, its own lean, its own bow, and a
+   fifth struck across the four with both ends overshot. */
+function tallyStroke(i, x) {
+  const r = penRng(i + 1);
+  const top = 3 + r() * 4, bot = 26 + r() * 4;
+  const lean = (r() - 0.5) * 5.5, bow = (r() - 0.5) * 2.6;
+  return `M${x.toFixed(1)} ${top.toFixed(1)} C${(x + bow).toFixed(1)} ${(top + 9).toFixed(1)}, ` +
+    `${(x + lean - bow).toFixed(1)} ${(bot - 8).toFixed(1)}, ${(x + lean).toFixed(1)} ${bot.toFixed(1)}`;
+}
+function tallyCross(i, x) {
+  const r = penRng(i + 40);
+  const y1 = 27 + r() * 3, y2 = 4 + r() * 3;
+  const x1 = x - 4 - r() * 3, x2 = x + 30 + r() * 4;
+  return `M${x1.toFixed(1)} ${y1.toFixed(1)} C${(x1 + 12).toFixed(1)} ${(y1 - 7).toFixed(1)}, ` +
+    `${(x2 - 12).toFixed(1)} ${(y2 + 7).toFixed(1)}, ${x2.toFixed(1)} ${y2.toFixed(1)}`;
+}
+/* `total` marks laid out in gates of five, the first `done` of them inked and the rest
+   ghosted. Drawing the unearned ones is the point: from a single stroke you can still
+   see the shape of the seven you are filling. */
+function tallyMarks(done, total) {
+  const GAP = 10, GATE = 20;
+  const inked = [], ghost = [];
+  let x = 2, idx = 0;
+  for (let g = 0; g * 5 < total; g++) {
+    const n = Math.min(5, total - g * 5), gateX = x;
+    for (let k = 0; k < n; k++) {
+      const i = idx++;
+      (i < done ? inked : ghost).push(k === 4 ? tallyCross(i, gateX) : tallyStroke(i, gateX + k * GAP));
+    }
+    x = gateX + (n - 1) * GAP + GATE;
+    if (n === 5) x = gateX + 4 * GAP + GATE - GAP;
+  }
+  const path = (d, cls) => `<path class="${cls}" d="${d}" fill="none" stroke="currentColor" stroke-linecap="round"/>`;
+  return `<svg class="chall-prog-marks" width="${Math.max(x, 40)}" height="34" viewBox="0 0 ${Math.max(x, 40)} 34" aria-hidden="true">` +
+    ghost.map((d) => path(d, "is-todo")).join("") + inked.map((d) => path(d, "is-cut")).join("") +
+    `</svg>`;
+}
+
+/* ---- the growing figure ----
+   The album board's count, drawn as one shape whose number of sides IS the count:
+   nothing at zero, a single stroke at one, a semicircle at two, then the polygons up
+   to a twelve-sided figure when the board is clear. The numeral beside it does the
+   reporting — a decagon is not something anyone counts the sides of — so the shape is
+   free to be flavour. One at 38px rather than twelve at 9px, which is what keeps it
+   from turning back into a progress meter. */
+
+/* How much hand a shape can carry. A triangle survives a badly drawn edge and is still
+   a triangle; a hendecagon does not — past about seven sides the wobble stops reading
+   as pencil and starts reading as a failed circle. So the hand eases off exactly where
+   the geometry gets fragile, without ever reaching a dead straight edge. */
+function figureHand(n) { return n <= 6 ? 1 : Math.max(0.32, 1 - (n - 6) / 6 * 0.78); }
+/* feDisplacementMap takes no runtime parameter, so the turbulence comes in three fixed
+   strengths (defined in index.html) and each shape picks the one it can carry. */
+function figureWobble(n) { return n <= 6 ? "charmWobble" : n <= 8 ? "charmWobbleMid" : "charmWobbleLow"; }
+
+function figurePoly(n, R, seed) {
+  const r = penRng(seed + n * 7), h = figureHand(n), pts = [];
+  // point-up for odd counts, flat-top for even — the way you would actually doodle them
+  const start = -Math.PI / 2 + (n % 2 === 0 ? Math.PI / n : 0);
+  for (let i = 0; i < n; i++) {
+    const a = start + (i / n) * Math.PI * 2 + (r() - 0.5) * 0.09 * h;
+    const rad = R * (1 - 0.07 * h + r() * 0.14 * h);
+    pts.push([Math.cos(a) * rad, Math.sin(a) * rad]);
+  }
+  let d = `M${pts[0][0].toFixed(1)} ${pts[0][1].toFixed(1)}`;
+  for (let i = 1; i <= n; i++) {
+    const q = pts[i - 1], pt = pts[i % n];
+    const mx = (pt[0] + q[0]) / 2, my = (pt[1] + q[1]) / 2;
+    const bow = (r() - 0.5) * R * 0.16 * h;
+    const len = Math.hypot(pt[0] - q[0], pt[1] - q[1]) || 1;
+    const nx = -(pt[1] - q[1]) / len, ny = (pt[0] - q[0]) / len;
+    d += ` Q${(mx + nx * bow).toFixed(1)} ${(my + ny * bow).toFixed(1)}, ${pt[0].toFixed(1)} ${pt[1].toFixed(1)}`;
+  }
+  return d;
+}
+/* Zero is a DOTTED ring, never a solid circle: a drawn circle and a twelve-sided figure
+   share a silhouette, and "nothing beaten" reading the same as "everything beaten" is
+   the one collision this ladder cannot afford. */
+function figureZero(R) { return `M0 ${-R} A${R} ${R} 0 1 1 -0.1 ${-R}`; }
+function figureOne(R, seed) {
+  const r = penRng(seed + 3);
+  return `M${(-1 + r()).toFixed(1)} ${(-R).toFixed(1)} C${(2.4 - r() * 2).toFixed(1)} ${(-R / 3).toFixed(1)}, ` +
+    `${(-2 + r() * 2).toFixed(1)} ${(R / 3).toFixed(1)}, ${(1 - r()).toFixed(1)} ${R.toFixed(1)}`;
+}
+/* Two: a chord and an arc. Genuinely two sides, so unlike a heart it does not break the
+   side-counting rule the rest of the ladder runs on. */
+function figureSemi(R, seed) {
+  const r = penRng(seed + 5);
+  const y = R * 0.5, w = R * 0.8;
+  const lx = -w + (r() - 0.5) * 1.4, rx = w + (r() - 0.5) * 1.4;
+  const dome = y - R * 1.72 + (r() - 0.5) * 1.4;
+  const chordBow = (r() - 0.5) * R * 0.13;
+  return `M${lx.toFixed(1)} ${y.toFixed(1)}` +
+    ` C${(lx - R * 0.06).toFixed(1)} ${dome.toFixed(1)}, ${(rx + R * 0.06).toFixed(1)} ${dome.toFixed(1)}, ${rx.toFixed(1)} ${(y + (r() - 0.5)).toFixed(1)}` +
+    ` Q0 ${(y + chordBow).toFixed(1)}, ${lx.toFixed(1)} ${y.toFixed(1)}`;
+}
+
+function beatenFigure(done, total) {
+  const SIZE = 38, R = SIZE * 0.38, seed = 11;
+  const n = Math.max(0, Math.min(12, done));      // past twelve there are no more sides to give
+  const full = total > 0 && done >= total;
+  const stroke = n === 0 ? "rgba(43,39,34,0.32)" : full ? "#8a2f22" : "#3a352d";
+  let inner;
+  if (n === 0) {
+    inner = `<path d="${figureZero(R)}" fill="none" stroke="${stroke}" stroke-width="2.2" stroke-dasharray="2.6 3.4" stroke-linecap="round"/>`;
+  } else if (n === 1) {
+    inner = `<path d="${figureOne(R, seed)}" fill="none" stroke="${stroke}" stroke-width="2.2" stroke-linecap="round"/>`;
+  } else if (n === 2) {
+    inner = `<path d="${figureSemi(R, seed)}" fill="none" stroke="${stroke}" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>`;
+  } else {
+    inner = `<path d="${figurePoly(n, R, seed)}" fill="${full ? "rgba(239,183,62,0.32)" : "none"}" stroke="${stroke}" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>`;
+  }
+  return `<svg class="chall-beaten-fig" viewBox="${-SIZE / 2} ${-SIZE / 2} ${SIZE} ${SIZE}" aria-hidden="true" style="filter:url(#${figureWobble(n)})">${inner}</svg>`;
+}
+
 // The pin: a drawing pin pushed in at an angle, grip up and needle running down to the
 // corner, so the glyph reads as a pin at a glance instead of needing to be worked out —
 // which the old head-on tack did not, at the 15px it renders inside a 24px button. This
@@ -7519,9 +7667,9 @@ function renderChallengesPage() {
   const html =
     `<div class="chall-head">` +
       `<div class="chall-head-sub">spend a token · defeat the rule</div>` +
-      `<span class="chall-tokens" title="spend a token to unlock a challenge">` +
-        `<span class="chall-tok-perf"></span>` +
-        `${CHALL_TICKET}<b>${tk}</b> <span class="chall-tok-label">token${tk === 1 ? "" : "s"}</span></span>` +
+      `<span class="chall-wallet${tk === 0 ? " is-empty" : ""}" title="spend a token to unlock a challenge">` +
+        `<span class="chall-wallet-stubs" aria-hidden="true">${walletStubs(tk)}</span>` +
+        `<span class="chall-wallet-cnt"><b>${tk}</b>token${tk === 1 ? "" : "s"}</span></span>` +
     `</div>` +
     `<div class="chall-layout">` +
       `<div class="chall-col">` +
@@ -7613,11 +7761,11 @@ function renderChallengeDetail(id) {
     const price = unlockPayment(c);
     if (price) {
       action = `<div class="chall-buy">` +
-        `<button type="button" class="chall-go is-unlock" data-unlock="${id}" title="tear a ticket to unlock">` +
-          `<span class="chall-unlock-perf"></span>` +
-          `<span class="chall-unlock-stamp">admit one</span>` +
-          `<span class="chall-unlock-lab">unlock</span></button>` +
-        `<div class="chall-buy-cost">spends ${CHALL_TICKET} ${price} token${price === 1 ? "" : "s"}</div>` +
+        `<button type="button" class="chall-go is-unlock" data-unlock="${id}" title="tear a ticket to unlock"` +
+          ` aria-label="Unlock for ${price} token${price === 1 ? "" : "s"}">` +
+          challStub("chall-unlock-stub", false) +
+          `<span class="chall-unlock-lab">Unlock</span>` +
+          `<span class="chall-unlock-cost">${price}</span></button>` +
       `</div>`;
     } else {
       action = `<div class="chall-need-wrap">` +
@@ -7683,34 +7831,25 @@ function renderChallengeDetail(id) {
 
   // Return path, below the action row.
   //
-  // One kraft stub in three states, not the three unrelated widgets this used to be (a
-  // slate-blue counter rule, a dashed tan panel, a red confirm box, none of which shared a
-  // colour, an edge or an alignment with each other or with the wallet they were talking
-  // about). A return is the unlock run backwards, so the object is the unlock's own object:
-  // the admission stub, with the same punched perforation down its edge that the wallet and
-  // the unlock button already carry. The three states are that one ticket being filled in,
-  // stamped, and handed back.
+  // This is a rare, reversible shelf decision, so it is written ON the page rather than staged
+  // on a card of its own. It used to be a kraft admission stub in three states, which made the
+  // quietest thing in the column the loudest object in it: a full-width panel with its own
+  // stock, edge, stamp and drop shadow, sitting under a Play button it outweighed.
   //
-  // The stub keeps one position and one footprint in every state, so arming the return and
-  // cancelling it never shove the card around underneath the pointer. Eligibility stays on the
-  // card forever once earned, but the stub only appears while the undefeated token-bought
-  // challenge is open.
-  const returnPerf = `<span class="chall-return-perf" aria-hidden="true"></span>`;
-  const returnPay = `<span class="chall-return-pay">${CHALL_TICKET}<b>+${cost}</b></span>`;
+  // Now the wait is pencil — seven hand-cut tally marks, the unearned ones ghosted so the shape
+  // of what you are filling reads from the first stroke — and the offer is one line of red pen.
+  // Eligibility stays on the challenge forever once earned; the offer only appears while the
+  // undefeated token-bought challenge is open.
+  const returnPay = `${CHALL_TICKET}<b>+${cost}</b>`;
   const returnSlot = (inner) => `<div class="chall-return-slot">${inner}</div>`;
   let returnPanel = "";
   if (challengeReturnReady(id)) {
     if (challReturnConfirmId === id) {
       returnPanel = returnSlot(
-        `<div class="chall-return-card is-asking" role="group" aria-label="Confirm challenge return">` +
-          returnPerf +
-          `<span class="chall-return-stamp">refund</span>` +
-          `<span class="chall-return-body">` +
-            `<span class="chall-return-lab">Put ${escapeHtml(c.name)} back on the shelf?</span>` +
-            `<span class="chall-return-sub">it relocks · your scores and attempts stay recorded</span>` +
+        `<div class="chall-return-ask" role="group" aria-label="Confirm challenge return">` +
+          `<span class="chall-return-q">Put ${escapeHtml(c.name)} back on the shelf?` +
+            `<span class="chall-return-note">it relocks · your scores and attempts stay recorded</span>` +
           `</span>` +
-          // Outside the text column on purpose: as a grid child it spans the whole stub, which
-          // is the only way both actions fit on one line in a ~300px detail column.
           `<span class="chall-return-actions">` +
             `<button type="button" class="chall-return-cancel" data-return-cancel>keep it</button>` +
             `<button type="button" class="chall-return-final" data-return-confirm="${id}">return it ${returnPay}</button>` +
@@ -7718,31 +7857,20 @@ function renderChallengeDetail(id) {
         `</div>`);
     } else {
       returnPanel = returnSlot(
-        `<button type="button" class="chall-return-card is-ready" data-return="${id}">` +
-          returnPerf +
-          `<span class="chall-return-stamp">refund</span>` +
-          `<span class="chall-return-body">` +
-            `<span class="chall-return-lab">Return to the shelf</span>` +
-            `<span class="chall-return-sub">your scores stay</span>` +
-          `</span>` +
-          returnPay +
-        `</button>`);
+        `<button type="button" class="chall-refund" data-return="${id}">` +
+          `Return to the shelf, get back ${CHALL_TICKET}${cost}` +
+        `</button>` +
+        `<span class="chall-refund-sub">your scores stay</span>`);
     }
   } else if (open && !c.free && !c.mastery && !rec.defeated && rec.returnRuns > 0) {
-    // The unvalidated stub: pale stock, no stamp, and the count told as punches rather than
-    // as "4 / 7": the same seven holes the finished ticket would have, so the wait reads as
-    // this exact object filling up rather than as a progress bar for something unrelated.
+    // The wait, kept as a tally rather than a meter: you are counting runs off on paper, and
+    // the seventh mark is the one that makes the ticket worth handing back.
     const done = Math.min(rec.returnRuns, CHALLENGE_RETURN_RUNS);
-    const punches = Array.from({ length: CHALLENGE_RETURN_RUNS },
-      (_, i) => `<i${i < done ? ` class="is-punched"` : ""}></i>`).join("");
     returnPanel = returnSlot(
-      `<div class="chall-return-card is-filling">` +
-        returnPerf +
-        `<span class="chall-return-punches" aria-hidden="true">${punches}</span>` +
-        `<span class="chall-return-body">` +
-          `<span class="chall-return-lab">${done} of ${CHALLENGE_RETURN_RUNS} runs finished</span>` +
-          `<span class="chall-return-sub">at ${CHALLENGE_RETURN_RUNS} you can trade it back for its token</span>` +
-        `</span>` +
+      `<div class="chall-prog">` +
+        tallyMarks(done, CHALLENGE_RETURN_RUNS) +
+        `<span class="chall-prog-said"><b>${done} of ${CHALLENGE_RETURN_RUNS} runs finished</b>` +
+          `<i>at ${CHALLENGE_RETURN_RUNS} you can trade it back for its token</i></span>` +
       `</div>`);
   }
 
@@ -8091,11 +8219,18 @@ function renderAlbumFocusPage() {
       `</button>`;
   });
 
-  const perfectLine = perfected ? ` · perfected <b>${perfected}</b>/${STUDIO_ALBUMS.length}` : "";
+  // A second line rather than a clause: the <b> in this block is the hand-set headline
+  // numeral, and a second one inline would give the perfected count the same weight as
+  // the beaten count it is a footnote to.
+  const perfectLine = perfected
+    ? `<span class="chall-beaten-perf">perfected ${perfected} of ${STUDIO_ALBUMS.length}</span>` : "";
   const html =
     `<div class="chall-head">` +
       `<div class="chall-head-sub">tap an album · beat all 12</div>` +
-      `<span class="chall-tokens">beaten <b>${beaten}</b>/${STUDIO_ALBUMS.length}${perfectLine}</span>` +
+      `<span class="chall-beaten">` +
+        beatenFigure(beaten, STUDIO_ALBUMS.length) +
+        `<span class="chall-beaten-txt"><b>${beaten}</b>of ${STUDIO_ALBUMS.length} beaten${perfectLine}</span>` +
+      `</span>` +
     `</div>` +
     `<div class="af-board">${tiles}</div>` +
     `<div class="chall-detail af-detail" id="afDetail"></div>`;
@@ -21699,6 +21834,21 @@ function buildDevApi() {
         answer: () => { if (commonPuzzle) { $("songInput").value = commonPuzzle.word; submitAnswer(); } },  // type + submit the thread
         win: () => { score = (CHALLENGE_BY_ID["common-thread"].target) || 9; endGame(); },
       },
+    },
+    // The album board's beaten count, seeded straight in. The count now drives a figure that
+    // grows a side per album — thirteen distinct drawings between an empty board and a full
+    // one — and nobody is going to play twelve albums out to check that the decagon reads.
+    albumBoard: {
+      beaten: (n) => {
+        const board = {};
+        STUDIO_ALBUMS.slice(0, Math.max(0, Math.min(STUDIO_ALBUMS.length, n))).forEach((a) => {
+          board[a] = { best: TOTAL_ROUNDS, bestDiff: "normal", beaten: true, beatenDiff: "normal" };
+        });
+        saveAlbumFocus(board);
+        if ($("albumFocusBody")) renderAlbumFocusPage();
+        return n;
+      },
+      clear: () => { saveAlbumFocus({}); if ($("albumFocusBody")) renderAlbumFocusPage(); },
     },
     // Seeding
     seed: { records: devSeedRecords, history: devSeedHistory, tally: devSeedTally,

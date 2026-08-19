@@ -78,7 +78,7 @@ if (location.pathname.endsWith('/index.html')) {
 <link rel="preload" href="fonts/courierprime-700-latin.woff2" as="font" type="font/woff2" crossorigin />
 <link rel="preload" href="fonts/courierprime-italic-latin.woff2" as="font" type="font/woff2" crossorigin />
   <link rel="stylesheet" href="ink.css" />
-  <link rel="stylesheet" href="styles.css?v=66" />
+  <link rel="stylesheet" href="styles.css?v=67" />
 </head>
 <body data-era="gold">
 <!-- Hand-drawn wobble for the penned achievement charms. Referenced by .charm svg
@@ -88,6 +88,20 @@ if (location.pathname.endsWith('/index.html')) {
   <filter id="charmWobble" x="-15%" y="-15%" width="130%" height="130%">
     <feTurbulence type="fractalNoise" baseFrequency="0.045" numOctaves="2" seed="7" result="noise"/>
     <feDisplacementMap in="SourceGraphic" in2="noise" scale="2.2" xChannelSelector="R" yChannelSelector="G"/>
+  </filter>
+<!-- Two weaker pours of the same turbulence, for the album board's growing figure.
+     feDisplacementMap takes no runtime parameter, so the strength has to be picked from
+     a fixed set: a triangle carries the full wobble and still reads as a triangle, but a
+     ten-sided figure under it stops reading as pencil and starts reading as a failed
+     circle. Mid is used at seven and eight sides, Low from nine up. Neither is zero —
+     a dead straight edge would drop the figure out of the same hand as the rest. -->
+  <filter id="charmWobbleMid" x="-15%" y="-15%" width="130%" height="130%">
+    <feTurbulence type="fractalNoise" baseFrequency="0.045" numOctaves="2" seed="7" result="noise"/>
+    <feDisplacementMap in="SourceGraphic" in2="noise" scale="0.9" xChannelSelector="R" yChannelSelector="G"/>
+  </filter>
+  <filter id="charmWobbleLow" x="-15%" y="-15%" width="130%" height="130%">
+    <feTurbulence type="fractalNoise" baseFrequency="0.045" numOctaves="2" seed="7" result="noise"/>
+    <feDisplacementMap in="SourceGraphic" in2="noise" scale="0.5" xChannelSelector="R" yChannelSelector="G"/>
   </filter>
   <!-- The at-a-glance panel's triangle wash. Coarser and stronger than charmWobble because
        it disturbs a filled silhouette rather than a pen line: a wandering edge is the whole

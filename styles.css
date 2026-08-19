@@ -1525,31 +1525,48 @@
      rule + win written out. One ruled sheet (the .card paper) — no cork, no scraps. */
   .chall-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 0 0 14px; }
   .chall-head-sub { font-family: var(--type); font-size: calc(10px + var(--text-size-adjust)); letter-spacing: 1.5px; text-transform: uppercase; color: var(--ink-soft); }
-  /* the token wallet — a kraft admission-ticket stub with a punched perforation
-     and the count inked in stamp red. The notches are filled with var(--paper) so
-     they read as holes bitten out of whatever paper stock is on the desk. */
-  .chall-tokens {
-    position: relative; display: inline-flex; align-items: baseline; gap: 7px;
-    font-family: var(--type); font-size: calc(12px + var(--text-size-adjust)); font-weight: 700; color: #6a3b1e;
-    background: #dfcba0; padding: 9px 14px 9px 22px; border-radius: 3px;
-    box-shadow: 0 3px 6px rgba(0,0,0,0.22); white-space: nowrap; transform: rotate(1.2deg);
+  /* ---- the token wallet: stubs on the desk, not another card ----
+     The count is told by the objects themselves — up to three drawn stubs fanned out —
+     with the numeral beside them for anything past what the eye takes in at a glance.
+     Nothing here is a box: this corner already sits on paper, and the old wallet was a
+     beige rounded rectangle indistinguishable from the four other beige rounded
+     rectangles the challenge panel was made of. */
+  .chall-wallet { display: inline-flex; align-items: center; gap: 9px; }
+  .chall-wallet-stubs { display: inline-flex; color: #7a4a22; }
+  .chall-stub { display: block; width: 34px; height: 22px; flex: none; }
+  /* the fan: each stub laid over the last, at its own angle */
+  .chall-stub + .chall-stub { margin-left: -15px; }
+  .chall-wallet-stubs .chall-stub:nth-child(1) { transform: rotate(-6deg); }
+  .chall-wallet-stubs .chall-stub:nth-child(2) { transform: rotate(2deg); }
+  .chall-wallet-stubs .chall-stub:nth-child(3) { transform: rotate(8deg); }
+  .chall-wallet-cnt {
+    font-family: var(--type); font-size: calc(10px + var(--text-size-adjust));
+    letter-spacing: 1.4px; text-transform: uppercase; color: var(--ink-soft); line-height: 1.2;
   }
-  .chall-tokens b { font-size: calc(16px + var(--text-size-adjust)); color: #8a2f22; }
-  /* an SVG has no baseline of its own, so centre it against the flex row instead of letting it
-     hang off its bottom edge next to the count */
-  .chall-tokens .chall-ticket-svg { width: 22px; height: 15px; align-self: center; }
-  .chall-tok-label { color: #a9713e; }
-  /* the perforation: a dashed rule down the stub with a notch bitten from each edge */
-  .chall-tok-perf {
-    position: absolute; left: 15px; top: 6px; bottom: 6px;
-    border-left: 2px dashed rgba(106,59,30,0.5);
+  .chall-wallet-cnt b {
+    display: block; font-family: var(--hand); font-weight: 700; font-size: calc(27px + var(--text-size-adjust));
+    letter-spacing: 0; text-transform: none; color: var(--ink); line-height: 0.85;
   }
-  .chall-tok-perf::before, .chall-tok-perf::after {
-    content: ""; position: absolute; left: -5px; width: 8px; height: 8px;
-    border-radius: 50%; background: var(--paper);
+  /* an empty wallet still draws one stub, ghosted, so the corner is never simply blank */
+  .chall-wallet.is-empty .chall-stub { opacity: 0.34; }
+
+  /* ---- the album board's beaten count ----
+     One figure whose number of sides IS the count: a dotted ring at nothing, a stroke at
+     one, a semicircle at two, then the polygons up to a twelve-sided figure when the board
+     is clear. The numeral does the reporting, so the shape is free to be flavour — which is
+     why there is one of it at 38px rather than twelve of it at 9px, the version that just
+     turns back into a progress meter. */
+  .chall-beaten { display: inline-flex; align-items: center; gap: 11px; }
+  .chall-beaten-fig { display: block; width: 38px; height: 38px; flex: none; }
+  .chall-beaten-txt {
+    font-family: var(--type); font-size: calc(10px + var(--text-size-adjust));
+    letter-spacing: 1.4px; text-transform: uppercase; color: var(--ink-soft); line-height: 1.3;
   }
-  .chall-tok-perf::before { top: -10px; }
-  .chall-tok-perf::after { bottom: -10px; }
+  .chall-beaten-txt b {
+    display: block; font-family: var(--hand); font-weight: 700; font-size: calc(28px + var(--text-size-adjust));
+    letter-spacing: 0; text-transform: none; color: var(--ink); line-height: 0.85; margin-bottom: 1px;
+  }
+  .chall-beaten-perf { display: block; margin-top: 2px; color: #9a7a2e; }
   .chall-layout { display: grid; grid-template-columns: 247px 1fr; gap: 0; }
 
   /* ---- left: the contents list ---- */
@@ -1951,163 +1968,91 @@
   .chall-dark.is-locked:active { transform: rotate(-0.6deg); }
 
 
-  /* unlock action — tear a ticket. Kraft stock, a punched perforation, and a
-     rotated "admit one" stamp in place of the pencil sticker. */
+  /* unlock action — the same stationery sticker as Play, inked in kraft, carrying the
+     ticket it tears and the price it costs. ONE telling of that price, inside the object
+     doing the spending: the old button stamped "admit one", said "unlock", and pencilled
+     "spends 1 token" underneath, which is the same fact three times in a 300px column. */
   .chall-go.is-unlock {
-    position: relative; display: inline-flex; align-items: center; gap: 11px;
-    background-color: #e6d3ab; color: #6a3b1e; padding: 10px 20px 10px 27px;
+    display: inline-flex; align-items: center; gap: 10px;
+    background-color: #e0c48c; color: var(--ink); padding: 10px 15px;
   }
   .chall-go.is-unlock::before { content: none; margin-right: 0; }
-  .chall-unlock-perf {
-    position: absolute; left: 16px; top: 3px; bottom: 3px;
-    border-left: 2px dashed rgba(43,39,34,0.42);
-  }
-  .chall-unlock-perf::before, .chall-unlock-perf::after {
-    content: ""; position: absolute; left: -6px; width: 9px; height: 9px;
-    border-radius: 50%; background: var(--paper); border: 2px solid var(--ink);
-  }
-  .chall-unlock-perf::before { top: -9px; }
-  .chall-unlock-perf::after { bottom: -9px; }
-  .chall-unlock-stamp {
-    font-size: calc(8.5px + var(--text-size-adjust)); letter-spacing: 1.4px; text-transform: uppercase; color: #8a2f22;
-    border: 1.5px solid rgba(138,47,34,0.6); border-radius: 2px; padding: 1px 5px;
-    transform: rotate(-3deg);
-  }
+  /* hollow, so the whole sticker can invert to ink-on-paper on hover without the kraft
+     fill fighting it */
+  .chall-unlock-stub { display: block; width: 30px; height: 20px; flex: none; }
   .chall-unlock-lab { font-size: calc(15px + var(--text-size-adjust)); letter-spacing: 1px; }
-  /* on hover the whole ticket inks over; keep the stamp + notch readable */
-  .chall-go.is-unlock:hover, .chall-go.is-unlock:focus-visible {
-    background-color: var(--ink); color: var(--paper);
+  .chall-unlock-cost {
+    font-family: var(--hand); font-weight: 700; font-size: calc(23px + var(--text-size-adjust));
+    letter-spacing: 0; line-height: 0.85; color: #8a2f22;
   }
-  .chall-go.is-unlock:hover .chall-unlock-stamp,
-  .chall-go.is-unlock:focus-visible .chall-unlock-stamp {
-    color: var(--paper); border-color: rgba(245,239,225,0.6);
-  }
-  .chall-go.is-unlock:hover .chall-unlock-perf,
-  .chall-go.is-unlock:focus-visible .chall-unlock-perf { border-left-color: rgba(245,239,225,0.4); }
-  .chall-go.is-unlock:hover .chall-unlock-perf::before,
-  .chall-go.is-unlock:hover .chall-unlock-perf::after,
-  .chall-go.is-unlock:focus-visible .chall-unlock-perf::before,
-  .chall-go.is-unlock:focus-visible .chall-unlock-perf::after { background: var(--ink); border-color: var(--paper); }
-  /* what the unlock costs, pencilled under the button so the price is never a surprise */
-  .chall-buy { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
-  .chall-buy-cost {
-    font-family: var(--type); font-size: calc(10px + var(--text-size-adjust)); letter-spacing: 0.4px; color: var(--ink-soft);
-    text-align: right;
-  }
+  .chall-go.is-unlock:hover, .chall-go.is-unlock:focus-visible { background-color: var(--ink); color: var(--paper); }
+  .chall-go.is-unlock:hover .chall-unlock-cost,
+  .chall-go.is-unlock:focus-visible .chall-unlock-cost { color: #efb73e; }
+  .chall-buy { display: flex; justify-content: flex-end; }
 
   /* ---- challenge return, below the action row ----
-     Completed runs lead to a reversible shelf decision, not a second currency, so the whole
-     path is ONE object, the admission stub the wallet and the unlock button are already made
-     of, in three states. `.is-filling` is the ticket not yet valid (pale stock, seven punch
-     holes, no stamp), `.is-ready` is it stamped REFUND and clickable, `.is-asking` is the same
-     stamped stub holding the question. Shell, perforation, stamp position and footprint are
-     shared, so the states read as one ticket changing rather than three widgets swapping. */
+     A rare, reversible shelf decision, written on the page rather than staged on a card.
+     It used to be a kraft admission stub in three states, which made the quietest thing in
+     the column the loudest object in it: full-width, with its own stock, edge, stamp and
+     drop shadow, outweighing the Play button above it. The wait is pencil now, and the
+     offer is one line of red pen. */
   .chall-return-slot { margin-top: 15px; padding-top: 12px; border-top: 1px dashed rgba(60,40,18,0.24); }
-  .chall-return-card {
-    position: relative; width: 100%; box-sizing: border-box;
-    display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 0 12px;
-    padding: 10px 13px 10px 26px; text-align: left;
-    font-family: var(--type); color: #6a3b1e;
-    background: #e6d3ab; border: 1.5px solid rgba(106,59,30,0.42); border-radius: 3px;
-    box-shadow: 2px 2px 0 rgba(43,39,34,0.15); transform: rotate(-0.4deg);
-    transition: background-color 0.24s ease, color 0.2s ease, transform 0.12s, box-shadow 0.2s;
+
+  /* the wait: hand-cut tally marks, the unearned ones ghosted so the shape of what you are
+     filling reads from the first stroke. currentColor throughout, so the two weights are set
+     by opacity on the paths rather than by two hardcoded greys. */
+  .chall-prog { font-family: var(--type); font-size: calc(10px + var(--text-size-adjust)); line-height: 1.6; color: var(--ink-soft); }
+  .chall-prog-marks { display: block; margin-bottom: 2px; color: #5b5346; }
+  .chall-prog-marks .is-cut { stroke-width: 2.1; }
+  .chall-prog-marks .is-todo { stroke-width: 1.8; opacity: 0.14; }
+  .chall-prog-said b { font-weight: 700; color: #5f5749; }
+  .chall-prog-said i { font-style: normal; display: block; opacity: 0.82; }
+
+  /* the offer: no card, just what it does and what it pays, underlined in the editor's red */
+  .chall-refund {
+    display: inline-flex; align-items: center; gap: 6px; max-width: 100%; text-align: left;
+    font-family: var(--type); font-size: calc(11.5px + var(--text-size-adjust)); font-weight: 700; letter-spacing: 0.4px;
+    color: #8a2f22; background: none; border: none;
+    border-bottom: 1.5px dashed rgba(138,47,34,0.5); padding: 3px 0; cursor: pointer;
+    transition: border-color 0.2s ease, color 0.2s ease;
   }
-  /* the perforation: the wallet stub's dashed rule and bitten notches, on the ticket's left
-     edge because this is the half you keep handing back */
-  .chall-return-perf {
-    position: absolute; left: 15px; top: 6px; bottom: 6px;
-    border-left: 2px dashed rgba(106,59,30,0.42);
+  .chall-refund:hover, .chall-refund:focus-visible { border-bottom-style: solid; border-bottom-color: #8a2f22; outline: none; }
+  .chall-refund .chall-ticket-svg { width: 19px; height: 13px; flex: none; }
+  .chall-refund-sub {
+    display: block; margin-top: 4px;
+    font-family: var(--type); font-size: calc(9.5px + var(--text-size-adjust)); letter-spacing: 0.4px; color: var(--ink-soft);
   }
-  /* the notches are bites out of the stock, not punched rings: filled with the paper behind
-     and left unoutlined, exactly as the wallet stub does it */
-  .chall-return-perf::before, .chall-return-perf::after {
-    content: ""; position: absolute; left: -5px; width: 9px; height: 9px;
-    border-radius: 50%; background: var(--paper);
-  }
-  .chall-return-perf::before { top: -10px; }
-  .chall-return-perf::after { bottom: -10px; }
-  /* the stamp, the twin of the unlock ticket's "admit one" */
-  .chall-return-stamp {
-    font-size: calc(8.5px + var(--text-size-adjust)); letter-spacing: 1.4px; text-transform: uppercase;
-    color: #8a2f22; border: 1.5px solid rgba(138,47,34,0.55); border-radius: 2px; padding: 1px 5px;
-    transform: rotate(-3deg); white-space: nowrap;
-  }
-  .chall-return-body { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
-  /* balanced so the confirm question, which is the one line here long enough to wrap in a
-     ~300px column, breaks into two even lines instead of leaving "shelf?" stranded alone */
-  .chall-return-lab {
-    font-size: calc(12px + var(--text-size-adjust)); letter-spacing: 0.4px; font-weight: 700; line-height: 1.25;
+
+  /* the question, asked in place — the offer's own line, grown, so nothing jumps */
+  .chall-return-ask { font-family: var(--type); color: var(--ink); }
+  .chall-return-q {
+    display: block; font-size: calc(12px + var(--text-size-adjust)); font-weight: 700; line-height: 1.3;
     text-wrap: balance;
   }
-  .chall-return-sub { font-size: calc(9.5px + var(--text-size-adjust)); letter-spacing: 0.5px; line-height: 1.4; color: #a9713e; }
-  /* what the stub is worth, inked in the wallet's own stamp red */
-  .chall-return-pay {
-    display: inline-flex; align-items: center; gap: 4px; white-space: nowrap;
-    font-size: calc(12px + var(--text-size-adjust)); font-weight: 700; color: #8a2f22;
+  .chall-return-note {
+    display: block; margin-top: 3px; font-weight: 400; line-height: 1.45;
+    font-size: calc(9.5px + var(--text-size-adjust)); color: var(--ink-soft);
   }
-  .chall-return-pay .chall-ticket-svg { width: 19px; height: 13px; }
-
-  /* ready: a real ticket you can hand over */
-  button.chall-return-card { cursor: pointer; }
-  .chall-return-card.is-ready:hover, .chall-return-card.is-ready:focus-visible {
-    background: #efe0be; border-color: rgba(106,59,30,0.62);
-    box-shadow: 3px 3px 0 rgba(43,39,34,0.2);
-  }
-  .chall-return-card.is-ready:active { transform: rotate(-0.4deg) translateY(1px); box-shadow: 1px 1px 0 rgba(43,39,34,0.15); }
-
-  /* filling: the same stub before it is worth anything, in paper-pale stock and pencil ink, flat on
-     the desk. Nothing here is red, because nothing here is spendable yet. */
-  .chall-return-card.is-filling {
-    color: #6b6252; background: #e7e0cd; border-color: rgba(60,40,18,0.22);
-    box-shadow: 1px 1px 0 rgba(43,39,34,0.08); transform: none;
-  }
-  .chall-return-card.is-filling .chall-return-perf,
-  .chall-return-card.is-filling .chall-return-perf::before,
-  .chall-return-card.is-filling .chall-return-perf::after { border-color: rgba(60,40,18,0.24); }
-  .chall-return-card.is-filling .chall-return-sub { color: #8b8375; }
-  /* the holes, punched left to right as runs are finished. One row whatever
-     CHALLENGE_RETURN_RUNS is: wrapped into a block they stop reading as a punched strip and
-     start reading as a dice face. */
-  .chall-return-punches { display: flex; gap: 3px; }
-  .chall-return-punches i {
-    width: 6px; height: 6px; flex: none; border-radius: 50%;
-    border: 1.5px solid rgba(60,40,18,0.3); background: transparent;
-  }
-  .chall-return-punches i.is-punched { background: #6b6252; border-color: #6b6252; box-shadow: inset 0 1px 0 rgba(0,0,0,0.35); }
-
-  /* asking: the stamped stub, still in place, now holding the question. The body simply
-     grows a row of actions: the card does not move, so nothing jumps under the pointer. */
-  .chall-return-card.is-asking { grid-template-columns: auto 1fr; align-items: start; }
-  .chall-return-card.is-asking .chall-return-stamp { margin-top: 2px; }
-  .chall-return-card.is-asking .chall-return-lab { color: var(--ink); }
   .chall-return-actions {
-    grid-column: 1 / -1; display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; margin-top: 11px;
+    display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; margin-top: 10px;
   }
   .chall-return-actions button {
     font-family: var(--type); font-size: calc(10.5px + var(--text-size-adjust)); letter-spacing: 0.5px; font-weight: 700;
     padding: 7px 11px; border-radius: 2px; cursor: pointer; white-space: nowrap;
     transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
   }
-  .chall-return-cancel { color: #6a3b1e; background: rgba(255,255,255,0.34); border: 1.5px solid rgba(106,59,30,0.42); }
-  .chall-return-cancel:hover, .chall-return-cancel:focus-visible { background: rgba(255,255,255,0.66); border-color: rgba(106,59,30,0.7); }
+  .chall-return-cancel { color: #5a5042; background: rgba(255,255,255,0.34); border: 1.5px solid rgba(60,40,18,0.3); }
+  .chall-return-cancel:hover, .chall-return-cancel:focus-visible { background: rgba(255,255,255,0.7); border-color: rgba(60,40,18,0.5); }
   .chall-return-final {
     display: inline-flex; align-items: center; gap: 6px;
     color: #f7ecd8; background: #8a2f22; border: 1.5px solid #6d2419;
   }
-  .chall-return-final .chall-return-pay { color: inherit; font-size: inherit; }
+  .chall-return-final .chall-ticket-svg { width: 18px; height: 12px; }
   .chall-return-final:hover, .chall-return-final:focus-visible { background: #74251a; }
 
   @media (max-width: 620px) {
-    /* On a phone the stub has ~210px of usable width, and three columns squeeze the label into
-       "Return to / the shelf". Fold it to two rows instead, the stamp and what it is worth on
-       top and the words underneath with the whole width to themselves, and give the confirm's two
-       actions a full-width row each, which is the better tap target anyway. */
-    .chall-return-card { grid-template-columns: auto 1fr; gap: 7px 10px; }
-    .chall-return-card > .chall-return-stamp,
-    .chall-return-card > .chall-return-punches { grid-area: 1 / 1; }
-    .chall-return-card > .chall-return-pay { grid-area: 1 / 2; justify-self: end; }
-    .chall-return-card > .chall-return-body { grid-area: 2 / 1 / auto / -1; }
-    .chall-return-actions { margin-top: 3px; }
+    /* the confirm's two actions get a full-width row each, which is the better tap
+       target anyway in a column this narrow */
     .chall-return-actions button { flex: 1 1 100%; justify-content: center; }
     .chall-layout { grid-template-columns: 1fr; }
     .chall-col { border-right: none; border-bottom: 1px solid rgba(60,40,18,0.16); padding-bottom: 8px; margin-bottom: 14px; }
@@ -2116,8 +2061,8 @@
     .af-board { grid-template-columns: repeat(3, 1fr); gap: 24px 12px; }
   }
   @media (prefers-reduced-motion: reduce) {
-    .chall-tokens, .chall-return-card, .chall-go { transform: none; }
-    .chall-go:active, .chall-return-card.is-ready:active { transform: translateY(1px); }
+    .chall-go { transform: none; }
+    .chall-go:active { transform: translateY(1px); }
   }
   body[data-reduce-motion="on"] .chall-detail-seal.is-burning .chall-seal-fire,
   body[data-reduce-motion="on"] .chall-detail-seal.is-burning .chall-seal-fire::after,
