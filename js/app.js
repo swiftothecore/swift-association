@@ -2530,7 +2530,10 @@ function showToast(a) {
   const layer = $("toastLayer");
   if (!layer) return;
   const t = document.createElement("div");
-  t.className = "toast";
+  // The finish rides on the toast so a struck charm arrives struck. This is the ONE moment the
+  // tier is allowed to be a beat rather than a label, and it costs nothing: the toast is already
+  // the grand cue (see playUnlockChime), and it is one charm on screen, not a grid of them.
+  t.className = "toast" + achFinish(a);
   t.setAttribute("data-tip", a.desc);
   t.setAttribute("data-tip-delay", "500");
   t.innerHTML = charmMarkup(a.icon, achColor(a), a.id) +
@@ -2811,11 +2814,18 @@ const achMasked = (a) => !!a.secret && !(a.reveal && challengeRecord(a.reveal).d
 // door pointing at a section that no longer exists is worse than no door.
 const secretCharmsLeft = () => ACHIEVEMENTS.filter((a) => achMasked(a) && !earnedAchievements[a.id]);
 
+// The material a charm's tile is finished in, from its authored `tier` (see ACHIEVEMENTS in
+// config.js). Tier 1 is the floor and is deliberately undecorated, so it returns nothing.
+// A still-masked secret gets no finish either: the tier would leak how heavy the feat is
+// while the charm is meant to be a surprise, which is the one place this signal must not
+// speak. It arrives with the reveal, along with the name and the glyph.
+const achFinish = (a) => (a.tier === 3 ? " ach--struck" : a.tier === 2 ? " ach--mounted" : "");
+
 // One charm tile: earned (revealed), a still-masked secret (???), or a visible
 // locked target. Shared by the grid + secret section.
 function achTile(a) {
   if (earnedAchievements[a.id]) {
-    return `<div class="ach ach--earned">${charmMarkup(a.icon, achColor(a), a.id)}<div class="ach-text"><div class="ach-nm">${escapeHtml(a.name)}</div><div class="ach-dc">${escapeHtml(a.desc)}</div></div></div>`;
+    return `<div class="ach ach--earned${achFinish(a)}">${charmMarkup(a.icon, achColor(a), a.id)}<div class="ach-text"><div class="ach-nm">${escapeHtml(a.name)}</div><div class="ach-dc">${escapeHtml(a.desc)}</div></div></div>`;
   }
   if (achMasked(a)) {
     // Once the level-10 "secret hints" reward is earned, reveal the how-to (desc) while
@@ -2824,7 +2834,7 @@ function achTile(a) {
     const cls = hiddenHintsUnlocked() ? "ach locked secret hinted" : "ach locked secret";
     return `<div class="${cls}"><span class="charm-q" aria-hidden="true">?</span><div class="ach-text"><div class="ach-nm">???</div><div class="ach-dc">${dc}</div></div></div>`;
   }
-  return `<div class="ach locked">${charmMarkup(a.icon, undefined, a.id)}<div class="ach-text"><div class="ach-nm">${escapeHtml(a.name)}</div><div class="ach-dc">${escapeHtml(a.desc)}</div></div></div>`;
+  return `<div class="ach locked${achFinish(a)}">${charmMarkup(a.icon, undefined, a.id)}<div class="ach-text"><div class="ach-nm">${escapeHtml(a.name)}</div><div class="ach-dc">${escapeHtml(a.desc)}</div></div></div>`;
 }
 
 const achGroupOf = (id) => ACH_GROUP_OF[id] || "core";
@@ -3209,7 +3219,7 @@ function renderAchievementsPage() {
       const label = isNewest ? "your newest charm" : "earlier charm";
       const position = `${latestIndex + 1} / ${earnedAsc.length}`;
       latestView.innerHTML =
-        `<span class="ach-latest-charm">${charmMarkup(charm.icon, achColor(charm), charm.id)}</span>` +
+        `<span class="ach-latest-charm${achFinish(charm)}">${charmMarkup(charm.icon, achColor(charm), charm.id)}</span>` +
         `<div class="ach-latest-text"><div class="ach-latest-label"><span>${label}</span><span class="ach-latest-position">${position}</span></div>` +
         `<div class="ach-latest-name">${escapeHtml(charm.name)}</div>` +
         `<div class="ach-latest-meta"><span class="ach-latest-desc">${escapeHtml(charm.desc)}</span> ` +
@@ -21292,6 +21302,51 @@ function buildDevApi() {
         if (!f && id !== "sealed") return `no such family — try ${ACH_FAMILIES.map((x) => x.id).join(", ")}, sealed`;
         setFamilyFold(id, !!shut);
         return `${f ? f.label : "The locked drawer"} ${shut ? "shut" : "open"}`;
+      },
+    },
+    /* Charm tiers — the authored `tier` on each ACHIEVEMENTS row, drawn as a material finish on
+       the tile (mounted at 2, struck at 3). There is no telemetry behind this and there never
+       will be, so the only thing that can be checked mechanically is the SHAPE of the pass:
+       stray values, and whether band 3 has quietly stopped being a handful. The judgement calls
+       themselves are only reviewable by reading show(3) and disagreeing with it. */
+    tiers: {
+      // Everything at one band, or the tally across all three when called bare.
+      show: (t) => {
+        if (t == null) return window.__dev.tiers.check();
+        const band = ACHIEVEMENTS.filter((a) => (a.tier || 1) === (t | 0));
+        return band.map((a) => ({ id: a.id, name: a.name, desc: a.desc,
+          secret: !!a.secret, sitting: !!a.sitting }));
+      },
+      check: () => {
+        const stray = ACHIEVEMENTS.filter((a) => a.tier != null && a.tier !== 2 && a.tier !== 3)
+          .map((a) => `${a.id}: tier ${a.tier}`);
+        const n = (t) => ACHIEVEMENTS.filter((a) => (a.tier || 1) === t).length;
+        const pct = (v) => ((v / ACHIEVEMENTS.length) * 100).toFixed(1) + "%";
+        return {
+          pencil: `${n(1)} (${pct(n(1))})`,
+          mounted: `${n(2)} (${pct(n(2))})`,
+          struck: `${n(3)} (${pct(n(3))})`,
+          // Band 3 is the one with a real ceiling: it is worth something only while it stays
+          // rare, and there is no automatic way to notice it creeping except this number.
+          verdict: n(3) > ACHIEVEMENTS.length * 0.15
+            ? "struck is over 15% of the roster — it has stopped meaning 'the top'"
+            : "bands look sane",
+          ...(stray.length ? { stray } : {}),
+        };
+      },
+      /* Repaint every tile on the open collection page with ONE finish, so a treatment can be
+         judged at real density without earning a single charm. Purely a DOM overlay: the next
+         render of the page puts the authored tiers back, which is also how you undo it. */
+      preview: (t) => {
+        const body = $("achievementsBody");
+        if (!body || !screens.achievements.classList.contains("active")) return "open the charms page first";
+        const cls = t === 3 ? "ach--struck" : t === 2 ? "ach--mounted" : null;
+        const tiles = body.querySelectorAll(".ach");
+        tiles.forEach((el) => {
+          el.classList.remove("ach--struck", "ach--mounted");
+          if (cls) el.classList.add(cls);
+        });
+        return `${tiles.length} tiles drawn as ${cls || "pencil"} — re-render the page to restore`;
       },
     },
     // Normal-mode novelty bias — the coverage nudge that favours un-encountered words in Normal.

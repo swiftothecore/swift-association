@@ -6070,7 +6070,16 @@
   .ach {
     display: flex; align-items: center; gap: 10px;
     border: 1.5px solid rgba(43,39,34,0.12); border-radius: 2px; padding: 9px 11px;
+    /* The tier treatments below hang an inner rule and a struck disc off the tile, so it has
+       to be a positioning context even in the untiered case. */
+    position: relative;
+    /* The two structural inks the tiers press with. The base border above is a hardcoded ink
+       rgba, but a pressed edge has to flip on a dark page or it disappears into the paper,
+       so anything the tiers draw takes its weight from these instead. */
+    --tier-rule: rgba(43,39,34,0.30);
+    --tier-lift: rgba(43,39,34,0.10);
   }
+  :root[data-theme="dark"] .ach { --tier-rule: rgba(236,229,214,0.32); --tier-lift: rgba(0,0,0,0.38); }
   .ach .charm { width: 30px; height: 30px; flex: none; }
   .ach .ach-text { min-width: 0; }
   .ach .ach-nm { font-family: var(--hand); font-weight: 700; font-size: calc(18px + var(--text-size-adjust)); color: var(--ink); line-height: 1.05; }
@@ -6079,6 +6088,64 @@
   /* locked = pencil, no highlighter: pen goes soft grey and the swipe is dropped */
   .ach.locked .charm { color: var(--ink-soft); }
   .ach.locked .charm::before { display: none; }
+
+  /* ---- Charm tiers (config.js `tier`), drawn as material rather than as motion ----
+     Deliberately NOT animated. A collection page is 222 tiles; a shimmer per hard charm is a
+     slot machine, and motion only speaks once you already own the thing, whereas the tier's
+     real job is on the LOCKED tile, telling you what is worth crossing the room for. Both
+     treatments therefore read identically earned and locked, and neither introduces a hue. */
+
+  /* The FRAME half of each treatment is scoped to `.ach` and the CHARM half deliberately is
+     not, so any other wrapper — the keepsake card, the unlock toast — earns the same finish
+     by taking the class alone, without also inheriting a tile's border and lift. */
+
+  /* Tier 2, "mounted": the pen pressed harder and the card is mounted. A second hairline rule
+     inside the border and a hard 2px paper lift. Structural only, so it survives all twelve
+     era palettes and both themes untouched. */
+  .ach.ach--mounted { border-color: var(--tier-rule); box-shadow: 2px 2px 0 var(--tier-lift); }
+  .ach.ach--mounted::after {
+    content: ""; position: absolute; inset: 3px;
+    border: 1px solid rgba(43,39,34,0.12); border-radius: 1px; pointer-events: none;
+  }
+  :root[data-theme="dark"] .ach.ach--mounted::after { border-color: rgba(236,229,214,0.13); }
+  .ach--mounted .charm .ink { stroke-width: 2; }
+  .ach--mounted .charm .ink-fill { stroke-width: 2.25; }
+
+  /* Tier 3, "struck": the highlighter swipe becomes a stamped metal disc. The alloy is mixed
+     FROM --bead, so the charm's group colour survives as the metal instead of being painted
+     over by a fourth colour axis — which is also why the disc must not be given a colour of
+     its own. The glyph goes dark ink in BOTH themes: it is sitting on metal now, not on paper,
+     and var(--ink) would render it invisible on a dark page's disc. */
+  .ach.ach--struck { border-color: var(--tier-rule); box-shadow: 2px 2px 0 var(--tier-lift); }
+  .ach--struck .charm { color: #2b2722; }
+  .ach--struck .charm::before {
+    inset: -14%; border-radius: 50%; transform: none;
+    background: linear-gradient(138deg,
+      color-mix(in srgb, var(--bead) 18%, #fffaf0) 0%,
+      color-mix(in srgb, var(--bead) 62%, #fff3d6) 26%,
+      var(--bead) 52%,
+      color-mix(in srgb, var(--bead) 45%, #fffaf0) 70%,
+      color-mix(in srgb, var(--bead) 88%, #000) 100%);
+    box-shadow: 0 1px 0 rgba(255,255,255,0.45), 0 1px 3px rgba(0,0,0,0.30);
+  }
+  /* The struck rim, a hair inside the disc's edge. */
+  .ach--struck .charm::after {
+    content: ""; position: absolute; inset: -6%; border-radius: 50%;
+    border: 1px solid color-mix(in srgb, var(--bead) 70%, #000); opacity: 0.45;
+    pointer-events: none;
+  }
+  /* Locked, the disc becomes a BLANK: struck, but with nothing struck on it and no alloy. The
+     .locked rule above hides .charm::before for every other tile; a tier-3 blank is the one
+     charm whose backing has to stay, because the empty disc IS the wanting. */
+  .ach--struck.locked .charm { color: var(--ink-soft); }
+  .ach--struck.locked .charm::before {
+    display: block;
+    background: linear-gradient(138deg,
+      color-mix(in srgb, var(--ink) 8%, var(--paper)),
+      color-mix(in srgb, var(--ink) 22%, var(--paper)));
+    box-shadow: inset 0 0 0 1px rgba(43,39,34,0.12);
+  }
+  .ach--struck.locked .charm::after { border-color: var(--ink-soft); opacity: 0.25; }
   /* The sealed stub: the slot a theme's secret charms would sit in if they were not filed
      in the locked drawer. Pencilled dashes rather than the solid rule its neighbours wear,
      no fill and no shadow, so it reads as a gap in the row that has been annotated rather
