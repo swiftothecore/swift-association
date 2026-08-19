@@ -724,14 +724,25 @@ export function initDev(api) {
   const scPropsBtn = btn("props", () => scPropsBtn.classList.toggle("on", api.scatter.props()));
   const scMarksBtn = btn("marks", () => scMarksBtn.classList.toggle("on", api.scatter.marks()));
   const scDbgBtn = btn("bands", () => scDbgBtn.classList.toggle("on", api.scatter.debug()));
+  // The reveal frontier is invisible by design, so it needs a readout: the desk
+  // is only ever built out of sight, and "built" short of "page" is the rule
+  // working rather than a stalled walk. Turning the gate off builds the whole
+  // page at once, which is the only way to judge a tall composition without
+  // scrolling it into being first.
+  const scGateBtn = btn("reveal gate", () => scGateBtn.classList.toggle("on", api.scatter.gate()));
   scPropsBtn.classList.add("on");
   scMarksBtn.classList.add("on");
+  scGateBtn.classList.add("on");
   body.append(section("desk",
     row(btn("rebuild", () => { api.scatter.rebuild(); toast(scStat()); }),
         btn("reseed", () => { api.scatter.reseed(); toast(scStat()); })),
     row("density", scDensN, btn("set", () => { api.scatter.density(+scDensN.value); toast(scStat()); })),
     row(scTypeSel, btn("only", () => { api.scatter.only(scTypeSel.value); toast(scStat()); })),
     row(scPropsBtn, scMarksBtn, scDbgBtn),
+    row(scGateBtn, btn("frontier", () => {
+      const f = api.scatter.frontier();
+      toast(f ? `built ${f.built} of ${f.page} · fold at ${Math.round(f.fold)}` : "no desk");
+    })),
     row(btn("showcase", () => { api.scatter.showcase(); toast("one of everything, top to bottom"); }))));
 
   // ---- Guest stamp ink ---------------------------------------------------------

@@ -22173,6 +22173,11 @@ function buildDevApi() {
       props: (on) => window.__deskScatter && window.__deskScatter.props(on),
       marks: (on) => window.__deskScatter && window.__deskScatter.marks(on),
       debug: (on) => window.__deskScatter && window.__deskScatter.debug(on),
+      // The reveal frontier: how far down the desk has actually been built.
+      // Desk is only ever created out of sight, so built() sitting well short
+      // of the page bottom is correct; gate(false) builds it all at once.
+      frontier: () => (window.__deskScatter ? window.__deskScatter.frontier() : null),
+      gate: (on) => window.__deskScatter && window.__deskScatter.gate(on),
       showcase: () => window.__deskScatter && window.__deskScatter.showcase(),
     },
     // Theme (light / dark notebook). set() writes the real setting so a reload keeps it;

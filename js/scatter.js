@@ -89,6 +89,51 @@ let showMarks = true;
 let onlyType = "";       // dev: restrict the walk to one incident type
 let debugBands = false;
 
+// How far the desk has actually been built, in page px. THE REVEAL RULE:
+// nothing on this desk may be created inside the viewport the player is
+// looking at. A desk object was always there, so watching one blink into
+// existence next to the notebook is the same fiction break as fading one in.
+// The page grows all the time (answer feedback expands, screens swap), and the
+// old code simply extended the walk into whatever new height it found, which
+// put fresh curls of pencil shaving on screen mid-round. Now the walk stops at
+// this frontier and only ever moves it out of sight: ahead of the fold, or
+// behind the player once they have scrolled past. Scrolling is what reveals
+// desk, which is what scrolling did in the first place.
+let builtTo = 0;
+const LEAD = 1.2;      // viewports of desk kept built ahead of the fold
+const LEAD_MIN = 0.5;  // rebuild once the built desk is nearer than this
+let gate = true;       // dev: off builds the whole page at once
+
+// Advance the frontier as far as it can go without anything landing in view,
+// and never backwards: a shorter page clips with overflow, it does not unbuild.
+// The walk itself never places above the fold (see startY), so a desk that has
+// not been built past the first screenful has nothing on it yet and can always
+// reach the fold for free.
+function buildLimit(H, VH) {
+  if (!gate) return (builtTo = H);
+  const top = window.scrollY;
+  const bottom = top + VH;
+  const front = Math.max(builtTo, VH);
+  // Build on when the frontier is clear of the view either way. Below it is the
+  // ordinary case: everything new lands under the fold and nobody sees it
+  // arrive. Above it means the player outran the build — a flick, End, a jump
+  // to an anchor — and the desk ahead of them is bare; holding the frontier
+  // there would keep it bare for the rest of the page, so it catches all the
+  // way up instead. That does land desk in view, but only while the page is
+  // moving under them by a screenful at a time.
+  //
+  // The frontier sitting INSIDE the view is the case worth protecting: hold it
+  // and build nothing until the player moves. This is what used to put fresh
+  // pencil shavings beside the notebook when answer feedback grew the page
+  // under someone who was sitting perfectly still.
+  const clear = front >= bottom || front <= top;
+  // The lead is a whole screenful and change rather than a tidy few hundred px
+  // because a group that overruns the frontier is allowed to finish, and its
+  // tail has to stay out of sight too.
+  const want = clear ? bottom + VH * LEAD : front;
+  return (builtTo = Math.min(H, Math.max(builtTo, want)));
+}
+
 // mulberry32: tiny deterministic PRNG so the layout is stable within a load and
 // reproduces its top portion when the page grows taller.
 function makeRng(a) {
@@ -529,14 +574,14 @@ function placeProp(frag, r, band, y, bag) {
 // Marks walk the page on their own, denser and dumber rhythm. They can and
 // should land under incidents: a coffee ring with beads scattered across it is
 // two things that happened to the same patch of desk, which is what a desk is.
-function placeMarks(frag, r, bands, H, startY) {
+function placeMarks(frag, r, bands, limit, startY) {
   const W = window.innerWidth;
   // Bagged like the props rather than drawn with replacement. Picking freely
   // gave one page four full coffee rings, and the full ring is the largest mark
   // on the desk: the repeat is the first thing the eye finds.
   let mbag = DESK_MARKS.slice();
   let y = startY;
-  while (y < H - 40) {
+  while (y < limit - 40) {
     const band = bands[(r() * bands.length) | 0];
     const bw = band[1] - band[0];
     if (bw > MIN_BAND) {
@@ -591,6 +636,8 @@ function rebuild() {
   el.style.height = H + "px";
   el.classList.toggle("dbg", debugBands);
 
+  const limit = buildLimit(H, VH);
+
   const cx = W / 2;
   const leftBand = [EDGE, cx - HALF - PAPER_GAP]; leftBand.side = 0;
   const rightBand = [cx + HALF + PAPER_GAP, W - EDGE]; rightBand.side = 1;
@@ -605,7 +652,9 @@ function rebuild() {
   const frag = document.createDocumentFragment();
 
   // Start below the first screenful so we never collide with the fixed props.
-  const startY = VH * 0.98 + rangeR(layoutR, 30, 120);
+  // Hard-clamped to the fold rather than merely aimed at it, because the
+  // frontier above leans on nothing ever being placed in the first screenful.
+  const startY = Math.max(VH, VH * 0.98 + rangeR(layoutR, 30, 120));
 
   if (debugBands) {
     for (const b of bands) {
@@ -614,12 +663,13 @@ function rebuild() {
       g.style.left = b[0] + "px";
       g.style.width = (b[1] - b[0]) + "px";
       g.style.top = startY + "px";
-      g.style.height = Math.max(0, H - startY) + "px";
+      g.style.height = Math.max(0, limit - startY) + "px";
       frag.appendChild(g);
     }
   }
 
-  if (showMarks) placeMarks(frag, marksR, bands, H, startY + rangeR(marksR, -180, 120));
+  if (showMarks) placeMarks(frag, marksR, bands, limit,
+                            Math.max(VH, startY + rangeR(marksR, -180, 120)));
 
   // A bag of props, refilled when it runs dry, so a long page cycles the whole
   // set before repeating anything. The tin is held out of it: the tin is a
@@ -656,7 +706,7 @@ function rebuild() {
 
   while (stats.beads < BEAD_CAP) {
     const walk = walks.reduce((next, candidate) =>
-      candidate.y < H - 90 && (!next || candidate.y < next.y) ? candidate : next, null);
+      candidate.y < limit - 90 && (!next || candidate.y < next.y) ? candidate : next, null);
     if (!walk) break;
     const { band, r, bw, roomy } = walk;
     let { y } = walk;
@@ -712,10 +762,27 @@ function schedule() {
   debounce = setTimeout(rebuild, 90);
 }
 
+// Scrolling is the only thing that can move the frontier once the page has
+// settled, so it gets its own trigger. Throttled on the leading edge rather
+// than debounced like the rest: a debounce waits for the scroll to STOP, which
+// is exactly when the player is looking at the stretch that needs building.
+let lastScrollBuild = 0;
+function onScroll() {
+  const VH = window.innerHeight;
+  // Cheap test first, so an ordinary scroll costs one comparison.
+  if (builtTo >= window.scrollY + VH * (1 + LEAD_MIN)) return;
+  if (!gate || !DESKTOP.matches || builtTo >= pageHeight()) return;
+  const now = Date.now();
+  if (now - lastScrollBuild < 120) { schedule(); return; }
+  lastScrollBuild = now;
+  rebuild();
+}
+
 function start() {
   ensureContainer();
   rebuild();
   window.addEventListener("resize", schedule);
+  window.addEventListener("scroll", onScroll, { passive: true });
   // The game fires this on every screen change (see showScreen in app.js), the
   // most common page-height change.
   window.addEventListener("deskscatter:refresh", schedule);
@@ -737,6 +804,14 @@ if (document.readyState === "loading") {
 // Dev handle (read by buildDevApi → the ?dev panel). Purely cosmetic controls.
 window.__deskScatter = {
   rebuild,
+  // How far the desk has been built and how much of it is still held back.
+  // A frontier sitting on the fold with page far below it is the reveal rule
+  // working, not a stalled walk: scroll and it moves.
+  frontier: () => ({ built: Math.round(builtTo), page: Math.round(pageHeight()),
+                     fold: window.scrollY + window.innerHeight, gate }),
+  // Off: build the whole page at once, the way it worked before the reveal
+  // rule. For judging a long composition without scrolling it into being.
+  gate: (on) => { gate = on == null ? !gate : !!on; rebuild(); return gate; },
   reseed: (n) => { seed = (n == null ? (Math.random() * 0xffffffff) : n) >>> 0; rebuild(); return seed; },
   density: (m) => { densityMult = clamp(+m || 1, 0.3, 3); rebuild(); return densityMult; },
   count: () => stats.beads,
