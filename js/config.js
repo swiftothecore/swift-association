@@ -1863,7 +1863,8 @@ export const ACH_ICONS = {
 
   // TEMPORARY placeholder charm — a dashed frame around a question mark. Any icon set to
   // "placeholder" is art-pending (new challenges / achievements before their real icon is
-  // drawn). Search "placeholder" to find everything still awaiting a bespoke charm.
+  // drawn). Search "placeholder" to find everything still awaiting a bespoke charm; as of the
+  // Mastery batch nothing wears it, so a hit here means art that has not been drawn yet.
   placeholder: `<svg viewBox="0 0 24 24"><rect class="ink" fill="none" stroke-width="1.5" stroke-dasharray="2.6 2.2" x="4" y="4" width="16" height="16" rx="3"/><path class="ink" fill="none" stroke-width="1.8" stroke-linecap="round" d="M9.3 9.5 a2.7 2.7 0 1 1 3.5 2.6 c-0.95 0.32 -1.05 0.95 -1.05 1.9"/><circle class="ink-fill" cx="11.75" cy="16.6" r="1.05"/></svg>`,
 
   /* ---- Achievement charm overhaul (every charm bespoke) ---- */
@@ -2392,6 +2393,53 @@ export const ACH_ICONS = {
   walkedaway: `<svg viewBox="0 0 24 24"><g transform="translate(7.2 15.6) rotate(-19)"><path class="ink-fill" fill="none" d="M0 -5.6 c2.6 0 3.7 2 3.3 3.9 c-0.36 1.85 -1.75 2.55 -1.95 4.5 c-0.2 2.05 0.62 3.5 -1.35 3.5 c-1.97 0 -1.15 -1.45 -1.35 -3.5 c-0.2 -1.95 -1.59 -2.65 -1.95 -4.5 C-3.7 -3.6 -2.6 -5.6 0 -5.6 Z"/><g class="ink-fill"><ellipse cx="-2.3" cy="-7.3" rx="0.85" ry="0.7"/><ellipse cx="-0.1" cy="-7.9" rx="0.78" ry="0.65"/><ellipse cx="1.9" cy="-7.4" rx="0.68" ry="0.58"/></g></g><g transform="translate(16.8 7.8) rotate(-19) scale(0.78)"><path class="ink-fill" fill="none" d="M0 -5.6 c2.6 0 3.7 2 3.3 3.9 c-0.36 1.85 -1.75 2.55 -1.95 4.5 c-0.2 2.05 0.62 3.5 -1.35 3.5 c-1.97 0 -1.15 -1.45 -1.35 -3.5 c-0.2 -1.95 -1.59 -2.65 -1.95 -4.5 C-3.7 -3.6 -2.6 -5.6 0 -5.6 Z"/><g class="ink-fill"><ellipse cx="-2.3" cy="-7.3" rx="0.85" ry="0.7"/><ellipse cx="-0.1" cy="-7.9" rx="0.78" ry="0.65"/><ellipse cx="1.9" cy="-7.4" rx="0.68" ry="0.58"/></g></g></svg>`,
   // an ear with two notes drifting in. You did not know it, you heard it
   heardit:    `<svg viewBox="0 0 24 24"><path class="ink-fill" fill="none" d="M7.4 21.4 C7.4 18.4 5.4 17.2 4.6 14.4 C3.3 10 5.7 4.8 10.4 4.8 C14.4 4.8 16.6 8 16 11.4 C15.4 14.6 12 14.4 11.6 16.6 C11.3 18.3 12.7 19 13.9 18.3"/><path class="ink" stroke-width="1.35" fill="none" d="M10.2 8.8 C12.5 8.8 13.1 11.1 12 12.5"/><g class="ink-fill"><ellipse cx="17.9" cy="11.5" rx="1.25" ry="1" transform="rotate(-22 17.9 11.5)"/><ellipse cx="21.6" cy="10.3" rx="1.25" ry="1" transform="rotate(-22 21.6 10.3)"/></g><g class="ink" stroke-width="1.3" fill="none"><path d="M19 11.1 V5 L22.7 3.8 V9.9"/><path d="M19 6.6 L22.7 5.4"/></g></svg>`,
+
+  /* ---- The Mastery batch's own marks (2026-08-19) ----
+     The last seven charms wearing the dashed question mark, all of them off the Skills &
+     Mastery shelf. That shelf is the only one whose feats are about the PLAYER rather than
+     about the songs, so none of these marks is allowed to be a bracelet, a page or a record:
+     they are the objects on the desk that measure a person and the things a person puts on.
+
+     Three of them are measurements (the level, the candelabra, the ladder), one is the mark
+     a pair of hands leaves, and three are things worn or held (the dressed notebook, the
+     empty bar, the folded fortune teller). Same rule as the Core and Catalogue batches:
+     detail inside a shape is drawn in currentColor, never knocked out in --paper, because
+     `.charm` renders both ink classes as outline and a paper knockout would vanish. Note
+     also that `.charm` FORCES the two stroke widths, so anything that needs a weight of its
+     own is a classless stroke rather than an `ink` path with an attribute. */
+
+  // five skills standing at the same level, drawn as the tool that says so: a spirit level
+  // with the bubble dead centre and one graduation per skill. The pun is the whole charm —
+  // the feat is five things at one LEVEL — which is why the bar is drawn true rather than
+  // tilted like the rest of the desk
+  spiritlevel:`<svg viewBox="0 0 24 24"><rect class="ink-fill" x="7.2" y="6.6" width="9.6" height="5.2" rx="2.4"/><g stroke="currentColor" stroke-width="0.95" opacity="0.5" fill="none"><path d="M9.9 7.4 V11"/><path d="M14.1 7.4 V11"/></g><circle cx="12" cy="9.2" r="1.25" fill="currentColor" stroke="none"/><rect class="ink-fill" x="1.4" y="11.8" width="21.2" height="6.2" rx="1.5"/><g stroke="currentColor" stroke-width="1.1" opacity="0.5" fill="none" stroke-linecap="round"><path d="M3.6 17.8 V15.9"/><path d="M7.8 17.8 V15.9"/><path d="M12 17.8 V15.9"/><path d="M16.2 17.8 V15.9"/><path d="M20.4 17.8 V15.9"/></g></svg>`,
+  // every skill at the cap: a five-branch candelabra with all five lit. The flames and the
+  // candles are solid so the lit five survive down at 12px, where five outlined stubs would
+  // close up into one shape; the mirrorball and the strung bulbs were both already taken, and
+  // a candelabra is the one thing on this desk that can make the whole place shimmer at once
+  candelabra:`<svg viewBox="0 0 24 24"><g class="ink" fill="none"><path d="M12 6.9 V19"/><path d="M12 12.2 C9.4 12.2 7.9 11 7.9 8.5"/><path d="M12 12.2 C14.6 12.2 16.1 11 16.1 8.5"/><path d="M12 15.4 C6.2 15.4 3.5 13.4 3.5 10.7"/><path d="M12 15.4 C17.8 15.4 20.5 13.4 20.5 10.7"/></g><path class="ink-fill" d="M8.6 19 H15.4 L17.4 21.9 H6.6 Z"/><g fill="currentColor" stroke="none"><rect x="10.7" y="4.2" width="2.6" height="2.9" rx="0.7"/><rect x="6.6" y="5.8" width="2.6" height="2.9" rx="0.7"/><rect x="14.8" y="5.8" width="2.6" height="2.9" rx="0.7"/><rect x="2.2" y="8" width="2.6" height="2.9" rx="0.7"/><rect x="19.2" y="8" width="2.6" height="2.9" rx="0.7"/><path d="M12 1.2 C13.2 2.6 13.1 4.1 12 4.1 C10.9 4.1 10.8 2.6 12 1.2 Z"/><path d="M7.9 2.8 C9.1 4.2 9 5.7 7.9 5.7 C6.8 5.7 6.7 4.2 7.9 2.8 Z"/><path d="M16.1 2.8 C17.3 4.2 17.2 5.7 16.1 5.7 C15 5.7 14.9 4.2 16.1 2.8 Z"/><path d="M3.5 5 C4.7 6.4 4.6 7.9 3.5 7.9 C2.4 7.9 2.3 6.4 3.5 5 Z"/><path d="M20.5 5 C21.7 6.4 21.6 7.9 20.5 7.9 C19.4 7.9 19.3 6.4 20.5 5 Z"/></g></svg>`,
+  // the top of the climb: a ladder with the pennant already tied to the rail above the last
+  // rung. The mastery board's own capstones are a microphone and a closed strand, so this one
+  // is deliberately the CLIMB rather than the crown — thirteen levels, and someone up there
+  topladder:`<svg viewBox="0 0 24 24"><g transform="rotate(-5 12 12)"><path class="ink-fill" d="M7.7 1.9 L2.2 3.8 L7.7 5.7 Z"/><g class="ink" fill="none"><path d="M7.8 2.1 V22"/><path d="M16.2 5.8 V22"/><path d="M7.8 8 H16.2"/><path d="M7.8 11.2 H16.2"/><path d="M7.8 14.4 H16.2"/><path d="M7.8 17.6 H16.2"/><path d="M7.8 20.8 H16.2"/></g></g></svg>`,
+  // ink in all five in one run, drawn as the hand that put it there: five fingers, five inked
+  // tips, pressed on purpose. The pads are solid so the five read as ink rather than as
+  // fingernails, and the hand is open and square on, which is what keeps it clear of the
+  // manicule's pointing finger
+  inkedhand:`<svg viewBox="0 0 24 24"><g transform="rotate(-7 12 14)"><path class="ink-fill" d="M8.6 14.2 C8.6 12.4 10.2 11.8 12.6 11.8 C15 11.8 16.6 12.4 16.6 14.2 L16.6 16.8 C16.6 19.9 14.9 21.6 12.6 21.6 C10.3 21.6 8.6 19.9 8.6 16.8 Z"/><g class="ink" fill="none" stroke-linecap="round"><path d="M9.9 12.3 L8.3 5.9"/><path d="M12 11.9 L11.3 4.4"/><path d="M14.2 11.9 L14.8 4.7"/><path d="M16.3 12.4 L17.7 6.7"/><path d="M9.2 15.6 L5.3 13"/></g><g fill="currentColor" stroke="none"><circle cx="8.1" cy="5.2" r="1.35"/><circle cx="11.2" cy="3.7" r="1.35"/><circle cx="14.9" cy="4" r="1.35"/><circle cx="18" cy="6.1" r="1.35"/><circle cx="4.6" cy="12.5" r="1.35"/></g></g></svg>`,
+  // the whole wardrobe worn at once, on the thing that wears it: the notebook dressed — its
+  // paper patterned, a pen clipped on, a label lettered on the cover and the trinket hanging
+  // off the ribbon. The five cosmetics are five details on one object rather than five
+  // objects, because a flat lay of five things is unreadable at 30px
+  dressednotebook:`<svg viewBox="0 0 24 24"><g transform="rotate(-6 12 12)"><rect class="ink-fill" x="5.6" y="2.6" width="12.8" height="16.6" rx="1.5"/><path stroke="currentColor" stroke-width="1" opacity="0.45" fill="none" d="M8.4 3.1 V18.7"/><path stroke="currentColor" stroke-width="1.35" fill="none" stroke-linecap="round" d="M10 8.8 C11 7.1 12 9.2 13.2 7.7 C14.1 6.5 15.2 8.4 16.4 7.4"/><g stroke="currentColor" stroke-width="1" opacity="0.35" fill="none"><path d="M10 12.4 H16.4"/><path d="M10 15 H15.2"/></g><rect class="ink-fill" x="16.2" y="1.3" width="2.9" height="8.4" rx="1.35"/><path class="ink" fill="none" d="M13.2 19.2 V21.4"/><circle class="ink-fill" cx="13.2" cy="22.5" r="1.1"/></g></svg>`,
+  // the blank start button, drawn in the notebook's other language: one bar of music with a
+  // rest sitting in it and nothing else written. A rest is the only mark on a desk that means
+  // silence on purpose, which is exactly what wearing a wordless button is
+  restbar:`<svg viewBox="0 0 24 24"><g class="ink" fill="none"><path d="M4.6 3.6 V20.4"/><path d="M18.2 3.6 V20.4"/></g><path stroke="currentColor" stroke-width="2.6" fill="none" d="M21 3.6 V20.4"/><path stroke="currentColor" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round" d="M9.4 6 L14 10.6 L10.2 13.6 L14.6 18.4"/><path stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round" d="M14.6 18.4 C13 17 10.4 17.4 9.8 19"/></svg>`,
+  // three cosmetics handed to chance: the folded paper fortune teller, the one thing on any
+  // desk that is worked by the hands and answers by luck. Dice were unavailable three times
+  // over — the randomiser already wears a pair, and two charms are drawn from them
+  fortuneteller:`<svg viewBox="0 0 24 24"><g transform="rotate(-8 12 12)"><path class="ink-fill" d="M12 2.2 L21.8 12 L12 21.8 L2.2 12 Z"/><g class="ink" fill="none"><path d="M7.1 7.1 L16.9 16.9"/><path d="M16.9 7.1 L7.1 16.9"/></g><path stroke="currentColor" stroke-width="1" opacity="0.45" fill="none" d="M7.1 7.1 H16.9 V16.9 H7.1 Z"/><g fill="currentColor" stroke="none"><circle cx="12" cy="8.8" r="0.85"/><circle cx="15.2" cy="12" r="0.85"/><circle cx="12" cy="15.2" r="0.85"/><circle cx="8.8" cy="12" r="0.85"/></g></g></svg>`,
 };
 
 /* ---------- Mastery marks ----------
@@ -3253,17 +3301,17 @@ export const ACHIEVEMENTS = [
      with one maxed skill carrying four idle ones; Nothing Out Of Place asks for that same total
      spread evenly, and The Whole Place Shimmer asks for the lot. Neither can be locked out:
      skill ink only ever accrues, and a plain classic run pays into all five. */
-  { id: "all-five-skills-level-8", name: "Nothing Out Of Place", desc: `Have all five skills at level ${SKILL_EVEN_LEVEL} or higher`, tier: 3, secret: false, icon: "placeholder" },
-  { id: "cap-every-skill", name: "The Whole Place Shimmer", desc: `Take all five skills to level ${SKILL_MAX_LEVEL}`, tier: 3, secret: false, icon: "placeholder" },
-  { id: "reach-mastery-max-level", name: "Long Live", desc: `Reach Mastery level ${MASTERY_MAX_LEVEL}`, tier: 3, secret: false, icon: "placeholder" },
+  { id: "all-five-skills-level-8", name: "Nothing Out Of Place", desc: `Have all five skills at level ${SKILL_EVEN_LEVEL} or higher`, tier: 3, secret: false, icon: "spiritlevel" },
+  { id: "cap-every-skill", name: "The Whole Place Shimmer", desc: `Take all five skills to level ${SKILL_MAX_LEVEL}`, tier: 3, secret: false, icon: "candelabra" },
+  { id: "reach-mastery-max-level", name: "Long Live", desc: `Reach Mastery level ${MASTERY_MAX_LEVEL}`, tier: 3, secret: false, icon: "topladder" },
   /* Ink in all five in ONE run, which is really a charm about the contribution mask: a Challenge
      pays resolve alone, relaxed never pays tempo, Ruthless never runs the round loop. It takes a
      timed classic run with a sung line, a streak held and answers reaching across albums. */
-  { id: "earn-ink-in-all-five-skills-one-run", name: "None Of It Accidental", desc: "Earn ink in all five skills in a single run", tier: 2, secret: false, icon: "placeholder" },
+  { id: "earn-ink-in-all-five-skills-one-run", name: "None Of It Accidental", desc: "Earn ink in all five skills in a single run", tier: 2, secret: false, icon: "inkedhand" },
   /* The wardrobe. Around forty cosmetics come off that ladder and nothing rewarded wearing them. */
-  { id: "wear-every-mastery-cosmetic-at-once", name: "Style", desc: "Wear a chosen pen, paper, trinket, button finish and button words all at once", tier: 3, secret: false, icon: "placeholder" },
-  { id: "wear-blank-start-button", name: "The Quiet One", desc: "Wear the blank start button", secret: true, icon: "placeholder" },
-  { id: "set-every-cosmetic-to-random", name: "Hands Of Fate", desc: "Hand your trinket, button finish and button words all to chance at once", secret: true, icon: "placeholder" },
+  { id: "wear-every-mastery-cosmetic-at-once", name: "Style", desc: "Wear a chosen pen, paper, trinket, button finish and button words all at once", tier: 3, secret: false, icon: "dressednotebook" },
+  { id: "wear-blank-start-button", name: "The Quiet One", desc: "Wear the blank start button", secret: true, icon: "restbar" },
+  { id: "set-every-cosmetic-to-random", name: "Hands Of Fate", desc: "Hand your trinket, button finish and button words all to chance at once", secret: true, icon: "fortuneteller" },
   { id: "find-every-polaroid-keepsake", name: "You Took A Polaroid Of Us", desc: "Find every polaroid keepsake", tier: 3, secret: true, icon: "polaroid" },
   { id: "earn-every-hidden-achievement",   name: "Is It Over Now?",  desc: "Earn every hidden achievement",         tier: 3, secret: true,  icon: "hourglass" },
   { id: "earn-every-other-achievement",    name: "The Lucky One",    desc: "Earn every other achievement",          tier: 3, secret: true,  icon: "clover" },
