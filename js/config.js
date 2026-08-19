@@ -1325,6 +1325,12 @@ export function skillLevelFromXp(xp) {
 // dense early reward tiers quickly, and level 13 has to be the most expensive level in
 // the game, which a flattening exponent could never do.
 export const MASTERY_GATE = 40;
+// The per-skill level MASTERY_GATE asks for if you spread it evenly across the five. The gate
+// itself only counts the SUM, so it can be cleared badly lopsided — four skills coasting on one
+// that is maxed. This is the number "Nothing Out Of Place" holds you to instead, and it derives
+// from the gate rather than restating it so the charm can never drift from the shape of the
+// thing it commemorates.
+export const SKILL_EVEN_LEVEL = Math.round(MASTERY_GATE / SKILLS.length);
 export const MASTERY_MAX_LEVEL = 13;
 export const MASTERY_LEVEL_BASE = 800;   // ink for level 1
 export const MASTERY_LEVEL_STEP = 350;   // extra ink each level asks over the last
@@ -2833,7 +2839,25 @@ export function reseedSeal(id, seed) {
    follow the fragment rule; keep the phrase to two or three words where you can, and check it
    against the catalogue before you use it. Names describe flavour and are free to change. Ids
    describe the feat in lowercase kebab-case, are derived from desc, and are permanent storage
-   keys. Change an existing id only through an appended ACH_ID_MIGRATIONS row. */
+   keys. Change an existing id only through an appended ACH_ID_MIGRATIONS row.
+
+   `tier` is how hard the feat is, and it is AUTHORED, not measured: one player and no
+   telemetry means a "rarest 2%" figure would be a number we made up. Three bands, and the
+   tile draws each as a material rather than as motion or as a fourth colour (--bead is the
+   theme group's and stays the theme group's):
+     absent — pencil. The floor: one-sitting feats, counters, and the odd secret you trip
+              over. It gets no decoration at all, because a tier system that dresses up its
+              floor has no floor.
+     2      — mounted. Needs more than one sitting, OR is a peak single-run performance that
+              is not the top of its own ladder.
+     3      — struck. The top of a ladder (no strictly harder version of the same feat exists
+              in the roster) or a commitment measured in weeks. Keep this band small; every
+              entry added to it makes the ones already there worth less.
+   `tier` is NOT `sitting`. `sitting` asks "could this be closed right now, in one go" for the
+   one-sitting plate and excludes secrets; tier asks how heavy the feat is and rates secrets
+   alongside everything else. A charm is often absent from both, and that is not a mistake.
+   When two charms are the same feat at different depths (recall 10 / 50 / 100 / 1,000 lines),
+   only the last one is struck. */
 export const ACHIEVEMENTS = [
   { id: "first-game-finished",        name: "The Very First Page", desc: "Finish your first game",              secret: false, icon: "wand", sitting: true, earn: { cat: "difficulty" } },
   { id: "perfect-13",       name: "All By Design",    desc: "Score a perfect 13/13",               secret: false, icon: "queen", sitting: true, earn: { cat: "difficulty" } },
@@ -2848,27 +2872,27 @@ export const ACHIEVEMENTS = [
   { id: "score-12", name: "Crestfallen On The Landing", desc: "Finish one shy (12/13)",            secret: true,  icon: "flute" },
   { id: "score-zero",        name: "I'm The Problem",  desc: "Score 0/13",                          secret: true,  icon: "mirror" },
   { id: "play-all-three-game-types",   name: "Hits Different",   desc: "Play all three game types",           secret: false, icon: "shapes", sitting: true },
-  { id: "play-15-games",          name: "When You're Fifteen", desc: "Play 15 games",                       secret: false, icon: "locker" },
+  { id: "play-15-games",          name: "When You're Fifteen", desc: "Play 15 games",                       tier: 2, secret: false, icon: "locker" },
   { id: "recall-5-lyric-lines-one-game", name: "You Knew The Line", desc: "Recall 5 lyric lines in one game",  secret: false, icon: "note", sitting: true, earn: { cat: "difficulty", diff: "lyricist" } },
   { id: "survive-20-rounds-infinite", name: "In The Clear Yet?", desc: "Survive 20+ rounds in Infinite",      secret: false, icon: "pines", sitting: true, earn: { cat: "infinite" } },
   { id: "reach-round-22-infinite",       name: "Feelin' Twenty-Two", desc: "Reach exactly round 22 in Infinite",  secret: false, icon: "balloons", sitting: true, earn: { cat: "infinite" } },
-  { id: "reach-round-89-infinite", name: "1989",         desc: "Reach round 89 in Infinite",          secret: false, icon: "skyline", sitting: true, earn: { cat: "infinite" } },
-  { id: "streak-10",       name: "The Lights Go Wild", desc: "Hit a 10-in-a-row streak",            secret: false, icon: "sparkler", sitting: true, earn: { cat: "difficulty" } },
-  { id: "win-ultra-10-correct",        name: "We Survived",      desc: "Win an Ultra game (10+ correct)",     secret: false, icon: "poppy", sitting: true, earn: { cat: "difficulty", diff: "ultra" } },
-  { id: "perfect-13-hard",        name: "Mountains We Moved", desc: "Perfect 13/13 on Hard or Ultra",      secret: false, icon: "coronet", sitting: true, earn: { cat: "difficulty", diff: "hard" } },
+  { id: "reach-round-89-infinite", name: "1989",         desc: "Reach round 89 in Infinite",          tier: 2, secret: false, icon: "skyline", sitting: true, earn: { cat: "infinite" } },
+  { id: "streak-10",       name: "The Lights Go Wild", desc: "Hit a 10-in-a-row streak",            tier: 2, secret: false, icon: "sparkler", sitting: true, earn: { cat: "difficulty" } },
+  { id: "win-ultra-10-correct",        name: "We Survived",      desc: "Win an Ultra game (10+ correct)",     tier: 2, secret: false, icon: "poppy", sitting: true, earn: { cat: "difficulty", diff: "ultra" } },
+  { id: "perfect-13-hard",        name: "Mountains We Moved", desc: "Perfect 13/13 on Hard or Ultra",      tier: 2, secret: false, icon: "coronet", sitting: true, earn: { cat: "difficulty", diff: "hard" } },
   // The two hardest single runs the game can ask for, and the top of their own ladders: Mountains We
   // Moved takes either of the top two difficulties, I Remember It All only asks you to FINISH a
   // Lyricist game. These stay unearned long after the rest of the collection is closed.
-  { id: "perfect-13-ultra",      name: "Who’s Afraid Of Little Old Me?", desc: "Perfect 13/13 on Ultra", secret: false, icon: "cage", sitting: true, earn: { cat: "difficulty", diff: "ultra" } },
-  { id: "perfect-13-lyricist",         name: "Alive In My Head", desc: "Perfect 13/13 in Lyricist",           secret: false, icon: "cameo", sitting: true, earn: { cat: "difficulty", diff: "lyricist" } },
+  { id: "perfect-13-ultra",      name: "Who’s Afraid Of Little Old Me?", desc: "Perfect 13/13 on Ultra", tier: 3, secret: false, icon: "cage", sitting: true, earn: { cat: "difficulty", diff: "ultra" } },
+  { id: "perfect-13-lyricist",         name: "Alive In My Head", desc: "Perfect 13/13 in Lyricist",           tier: 3, secret: false, icon: "cameo", sitting: true, earn: { cat: "difficulty", diff: "lyricist" } },
   { id: "round-1-under-2s",     name: "Let The Games Begin", desc: "Nail round 1 in under 2s",            secret: false, icon: "rocket", sitting: true, earn: { cat: "difficulty" } },
   { id: "answer-under-half-second-left", name: "It Just Felt So Good", desc: "Answer right with under 0.5s left", secret: true, icon: "match" },
   { id: "streak-3-same-album",       name: "Time To Branch Out?", desc: "3 correct in a row from one album", secret: true, icon: "branch" },
-  { id: "score-nearly-every-studio-album-one-game",        name: "The Eras Tour",    desc: "Score from nearly every studio album in one game", secret: false, icon: "ticket", sitting: true, earn: { cat: "difficulty" } },
-  { id: "perfect-daily",         name: "Golden Like Daylight", desc: "Score a perfect Daily",               secret: false, icon: "sunrise", sitting: true, earn: { cat: "daily" } },
-  { id: "daily-streak-7",      name: "Next Chapter",     desc: "Keep a 7-day Daily streak",           secret: false, icon: "openbook" },
-  { id: "daily-streak-30",         name: "Ever And Evermore", desc: "Reach a 30-day Daily streak",         secret: false, icon: "sprig" },
-  { id: "earn-13-achievements",            name: "Coming Back Around", desc: "Earn 13 achievements",                secret: false, icon: "cat" },
+  { id: "score-nearly-every-studio-album-one-game",        name: "The Eras Tour",    desc: "Score from nearly every studio album in one game", tier: 2, secret: false, icon: "ticket", sitting: true, earn: { cat: "difficulty" } },
+  { id: "perfect-daily",         name: "Golden Like Daylight", desc: "Score a perfect Daily",               tier: 2, secret: false, icon: "sunrise", sitting: true, earn: { cat: "daily" } },
+  { id: "daily-streak-7",      name: "Next Chapter",     desc: "Keep a 7-day Daily streak",           tier: 2, secret: false, icon: "openbook" },
+  { id: "daily-streak-30",         name: "Ever And Evermore", desc: "Reach a 30-day Daily streak",         tier: 3, secret: false, icon: "sprig" },
+  { id: "earn-13-achievements",            name: "Coming Back Around", desc: "Earn 13 achievements",                tier: 2, secret: false, icon: "cat" },
   { id: "play-between-midnight-and-1am",        name: "Midnights Become My Afternoons", desc: "Play between 12 and 1am",             secret: true,  icon: "clock" },
   { id: "recover-after-miss-3-times-one-game",     name: "I Keep Cruisin'",  desc: "Bounce back from a miss 3× in one game", secret: false, icon: "bounce", sitting: true, earn: { cat: "difficulty" } },
   { id: "finish-without-timer-red-zone",            name: "I Kept Calm",      desc: "Finish a game without the timer hitting the red",  secret: false, icon: "dove", sitting: true, earn: { cat: "difficulty" } },
@@ -2877,7 +2901,7 @@ export const ACHIEVEMENTS = [
   { id: "streak-3-b-titles", name: "My Mind Is Alive", desc: "3 correct in a row (titles starting with B)", secret: true, icon: "bee" },
   { id: "lose-3-lives-first-4-rounds",     name: "Summer's A Knife", desc: "Lose all 3 lives in the first 4 rounds", secret: true, icon: "lolly" },
   { id: "finish-with-no-answers",   name: "I Can't See You",  desc: "Finish a game without answering once", secret: true, icon: "blindfold" },
-  { id: "miss-1000-rounds-lifetime",    name: "A Thousand Cuts",          desc: "1,000 lifetime missed rounds", secret: true, icon: "scissors" },
+  { id: "miss-1000-rounds-lifetime",    name: "A Thousand Cuts",          desc: "1,000 lifetime missed rounds", tier: 2, secret: true, icon: "scissors" },
   { id: "reach-round-13-infinite-from-scratch",      name: "Where We Stood",   desc: "Reach round 13 from scratch in Infinite", secret: false, icon: "rays", sitting: true, earn: { cat: "infinite" } },
   { id: "answer-if-this-was-a-movie",      name: "Spicy Drama",      desc: "Answer with \"If This Was A Movie\" — Fearless or Speak Now? Fans still argue", secret: true, icon: "clapper" },
   { id: "recall-lyric-line-word-perfect",    name: "Word For Word",    desc: "Recall a lyric line word-perfect",     secret: false, icon: "quote", sitting: true, earn: { cat: "difficulty", diff: "lyricist" } },
@@ -2897,25 +2921,25 @@ export const ACHIEVEMENTS = [
   { id: "tap-every-page-mark", name: "Marked Every Page", desc: "Poke the little mark beside every page's title", secret: true, icon: "manicule" },
   { id: "play-easy-3-times-in-row",   name: "Safe & Sound",     desc: "Play Easy three times in a row",       secret: false, icon: "lantern", sitting: true, earn: { cat: "difficulty", diff: "easy" } },
   { id: "beat-personal-best-score",          name: "R-E-V-E-N-G-E",    desc: "Beat your own best score on any board", secret: false, icon: "megaphone", sitting: true, earn: { cat: "difficulty" } },
-  { id: "perfect-13-every-mode",       name: "Every Version Of Yourself", desc: "Score a perfect 13/13 in every difficulty", secret: false, icon: "mirrorball" },
+  { id: "perfect-13-every-mode",       name: "Every Version Of Yourself", desc: "Score a perfect 13/13 in every difficulty", tier: 3, secret: false, icon: "mirrorball" },
   { id: "streak-3-rare-words-no-ultra",         name: "Diamonds Are Forever", desc: "3 rare words right in a row (no Ultra)", secret: false, icon: "diamond", sitting: true, earn: { cat: "difficulty" } },
   { id: "win-fuzzy-lyric-match",        name: "Wordsmith",        desc: "Win a round on a fuzzy lyric match",    secret: false, icon: "anvil", sitting: true, earn: { cat: "difficulty", diff: "lyricist" } },
-  { id: "recall-10-lyric-lines-word-perfect",     name: "I've Got You Down", desc: "Recall 10 lyric lines word-perfect",   secret: false, icon: "pencil" },
-  { id: "recall-50-lyric-lines-word-perfect",         name: "I Know You By Heart", desc: "Recall 50 lyric lines word-perfect", secret: false, icon: "locket" },
-  { id: "recall-100-lyric-lines-word-perfect",    name: "You Don't Even Know Where I Start", desc: "Recall 100 lyric lines word-perfect", secret: false, icon: "spiral" },
-  { id: "recall-1000-lyric-lines-word-perfect",    name: "…Clearly You Were Ready For It?", desc: "Recall 1,000 lyric lines word-perfect", secret: false, icon: "trophy" },
-  { id: "recall-whole-verse-word-perfect",     name: "Overachiever",     desc: "Recall a whole verse (four lines word-perfect)", secret: false, icon: "aplus", sitting: true, earn: { cat: "difficulty", diff: "lyricist" } },
+  { id: "recall-10-lyric-lines-word-perfect",     name: "I've Got You Down", desc: "Recall 10 lyric lines word-perfect",   tier: 2, secret: false, icon: "pencil" },
+  { id: "recall-50-lyric-lines-word-perfect",         name: "I Know You By Heart", desc: "Recall 50 lyric lines word-perfect", tier: 2, secret: false, icon: "locket" },
+  { id: "recall-100-lyric-lines-word-perfect",    name: "You Don't Even Know Where I Start", desc: "Recall 100 lyric lines word-perfect", tier: 2, secret: false, icon: "spiral" },
+  { id: "recall-1000-lyric-lines-word-perfect",    name: "…Clearly You Were Ready For It?", desc: "Recall 1,000 lyric lines word-perfect", tier: 3, secret: false, icon: "trophy" },
+  { id: "recall-whole-verse-word-perfect",     name: "Overachiever",     desc: "Recall a whole verse (four lines word-perfect)", tier: 2, secret: false, icon: "aplus", sitting: true, earn: { cat: "difficulty", diff: "lyricist" } },
   { id: "answer-3-rounds-same-song",         name: "Someone Has A Favourite Song", desc: "Answer three rounds with lyrics from the same song", secret: true, icon: "repeat" },
   { id: "make-10-fuzzy-matches-one-lyricist-game",      name: "Eyes Closed",      desc: "10 fuzzy lyric matches in one Lyricist game", secret: false, icon: "eyeclosed", sitting: true, earn: { cat: "difficulty", diff: "lyricist" } },
   { id: "answer-paris-for-somewhere",            name: "We Were Somewhere Else", desc: "Answer “Paris” when the word is “somewhere”", secret: true, icon: "tower" },
-  { id: "answer-every-catalogue-song",   name: "I Knew Everything", desc: "Answer every song in the catalogue at least once", secret: false, icon: "checklist" },
-  { id: "answer-nemesis-word",             name: "The Cycle Ends",   desc: "Finally answer your nemesis word right", secret: true, icon: "banjo" },
+  { id: "answer-every-catalogue-song",   name: "I Knew Everything", desc: "Answer every song in the catalogue at least once", tier: 3, secret: false, icon: "checklist" },
+  { id: "answer-nemesis-word",             name: "The Cycle Ends",   desc: "Finally answer your nemesis word right", tier: 2, secret: true, icon: "banjo" },
   { id: "answer-rain-on-monday",   name: "It's Raining And It's Monday", desc: "Answer “rain” correctly on a Monday", secret: true, icon: "umbrella" },
   { id: "win-with-no-hints-or-timeouts",            name: "Finally Clean",    desc: "Win without hints or a single timeout",  secret: false, icon: "drop", sitting: true, earn: { cat: "difficulty" } },
-  { id: "win-every-difficulty", name: "Everything & Nothing All At Once", desc: "Win a game in every difficulty", secret: false, icon: "yinyang" },
-  { id: "finish-no-timeouts-2-games-in-row",      name: "Fearless (Taylor's Version)", desc: "Two games in a row with no timeouts", secret: false, icon: "vinyl", sitting: true, earn: { cat: "difficulty" } },
-  { id: "play-every-required-mode",         name: "Explorer",         desc: "Play every difficulty in Classic and in both Infinite variants, plus Custom", secret: false, icon: "compass" },
-  { id: "play-all-seven-weekdays",            name: "Seven",            desc: "Play on all seven days of the week", secret: true,  icon: "swing" },
+  { id: "win-every-difficulty", name: "Everything & Nothing All At Once", desc: "Win a game in every difficulty", tier: 2, secret: false, icon: "yinyang" },
+  { id: "finish-no-timeouts-2-games-in-row",      name: "Fearless (Taylor's Version)", desc: "Two games in a row with no timeouts", tier: 2, secret: false, icon: "vinyl", sitting: true, earn: { cat: "difficulty" } },
+  { id: "play-every-required-mode",         name: "Explorer",         desc: "Play every difficulty in Classic and in both Infinite variants, plus Custom", tier: 2, secret: false, icon: "compass" },
+  { id: "play-all-seven-weekdays",            name: "Seven",            desc: "Play on all seven days of the week", tier: 2, secret: true,  icon: "swing" },
   { id: "save-first-bracelet-keepsake", name: "Make The Friendship Bracelets", desc: "Save your first bracelet keepsake", secret: false, icon: "keepsake", sitting: true },
   { id: "type-reputation-tv", name: "The Piano Was Hissing", desc: "Type “reputation tv” somewhere",    secret: true,  icon: "piano" },
   { id: "quit-round-1-before-typing",       name: "She Must Bolt",    desc: "Quit before typing anything in round 1", secret: true,  icon: "door" },
@@ -2926,16 +2950,16 @@ export const ACHIEVEMENTS = [
      (roundRejects) — so every one of them is winnable again on the very next game and none
      can be missed by having already passed some milestone. The end-of-run half all demand a
      FULL thirteen pages, and the mid-run half unlock the moment they happen. */
-  { id: "answer-all-13-rounds-under-3s", name: "Faster Than The Wind", desc: "Answer all 13 rounds in under 3s each", secret: false, icon: "gustpage", sitting: true, earn: { cat: "difficulty" } },
+  { id: "answer-all-13-rounds-under-3s", name: "Faster Than The Wind", desc: "Answer all 13 rounds in under 3s each", tier: 2, secret: false, icon: "gustpage", sitting: true, earn: { cat: "difficulty" } },
   // Easy and Relaxed only, and that is the charm rather than a limitation of it: Normal's
   // clock is 10s, so "every answer over 10 seconds" cannot happen there, and Hard and Ultra
   // are shorter still. Sitting on a page you have already solved is the whole feat.
   { id: "win-with-every-answer-over-10s", name: "Slow Motion", desc: "Win with every answer over 10s (Easy or Relaxed)", secret: true, icon: "dwell" },
-  { id: "answer-in-final-second-all-13-rounds", name: "I Take My Time", desc: "Answer in the final second on all 13 rounds", secret: true, icon: "lasttick" },
+  { id: "answer-in-final-second-all-13-rounds", name: "I Take My Time", desc: "Answer in the final second on all 13 rounds", tier: 2, secret: true, icon: "lasttick" },
   { id: "answer-under-1s-three-rounds-running", name: "Just Like That", desc: "Answer in under a second three rounds running", secret: false, icon: "snapthree", sitting: true, earn: { cat: "difficulty" } },
-  { id: "perfect-13-every-answer-under-2s", name: "You Are The Best Thing", desc: "Perfect 13/13 with every answer under 2s", secret: false, icon: "blurstar", sitting: true, earn: { cat: "difficulty" } },
-  { id: "win-without-clock-dropping-below-half", name: "The Whole Way Home", desc: "Win without the clock dropping below half", secret: false, icon: "halfdial", sitting: true, earn: { cat: "difficulty" } },
-  { id: "perfect-13-no-wrong-submissions", name: "One For The Money", desc: "Perfect 13/13 with no wrong submissions", secret: false, icon: "cleanpage", sitting: true, earn: { cat: "difficulty" } },
+  { id: "perfect-13-every-answer-under-2s", name: "You Are The Best Thing", desc: "Perfect 13/13 with every answer under 2s", tier: 2, secret: false, icon: "blurstar", sitting: true, earn: { cat: "difficulty" } },
+  { id: "win-without-clock-dropping-below-half", name: "The Whole Way Home", desc: "Win without the clock dropping below half", tier: 2, secret: false, icon: "halfdial", sitting: true, earn: { cat: "difficulty" } },
+  { id: "perfect-13-no-wrong-submissions", name: "One For The Money", desc: "Perfect 13/13 with no wrong submissions", tier: 2, secret: false, icon: "cleanpage", sitting: true, earn: { cat: "difficulty" } },
   { id: "submit-same-wrong-answer-5-times-one-round", name: "I Once Was Poison Ivy", desc: "Submit the same wrong answer 5 times in one round", secret: true, icon: "ivyword" },
   { id: "answer-right-with-song-given-wrongly-earlier", name: "Lost In Translation", desc: "Answer right with a song you gave wrongly earlier", secret: true, icon: "rightsong" },
   { id: "answer-13-wrong-having-typed-every-round", name: "I Was Wrong", desc: "Answer 13 wrong, having typed something every round", secret: true, icon: "everycrossed" },
@@ -2949,38 +2973,38 @@ export const ACHIEVEMENTS = [
      standing condition that comes round again rather than a window that closes. The secret
      ones join HIDDEN_ACH_IDS in the batch's secrecy phase, which is a deliberate edit of its
      own. */
-  { id: "perfect-13-all-one-album", name: "This Is Our Place", desc: "Score 13/13 all from one album", secret: false, icon: "onesleeve", sitting: true, earn: { cat: "difficulty" } },
+  { id: "perfect-13-all-one-album", name: "This Is Our Place", desc: "Score 13/13 all from one album", tier: 2, secret: false, icon: "onesleeve", sitting: true, earn: { cat: "difficulty" } },
   /* The nemesis thread. The tally is folded once per finished game, so a word missed three
      times in one run counts once — which is exactly what "three separate games" wants. */
   { id: "answer-word-missed-in-earlier-game", name: "The Moment I Knew", desc: "Answer a word you missed in an earlier game", secret: false, icon: "wordreturned", sitting: true, earn: { cat: "difficulty" } },
-  { id: "miss-same-word-in-3-games", name: "Haunted", desc: "Miss the same word in 3 separate games", secret: true, icon: "hauntword" },
+  { id: "miss-same-word-in-3-games", name: "Haunted", desc: "Miss the same word in 3 separate games", tier: 2, secret: true, icon: "hauntword" },
   // The lower rung of a two-step ladder with The Cycle Ends: this one asks only that the word
   // you have missed MOST has finally fallen, where The Cycle Ends holds out for a word that
   // has beaten you MEAN_GRUDGE times first.
-  { id: "answer-most-missed-word", name: "I Just Know", desc: "Finally crack your most-missed word", secret: false, icon: "crackedword" },
-  { id: "be-dealt-every-prompt-word", name: "You Learn My Secrets", desc: "Be dealt every prompt word in the game", secret: false, icon: "everyword" },
+  { id: "answer-most-missed-word", name: "I Just Know", desc: "Finally crack your most-missed word", tier: 2, secret: false, icon: "crackedword" },
+  { id: "be-dealt-every-prompt-word", name: "You Learn My Secrets", desc: "Be dealt every prompt word in the game", tier: 3, secret: false, icon: "everyword" },
   /* Charms judged against the runs BEFORE this one. "In a row" means among runs of the same
      game type: the sandboxed types are invisible to them, neither extending nor breaking a
      chain, which is the rule noTimeoutStreak already set for a cross-run counter. */
   { id: "score-zero-then-perfect-13-next-game", name: "What Died Didn't Stay Dead", desc: "Score 0/13, then 13/13 the next game", secret: true, icon: "relit" },
-  { id: "perfect-13-two-games-in-row", name: "Two For The Show", desc: "Score two perfect 13/13 games in a row", secret: false, icon: "twostars", sitting: true, earn: { cat: "difficulty" } },
-  { id: "same-final-score-3-games-in-row", name: "It's All The Same", desc: "Finish on the same score three games running", secret: true, icon: "samescore" },
+  { id: "perfect-13-two-games-in-row", name: "Two For The Show", desc: "Score two perfect 13/13 games in a row", tier: 2, secret: false, icon: "twostars", sitting: true, earn: { cat: "difficulty" } },
+  { id: "same-final-score-3-games-in-row", name: "It's All The Same", desc: "Finish on the same score three games running", tier: 2, secret: true, icon: "samescore" },
   /* The long haul. The three dated ones read the calendar ledger rather than the run history,
      which is capped — see DATES_KEY. None of these carry `sitting`, and neither does I Just
      Know or You Learn My Secrets: the goal card only ever pins what an evening could actually
      close, and a charm measured in months or in a word you cannot ask to be dealt would sit
      there as a reproach rather than a destination. */
-  { id: "play-7-days-in-row", name: "Running Like Water", desc: "Play seven days in a row", secret: false, icon: "sevendays" },
-  { id: "play-on-13-different-days", name: "I'm Thirteen Now", desc: "Play on 13 different days", secret: false, icon: "thirteendays" },
-  { id: "play-in-every-month", name: "Brave The Seasons", desc: "Play in all twelve months of the year", secret: false, icon: "twelvemonths" },
-  { id: "answer-500-rounds-correct-lifetime", name: "The Rest Is History", desc: "Answer 500 rounds correctly, lifetime", secret: false, icon: "pagestack" },
-  { id: "play-1989-rounds-lifetime", name: "A Thousand Memories", desc: "Play 1,989 rounds in total", secret: false, icon: "ledger" },
-  { id: "play-89-games", name: "I Was Born In 19—", desc: "Play 89 games", secret: false, icon: "pegged" },
+  { id: "play-7-days-in-row", name: "Running Like Water", desc: "Play seven days in a row", tier: 2, secret: false, icon: "sevendays" },
+  { id: "play-on-13-different-days", name: "I'm Thirteen Now", desc: "Play on 13 different days", tier: 2, secret: false, icon: "thirteendays" },
+  { id: "play-in-every-month", name: "Brave The Seasons", desc: "Play in all twelve months of the year", tier: 3, secret: false, icon: "twelvemonths" },
+  { id: "answer-500-rounds-correct-lifetime", name: "The Rest Is History", desc: "Answer 500 rounds correctly, lifetime", tier: 2, secret: false, icon: "pagestack" },
+  { id: "play-1989-rounds-lifetime", name: "A Thousand Memories", desc: "Play 1,989 rounds in total", tier: 3, secret: false, icon: "ledger" },
+  { id: "play-89-games", name: "I Was Born In 19—", desc: "Play 89 games", tier: 2, secret: false, icon: "pegged" },
   /* The streak that outlives the run it started in — fifty correct answers with the game
      boundaries counting for nothing. Only the game types the cross-game counter can see
      extend it (see crossGameStreakCounts), and the sandboxed ones can neither feed it nor
      snap it. Counted in METRICS_KEY, per answer rather than per run. */
-  { id: "answer-50-correct-in-a-row-across-games", name: "The Walls We Crashed Through", desc: "Answer 50 in a row correctly, across as many games as it takes", secret: false, icon: "carriedover" },
+  { id: "answer-50-correct-in-a-row-across-games", name: "The Walls We Crashed Through", desc: "Answer 50 in a row correctly, across as many games as it takes", tier: 3, secret: false, icon: "carriedover" },
   /* Answered with the same song more than once. Distinct from Someone Has A Favourite Song,
      which counts sung LINES from one song; these count the credited answer however it arrived. */
   { id: "answer-same-song-twice-in-row", name: "Over And Over", desc: "Answer with the same song twice in a row", secret: true, icon: "twinsleeve" },
@@ -3003,7 +3027,7 @@ export const ACHIEVEMENTS = [
   { id: "play-on-taylors-birthday", name: "Happy Birthday To You", desc: "Play on Taylor's birthday", secret: true, icon: "cakeslice" },
   // Self-referential, so it is evaluated after every unlock alongside the other meta charms,
   // and its price moves whenever a theme is added to ACH_GROUPS.
-  { id: "earn-charm-in-every-theme", name: "The Things That I Love", desc: "Earn a charm in every theme", secret: false, icon: "fullbracelet" },
+  { id: "earn-charm-in-every-theme", name: "The Things That I Love", desc: "Earn a charm in every theme", tier: 3, secret: false, icon: "fullbracelet" },
   { id: "play-word-from-searcher", name: "You Drew Stars", desc: "Play a word straight from the lyric searcher", secret: true, icon: "lenstoline" },
   /* ---- The whole notebook: the Core theme's own batch (2026-08-13) ----
      Core stopped meaning anything when the four-way split carved Perfect, Clock, Misfires and
@@ -3015,8 +3039,8 @@ export const ACHIEVEMENTS = [
      None can be locked out. The two ledgers they read (SHELF_TYPES and the dice counter) only
      ever grow, the day-scoped one comes round again every day, and the meta rungs are
      re-evaluated after every unlock. */
-  { id: "finish-run-in-5-game-types", name: "On Every Corner", desc: "Finish a run in five different game types", secret: false, icon: "signpost" },
-  { id: "finish-run-in-every-game-type", name: "I Can Go Anywhere", desc: "Finish a run in every game type", secret: false, icon: "suitcase" },
+  { id: "finish-run-in-5-game-types", name: "On Every Corner", desc: "Finish a run in five different game types", tier: 2, secret: false, icon: "signpost" },
+  { id: "finish-run-in-every-game-type", name: "I Can Go Anywhere", desc: "Finish a run in every game type", tier: 3, secret: false, icon: "suitcase" },
   // The only one of the three scoped to a sitting rather than a lifetime, which is why it is
   // the only one of the three worth pinning as a goal.
   { id: "finish-3-game-types-one-day", name: "Every Single Day", desc: "Finish runs in three different game types in one day", secret: false, icon: "daysheet", sitting: true },
@@ -3024,30 +3048,30 @@ export const ACHIEVEMENTS = [
      that can open every door in the notebook, which is exactly the breadth Core is about. Two
      halves of one line, for the two rungs. */
   { id: "play-first-dice-pick", name: "Devils Roll The Dice", desc: "Play a run the dice picked for you", secret: false, icon: "diecast", sitting: true },
-  { id: "play-13-dice-picks", name: "Angels Roll Their Eyes", desc: "Play 13 runs the dice picked for you", secret: false, icon: "dicehalo" },
+  { id: "play-13-dice-picks", name: "Angels Roll Their Eyes", desc: "Play 13 runs the dice picked for you", tier: 2, secret: false, icon: "dicehalo" },
   /* The collection talking about itself. Self-referential like the four meta charms already
      here, so they are evaluated after every unlock and their price moves on its own as the
      roster grows — which is the honest behaviour for a charm whose subject IS the roster. */
-  { id: "earn-40-achievements", name: "Still Bejeweled", desc: "Earn 40 achievements", secret: false, icon: "jewelring" },
-  { id: "earn-80-achievements", name: "A String Of Lights", desc: "Earn 80 achievements", secret: false, icon: "fairylights" },
+  { id: "earn-40-achievements", name: "Still Bejeweled", desc: "Earn 40 achievements", tier: 2, secret: false, icon: "jewelring" },
+  { id: "earn-80-achievements", name: "A String Of Lights", desc: "Earn 80 achievements", tier: 3, secret: false, icon: "fairylights" },
   // A whole theme, not a charm from each — the rung above The Things That I Love rather than a
   // second reading of it. The smallest themes run to three charms, so this is real but not a wall.
-  { id: "complete-one-charm-theme", name: "One Single Thread Of Gold", desc: "Earn every charm in one theme", secret: false, icon: "goldspool" },
-  { id: "complete-three-charm-themes", name: "We Gather Stones", desc: "Earn every charm in three themes", secret: false, icon: "cairn" },
+  { id: "complete-one-charm-theme", name: "One Single Thread Of Gold", desc: "Earn every charm in one theme", tier: 2, secret: false, icon: "goldspool" },
+  { id: "complete-three-charm-themes", name: "We Gather Stones", desc: "Earn every charm in three themes", tier: 3, secret: false, icon: "cairn" },
   // Not "All At Once", which is the obvious name and sits one row from Everything & Nothing All
   // At Once on this very page. Three Times is the same line's other half of the idea and reads
   // as its own charm.
   { id: "earn-3-achievements-one-run", name: "Three Times", desc: "Earn three charms in a single run", secret: false, icon: "threecharms", sitting: true, earn: { cat: "difficulty" } },
   { id: "defeat-first-challenge",       name: "Ready For Combat", desc: "Defeat your first challenge",           secret: false, icon: "bow", sitting: true, earn: { cat: "challenge" } },
-  { id: "defeat-every-challenge",      name: "Get The Crown",    desc: "Defeat every challenge",                secret: false, icon: "flask" },
-  { id: "unlock-every-challenge",      name: "I Like Shiny Things", desc: "Unlock every challenge",                secret: false, icon: "rings" },
+  { id: "defeat-every-challenge",      name: "Get The Crown",    desc: "Defeat every challenge",                tier: 3, secret: false, icon: "flask" },
+  { id: "unlock-every-challenge",      name: "I Like Shiny Things", desc: "Unlock every challenge",                tier: 3, secret: false, icon: "rings" },
   // Dark sides. Milestones only — a challenge's own dark reward is its black wax seal and
   // violet tick, so there is deliberately no per-challenge charm here.
   { id: "beat-first-dark-side",    name: "Old Habits Die Screaming", desc: "Beat your first dark side",             secret: false, icon: "blackdog", sitting: true, earn: { cat: "dark" } },
-  { id: "beat-5-dark-sides",    name: "Cross The Line",   desc: `Beat ${DARK_SIDE_MILESTONE} dark sides`, secret: false, icon: "halo" },
-  { id: "beat-every-dark-side", name: "Darkest Little Paradise", desc: "Beat every dark side",           secret: false, icon: "eden" },
-  { id: "defeat-challenge-no-misses",   name: "Our Slates Are Clean", desc: "Defeat a challenge without missing a single page", secret: false, icon: "feather", sitting: true, earn: { cat: "challenge" } },
-  { id: "defeat-challenge-after-7-runs", name: "At Least I'm Trying", desc: "Defeat a challenge after seeing it through 7 times", secret: true, icon: "crumple" },
+  { id: "beat-5-dark-sides",    name: "Cross The Line",   desc: `Beat ${DARK_SIDE_MILESTONE} dark sides`, tier: 2, secret: false, icon: "halo" },
+  { id: "beat-every-dark-side", name: "Darkest Little Paradise", desc: "Beat every dark side",           tier: 3, secret: false, icon: "eden" },
+  { id: "defeat-challenge-no-misses",   name: "Our Slates Are Clean", desc: "Defeat a challenge without missing a single page", tier: 2, secret: false, icon: "feather", sitting: true, earn: { cat: "challenge" } },
+  { id: "defeat-challenge-after-7-runs", name: "At Least I'm Trying", desc: "Defeat a challenge after seeing it through 7 times", tier: 2, secret: true, icon: "crumple" },
   { id: "fall-for-first-impostor",      name: "In Plain Sight",                  desc: "Fall for the very first impostor you meet", secret: true, icon: "hooked" },
   /* ---- Flourish charms: win one named challenge the hard way ----
      Masked until that challenge has been DEFEATED (`reveal` names it), then they show as
@@ -3058,67 +3082,67 @@ export const ACHIEVEMENTS = [
      now do it properly. They stay deliberately selective, NOT one per challenge: only the
      challenges with a flourish worth naming carry one. A revealed flourish is not counted
      as hidden by Is It Over Now? (see HIDDEN_ACH_IDS in app.js). */
-  { id: "defeat-impostor-flawlessly",  name: "Should've Known That Word", desc: "Defeat Impostor flawlessly: every impostor flagged, every real word named", secret: true, reveal: "impostor", icon: "nosign" },
-  { id: "defeat-common-thread-every-line",  name: "One Single Thread", desc: "Defeat Common Thread: pull the word through every line", secret: true, reveal: "common-thread", icon: "thread" },
-  { id: "beat-revolving-door-before-swap",   name: "Two Steps Ahead",   desc: "Beat Revolving Door before a single swap: every answer on the first word", secret: true, reveal: "revolving-door", icon: "twosteps" },
-  { id: "win-home-invasion-clock-untouched",  name: "My Walls Stood Tall", desc: "Win Home Invasion untouched: the clock never once shrinks", secret: true, reveal: "home-invasion", icon: "wall" },
-  { id: "win-shrinking-timer-all-pages-under-10s",         name: "Tick-Tock",         desc: "Win Shrinking Timer, clearing every page once the clock hits single digits", secret: true, reveal: "shrinking-timer", icon: "stopwatch" },
-  { id: "win-sea-of-songs-no-decoys",      name: "Part The Sea",      desc: "Win Sea of Songs without ever tapping a decoy", secret: true, reveal: "sea-of-songs", icon: "partedsea" },
-  { id: "win-lyric-lover-all-lines-word-perfect", name: "Knowing All The Words", desc: "Win Lyric Lover with every line word-perfect, no fuzzy recalls", secret: true, reveal: "lyric-lover", icon: "cassette" },
-  { id: "clear-double-trouble-all-13-two-songs-each",     name: "Two Is Better Than One", desc: "Clear all thirteen pages of Double Trouble: two songs each, none dropped", secret: true, reveal: "double-trouble", icon: "cherries" },
-  { id: "win-vanishing-word-all-answers-blind",       name: "Blank Space",       desc: "Win Vanishing Word writing blind: every answer landed after the word had gone", secret: true, reveal: "vanishing-word", icon: "vanish" },
-  { id: "win-deep-cut-all-correct-same-album", name: "Been Here All Along", desc: "Win Deep Cut loyal to one album: every correct answer of the run off the same record", secret: true, reveal: "deep-cut", icon: "heartlabel" },
-  { id: "win-from-a-to-z-no-repeated-letters",     name: "Tied Together With A Smile", desc: "Win From A to Z on a chain that climbs every link: never twice on the same letter", secret: true, reveal: "alphabetical", icon: "ribbon" },
+  { id: "defeat-impostor-flawlessly",  name: "Should've Known That Word", desc: "Defeat Impostor flawlessly: every impostor flagged, every real word named", tier: 2, secret: true, reveal: "impostor", icon: "nosign" },
+  { id: "defeat-common-thread-every-line",  name: "One Single Thread", desc: "Defeat Common Thread: pull the word through every line", tier: 2, secret: true, reveal: "common-thread", icon: "thread" },
+  { id: "beat-revolving-door-before-swap",   name: "Two Steps Ahead",   desc: "Beat Revolving Door before a single swap: every answer on the first word", tier: 2, secret: true, reveal: "revolving-door", icon: "twosteps" },
+  { id: "win-home-invasion-clock-untouched",  name: "My Walls Stood Tall", desc: "Win Home Invasion untouched: the clock never once shrinks", tier: 2, secret: true, reveal: "home-invasion", icon: "wall" },
+  { id: "win-shrinking-timer-all-pages-under-10s",         name: "Tick-Tock",         desc: "Win Shrinking Timer, clearing every page once the clock hits single digits", tier: 2, secret: true, reveal: "shrinking-timer", icon: "stopwatch" },
+  { id: "win-sea-of-songs-no-decoys",      name: "Part The Sea",      desc: "Win Sea of Songs without ever tapping a decoy", tier: 2, secret: true, reveal: "sea-of-songs", icon: "partedsea" },
+  { id: "win-lyric-lover-all-lines-word-perfect", name: "Knowing All The Words", desc: "Win Lyric Lover with every line word-perfect, no fuzzy recalls", tier: 2, secret: true, reveal: "lyric-lover", icon: "cassette" },
+  { id: "clear-double-trouble-all-13-two-songs-each",     name: "Two Is Better Than One", desc: "Clear all thirteen pages of Double Trouble: two songs each, none dropped", tier: 2, secret: true, reveal: "double-trouble", icon: "cherries" },
+  { id: "win-vanishing-word-all-answers-blind",       name: "Blank Space",       desc: "Win Vanishing Word writing blind: every answer landed after the word had gone", tier: 2, secret: true, reveal: "vanishing-word", icon: "vanish" },
+  { id: "win-deep-cut-all-correct-same-album", name: "Been Here All Along", desc: "Win Deep Cut loyal to one album: every correct answer of the run off the same record", tier: 2, secret: true, reveal: "deep-cut", icon: "heartlabel" },
+  { id: "win-from-a-to-z-no-repeated-letters",     name: "Tied Together With A Smile", desc: "Win From A to Z on a chain that climbs every link: never twice on the same letter", tier: 2, secret: true, reveal: "alphabetical", icon: "ribbon" },
   // The risk three. Flourishes like the rest, so they carry `reveal` and stay masked until
   // their challenge is beaten — nobody rides a pot five deep by accident. Each one asks for
   // the thing its rule is really about: depth on Press, restraint on Insurance, nerve on
   // Wager. Deliberately NOT a rule that every challenge gets one; three of thirty-two.
-  { id: "bank-press-your-luck-pot-5-pages-deep", name: "Bonnie And Clyde",       desc: `Bank a pot on Press Your Luck ridden ${PRESS_FLOURISH_RIDE} pages deep`, secret: true, reveal: "press-your-luck", icon: "getaway" },
-  { id: "win-insurance-no-shields-spent",       name: "Untouchable",       desc: "Win Insurance with every shield still unspent", secret: true, reveal: "insurance", icon: "belljar" },
-  { id: "win-confidence-wager-max-every-page",           name: "Let The Players Play", desc: "Win Confidence Wager having staked the most you could hold on every page", secret: true, reveal: "confidence-wager", icon: "allin" },
+  { id: "bank-press-your-luck-pot-5-pages-deep", name: "Bonnie And Clyde",       desc: `Bank a pot on Press Your Luck ridden ${PRESS_FLOURISH_RIDE} pages deep`, tier: 2, secret: true, reveal: "press-your-luck", icon: "getaway" },
+  { id: "win-insurance-no-shields-spent",       name: "Untouchable",       desc: "Win Insurance with every shield still unspent", tier: 2, secret: true, reveal: "insurance", icon: "belljar" },
+  { id: "win-confidence-wager-max-every-page",           name: "Let The Players Play", desc: "Win Confidence Wager having staked the most you could hold on every page", tier: 2, secret: true, reveal: "confidence-wager", icon: "allin" },
   // Dark sides. A milestone rather than a flourish (no challenge named), so it stays visible.
-  { id: "beat-dark-side-no-misses",        name: "Now I Breathe Flames", desc: "Beat a dark side without missing a single page", secret: false, icon: "inkspill", sitting: true, earn: { cat: "dark" } },
+  { id: "beat-dark-side-no-misses",        name: "Now I Breathe Flames", desc: "Beat a dark side without missing a single page", tier: 2, secret: false, icon: "inkspill", sitting: true, earn: { cat: "dark" } },
   { id: "beat-first-album-focus", name: "Girl On A Mission",     desc: "Beat your first album in Album Focus", secret: false, icon: "map", sitting: true, earn: { cat: "album" } },
-  { id: "beat-all-12-album-focus",           name: "Stand Up Champions", desc: "Beat all 12 albums in Album Focus",     secret: false, icon: "butterfly" },
+  { id: "beat-all-12-album-focus",           name: "Stand Up Champions", desc: "Beat all 12 albums in Album Focus",     tier: 2, secret: false, icon: "butterfly" },
   { id: "perfect-album-focus",        name: "Gleaming, Twinkling", desc: "Perfect an album in Album Focus (13/13)", secret: false, icon: "coins", sitting: true, earn: { cat: "album" } },
-  { id: "perfect-all-12-album-focus",        name: "Made Of Starlight", desc: "Perfect all 12 albums in Album Focus",  secret: false, icon: "constellation" },
+  { id: "perfect-all-12-album-focus",        name: "Made Of Starlight", desc: "Perfect all 12 albums in Album Focus",  tier: 3, secret: false, icon: "constellation" },
   // Gleaming, Twinkling perfects at any difficulty; these are the two top rungs, and they ask for
   // different things — naming a record cold on a 5s clock, or having its words by heart.
-  { id: "perfect-album-focus-ultra", name: "Salute To Me",     desc: "Perfect an album on Ultra",            secret: false, icon: "kingcard", sitting: true, earn: { cat: "album", diff: "ultra" } },
-  { id: "perfect-album-focus-lyricist",   name: "Write What You Know", desc: "Perfect an album in Lyricist",         secret: false, icon: "manuscript", sitting: true, earn: { cat: "album", diff: "lyricist" } },
+  { id: "perfect-album-focus-ultra", name: "Salute To Me",     desc: "Perfect an album on Ultra",            tier: 2, secret: false, icon: "kingcard", sitting: true, earn: { cat: "album", diff: "ultra" } },
+  { id: "perfect-album-focus-lyricist",   name: "Write What You Know", desc: "Perfect an album in Lyricist",         tier: 2, secret: false, icon: "manuscript", sitting: true, earn: { cat: "album", diff: "lyricist" } },
   /* ---- Custom mode (your own levers, your own rules) ---- */
   { id: "finish-first-custom-run",             name: "My Choice Is You", desc: "Finish your first Custom run",         secret: false, icon: "levers", sitting: true },
   { id: "keep-5-custom-presets",             name: "A Drawer Of My Things", desc: `Keep ${CUSTOM_PRESET_SHELF} custom presets on the shelf at once`, secret: false, icon: "presetbox", sitting: true },
-  { id: "reach-round-50-endless-custom", name: "Forever & Always", desc: `Reach round ${CUSTOM_ENDLESS_MILESTONE} of an endless Custom run`, secret: false, icon: "infinity", sitting: true },
+  { id: "reach-round-50-endless-custom", name: "Forever & Always", desc: `Reach round ${CUSTOM_ENDLESS_MILESTONE} of an endless Custom run`, tier: 2, secret: false, icon: "infinity", sitting: true },
   // The one Custom charm that rewards authoring something punishing rather than comfortable.
   // "No easier than Ultra" is checked lever by lever against MODES.ultra (see customAtLeastUltra),
   // so retuning Ultra retunes this with it rather than leaving a stale set of numbers here.
-  { id: "perfect-custom-at-least-ultra",      name: "Aim At The Devil", desc: "Perfect a full Custom run tuned no easier than Ultra", secret: false, icon: "letter", sitting: true },
+  { id: "perfect-custom-at-least-ultra",      name: "Aim At The Devil", desc: "Perfect a full Custom run tuned no easier than Ultra", tier: 2, secret: false, icon: "letter", sitting: true },
   /* ---- Guest shelf (other artists' catalogues) ---- */
   { id: "admit-guest", name: "Been Waitin' For You", desc: "Admit a guest to the shelf", secret: false, icon: "guestpass", sitting: true, earn: { cat: "guest" } },
   // Admission already means a perfect, hint-free run, so these are the rungs above it.
-  { id: "admit-guest-hard",       name: "The Bravest Thing", desc: "Admit a guest on Hard or Ultra",       secret: false, icon: "handstamp", sitting: true, earn: { cat: "guest", diff: "hard" } },
-  { id: "admit-guest-lyricist", name: "Know You Better",        desc: "Admit a guest in Lyricist", secret: false, icon: "duetmic", sitting: true, earn: { cat: "guest", diff: "lyricist" } },
+  { id: "admit-guest-hard",       name: "The Bravest Thing", desc: "Admit a guest on Hard or Ultra",       tier: 2, secret: false, icon: "handstamp", sitting: true, earn: { cat: "guest", diff: "hard" } },
+  { id: "admit-guest-lyricist", name: "Know You Better",        desc: "Admit a guest in Lyricist", tier: 2, secret: false, icon: "duetmic", sitting: true, earn: { cat: "guest", diff: "lyricist" } },
   /* ---- Bonus games shelf ----
      A bonus run is otherwise sandboxed to its own best score — these charms are the ONE thing
      it writes outside BONUS_KEY, and that is deliberate: a charm is a collection entry, never
      a ranking, so it doesn't breach the rule that a bonus run is never ranked beside the main
      game. Nothing here may fold stats, history, records or skill XP. */
   { id: "finish-first-bonus-run",    name: "Play It Again",    desc: "Finish your first bonus run",          secret: false, icon: "tonearm", sitting: true, earn: { cat: "bonus" } },
-  { id: "play-every-bonus-game",      name: "Vinyl Shelf",      desc: "Play every game on the shelf",         secret: false, icon: "crate" },
-  { id: "clean-sweep-bonus-game",     name: "A Clean Kill",     desc: "Clean-sweep a bonus game: ten pages cleared", secret: false, icon: "broom", sitting: true, earn: { cat: "bonus" } },
-  { id: "clean-sweep-every-bonus-game", name: "Every Single One", desc: "Clean-sweep every game on the shelf",  secret: false, icon: "goldrecord" },
+  { id: "play-every-bonus-game",      name: "Vinyl Shelf",      desc: "Play every game on the shelf",         tier: 2, secret: false, icon: "crate" },
+  { id: "clean-sweep-bonus-game",     name: "A Clean Kill",     desc: "Clean-sweep a bonus game: ten pages cleared", tier: 2, secret: false, icon: "broom", sitting: true, earn: { cat: "bonus" } },
+  { id: "clean-sweep-every-bonus-game", name: "Every Single One", desc: "Clean-sweep every game on the shelf",  tier: 3, secret: false, icon: "goldrecord" },
   { id: "keep-bonus-sleeve", name: "One Last Souvenir", desc: "Take a sleeve off the page and keep it", secret: false, icon: "sleeve", sitting: true, earn: { cat: "bonus" } },
   // One per game, and four of the six are that game's clean sweep said in its own voice. The
   // two that aren't ask for something a sweep doesn't: exactness on Sing It Back, nerve on
   // Redacted. They are NOT masked like the challenge flourishes — a bonus game has no defeat
   // to reveal them on, so they stand as ordinary named targets from the start.
-  { id: "sweep-spot-the-slip", name: "Something’s Changed", desc: "Sweep Spot the Slip",             secret: false, icon: "ringedword", sitting: true, earn: { cat: "bonus" } },
-  { id: "sweep-name-that-song-one-line-each",   name: "The First Note",   desc: "Sweep Name That Song: all ten off one line each", secret: false, icon: "tuningfork", sitting: true, earn: { cat: "bonus" } },
-  { id: "sweep-sing-it-back-all-words-exact", name: "Right Where You Left Me", desc: "Sweep Sing It Back with every word exact, not one typo forgiven", secret: false, icon: "slotback", sitting: true, earn: { cat: "bonus" } },
-  { id: "name-redacted-song-no-strips-removed",      name: "Blind Faith",      desc: "Name a Redacted song with every strip still down", secret: false, icon: "taped", sitting: true, earn: { cat: "bonus" } },
-  { id: "take-rarest-only-here-card-all-10-pages",       name: "Rarest Air",       desc: "Take the rarest card on all ten pages of Only Here", secret: false, icon: "highcard", sitting: true, earn: { cat: "bonus" } },
-  { id: "finish-then-what-unbroken-chain", name: "Follow The Sparks", desc: "Sing a whole Then What run on one unbroken chain", secret: false, icon: "chain", sitting: true, earn: { cat: "bonus" } },
+  { id: "sweep-spot-the-slip", name: "Something’s Changed", desc: "Sweep Spot the Slip",             tier: 2, secret: false, icon: "ringedword", sitting: true, earn: { cat: "bonus" } },
+  { id: "sweep-name-that-song-one-line-each",   name: "The First Note",   desc: "Sweep Name That Song: all ten off one line each", tier: 2, secret: false, icon: "tuningfork", sitting: true, earn: { cat: "bonus" } },
+  { id: "sweep-sing-it-back-all-words-exact", name: "Right Where You Left Me", desc: "Sweep Sing It Back with every word exact, not one typo forgiven", tier: 2, secret: false, icon: "slotback", sitting: true, earn: { cat: "bonus" } },
+  { id: "name-redacted-song-no-strips-removed",      name: "Blind Faith",      desc: "Name a Redacted song with every strip still down", tier: 2, secret: false, icon: "taped", sitting: true, earn: { cat: "bonus" } },
+  { id: "take-rarest-only-here-card-all-10-pages",       name: "Rarest Air",       desc: "Take the rarest card on all ten pages of Only Here", tier: 2, secret: false, icon: "highcard", sitting: true, earn: { cat: "bonus" } },
+  { id: "finish-then-what-unbroken-chain", name: "Follow The Sparks", desc: "Sing a whole Then What run on one unbroken chain", tier: 2, secret: false, icon: "chain", sitting: true, earn: { cat: "bonus" } },
   // The secrets. Three of them are failures worn well (the register of I'm The Problem), which is the
   // shelf's own tone: these games have soft edges and losing on them is funny rather than sore.
   { id: "take-commonest-only-here-card",      name: "I Bought It",      desc: "Take the commonest card in an Only Here hand", secret: true, icon: "receipt" },
@@ -3147,14 +3171,14 @@ export const ACHIEVEMENTS = [
      same decision (cut the loss, come out ahead) against a mark that moves every time you
      play. */
   { id: "name-ruthless-page-off-one-word",                 name: "One Look",           desc: "Name a Ruthless Game page off a single word", secret: false, icon: "oneword", sitting: true, earn: { cat: "ruthless" } },
-  { id: "finish-ruthless-run-naming-all-ten",              name: "Never Gave In",      desc: "Finish a Ruthless Game run with all ten pages named, none handed back", secret: false, icon: "heldknot", sitting: true, earn: { cat: "ruthless" } },
-  { id: "finish-ruthless-run-with-no-wrong-guess",         name: "Sure Of Everything", desc: "Finish a Ruthless Game run without typing a single wrong song", secret: false, icon: "eraser", sitting: true, earn: { cat: "ruthless" } },
+  { id: "finish-ruthless-run-naming-all-ten",              name: "Never Gave In",      desc: "Finish a Ruthless Game run with all ten pages named, none handed back", tier: 2, secret: false, icon: "heldknot", sitting: true, earn: { cat: "ruthless" } },
+  { id: "finish-ruthless-run-with-no-wrong-guess",         name: "Sure Of Everything", desc: "Finish a Ruthless Game run without typing a single wrong song", tier: 2, secret: false, icon: "eraser", sitting: true, earn: { cat: "ruthless" } },
   // The ladder, read off the BOARD and not off the run that happened to close it. Three rungs of
   // the same shape so the descriptions can be read side by side and the only thing that changes
   // is the number, which is the whole point of a ladder.
-  { id: "every-ruthless-lens-best-under-90s",              name: "Green Light, Go",    desc: "Hold a best under 90 seconds on all six Ruthless Game lenses", secret: false, icon: "greenlight", earn: { cat: "ruthless" } },
-  { id: "every-ruthless-lens-best-under-60s",              name: "Time Moves Faster",  desc: "Hold a best under 60 seconds on all six Ruthless Game lenses", secret: false, icon: "clockrush", earn: { cat: "ruthless" } },
-  { id: "every-ruthless-lens-best-under-45s",              name: "Blink Of An Eye",    desc: "Hold a best under 45 seconds on all six Ruthless Game lenses", secret: false, icon: "blink", earn: { cat: "ruthless" } },
+  { id: "every-ruthless-lens-best-under-90s",              name: "Green Light, Go",    desc: "Hold a best under 90 seconds on all six Ruthless Game lenses", tier: 2, secret: false, icon: "greenlight", earn: { cat: "ruthless" } },
+  { id: "every-ruthless-lens-best-under-60s",              name: "Time Moves Faster",  desc: "Hold a best under 60 seconds on all six Ruthless Game lenses", tier: 2, secret: false, icon: "clockrush", earn: { cat: "ruthless" } },
+  { id: "every-ruthless-lens-best-under-45s",              name: "Blink Of An Eye",    desc: "Hold a best under 45 seconds on all six Ruthless Game lenses", tier: 3, secret: false, icon: "blink", earn: { cat: "ruthless" } },
   // Walking away, priced as the decision it is rather than the surrender it looks like.
   { id: "give-up-a-page-and-still-beat-last-ruthless-run", name: "Smart To Walk Away", desc: "Hand a page back and still finish faster than your last run down that lens", secret: false, icon: "walkedaway", sitting: true, earn: { cat: "ruthless" } },
   /* The secret, and the only charm in the notebook for being told the answer. The stream runs
@@ -3182,21 +3206,21 @@ export const ACHIEVEMENTS = [
      Part) only ever grows. `sitting` is deliberately sparse: it is only on the ones an evening
      can actually chase, never on the ones that need a particular word to be dealt first. */
   { id: "answer-song-titled-the-prompt-word", name: "Well, Yes!", desc: "Answer with the song whose title is the prompt word", secret: false, icon: "equals" },
-  { id: "answer-5-songs-titled-the-prompt-word", name: "Say The Quiet Part", desc: "Answer the song-titled-the-word for five different words", secret: false, icon: "fivewords" },
+  { id: "answer-5-songs-titled-the-prompt-word", name: "Say The Quiet Part", desc: "Answer the song-titled-the-word for five different words", tier: 2, secret: false, icon: "fivewords" },
   { id: "answer-alternate-version-when-base-would-do", name: "Acoustic Version Is Better", desc: "Name an alternate version when the original would have counted", secret: false, icon: "parens", sitting: true, earn: { cat: "difficulty" } },
   { id: "answer-3-fifth-tracks-one-game", name: "Track 5 Lover", desc: "Answer three fifth tracks in one game", secret: false, icon: "trackfive", sitting: true, earn: { cat: "difficulty" } },
   { id: "answer-thirteenth-track-on-page-13", name: "Right On Thirteen", desc: "Answer page 13 with an album's thirteenth track", secret: false, icon: "bookmark", sitting: true, earn: { cat: "difficulty" } },
-  { id: "answer-aoty-word-from-another-aoty-album", name: "Albums Of The Year", desc: "Take a word that titles an Album of the Year track with a song off a different Album of the Year", secret: false, icon: "laurel" },
-  { id: "answer-vault-track-for-tv-track-title", name: "Exploring The Vault", desc: "Take a word that titles a Taylor's Version track with a song From The Vault", secret: false, icon: "vault" },
+  { id: "answer-aoty-word-from-another-aoty-album", name: "Albums Of The Year", desc: "Take a word that titles an Album of the Year track with a song off a different Album of the Year", tier: 2, secret: false, icon: "laurel" },
+  { id: "answer-vault-track-for-tv-track-title", name: "Exploring The Vault", desc: "Take a word that titles a Taylor's Version track with a song From The Vault", tier: 2, secret: false, icon: "vault" },
   { id: "answer-song-saying-word-20-times", name: "A Hundred Times", desc: "Answer with a song that sings the word 20 times or more", secret: false, icon: "sameagain", sitting: true, earn: { cat: "difficulty" } },
   { id: "answer-song-with-word-in-first-line", name: "Opening Line", desc: "Answer with a song that holds the word in its very first line", secret: false, icon: "firstline", sitting: true, earn: { cat: "difficulty" } },
   { id: "answer-song-with-word-in-last-line", name: "Closing Line", desc: "Answer with a song that holds the word in its very last line", secret: false, icon: "lastline", sitting: true, earn: { cat: "difficulty" } },
-  { id: "answer-shortest-and-longest-titles-one-game", name: "Long Story Short", desc: "Answer with the shortest and the longest title in the catalogue, in one game", secret: false, icon: "shortlong" },
+  { id: "answer-shortest-and-longest-titles-one-game", name: "Long Story Short", desc: "Answer with the shortest and the longest title in the catalogue, in one game", tier: 2, secret: false, icon: "shortlong" },
   // Read off the RAW line, before the matcher drops the punctuation — the same trick JE SUIS
   // CALME plays with capitals. A dropdown CLICK never fills the box, so demanding that the
   // line itself spell the title out is what keeps this something the player typed.
-  { id: "type-title-punctuation-exactly", name: "Once Again With Feeling", desc: "Write a title's punctuation out in full, exactly as it's printed", secret: false, icon: "punctuation" },
-  { id: "answer-title-starting-with-last-word-of-previous", name: "I Always Get The Last Word", desc: "Follow an answer with a title that starts on its last word", secret: false, icon: "wordchain" },
+  { id: "type-title-punctuation-exactly", name: "Once Again With Feeling", desc: "Write a title's punctuation out in full, exactly as it's printed", tier: 2, secret: false, icon: "punctuation" },
+  { id: "answer-title-starting-with-last-word-of-previous", name: "I Always Get The Last Word", desc: "Follow an answer with a title that starts on its last word", tier: 2, secret: false, icon: "wordchain" },
   /* The named pairs. Secret to a charm: each one is a joke that only lands if you find it,
      and a visible card naming the song would be the answer printed on the box. */
   { id: "answer-karma-for-cat", name: "Karma Is A Cat", desc: "Answer “Karma” when the word is “cat”", secret: true, icon: "pawprint" },
@@ -3217,12 +3241,27 @@ export const ACHIEVEMENTS = [
   { id: "submit-lwymmd-for-grave", name: "Here Lies Your Answer Streak", desc: "Answer “Look What You Made Me Do” when the word is “grave”", secret: true, icon: "headstone" },
   { id: "submit-wrong-song-from-same-titled-albums-record", name: "Burning Red (With Anger)", desc: "Miss a word that titles a song with another song off that song's album", secret: true, icon: "burningsleeve" },
   /* ---- Skills & Mastery ---- */
-  { id: "unlock-mastery", name: "Bigger Than The Whole Sky", desc: "Press the wax and unlock Mastery", secret: false, icon: "waxpress" },
-  { id: "reach-level-10-one-skill",        name: "Superstar",        desc: `Take a single skill all the way to level ${SKILL_MAX_LEVEL}`, secret: false, icon: "rosette" },
-  { id: "wear-prestige-title", name: "Call It What You Want", desc: "Wear a prestige title on your signature", secret: false, icon: "nametag" },
-  { id: "find-every-polaroid-keepsake", name: "You Took A Polaroid Of Us", desc: "Find every polaroid keepsake", secret: true, icon: "polaroid" },
-  { id: "earn-every-hidden-achievement",   name: "Is It Over Now?",  desc: "Earn every hidden achievement",         secret: true,  icon: "hourglass" },
-  { id: "earn-every-other-achievement",    name: "The Lucky One",    desc: "Earn every other achievement",          secret: true,  icon: "clover" },
+  { id: "unlock-mastery", name: "Bigger Than The Whole Sky", desc: "Press the wax and unlock Mastery", tier: 2, secret: false, icon: "waxpress" },
+  { id: "reach-level-10-one-skill",        name: "Superstar",        desc: `Take a single skill all the way to level ${SKILL_MAX_LEVEL}`, tier: 2, secret: false, icon: "rosette" },
+  { id: "wear-prestige-title", name: "Call It What You Want", desc: "Wear a prestige title on your signature", tier: 2, secret: false, icon: "nametag" },
+  /* The two rungs above Superstar. MASTERY_GATE lets you through on a SUM, so it can be cleared
+     with one maxed skill carrying four idle ones; Nothing Out Of Place asks for that same total
+     spread evenly, and The Whole Place Shimmer asks for the lot. Neither can be locked out:
+     skill ink only ever accrues, and a plain classic run pays into all five. */
+  { id: "all-five-skills-level-8", name: "Nothing Out Of Place", desc: `Have all five skills at level ${SKILL_EVEN_LEVEL} or higher`, tier: 3, secret: false, icon: "placeholder" },
+  { id: "cap-every-skill", name: "The Whole Place Shimmer", desc: `Take all five skills to level ${SKILL_MAX_LEVEL}`, tier: 3, secret: false, icon: "placeholder" },
+  { id: "reach-mastery-max-level", name: "Long Live", desc: `Reach Mastery level ${MASTERY_MAX_LEVEL}`, tier: 3, secret: false, icon: "placeholder" },
+  /* Ink in all five in ONE run, which is really a charm about the contribution mask: a Challenge
+     pays resolve alone, relaxed never pays tempo, Ruthless never runs the round loop. It takes a
+     timed classic run with a sung line, a streak held and answers reaching across albums. */
+  { id: "earn-ink-in-all-five-skills-one-run", name: "None Of It Accidental", desc: "Earn ink in all five skills in a single run", tier: 2, secret: false, icon: "placeholder" },
+  /* The wardrobe. Around forty cosmetics come off that ladder and nothing rewarded wearing them. */
+  { id: "wear-every-mastery-cosmetic-at-once", name: "Style", desc: "Wear a chosen pen, paper, trinket, button finish and button words all at once", tier: 3, secret: false, icon: "placeholder" },
+  { id: "wear-blank-start-button", name: "The Quiet One", desc: "Wear the blank start button", secret: true, icon: "placeholder" },
+  { id: "set-every-cosmetic-to-random", name: "Hands Of Fate", desc: "Hand your trinket, button finish and button words all to chance at once", secret: true, icon: "placeholder" },
+  { id: "find-every-polaroid-keepsake", name: "You Took A Polaroid Of Us", desc: "Find every polaroid keepsake", tier: 3, secret: true, icon: "polaroid" },
+  { id: "earn-every-hidden-achievement",   name: "Is It Over Now?",  desc: "Earn every hidden achievement",         tier: 3, secret: true,  icon: "hourglass" },
+  { id: "earn-every-other-achievement",    name: "The Lucky One",    desc: "Earn every other achievement",          tier: 3, secret: true,  icon: "clover" },
 ];
 export const ACH_BY_ID = Object.fromEntries(ACHIEVEMENTS.map((a) => [a.id, a]));
 
@@ -3491,6 +3530,9 @@ export const ACH_GROUP_OF = {
   "name-ruthless-page-just-after-its-title-appears": "ruthless",
   "flag-spot-the-slip-impostor-under-2s": "bonus",
   "unlock-mastery": "mastery", "reach-level-10-one-skill": "mastery", "wear-prestige-title": "mastery",
+  "all-five-skills-level-8": "mastery", "cap-every-skill": "mastery", "reach-mastery-max-level": "mastery",
+  "earn-ink-in-all-five-skills-one-run": "mastery", "wear-every-mastery-cosmetic-at-once": "mastery",
+  "wear-blank-start-button": "mastery", "set-every-cosmetic-to-random": "mastery",
   "reach-round-89-infinite": "infinite",
   /* Nemesis: the charms that read your own per-word history back to you. The Cycle Ends sits
      here rather than under Catalogue because it is the lower rung of a ladder whose upper rung

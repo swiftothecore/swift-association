@@ -42,7 +42,7 @@ import {
   TEMPO_BASE, TEMPO_SPEED, LYRIC_TIER_XP, LYRIC_LEN_REF,
   ENDURANCE_BASE, ENDURANCE_GROWTH, ENDURANCE_RUN_CAP, RANGE_RATIO_XP, RANGE_PER_ALBUM,
   RESOLVE_BASE, RESOLVE_STREAK_CAP,
-  MASTERY_REWARDS, MASTERY_REWARD_BY_ID, MASTERY_GATE, MASTERY_MAX_LEVEL, MASTERY_LEVEL_STEP, SKILL_MAX_LEVEL,
+  MASTERY_REWARDS, MASTERY_REWARD_BY_ID, MASTERY_GATE, MASTERY_MAX_LEVEL, MASTERY_LEVEL_STEP, SKILL_MAX_LEVEL, SKILL_EVEN_LEVEL,
   CTA_LABELS, CTA_MARKS, PRIDE_BUTTONS, PRIDE_BUTTON_BY_ID, prideStripes,
   MASTERY_TITLES, MASTERY_TITLE_BY_VALUE, masteryDefaultTitle, MASTERY_ICONS, MASTERY_LEVEL_ICONS, MASTERY_TIER_ICONS, MASTERY_TILE_MARKS,
   skillXpForLevel, skillLevelFromXp, masteryXpForLevel, masteryLevelFromXp,
@@ -4758,6 +4758,11 @@ function buildPensTile(pens, m) {
 // MASTERY_REWARDS entry behind it and there must not be, since it grants nothing on its own.
 // So it gates on that kind's SET being unlocked, which is what earns all its members at once.
 const COSMETIC_RANDOM = "random";
+// The kinds that can be handed to chance. Trinkets, the button finish and its words; the pen
+// and the paper are not on this list because there is no cadence that would make them read as a
+// surprise rather than a fault. Named once here so the Hands Of Fate charm cannot drift from
+// the set of controls the reward board actually offers.
+const COSMETIC_RANDOM_KINDS = ["trinket", "button", "label"];
 function rewardSetUnlocked(m, kind) {
   const first = MASTERY_REWARDS.find((r) => r.kind === kind);
   return !!(first && m.unlocked[first.id]);
@@ -5088,6 +5093,7 @@ function applyMasteryCosmetic(kind, value) {
   // The signature flourish only lives on the records page — refresh it if it's showing.
   if (kind === "signature" && screens.records.classList.contains("active")) renderRecordsPage();
   renderMasteryPage();
+  checkWardrobeCharms();
 }
 
 /* ---------- Prestige titles ---------- */
@@ -16533,9 +16539,10 @@ function foldSkillXp(mask, given = null) {
   // levelUps), so a player who cleared the gate or capped a skill before these charms existed
   // still earns them on their next finished run instead of being locked out by the timing.
   if (res) {
-    if (isMasteryUnlocked(res.mastery)) unlock("unlock-mastery");
-    if (SKILL_IDS.some((id) => skillLevelFromXp(res.mastery.skills[id] || 0) >= SKILL_MAX_LEVEL)) unlock("reach-level-10-one-skill");
-    checkTitleCharm(res.mastery);
+    checkMasteryCharms(res.mastery);
+    // The one charm read from THIS fold rather than the saved record: it asks what the run just
+    // paid, so a mode whose mask silences a skill can never earn it however long it runs.
+    if (SKILL_IDS.every((id) => (delta[id] || 0) > 0)) unlock("earn-ink-in-all-five-skills-one-run");
   }
   return res;
 }
@@ -16544,6 +16551,38 @@ function foldSkillXp(mask, given = null) {
 // whether the player picked it in the stepper or their mastery handed them a tier default.
 function checkTitleCharm(m = loadMastery()) {
   if (wornTitleValue(m)) unlock("wear-prestige-title");
+}
+
+// Every mastery charm that asks about STATE rather than about the run just played. All of them
+// read the saved record, never this fold's transitions, so a notebook that cleared a threshold
+// before its charm existed earns it on the next finished run instead of being locked out by the
+// timing. Nothing here can be locked out for good either: skill ink only accrues, and a plain
+// classic run pays into all five.
+function checkMasteryCharms(m = loadMastery()) {
+  const lv = (id) => skillLevelFromXp(m.skills[id] || 0);
+  if (isMasteryUnlocked(m)) unlock("unlock-mastery");
+  if (SKILL_IDS.some((id) => lv(id) >= SKILL_MAX_LEVEL)) unlock("reach-level-10-one-skill");
+  if (SKILL_IDS.every((id) => lv(id) >= SKILL_EVEN_LEVEL)) unlock("all-five-skills-level-8");
+  if (SKILL_IDS.every((id) => lv(id) >= SKILL_MAX_LEVEL)) unlock("cap-every-skill");
+  if (masteryLevelFromXp(m.masteryXp || 0) >= MASTERY_MAX_LEVEL) unlock("reach-mastery-max-level");
+  checkTitleCharm(m);
+  checkWardrobeCharms();
+}
+
+// The three wardrobe charms. Read the SETTINGS rather than the ledger — the question is what
+// you are wearing, not what you own — and so they are checked from the one funnel every
+// cosmetic change runs through (applyMasteryCosmetic) plus every fold, which is what lets a
+// notebook already dressed this way earn them on its next finished run instead of having to
+// take an outfit off and put it back on.
+//
+// "random" counts as a choice for Style: the slot is set to something other than the everyday
+// default, which is what the charm asks. Hands Of Fate then sits inside it as the specific case
+// of handing all three randomisable kinds over at once.
+function checkWardrobeCharms() {
+  const worn = (kind) => settings[MASTERY_COSMETICS[kind].setting] || "";
+  if (Object.keys(MASTERY_COSMETICS).every((kind) => worn(kind))) unlock("wear-every-mastery-cosmetic-at-once");
+  if (worn("label") === "blank") unlock("wear-blank-start-button");
+  if (COSMETIC_RANDOM_KINDS.every((kind) => worn(kind) === COSMETIC_RANDOM)) unlock("set-every-cosmetic-to-random");
 }
 
 // Toast the small, frequent skill level-ups (they float over any screen the same way
@@ -19688,6 +19727,11 @@ function devSimulate(correctCount, opts = {}) {
         const speedFactor = Math.max(0, Math.min(1, (currentMode.seconds - 2) / currentMode.seconds));
         gameTempoXp += Math.round(TEMPO_BASE + TEMPO_SPEED * speedFactor);
       }
+      // By Heart is the one per-answer skill simulate can't infer, since it is paid for a SUNG
+      // line and nothing here types one. `opts.lyrics` stands one in: a "good" recall on a
+      // reference-length line, which is what a fold needs to pay all five skills at once (the
+      // None Of It Accidental charm). Off by default — a simulated run answers with titles.
+      if (opts.lyrics) gameLyricistXp += LYRIC_TIER_XP.good;
     } else {
       roundAlbums[i] = null;
       roundSongs[i] = null;
@@ -20327,6 +20371,15 @@ function buildDevApi() {
       // mastery.unlockRewards first, else it falls back to the mastery-following default.
       title: (slug) => { settings.masteryTitle = slug || ""; saveSettings(settings); if ($("masteryBody")) renderMasteryPage(); if (screens.records.classList.contains("active")) renderRecordsPage(); },
       titles: () => MASTERY_TITLES.map((t) => `${t.payload.title} (L${t.level}${t.isDefault ? ", default" : ""})`),
+      // Settle the mastery charms against the saved record and the wardrobe you are wearing,
+      // without playing a run. Every setter above writes the record straight, so a state reached
+      // through maxSkills / setMasteryLevel / unlockRewards would otherwise sit there unpaid
+      // until the next finished game — the charms ride foldSkillXp, which dev state never runs.
+      charms: () => {
+        checkMasteryCharms();
+        return ACHIEVEMENTS.filter((a) => achGroupOf(a.id) === "mastery")
+          .map((a) => (earnedAchievements[a.id] ? "✓ " : "· ") + a.name);
+      },
       open: () => openMastery("start"),
       // The finale in one press: the cap, every reward, and the Mastery page open on it.
       // Level 13 is the one state that can't be reached honestly in a testing session, and

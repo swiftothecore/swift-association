@@ -281,10 +281,15 @@ export function initDev(api) {
   const simN = num(13);
   const simType = select(["classic", "infinite", "daily"], (x) => x, (x) => x);
   const simMode = select(api.MODE_ORDER, (x) => x, (x) => x);
+  // A simulated run answers with titles, so By Heart is the one skill it never pays. Ticked,
+  // every correct page also stands in a sung line — which is what makes the fold pay all five
+  // skills at once, the only way to reach that charm without typing thirteen lyrics by hand.
+  const simLyrics = mk("input", { type: "checkbox" });
   body.append(section("simulate full game",
     row("correct=", simN, "/13"),
-    row(simType, simMode, btn("run", () => api.simulate(+simN.value, { type: simType.value, mode: simMode.value }))),
-    row(btn("auto-win 13/13", () => api.simulate(13, { type: "classic", mode: simMode.value })),
+    row(simType, simMode, btn("run", () => api.simulate(+simN.value, { type: simType.value, mode: simMode.value, lyrics: simLyrics.checked }))),
+    row(mk("label", { class: "dv-check" }, simLyrics, " answer in lyric lines")),
+    row(btn("auto-win 13/13", () => api.simulate(13, { type: "classic", mode: simMode.value, lyrics: simLyrics.checked })),
         btn("auto-lose 0/13", () => api.simulate(0, { type: "classic", mode: simMode.value })))));
 
   // ---- Start games -----------------------------------------------------------
