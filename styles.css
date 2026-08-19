@@ -6755,10 +6755,16 @@
     --day-ink-1: rgba(236, 229, 214, 0.55); --day-ink-2: rgba(236, 229, 214, 0.45);
     --day-ink-3: rgba(236, 229, 214, 0.4); --day-ink-4: rgba(236, 229, 214, 0.34);
   }
+  /* Spans in the card are block by default, but the three that are not (the card's
+     own flex row, the chip's flex column, the name the ruled line sits under) have to
+     outrank this rule. `.day span` is a class plus a type, so a bare `.day-card` loses
+     to it, the flex row never happens, and the chip silently becomes a full-width band
+     across the top of the card instead of the block down its left edge. They are
+     written `.day .day-*` for that reason alone; do not flatten them back. */
   .day span { display: block; }
   .day-body { position: relative; transform: rotate(-0.35deg); transition: transform 0.18s ease; }
   .day:hover .day-body { transform: rotate(-0.35deg) translateY(-1.5px); }
-  .day-card {
+  .day .day-card {
     position: relative; z-index: 2; display: flex; overflow: hidden;
     background: var(--day-paper); border: 2px solid var(--ink); border-radius: 2px;
     box-shadow: 2px 3px 0 rgba(43, 39, 34, 0.17), 0 7px 16px rgba(43, 39, 34, 0.13);
@@ -6775,7 +6781,7 @@
   }
 
   /* ---- the ink block: the chip wears the round's own era ink ---- */
-  .day-chip {
+  .day .day-chip {
     position: relative; z-index: 2; flex: 0 0 74px; padding: 5px 0 6px; text-align: center;
     display: flex; flex-direction: column; justify-content: center;
     color: #fdf6e6; background: var(--ink-accent);
@@ -6806,7 +6812,7 @@
 
   /* ---- the paper well ---- */
   .day-well { position: relative; z-index: 2; flex: 1 1 auto; padding: 9px 13px 8px 14px; min-width: 0; }
-  .day-name { font-family: var(--type); font-size: calc(12.5px + var(--text-size-adjust)); font-weight: 700; letter-spacing: 2.6px; display: inline-block; }
+  .day .day-name { font-family: var(--type); font-size: calc(12.5px + var(--text-size-adjust)); font-weight: 700; letter-spacing: 2.6px; display: inline-block; }
   /* hand-ruled underline, its own row: overshoots the word and thins to nothing, the
      way a line drawn against a straightedge runs on past where you meant to stop. */
   .day-ruled {
@@ -6886,7 +6892,7 @@
   }
 
   @media (max-width: 480px) {
-    .day-chip { flex-basis: 62px; }
+    .day .day-chip { flex-basis: 62px; }   /* matches the raised specificity above */
     .day-chip .n { font-size: calc(31px + var(--text-size-adjust)); }
     .day-well { padding: 8px 10px 7px 11px; }
   }
