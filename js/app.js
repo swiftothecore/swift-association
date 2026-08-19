@@ -824,6 +824,7 @@ const screens = {
   bonusplay: $("screen-bonusplay"),
   songbook: $("screen-songbook"),
   albumfocus: $("screen-albumfocus"),
+  albumdetail: $("screen-album-detail"),
   ruthless: $("screen-ruthless"),
   guests: $("screen-guests"),
   guestdetail: $("screen-guest-detail"),
@@ -8001,10 +8002,11 @@ function renderChallengeDetail(id) {
   });
 }
 
-/* ---------- Album Focus page (master/detail; the 12-album completion board) ---------- */
+/* ---------- Album Focus pages (the 12-album board, then one album's menu) ---------- */
 let albumFocusBackTarget = "start";   // where the Album Focus back link returns to
-let afSelectedAlbum = null;           // which album the detail panel is showing
-let afSelectedDiff = "medium";        // the difficulty tab the detail panel has picked
+let afSelectedAlbum = null;           // which album's separate menu is open
+let afSelectedDiff = "medium";        // the difficulty tab that album menu has picked
+let albumFocusScrollY = 0;             // restored after returning from an album menu
 
 // Status mark for an album row, scaling with how hard it was beaten/perfected. The exact
 // visual tiers are styling — the data (beatenDiff/perfectedDiff) drives which one shows.
@@ -8215,11 +8217,6 @@ function renderAlbumFocusPage() {
   const beaten = STUDIO_ALBUMS.filter((a) => board[a] && board[a].beaten).length;
   const perfected = STUDIO_ALBUMS.filter((a) => board[a] && board[a].perfected).length;
 
-  // Default selection: keep the current pick if valid, else the first not-yet-beaten album.
-  if (!afSelectedAlbum || !STUDIO_ALBUMS.includes(afSelectedAlbum)) {
-    afSelectedAlbum = STUDIO_ALBUMS.find((a) => !(board[a] && board[a].beaten)) || STUDIO_ALBUMS[0];
-  }
-
   // The board — 12 pinned snapshots that "develop" with progress: blank when fresh,
   // a faint era wash once played (with the best score pencilled in), full era colour
   // when beaten, and gold-leafed when perfected. The era colour is exposed as --era so
@@ -8252,27 +8249,31 @@ function renderAlbumFocusPage() {
         `<span class="chall-beaten-txt"><b>${beaten}</b>of ${STUDIO_ALBUMS.length} beaten${perfectLine}</span>` +
       `</span>` +
     `</div>` +
-    `<div class="af-board">${tiles}</div>` +
-    `<div class="chall-detail af-detail" id="afDetail"></div>`;
+    `<div class="af-board">${tiles}</div>`;
 
   const el = $("albumFocusBody");
   el.innerHTML = html;
   el.querySelectorAll(".af-tile").forEach((b) =>
     b.addEventListener("click", () => selectAlbum(b.dataset.album)));
-  selectAlbum(afSelectedAlbum);
 }
 
 function selectAlbum(album) {
+  if (!STUDIO_ALBUMS.includes(album)) return;
   afSelectedAlbum = album;
-  const body = $("albumFocusBody");
-  if (!body) return;
-  body.querySelectorAll(".af-tile").forEach((b) =>
-    b.classList.toggle("selected", b.dataset.album === album));
+  albumFocusScrollY = window.scrollY;
   renderAlbumDetail(album);
+  flipAwayToScreen("albumdetail");
+  window.scrollTo({ top: 0, behavior: "instant" });
+}
+
+function closeAlbumDetail() {
+  renderAlbumFocusPage();
+  flipInToScreen("albumfocus");
+  requestAnimationFrame(() => window.scrollTo({ top: albumFocusScrollY, behavior: "instant" }));
 }
 
 function renderAlbumDetail(album) {
-  const el = $("afDetail");
+  const el = $("albumDetailBody");
   if (!el) return;
   const rec = albumFocusRecord(album);
   const col = albumColor(album) || "#999";
@@ -8294,6 +8295,7 @@ function renderAlbumDetail(album) {
   }
 
   el.innerHTML =
+    `<div class="chall-detail af-detail">` +
     `<div class="chall-detail-head">` +
       `<span class="af-detail-spine" style="background:${col}"></span>` +
       `<span class="chall-detail-name">${escapeHtml(album)}</span>${stamp}` +
@@ -8310,7 +8312,7 @@ function renderAlbumDetail(album) {
     `<div class="chall-act">` +
       `<span class="chall-meta">${escapeHtml(meta)}</span>` +
       `<button type="button" class="chall-go" data-play="${escapeHtml(album)}">${rec.beaten ? "Play again" : "Start writing"}</button>` +
-    `</div>`;
+    `</div></div>`;
 
   el.querySelectorAll(".af-diff").forEach((b) =>
     b.addEventListener("click", () => { afSelectedDiff = b.dataset.diff; renderAlbumDetail(album); }));
@@ -22329,6 +22331,7 @@ async function init() {
   $("bonusQuitBtn").addEventListener("click", armBonusQuit);
   $("albumFocusBtn").addEventListener("click", () => openAlbumFocus("start"));
   $("albumFocusBackBtn").addEventListener("click", () => backToScreen(albumFocusBackTarget));
+  $("albumDetailBackBtn").addEventListener("click", closeAlbumDetail);
   $("ruthlessBtn").addEventListener("click", () => openRuthless("start"));
   $("ruthlessBackBtn").addEventListener("click", () => backToScreen(ruthlessBackTarget));
   frankGuestStamp();

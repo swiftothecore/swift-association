@@ -1972,6 +1972,18 @@ if (location.pathname.endsWith('/index.html')) {
     <div id="albumFocusBody"></div>
   </section>
 
+  <!-- ALBUM FOCUS DETAIL SCREEN: one album at a time, away from the polaroid board -->
+  <section id="screen-album-detail" class="screen card" tabindex="-1" aria-label="Album focus album">
+    <div class="stats-nav">
+      <span class="title-group">
+        <span class="page-mark mark-album" aria-hidden="true"><svg viewBox="0 0 36 24"><use href="#mark-album"/></svg></span>
+        <span class="stats-title">Album Focus</span>
+      </span>
+      <button id="albumDetailBackBtn" class="btn-link">← albums</button>
+    </div>
+    <div id="albumDetailBody"></div>
+  </section>
+
   <!-- RUTHLESS SCREEN — the six section lenses, each with its own best time -->
   <section id="screen-ruthless" class="screen card" tabindex="-1" aria-label="Ruthless Game">
     <div class="stats-nav">

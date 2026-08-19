@@ -3120,11 +3120,11 @@
     .rl-page-list { columns: 1; }
   }
 
-  /* ---------- Album Focus page — a pinned board of album snapshots ----------
+  /* ---------- Album Focus pages — a pinned board of album snapshots ----------
      The 12 studio albums as squares tacked to the desk in a loose 3x4 grid. Each
      picture "develops" with progress: blank when fresh, a faint era wash once
      played, full era colour when beaten, gold-leafed when perfected. Tapping a tile
-     drops the difficulty picker + record into the detail panel below the board. The
+     turns to a separate album menu with the difficulty picker and record. The
      colour wash is a --era-driven layer so a per-album illustration can replace it. */
   .af-board {
     display: grid; grid-template-columns: repeat(4, 1fr); gap: 30px 18px;
@@ -3143,7 +3143,6 @@
   .af-board .af-tile:nth-child(4n+3) { transform: rotate(-1deg); }
   .af-board .af-tile:nth-child(4n)   { transform: rotate(2.2deg); }
   .af-tile:hover { transform: rotate(0deg) translateY(-3px); box-shadow: 0 9px 17px rgba(60,50,35,0.3); z-index: 2; }
-  .af-tile.selected { box-shadow: 0 0 0 2px var(--ink), 0 6px 14px rgba(60,50,35,0.3); }
 
   .af-tile-win {
     display: block; aspect-ratio: 1 / 1; border-radius: 2px;
@@ -3175,7 +3174,6 @@
 
   /* perfected — pressed in gold leaf: gold pin, gilded top corners, gold caption */
   .af-tile.is-perfect { box-shadow: 0 4px 12px rgba(120,90,20,0.34); }
-  .af-tile.is-perfect.selected { box-shadow: 0 0 0 2px #b98a1f, 0 6px 14px rgba(120,90,20,0.4); }
   .af-tile.is-perfect .af-pin {
     background: #e6c052;
     box-shadow: inset 2px 2px 2px rgba(255,255,255,0.6), inset -1px -2px 2px rgba(120,90,20,0.35), 0 3px 4px rgba(120,90,20,0.4);
@@ -3190,8 +3188,9 @@
     .af-tile:hover { transform: translateY(-2px); }
   }
 
-  /* the detail panel drops in full-width beneath the board */
-  .af-detail { padding-left: 0; margin-top: 4px; padding-top: 18px; border-top: 1px solid rgba(60,40,18,0.16); }
+  /* the album's separate menu, matching the guest shelf's shelf-to-catalogue page turn */
+  #albumDetailBody { padding-top: 4px; }
+  .af-detail { padding-left: 0; margin-top: 0; }
 
   .af-detail-spine { width: 7px; align-self: stretch; min-height: 30px; border-radius: 2px; box-shadow: inset 0 0 0 1px rgba(43,39,34,0.2); }
   .af-stamp { color: rgba(60,90,70,0.85); border-color: rgba(60,90,70,0.55); }
