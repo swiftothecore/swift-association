@@ -556,7 +556,9 @@
   header.title h1 {
     position: relative;
     display: inline-block;
-    margin: 0;
+    /* the whole drawn mark sits a few px higher than its box wants, so the
+       tagline below it gets room to breathe without the header growing */
+    margin: -6px 0 0;
     font-family: var(--hand);
     font-weight: 700;
     font-size: clamp(22px, 6.4vw, 44px);
@@ -681,7 +683,7 @@
   header.title p {
     /* enough top clearance that the swash's entry loop never strikes it: the
        loop is the lowest ink in the masthead, hanging about 10px clear here */
-    margin: 16px 0 0;
+    margin: 24px 0 0;
     font-family: var(--type);
     font-size: calc(12px + var(--text-size-adjust)); letter-spacing: 1px;
     color: #7a5c38;  /* warm desk-brown, a faded sibling of the title's #4a3518 (sits on wood, not paper) */
