@@ -195,10 +195,17 @@ function ensureContainer() {
 
 // Full document height measured from the content column, NOT from scrollHeight
 // (which would include the container itself and risk a feedback loop).
+// The desk runs to the bottom of the body's own tail and no further. That last term
+// used to be a flat 48, which was safe only while the tail was a constant 64 wider
+// than it: the container is absolutely positioned, so anything it adds past the tail
+// stops being decoration and becomes the document's height, handing a page that fits
+// its window a scrollbar onto bare wood. Reading the real padding keeps the layer
+// inside the desk whichever tail updateDeskTail (js/app.js) has chosen.
 function pageHeight() {
   const app = document.querySelector(".app");
-  if (app) return app.offsetTop + app.offsetHeight + 48;
-  return document.documentElement.scrollHeight;
+  if (!app) return document.documentElement.scrollHeight;
+  const tail = parseFloat(getComputedStyle(document.body).paddingBottom) || 0;
+  return app.offsetTop + app.offsetHeight + tail;
 }
 
 // Depth ordering. Everything is on one flat desk, so the only correct rule is

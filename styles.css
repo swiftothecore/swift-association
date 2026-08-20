@@ -235,8 +235,17 @@
     background-color: #cdb389;
     display: flex;
     justify-content: center;
-    padding: 20px 18px 64px;
+    padding: 20px 18px var(--desk-tail, 24px);
   }
+  /* The desk margin under the notebook is a tail, not a constant. On a page that
+     genuinely scrolls it is run-off: the last row of a long list needs somewhere to
+     end, and 64px is what stops it butting into the window edge. On a page that
+     very nearly fits, that same 64px is the ONLY thing you can scroll to, so the
+     scrollbar buys you nothing but bare wood and the masthead slides off the top for
+     it. So the short tail is the default and the long one is switched back on by
+     updateDeskTail (js/app.js) once the notebook overflows the window by enough to
+     be worth scrolling on its own. */
+  body[data-tail="long"] { --desk-tail: 64px; }
   /* Below 1200px the tile is pinned at 1200px wide (cropped, centred) so the
      grain stays at a believable scale on phones; from 1200px up it tracks the
      viewport width exactly. */

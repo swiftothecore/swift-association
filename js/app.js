@@ -831,6 +831,44 @@ const screens = {
   mastery: $("screen-mastery"),
   howto: $("screen-howto"),
 };
+/* ---------- Desk tail ----------
+   How much bare desk sits under the notebook, decided by whether the page is long enough
+   to deserve any. The margin is run-off for a page that scrolls: a long list has to end
+   somewhere, and butting the last row into the window edge looks like the page was cut off.
+   But on a notebook that overflows the window by a dozen pixels, that same margin becomes
+   the whole scroll range, so the only thing scrolling can show you is wood, and the masthead
+   slides off the top to pay for it. Below the threshold the tail is trimmed to the CSS
+   default; above it, the full margin comes back.
+
+   Measured from the content column, never from the document height, which the tail is part
+   of: reading scrollHeight here would let the padding decide its own size. `.app` is a
+   stretched flex item, so on a page that fits it reports the body's content box rather than
+   the card's real bottom. That is harmless, because a stretched `.app` can only ever measure
+   SHORTER than the window and so always lands on the trimmed tail; once the notebook
+   genuinely overflows, the stretch stops applying and the measure is the card itself. */
+const DESK_TAIL_LONG = 160;   // px of overflow before the page counts as one you scroll
+function updateDeskTail() {
+  const app = document.querySelector(".app");
+  if (!app) return;
+  const overflow = app.offsetTop + app.offsetHeight - window.innerHeight;
+  const tail = overflow > DESK_TAIL_LONG ? "long" : "short";
+  // Only write on a real change: the tail resizes the body, which resizes the stretched
+  // `.app`, which is what the observer below is watching. Re-writing the same value would
+  // settle anyway, but it would settle a frame later and through a ResizeObserver warning.
+  if (document.body.dataset.tail !== tail) document.body.dataset.tail = tail;
+}
+/* Every signal that can change either side of that sum. The refresh event is the one the
+   desk scatter already listens for and is fired on every screen change, so a page swap is
+   covered without touching each call site; the observer catches growth WITHIN a screen
+   (expanding sections, a list that just gained a row) that fires no event at all. */
+window.addEventListener("deskscatter:refresh", updateDeskTail);
+window.addEventListener("resize", updateDeskTail);
+if ("ResizeObserver" in window) {
+  const appEl = document.querySelector(".app");
+  if (appEl) new ResizeObserver(updateDeskTail).observe(appEl);
+}
+updateDeskTail();
+
 function showScreen(name) {
   // Defensive: clear any stray inline animation a flip sheet helper might have left on a real
   // screen, so every screen animates normally on its next genuine show.
