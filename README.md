@@ -10,7 +10,7 @@ I’m currently working on a game inspired by ELLE’s Song Association. Where, 
 
 A round is one word. You get 10 seconds to name a song containing it, or to type a lyric line containing it, and every word you land adds a bead to the friendship bracelet you finish the run with.
 
-The game is still a work in progress and is by no means 'done'.
+The game is still a work in progress and is by no means 'done', but it is quite extensive and very playable right now.
 
 ## Standout features
 
