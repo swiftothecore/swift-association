@@ -57,6 +57,11 @@
     --margin: rgba(178, 58, 58, 0.45); /* red margin rule: a printed line, meant to sit UNDER text */
     --red-pen: #a8322e;                /* the editor's red pen: solid ink, for text you must be able to read */
 
+    /* The masthead's gold. Deliberately NOT an era token: the drawn title is the
+       one fixed mark on the desk, and a logo that repaints itself every ten
+       seconds is not a logo. Era ink starts below the header. */
+    --brand-gold: #a9791f;
+
     /* Era tokens (overridden per round by [data-era]) */
     --ink-accent: #a9791f;
     --highlighter: rgba(247, 201, 72, 0.55);
@@ -112,6 +117,7 @@
     --red-pen: #df6b64;                /* brightened so editor's ink stays legible */
     /* Default (no-era) accent, lifted for the dark page so the masthead gold and
        "Your best" number don't sit muddy. Per-era dark tunings are below. */
+    --brand-gold: #e0a83a;
     --ink-accent: #e0a83a;
     --highlighter: rgba(240, 196, 90, 0.32);
     --bead: #e0a83a;
@@ -154,7 +160,7 @@
   }
   /* Masthead sits on the desk, not the paper, so its "carved brown" ink goes
      invisible at night. Repaint the non-gold words as warm paper-white with a
-     dark underside; the gold word keeps riding --ink-accent. */
+     dark underside; the gold word keeps riding --brand-gold. */
   :root[data-theme="dark"] header.title h1 { color: #ece5d6; }
   :root[data-theme="dark"] .mast-line {
     background:
@@ -601,15 +607,18 @@
        without a heavy carved shadow. */
     filter: drop-shadow(0 1px 0 rgba(255,248,232,0.32)) drop-shadow(0 1.5px 1px rgba(50,26,7,0.28)) drop-shadow(0 3px 5px rgba(58,30,8,0.16));
   }
-  /* the era ink carried up into a single title word (recolours with the album era) */
+  /* the one gold word in the title. Pinned to --brand-gold, NOT --ink-accent: the
+     era wash owns the page below the header, but the masthead is the wordmark and
+     has to look the same in every era (reputation and graphite would drain the
+     gold out of it entirely). */
   .mast-gold {
-    /* Solid era-gold fill (the same yellow as the rest of the title's accents),
+    /* Solid brand-gold fill (the same yellow as the rest of the title's accents),
        NOT a gradient clipped to the text: Caveat's big "g" descender hangs below
        the text-clip box, so any clipped fill leaves its tip unpainted (a brown
        smudge when nested in the brown text, a cut-off tip once isolated). A solid
        colour paints the whole glyph, descender and all. */
-    color: var(--ink-accent);
-    -webkit-text-fill-color: var(--ink-accent);
+    color: var(--brand-gold);
+    -webkit-text-fill-color: var(--brand-gold);
     /* ONE tight underside and nothing else. The brown words can carry a light top
        edge, a dark underside and a wide ambient because brown on tan has the
        contrast to survive them; mid-gold on tan does not. Stacking a near-white
@@ -617,7 +626,7 @@
        once, and the word went to mush at a distance. So: no light edge, no wide
        ambient, and the remaining shadow is a half-pixel blur rather than a glow,
        just enough to seat the gold on the wood instead of floating over it. */
-    filter: drop-shadow(0 1px 0.5px color-mix(in srgb, var(--ink-accent), #000 55%));
+    filter: drop-shadow(0 1px 0.5px color-mix(in srgb, var(--brand-gold), #000 55%));
   }
   /* the dot on the first i becomes the game's gold star */
   .mast-i { position: relative; }
@@ -628,8 +637,8 @@
     /* wears the same gold as the "Song" letters but keeps its own lifted edge:
        a star is a solid little mark, not a run of thin strokes, so the near-white
        top edge that blurred the word reads as a highlight on it instead. */
-    fill: var(--ink-accent);
-    stroke: var(--ink-accent); stroke-width: 1.1;
+    fill: var(--brand-gold);
+    stroke: var(--brand-gold); stroke-width: 1.1;
     stroke-linejoin: round; stroke-linecap: round;
     filter: drop-shadow(0 1px 0 rgba(255,248,232,0.45)) drop-shadow(0 2px 5px rgba(58,30,8,0.28));
   }
@@ -656,7 +665,7 @@
        the drawing space is 320x34 with the wave axis on y=14, and the -0.554em
        drop is what lands that axis on the h1 content bottom, where the old flat
        rule sat. Move one and you must move the other. */
-    stroke: var(--ink-accent); opacity: 0.85; pointer-events: none;
+    stroke: var(--brand-gold); opacity: 0.85; pointer-events: none;
   }
   /* four short pen strokes flanking the title, the marks you rule beside a
      line you mean. deliberately uneven: the lengths differ, the angles are not
@@ -672,7 +681,7 @@
        baseline, so a mark on the true centre reads as riding high */
     transform: translateY(calc(-50% + 0.08em));
     pointer-events: none;
-    fill: none; stroke: var(--ink-accent);
+    fill: none; stroke: var(--brand-gold);
     stroke-width: 2.3; stroke-linecap: round;
     opacity: 0.9;
   }
@@ -695,7 +704,7 @@
   .tagline-row .tag-heart {
     width: 13px; height: auto; overflow: visible;
     margin: 0 10px; vertical-align: -2px;
-    fill: none; stroke: var(--ink-accent);
+    fill: none; stroke: var(--brand-gold);
     stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
     opacity: 0.9;
   }
