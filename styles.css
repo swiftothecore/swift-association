@@ -552,7 +552,10 @@
   @media (min-width: 1120px) { .desk-items { display: block; } }
 
   /* ---------- Title ---------- */
-  header.title { text-align: center; margin-bottom: 22px; }
+  /* 20px, not 22: the h1 rides 6px up and the tagline 8px down, so the header
+     box is 2px taller than it was. Give those 2px back here and the notebook
+     below stays exactly where it was drawn. */
+  header.title { text-align: center; margin-bottom: 20px; }
   header.title h1 {
     position: relative;
     display: inline-block;
