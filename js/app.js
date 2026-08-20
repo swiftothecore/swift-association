@@ -1389,14 +1389,32 @@ function wordProximity(song, word) {
   if (new RegExp("\\b" + escapeRegExp(word) + "e?s\\b", "i").test(lyrics)) return 1;
   return 2;
 }
-// Shuffle first, then sort by proximity — a stable sort keeps the shuffle as the
-// tiebreak, so the reveal stays varied within each tier instead of showing the same
-// song every time a word comes round. Strict rounds have no variants to sort.
+/* Shuffle first, then sort by proximity — a stable sort keeps the shuffle as the
+   tiebreak, so the reveal stays varied within each tier instead of showing the same
+   song every time a word comes round. Strict rounds have no variants to sort.
+
+   The second key is the catalogue's own shape. A missed page is the game's only
+   teaching moment, and three cards drawn from the Holiday Collection, the film songs,
+   the songs written for other artists and the collaborations don't tell the player they
+   missed something findable — they tell them the page was never really answerable,
+   which lands worse than being beaten. So inside each proximity tier the twelve studio
+   albums come first, and the fringe four fill in behind them.
+
+   The keys are in this order and not the other one on purpose: proximity has to stay
+   dominant, or a stem variant on a studio album ("shines") outranks a song saying the
+   actual word, which is the exact failure the proximity sort exists to prevent. Since
+   wordProximity only answers 0, 1 or 2, ties are the normal case and the studio lean
+   bites on almost every page anyway. It costs a little of the shuffle's variety — on a
+   word held by only one or two studio songs the fringe ones become predictably last —
+   and the shuffle still varies the order within each half. */
 function rankByProximity(songs, word) {
   const pool = shuffle(songs.slice());
-  if (effectiveStrict()) return pool;
+  const fringe = new Map(pool.map((s) => [s, STUDIO_ALBUMS.includes(s.album) ? 0 : 1]));
+  // A strict round has no variants to sort, but it still has a reveal to teach with, so
+  // it takes the studio key on its own rather than skipping the sort altogether.
+  if (effectiveStrict()) return pool.sort((a, b) => fringe.get(a) - fringe.get(b));
   const rank = new Map(pool.map((s) => [s, wordProximity(s, word)]));
-  return pool.sort((a, b) => rank.get(a) - rank.get(b));
+  return pool.sort((a, b) => (rank.get(a) - rank.get(b)) || (fringe.get(a) - fringe.get(b)));
 }
 
 /* ---------- Stats ---------- */
@@ -9526,7 +9544,7 @@ function cakeSvg() {
 // and kicker (or the score + streak once played), and — while unplayed — a punched
 // hem reading "tear here to play". Playing tears the hem off THIS card; the date
 // never changes, so the card never looks stale, only used. Design notes in full:
-// scripts/dev/daily-button-handoff.md + scripts/dev/daily-btn-dayblock.html (both
+// scripts/ui/daily-button-handoff.md + scripts/ui/daily-btn-dayblock.html (both
 // gitignored).
 const DAY_STRAND_CAP = 7;
 const DAY_HOLE_COUNT = 13;
@@ -20091,6 +20109,15 @@ function buildDevApi() {
         devApplyWord(w);
         return { word: w, valid: currentSongs.length };
       },
+      /* The rank the cards and the expansion are dealt off, with both sort keys spelled out.
+         On screen the order is just an order — nothing says why one song made a card and
+         another didn't — so the studio-albums key is invisible to anyone checking that it
+         works, which is the same reason the chain puzzles carry `from` on every decoy. */
+      order: () => rankByProximity(currentSongs, currentWord).map((s, i) => ({
+        n: i + 1, title: s.title, album: s.album,
+        near: wordProximity(s, currentWord),          // 0 the word, 1 a variant, 2 neither
+        studio: STUDIO_ALBUMS.includes(s.album),
+      })),
     },
     catalogue: {
       recipes: () => CATALOGUE_RECIPES.map((r) => ({
