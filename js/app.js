@@ -11628,6 +11628,7 @@ function renderChallengeTab() {
   const dark = !!challengeDark;
   const seals = dark ? CHALLENGE_SEALS_DARK : CHALLENGE_SEALS;
   const { lines, size } = tabNameLines(currentChallenge.name);
+  positionChallengeTab(el);
   el.classList.toggle("is-dark", dark);
   el.innerHTML =
     `<div class="ctab-seal">${sealMarkup(seals[currentChallenge.id])}</div>` +
@@ -11636,6 +11637,17 @@ function renderChallengeTab() {
   el.setAttribute("aria-label", "Challenge: " + currentChallenge.name + (dark ? " (dark side)" : ""));
   el.hidden = false;
 }
+
+// The tab hangs off .app, not off the play page (see index.html), so it has to be told
+// where down the notebook that page starts. The masthead above it changes height with the
+// viewport, which is why this is re-run on resize rather than measured once.
+function positionChallengeTab(el) {
+  const tab = el || $("challengeTab");
+  const card = $("screen-game");
+  if (!tab || !card) return;
+  tab.style.setProperty("--card-top", card.offsetTop + "px");
+}
+window.addEventListener("resize", () => { const t = $("challengeTab"); if (t && !t.hidden) positionChallengeTab(t); });
 
 function applyChallengeRound(wrap) {
   if (gameType !== "challenge" || !currentChallenge || !wrap) return;

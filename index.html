@@ -78,7 +78,7 @@ if (location.pathname.endsWith('/index.html')) {
 <link rel="preload" href="fonts/courierprime-700-latin.woff2" as="font" type="font/woff2" crossorigin />
 <link rel="preload" href="fonts/courierprime-italic-latin.woff2" as="font" type="font/woff2" crossorigin />
   <link rel="stylesheet" href="ink.css" />
-  <link rel="stylesheet" href="styles.css?v=68" />
+  <link rel="stylesheet" href="styles.css?v=69" />
 </head>
 <body data-era="gold">
 <!-- Hand-drawn wobble for the penned achievement charms. Referenced by .charm svg
@@ -1593,7 +1593,6 @@ if (location.pathname.endsWith('/index.html')) {
     <div id="livesTally" class="lives-tally" aria-hidden="true"></div>
     <div id="doodleLayer" class="doodle-layer" aria-hidden="true"></div>
     <div id="milestoneSticky" class="milestone-sticky" role="img" hidden></div>
-    <div id="challengeTab" class="challenge-tab" role="img" hidden></div>
     <div class="bracelet-wrap">
       <div class="bracelet-meta">
         <span>page <b id="pageNum">1</b><span id="pageTotalWrap"> of <b id="pageTotal">13</b></span></span>
@@ -2025,6 +2024,14 @@ if (location.pathname.endsWith('/index.html')) {
     </div>
     <div id="songbookBody"></div>
   </section>
+
+  <!-- The active challenge's tab, tucked into the notebook's fore-edge. A sibling of the
+       screens rather than a child of the play page ON PURPOSE: a page turn clones the whole
+       card into a .page-flip-sheet and transforms it, and a transformed clone is a stacking
+       context, which would drop the tab (it paints at z-index -1) behind the turning sheet's
+       own paper. Out here it belongs to the notebook instead of the page, so pages turn over
+       it and it stays put — which is what a bookmark does anyway. -->
+  <div id="challengeTab" class="challenge-tab" role="img" hidden></div>
 </div>
 
 <script type="module" src="js/app.js"></script>

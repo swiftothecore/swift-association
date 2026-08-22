@@ -869,6 +869,8 @@
   .screen:focus-visible { outline: none; }
 
   .screen { display: none; }
+  /* the play page paints over the challenge tab tucked behind its fore-edge */
+  #screen-game { z-index: 1; }
   .screen.active { display: block; animation: fade 0.4s ease; }
   @keyframes fade { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
 
@@ -4523,23 +4525,32 @@
      tucked into the notebook at the right-hand edge. Decorative and non-interactive — it
      just names the challenge you're in.
 
-     The trick that makes it belong to the notebook rather than sit beside it is z-index:
-     -1. The card sets no z-index of its own, so it makes no stacking context, and a
-     negative child paints BEHIND the card's paper: the page edge crops the tab's inner
-     end and the card's own drop shadow falls across it. Keep the card free of z-index,
-     transform, filter and opacity or the tab vanishes behind it.
+     The trick that makes it belong to the notebook rather than sit beside it is that the
+     play page outranks it: #screen-game takes z-index 1 and the tab sits at 0 beneath it,
+     so the page edge crops the tab's inner end and the card's own drop shadow falls across
+     it. They are siblings, which is what keeps that true through a page turn — as a child
+     of the card the tab was cloned into every .page-flip-sheet, and a transformed sheet is
+     a stacking context, so the cloned tab dropped behind the turning paper and the tab
+     appeared to darken under the flip shade and then vanish.
 
      The right edge, not the left, because the app's page turns pivot on a left spine
      (see .page-flip-sheet--side) — a tab out of that edge is a tab out of the binding.
 
      `--bite` is how much of the tab is buried behind the paper; the tab is anchored by
      the edge it grows OUT of, never by the far edge, because with width:max-content a
-     right-anchored tab grows leftwards and swallows its own seal under the page. */
+     right-anchored tab grows leftwards and swallows its own seal under the page.
+
+     It is positioned against .app rather than the page, so `--card-top` (set by
+     renderChallengeTab, and refreshed on resize) carries the play page's offset inside
+     the notebook and `--tab-y` is where the tab sits down that page. */
   .challenge-tab[hidden] { display: none; }
+  /* A run is the only place this belongs: showScreen puts body.in-game up for the play
+     board and takes it down everywhere else, so results and panels never wear it. */
+  body:not(.in-game) .challenge-tab { display: none; }
   .challenge-tab {
-    --bite: 46px; --notch: 15px;
-    position: absolute; z-index: -1;
-    left: calc(100% - var(--bite)); top: 92px; width: max-content;
+    --bite: 46px; --notch: 15px; --tab-y: 92px;
+    position: absolute; z-index: 0;
+    left: calc(100% - var(--bite)); top: calc(var(--card-top, 0px) + var(--tab-y)); width: max-content;
     padding: 11px calc(8px + var(--notch)) 13px calc(var(--bite) + 6px);
     display: flex; align-items: center; gap: 8px;
     background: var(--paper); border: 1px solid var(--paper-edge);
@@ -4585,8 +4596,8 @@
      below the fold and was never seen on a phone either. */
   @media (max-width: 900px) {
     .challenge-tab {
-      --bite: 0px; --notch: 9px;
-      left: auto; right: 6px; top: 112px;
+      --bite: 0px; --notch: 9px; --tab-y: 112px;
+      left: auto; right: 6px;
       padding: 7px calc(6px + var(--notch)) 7px 7px;
       box-shadow: -2px 2px 7px rgba(60,50,35,0.18);
       z-index: 4;
