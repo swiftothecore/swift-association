@@ -389,3 +389,39 @@ export function thirteenNote(dateKey) {
     aria: `Today's date adds up to 13. ${sumPhrase}.`,
   };
 }
+
+// Break a label into `k` lines at word boundaries, minimising the LONGEST line rather
+// than filling greedily. On the challenge tab the name is set vertically, so the longest
+// line IS the tab's height: a greedy fill leaves "I Have No Experience With / Home
+// Invasion", where one long column sets the height and the short one wastes the width it
+// costs. Falls back to the whole string when there is nothing to break on.
+export function balanceLines(name, k) {
+  const w = name.trim().split(/\s+/);
+  if (k <= 1 || w.length <= 1) return [name.trim()];
+  k = Math.min(k, w.length);
+  let best = null;
+  const walk = (i, left, lines) => {
+    if (left === 0) {
+      const all = lines.concat([w.slice(i).join(" ")]);
+      const worst = Math.max(...all.map((l) => l.length));
+      if (!best || worst < best.worst) best = { worst, lines: all };
+      return;
+    }
+    for (let j = i + 1; j <= w.length - left; j++) walk(j, left - 1, lines.concat([w.slice(i, j).join(" ")]));
+  };
+  walk(0, k - 1, []);
+  return best.lines;
+}
+
+// How the challenge tab sets a name: how many lines, and how big the hand is. Two lines
+// is the cap on purpose — 29 of the 33 challenge names fit on ONE line, so a third
+// column would widen the tab for a handful of names and thin the type for all of them.
+// The size then holds the column near 150px, which is what stops a long name running off
+// the bottom of a short page.
+export function tabNameLines(name) {
+  const lines = balanceLines(name, name.length <= 17 ? 1 : 2);
+  const longest = Math.max(...lines.map((l) => l.length));
+  // the handwriting averages a hair under half an em per character
+  const size = Math.max(11, Math.min(16, Math.floor(150 / (longest * 0.46))));
+  return { lines, size };
+}

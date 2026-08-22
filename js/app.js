@@ -1,5 +1,5 @@
 "use strict";
-import { $, escapeRegExp, escapeHtml, prefersReducedMotion, shuffle, chance, normalizeTitle, normalizeLyric, fuzzySubstringRatio, levenshtein, swappedNeighbours, mulberry32, fnv1a, charmBlob, dailySeed, censorText, anniversaryNote, thirteenNote } from "./util.js";
+import { $, escapeRegExp, escapeHtml, tabNameLines, prefersReducedMotion, shuffle, chance, normalizeTitle, normalizeLyric, fuzzySubstringRatio, levenshtein, swappedNeighbours, mulberry32, fnv1a, charmBlob, dailySeed, censorText, anniversaryNote, thirteenNote } from "./util.js";
 import "./credential-guard.js";
 import { SITE_URL, copyToClipboard } from "./share.js";
 import { launchFlock } from "./messengers.js";
@@ -9984,8 +9984,8 @@ function resetRunState() {
   if (skipBtn) skipBtn.remove();
   const banner = $("challBanner");
   if (banner) banner.remove();
-  const seal = $("challengeSeal");
-  if (seal) { seal.hidden = true; seal.innerHTML = ""; seal.removeAttribute("aria-label"); seal.classList.remove("is-dark"); }
+  const tab = $("challengeTab");
+  if (tab) { tab.hidden = true; tab.innerHTML = ""; tab.removeAttribute("aria-label"); tab.classList.remove("is-dark"); }
   const wrap = $("wordDisplay") && $("wordDisplay").parentNode;
   if (wrap) wrap.classList.remove("vanished");
 }
@@ -11611,33 +11611,35 @@ function comboRemaining() {
 // Per-round modifier for the active challenge (called from advanceRound after the
 // word is written). Vanishing Word hides the prompt after a beat; matching is
 // unaffected (currentWord/currentSongs live in state, not the DOM).
-// The active challenge's wax seal, stamped in a corner of the play page so you always know
-// which challenge you're in. Silent (and cleared) outside a challenge run.
-function renderChallengeSeal() {
-  const el = $("challengeSeal");
+// The active challenge, hung off the fore-edge of the play page on a paper tab wearing its
+// wax seal, so you always know which challenge you're in. Silent (and cleared) outside a
+// challenge run.
+function renderChallengeTab() {
+  const el = $("challengeTab");
   if (!el) return;
   if (gameType !== "challenge" || !currentChallenge) {
     el.hidden = true; el.innerHTML = ""; el.removeAttribute("aria-label");
     el.classList.remove("is-dark");
     return;
   }
-  // On a dark run the corner stamp pours black-violet like every other dark-side surface,
-  // with a small violet line under the name so the corner alone tells you which version
+  // On a dark run the seal pours black-violet like every other dark-side surface, and the
+  // tab adds the eclipse mark beside the name, so the tab alone tells you which version
   // you're playing — the tagline marker is at the top of the page and easy to lose.
   const dark = !!challengeDark;
   const seals = dark ? CHALLENGE_SEALS_DARK : CHALLENGE_SEALS;
+  const { lines, size } = tabNameLines(currentChallenge.name);
   el.classList.toggle("is-dark", dark);
   el.innerHTML =
-    `<div class="cseal-stamp">${sealMarkup(seals[currentChallenge.id])}</div>` +
-    `<div class="cseal-name">${escapeHtml(currentChallenge.name)}</div>` +
-    (dark ? `<div class="cseal-dark">${CHALL_ECLIPSE}dark side</div>` : "");
+    `<div class="ctab-seal">${sealMarkup(seals[currentChallenge.id])}</div>` +
+    (dark ? `<div class="ctab-dark">${CHALL_ECLIPSE}</div>` : "") +
+    `<div class="ctab-name" style="font-size:${size}px">${lines.map(escapeHtml).join("<br>")}</div>`;
   el.setAttribute("aria-label", "Challenge: " + currentChallenge.name + (dark ? " (dark side)" : ""));
   el.hidden = false;
 }
 
 function applyChallengeRound(wrap) {
   if (gameType !== "challenge" || !currentChallenge || !wrap) return;
-  renderChallengeSeal();   // the challenge's wax seal, stamped in the page corner for the run
+  renderChallengeTab();    // the challenge's tab, hung off the page edge for the run
   // `wordScale` (Vanishing Word's dark side) renders the prompt at a fraction of its normal
   // size. Read here, before the rule dispatch, so it's one lever any challenge can carry
   // rather than a per-rule special case. Display only — matching always reads currentWord

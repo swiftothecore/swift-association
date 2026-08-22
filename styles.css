@@ -4518,36 +4518,81 @@
     margin-top: 4px; transform: rotate(-3deg); white-space: nowrap;
   }
 
-  /* ---------- Challenge seal (the active challenge's wax stamp, page corner) ----------
-     Mirrors the milestone sticky on the opposite (bottom-left) corner. Decorative and
-     non-interactive — it just names the challenge you're in. */
-  .challenge-seal[hidden] { display: none; }
-  .challenge-seal {
-    position: absolute; left: 16px; bottom: 16px; z-index: 6;
-    display: flex; flex-direction: column; align-items: center;
+  /* ---------- Challenge tab (the active challenge, hung off the fore-edge) ----------
+     A slip of the same paper as the page, wearing the challenge's wax seal and its name,
+     tucked into the notebook at the right-hand edge. Decorative and non-interactive — it
+     just names the challenge you're in.
+
+     The trick that makes it belong to the notebook rather than sit beside it is z-index:
+     -1. The card sets no z-index of its own, so it makes no stacking context, and a
+     negative child paints BEHIND the card's paper: the page edge crops the tab's inner
+     end and the card's own drop shadow falls across it. Keep the card free of z-index,
+     transform, filter and opacity or the tab vanishes behind it.
+
+     The right edge, not the left, because the app's page turns pivot on a left spine
+     (see .page-flip-sheet--side) — a tab out of that edge is a tab out of the binding.
+
+     `--bite` is how much of the tab is buried behind the paper; the tab is anchored by
+     the edge it grows OUT of, never by the far edge, because with width:max-content a
+     right-anchored tab grows leftwards and swallows its own seal under the page. */
+  .challenge-tab[hidden] { display: none; }
+  .challenge-tab {
+    --bite: 46px; --notch: 15px;
+    position: absolute; z-index: -1;
+    left: calc(100% - var(--bite)); top: 92px; width: max-content;
+    padding: 11px calc(8px + var(--notch)) 13px calc(var(--bite) + 6px);
+    display: flex; align-items: center; gap: 8px;
+    background: var(--paper); border: 1px solid var(--paper-edge);
+    box-shadow: 2px 3px 8px rgba(60,50,35,0.22);
+    transform: rotate(1.1deg);
+    /* the V-cut outer end. --notch also buys the wording its clearance from the cut, so
+       the notch never eats the room the name needs — that is the whole reason a plain
+       tongue used to read better than a notched one. */
+    clip-path: polygon(0 0, 100% 0, calc(100% - 12px) 50%, 100% 100%, 0 100%);
     pointer-events: none; user-select: none;
   }
-  .cseal-stamp { width: 46px; height: 46px; transform: rotate(-7deg); filter: drop-shadow(1px 2px 3px rgba(60,50,35,0.2)); }
-  .cseal-stamp svg { width: 100%; height: 100%; display: block; }
-  .cseal-name {
-    margin-top: 3px; max-width: 92px; text-align: center;
-    font-family: var(--hand); font-size: calc(13px + var(--text-size-adjust)); line-height: 1.05; color: var(--ink-soft);
-    transform: rotate(-2deg);
+  .ctab-seal { width: 27px; height: 27px; flex: none; transform: rotate(-6deg); }
+  .ctab-seal svg { width: 100%; height: 100%; display: block; }
+  /* The name runs bottom-to-top, so a line break starts a new COLUMN and a long name
+     grows the tab sideways instead of down past the bottom of the page. Centred rather
+     than flush because the seal sits on the tab's long axis and a notched end reads as
+     centred: ragged lines beside both of those look like a mistake. Inline font-size
+     comes from tabNameLines(). */
+  .ctab-name {
+    writing-mode: vertical-rl; transform: rotate(180deg);
+    font-family: var(--hand); line-height: 1.25; text-align: center; color: var(--ink-soft);
   }
-  /* dark side: the same corner stamp poured black-violet, named underneath in the same
-     violet typewriter ink as the tagline marker so the two read as one signal. */
-  .cseal-dark {
-    display: inline-flex; align-items: center; gap: 4px; margin-top: 2px;
-    font-family: var(--type); font-size: calc(10px + var(--text-size-adjust)); font-weight: 700; letter-spacing: 0.6px;
-    text-transform: lowercase; color: #7a4bb0; transform: rotate(-2deg);
-  }
-  .cseal-dark .chall-mark-svg { width: 9px; height: 9px; color: currentColor; }
-  .challenge-seal.is-dark .cseal-stamp { filter: drop-shadow(1px 2px 3px rgba(40,25,60,0.3)); }
-  @media (max-width: 560px) {
-    .challenge-seal { left: 10px; bottom: 10px; }
-    .cseal-stamp { width: 38px; height: 38px; }
-    .cseal-name { font-size: calc(12px + var(--text-size-adjust)); max-width: 80px; }
-    .cseal-dark { font-size: calc(9px + var(--text-size-adjust)); }
+  /* dark side: the seal is already poured black-violet by the caller, so the tab adds
+     only the eclipse mark and a violet hairline down its inner edge — the same violet
+     ink as the tagline marker, so the two read as one signal. */
+  .challenge-tab.is-dark { box-shadow: 2px 3px 8px rgba(40,25,60,0.28); }
+  .challenge-tab.is-dark .ctab-name { color: #7a4bb0; }
+  .ctab-dark { flex: none; color: #7a4bb0; display: flex; }
+  .ctab-dark .chall-mark-svg { width: 11px; height: 11px; color: currentColor; }
+
+  /* The tongue stands up to ~110px clear of the paper (a two-line name is the widest it
+     gets), so it needs a desk gutter at least that deep: 660px of notebook plus two
+     gutters puts the floor at ~880px of window. Under that the tab cannot hang off the
+     edge without dragging a horizontal scrollbar onto the page, so it comes inboard and
+     presses onto the paper instead.
+
+     It also loses the name there, and that is deliberate rather than lazy: on a phone the
+     page has no free column down its right-hand side at all — the bracelet, the rule
+     banner, the prompt word and the feedback cards each span the full width in turn — so
+     a named tab has nowhere to sit that does not land on something. The seal alone clears
+     the bracelet and stays on the first screen, which is already more than the corner
+     stamp this replaced managed: at `bottom: 16px` on a page this tall, that stamp sat
+     below the fold and was never seen on a phone either. */
+  @media (max-width: 900px) {
+    .challenge-tab {
+      --bite: 0px; --notch: 9px;
+      left: auto; right: 6px; top: 112px;
+      padding: 7px calc(6px + var(--notch)) 7px 7px;
+      box-shadow: -2px 2px 7px rgba(60,50,35,0.18);
+      z-index: 4;
+    }
+    .ctab-name { display: none; }
+    .ctab-seal { width: 26px; height: 26px; }
   }
 
   /* ---------- Sacred-13 days (the 13th / dates that add up to 13) ----------
