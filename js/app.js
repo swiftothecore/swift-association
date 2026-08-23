@@ -11624,8 +11624,12 @@ function renderChallengeTab() {
     return;
   }
   // On a dark run the seal pours black-violet like every other dark-side surface, and the
-  // tab adds the eclipse mark beside the name, so the tab alone tells you which version
-  // you're playing — the tagline marker is at the top of the page and easy to lose.
+  // tab marks the name with the eclipse, so the tab alone tells you which version you're
+  // playing — the tagline marker is at the top of the page and easy to lose. The mark goes
+  // INSIDE the name rather than beside it: as a flex item of its own it took a whole column
+  // between the wax and the wording and sat centred in it, which read as a stray dot floating
+  // in the middle of the tab rather than as a mark against anything. Inline, it flows with the
+  // vertical text and lands at the foot of the name like a bullet before it.
   const dark = !!challengeDark;
   const seals = dark ? CHALLENGE_SEALS_DARK : CHALLENGE_SEALS;
   const { lines, size } = tabNameLines(currentChallenge.name);
@@ -11639,8 +11643,10 @@ function renderChallengeTab() {
   el.innerHTML =
     `<i class="ctab-ribbon" aria-hidden="true"></i>` +
     `<div class="ctab-seal">${sealMarkup(seals[currentChallenge.id])}</div>` +
-    (dark ? `<div class="ctab-dark">${CHALL_ECLIPSE}</div>` : "") +
-    `<div class="ctab-name" style="font-size:${size}px">${lines.map(escapeHtml).join("<br>")}</div>`;
+    `<div class="ctab-name" style="font-size:${size}px">` +
+      (dark ? `<span class="ctab-dark">${CHALL_ECLIPSE}</span>` : "") +
+      lines.map(escapeHtml).join("<br>") +
+    `</div>`;
   el.setAttribute("aria-label", "Challenge: " + currentChallenge.name + (dark ? " (dark side)" : ""));
   el.hidden = false;
 }

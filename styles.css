@@ -4619,8 +4619,11 @@
      ink as the tagline marker, so the two read as one signal. */
   .challenge-tab.is-dark { box-shadow: 2px 3px 8px rgba(40,25,60,0.28); }
   .challenge-tab.is-dark .ctab-name { color: #7a4bb0; }
-  .ctab-dark { flex: none; color: #7a4bb0; display: flex; }
-  .ctab-dark .chall-mark-svg { width: 11px; height: 11px; color: currentColor; }
+  /* Inline inside .ctab-name, so it rides the vertical text instead of claiming a column of
+     its own. The inline axis here is vertical (vertical-rl), which is why the gap to the first
+     letter is a physical bottom margin, and why vertical-align centres it across the column. */
+  .ctab-dark { display: inline-block; vertical-align: middle; margin-bottom: 5px; color: #7a4bb0; }
+  .ctab-dark .chall-mark-svg { width: 10px; height: 10px; color: currentColor; display: block; }
 
   /* The tongue stands up to ~110px clear of the paper (a two-line name is the widest it
      gets), so it needs a desk gutter at least that deep: 660px of notebook plus two
