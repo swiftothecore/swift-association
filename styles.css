@@ -5031,6 +5031,8 @@
     stroke-dasharray: 1; stroke-dashoffset: 1;
     animation: drawRing 0.55s ease-out forwards;
   }
+  .cc-first-thought { stroke-width: 2.15; animation-duration: 0.32s; }
+  .cc-first-thought + .cc-first-thought { animation-delay: 0.06s; }
   @keyframes drawRing { to { stroke-dashoffset: 0; } }
 
   /* ---------- Feedback ---------- */

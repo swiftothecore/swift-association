@@ -335,6 +335,8 @@ let timerStart = 0;
 // fresh-clock retries (Mulligan, Second Chance).
 let roundStart = 0;
 let roundLocked = false;
+let roundClockPending = false;
+let pendingRoundSubmission = null;
 let feedbackShownAt = 0;        // ms timestamp the verdict appeared — Enter-to-advance is held off for ENTER_SKIP_GRACE after it
 const ENTER_SKIP_GRACE = 250;   // so a held/late Enter from the answer screen can't instantly blow past the result
 let statsBackTarget = "start";
@@ -10024,6 +10026,8 @@ function resetRunState() {
   roundTyped = [];
   roundFirstPick = [];
   roundFirstKeyLeft = [];
+  roundClockPending = false;
+  pendingRoundSubmission = null;
   gameHitHalfClock = false;
   quickAnswerRun = 0;
   suggestionIndex = -1;
@@ -13407,6 +13411,12 @@ function nextRound() {
   // only starts once the flip has finished, so none of the 10s is lost.
   turnPageSheet($("screen-game"), () => {
     advanceRound();
+    // The next page is mounted under the turning sheet before its clock starts. Keep the writing
+    // line live so a fast keyboard player can begin immediately; an Enter during this brief gap
+    // is queued by submitAnswer and handed to the page the instant beginRoundClock starts it.
+    roundClockPending = true;
+    pendingRoundSubmission = null;
+    roundClockTotal = 0;
     // Mount this round's curtain (Wildcard's per-round rule) NOW, hidden beneath the flip
     // sheet, so the new word is already covered the instant the sheet rotates away (no
     // flash of the round). Once-per-run intros only show on round 1, which has no flip.
@@ -13594,7 +13604,18 @@ function beginRoundClock() {
   // The page stopwatch starts with the clock, never before it: the curtain above and the wager
   // below are read-and-decide time, not answering time. Relaxed has no clock to draw that line
   // for it, so it has to be drawn here.
-  const go = () => { roundStart = performance.now(); startTimer(); };
+  const go = () => {
+    const queued = pendingRoundSubmission;
+    roundClockPending = false;
+    pendingRoundSubmission = null;
+    if (roundLocked || !screens.game.classList.contains("active")) return;
+    const input = $("songInput");
+    input.disabled = false;
+    focusRoundInput(input);
+    roundStart = performance.now();
+    startTimer();
+    if (queued) submitAnswer(queued.song, queued.isTimeout);
+  };
   const startPlay = () => { if (wagerRuleActive()) showWagerStake(go); else go(); };
   if (!queue) { beginTimedRoundEffects(); startPlay(); return; }
   if (!Array.isArray(queue)) queue = [queue];
@@ -14378,6 +14399,8 @@ function revealedHintSong() {
 function advanceRound() {
   round++;
   roundLocked = false;
+  roundClockPending = false;
+  pendingRoundSubmission = null;
   justEarnedIndex = -1;
   // Clear any lingering guided-round note before the new page draws — but let beat B ("nice,
   // match every song...") ride onto the very next page so the player can actually read it, since
@@ -15905,6 +15928,13 @@ function checkCatalogueEggs(raw, song, correct) {
 
 function submitAnswer(song, isTimeout) {
   if (roundLocked) return;
+  // During an animated page turn the next page is already writable, but its clock waits for the
+  // sheet to clear. Preserve an early Enter and resolve it once beginRoundClock makes the page
+  // live, rather than either ignoring the player or starting a timer on the later verdict.
+  if (roundClockPending) {
+    if (!pendingRoundSubmission) pendingRoundSubmission = { song, isTimeout };
+    return;
+  }
 
   // Impostor: a fake page can only be cleared by flagging it. Letting the clock run out means
   // you failed to flag it in time — fatal. (A real page's timeout is a normal miss below.)
@@ -16416,14 +16446,14 @@ function submitAnswer(song, isTimeout) {
   // Sea of Songs shows the verdict on the grid itself, so it skips the pen-circle too.
   const reveal = () => (correct ? showCorrectFeedback(song, lyricMatch) : showWrongFeedback(song, isTimeout));
   if (song && !isTimeout && !lyricMatch && !tapGridActive() && settings.penCircle && !motionReduced() && !animInstant()) {
-    showCircledChoice(song, reveal);
+    showCircledChoice(song, reveal, correct && firstThoughtAnswer());
   } else {
     reveal();
   }
 }
 
 
-function showCircledChoice(song, done) {
+function showCircledChoice(song, done, firstThought = false) {
   const fb = $("feedback");
   fb.innerHTML =
     `<div class="circled-choice"><span class="cc-box"${activePen ? ` data-pen="${activePen}"` : ""}>` +
@@ -16441,16 +16471,18 @@ function showCircledChoice(song, done) {
         const lh = parseFloat(getComputedStyle(text).lineHeight) ||
                    parseFloat(getComputedStyle(text).fontSize) * 1.18;
         const lines = Math.max(1, Math.round(t.height / lh));
-        // A single line reads best as a hand-drawn circle. Once the title wraps, an oval that
-        // clears its corners has to balloon awkwardly, so instead we underline each line with a
-        // curvy pen stroke — it fits any length and can never clip.
+        const range = document.createRange();
+        range.selectNodeContents(text);
+        const rows = [...range.getClientRects()]
+          .filter((r) => r.width > 4)
+          .map((r) => ({ x0: r.left - b.left, x1: r.right - b.left, bottom: r.bottom - b.top }));
+        // An under-one-second answer gets two quick strokes beneath the title in place of the
+        // ordinary confirmation mark. Otherwise a single line is circled and a wrapped title
+        // gets one underline per line, as before.
         let svg;
-        if (lines >= 2) {
-          const range = document.createRange();
-          range.selectNodeContents(text);
-          const rows = [...range.getClientRects()]
-            .filter((r) => r.width > 4)
-            .map((r) => ({ x0: r.left - b.left, x1: r.right - b.left, bottom: r.bottom - b.top }));
+        if (firstThought) {
+          svg = buildTitleUnderline(b.width, b.height, rows, true);
+        } else if (lines >= 2) {
           svg = buildTitleUnderline(b.width, b.height, rows);
         } else {
           svg = buildChoiceRing(b.width, b.height, t.width, t.height,
@@ -16488,8 +16520,8 @@ function buildChoiceRing(bw, bh, tw, th, cx, cy) {
 // A curvy, hand-drawn underline beneath each line of a wrapped title. Each stroke is a gently
 // undulating polyline that overshoots the ends a touch and tapers its wave to nothing at the
 // tips (like a pen touching down and lifting), with a slight random tilt so no two are alike.
-function buildTitleUnderline(bw, bh, rows) {
-  const stroke = (x0, x1, y) => {
+function buildTitleUnderline(bw, bh, rows, double = false) {
+  const stroke = (x0, x1, y, cls = "cc-ring") => {
     const ext = Math.min(11, (x1 - x0) * 0.05);         // overshoot past the words
     const X0 = x0 - ext, X1 = x1 + ext, w = X1 - X0;
     const amp = Math.min(2.6, Math.max(1.6, w * 0.011)); // wave height (kept low so a crest
@@ -16505,9 +16537,12 @@ function buildTitleUnderline(bw, bh, rows) {
                  tilt * (tt - 0.5);
       d += (i ? "L" : "M") + `${x.toFixed(1)},${yy.toFixed(1)}`;
     }
-    return `<path class="cc-ring" pathLength="1" d="${d}"/>`;
+    return `<path class="${cls}" pathLength="1" d="${d}"/>`;
   };
-  const paths = rows.map((r) => stroke(r.x0, r.x1, r.bottom - 1)).join("");
+  const paths = rows.map((r) => double
+    ? stroke(r.x0, r.x1, r.bottom - 3, "cc-ring cc-first-thought") +
+      stroke(r.x0, r.x1, r.bottom + 3, "cc-ring cc-first-thought")
+    : stroke(r.x0, r.x1, r.bottom - 1)).join("");
   return `<svg viewBox="0 0 ${bw.toFixed(1)} ${bh.toFixed(1)}" aria-hidden="true">${paths}</svg>`;
 }
 
@@ -16637,6 +16672,16 @@ function moreSongsBlock(pool, shown, word) {
 }
 
 const LYRIC_BANNERS = { base: "✓ you knew the line", good: "✓ nicely recalled", perfect: "✓ word-perfect", verse: "✓ the whole verse" };
+const FIRST_THOUGHT_SECONDS = 1;
+
+// A quick answer is already timed by the page stopwatch. Multi-answer pages are excluded:
+// their one stopwatch covers several submissions and cannot honestly call the last title the
+// first thought. The ordinary title-confirmation stage reads this to choose its pen mark.
+function firstThoughtAnswer() {
+  const seconds = roundTimes[round - 1];
+  const multi = gameType === "challenge" && currentChallenge && currentChallenge.rule === "multi" && roundNamed.length > 1;
+  return !multi && typeof seconds === "number" && seconds < FIRST_THOUGHT_SECONDS;
+}
 
 // A reusable peel-and-stick foil star — the teacher's gold star, pressed into the
 // margin. A die-cut star (clip-path foil) with the bonus amount written across its
@@ -20331,6 +20376,16 @@ function buildDevApi() {
     },
     jumpToRound: (n) => { round = Math.max(0, (n | 0) - 1); clearTimer(); advanceRound(); startTimer(); },
     endNow: () => endGame(),
+    batch1: {
+      // The underline still has to pass through submitAnswer's stopwatch recording and the real
+      // correct-verdict renderer. This only moves that stopwatch back half a second.
+      firstThought: () => {
+        if (!screens.game.classList.contains("active") || roundLocked || !currentSongs.length) return false;
+        roundStart = performance.now() - 500;
+        devAnswer("correct");
+        return true;
+      },
+    },
     simulate: devSimulate,
     // Start games
     start: (mode) => { if (mode && MODES[mode]) setMode(mode); startGame(); },

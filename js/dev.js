@@ -235,6 +235,11 @@ export function initDev(api) {
         "score=", scoreN, btn("set", () => api.setScore(+scoreN.value)),
         btn("end now", () => api.endNow(), "warn"))));
 
+  // ---- Small charming features, Batch 1 -------------------------------------
+  // The fast-answer control uses the real page stopwatch and verdict.
+  body.append(section("charm batch 1",
+    row(btn("fast ✓ underline", () => toast(api.batch1.firstThought() ? "0.5s verdict" : "start a live answerable round")))));
+
   // ---- Answer reveal ---------------------------------------------------------
   // The verdict's cards and the expansion under them. The two things worth a control here are
   // both hard to reach by playing: a page wide enough to hit the cap and show the searcher
