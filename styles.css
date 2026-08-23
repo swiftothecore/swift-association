@@ -5112,14 +5112,21 @@
         #f7b3c2 0%, #e07d97 18%, #f2a2b6 33%,
         #c85674 52%, #e0879e 68%, #b34862 86%, #9d3b54 100%);
   }
-  /* the bonus, inked across the star body (nudged into its visual centre of mass) */
+  /* The bonus, inked across the star body. The nudge is UP, which looks wrong written down
+     and is right on the page. A pentagram reaches R above its centre and only 0.809R below,
+     so the star's true centroid sits about 55% down the box and the old +3px was aiming
+     squarely at it. But the text doesn't live in the whole star, it lives in the inner
+     pentagon, and that pentagon narrows to a downward vertex — so anything centred on the
+     geometric centre reads as sagging into the bottom notch with a field of empty gold
+     above it. Centre it on the body instead, not on the shape. */
   .sticker-amt {
     position: relative; z-index: 1;
-    transform: translateY(3px);
+    transform: translateY(-2px);
     font-family: var(--hand); font-weight: 700; font-size: calc(19px + var(--text-size-adjust)); line-height: 1;
     color: #6b4a12; text-shadow: 0 1px 0 rgba(255,247,214,0.5);
   }
-  .feedback .sticker--big .sticker-amt { font-size: calc(23px + var(--text-size-adjust)); transform: translateY(5px); }
+  /* same optical nudge, scaled to the bigger cut */
+  .feedback .sticker--big .sticker-amt { font-size: calc(23px + var(--text-size-adjust)); transform: translateY(-2.5px); }
   .sticker--rose .sticker-amt { color: #5e1f30; text-shadow: 0 1px 0 rgba(255,224,232,0.45); }
   @keyframes stickerPress {
     0% { opacity: 0; scale: 1.55; }
