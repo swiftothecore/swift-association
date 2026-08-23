@@ -812,69 +812,41 @@ if (location.pathname.endsWith('/index.html')) {
       <path d="M211 288 L229 270 Q220.5 268.6 212.8 270.5 Q210.2 278.6 211 288 Z" fill="url(#calCurl)" stroke="#c9ba97" stroke-width="0.8" stroke-linejoin="round"/>
     </svg>
   </div>
-  <!-- LEFT: the streak placard, lying flat on the wood just below the calendar.
-       A small engraved brass plate screwed to a walnut base, seen from directly
-       above like every other prop (an upright nameplate would foreshorten to a
-       bar and give the top-down scene away). The engraving is colour-filled, so
-       the flame can burn without breaking the brass.
-       Only the object is drawn here; the numbers and the whole plaque's
-       visibility are set by js/placard.js from the daily-challenge streak, and
-       it stays hidden until that streak is at least one day.
-       Desktop-only, non-interactive. -->
+  <!-- LEFT: the daily streak on a torn piece of calendar paper, tucked below
+       the calendar like a little keepsake. The red margin, blue ruling, pencil
+       note and imperfect tear keep it in the same stationery world as the
+       notebook instead of adding another heavy object to the desk.
+       js/placard.js writes the count and keeps the slip hidden until the daily
+       streak is at least one day. Desktop-only and non-interactive. -->
   <div class="desk-item di-placard" hidden>
-    <svg viewBox="0 0 200 108" xmlns="http://www.w3.org/2000/svg">
+    <svg viewBox="0 0 190 112" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Daily streak">
       <defs>
-        <linearGradient id="plcWood" x1="0.1" y1="0" x2="0.6" y2="1">
-          <stop offset="0" stop-color="#6f4726"/><stop offset="0.5" stop-color="#573419"/><stop offset="1" stop-color="#3b230f"/>
-        </linearGradient>
-        <!-- brass reads as brass because it turns over: pale at the lit upper
-             left, a darker band through the middle, warm again at the bottom -->
-        <linearGradient id="plcBrass" x1="0.05" y1="0" x2="0.7" y2="1">
-          <stop offset="0" stop-color="#efdcaa"/><stop offset="0.28" stop-color="#d3b165"/>
-          <stop offset="0.62" stop-color="#a8842f"/><stop offset="1" stop-color="#c6a54a"/>
+        <linearGradient id="plcPaper" x1="0" y1="0" x2="0.85" y2="1">
+          <stop offset="0" stop-color="#fffaf0"/><stop offset="0.58" stop-color="#f4ecd9"/><stop offset="1" stop-color="#e7dbc0"/>
         </linearGradient>
       </defs>
-      <!-- walnut base: the wood the plate is screwed to, with its own grain and
-           a chamfered top-left edge catching the desk's upper-left light -->
-      <rect x="3" y="3" width="194" height="102" rx="7" fill="url(#plcWood)" stroke="#2b1a09" stroke-width="0.9"/>
-      <g class="plc-grain">
-        <path d="M9 16 Q70 12.5 192 15.5"/><path d="M8 27 Q80 30 191 26"/>
-        <path d="M9 89 Q90 93 192 88"/><path d="M8 99 Q90 96 191 98.5"/>
+      <!-- a second sheet peeks out at the torn edge, suggesting this was
+           pulled from the calendar pad rather than bought as desk decor -->
+      <path class="plc-under" d="M14 15 Q95 10 178 14 L181 91 L174 96 L167 93 L159 98 L150 94 L141 99 L132 95 L122 99 L112 94 L102 98 L92 94 L82 99 L71 94 L61 98 L51 93 L41 97 L31 92 L21 95 Z"/>
+      <path class="plc-paper" d="M9 9 Q94 5 181 10 L180 86 L173 90 L165 87 L157 92 L148 88 L139 93 L130 89 L120 93 L110 88 L100 92 L90 88 L80 93 L69 88 L59 92 L49 87 L39 91 L29 86 L19 89 L10 84 Z" fill="url(#plcPaper)"/>
+      <!-- familiar notebook ruling, interrupted at the ragged edges -->
+      <g class="plc-rules"><path d="M13 42 Q94 40.5 178 42"/><path d="M12 67 Q94 65.5 179 67"/></g>
+      <path class="plc-margin" d="M43 14 Q41.5 49 43 86"/>
+      <!-- the flame follows the same one-weight icon language as the game's
+           keepsakes: one calm red-pen contour with a small highlighter core -->
+      <g class="plc-flame" transform="translate(10.5 23) scale(1.22)">
+        <path class="flame-body" d="M12 1.4 C12 5.4 11.2 7.8 10 9.6 C9.4 8.8 8.9 7.8 8.7 6.6 C6.5 9 4.9 11.6 4.9 14.4 C4.9 18.7 8.1 22.2 12 22.2 C15.9 22.2 19.1 18.7 19.1 14.4 C19.1 9.7 15.5 5.4 12 1.4 Z"/>
+        <path class="flame-core" d="M12 11.4 C13.5 13 14.3 14.3 14.3 15.9 C14.3 17.7 13.2 19 12 19 C10.8 19 9.7 17.7 9.7 15.9 C9.7 14.3 10.5 13 12 11.4 Z"/>
       </g>
-      <path class="plc-chamfer" d="M8 98 Q6.5 10 12 8 Q100 5.5 190 8"/>
-      <!-- the brass plate, inset, with its engraved border rule -->
-      <rect x="15" y="13" width="170" height="82" rx="3" fill="url(#plcBrass)" stroke="#7c5e21" stroke-width="0.9"/>
-      <rect class="plc-lip" x="20.8" y="18.8" width="160" height="72" rx="2"/>
-      <rect class="plc-cut" x="20" y="18" width="160" height="72" rx="2"/>
-      <!-- slot-head brass screws, one at each corner of the plate -->
-      <g class="plc-screw">
-        <g transform="translate(26 24)"><circle r="4"/><path d="M-2.4 -1.4 L2.4 1.4"/></g>
-        <g transform="translate(174 24)"><circle r="4"/><path d="M-2.4 1.4 L2.4 -1.4"/></g>
-        <g transform="translate(26 84)"><circle r="4"/><path d="M-2.4 1.1 L2.4 -1.1"/></g>
-        <g transform="translate(174 84)"><circle r="4"/><path d="M-2.4 -1.6 L2.4 1.6"/></g>
-      </g>
-      <!-- engraved type: a pale lower-right copy is the far wall of the cut
-           catching the light, the dark copy on top is the cut itself. The
-           heading is centred by text-anchor, but the count line can't be —
-           its width moves with the number of digits — so js/placard.js writes
-           the text and slides .plc-count into the middle itself.
-           text-anchor centres the *advance* box, and letter-spacing hangs a
-           trailing gap off the last letter, so the heading's x sits half a
-           letter-space right of the midline to put the ink in the middle. -->
-      <text class="plc-lip plc-l1" x="101.9" y="44.8">DAILY STREAK</text>
-      <text class="plc-cut plc-l1" x="101.1" y="44">DAILY STREAK</text>
-      <g class="plc-count">
-        <!-- the flame, engraved into the brass and colour-filled like enamel,
-             so it can burn without a gold-on-gold mark disappearing. Drawn at
-             the size the path was struck at, then scaled into the line. -->
-        <g class="plc-flame" transform="translate(-22.9 38.9) scale(0.62)">
-          <path class="flame-body" d="M53 26 C53 38 58 40 62 45 C66 50 68 55 68 60 C68 69 61 75 52.5 75 C44 75 37 69 37 60 C37 54 41 49 44 44 C45.5 48.5 48 50 49.5 48 C52 44.5 51.5 34 53 26 Z"/>
-          <path class="flame-core" d="M54 47 C54 53 58 56 59.5 61 C61 66 58 71 52.5 71 C47.5 71 44.5 67 45.5 62.5 C46.5 58 51 54 54 47 Z"/>
-        </g>
-        <text class="plc-lip plc-l2" x="29" y="78.8"></text>
-        <text class="plc-cut plc-l2" x="28.2" y="78"></text>
-      </g>
+      <text class="plc-l1" x="55" y="35">DAILY STREAK</text>
+      <text class="plc-l2" x="112" y="63" text-anchor="middle"></text>
+      <!-- faint graphite echo and underline make the count feel newly written -->
+      <path class="plc-pencil" d="M64 74 Q110 77 160 73"/>
+      <path class="plc-pencil plc-pencil-echo" d="M78 78 Q112 80 147 77.5"/>
     </svg>
+    <!-- This is the exact shared washi surface used on the six mode cards,
+         not an SVG imitation: the same translucency, fibres, wrinkle and tear. -->
+    <span class="nav-tape plc-tape" aria-hidden="true"></span>
   </div>
   <!-- LEFT: hexagonal pencil from above, set down whole beside the page:
        drawn at its real skinny proportions (barrel ~7mm at desk scale) so the
