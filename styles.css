@@ -5118,15 +5118,20 @@
      squarely at it. But the text doesn't live in the whole star, it lives in the inner
      pentagon, and that pentagon narrows to a downward vertex — so anything centred on the
      geometric centre reads as sagging into the bottom notch with a field of empty gold
-     above it. Centre it on the body instead, not on the shape. */
+     above it. Centre it on the body instead, not on the shape.
+     The same argument runs sideways, for two reasons at once. The cut leans right — its top
+     point sits left of centre while the right arm reaches further out and rides higher — so
+     the body's middle is not the box's middle. And "+" is a much lighter glyph than the
+     digit beside it, which drags the string's optical centre right of its geometric one.
+     Both want the number back to the left, so it goes. */
   .sticker-amt {
     position: relative; z-index: 1;
-    transform: translateY(-2px);
+    transform: translate(-1.5px, -2px);
     font-family: var(--hand); font-weight: 700; font-size: calc(19px + var(--text-size-adjust)); line-height: 1;
     color: #6b4a12; text-shadow: 0 1px 0 rgba(255,247,214,0.5);
   }
   /* same optical nudge, scaled to the bigger cut */
-  .feedback .sticker--big .sticker-amt { font-size: calc(23px + var(--text-size-adjust)); transform: translateY(-2.5px); }
+  .feedback .sticker--big .sticker-amt { font-size: calc(23px + var(--text-size-adjust)); transform: translate(-2px, -2.5px); }
   .sticker--rose .sticker-amt { color: #5e1f30; text-shadow: 0 1px 0 rgba(255,224,232,0.45); }
   @keyframes stickerPress {
     0% { opacity: 0; scale: 1.55; }
