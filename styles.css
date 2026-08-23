@@ -4599,9 +4599,13 @@
     /* box-shadow would be clipped away with the rest; drop-shadow follows the clipped shape. */
     filter: drop-shadow(1px 0.5px 1.4px rgba(60,50,35,0.3));
   }
-  /* Deeper than the wax on purpose. The seal and the ribbon are the same family of red, and
-     if the cloth matches the wax the stamp stops reading as an object sitting on top of it. */
-  .challenge-tab { --rib-a:#320c0f; --rib-b:#6a1e23; --rib-c:#7c2a2c; --rib-d:#511619; --rib-e:#2b0a0d; }
+  /* Deeper than the wax on purpose. The seal and the ribbon are the same family of red, and if
+     the cloth matches the wax the stamp stops reading as an object sitting on top of it. But
+     only one step deeper: taken further the edges go near-black, and against lettering this
+     soft the ribbon turns into the heaviest thing on the tab and reads as shadow, not silk.
+     The dark side's violet is pitched under the black-violet wax by the same logic, and is
+     darker than the red in absolute terms only because the wax it answers to is darker too. */
+  .challenge-tab { --rib-a:#4a1418; --rib-b:#87282d; --rib-c:#9a3438; --rib-d:#6b1d22; --rib-e:#3f1114; }
   .challenge-tab.is-dark { --rib-a:#190a2c; --rib-b:#3d1f61; --rib-c:#4c2877; --rib-d:#2c1550; --rib-e:#120720; }
   .ctab-seal { position: relative; width: 27px; height: 27px; flex: none; transform: rotate(-6deg); }
   .ctab-seal svg { width: 100%; height: 100%; display: block; }
