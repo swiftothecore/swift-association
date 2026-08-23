@@ -11631,7 +11631,13 @@ function renderChallengeTab() {
   const { lines, size } = tabNameLines(currentChallenge.name);
   positionChallengeTab(el);
   el.classList.toggle("is-dark", dark);
+  // The ribbon is what gives the seal somewhere to be. Wax on a real document is pressed over
+  // a ribbon or a folded tail that runs out both sides of it, and that is exactly the strip of
+  // nothing the tab had above and below its 27px stamp. It is a sibling of the seal rather than
+  // a child because it has to reach the tab's paper edges, past the padding the flex row sits
+  // inside, and it is drawn entirely in CSS so it costs nothing at any tab height.
   el.innerHTML =
+    `<i class="ctab-ribbon" aria-hidden="true"></i>` +
     `<div class="ctab-seal">${sealMarkup(seals[currentChallenge.id])}</div>` +
     (dark ? `<div class="ctab-dark">${CHALL_ECLIPSE}</div>` : "") +
     `<div class="ctab-name" style="font-size:${size}px">${lines.map(escapeHtml).join("<br>")}</div>`;
@@ -21753,6 +21759,13 @@ function buildDevApi() {
       list: () => CHALLENGE_ORDER.slice(),
       open: () => openChallenges("start"),
       start: (id) => startChallenge(id),
+      // The fore-edge tab's ribbon on or off, for judging the two side by side mid-run.
+      // Display only, and never persisted: it is a look under the hood, not a setting.
+      ribbon: (on) => {
+        const off = on == null ? !document.body.classList.contains("no-ctab-ribbon") : !on;
+        document.body.classList.toggle("no-ctab-ribbon", off);
+        return off ? "ribbon off — bare seal" : "ribbon on";
+      },
       // startChallenge silently refuses a locked challenge, so `start` alone can't reach any
       // non-free one. These open the door directly, without the token wallet or I Like Shiny Things.
       unlock: (id) => { const st = loadChallengeState(); st[id] = { ...challengeRecord(id), unlocked: true };

@@ -4552,9 +4552,12 @@
   body:not(.in-game) .challenge-tab { display: none; }
   .challenge-tab {
     --bite: 46px; --notch: 15px; --tab-y: 92px;
+    /* --pad-l is a variable rather than a literal because the ribbon has to line its column
+       up with the seal's, and the seal's left edge IS the padding. */
+    --pad-l: calc(var(--bite) + 6px); --seal: 27px; --ribbon: 15px;
     position: absolute; z-index: 0;
     left: calc(100% - var(--bite)); top: calc(var(--card-top, 0px) + var(--tab-y)); width: max-content;
-    padding: 11px calc(8px + var(--notch)) 13px calc(var(--bite) + 6px);
+    padding: 11px calc(8px + var(--notch)) 13px var(--pad-l);
     display: flex; align-items: center; gap: 8px;
     background: var(--paper); border: 1px solid var(--paper-edge);
     box-shadow: 2px 3px 8px rgba(60,50,35,0.22);
@@ -4565,7 +4568,42 @@
     clip-path: polygon(0 0, 100% 0, calc(100% - 12px) 50%, 100% 100%, 0 100%);
     pointer-events: none; user-select: none;
   }
-  .ctab-seal { width: 27px; height: 27px; flex: none; transform: rotate(-6deg); }
+  /* The ribbon the wax is pressed over. Deliberately NARROWER than the seal, because that is
+     the only arrangement that reads correctly: the wax has to overhang the ribbon on both
+     sides, the way it does when a real seal is poured across one. It runs flush into the tab's
+     top and bottom edges, where the tab's own clip-path cuts it off — which is what sells it
+     as continuing under the page rather than stopping. Positioned against .challenge-tab
+     (already position:absolute), not against the seal, so it can cross the flex row's padding.
+     .ctab-seal takes position:relative purely to get back on top of it: a positioned sibling
+     otherwise paints over an in-flow flex item regardless of DOM order. */
+  .ctab-ribbon {
+    position: absolute; top: 0; bottom: 0;
+    left: calc(var(--pad-l) + (var(--seal) - var(--ribbon)) / 2); width: var(--ribbon);
+    background:
+      /* two creases, held at a fixed distance from the ends so they never stretch with the
+         name's length; the tab is tall enough for both only because the name runs vertically */
+      linear-gradient(to bottom, transparent, rgba(30,10,12,0.26) 45%, rgba(255,226,214,0.11) 62%, transparent)
+        no-repeat 0 10px / 100% 7px,
+      linear-gradient(to bottom, transparent, rgba(255,226,214,0.09) 38%, rgba(30,10,12,0.24) 58%, transparent)
+        no-repeat 0 calc(100% - 17px) / 100% 6px,
+      /* the grosgrain rib. Regular on purpose: this is woven cloth, not a drawn ornament, and
+         a wobbling weave reads as a mistake where a wobbling pen-line reads as a hand. */
+      repeating-linear-gradient(to bottom,
+        rgba(255,222,210,0.07) 0 1px, rgba(24,6,8,0.11) 1px 2.4px, transparent 2.4px 3.9px),
+      /* the silk itself, lit down one side of its curve */
+      linear-gradient(to right, var(--rib-a), var(--rib-b) 34%, var(--rib-c) 50%, var(--rib-d) 76%, var(--rib-e));
+    /* the cut edges of grosgrain are never straight. Asymmetric left to right on purpose. */
+    clip-path: polygon(
+      1.2px 0, 13.6px 0, 14.2px 14%, 12.9px 31%, 14.1px 49%, 13.2px 68%, 14.4px 85%, 13.4px 100%,
+      1.6px 100%, 0.6px 82%, 2.1px 63%, 0.9px 44%, 2.3px 26%, 1.1px 11%);
+    /* box-shadow would be clipped away with the rest; drop-shadow follows the clipped shape. */
+    filter: drop-shadow(1px 0.5px 1.4px rgba(60,50,35,0.3));
+  }
+  /* Deeper than the wax on purpose. The seal and the ribbon are the same family of red, and
+     if the cloth matches the wax the stamp stops reading as an object sitting on top of it. */
+  .challenge-tab { --rib-a:#320c0f; --rib-b:#6a1e23; --rib-c:#7c2a2c; --rib-d:#511619; --rib-e:#2b0a0d; }
+  .challenge-tab.is-dark { --rib-a:#190a2c; --rib-b:#3d1f61; --rib-c:#4c2877; --rib-d:#2c1550; --rib-e:#120720; }
+  .ctab-seal { position: relative; width: 27px; height: 27px; flex: none; transform: rotate(-6deg); }
   .ctab-seal svg { width: 100%; height: 100%; display: block; }
   /* The name runs bottom-to-top, so a line break starts a new COLUMN and a long name
      grows the tab sideways instead of down past the bottom of the page. Centred rather
@@ -4607,7 +4645,12 @@
     }
     .ctab-name { display: none; }
     .ctab-seal { width: 26px; height: 26px; }
+    /* No name means no tall tab, which means no empty column for a ribbon to fill: at this
+       size it would be a stub of cloth barely longer than the wax sitting on it. */
+    .ctab-ribbon { display: none; }
   }
+  /* dev only (__dev.challenge.ribbon), for flicking between the ribbon and the bare stamp. */
+  body.no-ctab-ribbon .ctab-ribbon { display: none; }
 
   /* ---------- Sacred-13 days (the 13th / dates that add up to 13) ----------
      A quieter cousin of the album marginalia: smaller, softer paper, muted ink, so an

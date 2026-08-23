@@ -350,6 +350,7 @@ export function initDev(api) {
     row(returnSel, btn("start", () => api.challenge.start(returnSel.value)),
         btn("start dark", () => api.challenge.dark.start(returnSel.value)),
         btn("dark diff", () => { console.log("[dev] dark diff", returnSel.value, api.challenge.dark.diff(returnSel.value)); toast("dark diff in console"); })),
+    row(btn("tab ribbon", () => { readout.textContent = api.challenge.ribbon(); })),
     row(btn("unlock all dark sides", () => { const n = api.challenge.dark.unlockAll(); readout.textContent = `${n} dark sides unlocked — open Challenges`; }),
         btn("defeat all dark sides", () => { const n = api.challenge.dark.defeat(); readout.textContent = `${n} dark sides marked defeated — tap a black-violet seal`; }),
         btn("relock dark progress", () => { api.challenge.dark.reset(); readout.textContent = "dark progress cleared"; }, "warn")),
