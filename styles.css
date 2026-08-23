@@ -5130,8 +5130,11 @@
     font-family: var(--hand); font-weight: 700; font-size: calc(19px + var(--text-size-adjust)); line-height: 1;
     color: #6b4a12; text-shadow: 0 1px 0 rgba(255,247,214,0.5);
   }
-  /* same optical nudge, scaled to the bigger cut */
-  .feedback .sticker--big .sticker-amt { font-size: calc(23px + var(--text-size-adjust)); transform: translate(-2px, -2.5px); }
+  /* The big cut needs its own measurement, not the small one scaled up: the type grows
+     faster than the star does (19->23 against 54->64), and the nudge is correcting how the
+     hand face sits inside its line box rather than dividing up the star, so proportion is
+     the wrong instrument. Scaling gave -2.5 and it rode visibly high; measured, it's -1. */
+  .feedback .sticker--big .sticker-amt { font-size: calc(23px + var(--text-size-adjust)); transform: translate(-2px, -1px); }
   .sticker--rose .sticker-amt { color: #5e1f30; text-shadow: 0 1px 0 rgba(255,224,232,0.45); }
   @keyframes stickerPress {
     0% { opacity: 0; scale: 1.55; }
