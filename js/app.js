@@ -10735,13 +10735,14 @@ function startChallenge(id, opts) {
   gameType = "challenge";
   notePlayed(dark ? "dark" : "challenge", id);
   currentMode = MODES[c.mode] || MODES.medium;   // fixed by the challenge, not persisted via DIFF_KEY
-  // Some challenges override a single lever of the borrowed mode (Revolving Door wants a
-  // 20s clock; Shrinking Timer hides suggestions). Clone so the shared MODES object is
-  // never mutated; id stays the same so id-based achievement/label checks are unaffected.
+  // Some challenges override a lever of the borrowed mode (Revolving Door wants a 20s clock;
+  // Shrinking Timer hides suggestions; Deep Cut disables hints). Clone so the shared MODES
+  // object is never mutated; id stays the same so id-based achievement/label checks are unaffected.
   // Read off the RESOLVED entry so a dark override of these levers flows through too.
   const lever = {};
   if (c.seconds != null) lever.seconds = c.seconds;
   if (c.dropdown != null) lever.dropdown = c.dropdown;
+  if (c.hint != null) lever.hint = c.hint;
   if (Object.keys(lever).length) currentMode = { ...currentMode, ...lever };
   resetRunState();
   currentChallenge = c;                          // set AFTER resetRunState (which nulls it)

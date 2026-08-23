@@ -143,7 +143,7 @@ export const DEFAULT_SETTINGS = {
   openKeyboard: true,       // phones only: focus the answer line when each new round opens
   confirmLeave: true,       // require a second tap before abandoning an in-progress run
 
-  enableHints: true,        // show progressive hints in Easy/Normal/Relaxed (a hinted run can't set a personal best)
+  enableHints: true,        // show progressive hints in Easy/Relaxed (a hinted run can't set a personal best)
   censorExplicit: false,    // mask general profanity (fuck→f**k) in shown lyrics/titles; the racial slur is always masked regardless
 
   defaultGameType: "last",  // "last" | "classic" | "infinite" | "custom"
@@ -656,6 +656,7 @@ export const CHALLENGES = [
     win: "Score 10 / 13 with disappearing words." },
   { id: "deep-cut", name: "Deep Cut", rule: "album5", mode: "easy",
     free: false, cost: 1, album: null /* any single album */, need: 5, tapes: 1,
+    hint: false, blurb: "15s · suggestions · common words",
     // Dark: the album is DEALT, not chosen. `randomAlbum` makes startChallenge pick a studio
     // album at run start and pin it to `album`, so the run can't be steered onto whichever
     // album happens to be going well — and it wants six, not five.
