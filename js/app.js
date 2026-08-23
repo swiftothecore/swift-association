@@ -8693,7 +8693,6 @@ function guestPassMarkup(g, slot) {
 // but has no data attribute or event listener and cannot enter the playable guest paths.
 function guestSoonMarkup(g, slot) {
   const { len, tilt } = guestHangLayout.get(g.id) || { len: 130, tilt: 0 };
-  const ticks = "<i></i><i></i><i></i>";
   return (
     `<span class="guest-peg guest-peg--soon">` +
       guestStrapMarkup(len) +
@@ -8704,7 +8703,7 @@ function guestSoonMarkup(g, slot) {
           `<span class="guest-band">guest${GUEST_STAR}</span>` +
           `<span class="guest-face">` +
             `<span class="guest-name">${escapeHtml(g.name).replace(" ", "<br>")}</span>` +
-            `<span class="guest-ticks" aria-hidden="true">${ticks}</span>` +
+            `<span class="guest-ticks guest-ticks--soon" aria-hidden="true"></span>` +
             `<span class="guest-line"><span>catalogue pending</span></span>` +
             `<span class="guest-stub guest-stub--soon"></span>` +
           `</span>` +

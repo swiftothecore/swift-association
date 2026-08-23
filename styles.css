@@ -3399,7 +3399,7 @@
                 0 0 0 1px rgba(120,100,70,0.32), 0 1px 0 rgba(255,255,255,0.85) inset;
     z-index: auto;
   }
-  .guest-pass--soon .guest-ticks i { background: #77736c; }
+  .guest-ticks--soon { height: 5px; }
   .guest-stub--soon::before { content: none; }
   .guest-soon-stamp {
     position: absolute; left: 50%; top: 58%; z-index: 4;
