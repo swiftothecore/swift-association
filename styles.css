@@ -1784,17 +1784,40 @@
      (darkSealSvg) — the same wax poured black with a lilac rim. Also baked into the SVG. */
   .chall-detail-seal.is-locked > svg { filter: grayscale(1) opacity(0.42); }
   .chall-detail-seal.is-burnable { cursor: pointer; border-radius: 50%; }
-  .chall-detail-seal.is-burnable:focus-visible { outline: 2px dashed #7a4bb0; outline-offset: 4px; }
-  .chall-detail-seal.is-charred > svg {
-    filter: grayscale(1) saturate(0) brightness(0.28) contrast(1.55) drop-shadow(1px 2px 3px rgba(20,16,15,0.36));
+  /* The focus ring belongs to the button, not to the burnable state: a seal that has already
+     been burnt stays focusable (see the aria-disabled note in renderChallengeDetail) and a
+     focusable control with no visible ring is the worst of both. */
+  .chall-detail-seal:focus-visible { outline: 2px dashed #7a4bb0; outline-offset: 4px; border-radius: 50%; }
+  /* The char is a SECOND baked seal stacked over the live one, cross-faded in as the wax goes.
+     It is not a filter over the first: grayscale + brightness can only flatten, and flattening
+     a wax seal takes the sigil and the beaded rim with it, so what used to land here was a
+     featureless black disc that read as an ink spill rather than as burnt wax — and on the dark
+     theme, as nothing at all. See CHALLENGE_SEALS_BURNT. */
+  .chall-seal-char { position: absolute; z-index: 1; inset: 0; opacity: 0; pointer-events: none; }
+  .chall-seal-char svg { display: block; width: 53px; height: 53px; }
+  .chall-detail-seal.is-charred > svg { opacity: 0; }
+  .chall-detail-seal.is-charred .chall-seal-char {
+    opacity: 1; filter: drop-shadow(1px 2px 3px rgba(30,22,16,0.34));
+  }
+  /* On the dark sheet a warm-black drop-shadow is a shadow cast on a shadow. The char needs
+     the opposite: a faint ember halo, so the seal reads as an object sitting on the page
+     rather than as a hole cut out of it. */
+  :root[data-theme="dark"] .chall-detail-seal.is-charred .chall-seal-char {
+    filter: drop-shadow(0 1px 2px rgba(0,0,0,0.55)) drop-shadow(0 0 4px rgba(178,114,58,0.3));
   }
   /* The burn belongs to the wax rather than sitting behind it as a separate fire icon. A
      compact heat bloom and twelve soft particles lick upward through the seal while its
      violet drains away. The charred class arrives after one second and stays in memory. */
   .chall-seal-fire {
     position: absolute; z-index: 2; left: -5px; bottom: -3px; width: 63px; height: 72px;
-    overflow: visible; pointer-events: none; opacity: 0; mix-blend-mode: screen;
+    overflow: visible; pointer-events: none; opacity: 0;
   }
+  /* Screen blend ONLY on the dark sheet. Screening amber over #f5efe1 resolves to very nearly
+     white, so on paper the whole fire rendered as a pale smudge and the effect read as a
+     smear rather than a flame; plain source-over is what actually shows colour there. On the
+     dark theme screen is the right call and keeps the particles from stacking up muddy. */
+  :root[data-theme="dark"] .chall-seal-fire,
+  :root[data-theme="dark"] .chall-fire-particles i { mix-blend-mode: screen; }
   .chall-seal-fire::after {
     content: ""; position: absolute; z-index: 0; left: 7px; bottom: 5px; width: 49px; height: 45px;
     border-radius: 50%; opacity: 0; transform: scale(0.72);
@@ -1804,28 +1827,41 @@
   .chall-fire-particles { position: absolute; z-index: 1; inset: 0; }
   .chall-fire-particles i {
     position: absolute; bottom: 9px; left: var(--fire-x); width: var(--fire-size); height: var(--fire-size);
-    border-radius: 50%; opacity: 0; mix-blend-mode: screen;
+    border-radius: 50%; opacity: 0;
     background: radial-gradient(circle, rgba(255,244,174,0.9) 0 8%, rgba(255,155,32,0.72) 27%, rgba(228,61,18,0.3) 49%, rgba(228,61,18,0) 72%);
     filter: blur(0.7px); transform-origin: center;
   }
-  .chall-fire-particles i:nth-child(1)  { --fire-x: 3px;  --fire-size: 18px; --fire-dx: -2px; --fire-rise: -23px; --fire-delay: 0.01s; --fire-dur: 0.47s; }
-  .chall-fire-particles i:nth-child(2)  { --fire-x: 12px; --fire-size: 20px; --fire-dx: 2px;  --fire-rise: -33px; --fire-delay: 0.05s; --fire-dur: 0.59s; }
-  .chall-fire-particles i:nth-child(3)  { --fire-x: 23px; --fire-size: 18px; --fire-dx: -2px; --fire-rise: -27px; --fire-delay: 0.1s;  --fire-dur: 0.51s; }
-  .chall-fire-particles i:nth-child(4)  { --fire-x: 34px; --fire-size: 20px; --fire-dx: 2px;  --fire-rise: -36px; --fire-delay: 0.02s; --fire-dur: 0.61s; }
-  .chall-fire-particles i:nth-child(5)  { --fire-x: 45px; --fire-size: 17px; --fire-dx: 3px;  --fire-rise: -25px; --fire-delay: 0.14s; --fire-dur: 0.48s; }
-  .chall-fire-particles i:nth-child(6)  { --fire-x: 8px;  --fire-size: 15px; --fire-dx: 3px;  --fire-rise: -20px; --fire-delay: 0.27s; --fire-dur: 0.43s; }
-  .chall-fire-particles i:nth-child(7)  { --fire-x: 18px; --fire-size: 17px; --fire-dx: -3px; --fire-rise: -30px; --fire-delay: 0.25s; --fire-dur: 0.51s; }
-  .chall-fire-particles i:nth-child(8)  { --fire-x: 30px; --fire-size: 16px; --fire-dx: 2px;  --fire-rise: -24px; --fire-delay: 0.33s; --fire-dur: 0.45s; }
-  .chall-fire-particles i:nth-child(9)  { --fire-x: 41px; --fire-size: 18px; --fire-dx: -2px; --fire-rise: -32px; --fire-delay: 0.3s;  --fire-dur: 0.53s; }
-  .chall-fire-particles i:nth-child(10) { --fire-x: 14px; --fire-size: 14px; --fire-dx: 2px;  --fire-rise: -23px; --fire-delay: 0.45s; --fire-dur: 0.39s; }
-  .chall-fire-particles i:nth-child(11) { --fire-x: 27px; --fire-size: 15px; --fire-dx: -2px; --fire-rise: -28px; --fire-delay: 0.44s; --fire-dur: 0.43s; }
-  .chall-fire-particles i:nth-child(12) { --fire-x: 39px; --fire-size: 14px; --fire-dx: 2px;  --fire-rise: -21px; --fire-delay: 0.54s; --fire-dur: 0.37s; }
-  .chall-detail-seal.is-burning .chall-seal-fire { animation: challSealFireVeil 1s ease-out both; }
-  .chall-detail-seal.is-burning .chall-seal-fire::after { animation: challSealHeatBloom 1s ease-out both; }
-  .chall-detail-seal.is-burning .chall-fire-particles i {
-    animation: challSealParticle var(--fire-dur) var(--fire-delay) ease-in both;
+  .chall-fire-particles i:nth-child(1)  { --fire-x: 3px;  --fire-size: 18px; --fire-dx: -2px; --fire-rise: -38px; --fire-delay: 0.01s; --fire-dur: 0.47s; }
+  .chall-fire-particles i:nth-child(2)  { --fire-x: 12px; --fire-size: 20px; --fire-dx: 2px;  --fire-rise: -52px; --fire-delay: 0.05s; --fire-dur: 0.59s; }
+  .chall-fire-particles i:nth-child(3)  { --fire-x: 23px; --fire-size: 18px; --fire-dx: -2px; --fire-rise: -44px; --fire-delay: 0.1s;  --fire-dur: 0.51s; }
+  .chall-fire-particles i:nth-child(4)  { --fire-x: 34px; --fire-size: 20px; --fire-dx: 2px;  --fire-rise: -57px; --fire-delay: 0.02s; --fire-dur: 0.61s; }
+  .chall-fire-particles i:nth-child(5)  { --fire-x: 45px; --fire-size: 17px; --fire-dx: 3px;  --fire-rise: -41px; --fire-delay: 0.14s; --fire-dur: 0.48s; }
+  .chall-fire-particles i:nth-child(6)  { --fire-x: 8px;  --fire-size: 15px; --fire-dx: 3px;  --fire-rise: -34px; --fire-delay: 0.27s; --fire-dur: 0.43s; }
+  .chall-fire-particles i:nth-child(7)  { --fire-x: 18px; --fire-size: 17px; --fire-dx: -3px; --fire-rise: -48px; --fire-delay: 0.25s; --fire-dur: 0.51s; }
+  .chall-fire-particles i:nth-child(8)  { --fire-x: 30px; --fire-size: 16px; --fire-dx: 2px;  --fire-rise: -40px; --fire-delay: 0.33s; --fire-dur: 0.45s; }
+  .chall-fire-particles i:nth-child(9)  { --fire-x: 41px; --fire-size: 18px; --fire-dx: -2px; --fire-rise: -51px; --fire-delay: 0.3s;  --fire-dur: 0.53s; }
+  .chall-fire-particles i:nth-child(10) { --fire-x: 14px; --fire-size: 14px; --fire-dx: 2px;  --fire-rise: -37px; --fire-delay: 0.45s; --fire-dur: 0.39s; }
+  .chall-fire-particles i:nth-child(11) { --fire-x: 27px; --fire-size: 15px; --fire-dx: -2px; --fire-rise: -46px; --fire-delay: 0.44s; --fire-dur: 0.43s; }
+  .chall-fire-particles i:nth-child(12) { --fire-x: 39px; --fire-size: 14px; --fire-dx: 2px;  --fire-rise: -35px; --fire-delay: 0.54s; --fire-dur: 0.37s; }
+  /* --seal-burn-offset is a NEGATIVE delay written by armSealBurn, and it is what lets a seal
+     survive being re-rendered halfway through burning: the animation starts that far in
+     instead of replaying from the top against a timer that has already half run out. It is
+     absent (and so 0ms) on a fresh burn. */
+  .chall-detail-seal.is-burning .chall-seal-fire {
+    animation: challSealFireVeil 1s var(--seal-burn-offset, 0ms) ease-out both;
   }
-  .chall-detail-seal.is-burning > svg { animation: challSealScorch 1s ease-in both; }
+  .chall-detail-seal.is-burning .chall-seal-fire::after {
+    animation: challSealHeatBloom 1s var(--seal-burn-offset, 0ms) ease-out both;
+  }
+  .chall-detail-seal.is-burning .chall-fire-particles i {
+    animation: challSealParticle var(--fire-dur) calc(var(--fire-delay) + var(--seal-burn-offset, 0ms)) ease-in both;
+  }
+  .chall-detail-seal.is-burning > svg {
+    animation: challSealScorch 1s var(--seal-burn-offset, 0ms) ease-in both;
+  }
+  .chall-detail-seal.is-burning .chall-seal-char {
+    animation: challSealCharIn 1s var(--seal-burn-offset, 0ms) ease-in both;
+  }
   @keyframes challSealFireVeil {
     0%, 100% { opacity: 0; }
     10%, 82% { opacity: 1; }
@@ -1836,14 +1872,24 @@
   }
   @keyframes challSealParticle {
     0% { opacity: 0; transform: translate(0, 5px) scale(0.78); }
-    20% { opacity: 0.72; }
-    58% { opacity: 0.46; }
+    20% { opacity: 0.75; }
+    70% { opacity: 0.5; }
     100% { opacity: 0; transform: translate(var(--fire-dx), var(--fire-rise)) scale(0.16, 0.48); }
   }
+  /* The live seal heats and then hands over. It only has to get the violet as far as a hot,
+     dimming ember before the baked char takes the frame underneath it — the endpoint is a
+     cross-fade, not a destination, so this filter never has to fake charred wax on its own. */
   @keyframes challSealScorch {
-    0%, 30% { filter: drop-shadow(1px 2px 3px rgba(40,25,60,0.3)); }
-    65% { filter: sepia(0.7) saturate(1.7) brightness(0.68) drop-shadow(0 0 6px rgba(230,83,24,0.72)); }
-    100% { filter: grayscale(1) saturate(0) brightness(0.28) contrast(1.55) drop-shadow(1px 2px 3px rgba(20,16,15,0.36)); }
+    0%, 25% { opacity: 1; filter: drop-shadow(1px 2px 3px rgba(40,25,60,0.3)); }
+    58% { opacity: 1; filter: sepia(0.68) saturate(1.7) brightness(0.78) drop-shadow(0 0 7px rgba(230,96,26,0.75)); }
+    100% { opacity: 0; filter: sepia(0.7) saturate(1.1) brightness(0.5); }
+  }
+  /* ...and the char comes up through it, glowing while the fire is still on it and cooling to
+     an ordinary drop-shadow as the last particles go. */
+  @keyframes challSealCharIn {
+    0%, 30% { opacity: 0; filter: drop-shadow(0 0 9px rgba(232,112,30,0.85)); }
+    72% { opacity: 1; filter: drop-shadow(0 0 6px rgba(228,96,26,0.5)); }
+    100% { opacity: 1; filter: drop-shadow(1px 2px 3px rgba(30,22,16,0.34)); }
   }
   .chall-detail-name { font-family: var(--hand); font-weight: 700; font-size: calc(32px + var(--text-size-adjust)); line-height: 1; color: var(--ink); }
   .chall-pin-svg { display: block; width: 15px; height: 15px; }
@@ -2120,11 +2166,16 @@
     .chall-go { transform: none; }
     .chall-go:active { transform: translateY(1px); }
   }
-  body[data-reduce-motion="on"] .chall-detail-seal.is-burning .chall-seal-fire,
-  body[data-reduce-motion="on"] .chall-detail-seal.is-burning .chall-seal-fire::after,
-  body[data-reduce-motion="on"] .chall-detail-seal.is-burning .chall-seal-fire *,
-  body[data-reduce-motion="on"] .chall-detail-seal.is-burning > svg { animation: none; }
-  body[data-reduce-motion="on"] .chall-detail-seal.is-burning .chall-seal-fire { opacity: 0.9; }
+  /* Reduced motion chars the seal outright — armSealBurn skips the second entirely, and the
+     fire layer is never even built. This is the safety net for the setting being flipped
+     mid-burn, and it holds the same line: no fire, no half-lit seal, just the char. What it
+     replaced parked a static orange smear on the wax for a full second and then cut to black,
+     which is more startling than the animation it was standing in for. */
+  body[data-reduce-motion="on"] .chall-detail-seal .chall-seal-fire { display: none; }
+  body[data-reduce-motion="on"] .chall-detail-seal.is-burning > svg { opacity: 0; animation: none; }
+  body[data-reduce-motion="on"] .chall-detail-seal.is-burning .chall-seal-char {
+    opacity: 1; animation: none; filter: drop-shadow(1px 2px 3px rgba(30,22,16,0.34));
+  }
 
   /* ---------- Bonus games shelf ----------
      Not a grid of cards: a record deck on the desk. One game sits on the platter under the

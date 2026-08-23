@@ -353,6 +353,8 @@ export function initDev(api) {
     row(btn("tab ribbon", () => { readout.textContent = api.challenge.ribbon(); })),
     row(btn("unlock all dark sides", () => { const n = api.challenge.dark.unlockAll(); readout.textContent = `${n} dark sides unlocked — open Challenges`; }),
         btn("defeat all dark sides", () => { const n = api.challenge.dark.defeat(); readout.textContent = `${n} dark sides marked defeated — tap a black-violet seal`; }),
+        btn("char all seals", () => { const n = api.challenge.dark.char(); readout.textContent = `${n} seals burnt — compare the burnt art across the roster`; }),
+        btn("un-char seals", () => { api.challenge.dark.char(false); readout.textContent = "violet wax back on every seal"; }),
         btn("relock dark progress", () => { api.challenge.dark.reset(); readout.textContent = "dark progress cleared"; }, "warn")),
     row(returnSel, btn("ready return", () => {
           api.challenge.returns.ready(returnSel.value);
