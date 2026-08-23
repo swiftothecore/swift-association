@@ -28,7 +28,7 @@ import {
   BOTH_WORDS, BOTH_MIN_SONGS, BOTH_PARTNER_TRIES, BOTH_REVEAL_SONGS, MORE_EXAMPLES_MAX,
   PRESS_RIDE_STEP, PRESS_TRINKET_RIDE, PRESS_FLOURISH_RIDE, RISK_MAX_STAKE, RISK_TOKENS, RISK_TOKEN_VALUE,
   ALBUM_FOCUS_DIFFS, ALBUM_FOCUS_TARGET,
-  GUEST_SHELF_SLOTS, GUESTS, GUEST_DIFFS, GUEST_TARGET, TAYLOR_BUCKETS,
+  GUEST_SHELF_SLOTS, GUESTS, GUESTS_COMING_SOON, GUEST_DIFFS, GUEST_TARGET, TAYLOR_BUCKETS,
   ADAPT_BUCKETS, ADAPT_LEVELS, ADAPT_MAX_LEVEL, ADAPT_START_LEVEL, ADAPT_PROMO_STREAK,
   CUSTOM_SECONDS_MIN, CUSTOM_SECONDS_MAX, CUSTOM_SECONDS_TYPED_MAX, CUSTOM_HINT_MAX,
   CUSTOM_HINT_TYPED_MAX, CUSTOM_HINT_UNLIMITED, CUSTOM_POOLS,
@@ -8487,13 +8487,13 @@ function renderAlbumDetail(album) {
 
 /* ---------- Guest shelf ----------
    The destination the corner guest stamp franks you through to: other artists' catalogues,
-   hung on a rail as backstage passes. GUESTS carries only the name and the ink; every number
-   on a pass (songs, records, prompt words) comes from the guest's own file, fetched the first
-   time the shelf is opened and cached for the session. Nothing about a guest is hardcoded
-   here, so growing guests/olivia-rodrigo.json changes the pass without touching this file.
+   hung on a rail as backstage passes. GUESTS carries playable catalogues, while
+   GUESTS_COMING_SOON carries name-only disabled passes. Every number on a playable pass (songs,
+   records, prompt words) comes from the guest's own file, fetched the first time the shelf is
+   opened and cached for the session. Nothing about a playable guest is hardcoded here, so
+   growing guests/olivia-rodrigo.json changes the pass without touching this file.
 
-   The remaining slots are drawn as bare rings. An empty hanger is honest — it shows the rail
-   has room without inventing a name we cannot play. */
+   Slots beyond both lists are drawn as bare rings. */
 // The hardware, shared by every hanger: the split ring the strap loops through (drawn as
 // three ellipses — the metal itself, plus a darker edge either side of it) and the notebook
 // star printed on the pass band.
@@ -8517,9 +8517,10 @@ const guestFiles = new Map();         // id -> Promise<catalogue json>, one fetc
 // seven-step range as the old slot formula, so randomising never makes a pass look untidy.
 const GUEST_STRAP_LENGTHS = [96, 113, 130, 147, 164];
 const guestHangLayout = new Map();
-for (let offset = 0; offset < GUESTS.length; offset += GUEST_STRAP_LENGTHS.length) {
+const GUEST_SHELF_ENTRIES = [...GUESTS, ...GUESTS_COMING_SOON];
+for (let offset = 0; offset < GUEST_SHELF_ENTRIES.length; offset += GUEST_STRAP_LENGTHS.length) {
   const lengths = shuffle(GUEST_STRAP_LENGTHS.slice());
-  GUESTS.slice(offset, offset + lengths.length).forEach((guest, i) => {
+  GUEST_SHELF_ENTRIES.slice(offset, offset + lengths.length).forEach((guest, i) => {
     guestHangLayout.set(guest.id, {
       len: lengths[i],
       tilt: (Math.floor(Math.random() * 7) - 3) * 0.7,
@@ -8618,15 +8619,19 @@ function renderGuestShelfPage() {
   for (const count of guestRailPlan()) {
     let pegs = "";
     for (let n = 0; n < count; n++, slot++) {
-      pegs += GUESTS[slot] ? guestPassMarkup(GUESTS[slot], slot) : guestEmptyMarkup();
+      const entry = GUEST_SHELF_ENTRIES[slot];
+      pegs += entry
+        ? (slot < GUESTS.length ? guestPassMarkup(entry, slot) : guestSoonMarkup(entry, slot))
+        : guestEmptyMarkup();
     }
     rails += `<div class="guest-rail">${pegs}</div>`;
   }
 
   // The rack shows its occupancy directly, so keep the count out of the visible header. The
   // group label preserves the same information for screen readers without adding more UI.
-  const openSlots = Math.max(0, GUEST_SHELF_SLOTS - GUESTS.length);
-  const rackLabel = `${GUESTS.length} guest catalogue${GUESTS.length === 1 ? "" : "s"}; ` +
+  const openSlots = Math.max(0, GUEST_SHELF_SLOTS - GUEST_SHELF_ENTRIES.length);
+  const rackLabel = `${GUESTS.length} playable guest catalogue${GUESTS.length === 1 ? "" : "s"}; ` +
+    `${GUESTS_COMING_SOON.length} coming soon; ` +
     `${openSlots} empty shelf slot${openSlots === 1 ? "" : "s"}`;
 
   const el = $("guestBody");
@@ -8636,7 +8641,7 @@ function renderGuestShelfPage() {
     `</div>` +
     `<div class="guest-rack" role="group" aria-label="${rackLabel}">${rails}</div>`;
 
-  el.querySelectorAll(".guest-pass").forEach((b) =>
+  el.querySelectorAll(".guest-pass[data-guest]").forEach((b) =>
     b.addEventListener("click", () => selectGuest(b.dataset.guest)));
 
   // Fill the counts in as the files land. Each pass renders with em-dashes first so the rail
@@ -8679,6 +8684,32 @@ function guestPassMarkup(g, slot) {
             stub +
           `</span>` +
         `</span>` +
+      `</button>` +
+    `</span>`
+  );
+}
+
+// A named hanger for a planned catalogue. It keeps the physical pass language of the shelf,
+// but has no data attribute or event listener and cannot enter the playable guest paths.
+function guestSoonMarkup(g, slot) {
+  const { len, tilt } = guestHangLayout.get(g.id) || { len: 130, tilt: 0 };
+  const ticks = "<i></i><i></i><i></i>";
+  return (
+    `<span class="guest-peg guest-peg--soon">` +
+      guestStrapMarkup(len) +
+      `<button type="button" class="guest-pass guest-pass--soon" disabled aria-disabled="true"` +
+        ` style="--tilt:${tilt.toFixed(1)}deg" aria-label="${escapeHtml(g.name)}: coming soon">` +
+        `<span class="guest-slot" aria-hidden="true"></span>` +
+        `<span class="guest-print">` +
+          `<span class="guest-band">guest${GUEST_STAR}</span>` +
+          `<span class="guest-face">` +
+            `<span class="guest-name">${escapeHtml(g.name).replace(" ", "<br>")}</span>` +
+            `<span class="guest-ticks" aria-hidden="true">${ticks}</span>` +
+            `<span class="guest-line"><span>catalogue pending</span></span>` +
+            `<span class="guest-stub guest-stub--soon"></span>` +
+          `</span>` +
+        `</span>` +
+        `<i class="guest-soon-stamp" aria-hidden="true">coming soon</i>` +
       `</button>` +
     `</span>`
   );
@@ -21804,7 +21835,8 @@ function buildDevApi() {
     guest: {
       list: () => GUESTS.map((g) => ({ id: g.id, name: g.name, file: g.file })),
       open: () => openGuestShelf("start"),
-      slots: () => ({ filled: GUESTS.length, total: GUEST_SHELF_SLOTS, perRail: guestPerRail() }),
+      slots: () => ({ filled: GUESTS.length, comingSoon: GUESTS_COMING_SOON.length,
+        total: GUEST_SHELF_SLOTS, perRail: guestPerRail() }),
       load: (id) => loadGuest(id || (GUESTS[0] && GUESTS[0].id)),
       counts: (id) => loadGuest(id || (GUESTS[0] && GUESTS[0].id)).then(guestCounts),
       // Play one, at any of the difficulties the detail panel offers.

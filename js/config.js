@@ -286,8 +286,8 @@ export const DIFF_RANK = { relaxed: 0, easy: 1, medium: 2, hard: 3, ultra: 4, ly
    This list carries only what the shelf itself must draw before the file arrives: the name,
    where to fetch it, and the ink. Colour and mood only — no album art, ever.
 
-   GUEST_SHELF_SLOTS is how many hangers the rail holds. Slots beyond GUESTS render as bare
-   rings: honest about the room left, without promising a name that doesn't exist yet. */
+   GUEST_SHELF_SLOTS is how many hangers the rail holds. Planned catalogues can occupy a hanger
+   without entering GUESTS, which keeps unavailable artists out of every playable guest path. */
 export const GUEST_SHELF_SLOTS = 10;
 export const GUESTS = [
   {
@@ -330,6 +330,16 @@ export const GUESTS = [
            ticks: ["#b6d62b", "#6f8d37", "#26332b", "#899788"] },
     era: "folklore",
   },
+];
+// Names announced on the shelf before their catalogue data is ready. These deliberately have no
+// file, ink, or era, so nothing can mistake them for playable guests.
+export const GUESTS_COMING_SOON = [
+  { id: "beyonce", name: "Beyoncé" },
+  { id: "sabrina-carpenter", name: "Sabrina Carpenter" },
+  { id: "ariana-grande", name: "Ariana Grande" },
+  { id: "gracie-abrams", name: "Gracie Abrams" },
+  { id: "miley-cyrus", name: "Miley Cyrus" },
+  { id: "harry-styles", name: "Harry Styles" },
 ];
 // A guest is played at a chosen difficulty, from the same ladder Album Focus offers:
 // deliberately the same list, since a guest round IS Album Focus pointed at another corpus.
