@@ -234,7 +234,39 @@ function beadDefs(u) {
     `<linearGradient id="${u}dim" x1="0.28" y1="0.12" x2="0.92" y2="1">` +
       `<stop offset="0" stop-color="${PEN}" stop-opacity="0"/>` +
       `<stop offset="0.55" stop-color="${PEN}" stop-opacity="0.07"/>` +
-      `<stop offset="1" stop-color="${PEN}" stop-opacity="0.34"/></linearGradient>`;
+      `<stop offset="1" stop-color="${PEN}" stop-opacity="0.34"/></linearGradient>` +
+    // Nacre: the pearl's whole surface, not a shape sitting on it. Every attempt to give the
+    // pearl a coloured AREA inside an ivory body failed the same way, whether the area had a
+    // hard edge or a soft one — a shape inside a bead reads as something printed on the bead.
+    // So the pearl is now covered in album colour like every other finish, and what marks it
+    // out is TEXTURE, the way matte's is. Mother-of-pearl's texture is banding: bands of
+    // lustre sweeping the surface at an angle, catching the light unevenly. One diagonal
+    // gradient of alternating white gives all of it, at any colour, with no geometry of its
+    // own to go stale at strand size.
+    // The bands alternate LIGHT AND DARK, not light and nothing. All-white banding averages
+    // to a veil: it drains the album colour until a pearl sits as pale as the frosted miss
+    // two beads along, which is the one thing this finish must never do. Alternating keeps
+    // the mean where the album colour is and spends the contrast on the layering instead.
+    `<linearGradient id="${u}nacre" x1="0.02" y1="0.06" x2="0.98" y2="0.98">` +
+      `<stop offset="0" stop-color="#fff" stop-opacity="0.46"/>` +
+      `<stop offset="0.1" stop-color="${PEN}" stop-opacity="0.12"/>` +
+      `<stop offset="0.2" stop-color="#fff" stop-opacity="0.34"/>` +
+      `<stop offset="0.3" stop-color="${PEN}" stop-opacity="0.14"/>` +
+      `<stop offset="0.41" stop-color="#fff" stop-opacity="0.30"/>` +
+      `<stop offset="0.52" stop-color="${PEN}" stop-opacity="0.16"/>` +
+      `<stop offset="0.63" stop-color="#fff" stop-opacity="0.30"/>` +
+      `<stop offset="0.74" stop-color="${PEN}" stop-opacity="0.13"/>` +
+      `<stop offset="0.85" stop-color="#fff" stop-opacity="0.34"/>` +
+      `<stop offset="0.94" stop-color="${PEN}" stop-opacity="0.10"/>` +
+      `<stop offset="1" stop-color="#fff" stop-opacity="0.42"/></linearGradient>` +
+    // The cross-band, at the opposite angle and much weaker. Nacre is not corduroy: one set of
+    // parallel stripes reads as a machined ridge, and the interference between two sets at
+    // different angles is what makes the surface look layered rather than combed.
+    `<linearGradient id="${u}nacre2" x1="0.96" y1="0.1" x2="0.1" y2="0.9">` +
+      `<stop offset="0" stop-color="#fff" stop-opacity="0.20"/>` +
+      `<stop offset="0.4" stop-color="#fff" stop-opacity="0"/>` +
+      `<stop offset="0.72" stop-color="#fff" stop-opacity="0.17"/>` +
+      `<stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>`;
 }
 
 // ---- One pony bead ----
@@ -280,15 +312,17 @@ function ponyBead(x, y, fill, sc, rot, finish, u, idx) {
         `fill="${k % 2 ? "#fff" : PEN}" opacity="0.18"/>`;
     }
   } else if (finish === "pearl") {
-    // Ivory body, a broad band of the album colour blushing through it, one long sheen. The
-    // blush has to be STRONG: a pale one leaves a pearl indistinguishable from a frosted miss
-    // at strand size, which reads the rarest page on the strand as the worst one. No dim
-    // overlay here either — greying an ivory bead is what pushed it back toward the misses.
-    body = `<rect ${box} fill="#f7f1e3" stroke="${PEN}" stroke-width="${n(1.3 * sc)}"/>` +
-      `<rect x="${n(x - w * 0.40)}" y="${n(y - h * 0.14)}" width="${n(w * 0.80)}" height="${n(h * 0.52)}" rx="${n(5 * sc)}" fill="${fill}" opacity="0.58"/>` +
-      `<rect x="${n(x - w * 0.40)}" y="${n(y + h * 0.20)}" width="${n(w * 0.80)}" height="${n(h * 0.20)}" rx="${n(4 * sc)}" fill="${fill}" opacity="0.34"/>` +
+    // Album colour edge to edge, then the lustre laid over the whole of it. The bead still has
+    // to stay clearly the BEST bead on the strand rather than the palest, so the two things
+    // holding it apart from its neighbours are both surface: it is lustrous where a gloss bead
+    // is merely lit, and it is layered where a matte bead is dusty. Nothing bounds the lustre.
+    // An inset rim was tried to keep the bands from running off the edges and it put a visible
+    // frame around them, which is the sticker read arriving by another door.
+    body = `<rect ${box} fill="${fill}" stroke="${PEN}" stroke-width="${n(1.3 * sc)}"/>` +
+      `<rect ${box} fill="url(#${u}nacre)"/>` +
+      `<rect ${box} fill="url(#${u}nacre2)"/>` +
       `<path d="M${n(x - w * 0.30)},${n(y - h * 0.30)} q${n(w * 0.30)},${n(-h * 0.06)} ${n(w * 0.58)},${n(h * 0.04)}" ` +
-        `fill="none" stroke="#fff" stroke-width="${n(3.4 * sc)}" stroke-linecap="round" opacity="0.85"/>` +
+        `fill="none" stroke="#fff" stroke-width="${n(3.4 * sc)}" stroke-linecap="round" opacity="0.9"/>` +
       `<circle cx="${n(x - w * 0.25)}" cy="${n(y - h * 0.30)}" r="${n(1.7 * sc)}" fill="#fff" opacity="0.95"/>`;
   } else {
     body = `<rect ${box} fill="${fill}" stroke="var(--ink)" stroke-width="${n(1.3 * sc)}"/>` + lit + dim + bounce + spec;
