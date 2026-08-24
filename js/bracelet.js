@@ -295,8 +295,17 @@ function ponyBead(x, y, fill, sc, rot, finish, u, idx) {
 
   let body;
   if (finish === "clear") {
+    // The tint is the album of the song the player actually NAMED on this page, which the run
+    // records even for a wrong answer. It is deliberately faint and must stay that way: the
+    // strand's colour language is that colour means a page you landed, and a miss carrying its
+    // album at any real strength makes a bad run read as a full bracelet at a glance, on the
+    // keepsake card most of all. 0.13 was too faint to see at all, which is the bead lying by
+    // omission about something it is already holding; at 0.22 you can pick the album out of a
+    // bead you are looking at, while the strand still reads plainly frosted from across the
+    // page. Not every miss has one — a timeout names no song — so this can only ever be a
+    // detail found on a single bead, never a signal read along the strand.
     body = `<rect ${box} fill="#fff" fill-opacity="0.34" stroke="${PEN}" stroke-opacity="0.55" stroke-width="${n(1.25 * sc)}"/>` +
-      `<rect ${box} fill="${fill}" fill-opacity="0.13"/>` +
+      `<rect ${box} fill="${fill}" fill-opacity="0.22"/>` +
       `<rect x="${n(x - w / 2 + 3 * sc)}" y="${n(y - h / 2 + 3 * sc)}" width="${n(w - 6 * sc)}" height="${n(h - 6 * sc)}" ` +
         `rx="${n(rx * 0.6)}" fill="none" stroke="#fff" stroke-width="${n(1.6 * sc)}" opacity="0.7"/>` + lit + spec;
   } else if (finish === "matte") {
