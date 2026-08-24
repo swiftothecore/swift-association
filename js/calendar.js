@@ -78,6 +78,19 @@ for (const m of [...TS_MILESTONES, ...TS_LORE_DAYS]) {
 }
 const mdKey = (m, d) => `${String(m + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
 
+// A graphite slash through a spent day: its own angle, length, bow and
+// offset per date, like strokes made on different mornings.
+const strike = (cx, cy, s) => {
+  const a = (-22 - jit(s) * 16).toFixed(1);
+  const L = 11.5 + jit(s + 7) * 3.5;
+  const bow = 0.8 + jit(s + 13) * 1.4;
+  const dx = (jit(s + 3) - 0.5) * 2.4, dy = (jit(s + 5) - 0.5) * 2;
+  return el("path", {
+    d: `M${(-L / 2).toFixed(1)} ${bow.toFixed(1)} Q0 ${(-bow).toFixed(1)} ${(L / 2).toFixed(1)} ${(-bow * 1.6).toFixed(1)}`,
+    transform: `translate(${(cx + dx).toFixed(1)} ${(cy + dy).toFixed(1)}) rotate(${a})`
+  });
+};
+
 // --- the month's own mark, in the title line ---
 //
 // One drawing per month rather than one per season, so tearing a sheet off
@@ -224,6 +237,51 @@ function watchForLayout(svg) {
   layoutWatch = { io, onResize: retry };
   window.addEventListener("resize", retry);
   io?.observe(svg);
+}
+
+// The days that matter, in the app's own milestone language: an album-coloured
+// heart for a release (exactly what the milestone sticky shows on the day), and
+// the game's gold star for her birthday, which no album colour should stand in
+// for. A lyric day gets the same heart hollowed out — a quieter cousin of a
+// real release, since the song only named the date, nothing shipped on it. A day carrying its
+// own `mark` gets that object instead (August 1st gets a salt shaker).
+function drawMark(g, mark, cx, cy, colors, s) {
+  const x = (cx + MARK_DX).toFixed(1), y = (cy + MARK_DY).toFixed(1);
+  const tilt = (-16 + jit(s) * 32).toFixed(1);
+  if (mark.kind === "birthday") {
+    g.appendChild(el("path", { d: STAR_D, class: "cal-star",
+      transform: `translate(${x} ${y}) rotate(${tilt}) scale(0.4)` }));
+    return;
+  }
+  const hollow = mark.kind === "lore";
+  const color = (mark.album && colors[mark.album]) || "#8a7c62";
+  // A day can ask for its own object instead of the heart (August 1st stamps a salt shaker).
+  // Same 32x32 box and centring as the heart, so it takes the identical transform.
+  if (mark.mark === "salt") {
+    // Grouped so the cap seam shares the shaker's transform. The seam is drawn heavy (it
+    // scales down to well under a pixel otherwise) — without it the silhouette reads as a jar.
+    const shaker = el("g", {
+      transform: `translate(${x} ${y}) rotate(${tilt}) scale(0.3) translate(-16 -16)`
+    });
+    shaker.appendChild(el("path", {
+      d: SALT_SHAKER_D, fill: color, stroke: "rgba(0,0,0,0.28)", "stroke-width": 0.9,
+      "stroke-linejoin": "round"
+    }));
+    shaker.appendChild(el("path", {
+      d: SALT_CAP_D, fill: "none", stroke: "rgba(0,0,0,0.3)", "stroke-width": 2.4,
+      "stroke-linecap": "round"
+    }));
+    g.appendChild(shaker);
+    return;
+  }
+  g.appendChild(el("path", {
+    d: HEART_D,
+    fill: hollow ? "none" : color,
+    stroke: hollow ? color : "rgba(0,0,0,0.28)",
+    "stroke-width": hollow ? 3.2 : 0.9,
+    "stroke-linejoin": "round",
+    transform: `translate(${x} ${y}) rotate(${tilt}) scale(0.3) translate(-16 -16.4)`
+  }));
 }
 
 // The red pen loop around today: a fast ellipse that overshoots past a full
