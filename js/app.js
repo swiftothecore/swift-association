@@ -2215,7 +2215,7 @@ const HIDDEN_ACH_IDS = [
   "answer-under-1s-left", "finish-on-5-streak-after-miss", "score-12", "score-zero",
   "answer-under-half-second-left", "streak-3-same-album", "play-between-midnight-and-1am", "answer-cardigan-betty-august-one-game",
   "streak-3-b-titles", "lose-3-lives-first-4-rounds", "finish-with-no-answers", "miss-1000-rounds-lifetime",
-  "answer-if-this-was-a-movie", "open-settings-menu", "make-snake-appear", "watch-snow-fall",
+  "answer-if-this-was-a-movie", "open-settings-menu", "watch-snow-fall",
   "keep-page-company-past-midnight", "watch-autumn-leaves-fall", "answer-3-rounds-same-song", "answer-paris-for-somewhere",
   "answer-nemesis-word", "answer-rain-on-monday", "play-all-seven-weekdays", "type-reputation-tv",
   "quit-round-1-before-typing", "give-up-after-12-before-13", "defeat-challenge-after-7-runs", "fall-for-first-impostor",
@@ -17494,7 +17494,6 @@ const PEN_LABELS = { quill: "quill pen", fountain: "fountain pen", glitter: "gli
 function clearEggs() {
   // (the whale egg is deliberately NOT cleared here — it lives off the page, behind
   // the top edge, and its 13-second visit is meant to survive page turns)
-  stopSnake();
   clearBlueWash();
   const layer = $("doodleLayer");
   if (layer) layer.innerHTML = "";
@@ -17510,7 +17509,7 @@ function addDoodle(kind, posClass) {
   }
   const [w, h] = DOODLE_SIZE[kind] || [56, 56];
   const d = document.createElement("div");
-  d.className = "doodle " + posClass + (kind === "snake" ? " snake" : "");
+  d.className = "doodle " + posClass;
   d.style.width = w + "px"; d.style.height = h + "px";
   d.innerHTML = DOODLE_SVG[kind];
   // The scarf is the one doodle you can touch: it counts taps, lifetime, across every run. The
@@ -17618,15 +17617,12 @@ function runRoundEggs() {
   blueUsedThisRound = false;
   lyricEggMatched = false;
 
-  const era = document.body.getAttribute("data-era");
   const now = new Date();
   const midnightHour = now.getHours() === 0 && now.getMinutes() <= 13;
 
   // at most one margin doodle / note, by priority
   if (gameType === "classic" && round === 5) {
     addDoodle("fence", "corner-br");
-  } else if (era === "reputation" && settings.snake && chance(0.5)) {
-    slitherSnake();
   } else if (midnightHour) {
     addMarginNote("meet me at midnight");
   } else if (chance(0.14)) {
@@ -17748,163 +17744,6 @@ function clearBlueWash() {
   document.querySelectorAll(".blue-wash").forEach((w) => {
     if (!w.closest(".page-flip-sheet")) w.remove();
   });
-}
-
-// A detailed serpent that slithers right across the page during a reputation
-// round. The body follows the head along a travelling sine wave
-// (follow-the-leader), tapers to a point at the tail, wears a scale pattern,
-// and flicks a forked tongue. Built frame-by-frame so the undulation is real,
-// not a sliding sticker. Reduced motion gets a quiet inked coil instead.
-let snakeRaf = null;
-function stopSnake() {
-  if (snakeRaf) { cancelAnimationFrame(snakeRaf); snakeRaf = null; }
-  const old = document.querySelector(".snake-overlay");
-  if (old) old.remove();
-}
-function slitherSnake() {
-  const card = $("screen-game");
-  if (!card) return;
-  unlock("make-snake-appear");
-  if (motionReduced()) { addDoodle("snake", "corner-br"); return; }
-  stopSnake();
-
-  const W = card.clientWidth || 520;
-  const H = card.clientHeight || 800;
-  const NS = "http://www.w3.org/2000/svg";
-  // The overlay's viewBox is 0..W mapped to the card width (≈1 unit per px) but
-  // it overflows visibly onto the desk, so the snake keeps slithering past the
-  // card and only despawns once it's fully off the right edge of the window —
-  // no tell-tale fade where the user could see it pop out.
-  const exitX = (window.innerWidth - card.getBoundingClientRect().left) + 80;
-
-  const svg = document.createElementNS(NS, "svg");
-  svg.setAttribute("class", "snake-overlay");
-  svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
-  svg.setAttribute("preserveAspectRatio", "none");
-  svg.setAttribute("aria-hidden", "true");
-  svg.innerHTML = `
-    <defs>
-      <linearGradient id="snBody" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0" stop-color="#173a1c"/>
-        <stop offset="0.45" stop-color="#2f6b30"/>
-        <stop offset="0.8" stop-color="#5aa03f"/>
-        <stop offset="1" stop-color="#93c86a"/>
-      </linearGradient>
-      <pattern id="snScales" width="15" height="13" patternUnits="userSpaceOnUse">
-        <path d="M7.5 1 L14 6.5 L7.5 12 L1 6.5 Z" fill="#0c2410" opacity="0.22"/>
-        <path d="M0 6.5 L1 6.5 M14 6.5 L15 6.5" stroke="#0c2410" stroke-width="0.6" opacity="0.14"/>
-      </pattern>
-      <clipPath id="snClip"><path id="snClipPath" d="M0 0"/></clipPath>
-    </defs>
-    <path id="snFill" d="M0 0" fill="url(#snBody)" stroke="#0c2410" stroke-width="1.1" stroke-linejoin="round"/>
-    <rect id="snScalesRect" x="-40" y="0" width="${W + 80}" height="${H}" fill="url(#snScales)" clip-path="url(#snClip)"/>
-    <path id="snSheen" d="M0 0" fill="none" stroke="rgba(255,246,228,0.16)" stroke-width="2.6" stroke-linecap="round"/>
-    <g id="snHead"></g>
-  `;
-  card.appendChild(svg);
-
-  const fill = svg.querySelector("#snFill");
-  const clip = svg.querySelector("#snClipPath");
-  const sheen = svg.querySelector("#snSheen");
-  const head = svg.querySelector("#snHead");
-  const scalePat = svg.querySelector("#snScales");
-
-  const M = 30;                                   // spine nodes (head .. tail)
-  const seg = Math.max(9, (W * 0.6) / M);         // arc spacing between nodes
-  const baseY = H * 0.52;
-  const amp = Math.min(H * 0.07, 64);
-  const k = (Math.PI * 2) / (W * 0.5);            // wave number (≈2 humps across)
-  const bodyLen = M * seg;
-  // head must travel its own length in, across W, then its length out again
-  const speed = (W + 2 * bodyLen + 90) / 3500;    // px/ms → crosses in ~3.5s
-  const yAtX = (x) => baseY + amp * Math.sin(k * x);
-
-  let headX = -bodyLen - 30;                      // start fully off the left edge
-  const trail = [];                               // index 0 = newest head point
-  for (let x = headX; x > headX - bodyLen - seg * 6; x -= seg / 4) {
-    trail.push({ x, y: yAtX(x) });
-  }
-
-  const widthAt = (j) => {
-    const t = j / (M - 1);
-    const headW = 12, tailW = 0.8;
-    return tailW + (headW - tailW) * Math.pow(1 - t, 1.35);
-  };
-
-  let last = performance.now(), start = last;
-  function frame(now) {
-    const dt = Math.min(42, now - last); last = now;
-    const t = now - start;
-    headX += speed * dt;
-    trail.unshift({ x: headX, y: yAtX(headX) });
-    if (trail.length > 1200) trail.length = 1200;
-
-    // resample the trail at even arc-length to get the spine nodes
-    const nodes = [{ x: trail[0].x, y: trail[0].y }];
-    let ti = 0, acc = 0;
-    for (let j = 1; j < M; j++) {
-      const target = j * seg;
-      while (ti < trail.length - 1 && acc < target) {
-        const a = trail[ti], b = trail[ti + 1];
-        acc += Math.hypot(b.x - a.x, b.y - a.y);
-        ti++;
-      }
-      nodes.push({ x: trail[ti].x, y: trail[ti].y });
-    }
-
-    // offset the spine by a tapering half-width to build the body outline
-    const left = [], right = [];
-    for (let j = 0; j < M; j++) {
-      const p = nodes[j];
-      const a = nodes[Math.max(0, j - 1)], b = nodes[Math.min(M - 1, j + 1)];
-      let tx = b.x - a.x, ty = b.y - a.y;
-      const len = Math.hypot(tx, ty) || 1; tx /= len; ty /= len;
-      const nx = -ty, ny = tx, w = widthAt(j);
-      left.push([p.x + nx * w, p.y + ny * w]);
-      right.push([p.x - nx * w, p.y - ny * w]);
-    }
-    let d = "M" + left[0][0].toFixed(1) + " " + left[0][1].toFixed(1);
-    for (let j = 1; j < M; j++) d += "L" + left[j][0].toFixed(1) + " " + left[j][1].toFixed(1);
-    d += "L" + nodes[M - 1].x.toFixed(1) + " " + nodes[M - 1].y.toFixed(1);
-    for (let j = M - 1; j >= 0; j--) d += "L" + right[j][0].toFixed(1) + " " + right[j][1].toFixed(1);
-    d += "Z";
-    fill.setAttribute("d", d);
-    clip.setAttribute("d", d);
-
-    // a soft sheen running along the back, fading out before the tail
-    let sd = "M" + nodes[0].x.toFixed(1) + " " + nodes[0].y.toFixed(1);
-    const sheenN = Math.floor(M * 0.7);
-    for (let j = 1; j < sheenN; j++) sd += "L" + nodes[j].x.toFixed(1) + " " + nodes[j].y.toFixed(1);
-    sheen.setAttribute("d", sd);
-
-    // scales travel with the body
-    scalePat.setAttribute("patternTransform", `translate(${headX.toFixed(1)} 0)`);
-
-    // head: oriented along the heading, with amber slit-eyes and a flicking tongue
-    const hx = nodes[0].x, hy = nodes[0].y;
-    let hdx = nodes[0].x - nodes[1].x, hdy = nodes[0].y - nodes[1].y;
-    const hl = Math.hypot(hdx, hdy) || 1; hdx /= hl; hdy /= hl;
-    const ang = Math.atan2(hdy, hdx) * 180 / Math.PI;
-    const flick = Math.floor(t / 240) % 3 === 0;
-    const tongue = flick
-      ? `<path d="M13 0 L24 0 M24 0 L28 -3.4 M24 0 L28 3.4" stroke="#9b2226" stroke-width="1.5" fill="none" stroke-linecap="round"/>`
-      : `<path d="M13 0 L19 0 M19 0 L21.6 -1.6 M19 0 L21.6 1.6" stroke="#9b2226" stroke-width="1.5" fill="none" stroke-linecap="round" opacity="0.85"/>`;
-    head.setAttribute("transform", `translate(${hx.toFixed(1)} ${hy.toFixed(1)}) rotate(${ang.toFixed(1)})`);
-    head.innerHTML =
-      `<ellipse cx="3" cy="0" rx="12.5" ry="9" fill="url(#snBody)" stroke="#0c2410" stroke-width="1.1"/>` +
-      tongue +
-      `<g><circle cx="3.5" cy="-5" r="2.7" fill="#c89b3c"/><circle cx="3.5" cy="-5" r="2.7" fill="none" stroke="#0c2410" stroke-width="0.7"/><rect x="2.8" y="-6.7" width="1.4" height="3.4" rx="0.6" fill="#0c2410"/></g>` +
-      `<g><circle cx="3.5" cy="5" r="2.7" fill="#c89b3c"/><circle cx="3.5" cy="5" r="2.7" fill="none" stroke="#0c2410" stroke-width="0.7"/><rect x="2.8" y="3.3" width="1.4" height="3.4" rx="0.6" fill="#0c2410"/></g>` +
-      `<circle cx="12" cy="-2" r="0.8" fill="#0c2410"/><circle cx="12" cy="2" r="0.8" fill="#0c2410"/>`;
-
-    if (nodes[M - 1].x > exitX) {            // whole snake has slithered off the screen
-      snakeRaf = null;
-      svg.remove();
-      return;
-    }
-    snakeRaf = requestAnimationFrame(frame);
-  }
-  snakeRaf = requestAnimationFrame(frame);
 }
 
 // Yes, whale! — the famous whale tail that looks like a pair of legs surfaces from
@@ -18315,7 +18154,6 @@ const SET_ICONS = {
   penCircle: `<ellipse cx="11.5" cy="12" rx="7.5" ry="5.5" transform="rotate(-10 11.5 12)"/><path d="M17 15.5l3.5 3.5"/>`,
   sparkles: `<path d="M10 3.5l1.6 4.5 4.4 1.6-4.4 1.6L10 15.7 8.4 11.2 4 9.6l4.4-1.6z"/><path d="M17.5 14l.8 2.2 2.2.8-2.2.8-.8 2.2-.8-2.2-2.2-.8 2.2-.8z"/>`,
   timerTension: `<circle cx="12" cy="13.5" r="6.5"/><path d="M12 13.5V10M9.5 3.5h5M18.6 7.4l1.4-1.4"/>`,
-  snake: `<path d="M4 15.5c1.8-4 3.6 4 5.4 0s3.6 4 5.4 0"/><path d="M14.8 15.5c1-2 2.6-2.5 4.2-1.7"/><circle cx="19.6" cy="13.4" r=".9" fill="currentColor" stroke="none"/>`,
   reducedFlashing: `<path d="M13 3.5 7.5 13h4l-1 7.5L16.5 11h-4z"/><path d="M20 4 5 20"/>`,
   autoAdvance: `<path d="M5 6l6 6-6 6M13 6l6 6-6 6"/>`,
   enterOnMiss: `<path d="M20 5v7H6"/><path d="M10 8l-4 4 4 4"/>`,
@@ -18662,7 +18500,6 @@ function renderSettingsBody() {
         setCheckHTML("penCircle", "Pen-circle confirm", "marks your pick before the verdict"),
         setCheckHTML("sparkles", "Sparkles", "a burst on a correct answer"),
         setCheckHTML("timerTension", "Timer tension", "vignette, tremor and the countdown tick as the clock runs low"),
-        setCheckHTML("snake", "Slithering snake", "the reputation-era easter egg"),
         setCheckHTML("reducedFlashing", "Reduced flashing", "also mutes the perfect-game star shower"),
       ])
     );
@@ -22451,7 +22288,7 @@ function buildDevApi() {
     reset: { records: resetRecords, stats: resetStatsAll, ach: () => { resetAchievements(); earnedAchievements = {}; },
              tally: resetTally, daily: resetDaily, all: clearAllData },
     // Visual eggs
-    eggs: { snake: () => slitherSnake(), whale: () => surfaceWhale(), bottle: (side) => surfaceBottle(side),
+    eggs: { whale: () => surfaceWhale(), bottle: (side) => surfaceBottle(side),
             doodle: (k) => addDoodle(k || "cat", "corner-br"),
             sparkle: () => celebrateCorrect(3), lyricSparkle: () => lyricSparkle(), starShower: () => celebratePerfect(),
             blueWash: () => triggerBlueWash(), secret13: () => revealSecret13(),

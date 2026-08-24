@@ -133,7 +133,6 @@ export const DEFAULT_SETTINGS = {
   sparkles: true,           // sparkle burst on a correct answer
   timerTension: true,       // vignette / word tremor / red margin tally / countdown tick in the final seconds
   reducedFlashing: false,   // also suppress the perfect-game star shower
-  snake: true,              // the reputation-era slithering snake
   // gameplay pacing
   autoAdvance: true,        // auto-advance countdown after a correct answer
   countdownSecs: 5,         // 3..8 — length of that countdown
@@ -1802,7 +1801,6 @@ export const ACH_ICONS = {
   scissors:`<svg viewBox="0 0 24 24"><g class="ink" stroke-width="1.6" fill="none"><circle cx="5.9" cy="5.9" r="2.5"/><circle cx="5.9" cy="18.1" r="2.5"/></g><path class="ink-fill" d="M7.9 7.3 L20.8 16.2 C21.4 16.7 21 17.6 20.2 17.4 L7.1 9.4 Z"/><path class="ink-fill" d="M7.9 16.7 L20.8 7.8 C21.4 7.3 21 6.4 20.2 6.6 L7.1 14.6 Z"/><circle class="ink-fill" cx="12.8" cy="12" r="1.1"/></svg>`,
   clapper: `<svg viewBox="0 0 24 24"><path class="ink-fill" d="M3 8.2 L20.3 4.6 L20.9 7.4 L3.6 11 Z"/><g stroke="currentColor" stroke-width="1.3" fill="none"><path d="M6.3 7.6 L7.7 5.2"/><path d="M10.3 6.8 L11.7 4.4"/><path d="M14.3 6 L15.7 3.7"/><path d="M18.3 5.2 L19.5 3.1"/></g><rect class="ink-fill" x="3.4" y="10.6" width="17.4" height="9.2" rx="1.1"/><path d="M5.6 13.2 H12.4" stroke="currentColor" stroke-width="1.1" fill="none"/></svg>`,
   window:  `<svg viewBox="0 0 24 24"><rect class="ink-fill" x="4.6" y="3.2" width="14.8" height="16.4" rx="1"/><g class="ink" stroke-width="1.1"><path d="M12 5 V17.8"/><path d="M6.4 11.4 H17.6"/></g><path class="ink-fill" d="M6.4 5 C9 7 9.4 12 7.6 17.8 L6.4 17.8 Z"/><rect class="ink-fill" x="3.4" y="19.6" width="17.2" height="1.8" rx="0.7"/></svg>`,
-  snake:   `<svg viewBox="0 0 24 24"><path class="ink" fill="none" stroke-width="2.2" stroke-linecap="round" d="M4.6 19.4 C9.4 20.6 11.8 17.6 9.8 15 C7.8 12.4 4.4 12.8 4.2 9.8 C4 6.8 7.4 5.4 10.8 6.2 C14.2 7 15.4 9.8 18.4 9.6 C20 9.5 20.6 8.2 20.2 7"/><circle class="ink-fill" cx="20.2" cy="5.9" r="1.6"/><circle cx="20.7" cy="5.5" r="0.4" fill="var(--paper)" stroke="none"/><path class="ink" stroke-width="1" d="M21.3 4.7 L22.5 3.5 M22.5 3.5 L23.2 4.1 M22.5 3.5 L21.9 2.8"/></svg>`,
   mirrorball: `<svg viewBox="0 0 24 24"><path class="ink" stroke-width="1.4" d="M12 1.2 V5.2"/><circle class="ink-fill" cx="12" cy="12.6" r="7.4"/><g stroke="currentColor" stroke-width="0.9" fill="none" opacity="0.9"><path d="M4.8 10 H19.2"/><path d="M4.7 12.6 H19.3"/><path d="M4.8 15.2 H19.2"/><path d="M12 5.2 V20"/><path d="M8.6 5.9 V19.4"/><path d="M15.4 5.9 V19.4"/><path d="M6.2 7.6 V17.7"/><path d="M17.8 7.6 V17.7"/></g><path class="ink-fill" d="M20.8 3.4 L21.4 4.7 L22.7 5.3 L21.4 5.9 L20.8 7.2 L20.2 5.9 L18.9 5.3 L20.2 4.7 Z"/><circle class="ink-fill" cx="3.4" cy="6.4" r="0.6"/></svg>`,
   diamond: `<svg viewBox="0 0 24 24"><path class="ink-fill" d="M7 3.6 H17 L20.4 8.8 H3.6 Z"/><path class="ink-fill" d="M3.6 8.8 H20.4 L12 21 Z"/><g stroke="currentColor" stroke-width="0.9" fill="none"><path d="M3.6 8.8 H20.4"/><path d="M9.4 3.6 L7.6 8.8 L12 21"/><path d="M14.6 3.6 L16.4 8.8 L12 21"/><path d="M12 3.6 V8.8"/></g><circle cx="9.6" cy="6.1" r="0.6" fill="var(--paper)" stroke="none"/></svg>`,
   nib:     `<svg viewBox="0 0 24 24"><path class="ink-fill" d="M12 2 L17 13 L12 22 L7 13 Z"/><circle cx="12" cy="10.5" r="1.7" fill="var(--paper)"/><path class="ink" stroke-width="1.2" d="M12 12.5 V21"/></svg>`,
@@ -2970,7 +2968,6 @@ export const ACHIEVEMENTS = [
   { id: "answer-if-this-was-a-movie",      name: "Spicy Drama",      desc: "Answer with \"If This Was A Movie\" — Fearless or Speak Now? Fans still argue", secret: true, icon: "clapper" },
   { id: "recall-lyric-line-word-perfect",    name: "Word For Word",    desc: "Recall a lyric line word-perfect",     secret: false, icon: "quote", sitting: true, earn: { cat: "difficulty", diff: "lyricist" } },
   { id: "open-settings-menu", name: "I Look In People's Windows", desc: "Open the settings menu",      secret: true,  icon: "window" },
-  { id: "make-snake-appear", name: "Look What You Made Me Do", desc: "Make the snake appear",  secret: true,  icon: "snake" },
   { id: "watch-snow-fall",   name: "Snow On The Page",    desc: "Watch the snow fall",                   secret: true,  icon: "palm" },
   { id: "keep-page-company-past-midnight",       name: "Midnights Like This", desc: "Keep the page company past midnight",    secret: true,  icon: "nightrain" },
   { id: "watch-autumn-leaves-fall", name: "Autumn Leaves Falling", desc: "Watch the autumn leaves fall on the page", secret: true, icon: "leaf" },
@@ -3376,7 +3373,6 @@ export const ACH_ID_MIGRATIONS = {
   "spicy-drama": "answer-if-this-was-a-movie",
   "word-for-word": "recall-lyric-line-word-perfect",
   "i-look-in-windows": "open-settings-menu",
-  "look-what-you-made-me-do": "make-snake-appear",
   "snow-on-the-beach": "watch-snow-fall",
   "midnight-rain": "keep-page-company-past-midnight",
   "autumn-leaves-falling": "watch-autumn-leaves-fall",
@@ -3650,7 +3646,7 @@ export const ACH_GROUP_OF = {
   /* In the margins: everything earned off the answer line. The eggs and props you have to go
      looking for, the keepsakes, and the coincidences of clock and calendar — a charm here is
      about when or where you were sitting, never how well you played. */
-  "make-snake-appear": "margins", "watch-snow-fall": "margins", "watch-autumn-leaves-fall": "margins",
+  "watch-snow-fall": "margins", "watch-autumn-leaves-fall": "margins",
   "tap-scarf-doodle-13-times": "margins", "tap-every-page-mark": "margins",
   "type-reputation-tv": "margins", "open-settings-menu": "margins",
   "save-first-bracelet-keepsake": "margins", "find-every-polaroid-keepsake": "margins",
@@ -3686,10 +3682,6 @@ export const DOODLE_SVG = {
   // the weathered five-board fence with its five diamond holes in a quincunx, plus a
   // sparrow perched on top and grass at the post feet (the famous fence-photo tease)
   fence: `<svg viewBox="0 0 76 64"><g class="ink"><path d="M2.5 11.5 L2.8 57"/><path d="M15.5 10.8 L15.3 57"/><path d="M2.5 11.5 Q9 10.2 15.5 10.8"/><path d="M17.5 10.2 L17.7 57.5"/><path d="M30.5 9.8 L30.4 57.5"/><path d="M17.5 10.2 Q24 8.9 30.5 9.8"/><path d="M32.5 10.6 L32.8 57"/><path d="M45.5 10.2 L45.4 57"/><path d="M32.5 10.6 Q39 9.5 45.5 10.2"/><path d="M47.5 9.4 L47.7 57.5"/><path d="M60.5 9.8 L60.4 57.5"/><path d="M47.5 9.4 Q54 8.5 60.5 9.8"/><path d="M62.5 11 L62.8 57"/><path d="M75.5 10.6 L75.4 57"/><path d="M62.5 11 Q69 9.8 75.5 10.6"/><path d="M24 16 L28.2 21 L24 26 L19.8 21 Z"/><path d="M54 16 L58.2 21 L54 26 L49.8 21 Z"/><path d="M39 29 L43.8 34.5 L39 40 L34.2 34.5 Z"/><path d="M24 43 L28.2 48 L24 53 L19.8 48 Z"/><path d="M54 43 L58.2 48 L54 53 L49.8 48 Z"/></g><g class="ink" stroke-width="1" opacity="0.45"><path d="M6.5 32 q0.8 6 0.3 12 M42 14 q0.6 4 0.2 8 M70.5 30 q0.8 6 0.3 12"/></g><g class="ink" stroke-width="1.2" opacity="0.8"><path d="M4 58.5 q1.2 -4 2.6 -5.2 M7.5 59 q0.6 -3.2 2.2 -4.4 M33 59 q1 -3.6 2.4 -4.8 M37 58.5 q0.5 -3 2 -4.2 M68 59 q1.1 -3.8 2.5 -5 M72 58.5 q0.6 -3.2 2.1 -4.4"/></g><g class="ink" stroke-width="1.4"><path d="M50.8 9.2 Q50.4 5.8 53.5 5.4 Q56.1 5.1 56.5 7.3 L58 7.9 L56.2 8.5 Q55.5 9.2 54.6 9.3"/><path d="M50.8 9.2 L47.4 7"/></g><circle class="ink-fill" cx="55" cy="6.7" r="0.55"/></svg>`,
-  // an elegant serpent gliding in from the tail, head raised and tongue flicked;
-  // the reduced-motion stand-in for the animated slither (body is two tapering
-  // edge strokes so the dash animation draws it nose to tail)
-  snake: `<svg viewBox="0 0 84 58"><g class="ink"><path d="M4 47.5 C15 51 24 39.5 36 39.5 C48 39.5 50 50 62 50 C70 50 74.5 44.5 75.5 37"/><path d="M74 32 C71.5 40.5 68 46 62 46 C52 46 49.5 35.5 36 35.5 C25 35.5 17.5 47 4 47.5"/></g><path class="ink-fill" d="M73.4 35.4 Q71.9 32 74.3 29.2 Q76.5 26.8 78.7 28.2 Q80.7 29.6 79.3 32.5 Q77.7 35.7 75.1 36 Z"/><circle cx="76.7" cy="30.8" r="0.7" fill="var(--paper)"/><g class="ink" stroke-width="1.5"><path d="M79.3 29.2 Q81 28.2 82 27 M82 27 L83.6 25.9 M82 27 L82.6 25.1"/></g><g class="ink" stroke-width="1" opacity="0.55"><path d="M12.5 46.3 q1.8 -2.2 3.6 -0.7 M20 43 q1.9 -2.3 3.7 -0.8 M28.5 39.8 q1.9 -2 3.7 -0.6 M38 37.6 q1.8 2 3.6 0.7 M45.5 41.5 q1.8 2.2 3.6 0.9 M54 46.5 q1.9 1.9 3.7 0.7 M64.5 47.2 q2 -1 2.7 -2.9"/></g></svg>`,
   // the scarf, still left hanging on somebody's peg rail: draped over the peg in two
   // tails of different lengths, with knit stripes and fringe
   scarf: `<svg viewBox="10 0 50 58"><g class="ink"><path d="M12 5 L58 4.4"/><path d="M12 9 L58 8.5"/><path d="M33.2 8.8 C33.3 11.4 34.6 13 37.2 13.6"/><circle cx="38.6" cy="13.6" r="1.4"/><path d="M30.5 16.5 C27 22 25.5 29 27.5 36"/><path d="M36 17.5 C32.5 23 31 30 33 36.5"/><path d="M27.5 36 Q30.2 37.9 33 36.5"/><path d="M33.5 15 C38.5 20 41 30 39.5 47"/><path d="M38.7 14 C43.7 19.5 46.2 29.5 44.7 46"/><path d="M39.5 47 Q42.2 48.7 44.7 46"/><path d="M30.5 16.5 Q33.4 12.9 38.7 14"/></g><g class="ink" stroke-width="1.4"><path d="M28.2 37.6 L27.4 42 M30.4 38.4 L30.2 42.8 M32.5 37.7 L33 42"/><path d="M40.2 48.6 L39.5 53.2 M42.2 49.2 L42.2 53.8 M44.2 47.9 L44.9 52.4"/></g><g class="ink" stroke-width="0.9" opacity="0.6"><path d="M35.7 22 q2.5 1 5 0.6 M37.2 28 q2.6 1 5.2 0.5 M38 34.5 q2.7 0.9 5.5 0.4 M38.3 41 q2.7 0.7 5.7 0.2"/><path d="M28.5 23.5 q2.2 0.9 4.6 0.6 M27.2 29.5 q2.3 0.9 4.9 0.5"/></g><circle class="ink-fill" cx="15.5" cy="6.9" r="0.6"/><circle class="ink-fill" cx="54.5" cy="6.4" r="0.6"/></svg>`,
@@ -3719,7 +3711,7 @@ export const DOODLE_SVG = {
 // Natural display size (px) for each doodle, matched to its viewBox aspect so
 // addDoodle can size them without per-call-site numbers.
 export const DOODLE_SIZE = {
-  fence: [76, 64], snake: [84, 58], scarf: [50, 58], cat: [64, 52],
+  fence: [76, 64], scarf: [50, 58], cat: [64, 52],
   guitar: [46, 62], thirteen: [46, 56], cardigan: [62, 54], mirrorball: [56, 62],
   paperplane: [64, 46], willow: [58, 60], seagulls: [64, 44],
 };
