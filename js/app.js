@@ -49,6 +49,8 @@ import {
   skillXpForLevel, skillLevelFromXp, masteryXpForLevel, masteryLevelFromXp,
   POLAROID_DEVELOP_MS, POLAROID_TOTAL,
   RANDOM_CATEGORIES, RANDOM_UNPLAYED_WEIGHT,
+  STREAK_FLOOR, STREAK_CAP, STREAK_SALT, STREAK_TIERS,
+  STREAK_THROW, STREAK_DROP, STREAK_SPIN, STREAK_MS, STREAK_SIZE, STREAK_CONE,
 } from "./config.js";
 import { drawRandom, poolSummary } from "./random.js";
 import { POLAROIDS, POLAROID_BY_ID } from "./polaroids.js";
@@ -9131,6 +9133,9 @@ function renderBracelet() {
     : Math.min(Math.max(round, 1), sessionRounds());
   $("pageNum").textContent = pg;
   renderPageRegister(pg, uncapped);
+  // The gutter's third occupant, painted from the same place as the other two so a resumed
+  // run puts its streak back in the margin without a start path having to remember to.
+  renderStreakMark();
   // Voice the progress the bracelet shows visually (the SVG is aria-hidden). Only
   // re-announces when the text changes, so it fires on round advance and after a verdict.
   const sr = $("srStatus");
@@ -9172,6 +9177,138 @@ function renderNotebookPageRegister(el, page, total, accent = "") {
   if (accent) el.style.setProperty("--register-accent", accent);
   else el.style.removeProperty("--register-accent");
   el.classList.add("show");
+}
+
+/* ---------- The streak mark and its glitter ----------
+   The run's correct-in-a-row count, penciled in the margin under the page register, thrown
+   across the page as that many copies of itself when an answer is locked in. It reads
+   `correctStreak`, which the charms have kept for a long time, and writes nothing: no score,
+   no stat, no record. Taking this whole section out would leave the game's numbers identical.
+
+   Ordinary rounds only. The sandboxed gameTypes are left alone deliberately — Challenges and
+   the bonus shelf already draw their own progress language in this same gutter, and Ruthless
+   scores in seconds where low wins, so a streak flourish there would be cheering the wrong
+   direction. */
+function streakMarkActive() {
+  return gameType === "classic" || gameType === "infinite"
+      || gameType === "daily"   || gameType === "album";
+}
+
+// Which rung of the pencil case a count is written with. STREAK_TIERS is ordered low first.
+function streakTier(n) {
+  let t = STREAK_TIERS[0];
+  for (const rung of STREAK_TIERS) if (n >= rung.at) t = rung;
+  return t;
+}
+
+// The numeral itself. Also the whole feature's off-switch: every other mode, and the moment
+// before the first answer, leaves the gutter bare rather than showing a zero.
+function renderStreakMark() {
+  const el = $("streakMark");
+  if (!el) return;
+  if (!streakMarkActive() || correctStreak < 1) {
+    el.classList.remove("show", "is-kick", "is-yielding");
+    el.textContent = "";
+    el.style.removeProperty("color");
+    return;
+  }
+  el.textContent = String(correctStreak);
+  el.style.color = streakTier(correctStreak).ink;
+  el.classList.add("show");
+}
+
+// The red 3-2-1 countdown owns this gutter while it is up; see the note in styles.css.
+function yieldStreakMark(on) {
+  const el = $("streakMark");
+  if (el) el.classList.toggle("is-yielding", !!on);
+}
+
+/* The burst. Scraps are laid on an even arc through the cone and then jittered, so they read
+   as scattered without ever leaving a bald patch; the cone is aimed rightward ACROSS the page
+   rather than all round, because a full circle throws a third of them off the left edge.
+   Called instead of celebrateCorrect() wherever it runs, never as well: two streak-scaled
+   particle effects on one answer is just noise. */
+function burstStreak() {
+  const el = $("streakMark");
+  if (!el) return;
+  if (correctStreak >= 1 && !motionReduced() && !settings.reducedFlashing) {
+    el.classList.remove("is-kick");
+    void el.offsetWidth;                       // restart the kick on a repeat
+    el.classList.add("is-kick");
+  }
+  const layer = $("streakGlitter");
+  if (!layer || correctStreak < STREAK_FLOOR) return;
+  if (motionReduced() || !settings.sparkles || settings.reducedFlashing) return;
+
+  const card = $("screen-game");
+  const cr = card.getBoundingClientRect(), sr = el.getBoundingClientRect();
+  const ox = sr.left - cr.left + sr.width / 2;
+  const oy = sr.top - cr.top + sr.height / 2;
+  const count = Math.min(correctStreak, STREAK_CAP);
+  const tierIdx = STREAK_TIERS.indexOf(streakTier(correctStreak));
+  const span = STREAK_CONE * Math.PI / 180;
+  const base = STREAK_CONE >= 360 ? 0 : -span / 2;
+  const jit = (spread) => (Math.random() * 2 - 1) * spread;
+
+  for (let i = 0; i < count; i++) {
+    const a = base + (i / count) * span + (Math.random() - 0.5) * (span / count) * 0.9;
+    const power = STREAK_THROW * (0.55 + Math.random() * 0.65);
+    // A share of the scraps are borrowed from the rung above, so a new tier arrives by
+    // gradually winning the burst instead of the whole thing flipping colour on one answer.
+    const rung = STREAK_TIERS[
+      tierIdx + 1 < STREAK_TIERS.length && Math.random() < STREAK_SALT ? tierIdx + 1 : tierIdx
+    ];
+    const bit = document.createElement("div");
+    bit.className = "streak-bit";
+    bit.style.left = ox + "px";
+    bit.style.top = oy + "px";
+    bit.style.setProperty("--dx", (Math.cos(a) * power).toFixed(1));
+    bit.style.setProperty("--dy", (Math.sin(a) * power).toFixed(1));
+    bit.style.setProperty("--drop", (STREAK_DROP * (0.6 + Math.random() * 0.8)).toFixed(1));
+    bit.style.setProperty("--rot", jit(STREAK_SPIN).toFixed(0));
+    bit.style.setProperty("--sz", (STREAK_SIZE * (0.78 + Math.random() * 0.5)).toFixed(1));
+    bit.style.setProperty("--dur", (STREAK_MS * (0.82 + Math.random() * 0.36)).toFixed(0) + "ms");
+    bit.style.setProperty("--tint", rung.ink);
+    const g = document.createElement("span");
+    g.textContent = String(correctStreak);
+    bit.appendChild(g);
+    layer.appendChild(bit);
+    bit.addEventListener("animationend", () => bit.remove());
+    // A backgrounded tab can swallow animationend outright, and this layer must never
+    // accumulate. The sweep is the guarantee; the listener is only the tidy path.
+    setTimeout(() => bit.remove(), STREAK_MS * 2 + 600);
+  }
+}
+
+// A miss: the count does not burst, it drops. Same object, opposite physics.
+function dropStreakMark(lost) {
+  const el = $("streakMark");
+  if (!el || !lost || motionReduced() || settings.reducedFlashing) return;
+  const card = $("screen-game");
+  if (!card) return;
+  const fall = document.createElement("div");
+  fall.className = "streak-fall";
+  fall.textContent = String(lost);
+  fall.style.top = el.offsetTop + "px";
+  fall.addEventListener("animationend", () => fall.remove());
+  card.appendChild(fall);
+  setTimeout(() => fall.remove(), 1600);
+}
+
+// Called from the answer tail with the count as it stood BEFORE this page: on a miss that is
+// the number that falls, which is the one the player is losing.
+function foldStreakMark(correct, before) {
+  if (!streakMarkActive()) { renderStreakMark(); return; }
+  if (!correct) dropStreakMark(before);
+  renderStreakMark();
+}
+
+// Wipe the gutter between runs, and sweep any scrap still in flight.
+function clearStreakMark() {
+  const layer = $("streakGlitter");
+  if (layer) layer.innerHTML = "";
+  document.querySelectorAll(".streak-fall").forEach((f) => f.remove());
+  renderStreakMark();
 }
 
 // Pencil tally in the margin: one mark per starting life, spent ones struck out.
@@ -9993,6 +10130,7 @@ function resetRunState() {
   score = 0;
   round = 0;
   correctStreak = 0;
+  clearStreakMark();
   gameTimeouts = 0;
   gameMaxStreak = 0;
   lyricLineAnswers = 0;
@@ -14853,14 +14991,17 @@ function updateTally(remaining) {
       void el.offsetWidth; // restart the scrawl animation
       el.classList.add("show");
     }
+    yieldStreakMark(true);
   } else if (el.dataset.n) {
     el.dataset.n = "";
     el.textContent = "";
     el.classList.remove("show");
+    yieldStreakMark(false);
   }
 }
 function resetTension() {
   setTension(0);
+  yieldStreakMark(false);
   const el = $("marginTally");
   el.dataset.n = "";
   el.textContent = "";
@@ -16289,7 +16430,11 @@ function submitAnswer(song, isTimeout) {
   }
   // The goat remix — a timeout that snaps a 5+ answer streak (the scream skyward).
   if (isTimeout && correctStreak >= 5) earnPolaroid("goat-remix");
+  const streakBefore = correctStreak;
   correctStreak = correct ? correctStreak + 1 : 0;
+  // The margin numeral moves with the verdict; the glitter is thrown later, from the
+  // feedback, so it lands behind the verdict rather than on top of it.
+  foldStreakMark(correct, streakBefore);
   // A life is spent: the tally mark is struck out in the margin, and the pencil is heard doing
   // it. The scratch is deliberately glued to the mark rather than given the unlock chime's lead,
   // because it is the sound of THAT stroke being drawn — offset it and it stops being the mark.
@@ -16780,7 +16925,12 @@ function showCorrectFeedback(song, lyricMatch) {
   feedbackShownAt = Date.now();
   $(auto ? "skipBtn" : "continueBtn").addEventListener("click", advanceFromFeedback);
   playSound("correct");
-  celebrateCorrect(correctStreak, bonus);
+  // One celebration per answer. Where the streak glitter runs it IS the celebration, because
+  // the two do the same job (a correct answer, scaled by the streak) and stacking two
+  // streak-scaled particle effects on one page is just noise. Everywhere else — Challenges,
+  // the bonus shelf, Ruthless, Custom, Guest — the sparkles are untouched.
+  if (streakMarkActive()) burstStreak();
+  else celebrateCorrect(correctStreak, bonus);
   if (auto) runCountdown();
 }
 
@@ -20167,6 +20317,16 @@ function buildDevApi() {
     // Round control
     answer: devAnswer,
     advance: () => advanceFromFeedback(),
+    /* The streak mark. Reaching the gold rung by playing means 25 correct answers in a row,
+       and reaching the rung BOUNDARIES on purpose is harder still, so the tiers and the cap
+       are effectively unreviewable without this. `set` moves the count without firing, which
+       is what makes the numeral's own colour checkable separately from the burst it throws. */
+    streak: {
+      set: (n) => { correctStreak = Math.max(0, n | 0); renderStreakMark(); return correctStreak; },
+      burst: () => { burstStreak(); return correctStreak; },
+      drop: () => { const was = correctStreak; correctStreak = 0; dropStreakMark(was); renderStreakMark(); return was; },
+      state: () => ({ streak: correctStreak, shown: streakMarkActive(), gameType }),
+    },
     setWord: devApplyWord,
     setScore: (n) => { score = Math.max(0, n | 0); },
     /* The verdict's answer reveal: the example cards and the expansion under them. `state`

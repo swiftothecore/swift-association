@@ -792,6 +792,85 @@
   }
   body[data-reduce-motion="on"] .page-register-mark { transition: none; }
 
+  /* ---- the streak mark, and the glitter it throws ----------------------------------
+     The run's correct-in-a-row count, penciled in the outer margin BELOW the page register
+     (which ends at y=199) and below the lives tally (y=190), the two things that already
+     live in this gutter. They are mutually exclusive with each other and neither moves, so
+     one fixed top clears both.
+
+     The third occupant is the one that cannot be cleared by position: .margin-tally, the red
+     3-2-1 countdown, sits at 39% of the card and therefore moves with the card's height. Two
+     big hand-drawn numerals in a 44px gutter would be confusing at the best of times, and
+     actively bad when the streak happens to read 3 while the clock does. So the streak mark
+     stands down for the three seconds the countdown owns the margin, rather than either one
+     being nudged around the other. */
+  .streak-mark {
+    position: absolute; left: 4px; top: 214px; z-index: 6;
+    width: 38px; text-align: center;
+    font-family: var(--hand); font-weight: 700; font-size: calc(26px + var(--text-size-adjust));
+    line-height: 1; color: var(--ink-soft);
+    transform: rotate(-4deg); pointer-events: none; user-select: none;
+    display: none;
+    transition: color 0.18s ease, opacity 0.2s ease;
+  }
+  .streak-mark.show { display: block; }
+  /* the short pencil underline it sits on, struck slightly off-square like the register's own
+     marks: the gutter's whole job is to look jotted rather than printed */
+  .streak-mark::after {
+    content: ""; position: absolute; left: 7px; right: 9px; bottom: -6px; height: 1.5px;
+    background: var(--ink-soft); opacity: 0.32; transform: rotate(1.2deg);
+  }
+  /* the countdown has the margin — see the note above */
+  .streak-mark.is-yielding { opacity: 0; }
+
+  /* the numeral kicks as it throws, then settles */
+  @keyframes streak-kick {
+    0%   { transform: rotate(-4deg) scale(1); }
+    28%  { transform: rotate(-7deg) scale(1.32); }
+    100% { transform: rotate(-4deg) scale(1); }
+  }
+  .streak-mark.is-kick { animation: streak-kick 0.42s cubic-bezier(0.2, 0.9, 0.3, 1); }
+
+  /* the miss: the count drops off the page in the editor's red instead of bursting */
+  @keyframes streak-drop {
+    0%   { transform: rotate(-4deg) translateY(0); opacity: 1; }
+    18%  { transform: rotate(-2deg) translateY(-7px); opacity: 1; }
+    100% { transform: rotate(16deg) translateY(150px); opacity: 0; }
+  }
+  .streak-fall {
+    position: absolute; left: 4px; width: 38px; text-align: center; z-index: 6;
+    font-family: var(--hand); font-weight: 700; font-size: calc(26px + var(--text-size-adjust));
+    line-height: 1; color: var(--red-pen); pointer-events: none;
+    animation: streak-drop 0.7s cubic-bezier(0.5, 0, 0.85, 0.5) forwards;
+  }
+
+  /* Each scrap is two nested elements so the path is an arc rather than a straight line: the
+     outer carries the outward throw on an ease-OUT (fast, then slowing), the inner the fall on
+     an ease-IN (slow, then accelerating). Multiplying the two gives a parabola for two
+     transforms and no per-frame JS, which matters because this fires on every answer. */
+  .streak-glitter { position: absolute; inset: 0; pointer-events: none; overflow: visible; z-index: 7; }
+  .streak-bit {
+    position: absolute; will-change: transform, opacity;
+    animation: streak-throw var(--dur) cubic-bezier(0.16, 0.85, 0.36, 1) forwards;
+  }
+  .streak-bit > span {
+    display: block;
+    font-family: var(--hand); font-weight: 700; line-height: 1;
+    font-size: calc(var(--sz) * 1px); color: var(--tint, var(--ink));
+    animation: streak-fall var(--dur) cubic-bezier(0.42, 0, 0.9, 0.72) forwards;
+  }
+  @keyframes streak-throw {
+    0%   { transform: translate(0, 0); opacity: 0; }
+    9%   { opacity: 1; }
+    72%  { opacity: 1; }
+    100% { transform: translate(calc(var(--dx) * 1px), calc(var(--dy) * 1px)); opacity: 0; }
+  }
+  @keyframes streak-fall {
+    0%   { transform: translateY(0) rotate(0deg) scale(0.55); }
+    22%  { transform: translateY(0) rotate(calc(var(--rot) * 0.25deg)) scale(1.06); }
+    100% { transform: translateY(calc(var(--drop) * 1px)) rotate(calc(var(--rot) * 1deg)) scale(0.92); }
+  }
+
   /* infinite-mode lives: pencil tally strokes scrawled down the outer margin,
      each crossed out as a life is spent */
   .lives-tally {
@@ -8268,6 +8347,11 @@
   body[data-reduce-motion="on"] .kg-press,
   body[data-reduce-motion="on"] .kg-ghost { transition: none; }
   body[data-reduce-motion="on"] .margin-tally.show { animation: none; opacity: 0.9; }
+  /* The streak mark is a readout, so it stays; only its flight goes. The kick and the drop are
+     pure motion and are simply dropped — the number in the margin still changes, which is the
+     part that carries the meaning. No glitter is built at all on this setting (see app.js). */
+  body[data-reduce-motion="on"] .streak-mark.is-kick { animation: none; }
+  body[data-reduce-motion="on"] .streak-fall { animation: none; opacity: 0; }
   body[data-reduce-motion="on"] .life-mark.spent::after { animation: none; }
   body[data-reduce-motion="on"] .rarity-stamp.show { animation: none; opacity: var(--stamp-op); transform: rotate(7deg) scale(1); }
   body[data-reduce-motion="on"] .cc-ring { animation: none; stroke-dashoffset: 0; }

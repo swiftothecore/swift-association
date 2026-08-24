@@ -235,6 +235,20 @@ export function initDev(api) {
         "score=", scoreN, btn("set", () => api.setScore(+scoreN.value)),
         btn("end now", () => api.endNow(), "warn"))));
 
+  // ---- The streak mark -------------------------------------------------------
+  // Its whole design lives in the tiers and the cap, and both sit far up a streak nobody
+  // reaches by playing: gold is 25 correct in a row. "set" moves the count without throwing
+  // anything, so the penciled numeral can be judged apart from the burst.
+  const markN = num(13);
+  body.append(section("streak mark",
+    row("streak=", markN, btn("set", () => toast(`streak ${api.streak.set(+markN.value)}`)),
+        btn("throw", () => toast(`threw ${api.streak.burst()}`)),
+        btn("drop", () => toast(`dropped ${api.streak.drop()}`))),
+    row(btn("2 · pencil", () => { api.streak.set(2); api.streak.burst(); }),
+        btn("8 · graphite", () => { api.streak.set(8); api.streak.burst(); }),
+        btn("13 · era pen", () => { api.streak.set(13); api.streak.burst(); }),
+        btn("31 · gold", () => { api.streak.set(31); api.streak.burst(); }))));
+
   // ---- Small charming features, Batch 1 -------------------------------------
   // The fast-answer control uses the real page stopwatch and verdict.
   body.append(section("charm batch 1",

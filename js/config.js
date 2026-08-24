@@ -7,6 +7,42 @@ export const TOTAL_ROUNDS = 13;
 export const LAUNCH_DATE = null;    // set to "YYYY-MM-DD" on the day it goes public
 export const SERIAL_DIGITS = 4;     // "No. 0001"
 export const ROUND_SECONDS = 10;
+
+/* ---------- The streak mark and its glitter ----------
+   A run's correct-in-a-row count, penciled small in the notebook's outer margin below the
+   page register, and thrown across the page as that many copies of itself each time an
+   answer is locked in. Purely a flourish: nothing here is scored, stored or ranked, and
+   `correctStreak` was already being kept for the charms long before this drew anything.
+
+   Two readings carry the number at once. Under about eight you count the scraps; past that
+   you cannot, but every scrap is legibly the numeral itself, so the burst gets MORE readable
+   as it gets denser rather than less. That handover is the whole idea, which is why the cap
+   below throttles the scrap count and never the numeral.
+
+   The ladder is the pencil case, not a rarity table: pencil, graphite, the notebook's own
+   era pen, then gold. Two rungs were tried and cut. RED, because red is the miss and a
+   reward drawn in the colour that means wrong is a contradiction. HIGHLIGHTER, because a
+   wash behind a 20px numeral has no line of text to travel along and comes out a blob, and
+   a dozen blobs at a dozen angles read as stickers stuck to the page. */
+export const STREAK_FLOOR = 2;    // streaks below this land quietly; a lone "1" is a weak burst
+export const STREAK_CAP = 31;     // ceiling on scraps thrown. The numeral keeps climbing past it
+export const STREAK_SALT = 0.30;  // share of scraps borrowed from the rung above, so a new tier
+                                  // arrives by winning the burst rather than by switching it
+export const STREAK_TIERS = [
+  { at: 0,  ink: "var(--ink-soft)" },     // pencil
+  { at: 6,  ink: "var(--ink)" },          // graphite
+  { at: 12, ink: "var(--ink-accent)" },   // the era's own pen — no two notebooks climb alike
+  { at: 25, ink: "var(--brand-gold)" },   // gold
+];
+// Flight. The scrap is two nested elements: the outer carries the outward throw on an ease-out,
+// the inner the fall on an ease-in, and the two easings compose into an arc for no per-frame JS.
+export const STREAK_THROW = 210;  // px, before the per-scrap jitter
+export const STREAK_DROP = 120;   // px of gravity over the flight
+export const STREAK_SPIN = 160;   // max degrees of tumble, either way
+export const STREAK_MS = 1150;    // flight time, before the per-scrap jitter
+export const STREAK_SIZE = 21;    // px, before the per-scrap jitter
+export const STREAK_CONE = 200;   // degrees, aimed rightward ACROSS the page. A full 360 throws
+                                  // a third of the burst off the left edge onto the desk.
 export const RECENT_WINDOW = 5;
 // Normal-mode coverage bias: in a Normal (classic · medium) run each draw favours prompt
 // words the player hasn't been shown yet, so playing Normal trends toward meeting the whole
