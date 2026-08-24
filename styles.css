@@ -8123,24 +8123,48 @@
   .sr-mastery.locked .sr-mtop span:first-child { color: var(--ink-soft); }
   .sr-mbar { margin-top: 6px; }
 
-  /* ---- First-class Mastery moment (unlock / level-up) — a gold wax-seal banner atop the
-     recap, with a sparkle burst. ---- */
-  .mastery-celebrate { position: relative; text-align: center; margin: 4px auto 16px; max-width: 340px;
-    padding: 16px 18px 15px; border-radius: 6px; border: 1.5px solid rgba(199, 149, 31, 0.5);
-    background: linear-gradient(180deg, rgba(212, 160, 23, 0.12), rgba(212, 160, 23, 0.04));
-    box-shadow: 0 3px 10px rgba(43, 39, 34, 0.1); opacity: 0; transform: translateY(6px) scale(0.98); }
+  /* ---- First-class Mastery moment (unlock / level-up) — the Mastery page's own hero card
+     in miniature, sitting atop the recap: margin rule, numbered wax seal, kicker over a
+     hand-written level, and a way through. It carries the gold/red vars locally because it
+     lives on the results card, outside .mastery-page where they are declared.
+     One ROW on purpose. This lands in the middle of the results page, above the recap and
+     the actions, so a stacked column of star-title-sub-reward-button pushed everything that
+     matters below the fold and read as a splash screen rather than a note on the page. ---- */
+  .mastery-celebrate { --m-gold: 199, 149, 31; --m-goldink: 150, 105, 20; --m-red: 178, 58, 58;
+    position: relative; display: flex; align-items: center; gap: 14px;
+    margin: 0 auto 14px; max-width: 480px; padding: 12px 14px 12px 34px; border-radius: 10px;
+    background-color: var(--paper); background-image: linear-gradient(rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.3));
+    border: 1px solid rgba(var(--m-gold), 0.45); box-shadow: 0 1px 3px rgba(43, 39, 34, 0.07);
+    text-align: left; opacity: 0; transform: translateY(6px) scale(0.98); }
   .mastery-celebrate.in { opacity: 1; transform: none; transition: opacity 0.5s ease, transform 0.5s cubic-bezier(.34,1.56,.64,1); }
-  .mc-seal { width: 42px; height: 42px; margin: 0 auto 6px; color: #c8951f;
-    filter: drop-shadow(0 1px 2px rgba(199, 149, 31, 0.5)); }
-  .mc-seal svg { width: 100%; height: 100%; }
-  .mc-title { font-family: var(--hand); font-weight: 700; font-size: calc(24px + var(--text-size-adjust)); line-height: 1; color: var(--ink); }
-  .mc-sub { font-family: var(--type); font-size: calc(10px + var(--text-size-adjust)); letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-soft); margin-top: 6px; }
-  .mc-reward { font-family: var(--hand); font-size: calc(16px + var(--text-size-adjust)); color: var(--ink-accent); margin-top: 8px; }
-  .mc-cta { margin-top: 11px; font-family: var(--type); font-size: calc(11px + var(--text-size-adjust)); letter-spacing: 0.04em;
-    padding: 5px 13px; border-radius: 3px; border: 1px solid rgba(199, 149, 31, 0.55);
+  .mc-rule { position: absolute; top: 10px; bottom: 10px; left: 22px; width: 1.5px; background: rgba(var(--m-red), 0.55); }
+  /* Same wax medallion as the mastery hero, struck a size smaller. */
+  .mc-seal { width: 46px; height: 46px; flex: none; position: relative; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(var(--m-gold), 0.92); border: 2px solid rgba(var(--m-goldink), 0.9); }
+  .mc-seal::before { content: ""; position: absolute; inset: 4px; border-radius: 50%; border: 1px dashed rgba(63, 44, 16, 0.4); }
+  .mc-seal-num { font-family: var(--hand); font-weight: 700; font-size: calc(25px + var(--text-size-adjust)); line-height: 1;
+    color: #3f2c10; transform: translate(-3px, -1px); }
+  .mc-seal-emblem .charm { width: 22px; height: 22px; display: inline-flex; }
+  .mc-seal-emblem .charm svg { width: 100%; height: 100%; overflow: visible; }
+  .mc-seal-emblem .ink { fill: none; stroke: #3f2c10; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+  .mc-seal-emblem .ink-fill { fill: #3f2c10; stroke: #3f2c10; stroke-width: 1.2; }
+  .mc-body { flex: 1; min-width: 0; }
+  .mc-kicker { font-family: var(--type); font-size: calc(9.5px + var(--text-size-adjust)); letter-spacing: 0.2em;
+    text-transform: uppercase; color: var(--ink-soft); }
+  .mc-title { font-family: var(--hand); font-weight: 700; font-size: calc(24px + var(--text-size-adjust)); line-height: 1; color: var(--ink); margin-top: 2px; }
+  .mc-reward { font-family: var(--type); font-size: calc(10.5px + var(--text-size-adjust)); letter-spacing: 0.03em; color: rgba(var(--m-goldink), 1); margin-top: 4px; }
+  /* The reward is the payload of the whole banner, and the gold ink it is written in was
+     mixed for a light page — on a dark one it sinks into the card. Lift it here rather than
+     in the shared var: the seal's rim and the border want the deep gold either way. */
+  :root[data-theme="dark"] .mc-reward { color: rgba(226, 184, 92, 1); }
+  .mc-sub { font-family: var(--type); font-size: calc(10px + var(--text-size-adjust)); letter-spacing: 0.04em; color: var(--ink-soft); margin-top: 4px; }
+  .mc-cta { flex: none; align-self: center; font-family: var(--type); font-size: calc(10.5px + var(--text-size-adjust)); letter-spacing: 0.04em;
+    padding: 6px 11px; border-radius: 3px; border: 1px solid rgba(var(--m-gold), 0.55);
     background: var(--paper); color: var(--ink); cursor: pointer; }
-  .mc-cta:hover { background: rgba(199, 149, 31, 0.14); }
-  .mc-burst { position: absolute; top: 42px; left: 50%; width: 0; height: 0; pointer-events: none; }
+  .mc-cta:hover { background: rgba(var(--m-gold), 0.14); }
+  /* Sparks come off the wax itself (the burst is appended inside .mc-seal). */
+  .mc-burst { position: absolute; left: 50%; top: 50%; width: 0; height: 0; pointer-events: none; }
   .mc-burst .mcs { position: absolute; left: 0; top: 0; width: 14px; height: 14px; margin: -7px 0 0 -7px;
     color: #d8a71b; opacity: 0; animation: mcSpark 1.6s ease-out forwards; }
   .mc-burst .mcs svg { width: 100%; height: 100%; }
@@ -8148,6 +8172,12 @@
     0% { opacity: 0; transform: translate(0, 0) scale(0.2); }
     25% { opacity: 1; }
     100% { opacity: 0; transform: translate(var(--dx), var(--dy)) scale(1); }
+  }
+  /* Narrow: the button drops to its own line under the text rather than squeezing the level. */
+  @media (max-width: 430px) {
+    .mastery-celebrate { flex-wrap: wrap; padding-left: 30px; }
+    .mc-rule { left: 18px; }
+    .mc-cta { margin-left: 60px; }
   }
   @media (prefers-reduced-motion: reduce) {
     .mastery-celebrate { opacity: 1; transform: none; }

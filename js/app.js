@@ -2816,10 +2816,14 @@ function renderSkillsRecap() {
   celebrateMastery(res, el);
 }
 
-// A first-class Mastery moment on the results card: a gold seal banner for the unlock or a
-// level-up, naming any reward just earned, with a soft sparkle burst (honours reduced
-// motion / reduced flashing). Skill level-ups stay as plain toasts; this is only the rarer,
-// bigger beat. Injected at the top of the skills recap so it reads before the detail.
+// A first-class Mastery moment on the results card: the unlock or a level-up, naming any
+// reward just earned, with a soft sparkle burst (honours reduced motion / reduced flashing).
+// Skill level-ups stay as plain toasts; this is only the rarer, bigger beat. Injected at the
+// top of the skills recap so it reads before the detail.
+// It is deliberately the Mastery page's own hero in miniature — margin rule, numbered wax
+// seal, kicker over a big hand-written level — so arriving at the page after tapping through
+// feels like the same object, and so the seal is the LEVEL rather than a decorative star. Laid
+// out as one row, because this lands mid-results and must not push the recap off the page.
 function celebrateMastery(res, host) {
   if (!res || !host) return;
   const isUnlock = res.masteryJustUnlocked;
@@ -2827,17 +2831,30 @@ function celebrateMastery(res, host) {
   if (!isUnlock && !up) return;
   const lvl = up ? up.to : masteryLevelFromXp(res.mastery.masteryXp);
   const rewards = (res.newUnlocks || []).map((id) => MASTERY_REWARD_BY_ID[id]).filter(Boolean);
-  const rewardLine = rewards.length
-    ? `<div class="mc-reward">new reward${rewards.length > 1 ? "s" : ""}: ${rewards.map((r) => escapeHtml(r.name)).join(", ")}</div>`
-    : "";
-  const title = isUnlock ? "Mastery unlocked" : `Mastery: level ${lvl}`;
-  const sub = isUnlock ? "every skill now feeds your mastery" : "another page turns in your songbook";
+  // One meta line only. A reward is the better news, so it displaces the flavour note rather
+  // than stacking under it and growing the card by a row. Two names is the cap: a level that
+  // hands over a whole group (the eight trinkets at 5) would otherwise spell all of them out
+  // and turn the line into a paragraph. The board they landed on is one tap away.
+  const names = rewards.slice(0, 2).map((r) => escapeHtml(r.name));
+  const rest = rewards.length - names.length;
+  const meta = rewards.length
+    ? `<div class="mc-reward">new reward${rewards.length > 1 ? "s" : ""}: ${names.join(", ")}${rest ? ` and ${rest} more` : ""}</div>`
+    : `<div class="mc-sub">${escapeHtml(isUnlock ? "every skill now feeds your mastery" : "another page turns in your songbook")}</div>`;
+  // The unlock can land before the first level is banked, which is the one state with no
+  // number to press into the wax; the page calls that "freshly sealed" and shows the star.
+  const seal = lvl >= 1
+    ? `<span class="mc-seal-num">${lvl}</span>`
+    : `<span class="mc-seal-emblem">${masteryMarkup("star")}</span>`;
 
   const banner = document.createElement("div");
   banner.className = "mastery-celebrate";
-  banner.innerHTML = `<div class="mc-seal">${STAR_SVG}</div>` +
-    `<div class="mc-title">${escapeHtml(title)}</div>` +
-    `<div class="mc-sub">${escapeHtml(sub)}</div>${rewardLine}` +
+  banner.innerHTML = `<span class="mc-rule"></span>` +
+    `<div class="mc-seal">${seal}</div>` +
+    `<div class="mc-body">` +
+      `<div class="mc-kicker">${isUnlock ? "Mastery unlocked" : "Mastery level up"}</div>` +
+      `<div class="mc-title">${escapeHtml(lvl >= 1 ? `Level ${lvl}` : "Freshly sealed")}</div>` +
+      meta +
+    `</div>` +
     `<button type="button" class="mc-cta">see mastery →</button>`;
   host.insertBefore(banner, host.firstChild);
   banner.querySelector(".mc-cta").addEventListener("click", () => openMastery("results"));
@@ -2856,7 +2873,8 @@ function celebrateMastery(res, host) {
       s.innerHTML = SPARKLE_SVG;
       burst.appendChild(s);
     }
-    banner.appendChild(burst);
+    // Hung on the seal, not the card, so the sparks come off the wax wherever the row wraps.
+    (banner.querySelector(".mc-seal") || banner).appendChild(burst);
     setTimeout(() => burst.remove(), 2100);
   }
   if (!motionReduced()) { void banner.offsetWidth; }
