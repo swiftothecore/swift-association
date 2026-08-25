@@ -4172,8 +4172,10 @@ function keepsakeCount(earned) {
   return POLAROIDS.reduce((n, p) => n + (map[p.id] ? 1 : 0), 0);
 }
 // Keep the little count badge on the keepsakes icon current (hidden until the first is found).
+// The badge advertises the drawer, and the drawer holds two shelves, so it counts both. It is
+// one number rather than two: what it is for is telling you there is something in there.
 function updateKeepsakesNav() {
-  const n = keepsakeCount();
+  const n = keepsakeCount() + stickerCount();
   document.querySelectorAll(".js-keepsakes-count").forEach((el) => {
     el.textContent = n ? String(n) : "";
     el.classList.toggle("is-empty", !n);
@@ -4323,6 +4325,7 @@ function earnSticker(id) {
   saveStickers(earned);
   showStickerToast(st);
   playUnlockChime();
+  updateKeepsakesNav();
   refreshStickers();
   return true;
 }
@@ -4349,6 +4352,7 @@ function devSetSticker(id, on) {
   const e = loadStickers();
   if (on) e[id] = new Date().toISOString(); else delete e[id];
   saveStickers(e);
+  updateKeepsakesNav();
   refreshStickers();
   return stickerEarned(id) ? "earned" : "locked";
 }
@@ -22213,10 +22217,10 @@ function buildDevApi() {
       all: () => {
         const e = loadStickers(); const now = new Date().toISOString();
         for (const s of STICKERS) if (!e[s.id]) e[s.id] = now;
-        saveStickers(e); refreshStickers(); return STICKERS.length;
+        saveStickers(e); updateKeepsakesNav(); refreshStickers(); return STICKERS.length;
       },
       open: () => openKeepsakes(),                             // the shelf lives under the polaroid wall
-      reset: () => { resetStickers(); refreshStickers(); },
+      reset: () => { resetStickers(); updateKeepsakesNav(); refreshStickers(); },
       // The session ledger the three "in one session" stickers read. It is memory-only and
       // cleared by a reload, which makes it the one sticker input a test session cannot inspect
       // any other way. `fill` names a song off every studio record at once, which is the only

@@ -31,6 +31,7 @@ The game is still a work in progress and is by no means 'done', but it is quite 
 - Challenges mode with 32 challenges, most with a harder "dark side" to unlock, plus a super-hard tier unlocked through mastery
 - A skills and mastery system full of rewards
 - Over 200 achievements, graded by difficulty in the finish of the charm itself, one of which is pinned as a goal you can jump straight into
+- Fifteen stickers earned by noticing things rather than by scoring, shown as blank silhouettes until you work out what each one wants
 
 **The details**
 
@@ -52,7 +53,6 @@ The game is still a work in progress and is by no means 'done', but it is quite 
 - Global leaderboards
 - More easter eggs
 - More sound design
-- Stickers!!
 - Fixing up dark mode
 - Polaroids in more places!
 - More achievements (always)
