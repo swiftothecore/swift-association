@@ -4396,6 +4396,78 @@ function checkSessionStickers() {
   }
 }
 
+/* ---------- Sticker triggers that read a single answered page ---------- */
+
+// Did the sung line cover WHOLE_VERSE_LINES or more CONSECUTIVE lines of ONE real section?
+//
+// The verse tier already asks for a word-perfect block spanning that many lines, but it counts
+// them on the flat `lyrics` blob, which joins every section end to end. A four-line span
+// measured there can run out of the last line of a chorus into the verse after it and still look
+// contiguous, and that is not a verse anybody sang. songs.json keeps the structured sections, so
+// the honest answer is read from those: the recovered span has to sit inside one of them.
+//
+// It works off `match.line`, the raw lines the matcher recovered joined by a space, which is
+// exactly the shape a section's own lines normalize to. That keeps this away from the matching
+// path entirely: it asks where the line WAS, never whether the line counts.
+function sangWholeSection(song, match) {
+  if (!song || !match || !Array.isArray(song.sections)) return false;
+  const np = normalizeLyric(match.line || "");
+  if (!np) return false;
+  for (const sec of song.sections) {
+    const lines = (sec.lines || []).map((l) => normalizeLyric(l)).filter(Boolean);
+    if (lines.length < WHOLE_VERSE_LINES) continue;
+    // Rebuild each line's character span inside the section's own blob, then map the phrase's
+    // start and end back onto the lines they landed in.
+    let blob = "";
+    const segs = [];
+    for (const l of lines) {
+      const start = blob ? blob.length + 1 : 0;
+      blob = blob ? blob + " " + l : l;
+      segs.push({ start, end: blob.length });    // end exclusive
+    }
+    const at = blob.indexOf(np);
+    if (at < 0) continue;
+    const endAt = at + np.length - 1;
+    const from = segs.findIndex((g) => at >= g.start && at < g.end);
+    const to = segs.findIndex((g) => endAt >= g.start && endAt < g.end);
+    if (from >= 0 && to >= from && to - from + 1 >= WHOLE_VERSE_LINES) return true;
+  }
+  return false;
+}
+
+// The four stickers that read one answered page. All of them want Taylor's own catalogue
+// underneath, so they sit behind the gate the Catalogue charms already use: a guest run has
+// swapped the corpus wholesale, and none of these objects means anything against another
+// artist's records.
+function checkAnswerStickers(song, lyricMatch) {
+  if (devNoLog || !catalogueCharmsLive()) return;
+
+  // Vault door — a From The Vault track named. The flag rides on the song object out of
+  // songs.json through installCorpus, so nothing here has to know which twenty-seven they are.
+  if (song && song.vault) earnSticker("vault-door");
+
+  // Cat in a tiara — the page for karma, answered with Karma. baseTitleOf lets the remix count:
+  // it is still Karma, and a near miss on the one sticker that names its own answer would read
+  // as the game being awkward rather than as the joke landing.
+  if (song && currentWord && normalizeTitle(currentWord) === "karma"
+      && baseTitleOf(song.title) === "Karma") earnSticker("cat-in-a-tiara");
+
+  // Solitaire — one stone, one setting: a word only one song in the whole catalogue sings.
+  // Measured live off the same call the word buckets are built from rather than kept as a list,
+  // because a list would quietly become a lie the first time a lyric was corrected. Six words
+  // qualify as this is written, which is about one run in ten dealing you the shot at it.
+  if (cataloguePageHasWord() && songsContainingWord(currentWord, false).length === 1) {
+    earnSticker("solitaire");
+  }
+
+  // Marble poet bust — four or more consecutive lines of one real section, sung rather than
+  // named. Untypable under any clock, so in practice a Relaxed or Custom feat, which is right:
+  // the bust is about knowing it, not about speed.
+  if (lyricMatch && lyricMatch.tier === "verse" && sangWholeSection(song, lyricMatch)) {
+    earnSticker("poet-bust");
+  }
+}
+
 /* ---------- Sticker triggers that read a finished run ---------- */
 
 // Boombox — a full run played with the sound on. The sound ships OFF, so the whole feat is
@@ -16612,6 +16684,9 @@ function submitAnswer(song, isTimeout) {
   // The session ledger, which the two "in one session" stickers read. Sits beside the Catalogue
   // charms because it asks the same kind of question, and takes every mode's correct answers.
   if (correct) noteSessionSong(song);
+  // The four stickers about THIS page: the vault track, the lonely word, the sung verse and the
+  // cat. Fed lyricMatch, since one of them is about how the page was answered rather than what.
+  if (correct) checkAnswerStickers(song, lyricMatch);
   if (!isTimeout) checkCatalogueEggs($("songInput").value, song, correct);
   // Bullet Holes — every rung of the hint ladder burned on this page and the page missed anyway.
   // A timeout counts: the hints were still spent, and the page was still lost.
@@ -18314,6 +18389,7 @@ function surfaceBottle(side) {
         `<span class="bottle-note-cite">${escapeHtml(s.song)} · ${escapeHtml(s.album)}</span>`;
     });
     earnPolaroid("message-in-a-bottle");             // idempotent — the first catch develops it
+    earnSticker("ufo");                              // "like I was abducted" — caught the bottle
     bottleTimers.forEach(clearTimeout);
     // Hold the open note on screen a good while before it drifts away.
     bottleTimers = [setTimeout(stopBottle, 7000)];
@@ -22167,6 +22243,28 @@ function buildDevApi() {
         const m = token || (t === "daily" ? "daily" : boardMode());
         appendHistory({ s: 0, c: 0, n: TOTAL_ROUNDS, m, t, w: 0, d: new Date().toISOString(), tm: null });
         return `logged a loss: ${t} / ${m}`;
+      },
+      // The words only ONE song in the catalogue sings, derived exactly the way Solitaire derives
+      // them. This is the audit for that sticker: the list is never written down anywhere, so if
+      // a lyric correction moves it, the sticker moves with it and this is what shows you.
+      lonely: () => playableWords.filter((w) => songsContainingWord(w, false).length === 1),
+      // Every From The Vault track the live corpus is carrying, for the vault door.
+      vault: () => allSongs.filter((x) => x.vault).map((x) => x.title),
+      // The bust wants four consecutive lines of one real section, sung. Finding a page where
+      // that is even possible by hand is most of the work, so this hands back a block off the
+      // CURRENT page that would qualify: four lines of one section of a valid song, carrying the
+      // page's word. Paste it into the answer box and the sticker is the verdict.
+      verse: () => {
+        for (const song of currentSongs) {
+          for (const sec of song.sections || []) {
+            const lines = (sec.lines || []).filter(Boolean);
+            for (let i = 0; i + WHOLE_VERSE_LINES <= lines.length; i++) {
+              const block = lines.slice(i, i + WHOLE_VERSE_LINES).join(" ");
+              if (phraseSingsPromptWord(normalizeSungPhrase(block))) return { song: song.title, block };
+            }
+          }
+        }
+        return null;
       },
       // Which kind the band-aid is currently owed on: every token whose most recent settled row
       // is a loss. Winning one of these is the whole trigger.

@@ -679,6 +679,11 @@ export function initDev(api) {
     // every kind currently owing one, which is otherwise invisible.
     row("band-aid", btn("log a loss (this kind)", () => toast(api.stickers.seedLoss())),
         btn("wounds", () => { const w = api.stickers.wounds(); console.log("[dev] wounds", w); toast(w.length + " kind(s) owed"); })),
+    // The three page-shaped ones. "lonely words" is the Solitaire audit (the list is derived, never
+    // written down); "verse for this page" hands back a block that would earn the poet bust.
+    row("pages", btn("lonely words", () => { const w = api.stickers.lonely(); console.log("[dev] lonely", w); toast(w.join(" · ") || "none"); }),
+        btn("vault tracks", () => { const v = api.stickers.vault(); console.log("[dev] vault", v); toast(v.length + " vault tracks"); }),
+        btn("verse for this page", () => { const v = api.stickers.verse(); console.log("[dev] verse", v); toast(v ? v.song : "no four-line section here"); })),
     row(albumSel, shelfDiffSel, btn("play album", () => api.album.play(albumSel.value, shelfDiffSel.value)),
         btn("open albums", () => api.album.open())),
     row(shelfStateSel, btn("fill albums", () => { api.album.fill(shelfStateSel.value, shelfDiffSel.value); toast("album board filled"); }),
