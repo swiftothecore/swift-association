@@ -2053,6 +2053,9 @@ if (location.pathname.endsWith('/index.html')) {
 
 <script type="module" src="js/app.js"></script>
 <script type="module" src="js/scatter.js"></script>
+<!-- The stickers stuck to the closed notebook cover. Loaded on its own rather than through
+     app.js: the cover is on screen before the game data is, and this must not wait for it. -->
+<script type="module" src="js/stickercover.js"></script>
 <script type="module" src="js/calendar.js"></script>
 <script>
   // Register the service worker (offline + installable). Relative path keeps the

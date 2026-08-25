@@ -5668,6 +5668,35 @@
   :root[data-theme="dark"] .nb-cover-star { filter: brightness(0.76); }
   :root[data-theme="dark"] .nb-cover-gold { filter: brightness(0.6) saturate(1.2); }
 
+  /* ---------- Die-cut stickers on the open kraft field (js/stickercover.js) ----------
+     The one thing the bare field is bare FOR. Positions, sizes and rotations are all written
+     as inline styles by the placement layer, which measures the cover it finds; nothing about
+     where a sticker sits is decided here.
+
+     The layer sits above the board and below everything lying on top of it: the strap, the
+     ribbon, the corner protectors and the title plate are all objects on the cover, so a
+     sticker passes under them rather than over. In practice the mask keeps stickers off all
+     five, and this is what makes that true rather than merely likely. */
+  .cover-stickers { position: absolute; inset: 0; z-index: 1; pointer-events: none; }
+  .cover-sticker {
+    position: absolute; display: block; line-height: 0;
+    transform: rotate(var(--rot, 0deg));
+  }
+  /* overflow: visible is load-bearing: the die cut is a dilation of the artwork's alpha, so
+     the cream border is drawn OUTSIDE the viewBox and a clipped svg shaves it off. */
+  .cover-sticker svg {
+    display: block; width: 100%; height: 100%; overflow: visible;
+    filter: url(#stickCut);
+  }
+  /* Stroke only. Every path in the artwork carries its own fill attribute, so these classes
+     must never set one, or the fills stop being the drawing's own. */
+  .cover-sticker .ln { stroke: #2b2722; stroke-width: 2.3; stroke-linecap: round; stroke-linejoin: round; }
+  .cover-sticker .ln.t { stroke-width: 1.4; }   /* interior detail */
+  .cover-sticker .ln.h { stroke-width: 1.7; }   /* between the two */
+  /* Dark mode dims the whole cover, and vinyl on that board is in the same light. Pitched a
+     little brighter than the board itself: a sticker is glossier stock than kraft. */
+  :root[data-theme="dark"] .cover-sticker { filter: brightness(0.72) saturate(0.94); }
+
   /* Opening-the-notebook reveal — once the data loads, the closed cover is cloned into a
      real page-flip sheet (see revealNotebook) and turned away on its left spine with the
      exact same motion + shading used everywhere else (e.g. exiting a game: page-flip-sheet
