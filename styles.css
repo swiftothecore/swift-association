@@ -5429,69 +5429,153 @@
   .error code { font-family: var(--type); font-size: calc(13px + var(--text-size-adjust)); background: rgba(43,39,34,0.08); padding: 2px 6px; }
 
   /* ---------- The notebook's front cover (the loading state) ----------
-     A kraft-board cover — cloth spine, elastic strap, red bookmark ribbon, a taped
-     title plate — that sits closed while the data loads, then swings open on its spine
-     (see the reveal rules below) to uncover the ruled start board already laid out. */
+     A kraft-board cover bound to a real text block: cloth spine, elastic strap, red bookmark
+     ribbon, a taped title plate. It sits closed while the data loads, then swings open on its
+     spine (see the reveal rules below) to uncover the ruled start board already laid out.
+
+     Composition rule for the open kraft field: it stays BARE. Material, wear and edge do all
+     the work out there: grain, rubbed corners, the cut edge catching light. Nothing with a
+     silhouette (ornament, borders, motifs) goes on the field, because that is where the
+     die-cut stickers live. */
+
+  /* The outer element is the text block: the sliver of page edges the cover sits proud of,
+     showing along the fore-edge and the tail the way a closed notebook does from above. */
   .nb-cover {
     position: absolute; inset: 0; overflow: hidden;
     display: flex; align-items: center; justify-content: center;
-    border-radius: 3px 5px 5px 3px;
+    /* the label is centred in the panel it actually has: inboard of the spine, clear of
+       the strap, so the two never collide however narrow the notebook gets */
+    padding: 0 calc(13% + 26px) 0 40px;
+    border-radius: 3px 6px 6px 3px;
     background:
-      repeating-linear-gradient(92deg, rgba(255,255,255,0.03) 0 2px, rgba(60,42,20,0.03) 2px 4px),
-      radial-gradient(120% 90% at 30% 12%, #c9ae7e 0%, #bb9c69 46%, #a2824f 100%);
-    box-shadow: inset 0 0 0 1px rgba(74,52,24,0.28), inset 0 2px 10px rgba(255,246,225,0.22),
-      inset 0 -26px 46px rgba(74,50,20,0.18);
+      linear-gradient(300deg, rgba(88,68,36,0.45), rgba(88,68,36,0) 16px),
+      linear-gradient(160deg, #cabb96 0%, #bcab82 60%, #a89468 100%);
   }
-  /* stitched border a little in from the edge */
-  .nb-cover::after {
-    content: ""; position: absolute; inset: 12px 14px 14px 40px; border-radius: 3px;
-    border: 1.5px dashed rgba(74,52,24,0.32); pointer-events: none;
+  /* The board itself. Sits inboard of the page edges on the fore-edge and tail sides. */
+  .nb-cover-board {
+    position: absolute; inset: 2px 4px 5px 0; border-radius: 3px 5px 5px 3px;
+    pointer-events: none;
+    background:
+      /* rubbed pale wear where the hand takes hold: the two free corners, then the fore-edge */
+      radial-gradient(62px 50px at 100% 0%, rgba(255,246,224,0.30), rgba(255,246,224,0) 72%),
+      radial-gradient(70px 56px at 100% 100%, rgba(255,246,224,0.26), rgba(255,246,224,0) 72%),
+      linear-gradient(270deg, rgba(255,246,224,0.15) 0, rgba(255,246,224,0) 34px),
+      /* board fibre: two near-vertical runs on different periods, so they beat against each
+         other into something uneven instead of ruling a grid */
+      repeating-linear-gradient(91.4deg, rgba(255,250,236,0.035) 0 1px, rgba(74,52,24,0.03) 1px 2px, rgba(0,0,0,0) 2px 3px),
+      repeating-linear-gradient(88.2deg, rgba(74,52,24,0.026) 0 1px, rgba(0,0,0,0) 1px 5px),
+      /* uneven pulp: soft cloudy patches with no shape to them */
+      radial-gradient(70% 44% at 22% 26%, rgba(255,244,216,0.16), rgba(255,244,216,0) 62%),
+      radial-gradient(52% 38% at 74% 62%, rgba(86,60,26,0.13), rgba(86,60,26,0) 64%),
+      radial-gradient(46% 34% at 56% 6%, rgba(86,60,26,0.09), rgba(86,60,26,0) 66%),
+      radial-gradient(40% 30% at 12% 78%, rgba(86,60,26,0.08), rgba(86,60,26,0) 66%),
+      radial-gradient(120% 90% at 30% 12%, #c9ae7e 0%, #bb9c69 46%, #a2824f 100%);
+    box-shadow:
+      inset -1px 0 0 rgba(255,246,220,0.28),      /* the cut edge of the board catches the light */
+      inset 0 -1px 0 rgba(255,246,220,0.2),
+      inset 0 2px 10px rgba(255,246,225,0.20),
+      inset 0 -30px 52px rgba(74,50,20,0.16),
+      inset 0 0 0 1px rgba(74,52,24,0.22),
+      3px 4px 8px rgba(52,34,12,0.34);            /* board weight, thrown onto the pages below */
   }
   .nb-cover-spine {
-    position: absolute; top: 0; bottom: 0; left: 0; width: 30px;
-    background: linear-gradient(90deg, #6f5330 0%, #7c5f38 62%, #5f4726 100%);
-    box-shadow: inset -6px 0 10px rgba(40,26,10,0.4), inset 2px 0 0 rgba(255,240,210,0.14);
+    position: absolute; top: 0; bottom: 5px; left: 0; width: 32px;
+    border-radius: 3px 0 0 3px;
+    background:
+      /* bookcloth weave: a warp and a weft, both barely there */
+      repeating-linear-gradient(0deg, rgba(255,238,206,0.05) 0 1px, rgba(30,20,8,0.06) 1px 2px, rgba(0,0,0,0) 2px 3px),
+      repeating-linear-gradient(90deg, rgba(255,238,206,0.045) 0 1px, rgba(0,0,0,0) 1px 3px),
+      linear-gradient(90deg, #5b4324 0%, #795c36 20%, #83663d 52%, #6a5029 82%, #4e3a1e 100%);
+    box-shadow:
+      inset -7px 0 12px rgba(38,24,8,0.34), inset 2px 0 0 rgba(255,240,210,0.14),
+      3px 0 7px rgba(40,26,10,0.30);              /* the rolled joint stands off the board */
   }
-  /* two stitch runs up the spine */
+  /* two stitch runs up the spine, each stitch carrying its own shadow */
   .nb-cover-spine::before, .nb-cover-spine::after {
-    content: ""; position: absolute; top: 16px; bottom: 16px; width: 0;
-    border-left: 1.5px dashed rgba(255,238,206,0.42);
+    content: ""; position: absolute; top: 18px; bottom: 18px; width: 1.6px;
+    background: repeating-linear-gradient(180deg,
+      rgba(255,241,213,0.5) 0 5px, rgba(255,241,213,0) 5px 10px);
+    filter: drop-shadow(0 1px 0 rgba(28,17,5,0.45));
   }
   .nb-cover-spine::before { left: 9px; }
-  .nb-cover-spine::after  { left: 21px; }
+  .nb-cover-spine::after  { left: 21.5px; }
   /* the closure elastic, strung down the right side */
   .nb-cover-elastic {
-    position: absolute; top: -4%; bottom: -4%; right: 13%; width: 12px;
-    background: linear-gradient(90deg, rgba(40,34,30,0.35), #2f2a26 40%, #211d1a 60%, rgba(40,34,30,0.35));
-    border-radius: 3px; box-shadow: 0 1px 4px rgba(20,14,8,0.4);
+    position: absolute; top: -4%; bottom: -4%; right: 13%; width: 13px; z-index: 3;
+    background:
+      /* the ribbing of woven elastic */
+      repeating-linear-gradient(0deg, rgba(255,255,255,0.055) 0 1px, rgba(0,0,0,0) 1px 3px),
+      linear-gradient(90deg, rgba(28,24,20,0.5) 0 1px, #4b423b 2px 3px, #2b2622 34%,
+        #141210 60%, #332d28 86%, rgba(28,24,20,0.5) 100%);
+    border-radius: 2px;
+    box-shadow: -5px 0 9px rgba(38,24,8,0.26), 6px 0 11px rgba(38,24,8,0.26);
   }
   /* red bookmark ribbon peeking over the top edge (echoes the margin rule) */
   .nb-cover-ribbon {
-    position: absolute; top: -6px; right: 28%; width: 16px; height: 76px;
-    background: linear-gradient(180deg, #9a2f2f, #b23a3a 60%, #7d2626);
+    position: absolute; top: -6px; right: 28%; width: 16px; height: 76px; z-index: 2;
+    background:
+      linear-gradient(90deg, rgba(20,4,4,0.24) 0 2px, rgba(255,190,190,0.16) 5px 7px,
+        rgba(0,0,0,0) 9px, rgba(20,4,4,0.2) 100%),
+      repeating-linear-gradient(90deg, rgba(255,255,255,0.06) 0 1px, rgba(0,0,0,0) 1px 3px),
+      linear-gradient(180deg, #9a2f2f, #b23a3a 60%, #7d2626);
     box-shadow: 0 2px 5px rgba(40,10,10,0.35);
     clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 82%, 0 100%);
   }
-  /* worn corner protectors */
+  /* Leather corner protectors on the two free corners: darker stock than the board, rubbed
+     bare along the very tip, with a run of stitching just inside the folded edge. */
   .nb-cover-corner {
-    position: absolute; width: 34px; height: 34px; pointer-events: none;
-    background: linear-gradient(135deg, rgba(120,92,48,0.9), rgba(92,68,32,0.9));
-    box-shadow: inset 0 0 0 1px rgba(255,240,210,0.16);
+    position: absolute; width: 40px; height: 40px; pointer-events: none; z-index: 2;
+    background:
+      linear-gradient(135deg, rgba(196,158,102,0.55), rgba(196,158,102,0) 34%),
+      linear-gradient(135deg, #8b6535 0%, #6d4c26 52%, #4d3416 100%);
+    box-shadow: inset 0 0 0 1px rgba(255,242,214,0.16);
   }
-  .nb-cover-corner--tr { top: 0; right: 0; clip-path: polygon(100% 0, 0 0, 100% 100%); border-top-right-radius: 5px; }
-  .nb-cover-corner--br { bottom: 0; right: 0; clip-path: polygon(100% 0, 100% 100%, 0 100%); border-bottom-right-radius: 5px; }
-  /* the taped title plate — a cream label pinned to the board */
+  /* the stitch run, laid parallel to the folded edge and clipped to the triangle */
+  .nb-cover-corner::after {
+    content: ""; position: absolute; left: -40%; right: -40%; top: 50%; height: 1.5px;
+    background: repeating-linear-gradient(90deg,
+      rgba(255,238,206,0.5) 0 4px, rgba(0,0,0,0) 4px 8px);
+    filter: drop-shadow(0 1px 0 rgba(30,18,6,0.4));
+  }
+  .nb-cover-corner--tr {
+    top: 2px; right: 4px; clip-path: polygon(100% 0, 0 0, 100% 100%); border-top-right-radius: 5px;
+  }
+  .nb-cover-corner--tr::after { transform: translate(6px, -6px) rotate(45deg); }
+  .nb-cover-corner--br {
+    bottom: 5px; right: 4px; clip-path: polygon(100% 0, 100% 100%, 0 100%); border-bottom-right-radius: 5px;
+    background:
+      linear-gradient(45deg, rgba(196,158,102,0.5), rgba(196,158,102,0) 34%),
+      linear-gradient(45deg, #8b6535 0%, #6d4c26 52%, #4d3416 100%);
+  }
+  .nb-cover-corner--br::after { transform: translate(6px, 6px) rotate(-45deg); }
+  /* the taped title plate, a cream label pinned to the board. Its stock is fixed rather
+     than themed: it is a paper label on an object, not part of the page beneath. */
   .nb-cover-plate {
-    position: relative; z-index: 2; margin-left: 18px; text-align: center;
-    max-width: min(76%, 360px); padding: 22px 26px 20px;
-    background: linear-gradient(180deg, #f7f1e3, var(--paper));
+    position: relative; z-index: 2; text-align: center;
+    width: 100%; max-width: 360px; padding: 22px 26px 20px;
+    background:
+      radial-gradient(120% 80% at 50% 0%, rgba(255,255,255,0.5), rgba(255,255,255,0) 60%),
+      repeating-linear-gradient(0deg, rgba(120,96,54,0.028) 0 1px, rgba(0,0,0,0) 1px 4px),
+      linear-gradient(180deg, #f8f2e4, #eadfc7);
     border-radius: 2px; transform: rotate(-1.3deg);
-    box-shadow: 0 10px 22px rgba(48,32,12,0.28), inset 0 0 0 1px rgba(120,92,48,0.14);
+    box-shadow:
+      0 1px 1px rgba(48,32,12,0.22), 0 5px 12px rgba(48,32,12,0.22),
+      inset 0 0 0 1px rgba(120,92,48,0.14);
   }
-  /* washi tape at two corners of the plate */
+  /* the label is printed stationery, so it carries a hairline rule inside its edge */
+  .nb-cover-plate > .nb-cover-rule {
+    position: absolute; inset: 7px; border: 1px solid rgba(120,92,48,0.22);
+    border-radius: 1px; pointer-events: none;
+  }
+  /* washi tape at two corners of the plate, torn off the roll rather than cut */
   .nb-cover-plate::before, .nb-cover-plate::after {
-    content: ""; position: absolute; width: 58px; height: 20px;
-    background: rgba(214,196,150,0.6); box-shadow: 0 1px 2px rgba(60,44,20,0.22);
+    content: ""; position: absolute; width: 62px; height: 21px;
+    background:
+      repeating-linear-gradient(90deg, rgba(255,252,238,0.2) 0 1px, rgba(0,0,0,0) 1px 3px),
+      linear-gradient(180deg, rgba(236,220,176,0.86), rgba(208,186,136,0.82));
+    box-shadow: 0 1px 2px rgba(60,44,20,0.22);
+    clip-path: polygon(3% 0, 100% 0, 97% 22%, 100% 46%, 96% 70%, 100% 100%,
+      4% 100%, 0 74%, 3% 50%, 0 26%);
   }
   .nb-cover-plate::before { top: -9px; left: -14px; transform: rotate(-24deg); }
   .nb-cover-plate::after  { bottom: -9px; right: -14px; transform: rotate(-24deg); }
@@ -5503,7 +5587,7 @@
   }
   .nb-cover-kicker {
     margin: 0 0 6px; font-family: var(--type); font-size: calc(10px + var(--text-size-adjust)); letter-spacing: 2.5px;
-    text-transform: uppercase; color: var(--ink-soft);
+    text-transform: uppercase; color: #7b7062;
   }
   .nb-cover-title {
     margin: 0; font-family: var(--hand); font-weight: 700; line-height: 1.02;
@@ -5513,8 +5597,23 @@
   .nb-cover-gold { color: var(--ink-accent); }
   .nb-cover-sub {
     margin: 12px 0 0; font-family: var(--type); font-size: calc(11px + var(--text-size-adjust)); letter-spacing: 0.6px;
-    color: var(--ink-soft);
+    color: #7b7062;
   }
+  /* Dark notebook: the same object, seen under a lower lamp. The label keeps its cream
+     stock, so only the era accent needs pulling down to stay legible on it. */
+  :root[data-theme="dark"] .nb-cover {
+    background:
+      linear-gradient(300deg, rgba(60,48,28,0.5), rgba(60,48,28,0) 22px),
+      linear-gradient(160deg, #948871 0%, #857a65 60%, #726855 100%);
+  }
+  :root[data-theme="dark"] .nb-cover-board,
+  :root[data-theme="dark"] .nb-cover-spine,
+  :root[data-theme="dark"] .nb-cover-corner,
+  :root[data-theme="dark"] .nb-cover-elastic,
+  :root[data-theme="dark"] .nb-cover-ribbon { filter: brightness(0.62) saturate(0.9); }
+  :root[data-theme="dark"] .nb-cover-plate,
+  :root[data-theme="dark"] .nb-cover-star { filter: brightness(0.76); }
+  :root[data-theme="dark"] .nb-cover-gold { filter: brightness(0.6) saturate(1.2); }
 
   /* Opening-the-notebook reveal — once the data loads, the closed cover is cloned into a
      real page-flip sheet (see revealNotebook) and turned away on its left spine with the
