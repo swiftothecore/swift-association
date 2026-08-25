@@ -20,29 +20,36 @@
    Loaded as its own module from index.html rather than through app.js: the cover is on screen
    before app.js has finished booting, and this has no business waiting for game data. */
 
-// INTEGRATION POINT, one line. js/stickers.stub.js is a placeholder carrying the fifteen
-// drawings; when the real js/stickers.js lands, change this path and delete the stub.
-import { STICKERS } from "./stickers.stub.js";
+import { STICKERS } from "./stickers.js";
+import { loadStickers } from "./storage.js";
 import { mulberry32, fnv1a } from "./util.js";
 
 /* ---------- The numbers ---------- */
 
-// The density ceiling, picked by looking: scripts/stickers/sticker-density.html puts 4, 6, 8,
-// 12 and 15 side by side on the real cover. This is the desk-scatter failure mode in a smaller
-// frame. The bare kraft between the stickers is what makes each one read as a thing somebody
-// stuck on, and the board's grain, its rubbed corners and its lit cut edge are all doing
-// visible work that a crowd buries.
+// The density ceiling: how many of the earned set the cover will carry. Fifteen, which is
+// the whole drawn set today, so on a desktop cover every sticker a player has earned is on
+// the notebook and this number is not currently taking anything away.
 //
-// Eight is the last count that still reads as a field with things on it. At twelve the strip
-// above the title plate has closed into a row and the plate, which is the most important thing
-// on that surface, is being crowded by it; at fifteen the kraft has stopped being the subject
-// and the cover is a sticker sheet. Four and six are also good and simply quieter, so six is
-// the conservative move if this ever feels loud.
+// It is not simply absent, and it must not be removed, for two reasons. The cover is not one
+// size: at 375px the field only holds eleven of the fifteen slots at the 64px floor, so a
+// ceiling is already biting there and the oldest-first rule below is already deciding what
+// shows. And the set is going to grow past fifteen when the coincidence stickers land (see
+// STICKERS.md), at which point this starts governing the desktop cover too.
 //
-// The count is not the only thing holding it up: the packer spreads all fifteen slots over the
-// whole field (see the best-candidate sampling below), so the arbitrary handful a given player
-// has earned lands scattered rather than rafted. Raise this and that stops being enough.
-let COVER_MAX = 8;
+// What was measured, since it is the thing nobody should have to re-derive: on the desktop
+// cover the composition breaks between eight and twelve. At twelve the strip above the title
+// plate closes into a row and crowds the plate, which is the most important thing on that
+// surface; at fifteen the kraft has stopped being the subject and the cover reads as a sticker
+// sheet rather than as a notebook somebody owns. Corey looked at all five densities on
+// scripts/stickers/sticker-density.html and chose the full set anyway, which is a taste call
+// about wanting the collection visible, not an oversight. If the cover ever feels loud, eight
+// is the number this was measured at and six is the quiet one.
+//
+// The count was never the only thing holding it up. The packer spreads all fifteen slots over
+// the whole field (see the best-candidate sampling below), so an arbitrary handful lands
+// scattered rather than rafted. That work is what keeps a partial set looking right, and it
+// matters more, not less, now that the ceiling is not doing any trimming on desktop.
+let COVER_MAX = 15;
 
 // Never below 44 (that size belongs to the margin doodles, a family these must not converge
 // with) and 64 is the real floor: below it the crowded drawings stop being their object and
@@ -193,17 +200,11 @@ function layout(geo) {
 
 /* ---------- Which ones are on the cover ---------- */
 
-// STUB: the earned map. Shape is { [stickerId]: isoDate }, exactly loadStickers() in
-// js/storage.js. Read straight off the key here rather than imported, so this module stays
-// independent of the game's boot; at integration this becomes `loadStickers()`.
-const STICKERS_KEY = "swiftSongAssociation.stickers";
+// What the player has earned: { [stickerId]: isoDate }, the same store the keepsakes drawer
+// reads. The dev override stands in front of it so a density can be tried without touching
+// the notebook's real record.
 function earnedMap() {
-  if (devPick) return devPick;
-  try {
-    const raw = localStorage.getItem(STICKERS_KEY);
-    if (raw) { const o = JSON.parse(raw); if (o && typeof o === "object") return o; }
-  } catch (e) { /* ignore */ }
-  return {};
+  return devPick || loadStickers();
 }
 
 // The ceiling picks by EARN ORDER, oldest first: the cover is the handful you stuck on as you
@@ -344,6 +345,14 @@ function boot() {
   const STEP = 32, LIMIT = 4000;
   const chase = () => { if (attempt()) return; waited += STEP; if (waited < LIMIT) setTimeout(chase, STEP); };
   chase();
+  // Once more when the webfonts land. The title plate is sized by its own text, so measuring
+  // it against the fallback face gives a plate of the wrong height and a no-go mask that is
+  // wrong with it: on the density board, placing before the fonts settled cost the fullest
+  // cover two of its fifteen slots. Re-placing is free and invisible, since the layout is a
+  // pure function of the geometry, so an unchanged plate re-deals exactly what was there.
+  if (document.fonts && document.fonts.ready) {
+    document.fonts.ready.then(() => { lastSize = ""; attempt(); });
+  }
   // A resize while the cover is still up re-measures the field. The layer is rebuilt, not
   // transitioned, so this stays true: nothing here animates.
   if (typeof ResizeObserver === "function") new ResizeObserver(attempt).observe(loading);
