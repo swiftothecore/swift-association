@@ -479,6 +479,9 @@ function applySettings() {
     writeCtaLabel(playCta, activeCtaLabel());
   }
   sfx.setEnabled(!!settings.sound);   // sound gate lives in js/sound.js
+  // The boombox only pays out for a run played with the sound on, so turning it off mid-run
+  // spends the flag. Turning it back ON does not re-arm it: the next run does that.
+  if (!settings.sound) runSoundOn = false;
   paintSoundGear();                   // the corner icon is a view of settings.sound, never its own state
   refreshSnow();   // December snowfall follows the reduce-motion setting live
   refreshRain();   // midnight rain follows the reduce-motion setting live too
@@ -4391,6 +4394,56 @@ function checkSessionStickers() {
   if (first && newest && sessionAlbums.has(first) && sessionAlbums.has(newest)) {
     earnSticker("rocking-horse");
   }
+}
+
+/* ---------- Sticker triggers that read a finished run ---------- */
+
+// Boombox — a full run played with the sound on. The sound ships OFF, so the whole feat is
+// having found the switch. Armed at resetRunState from the live setting and cleared the moment
+// the sound goes back off, so flipping it on at the results screen does not count.
+let runSoundOn = false;
+
+// The two run-shaped stickers, folded from every end path that counts as a finished game:
+// classic/infinite/daily, Challenges, Album Focus, Custom and the guest shelf, all of which pass
+// through endGame. Deliberately NOT the bonus shelf or Ruthless: those run their own clocks with
+// no difficulty behind them, so neither question means anything there.
+function foldRunStickers() {
+  if (devNoLog) return;
+  if (runSoundOn && settings.sound) earnSticker("boombox");
+  // Lavender sprig — a run on the clock that never once reached its tense final seconds.
+  // gameHitRedZone is the same reading the tension vignette and the countdown tick work off.
+  // The seconds check excludes Relaxed and any clockless Custom preset, where there is no clock
+  // to stay away from and the sticker would be free.
+  if (currentMode.seconds > 0 && !gameHitRedZone) earnSticker("lavender-sprig");
+}
+
+// Champagne coupe — a run that landed exactly one page short of the best already on that board.
+// Exactly one, not "near": the near miss is the whole joke. Read from the board BEFORE this run
+// folds into it, or a new best would compare against itself.
+function noteNearMiss(bestBefore, thisScore) {
+  if (bestBefore > 0 && thisScore === bestBefore - 1) earnSticker("champagne-coupe");
+}
+
+// Band-aid — winning a kind of run that beat you the last time you played it. "A kind" is the
+// history token, so every difficulty, every challenge and every record keeps its own thread and
+// the wound is always fresh: lose one, win the next.
+//
+// Deliberately NOT "a challenge you previously lost", which is what the artwork suggests and
+// which locks out for good the day the last challenge on the roster is defeated. Nothing here
+// can run out.
+//
+// Won-ness is stamped on the history row (`w`) by the end path that knows it rather than derived
+// back out of s/n here: a challenge is won by clearing its target and a classic run by a
+// majority, and one formula over both would be wrong for at least one of them. Rows written
+// before this shipped carry no `w` at all and are skipped rather than guessed at.
+// `same` narrows "the same kind" beyond the token where a token is shared: a challenge and its
+// dark side both log as "chl-<id>" and are told apart by the row's own `dk` flag, and they are
+// separate threads, since beating the base card is no answer to the dark one having beaten you.
+function noteRunOutcome(type, token, won, same) {
+  if (devNoLog || !token || won == null) return;
+  const prior = loadHistory().find((h) => h && h.t === type && h.m === token && h.w != null
+    && (!same || same(h)));
+  if (won && prior && !prior.w) earnSticker("band-aid");
 }
 
 // The sticker shelf: its own lead, its own counter and its own grid, sitting BELOW the polaroid
@@ -10318,6 +10371,7 @@ function resetRunState() {
   lyricAnswerSongs = [];
   gameTimeSum = 0;
   gameHitRedZone = false;
+  runSoundOn = settings.sound;    // the boombox: was the sound already on when this run began
   rareStreak = 0;
   gameFuzzyMatches = 0;
   gameTimedRounds = 0;
@@ -12714,6 +12768,19 @@ function endChallenge() {
     if (insuranceRuleActive() && insuranceTokens > 0) score += insuranceTokens * riskTokenValue();
   }
 
+  // Hoisted above the history append so the row can carry whether the challenge was actually
+  // beaten (see noteRunOutcome). Nothing between here and its old home touches the score; the
+  // risk settle, which does, has already run.
+  const won = challengeWinCheck(c);
+  // The two challenge stickers, both read off THIS run rather than off the board, which is what
+  // keeps them repeatable: a dark side beaten a second time still earns the queen.
+  if (!devNoLog) {
+    if (won && challengeDark) earnSticker("chess-queen");
+    // Champagne coupe — one page short of this card's own best. The dark side keeps its own.
+    const cbest = challengeRecord(c.id);
+    noteNearMiss((challengeDark ? cbest.darkBest : cbest.best) || 0, score);
+  }
+
   // Challenges count toward the GLOBAL/catalogue stores only — the chronological
   // history log, the lifetime catalogue tally (Songs/Words Discovered, Favourite,
   // Nemesis), and the cross-game lifetime metrics. They deliberately do NOT touch
@@ -12727,6 +12794,9 @@ function endChallenge() {
     // is the honest 0-13 reading of the same run, and the bead total is the challenge's own
     // currency, kept on its record and its results card.
     const logged = riskRuleActive() ? roundResults.filter(Boolean).length : score;
+    // A dark run is its own thread: beating the base card is no consolation for the dark one
+    // having beaten you, and the row already carries `dk` to tell them apart.
+    noteRunOutcome("challenge", "chl-" + c.id, won, (h) => !!h.dk === !!challengeDark);
     appendHistory({
       s: logged, c: logged, n: roundResults.length,
       // Token stays "chl-<id>" so modeLabel keeps naming the challenge; the dark side is a
@@ -12734,6 +12804,7 @@ function endChallenge() {
       // and degrade the label to a bare "Challenge". Surfacing `dk` comes with the UI.
       m: "chl-" + c.id, t: "challenge",
       ...(challengeDark ? { dk: 1 } : {}),
+      w: won ? 1 : 0,
       d: new Date().toISOString(), tm: runTime,
       ...(verseBonus > 0 ? { v: verseBonus } : {}),
       ...(hintsUsed > 0 ? { h: 1 } : {}),
@@ -12771,7 +12842,6 @@ function endChallenge() {
   $("verseAnthology").style.display = "none";
   hideNewBestBanner();
 
-  const won = challengeWinCheck(c);
   // Bank the run before the defeat is recorded, so the winning run itself counts toward the
   // achievement tally. A seventh-run win does not offer a return because the challenge pays
   // its ordinary first-defeat token instead.
@@ -12908,11 +12978,16 @@ function endAlbumFocus() {
   markRunBreadth(null, "album");   // one album, not a difficulty of the main game — the day and the shelf breadth count, the token doesn't
   const hintFree = hintsUsed === 0;
   let rec = albumFocusRecord(album);
+  // A record is won by clearing its target. The board only marks it BEATEN on a hint-free run,
+  // which is a purity rule about the mark rather than about the run, so it is left out here.
+  const won = score >= ALBUM_FOCUS_TARGET;
+  if (!devNoLog) noteNearMiss(rec.best || 0, score);   // champagne coupe, off the pre-fold board
   if (!devNoLog) {
     const runTime = currentMode.seconds > 0 ? gameTimeSum : null;
+    noteRunOutcome("album", "af-" + album, won);   // before the append, or it reads this run
     appendHistory({
       s: score, c: score, n: roundResults.length,
-      m: "af-" + album, t: "album",
+      m: "af-" + album, t: "album", w: won ? 1 : 0,
       d: new Date().toISOString(), tm: runTime,
       ...(verseBonus > 0 ? { v: verseBonus } : {}),
       ...(hintsUsed > 0 ? { h: 1 } : {}),
@@ -16611,6 +16686,9 @@ function submitAnswer(song, isTimeout) {
   if (isTimeout && correctStreak >= 5) earnPolaroid("goat-remix");
   const streakBefore = correctStreak;
   correctStreak = correct ? correctStreak + 1 : 0;
+  // The "22" hat — twenty-two in a row in Infinite. The number IS the reference, so it is that
+  // number and not a round figure near it, and Infinite is the only board with room to run.
+  if (gameType === "infinite" && correctStreak >= 22 && !devNoLog) earnSticker("hat-22");
   // The margin numeral moves with the verdict; the glitter is thrown later, from the
   // feedback, so it lands behind the verdict rather than on top of it.
   foldStreakMark(correct, streakBefore);
@@ -17322,6 +17400,7 @@ function endGame() {
   clearWagerStake();  // a run can end with the stake panel still open (a loss settled elsewhere)
   resetTension();
   playRunFlourish();  // before the routing below, so every sandboxed mode's end sounds too
+  foldRunStickers();  // same reason: Challenges, Album Focus, Custom and the guest shelf all pass here
   applyEra(FINALE_ERAS[Math.floor(Math.random() * FINALE_ERAS.length)]);
 
   // Challenges and Album Focus are sandboxed — their own self-contained results path,
@@ -17357,10 +17436,16 @@ function endGame() {
 
   // Log every finished run to the chronological history (classic / infinite / daily).
   // devNoLog (a dev cheat) skips every challenge-return fold so test runs don't dirty the data.
+  // Won-ness, for the band-aid sticker, stamped on the row rather than re-read out of the score
+  // later. Infinite carries none: a run there ends when the lives run out, so there is no such
+  // thing as winning one and it never qualifies either way.
+  const runWon = isInfinite ? null : score >= Math.ceil(TOTAL_ROUNDS / 2);
+  if (!devNoLog) noteRunOutcome(gameType, isDaily ? "daily" : mode, runWon);   // before the append, or it reads this run
   if (!devNoLog) appendHistory({
     s: boardScore, c: score, n: roundsSurvived,
     m: isDaily ? "daily" : mode, t: gameType,
     d: new Date().toISOString(), tm: runTime,
+    ...(runWon != null ? { w: runWon ? 1 : 0 } : {}),
     ...(verseBonus > 0 ? { v: verseBonus } : {}),
     ...(hintsUsed > 0 ? { h: 1 } : {}),
   });
@@ -17631,6 +17716,9 @@ function endGame() {
     if (score === TOTAL_ROUNDS) unlock("perfect-daily");
     if (streak.current >= 7) unlock("daily-streak-7");
     if (streak.current >= 30) unlock("daily-streak-30");
+    // Half-struck matchbook — a fortnight of dailies, because a fortnight is fourteen. It sits
+    // between the two charm rungs rather than on either, so it is its own beat.
+    if (streak.current >= 14) earnSticker("matchbook");
     renderResultRecap();
     renderSkillsRecap();   // (hidden by renderSkillsRecap itself when the daily score is held back)
     dailyRng = null;   // back to Math.random() for any subsequent Classic game
@@ -17657,6 +17745,10 @@ function endGame() {
   // Every positive run folds into your personal records (best-per-mode); a 0 doesn't
   // (it would never be a best). A hinted run is skipped here too — it can't set a PB,
   // though it's always in the history log either way.
+  // Champagne coupe — one page short of the best on this board. Read outside the block below,
+  // which only opens for a run that could actually SET a record: a hinted run can still be the
+  // near miss, and being one short is not a personal best in the first place.
+  if (!devNoLog) noteNearMiss((loadRecords(mode)[0] || {}).score || 0, boardScore);
   if (boardScore > 0 && hintsUsed === 0 && !devNoLog) {
     const recTime = isInfinite ? null : runTime;   // infinite ranks by rounds, not speed
     const prevBest = loadRecords(mode)[0];
@@ -17762,6 +17854,13 @@ function quitGame() {
       unlock("give-up-after-12-before-13");
     }
   }
+
+  // Jewel bathtub — walking out of a run that was going perfectly. Ahead, not losing, out of the
+  // tub anyway. At least one page has to have been played: quitting before you have answered
+  // anything is not a perfect score, it is no score. Deliberately outside the charm guard above:
+  // the sticker fires from a challenge too, since it records a decision rather than a result and
+  // pays nothing a sandbox exists to protect (see STICKERS.md).
+  if (!devNoLog && roundResults.length > 0 && roundResults.every(Boolean)) earnSticker("jewel-bathtub");
 
   // Save the progress made before quitting, so a partial run still credits the
   // lifetime stats (see foldRunProgress).
@@ -20650,6 +20749,14 @@ function buildDevApi() {
     // is off, so the palette can be auditioned; all() walks every sound in turn.
     sound: {
       names: () => sfx.names.slice(),
+      // The master switch. The audition buttons force each sample PAST the setting, which is
+      // what they are for, but the boombox sticker asks for a run genuinely played with the
+      // sound on, and that has to be the real setting rather than a forced play.
+      enable: (on) => {
+        settings.sound = on == null ? !settings.sound : !!on;
+        saveSettings(settings); applySettings();
+        return settings.sound;
+      },
       play: (n) => sfx.play(n, true),
       all: (gapMs = 800) => sfx.names.forEach((n, i) => setTimeout(() => sfx.play(n, true), i * gapMs)),
       // The countdown is a sequence, not a sound: play() only ever gives you one tick of
@@ -22052,6 +22159,28 @@ function buildDevApi() {
         return [...sessionAlbums];
       },
       forget: () => { sessionSongs = new Map(); sessionAlbums = new Set(); return "session ledger cleared"; },
+      // Band-aid needs a LOSING run of the same kind already in the log, and losing one on
+      // purpose to test winning the next is two runs of grinding. This writes that row directly.
+      // Defaults to the kind you are about to play: classic on the picked difficulty.
+      seedLoss: (type, token) => {
+        const t = type || (gameType === "start" ? "classic" : gameType) || "classic";
+        const m = token || (t === "daily" ? "daily" : boardMode());
+        appendHistory({ s: 0, c: 0, n: TOTAL_ROUNDS, m, t, w: 0, d: new Date().toISOString(), tm: null });
+        return `logged a loss: ${t} / ${m}`;
+      },
+      // Which kind the band-aid is currently owed on: every token whose most recent settled row
+      // is a loss. Winning one of these is the whole trigger.
+      wounds: () => {
+        const seen = new Set(), out = [];
+        for (const h of loadHistory()) {
+          if (!h || h.w == null) continue;
+          const key = h.t + "/" + h.m + (h.dk ? ":dark" : "");
+          if (seen.has(key)) continue;
+          seen.add(key);
+          if (!h.w) out.push(key);
+        }
+        return out;
+      },
     },
     // Album Focus — force any album's board state without grinding runs, then eyeball
     // the pinned board (fresh / played / beaten / perfected + the gold-leaf treatment).

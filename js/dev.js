@@ -505,7 +505,9 @@ export function initDev(api) {
         btn("strike", () => toast("strike: " + api.sound.strike())),
         btn("flourish", () => api.sound.flourish()),
         btn("flourish + charm", () => api.sound.flourish(true)),
-        btn("state", () => toast("audio: " + api.sound.state())))));
+        btn("state", () => toast("audio: " + api.sound.state())),
+        // The real setting, not a forced play: the boombox sticker wants a run played with it on.
+        btn("sound on/off", () => toast("sound " + (api.sound.enable() ? "on" : "off"))))));
 
   // ---- Date ------------------------------------------------------------------
   // Pretend it's another day. One override behind every dated surface at once — the
@@ -673,6 +675,10 @@ export function initDev(api) {
     row("session", btn("name one per album", () => toast("albums: " + api.stickers.fill().length)),
         btn("peek ledger", () => { console.log("[dev] session", api.stickers.session()); toast("ledger in console"); }),
         btn("forget", () => { api.stickers.forget(); toast("ledger cleared"); }, "warn")),
+    // Band-aid wants a loss already in the log for the kind you are about to win. "wounds" lists
+    // every kind currently owing one, which is otherwise invisible.
+    row("band-aid", btn("log a loss (this kind)", () => toast(api.stickers.seedLoss())),
+        btn("wounds", () => { const w = api.stickers.wounds(); console.log("[dev] wounds", w); toast(w.length + " kind(s) owed"); })),
     row(albumSel, shelfDiffSel, btn("play album", () => api.album.play(albumSel.value, shelfDiffSel.value)),
         btn("open albums", () => api.album.open())),
     row(shelfStateSel, btn("fill albums", () => { api.album.fill(shelfStateSel.value, shelfDiffSel.value); toast("album board filled"); }),
