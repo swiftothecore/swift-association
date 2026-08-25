@@ -128,6 +128,7 @@ export const SEARCH_KEY = "swiftSongAssociation.search";                // Swift
 export const MASTERY_KEY = "swiftSongAssociation.mastery";              // skills + mastery progression — { skills:{...xp}, masteryXp, unlocked:{[rewardId]:isoDate} }
 export const CUSTOM_KEY = "swiftSongAssociation.custom";               // player-authored modes — { presets:[{id,name,mode}], activeId }
 export const KEEPSAKES_KEY = "swiftSongAssociation.keepsakes";         // earned collectibles — { [polaroidId]: isoDate } (unlock time, mirrors achievements)
+export const STICKERS_KEY = "swiftSongAssociation.stickers";           // earned stickers: { [stickerId]: isoDate }, same shape as the keepsakes store
 export const BREADTH_KEY = "swiftSongAssociation.modesSeen";           // { [token]: true } — every mode/difficulty combination ever finished, for "Explorer"
 export const WEEKDAYS_KEY = "swiftSongAssociation.weekdaysPlayed";     // { [0-6]: true } — which weekdays you have finished a game on, for "Seven"
 // The calendar ledger — { days: { [YYYY-MM-DD]: true }, months: { [1-12]: true } }. Deliberately
@@ -152,6 +153,13 @@ export const ACH_FOLD_KEY = "swiftSongAssociation.charmFolds";         // [secti
 // "every polaroid found" over a counter reading 21 / 22.
 export const POLAROID_DEVELOP_MS = 13 * 60 * 1000;   // 13 real minutes
 export const POLAROID_TOTAL = 21;
+
+// Stickers, the die-cut vinyl set (objects + SVGs live in js/stickers.js). A second
+// collectible beside the polaroids, never mixed into their grid: polaroids develop, stickers
+// are printed and arrive finished. STICKER_TOTAL is the drawer's counter denominator and sits
+// at the true count of the drawn set, for the same reason POLAROID_TOTAL does: a denominator
+// running ahead of what exists would report "every sticker found" over a short count.
+export const STICKER_TOTAL = 15;
 
 // Every persisted key shares this namespace; export/import and "clear everything"
 // sweep all keys under it.

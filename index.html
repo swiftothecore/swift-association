@@ -78,7 +78,7 @@ if (location.pathname.endsWith('/index.html')) {
 <link rel="preload" href="fonts/courierprime-700-latin.woff2" as="font" type="font/woff2" crossorigin />
 <link rel="preload" href="fonts/courierprime-italic-latin.woff2" as="font" type="font/woff2" crossorigin />
   <link rel="stylesheet" href="ink.css" />
-  <link rel="stylesheet" href="styles.css?v=70" />
+  <link rel="stylesheet" href="styles.css?v=74" />
 </head>
 <body data-era="gold">
 <!-- Hand-drawn wobble for the penned achievement charms. Referenced by .charm svg
@@ -137,6 +137,47 @@ if (location.pathname.endsWith('/index.html')) {
     <stop offset="0.52" stop-color="#8d8779"/>
     <stop offset="1" stop-color="#ddd8cb"/>
   </linearGradient>
+  <!-- The sticker die cut (see js/stickers.js and scripts/stickers/STICKERS.md). One filter,
+       not fifteen hand-drawn outlines: it dilates the artwork's own alpha, hardens the soft
+       edge back to a clean line, floods it cream and drops it behind, so every sticker gets
+       the same vinyl border and the same lift whatever its shape. It is also what stops the
+       dark stickers (the hat, the matchbook, the queen) dissolving on dark paper. Applied via
+       .sticker svg in styles.css, which must stay overflow: visible or the border is clipped. -->
+  <filter id="stickCut" x="-30%" y="-30%" width="160%" height="160%" color-interpolation-filters="sRGB">
+    <feMorphology in="SourceAlpha" operator="dilate" radius="2.6" result="fat"/>
+    <feGaussianBlur in="fat" stdDeviation="1.5" result="soft"/>
+    <feComponentTransfer in="soft" result="mask">
+      <feFuncA type="linear" slope="16" intercept="-4.6"/>
+    </feComponentTransfer>
+    <feFlood flood-color="#fbf6e9" result="paper"/>
+    <feComposite in="paper" in2="mask" operator="in" result="cut"/>
+    <feDropShadow in="cut" dx="0.7" dy="1.6" stdDeviation="1.2" flood-color="#2b2722" flood-opacity="0.3" result="lift"/>
+    <feMerge><feMergeNode in="lift"/><feMergeNode in="SourceGraphic"/></feMerge>
+  </filter>
+  <!-- The locked sticker: the same die cut, but the artwork itself flattened to one solid
+       black shape. The silhouettes are the puzzle, so this gives away the outline and nothing
+       else. Done as a filter rather than by overriding fills in CSS because the artwork sets
+       fill and opacity as presentation attributes on nearly every path, and half of them are
+       fill="none" detail lines: forcing colour per element blobs those open curves shut. This
+       reads the RENDERED alpha instead, so what goes black is exactly what was drawn. The
+       slope on the alpha ramp pulls the deliberately faint parts (the UFO's beam steps, the
+       0.3-opacity seams) up to solid while leaving a short edge ramp for antialiasing. -->
+  <filter id="stickCutLocked" x="-30%" y="-30%" width="160%" height="160%" color-interpolation-filters="sRGB">
+    <feMorphology in="SourceAlpha" operator="dilate" radius="2.6" result="fat"/>
+    <feGaussianBlur in="fat" stdDeviation="1.5" result="soft"/>
+    <feComponentTransfer in="soft" result="mask">
+      <feFuncA type="linear" slope="16" intercept="-4.6"/>
+    </feComponentTransfer>
+    <feFlood flood-color="#fbf6e9" result="paper"/>
+    <feComposite in="paper" in2="mask" operator="in" result="cut"/>
+    <feDropShadow in="cut" dx="0.7" dy="1.6" stdDeviation="1.2" flood-color="#2b2722" flood-opacity="0.3" result="lift"/>
+    <feComponentTransfer in="SourceAlpha" result="hard">
+      <feFuncA type="linear" slope="6"/>
+    </feComponentTransfer>
+    <feFlood flood-color="#221e19" result="ink"/>
+    <feComposite in="ink" in2="hard" operator="in" result="sil"/>
+    <feMerge><feMergeNode in="lift"/><feMergeNode in="sil"/></feMerge>
+  </filter>
 </svg>
 <!-- PAGE MARKS — the doodle beside each page's handwritten title, drawn once here and
      <use>d per screen. Same pen as the achievement charms (see .page-mark in styles.css,

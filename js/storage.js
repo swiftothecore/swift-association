@@ -14,6 +14,7 @@ import {
   BONUS_KEY, RUTHLESS_KEY,
   CUSTOM_KEY, CUSTOM_DEFAULT_MODE,
   KEEPSAKES_KEY,
+  STICKERS_KEY,
   MASTERY_KEY, SKILL_IDS, MASTERY_REWARDS, MASTERY_GATE,
   skillLevelFromXp, masteryLevelFromXp,
   MODES, MODE_ORDER, TOTAL_ROUNDS, ACH_ID_MIGRATIONS,
@@ -110,6 +111,23 @@ export function saveKeepsakes(earned) {
 }
 export function resetKeepsakes() {
   try { localStorage.removeItem(KEEPSAKES_KEY); } catch (e) { /* ignore */ }
+}
+
+/* ---------- Stickers (the die-cut vinyl set) ---------- */
+// Same shape as the keepsakes store: { [stickerId]: isoDate }. Stickers have no develop
+// clock, so the date is kept only as the earn record, for ordering and for the drawer.
+export function loadStickers() {
+  try {
+    const raw = localStorage.getItem(STICKERS_KEY);
+    if (raw) { const o = JSON.parse(raw); if (o && typeof o === "object") return o; }
+  } catch (e) { /* ignore */ }
+  return {};
+}
+export function saveStickers(earned) {
+  try { localStorage.setItem(STICKERS_KEY, JSON.stringify(earned)); } catch (e) { /* ignore */ }
+}
+export function resetStickers() {
+  try { localStorage.removeItem(STICKERS_KEY); } catch (e) { /* ignore */ }
 }
 
 /* ---------- Challenges mode (progress + tokens) ---------- */

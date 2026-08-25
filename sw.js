@@ -16,7 +16,7 @@
  * Paths are relative so the worker works at the site root (swiftassociation.com)
  * and under any project subpath, without hardcoding the origin.
  */
-const CACHE = "stta-v55";
+const CACHE = "stta-v56";
 // The game's panel routes. These are sections of index.html, not files, so a navigation to one
 // has nothing on the server to fetch: 404.html bounces it back through a ?/slug marker. Once
 // this worker is installed we can do better and answer with index.html directly, so a deep link
@@ -65,6 +65,10 @@ const ASSETS = [
   // deskprops.js and a half-cached pair would throw on an offline load.
   "js/scatter.js",
   "js/deskprops.js",
+  // The polaroid and sticker artwork. app.js imports both at load, so an uncached copy
+  // breaks a cold offline start rather than just the keepsakes drawer.
+  "js/polaroids.js",
+  "js/stickers.js",
   // The sound palette (opt-in sfx; see js/sound.js for sources + licences).
   "sounds/correct.mp3",
   "sounds/wrong.mp3",

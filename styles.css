@@ -1611,6 +1611,59 @@
   }
   @media (prefers-reduced-motion: reduce) { .keep-cell { transform: none; } }
 
+  /* Stickers: the die-cut vinyl shelf, a second family in the keepsakes drawer and never
+     mixed into the polaroid wall above it. The art (js/stickers.js) carries fill as a
+     presentation attribute on every path; .ln only ever sets STROKE, so a fill is never
+     overridden from here. The die cut and the locked silhouette are the two shared filters
+     in index.html, applied once per sticker rather than drawn into fifteen SVGs. */
+  .stick-shelf { margin: 26px 0 4px; padding-top: 20px; border-top: 1px solid var(--rule-soft, rgba(43, 39, 34, 0.14)); }
+  .sticker { display: block; line-height: 0; transform: rotate(var(--rot, 0deg)); }
+  .sticker svg {
+    /* overflow MUST stay visible: the die cut is a dilation drawn outside the artwork's own
+       bounds, so a clipped sticker loses its border on every side that touches the box. */
+    display: block; width: 100%; height: auto; overflow: visible;
+    filter: url(#stickCut);
+  }
+  .sticker-locked svg { filter: url(#stickCutLocked); }
+  .sticker .ln { stroke: #2b2722; stroke-width: 2.3; stroke-linecap: round; stroke-linejoin: round; }
+  .sticker .ln.t { stroke-width: 1.4; }   /* interior detail */
+  .sticker .ln.h { stroke-width: 1.7; }   /* between the two */
+  .stick-grid {
+    /* 84px of artwork per cell. The floor is 64px and it is not a suggestion: below it the
+       crowded stickers (the bathtub, the matchbook) stop being their object and become "an
+       object with detail", and at doodle size the whole family fails. */
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(112px, 1fr));
+    gap: 20px 12px; align-items: start; padding: 16px 4px 12px; justify-items: center;
+  }
+  .stick-cell { display: flex; flex-direction: column; align-items: center; gap: 7px; width: 100%; max-width: 118px; }
+  .stick-cell .sticker { width: 84px; }
+  /* The caption lines are flex items, so pin them to the cell: without this a long source
+     line would be free to take its own min-content width and lean over the stickers either
+     side of it. The break-word is for the narrow mobile column, where a single long word
+     ("Department") is wider than the cell it sits under. */
+  .stick-cap { display: flex; flex-direction: column; align-items: center; gap: 1px; text-align: center; max-width: 100%; }
+  .stick-cap-name, .stick-cap-sub { max-width: 100%; overflow-wrap: break-word; }
+  .stick-cap-name {
+    font-family: var(--hand); font-weight: 600; font-size: calc(16px + var(--text-size-adjust));
+    line-height: 1.05; color: var(--ink);
+  }
+  .stick-cap-sub {
+    font-family: var(--hand); font-weight: 500; font-size: calc(12px + var(--text-size-adjust));
+    line-height: 1.1; color: var(--ink-soft);
+  }
+  /* The unlock toast borrows the charm surface, so the sticker sits where the charm bead
+     would. Held at 64px: the floor, and the largest a toast can carry. */
+  .toast-sticker .sticker { width: 64px; flex: 0 0 auto; }
+  @media (max-width: 560px) {
+    /* Three across, matching the polaroid wall's density above it. 68px of artwork is still
+       above the 64px floor; going to two fat columns instead left the shelf reading as a
+       list of objects rather than as a sheet of stickers. */
+    .stick-grid { grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 16px 8px; }
+    .stick-cell { max-width: 100px; }
+    .stick-cell .sticker { width: 68px; }
+  }
+  @media (prefers-reduced-motion: reduce) { .sticker { transform: none; } }
+
   .rec-group-label {
     font-family: var(--type); font-size: calc(10px + var(--text-size-adjust)); letter-spacing: 1px;
     color: var(--ink-soft); text-transform: uppercase; margin: 24px 0 10px;

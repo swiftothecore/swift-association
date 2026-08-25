@@ -647,6 +647,7 @@ export function initDev(api) {
 
   // ---- Collections and alternate shelves ------------------------------------
   const polaroidSel = select(api.keepsakes.list(), (p) => p.id, (p) => p.name);
+  const stickerSel = select(api.stickers.list(), (s) => s.id, (s) => s.name);
   const albumSel = select(api.STUDIO_ALBUMS, (x) => x, (x) => x);
   const shelfStateSel = select(["fresh", "played", "beaten", "perfect"], (x) => x, (x) => x);
   const shelfDiffSel = select(api.MODE_ORDER, (x) => x, (x) => x);
@@ -658,6 +659,15 @@ export function initDev(api) {
         btn("open keepsakes", () => api.keepsakes.open())),
     row(btn("all developed", () => { api.keepsakes.all(); toast("all polaroids developed"); }),
         btn("clear keepsakes", () => { api.keepsakes.reset(); toast("keepsakes cleared"); }, "warn")),
+    // Stickers share the keepsakes drawer but not the polaroid grid. No trigger is wired yet,
+    // so these buttons are the only way to see one earned. "unlock" is the real path, toast and
+    // chime included; the other two write the store, for flipping the whole shelf between the
+    // black silhouettes and the finished set.
+    row(stickerSel, btn("unlock", () => { api.stickers.earn(stickerSel.value); toast("sticker: " + stickerSel.value); }),
+        btn("relock", () => { api.stickers.remove(stickerSel.value); toast("relocked " + stickerSel.value); }),
+        btn("open drawer", () => api.stickers.open())),
+    row(btn("all stickers", () => { api.stickers.all(); toast("all stickers stuck down"); }),
+        btn("clear stickers", () => { api.stickers.reset(); toast("stickers cleared"); }, "warn")),
     row(albumSel, shelfDiffSel, btn("play album", () => api.album.play(albumSel.value, shelfDiffSel.value)),
         btn("open albums", () => api.album.open())),
     row(shelfStateSel, btn("fill albums", () => { api.album.fill(shelfStateSel.value, shelfDiffSel.value); toast("album board filled"); }),

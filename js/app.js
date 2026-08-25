@@ -48,12 +48,14 @@ import {
   MASTERY_TITLES, MASTERY_TITLE_BY_VALUE, masteryDefaultTitle, MASTERY_ICONS, MASTERY_LEVEL_ICONS, MASTERY_TIER_ICONS, MASTERY_TILE_MARKS,
   skillXpForLevel, skillLevelFromXp, masteryXpForLevel, masteryLevelFromXp,
   POLAROID_DEVELOP_MS, POLAROID_TOTAL,
+  STICKER_TOTAL,
   RANDOM_CATEGORIES, RANDOM_UNPLAYED_WEIGHT,
   STREAK_FLOOR, STREAK_CAP, STREAK_SALT, STREAK_TIERS,
   STREAK_THROW, STREAK_DROP, STREAK_SPIN, STREAK_MS, STREAK_SIZE, STREAK_CONE,
 } from "./config.js";
 import { drawRandom, poolSummary } from "./random.js";
 import { POLAROIDS, POLAROID_BY_ID } from "./polaroids.js";
+import { STICKERS, STICKER_BY_ID } from "./stickers.js";
 import { buildBraceletSVG, trinketPreviewSVG, randomTrinketForBead } from "./bracelet.js";
 import { exportBraceletCard, copyBraceletCard, buildCardSVG, fontFaceCss } from "./braceletcard.js";
 import { exportSleeveCard, copySleeveCard, buildSleeveSVG } from "./sleevecard.js";
@@ -74,6 +76,7 @@ import {
   loadStats, updateStats, totalPlayed,
   loadAchievements, saveAchievements,
   loadKeepsakes, saveKeepsakes, resetKeepsakes,
+  loadStickers, saveStickers, resetStickers,
   loadMode,
   loadDailyResult, saveDailyResult, clearDailyResult, dailyTotals, dailyPlayedDates,
   loadDailyProgress, saveDailyProgress, clearDailyProgress,
@@ -4239,7 +4242,7 @@ function renderKeepsakesPage() {
       keepsakePolaroidHTML(p, { earned, state, tilt: j.tilt, small: true }) + `</div>`;
   }).join("");
 
-  body.innerHTML = intro + counter + `<div class="keep-grid">${tiles}</div>`;
+  body.innerHTML = intro + counter + `<div class="keep-grid">${tiles}</div>` + stickerShelfHTML();
   scheduleKeepsakeDevWatch();   // re-arm the develop watch for the next tile due to finish
 }
 
@@ -4267,6 +4270,115 @@ function scheduleKeepsakeDevWatch() {
 }
 function stopKeepsakeDevWatch() {
   if (keepsakeDevTimer) { clearTimeout(keepsakeDevTimer); keepsakeDevTimer = null; }
+}
+
+/* ---------- Stickers: the die-cut vinyl set (see js/stickers.js) ---------- */
+// The second collectible, and deliberately not a second polaroid. A polaroid develops over
+// thirteen real minutes inside a film frame; a sticker is printed, so it arrives finished and
+// has exactly two states. Locked is a solid black silhouette on the cream die cut: the shapes
+// are a standing puzzle the player is meant to solve, so the outline is the whole hint.
+// The #stickCut / #stickCutLocked filters and the .ln stroke rules are shared (index.html and
+// styles.css), never per sticker, so nothing here emits defs.
+
+// Has the player earned `id`? `earned` is passed in when a caller already has the map.
+function stickerEarned(id, earned) {
+  return !!(earned || loadStickers())[id];
+}
+// How many stickers are stuck down. Counts against what EXISTS (STICKERS), like keepsakeCount.
+function stickerCount(earned) {
+  const map = earned || loadStickers();
+  return STICKERS.reduce((n, s) => n + (map[s.id] ? 1 : 0), 0);
+}
+// A stable per-sticker tilt, hashed from the id, so the shelf reads stuck-down-by-hand rather
+// than gridded and never reshuffles between renders. Same idea as polaroidJitter, smaller
+// numbers: a sticker is pressed flat, not pinned up.
+function stickerTilt(id) {
+  const rng = mulberry32(fnv1a("sticker:" + id));
+  return (rng() * 11 - 5.5).toFixed(2);
+}
+// One sticker at one state. `locked` swaps the die-cut filter for the silhouette variant;
+// nothing else about the markup changes, so the two states share a footprint exactly.
+function stickerMarkup(s, locked) {
+  const cls = "sticker" + (locked ? " sticker-locked" : "");
+  return `<span class="${cls}" style="--rot:${stickerTilt(s.id)}deg" aria-hidden="true">${s.art}</span>`;
+}
+// Re-render the keepsakes drawer if it is open (otherwise a no-op), so an unlock landing while
+// the player is looking at the shelf lands on screen.
+function refreshStickers() {
+  refreshKeepsakes();
+}
+
+// Earn a sticker: stamp the unlock date, fire the charm-style toast and chime, refresh the
+// drawer. Idempotent, so a trigger can fire freely on every run. NOTHING calls this yet except
+// the dev tools; the fifteen triggers are a separate pass (see STICKERS.md).
+function earnSticker(id) {
+  const st = STICKER_BY_ID[id];
+  if (!st) return false;
+  const earned = loadStickers();
+  if (earned[id]) return false;                      // already stuck down
+  earned[id] = new Date().toISOString();
+  saveStickers(earned);
+  showStickerToast(st);
+  playUnlockChime();
+  refreshStickers();
+  return true;
+}
+
+// The sticker unlock toast. Deliberately the CHARM surface, not the keepsake one: the keepsake
+// toast is built around the develop veil and says "developing…", which is a promise a sticker
+// does not make. Same component, same chime, the sticker art where charmMarkup would go.
+function showStickerToast(st) {
+  const layer = $("toastLayer");
+  if (!layer) return;
+  const t = document.createElement("div");
+  t.className = "toast toast-sticker";
+  t.innerHTML = stickerMarkup(st, false) +
+    `<div><div class="t-label">sticker unlocked</div>` +
+    `<div class="t-name">${escapeHtml(st.name)}</div>` +
+    `<div class="t-sub">${escapeHtml(st.sub)}</div></div>`;
+  layer.appendChild(t);
+  scheduleToastDismiss();
+}
+
+// Dev-only: grant `id` without the toast, so a whole shelf can be flooded in one press.
+function devSetSticker(id, on) {
+  if (!STICKER_BY_ID[id]) return "unknown sticker: " + id;
+  const e = loadStickers();
+  if (on) e[id] = new Date().toISOString(); else delete e[id];
+  saveStickers(e);
+  refreshStickers();
+  return stickerEarned(id) ? "earned" : "locked";
+}
+
+// The sticker shelf: its own lead, its own counter and its own grid, sitting BELOW the polaroid
+// wall inside the keepsakes drawer and never mixed into it. Locked cells carry no caption, on
+// purpose: the silhouette is the question, and a name under it would be the answer.
+function stickerShelfHTML() {
+  const earned = loadStickers();
+  const found = stickerCount(earned);
+
+  const intro =
+    `<p class="chall-eyebrow">Your stickers</p>` +
+    `<p class="keep-lead">Die-cut vinyl, earned by noticing things rather than by scoring. ` +
+    `One you have not earned shows as its shape and nothing else, which is the point: work out ` +
+    `what the picture wants and go and do it.</p>`;
+
+  const counter =
+    `<div class="keep-counter"><span class="keep-counter-n">${found}</span>` +
+    `<span class="keep-counter-d">/ ${STICKER_TOTAL}</span>` +
+    `<span class="keep-counter-l">stuck down</span></div>`;
+
+  const cells = STICKERS.map((st) => {
+    const locked = !earned[st.id];
+    const label = locked ? "a sticker not yet earned" : st.name + " · " + st.sub;
+    const cap = locked ? "" :
+      `<span class="stick-cap"><span class="stick-cap-name">${escapeHtml(st.name)}</span>` +
+      `<span class="stick-cap-sub">${escapeHtml(st.sub)}</span></span>`;
+    return `<div class="stick-cell" data-id="${st.id}" data-state="${locked ? "locked" : "earned"}" ` +
+      `title="${escapeHtml(label)}">${stickerMarkup(st, locked)}${cap}</div>`;
+  }).join("");
+
+  return `<div class="stick-shelf">${intro}${counter}<div class="stick-grid">${cells}</div></div>`;
 }
 
 // Read a chosen image file, center-crop it to a square and downscale it to a
@@ -21857,6 +21969,22 @@ function buildDevApi() {
       },
       open: () => openKeepsakes(),                             // jump to the polaroid wall
       reset: () => { resetKeepsakes(); refreshKeepsakes(); updateKeepsakesNav(); },
+    },
+    // Stickers, the die-cut vinyl set. No triggers are wired yet, so this IS the only way to
+    // earn one: `earn` is the real path (toast + chime included) and the rest write the store
+    // directly, for eyeballing the locked silhouette against the finished sticker.
+    stickers: {
+      list: () => { const e = loadStickers(); return STICKERS.map((s) => ({ id: s.id, name: s.name, era: s.era, earned: !!e[s.id], at: e[s.id] || null })); },
+      state: (id) => (STICKER_BY_ID[id] ? (stickerEarned(id) ? "earned" : "locked") : "unknown sticker: " + id),
+      earn: (id) => (earnSticker(id) ? "earned" : devSetSticker(id, true)),   // real path, then a no-op report if already held
+      remove: (id) => devSetSticker(id, false),
+      all: () => {
+        const e = loadStickers(); const now = new Date().toISOString();
+        for (const s of STICKERS) if (!e[s.id]) e[s.id] = now;
+        saveStickers(e); refreshStickers(); return STICKERS.length;
+      },
+      open: () => openKeepsakes(),                             // the shelf lives under the polaroid wall
+      reset: () => { resetStickers(); refreshStickers(); },
     },
     // Album Focus — force any album's board state without grinding runs, then eyeball
     // the pinned board (fresh / played / beaten / perfected + the gold-leaf treatment).
