@@ -668,6 +668,11 @@ export function initDev(api) {
         btn("open drawer", () => api.stickers.open())),
     row(btn("all stickers", () => { api.stickers.all(); toast("all stickers stuck down"); }),
         btn("clear stickers", () => { api.stickers.reset(); toast("stickers cleared"); }, "warn")),
+    // The session ledger is memory-only and dies on reload, so these are the only way to see the
+    // two "in one session" stickers without playing until every record has turned up.
+    row("session", btn("name one per album", () => toast("albums: " + api.stickers.fill().length)),
+        btn("peek ledger", () => { console.log("[dev] session", api.stickers.session()); toast("ledger in console"); }),
+        btn("forget", () => { api.stickers.forget(); toast("ledger cleared"); }, "warn")),
     row(albumSel, shelfDiffSel, btn("play album", () => api.album.play(albumSel.value, shelfDiffSel.value)),
         btn("open albums", () => api.album.open())),
     row(shelfStateSel, btn("fill albums", () => { api.album.fill(shelfStateSel.value, shelfDiffSel.value); toast("album board filled"); }),

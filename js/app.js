@@ -4350,6 +4350,49 @@ function devSetSticker(id, on) {
   return stickerEarned(id) ? "earned" : "locked";
 }
 
+/* ---------- The session ledger ---------- */
+// Every song correctly named since the page was loaded, as title -> album, plus the set of
+// albums those songs came off. Three stickers ask what you have named "in one session" and this
+// is what they read.
+//
+// IN MEMORY ONLY, and never persisted. That is the whole design, not an oversight: a stored
+// tally would keep growing until it satisfied itself on its own, at which point the sticker
+// stops being a coincidence you noticed in one sitting and becomes a lifetime breadth feat,
+// which is charm territory. Reloading the page wipes it, deliberately.
+//
+// Every mode writes to it (Classic, Infinite, Album Focus, Daily, Challenges, Custom, the bonus
+// shelf and Ruthless), because the coincidence is about the SONGS, not about how you reached
+// them. The one exclusion is the guest shelf: a guest run swaps the whole corpus for another
+// artist's catalogue, and its albums have no business in a ledger read against Taylor's records.
+// catalogueCharmsLive() is the same gate the Catalogue charms already use for that reason.
+let sessionSongs = new Map();     // title -> album, first correct naming wins
+let sessionAlbums = new Set();    // the albums those songs came off
+
+// Record one correctly named song and take whatever the ledger now owes.
+function noteSessionSong(song) {
+  if (!song || !song.title || !catalogueCharmsLive()) return;
+  if (sessionSongs.has(song.title)) return;          // already on the ledger this sitting
+  sessionSongs.set(song.title, song.album || null);
+  if (song.album) sessionAlbums.add(song.album);
+  checkSessionStickers();
+}
+
+// The two ledger stickers. Both read STUDIO_ALBUMS rather than naming records here, so the ends
+// of the discography move on their own the day a new one is added.
+function checkSessionStickers() {
+  // Junior Jewels tee — a song off every studio record in one sitting. The signed shirt is
+  // covered in names, so this is the one that wants the whole guest list.
+  if (STUDIO_ALBUMS.length && STUDIO_ALBUMS.every((a) => sessionAlbums.has(a))) {
+    earnSticker("junior-jewels-tee");
+  }
+  // Rocking horse — the first record and the newest one, both named in the same sitting. Never
+  // grow up: the two ends of the shelf, as far apart as the catalogue goes.
+  const first = STUDIO_ALBUMS[0], newest = STUDIO_ALBUMS[STUDIO_ALBUMS.length - 1];
+  if (first && newest && sessionAlbums.has(first) && sessionAlbums.has(newest)) {
+    earnSticker("rocking-horse");
+  }
+}
+
 // The sticker shelf: its own lead, its own counter and its own grid, sitting BELOW the polaroid
 // wall inside the keepsakes drawer and never mixed into it. Locked cells carry no caption, on
 // purpose: the silhouette is the question, and a name under it would be the answer.
@@ -6620,6 +6663,9 @@ function judgeName(picked = null) {
   }
   hideBonusDropdown();
   const correct = song.title === bonusPuzzle.song.title;
+  // The shelf writes to the session ledger too, from the one path where the answer is a SONG.
+  // Sing It Back asks for a missing word and Only Here for cards, so neither names anything.
+  if (correct) noteSessionSong(song);
   /* Ruthless Game judges the same title the same way, but a miss does not end the page: wrong
      guesses are free there by design, so a wrong one is a SOFT reject — say which song was
      rejected, clear the line, and leave the clock running. Guessing early
@@ -16488,6 +16534,9 @@ function submitAnswer(song, isTimeout) {
      that starts on the last one's last word) read a log that already includes this answer. The
      eggs need the page to have been really sent: a timeout leaves whatever was in the box. */
   if (correct) checkCatalogueCharms(song);
+  // The session ledger, which the two "in one session" stickers read. Sits beside the Catalogue
+  // charms because it asks the same kind of question, and takes every mode's correct answers.
+  if (correct) noteSessionSong(song);
   if (!isTimeout) checkCatalogueEggs($("songInput").value, song, correct);
   // Bullet Holes — every rung of the hint ladder burned on this page and the page missed anyway.
   // A timeout counts: the hints were still spent, and the page was still lost.
@@ -21985,6 +22034,24 @@ function buildDevApi() {
       },
       open: () => openKeepsakes(),                             // the shelf lives under the polaroid wall
       reset: () => { resetStickers(); refreshStickers(); },
+      // The session ledger the three "in one session" stickers read. It is memory-only and
+      // cleared by a reload, which makes it the one sticker input a test session cannot inspect
+      // any other way. `fill` names a song off every studio record at once, which is the only
+      // sane way to test the tee without playing until every album has turned up.
+      session: () => ({
+        songs: [...sessionSongs.keys()],
+        albums: [...sessionAlbums],
+        missing: STUDIO_ALBUMS.filter((a) => !sessionAlbums.has(a)),
+      }),
+      fill: (albums) => {
+        const want = albums || STUDIO_ALBUMS;
+        for (const a of want) {
+          const song = allSongs.find((x) => x.album === a);
+          if (song) noteSessionSong(song);
+        }
+        return [...sessionAlbums];
+      },
+      forget: () => { sessionSongs = new Map(); sessionAlbums = new Set(); return "session ledger cleared"; },
     },
     // Album Focus — force any album's board state without grinding runs, then eyeball
     // the pinned board (fresh / played / beaten / perfected + the gold-leaf treatment).
