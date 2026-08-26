@@ -8800,7 +8800,7 @@ function renderAlbumDetail(album) {
    GUESTS_COMING_SOON carries name-only disabled passes. Every number on a playable pass (songs,
    records, prompt words) comes from the guest's own file, fetched the first time the shelf is
    opened and cached for the session. Nothing about a playable guest is hardcoded here, so
-   growing guests/olivia-rodrigo.json changes the pass without touching this file.
+   growing data/guests/olivia-rodrigo.json changes the pass without touching this file.
 
    Slots beyond both lists are drawn as bare rings. */
 // The hardware, shared by every hanger: the split ring the strap loops through (drawn as
@@ -9684,8 +9684,8 @@ function renderFloatGauge() {
 /* ---------- Data load ---------- */
 async function loadData() {
   const [wordsRes, songsRes] = await Promise.all([
-    fetch("words.json"),
-    fetch("songs.json"),
+    fetch("data/words.json"),
+    fetch("data/songs.json"),
   ]);
   if (!wordsRes.ok || !songsRes.ok) throw new Error("Failed to fetch data files");
   const words = await wordsRes.json();
@@ -18323,7 +18323,7 @@ const SECRET_MESSAGE_FALLBACK = { song: "Clean", album: "1989",
   message: "She lost him, but she found herself, and somehow, that was everything." };
 function loadSecretMessages() {
   if (!secretMessagePromise) {
-    secretMessagePromise = fetch("secret-messages.json")
+    secretMessagePromise = fetch("data/secret-messages.json")
       .then((r) => { if (!r.ok) throw new Error("secret-messages " + r.status); return r.json(); })
       .then((byAlbum) => {
         const pool = [];

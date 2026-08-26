@@ -81,7 +81,7 @@ function clearRecent() {
 
 /* ---------- data ---------- */
 async function loadData() {
-  const res = await fetch("../songs.json");
+  const res = await fetch("../data/songs.json");
   if (!res.ok) throw new Error("Failed to load songs.json");
   const grouped = await res.json();
   grouped.forEach((g, i) => ALBUM_INDEX.set(g.album, i));
@@ -89,7 +89,7 @@ async function loadData() {
   // only appears for words a round can actually start on. A miss is non-fatal: the game
   // re-validates and silently ignores an unknown ?word=, so a stale list never breaks play.
   try {
-    const wr = await fetch("../words.json");
+    const wr = await fetch("../data/words.json");
     if (wr.ok) for (const w of await wr.json()) PROMPT_WORDS.add(String(w).toLowerCase());
   } catch (e) { /* searcher still works without the play-in-game link */ }
   SONGS = grouped.flatMap(({ album, songs }) =>

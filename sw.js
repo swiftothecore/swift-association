@@ -16,7 +16,7 @@
  * Paths are relative so the worker works at the site root (swiftassociation.com)
  * and under any project subpath, without hardcoding the origin.
  */
-const CACHE = "stta-v56";
+const CACHE = "stta-v57";
 // The game's panel routes. These are sections of index.html, not files, so a navigation to one
 // has nothing on the server to fetch: 404.html bounces it back through a ?/slug marker. Once
 // this worker is installed we can do better and answer with index.html directly, so a deep link
@@ -83,11 +83,11 @@ const ASSETS = [
   "sounds/tick.mp3",
   "sounds/scratch.mp3",
   "sounds/close.mp3",
-  "songs.json",
-  "words.json",
+  "data/songs.json",
+  "data/words.json",
   // Taylor's liner-note secret messages — lazy-loaded when a message-in-a-bottle egg
   // is first caught (see loadSecretMessages in js/app.js).
-  "secret-messages.json",
+  "data/secret-messages.json",
   // Swift To The Lyric searcher — precached (incl. the "search/" navigate path) so it
   // works offline on a fresh install, not just after a runtime-cached visit.
   "search/",
@@ -108,7 +108,7 @@ const ASSETS = [
   "icons/icon-search-512-maskable.png",
   "icons/apple-touch-icon-search.png",
   "icons/og-image-search.png",
-  // NOT precached, deliberately: guests/*.json. songs.json alone is ~1MB, and a player who
+  // NOT precached, deliberately: data/guests/*.json. songs.json alone is ~1MB, and a player who
   // never opens the guest shelf should never pay for a catalogue they haven't asked for. The
   // network-first branch below still caches a guest file the first time the shelf fetches it,
   // so it works offline from then on. Keep new guests out of this list.

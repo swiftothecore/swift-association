@@ -6,7 +6,7 @@ covered here: see the licence section of [README.md](README.md) for that.
 
 ## Lyrics and liner-note messages
 
-`songs.json`, `guests/*.json` and `secret-messages.json` contain song lyrics, titles and
+`data/songs.json`, `data/guests/*.json` and `data/secret-messages.json` contain song lyrics, titles and
 album liner-note messages written by Taylor Swift and her co-writers, and by the artists
 on the guest shelf and theirs. Copyright in that material belongs to those writers and
 their publishers. It is quoted here for a non-commercial word-association game and is not

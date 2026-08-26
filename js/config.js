@@ -323,7 +323,7 @@ export const DIFF_RANK = { relaxed: 0, easy: 1, medium: 2, hard: 3, ultra: 4, ly
    "not a Taylor song" into an ambiguous shrug. So a guest is its own catalogue, played on its
    own, the way Album Focus already points the same machinery at a 12-song pool.
 
-   A guest's SONGS AND WORDS ARE NOT HERE. They live in one file per guest under guests/,
+   A guest's SONGS AND WORDS ARE NOT HERE. They live in one file per guest under data/guests/,
    fetched on demand by loadGuest (app.js) the first time the shelf needs their counts —
    songs.json is already ~1MB, and a player who never opens the shelf should never pay for it.
    This list carries only what the shelf itself must draw before the file arrives: the name,
@@ -336,7 +336,7 @@ export const GUESTS = [
   {
     id: "olivia-rodrigo",
     name: "Olivia Rodrigo",
-    file: "guests/olivia-rodrigo.json",
+    file: "data/guests/olivia-rodrigo.json",
     // pass ink: band gradient (deep → accent), the strap, the name, and the three
     // record ticks. Violet, which is SOUR/GUTS as a mood and nothing more.
     ink: { deep: "#2f1c47", accent: "#7a55b0", strap: "#5b3c88", pen: "#4a2f6b",
@@ -349,7 +349,7 @@ export const GUESTS = [
   {
     id: "wicked-soundtrack",
     name: "Wicked",
-    file: "guests/wicked.json",
+    file: "data/guests/wicked.json",
     // Two shades each of emerald and rose keep the pass rooted in Elphaba and Glinda.
     ink: { deep: "#234b3f", accent: "#c5799b", strap: "#527a50", pen: "#315746",
            ticks: ["#4f8b63", "#c5799b", "#315746", "#a85e82"] },
@@ -358,7 +358,7 @@ export const GUESTS = [
   {
     id: "hannah-montana",
     name: "Hannah Montana",
-    file: "guests/hannah-montana.json",
+    file: "data/guests/hannah-montana.json",
     // The show's violet wordmark and warm yellow star translated into the pass hardware.
     ink: { deep: "#56346f", accent: "#e2b63d", strap: "#76528e", pen: "#5a3971",
            ticks: ["#8a63a2", "#e2b63d", "#c78b35", "#6a4c88"] },
@@ -367,7 +367,7 @@ export const GUESTS = [
   {
     id: "billie-eilish",
     name: "Billie Eilish",
-    file: "guests/billie-eilish.json",
+    file: "data/guests/billie-eilish.json",
     // Near-black, acid green, and cold grey-green: a nocturnal palette translated into pass ink.
     ink: { deep: "#101512", accent: "#b6d62b", strap: "#26332b", pen: "#17211c",
            ticks: ["#b6d62b", "#6f8d37", "#26332b", "#899788"] },
