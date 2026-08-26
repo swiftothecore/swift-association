@@ -1033,8 +1033,8 @@ if (location.pathname.endsWith('/index.html')) {
              All three share the loop's centre, so a single x/y places them. -->
         <g id="calSlot"><rect x="-3.6" y="0" width="7.2" height="3.8" rx="1.9" fill="#43351e" opacity="0.72"/></g>
         <g id="calLoop">
-          <ellipse rx="3.4" ry="11.4" transform="rotate(13)" fill="none" stroke="url(#calWire)" stroke-width="2.4"/>
-          <path d="M-5 -6.6 C-4.4 -10.8 -0.6 -12.2 1.8 -10.2" fill="none" stroke="#f8f5ec" stroke-width="0.9" opacity="0.55"/>
+          <ellipse rx="3.4" ry="8.6" transform="rotate(13)" fill="none" stroke="url(#calWire)" stroke-width="2.4"/>
+          <path d="M-4.4 -4.4 C-3.9 -7.6 -0.6 -8.8 1.6 -7.2" fill="none" stroke="#f8f5ec" stroke-width="0.9" opacity="0.55"/>
         </g>
         <!-- the wire on the page: its shadow first (the coil is raised off the
              paper, lit from the upper left like every other prop), then the
@@ -1047,7 +1047,7 @@ if (location.pathname.endsWith('/index.html')) {
       <!-- The coil, threaded: drawn before the paper so the pad hides the half
            of every loop that passes beneath it. -->
       <g class="cal-coil">
-        <use href="#calLoop" x="41" y="70"/><use href="#calLoop" x="62" y="70"/><use href="#calLoop" x="83" y="70"/><use href="#calLoop" x="104" y="70"/><use href="#calLoop" x="125" y="70"/><use href="#calLoop" x="146" y="70"/><use href="#calLoop" x="167" y="70"/><use href="#calLoop" x="188" y="70"/><use href="#calLoop" x="209" y="70"/>
+        <use href="#calLoop" x="41" y="74"/><use href="#calLoop" x="62" y="74"/><use href="#calLoop" x="83" y="74"/><use href="#calLoop" x="104" y="74"/><use href="#calLoop" x="125" y="74"/><use href="#calLoop" x="146" y="74"/><use href="#calLoop" x="167" y="74"/><use href="#calLoop" x="188" y="74"/><use href="#calLoop" x="209" y="74"/>
       </g>
       <!-- the pad, a few sheets thick: spare months peeking out low-right -->
       <rect x="25" y="80" width="208" height="212" rx="6" fill="#cfc2a2"/>
@@ -1060,10 +1060,10 @@ if (location.pathname.endsWith('/index.html')) {
       <!-- where the binding meets the page: the punched slots, then the length
            of wire lying on the paper that turns down into each one -->
       <g class="cal-slots">
-        <use href="#calSlot" x="41" y="79"/><use href="#calSlot" x="62" y="79"/><use href="#calSlot" x="83" y="79"/><use href="#calSlot" x="104" y="79"/><use href="#calSlot" x="125" y="79"/><use href="#calSlot" x="146" y="79"/><use href="#calSlot" x="167" y="79"/><use href="#calSlot" x="188" y="79"/><use href="#calSlot" x="209" y="79"/>
+        <use href="#calSlot" x="41" y="83"/><use href="#calSlot" x="62" y="83"/><use href="#calSlot" x="83" y="83"/><use href="#calSlot" x="104" y="83"/><use href="#calSlot" x="125" y="83"/><use href="#calSlot" x="146" y="83"/><use href="#calSlot" x="167" y="83"/><use href="#calSlot" x="188" y="83"/><use href="#calSlot" x="209" y="83"/>
       </g>
       <g class="cal-stubs">
-        <use href="#calStub" x="41" y="70"/><use href="#calStub" x="62" y="70"/><use href="#calStub" x="83" y="70"/><use href="#calStub" x="104" y="70"/><use href="#calStub" x="125" y="70"/><use href="#calStub" x="146" y="70"/><use href="#calStub" x="167" y="70"/><use href="#calStub" x="188" y="70"/><use href="#calStub" x="209" y="70"/>
+        <use href="#calStub" x="41" y="74"/><use href="#calStub" x="62" y="74"/><use href="#calStub" x="83" y="74"/><use href="#calStub" x="104" y="74"/><use href="#calStub" x="125" y="74"/><use href="#calStub" x="146" y="74"/><use href="#calStub" x="167" y="74"/><use href="#calStub" x="188" y="74"/><use href="#calStub" x="209" y="74"/>
       </g>
       <!-- everything below is drawn from the real date by js/calendar.js -->
       <text class="cal-title" x="125" y="105" text-anchor="middle"></text>
