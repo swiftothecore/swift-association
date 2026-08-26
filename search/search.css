@@ -112,7 +112,7 @@ body::before {
 .sx-desk-item svg { display: block; width: 100%; height: auto; overflow: visible; }
 /* Props share the game's real-world scale (roughly 3px per mm of desk): the
    magnifier's lens is ~6cm across, the highlighter 14cm, index cards 5x3in,
-   the dictionary ~20cm tall, the earbud coil ~9.5cm with 15mm shells.
+   the dictionary 21x14cm, the earbud coil ~9.5cm with 15mm shells.
    Composition: left is the close-reading side (magnifier up top, highlighter
    mid, card stack low); the right edge belongs to the index journal (the album
    rail, styled far below) with the earbuds coiled below it, and the dictionary
@@ -139,14 +139,15 @@ body::before {
    book. Fixed so it rides with the viewport like the journal, behind the paper like
    every prop, desktop-only through its .sx-desk parent. */
 .dx-book {
-  position: fixed; width: 300px; right: 0; bottom: 0; top: auto; left: auto;
-  transform: translate(40%, 116%) rotate(-6deg);
+  /* 440px for a 440-wide viewBox: a 21x14cm book at the desk's 3px per mm */
+  position: fixed; width: 440px; right: 0; bottom: 0; top: auto; left: auto;
+  transform: translate(46%, 116%) rotate(-6deg);
   transition: transform .55s cubic-bezier(.22, .61, .36, 1);
 }
-body.sx-scrolled .dx-book { transform: translate(40%, 52%) rotate(-6deg); }
+body.sx-scrolled .dx-book { transform: translate(46%, 54%) rotate(-6deg); }
 /* short desktops: a tall (many-album) journal reaches further down the right edge, so
    the book peeks a little lower to stay clear of it */
-@media (max-height: 880px) { body.sx-scrolled .dx-book { transform: translate(40%, 86%) rotate(-6deg); } }
+@media (max-height: 880px) { body.sx-scrolled .dx-book { transform: translate(46%, 76%) rotate(-6deg); } }
 @media (prefers-reduced-motion: reduce) { .dx-book { transition: none; } }
 /* functional lettering on the props (the marker's label, L/R on the buds)
    stays in the typewriter hand, like the game's bead letters */

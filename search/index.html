@@ -512,65 +512,153 @@
     </svg>
   </div>
   <!-- RIGHT: a cloth-bound rhyming dictionary lying flat, spine off the screen
-       edge: blind-embossed border, a gold loupe stamped on the cover, page
-       flags in era colours marking the fore-edge, and a satin ribbon bookmark
-       slipped out onto the desk. -->
+       edge. 21x14cm, so 630x420 at the desk's 3px per mm; the old one was 14cm
+       tall, which is a paperback.
+
+       The fore-edge was drawn wrong as well as small: the page block stuck out
+       PAST the cover, and on a case binding the boards overhang the paper, not
+       the other way round. So the pages are under the cover now, and what you
+       see at that edge is the board's own thickness, the shadow it throws on
+       the block beneath it, and the flags coming out from under it.
+
+       The five flags were one rectangle drawn five times in five colours,
+       which is the same fault the earbuds had: this desk does not do mirrored
+       or cloned pairs. They are five different things now, stuck in by the
+       same person on five different days. Different stock (paper, and one
+       plastic tab that catches light where paper does not), different widths,
+       different depths in, one creased where it was pushed in too far, one
+       dog-eared, one torn off short, and one with a pencil tick on it. -->
   <div class="sx-desk-item dx-book">
-    <svg viewBox="0 0 330 470" xmlns="http://www.w3.org/2000/svg">
+    <svg viewBox="0 0 440 650" xmlns="http://www.w3.org/2000/svg">
       <defs>
-        <linearGradient id="bkCloth" x1="0" y1="0" x2="0.7" y2="1"><stop offset="0" stop-color="#7d3b41"/><stop offset="0.55" stop-color="#692c32"/><stop offset="1" stop-color="#521e23"/></linearGradient>
-        <linearGradient id="bkGold" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#e5bc5a"/><stop offset="1" stop-color="#c1913a"/></linearGradient>
-        <filter id="bkGrain" x="0" y="0" width="100%" height="100%">
-          <feTurbulence type="fractalNoise" baseFrequency="0.9 0.4" numOctaves="2" seed="7" stitchTiles="stitch"/>
-          <feColorMatrix type="matrix" values="0 0 0 0 0.16 0 0 0 0 0.06 0 0 0 0 0.07 0.5 0 0 0 -0.1"/>
+        <!-- book cloth, across the board: the light runs off the fore-edge
+             side and the board picks the desk back up at its very edge -->
+        <linearGradient id="bkCloth" x1="0" y1="0" x2="0.75" y2="0.9">
+          <stop offset="0" stop-color="#8a444a"/><stop offset="0.34" stop-color="#713137"/>
+          <stop offset="0.8" stop-color="#4c1c21"/><stop offset="1" stop-color="#6a2a30"/>
+        </linearGradient>
+        <!-- userSpaceOnUse, not the default: half the gold on this cover is
+             horizontal rules, and a horizontal line has a zero-height bounding
+             box, which collapses an objectBoundingBox gradient to nothing -->
+        <linearGradient id="bkGold" gradientUnits="userSpaceOnUse" x1="26" y1="22" x2="440" y2="628">
+          <stop offset="0" stop-color="#f0d283"/><stop offset="0.5" stop-color="#d4a745"/>
+          <stop offset="1" stop-color="#a67c28"/>
+        </linearGradient>
+        <!-- the weave. Book cloth is a woven texture, so it wants noise with a
+             direction to it, not an even speckle. -->
+        <filter id="bkWeave" x="0" y="0" width="100%" height="100%">
+          <feTurbulence type="fractalNoise" baseFrequency="0.75 0.42" numOctaves="2" seed="7" stitchTiles="stitch"/>
+          <feColorMatrix type="matrix" values="0 0 0 0 0.16 0 0 0 0 0.06 0 0 0 0 0.07 0.55 0 0 0 -0.12"/>
         </filter>
+        <!-- cut paper edges wander; a cloth board's edge wanders more, because
+             it is cloth wrapped over a board corner -->
+        <filter id="bkEdge" x="-6%" y="-6%" width="112%" height="112%">
+          <feTurbulence type="fractalNoise" baseFrequency="0.012 0.02" numOctaves="2" seed="4" result="n"/>
+          <feDisplacementMap in="SourceGraphic" in2="n" scale="2.6" xChannelSelector="R" yChannelSelector="G"/>
+        </filter>
+        <clipPath id="bkCover">
+          <path d="M46 22 H440 V628 H46 Q26 628 26 608 V42 Q26 22 46 22 Z"/>
+        </clipPath>
       </defs>
-      <!-- fore-edge page block peeking out from under the cover -->
-      <rect x="40" y="30" width="26" height="384" fill="#efe6cd" stroke="#cdbf9e" stroke-width="1"/>
-      <g fill="none" stroke="#d9cca9" stroke-width="1" opacity="0.85">
-        <path d="M45 32 q2 190 0 380"/><path d="M49 32 q-1.6 190 0 380"/><path d="M53 32 q2 190 0 380"/><path d="M57 32 q-1.6 190 0 380"/><path d="M61 32 q1.4 190 0 380"/>
+
+      <!-- THE PAGE BLOCK, under the boards. Only its shadowed sliver shows
+           past the overhang, which is all a case binding gives you. -->
+      <rect x="34" y="40" width="30" height="572" rx="2" fill="#e7dcbe"/>
+      <g fill="none" stroke-linecap="round">
+        <path d="M38 44 q2.5 284 0 566" stroke="#cbbc97" stroke-width="1.1" opacity="0.8"/>
+        <path d="M41.5 42 q-1.8 286 0 570" stroke="#d9cca9" stroke-width="0.9" opacity="0.7"/>
+        <path d="M45 45 q2.2 282 0 562" stroke="#c3b28c" stroke-width="1.3" opacity="0.75"/>
+        <path d="M48.5 43 q-1.4 285 0 568" stroke="#ddd1af" stroke-width="0.8" opacity="0.6"/>
+        <path d="M52 46 q1.9 281 0 560" stroke="#cbbc97" stroke-width="1.2" opacity="0.7"/>
+        <path d="M55.5 44 q-2.1 284 0 566" stroke="#d4c6a1" stroke-width="1" opacity="0.65"/>
       </g>
-      <!-- era-coloured page flags stuck through the fore-edge -->
-      <g stroke-width="0.8">
-        <rect x="6" y="66" width="36" height="13" rx="2" fill="#d9a827" stroke="#a37b1a" transform="rotate(-2 42 72)"/>
-        <rect x="10" y="128" width="32" height="13" rx="2" fill="#b23a3f" stroke="#84262a" transform="rotate(1.5 42 134)"/>
-        <rect x="4" y="196" width="38" height="13" rx="2" fill="#7ea6c9" stroke="#587e9e" transform="rotate(-1 42 202)"/>
-        <rect x="12" y="258" width="30" height="13" rx="2" fill="#9b7fb6" stroke="#71578c" transform="rotate(2 42 264)"/>
-        <rect x="8" y="330" width="34" height="13" rx="2" fill="#7ba05b" stroke="#587840" transform="rotate(-1.5 42 336)"/>
+      <!-- the shadow the overhanging board throws down onto the block -->
+      <rect x="34" y="40" width="18" height="572" fill="#3a1c12" opacity="0.3"/>
+      <rect x="34" y="40" width="7" height="572" fill="#2a130c" opacity="0.35"/>
+
+      <!-- THE FLAGS, from under the board. Five stickers, five days. -->
+      <!-- 1: mustard paper, in deep, with a pencil tick where the line was -->
+      <g transform="rotate(-2.6 60 118)">
+        <rect x="2" y="106" width="58" height="24" rx="2" fill="#dcae33" stroke="#a67f1c" stroke-width="0.8"/>
+        <path d="M6 110 h48" stroke="#f3dc9a" stroke-width="1.6" stroke-linecap="round" opacity="0.55"/>
+        <path d="M8 126 h46" stroke="#9a741a" stroke-width="1.4" stroke-linecap="round" opacity="0.4"/>
+        <path d="M14 118 l6 5 l11 -12" fill="none" stroke="#4a4133" stroke-width="1.9"
+              stroke-linecap="round" stroke-linejoin="round" opacity="0.7"/>
       </g>
-      <g stroke="#b3a685" stroke-width="1" opacity="0.8">
-        <path d="M41 66 v13 M41 128 v13 M41 196 v13 M41 258 v13 M41 330 v13"/>
+      <!-- 2: a plastic tab, narrower and shallower. Plastic is the one that
+           catches a specular; the paper ones never do. -->
+      <g transform="rotate(1.8 60 226)">
+        <rect x="16" y="217" width="44" height="18" rx="3" fill="#c0454a" stroke="#8c2c31" stroke-width="0.8"/>
+        <rect x="19" y="219.5" width="34" height="4" rx="2" fill="#ffffff" opacity="0.4"/>
+        <path d="M20 232 h30" stroke="#7d2429" stroke-width="1.2" stroke-linecap="round" opacity="0.4"/>
       </g>
-      <g stroke="#ffffff" stroke-width="1.2" opacity="0.3">
-        <path d="M10 69.5 h28 M14 131.5 h24 M8 199.5 h30 M16 261.5 h22 M12 333.5 h26"/>
+      <!-- 3: blue paper, pushed in too far and creased for it -->
+      <g transform="rotate(-1 60 342)">
+        <path d="M-4 330 H60 V356 H-4 Z" fill="#8bafd0" stroke="#5c82a4" stroke-width="0.8"/>
+        <path d="M22 330 V356" stroke="#4e7396" stroke-width="1.6" opacity="0.55"/>
+        <path d="M24.6 330 V356" stroke="#d3e4f2" stroke-width="1.4" opacity="0.6"/>
+        <path d="M0 334 h50" stroke="#d3e4f2" stroke-width="1.5" stroke-linecap="round" opacity="0.5"/>
       </g>
-      <!-- the cover, overhanging the pages, rounded on its open corners -->
-      <path d="M64 20 H330 V424 H64 Q52 424 52 412 V32 Q52 20 64 20 Z" fill="url(#bkCloth)" stroke="#40161a" stroke-width="1.5"/>
-      <path d="M64 20 H330 V424 H64 Q52 424 52 412 V32 Q52 20 64 20 Z" filter="url(#bkGrain)" opacity="0.35"/>
-      <!-- blind-embossed border: a dark press line with its raised highlight -->
-      <rect x="78" y="36" width="236" height="372" rx="2" fill="none" stroke="#46181d" stroke-width="2" opacity="0.9"/>
-      <rect x="79.5" y="37.5" width="236" height="372" rx="2" fill="none" stroke="#a05a61" stroke-width="1" opacity="0.4"/>
-      <!-- gold rules and the stamped loupe emblem -->
-      <path d="M78 76 H314" stroke="url(#bkGold)" stroke-width="2" opacity="0.85"/>
-      <path d="M78 88 H314" stroke="url(#bkGold)" stroke-width="1" opacity="0.7"/>
-      <path d="M78 372 H314" stroke="url(#bkGold)" stroke-width="1.5" opacity="0.75"/>
-      <!-- the stamp sits toward the fore-edge, on the half of the cover that
-           stays on screen, so it never gets cut to a floating ring -->
+      <!-- 4: purple, dog-eared where a thumb has caught it over and over -->
+      <g transform="rotate(3.4 60 452)">
+        <path d="M12 442 H60 V468 H12 L12 458 L22 452 L12 447 Z" fill="#a084bc" stroke="#75588f" stroke-width="0.8"/>
+        <path d="M12 458 L22 452 L12 447" fill="#8b6ba6" stroke="#6a4f83" stroke-width="0.7"/>
+        <path d="M26 446 h28" stroke="#ddd0eb" stroke-width="1.5" stroke-linecap="round" opacity="0.5"/>
+      </g>
+      <!-- 5: green, and torn: half of it came away when the book shut on it -->
+      <g transform="rotate(-2 60 560)">
+        <path d="M20 549 H60 V573 H26 L21 566 L27 561 L20 556 Z" fill="#88a866" stroke="#5f7d44" stroke-width="0.8"/>
+        <path d="M24 553 h28" stroke="#d5e3c4" stroke-width="1.4" stroke-linecap="round" opacity="0.5"/>
+        <path d="M26 569 h26" stroke="#5f7d44" stroke-width="1.2" stroke-linecap="round" opacity="0.35"/>
+      </g>
+
+      <!-- THE BOARDS -->
+      <g filter="url(#bkEdge)">
+        <path d="M46 22 H440 V628 H46 Q26 628 26 608 V42 Q26 22 46 22 Z"
+              fill="url(#bkCloth)" stroke="#3c1417" stroke-width="1.6"/>
+      </g>
+      <g clip-path="url(#bkCover)">
+        <rect x="26" y="22" width="414" height="606" filter="url(#bkWeave)" opacity="0.4"/>
+        <!-- the cloth rolls over the board's edge, so the fore-edge side has a
+             lit roll and the far side of it a dark turn -->
+        <path d="M30 40 V612" stroke="#b0666c" stroke-width="3" opacity="0.3"/>
+        <path d="M38 34 V618" stroke="#3a1216" stroke-width="5" opacity="0.28"/>
+      </g>
+      <!-- blind embossing: a pressed line is a dent, so it is a dark stroke
+           with its raised highlight on the lamp's side, never one line -->
+      <rect x="58" y="46" width="360" height="558" rx="2" fill="none" stroke="#43171b" stroke-width="2.4" opacity="0.9"/>
+      <rect x="60" y="48" width="360" height="558" rx="2" fill="none" stroke="#a8626a" stroke-width="1.2" opacity="0.35"/>
+      <!-- gold rules and the stamped loupe emblem, kept to the fore-edge half
+           of the board so the screen edge never crops it to a floating ring -->
+      <path d="M58 108 H418" stroke="url(#bkGold)" stroke-width="2.6" opacity="0.85"/>
+      <path d="M58 124 H418" stroke="url(#bkGold)" stroke-width="1.3" opacity="0.7"/>
+      <path d="M58 546 H418" stroke="url(#bkGold)" stroke-width="2" opacity="0.75"/>
       <g fill="none" stroke="url(#bkGold)">
-        <circle cx="146" cy="180" r="24" stroke-width="4"/>
-        <circle cx="146" cy="180" r="18.5" stroke-width="1" opacity="0.6"/>
-        <path d="M163 197 L180 214" stroke-width="5" stroke-linecap="round"/>
+        <circle cx="164" cy="272" r="34" stroke-width="5.5"/>
+        <circle cx="164" cy="272" r="26" stroke-width="1.3" opacity="0.6"/>
+        <path d="M188 296 L212 320" stroke-width="7" stroke-linecap="round"/>
       </g>
-      <path d="M106 246 H186" stroke="url(#bkGold)" stroke-width="1.5" opacity="0.8"/>
-      <path d="M122 256 H170" stroke="url(#bkGold)" stroke-width="1" opacity="0.7"/>
-      <!-- corner wear where the cloth has rubbed pale -->
-      <path d="M58 38 Q56 27 66 24" fill="none" stroke="#b06a70" stroke-width="2" stroke-linecap="round" opacity="0.35"/>
-      <path d="M58 406 Q56 417 66 420" fill="none" stroke="#b06a70" stroke-width="2" stroke-linecap="round" opacity="0.3"/>
-      <!-- satin ribbon slipped out of the bottom: one smooth fall, then a
-           swallowtail end cut square to the ribbon's direction -->
-      <path d="M96 424 C90 442 78 452 64 459" fill="none" stroke="#caa23b" stroke-width="10"/>
-      <path d="M95 422 C90 438 80 447 68 453" fill="none" stroke="#e6c469" stroke-width="3" stroke-linecap="round" opacity="0.6"/>
-      <path d="M61.8 454.5 L52 459.4 L60.4 460.8 L56.4 468.4 L66.2 463.5 Z" fill="#caa23b" stroke="#a37f27" stroke-width="0.8" stroke-linejoin="round"/>
+      <path d="M112 366 H236" stroke="url(#bkGold)" stroke-width="2" opacity="0.8"/>
+      <path d="M134 382 H214" stroke="url(#bkGold)" stroke-width="1.3" opacity="0.7"/>
+      <!-- bumped corners: the cloth has rubbed through to the pale board under
+           it, and only on the two corners a book actually lands on -->
+      <path d="M31 44 Q28 28 44 25" fill="none" stroke="#c98189" stroke-width="3"
+            stroke-linecap="round" opacity="0.4"/>
+      <path d="M30 606 Q27 622 43 625" fill="none" stroke="#c98189" stroke-width="2.4"
+            stroke-linecap="round" opacity="0.3"/>
+      <path d="M33 40 Q31 33 38 30" fill="none" stroke="#e0b9a0" stroke-width="1.6"
+            stroke-linecap="round" opacity="0.45"/>
+
+      <!-- THE RIBBON, slipped out of the bottom: one smooth fall, and a
+           swallowtail cut square to the ribbon's own direction rather than to
+           the page -->
+      <path d="M128 628 C118 654 100 668 78 680" fill="none" stroke="#8a6a20" stroke-width="14" opacity="0.45"/>
+      <path d="M126 628 C116 652 98 666 76 678" fill="none" stroke="#caa23b" stroke-width="13"/>
+      <path d="M124 626 C116 648 100 660 80 671" fill="none" stroke="#eccb74" stroke-width="4"
+            stroke-linecap="round" opacity="0.55"/>
+      <path d="M72.4 674.6 L56 683 L70 685.4 L63.2 698 L79.6 689.6 Z"
+            fill="#caa23b" stroke="#a37f27" stroke-width="1" stroke-linejoin="round"/>
+      <path d="M70 677 L60 682.5" stroke="#eccb74" stroke-width="1.6" stroke-linecap="round" opacity="0.5"/>
     </svg>
   </div>
   <!-- RIGHT: wired earbuds dropped in a loose coil, the researcher's close
