@@ -831,6 +831,9 @@
     font-size: calc(12px + var(--text-size-adjust)); letter-spacing: 1px;
     color: #7a5c38;  /* warm desk-brown, a faded sibling of the title's #4a3518 (sits on wood, not paper) */
   }
+  /* Nudged clear of the swash without paying for it in layout: a transform moves
+     the ink only, so the notebook below stays exactly where it was drawn. */
+  .tagline-row { transform: translateY(8px); }
   /* small inked hearts holding the tagline */
   .tagline-row .tag-heart {
     width: 13px; height: auto; overflow: visible;
