@@ -176,7 +176,7 @@ const MARK_WASH_D = "M3.4 8.6 C5.4 5.6 9 4.6 13.4 4.9 C18 5.2 20.6 7.4 20.4 11.6
 const MONTH_SEASON = ["winter", "winter", "spring", "spring", "spring", "summer",
                       "summer", "summer", "autumn", "autumn", "autumn", "winter"];
 const SEASON_WASH = { spring: "#6f8f4a", summer: "#c8912a", autumn: "#b0603a", winter: "#5a7c94" };
-const MARK_SCALE = 0.62;                // the 24-box drawn at ~15px, a shade under the cap height
+const MARK_SCALE = 0.92;                // the 24-box drawn at ~22px, the height of the whole title line
 const MARK_GAP = 8;                     // paper between the mark and the M of the month
 
 // The mark goes to the LEFT of the month, and the two are centred TOGETHER: the
