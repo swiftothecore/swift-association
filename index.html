@@ -696,40 +696,195 @@ if (location.pathname.endsWith('/index.html')) {
 <canvas id="autumnleaves" aria-hidden="true"></canvas>
 <div class="desk-items" aria-hidden="true">
   <!-- LEFT: reading glasses, folded flat on the desk, seen from directly above.
-       Resting front-down, so the folded temples cross over the lenses. -->
+       Resting front-down, so the folded temples cross over the lenses and the
+       lenses look up through the wood. Tortoiseshell acetate, and the figure in
+       it is a mottle filter plus one seeded set of flecks re-sampled per piece,
+       because the front and both temples were cut from a single pressed sheet.
+       The light comes from the upper left, the corner every other prop is lit
+       from. Nothing here is a mirrored pair: the right rim is a shade smaller
+       and sits higher, the two screw slots disagree, and only one lens has
+       been thumbed. -->
   <div class="desk-item di-glasses">
     <svg viewBox="0 0 170 84" xmlns="http://www.w3.org/2000/svg">
       <defs>
-        <linearGradient id="glAcetate" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7c4e2a"/><stop offset="0.55" stop-color="#5f3a1e"/><stop offset="1" stop-color="#472a13"/></linearGradient>
-        <linearGradient id="glLens" x1="0.2" y1="0" x2="0.8" y2="1"><stop offset="0" stop-color="#dde9ec" stop-opacity="0.42"/><stop offset="0.55" stop-color="#c2d1d5" stop-opacity="0.2"/><stop offset="1" stop-color="#adbec4" stop-opacity="0.32"/></linearGradient>
+        <!-- tortoiseshell acetate: an amber sheet lit from the upper left and
+             going walnut where it turns away. The figure on top of it is the
+             mottle filter plus the hand-placed flecks, never a flat brown. -->
+        <linearGradient id="glSheet" x1="0.1" y1="0" x2="0.9" y2="1"><stop offset="0" stop-color="#9c6530"/><stop offset="0.42" stop-color="#75441a"/><stop offset="0.78" stop-color="#4d270b"/><stop offset="1" stop-color="#331905"/></linearGradient>
+        <!-- the rolled edges of the acetate: lit ridge on the light's side,
+             dark turn on the far side. Both are stroked inside the mask, so
+             the outer half is clipped and the silhouette stays clean. -->
+        <linearGradient id="glEdgeHi" x1="0.15" y1="0" x2="0.85" y2="1"><stop offset="0" stop-color="#dfa869" stop-opacity="0.6"/><stop offset="0.5" stop-color="#c08a4a" stop-opacity="0.15"/><stop offset="1" stop-color="#c08a4a" stop-opacity="0"/></linearGradient>
+        <linearGradient id="glEdgeLo" x1="0.15" y1="0" x2="0.85" y2="1"><stop offset="0" stop-color="#2a1405" stop-opacity="0"/><stop offset="0.5" stop-color="#2a1405" stop-opacity="0.26"/><stop offset="1" stop-color="#170a02" stop-opacity="0.8"/></linearGradient>
+        <!-- the groove lips run the other way: inside a lens hole the wall on
+             the light's side is the one facing away from it -->
+        <linearGradient id="glLipLo" x1="0.15" y1="0" x2="0.85" y2="1"><stop offset="0" stop-color="#170a02" stop-opacity="0.72"/><stop offset="0.5" stop-color="#2a1405" stop-opacity="0.24"/><stop offset="1" stop-color="#2a1405" stop-opacity="0"/></linearGradient>
+        <linearGradient id="glLipHi" x1="0.15" y1="0" x2="0.85" y2="1"><stop offset="0" stop-color="#c08a4a" stop-opacity="0"/><stop offset="0.55" stop-color="#c99257" stop-opacity="0.16"/><stop offset="1" stop-color="#dda765" stop-opacity="0.42"/></linearGradient>
+        <linearGradient id="glShine" x1="0.2" y1="0" x2="0.8" y2="1"><stop offset="0" stop-color="#f6d4a2" stop-opacity="0.72"/><stop offset="0.28" stop-color="#f6d4a2" stop-opacity="0.1"/><stop offset="1" stop-color="#f6d4a2" stop-opacity="0"/></linearGradient>
+        <linearGradient id="glLens" x1="0.18" y1="0" x2="0.82" y2="1"><stop offset="0" stop-color="#eef6f7" stop-opacity="0.17"/><stop offset="0.42" stop-color="#a9bcc0" stop-opacity="0.06"/><stop offset="1" stop-color="#5d7278" stop-opacity="0.17"/></linearGradient>
+        <linearGradient id="glBrass" x1="0.1" y1="0" x2="0.9" y2="1"><stop offset="0" stop-color="#e7cb93"/><stop offset="0.45" stop-color="#b3904f"/><stop offset="1" stop-color="#7a5e2e"/></linearGradient>
+        <!-- acetate figure is cloud, not confetti: coarse blotches stretched
+             along the sheet's roll, with a fine grain under them -->
+        <filter id="glMottle" filterUnits="userSpaceOnUse" x="0" y="0" width="170" height="84"><feTurbulence type="fractalNoise" baseFrequency="0.05 0.13" numOctaves="4" seed="13"/><feColorMatrix type="matrix" values="0 0 0 0 0.11  0 0 0 0 0.042  0 0 0 0 0.008  0 0 0 1.75 -0.64"/></filter>
+        <filter id="glAmber" filterUnits="userSpaceOnUse" x="0" y="0" width="170" height="84"><feTurbulence type="fractalNoise" baseFrequency="0.045 0.1" numOctaves="3" seed="41"/><feColorMatrix type="matrix" values="0 0 0 0 0.72  0 0 0 0 0.5  0 0 0 0 0.24  0 0 0 1.1 -0.66"/></filter>
+        <filter id="glGrain" filterUnits="userSpaceOnUse" x="0" y="0" width="170" height="84"><feTurbulence type="fractalNoise" baseFrequency="0.62" numOctaves="3" seed="31"/><feColorMatrix type="matrix" values="0 0 0 0 0.22  0 0 0 0 0.12  0 0 0 0 0.03  0 0 0 0.42 -0.16"/></filter>
+        <filter id="glSoft" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="2.1"/></filter>
+        <filter id="glHaze" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="1.2"/></filter>
+        <filter id="glWisp" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="0.55"/></filter>
+        <!-- the frame front is one continuous piece of acetate with two holes
+             in it, so it is built as a mask rather than stacked shapes: the
+             bridge can then overlap the rims without leaving a seam, and
+             every texture and edge pass inside gets clipped for free -->
+        <mask id="glFront" maskUnits="userSpaceOnUse" x="0" y="26" width="170" height="58">
+          <g fill="#fff"><path d="M6.2 56.4 C6 39.6 14.4 30.6 41.2 30.2 C67.6 29.8 76.2 38.4 76 55.2 C75.8 71.6 67.4 80.4 41.4 80.2 C15 80 6.4 72.4 6.2 56.4 Z"/><path d="M94.8 55.2 C94.6 38.8 103 30.8 128.6 31 C154.2 31.2 163.4 39 163.6 55 C163.8 71 155 79.4 129 79.2 C103.4 79 95 71.6 94.8 55.2 Z"/><path d="M70.6 43 C72.8 37 77.6 34.8 85.2 34.8 C92.8 34.8 97.4 37 99.6 42.8 L99.6 46.4 C95.4 42.6 91.6 44.8 85.2 44.8 C78.8 44.8 75 42.6 70.8 46.4 Z"/></g>
+          <g fill="#000"><path d="M13.2 56.2 C13 42.8 20.4 37.2 41.2 37 C61.6 36.8 69.2 42.4 69 55.2 C68.8 67.8 61.4 73.4 41.4 73.2 C20.8 73 13.4 68 13.2 56.2 Z"/><path d="M101.8 55 C101.6 42.4 108.8 37.6 128.6 37.8 C148.2 38 156.6 42.8 156.8 55 C157 67 148.6 72.4 129 72.2 C109.2 72 102 67 101.8 55 Z"/></g>
+        </mask>
+        <mask id="glTempA" maskUnits="userSpaceOnUse" x="0" y="10" width="170" height="48"><g fill="none" stroke="#fff" stroke-linecap="round"><path d="M160 39 C128 30.5 84 25.4 50 26.6 C38 27.4 29.6 31.6 28.6 40.4" stroke-width="5.2"/><path d="M35.6 28.2 C31 30.4 28.8 34.6 28.6 40.6" stroke-width="6.4"/></g></mask>
+        <mask id="glTempB" maskUnits="userSpaceOnUse" x="0" y="10" width="170" height="48"><g fill="none" stroke="#fff" stroke-linecap="round"><path d="M9.5 38 C44 24.6 98 19.6 126 20.8 C138 21.4 146.4 26.4 145.2 35.2" stroke-width="5.4"/><path d="M138.4 22.6 C143.2 24.6 145.6 28.8 145.4 35.4" stroke-width="6.6"/></g></mask>
+        <clipPath id="glGlassL"><path d="M13.2 56.2 C13 42.8 20.4 37.2 41.2 37 C61.6 36.8 69.2 42.4 69 55.2 C68.8 67.8 61.4 73.4 41.4 73.2 C20.8 73 13.4 68 13.2 56.2 Z"/></clipPath>
+        <clipPath id="glGlassR"><path d="M101.8 55 C101.6 42.4 108.8 37.6 128.6 37.8 C148.2 38 156.6 42.8 156.8 55 C157 67 148.6 72.4 129 72.2 C109.2 72 102 67 101.8 55 Z"/></clipPath>
+        <!-- the sheet's figure, drawn once and re-sampled under a different
+             transform for each piece, because one pressing of acetate cut
+             the front and both temples -->
+        <g id="glFig"><ellipse cx="72.3" cy="19.6" rx="2.7" ry="1.4" transform="rotate(1 72.3 19.6)" fill="#402208" opacity="0.33"/><ellipse cx="130.5" cy="68.3" rx="4.3" ry="1.5" transform="rotate(-22 130.5 68.3)" fill="#331a08" opacity="0.37"/><ellipse cx="66.9" cy="21.7" rx="3.9" ry="1.8" transform="rotate(-49 66.9 21.7)" fill="#2a1405" opacity="0.38"/><ellipse cx="74.8" cy="37.5" rx="3.5" ry="1.1" transform="rotate(-19 74.8 37.5)" fill="#402208" opacity="0.41"/><ellipse cx="123.6" cy="31.2" rx="2.0" ry="0.7" transform="rotate(-30 123.6 31.2)" fill="#2a1405" opacity="0.36"/><ellipse cx="60.5" cy="42.9" rx="3.6" ry="1.7" transform="rotate(25 60.5 42.9)" fill="#2a1405" opacity="0.44"/><ellipse cx="42.2" cy="52.4" rx="2.1" ry="0.9" transform="rotate(9 42.2 52.4)" fill="#331a08" opacity="0.25"/><ellipse cx="155.2" cy="80.9" rx="2.8" ry="1.2" transform="rotate(-9 155.2 80.9)" fill="#402208" opacity="0.44"/><ellipse cx="21.7" cy="64.3" rx="3.2" ry="1.6" transform="rotate(32 21.7 64.3)" fill="#402208" opacity="0.38"/><ellipse cx="64.8" cy="82.8" rx="2.4" ry="0.8" transform="rotate(-24 64.8 82.8)" fill="#2a1405" opacity="0.36"/><ellipse cx="119.6" cy="52.1" rx="1.7" ry="0.9" transform="rotate(9 119.6 52.1)" fill="#2a1405" opacity="0.33"/><ellipse cx="136.2" cy="75.3" rx="3.7" ry="1.1" transform="rotate(10 136.2 75.3)" fill="#331a08" opacity="0.25"/><ellipse cx="9.2" cy="38.2" rx="3.2" ry="1.7" transform="rotate(-33 9.2 38.2)" fill="#402208" opacity="0.30"/><ellipse cx="152.6" cy="64.5" rx="1.6" ry="0.5" transform="rotate(-33 152.6 64.5)" fill="#402208" opacity="0.28"/><ellipse cx="166.3" cy="43.6" rx="2.0" ry="0.9" transform="rotate(-46 166.3 43.6)" fill="#2a1405" opacity="0.28"/><ellipse cx="142.4" cy="60.9" rx="4.0" ry="1.7" transform="rotate(-8 142.4 60.9)" fill="#2a1405" opacity="0.32"/><ellipse cx="3.8" cy="76.5" rx="2.5" ry="1.1" transform="rotate(-11 3.8 76.5)" fill="#2a1405" opacity="0.27"/><ellipse cx="21.6" cy="35.4" rx="1.9" ry="1.0" transform="rotate(29 21.6 35.4)" fill="#402208" opacity="0.40"/><ellipse cx="97.3" cy="65.5" rx="2.7" ry="1.1" transform="rotate(-20 97.3 65.5)" fill="#2a1405" opacity="0.37"/><ellipse cx="101.7" cy="55.7" rx="3.9" ry="2.0" transform="rotate(14 101.7 55.7)" fill="#331a08" opacity="0.32"/><ellipse cx="74.8" cy="68.8" rx="2.4" ry="1.0" transform="rotate(-9 74.8 68.8)" fill="#331a08" opacity="0.36"/><ellipse cx="154.0" cy="70.3" rx="3.2" ry="1.4" transform="rotate(8 154.0 70.3)" fill="#331a08" opacity="0.45"/><ellipse cx="42.8" cy="63.7" rx="2.6" ry="0.8" transform="rotate(-13 42.8 63.7)" fill="#2a1405" opacity="0.23"/><ellipse cx="76.4" cy="77.0" rx="4.3" ry="1.5" transform="rotate(-16 76.4 77.0)" fill="#2a1405" opacity="0.39"/><ellipse cx="153.1" cy="67.4" rx="2.9" ry="1.5" transform="rotate(19 153.1 67.4)" fill="#331a08" opacity="0.41"/><ellipse cx="165.7" cy="53.9" rx="3.9" ry="2.0" transform="rotate(-35 165.7 53.9)" fill="#331a08" opacity="0.34"/><ellipse cx="136.4" cy="73.6" rx="1.7" ry="0.7" transform="rotate(-33 136.4 73.6)" fill="#2a1405" opacity="0.33"/><ellipse cx="46.6" cy="58.1" rx="4.3" ry="1.7" transform="rotate(-5 46.6 58.1)" fill="#402208" opacity="0.46"/><ellipse cx="155.3" cy="30.9" rx="0.8" ry="0.4" transform="rotate(-17 155.3 30.9)" fill="#2a1405" opacity="0.34"/><ellipse cx="46.1" cy="46.3" rx="0.9" ry="0.8" transform="rotate(12 46.1 46.3)" fill="#331a08" opacity="0.35"/><ellipse cx="17.3" cy="50.3" rx="0.6" ry="0.4" transform="rotate(16 17.3 50.3)" fill="#2a1405" opacity="0.48"/><ellipse cx="104.8" cy="33.6" rx="1.3" ry="1.0" transform="rotate(-19 104.8 33.6)" fill="#2a1405" opacity="0.49"/><ellipse cx="50.1" cy="25.9" rx="0.8" ry="0.7" transform="rotate(-12 50.1 25.9)" fill="#402208" opacity="0.31"/><ellipse cx="1.4" cy="72.3" rx="0.9" ry="0.5" transform="rotate(-32 1.4 72.3)" fill="#2a1405" opacity="0.47"/><ellipse cx="165.9" cy="51.6" rx="1.0" ry="0.7" transform="rotate(-23 165.9 51.6)" fill="#402208" opacity="0.27"/><ellipse cx="44.0" cy="31.4" rx="0.7" ry="0.3" transform="rotate(-11 44.0 31.4)" fill="#402208" opacity="0.37"/><ellipse cx="93.2" cy="54.8" rx="0.6" ry="0.3" transform="rotate(37 93.2 54.8)" fill="#331a08" opacity="0.29"/><ellipse cx="89.0" cy="76.6" rx="1.0" ry="0.7" transform="rotate(-36 89.0 76.6)" fill="#331a08" opacity="0.43"/><ellipse cx="17.7" cy="56.9" rx="0.9" ry="0.7" transform="rotate(20 17.7 56.9)" fill="#331a08" opacity="0.41"/><ellipse cx="100.2" cy="84.1" rx="0.9" ry="0.6" transform="rotate(6 100.2 84.1)" fill="#2a1405" opacity="0.29"/><ellipse cx="115.2" cy="29.0" rx="0.6" ry="0.4" transform="rotate(20 115.2 29.0)" fill="#331a08" opacity="0.39"/><ellipse cx="158.4" cy="67.2" rx="1.4" ry="0.6" transform="rotate(-27 158.4 67.2)" fill="#331a08" opacity="0.34"/><ellipse cx="8.5" cy="55.0" rx="0.7" ry="0.5" transform="rotate(5 8.5 55.0)" fill="#331a08" opacity="0.48"/><ellipse cx="92.9" cy="66.9" rx="1.3" ry="0.8" transform="rotate(-16 92.9 66.9)" fill="#402208" opacity="0.25"/><ellipse cx="75.2" cy="81.7" rx="1.4" ry="1.1" transform="rotate(1 75.2 81.7)" fill="#402208" opacity="0.27"/><ellipse cx="97.4" cy="29.4" rx="2.1" ry="0.7" transform="rotate(37 97.4 29.4)" fill="#a9743a" opacity="0.29"/><ellipse cx="146.7" cy="21.8" rx="1.0" ry="0.3" transform="rotate(-22 146.7 21.8)" fill="#c08a4a" opacity="0.26"/><ellipse cx="81.8" cy="31.5" rx="2.6" ry="0.9" transform="rotate(-41 81.8 31.5)" fill="#a9743a" opacity="0.34"/><ellipse cx="38.7" cy="44.7" rx="2.5" ry="1.0" transform="rotate(9 38.7 44.7)" fill="#c08a4a" opacity="0.29"/><ellipse cx="153.7" cy="48.4" rx="1.1" ry="0.5" transform="rotate(1 153.7 48.4)" fill="#a9743a" opacity="0.23"/><ellipse cx="93.7" cy="76.9" rx="0.9" ry="0.4" transform="rotate(-56 93.7 76.9)" fill="#d29b58" opacity="0.28"/><ellipse cx="115.1" cy="34.5" rx="2.3" ry="0.9" transform="rotate(-31 115.1 34.5)" fill="#d29b58" opacity="0.15"/><ellipse cx="139.7" cy="78.4" rx="2.1" ry="0.9" transform="rotate(4 139.7 78.4)" fill="#a9743a" opacity="0.31"/><ellipse cx="155.7" cy="72.8" rx="2.0" ry="1.2" transform="rotate(-13 155.7 72.8)" fill="#c08a4a" opacity="0.32"/><ellipse cx="44.1" cy="56.6" rx="2.0" ry="1.2" transform="rotate(22 44.1 56.6)" fill="#c08a4a" opacity="0.27"/><ellipse cx="141.4" cy="69.4" rx="3.0" ry="1.2" transform="rotate(32 141.4 69.4)" fill="#a9743a" opacity="0.33"/><ellipse cx="11.6" cy="70.9" rx="1.8" ry="0.7" transform="rotate(3 11.6 70.9)" fill="#a9743a" opacity="0.25"/><ellipse cx="84.5" cy="72.3" rx="2.5" ry="1.1" transform="rotate(17 84.5 72.3)" fill="#d29b58" opacity="0.20"/>
+</g>
       </defs>
-      <!-- front frame: two acetate rims + keyhole bridge -->
-      <rect x="6" y="30" width="70" height="50" rx="24" fill="url(#glAcetate)"/>
-      <rect x="94" y="30" width="70" height="50" rx="24" fill="url(#glAcetate)"/>
-      <path d="M74 46 C77 37 93 37 96 46" fill="none" stroke="url(#glAcetate)" stroke-width="8" stroke-linecap="round"/>
-      <!-- lenses: translucent so the wood shows through -->
-      <rect x="13" y="37" width="56" height="36" rx="17" fill="url(#glLens)"/>
-      <rect x="101" y="37" width="56" height="36" rx="17" fill="url(#glLens)"/>
-      <rect x="13.5" y="37.5" width="55" height="35" rx="16.5" fill="none" stroke="#8a5a33" stroke-width="1" opacity="0.6"/>
-      <rect x="101.5" y="37.5" width="55" height="35" rx="16.5" fill="none" stroke="#8a5a33" stroke-width="1" opacity="0.6"/>
-      <!-- diagonal lens glare -->
-      <path d="M26 44 L46 64" stroke="#ffffff" stroke-opacity="0.26" stroke-width="6" stroke-linecap="round"/>
-      <path d="M36 41 L52 57" stroke="#ffffff" stroke-opacity="0.32" stroke-width="2.2" stroke-linecap="round"/>
-      <path d="M114 44 L134 64" stroke="#ffffff" stroke-opacity="0.26" stroke-width="6" stroke-linecap="round"/>
-      <path d="M124 41 L140 57" stroke="#ffffff" stroke-opacity="0.32" stroke-width="2.2" stroke-linecap="round"/>
-      <!-- warm sheen along the top of each rim -->
-      <path d="M18 34.5 Q40 29.5 60 33" fill="none" stroke="#9c6a42" stroke-width="2" stroke-linecap="round" opacity="0.85"/>
-      <path d="M110 33 Q130 29.5 152 34.5" fill="none" stroke="#9c6a42" stroke-width="2" stroke-linecap="round" opacity="0.85"/>
-      <!-- folded temples, nested one over the other -->
-      <path d="M160 37 C126 28 76 24.5 46 26" fill="none" stroke="url(#glAcetate)" stroke-width="5" stroke-linecap="round"/>
-      <path d="M50 26 C36 26.5 27 31 28 40" fill="none" stroke="#46290f" stroke-width="6.5" stroke-linecap="round"/>
-      <path d="M156 35.5 C126 27 84 23.8 58 24.8" fill="none" stroke="#a5714a" stroke-width="1.2" stroke-linecap="round" opacity="0.7"/>
-      <path d="M10 37 C46 24 100 19.5 128 21" fill="none" stroke="url(#glAcetate)" stroke-width="5" stroke-linecap="round"/>
-      <path d="M124 20.7 C138 22 146 27 144.5 36" fill="none" stroke="#46290f" stroke-width="6.5" stroke-linecap="round"/>
-      <path d="M12 35.5 C46 22.5 100 18 126 19.5" fill="none" stroke="#ab7748" stroke-width="1.3" stroke-linecap="round" opacity="0.9"/>
-      <!-- gold hinges -->
-      <rect x="4" y="37" width="4.5" height="10" rx="1.6" fill="#b28e50" stroke="#8a6a38" stroke-width="0.6"/>
-      <rect x="161.5" y="37" width="4.5" height="10" rx="1.6" fill="#b28e50" stroke="#8a6a38" stroke-width="0.6"/>
+
+      <!-- What the piece throws on the wood. The prop's CSS drop-shadow lifts
+           the whole thing off the desk; this is the shorter, harder shadow
+           that seats the acetate on it, and it is drawn from the same paths
+           so the temples read as a second storey above the front. -->
+      <g filter="url(#glSoft)" opacity="0.34">
+        <g mask="url(#glFront)" fill="#3a2510"><path d="M6.2 56.4 C6 39.6 14.4 30.6 41.2 30.2 C67.6 29.8 76.2 38.4 76 55.2 C75.8 71.6 67.4 80.4 41.4 80.2 C15 80 6.4 72.4 6.2 56.4 Z" transform="translate(2.6 5)"/><path d="M94.8 55.2 C94.6 38.8 103 30.8 128.6 31 C154.2 31.2 163.4 39 163.6 55 C163.8 71 155 79.4 129 79.2 C103.4 79 95 71.6 94.8 55.2 Z" transform="translate(2.6 5)"/><path d="M70.6 43 C72.8 37 77.6 34.8 85.2 34.8 C92.8 34.8 97.4 37 99.6 42.8 L99.6 46.4 C95.4 42.6 91.6 44.8 85.2 44.8 C78.8 44.8 75 42.6 70.8 46.4 Z" transform="translate(2.6 5)"/></g>
+      </g>
+
+      <!-- The lenses, seen from underneath: the glasses are lying on their
+           faces, so what is on top here is the back surface of each lens and
+           the desk showing through it. Two passes per lens, never mirrored:
+           the groove's shadow falling in from the lit side, then the window
+           reflected as a soft body with one hard edge inside it. -->
+      <g clip-path="url(#glGlassL)">
+        <path d="M13.2 56.2 C13 42.8 20.4 37.2 41.2 37 C61.6 36.8 69.2 42.4 69 55.2 C68.8 67.8 61.4 73.4 41.4 73.2 C20.8 73 13.4 68 13.2 56.2 Z" fill="url(#glLens)"/>
+        <path d="M13.2 56.2 C13 42.8 20.4 37.2 41.2 37 C61.6 36.8 69.2 42.4 69 55.2 C68.8 67.8 61.4 73.4 41.4 73.2 C20.8 73 13.4 68 13.2 56.2 Z" fill="none" stroke="#2b1c0c" stroke-width="4.5" opacity="0.16" filter="url(#glHaze)"/>
+        <path d="M14.6 50 C17.4 42.6 25.6 37.8 40 37.4" fill="none" stroke="#241505" stroke-width="4" opacity="0.22" filter="url(#glHaze)"/>
+        <!-- a reading lens is thickest in the middle, so its curve shows as a
+             faint second contour a little inside the rim -->
+        <path d="M13.2 56.2 C13 42.8 20.4 37.2 41.2 37 C61.6 36.8 69.2 42.4 69 55.2 C68.8 67.8 61.4 73.4 41.4 73.2 C20.8 73 13.4 68 13.2 56.2 Z" transform="translate(41.2 55.1) scale(0.9) translate(-41.2 -55.1)" fill="none" stroke="#f2f8f7" stroke-width="0.6" opacity="0.09"/>
+        <path d="M23 42.6 L46.5 66" stroke="#ffffff" stroke-opacity="0.15" stroke-width="7" stroke-linecap="round" filter="url(#glHaze)"/>
+        <path d="M34 40.2 L51 57.2" stroke="#ffffff" stroke-opacity="0.3" stroke-width="1.9" stroke-linecap="round"/>
+        <path d="M38.2 39.4 L46.4 47.6" stroke="#ffffff" stroke-opacity="0.5" stroke-width="0.9" stroke-linecap="round"/>
+      </g>
+      <g clip-path="url(#glGlassR)">
+        <path d="M101.8 55 C101.6 42.4 108.8 37.6 128.6 37.8 C148.2 38 156.6 42.8 156.8 55 C157 67 148.6 72.4 129 72.2 C109.2 72 102 67 101.8 55 Z" fill="url(#glLens)"/>
+        <path d="M101.8 55 C101.6 42.4 108.8 37.6 128.6 37.8 C148.2 38 156.6 42.8 156.8 55 C157 67 148.6 72.4 129 72.2 C109.2 72 102 67 101.8 55 Z" fill="none" stroke="#2b1c0c" stroke-width="4.5" opacity="0.16" filter="url(#glHaze)"/>
+        <path d="M103 49.4 C105.6 42.8 113.4 38.4 127.6 38.2" fill="none" stroke="#241505" stroke-width="4" opacity="0.22" filter="url(#glHaze)"/>
+        <path d="M101.8 55 C101.6 42.4 108.8 37.6 128.6 37.8 C148.2 38 156.6 42.8 156.8 55 C157 67 148.6 72.4 129 72.2 C109.2 72 102 67 101.8 55 Z" transform="translate(129.3 55) scale(0.9) translate(-129.3 -55)" fill="none" stroke="#f2f8f7" stroke-width="0.6" opacity="0.09"/>
+        <path d="M112 43.6 L134 65.4" stroke="#ffffff" stroke-opacity="0.13" stroke-width="6.6" stroke-linecap="round" filter="url(#glHaze)"/>
+        <path d="M122.6 41 L138.4 56.6" stroke="#ffffff" stroke-opacity="0.27" stroke-width="1.7" stroke-linecap="round"/>
+        <path d="M126.4 40.4 L133.6 47.6" stroke="#ffffff" stroke-opacity="0.45" stroke-width="0.85" stroke-linecap="round"/>
+        <!-- one thumbprint, wiped once and not well. Only this lens has it. -->
+        <g filter="url(#glHaze)" fill="none" stroke="#fffdf6" stroke-linecap="round" opacity="0.11">
+          <path d="M117 62.6 C123 68 132.6 68 138.6 61.6" stroke-width="2.6"/>
+          <path d="M119.4 58 C125 63.2 133.4 63.2 139.4 57.4" stroke-width="1.5"/>
+        </g>
+      </g>
+
+      <!-- The frame front, painted through the mask: sheet, figure, grain,
+           then the rolled edges. The rims are not a mirrored pair; the right
+           one is a shade smaller and sits a touch higher, the way a pressed
+           pair actually comes out. -->
+      <g fill="none" stroke="#1b0c02" stroke-width="1.7" opacity="0.55"><path d="M6.2 56.4 C6 39.6 14.4 30.6 41.2 30.2 C67.6 29.8 76.2 38.4 76 55.2 C75.8 71.6 67.4 80.4 41.4 80.2 C15 80 6.4 72.4 6.2 56.4 Z"/><path d="M94.8 55.2 C94.6 38.8 103 30.8 128.6 31 C154.2 31.2 163.4 39 163.6 55 C163.8 71 155 79.4 129 79.2 C103.4 79 95 71.6 94.8 55.2 Z"/><path d="M70.6 43 C72.8 37 77.6 34.8 85.2 34.8 C92.8 34.8 97.4 37 99.6 42.8 L99.6 46.4 C95.4 42.6 91.6 44.8 85.2 44.8 C78.8 44.8 75 42.6 70.8 46.4 Z"/></g>
+      <g mask="url(#glFront)">
+        <rect x="0" y="26" width="170" height="58" fill="url(#glSheet)"/>
+        <rect x="0" y="26" width="170" height="58" filter="url(#glMottle)" opacity="0.85"/><rect x="0" y="26" width="170" height="58" filter="url(#glAmber)" opacity="0.5"/>
+        <use href="#glFig"/>
+        <rect x="0" y="26" width="170" height="58" filter="url(#glGrain)" opacity="0.22"/>
+        <g fill="none">
+          <path d="M6.2 56.4 C6 39.6 14.4 30.6 41.2 30.2 C67.6 29.8 76.2 38.4 76 55.2 C75.8 71.6 67.4 80.4 41.4 80.2 C15 80 6.4 72.4 6.2 56.4 Z" stroke="url(#glEdgeHi)" stroke-width="2.2"/>
+          <path d="M6.2 56.4 C6 39.6 14.4 30.6 41.2 30.2 C67.6 29.8 76.2 38.4 76 55.2 C75.8 71.6 67.4 80.4 41.4 80.2 C15 80 6.4 72.4 6.2 56.4 Z" stroke="url(#glEdgeLo)" stroke-width="3"/>
+          <path d="M94.8 55.2 C94.6 38.8 103 30.8 128.6 31 C154.2 31.2 163.4 39 163.6 55 C163.8 71 155 79.4 129 79.2 C103.4 79 95 71.6 94.8 55.2 Z" stroke="url(#glEdgeHi)" stroke-width="2.2"/>
+          <path d="M94.8 55.2 C94.6 38.8 103 30.8 128.6 31 C154.2 31.2 163.4 39 163.6 55 C163.8 71 155 79.4 129 79.2 C103.4 79 95 71.6 94.8 55.2 Z" stroke="url(#glEdgeLo)" stroke-width="3"/>
+          <path d="M70.6 43 C72.8 37 77.6 34.8 85.2 34.8 C92.8 34.8 97.4 37 99.6 42.8 L99.6 46.4 C95.4 42.6 91.6 44.8 85.2 44.8 C78.8 44.8 75 42.6 70.8 46.4 Z" stroke="url(#glEdgeHi)" stroke-width="2.6"/>
+          <path d="M70.6 43 C72.8 37 77.6 34.8 85.2 34.8 C92.8 34.8 97.4 37 99.6 42.8 L99.6 46.4 C95.4 42.6 91.6 44.8 85.2 44.8 C78.8 44.8 75 42.6 70.8 46.4 Z" stroke="url(#glEdgeLo)" stroke-width="2.2"/>
+          <path d="M13.2 56.2 C13 42.8 20.4 37.2 41.2 37 C61.6 36.8 69.2 42.4 69 55.2 C68.8 67.8 61.4 73.4 41.4 73.2 C20.8 73 13.4 68 13.2 56.2 Z" stroke="url(#glLipLo)" stroke-width="3"/>
+          <path d="M13.2 56.2 C13 42.8 20.4 37.2 41.2 37 C61.6 36.8 69.2 42.4 69 55.2 C68.8 67.8 61.4 73.4 41.4 73.2 C20.8 73 13.4 68 13.2 56.2 Z" stroke="url(#glLipHi)" stroke-width="2.4"/>
+          <path d="M101.8 55 C101.6 42.4 108.8 37.6 128.6 37.8 C148.2 38 156.6 42.8 156.8 55 C157 67 148.6 72.4 129 72.2 C109.2 72 102 67 101.8 55 Z" stroke="url(#glLipLo)" stroke-width="3"/>
+          <path d="M101.8 55 C101.6 42.4 108.8 37.6 128.6 37.8 C148.2 38 156.6 42.8 156.8 55 C157 67 148.6 72.4 129 72.2 C109.2 72 102 67 101.8 55 Z" stroke="url(#glLipHi)" stroke-width="2.4"/>
+          <path d="M6.2 56.4 C6 39.6 14.4 30.6 41.2 30.2 C67.6 29.8 76.2 38.4 76 55.2 C75.8 71.6 67.4 80.4 41.4 80.2 C15 80 6.4 72.4 6.2 56.4 Z" stroke="url(#glShine)" stroke-width="1.6"/>
+          <path d="M94.8 55.2 C94.6 38.8 103 30.8 128.6 31 C154.2 31.2 163.4 39 163.6 55 C163.8 71 155 79.4 129 79.2 C103.4 79 95 71.6 94.8 55.2 Z" stroke="url(#glShine)" stroke-width="1.6"/>
+          <path d="M70.6 43 C72.8 37 77.6 34.8 85.2 34.8 C92.8 34.8 97.4 37 99.6 42.8 L99.6 46.4 C95.4 42.6 91.6 44.8 85.2 44.8 C78.8 44.8 75 42.6 70.8 46.4 Z" stroke="url(#glShine)" stroke-width="1.3"/>
+          <!-- polish marks on the top of the rims, and one scuff that has been
+               there long enough to have stopped being a scratch -->
+          <path d="M17.6 35.4 Q38 30.4 60 34" stroke="#e8bd88" stroke-width="1.2" stroke-linecap="round" opacity="0.17"/>
+          <path d="M110 34 Q130 30 151 35" stroke="#e8bd88" stroke-width="1.2" stroke-linecap="round" opacity="0.14"/>
+          <path d="M147.4 39.8 C150.4 38.7 153.6 38.9 155.8 40.2" stroke="#f0c795" stroke-width="0.6" stroke-linecap="round" opacity="0.38"/>
+          <path d="M24 76.4 C29 78.4 35 79.2 41 79.2" stroke="#1c0d02" stroke-width="1.2" stroke-linecap="round" opacity="0.28"/>
+        </g>
+      </g>
+
+      <!-- Hinges: a three-knuckle barrel and a slotted screw, brass gone dull.
+           Drawn per side rather than mirrored, and the screw slots do not
+           agree with each other, because nobody sets them by eye. -->
+      <g>
+        <rect x="3.2" y="41.2" width="5.4" height="12" rx="2" fill="url(#glBrass)" stroke="#6d5426" stroke-width="0.5"/>
+        <g stroke="#6d5426" stroke-width="0.45" opacity="0.7"><path d="M3.4 45.2 H8.4"/><path d="M3.4 49.4 H8.4"/></g>
+        <path d="M4.1 42.6 V51.6" stroke="#fdf2d4" stroke-width="0.7" opacity="0.5" stroke-linecap="round"/>
+        <circle cx="5.9" cy="47.3" r="1.5" fill="url(#glBrass)" stroke="#6d5426" stroke-width="0.45"/>
+        <path d="M4.95 46.9 L6.85 47.7" stroke="#5b4520" stroke-width="0.55" stroke-linecap="round"/>
+        <circle cx="5.4" cy="46.7" r="0.42" fill="#fff7e0" opacity="0.6"/>
+      </g>
+      <g>
+        <rect x="161.2" y="40.6" width="5.2" height="11.6" rx="2" fill="url(#glBrass)" stroke="#6d5426" stroke-width="0.5"/>
+        <g stroke="#6d5426" stroke-width="0.45" opacity="0.7"><path d="M161.4 44.4 H166.2"/><path d="M161.4 48.6 H166.2"/></g>
+        <path d="M162 42 V50.8" stroke="#fdf2d4" stroke-width="0.7" opacity="0.5" stroke-linecap="round"/>
+        <circle cx="163.8" cy="46.5" r="1.45" fill="url(#glBrass)" stroke="#6d5426" stroke-width="0.45"/>
+        <path d="M163.8 45.2 V47.8" stroke="#5b4520" stroke-width="0.55" stroke-linecap="round"/>
+        <circle cx="163.3" cy="45.9" r="0.4" fill="#fff7e0" opacity="0.6"/>
+      </g>
+
+      <!-- The temples, folded one across the other. The lower one is hinged at
+           the right and lays its tip down at the left; the upper one does the
+           reverse, and each casts its own shadow onto whatever it crosses,
+           which is the only thing that says these are stacked and not drawn
+           flat. Both are painted through their own mask so the acetate figure
+           runs on through them. -->
+      <g filter="url(#glHaze)" opacity="0.3" fill="none" stroke="#2f1d0a" stroke-linecap="round" transform="translate(1.4 3)">
+        <path d="M160 39 C128 30.5 84 25.4 50 26.6 C38 27.4 29.6 31.6 28.6 40.4" stroke-width="5.2"/>
+      </g>
+      <g fill="none" stroke="#1b0c02" stroke-linecap="round" opacity="0.5"><path d="M160 39 C128 30.5 84 25.4 50 26.6 C38 27.4 29.6 31.6 28.6 40.4" stroke-width="6.4"/><path d="M35.6 28.2 C31 30.4 28.8 34.6 28.6 40.6" stroke-width="7.6"/></g>
+      <g mask="url(#glTempA)">
+        <rect x="0" y="14" width="170" height="40" fill="url(#glSheet)"/>
+        <rect x="0" y="14" width="170" height="40" filter="url(#glMottle)" opacity="0.66"/><rect x="0" y="14" width="170" height="40" filter="url(#glAmber)" opacity="0.42"/>
+        <use href="#glFig" transform="translate(-22 -30) rotate(4 85 42)"/>
+        <rect x="0" y="14" width="170" height="40" filter="url(#glGrain)" opacity="0.2"/>
+        <g fill="none" stroke-linecap="round">
+          <path d="M160 39 C128 30.5 84 25.4 50 26.6 C38 27.4 29.6 31.6 28.6 40.4" stroke="#d49f60" stroke-width="2" opacity="0.3" transform="translate(-0.3 -1.6)"/>
+          <path d="M160 39 C128 30.5 84 25.4 50 26.6 C38 27.4 29.6 31.6 28.6 40.4" stroke="#1a0c02" stroke-width="2.6" opacity="0.52" transform="translate(0.4 1.8)"/>
+          <!-- the wire core, showing as a shadow in the acetate near the hinge -->
+          <path d="M157 38.6 C146 35.6 136 33.4 127 32" stroke="#201004" stroke-width="1.1" opacity="0.3"/>
+        </g>
+      </g>
+      <g filter="url(#glHaze)" opacity="0.34" fill="none" stroke="#2f1d0a" stroke-linecap="round" transform="translate(1.4 3.2)">
+        <path d="M9.5 38 C44 24.6 98 19.6 126 20.8 C138 21.4 146.4 26.4 145.2 35.2" stroke-width="5.4"/>
+      </g>
+      <g fill="none" stroke="#1b0c02" stroke-linecap="round" opacity="0.5"><path d="M9.5 38 C44 24.6 98 19.6 126 20.8 C138 21.4 146.4 26.4 145.2 35.2" stroke-width="6.6"/><path d="M138.4 22.6 C143.2 24.6 145.6 28.8 145.4 35.4" stroke-width="7.8"/></g>
+      <g mask="url(#glTempB)">
+        <rect x="0" y="14" width="170" height="40" fill="url(#glSheet)"/>
+        <rect x="0" y="14" width="170" height="40" filter="url(#glMottle)" opacity="0.66"/><rect x="0" y="14" width="170" height="40" filter="url(#glAmber)" opacity="0.42"/>
+        <use href="#glFig" transform="translate(36 -26) rotate(-5 85 42)"/>
+        <rect x="0" y="14" width="170" height="40" filter="url(#glGrain)" opacity="0.2"/>
+        <g fill="none" stroke-linecap="round">
+          <path d="M9.5 38 C44 24.6 98 19.6 126 20.8 C138 21.4 146.4 26.4 145.2 35.2" stroke="#dda965" stroke-width="2" opacity="0.34" transform="translate(-0.3 -1.7)"/>
+          <path d="M9.5 38 C44 24.6 98 19.6 126 20.8 C138 21.4 146.4 26.4 145.2 35.2" stroke="#1a0c02" stroke-width="2.6" opacity="0.52" transform="translate(0.4 1.9)"/>
+          <path d="M12.6 36.8 C24 32.6 34 29.6 44 27.4" stroke="#201004" stroke-width="1.1" opacity="0.3"/>
+        </g>
+        <!-- the strength, stamped on the inside of the temple where the wearer
+             would read it. Cut first, then filled, so it sits in the acetate. -->
+        <g transform="rotate(-3.4 120 21.6)" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="4.3" letter-spacing="0.35">
+          <text x="120" y="22.9" fill="#150a01" opacity="0.5">+1.50</text>
+          <text x="120" y="22.55" fill="#e2ba86" opacity="0.3">+1.50</text>
+        </g>
+      </g>
     </svg>
   </div>
   <!-- LEFT: coffee mug from directly above, on a stitched cork coaster. Seen

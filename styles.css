@@ -311,7 +311,10 @@
      top and a music pile (cassette with picks tossed on it) low; the
      mid-right stretch of wood stays deliberately bare. */
   /* screen-edge props: pinned to a viewport edge, roughly half hanging off */
-  .di-glasses { width: 420px; top: 5%;   left: 0; transform: translateX(-57%) rotate(-24deg); }
+  /* the glasses carry their own contact shadow inside the drawing, so the
+     prop shadow here only has to lift them off the wood */
+  .di-glasses { width: 420px; top: 5%;   left: 0; transform: translateX(-57%) rotate(-24deg);
+    filter: drop-shadow(4px 9px 7px rgba(46,32,14,0.24)) saturate(0.88); }
   .di-mug     { width: 380px; top: 36%;  left: 0; transform: translateX(-55%) rotate(-14deg);
     filter: drop-shadow(6px 13px 11px rgba(46,32,14,0.28)) saturate(0.88); }
   .di-floss   { width: 370px; top: 5%;   right: 0; transform: translateX(34%) rotate(8deg); }
