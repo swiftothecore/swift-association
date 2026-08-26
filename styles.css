@@ -571,13 +571,6 @@
        turn on its own now, because the body below it must not. */
     transform: rotate(var(--rot, 0deg));
   }
-  /* the same disc, face down. Unstamped, and a shade flatter because the back
-     of a bead never took the lamp the way the domed face does. */
-  .bead-scatter.disc.blank {
-    background:
-      radial-gradient(circle at 34% 30%, rgba(255,255,255,0.34) 0 8%, transparent 14%),
-      radial-gradient(circle at 42% 38%, #f5f0e2, #e6dfcd 72%, #cdc4ae);
-  }
   /* and the same disc landed on its rim. A face-up-only spill is a spill that
      never happened, and the edge-on silhouette is the cheapest thing on this
      desk that says "these are real objects": a flat pill with the light along

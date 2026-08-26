@@ -219,18 +219,19 @@ const zFor = (bottomY) => 1000 + clamp(Math.round(bottomY / 3), 0, 60000);
 // Beads
 // ---------------------------------------------------------------------------
 
-// kind: "round" | "disc" (face up, lettered) | "blank" (face down) | "side"
-// (edge-on, showing the threading hole). The edge-on variant is the single
-// biggest realism win available: a disc lying on its rim has a completely
-// different silhouette, and a spill where every disc landed face-up is a spill
-// that never happened.
+// kind: "round" | "disc" (lettered) | "side" (edge-on, showing the threading
+// hole). The edge-on variant is the single biggest realism win available: a
+// disc lying on its rim has a completely different silhouette, and a spill
+// where every disc landed the same way up is a spill that never happened.
+// There is deliberately no face-down state: an alphabet bead is stamped on
+// BOTH faces, so whichever way one lands it reads.
 function makeBead(r, x, y, o = {}) {
   const el = document.createElement("div");
   const size = o.size != null ? o.size : rangeR(r, 17, 25);
   const rot = o.rot != null ? o.rot : rangeR(r, -180, 180);
   const kind = o.kind || rollKind(r, o);
 
-  el.className = "bead-scatter " + (kind === "blank" ? "disc blank" : kind);
+  el.className = "bead-scatter " + kind;
   el.style.left = x.toFixed(1) + "px";
   el.style.top = y.toFixed(1) + "px";
   el.style.setProperty("--sz", size.toFixed(1) + "px");
@@ -256,17 +257,18 @@ function makeBead(r, x, y, o = {}) {
   return el;
 }
 
-// Kind mix, weighted toward the coloured rounds. All three disc states are
-// cream, and cream reads far louder against blonde oak than the muted era
-// colours do, so an even split by COUNT is nowhere near an even split by
-// attention: at 45% discs the wood looked like it had been salted.
+// Kind mix, weighted toward the coloured rounds. Both disc states are cream,
+// and cream reads far louder against blonde oak than the muted era colours do,
+// so an even split by COUNT is nowhere near an even split by attention: at 45%
+// discs the wood looked like it had been salted. The share that used to fall
+// to a face-down disc goes to a lettered one, which keeps the cream area
+// exactly where it was tuned and only adds the stamp.
 function rollKind(r, o) {
   const roll = r();
   if (o.faceUp) return roll < 0.72 ? "disc" : roll < 0.88 ? "round" : "side";
   if (roll < 0.58) return "round";
-  if (roll < 0.75) return "disc";
-  if (roll < 0.89) return "side";
-  return "blank";
+  if (roll < 0.86) return "disc";
+  return "side";
 }
 
 // One tin of beads is one tin of beads: an incident draws from two or three

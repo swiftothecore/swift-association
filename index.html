@@ -2076,12 +2076,15 @@ if (location.pathname.endsWith('/index.html')) {
       </g>
     </svg>
   </div>
-  <!-- Spilled alphabet beads, the kind bracelets get strung from. Three shared
-       geometries, because a spill in which every bead landed the same way up
-       is not a spill: #bdDisc face-up with its letter drawn per instance,
-       #bdBack face down and unstamped, and #bdSide lying on its rim with the
-       drilled hole showing. One loose spill below the floss station; its
-       face-up letters spell a word for whoever looks. -->
+  <!-- Spilled alphabet beads, the kind bracelets get strung from. Two shared
+       geometries: #bdDisc face up with its stamp drawn per instance, and
+       #bdSide lying on its rim with the drilled hole showing, because a spill
+       in which every bead landed the same way up is not a spill. There is no
+       face-down state and there must never be one: these beads carry the same
+       letter on BOTH faces, so whichever way one falls it reads.
+       One loose spill below the floss station, and its eight letters are the
+       letters of a song, scrambled the way a tipped-out handful scrambles
+       them. The heart among them is what a kit actually ships. -->
   <div class="desk-item di-beads-r">
     <svg viewBox="0 0 240 220" xmlns="http://www.w3.org/2000/svg">
       <defs>
@@ -2115,11 +2118,6 @@ if (location.pathname.endsWith('/index.html')) {
           <stop offset="0.42" stop-color="#efe9da"/>
           <stop offset="1" stop-color="#c6bda6"/>
         </linearGradient>
-        <linearGradient id="bdSideB" gradientUnits="userSpaceOnUse" x1="-2.98" y1="3.50" x2="2.98" y2="-3.50">
-          <stop offset="0" stop-color="#fdfbf4"/>
-          <stop offset="0.42" stop-color="#efe9da"/>
-          <stop offset="1" stop-color="#c6bda6"/>
-        </linearGradient>
         <g id="bdDisc">
           <!-- the millimetre and a half of acrylic under the face, offset the
                way the lamp throws it -->
@@ -2133,19 +2131,6 @@ if (location.pathname.endsWith('/index.html')) {
                without these two the disc is a printed dot. -->
           <path d="M-8.8 -4.8 A10 10 0 0 1 -3 -9.5" fill="none" stroke="#ffffff" stroke-width="1.1" opacity="0.55" stroke-linecap="round"/>
           <ellipse cx="-3.6" cy="-4" rx="4.4" ry="2.2" transform="rotate(-38 -3.6 -4)" fill="#ffffff" opacity="0.3"/>
-        </g>
-        <!-- The same bead face down. Flatter, because the back never took the
-             lamp the way the domed face does, and dished slightly in the
-             middle where the mould left its mark. A spill in which every disc
-             landed letter up is a spill that never happened. -->
-        <g id="bdBack">
-          <circle cx="1.2" cy="1.8" r="10.3" fill="#c2b8a0"/>
-          <circle r="10.5" fill="#eae4d4"/>
-          <circle r="10.5" fill="url(#bdWash)"/>
-          <circle r="6.4" fill="#e2dbc9" opacity="0.7"/>
-          <circle r="6.4" fill="none" stroke="#cdc4ad" stroke-width="0.5" opacity="0.8"/>
-          <circle r="9.2" fill="none" stroke="url(#bdBevel)" stroke-width="2.5" opacity="0.75"/>
-          <circle r="10.5" fill="none" stroke="#aca285" stroke-width="0.65" opacity="0.85"/>
         </g>
         <!-- Edge on, showing the drilled hole. The barrel is a cylinder, so it
              takes its light across its short axis; the hole is countersunk,
@@ -2169,12 +2154,21 @@ if (location.pathname.endsWith('/index.html')) {
         <!-- the scuff every bead in a tub eventually collects -->
         <path d="M3.4 6.6 q3 -1.4 5.4 -3.6" fill="none" stroke="#ffffff" stroke-width="0.6" opacity="0.4"/></g>
       <g transform="translate(148 70) scale(1.02)"><use href="#bdDisc"/><g transform="rotate(-30)"><text class="bead-letter bead-letter-lip" y="5.7">D</text><text class="bead-letter" y="4.8">D</text></g></g>
-      <g transform="translate(116 96) rotate(104)"><use href="#bdSide" fill="url(#bdSideB)"/></g>
+      <g transform="translate(114 94) scale(1.01)"><use href="#bdDisc"/><g transform="rotate(64)"><text class="bead-letter bead-letter-lip" y="5.7">A</text><text class="bead-letter" y="4.8">A</text></g></g>
       <g transform="translate(134 110) scale(0.99)"><use href="#bdDisc"/><g transform="rotate(8)"><text class="bead-letter bead-letter-lip" y="5.7">C</text><text class="bead-letter" y="4.8">C</text></g></g>
       <g transform="translate(98 130)"><use href="#bdDisc"/><circle r="10.5" fill="#cbb98e" opacity="0.13"/><g transform="rotate(-52)"><text class="bead-letter bead-letter-lip" y="5.7">N</text><text class="bead-letter" y="4.8">N</text></g></g>
       <g transform="translate(74 126) scale(1.03)"><use href="#bdDisc"/><g transform="rotate(22)"><text class="bead-letter bead-letter-lip" y="5.7">R</text><text class="bead-letter" y="4.8">R</text></g>
         <path d="M-7.2 -3.4 q2.6 -2.4 5.6 -3.4" fill="none" stroke="#8b8168" stroke-width="0.5" opacity="0.35"/></g>
-      <g transform="translate(62 100) scale(0.96)"><use href="#bdBack"/><circle r="10.5" fill="#d3bf90" opacity="0.1"/></g>
+      <!-- The heart bead every kit ships a handful of, stamped and inked the
+           same way the letters are. It is what stops the spill being an
+           alphabet and makes it a bracelet kit, and it is the only bead here
+           carrying any colour of its own. -->
+      <g transform="translate(62 100) scale(0.96)"><use href="#bdDisc"/><circle r="10.5" fill="#d3bf90" opacity="0.1"/>
+        <g transform="rotate(-14)">
+          <path transform="translate(0 0.9)" d="M0 4.6 C-4.6 1.5 -6.1 -0.7 -6.1 -3.1 C-6.1 -5.5 -4.2 -6.9 -2.6 -6.9 C-1.2 -6.9 -0.3 -6 0 -5.2 C0.3 -6 1.2 -6.9 2.6 -6.9 C4.2 -6.9 6.1 -5.5 6.1 -3.1 C6.1 -0.7 4.6 1.5 0 4.6 Z" fill="#fffdf6" opacity="0.75"/>
+          <path d="M0 4.6 C-4.6 1.5 -6.1 -0.7 -6.1 -3.1 C-6.1 -5.5 -4.2 -6.9 -2.6 -6.9 C-1.2 -6.9 -0.3 -6 0 -5.2 C0.3 -6 1.2 -6.9 2.6 -6.9 C4.2 -6.9 6.1 -5.5 6.1 -3.1 C6.1 -0.7 4.6 1.5 0 4.6 Z" fill="#b3465a" opacity="0.85"/>
+        </g>
+      </g>
     </svg>
   </div>
   </div>
