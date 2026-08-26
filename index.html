@@ -1276,13 +1276,81 @@ if (location.pathname.endsWith('/index.html')) {
         <linearGradient id="flRound" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff" stop-opacity="0.12"/><stop offset="0.42" stop-color="#ffffff" stop-opacity="0"/><stop offset="1" stop-color="#3d2030" stop-opacity="0.14"/></linearGradient>
         <linearGradient id="flBand" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ece1c7"/><stop offset="1" stop-color="#dbcdad"/></linearGradient>
         <linearGradient id="flGold" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#e5bc5a"/><stop offset="1" stop-color="#c1913a"/></linearGradient>
-        <radialGradient id="flBeadG" cx="0.35" cy="0.3" r="0.85"><stop offset="0" stop-color="#f0d089"/><stop offset="1" stop-color="#c79a3e"/></radialGradient>
-        <radialGradient id="flBeadB" cx="0.35" cy="0.3" r="0.85"><stop offset="0" stop-color="#a9c2de"/><stop offset="1" stop-color="#6c8cb4"/></radialGradient>
-        <radialGradient id="flBeadR" cx="0.35" cy="0.3" r="0.85"><stop offset="0" stop-color="#e2a2b4"/><stop offset="1" stop-color="#c06880"/></radialGradient>
-        <g id="flStarG">
-          <path d="M0 -12 L2.94 -4.05 L11.41 -3.71 L4.76 1.55 L7.05 9.71 L0 5 L-7.05 9.71 L-4.76 1.55 L-11.41 -3.71 L-2.94 -4.05 Z"/>
-          <path d="M0 0 L0 -12 L2.94 -4.05 Z M0 0 L11.41 -3.71 L4.76 1.55 Z M0 0 L7.05 9.71 L0 5 Z M0 0 L-7.05 9.71 L-4.76 1.55 Z M0 0 L-11.41 -3.71 L-2.94 -4.05 Z" fill="#4a3316" opacity="0.18" stroke="none"/>
-          <path d="M0 0 L0 -12 M0 0 L11.41 -3.71 M0 0 L7.05 9.71 M0 0 L-7.05 9.71 M0 0 L-11.41 -3.71" fill="none" stroke="#ffffff" stroke-width="0.9" opacity="0.35"/>
+        <!-- One bead, three colours. The shading is all white and shadow at an
+             opacity, never a per-colour gradient, so the body colour can come
+             in as an inherited fill on each <use> and every bead on the strand
+             is lit by the same lamp instead of carrying its own around. -->
+        <radialGradient id="flBeadLit" cx="0.3" cy="0.24" r="0.78">
+          <stop offset="0" stop-color="#ffffff" stop-opacity="0.46"/>
+          <stop offset="0.5" stop-color="#ffffff" stop-opacity="0.08"/>
+          <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
+        </radialGradient>
+        <!-- The last stop lifts again at the very rim: that is the wood
+             throwing light back up into the underside of the bead, and it is
+             what stops a round object reading as a flat disc with a gradient
+             painted on it. -->
+        <radialGradient id="flBeadShade" cx="0.34" cy="0.28" r="0.94">
+          <stop offset="0.42" stop-color="#2b1522" stop-opacity="0"/>
+          <stop offset="0.9" stop-color="#2b1522" stop-opacity="0.32"/>
+          <stop offset="1" stop-color="#2b1522" stop-opacity="0.1"/>
+        </radialGradient>
+        <g id="flBead">
+          <circle r="5"/>
+          <circle r="5" fill="url(#flBeadShade)"/>
+          <circle r="5" fill="url(#flBeadLit)"/>
+          <ellipse cx="-1.9" cy="-2.2" rx="1.5" ry="1" transform="rotate(-36 -1.9 -2.2)" fill="#ffffff" opacity="0.6"/>
+          <circle r="5" fill="none" stroke="#2b1522" stroke-opacity="0.22" stroke-width="0.5"/>
+        </g>
+        <!-- Where the cord goes in. The hole runs along the cord, not out of
+             the face at the reader, which is the whole difference between a
+             bead someone threaded and a bead someone drew: a loose bead on the
+             wood shows its hole, a strung one shows two mouths and a seam. -->
+        <g id="flBeadMouth">
+          <path d="M0 -4.8 q2.5 4.8 0 9.6" fill="none" stroke="#ffffff" stroke-width="0.5" opacity="0.09"/>
+          <ellipse cy="-4.45" rx="1.15" ry="0.5" fill="#3a2130" opacity="0.34"/>
+          <ellipse cy="4.45" rx="1.15" ry="0.5" fill="#3a2130" opacity="0.22"/>
+        </g>
+        <!-- Folded paper stars, ten facets each and not one of them the same
+             tone: a star is creased from the centre out to every tip, so one
+             side of each ridge takes the lamp and the other falls away. Both
+             the shape and the shading come out of scripts/art/foldstar.py,
+             which bakes the rotation into the vertices rather than leaving it
+             to a transform, because a turned <use> would carry its lighting
+             round with it. Two seeds, never one shape used twice: these were
+             cut and folded by hand and a mirrored pair would say otherwise. -->
+        <g id="flStarA">
+          <path class="fs-body" d="M1.98 -10.98 L3.41 -2.91 L11.62 -1.15 L4.43 2.12 L5.67 10.39 L-0.6 4.46 L-9.39 8.68 L-4.56 0.78 L-11.17 -6.79 L-1.89 -4.41 Z"/>
+          <g stroke="none">
+            <path d="M0 0 L1.98 -10.98 L3.41 -2.91 Z" fill="#4a3316" opacity="0.203"/>
+            <path d="M0 0 L11.62 -1.15 L4.43 2.12 Z" fill="#4a3316" opacity="0.233"/>
+            <path d="M0 0 L5.67 10.39 L4.43 2.12 Z" fill="#4a3316" opacity="0.084"/>
+            <path d="M0 0 L-9.39 8.68 L-0.6 4.46 Z" fill="#4a3316" opacity="0.258"/>
+            <path d="M0 0 L-11.17 -6.79 L-4.56 0.78 Z" fill="#4a3316" opacity="0.138"/>
+            <path d="M0 0 L1.98 -10.98 L-1.89 -4.41 Z" fill="#fffdf3" opacity="0.274"/>
+            <path d="M0 0 L11.62 -1.15 L3.41 -2.91 Z" fill="#fffdf3" opacity="0.319"/>
+            <path d="M0 0 L5.67 10.39 L-0.6 4.46 Z" fill="#fffdf3" opacity="0.096"/>
+            <path d="M0 0 L-9.39 8.68 L-4.56 0.78 Z" fill="#fffdf3" opacity="0.357"/>
+            <path d="M0 0 L-11.17 -6.79 L-1.89 -4.41 Z" fill="#fffdf3" opacity="0.177"/>
+          </g>
+          <path d="M0 0 L1.98 -10.98 M0 0 L11.62 -1.15 M0 0 L5.67 10.39 M0 0 L-9.39 8.68 M0 0 L-11.17 -6.79" fill="none" stroke="#ffffff" stroke-width="0.5" opacity="0.4"/>
+          <path d="M0 0 L3.41 -2.91 M0 0 L4.43 2.12 M0 0 L-0.6 4.46 M0 0 L-4.56 0.78 M0 0 L-1.89 -4.41" fill="none" stroke="#4a3316" stroke-width="0.4" opacity="0.16"/>
+        </g>
+        <g id="flStarB">
+          <path class="fs-body" d="M-4.3 -10.2 L1.48 -4.86 L8.53 -7.06 L5.15 -0.24 L10.61 6.75 L1.28 4.36 L-3.74 11.27 L-4.31 3.23 L-10.82 0.77 L-3.66 -3.11 Z"/>
+          <g stroke="none">
+            <path d="M0 0 L-4.3 -10.2 L1.48 -4.86 Z" fill="#4a3316" opacity="0.104"/>
+            <path d="M0 0 L8.53 -7.06 L5.15 -0.24 Z" fill="#4a3316" opacity="0.259"/>
+            <path d="M0 0 L10.61 6.75 L1.28 4.36 Z" fill="#4a3316" opacity="0.134"/>
+            <path d="M0 0 L-3.74 11.27 L1.28 4.36 Z" fill="#4a3316" opacity="0.221"/>
+            <path d="M0 0 L-10.82 0.77 L-4.31 3.23 Z" fill="#4a3316" opacity="0.23"/>
+            <path d="M0 0 L-4.3 -10.2 L-3.66 -3.11 Z" fill="#fffdf3" opacity="0.126"/>
+            <path d="M0 0 L8.53 -7.06 L1.48 -4.86 Z" fill="#fffdf3" opacity="0.358"/>
+            <path d="M0 0 L10.61 6.75 L5.15 -0.24 Z" fill="#fffdf3" opacity="0.172"/>
+            <path d="M0 0 L-3.74 11.27 L-4.31 3.23 Z" fill="#fffdf3" opacity="0.302"/>
+            <path d="M0 0 L-10.82 0.77 L-3.66 -3.11 Z" fill="#fffdf3" opacity="0.315"/>
+          </g>
+          <path d="M0 0 L-4.3 -10.2 M0 0 L8.53 -7.06 M0 0 L10.61 6.75 M0 0 L-3.74 11.27 M0 0 L-10.82 0.77" fill="none" stroke="#ffffff" stroke-width="0.5" opacity="0.4"/>
+          <path d="M0 0 L1.48 -4.86 M0 0 L5.15 -0.24 M0 0 L1.28 4.36 M0 0 L-4.31 3.23 M0 0 L-3.66 -3.11" fill="none" stroke="#4a3316" stroke-width="0.4" opacity="0.16"/>
         </g>
       </defs>
       <!-- The skeins are drawn as what they are: one continuous loop of floss
@@ -1394,22 +1462,46 @@ if (location.pathname.endsWith('/index.html')) {
               fill="url(#flBand)" stroke="#b9a884" stroke-width="0.7"/>
         <path d="M19.8 -9.4 L19.8 9.4" stroke="#cbbb99" stroke-width="1.2" opacity="0.5"/>
       </g>
-      <!-- loose strand threading three beads, swaying gently -->
+      <!-- A part-strung strand, swaying gently: floss off the rose skein with
+           three beads on it and a stopper knot below the last one, which is
+           the honest reason the beads have not slid off the end. Each bead is
+           lit by the fixed lamp and only its two hole mouths are turned, to
+           follow the cord where it goes in. -->
       <g class="desk-sway">
-        <path d="M15 58 C10 74 33 80 28 96 C24 105 34 108 33 118" fill="none" stroke="#b45874" stroke-width="2" stroke-linecap="round"/>
-        <circle cx="28" cy="96" r="5" fill="url(#flBeadG)" stroke="#9c7527" stroke-width="0.8"/>
-        <circle cx="28" cy="96" r="1.6" fill="#5d4318"/>
-        <circle cx="26.4" cy="94.4" r="1" fill="#ffffff" opacity="0.55"/>
-        <circle cx="31" cy="107" r="4.6" fill="url(#flBeadB)" stroke="#4c6b91" stroke-width="0.8"/>
-        <circle cx="31" cy="107" r="1.5" fill="#324e6e"/>
-        <circle cx="29.5" cy="105.5" r="0.9" fill="#ffffff" opacity="0.55"/>
-        <circle cx="33" cy="117" r="4.2" fill="url(#flBeadR)" stroke="#964962" stroke-width="0.8"/>
-        <circle cx="33" cy="117" r="1.4" fill="#6e3247"/>
-        <circle cx="31.6" cy="115.6" r="0.8" fill="#ffffff" opacity="0.55"/>
+        <path d="M15 58 C10 74 33 80 28 96 C24 105 34 108 33 118 C32.7 120.8 33.6 122.6 34.6 124.2"
+              fill="none" stroke="#b45874" stroke-width="2" stroke-linecap="round"/>
+        <!-- each bead stands off the wood on the cord, so it drops a short
+             shadow of its own rather than sitting flush against it -->
+        <g fill="#4a2b1a" opacity="0.24">
+          <ellipse cx="29.6" cy="98.2" rx="4.7" ry="4.3"/>
+          <ellipse cx="30.8" cy="108.6" rx="4.3" ry="3.9"/>
+          <ellipse cx="34.3" cy="118.8" rx="3.9" ry="3.6"/>
+        </g>
+        <g transform="translate(28 96)" fill="#d9ab4d">
+          <use href="#flBead"/>
+          <g transform="rotate(20)"><use href="#flBeadMouth"/></g>
+        </g>
+        <g transform="translate(29.4 106.6) scale(0.92)" fill="#7d9cc2">
+          <use href="#flBead"/>
+          <g transform="rotate(-31)"><use href="#flBeadMouth"/></g>
+        </g>
+        <g transform="translate(33 117) scale(0.84)" fill="#cf7f95">
+          <use href="#flBead"/>
+          <g transform="rotate(1)"><use href="#flBeadMouth"/></g>
+        </g>
+        <!-- The stopper knot that is the honest reason three beads are still
+             sitting on a loose end of floss. Drawn as the cord crossing itself
+             and carrying on, not as a lump tied onto the end: the far turn
+             passes behind, the near one over it, and the tail leaves the
+             crossing and tapers where it was cut. Whiskers of fray were tried
+             here and read as legs, which is the argument against detailing
+             anything much under a millimetre. -->
+        <path d="M34.4 123.4 C31.4 124.4 32.2 128.4 35.4 128" fill="none" stroke="#a04e69" stroke-width="1.7" stroke-linecap="round"/>
+        <path d="M33.6 125.4 C37.2 124.8 37.6 128.8 34.6 129.6 C33.2 130 32.5 130.9 32.3 132.1" fill="none" stroke="#c1687f" stroke-width="1.9" stroke-linecap="round"/>
       </g>
       <!-- folded paper stars -->
-      <use href="#flStarG" transform="translate(86 96) rotate(12)" fill="url(#flGold)" stroke="#a87c2e" stroke-width="0.8"/>
-      <use href="#flStarG" transform="translate(60 110) rotate(-18) scale(0.72)" fill="#d795a1" stroke="#a35b6d" stroke-width="0.8"/>
+      <use href="#flStarA" transform="translate(86 96)" fill="url(#flGold)" stroke="#a87c2e" stroke-width="0.7" stroke-linejoin="round"/>
+      <use href="#flStarB" transform="translate(60 110) scale(0.72)" fill="#d795a1" stroke="#a35b6d" stroke-width="0.9" stroke-linejoin="round"/>
     </svg>
   </div>
   <!-- A crumpled draft tossed off the page.
@@ -1984,34 +2076,107 @@ if (location.pathname.endsWith('/index.html')) {
       </g>
     </svg>
   </div>
-  <!-- Spilled alphabet beads, the kind bracelets get strung from. One shared
-       geometry: #bdDisc face-up (letter drawn per instance), #bdSide edge-on
-       showing the threading hole. One loose spill below the floss station;
-       its face-up letters spell a word for whoever looks. -->
+  <!-- Spilled alphabet beads, the kind bracelets get strung from. Three shared
+       geometries, because a spill in which every bead landed the same way up
+       is not a spill: #bdDisc face-up with its letter drawn per instance,
+       #bdBack face down and unstamped, and #bdSide lying on its rim with the
+       drilled hole showing. One loose spill below the floss station; its
+       face-up letters spell a word for whoever looks. -->
   <div class="desk-item di-beads-r">
     <svg viewBox="0 0 240 220" xmlns="http://www.w3.org/2000/svg">
       <defs>
-        <radialGradient id="bdWhite" cx="0.35" cy="0.3" r="0.95"><stop offset="0" stop-color="#fdfbf4"/><stop offset="0.7" stop-color="#f0ebdd"/><stop offset="1" stop-color="#d5cdb9"/></radialGradient>
+        <!-- The face of a disc bead: a warm bone body with the lamp on its
+             upper left, then one wash across the whole disc so the plastic
+             darkens away from it. Nothing here is rotated per bead, because a
+             disc is round: turning one only ever turns the letter stamped on
+             it, and turning the shading with it is what used to leave eight
+             beads each lit from a different corner of the room. -->
+        <radialGradient id="bdFace" cx="0.36" cy="0.3" r="0.95">
+          <stop offset="0" stop-color="#fffdf6"/>
+          <stop offset="0.55" stop-color="#eee7d5"/>
+          <stop offset="1" stop-color="#cec4ac"/>
+        </radialGradient>
+        <linearGradient id="bdWash" x1="0.1" y1="0" x2="0.85" y2="1">
+          <stop offset="0" stop-color="#ffffff" stop-opacity="0.2"/>
+          <stop offset="0.46" stop-color="#ffffff" stop-opacity="0"/>
+          <stop offset="1" stop-color="#3b2c14" stop-opacity="0.23"/>
+        </linearGradient>
+        <!-- The moulded chamfer, carried round the rim as a single stroke so
+             the light travels along it. A bead is pressed in a mould and has
+             no sharp corner anywhere on it; the chamfer is the whole reason a
+             disc reads as a piece of plastic rather than as a printed dot. -->
+        <linearGradient id="bdBevel" x1="0.12" y1="0" x2="0.88" y2="1">
+          <stop offset="0" stop-color="#fffdf6"/>
+          <stop offset="0.45" stop-color="#eee7d5"/>
+          <stop offset="1" stop-color="#b5aa90"/>
+        </linearGradient>
+        <linearGradient id="bdSideA" gradientUnits="userSpaceOnUse" x1="-0.05" y1="-4.60" x2="0.05" y2="4.60">
+          <stop offset="0" stop-color="#fdfbf4"/>
+          <stop offset="0.42" stop-color="#efe9da"/>
+          <stop offset="1" stop-color="#c6bda6"/>
+        </linearGradient>
+        <linearGradient id="bdSideB" gradientUnits="userSpaceOnUse" x1="-2.98" y1="3.50" x2="2.98" y2="-3.50">
+          <stop offset="0" stop-color="#fdfbf4"/>
+          <stop offset="0.42" stop-color="#efe9da"/>
+          <stop offset="1" stop-color="#c6bda6"/>
+        </linearGradient>
         <g id="bdDisc">
-          <circle r="10.5" fill="url(#bdWhite)" stroke="#bdb49e" stroke-width="0.9"/>
-          <circle r="8.7" fill="none" stroke="#ffffff" stroke-width="1.1" opacity="0.45"/>
-          <circle cx="-3.6" cy="-4" r="2" fill="#ffffff" opacity="0.6"/>
+          <!-- the millimetre and a half of acrylic under the face, offset the
+               way the lamp throws it -->
+          <circle cx="1.2" cy="1.8" r="10.3" fill="#c2b8a0"/>
+          <circle r="10.5" fill="url(#bdFace)"/>
+          <circle r="10.5" fill="url(#bdWash)"/>
+          <circle r="9.2" fill="none" stroke="url(#bdBevel)" stroke-width="2.5"/>
+          <circle r="10.5" fill="none" stroke="#aca285" stroke-width="0.65" opacity="0.85"/>
+          <!-- the glint the chamfer throws just in from the rim, and a soft
+               sheen laid across the face behind it. Moulded plastic is glossy;
+               without these two the disc is a printed dot. -->
+          <path d="M-8.8 -4.8 A10 10 0 0 1 -3 -9.5" fill="none" stroke="#ffffff" stroke-width="1.1" opacity="0.55" stroke-linecap="round"/>
+          <ellipse cx="-3.6" cy="-4" rx="4.4" ry="2.2" transform="rotate(-38 -3.6 -4)" fill="#ffffff" opacity="0.3"/>
         </g>
+        <!-- The same bead face down. Flatter, because the back never took the
+             lamp the way the domed face does, and dished slightly in the
+             middle where the mould left its mark. A spill in which every disc
+             landed letter up is a spill that never happened. -->
+        <g id="bdBack">
+          <circle cx="1.2" cy="1.8" r="10.3" fill="#c2b8a0"/>
+          <circle r="10.5" fill="#eae4d4"/>
+          <circle r="10.5" fill="url(#bdWash)"/>
+          <circle r="6.4" fill="#e2dbc9" opacity="0.7"/>
+          <circle r="6.4" fill="none" stroke="#cdc4ad" stroke-width="0.5" opacity="0.8"/>
+          <circle r="9.2" fill="none" stroke="url(#bdBevel)" stroke-width="2.5" opacity="0.75"/>
+          <circle r="10.5" fill="none" stroke="#aca285" stroke-width="0.65" opacity="0.85"/>
+        </g>
+        <!-- Edge on, showing the drilled hole. The barrel is a cylinder, so it
+             takes its light across its short axis; the hole is countersunk,
+             which is why there is a lit lip on one side of it and none on the
+             other. -->
         <g id="bdSide">
-          <rect x="-10.5" y="-4.6" width="21" height="9.2" rx="4.4" fill="url(#bdWhite)" stroke="#bdb49e" stroke-width="0.9"/>
-          <path d="M-7.6 -2.4 q7.6 -1.8 15.2 0" fill="none" stroke="#ffffff" stroke-width="1.1" opacity="0.6"/>
-          <ellipse rx="1.9" ry="2.3" fill="#57503e"/>
+          <rect x="-10.5" y="-4.6" width="21" height="9.2" rx="4.4" fill="#c2b8a0" transform="translate(1 1.5)"/>
+          <rect x="-10.5" y="-4.6" width="21" height="9.2" rx="4.4" stroke="#aca285" stroke-width="0.65"/>
+          <ellipse rx="2.5" ry="2.9" fill="#7d735c"/>
+          <ellipse rx="1.9" ry="2.3" fill="#4f4838"/>
+          <path d="M-1.9 -1.3 A2.4 2.9 0 0 1 1.5 -2.1" fill="none" stroke="#fffdf3" stroke-width="0.7" opacity="0.5"/>
         </g>
       </defs>
-      <g transform="translate(208 26) rotate(-18)"><use href="#bdDisc"/><text class="bead-letter" y="4.8">G</text></g>
-      <g transform="translate(172 44) rotate(12)"><use href="#bdDisc"/><text class="bead-letter" y="4.8">I</text></g>
-      <g transform="translate(140 34) rotate(-35)"><use href="#bdSide"/></g>
-      <g transform="translate(190 78) rotate(40)"><use href="#bdDisc"/><text class="bead-letter" y="4.8">A</text></g>
-      <g transform="translate(148 70) rotate(-30)"><use href="#bdDisc"/><text class="bead-letter" y="4.8">D</text></g>
-      <g transform="translate(134 110) rotate(8)"><use href="#bdDisc"/><text class="bead-letter" y="4.8">C</text></g>
-      <g transform="translate(98 130) rotate(-52)"><use href="#bdDisc"/><text class="bead-letter" y="4.8">N</text></g>
-      <g transform="translate(74 126) rotate(22)"><use href="#bdDisc"/><text class="bead-letter" y="4.8">R</text></g>
+      <!-- The spill itself. Every disc sits square to the lamp and only its
+           stamp is turned, and no two are quite the same size, because these
+           came out of one tub and landed as they fell. -->
+      <g transform="translate(208 26)"><use href="#bdDisc"/><g transform="rotate(-18)"><text class="bead-letter bead-letter-lip" y="5.7">G</text><text class="bead-letter" y="4.8">G</text></g></g>
+      <g transform="translate(172 44) scale(1.04)"><use href="#bdDisc"/><circle r="10.5" fill="#d3bf90" opacity="0.16"/><g transform="rotate(12)"><text class="bead-letter bead-letter-lip" y="5.7">I</text><text class="bead-letter" y="4.8">I</text></g></g>
+      <g transform="translate(140 34) rotate(-35)"><use href="#bdSide" fill="url(#bdSideA)"/></g>
+      <g transform="translate(190 78) scale(0.97)"><use href="#bdDisc"/><g transform="rotate(40)"><text class="bead-letter bead-letter-lip" y="5.7">A</text><text class="bead-letter" y="4.8">A</text></g>
+        <!-- the scuff every bead in a tub eventually collects -->
+        <path d="M3.4 6.6 q3 -1.4 5.4 -3.6" fill="none" stroke="#ffffff" stroke-width="0.6" opacity="0.4"/></g>
+      <g transform="translate(148 70) scale(1.02)"><use href="#bdDisc"/><g transform="rotate(-30)"><text class="bead-letter bead-letter-lip" y="5.7">D</text><text class="bead-letter" y="4.8">D</text></g></g>
+      <g transform="translate(116 96) rotate(104)"><use href="#bdSide" fill="url(#bdSideB)"/></g>
+      <g transform="translate(134 110) scale(0.99)"><use href="#bdDisc"/><g transform="rotate(8)"><text class="bead-letter bead-letter-lip" y="5.7">C</text><text class="bead-letter" y="4.8">C</text></g></g>
+      <g transform="translate(98 130)"><use href="#bdDisc"/><circle r="10.5" fill="#cbb98e" opacity="0.13"/><g transform="rotate(-52)"><text class="bead-letter bead-letter-lip" y="5.7">N</text><text class="bead-letter" y="4.8">N</text></g></g>
+      <g transform="translate(74 126) scale(1.03)"><use href="#bdDisc"/><g transform="rotate(22)"><text class="bead-letter bead-letter-lip" y="5.7">R</text><text class="bead-letter" y="4.8">R</text></g>
+        <path d="M-7.2 -3.4 q2.6 -2.4 5.6 -3.4" fill="none" stroke="#8b8168" stroke-width="0.5" opacity="0.35"/></g>
+      <g transform="translate(62 100) scale(0.96)"><use href="#bdBack"/><circle r="10.5" fill="#d3bf90" opacity="0.1"/></g>
     </svg>
+  </div>
   </div>
 </div>
 <div id="toastLayer" class="toast-layer" aria-live="polite"></div>
