@@ -1036,12 +1036,16 @@ if (location.pathname.endsWith('/index.html')) {
           <ellipse rx="3.4" ry="8.6" transform="rotate(13)" fill="none" stroke="url(#calWire)" stroke-width="2.4"/>
           <path d="M-4.4 -4.4 C-3.9 -7.6 -0.6 -8.8 1.6 -7.2" fill="none" stroke="#f8f5ec" stroke-width="0.9" opacity="0.55"/>
         </g>
-        <!-- the wire on the page: its shadow first (the coil is raised off the
+        <!-- The wire on the page: its shadow first (the coil is raised off the
              paper, lit from the upper left like every other prop), then the
-             wire, ending inside the slot as it turns down through it -->
+             wire, ending inside the slot as it turns down through it. It has to
+             START where the loop's right leg crosses the pad's top edge — at
+             (2.99, 2) off the shared centre, on the tangent the ellipse is
+             travelling when it gets there — or the ring and its own tail read
+             as two unrelated objects with a strip of bare paper between. -->
         <g id="calStub">
-          <path d="M2.5 6 Q2.2 9.8 -1.5 11.2" fill="none" stroke="#46341a" stroke-opacity="0.2" stroke-width="3" stroke-linecap="round"/>
-          <path d="M1.7 6 Q1.4 9.7 -2.3 11.1" fill="none" stroke="url(#calWire)" stroke-width="2.4" stroke-linecap="round"/>
+          <path d="M3.8 2.1 C3 5.3 2 8.5 -1.5 11.2" fill="none" stroke="#46341a" stroke-opacity="0.2" stroke-width="3" stroke-linecap="round"/>
+          <path d="M3 2 C2.2 5.2 1.2 8.4 -2.3 11.1" fill="none" stroke="url(#calWire)" stroke-width="2.4" stroke-linecap="round"/>
         </g>
       </defs>
       <!-- The coil, threaded: drawn before the paper so the pad hides the half
