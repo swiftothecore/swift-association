@@ -833,7 +833,7 @@
   }
   /* Nudged clear of the swash without paying for it in layout: a transform moves
      the ink only, so the notebook below stays exactly where it was drawn. */
-  .tagline-row { transform: translateY(8px); }
+  .tagline-row { transform: translateY(5px); }
   /* small inked hearts holding the tagline */
   .tagline-row .tag-heart {
     width: 13px; height: auto; overflow: visible;
