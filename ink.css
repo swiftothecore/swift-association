@@ -15,7 +15,11 @@
    Deliberately NOT listed: containers that hand --hand to a whole subtree (the
    searcher's `body`, `.song-modal-body`), since tilting one of those tilts a page
    rather than a run of writing, and text fields, since a field that is off-axis is
-   unpleasant to type in. The last rule resets a run nested inside another run, so
+   unpleasant to type in. `.loading` is the same exclusion for the same reason and is
+   worth naming, because it does declare --hand and so reads like an omission: it was
+   a line of handwriting once, but it is now the box the closed notebook cover fills
+   edge to edge, and a fraction of a degree there slides the cover off the card it is
+   sitting on and shows the paper underneath along the head and the top corner. The last rule resets a run nested inside another run, so
    the effect never compounds: only the outer edge of a piece of handwriting is inked.
 
    WHAT IT DOES. Two quiet axes, a sub-degree tilt and a sub-pixel baseline shift.
@@ -66,7 +70,7 @@
 *:nth-child(11n+10) > * > * { --ink-jit3: 0.05deg; --ink-lift3: 0.02px; }
 *:nth-child(11n+11) > * > * { --ink-jit3: -0.02deg; --ink-lift3: 0.11px; }
 
-/* Every authored run of handwriting (174 selectors). */
+/* Every authored run of handwriting (173 selectors). */
 .about-note-lbl, .ach .ach-nm, .ach-goal-btn span,
 .ach-goal-name, .ach-goal-note, .ach-latest-name,
 .ach-page-title, .ach-quest-cta span, .ach-quest-meterhead b,
@@ -99,7 +103,7 @@
 .inf-cell-num, .inf-hero-title, .inf-medallion b,
 .inf-row-h, .iw-big, .keep-counter-d,
 .keep-counter-n, .lc-line, .led-item,
-.loading, .lyric-card .lyric-line, .margin-tally,
+.lyric-card .lyric-line, .margin-tally,
 .mc-reward, .mc-title, .mh-seal-num,
 .mh-title, .mode-tab, .ms-cap,
 .name-prompt p, .nav-card-title, .nb-cover-title,
@@ -163,7 +167,7 @@
   .inf-cell-num, .inf-hero-title, .inf-medallion b,
   .inf-row-h, .iw-big, .keep-counter-d,
   .keep-counter-n, .lc-line, .led-item,
-  .loading, .lyric-card .lyric-line, .margin-tally,
+  .lyric-card .lyric-line, .margin-tally,
   .mc-reward, .mc-title, .mh-seal-num,
   .mh-title, .mode-tab, .ms-cap,
   .name-prompt p, .nav-card-title, .nb-cover-title,
@@ -223,7 +227,7 @@
   .inf-cell-num, .inf-hero-title, .inf-medallion b,
   .inf-row-h, .iw-big, .keep-counter-d,
   .keep-counter-n, .lc-line, .led-item,
-  .loading, .lyric-card .lyric-line, .margin-tally,
+  .lyric-card .lyric-line, .margin-tally,
   .mc-reward, .mc-title, .mh-seal-num,
   .mh-title, .mode-tab, .ms-cap,
   .name-prompt p, .nav-card-title, .nb-cover-title,

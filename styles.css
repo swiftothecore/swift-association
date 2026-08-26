@@ -5481,6 +5481,10 @@
   .card.is-booting {
     padding: 0;
     background: none; background-color: transparent;
+    /* Keep the two drop shadows so the closed notebook still sits on the desk, but drop the
+       white inset highlight: it is the top edge of a sheet of paper, and the cover's corners
+       are rounded harder than the card's, so it surfaces as a white nick in the top corner. */
+    box-shadow: 0 18px 40px rgba(60, 50, 35, 0.28), 0 2px 6px rgba(60, 50, 35, 0.18);
   }
   .error {
     text-align: center; padding: 40px 16px;
