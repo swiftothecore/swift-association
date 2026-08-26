@@ -479,8 +479,17 @@
     font: 700 14px "Courier Prime", monospace;
     fill: #2e2b26; text-anchor: middle;
   }
-  /* crumpled draft: below the music pile, as if flicked off the page */
-  .di-crumple { width: 130px; top: 80%; left: calc(50% + 372px); transform: rotate(-24deg); }
+  /* Crumpled draft: below the music pile, as if flicked off the page. Sized
+     off the same 3px/mm scale as everything else — a sheet balled up in one
+     hand comes out around 5cm across, not the 4.3cm it used to be — and given
+     its own shadow pair rather than the shared one, because a dense little
+     ball sitting on wood casts a tight dark contact under itself as well as
+     the soft cast shadow every prop gets. */
+  .di-crumple {
+    width: 152px; top: 80%; left: calc(50% + 361px); transform: rotate(-24deg);
+    filter: drop-shadow(4px 7px 6px rgba(46,32,14,0.28))
+            drop-shadow(1px 2px 1.5px rgba(46,32,14,0.30)) saturate(0.9);
+  }
 
   /* ---------- The scrolling desk (js/scatter.js + js/deskprops.js) ----------
      Everything on the wood below the first screenful: bead incidents, dropped

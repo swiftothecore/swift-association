@@ -1412,47 +1412,198 @@ if (location.pathname.endsWith('/index.html')) {
       <use href="#flStarG" transform="translate(60 110) rotate(-18) scale(0.72)" fill="#d795a1" stroke="#a35b6d" stroke-width="0.8"/>
     </svg>
   </div>
-  <!-- A crumpled draft tossed off the page: notebook paper balled up, facets
-       catching the light, with fragments of its ruled lines and red margin
-       still readable on the folds. Drawn before the cassette pile so a near
-       miss tucks under it. -->
+  <!-- A crumpled draft tossed off the page.
+
+       What makes a paper ball read as PAPER rather than as a rock is that it
+       is still a sheet: every facet is a flat piece of the same page, so the
+       ruling on it runs straight and evenly spaced within that facet and
+       changes direction the instant it crosses a crease. So the ruling is a
+       line pattern per facet, each at its own angle, never continuing across a
+       fold; the red margin is six separate segments whose ends meet exactly on
+       the creases they jog at; and the torn edge with its half-punched wire
+       hole says which notebook the sheet came out of.
+
+       The tessellation is a rim of triangles and quads, a mid-ring, and four
+       off-centre hubs, rather than a single fan from the middle. A fan gives
+       every facet a long thin wedge pointing at one point and the ball reads
+       as a parasol; a mid-ring keeps the planes short and stops any of them
+       agreeing on a centre.
+
+       Lit from the upper left, but deliberately NOT shaded like a sphere: a
+       crumple has dull facets sitting in the light and bright ones sitting in
+       the shade, because each plane is tipped by whichever fold it landed on.
+       Drawn before the cassette pile so a near miss tucks under it. -->
   <div class="desk-item di-crumple">
     <svg viewBox="0 0 130 130" xmlns="http://www.w3.org/2000/svg">
       <defs>
-        <path id="crBlob" d="M65 12 L90 22 L112 40 L104 60 L118 84 L96 106 L74 114 L46 110 L26 94 L14 60 L30 32 Z"/>
-        <radialGradient id="crShade" cx="0.38" cy="0.32" r="0.85">
-          <stop offset="0" stop-color="#ffffff" stop-opacity="0.3"/>
-          <stop offset="0.5" stop-color="#ffffff" stop-opacity="0"/>
-          <stop offset="1" stop-color="#7c6b47" stop-opacity="0.4"/>
+        <path id="crBlob" d="M66 10 L86 15 L100 26 L112 20 L112 42 L118 60 L110 80 L98 98 L80 112 L60 118 L42 112 L26 100 L16 104 L14 80 L12 54 L26 32 L44 16 Z"/>
+        <!-- rim: each mid-ring point's own triangle against the silhouette -->
+        <path id="crT1" d="M70 26 L66 10 L86 15 Z"/>
+        <path id="crT2" d="M94 40 L100 26 L112 20 Z"/>
+        <path id="crT3" d="M100 66 L112 42 L118 60 Z"/>
+        <path id="crT4" d="M86 92 L110 80 L98 98 Z"/>
+        <path id="crT5" d="M62 102 L80 112 L60 118 Z"/>
+        <path id="crT6" d="M38 94 L42 112 L26 100 L16 104 Z"/>
+        <path id="crT7" d="M26 66 L14 80 L12 54 Z"/>
+        <path id="crT8" d="M38 34 L26 32 L44 16 Z"/>
+        <!-- rim: the quads bridging one mid-ring point to the next -->
+        <path id="crB1" d="M70 26 L86 15 L100 26 L94 40 Z"/>
+        <path id="crB2" d="M94 40 L112 20 L112 42 L100 66 Z"/>
+        <path id="crB3" d="M100 66 L118 60 L110 80 L86 92 Z"/>
+        <path id="crB4" d="M86 92 L98 98 L80 112 L62 102 Z"/>
+        <path id="crB5" d="M62 102 L60 118 L42 112 L38 94 Z"/>
+        <path id="crB6" d="M38 94 L16 104 L14 80 L26 66 Z"/>
+        <path id="crB7" d="M26 66 L12 54 L26 32 L38 34 Z"/>
+        <path id="crB8" d="M38 34 L44 16 L66 10 L70 26 Z"/>
+        <!-- inner band: mid-ring back to the four hubs -->
+        <path id="crI1" d="M58 50 L38 34 L70 26 Z"/>
+        <path id="crI2" d="M58 50 L70 26 L94 40 Z"/>
+        <path id="crI3" d="M80 62 L94 40 L100 66 Z"/>
+        <path id="crI4" d="M80 62 L100 66 L86 92 Z"/>
+        <path id="crI5" d="M64 86 L86 92 L62 102 Z"/>
+        <path id="crI6" d="M64 86 L62 102 L38 94 Z"/>
+        <path id="crI7" d="M40 66 L38 94 L26 66 Z"/>
+        <path id="crI8" d="M40 66 L26 66 L38 34 Z"/>
+        <!-- the creases running hub to hub, and the plane they enclose -->
+        <path id="crG1" d="M58 50 L94 40 L80 62 Z"/>
+        <path id="crG2" d="M80 62 L86 92 L64 86 Z"/>
+        <path id="crG3" d="M64 86 L38 94 L40 66 Z"/>
+        <path id="crG4" d="M40 66 L38 34 L58 50 Z"/>
+        <path id="crC"  d="M58 50 L80 62 L64 86 L40 66 Z"/>
+        <!-- One ruled-line pattern per ruled facet. Separate patterns rather
+             than one shared fill because two neighbouring facets filled from
+             the same pattern would have their lines run straight on through
+             the crease between them, which is the one thing a folded sheet
+             never does. Spacing tightens as the facet tips away from us. -->
+        <pattern id="crRlC" patternUnits="userSpaceOnUse" width="24" height="13" patternTransform="rotate(6 64 64)"><path d="M0 7 H24" stroke="#8f9ab8" stroke-width="0.8" opacity="0.42"/></pattern>
+        <pattern id="crRlG1" patternUnits="userSpaceOnUse" width="24" height="9" patternTransform="rotate(28 64 64)"><path d="M0 4 H24" stroke="#8f9ab8" stroke-width="0.7" opacity="0.3"/></pattern>
+        <pattern id="crRlG3" patternUnits="userSpaceOnUse" width="24" height="9.5" patternTransform="rotate(62 64 64)"><path d="M0 5 H24" stroke="#8f9ab8" stroke-width="0.75" opacity="0.36"/></pattern>
+        <pattern id="crRlG4" patternUnits="userSpaceOnUse" width="24" height="10" patternTransform="rotate(-14 64 64)"><path d="M0 3 H24" stroke="#8f9ab8" stroke-width="0.8" opacity="0.4"/></pattern>
+        <pattern id="crRlI1" patternUnits="userSpaceOnUse" width="24" height="10" patternTransform="rotate(20 64 64)"><path d="M0 6 H24" stroke="#8f9ab8" stroke-width="0.8" opacity="0.4"/></pattern>
+        <pattern id="crRlI5" patternUnits="userSpaceOnUse" width="24" height="9" patternTransform="rotate(-22 64 64)"><path d="M0 4 H24" stroke="#8f9ab8" stroke-width="0.7" opacity="0.3"/></pattern>
+        <pattern id="crRlI7" patternUnits="userSpaceOnUse" width="24" height="10" patternTransform="rotate(-66 64 64)"><path d="M0 5 H24" stroke="#8f9ab8" stroke-width="0.75" opacity="0.36"/></pattern>
+        <pattern id="crRlB8" patternUnits="userSpaceOnUse" width="24" height="11" patternTransform="rotate(-8 64 64)"><path d="M0 5 H24" stroke="#8f9ab8" stroke-width="0.8" opacity="0.42"/></pattern>
+        <pattern id="crRlB5" patternUnits="userSpaceOnUse" width="24" height="10" patternTransform="rotate(24 64 64)"><path d="M0 4 H24" stroke="#8f9ab8" stroke-width="0.75" opacity="0.34"/></pattern>
+        <pattern id="crRlB3" patternUnits="userSpaceOnUse" width="24" height="8" patternTransform="rotate(40 64 64)"><path d="M0 4 H24" stroke="#8f9ab8" stroke-width="0.7" opacity="0.26"/></pattern>
+        <pattern id="crRlT6" patternUnits="userSpaceOnUse" width="24" height="11" patternTransform="rotate(-12 64 64)"><path d="M0 6 H24" stroke="#8f9ab8" stroke-width="0.75" opacity="0.32"/></pattern>
+        <pattern id="crRlB1" patternUnits="userSpaceOnUse" width="24" height="9" patternTransform="rotate(-46 64 64)"><path d="M0 4 H24" stroke="#8f9ab8" stroke-width="0.75" opacity="0.34"/></pattern>
+        <pattern id="crRlI2" patternUnits="userSpaceOnUse" width="24" height="10" patternTransform="rotate(-21 64 64)"><path d="M0 6 H24" stroke="#8f9ab8" stroke-width="0.75" opacity="0.34"/></pattern>
+        <pattern id="crRlB6" patternUnits="userSpaceOnUse" width="24" height="10" patternTransform="rotate(-42 64 64)"><path d="M0 5 H24" stroke="#8f9ab8" stroke-width="0.75" opacity="0.34"/></pattern>
+        <pattern id="crRlT1" patternUnits="userSpaceOnUse" width="24" height="10" patternTransform="rotate(14 64 64)"><path d="M0 4 H24" stroke="#8f9ab8" stroke-width="0.75" opacity="0.36"/></pattern>
+        <!-- the highlight the upper-left light lays over the whole ball -->
+        <radialGradient id="crShade" cx="0.34" cy="0.28" r="0.8">
+          <stop offset="0" stop-color="#ffffff" stop-opacity="0.24"/>
+          <stop offset="0.55" stop-color="#ffffff" stop-opacity="0"/>
         </radialGradient>
+        <!-- and the occlusion gathering in the shaded lower right, kept apart
+             from the highlight so it can fall off more steeply than it does -->
+        <linearGradient id="crWash" x1="0.15" y1="0.1" x2="0.9" y2="0.95">
+          <stop offset="0.42" stop-color="#6f5f3e" stop-opacity="0"/>
+          <stop offset="1" stop-color="#6f5f3e" stop-opacity="0.4"/>
+        </linearGradient>
       </defs>
-      <use href="#crBlob" fill="#ece3cb" stroke="#c9bd9e" stroke-width="1"/>
-      <g stroke="#cfc4a4" stroke-width="0.7" stroke-linejoin="round">
-        <path d="M65 12 L90 22 L58 46 Z" fill="#f4edd8"/>
-        <path d="M90 22 L112 40 L82 66 L58 46 Z" fill="#e4dabe"/>
-        <path d="M112 40 L104 60 L82 66 Z" fill="#d3c6a5"/>
-        <path d="M104 60 L118 84 L82 66 Z" fill="#e7ddc1"/>
-        <path d="M118 84 L96 106 L82 66 Z" fill="#dbcfae"/>
-        <path d="M96 106 L74 114 L50 86 L82 66 Z" fill="#efe6cc"/>
-        <path d="M74 114 L46 110 L50 86 Z" fill="#dcd0b0"/>
-        <path d="M46 110 L26 94 L50 86 Z" fill="#ece2c7"/>
-        <path d="M26 94 L14 60 L50 86 Z" fill="#e2d7b8"/>
-        <path d="M14 60 L30 32 L58 46 L50 86 Z" fill="#f2ebd5"/>
-        <path d="M30 32 L65 12 L58 46 Z" fill="#e6dcbf"/>
-        <path d="M58 46 L82 66 L50 86 Z" fill="#f7f1de"/>
+      <!-- the edge the sheet was torn out on, drawn behind the ball so the
+           facets cut it: a fringe of tabs and one half-punched wire hole -->
+      <path d="M12 54 L8.5 49 L12.4 47.6 L9.6 42.4 L13.8 41.4 L11.8 36.2 L16.4 35.6 L15.4 30 L20 30.6 L26 32 Z" fill="#f3ecd6" stroke="#c6b997" stroke-width="0.7" stroke-linejoin="round"/>
+      <path d="M11.6 44.4 a3 3 0 0 1 3.4 -5" fill="none" stroke="#b5a684" stroke-width="0.9"/>
+      <use href="#crBlob" fill="#ece3cb"/>
+      <!-- Facet fills. No sphere: T2 sits on the shaded side and is bright
+           because its ear is tipped up at the window, T7 sits in the light and
+           is dull because its fold turns away from it. -->
+      <g stroke="#cdc0a0" stroke-width="0.5" stroke-linejoin="round">
+        <use href="#crT1" fill="#f9f3e0"/>
+        <use href="#crT2" fill="#f1e9d1"/>
+        <use href="#crT3" fill="#cdc09e"/>
+        <use href="#crT4" fill="#cec19f"/>
+        <use href="#crT5" fill="#cabd9b"/>
+        <use href="#crT6" fill="#d2c6a4"/>
+        <use href="#crT7" fill="#d9cdac"/>
+        <use href="#crT8" fill="#dfd4b3"/>
+        <use href="#crB1" fill="#e8dfc4"/>
+        <use href="#crB2" fill="#ddd2b1"/>
+        <use href="#crB3" fill="#d5c9a7"/>
+        <use href="#crB4" fill="#c4b795"/>
+        <use href="#crB5" fill="#ded3b2"/>
+        <use href="#crB6" fill="#e4dabc"/>
+        <use href="#crB7" fill="#e9e0c6"/>
+        <use href="#crB8" fill="#fdf8ea"/>
+        <use href="#crI1" fill="#fbf6e4"/>
+        <use href="#crI2" fill="#ece3c9"/>
+        <use href="#crI3" fill="#d8cdac"/>
+        <use href="#crI4" fill="#cfc2a0"/>
+        <use href="#crI5" fill="#dbd0af"/>
+        <use href="#crI6" fill="#e6dcbf"/>
+        <use href="#crI7" fill="#f0e8cf"/>
+        <use href="#crI8" fill="#f6f0d9"/>
+        <use href="#crG1" fill="#e2d8b9"/>
+        <use href="#crG2" fill="#d3c7a5"/>
+        <use href="#crG3" fill="#ece4c9"/>
+        <use href="#crG4" fill="#f8f2dd"/>
+        <use href="#crC"  fill="#fbf5e2"/>
       </g>
-      <!-- fragments of the page's ruling and margin, broken across facets -->
-      <g fill="none" stroke-width="1.1" opacity="0.5">
-        <path d="M46 40 q10 -3 16 -6" stroke="#8f9ab8"/>
-        <path d="M60 70 q12 -4 20 -3" stroke="#8f9ab8"/>
-        <path d="M50 92 q10 1 18 6" stroke="#8f9ab8"/>
-        <path d="M24 66 q8 4 12 12" stroke="#b23a3f"/>
+      <!-- the page's own ruling, still legible facet by facet -->
+      <g>
+        <use href="#crC"  fill="url(#crRlC)"/>
+        <use href="#crG1" fill="url(#crRlG1)"/>
+        <use href="#crG3" fill="url(#crRlG3)"/>
+        <use href="#crG4" fill="url(#crRlG4)"/>
+        <use href="#crI1" fill="url(#crRlI1)"/>
+        <use href="#crI5" fill="url(#crRlI5)"/>
+        <use href="#crI7" fill="url(#crRlI7)"/>
+        <use href="#crB8" fill="url(#crRlB8)"/>
+        <use href="#crB5" fill="url(#crRlB5)"/>
+        <use href="#crB3" fill="url(#crRlB3)"/>
+        <use href="#crT6" fill="url(#crRlT6)"/>
+        <use href="#crT1" fill="url(#crRlT1)"/>
+        <use href="#crB1" fill="url(#crRlB1)"/>
+        <use href="#crI2" fill="url(#crRlI2)"/>
+        <use href="#crB6" fill="url(#crRlB6)"/>
       </g>
-      <!-- a scribble of abandoned lyric on the biggest facet -->
-      <path d="M56 60 q6 -4 10 0 q4 4 9 0" fill="none" stroke="#5d5138" stroke-width="0.9" opacity="0.4"/>
-      <!-- one soft light-to-shade wash over all the facets so the ball reads
-           as a single lit object rather than a cut stone -->
+      <!-- The red margin: one rule of the page crossing six facets from the
+           top-left round to the bottom. Each segment ends on the crease the
+           next one starts from, so the margin jogs at every fold instead of
+           drifting into a curve. -->
+      <g stroke="#b23a3f" stroke-width="1.15" stroke-linecap="round" fill="none">
+        <path d="M93 20.5 L80.8 32.3" opacity="0.4"/>
+        <path d="M80.8 32.3 L76 45" opacity="0.46"/>
+        <path d="M76 45 L65.7 54.2" opacity="0.54"/>
+        <path d="M65.7 54.2 L52 76" opacity="0.66"/>
+        <path d="M52 76 L39 80" opacity="0.6"/>
+        <path d="M39 80 L30.8 77.2" opacity="0.52"/>
+        <path d="M30.8 77.2 L15.2 94.4" opacity="0.44"/>
+      </g>
+      <!-- abandoned lyric, sitting on the ruling and breaking at the folds -->
+      <g stroke="#5d5138" stroke-width="0.9" stroke-linecap="round" fill="none" opacity="0.36">
+        <path d="M58 60 q6 -4 10 -1 q4 3 8 -1"/>
+        <path d="M52 72 q7 -3 12 -1"/>
+        <path d="M66 33 q5 -3 9 1 q3 2 6 0"/>
+        <path d="M46 96 q6 -3 10 0"/>
+      </g>
+      <!-- Creases: the crests that catch the light and the valleys that hold
+           the shade. Only the folds that actually turn get one; edging every
+           facet would draw the tessellation instead of the paper. -->
+      <g fill="none" stroke-linecap="round" opacity="0.75">
+        <g stroke="#fffdf2" stroke-width="0.9">
+          <path d="M58 50 L70 26"/>
+          <path d="M58 50 L38 34"/>
+          <path d="M40 66 L38 34"/>
+          <path d="M64 86 L38 94"/>
+          <path d="M26 66 L12 54"/>
+        </g>
+        <g stroke="#a2957a" stroke-width="0.8" opacity="0.55">
+          <path d="M80 62 L100 66"/>
+          <path d="M80 62 L86 92"/>
+          <path d="M64 86 L86 92"/>
+          <path d="M62 102 L80 112"/>
+          <path d="M94 40 L100 66"/>
+        </g>
+      </g>
+      <!-- one light-to-shade wash across the facets so the ball reads as a
+           single lit object rather than a cut stone, then its own outline so
+           the silhouette stays crisp against the wood -->
       <use href="#crBlob" fill="url(#crShade)"/>
+      <use href="#crBlob" fill="url(#crWash)"/>
+      <use href="#crBlob" fill="none" stroke="#bcae8c" stroke-width="0.8" stroke-linejoin="round" opacity="0.7"/>
     </svg>
   </div>
   <!-- RIGHT: cassette lying flat, face up. A real Type-I shell, drawn as the
