@@ -387,8 +387,14 @@
      are lining and monospaced, so the grid's fixed 26.3 column pitch and the
      numerals inside it finally agree with each other. */
   .di-calendar text { font-family: var(--type); }
-  .di-calendar .cal-title { font-weight: 700; font-size: calc(15px + var(--text-size-adjust)); letter-spacing: 1.4px; fill: #55412a; }
-  .di-calendar .cal-title .cal-year { font-weight: 400; font-size: calc(9.5px + var(--text-size-adjust)); letter-spacing: 1px; fill: #93876c; }
+  /* The title is sized by CAP HEIGHT, not by the number: Courier Prime's caps
+     are about 0.57em against Georgia's 0.69em, so matching the old 17px on
+     paper takes roughly 19. SEPTEMBER, the longest month, then sets the block
+     (mark + gap + type) down to a left edge of 34.8, which is where the red
+     rule beneath it starts, so the widest month lines up with the rule and no
+     other month can reach it. */
+  .di-calendar .cal-title { font-weight: 700; font-size: calc(19px + var(--text-size-adjust)); letter-spacing: 1px; fill: #55412a; }
+  .di-calendar .cal-title .cal-year { font-weight: 400; font-size: calc(11.5px + var(--text-size-adjust)); letter-spacing: 1px; fill: #93876c; }
   .di-calendar .cal-week text { font-weight: 700; font-size: calc(8.5px + var(--text-size-adjust)); letter-spacing: 0.6px; fill: #8a7c62; }
   .di-calendar .cal-days text { font-size: calc(11px + var(--text-size-adjust)); fill: #4a4034; }
   .di-calendar .cal-week text.wknd { fill: #b06a50; }
