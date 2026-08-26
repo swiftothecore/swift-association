@@ -21,6 +21,66 @@
 // it, so nothing here sets position, transform, or filter.
 
 // ---------------------------------------------------------------------------
+// The material kit.
+//
+// One lamp, upper left, the same one the fixed props in index.html are lit by.
+// Every prop below composes its defs out of these five helpers instead of
+// inventing its own gradient, because nine objects each inventing their own
+// light is exactly how a desk stops reading as one desk.
+//
+// Ids are passed in and prefixed per prop (dpStr..., dpLead...) so two props
+// on the same page never collide. A helper emits one defs element and nothing
+// else; the prop decides what to paint with it.
+// ---------------------------------------------------------------------------
+
+// A round section seen across its width: the lit edge, the body, the shade,
+// and then the far rim picking the desk's bounce back up. That last stop is
+// the whole trick. Without it a cylinder is a flat with stripes on it.
+const bar = (id, [lit, body, shade, bounce], deg = 0) =>
+  `<linearGradient id="${id}" x1="0" y1="0" x2="1" y2="0"
+     gradientTransform="rotate(${deg} 0.5 0.5)">
+     <stop offset="0" stop-color="${lit}"/><stop offset="0.34" stop-color="${body}"/>
+     <stop offset="0.78" stop-color="${shade}"/><stop offset="1" stop-color="${bounce}"/>
+   </linearGradient>`;
+
+// Anything spherical or domed: a bead, a jack tip, a drop of glue. The light
+// sits at 36/30 to match the loose beads the scatter deals, which are built
+// from the same numbers in CSS (.bead-scatter.round in styles.css).
+const dome = (id, hi, lo, deep) =>
+  `<radialGradient id="${id}" cx="0.36" cy="0.30" r="0.78">
+     <stop offset="0" stop-color="${hi}"/><stop offset="0.62" stop-color="${lo}"/>
+     <stop offset="1" stop-color="${deep}"/>
+   </radialGradient>`;
+
+// A specular that runs the LENGTH of a thing and dies before either end, the
+// way a lamp lies along a barrel. Paint it over a bar(), never instead of one.
+const sheen = (id, tint = "#fff6d6", peak = 0.42) =>
+  `<linearGradient id="${id}" x1="0" y1="0" x2="1" y2="0">
+     <stop offset="0" stop-color="${tint}" stop-opacity="0"/>
+     <stop offset="0.22" stop-color="${tint}" stop-opacity="${peak * 0.62}"/>
+     <stop offset="0.5" stop-color="${tint}" stop-opacity="${peak}"/>
+     <stop offset="0.82" stop-color="${tint}" stop-opacity="${peak * 0.4}"/>
+     <stop offset="1" stop-color="${tint}" stop-opacity="0"/>
+   </linearGradient>`;
+
+// The one that does the most work: a small displacement that stops a drawn
+// shape looking drawn. Proven on the marks. Keep the scale low on objects,
+// where an edge that wanders too far stops reading as manufactured.
+const rough = (id, freq, scale, seed) =>
+  `<filter id="${id}" x="-14%" y="-14%" width="128%" height="128%">
+     <feTurbulence type="fractalNoise" baseFrequency="${freq}" numOctaves="2" seed="${seed}" result="n"/>
+     <feDisplacementMap in="SourceGraphic" in2="n" scale="${scale}" xChannelSelector="R" yChannelSelector="G"/>
+   </filter>`;
+
+// Surface noise for materials that are not smooth: paper fibre, leather, the
+// matte of moulded rubber. Painted as a tinted overlay clipped to the shape.
+const grain = (id, freq, seed, [r, g, b], alpha) =>
+  `<filter id="${id}" x="0" y="0" width="100%" height="100%">
+     <feTurbulence type="fractalNoise" baseFrequency="${freq}" numOctaves="3" seed="${seed}"/>
+     <feColorMatrix type="matrix" values="0 0 0 0 ${r}  0 0 0 0 ${g}  0 0 0 0 ${b}  0 0 0 ${alpha} 0"/>
+   </filter>`;
+
+// ---------------------------------------------------------------------------
 // Tier 1: marks. Stains, dust, offcuts. Flat and stainless-of-shadow, because a
 // mark IS the desk surface rather than a thing resting on it.
 // ---------------------------------------------------------------------------
@@ -325,37 +385,32 @@ export const DESK_PROPS = [
     id: "bracelet", w: 172, h: 150,
     svg: `
       <defs>
-        <radialGradient id="dpBone" cx="0.34" cy="0.28" r="0.9">
-          <stop offset="0" stop-color="#fdfbf4"/><stop offset="0.7" stop-color="#efe9da"/><stop offset="1" stop-color="#d3cbb6"/>
-        </radialGradient>
+        <!-- bone, and the three colour beads. All lit at 36/30, the same
+             numbers the loose beads use in CSS, so a bracelet lying beside a
+             spill is lit by the one lamp. -->
+        <radialGradient id="dpBrBone" cx="0.36" cy="0.30" r="0.78"><stop offset="0" stop-color="#fdfbf4"/><stop offset="0.62" stop-color="#f0ebdd"/><stop offset="1" stop-color="#d5cdb9"/></radialGradient>
+        <radialGradient id="dpBr2" cx="0.36" cy="0.30" r="0.78"><stop offset="0" stop-color="#f4c9d3"/><stop offset="0.62" stop-color="#dc93a6"/><stop offset="1" stop-color="#b7677f"/></radialGradient>
+        <radialGradient id="dpBr7" cx="0.36" cy="0.30" r="0.78"><stop offset="0" stop-color="#cadcee"/><stop offset="0.62" stop-color="#93b0cd"/><stop offset="1" stop-color="#6486ac"/></radialGradient>
+        <radialGradient id="dpBr11" cx="0.36" cy="0.30" r="0.78"><stop offset="0" stop-color="#f7e5b4"/><stop offset="0.62" stop-color="#dfbc6f"/><stop offset="1" stop-color="#b6912f"/></radialGradient>
       </defs>
-      <!-- the elastic, under the beads, showing only in the gaps -->
-      <path d="M86 16 q62 8 68 56 q6 46 -44 66 q-52 21 -84 -10 q-30 -30 -8 -72 q16 -30 52 -34 q14 -2 22 4"
-            fill="none" stroke="#d8cdb2" stroke-width="3.2" stroke-linecap="round"/>
-      <g stroke="#bdb49e" stroke-width="0.85">
-        <g fill="url(#dpBone)">
-          <circle cx="86" cy="16" r="10"/><circle cx="118" cy="24" r="10"/><circle cx="141" cy="47" r="10"/>
-          <circle cx="152" cy="76" r="10"/><circle cx="146" cy="106" r="10"/><circle cx="122" cy="127" r="10"/>
-          <circle cx="92" cy="136" r="10"/><circle cx="61" cy="137" r="10"/><circle cx="34" cy="124" r="10"/>
-          <circle cx="16" cy="99" r="10"/><circle cx="15" cy="69" r="10"/><circle cx="30" cy="43" r="10"/>
-          <circle cx="56" cy="27" r="10"/>
-        </g>
-        <!-- three colour beads broke up the lettering, as they always do -->
-        <circle cx="118" cy="24" r="10" fill="#ecaebd"/>
-        <circle cx="61" cy="137" r="10" fill="#b3cbe4"/>
-        <circle cx="15" cy="69" r="10" fill="#f2d78f"/>
+      <!-- The elastic first. It only ever shows where the beads have slid away
+           from each other, which is why they are laid round the loop unevenly
+           (make_desk_props.py) instead of on a clock face. -->
+      <g fill="none" stroke-linecap="round">
+        <path d="M146.3 43.7 C161.4 62.8 158.4 57.9 158.0 79.3 C157.6 100.7 157.4 95.3 145.0 110.5 C132.7 125.6 135.6 119.0 119.4 126.7 C103.2 134.3 109.1 132.0 94.4 134.4 C79.6 136.7 87.1 135.4 73.3 134.1 C59.4 132.8 62.6 134.4 51.1 130.4 C39.6 126.3 46.1 130.4 37.3 121.5 C28.5 112.5 31.6 118.2 23.7 102.5 C15.8 86.9 10.9 92.5 12.6 72.6 C14.2 52.7 11.4 58.7 28.9 40.5 C46.3 22.3 40.8 22.4 67.0 15.6 C93.2 8.9 85.5 10.5 110.8 19.4 C136.2 28.4 131.2 24.5 146.3 43.7 Z" stroke="#b9a982" stroke-width="3.4"/>
+        <path d="M146.3 43.7 C161.4 62.8 158.4 57.9 158.0 79.3 C157.6 100.7 157.4 95.3 145.0 110.5 C132.7 125.6 135.6 119.0 119.4 126.7 C103.2 134.3 109.1 132.0 94.4 134.4 C79.6 136.7 87.1 135.4 73.3 134.1 C59.4 132.8 62.6 134.4 51.1 130.4 C39.6 126.3 46.1 130.4 37.3 121.5 C28.5 112.5 31.6 118.2 23.7 102.5 C15.8 86.9 10.9 92.5 12.6 72.6 C14.2 52.7 11.4 58.7 28.9 40.5 C46.3 22.3 40.8 22.4 67.0 15.6 C93.2 8.9 85.5 10.5 110.8 19.4 C136.2 28.4 131.2 24.5 146.3 43.7 Z" stroke="#e0d3b2" stroke-width="2.2"/>
+        <path d="M146.3 43.7 C161.4 62.8 158.4 57.9 158.0 79.3 C157.6 100.7 157.4 95.3 145.0 110.5 C132.7 125.6 135.6 119.0 119.4 126.7 C103.2 134.3 109.1 132.0 94.4 134.4 C79.6 136.7 87.1 135.4 73.3 134.1 C59.4 132.8 62.6 134.4 51.1 130.4 C39.6 126.3 46.1 130.4 37.3 121.5 C28.5 112.5 31.6 118.2 23.7 102.5 C15.8 86.9 10.9 92.5 12.6 72.6 C14.2 52.7 11.4 58.7 28.9 40.5 C46.3 22.3 40.8 22.4 67.0 15.6 C93.2 8.9 85.5 10.5 110.8 19.4 C136.2 28.4 131.2 24.5 146.3 43.7 Z" stroke="#f6efd9" stroke-width="0.9" opacity="0.7" transform="translate(-0.5 -0.8)"/>
       </g>
-      <!-- the lit rim and speck each bead catches from the upper-left lamp -->
-      <g fill="#ffffff" opacity="0.5">
-        <circle cx="82" cy="12" r="1.9"/><circle cx="137" cy="43" r="1.9"/><circle cx="142" cy="102" r="1.9"/>
-        <circle cx="88" cy="132" r="1.9"/><circle cx="30" cy="120" r="1.9"/><circle cx="26" cy="39" r="1.9"/>
+      <g fill="#46320e" opacity="0.18">
+        <ellipse cx="147.9" cy="46.3" rx="11.6" ry="10.4"/><ellipse cx="159.6" cy="81.9" rx="11.0" ry="9.8"/><ellipse cx="146.6" cy="113.1" rx="11.0" ry="9.8"/><ellipse cx="121.0" cy="129.3" rx="11.6" ry="10.4"/><ellipse cx="96.0" cy="137.0" rx="11.0" ry="9.8"/><ellipse cx="74.9" cy="136.7" rx="11.0" ry="9.8"/><ellipse cx="52.7" cy="133.0" rx="11.6" ry="10.4"/><ellipse cx="38.9" cy="124.1" rx="11.0" ry="9.8"/><ellipse cx="25.3" cy="105.1" rx="11.0" ry="9.8"/><ellipse cx="14.2" cy="75.2" rx="11.6" ry="10.4"/><ellipse cx="30.5" cy="43.1" rx="11.0" ry="9.8"/><ellipse cx="68.6" cy="18.2" rx="11.0" ry="9.8"/><ellipse cx="112.4" cy="22.0" rx="11.6" ry="10.4"/>
+      </g>
+      <g>
+        <g><circle cx="146.3" cy="43.7" r="12.0" fill="url(#dpBrBone)" stroke="#bdb49e" stroke-width="0.85"/><path d="M135.3 44.1A11.0 11.0 0 0 1 155.5 37.6" fill="none" stroke="#4a3418" stroke-width="1.9" opacity="0.17"/><path d="M156.9 45.3A10.7 10.7 0 0 1 141.8 53.4" fill="none" stroke="#ffffff" stroke-width="1.6" opacity="0.26"/><circle cx="146.3" cy="43.7" r="10.7" fill="none" stroke="#ffffff" stroke-width="0.8" opacity="0.32"/><circle cx="142.7" cy="39.4" r="1.9" fill="#ffffff" opacity="0.62"/></g><g><circle cx="158.0" cy="79.3" r="11.4" fill="url(#dpBrBone)" stroke="#bdb49e" stroke-width="0.85"/><path d="M147.6 79.8A10.4 10.4 0 0 1 166.7 73.6" fill="none" stroke="#4a3418" stroke-width="1.9" opacity="0.17"/><path d="M168.0 80.8A10.1 10.1 0 0 1 153.8 88.5" fill="none" stroke="#ffffff" stroke-width="1.6" opacity="0.26"/><circle cx="158.0" cy="79.3" r="10.1" fill="none" stroke="#ffffff" stroke-width="0.8" opacity="0.32"/><circle cx="154.6" cy="75.2" r="1.8" fill="#ffffff" opacity="0.62"/></g><g><circle cx="145.0" cy="110.5" r="11.4" fill="url(#dpBr2)" stroke="#964962" stroke-width="0.85"/><path d="M134.6 110.9A10.4 10.4 0 0 1 153.7 104.8" fill="none" stroke="#4a3418" stroke-width="1.9" opacity="0.17"/><path d="M155.0 112.0A10.1 10.1 0 0 1 140.8 119.7" fill="none" stroke="#ffffff" stroke-width="1.6" opacity="0.26"/><circle cx="145.0" cy="110.5" r="10.1" fill="none" stroke="#ffffff" stroke-width="0.8" opacity="0.32"/><circle cx="141.6" cy="106.4" r="1.8" fill="#ffffff" opacity="0.62"/></g><g><circle cx="119.4" cy="126.7" r="12.0" fill="url(#dpBrBone)" stroke="#bdb49e" stroke-width="0.85"/><path d="M108.4 127.1A11.0 11.0 0 0 1 128.6 120.6" fill="none" stroke="#4a3418" stroke-width="1.9" opacity="0.17"/><path d="M130.0 128.3A10.7 10.7 0 0 1 114.9 136.4" fill="none" stroke="#ffffff" stroke-width="1.6" opacity="0.26"/><circle cx="119.4" cy="126.7" r="10.7" fill="none" stroke="#ffffff" stroke-width="0.8" opacity="0.32"/><circle cx="115.8" cy="122.4" r="1.9" fill="#ffffff" opacity="0.62"/></g><g><circle cx="94.4" cy="134.4" r="11.4" fill="url(#dpBrBone)" stroke="#bdb49e" stroke-width="0.85"/><path d="M84.0 134.8A10.4 10.4 0 0 1 103.1 128.6" fill="none" stroke="#4a3418" stroke-width="1.9" opacity="0.17"/><path d="M104.4 135.9A10.1 10.1 0 0 1 90.2 143.6" fill="none" stroke="#ffffff" stroke-width="1.6" opacity="0.26"/><circle cx="94.4" cy="134.4" r="10.1" fill="none" stroke="#ffffff" stroke-width="0.8" opacity="0.32"/><circle cx="91.0" cy="130.3" r="1.8" fill="#ffffff" opacity="0.62"/></g><g><circle cx="73.3" cy="134.1" r="11.4" fill="url(#dpBrBone)" stroke="#bdb49e" stroke-width="0.85"/><path d="M62.9 134.5A10.4 10.4 0 0 1 81.9 128.4" fill="none" stroke="#4a3418" stroke-width="1.9" opacity="0.17"/><path d="M83.2 135.6A10.1 10.1 0 0 1 69.1 143.3" fill="none" stroke="#ffffff" stroke-width="1.6" opacity="0.26"/><circle cx="73.3" cy="134.1" r="10.1" fill="none" stroke="#ffffff" stroke-width="0.8" opacity="0.32"/><circle cx="69.8" cy="130.0" r="1.8" fill="#ffffff" opacity="0.62"/></g><g><circle cx="51.1" cy="130.4" r="12.0" fill="url(#dpBrBone)" stroke="#bdb49e" stroke-width="0.85"/><path d="M40.1 130.8A11.0 11.0 0 0 1 60.3 124.3" fill="none" stroke="#4a3418" stroke-width="1.9" opacity="0.17"/><path d="M61.7 132.0A10.7 10.7 0 0 1 46.7 140.1" fill="none" stroke="#ffffff" stroke-width="1.6" opacity="0.26"/><circle cx="51.1" cy="130.4" r="10.7" fill="none" stroke="#ffffff" stroke-width="0.8" opacity="0.32"/><circle cx="47.5" cy="126.1" r="1.9" fill="#ffffff" opacity="0.62"/></g><g><circle cx="37.3" cy="121.5" r="11.4" fill="url(#dpBr7)" stroke="#4c6b91" stroke-width="0.85"/><path d="M26.9 121.9A10.4 10.4 0 0 1 46.0 115.7" fill="none" stroke="#4a3418" stroke-width="1.9" opacity="0.17"/><path d="M47.3 123.0A10.1 10.1 0 0 1 33.1 130.6" fill="none" stroke="#ffffff" stroke-width="1.6" opacity="0.26"/><circle cx="37.3" cy="121.5" r="10.1" fill="none" stroke="#ffffff" stroke-width="0.8" opacity="0.32"/><circle cx="33.9" cy="117.4" r="1.8" fill="#ffffff" opacity="0.62"/></g><g><circle cx="23.7" cy="102.5" r="11.4" fill="url(#dpBrBone)" stroke="#bdb49e" stroke-width="0.85"/><path d="M13.3 103.0A10.4 10.4 0 0 1 32.4 96.8" fill="none" stroke="#4a3418" stroke-width="1.9" opacity="0.17"/><path d="M33.7 104.0A10.1 10.1 0 0 1 19.5 111.7" fill="none" stroke="#ffffff" stroke-width="1.6" opacity="0.26"/><circle cx="23.7" cy="102.5" r="10.1" fill="none" stroke="#ffffff" stroke-width="0.8" opacity="0.32"/><circle cx="20.3" cy="98.4" r="1.8" fill="#ffffff" opacity="0.62"/></g><g><circle cx="12.6" cy="72.6" r="12.0" fill="url(#dpBrBone)" stroke="#bdb49e" stroke-width="0.85"/><path d="M1.6 73.1A11.0 11.0 0 0 1 21.7 66.5" fill="none" stroke="#4a3418" stroke-width="1.9" opacity="0.17"/><path d="M23.1 74.2A10.7 10.7 0 0 1 8.1 82.3" fill="none" stroke="#ffffff" stroke-width="1.6" opacity="0.26"/><circle cx="12.6" cy="72.6" r="10.7" fill="none" stroke="#ffffff" stroke-width="0.8" opacity="0.32"/><circle cx="9.0" cy="68.3" r="1.9" fill="#ffffff" opacity="0.62"/></g><g><circle cx="28.9" cy="40.5" r="11.4" fill="url(#dpBrBone)" stroke="#bdb49e" stroke-width="0.85"/><path d="M18.5 40.9A10.4 10.4 0 0 1 37.5 34.8" fill="none" stroke="#4a3418" stroke-width="1.9" opacity="0.17"/><path d="M38.8 42.0A10.1 10.1 0 0 1 24.7 49.7" fill="none" stroke="#ffffff" stroke-width="1.6" opacity="0.26"/><circle cx="28.9" cy="40.5" r="10.1" fill="none" stroke="#ffffff" stroke-width="0.8" opacity="0.32"/><circle cx="25.4" cy="36.4" r="1.8" fill="#ffffff" opacity="0.62"/></g><g><circle cx="67.0" cy="15.6" r="11.4" fill="url(#dpBr11)" stroke="#9c7527" stroke-width="0.85"/><path d="M56.6 16.1A10.4 10.4 0 0 1 75.7 9.9" fill="none" stroke="#4a3418" stroke-width="1.9" opacity="0.17"/><path d="M77.0 17.1A10.1 10.1 0 0 1 62.8 24.8" fill="none" stroke="#ffffff" stroke-width="1.6" opacity="0.26"/><circle cx="67.0" cy="15.6" r="10.1" fill="none" stroke="#ffffff" stroke-width="0.8" opacity="0.32"/><circle cx="63.6" cy="11.5" r="1.8" fill="#ffffff" opacity="0.62"/></g><g><circle cx="110.8" cy="19.4" r="12.0" fill="url(#dpBrBone)" stroke="#bdb49e" stroke-width="0.85"/><path d="M99.9 19.9A11.0 11.0 0 0 1 120.0 13.4" fill="none" stroke="#4a3418" stroke-width="1.9" opacity="0.17"/><path d="M121.4 21.0A10.7 10.7 0 0 1 106.4 29.2" fill="none" stroke="#ffffff" stroke-width="1.6" opacity="0.26"/><circle cx="110.8" cy="19.4" r="10.7" fill="none" stroke="#ffffff" stroke-width="0.8" opacity="0.32"/><circle cx="107.2" cy="15.1" r="1.9" fill="#ffffff" opacity="0.62"/></g>
       </g>
       <g class="dp-bead-letter">
-        <text x="86" y="20">L</text><text x="141" y="51">U</text><text x="152" y="80">C</text>
-        <text x="146" y="110">K</text><text x="122" y="131">Y</text><text x="92" y="140">O</text>
-        <text x="34" y="128">N</text><text x="16" y="103">E</text><text x="30" y="47">S</text>
-        <text x="56" y="31">S</text>
-      </g>`,
+        <text x="146.3" y="43.7" transform="rotate(-45 146.3 43.7)">L</text><text x="158.0" y="79.3" transform="rotate(23 158.0 79.3)">U</text><text x="119.4" y="126.7" transform="rotate(80 119.4 126.7)">C</text><text x="94.4" y="134.4" transform="rotate(70 94.4 134.4)">K</text><text x="73.3" y="134.1" transform="rotate(119 73.3 134.1)">Y</text><text x="51.1" y="130.4" transform="rotate(105 51.1 130.4)">O</text><text x="23.7" y="102.5" transform="rotate(139 23.7 102.5)">N</text><text x="12.6" y="72.6" transform="rotate(201 12.6 72.6)">E</text><text x="28.9" y="40.5" transform="rotate(202 28.9 40.5)">S</text><text x="110.8" y="19.4" transform="rotate(278 110.8 19.4)">S</text>
+      </g>
+`,
   },
   {
     // Embroidery scissors, open, lying on the desk. Stork-handled ones are the
@@ -513,76 +568,70 @@ export const DESK_PROPS = [
     // tick marks around it reads as a bangle, or worse, as a clock face.
     id: "string", w: 150, h: 138, narrow: true,
     svg: `
-      <g fill="none" stroke-linecap="round">
-        <!-- back turn, sitting lowest and slightly flattened by the ones on it -->
-        <g stroke="#7e7a70" stroke-width="3">
-          <path d="M30 88 q-14 -34 22 -50 q40 -18 72 6 q26 18 14 44"/>
-        </g>
-        <g stroke="#ddd9ce" stroke-width="0.9" opacity="0.7">
-          <path d="M30 88 q-14 -34 22 -50 q40 -18 72 6 q26 18 14 44"/>
-        </g>
-        <!-- middle turn -->
-        <g stroke="#8e8a80" stroke-width="3.2">
-          <path d="M22 74 q-6 40 40 50 q48 10 72 -18 q18 -22 -2 -44"/>
-        </g>
-        <g stroke="#e6e2d7" stroke-width="1" opacity="0.8">
-          <path d="M22 74 q-6 40 40 50 q48 10 72 -18 q18 -22 -2 -44"/>
-        </g>
-        <!-- front turn, the one the light finds, ending in a sprung free tail -->
-        <g stroke="#8e8a80" stroke-width="3.4">
-          <path d="M118 44 q-24 -22 -60 -12 q-40 12 -36 48 q4 34 46 38 q30 3 46 -14"/>
-          <path d="M114 104 q16 -6 20 -20 q3 -12 -6 -20"/>
-        </g>
-        <g stroke="#f0ece1" stroke-width="1.1" opacity="0.85">
-          <path d="M118 44 q-24 -22 -60 -12 q-40 12 -36 48 q4 34 46 38 q30 3 46 -14"/>
-          <path d="M114 104 q16 -6 20 -20 q3 -12 -6 -20"/>
-        </g>
-        <!-- the winding, only on the front turn where it can actually be seen -->
-        <g stroke="#6b6760" stroke-width="0.75" opacity="0.5">
-          <path d="M104 36 l1 4 M88 31 l0 4 M72 30 l-1 4 M56 34 l-2 4 M42 42 l-3 3
-                   M31 54 l-4 2 M26 70 l-4 1 M27 86 l-4 -1 M34 99 l-3 3 M47 108 l-2 4
-                   M63 113 l-1 4 M79 114 l0 4 M95 111 l1 4"/>
+      <!-- Three turns of waxed cotton cord, dropped as one loose hank. The
+           turns run back to front and then the back one is brought over the
+           front one at the crossing: without that this is three concentric
+           ellipses, which is exactly what it used to be. The cord is twisted,
+           so its ridges catch the light in short dashes down its length. -->
+      <g>
+        <path d="M130.8 56.1 C129.5 65.3 129.6 61.6 125.9 69.8 C122.2 78.0 124.0 74.3 119.3 81.8 C114.5 89.2 117.2 85.8 111.1 93.0 C105.0 100.2 108.7 97.9 100.2 104.3 C91.7 110.6 95.5 108.9 84.5 112.8 C73.5 116.7 77.5 116.1 65.9 116.3 C54.3 116.5 58.8 116.4 48.2 113.4 C37.7 110.5 41.4 112.4 32.8 107.1 C24.3 101.9 27.4 104.3 21.5 97.1 C15.6 89.9 16.3 93.2 14.4 84.6 C12.6 76.0 12.4 78.9 15.8 70.2 C19.2 61.5 18.4 64.8 25.0 57.3 C31.6 49.7 28.4 52.6 36.4 46.7 C44.4 40.7 41.0 43.5 50.0 38.6 C59.0 33.8 54.4 35.8 64.6 31.5 C74.8 27.1 70.0 27.6 81.9 25.1 C93.7 22.6 89.6 22.3 101.5 23.6 C113.5 24.9 110.1 23.6 119.2 29.2 C128.3 34.8 126.3 32.5 130.0 41.1 C133.7 49.7 132.1 46.9 130.8 56.1 Z" fill="none" stroke="#8a7140" stroke-width="5.6" stroke-linecap="round"/><path d="M130.8 56.1 C129.5 65.3 129.6 61.6 125.9 69.8 C122.2 78.0 124.0 74.3 119.3 81.8 C114.5 89.2 117.2 85.8 111.1 93.0 C105.0 100.2 108.7 97.9 100.2 104.3 C91.7 110.6 95.5 108.9 84.5 112.8 C73.5 116.7 77.5 116.1 65.9 116.3 C54.3 116.5 58.8 116.4 48.2 113.4 C37.7 110.5 41.4 112.4 32.8 107.1 C24.3 101.9 27.4 104.3 21.5 97.1 C15.6 89.9 16.3 93.2 14.4 84.6 C12.6 76.0 12.4 78.9 15.8 70.2 C19.2 61.5 18.4 64.8 25.0 57.3 C31.6 49.7 28.4 52.6 36.4 46.7 C44.4 40.7 41.0 43.5 50.0 38.6 C59.0 33.8 54.4 35.8 64.6 31.5 C74.8 27.1 70.0 27.6 81.9 25.1 C93.7 22.6 89.6 22.3 101.5 23.6 C113.5 24.9 110.1 23.6 119.2 29.2 C128.3 34.8 126.3 32.5 130.0 41.1 C133.7 49.7 132.1 46.9 130.8 56.1 Z" fill="none" stroke="#d2ba8a" stroke-width="3.9" stroke-linecap="round"/><path d="M132.5 54.9L129.1 57.3M113.1 92.6L109.0 93.4M67.4 117.8L64.4 114.9M21.4 99.2L21.7 95.0M22.9 57.6L27.1 57.0M62.5 30.9L66.6 32.0M119.0 27.1L119.5 31.3" fill="none" stroke="#6f5b2e" stroke-width="0.9" opacity="0.3" stroke-linecap="round"/><path d="M130.8 56.1 C129.5 65.3 129.6 61.6 125.9 69.8 C122.2 78.0 124.0 74.3 119.3 81.8 C114.5 89.2 117.2 85.8 111.1 93.0 C105.0 100.2 108.7 97.9 100.2 104.3 C91.7 110.6 95.5 108.9 84.5 112.8 C73.5 116.7 77.5 116.1 65.9 116.3 C54.3 116.5 58.8 116.4 48.2 113.4 C37.7 110.5 41.4 112.4 32.8 107.1 C24.3 101.9 27.4 104.3 21.5 97.1 C15.6 89.9 16.3 93.2 14.4 84.6 C12.6 76.0 12.4 78.9 15.8 70.2 C19.2 61.5 18.4 64.8 25.0 57.3 C31.6 49.7 28.4 52.6 36.4 46.7 C44.4 40.7 41.0 43.5 50.0 38.6 C59.0 33.8 54.4 35.8 64.6 31.5 C74.8 27.1 70.0 27.6 81.9 25.1 C93.7 22.6 89.6 22.3 101.5 23.6 C113.5 24.9 110.1 23.6 119.2 29.2 C128.3 34.8 126.3 32.5 130.0 41.1 C133.7 49.7 132.1 46.9 130.8 56.1 Z" fill="none" stroke="#f4e8c9" stroke-width="1.2" opacity="0.6" stroke-linecap="round" transform="translate(-0.6 -0.9)"/>
+        <path d="M125.9 97.1 C124.1 105.6 125.7 103.4 118.6 109.2 C111.6 115.0 114.0 113.4 103.9 115.2 C93.7 117.0 97.1 116.3 86.9 114.8 C76.6 113.3 80.8 113.2 71.7 110.5 C62.6 107.9 67.1 109.3 58.5 106.5 C50.0 103.7 54.1 105.6 45.0 101.9 C35.8 98.2 38.4 100.9 30.0 94.9 C21.5 88.9 23.6 91.4 18.6 83.2 C13.6 75.0 14.6 77.8 14.4 69.2 C14.2 60.7 14.1 63.7 18.0 56.4 C22.0 49.1 20.3 52.1 26.8 46.5 C33.2 40.9 29.8 42.4 38.0 38.9 C46.2 35.4 42.8 36.4 52.4 35.5 C62.0 34.7 58.3 34.4 68.1 36.4 C77.8 38.3 74.3 37.2 82.9 41.6 C91.5 46.1 87.7 44.6 94.9 50.2 C102.1 55.9 98.8 53.0 105.5 59.2 C112.2 65.4 109.9 62.1 115.9 69.6 C122.0 77.1 121.3 73.8 124.5 82.6 C127.7 91.4 127.8 88.6 125.9 97.1 Z" fill="none" stroke="#8a7140" stroke-width="5.8" stroke-linecap="round"/><path d="M125.9 97.1 C124.1 105.6 125.7 103.4 118.6 109.2 C111.6 115.0 114.0 113.4 103.9 115.2 C93.7 117.0 97.1 116.3 86.9 114.8 C76.6 113.3 80.8 113.2 71.7 110.5 C62.6 107.9 67.1 109.3 58.5 106.5 C50.0 103.7 54.1 105.6 45.0 101.9 C35.8 98.2 38.4 100.9 30.0 94.9 C21.5 88.9 23.6 91.4 18.6 83.2 C13.6 75.0 14.6 77.8 14.4 69.2 C14.2 60.7 14.1 63.7 18.0 56.4 C22.0 49.1 20.3 52.1 26.8 46.5 C33.2 40.9 29.8 42.4 38.0 38.9 C46.2 35.4 42.8 36.4 52.4 35.5 C62.0 34.7 58.3 34.4 68.1 36.4 C77.8 38.3 74.3 37.2 82.9 41.6 C91.5 46.1 87.7 44.6 94.9 50.2 C102.1 55.9 98.8 53.0 105.5 59.2 C112.2 65.4 109.9 62.1 115.9 69.6 C122.0 77.1 121.3 73.8 124.5 82.6 C127.7 91.4 127.8 88.6 125.9 97.1 Z" fill="none" stroke="#d2ba8a" stroke-width="4.1" stroke-linecap="round"/><path d="M127.9 96.1L123.9 98.0M88.3 116.5L85.4 113.1M46.1 103.8L43.9 100.0M12.7 70.7L16.1 67.8M36.0 38.2L40.1 39.7M82.2 39.6L83.7 43.7M116.0 67.4L115.9 71.8" fill="none" stroke="#6f5b2e" stroke-width="0.9" opacity="0.3" stroke-linecap="round"/><path d="M125.9 97.1 C124.1 105.6 125.7 103.4 118.6 109.2 C111.6 115.0 114.0 113.4 103.9 115.2 C93.7 117.0 97.1 116.3 86.9 114.8 C76.6 113.3 80.8 113.2 71.7 110.5 C62.6 107.9 67.1 109.3 58.5 106.5 C50.0 103.7 54.1 105.6 45.0 101.9 C35.8 98.2 38.4 100.9 30.0 94.9 C21.5 88.9 23.6 91.4 18.6 83.2 C13.6 75.0 14.6 77.8 14.4 69.2 C14.2 60.7 14.1 63.7 18.0 56.4 C22.0 49.1 20.3 52.1 26.8 46.5 C33.2 40.9 29.8 42.4 38.0 38.9 C46.2 35.4 42.8 36.4 52.4 35.5 C62.0 34.7 58.3 34.4 68.1 36.4 C77.8 38.3 74.3 37.2 82.9 41.6 C91.5 46.1 87.7 44.6 94.9 50.2 C102.1 55.9 98.8 53.0 105.5 59.2 C112.2 65.4 109.9 62.1 115.9 69.6 C122.0 77.1 121.3 73.8 124.5 82.6 C127.7 91.4 127.8 88.6 125.9 97.1 Z" fill="none" stroke="#f4e8c9" stroke-width="1.3" opacity="0.6" stroke-linecap="round" transform="translate(-0.6 -0.9)"/>
+        <path d="M129.1 68.1 C126.2 75.3 125.9 72.7 120.1 78.3 C114.3 84.0 116.5 81.2 111.0 85.7 C105.5 90.1 108.5 88.1 103.0 92.2 C97.5 96.3 100.5 94.2 93.9 98.6 C87.2 102.9 90.8 102.6 82.1 105.7 C73.4 108.8 76.2 108.8 66.6 108.2 C57.0 107.6 60.0 108.0 52.0 103.8 C44.0 99.6 46.5 101.4 41.6 95.2 C36.6 89.0 38.2 91.4 36.5 84.5 C34.7 77.6 35.6 80.4 36.1 73.6 C36.6 66.9 35.3 69.5 38.1 63.3 C40.8 57.1 39.5 59.5 44.7 54.3 C49.8 49.1 47.3 50.7 54.0 47.0 C60.8 43.3 58.0 45.0 65.7 42.7 C73.5 40.3 69.8 41.2 78.1 39.8 C86.5 38.3 82.7 38.2 91.9 38.1 C101.0 38.1 97.4 37.4 106.7 39.6 C116.1 41.8 114.0 39.9 121.1 45.1 C128.3 50.3 126.5 48.4 129.1 55.8 C131.6 63.1 132.0 60.8 129.1 68.1 Z" fill="none" stroke="#8a7140" stroke-width="6.0" stroke-linecap="round"/><path d="M129.1 68.1 C126.2 75.3 125.9 72.7 120.1 78.3 C114.3 84.0 116.5 81.2 111.0 85.7 C105.5 90.1 108.5 88.1 103.0 92.2 C97.5 96.3 100.5 94.2 93.9 98.6 C87.2 102.9 90.8 102.6 82.1 105.7 C73.4 108.8 76.2 108.8 66.6 108.2 C57.0 107.6 60.0 108.0 52.0 103.8 C44.0 99.6 46.5 101.4 41.6 95.2 C36.6 89.0 38.2 91.4 36.5 84.5 C34.7 77.6 35.6 80.4 36.1 73.6 C36.6 66.9 35.3 69.5 38.1 63.3 C40.8 57.1 39.5 59.5 44.7 54.3 C49.8 49.1 47.3 50.7 54.0 47.0 C60.8 43.3 58.0 45.0 65.7 42.7 C73.5 40.3 69.8 41.2 78.1 39.8 C86.5 38.3 82.7 38.2 91.9 38.1 C101.0 38.1 97.4 37.4 106.7 39.6 C116.1 41.8 114.0 39.9 121.1 45.1 C128.3 50.3 126.5 48.4 129.1 55.8 C131.6 63.1 132.0 60.8 129.1 68.1 Z" fill="none" stroke="#d2ba8a" stroke-width="4.2" stroke-linecap="round"/><path d="M131.3 67.5L126.9 68.6M105.3 92.2L100.7 92.2M68.0 110.0L65.1 106.4M35.2 86.4L37.7 82.6M42.4 54.4L46.9 54.1M76.1 38.7L80.2 40.8M121.0 42.8L121.2 47.4" fill="none" stroke="#6f5b2e" stroke-width="0.9" opacity="0.3" stroke-linecap="round"/><path d="M129.1 68.1 C126.2 75.3 125.9 72.7 120.1 78.3 C114.3 84.0 116.5 81.2 111.0 85.7 C105.5 90.1 108.5 88.1 103.0 92.2 C97.5 96.3 100.5 94.2 93.9 98.6 C87.2 102.9 90.8 102.6 82.1 105.7 C73.4 108.8 76.2 108.8 66.6 108.2 C57.0 107.6 60.0 108.0 52.0 103.8 C44.0 99.6 46.5 101.4 41.6 95.2 C36.6 89.0 38.2 91.4 36.5 84.5 C34.7 77.6 35.6 80.4 36.1 73.6 C36.6 66.9 35.3 69.5 38.1 63.3 C40.8 57.1 39.5 59.5 44.7 54.3 C49.8 49.1 47.3 50.7 54.0 47.0 C60.8 43.3 58.0 45.0 65.7 42.7 C73.5 40.3 69.8 41.2 78.1 39.8 C86.5 38.3 82.7 38.2 91.9 38.1 C101.0 38.1 97.4 37.4 106.7 39.6 C116.1 41.8 114.0 39.9 121.1 45.1 C128.3 50.3 126.5 48.4 129.1 55.8 C131.6 63.1 132.0 60.8 129.1 68.1 Z" fill="none" stroke="#f4e8c9" stroke-width="1.3" opacity="0.6" stroke-linecap="round" transform="translate(-0.6 -0.9)"/>
+        <path d="M25.0 57.3 C28.7 53.9 28.4 52.6 36.4 46.7 C44.4 40.7 41.0 43.5 50.0 38.6 C59.0 33.8 59.9 33.7 64.6 31.5" fill="none" stroke="#6f5c38" stroke-width="9.5" opacity="0.2" stroke-linecap="round" transform="translate(1.2 1.8)"/><path d="M25.0 57.3 C28.7 53.9 28.4 52.6 36.4 46.7 C44.4 40.7 41.0 43.5 50.0 38.6 C59.0 33.8 59.9 33.7 64.6 31.5" fill="none" stroke="#8a7140" stroke-width="5.6" stroke-linecap="round"/><path d="M25.0 57.3 C28.7 53.9 28.4 52.6 36.4 46.7 C44.4 40.7 41.0 43.5 50.0 38.6 C59.0 33.8 59.9 33.7 64.6 31.5" fill="none" stroke="#d2ba8a" stroke-width="3.9" stroke-linecap="round"/><path d="M25.0 57.3 C28.7 53.9 28.4 52.6 36.4 46.7 C44.4 40.7 41.0 43.5 50.0 38.6 C59.0 33.8 59.9 33.7 64.6 31.5" fill="none" stroke="#f4e8c9" stroke-width="1.2" opacity="0.6" stroke-linecap="round" transform="translate(-0.6 -0.9)"/>
+        <path d="M120.0 44.0 C122.6 42.4 121.9 41.2 128.0 39.0 C134.1 36.8 132.9 35.4 139.0 37.0 C145.1 38.6 143.8 37.9 147.0 44.0 C150.2 50.1 150.3 48.3 149.0 56.0 C147.7 63.7 148.1 61.9 143.0 68.0 C137.9 74.1 137.8 72.1 133.0 75.0 C128.2 77.9 129.6 76.4 128.0 77.0" fill="none" stroke="#8a7140" stroke-width="5.2" stroke-linecap="round"/><path d="M120.0 44.0 C122.6 42.4 121.9 41.2 128.0 39.0 C134.1 36.8 132.9 35.4 139.0 37.0 C145.1 38.6 143.8 37.9 147.0 44.0 C150.2 50.1 150.3 48.3 149.0 56.0 C147.7 63.7 148.1 61.9 143.0 68.0 C137.9 74.1 137.8 72.1 133.0 75.0 C128.2 77.9 129.6 76.4 128.0 77.0" fill="none" stroke="#d2ba8a" stroke-width="3.6" stroke-linecap="round"/><path d="M118.0 43.9L122.0 44.1M126.2 38.2L129.8 39.8M138.5 35.1L139.5 38.9M147.8 42.2L146.2 45.8M150.7 55.0L147.3 57.0M145.0 68.0L141.0 68.0M135.0 75.4L131.0 74.6M127.3 78.9L128.7 75.1" fill="none" stroke="#6f5b2e" stroke-width="0.9" opacity="0.3" stroke-linecap="round"/><path d="M120.0 44.0 C122.6 42.4 121.9 41.2 128.0 39.0 C134.1 36.8 132.9 35.4 139.0 37.0 C145.1 38.6 143.8 37.9 147.0 44.0 C150.2 50.1 150.3 48.3 149.0 56.0 C147.7 63.7 148.1 61.9 143.0 68.0 C137.9 74.1 137.8 72.1 133.0 75.0 C128.2 77.9 129.6 76.4 128.0 77.0" fill="none" stroke="#f4e8c9" stroke-width="1.1" opacity="0.6" stroke-linecap="round" transform="translate(-0.6 -0.9)"/>
+        <!-- where it was cut: the plies let go of each other -->
+        <g stroke="#b39a63" stroke-width="1" stroke-linecap="round" opacity="0.85">
+          <path d="M128 77 l-5 3.4 M128 77 l-3.6 4.6 M128 77 l-1.6 5.2"/>
         </g>
       </g>
-      <!-- the ball end the wire was anchored by, and the cut tail at the far end -->
-      <circle cx="128" cy="60" r="5.4" fill="#b1893f" stroke="#7c5d25" stroke-width="1"/>
-      <circle cx="128" cy="60" r="1.9" fill="#5b451c"/>
-      <circle cx="126.4" cy="58.4" r="1.5" fill="#f0dcaa" opacity="0.6"/>`,
+`,
   },
   {
-    // Earbud cable, dropped and left. A long thin silhouette, which is exactly
-    // what a narrow gutter wants: it fills 300px of wood without needing 300px
-    // of width. The buds sit at the top, the jack runs off the bottom.
-    id: "cable", w: 96, h: 300, narrow: true, maxRot: 8,
+    // A quarter-inch instrument lead, coiled loosely the way one lands when it
+    // is dropped rather than wound. It replaces a pair of white earbuds, which
+    // were drawn no better and belonged on somebody else's desk: everything
+    // else on this one is stationery or a bracelet, and the lead at least
+    // shares a room with the songs. Long and thin, so the narrow gutters can
+    // still use it.
+    id: "lead", w: 96, h: 300, narrow: true, maxRot: 8,
     svg: `
       <defs>
-        <linearGradient id="dpCord" x1="0" y1="0" x2="1" y2="0">
-          <stop offset="0" stop-color="#e7e1d1"/><stop offset="0.5" stop-color="#cec7b3"/><stop offset="1" stop-color="#a79f8a"/>
-        </linearGradient>
+        ${bar("dpLeadNi", ["#f6f4ef", "#cfccc5", "#8d8a83", "#e2ddd3"])}
+        ${sheen("dpLeadSh", "#ffffff", 0.5)}
+        ${grain("dpLeadRub", 0.6, 19, [0.14, 0.12, 0.11], 0.55)}
       </defs>
-      <!-- one continuous run: the two bud leads join at a splitter, then the
-           single cord loops back on itself twice before leaving the frame -->
-      <g fill="none" stroke="#8d8674" stroke-width="4.4" stroke-linecap="round">
-        <path d="M28 28 q-8 22 6 36 q10 10 14 22"/>
-        <path d="M66 24 q10 24 -4 40 q-10 10 -14 22"/>
-        <path d="M48 96 q-26 22 -14 48 q12 26 44 20 q30 -6 22 -34 q-8 -26 -40 -18 q-30 8 -22 40 q8 30 34 44 q18 10 14 30"/>
+      <!-- A quarter-inch instrument lead, coiled the way one lands when it is
+           dropped rather than wound. Rubber has no twist and no sheen of its
+           own: it gets one soft line of light along its upper side and nothing
+           else, or it turns into liquorice. -->
+      <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M64.0 -10.0 C62.1 -0.4 64.4 4.0 58.0 20.0 C51.6 36.0 55.5 28.5 44.0 40.0 C32.5 51.5 31.6 42.6 22.0 56.0 C12.4 69.4 12.1 67.3 14.0 82.0 C15.9 96.7 14.6 95.0 28.0 102.0 C41.4 109.0 41.3 109.1 56.0 104.0 C70.7 98.9 70.2 99.4 74.0 86.0 C77.8 72.6 77.6 71.6 68.0 62.0 C58.4 52.4 58.7 53.4 44.0 56.0 C29.3 58.6 31.6 55.9 22.0 70.0 C12.4 84.1 14.0 80.8 14.0 100.0 C14.0 119.2 12.4 114.0 22.0 130.0 C31.6 146.0 29.3 139.8 44.0 150.0 C58.7 160.2 58.4 150.5 68.0 162.0 C77.6 173.5 77.2 171.9 74.0 186.0 C70.8 200.1 63.1 199.6 58.0 206.0" fill="none" stroke="#2b2724" stroke-width="7.6" stroke-linecap="round"/><path d="M64.0 -10.0 C62.1 -0.4 64.4 4.0 58.0 20.0 C51.6 36.0 55.5 28.5 44.0 40.0 C32.5 51.5 31.6 42.6 22.0 56.0 C12.4 69.4 12.1 67.3 14.0 82.0 C15.9 96.7 14.6 95.0 28.0 102.0 C41.4 109.0 41.3 109.1 56.0 104.0 C70.7 98.9 70.2 99.4 74.0 86.0 C77.8 72.6 77.6 71.6 68.0 62.0 C58.4 52.4 58.7 53.4 44.0 56.0 C29.3 58.6 31.6 55.9 22.0 70.0 C12.4 84.1 14.0 80.8 14.0 100.0 C14.0 119.2 12.4 114.0 22.0 130.0 C31.6 146.0 29.3 139.8 44.0 150.0 C58.7 160.2 58.4 150.5 68.0 162.0 C77.6 173.5 77.2 171.9 74.0 186.0 C70.8 200.1 63.1 199.6 58.0 206.0" fill="none" stroke="#43403c" stroke-width="5.3" stroke-linecap="round"/><path d="M64.0 -10.0 C62.1 -0.4 64.4 4.0 58.0 20.0 C51.6 36.0 55.5 28.5 44.0 40.0 C32.5 51.5 31.6 42.6 22.0 56.0 C12.4 69.4 12.1 67.3 14.0 82.0 C15.9 96.7 14.6 95.0 28.0 102.0 C41.4 109.0 41.3 109.1 56.0 104.0 C70.7 98.9 70.2 99.4 74.0 86.0 C77.8 72.6 77.6 71.6 68.0 62.0 C58.4 52.4 58.7 53.4 44.0 56.0 C29.3 58.6 31.6 55.9 22.0 70.0 C12.4 84.1 14.0 80.8 14.0 100.0 C14.0 119.2 12.4 114.0 22.0 130.0 C31.6 146.0 29.3 139.8 44.0 150.0 C58.7 160.2 58.4 150.5 68.0 162.0 C77.6 173.5 77.2 171.9 74.0 186.0 C70.8 200.1 63.1 199.6 58.0 206.0" fill="none" stroke="#948e86" stroke-width="1.7" opacity="0.6" stroke-linecap="round" transform="translate(-0.6 -0.9)"/>
+        <!-- the two places the cable lies across itself, brought over with the
+             contact shadow under them -->
+        <path d="M28.0 102.0 C37.0 102.6 41.3 109.1 56.0 104.0 C70.7 98.9 70.2 99.4 74.0 86.0 C77.8 72.6 77.6 71.6 68.0 62.0 C58.4 52.4 51.7 57.9 44.0 56.0" fill="none" stroke="#1c1917" stroke-width="12.9" opacity="0.2" stroke-linecap="round" transform="translate(1.2 1.8)"/><path d="M28.0 102.0 C37.0 102.6 41.3 109.1 56.0 104.0 C70.7 98.9 70.2 99.4 74.0 86.0 C77.8 72.6 77.6 71.6 68.0 62.0 C58.4 52.4 51.7 57.9 44.0 56.0" fill="none" stroke="#2b2724" stroke-width="7.6" stroke-linecap="round"/><path d="M28.0 102.0 C37.0 102.6 41.3 109.1 56.0 104.0 C70.7 98.9 70.2 99.4 74.0 86.0 C77.8 72.6 77.6 71.6 68.0 62.0 C58.4 52.4 51.7 57.9 44.0 56.0" fill="none" stroke="#43403c" stroke-width="5.3" stroke-linecap="round"/><path d="M28.0 102.0 C37.0 102.6 41.3 109.1 56.0 104.0 C70.7 98.9 70.2 99.4 74.0 86.0 C77.8 72.6 77.6 71.6 68.0 62.0 C58.4 52.4 51.7 57.9 44.0 56.0" fill="none" stroke="#948e86" stroke-width="1.7" opacity="0.6" stroke-linecap="round" transform="translate(-0.6 -0.9)"/>
+        <path d="M22.0 130.0 C29.0 136.4 29.3 139.8 44.0 150.0 C58.7 160.2 58.4 150.5 68.0 162.0 C77.6 173.5 72.1 178.3 74.0 186.0" fill="none" stroke="#1c1917" stroke-width="12.9" opacity="0.2" stroke-linecap="round" transform="translate(1.2 1.8)"/><path d="M22.0 130.0 C29.0 136.4 29.3 139.8 44.0 150.0 C58.7 160.2 58.4 150.5 68.0 162.0 C77.6 173.5 72.1 178.3 74.0 186.0" fill="none" stroke="#2b2724" stroke-width="7.6" stroke-linecap="round"/><path d="M22.0 130.0 C29.0 136.4 29.3 139.8 44.0 150.0 C58.7 160.2 58.4 150.5 68.0 162.0 C77.6 173.5 72.1 178.3 74.0 186.0" fill="none" stroke="#43403c" stroke-width="5.3" stroke-linecap="round"/><path d="M22.0 130.0 C29.0 136.4 29.3 139.8 44.0 150.0 C58.7 160.2 58.4 150.5 68.0 162.0 C77.6 173.5 72.1 178.3 74.0 186.0" fill="none" stroke="#948e86" stroke-width="1.7" opacity="0.6" stroke-linecap="round" transform="translate(-0.6 -0.9)"/>
       </g>
-      <g fill="none" stroke="url(#dpCord)" stroke-width="3" stroke-linecap="round">
-        <path d="M28 28 q-8 22 6 36 q10 10 14 22"/>
-        <path d="M66 24 q10 24 -4 40 q-10 10 -14 22"/>
-        <path d="M48 96 q-26 22 -14 48 q12 26 44 20 q30 -6 22 -34 q-8 -26 -40 -18 q-30 8 -22 40 q8 30 34 44 q18 10 14 30"/>
+      <!-- the strain relief: a ribbed rubber cone, where every lead on earth
+           eventually fails -->
+      <path d="M50 202 q-13 5 -15 20 q-2 13 0 24 h30 q2 -11 0 -24 q-2 -15 -15 -20 Z"
+            fill="#33302c" stroke="#211e1c" stroke-width="0.9"/>
+      <g fill="none" stroke="#5b5650" stroke-width="1.1" opacity="0.7">
+        <path d="M36 222 q14 4 28 0"/><path d="M35 232 q15 4 30 0"/><path d="M35 242 q15 4 30 0"/>
       </g>
-      <!-- the splitter barrel where the two leads meet -->
-      <rect x="42" y="88" width="12" height="18" rx="5" fill="#ddd6c4" stroke="#8d8674" stroke-width="0.9"/>
-      <!-- the buds: a stem and the tip that goes in the ear -->
-      <g stroke="#8d8674" stroke-width="0.9">
-        <path d="M28 28 q-10 -8 -4 -16 q7 -9 16 -2 q8 7 0 15 q-6 6 -12 3 Z" fill="#e4dece"/>
-        <path d="M66 24 q10 -9 4 -17 q-7 -8 -16 -1 q-8 7 0 15 q6 6 12 3 Z" fill="#e4dece"/>
-      </g>
-      <g fill="#ffffff" opacity="0.4">
-        <ellipse cx="28" cy="12" rx="4" ry="2.6" transform="rotate(-20 28 12)"/>
-        <ellipse cx="66" cy="10" rx="4" ry="2.6" transform="rotate(20 66 10)"/>
-      </g>`,
+      <!-- the plug: barrel, insulator, sleeve, tip. It reads as metal because
+           the far rim picks the desk's bounce back up (bar(), upstairs). -->
+      <rect x="35" y="244" width="30" height="5" rx="1.8" fill="#4a453f"/>
+      <rect x="36" y="248" width="28" height="30" rx="1.5" fill="url(#dpLeadNi)"/>
+      <rect x="36" y="248" width="28" height="30" fill="url(#dpLeadSh)" opacity="0.45"/>
+      <!-- the insulating ring that separates sleeve from tip -->
+      <rect x="41" y="276" width="18" height="3.4" fill="#17150f" opacity="0.9"/>
+      <rect x="41" y="278" width="18" height="12" fill="url(#dpLeadNi)"/>
+      <path d="M41 288 q9 9 18 0 v-4 h-18 Z" fill="url(#dpLeadNi)"/>
+      <path d="M38 250 v27" stroke="#fffdf8" stroke-width="1.6" opacity="0.5"/>
+      <path d="M61.4 250 v27" stroke="#5f5b54" stroke-width="1.4" opacity="0.4"/>
+      <!-- a nick in the plating, because nothing on this desk is new -->
+      <path d="M56 256 q2 4 0 8" stroke="#6f6a62" stroke-width="0.9" fill="none" opacity="0.5"/>
+`,
   },
   {
     // A wooden ruler alongside the page. The most vertical object on the desk, so

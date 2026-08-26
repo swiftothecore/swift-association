@@ -631,7 +631,7 @@
   /* the ruler is a thick solid block of wood, so it earns a heavier shadow than
      a coil of string does */
   .desk-drop.dp-ruler { filter: drop-shadow(4px 7px 5px rgba(46,32,14,0.34)) saturate(0.88); }
-  .desk-drop.dp-cable,
+  .desk-drop.dp-lead,
   .desk-drop.dp-string { filter: drop-shadow(2px 4px 3px rgba(46,32,14,0.28)) saturate(0.88); }
   /* prop lettering: the bracelet's own bead stamps, and the printed numbers on
      the spool card and the ruler. Same typewriter face the functional UI uses. */
