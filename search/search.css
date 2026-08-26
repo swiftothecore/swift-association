@@ -128,7 +128,8 @@ body::before {
    game's pencil; its test swipe rotates with it, which just reads as a swipe
    drawn at that angle on the wood */
 .dx-marker { width: 340px; top: 46%; left: calc(50% - 505px); transform: translate(-50%, -50%) rotate(75deg); }
-.dx-cards  { width: 380px; top: 64%; left: 0; transform: translateX(-36%) rotate(-9deg); }
+/* 440px for a 440-wide viewBox: 5x3in cards at the desk's 3px per mm */
+.dx-cards  { width: 440px; top: 60%; left: 0; transform: translateX(-30%) rotate(-9deg); }
 /* 285px for a 285-wide viewBox, i.e. 1:1 at the desk's 3px per mm */
 .dx-buds   { width: 285px; top: 56%; right: 0; transform: translateX(-2%) rotate(-14deg); }
 /* the rhyming dictionary is the deep-reference prop. The index journal owns the
