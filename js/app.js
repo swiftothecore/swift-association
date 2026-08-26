@@ -9731,7 +9731,7 @@ function restoreCorpus() {
 // derivation leans on songsContainingWord / validSongs / titleSongsForWord, which read the
 // globals themselves, so the corpus has to be live to be measured.
 // `opts.aliases` folds in TITLE_ALIASES (Taylor-specific, so guests pass it false);
-// `opts.buckets` is the rarity threshold set (a guest carries its own, see buildWordBuckets).
+// `opts.buckets` is the rarity threshold set (a guest carries its own, see indexPlayableWords).
 function installCorpus(grouped, words, opts = {}) {
   // songs.json stores lyrics as structured sections ([{label, lines}]); the game
   // works off a flat newline-joined `lyrics` string, so derive it here once. The
@@ -9820,39 +9820,61 @@ function installCorpus(grouped, words, opts = {}) {
     shortTitleWordLists[max] = playableWords.filter((w) =>
       validSongs(w, false, false).some((s) => titleWordCount(s.title) <= max));
   }
-  // On Tour! pools: for each album, the playable words that have a valid (lyrics) song
-  // in it, so each tour stop can be handed a winnable word. Plus the canonical album order.
   albumOrder = grouped.map((g) => g.album);
-  albumWordMap = {};
-  for (const w of playableWords) {
-    for (const a of new Set(validSongs(w, false, false).map((s) => s.album)))
-      (albumWordMap[a] = albumWordMap[a] || []).push(w);
-  }
-  buildWordBuckets(opts.buckets);
+  // The rarity buckets, plus the On Tour! pools: for each album, the playable words that
+  // have a valid (lyrics) song in it, so each tour stop can be handed a winnable word.
+  // One walk of the catalogue per word feeds both (see indexPlayableWords).
+  indexPlayableWords(opts.buckets);
   return snapshotCorpus();
 }
 
 // Bucket words by how many songs contain them, so each mode draws from an
-// appropriate-rarity pool. Thresholds are tunable; each bucket falls back to
-// the full list if it ends up too thin to sustain a 13-round, no-repeat game.
+// appropriate-rarity pool, and map each album to the words its songs hold.
+// Thresholds are tunable; each bucket falls back to the full list if it ends up
+// too thin to sustain a 13-round, no-repeat game.
 // `cfg` is a threshold set: TAYLOR_BUCKETS for the main catalogue, or a guest's own out of
 // its file. The numbers are per-catalogue and deliberately NOT scaled off catalogue size —
 // no clean formula fits both 287 songs and 42, and one bent through two points would be a
 // false generalisation waiting to misfit the third guest.
-function buildWordBuckets(cfg = TAYLOR_BUCKETS) {
+//
+// The four indexes are built together because they were all asking the catalogue the same
+// question. albumWordMap, the easy bucket and the hard bucket each ran their own full
+// lenient sweep of every lyric sheet, and ultra ran a strict one: four passes over ~514KB
+// of lyrics per word, 841,000 regex tests before the notebook could open, on the main
+// thread, which is why the desk props stood still through boot. One walk per word feeds
+// all four.
+//
+// The `continue` is the other half of it, and it is a real claim, not an optimisation
+// guess: where the lenient regex finds nothing the strict one cannot find anything either,
+// because the lenient pattern's tail is optional, so it contains the bare word as one of
+// its own alternatives, and falseFriendGuard only ever disowns OTHER words' inflections,
+// never the bare word itself. Checked against the whole catalogue: of 210,371 word/song
+// pairs there is not one where strict matches and lenient does not, on lyrics or titles.
+// Lenient misses 94% of pairs, so that line skips almost every strict scan there was.
+function indexPlayableWords(cfg = TAYLOR_BUCKETS) {
   const MIN = RECENT_WINDOW + 8;
-  // Easy counts plain lyric matches (title songs are allowed in Easy/Medium).
-  const easy = playableWords.filter((w) => songsContainingWord(w, false).length >= cfg.easy);
-  // Hard/Ultra count only *valid* answers (word in lyrics but NOT the title), so
-  // every bucketed word still has at least one answerable, non-giveaway song.
-  const hard = playableWords.filter((w) => {
-    const n = validSongs(w, false, true).length;
-    return n >= cfg.hard[0] && n <= cfg.hard[1];
-  });
-  const ultra = playableWords.filter((w) => {
-    const n = validSongs(w, true, true).length;   // strict word, no title, rarest
-    return n >= cfg.ultra[0] && n <= cfg.ultra[1];
-  });
+  const easy = [], hard = [], ultra = [];
+  albumWordMap = {};
+  for (const w of playableWords) {
+    const lenient = wordRegex(w, false);
+    const strict = wordRegex(w, true);
+    const albums = new Set();
+    // Easy counts plain lyric matches (title songs are allowed in Easy/Medium).
+    // Hard/Ultra count only *valid* answers (word in lyrics but NOT the title), so
+    // every bucketed word still has at least one answerable, non-giveaway song.
+    let easyN = 0, hardN = 0, ultraN = 0;
+    for (const s of allSongs) {
+      if (!lenient.test(s.lyrics)) continue;
+      easyN++;
+      albums.add(s.album);
+      if (!lenient.test(s.title)) hardN++;
+      if (strict.test(s.lyrics) && !strict.test(s.title)) ultraN++;   // strict, no title, rarest
+    }
+    for (const a of albums) (albumWordMap[a] = albumWordMap[a] || []).push(w);
+    if (easyN >= cfg.easy) easy.push(w);
+    if (hardN >= cfg.hard[0] && hardN <= cfg.hard[1]) hard.push(w);
+    if (ultraN >= cfg.ultra[0] && ultraN <= cfg.ultra[1]) ultra.push(w);
+  }
   const safe = (arr) => (arr.length >= MIN ? arr : playableWords);
   wordBuckets = { easy: safe(easy), all: playableWords, hard: safe(hard), ultra: safe(ultra) };
 }
@@ -13534,7 +13556,7 @@ function albumWordScore(word, album) {
 // whatever mode happens to be loaded. null when there's no album or nothing survives.
 //
 // Worth knowing before tuning this: for daily the bucket intersection is a no-op. Daily is always
-// Normal, MODES.medium.pool is "all", and buildWordBuckets sets wordBuckets.all to playableWords
+// Normal, MODES.medium.pool is "all", and indexPlayableWords sets wordBuckets.all to playableWords
 // itself — the unfiltered list every album word already comes from. So "all" is not a rarity
 // tier, and the pool below is shaped by the hapax filter alone. The intersection stays because
 // the pool name is the honest input; it just isn't a constraint at Normal.
@@ -13704,7 +13726,7 @@ function pickWord() {
     bucket = wordBuckets[effectivePool()] || playableWords;
   }
   // No-repeat within a game: exclude every word already used this run. Buckets
-  // are guaranteed ≥ TOTAL_ROUNDS words (see buildWordBuckets' MIN), so the pool
+  // are guaranteed ≥ TOTAL_ROUNDS words (see indexPlayableWords' MIN), so the pool
   // only empties on a degenerate list — fall back to the full bucket if so.
   const pool = bucket.filter((w) => !usedWords.includes(w));
   let choices = pool.length ? pool : bucket;
@@ -13774,7 +13796,7 @@ function pickWord() {
 // Album Focus: a word whose chosen-album valid set is non-empty under the active difficulty's
 // title rule. Start from the album's playable words intersected with the rarity bucket (so the
 // difficulty still shapes the pool), falling back to the full album list when that's too thin
-// (the buildWordBuckets safe() pattern). Then verify an in-album song survives effectiveNoTitle
+// (the indexPlayableWords safe() pattern). Then verify an in-album song survives effectiveNoTitle
 // (Hard can title-filter a word's only album song) — skip the word if not. null → normal pool.
 // `album` defaults to Album Focus's chosen album, but Deep Cut's dark side passes its DEALT
 // album so that run gets the same guarantee: never serve a page with no in-album answer.

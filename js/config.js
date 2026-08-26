@@ -392,7 +392,7 @@ export const GUEST_DIFFS = ALBUM_FOCUS_DIFFS;
 // arrives quickly once you know it, and ADMITTED should mean you know the whole shelf.
 export const GUEST_TARGET = TOTAL_ROUNDS;
 // The bucket thresholds Taylor's 287-song corpus is tuned to. A guest carries its own in its
-// file (see loadGuest / buildWordBuckets) because these numbers do not survive the trip: at
+// file (see loadGuest / indexPlayableWords) because these numbers do not survive the trip: at
 // 42 songs `easy >= 18` matches nine words and `ultra` swallows most of the vocabulary.
 export const TAYLOR_BUCKETS = { easy: 18, hard: [3, 9], ultra: [1, 3] };
 

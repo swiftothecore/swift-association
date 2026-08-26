@@ -75,9 +75,9 @@ export function variantBody(word) {
 }
 
 // Built regexes, memoised by word. Compiling one is cheap; compiling the same one six
-// hundred thousand times is not. buildWordBuckets alone asks for 733 words x 3 passes and
-// then tests each against all 287 songs, and that whole sweep used to build a fresh RegExp
-// per song. Sharing the object is safe precisely because nothing here is global- or
+// hundred thousand times is not. Matching a typed answer against the playable list builds
+// one per word, 733 of them, and indexPlayableWords asks for another 1,466 before the
+// notebook opens. Sharing the object is safe precisely because nothing here is global- or
 // sticky-flagged: every caller only ever runs `.test` or `.exec` on it, and an "i" regex
 // carries no lastIndex between calls, so two callers can hold the same one at once.
 //
