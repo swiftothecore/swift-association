@@ -317,7 +317,14 @@
   .di-mug     { width: 380px; top: 36%;  left: 0; transform: translateX(-55%) rotate(-14deg);
     filter: drop-shadow(6px 13px 11px rgba(46,32,14,0.28)) saturate(0.88); }
   .di-floss   { width: 370px; top: 5%;   right: 0; transform: translateX(34%) rotate(8deg); }
-  .di-cassette{ width: 320px; top: 54%;  right: 0; transform: translateX(42%) rotate(-16deg); }
+  /* Less overhang than the other edge props get. The insert is written on, and
+     the title is centred on the card, so the shell has to sit far enough onto
+     the screen for the whole of it to clear the viewport edge: past ~36% the
+     version note starts running off. On a narrow desk the notebook is the thing
+     that matters, so the tape keeps only the clearance the title needs and takes
+     the extra air later, once there is desk to spare. */
+  .di-cassette{ width: 320px; top: 54%;  right: 0; transform: translateX(34%) rotate(-16deg); }
+  @media (min-width: 1400px) { .di-cassette { transform: translateX(28%) rotate(-16deg); } }
   /* on-desk props: anchored to the notebook column (the .app is a fixed 660px
      wide whenever props are visible, so calc(50% +/- 330px) is the paper edge)
      rather than the viewport, keeping their gap to the page constant */
@@ -409,6 +416,35 @@
   /* her birthday: the desk's own folded-paper gold, so no album colour stands
      in for it (album days wear their era's ink, set per-mark in calendar.js) */
   .di-calendar .cal-star { fill: #dda93f; stroke: #a8752e; stroke-width: 2; stroke-linejoin: round; }
+  /* The cassette insert. Same split of voices as the desk calendar: the card is
+     a manufactured thing, so its header and spec line are printed in the desk's
+     Courier; the title, the version note and the album line are written on the
+     printed rules in the same ballpoint the calendar is marked in. */
+  .di-cassette text { text-anchor: middle; }
+  .di-cassette .cs-side, .di-cassette .cs-spec { text-anchor: start; }
+  .di-cassette .cs-spec { text-anchor: end; }
+  .di-cassette .cs-side {
+    font-family: var(--type); font-weight: 700; font-size: calc(4.4px + var(--text-size-adjust));
+    letter-spacing: 1.1px; fill: #fbf3e4;
+  }
+  .di-cassette .cs-spec {
+    font-family: var(--type); font-size: calc(3.8px + var(--text-size-adjust));
+    letter-spacing: 0.8px; fill: #fbf3e4; opacity: 0.72;
+  }
+  .di-cassette .cs-title {
+    font-family: var(--hand); font-weight: 700; font-size: calc(13px + var(--text-size-adjust));
+    fill: #33406a;
+  }
+  /* the version note trails the title on the same rule, smaller and unbolded,
+     the way it gets squeezed in after the song name has already been written */
+  .di-cassette .cs-sub {
+    font-weight: 400; font-size: calc(7.4px + var(--text-size-adjust));
+    fill: #3d4a72; opacity: 0.84;
+  }
+  .di-cassette .cs-note {
+    font-family: var(--hand); font-size: calc(7.2px + var(--text-size-adjust));
+    fill: #4a4632; opacity: 0.72;
+  }
   /* picks ride the cassette pile: right-edge anchored so the pair stays
      together at any viewport width, drawn after it so they land on top */
   .di-picks   { width: 155px; top: 70%; right: 36px; transform: rotate(22deg); }
