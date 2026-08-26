@@ -421,9 +421,12 @@
   /* the writer's marks: graphite strikes through the spent days, a red pen
      loop (main stroke + a lighter echo pass) around today, and one gold
      highlighter swipe on the 13th */
-  .di-calendar .cal-strikes path { fill: none; stroke: #6f675a; stroke-width: 1.15; stroke-linecap: round; opacity: 0.55; }
-  .di-calendar .cal-today path { fill: none; stroke: #b23a3f; stroke-linecap: round; stroke-width: 1.9; opacity: 0.85; }
-  .di-calendar .cal-today path.echo { stroke-width: 0.9; opacity: 0.45; }
+  /* no stroke-width or opacity here on purpose: calendar.js varies the pressure of
+     every strike per date, and a declaration in this file would win over the
+     presentation attribute it sets, flattening twenty-five squares back to one weight */
+  .di-calendar .cal-strikes path { fill: none; stroke: #6f675a; stroke-linecap: round; }
+  .di-calendar .cal-today path { fill: none; stroke: #b23a3f; stroke-linecap: round; stroke-width: 1.55; opacity: 0.8; }
+  .di-calendar .cal-today path.echo { stroke-width: 1.05; opacity: 0.5; }
   .di-calendar .cal-hl line { stroke: rgba(247, 201, 72, 0.55); stroke-width: 14; stroke-linecap: round; }
   /* her birthday: the desk's own folded-paper gold, so no album colour stands
      in for it (album days wear their era's ink, set per-mark in calendar.js) */

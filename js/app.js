@@ -10157,8 +10157,8 @@ function saltSvg(fill) {
   return `<svg viewBox="0 0 32 32" width="36" height="36" aria-hidden="true">` +
     `<path d="${SALT_SHAKER_D}" fill="${fill}" stroke="rgba(0,0,0,0.22)" stroke-width="0.7" stroke-linejoin="round"/>` +
     `<path d="${SALT_CAP_D}" fill="none" stroke="rgba(0,0,0,0.26)" stroke-width="0.8" stroke-linecap="round"/>` +
-    `<g fill="rgba(0,0,0,0.32)"><circle cx="13.9" cy="6.4" r="0.7"/><circle cx="16" cy="5.9" r="0.7"/><circle cx="18.1" cy="6.4" r="0.7"/></g>` +
-    `<path d="M10.4 17.5v7.5" fill="none" stroke="rgba(255,255,255,0.5)" stroke-width="1.1" stroke-linecap="round"/>` +
+    `<g fill="rgba(0,0,0,0.32)"><circle cx="13.8" cy="6.4" r="0.65"/><circle cx="16" cy="5.9" r="0.65"/><circle cx="18.2" cy="6.4" r="0.65"/></g>` +
+    `<path d="M11.2 18.4v6.4" fill="none" stroke="rgba(255,255,255,0.5)" stroke-width="1.1" stroke-linecap="round"/>` +
     `</svg>`;
 }
 // The sacred-13 mark for the minor 13-day sticky: a hand-inked "13" over a soft ring, in

@@ -54,8 +54,18 @@ const colX = (c) => COL0 + c * CW;
 const WEEK_Y = 133;                     // weekday-initial baseline
 const ROW0 = 152, RH = 22;              // first date row baseline + pitch
 const rowY = (r) => ROW0 + r * RH;
-const NUM_DY = 4.1;                     // optical centring of the numerals
-const MARK_DX = 7.8, MARK_DY = 5.6;     // the mark sits off the number's lower right
+const NUM_DY = 4.1;                     // baseline of the numerals below the row anchor
+// The numeral's OPTICAL centre, which is what the hand marks aim at and is not the row
+// anchor: Courier Prime's cap height is 0.583em, so an 11px figure sits from 3.2 above
+// its baseline to the baseline itself, centred 4.1 - 3.2 = 0.9 below the anchor. The
+// strike and the pen loop both centre here; the printed grid still hangs off cy.
+const NUM_CY = 0.9;
+// The mark sits off the number's lower right, and has to stay unmistakably inside its
+// own square: at 0.3 scale a 32-box mark is 9.6 across, so an offset of 6 leaves 2.3
+// of paper before the 26.3 column boundary. It used to be 7.8/5.6, which put the mark
+// hard against the gutter and left a heart reading as though it belonged to neither
+// the day it marks nor the one after it.
+const MARK_DX = 6, MARK_DY = 4.8;
 
 const MONTHS = ["January", "February", "March", "April", "May", "June",
                 "July", "August", "September", "October", "November", "December"];
@@ -70,7 +80,12 @@ const STAR_D = "M0 -12 L2.94 -4.05 L11.41 -3.71 L4.76 1.55 L7.05 9.71 L0 5 L-7.0
 // and two hearts will not fit in a 26px cell — so the earlier, original release
 // wins the square (they share an album colour anyway, so the day still reads as
 // 1989's). Her birthday outranks everything; a lyric day yields to a release.
-const RANK = { birthday: 0, album: 1, tv: 2, lore: 3 };
+// `songday` is a milestone-table entry for a day a SONG is about rather than a day
+// something shipped, so it outranks a bare lyric day but yields to any real release.
+// It must be listed: an absent kind makes RANK[kind] undefined, and every comparison
+// against undefined is false, which silently ranks that kind last as a challenger and
+// first as an incumbent depending only on table order.
+const RANK = { birthday: 0, album: 1, tv: 2, songday: 3, lore: 4 };
 const DAY_MARK = new Map();
 for (const m of [...TS_MILESTONES, ...TS_LORE_DAYS]) {
   const held = DAY_MARK.get(m.md);
@@ -78,18 +93,35 @@ for (const m of [...TS_MILESTONES, ...TS_LORE_DAYS]) {
 }
 const mdKey = (m, d) => `${String(m + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
 
-// A graphite slash through a spent day: its own angle, length, bow and
-// offset per date, like strokes made on different mornings.
-const strike = (cx, cy, s) => {
-  const a = (-22 - jit(s) * 16).toFixed(1);
-  const L = 11.5 + jit(s + 7) * 3.5;
-  const bow = 0.8 + jit(s + 13) * 1.4;
-  const dx = (jit(s + 3) - 0.5) * 2.4, dy = (jit(s + 5) - 0.5) * 2;
+// A graphite slash through a spent day. The length comes from the NUMERAL, not from a
+// constant: a stroke long enough to cross "17" is close to twice the width of "7", and
+// a fixed length turned the whole first week into slashes floating up off their digits
+// rather than through them. So it is the measured glyph box plus a hand's overshoot at
+// each end. It is centred on NUM_CY too, because the row anchor is not where the figure
+// is, and the bow is gentle and near-symmetric so neither tip flies clear of the ink.
+//
+// Angle, length, bow, offset AND pressure are jittered per date. The pressure is the
+// point: twenty-five squares of identical stroke-width and opacity read as one stamp
+// repeated, which is the opposite of the "crossed off on different mornings" the rest
+// of the geometry is trying to say. Weight and opacity are set here rather than in the
+// stylesheet, since a CSS declaration would win over a presentation attribute.
+const strike = (cx, cy, w, s) => {
+  const a = (-16 - jit(s) * 18).toFixed(1);
+  const L = w + 3.2 + jit(s + 7) * 2.2;
+  const bow = 0.7 + jit(s + 13) * 1.1;
+  const dx = (jit(s + 3) - 0.5) * 2, dy = (jit(s + 5) - 0.5) * 1.8;
   return el("path", {
-    d: `M${(-L / 2).toFixed(1)} ${bow.toFixed(1)} Q0 ${(-bow).toFixed(1)} ${(L / 2).toFixed(1)} ${(-bow * 1.6).toFixed(1)}`,
-    transform: `translate(${(cx + dx).toFixed(1)} ${(cy + dy).toFixed(1)}) rotate(${a})`
+    d: `M${(-L / 2).toFixed(1)} ${(bow * 0.7).toFixed(1)} Q0 ${(-bow * 0.5).toFixed(1)} ${(L / 2).toFixed(1)} ${(-bow).toFixed(1)}`,
+    "stroke-width": (0.95 + jit(s + 17) * 0.55).toFixed(2),
+    opacity: (0.4 + jit(s + 23) * 0.26).toFixed(2),
+    transform: `translate(${(cx + dx).toFixed(1)} ${(cy + NUM_CY + dy).toFixed(1)}) rotate(${a})`
   });
 };
+// Nominal advance of one Courier figure, the fallback when the pad is not laid out yet
+// and getBBox answers zero. Monospaced, so this is exact at the default text size and
+// only drifts if the accessibility text-size bump is on -- which is why the real width
+// is measured first and this is only the floor.
+const DIGIT_W = 6.6;
 
 // --- the month's own mark, in the title line ---
 //
@@ -258,44 +290,62 @@ function drawMark(g, mark, cx, cy, colors, s) {
   // A day can ask for its own object instead of the heart (August 1st stamps a salt shaker).
   // Same 32x32 box and centring as the heart, so it takes the identical transform.
   if (mark.mark === "salt") {
-    // Grouped so the cap seam shares the shaker's transform. The seam is drawn heavy (it
-    // scales down to well under a pixel otherwise) — without it the silhouette reads as a jar.
+    // Grouped so the lip line shares the shaker's transform. Both strokes are quoted in
+    // the 32-box because scale(0.3) is about to divide them: what the paper sees is
+    // 2 * 0.3 = 0.6 for the silhouette and 1.8 * 0.3 = 0.54 for the lip. Deliberately
+    // restrained — the shaker's read lives in two pinches about a pixel and a half deep,
+    // and heavier ink closes them up and turns the object into a padlock. The sticky's
+    // perforation dots would land at a fifth of a pixel here, so they are the larger
+    // surface's job, not this one's.
     const shaker = el("g", {
       transform: `translate(${x} ${y}) rotate(${tilt}) scale(0.3) translate(-16 -16)`
     });
     shaker.appendChild(el("path", {
-      d: SALT_SHAKER_D, fill: color, stroke: "rgba(0,0,0,0.28)", "stroke-width": 0.9,
+      d: SALT_SHAKER_D, fill: color, stroke: "rgba(0,0,0,0.3)", "stroke-width": 2,
       "stroke-linejoin": "round"
     }));
     shaker.appendChild(el("path", {
-      d: SALT_CAP_D, fill: "none", stroke: "rgba(0,0,0,0.3)", "stroke-width": 2.4,
+      d: SALT_CAP_D, fill: "none", stroke: "rgba(0,0,0,0.26)", "stroke-width": 1.8,
       "stroke-linecap": "round"
     }));
     g.appendChild(shaker);
     return;
   }
+  // Stroke weights are quoted in the 32-box and then divided by scale(0.3), so the
+  // numbers that matter are what reaches the paper: the filled heart's separating edge
+  // lands at 0.8, matching the birthday star, and the hollow one's outline at 1.05,
+  // heavier because there the stroke IS the drawing. The filled edge used to be quoted
+  // at 0.9, i.e. 0.27 on paper — sub-pixel, so the thing meant to lift a coloured heart
+  // off cream paper was not rendering at all.
   g.appendChild(el("path", {
     d: HEART_D,
     fill: hollow ? "none" : color,
-    stroke: hollow ? color : "rgba(0,0,0,0.28)",
-    "stroke-width": hollow ? 3.2 : 0.9,
+    stroke: hollow ? color : "rgba(0,0,0,0.3)",
+    "stroke-width": hollow ? 3.5 : 2.7,
     "stroke-linejoin": "round",
     transform: `translate(${x} ${y}) rotate(${tilt}) scale(0.3) translate(-16 -16.4)`
   }));
 }
 
-// The red pen loop around today: a fast ellipse that overshoots past a full
-// turn, plus a lighter echo pass slightly rotated — a pen going around twice.
+// The red pen loop around today: a fast ellipse that overshoots past a full turn, plus
+// a lighter echo pass rotated off it — a pen going around twice.
+//
+// The echo used to be quoted at 0.9 wide and 0.45 opaque, offset half a unit and turned
+// two degrees, which at this size is invisible: what rendered was one tidy oval, so the
+// second pass was a story the drawing never told. It is nearer the main stroke's weight
+// now and clearly turned off it. The main stroke has come down from 1.9, which made it
+// the heaviest ink on a sheet where everything else is a 1.1 pencil line, and the radii
+// have come in so the loop stops crowding the days either side of it in a 26.3 cell.
 function drawToday(g, cx, cy, s) {
   const rot = -8 + jit(s) * 15;
-  const rx = 10.8 + jit(s + 2) * 1.2, ry = 8.3 + jit(s + 4) * 0.9;
+  const rx = 9.9 + jit(s + 2) * 1.1, ry = 7.8 + jit(s + 4) * 0.8;
   const d =
     `M${(cx + rx).toFixed(1)} ${(cy - 1.2).toFixed(1)}` +
     ` C${(cx + rx * 1.02).toFixed(1)} ${(cy - ry).toFixed(1)} ${(cx - rx * 1.04).toFixed(1)} ${(cy - ry * 1.06).toFixed(1)} ${(cx - rx).toFixed(1)} ${(cy - 0.6).toFixed(1)}` +
     ` C${(cx - rx * 0.97).toFixed(1)} ${(cy + ry).toFixed(1)} ${(cx + rx * 0.98).toFixed(1)} ${(cy + ry * 1.04).toFixed(1)} ${(cx + rx * 1.01).toFixed(1)} ${(cy - 0.4).toFixed(1)}` +
     ` C${(cx + rx * 1.02).toFixed(1)} ${(cy - ry * 0.55).toFixed(1)} ${(cx + rx * 0.5).toFixed(1)} ${(cy - ry * 0.98).toFixed(1)} ${(cx - rx * 0.35).toFixed(1)} ${(cy - ry * 0.92).toFixed(1)}`;
   g.appendChild(el("path", { d, transform: `rotate(${rot.toFixed(1)} ${cx} ${cy})` }));
-  g.appendChild(el("path", { d, class: "echo", transform: `rotate(${(rot + 2.5).toFixed(1)} ${cx} ${cy}) translate(0.5 0.6)` }));
+  g.appendChild(el("path", { d, class: "echo", transform: `rotate(${(rot + 5.5).toFixed(1)} ${cx} ${cy}) translate(0.9 1)` }));
 }
 
 export function render(now) {
@@ -344,12 +394,18 @@ export function render(now) {
     }
     const mark = DAY_MARK.get(mdKey(m, d));
     if (mark) drawMark(marks, mark, cx, cy, colors, seed + d * 7);
-    days.appendChild(el("text", {
+    const num = el("text", {
       x: cx, y: (cy + NUM_DY).toFixed(1), "text-anchor": "middle",
       class: (c === 0 || c === 6) ? "wknd" : null
-    }, String(d)));
-    if (d < D) strikes.appendChild(strike(cx, cy, seed + d));
-    if (d === D) drawToday(today, cx, cy, seed + 200 + d);
+    }, String(d));
+    days.appendChild(num);
+    // Measured AFTER the append, so the figure is in the tree and has a box; an
+    // unlaid-out pad answers zero and falls back to the nominal monospace advance.
+    if (d < D) {
+      const w = num.getBBox().width || String(d).length * DIGIT_W;
+      strikes.appendChild(strike(cx, cy, w, seed + d));
+    }
+    if (d === D) drawToday(today, cx, cy + NUM_CY, seed + 200 + d);
   }
 }
 

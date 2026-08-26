@@ -1686,14 +1686,30 @@ export const TS_MILESTONES = [
 // The salt shaker silhouette for the August 1st mark, in the same 32x32 box as the milestone
 // sticky's heart and centred on (16, 16) so it drops into either transform unchanged. Shared
 // rather than copied because two surfaces stamp it: the sticky (js/app.js) and the desk
-// calendar's square (js/calendar.js). The narrow cap over flared shoulders is what makes it a
-// shaker and not a jar at 10px on the calendar, so keep the cap clearly narrower than the body;
-// SALT_CAP_D is the seam under the cap, drawn separately so each surface can weight it.
+// calendar's square (js/calendar.js).
+//
+// The whole job of this outline is to survive the calendar, where it is stamped about 10px
+// wide with no room for the perforation dots the sticky can afford. Two shapes have failed
+// there already and both failures are instructive. A flat lid sitting flush with the body
+// is a JAR, which is what the first attempt read as. A semicircular dome over a squat body
+// is a PADLOCK, which is what the second one read as — the crown and the seam together make
+// a handle, and the heavier the ink the more certain the handle becomes.
+//
+// What is left is the diner-shaker profile, four steps that no jar and no padlock have:
+// a barely-crowned cap NARROWER than the body, a lip that overhangs the cap on both sides,
+// a neck pinched narrower than either, and shoulders flaring out to a body taller than it
+// is wide — 14.4 by 16.8, because a body as wide as it is tall stops being a shaker and
+// starts being an ink bottle. Those two pinches are the whole read, so if you redraw this keep
+// neck < cap < lip < body, and keep the ink off them — 0.6px of outline already eats half
+// the neck's 1.4px of concavity at calendar size.
+// SALT_CAP_D is the lip line under the cap, drawn separately so each surface can weight it:
+// it is an interior feature, so it wants LESS ink than the silhouette, not more.
 export const SALT_SHAKER_D =
-  "M12.8 3.6h6.4a1.6 1.6 0 0 1 1.6 1.6v3.3c2.5 1.2 3.7 3.4 3.7 6.2v11.4" +
-  "a2.4 2.4 0 0 1-2.4 2.4h-12.2a2.4 2.4 0 0 1-2.4-2.4V14.7c0-2.8 1.2-5 3.7-6.2V5.2" +
-  "a1.6 1.6 0 0 1 1.6-1.6z";
-export const SALT_CAP_D = "M11.2 8.6h9.6";
+  "M12.3 5.2C12.3 4.1 14 3.4 16 3.4C18 3.4 19.7 4.1 19.7 5.2V9.2" +
+  "H20.4C20.4 10.3 19.8 11.1 19 11.6C21.6 12.6 23.2 14.6 23.2 17.4V26" +
+  "a2.4 2.4 0 0 1-2.4 2.4H11.2a2.4 2.4 0 0 1-2.4-2.4V17.4" +
+  "C8.8 14.6 10.4 12.6 13 11.6C12.2 11.1 11.6 10.3 11.6 9.2H12.3Z";
+export const SALT_CAP_D = "M11.6 9.2H20.4";
 
 /* ---------- Lyric days (desk-calendar marginalia only) ----------
    Days the songs themselves put a date on. Deliberately kept OUT of
