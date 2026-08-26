@@ -74,12 +74,33 @@ export function variantBody(word) {
   return falseFriendGuard(word) + "(?:" + wordVariants(word).join("|") + ")";
 }
 
+// Built regexes, memoised by word. Compiling one is cheap; compiling the same one six
+// hundred thousand times is not. buildWordBuckets alone asks for 733 words x 3 passes and
+// then tests each against all 287 songs, and that whole sweep used to build a fresh RegExp
+// per song. Sharing the object is safe precisely because nothing here is global- or
+// sticky-flagged: every caller only ever runs `.test` or `.exec` on it, and an "i" regex
+// carries no lastIndex between calls, so two callers can hold the same one at once.
+//
+// The cache is capped and cleared wholesale on overflow rather than evicted one at a time.
+// Player-typed answers reach wordRegex too, so the key space is not just the 733 playable
+// words and must not be allowed to grow without limit; a plain wipe keeps the bookkeeping
+// free, and the words that matter are re-compiled the next time they are asked for.
+const RX_CACHE = new Map();
+const RX_CACHE_MAX = 4000;
+
 // Lenient (strict falsy) also matches the inflected forms above (cheat→cheats);
 // strict requires the exact word. `strict` is an explicit boolean here — the game
 // wrapper resolves its default from effectiveStrict() before calling.
 export function wordRegex(word, strict) {
-  if (strict) return new RegExp("\\b" + escapeRegExp(word) + "\\b", "i");
-  return new RegExp("\\b" + variantBody(word) + "\\b", "i");
+  const key = (strict ? "s\u0000" : "l\u0000") + word;
+  const hit = RX_CACHE.get(key);
+  if (hit) return hit;
+  const rx = strict
+    ? new RegExp("\\b" + escapeRegExp(word) + "\\b", "i")
+    : new RegExp("\\b" + variantBody(word) + "\\b", "i");
+  if (RX_CACHE.size >= RX_CACHE_MAX) RX_CACHE.clear();
+  RX_CACHE.set(key, rx);
+  return rx;
 }
 
 // The first lyric line bearing the word (trimmed). Prioritise a line with the *exact*
@@ -89,7 +110,7 @@ export function wordRegex(word, strict) {
 export function extractLineWithWord(lyrics, word, strict) {
   const lines = lyrics.split("\n");
   if (!strict) {
-    const exactRx = new RegExp("\\b" + escapeRegExp(word) + "\\b", "i");
+    const exactRx = wordRegex(word, true);
     const exactLine = lines.find((l) => exactRx.test(l));
     if (exactLine) return exactLine.trim();
   }
@@ -106,7 +127,7 @@ export function highlightWord(line, word, strict) {
   let body;
   if (strict) body = escapeRegExp(word);
   else {
-    const exactRx = new RegExp("\\b" + escapeRegExp(word) + "\\b", "i");
+    const exactRx = wordRegex(word, true);   // same expression, so it shares the cache
     body = exactRx.test(line) ? escapeRegExp(word) : variantBody(word);
   }
   const rx = new RegExp("\\b(" + body + ")\\b", "ig");
