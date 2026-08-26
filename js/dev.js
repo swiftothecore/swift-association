@@ -456,7 +456,13 @@ export function initDev(api) {
     row(beatSel, btn("show beat", () => {
       toast(api.onboarding.guideBeat(beatSel.value) ? beatSel.value + " shown" : "can't anchor — need an open round");
     })),
-    row(obAlbumSel, btn("set era", () => { api.onboarding.setEra(obAlbumSel.value); toast("era → " + (obAlbumSel.value || "none")); })),
+    // The era is also the colour of the bookmark ribbon, and the ribbon is only on screen while
+    // the notebook is shut, so the cover has to be put back to judge the pick against it.
+    row(obAlbumSel, btn("set era", () => { api.onboarding.setEra(obAlbumSel.value); toast("era → " + (obAlbumSel.value || "none")); }),
+        btn("show cover", () => {
+          if (window.__stickerCover) { window.__stickerCover.show(); toast("notebook shut — ribbon on the cover"); }
+          else toast("cover module not loaded");
+        })),
     // How to play opens on card one for players, so proofreading the last card would otherwise
     // cost three clicks every time. Jump straight to any of them.
     row(howToSel, btn("open how to play", () => api.onboarding.howTo(Number(howToSel.value)))),

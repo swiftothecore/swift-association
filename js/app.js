@@ -486,7 +486,17 @@ function applySettings() {
   refreshSnow();   // December snowfall follows the reduce-motion setting live
   refreshRain();   // midnight rain follows the reduce-motion setting live too
   refreshLeaves(); // autumn leaves follow the reduce-motion setting live too
+  paintCoverRibbon();  // the bookmark wears the player's era, once they have named one
   window.dispatchEvent(new CustomEvent("deskscatter:refresh"));
+}
+
+// The bookmark ribbon on the closed cover. Red is the notebook's own silk, so no favourite
+// (and no colour for one, which the colour-blind palette never hits) leaves the property
+// unset and lets the CSS default stand rather than writing the red out twice.
+function paintCoverRibbon() {
+  const col = settings.favouriteAlbum ? albumColor(settings.favouriteAlbum) : null;
+  if (col) document.documentElement.style.setProperty("--cover-ribbon", col);
+  else document.documentElement.style.removeProperty("--cover-ribbon");
 }
 
 /* ---------- Sound icon (corner) ----------
@@ -19830,6 +19840,7 @@ let lastFocusedBeforeFirstRun = null;
 function setFavouriteAlbum(album) {
   settings.favouriteAlbum = (album && STUDIO_ALBUMS.includes(album)) ? album : "";
   saveSettings(settings);
+  paintCoverRibbon();   // the cover is behind the player right now, but it will be back
 }
 
 // Just-in-time onboarding tips fire once each, tracked in settings.seenCoachmarks.
@@ -20046,6 +20057,7 @@ function restoreFirstImpressions() {
   settings.seenCoachmarks = {};
   settings.firstMatchDone = false;
   saveSettings(settings);
+  paintCoverRibbon();   // the era went with it, so the bookmark goes back to red
 }
 
 /* ---------- First-impressions bypass (flag-gated) ----------
@@ -20824,7 +20836,7 @@ function buildDevApi() {
       formsReplay: () => { if (settings.seenCoachmarks) delete settings.seenCoachmarks.wordForms; saveSettings(settings); },
       reset: () => {
         settings.firstRunDone = false; settings.favouriteAlbum = ""; settings.firstMatchDone = false; settings.seenCoachmarks = {};
-        saveSettings(settings);
+        saveSettings(settings); paintCoverRibbon();
       },
     },
     // The typing hint under the answer line (see applyInputHints). Its fade is measured in

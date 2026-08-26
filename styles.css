@@ -5574,14 +5574,22 @@
     border-radius: 2px;
     box-shadow: -5px 0 9px rgba(38,24,8,0.26), 6px 0 11px rgba(38,24,8,0.26);
   }
-  /* red bookmark ribbon peeking over the top edge (echoes the margin rule) */
+  /* Bookmark ribbon peeking over the top edge (echoes the margin rule). Red by default, but
+     it wears the player's era when they have named one: --cover-ribbon is written onto <html>
+     by applySettings, and only the flat silk colour is themed. The sheen down the left edge,
+     the weave and the shadow at the fold are all neutral black and white laid over it, so a
+     pale era reads as pale silk rather than washing the whole object out. */
   .nb-cover-ribbon {
+    --rib: var(--cover-ribbon, #b23a3a);
     position: absolute; top: -6px; right: 28%; width: 16px; height: 76px; z-index: 2;
     background:
-      linear-gradient(90deg, rgba(20,4,4,0.24) 0 2px, rgba(255,190,190,0.16) 5px 7px,
-        rgba(0,0,0,0) 9px, rgba(20,4,4,0.2) 100%),
+      linear-gradient(90deg, rgba(0,0,0,0.26) 0 2px, rgba(255,255,255,0.2) 5px 7px,
+        rgba(0,0,0,0) 9px, rgba(0,0,0,0.22) 100%),
       repeating-linear-gradient(90deg, rgba(255,255,255,0.06) 0 1px, rgba(0,0,0,0) 1px 3px),
-      linear-gradient(180deg, #9a2f2f, #b23a3a 60%, #7d2626);
+      linear-gradient(180deg,
+        color-mix(in srgb, var(--rib) 86%, #150404),
+        var(--rib) 60%,
+        color-mix(in srgb, var(--rib) 70%, #150404));
     box-shadow: 0 2px 5px rgba(40,10,10,0.35);
     clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 82%, 0 100%);
   }
