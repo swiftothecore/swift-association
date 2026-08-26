@@ -111,7 +111,7 @@ body::before {
 }
 .sx-desk-item svg { display: block; width: 100%; height: auto; overflow: visible; }
 /* Props share the game's real-world scale (roughly 3px per mm of desk): the
-   magnifier's lens is ~6cm across, the highlighter ~12cm, index cards 13x8cm,
+   magnifier's lens is ~6cm across, the highlighter 14cm, index cards 5x3in,
    the dictionary ~20cm tall, the earbud coil ~9.5cm with 15mm shells.
    Composition: left is the close-reading side (magnifier up top, highlighter
    mid, card stack low); the right edge belongs to the index journal (the album
@@ -127,7 +127,7 @@ body::before {
 /* the highlighter stands near-vertical in the gap beside the page, like the
    game's pencil; its test swipe rotates with it, which just reads as a swipe
    drawn at that angle on the wood */
-.dx-marker { width: 340px; top: 46%; left: calc(50% - 505px); transform: translate(-50%, -50%) rotate(75deg); }
+.dx-marker { width: 430px; top: 52%; left: calc(50% - 512px); transform: translate(-50%, -50%) rotate(75deg); }
 /* 440px for a 440-wide viewBox: 5x3in cards at the desk's 3px per mm */
 .dx-cards  { width: 440px; top: 60%; left: 0; transform: translateX(-30%) rotate(-9deg); }
 /* 285px for a 285-wide viewBox, i.e. 1:1 at the desk's 3px per mm */
