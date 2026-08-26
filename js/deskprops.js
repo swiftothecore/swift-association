@@ -27,136 +27,282 @@
 
 export const DESK_MARKS = [
   {
-    // A full coffee ring: a mug set down, lifted, and never wiped. The ring is
-    // uneven on purpose (four arcs at different weights and opacities) and
-    // heaviest along the lower-right, where the film ran last before it dried.
+    // A full coffee ring. The thing that makes a real ring is that it is NOT a
+    // stroked circle: the liquid pins at its edge and dries there, so the
+    // deposit is a band of uneven width, fat on the side the film ran to last.
+    // That comes from an annulus whose two boundaries do not share a centre,
+    // roughed up by a displacement filter so no part of it is a clean curve.
     id: "ring-full", w: 190, h: 190,
     svg: `
-      <g fill="none" stroke="#7d5a2e" stroke-linecap="round">
-        <path d="M95 12 a83 83 0 0 1 74 46" stroke-width="5" opacity="0.16"/>
-        <path d="M169 58 a83 83 0 0 1 -30 106" stroke-width="7" opacity="0.24"/>
-        <path d="M139 164 a83 83 0 0 1 -96 -12" stroke-width="6.4" opacity="0.21"/>
-        <path d="M43 152 a83 83 0 0 1 52 -140" stroke-width="4.2" opacity="0.13"/>
-      </g>
-      <!-- the dried film inside the ring: barely there, but it stops the ring
-           reading as a drawn circle -->
-      <circle cx="95" cy="95" r="79" fill="#8a6431" opacity="0.045"/>
-      <!-- two dribbles down the outside, from the lift -->
-      <path d="M150 150 q6 9 3 17" fill="none" stroke="#7d5a2e" stroke-width="2.6" opacity="0.13" stroke-linecap="round"/>
-      <path d="M60 26 q-5 -6 -11 -7" fill="none" stroke="#7d5a2e" stroke-width="2" opacity="0.1" stroke-linecap="round"/>`,
+      <defs>
+        <filter id="dmRfEdge" x="-14%" y="-14%" width="128%" height="128%">
+          <feTurbulence type="fractalNoise" baseFrequency="0.013 0.019" numOctaves="3" seed="9" result="n"/>
+          <feDisplacementMap in="SourceGraphic" in2="n" scale="9" xChannelSelector="R" yChannelSelector="G"/>
+        </filter>
+        <!-- the tideline is blotchy where the grain drank unevenly -->
+        <filter id="dmRfGrain" x="0" y="0" width="100%" height="100%">
+          <feTurbulence type="fractalNoise" baseFrequency="0.05 0.13" numOctaves="3" seed="23"/>
+          <feColorMatrix type="matrix" values="0 0 0 0 0.44  0 0 0 0 0.31  0 0 0 0 0.15  0 0 0 0.9 -0.34"/>
+        </filter>
+        <clipPath id="dmRfBand">
+          <path fill-rule="evenodd" d="M95 12 a83 83 0 1 0 0.1 0 Z M97 20 a72.5 72.5 0 1 1 -0.1 0 Z"/>
+        </clipPath>
+      </defs>
+      <g filter="url(#dmRfEdge)">
+        <!-- the halo the film reached before the edge pinned, and the weak wash
+             the middle dried to -->
+        <circle cx="95" cy="95" r="86" fill="#8a6431" opacity="0.04"/>
+        <circle cx="97" cy="92.5" r="72" fill="#8a6431" opacity="0.05"/>
+        <path fill-rule="evenodd" fill="#7d5a2e" opacity="0.19"
+              d="M95 12 a83 83 0 1 0 0.1 0 Z M97 20 a72.5 72.5 0 1 1 -0.1 0 Z"/>
+        <g clip-path="url(#dmRfBand)">
+          <rect x="0" y="0" width="190" height="190" filter="url(#dmRfGrain)" opacity="0.55"/>
+        </g>
+        <!-- the last of it, darkest along the low side where it drained -->
+        <path d="M32 140 a83 83 0 0 0 104 18" fill="none" stroke="#6b4a24" stroke-width="6"
+              opacity="0.13" stroke-linecap="round"/>
+        <!-- an inner tideline: the film retreated once before it gave up -->
+        <path d="M34 118 a66 66 0 0 0 74 40" fill="none" stroke="#7d5a2e" stroke-width="2.2"
+              opacity="0.1" stroke-linecap="round"/>
+        <!-- the mug was nudged a few mm before it was lifted, so one quadrant
+             printed twice -->
+        <path d="M168 74 a83 83 0 0 1 4 32" fill="none" stroke="#7d5a2e" stroke-width="3.4"
+              opacity="0.09" stroke-linecap="round"/>
+        <!-- two runs down the outside from the lift, and the pits where foam sat -->
+        <path d="M150 152 q7 10 3 18" fill="none" stroke="#7d5a2e" stroke-width="2.6" opacity="0.12" stroke-linecap="round"/>
+        <path d="M58 25 q-6 -7 -12 -8" fill="none" stroke="#7d5a2e" stroke-width="2" opacity="0.09" stroke-linecap="round"/>
+        <g fill="#6b4a24" opacity="0.1">
+          <circle cx="46" cy="132" r="2.6"/><circle cx="122" cy="164" r="1.8"/><circle cx="24" cy="88" r="1.4"/>
+        </g>
+      </g>`,
   },
   {
-    // A half ring: the mug was moved before the film closed, so only the arc it
-    // sat longest on printed. Reads as an older, fainter visit than the full one.
+    // A half ring: the mug was lifted before the film closed, so only the arc it
+    // sat longest on printed, and the end it was dragged off smears instead of
+    // stopping. Same annulus trick as the full ring, cut to a sector.
     id: "ring-half", w: 170, h: 130,
     svg: `
-      <g fill="none" stroke="#7d5a2e" stroke-linecap="round">
-        <path d="M18 46 a72 66 0 0 0 62 70" stroke-width="5.6" opacity="0.19"/>
-        <path d="M80 116 a72 66 0 0 0 60 -34" stroke-width="4" opacity="0.13"/>
-        <path d="M148 62 a72 66 0 0 0 -6 -20" stroke-width="3" opacity="0.08"/>
-      </g>
-      <path d="M26 40 q-8 3 -13 10" fill="none" stroke="#7d5a2e" stroke-width="2.2" opacity="0.1" stroke-linecap="round"/>`,
+      <defs>
+        <filter id="dmRhEdge" x="-16%" y="-16%" width="132%" height="132%">
+          <feTurbulence type="fractalNoise" baseFrequency="0.016 0.022" numOctaves="3" seed="31" result="n"/>
+          <feDisplacementMap in="SourceGraphic" in2="n" scale="8" xChannelSelector="R" yChannelSelector="G"/>
+        </filter>
+        <filter id="dmRhGrain" x="0" y="0" width="100%" height="100%">
+          <feTurbulence type="fractalNoise" baseFrequency="0.06 0.14" numOctaves="3" seed="12"/>
+          <feColorMatrix type="matrix" values="0 0 0 0 0.44  0 0 0 0 0.31  0 0 0 0 0.15  0 0 0 0.9 -0.36"/>
+        </filter>
+        <clipPath id="dmRhBand">
+          <path d="M17 46 A68 60 0 0 0 153 46 L144 43 A57 50 0 0 1 30 43 Z"/>
+        </clipPath>
+      </defs>
+      <g filter="url(#dmRhEdge)">
+        <path d="M17 46 A68 60 0 0 0 153 46 L144 43 A57 50 0 0 1 30 43 Z"
+              fill="#7d5a2e" opacity="0.2"/>
+        <g clip-path="url(#dmRhBand)">
+          <rect x="0" y="0" width="170" height="130" filter="url(#dmRhGrain)" opacity="0.55"/>
+        </g>
+        <!-- the drag: the ring does not end, it is wiped sideways off its own edge -->
+        <path d="M153 46 q10 -4 19 -14" fill="none" stroke="#7d5a2e" stroke-width="7"
+              opacity="0.1" stroke-linecap="round"/>
+        <path d="M150 38 q12 -3 20 -11" fill="none" stroke="#7d5a2e" stroke-width="3"
+              opacity="0.07" stroke-linecap="round"/>
+        <!-- and the other end simply thins out, still faintly closing the circle -->
+        <path d="M17 46 q-2 -14 4 -24" fill="none" stroke="#7d5a2e" stroke-width="4"
+              opacity="0.08" stroke-linecap="round"/>
+        <path d="M26 20 q4 -6 9 -9" fill="none" stroke="#7d5a2e" stroke-width="2.4"
+              opacity="0.05" stroke-linecap="round"/>
+        <path d="M40 104 A68 60 0 0 0 120 100" fill="none" stroke="#6b4a24" stroke-width="4.4"
+              opacity="0.1" stroke-linecap="round"/>
+      </g>`,
   },
   {
-    // Sharpener curls. A pencil shaving is a helix cut flat: a lobed skirt with
-    // the graphite core's dark bite on the inner edge. Two curls and the dust
-    // that came off with them.
+    // Sharpener curls. A shaving is a ribbon cut off a spiral, not a flake: the
+    // skirt widens as the blade works out of the wood, the graphite core leaves
+    // a dark bite along the INNER edge, and the pencil is the hex yellow one on
+    // the desk upstairs, so its lacquer prints as a thin yellow rim on the
+    // outside of the curl. That rim is the detail that makes it read instantly.
+    // Geometry from scripts/art/make_desk_marks.py.
     id: "shavings", w: 96, h: 76,
     svg: `
-      <g stroke="#a58a52" stroke-width="0.8" stroke-linejoin="round">
-        <path d="M16 40 q-4 -16 10 -22 q16 -7 26 2 q9 8 2 17 q-8 10 -20 9 q-14 -1 -18 -6 Z" fill="#e8c98d"/>
-        <path d="M22 36 q-2 -11 8 -15 q12 -5 19 1" fill="none" stroke="#c9a565" stroke-width="1.1"/>
-        <path d="M52 22 q7 -4 12 1 q4 5 -1 8" fill="#d9b678"/>
+      <defs>
+        <filter id="dmShEdge" x="-12%" y="-12%" width="124%" height="124%">
+          <feTurbulence type="fractalNoise" baseFrequency="0.09 0.07" numOctaves="2" seed="14" result="n"/>
+          <feDisplacementMap in="SourceGraphic" in2="n" scale="2.6" xChannelSelector="R" yChannelSelector="G"/>
+        </filter>
+      </defs>
+      <g stroke-linejoin="round" stroke-linecap="round" filter="url(#dmShEdge)">
+        <path d="M 47.5,46.2 46.8,48.7 44.6,49.9 42.2,50.4 40.3,52.1 38.0,53.4 35.5,52.5 33.2,51.6 30.5,51.7 27.9,50.8 26.6,48.4 25.3,46.2 23.0,44.5 21.9,41.9 22.6,39.2 22.8,36.6 22.3,33.6 23.3,31.0 25.8,29.3 27.5,27.2 29.2,24.6 31.9,23.5 34.9,23.8 37.7,23.2 40.8,22.4 43.6,23.7 45.8,25.8 L 42.0,31.4 40.5,30.9 38.9,30.7 37.4,30.7 35.9,31.0 34.6,31.6 33.4,32.4 32.4,33.3 31.7,34.4 31.2,35.6 30.9,36.8 30.8,37.9 31.0,39.1 31.4,40.1 31.9,41.0 32.5,41.7 33.3,42.3 34.1,42.7 35.0,43.0 35.8,43.0 36.6,42.9 37.2,42.7 37.8,42.3 38.3,41.9 38.7,41.4 38.9,40.9 39.0,40.4 Z" fill="#e2cc9e" stroke="#b6934f" stroke-width="0.6" opacity="0.95"/>
+        <!-- the graphite the blade took with the wood, and the yellow lacquer off
+             the barrel's outer skin. Both come away in bites, so both are broken:
+             an unbroken ring of either turns the curl into a letter C. -->
+        <path d="M 39.0,40.4 38.9,40.9 38.7,41.4 38.3,41.9 37.8,42.3 37.2,42.7 36.6,42.9 35.8,43.0 35.0,43.0 34.1,42.7 33.3,42.3 32.5,41.7 31.9,41.0 31.4,40.1 31.0,39.1 30.8,37.9 30.9,36.8 31.2,35.6 31.7,34.4 32.4,33.3 33.4,32.4 34.6,31.6 35.9,31.0 37.4,30.7 38.9,30.7 40.5,30.9 42.0,31.4" fill="none" stroke="#c2a165" stroke-width="3.2" opacity="0.28"
+              stroke-dasharray="7 5 11 4 5 6"/>
+        <path d="M 39.0,40.4 38.9,40.9 38.7,41.4 38.3,41.9 37.8,42.3 37.2,42.7 36.6,42.9 35.8,43.0 35.0,43.0 34.1,42.7 33.3,42.3 32.5,41.7 31.9,41.0 31.4,40.1 31.0,39.1 30.8,37.9 30.9,36.8 31.2,35.6 31.7,34.4 32.4,33.3 33.4,32.4 34.6,31.6 35.9,31.0 37.4,30.7 38.9,30.7 40.5,30.9 42.0,31.4" fill="none" stroke="#57534a" stroke-width="1.4" opacity="0.3"
+              stroke-dasharray="4 12 6 9 3 14"/>
+        <path d="M 47.5,46.2 46.8,48.7 44.6,49.9 42.2,50.4 40.3,52.1 38.0,53.4 35.5,52.5 33.2,51.6 30.5,51.7 27.9,50.8 26.6,48.4 25.3,46.2 23.0,44.5 21.9,41.9 22.6,39.2 22.8,36.6 22.3,33.6 23.3,31.0 25.8,29.3 27.5,27.2 29.2,24.6 31.9,23.5 34.9,23.8 37.7,23.2 40.8,22.4 43.6,23.7 45.8,25.8" fill="none" stroke="#d9a83f" stroke-width="1.2" opacity="0.46"
+              stroke-dasharray="9 5 5 4 13 6"/>
+        <!-- the grain of the wood, running across the cut -->
+        <g fill="none" stroke="#c6a163" stroke-width="0.6" opacity="0.55">
+          <path d="M23 30 q7 4 8 12"/><path d="M31 24 q6 5 6 13"/><path d="M43 51 q-6 3 -13 2"/>
+          <path d="M27 47 q7 3 15 2"/>
+        </g>
+        <path d="M 76.7,64.8 74.9,64.2 73.2,64.1 71.3,64.5 69.5,63.8 68.6,62.1 67.2,60.9 65.4,59.9 64.8,58.0 65.1,56.0 64.6,54.2 64.1,52.1 65.1,50.3 66.6,49.0 67.4,47.1 68.5,45.2 70.6,44.6 72.6,44.5 74.5,43.4 76.7,42.9 78.7,44.0 80.5,45.1 82.8,45.6 L 79.4,49.6 78.3,49.1 77.1,48.8 75.9,48.7 74.8,48.9 73.7,49.3 72.8,49.8 72.0,50.4 71.4,51.2 70.9,52.1 70.6,52.9 70.5,53.8 70.6,54.7 70.8,55.4 71.2,56.1 71.6,56.7 72.2,57.1 72.8,57.5 73.4,57.6 73.9,57.7 74.5,57.6 75.0,57.5 75.4,57.2 Z" fill="#e9d5ac" stroke="#b6934f" stroke-width="0.55" opacity="0.94"/>
+        <path d="M 75.4,57.2 75.0,57.5 74.5,57.6 73.9,57.7 73.4,57.6 72.8,57.5 72.2,57.1 71.6,56.7 71.2,56.1 70.8,55.4 70.6,54.7 70.5,53.8 70.6,52.9 70.9,52.1 71.4,51.2 72.0,50.4 72.8,49.8 73.7,49.3 74.8,48.9 75.9,48.7 77.1,48.8 78.3,49.1 79.4,49.6" fill="none" stroke="#c2a165" stroke-width="2.4" opacity="0.26"
+              stroke-dasharray="6 4 9 5"/>
+        <path d="M 75.4,57.2 75.0,57.5 74.5,57.6 73.9,57.7 73.4,57.6 72.8,57.5 72.2,57.1 71.6,56.7 71.2,56.1 70.8,55.4 70.6,54.7 70.5,53.8 70.6,52.9 70.9,52.1 71.4,51.2 72.0,50.4 72.8,49.8 73.7,49.3 74.8,48.9 75.9,48.7 77.1,48.8 78.3,49.1 79.4,49.6" fill="none" stroke="#57534a" stroke-width="1.1" opacity="0.26"
+              stroke-dasharray="3 10 5 8"/>
+        <path d="M 76.7,64.8 74.9,64.2 73.2,64.1 71.3,64.5 69.5,63.8 68.6,62.1 67.2,60.9 65.4,59.9 64.8,58.0 65.1,56.0 64.6,54.2 64.1,52.1 65.1,50.3 66.6,49.0 67.4,47.1 68.5,45.2 70.6,44.6 72.6,44.5 74.5,43.4 76.7,42.9 78.7,44.0 80.5,45.1 82.8,45.6" fill="none" stroke="#d9a83f" stroke-width="1" opacity="0.4"
+              stroke-dasharray="7 4 4 3 10 5"/>
+        <g fill="none" stroke="#c6a163" stroke-width="0.5" opacity="0.5">
+          <path d="M64 50 q5 3 5 9"/><path d="M69 63 q-5 1 -8 -2"/>
+        </g>
       </g>
-      <!-- the graphite bite: the core the blade took with the wood -->
-      <path d="M16 40 q10 6 22 5 q11 -1 18 -8" fill="none" stroke="#57534a" stroke-width="2.2" opacity="0.55" stroke-linecap="round"/>
-      <g stroke="#a58a52" stroke-width="0.8" stroke-linejoin="round">
-        <path d="M52 62 q-3 -12 8 -16 q12 -5 20 2 q6 7 -1 12 q-9 6 -18 5 q-8 -1 -9 -3 Z" fill="#eccf96"/>
-        <path d="M58 58 q-1 -8 7 -11" fill="none" stroke="#c9a565" stroke-width="1"/>
-      </g>
-      <path d="M52 62 q9 4 18 3" fill="none" stroke="#57534a" stroke-width="1.8" opacity="0.45" stroke-linecap="round"/>
-      <!-- graphite dust -->
-      <g fill="#5d5850" opacity="0.4">
-        <circle cx="44" cy="55" r="1.3"/><circle cx="86" cy="40" r="1"/>
-        <circle cx="34" cy="66" r="0.9"/><circle cx="76" cy="70" r="1.2"/>
+      <!-- graphite dust, and one splinter too small to have curled -->
+      <path d="M52 20 q6 -3 9 1 q1 3 -3 3 q-5 0 -6 -4 Z" fill="#e6ca94" stroke="#b6934f" stroke-width="0.5"/>
+      <g fill="#5d5850">
+        <circle cx="47" cy="60" r="1.3" opacity="0.4"/><circle cx="88" cy="34" r="1" opacity="0.34"/>
+        <circle cx="31" cy="66" r="0.9" opacity="0.38"/><circle cx="84" cy="70" r="1.2" opacity="0.3"/>
+        <circle cx="15" cy="52" r="0.8" opacity="0.32"/><circle cx="59" cy="38" r="0.7" opacity="0.36"/>
       </g>`,
   },
   {
-    // Eraser crumbs, swept off the page and forgotten. Pale, matte, irregular:
-    // the one bit of debris on the desk that is lighter than the wood.
+    // Eraser crumbs, rolled off the page under a fingertip and swept aside. The
+    // shape is the whole point: rubber comes off as blunt little sausages with
+    // a bend in them, never as dots and never as slivers, and each one carries
+    // the grey of the graphite it just lifted along one flank. Each is a
+    // round-capped stroke rather than an outline, because that is exactly what
+    // a rolled crumb is, with a darker stroke under it for the cut edge.
     id: "crumbs", w: 84, h: 58,
     svg: `
-      <g fill="#e6dfd0" stroke="#c6bda9" stroke-width="0.5" opacity="0.85">
-        <path d="M10 22 q5 -6 11 -2 q4 4 -1 8 q-7 4 -10 -6 Z"/>
-        <path d="M30 12 q7 -4 9 2 q1 6 -6 6 q-6 0 -3 -8 Z"/>
-        <path d="M44 34 q8 -5 11 1 q2 6 -6 7 q-8 0 -5 -8 Z"/>
-        <path d="M62 18 q6 -3 7 2 q0 5 -5 4 q-5 -1 -2 -6 Z"/>
-        <path d="M22 42 q5 -3 6 1 q0 4 -4 3 q-4 -1 -2 -4 Z"/>
-        <path d="M70 40 q4 -2 5 1 q0 4 -4 3 q-3 -1 -1 -4 Z"/>
+      <defs>
+        <filter id="dmCrEdge" x="-15%" y="-15%" width="130%" height="130%">
+          <feTurbulence type="fractalNoise" baseFrequency="0.14 0.11" numOctaves="2" seed="27" result="n"/>
+          <feDisplacementMap in="SourceGraphic" in2="n" scale="2.2" xChannelSelector="R" yChannelSelector="G"/>
+        </filter>
+      </defs>
+      <g fill="none" stroke-linecap="round" opacity="0.8" filter="url(#dmCrEdge)">
+        <g stroke="#b3a88e">
+          <path d="M9 18 q10 5 21 3" stroke-width="7.4"/>
+          <path d="M31 41 q6 -8 11 -13" stroke-width="6.2"/>
+          <path d="M46 12 q4 6 6 13" stroke-width="5.4"/>
+          <path d="M55 33 q10 3 19 -1" stroke-width="6.8"/>
+          <path d="M22 48 q6 1 10 -1" stroke-width="4.6"/>
+          <path d="M68 46 q4 -3 7 -3" stroke-width="3.4"/>
+        </g>
+        <g stroke="#ddd3bd">
+          <path d="M9 18 q10 5 21 3" stroke-width="6.4"/>
+          <path d="M31 41 q6 -8 11 -13" stroke-width="5.2"/>
+          <path d="M46 12 q4 6 6 13" stroke-width="4.4"/>
+          <path d="M55 33 q10 3 19 -1" stroke-width="5.8"/>
+          <path d="M22 48 q6 1 10 -1" stroke-width="3.8"/>
+          <path d="M68 46 q4 -3 7 -3" stroke-width="2.6"/>
+        </g>
       </g>
+      <!-- the graphite each one lifted, smeared along its own upper flank -->
+      <g fill="none" stroke="#8d8578" stroke-width="1.7" stroke-linecap="round" opacity="0.24">
+        <path d="M11 20 q9 4 18 2"/><path d="M32 42 q5 -7 9 -11"/>
+        <path d="M56 35 q9 3 17 -1"/><path d="M23 49 q5 1 8 0"/>
+      </g>
+      <!-- and the dust that came off with them -->
       <g fill="#ded6c4" opacity="0.7">
-        <circle cx="52" cy="14" r="1.4"/><circle cx="16" cy="36" r="1.1"/>
-        <circle cx="38" cy="46" r="1.2"/><circle cx="78" cy="26" r="1"/>
+        <circle cx="45" cy="47" r="1.3"/><circle cx="19" cy="38" r="1"/>
+        <circle cx="72" cy="20" r="1.2"/><circle cx="30" cy="9" r="0.9"/>
+        <circle cx="66" cy="50" r="0.8"/>
       </g>`,
   },
   {
-    // An ink blot and the squiggles that tested the nib after it. Real desks
-    // have this exact pair: the accident, then the proof it was fixed.
-    // The blot is deliberately lopsided with one running tail. A symmetrical
-    // blob reads as a printed dot; ink that fell off a nib always has a heavy
-    // side where it landed and a thin side where it ran. Under multiply the
-    // navy loses most of its blue to the wood, so it is mixed darker and more
-    // opaque than it looks here.
+    // An ink blot and the nib tests that followed it. Ink on bare oak does not
+    // sit in a puddle: it soaks ALONG the grain, so the stain is a hard core
+    // with a wide, weak halo stretched sideways and a few capillary whiskers
+    // running out of it. The satellites are teardrops pointing away from the
+    // core, because a drop that splashes throws its own shape outward.
+    // Under multiply the navy loses most of its blue to the wood.
     id: "blot", w: 78, h: 62,
     svg: `
-      <path d="M20 22 q6 -12 17 -8 q13 4 12 15 q-1 8 -9 11 q-6 2 -12 -1
-               q-4 6 -10 5 q-5 -1 -4 -6 q1 -5 7 -6 q-3 -6 -1 -10 Z"
-            fill="#1e2a41" opacity="0.6"/>
-      <!-- the splash: satellites thrown clear when it landed -->
-      <g fill="#1e2a41" opacity="0.5">
-        <circle cx="12" cy="12" r="2.4"/><circle cx="45" cy="10" r="1.6"/>
-        <circle cx="16" cy="44" r="1.8"/><circle cx="38" cy="46" r="1.2"/>
+      <defs>
+        <filter id="dmBlSoak" x="-30%" y="-30%" width="160%" height="160%">
+          <feGaussianBlur stdDeviation="3.4 1.6"/>
+        </filter>
+        <filter id="dmBlEdge" x="-25%" y="-25%" width="150%" height="150%">
+          <feTurbulence type="fractalNoise" baseFrequency="0.17 0.09" numOctaves="2" seed="6" result="n"/>
+          <feDisplacementMap in="SourceGraphic" in2="n" scale="2.6" xChannelSelector="R" yChannelSelector="G"/>
+        </filter>
+      </defs>
+      <ellipse cx="29" cy="30" rx="24" ry="8" fill="#1e2a41" opacity="0.14" filter="url(#dmBlSoak)"/>
+      <g filter="url(#dmBlEdge)">
+        <path d="M24 25 q3 -7 11 -6 q8 1 9 8 q0 3 -3 5 q-3 2 -7 1 q-2 3 -6 3
+                 q-4 1 -6 -2 q-1 -2 2 -4 q2 -1 5 -1 q-3 -2 -5 -4 Z"
+              fill="#1e2a41" opacity="0.38"/>
+        <!-- the run: ink that found the grain and went with it -->
+        <path d="M43 30 q8 0 12 2 q3 2 0 2.4 q-5 -0.6 -13 -1.4 Z" fill="#1e2a41" opacity="0.26"/>
+        <!-- capillaries: the ink ran a few mm along the grain and stopped -->
+        <g fill="none" stroke="#1e2a41" stroke-linecap="round">
+          <path d="M48 26 q7 -1 11 -3" stroke-width="0.7" opacity="0.3"/>
+          <path d="M13 34 q-6 1 -9 3" stroke-width="0.6" opacity="0.26"/>
+          <path d="M46 36 q6 2 9 1" stroke-width="0.5" opacity="0.22"/>
+        </g>
+        <!-- satellites, each pulled out along the line it flew -->
+        <g fill="#1e2a41">
+          <ellipse cx="12" cy="12" rx="3" ry="1.7" transform="rotate(-34 12 12)" opacity="0.46"/>
+          <ellipse cx="46" cy="9" rx="2.2" ry="1.1" transform="rotate(22 46 9)" opacity="0.4"/>
+          <ellipse cx="15" cy="45" rx="2.4" ry="1.2" transform="rotate(28 15 45)" opacity="0.42"/>
+          <ellipse cx="39" cy="48" rx="1.5" ry="0.9" transform="rotate(-18 39 48)" opacity="0.36"/>
+          <circle cx="5" cy="24" r="0.9" opacity="0.3"/>
+        </g>
       </g>
-      <!-- nib tests: two scratchy passes and one that finally flowed -->
-      <g fill="none" stroke="#1e2a41" stroke-linecap="round">
-        <path d="M54 32 q7 -5 13 0" stroke-width="0.8" opacity="0.4"/>
-        <path d="M52 41 q8 -6 15 -1" stroke-width="1.2" opacity="0.5"/>
-        <path d="M50 50 q9 -7 17 -1 q5 4 9 1" stroke-width="1.9" opacity="0.62"/>
+      <!-- nib tests: drawn as filled strokes so each pass swells on the pull and
+           starves on the push, which a constant-width arc never does -->
+      <g fill="#1e2a41">
+        <path d="M57 38 q5 -3 9 -0.3 l0.25 0.7 q-4.2 -2.3 -8.7 0.5 Z" opacity="0.26"/>
+        <path d="M56 45 q6 -3.6 11 -0.8 l0.5 1 q-5.4 -2.9 -10.8 0.7 Z" opacity="0.34"/>
+        <path d="M55 52 q6.5 -4 12 -1 q3.2 1.9 5.8 0.6 l0.3 1.1 q-3.4 1.6 -6.8 -0.5
+                 q-5 -3 -10.6 0.8 Z" opacity="0.44"/>
       </g>`,
   },
   {
-    // Floss offcuts: the tag ends snipped off a finished bracelet. Four, not
-    // six, and short and fat rather than long and thin: at desk scale a 2px
-    // thread over 140px reads as a coloured pencil line, and four stubby curls
-    // read as what they are. Each gets a dark under-pass so it has a round
-    // cord's shading instead of a flat stroke's.
+    // Floss offcuts: the tag ends snipped off a finished bracelet. Six-ply
+    // embroidery floss is TWISTED, so each snippet gets ticks laid across it at
+    // the twist angle and a cut end where the plies spring apart. Without those
+    // two things a coloured stroke on wood is just a pencil line. Short and fat
+    // rather than long and thin, and four of them, because at desk scale a long
+    // thin thread reads as a drawn line too. Ticks from make_desk_marks.py.
     id: "offcuts", w: 128, h: 82,
     svg: `
       <g fill="none" stroke-linecap="round">
-        <g stroke-width="4.6" opacity="0.32">
-          <path d="M14 26 q16 -12 30 -2 q7 5 13 1" stroke="#4a3a22"/>
-          <path d="M24 56 q18 9 34 -1" stroke="#4a3a22"/>
-          <path d="M64 68 q16 -11 32 -2" stroke="#4a3a22"/>
-          <path d="M74 34 q15 10 30 1 q7 -4 13 1" stroke="#4a3a22"/>
+        <g stroke-width="5" opacity="0.28" stroke="#4a3a22">
+          <path d="M14 26 q16 -12 30 -2 q7 5 13 1"/>
+          <path d="M24 56 q18 9 34 -1"/>
+          <path d="M64 68 q16 -11 32 -2"/>
+          <path d="M74 34 q15 10 30 1 q7 -4 13 1"/>
         </g>
-        <g stroke-width="3.4">
+        <g stroke-width="3.6">
           <path d="M14 26 q16 -12 30 -2 q7 5 13 1" stroke="#c79a3e"/>
           <path d="M24 56 q18 9 34 -1" stroke="#c06880"/>
           <path d="M64 68 q16 -11 32 -2" stroke="#6c8cb4"/>
           <path d="M74 34 q15 10 30 1 q7 -4 13 1" stroke="#5a9e6e"/>
         </g>
-        <!-- the lit top of each cord -->
-        <g stroke-width="1.1" opacity="0.5" stroke="#ffffff">
-          <path d="M15 24 q15 -11 28 -2"/><path d="M25 54 q17 8 32 -1"/>
-          <path d="M65 66 q15 -10 30 -2"/><path d="M75 32 q14 9 28 1"/>
+        <!-- the twist. The ticks stay INSIDE the cord: a tick that overshoots
+             the edge stops reading as a ply and starts reading as a bristle. -->
+        <g stroke-width="0.9" opacity="0.38">
+          <path d="M13.5 25.0L17.2 25.1M16.3 23.1L20.0 23.6M19.3 21.6L22.9 22.4M22.5 20.3L26.0 21.6M25.9 19.4L29.2 21.0M29.4 18.9L32.6 20.8M33.1 18.6L36.0 20.9M36.9 18.8L39.7 21.2M40.9 19.2L43.5 21.9M45.0 20.0L47.4 22.8M49.3 21.1L51.5 24.1M53.7 22.6L55.8 25.7" stroke="#8a6a24"/>
+          <path d="M24.6 55.1L26.2 58.5M27.3 56.6L29.2 59.8M30.0 57.8L32.2 60.7M32.7 58.7L35.1 61.4M35.4 59.3L38.1 61.8M38.1 59.6L41.1 61.9M40.8 59.7L44.0 61.6M43.6 59.5L46.9 61.1M46.3 59.0L49.8 60.2M49.1 58.2L52.7 59.1M51.9 57.1L55.6 57.7M54.7 55.7L58.4 56.0" stroke="#8f4459"/>
+          <path d="M63.5 67.0L67.2 67.2M66.2 65.3L69.8 65.8M68.9 63.9L72.5 64.7M71.6 62.7L75.1 63.8M74.3 61.8L77.7 63.3M77.0 61.2L80.3 63.0M79.8 60.9L82.9 63.0M82.6 60.9L85.4 63.3M85.4 61.1L87.9 63.8M88.2 61.7L90.5 64.6M91.0 62.5L93.0 65.6M93.8 63.6L95.5 66.9" stroke="#46618c"/>
+          <path d="M74.5 33.1L76.0 36.5M77.0 34.6L78.9 37.8M79.8 35.9L81.9 38.9M82.7 36.9L85.1 39.7M85.8 37.7L88.4 40.3M89.1 38.2L91.9 40.6M92.6 38.5L95.6 40.6M96.3 38.5L99.4 40.5M100.2 38.2L103.4 40.0M104.2 37.7L107.6 39.4M108.5 37.0L111.9 38.4M113.0 36.0L116.4 37.3" stroke="#3a7350"/>
+        </g>
+        <g stroke-width="0.8" opacity="0.4" stroke="#fff3d8">
+          <path d="M16 24 q14 -10 27 -1"/><path d="M26 54 q16 8 31 -1"/>
+          <path d="M66 66 q14 -9 28 -2"/><path d="M76 32 q13 9 27 1"/>
         </g>
       </g>
-      <!-- frayed ends: each snippet splits into two or three fibres -->
+      <!-- cut ends: the plies spring apart the moment the scissors go through -->
       <g fill="none" stroke-width="0.9" stroke-linecap="round" opacity="0.7">
-        <path d="M57 25 l7 -3 M57 25 l7 2" stroke="#c79a3e"/>
-        <path d="M117 36 l7 -2 M117 36 l6 3" stroke="#5a9e6e"/>
-        <path d="M14 26 l-7 -3 M14 26 l-6 3" stroke="#c79a3e"/>
-        <path d="M96 66 l7 -1 M96 66 l6 3" stroke="#6c8cb4"/>
+        <path d="M57 25 l4 -2.5 M57 25 l4.6 0 M57 25 l3.4 2.6" stroke="#c79a3e"/>
+        <path d="M14 26 l-4 -2.4 M14 26 l-4.6 0.6 M14 26 l-3.4 2.6" stroke="#c79a3e"/>
+        <path d="M117 36 l4 -1.8 M117 36 l4 1.4 M117 36 l2.8 2.6" stroke="#5a9e6e"/>
+        <path d="M74 34 l-3.4 -2.4 M74 34 l-4 0.8" stroke="#5a9e6e"/>
+        <path d="M96 66 l4 -1.4 M96 66 l3.4 2 M96 66 l2.4 3" stroke="#6c8cb4"/>
+        <path d="M58 55 l3.4 -2 M58 55 l3.4 2" stroke="#c06880"/>
+        <path d="M24 56 l-3.4 -2.4 M24 56 l-3.4 1.4" stroke="#c06880"/>
       </g>`,
   },
 ];
