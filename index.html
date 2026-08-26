@@ -1526,63 +1526,209 @@ if (location.pathname.endsWith('/index.html')) {
       </g>
     </svg>
   </div>
-  <!-- RIGHT: three guitar picks tossed whole on the desk beside the page:
-       tortoiseshell, pearloid, rose -->
+  <!-- RIGHT: three guitar picks tossed whole on the desk beside the page.
+       A tortoiseshell 351, a pearloid 351 and a smaller rose jazz pick, so the
+       little pile reads as picks collected over years rather than one pick
+       drawn three times.
+
+       ONE LIGHT, from the SVG's own upper left, which is where the .desk-item
+       drop-shadow throws from too (a CSS filter is applied in the element's
+       own space, so the prop's shadow and everything drawn here rotate with
+       it together). Every gradient below is userSpaceOnUse with its axis
+       pre-turned against its own pick's rotate(), so the lit shoulder stays on
+       the same side of all three. If a pick's rotation changes, its face and
+       bevel axes have to be turned with it or that pick lights itself from the
+       wrong side while its neighbours do not.
+
+       Both materials are turbulence, not drawn spots: shell and nacre are
+       grown patterns, and every hand-drawn version of them reads as leopard
+       print or as comb scratches. Same trick the desk tile itself is built
+       from, one layer of fractal noise pushed through a colour matrix that
+       keeps only the patchy part of it.
+
+       Each pick is built in the same passes: the extruded side face (offset
+       down-right, the millimetre of plastic you can actually see), the face
+       fill, the material clipped inside it, the moulded chamfer as a single
+       clipped stroke whose gradient carries the light around the rim, the
+       crisp outline, and last the wear. -->
   <div class="desk-item di-picks">
     <svg viewBox="0 0 122 112" xmlns="http://www.w3.org/2000/svg">
       <defs>
-        <path id="pkShape" d="M0 -33 C20 -33 32 -21 28 -2 C24 14 8 33 0 39 C-8 33 -24 14 -28 -2 C-32 -21 -20 -33 0 -33 Z"/>
-        <linearGradient id="pkTort" x1="0" y1="0" x2="0.6" y2="1"><stop offset="0" stop-color="#cf9a45"/><stop offset="1" stop-color="#8f5e1f"/></linearGradient>
-        <linearGradient id="pkPearl" x1="0" y1="0" x2="0.6" y2="1"><stop offset="0" stop-color="#f5efe0"/><stop offset="1" stop-color="#ded2b8"/></linearGradient>
-        <linearGradient id="pkRose" x1="0" y1="0" x2="0.6" y2="1"><stop offset="0" stop-color="#c97487"/><stop offset="1" stop-color="#9c4257"/></linearGradient>
-        <filter id="pkBlur" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="1.5"/></filter>
-        <filter id="pkBlurS" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="0.9"/></filter>
-        <clipPath id="pkClipT"><use href="#pkShape"/></clipPath>
-        <clipPath id="pkClipP"><use href="#pkShape"/></clipPath>
+        <!-- 351: broad shoulders, and a tip with a real radius on it rather
+             than a corner point, because nothing moulded has a sharp corner -->
+        <path id="pkShape" d="M0 -33 C19 -33 31.5 -21.5 28 -2 C25 13 12 29 3.4 37.2 C1.4 39 -1.4 39 -3.4 37.2 C-12 29 -25 13 -28 -2 C-31.5 -21.5 -19 -33 0 -33 Z"/>
+        <!-- jazz: shorter, narrower, tighter point -->
+        <path id="pkJazz" d="M0 -25 C16 -25 25.5 -16 23 -1 C21 10.5 9.5 25.5 2.5 31.4 C1 32.6 -1 32.6 -2.5 31.4 C-9.5 25.5 -21 10.5 -23 -1 C-25.5 -16 -16 -25 0 -25 Z"/>
+
+        <!-- Face and chamfer gradients, a pair per pick, each axis turned back
+             against that pick's rotation so all three face the same lamp. -->
+        <linearGradient id="pkFaceT" gradientUnits="userSpaceOnUse" x1="-18" y1="-30" x2="18" y2="30">
+          <stop offset="0" stop-color="#e0b35d"/><stop offset="0.55" stop-color="#b8802f"/><stop offset="1" stop-color="#83511a"/>
+        </linearGradient>
+        <linearGradient id="pkBevT" gradientUnits="userSpaceOnUse" x1="-18" y1="-30" x2="18" y2="30">
+          <stop offset="0" stop-color="#fae4b2"/><stop offset="0.5" stop-color="#c08c39"/><stop offset="1" stop-color="#66400f"/>
+        </linearGradient>
+        <linearGradient id="pkFaceP" gradientUnits="userSpaceOnUse" x1="-33" y1="-11" x2="33" y2="11">
+          <stop offset="0" stop-color="#fcf7ea"/><stop offset="0.55" stop-color="#eae0c9"/><stop offset="1" stop-color="#d2c4a3"/>
+        </linearGradient>
+        <linearGradient id="pkBevP" gradientUnits="userSpaceOnUse" x1="-33" y1="-11" x2="33" y2="11">
+          <stop offset="0" stop-color="#fffdf6"/><stop offset="0.5" stop-color="#e3d8bd"/><stop offset="1" stop-color="#a4967a"/>
+        </linearGradient>
+        <linearGradient id="pkFaceR" gradientUnits="userSpaceOnUse" x1="-34" y1="-3" x2="34" y2="3">
+          <stop offset="0" stop-color="#d68d9e"/><stop offset="0.55" stop-color="#b45e72"/><stop offset="1" stop-color="#933b4b"/>
+        </linearGradient>
+        <linearGradient id="pkBevR" gradientUnits="userSpaceOnUse" x1="-34" y1="-3" x2="34" y2="3">
+          <stop offset="0" stop-color="#f2bcc6"/><stop offset="0.5" stop-color="#bb6b7e"/><stop offset="1" stop-color="#752d3d"/>
+        </linearGradient>
+
+        <!-- Shell marbling. Two octaves at a frequency stretched along the
+             pick's long axis, so the dark runs in streaks the way a sheet of
+             celluloid is poured, and the alpha row (1.9R - 0.72) throws away
+             everything but the crests, which is what leaves connected patches
+             with amber between them instead of an even speckle. -->
+        <filter id="pkShell" x="-5%" y="-5%" width="110%" height="110%">
+          <feTurbulence type="fractalNoise" baseFrequency="0.055 0.032" numOctaves="3" seed="14"/>
+          <feColorMatrix type="matrix" values="0 0 0 0 0.17  0 0 0 0 0.08  0 0 0 0 0.01  3.1 0 0 0 -1.18"/>
+        </filter>
+        <!-- the fine grain caught in the same plastic, one octave finer and
+             far weaker: it is what stops the big patches looking painted on -->
+        <filter id="pkShellFine" x="-5%" y="-5%" width="110%" height="110%">
+          <feTurbulence type="fractalNoise" baseFrequency="0.19 0.14" numOctaves="2" seed="6"/>
+          <feColorMatrix type="matrix" values="0 0 0 0 0.26  0 0 0 0 0.14  0 0 0 0 0.03  1.7 0 0 0 -0.78"/>
+        </filter>
+        <!-- and the honey the light gets through where the shell runs thin -->
+        <filter id="pkShellLit" x="-5%" y="-5%" width="110%" height="110%">
+          <feTurbulence type="fractalNoise" baseFrequency="0.04 0.028" numOctaves="2" seed="31"/>
+          <feColorMatrix type="matrix" values="0 0 0 0 1  0 0 0 0 0.87  0 0 0 0 0.58  2.4 0 0 0 -1.14"/>
+        </filter>
+        <!-- Nacre. The frequency is stretched hard the other way, thirty to
+             one, which is what turns noise into the laminated banding of a
+             pearloid sheet; the group it fills is rotated so the bands run
+             across the pick at their own angle, the way a pick punched out of
+             a sheet has no idea which way the sheet was striped. -->
+        <filter id="pkNacre" x="-5%" y="-5%" width="110%" height="110%">
+          <feTurbulence type="fractalNoise" baseFrequency="0.012 0.34" numOctaves="3" seed="9"/>
+          <feColorMatrix type="matrix" values="0 0 0 0 1  0 0 0 0 0.99  0 0 0 0 0.94  1.9 0 0 0 -0.72"/>
+          <feGaussianBlur stdDeviation="0.35"/>
+        </filter>
+        <filter id="pkNacreDk" x="-5%" y="-5%" width="110%" height="110%">
+          <feTurbulence type="fractalNoise" baseFrequency="0.01 0.26" numOctaves="2" seed="23"/>
+          <feColorMatrix type="matrix" values="0 0 0 0 0.72  0 0 0 0 0.67  0 0 0 0 0.55  1.8 0 0 0 -0.9"/>
+          <feGaussianBlur stdDeviation="0.45"/>
+        </filter>
+        <!-- the faint colour real nacre throws, one cool band and one warm,
+             both kept well under where they would read as a tint -->
+        <filter id="pkNacreHue" x="-5%" y="-5%" width="110%" height="110%">
+          <feTurbulence type="fractalNoise" baseFrequency="0.008 0.055" numOctaves="2" seed="17"/>
+          <feColorMatrix type="matrix" values="0 0 0 0 0.62  0.4 0 0 0 0.72  0.9 0 0 0 0.72  0.8 0 0 0 -0.42"/>
+          <feGaussianBlur stdDeviation="0.8"/>
+        </filter>
+        <!-- moulded nylon: no pattern in it at all, just the sanded tooth of
+             the grip patch -->
+        <filter id="pkTooth" x="-5%" y="-5%" width="110%" height="110%">
+          <feTurbulence type="fractalNoise" baseFrequency="0.5" numOctaves="2" seed="4"/>
+          <feColorMatrix type="matrix" values="0 0 0 0 0.38  0 0 0 0 0.13  0 0 0 0 0.2  1.9 0 0 0 -0.86"/>
+        </filter>
+
+        <filter id="pkBlur" x="-25%" y="-25%" width="150%" height="150%"><feGaussianBlur stdDeviation="1.5"/></filter>
+        <filter id="pkBlurS" x="-25%" y="-25%" width="150%" height="150%"><feGaussianBlur stdDeviation="0.9"/></filter>
+        <filter id="pkBlurXS" x="-25%" y="-25%" width="150%" height="150%"><feGaussianBlur stdDeviation="0.4"/></filter>
+        <!-- clipPaths are userSpaceOnUse, so one of each shape serves every
+             pick that wears it, each inside its own transform -->
+        <clipPath id="pkClip"><use href="#pkShape"/></clipPath>
+        <clipPath id="pkClipJ"><use href="#pkJazz"/></clipPath>
       </defs>
-      <!-- rose pick, mostly tucked under the tortoiseshell one -->
-      <g transform="translate(84 56) rotate(40) scale(0.9)">
-        <use href="#pkShape" fill="url(#pkRose)" stroke="#7e3346" stroke-width="1.5"/>
-        <use href="#pkShape" transform="scale(0.9)" fill="none" stroke="#e0a2b1" stroke-width="1.2" opacity="0.35"/>
-        <path d="M-13 -21 q13 -7 25 -1" fill="none" stroke="#ffffff" stroke-opacity="0.28" stroke-width="2.8" stroke-linecap="round"/>
+
+      <!-- ROSE jazz pick, mostly tucked under the tortoiseshell one. Moulded
+           nylon: opaque, so there is nothing to see through it and no pattern
+           in it, and MATT, where the other two are polished celluloid. That is
+           the whole of its character and it is worth keeping: a broad weak
+           sheen instead of a glint is the only thing here saying these three
+           picks are not all cut from the same sheet. -->
+      <g transform="translate(85 55) rotate(40)">
+        <use href="#pkJazz" transform="translate(2.44 0.57)" fill="#6f2c3b"/>
+        <use href="#pkJazz" fill="url(#pkFaceR)"/>
+        <g clip-path="url(#pkClipJ)">
+          <rect x="-26" y="-28" width="52" height="62" filter="url(#pkTooth)" opacity="0.6"/>
+        </g>
+        <use href="#pkJazz" clip-path="url(#pkClipJ)" fill="none" stroke="url(#pkBevR)" stroke-width="3.2"/>
+        <use href="#pkJazz" fill="none" stroke="#7b3143" stroke-width="0.75" opacity="0.6"/>
+        <path d="M-16 -12 q-2 12 2 22" fill="none" stroke="#ffffff" stroke-opacity="0.16" stroke-width="5" stroke-linecap="round" filter="url(#pkBlur)"/>
       </g>
-      <!-- tortoiseshell pick -->
+
+      <!-- the tortoiseshell pick's own shadow, thrown down-right onto the rose
+           one and the wood, before the pick that casts it is drawn -->
+      <g transform="translate(45 45) rotate(-14)">
+        <use href="#pkShape" fill="#2b1c0e" opacity="0.2" filter="url(#pkBlur)"/>
+      </g>
+
+      <!-- TORTOISESHELL, the favourite: celluloid, so it is marbled all the
+           way through rather than printed on the surface, it glows where the
+           light comes through the thin rim. -->
       <g transform="translate(42 40) rotate(-14)">
-        <use href="#pkShape" fill="url(#pkTort)" stroke="#6d4413" stroke-width="1.6"/>
-        <g clip-path="url(#pkClipT)" filter="url(#pkBlur)">
-          <g fill="#54330d" opacity="0.6">
-            <ellipse cx="-10" cy="-17" rx="7.5" ry="4" transform="rotate(28 -10 -17)"/>
-            <ellipse cx="11" cy="-7" rx="4.5" ry="7.5" transform="rotate(-22 11 -7)"/>
-            <ellipse cx="-16" cy="5" rx="4" ry="6.5" transform="rotate(14 -16 5)"/>
-            <ellipse cx="4" cy="14" rx="7.5" ry="4" transform="rotate(18 4 14)"/>
-            <ellipse cx="15" cy="-21" rx="4" ry="2.6" transform="rotate(-12 15 -21)"/>
-            <ellipse cx="-2" cy="27" rx="4.5" ry="2.8" transform="rotate(8 -2 27)"/>
-            <ellipse cx="-22" cy="-10" rx="3" ry="4.5" transform="rotate(30 -22 -10)"/>
-            <ellipse cx="20" cy="8" rx="3" ry="4.8" transform="rotate(-20 20 8)"/>
-          </g>
-          <g fill="#eec06d" opacity="0.45">
-            <ellipse cx="-2" cy="-27" rx="5" ry="3"/>
-            <ellipse cx="19" cy="4" rx="3.5" ry="5"/>
-            <ellipse cx="-21" cy="-4" rx="3.5" ry="4.5"/>
-          </g>
+        <use href="#pkShape" transform="translate(0.97 2.3)" fill="#7d5320"/>
+        <use href="#pkShape" fill="url(#pkFaceT)"/>
+        <g clip-path="url(#pkClip)">
+          <rect x="-32" y="-38" width="64" height="82" filter="url(#pkShellLit)" opacity="0.5"/>
+          <rect x="-32" y="-38" width="64" height="82" filter="url(#pkShell)" opacity="0.9"/>
+          <rect x="-32" y="-38" width="64" height="82" filter="url(#pkShellFine)" opacity="0.38"/>
+          <!-- the rim of transmitted light. It sits on the SHADED edge on
+               purpose: a thin translucent edge is lit from behind whatever the
+               lamp is doing, and that is the whole tell between shell and a
+               brown pick with spots painted on it. -->
+          <use href="#pkShape" transform="scale(0.98)" fill="none" stroke="#ffd88e" stroke-width="3.4" opacity="0.34" filter="url(#pkBlurS)"/>
         </g>
-        <use href="#pkShape" transform="scale(0.9)" fill="none" stroke="#f0cf8e" stroke-width="1.2" opacity="0.3"/>
-        <path d="M-15 -23 q15 -8 29 -1" fill="none" stroke="#ffffff" stroke-opacity="0.32" stroke-width="3" stroke-linecap="round"/>
-        <path d="M22 8 q-6 18 -20 28" fill="none" stroke="#402507" stroke-opacity="0.25" stroke-width="2.5" stroke-linecap="round"/>
+        <use href="#pkShape" clip-path="url(#pkClip)" fill="none" stroke="url(#pkBevT)" stroke-width="3.6"/>
+        <use href="#pkShape" fill="none" stroke="#6a4212" stroke-width="0.8" opacity="0.6"/>
+        <!-- specular: one soft streak on the lit shoulder, and inside it the
+             hard little glint the chamfer throws just in from the rim -->
+        <path d="M-16 -23 q15 -8 29 -2" fill="none" stroke="#ffffff" stroke-opacity="0.2" stroke-width="2.6" stroke-linecap="round" filter="url(#pkBlurS)"/>
+        <path d="M-13 -25.5 q11 -5 21 -1" fill="none" stroke="#fff8e6" stroke-opacity="0.5" stroke-width="1" stroke-linecap="round" filter="url(#pkBlurXS)"/>
       </g>
-      <!-- soft cast shadow, then the pearloid pick on top -->
-      <ellipse cx="52" cy="64" rx="20" ry="12" fill="#2b1c0e" opacity="0.16" filter="url(#pkBlur)"/>
+
+      <!-- the pearloid pick's shadow, onto the tortoiseshell one -->
+      <g transform="translate(59 84) rotate(26) scale(0.88)">
+        <use href="#pkShape" fill="#2b1c0e" opacity="0.22" filter="url(#pkBlur)"/>
+      </g>
+
+      <!-- PEARLOID, on top and nearest. Laminated nacre, so the pattern is
+           banded and belongs to the sheet rather than to the pick: the bands
+           are drawn in a group turned to their own angle so they run off the
+           edges without ever lining up with them. The gauge is stamped into
+           the plastic, not printed on it. -->
       <g transform="translate(56 80) rotate(26) scale(0.88)">
-        <use href="#pkShape" fill="url(#pkPearl)" stroke="#b9ad91" stroke-width="1.4"/>
-        <g clip-path="url(#pkClipP)" filter="url(#pkBlurS)" fill="none" stroke-linecap="round">
-          <path d="M-26 -12 q16 -7 34 -3" stroke="#d6c9ab" stroke-width="2.4" opacity="0.7"/>
-          <path d="M-28 2 q18 -6 36 -1" stroke="#d6c9ab" stroke-width="2.4" opacity="0.7"/>
-          <path d="M-20 16 q14 -7 28 -4" stroke="#d6c9ab" stroke-width="2.4" opacity="0.7"/>
-          <path d="M-24 -6 q16 -6 32 -2" stroke="#fdfaf1" stroke-width="1.6" opacity="0.6"/>
-          <path d="M-24 9 q15 -6 30 -3" stroke="#fdfaf1" stroke-width="1.6" opacity="0.6"/>
+        <use href="#pkShape" transform="translate(2.53 1.3)" fill="#b3a488"/>
+        <use href="#pkShape" fill="url(#pkFaceP)"/>
+        <g clip-path="url(#pkClip)">
+          <g transform="rotate(-24)">
+            <rect x="-46" y="-46" width="92" height="92" filter="url(#pkNacreDk)" opacity="0.55"/>
+            <rect x="-46" y="-46" width="92" height="92" filter="url(#pkNacre)" opacity="0.75"/>
+            <rect x="-46" y="-46" width="92" height="92" filter="url(#pkNacreHue)" opacity="0.22"/>
+          </g>
         </g>
-        <use href="#pkShape" transform="scale(0.9)" fill="none" stroke="#fffcf2" stroke-width="1.2" opacity="0.4"/>
-        <path d="M-14 -21 q13 -7 26 -1" fill="none" stroke="#ffffff" stroke-opacity="0.55" stroke-width="2.4" stroke-linecap="round"/>
+        <use href="#pkShape" clip-path="url(#pkClip)" fill="none" stroke="url(#pkBevP)" stroke-width="3.4"/>
+        <use href="#pkShape" fill="none" stroke="#b0a184" stroke-width="0.8" opacity="0.65"/>
+        <!-- upside down to the reader, because that is how it landed -->
+        <g transform="translate(0 5) rotate(180)">
+          <text class="pk-gauge pk-gauge-lip" x="0" y="-0.5">.73</text>
+          <text class="pk-gauge" x="0" y="0">.73</text>
+        </g>
+        <!-- Played tip. It goes on THIS pick and not on the tortoiseshell one
+             for the dull reason that this is the only tip in the pile you can
+             actually see: the shell pick's point is under it. The point has
+             gone matt and finely striated where it has been dragged over wound
+             strings, so the wear is drawn OVER the chamfer, dulling it, rather
+             than under it. -->
+        <g clip-path="url(#pkClip)">
+          <path d="M-8.5 28 q8.5 9.5 8.5 11 q0 -1.5 8.5 -11 q-8.5 5 -17 0 Z" fill="#fffaee" opacity="0.5" filter="url(#pkBlurS)"/>
+          <g stroke="#9d8f74" stroke-opacity="0.3" stroke-width="0.45" stroke-linecap="round" fill="none" filter="url(#pkBlurXS)">
+            <path d="M-5.6 31.6 q3.2 2.6 4.6 4.6"/>
+            <path d="M-3 31.4 q3 2.4 4.2 4.4"/>
+            <path d="M0.4 31.8 q2.6 2.2 3.6 3.8"/>
+          </g>
+        </g>
+        <path d="M-24 -13 q-3 13 1 25" fill="none" stroke="#ffffff" stroke-opacity="0.45" stroke-width="2.6" stroke-linecap="round" filter="url(#pkBlurS)"/>
+        <path d="M-21.5 -14 q-2.6 13 0.6 25" fill="none" stroke="#ffffff" stroke-opacity="0.5" stroke-width="0.9" stroke-linecap="round" filter="url(#pkBlurXS)"/>
       </g>
     </svg>
   </div>

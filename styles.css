@@ -448,6 +448,17 @@
   /* picks ride the cassette pile: right-edge anchored so the pair stays
      together at any viewport width, drawn after it so they land on top */
   .di-picks   { width: 155px; top: 70%; right: 36px; transform: rotate(22deg); }
+  /* The gauge stamped into the pearloid pick. Courier, because it is moulded
+     into a manufactured object rather than written by hand, and tiny: this is
+     the thickness marking, and on a real pick you have to tilt it to the light
+     to read it. Two passes make the deboss read as cut INTO the plastic rather
+     than printed on it: the shaded cut on top, and half a unit below it the
+     lower lip of the groove, which is the only part of it facing the lamp. */
+  .di-picks .pk-gauge {
+    font-family: var(--type); font-weight: 700; font-size: calc(4.6px + var(--text-size-adjust));
+    letter-spacing: 0.4px; text-anchor: middle; fill: #8d8064; opacity: 0.5;
+  }
+  .di-picks .pk-gauge-lip { fill: #fffdf4; opacity: 0.55; }
   /* spilled alphabet beads: 7mm beads at desk scale (21px), one loose spill
      drifting down-left from the floss station */
   .di-beads-r {
