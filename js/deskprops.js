@@ -436,60 +436,59 @@ export const DESK_PROPS = [
     id: "scissors", w: 88, h: 210, narrow: true, maxRot: 26,
     svg: `
       <defs>
-        ${bar("dpScSteel", ["#eeece7", "#b9b7b0", "#78766f", "#d3cec5"], 96)}
-        ${bar("dpScBrass", ["#f0d79a", "#c9a13f", "#8a6a2f", "#d9bd7c"], 108)}
+        ${bar("dpScSteel", ["#f6f4ef", "#c8c5bd", "#7e7c75", "#dcd7ce"], 96)}
+        ${bar("dpScBrass", ["#f2dba2", "#cba644", "#8a6a2f", "#dcc07f"], 108)}
+        ${bar("dpScShank", ["#e8cf94", "#c19c3c", "#7d5f26", "#d4b76f"], 20)}
         ${sheen("dpScSh", "#ffffff", 0.55)}
+        ${rough("dpScEdge", "0.11 0.09", 1.2, 17)}
       </defs>
-      <!-- Craft scissors, half open. Two things the old pair got wrong. The
-           blades were a mirrored pair, and nothing forged is symmetrical: the
-           upper blade lies OVER the lower one at the pivot and throws a shadow
-           onto it, which is the only thing that says these are two objects and
-           not one flat shape. And the bows are not a matching pair either. The
-           thumb goes in the small round one, three fingers in the long one, so
-           they differ in size and shape on any scissors you have ever held. -->
-      <!-- lower blade, running up to the right -->
-      <g>
-        <path d="M47 104 L70 26 q2 -8 5.4 -7 q3.4 1 1.6 9 L55.6 107 Z" fill="url(#dpScSteel)"
-              stroke="#8e8c85" stroke-width="0.8" stroke-linejoin="round"/>
-        <path d="M76 28 L59 106" fill="none" stroke="#6e6c66" stroke-width="1.8" opacity="0.5" stroke-linecap="round"/>
-        <path d="M68 33 L56 99" fill="none" stroke="#ffffff" stroke-width="1" opacity="0.45" stroke-linecap="round"/>
+      <!-- LOWER HALF: tip up and left, crossing to the bow down and right -->
+      <g filter="url(#dpScEdge)">
+        <path d="M50.7 110.1 C50.4 109.0 49.7 106.0 49.2 104.0 C48.7 101.9 48.2 99.9 47.7 97.9 C47.2 95.9 46.8 93.8 46.3 91.8 C45.8 89.8 45.3 87.9 44.8 85.8 C44.3 83.7 43.9 81.5 43.3 79.3 C42.7 77.2 41.9 75.1 41.2 72.9 C40.4 70.8 39.7 68.7 38.9 66.6 C38.2 64.5 37.3 62.2 36.6 60.2 C35.8 58.3 35.1 56.7 34.4 54.9 C33.7 53.1 32.9 51.3 32.2 49.6 C31.5 47.8 30.7 46.1 29.9 44.3 C29.2 42.5 28.3 40.5 27.6 39.0 C26.9 37.6 26.4 36.7 25.8 35.5 C25.1 34.3 24.5 33.2 23.9 32.0 C23.2 30.8 22.6 29.7 22.0 28.5 C21.3 27.3 20.3 25.6 20.0 25.0 L20.0 25.0 20.0 25.0 C20.1 25.7 20.2 27.6 20.3 28.9 C20.4 30.2 20.5 31.6 20.6 32.9 C20.8 34.2 20.9 35.5 21.0 36.8 C21.1 38.1 21.2 39.1 21.4 40.7 C21.6 42.3 22.0 44.5 22.3 46.4 C22.6 48.3 22.9 50.1 23.2 52.0 C23.6 53.9 23.9 55.8 24.2 57.7 C24.6 59.5 24.8 61.3 25.2 63.3 C25.6 65.3 26.1 67.7 26.6 69.9 C27.0 72.1 27.5 74.3 27.9 76.5 C28.4 78.7 28.9 80.9 29.4 83.1 C30.0 85.2 30.7 87.5 31.3 89.6 C32.0 91.7 32.7 93.6 33.3 95.6 C34.0 97.6 34.6 99.5 35.3 101.5 C35.9 103.5 36.6 105.5 37.2 107.5 C37.9 109.5 38.8 112.4 39.2 113.4 Z" fill="url(#dpScSteel)" stroke="#83817a" stroke-width="0.8" stroke-linejoin="round"/>
+        <!-- the back is heavy, the cutting edge is a bright ground bevel -->
+        <path d="M50.7 110.1 C50.4 109.0 49.7 106.0 49.2 104.0 C48.7 101.9 48.2 99.9 47.7 97.9 C47.2 95.9 46.8 93.8 46.3 91.8 C45.8 89.8 45.3 87.9 44.8 85.8 C44.3 83.7 43.9 81.5 43.3 79.3 C42.7 77.2 41.9 75.1 41.2 72.9 C40.4 70.8 39.7 68.7 38.9 66.6 C38.2 64.5 37.3 62.2 36.6 60.2 C35.8 58.3 35.1 56.7 34.4 54.9 C33.7 53.1 32.9 51.3 32.2 49.6 C31.5 47.8 30.7 46.1 29.9 44.3 C29.2 42.5 28.3 40.5 27.6 39.0 C26.9 37.6 26.4 36.7 25.8 35.5 C25.1 34.3 24.5 33.2 23.9 32.0 C23.2 30.8 22.6 29.7 22.0 28.5 C21.3 27.3 20.3 25.6 20.0 25.0" fill="none" stroke="#6e6c66" stroke-width="1.7" opacity="0.4"/>
+        <path d="M39.2 113.4 C38.8 112.4 37.9 109.5 37.2 107.5 C36.6 105.5 35.9 103.5 35.3 101.5 C34.6 99.5 34.0 97.6 33.3 95.6 C32.7 93.6 32.0 91.7 31.3 89.6 C30.7 87.5 30.0 85.2 29.4 83.1 C28.9 80.9 28.4 78.7 27.9 76.5 C27.5 74.3 27.0 72.1 26.6 69.9 C26.1 67.7 25.6 65.3 25.2 63.3 C24.8 61.3 24.6 59.5 24.2 57.7 C23.9 55.8 23.6 53.9 23.2 52.0 C22.9 50.1 22.6 48.3 22.3 46.4 C22.0 44.5 21.6 42.3 21.4 40.7 C21.2 39.1 21.1 38.1 21.0 36.8 C20.9 35.5 20.8 34.2 20.6 32.9 C20.5 31.6 20.4 30.2 20.3 28.9 C20.2 27.6 20.1 25.7 20.0 25.0" fill="none" stroke="#fdfdfb" stroke-width="1" opacity="0.5"/>
       </g>
-      <!-- upper blade, over the pivot, with what it throws on the one below -->
-      <path d="M44 106 L20 30 q-2 -8 -6 -7 q-4 1 -2 9 L32 110 Z" fill="#2f2a22" opacity="0.18"
-            transform="translate(2.4 2.6)"/>
-      <g>
-        <path d="M43 106 L20 30 q-2 -8 -5.4 -7 q-3.4 1 -1.6 9 L34.4 109 Z" fill="url(#dpScSteel)"
-              stroke="#8e8c85" stroke-width="0.8" stroke-linejoin="round"/>
-        <path d="M14 31 L28 108" fill="none" stroke="#6e6c66" stroke-width="1.8" opacity="0.45" stroke-linecap="round"/>
-        <path d="M22 37 L34 101" fill="none" stroke="#ffffff" stroke-width="1.2" opacity="0.5" stroke-linecap="round"/>
-        <!-- the grind: the bright facet the edge was sharpened to -->
-        <path d="M27 46 L38 100" fill="none" stroke="#fdfdfb" stroke-width="0.9" opacity="0.55"/>
-      </g>
-      <!-- the pivot screw, proud of the steel, with a real slot in it -->
-      <circle cx="45" cy="107" r="6.4" fill="url(#dpScBrass)" stroke="#6f5322" stroke-width="1"/>
-      <circle cx="45" cy="107" r="6.4" fill="url(#dpScSh)" opacity="0.35"/>
-      <path d="M41.4 104.6 L48.2 109.4" stroke="#6a5020" stroke-width="1.4" stroke-linecap="round"/>
-      <circle cx="43.2" cy="105.2" r="1.5" fill="#f8e9bd" opacity="0.7"/>
-      <!-- the bows. Each is a stroked ring rather than a traced outline: traced
-           outlines fuse into one brass blob where they meet the shanks. -->
       <g fill="none" stroke-linecap="round">
-        <g stroke="#6f5322" stroke-width="9">
-          <path d="M42 113 q-8 12 -13 22"/><path d="M49 113 q9 11 15 20"/>
-          <ellipse cx="22" cy="162" rx="13" ry="21" transform="rotate(-18 22 162)"/>
-          <ellipse cx="70" cy="170" rx="15" ry="29" transform="rotate(15 70 170)"/>
-        </g>
-        <g stroke="url(#dpScBrass)" stroke-width="6.4">
-          <path d="M42 113 q-8 12 -13 22"/><path d="M49 113 q9 11 15 20"/>
-          <ellipse cx="22" cy="162" rx="13" ry="21" transform="rotate(-18 22 162)"/>
-          <ellipse cx="70" cy="170" rx="15" ry="29" transform="rotate(15 70 170)"/>
-        </g>
-        <!-- the lamp along the outer edge of each bow, and the rub where a
-             thumb has sat on one of them for years -->
-        <g stroke="#f8e6b4" stroke-width="1.6" opacity="0.5">
-          <path d="M9 154 q-3 12 2 22"/><path d="M84 158 q3 16 -3 28"/>
-        </g>
-        <path d="M13 172 q-2 -8 1 -15" stroke="#fffbe8" stroke-width="2.6" opacity="0.35"/>
+        <path d="M44 114 C52 126 60 134 64 144" stroke="#6f5322" stroke-width="10"/>
+        <path d="M44 114 C52 126 60 134 64 144" stroke="url(#dpScShank)" stroke-width="7.2"/>
+        <ellipse cx="66" cy="171" rx="14.5" ry="28" transform="rotate(13 66 171)"
+                 stroke="#6f5322" stroke-width="10"/>
+        <ellipse cx="66" cy="171" rx="14.5" ry="28" transform="rotate(13 66 171)"
+                 stroke="url(#dpScBrass)" stroke-width="7"/>
+        <path d="M80 158 q4 15 -1 27" stroke="#f8e6b4" stroke-width="1.7" opacity="0.5"/>
       </g>
+      <!-- UPPER HALF: everything of it lies over the lower one, blade, shank and
+           the shadow it throws across the pivot -->
+      <g fill="#2f2a22" opacity="0.2" transform="translate(2.6 3)">
+        <path d="M50.7 114.0 C51.0 113.0 52.2 109.8 53.0 107.7 C53.8 105.5 54.6 103.4 55.3 101.3 C56.1 99.1 56.9 97.0 57.7 94.9 C58.5 92.7 59.4 90.4 60.1 88.2 C60.8 85.9 61.5 83.7 61.9 81.4 C62.4 79.2 62.7 77.1 63.1 74.9 C63.4 72.7 63.7 70.4 64.0 68.2 C64.3 66.0 64.6 63.7 64.9 61.7 C65.2 59.7 65.4 58.1 65.7 56.2 C65.9 54.3 66.2 52.4 66.4 50.5 C66.7 48.6 66.9 46.7 67.1 44.8 C67.3 42.8 67.6 40.7 67.8 39.0 C67.9 37.3 67.9 36.1 67.9 34.7 C67.9 33.3 68.0 31.9 68.0 30.5 C68.0 29.1 68.0 27.7 68.0 26.3 C68.0 24.8 68.0 22.7 68.0 22.0 L68.0 22.0 68.0 22.0 C67.7 22.6 66.8 24.5 66.3 25.8 C65.7 27.1 65.1 28.4 64.6 29.6 C64.0 30.9 63.5 32.2 62.9 33.5 C62.3 34.7 61.9 35.8 61.3 37.3 C60.6 38.8 59.9 40.8 59.2 42.6 C58.5 44.4 57.8 46.1 57.1 47.9 C56.4 49.7 55.7 51.5 55.0 53.3 C54.4 55.1 53.7 56.8 53.0 58.8 C52.3 60.7 51.7 63.1 51.0 65.2 C50.4 67.4 49.8 69.5 49.2 71.7 C48.6 73.8 47.9 76.0 47.4 78.1 C46.9 80.2 46.6 82.3 46.1 84.4 C45.6 86.5 45.0 88.6 44.4 90.8 C43.9 92.9 43.3 95.2 42.7 97.4 C42.1 99.6 41.5 101.7 40.9 103.9 C40.3 106.1 39.5 109.4 39.2 110.5 Z"/>
+        <path d="M43 114 C34 126 27 134 23 146" fill="none" stroke="#2f2a22" stroke-width="10" stroke-linecap="round"/>
+      </g>
+      <g filter="url(#dpScEdge)">
+        <path d="M50.7 114.0 C51.0 113.0 52.2 109.8 53.0 107.7 C53.8 105.5 54.6 103.4 55.3 101.3 C56.1 99.1 56.9 97.0 57.7 94.9 C58.5 92.7 59.4 90.4 60.1 88.2 C60.8 85.9 61.5 83.7 61.9 81.4 C62.4 79.2 62.7 77.1 63.1 74.9 C63.4 72.7 63.7 70.4 64.0 68.2 C64.3 66.0 64.6 63.7 64.9 61.7 C65.2 59.7 65.4 58.1 65.7 56.2 C65.9 54.3 66.2 52.4 66.4 50.5 C66.7 48.6 66.9 46.7 67.1 44.8 C67.3 42.8 67.6 40.7 67.8 39.0 C67.9 37.3 67.9 36.1 67.9 34.7 C67.9 33.3 68.0 31.9 68.0 30.5 C68.0 29.1 68.0 27.7 68.0 26.3 C68.0 24.8 68.0 22.7 68.0 22.0 L68.0 22.0 68.0 22.0 C67.7 22.6 66.8 24.5 66.3 25.8 C65.7 27.1 65.1 28.4 64.6 29.6 C64.0 30.9 63.5 32.2 62.9 33.5 C62.3 34.7 61.9 35.8 61.3 37.3 C60.6 38.8 59.9 40.8 59.2 42.6 C58.5 44.4 57.8 46.1 57.1 47.9 C56.4 49.7 55.7 51.5 55.0 53.3 C54.4 55.1 53.7 56.8 53.0 58.8 C52.3 60.7 51.7 63.1 51.0 65.2 C50.4 67.4 49.8 69.5 49.2 71.7 C48.6 73.8 47.9 76.0 47.4 78.1 C46.9 80.2 46.6 82.3 46.1 84.4 C45.6 86.5 45.0 88.6 44.4 90.8 C43.9 92.9 43.3 95.2 42.7 97.4 C42.1 99.6 41.5 101.7 40.9 103.9 C40.3 106.1 39.5 109.4 39.2 110.5 Z" fill="url(#dpScSteel)" stroke="#83817a" stroke-width="0.8" stroke-linejoin="round"/>
+        <path d="M50.7 114.0 C51.0 113.0 52.2 109.8 53.0 107.7 C53.8 105.5 54.6 103.4 55.3 101.3 C56.1 99.1 56.9 97.0 57.7 94.9 C58.5 92.7 59.4 90.4 60.1 88.2 C60.8 85.9 61.5 83.7 61.9 81.4 C62.4 79.2 62.7 77.1 63.1 74.9 C63.4 72.7 63.7 70.4 64.0 68.2 C64.3 66.0 64.6 63.7 64.9 61.7 C65.2 59.7 65.4 58.1 65.7 56.2 C65.9 54.3 66.2 52.4 66.4 50.5 C66.7 48.6 66.9 46.7 67.1 44.8 C67.3 42.8 67.6 40.7 67.8 39.0 C67.9 37.3 67.9 36.1 67.9 34.7 C67.9 33.3 68.0 31.9 68.0 30.5 C68.0 29.1 68.0 27.7 68.0 26.3 C68.0 24.8 68.0 22.7 68.0 22.0" fill="none" stroke="#6e6c66" stroke-width="1.8" opacity="0.4"/>
+        <path d="M39.2 110.5 C39.5 109.4 40.3 106.1 40.9 103.9 C41.5 101.7 42.1 99.6 42.7 97.4 C43.3 95.2 43.9 92.9 44.4 90.8 C45.0 88.6 45.6 86.5 46.1 84.4 C46.6 82.3 46.9 80.2 47.4 78.1 C47.9 76.0 48.6 73.8 49.2 71.7 C49.8 69.5 50.4 67.4 51.0 65.2 C51.7 63.1 52.3 60.7 53.0 58.8 C53.7 56.8 54.4 55.1 55.0 53.3 C55.7 51.5 56.4 49.7 57.1 47.9 C57.8 46.1 58.5 44.4 59.2 42.6 C59.9 40.8 60.6 38.8 61.3 37.3 C61.9 35.8 62.3 34.7 62.9 33.5 C63.5 32.2 64.0 30.9 64.6 29.6 C65.1 28.4 65.7 27.1 66.3 25.8 C66.8 24.5 67.7 22.6 68.0 22.0" fill="none" stroke="#fdfdfb" stroke-width="1.1" opacity="0.55"/>
+        <!-- the flat of the blade catching the lamp down its length -->
+        <path d="M39.2 110.5 C39.5 109.4 40.3 106.1 40.9 103.9 C41.5 101.7 42.1 99.6 42.7 97.4 C43.3 95.2 43.9 92.9 44.4 90.8 C45.0 88.6 45.6 86.5 46.1 84.4 C46.6 82.3 46.9 80.2 47.4 78.1 C47.9 76.0 48.6 73.8 49.2 71.7 C49.8 69.5 50.4 67.4 51.0 65.2 C51.7 63.1 52.3 60.7 53.0 58.8 C53.7 56.8 54.4 55.1 55.0 53.3 C55.7 51.5 56.4 49.7 57.1 47.9 C57.8 46.1 58.5 44.4 59.2 42.6 C59.9 40.8 60.6 38.8 61.3 37.3 C61.9 35.8 62.3 34.7 62.9 33.5 C63.5 32.2 64.0 30.9 64.6 29.6 C65.1 28.4 65.7 27.1 66.3 25.8 C66.8 24.5 67.7 22.6 68.0 22.0" fill="none" stroke="#ffffff" stroke-width="3" opacity="0.16" transform="translate(2.6 0)"/>
+      </g>
+      <g fill="none" stroke-linecap="round">
+        <path d="M43 114 C34 126 27 134 23 146" stroke="#6f5322" stroke-width="10"/>
+        <path d="M43 114 C34 126 27 134 23 146" stroke="url(#dpScShank)" stroke-width="7.2"/>
+        <ellipse cx="21" cy="167" rx="12.5" ry="20" transform="rotate(-16 21 167)"
+                 stroke="#6f5322" stroke-width="10"/>
+        <ellipse cx="21" cy="167" rx="12.5" ry="20" transform="rotate(-16 21 167)"
+                 stroke="url(#dpScBrass)" stroke-width="7"/>
+        <!-- the inside of the thumb bow, rubbed bright by years of use -->
+        <path d="M12 160 q-3 8 0 15" stroke="#fffbe8" stroke-width="2.4" opacity="0.4"/>
+        <path d="M8 162 q-3 9 1 17" stroke="#f8e6b4" stroke-width="1.6" opacity="0.5"/>
+      </g>
+      <!-- the pivot: a proud screw with a washer and a real slot -->
+      <ellipse cx="45" cy="113" rx="9.5" ry="9" fill="#2f2a22" opacity="0.18" transform="translate(1.4 1.8)"/>
+      <circle cx="44" cy="112" r="8.4" fill="url(#dpScSteel)" stroke="#7e7c75" stroke-width="0.8"/>
+      <circle cx="44" cy="112" r="5.6" fill="url(#dpScBrass)" stroke="#6f5322" stroke-width="0.9"/>
+      <circle cx="44" cy="112" r="5.6" fill="url(#dpScSh)" opacity="0.4"/>
+      <path d="M40.6 109.8 L47.6 114.2" stroke="#6a5020" stroke-width="1.5" stroke-linecap="round"/>
+      <circle cx="42.2" cy="110.2" r="1.4" fill="#f8e9bd" opacity="0.7"/>
 `,
   },
   {
@@ -605,50 +604,56 @@ export const DESK_PROPS = [
     id: "tin", w: 136, h: 122,
     svg: `
       <defs>
-        ${bar("dpTinWall", ["#efe6cf", "#c5b48d", "#8e7d57", "#cdbc95"], 96)}
-        ${bar("dpTinLid", ["#f4ecd8", "#cdbc95", "#93825c", "#ddcda7"], 112)}
-        ${sheen("dpTinSh", "#fffdf4", 0.5)}
+        ${bar("dpTinWall", ["#f2ead5", "#cbba93", "#8e7d57", "#d6c6a0"], 96)}
+        ${bar("dpTinRim", ["#fdf8e8", "#ddcda8", "#a1906a", "#eee0bd"], 104)}
+        ${bar("dpTinLid", ["#f6efdc", "#d2c19a", "#93825c", "#e2d3ae"], 118)}
         ${grain("dpTinScuff", "0.9 0.06", 8, [0.35, 0.30, 0.20], 0.5)}
-        <clipPath id="dpTinInner"><ellipse cx="88" cy="42" rx="37" ry="22" transform="rotate(8 88 42)"/></clipPath>
+        <radialGradient id="dpTinFloor" cx="0.42" cy="0.3" r="0.8">
+          <stop offset="0" stop-color="#cbbc97"/><stop offset="0.7" stop-color="#b3a47e"/>
+          <stop offset="1" stop-color="#8b7c55"/>
+        </radialGradient>
+        <clipPath id="dpTinInner"><ellipse cx="86" cy="46" rx="35" ry="20" transform="rotate(7 86 46)"/></clipPath>
       </defs>
-      <!-- The bead tin: a shallow round sweet tin, lid off. The old one was a
-           grey bowl with confetti in it. A tin is a pressed metal object, so
-           what it needs is the wall it stands on, the bright rolled rim on top
-           of that wall, the inside falling into shadow away from the lamp, and
-           paint that has been rubbed off the high points. -->
-      <!-- the lid, dropped face up beside it: rim, pressed centre, worn paint -->
-      <g transform="rotate(-6 32 96)">
-        <ellipse cx="32" cy="99" rx="29" ry="17" fill="#3a3018" opacity="0.2"/>
-        <ellipse cx="32" cy="96" rx="29" ry="17" fill="url(#dpTinLid)" stroke="#87764f" stroke-width="1"/>
-        <ellipse cx="32" cy="96" rx="23" ry="12.5" fill="none" stroke="#a08d63" stroke-width="1.4" opacity="0.75"/>
-        <ellipse cx="32" cy="95.4" rx="23" ry="12.5" fill="none" stroke="#fdf6e2" stroke-width="0.7" opacity="0.5"/>
-        <ellipse cx="32" cy="96" rx="15" ry="8" fill="#c06880" opacity="0.28"/>
-        <ellipse cx="26" cy="91" rx="11" ry="5" fill="#fffdf4" opacity="0.28"/>
+      <!-- The bead tin. What it needed this time was to stop being a bowl: a tin
+           is a CYLINDER, so it has a wall of even height all the way round, a
+           rolled hem at the top of that wall, and an inside where the far wall
+           is visible and the near one is not. -->
+      <!-- the lid, dropped face up and slightly under the tin -->
+      <g transform="rotate(-7 32 98)">
+        <ellipse cx="32" cy="101" rx="29" ry="17" fill="#3a3018" opacity="0.22"/>
+        <path d="M3 98 a29 17 0 0 0 58 0 v-4 a29 17 0 0 1 -58 0 Z" fill="url(#dpTinWall)"/>
+        <ellipse cx="32" cy="94" rx="29" ry="17" fill="url(#dpTinLid)" stroke="#87764f" stroke-width="0.9"/>
+        <ellipse cx="32" cy="94" rx="24" ry="13.4" fill="none" stroke="#9d8a60" stroke-width="1.6" opacity="0.7"/>
+        <ellipse cx="32" cy="93.2" rx="24" ry="13.4" fill="none" stroke="#fdf6e2" stroke-width="0.8" opacity="0.55"/>
+        <ellipse cx="32" cy="94" rx="15" ry="8" fill="#c06880" opacity="0.26"/>
+        <ellipse cx="26" cy="89" rx="11" ry="5" fill="#fffdf4" opacity="0.3"/>
+        <!-- a dent, and the ring a wet tin left on it -->
+        <path d="M44 86 q6 3 8 8" fill="none" stroke="#8d7c55" stroke-width="1.4" opacity="0.4"/>
       </g>
-      <!-- the wall of the tin, standing on the desk -->
-      <path d="M51 34 a39 23 0 0 1 74 12 l-3 20 a39 23 0 0 1 -74 -12 Z"
-            fill="url(#dpTinWall)" stroke="#7b6c4a" stroke-width="1"/>
-      <path d="M51 34 a39 23 0 0 1 74 12 l-3 20 a39 23 0 0 1 -74 -12 Z"
-            fill="url(#dpTinScuff)" opacity="0.35"/>
-      <!-- the band of paint left on the wall, worn through where it is handled -->
-      <path d="M53 46 a39 23 0 0 0 70 10" fill="none" stroke="#c06880" stroke-width="6" opacity="0.3"/>
-      <path d="M64 60 a39 23 0 0 0 22 4" fill="none" stroke="#efe6cf" stroke-width="5" opacity="0.35"/>
-      <!-- the mouth: rolled rim, then the inside wall in shadow, then the floor -->
-      <ellipse cx="88" cy="42" rx="40" ry="24" fill="url(#dpTinLid)" stroke="#7b6c4a" stroke-width="1.1" transform="rotate(8 88 42)"/>
-      <ellipse cx="88" cy="42" rx="40" ry="24" fill="url(#dpTinSh)" opacity="0.4" transform="rotate(8 88 42)"/>
-      <ellipse cx="88" cy="42" rx="37" ry="22" fill="#6b5c3d" transform="rotate(8 88 42)"/>
+      <!-- the cylinder wall, an even height right round the tin -->
+      <path d="M46 44 a40 24 0 0 0 80 0 v20 a40 24 0 0 1 -80 0 Z" fill="url(#dpTinWall)" stroke="#7b6c4a" stroke-width="0.9"/>
+      <path d="M46 44 a40 24 0 0 0 80 0 v20 a40 24 0 0 1 -80 0 Z" fill="url(#dpTinScuff)" opacity="0.32"/>
+      <!-- the paint band, worn off where the tin is picked up -->
+      <path d="M48 54 a40 24 0 0 0 76 6" fill="none" stroke="#c06880" stroke-width="7" opacity="0.28"/>
+      <path d="M62 70 a40 24 0 0 0 24 4" fill="none" stroke="#efe6cf" stroke-width="6" opacity="0.3"/>
+      <!-- INSIDE: the far wall drops away from the rim, then the floor -->
+      <ellipse cx="86" cy="44" rx="40" ry="24" fill="#6f6144" transform="rotate(7 86 44)"/>
       <g clip-path="url(#dpTinInner)">
-        <ellipse cx="88" cy="46" rx="34" ry="20" fill="#b3a179"/>
-        <path d="M54 40 a37 22 0 0 1 40 -18" fill="none" stroke="#4a3f28" stroke-width="13" opacity="0.34"/>
-        <path d="M56 44 a37 22 0 0 1 36 -20" fill="none" stroke="#4a3f28" stroke-width="7" opacity="0.2"/>
-        <ellipse cx="96" cy="54" rx="26" ry="12" fill="#fdf6e2" opacity="0.12"/>
+        <ellipse cx="86" cy="52" rx="35" ry="20" fill="url(#dpTinFloor)"/>
+        <path d="M53 42 a35 20 0 0 1 34 -16" fill="none" stroke="#5a4d31" stroke-width="14" opacity="0.4"/>
+        <ellipse cx="96" cy="60" rx="24" ry="11" fill="#fdf6e2" opacity="0.1"/>
       </g>
-      <!-- the beads still in it, crowded to the low side and each sitting in
-           its own small shadow on the tin's floor -->
-      <g><g><ellipse cx="96.0" cy="40.0" rx="5.8" ry="4.5" fill="#3a3018" opacity="0.28"/><circle cx="95" cy="38" r="6.4" fill="#a9d6b6" stroke="#5a9e6e" stroke-width="0.7"/><path d="M89.3 38.2A5.7 5.7 0 0 1 99.8 34.9" fill="none" stroke="#3a2a12" stroke-width="1.2" opacity="0.18"/><circle cx="93.1" cy="35.7" r="1.2" fill="#ffffff" opacity="0.6"/></g><g><ellipse cx="103.0" cy="44.0" rx="5.8" ry="4.5" fill="#3a3018" opacity="0.28"/><circle cx="102" cy="42" r="6.4" fill="#cbbceb" stroke="#8b73c9" stroke-width="0.7"/><path d="M96.3 42.2A5.7 5.7 0 0 1 106.8 38.9" fill="none" stroke="#3a2a12" stroke-width="1.2" opacity="0.18"/><circle cx="100.1" cy="39.7" r="1.2" fill="#ffffff" opacity="0.6"/></g><g><ellipse cx="65.0" cy="45.0" rx="5.8" ry="4.5" fill="#3a3018" opacity="0.28"/><circle cx="64" cy="43" r="6.4" fill="#f0ebdd" stroke="#cfc6ae" stroke-width="0.7"/><path d="M58.3 43.2A5.7 5.7 0 0 1 68.8 39.9" fill="none" stroke="#3a2a12" stroke-width="1.2" opacity="0.18"/><circle cx="62.1" cy="40.7" r="1.2" fill="#ffffff" opacity="0.6"/></g><g><ellipse cx="76.0" cy="47.0" rx="5.8" ry="4.5" fill="#3a3018" opacity="0.28"/><circle cx="75" cy="45" r="6.4" fill="#b3cbe4" stroke="#6486ac" stroke-width="0.7"/><path d="M69.3 45.2A5.7 5.7 0 0 1 79.8 41.9" fill="none" stroke="#3a2a12" stroke-width="1.2" opacity="0.18"/><circle cx="73.1" cy="42.7" r="1.2" fill="#ffffff" opacity="0.6"/></g><g><ellipse cx="90.0" cy="49.0" rx="5.8" ry="4.5" fill="#3a3018" opacity="0.28"/><circle cx="89" cy="47" r="6.4" fill="#f0ebdd" stroke="#cfc6ae" stroke-width="0.7"/><path d="M83.3 47.2A5.7 5.7 0 0 1 93.8 43.9" fill="none" stroke="#3a2a12" stroke-width="1.2" opacity="0.18"/><circle cx="87.1" cy="44.7" r="1.2" fill="#ffffff" opacity="0.6"/></g><g><ellipse cx="108.0" cy="52.0" rx="5.8" ry="4.5" fill="#3a3018" opacity="0.28"/><circle cx="107" cy="50" r="6.4" fill="#f2d78f" stroke="#b6912f" stroke-width="0.7"/><path d="M101.3 50.2A5.7 5.7 0 0 1 111.8 46.9" fill="none" stroke="#3a2a12" stroke-width="1.2" opacity="0.18"/><circle cx="105.1" cy="47.7" r="1.2" fill="#ffffff" opacity="0.6"/></g><g><ellipse cx="70.0" cy="55.0" rx="5.8" ry="4.5" fill="#3a3018" opacity="0.28"/><circle cx="69" cy="53" r="6.4" fill="#f0ebdd" stroke="#cfc6ae" stroke-width="0.7"/><path d="M63.3 53.2A5.7 5.7 0 0 1 73.8 49.9" fill="none" stroke="#3a2a12" stroke-width="1.2" opacity="0.18"/><circle cx="67.1" cy="50.7" r="1.2" fill="#ffffff" opacity="0.6"/></g><g><ellipse cx="96.0" cy="57.0" rx="5.8" ry="4.5" fill="#3a3018" opacity="0.28"/><circle cx="95" cy="55" r="6.4" fill="#f0ebdd" stroke="#cfc6ae" stroke-width="0.7"/><path d="M89.3 55.2A5.7 5.7 0 0 1 99.8 51.9" fill="none" stroke="#3a2a12" stroke-width="1.2" opacity="0.18"/><circle cx="93.1" cy="52.7" r="1.2" fill="#ffffff" opacity="0.6"/></g><g><ellipse cx="83.0" cy="59.0" rx="5.8" ry="4.5" fill="#3a3018" opacity="0.28"/><circle cx="82" cy="57" r="6.4" fill="#ecaebd" stroke="#b7677f" stroke-width="0.7"/><path d="M76.3 57.2A5.7 5.7 0 0 1 86.8 53.9" fill="none" stroke="#3a2a12" stroke-width="1.2" opacity="0.18"/><circle cx="80.1" cy="54.7" r="1.2" fill="#ffffff" opacity="0.6"/></g></g>
-      <!-- the rim's own highlight, last, so nothing paints over it -->
-      <path d="M53 34 a39 23 0 0 1 46 -14" fill="none" stroke="#fffdf4" stroke-width="1.6" opacity="0.6" stroke-linecap="round"/>
-      <path d="M124 50 a39 23 0 0 1 -18 15" fill="none" stroke="#6f6144" stroke-width="1.2" opacity="0.4" stroke-linecap="round"/>
+      <!-- the beads, sitting on that floor -->
+      <g><g><ellipse cx="76.2" cy="44.4" rx="5.9" ry="3.7" fill="#2f2712" opacity="0.3"/><circle cx="75" cy="42" r="6.2" fill="#f0ebdd" stroke="#cfc6ae" stroke-width="0.7"/><path d="M69.5 42.2A5.5 5.5 0 0 1 79.6 39.0" fill="none" stroke="#3a2a12" stroke-width="1.3" opacity="0.2"/><path d="M80.2 42.8A5.3 5.3 0 0 1 73.3 47.0" fill="none" stroke="#ffffff" stroke-width="1" opacity="0.22"/><circle cx="73.1" cy="39.8" r="1.1" fill="#ffffff" opacity="0.62"/></g><g><ellipse cx="93.2" cy="45.4" rx="5.9" ry="3.7" fill="#2f2712" opacity="0.3"/><circle cx="92" cy="43" r="6.2" fill="#a9d6b6" stroke="#5a9e6e" stroke-width="0.7"/><path d="M86.5 43.2A5.5 5.5 0 0 1 96.6 40.0" fill="none" stroke="#3a2a12" stroke-width="1.3" opacity="0.2"/><path d="M97.2 43.8A5.3 5.3 0 0 1 90.3 48.0" fill="none" stroke="#ffffff" stroke-width="1" opacity="0.22"/><circle cx="90.1" cy="40.8" r="1.1" fill="#ffffff" opacity="0.62"/></g><g><ellipse cx="100.2" cy="49.4" rx="5.9" ry="3.7" fill="#2f2712" opacity="0.3"/><circle cx="99" cy="47" r="6.2" fill="#cbbceb" stroke="#8b73c9" stroke-width="0.7"/><path d="M93.5 47.2A5.5 5.5 0 0 1 103.6 44.0" fill="none" stroke="#3a2a12" stroke-width="1.3" opacity="0.2"/><path d="M104.2 47.8A5.3 5.3 0 0 1 97.3 52.0" fill="none" stroke="#ffffff" stroke-width="1" opacity="0.22"/><circle cx="97.1" cy="44.8" r="1.1" fill="#ffffff" opacity="0.62"/></g><g><ellipse cx="62.2" cy="50.4" rx="5.9" ry="3.7" fill="#2f2712" opacity="0.3"/><circle cx="61" cy="48" r="6.2" fill="#f0ebdd" stroke="#cfc6ae" stroke-width="0.7"/><path d="M55.5 48.2A5.5 5.5 0 0 1 65.6 45.0" fill="none" stroke="#3a2a12" stroke-width="1.3" opacity="0.2"/><path d="M66.2 48.8A5.3 5.3 0 0 1 59.3 53.0" fill="none" stroke="#ffffff" stroke-width="1" opacity="0.22"/><circle cx="59.1" cy="45.8" r="1.1" fill="#ffffff" opacity="0.62"/></g><g><ellipse cx="73.2" cy="52.4" rx="5.9" ry="3.7" fill="#2f2712" opacity="0.3"/><circle cx="72" cy="50" r="6.2" fill="#b3cbe4" stroke="#6486ac" stroke-width="0.7"/><path d="M66.5 50.2A5.5 5.5 0 0 1 76.6 47.0" fill="none" stroke="#3a2a12" stroke-width="1.3" opacity="0.2"/><path d="M77.2 50.8A5.3 5.3 0 0 1 70.3 55.0" fill="none" stroke="#ffffff" stroke-width="1" opacity="0.22"/><circle cx="70.1" cy="47.8" r="1.1" fill="#ffffff" opacity="0.62"/></g><g><ellipse cx="87.2" cy="54.4" rx="5.9" ry="3.7" fill="#2f2712" opacity="0.3"/><circle cx="86" cy="52" r="6.2" fill="#f0ebdd" stroke="#cfc6ae" stroke-width="0.7"/><path d="M80.5 52.2A5.5 5.5 0 0 1 90.6 49.0" fill="none" stroke="#3a2a12" stroke-width="1.3" opacity="0.2"/><path d="M91.2 52.8A5.3 5.3 0 0 1 84.3 57.0" fill="none" stroke="#ffffff" stroke-width="1" opacity="0.22"/><circle cx="84.1" cy="49.8" r="1.1" fill="#ffffff" opacity="0.62"/></g><g><ellipse cx="105.2" cy="57.4" rx="5.9" ry="3.7" fill="#2f2712" opacity="0.3"/><circle cx="104" cy="55" r="6.2" fill="#f2d78f" stroke="#b6912f" stroke-width="0.7"/><path d="M98.5 55.2A5.5 5.5 0 0 1 108.6 52.0" fill="none" stroke="#3a2a12" stroke-width="1.3" opacity="0.2"/><path d="M109.2 55.8A5.3 5.3 0 0 1 102.3 60.0" fill="none" stroke="#ffffff" stroke-width="1" opacity="0.22"/><circle cx="102.1" cy="52.8" r="1.1" fill="#ffffff" opacity="0.62"/></g><g><ellipse cx="67.2" cy="60.4" rx="5.9" ry="3.7" fill="#2f2712" opacity="0.3"/><circle cx="66" cy="58" r="6.2" fill="#f0ebdd" stroke="#cfc6ae" stroke-width="0.7"/><path d="M60.5 58.2A5.5 5.5 0 0 1 70.6 55.0" fill="none" stroke="#3a2a12" stroke-width="1.3" opacity="0.2"/><path d="M71.2 58.8A5.3 5.3 0 0 1 64.3 63.0" fill="none" stroke="#ffffff" stroke-width="1" opacity="0.22"/><circle cx="64.1" cy="55.8" r="1.1" fill="#ffffff" opacity="0.62"/></g><g><ellipse cx="93.2" cy="62.4" rx="5.9" ry="3.7" fill="#2f2712" opacity="0.3"/><circle cx="92" cy="60" r="6.2" fill="#f0ebdd" stroke="#cfc6ae" stroke-width="0.7"/><path d="M86.5 60.2A5.5 5.5 0 0 1 96.6 57.0" fill="none" stroke="#3a2a12" stroke-width="1.3" opacity="0.2"/><path d="M97.2 60.8A5.3 5.3 0 0 1 90.3 65.0" fill="none" stroke="#ffffff" stroke-width="1" opacity="0.22"/><circle cx="90.1" cy="57.8" r="1.1" fill="#ffffff" opacity="0.62"/></g><g><ellipse cx="80.2" cy="64.4" rx="5.9" ry="3.7" fill="#2f2712" opacity="0.3"/><circle cx="79" cy="62" r="6.2" fill="#ecaebd" stroke="#b7677f" stroke-width="0.7"/><path d="M73.5 62.2A5.5 5.5 0 0 1 83.6 59.0" fill="none" stroke="#3a2a12" stroke-width="1.3" opacity="0.2"/><path d="M84.2 62.8A5.3 5.3 0 0 1 77.3 67.0" fill="none" stroke="#ffffff" stroke-width="1" opacity="0.22"/><circle cx="77.1" cy="59.8" r="1.1" fill="#ffffff" opacity="0.62"/></g></g>
+      <!-- the rolled hem: the outer lip, the inner lip, and the light along the
+           top of the roll. Painted last so nothing covers it. -->
+      <g transform="rotate(7 86 44)">
+        <ellipse cx="86" cy="44" rx="40" ry="24" fill="none" stroke="url(#dpTinRim)" stroke-width="4.4"/>
+        <ellipse cx="86" cy="44" rx="40" ry="24" fill="none" stroke="#7b6c4a" stroke-width="0.8" opacity="0.7"/>
+        <ellipse cx="86" cy="44" rx="35.6" ry="20" fill="none" stroke="#6b5c3d" stroke-width="1" opacity="0.6"/>
+        <path d="M48 38 a40 24 0 0 1 42 -18" fill="none" stroke="#fffdf4" stroke-width="1.8" opacity="0.65" stroke-linecap="round"/>
+        <path d="M124 52 a40 24 0 0 1 -20 15" fill="none" stroke="#6f6144" stroke-width="1.3" opacity="0.45" stroke-linecap="round"/>
+      </g>
 `,
   },
   {
@@ -776,89 +781,97 @@ export const DESK_PROPS = [
     // A watch, unclasped and taken off: the case face up, the strap folded back
     // on itself the way a strap falls when it is not holding anything. Leather,
     // worn, on a small cream dial. No branding, no logo.
-    id: "watch", w: 118, h: 178,
+    id: "watch", w: 118, h: 210,
     svg: `
       <defs>
-        <linearGradient id="dpWaHideCol" x1="0" y1="0" x2="1" y2="0.25"><stop offset="0" stop-color="#9a663f"/><stop offset="0.42" stop-color="#7a4c2c"/><stop offset="0.8" stop-color="#573320"/><stop offset="1" stop-color="#6b4327"/></linearGradient>
-        ${bar("dpWaCase", ["#f7ecc6", "#d9bb77", "#96762f", "#e6cf95"], 100)}
-        ${bar("dpWaSteel", ["#f4f0e4", "#cdc6b0", "#8d8770", "#ded7c1"], 100)}
-        ${grain("dpWaHide", "1.4 1.1", 15, [0.28, 0.17, 0.09], 0.55)}
+        <linearGradient id="dpWaHide" x1="0" y1="0" x2="1" y2="0.25">
+          <stop offset="0" stop-color="#9a663f"/><stop offset="0.42" stop-color="#7a4c2c"/>
+          <stop offset="0.8" stop-color="#573320"/><stop offset="1" stop-color="#6b4327"/>
+        </linearGradient>
+        ${bar("dpWaGold", ["#f9efcd", "#dcbe78", "#94742c", "#e9d29a"], 100)}
+        ${bar("dpWaSteel", ["#f6f2e6", "#cfc8b2", "#8b8570", "#e0d9c3"], 100)}
+        ${grain("dpWaGrain", "1.4 1.1", 15, [0.26, 0.15, 0.08], 0.6)}
         ${sheen("dpWaGlass", "#ffffff", 0.5)}
-        <clipPath id="dpWaStrap">
-          <path d="M56.0 104.0 C57.7 107.0 65.0 115.8 66.0 122.0 C67.0 128.2 65.5 135.8 62.0 141.0 C58.5 146.2 51.0 151.5 45.0 153.0 C39.0 154.5 30.3 153.0 26.0 150.0 C21.7 147.0 18.2 139.3 19.0 135.0 C19.8 130.7 25.8 125.2 31.0 124.0 C36.2 122.8 43.8 125.0 50.0 128.0 C56.2 131.0 63.2 137.3 68.0 142.0 C72.8 146.7 77.2 153.7 79.0 156.0" fill="none" stroke="#000" stroke-width="29" stroke-linecap="round"/>
+        <clipPath id="dpWaStrapClip">
+          <path d="M58.0 104.0 C59.0 107.7 62.7 118.3 64.0 126.0 C65.3 133.7 66.7 142.3 66.0 150.0 C65.3 157.7 63.0 165.7 60.0 172.0 C57.0 178.3 52.3 183.8 48.0 188.0 C43.7 192.2 38.3 195.7 34.0 197.0 C29.7 198.3 24.0 196.2 22.0 196.0" fill="none" stroke="#000" stroke-width="30" stroke-linecap="round"/>
         </clipPath>
       </defs>
-      <!-- A watch taken off and dropped face up. The long half of the strap
-           curls back under itself, which is what a strap does and what the old
-           one did not: the curl crosses its own tail, so it needs the same
-           over-and-under any coil needs. Leather gets its grain and its real
-           slanted stitches; the dashed line it had before was the giveaway
-           that the strap was drawn rather than sewn. -->
+      <!-- A watch taken off and dropped face up. The thing the old one was
+           missing is the lugs: without horns for the strap to be pinned
+           between, a case is a pocket watch with a belt under it. -->
+      <!-- LOWER STRAP, out of the bottom lugs, falling in an S and crossing
+           its own middle. Leather gets grain, real slanted stitches, and the
+           dark painted edge that every made strap has. -->
       <g fill="none" stroke-linecap="round">
-        <path d="M56.0 104.0 C57.7 107.0 65.0 115.8 66.0 122.0 C67.0 128.2 65.5 135.8 62.0 141.0 C58.5 146.2 51.0 151.5 45.0 153.0 C39.0 154.5 30.3 153.0 26.0 150.0 C21.7 147.0 18.2 139.3 19.0 135.0 C19.8 130.7 25.8 125.2 31.0 124.0 C36.2 122.8 43.8 125.0 50.0 128.0 C56.2 131.0 63.2 137.3 68.0 142.0 C72.8 146.7 77.2 153.7 79.0 156.0" stroke="#3f2717" stroke-width="29"/>
-        <path d="M56.0 104.0 C57.7 107.0 65.0 115.8 66.0 122.0 C67.0 128.2 65.5 135.8 62.0 141.0 C58.5 146.2 51.0 151.5 45.0 153.0 C39.0 154.5 30.3 153.0 26.0 150.0 C21.7 147.0 18.2 139.3 19.0 135.0 C19.8 130.7 25.8 125.2 31.0 124.0 C36.2 122.8 43.8 125.0 50.0 128.0 C56.2 131.0 63.2 137.3 68.0 142.0 C72.8 146.7 77.2 153.7 79.0 156.0" stroke="url(#dpWaHideCol)" stroke-width="25.4"/>
+        <path d="M58.0 104.0 C59.0 107.7 62.7 118.3 64.0 126.0 C65.3 133.7 66.7 142.3 66.0 150.0 C65.3 157.7 63.0 165.7 60.0 172.0 C57.0 178.3 52.3 183.8 48.0 188.0 C43.7 192.2 38.3 195.7 34.0 197.0 C29.7 198.3 24.0 196.2 22.0 196.0" stroke="#3a2415" stroke-width="29"/>
+        <path d="M58.0 104.0 C59.0 107.7 62.7 118.3 64.0 126.0 C65.3 133.7 66.7 142.3 66.0 150.0 C65.3 157.7 63.0 165.7 60.0 172.0 C57.0 178.3 52.3 183.8 48.0 188.0 C43.7 192.2 38.3 195.7 34.0 197.0 C29.7 198.3 24.0 196.2 22.0 196.0" stroke="url(#dpWaHide)" stroke-width="25"/>
       </g>
-      <g clip-path="url(#dpWaStrap)">
-        <rect x="0" y="86" width="118" height="92" fill="url(#dpWaHide)" opacity="0.45"/>
+      <g clip-path="url(#dpWaStrapClip)">
+        <rect x="0" y="96" width="118" height="114" fill="url(#dpWaGrain)" opacity="0.42"/>
       </g>
       <g fill="none" stroke-linecap="round">
-        <path d="M47.9 107.0L48.0 110.0M51.5 113.4L51.6 116.4M55.1 119.9L55.2 122.9M57.7 120.5L55.7 122.8M56.2 127.3L54.3 129.6M54.8 134.2L52.8 136.4M55.5 135.2L52.5 135.6M49.3 139.6L46.4 139.9M43.2 143.9L40.2 144.2M43.1 144.1L40.7 142.3M36.2 143.0L33.8 141.2M29.4 141.9L27.0 140.1M32.0 142.8L32.2 139.8M29.5 137.4L29.7 134.4M24.2 141.7L27.2 141.0M28.6 137.7L31.5 137.0M32.9 133.8L35.8 133.1M30.2 132.5L32.5 134.5M37.1 133.9L39.4 135.9M43.9 135.4L46.2 137.3M47.4 136.7L48.5 139.4M53.8 141.7L55.0 144.5M60.3 146.8L61.5 149.5M63.6 150.1L64.1 153.1M67.6 155.2L68.1 158.1M71.5 160.2L72.0 163.2" stroke="#d8bd8e" stroke-width="1" opacity="0.55"/>
-        <path d="M64.0 98.0L64.1 101.0M67.6 104.5L67.7 107.5M71.2 111.0L71.3 114.0M75.7 124.3L73.7 126.6M74.2 131.1L72.3 133.4M72.8 138.0L70.8 140.2M66.1 150.3L63.1 150.6M60.0 154.6L57.0 154.9M53.8 158.9L50.9 159.2M40.2 162.3L37.8 160.5M33.4 161.2L31.0 159.4M26.5 160.1L24.1 158.3M15.3 150.6L15.5 147.6M12.8 145.2L13.0 142.2M11.8 128.1L14.7 127.4M16.1 124.2L19.0 123.5M20.4 120.2L23.4 119.5M34.0 114.5L36.3 116.5M40.9 115.9L43.2 117.9M47.7 117.4L50.0 119.3M58.7 122.2L59.8 124.9M65.1 127.2L66.3 130.0M71.6 132.2L72.8 135.0M78.1 138.8L78.6 141.7M82.0 143.8L82.5 146.8M86.0 148.8L86.5 151.8" stroke="#d8bd8e" stroke-width="1" opacity="0.4"/>
-        <!-- the light along the crown of the leather -->
-        <path d="M56.0 104.0 C57.7 107.0 65.0 115.8 66.0 122.0 C67.0 128.2 65.5 135.8 62.0 141.0 C58.5 146.2 51.0 151.5 45.0 153.0 C39.0 154.5 30.3 153.0 26.0 150.0 C21.7 147.0 18.2 139.3 19.0 135.0 C19.8 130.7 25.8 125.2 31.0 124.0 C36.2 122.8 43.8 125.0 50.0 128.0 C56.2 131.0 63.2 137.3 68.0 142.0 C72.8 146.7 77.2 153.7 79.0 156.0" stroke="#a8724a" stroke-width="5" opacity="0.3" transform="translate(-1 -1.6)"/>
+        <path d="M49.3 105.0L48.6 107.9M50.7 110.3L50.0 113.2M52.2 115.6L51.5 118.5M53.6 120.9L52.9 123.8M55.0 126.1L54.3 129.1M55.6 130.2L54.4 133.0M56.1 136.0L54.9 138.7M56.6 141.7L55.4 144.5M57.1 147.5L55.9 150.2M57.0 150.0L54.9 152.1M55.6 155.2L53.5 157.4M54.1 160.5L52.1 162.7M52.7 165.8L50.6 168.0M52.4 167.7L49.7 168.9M49.5 171.5L46.8 172.7M46.6 175.3L43.9 176.6M43.8 179.2L41.0 180.4M43.3 180.7L40.3 180.9M39.9 182.9L36.9 183.1M36.6 185.0L33.6 185.2M33.2 187.2L30.2 187.4M35.6 188.4L33.0 186.8M32.7 188.2L30.2 186.5M29.8 187.9L27.3 186.3M26.9 187.7L24.4 186.0M24.0 187.5L21.5 185.8" stroke="#dcc08d" stroke-width="1" opacity="0.5"/>
+        <path d="M67.4 100.1L66.7 103.0M68.9 105.3L68.2 108.3M70.3 110.6L69.6 113.5M71.7 115.9L71.0 118.8M73.2 121.2L72.5 124.1M74.4 128.6L73.2 131.4M74.9 134.4L73.6 137.2M75.3 140.2L74.1 142.9M75.8 145.9L74.6 148.7M75.1 154.9L73.1 157.1M73.7 160.2L71.6 162.4M72.3 165.5L70.2 167.6M70.8 170.8L68.7 172.9M67.4 178.9L64.7 180.2M64.6 182.8L61.8 184.0M61.7 186.6L59.0 187.9M58.8 190.5L56.1 191.7M53.5 196.5L50.5 196.7M50.1 198.7L47.1 198.9M46.7 200.8L43.7 201.1M43.4 203.0L40.4 203.2M34.0 207.2L31.5 205.5M31.1 206.9L28.6 205.3M28.2 206.7L25.7 205.0M25.4 206.4L22.8 204.8M22.5 206.2L20.0 204.5" stroke="#dcc08d" stroke-width="1" opacity="0.36"/>
+        <path d="M58.0 104.0 C59.0 107.7 62.7 118.3 64.0 126.0 C65.3 133.7 66.7 142.3 66.0 150.0 C65.3 157.7 63.0 165.7 60.0 172.0 C57.0 178.3 52.3 183.8 48.0 188.0 C43.7 192.2 38.3 195.7 34.0 197.0 C29.7 198.3 24.0 196.2 22.0 196.0" stroke="#b07b4e" stroke-width="4.5" opacity="0.25" transform="translate(-1.2 -1.8)"/>
       </g>
-      <!-- the tip end, brought over the curl with its shadow under it -->
+      <!-- the tip, over its own curl, narrowing the way a strap is cut -->
       <g fill="none" stroke-linecap="round">
-        <path d="M19.0 135.0 C21.0 133.2 25.8 125.2 31.0 124.0 C36.2 122.8 43.8 125.0 50.0 128.0 C56.2 131.0 63.2 137.3 68.0 142.0 C72.8 146.7 77.2 153.7 79.0 156.0" stroke="#2a1a10" stroke-width="30" opacity="0.25"
-              transform="translate(1.6 2.2)"/>
-        <path d="M19.0 135.0 C21.0 133.2 25.8 125.2 31.0 124.0 C36.2 122.8 43.8 125.0 50.0 128.0 C56.2 131.0 63.2 137.3 68.0 142.0 C72.8 146.7 77.2 153.7 79.0 156.0" stroke="#3f2717" stroke-width="27.5"/>
-        <path d="M19.0 135.0 C21.0 133.2 25.8 125.2 31.0 124.0 C36.2 122.8 43.8 125.0 50.0 128.0 C56.2 131.0 63.2 137.3 68.0 142.0 C72.8 146.7 77.2 153.7 79.0 156.0" stroke="url(#dpWaHideCol)" stroke-width="24"/>
-        <path d="M33.5 147.9L33.7 145.0M29.1 138.6L29.3 135.6M26.2 138.8L29.1 138.1M33.7 131.9L36.6 131.2M37.6 133.2L39.9 135.2M46.5 135.0L47.7 137.8M57.7 143.8L58.9 146.5M65.3 151.0L65.8 153.9M72.1 159.7L72.6 162.7" stroke="#d8bd8e" stroke-width="1" opacity="0.5"/>
+        <path d="M48.0 188.0 C45.7 189.5 38.3 195.7 34.0 197.0 C29.7 198.3 24.0 196.2 22.0 196.0" stroke="#3a2415" stroke-width="25"/>
+        <path d="M48.0 188.0 C45.7 189.5 38.3 195.7 34.0 197.0 C29.7 198.3 24.0 196.2 22.0 196.0" stroke="url(#dpWaHide)" stroke-width="21"/>
+        <path d="M34.0 197.0 C32.0 196.8 24.0 196.2 22.0 196.0" stroke="#3a2415" stroke-width="20"/>
+        <path d="M34.0 197.0 C32.0 196.8 24.0 196.2 22.0 196.0" stroke="url(#dpWaHide)" stroke-width="16.5"/>
+        <path d="M45.5 181.7L42.5 181.9M42.0 183.9L39.0 184.1M38.5 186.2L35.5 186.4M35.0 188.4L32.0 188.6M35.9 190.5L33.4 188.8M32.9 190.2L30.4 188.5M29.9 190.0L27.4 188.3M26.9 189.7L24.4 188.0M23.9 189.5L21.4 187.8" stroke="#dcc08d" stroke-width="1" opacity="0.5"/>
       </g>
-      <!-- the short half and its buckle, the frame seen from above with the
-           pin lying across it -->
+      <!-- UPPER STRAP and the buckle it runs through -->
       <g fill="none" stroke-linecap="round">
-        <path d="M58 46 q5 -20 -4 -30" stroke="#3f2717" stroke-width="27.5"/>
-        <path d="M58 46 q5 -20 -4 -30" stroke="url(#dpWaHideCol)" stroke-width="24"/>
+        <path d="M58 52 q5 -20 -2 -34" stroke="#3a2415" stroke-width="27"/>
+        <path d="M58 52 q5 -20 -2 -34" stroke="url(#dpWaHide)" stroke-width="23"/>
+        <path d="M65.0 54.9L67.0 52.6M65.9 50.9L67.9 48.6M66.8 46.9L68.7 44.6M67.6 42.9L69.6 40.6M67.9 34.6L68.6 31.7M66.4 28.9L67.2 26.0M65.0 23.2L65.8 20.3M63.6 17.5L64.3 14.6" stroke="#dcc08d" stroke-width="1" opacity="0.45"/>
       </g>
-      <!-- the buckle: the frame the strap runs through, with the pin lying
-           across it and the tongue caught in a hole it has worn oval -->
-      <rect x="38" y="2" width="34" height="20" rx="4" fill="none" stroke="url(#dpWaCase)" stroke-width="3"/>
-      <rect x="38" y="2" width="34" height="20" rx="4" fill="none" stroke="#7d6127" stroke-width="0.6" opacity="0.5"/>
-      <path d="M55 12 h16" stroke="url(#dpWaCase)" stroke-width="2.2" stroke-linecap="round"/>
-      <path d="M40 4 v16" stroke="#fff3cd" stroke-width="0.9" opacity="0.5"/>
-      <ellipse cx="57" cy="27" rx="2.6" ry="1.8" fill="#2b1a10" opacity="0.55"/>
-      <ellipse cx="57" cy="36" rx="2.2" ry="1.6" fill="#2b1a10" opacity="0.4"/>
-      <!-- the case: bezel, then the dial sunk inside it -->
-      <circle cx="58" cy="76" r="31" fill="url(#dpWaCase)" stroke="#7d6127" stroke-width="1.1"/>
-      <circle cx="58" cy="76" r="31" fill="url(#dpWaGlass)" opacity="0.25"/>
-      <circle cx="58" cy="76" r="25.5" fill="#8d7743" opacity="0.5"/>
-      <circle cx="58" cy="76" r="24.5" fill="#f7f2e1" stroke="#b39a5c" stroke-width="0.8"/>
-      <rect x="87" y="70" width="9" height="13" rx="2.6" fill="url(#dpWaSteel)" stroke="#7d6127" stroke-width="0.7"/>
-      <path d="M88 71 v11" stroke="#fffaea" stroke-width="0.8" opacity="0.6"/>
-      <!-- dial: the minute track, four indices, and ten past ten -->
-      <circle cx="58" cy="76" r="20.5" fill="none" stroke="#b9ab86" stroke-width="0.5" opacity="0.7"/>
-      <g stroke="#6d6047" stroke-linecap="round">
-        <path d="M58 57.5 v5" stroke-width="1.7"/><path d="M76.5 76 h-5" stroke-width="1.7"/>
-        <path d="M58 94.5 v-5" stroke-width="1.7"/><path d="M39.5 76 h5" stroke-width="1.7"/>
+      <!-- the keeper, a loop of the same leather -->
+      <rect x="43" y="30" width="27" height="7" rx="2.4" fill="#4a2e1b" stroke="#2f1d11" stroke-width="0.7"/>
+      <rect x="43" y="30" width="27" height="2.6" rx="1.2" fill="#96613b" opacity="0.5"/>
+      <!-- the buckle frame, its pin, and the hole the tongue has worn oval -->
+      <rect x="40" y="2" width="33" height="21" rx="4" fill="none" stroke="url(#dpWaGold)" stroke-width="3.2"/>
+      <rect x="40" y="2" width="33" height="21" rx="4" fill="none" stroke="#7d6127" stroke-width="0.6" opacity="0.45"/>
+      <path d="M56 12.5 h16" stroke="url(#dpWaGold)" stroke-width="2.2" stroke-linecap="round"/>
+      <path d="M42 4 v17" stroke="#fff3cd" stroke-width="0.9" opacity="0.5"/>
+      <ellipse cx="57" cy="27" rx="2.6" ry="1.8" fill="#241509" opacity="0.6"/>
+      <!-- LUGS: two horns at each end, with the spring bar between them -->
+      <g fill="url(#dpWaGold)" stroke="#7d6127" stroke-width="0.7" stroke-linejoin="round">
+        <path d="M42 54 q-5 -4 -6 -8 q6 -2 11 3 Z"/><path d="M74 54 q5 -4 6 -8 q-6 -2 -11 3 Z"/>
+        <path d="M42 102 q-5 4 -6 8 q6 2 11 -3 Z"/><path d="M74 102 q5 4 6 8 q-6 2 -11 -3 Z"/>
       </g>
-      <g stroke="#a89b7c" stroke-width="0.7" opacity="0.6">
-        <path d="M71 63.5 l-2.4 2.4"/><path d="M71 88.5 l-2.4 -2.4"/>
-        <path d="M45 88.5 l2.4 -2.4"/><path d="M45 63.5 l2.4 2.4"/>
+      <!-- CASE: polished bezel, a step down, then the dial sunk under glass -->
+      <circle cx="58" cy="78" r="31" fill="url(#dpWaGold)" stroke="#7d6127" stroke-width="1"/>
+      <circle cx="58" cy="78" r="27.6" fill="url(#dpWaGold)" stroke="#8d6f31" stroke-width="0.8"
+              transform="rotate(180 58 78)"/>
+      <circle cx="58" cy="78" r="31" fill="url(#dpWaGlass)" opacity="0.3"/>
+      <circle cx="58" cy="78" r="25.5" fill="#8d7743" opacity="0.55"/>
+      <circle cx="58" cy="78" r="24.5" fill="#f7f2e1" stroke="#b39a5c" stroke-width="0.7"/>
+      <!-- the crown, knurled -->
+      <rect x="88" y="73" width="10" height="14" rx="2.6" fill="url(#dpWaSteel)" stroke="#7d6127" stroke-width="0.7"/>
+      <g stroke="#8b8570" stroke-width="0.6" opacity="0.8">
+        <path d="M90 74.5 v11"/><path d="M92 74.5 v11"/><path d="M94 74.5 v11"/><path d="M96 74.5 v11"/>
       </g>
-      <!-- the hands, with the shadow they drop on the dial under the crystal -->
-      <g stroke="#3f3a2e" stroke-linecap="round" opacity="0.22" transform="translate(1 1.4)">
-        <path d="M58 76 L45.5 66.5" stroke-width="2.2"/><path d="M58 76 L70 62" stroke-width="1.8"/>
+      <path d="M89 74.5 v11" stroke="#fffaea" stroke-width="0.9" opacity="0.6"/>
+      <!-- DIAL: minute track, applied indices with their own edge, ten past ten -->
+      <circle cx="58" cy="78" r="22.5" fill="none" stroke="#b9ab86" stroke-width="0.4" opacity="0.7"/>
+      <g stroke-linecap="butt"><path d="M60.4 55.6L60.2 57.1" stroke="#a89b7c" stroke-width="0.5" opacity="0.55"/><path d="M62.7 56.0L62.4 57.5" stroke="#a89b7c" stroke-width="0.5" opacity="0.55"/><path d="M65.0 56.6L64.5 58.0" stroke="#a89b7c" stroke-width="0.5" opacity="0.55"/><path d="M67.2 57.4L66.5 58.8" stroke="#a89b7c" stroke-width="0.5" opacity="0.55"/><path d="M71.2 59.8L70.3 61.0" stroke="#a89b7c" stroke-width="0.5" opacity="0.55"/><path d="M73.1 61.3L72.1 62.4" stroke="#a89b7c" stroke-width="0.5" opacity="0.55"/><path d="M74.7 62.9L73.6 63.9" stroke="#a89b7c" stroke-width="0.5" opacity="0.55"/><path d="M76.2 64.8L75.0 65.7" stroke="#a89b7c" stroke-width="0.5" opacity="0.55"/><path d="M78.6 68.8L77.2 69.5" stroke="#a89b7c" stroke-width="0.5" opacity="0.55"/><path d="M79.4 71.0L78.0 71.5" stroke="#a89b7c" stroke-width="0.5" opacity="0.55"/><path d="M80.0 73.3L78.5 73.6" stroke="#a89b7c" stroke-width="0.5" opacity="0.55"/><path d="M80.4 75.6L78.9 75.8" stroke="#a89b7c" stroke-width="0.5" opacity="0.55"/><path d="M80.4 80.4L78.9 80.2" stroke="#a89b7c" stroke-width="0.5" opacity="0.55"/><path d="M80.0 82.7L78.5 82.4" stroke="#a89b7c" stroke-width="0.5" opacity="0.55"/><path d="M79.4 85.0L78.0 84.5" stroke="#a89b7c" stroke-width="0.5" opacity="0.55"/><path d="M78.6 87.2L77.2 86.5" stroke="#a89b7c" stroke-width="0.5" opacity="0.55"/><path d="M76.2 91.2L75.0 90.3" stroke="#a89b7c" stroke-width="0.5" opacity="0.55"/><path d="M74.7 93.1L73.6 92.1" stroke="#a89b7c" stroke-width="0.5" opacity="0.55"/><path d="M73.1 94.7L72.1 93.6" stroke="#a89b7c" stroke-width="0.5" opacity="0.55"/><path d="M71.2 96.2L70.3 95.0" stroke="#a89b7c" stroke-width="0.5" opacity="0.55"/><path d="M67.2 98.6L66.5 97.2" stroke="#a89b7c" stroke-width="0.5" opacity="0.55"/><path d="M65.0 99.4L64.5 98.0" stroke="#a89b7c" stroke-width="0.5" opacity="0.55"/><path d="M62.7 100.0L62.4 98.5" stroke="#a89b7c" stroke-width="0.5" opacity="0.55"/><path d="M60.4 100.4L60.2 98.9" stroke="#a89b7c" stroke-width="0.5" opacity="0.55"/><path d="M55.6 100.4L55.8 98.9" stroke="#a89b7c" stroke-width="0.5" opacity="0.55"/><path d="M53.3 100.0L53.6 98.5" stroke="#a89b7c" stroke-width="0.5" opacity="0.55"/><path d="M51.0 99.4L51.5 98.0" stroke="#a89b7c" stroke-width="0.5" opacity="0.55"/><path d="M48.8 98.6L49.5 97.2" stroke="#a89b7c" stroke-width="0.5" opacity="0.55"/><path d="M44.8 96.2L45.7 95.0" stroke="#a89b7c" stroke-width="0.5" opacity="0.55"/><path d="M42.9 94.7L43.9 93.6" stroke="#a89b7c" stroke-width="0.5" opacity="0.55"/><path d="M41.3 93.1L42.4 92.1" stroke="#a89b7c" stroke-width="0.5" opacity="0.55"/><path d="M39.8 91.2L41.0 90.3" stroke="#a89b7c" stroke-width="0.5" opacity="0.55"/><path d="M37.4 87.2L38.8 86.5" stroke="#a89b7c" stroke-width="0.5" opacity="0.55"/><path d="M36.6 85.0L38.0 84.5" stroke="#a89b7c" stroke-width="0.5" opacity="0.55"/><path d="M36.0 82.7L37.5 82.4" stroke="#a89b7c" stroke-width="0.5" opacity="0.55"/><path d="M35.6 80.4L37.1 80.2" stroke="#a89b7c" stroke-width="0.5" opacity="0.55"/><path d="M35.6 75.6L37.1 75.8" stroke="#a89b7c" stroke-width="0.5" opacity="0.55"/><path d="M36.0 73.3L37.5 73.6" stroke="#a89b7c" stroke-width="0.5" opacity="0.55"/><path d="M36.6 71.0L38.0 71.5" stroke="#a89b7c" stroke-width="0.5" opacity="0.55"/><path d="M37.4 68.8L38.8 69.5" stroke="#a89b7c" stroke-width="0.5" opacity="0.55"/><path d="M39.8 64.8L41.0 65.7" stroke="#a89b7c" stroke-width="0.5" opacity="0.55"/><path d="M41.3 62.9L42.4 63.9" stroke="#a89b7c" stroke-width="0.5" opacity="0.55"/><path d="M42.9 61.3L43.9 62.4" stroke="#a89b7c" stroke-width="0.5" opacity="0.55"/><path d="M44.8 59.8L45.7 61.0" stroke="#a89b7c" stroke-width="0.5" opacity="0.55"/><path d="M48.8 57.4L49.5 58.8" stroke="#a89b7c" stroke-width="0.5" opacity="0.55"/><path d="M51.0 56.6L51.5 58.0" stroke="#a89b7c" stroke-width="0.5" opacity="0.55"/><path d="M53.3 56.0L53.6 57.5" stroke="#a89b7c" stroke-width="0.5" opacity="0.55"/><path d="M55.6 55.6L55.8 57.1" stroke="#a89b7c" stroke-width="0.5" opacity="0.55"/></g>
+      <g><path d="M58.0 55.5L58.0 60.5" stroke="#6d6047" stroke-width="2.2" stroke-linecap="butt"/><path d="M58.7 56.3L58.7 61.3" stroke="#c9bb96" stroke-width="1.1" opacity="0.7"/><path d="M69.2 58.5L66.8 62.8" stroke="#6d6047" stroke-width="1.2" stroke-linecap="butt"/><path d="M70.0 59.3L67.5 63.6" stroke="#c9bb96" stroke-width="0.6" opacity="0.7"/><path d="M77.5 66.8L73.2 69.2" stroke="#6d6047" stroke-width="1.2" stroke-linecap="butt"/><path d="M78.2 67.5L73.9 70.0" stroke="#c9bb96" stroke-width="0.6" opacity="0.7"/><path d="M80.5 78.0L75.5 78.0" stroke="#6d6047" stroke-width="2.2" stroke-linecap="butt"/><path d="M81.2 78.8L76.2 78.8" stroke="#c9bb96" stroke-width="1.1" opacity="0.7"/><path d="M77.5 89.2L73.2 86.8" stroke="#6d6047" stroke-width="1.2" stroke-linecap="butt"/><path d="M78.2 90.0L73.9 87.5" stroke="#c9bb96" stroke-width="0.6" opacity="0.7"/><path d="M69.2 97.5L66.8 93.2" stroke="#6d6047" stroke-width="1.2" stroke-linecap="butt"/><path d="M70.0 98.3L67.5 94.0" stroke="#c9bb96" stroke-width="0.6" opacity="0.7"/><path d="M58.0 100.5L58.0 95.5" stroke="#6d6047" stroke-width="2.2" stroke-linecap="butt"/><path d="M58.7 101.3L58.7 96.3" stroke="#c9bb96" stroke-width="1.1" opacity="0.7"/><path d="M46.8 97.5L49.2 93.2" stroke="#6d6047" stroke-width="1.2" stroke-linecap="butt"/><path d="M47.5 98.3L50.0 94.0" stroke="#c9bb96" stroke-width="0.6" opacity="0.7"/><path d="M38.5 89.2L42.8 86.8" stroke="#6d6047" stroke-width="1.2" stroke-linecap="butt"/><path d="M39.2 90.0L43.5 87.5" stroke="#c9bb96" stroke-width="0.6" opacity="0.7"/><path d="M35.5 78.0L40.5 78.0" stroke="#6d6047" stroke-width="2.2" stroke-linecap="butt"/><path d="M36.2 78.8L41.2 78.8" stroke="#c9bb96" stroke-width="1.1" opacity="0.7"/><path d="M38.5 66.8L42.8 69.2" stroke="#6d6047" stroke-width="1.2" stroke-linecap="butt"/><path d="M39.2 67.5L43.5 70.0" stroke="#c9bb96" stroke-width="0.6" opacity="0.7"/><path d="M46.7 58.5L49.2 62.8" stroke="#6d6047" stroke-width="1.2" stroke-linecap="butt"/><path d="M47.4 59.3L49.9 63.6" stroke="#c9bb96" stroke-width="0.6" opacity="0.7"/></g>
+      <g stroke="#3f3a2e" stroke-linecap="round" opacity="0.2" transform="translate(1 1.4)">
+        <path d="M58 78 L45 69" stroke-width="2.4"/><path d="M58 78 L71 65" stroke-width="1.9"/>
       </g>
       <g stroke="#3f3a2e" stroke-linecap="round">
-        <path d="M58 76 L45.5 66.5" stroke-width="2.2"/>
-        <path d="M58 76 L70 62" stroke-width="1.8"/>
-        <path d="M58 76 L62 90" stroke-width="0.8" stroke="#8a3f36"/>
+        <path d="M58 78 L45 69" stroke-width="2.6"/>
+        <path d="M58 78 L71 65" stroke-width="2"/>
+        <path d="M58 78 L62 94" stroke-width="0.8" stroke="#8a3f36"/>
+        <path d="M58 78 L56 74" stroke-width="1.6" stroke="#8a3f36"/>
       </g>
-      <circle cx="58" cy="76" r="2" fill="#3f3a2e"/>
-      <!-- the crystal: a soft band of window, and the hard line at its edge -->
-      <path d="M38 62 q16 -12 34 -5" fill="none" stroke="#ffffff" stroke-width="7" opacity="0.16" stroke-linecap="round"/>
-      <path d="M39 60 q16 -11 33 -4" fill="none" stroke="#ffffff" stroke-width="1.4" opacity="0.35" stroke-linecap="round"/>
+      <circle cx="58" cy="78" r="2" fill="#3f3a2e"/>
+      <!-- the crystal: the window a long way off, lying across the glass -->
+      <path d="M38 66 q16 -12 34 -5" fill="none" stroke="#ffffff" stroke-width="8" opacity="0.14" stroke-linecap="round"/>
+      <path d="M39 64 q16 -11 33 -4" fill="none" stroke="#ffffff" stroke-width="1.4" opacity="0.32" stroke-linecap="round"/>
 `,
   },
 ];
