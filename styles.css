@@ -568,9 +568,19 @@
     color: #2e2b26; line-height: 1;
     /* the stamp rides the bead's rotation on purpose: a tilted letter is a
        dropped bead, an upright one is a bead someone placed. It carries the
-       turn on its own now, because the body below it must not. */
-    transform: rotate(var(--rot, 0deg));
+       turn on its own now, because the body below it must not.
+       The nudge after it centres the INK. Flexbox centres the line box, and a
+       cap sits high inside that box by 0.069em (measured off Courier Prime's
+       own metrics), so every stamp on this desk used to ride high on its bead.
+       It comes after the rotate deliberately: the offset is along the letter's
+       own baseline, so it has to turn with the letter. */
+    transform: rotate(var(--rot, 0deg)) translateY(0.069em);
   }
+  /* the two glyphs that are not letters sit differently in the line box again,
+     and they fall back to whatever face has them, so they get their own
+     measurements rather than the letters' */
+  .bead-scatter.disc.sym-heart span { transform: rotate(var(--rot, 0deg)) translateY(0.143em); }
+  .bead-scatter.disc.sym-star span { transform: rotate(var(--rot, 0deg)) translateY(0.045em); }
   /* and the same disc landed on its rim. A face-up-only spill is a spill that
      never happened, and the edge-on silhouette is the cheapest thing on this
      desk that says "these are real objects": a flat pill with the light along

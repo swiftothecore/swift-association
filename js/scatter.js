@@ -250,7 +250,12 @@ function makeBead(r, x, y, o = {}) {
     el.style.setProperty("--hole", c.hole);
   } else if (kind === "disc") {
     const span = document.createElement("span");
-    span.textContent = o.glyph || pick(r, LOOSE_GLYPHS);
+    const glyph = o.glyph || pick(r, LOOSE_GLYPHS);
+    span.textContent = glyph;
+    // The heart and the star are not letters and do not sit in the line box
+    // like one, so they carry their own centring (see .sym-* in styles.css).
+    if (glyph === "\u2665") el.classList.add("sym-heart");
+    else if (glyph === "\u2605") el.classList.add("sym-star");
     el.appendChild(span);
   }
   stats.beads++;
