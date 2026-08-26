@@ -8,8 +8,6 @@ I’m currently working on a game inspired by ELLE’s Song Association. Where, 
 
 *pretty sure that's Taylor Swift*
 
-A round is one word. You get 10 seconds to name a song containing it, or to type a lyric line containing it, and every word you land adds a bead to the friendship bracelet you finish the run with.
-
 The game is still a work in progress and is by no means 'done', but it is quite extensive and very playable right now.
 
 ## Standout features
@@ -20,7 +18,7 @@ The game is still a work in progress and is by no means 'done', but it is quite 
 - Endless mode
 - Album focus mode so you can concentrate on ONE album only
 - Daily challenge
-- The ability to make your own **custom modes**, including a floating word rarity that climbs and falls with how you play
+- The ability to make your own **custom modes**
 - A guest shelf of other artists' catalogues, played on their own and never mixed into Taylor's
 - A shelf of bonus mini-games, including one where you hunt a swapped word in a real lyric
 - Ruthless Game, where the song writes itself out a word a second from a section you pick, and your time is the score
@@ -30,7 +28,7 @@ The game is still a work in progress and is by no means 'done', but it is quite 
 
 - Challenges mode with 32 challenges, most with a harder "dark side" to unlock, plus a super-hard tier unlocked through mastery
 - A skills and mastery system full of rewards
-- Over 200 achievements, graded by difficulty in the finish of the charm itself, one of which is pinned as a goal you can jump straight into
+- Over 200 achievements, graded by difficulty in the finish of the charm itself
 - Fifteen stickers earned by noticing things rather than by scoring, shown as blank silhouettes until you work out what each one wants
 
 **The details**
@@ -38,13 +36,10 @@ The game is still a work in progress and is by no means 'done', but it is quite 
 - Every era, plus holiday, movie, collaboration and some unreleased songs
 - Unique UI with a notebook theme, and lots and lots of easter eggs
 - Lyricist mode, where you answer by typing a lyric line instead of a song title
-- Typed titles forgive a slip, so one wrong letter or two swapped ones still names the song
-- A streak penciled in the margin that bursts across the page as that many copies of itself, climbing from pencil to your era's own pen to gold
+- A streak penciled in the margin that bursts across the page, climbing from pencil to your era's own pen to gold
 - Beads that record how a page went and not just whether: sanded for a hint taken, pearl for a line written from memory, clear for one you missed
 - Ability to save your friendship bracelet, or a bonus run's record sleeve, as a PNG to share your run!
 - A companion lyric searcher, [Swift To The Lyric](https://swiftassociation.com/search), for searching every line of every song
-- Every panel has its own link, so /records or /charms opens straight onto that page
-- Opt-in sound effects
 - Installable as a phone or desktop app and works offline once loaded
 
 **There are many features in the works as we speak:**
