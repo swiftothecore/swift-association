@@ -149,6 +149,11 @@ const RECALL_PERFECT = 0.9;
 // The top rung of the ladder: recalling a word-perfect block this many real lines long
 // is a "whole verse" (+3) — the loudest reward, and the Overachiever trigger.
 const WHOLE_VERSE_LINES = 4;
+// The lavender sprig sticker: how long one page has to be sat on before the answer counts as
+// pressed rather than played. Ninety seconds is well past any clock the game ships, so in
+// practice it is a Relaxed or clockless-Custom feat, which is the point: the flower is what got
+// left between the pages while somebody thought about it.
+const STICKER_LINGER_SECONDS = 90;
 // How far from an occurrence of the page's word a typed fragment may sit and still light
 // the live verse gauge. The gauge is a climb, so it has to light BEFORE the word is typed
 // or it goes dark for every line that ends on the word — but every extra word of reach is
@@ -4496,11 +4501,20 @@ let runSoundOn = false;
 function foldRunStickers() {
   if (devNoLog) return;
   if (runSoundOn && settings.sound) earnSticker("boombox");
-  // Lavender sprig — a run on the clock that never once reached its tense final seconds.
-  // gameHitRedZone is the same reading the tension vignette and the countdown tick work off.
-  // The seconds check excludes Relaxed and any clockless Custom preset, where there is no clock
-  // to stay away from and the sticker would be free.
-  if (currentMode.seconds > 0 && !gameHitRedZone) earnSticker("lavender-sprig");
+}
+
+// Lavender sprig — a page answered after sitting on it for STICKER_LINGER_SECONDS or more. A
+// pressed flower is something left between the pages, so the sticker asks for exactly that: the
+// page nobody rushed. Read off the same stopwatch every mode keeps, so a clockless Relaxed or
+// Custom run is where it will land, and no catalogue gate, because lingering means the same
+// thing on a guest's records as on Taylor's.
+//
+// This replaced "finish a timed run without hitting the red zone", which asked the identical
+// question to the charm I Kept Calm (`finish-without-timer-red-zone`). Do not put that trigger
+// back.
+function checkLingerSticker(spent) {
+  if (devNoLog) return;
+  if (spent >= STICKER_LINGER_SECONDS) earnSticker("lavender-sprig");
 }
 
 // Champagne coupe — a run that landed exactly one page short of the best already on that board.
@@ -16883,6 +16897,9 @@ function submitAnswer(song, isTimeout) {
   {
     const spent = (performance.now() - roundStart) / 1000;
     roundTimes[round - 1] = currentMode.seconds > 0 ? Math.min(spent, currentMode.seconds) : spent;
+    // Lavender sprig rides the same reading. It sits here rather than in checkAnswerStickers
+    // because that runs before the stopwatch is stopped, and it wants the raw figure.
+    if (correct) checkLingerSticker(roundTimes[round - 1]);
   }
   // Just Like That — three correct answers in a row, each inside a second. Off the page stopwatch
   // rather than the countdown, so Relaxed can win it too: a second is a second with or without a
@@ -22245,9 +22262,9 @@ function buildDevApi() {
       open: () => openKeepsakes(),                             // jump to the polaroid wall
       reset: () => { resetKeepsakes(); refreshKeepsakes(); updateKeepsakesNav(); },
     },
-    // Stickers, the die-cut vinyl set. No triggers are wired yet, so this IS the only way to
-    // earn one: `earn` is the real path (toast + chime included) and the rest write the store
-    // directly, for eyeballing the locked silhouette against the finished sticker.
+    // Stickers, the die-cut vinyl set. `earn` is the real path (toast + chime included) and the
+    // rest write the store directly, for eyeballing the locked silhouette against the finished
+    // sticker without having to hit the trigger.
     stickers: {
       list: () => { const e = loadStickers(); return STICKERS.map((s) => ({ id: s.id, name: s.name, era: s.era, earned: !!e[s.id], at: e[s.id] || null })); },
       state: (id) => (STICKER_BY_ID[id] ? (stickerEarned(id) ? "earned" : "locked") : "unknown sticker: " + id),
@@ -22291,6 +22308,21 @@ function buildDevApi() {
       // them. This is the audit for that sticker: the list is never written down anywhere, so if
       // a lyric correction moves it, the sticker moves with it and this is what shows you.
       lonely: () => playableWords.filter((w) => songsContainingWord(w, false).length === 1),
+      // The lavender sprig wants STICKER_LINGER_SECONDS on a single page, which is a minute and
+      // a half of sitting on your hands per attempt. `sat` is the live figure off the page
+      // stopwatch; `linger` ages that stopwatch so the next correct answer reads as pressed.
+      // Under a clock shorter than the threshold the recorded time is capped at the round
+      // length, so this only lands in Relaxed or a long/clockless Custom preset, which is the
+      // trigger being honest rather than the tool failing.
+      sat: () => +((performance.now() - roundStart) / 1000).toFixed(1),
+      linger: () => {
+        if (!screens.game.classList.contains("active") || roundLocked) return "no live page";
+        roundStart = performance.now() - (STICKER_LINGER_SECONDS + 1) * 1000;
+        const capped = currentMode.seconds > 0 && currentMode.seconds < STICKER_LINGER_SECONDS;
+        return capped
+          ? `page aged, but this mode caps the stopwatch at ${currentMode.seconds}s — the sprig cannot land here`
+          : "page aged: answer it correctly for the sprig";
+      },
       // Every From The Vault track the live corpus is carrying, for the vault door.
       vault: () => allSongs.filter((x) => x.vault).map((x) => x.title),
       // The bust wants four consecutive lines of one real section, sung. Finding a page where
