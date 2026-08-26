@@ -554,8 +554,11 @@
   /* mug steam - four wisps drifting up, each starting a beat after the last so
      the column never pulses as one object. The keyframes own opacity outright,
      which is why a wisp's weight is set as --wisp rather than as an opacity on
-     the path: an attribute there would simply be overwritten every frame. */
-  .desk-steam path { --wisp: 0.55; animation: deskSteam 4.4s ease-in-out infinite; transform-origin: center bottom; }
+     the path: an attribute there would simply be overwritten every frame.
+     `backwards` is load-bearing: without it a delayed wisp sits at the SVG
+     default opacity of 1 for its whole delay, so every reload flashes the
+     column at full strength and then snaps it out as each animation starts. */
+  .desk-steam path { --wisp: 0.55; animation: deskSteam 4.4s ease-in-out infinite backwards; transform-origin: center bottom; }
   .desk-steam path:nth-child(2) { --wisp: 0.4; animation-delay: 1.1s; }
   .desk-steam path:nth-child(3) { --wisp: 0.48; animation-delay: 2.2s; }
   .desk-steam path:nth-child(4) { --wisp: 0.34; animation-delay: 3.3s; }
