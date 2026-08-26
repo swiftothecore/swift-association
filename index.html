@@ -792,19 +792,21 @@ if (location.pathname.endsWith('/index.html')) {
            harder shadow that seats the china on the cork under it. -->
       <g filter="url(#mgSoft)" opacity="0.44">
         <circle cx="73.5" cy="94" r="43.2" fill="#4a3316"/>
-        <path d="M113 64.5 C135 60.5 142.5 77 142 94 C142.5 111 135 127.5 113 123.5 L113 109.5 C126 111.5 131 104 131 94 C131 84 126 76.5 113 78.5 Z" fill="#4a3316"/>
+        <path d="M99 70 C129 64 142.5 76 142 94 C142.5 112 129 124 99 118 L99 108 C123 112 131 104 131 94 C131 84 123 76 99 80 Z" fill="#4a3316"/>
       </g>
       <circle cx="71.6" cy="91.8" r="44.6" fill="#3f2b12" opacity="0.4" filter="url(#mgHaze)"/>
 
       <!-- handle: a C-loop with a real hole in it. Drawn as a closed contour
            rather than a fat stroke, because from directly above the giveaway
            that a handle is a handle is the crescent of cork showing through it,
-           and the left end tucks under the rim so the join never has to be
-           drawn. -->
-      <path d="M110 60.5 C132 56.5 139.5 73 139 90 C139.5 107 132 123.5 110 119.5 L110 105.5 C123 107.5 128 100 128 90 C128 80 123 72.5 110 74.5 Z" fill="url(#mgHandle)" stroke="#a39478" stroke-width="0.9" stroke-linejoin="round"/>
-      <path d="M112 67.5 C129 64.5 133.8 78 133.5 90 C133.8 102 129 115.5 112 112.5" fill="none" stroke="url(#mgGloss)" stroke-width="3.4" stroke-linecap="round"/>
-      <path d="M116 117.4 C130 113.4 135.6 102 135.2 93" fill="none" stroke="#9b8c6c" stroke-width="1.8" stroke-linecap="round" opacity="0.3"/>
-      <path d="M113 75.6 C122.5 75.4 129 82 129 90 C129 98 122.5 104.6 113 104.4" fill="none" stroke="#8d7e63" stroke-width="1.1" stroke-linecap="round" opacity="0.4"/>
+           and the roots run in as far as x=96 so the body swallows them. That
+           last number is load-bearing: the circle is only 44 wide, so a root
+           parked at the rim's widest point still hangs clear of the wall at the
+           height it actually meets it, and the handle floats. -->
+      <path d="M96 66 C126 60 139.5 72 139 90 C139.5 108 126 120 96 114 L96 104 C120 108 128 100 128 90 C128 80 120 72 96 76 Z" fill="url(#mgHandle)" stroke="#a39478" stroke-width="0.9" stroke-linejoin="round"/>
+      <path d="M100 70 C124 66 133.8 78 133.5 90 C133.8 102 124 114 100 110" fill="none" stroke="url(#mgGloss)" stroke-width="3.4" stroke-linecap="round"/>
+      <path d="M110 112 C129 108.6 137 100 136.8 92" fill="none" stroke="#9b8c6c" stroke-width="1.8" stroke-linecap="round" opacity="0.3"/>
+      <path d="M104 77 C121 75 127 81.5 127 90 C127 98.5 121 105 104 103" fill="none" stroke="#8d7e63" stroke-width="1.1" stroke-linecap="round" opacity="0.4"/>
 
       <!-- the china: rim band, inner wall falling into shadow, then the brew -->
       <circle cx="70" cy="90" r="44" fill="url(#mgRim)" stroke="#a2937a" stroke-width="1"/>
