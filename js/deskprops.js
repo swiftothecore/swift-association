@@ -481,28 +481,44 @@ export const DESK_PROPS = [
     // clean factory cut, which is what makes a torn scrap read as torn.
     id: "scrap", w: 176, h: 126,
     svg: `
-      <path d="M4 6 L150 4 L146 22 L162 40 L150 58 L166 76 L152 96 L160 114
-               L118 112 L96 120 L62 110 L38 120 L10 108 Z"
-            fill="#f3ecd6" stroke="#d6cbac" stroke-width="0.9" stroke-linejoin="round"/>
-      <!-- the torn edges get a paler lip: the fibre pulled through the sizing -->
-      <path d="M150 4 L146 22 L162 40 L150 58 L166 76 L152 96 L160 114 L118 112 L96 120 L62 110 L38 120 L10 108"
-            fill="none" stroke="#fffaea" stroke-width="1.8" opacity="0.75" stroke-linejoin="round"/>
-      <!-- the page's own furniture, cut off mid-scrap -->
-      <path d="M26 2 L24 116" fill="none" stroke="#b23a3f" stroke-width="1.1" opacity="0.5"/>
-      <g fill="none" stroke="#93a0bd" stroke-width="0.9" opacity="0.5">
-        <path d="M6 30 H155"/><path d="M6 56 H152"/><path d="M6 82 H157"/>
+      <defs>
+        ${grain("dpScrFib", "0.9 0.35", 5, [0.55, 0.5, 0.36], 0.42)}
+        ${rough("dpScrEdge", "0.16 0.12", 1.5, 13)}
+      </defs>
+      <!-- A corner torn off a page. Two clean factory edges at the top and
+           left, and two torn ones: a real tear runs mostly straight and
+           wanders by a fibre or two, where the old one zigzagged evenly enough
+           to read as a pennant. -->
+      <g filter="url(#dpScrEdge)">
+        <path d="M4 6 L152 3 L154.7 3.5 L155.3 10.1 L156.1 16.7 L154.4 22.9 L156.6 29.7 L152.2 35.5 L150.4 42.5 L152.6 47.8 L156.3 52.5 L154.5 59.0 L160.5 62.9 L159.7 69.2 L160.1 73.0 L161.6 79.6 L159.1 84.8 L154.8 89.4 L157.1 96.2 L153.5 101.1 L148.6 105.5 L149.9 111.4 L143.4 111.2 L137.1 112.6 L130.4 110.8 L124.5 116.0 L118.0 116.3 L112.7 113.7 L107.2 112.9 L101.7 112.2 L95.7 115.1 L90.3 113.8 L85.3 109.0 L79.4 111.8 L73.0 106.0 L68.2 111.0 L62.9 114.4 L56.2 111.7 L51.3 116.4 L44.9 115.0 L38.8 114.7 L34.9 118.3 L29.4 116.5 L24.5 113.5 L20.7 108.6 L15.2 106.6 L9.0 106.0 Z" fill="#f3ecd6" stroke="#d6cbac" stroke-width="0.8" stroke-linejoin="round"/>
+        <path d="M4 6 L152 3 L154.7 3.5 L155.3 10.1 L156.1 16.7 L154.4 22.9 L156.6 29.7 L152.2 35.5 L150.4 42.5 L152.6 47.8 L156.3 52.5 L154.5 59.0 L160.5 62.9 L159.7 69.2 L160.1 73.0 L161.6 79.6 L159.1 84.8 L154.8 89.4 L157.1 96.2 L153.5 101.1 L148.6 105.5 L149.9 111.4 L143.4 111.2 L137.1 112.6 L130.4 110.8 L124.5 116.0 L118.0 116.3 L112.7 113.7 L107.2 112.9 L101.7 112.2 L95.7 115.1 L90.3 113.8 L85.3 109.0 L79.4 111.8 L73.0 106.0 L68.2 111.0 L62.9 114.4 L56.2 111.7 L51.3 116.4 L44.9 115.0 L38.8 114.7 L34.9 118.3 L29.4 116.5 L24.5 113.5 L20.7 108.6 L15.2 106.6 L9.0 106.0 Z" fill="url(#dpScrFib)" opacity="0.35"/>
+        <!-- the torn edges only: the lip of fibre pulled through the sizing -->
+        <path d="M152 3 L154.7 3.5 L155.3 10.1 L156.1 16.7 L154.4 22.9 L156.6 29.7 L152.2 35.5 L150.4 42.5 L152.6 47.8 L156.3 52.5 L154.5 59.0 L160.5 62.9 L159.7 69.2 L160.1 73.0 L161.6 79.6 L159.1 84.8 L154.8 89.4 L157.1 96.2 L153.5 101.1 L148.6 105.5 L149.9 111.4 L143.4 111.2 L137.1 112.6 L130.4 110.8 L124.5 116.0 L118.0 116.3 L112.7 113.7 L107.2 112.9 L101.7 112.2 L95.7 115.1 L90.3 113.8 L85.3 109.0 L79.4 111.8 L73.0 106.0 L68.2 111.0 L62.9 114.4 L56.2 111.7 L51.3 116.4 L44.9 115.0 L38.8 114.7 L34.9 118.3 L29.4 116.5 L24.5 113.5 L20.7 108.6 L15.2 106.6 L9.0 106.0" fill="none" stroke="#fffaea" stroke-width="1.6" opacity="0.8" stroke-linejoin="round"/>
       </g>
-      <!-- two lines of pencil, the second struck out hard enough to dent -->
-      <g fill="none" stroke="#5c5340" stroke-width="1.5" stroke-linecap="round" opacity="0.65">
-        <path d="M34 26 q7 -6 13 0 q5 6 11 0 q6 -6 12 1 q5 5 12 -1 q7 -5 13 1"/>
-        <path d="M110 26 q6 -5 12 0 q5 5 11 -1"/>
-        <path d="M34 52 q8 -6 14 1 q5 6 12 -1 q7 -6 13 1 q6 6 13 -1 q7 -6 14 1"/>
+      <!-- the page's own furniture, running slightly off square because the
+           corner was torn askew -->
+      <g transform="rotate(-1.2 80 60)">
+        <path d="M26 1 L23 118" fill="none" stroke="#b23a3f" stroke-width="1.1" opacity="0.45"/>
+        <g fill="none" stroke="#93a0bd" stroke-width="0.9" opacity="0.45">
+          <path d="M5 30 H150"/><path d="M5 56 H148"/><path d="M5 82 H152"/>
+        </g>
       </g>
-      <path d="M30 50 q40 5 78 -2" fill="none" stroke="#5c5340" stroke-width="2" opacity="0.7" stroke-linecap="round"/>
-      <path d="M32 54 q42 4 76 -3" fill="none" stroke="#5c5340" stroke-width="1.3" opacity="0.5" stroke-linecap="round"/>
-      <!-- and one word circled in red, kept -->
-      <path d="M40 88 q6 -5 12 0 q5 5 12 -1" fill="none" stroke="#5c5340" stroke-width="1.5" opacity="0.65" stroke-linecap="round"/>
-      <ellipse cx="52" cy="84" rx="22" ry="12" fill="none" stroke="#b23a3f" stroke-width="1.4" opacity="0.7" transform="rotate(-4 52 84)"/>`,
+      <!-- two lines of pencil, one of them struck out hard enough to dent the
+           paper, and one word kept -->
+      <g fill="none" stroke="#5c5340" stroke-linecap="round">
+        <path d="M34 26 q7 -6 13 0 q5 6 11 0 q6 -6 12 1 q5 5 12 -1 q7 -5 13 1" stroke-width="1.5" opacity="0.62"/>
+        <path d="M110 26 q6 -5 12 0 q5 5 11 -1" stroke-width="1.3" opacity="0.5"/>
+        <path d="M34 52 q8 -6 14 1 q5 6 12 -1 q7 -6 13 1 q6 6 13 -1 q7 -6 14 1" stroke-width="1.6" opacity="0.66"/>
+        <path d="M30 50 q40 5 78 -2" stroke-width="2.1" opacity="0.7"/>
+        <path d="M32 54.5 q42 4 76 -3" stroke-width="1.2" opacity="0.45"/>
+        <path d="M40 88 q6 -5 12 0 q5 5 12 -1" stroke-width="1.5" opacity="0.62"/>
+      </g>
+      <!-- the dent the struck-out line left, catching the lamp on its far side -->
+      <path d="M31 51.6 q40 5 78 -2" fill="none" stroke="#fffaea" stroke-width="1.1" opacity="0.5"/>
+      <ellipse cx="52" cy="84" rx="22" ry="12" fill="none" stroke="#b23a3f" stroke-width="1.4"
+               opacity="0.7" transform="rotate(-4 52 84)"/>
+      <path d="M31 86 q3 10 14 12" fill="none" stroke="#b23a3f" stroke-width="1.1" opacity="0.5" stroke-linecap="round"/>
+`,
   },
   {
     // A floss skein spool on its side, mid-unwind. The card bobbin is the giveaway
@@ -690,45 +706,44 @@ export const DESK_PROPS = [
     id: "ruler", w: 74, h: 420, narrow: true, maxRot: 5,
     svg: `
       <defs>
-        <linearGradient id="dpBox" x1="0" y1="0" x2="1" y2="0">
-          <stop offset="0" stop-color="#e9cf99"/><stop offset="0.35" stop-color="#dcbd7f"/>
-          <stop offset="0.8" stop-color="#c9a463"/><stop offset="1" stop-color="#a8863f"/>
-        </linearGradient>
+        ${bar("dpRulFace", ["#f2dcab", "#e0c184", "#c19c56", "#e8d09a"])}
+        ${bar("dpRulBrass", ["#f2e0ab", "#c9a94f", "#8a6f28", "#dcc47f"])}
+        ${grain("dpRulGrain", "0.014 0.9", 6, [0.45, 0.34, 0.16], 0.5)}
+        <clipPath id="dpRulBody"><rect x="18" y="6" width="40" height="408" rx="3"/></clipPath>
       </defs>
-      <rect x="18" y="6" width="40" height="408" rx="3" fill="url(#dpBox)" stroke="#94743a" stroke-width="1"/>
-      <!-- the brass measuring edge down the left -->
-      <rect x="18" y="6" width="5" height="408" fill="#c2a05c" stroke="#8f7233" stroke-width="0.7"/>
-      <rect x="19" y="6" width="1.6" height="408" fill="#f0dda9" opacity="0.6"/>
-      <!-- grain: two long figures running the length -->
-      <g fill="none" stroke="#a8863f" stroke-width="0.8" opacity="0.35">
-        <path d="M33 10 q4 100 -1 200 q-4 100 1 200"/>
-        <path d="M46 12 q-3 90 2 190 q4 96 -2 208"/>
+      <!-- A boxwood ruler with a brass measuring edge. It was a flat yellow
+           rectangle: what it needed was the section (bar() across the width,
+           so the near edge is lit and the far one picks the desk back up),
+           grain running the length under the varnish, and the wear a ruler
+           actually collects at the nought end. -->
+      <rect x="18" y="6" width="40" height="408" rx="3" fill="url(#dpRulFace)" stroke="#94743a" stroke-width="1"/>
+      <g clip-path="url(#dpRulBody)">
+        <rect x="18" y="6" width="40" height="408" fill="url(#dpRulGrain)" opacity="0.4"/>
+        <!-- two long figures in the wood, and the ray fleck across them -->
+        <g fill="none" stroke="#a8863f" stroke-width="0.9" opacity="0.3">
+          <path d="M33 4 q5 100 -1 200 q-5 100 1 214"/>
+          <path d="M47 4 q-4 90 2 190 q5 96 -3 224"/>
+        </g>
+        <g fill="none" stroke="#f6e6bd" stroke-width="0.7" opacity="0.35">
+          <path d="M26 60 q10 6 24 2"/><path d="M26 230 q12 5 26 1"/>
+        </g>
+        <!-- the varnish, brightest just in from the near edge -->
+        <rect x="25" y="6" width="7" height="408" fill="#fff6d6" opacity="0.16"/>
       </g>
-      <!-- graduations: a long mark every centimetre, short between, fading out at
-           the worn end -->
-      <g stroke="#5f4a22" stroke-linecap="butt">
-        <g stroke-width="1.1" opacity="0.7">
-          <path d="M23 34 h16"/><path d="M23 60 h16"/><path d="M23 86 h16"/><path d="M23 112 h16"/>
-          <path d="M23 138 h16"/><path d="M23 164 h16"/><path d="M23 190 h16"/><path d="M23 216 h16"/>
-          <path d="M23 242 h16"/><path d="M23 268 h16"/><path d="M23 294 h16"/>
-        </g>
-        <g stroke-width="1.1" opacity="0.3">
-          <path d="M23 320 h16"/><path d="M23 346 h16"/><path d="M23 372 h16"/>
-        </g>
-        <g stroke-width="0.8" opacity="0.45">
-          <path d="M23 47 h9"/><path d="M23 73 h9"/><path d="M23 99 h9"/><path d="M23 125 h9"/>
-          <path d="M23 151 h9"/><path d="M23 177 h9"/><path d="M23 203 h9"/><path d="M23 229 h9"/>
-          <path d="M23 255 h9"/><path d="M23 281 h9"/>
-        </g>
-        <g stroke-width="0.8" opacity="0.2">
-          <path d="M23 307 h9"/><path d="M23 333 h9"/><path d="M23 359 h9"/>
-        </g>
+      <!-- the brass edge, its own little section: bright lip, body, dark seat -->
+      <rect x="18" y="6" width="5.4" height="408" fill="url(#dpRulBrass)"/>
+      <rect x="18.6" y="6" width="1.3" height="408" fill="#fbeec2" opacity="0.55"/>
+      <rect x="22.6" y="6" width="0.9" height="408" fill="#6f5820" opacity="0.4"/>
+      <!-- graduations, worn away at the end that gets used -->
+      <g stroke="#5f4a22" stroke-linecap="butt" fill="none">
+        <path d="M23 14.0 h15" stroke-width="1.1" opacity="0.72"/><path d="M23 17.0 h6" stroke-width="0.7" opacity="0.45"/><path d="M23 20.0 h6" stroke-width="0.7" opacity="0.45"/><path d="M23 23.0 h6" stroke-width="0.7" opacity="0.45"/><path d="M23 26.0 h6" stroke-width="0.7" opacity="0.45"/><path d="M23 29.0 h10" stroke-width="1" opacity="0.61"/><path d="M23 32.0 h6" stroke-width="0.7" opacity="0.45"/><path d="M23 35.0 h6" stroke-width="0.7" opacity="0.45"/><path d="M23 38.0 h6" stroke-width="0.7" opacity="0.45"/><path d="M23 41.0 h6" stroke-width="0.7" opacity="0.45"/><path d="M23 44.0 h15" stroke-width="1.1" opacity="0.72"/><path d="M23 47.0 h6" stroke-width="0.7" opacity="0.45"/><path d="M23 50.0 h6" stroke-width="0.7" opacity="0.45"/><path d="M23 53.0 h6" stroke-width="0.7" opacity="0.45"/><path d="M23 56.0 h6" stroke-width="0.7" opacity="0.45"/><path d="M23 59.0 h10" stroke-width="1" opacity="0.61"/><path d="M23 62.0 h6" stroke-width="0.7" opacity="0.45"/><path d="M23 65.0 h6" stroke-width="0.7" opacity="0.45"/><path d="M23 68.0 h6" stroke-width="0.7" opacity="0.45"/><path d="M23 71.0 h6" stroke-width="0.7" opacity="0.45"/><path d="M23 74.0 h15" stroke-width="1.1" opacity="0.72"/><path d="M23 77.0 h6" stroke-width="0.7" opacity="0.45"/><path d="M23 80.0 h6" stroke-width="0.7" opacity="0.45"/><path d="M23 83.0 h6" stroke-width="0.7" opacity="0.45"/><path d="M23 86.0 h6" stroke-width="0.7" opacity="0.45"/><path d="M23 89.0 h10" stroke-width="1" opacity="0.61"/><path d="M23 92.0 h6" stroke-width="0.7" opacity="0.45"/><path d="M23 95.0 h6" stroke-width="0.7" opacity="0.45"/><path d="M23 98.0 h6" stroke-width="0.7" opacity="0.45"/><path d="M23 101.0 h6" stroke-width="0.7" opacity="0.45"/><path d="M23 104.0 h15" stroke-width="1.1" opacity="0.72"/><path d="M23 107.0 h6" stroke-width="0.7" opacity="0.45"/><path d="M23 110.0 h6" stroke-width="0.7" opacity="0.45"/><path d="M23 113.0 h6" stroke-width="0.7" opacity="0.45"/><path d="M23 116.0 h6" stroke-width="0.7" opacity="0.45"/><path d="M23 119.0 h10" stroke-width="1" opacity="0.61"/><path d="M23 122.0 h6" stroke-width="0.7" opacity="0.45"/><path d="M23 125.0 h6" stroke-width="0.7" opacity="0.45"/><path d="M23 128.0 h6" stroke-width="0.7" opacity="0.45"/><path d="M23 131.0 h6" stroke-width="0.7" opacity="0.45"/><path d="M23 134.0 h15" stroke-width="1.1" opacity="0.72"/><path d="M23 137.0 h6" stroke-width="0.7" opacity="0.45"/><path d="M23 140.0 h6" stroke-width="0.7" opacity="0.45"/><path d="M23 143.0 h6" stroke-width="0.7" opacity="0.45"/><path d="M23 146.0 h6" stroke-width="0.7" opacity="0.45"/><path d="M23 149.0 h10" stroke-width="1" opacity="0.61"/><path d="M23 152.0 h6" stroke-width="0.7" opacity="0.45"/><path d="M23 155.0 h6" stroke-width="0.7" opacity="0.45"/><path d="M23 158.0 h6" stroke-width="0.7" opacity="0.45"/><path d="M23 161.0 h6" stroke-width="0.7" opacity="0.45"/><path d="M23 164.0 h15" stroke-width="1.1" opacity="0.72"/><path d="M23 167.0 h6" stroke-width="0.7" opacity="0.45"/><path d="M23 170.0 h6" stroke-width="0.7" opacity="0.45"/><path d="M23 173.0 h6" stroke-width="0.7" opacity="0.45"/><path d="M23 176.0 h6" stroke-width="0.7" opacity="0.45"/><path d="M23 179.0 h10" stroke-width="1" opacity="0.61"/><path d="M23 182.0 h6" stroke-width="0.7" opacity="0.45"/><path d="M23 185.0 h6" stroke-width="0.7" opacity="0.45"/><path d="M23 188.0 h6" stroke-width="0.7" opacity="0.45"/><path d="M23 191.0 h6" stroke-width="0.7" opacity="0.45"/><path d="M23 194.0 h15" stroke-width="1.1" opacity="0.72"/><path d="M23 197.0 h6" stroke-width="0.7" opacity="0.45"/><path d="M23 200.0 h6" stroke-width="0.7" opacity="0.45"/><path d="M23 203.0 h6" stroke-width="0.7" opacity="0.45"/><path d="M23 206.0 h6" stroke-width="0.7" opacity="0.45"/><path d="M23 209.0 h10" stroke-width="1" opacity="0.61"/><path d="M23 212.0 h6" stroke-width="0.7" opacity="0.45"/><path d="M23 215.0 h6" stroke-width="0.7" opacity="0.45"/><path d="M23 218.0 h6" stroke-width="0.7" opacity="0.45"/><path d="M23 221.0 h6" stroke-width="0.7" opacity="0.45"/><path d="M23 224.0 h15" stroke-width="1.1" opacity="0.72"/><path d="M23 227.0 h6" stroke-width="0.7" opacity="0.45"/><path d="M23 230.0 h6" stroke-width="0.7" opacity="0.45"/><path d="M23 233.0 h6" stroke-width="0.7" opacity="0.45"/><path d="M23 236.0 h6" stroke-width="0.7" opacity="0.45"/><path d="M23 239.0 h10" stroke-width="1" opacity="0.61"/><path d="M23 242.0 h6" stroke-width="0.7" opacity="0.45"/><path d="M23 245.0 h6" stroke-width="0.7" opacity="0.45"/><path d="M23 248.0 h6" stroke-width="0.7" opacity="0.45"/><path d="M23 251.0 h6" stroke-width="0.7" opacity="0.45"/><path d="M23 254.0 h15" stroke-width="1.1" opacity="0.72"/><path d="M23 257.0 h6" stroke-width="0.7" opacity="0.45"/><path d="M23 260.0 h6" stroke-width="0.7" opacity="0.45"/><path d="M23 263.0 h6" stroke-width="0.7" opacity="0.45"/><path d="M23 266.0 h6" stroke-width="0.7" opacity="0.45"/><path d="M23 269.0 h10" stroke-width="1" opacity="0.61"/><path d="M23 272.0 h6" stroke-width="0.7" opacity="0.45"/><path d="M23 275.0 h6" stroke-width="0.7" opacity="0.45"/><path d="M23 278.0 h6" stroke-width="0.7" opacity="0.45"/><path d="M23 281.0 h6" stroke-width="0.7" opacity="0.45"/><path d="M23 284.0 h15" stroke-width="1.1" opacity="0.72"/><path d="M23 287.0 h6" stroke-width="0.7" opacity="0.45"/><path d="M23 290.0 h6" stroke-width="0.7" opacity="0.45"/><path d="M23 293.0 h6" stroke-width="0.7" opacity="0.45"/><path d="M23 296.0 h6" stroke-width="0.7" opacity="0.45"/><path d="M23 299.0 h10" stroke-width="1" opacity="0.61"/><path d="M23 302.0 h6" stroke-width="0.7" opacity="0.21"/><path d="M23 305.0 h6" stroke-width="0.7" opacity="0.21"/><path d="M23 308.0 h6" stroke-width="0.7" opacity="0.21"/><path d="M23 311.0 h6" stroke-width="0.7" opacity="0.21"/><path d="M23 314.0 h15" stroke-width="1.1" opacity="0.34"/><path d="M23 317.0 h6" stroke-width="0.7" opacity="0.21"/><path d="M23 320.0 h6" stroke-width="0.7" opacity="0.21"/><path d="M23 323.0 h6" stroke-width="0.7" opacity="0.21"/><path d="M23 326.0 h6" stroke-width="0.7" opacity="0.21"/><path d="M23 329.0 h10" stroke-width="1" opacity="0.29"/><path d="M23 332.0 h6" stroke-width="0.7" opacity="0.21"/><path d="M23 335.0 h6" stroke-width="0.7" opacity="0.21"/><path d="M23 338.0 h6" stroke-width="0.7" opacity="0.21"/><path d="M23 341.0 h6" stroke-width="0.7" opacity="0.21"/><path d="M23 344.0 h15" stroke-width="1.1" opacity="0.34"/><path d="M23 347.0 h6" stroke-width="0.7" opacity="0.21"/><path d="M23 350.0 h6" stroke-width="0.7" opacity="0.21"/><path d="M23 353.0 h6" stroke-width="0.7" opacity="0.21"/><path d="M23 356.0 h6" stroke-width="0.7" opacity="0.21"/><path d="M23 359.0 h10" stroke-width="1" opacity="0.29"/><path d="M23 362.0 h6" stroke-width="0.7" opacity="0.21"/><path d="M23 365.0 h6" stroke-width="0.7" opacity="0.21"/><path d="M23 368.0 h6" stroke-width="0.7" opacity="0.21"/><path d="M23 371.0 h6" stroke-width="0.7" opacity="0.21"/><path d="M23 374.0 h15" stroke-width="1.1" opacity="0.34"/><path d="M23 377.0 h6" stroke-width="0.7" opacity="0.21"/><path d="M23 380.0 h6" stroke-width="0.7" opacity="0.21"/><path d="M23 383.0 h6" stroke-width="0.7" opacity="0.21"/><path d="M23 386.0 h6" stroke-width="0.7" opacity="0.21"/><path d="M23 389.0 h10" stroke-width="1" opacity="0.29"/><path d="M23 392.0 h6" stroke-width="0.7" opacity="0.21"/><path d="M23 395.0 h6" stroke-width="0.7" opacity="0.21"/><path d="M23 398.0 h6" stroke-width="0.7" opacity="0.21"/><path d="M23 401.0 h6" stroke-width="0.7" opacity="0.21"/><path d="M23 404.0 h15" stroke-width="1.1" opacity="0.34"/>
       </g>
-      <g class="dp-ruler-no" opacity="0.65">
-        <text x="50" y="64">2</text><text x="50" y="116">4</text><text x="50" y="168">6</text>
-        <text x="50" y="220">8</text><text x="50" y="272">10</text>
-      </g>
-      <rect x="18" y="6" width="40" height="408" rx="3" fill="none" stroke="#fff4d8" stroke-width="1" opacity="0.3"/>`,
+      <g class="dp-ruler-no"><text x="48" y="47.4">1</text><text x="48" y="77.4">2</text><text x="48" y="107.4">3</text><text x="48" y="137.4">4</text><text x="48" y="167.4">5</text><text x="48" y="197.4">6</text><text x="48" y="227.4">7</text><text x="48" y="257.4">8</text><text x="48" y="287.4">9</text><text x="48" y="317.4">10</text><text x="48" y="347.4">11</text><text x="48" y="377.4">12</text><text x="48" y="407.4">13</text></g>
+      <!-- the nought end, dinged and inked where every ruler gets it -->
+      <path d="M18 9 q8 -4 16 1" fill="none" stroke="#94743a" stroke-width="1.1" opacity="0.5"/>
+      <path d="M40 14 q6 3 10 -1" fill="none" stroke="#3d5a7a" stroke-width="1.4" opacity="0.3" stroke-linecap="round"/>
+      <path d="M44 372 q5 4 9 0" fill="none" stroke="#5c5340" stroke-width="1.1" opacity="0.25" stroke-linecap="round"/>
+`,
   },
   {
     // A watch, unclasped and taken off: the case face up, the strap folded back
@@ -737,40 +752,87 @@ export const DESK_PROPS = [
     id: "watch", w: 118, h: 178,
     svg: `
       <defs>
-        <linearGradient id="dpLeather" x1="0" y1="0" x2="1" y2="0.2">
-          <stop offset="0" stop-color="#8a5c39"/><stop offset="0.5" stop-color="#6e4529"/><stop offset="1" stop-color="#4e2f1b"/>
-        </linearGradient>
-        <linearGradient id="dpCase" x1="0.2" y1="0" x2="0.8" y2="1">
-          <stop offset="0" stop-color="#f0e2b8"/><stop offset="0.5" stop-color="#cfae68"/><stop offset="1" stop-color="#9c7c37"/>
-        </linearGradient>
+        <linearGradient id="dpWaHideCol" x1="0" y1="0" x2="1" y2="0.25"><stop offset="0" stop-color="#9a663f"/><stop offset="0.42" stop-color="#7a4c2c"/><stop offset="0.8" stop-color="#573320"/><stop offset="1" stop-color="#6b4327"/></linearGradient>
+        ${bar("dpWaCase", ["#f7ecc6", "#d9bb77", "#96762f", "#e6cf95"], 100)}
+        ${bar("dpWaSteel", ["#f4f0e4", "#cdc6b0", "#8d8770", "#ded7c1"], 100)}
+        ${grain("dpWaHide", "1.4 1.1", 15, [0.28, 0.17, 0.09], 0.55)}
+        ${sheen("dpWaGlass", "#ffffff", 0.5)}
+        <clipPath id="dpWaStrap">
+          <path d="M56.0 104.0 C58.6 111.0 62.7 111.9 64.0 126.0 C65.3 140.1 66.4 137.1 60.0 148.0 C53.6 158.9 54.9 157.4 44.0 160.0 C33.1 162.6 33.7 162.4 26.0 156.0 C18.3 149.6 18.1 148.3 20.0 140.0 C21.9 131.7 23.0 132.2 32.0 130.0 C41.0 127.8 42.9 132.0 48.0 133.0" fill="none" stroke="#000" stroke-width="29" stroke-linecap="round"/>
+        </clipPath>
       </defs>
-      <!-- the long half of the strap, curling away below -->
-      <path d="M52 108 q6 34 -8 48 q-16 16 -30 4 q-12 -11 2 -22 q10 -8 22 -4"
-            fill="none" stroke="url(#dpLeather)" stroke-width="17" stroke-linecap="round"/>
-      <!-- stitching down the strap -->
-      <path d="M52 110 q5 32 -8 45 q-14 14 -26 4" fill="none" stroke="#d8bd8e" stroke-width="0.9"
-            stroke-dasharray="3 4" opacity="0.5" stroke-linecap="round"/>
-      <!-- the short half, above, with the buckle -->
-      <path d="M58 44 q4 -22 -6 -30" fill="none" stroke="url(#dpLeather)" stroke-width="16" stroke-linecap="round"/>
-      <rect x="38" y="6" width="30" height="20" rx="4" fill="none" stroke="#b8963f" stroke-width="3.4"/>
-      <path d="M53 16 h16" stroke="#b8963f" stroke-width="2.6" stroke-linecap="round"/>
-      <!-- the case -->
-      <circle cx="58" cy="76" r="30" fill="url(#dpCase)" stroke="#7d6127" stroke-width="1.2"/>
-      <circle cx="58" cy="76" r="24" fill="#f6f0dd" stroke="#b39a5c" stroke-width="1"/>
-      <!-- the crown -->
-      <rect x="86" y="70" width="8" height="12" rx="2.4" fill="#c2a05c" stroke="#7d6127" stroke-width="0.8"/>
-      <!-- dial: four index marks and the hands stopped at ten past ten, the angle
-           every watch is photographed at because it is the one that reads calm -->
-      <g stroke="#6d6047" stroke-width="1.6" stroke-linecap="round">
-        <path d="M58 56 v5"/><path d="M78 76 h-5"/><path d="M58 96 v-5"/><path d="M38 76 h5"/>
+      <!-- A watch taken off and dropped face up. The long half of the strap
+           curls back under itself, which is what a strap does and what the old
+           one did not: the curl crosses its own tail, so it needs the same
+           over-and-under any coil needs. Leather gets its grain and its real
+           slanted stitches; the dashed line it had before was the giveaway
+           that the strap was drawn rather than sewn. -->
+      <g fill="none" stroke-linecap="round">
+        <path d="M56.0 104.0 C58.6 111.0 62.7 111.9 64.0 126.0 C65.3 140.1 66.4 137.1 60.0 148.0 C53.6 158.9 54.9 157.4 44.0 160.0 C33.1 162.6 33.7 162.4 26.0 156.0 C18.3 149.6 18.1 148.3 20.0 140.0 C21.9 131.7 23.0 132.2 32.0 130.0 C41.0 127.8 42.9 132.0 48.0 133.0" stroke="#3f2717" stroke-width="29"/>
+        <path d="M56.0 104.0 C58.6 111.0 62.7 111.9 64.0 126.0 C65.3 140.1 66.4 137.1 60.0 148.0 C53.6 158.9 54.9 157.4 44.0 160.0 C33.1 162.6 33.7 162.4 26.0 156.0 C18.3 149.6 18.1 148.3 20.0 140.0 C21.9 131.7 23.0 132.2 32.0 130.0 C41.0 127.8 42.9 132.0 48.0 133.0" stroke="url(#dpWaHideCol)" stroke-width="25.4"/>
+      </g>
+      <g clip-path="url(#dpWaStrap)">
+        <rect x="0" y="86" width="118" height="92" fill="url(#dpWaHide)" opacity="0.45"/>
+      </g>
+      <g fill="none" stroke-linecap="round">
+        <path d="M47.6 105.7L47.1 108.6M49.8 111.8L49.4 114.8M52.1 118.0L51.6 120.9M54.3 124.1L53.8 127.1M55.4 125.8L53.5 128.2M54.3 132.0L52.4 134.3M53.2 138.1L51.3 140.5M52.1 144.3L50.2 146.6M52.1 143.3L49.2 143.7M47.6 146.7L44.7 147.1M43.2 150.0L40.2 150.5M45.7 151.7L43.4 149.7M40.6 150.6L38.4 148.6M35.6 149.4L33.3 147.5M30.6 148.3L28.3 146.4M33.2 151.1L33.6 148.1M31.5 146.6L31.9 143.6M29.8 142.1L30.3 139.1M24.9 147.0L27.8 146.4M28.3 144.2L31.2 143.6M31.6 141.4L34.6 140.8M35.0 138.6L37.9 138.0M31.7 138.6L34.0 140.5M36.2 139.4L38.5 141.3M40.7 140.3L43.0 142.2M45.1 141.1L47.5 143.0" stroke="#d8bd8e" stroke-width="1" opacity="0.55"/>
+        <path d="M64.9 99.4L64.4 102.3M67.1 105.5L66.7 108.5M69.4 111.7L68.9 114.7M71.6 117.9L71.1 120.8M73.5 129.1L71.6 131.5M72.4 135.3L70.5 137.6M71.3 141.4L69.4 143.8M70.2 147.6L68.3 149.9M63.2 158.0L60.2 158.5M58.7 161.4L55.7 161.8M54.2 164.7L51.2 165.2M41.7 169.6L39.4 167.7M36.7 168.5L34.4 166.6M31.6 167.4L29.4 165.4M26.6 166.3L24.3 164.3M16.0 157.5L16.4 154.5M14.3 153.0L14.7 150.1M12.6 148.6L13.0 145.6M13.1 132.8L16.1 132.2M16.5 130.0L19.4 129.4M19.8 127.2L22.8 126.6M23.2 124.4L26.1 123.8M35.1 120.5L37.4 122.4M39.6 121.3L41.9 123.2M44.1 122.2L46.4 124.1M48.5 123.0L50.9 124.9" stroke="#d8bd8e" stroke-width="1" opacity="0.4"/>
+        <!-- the light along the crown of the leather -->
+        <path d="M56.0 104.0 C58.6 111.0 62.7 111.9 64.0 126.0 C65.3 140.1 66.4 137.1 60.0 148.0 C53.6 158.9 54.9 157.4 44.0 160.0 C33.1 162.6 33.7 162.4 26.0 156.0 C18.3 149.6 18.1 148.3 20.0 140.0 C21.9 131.7 23.0 132.2 32.0 130.0 C41.0 127.8 42.9 132.0 48.0 133.0" stroke="#a8724a" stroke-width="5" opacity="0.3" transform="translate(-1 -1.6)"/>
+      </g>
+      <!-- the tip end, brought over the curl with its shadow under it -->
+      <g fill="none" stroke-linecap="round">
+        <path d="M26.0 156.0 C24.1 150.9 18.1 148.3 20.0 140.0 C21.9 131.7 23.0 132.2 32.0 130.0 C41.0 127.8 42.9 132.0 48.0 133.0" stroke="#2a1a10" stroke-width="30" opacity="0.25"
+              transform="translate(1.6 2.2)"/>
+        <path d="M26.0 156.0 C24.1 150.9 18.1 148.3 20.0 140.0 C21.9 131.7 23.0 132.2 32.0 130.0 C41.0 127.8 42.9 132.0 48.0 133.0" stroke="#3f2717" stroke-width="27.5"/>
+        <path d="M26.0 156.0 C24.1 150.9 18.1 148.3 20.0 140.0 C21.9 131.7 23.0 132.2 32.0 130.0 C41.0 127.8 42.9 132.0 48.0 133.0" stroke="url(#dpWaHideCol)" stroke-width="24"/>
+        <path d="M33.7 154.5L34.1 151.6M31.4 148.5L31.8 145.6M29.2 142.5L29.6 139.6M25.4 145.5L28.3 144.9M29.9 141.7L32.8 141.2M34.4 138.0L37.3 137.4M33.3 138.1L35.6 140.0M39.3 139.2L41.6 141.1M45.3 140.3L47.6 142.2" stroke="#d8bd8e" stroke-width="1" opacity="0.5"/>
+      </g>
+      <!-- the short half and its buckle, the frame seen from above with the
+           pin lying across it -->
+      <g fill="none" stroke-linecap="round">
+        <path d="M58 46 q5 -20 -4 -30" stroke="#3f2717" stroke-width="27.5"/>
+        <path d="M58 46 q5 -20 -4 -30" stroke="url(#dpWaHideCol)" stroke-width="24"/>
+      </g>
+      <!-- the buckle: the frame the strap runs through, with the pin lying
+           across it and the tongue caught in a hole it has worn oval -->
+      <rect x="38" y="2" width="34" height="20" rx="4" fill="none" stroke="url(#dpWaCase)" stroke-width="3"/>
+      <rect x="38" y="2" width="34" height="20" rx="4" fill="none" stroke="#7d6127" stroke-width="0.6" opacity="0.5"/>
+      <path d="M55 12 h16" stroke="url(#dpWaCase)" stroke-width="2.2" stroke-linecap="round"/>
+      <path d="M40 4 v16" stroke="#fff3cd" stroke-width="0.9" opacity="0.5"/>
+      <ellipse cx="57" cy="27" rx="2.6" ry="1.8" fill="#2b1a10" opacity="0.55"/>
+      <ellipse cx="57" cy="36" rx="2.2" ry="1.6" fill="#2b1a10" opacity="0.4"/>
+      <!-- the case: bezel, then the dial sunk inside it -->
+      <circle cx="58" cy="76" r="31" fill="url(#dpWaCase)" stroke="#7d6127" stroke-width="1.1"/>
+      <circle cx="58" cy="76" r="31" fill="url(#dpWaGlass)" opacity="0.25"/>
+      <circle cx="58" cy="76" r="25.5" fill="#8d7743" opacity="0.5"/>
+      <circle cx="58" cy="76" r="24.5" fill="#f7f2e1" stroke="#b39a5c" stroke-width="0.8"/>
+      <rect x="87" y="70" width="9" height="13" rx="2.6" fill="url(#dpWaSteel)" stroke="#7d6127" stroke-width="0.7"/>
+      <path d="M88 71 v11" stroke="#fffaea" stroke-width="0.8" opacity="0.6"/>
+      <!-- dial: the minute track, four indices, and ten past ten -->
+      <circle cx="58" cy="76" r="20.5" fill="none" stroke="#b9ab86" stroke-width="0.5" opacity="0.7"/>
+      <g stroke="#6d6047" stroke-linecap="round">
+        <path d="M58 57.5 v5" stroke-width="1.7"/><path d="M76.5 76 h-5" stroke-width="1.7"/>
+        <path d="M58 94.5 v-5" stroke-width="1.7"/><path d="M39.5 76 h5" stroke-width="1.7"/>
+      </g>
+      <g stroke="#a89b7c" stroke-width="0.7" opacity="0.6">
+        <path d="M71 63.5 l-2.4 2.4"/><path d="M71 88.5 l-2.4 -2.4"/>
+        <path d="M45 88.5 l2.4 -2.4"/><path d="M45 63.5 l2.4 2.4"/>
+      </g>
+      <!-- the hands, with the shadow they drop on the dial under the crystal -->
+      <g stroke="#3f3a2e" stroke-linecap="round" opacity="0.22" transform="translate(1 1.4)">
+        <path d="M58 76 L45.5 66.5" stroke-width="2.2"/><path d="M58 76 L70 62" stroke-width="1.8"/>
       </g>
       <g stroke="#3f3a2e" stroke-linecap="round">
-        <path d="M58 76 L45 66" stroke-width="2.2"/>
+        <path d="M58 76 L45.5 66.5" stroke-width="2.2"/>
         <path d="M58 76 L70 62" stroke-width="1.8"/>
+        <path d="M58 76 L62 90" stroke-width="0.8" stroke="#8a3f36"/>
       </g>
       <circle cx="58" cy="76" r="2" fill="#3f3a2e"/>
-      <!-- the glass: one straight highlight across the crystal -->
-      <path d="M40 62 q14 -10 30 -4" fill="none" stroke="#ffffff" stroke-width="4" opacity="0.3" stroke-linecap="round"/>`,
+      <!-- the crystal: a soft band of window, and the hard line at its edge -->
+      <path d="M38 62 q16 -12 34 -5" fill="none" stroke="#ffffff" stroke-width="7" opacity="0.16" stroke-linecap="round"/>
+      <path d="M39 60 q16 -11 33 -4" fill="none" stroke="#ffffff" stroke-width="1.4" opacity="0.35" stroke-linecap="round"/>
+`,
   },
 ];
 
