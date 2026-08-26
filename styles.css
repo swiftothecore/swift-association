@@ -381,6 +381,16 @@
        shadow still falls down-right on screen like every other prop */
     filter: drop-shadow(6.4px 4.2px 6px rgba(46,32,14,0.30)) saturate(0.88);
   }
+  /* The grade printed on the barrel. A manufactured mark, so it speaks the
+     desk's printed voice like the calendar pad does, and it is set twice: a
+     pale copy a third of a unit higher is the lit top edge of the foil, the
+     dark copy under it is the stamp itself. Small on purpose — at desk size
+     this is about eight pixels of type on a prop nobody is meant to read. */
+  .di-pencil .pc-imprint {
+    font-family: var(--type); font-size: calc(7.6px + var(--text-size-adjust));
+    font-weight: 700; letter-spacing: 1.5px; fill: #8a6415; opacity: 0.72;
+  }
+  .di-pencil .pc-imprint-foil { fill: #fbe6ad; opacity: 0.6; }
   .di-calendar .cal-grain { opacity: 0.1; }
   /* the red pen rule under the month title */
   .di-calendar .cal-rule { fill: none; stroke: #b23a3f; stroke-width: 1.3; stroke-linecap: round; opacity: 0.6; }

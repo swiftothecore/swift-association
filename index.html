@@ -1125,42 +1125,143 @@ if (location.pathname.endsWith('/index.html')) {
          not an SVG imitation: the same translucency, fibres, wrinkle and tear. -->
     <span class="nav-tape plc-tape" aria-hidden="true"></span>
   </div>
-  <!-- LEFT: hexagonal pencil from above, set down whole beside the page:
-       drawn at its real skinny proportions (barrel ~7mm at desk scale) so the
-       CSS transform only rotates and flips it, never squashes it. Three shaded
-       facets, brass ferrule, worn eraser, freshly sharpened tip pointing down
-       the page as if just set aside mid-line -->
+  <!-- LEFT: hexagonal pencil from above, set down whole beside the page.
+       The plan geometry is measured, not eyeballed: a 7mm across-flats hex
+       resting on a facet shows three faces from directly above, and their
+       projected widths are s/2 : s : s/2, so the silhouette is the ACROSS-
+       CORNERS width (8.1mm, 24.2 units) and the middle band is exactly twice
+       either slant. Drawn at that real skinniness so the CSS transform only
+       rotates and flips it, never squashes it. Lit from the SVG-top: pale
+       slant, sheened flat, dark slant with a warm bounce line at the far edge.
+       Everything after that is wear — chipped lacquer at the collar, crimp
+       dimples, a graphite-dirtied eraser, blade chatter on the cone and dust
+       behind the point. -->
   <div class="desk-item di-pencil">
     <svg viewBox="0 0 520 32" xmlns="http://www.w3.org/2000/svg">
       <defs>
-        <linearGradient id="pcFer" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f0ede3"/><stop offset="0.45" stop-color="#b7b1a2"/><stop offset="1" stop-color="#837c6c"/></linearGradient>
+        <!-- metal rolls off across the ferrule and picks the desk back up at
+             the far rim, which is the whole reason it reads as round -->
+        <linearGradient id="pcFer" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#8f8979"/><stop offset="0.06" stop-color="#efece1"/>
+          <stop offset="0.24" stop-color="#cac4b5"/><stop offset="0.52" stop-color="#9d9789"/>
+          <stop offset="0.78" stop-color="#7c7667"/><stop offset="0.93" stop-color="#a8a292"/>
+          <stop offset="1" stop-color="#726c5d"/>
+        </linearGradient>
+        <linearGradient id="pcEras" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#c58e98"/><stop offset="0.08" stop-color="#eeb9c2"/>
+          <stop offset="0.34" stop-color="#dd9aa7"/><stop offset="0.72" stop-color="#c07d8b"/>
+          <stop offset="0.9" stop-color="#cf8b98"/><stop offset="1" stop-color="#a86a77"/>
+        </linearGradient>
+        <!-- one long lacquer specular, brightest three-fifths down the barrel
+             and gone before either end -->
+        <linearGradient id="pcSheen" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0" stop-color="#fff6d6" stop-opacity="0"/>
+          <stop offset="0.18" stop-color="#fff6d6" stop-opacity="0.3"/>
+          <stop offset="0.46" stop-color="#fff6d6" stop-opacity="0.44"/>
+          <stop offset="0.78" stop-color="#fff6d6" stop-opacity="0.22"/>
+          <stop offset="1" stop-color="#fff6d6" stop-opacity="0"/>
+        </linearGradient>
+        <radialGradient id="pcDust" cx="0.5" cy="0.5" r="0.5">
+          <stop offset="0" stop-color="#4a4740" stop-opacity="0.3"/>
+          <stop offset="1" stop-color="#4a4740" stop-opacity="0"/>
+        </radialGradient>
+        <radialGradient id="pcSmudge" cx="0.5" cy="0.5" r="0.5">
+          <stop offset="0" stop-color="#514c48" stop-opacity="0.34"/>
+          <stop offset="1" stop-color="#514c48" stop-opacity="0"/>
+        </radialGradient>
       </defs>
-      <!-- eraser -->
-      <path d="M26 6.5 H16 Q6 6.5 6 16 Q6 25.5 16 25.5 H26 Z" fill="#d795a1"/>
-      <path d="M11 10 q6 -2 13 -1.5" fill="none" stroke="#ecb7c0" stroke-width="1.8" stroke-linecap="round" opacity="0.85"/>
-      <path d="M24 23.5 q-10 1.5 -14 -5" fill="none" stroke="#b06e7c" stroke-width="1.6" stroke-linecap="round" opacity="0.6"/>
-      <!-- brass ferrule: edge grooves and two rows of crimp dimples -->
-      <rect x="26" y="5.5" width="26" height="21" fill="url(#pcFer)"/>
-      <rect x="26" y="8" width="26" height="2.6" fill="#ffffff" opacity="0.35"/>
-      <rect x="26" y="5.5" width="1.6" height="21" fill="#8f897b"/>
-      <rect x="50.4" y="5.5" width="1.6" height="21" fill="#8f897b" opacity="0.8"/>
-      <g fill="#6c665a" opacity="0.6"><circle cx="32.5" cy="9.5" r="1"/><circle cx="32.5" cy="16" r="1"/><circle cx="32.5" cy="22.5" r="1"/><circle cx="45.5" cy="9.5" r="1"/><circle cx="45.5" cy="16" r="1"/><circle cx="45.5" cy="22.5" r="1"/></g>
-      <!-- barrel: three hex facets, the slanted ones foreshortened, lit from
-           the upper left (the CSS flip puts the pale facet toward the light) -->
-      <rect x="52" y="5.5" width="390" height="6" fill="#f2cd6e"/>
-      <rect x="52" y="11.5" width="390" height="9" fill="#e5a93a"/>
-      <rect x="52" y="20.5" width="390" height="6" fill="#bd8225"/>
-      <path d="M52 6.3 H442" stroke="#ffe9ac" stroke-width="0.9" opacity="0.8"/>
-      <g stroke="#925f10" stroke-width="0.7" stroke-opacity="0.35"><path d="M52 11.5 H442"/><path d="M52 20.5 H442"/></g>
-      <!-- whittled collar and wood cone -->
-      <path d="M442 5.5 q2.4 5.3 0 10.5 q-2.4 5.3 0 10.5" fill="none" stroke="#8a5c12" stroke-width="1.1" opacity="0.45"/>
-      <path d="M442 5.5 L497 13.5 L497 16 L442 16 Z" fill="#f4e2bd"/>
-      <path d="M442 16 L497 16 L497 18.5 L442 26.5 Z" fill="#d9b988"/>
-      <g stroke="#c1a071" stroke-width="0.7"><path d="M447 9 L490 14.6"/><path d="M447 23 L490 17.4"/></g>
-      <!-- graphite point -->
-      <path d="M497 13.5 L516 16 L497 18.5 Z" fill="#4d4d4d"/>
-      <path d="M497 16 L516 16 L497 18.5 Z" fill="#2b2b2b"/>
-      <circle cx="511" cy="15.6" r="0.6" fill="#a8a8a8"/>
+      <!-- ERASER: rubbed down unevenly at the working end, still fat where the
+           ferrule grips it, and grey with the graphite it has picked up -->
+      <path d="M27 5.2 H13.4 Q8.6 5.3 6.2 8.1 Q3.9 10.9 3.9 15.4 Q3.9 20.6 5.9 23.6
+               Q7.9 26.6 12.6 26.8 H27 Z" fill="url(#pcEras)"/>
+      <path d="M9.2 9.4 Q13.4 7.6 18.6 7.5" fill="none" stroke="#f4cbd2" stroke-width="1.7"
+            stroke-linecap="round" opacity="0.7"/>
+      <path d="M6.8 20.6 Q5.6 17.6 6.1 14.4" fill="none" stroke="#a8626f" stroke-width="1.2"
+            stroke-linecap="round" opacity="0.45"/>
+      <ellipse cx="10.6" cy="18.9" rx="6.4" ry="6.1" fill="url(#pcSmudge)"/>
+      <ellipse cx="16.4" cy="23.4" rx="5.2" ry="3.4" fill="url(#pcSmudge)" opacity="0.7"/>
+      <g fill="#4f4a44" opacity="0.4"><circle cx="7.9" cy="17.4" r="0.5"/><circle cx="9.9" cy="21.6" r="0.35"/><circle cx="13.6" cy="24.2" r="0.4"/></g>
+      <!-- FERRULE: crimped tube, a touch proud of the wood. Two rings of
+           dimples, each squeezed flatter the nearer it sits to the silhouette,
+           because that is what a round row does when you look straight down -->
+      <rect x="27" y="4.4" width="28.4" height="23.2" fill="url(#pcFer)"/>
+      <rect x="27" y="6.4" width="28.4" height="2.4" fill="url(#pcSheen)" opacity="0.7"/>
+      <rect x="27" y="4.4" width="1.5" height="23.2" fill="#7b7566" opacity="0.85"/>
+      <rect x="28.5" y="4.4" width="0.7" height="23.2" fill="#f2efe4" opacity="0.5"/>
+      <rect x="53.9" y="4.4" width="1.5" height="23.2" fill="#6f6a5c" opacity="0.8"/>
+      <g opacity="0.62">
+        <g fill="#635e52">
+          <ellipse cx="33.4" cy="16"   rx="1.05" ry="1.05"/><ellipse cx="33.4" cy="11.2" rx="1.05" ry="0.85"/>
+          <ellipse cx="33.4" cy="20.8" rx="1.05" ry="0.85"/><ellipse cx="33.4" cy="7.4"  rx="1"    ry="0.5"/>
+          <ellipse cx="33.4" cy="24.6" rx="1"    ry="0.5"/>
+          <ellipse cx="46.8" cy="16"   rx="1.05" ry="1.05"/><ellipse cx="46.8" cy="11.2" rx="1.05" ry="0.85"/>
+          <ellipse cx="46.8" cy="20.8" rx="1.05" ry="0.85"/><ellipse cx="46.8" cy="7.4"  rx="1"    ry="0.5"/>
+          <ellipse cx="46.8" cy="24.6" rx="1"    ry="0.5"/>
+        </g>
+        <g fill="none" stroke="#ffffff" stroke-width="0.45" stroke-linecap="round" opacity="0.55">
+          <path d="M32.5 15.6 Q33.4 14.8 34.3 15.6"/><path d="M32.5 10.9 Q33.4 10.3 34.3 10.9"/>
+          <path d="M32.5 20.5 Q33.4 19.9 34.3 20.5"/>
+          <path d="M45.9 15.6 Q46.8 14.8 47.7 15.6"/><path d="M45.9 10.9 Q46.8 10.3 47.7 10.9"/>
+          <path d="M45.9 20.5 Q46.8 19.9 47.7 20.5"/>
+        </g>
+      </g>
+      <path d="M39.6 6.6 L43.1 6.4" stroke="#5f5a4e" stroke-width="0.4" opacity="0.35"/>
+      <path d="M27 26.9 H55.4" stroke="#5d5849" stroke-width="0.7" opacity="0.5"/>
+      <!-- BARREL: three faces, the middle one exactly twice either slant -->
+      <rect x="55.4" y="3.9"  width="384.6" height="6.1"  fill="#f4d17a"/>
+      <rect x="55.4" y="10"   width="384.6" height="12"   fill="#e9b449"/>
+      <rect x="55.4" y="22"   width="384.6" height="6.1"  fill="#c0842a"/>
+      <rect x="55.4" y="11.4" width="384.6" height="3.1"  fill="url(#pcSheen)"/>
+      <path d="M55.4 4.4 H440" stroke="#ffeab4" stroke-width="0.8" opacity="0.75"/>
+      <g stroke="#a8701a" stroke-width="0.6" stroke-opacity="0.32"><path d="M55.4 10 H440"/><path d="M55.4 22 H440"/></g>
+      <path d="M55.4 27.4 H440" stroke="#dd9c3c" stroke-width="0.7" opacity="0.5"/>
+      <path d="M55.4 28.1 H440" stroke="#8a5c12" stroke-width="0.7" opacity="0.5"/>
+      <!-- lacquer is brushed on, so it streaks lengthwise and never evenly -->
+      <g fill="none" stroke-linecap="round" opacity="0.9">
+        <path d="M92 12.6 H268"   stroke="#fbe0a2" stroke-width="0.7" opacity="0.2"/>
+        <path d="M148 19.4 H392"  stroke="#cf9527" stroke-width="0.6" opacity="0.16"/>
+        <path d="M212 7.1 H336"   stroke="#fae2ae" stroke-width="0.5" opacity="0.22"/>
+        <path d="M74 24.8 H186"   stroke="#a86e18" stroke-width="0.5" opacity="0.14"/>
+      </g>
+      <!-- the printed grade, foil-stamped: a lit top edge over a dark stamp -->
+      <text class="pc-imprint pc-imprint-foil" x="112" y="18.1">No. 2 &#183; HB</text>
+      <text class="pc-imprint" x="112" y="18.4">No. 2 &#183; HB</text>
+      <!-- paint the sharpener took off, and one older knock mid-barrel -->
+      <path d="M435 22 L438.8 21.9 L437.8 24 L433.8 23.6 Z" fill="#e0c99e" opacity="0.9"/>
+      <path d="M431.6 3.9 L436.6 3.9 L436 5.6 L431 5.8 Z" fill="#e8d5ac" opacity="0.85"/>
+      <path d="M298.6 22 L303.2 22 L302.4 23.5 L298.2 23.3 Z" fill="#d9c299" opacity="0.7"/>
+      <!-- WOOD CONE: the two facet edges carry on off the barrel and run into
+           the point, so the cone keeps three faces and the same light -->
+      <path d="M440 3.9 L498 13.3 L498 14.9 Q470 12 440 10 Z" fill="#f7e7c6"/>
+      <path d="M440 10 Q470 12 498 14.9 L498 17.1 Q470 20 440 22 Z" fill="#e7cb9c"/>
+      <path d="M440 22 Q470 20 498 17.1 L498 18.7 L440 28.1 Z" fill="#cdad79"/>
+      <!-- ragged lacquer collar: the blade tears the paint, it does not cut it -->
+      <path d="M440 3.9 L438.9 5.2 L440.2 7.1 L438.4 9.4 L440 11 L439 13.8 L440.3 16.2
+               L438.7 18.9 L440 21 L439.2 23.4 L440.2 25.6 L439 27 L440 28.1 Z"
+            fill="#d9ab4a" opacity="0.38"/>
+      <!-- blade chatter: each pass of the sharpener leaves its own arc -->
+      <g fill="none" stroke="#c0a06d" stroke-width="0.4" stroke-linecap="round" opacity="0.17">
+        <path d="M448.6 8.4 Q452.8 16 449.4 23.4"/>
+        <path d="M455 9.4 Q458.6 16.4 455.8 22.2"/>
+        <path d="M467.4 10.9 Q470.2 16 467.8 21.4" opacity="0.75"/>
+        <path d="M479 12.4 Q481.2 16.2 479.4 19.8"/>
+        <path d="M487.6 13.6 Q489.2 16 487.8 18.6" opacity="0.6"/>
+      </g>
+      <!-- grain, and the glue seam between the two slats the pencil is made of -->
+      <g fill="none" stroke="#c9a670" stroke-width="0.45" stroke-linecap="round" opacity="0.26">
+        <path d="M443 7.4 Q468 11 493.4 14.4"/>
+        <path d="M444 25.4 Q470 21.2 493 17.6"/>
+      </g>
+      <path d="M441 16.1 Q470 16.2 497 16" fill="none" stroke="#bb9a67" stroke-width="0.4" opacity="0.4"/>
+      <!-- graphite the point has ground back into its own wood -->
+      <ellipse cx="491" cy="16" rx="10.5" ry="3.6" fill="url(#pcDust)"/>
+      <g fill="#4b4844" opacity="0.3"><circle cx="483.6" cy="13.9" r="0.4"/><circle cx="487.4" cy="18.6" r="0.35"/></g>
+      <!-- LEAD: two faces and a sheen, worn to a small flat at the very end -->
+      <path d="M498 13.3 L515.4 15.7 L498 16.2 Z" fill="#57575a"/>
+      <path d="M498 16.2 L515.4 15.7 L515 16.4 L498 18.7 Z" fill="#2f2e2d"/>
+      <path d="M501 15.5 L512.6 15.8" stroke="#a3a3a8" stroke-width="0.45" opacity="0.5" stroke-linecap="round"/>
+      <path d="M498 13.3 L498 18.7" stroke="#6d6552" stroke-width="0.5" opacity="0.45"/>
+      <path d="M514.2 15.5 L516 15.9 L514.4 16.5 Z" fill="#7b7b80" opacity="0.75"/>
     </svg>
   </div>
   <!-- RIGHT: bracelet-making flat lay: two floss skeins seen from above,
