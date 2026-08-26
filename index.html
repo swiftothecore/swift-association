@@ -1704,8 +1704,10 @@ if (location.pathname.endsWith('/index.html')) {
        recorded over. The paper insert carries the manufacturer's printed
        header and rules; the title on those rules is in the same ballpoint the
        calendar is marked in, because the pad is printed and the writing is
-       hers. The writing is centred on the card, so the shell has to sit far
-       enough onto the screen for the whole top section to be readable. -->
+       hers. WHAT is written there changes with the date — js/cassette.js draws
+       a song onto the card each day, weighted so Clean comes up on about a
+       third of them. The markup below ships already reading Clean, which is
+       both the commonest draw and a correct label if that module never runs. -->
   <div class="desk-item di-cassette">
     <svg viewBox="0 0 192 124" xmlns="http://www.w3.org/2000/svg">
       <defs>
@@ -1758,6 +1760,12 @@ if (location.pathname.endsWith('/index.html')) {
       <rect x="48" y="36" width="96" height="32" fill="#15120e"/>
       <!-- slip sheet behind the packs, catching a little light at the top -->
       <rect x="48" y="36" width="96" height="32" fill="url(#csSlip)"/>
+      <!-- the strand, drawn BEFORE the packs so they sit on top of it: the one
+           straight line that touches the bottom of both, which is where tape
+           actually runs. A bowed path laid over the reels reads as a stripe
+           across the window rather than as tape leaving two packs. -->
+      <path d="M48 66.2 L144 60.3" fill="none" stroke="#2b1e0d" stroke-width="2.8"/>
+      <path d="M48 65 L144 59.1" fill="none" stroke="#7a5a2b" stroke-width="0.5" opacity="0.4"/>
       <!-- LEFT pack: wound thick, so the run is past the middle of the song -->
       <circle cx="74" cy="52" r="12.6" fill="url(#csPack)"/>
       <g fill="none" stroke="#6b4d24" stroke-width="0.55" opacity="0.42">
@@ -1773,9 +1781,6 @@ if (location.pathname.endsWith('/index.html')) {
         <path d="M110.6 53.8 A7.7 7.7 0 0 1 120.5 44.7"/>
       </g>
       <path d="M111 59 A9.9 9.9 0 0 1 122.3 42.9" fill="none" stroke="#8a6631" stroke-width="0.7" opacity="0.5"/>
-      <!-- the strand running between the packs, low across the window -->
-      <path d="M52 64.9 L74 64.5 Q98 63.7 118 61.8 L140 61.4" fill="none" stroke="#2b1e0d" stroke-width="2.6" stroke-linecap="round"/>
-      <path d="M52 63.8 L74 63.4 Q98 62.6 118 60.7 L140 60.3" fill="none" stroke="#7a5a2b" stroke-width="0.55" opacity="0.5"/>
       <!-- hubs: six-toothed, with the spindle hole through the middle -->
       <g>
         <circle cx="74" cy="52" r="7.5" fill="#e7dfca" stroke="#a99e83" stroke-width="1"/>
@@ -1791,8 +1796,8 @@ if (location.pathname.endsWith('/index.html')) {
       </g>
       <!-- the clear pane over the aperture: a thin lit edge and two streaks -->
       <path d="M48 36 H144 V68 H48 Z" fill="none" stroke="#8d8677" stroke-width="0.7" opacity="0.35"/>
-      <path d="M58 36 L74 36 L62 68 L54 68 Z" fill="#ffffff" opacity="0.06"/>
-      <path d="M80 36 L86 36 L76 68 L73 68 Z" fill="#ffffff" opacity="0.045"/>
+      <path d="M57 36 L64 36 L57 68 L50 68 Z" fill="#ffffff" opacity="0.055"/>
+      <path d="M78 36 L82 36 L75 68 L71 68 Z" fill="#ffffff" opacity="0.04"/>
 
       <rect x="48" y="36" width="96" height="32" fill="url(#csWell)"/>
       <rect x="4" y="6" width="184" height="112" rx="10" fill="url(#csGloss)"/>
@@ -1806,18 +1811,16 @@ if (location.pathname.endsWith('/index.html')) {
       <path d="M18 20.9 H174" stroke="#a8536a" stroke-width="0.5" opacity="0.45"/>
       <text class="cs-side" x="24" y="20.1">SIDE A</text>
       <text class="cs-spec" x="141" y="20.1">NORMAL</text>
-      <!-- the insert's printed rules: one red, two blue, as on the page itself -->
-      <path d="M24 29.8 H168" stroke="#b23a3f" stroke-width="1.1" opacity="0.5"/>
-      <path d="M24 35.6 H168" stroke="#8f9ab8" stroke-width="0.8" opacity="0.4"/>
-      <path d="M24 71.4 H168" stroke="#8f9ab8" stroke-width="0.8" opacity="0.32"/>
+      <!-- the insert's printed rules: red for the title, blue at the foot, the
+           same two inks the notebook page is ruled in -->
+      <path d="M24 33 H168" stroke="#b23a3f" stroke-width="1.1" opacity="0.5"/>
+      <path d="M24 73 H168" stroke="#8f9ab8" stroke-width="0.8" opacity="0.32"/>
       <!-- and what she wrote on them -->
-      <text class="cs-title" x="95" y="29.5" transform="rotate(-0.9 95 29.5)">Clean<tspan class="cs-sub" dx="3.4" dy="-0.2">(Taylor&#8217;s Version)</tspan></text>
-      <text class="cs-note" x="95.5" y="70.6" transform="rotate(-0.5 95.5 70.6)">1989 &#183; track 13</text>
-      <!-- age: two faint foxing blooms and a crease worn into the card -->
+      <text class="cs-title" x="95" y="32.7" transform="rotate(-0.9 95 32.7)">Clean<tspan class="cs-sub" dx="3.4" dy="-0.2">(Taylor&#8217;s Version)</tspan></text>
+      <text class="cs-note" x="95.5" y="72.7" transform="rotate(-0.5 95.5 72.7)">1989 &#183; track 13</text>
+      <!-- age: two faint foxing blooms -->
       <ellipse cx="36" cy="60" rx="5.2" ry="3.4" fill="#b39a6a" opacity="0.11"/>
       <ellipse cx="160" cy="30" rx="4" ry="5.6" fill="#b39a6a" opacity="0.09"/>
-      <path d="M18 47 q9 -1.6 14 1.4" fill="none" stroke="#b8a887" stroke-width="0.6" opacity="0.5"/>
-      <path d="M18 47.9 q9 -1.6 14 1.4" fill="none" stroke="#fdf8e9" stroke-width="0.6" opacity="0.45"/>
       <!-- one lifted corner, curling off the shell -->
       <path d="M174 74 Q174 76 170 76 L163 76 L174 65 Z" fill="#dfd3b4" stroke="#b3a685" stroke-width="0.7"/>
       <path d="M163 76 L174 65" stroke="#8c8069" stroke-width="0.7" opacity="0.6"/>
@@ -1866,7 +1869,7 @@ if (location.pathname.endsWith('/index.html')) {
       <!-- played-often wear: two hairline scuffs worn into the moulding -->
       <g stroke="#b6ae9d" fill="none" stroke-linecap="round" opacity="0.11">
         <path d="M27 100.4 q14 -1.4 26 -0.7" stroke-width="0.55"/>
-        <path d="M142 88.6 q11 0.9 20 -0.3" stroke-width="0.45"/>
+        <path d="M148 111.2 q8 -4.2 15 -6.6" stroke-width="0.45"/>
       </g>
     </svg>
   </div>

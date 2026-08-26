@@ -16,7 +16,7 @@
  * Paths are relative so the worker works at the site root (swiftassociation.com)
  * and under any project subpath, without hardcoding the origin.
  */
-const CACHE = "stta-v57";
+const CACHE = "stta-v58";
 // The game's panel routes. These are sections of index.html, not files, so a navigation to one
 // has nothing on the server to fetch: 404.html bounces it back through a ?/slug marker. Once
 // this worker is installed we can do better and answer with index.html directly, so a deep link
@@ -58,6 +58,9 @@ const ASSETS = [
   // The desk calendar draws every date itself; index.html only holds its blank
   // card. Precached so a fresh offline install can't render a dateless pad.
   "js/calendar.js",
+  // The cassette's label is a song the date picks, so index.html only holds the
+  // shell and the blank card. Precached for the same reason as the calendar.
+  "js/cassette.js",
   // The desk placard's engraved count, likewise (see js/placard.js).
   "js/placard.js",
   // The desk below the first screenful: the incident placer and the prop/mark

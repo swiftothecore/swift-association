@@ -534,6 +534,51 @@ export function initDev(api) {
         btn("live", () => { const d = api.date.clear(); dateInput.value = ""; toast("date → live (" + d + ")"); })),
     row(markSel, btn("jump", () => showDate(api.date.set(markSel.value))))));
 
+  // ---- Desk cassette ---------------------------------------------------------
+  // The tape on the desk carries a song the DATE picks, weighted so Clean comes up
+  // on roughly a third of days. Two things are hard to check by playing: whether a
+  // long title still fits between the printed rules, and whether the weighting is
+  // actually what it claims. "play" writes any song onto the card without moving the
+  // date (a date scrub or "today" puts the real draw back), and "sample" counts a
+  // year of draws to the console. The desk prop is desktop-only and the module may
+  // not have run, so every button checks for it first.
+  const cassSel = select(window.deskCassette ? window.deskCassette.songs() : [],
+    (s2) => s2.title, (s2) => s2.title);
+  const cassDays = num(365);
+  body.append(section("desk cassette",
+    row(cassSel, btn("play", () => {
+      const s2 = window.deskCassette?.play(cassSel.value);
+      toast(s2 ? "cassette → " + s2.title : "no desk cassette here");
+    })),
+    row(btn("today", () => {
+      if (!window.deskCassette) return toast("no desk cassette here");
+      window.deskCassette.refresh();
+      toast("cassette → today's draw");
+    }),
+    btn("longest titles", () => {
+      const all = window.deskCassette?.songs();
+      if (!all) return toast("no desk cassette here");
+      console.table(all.slice().sort((a, b) => b.title.length - a.title.length).slice(0, 15)
+        .map((s2) => ({ title: s2.title, album: s2.album, track: s2.track, chars: s2.title.length })));
+      toast("15 longest titles → console");
+    })),
+    row("sample", cassDays, "days", btn("sample", () => {
+      const dc = window.deskCassette;
+      if (!dc) return toast("no desk cassette here");
+      const counts = new Map();
+      const d = new Date();
+      for (let i = 0; i < Math.max(1, +cassDays.value); i++) {
+        const day = new Date(d.getFullYear(), d.getMonth(), d.getDate() + i);
+        const p2 = (n) => String(n).padStart(2, "0");
+        const song = dc.pick(`${day.getFullYear()}-${p2(day.getMonth() + 1)}-${p2(day.getDate())}`);
+        if (song) counts.set(song.title, (counts.get(song.title) || 0) + 1);
+      }
+      const n = Math.max(1, +cassDays.value);
+      console.table([...counts].sort((a, b) => b[1] - a[1]).slice(0, 20)
+        .map(([title, c]) => ({ title, days: c, share: (c / n * 100).toFixed(1) + "%" })));
+      toast(`Clean ${((counts.get("Clean") || 0) / n * 100).toFixed(1)}% of ${n} days → console`);
+    }))));
+
   // ---- Daily -----------------------------------------------------------------
   // "preview album pool" dumps an anniversary daily to the console without playing it: the
   // pool behind the words and the 13 the seed really draws. It follows the date override,

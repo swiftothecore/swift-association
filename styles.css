@@ -318,13 +318,15 @@
     filter: drop-shadow(6px 13px 11px rgba(46,32,14,0.28)) saturate(0.88); }
   .di-floss   { width: 370px; top: 5%;   right: 0; transform: translateX(34%) rotate(8deg); }
   /* Less overhang than the other edge props get. The insert is written on, and
-     the title is centred on the card, so the shell has to sit far enough onto
-     the screen for the whole of it to clear the viewport edge: past ~36% the
-     version note starts running off. On a narrow desk the notebook is the thing
-     that matters, so the tape keeps only the clearance the title needs and takes
-     the extra air later, once there is desk to spare. */
-  .di-cassette{ width: 320px; top: 54%;  right: 0; transform: translateX(34%) rotate(-16deg); }
-  @media (min-width: 1400px) { .di-cassette { transform: translateX(28%) rotate(-16deg); } }
+     the title is centred on the card, and the title is now a different song
+     every day (js/cassette.js), so "far enough on" is no longer a fixed answer.
+     The module measures the room it actually has and writes smaller when the
+     screen edge, rather than the card, is what's binding; what the overhang
+     decides is how often that happens. 24% is where three quarters of her
+     titles are written at full size, and it is as far onto the screen as the
+     tape can come before the narrowest desk that shows props at all (1120px)
+     starts tucking the shell under the notebook. */
+  .di-cassette{ width: 320px; top: 54%;  right: 0; transform: translateX(24%) rotate(-16deg); }
   /* on-desk props: anchored to the notebook column (the .app is a fixed 660px
      wide whenever props are visible, so calc(50% +/- 330px) is the paper edge)
      rather than the viewport, keeping their gap to the page constant */
@@ -442,22 +444,26 @@
     letter-spacing: 0.8px; fill: #fbf3e4; opacity: 0.72;
   }
   .di-cassette .cs-title {
-    font-family: var(--hand); font-weight: 700; font-size: calc(13px + var(--text-size-adjust));
+    font-family: var(--hand); font-weight: 700;
+    font-size: calc(var(--cs-title-size, 13px) + var(--text-size-adjust));
     fill: #33406a;
   }
   /* the version note trails the title on the same rule, smaller and unbolded,
      the way it gets squeezed in after the song name has already been written */
   .di-cassette .cs-sub {
-    font-weight: 400; font-size: calc(7.4px + var(--text-size-adjust));
+    font-weight: 400; font-size: calc(var(--cs-sub-size, 7.4px) + var(--text-size-adjust));
     fill: #3d4a72; opacity: 0.84;
   }
   .di-cassette .cs-note {
-    font-family: var(--hand); font-size: calc(7.2px + var(--text-size-adjust));
+    font-family: var(--hand); font-size: calc(var(--cs-note-size, 7.2px) + var(--text-size-adjust));
     fill: #4a4632; opacity: 0.72;
   }
   /* picks ride the cassette pile: right-edge anchored so the pair stays
-     together at any viewport width, drawn after it so they land on top */
-  .di-picks   { width: 155px; top: 70%; right: 36px; transform: rotate(22deg); }
+     together at any viewport width, drawn after it so they land on top. Low
+     enough on the shell to catch only its bottom corner — the card above them
+     is written on, and a pick lying across a song title reads as a mistake
+     rather than as a pick. */
+  .di-picks   { width: 155px; top: 72%; right: 36px; transform: rotate(22deg); }
   /* The gauge stamped into the pearloid pick. Courier, because it is moulded
      into a manufactured object rather than written by hand, and tiny: this is
      the thickness marking, and on a real pick you have to tilt it to the light

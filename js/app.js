@@ -9701,6 +9701,10 @@ async function loadData() {
   const words = await wordsRes.json();
   const grouped = await songsRes.json();
   taylorCorpus = installCorpus(grouped, words, { aliases: true });
+  // Dub the desk cassette. It is handed Taylor's songs once and never re-pointed,
+  // so a guest run leaves her tape sitting on the desk where it belongs.
+  try { (await import("./cassette.js")).install(taylorCorpus.allSongs); }
+  catch (e) { console.warn("desk cassette failed to load", e); }
 }
 
 /* ---------- The corpus (which catalogue the game is currently playing) ----------
@@ -10070,6 +10074,7 @@ function refreshDateSurfaces() {
   renderAnniversaryNote();
   renderMilestoneSticky();
   window.deskCalendar?.refresh();
+  window.deskCassette?.refresh();
   // Moving the date moves what "today" means to the daily gate, so the button's
   // played/unplayed coat, its countdown and the streak on the desk placard all
   // have to be redrawn with it.
