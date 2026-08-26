@@ -419,50 +419,61 @@ export const DESK_PROPS = [
     id: "scissors", w: 88, h: 210, narrow: true, maxRot: 26,
     svg: `
       <defs>
-        <linearGradient id="dpSteel" x1="0" y1="0" x2="1" y2="0">
-          <stop offset="0" stop-color="#f2f1ee"/><stop offset="0.45" stop-color="#c9c8c3"/>
-          <stop offset="0.7" stop-color="#a6a49d"/><stop offset="1" stop-color="#d5d4cf"/>
-        </linearGradient>
-        <linearGradient id="dpBrass" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0" stop-color="#d9b871"/><stop offset="0.55" stop-color="#b1893f"/><stop offset="1" stop-color="#8a6a2f"/>
-        </linearGradient>
+        ${bar("dpScSteel", ["#f4f2ee", "#c6c4bd", "#86847d", "#ded9d0"], 96)}
+        ${bar("dpScBrass", ["#f0d79a", "#c9a13f", "#8a6a2f", "#d9bd7c"], 108)}
+        ${sheen("dpScSh", "#ffffff", 0.55)}
       </defs>
-      <!-- blades, crossed just above the pivot -->
-      <g stroke="#8e8d87" stroke-width="0.9" stroke-linejoin="round">
-        <path d="M44 96 L58 20 q2 -9 6 -8 q4 1 3 10 L54 100 Z" fill="url(#dpSteel)"/>
-        <path d="M44 96 L28 22 q-2 -9 -6 -8 q-4 1 -3 10 L34 100 Z" fill="url(#dpSteel)"/>
+      <!-- Craft scissors, half open. Two things the old pair got wrong. The
+           blades were a mirrored pair, and nothing forged is symmetrical: the
+           upper blade lies OVER the lower one at the pivot and throws a shadow
+           onto it, which is the only thing that says these are two objects and
+           not one flat shape. And the bows are not a matching pair either. The
+           thumb goes in the small round one, three fingers in the long one, so
+           they differ in size and shape on any scissors you have ever held. -->
+      <!-- lower blade, running up to the right -->
+      <g>
+        <path d="M46 104 L70 26 q2 -8 6 -7 q4 1 2 9 L58 108 Z" fill="url(#dpScSteel)"
+              stroke="#8e8c85" stroke-width="0.8" stroke-linejoin="round"/>
+        <path d="M76 28 L59 106" fill="none" stroke="#6e6c66" stroke-width="1.8" opacity="0.5" stroke-linecap="round"/>
+        <path d="M68 33 L56 99" fill="none" stroke="#ffffff" stroke-width="1" opacity="0.45" stroke-linecap="round"/>
       </g>
-      <!-- the cutting edges, a shade brighter than the blade faces -->
-      <g fill="none" stroke="#ffffff" stroke-width="1.1" opacity="0.55" stroke-linecap="round">
-        <path d="M56 26 L48 92"/><path d="M26 28 L34 92"/>
+      <!-- upper blade, over the pivot, with what it throws on the one below -->
+      <path d="M44 106 L20 30 q-2 -8 -6 -7 q-4 1 -2 9 L32 110 Z" fill="#2f2a22" opacity="0.18"
+            transform="translate(2.4 2.6)"/>
+      <g>
+        <path d="M44 106 L20 30 q-2 -8 -6 -7 q-4 1 -2 9 L32 110 Z" fill="url(#dpScSteel)"
+              stroke="#8e8c85" stroke-width="0.8" stroke-linejoin="round"/>
+        <path d="M14 31 L28 108" fill="none" stroke="#6e6c66" stroke-width="1.8" opacity="0.45" stroke-linecap="round"/>
+        <path d="M22 37 L34 101" fill="none" stroke="#ffffff" stroke-width="1.2" opacity="0.5" stroke-linecap="round"/>
+        <!-- the grind: the bright facet the edge was sharpened to -->
+        <path d="M27 46 L38 100" fill="none" stroke="#fdfdfb" stroke-width="0.9" opacity="0.55"/>
       </g>
-      <circle cx="44" cy="100" r="5.6" fill="url(#dpBrass)" stroke="#6f5322" stroke-width="1"/>
-      <circle cx="42.4" cy="98.4" r="1.7" fill="#f6e4b6" opacity="0.75"/>
-      <!-- Handles: two open bows splayed below the pivot. Drawn as separate
-           stroked ellipses rather than as one traced outline, because a traced
-           pair overlaps so heavily near the pivot that the two loops fuse into a
-           single brass blob and the thing stops reading as scissors. Each bow
-           gets a dark under-stroke and a brass over-stroke, so it has the round
-           section of a cast handle rather than a flat line's. -->
+      <!-- the pivot screw, proud of the steel, with a real slot in it -->
+      <circle cx="45" cy="107" r="6.4" fill="url(#dpScBrass)" stroke="#6f5322" stroke-width="1"/>
+      <circle cx="45" cy="107" r="6.4" fill="url(#dpScSh)" opacity="0.35"/>
+      <path d="M41.4 104.6 L48.2 109.4" stroke="#6a5020" stroke-width="1.4" stroke-linecap="round"/>
+      <circle cx="43.2" cy="105.2" r="1.5" fill="#f8e9bd" opacity="0.7"/>
+      <!-- the bows. Each is a stroked ring rather than a traced outline: traced
+           outlines fuse into one brass blob where they meet the shanks. -->
       <g fill="none" stroke-linecap="round">
-        <g stroke="#6f5322" stroke-width="8">
-          <path d="M41 106 L31 130"/>
-          <path d="M47 106 L58 130"/>
-          <ellipse cx="27" cy="160" rx="15" ry="27" transform="rotate(-13 27 160)"/>
-          <ellipse cx="62" cy="160" rx="15" ry="27" transform="rotate(13 62 160)"/>
+        <g stroke="#6f5322" stroke-width="9">
+          <path d="M42 113 q-8 12 -13 22"/><path d="M49 113 q9 11 15 20"/>
+          <ellipse cx="22" cy="162" rx="13" ry="21" transform="rotate(-18 22 162)"/>
+          <ellipse cx="70" cy="170" rx="15" ry="29" transform="rotate(15 70 170)"/>
         </g>
-        <g stroke="url(#dpBrass)" stroke-width="5.6">
-          <path d="M41 106 L31 130"/>
-          <path d="M47 106 L58 130"/>
-          <ellipse cx="27" cy="160" rx="15" ry="27" transform="rotate(-13 27 160)"/>
-          <ellipse cx="62" cy="160" rx="15" ry="27" transform="rotate(13 62 160)"/>
+        <g stroke="url(#dpScBrass)" stroke-width="6.4">
+          <path d="M42 113 q-8 12 -13 22"/><path d="M49 113 q9 11 15 20"/>
+          <ellipse cx="22" cy="162" rx="13" ry="21" transform="rotate(-18 22 162)"/>
+          <ellipse cx="70" cy="170" rx="15" ry="29" transform="rotate(15 70 170)"/>
         </g>
-        <!-- the lamp catching the outer edge of each bow -->
-        <g stroke="#f6e4b6" stroke-width="1.5" opacity="0.55">
-          <path d="M14 150 q-2 14 4 24"/>
-          <path d="M75 150 q2 14 -4 24"/>
+        <!-- the lamp along the outer edge of each bow, and the rub where a
+             thumb has sat on one of them for years -->
+        <g stroke="#f8e6b4" stroke-width="1.6" opacity="0.5">
+          <path d="M9 154 q-3 12 2 22"/><path d="M84 158 q3 16 -3 28"/>
         </g>
-      </g>`,
+        <path d="M13 172 q-2 -8 1 -15" stroke="#fffbe8" stroke-width="2.6" opacity="0.35"/>
+      </g>
+`,
   },
   {
     // A corner torn off a notebook page, with a couplet on it that did not
@@ -500,29 +511,49 @@ export const DESK_PROPS = [
     id: "spool", w: 130, h: 118,
     svg: `
       <defs>
-        <linearGradient id="dpCard" x1="0" y1="0" x2="0.3" y2="1">
-          <stop offset="0" stop-color="#f6f0dd"/><stop offset="1" stop-color="#ddd3b8"/>
-        </linearGradient>
+        ${grain("dpSpCard", "0.7 0.5", 3, [0.42, 0.36, 0.24], 0.4)}
+        ${rough("dpSpEdge", "0.09 0.07", 1.6, 21)}
       </defs>
-      <!-- the run of floss trailing off, drawn first so the spool sits on it -->
-      <path d="M62 62 q34 22 52 18 q14 -3 12 -14" fill="none" stroke="#7a4f66" stroke-width="3" stroke-linecap="round" opacity="0.9"/>
-      <path d="M62 62 q34 22 52 18 q14 -3 12 -14" fill="none" stroke="#c06880" stroke-width="1.8" stroke-linecap="round"/>
-      <!-- bobbin card: a rounded rectangle with the two thread notches -->
-      <path d="M18 22 h72 a10 10 0 0 1 10 10 v52 a10 10 0 0 1 -10 10 h-72 a10 10 0 0 1 -10 -10 v-52 a10 10 0 0 1 10 -10 Z"
-            fill="url(#dpCard)" stroke="#c3b797" stroke-width="1"/>
-      <path d="M8 44 q10 6 0 12" fill="#cdbf9e" stroke="#b3a687" stroke-width="0.8"/>
-      <path d="M100 60 q-10 6 0 12" fill="#cdbf9e" stroke="#b3a687" stroke-width="0.8"/>
-      <!-- the wound band: rose floss, each pass of the wind picked out -->
-      <rect x="12" y="34" width="84" height="46" rx="5" fill="#c06880"/>
-      <g stroke="#a8536b" stroke-width="0.9" opacity="0.55">
-        <path d="M12 40 H96"/><path d="M12 48 H96"/><path d="M12 56 H96"/><path d="M12 64 H96"/><path d="M12 72 H96"/>
+      <!-- A floss bobbin, wound on a card. The old one was a rounded rectangle
+           with stripes on it. What makes it a bobbin is that the floss WRAPS
+           the card: every pass comes over the top edge and goes back under the
+           bottom one, so the winding is a series of separate strands with the
+           card's own edge showing between them, not a printed band. -->
+      <!-- the run of floss trailing off, drawn under the card it comes off -->
+      <g fill="none" stroke-linecap="round">
+        <path d="M63 63 q35 23 53 19 q15 -3 13 -15" stroke="#8f4459" stroke-width="4"/>
+        <path d="M63 63 q35 23 53 19 q15 -3 13 -15" stroke="#c06880" stroke-width="2.6"/>
+        <path d="M63 63 q35 23 53 19 q15 -3 13 -15" stroke="#f0b6c4" stroke-width="0.8" opacity="0.6" transform="translate(-0.4 -0.7)"/>
       </g>
-      <g stroke="#e59aad" stroke-width="0.7" opacity="0.5">
-        <path d="M12 37 H96"/><path d="M12 45 H96"/><path d="M12 53 H96"/><path d="M12 61 H96"/><path d="M12 69 H96"/>
+      <g filter="url(#dpSpEdge)">
+        <!-- the card: pressed board, softened corners, and the two thread
+             notches actually cut into it rather than drawn beside it -->
+        <path d="M18 21 h72 a10 10 0 0 1 10 10 v52 a10 10 0 0 1 -10 10 h-72 a10 10 0 0 1 -10 -10 v-52 a10 10 0 0 1 10 -10 Z"
+              fill="#eee6cd" stroke="#c3b797" stroke-width="1"/>
+        <path d="M18 21 h72 a10 10 0 0 1 10 10 v52 a10 10 0 0 1 -10 10 h-72 a10 10 0 0 1 -10 -10 v-52 a10 10 0 0 1 10 -10 Z"
+              fill="url(#dpSpCard)" opacity="0.4"/>
+        <path d="M8 43 q11 7 0 13 Z" fill="#d8caa6" stroke="#b3a687" stroke-width="0.8"/>
+        <path d="M100 59 q-11 7 0 13 Z" fill="#d8caa6" stroke="#b3a687" stroke-width="0.8"/>
+        <!-- the wind. Individual passes, each with its own light, laid slightly
+             unevenly because nobody winds a bobbin by machine. -->
+        <g fill="none" stroke="#b95d76" stroke-width="1.9" stroke-linecap="round" opacity="0.95">
+          <path d="M13.2 35.0 Q54 34.3 95.2 34.5"/><path d="M12.8 36.8 Q54 37.1 95.3 36.9"/><path d="M13.2 38.7 Q54 38.6 94.6 38.4"/><path d="M12.6 40.8 Q54 40.1 95.3 41.0"/><path d="M12.9 42.3 Q54 41.4 95.3 41.8"/><path d="M13.0 44.5 Q54 45.4 94.6 45.0"/><path d="M12.9 45.8 Q54 45.5 94.6 46.0"/><path d="M13.2 47.7 Q54 47.1 94.6 48.0"/><path d="M12.9 49.7 Q54 49.7 95.1 49.6"/><path d="M13.2 51.3 Q54 52.2 95.5 51.5"/><path d="M12.9 53.4 Q54 53.7 95.2 53.0"/><path d="M12.9 55.2 Q54 55.7 95.0 55.2"/><path d="M13.3 56.9 Q54 56.9 94.9 56.6"/><path d="M12.9 59.0 Q54 58.3 95.3 59.0"/><path d="M13.2 60.7 Q54 60.3 94.5 60.5"/><path d="M12.6 62.8 Q54 62.3 95.0 62.6"/><path d="M13.5 64.6 Q54 65.4 95.0 64.3"/><path d="M12.9 66.7 Q54 67.2 94.7 67.2"/><path d="M12.8 68.0 Q54 67.7 95.3 67.7"/><path d="M12.5 69.8 Q54 70.7 95.1 70.3"/><path d="M12.5 72.0 Q54 72.5 94.8 72.3"/><path d="M12.7 73.9 Q54 73.9 95.0 74.1"/><path d="M13.4 75.5 Q54 74.9 95.4 75.3"/><path d="M12.8 77.8 Q54 77.8 95.4 78.0"/><path d="M12.7 79.5 Q54 79.1 94.8 79.7"/><path d="M12.6 81.4 Q54 81.2 95.4 81.1"/>
+        </g>
+        <g fill="none" stroke="#e8a0b3" stroke-width="0.7" stroke-linecap="round" opacity="0.55"
+           transform="translate(0 -0.7)">
+          <path d="M13.2 35.0 Q54 34.3 95.2 34.5"/><path d="M12.8 36.8 Q54 37.1 95.3 36.9"/><path d="M13.2 38.7 Q54 38.6 94.6 38.4"/><path d="M12.6 40.8 Q54 40.1 95.3 41.0"/><path d="M12.9 42.3 Q54 41.4 95.3 41.8"/><path d="M13.0 44.5 Q54 45.4 94.6 45.0"/><path d="M12.9 45.8 Q54 45.5 94.6 46.0"/><path d="M13.2 47.7 Q54 47.1 94.6 48.0"/><path d="M12.9 49.7 Q54 49.7 95.1 49.6"/><path d="M13.2 51.3 Q54 52.2 95.5 51.5"/><path d="M12.9 53.4 Q54 53.7 95.2 53.0"/><path d="M12.9 55.2 Q54 55.7 95.0 55.2"/><path d="M13.3 56.9 Q54 56.9 94.9 56.6"/><path d="M12.9 59.0 Q54 58.3 95.3 59.0"/><path d="M13.2 60.7 Q54 60.3 94.5 60.5"/><path d="M12.6 62.8 Q54 62.3 95.0 62.6"/><path d="M13.5 64.6 Q54 65.4 95.0 64.3"/><path d="M12.9 66.7 Q54 67.2 94.7 67.2"/><path d="M12.8 68.0 Q54 67.7 95.3 67.7"/><path d="M12.5 69.8 Q54 70.7 95.1 70.3"/><path d="M12.5 72.0 Q54 72.5 94.8 72.3"/><path d="M12.7 73.9 Q54 73.9 95.0 74.1"/><path d="M13.4 75.5 Q54 74.9 95.4 75.3"/><path d="M12.8 77.8 Q54 77.8 95.4 78.0"/><path d="M12.7 79.5 Q54 79.1 94.8 79.7"/><path d="M12.6 81.4 Q54 81.2 95.4 81.1"/>
+        </g>
+        <!-- where each pass turns over the card's edge -->
+        <g fill="none" stroke="#a8536b" stroke-width="1.8" stroke-linecap="round" opacity="0.8">
+          <path d="M13 35.0 q-3.4 1.9 0 3.7"/><path d="M95 36.9 q3.4 1.9 0 3.7"/><path d="M13 38.7 q-3.4 1.9 0 3.7"/><path d="M95 40.6 q3.4 1.9 0 3.7"/><path d="M13 42.4 q-3.4 1.9 0 3.7"/><path d="M95 44.2 q3.4 1.9 0 3.7"/><path d="M13 46.1 q-3.4 1.9 0 3.7"/><path d="M95 48.0 q3.4 1.9 0 3.7"/><path d="M13 49.8 q-3.4 1.9 0 3.7"/><path d="M95 51.6 q3.4 1.9 0 3.7"/><path d="M13 53.5 q-3.4 1.9 0 3.7"/><path d="M95 55.4 q3.4 1.9 0 3.7"/><path d="M13 57.2 q-3.4 1.9 0 3.7"/><path d="M95 59.1 q3.4 1.9 0 3.7"/><path d="M13 60.9 q-3.4 1.9 0 3.7"/><path d="M95 62.8 q3.4 1.9 0 3.7"/><path d="M13 64.6 q-3.4 1.9 0 3.7"/><path d="M95 66.4 q3.4 1.9 0 3.7"/><path d="M13 68.3 q-3.4 1.9 0 3.7"/><path d="M95 70.2 q3.4 1.9 0 3.7"/><path d="M13 72.0 q-3.4 1.9 0 3.7"/><path d="M95 73.8 q3.4 1.9 0 3.7"/><path d="M13 75.7 q-3.4 1.9 0 3.7"/><path d="M95 77.5 q3.4 1.9 0 3.7"/><path d="M13 79.4 q-3.4 1.9 0 3.7"/><path d="M95 81.2 q3.4 1.9 0 3.7"/>
+        </g>
+        <!-- the lamp across the top of the wind, and the shade under it -->
+        <path d="M12 36 h84" stroke="#ffd3de" stroke-width="3" opacity="0.3" fill="none"/>
+        <path d="M12 78 h84" stroke="#7a3346" stroke-width="3" opacity="0.22" fill="none"/>
       </g>
-      <rect x="12" y="34" width="84" height="10" rx="4" fill="#ffffff" opacity="0.16"/>
-      <!-- the printed skein number, half hidden by the wind -->
-      <text class="dp-spool-no" x="54" y="94">304</text>`,
+      <!-- the printed skein number, half under the wind -->
+      <text class="dp-spool-no" x="54" y="90">304</text>
+`,
   },
   {
     // The bead tin: a shallow round sweet-tin with the lid off, tipped onto its
@@ -532,31 +563,50 @@ export const DESK_PROPS = [
     id: "tin", w: 136, h: 122,
     svg: `
       <defs>
-        <linearGradient id="dpTin" x1="0.1" y1="0" x2="0.9" y2="1">
-          <stop offset="0" stop-color="#e8dcc0"/><stop offset="0.5" stop-color="#c9b892"/><stop offset="1" stop-color="#9d8a63"/>
-        </linearGradient>
-        <linearGradient id="dpTinWall" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stop-color="#8a7a56"/><stop offset="1" stop-color="#b6a47c"/>
-        </linearGradient>
+        ${bar("dpTinWall", ["#efe6cf", "#c5b48d", "#8e7d57", "#cdbc95"], 96)}
+        ${bar("dpTinLid", ["#f4ecd8", "#cdbc95", "#93825c", "#ddcda7"], 112)}
+        ${sheen("dpTinSh", "#fffdf4", 0.5)}
+        ${grain("dpTinScuff", "0.9 0.06", 8, [0.35, 0.30, 0.20], 0.5)}
+        <clipPath id="dpTinInner"><ellipse cx="88" cy="42" rx="37" ry="22" transform="rotate(8 88 42)"/></clipPath>
       </defs>
-      <!-- the lid, dropped flat beside the tin -->
-      <ellipse cx="30" cy="96" rx="28" ry="16" fill="url(#dpTin)" stroke="#8a7a56" stroke-width="1"/>
-      <ellipse cx="30" cy="94" rx="22" ry="12" fill="none" stroke="#a89670" stroke-width="1" opacity="0.7"/>
-      <!-- the tin body, tipped so the mouth faces down-right -->
-      <path d="M54 28 a40 24 0 0 1 74 12 l-4 26 a40 24 0 0 1 -74 -12 Z" fill="url(#dpTinWall)" stroke="#7b6c4a" stroke-width="1"/>
-      <ellipse cx="91" cy="40" rx="40" ry="24" fill="url(#dpTin)" stroke="#7b6c4a" stroke-width="1.1" transform="rotate(9 91 40)"/>
-      <ellipse cx="91" cy="40" rx="33" ry="18" fill="#5f5238" opacity="0.55" transform="rotate(9 91 40)"/>
-      <!-- the beads still in it, crowded to the low side of the tilt -->
-      <g stroke="#7d7460" stroke-width="0.6">
-        <circle cx="84" cy="48" r="6" fill="#f0ebdd"/><circle cx="97" cy="50" r="6" fill="#ecaebd"/>
-        <circle cx="72" cy="44" r="6" fill="#f2d78f"/><circle cx="108" cy="45" r="6" fill="#f0ebdd"/>
-        <circle cx="90" cy="38" r="6" fill="#b3cbe4"/><circle cx="103" cy="36" r="5.6" fill="#f0ebdd"/>
-        <circle cx="77" cy="34" r="5.6" fill="#cbbceb"/>
+      <!-- The bead tin: a shallow round sweet tin, lid off. The old one was a
+           grey bowl with confetti in it. A tin is a pressed metal object, so
+           what it needs is the wall it stands on, the bright rolled rim on top
+           of that wall, the inside falling into shadow away from the lamp, and
+           paint that has been rubbed off the high points. -->
+      <!-- the lid, dropped face up beside it: rim, pressed centre, worn paint -->
+      <g transform="rotate(-6 32 96)">
+        <ellipse cx="32" cy="99" rx="29" ry="17" fill="#3a3018" opacity="0.2"/>
+        <ellipse cx="32" cy="96" rx="29" ry="17" fill="url(#dpTinLid)" stroke="#87764f" stroke-width="1"/>
+        <ellipse cx="32" cy="96" rx="23" ry="12.5" fill="none" stroke="#a08d63" stroke-width="1.4" opacity="0.75"/>
+        <ellipse cx="32" cy="95.4" rx="23" ry="12.5" fill="none" stroke="#fdf6e2" stroke-width="0.7" opacity="0.5"/>
+        <ellipse cx="32" cy="96" rx="15" ry="8" fill="#c06880" opacity="0.28"/>
+        <ellipse cx="26" cy="91" rx="11" ry="5" fill="#fffdf4" opacity="0.28"/>
       </g>
-      <g fill="#ffffff" opacity="0.45">
-        <circle cx="82" cy="46" r="1.4"/><circle cx="70" cy="42" r="1.4"/><circle cx="88" cy="36" r="1.3"/>
+      <!-- the wall of the tin, standing on the desk -->
+      <path d="M51 34 a39 23 0 0 1 74 12 l-3 20 a39 23 0 0 1 -74 -12 Z"
+            fill="url(#dpTinWall)" stroke="#7b6c4a" stroke-width="1"/>
+      <path d="M51 34 a39 23 0 0 1 74 12 l-3 20 a39 23 0 0 1 -74 -12 Z"
+            fill="url(#dpTinScuff)" opacity="0.35"/>
+      <!-- the band of paint left on the wall, worn through where it is handled -->
+      <path d="M53 46 a39 23 0 0 0 70 10" fill="none" stroke="#c06880" stroke-width="6" opacity="0.3"/>
+      <path d="M64 60 a39 23 0 0 0 22 4" fill="none" stroke="#efe6cf" stroke-width="5" opacity="0.35"/>
+      <!-- the mouth: rolled rim, then the inside wall in shadow, then the floor -->
+      <ellipse cx="88" cy="42" rx="40" ry="24" fill="url(#dpTinLid)" stroke="#7b6c4a" stroke-width="1.1" transform="rotate(8 88 42)"/>
+      <ellipse cx="88" cy="42" rx="40" ry="24" fill="url(#dpTinSh)" opacity="0.4" transform="rotate(8 88 42)"/>
+      <ellipse cx="88" cy="42" rx="37" ry="22" fill="#6b5c3d" transform="rotate(8 88 42)"/>
+      <g clip-path="url(#dpTinInner)">
+        <ellipse cx="88" cy="46" rx="34" ry="20" fill="#b3a179"/>
+        <path d="M54 40 a37 22 0 0 1 40 -18" fill="none" stroke="#4a3f28" stroke-width="9" opacity="0.5"/>
+        <ellipse cx="96" cy="54" rx="26" ry="12" fill="#fdf6e2" opacity="0.12"/>
       </g>
-      <ellipse cx="72" cy="30" rx="16" ry="6" fill="#ffffff" opacity="0.2" transform="rotate(9 72 30)"/>`,
+      <!-- the beads still in it, crowded to the low side and each sitting in
+           its own small shadow on the tin's floor -->
+      <g><g><ellipse cx="96.0" cy="40.0" rx="5.8" ry="4.5" fill="#3a3018" opacity="0.28"/><circle cx="95" cy="38" r="6.4" fill="#a9d6b6" stroke="#5a9e6e" stroke-width="0.7"/><path d="M89.3 38.2A5.7 5.7 0 0 1 99.8 34.9" fill="none" stroke="#3a2a12" stroke-width="1.2" opacity="0.18"/><circle cx="93.1" cy="35.7" r="1.2" fill="#ffffff" opacity="0.6"/></g><g><ellipse cx="103.0" cy="44.0" rx="5.8" ry="4.5" fill="#3a3018" opacity="0.28"/><circle cx="102" cy="42" r="6.4" fill="#cbbceb" stroke="#8b73c9" stroke-width="0.7"/><path d="M96.3 42.2A5.7 5.7 0 0 1 106.8 38.9" fill="none" stroke="#3a2a12" stroke-width="1.2" opacity="0.18"/><circle cx="100.1" cy="39.7" r="1.2" fill="#ffffff" opacity="0.6"/></g><g><ellipse cx="65.0" cy="45.0" rx="5.8" ry="4.5" fill="#3a3018" opacity="0.28"/><circle cx="64" cy="43" r="6.4" fill="#f0ebdd" stroke="#cfc6ae" stroke-width="0.7"/><path d="M58.3 43.2A5.7 5.7 0 0 1 68.8 39.9" fill="none" stroke="#3a2a12" stroke-width="1.2" opacity="0.18"/><circle cx="62.1" cy="40.7" r="1.2" fill="#ffffff" opacity="0.6"/></g><g><ellipse cx="76.0" cy="47.0" rx="5.8" ry="4.5" fill="#3a3018" opacity="0.28"/><circle cx="75" cy="45" r="6.4" fill="#b3cbe4" stroke="#6486ac" stroke-width="0.7"/><path d="M69.3 45.2A5.7 5.7 0 0 1 79.8 41.9" fill="none" stroke="#3a2a12" stroke-width="1.2" opacity="0.18"/><circle cx="73.1" cy="42.7" r="1.2" fill="#ffffff" opacity="0.6"/></g><g><ellipse cx="90.0" cy="49.0" rx="5.8" ry="4.5" fill="#3a3018" opacity="0.28"/><circle cx="89" cy="47" r="6.4" fill="#f0ebdd" stroke="#cfc6ae" stroke-width="0.7"/><path d="M83.3 47.2A5.7 5.7 0 0 1 93.8 43.9" fill="none" stroke="#3a2a12" stroke-width="1.2" opacity="0.18"/><circle cx="87.1" cy="44.7" r="1.2" fill="#ffffff" opacity="0.6"/></g><g><ellipse cx="108.0" cy="52.0" rx="5.8" ry="4.5" fill="#3a3018" opacity="0.28"/><circle cx="107" cy="50" r="6.4" fill="#f2d78f" stroke="#b6912f" stroke-width="0.7"/><path d="M101.3 50.2A5.7 5.7 0 0 1 111.8 46.9" fill="none" stroke="#3a2a12" stroke-width="1.2" opacity="0.18"/><circle cx="105.1" cy="47.7" r="1.2" fill="#ffffff" opacity="0.6"/></g><g><ellipse cx="70.0" cy="55.0" rx="5.8" ry="4.5" fill="#3a3018" opacity="0.28"/><circle cx="69" cy="53" r="6.4" fill="#f0ebdd" stroke="#cfc6ae" stroke-width="0.7"/><path d="M63.3 53.2A5.7 5.7 0 0 1 73.8 49.9" fill="none" stroke="#3a2a12" stroke-width="1.2" opacity="0.18"/><circle cx="67.1" cy="50.7" r="1.2" fill="#ffffff" opacity="0.6"/></g><g><ellipse cx="96.0" cy="57.0" rx="5.8" ry="4.5" fill="#3a3018" opacity="0.28"/><circle cx="95" cy="55" r="6.4" fill="#f0ebdd" stroke="#cfc6ae" stroke-width="0.7"/><path d="M89.3 55.2A5.7 5.7 0 0 1 99.8 51.9" fill="none" stroke="#3a2a12" stroke-width="1.2" opacity="0.18"/><circle cx="93.1" cy="52.7" r="1.2" fill="#ffffff" opacity="0.6"/></g><g><ellipse cx="83.0" cy="59.0" rx="5.8" ry="4.5" fill="#3a3018" opacity="0.28"/><circle cx="82" cy="57" r="6.4" fill="#ecaebd" stroke="#b7677f" stroke-width="0.7"/><path d="M76.3 57.2A5.7 5.7 0 0 1 86.8 53.9" fill="none" stroke="#3a2a12" stroke-width="1.2" opacity="0.18"/><circle cx="80.1" cy="54.7" r="1.2" fill="#ffffff" opacity="0.6"/></g></g>
+      <!-- the rim's own highlight, last, so nothing paints over it -->
+      <path d="M53 34 a39 23 0 0 1 46 -14" fill="none" stroke="#fffdf4" stroke-width="1.6" opacity="0.6" stroke-linecap="round"/>
+      <path d="M124 50 a39 23 0 0 1 -18 15" fill="none" stroke="#6f6144" stroke-width="1.2" opacity="0.4" stroke-linecap="round"/>
+`,
   },
   {
     // A spent guitar string, coiled the way one springs back the moment it comes
