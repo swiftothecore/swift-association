@@ -43,55 +43,154 @@
 <body>
 <div class="sx-desk" aria-hidden="true">
   <!-- LEFT: brass hand magnifier set down beside the page, handle running off
-       the screen edge. The lens does the searcher's job on the desk itself:
-       the wood grain under the glass is drawn back bigger and darker, with a
-       refraction band at the rim and a diagonal glare. -->
+       the screen edge. The lens does the searcher's job on the desk itself.
+
+       The glass is the whole prop, and the old one was a drawing of a
+       magnifier: grain inside a bit fatter than the grain outside, under a
+       milky wash. A lens does three things at once and only the first is
+       "bigger". The image is displaced outward from the axis; the
+       magnification falls off toward the rim, so the grain crowds into a
+       compressed annulus there; and straight lines bow, because a spherical
+       surface maps a straight line to a curve everywhere except through the
+       centre. The grain below is the desk's own straight lines forward-mapped
+       through that (scripts/art/make_searcher_props.py), and it stops short of
+       matching the desk at the rim on purpose: a real lens jumps at its edge,
+       and drawing the jump away is what made this read as a puddle.
+
+       The whole interior counter-rotates against the prop's own 50deg, so the
+       magnified grain lies parallel with the desk grain outside the glass. -->
   <div class="sx-desk-item dx-loupe">
     <svg viewBox="0 0 480 232" xmlns="http://www.w3.org/2000/svg">
       <defs>
-        <linearGradient id="lpBrass" x1="0" y1="0" x2="0.85" y2="1"><stop offset="0" stop-color="#ecc87e"/><stop offset="0.5" stop-color="#cfa050"/><stop offset="1" stop-color="#a1742f"/></linearGradient>
-        <linearGradient id="lpWood" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8a5a30"/><stop offset="0.45" stop-color="#633c1c"/><stop offset="1" stop-color="#41250e"/></linearGradient>
-        <radialGradient id="lpGlass" cx="0.38" cy="0.32" r="0.85"><stop offset="0" stop-color="#eef4f0" stop-opacity="0.26"/><stop offset="0.6" stop-color="#dbe6df" stop-opacity="0.1"/><stop offset="1" stop-color="#9fb4a8" stop-opacity="0.26"/></radialGradient>
+        <!-- brass, across the ring's width -->
+        <linearGradient id="lpBrass" x1="0" y1="0" x2="0.6" y2="1">
+          <stop offset="0" stop-color="#f6dc9c"/><stop offset="0.3" stop-color="#dcb257"/>
+          <stop offset="0.74" stop-color="#8f651f"/><stop offset="1" stop-color="#c39a44"/>
+        </linearGradient>
+        <!-- the turned handle, seen across its width: four stops, and the last
+             is the desk bouncing back up the underside -->
+        <linearGradient id="lpWood" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#b5824f"/><stop offset="0.28" stop-color="#7d4d23"/>
+          <stop offset="0.74" stop-color="#3d2109" stop-opacity="1"/><stop offset="1" stop-color="#6c4520"/>
+        </linearGradient>
+        <linearGradient id="lpPommel" x1="0.2" y1="0.1" x2="0.85" y2="0.95">
+          <stop offset="0" stop-color="#a97644"/><stop offset="0.45" stop-color="#6f421c"/>
+          <stop offset="1" stop-color="#341a06"/>
+        </linearGradient>
+        <!-- figure in the handle: the same trick the picks on the game's desk
+             use, one layer of noise rather than drawn stripes, because grain is
+             a grown pattern and every hand-drawn version reads as comb marks -->
+        <filter id="lpFigure" x="0" y="0" width="100%" height="100%">
+          <feTurbulence type="fractalNoise" baseFrequency="0.008 0.42" numOctaves="3" seed="5"/>
+          <feColorMatrix type="matrix" values="0 0 0 0 0.16  0 0 0 0 0.07  0 0 0 0 0.02  0 0 0 0.5 -0.06"/>
+        </filter>
+        <clipPath id="lpHandle">
+          <path d="M36 101 C64 95 104 92 152 93 C192 94 228 99 256 104 L256 128 C228 133 192 138 152 139 C104 140 64 137 36 131 Z"/>
+        </clipPath>
         <clipPath id="lpClip"><circle cx="356" cy="116" r="84"/></clipPath>
       </defs>
-      <!-- turned wooden handle, pommel trailing off screen left -->
-      <ellipse cx="34" cy="116" rx="17" ry="18" fill="url(#lpWood)"/>
-      <path d="M36 101 C92 93 152 95 202 102 C228 106 246 108 257 109 L257 123 C246 124 228 126 202 130 C152 137 92 139 36 131 Z" fill="url(#lpWood)"/>
-      <path d="M44 100.5 C100 93.5 160 95.5 236 105" fill="none" stroke="#a5714a" stroke-width="2.2" stroke-linecap="round" opacity="0.75"/>
-      <path d="M60 133 C110 138 160 137 210 129" fill="none" stroke="#2c1706" stroke-width="1.6" stroke-linecap="round" opacity="0.5"/>
-      <path d="M64 98.6 q4 17.4 0 34.8 M72 98 q4 18 0 36" fill="none" stroke="#341d0a" stroke-width="1.4" opacity="0.55"/>
-      <!-- brass collar where the handle meets the ring -->
-      <rect x="252" y="100" width="18" height="32" rx="3" fill="url(#lpBrass)" stroke="#7c5a22" stroke-width="1"/>
-      <rect x="255" y="103" width="12" height="4" rx="2" fill="#f4d896" opacity="0.8"/>
-      <!-- lens interior first: glass tint over magnified wood grain -->
-      <g clip-path="url(#lpClip)">
-<!-- counter-rotated against the item's CSS rotate(50deg) so the magnified
-             grain lies parallel with the desk grain outside the glass -->
-        <g fill="none" stroke="#6f4e20" stroke-linecap="round" transform="rotate(-55 356 116)">
-          <path d="M268 56 q46 6 88 0 q46 -6 92 0" stroke-width="5" opacity="0.24"/>
-          <path d="M268 82 q46 -7 88 0 q46 7 92 0" stroke-width="4" opacity="0.28"/>
-          <path d="M268 108 q40 6 84 1 q48 -5 96 1" stroke-width="6" opacity="0.22"/>
-          <path d="M268 136 q46 -6 88 -1 q46 5 92 -1" stroke-width="4.5" opacity="0.28"/>
-          <path d="M268 162 q46 6 88 0 q46 -6 92 0" stroke-width="5" opacity="0.22"/>
-          <ellipse cx="394" cy="148" rx="27" ry="8.5" stroke-width="2.4" opacity="0.26"/>
-          <ellipse cx="394" cy="148" rx="14" ry="4.5" stroke-width="2" opacity="0.3"/>
-        </g>
-        <circle cx="356" cy="116" r="84" fill="url(#lpGlass)"/>
-        <!-- refraction band just inside the rim, then the darker seat shadow -->
-        <circle cx="356" cy="116" r="78" fill="none" stroke="#ffffff" stroke-width="4" opacity="0.1"/>
-        <path d="M298 164 A75 75 0 0 0 430 130" fill="none" stroke="#2e2010" stroke-width="9" opacity="0.12"/>
-        <!-- diagonal glare, kept faint so it reads as light on glass, not as
-             an object under it -->
-        <path d="M316 76 L384 144" stroke="#ffffff" stroke-opacity="0.12" stroke-width="8" stroke-linecap="round"/>
-        <path d="M332 66 L390 124" stroke="#ffffff" stroke-opacity="0.24" stroke-width="2.6" stroke-linecap="round"/>
-        <ellipse cx="320" cy="78" rx="9" ry="5.5" fill="#ffffff" opacity="0.12" transform="rotate(-38 320 78)"/>
+
+      <!-- A magnifier lying face down on a lit desk throws a caustic: the
+           glass gathers the lamp and puts a bright patch on the wood on the
+           shadow side. It is the one thing that says the lens is real glass
+           and not a hole. -->
+      <ellipse cx="374" cy="136" rx="46" ry="34" fill="#fff3cf" opacity="0.14"
+               transform="rotate(-38 374 136)"/>
+      <ellipse cx="379" cy="141" rx="22" ry="14" fill="#fff8e0" opacity="0.18"
+               transform="rotate(-38 379 141)"/>
+
+      <!-- THE HANDLE -->
+      <ellipse cx="34" cy="116" rx="18" ry="19" fill="url(#lpPommel)"/>
+      <path d="M22 104 A18 19 0 0 1 40 99" fill="none" stroke="#c08c58" stroke-width="2.4"
+            stroke-linecap="round" opacity="0.5"/>
+      <path d="M36 101 C64 95 104 92 152 93 C192 94 228 99 256 104 L256 128 C228 133 192 138 152 139 C104 140 64 137 36 131 Z"
+            fill="url(#lpWood)"/>
+      <g clip-path="url(#lpHandle)">
+        <rect x="30" y="90" width="232" height="52" filter="url(#lpFigure)" opacity="0.55"/>
+        <!-- the lit ridge along the top and the dark turn under it -->
+        <path d="M44 100 C72 94.5 108 92 152 93" fill="none" stroke="#d0a06a" stroke-width="2.6"
+              stroke-linecap="round" opacity="0.6"/>
+        <path d="M58 136 C96 139.5 140 140 186 137.5" fill="none" stroke="#2a1405" stroke-width="3"
+              stroke-linecap="round" opacity="0.45"/>
       </g>
-      <!-- the brass ring, milled edge, rim lines and a top sheen -->
-      <circle cx="356" cy="116" r="92" fill="none" stroke="url(#lpBrass)" stroke-width="13"/>
-      <circle cx="356" cy="116" r="92" fill="none" stroke="#7c5822" stroke-width="13" stroke-dasharray="1.7 7.3" opacity="0.16"/>
-      <circle cx="356" cy="116" r="98.5" fill="none" stroke="#6e4d1c" stroke-width="1.3" opacity="0.9"/>
-      <circle cx="356" cy="116" r="85.5" fill="none" stroke="#5f421a" stroke-width="1.2" opacity="0.9"/>
-      <path d="M282 62 A92 92 0 0 1 430 62" fill="none" stroke="#f4d896" stroke-width="2.5" stroke-linecap="round" opacity="0.8"/>
+      <!-- turned beads: each is a groove, so a dark line with its lit lip on
+           the side the lamp is, never a single stroke -->
+      <g clip-path="url(#lpHandle)">
+        <g fill="none" stroke-linecap="round">
+          <path d="M74 92 C70 105 70 128 74 140" stroke="#2b1606" stroke-width="3.4" opacity="0.7"/>
+          <path d="M77.6 92 C73.6 105 73.6 128 77.6 140" stroke="#c99a63" stroke-width="1.5" opacity="0.45"/>
+          <path d="M88 92 C84 105 84 128 88 140" stroke="#2b1606" stroke-width="2.8" opacity="0.6"/>
+          <path d="M91.2 92 C87.2 105 87.2 128 91.2 140" stroke="#c99a63" stroke-width="1.3" opacity="0.4"/>
+          <path d="M232 96 C229 106 229 126 232 136" stroke="#2b1606" stroke-width="3" opacity="0.6"/>
+          <path d="M235.2 96 C232.2 106 232.2 126 235.2 136" stroke="#c99a63" stroke-width="1.3" opacity="0.4"/>
+        </g>
+      </g>
+      <!-- brass collar where the handle meets the ring -->
+      <rect x="250" y="99" width="20" height="34" rx="3" fill="url(#lpBrass)" stroke="#7c5a22" stroke-width="1"/>
+      <rect x="253" y="103" width="14" height="5" rx="2.5" fill="#f7e3a4" opacity="0.75"/>
+      <path d="M250 122 h20" stroke="#7c5a22" stroke-width="1" opacity="0.5"/>
+
+      <!-- THE GLASS -->
+      <g clip-path="url(#lpClip)">
+        <!-- the desk seen through it, a shade brighter than the wood outside
+             because the lens gathers light before it spreads it -->
+        <circle cx="356" cy="116" r="84" fill="#d3ba8e"/>
+        <g transform="rotate(-50 356 116)">
+          <!-- the magnified grain. It thickens toward the rim because that is
+               where the mapping crowds it, not because it was drawn darker. -->
+          <g fill="none" stroke="#6f4e20" stroke-linecap="round">
+          <path d="M345.0 32.8 C346.8 32.8 352.3 32.7 356.0 32.7 C359.7 32.7 365.2 32.8 367.0 32.8" stroke-width="2.6" opacity="0.17"/>
+          <path d="M306.5 49.3 C308.2 49.2 313.3 48.7 316.8 48.2 C320.3 47.8 323.8 47.3 327.4 46.8 C331.0 46.3 334.7 45.8 338.5 45.5 C342.3 45.1 346.2 44.8 350.1 44.7 C354.0 44.5 358.0 44.5 361.9 44.7 C365.8 44.8 369.7 45.1 373.5 45.5 C377.3 45.8 381.0 46.3 384.6 46.8 C388.2 47.3 391.7 47.8 395.2 48.2 C398.7 48.7 403.8 49.2 405.5 49.3" stroke-width="3.9" opacity="0.25"/>
+          <path d="M289.9 66.0 C291.5 65.8 296.3 65.2 299.5 64.6 C302.6 64.0 305.6 63.2 308.8 62.4 C312.0 61.6 315.3 60.7 318.9 59.8 C322.4 58.9 326.0 57.7 330.0 56.9 C333.9 56.1 338.2 55.5 342.6 55.0 C346.9 54.6 351.5 54.4 356.0 54.4 C360.5 54.4 365.1 54.6 369.4 55.0 C373.8 55.5 378.1 56.1 382.0 56.9 C386.0 57.7 389.6 58.9 393.1 59.8 C396.7 60.7 400.0 61.6 403.2 62.4 C406.4 63.2 409.4 64.0 412.5 64.6 C415.7 65.2 420.5 65.8 422.1 66.0" stroke-width="3.1" opacity="0.17"/>
+          <path d="M279.0 82.7 C280.5 82.5 285.2 82.2 288.0 81.7 C290.9 81.2 293.4 80.5 296.1 79.7 C298.8 78.9 301.2 77.8 304.3 76.8 C307.3 75.8 310.5 74.7 314.2 73.8 C317.9 72.9 322.1 72.0 326.5 71.3 C330.9 70.6 335.7 70.0 340.7 69.6 C345.6 69.2 350.9 68.9 356.0 68.9 C361.1 68.9 366.4 69.2 371.3 69.6 C376.3 70.0 381.1 70.6 385.5 71.3 C389.9 72.0 394.1 72.9 397.8 73.8 C401.5 74.7 404.7 75.8 407.7 76.8 C410.8 77.8 413.2 78.9 415.9 79.7 C418.6 80.5 421.1 81.2 424.0 81.7 C426.8 82.2 431.5 82.5 433.0 82.7" stroke-width="3.4" opacity="0.26"/>
+          <path d="M276.0 99.3 C277.3 99.2 281.5 98.9 284.1 98.6 C286.6 98.2 288.8 97.8 291.1 97.3 C293.5 96.8 295.4 96.0 298.2 95.4 C301.0 94.8 304.2 94.2 307.8 93.6 C311.5 93.0 315.6 92.4 320.1 91.9 C324.6 91.3 329.6 90.8 334.9 90.5 C340.2 90.1 346.0 89.8 351.7 89.8 C357.3 89.7 363.4 89.8 368.9 90.0 C374.4 90.2 379.9 90.6 384.8 91.1 C389.7 91.5 394.3 92.1 398.3 92.7 C402.4 93.3 406.1 93.9 409.3 94.5 C412.5 95.1 415.1 95.8 417.6 96.4 C420.1 96.9 422.0 97.6 424.4 98.0 C426.7 98.4 430.5 98.8 431.8 99.0" stroke-width="3.1" opacity="0.26"/>
+          <path d="M273.4 116.0 C274.7 116.0 279.0 116.0 281.5 116.0 C284.0 116.0 286.0 116.0 288.2 116.0 C290.4 116.0 292.1 116.0 294.7 116.0 C297.3 116.0 300.3 116.0 303.7 116.0 C307.2 116.0 311.1 116.0 315.4 116.0 C319.8 116.0 324.7 116.0 330.0 116.0 C335.2 116.0 341.2 116.0 347.0 116.0 C352.8 116.0 359.2 116.0 365.0 116.0 C370.8 116.0 376.8 116.0 382.0 116.0 C387.3 116.0 392.2 116.0 396.6 116.0 C400.9 116.0 404.8 116.0 408.3 116.0 C411.7 116.0 414.7 116.0 417.3 116.0 C419.9 116.0 421.6 116.0 423.8 116.0 C426.0 116.0 428.0 116.0 430.5 116.0 C433.0 116.0 437.3 116.0 438.6 116.0" stroke-width="4.9" opacity="0.17"/>
+          <path d="M276.0 132.7 C277.3 132.8 281.5 133.1 284.1 133.4 C286.6 133.8 288.8 134.2 291.1 134.7 C293.5 135.2 295.4 136.0 298.2 136.6 C301.0 137.2 304.2 137.8 307.8 138.4 C311.5 139.0 315.6 139.6 320.1 140.1 C324.6 140.7 329.6 141.2 334.9 141.5 C340.2 141.9 346.0 142.2 351.7 142.2 C357.3 142.3 363.4 142.2 368.9 142.0 C374.4 141.8 379.9 141.4 384.8 140.9 C389.7 140.5 394.3 139.9 398.3 139.3 C402.4 138.7 406.1 138.1 409.3 137.5 C412.5 136.9 415.1 136.2 417.6 135.6 C420.1 135.1 422.0 134.4 424.4 134.0 C426.7 133.6 430.5 133.2 431.8 133.0" stroke-width="4.4" opacity="0.22"/>
+          <path d="M279.0 149.3 C280.5 149.5 285.2 149.8 288.0 150.3 C290.9 150.8 293.4 151.5 296.1 152.3 C298.8 153.1 301.2 154.2 304.3 155.2 C307.3 156.2 310.5 157.3 314.2 158.2 C317.9 159.1 322.1 160.0 326.5 160.7 C330.9 161.4 335.7 162.0 340.7 162.4 C345.6 162.8 350.9 163.1 356.0 163.1 C361.1 163.1 366.4 162.8 371.3 162.4 C376.3 162.0 381.1 161.4 385.5 160.7 C389.9 160.0 394.1 159.1 397.8 158.2 C401.5 157.3 404.7 156.2 407.7 155.2 C410.8 154.2 413.2 153.1 415.9 152.3 C418.6 151.5 421.1 150.8 424.0 150.3 C426.8 149.8 431.5 149.5 433.0 149.3" stroke-width="4.0" opacity="0.30"/>
+          <path d="M289.9 166.0 C291.5 166.2 296.3 166.8 299.5 167.4 C302.6 168.0 305.6 168.8 308.8 169.6 C312.0 170.4 315.3 171.3 318.9 172.2 C322.4 173.1 326.0 174.3 330.0 175.1 C333.9 175.9 338.2 176.5 342.6 177.0 C346.9 177.4 351.5 177.6 356.0 177.6 C360.5 177.6 365.1 177.4 369.4 177.0 C373.8 176.5 378.1 175.9 382.0 175.1 C386.0 174.3 389.6 173.1 393.1 172.2 C396.7 171.3 400.0 170.4 403.2 169.6 C406.4 168.8 409.4 168.0 412.5 167.4 C415.7 166.8 420.5 166.2 422.1 166.0" stroke-width="2.9" opacity="0.15"/>
+          <path d="M306.5 182.7 C308.2 182.8 313.3 183.3 316.8 183.8 C320.3 184.2 323.8 184.7 327.4 185.2 C331.0 185.7 334.7 186.2 338.5 186.5 C342.3 186.9 346.2 187.2 350.1 187.3 C354.0 187.5 358.0 187.5 361.9 187.3 C365.8 187.2 369.7 186.9 373.5 186.5 C377.3 186.2 381.0 185.7 384.6 185.2 C388.2 184.7 391.7 184.2 395.2 183.8 C398.7 183.3 403.8 182.8 405.5 182.7" stroke-width="5.8" opacity="0.21"/>
+          <path d="M345.0 199.2 C346.8 199.2 352.3 199.3 356.0 199.3 C359.7 199.3 365.2 199.2 367.0 199.2" stroke-width="3.3" opacity="0.20"/>
+          </g>
+          <!-- one knot, mapped the same way, so it stretches with everything
+               else instead of sitting on top as a drawn ellipse -->
+          <ellipse cx="392" cy="150" rx="30" ry="10" fill="none" stroke="#6f4e20"
+                   stroke-width="2.6" opacity="0.24" transform="rotate(-6 392 150)"/>
+          <ellipse cx="392" cy="150" rx="15" ry="5" fill="none" stroke="#6f4e20"
+                   stroke-width="2.2" opacity="0.28" transform="rotate(-6 392 150)"/>
+        </g>
+        <!-- the seat shadow the ring throws down onto the glass, and the
+             caustic ring just inside the rim where the edge of the lens gathers
+             the light it is bending -->
+        <path d="M292 158 A75 75 0 0 0 428 122" fill="none" stroke="#2e2010" stroke-width="11" opacity="0.13"/>
+        <circle cx="356" cy="116" r="79" fill="none" stroke="#fff6dc" stroke-width="3.4" opacity="0.22"/>
+        <circle cx="356" cy="116" r="81.5" fill="none" stroke="#8a6a34" stroke-width="2.6" opacity="0.22"/>
+        <!-- a warm fringe on the lit side of the rim and a cool one opposite:
+             the cheap chromatic aberration a real hand lens actually has -->
+        <path d="M298 62 A82 82 0 0 1 412 60" fill="none" stroke="#d9a24a" stroke-width="2.2" opacity="0.28"/>
+        <path d="M300 172 A82 82 0 0 0 414 170" fill="none" stroke="#7f93a8" stroke-width="2.2" opacity="0.2"/>
+        <!-- a thumbprint on the glass, because it was picked up by the lens
+             like everyone picks one up -->
+        <g fill="none" stroke="#ffffff" stroke-width="1.5" opacity="0.1">
+          <path d="M322 138 C330 128 344 126 352 134"/>
+          <path d="M320 145 C330 133 348 131 357 141"/>
+          <path d="M319 152 C331 138 352 136 362 148"/>
+        </g>
+        <!-- and the glare: one broad soft band, one thin hot line just off it -->
+        <path d="M312 78 L382 148" stroke="#ffffff" stroke-opacity="0.08" stroke-width="13" stroke-linecap="round"/>
+        <path d="M330 64 L390 124" stroke="#ffffff" stroke-opacity="0.3" stroke-width="2.4" stroke-linecap="round"/>
+        <ellipse cx="318" cy="76" rx="11" ry="6" fill="#ffffff" opacity="0.14" transform="rotate(-38 318 76)"/>
+      </g>
+
+      <!-- THE RING: milled edge, rim lines, top sheen -->
+      <circle cx="356" cy="116" r="92" fill="none" stroke="url(#lpBrass)" stroke-width="14"/>
+      <circle cx="356" cy="116" r="92" fill="none" stroke="#7c5822" stroke-width="14"
+              stroke-dasharray="1.7 7.3" opacity="0.18"/>
+      <circle cx="356" cy="116" r="99" fill="none" stroke="#6e4d1c" stroke-width="1.4" opacity="0.9"/>
+      <circle cx="356" cy="116" r="85" fill="none" stroke="#5f421a" stroke-width="1.3" opacity="0.9"/>
+      <path d="M282 62 A92 92 0 0 1 430 62" fill="none" stroke="#f7e3a4" stroke-width="2.8"
+            stroke-linecap="round" opacity="0.8"/>
+      <path d="M300 182 A92 92 0 0 0 418 178" fill="none" stroke="#3f2c0e" stroke-width="2.4"
+            stroke-linecap="round" opacity="0.35"/>
     </svg>
   </div>
   <!-- LEFT: the gold highlighter, uncapped and set down mid-thought. This is
