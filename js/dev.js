@@ -536,13 +536,16 @@ export function initDev(api) {
 
   // ---- Desk cassette ---------------------------------------------------------
   // The tape on the desk carries a song the DATE picks, weighted so Clean comes up
-  // on roughly a third of days. Two things are hard to check by playing: whether a
-  // long title still fits between the printed rules, and whether the weighting is
-  // actually what it claims. "play" writes any song onto the card without moving the
-  // date (a date scrub or "today" puts the real draw back), and "sample" counts a
-  // year of draws to the console. The desk prop is desktop-only and the module may
-  // not have run, so every button checks for it first.
-  const cassSel = select(window.deskCassette ? window.deskCassette.songs() : [],
+  // on roughly a third of days, and labelled a re-recording only when it is Clean.
+  // Two things are hard to check by playing: which titles the card was too small to
+  // hold, and whether the weighting is actually what it claims. "play" writes any
+  // song onto the card without moving the date (a date scrub or "today" puts the
+  // real draw back, and the dropped titles are playable here so you can see how far
+  // they overrun), "cut titles" lists what the measuring pass dropped, and "sample"
+  // counts a year of draws to the console. The desk prop is desktop-only and the
+  // module may not have run, so every button checks for it first.
+  const cassSel = select(window.deskCassette
+    ? [...window.deskCassette.songs(), ...window.deskCassette.cut()] : [],
     (s2) => s2.title, (s2) => s2.title);
   const cassDays = num(365);
   body.append(section("desk cassette",
@@ -555,12 +558,12 @@ export function initDev(api) {
       window.deskCassette.refresh();
       toast("cassette → today's draw");
     }),
-    btn("longest titles", () => {
-      const all = window.deskCassette?.songs();
-      if (!all) return toast("no desk cassette here");
-      console.table(all.slice().sort((a, b) => b.title.length - a.title.length).slice(0, 15)
+    btn("cut titles", () => {
+      const gone = window.deskCassette?.cut();
+      if (!gone) return toast("no desk cassette here");
+      console.table(gone.slice().sort((a, b) => b.title.length - a.title.length)
         .map((s2) => ({ title: s2.title, album: s2.album, track: s2.track, chars: s2.title.length })));
-      toast("15 longest titles → console");
+      toast(`${gone.length} titles too wide for the card → console`);
     })),
     row("sample", cassDays, "days", btn("sample", () => {
       const dc = window.deskCassette;
@@ -570,13 +573,18 @@ export function initDev(api) {
       for (let i = 0; i < Math.max(1, +cassDays.value); i++) {
         const day = new Date(d.getFullYear(), d.getMonth(), d.getDate() + i);
         const p2 = (n) => String(n).padStart(2, "0");
-        const song = dc.pick(`${day.getFullYear()}-${p2(day.getMonth() + 1)}-${p2(day.getDate())}`);
-        if (song) counts.set(song.title, (counts.get(song.title) || 0) + 1);
+        const d2 = dc.draw(`${day.getFullYear()}-${p2(day.getMonth() + 1)}-${p2(day.getDate())}`);
+        const label = d2.song && d2.song.title + (d2.tv ? " (Taylor\u2019s Version)" : "");
+        if (label) counts.set(label, (counts.get(label) || 0) + 1);
       }
       const n = Math.max(1, +cassDays.value);
       console.table([...counts].sort((a, b) => b[1] - a[1]).slice(0, 20)
         .map(([title, c]) => ({ title, days: c, share: (c / n * 100).toFixed(1) + "%" })));
-      toast(`Clean ${((counts.get("Clean") || 0) / n * 100).toFixed(1)}% of ${n} days → console`);
+      const plain = counts.get("Clean") || 0;
+      const tv = counts.get("Clean (Taylor\u2019s Version)") || 0;
+      const clean = plain + tv;
+      toast(`Clean ${(clean / n * 100).toFixed(1)}% of ${n} days, `
+        + `${clean ? (tv / clean * 100).toFixed(0) : 0}% of those (Taylor\u2019s Version) → console`);
     }))));
 
   // ---- Daily -----------------------------------------------------------------

@@ -4,7 +4,7 @@
 // its printed rules. What is WRITTEN on those rules is a song, and it is drawn
 // here, seeded off the date, so the desk is dubbed a different tape each day:
 //   .cs-title  — the song, in the ballpoint the calendar is marked in
-//   .cs-sub    — "(Taylor's Version)", but only for the four re-recorded albums
+//   .cs-sub    — "(Taylor's Version)", which only Clean ever wears (see below)
 //   .cs-note   — the album and where the song sits on it
 //
 // The draw is weighted, not uniform. Clean comes up on roughly a third of days
@@ -15,30 +15,41 @@
 // pseudo-album groups (Holiday Collection, Songs From Movies, the features)
 // never claim a tracklisting they don't have.
 //
+// Nothing else is labelled a re-recording. Which pressing of a song is on a
+// dubbed tape is not knowable from the tape, so the card doesn't claim it. Clean
+// is the exception because Clean is the tape the desk owns rather than one it
+// dubbed, and this desk has both: HOUSE_TV_SHARE of the days it comes up it is
+// the 1989 (Taylor's Version) copy, the rest of the time the original.
+//
 // The markup ships already reading Clean, which is both the commonest draw and
 // a correct label if this module never runs at all.
 //
-// A written title has to fit the card, and "I Knew You Were Trouble" is not
-// "Clean", so each line is measured after the hand loads and shrunk until it
-// sits inside the rules. Sizes go out as custom properties rather than inline
-// font-size so the accessibility text-size offset in styles.css still applies.
+// A written title has to fit the card. Long ones are dropped from the pool
+// outright rather than shrunk to a whisper: a title is only worth writing at a
+// size you can read across a desk, so the pool is measured once the hand has
+// loaded and keeps only what sits inside the printed rules at full size. What
+// survives that cut still goes through fitLine, because how much of the card is
+// on screen shrinks with the window and the accessibility text-size offset can
+// widen every line. Sizes go out as custom properties rather than inline
+// font-size so that offset in styles.css still applies.
 //
 // Purely decorative, like every desk prop: if the markup isn't there — narrow
 // screens, quiet desk density — every entry point here does nothing.
 
-import { STUDIO_ALBUMS, VAULT_ALBUMS } from "./config.js";
+import { STUDIO_ALBUMS } from "./config.js";
 import { mulberry32, dailySeed } from "./util.js";
 
 const svg = document.querySelector(".di-cassette svg");
 const titleEl = svg && svg.querySelector(".cs-title");
 const noteEl = svg && svg.querySelector(".cs-note");
 
-// The tape this desk owns. Roughly one day in three.
+// The tape this desk owns. Roughly one day in three, and when it comes up it is
+// the re-recorded copy more often than not.
 const HOUSE_TAPE = { album: "1989", title: "Clean" };
 const CLEAN_SHARE = 0.34;
+const HOUSE_TV_SHARE = 0.6;
 
 const STUDIO = new Set(STUDIO_ALBUMS);
-const RERECORDED = new Set(VAULT_ALBUMS);
 
 // The writable span between the card's printed rules (x 24 → 168 in the SVG's
 // own units), less a little air at each end so nothing runs to the edge.
@@ -47,21 +58,32 @@ const TITLE_X = 95, TITLE_Y = 32.7;   // where the title is written (see index.h
 const EDGE_MARGIN = 18;               // px of screen kept clear of the viewport edge
 const TITLE_BASE = 13, SUB_BASE = 7.4, NOTE_BASE = 7.2;
 const MIN_SCALE = 0.55;     // past here a title is illegible; let it run off instead
+// Below this a title has never once needed the ruler — the widest short title on
+// the catalogue measures 110 of the 140 units — so the measuring pass skips them
+// and only weighs the couple of dozen that could plausibly overrun.
+const SAFE_CHARS = 22;
 
 let pool = [];              // every song the draw can reach, in songs.json order
 let house = null;           // the Clean entry, drawn separately so it can't double up
+let cut = [];               // what the card was too small to hold, kept for the dev panel
 
 /* ---------- the draw ---------- */
 
-// Which tape the desk is playing on a given "YYYY-MM-DD". Stable for that date
-// and unrelated to every other seeded thing on the page, so the daily challenge
-// and the cassette never move together.
-export function pick(dateKey) {
-  if (!pool.length) return house;
+// Which tape the desk is playing on a given "YYYY-MM-DD", and — for the house
+// tape only — which pressing of it. Stable for that date and unrelated to every
+// other seeded thing on the page, so the daily challenge and the cassette never
+// move together.
+function drawFor(dateKey) {
   const rng = mulberry32(dailySeed("cassette:" + dateKey));
-  if (house && rng() < CLEAN_SHARE) return house;
-  return pool[Math.floor(rng() * pool.length)] || house;
+  if (!pool.length || (house && rng() < CLEAN_SHARE))
+    return { song: house, tv: !!house && rng() < HOUSE_TV_SHARE };
+  // Only the house tape is ever labelled a re-recording, so every other draw is
+  // written plain and the version coin is never tossed.
+  return { song: pool[Math.floor(rng() * pool.length)] || house, tv: false };
 }
+
+// The song alone, for the dev panel and console poking.
+export function pick(dateKey) { return drawFor(dateKey).song; }
 
 /* ---------- writing it on the card ---------- */
 
@@ -108,11 +130,11 @@ function fitLine(el, prop, base, extra, span) {
 }
 
 // Write one song onto the card: the title on the red rule, the version note
-// trailing it where the four re-recorded albums earn one, the album and track
-// on the blue rule at the foot.
-function write(song) {
+// trailing it on the days the house tape is the re-recorded copy, the album and
+// track on the blue rule at the foot.
+function write(song, tv) {
   titleEl.textContent = song.title;
-  if (RERECORDED.has(song.album)) {
+  if (tv) {
     const sub = document.createElementNS("http://www.w3.org/2000/svg", "tspan");
     sub.setAttribute("class", "cs-sub");
     sub.setAttribute("dx", "3.4");
@@ -126,9 +148,48 @@ function write(song) {
   fitLine(noteEl, "--cs-note-size", NOTE_BASE, null, span);
 }
 
+/* ---------- what the card can hold ---------- */
+
+// How wide this title is written at full size, or 0 when the card isn't being
+// laid out at all — a hidden or not-yet-rendered SVG measures every string at
+// nothing, and 0 is the one answer that means "don't know" rather than "fits".
+function titleWidth(title) {
+  titleEl.textContent = title;
+  try { return titleEl.getComputedTextLength(); } catch { return 0; }
+}
+
+// Weigh the pool and drop what the card can't hold, measuring on the real text
+// element in the real hand: a character count can't tell "Would've, Could've,
+// Should've" (29 narrow characters, and it fits) from "The Tortured Poets
+// Department" (29 wide ones, and it doesn't).
+//
+// Done once, before the first draw, so a too-long title is never written and
+// then swapped out from under the player. If the tape isn't being laid out yet
+// the pass measures nothing and leaves the pool alone rather than trusting a
+// zero, and the next render tries again — a backgrounded tab and a desk still
+// coming up both land here. The house tape is exempt: "Clean" fits five times
+// over, and a desk with no pool at all still has its own tape on it.
+let pruned = false;
+function prune() {
+  if (pruned || !titleEl || !pool.length) return;
+  titleEl.style.setProperty("--cs-title-size", TITLE_BASE + "px");
+  const keep = [], dropped = [];
+  for (const song of pool) {
+    if (song.title.length <= SAFE_CHARS) { keep.push(song); continue; }
+    const width = titleWidth(song.title);
+    if (!width) { titleEl.style.removeProperty("--cs-title-size"); return; }
+    (width <= RULE_SPAN ? keep : dropped).push(song);
+  }
+  titleEl.style.removeProperty("--cs-title-size");
+  pool = keep;
+  cut = dropped;
+  pruned = true;
+}
+
 export function render(dateKey) {
-  const song = pick(dateKey);
-  if (song && titleEl && noteEl) write(song);
+  prune();
+  const { song, tv } = drawFor(dateKey);
+  if (song && titleEl && noteEl) write(song, tv);
 }
 
 /* ---------- wiring ---------- */
@@ -168,6 +229,20 @@ export function install(songs) {
     clearTimeout(resizeT);
     resizeT = setTimeout(refresh, 180);
   });
+  // A tape with no box on it — a tab that loaded in the background, a desk that
+  // hasn't been laid out yet — measures every title at nothing, so the pass
+  // above defers rather than trusting a zero. Getting a size is the signal that
+  // it can finally be done, and render does it before it writes. One-shot: the
+  // observer lets itself go the moment the pool has been weighed.
+  const card = svg.closest(".desk-item") || svg;
+  if (pool.length && typeof ResizeObserver === "function") {
+    const ro = new ResizeObserver(() => {
+      if (!card.getBoundingClientRect().width) return;
+      refresh();
+      if (pruned) ro.disconnect();
+    });
+    ro.observe(card);
+  }
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(draw).catch(draw);
   else draw();
   // Dev hook in the spirit of deskCalendar: `refresh` is what the date override
@@ -175,13 +250,19 @@ export function install(songs) {
   // song onto the card without moving the date.
   window.deskCassette = {
     render, refresh, pick,
+    // The full draw — song plus which pressing of it — for the weighting readout.
+    draw: drawFor,
     songs: () => (house ? [house, ...pool] : pool.slice()),
+    // What the measuring pass threw out, so the dev panel can show which titles
+    // the card is too small to hold.
+    cut: () => cut.slice(),
     // Force a song onto the card without moving the date. The next refresh
-    // (a date scrub, or midnight) puts the real draw back.
-    play(title) {
-      const all = house ? [house, ...pool] : pool;
+    // (a date scrub, or midnight) puts the real draw back. `tv` writes the
+    // version note; it defaults to how the house tape is usually labelled.
+    play(title, tv) {
+      const all = house ? [house, ...pool, ...cut] : [...pool, ...cut];
       const s = all.find((x) => x.title === title);
-      if (s) write(s);
+      if (s) write(s, tv === undefined ? s === house : !!tv);
       return s || null;
     },
   };
