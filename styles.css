@@ -5573,7 +5573,10 @@
   .countdown-skip:hover { color: var(--ink); border-bottom-color: var(--ink); }
 
   /* ---------- Results ---------- */
-  .final-score { text-align: center; margin-bottom: 18px; }
+  /* text-align:center here centers on .card's padded content box, but that box is
+     asymmetric (58px left pad for the margin rule vs 30px right) — shift back by
+     half the difference so the number centers on the visible page, not the padding. */
+  .final-score { text-align: center; margin-bottom: 18px; margin-left: -14px; }
   .final-score .big {
     font-family: var(--hand); font-weight: 700; font-size: calc(88px + var(--text-size-adjust)); line-height: 1;
     color: var(--ink); transform: rotate(-2deg); display: inline-block;
