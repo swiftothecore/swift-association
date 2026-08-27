@@ -15501,6 +15501,7 @@ function rankMatches(query) {
     const match = titleMatchScore(song._norm, q);
     if (!match) continue;
     if (!roundAcceptsSong(song)) continue;   // hide rule-breaking suggestions
+    if (isGiveawayPick(song)) continue;      // ...and answers the prompt word alone would hand over
     scored.push({ song, ...match });
   }
   scored.sort((a, b) => a.rank - b.rank || a.idx - b.idx || a.song.title.localeCompare(b.song.title));
@@ -15570,11 +15571,37 @@ function noteWrongSubmission(song, { burned = false } = {}) {
   if (list.filter((r) => r.key === key).length >= 5) unlock("submit-same-wrong-answer-5-times-one-round");
 }
 
+// Whether the prompt word sits in this song's title. The one measure behind both the
+// off-limits rule below and the giveaway filter on the dropdown.
+function titleHoldsWord(song) {
+  return !!song && !!currentWord && wordRegex(currentWord, effectiveStrict()).test(song.title);
+}
 // A pick is off-limits when the active mode bars title songs and the word sits in
 // this song's title — the exact condition validSongs() uses to exclude it.
 function isOffLimitsPick(song) {
-  return !!song && effectiveNoTitle() && wordRegex(currentWord, effectiveStrict()).test(song.title);
+  return effectiveNoTitle() && titleHoldsWord(song);
 }
+/* A giveaway is the same song in a mode that still ACCEPTS it: Easy and Relaxed leave
+   title songs in play, so "gold" was answerable by typing gold and pressing Enter for
+   the top match. That asks the player to read the prompt word and nothing else, and it
+   worked often enough (a title word is usually a chorus word, so validSongs takes it)
+   to be the cheapest line in the game rather than a rare quirk.
+
+   The leniency is worth keeping; the shortcut is not. So these are struck from the
+   SUGGESTIONS only — Gold Rush still counts on Easy, it just has to be typed out — which
+   leaves the forgiving modes forgiving without letting recognition stand in for recall.
+   Not a soft reject: nothing is being refused here, so there is nothing to explain.
+
+   Two exemptions. Modes that bar title songs outright (Normal, Hard, Ultra) keep showing
+   them greyed with an "in the title" tag, because there the listing IS the teaching. And
+   Title...? asks for a title holding the word, so filtering them would empty its dropdown
+   every page. */
+function isGiveawayPick(song) {
+  if (effectiveNoTitle()) return false;                 // already blocked, and shown as blocked
+  if (gameType === "challenge" && currentChallenge && currentChallenge.rule === "titleHas") return false;
+  return giveawaysHidden && titleHoldsWord(song);
+}
+let giveawaysHidden = true;   // dev toggle only — see buildDevApi().giveaways
 // Soft rejection: don't consume the round. Flash a red note, wipe the line, and
 // keep the clock running so the player can answer the same word with a valid song.
 let rejectFlashTimer = null;
@@ -19994,7 +20021,7 @@ const GUIDE_BEATS = {
     // contradict each other; where a dropdown is up it IS the action, title-only or not.
     body: () => {
       if (lyricModeNow()) return 'Type a <b>lyric line</b> with the word in it. Get close enough and it counts.';
-      if (effectiveDropdown()) return 'Type any word and pick it from the <b>suggestions</b>. Every song that uses it lights up.';
+      if (effectiveDropdown()) return 'Start typing a song\'s <b>title</b> and pick it from the <b>suggestions</b>. Every song that uses the word counts.';
       if (currentMode.titleOnly) return 'Type a song\'s <b>full title</b>. Every song that uses the word counts.';
       return 'Type a song\'s <b>full title</b>, or a <b>lyric line</b> with the word in it.';
     },
@@ -20708,6 +20735,16 @@ function buildDevApi() {
     // title / alias / misplaced spaces only), so a stretch of Hard or Ultra can be played
     // both ways and compared — the point of the lever is judging whether the allowance is
     // rescuing slips or quietly rescuing guesses.
+    /* The giveaway filter on the dropdown (title songs withheld from the suggestions in the
+       modes that still accept them). Turning it off restores the old list, which is the only
+       way to feel the difference: play a stretch of Relaxed each way and count how many pages
+       fall to the prompt word typed straight back in. `on` lists what the current page is
+       withholding, so a page that looks suggestion-poor can be explained without guessing. */
+    giveaways: {
+      state: () => giveawaysHidden,
+      set: (on) => { giveawaysHidden = on === undefined ? !giveawaysHidden : !!on; updateDropdown(); return giveawaysHidden; },
+      on: () => (currentWord ? allSongs.filter((s) => titleHoldsWord(s)).map((s) => s.title) : []),
+    },
     typos: {
       state: () => typosForgiven,
       set: (on) => { typosForgiven = on === undefined ? !typosForgiven : !!on; return typosForgiven; },

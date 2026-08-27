@@ -292,9 +292,27 @@ export function initDev(api) {
       : `no song${r.forgiving ? "" : " — forgiveness off"}`;
   };
   tryInput.addEventListener("keydown", (e) => { if (e.key === "Enter") runTry(); });
+  // The other half of the same question, from the list's side: which songs the dropdown is
+  // withholding on this page because the prompt word is in their title.
+  const giveOut = mk("span", { class: "dv-note" }, "—");
+  const readGive = () => {
+    const held = api.giveaways.on();
+    giveOut.textContent = !api.giveaways.state() ? "showing everything"
+      : held.length ? `withholding ${held.length}: ${held.slice(0, 3).join(", ")}${held.length > 3 ? "…" : ""}`
+      : "nothing to withhold";
+  };
+  const giveBtn = btn(`hide title giveaways: ${api.giveaways.state() ? "on" : "off"}`, () => {
+    const on = api.giveaways.set();
+    giveBtn.textContent = `hide title giveaways: ${on ? "on" : "off"}`;
+    giveBtn.classList.toggle("on", on);
+    readGive();
+  });
+  giveBtn.classList.toggle("on", api.giveaways.state());
+  readGive();
   body.append(section("typed answers",
     row(typoBtn, `min title ${api.typos.minLen()} chars`),
-    row(tryInput, btn("resolve", runTry), tryOut)));
+    row(tryInput, btn("resolve", runTry), tryOut),
+    row(giveBtn, btn("read", readGive), giveOut)));
 
   // ---- Simulate --------------------------------------------------------------
   const simN = num(13);
