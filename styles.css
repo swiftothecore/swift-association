@@ -215,6 +215,25 @@
 
   * { box-sizing: border-box; }
 
+  /* Pin the page to one axis. Both desk layers (.desk-items, .desk-scatter) are
+     absolute/left:0/right:0 with overflow:hidden, so their clip box is the
+     initial containing block: exactly the viewport, never the scrollable area.
+     Props are deliberately drawn hanging past that edge, so the moment the page
+     can pan sideways by a pixel you slide past the clip and land on bare wood
+     where half a prop used to be. Vertically the same thing happens at the top:
+     the wood tiles infinitely (repeat-y on the propagated canvas background) but
+     the props, the notebook and the fixed lighting overlay all stop at y=0, so an
+     upward bounce peels the staging away from the desk.
+
+     overflow-x is clip, NOT hidden: hidden on the root turns html into a scroll
+     container on the other axis and breaks sticky positioning and scroll
+     anchoring. overscroll-behavior kills the elastic bounce on both axes; on
+     mobile it also disables pull-to-refresh, which is wanted here, because an
+     accidental pull mid-run currently costs the player the run. Inner scrollers
+     set their own overscroll-behavior: contain and are unaffected. Neither
+     property stops a pinch-zoom pan, and neither should. */
+  html { overflow-x: clip; overscroll-behavior: none; }
+
   body {
     margin: 0;
     min-height: 100vh;
