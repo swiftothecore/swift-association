@@ -2593,9 +2593,9 @@
   .bd-stamp-type { font-family: var(--type); }
   .bd-pencil { font-family: var(--hand); fill: #4a4238; }
 
-  [data-reduce-motion="true"] .bonus-spin,
-  [data-reduce-motion="true"] .bonus-platter-disc.drop { animation: none; }
-  [data-reduce-motion="true"] .bonus-alt-disc .bonus-disc { transition: none; }
+  [data-reduce-motion="on"] .bonus-spin,
+  [data-reduce-motion="on"] .bonus-platter-disc.drop { animation: none; }
+  [data-reduce-motion="on"] .bonus-alt-disc .bonus-disc { transition: none; }
   @media (prefers-reduced-motion: reduce) {
     .bonus-spin, .bonus-platter-disc.drop { animation: none; }
   }
@@ -3187,8 +3187,8 @@
     .bg-track.ok .bg-track-note { display: none; }
     .bg-end-actions { flex-direction: column; gap: 9px; }
   }
-  [data-reduce-motion="true"] .bg-feedback.show,
-  [data-reduce-motion="true"] .bg-reject.show { animation: none; opacity: 1; }
+  [data-reduce-motion="on"] .bg-feedback.show,
+  [data-reduce-motion="on"] .bg-reject.show { animation: none; opacity: 1; }
 
   /* Challenge results panel (sandboxed — in place of the records board) */
   .chall-result-status { font-family: var(--hand); font-weight: 700; font-size: calc(22px + var(--text-size-adjust)); color: var(--ink-soft); margin-bottom: 4px; }
@@ -3458,7 +3458,7 @@
     /* the song count is the first thing to go: it is context, not what a pick turns on */
     .rl-pool { display: none; }
   }
-  [data-reduce-motion="true"] .rl-sec { transition: none; }
+  [data-reduce-motion="on"] .rl-sec { transition: none; }
 
   /* The Ruthless results listing — the ten pages, sitting in the fine print BELOW the actions
      so the page a player most often wants stays in reach. It is the only place a given-up page
@@ -7817,8 +7817,8 @@
   }
   .nav-card:hover .nav-card-title, .nav-card:focus-visible .nav-card-title { border-bottom-color: var(--ink); }
   .nav-card:active { transform: translateY(0); box-shadow: 0 1px 2px rgba(43, 39, 34, 0.1); }
-  [data-reduce-motion="true"] .nav-card { transition: none; }
-  [data-reduce-motion="true"] .nav-card:hover, [data-reduce-motion="true"] .nav-card:focus-visible { transform: none; }
+  [data-reduce-motion="on"] .nav-card { transition: none; }
+  [data-reduce-motion="on"] .nav-card:hover, [data-reduce-motion="on"] .nav-card:focus-visible { transform: none; }
   @media (max-width: 480px) {
     .see-also { gap: 7px; margin: 18px -10px 0; }
     .nav-card { display: block; text-align: center; padding: 14px 5px 11px; }
@@ -8594,9 +8594,9 @@
   }
   .stamp:focus-visible .stamp-art { outline: 1.5px dashed var(--ink-soft); outline-offset: 3px; }
   .stamp:active { transform: rotate(var(--stamp-rot)) scale(0.97); }
-  [data-reduce-motion="true"] .stamp { transition: none; }
-  [data-reduce-motion="true"] .stamp:hover,
-  [data-reduce-motion="true"] .stamp:focus-visible { transform: rotate(var(--stamp-rot)); }
+  [data-reduce-motion="on"] .stamp { transition: none; }
+  [data-reduce-motion="on"] .stamp:hover,
+  [data-reduce-motion="on"] .stamp:focus-visible { transform: rotate(var(--stamp-rot)); }
   @media (max-width: 480px) {
     .franking { top: 9px; right: 9px; }
     .stamp--focus { width: 34px; }
