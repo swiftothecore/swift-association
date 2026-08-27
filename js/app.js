@@ -224,7 +224,9 @@ let infiniteVariant = "3lives"; // "3lives" | "sudden"
 let lives = 0;                  // remaining lives in infinite mode
 let floatLevel = ADAPT_START_LEVEL; // Floating rarity pool: current level (1..4), climbs and falls with performance
 let floatPromo = 0;             // Floating rarity pool: correct-in-a-row at the current level toward promotion
+const DAILY_PROGRESS_VERSION = 2;
 let dailyRng = null;            // seeded PRNG, non-null only during a daily game
+let dailyRunDate = null;        // date that seeded the live/saved Daily; fixed for the whole run even if "today" changes
 let dailyAlbumPool = null;      // on an album-anniversary daily: [{ w, songs, catalogue, score }] the album's words by distinctiveness-desc; null otherwise
 let dailyAlbum = null;          // the album that daily leans toward, non-null only alongside dailyAlbumPool (locks the run's era wash)
 let dailyShareTime = null;      // completion time (sec) of the daily on screen — for the copyable result
@@ -232,8 +234,10 @@ let currentChallenge = null;    // the active CHALLENGES entry while gameType ==
 let challengeDark = false;      // true while the active challenge is running its dark side
 let challengeRunActive = false; // true only during a live challenge run (gates the achievement sandbox)
 let vanishTimer = null;         // Vanishing Word: timeout that hides the prompt word
+let vanishDeadline = 0;         // performance.now() deadline, so Settings can preserve its phase
 let vanishAnsweredBlind = true; // Vanishing Word: still true if every correct answer landed after the word blanked (Blank Space)
-let revolveId = null;           // Revolving Door: interval that swaps the word every rotateMs
+let revolveId = null;           // Revolving Door: timeout for the next rotateMs beat
+let revolveDeadline = 0;        // next swap deadline, preserved across Settings
 let revolveIndex = 0;           // Revolving Door: how many times the word has revolved this round
 let revolveBeatEverySwap = true; // Revolving Door: still true if every correct answer landed on slot 0 (Two Steps Ahead)
 let lastAlphaLetter = "";       // From A to Z: first letter of the last accepted answer
@@ -351,8 +355,11 @@ let feedbackShownAt = 0;        // ms timestamp the verdict appeared — Enter-t
 const ENTER_SKIP_GRACE = 250;   // so a held/late Enter from the answer screen can't instantly blow past the result
 let statsBackTarget = "start";
 let settings = { ...{} };       // populated from loadSettings() in init
-let pausedRemaining = null;     // timer seconds left when the settings modal paused play
+let pausedClockState = null;    // actual main clock state captured while Settings is open
 let pausedStopwatchAt = null;   // performance.now() when that pause began, so roundStart can skip the gap
+let pausedVanishRemaining = null; // Vanishing Word deadline left when Settings paused the page
+let settingsPauseActive = false;  // gates round-start callbacks that land behind Settings
+let settingsDeferredRoundClock = false; // a page flip finished while Settings was still open
 
 // Dev cheats (only active behind the ?dev flag; see devActive / js/dev.js).
 let devNoLog = false;           // when true, endGame skips folding the run into history/stats/records
@@ -10535,7 +10542,9 @@ function resetRunState() {
   floatLevel = ADAPT_START_LEVEL;   // only read on a run riding Custom's floating rarity pool
   floatPromo = 0;
   braceletSeed = (Math.random() * 0x100000000) >>> 0;   // a fresh shuffle for a random trinket strand
+  noveltySeen = null;
   dailyRng = null;
+  dailyRunDate = null;
   dailyAlbumPool = null;
   dailyAlbum = null;
   currentChallenge = null;
@@ -10614,8 +10623,8 @@ function resetRunState() {
   roundWildcard = null;
   lastWildcardId = "";
   whaleSeenThisGame = false;
-  clearTimeout(vanishTimer);
-  if (revolveId) { clearInterval(revolveId); revolveId = null; }
+  clearVanish();
+  if (revolveId) { clearTimeout(revolveId); revolveId = null; revolveDeadline = 0; }
   revolveIndex = 0;
   clearCurtain();
   const skipBtn = $("pathSkipBtn");
@@ -10664,19 +10673,16 @@ function foldRunProgress() {
    `sticky` segments never retire past the short form. Those are the ones saying THIS page is
    not the usual page (a sung line, Common Thread, the switch after the last hint) or reading
    out a resource that's running down (a hint budget). Both are news however long you've played.
-   Everything else — Enter takes the top match, Tab is a hint — is muscle memory, and goes. */
+   Everything else, such as Enter taking the top match or the hint button revealing a clue,
+   is muscle memory and goes. */
 const TYPE_HINT_FULL_PAGES = 8;    // pages a segment stays a full sentence
 const TYPE_HINT_SHORT_PAGES = 30;  // ...then chips only, until this many; then gone, unless sticky
 // Every segment id typeHintSegments can produce. Only the dev panel reads this (nothing in the
 // fade itself needs the roster) — keep it in step when a segment is added.
 const TYPE_HINT_IDS = ["common-word", "after-hint", "sing-line", "top-match", "no-suggestions",
-                       "verse-bonus", "hint-budget", "hint-key"];
+                       "verse-bonus", "hint-budget", "hint-button"];
 
 function keycap(label) { return `<kbd class="keycap">${label}</kbd>`; }
-// Touch, with no keyboard attached — a shortcut named here is a key the player doesn't have.
-function noKeyboard() {
-  return typeof matchMedia === "function" && matchMedia("(hover: none) and (pointer: coarse)").matches;
-}
 
 function typeHintSeen(id) {
   const seen = settings.typingHintsSeen;
@@ -10750,18 +10756,16 @@ function typeHintSegments(input) {
       short: "or the line, for a verse bonus" });
   }
   if (settings.enableHints !== false && currentMode.hint && gameType !== "daily" && hintBudgetLeft > 0) {
-    // On a phone there is no Tab key to press and the "need a hint?" button is right there, so
-    // the shortcut is dead copy on touch. What isn't dead is a budget: that's a resource
-    // reading rather than an instruction, so it's worded without the key and never retires.
+    // Keep Tab available for normal keyboard navigation. The visible hint button works with
+    // touch, mouse, Enter, and Space, so the same instruction is honest on every device.
     if (hintBudgetActive()) {
       segs.push({ id: "hint-budget", sticky: true,
-        full: noKeyboard() ? `${hintBudgetLeft} hint${hintBudgetLeft === 1 ? "" : "s"} left on this run.`
-                           : `${keycap("Tab")} for a hint (${hintBudgetLeft} left)`,
-        short: noKeyboard() ? `${hintBudgetLeft} left` : `${keycap("Tab")} hint (${hintBudgetLeft})` });
-    } else if (!noKeyboard()) {
-      segs.push({ id: "hint-key",
-        full: `${keycap("Tab")} for a hint`,
-        short: `${keycap("Tab")} hint` });
+        full: `${hintBudgetLeft} hint${hintBudgetLeft === 1 ? "" : "s"} left on this run. Use the hint button for a clue.`,
+        short: `${hintBudgetLeft} left · hint button` });
+    } else {
+      segs.push({ id: "hint-button",
+        full: "Use the hint button for a clue.",
+        short: "hint button for a clue" });
     }
   }
   return segs;
@@ -11227,7 +11231,11 @@ function startCustom() {
 // so the remaining words match what everyone else gets on the date.
 function dailyProgressSnapshot(dateStr) {
   return {
+    version: DAILY_PROGRESS_VERSION,
     startDate: dateStr,
+    // Page 13 is already decided while its verdict is showing. Persist that settled state so
+    // a reload or quit can finalize it instead of dealing the answered page again.
+    settled: round === TOTAL_ROUNDS && roundResults.length === TOTAL_ROUNDS,
     round, score,
     rngState: dailyRng ? dailyRng.state() : null,
     roundResults: roundResults.slice(),
@@ -11251,7 +11259,9 @@ function dailyProgressSnapshot(dateStr) {
     correctStreak, gameMaxStreak, gameTimeouts, quickAnswerRun,
     gameTimeSum, gameTimedRounds, gameFastestMs, gameHitRedZone,
     lyricLineAnswers, verseBonus, gameVersePerfect, gameWholeVerses, gameFuzzyMatches,
+    gameTempoXp, gameLyricistXp, gameResolveXp,
     rareStreak,
+    roundAnswerAlbums: roundAnswerAlbums.map((albums) => Array.isArray(albums) ? albums.slice() : []),
     verseKeepsake: verseKeepsake.slice(),
     lyricAnswerSongs: lyricAnswerSongs.slice(),
   };
@@ -11290,7 +11300,13 @@ function restoreDailyProgress(p) {
   gameVersePerfect = p.gameVersePerfect || 0;
   gameWholeVerses = p.gameWholeVerses || 0;
   gameFuzzyMatches = p.gameFuzzyMatches || 0;
+  gameTempoXp = p.gameTempoXp || 0;
+  gameLyricistXp = p.gameLyricistXp || 0;
+  gameResolveXp = p.gameResolveXp || 0;
   rareStreak = p.rareStreak || 0;
+  roundAnswerAlbums = Array.isArray(p.roundAnswerAlbums)
+    ? p.roundAnswerAlbums.map((albums) => Array.isArray(albums) ? albums.slice() : [])
+    : [];
   verseKeepsake = Array.isArray(p.verseKeepsake) ? p.verseKeepsake.slice() : [];
   lyricAnswerSongs = Array.isArray(p.lyricAnswerSongs) ? p.lyricAnswerSongs.slice() : [];
 }
@@ -11306,6 +11322,7 @@ function startDaily() {
   notePlayed("daily");
   currentMode = MODES.medium;   // daily is always Normal — override without persisting via DIFF_KEY
   resetRunState();
+  dailyRunDate = dateStr;
   dailyRng = mulberry32(dailySeed(dateStr));   // set AFTER resetRunState (which clears it)
   // The daily is the one run whose strand gets redrawn after the fact, from a saved snapshot
   // that stores scores and not beads. Seeding its random trinkets off the date instead of the
@@ -11323,12 +11340,18 @@ function startDaily() {
   // seek the PRNG to the saved position so the remaining words are deterministic. Stale
   // progress from another day is ignored (resetDaily / the date guard handle cleanup).
   const progress = loadDailyProgress(dateStr);
+  const settled = progress && progress.startDate === dateStr
+    && progress.settled === true && progress.round === TOTAL_ROUNDS
+    && Array.isArray(progress.roundResults) && progress.roundResults.length === TOTAL_ROUNDS;
   const resuming = progress && progress.startDate === dateStr
     && progress.round > 0 && progress.round < TOTAL_ROUNDS;
-  if (resuming) {
+  if (resuming || settled) {
     restoreDailyProgress(progress);
     if (typeof progress.rngState === "number") dailyRng.seek(progress.rngState);
   }
+  // A settled page 13 has no page left to replay. Finish its ordinary Daily fold from the
+  // saved accumulators; endGame's saved-result guard makes this safe if another path won first.
+  if (settled) { endGame(); return; }
   applyInputHints();
   updateTagline();
   $("pageTotalWrap").style.display = "";
@@ -12343,7 +12366,6 @@ function applyChallengeRound(wrap) {
   } else if (currentChallenge.rule === "multi") {
     renderMultiBanner();
   } else if (currentChallenge.rule === "devil") {
-    if (devilVanish) vanishTimer = setTimeout(() => { wrap.classList.add("vanished"); }, 1500);
     if (devilFx) renderDevilFx(wrap, currentWord, devilFx);
     renderDevilBanner();
   } else if (currentChallenge.rule === "flashwarp") {
@@ -12696,7 +12718,7 @@ function buildWildcardConstraints() {
     { id: "notitle",   label: "the word can't be in the title",  accepts: (s) => !rx.test(s.title) },
     { id: "titleword", label: "the word must be in the title",   accepts: (s) => rx.test(s.title) },
     { id: "vanish",    label: "the word vanishes",               accepts: null,
-      display: (w) => { vanishTimer = setTimeout(() => w.classList.add("vanished"), 1500); } },
+      display: (w) => { scheduleVanish(w, 1500); } },
     { id: "scramble",  label: "the word is scrambled",           accepts: null, instant: true,
       display: (w) => renderWordFx(w, currentWord, 1) },
   ];
@@ -13386,6 +13408,7 @@ function customLeverSummary(m) {
 function showDailyResult(data, dateStr) {
   gameType = "daily";
   currentMode = MODES.medium;
+  dailyRunDate = dateStr;
   roundResults = data.roundResults;
   roundAlbums = data.roundAlbums;
   score = data.score;
@@ -14073,10 +14096,41 @@ let curtainKeyOff = null;       // detaches the live gated card's Enter listener
 // True while a curtain is over the board (including its lift animation). The curtain is
 // captive: the round beneath it must not answer to the keyboard.
 function curtainUp() { return !!document.querySelector(".chall-curtain"); }
+// Curtain beats are deadlines rather than bare timeout ids so Settings can pause them at
+// their exact phase. Otherwise an auto-lifting rule card can disappear behind the modal, or
+// close the instant Settings does because its original timeout kept running underneath.
+function armCurtainTimer(timer) {
+  if (settingsPauseActive || timer.id != null) return;
+  timer.deadline = performance.now() + timer.remaining;
+  timer.id = setTimeout(() => {
+    timer.id = null;
+    const i = curtainTimers.indexOf(timer);
+    if (i >= 0) curtainTimers.splice(i, 1);
+    timer.fn();
+  }, timer.remaining);
+}
+function scheduleCurtainTimer(fn, delay) {
+  const timer = { fn, remaining: Math.max(0, delay), deadline: 0, id: null };
+  curtainTimers.push(timer);
+  armCurtainTimer(timer);
+  return timer;
+}
+function pauseCurtainTimers() {
+  const now = performance.now();
+  curtainTimers.forEach((timer) => {
+    if (timer.id == null) return;
+    clearTimeout(timer.id);
+    timer.id = null;
+    timer.remaining = Math.max(0, timer.deadline - now);
+  });
+}
+function resumeCurtainTimers() {
+  curtainTimers.slice().forEach(armCurtainTimer);
+}
 // Tear down any live challenge curtain + its timers (called on quit/reset so an abandoned
 // run never leaves the curtain up or fires a stale onDone).
 function clearCurtain() {
-  curtainTimers.forEach(clearTimeout);
+  curtainTimers.forEach((timer) => { if (timer.id != null) clearTimeout(timer.id); });
   curtainTimers = [];
   if (curtainKeyOff) curtainKeyOff();
   const ov = document.querySelector(".chall-curtain");
@@ -14105,14 +14159,19 @@ function mountCurtain(innerHTML) {
 // clock is spent reading it. Tap to skip ahead. Reduced motion shows it briefly without
 // animation. Every other path starts the clock immediately.
 function beginRoundClock() {
+  // A page turn can finish after Settings has already opened. Keep the prepared page inert
+  // and run this gate from the top once the modal closes, so no curtain, visual effect or
+  // countdown begins underneath it.
+  if (settingsPauseActive) { settingsDeferredRoundClock = true; return; }
+  settingsDeferredRoundClock = false;
   let queue = roundCurtainHTML();
   const wrap = $("wordDisplay").parentNode;
   const beginTimedRoundEffects = () => {
     if (gameType === "challenge" && currentChallenge
-        && (currentChallenge.rule === "vanishing" || currentChallenge.rule === "flashwarp")) {
-      clearTimeout(vanishTimer);
+        && (currentChallenge.rule === "vanishing" || currentChallenge.rule === "flashwarp"
+          || (currentChallenge.rule === "devil" && devilVanish))) {
       const ms = currentChallenge.revealMs || 1500;
-      vanishTimer = setTimeout(() => { wrap.classList.add("vanished"); }, ms);
+      scheduleVanish(wrap, ms);
     }
   };
   // Confidence Wager stakes AFTER the word is up but BEFORE the clock runs — this is the one
@@ -14170,13 +14229,13 @@ function beginRoundClock() {
       i++;
       if (last) {
         ov.classList.add("leaving");
-        curtainTimers.push(setTimeout(() => { clearCurtain(); onDone(); }, reduced ? 0 : 360));
+        scheduleCurtainTimer(() => { clearCurtain(); onDone(); }, reduced ? 0 : 360);
       } else if (reduced) {
         showCard();
       } else {
         // animate the current card out (overlay stays opaque), then drop the next one in
         ov.classList.add("swapping");
-        curtainTimers.push(setTimeout(showCard, 240));
+        scheduleCurtainTimer(showCard, 240);
       }
     };
     const nextBtn = ov.querySelector(".chall-curtain-next");
@@ -14206,7 +14265,7 @@ function beginRoundClock() {
       // Auto-lifting cards (per-page Wildcard / Switch-Up): advance after a beat, tap
       // anywhere to skip ahead.
       ov.addEventListener("click", next);
-      curtainTimers.push(setTimeout(next, reduced ? 1100 : 1750));
+      scheduleCurtainTimer(next, reduced ? 1100 : 1750);
     }
   };
   showCard();
@@ -15025,8 +15084,8 @@ function advanceRound() {
   // Wildcard: apply an INSTANT gimmick (scramble) the moment the word is rendered, so it's
   // already warped beneath the curtain. Timed gimmicks (vanish) still defer to beginRoundClock.
   if (isWildcardRound() && roundWildcard.instant && roundWildcard.display) roundWildcard.display(wrap);
-  clearTimeout(vanishTimer);
-  if (revolveId) { clearInterval(revolveId); revolveId = null; }   // stop the prior round's rotation
+  clearVanish();
+  if (revolveId) { clearTimeout(revolveId); revolveId = null; revolveDeadline = 0; }   // stop the prior round's rotation
   revolveIndex = 0;                            // Revolving Door: this round's word is slot 0
   roundNamed = [];                             // Double Trouble: no songs named on the fresh page yet
   // Suggestions belong to the page that produced them, so the backing array goes with the
@@ -15230,9 +15289,10 @@ const timerSpark = (() => {
   return { start, stop };
 })();
 
-// `resume` (seconds remaining) restarts a paused round mid-count instead of from
-// the full clock — used when closing the settings modal during play.
-function startTimer(resume) {
+// `resume` restarts a paused round mid-count instead of from the full clock. `resumeTotal`
+// preserves the scale the page was actually built with, while `revolveDelay` preserves the
+// current Revolving Door beat instead of resetting it every time Settings closes.
+function startTimer(resume, resumeTotal, revolveDelay) {
   clearTimer();
   const fill = $("timerFill");
   const label = $("timerLabel");
@@ -15245,7 +15305,9 @@ function startTimer(resume) {
     // It's A Clock!: one shared budget across the whole run. The bar is scaled to
     // comboCap() and begins wherever the shared clock stands; it never resets per round.
     total = comboCap();
-    begin = Math.max(0, Math.min(comboCap(), comboClock));
+    const shared = Number.isFinite(resume) ? resume : comboClock;
+    begin = Math.max(0, Math.min(comboCap(), shared));
+    comboClock = begin;
     if (wrap) wrap.style.display = "";
     if (begin <= 0) { comboClock = 0; roundLocked = true; resetTension(); endGame(); return; }
   } else {
@@ -15253,7 +15315,8 @@ function startTimer(resume) {
     // Floor a clocked page so stacked time penalties (Devil's Path) can't zero it, but never
     // above the mode's own base, so a deliberately short custom clock (e.g. 2s) stays as set.
     const floor = Math.min(base, 3);
-    total = base > 0 ? Math.max(floor, base + (extraSecondsPerRound || 0)) : base;
+    const builtTotal = base > 0 ? Math.max(floor, base + (extraSecondsPerRound || 0)) : base;
+    total = Number.isFinite(resumeTotal) && resumeTotal > 0 ? resumeTotal : builtTotal;
     // Relaxed mode (seconds <= 0): no clock at all — hide the bar and never time out.
     if (!(total > 0)) {
       if (wrap) wrap.style.display = "none";
@@ -15261,7 +15324,7 @@ function startTimer(resume) {
       return;
     }
     if (wrap) wrap.style.display = "";
-    begin = (resume != null && resume > 0 && resume < total) ? resume : total;
+    begin = Number.isFinite(resume) ? Math.max(0, Math.min(total, resume)) : total;
   }
   timerStart = performance.now() - (total - begin) * 1000;
   roundClockTotal = total;   // what "how long is left?" is measured against this page (see clockRemaining)
@@ -15292,7 +15355,7 @@ function startTimer(resume) {
     playSound("tick", false, COUNTDOWN_TICK_GAIN[n] || 1);
   };
   timerSpark.start();
-  startRevolve();   // Revolving Door: begin (or restart) the per-round word rotation, in sync with the clock
+  startRevolve(revolveDelay);   // Revolving Door: preserve the next swap's phase on resume
 
   timerId = setInterval(() => {
     const elapsed = (performance.now() - timerStart) / 1000;
@@ -15331,20 +15394,47 @@ function clockRemaining() {
   if (!(roundClockTotal > 0)) return null;
   return Math.max(0, roundClockTotal - (performance.now() - timerStart) / 1000);
 }
+function clearVanish() {
+  if (vanishTimer) clearTimeout(vanishTimer);
+  vanishTimer = null;
+  vanishDeadline = 0;
+}
+function scheduleVanish(wrap, delay) {
+  clearVanish();
+  const ms = Math.max(0, delay);
+  vanishDeadline = performance.now() + ms;
+  vanishTimer = setTimeout(() => {
+    vanishTimer = null;
+    vanishDeadline = 0;
+    if (wrap) wrap.classList.add("vanished");
+  }, ms);
+}
 function clearTimer() {
   if (timerId) { clearInterval(timerId); timerId = null; }
-  if (revolveId) { clearInterval(revolveId); revolveId = null; }   // stop Revolving Door's word rotation alongside the clock
+  if (revolveId) { clearTimeout(revolveId); revolveId = null; }   // stop Revolving Door's word rotation alongside the clock
+  revolveDeadline = 0;
   timerSpark.stop();
 }
 
-// Revolving Door only: start the interval that swaps the word every rotateMs. The round
-// clock keeps draining underneath — this just changes which word is in play. No-op for
-// every other game type/challenge. Cleared by clearTimer with the round clock.
-function startRevolve() {
-  if (revolveId) { clearInterval(revolveId); revolveId = null; }
+// Revolving Door only: schedule each swap from a deadline. A recursive timeout behaves like
+// the old interval during play but also lets Settings preserve the fraction of the current
+// beat that was left. Cleared by clearTimer with the round clock.
+function startRevolve(firstDelay) {
+  if (revolveId) { clearTimeout(revolveId); revolveId = null; }
+  revolveDeadline = 0;
   if (gameType !== "challenge" || !currentChallenge || currentChallenge.rule !== "revolving") return;
   const ms = currentChallenge.rotateMs || 5000;
-  revolveId = setInterval(revolveWord, ms);
+  const schedule = (delay) => {
+    revolveDeadline = performance.now() + delay;
+    revolveId = setTimeout(() => {
+      revolveId = null;
+      revolveDeadline = 0;
+      if (roundLocked || !timerId || settingsPauseActive) return;
+      revolveWord();
+      schedule(ms);
+    }, delay);
+  };
+  schedule(Number.isFinite(firstDelay) ? Math.max(0, firstDelay) : ms);
 }
 
 /* ---------- Timer tension ---------- */
@@ -16986,12 +17076,13 @@ function submitAnswer(song, isTimeout) {
   // It's Raining And It's Monday — answer the word "rain" right on a Monday.
   if (correct && !commonRuleActive() && currentWord === "rain" && new Date().getDay() === 1) unlock("answer-rain-on-monday");
 
-  // Daily: persist the run so a refresh/exit resumes here instead of restarting. Saved
-  // after the round is recorded but before the next word is drawn, so the stored PRNG
-  // position resumes the remaining words deterministically. The final round isn't saved —
-  // endGame finalizes the result and clears the in-progress record.
-  if (gameType === "daily" && round < TOTAL_ROUNDS) {
-    saveDailyProgress(todayKey(), dailyProgressSnapshot(todayKey()));
+  // Daily: persist every decided page before showing its verdict. Pages 1-12 resume at the
+  // next word; page 13 is marked settled and finalizes from the snapshot after a reload/quit.
+  // The key is the seed date captured at start, never a fresh reading of "today" mid-run.
+  if (gameType === "daily") {
+    const dateStr = dailyRunDate || todayKey();
+    dailyRunDate = dateStr;
+    saveDailyProgress(dateStr, dailyProgressSnapshot(dateStr));
   }
 
   // Common Thread has its own reveal (lines + thread), not the song-card feedback.
@@ -17558,10 +17649,17 @@ function emitSkillToast(sk, level, fallbackId) {
 
 /* ---------- End game ---------- */
 function endGame() {
+  // A rapid second Continue, or a recovered settled snapshot racing a completed tab, must not
+  // fold the same Daily into history, tallies, metrics, skills, and keepsakes twice.
+  if (gameType === "daily") {
+    const dateStr = dailyRunDate || todayKey();
+    const existing = loadDailyResult(dateStr);
+    if (existing) { showDailyResult(existing, dateStr); return; }
+  }
   runFolded = true;   // this run's stats are saved here in full; block any unload re-fold
   clearTimer();
   clearTimeout(hintUrgeTimer);
-  clearTimeout(vanishTimer);
+  clearVanish();
   clearWagerStake();  // a run can end with the stake panel still open (a loss settled elsewhere)
   resetTension();
   playRunFlourish();  // before the routing below, so every sandboxed mode's end sounds too
@@ -17872,7 +17970,7 @@ function endGame() {
 
   // Daily: persist the result, lock to one play/day, show streak + share (no board).
   if (isDaily) {
-    const dateStr = todayKey();
+    const dateStr = dailyRunDate || todayKey();
     dailyShareTime = runTime;   // for the copyable result (held back behind reveal if the score is hidden)
     saveDailyResult(dateStr, { score, roundResults: roundResults.slice(), roundAlbums: roundAlbums.slice(), tm: runTime });
     clearDailyProgress(dateStr);   // run finished — drop the resumable in-progress record
@@ -18036,7 +18134,7 @@ function quitGame() {
   clearTimer();
   if (countdownId) { clearInterval(countdownId); countdownId = null; }
   clearTimeout(hintUrgeTimer);
-  clearTimeout(vanishTimer);
+  clearVanish();
   clearCurtain();
   clearWagerStake();
   challengeRunActive = false;
@@ -18610,10 +18708,7 @@ function wireInput() {
   input.addEventListener("keydown", (e) => {
     if ($("settingsModal").classList.contains("open")) return;   // modal is captive
     if (curtainUp()) return;    // so is a curtain — no answering the word it's covering
-    if (e.key === "Tab" && hintsAllowed()) {
-      e.preventDefault();                   // keep focus in the input; reveal a hint instead
-      useHint();
-    } else if (e.key === "Enter") {
+    if (e.key === "Enter") {
       e.preventDefault();
       e.stopPropagation();        // this keypress submits — don't let it also bubble to the page-advance handler
       submitAnswer(null, false);
@@ -19316,26 +19411,51 @@ function exportBackup() {
 
 // Pause the round timer while the modal is open; resume from where it left off.
 function pauseForSettings() {
-  pausedRemaining = null;
+  settingsPauseActive = true;
+  pausedClockState = null;
   pausedStopwatchAt = null;
+  pausedVanishRemaining = null;
+  pauseCurtainTimers();
   // The stopwatch pauses on any live page, clock or not: time spent in the settings modal was
   // never spent answering, and in Relaxed there is no countdown to freeze in its place.
   if (screens.game.classList.contains("active") && !roundLocked) pausedStopwatchAt = performance.now();
-  if (timerId && screens.game.classList.contains("active") && !roundLocked && currentMode.seconds > 0) {
-    const elapsed = (performance.now() - timerStart) / 1000;
-    pausedRemaining = Math.max(0.1, currentMode.seconds - elapsed);
+  if (vanishTimer && screens.game.classList.contains("active") && !roundLocked) {
+    pausedVanishRemaining = Math.max(0, vanishDeadline - performance.now());
+    clearVanish();
+  }
+  if (timerId && screens.game.classList.contains("active") && !roundLocked) {
+    const remaining = clockRemaining();
+    const revolveRemaining = revolveId && revolveDeadline
+      ? Math.max(0, revolveDeadline - performance.now()) : null;
+    if (remaining != null) {
+      pausedClockState = { remaining: Math.max(0, remaining), total: roundClockTotal, revolveRemaining };
+      if (comboRuleActive()) { comboClock = pausedClockState.remaining; renderComboBanner(); }
+    }
     clearTimer();
   }
 }
 function resumeFromSettings() {
+  settingsPauseActive = false;
   if (pausedStopwatchAt != null) {
     roundStart += performance.now() - pausedStopwatchAt;   // push the page's start forward by the time spent in the modal
     pausedStopwatchAt = null;
   }
-  if (pausedRemaining == null) return;
-  const r = pausedRemaining;
-  pausedRemaining = null;
-  if (screens.game.classList.contains("active") && !roundLocked && currentMode.seconds > 0) startTimer(r);
+  const deferred = settingsDeferredRoundClock;
+  settingsDeferredRoundClock = false;
+  if (deferred && screens.game.classList.contains("active") && !roundLocked) {
+    beginRoundClock();
+  } else {
+    resumeCurtainTimers();
+    if (pausedVanishRemaining != null && screens.game.classList.contains("active") && !roundLocked) {
+      scheduleVanish($("wordDisplay").parentNode, pausedVanishRemaining);
+    }
+    if (pausedClockState && screens.game.classList.contains("active") && !roundLocked) {
+      const p = pausedClockState;
+      startTimer(p.remaining, p.total, p.revolveRemaining);
+    }
+  }
+  pausedClockState = null;
+  pausedVanishRemaining = null;
 }
 // Element focused before the modal opened, so focus can be returned there on close
 // (usually #songInput mid-game or the gear) instead of being lost to the hidden page.
@@ -19821,8 +19941,7 @@ function renderHowTo() {
   howToIndex = Math.max(0, Math.min(total - 1, howToIndex));
   const page = HOWTO_PAGES[howToIndex];
   const last = howToIndex === total - 1;
-  // The hint key is a key the player may not have: on touch there is no Tab to press.
-  const note = page.note.replace("{HINT}", noKeyboard() ? "the hint button" : `${keycap("Tab")}`);
+  const note = page.note.replace("{HINT}", "the hint button");
   el.innerHTML =
     `<div class="howto-card" data-howto-card>` +
       `<div class="howto-view" data-howto-view aria-live="polite">` +
@@ -19889,6 +20008,7 @@ let firstRunIndex = 0;
 let firstRunEra = "";              // the currently-highlighted era, committed to settings on confirm
 let firstRunMode = null;           // the difficulty picked from the welcome step ("relaxed" or null), applied on finish
 let lastFocusedBeforeFirstRun = null;
+let firstRunInerted = [];
 
 // The album closest to the player's heart, saved once and reused later. "" = not chosen.
 function setFavouriteAlbum(album) {
@@ -20049,7 +20169,7 @@ const GUIDE_BEATS = {
   guideHint: {
     anchor: () => $("hintBtn"),
     kicker: "stuck?",
-    body: () => 'Reveal a clue one step at a time. Tap here or press <b>Tab</b>, and it eases you in without just handing over the answer.',
+    body: () => 'Use the <b>hint button</b> to reveal a clue one step at a time, without just handing over the answer.',
     got: null,
     autoMs: () => (animInstant() ? 0 : 9000),
     place: ["below", "left", "above"],
@@ -20149,19 +20269,46 @@ function maybeRunFirstRun() {
 }
 // Show the onboarding overlay with whatever #firstRunBody currently holds. Shared by the
 // first-run step flow and the one-off post-game nudge.
+function containFirstRunBackground(modal) {
+  firstRunInerted = [];
+  Array.from(document.body.children).forEach((el) => {
+    if (!(el instanceof HTMLElement) || el === modal || el.tagName === "SCRIPT" || el.hasAttribute("inert")) return;
+    el.setAttribute("inert", "");
+    firstRunInerted.push(el);
+  });
+}
+function releaseFirstRunBackground() {
+  firstRunInerted.forEach((el) => { el.removeAttribute("inert"); });
+  firstRunInerted = [];
+}
+function firstRunFocusables() {
+  const card = document.querySelector("#firstRun .firstrun-card");
+  if (!card) return [];
+  return Array.from(
+    card.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])')
+  ).filter((el) => !el.disabled && el.offsetParent !== null && el.tabIndex !== -1);
+}
+function focusFirstRun() {
+  const modal = $("firstRun");
+  if (!modal.classList.contains("open")) return;
+  const target = firstRunFocusables()[0] || modal.querySelector(".firstrun-card");
+  if (target) { try { target.focus({ preventScroll: true }); } catch (_) { target.focus(); } }
+}
 function showOnboardingOverlay() {
-  lastFocusedBeforeFirstRun = document.activeElement;
   const m = $("firstRun");
+  if (m.classList.contains("open")) return;
+  lastFocusedBeforeFirstRun = document.activeElement;
   m.classList.add("open");
   m.setAttribute("aria-hidden", "false");
   document.body.classList.add("modal-open");
+  containFirstRunBackground(m);
 }
 function openFirstRun() {
   firstRunIndex = 0;
   firstRunEra = settings.favouriteAlbum || "";
   firstRunMode = null;
-  renderFirstRunStep();
   showOnboardingOverlay();
+  renderFirstRunStep();
 }
 function closeFirstRun() {
   const m = $("firstRun");
@@ -20169,6 +20316,7 @@ function closeFirstRun() {
   m.classList.remove("open");
   m.setAttribute("aria-hidden", "true");
   if (!$("settingsModal").classList.contains("open")) document.body.classList.remove("modal-open");
+  releaseFirstRunBackground();
   const back = lastFocusedBeforeFirstRun;
   lastFocusedBeforeFirstRun = null;
   const target = (back && typeof back.focus === "function" && document.contains(back)) ? back : $("playBtn");
@@ -20179,8 +20327,7 @@ function renderFirstRunStep() {
   if (!body) return;
   const step = FIRST_RUN_STEPS[firstRunIndex];
   if (step === "welcome") body.innerHTML = firstRunWelcomeHTML();
-  const focusTarget = body.querySelector(".btn-primary, button");
-  if (focusTarget) { try { focusTarget.focus({ preventScroll: true }); } catch (_) { /* noop */ } }
+  focusFirstRun();
 }
 // Re-render the era grid in place (on chip select, and when the standalone prompt opens),
 // keeping focus sensible without disturbing the highlight held in firstRunEra.
@@ -20190,7 +20337,9 @@ function renderEra() {
   body.innerHTML = firstRunEraHTML();
   const focusTarget = body.querySelector("[data-fr='confirm']:not([disabled])")
     || body.querySelector(".fr-era.is-selected") || body.querySelector(".fr-era");
-  if (focusTarget) { try { focusTarget.focus({ preventScroll: true }); } catch (_) { /* noop */ } }
+  if (focusTarget && $("firstRun").classList.contains("open")) {
+    try { focusTarget.focus({ preventScroll: true }); } catch (_) { focusTarget.focus(); }
+  }
 }
 function advanceFirstRun() {
   firstRunIndex += 1;
@@ -20212,7 +20361,7 @@ function finishFirstRun() {
 // onto the start screen, ready to play.
 function firstRunWelcomeHTML() {
   return `<p class="fr-kicker">welcome to the notebook</p>` +
-    `<h2 class="fr-title">Let's ease you in</h2>` +
+    `<h2 id="firstRunTitle" class="fr-title">Let's ease you in</h2>` +
     `<p class="fr-sub">Here's the whole game: you'll see a word, and you name a Taylor Swift song that has it somewhere in the lyrics. That's it.</p>` +
     `<p class="fr-sub">First time? We'd start you in <b>Relaxed</b>, so there's no clock, suggestions and hints stay on, and every song is in play. You can turn the difficulty up whenever you're ready.</p>` +
     // A pointer, not a fourth button. Nothing here needs the longer version to get started, and
@@ -20247,7 +20396,7 @@ function firstRunEraHTML() {
       `<span class="fr-era-name">${escapeHtml(a)}</span></button>`;
   }).join("");
   return `<p class="fr-kicker">a few games in</p>` +
-    `<h2 class="fr-title">Which era is yours?</h2>` +
+    `<h2 id="firstRunTitle" class="fr-title">Which era is yours?</h2>` +
     `<p class="fr-sub">Now you've settled in, pick the album closest to your heart. We'll keep it on your notebook, and you can change it any time in settings.</p>` +
     `<div class="fr-era-grid" role="group" aria-label="Choose your era">${chips}</div>` +
     `<div class="fr-actions">` +
@@ -20257,8 +20406,9 @@ function firstRunEraHTML() {
     `</div>`;
 }
 function wireFirstRun() {
+  const modal = $("firstRun");
   const body = $("firstRunBody");
-  if (!body) return;
+  if (!modal || !body) return;
   body.addEventListener("click", (e) => {
     const eraBtn = e.target.closest("[data-era-album]");
     if (eraBtn) { firstRunEra = eraBtn.getAttribute("data-era-album"); renderEra(); return; }
@@ -20275,6 +20425,37 @@ function wireFirstRun() {
       // Post-game "ready for Normal?" nudge
       case "normal-yes": setGameType("classic"); setMode("medium"); closeFirstRun(); break;
       case "normal-no":  closeFirstRun(); break;
+    }
+  });
+  modal.addEventListener("keydown", (e) => {
+    if (!modal.classList.contains("open")) return;
+    if (e.key === "Escape") {
+      e.preventDefault();
+      e.stopPropagation();
+      // Escape takes the neutral welcome path, while later optional nudges simply close.
+      if (!settings.firstRunDone) { firstRunMode = null; finishFirstRun(); }
+      else closeFirstRun();
+      return;
+    }
+    if (e.key !== "Tab") return;
+    const card = modal.querySelector(".firstrun-card");
+    const focusables = firstRunFocusables();
+    if (!card || !focusables.length) {
+      e.preventDefault();
+      if (card) card.focus();
+      return;
+    }
+    const first = focusables[0], last = focusables[focusables.length - 1];
+    const active = document.activeElement;
+    if (active === card || !card.contains(active)) {
+      e.preventDefault();
+      (e.shiftKey ? last : first).focus();
+    } else if (e.shiftKey && active === first) {
+      e.preventDefault();
+      last.focus();
+    } else if (!e.shiftKey && active === last) {
+      e.preventDefault();
+      first.focus();
     }
   });
 }
@@ -20302,15 +20483,14 @@ function showReadyForNormal(force) {
   if (!force && !screens.results.classList.contains("active")) return;   // they navigated away — skip
   $("firstRunBody").innerHTML =
     `<p class="fr-kicker">nicely done</p>` +
-    `<h2 class="fr-title">Ready to start the clock?</h2>` +
+    `<h2 id="firstRunTitle" class="fr-title">Ready to start the clock?</h2>` +
     `<p class="fr-sub">That was Relaxed, with no timer and all the help. <b>Normal</b> adds a 10-second clock per page. Same game, a little more thrilling. Want to give it a go next?</p>` +
     `<div class="fr-actions">` +
       `<button type="button" class="btn-primary" data-fr="normal-yes">Yes, switch me to Normal &rarr;</button>` +
       `<button type="button" class="btn-link" data-fr="normal-no">Stay in Relaxed for now</button>` +
     `</div>`;
   showOnboardingOverlay();
-  const focusTarget = $("firstRunBody").querySelector(".btn-primary");
-  if (focusTarget) { try { focusTarget.focus({ preventScroll: true }); } catch (_) { /* noop */ } }
+  focusFirstRun();
 }
 
 // One-off era prompt, held back until the player is a few games in (ERA_PROMPT_AFTER_GAMES) so
@@ -20327,8 +20507,8 @@ function maybeAskEra() {
 function showAskEra(force) {
   if (!force && !screens.results.classList.contains("active")) return;   // they navigated away — skip
   firstRunEra = settings.favouriteAlbum || "";
-  renderEra();
   showOnboardingOverlay();
+  renderEra();
 }
 
 // Wheel over the dimmed backdrop (outside the dialog) still scrolls the dialog,
@@ -20971,7 +21151,7 @@ function buildDevApi() {
     // is nothing to simulate here — payload() shows exactly what a tear puts on the
     // clipboard.
     share: {
-      payload: () => ({ text: buildShareString(todayKey()), url: SITE_URL }),   // needs a daily result on screen
+      payload: () => ({ text: buildShareString(dailyRunDate || todayKey()), url: SITE_URL }),   // needs a daily result on screen
       // Fly the flock without sending anything. Off the stub when one is on screen,
       // otherwise from the middle of the page, so the drawings can be judged in place
       // without winning a daily first.
@@ -21076,8 +21256,8 @@ function buildDevApi() {
     // Daily
     daily: {
       resetToday: () => clearDailyResult(todayKey()),
-      clearProgress: () => clearDailyProgress(todayKey()),   // drop the in-progress resume record
-      hasProgress: () => !!loadDailyProgress(todayKey()),
+      clearProgress: () => clearDailyProgress(dailyRunDate || todayKey()),   // drop the live run's pinned resume record
+      hasProgress: () => !!loadDailyProgress(dailyRunDate || todayKey()),
       setDate: (d) => { window.__devDate = d || null; refreshDateSurfaces(); },
       // Redraws the start screen after writing, so the daily button's inline streak and
       // the desk placard show the set number straight away — the placard is the whole
