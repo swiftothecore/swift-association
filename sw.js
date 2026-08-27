@@ -7,7 +7,8 @@
  *    below deliberately bypasses the HTTP cache), which is a real problem for a
  *    font: a slow face means a flash of the fallback. Serve from the precache.
  *  - other same-origin → NETWORK-FIRST (always latest when online; fall back to
- *    cache offline, and to the cached index.html for navigations). This deliberately
+ *    cache offline). Root and known panel navigations use the cached notebook shell;
+ *    other uncached navigations use the cached 404 page. This deliberately
  *    avoids the "my deploy isn't showing up" stale-code trap — no need to bump
  *    CACHE on every change; bump it only to evict stale precached entries.
  *  - cross-origin → CACHE-FIRST (kept as a safety net; the fonts are now
@@ -24,10 +25,13 @@ const CACHE = "stta-v59";
 // js/config.js and ROUTES in 404.html — a slug added to one must be added to all three.
 const ROUTES = ["records", "charms", "stats", "mastery", "challenges", "bonus", "guests", "songbook",
                 "album-focus", "ruthless", "how-to-play"];
-const isRoute = (url) => ROUTES.includes(url.pathname.replace(/^\/+|\/+$/g, ""));
+const routeSlug = (url) => url.pathname.replace(/^\/+|\/+$/g, "");
+const isRoute = (url) => ROUTES.includes(routeSlug(url));
+const isAppShellRoute = (url) => routeSlug(url) === "" || isRoute(url);
 const ASSETS = [
   "./",
   "index.html",
+  "404.html",
   "ink.css",
   // Keep the revision query exact: Cache.match() includes the query string, and
   // index.html deliberately requests this URL to break the browser HTTP cache.
@@ -143,9 +147,9 @@ self.addEventListener("fetch", (e) => {
   const url = new URL(req.url);
   const isFont = url.origin === location.origin && url.pathname.endsWith(".woff2");
 
-  if (url.origin === location.origin && req.mode === "navigate" && isRoute(url)) {
-    // Serve the notebook itself for a panel URL. index.html is precached, and `cache: "reload"`
-    // keeps the network copy authoritative when there is one, exactly like the branch below.
+  if (url.origin === location.origin && req.mode === "navigate" && isAppShellRoute(url)) {
+    // Serve the notebook itself only for its root and known panel URLs. index.html is precached,
+    // and `cache: "reload"` keeps the network copy authoritative when there is one.
     e.respondWith(
       fetch("index.html", { cache: "reload" })
         .then((res) => {
@@ -170,7 +174,8 @@ self.addEventListener("fetch", (e) => {
       )
     );
   } else if (url.origin === location.origin) {
-    // network-first, fall back to cache (and to index.html for navigations).
+    // Network-first, then fall back to the exact cached request. An uncached navigation that is
+    // not the root or a known panel route gets the real 404 page, never the game shell.
     // `cache: "reload"` makes the SW's own fetch BYPASS the browser HTTP cache —
     // without it, GitHub Pages' max-age means fetch() can return a stale file and
     // "network-first" silently behaves like "HTTP-cache-first" after a deploy.
@@ -184,7 +189,7 @@ self.addEventListener("fetch", (e) => {
         .catch(() =>
           caches
             .match(req)
-            .then((hit) => hit || (req.mode === "navigate" ? caches.match("index.html") : Response.error()))
+            .then((hit) => hit || (req.mode === "navigate" ? caches.match("404.html") : Response.error()))
         )
     );
   } else {

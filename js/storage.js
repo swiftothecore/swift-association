@@ -1150,18 +1150,37 @@ export function clearDailyResult(dateStr) {
 // exit mid-daily resumes where the player left off (closing the replay loophole)
 // instead of silently restarting. Cleared the moment the run is completed.
 // Key: swiftSongAssociation.dailyProgress.YYYY-MM-DD
+// Only the current day's snapshot can ever be resumed. Sweep older snapshots whenever a
+// daily is opened or saved so abandoned runs do not accumulate forever.
+function pruneDailyProgress(keepDateStr) {
+  const keepKey = keepDateStr ? DAILY_PROGRESS_KEY + "." + keepDateStr : null;
+  for (const k of appKeys()) {
+    if ((k === DAILY_PROGRESS_KEY || k.startsWith(DAILY_PROGRESS_KEY + ".")) && k !== keepKey) {
+      localStorage.removeItem(k);
+    }
+  }
+}
 export function loadDailyProgress(dateStr) {
   try {
+    pruneDailyProgress(dateStr);
     const raw = localStorage.getItem(DAILY_PROGRESS_KEY + "." + dateStr);
     if (raw) { const o = JSON.parse(raw); if (o && Array.isArray(o.roundResults)) return o; }
   } catch (e) { /* ignore */ }
   return null;
 }
 export function saveDailyProgress(dateStr, data) {
-  try { localStorage.setItem(DAILY_PROGRESS_KEY + "." + dateStr, JSON.stringify(data)); } catch (e) { /* ignore */ }
+  try {
+    pruneDailyProgress(dateStr);
+    localStorage.setItem(DAILY_PROGRESS_KEY + "." + dateStr, JSON.stringify(data));
+  } catch (e) { /* ignore */ }
 }
 export function clearDailyProgress(dateStr) {
   try { localStorage.removeItem(DAILY_PROGRESS_KEY + "." + dateStr); } catch (e) { /* ignore */ }
+}
+export function dailyProgressCount() {
+  try {
+    return appKeys().filter((k) => k === DAILY_PROGRESS_KEY || k.startsWith(DAILY_PROGRESS_KEY + ".")).length;
+  } catch (e) { return 0; }
 }
 
 // Lifetime daily totals derived from the per-day result keys (the authoritative
@@ -1362,11 +1381,22 @@ export function resetRecords() {
 export function resetStatsAll()   { removeByPrefix(STATS_KEY); try { localStorage.removeItem(METRICS_KEY); } catch (e) { /* ignore */ } }
 // Clears the charms AND every ledger that only exists to feed one — otherwise a reset leaves
 // the breadth charms instantly re-earnable off records the player is being told were wiped.
-export function resetAchievements() { try { localStorage.removeItem(ACH_KEY); localStorage.removeItem(TYPES_KEY); localStorage.removeItem(BREADTH_KEY); localStorage.removeItem(WEEKDAYS_KEY); localStorage.removeItem(DAY_TYPES_KEY); localStorage.removeItem(DICE_KEY); } catch (e) { /* ignore */ } }
+export function resetAchievements() {
+  try {
+    localStorage.removeItem(ACH_KEY);
+    localStorage.removeItem(TYPES_KEY);
+    localStorage.removeItem(BREADTH_KEY);
+    localStorage.removeItem(WEEKDAYS_KEY);
+    localStorage.removeItem(DATES_KEY);
+    localStorage.removeItem(DAY_TYPES_KEY);
+    localStorage.removeItem(DICE_KEY);
+  } catch (e) { /* ignore */ }
+}
 export function resetTally()      { try { localStorage.removeItem(TALLY_KEY); } catch (e) { /* ignore */ } }
 export function resetDaily() {
   try { localStorage.removeItem(DAILY_STREAK_KEY); } catch (e) { /* ignore */ }
   removeByPrefix(DAILY_KEY);
+  removeByPrefix(DAILY_PROGRESS_KEY);
   removeByPrefix(DAILY_BOARD_KEY);
 }
 // Wipe everything (settings included). Caller should reload afterward.
