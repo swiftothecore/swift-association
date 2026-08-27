@@ -118,18 +118,34 @@ body::before {
    rail, styled far below) with the earbuds coiled below it, and the dictionary
    held back below the fold to slide up when you scroll into a long result list.
    The mid stretches of wood stay deliberately bare, and edge props hang half off
-   the viewport so the desk reads as continuing. */
+   the viewport so the desk reads as continuing.
+
+   The left is MEANT to carry more than the right; what it is not allowed to do
+   is carry it in one clump. The void between the three left props is the number
+   that governs this gutter, exactly as it does in the game's scrolling desk: at
+   life size they had drifted into a touching chain, and three objects that touch
+   read as a pile however much bare wood sits around them. Open a gap before
+   reaching for a size. Note also that the right side is quiet at rest by design,
+   because two of its three occupants arrive later: the album rail only exists
+   once there are results, and the dictionary waits for a scroll.
+
+   Do not measure any of this with a bounding box. Every prop here is rotated,
+   and a 75deg pen has an axis-aligned box half again its own length, so the
+   boxes report collisions between objects that are visibly well clear of each
+   other. Judge it on the render, at 1280 wide as well as at 1900: the left
+   gutter is 310px at the narrow end and the props are drawn life size, so that
+   is where the spacing actually has to hold up. */
 /* the magnifier tucks into the corner: handle running off screen up-left, lens
    reaching in toward the page (its grain group counter-rotates inside the SVG
    so the magnified grain stays parallel with the desk's) */
-.dx-loupe { width: 480px; top: 0;   left: 0; transform: translate(-25%, -25%) rotate(50deg);
+.dx-loupe { width: 480px; top: 0;   left: 0; transform: translate(-31%, -31%) rotate(50deg);
   filter: drop-shadow(5px 11px 9px rgba(46,32,14,0.26)) saturate(0.88); }
 /* the highlighter stands near-vertical in the gap beside the page, like the
    game's pencil; its test swipe rotates with it, which just reads as a swipe
    drawn at that angle on the wood */
-.dx-marker { width: 430px; top: 52%; left: calc(50% - 512px); transform: translate(-50%, -50%) rotate(75deg); }
+.dx-marker { width: 430px; top: 50%; left: calc(50% - 548px); transform: translate(-50%, -50%) rotate(75deg); }
 /* 440px for a 440-wide viewBox: 5x3in cards at the desk's 3px per mm */
-.dx-cards  { width: 440px; top: 60%; left: 0; transform: translateX(-30%) rotate(-9deg); }
+.dx-cards  { width: 440px; top: 70%; left: 0; transform: translateX(-32%) rotate(-9deg); }
 /* 285px for a 285-wide viewBox, i.e. 1:1 at the desk's 3px per mm */
 .dx-buds   { width: 285px; top: 56%; right: 0; transform: translateX(-2%) rotate(-14deg); }
 /* the rhyming dictionary is the deep-reference prop. The index journal owns the
