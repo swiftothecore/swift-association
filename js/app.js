@@ -2678,7 +2678,7 @@ function renderVerseAnthology() {
   const rows = verseKeepsake.map((k, i) => {
     const mark = k.tier === "verse" ? "★★" : "★";
     return `<li class="va-row${i >= VA_SHOWN ? " va-folded" : ""}"><span class="va-mark">${mark}</span>` +
-      `<span class="va-text">${highlightWord(k.line, k.word)}</span></li>`;
+      `<span class="va-text">${lyricBreaks(highlightWord(k.line, k.word))}</span></li>`;
   }).join("");
   const n = verseKeepsake.length;
   const folded = n - VA_SHOWN;
@@ -4425,8 +4425,8 @@ function checkSessionStickers() {
 // contiguous, and that is not a verse anybody sang. songs.json keeps the structured sections, so
 // the honest answer is read from those: the recovered span has to sit inside one of them.
 //
-// It works off `match.line`, the raw lines the matcher recovered joined by a space, which is
-// exactly the shape a section's own lines normalize to. That keeps this away from the matching
+// It works off `match.line`, the raw lines the matcher recovered with their breaks kept, which
+// normalizes to exactly the shape a section's own lines do. That keeps this away from the matching
 // path entirely: it asks where the line WAS, never whether the line counts.
 function sangWholeSection(song, match) {
   if (!song || !match || !Array.isArray(song.sections)) return false;
@@ -16036,7 +16036,7 @@ function recoverFuzzyLine(song, normPhrase) {
       // window that happens to contain it (fuzzySubstringRatio leaves trailing lyric
       // free, which would let an over-long window tie and win).
       const sim = 1 - levenshtein(normPhrase, windowNorm) / Math.max(normPhrase.length, windowNorm.length);
-      if (!best || sim > best.sim) best = { sim, text: windowRaw.join(" "), lines: windowRaw.length };
+      if (!best || sim > best.sim) best = { sim, text: windowRaw.join("\n"), lines: windowRaw.length };
       if (windowNorm.length > normPhrase.length * 2) break;   // don't over-grow the window
     }
   }
@@ -16071,7 +16071,7 @@ function recoverLyricLine(song, normPhrase) {
   if (!startSeg || !endSeg) return { text: (rawLines.find(Boolean) || "").trim(), lines: 1 };
   const spanLines = rawLines.slice(startSeg.i, endSeg.i + 1)
     .map((l) => l.trim()).filter(Boolean);
-  return { text: spanLines.join(" "), lines: spanLines.length };
+  return { text: spanLines.join("\n"), lines: spanLines.length };
 }
 
 // Grade how much of the matched real line the player actually typed. Typing the
@@ -17122,6 +17122,11 @@ function lyricCardLine(song, word, lineOverride) {
   return extractLineWithWord(song.lyrics, word);
 }
 
+// A recovered lyric span keeps the newlines it was sung across (see recoverLyricLine), so a
+// two-line answer is displayed as two lines rather than one run-on sentence. Called on already
+// escaped/highlighted HTML, after the escaping, because escapeHtml leaves newlines alone.
+function lyricBreaks(html) { return html.replace(/\n/g, "<br>"); }
+
 function lyricCard(song, word, isWrong, lineOverride, context) {
   const line = lyricCardLine(song, word, lineOverride);
   const color = albumColor(song.album) || "var(--ink-soft)";
@@ -17130,7 +17135,7 @@ function lyricCard(song, word, isWrong, lineOverride, context) {
   const ctx = context ? lyricCardContext(song, word, line) : "";
   return `<div class="lyric-card${cls}" style="--album-color:${color}">
     <div class="song-title">${escapeHtml(censor(song.title))}${albumLabel}</div>
-    <div class="lyric-line">"${word ? highlightWord(line, word) : escapeHtml(censor(line))}"</div>
+    <div class="lyric-line">"${lyricBreaks(word ? highlightWord(line, word) : escapeHtml(censor(line)))}"</div>
     ${ctx}
   </div>`;
 }
