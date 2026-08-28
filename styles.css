@@ -4924,12 +4924,19 @@
      and the big number is the point there.) */
   .start-podium-col {
     flex: 1 1 auto; min-width: 0;
-    display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 12px;
+    display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 14px;
   }
   .start-podium-col .podium-title { flex: none; margin: 0; font-size: calc(22px + var(--text-size-adjust)); }
   .start-podium-col .start-best { flex: 1 1 auto; min-width: 0; }
   .start-podium-col .best-line {
-    flex-direction: row; align-items: baseline; flex-wrap: wrap; gap: 2px 10px; padding: 0;
+    flex-direction: row; align-items: baseline; flex-wrap: wrap; gap: 2px 12px; padding: 0;
+  }
+  /* Laid down in a row, the score and its meta run together — both are just words on the
+     same baseline. A hairline rules them apart the way a ledger column would; it rides the
+     meta so a wrap takes it along. */
+  .start-podium-col .best-meta::before {
+    content: ""; display: inline-block; width: 1px; height: 0.95em;
+    background: currentColor; opacity: 0.4; margin-right: 11px; vertical-align: -0.12em;
   }
   .start-podium-col .best-num { font-size: calc(30px + var(--text-size-adjust)); }
   .start-podium-col .best-unit { font-size: calc(17px + var(--text-size-adjust)); }
