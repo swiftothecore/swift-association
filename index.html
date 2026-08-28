@@ -2337,8 +2337,8 @@ if (location.pathname.endsWith('/index.html')) {
   <!-- The shell holds the page AND the binder's divider tabs, which stick out past the
        paper's right edge. They can't live inside .settings-card: that scrolls, so
        anything outside its padding box would be clipped or drag the scrollbar. -->
-  <div class="settings-shell">
-    <div class="settings-card card" role="dialog" aria-modal="true" aria-label="Settings">
+  <div class="settings-shell" role="dialog" aria-modal="true" aria-label="Settings" tabindex="-1">
+    <div class="settings-card card">
       <div class="settings-nav">
         <span class="settings-title">Settings</span>
         <button id="settingsCloseBtn" class="btn-link" aria-label="Close settings">✕ close</button>
@@ -2364,7 +2364,7 @@ if (location.pathname.endsWith('/index.html')) {
 <!-- CUSTOM MODE "Change" MODAL — author the active preset's levers (reuses settings-modal chrome) -->
 <div id="customModal" class="settings-modal custom-modal" aria-hidden="true">
   <div class="settings-scrim" id="customModalScrim"></div>
-  <div class="settings-card card" role="dialog" aria-modal="true" aria-label="Change your custom mode">
+  <div class="settings-card card" role="dialog" aria-modal="true" aria-label="Change your custom mode" tabindex="-1">
     <div class="settings-nav">
       <span class="settings-title">Change your mode</span>
       <button id="customModalCloseBtn" class="btn-link" aria-label="Close">✕ close</button>

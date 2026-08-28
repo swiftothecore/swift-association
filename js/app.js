@@ -79,7 +79,7 @@ import {
   loadStickers, saveStickers, resetStickers,
   loadMode,
   loadDailyResult, saveDailyResult, clearDailyResult, dailyTotals, dailyPlayedDates,
-  loadDailyProgress, saveDailyProgress, clearDailyProgress,
+  loadDailyProgress, saveDailyProgress, clearDailyProgress, dailyProgressCount,
   bumpDailyStreak, effectiveDailyStreak, saveDailyStreak, loadDailyStreak, recentDailyAlbums, yesterdayOf,
   markTypePlayed, loadTypesPlayed, shelfTypesPlayed,
   loadDayTypes, markDayTypePlayed, loadDicePicks, markDicePick,
@@ -360,6 +360,8 @@ let pausedStopwatchAt = null;   // performance.now() when that pause began, so r
 let pausedVanishRemaining = null; // Vanishing Word deadline left when Settings paused the page
 let settingsPauseActive = false;  // gates round-start callbacks that land behind Settings
 let settingsDeferredRoundClock = false; // a page flip finished while Settings was still open
+let pausedBonusState = null;      // exact Bonus/Ruthless clock phases captured while Settings is open
+let settingsDeferredBonusClock = false; // a bonus page flip finished behind Settings
 
 // Dev cheats (only active behind the ?dev flag; see devActive / js/dev.js).
 let devNoLog = false;           // when true, endGame skips folding the run into history/stats/records
@@ -3785,7 +3787,16 @@ function appendHistoryRows(hist) {
     // A Ruthless row is the one whose score is not out of thirteen: it counts the pages NAMED
     // out of the ten the run dealt, and its RECORD is the time in the next column over.
     const ruthless = isRuthlessToken(h.m);
-    const unit = isInfiniteToken(h.m) ? "" : "/" + (ruthless ? (h.n || BONUS_ROUNDS) : TOTAL_ROUNDS);
+    // Fixed runs carry their own target in `n`. That is usually thirteen, but Thirty-One and
+    // future variable-length runs must not be written back as though they used the classic count.
+    const historicChallenge = h.t === "challenge" && typeof h.m === "string"
+      ? CHALLENGE_BY_ID[h.m.replace(/^chl-/, "")] : null;
+    let fixedTotal = Number.isFinite(Number(h.n)) && Number(h.n) > 0
+      ? Number(h.n) : (ruthless ? BONUS_ROUNDS : TOTAL_ROUNDS);
+    // Older early-ending challenges stored pages reached rather than the card's denominator.
+    if (historicChallenge)
+      fixedTotal = historicChallenge.rule === "survive" ? surviveTarget(historicChallenge) : TOTAL_ROUNDS;
+    const unit = isInfiniteToken(h.m) ? "" : "/" + fixedTotal;
     const scoreText = "" + h.s;
     // ...so the crown has to be won on the time, and won LOW. Crowning ten-out-of-ten would
     // crown most rows of a lens and say nothing about which run was the good one.
@@ -5648,6 +5659,8 @@ let bonusScore = 0;
 let bonusPuzzle = null;    // this round's puzzle from js/bonus.js
 let bonusLocked = false;   // round answered — ignore further input until the next round
 let bonusRaf = null;       // clock handle (setInterval id — see startBonusClock)
+let bonusClockTotal = 0;   // countdown length in ms for the live shelf page
+let bonusClockDeadline = 0;// countdown deadline, so Settings can preserve the exact remainder
 let bonusEnded = false;
 let bonusRecentFakes = []; // Spot the Slip: impostor words used recently, so a run doesn't repeat one
 let bonusRecentSongs = []; // Name That Song / Sing It Back / Redacted: songs already used this run, so one doesn't come round twice
@@ -5682,6 +5695,8 @@ let chainNow = 0;
 let chainRun = 0;
 let chainBusy = false;
 let chainBeatId = null;
+let chainBeatDeadline = 0;
+let chainBeatFn = null;
 // Ruthless Game: how much of the stream is out, when this page started, what it has been fined
 // for a give-up, and the frozen cost of the page once it settles. `ruthlessSpent` exists so the
 // seconds are read off the clock exactly ONCE — the verdict line and bonusPageScore both want
@@ -5697,6 +5712,7 @@ let ruthlessStart = 0;
 let ruthlessPenalty = 0;
 let ruthlessSpent = 0;
 let ruthlessDripId = null;
+let ruthlessDripDeadline = 0;
 /* Skill XP earned by a Ruthless MODE run, accrued page by page. It is kept here rather than in
    the main game's `gameTempoXp`/`gameResolveXp` because the bonus loop never calls
    resetRunState, so writing into those would spend an abandoned classic run's accumulator or
@@ -6289,28 +6305,37 @@ function renderBonusRound() {
    requestAnimationFrame: rAF is suspended in a backgrounded tab, which would freeze the clock
    while hidden and then, because the deadline is absolute, expire the round the instant the
    player came back. An interval keeps ticking (throttled but firing) and stays accurate. */
-function startBonusClock() {
+function startBonusClock(resumeState = null) {
+  // A bonus page can finish turning while Settings is already over it. Keep the page inert
+  // and start its clock from the top when the modal closes, just like beginRoundClock does for
+  // the main loop. A genuinely paused clock arrives as resumeState after Settings has closed.
+  if (settingsPauseActive) { settingsDeferredBonusClock = true; return; }
+  settingsDeferredBonusClock = false;
   stopBonusClock();
   // A page answered during its own flip-in is already settled by the time this runs (it is
   // turnPageSheet's after-callback), and restarting a clock over a verdict would run the drip
   // on a page that is showing its answer.
   if (bonusLocked) return;
-  if (bonusTimed(bonusGame)) { startRuthlessClock(); return; }
+  if (bonusTimed(bonusGame)) { startRuthlessClock(resumeState); return; }
   // Second baseline: the page is really live now, so anything timed off it is timed off the
   // clock the player can see rather than off the page turn that preceded it.
-  bonusPageStart = performance.now();
+  if (!resumeState) bonusPageStart = performance.now();
   const fill = $("bonusTimerFill");
   const label = $("bonusTimerLabel");
   const secs = bonusSeconds();
-  const total = secs * 1000;
-  const started = performance.now();
-  fill.style.width = "100%";
+  const total = resumeState && resumeState.kind === "countdown" && resumeState.total > 0
+    ? resumeState.total : secs * 1000;
+  const begin = resumeState && resumeState.kind === "countdown"
+    ? Math.max(0, Math.min(total, resumeState.remaining)) : total;
+  bonusClockTotal = total;
+  bonusClockDeadline = performance.now() + begin;
+  fill.style.width = (begin / total * 100) + "%";
   fill.classList.remove("low");
   // The seconds are written out as well as drawn, exactly as the round screen does it — a bar
   // alone tells you time is going but never how much of it there is left to spend.
-  label.textContent = secs.toFixed(1);
+  label.textContent = (begin / 1000).toFixed(1);
   bonusRaf = setInterval(() => {
-    const left = Math.max(0, total - (performance.now() - started));
+    const left = Math.max(0, bonusClockDeadline - performance.now());
     const pct = (left / total) * 100;
     fill.style.width = pct + "%";
     label.textContent = (left / 1000).toFixed(1);
@@ -6321,6 +6346,8 @@ function startBonusClock() {
 function stopBonusClock() {
   if (bonusRaf) clearInterval(bonusRaf);
   bonusRaf = null;
+  bonusClockTotal = 0;
+  bonusClockDeadline = 0;
   stopRuthlessDrip();
 }
 
@@ -6335,13 +6362,19 @@ function stopBonusClock() {
    Nothing happens when the gauge fills. There is no deadline on this page, so the bar is a read
    on how expensive the page is getting rather than a countdown, and it fills UP as the seconds
    go on rather than draining away. */
-function startRuthlessClock() {
+function startRuthlessClock(resumeState = null) {
   const fill = $("bonusTimerFill");
   const label = $("bonusTimerLabel");
-  ruthlessStart = performance.now();
-  fill.style.width = "0%";
+  const elapsed = resumeState && resumeState.kind === "ruthless"
+    ? Math.max(0, resumeState.elapsed) : 0;
+  ruthlessStart = performance.now() - elapsed * 1000;
+  const initialPct = Math.min(100, (elapsed / RUTHLESS_PACE_SECONDS) * 100);
+  fill.style.width = initialPct + "%";
   fill.classList.remove("low");
-  label.textContent = "0.0";
+  fill.classList.toggle("low", initialPct >= 75);
+  label.textContent = elapsed.toFixed(1);
+  const spentEl = $("bonusSpent");
+  if (spentEl) spentEl.textContent = fmtTime(elapsed);
   bonusRaf = setInterval(() => {
     const spent = (performance.now() - ruthlessStart) / 1000;
     label.textContent = spent.toFixed(1);
@@ -6351,19 +6384,46 @@ function startRuthlessClock() {
     const el = $("bonusSpent");
     if (el) el.textContent = fmtTime(spent);
   }, 50);
-  startRuthlessDrip();
+  startRuthlessDrip(resumeState && resumeState.kind === "ruthless"
+    ? resumeState.dripRemaining : RUTHLESS_WORD_MS);
 }
 
-function startRuthlessDrip() {
+function startRuthlessDrip(firstDelay = RUTHLESS_WORD_MS) {
   stopRuthlessDrip();
-  ruthlessDripId = setInterval(() => {
+  const tick = () => {
     if (bonusLocked) return;
+    const scheduled = ruthlessDripDeadline || performance.now();
     revealRuthlessWord();
-  }, RUTHLESS_WORD_MS);
+    // setInterval keeps its original cadence when a callback runs late. Advance from the
+    // scheduled beat, not callback time, so Settings captures the real next beat instead of
+    // silently granting the callback delay a second time.
+    ruthlessDripDeadline = scheduled + RUTHLESS_WORD_MS;
+  };
+  const delay = Number.isFinite(firstDelay)
+    ? Math.max(1, Math.min(RUTHLESS_WORD_MS, firstDelay)) : RUTHLESS_WORD_MS;
+  ruthlessDripDeadline = performance.now() + delay;
+  if (delay === RUTHLESS_WORD_MS) {
+    ruthlessDripId = setInterval(tick, RUTHLESS_WORD_MS);
+    return;
+  }
+  // Preserve the fraction of the current one-second beat that was left when Settings opened.
+  // This stays interval-based: the short first interval restores the phase, then hands back to
+  // the ordinary one-second metronome after its first tick.
+  const phaseId = setInterval(() => {
+    clearInterval(phaseId);
+    if (ruthlessDripId !== phaseId) return;
+    ruthlessDripId = null;
+    tick();
+    if (bonusLocked || !bonusTimed(bonusGame)) { ruthlessDripDeadline = 0; return; }
+    ruthlessDripDeadline = performance.now() + RUTHLESS_WORD_MS;
+    ruthlessDripId = setInterval(tick, RUTHLESS_WORD_MS);
+  }, delay);
+  ruthlessDripId = phaseId;
 }
 function stopRuthlessDrip() {
   if (ruthlessDripId) clearInterval(ruthlessDripId);
   ruthlessDripId = null;
+  ruthlessDripDeadline = 0;
 }
 
 // One more word onto the page. The stream simply stops when the song runs out — by then the
@@ -6534,6 +6594,21 @@ const CHAIN_BEAT_MS = 780;   // long enough to read the mark before the next thr
 function stopChainBeat() {
   if (chainBeatId) clearTimeout(chainBeatId);
   chainBeatId = null;
+  chainBeatDeadline = 0;
+  chainBeatFn = null;
+}
+function armChainBeat(fn, delay) {
+  stopChainBeat();
+  chainBeatFn = fn;
+  const ms = Math.max(0, delay);
+  chainBeatDeadline = performance.now() + ms;
+  chainBeatId = setTimeout(() => {
+    const run = chainBeatFn;
+    chainBeatId = null;
+    chainBeatDeadline = 0;
+    chainBeatFn = null;
+    if (run) run();
+  }, ms);
 }
 
 /* The verse as it stands: the line the page opened on, then every pick's real successor, with
@@ -6636,7 +6711,7 @@ function judgeChain(i) {
     startBonusClock();
   };
   if (motionReduced() || animInstant()) on();
-  else chainBeatId = setTimeout(on, CHAIN_BEAT_MS);
+  else armChainBeat(on, CHAIN_BEAT_MS);
 }
 
 // A page is CLEARED at the full six, which is the verse whole — that is what the sleeve's tick
@@ -7147,28 +7222,44 @@ function settleBonusRound(correct, detail, isTimeout = false) {
    its own; the reveal is still readable for the full count, and opening "in context" pauses it. */
 let bonusCdId = null;
 let bonusFeedbackAt = 0;        // ms timestamp the verdict appeared — Enter is held off for ENTER_SKIP_GRACE after it
+let bonusCdValue = 0;
+let bonusCdDeadline = 0;
+let bonusCdRunId = 0;
 
 function stopBonusCountdown() {
-  if (bonusCdId) { clearInterval(bonusCdId); bonusCdId = null; }
+  if (bonusCdId) clearTimeout(bonusCdId);
+  bonusCdId = null;
+  bonusCdValue = 0;
+  bonusCdDeadline = 0;
+  bonusCdRunId = 0;
+}
+function armBonusCountdown(delay) {
+  const ms = Math.max(0, delay);
+  bonusCdDeadline = performance.now() + ms;
+  bonusCdId = setTimeout(() => {
+    bonusCdId = null;
+    bonusCdDeadline = 0;
+    if (settingsPauseActive) return;   // pauseForSettings normally catches it synchronously
+    bonusCdValue--;
+    if (bonusCdValue <= 0) {
+      const runAtSettle = bonusCdRunId;
+      stopBonusCountdown();
+      if (!bonusEnded && bonusGame && bonusRunId === runAtSettle) nextBonusRound();
+      return;
+    }
+    const el = $("bonusCd");
+    if (el) el.textContent = bonusCdValue;
+    armBonusCountdown(1000);
+  }, ms);
 }
 
 function runBonusCountdown() {
-  let n = settings.countdownSecs;
   stopBonusCountdown();
   // Tokenised against the run, like the old between-rounds timeout was: quitting and instantly
   // replaying must not let the abandoned run's countdown turn the new run's page.
-  const runAtSettle = bonusRunId;
-  bonusCdId = setInterval(() => {
-    if ($("settingsModal").classList.contains("open")) return;   // paused while settings is open
-    n--;
-    if (n <= 0) {
-      stopBonusCountdown();
-      if (!bonusEnded && bonusGame && bonusRunId === runAtSettle) nextBonusRound();
-    } else {
-      const el = $("bonusCd");
-      if (el) el.textContent = n;
-    }
-  }, 1000);
+  bonusCdValue = settings.countdownSecs;
+  bonusCdRunId = bonusRunId;
+  armBonusCountdown(1000);
 }
 
 // Leave the verdict and turn the page — the skip button, the "next page" button and Enter all
@@ -8268,11 +8359,11 @@ function renderChallengeDetail(id) {
       `</button>`;
   }
 
-  // Thirty-One's best is a round number, and the risk batch's is a bead total that can
-  // legitimately run past the page count — neither belongs over a "/ 13" denominator.
+  // Thirty-One has its own 31-round total, and the risk batch's best is a bead total that can
+  // legitimately run past the page count. Only the latter has no denominator at all.
   // Declared before `meta` because the dark-side note below reuses it against `darkBest`.
   const outOfFor = (best) => RISK_RULES.has(c.rule) ? ` bead${best === 1 ? "" : "s"}`
-    : c.rule === "survive" ? "" : `/${TOTAL_ROUNDS}`;
+    : `/${c.rule === "survive" ? surviveTarget(c) : TOTAL_ROUNDS}`;
   const bestOutOf = outOfFor(rec.best);
   let meta = "";
   if (rec.defeated) meta = `best ${rec.best}${bestOutOf} · ${rec.attempts} attempt${rec.attempts === 1 ? "" : "s"}`;
@@ -9328,6 +9419,12 @@ function buildCardMeta() {
     stats.push({ v: "Custom", l: customPreset ? customPreset.name : "mode" });
     stats.push({ v: finite ? correct + "/" + customSessionLen : String(roundResults.length), l: finite ? "strung" : "rounds" });
     if (runTime != null) stats.push({ v: fmtTime(runTime), l: "on the clock" });
+  } else if (gameType === "challenge" && surviveRuleActive()) {
+    const total = surviveTarget();
+    title = correct >= total ? "thirty-one unbroken ★" : "the long strand";
+    stats.push({ v: currentChallenge.name || "Thirty-One", l: "challenge" });
+    stats.push({ v: correct + "/" + total, l: "strung" });
+    if (runTime != null) stats.push({ v: fmtTime(runTime), l: "on the clock" });
   } else {
     // classic, daily, challenge — a fixed 13-round page
     const perfect = correct === TOTAL_ROUNDS;
@@ -9495,7 +9592,8 @@ function renderBracelet() {
   // tie beads. Gameplay stays visually dominant, and the full drop is saved for results,
   // where the bracelet is the point rather than the furniture above the word.
   const base = { compact: true, colors: albumPalette(), hinted: roundHinted, verseTiers: roundVerseTier };
-  const opts = (gameType === "infinite" || customInfinite())
+  const rollingStrand = gameType === "infinite" || customInfinite() || surviveRuleActive();
+  const opts = rollingStrand
     ? { ...base, total: Math.max(round, 1), letterBead: false }
     : gameType === "custom"
     ? { ...base, total: customSessionLen }
@@ -9517,7 +9615,9 @@ function renderBracelet() {
   // re-announces when the text changes, so it fires on round advance and after a verdict.
   const sr = $("srStatus");
   if (sr) {
-    sr.textContent = (uncapped ? `Round ${pg}. ` : `Page ${pg} of ${sessionRounds()}. `)
+    const progress = surviveRuleActive() ? `Round ${pg} of ${surviveTarget()}. `
+      : uncapped ? `Round ${pg}. ` : `Page ${pg} of ${sessionRounds()}. `;
+    sr.textContent = progress
       + `${correct} correct so far.`;
   }
 }
@@ -12300,6 +12400,9 @@ function comboRuleActive() {
 function surviveRuleActive() {
   return gameType === "challenge" && currentChallenge && currentChallenge.rule === "survive";
 }
+function surviveTarget(c = currentChallenge) {
+  return c && c.rule === "survive" ? (c.target || 31) : TOTAL_ROUNDS;
+}
 // Home Invasion: the run-scoped clock that shrinks on every wrong answer.
 function spiteRuleActive() {
   return gameType === "challenge" && currentChallenge && currentChallenge.rule === "spite";
@@ -12962,6 +13065,7 @@ function endChallenge() {
   // beaten (see noteRunOutcome). Nothing between here and its old home touches the score; the
   // risk settle, which does, has already run.
   const won = challengeWinCheck(c);
+  const challengeTotal = c.rule === "survive" ? surviveTarget(c) : TOTAL_ROUNDS;
   // The two challenge stickers, both read off THIS run rather than off the board, which is what
   // keeps them repeatable: a dark side beaten a second time still earns the queen.
   if (!devNoLog) {
@@ -12978,7 +13082,7 @@ function endChallenge() {
   // or play-count totals: a challenge bends the rules and borrows a mode, so folding
   // it into normal difficulty stats would pollute them. (devNoLog skips it all.)
   if (!devNoLog) {
-    const runTime = currentMode.seconds > 0 ? gameTimeSum : null;
+    const runTime = gameTimedRounds > 0 ? gameTimeSum : null;
     // A risk run's score is a BEAD total, which can outrun the page count — and a history row
     // reads "s / n", so logging it there would render "20 / 13". Log pages won instead: that
     // is the honest 0-13 reading of the same run, and the bead total is the challenge's own
@@ -12988,7 +13092,7 @@ function endChallenge() {
     // having beaten you, and the row already carries `dk` to tell them apart.
     noteRunOutcome("challenge", "chl-" + c.id, won, (h) => !!h.dk === !!challengeDark);
     appendHistory({
-      s: logged, c: logged, n: roundResults.length,
+      s: logged, c: logged, n: challengeTotal,
       // Token stays "chl-<id>" so modeLabel keeps naming the challenge; the dark side is a
       // separate flag rather than a token suffix, which would fall out of CHALLENGE_BY_ID
       // and degrade the label to a bare "Challenge". Surfacing `dk` comes with the UI.
@@ -13022,12 +13126,13 @@ function endChallenge() {
 
   showScreen("results");
   $("resultBracelet").innerHTML = renderBraceletSVG(roundResults, 0, -1, roundAlbums,
-    { colors: albumPalette(), hinted: roundHinted, verseTiers: roundVerseTier });
+    { colors: albumPalette(), hinted: roundHinted, verseTiers: roundVerseTier,
+      ...(c.rule === "survive" ? { total: challengeTotal, letterBead: false } : {}) });
   // A bead total has no "out of": the page count is not its ceiling, so it's shown against
   // the challenge's target instead of the 13 pages that produced it.
   setFinalTally(score,
     riskRuleActive() ? [{ v: String(riskTarget()), l: "needed" }]
-                     : [{ v: String(TOTAL_ROUNDS), l: "pages" }],
+                     : [{ v: String(challengeTotal), l: "pages" }],
     riskRuleActive() ? "beads" : "");
   $("keepGoingBtn").style.display = "none";
   $("namePrompt").style.display = "none";
@@ -13137,7 +13242,7 @@ function endChallenge() {
   // A risk run's best is a bead count, so it can't wear the "/ 13" denominator either.
   const bestLine = !metaBest ? ""
     : riskRuleActive() ? ` · best ${metaBest} bead${metaBest === 1 ? "" : "s"}`
-    : ` · best ${metaBest}/${TOTAL_ROUNDS}`;
+    : ` · best ${metaBest}/${challengeTotal}`;
   const meta = `<div class="chall-result-meta">${metaAttempts} attempt${metaAttempts === 1 ? "" : "s"}` +
     `${bestLine}</div>`;
   // A two-up row sitting above the full-width "front page" button: back to the list on the
@@ -13159,7 +13264,9 @@ function endChallenge() {
   // is a bead total that could sit anywhere relative to the pages actually cleared.
   const perfect = riskRuleActive()
     ? roundResults.length === TOTAL_ROUNDS && roundResults.every(Boolean)
-    : score === TOTAL_ROUNDS;
+    : c.rule === "survive"
+      ? roundResults.length === challengeTotal && roundResults.every(Boolean)
+      : score === TOTAL_ROUNDS;
   if (won && perfect) celebratePerfect();
 }
 
@@ -15339,6 +15446,15 @@ const timerSpark = (() => {
 // `resume` restarts a paused round mid-count instead of from the full clock. `resumeTotal`
 // preserves the scale the page was actually built with, while `revolveDelay` preserves the
 // current Revolving Door beat instead of resetting it every time Settings closes.
+function expireComboRun() {
+  if (!comboRuleActive() || roundLocked) return;
+  comboClock = 0;
+  // Settle the page through the ordinary timeout funnel before ending the run. This banks the
+  // terminal word, miss and page stopwatch, so a clock that expires on page one still records
+  // the twenty seconds the player actually spent there.
+  submitAnswer(null, true);
+  if (comboRuleActive() && screens.game.classList.contains("active")) endGame();
+}
 function startTimer(resume, resumeTotal, revolveDelay) {
   clearTimer();
   const fill = $("timerFill");
@@ -15356,7 +15472,6 @@ function startTimer(resume, resumeTotal, revolveDelay) {
     begin = Math.max(0, Math.min(comboCap(), shared));
     comboClock = begin;
     if (wrap) wrap.style.display = "";
-    if (begin <= 0) { comboClock = 0; roundLocked = true; resetTension(); endGame(); return; }
   } else {
     const base = baseSeconds();
     // Floor a clocked page so stacked time penalties (Devil's Path) can't zero it, but never
@@ -15375,6 +15490,7 @@ function startTimer(resume, resumeTotal, revolveDelay) {
   }
   timerStart = performance.now() - (total - begin) * 1000;
   roundClockTotal = total;   // what "how long is left?" is measured against this page (see clockRemaining)
+  if (comboRuleActive() && begin <= 0) { expireComboRun(); return; }
   fill.style.width = (begin / total * 100) + "%";
   fill.classList.remove("low");
   label.textContent = begin.toFixed(1);
@@ -15428,7 +15544,7 @@ function startTimer(resume, resumeTotal, revolveDelay) {
     if (remaining <= 0) {
       label.textContent = "0.0";
       // It's A Clock!: the shared clock running out ends the whole run, not just a round.
-      if (comboRuleActive()) { comboClock = 0; clearTimer(); resetTension(); roundLocked = true; endGame(); }
+      if (comboRuleActive()) expireComboRun();
       else submitAnswer(null, true);
     }
   }, 100);
@@ -16834,6 +16950,16 @@ function submitAnswer(song, isTimeout) {
     // `need` reached — fall through with this final song to resolve the page correct.
   }
 
+  // Freeze both readings before any verdict work runs. `timerStart` is the gauge baseline,
+  // which is deliberately earlier than this page on a shared-clock challenge and can be built
+  // to a different total by Shrinking Timer, Home Invasion, paths, and dark sides. The page
+  // stopwatch is the honest response duration; clockRemaining is the honest buzzer position.
+  const answerAt = performance.now();
+  const answerSecondsRaw = Math.max(0, (answerAt - roundStart) / 1000);
+  const answerClockLeft = clockRemaining();
+  const answerSeconds = isTimeout && answerClockLeft != null
+    ? Math.min(answerSecondsRaw, roundClockTotal) : answerSecondsRaw;
+
   roundLocked = true;
   clearTimer();
   resetTension();
@@ -16934,10 +17060,10 @@ function submitAnswer(song, isTimeout) {
   if (impostorRuleActive() && !correct) impostorMissed++;
   if (correct && song && song.title === "If This Was A Movie") unlock("answer-if-this-was-a-movie");
   // It's A Clock!: bank the time left on the shared clock; a correct answer winds it
-  // back up (capped). The timer is already cleared, so comboRemaining() is the reading
-  // at the moment of the answer. Next round's startTimer resumes from comboClock.
+  // back up (capped). answerClockLeft was frozen before the timer was cleared, so verdict work
+  // cannot shave extra fractions off the shared budget. Next round resumes from comboClock.
   if (comboRuleActive()) {
-    comboClock = comboRemaining();
+    comboClock = answerClockLeft == null ? comboRemaining() : answerClockLeft;
     if (correct) comboClock = Math.min(comboCap(), comboClock + comboBonus());
     renderComboBanner();
   }
@@ -17053,18 +17179,13 @@ function submitAnswer(song, isTimeout) {
     rareStreak = 0;
   }
 
-  // How long this page took, recorded for EVERY mode. Capped at the clock where there is one, so
-  // a timeout reads as exactly the round length rather than the stray milliseconds the verdict
-  // took to arrive; uncapped in Relaxed, which has nothing to cap against and where the honest
-  // number is the point. Deliberately above the `timed` gate below and deliberately not part of
-  // it: see roundStart for why that gate must not widen.
-  {
-    const spent = (performance.now() - roundStart) / 1000;
-    roundTimes[round - 1] = currentMode.seconds > 0 ? Math.min(spent, currentMode.seconds) : spent;
-    // Lavender sprig rides the same reading. It sits here rather than in checkAnswerStickers
-    // because that runs before the stopwatch is stopped, and it wants the raw figure.
-    if (correct) checkLingerSticker(roundTimes[round - 1]);
-  }
+  // How long this page took, recorded for EVERY mode from the page stopwatch frozen above.
+  // That remains correct when the visible gauge is shorter, longer, or shared across the run.
+  // A timeout alone is capped to the page's real built clock to discard interval callback lag.
+  roundTimes[round - 1] = answerSeconds;
+  // Lavender sprig rides the same reading. It sits here rather than in checkAnswerStickers
+  // because that runs before the stopwatch is stopped, and it wants the raw figure.
+  if (correct) checkLingerSticker(roundTimes[round - 1]);
   // Just Like That — three correct answers in a row, each inside a second. Off the page stopwatch
   // rather than the countdown, so Relaxed can win it too: a second is a second with or without a
   // clock. Anything else at all breaks the run, a miss and a slow correct answer alike.
@@ -17085,20 +17206,23 @@ function submitAnswer(song, isTimeout) {
   }
 
   // achievements: timing + streak signals (mid-game unlocks toast immediately).
-  // Timing signals only apply to timed modes — Relaxed has no clock, so they're skipped.
-  const timed = currentMode.seconds > 0;
+  // Timing signals only apply when this page really had a clock. Read the captured page
+  // duration and buzzer position, never currentMode.seconds or timerStart: challenges can
+  // replace both the clock's size and its baseline.
+  const timed = answerClockLeft != null;
   if (isTimeout) gameTimeouts++;
   if (timed) {
-    const elapsed = (performance.now() - timerStart) / 1000;
-    const remaining = currentMode.seconds - elapsed;
-    gameTimeSum += Math.min(elapsed, currentMode.seconds);   // for Perfect Storm
+    const elapsed = answerSeconds;
+    const remaining = answerClockLeft;
+    const clockTotal = roundClockTotal;
+    gameTimeSum += elapsed;                                  // real per-page response time
     gameTimedRounds++;                                       // for the lifetime avg answer time
     if (remaining <= 3) gameHitRedZone = true;               // for Peace (timeouts count too)
     // The Whole Way Home's half-clock reading, kept deliberately parallel to the red zone above:
     // same gate, same "timeouts count too", just a different line on the bar.
-    if (remaining <= currentMode.seconds / 2) gameHitHalfClock = true;
+    if (remaining <= clockTotal / 2) gameHitHalfClock = true;
     if (correct) {
-      const ms = Math.min(elapsed, currentMode.seconds) * 1000;
+      const ms = elapsed * 1000;
       if (gameFastestMs == null || ms < gameFastestMs) gameFastestMs = ms;   // lifetime fastest answer
       if (elapsed < 2) unlock("answer-under-2s");
       if (round === 1 && elapsed < 2) unlock("round-1-under-2s");
@@ -17110,7 +17234,7 @@ function submitAnswer(song, isTimeout) {
       const firstKey = roundFirstKeyLeft[round - 1];
       if (firstKey != null && firstKey >= 0 && firstKey < 2) unlock("type-nothing-until-2s-left-then-answer-right");
       // Quick Pen skill: faster answers earn more (full at instant, zero at the buzzer).
-      const speedFactor = Math.max(0, Math.min(1, remaining / currentMode.seconds));
+      const speedFactor = Math.max(0, Math.min(1, remaining / clockTotal));
       gameTempoXp += Math.round(TEMPO_BASE + TEMPO_SPEED * speedFactor);
     }
   }
@@ -19240,12 +19364,13 @@ function setIco(key) {
 // label on its row, the full set of tabs beneath it.
 function setChoiceHTML(key, name, desc, options) {
   const tabs = options.map((o) =>
-    `<button type="button" class="mode-tab${o.val === settings[key] ? " active" : ""}" data-choice="${key}" data-val="${o.val}">${o.label}</button>`
+    `<button type="button" class="mode-tab${o.val === settings[key] ? " active" : ""}" ` +
+      `data-choice="${key}" data-val="${o.val}" aria-pressed="${o.val === settings[key]}">${o.label}</button>`
   ).join("");
   const stack = options.length > 4 ? " set-row--stack" : "";
   return `<div class="set-row${stack}"><div class="set-label"><span class="set-name">${setIco(key)}${name}</span>` +
     (desc ? `<span class="set-desc">${desc}</span>` : "") + `</div>` +
-    `<div class="set-control set-choice">${tabs}</div></div>`;
+    `<div class="set-control set-choice" role="group" aria-label="${escapeHtml(name)}">${tabs}</div></div>`;
 }
 // Your era, as the twelve album colours rather than a browser dropdown. The player
 // already picked it this way at first run (.fr-era), and a choice that is *about* a
@@ -19279,7 +19404,8 @@ function setSelectHTML(key, name, desc, options) {
 function setSliderHTML() {
   return `<div class="set-row"><div class="set-label"><span class="set-name">${setIco("countdownSecs")}Countdown length</span>` +
     `<span class="set-desc">seconds before the next page auto-turns</span></div>` +
-    `<div class="set-control set-slider-row"><input type="range" id="countdownSlider" class="set-slider" min="3" max="8" step="1" value="${settings.countdownSecs}">` +
+    `<div class="set-control set-slider-row"><input type="range" id="countdownSlider" class="set-slider" min="3" max="8" step="1" ` +
+      `value="${settings.countdownSecs}" aria-label="Countdown length in seconds" aria-valuetext="${settings.countdownSecs} seconds">` +
     `<span class="set-slider-val" id="countdownVal">${settings.countdownSecs}s</span></div></div>`;
 }
 // Heart-hands gesture (the fan motif) — a line-art icon that caps the signature
@@ -19356,7 +19482,9 @@ function disarmBookplateTitle() {
 function bookplateTitleToMastery() {
   const btn = bpTitleBtn();
   if (!btn) return;
-  const inRun = screens.game.classList.contains("active");
+  const inNotebookRun = screens.game.classList.contains("active");
+  const inBonusRun = screens.bonusplay.classList.contains("active");
+  const inRun = inNotebookRun || inBonusRun;
   if (inRun && settings.confirmLeave !== false && !btn.classList.contains("armed")) {
     btn.classList.add("armed");
     btn.textContent = "leave this run? tap again";
@@ -19377,7 +19505,11 @@ function bookplateTitleToMastery() {
   // Quit BEFORE the modal closes, so resumeFromSettings finds no game screen to hand the
   // paused clock back to, and suppress the quit's own turn back to the desk: the only page
   // turn the player should see is the one into Mastery.
-  if (inRun) { skipNextFlip = true; quitGame(); }
+  if (inRun) {
+    skipNextFlip = true;
+    if (inBonusRun) leaveBonusGame();
+    else quitGame();
+  }
   closeSettings();
   openMastery(from, "titles");   // its showScreen focuses Mastery after closeSettings' restore
 }
@@ -19421,6 +19553,8 @@ function dangerItems() {
   const found = loadSongTally().songs || {};
   const songs = allSongs.filter((s) => found[s.title]).length;
   const dailies = Object.keys(dailyPlayedDates()).length;
+  const dailyProgress = dailyProgressCount();
+  const dailyEntries = dailies + dailyProgress;
   const streak = effectiveDailyStreak(todayKey()).current;
 
   return [
@@ -19428,8 +19562,10 @@ function dangerItems() {
     { key: "stats", name: "Stats & streaks", n: games, cost: plural(games, "game") },
     { key: "ach", name: "Achievements", n: charms, cost: `${charms} / ${ACHIEVEMENTS.length} charms` },
     { key: "tally", name: "Catalogue", n: songs, cost: `${songs} / ${allSongs.length} songs` },
-    { key: "daily", name: "Daily challenge", n: dailies,
-      cost: streak ? `${dailies} played, ${streak} run` : plural(dailies, "puzzle") },
+    { key: "daily", name: "Daily challenge", n: dailyEntries,
+      cost: dailyProgress
+        ? `${dailies} played, ${dailyProgress} in progress`
+        : (streak ? `${dailies} played, ${streak} run` : plural(dailies, "puzzle")) },
     { key: "settings", name: "Settings", n: 1, cost: "back to defaults" },
   ];
 }
@@ -19646,9 +19782,11 @@ function renderSettingsBody() {
   const was = document.activeElement;
   const d = (was && was.dataset) || {};
   // eraPick is compared against undefined, not truthiness: "" is the "no favourite" chip.
-  const wasSel = d.toggle ? `[data-toggle="${d.toggle}"]`
-    : d.choice ? `[data-choice="${d.choice}"][data-val="${d.val}"]`
-    : d.eraPick !== undefined ? `[data-era-pick="${d.eraPick}"]`
+  const wasSel = d.toggle ? `[data-toggle="${CSS.escape(d.toggle)}"]`
+    : d.choice ? `[data-choice="${CSS.escape(d.choice)}"][data-val="${CSS.escape(d.val)}"]`
+    : d.eraPick !== undefined ? `[data-era-pick="${CSS.escape(d.eraPick)}"]`
+    : d.select ? `[data-select="${CSS.escape(d.select)}"]`
+    : was && was.id === "countdownSlider" ? "#countdownSlider"
     : null;
   $("settingsBody").innerHTML = SETTINGS_PANELS.map((p) =>
     `<div class="set-panel" id="set-panel-${p.id}" role="tabpanel" aria-labelledby="set-tab-${p.id}"` +
@@ -19690,7 +19828,10 @@ function wireSettingsBody() {
   }));
   const slider = $("countdownSlider");
   if (slider) {
-    slider.addEventListener("input", () => { $("countdownVal").textContent = slider.value + "s"; });
+    slider.addEventListener("input", () => {
+      $("countdownVal").textContent = slider.value + "s";
+      slider.setAttribute("aria-valuetext", slider.value + " seconds");
+    });
     slider.addEventListener("change", () => { settings.countdownSecs = parseInt(slider.value, 10) || 5; saveSettings(settings); });
   }
   const nameField = $("set-playerName");
@@ -19765,12 +19906,86 @@ function exportBackup() {
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
+// Capture every time-bearing part of the Bonus/Ruthless loop. The shelf has its own clock,
+// Ruthless has a second word-drip cadence, Then What has a short between-pick beat, and the
+// verdict has its own auto-advance countdown. Settings must freeze all four at their exact
+// phase, as well as excluding the modal from the hidden page/sweep stopwatches.
+function pauseBonusForSettings() {
+  if (!screens.bonusplay.classList.contains("active") || !bonusGame || bonusEnded) return null;
+  const now = performance.now();
+  const state = {
+    pausedAt: now,
+    shiftPage: !bonusLocked && bonusPageStart > 0,
+    shiftRun: bonusRunStart > 0,
+    clock: null,
+    chainRemaining: null,
+    feedbackRemaining: null,
+  };
+
+  if (!bonusLocked && bonusRaf) {
+    state.clock = bonusTimed(bonusGame)
+      ? {
+          kind: "ruthless",
+          elapsed: Math.max(0, (now - ruthlessStart) / 1000),
+          dripRemaining: ruthlessDripId && ruthlessDripDeadline
+            ? Math.max(0, ruthlessDripDeadline - now) : RUTHLESS_WORD_MS,
+        }
+      : {
+          kind: "countdown",
+          total: bonusClockTotal,
+          remaining: Math.max(0, bonusClockDeadline - now),
+        };
+    stopBonusClock();
+  }
+
+  if (chainBeatId) {
+    state.chainRemaining = Math.max(0, chainBeatDeadline - now);
+    clearTimeout(chainBeatId);
+    chainBeatId = null;
+    chainBeatDeadline = 0;
+    // chainBeatFn deliberately survives: resumeBonusFromSettings re-arms this same beat.
+  }
+  if (bonusCdId) {
+    state.feedbackRemaining = Math.max(0, bonusCdDeadline - now);
+    clearTimeout(bonusCdId);
+    bonusCdId = null;
+    bonusCdDeadline = 0;
+  }
+  return state;
+}
+
+function resumeBonusFromSettings(state) {
+  const active = screens.bonusplay.classList.contains("active") && bonusGame && !bonusEnded;
+  if (!active) { settingsDeferredBonusClock = false; return; }
+
+  if (state) {
+    const gap = Math.max(0, performance.now() - state.pausedAt);
+    if (state.shiftPage) bonusPageStart += gap;
+    if (state.shiftRun) bonusRunStart += gap;
+
+    if (state.chainRemaining != null && chainBeatFn) {
+      const run = chainBeatFn;
+      armChainBeat(run, state.chainRemaining);
+    }
+    if (state.feedbackRemaining != null && bonusCdValue > 0 && bonusCdRunId === bonusRunId) {
+      armBonusCountdown(state.feedbackRemaining);
+    }
+    if (state.clock && !bonusLocked) startBonusClock(state.clock);
+  }
+
+  // A page flip can finish after pauseBonusForSettings took its snapshot. In that case there
+  // was no live clock to capture; start it now, once, from the ordinary fresh-page baseline.
+  if ((!state || !state.clock) && settingsDeferredBonusClock && !bonusLocked) startBonusClock();
+  settingsDeferredBonusClock = false;
+}
+
 // Pause the round timer while the modal is open; resume from where it left off.
 function pauseForSettings() {
   settingsPauseActive = true;
   pausedClockState = null;
   pausedStopwatchAt = null;
   pausedVanishRemaining = null;
+  pausedBonusState = pauseBonusForSettings();
   pauseCurtainTimers();
   // The stopwatch pauses on any live page, clock or not: time spent in the settings modal was
   // never spent answering, and in Relaxed there is no countdown to freeze in its place.
@@ -19812,11 +20027,63 @@ function resumeFromSettings() {
   }
   pausedClockState = null;
   pausedVanishRemaining = null;
+  const bonusState = pausedBonusState;
+  pausedBonusState = null;
+  resumeBonusFromSettings(bonusState);
 }
 // Element focused before the modal opened, so focus can be returned there on close
 // (usually #songInput mid-game or the gear) instead of being lost to the hidden page.
 let lastFocusedBeforeSettings = null;
 let lastFocusedBeforeSong = null;
+const dialogBackgroundInerted = new WeakMap();
+
+// `aria-modal` describes the dialog to assistive technology; inert makes that boundary real
+// for keyboard and virtual-cursor navigation. Track only attributes added here so closing one
+// dialog never releases a surface another overlay had already contained.
+function containDialogBackground(modal) {
+  const contained = [];
+  Array.from(document.body.children).forEach((el) => {
+    // The hidden import picker is activated programmatically from Settings. It is already out
+    // of layout and the accessibility tree, and making it inert can block its file chooser.
+    if (!(el instanceof HTMLElement) || el === modal || el.id === "importFile"
+        || el.tagName === "SCRIPT" || el.hasAttribute("inert")) return;
+    el.setAttribute("inert", "");
+    contained.push(el);
+  });
+  dialogBackgroundInerted.set(modal, contained);
+}
+function releaseDialogBackground(modal) {
+  const contained = dialogBackgroundInerted.get(modal) || [];
+  contained.forEach((el) => { el.removeAttribute("inert"); });
+  dialogBackgroundInerted.delete(modal);
+}
+function dialogFocusables(container) {
+  if (!container) return [];
+  return Array.from(
+    container.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])')
+  ).filter((el) => !el.disabled && el.offsetParent !== null && el.tabIndex !== -1);
+}
+function trapDialogTab(e, modal, container) {
+  if (e.key !== "Tab" || !modal.classList.contains("open") || !container) return;
+  const focusables = dialogFocusables(container);
+  if (!focusables.length) {
+    e.preventDefault();
+    container.focus();
+    return;
+  }
+  const first = focusables[0], last = focusables[focusables.length - 1];
+  const active = document.activeElement;
+  if (!container.contains(active)) {
+    e.preventDefault();
+    (e.shiftKey ? last : first).focus();
+  } else if (e.shiftKey && active === first) {
+    e.preventDefault();
+    last.focus();
+  } else if (!e.shiftKey && active === last) {
+    e.preventDefault();
+    first.focus();
+  }
+}
 
 // Reading lyric context shouldn't let the page turn out from under the reader, so any
 // running correct-answer countdown is cancelled the moment they expand context or open
@@ -19885,15 +20152,17 @@ function closeFullSong() {
 }
 
 function openSettings() {
+  const m = $("settingsModal");
+  if (m.classList.contains("open")) return;
   unlock("open-settings-menu");
   lastFocusedBeforeSettings = document.activeElement;
   pauseForSettings();
   settingsPanel = SETTINGS_PANELS[0].id;   // always open on the first divider
   renderSettingsBody();
-  const m = $("settingsModal");
   m.classList.add("open");
   m.setAttribute("aria-hidden", "false");
   document.body.classList.add("modal-open");   // freeze the page behind the modal
+  containDialogBackground(m);
   // Move focus into the dialog so keyboard/SR users land inside it (and the focus
   // trap has somewhere to start). The close button is a safe, always-present target.
   const close = $("settingsCloseBtn");
@@ -19905,6 +20174,7 @@ function closeSettings() {
   m.classList.remove("open");
   m.setAttribute("aria-hidden", "true");
   document.body.classList.remove("modal-open");
+  releaseDialogBackground(m);
   disarmBookplateTitle();   // an armed bookplate door must never survive the modal closing
   resumeFromSettings();
   // Restore focus to wherever it was before opening (falls back to the gear).
@@ -19935,11 +20205,13 @@ function cmToggleTile(key, name, desc, on, disabled, span) {
 }
 function cmChoiceTile(key, name, desc, options, cur, span) {
   const tabs = options.map((o) =>
-    `<button type="button" class="mode-tab${String(o.val) === String(cur) ? " active" : ""}" data-cm-choice="${key}" data-val="${escapeHtml(String(o.val))}">${escapeHtml(o.label)}</button>`
+    `<button type="button" class="mode-tab${String(o.val) === String(cur) ? " active" : ""}" ` +
+      `data-cm-choice="${key}" data-val="${escapeHtml(String(o.val))}" ` +
+      `aria-pressed="${String(o.val) === String(cur)}">${escapeHtml(o.label)}</button>`
   ).join("");
   return `<div class="cm-tile cm-tile--choice ${span}">` +
     cmTileHead(name, desc) +
-    `<div class="cm-choices">${tabs}</div></div>`;
+    `<div class="cm-choices" role="group" aria-label="${escapeHtml(name)}">${tabs}</div></div>`;
 }
 // Per-lever slider metadata. `sliderMin`/`sliderMax` are the comfortable drag range shown in
 // the modal; `typedMax` is how far the click-to-type value box may go past the slider's end;
@@ -19974,10 +20246,18 @@ function cmSliderLabelHtml(key, v) {
   if (key === "lives") return v === 1 ? "Sudden death" : (v + " lives");
   return String(v);
 }
+function cmSliderAriaValueText(key, v) {
+  if (key === "seconds") return v > 0 ? `${v} seconds` : "No clock";
+  if (key === "hintBudget") return v < 0 ? "Unlimited hints" : (v > 0 ? `${v} hints` : "No hints");
+  if (key === "rounds") return v === 0 ? "Endless" : `${v} round${v === 1 ? "" : "s"}`;
+  if (key === "lives") return v === 1 ? "Sudden death" : `${v} lives`;
+  return String(v);
+}
 // A slider's value readout, marked up so a click turns it into a number field (see wireCmEditables).
-function cmValLabel(key, val, extraCls) {
+function cmValLabel(key, val, extraCls, disabled = false) {
   return `<span class="cm-slider-val cm-val-edit${extraCls ? " " + extraCls : ""}" data-cm-slider-val="${key}" ` +
-    `data-cm-edit="${key}" role="button" tabindex="0" title="click to type an exact value">${cmSliderLabelHtml(key, val)}</span>`;
+    `data-cm-edit="${key}"${disabled ? ' aria-disabled="true"' : ' role="button" tabindex="0" title="click to type an exact value"'}>` +
+    `${cmSliderLabelHtml(key, val)}</span>`;
 }
 // A disabled slider greys out and stops taking drags; wireCmEditables also refuses to open the
 // click-to-type field inside a .cm-disabled tile, so a greyed lever is inert on every path.
@@ -19987,8 +20267,9 @@ function cmSliderTile(key, name, desc, val, disabled, span) {
   return `<div class="cm-tile cm-tile--slider ${span}${disabled ? " cm-disabled" : ""}">` +
     cmTileHead(name, desc) +
     `<div class="cm-slider-wrap">` +
-      `<input type="range" class="set-slider cm-slider" data-cm-slider="${key}" min="${meta.sliderMin}" max="${sliderMax}" step="1" value="${cmValueToSliderPos(key, val)}" aria-label="${name}"${disabled ? " disabled" : ""}>` +
-      cmValLabel(key, val) +
+      `<input type="range" class="set-slider cm-slider" data-cm-slider="${key}" min="${meta.sliderMin}" max="${sliderMax}" step="1" ` +
+        `value="${cmValueToSliderPos(key, val)}" aria-label="${name}" aria-valuetext="${cmSliderAriaValueText(key, val)}"${disabled ? " disabled" : ""}>` +
+      cmValLabel(key, val, "", disabled) +
     `</div></div>`;
 }
 // The run-length hero tile: a big value that reads the round count (or the infinite glyph), a
@@ -20000,21 +20281,47 @@ function cmRoundsTile(m) {
     ? `<div class="cm-lives">` +
         `<div class="cm-lives-head"><span class="cm-tile-name cm-lives-lbl">Lives</span>` +
           cmValLabel("lives", m.lives) + `</div>` +
-        `<input type="range" class="set-slider cm-slider" data-cm-slider="lives" min="${CUSTOM_LIVES_MIN}" max="${CUSTOM_LIVES_MAX}" step="1" value="${cmValueToSliderPos("lives", m.lives)}" aria-label="Lives">` +
+        `<input type="range" class="set-slider cm-slider" data-cm-slider="lives" min="${CUSTOM_LIVES_MIN}" max="${CUSTOM_LIVES_MAX}" step="1" ` +
+          `value="${cmValueToSliderPos("lives", m.lives)}" aria-label="Lives" aria-valuetext="${cmSliderAriaValueText("lives", m.lives)}">` +
       `</div>`
     : "";
   return `<div class="cm-tile cm-tile--hero cm-tile--rounds">` +
     cmTileHead("Rounds", `pages in a run, or slide to the end for endless`) +
     `<div class="cm-rounds-big cm-val-edit${infinite ? " is-inf" : ""}" data-cm-rounds-big data-cm-edit="rounds" ` +
       `role="button" tabindex="0" title="click to type an exact round count">${cmSliderLabelHtml("rounds", m.rounds)}</div>` +
-    `<input type="range" class="set-slider cm-slider cm-slider--rounds" data-cm-slider="rounds" min="${meta.sliderMin}" max="${meta.infStop}" step="1" value="${cmValueToSliderPos("rounds", m.rounds)}" aria-label="Rounds">` +
+    `<input type="range" class="set-slider cm-slider cm-slider--rounds" data-cm-slider="rounds" min="${meta.sliderMin}" max="${meta.infStop}" step="1" ` +
+      `value="${cmValueToSliderPos("rounds", m.rounds)}" aria-label="Rounds" aria-valuetext="${cmSliderAriaValueText("rounds", m.rounds)}">` +
     livesBlock +
     `</div>`;
+}
+
+function customModalFocusSelector(active) {
+  if (!(active instanceof HTMLElement)) return null;
+  const owner = active.closest("[data-cm-toggle], [data-cm-choice], [data-cm-slider], [data-cm-edit], [data-cm-preset], [data-cm-act]");
+  const d = (owner && owner.dataset) || active.dataset || {};
+  if (d.cmToggle) return `[data-cm-toggle="${CSS.escape(d.cmToggle)}"]`;
+  if (d.cmChoice) return `[data-cm-choice="${CSS.escape(d.cmChoice)}"][data-val="${CSS.escape(d.val)}"]`;
+  if (d.cmSlider) return `[data-cm-slider="${CSS.escape(d.cmSlider)}"]`;
+  if (d.cmEdit) return `[data-cm-edit="${CSS.escape(d.cmEdit)}"]`;
+  if (d.cmPreset) return `[data-cm-preset="${CSS.escape(d.cmPreset)}"]`;
+  if (d.cmAct) return `[data-cm-act="${CSS.escape(d.cmAct)}"]`;
+  return active.id === "cmNameInput" ? "#cmNameInput" : null;
+}
+function restoreCustomModalFocus(selector) {
+  if (!selector || !$("customModal").classList.contains("open")) return;
+  const body = $("customModalBody");
+  let target = body.querySelector(selector);
+  if (target && target.disabled) target = null;
+  target = target || body.querySelector(".cm-preset-chip.active:not([disabled])") || $("cmNameInput");
+  if (target) { try { target.focus({ preventScroll: true }); } catch (_) { target.focus(); } }
 }
 
 function renderCustomModalBody() {
   const body = $("customModalBody");
   if (!body) return;
+  // Slider commits and choice clicks rebuild this body. Preserve the logical control so
+  // keyboard users can keep adjusting it instead of being thrown back to the document.
+  const focusSelector = customModalFocusSelector(document.activeElement);
   const store = loadCustom();
   const preset = store.presets.find((p) => p.id === store.activeId) || store.presets[0];
   const m = normalizeCustomMode(preset.mode);
@@ -20025,7 +20332,8 @@ function renderCustomModalBody() {
   if (store.presets.length >= CUSTOM_PRESET_SHELF) unlock("keep-5-custom-presets");
 
   const chips = store.presets.map((p) =>
-    `<button type="button" class="cm-preset-chip${p.id === preset.id ? " active" : ""}" data-cm-preset="${escapeHtml(p.id)}">${escapeHtml(p.name || "Custom")}</button>`
+    `<button type="button" class="cm-preset-chip${p.id === preset.id ? " active" : ""}" ` +
+      `data-cm-preset="${escapeHtml(p.id)}" aria-pressed="${p.id === preset.id}">${escapeHtml(p.name || "Custom")}</button>`
   ).join("");
   const presetRow =
     `<div class="cm-presets">` +
@@ -20038,7 +20346,7 @@ function renderCustomModalBody() {
           `<button type="button" class="btn-ghost" data-cm-act="delete"${canDelete ? "" : " disabled"}>Delete</button>` +
         `</div>` +
       `</div>` +
-      (store.presets.length > 1 ? `<div class="cm-preset-chips">${chips}</div>` : "") +
+      (store.presets.length > 1 ? `<div class="cm-preset-chips" role="group" aria-label="Presets">${chips}</div>` : "") +
     `</div>`;
 
   body.innerHTML =
@@ -20061,6 +20369,7 @@ function renderCustomModalBody() {
     `</div>`;
 
   wireCustomModalBody();
+  restoreCustomModalFocus(focusSelector);
 }
 
 function wireCustomModalBody() {
@@ -20098,6 +20407,7 @@ function wireCustomModalBody() {
       if (!lbl) return;
       const val = cmSliderPosToValue(k, parseInt(sl.value, 10) || 0);
       lbl.innerHTML = cmSliderLabelHtml(k, val);
+      sl.setAttribute("aria-valuetext", cmSliderAriaValueText(k, val));
       if (k === "rounds") lbl.classList.toggle("is-inf", val === 0);
     });
     sl.addEventListener("change", () => {
@@ -20214,12 +20524,14 @@ function uniqueCustomName(base, presets) {
 
 let lastFocusedBeforeCustomModal = null;
 function openCustomModal() {
+  const m = $("customModal");
+  if (m.classList.contains("open")) return;
   lastFocusedBeforeCustomModal = document.activeElement;
   renderCustomModalBody();
-  const m = $("customModal");
   m.classList.add("open");
   m.setAttribute("aria-hidden", "false");
   document.body.classList.add("modal-open");
+  containDialogBackground(m);
   const close = $("customModalCloseBtn");
   if (close) { try { close.focus({ preventScroll: true }); } catch (_) { close.focus(); } }
 }
@@ -20229,6 +20541,7 @@ function closeCustomModal() {
   m.classList.remove("open");
   m.setAttribute("aria-hidden", "true");
   if (!$("settingsModal").classList.contains("open")) document.body.classList.remove("modal-open");
+  releaseDialogBackground(m);
   // Reflect the edits on the start-screen custom row (name, lever summary, tagline).
   renderCustomRow();
   updateTagline();
@@ -21007,9 +21320,9 @@ function devAnswer(kind) {
 /* Timer cheats — operate on the live interval (timerStart) or a frozen value. */
 function devTimerFreeze() {
   if (!timerId) return false;
-  devFrozenRemaining = Math.max(0, currentMode.seconds - (performance.now() - timerStart) / 1000);
+  devFrozenRemaining = clockRemaining();
   clearTimer();
-  return true;
+  return devFrozenRemaining != null;
 }
 function devTimerUnfreeze() {
   if (devFrozenRemaining == null) return;
@@ -21021,7 +21334,8 @@ function devTimerAdd(secs) {
   else if (devFrozenRemaining != null) devFrozenRemaining = Math.max(0, devFrozenRemaining + secs);
 }
 function devTimerSet(secs) {
-  if (timerId) timerStart = performance.now() - (currentMode.seconds - secs) * 1000;
+  if (timerId && roundClockTotal > 0)
+    timerStart = performance.now() - (roundClockTotal - Math.max(0, +secs || 0)) * 1000;
   else if (devFrozenRemaining != null) devFrozenRemaining = secs;
 }
 function devTimerDisable() {
@@ -21191,7 +21505,11 @@ function buildDevApi() {
     GUIDE_BEAT_IDS: Object.keys(GUIDE_BEATS),
     getState: () => ({
       screen: Object.keys(screens).find((k) => screens[k].classList.contains("active")),
-      round, score, total: TOTAL_ROUNDS,
+      round, score,
+      total: gameType === "infinite" || customInfinite() ? INF_GLYPH
+        : surviveRuleActive() ? surviveTarget()
+        : gameType === "custom" ? (customSessionLen || currentMode.rounds || TOTAL_ROUNDS)
+        : sessionRounds(),
       mode: currentMode.id, gameType, infiniteVariant, lives,
       era: document.body.getAttribute("data-era"),
       word: currentWord, roundLocked,
@@ -23814,20 +24132,13 @@ async function init() {
   $("customModalScrim").addEventListener("click", closeCustomModal);
   $("customModalOkBtn").addEventListener("click", closeCustomModal);
   $("settingsModal").addEventListener("wheel", routeSettingsWheel, { passive: false });
-  // Focus trap: keep Tab/Shift+Tab cycling within the open dialog.
+  // Focus traps keep Tab and Shift+Tab cycling through every control owned by each dialog.
+  // Settings uses the shell because its divider tabs sit beside the scrolling card.
   $("settingsModal").addEventListener("keydown", (e) => {
-    if (e.key !== "Tab" || !$("settingsModal").classList.contains("open")) return;
-    // The shell, not the card: the divider tabs sit outside the scrolling page and
-    // must still be inside the trap.
-    const card = document.querySelector("#settingsModal .settings-shell");
-    if (!card) return;
-    const focusables = Array.from(
-      card.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])')
-    ).filter((el) => !el.disabled && el.offsetParent !== null && el.tabIndex !== -1);
-    if (!focusables.length) return;
-    const first = focusables[0], last = focusables[focusables.length - 1];
-    if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
-    else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+    trapDialogTab(e, $("settingsModal"), document.querySelector("#settingsModal .settings-shell"));
+  });
+  $("customModal").addEventListener("keydown", (e) => {
+    trapDialogTab(e, $("customModal"), document.querySelector("#customModal .settings-card"));
   });
 
   // Leaving the page mid-game (reload / close) still banks the progress made so
