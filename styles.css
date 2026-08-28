@@ -7907,6 +7907,21 @@
   .dropdown .item:nth-child(3n)::before {
     --tape-clip: polygon(8% 0%, 92% 0%, 96% 33%, 89% 66%, 97% 100%, 7% 100%, 3% 66%, 11% 33%);
   }
+  /* The suggestion cards give up the tape's cast shadow, and it is not a taste call. `filter`
+     promotes the strip to its own compositing layer, and renderDropdown tears down and rebuilds
+     six of them on EVERY keystroke, so typing a lyric line churns dozens of throwaway layers in
+     a couple of seconds. Chromium (caught in Brave) loses one on the way out and leaves it
+     painted after the list is hidden: a stack of phantom song titles sitting on the paper, from
+     a query two letters old, while the DOM correctly says the list is gone. Switching tabs
+     healed it, which is the tell: stale pixels, not stale state.
+
+     Bisected to this one property: with the filter off and nothing else changed, the ghosts
+     stop. Everything else sharing the surface above (nav strips, tile and sleeve tape) is built
+     once and left alone, so none of them can strand a layer and all of them keep their shadow.
+     The strip is 32x14px and still reads as tape on its four other cues, so the loss is small
+     and it buys a bug that made the game look broken mid-round. Applies to the bonus games'
+     dropdown too, which shares the class and the same per-keystroke rebuild. */
+  .dropdown .item::before { filter: none; }
   /* Geometry + tint for the nav-card strips (size/transform/clip are overridden inline). */
   .nav-tape {
     position: absolute; z-index: 3; width: 50px; height: 16px; pointer-events: none;
