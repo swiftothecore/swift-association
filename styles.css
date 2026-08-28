@@ -728,16 +728,81 @@
     100% { stroke: #e6bd88; stroke-width: 2.5; }
   }
   body[data-reduce-motion="on"] .mg-pour.is-poured .mg-pour-line { animation: none; }
-  /* One tap on the surface. The rings are drawn around their own origin so the scale can be a
-     plain transform on the group the tap moved into place. */
-  .mg-ripple-rings { opacity: 0; transform-box: view-box; transform-origin: 0 0; }
-  .mg-ripple.is-rippling .mg-ripple-rings { animation: mugRipple 640ms ease-out 1; }
-  @keyframes mugRipple {
-    0%   { opacity: 0.75; transform: scale(0.3); }
-    70%  { opacity: 0.28; }
-    100% { opacity: 0; transform: scale(1.75); }
+  /* ONE TAP ON THE SURFACE (markup and the reasoning in index.html).
+     Everything below hangs off .is-rippling on the mug's <svg>, not on one group, because a
+     tap moves the wave AND the coffee the wave is crossing, and those are different elements.
+     The rings are drawn around their own origin, so the scale is a plain transform on the
+     group app.js moved into place. */
+  .mg-dimple { opacity: 0; }
+  /* The fade runs on stroke-opacity, which leaves plain opacity free to carry how much of the
+     wave each of the two strokes is worth. Weight and animation on one property would mean
+     giving the trough its own keyframes to fall out of step with the crest. */
+  .mg-ring circle { fill: none; stroke-opacity: 0; }
+  /* Coffee is nearly black, so a ripple on it is mostly the light it throws back and only a
+     little of the shadow behind that. Weighted accordingly: the trough is a hint, the crest
+     carries the read. */
+  .mg-ring-dark { stroke: #2b1806; }
+  .mg-ring-lit  { stroke: #f6e2c0; }
+  .mg-ripple .mg-ring, .mg-ripple .mg-dimple { transform-box: view-box; transform-origin: 0 0; }
+  /* The press. Fast in, slower out, and gone well before the last wave front leaves: a finger
+     lifts off coffee long before the coffee has finished answering. */
+  .di-mug svg.is-rippling .mg-dimple { animation: mugDimple 340ms cubic-bezier(0.3, 0, 0.2, 1) 1; }
+  @keyframes mugDimple {
+    0%   { opacity: 0;    transform: scale(0.2); }
+    22%  { opacity: 0.26; transform: scale(1); }
+    100% { opacity: 0;    transform: scale(1.55); }
   }
-  body[data-reduce-motion="on"] .mg-ripple.is-rippling .mg-ripple-rings { animation: none; }
+  /* The wave fronts. Each ring leaves a beat after the one before it, and the easing is the
+     whole trick: a wave front is quick out of the middle and then gives up, so the curve runs
+     out of speed long before the animation runs out of time. The stroke thins as it goes,
+     because the same water is being asked to cover a longer circle. */
+  .di-mug svg.is-rippling .mg-ring { animation: mugRingSpread 1080ms cubic-bezier(0.12, 0.62, 0.24, 1) 1 backwards; }
+  .di-mug svg.is-rippling .mg-ring circle { animation: mugRingFade 1080ms cubic-bezier(0.12, 0.62, 0.24, 1) 1 backwards; }
+  .di-mug svg.is-rippling .mg-ring-b, .di-mug svg.is-rippling .mg-ring-b circle { animation-delay: 130ms; }
+  .di-mug svg.is-rippling .mg-ring-c, .di-mug svg.is-rippling .mg-ring-c circle { animation-delay: 285ms; }
+  @keyframes mugRingSpread {
+    0%   { transform: scale(calc(0.32 * var(--rx, 1)), calc(0.32 * var(--ry, 1))); }
+    100% { transform: scale(calc(var(--spread, 4.6) * var(--rx, 1)), calc(var(--spread, 4.6) * var(--ry, 1))); }
+  }
+  /* No two of them are the same circle and none of them is quite a circle. Real coffee is not
+     drawn with a compass: a wave front comes off a cup wall and a bubble raft slightly out of
+     true, and three identical hoops leaving at even intervals is the thing that makes an
+     effect read as an effect. The numbers are small on purpose. */
+  .mg-ring-a { --rx: 1.04; --ry: 0.97; --spread: 4.9; }
+  .mg-ring-b { --rx: 0.96; --ry: 1.05; --spread: 4.15; }
+  .mg-ring-c { --rx: 1.02; --ry: 0.99; --spread: 4.55; }
+  /* Two keyframes, one clock: the ring's geometry is on the group and its weight is on the
+     strokes, and a scaled group would otherwise fatten the stroke exactly as the wave is
+     supposed to be losing it. */
+  @keyframes mugRingFade {
+    0%   { stroke-opacity: 0; stroke-width: 1.15; }
+    12%  { stroke-opacity: 0.78; stroke-width: 0.85; }
+    58%  { stroke-opacity: 0.34; stroke-width: 0.38; }
+    100% { stroke-opacity: 0; stroke-width: 0.18; }
+  }
+  .mg-ring-dark { opacity: 0.5; }
+  /* The coffee the waves are crossing. One shove away from the tap, one smaller overshoot
+     back, then still: the direction comes from app.js as a unit vector, and --amp is how much
+     of it each layer takes. The reflection moves most because a reflection is the first thing
+     a ripple takes apart, the bubbles next because they ride waves rather than resist them,
+     the crema swirl less because it is half sunk in the brew, and the poured clef least of
+     all, since a finished pour has set into the foam. */
+  .mg-window    { --amp: 1.45; }
+  .mg-bubbles   { --amp: 1; }
+  .mg-crema     { --amp: 0.62; }
+  .mg-pourslosh { --amp: 0.4; }
+  .di-mug svg.is-rippling .mg-slosh { animation: mugSlosh 900ms cubic-bezier(0.24, 0.8, 0.3, 1) 1; }
+  @keyframes mugSlosh {
+    0%   { transform: translate(0, 0); }
+    20%  { transform: translate(calc(var(--mg-push-x, 0) * var(--amp, 1) * 1px),
+                                calc(var(--mg-push-y, 0) * var(--amp, 1) * 1px)); }
+    52%  { transform: translate(calc(var(--mg-push-x, 0) * var(--amp, 1) * -0.45px),
+                                calc(var(--mg-push-y, 0) * var(--amp, 1) * -0.45px)); }
+    78%  { transform: translate(calc(var(--mg-push-x, 0) * var(--amp, 1) * 0.16px),
+                                calc(var(--mg-push-y, 0) * var(--amp, 1) * 0.16px)); }
+    100% { transform: translate(0, 0); }
+  }
+  body[data-reduce-motion="on"] .di-mug svg.is-rippling :is(.mg-dimple, .mg-ring, .mg-ring circle, .mg-slosh) { animation: none; }
 
   /* the loose beaded strand trailing off the floss skein sways gently */
   .desk-sway { transform-box: fill-box; transform-origin: 50% 0%; animation: deskSway 5.2s ease-in-out infinite; }

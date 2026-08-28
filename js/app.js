@@ -18270,7 +18270,11 @@ function wirePageMarks() {
    desk density leaves behind. The taps are simply not available there, and nothing is lost:
    turning the props back on restores the cup exactly as it was. */
 const MUG_POUR_SIPS = 1000;   // taps that finish the pour
-const MUG_RIPPLE_MS = 640;    // must outlast the mugRipple keyframes
+const MUG_RIPPLE_MS = 1420;   // must outlast the last wave front (mg-ring-c's delay + its keyframes)
+const MUG_BREW = { x: 70, y: 90 };   // the brew's centre in the prop's own viewBox units
+const MUG_PUSH = 1.5;         // how far the surface is shoved, in those same units. Read it
+                              // against the brew's 31.5-unit radius: the shove is small enough
+                              // to be the coffee flinching and not the coffee sliding.
 let mugRippleTimer = null;
 
 // How much of the clef the count has poured, 0 to 1.
@@ -18304,9 +18308,12 @@ function paintMugPour(sips, flare) {
   pour.classList.add("is-poured");
 }
 
-// The tap itself: a ring on the surface where the finger landed. The click point is mapped
+// The tap itself. Two things go to CSS from here and nothing else does: WHERE the finger
+// landed, and which way the coffee should be shoved because of it. The click point is mapped
 // through the SVG's own screen matrix rather than measured off the box, because the prop is
-// rotated and half of it hangs off the window.
+// rotated and half of it hangs off the window, and the direction is taken in the prop's own
+// coordinates for the same reason: the surface has to move away from the tap as the cup sees
+// it, not as the screen does.
 function rippleMug(svg, event) {
   if (motionReduced()) return;
   const ripple = svg.querySelector(".mg-ripple");
@@ -18316,11 +18323,19 @@ function rippleMug(svg, event) {
   point.x = event.clientX; point.y = event.clientY;
   const local = point.matrixTransform(ctm.inverse());
   ripple.setAttribute("transform", `translate(${local.x.toFixed(2)} ${local.y.toFixed(2)})`);
-  ripple.classList.remove("is-rippling");
-  ripple.getBoundingClientRect();   // reflow (an SVG group again, so not offsetWidth)
-  ripple.classList.add("is-rippling");
+  // Away from the middle of the brew. A tap dead in the centre has no direction to give, so
+  // it borrows one rather than freezing the surface: the coffee still answers.
+  let dx = local.x - MUG_BREW.x, dy = local.y - MUG_BREW.y;
+  const reach = Math.hypot(dx, dy) || 0;
+  if (reach < 0.01) { dx = 0.6; dy = -0.8; }
+  else { dx /= reach; dy /= reach; }
+  svg.style.setProperty("--mg-push-x", (dx * MUG_PUSH).toFixed(3));
+  svg.style.setProperty("--mg-push-y", (dy * MUG_PUSH).toFixed(3));
+  svg.classList.remove("is-rippling");
+  svg.getBoundingClientRect();   // reflow (an SVG element, so not offsetWidth)
+  svg.classList.add("is-rippling");
   clearTimeout(mugRippleTimer);
-  mugRippleTimer = setTimeout(() => ripple.classList.remove("is-rippling"), MUG_RIPPLE_MS);
+  mugRippleTimer = setTimeout(() => svg.classList.remove("is-rippling"), MUG_RIPPLE_MS);
 }
 
 function wireDeskMug() {
