@@ -1932,8 +1932,8 @@ export const ACH_ICONS = {
 
   // TEMPORARY placeholder charm — a dashed frame around a question mark. Any icon set to
   // "placeholder" is art-pending (new challenges / achievements before their real icon is
-  // drawn). Search "placeholder" to find everything still awaiting a bespoke charm; as of the
-  // Mastery batch nothing wears it, so a hit here means art that has not been drawn yet.
+  // drawn). Search "placeholder" to find everything still awaiting a bespoke charm; The Thousandth
+  // Cup is the only one wearing it, and its mark is being drawn separately.
   placeholder: `<svg viewBox="0 0 24 24"><rect class="ink" fill="none" stroke-width="1.5" stroke-dasharray="2.6 2.2" x="4" y="4" width="16" height="16" rx="3"/><path class="ink" fill="none" stroke-width="1.8" stroke-linecap="round" d="M9.3 9.5 a2.7 2.7 0 1 1 3.5 2.6 c-0.95 0.32 -1.05 0.95 -1.05 1.9"/><circle class="ink-fill" cx="11.75" cy="16.6" r="1.05"/></svg>`,
 
   /* ---- Achievement charm overhaul (every charm bespoke) ---- */
@@ -3040,6 +3040,13 @@ export const ACHIEVEMENTS = [
      any number of sittings. Nothing invites the tap and the cursor never changes, so this one
      is found by fidgeting; the mark jumps when you press it so at least the fidgeting answers. */
   { id: "tap-every-page-mark", name: "Marked Every Page", desc: "Poke the little mark beside every page's title", secret: true, icon: "manicule" },
+  /* The third touchable thing, and the only one that isn't on the page at all: the mug that has
+     been sitting on this desk since the first screen. A thousand taps is deliberately absurd,
+     and what makes it findable is that the crema answers from the very first one, resolving a
+     little further toward a poured treble clef with every tap, so the reward is visible long
+     before it is finished. Counted in METRICS_KEY; the pour is redrawn from that count on
+     every load, so it survives a reload and stays on the desk forever after. */
+  { id: "tap-desk-mug-1000-times", name: "The Thousandth Cup", desc: "Tap the coffee on the desk 1,000 times", tier: 2, secret: true, icon: "placeholder" },
   { id: "play-easy-3-times-in-row",   name: "Safe & Sound",     desc: "Play Easy three times in a row",       secret: false, icon: "lantern", sitting: true, earn: { cat: "difficulty", diff: "easy" } },
   { id: "beat-personal-best-score",          name: "R-E-V-E-N-G-E",    desc: "Beat your own best score on any board", secret: false, icon: "megaphone", sitting: true, earn: { cat: "difficulty" } },
   { id: "perfect-13-every-mode",       name: "Every Version Of Yourself", desc: "Score a perfect 13/13 in every difficulty", tier: 3, secret: false, icon: "mirrorball" },
@@ -3708,6 +3715,7 @@ export const ACH_GROUP_OF = {
      about when or where you were sitting, never how well you played. */
   "watch-snow-fall": "margins", "watch-autumn-leaves-fall": "margins",
   "tap-scarf-doodle-13-times": "margins", "tap-every-page-mark": "margins",
+  "tap-desk-mug-1000-times": "margins",
   "type-reputation-tv": "margins", "open-settings-menu": "margins",
   "save-first-bracelet-keepsake": "margins", "find-every-polaroid-keepsake": "margins",
   "play-word-from-searcher": "margins", "play-between-midnight-and-1am": "margins",

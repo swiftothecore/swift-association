@@ -91,7 +91,7 @@ import {
   loadCharmFolds, setCharmFold, saveCharmFolds,
   loadSongTally, saveSongTally, recordGameTally,
   loadCustom, saveCustom, activeCustomPreset, resetCustom, defaultCustomPreset,
-  loadMetrics, saveMetrics, recordGameMetrics, bumpCorrectRunStreak, bumpScarfClicks, tapPageMark, pageMarksTapped,
+  loadMetrics, saveMetrics, recordGameMetrics, bumpCorrectRunStreak, bumpScarfClicks, bumpMugSips, tapPageMark, pageMarksTapped,
   noteSelfTitledWord,
   loadSettings, saveSettings,
   exportData, importData,
@@ -2277,6 +2277,11 @@ const HIDDEN_ACH_IDS = [
   "answer-begin-again-for-wednesday-on-a-wednesday", "answer-only-me-for-friday-on-a-friday-night",
   "submit-the-man-for-karma", "submit-speak-now-for-wedding", "submit-lwymmd-for-grave",
   "submit-wrong-song-from-same-titled-albums-record",
+  /* DELIBERATELY ABSENT: The Thousandth Cup. It is masked like the rest, but its price is a
+     thousand taps on a coffee cup, and folding that into "earn every hidden charm" would put
+     an afternoon of clicking between the player and a capstone that is supposed to be about
+     having found things. The scarf's thirteen taps are a wink; a thousand is a bit, and a bit
+     should not be a toll gate. Leave it out. */
 ];
 
 // Re-evaluated after every unlock (each unlock no-ops if already earned, so this is safe to
@@ -18246,6 +18251,96 @@ function wirePageMarks() {
   markPoked(pageMarksTapped());
 }
 
+/* ---------- The mug: a thousand taps and what they pour ----------
+   The coffee has been on this desk since the first screen, and it is the third thing in the
+   game you can touch (the scarf doodle and the page marks are the other two). Tapping it does
+   one honest thing straight away: the surface ripples. What it does quietly is count, lifetime,
+   in METRICS_KEY, and redraw the crema from that count.
+
+   The pour is a treble clef, and it is not a switch that flips at a thousand: the clef is drawn
+   from its own start on the very first tap and creeps a thousandth further with each one, so a
+   player who taps the cup a few times and looks closely can see that the foam is not what it
+   was. That is the whole invitation. At MUG_POUR_SIPS the clef closes, flares once, and stays
+   on the desk for good, and The Thousandth Cup goes on the bracelet.
+
+   Read on every load rather than only when written: the count is the drawing, so a reload has
+   to arrive at the same crema the player left.
+
+   Everything here no-ops when the markup is absent, which is what a narrow screen or a quiet
+   desk density leaves behind. The taps are simply not available there, and nothing is lost:
+   turning the props back on restores the cup exactly as it was. */
+const MUG_POUR_SIPS = 1000;   // taps that finish the pour
+const MUG_RIPPLE_MS = 640;    // must outlast the mugRipple keyframes
+let mugRippleTimer = null;
+
+// How much of the clef the count has poured, 0 to 1.
+function mugPourProgress(sips) {
+  return Math.max(0, Math.min(1, sips / MUG_POUR_SIPS));
+}
+
+// Paint the crema for a given lifetime count. `flare` is the thousandth tap landing live, and
+// is the only time the finished clef animates; a reload after the fact draws it settled.
+function paintMugPour(sips, flare) {
+  const pour = document.querySelector(".mg-pour");
+  const line = pour && pour.querySelector(".mg-pour-line");
+  if (!line) return;
+  // Geometry, not layout, so this is honest even on a screen narrow enough to have hidden the
+  // desk. Guarded anyway: this runs during init, and a prop nobody can see is not worth taking
+  // the boot down over.
+  let length = 0;
+  try { length = line.getTotalLength(); } catch (e) { return; }
+  if (!length) return;
+  const progress = mugPourProgress(sips);
+  line.style.strokeDasharray = length;
+  line.style.strokeDashoffset = length * (1 - progress);
+  // Nothing at all until the first tap, so an untouched cup is an untouched cup. The stroke's
+  // round cap would otherwise leave a bead of foam sitting in the crema from the start.
+  line.style.opacity = progress > 0 ? "0.88" : "0";
+  if (!flare) return;
+  pour.classList.remove("is-poured");
+  pour.getBoundingClientRect();   // reflow, so the flare plays even if the class was already there.
+                                  // getBoundingClientRect rather than the usual offsetWidth poke:
+                                  // this is an SVG group, and offsetWidth is an HTMLElement thing.
+  pour.classList.add("is-poured");
+}
+
+// The tap itself: a ring on the surface where the finger landed. The click point is mapped
+// through the SVG's own screen matrix rather than measured off the box, because the prop is
+// rotated and half of it hangs off the window.
+function rippleMug(svg, event) {
+  if (motionReduced()) return;
+  const ripple = svg.querySelector(".mg-ripple");
+  const ctm = svg.getScreenCTM();
+  if (!ripple || !ctm) return;
+  const point = svg.createSVGPoint();
+  point.x = event.clientX; point.y = event.clientY;
+  const local = point.matrixTransform(ctm.inverse());
+  ripple.setAttribute("transform", `translate(${local.x.toFixed(2)} ${local.y.toFixed(2)})`);
+  ripple.classList.remove("is-rippling");
+  ripple.getBoundingClientRect();   // reflow (an SVG group again, so not offsetWidth)
+  ripple.classList.add("is-rippling");
+  clearTimeout(mugRippleTimer);
+  mugRippleTimer = setTimeout(() => ripple.classList.remove("is-rippling"), MUG_RIPPLE_MS);
+}
+
+function wireDeskMug() {
+  const svg = document.querySelector(".di-mug svg");
+  const hit = svg && svg.querySelector(".mg-hit");
+  if (!hit) return;
+  const poured = loadMetrics().mugSips || 0;
+  paintMugPour(poured, false);
+  // Backfill, the same one the page marks keep: the thousandth tap may have landed inside a
+  // challenge sandbox, where unlock() is gated. The tap was still counted, so the charm is
+  // handed over on the next load.
+  if (poured >= MUG_POUR_SIPS) unlock("tap-desk-mug-1000-times");
+  hit.addEventListener("click", (event) => {
+    const sips = bumpMugSips();
+    rippleMug(svg, event);
+    paintMugPour(sips, sips === MUG_POUR_SIPS);
+    if (sips >= MUG_POUR_SIPS) unlock("tap-desk-mug-1000-times");
+  });
+}
+
 /* Inside-page titles are plain text, including the bonus-game title that changes
    between runs. Split the current text only when it is clicked, then lift its
    letters in sequence. Rebuilding on every click keeps dynamic titles honest and
@@ -21613,6 +21708,18 @@ function buildDevApi() {
       // them is not a test plan.
       scarf: () => loadMetrics().scarfClicks || 0,
       setScarf: (n) => { const m = loadMetrics(); m.scarfClicks = Math.max(0, n | 0); saveMetrics(m); return m.scarfClicks; },
+      // Mug taps. A thousand of them is even less of a test plan than thirteen scarf taps, so
+      // the setter repaints the crema on the spot and the pour can be looked at at any stage.
+      // It deliberately does NOT hand over the charm: set 999 and tap the cup once, and the
+      // flare, the chime and the unlock all happen the way a player would meet them.
+      mug: () => loadMetrics().mugSips || 0,
+      setMug: (n) => {
+        const m = loadMetrics();
+        m.mugSips = Math.max(0, n | 0);
+        saveMetrics(m);
+        paintMugPour(m.mugSips, false);
+        return m.mugSips;
+      },
       // Page-header marks poked. Collecting the set by hand means visiting ten screens, and
       // the reset is the only way to see the charm land again once it has been earned.
       marks: () => PAGE_MARK_KINDS.filter((k) => pageMarksTapped()[k]),
@@ -23469,6 +23576,7 @@ async function init() {
   wireInput();
   wirePageMarks();
   wirePageTitles();
+  wireDeskMug();
   setupTooltips();
   wireFirstRun();
 

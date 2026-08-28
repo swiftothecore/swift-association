@@ -708,6 +708,37 @@
     70%  { opacity: calc(var(--wisp) * 0.33); }
     100% { opacity: 0; transform: translateY(-12px) scaleY(1.15); }
   }
+  /* ---------- The mug: the tap, the ripple and the pour (see app.js wireDeskMug) ----------
+     The desk layer is pointer-events:none as a whole, so the china turns hit testing back on
+     for itself and nothing else. No hover state and no hand cursor: this is furniture you
+     happen to be able to fidget with, not a control. */
+  .mg-hit { pointer-events: auto; cursor: default; }
+  /* The pour forms by running its dash offset back, and the offset is written by JS on every
+     tap. The transition is what makes one tap out of a thousand visible at all: the sliver it
+     adds is a fifth of a percent of the stroke, which reads as the foam creeping rather than
+     as anything moving. */
+  .mg-pour-line { transition: stroke-dashoffset 520ms ease-out; }
+  body[data-reduce-motion="on"] .mg-pour-line { transition: none; }
+  /* The thousandth tap. The finished clef flares white-hot for a moment, the way fresh crema
+     does before it settles into the brew, then sits there for good. */
+  .mg-pour.is-poured .mg-pour-line { animation: mugPoured 1600ms ease-out 1; }
+  @keyframes mugPoured {
+    0%   { stroke: #fff6e4; stroke-width: 3.4; }
+    45%  { stroke: #f6dcb4; stroke-width: 2.9; }
+    100% { stroke: #e6bd88; stroke-width: 2.5; }
+  }
+  body[data-reduce-motion="on"] .mg-pour.is-poured .mg-pour-line { animation: none; }
+  /* One tap on the surface. The rings are drawn around their own origin so the scale can be a
+     plain transform on the group the tap moved into place. */
+  .mg-ripple-rings { opacity: 0; transform-box: view-box; transform-origin: 0 0; }
+  .mg-ripple.is-rippling .mg-ripple-rings { animation: mugRipple 640ms ease-out 1; }
+  @keyframes mugRipple {
+    0%   { opacity: 0.75; transform: scale(0.3); }
+    70%  { opacity: 0.28; }
+    100% { opacity: 0; transform: scale(1.75); }
+  }
+  body[data-reduce-motion="on"] .mg-ripple.is-rippling .mg-ripple-rings { animation: none; }
+
   /* the loose beaded strand trailing off the floss skein sways gently */
   .desk-sway { transform-box: fill-box; transform-origin: 50% 0%; animation: deskSway 5.2s ease-in-out infinite; }
   @keyframes deskSway { 0%,100% { transform: rotate(-2.4deg); } 50% { transform: rotate(2.4deg); } }

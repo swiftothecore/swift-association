@@ -843,9 +843,10 @@ export function recordGameTally(rounds) {
 //   noTimeoutStreak — consecutive non-infinite games finished with zero timeouts
 //   correctRunStreak — correct answers in a row ACROSS game boundaries (see bumpCorrectRunStreak)
 //   scarfClicks — lifetime taps on the scarf margin doodle
+//   mugSips — lifetime taps on the desk mug (the coffee-pour egg)
 //   marksTapped — { [markKind]: true } for each page-header mark poked, lifetime
 export function loadMetrics() {
-  const d = { fastestMs: null, answerSumMs: 0, answerN: 0, lyricLines: 0, versePerfect: 0, wholeVerses: 0, bestVerseBonus: 0, roundsTotal: 0, roundsCorrect: 0, dailyPlayed: 0, dailyPerfect: 0, noTimeoutStreak: 0, correctRunStreak: 0, scarfClicks: 0, marksTapped: {}, selfTitled: {} };
+  const d = { fastestMs: null, answerSumMs: 0, answerN: 0, lyricLines: 0, versePerfect: 0, wholeVerses: 0, bestVerseBonus: 0, roundsTotal: 0, roundsCorrect: 0, dailyPlayed: 0, dailyPerfect: 0, noTimeoutStreak: 0, correctRunStreak: 0, scarfClicks: 0, mugSips: 0, marksTapped: {}, selfTitled: {} };
   try {
     const raw = localStorage.getItem(METRICS_KEY);
     if (raw) { const o = JSON.parse(raw); if (o && typeof o === "object") return { ...d, ...o }; }
@@ -895,6 +896,16 @@ export function bumpScarfClicks() {
   m.scarfClicks = (m.scarfClicks || 0) + 1;
   saveMetrics(m);
   return m.scarfClicks;
+}
+// One tap on the desk mug. Lifetime, and kept here for the same reason the scarf's tally is:
+// it is a count of a thing the player did, spread over as many sittings as they like. What it
+// buys is the pour that forms in the crema (see app.js MUG_POUR_SIPS), so it is read on every
+// load, not only when it is written.
+export function bumpMugSips() {
+  const m = loadMetrics();
+  m.mugSips = (m.mugSips || 0) + 1;
+  saveMetrics(m);
+  return m.mugSips;
 }
 // The margin mark at the top of each inside page. Lifetime and set-shaped rather than a
 // count, because the feat is having touched all ten of them, in any order and across any
