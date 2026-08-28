@@ -5719,15 +5719,39 @@
   .countdown-skip:hover { color: var(--ink); border-bottom-color: var(--ink); }
 
   /* ---------- Results ---------- */
-  /* text-align:center here centers on .card's padded content box, but that box is
-     asymmetric (58px left pad for the margin rule vs 30px right) — shift back by
-     half the difference so the number centers on the visible page, not the padding. */
-  .final-score { text-align: center; margin-bottom: 18px; margin-left: -14px; }
+  /* The tally centres on the same axis as the finished bracelet below it (both are a
+     fixed width auto-margined inside .card's padded box), so the two share edges and
+     read as one column. No -14px fudge against the asymmetric padding: the point is to
+     line up with the strand, not with the paper. */
+  .final-score { text-align: center; margin-bottom: 18px; }
+  .tally-head { margin: 0; display: flex; align-items: baseline; justify-content: center; gap: 9px; }
   .final-score .big {
     font-family: var(--hand); font-weight: 700; font-size: calc(88px + var(--text-size-adjust)); line-height: 1;
     color: var(--ink); transform: rotate(-2deg); display: inline-block;
   }
-  .final-score .sub { font-family: var(--type); font-size: calc(12px + var(--text-size-adjust)); letter-spacing: 1px; color: var(--ink-soft); margin-top: 4px; }
+  /* The noun the big number is counting, on the paths where it isn't self-evident
+     (Infinite counts rounds, a risk challenge counts beads). Empty everywhere else. */
+  .tally-unit {
+    font-family: var(--type); font-size: calc(12px + var(--text-size-adjust));
+    letter-spacing: 1.4px; color: var(--ink-soft);
+  }
+  .tally-unit:empty { display: none; }
+  .tally-rule { display: block; width: 408px; max-width: 100%; height: 5px; margin: 6px auto 0; }
+  .tally-ledger { display: grid; width: 408px; max-width: 100%; margin: 0 auto; }
+  .tally-ledger .cell { padding: 9px 4px 2px; }
+  .tally-ledger .cell + .cell { border-left: 1px solid color-mix(in srgb, var(--ink-soft) 32%, transparent); }
+  .tally-v { font-family: var(--type); font-weight: 700; font-size: calc(15px + var(--text-size-adjust)); letter-spacing: 0.5px; color: var(--ink); }
+  .tally-l { font-family: var(--type); font-size: calc(11px + var(--text-size-adjust)); letter-spacing: 1.3px; color: var(--ink-soft); margin-top: 3px; }
+  /* Prose sub, for the end paths whose result is a sentence rather than a set of
+     numbers ("all 10 named", "beads · need 12"). Sits where the ledger would. */
+  .final-score .sub { font-family: var(--type); font-size: calc(12px + var(--text-size-adjust)); letter-spacing: 1px; color: var(--ink-soft); margin: 8px 0 0; }
+  .final-score .sub:empty { display: none; }
+  /* Three cells of typewriter caps need the room; on a phone the labels get it back
+     from their letter-spacing rather than by wrapping onto two lines. */
+  @media (max-width: 560px) {
+    .tally-ledger .cell { padding: 8px 2px 2px; }
+    .tally-l { letter-spacing: 0.5px; font-size: calc(10px + var(--text-size-adjust)); }
+  }
 
   .name-prompt { margin-top: 18px; text-align: center; }
   .name-prompt p { font-family: var(--hand); font-size: calc(22px + var(--text-size-adjust)); color: var(--ink); margin: 0 0 10px; }

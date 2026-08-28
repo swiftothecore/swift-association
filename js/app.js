@@ -7509,9 +7509,9 @@ function endRuthlessRun() {
   $("resultBracelet").innerHTML = renderBraceletSVG(results, 0, -1, albums,
     { colors: albumPalette(), total: pages.length, letterBead: false, snapPage });
   // A time is the whole result, so it takes the big number; the pages it took are the sub.
-  $("finalScore").textContent = fmtTime(secs);
-  $("finalSub").textContent = gaveUp
-    ? `${named} of ${pages.length} named` : `all ${pages.length} named`;
+  // Prose rather than ledger cells: "all 10 named" is the finding, not a column of numbers.
+  setFinalTally(fmtTime(secs), gaveUp
+    ? `${named} of ${pages.length} named` : `all ${pages.length} named`);
   $("keepGoingBtn").style.display = "none";
   $("namePrompt").style.display = "none";
   $("verseAnthology").style.display = "none";
@@ -9244,6 +9244,39 @@ function cardVars() {
     margin:    g("--margin", "rgba(160,62,46,0.45)"),
     rule:      g("--rule", "rgba(74,54,30,0.09)"),
   };
+}
+
+// The tally shapes every end path can produce, for __dev.results.tally. Kept beside
+// setFinalTally so a new end path's shape gets added here in the same edit.
+const TALLY_PREVIEWS = {
+  classic:  { score: "10", sub: [{ v: "13", l: "pages" }, { v: "1:42", l: "on the clock" }, { v: "+6", l: "verse bonus" }] },
+  relaxed:  { score: "9",  sub: [{ v: "13", l: "pages" }] },
+  daily:    { score: "?",  sub: null },
+  infinite: { score: "24", sub: [{ v: "21", l: "correct" }, { v: "6:31", l: "on the clock" }, { v: "+11", l: "verse bonus" }], unit: "rounds" },
+  ruthless: { score: "3:07", sub: "all 10 named" },
+  risk:     { score: "14", sub: [{ v: "12", l: "needed" }], unit: "beads" },
+};
+
+// ---- The final tally ----
+// One number in the hand, a ruled line, then the run's numbers as a small ledger of
+// value-over-label cells sized to the strand below, so the tally and the bracelet stack
+// as one column. `sub` is either those cells (an array of {v,l}) or a sentence, for the
+// end paths whose result is prose rather than a set of numbers ("all 10 named"); pass
+// nothing at all for a held-back daily, where the rule is dropped rather than drawn over
+// an empty row. `unit` names what the big number counts on the paths where that isn't
+// self-evident: Infinite counts rounds, a risk challenge counts beads.
+function setFinalTally(score, sub, unit) {
+  $("finalScore").textContent = score;
+  $("finalUnit").textContent = unit || "";
+  const cells = Array.isArray(sub) ? sub.filter((c) => c && c.v != null && c.v !== "") : [];
+  const prose = typeof sub === "string" ? sub : "";
+  const led = $("finalLedger");
+  led.style.gridTemplateColumns = "repeat(" + Math.max(cells.length, 1) + ", 1fr)";
+  led.innerHTML = cells.map((c) =>
+    `<div class="cell"><div class="tally-v">${escapeHtml(String(c.v))}</div>` +
+    `<div class="tally-l">${escapeHtml(String(c.l))}</div></div>`).join("");
+  $("finalSub").textContent = prose;
+  $("finalRule").style.display = (cells.length || prose) ? "" : "none";
 }
 
 function buildCardMeta() {
@@ -12987,10 +13020,12 @@ function endChallenge() {
   showScreen("results");
   $("resultBracelet").innerHTML = renderBraceletSVG(roundResults, 0, -1, roundAlbums,
     { colors: albumPalette(), hinted: roundHinted, verseTiers: roundVerseTier });
-  $("finalScore").textContent = score;
   // A bead total has no "out of": the page count is not its ceiling, so it's shown against
   // the challenge's target instead of the 13 pages that produced it.
-  $("finalSub").textContent = riskRuleActive() ? "beads · need " + riskTarget() : "out of " + TOTAL_ROUNDS;
+  setFinalTally(score,
+    riskRuleActive() ? [{ v: String(riskTarget()), l: "needed" }]
+                     : [{ v: String(TOTAL_ROUNDS), l: "pages" }],
+    riskRuleActive() ? "beads" : "");
   $("keepGoingBtn").style.display = "none";
   $("namePrompt").style.display = "none";
   $("verseAnthology").style.display = "none";
@@ -13185,8 +13220,7 @@ function endAlbumFocus() {
   showScreen("results");
   $("resultBracelet").innerHTML = renderBraceletSVG(roundResults, 0, -1, roundAlbums,
     { colors: albumPalette(), hinted: roundHinted, verseTiers: roundVerseTier });
-  $("finalScore").textContent = score;
-  $("finalSub").textContent = "out of " + TOTAL_ROUNDS;
+  setFinalTally(score, [{ v: String(TOTAL_ROUNDS), l: "pages" }]);
   $("keepGoingBtn").style.display = "none";
   $("namePrompt").style.display = "none";
   $("verseAnthology").style.display = "none";
@@ -13261,8 +13295,7 @@ function endGuest() {
   applyEra(guestEra());   // endGame applies a random finale era; a guest keeps its own
   $("resultBracelet").innerHTML = renderBraceletSVG(roundResults, 0, -1, roundAlbums,
     { colors: palette, hinted: roundHinted, verseTiers: roundVerseTier });
-  $("finalScore").textContent = score;
-  $("finalSub").textContent = "out of " + TOTAL_ROUNDS;
+  setFinalTally(score, [{ v: String(TOTAL_ROUNDS), l: "pages" }]);
   $("keepGoingBtn").style.display = "none";
   $("namePrompt").style.display = "none";
   $("verseAnthology").style.display = "none";
@@ -13346,10 +13379,9 @@ function endCustom() {
     infinite
       ? { total: Math.max(roundsPlayed, 1), letterBead: false, colors: albumPalette(), hinted: roundHinted, verseTiers: roundVerseTier }
       : { total, colors: albumPalette(), hinted: roundHinted, verseTiers: roundVerseTier });
-  $("finalScore").textContent = score;
-  $("finalSub").textContent = infinite
-    ? `across ${roundsPlayed} round${roundsPlayed === 1 ? "" : "s"}`
-    : "out of " + total;
+  setFinalTally(score, [infinite
+    ? { v: String(roundsPlayed), l: roundsPlayed === 1 ? "round" : "rounds" }
+    : { v: String(total), l: "pages" }]);
   $("keepGoingBtn").style.display = "none";
   $("namePrompt").style.display = "none";
   hideNewBestBanner();
@@ -13421,8 +13453,9 @@ function showDailyResult(data, dateStr) {
   braceletSeed = dailySeed(dateStr);   // rebuild the same random-trinket strand the run ended on
   showScreen("results");
   $("resultBracelet").innerHTML = renderBraceletSVG(roundResults, 0, -1, roundAlbums, { colors: albumPalette() });
-  $("finalScore").textContent = settings.hideDailyScore ? "?" : score;
-  $("finalSub").textContent = "out of " + TOTAL_ROUNDS;
+  // A held-back score has nothing to rule off, so the tally is the "?" alone.
+  setFinalTally(settings.hideDailyScore ? "?" : score,
+    settings.hideDailyScore ? null : [{ v: String(TOTAL_ROUNDS), l: "pages" }]);
   $("keepGoingBtn").style.display = "none";
   $("resultAchievements").style.display = "none";
   $("resultSkills").style.display = "none";   // a saved daily snapshot folded no skill XP
@@ -13542,7 +13575,13 @@ function renderShareButton(dateStr, hidden) {
     const ok = await copyToClipboard(`${buildShareString(dateStr)}\n${SITE_URL}`);
     if (!ok) { settle("copy failed"); return; }
 
-    if (held) { $("finalScore").textContent = score; held = false; }   // reveal the held-back score
+    if (held) {
+      // Revealing un-seals the whole tally, not just the number: the ledger was left empty
+      // because the clock and the page count leak how the day went as surely as the score.
+      setFinalTally(score, [{ v: String(TOTAL_ROUNDS), l: "pages" }].concat(
+        dailyShareTime != null ? [{ v: fmtTime(dailyShareTime), l: "on the clock" }] : []));
+      held = false;
+    }
     btn.disabled = true;
     await tearOff(wrap, perf, btn, dateStr);
     torn = true;
@@ -17963,12 +18002,16 @@ function endGame() {
     ? { total: Math.max(roundsSurvived, 1), letterBead: false, colors: albumPalette(), hinted: roundHinted, verseTiers: roundVerseTier }
     : { colors: albumPalette(), hinted: roundHinted, verseTiers: roundVerseTier };
   $("resultBracelet").innerHTML = renderBraceletSVG(roundResults, 0, -1, roundAlbums, keepsakeOpts);
-  $("finalScore").textContent = boardScore;
   // Verse bonus (fuller lyric recall) rides alongside the score, never folded into it.
-  // Hidden on a held-back daily score — it would leak how well the round went.
-  const bonusSuffix = (verseBonus > 0 && !(isDaily && settings.hideDailyScore)) ? " · +" + verseBonus + " verse bonus" : "";
-  const timeSuffix = (shownTime != null && !(isDaily && settings.hideDailyScore)) ? " · " + fmtTime(shownTime) : "";
-  $("finalSub").textContent = (isInfinite ? "rounds · " + score + " correct" : "out of " + TOTAL_ROUNDS) + timeSuffix + bonusSuffix;
+  // A held-back daily keeps its ledger empty rather than ruling off an empty row: even the
+  // clock and the bonus would leak how well the round went.
+  const tallyHidden = isDaily && settings.hideDailyScore;
+  const tallyCells = [];
+  if (isInfinite) tallyCells.push({ v: String(score), l: "correct" });
+  else if (!tallyHidden) tallyCells.push({ v: String(TOTAL_ROUNDS), l: "pages" });
+  if (shownTime != null && !tallyHidden) tallyCells.push({ v: fmtTime(shownTime), l: "on the clock" });
+  if (verseBonus > 0 && !tallyHidden) tallyCells.push({ v: "+" + verseBonus, l: "verse bonus" });
+  setFinalTally(boardScore, tallyCells, isInfinite ? "rounds" : "");
   $("keepGoingBtn").style.display = (isInfinite || isDaily) ? "none" : "";
   renderVerseAnthology();
   if (!isInfinite && score === TOTAL_ROUNDS) celebratePerfect();
@@ -21533,6 +21576,20 @@ function buildDevApi() {
         window.open(url, "_blank");
         setTimeout(() => URL.revokeObjectURL(url), 8000);
         return url;
+      },
+    },
+    // The results headline. Every end path writes it through setFinalTally, and the shapes
+    // it has to hold are different screens: three ledger cells, one, none at all, a sentence
+    // instead of numbers, a unit beside the number. Deals each one onto the results page so
+    // they can be compared without playing seven runs to reach them.
+    results: {
+      cases: () => Object.keys(TALLY_PREVIEWS),
+      tally: (name = "classic") => {
+        const c = TALLY_PREVIEWS[name];
+        if (!c) return `no such case — try one of: ${Object.keys(TALLY_PREVIEWS).join(", ")}`;
+        showScreen("results");
+        setFinalTally(c.score, c.sub, c.unit);
+        return name;
       },
     },
     // The date itself. One override (window.__devDate) behind every dated surface: the

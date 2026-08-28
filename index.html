@@ -2739,9 +2739,18 @@ if (location.pathname.endsWith('/index.html')) {
   <!-- RESULTS SCREEN -->
   <section id="screen-results" class="screen card" tabindex="-1" aria-label="Results">
     <p class="word-label" style="text-align:center;">the final tally</p>
+    <!-- The tally reads as a marked page: the score in the hand, a ruled line under it,
+         then the run's numbers as a ledger of value-over-label cells. The rule and the
+         ledger are the strand's own width, so the tally and the bracelet stack as one
+         column instead of four independently centred lines. setFinalTally fills it. -->
     <div class="final-score">
-      <div class="big" id="finalScore">0</div>
-      <div class="sub" id="finalSub">out of 13</div>
+      <p class="tally-head"><span class="big" id="finalScore">0</span><span class="tally-unit" id="finalUnit"></span></p>
+      <svg class="tally-rule" id="finalRule" viewBox="0 0 408 5" preserveAspectRatio="none" aria-hidden="true">
+        <path d="M1 3.1 C 74 1.9, 150 3.8, 223 2.4 S 372 3.9, 407 2.2" fill="none"
+              stroke="var(--ink-soft)" stroke-opacity="0.5" stroke-width="1.3" stroke-linecap="round"/>
+      </svg>
+      <div class="tally-ledger" id="finalLedger"></div>
+      <p class="sub" id="finalSub"></p>
     </div>
 
     <div class="bracelet-caption-row">
