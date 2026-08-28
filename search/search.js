@@ -4,14 +4,22 @@
 // search returns exactly the lines the game would count as a match. Loads songs.json
 // itself and works off the structured `sections` (label + lines) so every hit knows
 // its section and per-section line number without re-parsing strings.
-import { escapeHtml, escapeRegExp, fuzzySubstringRatio } from "../js/util.js";
+import { escapeHtml, fuzzySubstringRatio, swappedNeighbours } from "../js/util.js";
 import "../js/credential-guard.js";
-import { wordRegex, variantBody } from "../js/match.js";
+import {
+  boundedWordBody,
+  canonicalMatchText,
+  exactWordBody,
+  wordRegex,
+  variantBody,
+} from "../js/match.js";
 import { ALBUM_COLORS, SEARCH_KEY } from "../js/config.js";
 import { canShare, shareOrCopy } from "../js/share.js";
 
 const $ = (id) => document.getElementById(id);
-const FUZZY_MIN = 0.78;   // token similarity needed for a fuzzy hit (0..1)
+const FUZZY_MIN = 0.78;          // token similarity needed for a fuzzy hit (0..1)
+const FUZZY_FOUR_MIN = 0.75;     // one edit in a four-letter word, e.g. lobe -> love
+const FUZZY_SWAP_MIN_LENGTH = 4; // adjacent swaps, e.g. lvoe -> love; shorter is too broad
 const RECENT_MAX = 8;     // how many recent searches to keep
 // The share button's resting wording. Decided once: whether the OS share sheet exists
 // can't change under us, and #counter re-renders on every search, so this has to be
@@ -58,18 +66,31 @@ function savePrefs() {
 
 function getRecent() {
   const r = loadStore().recent;
-  return Array.isArray(r) ? r : [];
+  if (!Array.isArray(r)) return [];
+  return r.map((entry) => {
+    if (Array.isArray(entry)) return entry.map((term) => String(term).trim()).filter(Boolean);
+    if (entry && Array.isArray(entry.terms)) return entry.terms.map((term) => String(term).trim()).filter(Boolean);
+    // Legacy entries were one space-delimited string. Keep their old interpretation;
+    // new entries are arrays, which can distinguish one phrase from several AND terms.
+    return typeof entry === "string" ? entry.trim().split(/\s+/).filter(Boolean) : [];
+  }).filter((terms) => terms.length);
 }
 // Record a settled query. Collapsing entries that are a prefix of the new one folds the
 // keystroke trail ("lov" → "love") into a single entry without a debounce timer.
-function pushRecent(raw) {
-  const q = raw.trim();
-  if (q.length < 2) return;
-  const ql = q.toLowerCase();
+function pushRecent(rawTerms) {
+  const terms = rawTerms.map((term) => String(term).trim()).filter(Boolean);
+  if (!terms.length || terms.every((term) => term.length < 2)) return;
+  const lower = terms.map((term) => canonicalMatchText(term).toLowerCase());
   const s = loadStore();
-  const recent = (Array.isArray(s.recent) ? s.recent : [])
-    .filter((e) => { const el = e.toLowerCase(); return el !== ql && !ql.startsWith(el); });
-  recent.unshift(q);
+  const recent = getRecent().filter((entry) => {
+    const old = entry.map((term) => canonicalMatchText(term).toLowerCase());
+    const same = old.length === lower.length && old.every((term, i) => term === lower[i]);
+    const typedPrefix = old.length === lower.length && old.length > 0 &&
+      old.slice(0, -1).every((term, i) => term === lower[i]) &&
+      lower[lower.length - 1].startsWith(old[old.length - 1]);
+    return !same && !typedPrefix;
+  });
+  recent.unshift(terms);
   s.recent = recent.slice(0, RECENT_MAX);
   saveStore(s);
 }
@@ -152,26 +173,34 @@ function markRanges(line, ranges) {
 // highlightWord: prefer the exact word when the line holds it, else the stem variants, so
 // "babe" never circles "baby". One combined global regex marks all the terms at once.
 function termBody(line, term, strict) {
-  if (strict) return escapeRegExp(term);
-  const exactRx = new RegExp("\\b" + escapeRegExp(term) + "\\b", "i");
-  return exactRx.test(line) ? escapeRegExp(term) : variantBody(term);
+  if (strict) return exactWordBody(term);
+  const exactRx = new RegExp(boundedWordBody(exactWordBody(term)), "iu");
+  return exactRx.test(line) ? exactWordBody(term) : variantBody(term);
 }
 function highlightTerms(line, terms, strict) {
   const body = terms.map((t) => termBody(line, t, strict)).join("|");
-  return escapeHtml(line).replace(new RegExp("\\b(" + body + ")\\b", "ig"), "<mark>$1</mark>");
+  return escapeHtml(line).replace(new RegExp(boundedWordBody("(" + body + ")"), "giu"), "<mark>$1</mark>");
 }
 
-// The best fuzzy token range for one term in a line, or null if nothing clears the bar.
-function fuzzyTermRange(line, term) {
-  const ql = term.toLowerCase();
-  let best = 0, bestIdx = -1, bestLen = 0;
-  for (const m of line.matchAll(/[A-Za-z']+/g)) {
+const WORD_TOKEN_RE = /[\p{L}\p{M}]+(?:['’‘][\p{L}\p{M}]+)*/gu;
+const comparableToken = (text) => canonicalMatchText(text).toLowerCase();
+
+// Every fuzzy token range for one term in a line. Four-letter words explicitly allow
+// one edit, while three-letter words keep the normal bar so fuzzy mode does not turn a
+// short prompt into most of the dictionary. Adjacent swaps are handled as one typo.
+function fuzzyTermRanges(line, term) {
+  const ql = comparableToken(term);
+  const min = ql.length === 4 ? FUZZY_FOUR_MIN : FUZZY_MIN;
+  const ranges = [];
+  for (const m of line.matchAll(WORD_TOKEN_RE)) {
     const tok = m[0];
     if (tok.length < 2 || Math.abs(tok.length - ql.length) > 2) continue;   // cheap length prefilter
-    const r = fuzzySubstringRatio(ql, tok.toLowerCase());
-    if (r > best) { best = r; bestIdx = m.index; bestLen = tok.length; }
+    const tl = comparableToken(tok);
+    const swapped = ql.length >= FUZZY_SWAP_MIN_LENGTH && swappedNeighbours(ql, tl);
+    const score = swapped ? 1 : fuzzySubstringRatio(ql, tl);
+    if (score >= min) ranges.push({ start: m.index, len: tok.length, score });
   }
-  return best >= FUZZY_MIN ? { start: bestIdx, len: bestLen } : null;
+  return ranges;
 }
 
 // Substring ("letters inside a word") match: the query letters appearing consecutively
@@ -179,21 +208,48 @@ function fuzzyTermRange(line, term) {
 // match (the game only counts whole words and their forms), so it's a wordplay/curiosity
 // tool and the UI labels it as such. Scoped to one token so it never runs across a space,
 // and it returns just the matched letters' range (not the whole word) so the mark is tight.
-function containsTermRange(line, term) {
-  const ql = term.toLowerCase();
-  for (const m of line.matchAll(/[A-Za-z']+/g)) {
-    const idx = m[0].toLowerCase().indexOf(ql);
-    if (idx >= 0) return { start: m.index + idx, len: ql.length };
+function containsTermRanges(line, term) {
+  const ql = comparableToken(term);
+  const ranges = [];
+  for (const m of line.matchAll(WORD_TOKEN_RE)) {
+    const token = comparableToken(m[0]);
+    let from = 0;
+    while (from <= token.length - ql.length) {
+      const idx = token.indexOf(ql, from);
+      if (idx < 0) break;
+      ranges.push({ start: m.index + idx, len: ql.length, score: 1 });
+      from = idx + 1;
+    }
   }
-  return null;
+  return ranges;
 }
 
 // Position filter against a single range ("starts the line" / "ends the line" = only
 // non-letters before / after it). With several terms it judges the first term's match.
 function passesPosition(line, range) {
-  if (state.pos === "start") return /^[^A-Za-z]*$/.test(line.slice(0, range.start));
-  if (state.pos === "end") return /^[^A-Za-z]*$/.test(line.slice(range.start + range.len));
+  if (state.pos === "start") return /^[^\p{L}\p{M}\p{N}]*$/u.test(line.slice(0, range.start));
+  if (state.pos === "end") return /^[^\p{L}\p{M}\p{N}]*$/u.test(line.slice(range.start + range.len));
   return true;
+}
+
+function regexTermRanges(line, term, strict) {
+  const rx = wordRegex(term, strict);
+  const global = new RegExp(rx.source, rx.flags.includes("g") ? rx.flags : rx.flags + "g");
+  return [...line.matchAll(global)].map((m) => ({ start: m.index, len: m[0].length, score: 1 }));
+}
+
+function termRanges(line, term, mode, strict) {
+  if (mode === "fuzzy") return fuzzyTermRanges(line, term);
+  if (mode === "contains") return containsTermRanges(line, term);
+  return regexTermRanges(line, term, strict);
+}
+
+// Prefer the strongest match, but apply the structural position filter to all possible
+// occurrences of the first term before choosing one. This lets "love is love" qualify
+// for an end-of-line search even though its first occurrence is in the middle.
+function chooseRange(line, candidates, enforcePosition) {
+  const eligible = enforcePosition ? candidates.filter((r) => passesPosition(line, r)) : candidates;
+  return eligible.reduce((best, r) => !best || r.score > best.score ? r : best, null);
 }
 
 // One song's hits for an AND-list of terms: a line counts only if EVERY term matches it
@@ -207,20 +263,15 @@ function searchSong(song, terms, mode) {
     if (state.section !== "any" && sectionType(sec.label) !== state.section) return;
     (sec.lines || []).forEach((line, li) => {
       let ranges = [];
-      // fuzzy and contains both locate their matches as explicit ranges (marked via markRanges);
-      // stem/exact use the shared word-boundary regex (marked via highlightTerms).
-      const finder = mode === "fuzzy" ? fuzzyTermRange : mode === "contains" ? containsTermRange : null;
-      if (finder) {
-        for (const term of terms) { const r = finder(line, term); if (!r) { ranges = null; break; } ranges.push(r); }
-      } else {
-        for (const term of terms) {
-          const m = wordRegex(term, strict).exec(line);   // non-global: first match per line
-          if (!m) { ranges = null; break; }
-          ranges.push({ start: m.index, len: m[0].length });
-        }
+      for (let i = 0; i < terms.length; i++) {
+        const candidates = termRanges(line, terms[i], mode, strict);
+        const range = chooseRange(line, candidates, i === 0 && state.pos !== "any");
+        if (!range) { ranges = null; break; }
+        ranges.push(range);
       }
-      if (!ranges || !passesPosition(line, ranges[0])) return;
-      const html = finder ? markRanges(line, ranges) : highlightTerms(line, terms, strict);
+      if (!ranges) return;
+      const html = mode === "fuzzy" || mode === "contains"
+        ? markRanges(line, ranges) : highlightTerms(line, terms, strict);
       hits.push(makeHit(sec, si, li, disp[si], html));
     });
   });
@@ -297,12 +348,22 @@ function commitTerm() {
   runSearch();
 }
 function removeTermAt(i) { state.terms.splice(i, 1); runSearch(); $("q").focus(); }
-// Load a stored / recent query string: 2+ tokens become chips, a single token stays editable.
-function applyQueryString(s) {
-  const tokens = String(s || "").trim().split(/\s+/).filter(Boolean);
-  if (tokens.length > 1) { state.terms = tokens; state.q = ""; }
-  else { state.terms = []; state.q = tokens[0] || ""; }
-  $("q").value = state.q;
+// Apply an unambiguous term array. One term stays editable even when it is a phrase;
+// two or more terms become AND chips.
+function applyTerms(rawTerms, syncInput = true) {
+  const terms = rawTerms.map((term) => String(term).trim()).filter(Boolean);
+  if (terms.length > 1) { state.terms = terms; state.q = ""; }
+  else { state.terms = []; state.q = terms[0] || ""; }
+  if (syncInput) $("q").value = state.q;
+}
+// Legacy links and stored strings used spaces as separators, so preserve that meaning.
+function applyQueryString(s, syncInput = true) {
+  applyTerms(String(s || "").trim().split(/\s+/).filter(Boolean), syncInput);
+}
+
+function applyRecent(raw) {
+  try { applyTerms(JSON.parse(raw)); }
+  catch (e) { applyQueryString(raw); }
 }
 
 /* ---------- render ---------- */
@@ -325,7 +386,10 @@ function renderInitial(q) {
     ? `<div class="sx-recent"><div class="sx-recent-head">recent searches` +
       `<button type="button" class="sx-recent-clear" id="recentClear">clear</button></div>` +
       `<div class="sx-recent-list">` +
-      recent.map((r) => `<button type="button" class="sx-recent-item" data-q="${escapeHtml(r)}">${escapeHtml(r)}</button>`).join("") +
+      recent.map((terms) => {
+        const label = terms.join(" + ");
+        return `<button type="button" class="sx-recent-item" data-terms="${escapeHtml(JSON.stringify(terms))}">${escapeHtml(label)}</button>`;
+      }).join("") +
       `</div></div>`
     : "";
   $("results").innerHTML = `<p class="sx-hint">${escapeHtml(msg)}</p>` + recentHTML;
@@ -359,6 +423,19 @@ let pinnedAlbum = null;
 function leaveIsolate() {
   if (pinnedAlbum) isolateAlbum(pinnedAlbum);
   else clearIsolate();
+}
+
+function syncPinnedAlbumControls() {
+  for (const el of document.querySelectorAll("#concord .sx-leg[data-album]")) {
+    el.setAttribute("aria-pressed", String(el.dataset.album === pinnedAlbum));
+  }
+}
+
+function togglePinnedAlbum(al) {
+  pinnedAlbum = pinnedAlbum === al ? null : al;
+  if (pinnedAlbum) isolateAlbum(pinnedAlbum);
+  else clearIsolate();
+  syncPinnedAlbumControls();
 }
 
 // Brushing: isolate one album across the results (grouped blocks or flat rows), fading the
@@ -406,6 +483,7 @@ function clearIsolate() {
   }
   const label = $("barlabel");
   if (label) label.textContent = label.dataset.hint || "";
+  syncPinnedAlbumControls();
 }
 
 // The index journal on the screen edge is a permanent desk prop; this only fills or empties
@@ -445,8 +523,10 @@ function renderConcord(groups, counts) {
   // Render EVERY album (so the hover-isolate can reach it and the breakdown can expand), but
   // fold everything past the top few behind a "+N more" toggle to keep the strip compact.
   const legend = entries.map(([al, c], i) =>
-    `<span class="sx-leg${i >= CONCORD_TOP ? " sx-leg-extra" : ""}" data-album="${escapeHtml(al)}">` +
-    `<span class="sx-leg-dot" style="background:${ALBUM_COLORS[al] || "#999"}"></span>${escapeHtml(al)} <b>${c}</b></span>`).join("");
+    `<button type="button" class="sx-leg${i >= CONCORD_TOP ? " sx-leg-extra" : ""}" ` +
+    `data-album="${escapeHtml(al)}" aria-pressed="false" aria-label="Show only ${escapeHtml(al)}, ${plural(c, "line")}">` +
+    `<span class="sx-leg-dot" aria-hidden="true" style="background:${ALBUM_COLORS[al] || "#999"}"></span>` +
+    `${escapeHtml(al)} <b aria-hidden="true">${c}</b></button>`).join("");
   const moreBtn = more > 0
     ? `<button type="button" class="sx-leg-more" id="moreAlbums" data-more="${more}">+${more} more album${more === 1 ? "" : "s"}</button>`
     : "";
@@ -511,7 +591,7 @@ function render(terms, groups) {
   renderConcord(groups, counts);
   const top = topAlbum(counts);
   setEraTint(top ? ALBUM_COLORS[top[0]] : null);
-  pushRecent(terms.join(" "));
+  pushRecent(terms);
 
   if (state.grouped) {
     // Group by album (a binder divider per album), songs within. Albums in release order.
@@ -554,13 +634,9 @@ function render(terms, groups) {
 /* ---------- deep links ---------- */
 function readHash() {
   const p = new URLSearchParams(location.hash.slice(1));
-  const qp = p.get("q");
-  if (qp) {
-    // Space-separated terms: 2+ load as chips (a shared multi-term link), one stays editable.
-    const tokens = qp.trim().split(/\s+/).filter(Boolean);
-    if (tokens.length > 1) { state.terms = tokens; state.q = ""; }
-    else if (tokens.length === 1) { state.q = tokens[0]; }
-  }
+  const terms = p.getAll("term").map((term) => term.trim()).filter(Boolean);
+  if (terms.length) applyTerms(terms, false);
+  else if (p.get("q")) applyQueryString(p.get("q"), false); // legacy space-delimited links
   if (["stem", "exact", "fuzzy", "contains"].includes(p.get("mode"))) state.mode = p.get("mode");
   if (p.get("view") === "flat") state.grouped = false;
   else if (p.get("view") === "grouped") state.grouped = true;   // can override a saved "flat"
@@ -574,7 +650,7 @@ function buildShareURL() {
   const p = new URLSearchParams();
   const terms = activeTerms();
   if (terms.length) {
-    p.set("q", terms.join(" "));
+    for (const term of terms) p.append("term", term);
     // A shared link encodes mode + layout explicitly so it reproduces faithfully regardless
     // of the recipient's saved prefs.
     p.set("mode", state.mode);
@@ -670,20 +746,31 @@ function init() {
   bar.addEventListener("click", (e) => {
     const s = e.target.closest("[data-album]");
     if (!s) return;
-    const al = s.dataset.album;
-    pinnedAlbum = pinnedAlbum === al ? null : al;
-    if (pinnedAlbum) isolateAlbum(pinnedAlbum);
-    else clearIsolate();
+    togglePinnedAlbum(s.dataset.album);
   });
-  // Clicking anywhere off the bar releases a locked album and brings every album back.
+  // Clicking anywhere off either album control releases a lock and shows every album.
   document.addEventListener("click", (e) => {
-    if (!pinnedAlbum || e.target.closest("#bar [data-album]")) return;
+    if (!pinnedAlbum || e.target.closest("#bar [data-album], #concord [data-album]")) return;
     pinnedAlbum = null;
     clearIsolate();
   });
   const concord = $("concord");
+  concord.addEventListener("mouseover", (e) => {
+    const button = e.target.closest(".sx-leg[data-album]");
+    if (button) previewAlbum(button.dataset.album);
+  });
+  concord.addEventListener("mouseleave", leaveIsolate);
+  concord.addEventListener("focusin", (e) => {
+    const button = e.target.closest(".sx-leg[data-album]");
+    if (button) previewAlbum(button.dataset.album);
+  });
+  concord.addEventListener("focusout", (e) => {
+    if (!e.relatedTarget?.closest?.(".sx-leg[data-album]")) leaveIsolate();
+  });
   // "+N more albums" unfolds the rest of the breakdown.
   concord.addEventListener("click", (e) => {
+    const album = e.target.closest(".sx-leg[data-album]");
+    if (album) { togglePinnedAlbum(album.dataset.album); return; }
     const btn = e.target.closest("#moreAlbums");
     if (!btn) return;
     const expanded = btn.closest(".sx-concord-legend").classList.toggle("expanded");
@@ -723,7 +810,7 @@ function init() {
   // #results is re-rendered on every search.
   $("results").addEventListener("click", (e) => {
     const item = e.target.closest(".sx-recent-item");
-    if (item) { applyQueryString(item.dataset.q); runSearch(); input.focus(); return; }
+    if (item) { applyRecent(item.dataset.terms); runSearch(); input.focus(); return; }
     if (e.target.closest("#recentClear")) { clearRecent(); renderInitial(state.q.trim()); }
   });
 

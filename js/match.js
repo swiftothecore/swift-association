@@ -6,8 +6,28 @@
 // app.js (they resolve effectiveStrict()/censor() and then delegate here).
 import { escapeRegExp, escapeHtml } from "./util.js";
 
+// JavaScript's `\b` only understands ASCII word characters, so it treats the edge
+// before an accented letter as a word boundary and the edge after one as no boundary
+// at all. Lyrics also use typographic apostrophes while player-entered prompts use the
+// straight form. Keep both details in one shared pattern layer so the game and searcher
+// agree on exact matches, stem matches, and highlighting.
+const WORD_CHAR = "\\p{L}\\p{M}\\p{N}_";
+const APOSTROPHE_PATTERN = "['’‘]";
+
+export function canonicalMatchText(text) {
+  return String(text).replace(/[’‘]/g, "'");
+}
+
+export function exactWordBody(word) {
+  return escapeRegExp(canonicalMatchText(word)).replace(/'/g, APOSTROPHE_PATTERN);
+}
+
+export function boundedWordBody(body) {
+  return `(?<![${WORD_CHAR}])(?:${body})(?![${WORD_CHAR}])`;
+}
+
 // Prefix-stem match: the word as the start of a token, plus a suffix, so "gold"
-// matches "golden", "dream" matches "dreamer". The leading \b keeps it safe (e.g.
+// matches "golden", "dream" matches "dreamer". The leading boundary keeps it safe (e.g.
 // "love" won't match "glove"/"clover"; "rain" won't match "train").
 //
 // The tail is a BOUNDED suffix set, never [a-z']*. An open tail reads as harmless
@@ -25,20 +45,20 @@ export const STEM_TAIL =
 // open tail: silent-e drop (love→loving), consonant+y→i (city→cities), and final-consonant
 // doubling (run→running). Each mutated stem is followed by its own bounded suffix set, so
 // time→timing matches but "timber" never does.
-// Bare "in" (not "in'") so it still matches before a trailing apostrophe — \bin'\b
-// can't (the apostrophe is non-word, killing the closing boundary), but \bin\b
-// backtracks onto the "n" inside "lovin'". Covers g-dropped forms either way.
+// Bare "in" (not "in'") so it still matches before a trailing apostrophe. A closing
+// boundary after the apostrophe cannot work, but the boundary after the "n" can
+// backtrack onto the "n" inside "lovin'". Covers g-dropped forms either way.
 export const INFLECT = "(?:ing|in|ings|ed|er|ers|es|y|ies|ied|ier|iest|able)";
 export function wordVariants(word) {
-  const w = word.toLowerCase();
-  const alts = [escapeRegExp(w) + STEM_TAIL];   // base: word + one bounded suffix
-  if (w.length >= 5 && w.endsWith("ing")) alts.push(escapeRegExp(w.slice(0, -1)) + "'?");
+  const w = canonicalMatchText(word).toLowerCase();
+  const alts = [exactWordBody(w) + STEM_TAIL];   // base: word + one bounded suffix
+  if (w.length >= 5 && w.endsWith("ing")) alts.push(exactWordBody(w.slice(0, -1)) + APOSTROPHE_PATTERN + "?");
   // Length 3, not 4: the three-letter -e words are exactly the ones the missing bare "d"
   // would otherwise strand (die→died, lie→lied, eye→eyed, ice→icy), and shortening it here
   // adds nothing else on the catalogue.
-  if (w.length >= 3 && w.endsWith("e")) alts.push(escapeRegExp(w.slice(0, -1)) + INFLECT);
-  if (w.length >= 3 && /[^aeiou]y$/.test(w)) alts.push(escapeRegExp(w.slice(0, -1) + "i") + INFLECT);
-  if (w.length >= 3 && /[^aeiou][aeiou][^aeiouwxy]$/.test(w)) alts.push(escapeRegExp(w + w.slice(-1)) + INFLECT);
+  if (w.length >= 3 && w.endsWith("e")) alts.push(exactWordBody(w.slice(0, -1)) + INFLECT);
+  if (w.length >= 3 && /[^aeiou]y$/.test(w)) alts.push(exactWordBody(w.slice(0, -1) + "i") + INFLECT);
+  if (w.length >= 3 && /[^aeiou][aeiou][^aeiouwxy]$/.test(w)) alts.push(exactWordBody(w + w.slice(-1)) + INFLECT);
   return alts;
 }
 
@@ -61,11 +81,11 @@ export const FALSE_FRIENDS = {
   spin: ["spines"],                                                             // spine
   star: ["stared", "stares", "staring", "starin"],                              // stare
 };
-// A zero-width veto to sit just inside the leading \b, so a false friend can never be the
+// A zero-width veto to sit just inside the leading boundary, so a false friend can never be the
 // token the alternation lands on. Empty for the ~727 words with nothing to disown.
 export function falseFriendGuard(word) {
-  const bad = FALSE_FRIENDS[word.toLowerCase()];
-  return bad ? "(?!(?:" + bad.map(escapeRegExp).join("|") + ")\\b)" : "";
+  const bad = FALSE_FRIENDS[canonicalMatchText(word).toLowerCase()];
+  return bad ? "(?!(?:" + bad.map(exactWordBody).join("|") + ")(?![" + WORD_CHAR + "]))" : "";
 }
 // The lenient alternation, guarded, ready to drop inside a group. Every caller that builds
 // its own regex out of wordVariants should use this instead, so a form the matcher refuses
@@ -92,12 +112,12 @@ const RX_CACHE_MAX = 4000;
 // strict requires the exact word. `strict` is an explicit boolean here — the game
 // wrapper resolves its default from effectiveStrict() before calling.
 export function wordRegex(word, strict) {
-  const key = (strict ? "s\u0000" : "l\u0000") + word;
+  const canonical = canonicalMatchText(word);
+  const key = (strict ? "s\u0000" : "l\u0000") + canonical;
   const hit = RX_CACHE.get(key);
   if (hit) return hit;
-  const rx = strict
-    ? new RegExp("\\b" + escapeRegExp(word) + "\\b", "i")
-    : new RegExp("\\b" + variantBody(word) + "\\b", "i");
+  const body = strict ? exactWordBody(canonical) : variantBody(canonical);
+  const rx = new RegExp(boundedWordBody(body), "iu");
   if (RX_CACHE.size >= RX_CACHE_MAX) RX_CACHE.clear();
   RX_CACHE.set(key, rx);
   return rx;
@@ -125,11 +145,11 @@ export function extractLineWithWord(lyrics, word, strict) {
 // it doesn't, so "babe" never highlights "baby".
 export function highlightWord(line, word, strict) {
   let body;
-  if (strict) body = escapeRegExp(word);
+  if (strict) body = exactWordBody(word);
   else {
     const exactRx = wordRegex(word, true);   // same expression, so it shares the cache
-    body = exactRx.test(line) ? escapeRegExp(word) : variantBody(word);
+    body = exactRx.test(line) ? exactWordBody(word) : variantBody(word);
   }
-  const rx = new RegExp("\\b(" + body + ")\\b", "ig");
+  const rx = new RegExp(boundedWordBody("(" + body + ")"), "giu");
   return escapeHtml(line).replace(rx, "<mark>$1</mark>");
 }
