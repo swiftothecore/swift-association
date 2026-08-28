@@ -18295,11 +18295,23 @@ function paintMugPour(sips, flare) {
   try { length = line.getTotalLength(); } catch (e) { return; }
   if (!length) return;
   const progress = mugPourProgress(sips);
+  // THE FIRST PAINT HAS NO JOURNEY TO MAKE. Until a dash is written the stroke is a solid one,
+  // which is the whole clef, and the transition that makes a single tap visible would then run
+  // the offset back from THERE: every load drew the finished pour and retracted it over half a
+  // second to whatever had been earned. The dash is placed with the transition suppressed, and
+  // the reflow is what commits it, so the offset a later tap animates from is the one the
+  // player actually left in the cup.
+  const placing = !line.style.strokeDasharray;
+  if (placing) pour.classList.add("is-placing");
   line.style.strokeDasharray = length;
   line.style.strokeDashoffset = length * (1 - progress);
   // Nothing at all until the first tap, so an untouched cup is an untouched cup. The stroke's
   // round cap would otherwise leave a bead of foam sitting in the crema from the start.
   line.style.opacity = progress > 0 ? "0.88" : "0";
+  if (placing) {
+    line.getBoundingClientRect();   // reflow (SVG, so not offsetWidth)
+    pour.classList.remove("is-placing");
+  }
   if (!flare) return;
   pour.classList.remove("is-poured");
   pour.getBoundingClientRect();   // reflow, so the flare plays even if the class was already there.

@@ -722,6 +722,9 @@
      frames of a load, or a desk where the paint bailed out) would otherwise flash the
      finished pour at a player who has not earned a drop of it. */
   .mg-pour-line { opacity: 0; transition: stroke-dashoffset 520ms ease-out; }
+  /* app.js writing the dash it read off the notebook rather than pouring anything: the crema
+     was already like this when the page opened, so there is nothing to creep. */
+  .mg-pour.is-placing .mg-pour-line { transition: none; }
   body[data-reduce-motion="on"] .mg-pour-line { transition: none; }
   /* The thousandth tap. The finished clef flares white-hot for a moment, the way fresh crema
      does before it settles into the brew, then sits there for good. */
