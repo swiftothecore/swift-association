@@ -5731,7 +5731,9 @@
      piece, so it centres on the paper without breaking the edges it shares. Relative offset
      rather than a margin: the strand and the caption row are auto-centred, and a margin
      would take that away from them. */
-  #screen-results > .word-label,
+  /* The caption is not in the shifted group: it is small type on a ruled line near the
+     margin, so it reads against the page's text column rather than against the paper's
+     centre, and pulling it left with the numeral made it look like it had slipped. */
   #screen-results .final-score,
   #screen-results .bracelet-caption-row,
   #screen-results .bracelet-finished { position: relative; left: -14px; }
