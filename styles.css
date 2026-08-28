@@ -333,7 +333,7 @@
      prop shadow here only has to lift them off the wood */
   .di-glasses { width: 420px; top: 5%;   left: 0; transform: translateX(-57%) rotate(-24deg);
     filter: drop-shadow(4px 9px 7px rgba(46,32,14,0.24)) saturate(0.88); }
-  .di-mug     { width: 380px; top: 36%;  left: 0; transform: translateX(-55%) rotate(-14deg);
+  .di-mug     { width: 380px; top: 39%;  left: 0; transform: translateX(-49%) rotate(-14deg);
     filter: drop-shadow(6px 13px 11px rgba(46,32,14,0.28)) saturate(0.88); }
   .di-floss   { width: 370px; top: 5%;   right: 0; transform: translateX(34%) rotate(8deg); }
   /* Less overhang than the other edge props get. The insert is written on, and
@@ -716,8 +716,12 @@
   /* The pour forms by running its dash offset back, and the offset is written by JS on every
      tap. The transition is what makes one tap out of a thousand visible at all: the sliver it
      adds is a fifth of a percent of the stroke, which reads as the foam creeping rather than
-     as anything moving. */
-  .mg-pour-line { transition: stroke-dashoffset 520ms ease-out; }
+     as anything moving.
+     Hidden until app.js says otherwise, and hidden HERE rather than only in the paint: the
+     markup carries the whole clef, so a cup whose count has not been read yet (the first
+     frames of a load, or a desk where the paint bailed out) would otherwise flash the
+     finished pour at a player who has not earned a drop of it. */
+  .mg-pour-line { opacity: 0; transition: stroke-dashoffset 520ms ease-out; }
   body[data-reduce-motion="on"] .mg-pour-line { transition: none; }
   /* The thousandth tap. The finished clef flares white-hot for a moment, the way fresh crema
      does before it settles into the brew, then sits there for good. */
@@ -818,6 +822,14 @@
     52%      { transform: translate(calc(var(--bx, 0) * -0.7px), calc(var(--by, 0) * 0.62px)); }
     78%      { transform: translate(calc(var(--bx, 0) * 0.36px), calc(var(--by, 0) * -0.85px)); }
   }
+  /* Where a bubble sits is an attribute, and a tap rewrites it (app.js stirMugRaft), so the
+     move is transitioned rather than animated: the raft slides to the arrangement the finger
+     just made and stays in it. .is-placing is app.js putting a bubble somewhere with no
+     journey in between, a fresh raft or one resurfacing after a pop, which must not slide
+     across the cup from wherever the last one died. */
+  .mg-bubble-body, .mg-bubble-lit { transition: cx 880ms cubic-bezier(0.24, 0.8, 0.3, 1),
+                                                cy 880ms cubic-bezier(0.24, 0.8, 0.3, 1); }
+  .mg-bubble.is-placing :is(.mg-bubble-body, .mg-bubble-lit) { transition: none; }
   .mg-bubble-skin { transform-box: fill-box; transform-origin: 50% 50%; }
   /* Going. The film thins, the bubble swells, and then it is simply not there: a bubble does
      not fade politely out, so the opacity is held most of the way and dropped at the end. */
@@ -837,6 +849,7 @@
      the coffee. app.js stops popping on the same setting. */
   body[data-reduce-motion="on"] .mg-bubble,
   body[data-reduce-motion="on"] .mg-bubble .mg-bubble-skin { animation: none; }
+  body[data-reduce-motion="on"] :is(.mg-bubble-body, .mg-bubble-lit) { transition: none; }
 
   /* the loose beaded strand trailing off the floss skein sways gently */
   .desk-sway { transform-box: fill-box; transform-origin: 50% 0%; animation: deskSway 5.2s ease-in-out infinite; }

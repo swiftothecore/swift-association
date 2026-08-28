@@ -18308,20 +18308,24 @@ function paintMugPour(sips, flare) {
   pour.classList.add("is-poured");
 }
 
-// The tap itself. Two things go to CSS from here and nothing else does: WHERE the finger
-// landed, and which way the coffee should be shoved because of it. The click point is mapped
-// through the SVG's own screen matrix rather than measured off the box, because the prop is
-// rotated and half of it hangs off the window, and the direction is taken in the prop's own
-// coordinates for the same reason: the surface has to move away from the tap as the cup sees
-// it, not as the screen does.
-function rippleMug(svg, event) {
-  if (motionReduced()) return;
-  const ripple = svg.querySelector(".mg-ripple");
+// Where the finger landed, in the prop's own coordinates. Mapped through the SVG's own screen
+// matrix rather than measured off the box, because the prop is rotated and half of it hangs
+// off the window: everything downstream of a tap has to reason about the surface as the cup
+// sees it, not as the screen does.
+function mugTapPoint(svg, event) {
   const ctm = svg.getScreenCTM();
-  if (!ripple || !ctm) return;
+  if (!ctm) return null;
   const point = svg.createSVGPoint();
   point.x = event.clientX; point.y = event.clientY;
-  const local = point.matrixTransform(ctm.inverse());
+  return point.matrixTransform(ctm.inverse());
+}
+
+// The tap itself. Two things go to CSS from here and nothing else does: WHERE the finger
+// landed, and which way the coffee should be shoved because of it.
+function rippleMug(svg, local) {
+  if (motionReduced()) return;
+  const ripple = svg.querySelector(".mg-ripple");
+  if (!ripple) return;
   ripple.setAttribute("transform", `translate(${local.x.toFixed(2)} ${local.y.toFixed(2)})`);
   // Away from the middle of the brew. A tap dead in the centre has no direction to give, so
   // it borrows one rather than freezing the surface: the coffee still answers.
@@ -18375,12 +18379,26 @@ function mugRaftSpot() {
   let roll = Math.random() * mugRaftClumps.reduce((sum, c) => sum + c.share, 0);
   const clump = mugRaftClumps.find((c) => (roll -= c.share) <= 0)
              || mugRaftClumps[0] || { x: MUG_BREW.x, y: MUG_BREW.y, spread: 6 };
-  let x = clump.x + mugRand(-clump.spread, clump.spread);
-  let y = clump.y + mugRand(-clump.spread, clump.spread);
+  return mugInBrew(clump.x + mugRand(-clump.spread, clump.spread),
+                   clump.y + mugRand(-clump.spread, clump.spread));
+}
+
+// Anywhere a bubble is put has to be pulled back inside the brew if it landed out over the
+// china, whether it was dealt there or shoved there by a tap.
+function mugInBrew(x, y) {
   const dx = x - MUG_BREW.x, dy = y - MUG_BREW.y;
   const out = Math.hypot(dx, dy);
-  if (out > MUG_RAFT_EDGE) { x = MUG_BREW.x + (dx / out) * MUG_RAFT_EDGE; y = MUG_BREW.y + (dy / out) * MUG_RAFT_EDGE; }
-  return { x, y };
+  if (out <= MUG_RAFT_EDGE) return { x, y };
+  return { x: MUG_BREW.x + (dx / out) * MUG_RAFT_EDGE, y: MUG_BREW.y + (dy / out) * MUG_RAFT_EDGE };
+}
+
+// The catchlight sits up and left, where the window is, and only on a bubble with a face big
+// enough to hold one. A dot on a half-unit bubble is a speck of dirt, not a highlight.
+function placeMugBubble(body, lit, x, y, r) {
+  body.setAttribute("cx", x.toFixed(2));
+  body.setAttribute("cy", y.toFixed(2));
+  lit.setAttribute("cx", (x - r * 0.34).toFixed(2));
+  lit.setAttribute("cy", (y - r * 0.36).toFixed(2));
 }
 
 // Deal one bubble: a size, a place, a tone and a clock of its own. Every call is a NEW bubble,
@@ -18392,18 +18410,19 @@ function drawMugBubble(bubble) {
   const r = 0.52 + Math.pow(Math.random(), 1.75) * 2.15;
   const body = bubble.querySelector(".mg-bubble-body");
   const lit = bubble.querySelector(".mg-bubble-lit");
-  body.setAttribute("cx", spot.x.toFixed(2));
-  body.setAttribute("cy", spot.y.toFixed(2));
+  // This bubble is not travelling: it is either being dealt for the first time or surfacing
+  // somewhere else after a pop, and the slide a tap gives it (styles.css) would otherwise
+  // walk it across the whole cup from wherever the last one died. Flushed before the class
+  // comes off, so the new spot is what the transition treats as home.
+  bubble.classList.add("is-placing");
+  placeMugBubble(body, lit, spot.x, spot.y, r);
   body.setAttribute("r", r.toFixed(2));
   body.setAttribute("fill", mugPick(MUG_BUBBLE_TONES));
   body.setAttribute("opacity", mugRand(0.6, 0.94).toFixed(2));
-  // The catchlight sits up and left, where the window is, and only on a bubble with a face big
-  // enough to hold one. A dot on a half-unit bubble is a speck of dirt, not a highlight.
-  const face = r > 0.85;
-  lit.setAttribute("cx", (spot.x - r * 0.34).toFixed(2));
-  lit.setAttribute("cy", (spot.y - r * 0.36).toFixed(2));
   lit.setAttribute("r", (r * 0.31).toFixed(2));
-  lit.setAttribute("opacity", face ? mugRand(0.3, 0.6).toFixed(2) : "0");
+  lit.setAttribute("opacity", r > 0.85 ? mugRand(0.3, 0.6).toFixed(2) : "0");
+  bubble.getBoundingClientRect();   // reflow (SVG, so not offsetWidth)
+  bubble.classList.remove("is-placing");
   bubble.style.setProperty("--bx", mugRand(-1.15, 1.15).toFixed(2));
   bubble.style.setProperty("--by", mugRand(-0.95, 0.95).toFixed(2));
   const dur = mugRand(7, 15);
@@ -18462,6 +18481,47 @@ function scheduleMugPop(layer) {
   }, MUG_POP_GAP.min + Math.random() * MUG_POP_GAP.spread);
 }
 
+/* WHAT THE TAP DOES TO THE RAFT. The slosh shoves the whole bubble group away and lets it
+   settle back exactly where it was, which is right for a reflection and wrong for bubbles:
+   prod real coffee and the foam does not go home. So a tap also rewrites where each bubble
+   IS. Every one is pushed away from the finger, hardest where the finger went in and not at
+   all past MUG_STIR.reach, with a little jitter on top so the raft is jostled apart rather
+   than fanned out in a tidy circle. Small bubbles are shoved further than heavy ones.
+
+   They slide, rather than jump, on the transition in styles.css, and they stay: tap the same
+   cup a few times and the gathering on the surface is one you made. Nothing is created or
+   destroyed here, so the raft stays MUG_RAFT_SIZE strong and the pops keep turning it over
+   underneath. Bubbles mid-pop are left alone, since they are already on their way somewhere.
+
+   MUG_STIR.push is read against the brew's 31.5-unit radius, the same as the slosh: a couple
+   of units is a bubble getting out of the way, not the surface being swept clean. */
+const MUG_STIR = { push: 3.2, reach: 20, jitter: 0.85 };
+
+function stirMugRaft(svg, local) {
+  if (motionReduced()) return;
+  svg.querySelectorAll(".mg-bubble:not(.is-popping)").forEach((bubble) => {
+    const body = bubble.querySelector(".mg-bubble-body");
+    const lit = bubble.querySelector(".mg-bubble-lit");
+    if (!body || !lit) return;
+    const r = parseFloat(body.getAttribute("r")) || 1;
+    const x = parseFloat(body.getAttribute("cx")), y = parseFloat(body.getAttribute("cy"));
+    if (!Number.isFinite(x) || !Number.isFinite(y)) return;
+    let dx = x - local.x, dy = y - local.y;
+    const gap = Math.hypot(dx, dy);
+    // Dead under the finger there is no direction to be pushed in, so it borrows one, exactly
+    // the way the slosh does rather than leaving that one bubble standing still.
+    if (gap < 0.01) { dx = Math.random() - 0.5; dy = Math.random() - 0.5; }
+    const away = Math.hypot(dx, dy) || 1;
+    // Squared falloff, so the shove is spent well before the reach runs out and the far side
+    // of the cup only trembles. A linear one moves the whole raft and reads as a slide.
+    const fade = Math.max(0, 1 - gap / MUG_STIR.reach) ** 2;
+    const shove = MUG_STIR.push * fade * (1.25 - r * 0.2);
+    const spot = mugInBrew(x + (dx / away) * shove + mugRand(-1, 1) * MUG_STIR.jitter * fade,
+                           y + (dy / away) * shove + mugRand(-1, 1) * MUG_STIR.jitter * fade);
+    placeMugBubble(body, lit, spot.x, spot.y, r);
+  });
+}
+
 function wireDeskMug() {
   const svg = document.querySelector(".di-mug svg");
   const hit = svg && svg.querySelector(".mg-hit");
@@ -18475,7 +18535,10 @@ function wireDeskMug() {
   if (poured >= MUG_POUR_SIPS) unlock("tap-desk-mug-1000-times");
   hit.addEventListener("click", (event) => {
     const sips = bumpMugSips();
-    rippleMug(svg, event);
+    // Mapped once and handed to both: the wave and the bubbles it moves have to agree about
+    // where the finger went in.
+    const local = mugTapPoint(svg, event);
+    if (local) { rippleMug(svg, local); stirMugRaft(svg, local); }
     paintMugPour(sips, sips === MUG_POUR_SIPS);
     if (sips >= MUG_POUR_SIPS) unlock("tap-desk-mug-1000-times");
   });
