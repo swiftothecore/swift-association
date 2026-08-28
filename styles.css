@@ -803,6 +803,40 @@
     100% { transform: translate(0, 0); }
   }
   body[data-reduce-motion="on"] .di-mug svg.is-rippling :is(.mg-dimple, .mg-ring, .mg-ring circle, .mg-slosh) { animation: none; }
+  /* THE RAFT ITSELF (dealt by app.js seedMugRaft, reasoning there). Each bubble wanders a unit
+     or so around the spot it surfaced at, on its own duration and started mid-wander by a
+     negative delay, so no two are ever in step and the raft never travels as a sheet. Three
+     transforms stack here and none of them fights another: the shove on .mg-bubbles, the
+     wander on the bubble, the pop on the skin inside it. */
+  .mg-bubble { transform-box: view-box; transform-origin: 0 0;
+               animation: mugBubbleDrift var(--bd, 11s) ease-in-out var(--bdd, 0s) infinite; }
+  /* Four stops rather than two: a bubble jostled by its neighbours does not travel out and
+     back along one line, and a plain ping-pong is legible as one within a few seconds. */
+  @keyframes mugBubbleDrift {
+    0%, 100% { transform: translate(0, 0); }
+    26%      { transform: translate(calc(var(--bx, 0) * 1px), calc(var(--by, 0) * 1px)); }
+    52%      { transform: translate(calc(var(--bx, 0) * -0.7px), calc(var(--by, 0) * 0.62px)); }
+    78%      { transform: translate(calc(var(--bx, 0) * 0.36px), calc(var(--by, 0) * -0.85px)); }
+  }
+  .mg-bubble-skin { transform-box: fill-box; transform-origin: 50% 50%; }
+  /* Going. The film thins, the bubble swells, and then it is simply not there: a bubble does
+     not fade politely out, so the opacity is held most of the way and dropped at the end. */
+  .mg-bubble.is-popping .mg-bubble-skin { animation: mugBubblePop 300ms ease-out 1 forwards; }
+  @keyframes mugBubblePop {
+    0%   { transform: scale(1);    opacity: 1; }
+    70%  { transform: scale(1.45); opacity: 0.55; }
+    100% { transform: scale(1.7);  opacity: 0; }
+  }
+  /* And coming up somewhere else, at whatever size the brew felt like. */
+  .mg-bubble.is-surfacing .mg-bubble-skin { animation: mugBubbleUp 460ms cubic-bezier(0.2, 0.7, 0.3, 1) 1 backwards; }
+  @keyframes mugBubbleUp {
+    0%   { transform: scale(0.3); opacity: 0; }
+    100% { transform: scale(1);   opacity: 1; }
+  }
+  /* Reduced motion keeps the raft, and keeps it randomised: it is the movement that goes, not
+     the coffee. app.js stops popping on the same setting. */
+  body[data-reduce-motion="on"] .mg-bubble,
+  body[data-reduce-motion="on"] .mg-bubble .mg-bubble-skin { animation: none; }
 
   /* the loose beaded strand trailing off the floss skein sways gently */
   .desk-sway { transform-box: fill-box; transform-origin: 50% 0%; animation: deskSway 5.2s ease-in-out infinite; }

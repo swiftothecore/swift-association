@@ -18338,11 +18338,136 @@ function rippleMug(svg, event) {
   mugRippleTimer = setTimeout(() => svg.classList.remove("is-rippling"), MUG_RIPPLE_MS);
 }
 
+/* THE BUBBLE RAFT. It used to be thirty-one circles typed into the markup, which meant every
+   cup on every desk was the same cup. It is dealt here instead, and it keeps moving after it
+   is dealt.
+
+   Three motions, and they are deliberately different things. The raft is CLUMPED somewhere new
+   on every load, because surface tension gathers bubbles against one part of a cup and which
+   part is an accident of the last stir. Each bubble then WANDERS a unit or so around where it
+   surfaced, on its own clock and started mid-wander by a negative delay, so the raft jostles
+   instead of sliding about as a sheet. And once in a while one POPS: it swells, goes, and
+   surfaces again somewhere else at a different size a moment later. The pop is what stops the
+   cup being a loop you can catch repeating.
+
+   A tap's slosh still lives on the parent .mg-bubbles group, so the shove and the wander are
+   two transforms on two elements and neither overwrites the other. */
+const MUG_RAFT_SIZE = 21;      // bubbles on the surface at once
+const MUG_RAFT_CLUMPS = 3;     // gatherings they are dealt around
+const MUG_RAFT_RING = { near: 18, far: 28 };    // how far off the brew's centre a clump sits (the brew's own radius is 31.5)
+const MUG_RAFT_ARC = { from: 0.14, to: 2.05 };  // radians, clockwise from due right: the drinking edge round to the near-left,
+                                                // which is the half of this cup that is ever actually on screen
+const MUG_RAFT_EDGE = 28.6;    // no bubble past here, so a wandering one still dies short of the china
+const MUG_BUBBLE_TONES = ["#8a5c33", "#9a6a3c", "#b0855a"];
+const MUG_POP_MS = 300, MUG_SURFACE_MS = 460;   // both must match the keyframes in styles.css
+const MUG_POP_GAP = { min: 4200, spread: 6800 };
+let mugRaftClumps = [];
+let mugPopTimer = null;
+
+const mugRand = (lo, hi) => lo + Math.random() * (hi - lo);
+const mugPick = (list) => list[Math.floor(Math.random() * list.length)];
+
+// One place on the surface: a clump picked at random, a spread around it, then pulled back
+// inside the brew if that spread wandered out over the china.
+function mugRaftSpot() {
+  // Weighted, not even: a raft is one main gathering with a couple of outriders, and three
+  // equal huddles read as three deliberate marks rather than as coffee.
+  let roll = Math.random() * mugRaftClumps.reduce((sum, c) => sum + c.share, 0);
+  const clump = mugRaftClumps.find((c) => (roll -= c.share) <= 0)
+             || mugRaftClumps[0] || { x: MUG_BREW.x, y: MUG_BREW.y, spread: 6 };
+  let x = clump.x + mugRand(-clump.spread, clump.spread);
+  let y = clump.y + mugRand(-clump.spread, clump.spread);
+  const dx = x - MUG_BREW.x, dy = y - MUG_BREW.y;
+  const out = Math.hypot(dx, dy);
+  if (out > MUG_RAFT_EDGE) { x = MUG_BREW.x + (dx / out) * MUG_RAFT_EDGE; y = MUG_BREW.y + (dy / out) * MUG_RAFT_EDGE; }
+  return { x, y };
+}
+
+// Deal one bubble: a size, a place, a tone and a clock of its own. Every call is a NEW bubble,
+// so this both seeds the raft and refills the gap a pop just left.
+function drawMugBubble(bubble) {
+  const spot = mugRaftSpot();
+  // Small ones far outnumber big ones on real crema, so the roll is bent toward the bottom of
+  // the range rather than spread flat across it.
+  const r = 0.52 + Math.pow(Math.random(), 1.75) * 2.15;
+  const body = bubble.querySelector(".mg-bubble-body");
+  const lit = bubble.querySelector(".mg-bubble-lit");
+  body.setAttribute("cx", spot.x.toFixed(2));
+  body.setAttribute("cy", spot.y.toFixed(2));
+  body.setAttribute("r", r.toFixed(2));
+  body.setAttribute("fill", mugPick(MUG_BUBBLE_TONES));
+  body.setAttribute("opacity", mugRand(0.6, 0.94).toFixed(2));
+  // The catchlight sits up and left, where the window is, and only on a bubble with a face big
+  // enough to hold one. A dot on a half-unit bubble is a speck of dirt, not a highlight.
+  const face = r > 0.85;
+  lit.setAttribute("cx", (spot.x - r * 0.34).toFixed(2));
+  lit.setAttribute("cy", (spot.y - r * 0.36).toFixed(2));
+  lit.setAttribute("r", (r * 0.31).toFixed(2));
+  lit.setAttribute("opacity", face ? mugRand(0.3, 0.6).toFixed(2) : "0");
+  bubble.style.setProperty("--bx", mugRand(-1.15, 1.15).toFixed(2));
+  bubble.style.setProperty("--by", mugRand(-0.95, 0.95).toFixed(2));
+  const dur = mugRand(7, 15);
+  bubble.style.setProperty("--bd", `${dur.toFixed(1)}s`);
+  // Negative, so the bubble is already part-way through its wander on the first frame. Without
+  // it the whole raft starts from dead still on the same tick, which reads as a held breath.
+  bubble.style.setProperty("--bdd", `${(-mugRand(0, dur)).toFixed(1)}s`);
+}
+
+// Lay a fresh raft. The clumps are redrawn too, so it is the SHAPE of the gathering that
+// changes between loads and not merely which bubbles are in it.
+function seedMugRaft(svg) {
+  const layer = svg && svg.querySelector(".mg-bubbles");
+  if (!layer) return;
+  mugRaftClumps = Array.from({ length: MUG_RAFT_CLUMPS }, (unused, i) => {
+    const angle = MUG_RAFT_ARC.from + (MUG_RAFT_ARC.to - MUG_RAFT_ARC.from) * ((i + mugRand(0.12, 0.88)) / MUG_RAFT_CLUMPS);
+    const reach = mugRand(MUG_RAFT_RING.near, MUG_RAFT_RING.far);
+    return { x: MUG_BREW.x + Math.cos(angle) * reach, y: MUG_BREW.y + Math.sin(angle) * reach,
+             spread: mugRand(3.4, 7), share: mugRand(0.35, 1) ** 2 };
+  });
+  // The skin inside the group is what a pop scales: the group itself is busy wandering, and a
+  // transform written there would be overwritten by the drift on the very next frame.
+  layer.innerHTML = Array.from({ length: MUG_RAFT_SIZE }, () => `
+        <g class="mg-bubble"><g class="mg-bubble-skin"><circle class="mg-bubble-body"/><circle class="mg-bubble-lit" fill="#ffffff"/></g></g>`).join("");
+  layer.querySelectorAll(".mg-bubble").forEach(drawMugBubble);
+  scheduleMugPop(layer);
+}
+
+// One bubble gives up, and a new one takes its place. Nothing is added or removed: the same
+// group is redrawn, so the raft is always MUG_RAFT_SIZE strong.
+function popMugBubble(layer) {
+  const raft = layer.querySelectorAll(".mg-bubble:not(.is-popping):not(.is-surfacing)");
+  if (!raft.length) return;
+  const bubble = mugPick(Array.from(raft));
+  bubble.classList.add("is-popping");
+  setTimeout(() => {
+    bubble.classList.remove("is-popping");
+    drawMugBubble(bubble);
+    bubble.getBoundingClientRect();   // reflow (SVG, so not offsetWidth) — the class swap and the
+                                      // redraw happen in one task, so no frame ever shows the old
+                                      // bubble back at full opacity in between
+    bubble.classList.add("is-surfacing");
+    setTimeout(() => bubble.classList.remove("is-surfacing"), MUG_SURFACE_MS);
+  }, MUG_POP_MS);
+}
+
+// The gap is long and uneven on purpose: coffee that pops on a beat is a cartoon. The timer
+// keeps running under reduced motion and simply declines to pop, so turning motion back on
+// mid-session brings the surface straight back to life without a reload.
+function scheduleMugPop(layer) {
+  clearTimeout(mugPopTimer);
+  mugPopTimer = setTimeout(() => {
+    if (!layer.isConnected) return;
+    if (!motionReduced()) popMugBubble(layer);
+    scheduleMugPop(layer);
+  }, MUG_POP_GAP.min + Math.random() * MUG_POP_GAP.spread);
+}
+
 function wireDeskMug() {
   const svg = document.querySelector(".di-mug svg");
   const hit = svg && svg.querySelector(".mg-hit");
   if (!hit) return;
   const poured = loadMetrics().mugSips || 0;
+  seedMugRaft(svg);
   paintMugPour(poured, false);
   // Backfill, the same one the page marks keep: the thousandth tap may have landed inside a
   // challenge sandbox, where unlock() is gated. The tap was still counted, so the charm is
@@ -23325,6 +23450,14 @@ function buildDevApi() {
     },
     // The scrolling desk (js/scatter.js) — cosmetic gutter incidents, props and
     // marks. All cosmetic: nothing here touches game state or storage.
+    // The coffee's bubble raft. It is dealt on load and only changes on its own slow clock, so
+    // reshuffling it by hand is the only way to see a run of different rafts, and popping on
+    // demand saves waiting out an uneven several-second gap for the one animation.
+    mug: {
+      raft: () => { const svg = document.querySelector(".di-mug svg"); if (svg) seedMugRaft(svg); return MUG_RAFT_SIZE; },
+      pop: () => { const layer = document.querySelector(".di-mug .mg-bubbles"); if (layer) popMugBubble(layer); },
+      clumps: () => mugRaftClumps.map((c) => ({ x: +c.x.toFixed(1), y: +c.y.toFixed(1), spread: +c.spread.toFixed(1), share: +c.share.toFixed(2) })),
+    },
     scatter: {
       rebuild: () => window.__deskScatter && window.__deskScatter.rebuild(),
       reseed: (n) => window.__deskScatter && window.__deskScatter.reseed(n),
