@@ -6800,9 +6800,10 @@
     animation: toastIn 0.4s cubic-bezier(.34,1.56,.64,1);
     pointer-events: auto;
   }
-  /* Only the toasts that actually carry a tooltip (achievement desc, skill blurb)
-     promise an explanation on hover. Note and keepsake toasts have no tip, so
-     they keep the plain arrow rather than inviting a hover that pays nothing. */
+  /* Only the toasts that actually carry a tooltip (achievement desc, skill blurb,
+     and the how-earned line on a keepsake or sticker) promise an explanation on
+     hover. Note toasts have no tip, so they keep the plain arrow rather than
+     inviting a hover that pays nothing. */
   .toast[data-tip] { cursor: help; }
   .tip-pop {
     position: fixed; z-index: 300; left: 0; top: 0;

@@ -1,8 +1,11 @@
 // Stickers: the die-cut vinyl collectible set (see scripts/stickers/STICKERS.md).
-// Each entry: { id, name, sub, era, art }.
+// Each entry: { id, name, sub, how, era, art }.
 //   id:   kebab-case handle; the unlock trigger and the STICKERS_KEY store key both use it.
 //   name: the object's own name, as the drawer captions it.
 //   sub:  the source line under it: the song, or where the object comes from.
+//   how:  what you did to earn it, in the achievement descs' voice. It rides on the unlock
+//         toast as a hover tip and NOWHERE ELSE: the drawer's locked cells stay wordless on
+//         purpose, so this must never be rendered into the shelf.
 //   era:  the section it belongs to, used to group the shelf.
 //   art:  a self-contained viewBox="0 0 100 100" SVG, exactly as drawn. No die-cut border and
 //         no stroke rules live in here: the shared #diecut filter and the .ln stroke classes
@@ -17,6 +20,7 @@ export const STICKERS = [
     id: "vault-door",
     name: "Vault door",
     sub: "From the Vault",
+    how: "Name a From The Vault track",
     era: "Meta and fandom",
     art: `<svg class="stick" viewBox="0 0 100 100">
   <path class="ln" fill="#5c554c" d="M16.4 32.6 L8.2 30.4 L7.8 41 L17 39.4 Z"/>
@@ -44,6 +48,7 @@ export const STICKERS = [
     id: "junior-jewels-tee",
     name: "Junior Jewels tee",
     sub: "You Belong With Me",
+    how: "Name a song off every studio album in one sitting",
     era: "Fearless and Speak Now",
     art: `<svg class="stick" viewBox="0 0 100 100">
   <path class="ln" fill="#f6efe2" d="M41.4 17.6 C44 21.6 47 23.6 50 23.6 C53 23.6 56 21.6 58.6 17.6 C64.6 18.6 70.2 21.2 74 25.2 L86 37.6 C87.6 39.6 87 42.2 85 43.6 L77.4 49.2 C76.4 50 75.4 49.6 75 48.6 L73 45 L73.2 82.6 C73.2 85.2 71.6 86.6 69 86.6 L31 86.4 C28.4 86.4 26.8 85 26.8 82.4 L27 45 L25 48.6 C24.6 49.6 23.6 50 22.6 49.2 L15 43.6 C13 42.2 12.4 39.6 14 37.6 L26 25.2 C29.8 21.2 35.4 18.6 41.4 17.6 Z"/>
@@ -70,6 +75,7 @@ export const STICKERS = [
     id: "rocking-horse",
     name: "Rocking horse",
     sub: "Never Grow Up",
+    how: "Name a song off the first album and off the newest one in one sitting",
     era: "Fearless and Speak Now",
     art: `<svg class="stick" viewBox="0 0 100 100">
   <path class="ln" fill="#f2e6cd" d="M32 40 C25.4 38.4 19.4 41.8 17.4 48.6 C20.6 46 23.8 45.2 26.8 46 C22.6 49.8 20.6 55 21.8 61 C25.2 53.8 29.6 49 34.6 46.8 Z"/>
@@ -103,6 +109,7 @@ export const STICKERS = [
     id: "hat-22",
     name: "The “22” hat",
     sub: "the hat handed to a fan",
+    how: "Answer 22 in a row in Infinite",
     era: "Red",
     art: `<svg class="stick" viewBox="0 0 100 100">
   <path class="ln" fill="#3d382f" d="M24.5 60 C22.6 45 26.4 32.4 36.2 29.4 C41.6 31.6 46.6 34.4 50 36.2 C53.8 33.8 59.4 31 65.2 29 C74.6 32.6 77.4 45 75.5 60 Z"/>
@@ -119,6 +126,7 @@ export const STICKERS = [
     id: "boombox",
     name: "Boombox",
     sub: "1989",
+    how: "Finish a run with the sound on",
     era: "1989",
     art: `<svg class="stick" viewBox="0 0 100 100">
   <path class="ln" fill="none" style="stroke-width:3.4" d="M35.6 27.6 C34.6 15.6 65.6 15.4 64.6 27.6"/>
@@ -144,6 +152,7 @@ export const STICKERS = [
     id: "band-aid",
     name: "Band-aid",
     sub: "Bad Blood",
+    how: "Win a kind of run that beat you the last time you played it",
     era: "1989",
     art: `<svg class="stick" viewBox="0 0 100 100">
   <g transform="rotate(-19 50 50)">
@@ -167,6 +176,7 @@ export const STICKERS = [
     id: "jewel-bathtub",
     name: "Jewel bathtub",
     sub: "Look What You Made Me Do",
+    how: "Walk out of a run you had not missed a page on",
     era: "reputation",
     art: `<svg class="stick" viewBox="0 0 100 100">
   <path class="ln" fill="#e8dfcc" d="M25.6 70 C21.2 73.6 19.4 80.6 22.6 85.6 C26.4 90 33.6 87.8 34.6 81.8 C35.4 77 33.4 72.2 29.2 70 Z"/>
@@ -198,6 +208,7 @@ export const STICKERS = [
     id: "champagne-coupe",
     name: "Champagne coupe",
     sub: "champagne problems",
+    how: "Finish exactly one page short of that board's best",
     era: "folklore and evermore",
     art: `<svg class="stick" viewBox="0 0 100 100">
   <path class="ln" fill="#e2eae7" d="M29.6 31.4 C29.6 45.6 38.4 53.4 50 53.4 C61.6 53.4 70.4 45.6 70.4 31.4 Z"/>
@@ -215,6 +226,7 @@ export const STICKERS = [
     id: "solitaire",
     name: "Solitaire",
     sub: "Bejeweled",
+    how: "Answer a word only one song in the whole catalogue sings",
     era: "Midnights",
     art: `<svg class="stick" viewBox="0 0 100 100">
   <path class="ln" fill="#8fc6e0" d="M28.6 21.6 L71.4 21.6 L88 38.6 L50 80.4 L12 38.6 Z"/>
@@ -233,6 +245,7 @@ export const STICKERS = [
     id: "chess-queen",
     name: "Chess queen",
     sub: "Mastermind",
+    how: "Beat a challenge's dark side",
     era: "Midnights",
     art: `<svg class="stick" viewBox="0 0 100 100">
   <path class="ln" fill="#38332c" d="M34.6 27.6 L37.4 15.6 L43.4 25.4 L46.6 12.6 L50.2 24.6 L53.8 12.4 L57 25.6 L63.2 15.4 L65.6 27.6 Z"/>
@@ -252,6 +265,7 @@ export const STICKERS = [
     id: "lavender-sprig",
     name: "Lavender sprig",
     sub: "Lavender Haze",
+    how: "Sit on one page for 90 seconds before answering it",
     era: "Midnights",
     art: `<svg class="stick" viewBox="0 0 100 100">
   <path class="ln" fill="none" stroke="#7a8c5a" style="stroke-width:3.1" d="M53.4 89 C51.6 74 48.2 60 46.6 46.4"/>
@@ -285,6 +299,7 @@ export const STICKERS = [
     id: "matchbook",
     name: "Half-struck matchbook",
     sub: "Fortnight",
+    how: "Keep a Daily Challenge streak going for a fortnight",
     era: "The Tortured Poets Department",
     art: `<svg class="stick" viewBox="0 0 100 100">
   <g transform="rotate(-5 50 56)">
@@ -327,6 +342,7 @@ export const STICKERS = [
     id: "poet-bust",
     name: "Marble poet bust",
     sub: "The Tortured Poets Department",
+    how: "Sing four or more lines in a row of one real section",
     era: "The Tortured Poets Department",
     art: `<svg class="stick" viewBox="0 0 100 100">
   <path class="ln" fill="#d3ccbc" d="M45.4 47.6 L54.6 47.6 L55 60.4 L45 60.4 Z"/>
@@ -366,6 +382,7 @@ export const STICKERS = [
     id: "ufo",
     name: "UFO",
     sub: "Down Bad",
+    how: "Catch the bottle drifting past the page",
     era: "The Tortured Poets Department",
     art: `<svg class="stick" viewBox="0 0 100 100">
   <path fill="#e2c96a" opacity="0.5" d="M37.4 54.6 L62.6 54.6 L74.6 90.4 L25.4 90.2 Z"/>
@@ -390,6 +407,7 @@ export const STICKERS = [
     id: "cat-in-a-tiara",
     name: "Cat in a tiara",
     sub: "childless cat lady",
+    how: "Answer the page for karma with Karma",
     era: "Whimsy",
     art: `<svg class="stick" viewBox="0 0 100 100">
   <path class="ln" fill="#dcc39a" d="M31.4 40.6 L26.6 22.4 L45.4 32.6 Z"/>

@@ -4172,11 +4172,18 @@ function earnPolaroid(id) {
 
 // The keepsake unlock toast — a mini polaroid caught mid-develop (its art under a
 // half-lifted black veil) beside the "new keepsake / {name} · developing" note.
+//
+// It carries the charm toast's hover tip, on the same 500ms delay: a keepsake arrives with no
+// explanation of itself, and several of them (the whale, the impostor flag, a discovery three
+// games old) fire far enough from what earned them that the caption alone reads as a mystery.
+// The tip says what you did. The DRAWER is deliberately not given the same line, because a
+// locked cell there is meant to be the question.
 function showKeepsakeToast(p) {
   const layer = $("toastLayer");
   if (!layer) return;
   const t = document.createElement("div");
   t.className = "toast toast-keepsake";
+  if (p.how) { t.setAttribute("data-tip", p.how); t.setAttribute("data-tip-delay", "500"); }
   const thumb = `<span class="pol-thumb" aria-hidden="true"><span class="pol-thumb-art">${p.art || ""}` +
     `<span class="pol-thumb-veil"></span></span></span>`;
   t.innerHTML = thumb +
@@ -4379,6 +4386,9 @@ function showStickerToast(st) {
   if (!layer) return;
   const t = document.createElement("div");
   t.className = "toast toast-sticker";
+  // Same hover tip as the charm toast: a sticker is earned by noticing, so the one place it is
+  // fair to say what was noticed is the moment it lands. The shelf still says nothing.
+  if (st.how) { t.setAttribute("data-tip", st.how); t.setAttribute("data-tip-delay", "500"); }
   t.innerHTML = stickerMarkup(st, false) +
     `<div><div class="t-label">sticker unlocked</div>` +
     `<div class="t-name">${escapeHtml(st.name)}</div>` +

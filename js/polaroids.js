@@ -1,8 +1,10 @@
 // Keepsake polaroids — the collectible photo set (see PLAN "Keepsakes").
-// Each entry: { id, name, sub, art }.
+// Each entry: { id, name, sub, how, art }.
 //   id   — kebab-case handle, matches the unlock trigger and the KEEPSAKES store key.
 //   name — the polaroid's own lowercase caption (main line); also the toast subject.
 //   sub  — the second caption line (a lyric/quip), fainter and smaller.
+//   how  — what you did to develop it, in the achievement descs' voice. The unlock toast hangs
+//          it off a hover tip, so a keepsake that arrives mid-run can explain itself.
 //   art  — a self-contained viewBox="0 0 200 200" SVG. The shared frame (polaroidHTML)
 //          adds the cream film border, washi tape, caption block and develop states, so
 //          the art here is just the photo. No <?xml>/width/height — it flexes to the frame.
@@ -13,6 +15,7 @@ export const POLAROIDS = [
     id: "holiday-house",
     name: "the holiday house",
     sub: "sat quietly on that beach",
+    how: "Discover the last great american dynasty",
     art: `<svg viewBox="0 0 200 200" role="img"><title>Holiday House photo</title>
   <rect width="200" height="70" fill="#ccd6d2"/>
   <circle cx="164" cy="24" r="11" fill="#eae7d6"/>
@@ -83,6 +86,7 @@ export const POLAROIDS = [
     id: "paris",
     name: "paris",
     sub: "romance is not dead",
+    how: "Finish a Relaxed game",
     art: `<svg viewBox="0 0 200 200" role="img"><title>Paris photo</title>
   <rect width="200" height="200" fill="#2b3053"/>
   <rect y="106" width="200" height="54" fill="#6c6293" opacity=".38"/>
@@ -119,6 +123,7 @@ export const POLAROIDS = [
     id: "starbucks-lovers",
     name: "starbucks lovers",
     sub: "got a long list of ex-lovers",
+    how: "Type “starbucks lovers” into any field in the game",
     art: `<svg viewBox="0 0 200 200" role="img"><title>Coffee cup with lovers badge, lipstick on the lid, croissant beside, cafe window behind</title>
   <defs><path id="sb3T" d="M82 102 A18.5 18.5 0 0 1 118 102"/><path id="sb3B" d="M84.5 106 A16 16 0 0 0 115.5 106"/></defs>
   <rect width="200" height="200" fill="#d8dee2"/>
@@ -166,6 +171,7 @@ export const POLAROIDS = [
     id: "neighbors-dog",
     name: "the neighbor's dog",
     sub: "dyed it key lime green",
+    how: "Sing the key lime green line word-perfect",
     art: `<svg viewBox="0 0 200 200" role="img"><title>A dog freshly dyed key lime green sitting proudly beside the dye bucket in a formal garden with a fountain</title>
   <rect width="200" height="200" fill="#ccd4cd"/>
   <rect y="36" width="200" height="6" fill="#dae0da" opacity=".8"/>
@@ -216,6 +222,7 @@ export const POLAROIDS = [
     id: "interview-um",
     name: "i think, for me, um...",
     sub: "every interview, ever",
+    how: "Time out on three or more pages in one game",
     art: `<svg viewBox="0 0 200 200" role="img"><title>Interview podium with three microphones, a water glass and an on-air sign against stage curtains</title>
   <rect width="200" height="200" fill="#322f38"/>
   <g stroke="#3c3844" stroke-width="3" fill="none" opacity=".9">
@@ -253,6 +260,7 @@ export const POLAROIDS = [
     id: "debutation",
     name: "debutation",
     sub: "look what you made me do",
+    how: "Name a debut song and a reputation song in the same game",
     art: `<svg viewBox="0 0 200 200" role="img"><title>Snake in a cowboy hat performing at a vintage microphone under a spotlight</title>
   <rect width="200" height="200" fill="#2e2c31"/>
   <polygon points="70,0 130,0 172,152 28,152" fill="#47424d" opacity=".55"/>
@@ -299,6 +307,7 @@ export const POLAROIDS = [
     id: "yes-whale",
     name: "yes, whale!",
     sub: "- taylor alison swift",
+    how: "Catch the whale when its tail breaks the page",
     art: `<svg viewBox="0 0 200 200" role="img"><title>Whale tail rising from the sea with a sailboat on the horizon</title>
   <rect width="200" height="108" fill="#cfdae0"/>
   <circle cx="40" cy="30" r="11" fill="#eae7d6"/>
@@ -336,6 +345,7 @@ export const POLAROIDS = [
     id: "cornelia-street",
     name: "cornelia street",
     sub: "i rent a place there",
+    how: "Discover Cornelia Street",
     art: `<svg viewBox="0 0 200 200" role="img"><title>Cornelia Street sign on a brick wall with string lights, a fire escape and a leaning bicycle</title>
   <rect width="200" height="200" fill="#a2624d"/>
   <g stroke="#8a4f3d" stroke-width="1.2" opacity=".7" fill="none">
@@ -377,6 +387,7 @@ export const POLAROIDS = [
     id: "getaway-car",
     name: "getaway car",
     sub: "nothing good starts in it",
+    how: "Answer correctly with under a second left",
     art: `<svg viewBox="0 0 200 200" role="img"><title>Sleek vintage luxury car with whitewall tires escaping past a motel at night</title>
   <rect width="200" height="200" fill="#23222b"/>
   <circle cx="32" cy="30" r="10" fill="#e9e4d4"/>
@@ -431,6 +442,7 @@ export const POLAROIDS = [
     id: "seven",
     name: "seven",
     sub: "picture me in the trees",
+    how: "Answer seven pages in a row correctly",
     art: `<svg viewBox="0 0 200 200" role="img"><title>Rope swing in deep misty woods with light shafts and a small bird on the branch</title>
   <rect width="200" height="200" fill="#c9d1c8"/>
   <polygon points="60,0 78,0 40,200 22,200" fill="#e3e7de" opacity=".3"/>
@@ -474,6 +486,7 @@ export const POLAROIDS = [
     id: "christmas-tree-farm",
     name: "christmas tree farm",
     sub: "in my heart",
+    how: "Finish a game in December",
     art: `<svg viewBox="0 0 200 200" role="img"><title>Snowy Christmas tree farm at dusk with a farmhouse, fence and red sled</title>
   <rect width="200" height="70" fill="#ddc9d2"/>
   <rect y="70" width="200" height="48" fill="#cfd3de"/>
@@ -514,6 +527,7 @@ export const POLAROIDS = [
     id: "typewriter",
     name: "the typewriter",
     sub: "left at my apartment",
+    how: "Recall a whole verse, word-perfect",
     art: `<svg viewBox="0 0 200 200" role="img"><title>Typewriter on a desk with ink bottle, pen and a crumpled draft</title>
   <rect width="200" height="200" fill="#46403a"/>
   <circle cx="10" cy="20" r="70" fill="#d9c7a3" opacity=".08"/>
@@ -551,6 +565,7 @@ export const POLAROIDS = [
     id: "not-a-lot",
     name: "not a lot going on",
     sub: "at the moment",
+    how: "Finish a game on the 22nd",
     art: `<svg viewBox="0 0 200 200" role="img"><title>An almost empty room: a sun patch, a ghost mark where a picture hung, a clock and one houseplant</title>
   <rect width="200" height="200" fill="#e9e3d3"/>
   <polygon points="26,26 88,26 70,118 8,118" fill="#f2ecd9" opacity=".85"/>
@@ -578,6 +593,7 @@ export const POLAROIDS = [
     id: "hey-kids",
     name: "hey kids!",
     sub: "spelling is fun",
+    how: "Sing three word-perfect lyric lines back to back",
     art: `<svg viewBox="0 0 200 200" role="img"><title>Alphabet beads spilling from a tipped tin across a desk, three strung on gold thread</title>
   <rect width="200" height="200" fill="#c9a86b"/>
   <g stroke="#b3915a" stroke-width="2" opacity=".6" fill="none"><path d="M0 30 q50 6 100 0 t100 4 M0 92 q60 -8 120 0 t80 -4 M0 158 q50 6 100 0 t100 4"/></g>
@@ -633,6 +649,7 @@ export const POLAROIDS = [
     id: "getting-married",
     name: "getting married!",
     sub: "your english & gym teachers",
+    how: "Discover every song with “love” in its title",
     art: `<svg viewBox="0 0 200 200" role="img"><title>Wedding arch wound with vines and flowers, guest chairs, an aisle and a ring cushion</title>
   <rect width="200" height="130" fill="#e9dcc4"/>
   <circle cx="100" cy="40" r="16" fill="#f2e6c8"/>
@@ -668,6 +685,7 @@ export const POLAROIDS = [
     id: "no-its-becky",
     name: "no its becky",
     sub: "(it was taylor swift)",
+    how: "Flag an impostor word and be right",
     art: `<svg viewBox="0 0 200 200" role="img"><title>Yellow tee reading no its becky hanging large on a wooden hanger</title>
   <rect width="200" height="200" fill="#d8d2c4"/>
   <rect y="12" width="200" height="5" fill="#b3a68e"/>
@@ -700,6 +718,7 @@ export const POLAROIDS = [
     id: "traffic-lights",
     name: "will it be alright?",
     sub: "i asked the traffic lights",
+    how: "Lean on ten or more hints in one game",
     art: `<svg viewBox="0 0 200 200" role="img"><title>Traffic light glowing amber in the rain with a speech bubble saying i don't know</title>
   <rect width="200" height="200" fill="#262936"/>
   <rect y="120" width="200" height="30" fill="#343a4d" opacity=".8"/>
@@ -742,6 +761,7 @@ export const POLAROIDS = [
     id: "goat-remix",
     name: "the goat remix",
     sub: "i knew you were trouble",
+    how: "Time out and snap a five-answer streak",
     art: `<svg viewBox="0 0 200 200" role="img"><title>A goat standing in a field screaming skyward, autumn tree and barn behind</title>
   <rect width="200" height="150" fill="#d8cfc0"/>
   <polygon points="8,104 27,88 46,104" fill="#5c3a30"/>
@@ -799,6 +819,7 @@ export const POLAROIDS = [
     id: "doughphelia",
     name: "doughphelia",
     sub: "a fate worse than bread",
+    how: "Discover The Fate of Ophelia",
     art: `<svg viewBox="0 0 200 200" role="img"><title>A cat shaped like a bread loaf in a bakery, ears properly attached, flower tucked behind one ear</title>
   <rect width="200" height="200" fill="#bfe0d2"/>
   <g stroke="#a8cdbc" stroke-width="1" opacity=".5"><path d="M0 50 H200 M0 100 H200 M33 0 V150 M66 0 V150 M99 0 V150 M132 0 V150 M165 0 V150"/></g>
@@ -852,6 +873,7 @@ export const POLAROIDS = [
     id: "stars",
     name: "stars",
     sub: "do u like dem",
+    how: "Score a perfect 13/13 on Hard",
     art: `<svg viewBox="0 0 200 200" role="img"><title>The scribbled stars artwork on spiral notebook paper</title>
   <defs>
     <g id="tsstars">
@@ -894,6 +916,7 @@ export const POLAROIDS = [
     id: "message-in-a-bottle",
     name: "message in a bottle",
     sub: "washed up with a secret inside",
+    how: "Catch the bottle drifting past the page",
     // Placeholder-quality art in the shared sea palette (mirrors the yes-whale
     // polaroid) — a corked bottle bobbing on the water with its rolled note. Swap for
     // the real hand-drawn photo later, same as the other keepsakes.
