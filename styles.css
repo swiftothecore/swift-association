@@ -4918,7 +4918,22 @@
      land on the podium's own text. The eyebrow is typewriter (functional), the note
      handwritten (creative). */
   .start-podium-row { display: flex; align-items: flex-end; gap: 22px; }
-  .start-podium-col { flex: 1 1 auto; min-width: 0; }
+  /* The front page has very little vertical room, so the start screen's best line lies
+     DOWN: the handwritten heading, the score and the meta all share one baseline instead
+     of stacking three rows. (The results page keeps the stacked block — it has the room,
+     and the big number is the point there.) */
+  .start-podium-col {
+    flex: 1 1 auto; min-width: 0;
+    display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 12px;
+  }
+  .start-podium-col .podium-title { flex: none; margin: 0; font-size: calc(22px + var(--text-size-adjust)); }
+  .start-podium-col .start-best { flex: 1 1 auto; min-width: 0; }
+  .start-podium-col .best-line {
+    flex-direction: row; align-items: baseline; flex-wrap: wrap; gap: 2px 10px; padding: 0;
+  }
+  .start-podium-col .best-num { font-size: calc(30px + var(--text-size-adjust)); }
+  .start-podium-col .best-unit { font-size: calc(17px + var(--text-size-adjust)); }
+  .start-podium-col .best-empty { font-size: calc(17px + var(--text-size-adjust)); padding: 0; }
   .anniversary-note[hidden] { display: none; }
   .anniversary-note { flex: none; margin: 0; }
   .an-reveal {

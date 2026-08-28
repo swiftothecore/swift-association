@@ -3700,7 +3700,7 @@ const isInfiniteToken = (token) => !!token && token.startsWith("inf-");
 const isRuthlessToken = (token) => !!token && token.startsWith("rl-");
 // Compact "your best" line for a single mode (start screen + results). Shows the
 // mode's top personal record, or a target line if you've never finished a run in it.
-function renderBestLine(el, mode) {
+function renderBestLine(el, mode, opts = {}) {
   let rec = loadRecords(mode)[0];
   if (!rec && !isInfiniteToken(mode) && MODES[mode]) {
     const best = loadStats(mode).best;
@@ -3712,9 +3712,12 @@ function renderBestLine(el, mode) {
   }
   const unit = isInfiniteToken(mode) ? " rounds" : " / " + TOTAL_ROUNDS;
   const timePart = rec.time != null ? " · " + fmtTime(rec.time) : "";
+  // The start screen sets this line beside its own "Your best" heading, so the ★ best
+  // badge would only say the heading again; the stacked results line keeps it.
+  const badge = opts.compact ? "" : "★ best · ";
   el.innerHTML =
     `<div class="best-line"><span class="best-num">${rec.score}<span class="best-unit">${unit}</span></span>` +
-    `<span class="best-meta">★ best · ${escapeHtml(modeLabel(mode))}${timePart}${rec.date ? " · " + recordDateLabel(rec.date) : ""}</span></div>`;
+    `<span class="best-meta">${badge}${escapeHtml(modeLabel(mode))}${timePart}${rec.date ? " · " + recordDateLabel(rec.date) : ""}</span></div>`;
 }
 
 /* ---------- Records page (personal-best tiles + run history) ---------- */
@@ -9992,7 +9995,7 @@ function refreshStartBoard() {
     return;
   }
   if (t) t.textContent = "Your best";
-  renderBestLine($("startBest"), boardMode());
+  renderBestLine($("startBest"), boardMode(), { compact: true });
 }
 // The active custom preset's playable lever set (clamped + derived). Reused by the start-row
 // summary, the tagline, and startCustom.
