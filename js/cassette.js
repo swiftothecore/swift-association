@@ -21,8 +21,9 @@
 // dubbed, and this desk has both: HOUSE_TV_SHARE of the days it comes up it is
 // the 1989 (Taylor's Version) copy, the rest of the time the original.
 //
-// The markup ships already reading Clean, which is both the commonest draw and
-// a correct label if this module never runs at all.
+// The markup starts blank and CSS keeps the mutable ink hidden while the pool
+// is measured. write() reveals both finished lines together, so the player
+// never sees a fallback or measurement title before the seeded one.
 //
 // A written title has to fit the card. Long ones are dropped from the pool
 // outright rather than shrunk to a whisper: a title is only worth writing at a
@@ -146,6 +147,7 @@ function write(song, tv) {
   const span = visibleSpan();
   fitLine(titleEl, "--cs-title-size", TITLE_BASE, ["--cs-sub-size", SUB_BASE], span);
   fitLine(noteEl, "--cs-note-size", NOTE_BASE, null, span);
+  svg.classList.add("is-dubbed");
 }
 
 /* ---------- what the card can hold ---------- */

@@ -480,6 +480,11 @@
     font-family: var(--hand); font-size: calc(var(--cs-note-size, 7.2px) + var(--text-size-adjust));
     fill: #4a4632; opacity: 0.72;
   }
+  /* The label is date-seeded after the catalogue and handwriting font arrive.
+     Keep its mutable ink out of the first paint, including the temporary titles
+     used to measure the card, then reveal the complete fitted label at once. */
+  .di-cassette :is(.cs-title, .cs-note) { visibility: hidden; }
+  .di-cassette svg.is-dubbed :is(.cs-title, .cs-note) { visibility: visible; }
   /* picks ride the cassette pile: right-edge anchored so the pair stays
      together at any viewport width, drawn after it so they land on top. Low
      enough on the shell to catch only its bottom corner — the card above them

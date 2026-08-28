@@ -1773,9 +1773,9 @@ if (location.pathname.endsWith('/index.html')) {
        third of them, and drops any title too wide for the rules. Clean is the
        only song ever labelled a re-recording, on most of the days it comes up:
        the desk owns both pressings of it and can't know which one another
-       dubbed tape came off. The markup below ships already reading Clean, which
-       is both the commonest draw and a correct label if that module never
-       runs. -->
+       dubbed tape came off. The changing ink starts blank and stays hidden
+       until js/cassette.js has chosen and fitted the day's final label, so a
+       fallback title never flashes before the seeded one. -->
   <div class="desk-item di-cassette">
     <svg viewBox="0 0 192 124" xmlns="http://www.w3.org/2000/svg">
       <defs>
@@ -1884,8 +1884,8 @@ if (location.pathname.endsWith('/index.html')) {
       <path d="M24 33 H168" stroke="#b23a3f" stroke-width="1.1" opacity="0.5"/>
       <path d="M24 73 H168" stroke="#8f9ab8" stroke-width="0.8" opacity="0.32"/>
       <!-- and what she wrote on them -->
-      <text class="cs-title" x="95" y="32.7" transform="rotate(-0.9 95 32.7)">Clean<tspan class="cs-sub" dx="3.4" dy="-0.2">(Taylor&#8217;s Version)</tspan></text>
-      <text class="cs-note" x="95.5" y="72.7" transform="rotate(-0.5 95.5 72.7)">1989 &#183; track 13</text>
+      <text class="cs-title" x="95" y="32.7" transform="rotate(-0.9 95 32.7)"></text>
+      <text class="cs-note" x="95.5" y="72.7" transform="rotate(-0.5 95.5 72.7)"></text>
       <!-- age: two faint foxing blooms -->
       <ellipse cx="36" cy="60" rx="5.2" ry="3.4" fill="#b39a6a" opacity="0.11"/>
       <ellipse cx="160" cy="30" rx="4" ry="5.6" fill="#b39a6a" opacity="0.09"/>
