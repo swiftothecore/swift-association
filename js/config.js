@@ -1918,9 +1918,10 @@ export const ACH_ICONS = {
   // the rule, with the shove still hanging in the air behind it
   allin:   `<svg viewBox="0 0 24 24"><g class="ink" stroke-width="1.1" opacity="0.5"><path d="M1.4 11.6 H3.9"/><path d="M1 14.4 H3.5"/><path d="M1.6 17.2 H4.1"/></g><g class="ink-fill" transform="rotate(5 12.6 15)"><circle cx="8.2" cy="17.5" r="1.9"/><circle cx="12.1" cy="17.5" r="1.9"/><circle cx="16" cy="17.5" r="1.9"/><circle cx="10.15" cy="14.1" r="1.9"/><circle cx="14.05" cy="14.1" r="1.9"/><circle cx="12.1" cy="10.7" r="1.9"/></g><path class="ink" stroke-width="1.7" d="M2.6 20.4 H21.4"/></svg>`,
 
-  // the beads left out in the rain with the umbrella still tied shut: cover you carried the
-  // whole way and never once opened. Holds the family, since it is where the beads ended up.
-  umbrella: `<svg viewBox="0 0 24 24"><g class="ink" stroke-width="1.1" opacity="0.5"><path d="M4.4 3.4 L3 6.6"/><path d="M8.8 6 L7.4 8.9"/><path d="M3.4 11 L2.2 13.7"/></g><g class="ink-fill"><circle cx="4.9" cy="19.2" r="1.55"/><circle cx="8" cy="19.2" r="1.55"/><circle cx="6.45" cy="16.4" r="1.55"/></g><path class="ink" stroke-width="1.6" fill="none" d="M16.3 7.6 L16.7 5.5 C17 3.8 15 3.1 14.2 4.6"/><path class="ink-fill" d="M16.3 7.6 Q21 13 14.8 19.4 Q11 13 16.3 7.6 Z"/><path class="ink" stroke-width="1.1" fill="none" d="M13.3 13.5 C15 14.4 16.8 14.2 18.3 12.9 L19.4 13.5"/><path class="ink" stroke-width="1.3" d="M14.8 19.4 L14.5 20.8"/><path class="ink" stroke-width="1.7" d="M2.4 20.8 H21.6"/></svg>`,
+  // the good glass, struck out: bubbles still climbing, one hard pen line straight through it.
+  // The only one of the four Insurance marks that leaves the bead vocabulary, because this
+  // charm is not a flourish — nothing was ridden or spent, the nice thing was simply lost.
+  struckglass: `<svg viewBox="0 0 24 24"><path class="ink-fill" d="M4.6 6.6 L19 6.2 C19.1 11.3 15.9 14 11.9 14.1 C7.9 14 4.5 11.4 4.6 6.6 Z"/><path class="ink" stroke-width="1.5" d="M11.9 14.1 L12.2 19.4"/><path class="ink" stroke-width="1.7" d="M8.2 20 Q12.2 21.2 16.1 19.7"/><path class="ink" stroke-width="2.3" d="M3.1 3.2 C8.5 8.5 15.1 14.7 20.9 20.6"/></svg>`,
 
   /* ---- Dark side milestone charms (the black seal's keepsakes) ---- */
   // the pub-sign dog, sat and waiting — your first walk into the dark
@@ -3238,7 +3239,7 @@ export const ACHIEVEMENTS = [
      the first defeat like a participation trophy. Deliberately no `reveal`: the flourishes
      mask until their challenge is DEFEATED, and the player who just died on page one has
      obviously not done that, so gating it there would hide it from the only person earning it. */
-  { id: "lose-insurance-page-1-shields-unspent", name: "Can't Have Nice Things", desc: "Lose Insurance on page one with every shield still unspent", secret: true, icon: "umbrella" },
+  { id: "lose-insurance-page-1-shields-unspent", name: "Can't Have Nice Things", desc: "Lose Insurance on page one with every shield still unspent", secret: true, icon: "struckglass" },
   // Dark sides. A milestone rather than a flourish (no challenge named), so it stays visible.
   { id: "beat-dark-side-no-misses",        name: "Now I Breathe Flames", desc: "Beat a dark side without missing a single page", tier: 2, secret: false, icon: "flame", sitting: true, earn: { cat: "dark" } },
   { id: "beat-first-album-focus", name: "Girl On A Mission",     desc: "Beat your first album in Album Focus", secret: false, icon: "map", sitting: true, earn: { cat: "album" } },
