@@ -13211,6 +13211,12 @@ function endChallenge() {
   if (c.rule === "press" && beadRideBanked >= PRESS_FLOURISH_RIDE) unlock("bank-press-your-luck-pot-5-pages-deep");
   // Untouchable — won Insurance having never once bought your way out of trouble.
   if (c.rule === "insurance" && won && insuranceSpent === 0) unlock("win-insurance-no-shields-spent");
+  // Can't Have Nice Things — Untouchable's mirror: the same untouched shields, read at the
+  // other end of the run. Page one only, since an uninsured miss is how EVERY Insurance run
+  // ends and the charm would otherwise land on the first defeat. A page-one death implies
+  // insuranceSpent === 0 on its own (an insured page absorbs the miss, and useInsurance
+  // refuses a second shield on the same page), so the count is not worth re-testing here.
+  if (c.rule === "insurance" && insuranceDead && roundResults.length === 1) unlock("lose-insurance-page-1-shields-unspent");
   // Let The Players Play — won Confidence Wager with nothing held back on any page.
   if (c.rule === "wager" && won && wagerAlwaysMax) unlock("win-confidence-wager-max-every-page");
 

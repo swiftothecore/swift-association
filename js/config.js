@@ -1918,6 +1918,10 @@ export const ACH_ICONS = {
   // the rule, with the shove still hanging in the air behind it
   allin:   `<svg viewBox="0 0 24 24"><g class="ink" stroke-width="1.1" opacity="0.5"><path d="M1.4 11.6 H3.9"/><path d="M1 14.4 H3.5"/><path d="M1.6 17.2 H4.1"/></g><g class="ink-fill" transform="rotate(5 12.6 15)"><circle cx="8.2" cy="17.5" r="1.9"/><circle cx="12.1" cy="17.5" r="1.9"/><circle cx="16" cy="17.5" r="1.9"/><circle cx="10.15" cy="14.1" r="1.9"/><circle cx="14.05" cy="14.1" r="1.9"/><circle cx="12.1" cy="10.7" r="1.9"/></g><path class="ink" stroke-width="1.7" d="M2.6 20.4 H21.4"/></svg>`,
 
+  // the beads left out in the rain with the umbrella still tied shut: cover you carried the
+  // whole way and never once opened. Holds the family, since it is where the beads ended up.
+  umbrella: `<svg viewBox="0 0 24 24"><g class="ink" stroke-width="1.1" opacity="0.5"><path d="M4.4 3.4 L3 6.6"/><path d="M8.8 6 L7.4 8.9"/><path d="M3.4 11 L2.2 13.7"/></g><g class="ink-fill"><circle cx="4.9" cy="19.2" r="1.55"/><circle cx="8" cy="19.2" r="1.55"/><circle cx="6.45" cy="16.4" r="1.55"/></g><path class="ink" stroke-width="1.6" fill="none" d="M16.3 7.6 L16.7 5.5 C17 3.8 15 3.1 14.2 4.6"/><path class="ink-fill" d="M16.3 7.6 Q21 13 14.8 19.4 Q11 13 16.3 7.6 Z"/><path class="ink" stroke-width="1.1" fill="none" d="M13.3 13.5 C15 14.4 16.8 14.2 18.3 12.9 L19.4 13.5"/><path class="ink" stroke-width="1.3" d="M14.8 19.4 L14.5 20.8"/><path class="ink" stroke-width="1.7" d="M2.4 20.8 H21.6"/></svg>`,
+
   /* ---- Dark side milestone charms (the black seal's keepsakes) ---- */
   // the pub-sign dog, sat and waiting — your first walk into the dark
   blackdog: `<svg viewBox="0 0 24 24"><path class="ink-fill" d="M3.3 7.2 C3.2 7.6 3.15 8.05 3.2 8.4 C4.2 9.0 5.2 9.15 6.0 9.1 C6.5 11.0 6.55 15.5 6.5 20.4 L8.8 20.4 C8.9 17.8 8.85 15.6 8.7 13.6 C9.9 14.9 11.5 15.4 12.7 15.9 C13.0 17.4 13.1 18.9 13.1 20.4 L17.5 20.4 C17.7 18.0 17.4 15.5 16.4 13.5 C15.2 11.1 13.0 9.3 10.9 8.2 C10.7 6.6 10.2 5.3 8.9 4.6 C7.3 3.9 5.4 4.4 4.4 5.7 C3.9 6.3 3.5 6.8 3.3 7.2 Z"/><path class="ink-fill" d="M8.8 4.7 C10.1 4.5 10.9 5.6 10.9 7.1 C10.9 8.4 10.3 9.3 9.4 9.2 C8.7 8.2 8.5 6.2 8.8 4.7 Z"/><path class="ink" stroke-width="1.7" fill="none" d="M17.5 19.4 C19.2 19.7 20.5 19.0 20.8 17.3"/><circle class="ink-fill" cx="5.9" cy="6.9" r="0.5"/></svg>`,
@@ -3228,6 +3232,13 @@ export const ACHIEVEMENTS = [
   { id: "bank-press-your-luck-pot-5-pages-deep", name: "Bonnie And Clyde",       desc: `Bank a pot on Press Your Luck ridden ${PRESS_FLOURISH_RIDE} pages deep`, tier: 2, secret: true, reveal: "press-your-luck", icon: "getaway" },
   { id: "win-insurance-no-shields-spent",       name: "Untouchable",       desc: "Win Insurance with every shield still unspent", tier: 2, secret: true, reveal: "insurance", icon: "belljar" },
   { id: "win-confidence-wager-max-every-page",           name: "Let The Players Play", desc: "Win Confidence Wager having staked the most you could hold on every page", tier: 2, secret: true, reveal: "confidence-wager", icon: "allin" },
+  /* The pratfall on the other end of Untouchable, and NOT a flourish: same fact (not one
+     shield spent) read at the wrong end of the run. Page one is the whole joke, because an
+     uninsured miss is simply how every Insurance run ends and a charm for that would fire on
+     the first defeat like a participation trophy. Deliberately no `reveal`: the flourishes
+     mask until their challenge is DEFEATED, and the player who just died on page one has
+     obviously not done that, so gating it there would hide it from the only person earning it. */
+  { id: "lose-insurance-page-1-shields-unspent", name: "Can't Have Nice Things", desc: "Lose Insurance on page one with every shield still unspent", secret: true, icon: "umbrella" },
   // Dark sides. A milestone rather than a flourish (no challenge named), so it stays visible.
   { id: "beat-dark-side-no-misses",        name: "Now I Breathe Flames", desc: "Beat a dark side without missing a single page", tier: 2, secret: false, icon: "flame", sitting: true, earn: { cat: "dark" } },
   { id: "beat-first-album-focus", name: "Girl On A Mission",     desc: "Beat your first album in Album Focus", secret: false, icon: "map", sitting: true, earn: { cat: "album" } },
@@ -3637,6 +3648,7 @@ export const ACH_GROUP_OF = {
   "win-sea-of-songs-no-decoys": "challenges", "win-lyric-lover-all-lines-word-perfect": "challenges", "clear-double-trouble-all-13-two-songs-each": "challenges",
   "win-vanishing-word-all-answers-blind": "challenges", "win-deep-cut-all-correct-same-album": "challenges", "win-from-a-to-z-no-repeated-letters": "challenges",
   "bank-press-your-luck-pot-5-pages-deep": "challenges", "win-insurance-no-shields-spent": "challenges", "win-confidence-wager-max-every-page": "challenges",
+  "lose-insurance-page-1-shields-unspent": "challenges",
   "beat-dark-side-no-misses": "challenges",
   /* Dark sides are a challenge's hard mode, so the three rungs of the dark ladder sit in
      Challenges beside the base ones rather than off in a section of their own. */
