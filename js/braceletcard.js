@@ -189,10 +189,11 @@ export function buildCardSVG(meta, fontCss) {
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">` +
     `<defs><style>${fontCss}` +
       `svg{--ink:${v.ink};--ink-soft:${v.inkSoft};--bead:${v.bead};--paper:${v.paper};--paper-edge:${v.paperEdge}}` +
-      `.b-cord{fill:none;stroke:#cfc3ab;stroke-linecap:round}` +
-      `.b-cord-shade{fill:none;stroke:#2b2722;stroke-linecap:round;opacity:.16}` +
-      `.b-cord-hi{fill:none;stroke:#fff;stroke-linecap:round;opacity:.35}` +
-      `.b-needle{fill:none;stroke:var(--ink-soft);stroke-linecap:round;opacity:.9}` +
+      `.b-cord-under{fill:none;stroke:#7a6743;stroke-linecap:round;opacity:.32}` +
+      `.b-cord{fill:none;stroke:#c8b28c;stroke-linecap:round}` +
+      `.b-cord-mid{fill:none;stroke:#ded0ae;stroke-linecap:round}` +
+      `.b-cord-hi{fill:none;stroke:#fffcf0;stroke-linecap:round;opacity:.6}` +
+      `.b-cord-twist{fill:none;stroke:#8a7550;stroke-linecap:butt;opacity:.13}` +
       `.b-cube-text{font-family:"Courier Prime",monospace;font-weight:700}` +
       `.b-skull{fill:#f3ece0;stroke:var(--ink-soft);stroke-linejoin:round}` +
       `.b-skull-hole{fill:var(--ink-soft)}` +

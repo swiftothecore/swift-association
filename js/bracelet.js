@@ -204,7 +204,9 @@ export function trinketPreviewSVG(id, tint) {
 // would lose both its outline and its letters against its own body. Coloured beads keep
 // var(--ink), where the theme-aware pen line still reads.
 const PEN = "#2b2722";
-const CORD = "#cfc3ab", CORD_HI = "#efe6d2", DISC = "#efe6d2", CUBE = "#fffdf6";
+const CORD = "#c8b28c", CORD_HI = "#efe6d2", DISC = "#efe6d2", CUBE = "#fffdf6";
+// the knot is the cord seen bunched, so it is shaded as a body rather than a flat disc
+const CORD_DK = "#7a6743", CORD_LT = "#fffcf0";
 
 const n = (v) => (+v).toFixed(2);
 
@@ -357,11 +359,57 @@ function alphaCube(x, y, ch, sc, rot) {
     `<ellipse cx="${n(x - s / 2 + 2.2 * sc)}" cy="${n(y)}" rx="${n(2 * sc)}" ry="${n(s * 0.16)}" fill="${PEN}" opacity="0.22"/></g>`;
 }
 
+// The elastic itself. One path drawn five times: a soft dark rim sunk under the cord, the
+// waxed body, a lifted mid tone and a narrow specular along the top, then the faint banding
+// of the twist crossing all of it. Five cheap strokes are the difference between a strung
+// cord and a flat grey noodle, and every strand and knot tail on the page goes through here.
+function cordStack(d, w = 3.6) {
+  const up = (v) => ` transform="translate(0 ${n(-v)})"`;
+  return `<path class="b-cord-under" d="${d}" stroke-width="${n(w + 1.1)}" transform="translate(0 ${n(w * 0.16)})"/>` +
+    `<path class="b-cord" d="${d}" stroke-width="${n(w)}"/>` +
+    `<path class="b-cord-mid" d="${d}" stroke-width="${n(w * 0.6)}"${up(w * 0.17)}/>` +
+    `<path class="b-cord-hi" d="${d}" stroke-width="${n(Math.max(0.7, w * 0.24))}"${up(w * 0.31)}/>` +
+    `<path class="b-cord-twist" d="${d}" stroke-width="${n(w * 0.94)}" ` +
+      `stroke-dasharray="${n(w * 0.42)} ${n(w * 0.66)}"/>`;
+}
+
 // The knot the strand is tied off with, plus the tail nobody trimmed. `dir` is which way
-// the tail falls away from the beads.
+// the tail falls away from the beads. Two crossed lobes rather than one ellipse: an overhand
+// knot is a bundle of cord passing over itself, and a single flat oval reads as one more
+// bead. The back lobe is darkened because it is the pass underneath.
 function tieKnot(x, y, dir) {
-  return `<ellipse cx="${n(x)}" cy="${n(y)}" rx="4.6" ry="3.6" fill="${CORD}" stroke="${PEN}" stroke-width="1.1" transform="rotate(${dir * 13} ${n(x)} ${n(y)})"/>` +
-    `<path d="M${n(x + dir * 3)},${n(y + 2)} c${dir * 6},7 ${dir * 12},8 ${dir * 18},7" fill="none" stroke="${CORD}" stroke-width="2.6" stroke-linecap="round"/>`;
+  const tail = `M${n(x + dir * 3)},${n(y + 2)} c${dir * 6},7 ${dir * 12},8 ${dir * 18},7`;
+  const lobe = (rot, fill, stroke) => `<ellipse cx="${n(x)}" cy="${n(y)}" rx="5.4" ry="3.1" fill="${fill}"` +
+    (stroke ? ` stroke="${stroke}" stroke-width="0.9"` : "") +
+    ` transform="rotate(${rot} ${n(x)} ${n(y)})"/>`;
+  return cordStack(tail, 2.6) +
+    `<g transform="rotate(${dir * 9} ${n(x)} ${n(y)})">` +
+      lobe(-31, "#a8905f", "") +
+      lobe(27, CORD, CORD_DK) +
+      `<g transform="rotate(27 ${n(x)} ${n(y)})">` +
+        `<path d="M${n(x - 3.4)},${n(y - 1.1)} c1.6,-1.5 4,-1.7 5.6,-0.8" fill="none" ` +
+          `stroke="${CORD_LT}" stroke-width="1.1" opacity="0.7" stroke-linecap="round"/>` +
+        `<path d="M${n(x - 3.6)},${n(y + 1.5)} c1.8,1.1 4.2,1 5.8,0.1" fill="none" ` +
+          `stroke="${CORD_DK}" stroke-width="0.9" opacity="0.3" stroke-linecap="round"/>` +
+      `</g>` +
+    `</g>`;
+}
+
+// The beading needle a strand is still on mid-run, at `ang` degrees off flat with its eye
+// where the elastic runs out. Steel tapered to a point, with a real slotted eye the cord
+// passes through: the old two-line sketch read as a stray pencil mark lying on the desk.
+function beadingNeedle(x, y, ang) {
+  return `<g transform="translate(${n(x)} ${n(y)}) rotate(${n(ang)})">` +
+    `<path d="M2,-2 L10,-1.55 L30,-1.15 L45,0 L30,1.15 L10,1.55 L2,2 A2.15 2.15 0 0 1 2,-2 Z" ` +
+      `fill="#9aa3aa" stroke="#4d565e" stroke-width="0.5" stroke-linejoin="round"/>` +
+    `<path d="M4.4,-1.2 L30,-0.62 L42,-0.12" fill="none" stroke="#f2f6f8" stroke-width="0.75" ` +
+      `opacity="0.9" stroke-linecap="round"/>` +
+    `<path d="M6,1.18 L30,0.74" fill="none" stroke="#4d565e" stroke-width="0.6" opacity="0.45" stroke-linecap="round"/>` +
+    `<path d="M17,-0.92 L24,-0.5" fill="none" stroke="#ffffff" stroke-width="1.05" opacity="0.85" stroke-linecap="round"/>` +
+    `<rect x="3.1" y="-0.9" width="5.6" height="1.8" rx="0.9" fill="var(--paper)" stroke="#5c666e" stroke-width="0.45"/>` +
+    `<path class="b-cord" d="M3.3,0.2 L8.4,-0.1" stroke-width="1.4"/>` +
+    `<path class="b-cord-hi" d="M3.6,-0.3 L8.1,-0.55" stroke-width="0.5"/>` +
+  `</g>`;
 }
 
 export function buildBraceletSVG(results, activeRound, freshIndex, albums, opts) {
@@ -450,9 +498,7 @@ export function buildBraceletSVG(results, activeRound, freshIndex, albums, opts)
       ` C${n(curlAt + r * 0.82)},${n(y + 17)} ${n(curlAt + r * 0.95)},${n(y + 9)} ${n(curlAt + r)},${n(y + 3)}`;
     tipY = y + 3;
   }
-  let svg = `<path class="b-cord" d="${el}" stroke-width="3.6"/>` +
-    `<path class="b-cord-shade" d="${el}" stroke-width="3.6"/>` +
-    `<path class="b-cord-hi" d="${el}" stroke-width="1" transform="translate(0 -1)"/>`;
+  let svg = cordStack(el, 3.6);
 
   // the knot the whole thing is strung off
   svg += tieKnot(X0 - 22, yAt(X0 - 22), -1);
@@ -519,9 +565,7 @@ export function buildBraceletSVG(results, activeRound, freshIndex, albums, opts)
     svg += heishi(ex, yAt(ex), sc, -4) + tieKnot(knotX, yAt(knotX), 1);
   } else {
     // still on the needle: the beading needle, threaded, waiting for the next page
-    svg += `<path class="b-needle" d="M${n(tipX - 2)},${n(tipY + 0.5)} L${n(tipX + 31)},${n(tipY - 6.5)}" stroke-width="2.1"/>` +
-      `<path class="b-needle" d="M${n(tipX + 31)},${n(tipY - 6.5)} L${n(tipX + 40)},${n(tipY - 8.4)}" stroke-width="1.1"/>` +
-      `<ellipse cx="${n(tipX + 4.5)}" cy="${n(tipY - 0.9)}" rx="3.6" ry="2.3" fill="var(--paper)" stroke="var(--ink-soft)" stroke-width="1.2" transform="rotate(-12 ${n(tipX + 4.5)} ${n(tipY - 0.9)})"/>`;
+    svg += beadingNeedle(tipX - 2, tipY + 0.5, -12);
   }
 
   return `<svg viewBox="0 0 ${W} ${BH}" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">` +
