@@ -56,7 +56,10 @@ import {
 import { drawRandom, poolSummary } from "./random.js";
 import { POLAROIDS, POLAROID_BY_ID } from "./polaroids.js";
 import { STICKERS, STICKER_BY_ID } from "./stickers.js";
-import { buildBraceletSVG, trinketPreviewSVG, randomTrinketForBead } from "./bracelet.js";
+import {
+  BRACELET_ROW_CAP, buildBraceletSVG, braceletFinish, braceletLayout, braceletTrinketId,
+  trinketPreviewSVG, randomTrinketForBead,
+} from "./bracelet.js";
 import { exportBraceletCard, copyBraceletCard, buildCardSVG, fontFaceCss } from "./braceletcard.js";
 import { exportSleeveCard, copySleeveCard, buildSleeveSVG } from "./sleevecard.js";
 import { sfx } from "./sound.js";
@@ -225,11 +228,15 @@ let lives = 0;                  // remaining lives in infinite mode
 let floatLevel = ADAPT_START_LEVEL; // Floating rarity pool: current level (1..4), climbs and falls with performance
 let floatPromo = 0;             // Floating rarity pool: correct-in-a-row at the current level toward promotion
 const DAILY_PROGRESS_VERSION = 2;
+const DAILY_BRACELET_VERSION = 1;
 let dailyRng = null;            // seeded PRNG, non-null only during a daily game
 let dailyRunDate = null;        // date that seeded the live/saved Daily; fixed for the whole run even if "today" changes
 let dailyAlbumPool = null;      // on an album-anniversary daily: [{ w, songs, catalogue, score }] the album's words by distinctiveness-desc; null otherwise
 let dailyAlbum = null;          // the album that daily leans toward, non-null only alongside dailyAlbumPool (locks the run's era wash)
 let dailyShareTime = null;      // completion time (sec) of the daily on screen — for the copyable result
+let dailyBraceletSnapshot = null; // versioned finished-strand state, restored when today's result is reopened
+let dailyResultRevealed = true; // false only while the optional Daily result ritual is still sealed
+let dailyPerfectCelebrated = false; // prevents a revealed perfect Daily from celebrating twice
 let currentChallenge = null;    // the active CHALLENGES entry while gameType === "challenge" (dark-resolved — see resolveChallenge)
 let challengeDark = false;      // true while the active challenge is running its dark side
 let challengeRunActive = false; // true only during a live challenge run (gates the achievement sandbox)
@@ -470,6 +477,7 @@ function applySettings() {
   body.setAttribute("data-anim-speed", settings.animSpeed || "normal");
   body.setAttribute("data-text-size", ["small", "large"].includes(settings.textSize) ? settings.textSize : "standard");
   body.setAttribute("data-desk-density", ["quiet", "bare"].includes(settings.deskDensity) ? settings.deskDensity : "full");
+  body.setAttribute("data-reduced-flashing", settings.reducedFlashing ? "on" : "off");
   if (settings.highContrast) body.setAttribute("data-contrast", "high");
   else body.removeAttribute("data-contrast");
   // One universal dark paper: the earned paper stocks are a light-mode cosmetic, so in dark
@@ -2227,8 +2235,10 @@ function unlock(id) {
   earnedAchievements[id] = new Date().toISOString();   // full ISO so same-day charms sort by earn time
   saveAchievements(earnedAchievements);
   newlyUnlocked.push(id);
-  showToast(ACH_BY_ID[id]);
-  playUnlockChime();
+  if (!dailyResultIsSealed()) {
+    showToast(ACH_BY_ID[id]);
+    playUnlockChime();
+  }
   checkMetaAchievements();
   // All At Once — three charms off a single run. Checked here rather than at an end path so it
   // lands the moment the third one does, which is the whole flavour of it; the recursion is safe
@@ -2686,7 +2696,7 @@ const VA_SHOWN = 3;   // keepsake lines shown before the rest fold behind "+ N m
 function renderVerseAnthology() {
   const el = $("verseAnthology");
   if (!el) return;
-  if (!verseKeepsake.length || (gameType === "daily" && settings.hideDailyScore)) {
+  if (!verseKeepsake.length || dailyResultIsSealed()) {
     el.style.display = "none"; el.innerHTML = ""; return;
   }
   const rows = verseKeepsake.map((k, i) => {
@@ -2725,6 +2735,7 @@ const ACH_RECAP_SHOWN = 5;   // unlock charms shown before "+N" points at the co
 function renderResultRecap() {
   const el = $("resultAchievements");
   if (!el) return;
+  if (dailyResultIsSealed()) { el.style.display = "none"; el.innerHTML = ""; syncRecapBand(); return; }
   const ids = [...new Set(newlyUnlocked)].filter((id) => ACH_BY_ID[id] && earnedAchievements[id]);
   if (!ids.length) { el.style.display = "none"; el.innerHTML = ""; syncRecapBand(); return; }
   // The charms carry no name of their own here: at this size six names would fill the
@@ -2784,7 +2795,7 @@ function renderSkillsRecap() {
   const el = $("resultSkills");
   if (!el) return;
   const fold = lastSkillFold;
-  const hideForDaily = gameType === "daily" && settings.hideDailyScore;  // don't leak how the day went
+  const hideForDaily = dailyResultIsSealed();  // don't leak how the day went
   if (!fold || !fold.res || hideForDaily) { el.style.display = "none"; el.innerHTML = ""; syncRecapBand(); return; }
   const { delta, res } = fold;
 
@@ -4163,7 +4174,7 @@ function earnPolaroid(id) {
   if (earned[id]) return false;                      // already have it
   earned[id] = new Date().toISOString();
   saveKeepsakes(earned);
-  showKeepsakeToast(p);
+  if (!dailyResultIsSealed()) showKeepsakeToast(p);
   updateKeepsakesNav();
   refreshKeepsakes();                                // if the wall is open, show it developing
   checkKeepsakeMeta(earned);
@@ -4371,8 +4382,10 @@ function earnSticker(id) {
   if (earned[id]) return false;                      // already stuck down
   earned[id] = new Date().toISOString();
   saveStickers(earned);
-  showStickerToast(st);
-  playUnlockChime();
+  if (!dailyResultIsSealed()) {
+    showStickerToast(st);
+    playUnlockChime();
+  }
   updateKeepsakesNav();
   refreshStickers();
   return true;
@@ -7610,8 +7623,10 @@ function endRuthlessRun() {
 
   showScreen("results");
   applyEra(FINALE_ERAS[Math.floor(Math.random() * FINALE_ERAS.length)]);
-  $("resultBracelet").innerHTML = renderBraceletSVG(results, 0, -1, albums,
-    { colors: albumPalette(), total: pages.length, letterBead: false, snapPage });
+  renderFinishedBracelet(results, albums, {
+    colors: albumPalette(), total: pages.length, tieText: String(pages.length), snapPage,
+    songs: pages.map((t) => t.ok ? t.title : null), words: [], times: [],
+  });
   // A time is the whole result, so it takes the big number; the pages it took are the sub.
   // Prose rather than ledger cells: "all 10 named" is the finding, not a column of numbers.
   setFinalTally(fmtTime(secs), gaveUp
@@ -9308,24 +9323,250 @@ let justEarnedIndex = -1; // bead that just became a trinket, for the swing-in
 // date-derived seed at both ends so the two renders agree (see startDaily / showDailyResult).
 let braceletSeed = 0;
 
-// Wraps the pure buildBraceletSVG, injecting the Mastery-chosen dangling trinket into
-// every render so app.js stays the single owner of that game-state default.
-function renderBraceletSVG(results, active, fresh, albums, opts) {
-  // Each of these is read off live run state UNLESS the caller supplied it. The caller wins
-  // because these used to be computed unconditionally and then spread on top of `opts`, which
-  // silently swallowed anything passed in — the strand preview asked for a devil, a horseshoe
-  // and a skull and got none of them, with no error to say why.
-  const given = (k) => opts && opts[k] != null;
+function dailyResultIsSealed() {
+  return gameType === "daily" && settings.hideDailyScore && !dailyResultRevealed;
+}
+
+// Freeze every input that changes what a finished Daily bracelet means. The ordinary result
+// fields stay at the top level for old saves and the Daily ledger; this versioned payload is
+// the richer, visual record used when the result is reopened after settings have changed.
+function snapshotDailyBracelet() {
+  return {
+    version: DAILY_BRACELET_VERSION,
+    results: roundResults.slice(),
+    albums: roundAlbums.slice(),
+    words: roundWords.slice(),
+    songs: roundSongs.slice(),
+    hinted: roundHinted.slice(),
+    verseTiers: roundVerseTier.slice(),
+    times: roundTimes.slice(),
+    verseKeepsake: verseKeepsake.map((k) => ({ ...k })),
+    verseBonus,
+    trinket: settings.masteryTrinket || "",
+    trinketSeed: braceletSeed >>> 0,
+  };
+}
+
+// Accept both the versioned bracelet payload and the small legacy Daily record. A legacy
+// result cannot recover details it never stored, but it is cleared into a safe empty state
+// instead of inheriting verse tiers, songs, or hints from whichever run was viewed before it.
+function normalizeDailyBracelet(data, dateStr) {
+  const raw = data && typeof data === "object" ? data : {};
+  const saved = raw.bracelet && typeof raw.bracelet === "object" ? raw.bracelet : raw;
+  // A Daily can only own thirteen pages. Bound and densify old or malformed saves here so
+  // their arrays cannot make the recap disagree with the fixed-size strand.
+  const array = (value) => Array.isArray(value)
+    ? Array.from({ length: Math.min(value.length, TOTAL_ROUNDS) }, (_, i) => value[i])
+    : [];
+  const keepsake = array(saved.verseKeepsake).map((k) => ({
+    line: String(k && k.line || ""),
+    word: String(k && k.word || ""),
+    tier: k && k.tier === "verse" ? "verse" : "perfect",
+  })).filter((k) => k.line);
+  const seed = Number(saved.trinketSeed);
+  return {
+    version: DAILY_BRACELET_VERSION,
+    results: array(saved.results || saved.roundResults || raw.roundResults)
+      .map((value) => value === true ? true : value === false ? false : null),
+    albums: array(saved.albums || saved.roundAlbums || raw.roundAlbums),
+    words: array(saved.words || saved.roundWords),
+    songs: array(saved.songs || saved.roundSongs),
+    hinted: array(saved.hinted || saved.roundHinted),
+    verseTiers: array(saved.verseTiers || saved.roundVerseTier),
+    times: array(saved.times || saved.roundTimes),
+    verseKeepsake: keepsake,
+    verseBonus: Number.isFinite(Number(saved.verseBonus)) ? Math.max(0, Number(saved.verseBonus)) : 0,
+    trinket: typeof saved.trinket === "string" ? saved.trinket : (settings.masteryTrinket || ""),
+    trinketSeed: Number.isFinite(seed) ? seed >>> 0 : dailySeed(dateStr),
+  };
+}
+
+function restoreDailyBracelet(snapshot) {
+  roundResults = snapshot.results.slice();
+  roundAlbums = snapshot.albums.slice();
+  roundWords = snapshot.words.slice();
+  roundSongs = snapshot.songs.slice();
+  roundHinted = snapshot.hinted.slice();
+  roundVerseTier = snapshot.verseTiers.slice();
+  roundTimes = snapshot.times.slice();
+  verseKeepsake = snapshot.verseKeepsake.map((k) => ({ ...k }));
+  verseBonus = snapshot.verseBonus;
+  braceletSeed = snapshot.trinketSeed;
+  round = roundResults.length;
+  hintsUsed = roundHinted.filter(Boolean).length;
+  gameTimeSum = roundTimes.reduce((sum, value) =>
+    sum + (typeof value === "number" && isFinite(value) ? value : 0), 0);
+}
+
+function dailyBraceletOptions(extra = {}) {
+  const snap = dailyBraceletSnapshot || snapshotDailyBracelet();
+  return {
+    total: TOTAL_ROUNDS,
+    tieText: String(TOTAL_ROUNDS),
+    colors: albumPalette(),
+    hinted: snap.hinted,
+    verseTiers: snap.verseTiers,
+    words: snap.words,
+    songs: snap.songs,
+    times: snap.times,
+    trinket: snap.trinket,
+    trinketSeed: snap.trinketSeed,
+    ...extra,
+    sealed: dailyResultIsSealed(),
+  };
+}
+
+const hasBraceletOption = (opts, key) => !!opts && Object.prototype.hasOwnProperty.call(opts, key);
+
+// Resolve the run-owned defaults once. A supplied snapshot or developer fixture wins, which
+// is essential for saved Dailies and for special challenge dangles.
+function braceletRenderOptions(results, opts = {}) {
   // Impostor challenge: a bead that flagged a fake dangles a little devil, not the star.
-  const impostorCaught = given("impostorCaught") ? opts.impostorCaught
+  const impostorCaught = hasBraceletOption(opts, "impostorCaught") ? opts.impostorCaught
     : impostorRuleActive() ? results.map((ok, i) => ok === true && impostorRounds.has(i + 1)) : null;
   // Risk challenges: a bead won at stake dangles a horseshoe instead of the usual trinket,
   // and the uninsured miss that ended an Insurance run strings a bone bead in place of a
   // frosted one.
-  const riskWon = given("riskWon") ? opts.riskWon : riskRuleActive() ? riskTrinket.slice() : null;
-  const skullMiss = given("skullMiss") ? opts.skullMiss : riskRuleActive() ? riskSkull.slice() : null;
+  const riskWon = hasBraceletOption(opts, "riskWon") ? opts.riskWon
+    : riskRuleActive() ? riskTrinket.slice() : null;
+  const skullMiss = hasBraceletOption(opts, "skullMiss") ? opts.skullMiss
+    : riskRuleActive() ? riskSkull.slice() : null;
+  return {
+    ...opts,
+    trinket: hasBraceletOption(opts, "trinket") ? opts.trinket : settings.masteryTrinket,
+    trinketSeed: hasBraceletOption(opts, "trinketSeed") ? opts.trinketSeed : braceletSeed,
+    impostorCaught, riskWon, skullMiss,
+  };
+}
+
+// Wraps the pure SVG builder for the live strand.
+function renderBraceletSVG(results, active, fresh, albums, opts) {
   return buildBraceletSVG(results, active, fresh, albums,
-    { ...opts, trinket: settings.masteryTrinket, trinketSeed: braceletSeed, impostorCaught, riskWon, skullMiss });
+    braceletRenderOptions(results, opts));
+}
+
+const BRACELET_FINISH_COPY = {
+  gloss: "glossy bead, correct without a hint",
+  matte: "matte bead, correct with a hint",
+  pearl: "pearl bead, a word-perfect lyric recall",
+  clear: "frosted bead, a missed page",
+  skull: "bone bead, the miss that ended the run",
+  empty: "an unfinished page",
+};
+const BRACELET_TRINKET_COPY = {
+  star: "star", heart: "heart", moon: "moon", butterfly: "butterfly", music: "music note",
+  key: "key", crown: "crown", snake: "snake", gem: "gem", cat: "cat", bow: "bow",
+  devil: "devil for catching an impostor",
+  horseshoe: "horseshoe for winning at risk",
+  stopwatch: "stopwatch for a snap answer",
+  nib: "pen nib for lyric recall",
+};
+
+function braceletFilledCount(results) {
+  return results.reduce((last, value, i) => value == null ? last : i + 1, 0);
+}
+
+function setBraceletKeepsakeAvailable(available) {
+  [$("saveBraceletBtn"), $("downloadBraceletBtn")].filter(Boolean).forEach((btn) => {
+    btn.disabled = !available;
+    btn.setAttribute("aria-disabled", available ? "false" : "true");
+  });
+  const note = $("braceletKeepsakeNote");
+  if (note) note.textContent = available ? "Keep the strand as a shareable notebook card."
+    : "Reveal today's result before keeping the strand.";
+}
+
+// The SVG stays decorative. This companion describes the same finish and dangle decisions in
+// text, then offers a collapsed page-by-page recap for anyone who wants to inspect the strand.
+function renderBraceletDetails(results, albums, opts) {
+  const summary = $("braceletSummary");
+  const memory = $("braceletMemory");
+  const legend = $("braceletLegend");
+  const recap = $("braceletRecap");
+  const caption = document.querySelector("#screen-results .bracelet-caption");
+  const sealed = !!opts.sealed;
+  if (caption) caption.textContent = sealed ? "today's bracelet, still sealed" : "the bracelet you made";
+  setBraceletKeepsakeAvailable(!sealed);
+
+  if (sealed) {
+    if (summary) summary.textContent = "Today's 13-page bracelet is sealed. Tear the Daily result slip to reveal the tally and strand.";
+    if (memory) { memory.hidden = true; memory.open = false; }
+    if (legend) legend.innerHTML = "";
+    if (recap) recap.innerHTML = "";
+    return;
+  }
+
+  const total = Math.max(1, Math.floor(Number(opts.total) || TOTAL_ROUNDS));
+  const filled = braceletFilledCount(results);
+  const correct = results.filter((value) => value === true).length;
+  const missed = results.filter((value) => value === false).length;
+  const hinted = Array.isArray(opts.hinted) ? opts.hinted : [];
+  const verseTiers = Array.isArray(opts.verseTiers) ? opts.verseTiers : [];
+  const allFinishes = [];
+  const allTrinkets = [];
+  for (let i = 0; i < filled; i++) {
+    const finish = braceletFinish(results[i], i, opts);
+    if (!allFinishes.includes(finish)) allFinishes.push(finish);
+    if (results[i] === true) {
+      const trinket = braceletTrinketId(i, opts);
+      if (trinket && !allTrinkets.includes(trinket)) allTrinkets.push(trinket);
+    }
+  }
+  const specialCount = allTrinkets.filter((id) => ["devil", "horseshoe", "stopwatch", "nib"].includes(id)).length;
+  const parts = [`${filled} page${filled === 1 ? "" : "s"} strung`, `${correct} correct`, `${missed} missed`];
+  if (allFinishes.includes("matte")) parts.push(`${hinted.filter(Boolean).length} hinted`);
+  if (allFinishes.includes("pearl")) parts.push(`${verseTiers.filter(Boolean).length} lyric recall`);
+  if (specialCount) parts.push("special dangles marked below");
+  if (summary) summary.textContent = parts.join(" · ") + ".";
+
+  if (legend) {
+    const finishItems = allFinishes.filter((finish) => BRACELET_FINISH_COPY[finish]).map((finish) =>
+      `<span class="bracelet-legend-item" data-finish="${finish}">` +
+        `<span class="bracelet-legend-swatch" aria-hidden="true"></span>` +
+        `<span>${escapeHtml(BRACELET_FINISH_COPY[finish])}</span></span>`);
+    const trinketItems = allTrinkets.map((id) =>
+      `<span class="bracelet-legend-item" data-trinket="${escapeHtml(id)}">` +
+        `<span class="bracelet-legend-swatch bracelet-legend-dangle" aria-hidden="true">◇</span>` +
+        `<span>${escapeHtml(BRACELET_TRINKET_COPY[id] || "chosen dangle")} on a correct bead</span></span>`);
+    legend.innerHTML = finishItems.concat(trinketItems).join("");
+  }
+
+  if (recap) {
+    const layout = braceletLayout(total, 0, Math.max(filled, 1), false);
+    const words = Array.isArray(opts.words) ? opts.words : roundWords;
+    const songs = Array.isArray(opts.songs) ? opts.songs : roundSongs;
+    const times = Array.isArray(opts.times) ? opts.times : roundTimes;
+    const items = layout.slots.filter((slot) => slot.index < filled).map((slot) => {
+      const i = slot.index;
+      const ok = results[i] === true;
+      const finish = braceletFinish(results[i], i, opts);
+      const prompt = words[i] ? `“${String(words[i])}”` : "prompt not kept";
+      const title = ok && songs[i] ? censor(String(songs[i])) : ok ? "correct answer" : "no song strung";
+      const album = albums[i] ? String(albums[i]) : "";
+      const elapsed = typeof times[i] === "number" && isFinite(times[i])
+        ? `${times[i].toFixed(times[i] < 10 ? 1 : 0).replace(/\.0$/, "")}s` : "";
+      const trinket = ok ? braceletTrinketId(i, opts) : null;
+      const meta = [BRACELET_FINISH_COPY[finish], album, elapsed,
+        trinket ? `${BRACELET_TRINKET_COPY[trinket] || "chosen"} dangle` : ""].filter(Boolean).join(" · ");
+      return `<li class="bracelet-recap-item" value="${i + 1}">` +
+        `<span class="bracelet-recap-page">page ${i + 1} · ${escapeHtml(prompt)}</span>` +
+        `<span class="bracelet-recap-title">${escapeHtml(title)}</span>` +
+        `<span class="bracelet-recap-meta">${escapeHtml(meta)}</span></li>`;
+    }).join("");
+    const omitted = layout.omitted > 0
+      ? `<p class="bracelet-recap-note">The strand shows the latest ${layout.visibleCount} pages. ${layout.omitted} earlier page${layout.omitted === 1 ? " is" : "s are"} already strung into the loop.</p>` : "";
+    recap.innerHTML = omitted + `<ol class="bracelet-recap-list" start="${layout.visibleStart + 1}">${items}</ol>`;
+  }
+  if (memory) { memory.hidden = false; memory.open = false; }
+}
+
+function renderFinishedBracelet(results, albums, opts = {}) {
+  if (gameType !== "daily") $("shareStub")?.remove();
+  const resolved = braceletRenderOptions(results, opts);
+  const el = $("resultBracelet");
+  if (el) el.innerHTML = buildBraceletSVG(results, 0, -1, albums, resolved);
+  renderBraceletDetails(results, albums, resolved);
+  return resolved;
 }
 
 // ---- Bracelet-as-PNG keepsake ----
@@ -9385,7 +9626,8 @@ function setFinalTally(score, sub, unit) {
 
 function buildCardMeta() {
   const correct = roundResults.filter(Boolean).length;
-  const runTime = currentMode.seconds > 0 ? gameTimeSum : null;
+  const runTime = gameType === "daily" ? dailyShareTime
+    : currentMode.seconds > 0 ? gameTimeSum : null;
   const dateKey = window.__devDate || todayKey();
   const dateLabel = new Date(dateKey + "T00:00:00").toLocaleDateString("en-US",
     { month: "long", day: "numeric", year: "numeric" });
@@ -9438,8 +9680,9 @@ function buildCardMeta() {
   } else {
     // classic, daily, challenge — a fixed 13-round page
     const perfect = correct === TOTAL_ROUNDS;
-    const hidden = gameType === "daily" && settings.hideDailyScore;
-    title = perfect ? "thirteen for thirteen ★"
+    const hidden = dailyResultIsSealed();
+    title = hidden ? "today's Daily, sealed"
+          : perfect ? "thirteen for thirteen ★"
           : gameType === "daily" ? "today's daily" : "the bracelet you made";
     stats.push({ v: gameType === "daily" ? "Daily" : (GAMETYPE_LABELS[gameType] || "Classic"), l: "mode" });
     stats.push({ v: hidden ? "?" : correct + "/" + TOTAL_ROUNDS, l: "strung" });
@@ -9506,32 +9749,31 @@ function buildSleeveMeta() {
 
 /* ---------- Taking a keepsake off the page ----------
    One handler behind every "save this" button on the site (the results bracelet, the bonus
-   shelf's sleeve). A plain click copies the PNG to the clipboard; a shift- (or ⌘/ctrl-)
-   click downloads it instead. If the browser can't write images to the clipboard, the copy
-   path quietly falls back to a download so the button always does *something*. Guards
-   against a double-click while rasterising.
+   shelf's sleeve). The bracelet has explicit Copy and Download controls; the older sleeve
+   mark also keeps its shift/command shortcut. If the browser cannot write images to the
+   clipboard, the copy path falls back to a download. Guards against a double-click while
+   rasterising.
    The meta is built LATE (inside the handler) rather than passed in, so a button that has
    been sitting on screen for a minute still exports what is on the page now. */
 
-/* Both keepsake buttons are compact marks beside the object they copy, so their wording lives
-   in a hidden span and the visible answer is a state on the element (the copy glyph swaps to
-   a tick). These helpers still support a plain-text button if another keepsake needs one. */
+/* The visible label is the status surface for the explicit bracelet actions. Older compact
+   marks still use their screen-reader label, so both shapes share one export handler. */
 function keepsakeLabel(btn) {
-  const sr = btn.querySelector(".sr-only");
-  return sr ? sr.textContent : btn.textContent;
+  const label = btn.querySelector("[data-keepsake-label]") || btn.querySelector(".sr-only");
+  return label ? label.textContent : btn.textContent;
 }
 function setKeepsakeLabel(btn, text, state) {
-  const sr = btn.querySelector(".sr-only");
-  if (!sr) { btn.textContent = text; return; }
-  sr.textContent = text;
+  const label = btn.querySelector("[data-keepsake-label]") || btn.querySelector(".sr-only");
+  if (!label) { btn.textContent = text; return; }
+  label.textContent = text;
   if (state) btn.setAttribute("data-state", state);
   else btn.removeAttribute("data-state");
 }
 
 let keepsakeSaveBusy = false;
-async function saveKeepsakePNG(e, { btn, meta, copy, download, noun, onKept }) {
+async function saveKeepsakePNG(e, { btn, meta, copy, download, noun, onKept, intent }) {
   if (keepsakeSaveBusy) return;
-  const wantDownload = !!(e && (e.shiftKey || e.metaKey || e.ctrlKey));
+  const wantDownload = intent === "download" || !!(e && (e.shiftKey || e.metaKey || e.ctrlKey));
   keepsakeSaveBusy = true;
   const label = btn ? keepsakeLabel(btn) : "";
   let kept = false;
@@ -9566,15 +9808,20 @@ async function saveKeepsakePNG(e, { btn, meta, copy, download, noun, onKept }) {
   }
 }
 
-// Wired to the results-screen bracelet button.
-function saveBraceletPNG(e) {
+// Wired to the results-screen bracelet actions.
+function saveBraceletPNG(e, intent = "copy") {
+  if (dailyResultIsSealed()) {
+    notifyNote("bracelet still sealed", "tear the Daily result slip to reveal it first");
+    return;
+  }
   if (!$("resultBracelet").innerHTML.trim()) return;   // nothing strung yet
   return saveKeepsakePNG(e, {
-    btn: $("saveBraceletBtn"),
+    btn: intent === "download" ? $("downloadBraceletBtn") : $("saveBraceletBtn"),
     meta: buildCardMeta,
     copy: copyBraceletCard,
     download: exportBraceletCard,
     noun: "bracelet",
+    intent,
     onKept: () => unlock("save-first-bracelet-keepsake"),     // "You're On Your Own, Kid"
   });
 }
@@ -9598,15 +9845,19 @@ function saveSleevePNG(e) {
 }
 
 function renderBracelet() {
-  // compact: the in-run strip is the SHORT strand — same beads, charms tucked up close, no
-  // tie beads. Gameplay stays visually dominant, and the full drop is saved for results,
-  // where the bracelet is the point rather than the furniture above the word.
+  // Compact is the short in-run strand: the same beads, with charms tucked close. Fixed
+  // thirteen-page runs keep their bare working end; rolling runs number each readable section.
+  // The full charm drop is saved for results, where the bracelet is the point.
   const base = { compact: true, colors: albumPalette(), hinted: roundHinted, verseTiers: roundVerseTier };
-  const rollingStrand = gameType === "infinite" || customInfinite() || surviveRuleActive();
+  const uncappedStrand = gameType === "infinite" || customInfinite();
+  const rollingStrand = uncappedStrand || surviveRuleActive();
+  const rollingTotal = surviveRuleActive() ? surviveTarget()
+    : uncappedStrand ? Math.ceil(Math.max(round, 1) / BRACELET_ROW_CAP) * BRACELET_ROW_CAP
+    : Math.max(round, 1);
   const opts = rollingStrand
-    ? { ...base, total: Math.max(round, 1), letterBead: false }
+    ? { ...base, total: rollingTotal, tieText: String(rollingTotal) }
     : gameType === "custom"
-    ? { ...base, total: customSessionLen }
+    ? { ...base, total: customSessionLen, tieText: String(customSessionLen) }
     : base;
   $("bracelet").innerHTML = renderBraceletSVG(roundResults, round, justEarnedIndex, roundAlbums, opts);
   const correct = roundResults.filter(Boolean).length;
@@ -9627,8 +9878,12 @@ function renderBracelet() {
   if (sr) {
     const progress = surviveRuleActive() ? `Round ${pg} of ${surviveTarget()}. `
       : uncapped ? `Round ${pg}. ` : `Page ${pg} of ${sessionRounds()}. `;
-    sr.textContent = progress
-      + `${correct} correct so far.`;
+    const latest = braceletFilledCount(roundResults) - 1;
+    const finish = latest >= 0 ? braceletFinish(roundResults[latest], latest,
+      braceletRenderOptions(roundResults, opts)) : null;
+    const bead = finish && BRACELET_FINISH_COPY[finish]
+      ? ` Latest bead: ${BRACELET_FINISH_COPY[finish]}.` : "";
+    sr.textContent = progress + `${correct} correct so far.` + bead;
   }
 }
 
@@ -10508,7 +10763,8 @@ function renderDailyButtonState() {
     tailHTML = `<span class="day-hem"><b>tear here to play</b>${dayHolesHTML()}</span>`;
     ariaLabel = `Daily Challenge for ${month} ${day}, thirteen words, the same for everybody. Not played yet.`;
   } else {
-    const scoreText = settings.hideDailyScore ? "?" : String(result.score);
+    const scoreVisible = !settings.hideDailyScore || result.revealed === true;
+    const scoreText = scoreVisible ? String(result.score) : "?";
     const best = dailyBest();
     // Beads read oldest → newest; if today isn't played yet the strand should still
     // end yesterday rather than truncate to nothing while the streak waits to be fed.
@@ -10524,7 +10780,7 @@ function renderDailyButtonState() {
       `</span>`;
     tailHTML = "";
     ariaLabel = `Daily Challenge for ${month} ${day}, played` +
-      (settings.hideDailyScore ? ", score hidden" : `, ${scoreText} out of ${TOTAL_ROUNDS}`) +
+      (scoreVisible ? `, ${scoreText} out of ${TOTAL_ROUNDS}` : ", result sealed") +
       (live.current > 0 ? `, ${live.current}-day streak` : "") + ".";
   }
   btn.setAttribute("aria-label", ariaLabel);
@@ -10698,6 +10954,10 @@ function resetRunState() {
   dailyRunDate = null;
   dailyAlbumPool = null;
   dailyAlbum = null;
+  dailyShareTime = null;
+  dailyBraceletSnapshot = null;
+  dailyResultRevealed = true;
+  dailyPerfectCelebrated = false;
   currentChallenge = null;
   challengeDark = false;
   challengeRunActive = false;
@@ -13135,9 +13395,9 @@ function endChallenge() {
   }
 
   showScreen("results");
-  $("resultBracelet").innerHTML = renderBraceletSVG(roundResults, 0, -1, roundAlbums,
+  renderFinishedBracelet(roundResults, roundAlbums,
     { colors: albumPalette(), hinted: roundHinted, verseTiers: roundVerseTier,
-      ...(c.rule === "survive" ? { total: challengeTotal, letterBead: false } : {}) });
+      ...(c.rule === "survive" ? { total: challengeTotal, tieText: String(challengeTotal) } : {}) });
   // A bead total has no "out of": the page count is not its ceiling, so it's shown against
   // the challenge's target instead of the 13 pages that produced it.
   setFinalTally(score,
@@ -13344,7 +13604,7 @@ function endAlbumFocus() {
   if (perfectedCount >= STUDIO_ALBUMS.length) unlock("perfect-all-12-album-focus");
 
   showScreen("results");
-  $("resultBracelet").innerHTML = renderBraceletSVG(roundResults, 0, -1, roundAlbums,
+  renderFinishedBracelet(roundResults, roundAlbums,
     { colors: albumPalette(), hinted: roundHinted, verseTiers: roundVerseTier });
   setFinalTally(score, [{ v: String(TOTAL_ROUNDS), l: "pages" }]);
   $("keepGoingBtn").style.display = "none";
@@ -13419,7 +13679,7 @@ function endGuest() {
 
   showScreen("results");
   applyEra(guestEra());   // endGame applies a random finale era; a guest keeps its own
-  $("resultBracelet").innerHTML = renderBraceletSVG(roundResults, 0, -1, roundAlbums,
+  renderFinishedBracelet(roundResults, roundAlbums,
     { colors: palette, hinted: roundHinted, verseTiers: roundVerseTier });
   setFinalTally(score, [{ v: String(TOTAL_ROUNDS), l: "pages" }]);
   $("keepGoingBtn").style.display = "none";
@@ -13501,10 +13761,10 @@ function endCustom() {
   if (!devNoLog && perfect && total >= TOTAL_ROUNDS && customAtLeastUltra(currentMode)) unlock("perfect-custom-at-least-ultra");
 
   showScreen("results");
-  $("resultBracelet").innerHTML = renderBraceletSVG(roundResults, 0, -1, roundAlbums,
+  renderFinishedBracelet(roundResults, roundAlbums,
     infinite
-      ? { total: Math.max(roundsPlayed, 1), letterBead: false, colors: albumPalette(), hinted: roundHinted, verseTiers: roundVerseTier }
-      : { total, colors: albumPalette(), hinted: roundHinted, verseTiers: roundVerseTier });
+      ? { total: Math.max(roundsPlayed, 1), tieText: String(Math.max(roundsPlayed, 1)), colors: albumPalette(), hinted: roundHinted, verseTiers: roundVerseTier }
+      : { total, tieText: String(total), colors: albumPalette(), hinted: roundHinted, verseTiers: roundVerseTier });
   setFinalTally(score, [infinite
     ? { v: String(roundsPlayed), l: roundsPlayed === 1 ? "round" : "rounds" }
     : { v: String(total), l: "pages" }]);
@@ -13566,31 +13826,67 @@ function customLeverSummary(m) {
   return parts.join(" · ");
 }
 
-// Re-render the results screen from a previously saved daily result (the
-// already-played path). Reuses the regular results layout + daily board + share.
+function renderDailyTally() {
+  if (dailyResultIsSealed()) { setFinalTally("?", null); return; }
+  const cells = [{ v: String(TOTAL_ROUNDS), l: "pages" }];
+  if (dailyShareTime != null) cells.push({ v: fmtTime(dailyShareTime), l: "on the clock" });
+  if (verseBonus > 0) cells.push({ v: "+" + verseBonus, l: "verse bonus" });
+  setFinalTally(score, cells);
+}
+
+// Spend the optional sealed-result ritual in one place. The tally, real SVG, page recap,
+// keepsake actions, achievement recap, and perfect celebration all turn over together.
+function revealDailyResult(dateStr, { refreshShare = false } = {}) {
+  if (gameType !== "daily" || dailyResultRevealed) return;
+  dailyResultRevealed = true;
+  const saved = loadDailyResult(dateStr);
+  if (saved) saveDailyResult(dateStr, { ...saved, revealed: true });
+
+  renderFinishedBracelet(roundResults, roundAlbums, dailyBraceletOptions());
+  renderDailyTally();
+  renderVerseAnthology();
+  if (score === TOTAL_ROUNDS && !dailyPerfectCelebrated) {
+    unlock("perfect-daily");
+    dailyPerfectCelebrated = true;
+    celebratePerfect();
+  }
+  renderResultRecap();
+  renderSkillsRecap();
+  if (refreshShare) renderShareButton(dateStr, false);
+}
+
+// Re-render the results screen from a previously saved Daily. Reset first so a small legacy
+// record cannot borrow songs, verse finishes, times, or unlock recaps from the preceding run.
 function showDailyResult(data, dateStr) {
   gameType = "daily";
   currentMode = MODES.medium;
+  resetRunState();
+  gameType = "daily";
+  currentMode = MODES.medium;
   dailyRunDate = dateStr;
-  roundResults = data.roundResults;
-  roundAlbums = data.roundAlbums;
-  score = data.score;
-  dailyShareTime = typeof data.tm === "number" ? data.tm : null;   // restore completion time for the share (older saves lack it)
-  braceletSeed = dailySeed(dateStr);   // rebuild the same random-trinket strand the run ended on
+  dailyBraceletSnapshot = normalizeDailyBracelet(data, dateStr);
+  restoreDailyBracelet(dailyBraceletSnapshot);
+  const savedScore = Number(data && data.score);
+  score = Number.isFinite(savedScore) ? Math.max(0, Math.min(TOTAL_ROUNDS, savedScore)) : 0;
+  const savedTime = Number(data && data.tm);
+  dailyShareTime = Number.isFinite(savedTime) && savedTime >= 0 ? savedTime : null;
+  if (dailyShareTime != null) gameTimeSum = dailyShareTime;
+  dailyResultRevealed = !!(data && data.revealed === true) || !settings.hideDailyScore;
+  // Reopening a result never replays its celebration. A still-sealed new-format save will
+  // celebrate once when the player actually tears it open.
+  dailyPerfectCelebrated = !dailyResultIsSealed();
   showScreen("results");
-  $("resultBracelet").innerHTML = renderBraceletSVG(roundResults, 0, -1, roundAlbums, { colors: albumPalette() });
-  // A held-back score has nothing to rule off, so the tally is the "?" alone.
-  setFinalTally(settings.hideDailyScore ? "?" : score,
-    settings.hideDailyScore ? null : [{ v: String(TOTAL_ROUNDS), l: "pages" }]);
+  renderFinishedBracelet(roundResults, roundAlbums, dailyBraceletOptions());
+  renderDailyTally();
   $("keepGoingBtn").style.display = "none";
-  $("resultAchievements").style.display = "none";
-  $("resultSkills").style.display = "none";   // a saved daily snapshot folded no skill XP
-  $("verseAnthology").style.display = "none";   // saved daily snapshot has no recalled-lines list
   $("namePrompt").style.display = "none";
   hideNewBestBanner();
   document.querySelector("#screen-results .podium-title").textContent = "Today's Result";
   renderDailyResultPanel();
-  renderShareButton(dateStr, settings.hideDailyScore);
+  renderVerseAnthology();
+  renderResultRecap();
+  renderSkillsRecap();
+  renderShareButton(dateStr, dailyResultIsSealed());
 }
 
 // The daily results panel: streak summary in place of a leaderboard (daily is one
@@ -13702,10 +13998,7 @@ function renderShareButton(dateStr, hidden) {
     if (!ok) { settle("copy failed"); return; }
 
     if (held) {
-      // Revealing un-seals the whole tally, not just the number: the ledger was left empty
-      // because the clock and the page count leak how the day went as surely as the score.
-      setFinalTally(score, [{ v: String(TOTAL_ROUNDS), l: "pages" }].concat(
-        dailyShareTime != null ? [{ v: fmtTime(dailyShareTime), l: "on the clock" }] : []));
+      revealDailyResult(dateStr);
       held = false;
     }
     btn.disabled = true;
@@ -17811,7 +18104,7 @@ function checkWardrobeCharms() {
 // reward newly earned — are NOT toasted here: they get a first-class celebration on the
 // results screen instead (see celebrateMastery, fired from renderSkillsRecap).
 function announceSkillProgress(res) {
-  if (!res) return;
+  if (!res || dailyResultIsSealed()) return;
   for (const up of res.levelUps) emitSkillToast(SKILL_BY_ID[up.id], up.to, up.id);
 }
 
@@ -17842,6 +18135,8 @@ function endGame() {
     const dateStr = dailyRunDate || todayKey();
     const existing = loadDailyResult(dateStr);
     if (existing) { showDailyResult(existing, dateStr); return; }
+    dailyResultRevealed = !settings.hideDailyScore;
+    dailyPerfectCelebrated = false;
   }
   runFolded = true;   // this run's stats are saved here in full; block any unload re-fold
   clearTimer();
@@ -17865,6 +18160,9 @@ function endGame() {
   const roundsSurvived = roundResults.length;
   const boardScore = isInfinite ? roundsSurvived : score;  // infinite ranks by how far you got
   const mode = boardMode();
+  if (isDaily) {
+    dailyBraceletSnapshot = snapshotDailyBracelet();
+  }
 
   // Completion time (sum of per-round answer seconds, capped per round). Only meaningful
   // when there's a clock — Relaxed (seconds 0) has no time. Used as the records speed metric.
@@ -18141,33 +18439,44 @@ function endGame() {
   }
 
   showScreen("results");
-  const keepsakeOpts = isInfinite
-    ? { total: Math.max(roundsSurvived, 1), letterBead: false, colors: albumPalette(), hinted: roundHinted, verseTiers: roundVerseTier }
-    : { colors: albumPalette(), hinted: roundHinted, verseTiers: roundVerseTier };
-  $("resultBracelet").innerHTML = renderBraceletSVG(roundResults, 0, -1, roundAlbums, keepsakeOpts);
+  const keepsakeOpts = isDaily ? dailyBraceletOptions()
+    : isInfinite
+      ? { total: Math.max(roundsSurvived, 1), tieText: String(Math.max(roundsSurvived, 1)), colors: albumPalette(), hinted: roundHinted, verseTiers: roundVerseTier }
+      : { colors: albumPalette(), hinted: roundHinted, verseTiers: roundVerseTier };
+  renderFinishedBracelet(roundResults, roundAlbums, keepsakeOpts);
   // Verse bonus (fuller lyric recall) rides alongside the score, never folded into it.
   // A held-back daily keeps its ledger empty rather than ruling off an empty row: even the
   // clock and the bonus would leak how well the round went.
-  const tallyHidden = isDaily && settings.hideDailyScore;
+  const tallyHidden = dailyResultIsSealed();
   const tallyCells = [];
   if (isInfinite) tallyCells.push({ v: String(score), l: "correct" });
   else if (!tallyHidden) tallyCells.push({ v: String(TOTAL_ROUNDS), l: "pages" });
   if (shownTime != null && !tallyHidden) tallyCells.push({ v: fmtTime(shownTime), l: "on the clock" });
   if (verseBonus > 0 && !tallyHidden) tallyCells.push({ v: "+" + verseBonus, l: "verse bonus" });
-  setFinalTally(boardScore, tallyCells, isInfinite ? "rounds" : "");
+  setFinalTally(tallyHidden ? "?" : boardScore, tallyCells, isInfinite ? "rounds" : "");
   $("keepGoingBtn").style.display = (isInfinite || isDaily) ? "none" : "";
   renderVerseAnthology();
-  if (!isInfinite && score === TOTAL_ROUNDS) celebratePerfect();
+  if (!isInfinite && score === TOTAL_ROUNDS && !dailyResultIsSealed()) {
+    celebratePerfect();
+    if (isDaily) dailyPerfectCelebrated = true;
+  }
 
   // Daily: persist the result, lock to one play/day, show streak + share (no board).
   if (isDaily) {
     const dateStr = dailyRunDate || todayKey();
     dailyShareTime = runTime;   // for the copyable result (held back behind reveal if the score is hidden)
-    saveDailyResult(dateStr, { score, roundResults: roundResults.slice(), roundAlbums: roundAlbums.slice(), tm: runTime });
+    saveDailyResult(dateStr, {
+      score,
+      roundResults: roundResults.slice(),
+      roundAlbums: roundAlbums.slice(),
+      tm: runTime,
+      revealed: dailyResultRevealed,
+      bracelet: dailyBraceletSnapshot,
+    });
     clearDailyProgress(dateStr);   // run finished — drop the resumable in-progress record
     const streak = bumpDailyStreak(dateStr);   // extend (or reset) the consecutive-days streak
     unlock("first-daily-finished");   // finished a Daily Challenge
-    if (score === TOTAL_ROUNDS) unlock("perfect-daily");
+    if (score === TOTAL_ROUNDS && !dailyResultIsSealed()) unlock("perfect-daily");
     if (streak.current >= 7) unlock("daily-streak-7");
     if (streak.current >= 30) unlock("daily-streak-30");
     // Half-struck matchbook — a fortnight of dailies, because a fortnight is fourteen. It sits
@@ -18177,12 +18486,11 @@ function endGame() {
     renderSkillsRecap();   // (hidden by renderSkillsRecap itself when the daily score is held back)
     dailyRng = null;   // back to Math.random() for any subsequent Classic game
     dailyAlbum = null; // and back to a shuffled era wash with it
-    if (settings.hideDailyScore) $("finalScore").textContent = "?";
     $("namePrompt").style.display = "none";
     hideNewBestBanner();
     document.querySelector("#screen-results .podium-title").textContent = "Today's Result";
     renderDailyResultPanel();
-    renderShareButton(dateStr, settings.hideDailyScore);
+    renderShareButton(dateStr, dailyResultIsSealed());
     return;
   }
 
@@ -19735,7 +20043,7 @@ function renderSettingsBody() {
         setCheckHTML("highContrast", "High contrast", "stronger ink, bolder accents"),
         setCheckHTML("colorBlindAlbums", "Colour-blind album colours", "a more distinguishable palette"),
         setCheckHTML("seasonalEffects", "Seasonal effects", "December snow, midnight rain and autumn leaves"),
-        setCheckHTML("hideDailyScore", "Hide daily score until reveal", ""),
+        setCheckHTML("hideDailyScore", "Seal Daily results until reveal", "keeps the tally, bracelet, and recap covered until you tear the result slip to copy it"),
       ]));
   panels.sound =
     setSection("",
@@ -19821,11 +20129,25 @@ function wireSettingsBody() {
   const body = $("settingsBody");
   body.querySelectorAll("[data-toggle]").forEach((b) => b.addEventListener("click", () => {
     const k = b.dataset.toggle;
+    const disablingDailySeal = k === "hideDailyScore" && settings.hideDailyScore;
+    const revealHeldDaily = disablingDailySeal && dailyResultIsSealed();
     // Sound has a second control in the corner, so it writes through setSound (which saves,
     // applies, repaints that icon, and auditions the chime) rather than duplicating the flip.
     if (k === "sound") { setSound(!settings.sound); renderSettingsBody(); return; }
     settings[k] = !settings[k];
     saveSettings(settings); applySettings(); renderSettingsBody();
+    if (disablingDailySeal && !settings.hideDailyScore) {
+      const dateStr = dailyRunDate || todayKey();
+      if (revealHeldDaily) {
+        revealDailyResult(dateStr, { refreshShare: true });
+      } else {
+        // Turning the seal off exposes a saved score even when its result page is not open.
+        // Record that reveal so turning the preference back on cannot pretend it stayed secret.
+        const saved = loadDailyResult(dateStr);
+        if (saved && saved.revealed !== true) saveDailyResult(dateStr, { ...saved, revealed: true });
+        renderDailyButtonState();
+      }
+    }
   }));
   body.querySelectorAll("[data-choice]").forEach((b) => b.addEventListener("click", () => {
     settings[b.dataset.choice] = b.dataset.val;
@@ -21855,8 +22177,8 @@ function buildDevApi() {
        second channel beside album colour (matte for a hint, pearl for a word-perfect line,
        frosted for a miss, a bone bead for the page an Insurance run died on) and the only
        other way to see them together is to play until the game happens to deal them.
-       `strand(n, opts)` strings an arbitrary run for one-off checks — `strand(34)` is the
-       shrink-to-fit case, `strand(13, { compact: true, active: 6 })` the live one. */
+       `strand(n, opts)` strings an arbitrary run for one-off checks. `strand(54)` is a
+       capped three-row coil, and `strand(500, { compact: true, active: 89 })` is a live section. */
     bracelet: {
       preview: () => {
         const al = STUDIO_ALBUMS.slice(0, 13);
@@ -21867,6 +22189,10 @@ function buildDevApi() {
         const impostorCaught = []; impostorCaught[1] = true;
         const riskWon = []; riskWon[4] = true;
         const snapPage = []; snapPage[9] = true;
+        const longStrand = (n, active = 0) => renderBraceletSVG(
+          Array.from({ length: n }, (_, i) => i < (active ? active - 1 : n) ? (i * 7 + 3) % 9 !== 0 : null),
+          active, -1, Array.from({ length: n }, (_, i) => al[i % al.length]),
+          { colors: albumPalette(), total: n, compact: active > 0, tieText: String(n) });
         const rows = [
           ["every finish + every earned trinket", renderBraceletSVG(done, 0, -1, al,
             { colors: albumPalette(), hinted, verseTiers, skullMiss, impostorCaught, riskWon, snapPage })],
@@ -21874,10 +22200,11 @@ function buildDevApi() {
             { colors: albumPalette(), compact: true, hinted })],
           ["live, page 13 of 13 (the curl must not back under the beads)", renderBraceletSVG(done.slice(0, 12).concat([null]), 13, -1, al,
             { colors: albumPalette(), compact: true })],
-          ["infinite, 34 pages (shrink-to-fit)", renderBraceletSVG(
-            Array.from({ length: 34 }, (_, i) => (i * 7 + 3) % 9 !== 0), 0, -1,
-            Array.from({ length: 34 }, (_, i) => al[i % al.length]),
-            { colors: albumPalette(), total: 34, letterBead: false })],
+          ["finished, 31 pages (balanced three-row coil)", longStrand(31)],
+          ["finished, 54 pages (15 earlier, last 39 shown)", longStrand(54)],
+          ["finished, 89 pages (50 earlier, last 39 shown)", longStrand(89)],
+          ["finished, 500 pages (461 earlier, last 39 shown)", longStrand(500)],
+          ["live, page 89 of 500 (pages 79 to 91 on the needle)", longStrand(500, 89)],
         ];
         const box = document.createElement("div");
         box.id = "devBraceletPreview";
@@ -21896,7 +22223,41 @@ function buildDevApi() {
       strand: (n = 13, o = {}) => renderBraceletSVG(
         Array.from({ length: n }, (_, i) => (o.active ? i < o.active - 1 : true) && i % 5 !== 2),
         o.active || 0, -1, Array.from({ length: n }, (_, i) => STUDIO_ALBUMS[i % STUDIO_ALBUMS.length]),
-        { colors: albumPalette(), total: n, letterBead: n !== TOTAL_ROUNDS, ...o }),
+        { colors: albumPalette(), total: n, tieText: String(n), ...o }),
+      audit: () => {
+        const specs = [
+          { label: "finished 31", total: 31, active: 0, filled: 31, start: 0, count: 31 },
+          { label: "finished 54", total: 54, active: 0, filled: 54, start: 15, count: 39 },
+          { label: "finished 89", total: 89, active: 0, filled: 89, start: 50, count: 39 },
+          { label: "finished 500", total: 500, active: 0, filled: 500, start: 461, count: 39 },
+          { label: "live page 89", total: 500, active: 89, filled: 88, start: 78, count: 13, compact: true },
+        ];
+        const cases = specs.map((spec) => {
+          const layout = braceletLayout(spec.total, spec.active, spec.filled, !!spec.compact);
+          const indices = layout.slots.map((slot) => slot.index);
+          const checks = {
+            window: layout.visibleStart === spec.start && layout.visibleCount === spec.count,
+            contiguous: indices.every((index, i) => index === layout.visibleStart + i),
+            rows: layout.rows.length >= 1 && layout.rows.length <= 3 &&
+              layout.rows.every((row) => row.length >= 1 && row.length <= 13) &&
+              layout.rows.reduce((sum, row) => sum + row.length, 0) === layout.visibleCount,
+            bounds: layout.slots.every((slot) => Number.isFinite(slot.x) && Number.isFinite(slot.y) &&
+              slot.x >= 0 && slot.x <= layout.width && slot.y >= 0 && slot.y <= layout.height),
+            active: !spec.active || indices.includes(spec.active - 1),
+          };
+          return {
+            case: spec.label,
+            visible: `${layout.visibleStart + 1}-${layout.visibleStart + layout.visibleCount}`,
+            rows: layout.rows.map((row) => row.length).join("/"),
+            omitted: layout.omitted,
+            pass: Object.values(checks).every(Boolean),
+            checks,
+          };
+        });
+        console.table(cases.map(({ case: label, visible, rows, omitted, pass }) =>
+          ({ case: label, visible, rows, omitted, pass })));
+        return { pass: cases.every((c) => c.pass), cases };
+      },
     },
     // The bracelet-as-PNG keepsake. Reads whatever finished strand is on the results
     // screen, so it needs a run to have just ended (any mode). meta() shows what the
@@ -24127,6 +24488,7 @@ async function init() {
   });
   // Save the finished bracelet as a keepsake PNG (a torn notebook page).
   $("saveBraceletBtn").addEventListener("click", saveBraceletPNG);
+  $("downloadBraceletBtn")?.addEventListener("click", (e) => saveBraceletPNG(e, "download"));
   // Roll a finished classic run straight into endless play, carrying the score.
   $("keepGoingBtn").addEventListener("click", () => startInfinite("3lives", { carry: true }));
   // Quit / give up mid-game — first tap arms, second tap leaves (see armQuit).

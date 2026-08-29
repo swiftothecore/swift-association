@@ -2753,22 +2753,48 @@ if (location.pathname.endsWith('/index.html')) {
       <p class="sub" id="finalSub"></p>
     </div>
 
-    <div class="bracelet-caption-row">
-      <p class="bracelet-caption">the bracelet you made</p>
-      <button id="saveBraceletBtn" class="bracelet-copy" type="button"
-              data-tip="Copy bracelet to clipboard (shift-click to download)">
-        <svg viewBox="0 0 24 24" class="keepsake-ic keepsake-ic--copy" aria-hidden="true">
-          <path d="M9.7 7 L9.7 4.3 A1.8 1.8 0 0 1 11.5 2.5 L19.2 2.5 A1.8 1.8 0 0 1 21 4.3 L21 14.7 A1.8 1.8 0 0 1 19.2 16.5 L16.6 16.5"/>
-          <rect x="3" y="7" width="13.5" height="14" rx="1.9"/>
-          <path d="M6.2 12.4 L13.3 12.4 M6.2 16.2 L10.8 16.2"/>
-        </svg>
-        <svg viewBox="0 0 24 24" class="keepsake-ic keepsake-ic--kept" aria-hidden="true">
-          <path d="M4.4 12.9 L9.6 18.2 L19.6 5.9"/>
-        </svg>
-        <span class="sr-only">Copy bracelet</span>
-      </button>
+    <div class="bracelet-result">
+      <div class="bracelet-caption-row">
+        <p class="bracelet-caption">the bracelet you made</p>
+      </div>
+      <p id="braceletSummary" class="bracelet-summary" role="status" aria-live="polite"></p>
+      <div id="resultBracelet" class="bracelet bracelet-finished" aria-hidden="true"></div>
+
+      <div class="bracelet-actions" role="group" aria-label="Save your bracelet">
+        <button id="saveBraceletBtn" class="bracelet-action bracelet-copy" type="button"
+                aria-describedby="braceletKeepsakeNote">
+          <svg viewBox="0 0 24 24" class="keepsake-ic keepsake-ic--copy" aria-hidden="true">
+            <path d="M9.7 7 L9.7 4.3 A1.8 1.8 0 0 1 11.5 2.5 L19.2 2.5 A1.8 1.8 0 0 1 21 4.3 L21 14.7 A1.8 1.8 0 0 1 19.2 16.5 L16.6 16.5"/>
+            <rect x="3" y="7" width="13.5" height="14" rx="1.9"/>
+            <path d="M6.2 12.4 L13.3 12.4 M6.2 16.2 L10.8 16.2"/>
+          </svg>
+          <svg viewBox="0 0 24 24" class="keepsake-ic keepsake-ic--kept" aria-hidden="true">
+            <path d="M4.4 12.9 L9.6 18.2 L19.6 5.9"/>
+          </svg>
+          <span data-keepsake-label>Copy image</span>
+        </button>
+        <button id="downloadBraceletBtn" class="bracelet-action bracelet-download" type="button"
+                aria-describedby="braceletKeepsakeNote">
+          <svg viewBox="0 0 24 24" class="keepsake-ic keepsake-ic--copy keepsake-ic--download" aria-hidden="true">
+            <path d="M12 3.2 L12 15.2 M7.6 11 L12 15.4 L16.4 11"/>
+            <path d="M4.2 14.8 L4.2 19.4 A1.4 1.4 0 0 0 5.6 20.8 L18.4 20.8 A1.4 1.4 0 0 0 19.8 19.4 L19.8 14.8"/>
+          </svg>
+          <svg viewBox="0 0 24 24" class="keepsake-ic keepsake-ic--kept" aria-hidden="true">
+            <path d="M4.4 12.9 L9.6 18.2 L19.6 5.9"/>
+          </svg>
+          <span data-keepsake-label>Download PNG</span>
+        </button>
+      </div>
+      <p id="braceletKeepsakeNote" class="bracelet-keepsake-note">Keep the strand as a shareable notebook card.</p>
+
+      <details id="braceletMemory" class="bracelet-memory">
+        <summary id="braceletGuide">what the bracelet remembers</summary>
+        <div class="bracelet-memory-sheet">
+          <div id="braceletLegend" class="bracelet-legend"></div>
+          <div id="braceletRecap" class="bracelet-recap"></div>
+        </div>
+      </details>
     </div>
-    <div id="resultBracelet" class="bracelet bracelet-finished"></div>
 
     <div id="namePrompt" class="name-prompt" style="display:none;">
       <p>sign your notebook — you will be remembered</p>

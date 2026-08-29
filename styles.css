@@ -4504,6 +4504,12 @@
   .b-cord-hi { fill: none; stroke: #fffcf0; stroke-linecap: round; opacity: 0.6; }
   .b-cord-twist { fill: none; stroke: #8a7550; stroke-linecap: butt; opacity: 0.13; }
   .b-cube-text { font-family: "Courier Prime", "Courier New", monospace; font-weight: 700; }
+  /* A long finished strand keeps only its newest coils on the page. This small
+     typewritten note belongs to the loose cord mark that accounts for the rest. */
+  .b-prefix {
+    fill: var(--ink-soft); font-family: var(--type); font-size: 10px;
+    font-weight: 700; letter-spacing: 0.04em;
+  }
   /* the bone bead on the page a sudden-death run died (Insurance) */
   .b-skull { fill: #f3ece0; stroke: var(--ink-soft); stroke-linejoin: round; }
   .b-skull-hole { fill: var(--ink-soft); }
@@ -4523,14 +4529,14 @@
     70%  { transform: scale(1.55); opacity: 0; }
     100% { transform: scale(1.55); opacity: 0; }
   }
-
-  /* trinkets dangle from the thread and sway gently; a fresh one swings in */
-  .trinket-dangle { transform-box: fill-box; transform-origin: 50% 0%; animation: sway 5.5s ease-in-out infinite; }
-  .trinket-dangle.fresh { animation: swingIn 1.4s cubic-bezier(.34,1.56,.64,1), sway 5.5s ease-in-out 1.4s infinite; }
-  @keyframes sway {
-    0%, 100% { transform: rotate(2.4deg); }
-    50%      { transform: rotate(-2.4deg); }
+  body[data-reduce-motion="on"] .b-halo,
+  body[data-reduced-flashing="on"] .b-halo {
+    animation: none; opacity: 0.3;
   }
+
+  /* Trinkets settle once strung. Only the newly earned one gets an arrival swing. */
+  .trinket-dangle { transform-box: fill-box; transform-origin: 50% 0%; }
+  .trinket-dangle.fresh { animation: swingIn 1.4s cubic-bezier(.34,1.56,.64,1) both; }
   @keyframes swingIn {
     0%   { transform: rotate(26deg); }
     40%  { transform: rotate(-14deg); }
@@ -4538,7 +4544,7 @@
     100% { transform: rotate(0deg); }
   }
 
-  .bracelet-finished { max-width: 440px; margin: 0 auto 10px; }
+  .bracelet-finished { max-width: 520px; margin: 0 auto 8px; }
   .bracelet-caption-row {
     display: flex; align-items: center; justify-content: center; gap: 7px;
     margin: 14px 0 0;
@@ -4548,24 +4554,204 @@
     color: var(--ink-soft); margin: 0;
   }
 
-  /* A quiet keepsake action beside the finished strand's handwritten caption. */
-  .bracelet-copy {
-    display: inline-flex; align-items: center; justify-content: center;
-    width: 28px; height: 28px; padding: 0; flex: none;
-    border: 0; border-radius: 4px; background: transparent;
-    color: var(--ink-soft); cursor: pointer;
-    transition: color 0.18s ease, background-color 0.18s ease, transform 0.1s ease;
+  .bracelet-summary {
+    max-width: 48ch; margin: 2px auto 8px; text-align: center;
+    font-family: var(--type); font-size: calc(11px + var(--text-size-adjust));
+    line-height: 1.45; letter-spacing: 0.03em; color: var(--ink-soft);
   }
-  .bracelet-copy:hover { color: var(--ink); background: rgba(43,39,34,0.055); }
-  .bracelet-copy:active { transform: translateY(1px); }
-  .bracelet-copy:focus-visible { outline: 2px dotted rgba(43,39,34,0.5); outline-offset: 2px; }
-  .bracelet-copy[data-state="busy"] { opacity: 0.5; }
-  .bracelet-copy[data-state="kept"] { color: #c7951f; background: rgba(199,149,31,0.12); }
-  .bracelet-copy[data-state="kept"] .keepsake-ic--copy { display: none; }
-  .bracelet-copy[data-state="kept"] .keepsake-ic--kept { display: block; }
-  .bracelet-copy[data-state="failed"] { color: rgba(160,62,46,0.85); background: rgba(160,62,46,0.08); }
-  .bracelet-copy[disabled] { cursor: default; }
-  [data-reduce-motion="on"] .bracelet-copy { transition: none; }
+  .bracelet-summary:empty { display: none; }
+  .bracelet-summary strong, .bracelet-summary b { color: var(--ink); }
+
+  /* Two ordinary, worded keepsake actions make copy and download independently
+     discoverable on touch. Their labels are also the live state targets in JS. */
+  .bracelet-actions {
+    display: flex; align-items: stretch; justify-content: center; flex-wrap: wrap;
+    gap: 9px; max-width: 520px; margin: 8px auto 12px;
+  }
+  .bracelet-action {
+    display: inline-flex; align-items: center; justify-content: center;
+    gap: 7px; min-width: 128px; min-height: 45px; padding: 8px 13px;
+    border: 1.5px solid color-mix(in srgb, var(--ink-soft) 44%, transparent);
+    border-radius: 4px;
+    background: color-mix(in srgb, var(--paper-edge) 64%, transparent);
+    color: var(--ink-soft); cursor: pointer; touch-action: manipulation;
+    font-family: var(--type); font-size: calc(11px + var(--text-size-adjust));
+    font-weight: 700; letter-spacing: 0.03em; line-height: 1.15;
+    transition: color 0.18s ease, background-color 0.18s ease,
+                border-color 0.18s ease, transform 0.1s ease;
+  }
+  .bracelet-action .keepsake-ic { width: 18px; height: 18px; flex: none; }
+  .bracelet-action:hover {
+    color: var(--ink); border-color: var(--ink-soft);
+    background: color-mix(in srgb, var(--ink) 7%, var(--paper));
+  }
+  .bracelet-action:active { transform: translateY(1px); }
+  .bracelet-action:focus-visible {
+    outline: 3px solid var(--ink-accent); outline-offset: 2px;
+  }
+  .bracelet-action[data-state="busy"] { opacity: 0.58; }
+  .bracelet-action[data-state="kept"] {
+    color: var(--ink-accent); border-color: var(--ink-accent);
+    background: color-mix(in srgb, var(--ink-accent) 13%, var(--paper));
+  }
+  .bracelet-action[data-state="kept"] .keepsake-ic--copy { display: none; }
+  .bracelet-action[data-state="kept"] .keepsake-ic--kept { display: block; }
+  .bracelet-action[data-state="failed"] {
+    color: var(--red-pen); border-color: var(--red-pen);
+    background: color-mix(in srgb, var(--red-pen) 9%, var(--paper));
+  }
+  .bracelet-action:disabled { cursor: not-allowed; opacity: 0.46; }
+  .bracelet-action[hidden] { display: none; }
+  [data-reduce-motion="on"] .bracelet-action { transition: none; }
+  .bracelet-keepsake-note {
+    max-width: 48ch; margin: -5px auto 12px; text-align: center;
+    color: var(--ink-soft); font-family: var(--type);
+    font-size: calc(9.5px + var(--text-size-adjust)); line-height: 1.4;
+  }
+
+  /* A ruled note under the keepsake. The player can ignore it, while the same
+     meanings remain available as text instead of living only in bead finishes. */
+  .bracelet-memory {
+    max-width: 520px; margin: 0 auto 12px; overflow: hidden;
+    border: 1px solid color-mix(in srgb, var(--ink-soft) 40%, transparent);
+    border-radius: 3px; background: var(--paper-edge);
+    box-shadow: 2px 3px 0 color-mix(in srgb, var(--ink-soft) 16%, transparent);
+  }
+  .bracelet-memory[hidden] { display: none; }
+  .bracelet-memory > summary {
+    min-height: 44px; padding: 7px 11px; display: flex; align-items: center; gap: 9px;
+    list-style: none; cursor: pointer; color: var(--ink);
+    font-family: var(--hand); font-size: calc(19px + var(--text-size-adjust));
+    font-weight: 700; line-height: 1.15;
+    background: color-mix(in srgb, var(--paper) 68%, transparent);
+  }
+  .bracelet-memory > summary::-webkit-details-marker { display: none; }
+  .bracelet-memory > summary::before {
+    content: "+"; width: 24px; height: 24px; flex: none;
+    display: inline-flex; align-items: center; justify-content: center;
+    border: 1.5px solid var(--ink-soft); border-radius: 50%;
+    color: var(--ink-soft); font-family: var(--type); font-size: 16px; line-height: 1;
+  }
+  .bracelet-memory[open] > summary::before { content: "\2212"; }
+  .bracelet-memory > summary:hover {
+    color: var(--ink-accent);
+    background: color-mix(in srgb, var(--ink-accent) 8%, var(--paper));
+  }
+  .bracelet-memory > summary:focus-visible {
+    outline: 3px solid var(--ink-accent); outline-offset: -4px; border-radius: 3px;
+  }
+  .bracelet-memory-sheet {
+    padding: 11px 13px 13px; border-top: 1px dashed color-mix(in srgb, var(--ink-soft) 40%, transparent);
+    background:
+      repeating-linear-gradient(to bottom, transparent 0, transparent 27px,
+        color-mix(in srgb, var(--ink-soft) 9%, transparent) 27px,
+        color-mix(in srgb, var(--ink-soft) 9%, transparent) 28px),
+      color-mix(in srgb, var(--paper) 84%, var(--paper-edge));
+  }
+
+  .bracelet-legend {
+    display: flex; flex-wrap: wrap; gap: 7px; margin: 0;
+  }
+  .bracelet-legend:empty { display: none; }
+  .bracelet-legend-item {
+    display: inline-flex; align-items: center; gap: 6px; min-height: 30px;
+    padding: 4px 7px; border: 1px dotted color-mix(in srgb, var(--ink-soft) 46%, transparent);
+    border-radius: 3px; background: color-mix(in srgb, var(--paper) 75%, transparent);
+    color: var(--ink-soft); font-family: var(--type);
+    font-size: calc(9.5px + var(--text-size-adjust)); line-height: 1.2;
+  }
+  .bracelet-legend-swatch {
+    position: relative; width: 15px; height: 18px; flex: none;
+    display: grid; place-items: center;
+    border: 1px solid var(--ink-soft); border-radius: 4px;
+    background: var(--paper); overflow: hidden;
+  }
+  .bracelet-legend-swatch[data-finish="gloss"],
+  .bracelet-legend-item[data-finish="gloss"] .bracelet-legend-swatch {
+    background:
+      radial-gradient(circle at 32% 27%, rgba(255,255,255,0.88) 0 1.8px, transparent 2.4px),
+      var(--bead);
+  }
+  .bracelet-legend-swatch[data-finish="matte"],
+  .bracelet-legend-item[data-finish="matte"] .bracelet-legend-swatch {
+    background: color-mix(in srgb, var(--bead) 48%, var(--paper));
+  }
+  .bracelet-legend-swatch[data-finish="pearl"],
+  .bracelet-legend-item[data-finish="pearl"] .bracelet-legend-swatch {
+    background:
+      radial-gradient(circle at 31% 26%, #fff 0 2px, transparent 2.7px),
+      linear-gradient(145deg, color-mix(in srgb, var(--bead) 64%, #fff),
+        color-mix(in srgb, var(--bead) 42%, var(--paper)));
+  }
+  .bracelet-legend-swatch[data-finish="clear"],
+  .bracelet-legend-item[data-finish="clear"] .bracelet-legend-swatch {
+    border-style: dashed; background: color-mix(in srgb, var(--paper) 82%, transparent);
+  }
+  .bracelet-legend-swatch[data-finish="skull"]::after,
+  .bracelet-legend-item[data-finish="skull"] .bracelet-legend-swatch::after {
+    content: "\00d7"; position: absolute; inset: 0; display: grid; place-items: center;
+    color: var(--ink); font: 700 15px/1 var(--type);
+  }
+  .bracelet-legend-swatch[data-finish="sealed"],
+  .bracelet-legend-item[data-finish="sealed"] .bracelet-legend-swatch {
+    background:
+      repeating-linear-gradient(45deg, transparent 0 3px,
+        color-mix(in srgb, var(--ink-soft) 24%, transparent) 3px 4px),
+      var(--paper-edge);
+  }
+  .bracelet-legend-dangle {
+    color: var(--ink-accent); background: var(--paper);
+    font: 700 12px/1 var(--type);
+  }
+
+  .bracelet-recap { margin-top: 10px; }
+  .bracelet-recap:empty { display: none; }
+  .bracelet-recap-list { list-style: none; margin: 0; padding: 0; }
+  .bracelet-recap-item {
+    display: grid; grid-template-columns: 7.5rem minmax(0, 1fr);
+    align-items: baseline; gap: 2px 10px; padding: 7px 3px;
+    border-top: 1px dotted color-mix(in srgb, var(--ink-soft) 32%, transparent);
+  }
+  .bracelet-recap-page {
+    grid-column: 1; grid-row: 1 / span 3; color: var(--ink-accent);
+    font-family: var(--type); font-size: calc(9px + var(--text-size-adjust));
+    font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase;
+  }
+  .bracelet-recap-title {
+    grid-column: 2; min-width: 0; overflow-wrap: anywhere; color: var(--ink);
+    font-family: var(--hand); font-size: calc(17px + var(--text-size-adjust)); line-height: 1.15;
+  }
+  .bracelet-recap-meta, .bracelet-recap-note {
+    grid-column: 2; min-width: 0; overflow-wrap: anywhere; color: var(--ink-soft);
+    font-family: var(--type); font-size: calc(9.5px + var(--text-size-adjust)); line-height: 1.35;
+  }
+  .bracelet-recap-note { margin: 0 0 8px; }
+
+  :root[data-theme="dark"] .bracelet-memory {
+    box-shadow: 2px 3px 0 rgba(0,0,0,0.34);
+  }
+  body[data-contrast="high"] :is(.bracelet-action, .bracelet-memory, .bracelet-legend-item) {
+    border-color: var(--ink); border-width: 2px;
+  }
+  body[data-contrast="high"] .bracelet-legend-swatch { border-color: var(--ink); border-width: 2px; }
+  body[data-contrast="high"] :is(.bracelet-action, .bracelet-memory > summary) { color: var(--ink); }
+  body[data-contrast="high"] :is(.bracelet-action, .bracelet-memory > summary):focus-visible {
+    outline-color: var(--ink); outline-width: 3px;
+  }
+
+  /* The narrow page has 58px of margin-side padding and 30px at the outer edge.
+     Let this one visual keepsake borrow 32px on each side, still leaving 30px of
+     viewport gutter and never widening the page itself. */
+  @media (max-width: 560px) {
+    #screen-results .bracelet-result {
+      width: calc(100% + 64px); max-width: calc(100vw - 60px); margin-left: -32px;
+    }
+    .bracelet-actions { padding: 0 3px; }
+    .bracelet-action { flex: 1 1 0; min-width: 0; padding-left: 8px; padding-right: 8px; }
+    .bracelet-memory { max-width: none; }
+    .bracelet-memory-sheet { padding-left: 10px; padding-right: 10px; }
+    .bracelet-recap-item { grid-template-columns: 5.7rem minmax(0, 1fr); gap: 2px 7px; }
+  }
 
   /* ---------- Results anthology — lines you wrote from memory (pressed-flower keepsake) ---------- */
   .verse-anthology {
@@ -5762,12 +5948,10 @@
      piece, so it centres on the paper without breaking the edges it shares. Relative offset
      rather than a margin: the strand and the caption row are auto-centred, and a margin
      would take that away from them. */
-  /* The caption is not in the shifted group: it is small type on a ruled line near the
-     margin, so it reads against the page's text column rather than against the paper's
-     centre, and pulling it left with the numeral made it look like it had slipped. */
+  /* The complete bracelet result moves as one unit. That keeps its caption, semantic
+     summary, strand, actions and memory note on the same paper-centred axis. */
   #screen-results .final-score,
-  #screen-results .bracelet-caption-row,
-  #screen-results .bracelet-finished { position: relative; left: -14px; }
+  #screen-results .bracelet-result { position: relative; left: -14px; }
   .tally-head { margin: 0; display: flex; align-items: baseline; justify-content: center; gap: 9px; }
   .final-score .big {
     font-family: var(--hand); font-weight: 700; font-size: calc(88px + var(--text-size-adjust)); line-height: 1;

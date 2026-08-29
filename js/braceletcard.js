@@ -55,10 +55,14 @@ export function esc(s) {
 // than counted: a card sets song titles in Caveat, where "Illicit Affairs" and "WWWWWWW"
 // are nowhere near the same width and a character budget would clip one and starve the
 // other.
-export function fitText(str, font, maxW) {
-  let s = String(str);
-  if (measureText(s, font) <= maxW) return s;
-  while (s.length > 1 && measureText(s + "…", font) > maxW) s = s.slice(0, -1);
+export function fitText(str, font, maxW, letterSpacing = 0) {
+  const chars = Array.from(String(str));
+  const width = (text) => measureText(text, font) +
+    Math.max(0, Array.from(text).length - 1) * (Number(letterSpacing) || 0);
+  let s = chars.join("");
+  if (width(s) <= maxW) return s;
+  while (chars.length > 1 && width(chars.join("") + "…") > maxW) chars.pop();
+  s = chars.join("");
   return s.replace(/[ ,;:.\-]+$/, "") + "…";
 }
 
@@ -140,11 +144,17 @@ export function buildCardSVG(meta, fontCss) {
   // design and has changed once already, and a hardcoded ratio here silently overlaps the
   // stat row with the signature when it does.
   const bx = 62, by = 148, bw = W - bx - 46;
-  const vb = /viewBox="0 0 ([\d.]+) ([\d.]+)"/.exec(meta.braceletMarkup || "");
-  const bh = +(bw * (vb ? +vb[2] / +vb[1] : 132 / 520)).toFixed(1);
-  const strand = (meta.braceletMarkup || "").replace(
-    "<svg ",
-    `<svg x="${bx}" y="${by}" width="${bw}" height="${bh}" preserveAspectRatio="xMidYMid meet" `
+  const markup = String(meta.braceletMarkup || "");
+  const number = "[-+]?(?:\\d*\\.)?\\d+(?:[eE][-+]?\\d+)?";
+  const vb = new RegExp(`viewBox\\s*=\\s*["']\\s*(${number})[\\s,]+(${number})[\\s,]+(${number})[\\s,]+(${number})\\s*["']`, "i").exec(markup);
+  const vbW = vb ? Number(vb[3]) : 520;
+  const vbH = vb ? Number(vb[4]) : 132;
+  const aspect = Number.isFinite(vbW) && Number.isFinite(vbH) && vbW > 0 && vbH > 0
+    ? vbH / vbW : 132 / 520;
+  const bh = +(bw * aspect).toFixed(1);
+  const strand = markup.replace(
+    /<svg\b/i,
+    `<svg x="${bx}" y="${by}" width="${bw}" height="${bh}" overflow="visible" preserveAspectRatio="xMidYMid meet"`
   );
 
   // stat chips, spread evenly under the strand; the page is then cut to fit them
@@ -161,9 +171,12 @@ export function buildCardSVG(meta, fontCss) {
   let statSvg = "";
   stats.forEach((s, i) => {
     const cx = +(contentL + colW * (i + 0.5)).toFixed(1);
+    const value = fitText(s.v == null ? "" : String(s.v), '700 40px Caveat, cursive', colW - 12);
+    const label = fitText(String(s.l == null ? "" : s.l).toUpperCase(),
+      '11.5px "Courier Prime", monospace', colW - 12, 1.6);
     statSvg +=
-      `<text x="${cx}" y="${sy}" text-anchor="middle" font-family="Caveat" font-weight="700" font-size="40" fill="${v.inkAccent}">${esc(s.v)}</text>` +
-      `<text x="${cx}" y="${sy + 22}" text-anchor="middle" font-family="Courier Prime" font-size="11.5" letter-spacing="1.6" fill="${v.inkSoft}">${esc(String(s.l).toUpperCase())}</text>`;
+      `<text x="${cx}" y="${sy}" text-anchor="middle" font-family="Caveat" font-weight="700" font-size="40" fill="${v.inkAccent}">${esc(value)}</text>` +
+      `<text x="${cx}" y="${sy + 22}" text-anchor="middle" font-family="Courier Prime" font-size="11.5" letter-spacing="1.6" fill="${v.inkSoft}">${esc(label)}</text>`;
   });
   const divY = sy - 42;
   const divider = stats.length
@@ -175,16 +188,26 @@ export function buildCardSVG(meta, fontCss) {
   // era's accent, but the name stays gold in every era.
   const GOLD = "#a9791f";
   const sigY = H - 46;
+  const footerFont = '12px "Courier Prime", monospace';
+  const footerMax = meta.signature ? contentW * 0.52 : contentW;
+  const footerText = fitText(meta.footer || "", footerFont, footerMax, 0.4);
+  const footerW = measureText(footerText, footerFont) +
+    Math.max(0, Array.from(footerText).length - 1) * 0.4;
   let sig = "";
   if (meta.signature) {
-    const nameW = measureText(meta.signature, "700 34px Caveat");
     const hw = 46, hh = 37;
+    const sigFont = "700 34px Caveat, cursive";
+    const markW = meta.heartHands ? hw + 14 : 0;
+    const sigMax = Math.max(42, contentW - footerW - 24 - markW);
+    const signature = fitText(meta.signature, sigFont, sigMax);
+    const nameW = measureText(signature, sigFont);
     sig = `<g transform="rotate(-3 ${contentL} ${sigY})">` +
-      `<text x="${contentL}" y="${sigY}" font-family="Caveat" font-weight="700" font-size="34" fill="${GOLD}">${esc(meta.signature)}</text>` +
-      heartHandsMark(meta.heartHands, contentL + nameW + 14, sigY - 30, hw, hh, GOLD) +
+      `<text x="${contentL}" y="${sigY}" font-family="Caveat" font-weight="700" font-size="34" fill="${GOLD}">${esc(signature)}</text>` +
+      heartHandsMark(meta.heartHands, contentL + nameW + (markW ? 14 : 0), sigY - 30, hw, hh, GOLD) +
     `</g>`;
   }
-  const footer = `<text x="${contentR}" y="${sigY}" text-anchor="end" font-family="Courier Prime" font-size="12" letter-spacing="0.4" fill="${v.inkSoft}">${esc(meta.footer)}</text>`;
+  const footer = `<text x="${contentR}" y="${sigY}" text-anchor="end" font-family="Courier Prime" font-size="12" letter-spacing="0.4" fill="${v.inkSoft}">${esc(footerText)}</text>`;
+  const title = fitText(meta.title || "", "700 46px Caveat, cursive", contentW);
 
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">` +
     `<defs><style>${fontCss}` +
@@ -194,6 +217,7 @@ export function buildCardSVG(meta, fontCss) {
       `.b-cord-mid{fill:none;stroke:#ded0ae;stroke-linecap:round}` +
       `.b-cord-hi{fill:none;stroke:#fffcf0;stroke-linecap:round;opacity:.6}` +
       `.b-cord-twist{fill:none;stroke:#8a7550;stroke-linecap:butt;opacity:.13}` +
+      `.b-prefix{font-family:"Courier Prime",monospace;font-size:10px;font-weight:700;letter-spacing:.04em;fill:var(--ink-soft)}` +
       `.b-cube-text{font-family:"Courier Prime",monospace;font-weight:700}` +
       `.b-skull{fill:#f3ece0;stroke:var(--ink-soft);stroke-linejoin:round}` +
       `.b-skull-hole{fill:var(--ink-soft)}` +
@@ -209,7 +233,7 @@ export function buildCardSVG(meta, fontCss) {
     rules +
     `<line x1="${marginX}" y1="0" x2="${marginX}" y2="${H}" stroke="${v.margin}" stroke-width="2"/>` +
     `<text x="${contentL}" y="54" font-family="Courier Prime" font-weight="700" font-size="12" letter-spacing="2.6" fill="${v.inkSoft}">${esc(String(meta.kicker).toUpperCase())}</text>` +
-    `<text x="${contentL}" y="112" font-family="Caveat" font-weight="700" font-size="46" fill="${v.ink}">${esc(meta.title)}</text>` +
+    `<text x="${contentL}" y="112" font-family="Caveat" font-weight="700" font-size="46" fill="${v.ink}">${esc(title)}</text>` +
     strand + divider + statSvg + sig + footer +
     washiTape(80, -9, 104, 30, -4, 0) + washiTape(W - 190, -9, 104, 30, 3, 1) +
   `</svg>`;

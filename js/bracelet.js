@@ -1,8 +1,8 @@
 // The hand-strung friendship-bracelet keepsake, rendered as SVG.
 // Pure: given the per-round results (and the picked albums), returns markup.
-// Classic runs draw 13 beads with a white "13" letter bead; infinite runs pass
-// { total: <rounds>, letterBead: false } so the strand grows and the beads
-// shrink to fit (shrink-to-fit; no fixed cap).
+// Classic runs draw 13 beads with white "13" tie cubes. Longer runs keep the
+// same readable bead size: live play turns over to a fresh 13-page section, and
+// finished strands coil through up to three rows with an earlier-pages marker.
 import { TOTAL_ROUNDS, ALBUM_COLORS } from "./config.js";
 
 export function starPath(cx, cy, rOut, rIn) {
@@ -169,6 +169,113 @@ export function randomTrinketForBead(seed, i) {
   return RANDOM_TRINKET_IDS[h % RANDOM_TRINKET_IDS.length];
 }
 
+// One source of truth for the finish and dangle meanings. The renderer and the
+// results-page text recap both read these helpers, so the visual strand cannot
+// quietly acquire a meaning that its accessible explanation does not know.
+export function braceletFinish(result, i, opts = {}) {
+  if (opts.sealed) return "sealed";
+  if (result === true) {
+    const tier = (opts.verseTiers || [])[i];
+    return tier === "perfect" ? "pearl" : (opts.hinted || [])[i] ? "matte" : "gloss";
+  }
+  if (result === false) return (opts.skullMiss || [])[i] ? "skull" : "clear";
+  return "empty";
+}
+
+export function braceletTrinketId(i, opts = {}) {
+  if (opts.sealed) return null;
+  const tier = (opts.verseTiers || [])[i];
+  if ((opts.impostorCaught || [])[i]) return "devil";
+  if ((opts.riskWon || [])[i]) return "horseshoe";
+  if ((opts.snapPage || [])[i]) return "stopwatch";
+  if (tier === "perfect" || tier === "verse") return "nib";
+  if (opts.trinket === "random") return randomTrinketForBead(opts.trinketSeed || 0, i);
+  return opts.trinket && TRINKETS[opts.trinket] ? opts.trinket : "star";
+}
+
+export const BRACELET_ROW_CAP = 13;
+export const BRACELET_RESULT_ROWS = 3;
+
+// Pure geometry model for both the SVG and the developer audit. A live long run
+// shows the current 13-page section. A completed long run shows at most the most
+// recent 39 pages, wrapped like one bracelet laid in a loose serpentine coil.
+export function braceletLayout(totalValue, activeRound = 0, filledValue = 0, compact = false) {
+  const parsedTotal = Number(totalValue);
+  const total = Math.max(1, Math.floor(Number.isFinite(parsedTotal) ? parsedTotal : TOTAL_ROUNDS));
+  const parsedFilled = Number(filledValue);
+  const filled = Math.max(0, Math.min(total,
+    Math.floor(Number.isFinite(parsedFilled) ? parsedFilled : 0)));
+  const live = Number(activeRound) > 0;
+  const active = Math.max(1, Math.min(total, Math.floor(Number(activeRound) || 1)));
+  const maxFinished = BRACELET_ROW_CAP * BRACELET_RESULT_ROWS;
+
+  let visibleStart = 0;
+  let visibleCount;
+  if (live) {
+    visibleStart = total > BRACELET_ROW_CAP
+      ? Math.floor((active - 1) / BRACELET_ROW_CAP) * BRACELET_ROW_CAP
+      : 0;
+    visibleCount = Math.min(BRACELET_ROW_CAP, total - visibleStart);
+  } else {
+    const made = Math.max(1, filled);
+    visibleStart = Math.max(0, made - maxFinished);
+    visibleCount = made - visibleStart;
+  }
+
+  const rowCount = live ? 1 : Math.max(1, Math.ceil(visibleCount / BRACELET_ROW_CAP));
+  const lengths = [];
+  if (live) {
+    lengths.push(visibleCount);
+  } else {
+    const base = Math.floor(visibleCount / rowCount);
+    const extra = visibleCount % rowCount;
+    for (let r = 0; r < rowCount; r++) lengths.push(base + (r < extra ? 1 : 0));
+  }
+
+  const W = 520, CENTRE = 220, PITCH = 29;
+  const prefixOffset = visibleStart > 0 ? 22 : 0;
+  const rowStep = 112;
+  const rows = [];
+  const slots = [];
+  let cursor = 0;
+  for (let r = 0; r < rowCount; r++) {
+    const length = Math.max(1, lengths[r]);
+    const span = (length - 1) * PITCH;
+    const left = live ? 46 : CENTRE - span / 2;
+    // The last row always runs left to right so its numbered tie can finish at
+    // the ordinary right-hand side. Rows above it alternate to make one coil.
+    const dir = live ? 1 : ((rowCount - 1 - r) % 2 === 0 ? 1 : -1);
+    const right = left + span;
+    const y = prefixOffset + (compact ? 38 : 44) + r * rowStep;
+    const row = {
+      index: r, length, dir, left, right, y,
+      startX: dir > 0 ? left : right,
+      endX: dir > 0 ? right : left,
+    };
+    rows.push(row);
+    for (let c = 0; c < length; c++) {
+      slots.push({
+        index: visibleStart + cursor + c,
+        row: r,
+        col: c,
+        dir,
+        x: dir > 0 ? left + c * PITCH : right - c * PITCH,
+        y,
+      });
+    }
+    cursor += length;
+  }
+
+  const height = live
+    ? prefixOffset + (compact ? 88 : 132)
+    : prefixOffset + (rowCount - 1) * rowStep + 132;
+  return {
+    width: W, height, total, filled, live, compact,
+    visibleStart, visibleCount, omitted: visibleStart,
+    rows, slots, pitch: PITCH,
+  };
+}
+
 // The bone bead. Not a dangling trinket but a BEAD: it replaces the matte spacer on the one
 // page a sudden-death run actually died on (Insurance's uninsured miss), so the strand says
 // where it ended without a caption. Drawn in the miss bead's own muted paper, since it is
@@ -296,7 +403,15 @@ function ponyBead(x, y, fill, sc, rot, finish, u, idx) {
     `rx="${n(rx * 0.9)}" fill="${PEN}" opacity="0.10"/>`;
 
   let body;
-  if (finish === "clear") {
+  if (finish === "sealed") {
+    // A hidden Daily result is not merely covered with CSS. The real finishes
+    // never enter the DOM until reveal, so the strand cannot leak through an
+    // export, accessibility text, dev inspection, or a failed overlay.
+    body = `<rect ${box} fill="var(--paper-edge)" stroke="var(--ink-soft)" stroke-width="${n(1.15 * sc)}" opacity="0.92"/>` +
+      `<path d="M${n(x - w * 0.34)},${n(y - h * 0.22)} L${n(x + w * 0.34)},${n(y + h * 0.22)} ` +
+        `M${n(x - w * 0.34)},${n(y + h * 0.22)} L${n(x + w * 0.34)},${n(y - h * 0.22)}" ` +
+        `fill="none" stroke="var(--ink-soft)" stroke-width="${n(0.8 * sc)}" opacity="0.22"/>` + lit;
+  } else if (finish === "clear") {
     // The tint is the album of the song the player actually NAMED on this page, which the run
     // records even for a wrong answer. It is deliberately faint and must stay that way: the
     // strand's colour language is that colour means a page you landed, and a miss carrying its
@@ -412,11 +527,10 @@ function beadingNeedle(x, y, ang) {
   `</g>`;
 }
 
-export function buildBraceletSVG(results, activeRound, freshIndex, albums, opts) {
+function buildSingleRowBraceletSVG(results, activeRound, freshIndex, albums, opts) {
   const total = (opts && opts.total) || TOTAL_ROUNDS;
-  // letterBead:false marks an uncapped run (infinite, custom-infinite, Ruthless). It no
-  // longer draws a finale slot — it decides what the TIE BEADS say when the run ends:
-  // a fixed-length run ties off with "13", an uncapped one with the pages it reached.
+  // `tieText` is the explicit contract. `letterBead` remains only as a compatibility fallback
+  // for an older caller or saved fixture that has not moved to a numbered tie yet.
   const letterBead = !opts || opts.letterBead !== false;
   // Album→colour map; callers pass the active palette (colour-blind variant when
   // that setting is on), defaulting to the standard album colours.
@@ -454,10 +568,8 @@ export function buildBraceletSVG(results, activeRound, freshIndex, albums, opts)
   const W = 520, X0 = 46, XEND = 494;
   const BH = compact ? 88 : 132;
   const yMid = compact ? 38 : 44;
-  // Shrink-to-fit, uncapped: thirteen beads sit at full size and a long infinite run packs
-  // down instead of running off the page. Beads, spacers, charms and drops all ride this one
-  // scale, so a long strand reads as the same object seen smaller. The 386 is the run of page
-  // the beads get once the tie beads and both knots have taken their room.
+  // This path only draws thirteen pages or fewer. The scale still lets a non-standard short
+  // run leave enough room for its tie without changing the familiar thirteen-page strand.
   const sc = Math.max(0.28, Math.min(1, 386 / (total * 29)));
   const PITCH = 29 * sc;
   const yAt = (x) => yMid + 5 * Math.sin(Math.PI * ((x - 14) / (XEND - 14)));
@@ -468,7 +580,9 @@ export function buildBraceletSVG(results, activeRound, freshIndex, albums, opts)
   const filled = results.reduce((m, v, i) => (v == null ? m : i + 1), 0);
   const lastX = slotX(Math.max(1, filled, live ? activeRound : 0) - 1);
   const tie = live ? null
-    : (opts && opts.tie) || (letterBead ? ["1", "3"] : String(total).split(""));
+    : (opts && opts.tie) || (opts && opts.tieText != null
+      ? String(opts.tieText).split("")
+      : (letterBead ? ["1", "3"] : String(total).split("")));
 
   // ---- the elastic ----
   // On a live run the bare end lies in a loose curl rather than running dead straight off the
@@ -568,8 +682,154 @@ export function buildBraceletSVG(results, activeRound, freshIndex, albums, opts)
     svg += beadingNeedle(tipX - 2, tipY + 0.5, -12);
   }
 
-  return `<svg viewBox="0 0 ${W} ${BH}" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">` +
+  return `<svg viewBox="0 0 ${W} ${BH}" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">` +
     `<defs>${beadDefs(u)}<filter id="${u}drop" x="-10%" y="-30%" width="120%" height="185%">` +
     `<feDropShadow dx="1.4" dy="3.4" stdDeviation="2.2" flood-color="${PEN}" flood-opacity="0.28"/></filter></defs>` +
     `<g filter="url(#${u}drop)">${svg}</g></svg>`;
+}
+
+// Long and sealed strands use the readable geometry model above. The ordinary
+// 13-page strand keeps its established drawing untouched; this path only takes
+// over when the old single row would have to shrink or expose a sealed Daily.
+function buildCoiledBraceletSVG(results, activeRound, freshIndex, albums, opts = {}) {
+  const total = Math.max(1, Math.floor(Number(opts.total) || TOTAL_ROUNDS));
+  const colors = opts.colors || ALBUM_COLORS;
+  const compact = !!opts.compact;
+  const sealed = !!opts.sealed;
+  const live = activeRound > 0;
+  const filled = sealed ? total : results.reduce((m, v, i) => (v == null ? m : i + 1), 0);
+  const layout = braceletLayout(total, activeRound, filled, compact);
+  const u = "br" + (++BR_UID);
+  const XEND = 494;
+  const yAt = (x, row) => row.y + 5 * Math.sin(Math.PI * ((x - 14) / (XEND - 14)));
+  const slotAt = (index) => layout.slots.find((s) => s.index === index) || layout.slots[layout.slots.length - 1];
+  const lastSlot = slotAt(live ? Math.max(0, activeRound - 1) : Math.max(0, filled - 1));
+  const lastRow = layout.rows[lastSlot.row];
+
+  const tie = live ? null : (Array.isArray(opts.tie)
+    ? opts.tie.map(String)
+    : String(opts.tieText != null ? opts.tieText
+      : opts.letterBead === false ? total : TOTAL_ROUNDS).split(""));
+  const tieSc = tie ? Math.max(0.58, Math.min(1, 2.6 / Math.max(1, tie.length))) : 1;
+  const tiePitch = 27 * tieSc;
+  const tieX = tie ? lastSlot.x + layout.pitch * 0.9 : 0;
+  const knotX = tie ? tieX + (tie.length - 1) * tiePitch + 30 * tieSc : 0;
+
+  let prefix = "";
+  if (layout.omitted > 0) {
+    const pages = `${layout.omitted} earlier page${layout.omitted === 1 ? "" : "s"}`;
+    prefix = `<g class="b-prefix-mark">` +
+      cordStack("M18 14 C25 5 38 5 43 13 C48 21 36 24 29 18 C23 13 31 8 37 12", 2.5) +
+      `<text x="52" y="18" class="b-prefix">${pages} already strung</text></g>`;
+  }
+
+  let cord = "";
+  let tipX = 0, tipY = 0;
+  const firstRow = layout.rows[0];
+  const startKnotX = firstRow.startX - firstRow.dir * 22;
+  const startKnotY = yAt(startKnotX, firstRow);
+
+  if (live) {
+    const curlAt = Math.min(XEND - 44, lastSlot.x + layout.pitch * 0.95);
+    const curlW = Math.max(0, Math.min(128, XEND - 8 - curlAt));
+    cord = `M${n(startKnotX)},${n(startKnotY)}`;
+    for (let k = 1; k <= 40; k++) {
+      const x = startKnotX + ((curlAt - startKnotX) * k) / 40;
+      cord += `L${n(x)},${n(yAt(x, firstRow))}`;
+    }
+    const y = yAt(curlAt, firstRow), r = curlW;
+    cord += ` C${n(curlAt + r * 0.26)},${n(y - 7)} ${n(curlAt + r * 0.40)},${n(y + 13)} ${n(curlAt + r * 0.56)},${n(y + 14)}` +
+      ` C${n(curlAt + r * 0.73)},${n(y + 15)} ${n(curlAt + r * 0.81)},${n(y + 1)} ${n(curlAt + r * 0.66)},${n(y - 3)}` +
+      ` C${n(curlAt + r * 0.53)},${n(y - 7)} ${n(curlAt + r * 0.49)},${n(y + 8)} ${n(curlAt + r * 0.64)},${n(y + 12)}` +
+      ` C${n(curlAt + r * 0.82)},${n(y + 17)} ${n(curlAt + r * 0.95)},${n(y + 9)} ${n(curlAt + r)},${n(y + 3)}`;
+    tipX = curlAt + curlW;
+    tipY = y + 3;
+  } else {
+    cord = `M${n(startKnotX)},${n(startKnotY)}`;
+    layout.rows.forEach((row, r) => {
+      const fromX = row.startX - row.dir * 22;
+      const final = r === layout.rows.length - 1;
+      const toX = final ? knotX + 4 : row.endX + row.dir * 22;
+      for (let k = 1; k <= 28; k++) {
+        const x = fromX + ((toX - fromX) * k) / 28;
+        cord += `L${n(x)},${n(yAt(x, row))}`;
+      }
+      if (!final) {
+        const next = layout.rows[r + 1];
+        const nextX = next.startX - next.dir * 22;
+        const y1 = yAt(toX, row), y2 = yAt(nextX, next);
+        cord += `C${n(toX + row.dir * 18)},${n(y1 + 30)} ` +
+          `${n(nextX + row.dir * 18)},${n(y2 - 30)} ${n(nextX)},${n(y2)}`;
+      }
+    });
+  }
+
+  let svg = prefix + cordStack(cord, 3.6) +
+    tieKnot(startKnotX, startKnotY, -firstRow.dir);
+
+  for (const slot of layout.slots) {
+    const i = slot.index, x = slot.x, row = layout.rows[slot.row], y = yAt(x, row);
+    const answered = sealed ? "sealed" : results[i];
+    const albumCol = !sealed && albums && albums[i] ? (colors[albums[i]] || null) : null;
+    const fill = sealed ? "var(--paper-edge)" : (albumCol || "var(--bead)");
+    const tint = albumCol ? ` style="--bead:${albumCol}"` : "";
+    const rot = jitter(i, 1, 9);
+    const gx = x - slot.dir * layout.pitch * 0.5;
+    if (slot.col > 0 && (sealed || answered != null || i + 1 === activeRound)) {
+      svg += heishi(gx, yAt(gx, row), 1, jitter(i, 2, 10));
+    }
+
+    const finish = braceletFinish(answered, i, opts);
+    if (finish === "sealed") {
+      svg += ponyBead(x, y, fill, 1, rot, finish, u, i);
+    } else if (answered === true) {
+      svg += ponyBead(x, y, fill, 1, rot, finish, u, i);
+      const fresh = i === freshIndex;
+      const delay = fresh ? "" : ` style="animation-delay:${(-(i * 0.9) % 5.5).toFixed(2)}s"`;
+      const id = braceletTrinketId(i, opts);
+      const drop = (compact ? 18 : 32) + (i % 2 ? 8 : 0);
+      const cr = compact ? 7 : 10.2;
+      const csw = Math.max(0.7, cr * 0.15).toFixed(2);
+      const hy = y + 14;
+      svg += `<g class="trinket-dangle${fresh ? " fresh" : ""}"${delay}>` +
+        `<circle cx="${n(x)}" cy="${n(hy + 3.2)}" r="2.5" fill="none" stroke="var(--ink)" stroke-width="1.1" opacity="0.75"/>` +
+        `<path d="M${n(x)},${n(hy + 3.2)} L${n(x)},${n(hy + drop - cr)}" stroke="var(--ink)" stroke-width="0.9" opacity="0.45"/>` +
+        `<g${tint}>${TRINKETS[id](x, hy + drop, cr, csw)}</g></g>`;
+    } else if (finish === "skull") {
+      svg += `<g class="b-skull-bead">${skullBead(x, y - 1.8, 13.4, 1)}</g>`;
+    } else if (finish === "clear") {
+      svg += ponyBead(x, y, fill, 1, rot, finish, u, i);
+    } else if (i + 1 === activeRound) {
+      svg += `<rect class="b-halo" x="${n(x - 19)}" y="${n(y - 21)}" width="38" height="42" ` +
+        `rx="13" stroke-width="2"/>` + ponyBead(x, y, "var(--bead)", 1.06, rot, "gloss", u, i);
+    }
+  }
+
+  if (tie) {
+    const sx = tieX - layout.pitch * 0.42;
+    svg += heishi(sx, yAt(sx, lastRow), 1, 5);
+    tie.forEach((ch, k) => {
+      const x = tieX + k * tiePitch;
+      svg += alphaCube(x, yAt(x, lastRow), ch, tieSc, k % 2 ? 5.5 : -6);
+    });
+    const ex = tieX + (tie.length - 1) * tiePitch + 17 * tieSc;
+    svg += heishi(ex, yAt(ex, lastRow), tieSc, -4) + tieKnot(knotX, yAt(knotX, lastRow), 1);
+  } else {
+    svg += beadingNeedle(tipX - 2, tipY + 0.5, -12);
+  }
+
+  return `<svg viewBox="0 0 ${layout.width} ${layout.height}" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false" ` +
+    `data-bracelet-layout="${layout.rows.length > 1 ? "coil" : "section"}" data-bracelet-total="${total}" ` +
+    `data-visible-start="${layout.visibleStart}" data-visible-count="${layout.visibleCount}">` +
+    `<defs>${beadDefs(u)}<filter id="${u}drop" x="-15%" y="-18%" width="130%" height="145%">` +
+    `<feDropShadow dx="1.4" dy="3.4" stdDeviation="2.2" flood-color="${PEN}" flood-opacity="0.28"/></filter></defs>` +
+    `<g filter="url(#${u}drop)">${svg}</g></svg>`;
+}
+
+export function buildBraceletSVG(results, activeRound, freshIndex, albums, opts = {}) {
+  const total = Math.max(1, Math.floor(Number(opts.total) || TOTAL_ROUNDS));
+  if (!opts.sealed && total <= BRACELET_ROW_CAP) {
+    return buildSingleRowBraceletSVG(results, activeRound, freshIndex, albums, { ...opts, total });
+  }
+  return buildCoiledBraceletSVG(results, activeRound, freshIndex, albums, { ...opts, total });
 }

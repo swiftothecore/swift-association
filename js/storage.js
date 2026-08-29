@@ -1140,7 +1140,8 @@ export function loadMode() {
 
 /* ---------- Daily challenge ---------- */
 // Per-day played result. Key: swiftSongAssociation.daily.YYYY-MM-DD
-// Value: { score, roundResults: boolean[], roundAlbums: (string|null)[] }
+// Value keeps the compact legacy fields plus an optional versioned `bracelet` snapshot and
+// `revealed` flag. The richer payload lets the finished Daily redraw faithfully after reload.
 export function loadDailyResult(dateStr) {
   try {
     const raw = localStorage.getItem(DAILY_KEY + "." + dateStr);
