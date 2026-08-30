@@ -32,7 +32,9 @@
 // it scrolls 1:1 with the wood grain: these objects are ON the desk, and a desk
 // object does not fade in, drift, or announce itself. It was always there.
 
-import { DESK_MARKS, DESK_PROPS } from "./deskprops.js";
+import { DESK_MARKS, DESK_PROPS, BEAD_SPRITE, BEAD_MARKS } from "./deskprops.js";
+
+const SVGNS = "http://www.w3.org/2000/svg";
 
 // Same breakpoint the fixed props use: below this the gutters are too thin to
 // hold anything without crowding the notebook.
@@ -45,15 +47,18 @@ const EDGE = 10;       // keep things off the screen edge
 const MIN_BAND = 66;   // a gutter narrower than this gets nothing
 const BEAD_CAP = 520;  // hard ceiling, however tall the page
 
-// Bead palette, echoing the floss-station beads and the era accents.
-// hi = lit face, lo = shaded edge fill, edge = stroke, hole = threading hole.
+// Bead palette, echoing the floss-station beads and the era accents. One flat
+// body colour each and nothing else, because the sprite lights every bead with
+// the same white and the same shadow whatever colour it is (see BEAD_SPRITE).
+// The old entries carried a lit face, a shaded fill, a stroke and a hole tint
+// per colour, which is six beads each hauling its own lamp around the desk.
 const ROUND_COLORS = [
-  { hi: "#f2d78f", lo: "#c79a3e", edge: "#9c7527", hole: "#5d4318" }, // gold
-  { hi: "#ecaebd", lo: "#c06880", edge: "#964962", hole: "#6e3247" }, // rose
-  { hi: "#b3cbe4", lo: "#6c8cb4", edge: "#4c6b91", hole: "#324e6e" }, // denim
-  { hi: "#cbbceb", lo: "#8b73c9", edge: "#6d5aa6", hole: "#453a6a" }, // lavender
-  { hi: "#a9d6b6", lo: "#5a9e6e", edge: "#3f7d54", hole: "#2c5238" }, // debut green
-  { hi: "#f0b795", lo: "#c4703f", edge: "#9c5227", hole: "#633315" }, // rust
+  { body: "#d9ab4d" }, // gold
+  { body: "#cf7f95" }, // rose
+  { body: "#7d9cc2" }, // denim
+  { body: "#9d88d4" }, // lavender
+  { body: "#74ab86" }, // debut green
+  { body: "#cd8154" }, // rust
 ];
 
 // Floss colours for the strand thread, keyed loosely to the bead palette so a
@@ -190,6 +195,11 @@ function ensureContainer() {
   const app = document.querySelector(".app");
   if (app && app.parentNode) app.parentNode.insertBefore(container, app);
   else document.body.appendChild(container);
+  // The bead symbols every bead <use>s, as a SIBLING of the container rather
+  // than a child of it: rebuild() replaces the container's children wholesale,
+  // and Bare empties it entirely, so a sprite living inside would be thrown out
+  // with the desk and every bead of the next rebuild would come back invisible.
+  container.insertAdjacentHTML("beforebegin", BEAD_SPRITE);
   return container;
 }
 
@@ -225,41 +235,119 @@ const zFor = (bottomY) => 1000 + clamp(Math.round(bottomY / 3), 0, 60000);
 // where every disc landed the same way up is a spill that never happened.
 // There is deliberately no face-down state: an alphabet bead is stamped on
 // BOTH faces, so whichever way one lands it reads.
+//
+// Each bead is one <use> of the sprite, which is the SAME drawing as the fixed
+// spill in index.html rather than an impression of it. Everything a bead does
+// NOT get from the sprite is per-bead and belongs here: its colour, its stamp,
+// its size, and the wear it happens to be carrying.
 function makeBead(r, x, y, o = {}) {
-  const el = document.createElement("div");
   const size = o.size != null ? o.size : rangeR(r, 17, 25);
   const rot = o.rot != null ? o.rot : rangeR(r, -180, 180);
   const kind = o.kind || rollKind(r, o);
 
-  el.className = "bead-scatter " + kind;
+  const el = document.createElementNS(SVGNS, "svg");
+  // The sprite is drawn at bead radius 10.5 in a 26-unit box, so the box is a
+  // shade wider than the bead: the acrylic thickness showing past the face and
+  // the chamfer glint both live in that margin.
+  el.setAttribute("viewBox", "-13 -13 26 26");
+  el.setAttribute("class", "bead-scatter " + kind);
   el.style.left = x.toFixed(1) + "px";
   el.style.top = y.toFixed(1) + "px";
   el.style.setProperty("--sz", size.toFixed(1) + "px");
-  el.style.setProperty("--rot", rot.toFixed(1) + "deg");
   // Shadow scales with the bead, so a big one sits visibly higher off the wood
   // than a small one. Uniform shadows are what flattened the old scatter into
   // stickers at one depth.
   el.style.setProperty("--sh", (size / 20).toFixed(2));
   el.style.zIndex = zFor(y + size / 2);
 
+  const use = document.createElementNS(SVGNS, "use");
+
   if (kind === "round") {
-    const c = o.color || pick(r, ROUND_COLORS);
-    el.style.setProperty("--hi", c.hi);
-    el.style.setProperty("--lo", c.lo);
-    el.style.setProperty("--edge", c.edge);
-    el.style.setProperty("--hole", c.hole);
-  } else if (kind === "disc") {
-    const span = document.createElement("span");
-    const glyph = o.glyph || pick(r, LOOSE_GLYPHS);
-    span.textContent = glyph;
-    // The heart and the star are not letters and do not sit in the line box
-    // like one, so they carry their own centring (see .sym-* in styles.css).
-    if (glyph === "\u2665") el.classList.add("sym-heart");
-    else if (glyph === "\u2605") el.classList.add("sym-star");
-    el.appendChild(span);
+    // The body colour arrives as an inherited fill and the sprite's white and
+    // shadow passes sit on top of it, so all six colours share one lamp.
+    use.setAttribute("href", "#dbRound");
+    use.setAttribute("fill", (o.color || pick(r, ROUND_COLORS)).body);
+    el.appendChild(use);
+    // Then which way it happens to have landed. A round bead is drilled right
+    // through, so it either looks up at you down the bore or lies with the hole
+    // across it showing two mouths and the seam between them. Giving every one
+    // of them the same hole in the same place is what made a handful of them
+    // read as one shape stamped out six times.
+    const hole = document.createElementNS(SVGNS, "use");
+    hole.setAttribute("href", chance(r, 0.52) ? "#dbBore" : "#dbMouth");
+    hole.setAttribute("transform", `rotate(${rangeR(r, -180, 180).toFixed(1)})`);
+    el.appendChild(hole);
+  } else if (kind === "side") {
+    // The one bead kind a turn genuinely changes the shape of, so this is the
+    // one that carries a rotation. A round body must never take one: rotating
+    // it can only rotate its lighting, and a spill in which every bead is lit
+    // from a different corner of the room is the flattest thing on this desk.
+    use.setAttribute("href", "#dbSide");
+    const g = document.createElementNS(SVGNS, "g");
+    g.setAttribute("transform", `rotate(${rot.toFixed(1)})`);
+    g.appendChild(use);
+    el.appendChild(g);
+  } else {
+    use.setAttribute("href", "#dbDisc");
+    el.appendChild(use);
+    // A tub of beads is not a fresh tub. Roughly one in five has gone amber
+    // sitting in the light, and one in eight carries a scuff off the tub wall.
+    if (chance(r, 0.2)) el.appendChild(svgNode("circle", {
+      r: 10.5, fill: chance(r, 0.5) ? "#d3bf90" : "#cbb98e",
+      opacity: rangeR(r, 0.09, 0.17).toFixed(2),
+    }));
+    el.appendChild(stamp(r, o.glyph || pick(r, LOOSE_GLYPHS), rot));
+    if (chance(r, 0.12)) {
+      const a = rangeR(r, 0, 360) * Math.PI / 180;
+      const sx = Math.cos(a) * 7.6, sy = Math.sin(a) * 7.6;
+      el.appendChild(svgNode("path", {
+        d: `M${sx.toFixed(1)} ${sy.toFixed(1)} q${(-sx * 0.42).toFixed(1)} ${(-sy * 0.3).toFixed(1)} ${(-sx * 0.72).toFixed(1)} ${(-sy * 0.66).toFixed(1)}`,
+        fill: "none", stroke: chance(r, 0.5) ? "#ffffff" : "#8b8168",
+        "stroke-width": 0.55, "stroke-linecap": "round", opacity: 0.38,
+      }));
+    }
   }
+
   stats.beads++;
   return el;
+}
+
+function svgNode(name, attrs) {
+  const n = document.createElementNS(SVGNS, name);
+  for (const k in attrs) n.setAttribute(k, attrs[k]);
+  return n;
+}
+
+// What the disc says. Cut into the bead and inked, never printed on it, so it
+// goes down in two passes: the ink, and half a unit under it the lower lip of
+// the groove, which is the only part of the cut facing the lamp. The metrics
+// are the fixed spill's own (see .desk-items .bead-letter), because the sprite
+// is drawn in the space those were measured in.
+//
+// The turn goes on the stamp and nowhere else: a tilted letter is a bead that
+// was dropped, an upright one is a bead that was placed.
+function stamp(r, glyph, rot) {
+  const g = document.createElementNS(SVGNS, "g");
+  g.setAttribute("transform", `rotate(${rot.toFixed(1)})`);
+  const mark = BEAD_MARKS[glyph];
+  if (mark) {
+    // A heart or a star is a mark rather than a character: smaller than a
+    // letter, sitting on the bead's own centre instead of on a baseline, and
+    // inked in folklore grey so the one bead carrying a colour still belongs
+    // to this notebook.
+    const inner = document.createElementNS(SVGNS, "g");
+    inner.setAttribute("transform", "scale(0.72)");
+    inner.appendChild(svgNode("path", { d: mark.d, transform: `translate(0 ${(mark.dy + 1.25).toFixed(2)})`, fill: "#fffdf3", opacity: 0.75 }));
+    inner.appendChild(svgNode("path", { d: mark.d, transform: `translate(0 ${mark.dy})`, fill: "#9b9b9b" }));
+    g.appendChild(inner);
+    return g;
+  }
+  for (const [cls, y] of [["bead-stamp bead-stamp-lip", 4.96], ["bead-stamp", 4.06]]) {
+    const t = svgNode("text", { class: cls, y });
+    t.textContent = glyph;
+    g.appendChild(t);
+  }
+  return g;
 }
 
 // Kind mix, weighted toward the coloured rounds. Both disc states are cream,

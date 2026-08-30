@@ -44,8 +44,8 @@ const bar = (id, [lit, body, shade, bounce], deg = 0) =>
    </linearGradient>`;
 
 // Anything spherical or domed: a bead, a jack tip, a drop of glue. The light
-// sits at 36/30 to match the loose beads the scatter deals, which are built
-// from the same numbers in CSS (.bead-scatter.round in styles.css).
+// sits at 36/30 to match the loose beads the scatter deals, which are lit from
+// the same corner by #dbRound in BEAD_SPRITE below.
 const dome = (id, hi, lo, deep) =>
   `<radialGradient id="${id}" cx="0.36" cy="0.30" r="0.78">
      <stop offset="0" stop-color="${hi}"/><stop offset="0.62" stop-color="${lo}"/>
@@ -79,6 +79,149 @@ const grain = (id, freq, seed, [r, g, b], alpha) =>
      <feTurbulence type="fractalNoise" baseFrequency="${freq}" numOctaves="3" seed="${seed}"/>
      <feColorMatrix type="matrix" values="0 0 0 0 ${r}  0 0 0 0 ${g}  0 0 0 0 ${b}  0 0 0 ${alpha} 0"/>
    </filter>`;
+
+// ---------------------------------------------------------------------------
+// The bead sprite.
+//
+// Every loose bead the walk drops is one <use> of a symbol below. The three
+// symbols ARE the beads drawn in the fixed spill in index.html (.di-beads-r),
+// restated here rather than referenced across, because the density setting
+// hides .desk-items outright and the scattered beads must not go with it.
+//
+// The whole reason these are SVG at all is that a bead is not a gradient. The
+// passes that make one read as a pressed piece of plastic rather than as a dot
+// are the ones no stack of CSS gradients can draw: the moulded chamfer carried
+// round the rim as a single stroke so the light travels along it, the glint
+// that chamfer throws just in from the edge, the sheen laid across the face
+// behind it, the countersunk hole with a lit lip on one wall and none on the
+// other, and the millimetre and a half of acrylic showing past the face on the
+// side the lamp throws it. Beads on this desk used to be three radial
+// gradients in a div, and next to the spill upstairs they read as stickers.
+//
+// One lamp, upper left, the same one every prop on this desk uses. THE LIGHT IS
+// COLOUR-AGNOSTIC: a round bead's body colour arrives as an inherited fill on
+// the <use> and everything over it is white or shadow at an opacity, so six
+// colours of bead are lit by one lamp instead of each carrying its own around.
+// That is also why the drilled hole is a shadow rather than a per-colour tint:
+// the wall of the hole is the same plastic, just in the dark.
+//
+// Coordinate space: bead radius 10.5, viewBox "-13 -13 26 26", which is the
+// space the fixed spill's letters were measured in, so the stamp metrics below
+// are the same numbers .desk-items .bead-letter uses.
+export const BEAD_SPRITE = `
+<svg class="bead-sprite" aria-hidden="true" focusable="false" width="0" height="0">
+  <defs>
+    <!-- A round bead: white lit from the upper left, then shadow closing in at
+         the rim, and at the very rim the shade lifting again where the wood
+         throws light back up into the underside. That last stop is what stops a
+         ball reading as a flat disc with a gradient painted on it. -->
+    <radialGradient id="dbLit" cx="0.3" cy="0.24" r="0.78">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.44"/>
+      <stop offset="0.5" stop-color="#ffffff" stop-opacity="0.08"/>
+      <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="dbShade" cx="0.34" cy="0.28" r="0.94">
+      <stop offset="0.42" stop-color="#2b1522" stop-opacity="0"/>
+      <stop offset="0.9" stop-color="#2b1522" stop-opacity="0.34"/>
+      <stop offset="1" stop-color="#2b1522" stop-opacity="0.12"/>
+    </radialGradient>
+    <!-- The face of an alphabet disc: a warm bone body with the lamp on its
+         upper left, then one wash across the whole disc so the plastic darkens
+         away from it. -->
+    <radialGradient id="dbFace" cx="0.36" cy="0.3" r="0.95">
+      <stop offset="0" stop-color="#fffdf6"/>
+      <stop offset="0.55" stop-color="#eee7d5"/>
+      <stop offset="1" stop-color="#cec4ac"/>
+    </radialGradient>
+    <linearGradient id="dbWash" x1="0.1" y1="0" x2="0.85" y2="1">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.2"/>
+      <stop offset="0.46" stop-color="#ffffff" stop-opacity="0"/>
+      <stop offset="1" stop-color="#3b2c14" stop-opacity="0.23"/>
+    </linearGradient>
+    <!-- The moulded chamfer. Nothing pressed in a mould has a sharp corner
+         anywhere on it, and this is most of what says "plastic" at this size. -->
+    <linearGradient id="dbBevel" x1="0.12" y1="0" x2="0.88" y2="1">
+      <stop offset="0" stop-color="#fffdf6"/>
+      <stop offset="0.45" stop-color="#eee7d5"/>
+      <stop offset="1" stop-color="#b5aa90"/>
+    </linearGradient>
+    <!-- The barrel of a disc landed on its rim, lit across its short axis. -->
+    <linearGradient id="dbBarrel" gradientUnits="userSpaceOnUse" x1="-0.05" y1="-4.6" x2="0.05" y2="4.6">
+      <stop offset="0" stop-color="#fdfbf4"/>
+      <stop offset="0.42" stop-color="#efe9da"/>
+      <stop offset="1" stop-color="#c6bda6"/>
+    </linearGradient>
+
+    <!-- A coloured pony bead lying loose. Body colour comes in as the inherited
+         fill, so the six colours share one lamp. The hole is NOT in here: a
+         bead falls the way it falls, and which way its hole is pointing is the
+         one thing that tells two otherwise identical beads apart. -->
+    <g id="dbRound">
+      <circle r="10.5"/>
+      <circle r="10.5" fill="url(#dbShade)"/>
+      <circle r="10.5" fill="url(#dbLit)"/>
+      <ellipse cx="-4" cy="-4.6" rx="3.2" ry="2.1" transform="rotate(-36 -4 -4.6)" fill="#ffffff" opacity="0.55"/>
+      <circle r="10.5" fill="none" stroke="#2b1522" stroke-opacity="0.24" stroke-width="1"/>
+    </g>
+    <!-- Landed with the hole looking up: the countersunk funnel, the bore under
+         it, and a lit lip on the one wall the lamp can reach. A hole drawn as a
+         single dark dot is a printed dot; the lip is what drills it. -->
+    <g id="dbBore">
+      <circle r="2.7" fill="#2b1522" opacity="0.34"/>
+      <circle r="1.95" fill="#1a0d14" opacity="0.5"/>
+      <path d="M-2.4 -1.2 A2.7 2.7 0 0 1 2 -2.1" fill="none" stroke="#fffdf3"
+            stroke-width="0.6" stroke-linecap="round" opacity="0.45"/>
+    </g>
+    <!-- And landed with the hole running across it instead, which shows as two
+         mouths and the faint seam between them. Same drawing the floss station
+         upstairs threads its beads with, at this sprite's scale. -->
+    <g id="dbMouth">
+      <path d="M0 -10.1 q5.25 10.1 0 20.2" fill="none" stroke="#ffffff" stroke-width="1.05" opacity="0.09"/>
+      <ellipse cy="-9.35" rx="2.4" ry="1.05" fill="#3a2130" opacity="0.34"/>
+      <ellipse cy="9.35" rx="2.4" ry="1.05" fill="#3a2130" opacity="0.22"/>
+    </g>
+
+    <!-- The cream alphabet disc, face up. The stamp is added per bead, because
+         only the letter is ever turned: a disc is round, so rotating the body
+         would only rotate its lighting and leave every bead in a spill lit from
+         a different corner of the room. -->
+    <g id="dbDisc">
+      <circle cx="1.2" cy="1.8" r="10.3" fill="#c2b8a0"/>
+      <circle r="10.5" fill="url(#dbFace)"/>
+      <circle r="10.5" fill="url(#dbWash)"/>
+      <circle r="9.2" fill="none" stroke="url(#dbBevel)" stroke-width="2.5"/>
+      <circle r="10.5" fill="none" stroke="#aca285" stroke-width="0.65" opacity="0.85"/>
+      <path d="M-8.8 -4.8 A10 10 0 0 1 -3 -9.5" fill="none" stroke="#ffffff" stroke-width="1.1" opacity="0.55" stroke-linecap="round"/>
+      <ellipse cx="-3.6" cy="-4" rx="4.4" ry="2.2" transform="rotate(-38 -3.6 -4)" fill="#ffffff" opacity="0.3"/>
+    </g>
+
+    <!-- The same disc landed on its rim, showing the drilled hole end on. The
+         barrel is a cylinder, so it takes its light across its short axis, and
+         the hole is countersunk, which is why there is a lit lip on one side of
+         it and none on the other. -->
+    <g id="dbSide">
+      <rect x="-10.5" y="-4.6" width="21" height="9.2" rx="4.4" fill="#c2b8a0" transform="translate(1 1.5)"/>
+      <rect x="-10.5" y="-4.6" width="21" height="9.2" rx="4.4" fill="url(#dbBarrel)" stroke="#aca285" stroke-width="0.65"/>
+      <ellipse rx="2.5" ry="2.9" fill="#7d735c"/>
+      <ellipse rx="1.9" ry="2.3" fill="#4f4838"/>
+      <path d="M-1.9 -1.3 A2.4 2.9 0 0 1 1.5 -2.1" fill="none" stroke="#fffdf3" stroke-width="0.7" opacity="0.5"/>
+    </g>
+  </defs>
+</svg>`;
+
+// The two glyphs a bead kit ships that are not letters. They are stamped and
+// inked exactly the way the letters are, but drawn as paths rather than set as
+// type: a heart and a star sit differently in every font's line box, and the
+// fallback face is not ours to choose. Folklore grey, the album's own #9b9b9b,
+// so the beads carrying a mark instead of a letter still belong to this
+// notebook. Each is emitted twice by the caller, the lip a unit and a quarter
+// under the ink, because the mark is cut into the bead rather than printed on
+// it. `dy` sits the mark on the bead's own centre: a heart hangs low in its own
+// outline, so it has to be nudged down to look centred at all.
+export const BEAD_MARKS = {
+  "♥": { dy: 1.15, d: "M0 4.6 C-4.6 1.5 -6.1 -0.7 -6.1 -3.1 C-6.1 -5.5 -4.2 -6.9 -2.6 -6.9 C-1.2 -6.9 -0.3 -6 0 -5.2 C0.3 -6 1.2 -6.9 2.6 -6.9 C4.2 -6.9 6.1 -5.5 6.1 -3.1 C6.1 -0.7 4.6 1.5 0 4.6 Z" },
+  "★": { dy: 0.4, d: "M0 -6.6 L1.86 -2.36 L6.47 -1.87 L3.02 1.23 L3.98 5.77 L0 3.46 L-3.98 5.77 L-3.02 1.23 L-6.47 -1.87 L-1.86 -2.36 Z" },
+};
 
 // ---------------------------------------------------------------------------
 // Tier 1: marks. Stains, dust, offcuts. Flat and stainless-of-shadow, because a

@@ -548,17 +548,22 @@
   }
   @media (min-width: 1120px) { .desk-scatter { display: block; } }
 
+  /* Every bead on the wood is one <use> of the sprite in js/deskprops.js, which
+     is the same drawing as the fixed spill in index.html. These used to be divs
+     with three radial gradients each, and beside the designed spill upstairs
+     they read as stickers: no chamfer, no glint, no countersink, no acrylic
+     thickness past the face, and a letter printed on the plastic instead of cut
+     into it. None of those are things a stack of gradients can draw. */
+  .bead-sprite { position: absolute; width: 0; height: 0; overflow: hidden; }
   .bead-scatter {
     position: absolute;
-    width: var(--sz, 20px); height: var(--sz, 20px);
-    /* The BODY does not take --rot. A bead is round, so turning it can only
-       ever turn what is printed on it, and turning the shading with it left
-       every bead in the spill lit from a different corner of the room. The
-       rotation now goes on the two things a turn genuinely changes: the
-       stamped letter, and the edge-on bead's silhouette. */
+    /* --sz is the BEAD's diameter; the sprite's box is a shade wider than the
+       bead it holds, so the element has to be scaled up by the same fraction
+       for --sz to keep meaning what it says. */
+    width: calc(var(--sz, 20px) * 26 / 21); height: calc(var(--sz, 20px) * 26 / 21);
     transform: translate(-50%, -50%);
-    border-radius: 50%;
-    opacity: 0.92;
+    overflow: visible;
+    opacity: 0.94;
     /* --sh scales the whole shadow with the bead, so a big bead visibly sits
        higher off the wood than a small one. One shared shadow for every bead is
        what used to flatten the spill into stickers at a single depth. */
@@ -566,68 +571,15 @@
       drop-shadow(calc(1.4px * var(--sh, 1)) calc(2.8px * var(--sh, 1)) calc(2px * var(--sh, 1)) rgba(46,32,14,0.32))
       saturate(0.9);
   }
-  /* coloured round bead: threading hole + light speck + lit body, all as
-     stacked radial gradients so no extra elements are needed */
-  .bead-scatter.round {
-    background:
-      radial-gradient(circle at 50% 50%, var(--hole) 0 11%, transparent 13%),
-      radial-gradient(circle at 32% 28%, rgba(255,255,255,0.62) 0 7%, transparent 12%),
-      radial-gradient(circle at 38% 32%, var(--hi), var(--lo) 82%);
-    border: 0.8px solid var(--edge);
-    /* the shaded shoulder, and under it the light the wood throws back up into
-       the bead's underside. A gradient alone gives a disc that fades; the
-       bounce on the far rim is what makes it a ball resting on something. */
-    box-shadow:
-      inset 1px 1.4px 2px rgba(58,32,20,0.22),
-      inset -0.8px -1.2px 1.6px rgba(255,255,255,0.2);
+  /* The stamp, in the fixed spill's own metrics, because the sprite is drawn in
+     the space those were measured in. Two passes: the ink, and half a unit
+     under it the lower lip of the groove, which is the only part of the cut
+     that faces the lamp. */
+  .bead-scatter .bead-stamp {
+    font: 700 calc(14px + var(--text-size-adjust)) "Courier Prime", monospace;
+    fill: #2e2b26; text-anchor: middle; opacity: 0.92;
   }
-  /* cream alphabet-disc bead, face up: aged bone body with a stamped letter */
-  .bead-scatter.disc {
-    background:
-      radial-gradient(circle at 30% 26%, rgba(255,255,255,0.55) 0 6%, transparent 11%),
-      radial-gradient(circle at 36% 30%, #fdfbf4, #f0ebdd 68%, #d5cdb9);
-    border: 0.9px solid #bdb49e;
-    display: flex; align-items: center; justify-content: center;
-    /* the moulded chamfer just in from the rim, then the same shoulder and
-       bounce the round beads get. Nothing pressed in a mould has a sharp edge,
-       and the chamfer is most of what says "plastic" at this size. */
-    box-shadow:
-      inset 0 0 0 0.9px rgba(255,255,255,0.4),
-      inset 1.1px 1.5px 2px rgba(70,52,22,0.18),
-      inset -0.8px -1.2px 1.6px rgba(255,255,255,0.28);
-  }
-  .bead-scatter.disc span {
-    font: 700 calc(var(--sz, 20px) * 0.6) "Courier Prime", monospace;
-    color: #2e2b26; line-height: 1;
-    /* the stamp rides the bead's rotation on purpose: a tilted letter is a
-       dropped bead, an upright one is a bead someone placed. It carries the
-       turn on its own now, because the body below it must not.
-       The nudge after it centres the INK. Flexbox centres the line box, and a
-       cap sits high inside that box by 0.069em (measured off Courier Prime's
-       own metrics), so every stamp on this desk used to ride high on its bead.
-       It comes after the rotate deliberately: the offset is along the letter's
-       own baseline, so it has to turn with the letter. */
-    transform: rotate(var(--rot, 0deg)) translateY(0.069em);
-  }
-  /* the two glyphs that are not letters sit differently in the line box again,
-     and they fall back to whatever face has them, so they get their own
-     measurements rather than the letters' */
-  .bead-scatter.disc.sym-heart span { transform: rotate(var(--rot, 0deg)) translateY(0.143em); }
-  .bead-scatter.disc.sym-star span { transform: rotate(var(--rot, 0deg)) translateY(0.045em); }
-  /* and the same disc landed on its rim. A face-up-only spill is a spill that
-     never happened, and the edge-on silhouette is the cheapest thing on this
-     desk that says "these are real objects": a flat pill with the light along
-     its top edge and the threading hole punched through the middle. */
-  .bead-scatter.side {
-    height: calc(var(--sz, 20px) * 0.42);
-    border-radius: calc(var(--sz, 20px) * 0.21);
-    /* the one bead kind a turn really does change the shape of */
-    transform: translate(-50%, -50%) rotate(var(--rot, 0deg));
-    background:
-      radial-gradient(ellipse 13% 42% at 50% 52%, #554e3d 0 58%, transparent 74%),
-      linear-gradient(180deg, #fefcf6 0%, #f4eee1 38%, #ded6c2 76%, #c6bda7 100%);
-    border: 0.8px solid #bdb49e;
-  }
+  .bead-scatter .bead-stamp-lip { fill: #fffdf3; opacity: 0.75; }
   /* a bead alone in a lot of empty wood. Nothing is crowding it, so its shadow
      gets to run long and soft, which is what reads as "this one rolled here". */
   .bead-scatter.lonely {
