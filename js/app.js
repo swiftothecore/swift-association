@@ -16597,9 +16597,10 @@ function oneTypoApart(a, b) {
 // A token the player probably thought WAS the page's word. Three shapes, in the order a
 // player is likely to have meant them:
 //
-//   strict    "golden" on a page for "gold" in a run that counts the word itself only. The
-//             most arguable miss in the game, because the very same line clears the page in
-//             every other mode.
+//   strict    "golden" on a page for "gold" with Match word variants switched off. The most
+//             arguable miss in the game, because the same line clears the page for everyone
+//             who left the setting alone — and no MODE turns this on, so the fix is a setting
+//             and the message has to say so rather than blame the run.
 //   friend    "stared" on a page for "star": a form of an unrelated word that our own stem
 //             rule would otherwise have taken, refused by name in FALSE_FRIENDS.
 //   compound  "typewriter" on a page for "write": the word IS in there, but as half of a
@@ -16626,7 +16627,11 @@ function nearMissPromptWord(normPhrase) {
       if (strict && wordRegex(norm, false).test(t)) return { token: t, word, why: "strict" };
       const friends = falseFriendRegex(norm);
       if (!strict && friends && friends.test(t)) return { token: t, word, why: "friend" };
-      if (buriesPromptWord(t, rx)) return { token: t, word, why: "compound" };
+      // The compound test always asks the LENIENT regex, even in a strict run: the question
+      // is whether the player SAW the word in there, not whether it would have counted. With
+      // variants off, strict "write" doesn't match "writer", and "typewriter" — the most
+      // confusing token on the page — would go unexplained in the one mode that needs it most.
+      if (buriesPromptWord(t, wordRegex(norm, false))) return { token: t, word, why: "compound" };
     }
   }
   return null;
@@ -16691,7 +16696,7 @@ function nudgeNearMiss(raw, near) {
   const t = `“<b>${escapeHtml(censor(typedForm(raw, near.token)))}</b>”`;
   const w = `“<b>${escapeHtml(censor(near.word))}</b>”`;
   softRejectFlash(near.why === "strict"
-    ? `${t} doesn't count as ${w} — this run counts the word itself only`
+    ? `${t} doesn't count as ${w} — word variants are off in settings`
     : `${t} doesn't count as ${w} — sing a line with the word itself`, true);
 }
 
