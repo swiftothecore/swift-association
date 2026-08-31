@@ -163,37 +163,51 @@ function layout(geo) {
     // field reads as evenly salted, which is the desk-scatter failure mode: perfectly spaced
     // is a metronome, and a couple of deliberate pairs are what make the gaps read as gaps.
     const cluster = placed.length > 1 && rng() < CLUSTER_ODDS;
-    let spot = null, spotScore = -1;
-    for (let t = 0; t < TRIES; t++) {
-      let cx, cy;
-      if (cluster) {
-        const near = placed[(rng() * placed.length) | 0];
-        const reach = near.rad + rad + GAP;
-        const d = reach * (CLUSTER_NEAR + rng() * (CLUSTER_FAR - CLUSTER_NEAR));
-        const a = rng() * Math.PI * 2;
-        cx = near.cx + Math.cos(a) * d;
-        cy = near.cy + Math.sin(a) * d;
-      } else {
-        cx = field.x + rad + rng() * Math.max(0, field.w - size);
-        cy = field.y + rad + rng() * Math.max(0, field.h - size);
+    let spot = null, spotScore = -1, curRad = rad;
+
+    // A short viewport (a laptop with little vertical room, not a phone-width field) can leave
+    // less room than fifteen random draws expect, and a spot that never turns up would mean an
+    // earned sticker just never appears on the cover — the exact bug this shrink loop exists to
+    // rule out. So a candidate scan that comes up empty is not the end: the radius is shrunk
+    // and the field re-scanned, same seed, so a sticker that has to give ground always gives
+    // the same ground at a given field size rather than flickering between sizes on a reload.
+    for (let shrink = 0; shrink < 9 && !spot; shrink++) {
+      if (shrink > 0) curRad *= 0.82;
+      const useCluster = cluster && shrink === 0;
+      spotScore = -1;
+      for (let t = 0; t < TRIES; t++) {
+        let cx, cy;
+        if (useCluster) {
+          const near = placed[(rng() * placed.length) | 0];
+          const reach = near.rad + curRad + GAP;
+          const d = reach * (CLUSTER_NEAR + rng() * (CLUSTER_FAR - CLUSTER_NEAR));
+          const a = rng() * Math.PI * 2;
+          cx = near.cx + Math.cos(a) * d;
+          cy = near.cy + Math.sin(a) * d;
+        } else {
+          cx = field.x + curRad + rng() * Math.max(0, field.w - curRad * 2);
+          cy = field.y + curRad + rng() * Math.max(0, field.h - curRad * 2);
+        }
+        if (cx - curRad < field.x || cx + curRad > field.x + field.w) continue;
+        if (cy - curRad < field.y || cy + curRad > field.y + field.h) continue;
+        if (mask.some((m) => hits(m, cx, cy, curRad))) continue;
+        // Distance to the nearest neighbour's EDGE. Negative means they overlap.
+        let near = Infinity;
+        for (const p of placed) {
+          const dx = p.cx - cx, dy = p.cy - cy;
+          near = Math.min(near, Math.sqrt(dx * dx + dy * dy) - p.rad - curRad);
+        }
+        // The floor attempt (shrink === 8) asks only to not overlap, GAP included, because by
+        // then the point is to still land the sticker somewhere rather than hold a margin.
+        if (near < (shrink < 8 ? GAP : 0)) continue;
+        // A cluster wants the FIRST spot that fits, not the roomiest one, or it stops clustering.
+        if (useCluster) { spot = { cx, cy }; break; }
+        if (near > spotScore) { spotScore = near; spot = { cx, cy }; }
       }
-      if (cx - rad < field.x || cx + rad > field.x + field.w) continue;
-      if (cy - rad < field.y || cy + rad > field.y + field.h) continue;
-      if (mask.some((m) => hits(m, cx, cy, rad))) continue;
-      // Distance to the nearest neighbour's EDGE. Negative means they overlap.
-      let near = Infinity;
-      for (const p of placed) {
-        const dx = p.cx - cx, dy = p.cy - cy;
-        near = Math.min(near, Math.sqrt(dx * dx + dy * dy) - p.rad - rad);
-      }
-      if (near < GAP) continue;
-      // A cluster wants the FIRST spot that fits, not the roomiest one, or it stops clustering.
-      if (cluster) { spot = { cx, cy }; break; }
-      if (near > spotScore) { spotScore = near; spot = { cx, cy }; }
     }
     if (!spot) continue;
-    placed.push({ cx: spot.cx, cy: spot.cy, rad, rot });
-    out[st.id] = { x: spot.cx - rad, y: spot.cy - rad, size, rot };
+    placed.push({ cx: spot.cx, cy: spot.cy, rad: curRad, rot });
+    out[st.id] = { x: spot.cx - curRad, y: spot.cy - curRad, size: curRad * 2, rot };
   }
   return out;
 }
