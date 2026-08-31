@@ -309,7 +309,7 @@ let insuranceDead = false;      // Insurance: an uninsured miss landed — the r
 let riskDecisionPending = false;// a between-pages bank/double offer is waiting for nextRound
 let riskSettled = false;        // the end-of-run payout has already been applied (see endChallenge)
 let roundWildcard = null;       // Wildcard: this round's active sub-constraint
-let lastWildcardId = "";        // Wildcard: previous round's constraint id (no immediate repeat)
+let lastWildcardId = "";        // Wildcard: previous rule/pair id (Dark rotates both constituents)
 let devForcedWildcardId = null; // Dev tools: pin every Wildcard round to one sub-rule (or null)
 // Impostor: which of the 13 pages show a fake word (Set of round numbers), whether THIS page
 // is a fake, and the run outcome trackers. impostorFailed short-circuits the win to a loss.
@@ -2227,6 +2227,8 @@ function playRunFlourish() {
 }
 
 function unlock(id) {
+  // A no-log run is completely disposable: do not let mid-round checks persist charms.
+  if (devNoLog) return;
   // Sandbox: during a live challenge run, only the challenge-progress charms unlock —
   // no game-quality achievements (streaks, speed, etc.) leak in from mid-round checks.
   // The flag is cleared before endChallenge folds, so post-run meta charms still fire.
@@ -4168,6 +4170,7 @@ function devSetKeepsake(id, agoMs) {
 // "developing" toast, refresh the wall + nav counter, and check the collection meta. Idempotent
 // — re-earning an owned polaroid is a no-op, so triggers can fire freely on every game.
 function earnPolaroid(id) {
+  if (devNoLog) return false;
   const p = POLAROID_BY_ID[id];
   if (!p) return false;
   const earned = loadKeepsakes();
@@ -4376,6 +4379,7 @@ function refreshStickers() {
 // drawer. Idempotent, so a trigger can fire freely on every run. NOTHING calls this yet except
 // the dev tools; the fifteen triggers are a separate pass (see STICKERS.md).
 function earnSticker(id) {
+  if (devNoLog) return false;
   const st = STICKER_BY_ID[id];
   if (!st) return false;
   const earned = loadStickers();
@@ -11112,7 +11116,7 @@ let typeHintCountArmed = false;
 function noteTypeHintsSeen(segs) {
   if (!typeHintCountArmed) return;
   typeHintCountArmed = false;
-  if (!segs.length) return;
+  if (devNoLog || !segs.length) return;
   if (!settings.typingHintsSeen || typeof settings.typingHintsSeen !== "object") settings.typingHintsSeen = {};
   for (const seg of segs) settings.typingHintsSeen[seg.id] = typeHintSeen(seg.id) + 1;
   saveSettings(settings);
@@ -11805,7 +11809,7 @@ function startChallenge(id, opts) {
             && (!!(opts && opts.force) || darkSideUnlocked(id));
   const c = resolveChallenge(base, dark);
   gameType = "challenge";
-  notePlayed(dark ? "dark" : "challenge", id);
+  if (!devNoLog) notePlayed(dark ? "dark" : "challenge", id);
   currentMode = MODES[c.mode] || MODES.medium;   // fixed by the challenge, not persisted via DIFF_KEY
   // Some challenges override a lever of the borrowed mode (Revolving Door wants a 20s clock;
   // Shrinking Timer hides suggestions; Deep Cut disables hints). Clone so the shared MODES
@@ -11838,7 +11842,7 @@ function startChallenge(id, opts) {
   if (c.rule === "spite") spiteSeconds = c.seconds || 10;
   // Thirty-One: runs on Infinite's sudden-death rules while staying a sandboxed challenge.
   if (c.rule === "survive") lives = 1;
-  recordChallengeAttempt(id, dark);
+  if (!devNoLog) recordChallengeAttempt(id, dark);
   applyInputHints();
   updateTagline();
   // Thirty-One shows a live round count (like Infinite), not "page X / 13".
@@ -12752,6 +12756,8 @@ function applyChallengeRound(wrap) {
   }
   if (currentChallenge.rule === "vanishing") {
     return;
+  } else if (currentChallenge.rule === "alphabetical") {
+    renderAlphaBanner();
   } else if (currentChallenge.rule === "wordfx") {
     renderWordFx(wrap, currentWord, round);
   } else if (currentChallenge.rule === "revolving") {
@@ -12813,6 +12819,24 @@ function applyChallengeRound(wrap) {
 }
 // Fixed max-warp tier for Ready For It (the round-4-equivalent scramble+drop+reverse).
 const FLASHWARP_LEVEL = 4;
+// From A to Z: the live floor, plus Dark Side's feasibility ceiling. The ceiling is the latest
+// initial that still leaves one distinct later title initial per page after this one, making the
+// winnability guard visible before the player commits to a title.
+function renderAlphaBanner() {
+  if (!(gameType === "challenge" && currentChallenge && currentChallenge.rule === "alphabetical")) return;
+  const el = ensureChallBanner();
+  let rule;
+  if (currentChallenge.strictAlpha) {
+    const ceiling = alphaCeilingLetter();
+    rule = lastAlphaLetter ? `later than ${lastAlphaLetter}` : "choose the opening letter";
+    if (ceiling) rule += ` · no later than ${ceiling}`;
+  } else {
+    rule = lastAlphaLetter ? `${lastAlphaLetter} or later` : "choose any opening letter";
+  }
+  el.innerHTML =
+    `<span class="chall-prog-name">alphabet · ${escapeHtml(rule)}</span>` +
+    `<span class="chall-prog-count">${score} / ${currentChallenge.target || 9}</span>`;
+}
 function renderFlashwarpBanner() {
   if (!(gameType === "challenge" && currentChallenge && currentChallenge.rule === "flashwarp")) return;
   const el = ensureChallBanner();
@@ -13185,7 +13209,13 @@ function applyWildcardRound() {
   const choices = stacked.length ? stacked : usable;
   // Dev tools: pin the round to a chosen sub-rule when it's solvable this round.
   const forced = devForcedWildcardId && choices.find((c) => c.id === devForcedWildcardId);
-  let pool = choices.filter((c) => c.id !== lastWildcardId);
+  // Base excludes its one previous rule. Dark excludes BOTH constituents of its previous pair,
+  // so the next page cannot quietly keep vanish (or any other half) while changing only its
+  // partner. Every page has two visual rules plus several answer constraints, which guarantees
+  // a disjoint solvable pair; the exact-id fallback remains a defensive guard for malformed data.
+  const previousParts = new Set(lastWildcardId.split("+").filter(Boolean));
+  let pool = choices.filter((c) => c.id.split("+").every((id) => !previousParts.has(id)));
+  if (!pool.length) pool = choices.filter((c) => c.id !== lastWildcardId);
   if (!pool.length) pool = choices.length ? choices : cons;
   roundWildcard = forced || pool[Math.floor(Math.random() * pool.length)];
   lastWildcardId = roundWildcard.id;
@@ -13417,7 +13447,7 @@ function endChallenge() {
   const returnJustReady = !devNoLog && !won && returnRunsBefore < CHALLENGE_RETURN_RUNS
     && challengeReturnReady(c.id);
 
-  const firstTime = won ? markChallengeDefeated(c.id, score, challengeDark) : false;
+  const firstTime = !devNoLog && won ? markChallengeDefeated(c.id, score, challengeDark) : false;
   const rec = challengeRecord(c.id);
   /* The three charms about HOW a challenge was beaten rather than which one. All three used to
      hang off the first-ever defeat of a given challenge, which made each one a single
@@ -13425,60 +13455,61 @@ function endChallenge() {
      for good: lose your opening run everywhere and Our Slates Are Clean died; win everything
      inside seven runs and At Least I'm Trying died. They are judged on THIS run now, so a
      challenge already on the board can always be gone back to and done properly. */
-  const cleanSheet = won && roundResults.length > 0 && roundResults.every(Boolean);
+  const rewardRun = !devNoLog;
+  const cleanSheet = rewardRun && won && roundResults.length > 0 && roundResults.every(Boolean);
   // Our Slates Are Clean — a defeat with nothing scratched out: every page of the run cleared.
   if (cleanSheet && !challengeDark) unlock("defeat-challenge-no-misses");
   // Now I Breathe Flames — the dark mirror of it, on a dark side.
   if (cleanSheet && challengeDark) unlock("beat-dark-side-no-misses");
   // At Least I'm Trying — won a challenge you had already seen through seven times. `runs`
   // never freezes (see recordCompletedChallengeRun), so this stays winnable on any card, forever.
-  if (won && !challengeDark && rec.runs >= CHALLENGE_RETURN_RUNS) unlock("defeat-challenge-after-7-runs");
+  if (rewardRun && won && !challengeDark && rec.runs >= CHALLENGE_RETURN_RUNS) unlock("defeat-challenge-after-7-runs");
   // Should've Known That Word — a flawless Impostor run: every impostor flagged (implied by surviving)
   // and every real word named. challengeRunActive is already false, so the charm fires normally.
-  if (c.rule === "impostor" && won && impostorMissed === 0) unlock("defeat-impostor-flawlessly");
+  if (rewardRun && c.rule === "impostor" && won && impostorMissed === 0) unlock("defeat-impostor-flawlessly");
   // One Single Thread — defeat Common Thread (the word is the string tying the lines together).
-  if (c.rule === "common" && won) unlock("defeat-common-thread-every-line");
+  if (rewardRun && c.rule === "common" && won) unlock("defeat-common-thread-every-line");
   // Per-challenge flourish charms: winning the harder way, native to each challenge's twist.
   // Two Steps Ahead — every correct Revolving Door answer landed before the word swapped.
-  if (c.rule === "revolving" && won && revolveBeatEverySwap) unlock("beat-revolving-door-before-swap");
+  if (rewardRun && c.rule === "revolving" && won && revolveBeatEverySwap) unlock("beat-revolving-door-before-swap");
   // My Walls Stood Tall — a flawless Home Invasion: no miss ever cut the per-page clock.
-  if (c.rule === "spite" && won && spiteSeconds === (c.seconds || 10)) unlock("win-home-invasion-clock-untouched");
+  if (rewardRun && c.rule === "spite" && won && spiteSeconds === (c.seconds || 10)) unlock("win-home-invasion-clock-untouched");
   // Tick-Tock — cleared every single-digit-clock page of Shrinking Timer (rounds 9-13).
-  if (c.rule === "accelerate" && won && roundResults.slice(8).length === 5
+  if (rewardRun && c.rule === "accelerate" && won && roundResults.slice(8).length === 5
       && roundResults.slice(8).every(Boolean)) unlock("win-shrinking-timer-all-pages-under-10s");
   // Part The Sea — won Sea of Songs without ever tapping a decoy tile.
-  if (c.rule === "sea" && won && seaDecoyTaps === 0) unlock("win-sea-of-songs-no-decoys");
+  if (rewardRun && c.rule === "sea" && won && seaDecoyTaps === 0) unlock("win-sea-of-songs-no-decoys");
   // Knowing All The Words — every scored Lyric Lover line was recalled word-perfect.
-  if (c.rule === "verse" && won && score > 0 && gameVersePerfect === score) unlock("win-lyric-lover-all-lines-word-perfect");
+  if (rewardRun && c.rule === "verse" && won && score > 0 && gameVersePerfect === score) unlock("win-lyric-lover-all-lines-word-perfect");
   // Two Is Better Than One — a perfect Double Trouble run: all 13 pages cleared with two songs.
   // Keyed on the id, not the rule: Name Three borrows the same `multi` rule, and a perfect run
   // of THREE songs a page is a different feat that shouldn't quietly claim this charm.
-  if (c.id === "double-trouble" && score === TOTAL_ROUNDS) unlock("clear-double-trouble-all-13-two-songs-each");
+  if (rewardRun && c.id === "double-trouble" && score === TOTAL_ROUNDS) unlock("clear-double-trouble-all-13-two-songs-each");
   // Blank Space — won Vanishing Word writing into the blank: every correct answer came after
   // the word had already gone.
-  if (c.rule === "vanishing" && won && vanishAnsweredBlind) unlock("win-vanishing-word-all-answers-blind");
+  if (rewardRun && c.rule === "vanishing" && won && vanishAnsweredBlind) unlock("win-vanishing-word-all-answers-blind");
   // Been Here All Along — total loyalty in Deep Cut: not just five from one album, but every
   // correct answer of the run off that same album, no strays.
-  if (c.rule === "album5" && won && score === deepCutLeader().count) unlock("win-deep-cut-all-correct-same-album");
+  if (rewardRun && c.rule === "album5" && won && score === deepCutLeader().count) unlock("win-deep-cut-all-correct-same-album");
   // Tied Together With A Smile — From A to Z climbing on every link: the alphabet tied end to
   // end without ever resting twice on the same letter.
-  if (c.rule === "alphabetical" && won && alphaEveryLetterNew) unlock("win-from-a-to-z-no-repeated-letters");
+  if (rewardRun && c.rule === "alphabetical" && won && alphaEveryLetterNew) unlock("win-from-a-to-z-no-repeated-letters");
   // The risk three. Read AFTER the settle above, which banks whatever was still riding when
   // the pages ran out — a pot carried all the way home is banked like any other, so it counts.
   // Bonnie And Clyde — a pot ridden PRESS_FLOURISH_RIDE deep and actually banked.
   // Not gated on the win: the ride is the feat, and a run that rode that deep and still fell
   // short of the target has done the reckless thing the charm is named for.
-  if (c.rule === "press" && beadRideBanked >= PRESS_FLOURISH_RIDE) unlock("bank-press-your-luck-pot-5-pages-deep");
+  if (rewardRun && c.rule === "press" && beadRideBanked >= PRESS_FLOURISH_RIDE) unlock("bank-press-your-luck-pot-5-pages-deep");
   // Untouchable — won Insurance having never once bought your way out of trouble.
-  if (c.rule === "insurance" && won && insuranceSpent === 0) unlock("win-insurance-no-shields-spent");
+  if (rewardRun && c.rule === "insurance" && won && insuranceSpent === 0) unlock("win-insurance-no-shields-spent");
   // Can't Have Nice Things — Untouchable's mirror: the same untouched shields, read at the
   // other end of the run. Page one only, since an uninsured miss is how EVERY Insurance run
   // ends and the charm would otherwise land on the first defeat. A page-one death implies
   // insuranceSpent === 0 on its own (an insured page absorbs the miss, and useInsurance
   // refuses a second shield on the same page), so the count is not worth re-testing here.
-  if (c.rule === "insurance" && insuranceDead && roundResults.length === 1) unlock("lose-insurance-page-1-shields-unspent");
+  if (rewardRun && c.rule === "insurance" && insuranceDead && roundResults.length === 1) unlock("lose-insurance-page-1-shields-unspent");
   // Let The Players Play — won Confidence Wager with nothing held back on any page.
-  if (c.rule === "wager" && won && wagerAlwaysMax) unlock("win-confidence-wager-max-every-page");
+  if (rewardRun && c.rule === "wager" && won && wagerAlwaysMax) unlock("win-confidence-wager-max-every-page");
 
   // A dark run signs off the way it was announced: the briefing card's violet kicker,
   // repeated above the challenge name so the run opens and closes on the same note. The
@@ -14245,6 +14276,28 @@ function pickWord() {
   // only empties on a degenerate list — fall back to the full bucket if so.
   const pool = bucket.filter((w) => !usedWords.includes(w));
   let choices = pool.length ? pool : bucket;
+  // From A to Z: only serve a prompt with an answer that clears the current floor. Dark Side
+  // also refuses a title jump that would leave too few later initials for the pages still ahead,
+  // so filtering through the shared predicate here prevents both random dead pages and terminal
+  // player choices such as taking Y before the final page.
+  if (gameType === "challenge" && currentChallenge && currentChallenge.rule === "alphabetical") {
+    let enough = choices.filter((w) =>
+      validSongs(w, effectiveStrict(), effectiveNoTitle()).some(alphaAllowsSong));
+    // The current catalogue always has unused choices, but do not quietly fall back to an
+    // illegal prompt if a future edit thins it out. Reusing a prompt is the least surprising
+    // recovery; widening from the common pool comes next. If even the full catalogue has no
+    // legal prompt, fail loudly so the broken corpus is caught instead of serving a dead page.
+    if (!enough.length) {
+      enough = bucket.filter((w) =>
+        validSongs(w, effectiveStrict(), effectiveNoTitle()).some(alphaAllowsSong));
+    }
+    if (!enough.length) {
+      enough = playableWords.filter((w) =>
+        validSongs(w, effectiveStrict(), effectiveNoTitle()).some(alphaAllowsSong));
+    }
+    if (!enough.length) throw new Error("From A to Z has no legal prompt for the current chain");
+    choices = enough;
+  }
   // Double Trouble: a page is only winnable if the word has at least `need` valid
   // songs (after the no-title rule). Keep only such words; fall back if none remain.
   if (gameType === "challenge" && currentChallenge && currentChallenge.rule === "multi") {
@@ -15318,8 +15371,13 @@ function applyRiskScoring(correct) {
     // The stake is never deducted up front, so a win pays it and a miss forfeits it — the
     // same arithmetic as "stake it, get it back doubled", with nothing to refund.
     if (roundStake > 0) {
+      // submitAnswer has already added the ordinary correct-answer bead, so subtract that one
+      // to recover the bankroll the stake panel capped against. A player who wagered every bead
+      // they could afford took the page's maximum risk even when the configured ceiling was
+      // temporarily out of reach (Dark Side opens on one bead against a ceiling of four).
+      const affordableCap = Math.min(riskMaxStake(), Math.max(0, score - (correct ? 1 : 0)));
       adjustBeads(correct ? roundStake : -roundStake);
-      if (correct && roundStake >= riskMaxStake()) riskTrinket[round - 1] = true;
+      if (correct && roundStake >= affordableCap) riskTrinket[round - 1] = true;
     }
   } else if (rule === "doubleup") {
     // The same pot as Press Your Luck, escalating by doubling instead of adding: the page you
@@ -15475,6 +15533,11 @@ function advanceRound() {
   currentSongs = roundIsImpostor ? [] : validSongs(currentWord, effectiveStrict(), effectiveNoTitle());
   if (commonRuleActive() && commonPuzzle) currentSongs = commonPuzzle.lines.map((x) => x.song);
   currentLyricSongs = currentSongs;   // full lyrics-valid set (soft-rejects judge near-misses off this)
+  // From A to Z: narrow every downstream surface to the titles the live chain can really accept.
+  // Keep currentLyricSongs broad so an out-of-order or page-stranding title gets a soft reject
+  // instead of being scored as an unrelated wrong answer.
+  if (gameType === "challenge" && currentChallenge && currentChallenge.rule === "alphabetical")
+    currentSongs = currentSongs.filter(alphaAllowsSong);
   // Both Of Us: draw the page's extra word(s) against the one just drawn, then narrow the valid
   // set to the songs holding them ALL — so the rarity stamp, the examples, the hint song and the
   // win check every describe an answer that really clears the page. currentLyricSongs widens to
@@ -15491,10 +15554,11 @@ function advanceRound() {
   // trick rather than a rule. The word has to be in the title as printed.
   if (gameType === "challenge" && currentChallenge && currentChallenge.rule === "titleHas")
     currentSongs = titleSongsForWord(currentWord, true);
-  // Short n' Sweet: only one- or two-word titles are acceptable answers — so the rarity
-  // count, the suggestion pool and the example pool all reflect the SHORT-title subset.
+  // Short n' Sweet: use the resolved title limit everywhere. Base accepts one or two words;
+  // Dark Side accepts one only, so its rarity and reveal pools must not retain two-word titles
+  // that the submission judge will reject.
   if (gameType === "challenge" && currentChallenge && currentChallenge.rule === "shorttitle")
-    currentSongs = currentSongs.filter((s) => titleWordCount(s.title) <= 2);
+    currentSongs = currentSongs.filter((s) => titleWordCount(s.title) <= maxTitleWordsNow());
   // Wrapped Like A Chain: once a chain letter is set, only songs whose title starts with it
   // are acceptable — narrow the valid set so the rarity count and examples agree.
   if (gameType === "challenge" && currentChallenge && currentChallenge.rule === "chain" && chainLetter)
@@ -15964,11 +16028,7 @@ function roundAcceptsSong(song) {
     return !roundWildcard || !roundWildcard.accepts || roundWildcard.accepts(song);
   }
   if (currentChallenge.rule === "alphabetical") {
-    if (!lastAlphaLetter) return true;
-    const L = firstAlphaLetter(song.title);
-    // Dark (`strictAlpha`): the letter must actually CLIMB, so resting twice on the same
-    // letter is no longer a free move.
-    return !L || (currentChallenge.strictAlpha ? L > lastAlphaLetter : L >= lastAlphaLetter);
+    return alphaAllowsSong(song);
   }
   if (currentChallenge.rule === "titleHas")
     return wordRegex(currentWord, true).test(song.title);
@@ -16193,6 +16253,40 @@ function firstAlphaLetter(title) {
   const m = (title || "").toUpperCase().match(/[A-Z]/);
   return m ? m[0] : "";
 }
+// From A to Z: whether this title can be accepted without breaking the live chain. The dark
+// side has a second duty beyond beating the current floor: a jump may not use so much alphabet
+// that the remaining pages can no longer be served. That is what keeps an early Y-title from
+// turning every later page into a forced miss. The visible alphabet banner surfaces the live
+// ceiling, so this guard is a rule the player can plan around rather than an invisible rejection.
+function alphaClearsFloor(song) {
+  const L = firstAlphaLetter(song && song.title);
+  if (!L) return false;
+  if (!lastAlphaLetter) return true;
+  return currentChallenge && currentChallenge.strictAlpha ? L > lastAlphaLetter : L >= lastAlphaLetter;
+}
+function alphaLaterInitialCount(letter) {
+  const later = new Set();
+  for (const song of allSongs) {
+    const L = firstAlphaLetter(song.title);
+    if (L > letter) later.add(L);
+  }
+  return later.size;
+}
+function alphaFutureStepsNeeded() {
+  if (!currentChallenge || !currentChallenge.strictAlpha) return 0;
+  return Math.max(0, TOTAL_ROUNDS - round);
+}
+function alphaAllowsSong(song) {
+  if (!alphaClearsFloor(song)) return false;
+  if (!currentChallenge || !currentChallenge.strictAlpha) return true;
+  return alphaLaterInitialCount(firstAlphaLetter(song.title)) >= alphaFutureStepsNeeded();
+}
+function alphaCeilingLetter() {
+  if (!currentChallenge || !currentChallenge.strictAlpha) return "";
+  const letters = [...new Set(allSongs.map((song) => firstAlphaLetter(song.title)).filter(Boolean))].sort();
+  const needed = alphaFutureStepsNeeded();
+  return letters.filter((L) => alphaLaterInitialCount(L) >= needed).pop() || "";
+}
 // Shared soft-reject flash: wipe the line, pulse the input, show a red margin note,
 // and keep the clock running — the round is NOT burned. Used by the off-limits,
 // alphabetical, wildcard, and One Of A Kind rejects.
@@ -16231,6 +16325,12 @@ function rejectAlpha(letter) {
   softRejectFlash(currentChallenge && currentChallenge.strictAlpha
     ? `out of order — start later than <b>${escapeHtml(lastAlphaLetter)}</b>`
     : `out of order — start with <b>${escapeHtml(lastAlphaLetter)}</b> or later`);
+}
+// Dark From A to Z: the title clears today's floor but jumps so far ahead that the remaining
+// pages could no longer be served. Keep the page live and explain why the otherwise-valid title
+// did not take.
+function rejectAlphaLeap() {
+  softRejectFlash(`too far ahead: leave enough alphabet for the pages still to come`);
 }
 // Title...?: the word's in the lyrics but not the title they named.
 function rejectTitleHas() {
@@ -16958,7 +17058,7 @@ function checkCatalogueCharms(song) {
   // lifetime set of WORDS, so a hundred answers of "Red" for "red" is still one of the five.
   if (song._norm === normalizeTitle(currentWord)) {
     unlock("answer-song-titled-the-prompt-word");
-    if (noteSelfTitledWord(currentWord) >= 5) unlock("answer-5-songs-titled-the-prompt-word");
+    if (!devNoLog && noteSelfTitledWord(currentWord) >= 5) unlock("answer-5-songs-titled-the-prompt-word");
   }
 
   // Acoustic Version Is Better — the alternate take when the original would have counted too.
@@ -17147,11 +17247,13 @@ function submitAnswer(song, isTimeout) {
   // From A to Z: a valid answer earlier in the alphabet than the last accepted one is
   // soft-rejected (doesn't burn the round), so the player can keep the sequence going.
   if (song && !isTimeout && currentChallenge && currentChallenge.rule === "alphabetical"
-      && currentSongs.some((s) => s.title === song.title)) {
+      && currentLyricSongs.some((s) => s.title === song.title)
+      && !alphaAllowsSong(song)) {
     const L = firstAlphaLetter(song.title);
     // Dark: a REPEAT of the last letter is rejected too, not just a step backwards.
     const stalled = currentChallenge.strictAlpha ? L <= lastAlphaLetter : L < lastAlphaLetter;
     if (lastAlphaLetter && L && stalled) { noteWrongSubmission(song); rejectAlpha(L); return; }
+    noteWrongSubmission(song); rejectAlphaLeap(); return;
   }
 
   // One Of A Kind: trying the named target song on a round where it doesn't fit the
@@ -17449,7 +17551,7 @@ function submitAnswer(song, isTimeout) {
   // so the note points at the freshly-added charm. firstMatchDone is a one-and-done lifetime flag
   // (the coachmark itself is also gated to a genuine first classic game).
   if (correct) {
-    if (!settings.firstMatchDone) { settings.firstMatchDone = true; saveSettings(settings); }
+    if (!devNoLog && !settings.firstMatchDone) { settings.firstMatchDone = true; saveSettings(settings); }
     maybeGuideMatch();
   }
 
@@ -17880,7 +17982,7 @@ function showCorrectFeedback(song, lyricMatch) {
   // First time a verse bonus is ever earned, teach what it is — once, then silent.
   let firstNote = "";
   if (bonus > 0 && !settings.seenVerseBonus) {
-    settings.seenVerseBonus = true; saveSettings(settings);
+    if (!devNoLog) { settings.seenVerseBonus = true; saveSettings(settings); }
     firstNote = `<p class="verse-firstnote">writing more of the line earns a verse bonus: a prestige tally, kept apart from your score</p>`;
   }
   const card = multi
@@ -21027,6 +21129,7 @@ function setFavouriteAlbum(album) {
 // Just-in-time onboarding tips fire once each, tracked in settings.seenCoachmarks.
 function coachmarkSeen(id) { return !!(settings.seenCoachmarks && settings.seenCoachmarks[id]); }
 function markCoachmark(id) {
+  if (devNoLog) return;
   if (!settings.seenCoachmarks || typeof settings.seenCoachmarks !== "object") settings.seenCoachmarks = {};
   settings.seenCoachmarks[id] = true;
   saveSettings(settings);
@@ -23918,6 +24021,7 @@ function buildDevApi() {
       wildcard: {
         ids: () => ["oneword", "twoword", "long", "vowel", "consonant", "notitle", "titleword", "vanish", "scramble", "album"],
         current: () => roundWildcard && roundWildcard.id,
+        previous: () => lastWildcardId,
         // On a dark run `force` also takes a FUSED id ("vowel+long") — see pairs() below.
         force: (id) => { devForcedWildcardId = id || null; return devForcedWildcardId; },
         clear: () => { devForcedWildcardId = null; },
@@ -24170,6 +24274,16 @@ function buildDevApi() {
         // Pin the floor so a rejection can be tested without playing the sequence up to it.
         setFloor: (L) => { lastAlphaLetter = (L || "").toUpperCase().slice(0, 1); return lastAlphaLetter; },
         strict: () => !!(currentChallenge && currentChallenge.strictAlpha),   // are ties banned?
+        // Re-derive one prompt through the same floor + feasibility predicate as live play,
+        // without re-pointing the current page. This is the regression hatch for an early Y
+        // and for the moving ceiling surfaced in the dark banner.
+        inspect: (word = currentWord) => {
+          const songs = word ? validSongs(word, effectiveStrict(), effectiveNoTitle()) : [];
+          const legal = songs.filter(alphaAllowsSong);
+          return { word, round, floor: lastAlphaLetter, ceiling: alphaCeilingLetter(),
+            futureSteps: alphaFutureStepsNeeded(), legal: legal.map((s) => s.title),
+            rejected: songs.filter((s) => !legal.includes(s)).map((s) => s.title) };
+        },
         climbing: () => alphaEveryLetterNew,            // is Tied Together still alive this run?
         spoil: () => { alphaEveryLetterNew = false; },  // as if you'd rested twice on one letter
         win: (climbing) => { alphaEveryLetterNew = climbing !== false;
