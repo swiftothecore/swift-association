@@ -63,7 +63,7 @@ import {
 import { exportBraceletCard, copyBraceletCard, buildCardSVG, fontFaceCss } from "./braceletcard.js";
 import { exportSleeveCard, copySleeveCard, buildSleeveSVG } from "./sleevecard.js";
 import { sfx } from "./sound.js";
-import { wordRegex as wordRegexCore, extractLineWithWord as extractLineWithWordCore, highlightWord as highlightWordCore, variantBody } from "./match.js";
+import { wordRegex as wordRegexCore, extractLineWithWord as extractLineWithWordCore, highlightWord as highlightWordCore, variantBody, falseFriendRegex } from "./match.js";
 import { buildLineIndex, buildSlipContext, buildSlipPuzzle, buildNamePuzzle,
          buildBlankPuzzle, buildRedactedPuzzle,
          buildWordIndex, buildOnlyHerePuzzle, onlyHerePoints, ONLY_HAND,
@@ -16594,6 +16594,60 @@ function oneTypoApart(a, b) {
   return swappedNeighbours(a, b);
 }
 
+// A token the player probably thought WAS the page's word. Three shapes, in the order a
+// player is likely to have meant them:
+//
+//   strict    "golden" on a page for "gold" in a run that counts the word itself only. The
+//             most arguable miss in the game, because the very same line clears the page in
+//             every other mode.
+//   friend    "stared" on a page for "star": a form of an unrelated word that our own stem
+//             rule would otherwise have taken, refused by name in FALSE_FRIENDS.
+//   compound  "typewriter" on a page for "write": the word IS in there, but as half of a
+//             different word. The other half has to be one the catalogue sings in its own
+//             right, so a seam is a seam and not two letters that happened to fall apart —
+//             "tonight" is "to" + "night", "tired" is not "ti" + "red".
+//
+// Judged off the page's word and the typed text alone. lyricVocab is corpus-level (the same
+// on every page showing this word) and no song is ever looked up, so naming the token gives
+// away nothing about which songs are valid — the same footing that lets the nudge speak at
+// all. Returns { token, word, why } for the first qualifying token IN THE LINE, since the
+// player reads their own line left to right, or null.
+function nearMissPromptWord(normPhrase) {
+  const strict = effectiveStrict();
+  // The page's words in both spellings: `norm` to judge by, `word` to say out loud, since
+  // normalizeLyric g-drops and would have the nudge call the word "sin" on a page for "sing".
+  const need = lyricRequiredWords().map((w) => ({ word: w, norm: normalizeLyric(w) })).filter((n) => n.norm);
+  if (!need.length) return null;
+  for (const t of normPhrase.split(" ")) {
+    if (t.length < JOIN_MIN_PART + 1) continue;
+    for (const { word, norm } of need) {
+      const rx = wordRegex(norm, strict);
+      if (rx.test(t)) continue;                                    // it counts; not a near miss
+      if (strict && wordRegex(norm, false).test(t)) return { token: t, word, why: "strict" };
+      const friends = falseFriendRegex(norm);
+      if (!strict && friends && friends.test(t)) return { token: t, word, why: "friend" };
+      if (buriesPromptWord(t, rx)) return { token: t, word, why: "compound" };
+    }
+  }
+  return null;
+}
+
+// Is `token` a compound with the page's word on one side of the seam and a word the
+// catalogue sings on the other? Deliberately NOT a substring test: "red" sits inside
+// "tired" and "sacred" and saying so would make the game look like it cannot read.
+// Mirrors splitOnPromptWord's walk, but asks only that the remainder be a real word
+// rather than one sung beside the prompt word — this is explaining a rejection, not
+// repairing a line, so it has no business insisting the pair was ever sung together.
+function buriesPromptWord(token, rx) {
+  if (token.length < JOIN_MIN_TOKEN) return false;
+  for (let i = JOIN_MIN_PART; i <= token.length - JOIN_MIN_PART; i++) {
+    const a = token.slice(0, i), b = token.slice(i);
+    if (rx.test(a) && lyricVocab.has(b)) return true;
+    if (rx.test(b) && lyricVocab.has(a)) return true;
+  }
+  return false;
+}
+
 // Something long enough to have been a sung line came back unresolved. If the reason was
 // that it never sang the page's word, say so — silence there reads as a broken game, since
 // the player typed a real Taylor line and watched nothing happen.
@@ -16608,10 +16662,37 @@ function nudgeLyricNeedsWord(raw) {
   if (!np || np.split(" ").length < MIN_LYRIC_WORDS) return;   // too short to have been a line
   if (phraseSingsPromptWord(np)) return;                       // it sang the word; something else was wrong
   if (isTitleFragment(np)) return;                             // a half-typed title, not a sung line
+  const near = nearMissPromptWord(np);
+  if (near) return nudgeNearMiss(raw, near);
   const which = bothRuleActive() && bothWords.length > 1
     ? bothWordsPhrase(true)
     : `“<b>${escapeHtml(currentWord)}</b>”`;
   softRejectFlash(`a sung line has to be one with ${which} in it`, true);
+}
+
+// The near miss as the player actually typed it. normalizeLyric g-drops and strips
+// apostrophes, so echoing its own output would answer "handwriting" with "handwritin" and
+// "heart's" with "hearts" — a nudge that misquotes the line it is explaining reads as a
+// second bug. Trailing punctuation goes, since the player typed a line and not a word.
+function typedForm(raw, token) {
+  for (const t of String(raw || "").split(/\s+/)) {
+    if (normalizeLyric(t) === token) {
+      return t.replace(/^[^\p{L}\p{N}]+/u, "").replace(/[^\p{L}\p{N}']+$/u, "") || token;
+    }
+  }
+  return token;
+}
+// The nudge when the line held something the player probably thought WAS the word. It
+// replaces the plain "needs the word in it" rather than tacking onto it: naming the token
+// already names the word, and the flash is up for 1.7 seconds — a sentence that wraps to two
+// lines rides up over the prompt word itself, which is the one thing on screen it must not
+// cover. Censored like every other echo of typed text, since it came out of the player's box.
+function nudgeNearMiss(raw, near) {
+  const t = `“<b>${escapeHtml(censor(typedForm(raw, near.token)))}</b>”`;
+  const w = `“<b>${escapeHtml(censor(near.word))}</b>”`;
+  softRejectFlash(near.why === "strict"
+    ? `${t} doesn't count as ${w} — this run counts the word itself only`
+    : `${t} doesn't count as ${w} — sing a line with the word itself`, true);
 }
 
 // A player can answer by typing a LYRIC LINE instead of the title. There is no lyric
@@ -22024,6 +22105,10 @@ function buildDevApi() {
         needs: lyricRequiredWords(),
         singsWord: phraseSingsPromptWord(np),
         titleFragment: isTitleFragment(np),
+        // The token the nudge would name as the near miss, and which of the three shapes it
+        // is. Reported even when the line is ACCEPTED, so a page where a real match and a
+        // near miss sit in the same line is visible rather than a surprise later.
+        nearMiss: nearMissPromptWord(np) || null,
         proximity: LYRIC_PROXIMITY,
         meter: verseProgress(phrase || "") || "dark",
         accepted: !!m,

@@ -87,6 +87,16 @@ export function falseFriendGuard(word) {
   const bad = FALSE_FRIENDS[canonicalMatchText(word).toLowerCase()];
   return bad ? "(?!(?:" + bad.map(exactWordBody).join("|") + ")(?![" + WORD_CHAR + "]))" : "";
 }
+// The same lenient alternation WITHOUT the veto, or null for the ~727 words that have
+// nothing to disown. It lets a caller tell "the veto refused this token" apart from "this
+// token has nothing to do with the word", which is a distinction worth saying out loud:
+// "he stared at me" on a page for "star" is a rejection a player will argue with, and the
+// game's near-miss nudge answers it. Never use this to MATCH — the veto exists because
+// these forms belong to another word entirely.
+export function falseFriendRegex(word) {
+  if (!FALSE_FRIENDS[canonicalMatchText(word).toLowerCase()]) return null;
+  return new RegExp(boundedWordBody("(?:" + wordVariants(word).join("|") + ")"), "iu");
+}
 // The lenient alternation, guarded, ready to drop inside a group. Every caller that builds
 // its own regex out of wordVariants should use this instead, so a form the matcher refuses
 // can never still be the one a card highlights.
