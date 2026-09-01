@@ -4498,7 +4498,7 @@
   }
   /* The "to beat it" win condition under a challenge's round-1 intro. */
   .chall-curtain-win {
-    display: inline-block; margin-top: 9px; font-style: italic;
+    display: block; margin-top: 9px; font-style: italic;
     color: var(--ink); opacity: 0.82;
   }
   .chall-curtain-cue {
