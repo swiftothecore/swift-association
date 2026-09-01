@@ -3339,6 +3339,106 @@
   .chall-result-actions .btn-primary { flex: 1; width: auto; margin: 0; padding: 11px 10px; font-size: calc(13px + var(--text-size-adjust)); }
   .chall-result-actions .btn-primary:first-child { transform: rotate(0.6deg); }
 
+  /* "play the dark side" — the offer that only exists once the card underneath it has been
+     beaten. It is deliberately NOT a third stamp in the two-up row below: those two are
+     stationery washed in coloured pencil, and this is the one object on a challenge results
+     page that isn't made of paper at all. A strip of night torn out and taped over the sheet,
+     inked in the dark side's aubergine with the violet bleeding into it, carrying the eclipse
+     at full size with its corona drawn out. Hover and the light comes back around the blot:
+     the rays extend, the paper goes darker, the hand-drawn arrow leans out of the strip. */
+  .dark-invite {
+    position: relative; display: flex; align-items: center; gap: 13px;
+    width: 100%; margin: 2px 0 10px; padding: 11px 14px 11px 12px;
+    text-align: left; cursor: pointer;
+    color: #d7c7ee; background-color: #241a33;
+    background-image:
+      radial-gradient(78% 190% at 11% 52%, rgba(163,118,218,0.40) 0%, rgba(74,44,116,0.20) 46%, rgba(0,0,0,0) 78%),
+      linear-gradient(168deg, rgba(255,255,255,0.10) 0%, rgba(255,255,255,0) 42%, rgba(0,0,0,0.44) 100%);
+    border: 2px solid #150e1f; border-radius: 2px;
+    box-shadow: inset 0 0 0 1px rgba(190,150,240,0.26), 3px 3px 0 rgba(26,15,42,0.34);
+    transform: rotate(-0.45deg);
+    transition: background-color 0.26s ease, box-shadow 0.2s ease, transform 0.12s ease;
+  }
+  /* The tape: two pale strips holding the torn night to the page, one at each end and neither
+     the same width or angle as the other, because a mirrored pair reads as printed. */
+  .dark-invite::before, .dark-invite::after {
+    content: ""; position: absolute; top: -10px; height: 20px;
+    background: rgba(244, 237, 221, 0.26);
+    border-left: 1px solid rgba(126, 114, 92, 0.20);
+    border-right: 1px solid rgba(126, 114, 92, 0.20);
+    pointer-events: none;
+  }
+  .dark-invite::before { left: 11px; width: 36px; transform: rotate(-4deg); }
+  .dark-invite::after { right: 15px; width: 27px; transform: rotate(6deg); }
+
+  .dark-invite-mark { flex: 0 0 auto; display: block; line-height: 0; }
+  .dark-invite-svg { display: block; width: 34px; height: 34px; color: #d9c3f6; }
+  /* The corona sits mostly withdrawn and comes out on hover — never a glow, just more of the
+     drawing. transform-box keeps the rotation on the SVG's own centre, not the button's. */
+  .dark-invite-rays {
+    opacity: 0.52; transform-box: fill-box; transform-origin: center;
+    transition: opacity 0.3s ease, transform 0.45s ease;
+  }
+  .dark-invite-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+  .dark-invite-title {
+    font-family: var(--hand); font-weight: 700; line-height: 1;
+    font-size: calc(21px + var(--text-size-adjust)); color: #f0e6fb;
+  }
+  .dark-invite-note {
+    font-family: var(--type); font-size: calc(10.5px + var(--text-size-adjust));
+    letter-spacing: 0.4px; color: #a591c4;
+  }
+  .dark-invite-arrow { flex: 0 0 auto; margin-left: auto; line-height: 0; color: #b79ade; }
+  .dark-invite-arrow svg {
+    display: block; width: 26px; height: 14px;
+    transition: transform 0.22s ease;
+  }
+
+  .dark-invite:hover, .dark-invite:focus-visible {
+    background-color: #1b1327;
+    box-shadow: inset 0 0 0 1px rgba(203,166,246,0.44), 4px 4px 0 rgba(26,15,42,0.44);
+  }
+  .dark-invite:hover .dark-invite-rays, .dark-invite:focus-visible .dark-invite-rays {
+    opacity: 0.92; transform: rotate(-9deg);
+  }
+  .dark-invite:hover .dark-invite-arrow svg, .dark-invite:focus-visible .dark-invite-arrow svg {
+    transform: translateX(4px);
+  }
+  .dark-invite:active { transform: rotate(-0.45deg) translateY(1px); box-shadow: inset 0 0 0 1px rgba(203,166,246,0.44), 1px 1px 0 rgba(26,15,42,0.34); }
+
+  /* Freshly unlocked: the strip arrives rather than being already there, and the corona
+     swings open once before settling back. One pass, no loop. */
+  .dark-invite.is-fresh { animation: darkInviteArrive 0.6s ease-out both; }
+  .dark-invite.is-fresh .dark-invite-rays { animation: darkInviteCorona 2s ease-out 0.4s both; }
+  @keyframes darkInviteArrive {
+    from { opacity: 0; transform: rotate(-2.6deg) translateY(6px); }
+    60%  { opacity: 1; transform: rotate(0.5deg) translateY(0); }
+    to   { opacity: 1; transform: rotate(-0.45deg) translateY(0); }
+  }
+  @keyframes darkInviteCorona {
+    0%   { opacity: 0; transform: rotate(-14deg); }
+    35%  { opacity: 0.95; transform: rotate(0deg); }
+    to   { opacity: 0.52; transform: rotate(0deg); }
+  }
+  [data-reduce-motion="on"] .dark-invite.is-fresh,
+  [data-reduce-motion="on"] .dark-invite.is-fresh .dark-invite-rays { animation: none; }
+  [data-reduce-motion="on"] .dark-invite,
+  [data-reduce-motion="on"] .dark-invite-rays,
+  [data-reduce-motion="on"] .dark-invite-arrow svg { transition: none; }
+
+  /* On the night page the strip's own aubergine is nearly the paper it's taped to, and the
+     hard shadow that separates it in daylight lands on black. It lifts a shade and takes a
+     brighter violet hairline instead — the edge is what has to hold the object together here. */
+  :root[data-theme="dark"] .dark-invite {
+    background-color: #2c2041;
+    box-shadow: inset 0 0 0 1px rgba(203,166,246,0.36), 3px 3px 0 rgba(0,0,0,0.46);
+  }
+  :root[data-theme="dark"] .dark-invite:hover,
+  :root[data-theme="dark"] .dark-invite:focus-visible {
+    background-color: #221838;
+    box-shadow: inset 0 0 0 1px rgba(214,182,250,0.55), 4px 4px 0 rgba(0,0,0,0.54);
+  }
+
   #backToChallenges {
     --btn-wash: rgba(120, 170, 220, 0.30);
     --btn-mark: rgba(63, 111, 163, 0.42);

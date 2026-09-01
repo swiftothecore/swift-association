@@ -7938,6 +7938,16 @@ const CHALL_UNPIN = `<svg viewBox="0 0 16 16" class="chall-unpin-svg" aria-hidde
 // in currentColor so the same glyph greys out with the button in its locked state.
 const CHALL_ECLIPSE = `<svg viewBox="0 0 20 20" class="chall-mark-svg" aria-hidden="true"><circle cx="10" cy="10" r="8.1" fill="none" stroke="currentColor" stroke-width="1.1" opacity="0.5"/><circle cx="10" cy="10" r="5.6" fill="currentColor"/></svg>`;
 
+// The same eclipse at invitation size, with its corona drawn out in uneven hand-ruled rays:
+// the results-screen offer is a bigger object than the shelf button, so it gets the fuller
+// drawing. The rays are their own group because they only come out when the offer is
+// hovered, which is the whole gesture: the light going back around the blot.
+const DARK_INVITE_MARK = `<svg viewBox="0 0 32 32" class="dark-invite-svg" aria-hidden="true">` +
+  `<g class="dark-invite-rays" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M16 4.4 L16.4 1.5"/><path d="M8.3 6.8 L6.4 4.5"/><path d="M4.6 14.0 L1.6 13.5"/><path d="M6.2 22.9 L4.2 24.3"/><path d="M12.9 27.4 L12.1 30.7"/><path d="M22 26.4 L23.3 28.6"/><path d="M27 20 L30.1 21.1"/><path d="M26.9 10.9 L28.9 10.0"/><path d="M22 5.7 L22.9 4.05"/></g>` +
+  `<circle cx="16" cy="16" r="10.6" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.62"/>` +
+  `<circle cx="16" cy="16" r="8.4" fill="#150e1f"/>` +
+  `</svg>`;
+
 // The beaten seal is a genuine two-tone: the wax body ages to a warm grey while the
 // beaded rim keeps its red. A uniform CSS filter can't do that (body and beads are both
 // red at the source), so we derive an "aged" copy of each wax seal by string-swapping the
@@ -13600,9 +13610,40 @@ function endChallenge() {
     : ` · best ${metaBest}/${challengeTotal}`;
   const meta = `<div class="chall-result-meta">${metaAttempts} attempt${metaAttempts === 1 ? "" : "s"}` +
     `${bestLine}</div>`;
+  // The dark side, offered where it is actually wanted: the moment the base challenge has
+  // just been beaten, and every time it is played again afterwards. Reaching it otherwise
+  // means going back to the shelf and finding the card, which is a long walk from the
+  // sentence that just told you it was unlocked. Not offered on a dark run itself — the
+  // replay button beside it already deals the dark side again (see below).
+  const darkOffered = !c.dark && darkSideUnlocked(c.id);
+  let darkInvite = "";
+  if (darkOffered) {
+    // What the strip says depends on where the player stands with it, so the offer is never
+    // a stock sentence: freshly opened, still standing, or already beaten and worth a rematch.
+    const darkNote = firstTime && !rec.darkAttempts
+      ? "unlocked just now · the same card with the light taken out"
+      : rec.darkDefeated
+        ? "beaten once already · go back for it"
+        : rec.darkAttempts
+          ? `still undefeated after ${rec.darkAttempts} attempt${rec.darkAttempts === 1 ? "" : "s"}`
+          : "the same card with the light taken out";
+    darkInvite =
+      `<button type="button" id="playDarkSide" class="dark-invite${firstTime ? " is-fresh" : ""}">` +
+        `<span class="dark-invite-mark">${DARK_INVITE_MARK}</span>` +
+        `<span class="dark-invite-text">` +
+          `<span class="dark-invite-title">play the dark side</span>` +
+          `<span class="dark-invite-note">${escapeHtml(darkNote)}</span>` +
+        `</span>` +
+        `<span class="dark-invite-arrow" aria-hidden="true">` +
+          `<svg viewBox="0 0 26 14"><path d="M1.4 7.3 C7 6.4 15.4 6.6 23.4 6.9 M18.4 2.2 C20.2 4.1 22.2 5.9 24.2 6.9 C22.1 8.1 20.1 9.9 18.6 11.9" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>` +
+        `</span>` +
+      `</button>`;
+  }
+
   // A two-up row sitting above the full-width "front page" button: back to the list on the
   // left, replay this same challenge on the right — each half the width of the button below.
   $("resultPodium").innerHTML = status + tokenLine + returnLine + verseLine + impostorLine + riskResultLine() + meta +
+    darkInvite +
     `<div class="chall-result-actions">` +
       `<button id="backToChallenges" class="btn-primary">← challenges</button>` +
       `<button id="replayChallenge" class="btn-primary">replay ↺</button>` +
@@ -13612,6 +13653,7 @@ function endChallenge() {
   // to ask for the dark side again. startChallenge re-resolves from CHALLENGE_BY_ID and
   // defaults to the base, which would quietly hand back the easy version.
   $("replayChallenge").addEventListener("click", () => startChallenge(c.id, { dark: !!c.dark }));
+  if (darkOffered) $("playDarkSide").addEventListener("click", () => startChallenge(c.id, { dark: true }));
 
   renderResultRecap();   // surface any challenge achievements just earned
   renderSkillsRecap();
