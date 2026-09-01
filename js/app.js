@@ -13613,8 +13613,9 @@ function endChallenge() {
   // The dark side, offered where it is actually wanted: the moment the base challenge has
   // just been beaten, and every time it is played again afterwards. Reaching it otherwise
   // means going back to the shelf and finding the card, which is a long walk from the
-  // sentence that just told you it was unlocked. Not offered on a dark run itself — the
-  // replay button beside it already deals the dark side again (see below).
+  // sentence that just told you it was unlocked. Built here, appended below the action row
+  // (see the innerHTML). Not offered on a dark run itself — the replay button already deals
+  // the dark side again (see below).
   const darkOffered = !c.dark && darkSideUnlocked(c.id);
   let darkInvite = "";
   if (darkOffered) {
@@ -13640,14 +13641,15 @@ function endChallenge() {
       `</button>`;
   }
 
-  // A two-up row sitting above the full-width "front page" button: back to the list on the
-  // left, replay this same challenge on the right — each half the width of the button below.
+  // A two-up row: back to the list on the left, replay this same challenge on the right, each
+  // half the width of the full-width buttons around them. The dark side's strip follows the
+  // row rather than leading it, so the two ordinary ways out of the screen stay where they
+  // are on every challenge and the offer sits directly above the front-page button.
   $("resultPodium").innerHTML = status + tokenLine + returnLine + verseLine + impostorLine + riskResultLine() + meta +
-    darkInvite +
     `<div class="chall-result-actions">` +
       `<button id="backToChallenges" class="btn-primary">← challenges</button>` +
       `<button id="replayChallenge" class="btn-primary">replay ↺</button>` +
-    `</div>`;
+    `</div>` + darkInvite;
   $("backToChallenges").addEventListener("click", () => openChallenges("start"));
   // Replay means replay THIS run — `c` is the resolved challenge, so a dark run's replay has
   // to ask for the dark side again. startChallenge re-resolves from CHALLENGE_BY_ID and
