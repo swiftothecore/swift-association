@@ -2754,11 +2754,13 @@ if (location.pathname.endsWith('/index.html')) {
     </div>
 
     <div class="bracelet-result">
-      <div class="bracelet-caption-row">
-        <p class="bracelet-caption">the bracelet you made</p>
-      </div>
-      <p id="braceletSummary" class="bracelet-summary" role="status" aria-live="polite"></p>
+      <p class="bracelet-caption">the bracelet you made</p>
       <div id="resultBracelet" class="bracelet bracelet-finished" aria-hidden="true"></div>
+      <!-- The strand itself is decorative markup, so this is its text alternative and the
+           live region that announces a finished run. Read, never shown: every number in it
+           is either already in the tally above or spelled out, with counts, in the note
+           below, and printing it a third time cost the keepsake three lines of paper. -->
+      <p id="braceletSummary" class="sr-only" role="status" aria-live="polite"></p>
 
       <div class="bracelet-actions" role="group" aria-label="Save your bracelet">
         <button id="saveBraceletBtn" class="bracelet-action bracelet-copy" type="button"
@@ -2771,7 +2773,7 @@ if (location.pathname.endsWith('/index.html')) {
           <svg viewBox="0 0 24 24" class="keepsake-ic keepsake-ic--kept" aria-hidden="true">
             <path d="M4.4 12.9 L9.6 18.2 L19.6 5.9"/>
           </svg>
-          <span data-keepsake-label>Copy image</span>
+          <span data-keepsake-label>Copy</span>
         </button>
         <button id="downloadBraceletBtn" class="bracelet-action bracelet-download" type="button"
                 aria-describedby="braceletKeepsakeNote">
@@ -2782,13 +2784,17 @@ if (location.pathname.endsWith('/index.html')) {
           <svg viewBox="0 0 24 24" class="keepsake-ic keepsake-ic--kept" aria-hidden="true">
             <path d="M4.4 12.9 L9.6 18.2 L19.6 5.9"/>
           </svg>
-          <span data-keepsake-label>Download PNG</span>
+          <span data-keepsake-label>Download</span>
         </button>
       </div>
-      <p id="braceletKeepsakeNote" class="bracelet-keepsake-note">Keep the strand as a shareable notebook card.</p>
+      <!-- Empty whenever the keepsake is actually available: two worded buttons already say
+           what they do. It stays in the markup for the one case that needs a sentence — a
+           daily result still sealed, where the buttons are disabled and the reason is not
+           otherwise on screen. -->
+      <p id="braceletKeepsakeNote" class="bracelet-keepsake-note"></p>
 
       <details id="braceletMemory" class="bracelet-memory">
-        <summary id="braceletGuide">what the bracelet remembers</summary>
+        <summary id="braceletGuide"><span>what the beads mean</span></summary>
         <div class="bracelet-memory-sheet">
           <div id="braceletLegend" class="bracelet-legend"></div>
           <div id="braceletRecap" class="bracelet-recap"></div>

@@ -4725,43 +4725,36 @@
     100% { transform: rotate(0deg); }
   }
 
-  .bracelet-finished { max-width: 520px; margin: 0 auto 8px; }
-  .bracelet-caption-row {
-    display: flex; align-items: center; justify-content: center; gap: 7px;
-    margin: 14px 0 0;
-  }
+  .bracelet-finished { max-width: 520px; margin: 0 auto 4px; }
   .bracelet-caption {
     text-align: center; font-family: var(--hand); font-size: calc(19px + var(--text-size-adjust));
-    color: var(--ink-soft); margin: 0;
+    color: var(--ink-soft); margin: 14px 0 0;
   }
-
-  .bracelet-summary {
-    max-width: 48ch; margin: 2px auto 8px; text-align: center;
-    font-family: var(--type); font-size: calc(11px + var(--text-size-adjust));
-    line-height: 1.45; letter-spacing: 0.03em; color: var(--ink-soft);
-  }
-  .bracelet-summary:empty { display: none; }
-  .bracelet-summary strong, .bracelet-summary b { color: var(--ink); }
 
   /* Two ordinary, worded keepsake actions make copy and download independently
-     discoverable on touch. Their labels are also the live state targets in JS. */
+     discoverable on touch. Their labels are also the live state targets in JS, so the
+     pair is sized to hold every state it passes through in ordinary use ("Copying...",
+     "Saved ✓") without the chips resizing under the player's cursor; only the failure
+     line is wider, where a chip that has visibly changed is the point. They are secondary
+     to the strand they save, and stay small enough to read as a caption under it rather
+     than as the point of the page. */
   .bracelet-actions {
     display: flex; align-items: stretch; justify-content: center; flex-wrap: wrap;
-    gap: 9px; max-width: 520px; margin: 8px auto 12px;
+    gap: 8px; max-width: 520px; margin: 6px auto 10px;
   }
   .bracelet-action {
     display: inline-flex; align-items: center; justify-content: center;
-    gap: 7px; min-width: 128px; min-height: 45px; padding: 8px 13px;
-    border: 1.5px solid color-mix(in srgb, var(--ink-soft) 44%, transparent);
+    gap: 6px; min-width: 112px; min-height: 36px; padding: 6px 12px;
+    border: 1.3px solid color-mix(in srgb, var(--ink-soft) 40%, transparent);
     border-radius: 4px;
     background: color-mix(in srgb, var(--paper-edge) 64%, transparent);
     color: var(--ink-soft); cursor: pointer; touch-action: manipulation;
-    font-family: var(--type); font-size: calc(11px + var(--text-size-adjust));
-    font-weight: 700; letter-spacing: 0.03em; line-height: 1.15;
+    font-family: var(--type); font-size: calc(10px + var(--text-size-adjust));
+    font-weight: 700; letter-spacing: 0.04em; line-height: 1.15;
     transition: color 0.18s ease, background-color 0.18s ease,
                 border-color 0.18s ease, transform 0.1s ease;
   }
-  .bracelet-action .keepsake-ic { width: 18px; height: 18px; flex: none; }
+  .bracelet-action .keepsake-ic { width: 14px; height: 14px; flex: none; }
   .bracelet-action:hover {
     color: var(--ink); border-color: var(--ink-soft);
     background: color-mix(in srgb, var(--ink) 7%, var(--paper));
@@ -4784,45 +4777,53 @@
   .bracelet-action:disabled { cursor: not-allowed; opacity: 0.46; }
   .bracelet-action[hidden] { display: none; }
   [data-reduce-motion="on"] .bracelet-action { transition: none; }
+  /* Empty on every ordinary run, so it collapses to nothing rather than reserving a
+     line for a sentence the buttons already made. */
   .bracelet-keepsake-note {
-    max-width: 48ch; margin: -5px auto 12px; text-align: center;
+    max-width: 48ch; margin: -2px auto 10px; text-align: center;
     color: var(--ink-soft); font-family: var(--type);
     font-size: calc(9.5px + var(--text-size-adjust)); line-height: 1.4;
   }
+  .bracelet-keepsake-note:empty { display: none; margin: 0; }
 
   /* A ruled note under the keepsake. The player can ignore it, while the same
-     meanings remain available as text instead of living only in bead finishes. */
+     meanings remain available as text instead of living only in bead finishes.
+     CLOSED it is one quiet pencilled line, not a panel: a shut drawer should cost the
+     results page a single row of ink. The box, the ruled paper and the shadow are all
+     drawn on the sheet inside, and so exist only while somebody is reading it. */
   .bracelet-memory {
-    max-width: 520px; margin: 0 auto 12px; overflow: hidden;
-    border: 1px solid color-mix(in srgb, var(--ink-soft) 40%, transparent);
-    border-radius: 3px; background: var(--paper-edge);
-    box-shadow: 2px 3px 0 color-mix(in srgb, var(--ink-soft) 16%, transparent);
+    max-width: 520px; margin: 0 auto 4px; border: 0; background: none;
   }
   .bracelet-memory[hidden] { display: none; }
   .bracelet-memory > summary {
-    min-height: 44px; padding: 7px 11px; display: flex; align-items: center; gap: 9px;
-    list-style: none; cursor: pointer; color: var(--ink);
-    font-family: var(--hand); font-size: calc(19px + var(--text-size-adjust));
-    font-weight: 700; line-height: 1.15;
-    background: color-mix(in srgb, var(--paper) 68%, transparent);
+    min-height: 30px; padding: 5px 8px; display: flex;
+    align-items: center; justify-content: center; gap: 7px;
+    list-style: none; cursor: pointer; color: var(--ink-soft);
+    font-family: var(--type); font-size: calc(9.5px + var(--text-size-adjust));
+    font-weight: 700; letter-spacing: 0.07em; line-height: 1.15;
   }
   .bracelet-memory > summary::-webkit-details-marker { display: none; }
   .bracelet-memory > summary::before {
-    content: "+"; width: 24px; height: 24px; flex: none;
+    content: "+"; width: 15px; height: 15px; flex: none;
     display: inline-flex; align-items: center; justify-content: center;
-    border: 1.5px solid var(--ink-soft); border-radius: 50%;
-    color: var(--ink-soft); font-family: var(--type); font-size: 16px; line-height: 1;
+    border: 1.1px solid color-mix(in srgb, var(--ink-soft) 62%, transparent);
+    border-radius: 50%;
+    color: var(--ink-soft); font-family: var(--type); font-size: 11px; line-height: 1;
   }
   .bracelet-memory[open] > summary::before { content: "\2212"; }
-  .bracelet-memory > summary:hover {
-    color: var(--ink-accent);
-    background: color-mix(in srgb, var(--ink-accent) 8%, var(--paper));
+  .bracelet-memory > summary > span {
+    border-bottom: 1px dotted color-mix(in srgb, var(--ink-soft) 52%, transparent);
   }
+  .bracelet-memory > summary:hover { color: var(--ink-accent); }
+  .bracelet-memory > summary:hover > span { border-bottom-color: var(--ink-accent); }
   .bracelet-memory > summary:focus-visible {
-    outline: 3px solid var(--ink-accent); outline-offset: -4px; border-radius: 3px;
+    outline: 3px solid var(--ink-accent); outline-offset: -2px; border-radius: 3px;
   }
   .bracelet-memory-sheet {
-    padding: 11px 13px 13px; border-top: 1px dashed color-mix(in srgb, var(--ink-soft) 40%, transparent);
+    margin: 2px 0 8px; padding: 11px 13px 13px; overflow: hidden;
+    border: 1px solid color-mix(in srgb, var(--ink-soft) 34%, transparent);
+    border-radius: 3px;
+    box-shadow: 2px 3px 0 color-mix(in srgb, var(--ink-soft) 14%, transparent);
     background:
       repeating-linear-gradient(to bottom, transparent 0, transparent 27px,
         color-mix(in srgb, var(--ink-soft) 9%, transparent) 27px,
@@ -4880,6 +4881,10 @@
         color-mix(in srgb, var(--ink-soft) 24%, transparent) 3px 4px),
       var(--paper-edge);
   }
+  .bracelet-legend-count {
+    flex: none; color: var(--ink); font-weight: 700; letter-spacing: 0.02em;
+    font-variant-numeric: tabular-nums;
+  }
   .bracelet-legend-dangle {
     color: var(--ink-accent); background: var(--paper);
     font: 700 12px/1 var(--type);
@@ -4889,29 +4894,35 @@
   .bracelet-recap:empty { display: none; }
   .bracelet-recap-list { list-style: none; margin: 0; padding: 0; }
   .bracelet-recap-item {
-    display: grid; grid-template-columns: 7.5rem minmax(0, 1fr);
-    align-items: baseline; gap: 2px 10px; padding: 7px 3px;
+    display: grid; grid-template-columns: 13px 8.6rem minmax(0, 1fr);
+    align-items: baseline; gap: 2px 8px; padding: 7px 3px;
     border-top: 1px dotted color-mix(in srgb, var(--ink-soft) 32%, transparent);
   }
+  /* The row's finish, said the way the legend two inches above says it, so the words for
+     it only have to appear once on the page. */
+  .bracelet-recap-bead {
+    grid-column: 1; grid-row: 1 / span 3; width: 11px; height: 13px;
+    align-self: center;
+  }
   .bracelet-recap-page {
-    grid-column: 1; grid-row: 1 / span 3; color: var(--ink-accent);
+    grid-column: 2; grid-row: 1 / span 3; color: var(--ink-accent);
     font-family: var(--type); font-size: calc(9px + var(--text-size-adjust));
     font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase;
   }
   .bracelet-recap-title {
-    grid-column: 2; min-width: 0; overflow-wrap: anywhere; color: var(--ink);
+    grid-column: 3; min-width: 0; overflow-wrap: anywhere; color: var(--ink);
     font-family: var(--hand); font-size: calc(17px + var(--text-size-adjust)); line-height: 1.15;
   }
   .bracelet-recap-meta, .bracelet-recap-note {
-    grid-column: 2; min-width: 0; overflow-wrap: anywhere; color: var(--ink-soft);
+    grid-column: 3; min-width: 0; overflow-wrap: anywhere; color: var(--ink-soft);
     font-family: var(--type); font-size: calc(9.5px + var(--text-size-adjust)); line-height: 1.35;
   }
   .bracelet-recap-note { margin: 0 0 8px; }
 
-  :root[data-theme="dark"] .bracelet-memory {
+  :root[data-theme="dark"] .bracelet-memory-sheet {
     box-shadow: 2px 3px 0 rgba(0,0,0,0.34);
   }
-  body[data-contrast="high"] :is(.bracelet-action, .bracelet-memory, .bracelet-legend-item) {
+  body[data-contrast="high"] :is(.bracelet-action, .bracelet-memory-sheet, .bracelet-legend-item) {
     border-color: var(--ink); border-width: 2px;
   }
   body[data-contrast="high"] .bracelet-legend-swatch { border-color: var(--ink); border-width: 2px; }
@@ -4931,7 +4942,7 @@
     .bracelet-action { flex: 1 1 0; min-width: 0; padding-left: 8px; padding-right: 8px; }
     .bracelet-memory { max-width: none; }
     .bracelet-memory-sheet { padding-left: 10px; padding-right: 10px; }
-    .bracelet-recap-item { grid-template-columns: 5.7rem minmax(0, 1fr); gap: 2px 7px; }
+    .bracelet-recap-item { grid-template-columns: 13px 5.4rem minmax(0, 1fr); gap: 2px 6px; }
   }
 
   /* ---------- Results anthology — lines you wrote from memory (pressed-flower keepsake) ---------- */

@@ -9524,6 +9524,9 @@ const BRACELET_FINISH_COPY = {
   skull: "bone bead, the miss that ended the run",
   empty: "an unfinished page",
 };
+// The dangles a run has to earn, as against whichever trinket the player's Mastery reward
+// hangs on every correct bead. Only these are worth naming twice.
+const BRACELET_SPECIAL_TRINKETS = ["devil", "horseshoe", "stopwatch", "nib"];
 const BRACELET_TRINKET_COPY = {
   star: "star", heart: "heart", moon: "moon", butterfly: "butterfly", music: "music note",
   key: "key", crown: "crown", snake: "snake", gem: "gem", cat: "cat", bow: "bow",
@@ -9542,9 +9545,11 @@ function setBraceletKeepsakeAvailable(available) {
     btn.disabled = !available;
     btn.setAttribute("aria-disabled", available ? "false" : "true");
   });
+  // Blank while the buttons work: two worded actions under a picture of a bracelet do not
+  // need a caption telling the player the picture is worth keeping. The line is for the one
+  // state the buttons cannot explain themselves, a daily result still sealed.
   const note = $("braceletKeepsakeNote");
-  if (note) note.textContent = available ? "Keep the strand as a shareable notebook card."
-    : "Reveal today's result before keeping the strand.";
+  if (note) note.textContent = available ? "" : "Reveal today's result before keeping the strand.";
 }
 
 // The SVG stays decorative. This companion describes the same finish and dangle decisions in
@@ -9573,32 +9578,51 @@ function renderBraceletDetails(results, albums, opts) {
   const missed = results.filter((value) => value === false).length;
   const hinted = Array.isArray(opts.hinted) ? opts.hinted : [];
   const verseTiers = Array.isArray(opts.verseTiers) ? opts.verseTiers : [];
+  // Both the every-bead lists (which the legend counts) and their first-appearance order
+  // (which the legend reads in, so the note runs left to right the way the strand does).
+  const finishes = [];
+  const trinkets = [];
   const allFinishes = [];
   const allTrinkets = [];
   for (let i = 0; i < filled; i++) {
     const finish = braceletFinish(results[i], i, opts);
+    finishes.push(finish);
     if (!allFinishes.includes(finish)) allFinishes.push(finish);
     if (results[i] === true) {
       const trinket = braceletTrinketId(i, opts);
-      if (trinket && !allTrinkets.includes(trinket)) allTrinkets.push(trinket);
+      if (trinket) {
+        trinkets.push(trinket);
+        if (!allTrinkets.includes(trinket)) allTrinkets.push(trinket);
+      }
     }
   }
-  const specialCount = allTrinkets.filter((id) => ["devil", "horseshoe", "stopwatch", "nib"].includes(id)).length;
   const parts = [`${filled} page${filled === 1 ? "" : "s"} strung`, `${correct} correct`, `${missed} missed`];
   if (allFinishes.includes("matte")) parts.push(`${hinted.filter(Boolean).length} hinted`);
   if (allFinishes.includes("pearl")) parts.push(`${verseTiers.filter(Boolean).length} lyric recall`);
-  if (specialCount) parts.push("special dangles marked below");
+  // Spoken, not printed. The tally above already says the score and the page count, and the
+  // legend below counts every finish and dangle by name, so a sighted player was reading the
+  // same run three times over. A screen reader has neither of those (the strand is aria-hidden
+  // and the legend is behind a closed <details>), which is why the sentence still exists.
   if (summary) summary.textContent = parts.join(" · ") + ".";
 
+  // The legend counts as well as explains. That count is what lets the summary line come off
+  // the page: "×5 pearl bead" is the same fact, said where the swatch beside it makes it mean
+  // something. A multiplier rather than a plural, so one bead reads as "×1" and no copy string
+  // needs two forms of itself.
   if (legend) {
+    const tally = (list) => list.reduce((m, v) => (m[v] = (m[v] || 0) + 1, m), {});
+    const finishCounts = tally(finishes);
+    const trinketCounts = tally(trinkets);
+    const item = (attr, swatchClass, glyph, count, text) =>
+      `<span class="bracelet-legend-item" ${attr}>` +
+        `<span class="bracelet-legend-swatch ${swatchClass}" aria-hidden="true">${glyph}</span>` +
+        `<span class="bracelet-legend-count">×${count}</span>` +
+        `<span>${escapeHtml(text)}</span></span>`;
     const finishItems = allFinishes.filter((finish) => BRACELET_FINISH_COPY[finish]).map((finish) =>
-      `<span class="bracelet-legend-item" data-finish="${finish}">` +
-        `<span class="bracelet-legend-swatch" aria-hidden="true"></span>` +
-        `<span>${escapeHtml(BRACELET_FINISH_COPY[finish])}</span></span>`);
+      item(`data-finish="${finish}"`, "", "", finishCounts[finish] || 0, BRACELET_FINISH_COPY[finish]));
     const trinketItems = allTrinkets.map((id) =>
-      `<span class="bracelet-legend-item" data-trinket="${escapeHtml(id)}">` +
-        `<span class="bracelet-legend-swatch bracelet-legend-dangle" aria-hidden="true">◇</span>` +
-        `<span>${escapeHtml(BRACELET_TRINKET_COPY[id] || "chosen dangle")} on a correct bead</span></span>`);
+      item(`data-trinket="${escapeHtml(id)}"`, "bracelet-legend-dangle", "◇", trinketCounts[id] || 0,
+        `${BRACELET_TRINKET_COPY[id] || "chosen dangle"} on a correct bead`));
     legend.innerHTML = finishItems.concat(trinketItems).join("");
   }
 
@@ -9607,6 +9631,13 @@ function renderBraceletDetails(results, albums, opts) {
     const words = Array.isArray(opts.words) ? opts.words : roundWords;
     const songs = Array.isArray(opts.songs) ? opts.songs : roundSongs;
     const times = Array.isArray(opts.times) ? opts.times : roundTimes;
+    const palette = opts.colors && typeof opts.colors === "object" ? opts.colors : albumPalette();
+    // What the row says in WORDS is only what the legend above it hasn't already said.
+    // The finish rides along as the same swatch the legend uses, and the dangle is named
+    // only when it is one of the special ones: printing "glossy bead, correct without a
+    // hint · star dangle" thirteen times down a clean run buried the two facts a player
+    // actually opened the note for, which page held which word and what it turned out to be.
+    // The finish still reaches a screen reader as text, since a swatch reaches nobody.
     const items = layout.slots.filter((slot) => slot.index < filled).map((slot) => {
       const i = slot.index;
       const ok = results[i] === true;
@@ -9617,12 +9648,19 @@ function renderBraceletDetails(results, albums, opts) {
       const elapsed = typeof times[i] === "number" && isFinite(times[i])
         ? `${times[i].toFixed(times[i] < 10 ? 1 : 0).replace(/\.0$/, "")}s` : "";
       const trinket = ok ? braceletTrinketId(i, opts) : null;
-      const meta = [BRACELET_FINISH_COPY[finish], album, elapsed,
-        trinket ? `${BRACELET_TRINKET_COPY[trinket] || "chosen"} dangle` : ""].filter(Boolean).join(" · ");
+      const special = trinket && BRACELET_SPECIAL_TRINKETS.includes(trinket);
+      const meta = [album, elapsed,
+        special ? `${BRACELET_TRINKET_COPY[trinket] || "chosen"} dangle` : ""].filter(Boolean).join(" · ");
+      // The swatch takes the page's own album colour, so a row of the note and the bead it
+      // describes are the same bead. Filtered to a literal colour token, never interpolated raw.
+      const hue = (albums[i] && palette[albums[i]]) || "";
+      const tint = /^#[0-9a-f]{3,8}$/i.test(hue) ? ` style="--bead:${hue}"` : "";
       return `<li class="bracelet-recap-item" value="${i + 1}">` +
+        `<span class="bracelet-legend-swatch bracelet-recap-bead" data-finish="${finish}"${tint} aria-hidden="true"></span>` +
         `<span class="bracelet-recap-page">page ${i + 1} · ${escapeHtml(prompt)}</span>` +
-        `<span class="bracelet-recap-title">${escapeHtml(title)}</span>` +
-        `<span class="bracelet-recap-meta">${escapeHtml(meta)}</span></li>`;
+        `<span class="bracelet-recap-title">${escapeHtml(title)}` +
+          `<span class="sr-only"> · ${escapeHtml(BRACELET_FINISH_COPY[finish] || "")}</span></span>` +
+        (meta ? `<span class="bracelet-recap-meta">${escapeHtml(meta)}</span>` : "") + `</li>`;
     }).join("");
     const omitted = layout.omitted > 0
       ? `<p class="bracelet-recap-note">The strand shows the latest ${layout.visibleCount} pages. ${layout.omitted} earlier page${layout.omitted === 1 ? " is" : "s are"} already strung into the loop.</p>` : "";
@@ -22805,8 +22843,11 @@ function buildDevApi() {
         const rows = {};
         const parts = {
           heading: ".word-label", score: "#finalScore", rule: ".tally-rule", ledger: ".tally-ledger",
-          caption: ".bracelet-caption", summary: "#braceletSummary", strand: "#resultBracelet",
-          actions: ".bracelet-actions", keepsakeNote: ".bracelet-keepsake-note", memory: ".bracelet-memory",
+          caption: ".bracelet-caption", strand: "#resultBracelet", actions: ".bracelet-actions",
+          // Only rendered when a daily result is still sealed; skipped, like anything with no
+          // width, on every other run. #braceletSummary is deliberately absent: it is sr-only.
+          keepsakeNote: ".bracelet-keepsake-note",
+          memory: ".bracelet-memory > summary", memorySheet: ".bracelet-memory-sheet",
         };
         for (const [k, sel] of Object.entries(parts)) {
           const el = R.querySelector(sel);
