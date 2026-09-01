@@ -3342,8 +3342,8 @@
   /* "play the dark side" — the offer that only exists once the card underneath it has been
      beaten. It is deliberately NOT a third stamp in the two-up row below: those two are
      stationery washed in coloured pencil, and this is the one object on a challenge results
-     page that isn't made of paper at all. A strip of night torn out and taped over the sheet,
-     inked in the dark side's aubergine with the violet bleeding into it, carrying the eclipse
+     page that isn't made of paper at all. A strip of night torn out of the sheet, inked in
+     the dark side's aubergine with the violet bleeding into it, carrying the eclipse
      at full size with its corona drawn out. Hover and the light comes back around the blot:
      the rays extend, the paper goes darker, the hand-drawn arrow leans out of the strip. */
   .dark-invite {
@@ -3359,17 +3359,6 @@
     transform: rotate(-0.45deg);
     transition: background-color 0.26s ease, box-shadow 0.2s ease, transform 0.12s ease;
   }
-  /* The tape: two pale strips holding the torn night to the page, one at each end and neither
-     the same width or angle as the other, because a mirrored pair reads as printed. */
-  .dark-invite::before, .dark-invite::after {
-    content: ""; position: absolute; top: -10px; height: 20px;
-    background: rgba(244, 237, 221, 0.26);
-    border-left: 1px solid rgba(126, 114, 92, 0.20);
-    border-right: 1px solid rgba(126, 114, 92, 0.20);
-    pointer-events: none;
-  }
-  .dark-invite::before { left: 11px; width: 36px; transform: rotate(-4deg); }
-  .dark-invite::after { right: 15px; width: 27px; transform: rotate(6deg); }
 
   .dark-invite-mark { flex: 0 0 auto; display: block; line-height: 0; }
   .dark-invite-svg { display: block; width: 34px; height: 34px; color: #d9c3f6; }
