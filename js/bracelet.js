@@ -178,7 +178,13 @@ export function braceletFinish(result, i, opts = {}) {
     const tier = (opts.verseTiers || [])[i];
     return tier === "perfect" ? "pearl" : (opts.hinted || [])[i] ? "matte" : "gloss";
   }
-  if (result === false) return (opts.skullMiss || [])[i] ? "skull" : "clear";
+  if (result === false) {
+    if ((opts.skullMiss || [])[i]) return "skull";
+    // Insurance: a page a shield took the miss for. Still a miss — it is strung on the frosted
+    // body, not a coloured one — but a miss that was paid for, so it wears the patch.
+    if ((opts.shieldSaved || [])[i]) return "shielded";
+    return "clear";
+  }
   return "empty";
 }
 
@@ -314,6 +320,10 @@ const PEN = "#2b2722";
 const CORD = "#c8b28c", CORD_HI = "#efe6d2", DISC = "#efe6d2", CUBE = "#fffdf6";
 // the knot is the cord seen bunched, so it is shaded as a body rather than a flat disc
 const CORD_DK = "#7a6743", CORD_LT = "#fffcf0";
+// The margin red, for the one mark on the strand that is a REPAIR rather than a result: the
+// patch over a miss an Insurance shield took. Fixed rather than var(--ink) for the same reason
+// PEN is: it has to hold its meaning on the night page as well as the cream one.
+const MEND = "#9c3b2e";
 
 const n = (v) => (+v).toFixed(2);
 
@@ -381,9 +391,10 @@ function beadDefs(u) {
 // ---- One pony bead ----
 // A 9x6mm barrel reads TALLER THAN IT IS WIDE on a cord — a short fat cylinder, not a
 // lozenge lying down. `finish` is the strand's second channel, on top of album colour:
-//   gloss  a page you named        matte  a page where a hint was taken (sanded, so it
-//   pearl  a line written from     |      still reads on the albums that are already grey)
-//   |      memory, word-perfect    clear  a page you missed
+//   gloss  a page you named        matte    a page where a hint was taken (sanded, so it
+//   pearl  a line written from     |        still reads on the albums that are already grey)
+//   |      memory, word-perfect    clear    a page you missed
+//                                  shielded a miss an Insurance shield took for you
 function ponyBead(x, y, fill, sc, rot, finish, u, idx) {
   const w = 24 * sc, h = 28 * sc, rx = 7.6 * sc;
   const box = `x="${n(x - w / 2)}" y="${n(y - h / 2)}" width="${n(w)}" height="${n(h)}" rx="${n(rx)}"`;
@@ -425,6 +436,27 @@ function ponyBead(x, y, fill, sc, rot, finish, u, idx) {
       `<rect ${box} fill="${fill}" fill-opacity="0.22"/>` +
       `<rect x="${n(x - w / 2 + 3 * sc)}" y="${n(y - h / 2 + 3 * sc)}" width="${n(w - 6 * sc)}" height="${n(h - 6 * sc)}" ` +
         `rx="${n(rx * 0.6)}" fill="none" stroke="#fff" stroke-width="${n(1.6 * sc)}" opacity="0.7"/>` + lit + spec;
+  } else if (finish === "shielded") {
+    // The frosted miss, patched. Insurance's whole decision is whether to spend a shield, and
+    // a rescued page used to string the same bead a plain miss gets — so the strand said
+    // nothing about the only choice the challenge asks for. It is built ON the frosted body
+    // rather than beside it, because it IS a miss and must never read along the strand as a
+    // page landed: the album tint stays at the frosted 0.22 and the colour language holds.
+    // What is added is a repair. A red-inked patch stitched across the bead, corner to corner,
+    // with the stitches drawn rather than dashed so it reads as something done by hand to a
+    // bead that had already gone wrong — the same margin red the shield button is inked in,
+    // which is what ties the mark back to the thing that was spent for it.
+    const px = x - w * 0.30, py = y - h * 0.20, pw = w * 0.60, ph = h * 0.40;
+    const stitch = [0.18, 0.5, 0.82].map((t) =>
+      `<path d="M${n(px + pw * t)},${n(py - 1.4 * sc)} L${n(px + pw * t)},${n(py + ph + 1.4 * sc)}" ` +
+        `stroke="${MEND}" stroke-width="${n(1.0 * sc)}" stroke-linecap="round" opacity="0.72" ` +
+        `stroke-dasharray="${n(2.1 * sc)} ${n(2.4 * sc)}"/>`).join("");
+    body = `<rect ${box} fill="#fff" fill-opacity="0.34" stroke="${PEN}" stroke-opacity="0.55" stroke-width="${n(1.25 * sc)}"/>` +
+      `<rect ${box} fill="${fill}" fill-opacity="0.22"/>` +
+      `<rect x="${n(px)}" y="${n(py)}" width="${n(pw)}" height="${n(ph)}" rx="${n(2.2 * sc)}" ` +
+        `fill="${MEND}" fill-opacity="0.18" stroke="${MEND}" stroke-width="${n(1.25 * sc)}" ` +
+        `stroke-opacity="0.85" transform="rotate(-7 ${n(x)} ${n(y)})"/>` +
+      `<g transform="rotate(-7 ${n(x)} ${n(y)})">${stitch}</g>` + lit;
   } else if (finish === "matte") {
     // Sanded, not merely flat. Three albums are already grey or near-grey, so a matte bead
     // that differed from a gloss one by hue alone would be invisible on exactly the pages
@@ -549,6 +581,8 @@ function buildSingleRowBraceletSVG(results, activeRound, freshIndex, albums, opt
   // per-round flag (Insurance): the uninsured miss that ended the run — this page's bead is
   // a skull rather than a frosted spacer. At most one page a run ever carries it.
   const skullMiss = (opts && opts.skullMiss) || [];
+  // Insurance: the pages a shield took the miss for (see braceletFinish "shielded").
+  const shieldSaved = (opts && opts.shieldSaved) || [];
   // per-round flag (Ruthless): this page was named inside its lens's snap window, so it dangles
   // a stopwatch.
   const snapPage = (opts && opts.snapPage) || [];
@@ -658,7 +692,7 @@ function buildSingleRowBraceletSVG(results, activeRound, freshIndex, albums, opt
       // skull placed on the bead's own centre floats high and reads as a charm, not a bead.
       svg += `<g class="b-skull-bead">${skullBead(x, y - 1.8 * sc, 13.4 * sc, 1)}</g>`;
     } else if (answered === false) {
-      svg += ponyBead(x, y, fill, sc, rot, "clear", u, i);
+      svg += ponyBead(x, y, fill, sc, rot, shieldSaved[i] ? "shielded" : "clear", u, i);
     } else if (i + 1 === activeRound) {
       svg += `<rect class="b-halo" x="${n(x - 19 * sc)}" y="${n(y - 21 * sc)}" width="${n(38 * sc)}" height="${n(42 * sc)}" ` +
         `rx="${n(13 * sc)}" stroke-width="2"/>` +
@@ -797,7 +831,7 @@ function buildCoiledBraceletSVG(results, activeRound, freshIndex, albums, opts =
         `<g${tint}>${TRINKETS[id](x, hy + drop, cr, csw)}</g></g>`;
     } else if (finish === "skull") {
       svg += `<g class="b-skull-bead">${skullBead(x, y - 1.8, 13.4, 1)}</g>`;
-    } else if (finish === "clear") {
+    } else if (finish === "clear" || finish === "shielded") {
       svg += ponyBead(x, y, fill, 1, rot, finish, u, i);
     } else if (i + 1 === activeRound) {
       svg += `<rect class="b-halo" x="${n(x - 19)}" y="${n(y - 21)}" width="38" height="42" ` +

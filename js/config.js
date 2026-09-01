@@ -811,38 +811,54 @@ export const CHALLENGES = [
     win: "Recall 6 lines word-for-word (or better). Type the line exactly." },
   { id: "wrapped-chain", name: "Wrapped Like A Chain", rule: "chain", mode: "medium",
     free: false, cost: 1, target: 6, noTitle: false, pool: "easy", tapes: 3,
-    // Dark: the suggestions go, and they are the whole point. rankMatches filters the dropdown
-    // through roundAcceptsSong, which for this rule means "does the title start with the chain
-    // letter" — so on the base run, typing a single character hands you a live list of legal
-    // links and the player never holds the constraint in their head at all. `pool: null` then
-    // compounds with the letter rather than sitting beside it: a rarer word holds fewer songs,
-    // so fewer of them can start with the letter you need. pickChainWord still guarantees an
-    // extendable word every page, and a wider bucket makes that guard MORE reliable, not less.
-    // `noTitle` was deliberately left alone — word + letter + not-in-title, spelled blind in
-    // 10s, stops being a knowledge test.
-    hard: { target: 8, pool: null, dropdown: false,
-      blurb: "10s · no suggestions · all words · each title starts with the last letter of the one before",
-      desc: "Same chain, and now you have to know the tracklist yourself. No suggestions, no easy words, and two more links to make.",
+    // Dark, REWORKED 2026-09-01 after playtest (fun 1/5, fairness 2/5). The first version took
+    // the suggestions away, and that turned out to be the wrong thing to take. rankMatches
+    // filters the dropdown through roundAcceptsSong, so on the base run the suggestions ARE
+    // the list of legal links — pulling them leaves you spelling a full title blind against a
+    // letter you are holding in your head, on a 10s clock, with no way of clawing back a page
+    // once one goes wrong. It read as unwinnable rather than hard, and a player reaching for a
+    // dropdown that is not there is not making a decision, they are just stuck.
+    // So the suggestions come back and the dark side takes TIME and the easy bucket instead:
+    // 8 seconds to find a link, every word in play, and eight links to make rather than six.
+    // The dropdown still has to be READ and chosen from inside 8s, which is a real squeeze
+    // without ever being a blank page. `pool: null` compounds with the letter — a rarer word
+    // holds fewer songs, so fewer of them start with the letter you need — and pickChainWord
+    // still guarantees an extendable word every page, a guard a WIDER bucket makes more
+    // reliable, not less. `noTitle` stays off for the reason it always was.
+    hard: { target: 8, pool: null, seconds: 8,
+      blurb: "8s · suggestions · all words · each title starts with the last letter of the one before",
+      desc: "The same chain on a shorter fuse. Eight seconds a link, no easy words, and two more links to make.",
       win: "Build a chain of 8 linked songs." },
     blurb: "10s · suggestions · each title starts with the last letter of the one before",
     desc: "Link your song answers like a chain, each song title must begin with the last letter of your previous answer.",
     win: "Build a chain of 6 linked songs." },
   { id: "on-tour", name: "On Tour!", rule: "setlist", mode: "medium",
     free: false, cost: 1, target: 9, noTitle: false, tapes: 2,
-    // Dark: same lever as the chain, for the same reason. roundAcceptsSong filters the dropdown
-    // to tonight's album, so the base run's suggestions ARE a live tracklist of the album you
-    // were dealt — take them away and you have to recall the album unaided, which is the thing
-    // this challenge claims to test. The clock deliberately stays at 10s: the answer is a typed
-    // full title, so seconds would make it a typing race (the same call Name Three made).
+    // Dark: roundAcceptsSong filters the dropdown to tonight's album, so the base run's
+    // suggestions ARE a live tracklist of the album you were dealt — take them away and you
+    // have to recall the album unaided, which is the thing this challenge claims to test.
+    //   The clock went 10s -> 12s on 2026-09-01 after playtest. The old note here said 10s was
+    // deliberate because seconds would make a typed full title a typing race (the call Name
+    // Three made) — but that reasoning was written for a page WITH suggestions, where the
+    // dropdown does most of the typing. With them gone the player is recalling the tracklist
+    // AND spelling the title out inside the same ten seconds, and the long titles this
+    // catalogue is full of ran out of clock on recall the player already had. The extra two
+    // seconds are paid to the typing, not to the remembering.
+    //   `studioOnly` restricts the setlist to the twelve studio albums (STUDIO_ALBUMS). The
+    // full album list runs to sixteen groups, and the extra ones are the deluxe and Taylor's
+    // Version tails — the nights that deal the one-of-one words and the songs nobody has the
+    // running order of. On the base run the dropdown covers for that; on the dark side it is
+    // just a night you cannot play. Twelve albums over thirteen stops means exactly one album
+    // comes round twice, which buildTourSetlist already handles by cycling.
     //   `noTitle: true` was considered and dropped. albumWordMap is built with
     //   validSongs(w, false, false), so a word can be in an album's pool ONLY because of a
     //   title-match song; with noTitle on, that page would have no legal answer. Fixing it means
     //   one map per noTitle setting (the shortTitleWordLists shape), and albumWordMap is both
     //   Deep Cut's pool and part of the guest-shelf corpus snapshot — two halves to keep in
     //   step for a modest gain on top of a lever that already carries the dark side.
-    hard: { dropdown: false, target: 10,
-      blurb: "10s · no suggestions · each page wants a song from that night's album",
-      desc: "Same tour, no setlist in your hand. Every night is an album and you have to know its songs yourself.",
+    hard: { dropdown: false, target: 10, seconds: 12, studioOnly: true,
+      blurb: "12s · no suggestions · every night is one of the twelve studio albums",
+      desc: "Same tour, no setlist in your hand. The twelve studio albums only, and you have to know their songs yourself.",
       win: "Score 10 / 13 playing each album on cue." },
     blurb: "10s · suggestions · each page wants a song from that night's album",
     desc: "You're going on tour! A setlist of albums, one per page, and your answer must come from that night's album.",
@@ -1045,13 +1061,20 @@ export const CHALLENGES = [
     // three answers of exposure at a time. `pressMinRide` (read through pressMinRide(), which
     // gates the between-pages offer) locks the pot until it is that deep, so pages one to three
     // of every ride are committed before you see them and the pot at risk is 6, not 1. The
-    // target is base + 6: four locked cycles cap at 24, so 26 cannot be reached without riding
-    // one of them to a depth of four. The run-end settle still banks whatever is riding, which
-    // is the honest escape valve on the closing pages and stays exactly as it is.
-    hard: { target: 26, pressMinRide: 3,
+    // run-end settle still banks whatever is riding, which is the honest escape valve on the
+    // closing pages and stays exactly as it is.
+    //   Target went 26 -> 30 on 2026-09-01 after playtest (fun 4/5, fairness 4/5 — the shape is
+    // right, the bar was low: a clean run banked 34). Re-derived against pages, not EV. The
+    // shallowest legal line is cycles of exactly three, worth 6 each: four of them fills twelve
+    // pages for 24, and the thirteenth rides alone into the settle for 25. 26 therefore asked
+    // for one ride of four (3+3+3+4 = 28) and nothing more. At 30 that line falls short too, so
+    // the run has to carry either three rides of four (4+4+4+1 = 31) or one ride of five
+    // (4+4+5 = 35) — a pot of 10 or 15 exposed to a single miss, which is the decision the
+    // challenge is actually for. Base + 10.
+    hard: { target: 30, pressMinRide: 3,
       blurb: "12s · suggestions · you cannot bank until three deep",
       desc: "Every correct answer drops beads into a pot, and each one you ride is worth more than the last. But the pot is locked until it is three pages deep, so there is no cashing out early and one miss inside that window wipes the lot.",
-      win: "Bank 26 beads across the run." },
+      win: "Bank 30 beads across the run." },
     blurb: "12s · suggestions · bank the pot or ride on, a miss wipes it",
     desc: "Every correct answer drops beads into a pot, and each one you ride is worth more than the last. Bank the pot whenever you like, but one miss wipes everything you haven't banked. Whatever is still riding when the 13 pages run out is yours.",
     win: "Bank 20 beads across the run." },
@@ -1068,11 +1091,17 @@ export const CHALLENGES = [
     // page one you can stake a single bead and the ceiling `maxStake: 4` opens only once you
     // have built a bankroll. adjustBeads floors at zero with no debt, so a big early miss
     // leaves you grinding +1 a page, which cannot reach the target — the run is decided in its
-    // first four pages, which is the point. Target is base + 4.
-    hard: { startBeads: 1, maxStake: 4, target: 24, wagerTeaseSelf: true,
+    // first four pages, which is the point.
+    //   Target went 24 -> 30 on 2026-09-01 after playtest (fun 4/5 — the bet is right, the bar
+    // was low: a run that cleared only ten of thirteen pages still finished on 39). Opening on
+    // one bead the bankroll doubles at best each page it is fully staked, so 1 -> 2 -> 4 -> 8
+    // reaches the old 24 inside six pages of confident play with the back half spare. 30 wants
+    // the ceiling of four staked and landed deep into the run rather than banked away from once
+    // the arithmetic is safe, which is the page this challenge is named after. Base + 10.
+    hard: { startBeads: 1, maxStake: 4, target: 30, wagerTeaseSelf: true,
       blurb: "12s · suggestions · one bead to start · stake up to four, on nothing but your own record",
       desc: "The word is face down and this time the card tells you nothing about it. All you have is your own history with it, and one bead to build from. Stake up to four, answer it and the stake pays back double, miss it and it is gone.",
-      win: "Finish the run on 24 beads." },
+      win: "Finish the run on 30 beads." },
     blurb: "12s · suggestions · stake beads on a word you haven't seen yet",
     desc: "The word is face down. All you get is how widely it is sung and your own record with it, and on that you stake up to three beads. Turn it over and the clock runs: answer it and the stake pays back double, miss it and the stake is gone. A correct answer is always worth its own bead on top.",
     win: "Finish the run on 20 beads." },
@@ -1096,24 +1125,34 @@ export const CHALLENGES = [
     win: "Finish the run on 20 beads." },
   */
   { id: "insurance", name: "Insurance", rule: "insurance", mode: "easy",
-    free: false, cost: 1, target: 13, seconds: 15, tokens: 3, tokenValue: 2, tapes: 2,
+    free: false, cost: 1, target: 13, seconds: 15, tokens: 3, tapes: 2,
+    // REWORKED 2026-09-01 after playtest (fairness 1/5, both sides). The bead economy is GONE
+    // from this challenge — no tokenValue, no end-of-run cash-in for shields you never spent,
+    // and `target: 13` now means the thirteen PAGES, read off roundResults rather than off a
+    // bead total. Insurance is the one risk rule with no bet in it: every page is answer-or-die
+    // and the only decision is whether to spend a shield, so a second currency laid over the
+    // top was fluff at best. At worst it was a lie. The old sums made a shielded rescue cost
+    // more beads than it saved, so the winning line was "answer all thirteen and cash the
+    // shields in", which is a rule telling you not to use the mechanic it is named after; and
+    // a page-one death still paid out three unspent shields, so the results screen congratulated
+    // a run that lasted one page with six beads.
+    // What is left is the rule as stated: survive all thirteen pages. A shield takes a miss for
+    // you and nothing else does, so shields are pure survival and spending one is a straight
+    // trade of a future rescue for this page. Untouchable (win with every shield unspent) is
+    // what still rewards not needing them — a charm, where it belongs, rather than a tax on
+    // the win condition.
     // Dark: sharpen the trade, never the answer. This is sudden death over 13 pages, so p
     // compounds savagely — taking the suggestions away would turn it into a lottery rather than
-    // a harder challenge. So it makes a kept shield WORTH more instead of making shields
-    // scarcer alone, which is the more interesting version of the same squeeze.
-    // The arithmetic is the design. Base allows two shielded misses (11 correct + one kept
-    // shield at 2 = exactly 13). Dark: a clean run is 13 + two kept shields at 3 = 19 against
-    // 15; one shielded miss is 12 + one kept shield at 3 = exactly 15, scraping it; two is
-    // 11 + nothing = 11 and a loss. So the dark side buys exactly ONE rescue where the base
-    // buys two. 15s -> 12s is the only pressure on the answer itself, small enough to leave
-    // the survival curve intact. Target is base + 2.
-    hard: { tokens: 2, tokenValue: 3, target: 15, seconds: 12,
-      blurb: "12s · sudden death · two shields, and every one you keep is worth three beads",
-      desc: "One miss ends the run. Two shields this time, and each one you never spend is worth three beads at the end, so a single rescue is all the run can afford and still clear the bar.",
-      win: "Survive all 13 pages and finish on 15 beads." },
-    blurb: "15s · sudden death · three shields, and every one you keep is worth beads",
-    desc: "One miss ends the run. You start with three shields and may spend one before you answer to survive a miss, but every shield you still hold at the end is worth 2 beads. Buying your way out of trouble is exactly what costs you the win.",
-    win: "Survive all 13 pages and finish on 13 beads." },
+    // a harder challenge. So the dark side carries two shields where the base carries three,
+    // and pays three seconds for them. 15s -> 12s is the only pressure on the answer itself, small
+    // enough to leave the survival curve intact.
+    hard: { tokens: 2, seconds: 12,
+      blurb: "12s · sudden death · two shields · survive all thirteen pages",
+      desc: "One miss ends the run. Two shields this time, three seconds less on the clock, and nothing else between you and the end of it.",
+      win: "Survive all 13 pages." },
+    blurb: "15s · sudden death · three shields · survive all thirteen pages",
+    desc: "One miss ends the run. You start with three shields and may spend one before you answer: a shield takes that page's miss for you, and nothing else will. Spend them and they are gone.",
+    win: "Survive all 13 pages." },
 ];
 /* Both Of Us — the multi-word page. BOTH_WORDS prompt words are drawn per page (the dark side
    carries a wider `words`), and a set is only served once at least BOTH_MIN_SONGS songs hold
@@ -1133,9 +1172,10 @@ export const BOTH_REVEAL_SONGS = 2;
    PRESS_RIDE_STEP: Press Your Luck's pot escalates — the first answer you ride is worth 1
    bead, the second 2, the third 3, and so on. Riding four deep is therefore a pot of 10 and
    banking every single page caps you at 13, which is what forces the gamble at a target of 20.
-   RISK_MAX_STAKE / RISK_TOKENS / RISK_TOKEN_VALUE are the fallbacks for the per-entry
-   `maxStake` / `tokens` / `tokenValue` levers. (`startBeads` has no shared default: a run
-   opens on nothing unless its own entry says otherwise.) */
+   RISK_MAX_STAKE / RISK_TOKENS are the fallbacks for the per-entry `maxStake` / `tokens`
+   levers. (`startBeads` has no shared default: a run opens on nothing unless its own entry
+   says otherwise.) There is no shield VALUE any more — Insurance's shields buy survival and
+   nothing else since the 2026-09-01 rework; see its entry above. */
 export const PRESS_RIDE_STEP = 1;
 /* How deep a ride has to be before the bead that banks it earns the horseshoe trinket. Riding
    three pages is a pot of 6 against a target of 20, so it's a real commitment, not a shrug. */
@@ -1148,7 +1188,6 @@ export const PRESS_TRINKET_RIDE = 3;
 export const PRESS_FLOURISH_RIDE = 5;
 export const RISK_MAX_STAKE = 3;
 export const RISK_TOKENS = 3;
-export const RISK_TOKEN_VALUE = 2;
 /* Odd One Out — the reject grid. Each page shows ODD_TILES songs, of which exactly one is the
    odd one: the word appears in NEITHER its lyrics nor its title (so the tile isn't an unfair
    "title matched but it's wrong" trap). Tapping the odd one scores; tapping any of the genuine
@@ -1252,27 +1291,35 @@ export const DARK_SIDE_MILESTONE = 5;
                   faster; both default to the base ramp and the level is still clamped to 4.
    - one-of-a-kind `guesses` sets the wrong-guess budget (1 on dark). `newSongLivesMax` holds
                   the run's budget so the pips and the intro cue match what you actually get.
-   - wrapped-chain / on-tour: both dark sides are `dropdown: false` plus a target, and it is the
-                  same finding in both. rankMatches filters suggestions through roundAcceptsSong,
-                  which for `chain` means "starts with the chain letter" and for `setlist` means
-                  "from tonight's album" — so on the base runs the dropdown is a live index of
-                  legal answers and solves the rule for you. Removing it IS the dark side; the
-                  rest is a target. Chain also takes `pool: null`, which compounds with the
-                  letter (rarer word, fewer holders, fewer of them starting right) while
-                  pickChainWord's guard only gets safer against a wider bucket.
+   - on-tour      `dropdown: false` plus a target. rankMatches filters suggestions through
+                  roundAcceptsSong, which for `setlist` means "from tonight's album", so the
+                  base run's dropdown is a live tracklist and solves the rule for you. Removing
+                  it IS the dark side. `studioOnly` then narrows the setlist to STUDIO_ALBUMS,
+                  because the four non-studio groups are the deluxe and Taylor's Version tails
+                  and nobody holds their running order; `seconds: 12` pays for spelling a full
+                  title out unaided (both 2026-09-01).
+   - wrapped-chain SAME lever, and it FAILED here — see the entry's own note. Chain's dropdown
+                  is filtered to titles starting with the chain letter, so pulling it leaves a
+                  blank page rather than a hard choice, and the playtest rated it 1/5 for fun.
+                  The dark side now keeps the suggestions and takes `seconds: 8` and
+                  `pool: null` instead. The lesson generalises: removing the dropdown is a real
+                  dark-side lever only where the player can still get somewhere without it.
    - press-your-luck `pressMinRide` (3 on dark, read through pressMinRide()) locks the pot until
                   the ride is that deep, so showRiskDecision simply doesn't stop between pages
-                  below the floor and renderRiskBanner says "locked" instead. Target base + 6:
-                  four locked cycles of three cap at 24, so 26 needs one ride four deep.
+                  below the floor and renderRiskBanner says "locked" instead. Target base + 10:
+                  the shallowest legal line (cycles of exactly three, 6 each) caps at 25 over
+                  thirteen pages and 3+3+3+4 at 28, so 30 needs a ride five deep or three of four.
    - confidence-wager `wagerTeaseSelf` drops the rarity half of the card back, leaving only your
                   own record with the word — the objective read goes, the self-knowledge one
                   stays. It removes a fact rather than adding one, so the "never let the word be
                   deduced" rule holds by construction. `startBeads: 1` throttles the opening
                   because the stake cap is min(maxStake, score); `maxStake: 4` opens a ceiling
-                  you have to earn. Target base + 4.
-   - insurance    `tokens` 2 / `tokenValue` 3 / target base + 2 buy exactly ONE rescue where the
-                  base buys two (19 clean, 15 on one shielded miss, 11 on two). All four levers
-                  already read off the entry, so it is a pure economy change.
+                  you have to earn. Target base + 10: staked to the ceiling the bankroll
+                  doubles a page, so the old 24 landed inside six confident pages.
+   - insurance    `tokens` 2 (against the base's 3) and `seconds` 12. There is no bead economy
+                  here any more — the challenge was reworked on 2026-09-01 to be survival and
+                  nothing else, on both sides, so the dark side is one fewer shield and three
+                  fewer seconds. See the entry for why the beads went.
    THE STANDING RULE FOR THE RISK THREE: never tighten the answer. Those rules multiply risk
    (p^n on a Press pot, p^13 on an Insurance run), so a lower answer probability deletes the
    decision rather than hardening it. Move the economy or the information instead.

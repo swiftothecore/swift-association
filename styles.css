@@ -4266,11 +4266,81 @@
   .rs-n { font-family: var(--hand); font-weight: 700; font-size: calc(26px + var(--text-size-adjust)); color: var(--ink); line-height: 1; }
   .rs-l { font-family: var(--type); font-size: calc(10px + var(--text-size-adjust)); letter-spacing: 0.6px; color: var(--ink-soft); }
   .risk-stake-note { font-family: var(--type); font-size: calc(11px + var(--text-size-adjust)); color: var(--ink-soft); margin: 10px 0 0; }
-  /* Insurance — the shield you spend before answering. Same dashed affordance as Choose Your
-     Path's Mulligan (it is the same kind of thing: a run resource), inked red because it is
-     the only thing standing between you and the end of the run. */
-  .risk-shield-btn { color: #9c3b2e; border-color: rgba(156, 59, 46, 0.6); }
-  .risk-shield-btn:hover { color: #7d2f24; border-color: #7d2f24; }
+  /* Insurance — the shield you spend before answering. It used to borrow Choose Your Path's
+     dashed mulligan affordance, and a playtester read that outline as an unfinished element
+     rather than a control: on Insurance this is not a convenience at the edge of the page, it
+     is the ONLY control the challenge has and the entire run is the question of whether to
+     press it. So it is stamped instead — margin red, a double rule for the stamp's ring, its
+     own drawn shield, and the shields left counted in pips beside the shortcut. */
+  .risk-shield-stamp {
+    display: flex; align-items: center; gap: 10px; cursor: pointer;
+    margin: 10px auto 0; padding: 7px 14px 7px 11px;
+    background: color-mix(in srgb, var(--red-pen) 7%, var(--paper));
+    color: var(--red-pen);
+    border: 2px solid var(--red-pen); border-radius: 3px;
+    box-shadow: 0 0 0 1.5px var(--paper) inset, 2px 3px 0 rgba(156, 59, 46, 0.18);
+    transform: rotate(-0.8deg);
+    transition: background 0.14s ease, color 0.14s ease, transform 0.12s ease, box-shadow 0.14s ease;
+  }
+  .risk-shield-stamp:hover, .risk-shield-stamp:focus-visible {
+    background: var(--red-pen); color: var(--paper);
+    transform: rotate(-0.8deg) translateY(-1px);
+    box-shadow: 0 0 0 1.5px var(--paper) inset, 3px 4px 0 rgba(156, 59, 46, 0.28);
+  }
+  .rss-shield { width: 24px; height: 24px; display: block; }
+  .rss-body { display: flex; flex-direction: column; align-items: flex-start; gap: 1px; }
+  .rss-lab {
+    font-family: var(--type); font-weight: 700; letter-spacing: 1.1px; text-transform: uppercase;
+    font-size: calc(12px + var(--text-size-adjust)); line-height: 1.1;
+  }
+  .rss-sub {
+    display: flex; align-items: center; gap: 6px;
+    font-family: var(--type); font-size: calc(10px + var(--text-size-adjust));
+    letter-spacing: 0.5px; opacity: 0.85;
+  }
+  /* The shields still in hand, countable without reading a bracket. */
+  .rss-pips { display: inline-flex; gap: 3px; }
+  .rss-pips i { width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+  @media (prefers-reduced-motion: reduce) {
+    .risk-shield-stamp { transition: none; }
+    .risk-shield-stamp:hover, .risk-shield-stamp:focus-visible { transform: rotate(-0.8deg); }
+  }
+  /* A wiped Press Your Luck pot, said out loud. The bead delta beside the strand reports a
+     one-bead swing and a fifty-five-bead wipe in the same 12px, and in playtest the biggest
+     event in the run went unnoticed because of it. This is struck across the banner the pot
+     was being counted on, which is where the player has been watching the number climb. */
+  .pot-wipe {
+    display: flex; align-items: baseline; justify-content: center; gap: 8px;
+    margin-top: 4px; color: var(--red-pen);
+  }
+  .pot-wipe-n {
+    font-family: var(--hand); font-weight: 700; line-height: 1;
+    font-size: calc(30px + var(--text-size-adjust));
+  }
+  .pot-wipe-t {
+    font-family: var(--type); font-weight: 700; text-transform: uppercase; letter-spacing: 1.4px;
+    font-size: calc(11px + var(--text-size-adjust));
+  }
+  .chall-banner.is-wiped .pot-wipe { animation: pot-wipe-in 2.2s ease both; }
+  .chall-banner.is-wiped { animation: pot-wipe-shake 0.42s ease both; }
+  @keyframes pot-wipe-in {
+    0% { opacity: 0; transform: scale(0.82) rotate(-3deg); }
+    9% { opacity: 1; transform: scale(1.06) rotate(-1.6deg); }
+    16% { transform: scale(1) rotate(-1.2deg); }
+    82% { opacity: 1; }
+    100% { opacity: 0; }
+  }
+  @keyframes pot-wipe-shake {
+    0%, 100% { transform: translateX(0); }
+    18% { transform: translateX(-5px); }
+    38% { transform: translateX(4px); }
+    58% { transform: translateX(-3px); }
+    78% { transform: translateX(2px); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .chall-banner.is-wiped .pot-wipe, .chall-banner.is-wiped { animation: none; }
+  }
+
   /* The bead swing a bet just paid (or cost), called out beside the strand's trinket count. */
   .bead-delta {
     margin-left: 8px; font-family: var(--type); font-weight: 700; font-size: calc(12px + var(--text-size-adjust));
@@ -4312,6 +4382,43 @@
   /* One Of A Kind — a remaining guess (drains to a hollow pip as guesses are spent) */
   .chall-pip.filled { background: #b23a3a; border-color: #b23a3a; }
   .chall-prog-count { font-variant-numeric: tabular-nums; opacity: 0.8; }
+  /* The risk batch's banner is a SCOREBOARD, not a reminder. On those four rules the whole
+     decision is what you hold against what you need, and at the shared banner's 12px it was
+     being read past entirely (playtest, all three of Press / Wager / Insurance). Sized up,
+     ruled off, and the count set in the hand so the number is the loudest thing on the row. */
+  .chall-banner.is-risk {
+    display: flex; align-items: baseline; justify-content: center; gap: 14px; flex-wrap: wrap;
+    margin: 4px auto 10px; padding: 5px 16px 6px; max-width: 420px;
+    border-top: 1.5px solid rgba(43, 39, 34, 0.16);
+    border-bottom: 1.5px solid rgba(43, 39, 34, 0.16);
+    color: var(--ink);
+  }
+  .chall-banner.is-risk .chall-prog-name {
+    font-size: calc(14px + var(--text-size-adjust)); letter-spacing: 0.3px; color: var(--ink-soft);
+  }
+  .chall-banner.is-risk .chall-prog-count {
+    font-family: var(--hand); font-weight: 700; opacity: 1; letter-spacing: 0;
+    font-size: calc(22px + var(--text-size-adjust)); margin-left: 0;
+  }
+  /* Wrapped Like A Chain — the letter the next title has to start with. It was one bold
+     character inside the banner's 12px body copy, and a playtester squinted up past the prompt
+     word to find it on every single page: the rule was harder to read than the answer. It is an
+     alphabet bead now, the same white cube the strand strings, set at the size it is actually
+     being asked at. */
+  .chall-banner.is-chain { display: flex; align-items: center; justify-content: center; gap: 14px; flex-wrap: wrap; margin-bottom: 10px; }
+  .chall-banner.is-chain .chall-prog-name { font-size: calc(13px + var(--text-size-adjust)); }
+  .chain-cue { display: inline-flex; align-items: center; gap: 9px; font-size: calc(13px + var(--text-size-adjust)); }
+  .chain-letter {
+    display: inline-flex; align-items: center; justify-content: center;
+    min-width: 34px; height: 34px; padding: 0 5px;
+    font-family: var(--type); font-weight: 700; font-size: calc(21px + var(--text-size-adjust));
+    /* A white alphabet bead is a white OBJECT, not ink on paper — same call the strand's
+       cubes make. Fixed ink, or on the night page it is warm paper-white on white. */
+    line-height: 1; letter-spacing: 0; color: #2b2722;
+    background: #fffdf6; border: 2px solid #2b2722; border-radius: 5px;
+    box-shadow: 1px 2px 0 rgba(43, 39, 34, 0.22);
+    transform: rotate(-2deg);
+  }
   /* When the count sits directly after the name (no pips between — Shrinking Timer,
      Wrapped Like A Chain, On Tour!, It's A Clock!), keep them from butting together. */
   .chall-prog-name + .chall-prog-count { margin-left: 8px; }
