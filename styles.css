@@ -4679,10 +4679,10 @@
      the trinket star beside them is a thing you earned. If a term ever out-inks the star,
      this is the line that did it. */
   .rule-terms { display: inline-flex; align-items: center; gap: 7px; }
-  /* Fixed-width slots, so a term that does not apply leaves a hole instead of letting its
-     neighbours slide over. Without this, Lyricist's missing title mark would be
-     indistinguishable from a row that simply carries three marks — and the slots would stop
-     being learnable by position. */
+  /* Every mark gets the same box, so the spacing between them is even whatever they are drawn
+     from — the marks differ in ink width and a slot is what keeps that from showing as ragged
+     gaps. A term the page has no opinion about renders NO slot at all and the row closes up;
+     see RULE_ORDER in js/rulemarks.js for what that costs and why it was worth it. */
   .rule-slot {
     flex: none; width: 14px; height: 14px;
     display: inline-flex; align-items: center; justify-content: center;

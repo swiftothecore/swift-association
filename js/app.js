@@ -12375,9 +12375,9 @@ function renderPromptChrome() {
 // currentMode read would quietly describe the mode the run borrowed instead of the page in
 // front of the player, which is the exact failure these marks exist to fix.
 //
-// A null slot means "this page has no opinion", and it is held open and left empty rather
-// than dropped. That is doing real work on Lyricist: the title mark is absent because a title
-// is not a thing the page has, which is what lets the mark stay two-state.
+// A null means "this page has no opinion", and that mark is simply not drawn — the row closes
+// up rather than holding a gap. It is what lets the title mark stay two-state: on Lyricist the
+// mark is absent because a title is not a thing the page has, rather than struck.
 function currentRuleTerms() {
   if (devRuleTerms) return devRuleTerms;             // dev panel override — see buildDevApi().terms
   const rule = gameType === "challenge" && currentChallenge ? currentChallenge.rule : null;

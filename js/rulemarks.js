@@ -43,12 +43,16 @@ export const RULE_MARKS = {
   },
 };
 
-// Fixed order, and always all four slots. A term that does not apply leaves its slot EMPTY
-// rather than being dropped from the row: the marks are a flex line, so an omitted mark would
-// simply slide its neighbours along, and "the title rule has no meaning here" would look
-// identical to "this row happens to carry three marks". Holding the positions is what makes an
-// absence readable as an absence — which is how Lyricist says "a title is not a thing this
-// page has" without the title mark needing a third state to say it.
+// Fixed order, but only the marks that have something to say are drawn. A term the page has no
+// opinion about is DROPPED and the rest close up, so the row never carries a hole.
+//
+// Reserving the empty slot was tried and cut. It made an absence readable by position, which is
+// a real thing to lose: on Lyricist the row is now simply three marks, and "this page has no
+// opinion about titles" no longer looks different from "this row happens to carry three marks".
+// What still separates it is the pairing — a missing sleeve beside a lit quaver — and that was
+// judged the better trade against a visible gap sitting in the middle of the notebook's chrome.
+// The slot keeps its fixed WIDTH regardless, so the spacing between the marks that do render
+// stays even; it is only the empty one that goes.
 export const RULE_ORDER = ["suggest", "title", "clock", "sung"];
 
 // Derive the four states from a bag of levers. Every caller goes through here — the live
@@ -69,7 +73,8 @@ export function ruleTermsFrom({ dropdown, noTitle, seconds, lyricOnly, titleOnly
     // effectiveDropdown, which short-circuits on exactly this.
     suggest: typed ? (lyric ? false : !!dropdown) : null,
     // Absent, not struck, on a lyric page: a title is not a thing that page HAS, so it has no
-    // opinion to state about where the word may sit in one.
+    // opinion to state about where the word may sit in one. Absent means the mark is simply
+    // not drawn — see RULE_ORDER for why the row closes up rather than reserving the space.
     title: (namesSong && !lyric) ? !noTitle : null,
     clock: (seconds || 0) > 0,
     sung: typed ? (lyric || !titleOnly) : null,
@@ -105,7 +110,7 @@ export function ruleTermsSentence(terms) {
 }
 
 // terms: { suggest, title, clock, sung }, each true (plain), false (struck), or null/undefined
-// (this page has no opinion — the slot is held open and left empty).
+// (this page has no opinion — the mark is not drawn at all and its neighbours close up).
 //
 // The group carries ONE label rather than one per mark. Reading the meta row, a screen reader
 // should hear the page's terms as a sentence sitting between the page number and the trinket
@@ -113,7 +118,8 @@ export function ruleTermsSentence(terms) {
 export function ruleSlotsMarkup(terms, { tips = true } = {}) {
   return RULE_ORDER.map((key) => {
     const v = terms ? terms[key] : null;
-    if (v == null) return `<span class="rule-slot"></span>`;
+    if (v == null) return "";   // nothing to say: the row closes up rather than holding a gap
+
     const tip = tips ? ` data-tip="${escapeHtml(RULE_MARKS[key][v ? "on" : "off"])}" data-tip-delay="120"` : "";
     return `<span class="rule-slot"${tip}>${ruleMarkMarkup(key, v)}</span>`;
   }).join("");
