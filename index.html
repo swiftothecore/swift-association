@@ -565,6 +565,33 @@ if (location.pathname.endsWith('/index.html')) {
   <symbol id="rule-strike-note" viewBox="0 0 24 24">
     <path stroke-width="1.8" d="M4.6 21.6 C8.8 16.4 13.8 10.6 18 5.4"/>
   </symbol>
+  <!-- HINTS: a match. The clue drawn as the thing the notebook already calls it — the
+       Bullet Holes charm burns three of these for a page missed with every hint spent, so
+       the object arrives half-learned. Head drawn heavy and closed, the same trick the
+       quaver's head uses: an accurate matchhead is a smudge at 14px, and the stick alone
+       has no silhouette at all. No flame and no sparks; both close up into one blob at
+       this size, and the strike needs clean stick to cross. Centred on x=12 like its
+       neighbours, which a tilted match does not want to be — the tilt is hung off centre
+       so the mark's mass, not its stick, sits in the middle of the slot. -->
+  <symbol id="rule-hint" viewBox="0 0 24 24">
+    <path d="M13.4 8.8 C12.4 12.6 11.3 16.6 10.3 20.6"/>
+    <path stroke-width="1.9" d="M14.1 4.2 C15.6 4.6 16.4 6 16 7.5 C15.5 9.2 13.9 10.2 12.6 9.8 C11.5 9.4 11 8.2 11.4 6.8 C11.8 5.2 12.9 3.9 14.1 4.2 Z"/>
+  </symbol>
+  <!-- THE RING: the vocabulary's second piece of grammar, and like the strike it means one
+       thing wherever it lands — this is the ONLY way the page will take. Circling a word is
+       what a notebook does to the one that matters, so it reads without being taught, and it
+       sits opposite the strike rather than beside it: struck is "not available", circled is
+       "nothing else is". Drawn as a real circling gesture, uneven and overshooting where it
+       closes, at a lighter weight than the strike so it frames the mark instead of competing
+       with it.
+
+       Fitted to the quaver, the only mark that has a third state to say (Lyricist and the
+       lyric pages of Switch-Up, where a sung line is not a bonus but the answer). Any mark
+       given a `ring` in RULE_MARKS needs its own, tuned to that drawing's mass — a circle
+       big enough to clear every mark would sit into its neighbours' slots. -->
+  <symbol id="rule-ring-note" viewBox="0 0 24 24">
+    <path stroke-width="1.15" opacity="0.85" d="M14.6 2.2 C18.4 3.9 20.6 7.9 20.4 12.3 C20.2 17.4 16.9 22.6 12.1 23.3 C7.9 23.9 4.3 20.3 3.6 15.9 C2.8 10.7 5.1 4.4 9.9 2.4 C11.6 1.7 13.3 1.7 14.8 2.4 C15.9 2.9 16.8 3.6 17.4 4.4"/>
+  </symbol>
 </svg>
 <!-- MASTERY REWARD MARKS — one per tile on the Mastery reward board, drawn once here and
      <use>d by rewardTileMarkHTML in app.js. Built exactly like the charm-collection theme
@@ -2746,7 +2773,7 @@ if (location.pathname.endsWith('/index.html')) {
         <span>page <b id="pageNum">1</b><span id="pageTotalWrap"> of <b id="pageTotal">13</b></span></span>
         <!-- The page count says where you are; the star says what you have earned. #ruleTerms
              joins them as what the page will TAKE, filled by renderRuleTerms. It sits inside
-             the right-hand span so the four marks land in the dead space space-between was
+             the right-hand span so the marks land in the dead space space-between was
              already leaving, costing the row no height, and it goes BEFORE the star because a
              term you merely glance at must never outrank a thing you won. -->
         <span class="bracelet-meta-right">

@@ -12368,7 +12368,7 @@ function renderPromptChrome() {
 }
 
 /* ---------- Rule marks: the terms of the page ---------- */
-// Which of the four marks this page shows, and struck or not. Reads the LIVE levers rather
+// Which of the five marks this page shows, and struck, circled or plain. Reads the LIVE levers rather
 // than currentMode, because half the challenge roster rewrites them per run or per page —
 // Revolving Door turns the title rule on over Normal's own settings, Switch-Up flips between
 // naming and singing page by page, Choose Your Path's perks turn levers off mid-run. A
@@ -12381,14 +12381,26 @@ function renderPromptChrome() {
 function currentRuleTerms() {
   if (devRuleTerms) return devRuleTerms;             // dev panel override — see buildDevApi().terms
   const rule = gameType === "challenge" && currentChallenge ? currentChallenge.rule : null;
-  return ruleTermsFrom({
+  const terms = ruleTermsFrom({
     dropdown: effectiveDropdown(),
+    // The ladder's own gates, minus the ones that come and go inside a page: roundLocked
+    // flips while an answer is being judged, and the mark must not flicker with it. The
+    // budget does belong here — Custom's last hint being spent genuinely changes what the
+    // NEXT page will offer, which is exactly the sort of thing this row exists to say.
+    hint: gameType !== "daily" && !!currentMode.hint && hintBudgetLeft > 0,
     noTitle: effectiveNoTitle(),
     seconds: baseSeconds(),
     lyricOnly: lyricModeNow(),
     titleOnly: currentMode.titleOnly,
     ...ruleShapeFor(rule),
   });
+  // The player's own switch empties the slot rather than striking it. A struck match on
+  // every page of every mode forever would read as a rule the mode imposed, when it is a
+  // setting they can turn back on in the drawer — and it would be the one mark on the row
+  // that never once changes. Off in settings means hints are not a term of this game at all,
+  // which is what an absent mark already means everywhere else here.
+  if (settings.enableHints === false) terms.hint = null;
+  return terms;
 }
 
 // The same four states for a mode the player is only LOOKING at: a difficulty card, or a
@@ -12404,8 +12416,8 @@ function modeRuleTerms(m, rule) {
 function challengeRuleTerms(c, mode) {
   const pick = (k) => (c && c[k] !== undefined ? c[k] : mode ? mode[k] : undefined);
   return modeRuleTerms({
-    dropdown: pick("dropdown"), noTitle: pick("noTitle"), seconds: pick("seconds"),
-    lyricOnly: pick("lyricOnly"), titleOnly: pick("titleOnly"),
+    dropdown: pick("dropdown"), hint: pick("hint"), noTitle: pick("noTitle"),
+    seconds: pick("seconds"), lyricOnly: pick("lyricOnly"), titleOnly: pick("titleOnly"),
   }, c && c.rule);
 }
 let devRuleTerms = null;   // dev toggle only — see buildDevApi().terms
@@ -16060,7 +16072,7 @@ function advanceRound() {
   renderTapKnowledgeUI();                      // Odd One Out / Whose Line?: their own tap grids
   renderCommonUI();                            // Common Thread: the three-line puzzle (hidden elsewhere)
   renderPromptChrome();                        // whether the prompt word shows, and what it's asking
-  renderRuleTerms();                           // ...and the four marks saying what it will take
+  renderRuleTerms();                           // ...and the marks saying what it will take
   renderExcludedNote();
   $("feedback").innerHTML = "";
   $("playArea").style.display = "";
@@ -21537,7 +21549,7 @@ const HOWTO_PAGES = [
     body: `Type a song title and the notebook will meet you halfway: it forgives near-misses and ` +
       `offers matching titles as you go. Stuck on a name but sure of the song? Sing it instead: ` +
       `type a line of lyrics containing the word and that counts too. Not every page takes all ` +
-      `of that, though, and the four marks in the corner of the page say which:`,
+      `of that, though, and the marks in the corner of the page say which:`,
     // The one place the marks are TAUGHT. They are drawn on the difficulty and challenge cards
     // beside the words they stand for, which is where most players will meet them; this is
     // where someone who wants the whole vocabulary in one place can find it.
@@ -22735,7 +22747,8 @@ function buildDevApi() {
     // The terms strip. Every real run shows one combination out of the handful its mode
     // allows, so the only way to eyeball a state the difficulty ladder never reaches (a
     // struck quaver, an absent title mark) is to force it. `set` takes a partial: anything
-    // left out keeps whatever the live page said, and null on a key empties that slot.
+    // left out keeps whatever the live page said, null on a key empties that slot, and the
+    // string "only" circles a mark that has a ring (today: sung).
     terms: {
       state: () => currentRuleTerms(),
       set: (over = {}) => {
