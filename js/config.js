@@ -716,7 +716,7 @@ export const CHALLENGES = [
     // The copy is overridden too, unlike most dark sides: this card's wording states the
     // number out loud ("five"), so reusing it on a dark run would misstate the win condition.
     hard: { need: 6, randomAlbum: true,
-      desc: "Guess six correct songs from one album, and this time the album is dealt to you rather than chosen.",
+      desc: "Guess six correct songs from one album, and the album is dealt to you.",
       win: "Answer 6 correct songs from the album you were dealt." },
     desc: "Guess five correct songs from the same album.",
     win: "Answer 5 correct songs from one album." },
@@ -725,8 +725,8 @@ export const CHALLENGES = [
     // `strictAlpha` bans ties, so the alphabet has to climb on every link instead of resting.
     // The copy changes too: the base rule permits repeats, this one doesn't.
     hard: { target: 8, pool: null, dropdown: false, strictAlpha: true,
-      blurb: "10s · no suggestions · all words · not in the title · strictly later titles · leave room for the full chain",
-      desc: "Each title must start LATER in the alphabet than the last, with no resting twice on the same letter. The live ceiling keeps every remaining page extendable, so do not jump too far ahead.",
+      blurb: "10s · no suggestions · all words · not in the title · strictly later each time",
+      desc: "Each title must start LATER in the alphabet than the last, never twice on a letter. A live ceiling keeps the rest of the chain reachable, so do not leap ahead.",
       win: "Land 8 correct answers, each one climbing the alphabet." },
     blurb: "10s · suggestions · common words · not in the title",
     desc: "Build an A→Z chain: after your first answer, each title must start on the same letter or later.",
@@ -798,7 +798,7 @@ export const CHALLENGES = [
     hard: { pool: null, dropdown: false, maxTitleWords: 1,
       blurb: "10s · no suggestions · only one-word titles count",
       desc: "One-word titles only now. Two words is one too many.",
-      win: "Score 9 / 13 using nothing but one-word titles." },
+      win: "Score 9 / 13 using only one-word titles." },
     blurb: "10s · suggestions · only one- or two-word titles count",
     desc: "Only songs with one-word or two-word titles are allowed. Keep it short and sweet.",
     win: "Score 9 / 13 using only short titles." },

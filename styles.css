@@ -2300,17 +2300,49 @@
   .chall-peek-toggle:hover, .chall-peek-toggle:focus-visible { color: #5d3590; text-decoration-color: rgba(122,75,176,0.8); }
   .chall-peek-mark { display: flex; }
   .chall-peek-mark svg { width: 11px; height: 11px; display: block; color: currentColor; }
+  /* ---- the light/dark swap ----
+     Every line the flip rewrites holds BOTH readings, stacked in one grid cell, with the
+     unused one hidden. The cell is therefore always as tall and as wide as the LONGER of the
+     two, so flipping the card cannot move one pixel of it: the shorter side leaves the gap
+     where the other side's words would have been. That gap is the point. Sized any other way
+     the card jumped on all 25 dark sides — 131px of it on Alphabetical — and the buttons,
+     the record line and the return panel all went with it.
+     Reserving the taller of the two costs a little blank paper on whichever side is shorter,
+     and it is only ever paid on a challenge you have already beaten, since nothing else can
+     open the dark side in the first place. */
+  .chall-swap { display: grid; }
+  .chall-swap > .chall-swap-l,
+  .chall-swap > .chall-swap-d { grid-area: 1 / 1; min-width: 0; transition: opacity 130ms ease; }
+  /* visibility, not opacity alone: a hidden reading must be out of the accessibility tree and
+     unselectable, or the card reads as both sides at once to a screen reader. */
+  .chall-swap > .chall-swap-d { visibility: hidden; opacity: 0; }
+  .chall-detail.is-peeking .chall-swap:not(.chall-swap--pin) > .chall-swap-l,
+  .chall-detail.is-pinned .chall-swap--pin > .chall-swap-l { visibility: hidden; opacity: 0; }
+  .chall-detail.is-peeking .chall-swap:not(.chall-swap--pin) > .chall-swap-d,
+  .chall-detail.is-pinned .chall-swap--pin > .chall-swap-d { visibility: visible; opacity: 1; }
+  @media (prefers-reduced-motion: reduce) {
+    .chall-swap > .chall-swap-l, .chall-swap > .chall-swap-d { transition: none; }
+  }
   /* the swapped-in dark copy: the same three lines in the same three places, rewritten in
      violet pencil so the change reads as a change and the card can't be mistaken for the
-     light side. The eyebrows go violet too, so a section is either all one ink or all the
-     other rather than a base heading over dark text. */
-  .chall-sec.is-dark .chall-eyebrow { color: rgba(122,75,176,0.75); }
-  .chall-sec.is-dark .chall-rule,
-  .chall-sec.is-dark .chall-goal { color: #513a72; }
-  .chall-sec.is-dark .chall-mods { color: #7a6b8c; }
-  .chall-sec--beat.is-dark { border-top-color: rgba(122,75,176,0.35); }
+     light side. The dark ink lives on the hidden reading itself, so it needs no state
+     selector — only the eyebrows and the rule above the goal, which don't swap, follow the
+     card's state, and they do go violet so a section is all one ink rather than a base
+     heading over dark text. */
+  .chall-detail.is-peeking .chall-sec .chall-eyebrow { color: rgba(122,75,176,0.75); }
+  .chall-rule > .chall-swap-d,
+  .chall-goal > .chall-swap-d { color: #513a72; }
+  .chall-mods > .chall-swap-d { color: #7a6b8c; }
+  .chall-detail.is-peeking .chall-sec--beat { border-top-color: rgba(122,75,176,0.35); }
   /* the record line follows the copy: while the dark rules show, this is the dark record */
-  .chall-meta.is-dark { display: flex; align-items: center; gap: 7px; color: #8a7d99; }
+  .chall-meta-in { display: grid; }
+  .chall-meta-in > .chall-swap-d { display: flex; align-items: center; gap: 7px; color: #8a7d99; }
+  /* the head's two badges share a cell as well, which is what finally settles the 10px the
+     taller "defeated" stamp used to knock the whole card down by on every flip */
+  .chall-detail-flag > .chall-swap-l { display: flex; align-items: center; gap: 10px; }
+  /* ...and on a challenge with no dark side the wrapper is still there, holding the star and
+     the stamp that used to be the head's own flex children */
+  .chall-detail-flag:not(.chall-swap) { display: flex; align-items: center; gap: 10px; }
   .chall-meta-stamp {
     font-weight: 700; font-size: calc(9px + var(--text-size-adjust)); letter-spacing: 1.4px; text-transform: uppercase;
     color: rgba(122,75,176,0.9); border: 1.5px double rgba(122,75,176,0.5); border-radius: 2px;
@@ -2331,12 +2363,12 @@
   :root[data-theme="dark"] .chall-peek-toggle { color: #c49af0; text-decoration-color: rgba(196,154,240,0.45); }
   :root[data-theme="dark"] .chall-peek-toggle:hover,
   :root[data-theme="dark"] .chall-peek-toggle:focus-visible { color: #dcc2ff; text-decoration-color: rgba(196,154,240,0.85); }
-  :root[data-theme="dark"] .chall-sec.is-dark .chall-eyebrow { color: rgba(196,154,240,0.8); }
-  :root[data-theme="dark"] .chall-sec.is-dark .chall-rule,
-  :root[data-theme="dark"] .chall-sec.is-dark .chall-goal { color: #cbb2f0; }
-  :root[data-theme="dark"] .chall-sec.is-dark .chall-mods { color: #b0a2c0; }
-  :root[data-theme="dark"] .chall-sec--beat.is-dark { border-top-color: rgba(196,154,240,0.35); }
-  :root[data-theme="dark"] .chall-meta.is-dark { color: #a89ab8; }
+  :root[data-theme="dark"] .chall-detail.is-peeking .chall-sec .chall-eyebrow { color: rgba(196,154,240,0.8); }
+  :root[data-theme="dark"] .chall-rule > .chall-swap-d,
+  :root[data-theme="dark"] .chall-goal > .chall-swap-d { color: #cbb2f0; }
+  :root[data-theme="dark"] .chall-mods > .chall-swap-d { color: #b0a2c0; }
+  :root[data-theme="dark"] .chall-detail.is-peeking .chall-sec--beat { border-top-color: rgba(196,154,240,0.35); }
+  :root[data-theme="dark"] .chall-meta-in > .chall-swap-d { color: #a89ab8; }
   :root[data-theme="dark"] .chall-meta-stamp { color: rgba(208,176,255,0.95); border-color: rgba(196,154,240,0.55); }
   :root[data-theme="dark"] .chall-detail-dark { color: rgba(208,176,255,0.95); }
   .chall-diff { display: flex; align-items: center; gap: 9px; margin-bottom: 14px; }

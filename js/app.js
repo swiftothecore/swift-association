@@ -7741,6 +7741,7 @@ function armBonusQuit() {
 let challengesBackTarget = "start";  // where the Challenges' back link returns to
 let challSelectedId = null;          // which challenge the detail panel is showing
 let challDetailPeek = false;         // ...and whether its "what changes on the dark side?" is unfolded
+let challDetailHover = false;        // ...and whether the Dark Side button is being hovered/focused right now
 let challReturnConfirmId = null;      // first tap arms a return; the explicit second tap confirms it
 let challListResizeHandler = null;   // window-resize handler that re-snaps the list peek
 // A defeated dark seal can be burned down to char as a small, page-local reward. These
@@ -8342,6 +8343,8 @@ function selectChallenge(id) {
 function renderChallengeDetail(id) {
   const el = $("challDetail");
   if (!el) return;
+  // A rebuild throws away the button the pointer was on, so its mouseleave is never coming.
+  challDetailHover = false;
   const c = CHALLENGE_BY_ID[id];
   const rec = challengeRecord(id);
   const open = challengeUnlocked(id);
@@ -8410,16 +8413,37 @@ function renderChallengeDetail(id) {
   // and the toggle below reads "show me the light side again". Crucially the ACTION ROW never
   // changes — Play still starts the base run, Dark Side still starts the dark one, both one
   // click away — so the state changes what you're reading, never what a button does.
-  const showDark = open && darkOpen && challDetailPeek;
-  const view = showDark ? resolveChallenge(c, true) : c;
-  const viewMode = MODES[view.mode];
+  //
+  // WHY BOTH SIDES ARE PRINTED AT ONCE. The two readings are never the same length, and the
+  // flip used to jolt the card because of it: measured across the roster it moved the Play
+  // button on all 25 dark sides, by 9px on the mildest and 131px on Alphabetical, and the
+  // "defeated" stamp standing 10px taller than the "dark side" flag jogged the head on every
+  // one of them. So every swappable line now prints BOTH readings into a single grid cell
+  // with one of them hidden. The cell is always as tall and as wide as the longer side, and
+  // the shorter side simply leaves the gap where the other's words would have gone. Nothing
+  // on the card can move, and the flip reduces to one class on the root — cheap enough to
+  // hang off a hover, and no longer a rebuild that has to resume a burning seal mid-flame.
+  const canPeek = open && darkOpen;
+  const dk = canPeek ? resolveChallenge(c, true) : null;
+  const dkMode = dk ? MODES[dk.mode] : null;
+  const mode = MODES[c.mode];
+  // Both readings, one cell. `light`/`dark` arrive as HTML; the caller does the escaping.
+  // A null `dark` means this card has no other side, so print the one line plainly.
+  const swap = (tag, cls, light, dark) => dark == null
+    ? `<${tag} class="${cls}">${light}</${tag}>`
+    : `<${tag} class="${cls} chall-swap"><span class="chall-swap-l">${light}</span>` +
+      `<span class="chall-swap-d">${dark}</span></${tag}>`;
   let darkPeek = "";
-  if (open && darkOpen) {
+  if (canPeek) {
+    // The toggle's own label follows the PINNED state, never the hover, so hovering the Dark
+    // Side button can't rewrite the switch sitting under it. That is what `chall-swap--pin`
+    // marks: same stacking, driven by `.is-pinned` instead of `.is-peeking`.
     darkPeek =
       `<div class="chall-peek">` +
         `<button type="button" class="chall-peek-toggle" data-peek aria-expanded="${challDetailPeek}">` +
           `<span class="chall-peek-mark">${CHALL_ECLIPSE}</span>` +
-          `<span class="chall-peek-lab">${showDark ? "show me the light side again" : "what changes on the dark side?"}</span>` +
+          swap("span", "chall-peek-lab chall-swap--pin",
+            "what changes on the dark side?", "show me the light side again") +
         `</button>` +
       `</div>`;
   }
@@ -8471,13 +8495,12 @@ function renderChallengeDetail(id) {
 
   // While the dark rules are showing, the record line has to follow them: quoting the base
   // best beside the dark goal would credit a run played on the easy version.
-  const shownMeta = showDark
-    ? (rec.darkDefeated
-        ? `best ${rec.darkBest}${outOfFor(rec.darkBest)} · ${rec.darkAttempts} attempt${rec.darkAttempts === 1 ? "" : "s"}`
+  const darkMeta = !canPeek ? null
+    : (rec.darkDefeated
+        ? `<span class="chall-meta-stamp">defeated</span>best ${rec.darkBest}${outOfFor(rec.darkBest)} · ${rec.darkAttempts} attempt${rec.darkAttempts === 1 ? "" : "s"}`
         : rec.darkAttempts
           ? `${rec.darkAttempts} attempt${rec.darkAttempts === 1 ? "" : "s"} · not yet beaten`
-          : "dark side not yet attempted")
-    : meta;
+          : "dark side not yet attempted");
 
   // How far into its second this seal's burn already is. A rebuild mid-burn has to pick the
   // flame up at that offset, so the age is carried here and handed to armSealBurn below.
@@ -8529,27 +8552,35 @@ function renderChallengeDetail(id) {
       `<${sealTag} class="chall-detail-seal ${sealClass}"${sealAttrs}>` +
         `${sealMarkup((rec.darkDefeated ? CHALLENGE_SEALS_DARK : rec.defeated ? CHALLENGE_SEALS_AGED : CHALLENGE_SEALS)[c.id])}${sealChar}${sealFire}</${sealTag}>` +
       `<span class="chall-detail-name">${escapeHtml(c.name)}</span>` +
-      (showDark
-        ? `<span class="chall-detail-dark">${CHALL_ECLIPSE}dark side</span>`
-        : rec.defeated ? `<span class="chall-detail-star">${CHALL_STAR}</span><span class="chall-detail-stamp">defeated</span>` : "") +
+      // The two badges share a cell, which is what finally settles the 10px the taller
+      // "defeated" stamp used to knock the head down by on every flip. A card with no dark
+      // side to offer keeps the plain stamp, and one with neither prints nothing at all
+      // rather than an empty span holding the head's gap open after the name.
+      (canPeek || rec.defeated
+        ? swap("span", "chall-detail-flag",
+            rec.defeated
+              ? `<span class="chall-detail-star">${CHALL_STAR}</span><span class="chall-detail-stamp">defeated</span>`
+              : "",
+            canPeek ? `<span class="chall-detail-dark">${CHALL_ECLIPSE}dark side</span>` : null)
+        : "") +
     `</div>` +
     `<div class="chall-diff">` +
       `<span class="chall-eyebrow">Difficulty</span>` +
       `${tapesMarkup(c.tapes)}` +
       `<span class="chall-diff-word">${TAPE_WORD[(c.tapes || 0) === 0 ? 0 : Math.max(1, Math.min(4, c.tapes))]}</span>` +
     `</div>` +
-    `<div class="chall-sec${showDark ? " is-dark" : ""}">` +
+    `<div class="chall-sec">` +
       `<div class="chall-eyebrow">The rule</div>` +
-      `<div class="chall-rule">${escapeHtml(view.desc)}</div>` +
+      swap("div", "chall-rule", escapeHtml(c.desc), dk && escapeHtml(dk.desc)) +
     `</div>` +
-    `<div class="chall-sec chall-sec--beat${showDark ? " is-dark" : ""}">` +
+    `<div class="chall-sec chall-sec--beat">` +
       `<div class="chall-eyebrow">To beat it</div>` +
-      `<div class="chall-goal">${escapeHtml(view.win)}</div>` +
-      `<div class="chall-mods">${escapeHtml(view.blurb || viewMode.blurb)}</div>` +
+      swap("div", "chall-goal", escapeHtml(c.win), dk && escapeHtml(dk.win)) +
+      swap("div", "chall-mods", escapeHtml(c.blurb || mode.blurb),
+        dk && escapeHtml(dk.blurb || dkMode.blurb)) +
     `</div>` +
     `<div class="chall-act">` +
-      `<span class="chall-meta${showDark ? " is-dark" : ""}">` +
-        `${showDark && rec.darkDefeated ? `<span class="chall-meta-stamp">defeated</span>` : ""}${shownMeta}</span>` +
+      `<span class="chall-meta">${swap("span", "chall-meta-in", meta, darkMeta)}</span>` +
       `<span class="chall-act-btns">${darkAction}${action}</span>` +
     `</div>` +
     // Below the actions on purpose: the buttons never move when the card is flipped, and a
@@ -8558,11 +8589,16 @@ function renderChallengeDetail(id) {
     // light/dark rules being previewed, and it must not crowd Play out of the action row.
     returnPanel + darkPeek;
 
+  // Flipping the card is a class on the root, not a rebuild: both sides are already sitting
+  // in the cell, so nothing is re-rendered, re-measured, or has its seal burn interrupted.
+  const paintPeek = () => {
+    el.classList.toggle("is-peeking", canPeek && (challDetailPeek || challDetailHover));
+    el.classList.toggle("is-pinned", canPeek && challDetailPeek);
+    el.querySelector("[data-peek]")?.setAttribute("aria-expanded", String(challDetailPeek));
+  };
+  paintPeek();
   const peek = el.querySelector("[data-peek]");
-  if (peek) peek.addEventListener("click", () => {
-    challDetailPeek = !challDetailPeek;
-    renderChallengeDetail(id);
-  });
+  if (peek) peek.addEventListener("click", () => { challDetailPeek = !challDetailPeek; paintPeek(); });
   const ub = el.querySelector("[data-unlock]");
   if (ub) ub.addEventListener("click", () => { if (unlockChallenge(ub.dataset.unlock)) renderChallengesPage(); });
   const armReturn = el.querySelector("[data-return]");
@@ -8587,7 +8623,19 @@ function renderChallengeDetail(id) {
   const pb = el.querySelector("[data-play]");
   if (pb) pb.addEventListener("click", () => startChallenge(pb.dataset.play));
   const db = el.querySelector("[data-dark]");
-  if (db) db.addEventListener("click", () => startChallenge(db.dataset.dark, { dark: true }));
+  if (db) {
+    db.addEventListener("click", () => startChallenge(db.dataset.dark, { dark: true }));
+    // Hover the button and the card reads in the rules that button would deal you; take the
+    // pointer away and it snaps back. Only honest because the flip cannot move anything (see
+    // the swap note above) — before that, a hover preview would have thrown the page around
+    // under the cursor. Focus does the same, so a keyboard tab gets the same look, and the
+    // pinned toggle underneath still holds the dark side open for reading at leisure.
+    const hover = (on) => { challDetailHover = on; paintPeek(); };
+    db.addEventListener("mouseenter", () => hover(true));
+    db.addEventListener("mouseleave", () => hover(false));
+    db.addEventListener("focus", () => hover(true));
+    db.addEventListener("blur", () => hover(false));
+  }
   const burnSeal = el.querySelector("[data-burn-seal]");
   if (burnSeal) {
     // A rebuild landed on a seal that was already alight: pick the flame up mid-stride rather
@@ -24060,6 +24108,42 @@ function buildDevApi() {
         },
         // The resolved entry a dark run would actually play with.
         resolve: (id) => resolveChallenge(CHALLENGE_BY_ID[id], true),
+        // Pin the detail card open on its dark reading without a mouse, for looking at the
+        // violet copy while editing it. `false` puts the light side back.
+        peek: (on) => { challDetailPeek = on !== false;
+          if (challSelectedId) renderChallengeDetail(challSelectedId); return challDetailPeek; },
+        // BLANK PAPER AUDIT. The card reserves the taller of its two readings on every line
+        // it swaps, so a wordy dark `desc` no longer shoves the button down — it punches a
+        // hole in the LIGHT card instead, and that hole is invisible while you are writing
+        // the dark copy. This measures it: `light` is how much empty paper the base reading
+        // is now sitting above, `dark` the same for the dark one, in px at the current
+        // window width. Run it after authoring a dark side; a line or two is the cost of
+        // the swap, and anything past ~60px means the copy wants cutting, not the layout.
+        // Only reads the challenge on screen unless you pass `all`.
+        gaps: (all) => {
+          const measure = (id) => {
+            const el = $("challDetail");
+            if (!el || !el.querySelector("[data-peek]")) return null;
+            let light = 0, dark = 0;
+            el.querySelectorAll(".chall-rule.chall-swap, .chall-goal.chall-swap, .chall-mods.chall-swap")
+              .forEach((sw) => {
+                const cell = sw.getBoundingClientRect().height;
+                // Both readings stretch to fill the cell, so they have to be released to
+                // their own heights for a moment to be measured at all.
+                sw.style.alignItems = "start";
+                light += Math.round(cell - sw.querySelector(".chall-swap-l").getBoundingClientRect().height);
+                dark += Math.round(cell - sw.querySelector(".chall-swap-d").getBoundingClientRect().height);
+                sw.style.alignItems = "";
+              });
+            return { id, light, dark };
+          };
+          if (!all) return measure(challSelectedId);
+          const was = challSelectedId;
+          const out = [];
+          DARK_SIDE_IDS.forEach((id) => { selectChallenge(id); const m = measure(id); if (m) out.push(m); });
+          if (was) selectChallenge(was);
+          return out.sort((a, b) => Math.max(b.light, b.dark) - Math.max(a.light, a.dark));
+        },
         // Per-challenge dark progress, and a way to clear it.
         record: (id) => { const r = challengeRecord(id);
           return { darkDefeated: r.darkDefeated, darkAttempts: r.darkAttempts, darkBest: r.darkBest }; },
