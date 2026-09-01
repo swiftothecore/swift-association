@@ -535,11 +535,18 @@ if (location.pathname.endsWith('/index.html')) {
   </symbol>
   <!-- WHAT THE PAGE TAKES: a quaver, for whether a sung line counts. The head is drawn wider
        than a real note's and closed with its own heavier stroke, because an accurate head is a
-       smudge at 14px and the flag alone is not enough silhouette to carry the mark. -->
+       smudge at 14px and the flag alone is not enough silhouette to carry the mark.
+
+       Drawn CENTRED in the box, which a quaver does not want to be: its head hangs left of the
+       stem and its flag right of it, so the natural drawing sits well right of centre. The
+       slots in the row are fixed-width, so an off-centre mark does not look off-centre — it
+       looks like the gap before it is wider than the others, which is the one thing a row of
+       evenly spaced marks must never do. Every mark here centres on x=12; check that with
+       getBBox before moving any of these paths. -->
   <symbol id="rule-sung" viewBox="0 0 24 24">
-    <path d="M16.6 4.6 C16.8 9.2 16.8 13.4 16.6 16.6"/>
-    <path stroke-width="1.9" d="M16.6 16.6 C16.6 18.8 14.6 20.6 12.4 20.4 C10.7 20.2 9.8 18.9 10.4 17.4 C11.1 15.6 13.2 14.5 15 14.8 C16 15 16.6 15.7 16.6 16.6 Z"/>
-    <path d="M16.7 4.8 C19.2 6.1 21.2 7.8 21.3 10.2 C21.4 11.9 20.5 13.2 19.2 13.9"/>
+    <path d="M12.8 4.6 C13 9.2 13 13.4 12.8 16.6"/>
+    <path stroke-width="1.9" d="M12.8 16.6 C12.8 18.8 10.8 20.6 8.6 20.4 C6.9 20.2 6 18.9 6.6 17.4 C7.3 15.6 9.4 14.5 11.2 14.8 C12.2 15 12.8 15.7 12.8 16.6 Z"/>
+    <path d="M12.9 4.8 C15.4 6.1 17.4 7.8 17.5 10.2 C17.6 11.9 16.7 13.2 15.4 13.9"/>
   </symbol>
   <!-- THE STRIKE: the vocabulary's only piece of grammar, and it means one thing wherever it
        lands — not available to you on this page. Heavier than the mark it crosses so it reads
@@ -547,14 +554,16 @@ if (location.pathname.endsWith('/index.html')) {
   <symbol id="rule-strike" viewBox="0 0 24 24">
     <path stroke-width="1.8" d="M4.9 19.7 C9.3 15.1 14.5 9.5 19.1 4.9"/>
   </symbol>
-  <!-- The quaver's strike: the same stroke, the same angle and weight, translated down and
-       right. Not a second meaning — a drawing fix. A quaver's own axis runs bottom-left to
-       top-right, which is the direction the strike travels, so laid on the box centre the
-       shared stroke runs ALONGSIDE the note instead of across it and reads as a stray pen
-       mark beside a note. It also overshoots the note at both ends, because a stroke that
-       starts exactly on the head reads as a line touching a note, not a note crossed out. -->
+  <!-- The quaver's strike: the same stroke at the same angle and weight, dropped lower. Not a
+       second meaning — a drawing fix. A quaver's own axis runs bottom-left to top-right, which
+       is the direction the strike travels, so the shared stroke runs ALONGSIDE the note rather
+       than across it and reads as a stray pen mark beside a note. This one is aimed to cross
+       the stem and pass through the head, which hangs low. It also overshoots the note at both
+       ends, because a stroke that starts exactly on the head reads as a line touching a note
+       and not as a note crossed out. Moves with #rule-sung: the two were tuned against each
+       other, so shifting one without the other puts the stroke back beside the note. -->
   <symbol id="rule-strike-note" viewBox="0 0 24 24">
-    <path stroke-width="1.8" d="M8.4 21.6 C12.6 16.4 17.6 10.6 21.8 5.4"/>
+    <path stroke-width="1.8" d="M4.6 21.6 C8.8 16.4 13.8 10.6 18 5.4"/>
   </symbol>
 </svg>
 <!-- MASTERY REWARD MARKS — one per tile on the Mastery reward board, drawn once here and
