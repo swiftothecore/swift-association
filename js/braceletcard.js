@@ -94,6 +94,22 @@ function heartHandsMark(markup, x, y, w, h, fill) {
     .replace("<svg ", `<svg x="${x}" y="${y}" `);
 }
 
+// The dark side's violet, the one the game already marks a dark run in (.tagline-dark /
+// .podium-dark in styles.css). Kept as one constant so the badge and the tape agree.
+export const DARK_INK = "#7a4bb0";
+
+// The eclipse the game stamps on a dark run, drawn from scratch rather than lifted off the
+// page: index.html's CHALL_ECLIPSE is a class-styled, currentColor SVG, and neither the class
+// nor the inherited colour survives the trip into a rasterised card. Same two circles, sized
+// off the same 20x20 box, centred on (cx,cy).
+function eclipseMark(cx, cy, size, fill) {
+  const k = size / 20;
+  return `<g transform="translate(${cx} ${cy}) scale(${k.toFixed(4)})">` +
+    `<circle r="8.1" fill="none" stroke="${fill}" stroke-width="1.1" opacity="0.5"/>` +
+    `<circle r="5.6" fill="${fill}"/>` +
+  `</g>`;
+}
+
 // One strip of frosted washi tape with hand-torn edges, matching the app's real tape
 // (see styles.css .nav-tape): a warm translucent kraft strip that lifts off the page —
 // torn silhouette, translucent fill, a diagonal sheen, faint fibre grain, soft shadow.
@@ -175,11 +191,19 @@ export function buildCardSVG(meta, fontCss) {
   let statSvg = "";
   stats.forEach((s, i) => {
     const cx = +(contentL + colW * (i + 0.5)).toFixed(1);
-    const value = fitText(s.v == null ? "" : String(s.v), '700 40px Caveat, cursive', colW - 12);
+    // A stat value is a name as often as it is a number — a challenge, an album, a guest — and
+    // a name clipped to "Vanishing W…" fails at the one job the chip has. So the ink shrinks
+    // to fit its column first, down to 26px, and only a value still too long after that is
+    // trimmed. Numbers, which fit at full size, are untouched.
+    const raw = s.v == null ? "" : String(s.v);
+    let size = 40;
+    while (size > 26 && measureText(raw, `700 ${size}px Caveat, cursive`) > colW - 12) size -= 2;
+    const valueFont = `700 ${size}px Caveat, cursive`;
+    const value = fitText(raw, valueFont, colW - 12);
     const label = fitText(String(s.l == null ? "" : s.l).toUpperCase(),
       '11.5px "Courier Prime", monospace', colW - 12, 1.6);
     statSvg +=
-      `<text x="${cx}" y="${sy}" text-anchor="middle" font-family="Caveat" font-weight="700" font-size="40" fill="${v.inkAccent}">${esc(value)}</text>` +
+      `<text x="${cx}" y="${sy}" text-anchor="middle" font-family="Caveat" font-weight="700" font-size="${size}" fill="${v.inkAccent}">${esc(value)}</text>` +
       `<text x="${cx}" y="${sy + 22}" text-anchor="middle" font-family="Courier Prime" font-size="11.5" letter-spacing="1.6" fill="${v.inkSoft}">${esc(label)}</text>`;
   });
   const divY = sy - 42;
@@ -192,17 +216,33 @@ export function buildCardSVG(meta, fontCss) {
   // era's accent, but the name stays gold in every era.
   const GOLD = "#a9791f";
   const sigY = H - 46;
-  const footerFont = '12px "Courier Prime", monospace';
-  const footerMax = meta.signature ? contentW * 0.52 : contentW;
-  const footerText = fitText(meta.footer || "", footerFont, footerMax, 0.4);
-  const footerW = measureText(footerText, footerFont) +
+  const hw = 46, hh = 37;
+  const sigFont = "700 34px Caveat, cursive";
+  const markW = meta.signature && meta.heartHands ? hw + 14 : 0;
+  const GAP = 24;
+  // The footer is given the line MINUS what the signature actually needs, not a flat share of
+  // it. A fixed 52% cut the date-and-domain line short under a short name like "Corey" while
+  // half the row sat empty; the signature is still capped at 55% so a long one can't do the
+  // same thing back to the footer.
+  const sigNeeds = meta.signature
+    ? Math.min(measureText(meta.signature, sigFont) + markW, contentW * 0.55) : 0;
+  const footerMax = sigNeeds ? Math.max(140, contentW - sigNeeds - GAP) : contentW;
+  // The footer carries the date, the time and the domain, and the domain is the half a
+  // trimmed line loses. So under a long signature it sets itself smaller rather than shorter,
+  // down to 9.5px, and only then gives up characters.
+  let footerSize = 12;
+  const footerAt = (px) => `${px}px "Courier Prime", monospace`;
+  const footerRaw = String(meta.footer || "");
+  while (footerSize > 9.5 &&
+         measureText(footerRaw, footerAt(footerSize)) +
+           Math.max(0, footerRaw.length - 1) * 0.4 > footerMax) footerSize -= 0.5;
+  const footerFontSized = footerAt(footerSize);
+  const footerText = fitText(footerRaw, footerFontSized, footerMax, 0.4);
+  const footerW = measureText(footerText, footerFontSized) +
     Math.max(0, Array.from(footerText).length - 1) * 0.4;
   let sig = "";
   if (meta.signature) {
-    const hw = 46, hh = 37;
-    const sigFont = "700 34px Caveat, cursive";
-    const markW = meta.heartHands ? hw + 14 : 0;
-    const sigMax = Math.max(42, contentW - footerW - 24 - markW);
+    const sigMax = Math.max(42, contentW - footerW - GAP - markW);
     const signature = fitText(meta.signature, sigFont, sigMax);
     const nameW = measureText(signature, sigFont);
     sig = `<g transform="rotate(-3 ${contentL} ${sigY})">` +
@@ -210,8 +250,23 @@ export function buildCardSVG(meta, fontCss) {
       heartHandsMark(meta.heartHands, contentL + nameW + (markW ? 14 : 0), sigY - 30, hw, hh, GOLD) +
     `</g>`;
   }
-  const footer = `<text x="${contentR}" y="${sigY}" text-anchor="end" font-family="Courier Prime" font-size="12" letter-spacing="0.4" fill="${v.inkSoft}">${esc(footerText)}</text>`;
+  const footer = `<text x="${contentR}" y="${sigY}" text-anchor="end" font-family="Courier Prime" font-size="${footerSize}" letter-spacing="0.4" fill="${v.inkSoft}">${esc(footerText)}</text>`;
   const title = fitText(meta.title || "", "700 46px Caveat, cursive", contentW);
+
+  // A dark run is marked the way the game marks it everywhere else: the eclipse and the word,
+  // in violet, in the functional typewriter face, sitting on the kicker line. Without it a
+  // dark side exports as an ordinary run of the same challenge.
+  const kicker = String(meta.kicker || "").toUpperCase();
+  const kickFont = '700 12px "Courier Prime", monospace';
+  let darkBadge = "";
+  if (meta.dark) {
+    const kickW = measureText(kicker, kickFont) + Math.max(0, kicker.length - 1) * 2.6;
+    const x = contentL + kickW + 16;
+    darkBadge = eclipseMark(x + 5.5, 50, 11, DARK_INK) +
+      `<text x="${x + 16}" y="54" font-family="Courier Prime" font-weight="700" font-size="11"` +
+      ` letter-spacing="1.5" fill="${DARK_INK}">DARK SIDE</text>`;
+  }
+  const tapeTint = meta.dark ? "rgba(122,75,176,0.34)" : undefined;
 
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">` +
     `<defs><style>${fontCss}` +
@@ -236,10 +291,11 @@ export function buildCardSVG(meta, fontCss) {
     `<rect width="${W}" height="${H}" fill="${v.paper}"/>` +
     rules +
     `<line x1="${marginX}" y1="0" x2="${marginX}" y2="${H}" stroke="${v.margin}" stroke-width="2"/>` +
-    `<text x="${contentL}" y="54" font-family="Courier Prime" font-weight="700" font-size="12" letter-spacing="2.6" fill="${v.inkSoft}">${esc(String(meta.kicker).toUpperCase())}</text>` +
+    `<text x="${contentL}" y="54" font-family="Courier Prime" font-weight="700" font-size="12" letter-spacing="2.6" fill="${v.inkSoft}">${esc(kicker)}</text>` +
+    darkBadge +
     `<text x="${contentL}" y="112" font-family="Caveat" font-weight="700" font-size="46" fill="${v.ink}">${esc(title)}</text>` +
     strand + divider + statSvg + sig + footer +
-    washiTape(80, -9, 104, 30, -4, 0) + washiTape(W - 190, -9, 104, 30, 3, 1) +
+    washiTape(80, -9, 104, 30, -4, 0, tapeTint) + washiTape(W - 190, -9, 104, 30, 3, 1, tapeTint) +
   `</svg>`;
 }
 

@@ -5771,6 +5771,11 @@ let bonusSleeveRun = null;
    strings at the moment it ends, because the keepsake is pressed off a results screen whose
    bonus globals have already been handed back. */
 let ruthlessCard = null;
+/* And once more for a Challenge run: which card was played, whether it was the dark side, and
+   how it finished. Snapshotted for the same reason as the two above (the bonus loop hands the
+   results screen back with `roundResults` already belonging to another run) and for one of its
+   own: a dark side must never be pressed into a keepsake as its base challenge. */
+let challengeCard = null;
 // Bumped on every start. The between-rounds pause is a setTimeout, so without a token a run
 // that's quit and immediately restarted would have the old pause advance the NEW run a round.
 let bonusRunId = 0;
@@ -9801,6 +9806,7 @@ function buildCardMeta() {
 
   const stats = [];
   let title = "the bracelet you made";
+  let darkRun = false;            // a dark side signs the card in its own violet ink
 
   if (gameType === "infinite") {
     title = "an infinite strand";
@@ -9836,12 +9842,33 @@ function buildCardMeta() {
     stats.push({ v: "Custom", l: customPreset ? customPreset.name : "mode" });
     stats.push({ v: finite ? correct + "/" + customSessionLen : String(roundResults.length), l: finite ? "strung" : "rounds" });
     if (runTime != null) stats.push({ v: fmtTime(runTime), l: "on the clock" });
-  } else if (gameType === "challenge" && surviveRuleActive()) {
-    const total = surviveTarget();
-    title = correct >= total ? "thirty-one unbroken ★" : "the long strand";
-    stats.push({ v: currentChallenge.name || "Thirty-One", l: "challenge" });
-    stats.push({ v: correct + "/" + total, l: "strung" });
-    if (runTime != null) stats.push({ v: fmtTime(runTime), l: "on the clock" });
+  } else if (gameType === "challenge" && (challengeCard || currentChallenge)) {
+    // Every challenge names itself here, base or dark. Only Thirty-One used to, so every other
+    // card — Vanishing Word, and its dark side — fell through to the fixed-13 branch below and
+    // came out of the exporter labelled "Classic", with nothing on the page saying otherwise.
+    // Read off the run's own snapshot where there is one; the live state is the fallback for a
+    // card pressed before endChallenge wrote it down.
+    const ch = challengeCard || {
+      name: currentChallenge.name || "Challenge", dark: !!challengeDark, won: false,
+      score, total: surviveRuleActive() ? surviveTarget() : TOTAL_ROUNDS,
+      bead: beadScoredRule(), target: riskTarget(),
+      secs: runTime, survive: surviveRuleActive(),
+    };
+    darkRun = !!ch.dark;
+    title = ch.survive ? (ch.won ? "thirty-one unbroken ★" : "the long strand")
+          : ch.dark    ? (ch.won ? "the dark side, defeated ★" : "a card with the light taken out")
+          : ch.won     ? "the challenge, defeated ★"
+                       : "a challenge, on paper";
+    stats.push({ v: ch.name, l: ch.dark ? "dark side" : "challenge" });
+    // A risk challenge is scored in beads against a target rather than out of its pages, the
+    // same reading the tally on screen gives it.
+    if (ch.bead) {
+      stats.push({ v: String(ch.score), l: "beads" });
+      if (ch.target) stats.push({ v: String(ch.target), l: "needed" });
+    } else {
+      stats.push({ v: ch.score + "/" + ch.total, l: "strung" });
+    }
+    if (ch.secs != null) stats.push({ v: fmtTime(ch.secs), l: "on the clock" });
   } else {
     // classic, daily, challenge — a fixed 13-round page
     const perfect = correct === TOTAL_ROUNDS;
@@ -9861,6 +9888,7 @@ function buildCardMeta() {
     title,
     braceletMarkup: $("resultBracelet").innerHTML,
     stats: stats.slice(0, 4),
+    dark: darkRun,          // violet eclipse on the kicker + violet tape, as the game marks it
     signature: name,
     footer: dateLabel + " · " + timeLabel + " · swiftassociation.com",
     filename: "swift-bracelet-" + dateKey + ".png",
@@ -11995,6 +12023,7 @@ function startChallenge(id, opts) {
   resetRunState();
   currentChallenge = c;                          // set AFTER resetRunState (which nulls it)
   challengeDark = dark;
+  challengeCard = null;                          // last run's keepsake numbers, not this one's
   challengeRunActive = true;                     // start the achievement sandbox
   // Deep Cut (dark): deal the album instead of letting the run drift onto whichever one is
   // going well. Set on the resolved clone, so `c.album` is a real album everywhere it's read
@@ -13562,6 +13591,15 @@ function endChallenge() {
   // risk settle, which does, has already run.
   const won = challengeWinCheck(c);
   const challengeTotal = c.rule === "survive" ? surviveTarget(c) : TOTAL_ROUNDS;
+  // The run written down as the bracelet keepsake's own strings, before anything downstream
+  // can move the numbers it quotes (see challengeCard).
+  challengeCard = {
+    name: c.name, dark: !!c.dark, won,
+    score, total: challengeTotal,
+    bead: beadScoredRule(), target: riskTarget(),
+    secs: gameTimedRounds > 0 ? gameTimeSum : null,
+    survive: c.rule === "survive",
+  };
   // The two challenge stickers, both read off THIS run rather than off the board, which is what
   // keeps them repeatable: a dark side beaten a second time still earns the queen.
   if (!devNoLog) {
