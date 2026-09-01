@@ -337,6 +337,26 @@ export function initDev(api) {
     row(infVar, btn("start infinite", () => api.startInfinite(infVar.value)),
         btn("start daily", () => api.startDaily()))));
 
+  // ---- The final tally -------------------------------------------------------
+  // The headline's six shapes, dealt onto the results page one at a time, and the alignment
+  // audit that goes with them. The whole results column is meant to sit on the paper's centre
+  // rather than the content box's, and a pixel or two out is the sort of thing that is felt
+  // long before it is seen, so the audit prints where each part's box and its actual ink land.
+  const tallyCase = select(api.results.cases(), (x) => x, (x) => x);
+  const centreOut = mk("pre", { class: "dv-pre", style: "display:none" });
+  const pad = (t, w) => (t + "            ").slice(0, w);
+  body.append(section("final tally",
+    row(tallyCase, btn("deal tally", () => { readout.textContent = api.results.tally(tallyCase.value); })),
+    row(btn("check centring", () => {
+      const m = api.results.centre();
+      centreOut.style.display = "";
+      centreOut.textContent = typeof m === "string" ? m
+        : "px from the paper's centre · box, then ink\n" + Object.entries(m)
+          .map(([k, v]) => `${pad(k, 13)}${String(v.box).padStart(7)}${v.ink === "—" ? "" : String(v.ink).padStart(8)}`)
+          .join("\n");
+    })),
+    centreOut));
+
   // ---- Ruthless board --------------------------------------------------------
   // The lens sheet is drawn from the records, and its two states read quite differently: a lens
   // with a time carries it in the margin and a note saying how it was got, an unplayed one shows

@@ -719,7 +719,7 @@ function buildSingleRowBraceletSVG(results, activeRound, freshIndex, albums, opt
   return `<svg viewBox="0 0 ${W} ${BH}" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">` +
     `<defs>${beadDefs(u)}<filter id="${u}drop" x="-10%" y="-30%" width="120%" height="185%">` +
     `<feDropShadow dx="1.4" dy="3.4" stdDeviation="2.2" flood-color="${PEN}" flood-opacity="0.28"/></filter></defs>` +
-    `<g filter="url(#${u}drop)">${svg}</g></svg>`;
+    `<g filter="url(#${u}drop)"><g class="b-strand">${svg}</g></g></svg>`;
 }
 
 // Long and sealed strands use the readable geometry model above. The ordinary
@@ -798,7 +798,7 @@ function buildCoiledBraceletSVG(results, activeRound, freshIndex, albums, opts =
     });
   }
 
-  let svg = prefix + cordStack(cord, 3.6) +
+  let svg = cordStack(cord, 3.6) +
     tieKnot(startKnotX, startKnotY, -firstRow.dir);
 
   for (const slot of layout.slots) {
@@ -857,7 +857,31 @@ function buildCoiledBraceletSVG(results, activeRound, freshIndex, albums, opts =
     `data-visible-start="${layout.visibleStart}" data-visible-count="${layout.visibleCount}">` +
     `<defs>${beadDefs(u)}<filter id="${u}drop" x="-15%" y="-18%" width="130%" height="145%">` +
     `<feDropShadow dx="1.4" dy="3.4" stdDeviation="2.2" flood-color="${PEN}" flood-opacity="0.28"/></filter></defs>` +
-    `<g filter="url(#${u}drop)">${svg}</g></svg>`;
+    `<g filter="url(#${u}drop)">${prefix}<g class="b-strand">${svg}</g></g></svg>`;
+}
+
+// A finished strand is drawn from a fixed layout centre, but what lands on the paper is
+// the cord between its two knots, and the tie beads that carry the page count hang off the
+// right-hand knot. That leaves the drawing sitting left of the middle of its own box by
+// however long the tie is (about nine pixels on a thirteen-page strand), which is enough to
+// read as crooked under a tally that is centred to the pixel. So the strand is centred on
+// what it actually drew rather than on the numbers it was drawn from. Measured rather than
+// computed: a coiled strand's turn-arounds bulge past its knots by a curve's worth, and the
+// bulge depends on the row count. The left-aligned "N earlier pages" note sits outside the
+// measured group on purpose: it is a caption, not part of the strand.
+// Only ever called on a FINISHED strand. A live one grows to the right from a fixed start
+// and must stay anchored there, or the beads already strung would slide as pages are added.
+export function centreStrand(host) {
+  const g = host && host.querySelector("g.b-strand");
+  const svg = g && g.ownerSVGElement;
+  if (!g || !svg) return 0;
+  g.removeAttribute("transform");
+  let box;
+  try { box = g.getBBox(); } catch { return 0; }          // not laid out (hidden screen)
+  if (!box || !box.width) return 0;
+  const dx = svg.viewBox.baseVal.width / 2 - (box.x + box.width / 2);
+  if (Math.abs(dx) >= 0.25) g.setAttribute("transform", `translate(${dx.toFixed(2)} 0)`);
+  return dx;
 }
 
 export function buildBraceletSVG(results, activeRound, freshIndex, albums, opts = {}) {

@@ -6130,10 +6130,22 @@
      rather than a margin: the strand and the caption row are auto-centred, and a margin
      would take that away from them. */
   /* The complete bracelet result moves as one unit. That keeps its caption, semantic
-     summary, strand, actions and memory note on the same paper-centred axis. */
+     summary, strand, actions and memory note on the same paper-centred axis. So does the
+     heading. It was left behind on the text column once, on the grounds that small type near
+     the margin reads against the column rather than against the paper, but sitting fourteen
+     pixels right of the number it names it just reads as crooked: the tally is one object,
+     and every part of it wants the same axis. */
+  #screen-results > .word-label,
   #screen-results .final-score,
   #screen-results .bracelet-result { position: relative; left: -14px; }
-  .tally-head { margin: 0; display: flex; align-items: baseline; justify-content: center; gap: 9px; }
+  /* --tally-nudge is the optical correction centreTallyHead measures for whichever value the
+     row is showing. A layout box is centred on the text's advance width, and the hand font's
+     numerals do not sit square in theirs, so a row centred by layout alone paints visibly
+     right of the rule beneath it. */
+  .tally-head {
+    margin: 0; display: flex; align-items: baseline; justify-content: center; gap: 9px;
+    transform: translateX(var(--tally-nudge, 0px));
+  }
   .final-score .big {
     font-family: var(--hand); font-weight: 700; font-size: calc(88px + var(--text-size-adjust)); line-height: 1;
     color: var(--ink); transform: rotate(-2deg); display: inline-block;

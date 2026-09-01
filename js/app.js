@@ -58,7 +58,7 @@ import { POLAROIDS, POLAROID_BY_ID } from "./polaroids.js";
 import { STICKERS, STICKER_BY_ID } from "./stickers.js";
 import {
   BRACELET_ROW_CAP, buildBraceletSVG, braceletFinish, braceletLayout, braceletTrinketId,
-  trinketPreviewSVG, randomTrinketForBead,
+  centreStrand, trinketPreviewSVG, randomTrinketForBead,
 } from "./bracelet.js";
 import { exportBraceletCard, copyBraceletCard, buildCardSVG, fontFaceCss } from "./braceletcard.js";
 import { exportSleeveCard, copySleeveCard, buildSleeveSVG } from "./sleevecard.js";
@@ -477,6 +477,7 @@ function applySettings() {
   body.setAttribute("data-reduce-motion", rm);
   body.setAttribute("data-anim-speed", settings.animSpeed || "normal");
   body.setAttribute("data-text-size", ["small", "large"].includes(settings.textSize) ? settings.textSize : "standard");
+  centreTallyHead();     // the text-size lever changes the numeral's size, so its ink moves
   body.setAttribute("data-desk-density", ["quiet", "bare"].includes(settings.deskDensity) ? settings.deskDensity : "full");
   body.setAttribute("data-reduced-flashing", settings.reducedFlashing ? "on" : "off");
   if (settings.highContrast) body.setAttribute("data-contrast", "high");
@@ -9634,7 +9635,13 @@ function renderFinishedBracelet(results, albums, opts = {}) {
   if (gameType !== "daily") $("shareStub")?.remove();
   const resolved = braceletRenderOptions(results, opts);
   const el = $("resultBracelet");
-  if (el) el.innerHTML = buildBraceletSVG(results, 0, -1, albums, resolved);
+  if (el) {
+    el.innerHTML = buildBraceletSVG(results, 0, -1, albums, resolved);
+    // Centre the strand on the ink it drew, not on its layout centre: the tie beads hang
+    // off the right-hand knot and would otherwise push the whole thing left of the tally
+    // above it. Done here, before the keepsake reads this markup, so the PNG agrees.
+    centreStrand(el);
+  }
   renderBraceletDetails(results, albums, resolved);
   return resolved;
 }
@@ -9692,6 +9699,56 @@ function setFinalTally(score, sub, unit) {
     `<div class="tally-l">${escapeHtml(String(c.l))}</div></div>`).join("");
   $("finalSub").textContent = prose;
   $("finalRule").style.display = (cells.length || prose) ? "" : "none";
+  centreTallyHead();
+}
+
+// Optical centring for the headline number. A layout box is centred on the text's ADVANCE
+// width, but the eye centres on the ink, and a hand font's numerals do not sit square in
+// their advances: Caveat paints "10" about eleven pixels right of the middle of its own box
+// at 88px, which is plainly visible sitting over a ruled line that is centred to the pixel.
+// The error is different for every value the tally can show, so it is measured rather than
+// nudged by a constant: "9", "24" and "3:07" each need their own. Writes the shift as
+// --tally-nudge, which .tally-head translates by.
+function centreTallyHead() {
+  const head = document.querySelector("#screen-results .tally-head");
+  if (!head) return 0;
+  const parts = [...head.children].filter((el) => el.offsetWidth && el.textContent.trim());
+  const clear = () => { head.style.removeProperty("--tally-nudge"); return 0; };
+  // Nothing to measure: the screen is hidden, or the row is empty. No correction is the
+  // honest answer, since the alternative is leaving the last run's on a new number. Every
+  // end path shows the results screen before it writes the tally, so this is a guard.
+  if (!parts.length) return clear();
+  const ctx = (centreTallyHead.ctx ||= document.createElement("canvas").getContext("2d"));
+  let pending = false;
+  // The ink edge of one part: the left side bearing of the first, the right of the last.
+  const edge = (el, side) => {
+    const cs = getComputedStyle(el);
+    const font = `${cs.fontStyle} ${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`;
+    try {
+      ctx.letterSpacing = cs.letterSpacing === "normal" ? "0px" : cs.letterSpacing;
+      ctx.font = font;
+      // A fallback face has different bearings, so a measurement taken before the hand font
+      // arrives is worse than none. Take it again when the fonts settle.
+      if (document.fonts && !document.fonts.check(font)) pending = true;
+      const m = ctx.measureText(el.textContent.trim());
+      if (!m || m.actualBoundingBoxRight == null) return null;   // no ink metrics on this engine
+      return side < 0 ? -m.actualBoundingBoxLeft : m.actualBoundingBoxRight;
+    } catch { return null; }
+  };
+  const first = parts[0], last = parts[parts.length - 1];
+  const l = edge(first, -1), r = edge(last, 1);
+  if (pending && document.fonts) {
+    document.fonts.ready.then(() => { if (head.isConnected) centreTallyHead(); });
+    return clear();
+  }
+  if (l == null || r == null) return clear();            // no ink metrics: leave it be
+  // offsetLeft is the pre-transform layout box, which is what we want: the numeral's own
+  // -2deg tilt turns about its centre and so moves that centre nowhere.
+  const dx = (head.offsetLeft + head.clientWidth / 2)
+    - ((first.offsetLeft + l) + (last.offsetLeft + r)) / 2;
+  if (!Number.isFinite(dx) || Math.abs(dx) < 0.25) return clear();
+  head.style.setProperty("--tally-nudge", dx.toFixed(2) + "px");
+  return dx;
 }
 
 function buildCardMeta() {
@@ -22716,6 +22773,66 @@ function buildDevApi() {
         showScreen("results");
         setFinalTally(c.score, c.sub, c.unit);
         return name;
+      },
+      // The alignment audit. Everything down the results column is supposed to share one
+      // axis: the paper's own centre, not the padded content box's. By eye a couple of
+      // pixels out is felt but not seen. This measures it: `box` is where the element's
+      // layout box sits, `ink` where the pixels actually land (the two differ wherever a
+      // hand font's side bearings or a strand's tie beads pull the drawing off its box).
+      // Positive is right of the paper's centre. Anything past a pixel is worth a look.
+      centre: () => {
+        const R = $("screen-results");
+        if (!R || !R.classList.contains("active")) return "open the results screen first";
+        const r0 = R.getBoundingClientRect(), mid = (r0.left + r0.right) / 2;
+        const ctx = document.createElement("canvas").getContext("2d");
+        const box = (el) => { const r = el.getBoundingClientRect(); return (r.left + r.right) / 2 - mid; };
+        // The painted edges of one run of text, against the paper's centre.
+        const edges = (el) => {
+          const cs = getComputedStyle(el), text = (el.textContent || "").trim();
+          // One run of text or nothing: a box holding several elements has no single ink
+          // line to measure, and pretending otherwise reads as a number rather than a "—".
+          if (!text || el.children.length) return null;
+          try {
+            ctx.letterSpacing = cs.letterSpacing === "normal" ? "0px" : cs.letterSpacing;
+            ctx.font = `${cs.fontStyle} ${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`;
+            const m = ctx.measureText(text);
+            if (m.actualBoundingBoxRight == null) return null;
+            const advL = box(el) - m.width / 2;
+            return [advL - m.actualBoundingBoxLeft, advL + m.actualBoundingBoxRight];
+          } catch { return null; }
+        };
+        const ink = (el) => { const e = edges(el); return e ? (e[0] + e[1]) / 2 : null; };
+        const rows = {};
+        const parts = {
+          heading: ".word-label", score: "#finalScore", rule: ".tally-rule", ledger: ".tally-ledger",
+          caption: ".bracelet-caption", summary: "#braceletSummary", strand: "#resultBracelet",
+          actions: ".bracelet-actions", keepsakeNote: ".bracelet-keepsake-note", memory: ".bracelet-memory",
+        };
+        for (const [k, sel] of Object.entries(parts)) {
+          const el = R.querySelector(sel);
+          // getBoundingClientRect, not offsetWidth: the ruled line is an SVG element, and
+          // SVG elements have no offsetWidth to be skipped by.
+          if (!el || !el.getBoundingClientRect().width) continue;
+          const i = ink(el);
+          rows[k] = { box: +box(el).toFixed(2), ink: i == null ? "—" : +i.toFixed(2) };
+        }
+        // With a unit beside it ("24 rounds") it is the PAIR that is centred, so the number
+        // on its own reads as far left of the middle as the unit is wide. Measure the row.
+        const unit = R.querySelector("#finalUnit"), num = R.querySelector("#finalScore");
+        if (unit && unit.offsetWidth && num) {
+          const a = edges(num), b = edges(unit);
+          if (a && b) rows.headline = { box: +box(R.querySelector(".tally-head")).toFixed(2), ink: +((a[0] + b[1]) / 2).toFixed(2) };
+        }
+        // The strand's ink is a drawing, not text: read it off the group centreStrand moved.
+        const g = R.querySelector("#resultBracelet g.b-strand");
+        if (g && rows.strand) {
+          const svg = g.ownerSVGElement, sr = svg.getBoundingClientRect(), bb = g.getBBox();
+          const t = parseFloat((g.getAttribute("transform") || "translate(0").match(/-?[\d.]+/)[0]);
+          const at = sr.left + ((bb.x + bb.width / 2 + t) / svg.viewBox.baseVal.width) * sr.width;
+          rows.strand.ink = +(at - mid).toFixed(2);
+        }
+        console.table(rows);
+        return rows;
       },
     },
     // The date itself. One override (window.__devDate) behind every dated surface: the

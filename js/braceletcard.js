@@ -143,7 +143,11 @@ export function buildCardSVG(meta, fontCss) {
   // rather than assumed: the strand's own viewBox height is a property of the bracelet's
   // design and has changed once already, and a hardcoded ratio here silently overlaps the
   // stat row with the signature when it does.
-  const bx = 62, by = 148, bw = W - bx - 46;
+  // The strand sits in the text column, like the stat chips under it and the title over it.
+  // It used to hang a little wider on both sides, which read as centred only because the
+  // strand's own drawing sat left inside its box; now that the drawing is centred on its
+  // ink, a box that is not on the column's axis shows.
+  const bx = contentL, by = 148, bw = contentW;
   const markup = String(meta.braceletMarkup || "");
   const number = "[-+]?(?:\\d*\\.)?\\d+(?:[eE][-+]?\\d+)?";
   const vb = new RegExp(`viewBox\\s*=\\s*["']\\s*(${number})[\\s,]+(${number})[\\s,]+(${number})[\\s,]+(${number})\\s*["']`, "i").exec(markup);
