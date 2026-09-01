@@ -516,6 +516,20 @@ export function initDev(api) {
   // tier and, optionally, one segment. Applies to the open round immediately.
   const thTierSel = select(["full", "short", "off"], (x) => x, (x) => x + " form");
   const thSegSel = select(["", ...api.typingHint.ids()], (x) => x, (x) => x || "every segment");
+  // ---- Rule marks --------------------------------------------------------------
+  // Cycles one slot at a time through plain → struck → absent, because absent is a real state
+  // of the strip (it is how Lyricist says a title is not a thing this page has) and no
+  // difficulty setting will show it to you next to the other three.
+  const termCycle = (key) => btn(key, () => {
+    const now = api.terms.state()[key];
+    api.terms.set({ [key]: now === true ? false : now === false ? null : true });
+    toast(`${key} → ${JSON.stringify(api.terms.state()[key])}`);
+  });
+  body.append(section("rule marks",
+    row(termCycle("suggest"), termCycle("title"), termCycle("clock"), termCycle("sung")),
+    row(btn("show terms", () => { readout.textContent = JSON.stringify(api.terms.state()); }),
+        btn("back to the real page", () => { api.terms.clear(); toast("terms follow the round again"); }, "warn"))));
+
   body.append(section("typing hint",
     row(thTierSel, thSegSel, btn("age to", () => {
       api.typingHint.age(thTierSel.value, thSegSel.value || null);

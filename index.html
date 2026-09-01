@@ -490,6 +490,73 @@ if (location.pathname.endsWith('/index.html')) {
     <path d="M19.4 11.2 C19.6 12 19.7 12.6 19.6 13.2"/>
   </symbol>
 </svg>
+<!-- RULE MARKS — the terms of the page. Four marks for the rules a round enforces but never
+     says out loud, plus the strike that negates any of them. Drawn in the same pen as the
+     page and theme marks above (24x24, no colour of their own, styled by inheritance only)
+     because they sit in the notebook's own chrome, not on a card of their own.
+
+     They render in four places off ONE builder in js/rulemarks.js — the round's meta row, the
+     difficulty cards, the challenge card and the how-to legend — so the shapes live here once
+     and nothing downstream redraws them.
+
+     Weights are set as ATTRIBUTES where a stroke has to differ from its neighbours, not as CSS
+     classes: <use> renders into a shadow tree ordinary selectors cannot reach. That is the same
+     reason the marks above carry no stroke or fill here — but freezing a WIDTH is harmless,
+     while freezing a colour would stop the mark tracking the era. -->
+<svg width="0" height="0" aria-hidden="true" style="position:absolute" focusable="false">
+  <!-- SUGGESTIONS: a brace holding three names of uneven length. The dropdown drawn as the
+       thing it is, in the notebook's hand rather than in borrowed software chrome. The brace
+       is load-bearing twice over: without it three stacked strokes read as a hamburger menu,
+       and it is what stops this colliding with a bare page of ruled lines. -->
+  <symbol id="rule-suggest" viewBox="0 0 24 24">
+    <path d="M4.2 6.6 C3.2 11 3.2 15 4.2 19.4"/>
+    <path d="M7.6 8.6 C11.8 8.2 17 8.3 20.8 8.8"/>
+    <path d="M7.6 13.1 C11 12.7 15.2 12.8 18.4 13.2"/>
+    <path d="M7.6 17.6 C10.2 17.2 13.2 17.3 15.6 17.7"/>
+  </symbol>
+  <!-- THE TITLE RULE: a sleeve with a heading and a body line. The two inner strokes are cut
+       to obviously different lengths on purpose — at 14px two strokes of a similar length
+       read as "some text", and the whole mark depends on one of them being a TITLE. A closed
+       silhouette, which is what lets the suggestions mark keep its stack. -->
+  <symbol id="rule-title" viewBox="0 0 24 24">
+    <path d="M3.8 4.8 C9.8 4.4 16.4 4.5 20.2 5 C20.6 9.8 20.6 14.6 20.2 19.2 C14.6 19.6 8.6 19.5 3.8 19.1 C3.4 14.4 3.4 9.4 3.8 4.8 Z"/>
+    <path d="M6.8 9.6 C10.4 9.2 14.2 9.3 17.2 9.7"/>
+    <path d="M6.8 14.6 C9.2 14.2 11.6 14.3 13.6 14.7"/>
+  </symbol>
+  <!-- THE CLOCK: the same stopwatch as #theme-clock, which the charm shelf already uses for
+       the timed modes, so it arrives at the round half-learned. It deliberately carries no
+       number — the timer bar answers that two inches below. All this says is whether there is
+       a clock at all, which is the one thing the bar cannot say when it is not there. -->
+  <symbol id="rule-clock" viewBox="0 0 24 24">
+    <path d="M12 6.6 C15.9 6.6 19 9.8 19 13.7 C19 17.6 15.9 20.7 12 20.7 C8.1 20.7 5 17.6 5 13.7 C5 9.9 8 6.7 11.8 6.6"/>
+    <path d="M10.2 3.4 H13.8"/>
+    <path d="M12 3.6 V6.6"/>
+    <path d="M12 9.6 V13.7 L15.2 11.4"/>
+  </symbol>
+  <!-- WHAT THE PAGE TAKES: a quaver, for whether a sung line counts. The head is drawn wider
+       than a real note's and closed with its own heavier stroke, because an accurate head is a
+       smudge at 14px and the flag alone is not enough silhouette to carry the mark. -->
+  <symbol id="rule-sung" viewBox="0 0 24 24">
+    <path d="M16.6 4.6 C16.8 9.2 16.8 13.4 16.6 16.6"/>
+    <path stroke-width="1.9" d="M16.6 16.6 C16.6 18.8 14.6 20.6 12.4 20.4 C10.7 20.2 9.8 18.9 10.4 17.4 C11.1 15.6 13.2 14.5 15 14.8 C16 15 16.6 15.7 16.6 16.6 Z"/>
+    <path d="M16.7 4.8 C19.2 6.1 21.2 7.8 21.3 10.2 C21.4 11.9 20.5 13.2 19.2 13.9"/>
+  </symbol>
+  <!-- THE STRIKE: the vocabulary's only piece of grammar, and it means one thing wherever it
+       lands — not available to you on this page. Heavier than the mark it crosses so it reads
+       as a second, later pen rather than as part of the drawing. -->
+  <symbol id="rule-strike" viewBox="0 0 24 24">
+    <path stroke-width="1.8" d="M4.9 19.7 C9.3 15.1 14.5 9.5 19.1 4.9"/>
+  </symbol>
+  <!-- The quaver's strike: the same stroke, the same angle and weight, translated down and
+       right. Not a second meaning — a drawing fix. A quaver's own axis runs bottom-left to
+       top-right, which is the direction the strike travels, so laid on the box centre the
+       shared stroke runs ALONGSIDE the note instead of across it and reads as a stray pen
+       mark beside a note. It also overshoots the note at both ends, because a stroke that
+       starts exactly on the head reads as a line touching a note, not a note crossed out. -->
+  <symbol id="rule-strike-note" viewBox="0 0 24 24">
+    <path stroke-width="1.8" d="M8.4 21.6 C12.6 16.4 17.6 10.6 21.8 5.4"/>
+  </symbol>
+</svg>
 <!-- MASTERY REWARD MARKS — one per tile on the Mastery reward board, drawn once here and
      <use>d by rewardTileMarkHTML in app.js. Built exactly like the charm-collection theme
      marks: a filled wash underneath, a pen drawing over it, both carrying NO colour of their
@@ -2668,7 +2735,15 @@ if (location.pathname.endsWith('/index.html')) {
     <div class="bracelet-wrap">
       <div class="bracelet-meta">
         <span>page <b id="pageNum">1</b><span id="pageTotalWrap"> of <b id="pageTotal">13</b></span></span>
-        <span class="trinkets">★ <b id="trinketCount">0</b></span>
+        <!-- The page count says where you are; the star says what you have earned. #ruleTerms
+             joins them as what the page will TAKE, filled by renderRuleTerms. It sits inside
+             the right-hand span so the four marks land in the dead space space-between was
+             already leaving, costing the row no height, and it goes BEFORE the star because a
+             term you merely glance at must never outrank a thing you won. -->
+        <span class="bracelet-meta-right">
+          <span id="ruleTerms" class="rule-terms"></span>
+          <span class="trinkets">★ <b id="trinketCount">0</b></span>
+        </span>
       </div>
       <div id="bracelet" class="bracelet"></div>
     </div>

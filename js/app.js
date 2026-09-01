@@ -72,6 +72,8 @@ import { buildLineIndex, buildSlipContext, buildSlipPuzzle, buildNamePuzzle,
          ruthlessBar, RUTHLESS_LENSES, RUTHLESS_HANDOUT_WORDS,
          judgeBlank, blankExact } from "./bonus.js";
 import { renderStreakPlacard } from "./placard.js";
+import { ruleSlotsMarkup, ruleTermsMarkup, ruleTermsLabel, ruleLegendMarkup,
+         ruleTermsFrom, ruleShapeFor } from "./rulemarks.js";
 import {
   loadRecords, insertRecord, migrateRecordsFromStats, getPlayerName, setPlayerName,
   getAvatar, setAvatar,
@@ -8596,8 +8598,14 @@ function renderChallengeDetail(id) {
     `<div class="chall-sec chall-sec--beat">` +
       `<div class="chall-eyebrow">To beat it</div>` +
       swap("div", "chall-goal", escapeHtml(c.win), dk && escapeHtml(dk.win)) +
-      swap("div", "chall-mods", escapeHtml(c.blurb || mode.blurb),
-        dk && escapeHtml(dk.blurb || dkMode.blurb)) +
+      // Same pairing as the difficulty cards, and it matters more here: a noTitle CHALLENGE
+      // strikes the offending songs out of the suggestions rather than refusing a pick, so
+      // this card is the only place the rule is ever stated before the run starts.
+      swap("div", "chall-mods",
+        ruleTermsMarkup(challengeRuleTerms(c, mode), { labelled: false, cls: "chall-terms" }) +
+          escapeHtml(c.blurb || mode.blurb),
+        dk && (ruleTermsMarkup(challengeRuleTerms({ ...c, ...dk }, dkMode), { labelled: false, cls: "chall-terms" }) +
+          escapeHtml(dk.blurb || dkMode.blurb))) +
     `</div>` +
     `<div class="chall-act">` +
       `<span class="chall-meta">${swap("span", "chall-meta-in", meta, darkMeta)}</span>` +
@@ -10572,12 +10580,15 @@ function updateBlurb() {
   } else {
     const b = $("modeBlurb");
     if (b) {
-      if (gameType === "infinite") {
-        const v = infiniteVariant === "sudden" ? "one miss ends it" : "three lives";
-        b.textContent = v + " · " + currentMode.blurb;
-      } else {
-        b.textContent = currentMode.blurb;
-      }
+      const text = gameType === "infinite"
+        ? (infiniteVariant === "sudden" ? "one miss ends it" : "three lives") + " · " + currentMode.blurb
+        : currentMode.blurb;
+      // The marks ride WITH the blurb, never instead of it. Prose teaches and marks remind,
+      // and choosing a difficulty is the one moment the player has time to read both — which
+      // is what makes the mark legible later, in a row of the round's chrome with no words in
+      // it. The blurb is the accessible reading of the pair, so the marks stay aria-hidden.
+      b.innerHTML = ruleTermsMarkup(modeRuleTerms(currentMode), { labelled: false, cls: "mode-terms" }) +
+        escapeHtml(text);
     }
   }
   updateTagline();
@@ -12354,6 +12365,62 @@ function renderPromptChrome() {
       : more.length ? (more.length === 1 ? "write one song with both" : "write one song with all three")
       : "write a song with";
   }
+}
+
+/* ---------- Rule marks: the terms of the page ---------- */
+// Which of the four marks this page shows, and struck or not. Reads the LIVE levers rather
+// than currentMode, because half the challenge roster rewrites them per run or per page —
+// Revolving Door turns the title rule on over Normal's own settings, Switch-Up flips between
+// naming and singing page by page, Choose Your Path's perks turn levers off mid-run. A
+// currentMode read would quietly describe the mode the run borrowed instead of the page in
+// front of the player, which is the exact failure these marks exist to fix.
+//
+// A null slot means "this page has no opinion", and it is held open and left empty rather
+// than dropped. That is doing real work on Lyricist: the title mark is absent because a title
+// is not a thing the page has, which is what lets the mark stay two-state.
+function currentRuleTerms() {
+  if (devRuleTerms) return devRuleTerms;             // dev panel override — see buildDevApi().terms
+  const rule = gameType === "challenge" && currentChallenge ? currentChallenge.rule : null;
+  return ruleTermsFrom({
+    dropdown: effectiveDropdown(),
+    noTitle: effectiveNoTitle(),
+    seconds: baseSeconds(),
+    lyricOnly: lyricModeNow(),
+    titleOnly: currentMode.titleOnly,
+    ...ruleShapeFor(rule),
+  });
+}
+
+// The same four states for a mode the player is only LOOKING at: a difficulty card, or a
+// challenge card's base and dark faces. Levers come off the entry rather than the live run,
+// which is the whole point — this is what the mode will do, before it is running.
+function modeRuleTerms(m, rule) {
+  return ruleTermsFrom({ ...m, ...ruleShapeFor(rule || null) });
+}
+// A challenge's own lever overrides sit ON the challenge entry and fall back to the difficulty
+// mode it borrows, which is exactly how effectiveNoTitle and friends resolve them at runtime.
+// `c` is already the resolved face (base or dark), so a dark side that flips a lever is read
+// from the block the player is actually looking at.
+function challengeRuleTerms(c, mode) {
+  const pick = (k) => (c && c[k] !== undefined ? c[k] : mode ? mode[k] : undefined);
+  return modeRuleTerms({
+    dropdown: pick("dropdown"), noTitle: pick("noTitle"), seconds: pick("seconds"),
+    lyricOnly: pick("lyricOnly"), titleOnly: pick("titleOnly"),
+  }, c && c.rule);
+}
+let devRuleTerms = null;   // dev toggle only — see buildDevApi().terms
+
+// Refill the strip in the meta row. The element itself is long-lived (it is in index.html),
+// so this writes its slots and its label rather than replacing it — nothing else in the row
+// should have to be rebuilt because a page's terms changed.
+function renderRuleTerms() {
+  const el = $("ruleTerms");
+  if (!el) return;
+  const terms = currentRuleTerms();
+  el.innerHTML = ruleSlotsMarkup(terms);
+  const label = ruleTermsLabel(terms);
+  if (label) { el.setAttribute("role", "img"); el.setAttribute("aria-label", label); }
+  else { el.removeAttribute("role"); el.setAttribute("aria-hidden", "true"); }
 }
 
 // Confidence Wager: turn the face-down word over. The stake is down, so the word, its lead-in
@@ -15993,6 +16060,7 @@ function advanceRound() {
   renderTapKnowledgeUI();                      // Odd One Out / Whose Line?: their own tap grids
   renderCommonUI();                            // Common Thread: the three-line puzzle (hidden elsewhere)
   renderPromptChrome();                        // whether the prompt word shows, and what it's asking
+  renderRuleTerms();                           // ...and the four marks saying what it will take
   renderExcludedNote();
   $("feedback").innerHTML = "";
   $("playArea").style.display = "";
@@ -21468,7 +21536,12 @@ const HOWTO_PAGES = [
     title: "More than one way in",
     body: `Type a song title and the notebook will meet you halfway: it forgives near-misses and ` +
       `offers matching titles as you go. Stuck on a name but sure of the song? Sing it instead: ` +
-      `type a line of lyrics containing the word and that counts too.`,
+      `type a line of lyrics containing the word and that counts too. Not every page takes all ` +
+      `of that, though, and the four marks in the corner of the page say which:`,
+    // The one place the marks are TAUGHT. They are drawn on the difficulty and challenge cards
+    // beside the words they stand for, which is where most players will meet them; this is
+    // where someone who wants the whole vocabulary in one place can find it.
+    legend: true,
     note: `Stuck properly? {HINT} spends a hint, in the modes that carry them. Every page has more ` +
       `than one right answer, so the one you half-remember may well be one of them.`,
   },
@@ -21511,6 +21584,7 @@ function renderHowTo() {
             `<span class="ach-latest-position">${howToIndex + 1} / ${total}</span></div>` +
           `<div class="howto-title">${escapeHtml(page.title)}</div>` +
           `<p class="howto-body">${page.body}</p>` +
+          (page.legend ? ruleLegendMarkup() : "") +
           `<p class="howto-note">${note}</p>` +
         `</div>` +
       `</div>` +
@@ -22658,6 +22732,19 @@ function buildDevApi() {
     // dozens of pages per segment, which is unwatchable in a sitting, so age it by hand: pass
     // a tier ("full" | "short" | "off") and optionally one segment id from TYPE_HINT_IDS.
     // Takes effect on the next page, or immediately if a game is already open.
+    // The terms strip. Every real run shows one combination out of the handful its mode
+    // allows, so the only way to eyeball a state the difficulty ladder never reaches (a
+    // struck quaver, an absent title mark) is to force it. `set` takes a partial: anything
+    // left out keeps whatever the live page said, and null on a key empties that slot.
+    terms: {
+      state: () => currentRuleTerms(),
+      set: (over = {}) => {
+        devRuleTerms = { ...currentRuleTerms(), ...over };
+        renderRuleTerms();
+        return devRuleTerms;
+      },
+      clear: () => { devRuleTerms = null; renderRuleTerms(); },
+    },
     typingHint: {
       ids: () => TYPE_HINT_IDS.slice(),
       state: () => Object.fromEntries(TYPE_HINT_IDS.map((id) => [id, typeHintSeen(id)])),

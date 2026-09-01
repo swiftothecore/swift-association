@@ -51,6 +51,9 @@ const ASSETS = [
   "js/match.js",
   // Bonus-game puzzle builders (pure; see js/bonus.js).
   "js/bonus.js",
+  // The four rule marks (pure; see js/rulemarks.js). app.js imports it at load, so an
+  // uncached copy breaks a cold offline start rather than only the marks.
+  "js/rulemarks.js",
   // The randomiser's weighting (pure; see js/random.js). app.js imports it at load, so an
   // uncached copy would break a cold offline start rather than just the button.
   "js/random.js",
