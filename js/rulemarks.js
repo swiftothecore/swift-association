@@ -14,11 +14,11 @@
 // and app.js owns reading the live levers (see currentRuleTerms).
 import { escapeHtml } from "./util.js";
 
-// Two pieces of shared grammar, learned once. A struck mark means "not available to you on
-// this page"; a circled mark means the opposite corner of the same question — "nothing else
-// is". Most marks only ever need the first, so most are two states and nothing more; a mark
-// that has a third thing to say declares a `ring` and gets it. The quaver takes its own
-// stroke rather than the shared one, for a drawing reason and not a meaning one — a quaver's axis runs bottom-left
+// One shared grammar, learned once: a struck mark means "not available to you on this page".
+// Nearly every mark is two states and nothing more. A mark with a third thing to say does not
+// get a second overlay to be taught — it declares `onlySymbol` and is REDRAWN, so the stronger
+// state is the same mark escalated rather than a new piece of punctuation over an old one.
+// The quaver takes its own stroke rather than the shared one, for a drawing reason and not a meaning one — a quaver's axis runs bottom-left
 // to top-right, the same direction the strike travels, so the shared stroke lays alongside
 // the note instead of across it and reads as a stray pen mark. Same angle, same weight,
 // nudged onto the note's actual mass. The drawings are in index.html.
@@ -47,11 +47,12 @@ export const RULE_MARKS = {
     off: "no clock — take as long as you like",
   },
   // The one mark with three things to say, because "a sung line counts" and "a sung line is
-  // the only thing that counts" are a bonus and a whole different game, and until the ring
-  // arrived the only thing separating them on the row was the ABSENCE of the title mark
-  // beside it — a difference you can only read if you already know both rows by heart.
+  // the only thing that counts" are a bonus and a whole different game, and until the second
+  // drawing arrived the only thing separating them on the row was the ABSENCE of the title
+  // mark beside it — a difference you can only read if you already know both rows by heart.
+  // One note, then two: the escalation is in the music rather than in a mark laid over it.
   sung: {
-    symbol: "rule-sung", strike: "rule-strike-note", ring: "rule-ring-note",
+    symbol: "rule-sung", strike: "rule-strike-note", onlySymbol: "rule-sung-only",
     on: "sing the line the word is in, for a verse bonus",
     off: "the full title, nothing else",
     only: "sing the line the word is in — a title won't do",
@@ -64,13 +65,14 @@ export const RULE_MARKS = {
 // Reserving the empty slot was tried and cut. It made an absence readable by position, which is
 // a real thing to lose: on Lyricist the row is now simply three marks, and "this page has no
 // opinion about titles" no longer looks different from "this row happens to carry three marks".
-// What still separates it is the pairing — a missing sleeve beside a lit quaver — and that was
-// judged the better trade against a visible gap sitting in the middle of the notebook's chrome.
+// That cost is now carried by the doubled quaver instead, which says outright what the missing
+// sleeve beside it could only imply, and a visible gap sitting in the middle of the notebook's
+// chrome is worse than an absence you read off the marks that remain.
 // The slot keeps its fixed WIDTH regardless, so the spacing between the marks that do render
 // stays even; it is only the empty one that goes.
 export const RULE_ORDER = ["suggest", "hint", "title", "clock", "sung"];
 
-// Derive the four states from a bag of levers. Every caller goes through here — the live
+// Derive the five states from a bag of levers. Every caller goes through here — the live
 // round, the difficulty cards and the challenge card — so a mode and the page it produces can
 // never disagree about what they are claiming.
 //
@@ -113,24 +115,25 @@ export function ruleShapeFor(rule) {
   };
 }
 
-// A term's value as the key its copy and its overlay are filed under. `false` strikes,
-// `"only"` circles, anything else truthy is the plain mark. Kept in one function because a
+// A term's value as the key its copy and its drawing are filed under. `false` strikes,
+// `"only"` redraws, anything else truthy is the plain mark. Kept in one function because a
 // caller that reads the raw value gets `"only"` wrong in the most dangerous possible way: it
 // is a truthy string, so a bare `terms.sung ? on : off` silently prints the bonus line on a
 // page where the bonus is the only way through.
 function markState(v) { return v === false ? "off" : v === "only" ? "only" : "on"; }
 
-// One mark. The state decides what is laid over the drawing: the strike, the ring, or
-// nothing. A mark asked for a state it has no drawing for falls back to the plain mark
-// rather than inventing a meaning.
+// One mark. The state picks the drawing and what is laid over it: the plain symbol, the plain
+// symbol struck, or — for a mark that carries one — a second symbol drawn instead. A mark
+// asked for a state it has no drawing for falls back to the plain mark rather than inventing
+// a meaning.
 export function ruleMarkMarkup(key, state) {
   const m = RULE_MARKS[key];
   if (!m) return "";
   const s = markState(state);
-  const over = s === "off" ? m.strike : s === "only" ? m.ring : null;
+  const symbol = (s === "only" && m.onlySymbol) || m.symbol;
   return `<svg class="rule-mark" viewBox="0 0 24 24" aria-hidden="true" focusable="false">` +
-    `<use href="#${m.symbol}"/>` +
-    (over ? `<use href="#${over}"/>` : "") +
+    `<use href="#${symbol}"/>` +
+    (s === "off" ? `<use href="#${m.strike}"/>` : "") +
     `</svg>`;
 }
 
@@ -143,7 +146,7 @@ export function ruleTermsSentence(terms) {
 }
 
 // terms: { suggest, hint, title, clock, sung }, each true (plain), false (struck), "only"
-// (circled — the page takes nothing else), or null/undefined (this page has no opinion, so
+// (redrawn — the page takes nothing else), or null/undefined (this page has no opinion, so
 // the mark is not drawn at all and its neighbours close up).
 //
 // The group carries ONE label rather than one per mark. Reading the meta row, a screen reader
@@ -181,10 +184,10 @@ export function ruleTermsMarkup(terms, { labelled = true, tips = true, cls = "" 
 export function ruleLegendMarkup() {
   return `<div class="rule-legend">` + RULE_ORDER.map((key) => {
     const m = RULE_MARKS[key];
-    // A mark with a ring teaches all three at once. Splitting the circled state onto a row
-    // of its own would file it as a sixth mark to learn, when the whole point of the ring is
-    // that it is the same mark saying something stronger.
-    const states = ["on", "off", ...(m.ring && m.only ? ["only"] : [])];
+    // A mark with a second drawing teaches all three at once. Splitting the stronger state
+    // onto a row of its own would file it as a sixth mark to learn, when the whole point is
+    // that it is the same mark saying something more.
+    const states = ["on", "off", ...(m.onlySymbol && m.only ? ["only"] : [])];
     return `<div class="rule-legend-row">` +
       `<span class="rule-legend-pair" aria-hidden="true">` +
         states.map((st) => ruleMarkMarkup(key, st === "on" ? true : st === "off" ? false : "only")).join("") +

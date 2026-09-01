@@ -22748,7 +22748,7 @@ function buildDevApi() {
     // allows, so the only way to eyeball a state the difficulty ladder never reaches (a
     // struck quaver, an absent title mark) is to force it. `set` takes a partial: anything
     // left out keeps whatever the live page said, null on a key empties that slot, and the
-    // string "only" circles a mark that has a ring (today: sung).
+    // string "only" swaps in the stronger drawing on a mark that has one (today: sung).
     terms: {
       state: () => currentRuleTerms(),
       set: (over = {}) => {
