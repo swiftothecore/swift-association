@@ -3,10 +3,10 @@
 //   id:   kebab-case handle; the unlock trigger and the STICKERS_KEY store key both use it.
 //   name: the object's own name, as the drawer captions it.
 //   sub:  the source line under it: the song, or where the object comes from.
-//   how:  what you did to earn it, in the achievement descs' voice. It rides on the unlock
-//         toast as a hover tip and, once the sticker is EARNED, as the third caption line on
-//         the drawer's shelf. A LOCKED cell stays wordless on purpose, name and how alike:
-//         the silhouette is the question, so never render either into a locked cell.
+//   how:  what you did to earn it, in the achievement descs' voice. It is a HOVER TIP in both
+//         places it appears, the unlock toast and an earned cell on the drawer's shelf, and it
+//         is never printed: as a caption line it swamped the shelf. A LOCKED cell carries
+//         neither this nor the name, because the silhouette is the question.
 //   era:  the section it belongs to, used to group the shelf.
 //   art:  a self-contained viewBox="0 0 100 100" SVG, exactly as drawn. No die-cut border and
 //         no stroke rules live in here: the shared #diecut filter and the .ln stroke classes
