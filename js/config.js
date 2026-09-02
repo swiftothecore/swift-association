@@ -809,6 +809,39 @@ export const CHALLENGES = [
       win: "Recall 8 lines word-for-word (or better). Type the line exactly." },
     desc: "Answer by typing the lyric line, and do it word-for-word six times.",
     win: "Recall 6 lines word-for-word (or better). Type the line exactly." },
+  { id: "lyric-ink", name: "Long Story Long", rule: "ink", mode: "medium",
+    free: false, cost: 1, ink: 400, seconds: 18, noTitle: false, dropdown: true, tapes: 0,
+    // The only challenge scored in CHARACTERS rather than pages. Clearing a page and scoring
+    // it are deliberately different things here: the lyric path already accepts any contiguous
+    // run of four words that sings the prompt word, so the cheapest legal answer is about 18
+    // characters and a page can always be passed for almost nothing. What the run asks is how
+    // much of the passage around the word you dare write out before the clock takes the page
+    // off you. 400 over 13 is 30.8 a page against a median line of 34, so it reads as "about
+    // a line, every page", with two or three blanks payable by a two-line run somewhere else.
+    //
+    // NOT `mode: "lyricist"`, though it is a lyric challenge. Lyricist is lyricOnly, and that
+    // shuts the title path — which is the whole reason the suggestions are on. Naming the song
+    // banks its title's length (~14), a third of a line, fast: a real bail-out on a page you
+    // cannot sing, and never a strategy, since all 13 titles is about 190 of the 400. Medium
+    // keeps both paths open, and a typed line long enough to matter can't collide with the
+    // dropdown anyway (titleMatchScore wants the query INSIDE a title, so a phrase past title
+    // length ranks nothing). `noTitle: false` because a banned title would fight the rule:
+    // widening validSongs is what puts more lyric on the page to write from.
+    //
+    // Dark gets MORE clock, not less, and that is the point rather than a mercy. 600 is 46 a
+    // page, around the 78th-percentile line, so most pages want a full line plus a run into the
+    // next one. Cut the clock as well and the two multiply into a typing-speed test at roughly
+    // 2.9 characters a second sustained; at 23s the binding constraint stays recall depth,
+    // which is the axis the challenge is actually about. The dropdown quietly changes meaning
+    // between the sides with no second rule: a 14-character title bank is a sensible page on
+    // 400 and a thrown page on 600.
+    hard: { ink: 600, seconds: 23,
+      blurb: "23s · suggestions · all words · title words allowed",
+      desc: "The same page, and half as much again to fill it. You get five seconds more to write each one, and you will still run out of them. A title banked here is a page thrown away: on this side only the lines will do, and the long ones at that.",
+      win: "Write 600 characters across 13 pages." },
+    blurb: "18s · suggestions · all words · title words allowed",
+    desc: "Every page is scored by how much you WRITE. Sing the line around the word and keep going as far as you can: every character of it counts. Naming the song banks its title instead, quick and small. Submit before the clock dies, or the page banks nothing.",
+    win: "Write 400 characters across 13 pages." },
   { id: "wrapped-chain", name: "Wrapped Like A Chain", rule: "chain", mode: "medium",
     free: false, cost: 1, target: 6, noTitle: false, pool: "easy", tapes: 3,
     // Dark, REWORKED 2026-09-01 after playtest (fun 1/5, fairness 2/5). The first version took
@@ -2676,6 +2709,9 @@ const WAX_SEAL_MOTIFS = {
   "short-title": { wax: 11, fr: "evenodd", d: "M22 32 L28 25.5 H40.9 Q42.5 25.5 42.5 27.1 V36.9 Q42.5 38.5 40.9 38.5 H28 Z M25.3 32 a1.5 1.5 0 1 0 3 0 a1.5 1.5 0 1 0 -3 0 M35 35.6 C33 33.8 31.5 32.4 31.5 30.5 C31.5 28.5 33.9 27.9 35 29.7 C36.1 27.9 38.5 28.5 38.5 30.5 C38.5 32.4 37 33.8 35 35.6 Z" },
   // a heart holding a quotation: the lyric line, loved word for word
   "lyric-lover": { wax: 12, fr: "evenodd", d: "M32 45 C25.5 39.5 20.5 35 20.5 28.8 C20.5 22.4 28.4 20.6 32 26 C35.6 20.6 43.5 22.4 43.5 28.8 C43.5 35 38.5 39.5 32 45 Z M29.4 27.6 C31.2 28.3 31.5 30.7 30 33.6 L28.6 33 C29.7 30.8 29.6 29.2 28.8 28.3 Z M35 27.6 C36.8 28.3 37.1 30.7 35.6 33.6 L34.2 33 C35.3 30.8 35.2 29.2 34.4 28.3 Z" },
+  // a scroll unrolled, three lines written down it and the last one stopping short:
+  // as much as you got down before the page was taken off you
+  "lyric-ink": { fr: "nonzero", d: "M22.5 23 H41.5 V41 H22.5 Z M20.5 23 a11.5 4 0 1 1 23 0 a11.5 4 0 1 1 -23 0 M20.5 41 a11.5 4 0 1 1 23 0 a11.5 4 0 1 1 -23 0 M26 27.2 V29.2 H38 V27.2 Z M26 31.2 V33.2 H38 V31.2 Z M26 34.8 V36.8 H32.5 V34.8 Z" },
   // three chain links running corner to corner: each song wrapped onto the last
   "wrapped-chain": { wax: 13, fr: "evenodd", d: "M20.9 26.6 a4.5 4.5 0 1 1 9 0 a4.5 4.5 0 1 1 -9 0 M23.4 26.6 a2 2 0 1 1 4 0 a2 2 0 1 1 -4 0 M27.5 32 a4.5 4.5 0 1 1 9 0 a4.5 4.5 0 1 1 -9 0 M30 32 a2 2 0 1 1 4 0 a2 2 0 1 1 -4 0 M34.1 37.4 a4.5 4.5 0 1 1 9 0 a4.5 4.5 0 1 1 -9 0 M36.6 37.4 a2 2 0 1 1 4 0 a2 2 0 1 1 -4 0" },
   // a stage microphone: every night a different album on cue

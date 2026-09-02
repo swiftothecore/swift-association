@@ -6043,6 +6043,16 @@
     font-family: var(--hand); font-size: calc(16px + var(--text-size-adjust)); color: var(--ink-soft);
     text-align: center; margin: 0 auto 10px; max-width: 32ch; line-height: 1.35;
   }
+  /* Long Story Long: what the page just paid, under the verdict banner. Typewriter rather
+     than handwriting because it is a meter reading and not a remark, and the number itself
+     is the only thing lifted to full ink — the sentence around it is there to be glanced at
+     once and then trusted. */
+  .ink-note {
+    font-family: var(--type); font-size: calc(13px + var(--text-size-adjust)); color: var(--ink-soft);
+    text-align: center; margin: 0 auto 10px; letter-spacing: 0.02em;
+  }
+  .ink-note b { font-size: calc(16px + var(--text-size-adjust)); color: var(--ink); }
+
   /* The one-time word-forms note: an aside pencilled under the card it's explaining, so it
      reads as annotation on the lyric above rather than another verdict. */
   .forms-firstnote {

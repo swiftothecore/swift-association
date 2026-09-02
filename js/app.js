@@ -8415,8 +8415,11 @@ function renderChallengeDetail(id) {
   // Insurance is a risk rule that keeps no beads (see beadScoredRule), so its best is a page
   // count like everyone else's and wears the ordinary denominator.
   // Declared before `meta` because the dark-side note below reuses it against `darkBest`.
+  // Long Story Long joins the risk batch in having no denominator: its best is a character
+  // count, and "best 431/13" would be nonsense on a card whose whole score is the tally.
   const outOfFor = (best) => (RISK_RULES.has(c.rule) && c.rule !== "insurance")
     ? ` bead${best === 1 ? "" : "s"}`
+    : c.rule === "ink" ? " characters"
     : `/${c.rule === "survive" ? surviveTarget(c) : TOTAL_ROUNDS}`;
   const bestOutOf = outOfFor(rec.best);
   let meta = "";
@@ -9728,6 +9731,7 @@ const TALLY_PREVIEWS = {
   infinite: { score: "24", sub: [{ v: "21", l: "correct" }, { v: "6:31", l: "on the clock" }, { v: "+11", l: "verse bonus" }], unit: "rounds" },
   ruthless: { score: "3:07", sub: "all 10 named" },
   risk:     { score: "14", sub: [{ v: "12", l: "needed" }], unit: "beads" },
+  ink:      { score: "431", sub: [{ v: "400", l: "needed" }], unit: "characters" },
 };
 
 // ---- The final tally ----
@@ -9860,6 +9864,7 @@ function buildCardMeta() {
       name: currentChallenge.name || "Challenge", dark: !!challengeDark, won: false,
       score, total: surviveRuleActive() ? surviveTarget() : TOTAL_ROUNDS,
       bead: beadScoredRule(), target: riskTarget(),
+      ink: inkRuleActive() ? gameInk : null, inkTarget: inkRuleActive() ? inkTarget() : 0,
       secs: runTime, survive: surviveRuleActive(),
     };
     darkRun = !!ch.dark;
@@ -9873,6 +9878,12 @@ function buildCardMeta() {
     if (ch.bead) {
       stats.push({ v: String(ch.score), l: "beads" });
       if (ch.target) stats.push({ v: String(ch.target), l: "needed" });
+    } else if (ch.ink != null) {
+      // Long Story Long is scored in characters written, so the keepsake says what the run
+      // was actually judged on. Pages cleared are not on the card at all: thirteen cheap
+      // answers is a full strand and a lost run, and printing "13/13" would say the opposite.
+      stats.push({ v: String(ch.ink), l: "characters" });
+      if (ch.inkTarget) stats.push({ v: String(ch.inkTarget), l: "needed" });
     } else {
       stats.push({ v: ch.score + "/" + ch.total, l: "strung" });
     }
@@ -11114,6 +11125,8 @@ function resetRunState() {
   verseKeepsake = [];
   roundVerseTier = [];
   lyricAnswerSongs = [];
+  gameInk = 0;
+  roundInk = [];
   gameTimeSum = 0;
   gameHitRedZone = false;
   runSoundOn = settings.sound;    // the boombox: was the sound already on when this run began
@@ -13077,6 +13090,8 @@ function applyChallengeRound(wrap) {
     renderSwitchBanner();
   } else if (currentChallenge.rule === "multi") {
     renderMultiBanner();
+  } else if (currentChallenge.rule === "ink") {
+    renderInkBanner();
   } else if (currentChallenge.rule === "devil") {
     if (devilFx) renderDevilFx(wrap, currentWord, devilFx);
     renderDevilBanner();
@@ -13185,6 +13200,19 @@ function renderSwitchBanner() {
   el.innerHTML =
     `<span class="chall-prog-name">${roundLyricOnly ? "sing a lyric line" : "name a title"}</span>` +
     `<span class="chall-prog-count">${score} / ${currentChallenge.target || 9}</span>`;
+}
+// Long Story Long: the run's whole score, since pages cleared mean nothing here. Reads the
+// tally and what is still owed rather than a page count, because the decision the rule is
+// asking for ("do I stop and submit, or reach for another line?") is answered by the gap, not
+// by how far through the run you are.
+function inkTarget() { return (currentChallenge && currentChallenge.ink) || 400; }
+function renderInkBanner() {
+  if (!inkRuleActive()) return;
+  const el = ensureChallBanner();
+  const left = Math.max(0, inkTarget() - gameInk);
+  el.innerHTML =
+    `<span class="chall-prog-name">${left ? `${left} still to write` : "written"}</span>` +
+    `<span class="chall-prog-count">${gameInk} / ${inkTarget()}</span>`;
 }
 // Double Trouble: how many of the two needed songs have been named this page.
 function renderMultiBanner() {
@@ -13631,6 +13659,9 @@ function challengeWinCheck(c) {
   if (c.rule === "impostor") return !impostorFailed && (score - impostorFlagged) >= (c.target || 7);
   // Lyric Lover: recall a target number of word-perfect-or-better lines this run.
   if (c.rule === "verse") return gameVersePerfect >= (c.target || 4);
+  // Long Story Long: the character tally IS the win. Pages cleared are not consulted at all —
+  // thirteen cheap four-word answers is a spotless 13/13 and a lost run.
+  if (c.rule === "ink") return gameInk >= (c.ink || 400);
   // Thirty-One: an unbroken run (still alive) that cleared the target round (31).
   if (c.rule === "survive") return round >= (c.target || 31) && lives > 0;
   // Insurance: sudden death, and surviving all 13 pages is the WHOLE win. There is no bead
@@ -13676,6 +13707,7 @@ function endChallenge() {
     name: c.name, dark: !!c.dark, won,
     score, total: challengeTotal,
     bead: beadScoredRule(), target: riskTarget(),
+    ink: c.rule === "ink" ? gameInk : null, inkTarget: c.rule === "ink" ? inkTarget() : 0,
     secs: gameTimedRounds > 0 ? gameTimeSum : null,
     survive: c.rule === "survive",
   };
@@ -13684,8 +13716,11 @@ function endChallenge() {
   if (!devNoLog) {
     if (won && challengeDark) earnSticker("chess-queen");
     // Champagne coupe — one page short of this card's own best. The dark side keeps its own.
+    // Long Story Long sits this out: its record is a character count, so "one short" would be
+    // one CHARACTER short of a stored 400-odd, which is neither a near miss anybody would feel
+    // nor the same quantity as the page score being handed in here.
     const cbest = challengeRecord(c.id);
-    noteNearMiss((challengeDark ? cbest.darkBest : cbest.best) || 0, score);
+    if (c.rule !== "ink") noteNearMiss((challengeDark ? cbest.darkBest : cbest.best) || 0, score);
   }
 
   // Challenges count toward the GLOBAL/catalogue stores only — the chronological
@@ -13742,11 +13777,16 @@ function endChallenge() {
     { colors: albumPalette(), hinted: roundHinted, verseTiers: roundVerseTier,
       ...(c.rule === "survive" ? { total: challengeTotal, tieText: String(challengeTotal) } : {}) });
   // A bead total has no "out of": the page count is not its ceiling, so it's shown against
-  // the challenge's target instead of the 13 pages that produced it.
-  setFinalTally(score,
-    beadScoredRule() ? [{ v: String(riskTarget()), l: "needed" }]
+  // the challenge's target instead of the 13 pages that produced it. Long Story Long is the
+  // same case for the same reason — the headline has to be the number the run was judged on,
+  // and putting a page score up there in 88px hand would state the opposite of the rule:
+  // thirteen cheap answers reads as a flawless 13 and is a lost run.
+  const inkRun = c.rule === "ink";
+  setFinalTally(inkRun ? String(gameInk) : score,
+    inkRun          ? [{ v: String(inkTarget()), l: "needed" }]
+    : beadScoredRule() ? [{ v: String(riskTarget()), l: "needed" }]
                      : [{ v: String(challengeTotal), l: "pages" }],
-    beadScoredRule() ? "beads" : "");
+    inkRun ? "characters" : beadScoredRule() ? "beads" : "");
   $("keepGoingBtn").style.display = "none";
   $("namePrompt").style.display = "none";
   $("verseAnthology").style.display = "none";
@@ -13760,7 +13800,11 @@ function endChallenge() {
   const returnJustReady = !devNoLog && !won && returnRunsBefore < CHALLENGE_RETURN_RUNS
     && challengeReturnReady(c.id);
 
-  const firstTime = !devNoLog && won ? markChallengeDefeated(c.id, score, challengeDark) : false;
+  // The record keeps the score the challenge was actually judged on, so Long Story Long banks
+  // its character tally rather than its page count — the same swap the risk batch makes for
+  // beads, and what lets `outOfFor` print it without a "/ 13" it was never scored out of.
+  const bestScore = c.rule === "ink" ? gameInk : score;
+  const firstTime = !devNoLog && won ? markChallengeDefeated(c.id, bestScore, challengeDark) : false;
   const rec = challengeRecord(c.id);
   /* The three charms about HOW a challenge was beaten rather than which one. All three used to
      hang off the first-ever defeat of a given challenge, which made each one a single
@@ -13848,6 +13892,14 @@ function endChallenge() {
   const verseLine = c.rule === "verse"
     ? `<div class="chall-result-meta">${gameVersePerfect} line${gameVersePerfect === 1 ? "" : "s"} recalled word-for-word</div>`
     : "";
+  // Long Story Long: the run's actual score, plus where it came from. The split is the whole
+  // post-mortem — a run that banked eleven titles and lost is a different failure from one
+  // that sang nine long lines and ran three pages short, and the page count says neither.
+  const inkSung = roundInk.filter((n) => n > 0).length;
+  const inkLine = c.rule === "ink"
+    ? `<div class="chall-result-meta">${gameInk} of ${inkTarget()} characters written` +
+      (inkSung ? ` · ${Math.round(gameInk / inkSung)} a page` : "") + `</div>`
+    : "";
   // Impostor: the score bundles caught fakes and real answers — break it out honestly.
   const realNamed = score - impostorFlagged;
   const impostorLine = c.rule === "impostor"
@@ -13859,9 +13911,11 @@ function endChallenge() {
   // easy version, which is both wrong and deflating.
   const metaAttempts = c.dark ? rec.darkAttempts : rec.attempts;
   const metaBest = c.dark ? rec.darkBest : rec.best;
-  // A risk run's best is a bead count, so it can't wear the "/ 13" denominator either.
+  // A risk run's best is a bead count, so it can't wear the "/ 13" denominator either — nor
+  // can Long Story Long's, which is a count of characters written.
   const bestLine = !metaBest ? ""
     : beadScoredRule() ? ` · best ${metaBest} bead${metaBest === 1 ? "" : "s"}`
+    : c.rule === "ink" ? ` · best ${metaBest} characters`
     : ` · best ${metaBest}/${challengeTotal}`;
   const meta = `<div class="chall-result-meta">${metaAttempts} attempt${metaAttempts === 1 ? "" : "s"}` +
     `${bestLine}</div>`;
@@ -13900,7 +13954,7 @@ function endChallenge() {
   // half the width of the full-width buttons around them. The dark side's strip follows the
   // row rather than leading it, so the two ordinary ways out of the screen stay where they
   // are on every challenge and the offer sits directly above the front-page button.
-  $("resultPodium").innerHTML = status + tokenLine + returnLine + verseLine + impostorLine + riskResultLine() + meta +
+  $("resultPodium").innerHTML = status + tokenLine + returnLine + verseLine + inkLine + impostorLine + riskResultLine() + meta +
     `<div class="chall-result-actions">` +
       `<button id="backToChallenges" class="btn-primary">← challenges</button>` +
       `<button id="replayChallenge" class="btn-primary">replay ↺</button>` +
@@ -17153,6 +17207,26 @@ function nudgeNearMiss(raw, near) {
 // for; this path is meant to be worth more because it asks for more. Always satisfiable:
 // validSongs admits a song on its LYRICS, so every valid song has a line a player could
 // sing, and a lyric-only mode stays winnable.
+// Long Story Long's currency: how much REAL lyric a sung answer put on the page. The typed
+// phrase is capped by the span it actually matched, and that cap is what makes the number
+// unfarmable in BOTH directions. Uncapped, the fuzzy path's ~20% tolerance (FUZZY_THRESHOLD)
+// would pay for padding a remembered line out with junk; capped at the span alone, a four-word
+// fragment of a long line would be credited with the whole line the player never typed.
+// Counted on the NORMALIZED text so punctuation, capitals and the spaces a player closed up
+// can't move the score: every character banked is a character of lyric that was recalled.
+function lyricInk(normPhrase, line) {
+  const typed = (normPhrase || "").length;
+  const span = normalizeLyric(line || "").length;
+  return span ? Math.min(typed, span) : typed;
+}
+// Naming the song instead: the title is what got written, so the title is what it's worth.
+function titleInk(song) {
+  return song ? normalizeLyric(song.title || "").length : 0;
+}
+function inkRuleActive() {
+  return gameType === "challenge" && !!currentChallenge && currentChallenge.rule === "ink";
+}
+
 function matchLyricLine(phrase) {
   const normPhrase = normalizeSungPhrase(phrase);
   if (!normPhrase) return null;
@@ -17168,7 +17242,7 @@ function matchLyricLine(phrase) {
     const song = shortLineSong(normPhrase);
     if (!song) return null;
     const { text: line, lines } = recoverLyricLine(song, normPhrase);
-    return { song, line, fuzzy: false, ...gradeLyricRecall(normPhrase, line, lines) };
+    return { song, line, fuzzy: false, ink: lyricInk(normPhrase, line), ...gradeLyricRecall(normPhrase, line, lines) };
   }
   // Multi-line recall still "just works": the word only has to be somewhere in the block
   // that was typed, not in one particular line of it. The bare-word / word+filler cheat
@@ -17178,7 +17252,7 @@ function matchLyricLine(phrase) {
   for (const s of currentSongs) {
     if (s._normLyrics.includes(normPhrase)) {
       const { text: line, lines } = recoverLyricLine(s, normPhrase);
-      return { song: s, line, fuzzy: false, ...gradeLyricRecall(normPhrase, line, lines) };
+      return { song: s, line, fuzzy: false, ink: lyricInk(normPhrase, line), ...gradeLyricRecall(normPhrase, line, lines) };
     }
   }
 
@@ -17200,7 +17274,7 @@ function matchLyricLine(phrase) {
   }
   if (!best) return null;
   const { text: line, lines } = recoverFuzzyLine(best.song, normPhrase);
-  return { song: best.song, line, fuzzy: true, ...gradeLyricRecall(normPhrase, line, lines) };
+  return { song: best.song, line, fuzzy: true, ink: lyricInk(normPhrase, line), ...gradeLyricRecall(normPhrase, line, lines) };
 }
 
 // Recover a display line for a FUZZY (non-verbatim) match: scan the song's contiguous
@@ -18080,6 +18154,17 @@ function submitAnswer(song, isTimeout) {
     maybeGuideMatch();
   }
 
+  // Long Story Long: bank what this page wrote. A sung line is worth the lyric it recalled,
+  // naming the song is worth its title, and a page that ended any other way — timed out,
+  // answered wrong — is worth nothing. The hard cut needs no code of its own: a timeout never
+  // reaches the resolver above, so whatever was half-typed when the clock died is simply gone.
+  if (inkRuleActive()) {
+    const gained = !correct ? 0 : lyricMatch ? (lyricMatch.ink || 0) : titleInk(song);
+    roundInk[round - 1] = gained;
+    gameInk += gained;
+    renderInkBanner();
+  }
+
   if (lyricMatch) {
     lyricLineAnswers++;                  // recalled a lyric line (for You Knew The Line)
     verseBonus += lyricMatch.bonus;      // reward fuller recall, separate from the 0–13 score
@@ -18510,6 +18595,14 @@ function showCorrectFeedback(song, lyricMatch) {
     if (!devNoLog) { settings.seenVerseBonus = true; saveSettings(settings); }
     firstNote = `<p class="verse-firstnote">writing more of the line earns a verse bonus: a prestige tally, kept apart from your score</p>`;
   }
+  // Long Story Long: what this page was worth, said at the moment it was earned. Without it
+  // the tally in the banner just moves by an amount the player has to work out, and the whole
+  // rule is a judgement about how much a line is worth reaching for — which is unlearnable if
+  // the answer never arrives attached to what was typed.
+  const inkNote = inkRuleActive()
+    ? `<p class="ink-note"><b>+${roundInk[round - 1] || 0}</b> character${(roundInk[round - 1] || 0) === 1 ? "" : "s"}` +
+      ` · ${Math.max(0, inkTarget() - gameInk)} still to write</p>`
+    : "";
   const card = multi
     ? roundNamed.map((t) => lyricCard(currentSongs.find((s) => s.title === t) || song, currentWord, false, null, true)).join("")
     : both
@@ -18536,6 +18629,7 @@ function showCorrectFeedback(song, lyricMatch) {
     : `<button id="continueBtn" class="btn-ghost">next page →</button>`;
   fb.innerHTML = `
     <div class="fb-head"><div class="banner good">${banner}</div>${sticker}</div>
+    ${inkNote}
     ${firstNote}
     ${card}
     ${formsNote}
@@ -19295,6 +19389,8 @@ let gameWholeVerses = 0;         // whole-verse (4-line) recalls this game (Over
 let verseKeepsake = [];          // { line, word, tier } for each perfect+ recall — results-page anthology
 let roundVerseTier = [];         // per-round verse tier ("perfect"/"verse") → nib bracelet trinket
 let lyricAnswerSongs = [];       // titles answered via a lyric line this game (for Someone Has A Favourite Song)
+let gameInk = 0;                 // Long Story Long: characters of real lyric (or title) written this run
+let roundInk = [];               // ...and what each page was worth, for the banner and the results recap
 let gameTimeSum = 0;             // total answer time this game, secs (for Perfect Storm)
 let gameHitRedZone = false;      // any round answered with ≤3s left this game (for Peace)
 let rareStreak = 0;              // consecutive correct rare/scarce words this game (for Diamonds Are Forever)
@@ -24711,6 +24807,19 @@ function buildDevApi() {
         range: () => [seaMinValidNow(), seaMaxValidNow()],                              // how many valids this run seeds per grid (dark cuts it)
         answer: () => { const v = seaTiles.find((t) => t.valid); if (v) onSeaTileClick(seaTiles.indexOf(v)); },  // tap a correct tile
         win: () => { score = (CHALLENGE_BY_ID["sea-of-songs"].target) || 9; endGame(); },
+      },
+      // Long Story Long — the tally, what each page paid into it, and the shortcuts past the
+      // one thing that genuinely cannot be playtested at speed: typing 600 characters by hand
+      // to reach the win path. `price` grades a phrase without spending the page, so the
+      // capping rule (typed vs matched span) can be checked against real lyric and real junk.
+      ink: {
+        tally: () => ({ written: gameInk, target: inkTarget(), left: Math.max(0, inkTarget() - gameInk),
+                        pages: roundInk.slice(), pace: roundInk.filter((n) => n > 0).length
+                          ? Math.round(gameInk / roundInk.filter((n) => n > 0).length) : 0 }),
+        price: (phrase) => { const m = matchLyricLine(String(phrase || "")); return m ? { ink: m.ink, song: m.song.title, line: m.line, fuzzy: m.fuzzy } : null; },
+        set: (n) => { gameInk = Math.max(0, n | 0); renderInkBanner(); return gameInk; },
+        add: (n) => { gameInk = Math.max(0, gameInk + (n | 0)); renderInkBanner(); return gameInk; },
+        win: () => { gameInk = inkTarget(); endGame(); },
       },
       // Odd One Out / Whose Line? — the two tap grids that judge their own tile.
       oddone: {
