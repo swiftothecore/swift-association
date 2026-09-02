@@ -646,10 +646,16 @@ export function initDev(api) {
   // replays the same anniversary across five of them and counts the words each year hands
   // back from the last, which is the one thing playing today can never show you.
   const stCur = num(5), stBest = num(9);
+  const reopenDate = mk("input", { type: "date", class: "dv-text", style: "width:124px" });
   body.append(section("daily",
     row(btn("reset today (replay)", () => { api.daily.resetToday(); toast("today's daily cleared"); }),
         btn("clear in-progress", () => { api.daily.clearProgress(); toast(api.daily.hasProgress() ? "still in progress" : "in-progress cleared"); })),
     row("streak cur", stCur, "best", stBest, btn("set", () => { api.daily.setStreak(+stCur.value, +stBest.value); toast("streak set"); })),
+    // Backfills n real saved days (fakeStrand), then jumps straight to one of them —
+    // the fast path for checking the Stats calendar's archive view and its ‹ › month nav.
+    row(btn("fake 45-day strand", () => { api.daily.fakeStrand(45); toast("45 fake days saved — open Stats → All to see the calendar"); }),
+        "reopen", reopenDate,
+        btn("reopen", () => toast(api.daily.reopen(reopenDate.value)))),
     row(btn("preview album pool", () => {
           const r = api.daily.preview();
           api.daily.dump(r.date);

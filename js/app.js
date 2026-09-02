@@ -241,6 +241,12 @@ let dailyShareTime = null;      // completion time (sec) of the daily on screen 
 let dailyBraceletSnapshot = null; // versioned finished-strand state, restored when today's result is reopened
 let dailyResultRevealed = true; // false only while the optional Daily result ritual is still sealed
 let dailyPerfectCelebrated = false; // prevents a revealed perfect Daily from celebrating twice
+// Non-null only while the results screen is showing a Daily reopened from the Stats
+// calendar — the date being viewed, which drives the "back to your calendar" chrome
+// in place of the ordinary "today" framing. Cleared at the top of every real run (it
+// belongs to how we got here, not to the run), so it can never bleed into the next
+// finished game's results screen.
+let archivedDailyDate = null;
 let currentChallenge = null;    // the active CHALLENGES entry while gameType === "challenge" (dark-resolved — see resolveChallenge)
 let challengeDark = false;      // true while the active challenge is running its dark side
 let challengeRunActive = false; // true only during a live challenge run (gates the achievement sandbox)
@@ -1136,7 +1142,7 @@ function backToScreen(prev) {
 const routeOpeners = {
   records: () => openRecords("start"),
   charms: () => openAchievements("start"),
-  stats: () => { statsBackTarget = "start"; renderStats(null); flipAwayToScreen("stats"); },
+  stats: () => { statsBackTarget = "start"; statsCalendarMonth = null; renderStats(null); flipAwayToScreen("stats"); },
   mastery: () => openMastery("start"),
   challenges: () => openChallenges("start"),
   bonus: () => openBonus("start"),
@@ -1667,6 +1673,16 @@ function renderStats(lastScore, viewMode = defaultStatsView()) {
     b.addEventListener("click", () => renderStats(lastScore, b.dataset.statmode)));
   el.querySelectorAll("[data-open-songbook]").forEach((b) =>
     b.addEventListener("click", () => openSongbook(b.dataset.openSongbook)));
+  el.querySelectorAll("[data-daily-date]").forEach((b) =>
+    b.addEventListener("click", () => openArchivedDaily(b.dataset.dailyDate)));
+  el.querySelector(".cal-nav-prev")?.addEventListener("click", () => {
+    statsCalendarMonth = shiftMonthKey(statsCalendarMonth || todayKey().slice(0, 7), -1);
+    renderStats(lastScore, "all");
+  });
+  el.querySelector(".cal-nav-next")?.addEventListener("click", () => {
+    statsCalendarMonth = shiftMonthKey(statsCalendarMonth || todayKey().slice(0, 7), 1);
+    renderStats(lastScore, "all");
+  });
 }
 
 // Highest-count entry of a {key: count} map (first one wins ties), or null if empty.
@@ -1879,32 +1895,72 @@ function markerO(s) {
 const MONTH_NAMES = ["January", "February", "March", "April", "May", "June",
   "July", "August", "September", "October", "November", "December"];
 
-// The current month as a notebook calendar: today ringed in green marker, every
-// completed-daily day struck out with a unique red marker X. Month/today come from
-// todayKey() (active timezone); the crossed-off set from dailyPlayedDates().
+// Which month the Stats calendar is showing, as "YYYY-MM"; null means "the current
+// month" and tracks it live rather than freezing at whatever month Stats first opened
+// in. Set by the ‹ › nav; reset to null wherever Stats is opened fresh from the front
+// page or from a results screen, so browsing never leaves a stale month behind for the
+// next visit. Session-only — nothing here is worth persisting to storage.
+let statsCalendarMonth = null;
+function shiftMonthKey(key, delta) {
+  const [y, m] = key.split("-").map(Number);
+  const d = new Date(Date.UTC(y, m - 1 + delta, 1));
+  return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}`;
+}
+// The earliest month with a finished Daily, so ‹ has somewhere real to stop instead of
+// paging back through empty months forever.
+function earliestPlayedMonth() {
+  const dates = Object.keys(dailyPlayedDates());
+  if (!dates.length) return null;
+  return dates.sort()[0].slice(0, 7);
+}
+
+// A notebook calendar for the viewed month (current month by default): today ringed in
+// green marker, every completed-daily day struck out with a unique red marker X. A
+// struck day is a real button — tapping it reopens that day's finished bracelet, the
+// way flipping back to a written page would. ‹ › page between months; ‹ stops at the
+// earliest Daily on record, › never pages past the current month (nothing to show yet).
 function dailyCalendarHTML() {
   const today = todayKey();                       // YYYY-MM-DD in the active zone
-  const [yy, mm, dd] = today.split("-").map(Number);
+  const [ty, tm, td] = today.split("-").map(Number);
+  const currentKey = `${ty}-${String(tm).padStart(2, "0")}`;
+  const viewKey = statsCalendarMonth || currentKey;
+  const isCurrentMonth = viewKey === currentKey;
+  const [yy, mm] = viewKey.split("-").map(Number);
   const monthIdx = mm - 1;
   const daysInMonth = new Date(Date.UTC(yy, mm, 0)).getUTCDate();
   const firstDow = new Date(Date.UTC(yy, monthIdx, 1)).getUTCDay();   // 0 = Sunday
   const pad2 = (n) => String(n).padStart(2, "0");
   const monthPrefix = `${yy}-${pad2(mm)}-`;
   const played = dailyPlayedDates();
+  const earliest = earliestPlayedMonth();
 
   let cells = "";
   for (let i = 0; i < firstDow; i++) cells += `<div class="cal-cell cal-blank"></div>`;
   for (let day = 1; day <= daysInMonth; day++) {
-    const isToday = day === dd, done = played[monthPrefix + pad2(day)] != null;
+    const dateStr = monthPrefix + pad2(day);
+    const isToday = isCurrentMonth && day === td;
+    const isFuture = isCurrentMonth && day > td;
+    const score = played[dateStr];
+    const done = score != null;
     let ink = "";
     if (isToday) ink += markerO(30);
     if (done) ink += markerX(30);
-    const cls = "cal-cell" + (day > dd ? " cal-future" : "") + (isToday ? " cal-today" : "");
-    cells += `<div class="${cls}"><span class="cal-num">${day}</span><span class="cal-ink">${ink}</span></div>`;
+    const cls = "cal-cell" + (isFuture ? " cal-future" : "") + (isToday ? " cal-today" : "") + (done ? " cal-cell--done" : "");
+    const inner = `<span class="cal-num">${day}</span><span class="cal-ink">${ink}</span>`;
+    cells += done
+      ? `<button type="button" class="${cls}" data-daily-date="${dateStr}" ` +
+        `data-tip="${score}/${TOTAL_ROUNDS} · tap to reopen" data-tip-delay="200">${inner}</button>`
+      : `<div class="${cls}">${inner}</div>`;
   }
   const dows = ["S", "M", "T", "W", "T", "F", "S"].map((x) => `<div class="cal-dow">${x}</div>`).join("");
+  const prevAttrs = (earliest != null && viewKey <= earliest) ? " disabled aria-disabled=\"true\"" : "";
+  const nextAttrs = isCurrentMonth ? " disabled aria-disabled=\"true\"" : "";
   return `<div class="daily-cal">` +
-    `<div class="cal-head"><span class="cal-month">${MONTH_NAMES[monthIdx]}</span><span class="cal-year">${yy}</span></div>` +
+    `<div class="cal-head">` +
+    `<button type="button" class="cal-nav cal-nav-prev" aria-label="previous month"${prevAttrs}>&#8249;</button>` +
+    `<span class="cal-headline"><span class="cal-month">${MONTH_NAMES[monthIdx]}</span><span class="cal-year">${yy}</span></span>` +
+    `<button type="button" class="cal-nav cal-nav-next" aria-label="next month"${nextAttrs}>&#8250;</button>` +
+    `</div>` +
     `<div class="cal-grid cal-dows">${dows}</div>` +
     `<div class="cal-grid cal-days">${cells}</div>` +
     `</div>`;
@@ -6029,6 +6085,10 @@ function startBonusGame(g, lensId = null) {
      open showing the charms and the skill fold of whatever main run came before it. */
   newlyUnlocked = [];
   lastSkillFold = null;
+  // Same reason: an archived-Daily visit belongs to how the last results screen was
+  // reached, not to whatever the shelf is about to play.
+  archivedDailyDate = null;
+  applyAgainBtnLabel();
   // The longest chain belongs to the RUN, not the page, so it is reset here and nowhere else.
   chainNow = 0;
   chainRun = 0;
@@ -11115,6 +11175,11 @@ function resetRunState() {
   // re-installs its own corpus immediately AFTER calling this (see startGuestRun), so the
   // order here is load-bearing: restore first, then let the guest opt back out.
   restoreCorpus();
+  // Belongs to how the last results screen was reached, not to the run that just ended
+  // there — clear it before every new run so a fresh finish never inherits the "back to
+  // your calendar" chrome of a Daily reopened earlier in the session.
+  archivedDailyDate = null;
+  applyAgainBtnLabel();
   score = 0;
   round = 0;
   correctStreak = 0;
@@ -14327,7 +14392,8 @@ function showDailyResult(data, dateStr) {
   $("keepGoingBtn").style.display = "none";
   $("namePrompt").style.display = "none";
   hideNewBestBanner();
-  document.querySelector("#screen-results .podium-title").textContent = "Today's Result";
+  document.querySelector("#screen-results .podium-title").textContent =
+    archivedDailyDate ? shareDateLabel(dateStr) : "Today's Result";
   renderDailyResultPanel();
   renderVerseAnthology();
   renderResultRecap();
@@ -14336,17 +14402,47 @@ function showDailyResult(data, dateStr) {
 }
 
 // The daily results panel: streak summary in place of a leaderboard (daily is one
-// play per day, so there's nothing to rank — your streak is the throughline).
+// play per day, so there's nothing to rank — your streak is the throughline). Flipped
+// back to an old page from the Stats calendar, the "played today" / "come back
+// tomorrow" framing would be talking about the wrong day, so it's swapped for a note
+// naming the page actually on screen; the streak numbers themselves stay put; they're
+// always today's real numbers, and mean the same thing on any page you're viewing.
 function renderDailyResultPanel() {
   const d = effectiveDailyStreak(todayKey());
-  const note = d.playedToday
-    ? `<p class="daily-streak-note">✓ played today's challenge</p>`
-    : `<p class="daily-streak-note">come back tomorrow to keep the streak</p>`;
+  const note = archivedDailyDate
+    ? `<p class="daily-streak-note">flipped back to ${shareDateLabel(archivedDailyDate)}</p>`
+    : d.playedToday
+      ? `<p class="daily-streak-note">✓ played today's challenge</p>`
+      : `<p class="daily-streak-note">come back tomorrow to keep the streak</p>`;
   $("resultPodium").innerHTML =
     `<div class="streak-row">` +
     `<div class="streak-cell"><span class="stat-val">🔥 ${d.current}</span><span class="stat-lbl">day streak</span></div>` +
     `<div class="streak-cell"><span class="stat-val">${d.best}</span><span class="stat-lbl">best streak</span></div>` +
     `</div>` + note;
+}
+
+// Reopen a past Daily from the Stats calendar — the "look back through old bracelets"
+// entry point. showDailyResult already renders a saved Daily read-only (it's how
+// reopening *today's* finished result works too); this just also marks the visit as an
+// archive read so the results screen's chrome points back to the calendar instead of
+// the front page. Silently does nothing if the day's save has gone missing (cleared
+// storage, corrupted entry) rather than showing an empty results screen.
+function openArchivedDaily(dateStr) {
+  const data = loadDailyResult(dateStr);
+  if (!data) return;
+  showDailyResult(data, dateStr);
+  archivedDailyDate = dateStr;
+  applyAgainBtnLabel();
+  document.querySelector("#screen-results .podium-title").textContent = shareDateLabel(dateStr);
+  renderDailyResultPanel();
+}
+
+// The results screen's "leave" stamp reads differently depending on how we got here:
+// finishing a real run turns back to the front page, but flipping back to an old
+// Daily from the calendar should turn back to the calendar. One button, one label.
+function applyAgainBtnLabel() {
+  const btn = $("againBtn");
+  if (btn) btn.textContent = archivedDailyDate ? "← Back to your calendar" : "Turn back to the front page";
 }
 
 /* The three pieces of the shared summary, derived once and used twice: they are what
@@ -23447,6 +23543,17 @@ function buildDevApi() {
         }
         return `${reports.length} album(s) — see console`;
       },
+      // Jump straight to a saved day's bracelet the way clicking its calendar X does —
+      // for checking the archive view (podium title, streak note, "back to your
+      // calendar" chrome) without hand-clicking through Stats. Pairs with fakeStrand,
+      // which already backfills real saved days (including across a month boundary)
+      // for exercising the ‹ › month nav.
+      reopen: (dateKey) => {
+        const d = dateKey || window.__devDate || todayKey();
+        if (!loadDailyResult(d)) return `no saved daily for ${d}`;
+        openArchivedDaily(d);
+        return `reopened ${d}`;
+      },
     },
     // Milestones (anniversary / birthday marginalia). `preview` jumps the date to a
     // milestone and re-renders both surfaces; `dates` lists this year's milestone keys.
@@ -25543,8 +25650,8 @@ async function init() {
     else startGame();
   });
   $("dailyBtn").addEventListener("click", startDaily);
-  $("statsBtn").addEventListener("click", () => { statsBackTarget = "start"; routeTo("stats", "start"); renderStats(null); flipAwayToScreen("stats"); });
-  $("resultsStatsBtn").addEventListener("click", () => { statsBackTarget = "results"; renderStats(score); flipAwayToScreen("stats"); });
+  $("statsBtn").addEventListener("click", () => { statsBackTarget = "start"; statsCalendarMonth = null; routeTo("stats", "start"); renderStats(null); flipAwayToScreen("stats"); });
+  $("resultsStatsBtn").addEventListener("click", () => { statsBackTarget = "results"; statsCalendarMonth = null; renderStats(score); flipAwayToScreen("stats"); });
   $("statsBackBtn").addEventListener("click", () => backToScreen(statsBackTarget));
   // Empty-state "start writing →" affordance: wherever a zero-data screen renders one, send the
   // player straight to the start screen's launchpad (same page-flip as a back tap). Delegated once
@@ -25631,6 +25738,14 @@ async function init() {
     if (screens.guests.classList.contains("active")) renderGuestShelfPage();
   });
   $("againBtn").addEventListener("click", () => {
+    // A Daily reopened from the Stats calendar turns back to the calendar, not the
+    // front page — this button relabels itself for that visit (see applyAgainBtnLabel).
+    if (archivedDailyDate) {
+      archivedDailyDate = null;
+      applyAgainBtnLabel();
+      backToScreen("stats");
+      return;
+    }
     applyEra("gold");
     renderStartPickers();
     $("startContent").style.display = "";

@@ -9388,11 +9388,22 @@
      marker, completed days struck out with hand-inked red marker X's. */
   .daily-cal { margin-top: 16px; }
   .cal-head { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 8px; padding: 0 2px; }
+  .cal-headline { display: flex; align-items: baseline; gap: 6px; }
   .cal-month { font-family: var(--hand); font-size: calc(28px + var(--text-size-adjust)); font-weight: 700; color: var(--ink); line-height: 1; }
   .cal-year { font-family: var(--type); font-size: calc(12px + var(--text-size-adjust)); letter-spacing: 1px; color: var(--ink-soft); }
+  /* Month-page turners either side of the headline. Plain notebook ink, not a UI
+     chrome button — a wash on hover is the only tell that they do anything. */
+  .cal-nav { font-family: var(--type); font-size: calc(20px + var(--text-size-adjust)); line-height: 1; color: var(--ink-soft); background: none; border: none; padding: 4px 8px; margin: 0; cursor: pointer; border-radius: 6px; }
+  .cal-nav:hover:not(:disabled), .cal-nav:focus-visible:not(:disabled) { background: var(--paper-edge); color: var(--ink); }
+  .cal-nav:disabled { opacity: 0.25; cursor: default; }
   .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); }
   .cal-dow { text-align: center; font-family: var(--type); font-size: calc(10px + var(--text-size-adjust)); letter-spacing: 0.5px; color: var(--ink-soft); padding-bottom: 4px; }
   .cal-cell { position: relative; height: 40px; display: flex; align-items: center; justify-content: center; }
+  /* A struck day is a real button (reopens that page's bracelet), styled to disappear
+     until touched — the marker X already says "something happened here". */
+  button.cal-cell { font: inherit; width: 100%; background: none; border: none; margin: 0; }
+  .cal-cell--done { cursor: pointer; border-radius: 8px; }
+  .cal-cell--done:hover, .cal-cell--done:focus-visible { background: var(--paper-edge); }
   .cal-num { font-family: var(--type); font-size: calc(14px + var(--text-size-adjust)); color: var(--ink); position: relative; z-index: 1; }
   .cal-future .cal-num { color: rgba(43, 39, 34, 0.3); }
   .cal-today .cal-num { font-weight: 700; }
