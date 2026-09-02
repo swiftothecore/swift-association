@@ -4663,7 +4663,9 @@ function noteRunOutcome(type, token, won, same) {
 
 // The sticker shelf: its own lead, its own counter and its own grid, sitting BELOW the polaroid
 // wall inside the keepsakes drawer and never mixed into it. Locked cells carry no caption, on
-// purpose: the silhouette is the question, and a name under it would be the answer.
+// purpose: the silhouette is the question, and a name under it would be the answer. An EARNED
+// cell carries all three lines, `how` included, because once the answer has landed the feat
+// stops being a spoiler and starts being the thing worth remembering about the sticker.
 function stickerShelfHTML() {
   const earned = loadStickers();
   const found = stickerCount(earned);
@@ -4672,7 +4674,8 @@ function stickerShelfHTML() {
     `<p class="chall-eyebrow">Your stickers</p>` +
     `<p class="keep-lead">Die-cut vinyl, earned by noticing things rather than by scoring. ` +
     `One you have not earned shows as its shape and nothing else, which is the point: work out ` +
-    `what the picture wants and go and do it.</p>`;
+    `what the picture wants and go and do it. One you have earned says underneath it what you ` +
+    `did.</p>`;
 
   const counter =
     `<div class="keep-counter"><span class="keep-counter-n">${found}</span>` +
@@ -4681,10 +4684,11 @@ function stickerShelfHTML() {
 
   const cells = STICKERS.map((st) => {
     const locked = !earned[st.id];
-    const label = locked ? "a sticker not yet earned" : st.name + " · " + st.sub;
+    const label = locked ? "a sticker not yet earned" : st.name + " · " + st.sub + " · " + st.how;
     const cap = locked ? "" :
       `<span class="stick-cap"><span class="stick-cap-name">${escapeHtml(st.name)}</span>` +
-      `<span class="stick-cap-sub">${escapeHtml(st.sub)}</span></span>`;
+      `<span class="stick-cap-sub">${escapeHtml(st.sub)}</span>` +
+      `<span class="stick-cap-how">${escapeHtml(st.how)}</span></span>`;
     return `<div class="stick-cell" data-id="${st.id}" data-state="${locked ? "locked" : "earned"}" ` +
       `title="${escapeHtml(label)}">${stickerMarkup(st, locked)}${cap}</div>`;
   }).join("");

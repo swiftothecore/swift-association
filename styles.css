@@ -1904,6 +1904,14 @@
     font-family: var(--hand); font-weight: 500; font-size: calc(12px + var(--text-size-adjust));
     line-height: 1.1; color: var(--ink-soft);
   }
+  /* What the sticker was earned for. Functional text, so it takes the typewriter face at the
+     same size and colour as a charm's desc (.ach-dc), which is the same job on the charms
+     panel. Only an earned cell has one: a locked cell stays wordless. */
+  .stick-cap-how {
+    font-family: var(--type); font-size: calc(10px + var(--text-size-adjust));
+    line-height: 1.25; color: var(--ink-soft); margin-top: 3px; max-width: 100%;
+    overflow-wrap: break-word; text-wrap: pretty;
+  }
   /* The unlock toast borrows the charm surface, so the sticker sits where the charm bead
      would. Held at 64px: the floor, and the largest a toast can carry. */
   .toast-sticker .sticker { width: 64px; flex: 0 0 auto; }

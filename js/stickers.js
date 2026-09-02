@@ -4,8 +4,9 @@
 //   name: the object's own name, as the drawer captions it.
 //   sub:  the source line under it: the song, or where the object comes from.
 //   how:  what you did to earn it, in the achievement descs' voice. It rides on the unlock
-//         toast as a hover tip and NOWHERE ELSE: the drawer's locked cells stay wordless on
-//         purpose, so this must never be rendered into the shelf.
+//         toast as a hover tip and, once the sticker is EARNED, as the third caption line on
+//         the drawer's shelf. A LOCKED cell stays wordless on purpose, name and how alike:
+//         the silhouette is the question, so never render either into a locked cell.
 //   era:  the section it belongs to, used to group the shelf.
 //   art:  a self-contained viewBox="0 0 100 100" SVG, exactly as drawn. No die-cut border and
 //         no stroke rules live in here: the shared #diecut filter and the .ln stroke classes
