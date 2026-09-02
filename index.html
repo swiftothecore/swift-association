@@ -78,7 +78,7 @@ if (location.pathname.endsWith('/index.html')) {
 <link rel="preload" href="fonts/courierprime-700-latin.woff2" as="font" type="font/woff2" crossorigin />
 <link rel="preload" href="fonts/courierprime-italic-latin.woff2" as="font" type="font/woff2" crossorigin />
   <link rel="stylesheet" href="ink.css" />
-  <link rel="stylesheet" href="styles.css?v=74" />
+  <link rel="stylesheet" href="styles.css?v=75" />
 </head>
 <body data-era="gold">
 <!-- Hand-drawn wobble for the penned achievement charms. Referenced by .charm svg
@@ -2489,9 +2489,9 @@ if (location.pathname.endsWith('/index.html')) {
 
 <div id="songModal" class="song-modal" aria-hidden="true">
   <div class="song-scrim" id="songScrim"></div>
-  <div class="song-card card" role="dialog" aria-modal="true" aria-label="Full lyrics">
+  <div class="song-card card" role="dialog" aria-modal="true" aria-labelledby="songModalTitle">
     <div class="song-modal-nav">
-      <span class="song-modal-title" id="songModalTitle"></span>
+      <h2 class="song-modal-title" id="songModalTitle" tabindex="-1"></h2>
       <button id="songModalClose" class="btn-link" aria-label="Close lyrics">✕ close</button>
     </div>
     <div id="songModalBody" class="song-modal-body"></div>

@@ -255,17 +255,16 @@ export function initDev(api) {
     row(btn("fast ✓ underline", () => toast(api.batch1.firstThought() ? "0.5s verdict" : "start a live answerable round")))));
 
   // ---- Answer reveal ---------------------------------------------------------
-  // The verdict's cards and the expansion under them. The two things worth a control here are
-  // both hard to reach by playing: a page wide enough to hit the cap and show the searcher
-  // tail (which "widest page" deals on demand), and the reason a page offers no expansion at
-  // all, since Ultra, a tap grid, Both Of Us and the settings toggle all look identical from
-  // the outside — the readout names whichever one refused.
+  // The verdict's cards and repeatable batches under them. "Widest page" deals enough songs to
+  // exercise several presses; the readout distinguishes the pool, loaded rows and remainder.
   const revOut = mk("span", { class: "dv-note" }, "—");
   const readReveal = () => {
     const s = api.reveal.state();
     revOut.textContent = !s.word ? "no live page"
       : `"${s.word}" · ${s.valid} valid · ${s.cards} card${s.cards === 1 ? "" : "s"} · ` +
-        (s.expandable ? `expands (cap ${s.cap})` : `no expansion${s.refusedBy ? ` — ${s.refusedBy}` : ""}`);
+        (s.expandable
+          ? `${s.rendered}/${s.extra} extras loaded · batch ${s.batch} · ${s.remaining} remaining`
+          : `no expansion${s.refusedBy ? ` · ${s.refusedBy}` : ""}`);
   };
   body.append(section("answer reveal",
     row(btn("widest page", () => { api.reveal.widest(); readReveal(); }),

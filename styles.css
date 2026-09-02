@@ -6090,6 +6090,10 @@
     font-family: var(--type); font-size: calc(11px + var(--text-size-adjust)); letter-spacing: 1px;
     color: var(--ink-soft); margin-bottom: 4px;
   }
+  .lyric-card .song-title mark,
+  .ms-title mark {
+    background: var(--highlighter); color: var(--ink); padding: 0 2px; font-weight: 700;
+  }
   .lyric-card .lyric-line {
     font-family: var(--hand); font-size: calc(24px + var(--text-size-adjust)); color: var(--ink); line-height: 1.3;
   }
@@ -6109,7 +6113,9 @@
      of separate cards, and it reads as one answer instead of two. */
   .lyric-card.both-proof { margin-bottom: 12px; }
   .lyric-card.both-proof .lyric-line { font-size: calc(21px + var(--text-size-adjust)); }
-  .lyric-card.both-proof .lyric-line + .lyric-line { margin-top: 5px; }
+  .lyric-card.both-proof .lyric-reveal + .lyric-reveal {
+    margin-top: 9px; padding-top: 9px; border-top: 1px dashed rgba(43,39,34,0.14);
+  }
 
   /* Wrong cards: album border stays, lyric slightly faded, keyword blushes */
   .lyric-card.wrong-card .lyric-line { color: var(--ink-soft); }
@@ -6117,54 +6123,111 @@
     background: rgba(178,58,58,0.15); color: var(--ink);
   }
 
-  /* Lyric context: a quiet toggle that expands ±2 surrounding lines, with a nested
-     link out to the whole song. Kept low-key so the card stays uncluttered by default. */
-  .lyric-ctx-toggle {
-    margin-top: 6px; padding: 1px 0;
+  .wrong-submission {
+    margin: -8px 0 13px; color: var(--ink-soft);
+    font-family: var(--hand); font-size: calc(19px + var(--text-size-adjust));
+  }
+  .wrong-submission span {
+    margin-right: 4px; font-family: var(--type); font-size: calc(9px + var(--text-size-adjust));
+    letter-spacing: 1px; text-transform: uppercase;
+  }
+  .lyric-title-proof {
+    font-family: var(--hand); font-size: calc(18px + var(--text-size-adjust));
+    line-height: 1.3; color: var(--ink-soft);
+  }
+
+  /* Context opens around the existing lyric in DOM and reading order: earlier lines, the one
+     large anchor, then later lines. The anchor is never copied into the disclosure. */
+  .lyric-context-before { margin: 2px 0 5px; }
+  .lyric-context-after { margin: 5px 0 1px; }
+  .lyric-context-before[hidden], .lyric-context-after[hidden],
+  .lyric-full-wrap[hidden], .lyric-ctx[hidden] { display: none; }
+  .lyric-context-meta {
+    margin-bottom: 3px; font-family: var(--type); font-size: calc(9px + var(--text-size-adjust));
+    letter-spacing: 1px; text-transform: uppercase; color: var(--album-color, var(--ink-soft));
+  }
+  .lyric-reveal-actions {
+    display: flex; align-items: center; flex-wrap: wrap; gap: 2px 10px; margin-top: 2px;
+  }
+  .lyric-ctx-toggle,
+  .lyric-fullsong,
+  .more-songs-toggle,
+  .more-songs-next,
+  .more-songs-all {
+    display: inline-flex; align-items: center;
+    min-width: 44px; min-height: 44px; max-width: 100%;
+    padding: 8px 5px; line-height: 1.25; white-space: normal; text-align: left;
     font-family: var(--type); font-size: calc(10px + var(--text-size-adjust)); letter-spacing: 0.8px; text-transform: uppercase;
     color: var(--ink-soft); background: transparent;
-    border: none; border-bottom: 1px dashed var(--ink-soft);
-    cursor: pointer;
+    border: none; text-decoration: none; cursor: pointer; touch-action: manipulation;
   }
+  .lyric-ctx-toggle,
+  .more-songs-toggle,
+  .more-songs-next,
+  .more-songs-all { text-decoration-line: underline; text-decoration-style: dashed; text-underline-offset: 4px; }
   .lyric-ctx-toggle:hover { color: var(--ink); }
-  .lyric-ctx { margin-top: 8px; }
+  .lyric-ctx { margin-top: 4px; }
   .lyric-ctx-lines { margin-bottom: 6px; }
   .lc-line { font-family: var(--hand); font-size: calc(17px + var(--text-size-adjust)); line-height: 1.45; color: var(--ink-soft); }
   .lc-line.lc-match { color: var(--ink); }
   .lc-line.lc-match mark { background: var(--highlighter); color: var(--ink); padding: 0 3px; font-weight: 700; }
   .lc-gap { font-family: var(--type); font-size: calc(12px + var(--text-size-adjust)); color: var(--ink-soft); opacity: 0.6; line-height: 1; }
+  .lc-anchor-note {
+    margin: 2px 0; font-family: var(--type); font-size: calc(8px + var(--text-size-adjust));
+    letter-spacing: 0.8px; text-transform: uppercase; color: var(--ink-soft); opacity: 0.65;
+  }
   .lyric-fullsong {
-    font-family: var(--type); font-size: calc(10px + var(--text-size-adjust)); letter-spacing: 0.8px; text-transform: uppercase;
-    color: var(--album-color, var(--ink-soft)); background: transparent;
-    border: none; padding: 2px 0; cursor: pointer;
+    color: var(--album-color, var(--ink-soft));
   }
   .lyric-fullsong:hover { text-decoration: underline; }
+  .lyric-occurrence {
+    display: inline-flex; align-items: center; gap: 2px; color: var(--ink-soft);
+  }
+  .lyric-occurrence-btn {
+    display: inline-grid; place-items: center; width: 44px; height: 44px; padding: 0;
+    border: 0; background: transparent; color: var(--ink-soft); cursor: pointer;
+    font-family: var(--hand); font-size: calc(25px + var(--text-size-adjust)); line-height: 1;
+  }
+  .lyric-occurrence-btn:hover:not(:disabled) { color: var(--ink); }
+  .lyric-occurrence-btn:disabled { opacity: 0.28; cursor: default; }
+  .lyric-occurrence-count {
+    min-width: 34px; text-align: center; font-family: var(--type);
+    font-size: calc(9px + var(--text-size-adjust)); letter-spacing: 0.5px;
+  }
 
-  /* The rest of the page's field (see moreSongsBlock). The toggle borrows the context peek's
-     dashed-underline vocabulary so the verdict has one quiet-control language rather than two,
-     and the list it opens is deliberately the plainest thing on the screen: a margin-ruled
-     column of titles, no lyric, no card. Cards are the proof and they keep the weight; this is
-     an index, and an index that competed with them would defeat the point of folding it away. */
+  :is(.lyric-ctx-toggle, .lyric-fullsong, .lyric-occurrence-btn,
+      .more-songs-toggle, .more-songs-next, .more-songs-all):focus-visible {
+    outline: 2px solid var(--ink-accent); outline-offset: 2px; border-radius: 2px;
+  }
+  body[data-contrast="high"] :is(.lyric-ctx-toggle, .lyric-fullsong, .lyric-occurrence-btn,
+      .more-songs-toggle, .more-songs-next, .more-songs-all):focus-visible {
+    outline-color: var(--ink); outline-width: 3px;
+  }
+
+  /* The scoped remainder of the answer field. It opens in batches, with one compact proof line
+     per song and the same low-key context controls as the headline cards. */
   .more-songs-toggle {
-    display: inline-block; margin: 2px 0 0; padding: 1px 0;
-    font-family: var(--type); font-size: calc(10px + var(--text-size-adjust)); letter-spacing: 0.8px; text-transform: uppercase;
-    color: var(--ink-soft); background: transparent;
-    border: none; border-bottom: 1px dashed var(--ink-soft);
-    cursor: pointer;
+    margin: 2px 0 0;
   }
   .more-songs-toggle:hover { color: var(--ink); }
   .more-songs { margin-top: 10px; text-align: left; }
-  .more-songs-list { list-style: none; margin: 0 0 8px; padding: 0; }
+  .more-songs[hidden], .ms-row[hidden] { display: none; }
+  .more-songs-list { list-style: none; margin: 0 0 5px; padding: 0; }
   /* One rule down the left, the album colour carried by a bead of a dot per row — the same
      colour-only era language the cards use, at index scale. */
   .ms-row {
-    display: flex; align-items: baseline; gap: 7px;
-    padding: 3px 0 3px 12px; border-left: 1px solid rgba(43,39,34,0.12);
+    display: flex; align-items: flex-start; gap: 8px;
+    padding: 9px 0 10px 12px; border-left: 1px solid rgba(43,39,34,0.12);
+  }
+  .ms-row + .ms-row { border-top: 1px dashed rgba(43,39,34,0.1); }
+  .ms-copy { min-width: 0; flex: 1; }
+  .ms-heading {
+    display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 7px; margin-bottom: 2px;
   }
   .ms-dot {
     flex: none; width: 6px; height: 6px; border-radius: 50%;
     background: var(--album-color, var(--ink-soft)); opacity: 0.85;
-    transform: translateY(-1px);
+    margin-top: 8px;
   }
   .ms-title { font-family: var(--hand); font-size: calc(18px + var(--text-size-adjust)); color: var(--ink); line-height: 1.3; }
   /* Sits straight after the title, exactly as the cards' .album-tag does. Right-aligning it to
@@ -6174,10 +6237,19 @@
     font-family: var(--type); font-size: calc(9px + var(--text-size-adjust)); letter-spacing: 0.8px; text-transform: uppercase;
     color: var(--album-color, var(--ink-soft)); opacity: 0.8;
   }
+  .lyric-reveal--compact .lyric-line {
+    font-family: var(--hand); font-size: calc(18px + var(--text-size-adjust));
+    color: var(--ink-soft); line-height: 1.35;
+  }
+  .lyric-reveal--compact .lyric-line mark {
+    background: var(--highlighter); color: var(--ink); padding: 0 2px; font-weight: 700;
+  }
+  .lyric-reveal--compact .lc-line { font-size: calc(16px + var(--text-size-adjust)); }
+  .more-songs-next { margin: 2px 0; }
+  .more-songs-next:hover:not(:disabled) { color: var(--ink); }
+  .more-songs-next:disabled { opacity: 0.58; cursor: default; text-decoration: none; }
   .more-songs-all {
-    display: inline-block;
-    font-family: var(--type); font-size: calc(10px + var(--text-size-adjust)); letter-spacing: 0.8px; text-transform: uppercase;
-    color: var(--ink-soft); text-decoration: none; border-bottom: 1px dashed var(--ink-soft);
+    margin-top: 1px;
   }
   .more-songs-all:hover { color: var(--ink); }
 
@@ -9737,7 +9809,7 @@
     display: flex; align-items: baseline; justify-content: space-between; gap: 12px;
     margin-bottom: 14px; padding-bottom: 8px; border-bottom: 1px dashed rgba(43, 39, 34, 0.2);
   }
-  .song-modal-title { font-family: var(--hand); font-weight: 700; font-size: calc(24px + var(--text-size-adjust)); color: var(--ink); line-height: 1.1; }
+  .song-modal-title { margin: 0; font-family: var(--hand); font-weight: 700; font-size: calc(24px + var(--text-size-adjust)); color: var(--ink); line-height: 1.1; }
   .song-modal-body { font-family: var(--hand); }
   .fs-section { margin: 0 0 16px; }
   .fs-section:last-child { margin-bottom: 0; }

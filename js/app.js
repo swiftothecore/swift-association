@@ -25,7 +25,7 @@ import {
   SEA_GRID_SIZE, SEA_MIN_VALID, SEA_MAX_VALID,
   COMMON_LINES, COMMON_MIN_SONGS, COMMON_MAX_SONGS, COMMON_GEN_ATTEMPTS, COMMON_MAX_ACCEPT,
   ODD_TILES, WHOSE_TILES, WHOSE_MIN_WORDS, WHOSE_GEN_ATTEMPTS, WHOSE_HARD_POOL,
-  BOTH_WORDS, BOTH_MIN_SONGS, BOTH_PARTNER_TRIES, BOTH_REVEAL_SONGS, MORE_EXAMPLES_MAX,
+  BOTH_WORDS, BOTH_MIN_SONGS, BOTH_PARTNER_TRIES, BOTH_REVEAL_SONGS, MORE_EXAMPLES_BATCH,
   PRESS_RIDE_STEP, PRESS_TRINKET_RIDE, PRESS_FLOURISH_RIDE, RISK_MAX_STAKE, RISK_TOKENS,
   INK_FLOURISH_PAGES,
   ALBUM_FOCUS_DIFFS, ALBUM_FOCUS_TARGET,
@@ -65,6 +65,7 @@ import { exportBraceletCard, copyBraceletCard, buildCardSVG, fontFaceCss } from 
 import { exportSleeveCard, copySleeveCard, buildSleeveSVG } from "./sleevecard.js";
 import { sfx } from "./sound.js";
 import { wordRegex as wordRegexCore, extractLineWithWord as extractLineWithWordCore, highlightWord as highlightWordCore, variantBody, falseFriendRegex } from "./match.js";
+import { buildLyricReveal } from "./lyric-reveal.mjs";
 import { buildLineIndex, buildSlipContext, buildSlipPuzzle, buildNamePuzzle,
          buildBlankPuzzle, buildRedactedPuzzle,
          buildWordIndex, buildOnlyHerePuzzle, onlyHerePoints, ONLY_HAND,
@@ -7236,6 +7237,7 @@ function settleBonusRound(correct, detail, isTimeout = false) {
         `<b id="bonusCd">${settings.countdownSecs}</b></div>` +
       `<button type="button" id="bonusSkipBtn" class="countdown-skip">skip →</button>`
     : `<button type="button" id="bonusNextBtn" class="btn-ghost">${last ? "the sleeve" : "next page"} →</button>`;
+  resetLyricReveals();
   const fb = $("bonusFeedback");
   fb.className = "bg-feedback show " + (correct ? "ok" : "no");
   fb.innerHTML =
@@ -18417,16 +18419,13 @@ function buildTitleUnderline(bw, bh, rows, double = false) {
 
 // The lyric a card will display for a song. A lyric-answer override is the span the player
 // actually recalled, which need NOT contain the prompt word (matching only requires a real
-// line of a valid song — see matchLyricLine). When it doesn't, fall back to the song's
-// word-bearing line so the card always shows — and highlights — the lyric holding the word.
+// line of a valid song, see matchLyricLine). When it doesn't, fall back to a word-bearing line.
+// Never fall back to an unrelated first lyric: Title...? has a separate title proof below.
 function lyricCardLine(song, word, lineOverride) {
-  // No prompt word at all — a bonus game's reveal, where the answer is the song rather than a
-  // word in it. There's nothing to search the lyrics for, so the card shows the line it was
-  // handed and nothing else.
   if (!word) return lineOverride == null ? "" : lineOverride;
-  if (lineOverride == null) return extractLineWithWord(song.lyrics, word);
-  if (wordRegex(word).test(lineOverride)) return lineOverride;
-  return extractLineWithWord(song.lyrics, word);
+  if (lineOverride != null && wordRegex(word).test(lineOverride)) return lineOverride;
+  const line = extractLineWithWord(song.lyrics || "", word);
+  return line && wordRegex(word).test(line) ? line : "";
 }
 
 // A recovered lyric span keeps the newlines it was sung across (see recoverLyricLine), so a
@@ -18434,115 +18433,240 @@ function lyricCardLine(song, word, lineOverride) {
 // escaped/highlighted HTML, after the escaping, because escapeHtml leaves newlines alone.
 function lyricBreaks(html) { return html.replace(/\n/g, "<br>"); }
 
-function lyricCard(song, word, isWrong, lineOverride, context) {
-  const line = lyricCardLine(song, word, lineOverride);
-  const color = albumColor(song.album) || "var(--ink-soft)";
-  const albumLabel = song.album ? `<span class="album-tag" style="--album-color:${color}">${escapeHtml(song.album)}</span>` : "";
-  const cls = isWrong ? " wrong-card" : "";
-  const ctx = context ? lyricCardContext(song, word, line) : "";
-  return `<div class="lyric-card${cls}" style="--album-color:${color}">
-    <div class="song-title">${escapeHtml(censor(song.title))}${albumLabel}</div>
-    <div class="lyric-line">"${lyricBreaks(word ? highlightWord(line, word) : escapeHtml(censor(line)))}"</div>
-    ${ctx}
-  </div>`;
+let lyricRevealSeq = 0;
+const lyricRevealRegistry = new Map();
+
+function resetLyricReveals() {
+  lyricRevealRegistry.clear();
 }
 
-// Both Of Us proof: ONE card for one song, carrying the line it sings each of the page's
-// words on. A stack of separate lyricCards repeats the title and the album tag per word, so
-// a single song reads as two or three different ones — which is the opposite of the point.
-// The context toggle is anchored on the first word, so the card still opens out.
-function bothProofCard(song, isWrong) {
-  const color = albumColor(song.album) || "var(--ink-soft)";
-  const albumLabel = song.album ? `<span class="album-tag" style="--album-color:${color}">${escapeHtml(song.album)}</span>` : "";
-  const lines = bothWords.map((w) =>
-    `<div class="lyric-line">"${highlightWord(lyricCardLine(song, w, null), w)}"</div>`).join("");
-  return `<div class="lyric-card both-proof${isWrong ? " wrong-card" : ""}" style="--album-color:${color}">
-    <div class="song-title">${escapeHtml(censor(song.title))}${albumLabel}</div>
-    ${lines}
-    ${lyricCardContext(song, bothWords[0])}
-  </div>`;
+function nextLyricRevealId(part) {
+  lyricRevealSeq++;
+  return `lyric-${part}-${lyricRevealSeq}`;
 }
 
-// The ±2 surrounding lines around the prompt word's line, for the in-card "in context"
-// peek. Anchored on the word (not the displayed line, which may be a multi-line lyric
-// answer) so it always lands where the word actually sits. With no word — a bonus reveal,
-// where the answer is the song — it anchors on `anchorLine` instead, matched normalized so
-// punctuation and casing can't lose the line.
-function lyricContextRows(song, word, anchorLine) {
-  const all = (song.lyrics || "").split("\n").map((l) => l.trim()).filter(Boolean);
-  const idx = word
-    ? all.findIndex((l) => wordRegex(word).test(l))
-    : anchorLine ? all.findIndex((l) => normalizeLyric(l) === normalizeLyric(anchorLine)) : -1;
-  if (idx < 0) return "";
-  const start = Math.max(0, idx - 2), end = Math.min(all.length, idx + 3);
+function titleProofActive() {
+  // The shelf keeps the last main run's gameType/currentChallenge in memory. Require the main
+  // game screen as well so a bonus answer card opened after Title...? still shows its lyric.
+  return screens.game.classList.contains("active") && gameType === "challenge" &&
+    currentChallenge && currentChallenge.rule === "titleHas";
+}
+
+function albumTag(song, color) {
+  if (!song.album) return "";
+  return `<span class="album-tag" style="--album-color:${color}">` +
+    `<span class="sr-only">, album ${escapeHtml(song.album)}</span>` +
+    `<span aria-hidden="true">${escapeHtml(song.album)}</span></span>`;
+}
+
+function lyricRevealMeta(model, word) {
+  const parts = [];
+  if (model.sectionLabel) parts.push(model.sectionLabel);
+  if (word && model.totalMatches > 1 && model.occurrence)
+    parts.push(`${model.occurrence} of ${model.totalMatches} matching lines`);
+  else if (!word && model.totalMatches > 1 && model.occurrence)
+    parts.push(`${model.occurrence} of ${model.totalMatches} occurrences`);
+  return parts.length ? `<div class="lyric-context-meta">${parts.map(escapeHtml).join(" · ")}</div>` : "";
+}
+
+function lyricContextLine(line, entry) {
+  const matches = entry.word && entry.matchesLine && entry.matchesLine(line.text);
+  return `<div class="lc-line${matches ? " lc-match" : ""}">` +
+    (matches ? highlightWord(line.text, entry.word, entry.strict) : escapeHtml(censor(line.text))) + `</div>`;
+}
+
+function lyricContextPart(lines, truncated, atStart, entry) {
   let html = "";
-  if (start > 0) html += `<div class="lc-gap" aria-hidden="true">⋯</div>`;
-  for (let i = start; i < end; i++) {
-    html += i === idx
-      ? `<div class="lc-line lc-match">${word ? highlightWord(all[i], word) : escapeHtml(censor(all[i]))}</div>`
-      : `<div class="lc-line">${escapeHtml(censor(all[i]))}</div>`;
-  }
-  if (end < all.length) html += `<div class="lc-gap" aria-hidden="true">⋯</div>`;
+  if (truncated && atStart) html += `<div class="lc-gap" aria-hidden="true">⋯</div>`;
+  html += lines.map((line) => lyricContextLine(line, entry)).join("");
+  if (truncated && !atStart) html += `<div class="lc-gap" aria-hidden="true">⋯</div>`;
   return html;
 }
 
-// Progressive disclosure for a lyric card: a quiet "in context" toggle that expands the
-// surrounding lines inline, with a "full lyrics" link nested inside that opens the whole
-// song in a modal. One control keeps the default card uncluttered (CLAUDE: gameplay stays
-// dominant). Returns "" when there's nothing to expand.
-function lyricCardContext(song, word, anchorLine) {
-  const rows = lyricContextRows(song, word, anchorLine);
-  if (!rows) return "";
-  return `<button type="button" class="lyric-ctx-toggle" aria-expanded="false">in context</button>` +
-    `<div class="lyric-ctx" hidden>` +
-      `<div class="lyric-ctx-lines">${rows}</div>` +
-      `<button type="button" class="lyric-fullsong" data-song="${escapeHtml(song.title)}" data-word="${escapeHtml(word || "")}">full lyrics →</button>` +
-    `</div>`;
+function fullLyricsButton(entry, extra = false) {
+  if (!entry.model) return "";
+  const attrs = extra ? ` data-lyric-context-extra${entry.expanded ? "" : " hidden"}` : "";
+  return `<span class="lyric-full-wrap" id="${entry.fullId}"${attrs}>` +
+    `<button type="button" class="lyric-fullsong" data-song="${escapeHtml(entry.song.title)}"` +
+      ` data-reveal-id="${entry.id}" data-word="${escapeHtml(entry.word || "")}" data-section="${entry.model.sectionIndex}"` +
+      ` data-line="${entry.model.anchorSourceLineIndex}" aria-label="Open full lyrics for ${escapeHtml(censor(entry.song.title))} at this line">` +
+      `full lyrics →</button></span>`;
 }
 
-/* The rest of the page's field, folded away under the example cards. "What else held that
-   word?" is a question the verdict couldn't answer before: the cards stop at three (one on
-   Ultra) because each one carries a lyric line, and a fourth and fifth card push the advance
-   button off the screen. So the expansion answers it in the other currency — titles only, no
-   lyric — which is cheap enough to list a dozen of. Cards are the proof; this is the field.
-   `shown` is the songs already on cards, excluded so the list is strictly what the player
-   hasn't seen. Returns "" whenever there's nothing to add or the mode/settings refuse it:
-     - examples switched off: the player asked for no reveal, so don't offer a bigger one. Two
-       separate ways to say that — the notebook-wide setting, and a Custom preset that turned
-       its own `examples` lever down to 0 (CUSTOM_EXAMPLES_MAX allows it). A run that shows no
-       cards must not offer to list the field instead; that's the lever being ignored.
-     - Ultra: `moreExamples: false`, see MODES.
-     - the tap grids: their answers light up on the grid itself, and the grid IS the reveal.
-     - Both Of Us: its cards are per-word proof that the page was findable, and a bare title
-       list can't carry that — it would read as a fourth answer to a different question.
-   Draws from the pool the CALLER narrowed, never a fresh word lookup: on Deep Cut, Album
-   Focus, the alphabet chain and the rest, `currentSongs` is already the subset the rule would
-   have accepted, and listing songs the page would have rejected teaches the wrong rule. */
-function moreSongsBlock(pool, shown, word) {
-  if (!settings.showExamples || !(currentMode.examples > 0)) return "";
-  if (currentMode.moreExamples === false) return "";
-  if (tapGridActive()) return "";
-  if (bothRuleActive() && bothWords.length > 1) return "";
-  const seen = new Set((shown || []).map((s) => s.title));
-  const rest = (pool || []).filter((s) => !seen.has(s.title));
-  if (!rest.length) return "";
-  const picks = rest.slice(0, MORE_EXAMPLES_MAX);
-  const rows = picks.map((s) => {
-    const color = albumColor(s.album) || "var(--ink-soft)";
-    const album = s.album ? `<span class="ms-album">${escapeHtml(s.album)}</span>` : "";
-    return `<li class="ms-row" style="--album-color:${color}">` +
-      `<span class="ms-dot" aria-hidden="true"></span>` +
-      `<span class="ms-title">${escapeHtml(censor(s.title))}</span>${album}</li>`;
-  }).join("");
-  // Over the cap, the tail goes where an exhaustive answer belongs. Opened in a new tab so a
-  // run in progress survives the curiosity.
-  const tail = rest.length > picks.length && word
-    ? `<a class="more-songs-all" href="search/#q=${encodeURIComponent(word)}" target="_blank" rel="noopener"` +
-      ` title="See every song with “${escapeHtml(word)}” in the lyric searcher">all ${rest.length} in the searcher →</a>`
+function occurrenceControls(entry) {
+  const model = entry.model;
+  // A recovered multi-line answer is one displayed span, not one numbered line. Keep it whole.
+  if (!model || entry.line.includes("\n") || model.lineStart !== model.lineEnd || model.totalMatches < 2 || !model.occurrence) return "";
+  const title = escapeHtml(censor(entry.song.title));
+  return `<span class="lyric-occurrence" role="group" aria-label="Matching lyrics in ${title}">` +
+    `<button type="button" class="lyric-occurrence-btn" data-occurrence-step="-1" aria-label="Previous matching lyric in ${title}">‹</button>` +
+    `<span class="lyric-occurrence-count" aria-live="polite">${model.occurrence} / ${model.totalMatches}</span>` +
+    `<button type="button" class="lyric-occurrence-btn" data-occurrence-step="1" aria-label="Next matching lyric in ${title}">›</button>` +
+  `</span>`;
+}
+
+function lyricRevealInner(entry) {
+  const model = entry.model;
+  const hasContext = !!(entry.allowContext && model && (model.before.length || model.after.length));
+  const hidden = entry.expanded ? "" : " hidden";
+  const before = hasContext
+    ? `<div class="lyric-context-before" id="${entry.beforeId}" data-lyric-context-extra${hidden}>` +
+        lyricRevealMeta(model, entry.word) +
+        lyricContextPart(model.before, model.truncatedBefore, true, entry) + `</div>`
     : "";
-  const label = rest.length === 1 ? "1 more song" : `${rest.length} more songs`;
-  return `<button type="button" class="more-songs-toggle" aria-expanded="false" aria-controls="moreSongs">${label}</button>` +
-    `<div class="more-songs" id="moreSongs" hidden><ul class="more-songs-list">${rows}</ul>${tail}</div>`;
+  const after = hasContext
+    ? `<div class="lyric-context-after" id="${entry.afterId}" data-lyric-context-extra${hidden}>` +
+        lyricContextPart(model.after, model.truncatedAfter, false, entry) + `</div>`
+    : "";
+  const line = entry.word
+    ? highlightWord(entry.line, entry.word, entry.strict)
+    : escapeHtml(censor(entry.line));
+  const contextButton = hasContext
+    ? `<button type="button" class="lyric-ctx-toggle" aria-expanded="${entry.expanded ? "true" : "false"}"` +
+      ` aria-controls="${entry.beforeId} ${entry.afterId} ${entry.fullId}"` +
+      ` aria-label="${entry.expanded ? "Hide" : "Show"} lyric context for ${escapeHtml(censor(entry.song.title))}">` +
+      `${entry.expanded ? "hide context" : "in context"}</button>`
+    : "";
+  return `${before}<div class="lyric-line">"${lyricBreaks(line)}"</div>${after}` +
+    `<div class="lyric-reveal-actions">${contextButton}${occurrenceControls(entry)}` +
+      (entry.allowContext ? fullLyricsButton(entry, hasContext) : "") + `</div>`;
+}
+
+function registerLyricReveal(song, word, line, options = {}) {
+  if (!line) return "";
+  const id = nextLyricRevealId("reveal");
+  const strict = effectiveStrict();
+  const matchesLine = word ? (candidate) => wordRegex(word, strict).test(candidate) : null;
+  const model = buildLyricReveal(song, line, { normalize: normalizeLyric, matchesLine });
+  const entry = {
+    id, song, word, line, strict, matchesLine, model,
+    allowContext: options.context !== false,
+    expanded: false,
+    beforeId: `${id}-before`, afterId: `${id}-after`, fullId: `${id}-full`,
+  };
+  lyricRevealRegistry.set(id, entry);
+  return `<div class="lyric-reveal${options.compact ? " lyric-reveal--compact" : ""}"` +
+    ` data-lyric-reveal="${id}">${lyricRevealInner(entry)}</div>`;
+}
+
+function standaloneLyricContext(song, word, anchorLine) {
+  const line = anchorLine || lyricCardLine(song, word, null);
+  if (!line) return "";
+  const id = nextLyricRevealId("context");
+  const strict = effectiveStrict();
+  const matchesLine = word ? (candidate) => wordRegex(word, strict).test(candidate) : null;
+  const model = buildLyricReveal(song, line, { normalize: normalizeLyric, matchesLine });
+  if (!model) return "";
+  const hasContext = !!(model.before.length || model.after.length);
+  const entry = {
+    id, song, word, line, strict, matchesLine, model, allowContext: true, expanded: false,
+    beforeId: `${id}-before`, afterId: `${id}-after`, fullId: `${id}-full`,
+  };
+  lyricRevealRegistry.set(id, entry);
+  if (!hasContext) {
+    return `<div class="lyric-reveal lyric-reveal--standalone" data-lyric-reveal="${id}">` +
+      `<div class="lyric-reveal-actions">${fullLyricsButton(entry)}</div></div>`;
+  }
+  const rows = lyricRevealMeta(model, word) +
+    lyricContextPart(model.before, model.truncatedBefore, true, entry) +
+    `<div class="lc-anchor-note">the line shown above</div>` +
+    lyricContextPart(model.after, model.truncatedAfter, false, entry);
+  return `<div class="lyric-reveal lyric-reveal--standalone" data-lyric-reveal="${id}">` +
+    `<button type="button" class="lyric-ctx-toggle" aria-expanded="false" aria-controls="${entry.beforeId}"` +
+      ` aria-label="Show lyric context for ${escapeHtml(censor(song.title))}">in context</button>` +
+    `<div class="lyric-ctx" id="${entry.beforeId}" data-lyric-context-extra hidden>` +
+      `<div class="lyric-ctx-lines">${rows}</div>${fullLyricsButton(entry)}</div></div>`;
+}
+
+function lyricCard(song, word, isWrong, lineOverride, context) {
+  const color = albumColor(song.album) || "var(--ink-soft)";
+  const proofTitle = titleProofActive();
+  const title = proofTitle
+    ? highlightWordCore(censor(song.title), word, true)
+    : escapeHtml(censor(song.title));
+  const proof = proofTitle
+    ? `<div class="lyric-title-proof"><span aria-hidden="true">↳</span> the word is in the title</div>`
+    : registerLyricReveal(song, word, lyricCardLine(song, word, lineOverride), { context });
+  const cls = isWrong ? " wrong-card" : "";
+  const headingId = nextLyricRevealId("title");
+  return `<article class="lyric-card${cls}${proofTitle ? " title-proof" : ""}" style="--album-color:${color}" aria-labelledby="${headingId}">` +
+    `<div class="song-title" id="${headingId}">${title}${albumTag(song, color)}</div>${proof}</article>`;
+}
+
+// Both Of Us remains ONE card per song, but each required word now has its own anchored proof
+// and context controls. The valid-song intersection and scoring are untouched.
+function bothProofCard(song, isWrong) {
+  const color = albumColor(song.album) || "var(--ink-soft)";
+  const headingId = nextLyricRevealId("title");
+  const lines = bothWords.map((word) =>
+    registerLyricReveal(song, word, lyricCardLine(song, word, null), { context: true })).join("");
+  return `<article class="lyric-card both-proof${isWrong ? " wrong-card" : ""}" style="--album-color:${color}" aria-labelledby="${headingId}">` +
+    `<div class="song-title" id="${headingId}">${escapeHtml(censor(song.title))}${albumTag(song, color)}</div>` +
+    `${lines}</article>`;
+}
+
+// Standalone form used where the anchor line is already written on the bonus page.
+function lyricCardContext(song, word, anchorLine) {
+  return standaloneLyricContext(song, word, anchorLine);
+}
+
+function moreSongsAllowed() {
+  if (!settings.showExamples || !(currentMode.examples > 0)) return false;
+  if (currentMode.moreExamples === false || tapGridActive()) return false;
+  return !(bothRuleActive() && bothWords.length > 1);
+}
+
+function moreSongRow(song, word, index, initial) {
+  const color = albumColor(song.album) || "var(--ink-soft)";
+  const headingId = nextLyricRevealId("more-title");
+  const proofTitle = titleProofActive();
+  const title = proofTitle
+    ? highlightWordCore(censor(song.title), word, true)
+    : escapeHtml(censor(song.title));
+  const proof = proofTitle
+    ? `<div class="lyric-title-proof"><span aria-hidden="true">↳</span> the word is in the title</div>`
+    : registerLyricReveal(song, word, lyricCardLine(song, word, null), { context: true, compact: true });
+  return `<li class="ms-row" style="--album-color:${color}" data-more-song${index < initial ? "" : " hidden"}>` +
+    `<span class="ms-dot" aria-hidden="true"></span><div class="ms-copy">` +
+      `<div class="ms-heading" id="${headingId}"><span class="ms-title">${title}</span>` +
+        (song.album ? `<span class="ms-album"><span class="sr-only">, album ${escapeHtml(song.album)}</span>` +
+          `<span aria-hidden="true">${escapeHtml(song.album)}</span></span>` : "") +
+      `</div>${proof}</div></li>`;
+}
+
+/* The rest of the already-narrowed answer pool. The first batch opens with the fold; every
+   further press reveals another batch until the exact pool is exhausted. Each row carries its
+   own lyric proof, so the list teaches where the word lives rather than becoming a title index. */
+function moreSongsBlock(pool, shown, word) {
+  if (!moreSongsAllowed()) return "";
+  const seen = new Set((shown || []).map((song) => song.title));
+  const rest = (pool || []).filter((song) => !seen.has(song.title));
+  if (!rest.length) return "";
+  const id = nextLyricRevealId("more");
+  const initial = Math.min(MORE_EXAMPLES_BATCH, rest.length);
+  const rows = rest.map((song, index) => moreSongRow(song, word, index, initial)).join("");
+  const openingLabel = rest.length > initial
+    ? `show ${initial} more · ${rest.length} available`
+    : `show ${rest.length} more song${rest.length === 1 ? "" : "s"}`;
+  const remaining = rest.length - initial;
+  const next = remaining
+    ? `<button type="button" class="more-songs-next" data-batch="${MORE_EXAMPLES_BATCH}">` +
+      `show ${Math.min(MORE_EXAMPLES_BATCH, remaining)} more · ${remaining} remaining</button>`
+    : "";
+  // Swift To The Lyric is Taylor-only. It is a secondary whole-catalogue exploration, never a
+  // substitute for completing this scoped list, and therefore stays out of guest/title pages.
+  let searcher = "";
+  if (activeCorpus === "taylor" && word && !titleProofActive()) {
+    const hash = new URLSearchParams({ q: word, mode: effectiveStrict() ? "exact" : "stem", view: "grouped" });
+    searcher = `<a class="more-songs-all" href="search/#${hash.toString()}" target="_blank" rel="noopener"` +
+      ` aria-label="Explore ${escapeHtml(word)} across Taylor Swift's full catalogue in Swift To The Lyric">` +
+      `explore “${escapeHtml(word)}” across Taylor's full catalogue →</a>`;
+  }
+  return `<button type="button" class="more-songs-toggle" aria-expanded="false" aria-controls="${id}"` +
+      ` data-label="${escapeHtml(openingLabel)}">${openingLabel}</button>` +
+    `<div class="more-songs" id="${id}" data-more-total="${rest.length}" data-more-shown="${initial}" aria-live="off" hidden>` +
+      `<p class="sr-only" data-more-status aria-live="polite">${initial} of ${rest.length} extra songs ready to read</p>` +
+      `<ul class="more-songs-list">${rows}</ul>${next}${searcher}</div>`;
 }
 
 const LYRIC_BANNERS = { base: "✓ you knew the line", good: "✓ nicely recalled", perfect: "✓ word-perfect", verse: "✓ the whole verse" };
@@ -18597,6 +18721,7 @@ function wordFormsNote(song, lineOverride) {
 }
 
 function showCorrectFeedback(song, lyricMatch) {
+  resetLyricReveals();
   const fb = $("feedback");
   // On a lyric answer, celebrate the recall and show the exact line they typed.
   // The banner escalates with how much of the line they recalled, and a gold sticker
@@ -18673,8 +18798,12 @@ function showCorrectFeedback(song, lyricMatch) {
 }
 
 function showWrongFeedback(song, isTimeout) {
+  resetLyricReveals();
   const fb = $("feedback");
   const reason = isTimeout ? "the page ran out" : "not this verse";
+  const submitted = song && !isTimeout
+    ? `<p class="wrong-submission"><span>your answer</span> ${escapeHtml(censor(song.title))}</p>`
+    : "";
   // Ultra reveals one song rather than three — every lever that makes it hard bites during
   // the page, and the reveal is post-mortem, so it teaches without softening the round. The
   // "show examples" setting can force 0 in any mode.
@@ -18723,6 +18852,7 @@ function showWrongFeedback(song, isTimeout) {
   }
   fb.innerHTML = `
     <div class="banner bad">✗ ${reason}</div>
+    ${submitted}
     ${help}
     <button id="continueBtn" class="btn-ghost">next page →</button>`;
   feedbackShownAt = Date.now();
@@ -18754,6 +18884,18 @@ function runCountdown() {
       el.textContent = n;
     }
   }, 1000);
+}
+
+// A verdict's plain Enter shortcut must never steal Enter from a focused disclosure, link or
+// form control. Native activation then reaches the delegated click handler exactly once.
+function feedbackEnterBelongsToControl(e) {
+  if (e.defaultPrevented || e.isComposing || e.repeat || e.altKey || e.ctrlKey || e.metaKey || e.shiftKey)
+    return true;
+  const origin = e.target instanceof Element ? e.target : document.activeElement;
+  return !!(origin && origin.closest(
+    'button, a[href], input, select, textarea, summary, ' +
+    '[contenteditable]:not([contenteditable="false"]), [role="button"], [role="link"]'
+  ));
 }
 
 
@@ -20298,6 +20440,7 @@ function wireInput() {
   // the page: skips the correct-answer countdown, or fires "next page" on a miss.
   document.addEventListener("keydown", (e) => {
     if (e.key !== "Enter") return;
+    if (feedbackEnterBelongsToControl(e)) return;
     if (!screens.game.classList.contains("active") || !roundLocked) return;
     // Modals and curtains are captive — don't let Enter advance the page behind them.
     if ($("settingsModal").classList.contains("open")) return;
@@ -20319,6 +20462,7 @@ function wireInput() {
   // "Enter advances on a miss" setting as the round screen above.
   document.addEventListener("keydown", (e) => {
     if (e.key !== "Enter") return;
+    if (feedbackEnterBelongsToControl(e)) return;
     if (!screens.bonusplay.classList.contains("active") || !bonusLocked || bonusEnded) return;
     if ($("settingsModal").classList.contains("open")) return;
     if ($("songModal").classList.contains("open")) return;
@@ -20331,46 +20475,100 @@ function wireInput() {
     advanceFromBonusFeedback();
   });
 
-  // Lyric-context controls live inside the feedback blocks, whose innerHTML is rebuilt each
-  // round, so delegate from the stable containers — the round screen's and the bonus shelf's,
-  // which reveal an answer on the same lyric card. The toggle expands the inline ±context peek;
-  // the nested link opens the full song. Either interaction pauses any auto-advance.
+  // Result controls live inside rebuilt feedback blocks, so delegate from the two stable hosts.
+  // Every reading action pauses auto-advance; disclosure state stays local to its unique reveal.
   [$("feedback"), $("bonusFeedback")].forEach((host) => host.addEventListener("click", (e) => {
     const toggle = e.target.closest(".lyric-ctx-toggle");
     if (toggle) {
-      // The box is always the toggle's next sibling (lyricCardContext emits them as a pair), so
-      // this works whether or not there's a lyric card around them — Sing It Back's reveal is
-      // the peek on its own, with no card to reach up to.
-      const box = toggle.nextElementSibling;
-      if (box && box.classList.contains("lyric-ctx")) {
-        const showing = box.hidden;   // currently hidden → we're about to show it
-        box.hidden = !showing;
-        toggle.setAttribute("aria-expanded", String(showing));
-        toggle.textContent = showing ? "hide context" : "in context";
-        if (showing) pauseAutoAdvanceForReading();
+      const reveal = toggle.closest("[data-lyric-reveal]");
+      const extras = reveal ? Array.from(reveal.querySelectorAll("[data-lyric-context-extra]")) : [];
+      const showing = extras.some((part) => part.hidden);
+      extras.forEach((part) => { part.hidden = !showing; });
+      toggle.setAttribute("aria-expanded", String(showing));
+      toggle.textContent = showing ? "hide context" : "in context";
+      toggle.setAttribute("aria-label", `${showing ? "Hide" : "Show"} lyric context for ${
+        reveal && lyricRevealRegistry.get(reveal.dataset.lyricReveal)
+          ? censor(lyricRevealRegistry.get(reveal.dataset.lyricReveal).song.title)
+          : "this song"}`);
+      const entry = reveal && lyricRevealRegistry.get(reveal.dataset.lyricReveal);
+      if (entry) entry.expanded = showing;
+      if (showing) pauseAutoAdvanceForReading();
+      return;
+    }
+
+    const occurrence = e.target.closest(".lyric-occurrence-btn");
+    if (occurrence) {
+      const reveal = occurrence.closest("[data-lyric-reveal]");
+      const entry = reveal && lyricRevealRegistry.get(reveal.dataset.lyricReveal);
+      if (entry && entry.model && entry.model.matches.length > 1) {
+        const step = Number(occurrence.dataset.occurrenceStep || 0);
+        const targetIndex = (entry.model.occurrence - 1 + step + entry.model.matches.length) % entry.model.matches.length;
+        const target = entry.model.matches[targetIndex];
+        if (target) {
+          entry.line = target.text;
+          entry.model = buildLyricReveal(entry.song, target.text, {
+            normalize: normalizeLyric,
+            matchesLine: entry.matchesLine,
+            anchor: target,
+          });
+          reveal.innerHTML = lyricRevealInner(entry);
+          const replacement = reveal.querySelector(`[data-occurrence-step="${occurrence.dataset.occurrenceStep}"]`);
+          if (replacement) requestAnimationFrame(() => replacement.focus({ preventScroll: true }));
+          pauseAutoAdvanceForReading();
+        }
       }
       return;
     }
-    // The rest of the page's field. Same pairing as the context peek — the list is the
-    // toggle's next sibling — and the same reason to pause an auto-advance: a list that
-    // scrolls away mid-read is worse than no list at all.
+
     const more = e.target.closest(".more-songs-toggle");
     if (more) {
-      const box = more.nextElementSibling;
-      if (box && box.classList.contains("more-songs")) {
+      const box = document.getElementById(more.getAttribute("aria-controls"));
+      if (box) {
         const showing = box.hidden;
         box.hidden = !showing;
         more.setAttribute("aria-expanded", String(showing));
-        // The count is worth keeping in the collapsed label and worth dropping from the open
-        // one, where the list itself is the count.
-        if (showing) { more.dataset.label = more.textContent; more.textContent = "hide the rest"; }
-        else if (more.dataset.label) more.textContent = more.dataset.label;
+        more.textContent = showing ? "hide additional songs" : more.dataset.label;
         if (showing) pauseAutoAdvanceForReading();
       }
       return;
     }
+
+    const next = e.target.closest(".more-songs-next");
+    if (next) {
+      const box = next.closest(".more-songs");
+      const hiddenRows = box ? Array.from(box.querySelectorAll("[data-more-song][hidden]")) : [];
+      const batch = Math.max(1, Number(next.dataset.batch) || MORE_EXAMPLES_BATCH);
+      hiddenRows.slice(0, batch).forEach((row) => { row.hidden = false; });
+      const remaining = Math.max(0, hiddenRows.length - batch);
+      const total = Number(box.dataset.moreTotal) || 0;
+      const shown = total - remaining;
+      box.dataset.moreShown = String(shown);
+      const fold = host.querySelector(`.more-songs-toggle[aria-controls="${box.id}"]`);
+      if (fold) fold.dataset.label = shown === total
+        ? `show all ${total} additional songs`
+        : `show ${shown} of ${total} additional songs`;
+      const status = box.querySelector("[data-more-status]");
+      if (status) status.textContent = remaining
+        ? `${shown} of ${total} additional songs shown. ${remaining} remaining.`
+        : `All ${total} additional songs shown.`;
+      if (remaining) {
+        next.textContent = `show ${Math.min(batch, remaining)} more · ${remaining} remaining`;
+      } else {
+        const returnFocus = document.activeElement === next;
+        next.textContent = `all ${total} additional songs shown`;
+        next.disabled = true;
+        if (returnFocus && fold) requestAnimationFrame(() => fold.focus({ preventScroll: true }));
+      }
+      pauseAutoAdvanceForReading();
+      return;
+    }
+
     const full = e.target.closest(".lyric-fullsong");
-    if (full) openFullSong(full.dataset.song, full.dataset.word);
+    if (full) {
+      const entry = lyricRevealRegistry.get(full.dataset.revealId);
+      openFullSong(entry ? entry.song : full.dataset.song,
+        full.dataset.word, full.dataset.section, full.dataset.line);
+    }
   }));
 
   // Full-song modal: close on the scrim, the close button, or Escape; trap Tab inside it.
@@ -20380,12 +20578,7 @@ function wireInput() {
     const m = $("songModal");
     if (!m.classList.contains("open")) return;
     if (e.key === "Escape") { e.stopPropagation(); closeFullSong(); return; }
-    if (e.key !== "Tab") return;
-    const focusable = m.querySelectorAll("button, [href], a");
-    if (!focusable.length) return;
-    const first = focusable[0], last = focusable[focusable.length - 1];
-    if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
-    else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+    trapDialogTab(e, m, m.querySelector(".song-card"));
   });
 }
 
@@ -21170,6 +21363,9 @@ function trapDialogTab(e, modal, container) {
   if (!container.contains(active)) {
     e.preventDefault();
     (e.shiftKey ? last : first).focus();
+  } else if (!focusables.includes(active)) {
+    e.preventDefault();
+    (e.shiftKey ? last : first).focus();
   } else if (e.shiftKey && active === first) {
     e.preventDefault();
     last.focus();
@@ -21192,41 +21388,48 @@ function pauseAutoAdvanceForReading() {
 // Build the full lyrics for the song modal: structured sections with their labels, every
 // line holding the prompt word highlighted (and used as the scroll anchor). Falls back to
 // the flat lyrics if a song somehow has no structured sections.
-function fullSongHTML(song, word) {
+function fullSongHTML(song, word, anchorSection, anchorLine) {
   const sections = (Array.isArray(song.sections) && song.sections.length)
     ? song.sections
     : [{ label: "", lines: (song.lyrics || "").split("\n") }];
-  return sections.map((sec) => {
-    const lines = (sec.lines || []).map((raw) => {
+  return sections.map((sec, sectionIndex) => {
+    const lines = (sec.lines || []).map((raw, lineIndex) => {
       const l = (raw || "").trim();
       if (!l) return "";
-      return word && wordRegex(word).test(l)
-        ? `<div class="lc-line lc-match">${highlightWord(l, word)}</div>`
-        : `<div class="lc-line">${escapeHtml(censor(l))}</div>`;
+      const match = word && wordRegex(word).test(l);
+      const anchor = sectionIndex === anchorSection && lineIndex === anchorLine;
+      return `<div class="lc-line${match ? " lc-match" : ""}${anchor ? " lc-anchor" : ""}"` +
+        ` data-section="${sectionIndex}" data-line="${lineIndex}">` +
+        (match ? highlightWord(l, word) : escapeHtml(censor(l))) + `</div>`;
     }).join("");
     const label = sec.label ? `<div class="fs-label">${escapeHtml(sec.label)}</div>` : "";
     return `<div class="fs-section">${label}${lines}</div>`;
   }).join("");
 }
 
-function openFullSong(title, word) {
-  const song = allSongs.find((s) => s.title === title);
+function openFullSong(songOrTitle, word, section, line) {
+  const song = typeof songOrTitle === "string"
+    ? allSongs.find((candidate) => candidate.title === songOrTitle)
+    : songOrTitle;
   if (!song) return;
   lastFocusedBeforeSong = document.activeElement;
   pauseAutoAdvanceForReading();
+  const anchorSection = Number(section), anchorLine = Number(line);
+  const hasAnchor = Number.isInteger(anchorSection) && Number.isInteger(anchorLine);
   const color = albumColor(song.album) || "var(--ink-soft)";
-  const albumLabel = song.album ? `<span class="album-tag" style="--album-color:${color}">${escapeHtml(song.album)}</span>` : "";
-  $("songModalTitle").innerHTML = `${escapeHtml(censor(song.title))}${albumLabel}`;
-  $("songModalBody").innerHTML = fullSongHTML(song, word);
+  $("songModalTitle").innerHTML = `${escapeHtml(censor(song.title))}${albumTag(song, color)}`;
+  $("songModalBody").innerHTML = fullSongHTML(song, word,
+    hasAnchor ? anchorSection : -1, hasAnchor ? anchorLine : -1);
   const m = $("songModal");
   m.style.setProperty("--album-color", color);
   m.classList.add("open");
   m.setAttribute("aria-hidden", "false");
   document.body.classList.add("modal-open");
-  const close = $("songModalClose");
-  if (close) { try { close.focus({ preventScroll: true }); } catch (_) { close.focus(); } }
-  // Land the reader on the first highlighted line rather than the top of the song.
-  const match = $("songModalBody").querySelector(".lc-match");
+  containDialogBackground(m);
+  const heading = $("songModalTitle");
+  if (heading) { try { heading.focus({ preventScroll: true }); } catch (_) { heading.focus(); } }
+  // Land the reader on the selected occurrence, with the first highlighted line as fallback.
+  const match = $("songModalBody").querySelector(".lc-anchor") || $("songModalBody").querySelector(".lc-match");
   if (match) { try { match.scrollIntoView({ block: "center" }); } catch (_) { /* ignore */ } }
 }
 
@@ -21235,6 +21438,7 @@ function closeFullSong() {
   if (!m.classList.contains("open")) return;
   m.classList.remove("open");
   m.setAttribute("aria-hidden", "true");
+  releaseDialogBackground(m);
   // Settings may also be open behind it (its own scroll lock); only release the page
   // freeze when nothing else needs it.
   if (!$("settingsModal").classList.contains("open")) document.body.classList.remove("modal-open");
@@ -22381,6 +22585,11 @@ function devApplyWord(word) {
   currentWord = word;
   if (!usedWords.includes(word)) usedWords.push(word);
   currentSongs = validSongs(currentWord, effectiveStrict(), effectiveNoTitle());
+  currentLyricSongs = currentSongs;
+  // Title...? reverses the base eligibility rule. Keep its force-word diagnostic honest so
+  // the title-only Mary's Song fixture can be reached without waiting for a random deal.
+  if (gameType === "challenge" && currentChallenge && currentChallenge.rule === "titleHas")
+    currentSongs = titleSongsForWord(currentWord, true);
   roundHintSong = pickHintSong();
   resetWordCaches();                    // a forced word is a new page as far as these are concerned
   renderPromptSwipe();
@@ -22390,12 +22599,12 @@ function devApplyWord(word) {
 }
 
 /* The widest page in the corpus under the round's own levers — the word the most songs hold.
-   The reveal expansion is the reason this exists: MORE_EXAMPLES_MAX and the "all N in the
-   searcher" tail only appear on a page with more answers than the cap, and normal play deals
-   one rarely and never on demand. Judged with the live round's strictness and title rule so the
+   The reveal expansion is the reason this exists: several MORE_EXAMPLES_BATCH presses need a
+   page with plenty of answers, and normal play deals one rarely and never on demand. Judged
+   with the live round's strictness and title rule so the
    count it reports is the count the verdict will show. Returns null if nothing qualifies.
-   Like devApplyWord, this thinks in base-mode terms: it does not know about a challenge's
-   narrowing rules, so use it in the difficulty ladder. */
+   Apart from Title...?'s dedicated proof fixture, devApplyWord thinks in base-mode terms: it
+   does not know every challenge's narrowing rule, so use widest in the difficulty ladder. */
 function devWidestWord(min = 0) {
   let best = null, bestN = min;
   for (const w of playableWords) {
@@ -22744,26 +22953,33 @@ function buildDevApi() {
     },
     setWord: devApplyWord,
     setScore: (n) => { score = Math.max(0, n | 0); },
-    /* The verdict's answer reveal: the example cards and the expansion under them. `state`
-       reports what THIS page will offer and, when it offers nothing, which gate said no —
-       the three refusals (Ultra, a tap grid, Both Of Us) and the settings toggle are otherwise
-       indistinguishable from a page that simply had no songs left. `widest` re-points the live
-       round to the word the most songs hold, which is the only reliable way to reach the cap
-       and the searcher tail. */
+    /* The verdict's answer reveal: headline cards plus a repeatable remainder in fixed batches.
+       `state` stays inspection-only, so reading the panel cannot allocate hidden reveal models. */
     reveal: {
-      state: () => ({
-        word: currentWord || null,
-        valid: currentSongs.length,
-        cards: (settings.showExamples && !tapGridActive()) ? currentMode.examples : 0,
-        cap: MORE_EXAMPLES_MAX,
-        expandable: !!moreSongsBlock(currentSongs, currentSongs.slice(0, currentMode.examples), currentWord),
-        refusedBy: !settings.showExamples ? "showExamples setting"
-          : !(currentMode.examples > 0) ? `examples lever is 0 (${currentMode.id})`
-          : currentMode.moreExamples === false ? `mode: ${currentMode.id}`
-          : tapGridActive() ? "tap grid reveals on the grid"
-          : (bothRuleActive() && bothWords.length > 1) ? "Both Of Us proof cards"
-          : null,
-      }),
+      state: () => {
+        const cards = (settings.showExamples && !tapGridActive())
+          ? Math.min(currentSongs.length, currentMode.examples) : 0;
+        const extra = Math.max(0, currentSongs.length - cards);
+        const panel = document.querySelector("#feedback .more-songs");
+        const rendered = panel ? Number(panel.dataset.moreShown || 0) : 0;
+        return {
+          word: currentWord || null,
+          valid: currentSongs.length,
+          cards,
+          batch: MORE_EXAMPLES_BATCH,
+          extra,
+          rendered,
+          remaining: panel ? Math.max(0, extra - rendered) : extra,
+          expandable: moreSongsAllowed() && extra > 0,
+          searcher: activeCorpus === "taylor" && !!currentWord && !titleProofActive(),
+          refusedBy: !settings.showExamples ? "showExamples setting"
+            : !(currentMode.examples > 0) ? `examples lever is 0 (${currentMode.id})`
+            : currentMode.moreExamples === false ? `mode: ${currentMode.id}`
+            : tapGridActive() ? "tap grid reveals on the grid"
+            : (bothRuleActive() && bothWords.length > 1) ? "Both Of Us proof cards"
+            : null,
+        };
+      },
       widest: (min = 0) => {
         const w = devWidestWord(min);
         if (!w) return null;

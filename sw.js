@@ -17,7 +17,7 @@
  * Paths are relative so the worker works at the site root (swiftassociation.com)
  * and under any project subpath, without hardcoding the origin.
  */
-const CACHE = "stta-v59";
+const CACHE = "stta-v60";
 // The game's panel routes. These are sections of index.html, not files, so a navigation to one
 // has nothing on the server to fetch: 404.html bounces it back through a ?/slug marker. Once
 // this worker is installed we can do better and answer with index.html directly, so a deep link
@@ -35,7 +35,7 @@ const ASSETS = [
   "ink.css",
   // Keep the revision query exact: Cache.match() includes the query string, and
   // index.html deliberately requests this URL to break the browser HTTP cache.
-  "styles.css?v=74",
+  "styles.css?v=75",
   // Self-hosted fonts (latin subset). Precached so first offline load has the
   // real faces; declared via @font-face in styles.css / search.css.
   "fonts/caveat-latin.woff2",
@@ -49,6 +49,8 @@ const ASSETS = [
   "js/util.js",
   "js/config.js",
   "js/match.js",
+  // Structured, state-free result-card context selection.
+  "js/lyric-reveal.mjs",
   // Bonus-game puzzle builders (pure; see js/bonus.js).
   "js/bonus.js",
   // The four rule marks (pure; see js/rulemarks.js). app.js imports it at load, so an
