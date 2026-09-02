@@ -9794,7 +9794,7 @@ const TALLY_PREVIEWS = {
   infinite: { score: "24", sub: [{ v: "21", l: "correct" }, { v: "6:31", l: "on the clock" }, { v: "+11", l: "verse bonus" }], unit: "rounds" },
   ruthless: { score: "3:07", sub: "all 10 named" },
   risk:     { score: "14", sub: [{ v: "12", l: "needed" }], unit: "beads" },
-  ink:      { score: "1284", sub: [{ v: "1200", l: "needed" }], unit: "characters" },
+  ink:      { score: "1184", sub: [{ v: "1100", l: "needed" }], unit: "characters" },
 };
 
 // ---- The final tally ----
@@ -13275,7 +13275,7 @@ function renderSwitchBanner() {
 // tally and what is still owed rather than a page count, because the decision the rule is
 // asking for ("do I stop and submit, or reach for another line?") is answered by the gap, not
 // by how far through the run you are.
-function inkTarget() { return (currentChallenge && currentChallenge.ink) || 1200; }
+function inkTarget() { return (currentChallenge && currentChallenge.ink) || 1100; }
 function renderInkBanner() {
   if (!inkRuleActive()) return;
   const el = ensureChallBanner();
@@ -13731,7 +13731,7 @@ function challengeWinCheck(c) {
   if (c.rule === "verse") return gameVersePerfect >= (c.target || 4);
   // Long Story Long: the character tally IS the win. Pages cleared are not consulted at all —
   // thirteen cheap four-word answers is a spotless 13/13 and a lost run.
-  if (c.rule === "ink") return gameInk >= (c.ink || 1200);
+  if (c.rule === "ink") return gameInk >= (c.ink || 1100);
   // Thirty-One: an unbroken run (still alive) that cleared the target round (31).
   if (c.rule === "survive") return round >= (c.target || 31) && lives > 0;
   // Insurance: sudden death, and surviving all 13 pages is the WHOLE win. There is no bead
@@ -25158,7 +25158,7 @@ function buildDevApi() {
         win: () => { score = (CHALLENGE_BY_ID["sea-of-songs"].target) || 9; endGame(); },
       },
       // Long Story Long — the tally, what each page paid into it, and the shortcuts past the
-      // one thing that genuinely cannot be playtested at speed: typing 1200 characters by hand
+      // one thing that genuinely cannot be playtested at speed: typing 1100 characters by hand
       // to reach the win path. `price` grades a phrase without spending the page, so the
       // capping rule (typed vs matched span) can be checked against real lyric and real junk.
       ink: {

@@ -807,7 +807,7 @@ export const CHALLENGES = [
     desc: "Answer by typing the lyric line, and do it word-for-word six times.",
     win: "Recall 6 lines word-for-word (or better). Type the line exactly." },
   { id: "lyric-ink", name: "Long Story Long", rule: "ink", mode: "medium",
-    free: false, cost: 1, ink: 1200, seconds: 18, noTitle: false, dropdown: true, tapes: 0,
+    free: false, cost: 1, ink: 1100, seconds: 18, noTitle: false, dropdown: true, tapes: 3,
     // The only challenge scored in CHARACTERS rather than pages. Clearing a page and scoring
     // it are deliberately different things here: the lyric path already accepts any contiguous
     // run of four words that sings the prompt word, so the cheapest legal answer is about 18
@@ -837,16 +837,16 @@ export const CHALLENGES = [
     // away — so the old `seconds: 23` made the dark side EASIER per page than the base in
     // relative terms. Dark is the number alone now, on the same 18s.
     //
-    // 1200 is ~92 a page: reachable at a recital pace, unreachable at a remembering one, and
+    // 1100 is ~85 a page: reachable at a recital pace, unreachable at a remembering one, and
     // it still pays for two or three pages where the word lands somewhere you don't hold a
     // long passage of. Both figures are a first re-tune off three pages of evidence, so they
     // are expected to move again once a full thirteen-page run has been measured.
-    hard: { ink: 1600,
+    hard: { ink: 1500,
       desc: "The same page, a third as much again to fill, and not a second more to do it in. A title banked here is a page thrown away: on this side only the lines will do, and the long ones at that.",
-      win: "Write 1600 characters across 13 pages." },
+      win: "Write 1500 characters across 13 pages." },
     blurb: "18s · suggestions · all words · title words allowed",
     desc: "Every page is scored by how much you WRITE. Sing the line around the word and keep going as far as you can: every character of it counts. Naming the song banks its title instead, quick and small. Submit before the clock dies, or the page banks nothing.",
-    win: "Write 1200 characters across 13 pages." },
+    win: "Write 1100 characters across 13 pages." },
   { id: "wrapped-chain", name: "Wrapped Like A Chain", rule: "chain", mode: "medium",
     free: false, cost: 1, target: 6, noTitle: false, pool: "easy", tapes: 3,
     // Dark, REWORKED 2026-09-01 after playtest (fun 1/5, fairness 2/5). The first version took
@@ -1235,17 +1235,18 @@ export const RISK_TOKENS = 3;
    matched), the page is 18 seconds, and the playtest that forced the 400 -> 1200 retune put a
    reciting player at ~8 characters a second. That is a hard ceiling of ~144 characters a
    page, and only if the typing starts the instant the word lands. Measured 2026-09-02: the
-   median lyric line holding a prompt word is ~37 characters, so the base target's 92 a page
-   is about two and a half lines, and each page of this flourish is three or more.
-     8 pages  -> 150 a page. Above the ceiling. Not hard, impossible.
-     9 pages  -> 133 a page. 16.7s of unbroken typing out of 18. Effectively impossible.
-    10 pages  -> 120 a page. 15s of typing, 3s to read the word and find the passage.
-    11 pages  -> 109 a page. Real, but only 18% over the pace the base win already asks for.
-   Ten, then: the edge of what the clock allows, sustained ten times, with no dud page, and
-   the base target deliberately leaves room for two or three dud pages, so refusing all of
-   them is most of the feat. Move it here and the charm's desc follows; the charm id carries
-   no number, because this one is expected to move again once a real run has been measured.
-   It reads the same on the dark side, where 1600 in ten pages asks 160 a page, over the
+   median lyric line holding a prompt word is ~37 characters, so the base target's 85 a page
+   is a little over two lines, and each page of this flourish is three or more.
+     8 pages  -> 138 a page. 17.2s of unbroken typing out of 18. Effectively impossible.
+     9 pages  -> 122 a page. 15.3s of typing, 2.7s to read the word and find the passage.
+    10 pages  -> 110 a page. Real, but only 18% over the pace the base win already asks for.
+    11 pages  -> 100 a page. Comfortably real.
+   NOTE: this table was re-derived off the 1200 -> 1100 retune below by the same arithmetic,
+   not by a fresh playtest, so INK_FLOURISH_PAGES staying at 10 (rather than moving to 9, now
+   the closer analogue of the old "edge of the clock" row) has not been re-validated. Move it
+   here and the charm's desc follows; the charm id carries no number, because this one is
+   expected to move again once a real run has been measured.
+   It reads the same on the dark side, where 1500 in ten pages asks 150 a page, over the
    ceiling. The dark flourish is currently out of reach, and that is the honest reading of
    an 18-second page, not a number to soften. */
 export const INK_FLOURISH_PAGES = 10;
