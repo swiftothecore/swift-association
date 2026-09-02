@@ -810,38 +810,46 @@ export const CHALLENGES = [
     desc: "Answer by typing the lyric line, and do it word-for-word six times.",
     win: "Recall 6 lines word-for-word (or better). Type the line exactly." },
   { id: "lyric-ink", name: "Long Story Long", rule: "ink", mode: "medium",
-    free: false, cost: 1, ink: 400, seconds: 18, noTitle: false, dropdown: true, tapes: 0,
+    free: false, cost: 1, ink: 1200, seconds: 18, noTitle: false, dropdown: true, tapes: 0,
     // The only challenge scored in CHARACTERS rather than pages. Clearing a page and scoring
     // it are deliberately different things here: the lyric path already accepts any contiguous
     // run of four words that sings the prompt word, so the cheapest legal answer is about 18
     // characters and a page can always be passed for almost nothing. What the run asks is how
     // much of the passage around the word you dare write out before the clock takes the page
-    // off you. 400 over 13 is 30.8 a page against a median line of 34, so it reads as "about
-    // a line, every page", with two or three blanks payable by a two-line run somewhere else.
+    // off you. Thirteen cheap answers is a spotless 13/13 and a lost run.
     //
     // NOT `mode: "lyricist"`, though it is a lyric challenge. Lyricist is lyricOnly, and that
     // shuts the title path — which is the whole reason the suggestions are on. Naming the song
-    // banks its title's length (~14), a third of a line, fast: a real bail-out on a page you
-    // cannot sing, and never a strategy, since all 13 titles is about 190 of the 400. Medium
-    // keeps both paths open, and a typed line long enough to matter can't collide with the
-    // dropdown anyway (titleMatchScore wants the query INSIDE a title, so a phrase past title
-    // length ranks nothing). `noTitle: false` because a banned title would fight the rule:
-    // widening validSongs is what puts more lyric on the page to write from.
+    // banks its title's length (~14), a fast page you barely have to think about. Medium keeps
+    // both paths open, and a typed line long enough to matter can't collide with the dropdown
+    // anyway (titleMatchScore wants the query INSIDE a title, so a phrase past title length
+    // ranks nothing). `noTitle: false` because a banned title would fight the rule: widening
+    // validSongs is what puts more lyric on the page to write from.
     //
-    // Dark gets MORE clock, not less, and that is the point rather than a mercy. 600 is 46 a
-    // page, around the 78th-percentile line, so most pages want a full line plus a run into the
-    // next one. Cut the clock as well and the two multiply into a typing-speed test at roughly
-    // 2.9 characters a second sustained; at 23s the binding constraint stays recall depth,
-    // which is the axis the challenge is actually about. The dropdown quietly changes meaning
-    // between the sides with no second rule: a 14-character title bank is a sensible page on
-    // 400 and a thrown page on 600.
-    hard: { ink: 600, seconds: 23,
-      blurb: "23s · suggestions · all words · title words allowed",
-      desc: "The same page, and half as much again to fill it. You get five seconds more to write each one, and you will still run out of them. A title banked here is a page thrown away: on this side only the lines will do, and the long ones at that.",
-      win: "Write 600 characters across 13 pages." },
+    // THE NUMBER WAS 400/600 AND IT WAS WRONG BY A FACTOR OF THREE. It was calibrated on ~2.5
+    // characters a second, assuming recall and typing interleave — remember a bit, type it,
+    // remember the next bit — which reads 400 as "about a median line (34 chars) every page".
+    // Playtested 2026-09-02: 450 banked in THREE pages, ~150 a page, ~8 characters a second.
+    // Somebody who holds the passage whole is not remembering while they type, they are
+    // reciting, and they go at their ordinary touch-typing speed. So recall stops being the
+    // constraint and the clock becomes the only one, which is the typing test the original
+    // 23s dark side was written to avoid.
+    //
+    // WHICH IS WHY DARK NO LONGER BUYS MORE CLOCK. At 8 chars/sec five seconds is worth ~40
+    // characters of headroom a page, more than the jump from one target to a higher one takes
+    // away — so the old `seconds: 23` made the dark side EASIER per page than the base in
+    // relative terms. Dark is the number alone now, on the same 18s.
+    //
+    // 1200 is ~92 a page: reachable at a recital pace, unreachable at a remembering one, and
+    // it still pays for two or three pages where the word lands somewhere you don't hold a
+    // long passage of. Both figures are a first re-tune off three pages of evidence, so they
+    // are expected to move again once a full thirteen-page run has been measured.
+    hard: { ink: 1600,
+      desc: "The same page, a third as much again to fill, and not a second more to do it in. A title banked here is a page thrown away: on this side only the lines will do, and the long ones at that.",
+      win: "Write 1600 characters across 13 pages." },
     blurb: "18s · suggestions · all words · title words allowed",
     desc: "Every page is scored by how much you WRITE. Sing the line around the word and keep going as far as you can: every character of it counts. Naming the song banks its title instead, quick and small. Submit before the clock dies, or the page banks nothing.",
-    win: "Write 400 characters across 13 pages." },
+    win: "Write 1200 characters across 13 pages." },
   { id: "wrapped-chain", name: "Wrapped Like A Chain", rule: "chain", mode: "medium",
     free: false, cost: 1, target: 6, noTitle: false, pool: "easy", tapes: 3,
     // Dark, REWORKED 2026-09-01 after playtest (fun 1/5, fairness 2/5). The first version took
