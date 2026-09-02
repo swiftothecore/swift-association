@@ -1229,6 +1229,29 @@ export const PRESS_TRINKET_RIDE = 3;
 export const PRESS_FLOURISH_RIDE = 5;
 export const RISK_MAX_STAKE = 3;
 export const RISK_TOKENS = 3;
+/* Long Story Long: how few pages the target may be filled in before The Ink Bleeds fires.
+   The run is always thirteen pages, so this is a PACE, not an early finish: the remaining
+   pages still play, and anything written on them is spare.
+
+   THE NUMBER IS BOUNDED ABOVE BY THE CLOCK, not by taste, so it can be worked out rather
+   than guessed. A page pays what you TYPE (lyricInk caps the credit at the span you actually
+   matched), the page is 18 seconds, and the playtest that forced the 400 -> 1200 retune put a
+   reciting player at ~8 characters a second. That is a hard ceiling of ~144 characters a
+   page, and only if the typing starts the instant the word lands. Measured 2026-09-02: the
+   median lyric line holding a prompt word is ~37 characters, so the base target's 92 a page
+   is about two and a half lines, and each page of this flourish is three or more.
+     8 pages  -> 150 a page. Above the ceiling. Not hard, impossible.
+     9 pages  -> 133 a page. 16.7s of unbroken typing out of 18. Effectively impossible.
+    10 pages  -> 120 a page. 15s of typing, 3s to read the word and find the passage.
+    11 pages  -> 109 a page. Real, but only 18% over the pace the base win already asks for.
+   Ten, then: the edge of what the clock allows, sustained ten times, with no dud page, and
+   the base target deliberately leaves room for two or three dud pages, so refusing all of
+   them is most of the feat. Move it here and the charm's desc follows; the charm id carries
+   no number, because this one is expected to move again once a real run has been measured.
+   It reads the same on the dark side, where 1600 in ten pages asks 160 a page, over the
+   ceiling. The dark flourish is currently out of reach, and that is the honest reading of
+   an 18-second page, not a number to soften. */
+export const INK_FLOURISH_PAGES = 10;
 /* Odd One Out — the reject grid. Each page shows ODD_TILES songs, of which exactly one is the
    odd one: the word appears in NEITHER its lyrics nor its title (so the tile isn't an unfair
    "title matched but it's wrong" trap). Tapping the odd one scores; tapping any of the genuine
@@ -2717,9 +2740,11 @@ const WAX_SEAL_MOTIFS = {
   "short-title": { wax: 11, fr: "evenodd", d: "M22 32 L28 25.5 H40.9 Q42.5 25.5 42.5 27.1 V36.9 Q42.5 38.5 40.9 38.5 H28 Z M25.3 32 a1.5 1.5 0 1 0 3 0 a1.5 1.5 0 1 0 -3 0 M35 35.6 C33 33.8 31.5 32.4 31.5 30.5 C31.5 28.5 33.9 27.9 35 29.7 C36.1 27.9 38.5 28.5 38.5 30.5 C38.5 32.4 37 33.8 35 35.6 Z" },
   // a heart holding a quotation: the lyric line, loved word for word
   "lyric-lover": { wax: 12, fr: "evenodd", d: "M32 45 C25.5 39.5 20.5 35 20.5 28.8 C20.5 22.4 28.4 20.6 32 26 C35.6 20.6 43.5 22.4 43.5 28.8 C43.5 35 38.5 39.5 32 45 Z M29.4 27.6 C31.2 28.3 31.5 30.7 30 33.6 L28.6 33 C29.7 30.8 29.6 29.2 28.8 28.3 Z M35 27.6 C36.8 28.3 37.1 30.7 35.6 33.6 L34.2 33 C35.3 30.8 35.2 29.2 34.4 28.3 Z" },
-  // a scroll unrolled, three lines written down it and the last one stopping short:
-  // as much as you got down before the page was taken off you
-  "lyric-ink": { fr: "nonzero", d: "M22.5 23 H41.5 V41 H22.5 Z M20.5 23 a11.5 4 0 1 1 23 0 a11.5 4 0 1 1 -23 0 M20.5 41 a11.5 4 0 1 1 23 0 a11.5 4 0 1 1 -23 0 M26 27.2 V29.2 H38 V27.2 Z M26 31.2 V33.2 H38 V31.2 Z M26 34.8 V36.8 H32.5 V34.8 Z" },
+  // a fountain-pen nib, breather hole and slit pressed in: the only challenge whose currency
+  // is ink. It replaced a scroll of written lines, which said "a page of writing" but sat in
+  // the same family as half the set; the nib is one object, and it is the one this rule is
+  // about: how much of it you get onto the paper.
+  "lyric-ink": { fr: "evenodd", d: "M32 20 L39.2 31 L32 44.2 L24.8 31 Z M29.9 28.3 a2.1 2.1 0 1 1 4.2 0 a2.1 2.1 0 1 1 -4.2 0 M31.05 31.6 H32.95 V41.6 H31.05 Z" },
   // three chain links running corner to corner: each song wrapped onto the last
   "wrapped-chain": { wax: 13, fr: "evenodd", d: "M20.9 26.6 a4.5 4.5 0 1 1 9 0 a4.5 4.5 0 1 1 -9 0 M23.4 26.6 a2 2 0 1 1 4 0 a2 2 0 1 1 -4 0 M27.5 32 a4.5 4.5 0 1 1 9 0 a4.5 4.5 0 1 1 -9 0 M30 32 a2 2 0 1 1 4 0 a2 2 0 1 1 -4 0 M34.1 37.4 a4.5 4.5 0 1 1 9 0 a4.5 4.5 0 1 1 -9 0 M36.6 37.4 a2 2 0 1 1 4 0 a2 2 0 1 1 -4 0" },
   // a stage microphone: every night a different album on cue
@@ -3317,6 +3342,11 @@ export const ACHIEVEMENTS = [
   { id: "win-shrinking-timer-all-pages-under-10s",         name: "Tick-Tock",         desc: "Win Shrinking Timer, clearing every page once the clock hits single digits", tier: 2, secret: true, reveal: "shrinking-timer", icon: "stopwatch" },
   { id: "win-sea-of-songs-no-decoys",      name: "Part The Sea",      desc: "Win Sea of Songs without ever tapping a decoy", tier: 2, secret: true, reveal: "sea-of-songs", icon: "partedsea" },
   { id: "win-lyric-lover-all-lines-word-perfect", name: "Knowing All The Words", desc: "Win Lyric Lover with every line word-perfect, no fuzzy recalls", tier: 2, secret: true, reveal: "lyric-lover", icon: "cassette" },
+  // Long Story Long's two, and they pull in opposite directions on purpose: one asks you to
+  // refuse the cheap page every single time, the other asks you to write faster than the
+  // target needs. A run that does both has played the challenge at its limit.
+  { id: "win-long-story-long-no-titles-banked", name: "Every Word I Said", desc: "Win Long Story Long on the lines alone: not one page banked by naming the song", tier: 2, secret: true, reveal: "lyric-ink", icon: "placeholder" },
+  { id: "win-long-story-long-filling-target-early",   name: "The Ink Bleeds",    desc: `Win Long Story Long with the target filled inside ${INK_FLOURISH_PAGES} pages`, tier: 2, secret: true, reveal: "lyric-ink", icon: "placeholder" },
   { id: "clear-double-trouble-all-13-two-songs-each",     name: "Two Is Better Than One", desc: "Clear all thirteen pages of Double Trouble: two songs each, none dropped", tier: 2, secret: true, reveal: "double-trouble", icon: "cherries" },
   { id: "win-vanishing-word-all-answers-blind",       name: "Blank Space",       desc: "Win Vanishing Word writing blind: every answer landed after the word had gone", tier: 2, secret: true, reveal: "vanishing-word", icon: "vanish" },
   { id: "win-deep-cut-all-correct-same-album", name: "Been Here All Along", desc: "Win Deep Cut loyal to one album: every correct answer of the run off the same record", tier: 2, secret: true, reveal: "deep-cut", icon: "heartlabel" },
@@ -3745,6 +3775,7 @@ export const ACH_GROUP_OF = {
   "win-vanishing-word-all-answers-blind": "challenges", "win-deep-cut-all-correct-same-album": "challenges", "win-from-a-to-z-no-repeated-letters": "challenges",
   "bank-press-your-luck-pot-5-pages-deep": "challenges", "win-insurance-no-shields-spent": "challenges", "win-confidence-wager-max-every-page": "challenges",
   "lose-insurance-page-1-shields-unspent": "challenges",
+  "win-long-story-long-no-titles-banked": "challenges", "win-long-story-long-filling-target-early": "challenges",
   "beat-dark-side-no-misses": "challenges",
   /* Dark sides are a challenge's hard mode, so the three rungs of the dark ladder sit in
      Challenges beside the base ones rather than off in a section of their own. */

@@ -27,6 +27,7 @@ import {
   ODD_TILES, WHOSE_TILES, WHOSE_MIN_WORDS, WHOSE_GEN_ATTEMPTS, WHOSE_HARD_POOL,
   BOTH_WORDS, BOTH_MIN_SONGS, BOTH_PARTNER_TRIES, BOTH_REVEAL_SONGS, MORE_EXAMPLES_MAX,
   PRESS_RIDE_STEP, PRESS_TRINKET_RIDE, PRESS_FLOURISH_RIDE, RISK_MAX_STAKE, RISK_TOKENS,
+  INK_FLOURISH_PAGES,
   ALBUM_FOCUS_DIFFS, ALBUM_FOCUS_TARGET,
   GUEST_SHELF_SLOTS, GUESTS, GUESTS_COMING_SOON, GUEST_DIFFS, GUEST_TARGET, TAYLOR_BUCKETS,
   ADAPT_BUCKETS, ADAPT_LEVELS, ADAPT_MAX_LEVEL, ADAPT_START_LEVEL, ADAPT_PROMO_STREAK,
@@ -11127,6 +11128,8 @@ function resetRunState() {
   lyricAnswerSongs = [];
   gameInk = 0;
   roundInk = [];
+  inkTitlePages = 0;
+  inkFilledOnPage = 0;
   gameTimeSum = 0;
   gameHitRedZone = false;
   runSoundOn = settings.sound;    // the boombox: was the sound already on when this run began
@@ -13848,6 +13851,15 @@ function endChallenge() {
   // Been Here All Along — total loyalty in Deep Cut: not just five from one album, but every
   // correct answer of the run off that same album, no strays.
   if (rewardRun && c.rule === "album5" && won && score === deepCutLeader().count) unlock("win-deep-cut-all-correct-same-album");
+  // Every Word I Said: Long Story Long won without banking a single title. The cheap page is
+  // always there (naming the song is ~14 characters for almost no thought), so refusing it
+  // thirteen times over and still reaching the target is the flourish.
+  if (rewardRun && c.rule === "ink" && won && inkTitlePages === 0) unlock("win-long-story-long-no-titles-banked");
+  // The Ink Bleeds: the same target filled at a pace, inside INK_FLOURISH_PAGES pages. Read
+  // off inkFilledOnPage rather than the final tally, so pages written after the target was
+  // already reached can't drag a fast run out of it.
+  if (rewardRun && c.rule === "ink" && won && inkFilledOnPage && inkFilledOnPage <= INK_FLOURISH_PAGES)
+    unlock("win-long-story-long-filling-target-early");
   // Tied Together With A Smile — From A to Z climbing on every link: the alphabet tied end to
   // end without ever resting twice on the same letter.
   if (rewardRun && c.rule === "alphabetical" && won && alphaEveryLetterNew) unlock("win-from-a-to-z-no-repeated-letters");
@@ -17223,6 +17235,11 @@ function lyricInk(normPhrase, line) {
 function titleInk(song) {
   return song ? normalizeLyric(song.title || "").length : 0;
 }
+// Dev only: keep inkFilledOnPage honest after the tally has been set by hand. Same rule the
+// live path uses, the first page the total stands at or above the target, just re-checked.
+function devMarkInkFilled() {
+  if (!inkFilledOnPage && gameInk >= inkTarget()) inkFilledOnPage = Math.max(1, round);
+}
 function inkRuleActive() {
   return gameType === "challenge" && !!currentChallenge && currentChallenge.rule === "ink";
 }
@@ -18162,6 +18179,13 @@ function submitAnswer(song, isTimeout) {
     const gained = !correct ? 0 : lyricMatch ? (lyricMatch.ink || 0) : titleInk(song);
     roundInk[round - 1] = gained;
     gameInk += gained;
+    // The two flourishes read the same bank from opposite ends. Every Word I Said counts the
+    // pages that took the title shortcut (a page worth nothing took no shortcut, so a miss
+    // never spoils it); The Ink Bleeds remembers the page the target was FILLED on, which is
+    // not the page the run ends on: the thirteen still play out, and a run that got there
+    // early keeps writing.
+    if (gained > 0 && !lyricMatch) inkTitlePages++;
+    if (!inkFilledOnPage && gameInk >= inkTarget()) inkFilledOnPage = round;
     renderInkBanner();
   }
 
@@ -19391,6 +19415,8 @@ let roundVerseTier = [];         // per-round verse tier ("perfect"/"verse") →
 let lyricAnswerSongs = [];       // titles answered via a lyric line this game (for Someone Has A Favourite Song)
 let gameInk = 0;                 // Long Story Long: characters of real lyric (or title) written this run
 let roundInk = [];               // ...and what each page was worth, for the banner and the results recap
+let inkTitlePages = 0;           // ...how many of those pages were banked by naming the song, not singing a line
+let inkFilledOnPage = 0;         // ...and the page the target was first reached on (0 if it never was)
 let gameTimeSum = 0;             // total answer time this game, secs (for Perfect Storm)
 let gameHitRedZone = false;      // any round answered with ≤3s left this game (for Peace)
 let rareStreak = 0;              // consecutive correct rare/scarce words this game (for Diamonds Are Forever)
@@ -24809,17 +24835,23 @@ function buildDevApi() {
         win: () => { score = (CHALLENGE_BY_ID["sea-of-songs"].target) || 9; endGame(); },
       },
       // Long Story Long — the tally, what each page paid into it, and the shortcuts past the
-      // one thing that genuinely cannot be playtested at speed: typing 600 characters by hand
+      // one thing that genuinely cannot be playtested at speed: typing 1200 characters by hand
       // to reach the win path. `price` grades a phrase without spending the page, so the
       // capping rule (typed vs matched span) can be checked against real lyric and real junk.
       ink: {
         tally: () => ({ written: gameInk, target: inkTarget(), left: Math.max(0, inkTarget() - gameInk),
                         pages: roundInk.slice(), pace: roundInk.filter((n) => n > 0).length
                           ? Math.round(gameInk / roundInk.filter((n) => n > 0).length) : 0 }),
+        // Where the two flourishes stand right now, since neither is visible on the page.
+        flourish: () => ({ titles: inkTitlePages, clean: inkTitlePages === 0,
+                           filledOn: inkFilledOnPage || null, need: INK_FLOURISH_PAGES,
+                           fast: !!inkFilledOnPage && inkFilledOnPage <= INK_FLOURISH_PAGES }),
         price: (phrase) => { const m = matchLyricLine(String(phrase || "")); return m ? { ink: m.ink, song: m.song.title, line: m.line, fuzzy: m.fuzzy } : null; },
-        set: (n) => { gameInk = Math.max(0, n | 0); renderInkBanner(); return gameInk; },
-        add: (n) => { gameInk = Math.max(0, gameInk + (n | 0)); renderInkBanner(); return gameInk; },
-        win: () => { gameInk = inkTarget(); endGame(); },
+        // Moving the tally by hand has to move the flourish's bookmark with it, or a dev win
+        // would land on page 13 with the target "never filled" and The Ink Bleeds unreachable.
+        set: (n) => { gameInk = Math.max(0, n | 0); devMarkInkFilled(); renderInkBanner(); return gameInk; },
+        add: (n) => { gameInk = Math.max(0, gameInk + (n | 0)); devMarkInkFilled(); renderInkBanner(); return gameInk; },
+        win: () => { gameInk = inkTarget(); devMarkInkFilled(); endGame(); },
       },
       // Odd One Out / Whose Line? — the two tap grids that judge their own tile.
       oddone: {
