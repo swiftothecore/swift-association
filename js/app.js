@@ -20784,8 +20784,10 @@ function wireInput() {
     if ($("songModal").classList.contains("open")) return;
     if (curtainUp()) return;
     // Only once a verdict is actually on the page — not during the pen-circle
-    // animation between submitting and the feedback appearing.
-    if (!$("cd") && !$("continueBtn")) return;
+    // animation between submitting and the feedback appearing. The skip button is checked as
+    // well as the count itself, since pausing to read the context replaces the count (see
+    // pauseAutoAdvanceForReading) but leaves skip there to be taken.
+    if (!$("cd") && !$("skipBtn") && !$("continueBtn")) return;
     // Brief grace so an Enter still held from submitting can't instantly skip the result.
     if (Date.now() - feedbackShownAt < ENTER_SKIP_GRACE) return;
     // "Enter advances on a miss" off → require a click on the miss/answer screen.
@@ -20815,6 +20817,16 @@ function wireInput() {
   // Result controls live inside rebuilt feedback blocks, so delegate from the two stable hosts.
   // Every reading action pauses auto-advance; disclosure state stays local to its unique reveal.
   [$("feedback"), $("bonusFeedback")].forEach((host) => host.addEventListener("click", (e) => {
+    // A mouse click leaves focus sitting on the disclosure, and a focused button owns Enter
+    // (see feedbackEnterBelongsToControl), so after reading the context Enter would fold the
+    // context back up instead of turning the page. Hand focus back to the document, but only
+    // for a pointer press: a keyboard player who tabbed here (detail 0) reached the button
+    // deliberately and keeps its Enter.
+    if (e.detail > 0) {
+      const pressed = e.target.closest(".lyric-ctx-toggle, .more-songs-toggle");
+      if (pressed && document.activeElement === pressed) pressed.blur();
+    }
+
     const toggle = e.target.closest(".lyric-ctx-toggle");
     if (toggle) {
       const reveal = toggle.closest("[data-lyric-reveal]");
