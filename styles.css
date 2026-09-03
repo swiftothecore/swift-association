@@ -1835,6 +1835,24 @@
     .polaroid-keep .pol-veil { animation: none; }
   }
 
+  /* The same lamp as the Album Focus board (see .af-tile below): instant film is a physical
+     object, so the frame keeps its cream and is only taken down a stop, rather than being
+     repainted dark. Twenty-one of these hang together on one wall, and at full brightness the
+     earned ones read as lit panels rather than photographs.
+
+     Here that dim is one brightness() over the whole tile rather than a repainted background,
+     which is the difference between a photograph in an unlit room and a bright photograph in a
+     grey mount: the frame, the artwork and the caption all go down together, so the object
+     stays internally lit the way it was drawn. It also means the two caption lines keep the
+     ratios they were written for and need no re-inking, which the Album Focus captions did.
+     brightness() runs in sRGB, so 0.78 lands the #f7f2e5 stock on the same dimmed cream the
+     board uses. The photo well and the locked tile keep their #0c0a07: black is black either
+     way, and a filter over a black rectangle changes nothing. */
+  :root[data-theme="dark"] .polaroid-keep {
+    filter: brightness(0.78) saturate(0.94);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  }
+
   /* Keepsakes modal — a lead, the found counter, then the messy pinned polaroid wall. The
      tiles are small and jittered (translate + rotate) so the wall reads scattered, not gridded. */
   .keep-lead {
@@ -3816,6 +3834,43 @@
   }
   .af-diff:hover { background: rgba(43,39,34,0.06); }
   .af-diff.is-on { color: var(--paper); background: var(--ink); border-color: var(--ink); }
+
+  /* The board at night. A snapshot is a physical object, so the stock keeps its cream rather
+     than being repainted into a dark card. That was tried first, and twelve dark squares on a
+     dark page lose their edges entirely, leaving twelve pins floating over nothing. What the
+     board gets instead is the dim of an unlit room: the same cream, taken down far enough that
+     it stops out-glowing the notebook it is pinned to.
+
+     The captions have to be pinned by hand. They read from --ink / --ink-soft, which invert for
+     the dark page, so on a stock that stays cream a beaten album's title arrived as near-white
+     on near-white (2.8:1 for the soft ink, worse for the full one). These are the one place
+     here where the ink is deliberately NOT the token: the surface under them is light in both
+     themes, so the writing on it is too. The perfected gold is re-inked for the same reason,
+     since dimming the stock alone would have dropped it to 1.7:1. */
+  :root[data-theme="dark"] .af-tile { background: #c2b79c; box-shadow: 0 5px 14px rgba(0, 0, 0, 0.5); }
+  :root[data-theme="dark"] .af-tile:hover,
+  :root[data-theme="dark"] .af-tile.is-perfect { box-shadow: 0 9px 19px rgba(0, 0, 0, 0.55); }
+  :root[data-theme="dark"] .af-tile-cap { color: #2f2a20; }
+  :root[data-theme="dark"] .af-tile.is-fresh .af-tile-cap,
+  :root[data-theme="dark"] .af-tile.is-played .af-tile-cap,
+  :root[data-theme="dark"] .af-tile-score { color: #4b4438; }
+  :root[data-theme="dark"] .af-tile.is-fresh .af-tile-win {
+    background: #ada182; box-shadow: inset 0 0 0 1.5px #948871;
+  }
+  :root[data-theme="dark"] .af-tile.is-perfect .af-tile-cap { color: #7d5a12; }
+  /* Pin and gold leaf are objects too: same colours, one stop down for the same lamp. */
+  :root[data-theme="dark"] .af-pin { background: #ad382f; }
+  :root[data-theme="dark"] .af-corner--tl,
+  :root[data-theme="dark"] .af-corner--tr { border-top-color: #c9a435; }
+  /* The difficulty row is the opposite case: a control drawn ON the paper rather than an object
+     lying on it, so it follows the page into the dark. Its cream wash composited to within
+     1.2:1 of the ink sitting on it, which is to say the unselected difficulties were invisible.
+     :not(.is-on) keeps the selected pill's ink/paper inversion, which already works in both
+     themes. */
+  :root[data-theme="dark"] .af-diff:not(.is-on) {
+    background: rgba(236, 229, 214, 0.07); border-color: rgba(236, 229, 214, 0.28);
+  }
+  :root[data-theme="dark"] .af-diff:not(.is-on):hover { background: rgba(236, 229, 214, 0.14); }
 
   /* ---------- Guest shelf — catalogues hung as backstage passes ----------
      The one place in the notebook where another artist's name appears, so it is deliberately
