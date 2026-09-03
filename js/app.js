@@ -13378,7 +13378,8 @@ function renderMultiBanner() {
   const need = currentChallenge.need || 2;
   el.innerHTML =
     `<span class="chall-prog-name">name ${need} different songs</span>` +
-    `<span class="chall-prog-count">${roundNamed.length} / ${need} this page · ${score} / ${currentChallenge.target || 8}</span>`;
+    `<span class="chall-prog-count">${roundNamed.length} / ${need}</span>` +
+    `<span class="chall-prog-note">this page · ${score} / ${currentChallenge.target || 8} pages cleared</span>`;
 }
 // Devil's Path: distort the prompt word display-only (matching reads currentWord from
 // state, never the DOM), at a FIXED effect for the run — unlike Word Games' escalating tiers.
@@ -13405,10 +13406,9 @@ function renderDevilBanner() {
   if (devilBannedInitials.length) parts.push(`no ${devilBannedInitials.join("/")}`);
   if (devilPoolHard) parts.push("rarer words");
   el.innerHTML =
-    `<span class="chall-prog-name">devil's path · ${score} / ${currentChallenge.target || 9}</span>` +
-    (parts.length
-      ? `<span class="chall-prog-count">${parts.map(escapeHtml).join(" · ")}</span>`
-      : `<span class="chall-prog-count">no curses… yet</span>`);
+    `<span class="chall-prog-name">devil's path</span>` +
+    `<span class="chall-prog-count">${score} / ${currentChallenge.target || 9}</span>` +
+    `<span class="chall-prog-note">${parts.length ? parts.map(escapeHtml).join(" · ") : "no curses… yet"}</span>`;
 }
 
 // Shrinking Timer: this round's clock, shrinking linearly from accelFrom (round 1)
@@ -13459,7 +13459,8 @@ function renderChainBanner() {
       `<span class="sr-only">${escapeHtml(chainLetter.toUpperCase())}</span></span>`
     : `<span class="chain-cue">first link · <b>start anywhere</b></span>`;
   el.innerHTML =
-    `<span class="chall-prog-name">chain ${score} / ${target}</span>` + link;
+    `<span class="chall-prog-name">chain</span>` +
+    `<span class="chall-prog-count">${score} / ${target}</span>` + link;
 }
 // On Tour!: tonight's album (in its colour) + which stop on the setlist this is.
 function renderTourBanner() {
@@ -13477,7 +13478,8 @@ function renderComboBanner() {
   const el = ensureChallBanner();
   el.innerHTML =
     `<span class="chall-prog-name">shared clock</span>` +
-    `<span class="chall-prog-count">${Math.max(0, comboClock).toFixed(0)}s · +${comboBonus()}s per correct</span>`;
+    `<span class="chall-prog-count">${Math.max(0, comboClock).toFixed(0)}s</span>` +
+    `<span class="chall-prog-note">+${comboBonus()}s per correct</span>`;
 }
 
 // The shared challenge-banner element above the word (reused across rules; cleaned
@@ -13490,8 +13492,22 @@ function ensureChallBanner() {
     el.className = "chall-banner";
     const anchor = document.querySelector("#screen-game .word-label");
     anchor.parentNode.insertBefore(el, anchor);
+    // Every rule writes its own markup into this one element, from a dozen render functions,
+    // and the tally is set in 19px handwriting — which is right for "9 / 13" and absurd for
+    // "20s · +5s per correct". Rather than teach each render function to classify its own
+    // string (and rely on the next one remembering), the element watches itself: whatever is
+    // written in, the count gets measured once and sized to what it turned out to be.
+    new MutationObserver(() => sizeChallCount(el)).observe(el, { childList: true, subtree: true });
   }
   return el;
+}
+// A count that reads as a sentence rather than a figure drops a size. Measured on the rendered
+// text, so the same banner can be a figure on page one and a sentence by page nine.
+const CHALL_COUNT_WORDY = 15;
+function sizeChallCount(el) {
+  el.querySelectorAll(".chall-prog-count").forEach((c) => {
+    c.classList.toggle("is-wordy", (c.textContent || "").trim().length >= CHALL_COUNT_WORDY);
+  });
 }
 
 // Deep Cut: the album you've pulled the most correct songs from so far (the one the
@@ -15109,6 +15125,20 @@ function isWildcardRound() {
 // The inner card markup for a curtain. `o.headline` is the big handwritten line; the
 // optional `o.sub` is trusted HTML (callers build it with escaped pieces) so it can carry
 // album-colour spans / bold.
+// A challenge's `blurb` — its levers, dot-separated — set out as the terms of the run. The
+// briefing card used to print the rule and the goal and nothing else, which was survivable on
+// a base run (you had just read the detail card) and wrong on a dark one, where the levers ARE
+// usually the change: It's A Clock!'s dark briefing was word-for-word its light one while the
+// shared clock had gone 20s to 14s and the bonus 5s to 3s. Every lever the hard block moves is
+// named in the resolved blurb, so printing it here states the whole run in the one place the
+// player is certainly looking. Split on the separator the blurbs are already written with, so
+// the terms stack as a list rather than running on as a sentence.
+function curtainTermsHTML(blurb) {
+  const terms = String(blurb || "").split("·").map((t) => t.trim()).filter(Boolean);
+  if (!terms.length) return "";
+  return `<ul class="chall-curtain-terms">` +
+    terms.map((t) => `<li>${escapeHtml(t)}</li>`).join("") + `</ul>`;
+}
 function curtainCardHTML(o) {
   const ruleStyle = o.headlineColor ? ` style="color:${o.headlineColor}"` : "";
   return `<div class="chall-curtain-card${o.dark ? " is-dark" : ""}">` +
@@ -15116,6 +15146,7 @@ function curtainCardHTML(o) {
     `<div class="chall-curtain-tag">${escapeHtml(o.tag)}</div>` +
     `<div class="chall-curtain-rule"${ruleStyle}>${escapeHtml(o.headline)}</div>` +
     (o.sub ? `<div class="chall-curtain-sub">${o.sub}</div>` : "") +
+    (o.terms ? curtainTermsHTML(o.terms) : "") +
     `<div class="chall-curtain-cue">${escapeHtml(o.cue || "the word is coming…")}</div>` +
     (o.button ? `<button type="button" class="chall-curtain-next">${escapeHtml(o.button)}</button>` : "") +
     `</div>`;
@@ -15197,8 +15228,21 @@ function challengeIntroHTML(c) {
       sub: challengeTargetSong.album
         ? `from <b style="color:${col}">${escapeHtml(challengeTargetSong.album)}</b> — it's hiding somewhere in the next 13 pages`
         : `it's hiding somewhere in the next 13 pages`,
+      terms: c.blurb,
       cue: `name it on the right page — you get ${newSongLivesMax} guess${newSongLivesMax === 1 ? "" : "es"}`,
       button: "start the hunt" });
+  }
+  // Deep Cut's dark side — the album is DEALT rather than chosen, and which album it is decides
+  // the whole run, so the briefing names it. The base card can't: there is no album until the
+  // player's own answers pick one out, which is the difference between the two sides and the
+  // reason this branch keys off `c.album` rather than off the dark flag.
+  if (c.rule === "album5" && c.album) {
+    const col = albumColor(c.album) || "var(--ink-soft)";
+    return curtainCardHTML({ kicker: kick("deep cut"), dark: challengeDark, tag: "your album",
+      headline: c.album, headlineColor: col,
+      sub: `name <b>${c.need || 5}</b> songs from it over the next ${TOTAL_ROUNDS} pages — ` +
+        `answers from anywhere else still score the page, but they don't move the tally`,
+      terms: c.blurb, cue: "no swapping it now", button: "let's go" });
   }
   // Choose Your Path — explain the perk forks.
   if (c.rule === "path") {
@@ -15207,7 +15251,7 @@ function challengeIntroHTML(c) {
       headline: "forge your own run",
       sub: `clear pages to reach <b>${c.target}/13</b>` +
         (forks ? `, and at pages ${forks} you'll pick a perk for the rest of the way` : ""),
-      cue: "choose wisely", button: "let's go" });
+      terms: c.blurb, cue: "choose wisely", button: "let's go" });
   }
   // Devil's Path — warn that the forks hand you curses, not perks.
   if (c.rule === "devil") {
@@ -15216,12 +15260,12 @@ function challengeIntroHTML(c) {
       headline: "choose your curses",
       sub: `reach <b>${c.target}/13</b>` +
         (forks ? `, but at pages ${forks} you must take the lesser of two evils` : ""),
-      cue: "no way out but through", button: "make the deal" });
+      terms: c.blurb, cue: "no way out but through", button: "make the deal" });
   }
   // Every other challenge — name it, restate the rule and the win condition.
   return curtainCardHTML({ kicker: kick("challenge"), dark: challengeDark, tag: "the rule", headline: c.name,
     sub: `${escapeHtml(c.desc)}<span class="chall-curtain-win">${escapeHtml(c.win)}</span>`,
-    cue: "ready when you are", button: "let's go" });
+    terms: c.blurb, cue: "ready when you are", button: "let's go" });
 }
 
 // How long an auto-lifting curtain card holds, derived from how much there is to read on it.

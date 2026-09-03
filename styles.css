@@ -4361,10 +4361,29 @@
     .word-wrap[data-concealed] .word { transform: none; }
   }
 
-  /* Wildcard — the per-round rule banner above the prompt word */
+  /* The challenge banner above the prompt word: the rule in force, and — on most of the
+     roster — the running tally the whole run is judged on. It was one 12px typewriter line for
+     both, and the tally was being read past on every rule that has one, in the same way the
+     risk batch's was before it got its scoreboard (see .is-risk below). So the scoreboard is
+     the BASE now rather than a special case for four cards: the row is ruled off from the page
+     above and below, and the count is set in the hand at a size you can take in without
+     looking away from the word. .is-risk keeps its own larger figure, because on those rules
+     the number is not progress, it is the stake. */
   .chall-banner {
     text-align: center; margin: 2px 0 6px; font-family: var(--type);
     font-size: calc(12px + var(--text-size-adjust)); letter-spacing: 0.4px; color: var(--ink-soft);
+  }
+  /* A banner carrying a TALLY becomes a scoreboard. One that only reminds you of the rule
+     (Title…?, Switch-Up, Wildcard) stays the quiet line above, because there is nothing to
+     rule off around. Selected on the count itself rather than a per-rule class, so a rule that
+     starts printing one gets the treatment without a second edit somewhere else. Keep this at
+     :has() rather than :not(:has()) — the negated form outranks `.chall-banner.is-chain` on
+     specificity and silently flattened the chain row. */
+  .chall-banner:has(.chall-prog-count) {
+    display: flex; align-items: baseline; justify-content: center; gap: 12px; flex-wrap: wrap;
+    margin: 4px auto 9px; padding: 4px 16px 5px; max-width: 420px;
+    border-top: 1.5px solid rgba(43, 39, 34, 0.14);
+    border-bottom: 1.5px solid rgba(43, 39, 34, 0.14);
   }
   .chall-banner-tag {
     font-weight: 700; text-transform: uppercase; font-size: calc(10px + var(--text-size-adjust)); letter-spacing: 1px;
@@ -4381,7 +4400,25 @@
   }
   /* One Of A Kind — a remaining guess (drains to a hollow pip as guesses are spent) */
   .chall-pip.filled { background: #b23a3a; border-color: #b23a3a; }
-  .chall-prog-count { font-variant-numeric: tabular-nums; opacity: 0.8; }
+  .chall-prog-count {
+    font-family: var(--hand); font-weight: 700; letter-spacing: 0;
+    font-size: calc(19px + var(--text-size-adjust));
+    font-variant-numeric: tabular-nums; opacity: 1; color: var(--ink);
+  }
+  /* Some counts are a sentence rather than a figure — the shared clock and its bonus, a page
+     tally beside a run tally, the curses taken so far. Those sit a size down, so the row still
+     reads as a scoreboard without a clause set in 19px handwriting. Chosen off the text's own
+     length rather than a per-rule class, because the same banner is short on page one and long
+     by page nine. */
+  .chall-prog-count.is-wordy { font-size: calc(14px + var(--text-size-adjust)); }
+  /* The clause that hangs off a figure: the per-correct bonus beside the shared clock, the run
+     tally beside the page tally, the curses standing against you. It belongs on the row, but it
+     is not the number the player is tracking, so it stays in the quiet typewriter voice the
+     whole banner used to be set in. */
+  .chall-prog-note {
+    font-family: var(--type); font-size: calc(11.5px + var(--text-size-adjust));
+    letter-spacing: 0.3px; color: var(--ink-soft); opacity: 0.85;
+  }
   /* The risk batch's banner is a SCOREBOARD, not a reminder. On those four rules the whole
      decision is what you hold against what you need, and at the shared banner's 12px it was
      being read past entirely (playtest, all three of Press / Wager / Insurance). Sized up,
@@ -4406,6 +4443,7 @@
      alphabet bead now, the same white cube the strand strings, set at the size it is actually
      being asked at. */
   .chall-banner.is-chain { display: flex; align-items: center; justify-content: center; gap: 14px; flex-wrap: wrap; margin-bottom: 10px; }
+  .chall-banner.is-chain .chall-prog-count { font-size: calc(19px + var(--text-size-adjust)); }
   .chall-banner.is-chain .chall-prog-name { font-size: calc(13px + var(--text-size-adjust)); }
   .chain-cue { display: inline-flex; align-items: center; gap: 9px; font-size: calc(13px + var(--text-size-adjust)); }
   .chain-letter {
@@ -4500,6 +4538,28 @@
   .chall-curtain-win {
     display: block; margin-top: 9px; font-style: italic;
     color: var(--ink); opacity: 0.82;
+  }
+  /* The terms of the run, off the challenge's own blurb: the clock, the suggestions, the word
+     pool, the title rule. Ruled off above and below like a clause pasted into the page, and
+     set in the typewriter face because these are the functional facts, not the flavour. Two
+     columns from 380px so a five-term blurb does not push the button off a short screen. */
+  .chall-curtain-terms {
+    list-style: none; margin: 15px auto 0; padding: 9px 0 10px; max-width: 340px;
+    border-top: 1px solid rgba(43, 39, 34, 0.16);
+    border-bottom: 1px solid rgba(43, 39, 34, 0.16);
+    font-family: var(--type); font-size: calc(11px + var(--text-size-adjust));
+    line-height: 1.5; color: var(--ink-soft); text-align: left;
+    display: grid; grid-template-columns: 1fr; gap: 1px 18px;
+  }
+  @media (min-width: 380px) {
+    .chall-curtain-terms { grid-template-columns: 1fr 1fr; }
+    .chall-curtain-terms > li:only-child { grid-column: 1 / -1; }
+  }
+  /* a pencil tick against each term — the same mark the rule row uses for "this applies" */
+  .chall-curtain-terms > li { position: relative; padding-left: 15px; }
+  .chall-curtain-terms > li::before {
+    content: "✓"; position: absolute; left: 0; top: 0;
+    color: #b23a3a; opacity: 0.75; font-size: calc(10px + var(--text-size-adjust));
   }
   .chall-curtain-cue {
     font-family: var(--type); font-size: calc(12px + var(--text-size-adjust)); color: var(--ink-soft);
