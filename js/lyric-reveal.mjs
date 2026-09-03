@@ -106,10 +106,10 @@ export function buildLyricReveal(song, anchorText, options = {}) {
   }
 
   const matching = [];
-  if (matchesLine) {
+  const collect = (test) => {
     for (const candidate of sections) {
       candidate.lines.forEach((line, lineIndex) => {
-        if (matchesLine(line.text)) matching.push({
+        if (test(line.text)) matching.push({
           sectionIndex: candidate.sectionIndex,
           sectionLabel: candidate.label,
           lineIndex,
@@ -118,24 +118,39 @@ export function buildLyricReveal(song, anchorText, options = {}) {
         });
       });
     }
-  } else {
+  };
+  if (matchesLine) collect(matchesLine);
+  else {
     const anchorKey = normalize(section.lines[anchorIndex].text);
-    for (const candidate of sections) {
-      candidate.lines.forEach((line, lineIndex) => {
-        if (normalize(line.text) === anchorKey) matching.push({
-          sectionIndex: candidate.sectionIndex,
-          sectionLabel: candidate.label,
-          lineIndex,
-          sourceLineIndex: line.sourceLineIndex,
-          text: line.text,
-        });
-      });
-    }
+    collect((text) => normalize(text) === anchorKey);
   }
   const occurrenceIndex = matching.findIndex((hit) =>
     hit.sectionIndex === section.sectionIndex && hit.lineIndex === anchorIndex);
-  const beforeStart = Math.max(0, start - radius);
-  const afterEnd = Math.min(section.lines.length, end + 1 + radius);
+
+  // Context is measured against the WHOLE song, not the anchor's section. Clipping at the
+  // section edge is what made the peek lopsided: a line sitting first in its chorus got nothing
+  // above it and two lines below, which reads as a bug rather than as the end of a verse. The
+  // song runs on past a section break, so the peek does too, and a line that opens a new
+  // section is flagged so the rendering can draw the break instead of pretending it isn't there.
+  const flat = [];
+  sections.forEach((candidate) => {
+    candidate.lines.forEach((line, lineIndex) => {
+      flat.push({
+        text: line.text,
+        sourceLineIndex: line.sourceLineIndex,
+        sectionIndex: candidate.sectionIndex,
+        sectionLabel: candidate.label,
+        lineIndex,
+        sectionBreak: flat.length > 0 && flat[flat.length - 1].sectionIndex !== candidate.sectionIndex,
+      });
+    });
+  });
+  const flatIndex = (lineIndex) => flat.findIndex((line) =>
+    line.sectionIndex === section.sectionIndex && line.lineIndex === lineIndex);
+  const spanStart = flatIndex(start);
+  const spanEnd = flatIndex(end);
+  const beforeStart = Math.max(0, spanStart - radius);
+  const afterEnd = Math.min(flat.length, spanEnd + 1 + radius);
 
   return {
     sectionIndex: section.sectionIndex,
@@ -144,10 +159,10 @@ export function buildLyricReveal(song, anchorText, options = {}) {
     lineEnd: end,
     anchorLineIndex: anchorIndex,
     anchorSourceLineIndex: section.lines[anchorIndex].sourceLineIndex,
-    before: section.lines.slice(beforeStart, start),
-    after: section.lines.slice(end + 1, afterEnd),
+    before: flat.slice(beforeStart, spanStart),
+    after: flat.slice(spanEnd + 1, afterEnd),
     truncatedBefore: beforeStart > 0,
-    truncatedAfter: afterEnd < section.lines.length,
+    truncatedAfter: afterEnd < flat.length,
     totalMatches: matching.length,
     occurrence: occurrenceIndex >= 0 ? occurrenceIndex + 1 : 0,
     matches: matching,

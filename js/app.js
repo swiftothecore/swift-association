@@ -18559,27 +18559,34 @@ function albumTag(song, color) {
     `<span aria-hidden="true">${escapeHtml(song.album)}</span></span>`;
 }
 
-function lyricRevealMeta(model, word) {
+// The count is suppressed when a stepper is rendering it two lines below: "1 of 4 matching
+// lines" sitting directly above a "1 / 4" control is the same fact written twice.
+function lyricRevealMeta(model, word, showCount = true) {
   const parts = [];
   if (model.sectionLabel) parts.push(model.sectionLabel);
-  if (word && model.totalMatches > 1 && model.occurrence)
-    parts.push(`${model.occurrence} of ${model.totalMatches} matching lines`);
-  else if (!word && model.totalMatches > 1 && model.occurrence)
-    parts.push(`${model.occurrence} of ${model.totalMatches} occurrences`);
+  if (showCount && model.totalMatches > 1 && model.occurrence)
+    parts.push(`${model.occurrence} of ${model.totalMatches} ${word ? "matching lines" : "occurrences"}`);
   return parts.length ? `<div class="lyric-context-meta">${parts.map(escapeHtml).join(" · ")}</div>` : "";
 }
 
-function lyricContextLine(line, entry) {
+// A context line that opens a new section of the song carries a quiet rule above it, so the
+// peek can run past a section edge without the two halves reading as one continuous verse.
+function lyricContextLine(line, entry, allowBreak = true) {
   const matches = entry.word && entry.matchesLine && entry.matchesLine(line.text);
-  return `<div class="lc-line${matches ? " lc-match" : ""}">` +
+  const broken = allowBreak && line.sectionBreak;
+  return `<div class="lc-line${matches ? " lc-match" : ""}${broken ? " lc-break" : ""}">` +
     (matches ? highlightWord(line.text, entry.word, entry.strict) : escapeHtml(censor(line.text))) + `</div>`;
 }
 
 function lyricContextPart(lines, truncated, atStart, entry) {
   let html = "";
-  if (truncated && atStart) html += `<div class="lc-gap" aria-hidden="true">⋯</div>`;
-  html += lines.map((line) => lyricContextLine(line, entry)).join("");
-  if (truncated && !atStart) html += `<div class="lc-gap" aria-hidden="true">⋯</div>`;
+  // Three dots, not the ⋯ glyph: at this size the single character sets as one short dash and
+  // reads as a stray pen mark rather than as "the song carries on past here".
+  if (truncated && atStart) html += `<div class="lc-gap" aria-hidden="true">· · ·</div>`;
+  // The rule marks a section edge BETWEEN two lines. The top line of the block above the anchor
+  // has nothing over it but the ellipsis, so a rule there is just a stray underline on the meta.
+  html += lines.map((line, index) => lyricContextLine(line, entry, !(atStart && index === 0))).join("");
+  if (truncated && !atStart) html += `<div class="lc-gap" aria-hidden="true">· · ·</div>`;
   return html;
 }
 
@@ -18593,12 +18600,16 @@ function fullLyricsButton(entry, extra = false) {
       `full lyrics →</button></span>`;
 }
 
-function occurrenceControls(entry) {
+// Stepping between occurrences only changes what is on screen while the context is open: the
+// repeated line itself is identical every time it comes round, so on a closed card the arrows
+// looked broken. They ride the same disclosure as the context they page through.
+function occurrenceControls(entry, extra = false) {
   const model = entry.model;
   // A recovered multi-line answer is one displayed span, not one numbered line. Keep it whole.
   if (!model || entry.line.includes("\n") || model.lineStart !== model.lineEnd || model.totalMatches < 2 || !model.occurrence) return "";
   const title = escapeHtml(censor(entry.song.title));
-  return `<span class="lyric-occurrence" role="group" aria-label="Matching lyrics in ${title}">` +
+  const attrs = extra ? ` data-lyric-context-extra${entry.expanded ? "" : " hidden"}` : "";
+  return `<span class="lyric-occurrence" role="group" aria-label="Matching lyrics in ${title}"${attrs}>` +
     `<button type="button" class="lyric-occurrence-btn" data-occurrence-step="-1" aria-label="Previous matching lyric in ${title}">‹</button>` +
     `<span class="lyric-occurrence-count" aria-live="polite">${model.occurrence} / ${model.totalMatches}</span>` +
     `<button type="button" class="lyric-occurrence-btn" data-occurrence-step="1" aria-label="Next matching lyric in ${title}">›</button>` +
@@ -18609,9 +18620,10 @@ function lyricRevealInner(entry) {
   const model = entry.model;
   const hasContext = !!(entry.allowContext && model && (model.before.length || model.after.length));
   const hidden = entry.expanded ? "" : " hidden";
+  const stepper = occurrenceControls(entry, hasContext);
   const before = hasContext
     ? `<div class="lyric-context-before" id="${entry.beforeId}" data-lyric-context-extra${hidden}>` +
-        lyricRevealMeta(model, entry.word) +
+        lyricRevealMeta(model, entry.word, !stepper) +
         lyricContextPart(model.before, model.truncatedBefore, true, entry) + `</div>`
     : "";
   const after = hasContext
@@ -18627,9 +18639,11 @@ function lyricRevealInner(entry) {
       ` aria-label="${entry.expanded ? "Hide" : "Show"} lyric context for ${escapeHtml(censor(entry.song.title))}">` +
       `${entry.expanded ? "hide context" : "in context"}</button>`
     : "";
+  const actions = contextButton + stepper + (entry.allowContext ? fullLyricsButton(entry, hasContext) : "");
+  // A card with nothing to offer gets no action row at all. An empty flex box still carries its
+  // margin, which is where a chunk of the dead space under the smaller proofs was coming from.
   return `${before}<div class="lyric-line">"${lyricBreaks(line)}"</div>${after}` +
-    `<div class="lyric-reveal-actions">${contextButton}${occurrenceControls(entry)}` +
-      (entry.allowContext ? fullLyricsButton(entry, hasContext) : "") + `</div>`;
+    (actions ? `<div class="lyric-reveal-actions">${actions}</div>` : "");
 }
 
 function registerLyricReveal(song, word, line, options = {}) {

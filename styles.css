@@ -6141,7 +6141,7 @@
   .lyric-context-before { margin: 2px 0 5px; }
   .lyric-context-after { margin: 5px 0 1px; }
   .lyric-context-before[hidden], .lyric-context-after[hidden],
-  .lyric-full-wrap[hidden], .lyric-ctx[hidden] { display: none; }
+  .lyric-full-wrap[hidden], .lyric-ctx[hidden], .lyric-occurrence[hidden] { display: none; }
   .lyric-context-meta {
     margin-bottom: 3px; font-family: var(--type); font-size: calc(9px + var(--text-size-adjust));
     letter-spacing: 1px; text-transform: uppercase; color: var(--album-color, var(--ink-soft));
@@ -6166,12 +6166,26 @@
   .more-songs-next,
   .more-songs-all { text-decoration-line: underline; text-decoration-style: dashed; text-underline-offset: 4px; }
   .lyric-ctx-toggle:hover { color: var(--ink); }
+  /* Every one of these controls keeps a 44px touch target on a finger, but a mouse does not
+     need one, and a stack of 44px bands under cards that are three lines tall is most of the
+     dead space on the verdict. On a fine pointer they shrink to the size of their own type. */
+  @media (pointer: fine) {
+    .lyric-ctx-toggle,
+    .lyric-fullsong,
+    .more-songs-toggle,
+    .more-songs-next,
+    .more-songs-all { min-width: 0; min-height: 0; padding: 4px 4px; }
+    .lyric-occurrence-btn { width: 26px; height: 26px; }
+  }
   .lyric-ctx { margin-top: 4px; }
   .lyric-ctx-lines { margin-bottom: 6px; }
   .lc-line { font-family: var(--hand); font-size: calc(17px + var(--text-size-adjust)); line-height: 1.45; color: var(--ink-soft); }
   .lc-line.lc-match { color: var(--ink); }
   .lc-line.lc-match mark { background: var(--highlighter); color: var(--ink); padding: 0 3px; font-weight: 700; }
-  .lc-gap { font-family: var(--type); font-size: calc(12px + var(--text-size-adjust)); color: var(--ink-soft); opacity: 0.6; line-height: 1; }
+  /* The peek runs past a section edge rather than stopping dead at one, so the edge is drawn:
+     a hairline says the next line is a new verse, not the same breath continuing. */
+  .lc-line.lc-break { margin-top: 6px; padding-top: 5px; border-top: 1px dashed rgba(43,39,34,0.16); }
+  .lc-gap { font-family: var(--type); font-size: calc(12px + var(--text-size-adjust)); color: var(--ink-soft); opacity: 0.6; line-height: 1; letter-spacing: 2px; margin: 3px 0; }
   .lc-anchor-note {
     margin: 2px 0; font-family: var(--type); font-size: calc(8px + var(--text-size-adjust));
     letter-spacing: 0.8px; text-transform: uppercase; color: var(--ink-soft); opacity: 0.65;
