@@ -12711,10 +12711,20 @@ function pickWhoseLine(song, hard) {
 // Whose Line?: draw a source song + a line from it, then offer WHOSE_TILES songs with the source
 // hidden among decoys. Decoys never include a song whose lyrics also carry that exact line, so a
 // re-recording sharing the line with its original can't make two tiles correct at once.
+// The twelve studio albums, or everything if the corpus in play has none of them by name (a
+// guest shelf). Whose Line? draws its line AND its decoys from here rather than from the whole
+// sixteen-group catalogue: a deep cut off a deluxe or Taylor's Version tail is a line nobody
+// has heard placed against three songs nobody has heard, which is not a harder page, only an
+// unanswerable one. Same reasoning, and the same fallback guard, as On Tour!'s setlist.
+function whoseSongPool() {
+  const studio = allSongs.filter((s) => STUDIO_ALBUMS.includes(s.album));
+  return studio.length ? studio : allSongs;
+}
 function buildWhosePuzzle() {
   whosePuzzle = null;
   tapTiles = [];
-  const pool = shuffle(allSongs.slice());
+  const catalogue = whoseSongPool();
+  const pool = shuffle(catalogue.slice());
   let source = null, line = null;
   // On a dark run, look for a hook-free line first. Those are strictly rarer, and a build that
   // returns false renders a DEAD page (the caller ignores the return, leaving no line and no
@@ -12730,7 +12740,7 @@ function buildWhosePuzzle() {
   }
   if (!source) return false;
   const low = line.toLowerCase();
-  const decoys = shuffle(allSongs.filter((s) =>
+  const decoys = shuffle(catalogue.filter((s) =>
     s.title !== source.title && !String(s.lyrics || "").toLowerCase().includes(low)))
     .slice(0, WHOSE_TILES - 1);
   if (!decoys.length) return false;
@@ -13055,10 +13065,10 @@ function revealCommon(correct) {
 const TOUR_MIN_WORDS = 3;
 function buildTourSetlist() {
   tourSetlist = [];
-  // The dark side's `studioOnly` books the tour into the twelve studio albums and nowhere
-  // else. albumOrder runs to sixteen groups; the extra four are deluxe and Taylor's Version
-  // tails, and a night on one of those is a night whose running order nobody holds — fine
-  // while the dropdown is a live tracklist, unplayable once the dark side takes it away.
+  // `studioOnly` books the tour into the twelve studio albums and nowhere else. albumOrder
+  // runs to sixteen groups; the extra four are deluxe and Taylor's Version tails, and a night
+  // on one of those is a night whose running order nobody holds — a list to scroll rather than
+  // an album to play, dropdown or no dropdown. Both sides of On Tour! carry it.
   // Filtered rather than replaced, so a group with too few candidate words still drops out
   // below, and the filter falls back to the full list if it ever empties (a guest corpus has
   // no studio albums by this name, and On Tour! is a Taylor challenge, but the guard costs
@@ -13201,6 +13211,11 @@ function applyChallengeRound(wrap) {
     wrap.dataset.small = "1";
     wrap.style.setProperty("--word-scale", String(scale));
   }
+  // `wordFlip` turns the prompt upside down. Same shape as wordScale — one lever any challenge
+  // can carry, display only, matching still reads currentWord from state — and it exists for
+  // the same finding: a word that is merely BRIEF is no obstacle once it has been read, so
+  // Vanishing Word's dark side has to make the reading itself cost something.
+  if (currentChallenge.wordFlip) wrap.dataset.flip = "1";
   if (currentChallenge.rule === "vanishing") {
     return;
   } else if (currentChallenge.rule === "alphabetical") {
@@ -13515,6 +13530,25 @@ function deepCutRevealSong(pool) {
   const { album } = deepCutLeader();
   if (!album) return null;
   return pool.find((s) => s.album === album) || null;
+}
+// Deep Cut, on a page you WON from the wrong album. A correct answer still scores the page,
+// but on this challenge the page is not the point: only songs from the album the tally is
+// building on move the pips, and a run of thirteen right answers off thirteen different
+// albums loses. So the verdict says both things — the tick, and the song that would have
+// counted. Silent when there is no album in play yet (page one of a base run has nothing to
+// be off-target FROM), when the answer was already on target, and when the album genuinely
+// had nothing on this page, which is the one case where the player did nothing wrong.
+function deepCutMissedAlbumNote(song) {
+  if (gameType !== "challenge" || !currentChallenge || currentChallenge.rule !== "album5") return "";
+  if (!song) return "";
+  const { album } = deepCutLeader();
+  if (!album || song.album === album) return "";
+  const alt = currentSongs.find((s) => s.album === album && s.title !== song.title);
+  if (!alt) return "";
+  const col = albumColor(album) || "var(--ink-soft)";
+  return `<p class="deepcut-note">but you could have had ` +
+    `<b>${escapeHtml(censor(alt.title))}</b>` +
+    `<span class="deepcut-note-album" style="color:${col}">${escapeHtml(album)}</span></p>`;
 }
 function renderDeepCutCounter() {
   if (gameType !== "challenge" || !currentChallenge || currentChallenge.rule !== "album5") return;
@@ -15190,6 +15224,12 @@ function challengeIntroHTML(c) {
     cue: "ready when you are", button: "let's go" });
 }
 
+// How long an auto-lifting curtain card holds, derived from how much there is to read on it.
+// (Button-gated cards — every challenge's round-1 intro — wait for the player instead.)
+const CURTAIN_NOTICE_MS = 900;     // before reading starts: noticing the card is there at all
+const CURTAIN_MS_PER_CHAR = 77;    // ~13 characters a second, unhurried
+const CURTAIN_MIN_MS = 1750;       // the old fixed hold, now the floor — nothing got faster
+const CURTAIN_MAX_MS = 4200;       // and no label can stall the run
 let curtainTimers = [];
 let curtainKeyOff = null;       // detaches the live gated card's Enter listener (see showCard)
 // True while a curtain is over the board (including its lift animation). The curtain is
@@ -15361,10 +15401,18 @@ function beginRoundClock() {
       document.addEventListener("keydown", onKey, true);
       curtainKeyOff = () => { document.removeEventListener("keydown", onKey, true); curtainKeyOff = null; };
     } else {
-      // Auto-lifting cards (per-page Wildcard / Switch-Up): advance after a beat, tap
-      // anywhere to skip ahead.
+      // Auto-lifting cards (per-page Wildcard / Switch-Up / On Tour!): advance after a beat,
+      // tap anywhere to skip ahead. The beat is READ OFF THE CARD rather than fixed, because
+      // a fixed 1.75s was set against Switch-Up's four-word headline and Wildcard's dark side
+      // then started printing two fused rules into the same slot — a card that takes longer to
+      // read than it is on screen for, which is the page's rule going unread on every page of
+      // the run. Roughly 13 characters a second plus a beat to notice the card at all, floored
+      // at the old hold so nothing got quicker and capped so a long label can't stall the run.
+      const words = (ov.querySelector(".chall-curtain-card") || ov).textContent || "";
+      const read = CURTAIN_NOTICE_MS + words.trim().length * CURTAIN_MS_PER_CHAR;
+      const hold = Math.max(CURTAIN_MIN_MS, Math.min(CURTAIN_MAX_MS, read));
       ov.addEventListener("click", next);
-      scheduleCurtainTimer(next, reduced ? 1100 : 1750);
+      scheduleCurtainTimer(next, reduced ? Math.round(hold * 0.62) : hold);
     }
   };
   showCard();
@@ -16280,6 +16328,7 @@ function advanceRound() {
   wrap.style.removeProperty("--tiny-dx");
   wrap.style.removeProperty("--tiny-dy");
   wrap.removeAttribute("data-small");         // clear any prior round's Vanishing Word dark shrink
+  wrap.removeAttribute("data-flip");          // …and its upside-down turn
   wrap.style.removeProperty("--word-scale");
   wrap.classList.remove("revolve-in");        // clear any prior round's revolve swap
   // Wildcard: apply an INSTANT gimmick (scramble) the moment the word is rendered, so it's
@@ -16354,12 +16403,26 @@ function showTimerFull() {
   const fill = $("timerFill");
   const label = $("timerLabel");
   const wrap = document.querySelector(".timer-wrap");
-  // It's A Clock! uses one shared clock — paint it at its current reading, not "full".
-  const base = comboRuleActive() ? Math.max(0, comboClock) : baseSeconds();
+  // It's A Clock! uses one shared clock, and its bar is scaled to comboCap() rather than to
+  // the reading it currently holds — exactly as startTimer scales it. Painting it "full" here
+  // instead made the curtain show a brimming bar that jumped back to two thirds the instant
+  // the clock actually started, on every page of the run: the bar was telling the truth about
+  // the seconds and lying about the budget they came out of.
+  if (comboRuleActive()) {
+    const cap = comboCap();
+    const shared = Math.max(0, Math.min(cap, comboClock));
+    if (!(cap > 0)) { if (wrap) wrap.style.display = "none"; return; }
+    if (wrap) wrap.style.display = "";
+    fill.style.width = (shared / cap * 100) + "%";
+    fill.classList.toggle("low", shared <= 3);
+    label.textContent = shared.toFixed(1);
+    return;
+  }
+  const base = baseSeconds();
   // Floor a clocked page so stacked time penalties (Devil's Path) can't zero it, but never
   // above the mode's own base, so a deliberately short custom clock (e.g. 2s) stays as set.
   const floor = Math.min(base, 3);
-  const total = base > 0 ? Math.max(floor, base + (comboRuleActive() ? 0 : (extraSecondsPerRound || 0))) : base;
+  const total = base > 0 ? Math.max(floor, base + (extraSecondsPerRound || 0)) : base;
   if (!(total > 0)) { if (wrap) wrap.style.display = "none"; return; }
   if (wrap) wrap.style.display = "";
   fill.style.width = "100%";
@@ -16719,8 +16782,14 @@ function roundAcceptsSong(song) {
 }
 
 // The number of whitespace-separated words in a title (Short n' Sweet's measure).
+// How many words a title reads as. Hyphens and slashes count as breaks, not as letters:
+// "Anti-Hero" is one whitespace-delimited token and two words to anybody looking at it, and
+// on Short n' Sweet's dark side ("one-word titles only") it was the one legal answer that
+// visibly broke the rule — offered in the reveal, and accepted when typed "Anti Hero", since
+// a misplaced space is already forgiven. Counting it as two costs the light side nothing (it
+// allows two) and gives the dark side back the rule it prints on the card.
 function titleWordCount(title) {
-  return (title || "").trim().split(/\s+/).filter(Boolean).length;
+  return (title || "").trim().split(/[\s\-\u2010-\u2015/]+/).filter(Boolean).length;
 }
 
 /* ---------- Resolving a typed title ---------- */
@@ -17342,12 +17411,36 @@ function nudgeLyricNeedsWord(raw) {
   if (!np || np.split(" ").length < MIN_LYRIC_WORDS) return;   // too short to have been a line
   if (phraseSingsPromptWord(np)) return;                       // it sang the word; something else was wrong
   if (isTitleFragment(np)) return;                             // a half-typed title, not a sung line
+  // Every challenge that hides the word behind a warp or a vanish has to be answered from
+  // what you managed to read, and this nudge prints the word in plain letters — so on those
+  // pages it was a free reveal. Four nonsense words and Enter beat Word Games, Vanishing Word
+  // and Ready For It??? outright, which is the whole of those challenges handed over by a
+  // helper meant for a player who typed a real line and saw nothing happen. Keep the nudge
+  // (the silence it exists to prevent is just as confusing here) and take the word out of it.
+  if (!promptWordLegible()) {
+    softRejectFlash(`a sung line has to be one with the page's word in it`, true);
+    return;
+  }
   const near = nearMissPromptWord(np);
   if (near) return nudgeNearMiss(raw, near);
   const which = bothRuleActive() && bothWords.length > 1
     ? bothWordsPhrase(true)
     : `“<b>${escapeHtml(currentWord)}</b>”`;
   softRejectFlash(`a sung line has to be one with ${which} in it`, true);
+}
+
+// Can the player read the page's word off the page right now? False wherever a rule has
+// warped it, blanked it or turned it face down — the three states in which naming the word
+// anywhere else on screen would be giving the challenge away. Read off the LIVE prompt
+// element rather than the rule id, so a vanishing page is legible until it actually vanishes
+// and a warp ladder that has not started warping yet still counts as readable.
+function promptWordLegible() {
+  if (wordConcealed) return false;
+  const wrap = $("wordDisplay") && $("wordDisplay").parentNode;
+  if (!wrap) return true;
+  if (wrap.classList.contains("vanished")) return false;
+  if (wrap.dataset.fx) return false;
+  return true;
 }
 
 // The near miss as the player actually typed it. normalizeLyric g-drops and strips
@@ -18185,7 +18278,12 @@ function submitAnswer(song, isTimeout) {
     return;
   }
   roundResults[round - 1] = correct;
-  roundAlbums[round - 1] = song ? (song.album || null) : null;
+  // The tap grids answer with a tile rather than a typed song, so `song` is null here and the
+  // bracelet used to string every page of Whose Line? and Odd One Out in the notebook's era
+  // colour — thirteen beads that look picked at random because nothing about the run picked
+  // them. The page still HAS an answer: the song on the correct tile. String that album.
+  const tapAnswer = tapKnowledgeActive() ? (tapTiles.find((t) => t.correct) || {}).song : null;
+  roundAlbums[round - 1] = song ? (song.album || null) : (tapAnswer ? (tapAnswer.album || null) : null);
   // Distinct albums the prompt word *could* have been answered from — the Discography skill
   // normalises breadth against this, so a word that only lives in one album never penalises.
   roundAnswerAlbums[round - 1] = [...new Set(currentSongs.map((s) => s.album).filter(Boolean))];
@@ -18945,6 +19043,8 @@ function showCorrectFeedback(song, lyricMatch) {
   // rule — the card above is already showing the highlighted variant, so it lands with the
   // evidence in view. Once, then silent. Skipped when the verse note is already talking.
   const formsNote = firstNote ? "" : wordFormsNote((multi || both) ? null : song, multi ? null : (lyricMatch ? lyricMatch.line : null));
+  // Deep Cut: right page, wrong album — name the answer that would have moved the tally.
+  const deepCutNote = deepCutMissedAlbumNote(multi ? null : song);
   // "What else held that word?" — the same expansion a missed page offers, because the
   // curiosity is at least as strong on a page you just landed as on one you lost. Shuffled:
   // with the answer already found there's no lead card to earn its place at the top, so the
@@ -18963,6 +19063,7 @@ function showCorrectFeedback(song, lyricMatch) {
     ${inkNote}
     ${firstNote}
     ${card}
+    ${deepCutNote}
     ${formsNote}
     ${more}
     ${advanceUI}`;

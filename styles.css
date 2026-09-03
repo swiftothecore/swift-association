@@ -4586,6 +4586,17 @@
   .word-wrap[data-small] .word {
     font-size: calc(clamp(50px, 12vw, 80px) * var(--word-scale, 1));
   }
+  /* …and, on that same dark side, upside down. Reading a familiar word inverted is slower
+     than reading it small, and slower than reading it briefly, which is the point: the old
+     dark side vanished quickly but was legible at a glance, so the vanish arrived after the
+     player already had the word and cost them nothing. Screen readers are untouched —
+     #wordDisplay's text content never changes.
+     On `.word`, NOT on the wrap: the wrap carries the tremor keyframes, and an animation
+     outranks a plain declaration, so a rotate written there is silently discarded for the
+     whole run. The swipe is .word::before and turns with it either way. 178.8deg rather than
+     180 keeps the -1.2deg the word is already written at, so the flipped word sits at the
+     same hand-drawn angle instead of straightening up. */
+  .word-wrap[data-flip] .word { transform: rotate(178.8deg); }
 
   .hist-head, .hist-row {
     display: grid; grid-template-columns: 1fr 0.8fr 0.8fr 1.9fr 1.3fr;
@@ -6052,6 +6063,20 @@
     text-align: center; margin: 0 auto 10px; letter-spacing: 0.02em;
   }
   .ink-note b { font-size: calc(16px + var(--text-size-adjust)); color: var(--ink); }
+
+  /* Deep Cut's "but you could have had" — pencilled under the card of an answer that scored
+     the page off the wrong album. An aside in the same margin hand as the forms note, not a
+     second verdict: the tick above it still stands. The album is set small beside the title,
+     in the album's own colour, which is the same pairing the pips above the word already use. */
+  .deepcut-note {
+    font-family: var(--hand); font-size: calc(15px + var(--text-size-adjust)); color: var(--ink-soft);
+    text-align: center; margin: 9px auto 0; max-width: 42ch; line-height: 1.45;
+  }
+  .deepcut-note b { color: var(--ink); font-weight: 700; }
+  .deepcut-note-album {
+    font-family: var(--type); font-size: calc(10px + var(--text-size-adjust));
+    text-transform: uppercase; letter-spacing: 1px; margin-left: 7px; vertical-align: 1px;
+  }
 
   /* The one-time word-forms note: an aside pencilled under the card it's explaining, so it
      reads as annotation on the lyric above rather than another verdict. */

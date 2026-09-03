@@ -695,13 +695,22 @@ export const CHALLENGES = [
   { id: "vanishing-word", name: "Vanishing Word", rule: "vanishing", mode: "medium",
     free: true,  cost: 1, target: 10, revealMs: 1500, tapes: 1,
     // Dark: less time AND less to read. `wordScale` is the fraction of normal size the prompt
-    // renders at, so 0.3 is "~70% smaller" — the same magnitude as Smallest Song's data-tiny.
-    // It stays a DIFFERENT thing to that challenge, though: small and centred, but never
-    // tilted, never drifting, and it keeps its highlighter swipe. This one isn't asking you
-    // to hunt for the word, only to read it before it's gone.
-    hard: { revealMs: 600, wordScale: 0.3,
-      desc: "The word is small now, and it's gone in a blink.",
-      win: "Score 10 / 13 reading a word that's barely there." },
+    // renders at. It stays a DIFFERENT thing to Smallest Song, though: small and centred, and
+    // it keeps its highlighter swipe. This one isn't asking you to hunt for the word, only to
+    // read it before it's gone.
+    // Playtested 2026-09-03 and retuned: at 600ms and 0.3 the word was still perfectly
+    // legible at a glance, and once it has been READ the vanish costs nothing — you already
+    // have the word. So the lever that matters here is not the timer, it is how expensive the
+    // first read is. `wordFlip` turns the prompt 180 degrees (a familiar word inverted has to
+    // be worked out rather than recognised), the scale drops again, and the blink shortens on
+    // top of both. Small + upside down + gone is three obstacles to one act of reading, which
+    // is the challenge the card has always claimed to be. The flip is deliberately carrying
+    // most of the new weight: the scale and the timer move one notch each rather than two,
+    // because 10/13 is still the bar and three hard nerfs at once would move the target as
+    // well as the difficulty. Retune the three numbers together, never one alone.
+    hard: { revealMs: 500, wordScale: 0.26, wordFlip: true,
+      desc: "The word is small, upside down, and gone in a blink.",
+      win: "Score 10 / 13 off a word you barely got to read." },
     desc: "The word vanishes quickly, so pay attention.",
     win: "Score 10 / 13 with disappearing words." },
   { id: "deep-cut", name: "Deep Cut", rule: "album5", mode: "easy",
@@ -885,8 +894,11 @@ export const CHALLENGES = [
     //   `studioOnly` restricts the setlist to the twelve studio albums (STUDIO_ALBUMS). The
     // full album list runs to sixteen groups, and the extra ones are the deluxe and Taylor's
     // Version tails — the nights that deal the one-of-one words and the songs nobody has the
-    // running order of. On the base run the dropdown covers for that; on the dark side it is
-    // just a night you cannot play. Twelve albums over thirteen stops means exactly one album
+    // running order of. It was a dark-side lever first, on the reasoning that the base run's
+    // dropdown covers for a night you don't know; playtesting says it doesn't. Being handed a
+    // deluxe tail is a night you scroll a tracklist you have never heard rather than a night
+    // you play, whether or not the list is in your hand, so it is a BASE lever now and the
+    // dark side simply inherits it. Twelve albums over thirteen stops means exactly one album
     // comes round twice, which buildTourSetlist already handles by cycling.
     //   `noTitle: true` was considered and dropped. albumWordMap is built with
     //   validSongs(w, false, false), so a word can be in an album's pool ONLY because of a
@@ -894,12 +906,13 @@ export const CHALLENGES = [
     //   one map per noTitle setting (the shortTitleWordLists shape), and albumWordMap is both
     //   Deep Cut's pool and part of the guest-shelf corpus snapshot — two halves to keep in
     //   step for a modest gain on top of a lever that already carries the dark side.
-    hard: { dropdown: false, target: 10, seconds: 12, studioOnly: true,
-      blurb: "12s · no suggestions · every night is one of the twelve studio albums",
-      desc: "Same tour, no setlist in your hand. The twelve studio albums only, and you have to know their songs yourself.",
+    studioOnly: true,
+    hard: { dropdown: false, target: 10, seconds: 12,
+      blurb: "12s · no suggestions · you have to know the tracklists yourself",
+      desc: "Same tour, no setlist in your hand. You have to know each album's songs yourself.",
       win: "Score 10 / 13 playing each album on cue." },
     blurb: "10s · suggestions · each page wants a song from that night's album",
-    desc: "You're going on tour! A setlist of albums, one per page, and your answer must come from that night's album.",
+    desc: "You're going on tour! A setlist of the twelve studio albums, one per page, and your answer must come from that night's album.",
     win: "Score 9 / 13 playing each album on cue." },
   { id: "its-a-clock", name: "It's A Clock!", rule: "combo", mode: "medium",
     free: false, cost: 1, target: 9, noTitle: false, pool: "easy", tapes: 2,
@@ -1330,11 +1343,14 @@ export const DARK_SIDE_MILESTONE = 5;
                   `minWords` lowers the floor so short lines are in the draw. buildWhosePuzzle
                   tries the hard draw first and falls back to the base one, because a failed
                   build renders a dead page. `seconds` and `target` squeeze on top.
-   - vanishing-word `wordScale` (0.3 on dark) renders the prompt at that fraction of its
-                  normal size, read once in applyChallengeRound ahead of the rule dispatch
-                  and cleared with the other per-round word styling. CSS is [data-small] +
-                  --word-scale, scaling the base clamp so it stays responsive. Deliberately
-                  NOT data-tiny: no tilt, no drift, swipe kept — reading, not hunting.
+   - vanishing-word `wordScale` (0.22 on dark) renders the prompt at that fraction of its
+                  normal size and `wordFlip` turns it upside down. Both are read once in
+                  applyChallengeRound ahead of the rule dispatch and cleared with the other
+                  per-round word styling; CSS is [data-small] + --word-scale (scaling the base
+                  clamp so it stays responsive) and [data-flip] on the WRAP, so the highlighter
+                  swipe turns with the word. Deliberately NOT data-tiny: no drift, swipe kept —
+                  reading, not hunting. The pair exists because a merely BRIEF word is free
+                  once it has been read; the cost has to sit on the read itself.
    - devils-path  the category cap is live (one `time` curse per run, enforced in the offer
                   pool). It caps `time` ONLY — `restrict` and `wordfx` stack safely, since the
                   word picker guards restrict and the wordfx curses share one variable.
