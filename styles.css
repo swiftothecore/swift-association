@@ -8802,12 +8802,21 @@
   .rb-prog { display: block; width: 120px; height: 5px; border-radius: 3px; background: rgba(43, 39, 34, 0.1); overflow: hidden; margin-top: 6px; }
   .rb-prog i { display: block; height: 100%; border-radius: 3px; background: rgba(var(--m-accent), 0.78); }
 
+  /* The start-button WORDS tile is the tall one — eight label rows — so it spans the left
+     column's short tiles rather than sitting beside one and leaving a hole. That span is
+     load-bearing and is why the two knowledge vaults live in that column: the button-finish
+     tile can't take up the slack itself, since a swatch is a real button held at a fixed
+     width (see .rb-button below), so widening it just leaves it hollow. Adding the sticker
+     vault to the stack lengthens the column and brings the two sides CLOSER to level, not
+     further apart. It also lands the level-9 vault directly above the level-10 one, which is
+     the pairing: the shelf starts nudging, then the charms tell you outright. */
   .rb-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;
     grid-template-areas:
       "pens pens paper paper"
       "trinket trinket trinket trinket"
       "hard hard hard hard"
       "button button cta cta"
+      "stick stick cta cta"
       "hint hint cta cta"
       "title title title title"; }
 
@@ -9135,7 +9144,7 @@
     font-family: var(--type); font-size: calc(10.5px + var(--text-size-adjust)); color: var(--ink-soft); background: rgba(43, 39, 34, 0.04); border: 1px solid rgba(43, 39, 34, 0.14); }
   .rb-titles .title-stepper { margin-top: 14px; padding-top: 14px; border-top: 1px solid rgba(43, 39, 34, 0.1); }
   @media (max-width: 560px) {
-    .rb-grid { grid-template-columns: 1fr; grid-template-areas: "pens" "trinket" "paper" "hard" "button" "cta" "hint" "title"; }
+    .rb-grid { grid-template-columns: 1fr; grid-template-areas: "pens" "trinket" "paper" "hard" "button" "cta" "stick" "hint" "title"; }
     .rb-bead { width: 34px; height: 34px; }
     .rb-bead .trinket-preview, .rb-bead > .charm { width: 24px; height: 24px; }
     .rb-swatches { gap: 10px; }

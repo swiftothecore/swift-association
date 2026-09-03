@@ -1638,6 +1638,13 @@ export const MASTERY_REWARDS = [
   // accept in place of the payload's default, so a flag pick runs through the same unlock
   // guard as every other cosmetic instead of a picker of its own.
   { level: 8,  id: "btn-pride",  kind: "button", name: "Pride flags", desc: "Choose a flag for your start button.", payload: { button: "pride-rainbow" }, variants: PRIDE_BUTTONS },
+  // Sticker hints — a level-9 milestone (grants no toggle), and the quieter half of a pair
+  // with the level-10 vault below. This one only NUDGES: a locked sticker still shows as its
+  // silhouette and still keeps its name and its `how` to itself, and gains a line pointing at
+  // the kind of thing it wants. Level 10 then stops nudging and tells you outright, about the
+  // other family. Deliberately weaker than its neighbour, because the silhouette IS the
+  // question the sticker shelf asks and handing over the trigger would answer it.
+  { level: 9, id: "sticker-hints", kind: "unlock", name: "Sticker hints", icon: "sticker", desc: "Nudges you toward every sticker you have not stuck down." },
   // Secret hints — a level-10 milestone (grants no toggle). Once earned, the achievements
   // page reveals how to earn each still-locked secret charm (its desc, name kept masked).
   { level: 10, id: "reveal-hints", kind: "unlock", name: "Secret hints", icon: "key", desc: "Reveals how to earn every secret charm." },
@@ -1707,12 +1714,13 @@ export const MASTERY_TILE_MARKS = {
   hard:   "#8a3b2f",   // brick, for the brutal tier
   button: "#c8951f",   // the gold the start button already is
   cta:    "#2f6f6a",   // teal, so the words never read as the finish
+  stick:  "#584a8c",   // ink violet: the shelf's own, held clear of the charm vault's plum
   hint:   "#6d3f5c",   // plum, matching the vault it opens
   title:  "#4a6b3f",   // laurel green, for the rank
 };
 
 // The mark each Mastery level wears on the hero's ascent track, and the single source of
-// truth for it. Where a reward already defines the level's identity — the first pen, the two
+// truth for it. Where a reward already defines the level's identity — the first pen, the three
 // milestones — the level takes its mark FROM that reward rather than naming a second one, so
 // the track node and the tile it points at can never drift apart; the two title levels here
 // take the TIER's mark on the same principle, because a track node marks what the level
@@ -1726,6 +1734,7 @@ export const MASTERY_LEVEL_ICONS = {
   6:  MASTERY_REWARD_BY_ID["hardmode-unlock"].icon,
   7:  MASTERY_TIER_ICONS[0],
   8:  "rise",
+  9:  MASTERY_REWARD_BY_ID["sticker-hints"].icon,
   10: MASTERY_REWARD_BY_ID["reveal-hints"].icon,
   12: "sparkle",
   13: MASTERY_TIER_ICONS[3],
@@ -2671,6 +2680,21 @@ const MASTERY_OWN_ICONS = {
      the two blades collapsed into each other. Grip and guard are also kept over 2.5
      units thick, or their own two edges' strokes meet at 12px and the hilt goes solid. */
   swords: `<svg viewBox="0 0 24 24"><g transform="rotate(-9 12 12) translate(0 -0.7)"><g transform="rotate(-135 12 12.5) translate(-2.2 0.5)"><circle class="ink-fill" cx="2.9" cy="12" r="1.35"/><rect class="ink-fill" x="3.9" y="10.85" width="3" height="2.3" rx="1.1"/><rect class="ink-fill" x="6.8" y="8.7" width="2.4" height="6.6" rx="1.15"/><path class="ink-fill" d="M9.2 10.05 L11 10.17 L11 13.83 L9.2 13.95 Z"/><path class="ink-fill" d="M17.4 10.58 L20 10.75 L23 12 L20 13.25 L17.4 13.42 Z"/></g><g transform="rotate(-45 12 12.5) translate(-1 0.5)"><circle class="ink-fill" cx="2.9" cy="12" r="1.35"/><rect class="ink-fill" x="3.9" y="10.85" width="3" height="2.3" rx="1.1"/><rect class="ink-fill" x="6.8" y="8.7" width="2.4" height="6.6" rx="1.15"/><path class="ink-fill" d="M9.2 10.05 L20 10.75 L23 12 L20 13.25 L9.2 13.95 Z"/></g></g></svg>`,
+
+  /* The sticker vault's seal (level 9): a die-cut sticker, said with ONE closed path and the
+     corner sliced clean off. Everything else was tried and taken back out, so save the trip:
+     this mark's main surface is `.rb-ms-seal`, which paints ink-fill AND ink in the same flat
+     foil (see styles.css), so the peel cannot be a second shape laid against the body — a
+     filled wedge in the removed corner adds back up to the rounded square it started as, and a
+     stroked flap outside it merges into the silhouette it is supposed to lift away from. Both
+     read at 18px as a plain blob. Negative space is the only thing that separates two shapes
+     here, the way `swords` above uses a real gap, and a gap wide enough to read at this size
+     would eat a third of the sticker.
+     So the slice IS the drawing, and it is enough: a die cut with one corner gone reads as a
+     sticker with the corner lifted, and it survives being a silhouette, an outline and a 12px
+     mark on the mobile ascent track. Nothing inside the body for the same reason, and because
+     a blank die cut is what an unearned sticker looks like anyway. */
+  sticker: `<svg viewBox="0 0 24 24"><g transform="rotate(-8 12 12)"><path class="ink-fill" d="M7.3 3.6 H16.4 C18.61 3.6 20.4 5.39 20.4 7.6 V12.9 L12.9 20.4 H7.3 C5.09 20.4 3.6 18.61 3.6 16.4 V7.6 C3.6 5.39 5.09 3.6 7.3 3.6 Z"/></g></svg>`,
 
   /* The four prestige tier marks (MASTERY_TIER_ICONS). Four objects off one desk rather than
      four ranks of the same badge, each drawn from its tier's name: a pressed laurel sprig,

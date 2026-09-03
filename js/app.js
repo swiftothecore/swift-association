@@ -3004,6 +3004,12 @@ const achMasked = (a) => !!a.secret && !(a.reveal && challengeRecord(a.reveal).d
 // door pointing at a section that no longer exists is worse than no door.
 const secretCharmsLeft = () => ACHIEVEMENTS.filter((a) => achMasked(a) && !earnedAchievements[a.id]);
 
+// The sticker shelf's half of the same idea, and the two questions its Mastery vault asks.
+// Kept as functions rather than read once, because the drawer re-renders while the ledger and
+// the shelf both move under it.
+const stickersLeft = () => STICKERS.filter((st) => !stickerEarned(st.id));
+const stickerHintsOn = () => !!loadMastery().unlocked["sticker-hints"];
+
 // The material a charm's tile is finished in, from its authored `tier` (see ACHIEVEMENTS in
 // config.js): a punched paper disc at 2, a struck metal one at 3. Both bands work on the same
 // axis — what the glyph SITS ON — which is what makes them rankable against each other at a
@@ -4667,16 +4673,25 @@ function noteRunOutcome(type, token, won, same) {
 // cell captions the name and the source and puts the feat in the hover tip instead: it was tried
 // as a third printed line and fifteen sentences at 118px turned a sheet of stickers into a wall
 // of text, so `how` is there to be asked for rather than read.
+// Mastery 9 adds ONE thing and no more: a locked cell's hover tip gains that sticker's `hint`.
+// It is deliberately not the `how` and never becomes it — the shelf still asks the question,
+// the vault only stops the unguessable ones being unguessable. It also stays a hover tip rather
+// than becoming a printed line, for the same reason `how` never became one. A sticker whose
+// picture and source already say it carries no hint at all (`hint: null`), and those cells are
+// left exactly as they were rather than being given a padded sentence to fill the space.
 function stickerShelfHTML() {
   const earned = loadStickers();
   const found = stickerCount(earned);
+  const hinting = stickerHintsOn();
 
   const intro =
     `<p class="chall-eyebrow">Your stickers</p>` +
     `<p class="keep-lead">Die-cut vinyl, earned by noticing things rather than by scoring. ` +
     `One you have not earned shows as its shape and nothing else, which is the point: work out ` +
     `what the picture wants and go and do it. Hover an earned one to be reminded what you ` +
-    `did for it.</p>`;
+    `did for it.` +
+    (hinting ? ` Hover one you have not earned and the shelf will nudge you.` : ``) +
+    `</p>`;
 
   const counter =
     `<div class="keep-counter"><span class="keep-counter-n">${found}</span>` +
@@ -4685,7 +4700,9 @@ function stickerShelfHTML() {
 
   const cells = STICKERS.map((st) => {
     const locked = !earned[st.id];
-    const label = locked ? "a sticker not yet earned" : st.name + " · " + st.sub + " · " + st.how;
+    const label = !locked ? st.name + " · " + st.sub + " · " + st.how
+      : (hinting && st.hint) ? st.hint
+      : "a sticker not yet earned";
     const cap = locked ? "" :
       `<span class="stick-cap"><span class="stick-cap-name">${escapeHtml(st.name)}</span>` +
       `<span class="stick-cap-sub">${escapeHtml(st.sub)}</span></span>`;
@@ -5038,6 +5055,19 @@ function renderMasteryPage() {
   // reward actually shows itself. Only drawn while that section still has something in it.
   const hints = body.querySelector("[data-open-secret-charms]");
   if (hints) hints.addEventListener("click", () => openAchievements("mastery", "secret"));
+  // The sticker vault's door. The odd one of the three: the shelf lives in the keepsakes
+  // DRAWER, which is a modal over whatever screen you were on, so there is no page turn to
+  // survive and the window must NOT move — closing the drawer has to give the Mastery page
+  // back exactly where it was left. Hence `keepWindow`, and the modal's own card as the
+  // scroller (.settings-card is the box carrying overflow-y).
+  const stick = body.querySelector("[data-open-sticker-shelf]");
+  if (stick) stick.addEventListener("click", () => {
+    openKeepsakes();
+    revealAfterFlip(() => document.querySelector("#keepsakesBody .stick-shelf"), {
+      pad: 14, keepWindow: true,
+      within: () => document.querySelector("#keepsakesModal .settings-card"),
+    });
+  });
 }
 
 // ---- Mastery hero ----
@@ -5190,9 +5220,12 @@ function buildRewardBento(m, mLevel, unlocked) {
       }) +
       buildButtonTile(groups.button, m) +
       buildCtaTile(groups.label, m) +
-      // The other vault. It guards knowledge rather than a tier, so it is made of different
-      // stuff — plum leather and rose foil against the super-hard tile's iron and brass —
-      // and it opens with the key it already wears rather than being broken into.
+      buildStickerHintTile(m, groups.unlock) +
+      // The last vault, and the one the sticker tile above is paired with. Both guard knowledge
+      // rather than a tier, so both are made of different stuff to the super-hard tile — plum
+      // leather and rose foil against its iron and brass — and this one opens with the key it
+      // already wears rather than being broken into. It is also the stronger of the pair on
+      // purpose: level 9 nudges, level 10 tells you outright.
       // Its earned state has two readings, because the thing it points at can run out: the
       // Secret section only holds charms you haven't earned yet, and it stops rendering once
       // you've found them all. A door to a section that isn't there is worse than no door, so
@@ -5208,6 +5241,27 @@ function buildRewardBento(m, mLevel, unlocked) {
       buildTitlesTile(m, unlocked) +
     `</div>` +
   `</div>`;
+}
+
+// The third vault, and the quiet one. It shares the charms vault's plum leather and rose foil
+// on purpose — the two of them are one kind of object, knowledge rather than a tier, and the
+// super-hard tile keeps its iron and brass to itself — so the tone is reused rather than
+// forked. Only the hexagon's hue differs, because two identical marks on adjacent tiles read
+// as a stutter.
+// Three states, for the same reason the charms vault has three: the thing it points at can run
+// out. Once all fifteen are stuck down there is no locked silhouette left to nudge, so the tile
+// drops its door and says so rather than opening onto a shelf with nothing to say.
+function buildStickerHintTile(m, unlocks) {
+  const r = unlocks.find((x) => x.id === "sticker-hints");
+  const left = stickersLeft().length > 0;
+  return buildMilestoneTile(r, {
+    area: "stick", tone: "ink", watermark: true, earned: !!(r && m.unlocked[r.id]),
+    earnedCopy: left
+      ? "Unlocked — every sticker you have not earned now whispers what it wants."
+      : "All fifteen stuck down. Nothing left on the shelf to hint at.",
+    lockedCopy: `A nudge toward each sticker still showing as a shape. Reach Mastery ${r ? r.level : ""} to be let in on it.`,
+    action: left ? { label: "Open the drawer", attr: `data-open-sticker-shelf` } : null,
+  });
 }
 
 /* A reward tile's mark: the hexagonal wash with that tile's drawing over it. Built exactly
@@ -8236,8 +8290,12 @@ function scrollChallengeGroupIntoView(id) {
 function revealAfterFlip(find, opts) {
   const o = opts || {};
   const pad = o.pad || 0;
-  window.scrollTo({ top: 0, behavior: "instant" });
-  let tries = 40, settled = -1;
+  // Doors into a SCREEN are reached by a page turn, and the window is left wherever the page
+  // you came from was scrolled to, so it has to be reset before anything is measured. A door
+  // into a MODAL is not: the drawer opens over the page you were on, and that page has to be
+  // handed back untouched when the drawer closes. `keepWindow` is that second case.
+  if (!o.keepWindow) window.scrollTo({ top: 0, behavior: "instant" });
+  let tries = 40, settled = null;
   const step = () => {
     const el = find();
     const scroller = o.within ? o.within() : null;
@@ -8259,7 +8317,17 @@ function revealAfterFlip(find, opts) {
     // a shorter scroller can reach further down its own content — so a target clamped against
     // the taller measurement is left stranded mid-list. Re-place it until a frame measures the
     // same as the one before it.
-    const now = scroller ? scroller.clientHeight : document.documentElement.scrollHeight;
+    // BOTH of a scroller's heights are watched, not just its own. The challenge list settles by
+    // changing the height of the BOX (fitPeek trims it) while its content stands still; the
+    // keepsakes drawer settles the opposite way, since a modal card's height is pinned by
+    // max-height from the first frame while its CONTENT is still arriving. Watching the box
+    // alone ends the loop on the SECOND frame for that second case — a pinned height never
+    // changes, so nothing keeps it going — and the sticker shelf sits below a wall of polaroids
+    // whose images are still resolving, which moves the target after the last placement. So the
+    // door would land somewhere up the polaroid wall. Watching the content height too costs
+    // nothing (the retry budget is the same 40 frames) and covers both directions.
+    const now = scroller ? scroller.clientHeight + ":" + scroller.scrollHeight
+      : document.documentElement.scrollHeight;
     if (now !== settled) { settled = now; if (--tries > 0) requestAnimationFrame(step); }
   };
   requestAnimationFrame(step);
@@ -24763,6 +24831,16 @@ function buildDevApi() {
       },
       open: () => openKeepsakes(),                             // the shelf lives under the polaroid wall
       reset: () => { resetStickers(); updateKeepsakesNav(); refreshStickers(); },
+      // The Mastery 9 hint layer, which is otherwise only readable one hover tip at a time and
+      // only while the vault is open. Prints what each STILL-LOCKED cell would whisper, beside
+      // the `how` it must never turn into, so the two can be read against each other: a hint
+      // that has drifted into being the trigger is the failure this readout exists to catch.
+      // `on` is the live gate; move it with api.mastery.unlockRewards/lockRewards.
+      hints: () => ({
+        on: stickerHintsOn(),
+        locked: stickersLeft().map((st) => ({ id: st.id, hint: st.hint, how: st.how })),
+        noHint: STICKERS.filter((st) => !st.hint).map((st) => st.id),
+      }),
       // The session ledger the three "in one session" stickers read. It is memory-only and
       // cleared by a reload, which makes it the one sticker input a test session cannot inspect
       // any other way. `fill` names a song off every studio record at once, which is the only
