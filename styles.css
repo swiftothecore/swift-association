@@ -947,10 +947,10 @@
     stroke-width: 2.3; stroke-linecap: round;
     opacity: 0.9;
   }
-  .mast-flank--l { left: -1.05em; }
+  .mast-flank--l { left: -0.9em; }
   /* the right flank rides its own drop on top of the shared one: the title
      tilts up as it runs right, so the far end needs more to sit level by eye */
-  .mast-flank--r { right: -1.25em; transform: translateY(calc(-50% + 0.22em)) scaleX(-1); }
+  .mast-flank--r { right: -1.1em; transform: translateY(calc(-50% + 0.22em)) scaleX(-1); }
   /* below the font-size cap the title scales with the viewport, and the doodle
      tips ride ~2% in from the screen edges; under ~620px that air runs out */
   @media (max-width: 620px) { .mast-flank { display: none; } }
