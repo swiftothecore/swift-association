@@ -2892,6 +2892,11 @@ if (location.pathname.endsWith('/index.html')) {
            below, and printing it a third time cost the keepsake three lines of paper. -->
       <p id="braceletSummary" class="sr-only" role="status" aria-live="polite"></p>
 
+      <!-- Copy, Download and the beads note are one row of caption-sized keepsake controls,
+           not three stacked blocks: closed, the whole apparatus under the strand costs the
+           results page a single line. The note wraps to its own full-width line when it has
+           something to say, and the memory sheet claims one when a reader opens it. -->
+      <div class="bracelet-keepsake">
       <div class="bracelet-actions" role="group" aria-label="Save your bracelet">
         <button id="saveBraceletBtn" class="bracelet-action bracelet-copy" type="button"
                 aria-describedby="braceletKeepsakeNote">
@@ -2930,6 +2935,7 @@ if (location.pathname.endsWith('/index.html')) {
           <div id="braceletRecap" class="bracelet-recap"></div>
         </div>
       </details>
+      </div>
     </div>
 
     <div id="namePrompt" class="name-prompt" style="display:none;">

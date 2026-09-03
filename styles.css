@@ -4869,6 +4869,17 @@
      line is wider, where a chip that has visibly changed is the point. They are secondary
      to the strand they save, and stay small enough to read as a caption under it rather
      than as the point of the page. */
+  /* One row, not three. The two buttons and the beads note are all captions to the strand,
+     so they share a line and the page below moves up by two blocks of paper. The note and
+     the opened memory sheet each take a full-width line of their own, in that order. */
+  .bracelet-keepsake {
+    display: flex; align-items: center; justify-content: center; flex-wrap: wrap;
+    gap: 6px 10px; max-width: 520px; margin: 6px auto 4px;
+  }
+  .bracelet-keepsake > .bracelet-actions { margin: 0; max-width: none; }
+  .bracelet-keepsake > .bracelet-memory { margin: 0; order: 4; }
+  .bracelet-keepsake > .bracelet-memory[open] { flex: 1 0 100%; }
+  .bracelet-keepsake > .bracelet-keepsake-note { order: 5; flex: 1 0 100%; margin: 2px auto 0; }
   .bracelet-actions {
     display: flex; align-items: stretch; justify-content: center; flex-wrap: wrap;
     gap: 8px; max-width: 520px; margin: 6px auto 10px;
@@ -5069,6 +5080,7 @@
     #screen-results .bracelet-result {
       width: calc(100% + 64px); max-width: calc(100vw - 60px); margin-left: -32px;
     }
+    .bracelet-keepsake > .bracelet-actions { flex: 1 0 100%; }
     .bracelet-actions { padding: 0 3px; }
     .bracelet-action { flex: 1 1 0; min-width: 0; padding-left: 8px; padding-right: 8px; }
     .bracelet-memory { max-width: none; }
