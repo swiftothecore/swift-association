@@ -15271,9 +15271,20 @@ function challengeIntroHTML(c) {
 // How long an auto-lifting curtain card holds, derived from how much there is to read on it.
 // (Button-gated cards — every challenge's round-1 intro — wait for the player instead.)
 const CURTAIN_NOTICE_MS = 900;     // before reading starts: noticing the card is there at all
-const CURTAIN_MS_PER_CHAR = 77;    // ~13 characters a second, unhurried
+const CURTAIN_MS_PER_CHAR = 45;    // ~22 characters a second, unhurried but not a crawl
 const CURTAIN_MIN_MS = 1750;       // the old fixed hold, now the floor — nothing got faster
 const CURTAIN_MAX_MS = 4200;       // and no label can stall the run
+// Only the headline and its supporting line are counted. The kicker, the tag and the cue are
+// furniture: the same words on every card, in the same places, and a returning player is not
+// reading them. Counting them made every card hit the ceiling, which is a flat hold wearing a
+// formula.
+function curtainReadLength(ov) {
+  let n = 0;
+  ov.querySelectorAll(".chall-curtain-rule, .chall-curtain-sub").forEach((el) => {
+    n += (el.textContent || "").trim().length;
+  });
+  return n;
+}
 let curtainTimers = [];
 let curtainKeyOff = null;       // detaches the live gated card's Enter listener (see showCard)
 // True while a curtain is over the board (including its lift animation). The curtain is
@@ -15452,8 +15463,7 @@ function beginRoundClock() {
       // read than it is on screen for, which is the page's rule going unread on every page of
       // the run. Roughly 13 characters a second plus a beat to notice the card at all, floored
       // at the old hold so nothing got quicker and capped so a long label can't stall the run.
-      const words = (ov.querySelector(".chall-curtain-card") || ov).textContent || "";
-      const read = CURTAIN_NOTICE_MS + words.trim().length * CURTAIN_MS_PER_CHAR;
+      const read = CURTAIN_NOTICE_MS + curtainReadLength(ov) * CURTAIN_MS_PER_CHAR;
       const hold = Math.max(CURTAIN_MIN_MS, Math.min(CURTAIN_MAX_MS, read));
       ov.addEventListener("click", next);
       scheduleCurtainTimer(next, reduced ? Math.round(hold * 0.62) : hold);
