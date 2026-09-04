@@ -282,6 +282,7 @@ let perkNoTitleOff = false;     // Choose Your Path: Off The Record → allow th
 let perkCalm = false;           // Choose Your Path: Steady Hands → no timer tremor/tension
 let roundLyricOnly = false;     // Switch-Up: this page demands a lyric line (true) or a title (false)
 let roundNamed = [];            // Double Trouble / Name Three: distinct valid titles named this page so far
+let runNamedSongs = new Set();  // Double Trouble dark: every title banked so far this RUN, spent for good
 let bothWords = [];             // Both Of Us: every prompt word on this page (bothWords[0] === currentWord)
 // Devil's Path: curses taken at forks, each a permanent handicap for the rest of the run.
 let devilCursesTaken = [];      // curse ids already taken (never re-offered)
@@ -11363,6 +11364,7 @@ function resetRunState() {
   perkCalm = false;
   roundLyricOnly = false;
   roundNamed = [];
+  runNamedSongs = new Set();
   bothWords = [];
   devilCursesTaken = [];
   devilDropOff = false;
@@ -13371,6 +13373,18 @@ function renderInkBanner() {
     `<span class="chall-prog-name">${left ? `${left} still to write` : "written"}</span>` +
     `<span class="chall-prog-count">${gameInk} / ${inkTarget()}</span>`;
 }
+// Double Trouble's dark side: a song is spent once named, for the whole run. The page
+// still wants `need` different songs, but they have to be `need` songs nobody has used yet,
+// so the catalogue thins out under the player as the run goes on.
+function multiNoRepeats() {
+  return gameType === "challenge" && currentChallenge && currentChallenge.rule === "multi"
+    && !!currentChallenge.noRepeats;
+}
+// The valid songs still available for this page: on the base rule that is all of them.
+function multiFreshSongs(pool) {
+  const songs = pool || currentSongs;
+  return multiNoRepeats() ? songs.filter((s) => !runNamedSongs.has(s.title)) : songs;
+}
 // Double Trouble: how many of the two needed songs have been named this page.
 function renderMultiBanner() {
   if (gameType !== "challenge" || !currentChallenge || currentChallenge.rule !== "multi") return;
@@ -13379,7 +13393,8 @@ function renderMultiBanner() {
   el.innerHTML =
     `<span class="chall-prog-name">name ${need} different songs</span>` +
     `<span class="chall-prog-count">${roundNamed.length} / ${need}</span>` +
-    `<span class="chall-prog-note">this page · ${score} / ${currentChallenge.target || 8} pages cleared</span>`;
+    `<span class="chall-prog-note">this page · ${score} / ${currentChallenge.target || 8} pages cleared` +
+      (multiNoRepeats() ? ` · ${runNamedSongs.size} songs spent` : "") + `</span>`;
 }
 // Devil's Path: distort the prompt word display-only (matching reads currentWord from
 // state, never the DOM), at a FIXED effect for the run — unlike Word Games' escalating tiers.
@@ -14933,9 +14948,13 @@ function pickWord() {
   }
   // Double Trouble: a page is only winnable if the word has at least `need` valid
   // songs (after the no-title rule). Keep only such words; fall back if none remain.
+  // On the dark side the songs already spent this run don't count toward that floor, which
+  // is the winnability guard for the no-repeats rule: a word with two holders is a fine page
+  // on round one and a dead one on round nine if both of them are gone.
   if (gameType === "challenge" && currentChallenge && currentChallenge.rule === "multi") {
     const need = currentChallenge.need || 2;
-    const enough = choices.filter((w) => validSongs(w, effectiveStrict(), effectiveNoTitle()).length >= need);
+    const enough = choices.filter((w) =>
+      multiFreshSongs(validSongs(w, effectiveStrict(), effectiveNoTitle())).length >= need);
     if (enough.length) choices = enough;
   }
   // Both Of Us: the page's extra words are drawn against this one, so an anchor with fewer
@@ -16251,9 +16270,13 @@ function renderRarityStamp() {
 // variant ("babe" should point at a "babe" line, not a "baby" one).
 function pickHintSong() {
   if (!currentSongs.length) return null;
+  // Never zoom in on a song the no-repeats dark side has already spent: a hint the player
+  // cannot answer with is worse than no hint at all.
+  const live = multiFreshSongs();
+  const usable = live.length ? live : currentSongs;
   const exactRx = new RegExp("\\b" + escapeRegExp(currentWord) + "\\b", "i");
-  const pool = currentSongs.filter((s) => exactRx.test(s.lyrics));
-  const from = pool.length ? pool : currentSongs;
+  const pool = usable.filter((s) => exactRx.test(s.lyrics));
+  const from = pool.length ? pool : usable;
   return from[Math.floor(Math.random() * from.length)];
 }
 
@@ -18285,7 +18308,17 @@ function submitAnswer(song, isTimeout) {
       softRejectFlash(`already named <b>${escapeHtml(song.title)}</b> — name a different song`);
       return;
     }
+    // Dark side: a song named on ANY earlier page is spent, and saying it again costs the
+    // page nothing but the seconds. Soft-rejected like the page duplicate, with its own
+    // wording, because "you used that one already" is a different mistake from "you just
+    // said that" and the player needs to know which page they burned it on.
+    if (multiNoRepeats() && runNamedSongs.has(song.title)) {
+      noteWrongSubmission(song);
+      softRejectFlash(`<b>${escapeHtml(song.title)}</b> is spent — you named it earlier this run`);
+      return;
+    }
     roundNamed.push(song.title);
+    runNamedSongs.add(song.title);
     renderMultiBanner();
     if (roundNamed.length < need) {
       softRejectFlash(`✓ ${roundNamed.length} of ${need} — name another song with the word`);
@@ -19154,6 +19187,9 @@ function showWrongFeedback(song, isTimeout) {
     // they got the first of the pair, then missed the second) — only surface fresh options.
     if (currentChallenge && currentChallenge.rule === "multi" && roundNamed.length)
       pool = pool.filter((s) => !roundNamed.includes(s.title));
+    // …and on the dark side, don't showcase one spent on an earlier page either: it isn't an
+    // answer the player could have given, so it would be teaching them the wrong catalogue.
+    if (multiNoRepeats()) { const fresh = multiFreshSongs(pool); if (fresh.length) pool = fresh; }
     // Lead with the songs the page was really about: Deep Cut's album-in-progress first
     // (the answer that would have moved the tally), then the song the round's help actually
     // described — so the reveal answers the hint the player was reading instead of making
@@ -25724,14 +25760,16 @@ function buildDevApi() {
       multi: {
         need: () => (currentChallenge && currentChallenge.need) || 2,           // songs this page wants
         named: () => roundNamed.slice(),                                        // named so far this page
-        answers: () => currentSongs.map((s) => s.title),                        // every song that would count
-        // Name the next song not yet used this page (repeat to clear the page).
-        name: () => { const s = currentSongs.find((x) => !roundNamed.includes(x.title));
+        answers: () => multiFreshSongs().map((s) => s.title),                   // every song that would count NOW
+        spent: () => [...runNamedSongs],                                        // dark: titles burned this run
+        // Name the next song not yet used this page (repeat to clear the page). On the dark
+        // side that means the next song not used anywhere in the run.
+        name: () => { const s = multiFreshSongs().find((x) => !roundNamed.includes(x.title));
           if (s) submitAnswer(s); return s ? s.title : null; },
         // Clear the whole page in one call, proving the soft-reject ladder resolves at `need`.
         fill: () => { const need = (currentChallenge && currentChallenge.need) || 2;
           for (let i = roundNamed.length; i < need && !roundLocked; i++) {
-            const s = currentSongs.find((x) => !roundNamed.includes(x.title));
+            const s = multiFreshSongs().find((x) => !roundNamed.includes(x.title));
             if (!s) break;
             submitAnswer(s);
           }
@@ -25739,6 +25777,15 @@ function buildDevApi() {
         // Name a song already banked this page — the duplicate soft reject.
         repeat: () => { const t = roundNamed[0]; const s = t && currentSongs.find((x) => x.title === t);
           if (s) submitAnswer(s); return t || null; },
+        // Dark only: name a song spent on an EARLIER page — the no-repeats soft reject. Null
+        // when this page holds none of the spent songs, which is itself worth knowing.
+        stale: () => { const s = currentSongs.find((x) => runNamedSongs.has(x.title)
+            && !roundNamed.includes(x.title));
+          if (s) submitAnswer(s); return s ? s.title : null; },
+        // Burn titles without playing them, to see a late-run page draw against a thin catalogue.
+        burn: (n) => { for (const s of currentSongs.slice(0, n || currentSongs.length - 1))
+            runNamedSongs.add(s.title);
+          renderMultiBanner(); return [...runNamedSongs]; },
         win: (id) => { const c = CHALLENGE_BY_ID[id || "name-three"];
           score = (c && c.target) || 8; endGame(); },
       },

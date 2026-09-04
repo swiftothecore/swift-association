@@ -934,10 +934,19 @@ export const CHALLENGES = [
     win: "Score 9 / 13 as the answer type keeps switching." },
   { id: "double-trouble", name: "Double Trouble", rule: "multi", mode: "medium",
     free: false, cost: 1, target: 8, need: 2, pool: "easy", seconds: 18, tapes: 2,
-    hard: { need: 3, seconds: 15,
-      blurb: "15s · suggestions · name THREE different songs each page · not in the title",
-      desc: "Two songs isn't enough either! Answer three songs per word, in less time, or fail the round.",
-      win: "Clear 8 pages, naming three different songs each." },
+    // Dark: still TWO songs a page, on a tighter clock, but every song named is spent for
+    // the rest of the run. Deliberately not `need: 3`, which lands on Name Three's headline.
+    // `multi` is the only rule the roster runs twice, so the two cards have to differ by axis
+    // and not just by number. Here the wall is the catalogue draining under you: the early
+    // pages are ordinary Double Trouble and the late ones are played on what is left.
+    // `pool: null` is load-bearing, not flavour. On the base entry's common words a page has
+    // twenty to thirty-five holders, so spending two of them a page is a rule the player would
+    // never once feel; off the whole word list the holder lists are short enough that a title
+    // burned on page three is a title genuinely missing on page nine.
+    hard: { seconds: 15, noRepeats: true, pool: null,
+      blurb: "15s · suggestions · rarer words · two songs a page · no repeats all run · not in the title",
+      desc: "Rarer words, two songs a page, and each song you name is spent for the rest of the run.",
+      win: "Clear 8 pages, naming two songs each and never repeating one." },
     blurb: "18s · suggestions · name TWO different songs each page · not in the title",
     desc: "One song isn't enough! Answer two songs per word or fail the round.",
     win: "Clear 8 pages, naming two different songs each." },
