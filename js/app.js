@@ -22969,6 +22969,20 @@ function devArmCatalogue(id) {
   return { ...r, name: (ACH_BY_ID[r.id] || {}).name || r.id };
 }
 
+// Point the live page at some word the given song really holds, so a diagnostic can name that
+// song without waiting for the draw to offer it. Returns the word used, or null when no playable
+// word reaches the song under the round's own levers — which is itself worth reporting rather
+// than silently re-pointing at something the page would reject.
+function devPointWordAtSong(song) {
+  if (!song) return null;
+  for (const w of playableWords) {
+    if (!wordRegex(w, effectiveStrict()).test(song.lyrics)) continue;
+    if (effectiveNoTitle() && wordRegex(w, effectiveStrict()).test(song.title)) continue;
+    devApplyWord(w);
+    if (currentSongs.some((s) => s.title === song.title)) return w;
+  }
+  return null;
+}
 // Re-point the *current* live round to a chosen prompt word without advancing.
 function devApplyWord(word) {
   if (!word) return;
@@ -25701,6 +25715,30 @@ function buildDevApi() {
         spoil: () => { vanishAnsweredBlind = false; },  // as if you'd answered before the word went
         win: (blind) => { vanishAnsweredBlind = blind !== false;
           score = (CHALLENGE_BY_ID["vanishing-word"].target) || 10; endGame(); },
+      },
+      // One Of A Kind — the run ends on the named song and banks the PAGE it landed on, the
+      // shelf's only low-wins record. Everything here exists to test that scoring without
+      // waiting for the draw to put the target's word in front of you.
+      newsong: {
+        target: () => (challengeTargetSong || {}).title || null,   // the song to land
+        guesses: () => newSongLives,                               // wrong tries left (dark deals 1)
+        // The page it was landed on, i.e. the run's score. 0 until it lands.
+        found: () => newSongFoundPage,
+        // Does THIS page accept the target? The forced word only comes round once, so most
+        // pages answer no — which is the thing worth being able to check.
+        fits: () => !!challengeTargetSong && currentSongs.some((s) => s.title === challengeTargetSong.title),
+        // Re-point the live page at a word the target really holds, then name it: the whole
+        // end path (found page → run ends → record) in one call, from any round.
+        land: () => {
+          if (!challengeTargetSong) return null;
+          if (!devPointWordAtSong(challengeTargetSong)) return null;
+          submitAnswer(challengeTargetSong);
+          return { page: newSongFoundPage, word: currentWord };
+        },
+        // Name the target on a page it does NOT fit — the soft reject that spends a guess,
+        // and at zero the "out of guesses" loss.
+        miss: () => { if (challengeTargetSong) submitAnswer(challengeTargetSong);
+          return newSongLives; },
       },
       // Deep Cut — five correct off one album. Been Here All Along wants the WHOLE run off it,
       // so `win(false)` adds a stray from a second album to prove the charm withholds.
