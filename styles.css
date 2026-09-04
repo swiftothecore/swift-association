@@ -3358,7 +3358,57 @@
 
   /* Challenge results panel (sandboxed — in place of the records board) */
   .chall-result-status { font-family: var(--hand); font-weight: 700; font-size: calc(22px + var(--text-size-adjust)); color: var(--ink-soft); margin-bottom: 4px; }
-  .chall-result-status.win { color: #2b2722; }
+  /* ---------- the verdict ----------
+     A beaten challenge is stamped, not written. The old win line was handwriting at the same
+     size as the meta under it, and it lost the argument with every other line on the screen —
+     you could finish a run and not know you had won it. This is the same rubber stamp the
+     drawer prints on a beaten card (red double rule, gold star), scaled up to the width of
+     the panel and pressed across the top of it, so the verdict is the first thing the eye
+     lands on and there is nothing to read to find out how it went.
+     Multiply, because a stamp is ink sinking into paper rather than a badge sitting on it. */
+  .chall-verdict { margin-bottom: 10px; }
+  .chall-verdict-stamp {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-family: var(--type); font-weight: 700;
+    font-size: calc(16px + var(--text-size-adjust)); letter-spacing: 3px; text-transform: uppercase;
+    color: rgba(178,58,58,0.9); border: 3px double rgba(178,58,58,0.65); border-radius: 3px;
+    padding: 6px 14px; transform: rotate(-2.2deg); transform-origin: 22% 60%;
+    mix-blend-mode: multiply;
+  }
+  .chall-verdict-stamp .chall-star-svg { width: 20px; height: 20px; }
+  .chall-verdict-stamp.is-dark { color: rgba(122,75,176,0.92); border-color: rgba(122,75,176,0.6); }
+  /* pressed on, once, as the panel arrives: down at an angle, bedded in, settled. */
+  .chall-verdict.is-win .chall-verdict-stamp { animation: verdict-press 0.5s cubic-bezier(.2,1.3,.4,1) both; }
+  @keyframes verdict-press {
+    0%   { opacity: 0; transform: rotate(-9deg) scale(1.45); }
+    55%  { opacity: 1; transform: rotate(-1.2deg) scale(0.95); }
+    100% { opacity: 1; transform: rotate(-2.2deg) scale(1); }
+  }
+  /* The bar the run was measured against, on a win as well as a loss: a score with no scale
+     beside it is not a result. Typewriter, because it is a reading off the rules and not
+     something anyone said. */
+  .chall-verdict-goal {
+    font-family: var(--type); font-size: calc(12px + var(--text-size-adjust));
+    line-height: 1.4; color: var(--ink-soft); margin-top: 6px;
+  }
+  .chall-verdict-goal b { font-weight: 700; color: var(--ink); }
+  .chall-verdict:not(.is-win) .chall-result-status { margin-bottom: 0; }
+  :root[data-theme="dark"] .chall-verdict-stamp {
+    mix-blend-mode: normal; color: #e58a84; border-color: rgba(223,107,100,0.6);
+  }
+  :root[data-theme="dark"] .chall-verdict-stamp.is-dark { color: rgba(208,176,255,0.95); border-color: rgba(196,154,240,0.55); }
+  @media (prefers-reduced-motion: reduce) {
+    .chall-verdict.is-win .chall-verdict-stamp { animation: none; }
+  }
+  [data-reduce-motion="on"] .chall-verdict.is-win .chall-verdict-stamp { animation: none; }
+  /* On a phone the panel is ~250px across and the two words wrap, which leaves the star
+     floating beside a two-line block. Tighten the press rather than let it break. */
+  @media (max-width: 560px) {
+    .chall-verdict-stamp {
+      font-size: calc(13px + var(--text-size-adjust)); letter-spacing: 1.8px; gap: 6px; padding: 5px 10px;
+    }
+    .chall-verdict-stamp .chall-star-svg { width: 16px; height: 16px; }
+  }
   .chall-result-token { font-family: var(--type); font-size: calc(13px + var(--text-size-adjust)); color: #2b2722; margin-bottom: 4px; }
   .chall-result-meta { font-family: var(--type); font-size: calc(11px + var(--text-size-adjust)); color: var(--ink-soft); margin-bottom: 12px; }
   /* Two half-width buttons in a row (back to the list · replay this challenge), sitting above

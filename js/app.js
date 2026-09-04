@@ -14120,6 +14120,29 @@ function challengeWinCheck(c) {
   return score >= (c.target || TOTAL_ROUNDS);
 }
 
+// What the finished run measured, and the bar it was measured against — the same numbers
+// challengeWinCheck above just compared, said out loud. It has to be read off the rule the
+// way the check is: a run scored in beads, characters, word-perfect lines or rounds survived
+// is not a page count, and quoting "11 / 13" at any of them is a lie in the player's favour
+// half the time and against them the other half. Returns null for a challenge whose goal
+// isn't a number (One Of A Kind is "find the song", full stop) — the caller falls back to
+// the card's own goal sentence there.
+// KEEP IN STEP WITH challengeWinCheck. If a rule's win condition moves and this doesn't,
+// the results screen will cheerfully print a target the run was never judged on.
+function challengeTally(c) {
+  if (!c) return null;
+  if (c.rule === "newsong") return null;
+  if (c.rule === "album5") return { got: deepCutLeader().count, need: c.need || 5, unit: "from one album" };
+  if (c.rule === "impostor") return { got: score - impostorFlagged, need: c.target || 7, unit: "real words named" };
+  if (c.rule === "verse") return { got: gameVersePerfect, need: c.target || 4, unit: "lines word-for-word" };
+  if (c.rule === "ink") return { got: gameInk, need: inkTarget(), unit: "characters written" };
+  if (c.rule === "survive") return { got: round, need: surviveTarget(c), unit: "rounds reached" };
+  if (c.rule === "insurance") return { got: roundResults.length, need: TOTAL_ROUNDS, unit: "pages survived" };
+  if (beadScoredRule()) return { got: score, need: riskTarget(), unit: score === 1 ? "bead banked" : "beads banked" };
+  if (c.rule === "chain") return { got: score, need: c.target || TOTAL_ROUNDS, unit: "songs chained" };
+  return { got: score, need: c.target || TOTAL_ROUNDS, unit: "pages cleared" };
+}
+
 // Sandboxed results path for a challenge run (mirrors showDailyResult — no board,
 // no stats; its own win panel). Reached only via endGame's challenge short-circuit.
 function endChallenge() {
@@ -14340,11 +14363,39 @@ function endChallenge() {
     titleEl.textContent = c.name;
   }
   const outOfGuesses = c.rule === "newsong" && challengeTargetSong && newSongLives <= 0;
+  // The verdict, and the bar it was measured against.
+  //
+  // A win used to be one line of handwriting the same size as the four lines under it, which
+  // meant a player could read a whole results screen and still not be sure they had beaten
+  // the thing. So a defeated challenge is stamped now, in the card's own language: the red
+  // double rule and the gold star the drawer already prints on a beaten card, at full size,
+  // pressed across the top of the panel.
+  //
+  // The goal line under it is on BOTH outcomes, which is the other half of the fix. The
+  // screen was reporting a score with no scale on it — "11 pages cleared" says nothing at all
+  // unless you also know the run needed nine — and the target was only ever spelled out in
+  // the losing sentence, on the one screen where you already knew you'd fallen short.
+  const tally = challengeTally(c);
+  const goalLine = tally
+    ? `<div class="chall-verdict-goal"><b>${tally.got}</b> ${escapeHtml(tally.unit)} · ` +
+      `needed <b>${tally.need}</b></div>`
+    // One Of A Kind has no number to hit — it is "find the song" — so it quotes the card's
+    // own goal sentence instead of inventing a tally for it.
+    : `<div class="chall-verdict-goal">${escapeHtml(c.win)}</div>`;
   const status = won
-    ? `<div class="chall-result-status win">challenge defeated!</div>`
-    : outOfGuesses
-      ? `<div class="chall-result-status">out of guesses — the song got away</div>`
-      : `<div class="chall-result-status">not yet — ${escapeHtml(c.win)}</div>`;
+    // A dark run's stamp is violet, not red: the drawer already prints the dark record in
+    // that ink, and a beaten dark side that signs off in the base challenge's red is the one
+    // reading this whole block exists to prevent.
+    ? `<div class="chall-verdict is-win">` +
+        `<div class="chall-verdict-stamp${c.dark ? " is-dark" : ""}">${CHALL_STAR}` +
+          `<span>${c.dark ? "dark side defeated" : "challenge defeated"}</span></div>` +
+        goalLine +
+      `</div>`
+    : `<div class="chall-verdict">` +
+        `<div class="chall-result-status">` +
+          (outOfGuesses ? "out of guesses — the song got away" : "not yet") +
+        `</div>` + goalLine +
+      `</div>`;
   const tokenLine = firstTime ? `<div class="chall-result-token">${CHALL_TICKET} +1 token earned</div>` : "";
   // Same ticket mark as the stub this line is pointing at, so the sentence and the object it
   // sends you to are recognisably about the same thing.
@@ -25439,6 +25490,13 @@ function buildDevApi() {
       list: () => CHALLENGE_ORDER.slice(),
       open: () => openChallenges("start"),
       start: (id) => startChallenge(id),
+      // Where the live run stands against the bar it will actually be judged on, in the
+      // rule's own unit — the very numbers the results screen's goal line will print. Worth
+      // having separately from `getState()`, because the whole point of the goal line is that
+      // a challenge's measure is often NOT the page count on screen: beads banked, characters
+      // written, lines recalled word-for-word, rounds survived. Reads state, changes nothing.
+      // null on One Of A Kind, which has no number to hit.
+      tally: () => (gameType === "challenge" ? challengeTally(currentChallenge) : null),
       // The fore-edge tab's ribbon on or off, for judging the two side by side mid-run.
       // Display only, and never persisted: it is a look under the hood, not a setting.
       ribbon: (on) => {
