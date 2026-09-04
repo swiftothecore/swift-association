@@ -739,12 +739,18 @@ export const CHALLENGES = [
     win: "Score 9 / 13 through the distortion." },
   { id: "one-of-a-kind", name: "One Of A Kind", rule: "newsong", mode: "easy",
     free: false, cost: 1, guesses: 3, tapes: 1,
+    // The run ENDS on the named song, and the page it landed on is the score — low wins, and
+    // it is the one card on the shelf scored that way (see markChallengeDefeated's `lower`).
+    // Playtested 2026-09-04: the old run played all thirteen pages whether or not the song had
+    // already been found, so the last nine pages could not change the outcome and the number
+    // the card kept was a page tally that had nothing to do with the win. Ending on the answer
+    // makes the record "found it on page four" — a thing to beat rather than a thing to sit out.
     // One guess, not three. The copy states the number out loud, so it has to move with it.
     hard: { guesses: 1,
-      desc: "You're given one specific song you've never answered before. Answer it on a round where it fits the word. You get ONE guess, so be sure before you commit.",
-      win: "Answer the named song first time, with a single guess." },
-    desc: "You're given one specific song you've never answered before. Answer it on a round where it fits the word. You have three guesses, and getting it wrong costs you a guess.",
-    win: "Answer the named song before your 3 guesses run out." },
+      desc: "You're given one specific song you've never answered before. Answer it on a round where it fits the word, and the run ends the moment you do. You get ONE guess, so be sure before you commit.",
+      win: "Answer the named song first time, with a single guess — the earlier the page, the better." },
+    desc: "You're given one specific song you've never answered before. Answer it on a round where it fits the word, and the run ends the moment you do. You have three guesses, and getting it wrong costs you a guess.",
+    win: "Answer the named song before your 3 guesses run out — the earlier the page, the better." },
   { id: "choose-your-path", name: "Choose Your Path", rule: "path", mode: "medium",
     free: false, cost: 1, target: 9, forks: [4, 8], tapes: 1,
     desc: "Pick perks at forks in the run that help you get ahead.",
@@ -1365,6 +1371,8 @@ export const DARK_SIDE_MILESTONE = 5;
                   faster; both default to the base ramp and the level is still clamped to 4.
    - one-of-a-kind `guesses` sets the wrong-guess budget (1 on dark). `newSongLivesMax` holds
                   the run's budget so the pips and the intro cue match what you actually get.
+                  Both sides end the run on the named song and bank the PAGE it landed on as
+                  the record (newSongFoundPage), the shelf's only low-wins score.
    - on-tour      `dropdown: false` plus a target. rankMatches filters suggestions through
                   roundAcceptsSong, which for `setlist` means "from tonight's album", so the
                   base run's dropdown is a live tracklist and solves the rule for you. Removing

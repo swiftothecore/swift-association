@@ -269,6 +269,7 @@ let forcedFirstWord = "";       // "Play this word" deep-link (search/?word=): f
 let newSongLives = 0;           // One Of A Kind: wrong target guesses left before the run fails
 const NEW_SONG_LIVES = 3;       // One Of A Kind: default starting guesses (discourages spamming the target)
 let newSongLivesMax = NEW_SONG_LIVES;   // this run's budget (the dark side deals fewer), for the pips + intro cue
+let newSongFoundPage = 0;       // One Of A Kind: the page the target song was finally named on — the run's whole score
 let extraSecondsPerRound = 0;   // Choose Your Path: bonus seconds added to every round's clock
 let skipTokens = 0;             // Choose Your Path: one-time word "swaps" earned at a fork
 let pathForksTaken = [];        // Choose Your Path: fork rounds whose perk has been chosen
@@ -2570,16 +2571,21 @@ function returnChallenge(id) {
 // the base milestones: those charms are about first-ever/one-try/return runs on the base
 // roster, and re-firing them off a dark run would double-count the same beat. Dark-side
 // rewards are a separate, selective set still to be designed (see PLAN.md).
-function markChallengeDefeated(id, score, dark) {
+// `lower` inverts what counts as an improvement, for the one card whose score is a page number
+// rather than a tally: One Of A Kind ends on the answer, so finding the song on page four beats
+// finding it on page nine. A stored 0 means "no record yet" on both readings, which is why the
+// low comparison has to check it rather than lean on Math.min.
+function markChallengeDefeated(id, score, dark, lower) {
   const st = loadChallengeState();
   const rec = { ...challengeRecord(id) };
   const firstTime = dark ? !rec.darkDefeated : !rec.defeated;
+  const beats = (next, held) => lower ? (!held || next < held) : next > held;
   if (dark) {
     rec.darkDefeated = true;
-    if (score > rec.darkBest) rec.darkBest = score;
+    if (beats(score, rec.darkBest)) rec.darkBest = score;
   } else {
     rec.defeated = true;
-    if (score > rec.best) rec.best = score;
+    if (beats(score, rec.best)) rec.best = score;
   }
   st[id] = rec;
   saveChallengeState(st);
@@ -8551,13 +8557,17 @@ function renderChallengeDetail(id) {
   // Declared before `meta` because the dark-side note below reuses it against `darkBest`.
   // Long Story Long joins the risk batch in having no denominator: its best is a character
   // count, and "best 431/13" would be nonsense on a card whose whole score is the tally.
+  // One Of A Kind is the odd one again: its best is the PAGE the named song was landed on, and
+  // low wins, so it reads as a place in the run rather than a tally out of it. "best 4/13" would
+  // say the opposite of what happened.
   const outOfFor = (best) => (RISK_RULES.has(c.rule) && c.rule !== "insurance")
     ? ` bead${best === 1 ? "" : "s"}`
     : c.rule === "ink" ? " characters"
+    : c.rule === "newsong" ? ""
     : `/${c.rule === "survive" ? surviveTarget(c) : TOTAL_ROUNDS}`;
-  const bestOutOf = outOfFor(rec.best);
+  const bestLabel = (best) => c.rule === "newsong" ? `found on page ${best}` : `best ${best}${outOfFor(best)}`;
   let meta = "";
-  if (rec.defeated) meta = `best ${rec.best}${bestOutOf} · ${rec.attempts} attempt${rec.attempts === 1 ? "" : "s"}`;
+  if (rec.defeated) meta = `${bestLabel(rec.best)} · ${rec.attempts} attempt${rec.attempts === 1 ? "" : "s"}`;
   else if (rec.attempts) meta = `${rec.attempts} attempt${rec.attempts === 1 ? "" : "s"} · not yet beaten`;
 
   // "What changes on the dark side?" — the rules you're being offered, readable without
@@ -8656,7 +8666,7 @@ function renderChallengeDetail(id) {
   // best beside the dark goal would credit a run played on the easy version.
   const darkMeta = !canPeek ? null
     : (rec.darkDefeated
-        ? `<span class="chall-meta-stamp">defeated</span>best ${rec.darkBest}${outOfFor(rec.darkBest)} · ${rec.darkAttempts} attempt${rec.darkAttempts === 1 ? "" : "s"}`
+        ? `<span class="chall-meta-stamp">defeated</span>${bestLabel(rec.darkBest)} · ${rec.darkAttempts} attempt${rec.darkAttempts === 1 ? "" : "s"}`
         : rec.darkAttempts
           ? `${rec.darkAttempts} attempt${rec.darkAttempts === 1 ? "" : "s"} · not yet beaten`
           : "dark side not yet attempted");
@@ -11228,6 +11238,11 @@ function isGameOver() {
   if (spiteRuleActive() && spiteSeconds <= 0) return true;
   // Insurance: sudden death — a miss nobody had shielded ends the run where it stands.
   if (insuranceRuleActive() && insuranceDead) return true;
+  // One Of A Kind: the win is binary and it has just been met. Every page after it was dead
+  // time that could not change the outcome, which is exactly why the old thirteen-page run
+  // read as arbitrary — you had already done the only thing the card asks. The run ends on
+  // the answer now, and the page it landed on becomes a score there is something to beat.
+  if (newSongRuleActive() && newSongFoundPage) return true;
   return round >= TOTAL_ROUNDS;
 }
 
@@ -11349,6 +11364,7 @@ function resetRunState() {
   forcedFirstWord = "";
   newSongLives = 0;
   newSongLivesMax = NEW_SONG_LIVES;
+  newSongFoundPage = 0;
   extraSecondsPerRound = 0;
   skipTokens = 0;
   pathForksTaken = [];
@@ -13902,8 +13918,12 @@ function endChallenge() {
     // Long Story Long sits this out: its record is a character count, so "one short" would be
     // one CHARACTER short of a stored 400-odd, which is neither a near miss anybody would feel
     // nor the same quantity as the page score being handed in here.
+    // One Of A Kind sits it out for the mirror reason: its best is a page number where low
+    // wins, so "one short" would mean one page EARLIER than the record — which is not a near
+    // miss at all, it is a new record.
     const cbest = challengeRecord(c.id);
-    if (c.rule !== "ink") noteNearMiss((challengeDark ? cbest.darkBest : cbest.best) || 0, score);
+    if (c.rule !== "ink" && c.rule !== "newsong")
+      noteNearMiss((challengeDark ? cbest.darkBest : cbest.best) || 0, score);
   }
 
   // Challenges count toward the GLOBAL/catalogue stores only — the chronological
@@ -13986,8 +14006,15 @@ function endChallenge() {
   // The record keeps the score the challenge was actually judged on, so Long Story Long banks
   // its character tally rather than its page count — the same swap the risk batch makes for
   // beads, and what lets `outOfFor` print it without a "/ 13" it was never scored out of.
-  const bestScore = c.rule === "ink" ? gameInk : score;
-  const firstTime = !devNoLog && won ? markChallengeDefeated(c.id, bestScore, challengeDark) : false;
+  // One Of A Kind joins it with a page number: the run ends the moment the named song lands,
+  // so the page it landed on is the only figure the card is really scored on, and it is the
+  // one figure worth beating. LOW WINS there, which is what `lowWinsRule` tells the record.
+  const bestScore = c.rule === "ink" ? gameInk
+    : c.rule === "newsong" ? newSongFoundPage
+    : score;
+  const lowWinsRule = c.rule === "newsong";
+  const firstTime = !devNoLog && won
+    ? markChallengeDefeated(c.id, bestScore, challengeDark, lowWinsRule) : false;
   const rec = challengeRecord(c.id);
   /* The three charms about HOW a challenge was beaten rather than which one. All three used to
      hang off the first-ever defeat of a given challenge, which made each one a single
@@ -14095,6 +14122,11 @@ function endChallenge() {
     ? `<div class="chall-result-meta">${realNamed} real word${realNamed === 1 ? "" : "s"} named · ` +
       `${impostorFlagged} impostor${impostorFlagged === 1 ? "" : "s"} caught</div>`
     : "";
+  // One Of A Kind: the page the song was landed on IS the result, so say it in words rather
+  // than leaving the player to count back through the run.
+  const newSongLine = c.rule === "newsong" && newSongFoundPage
+    ? `<div class="chall-result-meta">found on page ${newSongFoundPage} of ${challengeTotal}</div>`
+    : "";
   // The dark side keeps its own attempt count and best (darkAttempts/darkBest), so a dark
   // run must report those — quoting the base record here would credit a run played on the
   // easy version, which is both wrong and deflating.
@@ -14105,6 +14137,9 @@ function endChallenge() {
   const bestLine = !metaBest ? ""
     : beadScoredRule() ? ` · best ${metaBest} bead${metaBest === 1 ? "" : "s"}`
     : c.rule === "ink" ? ` · best ${metaBest} characters`
+    // One Of A Kind's best is the earliest page the song has ever been landed on, so it reads
+    // as a page and not as a tally out of thirteen.
+    : c.rule === "newsong" ? ` · best: found on page ${metaBest}`
     : ` · best ${metaBest}/${challengeTotal}`;
   const meta = `<div class="chall-result-meta">${metaAttempts} attempt${metaAttempts === 1 ? "" : "s"}` +
     `${bestLine}</div>`;
@@ -14143,7 +14178,7 @@ function endChallenge() {
   // half the width of the full-width buttons around them. The dark side's strip follows the
   // row rather than leading it, so the two ordinary ways out of the screen stay where they
   // are on every challenge and the offer sits directly above the front-page button.
-  $("resultPodium").innerHTML = status + tokenLine + returnLine + verseLine + inkLine + impostorLine + riskResultLine() + meta +
+  $("resultPodium").innerHTML = status + tokenLine + returnLine + verseLine + inkLine + impostorLine + newSongLine + riskResultLine() + meta +
     `<div class="chall-result-actions">` +
       `<button id="backToChallenges" class="btn-primary">← challenges</button>` +
       `<button id="replayChallenge" class="btn-primary">replay ↺</button>` +
@@ -15199,7 +15234,8 @@ function challengeIntroHTML(c) {
         ? `from <b style="color:${col}">${escapeHtml(challengeTargetSong.album)}</b> — it's hiding somewhere in the next 13 pages`
         : `it's hiding somewhere in the next 13 pages`,
       terms: c.blurb,
-      cue: `name it on the right page — you get ${newSongLivesMax} guess${newSongLivesMax === 1 ? "" : "es"}`,
+      cue: `name it on the right page and the run ends there — you get ` +
+        `${newSongLivesMax} guess${newSongLivesMax === 1 ? "" : "es"}, and the earlier the page the better`,
       button: "start the hunt" });
   }
   // Deep Cut's dark side — the album is DEALT rather than chosen, and which album it is decides
@@ -17092,6 +17128,10 @@ function lastChainLetter(title) {
 // the prompt word. Costs a guess (so spamming the target every round can't brute-force
 // the win); when the budget runs out the run fails. A guess is only spent here — naming
 // it on a round where it DOES fit falls through and wins.
+// One Of A Kind: is this run the "name the song you have never named" rule?
+function newSongRuleActive() {
+  return gameType === "challenge" && currentChallenge && currentChallenge.rule === "newsong";
+}
 function rejectNewSong() {
   const t = challengeTargetSong ? challengeTargetSong.title : "your song";
   newSongLives -= 1;
@@ -18271,6 +18311,13 @@ function submitAnswer(song, isTimeout) {
   // "storm + diamond" is no evidence at all about "storm". The song still logs normally.
   roundWords[round - 1] = (whoseLineRuleActive() || bothRuleActive()) ? null : currentWord;
   roundSongs[round - 1] = correct && song ? song.title : null;  // credited song — for the lifetime tally
+  // One Of A Kind: the page the named song was finally landed on. This IS the run's score (see
+  // isGameOver and the bestScore swap in endChallenge), so it is written once and never
+  // rewritten — the win is binary, and the first landing is the only one that can happen.
+  if (correct && song && newSongRuleActive() && challengeTargetSong
+      && song.title === challengeTargetSong.title && !newSongFoundPage) {
+    newSongFoundPage = round;
+  }
   // How the page was ended, for the two charms that ask about the manner rather than the result:
   // whether the player sent something at all (I Was Wrong), and whether they simply took the top
   // line of the dropdown (Took The Money). A timeout is neither, whatever is left in the box.
@@ -25613,7 +25660,10 @@ function buildDevApi() {
         // Name a song holding SOME of the words but not all — the soft-reject path.
         half: () => { const s = currentLyricSongs.find((x) => !currentSongs.includes(x));
           if (s) submitAnswer(s); return s ? s.title : null; },
-        win: () => { score = (CHALLENGE_BY_ID["both-of-us"].target) || 9; endGame(); },
+        // The LIVE challenge's target, not the roster entry's: the dark side wins at six, and
+        // reading the base nine here would have the diagnostic overshoot a run already won.
+        win: () => { score = (currentChallenge && currentChallenge.target)
+          || CHALLENGE_BY_ID["both-of-us"].target || 9; endGame(); },
       },
       // Double Trouble / Name Three — the "name N different songs a page" rule.
       multi: {
