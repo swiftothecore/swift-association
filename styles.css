@@ -4643,9 +4643,9 @@
   }
 
   /* Every prompt-word modifier below targets `.word`, never `#wordDisplay`. The page-turn
-     flip sheet is a clone of the game card with all ids stripped, so an id-based selector
-     silently stops matching on the sheet and the answered page snaps back to a plain,
-     full-size word for the half second it takes to turn. */
+     flip sheet is a clone of the game card with every id renamed behind a per-sheet prefix
+     (renameFlipIds), so an id-based selector silently stops matching on the sheet and the
+     answered page snaps back to a plain, full-size word for the half second it takes to turn. */
 
   /* Vanishing Word challenge — the prompt word fades out of view after a beat
      (still in state, so matching is unaffected). */
@@ -5872,9 +5872,10 @@
   /* The shared tap grid (Sea of Songs, Odd One Out, Whose Line?) — tapping a title replaces
      typing, so the typed-input affordances come off the page on all of them.
      Keyed off the data attribute alone, never `#playArea`/`#gameHint`: the page-turn flip
-     sheet is a clone of the game card with all ids stripped, so an id-based selector would
-     stop applying there and the answered page would flip away wearing an input box it never
-     had. (Same rule as the prompt-word modifiers below — always target the class.) */
+     sheet is a clone of the game card with every id renamed behind a per-sheet prefix, so an
+     id-based selector would stop applying there and the answered page would flip away wearing
+     an input box it never had. (Same rule as the prompt-word modifiers below — always target
+     the class.) */
   [data-tapgrid="1"] .input-area,
   [data-tapgrid="1"] .hint,
   [data-tapgrid="1"] .hint-btn,

@@ -973,6 +973,52 @@ function showScreen(name) {
   window.dispatchEvent(new CustomEvent("deskscatter:refresh"));
 }
 
+/* ---------- Renaming the ids inside a flip sheet ----------
+   A flip sheet is a clone of a live screen, so every id in it is a duplicate of an id that is
+   still mounted a few nodes away. Deleting them was the old answer to that, and it quietly
+   broke every drawing that paints itself through a paint server. The bracelet is the one that
+   showed: a bead takes its sheen and its shaded side from `url(#…)` gradients declared in the
+   strand's own <defs> (beadDefs in js/bracelet.js), a pearl takes its entire lustre from two
+   more, and the strand hangs its shadow off a `url(#…)` filter. With the ids gone those
+   references resolved to nothing, so for the half second of a page turn the gloss beads went
+   flat and the pearls went plain — and then came back, because the page underneath had been
+   rendered with a fresh set of ids all its own.
+   Renaming rather than deleting keeps the document free of duplicates AND keeps every internal
+   reference pointing at the copy that travelled with the sheet. Nothing about the styling
+   changes: an id selector matched neither the stripped clone nor the renamed one, which is why
+   the page-turn rules in styles.css are keyed off classes and data attributes to begin with.
+   References that point OUT of the sheet — the rule-mark <symbol>s, the desk's bead sprite —
+   aren't in the map, so they are left alone and still resolve to the originals. */
+let flipIdSeq = 0;
+const FLIP_IDREF_ATTRS = ["aria-labelledby", "aria-describedby", "aria-controls", "aria-owns",
+  "aria-activedescendant", "aria-details", "aria-errormessage", "for", "headers", "list", "form"];
+function renameFlipIds(root) {
+  const prefix = "flip" + (++flipIdSeq) + "-";
+  const renamed = new Map();
+  [root, ...root.querySelectorAll("[id]")].forEach((el) => {
+    const old = el.getAttribute("id");
+    if (!old) return;
+    renamed.set(old, prefix + old);
+    el.setAttribute("id", prefix + old);
+  });
+  if (!renamed.size) return;
+  [root, ...root.querySelectorAll("*")].forEach((el) => {
+    // Write through the Attr node, not setAttribute, so a namespaced attribute (xlink:href on
+    // an old-style <use>) is updated in place rather than shadowed by a same-named one.
+    Array.from(el.attributes).forEach((attr) => {
+      const value = attr.value;
+      if (value.includes("url(")) {
+        attr.value = value.replace(/url\(\s*(['"]?)#([^'")\s]+)\1\s*\)/g,
+          (whole, quote, id) => renamed.has(id) ? `url(${quote}#${renamed.get(id)}${quote})` : whole);
+      } else if ((attr.localName === "href" || attr.name === "xlink:href") && value.startsWith("#")) {
+        if (renamed.has(value.slice(1))) attr.value = "#" + renamed.get(value.slice(1));
+      } else if (FLIP_IDREF_ATTRS.includes(attr.name)) {
+        attr.value = value.split(/\s+/).filter(Boolean).map((t) => renamed.get(t) || t).join(" ");
+      }
+    });
+  });
+}
+
 /* Side-to-side page turns for screen navigation. Where nextRound's flip lifts the answered
    page up from its top edge (forward through the notebook), these turn pages sideways around
    the left spine. Two complementary motions sell "going in" vs "coming back":
@@ -1261,8 +1307,7 @@ function revealNotebook(onDone) {
   layOutBoard();
   loading.style.display = "none";
   const flip = loading.cloneNode(true);
-  flip.removeAttribute("id");
-  flip.querySelectorAll("[id]").forEach((e) => e.removeAttribute("id"));
+  renameFlipIds(flip);
   flip.setAttribute("aria-hidden", "true");
   flip.style.display = "";
   flip.classList.remove("loading");
@@ -15111,8 +15156,7 @@ function turnPageSheet(card, fill, done) {
   ["--ink-accent", "--highlighter", "--bead", "--page-wash"].forEach((token) => {
     flip.style.setProperty(token, oldPageStyle.getPropertyValue(token));
   });
-  flip.removeAttribute("id");
-  flip.querySelectorAll("[id]").forEach((e) => e.removeAttribute("id"));
+  renameFlipIds(flip);
   flip.classList.remove("screen", "active");
   // Decorative clone of the page — hide from the a11y tree so the duplicated live regions in
   // it (#wordDisplay, #feedback, #bonusFeedback) aren't re-announced during the page turn.

@@ -461,6 +461,71 @@ export function initDev(api) {
     row("motion", motionSel, btn("set", () => { readout.textContent = `motion: ${api.accessibility.motion(motionSel.value).motion}`; }),
         btn("toggle flash", () => { const s = api.accessibility.flash(); readout.textContent = `flashing: ${s.flashing ? "reduced" : "full"}`; }))));
 
+
+  // ---- The page turn -----------------------------------------------------------
+  // Catch the next flip sheet, freeze it a third of the way through its turn and hold it
+  // there, then audit every url(#…) it paints through. A flip sheet is a CLONE, so a gradient
+  // or a filter it references has to resolve to a def that travelled with the sheet
+  // (renameFlipIds in app.js) — or to something outside it that is genuinely shared, like the
+  // rule-mark symbols. Neither used to be true: the ids were stripped off the clone, the
+  // bracelet's bead sheen and drop shadow resolved to nothing, and gloss beads went flat for
+  // the half second of the turn. A fault that is over before you can look at it needs a hold
+  // to see at all, so this is the tool for that whole class of them.
+  // Its own output line, not the shared readout: the readout is a live status strip the app
+  // rewrites on every state change, so an audit posted there is gone by the next page.
+  const flipAuditOut = mk("pre", { class: "dv-pre" }, "—");
+  let heldSheet = null;
+  let holdArmed = null;
+  const auditSheetRefs = (sheet) => {
+    const refs = new Set();
+    [sheet, ...sheet.querySelectorAll("*")].forEach((el) => {
+      Array.from(el.attributes).forEach((attr) => {
+        const hit = /url\(\s*['"]?#([^'")\s]+)/.exec(attr.value);
+        if (hit) refs.add(hit[1]);
+      });
+    });
+    // A reference is fine if it lands inside the sheet, and fine if it lands on something
+    // shared that is still mounted. It is broken only when it lands on nothing at all.
+    const dangling = [...refs].filter((id) => {
+      const sel = `[id="${CSS.escape(id)}"]`;
+      return !sheet.querySelector(sel) && !document.querySelector(sel);
+    });
+    return { checked: refs.size, dangling };
+  };
+  const releaseSheet = () => {
+    if (heldSheet) { delete heldSheet.remove; heldSheet.remove(); heldSheet = null; }
+    if (holdArmed) { holdArmed.disconnect(); holdArmed = null; }
+  };
+  const holdNextTurn = () => {
+    releaseSheet();
+    holdArmed = new MutationObserver((records) => {
+      records.forEach((record) => record.addedNodes.forEach((node) => {
+        if (heldSheet || node.nodeType !== 1 || !node.classList || !node.classList.contains("page-flip-sheet")) return;
+        heldSheet = node;
+        holdArmed.disconnect();
+        holdArmed = null;
+        // A negative delay seeks into the animation; pausing then pins it there.
+        [node, ...node.querySelectorAll(".flip-shade")].forEach((el) => {
+          el.style.animationDelay = "-0.16s";
+          el.style.animationPlayState = "paused";
+        });
+        node.remove = () => {};            // outlive scheduleFlipRemoval's timeout
+        const report = auditSheetRefs(node);
+        flipAuditOut.textContent = report.dangling.length
+          ? `sheet held · ${report.dangling.length} dangling of ${report.checked}\n${report.dangling.map((id) => "• " + id).join("\n")}`
+          : `sheet held · all ${report.checked} url(#…) refs resolve`;
+      }));
+    });
+    holdArmed.observe(document.body, { childList: true, subtree: true });
+    flipAuditOut.textContent = "armed — turn a page";
+  };
+  body.append(section("page turn",
+    row(btn("hold next turn", holdNextTurn), btn("release", () => {
+      releaseSheet();
+      flipAuditOut.textContent = "—";
+    })),
+    flipAuditOut));
+
   // ---- Address-bar routes ----------------------------------------------------
   // Opening a panel from here checks the pushState half. The copy button is the one that
   // matters: paste the link into a fresh tab and you are testing 404.html's bounce (or the
