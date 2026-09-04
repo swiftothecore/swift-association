@@ -257,8 +257,6 @@ let revolveId = null;           // Revolving Door: timeout for the next rotateMs
 let revolveDeadline = 0;        // next swap deadline, preserved across Settings
 let revolveIndex = 0;           // Revolving Door: how many times the word has revolved this round
 let revolveBeatEverySwap = true; // Revolving Door: still true if every correct answer landed on slot 0 (Two Steps Ahead)
-let lastAlphaLetter = "";       // From A to Z: first letter of the last accepted answer
-let alphaEveryLetterNew = true; // From A to Z: still true if the chain never rested twice on one letter (Tied Together With A Smile)
 let roundSecondsOverride = null; // Shrinking Timer: per-round clock override (null = use the mode's seconds)
 let chainLetter = "";           // Wrapped Like A Chain: required first letter of the next title ("" = free)
 let tourSetlist = [];           // On Tour!: the album scheduled for each round (index = round-1)
@@ -1365,7 +1363,7 @@ function applyEra(era) { document.body.setAttribute("data-era", era); }
 function effectiveStrict() { return currentMode.strict || settings.stemMatching === false; }
 // Per-challenge lever overrides: a challenge entry may set `noTitle` / `pool` to
 // override the difficulty mode it borrows (e.g. Word Games allows title-word songs,
-// From A to Z draws from the common pool so every round has options). Falls back to
+// Short n' Sweet draws from the common pool so every round has options). Falls back to
 // the active mode for non-challenge runs / challenges that don't override.
 function effectiveNoTitle() {
   if (perkNoTitleOff) return false;            // Choose Your Path: Off The Record
@@ -8577,7 +8575,7 @@ function renderChallengeDetail(id) {
   //
   // WHY BOTH SIDES ARE PRINTED AT ONCE. The two readings are never the same length, and the
   // flip used to jolt the card because of it: measured across the roster it moved the Play
-  // button on all 25 dark sides, by 9px on the mildest and 131px on Alphabetical, and the
+  // button on all 25 dark sides, by 9px on the mildest and 131px on the wordiest, and the
   // "defeated" stamp standing 10px taller than the "dark side" flag jogged the head on every
   // one of them. So every swappable line now prints BOTH readings into a single grid cell
   // with one of them hidden. The cell is always as tall and as wide as the longer side, and
@@ -11325,8 +11323,6 @@ function resetRunState() {
   focusAlbum = null;
   focusDifficulty = null;
   guestRunId = null;
-  lastAlphaLetter = "";
-  alphaEveryLetterNew = true;
   vanishAnsweredBlind = true;
   roundSecondsOverride = null;
   impostorRounds = new Set();
@@ -13220,8 +13216,6 @@ function applyChallengeRound(wrap) {
   if (currentChallenge.wordFlip) wrap.dataset.flip = "1";
   if (currentChallenge.rule === "vanishing") {
     return;
-  } else if (currentChallenge.rule === "alphabetical") {
-    renderAlphaBanner();
   } else if (currentChallenge.rule === "wordfx") {
     renderWordFx(wrap, currentWord, round);
   } else if (currentChallenge.rule === "revolving") {
@@ -13285,24 +13279,6 @@ function applyChallengeRound(wrap) {
 }
 // Fixed max-warp tier for Ready For It (the round-4-equivalent scramble+drop+reverse).
 const FLASHWARP_LEVEL = 4;
-// From A to Z: the live floor, plus Dark Side's feasibility ceiling. The ceiling is the latest
-// initial that still leaves one distinct later title initial per page after this one, making the
-// winnability guard visible before the player commits to a title.
-function renderAlphaBanner() {
-  if (!(gameType === "challenge" && currentChallenge && currentChallenge.rule === "alphabetical")) return;
-  const el = ensureChallBanner();
-  let rule;
-  if (currentChallenge.strictAlpha) {
-    const ceiling = alphaCeilingLetter();
-    rule = lastAlphaLetter ? `later than ${lastAlphaLetter}` : "choose the opening letter";
-    if (ceiling) rule += ` · no later than ${ceiling}`;
-  } else {
-    rule = lastAlphaLetter ? `${lastAlphaLetter} or later` : "choose any opening letter";
-  }
-  el.innerHTML =
-    `<span class="chall-prog-name">alphabet · ${escapeHtml(rule)}</span>` +
-    `<span class="chall-prog-count">${score} / ${currentChallenge.target || 9}</span>`;
-}
 function renderFlashwarpBanner() {
   if (!(gameType === "challenge" && currentChallenge && currentChallenge.rule === "flashwarp")) return;
   const el = ensureChallBanner();
@@ -13768,7 +13744,7 @@ function renderWildcardBanner(label) {
   ensureChallBanner().innerHTML = `<span class="chall-banner-tag">rule</span> ${escapeHtml(label)}`;
 }
 // Soft reject for an answer that breaks the round's Wildcard rule — no burned round,
-// same flash vocabulary as the alphabetical / off-limits rejects.
+// same flash vocabulary as the chain / off-limits rejects.
 function rejectWildcard(label) {
   softRejectFlash(`breaks the rule — <b>${escapeHtml(label)}</b>`);
 }
@@ -13877,7 +13853,7 @@ function challengeWinCheck(c) {
   // it saved (see the entry in config.js). A shielded miss is a page survived, so it counts
   // here exactly as a page answered does.
   if (c.rule === "insurance") return !insuranceDead && roundResults.length >= TOTAL_ROUNDS;
-  // Score-target rules: vanishing / alphabetical / accelerate / titleHas / shorttitle /
+  // Score-target rules: vanishing / accelerate / titleHas / shorttitle /
   // chain (chain length == score) / setlist / combo (reach the target before the clock dies).
   return score >= (c.target || TOTAL_ROUNDS);
 }
@@ -14064,9 +14040,6 @@ function endChallenge() {
   // already reached can't drag a fast run out of it.
   if (rewardRun && c.rule === "ink" && won && inkFilledOnPage && inkFilledOnPage <= INK_FLOURISH_PAGES)
     unlock("win-long-story-long-filling-target-early");
-  // Tied Together With A Smile — From A to Z climbing on every link: the alphabet tied end to
-  // end without ever resting twice on the same letter.
-  if (rewardRun && c.rule === "alphabetical" && won && alphaEveryLetterNew) unlock("win-from-a-to-z-no-repeated-letters");
   // The risk three. Read AFTER the settle above, which banks whatever was still riding when
   // the pages ran out — a pot carried all the way home is banked like any other, so it counts.
   // Bonnie And Clyde — a pot ridden PRESS_FLOURISH_RIDE deep and actually banked.
@@ -14924,28 +14897,6 @@ function pickWord() {
   // only empties on a degenerate list — fall back to the full bucket if so.
   const pool = bucket.filter((w) => !usedWords.includes(w));
   let choices = pool.length ? pool : bucket;
-  // From A to Z: only serve a prompt with an answer that clears the current floor. Dark Side
-  // also refuses a title jump that would leave too few later initials for the pages still ahead,
-  // so filtering through the shared predicate here prevents both random dead pages and terminal
-  // player choices such as taking Y before the final page.
-  if (gameType === "challenge" && currentChallenge && currentChallenge.rule === "alphabetical") {
-    let enough = choices.filter((w) =>
-      validSongs(w, effectiveStrict(), effectiveNoTitle()).some(alphaAllowsSong));
-    // The current catalogue always has unused choices, but do not quietly fall back to an
-    // illegal prompt if a future edit thins it out. Reusing a prompt is the least surprising
-    // recovery; widening from the common pool comes next. If even the full catalogue has no
-    // legal prompt, fail loudly so the broken corpus is caught instead of serving a dead page.
-    if (!enough.length) {
-      enough = bucket.filter((w) =>
-        validSongs(w, effectiveStrict(), effectiveNoTitle()).some(alphaAllowsSong));
-    }
-    if (!enough.length) {
-      enough = playableWords.filter((w) =>
-        validSongs(w, effectiveStrict(), effectiveNoTitle()).some(alphaAllowsSong));
-    }
-    if (!enough.length) throw new Error("From A to Z has no legal prompt for the current chain");
-    choices = enough;
-  }
   // Double Trouble: a page is only winnable if the word has at least `need` valid
   // songs (after the no-title rule). Keep only such words; fall back if none remain.
   // On the dark side the songs already spent this run don't count toward that floor, which
@@ -16332,11 +16283,6 @@ function advanceRound() {
   currentSongs = roundIsImpostor ? [] : validSongs(currentWord, effectiveStrict(), effectiveNoTitle());
   if (commonRuleActive() && commonPuzzle) currentSongs = commonPuzzle.lines.map((x) => x.song);
   currentLyricSongs = currentSongs;   // full lyrics-valid set (soft-rejects judge near-misses off this)
-  // From A to Z: narrow every downstream surface to the titles the live chain can really accept.
-  // Keep currentLyricSongs broad so an out-of-order or page-stranding title gets a soft reject
-  // instead of being scored as an unrelated wrong answer.
-  if (gameType === "challenge" && currentChallenge && currentChallenge.rule === "alphabetical")
-    currentSongs = currentSongs.filter(alphaAllowsSong);
   // Both Of Us: draw the page's extra word(s) against the one just drawn, then narrow the valid
   // set to the songs holding them ALL — so the rarity stamp, the examples, the hint song and the
   // win check every describe an answer that really clears the page. currentLyricSongs widens to
@@ -16829,7 +16775,7 @@ function resetTension() {
 
 // Whether a song satisfies the active challenge's per-round constraint — so the
 // suggestions never reveal an answer the rule would soft-reject (e.g. a multi-word
-// title under "only one-word titles", or an out-of-order title in From A to Z).
+// title under "only one-word titles", or an off-chain title in Wrapped Like A Chain).
 // Non-constraint rules (and non-challenge play) accept everything.
 function roundAcceptsSong(song) {
   // Album Focus: only ever suggest songs from the locked album.
@@ -16841,9 +16787,6 @@ function roundAcceptsSong(song) {
       wordRegex(currentWord, effectiveStrict()).test(song.title)) return false;
   if (currentChallenge.rule === "wildcard") {
     return !roundWildcard || !roundWildcard.accepts || roundWildcard.accepts(song);
-  }
-  if (currentChallenge.rule === "alphabetical") {
-    return alphaAllowsSong(song);
   }
   if (currentChallenge.rule === "titleHas")
     return wordRegex(currentWord, true).test(song.title);
@@ -17069,48 +17012,14 @@ function rejectOffLimits(song) {
   }, 1700);
   input.focus();
 }
-// From A to Z: the first A–Z letter of a title (ignoring punctuation/digits).
+// Wrapped Like A Chain / Devil's Path: the first A–Z letter of a title (ignoring punctuation/digits).
 function firstAlphaLetter(title) {
   const m = (title || "").toUpperCase().match(/[A-Z]/);
   return m ? m[0] : "";
 }
-// From A to Z: whether this title can be accepted without breaking the live chain. The dark
-// side has a second duty beyond beating the current floor: a jump may not use so much alphabet
-// that the remaining pages can no longer be served. That is what keeps an early Y-title from
-// turning every later page into a forced miss. The visible alphabet banner surfaces the live
-// ceiling, so this guard is a rule the player can plan around rather than an invisible rejection.
-function alphaClearsFloor(song) {
-  const L = firstAlphaLetter(song && song.title);
-  if (!L) return false;
-  if (!lastAlphaLetter) return true;
-  return currentChallenge && currentChallenge.strictAlpha ? L > lastAlphaLetter : L >= lastAlphaLetter;
-}
-function alphaLaterInitialCount(letter) {
-  const later = new Set();
-  for (const song of allSongs) {
-    const L = firstAlphaLetter(song.title);
-    if (L > letter) later.add(L);
-  }
-  return later.size;
-}
-function alphaFutureStepsNeeded() {
-  if (!currentChallenge || !currentChallenge.strictAlpha) return 0;
-  return Math.max(0, TOTAL_ROUNDS - round);
-}
-function alphaAllowsSong(song) {
-  if (!alphaClearsFloor(song)) return false;
-  if (!currentChallenge || !currentChallenge.strictAlpha) return true;
-  return alphaLaterInitialCount(firstAlphaLetter(song.title)) >= alphaFutureStepsNeeded();
-}
-function alphaCeilingLetter() {
-  if (!currentChallenge || !currentChallenge.strictAlpha) return "";
-  const letters = [...new Set(allSongs.map((song) => firstAlphaLetter(song.title)).filter(Boolean))].sort();
-  const needed = alphaFutureStepsNeeded();
-  return letters.filter((L) => alphaLaterInitialCount(L) >= needed).pop() || "";
-}
 // Shared soft-reject flash: wipe the line, pulse the input, show a red margin note,
 // and keep the clock running — the round is NOT burned. Used by the off-limits,
-// alphabetical, wildcard, and One Of A Kind rejects.
+// chain, wildcard, and One Of A Kind rejects.
 // `keep` leaves what was typed in the box. Every rule-based reject wipes it (the pick was
 // wrong, start again), but a nudge about a line the player is halfway through singing
 // shouldn't throw the line away — there, the fix is usually to keep going.
@@ -17139,19 +17048,6 @@ function softRejectFlash(html, keep) {
 // the soft reject and the win condition can never disagree.
 function maxTitleWordsNow() {
   return (currentChallenge && currentChallenge.maxTitleWords) || 2;
-}
-// Soft reject for an out-of-order answer in the alphabetical challenge.
-function rejectAlpha(letter) {
-  // Dark bans ties, so "or later" would be a lie — it has to climb PAST the last letter.
-  softRejectFlash(currentChallenge && currentChallenge.strictAlpha
-    ? `out of order — start later than <b>${escapeHtml(lastAlphaLetter)}</b>`
-    : `out of order — start with <b>${escapeHtml(lastAlphaLetter)}</b> or later`);
-}
-// Dark From A to Z: the title clears today's floor but jumps so far ahead that the remaining
-// pages could no longer be served. Keep the page live and explain why the otherwise-valid title
-// did not take.
-function rejectAlphaLeap() {
-  softRejectFlash(`too far ahead: leave enough alphabet for the pages still to come`);
 }
 // Title...?: the word's in the lyrics but not the title they named.
 function rejectTitleHas() {
@@ -18200,18 +18096,6 @@ function submitAnswer(song, isTimeout) {
   // counts as a miss; lyric answers resolve only to valid songs, so they're exempt.
   if (song && !isTimeout && !lyricMatch && isOffLimitsPick(song)) { noteWrongSubmission(song); rejectOffLimits(song); return; }
 
-  // From A to Z: a valid answer earlier in the alphabet than the last accepted one is
-  // soft-rejected (doesn't burn the round), so the player can keep the sequence going.
-  if (song && !isTimeout && currentChallenge && currentChallenge.rule === "alphabetical"
-      && currentLyricSongs.some((s) => s.title === song.title)
-      && !alphaAllowsSong(song)) {
-    const L = firstAlphaLetter(song.title);
-    // Dark: a REPEAT of the last letter is rejected too, not just a step backwards.
-    const stalled = currentChallenge.strictAlpha ? L <= lastAlphaLetter : L < lastAlphaLetter;
-    if (lastAlphaLetter && L && stalled) { noteWrongSubmission(song); rejectAlpha(L); return; }
-    noteWrongSubmission(song); rejectAlphaLeap(); return;
-  }
-
   // One Of A Kind: trying the named target song on a round where it doesn't fit the
   // prompt word doesn't burn the round — the player keeps hunting for a word that lands
   // it ("answer that song for at least one word"). When it DOES fit, it falls through
@@ -18459,14 +18343,6 @@ function submitAnswer(song, isTimeout) {
     else if (tapKnowledgeActive()) renderTapKnowledgeBanner();
     // The risk batch's banner carries the live bead total, which a bet has just moved.
     else if (RISK_RULES.has(currentChallenge.rule)) { renderRiskBanner(); renderInsuranceBtn(); }
-  }
-  // From A to Z: advance the alphabetical floor only on an accepted correct answer.
-  if (correct && currentChallenge && currentChallenge.rule === "alphabetical") {
-    const L = firstAlphaLetter(song.title);
-    // Tied Together With A Smile: the rule only demands non-decreasing, so resting twice on
-    // the same letter is legal — doing it spoils a chain that climbs on every single link.
-    if (L && L === lastAlphaLetter) alphaEveryLetterNew = false;
-    lastAlphaLetter = L;
   }
   // Blank Space: a correct answer landed while the word was still on the page — the run was
   // no longer written blind. The vanish timeout is untouched by submit, so the class is the
@@ -25711,29 +25587,6 @@ function buildDevApi() {
           score = roundResults.length;
           endGame();
         },
-      },
-      // From A to Z — non-decreasing letters. Tied Together With A Smile wants a chain that
-      // climbs on every link, so `win(false)` is the rested-twice control case.
-      alpha: {
-        // The letter the next title must meet or beat (must BEAT outright on a dark run).
-        floor: () => lastAlphaLetter,
-        // Pin the floor so a rejection can be tested without playing the sequence up to it.
-        setFloor: (L) => { lastAlphaLetter = (L || "").toUpperCase().slice(0, 1); return lastAlphaLetter; },
-        strict: () => !!(currentChallenge && currentChallenge.strictAlpha),   // are ties banned?
-        // Re-derive one prompt through the same floor + feasibility predicate as live play,
-        // without re-pointing the current page. This is the regression hatch for an early Y
-        // and for the moving ceiling surfaced in the dark banner.
-        inspect: (word = currentWord) => {
-          const songs = word ? validSongs(word, effectiveStrict(), effectiveNoTitle()) : [];
-          const legal = songs.filter(alphaAllowsSong);
-          return { word, round, floor: lastAlphaLetter, ceiling: alphaCeilingLetter(),
-            futureSteps: alphaFutureStepsNeeded(), legal: legal.map((s) => s.title),
-            rejected: songs.filter((s) => !legal.includes(s)).map((s) => s.title) };
-        },
-        climbing: () => alphaEveryLetterNew,            // is Tied Together still alive this run?
-        spoil: () => { alphaEveryLetterNew = false; },  // as if you'd rested twice on one letter
-        win: (climbing) => { alphaEveryLetterNew = climbing !== false;
-          score = (CHALLENGE_BY_ID.alphabetical.target) || 9; endGame(); },
       },
       // Both Of Us — the multi-word page. `check` is the honest read: it re-derives, straight
       // off the song lyrics, which of this page's words each "answer" really holds, so a

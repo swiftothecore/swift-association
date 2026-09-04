@@ -726,17 +726,6 @@ export const CHALLENGES = [
       win: "Answer 6 correct songs from the album you were dealt." },
     desc: "Guess five correct songs from the same album.",
     win: "Answer 5 correct songs from one album." },
-  { id: "alphabetical", name: "From A to Z", rule: "alphabetical", mode: "medium",
-    free: false, cost: 1, target: 9, pool: "easy", tapes: 3,
-    // `strictAlpha` bans ties, so the alphabet has to climb on every link instead of resting.
-    // The copy changes too: the base rule permits repeats, this one doesn't.
-    hard: { target: 8, pool: null, dropdown: false, strictAlpha: true,
-      blurb: "10s · no suggestions · all words · not in the title · strictly later each time",
-      desc: "Each title must start LATER in the alphabet than the last, never twice on a letter. A live ceiling keeps the rest of the chain reachable, so do not leap ahead.",
-      win: "Land 8 correct answers, each one climbing the alphabet." },
-    blurb: "10s · suggestions · common words · not in the title",
-    desc: "Build an A→Z chain: after your first answer, each title must start on the same letter or later.",
-    win: "Land 9 correct answers in non-decreasing A→Z order." },
   { id: "word-modifiers", name: "Word Games", rule: "wordfx", mode: "medium",
     free: false, cost: 1, target: 9, noTitle: false, tapes: 2,
     // `fxFrom` starts the ladder partway up (page 1 is already warped, no gentle opening) and
@@ -1368,8 +1357,6 @@ export const DARK_SIDE_MILESTONE = 5;
                   with no in-album answer can't burn a page the player couldn't have avoided.
    - wildcard     `stack: 2` fuses two sub-rules per page (fuseWildcard / wildcardPairs), pairs
                   vetted for a surviving answer and capped at one visual gimmick.
-   - alphabetical `strictAlpha` bans ties, so the alphabet must climb on every link. The soft
-                  reject changes wording with it ("later than X", not "X or later").
    - short-title  `maxTitleWords` (1 on dark) is read by the pool, the suggestion filter, the
                   soft reject, the in-run banner and the win check via `maxTitleWordsNow`, so
                   they can never disagree about the rule. `shortTitleWordLists` keeps one pool
@@ -2767,8 +2754,6 @@ const WAX_SEAL_MOTIFS = {
   "vanishing-word": { wax: 1, fr: "nonzero", d: "M32 19 A13 13 0 0 0 32 45 Z M37.5 22.5 m-2.7 0 a2.7 2.7 0 1 1 5.4 0 a2.7 2.7 0 1 1 -5.4 0 M40 32 m-3.1 0 a3.1 3.1 0 1 1 6.2 0 a3.1 3.1 0 1 1 -6.2 0 M37.5 41.5 m-2.7 0 a2.7 2.7 0 1 1 5.4 0 a2.7 2.7 0 1 1 -5.4 0 M43.5 25.5 m-1.7 0 a1.7 1.7 0 1 1 3.4 0 a1.7 1.7 0 1 1 -3.4 0 M44.8 36.5 m-1.6 0 a1.6 1.6 0 1 1 3.2 0 a1.6 1.6 0 1 1 -3.2 0 M46.7 31 m-1.1 0 a1.1 1.1 0 1 1 2.2 0 a1.1 1.1 0 1 1 -2.2 0" },
   // a vinyl record, label and spindle hole pressed in: one single album
   "deep-cut": { wax: 2, fr: "nonzero", d: "M18.5 32 a13.5 13.5 0 1 1 27 0 a13.5 13.5 0 1 1 -27 0 M23.7 32 a8.3 8.3 0 1 0 16.6 0 a8.3 8.3 0 1 0 -16.6 0 M25.7 32 a6.3 6.3 0 1 1 12.6 0 a6.3 6.3 0 1 1 -12.6 0 M30.2 32 a1.8 1.8 0 1 0 3.6 0 a1.8 1.8 0 1 0 -3.6 0" },
-  // an A-to-Z monogram, the classic wax-seal treatment for an alphabetical rule
-  "alphabetical": { wax: 3, fr: "nonzero", d: "M25.5 21.5 L31 31.5 H27.9 L25.5 26.6 L23.1 31.5 H20 Z M22.1 28.4 H28.9 L29.6 30.3 H21.4 Z M34 30.5 H43 V33 L37.6 39.9 H43.2 V42.4 H33.8 V39.9 L39.2 33 H34 Z" },
   // a word as three bars, warping more with every line until it breaks apart
   "word-modifiers": { wax: 4, fr: "nonzero", d: "M22 22.5 H42 V26 H22 Z M22 30.5 C26 28.5 28 32.5 32 30.5 C36 28.5 38 32.5 42 30.5 L42 34 C38 36 36 32 32 34 C28 36 26 32 22 34 Z M21.5 39 C25 36.5 28 41.5 31 39 L31 42.5 C28 45 25 40 21.5 42.5 Z M34 38.5 C37 36 40 41 43.5 38.5 L43.5 42 C40 44.5 37 39.5 34 41.5 Z" },
   // one lone song: a single bold eighth note
@@ -3397,7 +3382,6 @@ export const ACHIEVEMENTS = [
   { id: "clear-double-trouble-all-13-two-songs-each",     name: "Two Is Better Than One", desc: "Clear all thirteen pages of Double Trouble: two songs each, none dropped", tier: 2, secret: true, reveal: "double-trouble", icon: "cherries" },
   { id: "win-vanishing-word-all-answers-blind",       name: "Blank Space",       desc: "Win Vanishing Word writing blind: every answer landed after the word had gone", tier: 2, secret: true, reveal: "vanishing-word", icon: "vanish" },
   { id: "win-deep-cut-all-correct-same-album", name: "Been Here All Along", desc: "Win Deep Cut loyal to one album: every correct answer of the run off the same record", tier: 2, secret: true, reveal: "deep-cut", icon: "heartlabel" },
-  { id: "win-from-a-to-z-no-repeated-letters",     name: "Tied Together With A Smile", desc: "Win From A to Z on a chain that climbs every link: never twice on the same letter", tier: 2, secret: true, reveal: "alphabetical", icon: "ribbon" },
   // The risk three. Flourishes like the rest, so they carry `reveal` and stay masked until
   // their challenge is beaten — nobody rides a pot five deep by accident. Each one asks for
   // the thing its rule is really about: depth on Press, restraint on Insurance, nerve on
@@ -3671,7 +3655,6 @@ export const ACH_ID_MIGRATIONS = {
   "two-is-better": "clear-double-trouble-all-13-two-songs-each",
   "blank-space": "win-vanishing-word-all-answers-blind",
   "you-belong-with-me": "win-deep-cut-all-correct-same-album",
-  "tied-together": "win-from-a-to-z-no-repeated-letters",
   "i-knew-you-were-trouble": "bank-press-your-luck-pot-5-pages-deep",
   "untouchable": "win-insurance-no-shields-spent",
   "the-man": "win-confidence-wager-max-every-page",
@@ -3819,7 +3802,7 @@ export const ACH_GROUP_OF = {
   "defeat-impostor-flawlessly": "challenges", "fall-for-first-impostor": "challenges", "defeat-common-thread-every-line": "challenges",
   "beat-revolving-door-before-swap": "challenges", "win-home-invasion-clock-untouched": "challenges", "win-shrinking-timer-all-pages-under-10s": "challenges",
   "win-sea-of-songs-no-decoys": "challenges", "win-lyric-lover-all-lines-word-perfect": "challenges", "clear-double-trouble-all-13-two-songs-each": "challenges",
-  "win-vanishing-word-all-answers-blind": "challenges", "win-deep-cut-all-correct-same-album": "challenges", "win-from-a-to-z-no-repeated-letters": "challenges",
+  "win-vanishing-word-all-answers-blind": "challenges", "win-deep-cut-all-correct-same-album": "challenges",
   "bank-press-your-luck-pot-5-pages-deep": "challenges", "win-insurance-no-shields-spent": "challenges", "win-confidence-wager-max-every-page": "challenges",
   "lose-insurance-page-1-shields-unspent": "challenges",
   "win-long-story-long-no-titles-banked": "challenges", "win-long-story-long-filling-target-early": "challenges",
