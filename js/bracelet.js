@@ -567,6 +567,10 @@ function buildSingleRowBraceletSVG(results, activeRound, freshIndex, albums, opt
   // Album→colour map; callers pass the active palette (colour-blind variant when
   // that setting is on), defaulting to the standard album colours.
   const colors = (opts && opts.colors) || ALBUM_COLORS;
+  // Per-bead colour overrides, for the rules where the page has no album to be coloured by
+  // (see beadTints in app.js). A literal colour, never a token: the keepsake PNG rasterises
+  // this markup outside the page's own CSS, so a var() here would export as black.
+  const tints = (opts && opts.beadTints) || [];
   // per-round flags: was a hint taken that round? the bead is strung sanded rather than glossy.
   const hinted = (opts && opts.hinted) || [];
   // per-round verse tier ("perfect"/"verse"): both hang the reserved pen-nib trinket, and a
@@ -655,7 +659,7 @@ function buildSingleRowBraceletSVG(results, activeRound, freshIndex, albums, opt
   for (let i = 0; i < total; i++) {
     const x = slotX(i), y = yAt(x);
     const answered = results[i];
-    const albumCol = (albums && albums[i]) ? (colors[albums[i]] || null) : null;
+    const albumCol = tints[i] || ((albums && albums[i]) ? (colors[albums[i]] || null) : null);
     const fill = albumCol || "var(--bead)";
     // The trinket takes its tint from an inherited --bead, so the override may only be written
     // when there IS an album colour: `--bead:var(--bead)` is a self-reference, which makes the
@@ -728,6 +732,7 @@ function buildSingleRowBraceletSVG(results, activeRound, freshIndex, albums, opt
 function buildCoiledBraceletSVG(results, activeRound, freshIndex, albums, opts = {}) {
   const total = Math.max(1, Math.floor(Number(opts.total) || TOTAL_ROUNDS));
   const colors = opts.colors || ALBUM_COLORS;
+  const tints = opts.beadTints || [];   // see the note on the single-row builder above
   const compact = !!opts.compact;
   const sealed = !!opts.sealed;
   const live = activeRound > 0;
@@ -804,7 +809,8 @@ function buildCoiledBraceletSVG(results, activeRound, freshIndex, albums, opts =
   for (const slot of layout.slots) {
     const i = slot.index, x = slot.x, row = layout.rows[slot.row], y = yAt(x, row);
     const answered = sealed ? "sealed" : results[i];
-    const albumCol = !sealed && albums && albums[i] ? (colors[albums[i]] || null) : null;
+    const albumCol = sealed ? null
+      : (tints[i] || (albums && albums[i] ? (colors[albums[i]] || null) : null));
     const fill = sealed ? "var(--paper-edge)" : (albumCol || "var(--bead)");
     const tint = albumCol ? ` style="--bead:${albumCol}"` : "";
     const rot = jitter(i, 1, 9);

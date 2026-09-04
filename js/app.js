@@ -9,7 +9,8 @@ import {
   LAUNCH_DATE, SERIAL_DIGITS,
   MODES, MODE_ORDER, MODE_COLORS, DIFFICULTY_LADDER, MODALITY_MODES, EXPLORER_TOKENS, SHELF_TYPES, PAGE_MARK_KINDS,
   ERAS, TENDER_ERAS, FINALE_ERAS, ALBUM_ERA, TS_MILESTONES, TS_LORE_DAYS, SALT_SHAKER_D, SALT_CAP_D,
-  ALBUM_COLORS, CB_ALBUM_COLORS, STUDIO_ALBUMS, TITLE_ALIASES, STAMP_INKS,
+  ALBUM_COLORS, CB_ALBUM_COLORS, IMPOSTOR_BEAD, COMMON_THREAD_BEADS,
+  STUDIO_ALBUMS, TITLE_ALIASES, STAMP_INKS,
   VAULT_TRACKS, AOTY_ALBUMS, VAULT_ALBUMS,
   ACHIEVEMENTS, ACH_ICONS, ACH_BY_ID, ACH_GROUPS, ACH_GROUP_COLORS, ACH_GROUP_OF,
   ACH_FAMILIES, ACH_FAMILY_COLORS,
@@ -64,7 +65,7 @@ import {
 import { exportBraceletCard, copyBraceletCard, buildCardSVG, fontFaceCss } from "./braceletcard.js";
 import { exportSleeveCard, copySleeveCard, buildSleeveSVG } from "./sleevecard.js";
 import { sfx } from "./sound.js";
-import { wordRegex as wordRegexCore, extractLineWithWord as extractLineWithWordCore, highlightWord as highlightWordCore, variantBody, falseFriendRegex } from "./match.js";
+import { wordRegex as wordRegexCore, extractLineWithWord as extractLineWithWordCore, highlightWord as highlightWordCore, variantBody, falseFriendRegex, addedLettersRegex } from "./match.js";
 import { buildLyricReveal } from "./lyric-reveal.mjs";
 import { buildLineIndex, buildSlipContext, buildSlipPuzzle, buildNamePuzzle,
          buildBlankPuzzle, buildRedactedPuzzle,
@@ -9661,12 +9662,47 @@ function braceletRenderOptions(results, opts = {}) {
   // Insurance: a page a shield took the miss for wears a patched bead rather than a frosted one.
   const shieldSaved = hasBraceletOption(opts, "shieldSaved") ? opts.shieldSaved
     : riskRuleActive() ? riskSaved.slice() : null;
+  // Per-bead colours for the two rules whose pages have no album to be coloured by. Left null
+  // everywhere else, so every other strand still strings its answers' albums exactly as before.
+  const beadTints = hasBraceletOption(opts, "beadTints") ? opts.beadTints
+    : impostorRuleActive() ? results.map((ok, i) =>
+        ok === true && impostorRounds.has(i + 1) ? IMPOSTOR_BEAD : null)
+    : commonRuleActive() ? results.map((ok, i) =>
+        ok === true ? commonSpeedTint(roundTimes[i]) : null)
+    : null;
   return {
     ...opts,
     trinket: hasBraceletOption(opts, "trinket") ? opts.trinket : settings.masteryTrinket,
     trinketSeed: hasBraceletOption(opts, "trinketSeed") ? opts.trinketSeed : braceletSeed,
-    impostorCaught, riskWon, skullMiss, shieldSaved,
+    impostorCaught, riskWon, skullMiss, shieldSaved, beadTints,
   };
+}
+
+/* Common Thread's bead colour: how fast the thread was pulled, on the page's own clock. Dark
+   green for an answer that landed the moment the lines appeared, dark red for one that landed
+   with a tenth of a second on the gauge, amber through the middle. Read against baseSeconds()
+   rather than a constant so the dark side's 2.5s page is scored against 2.5s and not against
+   the base 3.5 — a hair under the wire is a hair under the wire on either card.
+   Every cleared page on this challenge looks identical on the strand otherwise: there is no
+   album, because the answer is a word rather than a song. Speed is the only thing that
+   distinguishes one from another, so speed is what the beads are a picture of. */
+function commonSpeedTint(seconds) {
+  const total = Number(baseSeconds()) || 3.5;
+  if (!isFinite(seconds) || seconds == null) return COMMON_THREAD_BEADS[0];
+  const t = Math.min(1, Math.max(0, seconds / total));
+  const stops = COMMON_THREAD_BEADS;
+  // Two segments, green→amber→red, so the midpoint reads as amber instead of as mud.
+  const seg = t < 0.5 ? 0 : 1;
+  return mixHex(stops[seg], stops[seg + 1], t < 0.5 ? t * 2 : (t - 0.5) * 2);
+}
+// Blend two #rrggbb colours. Kept here beside its one caller rather than in util.js: the
+// bracelet takes literal colours only (the keepsake PNG rasterises outside the page's CSS),
+// and this is the only place the game has ever needed to compute one.
+function mixHex(a, b, t) {
+  const parse = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
+  const [ar, ag, ab] = parse(a), [br, bg, bb] = parse(b);
+  const to = (x, y) => Math.round(x + (y - x) * Math.min(1, Math.max(0, t))).toString(16).padStart(2, "0");
+  return `#${to(ar, br)}${to(ag, bg)}${to(ab, bb)}`;
 }
 
 // Wraps the pure SVG builder for the live strand.
@@ -9813,7 +9849,11 @@ function renderBraceletDetails(results, albums, opts) {
         special ? `${BRACELET_TRINKET_COPY[trinket] || "chosen"} dangle` : ""].filter(Boolean).join(" · ");
       // The swatch takes the page's own album colour, so a row of the note and the bead it
       // describes are the same bead. Filtered to a literal colour token, never interpolated raw.
-      const hue = (albums[i] && palette[albums[i]]) || "";
+      // A rule with its own bead colours (Impostor's fakes, Common Thread's speed ramp) wins
+      // over the album, exactly as it does on the strand — the note and the bead it describes
+      // have to be the same bead.
+      const hue = (Array.isArray(opts.beadTints) && opts.beadTints[i])
+        || (albums[i] && palette[albums[i]]) || "";
       const tint = /^#[0-9a-f]{3,8}$/i.test(hue) ? ` style="--bead:${hue}"` : "";
       return `<li class="bracelet-recap-item" value="${i + 1}">` +
         `<span class="bracelet-legend-swatch bracelet-recap-bead" data-finish="${finish}"${tint} aria-hidden="true"></span>` +
@@ -12939,10 +12979,29 @@ function commonRuleActive() {
 function commonAcceptSet(lines) {
   const set = new Set();
   for (const w of playableWords) {
-    const rx = wordRegex(w, false);
+    const rx = addedLettersRegex(w);
     if (lines.every((l) => rx.test(l))) set.add(w.toLowerCase());
   }
   return set;
+}
+// Songs whose lyrics hold an add-only form of the word — Common Thread's version of
+// songsContainingWord. Kept local to the rule so nothing else inherits the tighter match.
+function songsThreadingWord(word) {
+  const rx = addedLettersRegex(word);
+  return allSongs.filter((s) => rx.test(s.lyrics));
+}
+// The line this song will show for the thread word. Prefers a line holding the word exactly
+// (so a page about "haze" leads with "haze" rather than "hazes" where it can), then any line
+// holding an add-only form. Returns null when the song has neither, which is the signal for
+// the generator to drop it rather than show a line the answer cannot be read out of.
+function extractCommonLine(lyrics, word) {
+  const lines = String(lyrics || "").split("\n");
+  const exactRx = wordRegex(word, true);
+  const exact = lines.find((l) => exactRx.test(l));
+  if (exact) return exact.trim();
+  const rx = addedLettersRegex(word);
+  const line = lines.find((l) => rx.test(l));
+  return line ? line.trim() : null;
 }
 // How many lyric lines a Common Thread page shows. Base is COMMON_LINES (3); the dark side
 // carries `commonLines` (4). Read through this helper so the generator, the puzzle panel and the
@@ -12969,22 +13028,22 @@ function buildCommonPuzzle() {
   const want = commonLinesNow();
   let candidates = playableWords.filter((w) => {
     if (usedWords.includes(w)) return false;
-    const n = songsContainingWord(w, false).length;
+    const n = songsThreadingWord(w).length;
     // Need at least `want` songs to draw `want` distinct lines, and stay under the ubiquity cap.
     return n >= Math.max(COMMON_MIN_SONGS, want) && n <= COMMON_MAX_SONGS;
   });
-  if (candidates.length < 1) candidates = playableWords.filter((w) => songsContainingWord(w, false).length >= want);
+  if (candidates.length < 1) candidates = playableWords.filter((w) => songsThreadingWord(w).length >= want);
   candidates = shuffle(candidates.slice());
 
   const maxAccept = commonMaxAcceptNow();
   let best = null;
   for (let i = 0; i < COMMON_GEN_ATTEMPTS && i < candidates.length; i++) {
     const w = candidates[i];
-    const songs = shuffle(songsContainingWord(w, false).slice()).slice(0, want);
+    const songs = shuffle(songsThreadingWord(w).slice()).slice(0, want);
     if (songs.length < want) continue;
     const lines = [];
     for (const s of songs) {
-      const line = extractLineWithWord(s.lyrics, w, false);
+      const line = extractCommonLine(s.lyrics, w);
       if (line) lines.push({ song: s, line });
     }
     if (lines.length < want) continue;
@@ -12996,24 +13055,29 @@ function buildCommonPuzzle() {
   if (!best) {
     // Degenerate fallback (shouldn't hit with real data): force any word with enough songs.
     const w = candidates[0] || playableWords[0];
-    const songs = shuffle(songsContainingWord(w, false).slice()).slice(0, want);
-    const lines = songs.map((s) => ({ song: s, line: extractLineWithWord(s.lyrics, w, false) || s.title }));
+    const songs = shuffle(songsThreadingWord(w).slice()).slice(0, want);
+    const lines = songs.map((s) => ({ song: s, line: extractCommonLine(s.lyrics, w) || s.title }));
     best = { word: w, lines, accept: new Set([w.toLowerCase()]) };
   }
   commonPuzzle = best;
   if (!usedWords.includes(best.word)) usedWords.push(best.word);
 }
 // Judge a typed Common Thread answer against the accept set — every playable word that runs
-// through all shown lines (the intended thread plus any other real word common to them). Matching
-// is bidirectional so stem variants land it ("admitted" answers an "admit" thread and vice versa),
-// mirroring the game's stem-lenient core. The accept set is drawn only from playable words, so
-// filler like "the"/"you" (never promptable) can't win even if it sits in every line.
+// through all shown lines (the intended thread plus any other real word common to them). Still
+// bidirectional, so "admitted" answers an "admit" thread and "admit" answers an "admitted" one,
+// but ADD-ONLY in both directions rather than fully stem-lenient. The lines are on the page and
+// the answer is a word: "haze" must not take a page threaded on "hazy", because a player looking
+// at four lines that all say "hazy" has no way to know a different word was also being accepted,
+// and a rule you cannot see is worse than a hard one. Letters added to the end are the honest
+// case — you read the thread and wrote a form of it — and they still count, on both cards.
+// The accept set is drawn only from playable words, so filler like "the"/"you" (never promptable)
+// can't win even if it sits in every line.
 function commonAnswerMatches(raw) {
   const token = String(raw || "").trim().toLowerCase();
   if (!token || !commonPuzzle) return false;
-  const rx = wordRegex(token, false);
+  const rx = addedLettersRegex(token);
   for (const w of commonPuzzle.accept) {
-    if (w === token || rx.test(w) || wordRegex(w, false).test(token)) return true;
+    if (w === token || rx.test(w) || addedLettersRegex(w).test(token)) return true;
   }
   return false;
 }
@@ -13230,68 +13294,72 @@ function applyChallengeRound(wrap) {
   // the same finding: a word that is merely BRIEF is no obstacle once it has been read, so
   // Vanishing Word's dark side has to make the reading itself cost something.
   if (currentChallenge.wordFlip) wrap.dataset.flip = "1";
-  if (currentChallenge.rule === "vanishing") {
-    return;
-  } else if (currentChallenge.rule === "wordfx") {
+  // ONCE-PER-PAGE work: the treatment this rule puts on the word itself, and the clocks a rule
+  // sets per page. Kept apart from the banner below because these are not safe to run twice —
+  // re-drawing the warp or re-rolling the tiny word's position mid-verdict would move the page
+  // under the player, and re-deriving a clock after the answer would rewrite what they played.
+  if (currentChallenge.rule === "wordfx") {
     renderWordFx(wrap, currentWord, round);
-  } else if (currentChallenge.rule === "revolving") {
-    renderRevolveCounter();
-  } else if (currentChallenge.rule === "album5") {
-    renderDeepCutCounter();
-  } else if (currentChallenge.rule === "newsong") {
-    renderNewSongBanner();
-  } else if (currentChallenge.rule === "path") {
-    renderPerkReveals();
-  } else if (currentChallenge.rule === "accelerate") {
-    roundSecondsOverride = accelSeconds(round);   // Shrinking Timer: shrink this page's clock
-    renderAccelBanner();
-  } else if (currentChallenge.rule === "titleHas" || currentChallenge.rule === "shorttitle") {
-    renderTitleRuleBanner();
-  } else if (currentChallenge.rule === "chain") {
-    renderChainBanner();
-  } else if (currentChallenge.rule === "setlist") {
-    renderTourBanner();
-  } else if (currentChallenge.rule === "combo") {
-    renderComboBanner();
-  } else if (currentChallenge.rule === "switchup") {
-    // The page's answer type was decided in advanceRound (before the word was drawn); just
-    // surface it in the banner.
-    renderSwitchBanner();
-  } else if (currentChallenge.rule === "multi") {
-    renderMultiBanner();
-  } else if (currentChallenge.rule === "ink") {
-    renderInkBanner();
-  } else if (currentChallenge.rule === "devil") {
-    if (devilFx) renderDevilFx(wrap, currentWord, devilFx);
-    renderDevilBanner();
   } else if (currentChallenge.rule === "flashwarp") {
     // Are You Sure You're …Ready For It??? — max warp AND vanishing, constant from round 1.
     // The vanish timeout itself is armed in beginRoundClock (which knows the clock start).
     renderWordFx(wrap, currentWord, round, FLASHWARP_LEVEL);
-    renderFlashwarpBanner();
-  } else if (currentChallenge.rule === "spite") {
-    // I Have No Experience With Home Invasion — this page's clock is the run-scoped value.
-    roundSecondsOverride = spiteSeconds;
-    renderSpiteBanner();
-  } else if (currentChallenge.rule === "survive") {
-    renderSurviveBanner();
-  } else if (currentChallenge.rule === "impostor") {
-    renderImpostorBanner();
-  } else if (currentChallenge.rule === "sea") {
-    renderSeaBanner();
-  } else if (currentChallenge.rule === "oddone" || currentChallenge.rule === "whoseline") {
-    renderTapKnowledgeBanner();
-  } else if (currentChallenge.rule === "bothwords") {
-    renderBothBanner();
-  } else if (currentChallenge.rule === "common") {
-    renderCommonBanner();
-  } else if (RISK_RULES.has(currentChallenge.rule)) {
-    // The risk batch shares one banner (what's at stake · beads against the target).
-    renderRiskBanner();
+  } else if (currentChallenge.rule === "devil") {
+    if (devilFx) renderDevilFx(wrap, currentWord, devilFx);
   } else if (currentChallenge.rule === "tiny") {
     // The Smallest Song Who Ever Lived — shrink, tilt, and offset the prompt, constant.
     renderTinyWord(wrap, currentWord);
+  } else if (currentChallenge.rule === "path") {
+    renderPerkReveals();
+  } else if (currentChallenge.rule === "accelerate") {
+    roundSecondsOverride = accelSeconds(round);   // Shrinking Timer: shrink this page's clock
+  } else if (currentChallenge.rule === "spite") {
+    // I Have No Experience With Home Invasion — this page's clock is the run-scoped value.
+    roundSecondsOverride = spiteSeconds;
   }
+  renderChallengeProgress();
+}
+
+/* The live progress banner for whichever rule is running: the tally, the clock reading, the
+   album, the letter — whatever this challenge counts. Split out of applyChallengeRound so it
+   can be re-run the INSTANT an answer is judged, rather than only when the next page is laid
+   down. Playtesting Devil's Path made the case and it holds for every card: you clear a page,
+   the verdict says so, and the number underneath still reads what it read before you answered
+   until the page turns several seconds later. The score is the one thing a player looks at
+   after a correct answer, and it was the last thing to move.
+
+   Everything in here is a pure re-render off live state, safe to call any number of times a
+   page. Anything that ISN'T — the word's warp, the tiny word's placement, the per-page clock
+   overrides — stays above in applyChallengeRound. Keep that line where it is: a renderer that
+   quietly re-rolls something belongs on the other side of it. Rules with no banner of their
+   own (Vanishing Word, Word Games) simply fall through and render nothing. */
+function renderChallengeProgress() {
+  if (gameType !== "challenge" || !currentChallenge) return;
+  const rule = currentChallenge.rule;
+  if (rule === "revolving") renderRevolveCounter();
+  else if (rule === "album5") renderDeepCutCounter();
+  else if (rule === "newsong") renderNewSongBanner();
+  else if (rule === "accelerate") renderAccelBanner();
+  else if (rule === "titleHas" || rule === "shorttitle") renderTitleRuleBanner();
+  else if (rule === "chain") renderChainBanner();
+  else if (rule === "setlist") renderTourBanner();
+  else if (rule === "combo") renderComboBanner();
+  // Switch-Up: the page's answer type was decided in advanceRound (before the word was
+  // drawn); this only surfaces it.
+  else if (rule === "switchup") renderSwitchBanner();
+  else if (rule === "multi") renderMultiBanner();
+  else if (rule === "ink") renderInkBanner();
+  else if (rule === "devil") renderDevilBanner();
+  else if (rule === "flashwarp") renderFlashwarpBanner();
+  else if (rule === "spite") renderSpiteBanner();
+  else if (rule === "survive") renderSurviveBanner();
+  else if (rule === "impostor") renderImpostorBanner();
+  else if (rule === "sea") renderSeaBanner();
+  else if (rule === "oddone" || rule === "whoseline") renderTapKnowledgeBanner();
+  else if (rule === "bothwords") renderBothBanner();
+  else if (rule === "common") renderCommonBanner();
+  // The risk batch shares one banner (what's at stake · beads against the target).
+  else if (RISK_RULES.has(rule)) renderRiskBanner();
 }
 // Fixed max-warp tier for Ready For It (the round-4-equivalent scramble+drop+reverse).
 const FLASHWARP_LEVEL = 4;
@@ -18266,6 +18334,12 @@ function submitAnswer(song, isTimeout) {
   const answerClockLeft = clockRemaining();
   const answerSeconds = isTimeout && answerClockLeft != null
     ? Math.min(answerSecondsRaw, roundClockTotal) : answerSecondsRaw;
+  // Banked HERE, beside the reading it comes from, rather than further down the tail. Common
+  // Thread's strand colours each bead by how long the page took, and renderBracelet runs before
+  // the old assignment did — so the live strand was tinting this page off the PREVIOUS page's
+  // time. Everything downstream that reads roundTimes[round - 1] gets the same figure it always
+  // did; it is simply written before the first thing that needs it rather than after.
+  roundTimes[round - 1] = answerSeconds;
 
   roundLocked = true;
   clearTimer();
@@ -18386,16 +18460,15 @@ function submitAnswer(song, isTimeout) {
     if (correct) comboClock = Math.min(comboCap(), comboClock + comboBonus());
     renderComboBanner();
   }
-  // Live challenge progress — refresh the banner the instant an answer is recorded
-  // (Deep Cut's album tally / One Of A Kind's found-it stamp), before the page turns.
+  // Live challenge progress — refresh the banner the instant an answer is recorded, before the
+  // page turns. EVERY rule, not the handful that used to be listed here: the banner sits under
+  // the verdict for several seconds, and a tally still reading what it read before you answered
+  // is read as "that didn't score". The score is the first thing anyone looks at after a
+  // correct answer and it was the last thing to move.
   if (gameType === "challenge" && currentChallenge) {
-    if (currentChallenge.rule === "album5") renderDeepCutCounter();
-    else if (currentChallenge.rule === "newsong") renderNewSongBanner();
-    // The knowledge grids sit under their banner through the whole verdict, so a stale count
-    // would be read as "that didn't score" for the several seconds the reveal is up.
-    else if (tapKnowledgeActive()) renderTapKnowledgeBanner();
-    // The risk batch's banner carries the live bead total, which a bet has just moved.
-    else if (RISK_RULES.has(currentChallenge.rule)) { renderRiskBanner(); renderInsuranceBtn(); }
+    renderChallengeProgress();
+    // The insurance button is not part of the banner, but it answers to the same bead total.
+    if (RISK_RULES.has(currentChallenge.rule)) renderInsuranceBtn();
   }
   // Blank Space: a correct answer landed while the word was still on the page — the run was
   // no longer written blind. The vanish timeout is untouched by submit, so the class is the
@@ -18508,10 +18581,10 @@ function submitAnswer(song, isTimeout) {
     rareStreak = 0;
   }
 
-  // How long this page took, recorded for EVERY mode from the page stopwatch frozen above.
-  // That remains correct when the visible gauge is shorter, longer, or shared across the run.
-  // A timeout alone is capped to the page's real built clock to discard interval callback lag.
-  roundTimes[round - 1] = answerSeconds;
+  // How long this page took was recorded for EVERY mode at the top of the verdict, from the page
+  // stopwatch frozen there. That remains correct when the visible gauge is shorter, longer, or
+  // shared across the run, and a timeout alone is capped to the page's real built clock to
+  // discard interval callback lag. Everything below simply reads it.
   // Lavender sprig rides the same reading. It sits here rather than in checkAnswerStickers
   // because that runs before the stopwatch is stopped, and it wants the raw figure.
   if (correct) checkLingerSticker(roundTimes[round - 1]);

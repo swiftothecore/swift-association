@@ -133,6 +133,48 @@ export function wordRegex(word, strict) {
   return rx;
 }
 
+// The ADD-ONLY half of the lenient match: the word kept whole, with letters only ever added to
+// the end of it. "haze" reaches "hazes", "hazed" and "hazing"; it does not reach "hazy", because
+// getting there means taking the "e" off first. Two of the four alternations above survive the
+// cut — the bounded suffix tail, and the doubled final consonant (admit → admitted, run →
+// running, which really is only letters added) — and the two that mutate the stem are dropped:
+// the silent-e drop and the consonant+y→i swap both REPLACE a letter before they add any, and
+// the g-dropped "lovin'" alternate takes one away.
+//
+// This is not a general tightening of the game and must not become one: the ordinary lenient
+// match is what makes a page winnable from a half-remembered lyric, and every mode still uses
+// it. This exists for Common Thread, where the answer IS a word rather than a song. There, one
+// word has to run through every line on the page, and "close enough to another form of it" makes
+// the puzzle unreadable — you can see what the lines share or you cannot, and a rule that quietly
+// accepts a word you can't see in front of you is a rule nobody can play to.
+export function addedVariants(word) {
+  const w = canonicalMatchText(word).toLowerCase();
+  const alts = [exactWordBody(w) + STEM_TAIL];
+  // A word that already ends in "e" spells its past and agent forms by adding a single letter to
+  // the whole word — haze → hazed, love → loved, haze → hazer — and STEM_TAIL cannot reach them,
+  // because it deliberately carries no bare "d" (it would buy car → card and ten → tend). The
+  // lenient matcher gets there through the silent-e alternate instead, which is exactly the
+  // alternate dropped above. Gating the bare tail on that final "e" is what keeps it honest: an
+  // "e" is what makes the added letter a real inflection rather than the start of another word.
+  if (w.length >= 3 && w.endsWith("e")) alts.push(exactWordBody(w) + "(?:d|rs?)");
+  if (w.length >= 3 && /[^aeiou][aeiou][^aeiouwxy]$/.test(w)) alts.push(exactWordBody(w + w.slice(-1)) + INFLECT);
+  return alts;
+}
+// Memoised beside wordRegex's cache, under its own key prefix, and carrying the same false-friend
+// veto: "stared" is star + ed and so passes the add-only test on spelling alone, while still
+// belonging to another word entirely.
+export function addedLettersRegex(word) {
+  const canonical = canonicalMatchText(word);
+  const key = "a " + canonical;
+  const hit = RX_CACHE.get(key);
+  if (hit) return hit;
+  const body = falseFriendGuard(canonical) + "(?:" + addedVariants(canonical).join("|") + ")";
+  const rx = new RegExp(boundedWordBody(body), "iu");
+  if (RX_CACHE.size >= RX_CACHE_MAX) RX_CACHE.clear();
+  RX_CACHE.set(key, rx);
+  return rx;
+}
+
 // The first lyric line bearing the word (trimmed). Prioritise a line with the *exact*
 // prompt word over a looser stem variant (e.g. "babe" shouldn't surface a line whose
 // only match is "baby"). Only the lenient path falls back; a strict caller already

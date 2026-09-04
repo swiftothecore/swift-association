@@ -1923,6 +1923,24 @@ export const VAULT_TRACKS = new Set([
 export const AOTY_ALBUMS = ["Fearless", "1989", "folklore", "Midnights"];
 export const VAULT_ALBUMS = ["Fearless", "Speak Now", "Red", "1989"];
 
+/* Bead colours for the two rules where an album says nothing about the page, so the strand
+   would otherwise string the notebook's era tint and look like it was picked at random.
+
+   IMPOSTOR_BEAD is the fake: a page that was never a song at all, flagged rather than answered.
+   A bruised violet-black, deliberately outside both album palettes and darker than every one of
+   them, so a run reads at a glance as real pages in their album colours with the fakes struck
+   through in ink. It pairs with the devil already dangling off those beads.
+
+   COMMON_THREAD_BEADS is the ramp Common Thread's beads are strung along: how long the page took
+   against its own clock, dark green for an instant read through to dark red for a thread pulled
+   out with a tenth of a second to spare. The page is 3.5 seconds (2.5 on the dark side) and the
+   only thing that distinguishes one cleared page from another is how fast you saw it, so that is
+   what the strand should be a picture of. Three stops rather than two: green straight to red
+   passes through a muddy brown around the midpoint, and the amber keeps the middle of the run
+   legible as a middle rather than as a smear. */
+export const IMPOSTOR_BEAD = "#3b2a4d";
+export const COMMON_THREAD_BEADS = ["#1f6b3a", "#9a7b16", "#8f1d1d"];
+
 export const ALBUM_COLORS = {
   "Taylor Swift":                     "#5a9ea6",
   "Fearless":                         "#b8943a",
