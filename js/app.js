@@ -17659,7 +17659,7 @@ function oneTypoApart(a, b) {
   return swappedNeighbours(a, b);
 }
 
-// A token the player probably thought WAS the page's word. Three shapes, in the order a
+// A token the player probably thought WAS the page's word. Four shapes, in the order a
 // player is likely to have meant them:
 //
 //   strict    "golden" on a page for "gold" with Match word variants switched off. The most
@@ -17672,6 +17672,12 @@ function oneTypoApart(a, b) {
 //             different word. The other half has to be one the catalogue sings in its own
 //             right, so a seam is a seam and not two letters that happened to fall apart —
 //             "tonight" is "to" + "night", "tired" is not "ti" + "red".
+//   inside    "fine" on a page for "in": the LETTERS are in there and nothing else is. No
+//             seam, so compound passes it by, and the player is left reading a line that
+//             plainly has "in" in it beside a game insisting it doesn't. Last of the four
+//             for exactly the reason compound refuses to be a substring test — this is the
+//             coincidence shape, and naming it is only worth doing once the three shapes
+//             that mean something have all declined the line.
 //
 // Judged off the page's word and the typed text alone. lyricVocab is corpus-level (the same
 // on every page showing this word) and no song is ever looked up, so naming the token gives
@@ -17697,6 +17703,19 @@ function nearMissPromptWord(normPhrase) {
       // variants off, strict "write" doesn't match "writer", and "typewriter" — the most
       // confusing token on the page — would go unexplained in the one mode that needs it most.
       if (buriesPromptWord(t, wordRegex(norm, false))) return { token: t, word, why: "compound" };
+    }
+  }
+  // Nothing above owned the line, so fall back to the coincidence: the word's letters sitting
+  // inside a longer word that has no seam to point at. Held to words the catalogue sings in
+  // their own right, so this can only ever quote a token the player typed on purpose, and run
+  // as a SECOND pass rather than a fourth test in the loop above — otherwise an accidental
+  // "sacred" early in the line would answer for a real "typewriter" later in it.
+  for (const t of normPhrase.split(" ")) {
+    if (!lyricVocab.has(t)) continue;
+    for (const { word, norm } of need) {
+      if (t === norm || norm.length < 2 || !t.includes(norm)) continue;
+      if (wordRegex(norm, strict).test(t)) continue;             // it counts; not a near miss
+      return { token: t, word, why: "inside" };
     }
   }
   return null;
