@@ -708,8 +708,12 @@ export const CHALLENGES = [
     // most of the new weight: the scale and the timer move one notch each rather than two,
     // because 10/13 is still the bar and three hard nerfs at once would move the target as
     // well as the difficulty. Retune the three numbers together, never one alone.
-    hard: { revealMs: 500, wordScale: 0.26, wordFlip: true,
-      desc: "The word is small, upside down, and gone in a blink.",
+    // Playtested again 2026-09-04: the flip was doing its job, but 0.26 still read as merely
+    // small, so the scale alone moved on to 0.18 — around 9-14px against the base clamp, which
+    // is a word you have to lean into rather than one you take in at a glance. The timer and
+    // the flip stayed where they were, since the finding was about the size and nothing else.
+    hard: { revealMs: 500, wordScale: 0.18, wordFlip: true,
+      desc: "The word is tiny, upside down, and gone in a blink.",
       win: "Score 10 / 13 off a word you barely got to read." },
     desc: "The word vanishes quickly, so pay attention.",
     win: "Score 10 / 13 with disappearing words." },
@@ -1069,10 +1073,16 @@ export const CHALLENGES = [
     // through bothWordCountNow) is what the partner draw builds to, so the guard, the prompt
     // display, the soft reject and the reveal all widen together. All three copy sites state
     // the count, so all three move with it.
-    hard: { seconds: 15, words: 3, bothMinSongs: 1, pool: null,
+    // Playtested 2026-09-04 and the target came down with it. Three rare words sharing a single
+    // song is a far narrower page than two, and nine of them was a ceiling you could play well
+    // for a whole run and still not reach — the run stopped being about reading the pages and
+    // started being about the arithmetic. Six of thirteen leaves room to lose the pages that
+    // genuinely are unfindable and still win on the ones you can read. The bar moves; the page
+    // itself is untouched, because the page was never the problem.
+    hard: { seconds: 15, words: 3, bothMinSongs: 1, pool: null, target: 6,
       blurb: "15s · suggestions · THREE words · one song has to hold every one",
       desc: "A third word joins the page and the words get rarer. One song still has to hold all of them, and there may only be one that does.",
-      win: "Score 9 / 13 naming songs that hold all three words." },
+      win: "Score 6 / 13 naming songs that hold all three words." },
     blurb: "20s · suggestions · two words · name one song whose lyrics hold both",
     desc: "Two words on the page instead of one. Name a single song whose lyrics hold both of them, because half doesn't count.",
     win: "Score 9 / 13 naming songs that hold both words." },
