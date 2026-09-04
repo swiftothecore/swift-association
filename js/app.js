@@ -19223,16 +19223,29 @@ function runCountdown() {
   }, 1000);
 }
 
-// A verdict's plain Enter shortcut must never steal Enter from a focused disclosure, link or
-// form control. Native activation then reaches the delegated click handler exactly once.
+// The reading controls on a verdict: the context disclosure, the occurrence stepper, the
+// "more songs" fold and its batches, and the full-lyrics opener. Every one of them leaves
+// focus on itself once it has been used — a pointer press focuses the button, the stepper
+// re-focuses its replacement, and the song modal hands focus back on close — so any of them
+// would otherwise hold Enter hostage for the rest of the verdict.
+const FEEDBACK_READING_CONTROLS =
+  ".lyric-ctx-toggle, .lyric-occurrence-btn, .lyric-fullsong, .more-songs-toggle, .more-songs-next";
+
+// A verdict's plain Enter shortcut must never steal Enter from a focused link or form
+// control. Native activation then reaches the delegated click handler exactly once.
+// The reading controls above are the exception: on a verdict page Enter means "turn the
+// page", so they are worked with Space, which every button answers to natively, and pressing
+// Enter after opening the context turns the page instead of folding it straight back up.
 function feedbackEnterBelongsToControl(e) {
   if (e.defaultPrevented || e.isComposing || e.repeat || e.altKey || e.ctrlKey || e.metaKey || e.shiftKey)
     return true;
   const origin = e.target instanceof Element ? e.target : document.activeElement;
-  return !!(origin && origin.closest(
+  if (!origin) return false;
+  if (origin.closest(FEEDBACK_READING_CONTROLS)) return false;
+  return !!origin.closest(
     'button, a[href], input, select, textarea, summary, ' +
     '[contenteditable]:not([contenteditable="false"]), [role="button"], [role="link"]'
-  ));
+  );
 }
 
 
@@ -20817,16 +20830,6 @@ function wireInput() {
   // Result controls live inside rebuilt feedback blocks, so delegate from the two stable hosts.
   // Every reading action pauses auto-advance; disclosure state stays local to its unique reveal.
   [$("feedback"), $("bonusFeedback")].forEach((host) => host.addEventListener("click", (e) => {
-    // A mouse click leaves focus sitting on the disclosure, and a focused button owns Enter
-    // (see feedbackEnterBelongsToControl), so after reading the context Enter would fold the
-    // context back up instead of turning the page. Hand focus back to the document, but only
-    // for a pointer press: a keyboard player who tabbed here (detail 0) reached the button
-    // deliberately and keeps its Enter.
-    if (e.detail > 0) {
-      const pressed = e.target.closest(".lyric-ctx-toggle, .more-songs-toggle");
-      if (pressed && document.activeElement === pressed) pressed.blur();
-    }
-
     const toggle = e.target.closest(".lyric-ctx-toggle");
     if (toggle) {
       const reveal = toggle.closest("[data-lyric-reveal]");
