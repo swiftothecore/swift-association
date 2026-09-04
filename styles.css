@@ -1539,23 +1539,28 @@
      one of them being a picture. The CTA takes whatever width is left over, so it stays the
      wide gold bar it has always been. */
   .play-row {
-    position: relative; display: flex; align-items: stretch; gap: 10px;
+    position: relative; display: flex; align-items: center; gap: 10px;
     margin-top: 18px;
   }
   .play-row .btn-primary.play-cta { flex: 1 1 auto; width: auto; margin: 0; }
 
-  /* The chance stamp: the CTA's box in teal, a size down. Kept on .btn-primary so it inherits
-     the ink border, the hard shadow and the ink-fill hover inversion the whole button family
-     shares, and tilted the other way, so the pair reads as two things put down by hand rather
-     than one control cut in two. */
+  /* The chance stamp: the CTA's box, squared off and inked rust. Kept on .btn-primary so it
+     inherits the ink border, the hard shadow and the ink-fill hover inversion the whole button
+     family shares, and tilted the other way, so the pair reads as two things put down by hand
+     rather than one control cut in two. Rust because the six nav-card tints below already own
+     gold, lavender, denim, graphite, rose and teal, and a seventh that sits near one of them
+     reads as a mistake. Sized as a real square rather than stretched to the CTA's height: a
+     flex item's cross size is not definite while its main size is being resolved, so
+     aspect-ratio alone silently leaves it a tall thin sliver. It rides the type scale with
+     everything else and sits centred against the taller gold bar. */
   .btn-primary.chance-cta {
-    flex: 0 0 auto; width: auto; margin: 0;
-    display: inline-flex; align-items: center; justify-content: center; gap: 2px;
-    padding: 12px 15px; font-size: calc(12px + var(--text-size-adjust)); letter-spacing: 0.6px;
-    color: var(--ink);
-    background-color: var(--chance-teal, #8fbfba);
+    flex: 0 0 auto; align-self: center; margin: 0;
+    width: calc(54px + var(--text-size-adjust)); height: calc(54px + var(--text-size-adjust));
+    display: inline-flex; align-items: center; justify-content: center;
+    padding: 0; color: var(--ink);
+    background-color: var(--chance-rust, #b5623a);
     background-image:
-      linear-gradient(168deg, rgba(255, 255, 255, 0.32) 0%, rgba(255, 255, 255, 0) 46%, rgba(43, 39, 34, 0.12) 100%),
+      linear-gradient(168deg, rgba(255, 255, 255, 0.24) 0%, rgba(255, 255, 255, 0) 46%, rgba(43, 39, 34, 0.12) 100%),
       /* the faint pressed texture the patterned buttons all carry */
       repeating-linear-gradient(52deg, rgba(43, 39, 34, 0.038) 0 1px, rgba(0, 0, 0, 0) 1px 8px);
     box-shadow: 3px 3px 0 rgba(43, 39, 34, 0.22);
@@ -1566,23 +1571,17 @@
     background-color: var(--ink); color: var(--paper);
   }
   .btn-primary.chance-cta:active { transform: rotate(0.7deg) translateY(1px) scale(0.99); }
-  .chance-mark { margin-right: 7px; width: 22px; height: 22px; vertical-align: -4px; }
-  /* Matched to the CTA's ✎ by weight rather than by size: the shared .cta-mark rules set no
-     stroke-width, and a hairline die beside a solid pencil reads as a different family. */
+  /* Bigger than the CTA's inline mark, because here it is the whole label. */
+  .chance-mark { margin: 0; width: 28px; height: 28px; vertical-align: 0; }
+  /* Matched to the CTA's pencil by weight rather than by size: the shared .cta-mark rules set
+     no stroke-width, and a hairline die beside a solid pencil reads as a different family. */
   .chance-mark .ink { stroke-width: 1.9; }
-  .chance-word { white-space: nowrap; }
-  :root[data-theme="dark"] .btn-primary.chance-cta { background-color: #6f9c97; }
+  :root[data-theme="dark"] .btn-primary.chance-cta { background-color: #97522f; }
 
-  /* Narrow paper: the phrase is the first thing to go, since the mark and the title carry it,
-     and below that the stamp drops under the CTA rather than squeezing it. */
-  @media (max-width: 760px) {
-    .btn-primary.chance-cta { padding: 12px 13px; }
-    .chance-word { font-size: calc(11px + var(--text-size-adjust)); }
-  }
   @media (max-width: 480px) {
-    .play-row { flex-wrap: wrap; }
-    .play-row .btn-primary.play-cta { flex: 1 1 100%; }
-    .btn-primary.chance-cta { flex: 1 1 100%; }
+    .play-row { gap: 8px; }
+    .btn-primary.chance-cta { width: calc(48px + var(--text-size-adjust)); height: calc(48px + var(--text-size-adjust)); }
+    .chance-mark { width: 24px; height: 24px; }
   }
   .mode-picker-label {
     font-family: var(--type); font-size: calc(10px + var(--text-size-adjust)); letter-spacing: 1.5px;
