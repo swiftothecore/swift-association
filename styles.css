@@ -1571,7 +1571,7 @@
     width: calc(54px + var(--text-size-adjust)); height: calc(54px + var(--text-size-adjust));
     display: inline-flex; align-items: center; justify-content: center;
     padding: 0; color: var(--ink);
-    background-color: var(--chance-board, #d8c7a4);
+    background-color: var(--chance-board, #f4eddf);
     background-image:
       url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20width%3D%27120%27%20height%3D%27120%27%3E%3Cfilter%20id%3D%27f%27%3E%3CfeTurbulence%20type%3D%27fractalNoise%27%20baseFrequency%3D%270.09%200.85%27%20numOctaves%3D%274%27%20seed%3D%2711%27%2F%3E%3CfeColorMatrix%20type%3D%27saturate%27%20values%3D%270%27%2F%3E%3C%2Ffilter%3E%3Crect%20width%3D%27120%27%20height%3D%27120%27%20filter%3D%27url%28%23f%29%27%20opacity%3D%270.30%27%2F%3E%3C%2Fsvg%3E"),
       linear-gradient(168deg, rgba(255, 255, 255, 0.20) 0%, rgba(255, 255, 255, 0) 46%, rgba(43, 39, 34, 0.11) 100%);
@@ -1592,13 +1592,25 @@
   .chance-mark .ink { stroke-width: 1.8; }
   /* The front die is IN FRONT, so it knocks a real hole in the one behind it instead of being
      drawn over the top of it. The hole is the board's own colour, which means it has to follow
-     the hover inversion too, or the die fills with kraft on an inked button. */
-  .chance-mark .knock { fill: var(--chance-board, #d8c7a4); stroke: none; }
+     the hover inversion too, or the die fills with card on an inked button. */
+  .chance-mark .knock { fill: var(--chance-board, #f4eddf); stroke: none; }
   .btn-primary.chance-cta:hover .chance-mark .knock,
   .btn-primary.chance-cta:focus-visible .chance-mark .knock { fill: var(--ink); }
-  /* Dark page: the board goes into shadow rather than staying bright, because --ink is a warm
-     paper-white there and the mark would vanish on pale kraft. */
-  :root[data-theme="dark"] .btn-primary.chance-cta { --chance-board: #6f5c3e; }
+  /* Dark page: the board stays the same near-white card it is in daylight, so the stamp reads
+     as the same object on both themes. The catch is that dark's --ink IS a warm paper-white, so
+     the dice would vanish; the whole pair is therefore inked and inverted by hand here, in
+     fixed values rather than the theme's, and the knock follows both states with them. */
+  :root[data-theme="dark"] .btn-primary.chance-cta {
+    --chance-board: #ece4d3; color: #2b2419;
+  }
+  :root[data-theme="dark"] .btn-primary.chance-cta:hover,
+  :root[data-theme="dark"] .btn-primary.chance-cta:focus-visible {
+    background-color: #2b2419; color: #ece4d3;
+  }
+  :root[data-theme="dark"] .btn-primary.chance-cta:hover .chance-mark .knock,
+  :root[data-theme="dark"] .btn-primary.chance-cta:focus-visible .chance-mark .knock {
+    fill: #2b2419;
+  }
 
   /* THE IDLE BOB, AND THE RATTLE INSIDE IT. The gold bar beside this one has always breathed
      on a loop, and a stamp that sits perfectly still next to it reads as disabled rather than
