@@ -3899,7 +3899,7 @@ function renderBestLine(el, mode, opts = {}) {
     if (best > 0) rec = { score: best, date: null };
   }
   if (!rec) {
-    el.innerHTML = `<div class="best-empty">no runs yet — set your first record <span class="best-empty-star">${STAR_SVG}</span></div>`;
+    el.innerHTML = `<div class="best-empty">no runs yet — set your first record</div>`;
     return;
   }
   const unit = isInfiniteToken(mode) ? " rounds" : " / " + TOTAL_ROUNDS;

@@ -1792,8 +1792,6 @@
   .best-unit { font-size: calc(21px + var(--text-size-adjust)); color: var(--ink-soft); }
   .best-meta { font-family: var(--type); font-size: calc(11px + var(--text-size-adjust)); letter-spacing: 0.5px; color: var(--ink-soft); }
   .best-empty { font-family: var(--hand); font-size: calc(20px + var(--text-size-adjust)); color: var(--ink-soft); opacity: 0.85; padding: 4px 0 8px; }
-  .best-empty-star { display: inline-block; width: 0.92em; height: 0.92em; vertical-align: -0.14em; color: var(--ink-soft); opacity: 0.9; }
-  .best-empty-star svg { width: 100%; height: 100%; display: block; }
   /* ---------- Records page (personal bests + history) ---------- */
   .rec-sig { display: flex; align-items: center; gap: 18px; margin: 2px 0 16px; padding-bottom: 16px; border-bottom: 1px dashed rgba(43,39,34,0.16); }
   .rec-sig-text { min-width: 0; }
