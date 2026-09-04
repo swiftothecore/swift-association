@@ -51,7 +51,7 @@ import {
   skillXpForLevel, skillLevelFromXp, masteryXpForLevel, masteryLevelFromXp,
   POLAROID_DEVELOP_MS, POLAROID_TOTAL,
   STICKER_TOTAL,
-  RANDOM_CATEGORIES, RANDOM_UNPLAYED_WEIGHT,
+  RANDOM_CATEGORIES, RANDOM_UNPLAYED_WEIGHT, RANDOM_GOAL_WEIGHT,
   STREAK_FLOOR, STREAK_CAP, STREAK_SALT, STREAK_TIERS,
   STREAK_THROW, STREAK_DROP, STREAK_SPIN, STREAK_MS, STREAK_SIZE, STREAK_CONE,
 } from "./config.js";
@@ -3872,6 +3872,19 @@ function currentGoal() {
   return ACH_BY_ID[id];
 }
 
+/* Custom's destinations differ by LEVERS, not by difficulty, so two Custom charms name a
+   `lever` in their `earn` and only the presets that could actually close them count as doors.
+   The predicate reads a NORMALISED lever set, so a hand-edited preset can't sneak past it, and
+   `label` is the button's wording, because "play your own rules" would be a half-truth when the
+   charm needs one particular set of them. Keyed by name rather than held as a function in
+   config.js, which stays data. */
+const CUSTOM_GOAL_LEVERS = {
+  // rounds:0 IS the endless variant (see customInfinite) — a finite preset stops long before 50.
+  endless: { label: "an endless preset", ok: (m) => m.rounds === 0 },
+  // The same two bars endCustom mints the charm off: the levers, and a full-length run to keep.
+  ultra:   { label: "a preset as hard as Ultra", ok: (m) => customAtLeastUltra(m) && m.rounds >= TOTAL_ROUNDS },
+};
+
 /* Where to send someone chasing a goal. Answered by filtering the RANDOMISER's live pool
    rather than by dispatching on `earn.cat` ourselves, which is the whole reason `earn.cat`
    borrows that vocabulary: the pool already refuses to deal anything locked and already
@@ -3885,12 +3898,30 @@ function goalEntries(earn) {
     // The difficulty category tokenises per mode, so a `diff` is matched against the entry
     // itself. Every other category rolls its difficulty at dispatch, so it rides along there.
     if (earn.diff && e.cat === "difficulty") return e.mode === earn.diff;
+    // Custom's lever gate. An empty result here is the honest answer that the player has not
+    // written a preset this charm could be earned on yet, and the card already knows how to say
+    // a destination isn't open.
+    if (earn.lever && e.cat === "custom") {
+      const lever = CUSTOM_GOAL_LEVERS[earn.lever];
+      return !!lever && lever.ok(normalizeCustomMode(customPresetById(e.preset).mode));
+    }
     return true;
   });
 }
 
+// The stored preset behind a pool entry, or a safe empty stand-in if it has been deleted since
+// the pool was built. normalizeCustomMode fills a blank in with the defaults, so the lever gate
+// reads a real lever set either way rather than throwing on a missing preset.
+function customPresetById(id) {
+  return loadCustom().presets.find((cp) => cp && cp.id === id) || { mode: {} };
+}
+
 // Button text: "play Ultra", "play a challenge", "play Album Focus on Lyricist".
 function goalDestLabel(earn) {
+  // A lever-gated Custom goal names the levers it needs, not the shelf they live on.
+  if (earn.cat === "custom" && earn.lever && CUSTOM_GOAL_LEVERS[earn.lever]) {
+    return CUSTOM_GOAL_LEVERS[earn.lever].label;
+  }
   const cat = RANDOM_CATEGORIES.find((c) => c.id === earn.cat);
   const base = cat ? cat.label : earn.cat;
   const diff = earn.diff && MODES[earn.diff] ? MODES[earn.diff].label : "";
@@ -3920,9 +3951,10 @@ function goalCardHTML() {
     : (entries.length
         ? `<button type="button" class="ach-plate-go" data-goal-play="1">play ${escapeHtml(goalDestLabel(a.earn))} <span aria-hidden="true">→</span></button>`
         // Two different truths, and they must not be collapsed. A charm WITH an `earn` whose
-        // pool came back empty has a destination that is locked (no dark side unlocked yet, say).
-        // A charm with no `earn` has no destination at all — Custom isn't in the randomiser's
-        // pool, and the desk actions aren't runs. Neither may pretend to be the other.
+        // pool came back empty has a destination that is not open: no dark side unlocked yet,
+        // say, or no preset of your own that a lever-gated Custom charm could be earned on.
+        // A charm with no `earn` has no destination at all — the desk and drawer actions aren't
+        // runs. Neither may pretend to be the other.
         : `<span class="ach-plate-note">${escapeHtml(a.earn ? "not open to you yet" : "you'll have to go and find this one")}</span>`) +
       `<button type="button" class="ach-plate-swap" data-goal-repin="1">pin me something else</button>`;
 
@@ -6540,7 +6572,11 @@ function startBonusGame(g, lensId = null) {
   else if (gameType === "ruthless") gameType = "classic";
   updateTagline();   // the masthead is shared, and a lens run's is not the last difficulty's
   bonusGame = g;
-  notePlayed("bonus", g.id);
+  // A lens run is the Ruthless MODE, and the randomiser deals it per lens, so that is the token
+  // it marks. Marking the shelf's own id instead would leave every lens permanently unplayed in
+  // the ledger's eyes and the whole category leaning at full strength for ever.
+  if (lensId) notePlayed("ruthless", lensId);
+  else notePlayed("bonus", g.id);
   bonusRound = 0;
   bonusScore = 0;
   bonusEnded = false;
@@ -11299,8 +11335,13 @@ function updateBlurb() {
 function updateTagline() {
   const el = $("tagline");
   if (!el) return;
-  // Custom's clock comes from the active preset, not the difficulty currentMode.
-  const cm = gameType === "custom" ? activeCustomMode() : currentMode;
+  // Custom's clock comes from a preset, not the difficulty currentMode: the one being PLAYED
+  // while a run is live, and the shelf's active pick only when there isn't one. The two are no
+  // longer always the same preset, because the randomiser and the pinned goal can deal a run on
+  // a preset the shelf isn't pointing at.
+  const cm = gameType === "custom"
+    ? (customPreset ? normalizeCustomMode(customPreset.mode) : activeCustomMode())
+    : currentMode;
   const clock = cm.seconds > 0 ? `${cm.seconds} seconds each` : "no timer";
   const line = gameType === "infinite"
     ? `endless pages · ${clock}`
@@ -12275,6 +12316,7 @@ function seedRandomFromBoards() {
     if (r.darkAttempts > 0) tokens.push(randomToken("dark", c.id));
   }
   for (const g of BONUS_GAMES) if (bonusRecord(g.id).plays > 0) tokens.push(randomToken("bonus", g.id));
+  for (const lens of RUTHLESS_LENSES) if (ruthlessRecord(lens.id).plays > 0) tokens.push(randomToken("ruthless", lens.id));
   if (Object.keys(dailyPlayedDates()).length) tokens.push(randomToken("daily"));
   seedRandomSeen(tokens);
 }
@@ -12314,6 +12356,16 @@ function buildRandomPool() {
   for (const g of BONUS_GAMES) {
     if (!g.ready) continue;   // the shelf shows what's coming; the draw only deals what plays
     push("bonus", g.id, "Bonus · " + g.name, { bonus: g.id });
+  }
+
+  /* Custom, one entry per preset the player has written. The levers ARE the game here, so two
+     presets are two different things to be dealt in the way two Infinite variants are, and the
+     token goes per preset (see RANDOM_CATEGORIES) — a preset written this afternoon is something
+     the dice have never handed over. Nothing to filter: loadCustom always seeds at least one
+     preset, a preset can't be locked, and playing one spends nothing. */
+  for (const preset of loadCustom().presets) {
+    if (!preset || !preset.id) continue;
+    push("custom", preset.id, "Your own rules · " + preset.name, { preset: preset.id });
   }
 
   // Ruthless, one entry per lens. The lens is the thing drawn — six sections are six different
@@ -12374,6 +12426,10 @@ async function dispatchRandom(entry) {
     case "dark":      startChallenge(entry.challenge, { dark: true }); return true;
     case "bonus":     startBonusGame(BONUS_GAMES.find((g) => g.id === entry.bonus)); return true;
     case "ruthless":  startRuthlessMode(entry.lens); return true;
+    // Started from the drawn preset's id, not from the shelf's active one, and WITHOUT moving
+    // the active pick: a roll is one run, the same way a drawn difficulty doesn't rewrite the
+    // player's saved one.
+    case "custom":    startCustom(entry.preset); return true;
     case "daily":     startDaily(); return true;
     default: return false;
   }
@@ -12393,14 +12449,30 @@ function foldDicePick() {
   if (n >= 13) unlock("play-13-dice-picks");
 }
 
+/* The pinned goal as a lean on the draw: every pool entry the goal card would send the player
+   to, as a set of ledger tokens for js/random.js to multiply by. Read-only on purpose — it uses
+   the pin the player already has and never calls currentGoal() into pinning a fresh one, because
+   rolling the dice is not a visit to the charm page and must not quietly choose a goal.
+
+   Nothing to lean toward in three cases, all of them returning null: no pin, a pin already
+   earned (the card is showing a result, not a chase), and a pin whose destination isn't open. */
+function goalLean() {
+  if (!loadGoal()) return null;
+  const a = currentGoal();
+  if (!a || earnedAchievements[a.id]) return null;
+  const tokens = new Set(goalEntries(a.earn).map((e) => e.token));
+  return tokens.size ? { tokens, weight: RANDOM_GOAL_WEIGHT } : null;
+}
+
 async function rollRandom() {
   let pool = buildRandomPool();
   const seen = loadRandomSeen();
+  const goal = goalLean();
   // One retry, and only for the one failure mode that exists: a guest whose catalogue wouldn't
   // download. Re-drawing from a pool with guests removed can't loop, because every other
   // category starts synchronously and cannot fail.
   for (let attempt = 0; attempt < 2; attempt++) {
-    const entry = drawRandom(pool, seen);
+    const entry = drawRandom(pool, seen, Math.random, RANDOM_UNPLAYED_WEIGHT, goal);
     if (!entry) break;
     resolveRandomDifficulty(entry);
     notifyNote("the draw", randomDrawLabel(entry));
@@ -12535,9 +12607,14 @@ function customInfinite() { return gameType === "custom" && currentMode && curre
 // infinite run capped by lives. Sandboxed like Challenges: it folds skill XP + achievements,
 // but never records/stats/history/tally/play-counts (see endCustom). The hint budget caps
 // total reveals for the run.
-function startCustom() {
-  const preset = activeCustomPreset();
+function startCustom(presetId) {
+  // A preset id comes from the randomiser, the pinned goal and the results card's replay, all of
+  // which mean one specific preset rather than "whatever the shelf is pointing at". Resolving it
+  // here (and falling back to the active one) keeps the active pick a thing only the shelf moves.
+  const preset = (presetId && loadCustom().presets.find((cp) => cp && cp.id === presetId))
+    || activeCustomPreset();
   gameType = "custom";
+  notePlayed("custom", preset.id);
   currentMode = normalizeCustomMode(preset.mode);   // clone — never persisted via DIFF_KEY
   resetRunState();
   customPreset = preset;                             // set AFTER resetRunState (which nulls it)
@@ -15066,7 +15143,9 @@ function endCustom() {
     showScreen("start");
     $("startContent").style.display = "";
   });
-  $("replayCustom").addEventListener("click", () => startCustom());
+  // The preset that was just played, which is not always the shelf's active one now that the
+  // randomiser and the pinned goal can deal a different one.
+  $("replayCustom").addEventListener("click", () => startCustom(preset && preset.id));
 
   renderResultRecap();
   renderSkillsRecap();
@@ -24688,7 +24767,9 @@ function buildDevApi() {
         }
         return { level: floatLevel, promo: floatPromo, pool: effectivePool(), floating: floatingPoolNow() };
       },
-      play: () => startCustom(),                               // start a run on the active preset
+      // Start a run: on the active preset, or on any preset by id, which is what the randomiser
+      // and the pinned goal now do (custom.presets() prints the ids).
+      play: (presetId) => startCustom(presetId),
       open: () => { gameType = "custom"; rememberGameType("custom"); renderStartPickers(); showScreen("start"); $("startContent").style.display = ""; },
       reset: () => { resetCustom(); syncCustomUI(); },
     },
@@ -25389,12 +25470,31 @@ function buildDevApi() {
       // Per-category shape of the draw: size, how much is still unplayed, and the share of the
       // draw it commands once the lean is applied. The share is the number to read — a category
       // whose entries are all unplayed should be visibly fatter than one that's exhausted.
-      summary: () => poolSummary(buildRandomPool(), loadRandomSeen()),
+      summary: () => poolSummary(buildRandomPool(), loadRandomSeen(), RANDOM_UNPLAYED_WEIGHT, goalLean()),
+      // What the pinned goal is doing to the draw: the charm, and every entry it fattens. The
+      // one thing to check here is that a pin with no open destination leans NOTHING rather than
+      // leaning everything — `entries: []` on an unearned pin is the honest "no door yet" case.
+      goalLean: () => {
+        // Read-only, like the lean itself: reported off the STORED pin rather than through
+        // currentGoal(), which would pin something new on an unpinned notebook and make the
+        // report the reason there is a lean to report.
+        const rec = loadGoal();
+        const a = rec && ACH_BY_ID[rec.id];
+        const lean = goalLean();
+        return {
+          pinned: a ? a.name : null,
+          earned: !!(a && earnedAchievements[a.id]),
+          weight: lean ? lean.weight : 0,
+          entries: lean
+            ? buildRandomPool().filter((e) => lean.tokens.has(e.token)).map((e) => e.label)
+            : [],
+        };
+      },
       // Roll without launching, so a draw can be inspected. Repeat it to eyeball the spread.
       peek: (n = 1) => {
-        const pool = buildRandomPool(), seen = loadRandomSeen(), out = [];
+        const pool = buildRandomPool(), seen = loadRandomSeen(), goal = goalLean(), out = [];
         for (let i = 0; i < Math.max(1, n | 0); i++) {
-          const e = drawRandom(pool, seen);
+          const e = drawRandom(pool, seen, Math.random, RANDOM_UNPLAYED_WEIGHT, goal);
           out.push(e ? { cat: e.cat, label: e.label, played: !!seen[e.token] } : null);
         }
         return out.length === 1 ? out[0] : out;
@@ -25403,22 +25503,30 @@ function buildDevApi() {
       // category counts against summary()'s shares, and `unplayed` against how much of the pool
       // is unplayed: the lean is working when the first number is well above the second.
       sample: (n = 1000) => {
-        const pool = buildRandomPool(), seen = loadRandomSeen();
+        const pool = buildRandomPool(), seen = loadRandomSeen(), goal = goalLean();
         n = Math.max(1, n | 0);
-        const cats = {}; let unplayed = 0;
+        const cats = {}; let unplayed = 0, onGoal = 0;
         for (let i = 0; i < n; i++) {
-          const e = drawRandom(pool, seen);
+          const e = drawRandom(pool, seen, Math.random, RANDOM_UNPLAYED_WEIGHT, goal);
           if (!e) continue;
           cats[e.cat] = (cats[e.cat] || 0) + 1;
           if (!seen[e.token]) unplayed++;
+          if (goal && goal.tokens.has(e.token)) onGoal++;
         }
         const pct = Object.fromEntries(Object.entries(cats).map(([k, v]) => [k, ((v / n) * 100).toFixed(1) + "%"]));
         const poolUnplayed = pool.filter((e) => !seen[e.token]).length;
+        // `onGoal` against `poolOnGoal` is the goal lean's version of the same comparison the
+        // unplayed pair makes: the lean is working when the first number sits above the second,
+        // and badly wrong if it has swallowed the draw.
+        const poolOnGoal = goal ? pool.filter((e) => goal.tokens.has(e.token)).length : 0;
         return {
           n, categories: pct,
           unplayed: ((unplayed / n) * 100).toFixed(1) + "%",
           poolUnplayed: ((poolUnplayed / pool.length) * 100).toFixed(1) + "% of the pool",
           weight: RANDOM_UNPLAYED_WEIGHT,
+          onGoal: goal ? ((onGoal / n) * 100).toFixed(1) + "%" : "no pin to lean on",
+          poolOnGoal: goal ? ((poolOnGoal / pool.length) * 100).toFixed(1) + "% of the pool" : "",
+          goalWeight: goal ? goal.weight : 0,
         };
       },
       // Force a category, so a single shelf's dispatch can be exercised on demand. Ignores the
@@ -25426,7 +25534,12 @@ function buildDevApi() {
       cat: (id) => {
         const opts = buildRandomPool().filter((e) => e.cat === id);
         if (!opts.length) return `nothing playable in "${id}" — try ${RANDOM_CATEGORIES.map((c) => c.id).join(", ")}`;
-        return dispatchRandom(opts[Math.floor(Math.random() * opts.length)]);
+        const entry = opts[Math.floor(Math.random() * opts.length)];
+        // The draw resolves a difficulty for the categories that take one before dispatching, and
+        // Infinite reads it straight off the entry — so forcing a category has to do it too, or
+        // this shortcut hands startInfinite an undefined mode.
+        resolveRandomDifficulty(entry);
+        return dispatchRandom(entry);
       },
       roll: () => rollRandom(),                        // the button, from the console
       seen: () => loadRandomSeen(),                    // the raw ledger
@@ -25446,6 +25559,7 @@ function buildDevApi() {
       pool: () => goalPool().map((a) => ({
         id: a.id, name: a.name,
         cat: a.earn ? a.earn.cat : "(no earn)", diff: (a.earn && a.earn.diff) || "",
+        lever: (a.earn && a.earn.lever) || "",
         dest: goalEntries(a.earn).length,
       })).sort((x, y) => x.cat.localeCompare(y.cat) || x.id.localeCompare(y.id)),
       // Per-category shape, and the share of the draw each commands. Because the draw picks a

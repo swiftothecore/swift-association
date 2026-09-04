@@ -15,7 +15,7 @@
 //   label   — how the draw describes itself to the player
 //   payload — whatever app.js needs to start it (mode, album, id, variant, dark…)
 
-import { RANDOM_CATEGORIES, RANDOM_UNPLAYED_WEIGHT } from "./config.js";
+import { RANDOM_CATEGORIES, RANDOM_UNPLAYED_WEIGHT, RANDOM_GOAL_WEIGHT } from "./config.js";
 
 const CAT_WEIGHT = new Map(RANDOM_CATEGORIES.map((c) => [c.id, c.weight]));
 
@@ -23,10 +23,17 @@ const CAT_WEIGHT = new Map(RANDOM_CATEGORIES.map((c) => [c.id, c.weight]));
 // draw and the dev-tools report read the same numbers rather than computing them twice.
 //
 // An entry's weight is its category's share divided between that category's entries, times the
-// unplayed multiplier. Dividing by the category size first is what stops 32 challenges from
-// outvoting two Infinite variants; multiplying after is what makes a barely-touched shelf swell against
-// an exhausted one, because a category's total is the sum of its entries'.
-export function weighPool(pool, seen = {}, unplayedWeight = RANDOM_UNPLAYED_WEIGHT) {
+// unplayed multiplier, times the goal multiplier. Dividing by the category size first is what
+// stops 32 challenges from outvoting two Infinite variants; multiplying after is what makes a
+// barely-touched shelf swell against an exhausted one, because a category's total is the sum of
+// its entries'.
+//
+// `goal` is the pinned charm's destinations, as { tokens: Set, weight }, or null for no lean. It
+// stays a bag of tokens rather than a charm, because this module knows nothing about charms and
+// should not learn: app.js resolves the pin to pool entries and hands over what came back.
+export function weighPool(pool, seen = {}, unplayedWeight = RANDOM_UNPLAYED_WEIGHT, goal = null) {
+  const goalTokens = goal && goal.tokens ? goal.tokens : null;
+  const goalWeight = goal && goal.weight > 0 ? goal.weight : RANDOM_GOAL_WEIGHT;
   const sized = new Map();
   for (const e of pool) {
     if (!e || !CAT_WEIGHT.has(e.cat)) continue;
@@ -37,7 +44,9 @@ export function weighPool(pool, seen = {}, unplayedWeight = RANDOM_UNPLAYED_WEIG
   for (const entry of pool) {
     if (!entry || !CAT_WEIGHT.has(entry.cat)) continue;
     const base = CAT_WEIGHT.get(entry.cat) / sized.get(entry.cat);
-    const weight = base * (seen[entry.token] ? 1 : unplayedWeight);
+    const weight = base
+      * (seen[entry.token] ? 1 : unplayedWeight)
+      * (goalTokens && goalTokens.has(entry.token) ? goalWeight : 1);
     weighted.push({ entry, weight });
     total += weight;
   }
@@ -48,8 +57,8 @@ export function weighPool(pool, seen = {}, unplayedWeight = RANDOM_UNPLAYED_WEIG
 // the distribution can be sampled without touching Math.random's real stream.
 // Returns null for an empty pool, which is a real state on a fresh notebook that has somehow
 // locked itself out of everything, and must not throw.
-export function drawRandom(pool, seen = {}, rng = Math.random, unplayedWeight = RANDOM_UNPLAYED_WEIGHT) {
-  const { weighted, total } = weighPool(pool, seen, unplayedWeight);
+export function drawRandom(pool, seen = {}, rng = Math.random, unplayedWeight = RANDOM_UNPLAYED_WEIGHT, goal = null) {
+  const { weighted, total } = weighPool(pool, seen, unplayedWeight, goal);
   if (!weighted.length || total <= 0) return null;
   let roll = rng() * total;
   for (const w of weighted) {
@@ -61,26 +70,30 @@ export function drawRandom(pool, seen = {}, rng = Math.random, unplayedWeight = 
 }
 
 // Per-category breakdown for the dev tools: how big each shelf is, how much of it is still
-// unplayed, and what share of the draw it actually commands once the lean is applied. The
-// share is the number worth reading — the configured weight is only its starting point.
-export function poolSummary(pool, seen = {}, unplayedWeight = RANDOM_UNPLAYED_WEIGHT) {
-  const { weighted, total } = weighPool(pool, seen, unplayedWeight);
+// unplayed, how many of its entries the pinned goal points at, and what share of the draw it
+// actually commands once both leans are applied. The share is the number worth reading — the
+// configured weight is only its starting point.
+export function poolSummary(pool, seen = {}, unplayedWeight = RANDOM_UNPLAYED_WEIGHT, goal = null) {
+  const { weighted, total } = weighPool(pool, seen, unplayedWeight, goal);
+  const goalTokens = goal && goal.tokens ? goal.tokens : null;
   const rows = new Map();
   for (const w of weighted) {
-    const row = rows.get(w.entry.cat) || { cat: w.entry.cat, entries: 0, unplayed: 0, weight: 0 };
+    const row = rows.get(w.entry.cat) || { cat: w.entry.cat, entries: 0, unplayed: 0, goal: 0, weight: 0 };
     row.entries += 1;
     if (!seen[w.entry.token]) row.unplayed += 1;
+    if (goalTokens && goalTokens.has(w.entry.token)) row.goal += 1;
     row.weight += w.weight;
     rows.set(w.entry.cat, row);
   }
   const out = [];
   for (const c of RANDOM_CATEGORIES) {
     const row = rows.get(c.id);
-    if (!row) { out.push({ cat: c.id, entries: 0, unplayed: 0, share: "0.0%" }); continue; }
+    if (!row) { out.push({ cat: c.id, entries: 0, unplayed: 0, goal: 0, share: "0.0%" }); continue; }
     out.push({
       cat: row.cat,
       entries: row.entries,
       unplayed: row.unplayed,
+      goal: row.goal,
       share: (total > 0 ? (row.weight / total) * 100 : 0).toFixed(1) + "%",
     });
   }

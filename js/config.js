@@ -671,8 +671,21 @@ export const RUTHLESS_RUN_RUNGS = [90, 60, 45];
    Album Focus is the reason: playing Midnights once is knowing Midnights, so it marks
    `album:midnights` and every difficulty of it counts as seen. Guests and Infinite variants
    follow the same reading. A plain difficulty run is the exception where the difficulty IS the
-   thing drawn, so it tokenises per mode. */
+   thing drawn, so it tokenises per mode, and a Custom preset is the same exception read the
+   other way round: the levers ARE the game there, so it tokenises per preset and a preset the
+   player has just written is something they have never been dealt. */
 export const RANDOM_UNPLAYED_WEIGHT = 4;
+
+/* THE GOAL LEAN. A pinned charm is the one thing the player has said out loud that they are
+   chasing, so the dice tilt toward the shelves that could actually close it: every pool entry
+   the goal card would send them to counts RANDOM_GOAL_WEIGHT times over. Deliberately weaker
+   than the unplayed lean, and deliberately a lean rather than a filter — the dice are for
+   surprise, and a draw that quietly became "go and do your goal" would be the goal card's
+   button wearing a disguise. The two leans multiply, so an unplayed goal entry is the fattest
+   thing in the pool, which is the right answer to "I have pinned something I have never
+   played". A goal that is already earned, or that has no open destination, leans nothing. */
+export const RANDOM_GOAL_WEIGHT = 3;
+
 // `weight` is a share of the draw; the numbers are relative and don't need to total anything.
 // `empty` categories (no unlocked entries yet, no guest fetched, today's daily already played)
 // simply contribute nothing and the rest re-normalise around them.
@@ -685,6 +698,7 @@ export const RANDOM_CATEGORIES = [
   { id: "dark",       weight: 14, label: "a dark side" },
   { id: "bonus",      weight: 12, label: "a bonus game" },
   { id: "ruthless",   weight: 8,  label: "Ruthless Game" },
+  { id: "custom",     weight: 8,  label: "your own rules" },
   { id: "daily",      weight: 8,  label: "the daily" },
 ];
 
@@ -3448,13 +3462,21 @@ export const ACHIEVEMENTS = [
   { id: "perfect-album-focus-ultra", name: "Salute To Me",     desc: "Perfect an album on Ultra",            tier: 2, secret: false, icon: "kingcard", sitting: true, earn: { cat: "album", diff: "ultra" } },
   { id: "perfect-album-focus-lyricist",   name: "Write What You Know", desc: "Perfect an album in Lyricist",         tier: 2, secret: false, icon: "manuscript", sitting: true, earn: { cat: "album", diff: "lyricist" } },
   /* ---- Custom mode (your own levers, your own rules) ---- */
-  { id: "finish-first-custom-run",             name: "My Choice Is You", desc: "Finish your first Custom run",         secret: false, icon: "levers", sitting: true },
+  /* Custom is the one destination category whose entries differ by LEVERS rather than by
+     difficulty, so two of these charms name a `lever` as well as a cat: a preset that ends at
+     13 pages is not a door to a round-50 endless run, and a comfortable preset is not a door to
+     Aim At The Devil. The named levers are resolved in app.js (CUSTOM_GOAL_LEVERS), which is
+     also where the button's wording for them lives. A charm whose lever matches none of the
+     player's own presets honestly has no open destination yet, and the card says so.
+     Keeping presets on the shelf is a drawer action rather than a run, so it stays without an
+     `earn` the way the desk charms do. */
+  { id: "finish-first-custom-run",             name: "My Choice Is You", desc: "Finish your first Custom run",         secret: false, icon: "levers", sitting: true, earn: { cat: "custom" } },
   { id: "keep-5-custom-presets",             name: "A Drawer Of My Things", desc: `Keep ${CUSTOM_PRESET_SHELF} custom presets on the shelf at once`, secret: false, icon: "presetbox", sitting: true },
-  { id: "reach-round-50-endless-custom", name: "Forever & Always", desc: `Reach round ${CUSTOM_ENDLESS_MILESTONE} of an endless Custom run`, tier: 2, secret: false, icon: "infinity", sitting: true },
+  { id: "reach-round-50-endless-custom", name: "Forever & Always", desc: `Reach round ${CUSTOM_ENDLESS_MILESTONE} of an endless Custom run`, tier: 2, secret: false, icon: "infinity", sitting: true, earn: { cat: "custom", lever: "endless" } },
   // The one Custom charm that rewards authoring something punishing rather than comfortable.
   // "No easier than Ultra" is checked lever by lever against MODES.ultra (see customAtLeastUltra),
   // so retuning Ultra retunes this with it rather than leaving a stale set of numbers here.
-  { id: "perfect-custom-at-least-ultra",      name: "Aim At The Devil", desc: "Perfect a full Custom run tuned no easier than Ultra", tier: 2, secret: false, icon: "pitchfork", sitting: true },
+  { id: "perfect-custom-at-least-ultra",      name: "Aim At The Devil", desc: "Perfect a full Custom run tuned no easier than Ultra", tier: 2, secret: false, icon: "pitchfork", sitting: true, earn: { cat: "custom", lever: "ultra" } },
   /* ---- Guest shelf (other artists' catalogues) ---- */
   { id: "admit-guest", name: "Been Waitin' For You", desc: "Admit a guest to the shelf", secret: false, icon: "guestpass", sitting: true, earn: { cat: "guest" } },
   // Admission already means a perfect, hint-free run, so these are the rungs above it.

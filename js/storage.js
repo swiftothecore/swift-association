@@ -500,9 +500,14 @@ export function resetRuthless() {
 // `mode` is a MODES-shaped lever object (see CUSTOM_DEFAULT_MODE). Purely saved
 // configurations — nothing here feeds stats/records. A fresh/empty store seeds one preset
 // so a first-time player always has something to play.
-export function defaultCustomPreset() {
+// `id` is passed only for the unsaved seed below, which needs a STABLE identity: an untouched
+// store is re-seeded on every read, and things outside it key off the preset id — the
+// randomiser tokenises its draw per preset, so a seed that invented a fresh id each read would
+// look like a brand new mode every time anything asked. A "New mode" gets the random id, which
+// can never collide with the seed's.
+export function defaultCustomPreset(id) {
   return {
-    id: "cp" + Date.now().toString(36) + Math.floor(Math.random() * 1e4).toString(36),
+    id: id || "cp" + Date.now().toString(36) + Math.floor(Math.random() * 1e4).toString(36),
     // Deliberately not descriptive of the levers: this preset is the player's to edit, and a
     // name that spelled out the clock or the answer type would start lying the moment they
     // dragged a slider.
@@ -521,7 +526,7 @@ export function loadCustom() {
       }
     }
   } catch (e) { /* ignore */ }
-  const seed = defaultCustomPreset();
+  const seed = defaultCustomPreset("cpseed");
   return { presets: [seed], activeId: seed.id };
 }
 export function saveCustom(o) {
