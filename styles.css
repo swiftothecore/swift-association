@@ -1600,6 +1600,35 @@
      paper-white there and the mark would vanish on pale kraft. */
   :root[data-theme="dark"] .btn-primary.chance-cta { --chance-board: #6f5c3e; }
 
+  /* THE IDLE BOB. The gold bar beside this one has always breathed on a loop, and a stamp
+     that sits perfectly still next to it reads as disabled rather than calm, so the stamp
+     moves too — the whole board, not the mark inside it. It is the same gesture on the same
+     2.8s cadence as playBob, lifting the same 3px with its hard shadow lengthening under it,
+     because the two are a pair of buttons in one row and a second, unrelated idle would just
+     be a second thing to look at.
+
+     WHAT KEEPS IT FROM READING AS A PAIR OF TABS is the quarter-cycle offset and the tilt. A
+     negative animation-delay starts it already part-way through, so the pair is never at the
+     top together, and the board swings across its 0.7deg rest instead of rising flat — a
+     light square of kraft nudged on a desk rather than a UI element sliding up. The gold bar
+     holds its own -0.6deg the whole way, which is what keeps the two gestures distinguishable
+     while the timing stays shared.
+
+     THE REST ANGLE LIVES IN THE KEYFRAMES. An infinite animation on the button outranks the
+     transform on the rule above, so every frame here has to carry the 0.7deg itself or the
+     stamp snaps square the moment the loop starts. The press is the other half of that: the
+     :active transform would lose the same argument, so the animation stands down there and
+     hands the transform back. */
+  @media (prefers-reduced-motion: no-preference) {
+    .btn-primary.chance-cta { animation: chanceBob 2.8s ease-in-out -0.7s infinite; }
+    .btn-primary.chance-cta:active { animation: none; }
+  }
+  body[data-reduce-motion="on"] .btn-primary.chance-cta { animation: none; }
+  @keyframes chanceBob {
+    0%, 100% { transform: rotate(0.7deg) translateY(0); box-shadow: 3px 3px 0 rgba(43, 39, 34, 0.22); }
+    50%      { transform: rotate(2.3deg) translateY(-3px); box-shadow: 3px 6px 0 rgba(43, 39, 34, 0.18); }
+  }
+
   @media (max-width: 480px) {
     .play-row { gap: 8px; }
     .btn-primary.chance-cta { width: calc(48px + var(--text-size-adjust)); height: calc(48px + var(--text-size-adjust)); }
