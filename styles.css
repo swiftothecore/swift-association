@@ -1544,25 +1544,39 @@
   }
   .play-row .btn-primary.play-cta { flex: 1 1 auto; width: auto; margin: 0; }
 
-  /* The chance stamp: the CTA's box, squared off and inked rust. Kept on .btn-primary so it
-     inherits the ink border, the hard shadow and the ink-fill hover inversion the whole button
-     family shares, and tilted the other way, so the pair reads as two things put down by hand
-     rather than one control cut in two. Rust because the six nav-card tints below already own
-     gold, lavender, denim, graphite, rose and teal, and a seventh that sits near one of them
-     reads as a mistake. Sized as a real square rather than stretched to the CTA's height: a
-     flex item's cross size is not definite while its main size is being resolved, so
-     aspect-ratio alone silently leaves it a tall thin sliver. It rides the type scale with
-     everything else and sits centred against the taller gold bar. */
+  /* The chance stamp: the CTA's box, squared off, and cut from board rather than inked.
+     Kept on .btn-primary so it inherits the ink border, the hard shadow and the ink-fill hover
+     inversion the whole button family shares, and tilted the other way, so the pair reads as
+     two things put down by hand rather than one control cut in two.
+
+     KRAFT, NOT A COLOUR. The six nav-card tints below the row own gold, lavender, denim,
+     graphite, rose and teal, and the bonus card owns mint, so a seventh hue landing near any of
+     them reads as a mistake rather than a choice. Parcel board is the way out: it is stock, not
+     a tint, so it cannot collide with a palette it was never in, and it puts a second kind of
+     paper on a desk already made of paper. The cost is that the box carries no contrast of its
+     own, which is why the mark inside it is drawn heavier than the CTA's pencil.
+
+     THE url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20width%3D%27120%27%20height%3D%27120%27%3E%3Cfilter%20id%3D%27f%27%3E%3CfeTurbulence%20type%3D%27fractalNoise%27%20baseFrequency%3D%270.09%200.85%27%20numOctaves%3D%274%27%20seed%3D%2711%27%2F%3E%3CfeColorMatrix%20type%3D%27saturate%27%20values%3D%270%27%2F%3E%3C%2Ffilter%3E%3Crect%20width%3D%27120%27%20height%3D%27120%27%20filter%3D%27url%28%23f%29%27%20opacity%3D%270.30%27%2F%3E%3C%2Fsvg%3E") IS STRETCHED NOISE, not repeating rules. Real board has strands of pulp running
+     roughly one way with no two the same length; a repeating-linear-gradient at this size reads
+     as corduroy the moment the button is larger than a thumbnail. Fractal noise, long in x and
+     short in y, blended soft-light so it tints the board instead of sitting on top of it, with
+     the button family's constant sheen underneath it.
+
+     Sized as a real square rather than stretched to the CTA's height: a flex item's cross size
+     is not definite while its main size is being resolved, so aspect-ratio alone silently
+     leaves it a tall thin sliver. It rides the type scale with everything else and sits centred
+     against the taller gold bar. */
   .btn-primary.chance-cta {
     flex: 0 0 auto; align-self: center; margin: 0;
     width: calc(54px + var(--text-size-adjust)); height: calc(54px + var(--text-size-adjust));
     display: inline-flex; align-items: center; justify-content: center;
     padding: 0; color: var(--ink);
-    background-color: var(--chance-rust, #b5623a);
+    background-color: var(--chance-board, #d8c7a4);
     background-image:
-      linear-gradient(168deg, rgba(255, 255, 255, 0.24) 0%, rgba(255, 255, 255, 0) 46%, rgba(43, 39, 34, 0.12) 100%),
-      /* the faint pressed texture the patterned buttons all carry */
-      repeating-linear-gradient(52deg, rgba(43, 39, 34, 0.038) 0 1px, rgba(0, 0, 0, 0) 1px 8px);
+      url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20width%3D%27120%27%20height%3D%27120%27%3E%3Cfilter%20id%3D%27f%27%3E%3CfeTurbulence%20type%3D%27fractalNoise%27%20baseFrequency%3D%270.09%200.85%27%20numOctaves%3D%274%27%20seed%3D%2711%27%2F%3E%3CfeColorMatrix%20type%3D%27saturate%27%20values%3D%270%27%2F%3E%3C%2Ffilter%3E%3Crect%20width%3D%27120%27%20height%3D%27120%27%20filter%3D%27url%28%23f%29%27%20opacity%3D%270.30%27%2F%3E%3C%2Fsvg%3E"),
+      linear-gradient(168deg, rgba(255, 255, 255, 0.20) 0%, rgba(255, 255, 255, 0) 46%, rgba(43, 39, 34, 0.11) 100%);
+    background-size: 120px 120px, auto;
+    background-blend-mode: soft-light, normal;
     box-shadow: 3px 3px 0 rgba(43, 39, 34, 0.22);
     transform: rotate(0.7deg);
     transition: background-color 0.24s ease, color 0.2s ease, transform 0.12s, box-shadow 0.2s;
@@ -1575,8 +1589,16 @@
   .chance-mark { margin: 0; width: 28px; height: 28px; vertical-align: 0; }
   /* Matched to the CTA's pencil by weight rather than by size: the shared .cta-mark rules set
      no stroke-width, and a hairline die beside a solid pencil reads as a different family. */
-  .chance-mark .ink { stroke-width: 1.9; }
-  :root[data-theme="dark"] .btn-primary.chance-cta { background-color: #97522f; }
+  .chance-mark .ink { stroke-width: 1.8; }
+  /* The front die is IN FRONT, so it knocks a real hole in the one behind it instead of being
+     drawn over the top of it. The hole is the board's own colour, which means it has to follow
+     the hover inversion too, or the die fills with kraft on an inked button. */
+  .chance-mark .knock { fill: var(--chance-board, #d8c7a4); stroke: none; }
+  .btn-primary.chance-cta:hover .chance-mark .knock,
+  .btn-primary.chance-cta:focus-visible .chance-mark .knock { fill: var(--ink); }
+  /* Dark page: the board goes into shadow rather than staying bright, because --ink is a warm
+     paper-white there and the mark would vanish on pale kraft. */
+  :root[data-theme="dark"] .btn-primary.chance-cta { --chance-board: #6f5c3e; }
 
   @media (max-width: 480px) {
     .play-row { gap: 8px; }

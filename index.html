@@ -2613,27 +2613,32 @@ if (location.pathname.endsWith('/index.html')) {
       <div class="play-row">
         <button id="playBtn" class="btn-primary play-cta">Start writing</button>
         <!-- RANDOMISER: the launch row's second button. A square stamp beside the CTA, boxed
-             and coloured like it, because it does the same kind of thing and a quiet ornament
-             next to a gold stamp read as decoration rather than a control. Rust, which is
-             nowhere in the six nav-card tints, and the mark carries it alone: the phrase would
-             cost the CTA a third of the row to say what the die already says. -->
+             and cut from kraft board, because it does the same kind of thing and a quiet
+             ornament next to a gold stamp read as decoration rather than a control. Board
+             rather than a colour, since the six nav-card tints below own every hue this could
+             have taken; the mark carries it alone, because the phrase would cost the CTA a
+             third of the row to say what the dice already say. -->
         <button id="randomGear" class="btn-primary chance-cta" type="button"
                 aria-label="Play something random" title="Leave it to chance">
-          <!-- One die caught mid-tumble, drawn flat in ink to sit in the same family as the
-               CTA's pencil: line weight matched, currentColor throughout so the hover
-               inversion is free, and the two ticks are the throw, not decoration. -->
+          <!-- Two dice thrown, drawn flat in ink to sit in the same family as the CTA's pencil.
+               The front die KNOCKS A HOLE in the one behind it (class="knock", filled with the
+               board's own colour) rather than being drawn on top of it, so the two read as
+               objects at different depths instead of two outlines crossing. Everything else is
+               currentColor, which is what makes the hover inversion free. -->
           <span class="cta-mark chance-mark" aria-hidden="true">
             <svg viewBox="0 0 24 24" focusable="false">
-              <g transform="rotate(-13 12 14)">
-                <rect class="ink" x="3.4" y="5.4" width="17.2" height="17.2" rx="3.4"/>
+              <g transform="rotate(-13 8.2 8.6)">
+                <rect class="ink" x="2" y="2.4" width="12.4" height="12.4" rx="2.8"/>
+                <g class="ink-fill"><circle cx="5.7" cy="6.1" r="1.4"/><circle cx="10.7" cy="11.1" r="1.4"/></g>
+              </g>
+              <g transform="rotate(12 15.6 15.4)">
+                <rect class="knock" x="9.4" y="9.2" width="12.4" height="12.4" rx="2.8"/>
+                <rect class="ink" x="9.4" y="9.2" width="12.4" height="12.4" rx="2.8"/>
                 <g class="ink-fill">
-                  <circle cx="7.9" cy="9.9" r="1.7"/>
-                  <circle cx="12" cy="14" r="1.7"/>
-                  <circle cx="16.1" cy="18.1" r="1.7"/>
+                  <circle cx="12.9" cy="12.7" r="1.35"/><circle cx="18.3" cy="12.7" r="1.35"/>
+                  <circle cx="12.9" cy="18.1" r="1.35"/><circle cx="18.3" cy="18.1" r="1.35"/>
                 </g>
               </g>
-              <path class="ink" d="M20.9 3.6 L22.7 1.3"/>
-              <path class="ink" d="M16.9 2.2 L17.5 -0.2"/>
             </svg>
           </span>
         </button>
