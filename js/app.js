@@ -18131,10 +18131,16 @@ function submitAnswer(song, isTimeout) {
     }
   }
 
-  // Short n' Sweet: a song valid by lyrics but with a 3+-word title is soft-rejected so
-  // the player keeps looking for a one- or two-word title.
+  // Short n' Sweet: a title over the limit is soft-rejected so the player keeps looking for a
+  // one- or two-word one. Deliberately NOT gated on the song holding the prompt word, unlike
+  // the rule rejects below it. Those rules are about which of the word's holders count, so a
+  // song that holds nothing is simply a wrong guess and belongs in the ordinary miss. This one
+  // is a property of the title alone: the card says only short titles count here, and it can
+  // say so without ever reading the lyrics. With the lyrics gate on, a long title that missed
+  // the word slipped past the rule entirely and was graded as an ordinary answer — which is
+  // how "The Tortured Poets Department" came to burn a page on a challenge that does not
+  // accept four-word titles at all, with nothing on screen to say why.
   if (song && !isTimeout && currentChallenge && currentChallenge.rule === "shorttitle"
-      && currentLyricSongs.some((s) => s.title === song.title)
       && titleWordCount(song.title) > maxTitleWordsNow()) {
     noteWrongSubmission(song); rejectShortTitle(); return;
   }
