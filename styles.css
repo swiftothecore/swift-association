@@ -5528,84 +5528,62 @@
   .start-podium-col .best-empty { font-size: calc(17px + var(--text-size-adjust)); padding: 0; }
   .anniversary-note[hidden] { display: none; }
   .anniversary-note { flex: none; margin: 0; }
-  .an-reveal {
-    position: relative; display: grid; width: min(29ch, 100%); text-align: center;
-  }
-  .an-reveal > * { grid-area: 1 / 1; }
-  .an-secret {
-    align-self: center; padding: 18px 20px 12px;
-    font-family: var(--hand); font-size: calc(19px + var(--text-size-adjust)); line-height: 1.18;
-    color: var(--ink-soft); opacity: 0; transform: rotate(0.7deg) scale(0.97);
-  }
-  .an-secret-mark {
-    display: block; margin-bottom: 3px; color: var(--ink); font-size: 0.82em;
-  }
-  .an-reveal.is-revealed .an-secret {
-    animation: anSecretReveal 0.42s 0.48s ease-out forwards;
-  }
+  /* Kept short on purpose. The front page is compact now, and this slip shares a row with
+     the podium: every pixel it grows past the podium's own height pushes the board down.
+     So the padding is tight, the eyebrow sits right on top of the headline, and the three
+     lines are set to read as one small block rather than three stacked rows. */
   .an-slip {
-    position: relative; max-width: 29ch; text-align: center;
+    /* A set width, not a max: these notes are one or two short lines, so shrink-to-fit
+       gave every day a different-sized slip and the short ones read as a scrap. The
+       width must NOT be written as min(33ch, 100%) — .anniversary-note is flex:none, so
+       it sizes to its content, and a percentage here resolves against a parent that is
+       itself waiting on this child. The browser breaks that loop by falling back to the
+       text's max-content, and the slip silently collapses to the width of its longest
+       sentence. A flat ch width plus a percentage max-width says the same thing without
+       the cycle: the parent takes the width from the child, and the cap only bites once
+       there's a real width to measure against (the stacked layout below 700px). */
+    position: relative; width: 29ch; max-width: 100%; text-align: center;
     background: #fbf6e9; border: 1px solid var(--paper-edge); border-radius: 3px;
     box-shadow: 2px 4px 11px rgba(60, 50, 35, 0.16);
-    padding: 14px 24px 13px; transform: rotate(-1.4deg);
+    padding: 9px 22px 8px; transform: rotate(-1.4deg);
   }
-  /* Two strips of the shared realistic washi (kraft tan); see .nav-tape surface rule. */
+  /* Two strips of the shared realistic washi (kraft tan); see .nav-tape surface rule.
+     Taped diagonally ACROSS the two top corners, the way you'd actually pin a scrap to a
+     page. Each 44x14 strip is turned 45-ish degrees and sat a little inside its corner
+     rather than centred on it, so most of the strip lies on the paper and only about ten
+     pixels of each end hangs off into the corner's dead air. That overhang is the whole
+     reason the tape is absolutely positioned and the slip carries no padding for it: the
+     strips are out of flow, so the corner they stick past is space the row already had,
+     and neither the podium beside the slip nor the button below it moves by a pixel when
+     the tape goes on or comes off. Do NOT reach for margins or a taller .an-slip to
+     "make room" — that is the change that pushes the board down. The two angles are
+     deliberately not mirrored, and the right strip keeps its own torn-edge clip. */
   .an-tape {
-    position: absolute; top: -9px; z-index: 3; width: 46px; height: 15px;
-    display: block; padding: 0; border: 0; appearance: none; cursor: default;
+    position: absolute; top: 2px; z-index: 3; width: 44px; height: 14px; display: block;
     --tape-color: #c9b27a;
   }
-  .an-tape:focus-visible { outline: 2px dotted var(--ink-soft); outline-offset: 3px; }
-  .an-tape-l { left: 15%; transform: rotate(-7deg); }
+  .an-tape-l { left: -13px; transform: rotate(-46deg); }
   .an-tape-r {
-    right: 13%; transform: rotate(5deg);
+    right: -13px; transform: rotate(42deg);
     --tape-clip: polygon(4% 0%, 95% 0%, 99% 25%, 90% 50%, 97% 75%, 93% 100%, 6% 100%, 10% 75%, 2% 50%, 9% 25%);
   }
-  .an-tape-l.is-falling { animation: anTapeFallLeft 0.48s ease-in forwards; }
-  .an-tape-r.is-falling { animation: anTapeFallRight 0.48s ease-in forwards; }
-  .an-slip.is-falling {
-    pointer-events: none; animation: anSlipFall 0.72s 0.3s cubic-bezier(0.55, 0.05, 0.72, 0.38) forwards;
-  }
-  @keyframes anTapeFallLeft {
-    18% { transform: translate(-4px, 2px) rotate(-13deg); }
-    to { opacity: 0; transform: translate(-26px, 76px) rotate(-42deg); }
-  }
-  @keyframes anTapeFallRight {
-    18% { transform: translate(4px, 2px) rotate(11deg); }
-    to { opacity: 0; transform: translate(30px, 80px) rotate(48deg); }
-  }
-  @keyframes anSlipFall {
-    12% { transform: translateY(3px) rotate(-0.5deg); }
-    to { opacity: 0; transform: translate(36px, 150px) rotate(12deg); }
-  }
-  @keyframes anSecretReveal {
-    to { opacity: 1; transform: rotate(0.7deg) scale(1); }
-  }
   .an-eyebrow {
-    font-family: var(--type); font-size: calc(10px + var(--text-size-adjust)); letter-spacing: 2px;
-    text-transform: uppercase; color: var(--ink-soft); margin-bottom: 3px;
+    font-family: var(--type); font-size: calc(9px + var(--text-size-adjust)); letter-spacing: 1.8px;
+    line-height: 1.1; text-transform: uppercase; color: var(--ink-soft); margin-bottom: 1px;
   }
-  .an-headline { font-family: var(--hand); font-size: calc(23px + var(--text-size-adjust)); line-height: 1.12; color: var(--ink); }
+  .an-headline { font-family: var(--hand); font-size: calc(20px + var(--text-size-adjust)); line-height: 1.08; color: var(--ink); }
   .an-name { font-weight: 700; }
   .an-note {
-    font-family: var(--hand); font-size: calc(16px + var(--text-size-adjust)); line-height: 1.2;
-    color: var(--ink-soft); margin-top: 2px;
+    font-family: var(--hand); font-size: calc(14px + var(--text-size-adjust)); line-height: 1.15;
+    color: var(--ink-soft); margin-top: 1px;
   }
   /* Too narrow to sit beside the podium, so stack it under: still right-aligned, still
      just above the button. */
   @media (max-width: 700px) {
     .start-podium-row { display: block; }
-    .anniversary-note { display: flex; justify-content: flex-end; margin: 14px 0 0; }
-  }
-  body[data-reduce-motion="on"] .an-tape.is-falling,
-  body[data-reduce-motion="on"] .an-slip.is-falling,
-  body[data-reduce-motion="on"] .an-reveal.is-revealed .an-secret {
-    animation-duration: 0.01ms; animation-delay: 0s;
-  }
-  @media (prefers-reduced-motion: reduce) {
-    .an-tape.is-falling, .an-slip.is-falling, .an-reveal.is-revealed .an-secret {
-      animation-duration: 0.01ms; animation-delay: 0s;
-    }
+    /* The corner tape hangs off each side, and stacked the note is flush right, so
+       without the inset the right strip walks off the paper and onto the desk. */
+    .anniversary-note { display: flex; justify-content: flex-end; margin: 14px 0 0; padding: 0 14px; }
   }
 
   /* ---------- Milestone sticky (game screen, milestone days only) ----------
@@ -5778,12 +5756,12 @@
      A quieter cousin of the album marginalia: smaller, softer paper, muted ink, so an
      ordinary lucky day never competes with an album release or her birthday. */
   .an-slip--minor {
-    max-width: 25ch; padding: 12px 20px 11px; transform: rotate(-1deg);
+    width: 26ch; padding: 8px 18px 7px; transform: rotate(-1deg);
     background: #f7f2e6; box-shadow: 1px 3px 8px rgba(60, 50, 35, 0.11);
   }
-  .an-slip--minor .an-headline { font-size: calc(19px + var(--text-size-adjust)); color: var(--ink-soft); }
+  .an-slip--minor .an-headline { font-size: calc(17px + var(--text-size-adjust)); color: var(--ink-soft); }
   .an-slip--minor .an-name { font-weight: 400; }
-  .an-slip--minor .an-note { font-size: calc(14px + var(--text-size-adjust)); opacity: 0.85; }
+  .an-slip--minor .an-note { font-size: calc(13px + var(--text-size-adjust)); opacity: 0.85; }
   .ms-slip--minor {
     width: 54px; height: 54px; background: #f7f2e6;
     box-shadow: 1px 3px 7px rgba(60, 50, 35, 0.15); transform: rotate(-2deg);
