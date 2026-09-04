@@ -8573,182 +8573,310 @@
   }
 
   /* =====================================================================
-     Daily Challenge — "the day block": a day printed on cheap stock and
-     pasted into the notebook, sitting under the gold primary CTA. Built in
-     JS by renderDailyButtonState() (js/app.js); see scripts/ui/daily-btn-
-     dayblock.html (gitignored) for the design session this shipped from.
-       · the chip is a letterpress hit, not a filled box — ink pools at the
-         plate edges, a fine roller grain runs vertical, and the numeral
-         carries a second-colour hit knocked out of register. The chip
-         takes the round's era ink (--ink-accent), same as everywhere else.
-       · the well is paper: two low-alpha speckle layers, and a hand-ruled
-         underline that overshoots its word.
-       · the hem is punched, not dashed — the holes show the PAGE behind
-         the card, so it reads as having thickness.
-       · playing tears the hem off. The date underneath never changes —
-         only the hem is gone and the card is genuinely shorter. The chip
-         goes to --ink-soft ("faded pencil") but keeps its misregistration,
-         so the played card reads as the same object, used.
-     The --day-* tokens carry the stock's own ink/paper alphas, redefined
-     for dark so the fibre lip (the one detail that would visibly glow on a
-     dark page if left alone) and the ruled lines invert with the theme.
+     Daily Challenge — "the ticket": one strip of printed card with a stub
+     on the right that you tear off to play. Sits under the gold primary CTA
+     and is built in JS by renderDailyButtonState() (js/app.js); the design
+     sessions it shipped from are scripts/ui/daily-ticket-*.html (gitignored).
+
+     THE TICKET IS DARKER THAN THE PAGE, and everything else here follows
+     from that. A near-white strip on cream paper reads as a lit panel, not
+     as a piece of card someone dropped on the sheet, and every ticket cue
+     printed on it then spends its life fighting that impression. So the
+     stock is MIXED OFF --paper rather than written as a literal: the Mastery
+     paper stocks each move the page (manila is already darker than the cream
+     a fixed value would have used), and a stock that does not move with them
+     is brighter than the sheet on half the notebook. Dark keeps the same
+     relationship and flips its direction, because a piece of card on a dark
+     page catches the light instead of losing it.
+
+       · the silhouette is a MASK. The end bites and the two notches either
+         side of the perforation are real absences, so the shadow follows
+         them and they work over ruled paper, an era wash or the desk alike.
+         That is also why the shadow is a filter on .day-shadow rather than a
+         box-shadow, which would still trace the unmasked rectangle.
+       · the date is a compartment, not an ornament floating in the well: a
+         division rule down each side (full height, so the eye reads a panel
+         edge rather than a box drawn on the card), a tint of the card's own
+         ink behind it, and air.
+       · the printed frame stops at the perforation. The stub is a separate
+         impression and carries its own; a frame running through a tear line
+         is what gives away a strip that is really one rectangle in costume.
+       · the stub is the editor's red, deepened — not the era ink. Era ink
+         here would echo the gold CTA sitting directly above it and the daily
+         would read as a second button rather than as a keepsake, and era gold
+         mixed toward a dark red only lands on mud. The era rides the wash
+         behind the date panel instead, where nothing has to fight it.
+       · the letterpress slip on the title is the RED plate slipping, which
+         is what makes it read as a second printing pass rather than as a
+         drop shadow under the type.
+       · playing tears the stub off. The strip is genuinely shorter, the date
+         never moves, and the score prints in the space the stub held.
      ===================================================================== */
   .day {
-    --day-paper: #fdfaf1; --day-hem-bg: #f8f2e2;
-    --day-lip: rgba(255, 253, 246, 0.8);
-    --day-fibre-1: rgba(43, 39, 34, 0.05); --day-fibre-2: rgba(43, 39, 34, 0.045);
-    --day-ink-1: rgba(43, 39, 34, 0.6); --day-ink-2: rgba(43, 39, 34, 0.5);
-    --day-ink-3: rgba(43, 39, 34, 0.45); --day-ink-4: rgba(43, 39, 34, 0.34);
+    /* Each pair is a literal followed by the mix that supersedes it: if a browser
+       cannot parse color-mix the second declaration is dropped at parse time and
+       the literal survives, so the ticket degrades to fixed cream rather than to
+       no background at all. */
+    --day-stock: #f0e6cd;
+    --day-stock: color-mix(in srgb, var(--paper) 90%, #6d5a33);
+    --day-ink: #2f2820;
+    --day-ink: color-mix(in srgb, var(--ink) 92%, var(--day-stock));
+    --day-soft: #6f675a;
+    --day-soft: color-mix(in srgb, var(--ink) 55%, var(--day-stock));
+    --day-red: var(--red-pen);
+    --day-rule: rgba(47, 40, 32, 0.38);
+    --day-rule: color-mix(in srgb, var(--ink) 38%, transparent);
+    --day-rule-2: rgba(47, 40, 32, 0.18);
+    --day-rule-2: color-mix(in srgb, var(--ink) 18%, transparent);
+    --day-tint: rgba(47, 40, 32, 0.055);
+    --day-tint: color-mix(in srgb, var(--ink) 5.5%, transparent);
+    --day-fleck: rgba(47, 40, 32, 0.06);
+    --day-fleck: color-mix(in srgb, var(--ink) 6%, transparent);
+    --day-slip: rgba(168, 50, 46, 0.16);
+    --day-slip: color-mix(in srgb, var(--red-pen) 16%, transparent);
+    --day-shade: rgba(43, 39, 34, 0.2);
+    --day-stub: #93302a;
+    --day-stub: color-mix(in srgb, var(--red-pen) 88%, #3a120f);
+    --day-stub-ink: #f7ead0;
+    --day-stub-rule: rgba(247, 234, 208, 0.42);
+    --day-bite: 10px;      /* the half-circle bitten out of each end */
+    --day-seam: 110px;     /* where the perforation runs, measured from the right */
     position: relative; display: block; width: 100%; margin-top: 12px; padding: 0;
     border: 0; background: none; font: inherit; color: inherit; text-align: left; cursor: pointer;
   }
   :root[data-theme="dark"] .day {
-    --day-paper: #2f281f; --day-hem-bg: #262019;
-    --day-lip: rgba(236, 229, 214, 0.3);
-    --day-fibre-1: rgba(236, 229, 214, 0.07); --day-fibre-2: rgba(236, 229, 214, 0.06);
-    --day-ink-1: rgba(236, 229, 214, 0.55); --day-ink-2: rgba(236, 229, 214, 0.45);
-    --day-ink-3: rgba(236, 229, 214, 0.4); --day-ink-4: rgba(236, 229, 214, 0.34);
+    --day-stock: #342d23;
+    --day-stock: color-mix(in srgb, var(--paper) 88%, #d9cdb4);
+    --day-ink: #e9e1d0;
+    --day-ink: color-mix(in srgb, var(--ink) 94%, var(--day-stock));
+    --day-soft: #9d947f;
+    --day-soft: color-mix(in srgb, var(--ink) 46%, var(--day-stock));
+    --day-rule: rgba(233, 225, 208, 0.26);
+    --day-rule: color-mix(in srgb, var(--ink) 26%, transparent);
+    --day-rule-2: rgba(233, 225, 208, 0.12);
+    --day-rule-2: color-mix(in srgb, var(--ink) 12%, transparent);
+    --day-tint: rgba(233, 225, 208, 0.05);
+    --day-tint: color-mix(in srgb, var(--ink) 5%, transparent);
+    --day-fleck: rgba(233, 225, 208, 0.055);
+    --day-fleck: color-mix(in srgb, var(--ink) 5.5%, transparent);
+    /* on a dark card the second pass shows as ink pooling, not as a lighter hit */
+    --day-slip: rgba(0, 0, 0, 0.34);
+    --day-shade: rgba(0, 0, 0, 0.45);
+    --day-stub: #8f3b34;
+    --day-stub: color-mix(in srgb, var(--red-pen) 56%, #2a0f0c);
+    --day-stub-ink: #f4e2cd;
+    --day-stub-rule: rgba(244, 226, 205, 0.36);
   }
-  /* Spans in the card are block by default, but the three that are not (the card's
-     own flex row, the chip's flex column, the name the ruled line sits under) have to
-     outrank this rule. `.day span` is a class plus a type, so a bare `.day-card` loses
-     to it, the flex row never happens, and the chip silently becomes a full-width band
-     across the top of the card instead of the block down its left edge. They are
-     written `.day .day-*` for that reason alone; do not flatten them back. */
+  /* Spans in the ticket are block by default; the handful that are flex rows have to
+     outrank this, which is why they are written `.day .day-*` (a class plus a type
+     beats a bare class). Do not flatten them back — a strip whose row silently
+     becomes a stack of full-width bands is exactly what that costs. */
   .day span { display: block; }
-  .day-body { position: relative; transform: rotate(-0.35deg); transition: transform 0.18s ease; }
-  .day:hover .day-body { transform: rotate(-0.35deg) translateY(-1.5px); }
-  .day .day-card {
-    position: relative; z-index: 2; display: flex; overflow: hidden;
-    background: var(--day-paper); border: 2px solid var(--ink); border-radius: 2px;
-    box-shadow: 2px 3px 0 rgba(43, 39, 34, 0.17), 0 7px 16px rgba(43, 39, 34, 0.13);
-    transition: box-shadow 0.18s ease;
+  .day-body { position: relative; transform: rotate(-0.28deg); transition: transform 0.17s ease; }
+  .day:hover .day-body { transform: rotate(-0.28deg) translateY(-2px); }
+  .day:active .day-body { transform: rotate(-0.28deg) translateY(0); }
+  .day-shadow {
+    filter: drop-shadow(1.5px 2.5px 0 var(--day-shade)) drop-shadow(0 7px 14px var(--day-shade));
+    transition: filter 0.17s ease;
   }
-  .day:hover .day-card { box-shadow: 2px 5px 0 rgba(43, 39, 34, 0.17), 0 11px 22px rgba(43, 39, 34, 0.17); }
-  /* paper fibre: two speckle layers at different scales, both nearly invisible alone */
-  .day-card::before {
-    content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 1; opacity: 0.55;
+  .day:hover .day-shadow { filter: drop-shadow(1.5px 4px 0 var(--day-shade)) drop-shadow(0 12px 22px var(--day-shade)); }
+
+  .day .day-strip {
+    position: relative; display: flex; align-items: stretch; overflow: hidden;
+    height: 76px; border-radius: 3px; background: var(--day-stock); color: var(--day-ink);
+    -webkit-mask-image:
+      radial-gradient(circle var(--day-bite) at 0 50%, transparent 97%, #000 100%),
+      radial-gradient(circle var(--day-bite) at 100% 50%, transparent 97%, #000 100%),
+      radial-gradient(circle 7px at calc(100% - var(--day-seam)) 0, transparent 97%, #000 100%),
+      radial-gradient(circle 7px at calc(100% - var(--day-seam)) 100%, transparent 97%, #000 100%);
+    -webkit-mask-composite: source-in; mask-composite: intersect;
+    mask-image:
+      radial-gradient(circle var(--day-bite) at 0 50%, transparent 97%, #000 100%),
+      radial-gradient(circle var(--day-bite) at 100% 50%, transparent 97%, #000 100%),
+      radial-gradient(circle 7px at calc(100% - var(--day-seam)) 0, transparent 97%, #000 100%),
+      radial-gradient(circle 7px at calc(100% - var(--day-seam)) 100%, transparent 97%, #000 100%);
+  }
+  /* card fibre: two speckle layers at different scales, invisible on their own, and
+     pitched DARK rather than light so they read as flecks in the stock instead of
+     glare on it — the same mistake as a too-bright stock, one layer down. */
+  .day-strip::before {
+    content: ""; position: absolute; inset: 0; z-index: 1; pointer-events: none; opacity: 0.5;
     background-image:
-      radial-gradient(circle at 20% 30%, var(--day-fibre-1) 0.6px, transparent 0.7px),
-      radial-gradient(circle at 70% 65%, var(--day-fibre-2) 0.5px, transparent 0.6px);
+      radial-gradient(circle at 20% 30%, var(--day-fleck) 0.6px, transparent 0.7px),
+      radial-gradient(circle at 70% 65%, var(--day-fleck) 0.5px, transparent 0.6px);
     background-size: 17px 13px, 11px 19px;
   }
+  .day-frame {
+    position: absolute; z-index: 3; pointer-events: none; border-radius: 2px;
+    top: 6px; bottom: 6px; left: 6px; right: calc(var(--day-seam) + 6px);
+    border: 1px solid var(--day-rule);
+    box-shadow: inset 0 0 0 3px var(--day-stock), inset 0 0 0 4px var(--day-rule-2);
+  }
+  .day:focus-visible { outline: none; }
+  .day:focus-visible .day-frame { border-color: var(--day-red); box-shadow: inset 0 0 0 3px var(--day-stock), inset 0 0 0 4px var(--day-red); }
 
-  /* ---- the ink block: the chip wears the round's own era ink ---- */
-  .day .day-chip {
-    position: relative; z-index: 2; flex: 0 0 74px; padding: 5px 0 6px; text-align: center;
-    display: flex; flex-direction: column; justify-content: center;
-    color: #fdf6e6; background: var(--ink-accent);
-    background-image:
-      linear-gradient(90deg, rgba(0, 0, 0, 0.22) 0, transparent 7%, transparent 93%, rgba(0, 0, 0, 0.26) 100%),
-      linear-gradient(180deg, rgba(255, 255, 255, 0.13) 0, transparent 40%, rgba(0, 0, 0, 0.14) 100%),
-      repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.05) 0 1px, transparent 1px 3px);
-    box-shadow: inset -1px 0 0 rgba(0, 0, 0, 0.45);
+  /* ---- the left ornament, drawn rather than set: the two asterisks are not a
+     mirrored pair, because nothing on this desk is stamped twice ---- */
+  .day .day-orn {
+    position: relative; z-index: 2; flex: 0 0 40px; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 5px; color: var(--day-soft);
   }
-  /* tracking adds a space after the LAST letter too, so a centred tracked word sits
-     half its tracking left of true centre — padding-left of one tracking unit fixes
-     it. The hairlines sit against the padding box so they don't drift with the word. */
-  .day-chip .m { font-size: calc(8.5px + var(--text-size-adjust)); letter-spacing: 3px; opacity: 0.92; position: relative; padding-left: 3px; }
-  .day-chip .m::before, .day-chip .m::after {
-    content: ""; position: absolute; top: 50%; width: 9px; height: 1px; background: rgba(253, 246, 230, 0.5);
-  }
-  .day-chip .m::before { left: 7px; } .day-chip .m::after { right: 7px; }
-  /* Caveat's ink sits well right of its advance width, and by an amount that varies
-     by which digits are on the card — see centreDayNumeral() in app.js, which
-     measures the real ink and writes --n-nudge. -5px is the median, so the chip
-     still looks right on the frame before the script runs. */
-  .day-chip .n {
-    font-family: var(--hand); font-size: calc(37px + var(--text-size-adjust)); font-weight: 700; line-height: 0.96; letter-spacing: -1px;
-    transform: translateX(var(--n-nudge, -5px));
-    text-shadow: -1.5px -1px 0 rgba(0, 0, 0, 0.32);   /* the misregistered second hit */
-  }
-  .day-chip .d { font-size: calc(8px + var(--text-size-adjust)); letter-spacing: 2.4px; opacity: 0.86; margin-top: -1px; padding-left: 2.4px; }
+  .day-orn svg { display: block; }
+  .day-orn .ast { width: 11px; height: 11px; }
+  .day-orn .tk { width: 19px; height: 13px; opacity: 0.85; }
 
-  /* ---- the paper well ---- */
-  .day-well { position: relative; z-index: 2; flex: 1 1 auto; padding: 9px 13px 8px 14px; min-width: 0; }
-  .day .day-name { font-family: var(--type); font-size: calc(12.5px + var(--text-size-adjust)); font-weight: 700; letter-spacing: 2.6px; display: inline-block; }
-  /* hand-ruled underline, its own row: overshoots the word and thins to nothing, the
-     way a line drawn against a straightedge runs on past where you meant to stop. */
-  .day-ruled {
-    height: 1.6px; width: 100%; max-width: 172px; margin-top: 4px;
-    background: linear-gradient(90deg, var(--day-ink-1) 0, var(--day-ink-2) 72%, transparent 100%);
-    transform: rotate(-0.45deg); transform-origin: left center;
+  /* ---- the title well ---- */
+  .day .day-well {
+    position: relative; z-index: 2; flex: 1 1 auto; min-width: 0;
+    display: flex; flex-direction: column; justify-content: center; padding: 0 12px 0 4px;
   }
-  .day-kick { font-size: calc(10px + var(--text-size-adjust)); color: var(--ink-soft); letter-spacing: 1.05px; margin-top: 5px; }
-  .day-serial { position: absolute; right: 11px; bottom: 7px; font-size: calc(8.5px + var(--text-size-adjust)); letter-spacing: 2.2px; color: var(--day-ink-4); }
+  .day .day-name {
+    font-family: var(--type); font-size: calc(22px + var(--text-size-adjust)); font-weight: 700;
+    letter-spacing: 0.8px; line-height: 1; white-space: nowrap; text-shadow: 0.7px 0.5px 0 var(--day-slip);
+  }
+  /* the small-print line: a rule, the copy, a rule that runs to the end, and the
+     serial riding on it. `order` puts the serial after the flexible rule, since a
+     pseudo-element is laid out last by default. Cornered instead, the serial fouled
+     the frame's inner band at every width. */
+  .day .day-kick {
+    display: flex; align-items: center; gap: 8px; margin-top: 7px;
+    font-size: calc(9.5px + var(--text-size-adjust)); color: var(--day-red);
+    letter-spacing: 0.5px; white-space: nowrap;
+  }
+  .day-kick::before { content: ""; width: 14px; height: 1px; background: currentColor; opacity: 0.55; }
+  .day-kick::after { content: ""; order: 1; flex: 1 1 auto; min-width: 12px; height: 1px; background: currentColor; opacity: 0.35; }
+  .day-serial { order: 2; font-size: calc(8px + var(--text-size-adjust)); letter-spacing: 2px; color: var(--day-soft); opacity: 0.8; }
+  .day .day-next { display: inline; }
+  /* played, the small-print line is a countdown rather than an invitation, so it drops
+     out of the editor's red and back to pencil */
+  .day--done .day-kick { color: var(--day-soft); }
+  /* Two copies of the kicker, long and short, because the line cannot be re-written
+     from CSS and the long one does not fit beside the date panel on a phone. The
+     button's aria-label always carries the full sentence. */
+  .day .day-kick-short { display: none; }
 
-  /* ---- the punched hem ---- */
-  .day-hem {
-    position: relative; z-index: 2; height: 29px; margin-top: -2px;
-    background: var(--day-hem-bg); border: 2px solid var(--ink); border-radius: 0 0 2px 2px;
-    border-top: 0; box-shadow: 2px 3px 0 rgba(43, 39, 34, 0.14);
+  /* ---- the date: its own printed compartment ---- */
+  .day .day-date {
+    position: relative; z-index: 2; flex: 0 0 74px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    background-color: var(--day-tint);
+    /* the era, carried as a wash behind the date rather than as a block of era ink:
+       the stub is already doing the loud colour and two of them fight */
+    background-image: linear-gradient(var(--page-wash), var(--page-wash));
+    box-shadow: inset 1px 0 0 var(--day-rule), inset -1px 0 0 var(--day-rule);
   }
-  .day-hem::before {
-    content: ""; position: absolute; left: 0; right: 0; top: 0; height: 1.4px;
-    background: repeating-linear-gradient(90deg, var(--day-ink-3) 0 4px, transparent 4px 8px);
+  .day-date .dec { width: 38px; height: 5px; color: var(--day-red); opacity: 0.9; }
+  .day-date .m {
+    font-size: calc(8.5px + var(--text-size-adjust)); font-weight: 700; letter-spacing: 2.6px;
+    padding-left: 2.6px; color: var(--day-red); margin-top: 3px;
   }
-  .day-hole {
-    position: absolute; top: -3.2px; width: 6.4px; height: 6.4px; border-radius: 50%;
-    background: var(--paper); box-shadow: inset 0 1px 1.5px rgba(43, 39, 34, 0.34);
+  /* Caveat's ink sits well right of its advance width, by an amount that varies with
+     which digits are on the card — see centreDayNumerals() in app.js, which measures
+     the real ink and writes --n-nudge. -3px is the median, so the numeral still looks
+     centred on the frame before the script has run. */
+  .day-date .n {
+    font-family: var(--hand); font-size: calc(33px + var(--text-size-adjust)); font-weight: 700;
+    line-height: 0.92; letter-spacing: -1px; transform: translateX(var(--n-nudge, -3px));
   }
-  /* the tear line sits at the hem's own optical centre rather than pinned to its top —
-     Caveat's ascenders and descenders both need clearance, and this way neither the
-     punch line above nor the card's bottom edge below is ever crowded */
-  .day-hem b {
-    position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
-    padding-top: 3px; text-align: center; font-family: var(--hand); font-weight: 400;
-    font-size: calc(15px + var(--text-size-adjust)); line-height: 1; color: var(--ink-soft); letter-spacing: 0.3px;
+  .day-date .d {
+    font-size: calc(7.5px + var(--text-size-adjust)); letter-spacing: 2.2px;
+    padding-left: 2.2px; color: var(--day-soft); margin-bottom: 3px;
   }
-  .day:hover .day-hem b { color: var(--red-pen); }
-  .day-curl {
-    position: absolute; right: 0; bottom: 0; z-index: 5; width: 30px; height: 30px;
-    background: linear-gradient(135deg, transparent 50%, var(--day-hem-bg) 50%, var(--day-paper) 100%);
-    box-shadow: -2px -2px 5px rgba(43, 39, 34, 0.2);
-    clip-path: polygon(100% 0, 100% 100%, 0 100%);
+
+  /* ---- the perforation: punched, not dashed. A dash is a drawn line and a punch is
+     an absence, and the eye knows the difference. ---- */
+  .day-perf {
+    position: absolute; top: 7px; bottom: 7px; right: calc(var(--day-seam) - 1px); width: 2px; z-index: 4;
+    background-image: radial-gradient(circle 0.9px at 50% 50%, var(--day-soft) 100%, transparent 0);
+    background-size: 2px 6px;
   }
-  @media (prefers-reduced-motion: no-preference) {
-    .day-curl { animation: dayCurl 3.6s ease-in-out infinite; }
+  /* ---- the stub: the part you tear ---- */
+  .day .day-stub {
+    position: relative; z-index: 2; flex: 0 0 110px; display: flex; align-items: center;
+    justify-content: center; gap: 8px; background: var(--day-stub); color: var(--day-stub-ink);
   }
-  body[data-reduce-motion="on"] .day-curl { animation: none; }
-  @keyframes dayCurl { 0%, 100% { width: 26px; height: 26px; } 50% { width: 36px; height: 36px; } }
+  .day-stub-frame { position: absolute; inset: 6px; border: 1px solid var(--day-stub-rule); border-radius: 2px; }
+  .day-stub .go { font-size: calc(17px + var(--text-size-adjust)); font-weight: 700; letter-spacing: 1.6px; }
+  .day-stub .arw { width: 14px; height: 14px; stroke: currentColor; transition: transform 0.17s ease; }
+  .day:hover .day-stub .arw { transform: translateX(2px); }
 
   /* =====================================================================
-     PLAYED — the hem is gone and the card is genuinely shorter. The torn
-     edge is three layers: an irregular silhouette (never a repeat), a pale
-     fibre lip just inside it (torn stock shows its uncoloured core), and
-     loose specks below. The date does not change; the chip goes to
-     --ink-soft ("faded pencil") but keeps its misregistration, so the
-     played card is recognisably the unplayed one, used — not a redesign.
+     PLAYED — the stub is GONE. The strip is genuinely shorter, the tear is
+     ragged, the date does not move, and the result prints in the space the
+     stub held. Nothing is restyled to say "done": a piece of the object is
+     missing, which is the only way a ticket says it.
      ===================================================================== */
-  .day--done .day-card {
-    background: var(--day-paper); padding-bottom: 26px; border-bottom: 0; box-shadow: none;
-    clip-path: polygon(0 0, 100% 0, 100% 80%, 97% 95%, 94% 78%, 90% 98%, 86% 83%, 82% 100%, 77% 84%, 73% 96%, 69% 79%, 64% 99%, 60% 85%, 56% 97%, 51% 80%, 47% 100%, 42% 83%, 38% 96%, 33% 78%, 29% 98%, 25% 85%, 20% 97%, 16% 80%, 11% 99%, 7% 83%, 3% 95%, 0 79%);
-  }
-  .day--done .day-card::after {
-    content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 13px; z-index: 4; pointer-events: none;
-    background: linear-gradient(to top, var(--day-lip), transparent);
-  }
   .day--done .day-body { transform: rotate(-0.5deg); }
-  .day--done .day-chip { background: var(--ink-soft); }
-  .day--done .day-chip .n { text-shadow: -1.5px -1px 0 rgba(43, 39, 34, 0.28); }
-  .day-specks { position: absolute; z-index: 3; left: 0; right: 0; bottom: -5px; height: 8px; pointer-events: none; }
-  .day-specks i { position: absolute; width: 2px; height: 2px; border-radius: 50%; background: var(--day-ink-3); }
-  .day-score { font-family: var(--hand); font-size: calc(24px + var(--text-size-adjust)); font-weight: 700; line-height: 1; margin-top: 5px; color: var(--ink); }
-  .day-score em { font-style: normal; font-size: calc(15px + var(--text-size-adjust)); color: var(--ink-soft); margin-left: 7px; letter-spacing: 0; }
-  .day-next { font-size: calc(8.5px + var(--text-size-adjust)); letter-spacing: 2.1px; color: var(--day-ink-4); margin-top: 7px; }
+  .day--done .day-strip {
+    -webkit-mask-image: none; mask-image: none;
+    clip-path: polygon(0 0, 97.6% 0, 99.3% 8%, 97.7% 18%, 99.6% 29%, 97.9% 40%, 99.4% 52%,
+      97.6% 63%, 99.6% 75%, 97.8% 87%, 99.2% 100%, 0 100%);
+  }
+  /* the fibre lip: torn card shows its own uncoloured core just inside the edge */
+  .day--done .day-strip::after {
+    content: ""; position: absolute; top: 0; bottom: 0; right: 0; width: 11px; z-index: 4; pointer-events: none;
+    background: linear-gradient(to left, var(--day-tint), transparent);
+  }
+  .day--done .day-frame { right: 144px; }
+  /* Sized off what has to fit INSIDE it — the strand is seven beads and a knot — rather
+     than off the stub it replaces. Any wider and it eats the title, which is nowhere near
+     as compressible as it looks: "DAILY CHALLENGE" set in a monospace has a fixed width. */
+  .day .day-result {
+    position: relative; z-index: 3; flex: 0 0 138px; align-self: center;
+    padding-right: 16px; text-align: right; transform: rotate(-1deg);
+  }
+  .day-score {
+    font-family: var(--hand); font-size: calc(25px + var(--text-size-adjust));
+    font-weight: 700; line-height: 1; color: var(--day-ink);
+  }
+  .day-score em { font-style: normal; font-size: calc(14px + var(--text-size-adjust)); color: var(--day-soft); }
+  .day-score i {
+    font-style: normal; font-family: var(--type); font-size: calc(9px + var(--text-size-adjust));
+    letter-spacing: 1px; color: var(--day-soft); margin-left: 7px;
+  }
   /* the streak, drawn rather than captioned: one bead per day kept, on the game's own
      waxed cord. Caps at seven beads + a written count, so a long run never overflows. */
-  .day-strand { position: absolute; right: 10px; top: 26px; z-index: 3; text-align: right; }
-  .day-strand svg { display: block; height: 22px; overflow: visible; margin-left: auto; }
+  .day .day-strand { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; margin-top: 5px; }
+  .day-strand svg { display: block; height: 18px; width: auto; overflow: visible; }
   .day-strand b {
-    display: block; font-family: var(--type); font-weight: 400; font-size: calc(8.5px + var(--text-size-adjust));
-    letter-spacing: 2.1px; color: var(--day-ink-4); margin-top: 3px;
+    display: block; font-family: var(--type); font-weight: 400;
+    font-size: calc(7.5px + var(--text-size-adjust)); letter-spacing: 1.6px; color: var(--day-soft);
   }
 
+  /* A PHONE COLUMN IS ABOUT 250px OF TICKET, and almost nothing survives that at full
+     size. The ornament block goes, the date and stub narrow, the kicker swaps to its
+     short copy, and — the one that matters — the title takes two lines instead of
+     shrinking to nothing: "DAILY CHALLENGE" is monospace and therefore a fixed width,
+     so at this column it either wraps or it runs under the date panel. A ticket that
+     stacks its own title is an ordinary thing; a clipped one is not. The date keeps its
+     rules and its tint, because the compartment IS the point, and loses only its
+     flourishes. Played, the strand's beads are wider than the space the stub left, so
+     they go and the written count stays.
+     ===================================================================== */
   @media (max-width: 480px) {
-    .day .day-chip { flex-basis: 62px; }   /* matches the raised specificity above */
-    .day-chip .n { font-size: calc(31px + var(--text-size-adjust)); }
-    .day-well { padding: 8px 10px 7px 11px; }
+    .day { --day-seam: 78px; --day-bite: 8px; }
+    .day .day-strip { height: 70px; }
+    .day .day-orn { display: none; }
+    .day .day-well { padding: 0 8px 0 10px; }
+    .day .day-name {
+      font-size: calc(14px + var(--text-size-adjust)); letter-spacing: 0.4px;
+      line-height: 1.06; white-space: normal;
+    }
+    .day .day-kick { margin-top: 5px; font-size: calc(8.5px + var(--text-size-adjust)); gap: 6px; }
+    .day .day-kick-long { display: none; }
+    .day .day-kick-short { display: block; }
+    .day .day-serial { display: none; }
+    .day .day-date { flex-basis: 54px; }
+    .day-date .dec { display: none; }
+    .day-date .m, .day-date .d { letter-spacing: 1.6px; padding-left: 1.6px; }
+    .day-date .n { font-size: calc(26px + var(--text-size-adjust)); }
+    .day .day-stub { flex-basis: 78px; gap: 5px; }
+    .day-stub .go { font-size: calc(13px + var(--text-size-adjust)); letter-spacing: 1px; }
+    .day .day-result { flex-basis: 92px; padding-right: 10px; }
+    .day-strand svg { display: none; }
+    .day--done .day-frame { right: 98px; }
+    .day-score { font-size: calc(20px + var(--text-size-adjust)); }
+    .day-score i { display: none; }
   }
 
   /* records / charms / stats — three taped index cards pinned to the page. Each is a

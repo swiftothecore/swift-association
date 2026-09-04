@@ -1301,7 +1301,7 @@ function dominantDailyAlbum(roundResults, roundAlbums) {
   }
   return best ? best.a : null;
 }
-// The day block's streak strand: up to `n` consecutive played days ending at `endDate`
+// The daily ticket's streak strand: up to `n` consecutive played days ending at `endDate`
 // (inclusive), oldest to newest, each entry the day's dominant album (or null). Stops
 // at the first missing day — a streak is consecutive by definition, so a gap ends the
 // walk rather than being skipped over. No storage schema change: every input here is

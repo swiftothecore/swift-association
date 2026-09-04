@@ -11201,19 +11201,20 @@ function cakeSvg() {
     `<path d="M7 12.4Q7 11.7 8 11.7H23" fill="none" stroke="rgba(255,255,255,0.45)" stroke-width="0.8"/>` +
     `</g></svg>`;
 }
-// The Daily Challenge button is "the day block": a day printed on cheap stock and
-// pasted under the gold CTA. An era-inked date chip, a paper well carrying the title
-// and kicker (or the score + streak once played), and — while unplayed — a punched
-// hem reading "tear here to play". Playing tears the hem off THIS card; the date
-// never changes, so the card never looks stale, only used. Design notes in full:
-// scripts/ui/daily-button-handoff.md + scripts/ui/daily-btn-dayblock.html (both
-// gitignored).
+// The Daily Challenge button is "the ticket": one strip of printed card lying under
+// the gold CTA, with a stub on the right you tear off to play. An ornament block, a
+// well carrying the title and the small-print line, the date in its own printed
+// compartment, a perforation, and the stub. Playing tears the stub off THIS ticket:
+// the strip gets shorter and the result prints where the stub was, while the date
+// never changes, so it never looks stale, only used. The stock is mixed off --paper
+// and is always a shade DARKER than the page (lighter, on the dark notebook) — see
+// the block comment over .day in styles.css, which is where that rule is explained
+// and where breaking it shows first. Design sessions: scripts/ui/daily-ticket-*.html
+// and scripts/ui/daily-button-handoff.md (both gitignored).
 const DAY_STRAND_CAP = 7;
-const DAY_HOLE_COUNT = 13;
-const DAY_SPECK_COUNT = 9;
 const DAY_BEAD_YS = [11, 13, 12, 11, 12, 11, 12];
 
-// The day block's serial: how many days the game has been public. Derived, never
+// The daily ticket's serial: how many days the game has been public. Derived, never
 // stored, so the same date carries the same serial for everybody. null before
 // LAUNCH_DATE is set (or on a future one), which keeps a fake serial off the card
 // during development.
@@ -11236,34 +11237,14 @@ function dayChipFields(dateStr) {
   const dow = new Intl.DateTimeFormat("en-US", { timeZone: "UTC", weekday: "short" }).format(d).toUpperCase();
   return { month, day, dow };
 }
-// Thirteen punched holes, evenly spread and each nudged a little off the grid — a
-// hand-fed punch never lands on a perfect pitch, and a perfect pitch is exactly what
-// makes CSS dots look like CSS dots.
-function dayHolesHTML() {
-  let html = "";
-  for (let i = 0; i < DAY_HOLE_COUNT; i++) {
-    const left = (5 + (i * 90) / (DAY_HOLE_COUNT - 1) + (Math.random() - 0.5) * 1.1).toFixed(2);
-    const top = (-3.2 + (Math.random() - 0.5) * 1.2).toFixed(2);
-    html += `<span class="day-hole" style="left:${left}%;top:${top}px"></span>`;
-  }
-  return html;
-}
-// Loose fibre specks along the torn edge, once played.
-function daySpecksHTML() {
-  let html = "";
-  for (let i = 0; i < DAY_SPECK_COUNT; i++) {
-    const left = (4 + Math.random() * 92).toFixed(2);
-    const top = (Math.random() * 7).toFixed(2);
-    const op = (0.35 + Math.random() * 0.5).toFixed(2);
-    html += `<i style="left:${left}%;top:${top}px;opacity:${op}"></i>`;
-  }
-  return html;
-}
 // The streak strand: one bead per day kept, on the game's own waxed cord, coloured by
 // each day's dominant album (albumColor(), so the colour-blind palette is honoured
 // for free). Under the cap the beads already say the number, so a numeral beside them
 // would say it twice — the caption underneath carries the count instead, and only
-// past the cap does the cord run off the left edge to say "more, back there".
+// past the cap does the cord run off the left edge to say "more, back there". On a
+// phone the beads are wider than the space the torn stub leaves, so CSS drops the svg
+// and the caption stands alone — which is why the count is written text and not a
+// <title> on the drawing.
 function dayStrandHTML(albums, days) {
   if (!albums.length) return `<b>${days}-DAY STREAK</b>`;
   const over = days > albums.length;
@@ -11286,7 +11267,7 @@ function dayStrandHTML(albums, days) {
       : `<circle cx="${p.x}" cy="${p.y}" r="${r}" fill="#f7f1e2" stroke-dasharray="2.6 2.2"/>`;
   }).join("");
   const w = Math.ceil(knotX + 5);
-  return `<svg viewBox="0 0 ${w} 22" width="${w}" height="22" role="img"><title>${days}-day streak</title>` +
+  return `<svg viewBox="0 0 ${w} 22" width="${w}" height="22" aria-hidden="true">` +
     `<path d="${d}" fill="none" stroke="#8a7f6b" stroke-width="1.9" stroke-linecap="round"/>` +
     `<g stroke="#2b2722" stroke-width="1.3">${beads}` +
       `<circle cx="${knotX}" cy="${lastY}" r="2.4" fill="#8a7f6b" stroke-width="0"/></g></svg>` +
@@ -11300,7 +11281,7 @@ function dayStrandHTML(albums, days) {
 async function centreDayNumerals() {
   if (document.fonts && document.fonts.ready) await document.fonts.ready;
   const cx = document.createElement("canvas").getContext("2d");
-  document.querySelectorAll(".day-chip .n").forEach((el) => {
+  document.querySelectorAll(".day-date .n").forEach((el) => {
     const cs = getComputedStyle(el);
     cx.font = `${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`;
     if ("letterSpacing" in cx) cx.letterSpacing = cs.letterSpacing;
@@ -11325,19 +11306,40 @@ function renderDailyButtonState() {
   renderStreakPlacard(live);
 
   const { month, day, dow } = dayChipFields(dateStr);
-  const chipHTML = `<span class="day-chip"><span class="m">${month}</span><span class="n">${day}</span><span class="d">${dow}</span></span>`;
   const serial = dailySerial(dateStr);
   const serialHTML = serial ? `<span class="day-serial">No. ${serial}</span>` : "";
+  // The ornament block and the date's flourishes are struck from the sprite in
+  // index.html; see the comment over #day-ast-a for why they are drawn and not typed.
+  const ornHTML =
+    `<span class="day-orn" aria-hidden="true">` +
+      `<svg class="ast" viewBox="0 0 12 12"><use href="#day-ast-a"/></svg>` +
+      `<svg class="tk" viewBox="0 0 19 13"><use href="#day-ticks"/></svg>` +
+      `<svg class="ast" viewBox="0 0 12 12"><use href="#day-ast-b"/></svg>` +
+    `</span>`;
+  const decHTML = `<svg class="dec" viewBox="0 0 38 5" aria-hidden="true"><use href="#day-dec"/></svg>`;
+  const dateHTML =
+    `<span class="day-date">${decHTML}` +
+      `<span class="m">${month}</span><span class="n">${String(day).padStart(2, "0")}</span><span class="d">${dow}</span>` +
+    `${decHTML}</span>`;
 
-  let wellHTML, tailHTML, ariaLabel;
+  // The kicker copy is carried twice, long and short: the line cannot be rewritten from
+  // CSS, and a phone leaves it about 100px between the title and the date panel — the
+  // long sentence needs 250. Whichever copy is showing, the button's aria-label below
+  // always speaks the full one, so nothing is actually lost at the small size.
+  const kickHTML = (long, short) =>
+    `<span class="day-kick"><span class="day-kick-long">${long}</span>` +
+      `<span class="day-kick-short">${short}</span>${serialHTML}</span>`;
+
+  let restHTML, ariaLabel;
   if (undone) {
-    wellHTML =
+    restHTML =
       `<span class="day-well">` +
-        `<span class="day-name">DAILY CHALLENGE</span><span class="day-ruled"></span>` +
-        `<span class="day-kick">thirteen words · the same for everybody</span>` +
-        serialHTML +
-      `</span>`;
-    tailHTML = `<span class="day-hem"><b>tear here to play</b>${dayHolesHTML()}</span>`;
+        `<span class="day-name">DAILY CHALLENGE</span>` +
+        kickHTML("thirteen words · the same for everybody", "same for all") +
+      `</span>` + dateHTML +
+      `<span class="day-perf"></span>` +
+      `<span class="day-stub"><span class="day-stub-frame"></span><span class="go">START</span>` +
+        `<svg class="arw" viewBox="0 0 24 24" aria-hidden="true"><use href="#day-arw"/></svg></span>`;
     ariaLabel = `Daily Challenge for ${month} ${day}, thirteen words, the same for everybody. Not played yet.`;
   } else {
     const scoreVisible = !settings.hideDailyScore || result.revealed === true;
@@ -11348,22 +11350,30 @@ function renderDailyButtonState() {
     const endDate = live.playedToday ? dateStr : yesterdayOf(dateStr);
     const albums = live.current > 0 ? recentDailyAlbums(endDate, DAY_STRAND_CAP) : [];
     const strandHTML = live.current > 0 ? `<span class="day-strand">${dayStrandHTML(albums, live.current)}</span>` : "";
-    wellHTML =
+    // The countdown keeps its own element: startResetCountdown() rewrites just those
+    // nodes every second rather than re-rendering the whole ticket on a timer. Both
+    // copies of the kicker carry one, which is why the tick writes to all of them.
+    const left = formatResetCountdown(msUntilDailyReset());
+    restHTML =
       `<span class="day-well">` +
-        `<span class="day-name">DAILY CHALLENGE</span><span class="day-ruled"></span>` +
-        `<span class="day-score">${scoreText} / ${TOTAL_ROUNDS}${best > 0 ? ` <em>best ${best}</em>` : ""}</span>` +
-        `<span class="day-next">next block in ${formatResetCountdown(msUntilDailyReset())}</span>` +
-        strandHTML + serialHTML +
+        `<span class="day-name">DAILY CHALLENGE</span>` +
+        kickHTML(`next ticket in <span class="day-next">${left}</span>`,
+                 `in <span class="day-next">${left}</span>`) +
+      `</span>` + dateHTML +
+      `<span class="day-result">` +
+        `<span class="day-score">${scoreText}<em>/${TOTAL_ROUNDS}</em>` +
+          (best > 0 ? `<i>best ${best}</i>` : "") + `</span>` +
+        strandHTML +
       `</span>`;
-    tailHTML = "";
     ariaLabel = `Daily Challenge for ${month} ${day}, played` +
       (scoreVisible ? `, ${scoreText} out of ${TOTAL_ROUNDS}` : ", result sealed") +
       (live.current > 0 ? `, ${live.current}-day streak` : "") + ".";
   }
   btn.setAttribute("aria-label", ariaLabel);
-  btn.innerHTML = undone
-    ? `<span class="day-body"><span class="day-card">${chipHTML}${wellHTML}</span>${tailHTML}</span><span class="day-curl"></span>`
-    : `<span class="day-body"><span class="day-card">${chipHTML}${wellHTML}</span></span><span class="day-specks">${daySpecksHTML()}</span>`;
+  btn.innerHTML =
+    `<span class="day-body"><span class="day-shadow"><span class="day-strip">` +
+      `<span class="day-frame"></span>${ornHTML}${restHTML}` +
+    `</span></span></span>`;
   centreDayNumerals();
 
   if (!undone) startResetCountdown(); else stopResetCountdown();
@@ -11372,11 +11382,13 @@ let dailyCountdownTimer = null;
 function startResetCountdown() {
   stopResetCountdown();
   const tick = () => {
-    const note = document.querySelector("#dailyBtn .day-next");
-    if (!note) { stopResetCountdown(); return; }
+    // both copies of the kicker carry one, and only one of them is ever on screen
+    const notes = document.querySelectorAll("#dailyBtn .day-next");
+    if (!notes.length) { stopResetCountdown(); return; }
     const ms = msUntilDailyReset();
     if (ms <= 1000) { renderDailyButtonState(); return; }   // rolled into a new local day → flip to undone
-    note.textContent = "next block in " + formatResetCountdown(ms);
+    const text = formatResetCountdown(ms);
+    notes.forEach((n) => { n.textContent = text; });
   };
   tick();
   dailyCountdownTimer = setInterval(tick, 1000);
@@ -24026,7 +24038,7 @@ function buildDevApi() {
           lastPlayed: lastPlayed || todayKey() });
         renderDailyButtonState();
       },
-      // setStreak only writes the counter, so the day block's bead strand (which reads
+      // setStreak only writes the counter, so the ticket's bead strand (which reads
       // each day's own saved result) has nothing to draw from. This writes `n` fake but
       // shaped-right PLAYED days ending today (or `endDate`), one bead colour each —
       // cycling the studio albums unless a list is given — and sets the streak to match.

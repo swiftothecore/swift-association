@@ -603,6 +603,37 @@ if (location.pathname.endsWith('/index.html')) {
     <path stroke-width="1.9" d="M18 15.9 C18 18 16.2 19.7 14.2 19.5 C12.7 19.3 11.9 18.1 12.4 16.7 C13.1 15 15 14 16.6 14.3 C17.5 14.5 18 15.1 18 15.9 Z"/>
   </symbol>
 </svg>
+<!-- THE DAILY TICKET'S PRINTING — the ornaments and rules struck onto the day's ticket,
+     <use>d by renderDailyButtonState in app.js. Every one is a drawn path, not a font
+     glyph: a typed asterisk is a typeface's asterisk and it shows, especially beside
+     Caveat. The two asterisks are deliberately NOT a mirrored pair and neither is
+     symmetrical in itself, and the three rules are cut to different lengths, because
+     this is meant to read as a plate someone cut rather than as a character repeated.
+     Colour is left to currentColor; only the widths are frozen, since <use> renders
+     into a shadow tree ordinary selectors cannot reach. -->
+<svg width="0" height="0" aria-hidden="true" style="position:absolute" focusable="false">
+  <symbol id="day-ast-a" viewBox="0 0 12 12">
+    <path d="M6.1 1.3 L5.7 10.5 M1.7 3.5 L10.3 8.7 M10.4 3.2 L1.6 8.9"
+          fill="none" stroke="currentColor" stroke-width="1.15" stroke-linecap="round"/>
+  </symbol>
+  <symbol id="day-ast-b" viewBox="0 0 12 12">
+    <path d="M5.8 1.5 L6.3 10.3 M1.9 3.9 L10.4 8.3 M10.1 3.7 L1.7 9.2"
+          fill="none" stroke="currentColor" stroke-width="1.15" stroke-linecap="round"/>
+  </symbol>
+  <symbol id="day-ticks" viewBox="0 0 19 13">
+    <path d="M1.4 1.6 L17.3 1.9 M2.1 6.4 L14.6 6.2 M1.6 11.2 L16.1 11.5"
+          fill="none" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/>
+  </symbol>
+  <!-- the flourish above and below the date: two rules and a lozenge between them -->
+  <symbol id="day-dec" viewBox="0 0 38 5">
+    <path d="M1.4 2.6 L10.6 2.4 M27.2 2.6 L36.4 2.4 M19 0.7 L21.3 2.5 L19 4.3 L16.8 2.5 Z"
+          fill="none" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/>
+  </symbol>
+  <symbol id="day-arw" viewBox="0 0 24 24">
+    <path d="M6 12 h11 M12 6 l6 6 -6 6" fill="none" stroke="currentColor"
+          stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+  </symbol>
+</svg>
 <!-- MASTERY REWARD MARKS — one per tile on the Mastery reward board, drawn once here and
      <use>d by rewardTileMarkHTML in app.js. Built exactly like the charm-collection theme
      marks: a filled wash underneath, a pen drawing over it, both carrying NO colour of their
