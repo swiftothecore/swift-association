@@ -1600,33 +1600,51 @@
      paper-white there and the mark would vanish on pale kraft. */
   :root[data-theme="dark"] .btn-primary.chance-cta { --chance-board: #6f5c3e; }
 
-  /* THE IDLE BOB. The gold bar beside this one has always breathed on a loop, and a stamp
-     that sits perfectly still next to it reads as disabled rather than calm, so the stamp
-     moves too — the whole board, not the mark inside it. It is the same gesture on the same
-     2.8s cadence as playBob, lifting the same 3px with its hard shadow lengthening under it,
-     because the two are a pair of buttons in one row and a second, unrelated idle would just
-     be a second thing to look at.
+  /* THE IDLE BOB, AND THE RATTLE INSIDE IT. The gold bar beside this one has always breathed
+     on a loop, and a stamp that sits perfectly still next to it reads as disabled rather than
+     calm, so the stamp moves too — the whole board, and the dice inked on it as well.
 
-     WHAT KEEPS IT FROM READING AS A PAIR OF TABS is the quarter-cycle offset and the tilt. A
-     negative animation-delay starts it already part-way through, so the pair is never at the
-     top together, and the board swings across its 0.7deg rest instead of rising flat — a
-     light square of kraft nudged on a desk rather than a UI element sliding up. The gold bar
-     holds its own -0.6deg the whole way, which is what keeps the two gestures distinguishable
-     while the timing stays shared.
+     IN STEP WITH THE BAR, DELIBERATELY. Same 2.8s cadence, same 3px lift, same hard shadow
+     lengthening underneath, and no delay offsetting it: the two rise and fall together. An
+     offset was tried and it is the worse read — a row of two hand-laid objects breathing a
+     beat apart looks like a timing bug, not like craft. What keeps the pair from flattening
+     into a matched set of tabs is the tilt instead: the board SWINGS across its 0.7deg rest
+     as it lifts, while the gold bar holds its own -0.6deg the whole way, so the timing is
+     shared and the gesture still is not.
+
+     THE RATTLE RIDES THE LIFT. The dice get their own scribble of movement, on the same
+     2.8s clock so it can never drift out of the bob it belongs to, and placed across the
+     rise and the top of it — the box is picked up, the dice knock about inside, everything
+     settles on the way back down. Uneven steps rotating both ways, for the same reason the
+     ornaments elsewhere are drawn uneven. It is small on purpose: the board is what carries
+     the movement and this is the detail inside it, not a second animation competing.
 
      THE REST ANGLE LIVES IN THE KEYFRAMES. An infinite animation on the button outranks the
      transform on the rule above, so every frame here has to carry the 0.7deg itself or the
      stamp snaps square the moment the loop starts. The press is the other half of that: the
      :active transform would lose the same argument, so the animation stands down there and
-     hands the transform back. */
+     hands the transform back — and the dice stand down with it, since a rattle continuing
+     under a pressed button is the one frame where it reads as a glitch. */
   @media (prefers-reduced-motion: no-preference) {
-    .btn-primary.chance-cta { animation: chanceBob 2.8s ease-in-out -0.7s infinite; }
-    .btn-primary.chance-cta:active { animation: none; }
+    .btn-primary.chance-cta { animation: chanceBob 2.8s ease-in-out infinite; }
+    .chance-mark { animation: chanceRattle 2.8s ease-in-out infinite; }
+    .btn-primary.chance-cta:active,
+    .btn-primary.chance-cta:active .chance-mark { animation: none; }
   }
-  body[data-reduce-motion="on"] .btn-primary.chance-cta { animation: none; }
+  body[data-reduce-motion="on"] .btn-primary.chance-cta,
+  body[data-reduce-motion="on"] .chance-mark { animation: none; }
   @keyframes chanceBob {
     0%, 100% { transform: rotate(0.7deg) translateY(0); box-shadow: 3px 3px 0 rgba(43, 39, 34, 0.22); }
     50%      { transform: rotate(2.3deg) translateY(-3px); box-shadow: 3px 6px 0 rgba(43, 39, 34, 0.18); }
+  }
+  @keyframes chanceRattle {
+    0%, 22%  { transform: translate(0, 0) rotate(0deg); }
+    30%      { transform: translate(-1px, 0.5px) rotate(-5deg); }
+    38%      { transform: translate(1.1px, -0.6px) rotate(6deg); }
+    46%      { transform: translate(-0.8px, -0.3px) rotate(-4deg); }
+    54%      { transform: translate(0.7px, 0.5px) rotate(3.4deg); }
+    62%      { transform: translate(-0.4px, 0.2px) rotate(-1.5deg); }
+    70%, 100% { transform: translate(0, 0) rotate(0deg); }
   }
 
   @media (max-width: 480px) {
