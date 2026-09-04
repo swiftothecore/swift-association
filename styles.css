@@ -68,6 +68,22 @@
     --bead: #c8951f;
     --page-wash: rgba(212, 160, 23, 0.05);
 
+    /* The lamp on the sheet. Cut to the same shape as the desk's own lighting in
+       body::before, because the notebook is lying on that desk under that light and
+       was the one object in the picture with none on it: brighter at the head of the
+       page, falling into shade at the foot, which is also what gives a long scrolling
+       panel a near edge and a far one.
+
+       A token rather than a literal in .card because dark mode cannot reuse the value.
+       A warm white that reads as lamplight on cream paper reads as fog on a dark
+       sheet, so the highlight there is barely a twentieth and the shade does the work
+       instead. Nothing here is texture: it is one gradient, and it never grains. */
+    --paper-light: linear-gradient(180deg,
+      rgba(255, 251, 238, 0.34) 0%,
+      rgba(255, 251, 238, 0) 22%,
+      rgba(74, 53, 29, 0) 68%,
+      rgba(74, 53, 29, 0.075) 100%);
+
     --line: 32px;  /* notebook baseline rhythm */
     --hand: "Caveat", "Bradley Hand", "Segoe Script", cursive;
     --type: "Courier Prime", "Courier New", monospace;
@@ -112,6 +128,11 @@
     --ink: #ece5d6;            /* warm paper-white */
     --ink-soft: #9d947f;       /* faded pencil, lifted for a dark page */
     --rule: rgba(236, 229, 214, 0.08);
+    --paper-light: linear-gradient(180deg,
+      rgba(255, 240, 208, 0.05) 0%,
+      rgba(255, 240, 208, 0) 24%,
+      rgba(0, 0, 0, 0) 66%,
+      rgba(0, 0, 0, 0.17) 100%);
     --margin: rgba(206, 86, 86, 0.5);  /* the red rule still reads as red */
     --red-pen: #df6b64;                /* brightened so editor's ink stays legible */
     /* Default (no-era) accent, lifted for the dark page so the masthead gold and
@@ -978,6 +999,9 @@
   .card {
     position: relative;
     background:
+      /* the lamp, above everything else on the sheet so it falls across the rulings
+         and the margin the same way it falls across the paper between them */
+      var(--paper-light),
       /* red margin rule as a background layer so it spans the full scroll height
          (the old absolute ::before stopped at the visible box in scrolling cards). */
       linear-gradient(to right, transparent var(--rule-x, 44px), rgba(178, 58, 58, 0.38) var(--rule-x, 44px), rgba(178, 58, 58, 0.38) calc(var(--rule-x, 44px) + 2px), transparent calc(var(--rule-x, 44px) + 2px)),
@@ -989,6 +1013,10 @@
         var(--rule) calc(var(--line) - 1px),
         var(--rule) var(--line)
       );
+    /* The light has to span the whole sheet however tall it grows, so it is sized to
+       the box rather than left on auto. Four entries for four layers, and it has to
+       sit after the shorthand, which resets it. */
+    background-size: 100% 100%, auto, auto, auto;
     background-color: var(--paper);
     border-radius: 3px;
     padding: 30px 30px 34px 58px;   /* extra left pad for the margin */
@@ -4712,8 +4740,10 @@
        so the intro card floats on real ruled paper instead of a flat fill */
     background-color: var(--paper);
     background-image:
+      var(--paper-light),
       linear-gradient(to right, transparent var(--rule-x, 44px), rgba(178, 58, 58, 0.38) var(--rule-x, 44px), rgba(178, 58, 58, 0.38) calc(var(--rule-x, 44px) + 2px), transparent calc(var(--rule-x, 44px) + 2px)),
       repeating-linear-gradient(to bottom, var(--paper) 0, var(--paper) calc(var(--line) - 1px), var(--rule) calc(var(--line) - 1px), var(--rule) var(--line));
+    background-size: 100% 100%, auto, auto;
     cursor: pointer;
   }
   .chall-curtain.leaving { animation: curtain-out 0.34s ease both; }
@@ -9930,6 +9960,11 @@
   body[data-contrast="high"] {
     --paper: #ffffff;
     --paper-edge: #f0f0f0;
+    /* The lamp stands down here, in both palettes. This setting asks for the whitest
+       paper and the blackest ink it can get, and the light can only spend that: it
+       shades one end of the sheet away from #ffffff on purpose. Atmosphere is exactly
+       what the setting is trading. */
+    --paper-light: linear-gradient(rgba(0, 0, 0, 0), rgba(0, 0, 0, 0));
     --ink: #000000;
     --ink-soft: #3a3a3a;
     --rule: rgba(0, 0, 0, 0.14);
@@ -9967,6 +10002,10 @@
   :root[data-theme="dark"] body[data-contrast="high"] {
     --paper: #17130d;          /* the sheet drops nearly to the desk to buy ink contrast */
     --paper-edge: #221c14;
+    /* Repeated from the light high-contrast block on purpose, for the reason spelled
+       out above: `:root[data-theme="dark"]` (0,2,0) outranks `body[data-contrast="high"]`
+       (0,1,1), so the dark lamp would climb straight back over that block's override. */
+    --paper-light: linear-gradient(rgba(0, 0, 0, 0), rgba(0, 0, 0, 0));
     --desk: #070605;           /* kept in step with the other two palettes; the desk is
                                   actually painted below, since --desk has no consumers */
     --ink: #ffffff;
