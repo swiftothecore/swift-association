@@ -5215,13 +5215,17 @@
   }
   .bracelet-memory > summary::-webkit-details-marker { display: none; }
   .bracelet-memory > summary::before {
-    content: "+"; width: 15px; height: 15px; flex: none;
+    content: ""; width: 15px; height: 15px; flex: none;
     display: inline-flex; align-items: center; justify-content: center;
     border: 1.1px solid color-mix(in srgb, var(--ink-soft) 62%, transparent);
     border-radius: 50%;
-    color: var(--ink-soft); font-family: var(--type); font-size: 11px; line-height: 1;
+    background:
+      linear-gradient(var(--ink-soft) 0 0) no-repeat center / 7px 1.2px,
+      linear-gradient(var(--ink-soft) 0 0) no-repeat center / 1.2px 7px;
   }
-  .bracelet-memory[open] > summary::before { content: "\2212"; }
+  .bracelet-memory[open] > summary::before {
+    background: linear-gradient(var(--ink-soft) 0 0) no-repeat center / 7px 1.2px;
+  }
   .bracelet-memory > summary > span {
     border-bottom: 1px dotted color-mix(in srgb, var(--ink-soft) 52%, transparent);
   }
