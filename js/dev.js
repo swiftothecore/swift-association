@@ -561,10 +561,7 @@ export function initDev(api) {
     // The era is also the colour of the bookmark ribbon, and the ribbon is only on screen while
     // the notebook is shut, so the cover has to be put back to judge the pick against it.
     row(obAlbumSel, btn("set era", () => { api.onboarding.setEra(obAlbumSel.value); toast("era → " + (obAlbumSel.value || "none")); }),
-        btn("show cover", () => {
-          if (window.__stickerCover) { window.__stickerCover.show(); toast("notebook shut — ribbon on the cover"); }
-          else toast("cover module not loaded");
-        })),
+        btn("show cover", () => { api.stickers.cover(); toast("notebook shut — ribbon on the cover"); })),
     // How to play opens on card one for players, so proofreading the last card would otherwise
     // cost three clicks every time. Jump straight to any of them.
     row(howToSel, btn("open how to play", () => api.onboarding.howTo(Number(howToSel.value)))),
@@ -851,6 +848,11 @@ export function initDev(api) {
         btn("open drawer", () => api.stickers.open())),
     row(btn("all stickers", () => { api.stickers.all(); toast("all stickers stuck down"); }),
         btn("clear stickers", () => { api.stickers.reset(); toast("stickers cleared"); }, "warn")),
+    // The shelf catalogues the set; the cover is where it lives, and where a placement can
+    // actually be judged. Same door the drawer offers, so the corner tag and the page turn
+    // out are both in the test. Only works from the front page, which is also the rule the
+    // player's button follows.
+    row(btn("look at the cover", () => toast(api.stickers.cover()))),
     // The session ledger is memory-only and dies on reload, so these are the only way to see the
     // two "in one session" stickers without playing until every record has turned up.
     row("session", btn("name one per album", () => toast("albums: " + api.stickers.fill().length)),

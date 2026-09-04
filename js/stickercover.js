@@ -389,6 +389,41 @@ function holdForDev() {
 }
 
 
+/* ---------- Putting the closed cover back on the desk ----------
+   The cover is on screen for exactly as long as the data takes to load, which is nowhere near
+   long enough to look at what is stuck to it, and revealNotebook opens it out from under you.
+   These two put it back and take it away again, so the keepsakes drawer can offer a proper
+   look at the collection. They only move the boot chrome around; the placement is the same
+   pure function of the geometry it always was, so an admired cover is the identical picture
+   the player saw on load. The way back OUT is app.js's business, because opening the notebook
+   is the page turn it already owns. */
+
+function coverParts() {
+  return {
+    card: document.getElementById("screen-start"),
+    loading: document.getElementById("loading"),
+    content: document.getElementById("startContent"),
+  };
+}
+
+export function showCover() {
+  const { card, loading, content } = coverParts();
+  if (!card || !loading) return "no cover";
+  card.classList.add("is-booting");
+  if (content) content.style.display = "none";
+  loading.style.display = "";
+  return placeCoverStickers();
+}
+
+export function hideCover() {
+  const { card, loading, content } = coverParts();
+  if (card) card.classList.remove("is-booting");
+  if (loading) loading.style.display = "none";
+  if (content) content.style.display = "";
+  return "hidden";
+}
+
+
 /* ---------- Dev tools ---------- */
 // Reachable as window.__stickerCover, and through the "stickers" section of the ?dev panel.
 // `show()` earns its place: the closed cover is only on screen while the data loads, so
@@ -401,26 +436,10 @@ const api = {
   only(ids) { devPick = fakeEarned(Array.isArray(ids) ? ids : [ids]); return placeCoverStickers(); },
   real() { devPick = null; return placeCoverStickers(); },   // back to the actual store
   mask(on) { devMask = on !== false; return placeCoverStickers(); },
-  // Put the closed notebook back on screen so the cover can be looked at after boot.
-  show() {
-    const card = document.getElementById("screen-start");
-    const loading = document.getElementById("loading");
-    const content = document.getElementById("startContent");
-    if (!card || !loading) return "no cover";
-    card.classList.add("is-booting");
-    if (content) content.style.display = "none";
-    loading.style.display = "";
-    return placeCoverStickers();
-  },
-  hide() {
-    const card = document.getElementById("screen-start");
-    const loading = document.getElementById("loading");
-    const content = document.getElementById("startContent");
-    if (card) card.classList.remove("is-booting");
-    if (loading) loading.style.display = "none";
-    if (content) content.style.display = "";
-    return "hidden";
-  },
+  // Put the closed notebook back on screen so the cover can be looked at after boot. Same
+  // pair the keepsakes drawer's "look at the cover" runs on, minus the tag and the page turn.
+  show: showCover,
+  hide: hideCover,
   place: placeCoverStickers,
   // What the packer decided, for checking a placement without eyeballing it.
   spots() {

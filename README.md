@@ -29,7 +29,7 @@ The game is still a work in progress and is by no means 'done', but it is quite 
 - Challenges mode with 32 challenges, most with a harder "dark side" to unlock, plus a super-hard tier unlocked through mastery
 - A skills and mastery system full of rewards
 - Over 200 achievements, graded by difficulty in the finish of the charm itself
-- Fifteen stickers earned by noticing things rather than by scoring, shown as blank silhouettes until you work out what each one wants
+- Fifteen stickers earned by noticing things rather than by scoring, shown as blank silhouettes until you work out what each one wants, and stuck to the notebook's front cover, which you can shut again to admire
 
 **The details**
 

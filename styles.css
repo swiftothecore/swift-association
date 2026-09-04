@@ -1533,74 +1533,56 @@
 
   /* ---------- Difficulty picker — notebook tabs ---------- */
   .mode-picker { margin: 0 0 20px; }
-  /* ---------- Randomiser: a thrown pair in the notebook's top-left corner ----------
-     The pair sits fully on the paper, tucked into the top-left corner just above and left of
-     MODE, straddling the printed margin rule rather than the paper's edge. On a phone it stays
-     inside the printed margin. The button keeps a full tap target even when its art scales down. */
-  .random-dice {
-    position: absolute; z-index: 7; top: 14px; left: 0;
-    width: 46px; height: 38px; padding: 0; border: 0; background: none;
-    color: var(--ink); cursor: pointer; appearance: none;
-    -webkit-tap-highlight-color: transparent;
+  /* ---------- The launch row: the two ways to start ----------
+     The gold stamp and the chance stamp, side by side. Both are real boxed buttons, because
+     they do the same kind of thing; the hierarchy is carried by size and colour rather than by
+     one of them being a picture. The CTA takes whatever width is left over, so it stays the
+     wide gold bar it has always been. */
+  .play-row {
+    position: relative; display: flex; align-items: stretch; gap: 10px;
+    margin-top: 18px;
   }
-  .random-dice-art {
-    position: absolute; inset: 0; display: block;
-    filter: drop-shadow(1px 3px 2px rgba(39, 27, 14, 0.24));
-    transition: transform 0.12s ease, filter 0.12s ease;
-    transform-origin: 50% 56%;
+  .play-row .btn-primary.play-cta { flex: 1 1 auto; width: auto; margin: 0; }
+
+  /* The chance stamp: the CTA's box in teal, a size down. Kept on .btn-primary so it inherits
+     the ink border, the hard shadow and the ink-fill hover inversion the whole button family
+     shares, and tilted the other way, so the pair reads as two things put down by hand rather
+     than one control cut in two. */
+  .btn-primary.chance-cta {
+    flex: 0 0 auto; width: auto; margin: 0;
+    display: inline-flex; align-items: center; justify-content: center; gap: 2px;
+    padding: 12px 15px; font-size: calc(12px + var(--text-size-adjust)); letter-spacing: 0.6px;
+    color: var(--ink);
+    background-color: var(--chance-teal, #8fbfba);
+    background-image:
+      linear-gradient(168deg, rgba(255, 255, 255, 0.32) 0%, rgba(255, 255, 255, 0) 46%, rgba(43, 39, 34, 0.12) 100%),
+      /* the faint pressed texture the patterned buttons all carry */
+      repeating-linear-gradient(52deg, rgba(43, 39, 34, 0.038) 0 1px, rgba(0, 0, 0, 0) 1px 8px);
+    box-shadow: 3px 3px 0 rgba(43, 39, 34, 0.22);
+    transform: rotate(0.7deg);
+    transition: background-color 0.24s ease, color 0.2s ease, transform 0.12s, box-shadow 0.2s;
   }
-  .random-dice-svg { display: block; width: 100%; height: 100%; overflow: visible; }
-  .random-dice-label {
-    position: absolute; top: 52px; left: -4px; width: max-content;
-    font-family: var(--hand); font-size: calc(14px + var(--text-size-adjust)); line-height: 1; color: var(--ink-soft);
-    opacity: 0; transform: translateY(-2px) rotate(-2deg);
-    transition: opacity 0.12s ease, transform 0.12s ease; pointer-events: none;
+  .btn-primary.chance-cta:hover, .btn-primary.chance-cta:focus-visible {
+    background-color: var(--ink); color: var(--paper);
   }
-  .random-dice:hover .random-dice-art,
-  .random-dice:focus-visible .random-dice-art {
-    transform: translateY(-2px) rotate(-1deg);
-    filter: drop-shadow(2px 5px 3px rgba(39, 27, 14, 0.32));
-  }
-  .random-dice:hover .random-dice-label,
-  .random-dice:focus-visible .random-dice-label { opacity: 1; transform: translateY(0) rotate(-2deg); }
-  .random-dice:active .random-dice-art { transform: translateY(2px) rotate(3deg) scale(0.95); }
-  .random-dice:focus-visible { outline: 1.5px dashed var(--ink-soft); outline-offset: 4px; border-radius: 6px; }
-  :root[data-theme="dark"] .random-dice-art {
-    filter: drop-shadow(1px 4px 3px rgba(0, 0, 0, 0.58)) brightness(0.86) saturate(0.78);
-  }
-  :root[data-theme="dark"] .random-dice:hover .random-dice-art,
-  :root[data-theme="dark"] .random-dice:focus-visible .random-dice-art {
-    filter: drop-shadow(2px 6px 4px rgba(0, 0, 0, 0.65)) brightness(0.94) saturate(0.82);
-  }
+  .btn-primary.chance-cta:active { transform: rotate(0.7deg) translateY(1px) scale(0.99); }
+  .chance-mark { margin-right: 7px; width: 22px; height: 22px; vertical-align: -4px; }
+  /* Matched to the CTA's ✎ by weight rather than by size: the shared .cta-mark rules set no
+     stroke-width, and a hairline die beside a solid pencil reads as a different family. */
+  .chance-mark .ink { stroke-width: 1.9; }
+  .chance-word { white-space: nowrap; }
+  :root[data-theme="dark"] .btn-primary.chance-cta { background-color: #6f9c97; }
+
+  /* Narrow paper: the phrase is the first thing to go, since the mark and the title carry it,
+     and below that the stamp drops under the CTA rather than squeezing it. */
   @media (max-width: 760px) {
-    .random-dice { top: 6px; left: 2px; width: 54px; height: 46px; }
-    .random-dice-art { transform: scale(0.82); transform-origin: top left; }
-    .random-dice:hover .random-dice-art,
-    .random-dice:focus-visible .random-dice-art { transform: scale(0.82) translateY(-2px) rotate(-1deg); }
-    .random-dice:active .random-dice-art { transform: scale(0.78) translateY(2px) rotate(3deg); }
-    .random-dice-label { display: none; }
+    .btn-primary.chance-cta { padding: 12px 13px; }
+    .chance-word { font-size: calc(11px + var(--text-size-adjust)); }
   }
   @media (max-width: 480px) {
-    .random-dice { top: 4px; left: 1px; width: 48px; height: 44px; }
-    .random-dice-art { transform: scale(0.7); }
-    .random-dice:hover .random-dice-art,
-    .random-dice:focus-visible .random-dice-art { transform: scale(0.7) translateY(-2px) rotate(-1deg); }
-    .random-dice:active .random-dice-art { transform: scale(0.67) translateY(2px) rotate(3deg); }
-  }
-  body[data-reduce-motion="on"] .random-dice-art,
-  body[data-reduce-motion="on"] .random-dice-label { transition: none; }
-  body[data-reduce-motion="on"] .random-dice:hover .random-dice-art,
-  body[data-reduce-motion="on"] .random-dice:focus-visible .random-dice-art,
-  body[data-reduce-motion="on"] .random-dice:active .random-dice-art { transform: none; }
-  @media (max-width: 760px) {
-    body[data-reduce-motion="on"] .random-dice:hover .random-dice-art,
-    body[data-reduce-motion="on"] .random-dice:focus-visible .random-dice-art,
-    body[data-reduce-motion="on"] .random-dice:active .random-dice-art { transform: scale(0.82); }
-  }
-  @media (max-width: 480px) {
-    body[data-reduce-motion="on"] .random-dice:hover .random-dice-art,
-    body[data-reduce-motion="on"] .random-dice:focus-visible .random-dice-art,
-    body[data-reduce-motion="on"] .random-dice:active .random-dice-art { transform: scale(0.7); }
+    .play-row { flex-wrap: wrap; }
+    .play-row .btn-primary.play-cta { flex: 1 1 100%; }
+    .btn-primary.chance-cta { flex: 1 1 100%; }
   }
   .mode-picker-label {
     font-family: var(--type); font-size: calc(10px + var(--text-size-adjust)); letter-spacing: 1.5px;
@@ -1860,6 +1842,17 @@
     line-height: 1.55; margin: 4px 0 14px; max-width: 60ch;
   }
   .keep-counter { display: flex; align-items: baseline; gap: 9px; margin: 0 0 4px; }
+  /* The door from the shelf to the cover the stickers actually live on. */
+  .stick-cover-cta { margin-top: 20px; text-align: center; }
+  .stick-cover-line {
+    font-family: var(--hand); font-size: calc(17px + var(--text-size-adjust));
+    color: var(--ink-soft); margin: 0;
+  }
+  .stick-cover-cta .btn-ghost { width: auto; padding: 9px 18px; margin-top: 9px; }
+  .stick-cover-foot {
+    font-family: var(--type); font-size: calc(11px + var(--text-size-adjust));
+    color: var(--ink-soft); opacity: 0.85; margin: 7px 0 0;
+  }
   .keep-counter-n { font-family: var(--hand); font-size: calc(38px + var(--text-size-adjust)); font-weight: 700; color: var(--ink); line-height: 1; }
   .keep-counter-d { font-family: var(--hand); font-size: calc(22px + var(--text-size-adjust)); color: var(--ink-soft); }
   .keep-counter-l {
@@ -6753,6 +6746,55 @@
   /* Dark mode dims the whole cover, and vinyl on that board is in the same light. Pitched a
      little brighter than the board itself: a sticker is glossier stock than kraft. */
   :root[data-theme="dark"] .cover-sticker { filter: brightness(0.72) saturate(0.94); }
+
+  /* ---------- Admiring the cover ----------
+     The cover is otherwise on screen for exactly as long as the data takes to load, which is
+     no time at all to look at what you have stuck to it, so the keepsakes drawer can put the
+     notebook back on the desk closed. The one thing added out there is the way back in: a
+     small paper tag on the bottom-right corner, the corner a hand lifts to open a real
+     notebook. It sits inside the corner protector's no-go box (40px of leather plus the
+     layout's 14px clearance), so it costs the sticker field nothing and no placement moves.
+
+     While the cover is only the loading state the tag is `hidden`: that cover opens on its
+     own the moment the data lands, and a control offering to do what is about to happen
+     anyway is a lie. js/stickercover.js is the only thing that unhides it. */
+  .nb-open-tab {
+    position: absolute; right: 7px; bottom: 9px; z-index: 4;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px;
+    width: 46px; height: 46px; padding: 0;
+    font-family: var(--type); color: #4a3a20; cursor: pointer;
+    background: linear-gradient(158deg, #fdf8ea, #f0e5cc);
+    border: 1px solid rgba(74, 52, 24, 0.45); border-radius: 3px;
+    box-shadow: 1px 2px 5px rgba(40, 26, 10, 0.34);
+    transform: rotate(-5deg);
+    transition: transform 0.14s ease, box-shadow 0.14s ease;
+  }
+  /* display:flex above outranks the hidden attribute's UA rule, so restate it: while the
+     cover is only the loading state there must be nothing out there but the cover. */
+  .nb-open-tab[hidden] { display: none; }
+  .nb-open-tab-art { display: block; width: 22px; height: 17px; overflow: visible; }
+  .nb-open-tab-art .ink {
+    fill: none; stroke: currentColor; stroke-width: 1.5;
+    stroke-linecap: round; stroke-linejoin: round;
+  }
+  .nb-open-tab-word {
+    font-size: calc(9px + var(--text-size-adjust)); letter-spacing: 1.2px; text-transform: uppercase;
+  }
+  .nb-open-tab:hover, .nb-open-tab:focus-visible {
+    transform: rotate(-5deg) translate(1px, -2px);
+    box-shadow: 2px 4px 8px rgba(40, 26, 10, 0.4);
+  }
+  .nb-open-tab:active { transform: rotate(-5deg) translateY(1px) scale(0.97); }
+  .nb-open-tab:focus-visible { outline: 1.5px dashed #4a3a20; outline-offset: 3px; }
+  :root[data-theme="dark"] .nb-open-tab { filter: brightness(0.7); }
+  body[data-reduce-motion="on"] .nb-open-tab { transition: none; }
+  body[data-reduce-motion="on"] .nb-open-tab:hover,
+  body[data-reduce-motion="on"] .nb-open-tab:focus-visible,
+  body[data-reduce-motion="on"] .nb-open-tab:active { transform: rotate(-5deg); }
+
+  /* The whole closed notebook is a second, unlabelled way out while it is being admired, so
+     a click anywhere lands somewhere sensible. The tag is what says so. */
+  .loading.is-admiring { cursor: pointer; }
 
   /* Opening-the-notebook reveal — once the data loads, the closed cover is cloned into a
      real page-flip sheet (see revealNotebook) and turned away on its left spine with the

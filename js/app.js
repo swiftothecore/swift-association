@@ -58,6 +58,7 @@ import {
 import { drawRandom, poolSummary } from "./random.js";
 import { POLAROIDS, POLAROID_BY_ID } from "./polaroids.js";
 import { STICKERS, STICKER_BY_ID } from "./stickers.js";
+import { showCover } from "./stickercover.js";
 import {
   BRACELET_ROW_CAP, buildBraceletSVG, braceletFinish, braceletLayout, braceletTrinketId,
   centreStrand, trinketPreviewSVG, randomTrinketForBead,
@@ -1324,6 +1325,63 @@ function revealNotebook(onDone) {
   const finish = () => { if (finished) return; finished = true; flip.remove(); done(); };
   flip.addEventListener("animationend", (e) => { if (e.target === flip) finish(); });
   setTimeout(finish, 500 * (animScale() || 1) + 80);
+}
+
+/* ---------- Admiring the cover ----------
+   The stickers a player earns go on the front of the notebook, and the front of the notebook
+   is otherwise on screen only while the data loads. So the keepsakes drawer can close the book
+   again and leave it closed for as long as you like. Nothing is rendered specially for this:
+   it is the real boot cover, placed by the same pure layout, which is the whole point — what
+   you are admiring has to be the thing you saw on load and will see next time.
+
+   Going back in is the page turn revealNotebook already owns, so the notebook opens exactly
+   the way it opens on boot rather than snapping away. The little corner tag is the labelled
+   way out; a click anywhere on the cover and Escape both do the same thing, because a closed
+   notebook you cannot get out of is a trap. */
+
+let coverAdmireBack = null;   // where focus goes when the notebook opens again
+
+function admiringCover() { return !!$("loading") && $("loading").classList.contains("is-admiring"); }
+
+function openCoverAdmire(back) {
+  // The notebook can only be shut over the front page: there is nothing to close in the middle
+  // of a run, and no surface to put it back on anywhere else.
+  if (!screens.start.classList.contains("active") || admiringCover()) return false;
+  coverAdmireBack = back || null;
+  showCover();
+  const loading = $("loading");
+  const tab = $("coverOpenTab");
+  loading.classList.add("is-admiring");
+  loading.addEventListener("click", closeCoverAdmire);
+  document.addEventListener("keydown", coverAdmireKey, true);
+  if (tab) { tab.hidden = false; tab.focus(); }
+  window.scrollTo({ top: 0, behavior: prefersReducedMotion() ? "auto" : "smooth" });
+  return true;
+}
+
+function closeCoverAdmire() {
+  if (!admiringCover()) return;
+  const loading = $("loading");
+  const tab = $("coverOpenTab");
+  loading.classList.remove("is-admiring");
+  loading.removeEventListener("click", closeCoverAdmire);
+  document.removeEventListener("keydown", coverAdmireKey, true);
+  // Hidden BEFORE the turn: revealNotebook clones the cover into the flip sheet, and a tag
+  // riding round on the turning page would be the one thing out there that is not the cover.
+  if (tab) tab.hidden = true;
+  const back = coverAdmireBack;
+  coverAdmireBack = null;
+  revealNotebook(() => {
+    if (back && typeof back.focus === "function" && document.contains(back)) back.focus();
+  });
+}
+
+// Captured, so Escape closes the cover before anything else downstream reads the key.
+function coverAdmireKey(e) {
+  if (e.key !== "Escape" || !admiringCover()) return;
+  e.preventDefault();
+  e.stopPropagation();
+  closeCoverAdmire();
 }
 
 /* ---------- Sticky-tape on the nav keepsake cards ----------
@@ -4429,6 +4487,14 @@ function renderKeepsakesPage() {
   }).join("");
 
   body.innerHTML = intro + counter + `<div class="keep-grid">${tiles}</div>` + stickerShelfHTML();
+  // "Look at the cover" (never "close the notebook" — the in-run quit button owns that phrase):
+  // the drawer is a modal over the front page, so it has to get out of the way first, and focus
+  // comes back to the keepsakes icon once the book reopens.
+  const shut = body.querySelector("[data-close-notebook]");
+  if (shut) shut.addEventListener("click", () => {
+    closeKeepsakes();
+    openCoverAdmire($("keepsakesGear"));
+  });
   scheduleKeepsakeDevWatch();   // re-arm the develop watch for the next tile due to finish
 }
 
@@ -4761,7 +4827,25 @@ function stickerShelfHTML() {
       `title="${escapeHtml(label)}">${stickerMarkup(st, locked)}${cap}</div>`;
   }).join("");
 
-  return `<div class="stick-shelf">${intro}${counter}<div class="stick-grid">${cells}</div></div>`;
+  // The shelf is where the set is catalogued; the cover is where it LIVES. That surface is
+  // otherwise only up while the data loads, so this is the door to it. Offered whatever the
+  // count is: a bare cover is a fair thing to look at, and it is the before picture.
+  const admire = found
+    ? `${found === 1 ? "Your sticker is" : "Your stickers are"} stuck to the front of the notebook.`
+    : `Nothing is on the front of the notebook yet.`;
+  // The drawer opens over whatever screen you are on, and the cover can only be closed over
+  // the front page — there is no notebook to shut in the middle of a run. Off the front page
+  // the line still gets said; only the door is missing, and it says where the door is.
+  const onFront = screens.start.classList.contains("active");
+  const cover =
+    `<div class="stick-cover-cta">` +
+    `<p class="stick-cover-line">${admire}</p>` +
+    (onFront
+      ? `<button type="button" class="btn-ghost" data-close-notebook>Look at the cover</button>`
+      : `<p class="stick-cover-foot">Shut it from the front page for a proper look.</p>`) +
+    `</div>`;
+
+  return `<div class="stick-shelf">${intro}${counter}<div class="stick-grid">${cells}</div>${cover}</div>`;
 }
 
 // Read a chosen image file, center-crop it to a square and downscale it to a
@@ -25074,6 +25158,10 @@ function buildDevApi() {
         saveStickers(e); updateKeepsakesNav(); refreshStickers(); return STICKERS.length;
       },
       open: () => openKeepsakes(),                             // the shelf lives under the polaroid wall
+      // The cover the set actually lives on, put back on the desk from wherever you are.
+      // window.__stickerCover.show() is the layer's own version and stops at the picture;
+      // this is the player's route, tag and page turn included.
+      cover: () => { closeKeepsakes(); return openCoverAdmire(null) ? "closed the notebook" : "front page only"; },
       reset: () => { resetStickers(); updateKeepsakesNav(); refreshStickers(); },
       // The Mastery 9 hint layer, which is otherwise only readable one hover tip at a time and
       // only while the vault is open. Prints what each STILL-LOCKED cell would whisper, beside
