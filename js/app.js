@@ -9003,6 +9003,74 @@ function albumTileName(a) {
   return a;
 }
 
+/* ---------- The album picture: a square coloured in by hand ----------
+   The snapshot on an Album Focus tile is not a printed swatch of the era colour. It is a
+   pencilled box that somebody is colouring in with a crayon, and how far they have got IS
+   the record: a blank box has never been played, a half-filled one is a best score, a
+   square filled corner to corner is a beaten album.
+
+   That is the whole reason this is drawn rather than washed. A flat fill can only say
+   "more saturated" as you improve, which nobody can read; strokes can be counted. So the
+   fill level is the score over the thirteen pages, and `beaten` forces it to the brim
+   however it was won.
+
+   Every square is seeded off the album's own name, so the slant of the hand, the wobble of
+   the box and the place each stroke starts are stable for that album forever and different
+   from all eleven others — twelve squares coloured by the same person on twelve days, not
+   one drawing tinted twelve times. The rng is deliberately advanced for strokes that are
+   NOT drawn yet, so a square gains strokes as you improve instead of being re-coloured.
+
+   Colour and mood only: there is no album imagery here and there is not meant to be. The
+   only thing on the paper is graphite and one era colour. */
+const AF_STROKES = 26;                 // strokes in a square filled to the brim
+
+function albumCrayon(album, level) {
+  const rng = mulberry32(fnv1a("af-crayon:" + album));
+  const f = (v) => Math.round(v * 10) / 10;
+  const jit = (n) => (rng() * 2 - 1) * n;
+  const uid = "afc" + (fnv1a("af-clip:" + album) % 1000000);
+
+  // the pencilled box being coloured within — four jittered corners joined by edges that
+  // bow, because nobody rules a square freehand and gets four straight sides
+  const b = 3.4;
+  const pts = [[b + jit(1), b + jit(1)], [100 - b + jit(1), b + jit(1)],
+               [100 - b + jit(1), 100 - b + jit(1)], [b + jit(1), 100 - b + jit(1)]];
+  let box = `M${f(pts[0][0])} ${f(pts[0][1])}`;
+  for (let i = 0; i < 4; i++) {
+    const [x1, y1] = pts[i], [x2, y2] = pts[(i + 1) % 4];
+    const nx = (y2 - y1) / 100, ny = -(x2 - x1) / 100, bow = jit(1.6);
+    box += ` Q${f((x1 + x2) / 2 + nx * bow)} ${f((y1 + y2) / 2 + ny * bow)} ${f(x2)} ${f(y2)}`;
+  }
+  box += " Z";
+
+  // the strokes themselves, laid left to right on a slant and clipped at the picture edge.
+  // Most overshoot the box the way a crayon does; a few stop short and leave a sliver of
+  // paper, which is the difference between a coloured square and a printed one.
+  const tilt = -14 + rng() * 10;
+  const n = level >= 1 ? AF_STROKES : Math.round(Math.max(0, Math.min(1, level)) * AF_STROKES);
+  let strokes = "";
+  for (let i = 0; i < AF_STROKES; i++) {
+    const t = i / (AF_STROKES - 1);
+    const x = -14 + t * 128 + jit(3.4);
+    const short = rng();
+    const top = short < 0.14 ? 4 + rng() * 14 : -22 + rng() * 10;
+    const bot = short > 0.88 ? 94 - rng() * 14 : 122 - rng() * 10;
+    const bow = jit(5.5);
+    const w = 10 + rng() * 7;
+    const o = 0.4 + rng() * 0.18;
+    if (i >= n) continue;              // geometry already drawn from the rng: see above
+    strokes += `<path d="M${f(x)} ${f(top)} Q${f(x + bow)} 50 ${f(x + bow * 0.25)} ${f(bot)}"` +
+      ` stroke-width="${f(w)}" opacity="${o.toFixed(2)}"/>`;
+  }
+
+  return `<svg class="af-crayon" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">` +
+    `<clipPath id="${uid}"><rect x="0" y="0" width="100" height="100"/></clipPath>` +
+    `<g clip-path="url(#${uid})">` +
+      `<g class="af-crayon-ink" transform="rotate(${f(tilt)} 50 50)" fill="none" stroke-linecap="round">${strokes}</g>` +
+      `<path class="af-crayon-box" d="${box}" fill="none"/>` +
+    `</g></svg>`;
+}
+
 /* ---------- Ruthless: the lens picker ----------
    The page is a LYRIC SHEET, not a board. One song is typed down the paper in the order a song
    actually runs — verse into pre-chorus into chorus into post-chorus, second verse, bridge — with
@@ -9203,10 +9271,10 @@ function renderAlbumFocusPage() {
   const beaten = STUDIO_ALBUMS.filter((a) => board[a] && board[a].beaten).length;
   const perfected = STUDIO_ALBUMS.filter((a) => board[a] && board[a].perfected).length;
 
-  // The board — 12 pinned snapshots that "develop" with progress: blank when fresh,
-  // a faint era wash once played (with the best score pencilled in), full era colour
-  // when beaten, and gold-leafed when perfected. The era colour is exposed as --era so
-  // the picture layer can later swap the flat wash for a per-album illustration.
+  // The board — 12 pinned snapshots, each a pencilled square being coloured in with the
+  // era colour (see albumCrayon): empty when fresh, part-coloured once played (with the
+  // best score pencilled in beside it), filled to the brim when beaten, and gold-leafed
+  // when perfected. The era colour reaches the drawing as --era on the tile.
   let tiles = "";
   STUDIO_ALBUMS.forEach((a) => {
     const rec = albumFocusRecord(a);
@@ -9215,9 +9283,12 @@ function renderAlbumFocusPage() {
     const score = (rec.best > 0 && !rec.beaten) ? `<span class="af-tile-score">${rec.best}/${TOTAL_ROUNDS}</span>` : "";
     const gold = rec.perfected
       ? `<span class="af-corner af-corner--tl" aria-hidden="true"></span><span class="af-corner af-corner--tr" aria-hidden="true"></span>` : "";
+    // how far the square is coloured in: the best score over the thirteen pages, with a
+    // beaten album filled to the brim whatever it was beaten on
+    const level = rec.beaten ? 1 : Math.max(0, rec.best || 0) / TOTAL_ROUNDS;
     tiles += `<button type="button" class="af-tile ${state}" data-album="${escapeHtml(a)}" style="--era:${albumColor(a) || "#999"}" aria-label="${escapeHtml(a)}: ${stateWord}">` +
       `<span class="af-pin" aria-hidden="true"></span>${gold}` +
-      `<span class="af-tile-win" aria-hidden="true"></span>${score}` +
+      `<span class="af-tile-win">${albumCrayon(a, level)}${score}</span>` +
       `<span class="af-tile-cap">${escapeHtml(albumTileName(a))}</span>` +
       `</button>`;
   });

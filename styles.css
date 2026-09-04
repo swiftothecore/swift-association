@@ -2609,7 +2609,6 @@
     .chall-col { border-right: none; border-bottom: 1px solid rgba(60,40,18,0.16); padding-bottom: 8px; margin-bottom: 14px; }
     .chall-list { padding-right: 0; margin-right: 0; padding-left: 14px; margin-left: -14px; }
     .chall-detail { padding-left: 0; }
-    .af-board { grid-template-columns: repeat(3, 1fr); gap: 24px 12px; }
   }
   @media (prefers-reduced-motion: reduce) {
     .chall-go { transform: none; }
@@ -3767,14 +3766,21 @@
   }
 
   /* ---------- Album Focus pages — a pinned board of album snapshots ----------
-     The 12 studio albums as squares tacked to the desk in a loose 3x4 grid. Each
-     picture "develops" with progress: blank when fresh, a faint era wash once
-     played, full era colour when beaten, gold-leafed when perfected. Tapping a tile
-     turns to a separate album menu with the difficulty picker and record. The
-     colour wash is a --era-driven layer so a per-album illustration can replace it. */
+     The 12 studio albums as squares tacked to the desk in a loose 3x4 grid. The
+     picture is a pencilled box being coloured in with the era colour (drawn in JS by
+     albumCrayon), and how far it is coloured IS the record: empty when never played,
+     part-coloured at your best score, filled to the brim when beaten, gold-leafed when
+     perfected. Tapping a tile turns to a separate album menu with the difficulty
+     picker and record. Nothing here is a flat swatch on purpose — twelve saturated
+     rectangles side by side read as a paint chart, and strokes let the paper through. */
   .af-board {
     display: grid; grid-template-columns: repeat(4, 1fr); gap: 30px 18px;
     padding: 16px 6px 24px; justify-items: center;
+  }
+  /* Three across on a phone. This has to live below the four-column rule, not up in the
+     main narrow-screen block: same specificity, and the later rule wins. */
+  @media (max-width: 620px) {
+    .af-board { grid-template-columns: repeat(3, 1fr); gap: 24px 12px; }
   }
   .af-tile {
     position: relative; width: 100%; max-width: 136px; cursor: pointer;
@@ -3783,39 +3789,66 @@
     font: inherit; text-align: center; color: var(--ink);
     transition: transform 0.16s ease, box-shadow 0.16s ease;
   }
-  /* deterministic scatter so the board looks hand-arranged, not gridded */
-  .af-board .af-tile:nth-child(4n+1) { transform: rotate(-2.4deg); }
-  .af-board .af-tile:nth-child(4n+2) { transform: rotate(1.5deg); }
-  .af-board .af-tile:nth-child(4n+3) { transform: rotate(-1deg); }
-  .af-board .af-tile:nth-child(4n)   { transform: rotate(2.2deg); }
+  /* Deterministic scatter so the board looks hand-arranged, not gridded. One rule per
+     tile rather than an nth-child(4n) cycle: on a four-wide board a cycle of four puts
+     the SAME tilt down every column, which the eye reads as a pattern, not a scatter. */
+  .af-board .af-tile:nth-child(1)  { transform: rotate(-2.4deg) translateY(1px); }
+  .af-board .af-tile:nth-child(2)  { transform: rotate(1.5deg); }
+  .af-board .af-tile:nth-child(3)  { transform: rotate(-0.7deg) translateY(2px); }
+  .af-board .af-tile:nth-child(4)  { transform: rotate(2.2deg); }
+  .af-board .af-tile:nth-child(5)  { transform: rotate(1.9deg) translateY(2px); }
+  .af-board .af-tile:nth-child(6)  { transform: rotate(-1.6deg); }
+  .af-board .af-tile:nth-child(7)  { transform: rotate(2.8deg) translateY(-1px); }
+  .af-board .af-tile:nth-child(8)  { transform: rotate(-2.1deg); }
+  .af-board .af-tile:nth-child(9)  { transform: rotate(-1.2deg); }
+  .af-board .af-tile:nth-child(10) { transform: rotate(2.5deg) translateY(1px); }
+  .af-board .af-tile:nth-child(11) { transform: rotate(-2.7deg); }
+  .af-board .af-tile:nth-child(12) { transform: rotate(0.9deg) translateY(2px); }
   .af-tile:hover { transform: rotate(0deg) translateY(-3px); box-shadow: 0 9px 17px rgba(60,50,35,0.3); z-index: 2; }
 
+  /* the paper inside the snapshot's window — always paper, never a colour swatch */
   .af-tile-win {
-    display: block; aspect-ratio: 1 / 1; border-radius: 2px;
-    background: var(--era, #999); box-shadow: inset 0 0 0 1px rgba(43,39,34,0.08);
+    position: relative; display: block; aspect-ratio: 1 / 1; border-radius: 2px;
+    background: #f7f1e2; box-shadow: inset 0 0 0 1px rgba(43,39,34,0.1);
   }
-  .af-tile.is-fresh .af-tile-win {
-    background: #e7dfcd;
-    background-image: repeating-linear-gradient(45deg, rgba(120,110,90,0.09) 0 6px, transparent 6px 12px);
-    box-shadow: inset 0 0 0 1.5px #c3b89c;
-  }
-  .af-tile.is-played .af-tile-win { opacity: 0.4; filter: saturate(0.7); }
+  .af-crayon { display: block; width: 100%; height: 100%; }
+  .af-crayon-ink { stroke: var(--era, #999); }
+  .af-crayon-box { stroke: rgba(43,39,34,0.3); stroke-width: 1.1; }
+  /* An unplayed square is a blank box, so its pencil line is the only thing in the
+     window and carries the whole tile. It gets to be a shade darker for that. */
+  .af-tile.is-fresh .af-crayon-box { stroke: rgba(43,39,34,0.4); }
   .af-tile-cap {
     font-family: var(--hand); font-weight: 700; font-size: calc(19px + var(--text-size-adjust)); line-height: 1.02;
     color: var(--ink); padding: 7px 3px 9px; min-height: 1.8em;
     display: flex; align-items: center; justify-content: center;
   }
   .af-tile.is-fresh .af-tile-cap, .af-tile.is-played .af-tile-cap { color: var(--ink-soft); }
+  /* The best score, on a scrap of paper stuck to the square. It has to sit ON the colouring
+     rather than beside it — an album two pages off beaten has almost no bare paper left to
+     write on — and bare pencil over a dark era (Red, reputation) is unreadable however it is
+     haloed. So it gets its own paper to be written on, torn and tacked on a slight angle. */
   .af-tile-score {
-    position: absolute; right: 10px; bottom: 42px;
-    font-family: var(--hand); font-weight: 700; font-size: calc(17px + var(--text-size-adjust)); color: var(--ink-soft);
+    position: absolute; right: 4px; bottom: 4px; padding: 0 5px 1px;
+    font-family: var(--hand); font-weight: 700; font-size: calc(16px + var(--text-size-adjust));
+    color: var(--ink); background: #f7f1e2; transform: rotate(-2.5deg);
+    border-radius: 3px 1px 4px 2px; box-shadow: 0 1px 2px rgba(60,50,35,0.22);
   }
 
-  /* the pushpin holding each snapshot to the desk */
+  /* The pushpin holding each snapshot to the desk. Flat ink and one colour: the page is
+     drawn, so a glossy plastic bead with a specular highlight on it is the one object
+     here pretending to be a photograph of a thing. It gets an inked ring and a slightly
+     uneven head instead, and no two heads on the board are quite the same shape. */
   .af-pin {
-    position: absolute; top: -8px; left: 50%; width: 15px; height: 15px; z-index: 3;
-    transform: translateX(-50%); border-radius: 50%; background: #c7413a;
-    box-shadow: inset 2px 2px 2px rgba(255,255,255,0.45), inset -1px -2px 2px rgba(0,0,0,0.28), 0 3px 4px rgba(0,0,0,0.32);
+    position: absolute; top: -7px; left: 50%; width: 14px; height: 14px; z-index: 3;
+    transform: translateX(-50%); background: #c0453c;
+    border-radius: 52% 48% 51% 49% / 49% 52% 48% 51%;
+    box-shadow: inset 0 0 0 1.2px rgba(43,39,34,0.5), 1px 2px 0 rgba(60,50,35,0.14);
+  }
+  .af-board .af-tile:nth-child(3n) .af-pin {
+    border-radius: 48% 52% 47% 53% / 53% 47% 52% 48%; width: 13px; height: 13px;
+  }
+  .af-board .af-tile:nth-child(3n+2) .af-pin {
+    border-radius: 51% 49% 53% 47% / 47% 51% 49% 53%; width: 15px; height: 14px;
   }
 
   /* perfected — pressed in gold leaf: gold pin, gilded top corners, gold caption */
@@ -3826,11 +3859,12 @@
   }
   .af-tile.is-perfect .af-tile-cap { color: #b0821f; }
   .af-corner { position: absolute; top: 7px; width: 0; height: 0; z-index: 2; }
-  .af-corner--tl { left: 7px; border-top: 15px solid #e0b93f; border-right: 15px solid transparent; }
-  .af-corner--tr { right: 7px; border-top: 15px solid #e0b93f; border-left: 15px solid transparent; }
+  .af-corner--tl { left: 7px; border-top: 14px solid #ddb43c; border-right: 14px solid transparent; transform: rotate(-2deg); }
+  .af-corner--tr { right: 7px; border-top: 13px solid #ddb43c; border-left: 15px solid transparent; transform: rotate(1.5deg); }
 
   @media (prefers-reduced-motion: reduce) {
-    .af-board .af-tile { transform: none; }
+    .af-board .af-tile,
+    .af-board .af-tile:nth-child(n) { transform: none; }
     .af-tile:hover { transform: translateY(-2px); }
   }
 
@@ -3867,13 +3901,14 @@
   :root[data-theme="dark"] .af-tile-cap { color: #2f2a20; }
   :root[data-theme="dark"] .af-tile.is-fresh .af-tile-cap,
   :root[data-theme="dark"] .af-tile.is-played .af-tile-cap,
-  :root[data-theme="dark"] .af-tile-score { color: #4b4438; }
-  :root[data-theme="dark"] .af-tile.is-fresh .af-tile-win {
-    background: #ada182; box-shadow: inset 0 0 0 1.5px #948871;
-  }
+  :root[data-theme="dark"] .af-tile-score { color: #3a352b; }
+  :root[data-theme="dark"] .af-tile-win { background: #bcb094; box-shadow: inset 0 0 0 1px rgba(43,39,34,0.16); }
+  :root[data-theme="dark"] .af-tile-score { background: #efe7d3; box-shadow: 0 1px 2px rgba(0,0,0,0.3); }
   :root[data-theme="dark"] .af-tile.is-perfect .af-tile-cap { color: #7d5a12; }
   /* Pin and gold leaf are objects too: same colours, one stop down for the same lamp. */
-  :root[data-theme="dark"] .af-pin { background: #ad382f; }
+  :root[data-theme="dark"] .af-pin {
+    background: #ad382f; box-shadow: inset 0 0 0 1.2px rgba(43,39,34,0.5), 1px 2px 0 rgba(0,0,0,0.28);
+  }
   :root[data-theme="dark"] .af-corner--tl,
   :root[data-theme="dark"] .af-corner--tr { border-top-color: #c9a435; }
   /* The difficulty row is the opposite case: a control drawn ON the paper rather than an object
