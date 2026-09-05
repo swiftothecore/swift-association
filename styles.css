@@ -7249,6 +7249,7 @@
   .stats-nav .stats-title {
     font-family: var(--hand); font-weight: 700; font-size: calc(26px + var(--text-size-adjust));
     color: var(--ink); transform: rotate(-0.8deg); cursor: default;
+    -webkit-user-select: none; user-select: none;
   }
   /* A clicked inside-page title skips across the paper one letter at a time. The
      title keeps its resting handwritten tilt while each generated letter supplies
