@@ -3664,7 +3664,7 @@ export const ACHIEVEMENTS = [
   { id: "answer-song-titled-the-prompt-word", name: "Well, Yes!", desc: "Answer with the song whose title is the prompt word", secret: false, icon: "equals" },
   { id: "answer-5-songs-titled-the-prompt-word", name: "Say The Quiet Part", desc: "Answer the song-titled-the-word for five different words", tier: 2, secret: false, icon: "fivewords" },
   { id: "answer-alternate-version-when-base-would-do", name: "Acoustic Version Is Better", desc: "Name an alternate version when the original would have counted", secret: false, icon: "parens", sitting: true, earn: { cat: "difficulty" } },
-  { id: "answer-3-fifth-tracks-one-game", name: "Track 5 Lover", desc: "Answer three fifth tracks in one game", secret: false, icon: "trackfive", sitting: true, earn: { cat: "difficulty" } },
+  { id: "answer-3-fifth-tracks-one-game", name: "Track 5 Lover", desc: "Answer three track 5s in one game", secret: false, icon: "trackfive", sitting: true, earn: { cat: "difficulty" } },
   { id: "answer-thirteenth-track-on-page-13", name: "Right On Thirteen", desc: "Answer page 13 with an album's thirteenth track", secret: false, icon: "bookmark", sitting: true, earn: { cat: "difficulty" } },
   { id: "answer-aoty-word-from-another-aoty-album", name: "Albums Of The Year", desc: "Take a word that titles an Album of the Year track with a song off a different Album of the Year", tier: 2, secret: false, icon: "laurel" },
   { id: "answer-vault-track-for-tv-track-title", name: "Exploring The Vault", desc: "Take a word that titles a Taylor's Version track with a song From The Vault", tier: 2, secret: false, icon: "vault" },
