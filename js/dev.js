@@ -464,8 +464,8 @@ export function initDev(api) {
 
   // ---- The page turn -----------------------------------------------------------
   // Catch the next flip sheet, freeze it a third of the way through its turn and hold it
-  // there, then audit every url(#…) it paints through. A flip sheet is a CLONE, so a gradient
-  // or a filter it references has to resolve to a def that travelled with the sheet
+  // there, then audit every id reference it carries. A flip sheet is a CLONE, so a gradient,
+  // label, control, or fragment link has to resolve to the node that travelled with the sheet
   // (renameFlipIds in app.js) — or to something outside it that is genuinely shared, like the
   // rule-mark symbols. Neither used to be true: the ids were stripped off the clone, the
   // bracelet's bead sheen and drop shadow resolved to nothing, and gloss beads went flat for
@@ -476,45 +476,107 @@ export function initDev(api) {
   const flipAuditOut = mk("pre", { class: "dv-pre" }, "—");
   let heldSheet = null;
   let holdArmed = null;
+  let holdBaseline = null;
+  const flipTokens = ["--ink-accent", "--highlighter", "--bead", "--page-wash"];
+  const idRefAttrs = new Set(["aria-labelledby", "aria-describedby", "aria-controls", "aria-owns",
+    "aria-activedescendant", "aria-details", "aria-errormessage", "aria-flowto", "for", "headers",
+    "list", "form", "itemref", "popovertarget", "commandfor"]);
   const auditSheetRefs = (sheet) => {
     const refs = new Set();
     [sheet, ...sheet.querySelectorAll("*")].forEach((el) => {
       Array.from(el.attributes).forEach((attr) => {
-        const hit = /url\(\s*['"]?#([^'")\s]+)/.exec(attr.value);
-        if (hit) refs.add(hit[1]);
+        for (const hit of attr.value.matchAll(/url\(\s*['"]?#([^'")\s]+)/g)) refs.add(hit[1]);
+        if ((attr.localName === "href" || attr.name === "xlink:href") && attr.value.startsWith("#"))
+          refs.add(attr.value.slice(1));
+        if (idRefAttrs.has(attr.name))
+          attr.value.split(/\s+/).filter(Boolean).forEach((id) => refs.add(id));
       });
     });
-    // A reference is fine if it lands inside the sheet, and fine if it lands on something
-    // shared that is still mounted. It is broken only when it lands on nothing at all.
+    const localIds = new Set([sheet, ...sheet.querySelectorAll("[id]")].map((el) => el.id).filter(Boolean));
+    const renamed = new Map([sheet, ...sheet.querySelectorAll("[data-flip-id]")]
+      .map((el) => [el.dataset.flipId, el.id]));
+    // An external reference is fine only when the sheet has no renamed counterpart for it.
+    // Otherwise resolving to the live page's old id would hide a missed rewrite.
     const dangling = [...refs].filter((id) => {
-      const sel = `[id="${CSS.escape(id)}"]`;
-      return !sheet.querySelector(sel) && !document.querySelector(sel);
+      if (localIds.has(id)) return false;
+      if (renamed.has(id)) return true;
+      return !document.getElementById(id);
     });
     return { checked: refs.size, dangling };
   };
   const releaseSheet = () => {
-    if (heldSheet) { delete heldSheet.remove; heldSheet.remove(); heldSheet = null; }
+    if (heldSheet) {
+      const sheet = heldSheet;
+      heldSheet = null;
+      sheet.removeAttribute("data-dev-hold");
+      sheet.dispatchEvent(new Event("pageturn:release"));
+    }
     if (holdArmed) { holdArmed.disconnect(); holdArmed = null; }
+    holdBaseline = null;
   };
   const holdNextTurn = () => {
     releaseSheet();
+    const source = document.querySelector(".screen.active");
+    const app = document.querySelector(".app");
+    const sourceStyle = source ? getComputedStyle(source) : null;
+    holdBaseline = {
+      scrollHeight: document.documentElement.scrollHeight,
+      scrollWidth: document.documentElement.scrollWidth,
+      appHeight: app ? app.getBoundingClientRect().height : 0,
+      palette: sourceStyle ? flipTokens.map((token) => sourceStyle.getPropertyValue(token).trim()) : [],
+    };
     holdArmed = new MutationObserver((records) => {
+      const candidates = [];
       records.forEach((record) => record.addedNodes.forEach((node) => {
-        if (heldSheet || node.nodeType !== 1 || !node.classList || !node.classList.contains("page-flip-sheet")) return;
-        heldSheet = node;
-        holdArmed.disconnect();
-        holdArmed = null;
-        // A negative delay seeks into the animation; pausing then pins it there.
-        [node, ...node.querySelectorAll(".flip-shade")].forEach((el) => {
-          el.style.animationDelay = "-0.16s";
-          el.style.animationPlayState = "paused";
-        });
-        node.remove = () => {};            // outlive scheduleFlipRemoval's timeout
-        const report = auditSheetRefs(node);
-        flipAuditOut.textContent = report.dangling.length
-          ? `sheet held · ${report.dangling.length} dangling of ${report.checked}\n${report.dangling.map((id) => "• " + id).join("\n")}`
-          : `sheet held · all ${report.checked} url(#…) refs resolve`;
+        if (node.nodeType !== 1) return;
+        if (node.matches && node.matches(".page-flip-sheet:not(.flip-static)")) candidates.push(node);
+        if (node.querySelectorAll) candidates.push(...node.querySelectorAll(".page-flip-sheet:not(.flip-static)"));
       }));
+      const node = candidates[0];
+      if (heldSheet || !node) return;
+      heldSheet = node;
+      heldSheet.setAttribute("data-dev-hold", "");
+      holdArmed.disconnect();
+      holdArmed = null;
+      // A negative delay seeks into the animation; pausing then pins it there.
+      [node, ...node.querySelectorAll(".flip-shade")].forEach((el) => {
+        el.style.animationDelay = "-0.16s";
+        el.style.animationPlayState = "paused";
+      });
+      const report = auditSheetRefs(node);
+      const ids = new Map();
+      document.querySelectorAll("[id]").forEach((el) => ids.set(el.id, (ids.get(el.id) || 0) + 1));
+      const duplicates = [...ids].filter(([, count]) => count > 1).map(([id]) => id);
+      const appNow = document.querySelector(".app");
+      const geometryStable = !!holdBaseline &&
+        document.documentElement.scrollHeight === holdBaseline.scrollHeight &&
+        document.documentElement.scrollWidth === holdBaseline.scrollWidth &&
+        (!appNow || Math.abs(appNow.getBoundingClientRect().height - holdBaseline.appHeight) < 0.5);
+      const palette = flipTokens.map((token) => getComputedStyle(node).getPropertyValue(token).trim());
+      // A reverse turn animates a clone of the destination, not the page that was active when
+      // the audit was armed. Its correct palette is therefore the newly active original's;
+      // every outgoing/top-edge sheet is expected to keep the armed source palette.
+      const original = node.classList.contains("page-flip-sheet--in") && node.dataset.flipId
+        ? document.getElementById(node.dataset.flipId) : null;
+      const expectedPalette = original
+        ? flipTokens.map((token) => getComputedStyle(original).getPropertyValue(token).trim())
+        : (holdBaseline && holdBaseline.palette);
+      const paletteStable = !!expectedPalette && palette.every((value, i) => value === expectedPalette[i]);
+      const dest = document.querySelector(".screen.active");
+      const layer = node.closest(".page-flip-layer");
+      const lines = [
+        "sheet held",
+        report.dangling.length
+          ? `${report.dangling.length} dangling of ${report.checked}: ${report.dangling.join(", ")}`
+          : `all ${report.checked} id references resolve`,
+        `duplicate ids: ${duplicates.length}${duplicates.length ? " (" + duplicates.join(", ") + ")" : ""}`,
+        `clone hidden/inert: ${node.getAttribute("aria-hidden") === "true" && node.hasAttribute("inert") ? "yes" : "NO"}`,
+        `palette frozen: ${paletteStable ? "yes" : "NO"}`,
+        `geometry stable: ${geometryStable ? "yes" : "NO"}`,
+        `fixed clipped layer: ${layer && getComputedStyle(layer).position === "fixed" && getComputedStyle(layer).overflow === "clip" ? "yes" : "NO"}`,
+        `destination held: ${dest && (dest.hasAttribute("inert") || dest.getAttribute("aria-busy") === "true") ? "yes" : "NO"}`,
+      ];
+      flipAuditOut.textContent = lines.join("\n");
     });
     holdArmed.observe(document.body, { childList: true, subtree: true });
     flipAuditOut.textContent = "armed — turn a page";

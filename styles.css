@@ -1237,10 +1237,20 @@
   .screen.active { display: block; animation: fade 0.4s ease; }
   @keyframes fade { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
 
-  /* page turn — the answered page (a cloned sheet) lifts from its top edge and
+  /* The viewport layer keeps transformed sheets out of document layout and catches pointer
+     input until the destination is genuinely live. Its perspective origin is aligned to the
+     notebook by beginPageTurn, so moving the clone to <body> does not change the hinge. */
+  .page-flip-layer {
+    position: fixed; inset: 0; z-index: 80; overflow: clip;
+    pointer-events: auto; touch-action: none;
+    perspective: 1700px;
+    perspective-origin: var(--flip-origin-x, 50%) var(--flip-origin-y, 0%);
+  }
+
+  /* page turn: the answered page (a cloned sheet) lifts from its top edge and
      flips away toward the reader, revealing the next page already in place beneath */
   .page-flip-sheet {
-    display: block; position: absolute; z-index: 40; pointer-events: none;
+    display: block; position: absolute; z-index: 1; pointer-events: none;
     transform-origin: top center; backface-visibility: hidden;
     box-shadow: 0 22px 44px rgba(60, 50, 35, 0.34);
     animation: pageFlip 0.5s cubic-bezier(.42,.04,.34,1) forwards;
@@ -2948,7 +2958,7 @@
   /* ---------- Bonus game play screen (shared chrome for every bonus game) ---------- */
   /* Spot the Slip's short prompt should still open as a full notebook page. This is a
      minimum only: its answer card and narrow layouts remain free to extend the paper. */
-  #screen-bonusplay[data-bonus-game="spot-the-slip"] { min-height: 540px; }
+  :is(#screen-bonusplay, [data-flip-id="screen-bonusplay"])[data-bonus-game="spot-the-slip"] { min-height: 540px; }
   .bg-hud {
     display: flex; justify-content: space-between; align-items: baseline;
     font-family: var(--type); font-size: calc(10.5px + var(--text-size-adjust)); letter-spacing: 1.2px; text-transform: uppercase;
@@ -3444,7 +3454,7 @@
   .bg-end-actions .btn-primary { flex: 1; width: auto; margin: 0; padding: 11px 10px; font-size: calc(13px + var(--text-size-adjust)); }
   .bg-end-actions .btn-primary:first-child { transform: rotate(0.6deg); }
 
-  #bonusShelfBtn {
+  :is(#bonusShelfBtn, [data-flip-id="bonusShelfBtn"]) {
     --btn-wash: rgba(112, 122, 178, 0.28);
     --btn-mark: rgba(66, 76, 136, 0.26);
     background-color: var(--btn-wash);
@@ -3454,13 +3464,13 @@
     background-size: 11px 11px;
     transition: --btn-wash 0.22s ease, --btn-mark 0.22s ease, color 0.2s ease, transform 0.12s, box-shadow 0.2s;
   }
-  #bonusShelfBtn:hover {
+  :is(#bonusShelfBtn, [data-flip-id="bonusShelfBtn"]):hover {
     color: var(--paper);
     --btn-wash: #4c5488;
     --btn-mark: rgba(245, 239, 225, 0.26);
   }
 
-  #bonusAgainBtn {
+  :is(#bonusAgainBtn, [data-flip-id="bonusAgainBtn"]) {
     --btn-wash: rgba(186, 96, 122, 0.28);
     --btn-mark: rgba(158, 62, 90, 0.32);
     background-color: var(--btn-wash);
@@ -3468,7 +3478,7 @@
     background-size: 13px 7.5px;
     transition: --btn-wash 0.22s ease, --btn-mark 0.22s ease, color 0.2s ease, transform 0.12s, box-shadow 0.2s;
   }
-  #bonusAgainBtn:hover {
+  :is(#bonusAgainBtn, [data-flip-id="bonusAgainBtn"]):hover {
     color: var(--paper);
     --btn-wash: #a8465e;
     --btn-mark: rgba(245, 239, 225, 0.30);
@@ -3670,7 +3680,7 @@
     box-shadow: inset 0 0 0 1px rgba(214,182,250,0.55), 4px 4px 0 rgba(0,0,0,0.54);
   }
 
-  #backToChallenges {
+  :is(#backToChallenges, [data-flip-id="backToChallenges"]) {
     --btn-wash: rgba(120, 170, 220, 0.30);
     --btn-mark: rgba(63, 111, 163, 0.42);
     background-color: var(--btn-wash);
@@ -3679,20 +3689,20 @@
     background-position: 3px 3px;
     transition: --btn-wash 0.22s ease, --btn-mark 0.22s ease, color 0.2s ease, transform 0.12s, box-shadow 0.2s;
   }
-  #backToChallenges:hover {
+  :is(#backToChallenges, [data-flip-id="backToChallenges"]):hover {
     color: var(--paper);
     --btn-wash: #3f6fa3;
     --btn-mark: rgba(245, 239, 225, 0.30);
   }
 
-  #replayChallenge {
+  :is(#replayChallenge, [data-flip-id="replayChallenge"]) {
     --btn-wash: rgba(120, 185, 135, 0.30);
     --btn-mark: rgba(63, 125, 84, 0.34);
     background-color: var(--btn-wash);
     background-image: repeating-linear-gradient(45deg, var(--btn-mark) 0 2px, transparent 2px 8px);
     transition: --btn-wash 0.22s ease, --btn-mark 0.22s ease, color 0.2s ease, transform 0.12s, box-shadow 0.2s;
   }
-  #replayChallenge:hover {
+  :is(#replayChallenge, [data-flip-id="replayChallenge"]):hover {
     color: var(--paper);
     --btn-wash: #3f7d54;
     --btn-mark: rgba(245, 239, 225, 0.26);
@@ -3701,7 +3711,7 @@
   /* Album Focus reuses the same two-up row, but gets its own colours + patterns so it
      never reads as a copy of Challenges: back is a warm terracotta crosshatch (woven
      diagonals), replay is a plum field of hollow rings. */
-  #backToAlbumFocus {
+  :is(#backToAlbumFocus, [data-flip-id="backToAlbumFocus"]) {
     --btn-wash: rgba(181, 98, 63, 0.28);
     --btn-mark: rgba(150, 74, 44, 0.36);
     background-color: var(--btn-wash);
@@ -3710,13 +3720,13 @@
       repeating-linear-gradient(-45deg, var(--btn-mark) 0 1.5px, transparent 1.5px 8px);
     transition: --btn-wash 0.22s ease, --btn-mark 0.22s ease, color 0.2s ease, transform 0.12s, box-shadow 0.2s;
   }
-  #backToAlbumFocus:hover {
+  :is(#backToAlbumFocus, [data-flip-id="backToAlbumFocus"]):hover {
     color: var(--paper);
     --btn-wash: #b5623f;
     --btn-mark: rgba(245, 239, 225, 0.28);
   }
 
-  #replayAlbumFocus {
+  :is(#replayAlbumFocus, [data-flip-id="replayAlbumFocus"]) {
     --btn-wash: rgba(138, 106, 168, 0.28);
     --btn-mark: rgba(122, 90, 158, 0.42);
     background-color: var(--btn-wash);
@@ -3725,7 +3735,7 @@
     background-position: 3px 3px;
     transition: --btn-wash 0.22s ease, --btn-mark 0.22s ease, color 0.2s ease, transform 0.12s, box-shadow 0.2s;
   }
-  #replayAlbumFocus:hover {
+  :is(#replayAlbumFocus, [data-flip-id="replayAlbumFocus"]):hover {
     color: var(--paper);
     --btn-wash: #7a5a9e;
     --btn-mark: rgba(245, 239, 225, 0.30);
@@ -3734,27 +3744,27 @@
   /* Custom's two-up row gets its own colours + patterns too, so it never reads as a copy
      of Challenges or Album Focus: ← modes is a brick-rust field ruled with vertical ledger
      lines (its own workshop hue), replay is a teal ruled the opposite diagonal. */
-  #backToCustom {
+  :is(#backToCustom, [data-flip-id="backToCustom"]) {
     --btn-wash: rgba(187, 86, 64, 0.28);
     --btn-mark: rgba(150, 60, 44, 0.42);
     background-color: var(--btn-wash);
     background-image: repeating-linear-gradient(90deg, var(--btn-mark) 0 1.5px, transparent 1.5px 9px);
     transition: --btn-wash 0.22s ease, --btn-mark 0.22s ease, color 0.2s ease, transform 0.12s, box-shadow 0.2s;
   }
-  #backToCustom:hover {
+  :is(#backToCustom, [data-flip-id="backToCustom"]):hover {
     color: var(--paper);
     --btn-wash: #b5563f;
     --btn-mark: rgba(245, 239, 225, 0.30);
   }
 
-  #replayCustom {
+  :is(#replayCustom, [data-flip-id="replayCustom"]) {
     --btn-wash: rgba(74, 140, 135, 0.28);
     --btn-mark: rgba(44, 108, 103, 0.40);
     background-color: var(--btn-wash);
     background-image: repeating-linear-gradient(-45deg, var(--btn-mark) 0 2px, transparent 2px 8px);
     transition: --btn-wash 0.22s ease, --btn-mark 0.22s ease, color 0.2s ease, transform 0.12s, box-shadow 0.2s;
   }
-  #replayCustom:hover {
+  :is(#replayCustom, [data-flip-id="replayCustom"]):hover {
     color: var(--paper);
     --btn-wash: #3f8580;
     --btn-mark: rgba(245, 239, 225, 0.28);
@@ -3776,14 +3786,14 @@
   /* The full-width "front page" button keeps its era highlighter wash, but picks up a
      faint graph-paper grid so it reads as patterned alongside the dotted challenges and
      diagonally-ruled replay buttons. Inked (not a fixed hue) so it rides every era. */
-  #againBtn {
+  :is(#againBtn, [data-flip-id="againBtn"]) {
     --btn-mark: rgba(43, 39, 34, 0.07);
     background-image:
       repeating-linear-gradient(0deg, var(--btn-mark) 0 1px, transparent 1px 11px),
       repeating-linear-gradient(90deg, var(--btn-mark) 0 1px, transparent 1px 11px);
     transition: --btn-mark 0.22s ease, background-color 0.22s ease, color 0.2s ease, transform 0.12s, box-shadow 0.2s;
   }
-  #againBtn:hover {
+  :is(#againBtn, [data-flip-id="againBtn"]):hover {
     --btn-mark: rgba(245, 239, 225, 0.10);
   }
 
@@ -3829,11 +3839,12 @@
   }
 
   #screen-ruthless { display: none; }
-  #screen-ruthless.active { display: flex; flex-direction: column; }
+  #screen-ruthless.active,
+  .page-flip-sheet[data-flip-id="screen-ruthless"] { display: flex; flex-direction: column; }
   /* No min-height:0 here on purpose: the body must never shrink below its own content, or on a
      window where the document lands on its min-content floor the footnote is pushed out through
      the bottom of the notebook. */
-  #ruthlessBody { display: flex; flex-direction: column; }
+  :is(#ruthlessBody, [data-flip-id="ruthlessBody"]) { display: flex; flex-direction: column; }
 
   .rl-blurb {
     font-family: var(--hand); font-size: clamp(1rem, 2.1vh, 1.18rem); line-height: 1.35;
@@ -4079,7 +4090,7 @@
   }
 
   /* the album's separate menu, matching the guest shelf's shelf-to-catalogue page turn */
-  #albumDetailBody { padding-top: 4px; }
+  :is(#albumDetailBody, [data-flip-id="albumDetailBody"]) { padding-top: 4px; }
   .af-detail { padding-left: 0; margin-top: 0; }
 
   .af-detail-spine { width: 7px; align-self: stretch; min-height: 30px; border-radius: 2px; box-shadow: inset 0 0 0 1px rgba(43,39,34,0.2); }
@@ -4143,8 +4154,8 @@
      (app.js) picks the count in markup and a breakpoint crossing re-renders. Nothing here
      reflows the passes on its own. */
   .guest-rack { margin: 4px 0 6px; }
-  #guestDetailBody { padding-top: 4px; }
-  #guestDetailBody .guest-detail { margin-top: 0; }
+  :is(#guestDetailBody, [data-flip-id="guestDetailBody"]) { padding-top: 4px; }
+  :is(#guestDetailBody, [data-flip-id="guestDetailBody"]) .guest-detail { margin-top: 0; }
   .guest-rail {
     position: relative; display: flex; justify-content: center; align-items: flex-start;
     gap: 14px; padding: 6px 0 34px;
@@ -5001,7 +5012,7 @@
      shrunk to sit inside the mode label without stealing width from an already tight column. */
   .hist-dark { display: inline-block; width: 11px; height: 11px; margin-left: 5px; vertical-align: -1px; color: #7a4bb0; }
   .hist-dark .chall-mark-svg { width: 100%; height: 100%; display: block; color: currentColor; }
-  #histMore { margin-top: 12px; }
+  :is(#histMore, [data-flip-id="histMore"]) { margin-top: 12px; }
 
   /* ---------- Records calendar heatmap (games played per day / per hour) ----------
      A contribution-grid in the notebook's gold "ink density". The grid spans the full
@@ -5397,7 +5408,7 @@
      Let this one visual keepsake borrow 32px on each side, still leaving 30px of
      viewport gutter and never widening the page itself. */
   @media (max-width: 560px) {
-    #screen-results .bracelet-result {
+    :is(#screen-results, [data-flip-id="screen-results"]) .bracelet-result {
       width: calc(100% + 64px); max-width: calc(100vw - 60px); margin-left: -32px;
     }
     .bracelet-keepsake > .bracelet-actions { flex: 1 0 100%; }
@@ -6698,9 +6709,9 @@
      the margin reads against the column rather than against the paper, but sitting fourteen
      pixels right of the number it names it just reads as crooked: the tally is one object,
      and every part of it wants the same axis. */
-  #screen-results > .word-label,
-  #screen-results .final-score,
-  #screen-results .bracelet-result { position: relative; left: -14px; }
+  :is(#screen-results, [data-flip-id="screen-results"]) > .word-label,
+  :is(#screen-results, [data-flip-id="screen-results"]) .final-score,
+  :is(#screen-results, [data-flip-id="screen-results"]) .bracelet-result { position: relative; left: -14px; }
   /* --tally-nudge is the optical correction centreTallyHead measures for whichever value the
      row is showing. A layout box is centred on the text's advance width, and the hand font's
      numerals do not sit square in theirs, so a row centred by layout alone paints visibly
@@ -6755,8 +6766,8 @@
      fade the ink with the wash; an X can't be drawn as a gradient, so it rides in a
      masked overlay instead — whose ink is a plain background-color that interpolates on
      its own, so the property dance isn't needed here. */
-  #saveNameBtn { position: relative; overflow: hidden; }
-  #saveNameBtn::before {
+  :is(#saveNameBtn, [data-flip-id="saveNameBtn"]) { position: relative; overflow: hidden; }
+  :is(#saveNameBtn, [data-flip-id="saveNameBtn"])::before {
     content: ""; position: absolute; inset: 0; pointer-events: none;
     background-color: rgba(43, 39, 34, 0.15);
     -webkit-mask-image: var(--sn-hatch); mask-image: var(--sn-hatch);
@@ -6764,7 +6775,7 @@
     --sn-hatch: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16'%3E%3Cg stroke='%23000' stroke-width='1.6' stroke-linecap='round' fill='none'%3E%3Cpath d='M2 2l4 4M6 2l-4 4'/%3E%3Cpath d='M10 10l4 4M14 10l-4 4'/%3E%3C/g%3E%3C/svg%3E");
     transition: background-color 0.22s ease;
   }
-  #saveNameBtn:hover::before { background-color: rgba(245, 239, 225, 0.20); }
+  :is(#saveNameBtn, [data-flip-id="saveNameBtn"]):hover::before { background-color: rgba(245, 239, 225, 0.20); }
   /* keep the label above the hatch overlay */
   .sn-word { position: relative; }
 
@@ -7078,10 +7089,10 @@
   /* The start sheet ends right under the nav-card grid, so keep its foot snug.
      Skip it while booting so the padding can't outrank .card.is-booting's padding:0
      (ID specificity) and leave a bare strip below the closed cover. */
-  #screen-start.card:not(.is-booting) { padding-bottom: 40px; }
+  :is(#screen-start, [data-flip-id="screen-start"]).card:not(.is-booting) { padding-bottom: 40px; }
 
   /* ---------- Stats page ---------- */
-  #screen-stats.card { padding-top: 16px; }
+  :is(#screen-stats, [data-flip-id="screen-stats"]).card { padding-top: 16px; }
   .stats-nav {
     display: flex; justify-content: space-between; align-items: center;
     margin-bottom: 18px;

@@ -479,6 +479,9 @@ function writeCtaLabel(btn, labelId) {
 
 function applySettings() {
   const body = document.body;
+  // A settings change can replace inherited paper, ink, motion, or layout tokens. Finish any
+  // in-flight sheet before applying it so a frozen outgoing page cannot restyle mid-turn.
+  if (activePageTurn) finishActivePageTurn();
   const dark = effectiveTheme() === "dark";
   // The attribute lives on <html> so the pre-paint script (which runs before <body> exists)
   // and this function write to the same element, and CSS keys off :root[data-theme].
@@ -576,8 +579,10 @@ function playSound(name, force = false, level = 1) {
 function phoneViewport() {
   return !!(window.matchMedia && window.matchMedia("(max-width: 760px)").matches);
 }
-function focusRoundInput(input) {
-  if (input && (!phoneViewport() || settings.openKeyboard !== false)) input.focus();
+function focusRoundInput(input, preventScroll = false) {
+  if (!input || (phoneViewport() && settings.openKeyboard === false)) return;
+  if (!preventScroll) { input.focus(); return; }
+  try { input.focus({ preventScroll: true }); } catch (_) { input.focus(); }
 }
 
 /* ---------- December snowfall ---------- */
@@ -926,7 +931,26 @@ if ("ResizeObserver" in window) {
 }
 updateDeskTail();
 
-function showScreen(name) {
+function focusScreen(name) {
+  if (name === "game") return;
+  const sec = screens[name];
+  if (!sec || typeof sec.focus !== "function") return;
+  // A dialog owns focus until it closes. A page turn can finish behind Settings when the
+  // animation was already under way, and must not pull focus out of that modal.
+  if (document.querySelector(".settings-modal.open, .song-modal.open, .firstrun.open")) return;
+  try { sec.focus({ preventScroll: true }); } catch (_) { sec.focus(); }
+}
+
+function commitScreenPresentation(name, refresh = true) {
+  // Chrome outside the paper stays with the outgoing page until a page turn completes.
+  document.body.classList.toggle("in-game", name === "game");
+  updateMastheadHome(name);
+  if (refresh) window.dispatchEvent(new CustomEvent("deskscatter:refresh"));
+}
+
+function showScreen(name, options = {}) {
+  const deferFocus = !!options.deferFocus;
+  const deferPresentation = !!options.deferPresentation;
   // Defensive: clear any stray inline animation a flip sheet helper might have left on a real
   // screen, so every screen animates normally on its next genuine show.
   Object.values(screens).forEach((s) => { s.classList.remove("active"); s.style.animation = ""; });
@@ -947,8 +971,6 @@ function showScreen(name) {
   // A run is not a place: drop any panel URL the moment a board goes live, so the browser's
   // back button can't close a game the player is in the middle of (see clearRoute).
   if (name === "game" || name === "bonusplay") clearRoute();
-  // Hide the bottom-left lyric-search chrome during active play, so it doesn't clutter the board.
-  document.body.classList.toggle("in-game", name === "game");
   if (name !== "game") dismissCoachmark();   // no guided-round note should outlive the board
   // Re-arm the quit button fresh for each visit to the game (drop any stale armed state).
   if (name === "game") {
@@ -962,17 +984,8 @@ function showScreen(name) {
   // Move keyboard/screen-reader focus onto the newly shown screen so the next Tab
   // (and the SR reading position) start there, not on the now-hidden trigger. The
   // game screen manages its own focus on #songInput, so don't steal it there.
-  if (name !== "game") {
-    const sec = screens[name];
-    if (sec && typeof sec.focus === "function") {
-      try { sec.focus({ preventScroll: true }); } catch (_) { sec.focus(); }
-    }
-  }
-  // The masthead doubles as the way home from any sub-page (see mastheadHome).
-  updateMastheadHome(name);
-  // Nudge the decorative gutter beads (js/scatter.js): the page height changes
-  // between screens, so the scatter re-fills to match whatever is now shown.
-  window.dispatchEvent(new CustomEvent("deskscatter:refresh"));
+  if (!deferFocus) focusScreen(name);
+  if (!deferPresentation) commitScreenPresentation(name);
 }
 
 /* ---------- Renaming the ids inside a flip sheet ----------
@@ -986,20 +999,23 @@ function showScreen(name) {
    flat and the pearls went plain — and then came back, because the page underneath had been
    rendered with a fresh set of ids all its own.
    Renaming rather than deleting keeps the document free of duplicates AND keeps every internal
-   reference pointing at the copy that travelled with the sheet. Nothing about the styling
-   changes: an id selector matched neither the stripped clone nor the renamed one, which is why
-   the page-turn rules in styles.css are keyed off classes and data attributes to begin with.
+   reference pointing at the copy that travelled with the sheet. Each renamed node keeps its old
+   name in data-flip-id, which the small set of id-based presentation rules in styles.css aliases.
    References that point OUT of the sheet — the rule-mark <symbol>s, the desk's bead sprite —
    aren't in the map, so they are left alone and still resolve to the originals. */
 let flipIdSeq = 0;
 const FLIP_IDREF_ATTRS = ["aria-labelledby", "aria-describedby", "aria-controls", "aria-owns",
-  "aria-activedescendant", "aria-details", "aria-errormessage", "for", "headers", "list", "form"];
+  "aria-activedescendant", "aria-details", "aria-errormessage", "aria-flowto", "for", "headers",
+  "list", "form", "itemref", "popovertarget", "commandfor"];
 function renameFlipIds(root) {
   const prefix = "flip" + (++flipIdSeq) + "-";
   const renamed = new Map();
   [root, ...root.querySelectorAll("[id]")].forEach((el) => {
     const old = el.getAttribute("id");
     if (!old) return;
+    // CSS presentation selectors use this collision-free alias while the real id is renamed.
+    // It also gives the dev audit a stable way to pair a clone node with its source node.
+    el.setAttribute("data-flip-id", old);
     renamed.set(old, prefix + old);
     el.setAttribute("id", prefix + old);
   });
@@ -1021,6 +1037,140 @@ function renameFlipIds(root) {
   });
 }
 
+const FLIP_PALETTE_TOKENS = ["--ink-accent", "--highlighter", "--bead", "--page-wash"];
+let activePageTurn = null;
+
+function freezeFlipPalette(src, flip) {
+  const style = getComputedStyle(src);
+  FLIP_PALETTE_TOKENS.forEach((token) => {
+    flip.style.setProperty(token, style.getPropertyValue(token));
+  });
+}
+
+// cloneNode copies markup, not the whole rendered state. Preserve the live values that can be
+// visible on a turning page, especially a scrolled challenge list or Ruthless lyric stream.
+// The source and copy stay structurally identical, so corresponding nodes pair by tree order.
+function copyFlipRuntimeState(src, flip) {
+  const sources = [src, ...src.querySelectorAll("*")];
+  const copies = [flip, ...flip.querySelectorAll("*")];
+  sources.forEach((node, i) => {
+    const copy = copies[i];
+    if (!copy) return;
+    if (node instanceof HTMLInputElement && copy instanceof HTMLInputElement) {
+      copy.value = node.value;
+      copy.checked = node.checked;
+      copy.indeterminate = node.indeterminate;
+    } else if (node instanceof HTMLTextAreaElement && copy instanceof HTMLTextAreaElement) {
+      copy.value = node.value;
+    } else if (node instanceof HTMLSelectElement && copy instanceof HTMLSelectElement) {
+      copy.selectedIndex = node.selectedIndex;
+    } else if (node instanceof HTMLProgressElement && copy instanceof HTMLProgressElement) {
+      copy.value = node.value;
+    } else if (node instanceof HTMLMeterElement && copy instanceof HTMLMeterElement) {
+      copy.value = node.value;
+    }
+    if (node instanceof HTMLCanvasElement && copy instanceof HTMLCanvasElement) {
+      try {
+        copy.width = node.width;
+        copy.height = node.height;
+        copy.getContext("2d").drawImage(node, 0, 0);
+      } catch (_) {}
+    }
+    copy.scrollTop = node.scrollTop;
+    copy.scrollLeft = node.scrollLeft;
+  });
+}
+
+function positionFlipSheet(flip, at) {
+  const rect = at.getBoundingClientRect();
+  flip.style.top = rect.top + "px";
+  flip.style.left = rect.left + "px";
+  flip.style.width = rect.width + "px";
+  flip.style.height = rect.height + "px";
+}
+
+// A page turn is one transaction. The fixed layer contains every visual clone, the app keeps
+// its pre-turn dimensions, and state restored by finish() is shared by animationend, timeout,
+// resize, preference changes, and a newer turn superseding this one.
+function beginPageTurn(anchor) {
+  if (activePageTurn) activePageTurn.finish();
+  const app = document.querySelector(".app");
+  const appRect = app.getBoundingClientRect();
+  const documentWidth = document.documentElement.scrollWidth;
+  const layer = document.createElement("div");
+  layer.className = "page-flip-layer";
+  layer.setAttribute("aria-hidden", "true");
+  layer.style.setProperty("--flip-origin-x", (appRect.left + appRect.width / 2) + "px");
+  layer.style.setProperty("--flip-origin-y", appRect.top + "px");
+  layer.addEventListener("wheel", (event) => event.preventDefault(), { passive: false });
+  document.body.appendChild(layer);
+  // Some notebook tabs deliberately protrude past the paper. Switching to a screen without one
+  // can shrink the root scrollable width even while app height is locked, so retain the exact
+  // pre-turn horizontal extent with a non-painted layout sentinel.
+  const widthSentinel = document.createElement("div");
+  widthSentinel.setAttribute("aria-hidden", "true");
+  widthSentinel.setAttribute("inert", "");
+  widthSentinel.style.cssText = `position:absolute;left:0;top:0;width:${documentWidth}px;height:1px;visibility:hidden;pointer-events:none`;
+  document.body.appendChild(widthSentinel);
+
+  const oldStyle = {
+    height: app.style.height,
+    minHeight: app.style.minHeight,
+    maxHeight: app.style.maxHeight,
+    overflow: app.style.overflow,
+  };
+  app.style.height = appRect.height + "px";
+  app.style.minHeight = appRect.height + "px";
+  app.style.maxHeight = appRect.height + "px";
+  app.style.overflow = "clip";
+
+  const held = [];
+  let callback = null;
+  let finished = false;
+  const holdAttribute = (el, name, value = "") => {
+    if (!el) return;
+    held.push({ el, name, had: el.hasAttribute(name), value: el.getAttribute(name) });
+    el.setAttribute(name, value);
+  };
+  holdAttribute(app, "aria-busy", "true");
+
+  const turn = {
+    layer,
+    holdInert(el) { holdAttribute(el, "inert"); },
+    holdBusy(el) { holdAttribute(el, "aria-busy", "true"); },
+    setCompletion(fn) { callback = fn; },
+    finish() {
+      if (finished) return;
+      finished = true;
+      if (activePageTurn === turn) activePageTurn = null;
+      layer.remove();
+      widthSentinel.remove();
+      app.style.height = oldStyle.height;
+      app.style.minHeight = oldStyle.minHeight;
+      app.style.maxHeight = oldStyle.maxHeight;
+      app.style.overflow = oldStyle.overflow;
+      held.reverse().forEach(({ el, name, had, value }) => {
+        if (had) el.setAttribute(name, value == null ? "" : value);
+        else el.removeAttribute(name);
+      });
+      window.dispatchEvent(new CustomEvent("deskscatter:refresh"));
+      const done = callback;
+      callback = null;
+      if (done) done();
+    },
+  };
+  activePageTurn = turn;
+  return turn;
+}
+
+function finishActivePageTurn() {
+  if (activePageTurn) activePageTurn.finish();
+}
+
+window.addEventListener("resize", finishActivePageTurn);
+window.addEventListener("scroll", finishActivePageTurn, { passive: true });
+if (window.visualViewport) window.visualViewport.addEventListener("resize", finishActivePageTurn);
+
 /* Side-to-side page turns for screen navigation. Where nextRound's flip lifts the answered
    page up from its top edge (forward through the notebook), these turn pages sideways around
    the left spine. Two complementary motions sell "going in" vs "coming back":
@@ -1032,33 +1182,45 @@ function renameFlipIds(root) {
    reduced-motion / instant-speed / page-turn-off opt-outs (else they just switch instantly).
    A flip sheet is the clone of `src`, positioned over `at` (a currently-visible screen, so its
    offsets are real even when `src` is display:none). */
-function makeFlipSheet(src, at, sideClass, shadeClass) {
+function makeFlipSheet(src, at, sideClass, shadeClass, turn) {
   const flip = src.cloneNode(true);
-  // Keep element ids on the clone: some of the look is keyed off ids (e.g. #screen-start's
-  // backdrop, #againBtn), so stripping them would render the sheet in a half-unstyled state.
-  // The real screens come earlier in the DOM, so getElementById still resolves to them; the
-  // clone carries no event listeners (cloneNode) and is pointer-events:none and short-lived.
+  freezeFlipPalette(src, flip);
+  renameFlipIds(flip);
   flip.classList.remove("screen", "active");
-  // Purely a visual page-turn artifact (and a duplicate of live regions like #wordDisplay) —
-  // keep it out of the a11y tree so screen readers don't re-announce the cloned word/feedback.
+  // Purely a visual page-turn artifact: keep it out of both the accessibility and interaction
+  // trees so its copied controls cannot be reached by keyboard or virtual-cursor navigation.
   flip.setAttribute("aria-hidden", "true");
+  flip.setAttribute("inert", "");
   flip.classList.add("page-flip-sheet", sideClass);
   flip.style.animation = "";          // never inherit a one-off inline animation from the source
   flip.style.opacity = "";
   flip.style.transition = "";
-  flip.style.top = at.offsetTop + "px";
-  flip.style.left = at.offsetLeft + "px";
-  flip.style.width = at.offsetWidth + "px";
+  positionFlipSheet(flip, at);
   const shade = document.createElement("div");
   shade.className = "flip-shade " + shadeClass;
   flip.appendChild(shade);
-  at.parentNode.appendChild(flip);
+  turn.layer.appendChild(flip);
+  // Detached nodes clamp scroll offsets to zero. Repeat after insertion now layout exists.
+  copyFlipRuntimeState(src, flip);
   return flip;
 }
-function scheduleFlipRemoval(flip, onEnd) {
+function scheduleFlipRemoval(flip, onEnd, turn) {
   let finished = false;
-  const finish = () => { if (finished) return; finished = true; flip.remove(); if (onEnd) onEnd(); };
+  const finish = () => {
+    if (finished) return;
+    // The localhost dev panel can pin a sheet for visual inspection. It marks only the
+    // animated artifact and releases it through the event below, so the whole transaction,
+    // including layout and interaction locks, stays truthful while held.
+    if (flip.hasAttribute("data-dev-hold")) {
+      flip.setAttribute("data-dev-finish-pending", "");
+      return;
+    }
+    finished = true;
+    turn.finish();
+  };
+  turn.setCompletion(onEnd);
   flip.addEventListener("animationend", (e) => { if (e.target === flip) finish(); });
+  flip.addEventListener("pageturn:release", finish);
   setTimeout(finish, 500 * animScale() || 250);
 }
 // One-shot suppressor for the next page turn. Set where two navigations run back to back
@@ -1070,25 +1232,35 @@ function flipDisabled(name, current) {
   return !current || current === screens[name] || !pageTurnAnimated();
 }
 // FORWARD: the leaving page turns away to reveal the destination beneath it.
-function flipAwayToScreen(name) {
+function flipAwayToScreen(name, onDone) {
   const current = Object.values(screens).find((s) => s.classList.contains("active"));
-  if (flipDisabled(name, current)) { showScreen(name); return; }
-  const flip = makeFlipSheet(current, current, "page-flip-sheet--side", "flip-shade--side");
-  showScreen(name);                                   // destination now active beneath the sheet
-  scheduleFlipRemoval(flip);
+  if (flipDisabled(name, current)) { showScreen(name); if (onDone) onDone(); return; }
+  const dest = screens[name];
+  const turn = beginPageTurn(current);
+  turn.holdInert(dest);
+  const flip = makeFlipSheet(current, current, "page-flip-sheet--side", "flip-shade--side", turn);
+  showScreen(name, { deferFocus: true, deferPresentation: true });
+  dest.style.animation = "none";
+  scheduleFlipRemoval(flip, () => {
+    commitScreenPresentation(name, false);
+    if (dest.classList.contains("active")) focusScreen(name);
+    if (onDone) onDone();
+  }, turn);
 }
 // BACK: the destination page turns in on top of the page you're leaving. The destination must
 // already be rendered (and any display fix applied) by the caller before this runs.
-function flipInToScreen(name) {
+function flipInToScreen(name, onDone) {
   const current = Object.values(screens).find((s) => s.classList.contains("active"));
-  if (flipDisabled(name, current)) { showScreen(name); return; }
+  if (flipDisabled(name, current)) { showScreen(name); if (onDone) onDone(); return; }
   const dest = screens[name];
+  const turn = beginPageTurn(current);
+  turn.holdInert(dest);
   // 1. Freeze the page we're leaving as a static backdrop, so swapping the real screens
   //    underneath it is invisible.
-  const backdrop = makeFlipSheet(current, current, "flip-static", "flip-shade--off");
+  const backdrop = makeFlipSheet(current, current, "flip-static", "flip-shade--off", turn);
   // 2. Activate the destination beneath the backdrop NOW — so it's fully prepared (tape
   //    re-scattered, etc.) before we clone it.
-  showScreen(name);
+  showScreen(name, { deferFocus: true, deferPresentation: true });
   // Suppress the destination's own enter-fade: the incoming flip sheet IS the motion, and
   // when the page we're leaving is shorter than the destination (e.g. give-up: the game
   // card is shorter than the start screen) the real screen's fade would otherwise play in
@@ -1100,7 +1272,7 @@ function flipInToScreen(name) {
   // 3. Clone the now-final destination for the incoming sheet — so its tape and id-styled
   //    buttons match the real screen exactly — and flip it in over the backdrop. (dest is the
   //    visible active screen now, so its offsets are real.)
-  const incoming = makeFlipSheet(dest, dest, "page-flip-sheet--in", "flip-shade--in");
+  const incoming = makeFlipSheet(dest, dest, "page-flip-sheet--in", "flip-shade--in", turn);
   // 4. Now hide the real destination for the length of the turn. The backdrop only covers the
   //    page we're leaving, so when the destination is TALLER (e.g. quitting a game: the start
   //    board is longer than the game card) its uncovered lower strip would otherwise be sitting
@@ -1117,7 +1289,12 @@ function flipInToScreen(name) {
   backdrop.offsetHeight;                        // flush the opacity:1 baseline so the transition runs
   backdrop.style.transition = `opacity ${(0.16 * s).toFixed(3)}s linear ${(0.32 * s).toFixed(3)}s`;
   backdrop.style.opacity = "0";
-  scheduleFlipRemoval(incoming, () => { backdrop.remove(); dest.style.opacity = ""; });
+  scheduleFlipRemoval(incoming, () => {
+    dest.style.opacity = "";
+    commitScreenPresentation(name, false);
+    if (dest.classList.contains("active")) focusScreen(name);
+    if (onDone) onDone();
+  }, turn);
 }
 
 /* ---------- The masthead as a way home ----------
@@ -1300,32 +1477,38 @@ function revealNotebook(onDone) {
     done();
     return;
   }
-  // Measure the closed cover exactly as the player sees it now — at the card's real position and
-  // width (border-box, so restoring padding below won't move it) and the idle page height.
-  const top = card.offsetTop, left = card.offsetLeft, width = card.offsetWidth;
+  // Measure the closed cover exactly as the player sees it now, then lock that geometry before
+  // laying out the taller open board beneath it.
+  const turn = beginPageTurn(card);
+  turn.holdInert(card);
+  const cardRect = card.getBoundingClientRect();
   const height = loading.getBoundingClientRect().height;
   // Reveal the real board and hide the original cover, then immediately cover the seam with the
   // flip sheet (same synchronous tick, so the bare board never flashes before the turn starts).
   layOutBoard();
   loading.style.display = "none";
   const flip = loading.cloneNode(true);
+  freezeFlipPalette(card, flip);
   renameFlipIds(flip);
   flip.setAttribute("aria-hidden", "true");
+  flip.setAttribute("inert", "");
   flip.style.display = "";
   flip.classList.remove("loading");
   flip.classList.add("page-flip-sheet", "page-flip-sheet--side", "cover-flip");
-  flip.style.top = top + "px";
-  flip.style.left = left + "px";
-  flip.style.width = width + "px";
+  flip.style.top = cardRect.top + "px";
+  flip.style.left = cardRect.left + "px";
+  flip.style.width = cardRect.width + "px";
   flip.style.height = height + "px";
   const shade = document.createElement("div");
   shade.className = "flip-shade flip-shade--side";
   flip.appendChild(shade);
-  card.parentNode.appendChild(flip);
-  let finished = false;
-  const finish = () => { if (finished) return; finished = true; flip.remove(); done(); };
-  flip.addEventListener("animationend", (e) => { if (e.target === flip) finish(); });
-  setTimeout(finish, 500 * (animScale() || 1) + 80);
+  turn.layer.appendChild(flip);
+  scheduleFlipRemoval(flip, () => {
+    // Making the opening board inert drops its old boot-time focus. Restore the page before
+    // the completion hook optionally opens a routed screen, welcome dialog, or cover trigger.
+    if (card.classList.contains("active")) focusScreen("start");
+    done();
+  }, turn);
 }
 
 /* ---------- Admiring the cover ----------
@@ -6345,9 +6528,8 @@ function startBonusGame(g, lensId = null) {
   // Same: a run is exact until a page is forgiven, so it starts true once per run.
   blankExactRun = true;
   bonusRunId++;
-  // Started for every game, read only by the ones that keep a sweep. A flag checked here and
-  // again at the end is two places for a game to be half-timed.
-  bonusRunStart = performance.now();
+  // Sweep time begins with the first playable page, after the shelf turn has landed.
+  bonusRunStart = 0;
   stopBonusClock();
   stopBonusCountdown();
   // The pressing follows the game in from the shelf, so the play screen is visibly the
@@ -6359,8 +6541,7 @@ function startBonusGame(g, lensId = null) {
   const title = lens ? `Ruthless Game · ${lens.label}` : g.name;
   screens.bonusplay.dataset.bonusGame = lens ? "ruthless" : g.id;
   $("bonusPlayTitle").innerHTML = `${bonusDisc(g, "bonus-disc-sm")}<span>${escapeHtml(title)}</span>`;
-  flipAwayToScreen("bonusplay");
-  nextBonusRound();
+  nextBonusRound({ entering: true });
 }
 
 function bonusSeconds() {
@@ -6406,7 +6587,7 @@ function buildBonusPuzzle() {
   return buildNamePuzzle(songs, lineIndex, Math.random, 120, new Set(bonusRecentSongs));
 }
 
-function nextBonusRound() {
+function nextBonusRound(options = {}) {
   if (bonusRound >= BONUS_ROUNDS) { endBonusRun(); return; }
   bonusRound++;
   bonusPuzzle = buildBonusPuzzle();
@@ -6414,7 +6595,7 @@ function nextBonusRound() {
   // should be vanishingly rare, but skipping the page is the honest response — never show a
   // puzzle we can't vouch for. Settled BEFORE the page turns, so a skip can never leave a
   // half-turned sheet on the desk or start two flips over each other.
-  if (!bonusPuzzle) { nextBonusRound(); return; }
+  if (!bonusPuzzle) { nextBonusRound(options); return; }
   if (bonusPuzzle.fakeWord) {
     bonusRecentFakes.push(bonusPuzzle.fakeWord.toLowerCase());
     if (bonusRecentFakes.length > 6) bonusRecentFakes.shift();
@@ -6427,9 +6608,6 @@ function nextBonusRound() {
   redactWorth = bonusPagePoints(bonusGame);
   redactPeeled = 0;
   onlyPlayed = null;
-  // First of the two baselines (see bonusPageStart). This one covers the flip-in window, where
-  // the page can already be answered but the clock has not started.
-  bonusPageStart = performance.now();
   if (bonusGame.id === "only-here" && bonusPuzzle.hand)
     bonusPuzzle.hand.forEach((c) => onlyDealt.add(c.key));
   // A fresh chain: nothing picked, nothing banked. The longest run survives the page.
@@ -6444,8 +6622,8 @@ function nextBonusRound() {
   ruthlessSpent = 0;
 
   // Everything that makes the new page: the shared chrome, then the game's own body.
+  bonusLocked = true;
   const lay = () => {
-    bonusLocked = false;
     $("bonusFeedback").innerHTML = "";
     $("bonusFeedback").className = "bg-feedback";
     $("bonusProgress").textContent = `round ${bonusRound} / ${BONUS_ROUNDS}`;
@@ -6453,13 +6631,21 @@ function nextBonusRound() {
     $("bonusTimer").style.display = "";
     renderBonusPageRegister();
     renderBonusRound();
+    showBonusClockReady();
+  };
+  const begin = () => {
+    if (!(bonusRunStart > 0)) bonusRunStart = performance.now();
+    bonusLocked = false;
+    startBonusClock();
+    focusBonusRoundInput();
   };
   // The same page turn the round screen uses, and the same whoosh — a bonus page is a page of
-  // this notebook too. Page 1 lays down instantly: startBonusGame has just turned the whole
-  // card in, so there is no answered page to lift (the round screen's round-0 case exactly).
+  // this notebook too. Page 1 is prepared while hidden, then its clock begins only after the
+  // shelf-to-play turn has landed. Later pages stay inert until their top-edge turn is gone.
   playSound("page");
-  if (bonusRound === 1 || !pageTurnAnimated()) { lay(); startBonusClock(); return; }
-  turnPageSheet($("screen-bonusplay"), lay, startBonusClock);
+  if (options.entering) { lay(); flipAwayToScreen("bonusplay", begin); return; }
+  if (!pageTurnAnimated()) { lay(); begin(); return; }
+  turnPageSheet($("screen-bonusplay"), lay, begin, { inert: true });
 }
 
 // Shelf games are ten-page notebook stacks. Ruthless only borrows their loop and keeps its
@@ -6541,7 +6727,7 @@ function renderBonusRound() {
     input.addEventListener("keydown", (e) => {
       if (e.key === "Enter") { e.preventDefault(); judgeGap(); }
     });
-    focusRoundInput(input);
+    if (!bonusLocked) focusRoundInput(input);
   } else if (bonusGame.id === "then-what") {
     // The song is named at the top for Sing It Back's reason: the answer has to be pinned by a
     // real song rather than by whatever lines could be argued into. Solving it means singing
@@ -6586,17 +6772,11 @@ function renderBonusRound() {
       if (e.key === "Enter") { e.preventDefault(); judgeName(); }
     });
     $("bonusGiveUp").addEventListener("click", giveUpRuthless);
-    /* Baselined HERE as well as in startRuthlessClock, which runs a page-flip later. The page is
-       live from the moment it is laid down — the input is rendered and focused — so an answer
-       given during the flip would otherwise be timed from the PREVIOUS page's baseline and
-       charged a minute it never took. The clock re-baselines when it starts a beat later, so
-       the flip itself is not charged to anyone who doesn't answer during it. */
-    ruthlessStart = performance.now();
     // The first word is on the page before the clock's first tick, so it never opens blank and
     // the player is reading something from the moment the sheet lands.
     for (let i = 0; i < RUTHLESS_OPEN_WORDS; i++) revealRuthlessWord();
     updateRuthlessMeta();
-    focusRoundInput(input);
+    if (!bonusLocked) focusRoundInput(input);
   } else if (bonusGame.id === "redacted") {
     // Punctuation stays OUTSIDE the strip, on both counts: a comma is grammar rather than a
     // secret, and real redaction blacks the word, not the line's furniture. The word itself is
@@ -6644,8 +6824,14 @@ function renderBonusRound() {
       if (bonusDropdownKey(e)) return;
       if (e.key === "Enter") { e.preventDefault(); judgeName(); }
     });
-    focusRoundInput(input);
+    if (!bonusLocked) focusRoundInput(input);
   }
+}
+
+function focusBonusRoundInput() {
+  if (bonusLocked || settingsPauseActive || !bonusGame || bonusGame.id === "redacted") return;
+  const input = $("bonusInput");
+  if (input && screens.bonusplay.classList.contains("active")) focusRoundInput(input);
 }
 
 /* ---------- the clock ----------
@@ -6660,13 +6846,9 @@ function startBonusClock(resumeState = null) {
   if (settingsPauseActive) { settingsDeferredBonusClock = true; return; }
   settingsDeferredBonusClock = false;
   stopBonusClock();
-  // A page answered during its own flip-in is already settled by the time this runs (it is
-  // turnPageSheet's after-callback), and restarting a clock over a verdict would run the drip
-  // on a page that is showing its answer.
   if (bonusLocked) return;
   if (bonusTimed(bonusGame)) { startRuthlessClock(resumeState); return; }
-  // Second baseline: the page is really live now, so anything timed off it is timed off the
-  // clock the player can see rather than off the page turn that preceded it.
+  // The page is genuinely live now, so its score starts with the clock the player can see.
   if (!resumeState) bonusPageStart = performance.now();
   const fill = $("bonusTimerFill");
   const label = $("bonusTimerLabel");
@@ -6697,6 +6879,25 @@ function stopBonusClock() {
   bonusClockTotal = 0;
   bonusClockDeadline = 0;
   stopRuthlessDrip();
+}
+
+// Paint the next page's honest starting clock before the old sheet lifts away. The interval
+// still starts only in begin(), but the revealed page no longer carries the previous page's
+// zero or elapsed reading and then jumps at the animation boundary.
+function showBonusClockReady() {
+  const fill = $("bonusTimerFill");
+  const label = $("bonusTimerLabel");
+  if (!fill || !label || !bonusGame) return;
+  fill.classList.remove("low");
+  if (bonusTimed(bonusGame)) {
+    fill.style.width = "0%";
+    label.textContent = "0.0";
+    const spent = $("bonusSpent");
+    if (spent) spent.textContent = fmtTime(0);
+    return;
+  }
+  fill.style.width = "100%";
+  label.textContent = bonusSeconds().toFixed(1);
 }
 
 /* ---------- Ruthless Game: the count-up clock and the drip ----------
@@ -11925,7 +12126,7 @@ function renderHintAffordance() {
 
 // Reveal the next hint tier (1 = count + album, 2 = title shape, 3 = lyric line).
 function useHint() {
-  if (!hintsAllowed() || hintTier >= 3 || !roundHintSong) return;
+  if (roundClockPending || !hintsAllowed() || hintTier >= 3 || !roundHintSong) return;
   if (hintTier === 0 && !roundHinted[round - 1]) {
     roundHinted[round - 1] = true;
     hintsUsed++;
@@ -12732,7 +12933,7 @@ function renderTapGrid() {
 // A tile was tapped — lock the grid and answer with that song. A valid tile scores correct;
 // a decoy falls through submitAnswer as a wrong pick (the page is lost), same as the game.
 function onSeaTileClick(index) {
-  if (roundLocked || !seaRuleActive()) return;
+  if (roundLocked || roundClockPending || !seaRuleActive()) return;
   const tile = seaTiles[index];
   if (!tile) return;
   if (!tile.valid) seaDecoyTaps++;   // tapped a decoy — spoils a flawless run (Part The Sea)
@@ -13072,7 +13273,7 @@ function renderTapKnowledgeUI() {
 // Judge a tapped tile (index -1 = the clock ran out with nothing tapped), then hand the page to
 // submitAnswer's shared tail via the tapAnswerCorrect override.
 function onTapKnowledgeClick(index) {
-  if (roundLocked || !tapKnowledgeActive()) return;
+  if (roundLocked || roundClockPending || !tapKnowledgeActive()) return;
   const tile = index >= 0 ? tapTiles[index] : null;
   if (index >= 0 && !tile) return;
   tapAnswerCorrect = !!(tile && tile.correct);
@@ -15399,35 +15600,34 @@ function pickAlbumWord(album) {
    runs once the sheet is gone, which is where a clock belongs so none of its time is lost.
    Distinct from makeFlipSheet's side-to-side turns, which pivot on the left spine for screen
    navigation rather than forward through the notebook. */
-function turnPageSheet(card, fill, done) {
+function turnPageSheet(card, fill, done, options = {}) {
   card.style.transform = "";
+  const turn = beginPageTurn(card);
   const flip = card.cloneNode(true);
   // The live body changes era while `fill` prepares the next page. Freeze the outgoing
-  // sheet's inherited era tokens first, otherwise the old page briefly takes on the new
-  // page's colour before it has finished turning away.
-  const oldPageStyle = getComputedStyle(card);
-  ["--ink-accent", "--highlighter", "--bead", "--page-wash"].forEach((token) => {
-    flip.style.setProperty(token, oldPageStyle.getPropertyValue(token));
-  });
+  // sheet first, otherwise it takes on the new page's colour before it has turned away.
+  freezeFlipPalette(card, flip);
   renameFlipIds(flip);
   flip.classList.remove("screen", "active");
   // Decorative clone of the page — hide from the a11y tree so the duplicated live regions in
   // it (#wordDisplay, #feedback, #bonusFeedback) aren't re-announced during the page turn.
   flip.setAttribute("aria-hidden", "true");
+  flip.setAttribute("inert", "");
   flip.classList.add("page-flip-sheet");
-  flip.style.top = card.offsetTop + "px";
-  flip.style.left = card.offsetLeft + "px";
-  flip.style.width = card.offsetWidth + "px";
+  positionFlipSheet(flip, card);
   const shade = document.createElement("div");
   shade.className = "flip-shade";
   flip.appendChild(shade);
-  card.parentNode.appendChild(flip);
+  turn.layer.appendChild(flip);
+  copyFlipRuntimeState(card, flip);
+  turn.holdBusy(card);
+  if (options.inert) turn.holdInert(card);
 
   fill();                     // the next page is now in place under the flipping sheet
 
   // Primary trigger is a timeout matched to the 0.5s flip (CSS .page-flip-sheet), with
   // animationend as a fast-path; whichever lands first wins.
-  scheduleFlipRemoval(flip, done);
+  scheduleFlipRemoval(flip, done, turn);
 }
 
 // Whether a page turn should be animated at all: reduced motion, "instant" animation speed
@@ -15468,13 +15668,9 @@ function nextRound() {
   // Turn the answered page and lay the next one down beneath it. The timer for the new round
   // only starts once the flip has finished, so none of the 10s is lost.
   turnPageSheet($("screen-game"), () => {
-    advanceRound();
-    // The next page is mounted under the turning sheet before its clock starts. Keep the writing
-    // line live so a fast keyboard player can begin immediately; an Enter during this brief gap
-    // is queued by submitAnswer and handed to the page the instant beginRoundClock starts it.
-    roundClockPending = true;
-    pendingRoundSubmission = null;
-    roundClockTotal = 0;
+    // Keep the writing line live so a fast keyboard player can begin immediately. Every other
+    // action is held until the sheet clears, and an early Enter snapshots this exact answer.
+    advanceRound({ clockPending: true });
     // Mount this round's curtain (Wildcard's per-round rule) NOW, hidden beneath the flip
     // sheet, so the new word is already covered the instant the sheet rotates away (no
     // flash of the round). Once-per-run intros only show on round 1, which has no flip.
@@ -15750,10 +15946,20 @@ function beginRoundClock() {
     pendingRoundSubmission = null;
     if (roundLocked || !screens.game.classList.contains("active")) return;
     const input = $("songInput");
+    if (queued && queued.value != null) {
+      input.value = queued.value;
+      activeIndex = queued.activeIndex;
+    }
     input.disabled = false;
     focusRoundInput(input);
     roundStart = performance.now();
     startTimer();
+    // Typing was allowed beneath the turning sheet, but the flip was not clock time. Stamp
+    // that first key against the just-started clock instead of recording an untimed sentinel.
+    if (input.value && roundFirstKeyLeft[round - 1] == null) {
+      const left = clockRemaining();
+      roundFirstKeyLeft[round - 1] = left == null ? -1 : left;
+    }
     if (queued) submitAnswer(queued.song, queued.isTimeout);
   };
   const startPlay = () => { if (wagerRuleActive()) showWagerStake(go); else go(); };
@@ -15922,7 +16128,7 @@ function renderPerkReveals() {
 // the round is NOT consumed (re-rolls in place with a new clock), so it's a true
 // "I don't know this one" escape, not a forfeit.
 function usePathSkip() {
-  if (skipTokens <= 0 || roundLocked) return;
+  if (skipTokens <= 0 || roundLocked || roundClockPending) return;
   skipTokens -= 1;
   round -= 1;            // advanceRound bumps it straight back to the same round number
   clearTimer();
@@ -16348,7 +16554,7 @@ function clearWagerStake() {
 // a shield never spent is worth beads at the end (see endChallenge), which is what makes
 // buying your way out of trouble cost you the win rather than being free.
 function useInsurance() {
-  if (!insuranceRuleActive() || roundInsured || insuranceTokens <= 0 || roundLocked) return;
+  if (roundClockPending || !insuranceRuleActive() || roundInsured || insuranceTokens <= 0 || roundLocked) return;
   insuranceTokens -= 1;
   insuranceSpent += 1;
   roundInsured = true;
@@ -16643,10 +16849,10 @@ function revealedHintSong() {
   return pathPerk ? roundHintSong : null;
 }
 
-function advanceRound() {
+function advanceRound(options = {}) {
   round++;
   roundLocked = false;
-  roundClockPending = false;
+  roundClockPending = !!options.clockPending;
   pendingRoundSubmission = null;
   justEarnedIndex = -1;
   // Clear any lingering guided-round note before the new page draws — but let beat B ("nice,
@@ -16796,9 +17002,10 @@ function advanceRound() {
   $("rejectFlash").classList.remove("show");
   hideDropdown();
   renderVerseMeter("");                 // reset the live verse gauge for the new round
-  focusRoundInput(input);
+  focusRoundInput(input, roundClockPending);
 
   resetTension();
+  if (roundClockPending) showTimerFull();
   renderHintAffordance();
   renderPathSkip();
   renderInsuranceBtn();                        // Insurance: the shield action (hidden elsewhere)
@@ -18161,7 +18368,7 @@ function lockImpostorPage() {
 }
 // The 🚩 button: call the current word a fake. Right on a decoy (caught), fatal on a real word.
 function flagImpostor() {
-  if (!impostorRuleActive() || roundLocked) return;
+  if (roundClockPending || !impostorRuleActive() || roundLocked) return;
   if (!roundIsImpostor) { impostorGameOver("falseflag"); return; }   // accused a genuine word
   lockImpostorPage();
   impostorSeen++;
@@ -18413,10 +18620,20 @@ function checkCatalogueEggs(raw, song, correct) {
 function submitAnswer(song, isTimeout) {
   if (roundLocked) return;
   // During an animated page turn the next page is already writable, but its clock waits for the
-  // sheet to clear. Preserve an early Enter and resolve it once beginRoundClock makes the page
-  // live, rather than either ignoring the player or starting a timer on the later verdict.
+  // sheet to clear. Snapshot an early Enter so later typing cannot silently change the answer
+  // that will be judged when beginRoundClock makes the page live.
   if (roundClockPending) {
-    if (!pendingRoundSubmission) pendingRoundSubmission = { song, isTimeout };
+    if (!pendingRoundSubmission) {
+      const input = $("songInput");
+      pendingRoundSubmission = {
+        song,
+        isTimeout,
+        value: input ? input.value : "",
+        activeIndex,
+      };
+      if (input) input.disabled = true;
+      hideDropdown();
+    }
     return;
   }
 
@@ -20172,7 +20389,7 @@ let quitTimer = null;
 // in-progress run against a stray click. Wired to #quitBtn.
 function armQuit() {
   const btn = $("quitBtn");
-  if (!btn) return;
+  if (!btn || roundClockPending) return;
   if (settings.confirmLeave === false) { quitGame(); return; }
   if (btn.classList.contains("armed")) {
     clearTimeout(quitTimer);
@@ -21097,7 +21314,8 @@ function wireInput() {
     // Holding My Breath: when the player first put pen to paper on this page, recorded as the
     // seconds still on the clock. Once per page, and only while the page is live — the verdict
     // screen leaves the box disabled, so nothing typed after it can rewrite the stamp.
-    if (round > 0 && !roundLocked && input.value && roundFirstKeyLeft[round - 1] == null) {
+    if (round > 0 && !roundLocked && !roundClockPending
+        && input.value && roundFirstKeyLeft[round - 1] == null) {
       const left = clockRemaining();
       roundFirstKeyLeft[round - 1] = left == null ? -1 : left;   // -1: no clock to hold your breath against
     }
@@ -26303,6 +26521,9 @@ async function init() {
   if (window.matchMedia) {
     window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => {
       if ((settings.theme || "light") === "system") applySettings();
+    });
+    window.matchMedia("(prefers-reduced-motion: reduce)").addEventListener("change", () => {
+      if ((settings.reduceMotion || "auto") === "auto") applySettings();
     });
   }
   migrateRecordsFromStats();   // seed records from pre-existing stats once, before any game runs
