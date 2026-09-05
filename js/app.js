@@ -14132,6 +14132,8 @@ function renderChallengeProgress() {
   else if (rule === "common") renderCommonBanner();
   // The risk batch shares one banner (what's at stake · beads against the target).
   else if (RISK_RULES.has(rule)) renderRiskBanner();
+  // Every rule, banner or no banner: the room left is a property of the run, not of the card.
+  renderChallengeMargin();
 }
 // Fixed max-warp tier for Ready For It (the round-4-equivalent scramble+drop+reverse).
 const FLASHWARP_LEVEL = 4;
@@ -14337,7 +14339,9 @@ function ensureChallBanner() {
     el = document.createElement("div");
     el.id = "challBanner";
     el.className = "chall-banner";
-    const anchor = document.querySelector("#screen-game .word-label");
+    // Above the margin line when there is one, and above the word label either way — the
+    // banner says what the page wants, the margin says what the run has left, in that order.
+    const anchor = $("challMargin") || document.querySelector("#screen-game .word-label");
     anchor.parentNode.insertBefore(el, anchor);
     // Every rule writes its own markup into this one element, from a dozen render functions,
     // and the tally is set in 19px handwriting — which is right for "9 / 13" and absurd for
@@ -14355,6 +14359,92 @@ function sizeChallCount(el) {
   el.querySelectorAll(".chall-prog-count").forEach((c) => {
     c.classList.toggle("is-wordy", (c.textContent || "").trim().length >= CHALL_COUNT_WORDY);
   });
+}
+
+/* The margin line: where the run stands and how much room it has left, under the rule banner
+   and above the word. Its own element rather than a piece of the banner, because a dozen
+   render functions own that one innerHTML between them and half the roster (Vanishing Word,
+   Word Games) draws no banner at all — a margin that only appeared on the rules that happen to
+   have a banner would be missing from exactly the runs that go quietly wrong.
+
+   TWO LINES, AND THE ORDER IS THE POINT. What you have cleared is the number a player actually
+   wants off a glance, so it leads, set large. What you can still afford to get wrong goes
+   underneath it, noticeably smaller: true on every page but only worth reading on the last few,
+   and a countdown of failures has no business being the loudest thing on a healthy page. The
+   states escalate on the second line alone — the first line goes on plainly reporting the score
+   even once the target is gone, because that is still what the run is.
+
+   The marks belong to the second line and are sized to it: the same gate tally the challenge
+   card counts return runs on, the spent slips inked and the ones still in hand ghosted, so the
+   shape of the whole budget is readable from one stroke. Nothing here animates. */
+function ensureChallMargin() {
+  let el = $("challMargin");
+  if (!el) {
+    el = document.createElement("div");
+    el.id = "challMargin";
+    el.className = "chall-margin";
+    const anchor = document.querySelector("#screen-game .word-label");
+    anchor.parentNode.insertBefore(el, anchor);
+  }
+  return el;
+}
+
+// Why finishing a lost run is still worth doing, in the terms that actually apply to THIS
+// card. The return tally is the strong reason and only some challenges can earn it: a free or
+// Mastery entry never mints a token, a defeated one no longer needs the escape route, a dark
+// run is not counted toward returning its own base card, and past the seventh run the option
+// is already permanently earned. Everything else gets the reason that is always true.
+function deadRunReason(c) {
+  const rec = c ? challengeRecord(c.id) : null;
+  const banking = rec && !c.free && !c.mastery && !challengeDark && !rec.defeated
+    && rec.returnRuns < CHALLENGE_RETURN_RUNS;
+  return banking
+    ? `Play it out: finishing is mark ${rec.returnRuns + 1} of ${CHALLENGE_RETURN_RUNS} toward ` +
+      `trading this challenge back for its token. Quitting banks nothing.`
+    : `Play it out: the pages still fold into Instinct. Quitting banks nothing.`;
+}
+
+// Rules whose own banner already counts what the lead line would count (see the note in
+// renderChallengeMargin). Not a blindness like MARGIN_BLIND: these still get the slips line,
+// they just don't get the score said twice.
+const MARGIN_ECHO = new Set(["album5", "chain"]);
+function renderChallengeMargin() {
+  const el = $("challMargin");
+  const m = challengeSlips();
+  if (!m) { if (el) { el.hidden = true; el.innerHTML = ""; } return; }
+  const wrap = ensureChallMargin();
+  const lost = m.left < 0;
+  const spent = lost ? m.of : m.of - m.left;
+  wrap.dataset.state = lost ? "lost" : m.left === 0 ? "spent" : "ok";
+  wrap.hidden = false;
+  const marks = m.of > 0 ? tallyMarks(spent, m.of) : "";
+  // The lead line is the results screen's own sentence, read a run early: challengeTally is the
+  // one function that knows how each rule counts, and MARGIN_BLIND has already excluded every
+  // rule it would answer in some unit the slips arithmetic can't follow. Two readings of the
+  // same run must never be computed two ways, so it is asked rather than re-derived here.
+  // MARGIN_ECHO drops it entirely on the two rules whose own banner is already a count of the
+  // same thing, an inch higher up the page: Deep Cut's pips and Wrapped Like A Chain's tally
+  // both read "0 / 5" and "3 / 8" on their own, and printing that twice in two type sizes looks
+  // like two different numbers about two different things. Those two keep the slips line alone,
+  // which is the half they were missing.
+  const t = MARGIN_ECHO.has(currentChallenge.rule) ? null : challengeTally(currentChallenge);
+  const prog = t ? `${t.got} / ${t.need} ${t.unit}` : "";
+  // Only the dying run gets a bold clause on the second line, and it is the clause that says
+  // the target has gone — the sentence a player needs to stop hunting for a score that can no
+  // longer happen and read the reason to finish anyway. It does NOT re-quote the bar: the line
+  // directly above it is already naming the bar, and the two say it in different units on some
+  // rules ("0 / 10 pages cleared" over "10 / 13 is out of reach"), which reads like two
+  // different targets rather than one target and its verdict.
+  const said = lost
+    ? `<b>out of reach now.</b> ${escapeHtml(deadRunReason(currentChallenge))}`
+    : m.left === 0
+      ? `no slips left · every page from here`
+      : `${m.left} slip${m.left === 1 ? "" : "s"} left · ${escapeHtml(m.note)}`;
+  // A fresh node each render, so the lost line is announced the once it appears rather than
+  // every page turn quietly re-reading a number nobody asked for.
+  wrap.innerHTML =
+    (prog ? `<b class="chall-margin-prog">${escapeHtml(prog)}</b>` : "") +
+    `<span class="chall-margin-said">${marks}<span>${said}</span></span>`;
 }
 
 // Deep Cut: the album you've pulled the most correct songs from so far (the one the
@@ -14735,6 +14825,60 @@ function challengeTally(c) {
   if (beadScoredRule()) return { got: score, need: riskTarget(), unit: score === 1 ? "bead banked" : "beads banked" };
   if (c.rule === "chain") return { got: score, need: c.target || TOTAL_ROUNDS, unit: "songs chained" };
   return { got: score, need: c.target || TOTAL_ROUNDS, unit: "pages cleared" };
+}
+
+/* ---------- The margin: how much room the run has left ----------
+   A challenge is nearly always "clear N of thirteen pages", and the arithmetic that follows
+   from that is not something a player does in their head mid-run: miss five pages of a nine
+   target and the run is already lost, with eight pages still to play and nothing on screen
+   saying so. This is the number that says it — slips, meaning pages you could still get wrong
+   and finish on the target anyway.
+
+   KEEP IN STEP WITH challengeWinCheck, exactly as challengeTally is. The arithmetic is only
+   honest for a rule whose measure can rise by AT MOST ONE per page across a fixed run, because
+   "the best you could still do" is then precisely what you have plus the pages you have left.
+   Every rule that scores some other way is named in MARGIN_BLIND and gets no counter at all: a
+   margin that is wrong once is worse than no margin, since the whole thing anyone would do with
+   it is decide whether a run is still alive.
+
+   `left` is the count of misses still affordable. Zero does NOT mean lost — it means every
+   remaining page has to land. Below zero is the state this exists for: the run cannot reach its
+   target any more, whatever happens next. */
+const MARGIN_BLIND = new Set([
+  "newsong",                       // One Of A Kind: the goal is a song, not a number
+  "impostor",                      // impostor pages aren't chances at the target, and a bad flag ends the run outright
+  "ink",                           // Long Story Long is scored in characters, and a page can write hundreds
+  "survive", "insurance",          // sudden death: the lives tally already says what these have left
+  "press", "wager", "doubleup",    // the risk batch banks beads, and one page can pay several
+]);
+function challengeSlips(c = currentChallenge) {
+  if (gameType !== "challenge" || !c || MARGIN_BLIND.has(c.rule)) return null;
+  const total = sessionRounds();
+  const toPlay = Math.max(0, total - roundResults.length);   // this page included, until it is judged
+  // `goal` is the bar named the way the card names it — the margin's fallback lead line for a
+  // rule challengeTally has no reading for, and the one place the bar is spelled out in full.
+  // `note` says what a slip IS here, and it is not the same sentence on every rule: on Deep Cut
+  // a page answered correctly off the wrong album has still spent one.
+  const slips = (got, need, goal, note) =>
+    ({ left: got + toPlay - need, of: Math.max(0, total - need), goal, note });
+  // Deep Cut counts one album, so a page that scored on a different one was still a slip. The
+  // leader plus the pages left is the best that album can finish on, which is the same bound.
+  if (c.rule === "album5") {
+    const need = c.need || 5;
+    return slips(deepCutLeader().count, need, `${need} from one album`,
+      "pages that needn't land on your album");
+  }
+  // Lyric Lover measures word-perfect recall, one line to a page.
+  if (c.rule === "verse") {
+    const need = c.target || 4;
+    return slips(gameVersePerfect, need, `${need} line${need === 1 ? "" : "s"} word-for-word`,
+      "pages without a word-perfect line");
+  }
+  const need = c.target || total;
+  // Wrapped Like A Chain scores in links rather than pages, even though the two happen to move
+  // together, and quoting it a page count would name a number the card never uses.
+  const goal = c.rule === "chain" ? `${need} songs chained` : `${need} / ${total}`;
+  return slips(score, need, goal, "pages you can still afford to miss");
 }
 
 // Sandboxed results path for a challenge run (mirrors showDailyResult — no board,
@@ -17352,6 +17496,7 @@ function advanceRound(options = {}) {
   $("playArea").style.display = "";
   renderBracelet();
   renderLives();
+  renderChallengeMargin();   // hides itself on anything that isn't a challenge with a countable target
   renderFloatGauge();
   const input = $("songInput");
   input.value = "";
@@ -24129,6 +24274,22 @@ function devSeedDates(n, from) {
 // The single curated surface handed to the dev panel. Getters read live module
 // state on each call; the rest are thin wrappers over the game's own functions.
 function buildDevApi() {
+  // Fake `n` missed pages into the live run, so the margin's late states can be reached without
+  // playing eleven honest pages to get there. Misses are logged AND `round` is advanced with
+  // them, which is what keeps roundResults in step: the next real answer still writes at its own
+  // index instead of overwriting one of these. The page number in the meta row is the one thing
+  // left stale, and it catches up on the next page turn.
+  const burnSlips = (n) => {
+    if (gameType !== "challenge" || !challengeSlips()) return null;
+    for (let i = 0; i < (n | 0) && roundResults.length < sessionRounds(); i++) {
+      roundResults.push(false);
+      roundAlbums.push(null);
+      round++;
+    }
+    renderChallengeProgress();
+    renderBracelet();
+    return challengeSlips();
+  };
   return {
     MODES, MODE_ORDER, ERAS, ACHIEVEMENTS, SKILL_IDS, STUDIO_ALBUMS,
     GUIDE_BEAT_IDS: Object.keys(GUIDE_BEATS),
@@ -26260,6 +26421,18 @@ function buildDevApi() {
       // written, lines recalled word-for-word, rounds survived. Reads state, changes nothing.
       // null on One Of A Kind, which has no number to hit.
       tally: () => (gameType === "challenge" ? challengeTally(currentChallenge) : null),
+      /* The margin — what the run can still afford to get wrong. `state` is the live reading
+         and touches nothing; the other three burn pages to reach a state worth looking at.
+         Null on the rules the margin stays silent on (see MARGIN_BLIND), which is itself the
+         quickest way to check a rule is on the right side of that line. */
+      margin: {
+        state: () => challengeSlips(),
+        spend: (n) => burnSlips(Math.max(1, n | 0)),
+        // One slip left: the last page on which a miss is still survivable.
+        brink: () => { const m = challengeSlips(); return m ? burnSlips(m.left - 1) : null; },
+        // Past the end — the run cannot reach its target any more, which is the note itself.
+        doom: () => { const m = challengeSlips(); return m ? burnSlips(m.left + 1) : null; },
+      },
       // The fore-edge tab's ribbon on or off, for judging the two side by side mid-run.
       // Display only, and never persisted: it is a look under the hood, not a setting.
       ribbon: (on) => {

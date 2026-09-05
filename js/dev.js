@@ -407,6 +407,15 @@ export function initDev(api) {
         btn("start dark", () => api.challenge.dark.start(returnSel.value)),
         btn("dark diff", () => { console.log("[dev] dark diff", returnSel.value, api.challenge.dark.diff(returnSel.value)); toast("dark diff in console"); })),
     row(btn("tab ribbon", () => { readout.textContent = api.challenge.ribbon(); })),
+    // The margin line only says anything interesting at the end of its own countdown, and
+    // reaching that honestly is eleven pages of deliberately playing badly. `brink` parks the
+    // live run on its last affordable miss; `doom` steps past it, which is the lost note and
+    // the whole reason the counter exists. Null in the readout means this rule is in
+    // MARGIN_BLIND and draws no margin at all, which is worth being able to check.
+    row("margin", btn("state", () => { readout.textContent = JSON.stringify(api.challenge.margin.state()); }),
+        btn("burn 1", () => { readout.textContent = JSON.stringify(api.challenge.margin.spend(1)); }),
+        btn("to the brink", () => { readout.textContent = JSON.stringify(api.challenge.margin.brink()); }),
+        btn("doom the run", () => { readout.textContent = JSON.stringify(api.challenge.margin.doom()); }, "warn")),
     row(btn("unlock all dark sides", () => { const n = api.challenge.dark.unlockAll(); readout.textContent = `${n} dark sides unlocked — open Challenges`; }),
         btn("defeat all dark sides", () => { const n = api.challenge.dark.defeat(); readout.textContent = `${n} dark sides marked defeated — tap a black-violet seal`; }),
         btn("char all seals", () => { const n = api.challenge.dark.char(); readout.textContent = `${n} seals burnt — compare the burnt art across the roster`; }),

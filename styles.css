@@ -4836,6 +4836,63 @@
     font-family: var(--type); font-size: calc(11.5px + var(--text-size-adjust));
     letter-spacing: 0.3px; color: var(--ink-soft); opacity: 0.85;
   }
+  /* ---- the margin line: where the run stands, and how much room it has left ---------------
+     Under the rule banner, above the word, in two lines with a deliberate gap between them in
+     weight. The score leads at reading size; the slips line sits beneath it a good 3px smaller
+     and dimmed, carrying the gate marks at a height matched to its own text rather than the
+     line above it. That hierarchy is the whole design: the top line is worth a glance every
+     page, the bottom one only becomes interesting at the end of its own countdown, and sizing
+     them the same made a countdown of failures the loudest thing on a healthy page.
+
+     Three states, and only the last one is allowed to raise its voice. `spent` means no misses
+     left but the run is still alive, so the second line firms up rather than turning red.
+     `lost` is the one the whole thing exists for: the target cannot be reached any more, said
+     in the editor's red with the reason to play the pages out anyway beside it. The score line
+     goes on reporting the score through all three — it is still what the run is. */
+  .chall-margin {
+    display: flex; flex-direction: column; align-items: center; gap: 2px;
+    margin: -3px auto 8px; max-width: 430px; padding: 0 12px;
+    font-family: var(--type); color: var(--ink-soft); text-align: center;
+  }
+  .chall-margin[hidden] { display: none; }
+  .chall-margin-prog {
+    font-size: calc(12.5px + var(--text-size-adjust)); letter-spacing: 0.3px;
+    font-weight: 700; color: var(--ink); line-height: 1.3;
+  }
+  .chall-margin-said {
+    /* Never wraps between the marks and the words: the tally belongs BESIDE its sentence, and
+       letting it break onto a line of its own leaves four strokes stranded under the score. On
+       a narrow page the sentence wraps within itself instead, which is what it is for. */
+    display: flex; align-items: center; justify-content: center; gap: 7px; flex-wrap: nowrap;
+    font-size: calc(9.5px + var(--text-size-adjust)); letter-spacing: 0.3px; line-height: 1.4;
+    opacity: 0.72; text-align: left;
+  }
+  .chall-margin-said b { font-weight: 700; }
+  /* The gate tally at second-line size. The shelf's own weights are drawn for a 19px mark, and
+     at 15 the whole glyph scales with it — a 1.8 stroke at 14% ink comes out under half a pixel
+     and simply isn't there. Both states are re-inked for this size: thicker in user units so
+     the downscale lands near a pencil line, and the unspent marks lifted well clear of the
+     vanishing point while staying plainly lighter than the ones already spent. */
+  .chall-margin .chall-prog-marks {
+    display: block; height: 15px; width: auto; margin: 0; flex: none; color: currentColor;
+  }
+  .chall-margin .chall-prog-marks .is-cut { stroke-width: 3.4; }
+  .chall-margin .chall-prog-marks .is-todo { stroke-width: 3; opacity: 0.32; }
+  .chall-margin[data-state="spent"] .chall-margin-said { color: var(--ink); opacity: 0.9; }
+  /* The dead run. Ruled off top and bottom like the banner above it, so it reads as a note
+     entered on the page rather than an alert thrown over it. */
+  .chall-margin[data-state="lost"] {
+    color: #b23a3a; padding: 5px 14px 6px; margin: 0 auto 9px;
+    border-top: 1.5px solid rgba(178, 58, 58, 0.28);
+    border-bottom: 1.5px solid rgba(178, 58, 58, 0.28);
+  }
+  .chall-margin[data-state="lost"] .chall-margin-prog { color: #b23a3a; }
+  .chall-margin[data-state="lost"] .chall-margin-said {
+    /* The reason runs to two or three lines, so the marks sit against the top of it rather than
+       floating in the middle of a paragraph. */
+    align-items: flex-start; opacity: 0.86;
+  }
+
   /* The risk batch's banner is a SCOREBOARD, not a reminder. On those four rules the whole
      decision is what you hold against what you need, and at the shared banner's 12px it was
      being read past entirely (playtest, all three of Press / Wager / Insurance). Sized up,
