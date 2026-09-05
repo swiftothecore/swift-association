@@ -11897,6 +11897,7 @@ function resetRunState() {
   lastWildcardId = "";
   whaleSeenThisGame = false;
   runDoodleInked = false;
+  runDoodleKind = "";
   clearVanish();
   if (revolveId) { clearTimeout(revolveId); revolveId = null; revolveDeadline = 0; }
   revolveIndex = 0;
@@ -20466,6 +20467,7 @@ let activePen = null;            // 'quill' | 'fountain' | 'glitter' | null
 let blueUsedThisRound = false;
 let whaleSeenThisGame = false;   // caps "yes, whale!" at one surfacing per game — see runRoundEggs
 let runDoodleInked = false;      // the margin doodle is rolled once per run, not once per page
+let runDoodleKind = "";          // what that roll drew, so page six can put it back after the fence
 let lyricEggMatched = false;     // whether the typed text is currently sitting on a real lyric (so the sparkle fires once per crossing, not every keystroke)
 let blueWashTimer = null;        // so the wash can be cut short when the page turns under it
 let correctStreak = 0;           // consecutive correct answers this game
@@ -20512,6 +20514,7 @@ function addDoodle(kind) {
   const [w, h] = DOODLE_SIZE[kind] || [40, 58];
   const d = document.createElement("div");
   d.className = "doodle";
+  d.dataset.kind = kind;   // so a page turn can tell "already hanging" from "needs re-inking"
   d.style.width = w + "px"; d.style.height = h + "px";
   d.innerHTML = DOODLE_SVG[kind];
   // The scarf is the one doodle you can touch: it counts taps, lifetime, across every run. The
@@ -20930,20 +20933,30 @@ function runRoundEggs() {
   /* The margin doodle is drawn ONCE for a run and then left there. It used to be a 14% roll
      per page, which meant a drawing appeared beside page four and was gone by page five —
      and a mark that comes and goes on its own is reading as a UI element, not as something
-     somebody inked in a margin. So the roll happens on the first page, the doodle survives
-     every page turn after it (see clearEggs), and the only thing that ever replaces it is
-     the fence, which has a page of its own to arrive on.
+     somebody inked in a margin. So the roll happens on the first page and the doodle
+     survives every page turn after it (see clearEggs).
+
+     The fence is the exception in BOTH directions, and this is the fiddly bit. It arrives on
+     page five of a classic run whether or not the run inked anything, and it leaves again on
+     page six — it is a tease, not marginalia, and a tease that stays for the remaining eight
+     pages is just wallpaper. So the run's own doodle is remembered rather than merely drawn,
+     and page six puts it back exactly as it was (or clears the margin, if the run rolled
+     nothing). Re-inking is skipped when the right drawing is already hanging there, so a
+     page turn does not restart its fade-in.
 
      The midnight note is not ink and is not part of this: it is a thought scribbled in the
      margin for thirteen minutes a day, so it stays per-page and can sit above a doodle. */
-  if (gameType === "classic" && round === 5) {
-    addDoodle("fence");
-  } else if (!runDoodleInked) {
+  if (!runDoodleInked) {
     runDoodleInked = true;
-    if (chance(0.55)) {
-      const pool = ["scarf", "thirteen", "mirrorball", "paperplane", "willow"];
-      addDoodle(pool[Math.floor(Math.random() * pool.length)]);
-    }
+    const pool = ["scarf", "thirteen", "mirrorball", "paperplane", "willow"];
+    if (chance(0.55)) runDoodleKind = pool[Math.floor(Math.random() * pool.length)];
+  }
+  const want = (gameType === "classic" && round === 5) ? "fence" : runDoodleKind;
+  const hanging = $("doodleLayer") && $("doodleLayer").querySelector(".doodle");
+  if (want) {
+    if (!hanging || hanging.dataset.kind !== want) addDoodle(want);
+  } else if (hanging) {
+    hanging.remove();
   }
   if (midnightHour) addMarginNote("meet me at midnight");
 
