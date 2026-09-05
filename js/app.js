@@ -9346,6 +9346,25 @@ function albumTileName(a) {
   return a;
 }
 
+/* ---------- The difficulty picker on a "pick a mode, then play" panel ----------
+   Album Focus and the guest catalogues both end on the same question the front page asks:
+   which difficulty is this being written at? So they ask it with the FRONT PAGE'S CONTROL —
+   the notebook index tabs, each rung carrying its own highlighter wash when it is picked,
+   and lyricist set past a dashed divider because it is a different modality, not a sixth
+   rung. What sat here before was a row of bordered chips invented for these two screens
+   alone: nothing else in the notebook looks like that, the ladder read as six equal options,
+   and a control with a stroke and a corner radius is the one object on a paper page that
+   looks like a web toolbar. One question, one control. */
+function difficultyTabs(list, selected) {
+  return list.map((m) => {
+    const modality = MODALITY_MODES.includes(m);
+    return (modality ? `<span class="mode-tab-sep" aria-hidden="true"></span>` : "") +
+      `<button type="button" class="mode-tab${modality ? " mode-tab--modality" : ""}` +
+      `${m === selected ? " active" : ""}" data-diff="${m}" data-mode="${m}"` +
+      ` aria-pressed="${m === selected}">${escapeHtml(MODES[m].label)}</button>`;
+  }).join("");
+}
+
 /* ---------- The album picture: a square coloured in by hand ----------
    The snapshot on an Album Focus tile is not a printed swatch of the era colour. It is a
    pencilled box that somebody is colouring in with a crayon, and how far they have got IS
@@ -9365,7 +9384,7 @@ function albumTileName(a) {
 
    Colour and mood only: there is no album imagery here and there is not meant to be. The
    only thing on the paper is graphite and one era colour. */
-const AF_STROKES = 26;                 // strokes in a square filled to the brim
+const AF_STROKES = 54;                 // strokes in a square filled to the brim
 
 function albumCrayon(album, level) {
   const rng = mulberry32(fnv1a("af-crayon:" + album));
@@ -9386,22 +9405,43 @@ function albumCrayon(album, level) {
   }
   box += " Z";
 
-  // the strokes themselves, laid left to right on a slant and clipped at the picture edge.
-  // Most overshoot the box the way a crayon does; a few stop short and leave a sliver of
-  // paper, which is the difference between a coloured square and a printed one.
-  const tilt = -14 + rng() * 10;
-  const n = level >= 1 ? AF_STROKES : Math.round(Math.max(0, Math.min(1, level)) * AF_STROKES);
+  // The strokes themselves, laid left to right on a slant. Three things are doing the work
+  // here and all three were arrived at by drawing the wrong thing first.
+  //
+  // WIDTH: a stroke has to be narrow enough that its neighbours stay countable at tile size.
+  // Wide strokes merge into one flat wedge of colour, which is exactly the printed swatch
+  // this was drawn to avoid. So each is a few units across, only just overlapping the next,
+  // with the pressure varying stroke to stroke and roughly one in six a skip — the light
+  // pass a crayon leaves when the wax does not catch. Between them the paper stays visible.
+  //
+  // ENDS: strokes stay near the pencilled box, overshooting it by a unit or two the way a
+  // hand does and sometimes stopping short of it. They must NOT run out to the picture edge:
+  // the clip then cuts every one of them off at the same height and the square gets a
+  // ruler-straight top and bottom, which is the printed look coming back in by the side door.
+  //
+  // FRONTIER: the reveal order is jittered, so a half-coloured square does not end on a
+  // clean vertical line. A few strokes past the frontier got done early, a few before it got
+  // missed, and the last ones in go lighter. That is somebody who stopped, rather than
+  // somebody who cut the colour off with a ruler.
+  const tilt = -9 + rng() * 7;
+  // A single page scored is 4 strokes of 54, which with the frontier fade on top of it comes
+  // out as bare paper. Any score at all has to leave a mark, so a played square gets a floor.
+  const lv = Math.max(0, Math.min(1, level));
+  const n = level >= 1 ? AF_STROKES : Math.max(lv > 0 ? 5 : 0, Math.round(lv * AF_STROKES));
   let strokes = "";
   for (let i = 0; i < AF_STROKES; i++) {
     const t = i / (AF_STROKES - 1);
-    const x = -14 + t * 128 + jit(3.4);
+    const x = -12 + t * 124 + jit(1.2);
+    const order = i + jit(2.4);
     const short = rng();
-    const top = short < 0.14 ? 4 + rng() * 14 : -22 + rng() * 10;
-    const bot = short > 0.88 ? 94 - rng() * 14 : 122 - rng() * 10;
-    const bow = jit(5.5);
-    const w = 10 + rng() * 7;
-    const o = 0.4 + rng() * 0.18;
-    if (i >= n) continue;              // geometry already drawn from the rng: see above
+    const top = short < 0.22 ? 6 + rng() * 13 : -2 + rng() * 6;
+    const bot = short > 0.78 ? 94 - rng() * 13 : 102 - rng() * 6;
+    const bow = jit(3.2);
+    const w = 2.2 + rng() * 2.4;
+    const light = rng() < 0.16;
+    let o = (0.32 + rng() * 0.2) * (light ? 0.45 : 1);
+    if (level < 1 && order >= n) continue;   // geometry already drawn from the rng: see above
+    if (level < 1 && n - order < 2.5) o *= 0.45 + 0.55 * ((n - order) / 2.5);
     strokes += `<path d="M${f(x)} ${f(top)} Q${f(x + bow)} 50 ${f(x + bow * 0.25)} ${f(bot)}"` +
       ` stroke-width="${f(w)}" opacity="${o.toFixed(2)}"/>`;
   }
@@ -9677,10 +9717,9 @@ function renderAlbumDetail(album) {
   if (!el) return;
   const rec = albumFocusRecord(album);
   const col = albumColor(album) || "#999";
+  const level = rec.beaten ? 1 : Math.max(0, rec.best || 0) / TOTAL_ROUNDS;
 
-  const tabs = ALBUM_FOCUS_DIFFS.map((d) =>
-    `<button type="button" class="af-diff${d === afSelectedDiff ? " is-on" : ""}" data-diff="${d}">${escapeHtml(MODES[d].label)}</button>`
-  ).join("");
+  const tabs = difficultyTabs(ALBUM_FOCUS_DIFFS, afSelectedDiff);
 
   const stamp = rec.perfected
     ? `<span class="chall-detail-star">${CHALL_STAR}</span><span class="chall-detail-stamp af-stamp">perfected</span>`
@@ -9697,7 +9736,12 @@ function renderAlbumDetail(album) {
   el.innerHTML =
     `<div class="chall-detail af-detail">` +
     `<div class="chall-detail-head">` +
-      `<span class="af-detail-spine" style="background:${col}"></span>` +
+      // The album's own square, lifted straight off the board. A challenge's detail opens on
+      // its wax seal; this page opened on a 7px bar of era colour, which is a swatch, not an
+      // object, and said nothing the album's name had not already said. The snapshot says how
+      // far this one is coloured in — the record — and it is the same drawing the player just
+      // tapped, so the turn from board to menu keeps hold of the thing they picked.
+      `<span class="af-detail-pic" style="--era:${col}" aria-hidden="true">${albumCrayon(album, level)}</span>` +
       `<span class="chall-detail-name">${escapeHtml(album)}</span>${stamp}` +
     `</div>` +
     `<div class="chall-sec">` +
@@ -9707,14 +9751,17 @@ function renderAlbumDetail(album) {
     `<div class="chall-sec chall-sec--beat">` +
       `<div class="chall-eyebrow">To beat it</div>` +
       `<div class="chall-goal">Score ${ALBUM_FOCUS_TARGET}/${TOTAL_ROUNDS}. A perfect 13/13 completes it in style.</div>` +
-      `<div class="af-diffs">${tabs}</div>` +
+    `</div>` +
+    `<div class="chall-sec chall-sec--pick">` +
+      `<div class="chall-eyebrow">Written at</div>` +
+      `<div class="mode-tabs af-diffs">${tabs}</div>` +
     `</div>` +
     `<div class="chall-act">` +
       `<span class="chall-meta">${escapeHtml(meta)}</span>` +
       `<button type="button" class="chall-go" data-play="${escapeHtml(album)}">${rec.beaten ? "Play again" : "Start writing"}</button>` +
     `</div></div>`;
 
-  el.querySelectorAll(".af-diff").forEach((b) =>
+  el.querySelectorAll(".af-diffs [data-diff]").forEach((b) =>
     b.addEventListener("click", () => { afSelectedDiff = b.dataset.diff; renderAlbumDetail(album); }));
   const pb = el.querySelector("[data-play]");
   if (pb) pb.addEventListener("click", () => startAlbumFocus(pb.dataset.play, afSelectedDiff));
@@ -10007,9 +10054,7 @@ function renderGuestDetail(id) {
     const records = (c.albums || []).map((a) =>
       `<li><span class="guest-rec-name">${escapeHtml(a.album)}</span>` +
       `<span class="guest-rec-n">${(a.songs || []).length}</span></li>`).join("");
-    const tabs = GUEST_DIFFS.map((d) =>
-      `<button type="button" class="af-diff${d === guestSelectedDiff ? " is-on" : ""}" data-diff="${d}">${escapeHtml(MODES[d].label)}</button>`
-    ).join("");
+    const tabs = difficultyTabs(GUEST_DIFFS, guestSelectedDiff);
     const stamp = rec.admitted
       ? `<span class="chall-detail-star">${CHALL_STAR}</span><span class="chall-detail-stamp af-stamp">admitted</span>` : "";
     let meta = "not played yet";
@@ -10032,14 +10077,17 @@ function renderGuestDetail(id) {
       `<div class="chall-sec chall-sec--beat">` +
         `<div class="chall-eyebrow">To be admitted</div>` +
         `<div class="chall-goal">Name all ${TOTAL_ROUNDS}. Anything less is a visit, not a residency.</div>` +
-        `<div class="af-diffs">${tabs}</div>` +
+      `</div>` +
+      `<div class="chall-sec chall-sec--pick">` +
+        `<div class="chall-eyebrow">Written at</div>` +
+        `<div class="mode-tabs af-diffs">${tabs}</div>` +
       `</div>` +
       `<div class="chall-act">` +
         `<span class="chall-meta">${escapeHtml(meta)}</span>` +
         `<button type="button" class="chall-go" data-play="${escapeHtml(id)}">${rec.best > 0 ? "Play again" : "Start writing"}</button>` +
       `</div></div>`;
     const el2 = $("guestDetailBody");
-    el2.querySelectorAll(".af-diff").forEach((b) =>
+    el2.querySelectorAll(".af-diffs [data-diff]").forEach((b) =>
       b.addEventListener("click", () => { guestSelectedDiff = b.dataset.diff; renderGuestDetail(id); }));
     const pb = el2.querySelector("[data-play]");
     if (pb) pb.addEventListener("click", () => startGuestRun(pb.dataset.play, guestSelectedDiff));

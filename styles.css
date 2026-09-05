@@ -4104,16 +4104,21 @@
   :is(#albumDetailBody, [data-flip-id="albumDetailBody"]) { padding-top: 4px; }
   .af-detail { padding-left: 0; margin-top: 0; }
 
-  .af-detail-spine { width: 7px; align-self: stretch; min-height: 30px; border-radius: 2px; box-shadow: inset 0 0 0 1px rgba(43,39,34,0.2); }
-  .af-stamp { color: rgba(60,90,70,0.85); border-color: rgba(60,90,70,0.55); }
-  .af-diffs { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
-  .af-diff {
-    font-family: var(--type); font-size: calc(12px + var(--text-size-adjust)); font-weight: 700; color: var(--ink-soft);
-    background: rgba(236,227,208,0.5); border: 1.5px solid #c7ba9b; border-radius: 2px;
-    padding: 6px 14px; cursor: pointer; transition: background 0.14s, color 0.14s, border-color 0.14s;
+  /* the album's snapshot at the head of its menu — the board's own square, off its pin and
+     picked up, so it sits a touch askew and casts a shadow rather than lying flat */
+  .af-detail-pic {
+    flex: 0 0 auto; width: 66px; height: 66px; overflow: hidden; border-radius: 2px;
+    background: #f7f1e2; transform: rotate(-1.8deg);
+    box-shadow: inset 0 0 0 1px rgba(43,39,34,0.1), 2px 3px 7px rgba(60,50,35,0.24);
   }
-  .af-diff:hover { background: rgba(43,39,34,0.06); }
-  .af-diff.is-on { color: var(--paper); background: var(--ink); border-color: var(--ink); }
+  .af-stamp { color: rgba(60,90,70,0.85); border-color: rgba(60,90,70,0.55); }
+  /* The picker itself is .mode-tabs, borrowed whole from the front page (see difficultyTabs
+     in app.js). All this adds is the line the tabs stand on: an index tab is drawn with an
+     open bottom edge, so without a rule under the row the six of them float with their
+     corners hanging. Same dashed pencil rule the sections above are divided by. */
+  .af-diffs { border-bottom: 1.5px solid rgba(43,39,34,0.18); margin-top: 3px; }
+  /* the picker is the last thing before the action row, so it carries the gap to it */
+  .chall-sec--pick { margin-bottom: 18px; }
 
   /* The board at night. A snapshot is a physical object, so the stock keeps its cream rather
      than being repainted into a dark card. That was tried first, and twelve dark squares on a
@@ -4135,6 +4140,7 @@
   :root[data-theme="dark"] .af-tile.is-played .af-tile-cap,
   :root[data-theme="dark"] .af-tile-score { color: #3a352b; }
   :root[data-theme="dark"] .af-tile-win { background: #bcb094; box-shadow: inset 0 0 0 1px rgba(43,39,34,0.16); }
+  :root[data-theme="dark"] .af-detail-pic { background: #bcb094; box-shadow: inset 0 0 0 1px rgba(43,39,34,0.16), 2px 3px 8px rgba(0,0,0,0.45); }
   :root[data-theme="dark"] .af-tile-score { background: #efe7d3; box-shadow: 0 1px 2px rgba(0,0,0,0.3); }
   :root[data-theme="dark"] .af-tile.is-perfect .af-tile-cap { color: #7d5a12; }
   /* Pin and gold leaf are objects too: same colours, one stop down for the same lamp. */
@@ -4143,15 +4149,9 @@
   }
   :root[data-theme="dark"] .af-corner--tl,
   :root[data-theme="dark"] .af-corner--tr { border-top-color: #c9a435; }
-  /* The difficulty row is the opposite case: a control drawn ON the paper rather than an object
-     lying on it, so it follows the page into the dark. Its cream wash composited to within
-     1.2:1 of the ink sitting on it, which is to say the unselected difficulties were invisible.
-     :not(.is-on) keeps the selected pill's ink/paper inversion, which already works in both
-     themes. */
-  :root[data-theme="dark"] .af-diff:not(.is-on) {
-    background: rgba(236, 229, 214, 0.07); border-color: rgba(236, 229, 214, 0.28);
-  }
-  :root[data-theme="dark"] .af-diff:not(.is-on):hover { background: rgba(236, 229, 214, 0.14); }
+  /* The difficulty row needs no dark rule of its own: it is the front page's .mode-tabs, which
+     already reads in both themes. Only the rule it stands on is local, so only that inverts. */
+  :root[data-theme="dark"] .af-diffs { border-bottom-color: rgba(236, 229, 214, 0.24); }
 
   /* ---------- Guest shelf — catalogues hung as backstage passes ----------
      The one place in the notebook where another artist's name appears, so it is deliberately
