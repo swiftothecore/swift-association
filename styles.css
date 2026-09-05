@@ -3781,6 +3781,41 @@
     --btn-mark: rgba(245, 239, 225, 0.28);
   }
 
+  /* The guest shelf's two-up row, inked in its own pair so it never reads as a repeat of
+     Challenges, Album Focus or Custom: ← guest shelf is olive webbing woven into a gingham
+     check, the same nylon strap the passes hang from, and replay is a visitor-badge magenta
+     pressed with a row of hand-cut triangles. */
+  :is(#backToGuests, [data-flip-id="backToGuests"]) {
+    --btn-wash: rgba(142, 152, 84, 0.30);
+    --btn-mark: rgba(94, 106, 50, 0.20);
+    background-color: var(--btn-wash);
+    background-image:
+      repeating-linear-gradient(0deg, var(--btn-mark) 0 4.5px, transparent 4.5px 9px),
+      repeating-linear-gradient(90deg, var(--btn-mark) 0 4.5px, transparent 4.5px 9px);
+    transition: --btn-wash 0.22s ease, --btn-mark 0.22s ease, color 0.2s ease, transform 0.12s, box-shadow 0.2s;
+  }
+  :is(#backToGuests, [data-flip-id="backToGuests"]):hover {
+    color: var(--paper);
+    --btn-wash: #5b6a2c;
+    --btn-mark: rgba(245, 239, 225, 0.22);
+  }
+
+  :is(#replayGuest, [data-flip-id="replayGuest"]) {
+    --btn-wash: rgba(178, 96, 156, 0.28);
+    --btn-mark: rgba(140, 56, 118, 0.30);
+    background-color: var(--btn-wash);
+    background-image:
+      linear-gradient(135deg, var(--btn-mark) 22%, transparent 22%),
+      linear-gradient(45deg, transparent 78%, var(--btn-mark) 78%);
+    background-size: 9px 9px;
+    transition: --btn-wash 0.22s ease, --btn-mark 0.22s ease, color 0.2s ease, transform 0.12s, box-shadow 0.2s;
+  }
+  :is(#replayGuest, [data-flip-id="replayGuest"]):hover {
+    color: var(--paper);
+    --btn-wash: #97397f;
+    --btn-mark: rgba(245, 239, 225, 0.26);
+  }
+
   /* The Change modal's OK button echoes the results "front page" button: the gold
      highlighter wash under a faint graph-paper grid, so it reads as a patterned stamp
      rather than a plain block. */
