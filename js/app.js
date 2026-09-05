@@ -20,7 +20,7 @@ import {
   BONUS_CHAIN_SECONDS, CHAIN_EASY_PAGES, BONUS_SNAP_MS,
   RUTHLESS_WORD_MS, RUTHLESS_OPEN_WORDS,
   RUTHLESS_PACE_SECONDS, RUTHLESS_RUN_RUNGS,
-  CHALLENGES, CHALLENGE_BY_ID, CHALLENGE_ORDER, CHALLENGE_SEALS, DARK_SIDE_IDS, DARK_SIDE_TODO,
+  CHALLENGES, CHALLENGE_BY_ID, CHALLENGE_ORDER, CHALLENGE_SEALS, byShelf, DARK_SIDE_IDS, DARK_SIDE_TODO,
   DARK_SIDE_MILESTONE, CHALLENGE_RETURN_RUNS,
   IMPOSTOR_WORDS, IMPOSTOR_COUNT, DARK_IMPOSTOR_WORDS,
   SEA_GRID_SIZE, SEA_MIN_VALID, SEA_MAX_VALID,
@@ -8801,7 +8801,7 @@ function openChallenges(from, focusId) {
 // The first challenge of the super-hard tier worth landing on: the first one still
 // undefeated, else the first of the tier. "" if the tier doesn't exist.
 function firstSuperHardChallenge() {
-  const tier = CHALLENGES.filter((c) => (c.tapes || 0) === 4);
+  const tier = byShelf(CHALLENGES.filter((c) => (c.tapes || 0) === 4));
   if (!tier.length) return "";
   return (tier.find((c) => !challengeRecord(c.id).defeated) || tier[0]).id;
 }
@@ -8916,10 +8916,13 @@ function renderChallengesPage() {
   const defeated = CHALLENGES.filter((c) => challengeRecord(c.id).defeated).length;
 
   // Default selection: keep the current pick if still valid, else the first
-  // not-yet-defeated challenge, else the very first.
+  // not-yet-defeated challenge on the shelf, else the shelf's first row.
   if (!challSelectedId || !CHALLENGE_BY_ID[challSelectedId]) {
-    const firstOpen = CHALLENGES.find((c) => !challengeRecord(c.id).defeated);
-    challSelectedId = (firstOpen || CHALLENGES[0]).id;
+    // Shelf order, not authoring order, so the pre-selected row is the first one
+    // you can actually see rather than an arbitrary one further down the list.
+    const shelf = byShelf(CHALLENGES);
+    const firstOpen = shelf.find((c) => !challengeRecord(c.id).defeated);
+    challSelectedId = (firstOpen || shelf[0]).id;
   }
 
   // Grouped by difficulty, with a small local shortlist above it. Pins deliberately
@@ -8962,7 +8965,7 @@ function renderChallengesPage() {
       pinned.map(challengeRow).join("") + `</div>`;
   }
   [1, 2, 3, 4, 0].forEach((tier) => {
-    const inTier = CHALLENGES.filter((c) => (c.tapes || 0) === tier);
+    const inTier = byShelf(CHALLENGES.filter((c) => (c.tapes || 0) === tier));
     if (!inTier.length) return;
     list += `<div class="chall-group">` +
       `<div class="chall-group-head t${tier}">` +

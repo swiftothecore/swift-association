@@ -5,7 +5,8 @@
 // directly rather than routed through the api.
 
 import { ACHIEVEMENTS, ACH_ICONS, ACH_GROUPS, ACH_GROUP_OF, ACH_GROUP_COLORS,
-         CHALLENGES, CHALLENGE_SEALS, WAX_SEEDS, WAX_AUTO_IDS, reseedSeal, waxPourFaults } from "./config.js";
+         CHALLENGES, CHALLENGE_SEALS, WAX_SEEDS, WAX_AUTO_IDS, reseedSeal, waxPourFaults,
+         byShelf, auditChallengeShelf } from "./config.js";
 
 function auditAchievementIdSources(config, app) {
   const failures = [];
@@ -184,6 +185,35 @@ export function initDev(api) {
     row(btn("rerun audit", runAchievementAudit)),
     achAuditOut));
   runAchievementAudit();
+
+  // ---- Challenge shelf ------------------------------------------------------
+  // CHALLENGE_SHELF is hand-authored, so the failure mode is drift: a new challenge
+  // added to CHALLENGES and never placed here (it silently falls to the end of its
+  // tier, which looks fine and is wrong), or a shelved one leaving a stale id behind.
+  // Printing the order as well as the faults means the ramp can be eyeballed without
+  // opening config, which is the whole point of it being a designed order.
+  const shelfOut = mk("pre", { class: "dv-pre" }, "-");
+  const TIER_NAME = { 0: "unrated", 1: "easy", 2: "tricky", 3: "tough", 4: "brutal" };
+  const runShelfAudit = () => {
+    const { missing, unknown } = auditChallengeShelf();
+    const lines = [];
+    if (missing.length) lines.push(`NOT PLACED on the shelf (${missing.length}), sorting to the end of their tier:`,
+      ...missing.map((id) => `  • ${id}`));
+    if (unknown.length) lines.push(`STALE shelf entries with no challenge (${unknown.length}):`,
+      ...unknown.map((id) => `  • ${id}`));
+    if (!missing.length && !unknown.length) lines.push("\u2713 shelf and roster agree");
+    for (const tier of [1, 2, 3, 4, 0]) {
+      const inTier = byShelf(CHALLENGES.filter((c) => (c.tapes || 0) === tier));
+      if (!inTier.length) continue;
+      lines.push("", `${TIER_NAME[tier]} · ${inTier.length}`);
+      inTier.forEach((c, i) => lines.push(`  ${String(i + 1).padStart(2)}. ${c.name}`));
+    }
+    shelfOut.textContent = lines.join("\n");
+  };
+  body.append(section("challenge shelf",
+    row(btn("recheck order", runShelfAudit)),
+    shelfOut));
+  runShelfAudit();
   function renderRevealBox() {
     if (!revealOpen) return;
     if (revealView === "shortLines") renderShortLines();
@@ -1180,7 +1210,7 @@ export function initDev(api) {
 
     const grid = mk("div", { class: "dvg-body" });
     for (const tier of [1, 2, 3, 4, 0]) {
-      const inTier = CHALLENGES.filter((c) => (c.tapes || 0) === tier && CHALLENGE_SEALS[c.id]);
+      const inTier = byShelf(CHALLENGES.filter((c) => (c.tapes || 0) === tier && CHALLENGE_SEALS[c.id]));
       if (!inTier.length) continue;
       grid.append(mk("div", { class: "dvg-group" }, `${SEAL_TIERS[tier]} · ${inTier.length}`));
       const cells = mk("div", { class: "dvs-grid" });

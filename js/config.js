@@ -1340,6 +1340,97 @@ export const SEA_MAX_VALID = 4;
 
 export const CHALLENGE_BY_ID = Object.fromEntries(CHALLENGES.map((c) => [c.id, c]));
 export const CHALLENGE_ORDER = CHALLENGES.map((c) => c.id);
+/* ---------------------------------------------------------------------------
+   CHALLENGE_SHELF — the ORDER the challenges are listed in on the shelf, inside
+   whichever difficulty tier they belong to. The CHALLENGES array above is the
+   authoring log (batches, in the order they were built) and stays that way; this
+   is the reading order, and it is the only thing the shelf sorts by.
+
+   The rule, so a new entry can be placed without re-litigating it: order the
+   FAMILIES gentlest to nastiest, and run gentlest-first inside each family. When
+   "kindred together" and "gentle to nasty" disagree, family adjacency wins
+   locally and the ramp orders the families. One sort key, not two competing ones.
+
+   The family ladder, by what the rule takes away from you:
+     1 catalogue filter  the normal game, with a rule about which songs count
+     2 catalogue depth   the normal game, but you must produce more of it
+     3 knowledge tap     no typing, and no prompt word to lean on
+     4 the word          the page's word is the problem: warped, fake, or the answer
+     5 the clock         you do not get time
+     6 churn             the rules will not hold still
+     7 agency            you choose your own damage
+     8 risk              the score itself is on the table
+
+   The payoff is that each tier walks the same ladder in the same order, so the
+   shelf reads as one journey taken again a notch harder, and you can guess where
+   a challenge lives before you find it. Do not spread the families out for
+   variety: a list is scanned in parallel, not read top to bottom like a track
+   list, so the variety would be one nobody experiences, while the structure that
+   clustering makes visible (this game HAS eight kinds of challenge) would be lost.
+
+   Anything absent from this list sorts to the end of its tier rather than
+   vanishing, so a newly authored challenge is never dropped off the shelf by
+   being forgotten here. New challenges land in tapes:0 and append in authoring
+   order, because an unrated tier has no ramp to sit on; when one earns its
+   rating it is SLOTTED into its family in the new tier, not appended to it. */
+export const CHALLENGE_SHELF = [
+  // ---- tapes 1 (easy)
+  "vanishing-word",     // free doorway (exception: it is the one challenge that costs
+                        // nothing, so a player with no tokens must find it first. By family
+                        // it belongs with Word Games, and that is worth losing for the door.)
+  "short-title",        // catalogue filter
+  "deep-cut",           // catalogue depth: five songs from one album
+  "one-of-a-kind",      // catalogue depth: one exact song, the same ask magnified
+  "whose-line",         // knowledge tap
+  "revolving-door",     // the clock (the word churns)
+  "switch-up",          // churn (the answer churns: same idea, other half of the page)
+  "choose-your-path",   // agency
+  "press-your-luck",    // risk
+  "confidence-wager",   // risk
+
+  // ---- tapes 2 (tricky)
+  "title-in",           // catalogue filter
+  "on-tour",            // catalogue depth: one song from a named album
+  "both-of-us",         // catalogue depth: one song holding two words
+  "double-trouble",     // catalogue depth: two songs a page
+  "odd-one-out",        // knowledge tap
+  "word-modifiers",     // the word: warped, but real
+  "impostor",           // the word: possibly not real at all
+  "common-thread",      // the word: no longer given to you, it IS the answer
+  "shrinking-timer",    // the clock
+  "its-a-clock",        // the clock
+  "wildcard",           // churn
+  "devils-path",        // agency (Choose Your Path's alter-ego, at its position one tier up)
+  "insurance",          // risk
+
+  // ---- tapes 3 (tough)
+  "wrapped-chain",      // catalogue filter
+  "name-three",         // catalogue depth
+  "sea-of-songs",       // knowledge tap
+  "lyric-lover",        // lyric writing: the pure ask, exact recall
+  "lyric-ink",          // lyric writing: scored by sheer volume of ink
+
+  // ---- tapes 4 (brutal)
+  "smallest-song",      // the word: one attack on it, hidden
+  "ready-for-it",       // the word: two at once, warped and then gone
+  "home-invasion",      // the clock
+  "thirty-one",         // risk, and the shelf's last row: the only challenge that is not a
+                        // 13-page run, and the longest commitment in the game
+];
+const SHELF_RANK = Object.fromEntries(CHALLENGE_SHELF.map((id, i) => [id, i]));
+/* Sort key for a challenge on the shelf. Unlisted ids sort last, in array order. */
+export const shelfRank = (id) => (id in SHELF_RANK ? SHELF_RANK[id] : Number.MAX_SAFE_INTEGER);
+/* Shelf order for a list of challenge entries. Stable, so unlisted ids keep authoring order. */
+export const byShelf = (list) => list.slice().sort((a, b) => shelfRank(a.id) - shelfRank(b.id));
+/* Drift check for the dev panel: ids on the roster but missing here, and ids here that are no
+   longer on the roster (a shelved challenge leaves a stale entry behind). */
+export function auditChallengeShelf() {
+  const roster = new Set(CHALLENGES.map((c) => c.id));
+  return {
+    missing: CHALLENGES.filter((c) => !(c.id in SHELF_RANK)).map((c) => c.id),
+    unknown: CHALLENGE_SHELF.filter((id) => !roster.has(id)),
+  };
+}
 /* Challenges that currently have a dark side at all (i.e. carry a `hard` block). */
 export const DARK_SIDE_IDS = CHALLENGES.filter((c) => c.hard).map((c) => c.id);
 /* The mid-way dark-side charm's threshold. The "beat every dark side" charm deliberately has
