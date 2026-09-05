@@ -4367,8 +4367,8 @@ function earnPolaroid(id) {
 // It carries the charm toast's hover tip, on the same 500ms delay: a keepsake arrives with no
 // explanation of itself, and several of them (the whale, the impostor flag, a discovery three
 // games old) fire far enough from what earned them that the caption alone reads as a mystery.
-// The tip says what you did. The DRAWER is deliberately not given the same line, because a
-// locked cell there is meant to be the question.
+// The tip says what you did. In the DRAWER the same line hangs off an earned tile's hover
+// title; a locked cell there gets nothing, because it is meant to be the question.
 function showKeepsakeToast(p) {
   const layer = $("toastLayer");
   if (!layer) return;
@@ -4480,8 +4480,11 @@ function renderKeepsakesPage() {
   const tiles = POLAROIDS.map((p) => {
     const state = polaroidState(p.id, earned);
     const j = polaroidJitter(p.id);
+    // An earned tile says what you did for it, the way the sticker shelf and the unlock toast
+    // do: the caption is a quip, not an explanation, and by the time a photo has developed the
+    // game that earned it is often several sessions back. A locked cell stays the question.
     const label = state === "locked" ? "a keepsake not yet earned"
-      : state === "developing" ? p.name + " (developing)" : p.name;
+      : (state === "developing" ? p.name + " (developing)" : p.name) + (p.how ? " · " + p.how : "");
     return `<div class="keep-cell" data-id="${p.id}" data-state="${state}" style="--dy:${j.dy}px;--dx:${j.dx}px" title="${escapeHtml(label)}">` +
       keepsakePolaroidHTML(p, { earned, state, tilt: j.tilt, small: true }) + `</div>`;
   }).join("");
