@@ -352,7 +352,7 @@
   /* screen-edge props: pinned to a viewport edge, roughly half hanging off */
   /* the glasses carry their own contact shadow inside the drawing, so the
      prop shadow here only has to lift them off the wood */
-  .di-glasses { width: 420px; top: 5%;   left: 0; transform: translateX(-57%) rotate(-24deg);
+  .di-glasses { width: 420px; top: 4%;   left: 0; transform: translateX(-54%) rotate(-24deg);
     filter: drop-shadow(4px 9px 7px rgba(46,32,14,0.24)) saturate(0.88); }
   .di-mug     { width: 380px; top: 39%;  left: 0; transform: translateX(-49%) rotate(-14deg);
     filter: drop-shadow(6px 13px 11px rgba(46,32,14,0.28)) saturate(0.88); }
