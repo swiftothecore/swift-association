@@ -840,6 +840,7 @@ export function initDev(api) {
   body.append(section("seed data",
     row(btn("fake records", () => { api.seed.records(); toast("records seeded"); }),
         btn("seed history", () => { api.seed.history(+histN.value); toast("history seeded"); }), histN),
+    row(btn("seed infinite", () => { api.seed.infinite(); toast("infinite runs seeded"); })),
     row(btn("seed tally", () => { api.seed.tally(); toast("tally seeded"); }),
         btn("unlock all ach", () => { api.seed.unlockAch(); toast("all achievements unlocked"); }),
         btn("lock all", () => { api.seed.lockAch(); toast("achievements cleared"); }, "warn")),

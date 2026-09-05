@@ -2399,62 +2399,121 @@ function extraStatsHTML() {
     </div>`;
 }
 
-// Infinite runs aren't comparable to the 13-round game (scores can exceed 13 and
-// the 0–13 histogram is meaningless), so the Infinite tab gets its own body: a
-// pen-circled headline (your single longest run + where it came from) and a ruled
-// LEDGER — difficulty down the side, the two lives-variants across the top, each cell
-// the best run + games played. No relative-fill bar (it was meaningless); the number
-// carries it, the ruling does the structure, and a red-pen ellipse marks the all-time
-// best. Colour-coded by variant — gold for forgiving 3-lives, danger-red for sudden death.
+// Infinite runs aren't comparable to the 13-round game (scores can exceed 13 and the
+// 0-13 histogram is meaningless), so the Infinite tab gets its own body. What a run IS
+// in this mode is a length: you kept going until you didn't. So the tab draws lengths.
+// Each played combo is a STRAND — one bead per round survived, threaded on a hand-drawn
+// cord and tied off with its number — and every strand on the tab shares one scale, so
+// the longest run fills the track and the rest read against it at a glance. That makes
+// the honest comparison the picture instead of a caption: sudden death really is short.
+//
+// It replaced a variant x difficulty table, and the reason is worth writing down. Twelve
+// cells for two variants across six difficulties is mostly holes on any real notebook
+// (nobody grinds infinite Ultra), so the old grid spent a third of its height printing
+// dashes, and its numbers all had the same weight whether they were 7 or 41. Strands
+// only exist where something was played; the untried difficulties collapse to one faint
+// line per group that says what is left to try.
+//
+// Gold for the forgiving 3-lives variant, danger-red for sudden death, matching the
+// beads in each group's heading. `beads` is how many that variant gives you.
 const INF_VARIANT_STYLE = {
-  "3lives": { color: "#c08a2e", beads: 3 },
-  sudden:   { color: "#b23a3a", beads: 1 },
+  "3lives": { color: "#c08a2e", beads: 3, label: "three lives" },
+  sudden:   { color: "#b23a3a", beads: 1, label: "sudden death" },
 };
+// Track the strands are drawn on, in SVG units. The svg scales to its column, so this is
+// a ratio budget rather than a pixel count.
+const INF_TRACK = 320;
+// One bead per round, pitched so the tab's best run just fills the track — but never so
+// tight the beads merge, and never so loose a 3-round strand looks like an achievement.
+function infPitch(max) { return Math.max(5.2, Math.min(13, INF_TRACK / Math.max(1, max))); }
+// A strand of `rounds` beads at the shared pitch. Over the track's capacity the cord runs
+// off the right edge unfinished (no knot, no number tied on) — the same "this kept going"
+// idiom the daily streak strand uses when a run outgrows its space.
+function infStrandHTML(rounds, color, pitch) {
+  const r = Math.max(2.3, pitch * 0.42);
+  const x0 = 3 + r;
+  const room = Math.max(1, Math.floor((INF_TRACK - x0 - 10) / pitch) + 1);
+  const shown = Math.min(rounds, room);
+  const over = rounds > room;
+  const seed = color.charCodeAt(1) + rounds;
+  const pts = [];
+  for (let i = 0; i < shown; i++) {
+    // Hand-threaded, so the cord wanders: a small deterministic wobble off the centre
+    // line, different for every strand (the colour seeds it) and never a clean repeat.
+    const w = Math.sin(i * 1.9 + seed) * 1.05 + Math.sin(i * 0.77 + seed * 2) * 0.85;
+    pts.push({ x: x0 + i * pitch, y: 11 + w });
+  }
+  const last = pts[pts.length - 1];
+  const endX = over ? INF_TRACK : last.x + Math.max(7, pitch * 0.8);
+  let d = `M0 ${(pts[0].y + 0.6).toFixed(1)}`;
+  pts.forEach((p, i) => {
+    const prev = i === 0 ? { x: 0, y: pts[0].y } : pts[i - 1];
+    d += ` Q${((prev.x + p.x) / 2).toFixed(1)} ${(p.y + (i % 2 ? -2.2 : 2.2)).toFixed(1)} ${p.x.toFixed(1)} ${p.y.toFixed(1)}`;
+  });
+  d += ` Q${(endX - 4).toFixed(1)} ${(last.y - 2).toFixed(1)} ${endX.toFixed(1)} ${last.y.toFixed(1)}`;
+  const beads = pts.map((p, i) =>
+    `<circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="${(r * (i % 4 === 1 ? 0.94 : 1)).toFixed(2)}" fill="${color}"/>`
+  ).join("");
+  const knot = over ? "" :
+    `<circle cx="${endX.toFixed(1)}" cy="${last.y.toFixed(1)}" r="${Math.max(1.6, r * 0.55).toFixed(2)}" fill="#8a7f6b" stroke="none"/>`;
+  return `<svg class="inf-strand" viewBox="0 0 ${INF_TRACK} 22" preserveAspectRatio="xMinYMid meet" aria-hidden="true">` +
+    `<path d="${d}" fill="none" stroke="#8a7f6b" stroke-width="1.4" stroke-linecap="round"/>` +
+    `<g stroke="#2b2722" stroke-width="0.9">${beads}${knot}</g></svg>`;
+}
 function infiniteTabHTML() {
   const entries = [];
   for (const variant of ["3lives", "sudden"]) {
     for (const m of MODE_ORDER) {
       const st = loadStats("inf-" + variant + "-" + m);
-      if (st.played > 0) entries.push({ variant, mode: m, best: st.best, played: st.played });
+      if (st.played > 0) entries.push({ variant, mode: m, best: st.best, played: st.played, total: st.totalScore || 0 });
     }
   }
   if (!entries.length) {
-    return `<p class="stats-empty">no infinite runs yet — try Infinite mode!</p>`;
+    return `<div class="stats-empty inf-empty"><p>No infinite runs yet. Infinite mode deals pages until your lives run out, ` +
+      `and every round you survive strings one more bead.</p>${playCTA("play infinite")}</div>`;
   }
-  // headline = the single longest run across every combo, + total infinite games played
-  let top = entries[0], totalGames = 0;
-  for (const e of entries) { totalGames += e.played; if (e.best > top.best) top = e; }
+  // headline = the single longest run across every combo; the whole tab scales to it
+  let top = entries[0], games = 0, rounds = 0;
+  for (const e of entries) { games += e.played; rounds += e.total; if (e.best > top.best) top = e; }
+  const pitch = infPitch(top.best);
   const hero = `
     <div class="inf-hero">
-      <div class="inf-medallion">
-        <b>${top.best}</b><span>rounds</span>
+      <div class="inf-best">
+        <svg class="inf-best-ring" viewBox="0 0 120 76" aria-hidden="true">
+          <ellipse cx="60" cy="38" rx="52" ry="31" transform="rotate(-4 60 38)"/>
+          <path d="M9 44 Q13 66 46 71 Q80 76 105 60"/>
+        </svg>
+        <b>${top.best}</b>
       </div>
       <div class="inf-hero-text">
         <div class="inf-hero-title">your longest run</div>
-        <div class="inf-hero-sub">${VARIANT_LABELS[top.variant]} · ${MODES[top.mode].label}</div>
+        <div class="inf-hero-sub">${top.best} rounds · ${VARIANT_LABELS[top.variant]} · ${MODES[top.mode].label}</div>
       </div>
     </div>`;
-  // ledger: a cell per variant×difficulty; unplayed = a faint dash; the best one is circled
-  const cell = (variant, m) => {
-    const e = entries.find((x) => x.variant === variant && x.mode === m);
-    if (!e) return `<td class="inf-cell inf-cell--empty">–</td>`;
-    const circ = (e === top)
-      ? `<svg class="inf-circle" viewBox="0 0 90 50" aria-hidden="true"><ellipse cx="45" cy="25" rx="40" ry="20" fill="none" stroke="#b23a3a" stroke-width="1.6"/></svg>`
-      : "";
-    return `<td class="inf-cell">${circ}<span class="inf-cell-num" style="color:${INF_VARIANT_STYLE[variant].color}">${e.best}</span><span class="inf-cell-sub">${e.played} game${e.played === 1 ? "" : "s"}</span></td>`;
-  };
-  const colHead = (variant) => {
+  const group = (variant) => {
     const sty = INF_VARIANT_STYLE[variant];
+    const mine = MODE_ORDER.map((m) => entries.find((e) => e.variant === variant && e.mode === m)).filter(Boolean);
     const beads = Array.from({ length: sty.beads }, () => `<i style="background:${sty.color}"></i>`).join("");
-    return `<th><span class="inf-th-beads">${beads}</span>${VARIANT_LABELS[variant]}</th>`;
+    const head = `<div class="inf-group-h"><span class="inf-th-beads">${beads}</span>${sty.label}</div>`;
+    if (!mine.length) {
+      return `<section class="inf-group">${head}<p class="inf-untried">nothing strung here yet — ${sty.label} is still an empty page</p></section>`;
+    }
+    const rows = mine.map((e) =>
+      `<div class="inf-row">` +
+        `<span class="inf-row-h">${MODES[e.mode].label}</span>` +
+        `<span class="inf-row-strand">${infStrandHTML(e.best, sty.color, pitch)}</span>` +
+        `<span class="inf-row-num" style="color:${sty.color}">${e.best}</span>` +
+        `<span class="inf-row-games">${e.played} game${e.played === 1 ? "" : "s"}</span>` +
+      `</div>`
+    ).join("");
+    const left = MODE_ORDER.filter((m) => !mine.some((e) => e.mode === m)).map((m) => MODES[m].label);
+    const untried = left.length ? `<p class="inf-untried">not strung yet · ${left.join(" · ")}</p>` : "";
+    return `<section class="inf-group">${head}${rows}${untried}</section>`;
   };
-  const rows = MODE_ORDER.map((m) =>
-    `<tr><th class="inf-row-h">${MODES[m].label}</th>${cell("3lives", m)}${cell("sudden", m)}</tr>`
-  ).join("");
-  return hero +
-    `<table class="inf-ledger"><thead><tr><th></th>${colHead("3lives")}${colHead("sudden")}</tr></thead>` +
-    `<tbody>${rows}</tbody></table>` +
-    `<p class="inf-foot">${totalGames} infinite game${totalGames === 1 ? "" : "s"} played · the circle marks your all-time best</p>`;
+  const avg = (rounds / games).toFixed(1);
+  return hero + group("3lives") + group("sudden") +
+    `<p class="inf-foot">${games} infinite game${games === 1 ? "" : "s"} · ` +
+    `${rounds} round${rounds === 1 ? "" : "s"} survived in total · ${avg} a run</p>`;
 }
 
 /* ---------- Achievements ---------- */
@@ -23926,6 +23985,20 @@ function devSeedHistory(n = 25) {
       d: new Date(now - i * 7 * 3600 * 1000).toISOString(), tm: 30 + Math.random() * 60 });
   }
 }
+// Infinite runs, spread over both variants so the stats tab's strands have something to
+// scale against. Runs get shorter as the difficulty climbs and sudden death is punished
+// hardest, which is the shape a real notebook has — a flat seed would make every strand
+// the same length and hide exactly the comparison the tab exists to draw.
+function devSeedInfinite(games = 30) {
+  const modes = ["relaxed", "easy", "medium", "hard"];
+  for (let g = 0; g < games; g++) {
+    const variant = Math.random() < 0.62 ? "3lives" : "sudden";
+    const mi = Math.floor(Math.random() * modes.length);
+    const ceiling = (variant === "sudden" ? 14 : 38) - mi * (variant === "sudden" ? 2.5 : 6);
+    const rounds = Math.max(1, Math.round(ceiling * (0.35 + Math.random() * 0.65)));
+    updateStats(rounds, "inf-" + variant + "-" + modes[mi], rounds);
+  }
+}
 function devSeedTally(games = 6) {
   for (let g = 0; g < games; g++) {
     const rounds = [];
@@ -26717,6 +26790,7 @@ function buildDevApi() {
     },
     // Seeding
     seed: { records: devSeedRecords, history: devSeedHistory, tally: devSeedTally,
+            infinite: devSeedInfinite,
             unlockAch: devUnlockAllAch, lockAch: devLockAllAch,
             fireAch: (id) => unlock(id),
             // Fire N still-unearned charms into THIS game's unlock list, so the results
