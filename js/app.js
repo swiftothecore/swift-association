@@ -14429,6 +14429,14 @@ function renderChallengeMargin() {
   // which is the half they were missing.
   const t = MARGIN_ECHO.has(currentChallenge.rule) ? null : challengeTally(currentChallenge);
   const prog = t ? `${t.got} / ${t.need} ${t.unit}` : "";
+  // The three second lines all have to survive being read cold, by someone who has not been
+  // following the counter down. Each one therefore carries its own definition: the healthy line
+  // says what a slip IS on this rule, and the last-slip line says what spending it COSTS. "no
+  // slips left · every page from here" said neither, and a playtest read it as an unfinished
+  // sentence, which is what it was. Neither line re-quotes the bar, for the reason below: the
+  // count above it is already naming the bar, and m.goal names it in a different shape ("10 /
+  // 13" against "0 / 10 pages cleared"), which reads as a second number rather than the same
+  // one.
   // Only the dying run gets a bold clause on the second line, and it is the clause that says
   // the target has gone — the sentence a player needs to stop hunting for a score that can no
   // longer happen and read the reason to finish anyway. It does NOT re-quote the bar: the line
@@ -14438,7 +14446,7 @@ function renderChallengeMargin() {
   const said = lost
     ? `<b>out of reach now.</b> ${escapeHtml(deadRunReason(currentChallenge))}`
     : m.left === 0
-      ? `no slips left · every page from here`
+      ? `no slips left · one more and the target is out of reach`
       : `${m.left} slip${m.left === 1 ? "" : "s"} left · ${escapeHtml(m.note)}`;
   // A fresh node each render, so the lost line is announced the once it appears rather than
   // every page turn quietly re-reading a number nobody asked for.
