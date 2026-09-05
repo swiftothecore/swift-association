@@ -3229,10 +3229,9 @@ export const ACHIEVEMENTS = [
   { id: "keep-page-company-past-midnight",       name: "Midnights Like This", desc: "Keep the page company past midnight",    secret: true,  icon: "nightrain" },
   { id: "watch-autumn-leaves-fall", name: "Autumn Leaves Falling", desc: "Watch the autumn leaves fall on the page", secret: true, icon: "leaf" },
   /* The scarf doodle is the one drawing you can touch, and its tally is lifetime rather than
-     per-run: it is one of five drawings a run might ink in the margin, and only about half of
-     runs ink one at all, so thirteen taps inside a single game would be luck rather than a
-     feat. When it does turn up it stays for the whole run, which is what makes the tapping
-     possible at all. Counted in METRICS_KEY. */
+     per-run: it is one of five drawings, each page rolls for one at 15%, and the roll is made
+     fresh every page, so thirteen taps inside a single game would be luck rather than a feat.
+     Counted in METRICS_KEY. */
   { id: "tap-scarf-doodle-13-times", name: "You Keep My Old Scarf", desc: "Tap the scarf doodle 13 times", secret: true, icon: "scarftap" },
   /* The other drawings you can touch: the little inked mark beside every inside page's title
      (see PAGE_MARK_KINDS). Lifetime and set-shaped — ten distinct marks, in any order, across

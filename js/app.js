@@ -11896,8 +11896,6 @@ function resetRunState() {
   roundWildcard = null;
   lastWildcardId = "";
   whaleSeenThisGame = false;
-  runDoodleInked = false;
-  runDoodleKind = "";
   clearVanish();
   if (revolveId) { clearTimeout(revolveId); revolveId = null; revolveDeadline = 0; }
   revolveIndex = 0;
@@ -20466,8 +20464,6 @@ let titleTaps = 0;
 let activePen = null;            // 'quill' | 'fountain' | 'glitter' | null
 let blueUsedThisRound = false;
 let whaleSeenThisGame = false;   // caps "yes, whale!" at one surfacing per game — see runRoundEggs
-let runDoodleInked = false;      // the margin doodle is rolled once per run, not once per page
-let runDoodleKind = "";          // what that roll drew, so page six can put it back after the fence
 let lyricEggMatched = false;     // whether the typed text is currently sitting on a real lyric (so the sparkle fires once per crossing, not every keystroke)
 let blueWashTimer = null;        // so the wash can be cut short when the page turns under it
 let correctStreak = 0;           // consecutive correct answers this game
@@ -20502,9 +20498,8 @@ function clearEggs() {
   // the top edge, and its 13-second visit is meant to survive page turns)
   clearBlueWash();
   const layer = $("doodleLayer");
-  // The margin doodle is ink, so it survives the page turn: it is drawn once for a run and
-  // left alone. Everything else in this layer (the midnight note) is per-page and goes.
-  if (layer) layer.querySelectorAll(":scope > :not(.doodle)").forEach((e) => e.remove());
+  // Every round is a new page of the notebook, so nothing in this layer carries over.
+  if (layer) layer.innerHTML = "";
 }
 
 function addDoodle(kind) {
@@ -20930,33 +20925,20 @@ function runRoundEggs() {
   const now = new Date();
   const midnightHour = now.getHours() === 0 && now.getMinutes() <= 13;
 
-  /* The margin doodle is drawn ONCE for a run and then left there. It used to be a 14% roll
-     per page, which meant a drawing appeared beside page four and was gone by page five —
-     and a mark that comes and goes on its own is reading as a UI element, not as something
-     somebody inked in a margin. So the roll happens on the first page and the doodle
-     survives every page turn after it (see clearEggs).
+  /* One page, at most one doodle, rolled fresh each time — because each round IS a new page
+     of the notebook, and ink does not travel from one sheet to the next. An earlier pass made
+     the doodle survive page turns on the theory that a mark coming and going read as UI
+     rather than as ink; what it actually produced was the same drawing redrawn in the same
+     spot on all thirteen pages, which is wallpaper. Occasional is the point: most pages have
+     a bare margin, and the drawing is a thing you catch rather than a thing you look past.
 
-     The fence is the exception in BOTH directions, and this is the fiddly bit. It arrives on
-     page five of a classic run whether or not the run inked anything, and it leaves again on
-     page six — it is a tease, not marginalia, and a tease that stays for the remaining eight
-     pages is just wallpaper. So the run's own doodle is remembered rather than merely drawn,
-     and page six puts it back exactly as it was (or clears the margin, if the run rolled
-     nothing). Re-inking is skipped when the right drawing is already hanging there, so a
-     page turn does not restart its fade-in.
-
-     The midnight note is not ink and is not part of this: it is a thought scribbled in the
-     margin for thirteen minutes a day, so it stays per-page and can sit above a doodle. */
-  if (!runDoodleInked) {
-    runDoodleInked = true;
+     The midnight note is the same shape of thing and shares the page with a doodle happily:
+     it is a thought scribbled in the margin for thirteen minutes a day. */
+  if (gameType === "classic" && round === 5) {
+    addDoodle("fence");
+  } else if (chance(0.15)) {
     const pool = ["scarf", "thirteen", "mirrorball", "paperplane", "willow"];
-    if (chance(0.55)) runDoodleKind = pool[Math.floor(Math.random() * pool.length)];
-  }
-  const want = (gameType === "classic" && round === 5) ? "fence" : runDoodleKind;
-  const hanging = $("doodleLayer") && $("doodleLayer").querySelector(".doodle");
-  if (want) {
-    if (!hanging || hanging.dataset.kind !== want) addDoodle(want);
-  } else if (hanging) {
-    hanging.remove();
+    addDoodle(pool[Math.floor(Math.random() * pool.length)]);
   }
   if (midnightHour) addMarginNote("meet me at midnight");
 
