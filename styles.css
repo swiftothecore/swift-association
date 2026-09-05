@@ -1922,14 +1922,29 @@
     animation-name: polDevelopFade; animation-timing-function: linear; animation-fill-mode: both;
   }
   @keyframes polDevelopFade { from { opacity: 1; } to { opacity: 0; } }
-  /* Locked — a sealed keepsake: just a black rectangle, no cream frame or caption at all. */
+  /* Locked — a sealed keepsake: still just a black rectangle, no cream frame and no caption.
+     It is built from the earned tile's own boxes (a square well and an empty caption block)
+     rather than an aspect-ratio guess, purely so it occupies EXACTLY the footprint of a
+     developed polaroid. A 5/6 box was roughly a polaroid's proportions but not this
+     polaroid's, so every locked tile came up ~55px short and punched a hole in the row. It is
+     all one colour, so borrowing the structure costs the sealed look nothing. */
   .keep-locked {
-    display: block; width: 100%; aspect-ratio: 5 / 6; box-sizing: border-box;
-    background: #0c0a07; border-radius: 2px; box-shadow: 0 2px 6px rgba(43, 39, 34, 0.20);
+    display: block; width: 100%; box-sizing: border-box; padding: 9px 9px 0;
+    background: #0c0a07; border: 1px solid #0c0a07; border-radius: 2px;
+    box-shadow: 0 2px 6px rgba(43, 39, 34, 0.20);
     transform: rotate(var(--tilt, -2deg)); transition: transform 0.16s ease;
   }
+  .keep-locked-well { display: block; width: 100%; aspect-ratio: 1 / 1; }
+  /* The caption block is a RESERVED box, not a box that grows to fit its text, and that is
+     what levels the wall. Three things used to change a tile's height for free: a name that
+     wrapped to three lines, a sub-line that wrapped to three, and a still-developing tile
+     that has no sub-line at all yet. All three now happen inside the same reserved height,
+     so a photo finishing its develop no longer shoves its neighbours down the page.
+     Two lines of name + two of sub is the budget the wall is drawn to at its column width;
+     the rare longer caption is allowed to overflow the block rather than be clamped, because
+     a truncated keepsake caption is a worse failure than one slightly tall tile. */
   .pol-cap {
-    min-height: 42px; display: flex; flex-direction: column;
+    min-height: 74px; display: flex; flex-direction: column;
     align-items: center; justify-content: center; gap: 2px;
     padding: 5px 3px 7px; text-align: center;
   }
@@ -1970,7 +1985,14 @@
   }
 
   /* Keepsakes modal — a lead, the found counter, then the messy pinned polaroid wall. The
-     tiles are small and jittered (translate + rotate) so the wall reads scattered, not gridded. */
+     tiles are jittered (translate + rotate) so the wall reads scattered, not gridded.
+
+     It takes a wider sheet than the rest of the .settings-modal family, which is sized for a
+     column of settings rows and was simply inherited here. This drawer is not a form, it is
+     twenty-one objects hung on a wall, and 594px could only ever fit four narrow ones per row
+     — so the captions wrapped, the tiles came out at wildly different heights, and the wall
+     read as clutter. The extra width is spent on the tiles, not on more of them. */
+  .keepsakes-modal .settings-card { width: min(880px, calc(100vw - 28px)); }
   .keep-lead {
     font-family: var(--type); font-size: calc(12.5px + var(--text-size-adjust)); color: var(--ink-soft);
     line-height: 1.55; margin: 4px 0 14px; max-width: 60ch;
@@ -1993,9 +2015,21 @@
     font-family: var(--type); font-size: calc(10px + var(--text-size-adjust)); letter-spacing: 1.4px;
     text-transform: uppercase; color: var(--ink-soft);
   }
+  /* The column floor is set by the CAPTION, not by the artwork. At 96px the frame held a
+     photo perfectly well and then broke "the holiday house" over three lines and "got a long
+     list of ex-lovers" over three more, which is where the wall's raggedness came from: the
+     tiles were not really different sizes, their captions were. 150px gives the handwritten
+     name two lines at most for every keepsake in the set.
+
+     The 26px column gap is the other half of the overlap fix and has to be read together with
+     polaroidJitter: a tile carries up to 5px of --dx AND a rotation of up to 7deg, which
+     swings the corners of a ~200px-tall frame about 12px sideways. Two neighbours leaning
+     toward each other therefore spend ~34px of the gutter between them. At the old 12px they
+     genuinely overlapped — eight pairs of them, by up to 14px. Do not trim this gap back
+     without trimming the jitter to match. */
   .keep-grid {
-    display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
-    gap: 18px 12px; align-items: start; padding: 16px 4px 12px;
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 28px 26px; align-items: start; padding: 16px 4px 12px;
   }
   /* No content-visibility here, deliberately: `auto` also applies PAINT containment, which
      clips each tile to its own cell — and these tiles are tilted up to 7deg, so the corners
@@ -2004,7 +2038,14 @@
      on a padded wrapper that the rotated polaroid can overflow into. */
   .keep-cell { transform: translate(var(--dx, 0), var(--dy, 0)); }
   @media (max-width: 560px) {
-    .keep-grid { grid-template-columns: repeat(auto-fill, minmax(82px, 1fr)); gap: 14px 10px; }
+    /* Two across on a phone, which is fatter than the FOUR this wall used to manage on a
+       desktop. That is the point: the card only has ~290px of usable width once the notebook's
+       left margin is paid for, and three columns of ~86px would put every caption back onto
+       three lines. Two properly-sized polaroids beat three unreadable ones.
+       The 26px gutter does NOT shrink with the columns. It cannot: it is sized against the
+       tilt, which swings a tile's corners ~12px sideways no matter how narrow the phone is,
+       and at 16px the tiles lapped each other here even though the desktop wall was clean. */
+    .keep-grid { grid-template-columns: repeat(auto-fill, minmax(112px, 1fr)); gap: 22px 26px; }
     .keep-counter-n { font-size: calc(32px + var(--text-size-adjust)); }
   }
   @media (prefers-reduced-motion: reduce) { .keep-cell { transform: none; } }
@@ -2029,8 +2070,12 @@
   .stick-grid {
     /* 84px of artwork per cell. The floor is 64px and it is not a suggestion: below it the
        crowded stickers (the bathtub, the matchbook) stop being their object and become "an
-       object with detail", and at doodle size the whole family fails. */
-    display: grid; grid-template-columns: repeat(auto-fill, minmax(112px, 1fr));
+       object with detail", and at doodle size the whole family fails.
+       The 132px column is chosen against the SET SIZE rather than the artwork: on the wider
+       drawer it lands five across, which is the only count that divides fifteen stickers into
+       full rows. At 112px the same shelf fell into 6 + 6 + 3 and the short row read as a gap
+       in the sheet. Revisit this number if STICKERS ever stops being fifteen. */
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(132px, 1fr));
     gap: 20px 12px; align-items: start; padding: 16px 4px 12px; justify-items: center;
   }
   .stick-cell { display: flex; flex-direction: column; align-items: center; gap: 7px; width: 100%; max-width: 118px; }
@@ -2053,9 +2098,11 @@
      would. Held at 64px: the floor, and the largest a toast can carry. */
   .toast-sticker .sticker { width: 64px; flex: 0 0 auto; }
   @media (max-width: 560px) {
-    /* Three across, matching the polaroid wall's density above it. 68px of artwork is still
-       above the 64px floor; going to two fat columns instead left the shelf reading as a
-       list of objects rather than as a sheet of stickers. */
+    /* Three across. 68px of artwork is still above the 64px floor; going to two fat columns
+       instead left the shelf reading as a list of objects rather than as a sheet of stickers.
+       It no longer matches the polaroid wall above, which drops to two on a phone — the two
+       families want different things at this width: a sticker is one shape and survives being
+       small, a polaroid is carrying two lines of handwriting and does not. */
     .stick-grid { grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 16px 8px; }
     .stick-cell { max-width: 100px; }
     .stick-cell .sticker { width: 68px; }

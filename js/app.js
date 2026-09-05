@@ -4265,12 +4265,16 @@ function polaroidHTML(photo, caption, opts = {}) {
   // two-line caption, and one of three develop states. It shares the frame, washi tape and
   // tilt with the profile polaroid below; only the photo well and caption block differ.
   //   locked     — never earned: a plain black rectangle, no frame or caption (a sealed mystery).
+  //                It carries the developed tile's two boxes (square well + empty caption) so
+  //                it stands exactly as tall as its neighbours; being one flat colour, that
+  //                structure is invisible and the sealed look is unchanged.
   //   developing — earned <13min ago: the photo under a black veil that is still fading up.
   //   developed  — earned 13min+ ago: the fully cleared photo + both caption lines.
   if (opts.keepsake) {
     const state = opts.state || "locked";
     if (state === "locked") {
-      return `<span class="keep-locked${opts.small ? " keep-locked-sm" : ""}" style="--tilt:${tilt}deg" aria-hidden="true"></span>`;
+      return `<span class="keep-locked${opts.small ? " keep-locked-sm" : ""}" style="--tilt:${tilt}deg" aria-hidden="true">` +
+        `<span class="keep-locked-well"></span><span class="pol-cap"></span></span>`;
     }
     const cls = "polaroid polaroid-keep is-" + state + (opts.small ? " polaroid-sm" : "");
     // Instant film: the photo sits under a black veil whose opacity slides from 1 (just
@@ -4425,9 +4429,14 @@ function updateKeepsakesNav() {
 // gridded — deterministic (hashed from the id), so it never reshuffles between renders.
 function polaroidJitter(id) {
   const rng = mulberry32(fnv1a(id));
+  // The sideways numbers are deliberately the small ones. A tilt already moves a tall frame's
+  // corners about 12px sideways, so tilt and --dx spend the SAME gutter, and the two together
+  // used to overrun it and lap the neighbouring polaroid. Vertical drift costs nothing by
+  // comparison — the row gap is not competing with the rotation — so the scattered look is
+  // bought with --dy and the tilt, and --dx only breaks up the column edges.
   const tilt = (rng() * 14 - 7).toFixed(2);  // -7deg .. +7deg — pinned any-old-how
   const dy = (rng() * 22 - 7).toFixed(1);    // -7px .. +15px
-  const dx = (rng() * 16 - 8).toFixed(1);    // -8px .. +8px
+  const dx = (rng() * 10 - 5).toFixed(1);    // -5px .. +5px
   return { tilt, dy, dx };
 }
 
