@@ -720,11 +720,23 @@ if (location.pathname.endsWith('/index.html')) {
   </symbol>
 </svg>
 <!-- BONUS GAME PRESSINGS — the shelf's icon family, drawn once here and <use>d per card.
-     Every bonus game is a black 7-inch pressing with a 1920s shellac label: engraved
-     sunrays, a beaded ring, hub rings, and the game's own mark inside a cream cartouche
-     flanked by deco diamonds. The vinyl, rays and furniture never change from game to
-     game; only the label colour and the mark do (see BONUS_GAMES in js/config.js), which
-     is what holds the family together at 40px as well as at 160px.
+     Every bonus game is a black 7-inch pressing with a 1920s shellac label, and the label
+     is composed in two halves around the spindle hole: a shared deco SUNRISE fanned over
+     the top, and the game's OWN MARK printed large in cream underneath it. The vinyl, the
+     fan and the furniture never change from game to game; only the label colour and the
+     mark do (see BONUS_GAMES in js/config.js), which is what holds the family together.
+     That split is deliberate and was arrived at the hard way. The label used to spend its
+     whole middle on a full 24-spoke corona that was identical on all six games, and gave
+     the mark a cream lozenge the size of a fingernail at the very bottom edge — so the
+     loudest thing on every pressing was the part they all shared, the mark was about three
+     pixels wide on the 38px shelf strips, and the games could only be told apart by hue.
+     The mark now owns the biggest clear field on the label and is drawn in cream straight
+     onto the colour, so it carries at thumbnail size. Do not put the lozenge back, and do
+     not close the fan back into a full ring: both changes hand the centre of the label
+     back to the furniture.
+     Every mark is drawn inside the lower crescent, which is bounded by the spindle rings
+     above and the beaded ring below — in practice, keep every point within about 34 units
+     of (70,70) or it will foul the ring at the corners.
      The marks are DRAWN PATHS, never font glyphs: a typed "?" reads as typing rather than
      printing, and renders differently on every machine. Keep it that way. -->
 <svg width="0" height="0" aria-hidden="true" style="position:absolute" focusable="false">
@@ -743,91 +755,88 @@ if (location.pathname.endsWith('/index.html')) {
       <path d="M18 52 A54 54 0 0 1 50 17" fill="none" stroke="rgba(255,255,255,0.10)" stroke-width="5" stroke-linecap="round"/>
       <path d="M122 88 A54 54 0 0 1 90 123" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="5" stroke-linecap="round"/>
     </g>
-    <!-- engraved sunrays across the label, 24 spokes struck from the hub -->
+    <!-- the sunrise: 13 engraved spokes fanned over the top half of the label only. It was
+         a full 24-spoke ring, which meant the shared furniture owned the middle of every
+         pressing; opening it to a half-fan hands the lower crescent to the game's mark and
+         turns the corona into a horizon, which is the better deco anyway. -->
     <g id="bd-rays">
-      <g stroke="rgba(247,236,215,0.3)" stroke-width="1" stroke-linecap="round">
-        <line x1="84" y1="70" x2="104" y2="70"/><line x1="83.5" y1="73.6" x2="102.8" y2="78.8"/>
-        <line x1="82.1" y1="77" x2="99.4" y2="87"/><line x1="79.9" y1="79.9" x2="94" y2="94"/>
-        <line x1="77" y1="82.1" x2="87" y2="99.4"/><line x1="73.6" y1="83.5" x2="78.8" y2="102.8"/>
-        <line x1="70" y1="84" x2="70" y2="104"/><line x1="66.4" y1="83.5" x2="61.2" y2="102.8"/>
-        <line x1="63" y1="82.1" x2="53" y2="99.4"/><line x1="60.1" y1="79.9" x2="46" y2="94"/>
-        <line x1="57.9" y1="77" x2="40.6" y2="87"/><line x1="56.5" y1="73.6" x2="37.2" y2="78.8"/>
-        <line x1="56" y1="70" x2="36" y2="70"/><line x1="56.5" y1="66.4" x2="37.2" y2="61.2"/>
-        <line x1="57.9" y1="63" x2="40.6" y2="53"/><line x1="60.1" y1="60.1" x2="46" y2="46"/>
-        <line x1="63" y1="57.9" x2="53" y2="40.6"/><line x1="66.4" y1="56.5" x2="61.2" y2="37.2"/>
-        <line x1="70" y1="56" x2="70" y2="36"/><line x1="73.6" y1="56.5" x2="78.8" y2="37.2"/>
-        <line x1="77" y1="57.9" x2="87" y2="40.6"/><line x1="79.9" y1="60.1" x2="94" y2="46"/>
-        <line x1="82.1" y1="63" x2="99.4" y2="53"/><line x1="83.5" y1="66.4" x2="102.8" y2="61.2"/>
+      <g stroke="rgba(247,236,215,0.32)" stroke-width="1" stroke-linecap="round">
+        <line x1="84" y1="70" x2="104" y2="70"/><line x1="83.5" y1="66.4" x2="102.8" y2="61.2"/>
+        <line x1="82.1" y1="63" x2="99.4" y2="53"/><line x1="79.9" y1="60.1" x2="94" y2="46"/>
+        <line x1="77" y1="57.9" x2="87" y2="40.6"/><line x1="73.6" y1="56.5" x2="78.8" y2="37.2"/>
+        <line x1="70" y1="56" x2="70" y2="36"/><line x1="66.4" y1="56.5" x2="61.2" y2="37.2"/>
+        <line x1="63" y1="57.9" x2="53" y2="40.6"/><line x1="60.1" y1="60.1" x2="46" y2="46"/>
+        <line x1="57.9" y1="63" x2="40.6" y2="53"/><line x1="56.5" y1="66.4" x2="37.2" y2="61.2"/>
+        <line x1="56" y1="70" x2="36" y2="70"/>
       </g>
     </g>
-    <!-- shared deco furniture: hairline ring, beaded ring, hub rings, cartouche, diamonds -->
+    <!-- shared deco furniture: hairline ring, beaded ring, hub rings, and a diamond finial
+         closing each end of the fan's horizon. Nothing sits in the lower crescent: that is
+         the mark's field, and anything printed there competes with it at thumbnail size. -->
     <g id="bd-furniture">
       <circle cx="70" cy="70" r="41" fill="none" stroke="rgba(247,236,215,0.5)" stroke-width="0.8"/>
       <circle cx="70" cy="70" r="38.5" fill="none" stroke="rgba(247,236,215,0.65)" stroke-width="2.2"
               stroke-dasharray="0.1 5.05" stroke-linecap="round"/>
       <circle cx="70" cy="70" r="10" fill="none" stroke="rgba(247,236,215,0.7)" stroke-width="1"/>
       <circle cx="70" cy="70" r="7.8" fill="none" stroke="rgba(247,236,215,0.45)" stroke-width="0.6"/>
-      <rect x="54" y="88" width="32" height="15" rx="7.5" fill="#f7ecd7"/>
-      <path d="M47.5 95.5 L49.5 93.5 L51.5 95.5 L49.5 97.5 Z" fill="rgba(247,236,215,0.75)"/>
-      <path d="M88.5 95.5 L90.5 93.5 L92.5 95.5 L90.5 97.5 Z" fill="rgba(247,236,215,0.75)"/>
+      <path d="M32.2 70 L34.5 67.4 L36.8 70 L34.5 72.6 Z" fill="rgba(247,236,215,0.75)"/>
+      <path d="M103.2 70 L105.5 67.4 L107.8 70 L105.5 72.6 Z" fill="rgba(247,236,215,0.75)"/>
     </g>
     <!-- the spindle hole, drawn last on every disc so nothing crosses it -->
     <circle id="bd-hub" cx="70" cy="70" r="5.4" fill="#f2e8d3" stroke="rgba(0,0,0,0.3)" stroke-width="0.8"/>
-    <!-- the marks. Each inherits the label colour from the <g> the card wraps it in. -->
+    <!-- The marks, printed in cream on the label colour (bonusDisc supplies the fill). Each
+         one fills the lower crescent, so the extremes sit on its waist rather than at the
+         corners of a box — a mark drawn tall AND wide fouls the beaded ring. -->
     <g id="bd-mark-question">
-      <path d="M66.6 92.8 C66.6 88.6 73.8 88.6 73.8 92.5 C73.8 95.2 71.2 95.0 70.9 97.4"
-            fill="none" stroke-width="1.9" stroke-linecap="round"/>
-      <circle cx="70.9" cy="100.4" r="1.15" stroke="none"/>
+      <path d="M60.5 83.5 C60.5 73 79.5 73 79.5 83 C79.5 89.5 72.4 89.3 71.6 95.5"
+            fill="none" stroke-width="3.2" stroke-linecap="round"/>
+      <circle cx="71.6" cy="101.4" r="2.6" stroke="none"/>
     </g>
+    <!-- the needle jumping out of the groove: the line runs straight, one word throws it -->
     <g id="bd-mark-skip">
-      <path d="M58.5 95.5 L63.5 95.5 L66.5 90.8 L70 100.2 L73 95.5 L81.5 95.5"
-            fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-    </g>
-    <g id="bd-mark-loop">
-      <path d="M75.64 93.45 A6 6 0 1 1 71.04 89.59"
-            fill="none" stroke-width="1.8" stroke-linecap="round"/>
-      <path d="M74.39 90.18 L70.69 91.56 L71.39 87.62 Z" stroke="none"/>
+      <path d="M46 92 L58 92 L64 80 L70 104 L76 92 L94 92"
+            fill="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
     </g>
     <!-- the proofreader's caret over an empty rule: a word belongs here and isn't. -->
     <g id="bd-mark-caret">
-      <path d="M59.4 99.4 L80.6 99.4" fill="none" stroke-width="1.8" stroke-linecap="round"/>
-      <path d="M65.9 90.5 L70 96.2 L74.1 90.5" fill="none" stroke-width="1.8"
+      <path d="M52 99 L88 99" fill="none" stroke-width="3" stroke-linecap="round"/>
+      <path d="M60 82 L70 94 L80 82" fill="none" stroke-width="3"
             stroke-linecap="round" stroke-linejoin="round"/>
     </g>
     <!-- two lines of a document with the telling half of each one struck out: a solid block
          where the words were, a hairline rule where they were left alone. -->
     <g id="bd-mark-redact">
-      <rect x="57.5" y="91.4" width="12.5" height="3.4" rx="1.1" stroke="none"/>
-      <path d="M72.6 93.1 L82.5 93.1" fill="none" stroke-width="1.5" stroke-linecap="round"/>
-      <path d="M57.5 99.3 L65.4 99.3" fill="none" stroke-width="1.5" stroke-linecap="round"/>
-      <rect x="68" y="97.6" width="14.5" height="3.4" rx="1.1" stroke="none"/>
+      <rect x="51" y="79.3" width="22" height="6.4" rx="2.2" stroke="none"/>
+      <path d="M77 82.5 L91 82.5" fill="none" stroke-width="2.6" stroke-linecap="round"/>
+      <path d="M52 96 L64 96" fill="none" stroke-width="2.6" stroke-linecap="round"/>
+      <rect x="68" y="92.8" width="21" height="6.4" rx="2.2" stroke="none"/>
     </g>
     <!-- a pin stuck in one spot, with the ground ruled either side of it: this word is here
          and nowhere else on the map. -->
     <g id="bd-mark-pin">
-      <path d="M70 100.6 C66.4 96.6 66 95.9 66 93.2 a4 4 0 1 1 8 0 c0 2.7 -0.4 3.4 -4 7.4 Z"
-            fill="none" stroke-width="1.8" stroke-linejoin="round"/>
-      <circle cx="70" cy="93.1" r="1.45" stroke="none"/>
-      <path d="M58.5 101.7 L64.2 101.7 M75.8 101.7 L81.5 101.7" fill="none"
-            stroke-width="1.5" stroke-linecap="round"/>
+      <path d="M70 102 C62.8 94 62 92.6 62 87.2 a8 8 0 1 1 16 0 c0 5.4 -0.8 6.8 -8 14.8 Z"
+            fill="none" stroke-width="3" stroke-linejoin="round"/>
+      <circle cx="70" cy="86.4" r="2.9" stroke="none"/>
+      <path d="M52 100 L60 100 M80 100 L88 100" fill="none"
+            stroke-width="2.6" stroke-linecap="round"/>
     </g>
     <!-- the return stroke: drop off the end of the line and go back for the next one. Drawn
-         open rather than as a closed loop, because at 36px a loop this size fills in and reads
-         as a blob rather than as an arrow. -->
+         open rather than as a closed loop, because a loop this size fills in at small sizes
+         and reads as a blob rather than as an arrow. -->
     <g id="bd-mark-chain">
-      <path d="M79.5 89.8 L79.5 98.6 L63.4 98.6" fill="none"
-            stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
-      <path d="M61.6 98.6 L66.6 95.9 L66.6 101.3 Z" stroke="none"/>
+      <path d="M88 79.5 L88 97.5 L58 97.5" fill="none"
+            stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M52.5 97.5 L61.5 92.8 L61.5 102.2 Z" stroke="none"/>
     </g>
     <!-- a metronome, arm off centre and still swinging: the thing that will not wait. The arm
          leaves through the TOP of the case rather than past a corner, and the weight sits low
-         and square on it — at 36px an arm clipping the shoulder reads as a dustpan and brush. -->
+         and square on it — an arm clipping the shoulder reads as a dustpan and brush. -->
     <g id="bd-mark-metro">
-      <path d="M62.6 101.8 L67 90.4 L73 90.4 L77.4 101.8 Z" fill="none"
-            stroke-width="1.7" stroke-linejoin="round"/>
-      <path d="M70 101 L73.5 87" fill="none" stroke-width="1.6" stroke-linecap="round"/>
-      <rect x="69" y="93.4" width="5.2" height="2.3" rx="0.7"
-            transform="rotate(-14 71.6 94.55)" stroke="none"/>
+      <path d="M56.7 102.2 L64.6 81.7 L75.4 81.7 L83.3 102.2 Z" fill="none"
+            stroke-width="2.9" stroke-linejoin="round"/>
+      <path d="M70 100.8 L76.3 75.6" fill="none" stroke-width="2.8" stroke-linecap="round"/>
+      <rect x="68.2" y="87.1" width="9.4" height="4.1" rx="1.3"
+            transform="rotate(-14 72.9 89.2)" stroke="none"/>
     </g>
     <!-- the unreleased record: a bare white label with a rubber-stamped TEST PRESSING box.
          The title is pencilled on per game by renderBonusPage, so it isn't in here. -->

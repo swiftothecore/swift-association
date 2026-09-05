@@ -512,15 +512,15 @@ export const CUSTOM_DEFAULT_MODE = {
    Nor is it on Ruthless, which is scored in seconds already. */
 export const BONUS_GAMES = [
   { id: "spot-the-slip", name: "Spot the Slip", ready: true, sweep: true,
-    kicker: "find the wrong word", tint: "#cf6752", mark: "skip",
+    kicker: "find the wrong word", tint: "#bf5340", mark: "skip",
     line: "One word in the lyric is an impostor. Catch it.",
     blurb: "One word in the lyric has been swapped for an impostor. Catch it before the ink dries." },
   { id: "name-that-song", name: "Name That Song", ready: true, sweep: true,
-    kicker: "lyric in, title out", tint: "#33486e", mark: "question",
+    kicker: "lyric in, title out", tint: "#33628f", mark: "question",
     line: "Read the line, name the song, beat the clock.",
     blurb: "Read the line, name the song, and beat the clock. No prompt word to lean on but the lyric itself." },
   { id: "sing-it-back", name: "Sing It Back", ready: true, sweep: true,
-    kicker: "fill the gap", tint: "#77485e", mark: "caret",
+    kicker: "fill the gap", tint: "#8d4064", mark: "caret",
     line: "A word is missing from the line. Write it back.",
     blurb: "A word has been lifted out of one of the song's own lines. Write it back in." },
   // The one game on the shelf scored in POINTS rather than pages cleared: `points` is what a
@@ -531,13 +531,13 @@ export const BONUS_GAMES = [
   // stare rather than spend. Six keeps the same shape (a strip a point, floored at one) with a
   // shorter drop, so peeling the two or three you actually need is not a ruined page.
   { id: "redacted", name: "Redacted", ready: true, points: 6,
-    kicker: "how little do you need?", tint: "#4e5f3a", mark: "redact",
+    kicker: "how little do you need?", tint: "#3b4d31", mark: "redact",
     line: "Peel the tape off a verse, and name it cheap.",
     blurb: "A verse with the telling words taped over. Peel them off one at a time, and name the song before you have spent the page." },
   // The one game on the shelf with no fail state: every card in the hand is really in the song,
   // so every pick pays, and the rarity is what the five points are for. See buildOnlyHerePuzzle.
   { id: "only-here", name: "Only Here", ready: true, points: 5,
-    kicker: "the game backwards", tint: "#2b6b6a", mark: "pin",
+    kicker: "the game backwards", tint: "#1c7371", mark: "pin",
     line: "Six words from the song. Pick the rarest.",
     blurb: "The game backwards: here is the song, and here are six words out of it. Pick the one you think the fewest other songs sing, and the hand turns over to show you what they were all worth." },
   // Four picks down one song, worth 1, 1, 2 and 2 — the payout escalates because the decoys
@@ -545,7 +545,7 @@ export const BONUS_GAMES = [
   // asked to survive but never paid for reads as the game turning mean rather than exciting.
   // The six is CHAIN_PAGE written out; the two must stay in step.
   { id: "then-what", name: "Then What", ready: true, points: 6,
-    kicker: "what comes next?", tint: "#5e4a86", mark: "chain",
+    kicker: "what comes next?", tint: "#4c3f8a", mark: "chain",
     line: "Three lines. Pick the one that comes next.",
     blurb: "One line of the song, and three that might follow it. Pick the right one and it locks into the page in pen; four picks and the verse is yours." },
 ];

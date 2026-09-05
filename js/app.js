@@ -6283,10 +6283,16 @@ function openBonus(from) {
 /* The game's pressing. All the geometry is shared (#bd-* in index.html); a game supplies
    only its label colour and its mark, and an unwritten game gets the bare test pressing
    with its title pencilled on. `extra` lets a caller add classes without re-declaring the
-   whole disc, so the shelf, the play screen and the end card all draw the same object. */
-function bonusDisc(g, extra = "") {
+   whole disc, so the shelf, the play screen and the end card all draw the same object.
+   The mark is printed in CREAM on the colour rather than in the tint itself. It used to be
+   tinted, sitting on a cream lozenge, which made the lozenge the bright shape and the mark
+   a smudge inside it — six pressings that could only be told apart by hue. Cream straight
+   onto the label is the highest contrast the palette has, and it is what makes the mark
+   survive down to the 38px shelf strips. Literal hex, not a CSS colour function: the disc
+   travels into the sleeve keepsake's rasteriser, where nothing resolves. */
+function bonusDisc(g, extra = "", crop = false) {
   const cls = `bonus-disc${extra ? " " + extra : ""}`;
-  const open = `<svg class="${cls}" viewBox="0 0 140 140" aria-hidden="true">`;
+  const open = `<svg class="${cls}" viewBox="${crop ? "23 23 94 94" : "0 0 140 140"}" aria-hidden="true">`;
   if (!g.ready) {
     return open +
       `<use href="#bd-vinyl"/><use href="#bd-test-label"/>` +
@@ -6298,7 +6304,7 @@ function bonusDisc(g, extra = "") {
     `<use href="#bd-vinyl"/>` +
     `<circle cx="70" cy="70" r="44" fill="${escapeHtml(g.tint)}"/>` +
     `<use href="#bd-rays"/><use href="#bd-furniture"/>` +
-    `<g stroke="${escapeHtml(g.tint)}" fill="${escapeHtml(g.tint)}"><use href="#bd-mark-${escapeHtml(g.mark)}"/></g>` +
+    `<g stroke="#f7ecd7" fill="#f7ecd7"><use href="#bd-mark-${escapeHtml(g.mark)}"/></g>` +
     `<use href="#bd-hub"/></svg>`;
 }
 
@@ -6435,7 +6441,7 @@ function renderBonusPage() {
   const shelf = others.map((x) =>
     `<button type="button" class="bonus-alt${x.ready ? "" : " is-soon"}" data-id="${escapeHtml(x.id)}">` +
       `<span class="bonus-alt-tab" style="background:${x.ready ? escapeHtml(x.tint) : "#cfc7ba"}"></span>` +
-      `<span class="bonus-alt-disc">${bonusDisc(x)}</span>` +
+      `<span class="bonus-alt-disc">${bonusDisc(x, "", true)}</span>` +
       `<span class="bonus-alt-text">` +
         `<span class="bonus-alt-top">` +
           `<span class="bonus-alt-name">${escapeHtml(x.name)}</span>` +
@@ -6540,7 +6546,7 @@ function startBonusGame(g, lensId = null) {
   const lens = lensId ? ruthlessLens(lensId) : null;
   const title = lens ? `Ruthless Game · ${lens.label}` : g.name;
   screens.bonusplay.dataset.bonusGame = lens ? "ruthless" : g.id;
-  $("bonusPlayTitle").innerHTML = `${bonusDisc(g, "bonus-disc-sm")}<span>${escapeHtml(title)}</span>`;
+  $("bonusPlayTitle").innerHTML = `${bonusDisc(g, "bonus-disc-sm", true)}<span>${escapeHtml(title)}</span>`;
   nextBonusRound({ entering: true });
 }
 
