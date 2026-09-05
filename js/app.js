@@ -1118,6 +1118,7 @@ function beginPageTurn(anchor) {
     minHeight: app.style.minHeight,
     maxHeight: app.style.maxHeight,
     overflow: app.style.overflow,
+    transition: app.style.transition,
   };
   app.style.height = appRect.height + "px";
   app.style.minHeight = appRect.height + "px";
@@ -1139,12 +1140,42 @@ function beginPageTurn(anchor) {
     holdInert(el) { holdAttribute(el, "inert"); },
     holdBusy(el) { holdAttribute(el, "aria-busy", "true"); },
     setCompletion(fn) { callback = fn; },
+    // The page being turned to is often TALLER than the page being left (opening the cover, or
+    // any short board → long panel turn). The lock above holds the notebook at its pre-turn
+    // height, so without this the extra length arrives in a single frame the instant finish()
+    // releases it: you read the top of the new page during the turn and the rest of it lands
+    // afterwards, as two separate events. Growing the lock instead lets the page unfurl in step
+    // with the sheet, so the turn is the only motion. Callers invoke it once the destination is
+    // laid down beneath the sheet (never before: it measures the real thing, not a guess).
+    settleHeight() {
+      if (finished || !pageTurnAnimated()) return;
+      // Measure unlocked, inside one tick, so nothing is painted at the natural height.
+      app.style.height = oldStyle.height;
+      app.style.minHeight = oldStyle.minHeight;
+      app.style.maxHeight = oldStyle.maxHeight;
+      const natural = app.getBoundingClientRect().height;
+      app.style.height = appRect.height + "px";
+      app.style.minHeight = appRect.height + "px";
+      app.style.maxHeight = appRect.height + "px";
+      if (natural <= appRect.height + 1) return;    // same length or shorter: nothing to reveal
+      app.offsetHeight;                             // flush the locked baseline so it transitions
+      // Height alone holds the clip while it moves, so min/max step out of the way: a min-height
+      // sitting at the destination's size would land the whole page on the first frame, which is
+      // the very snap this exists to remove. They are restored with everything else by finish().
+      app.style.minHeight = "0px";
+      app.style.maxHeight = "none";
+      // Deliberately a shade shorter than the 0.5s sheet, and on the sheet's own easing: the
+      // growth should have settled by the time the page it belongs to has finished turning.
+      app.style.transition = `height ${(0.42 * (animScale() || 1)).toFixed(3)}s cubic-bezier(.42,.04,.34,1)`;
+      app.style.height = natural + "px";
+    },
     finish() {
       if (finished) return;
       finished = true;
       if (activePageTurn === turn) activePageTurn = null;
       layer.remove();
       widthSentinel.remove();
+      app.style.transition = oldStyle.transition;   // before the heights, or the release animates
       app.style.height = oldStyle.height;
       app.style.minHeight = oldStyle.minHeight;
       app.style.maxHeight = oldStyle.maxHeight;
@@ -1241,6 +1272,7 @@ function flipAwayToScreen(name, onDone) {
   const flip = makeFlipSheet(current, current, "page-flip-sheet--side", "flip-shade--side", turn);
   showScreen(name, { deferFocus: true, deferPresentation: true });
   dest.style.animation = "none";
+  turn.settleHeight();          // the destination is down: grow into it rather than snap at the end
   scheduleFlipRemoval(flip, () => {
     commitScreenPresentation(name, false);
     if (dest.classList.contains("active")) focusScreen(name);
@@ -1282,7 +1314,10 @@ function flipInToScreen(name, onDone) {
   //    sheets are removed (below), so there's no frame without a page. Order matters: the clone
   //    above is taken while the destination is still visible.
   dest.style.opacity = "0";
-  // 5. The destination is often SHORTER than the page we're leaving, so fade the backdrop's
+  // 5. Grow the notebook into the destination's height under the hidden strip, so the document
+  //    behind the sheets is already the right length when they are removed.
+  turn.settleHeight();
+  // 6. The destination is often SHORTER than the page we're leaving, so fade the backdrop's
   //    lower (uncovered) half out near the end — it dissolves into the desk instead of snapping
   //    away when the sheets are removed.
   const s = animScale() || 1;
@@ -1487,6 +1522,7 @@ function revealNotebook(onDone) {
   // flip sheet (same synchronous tick, so the bare board never flashes before the turn starts).
   layOutBoard();
   loading.style.display = "none";
+  turn.settleHeight();        // the open board is much longer than the cover it replaces
   const flip = loading.cloneNode(true);
   freezeFlipPalette(card, flip);
   renameFlipIds(flip);
@@ -15630,6 +15666,7 @@ function turnPageSheet(card, fill, done, options = {}) {
   if (options.inert) turn.holdInert(card);
 
   fill();                     // the next page is now in place under the flipping sheet
+  turn.settleHeight();        // and if it is a longer page, the card grows into it as the sheet turns
 
   // Primary trigger is a timeout matched to the 0.5s flip (CSS .page-flip-sheet), with
   // animationend as a fast-path; whichever lands first wins.
