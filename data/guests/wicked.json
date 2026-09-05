@@ -431,7 +431,8 @@
                 "Wicked"
               ]
             }
-          ]
+          ],
+          "voice": "Glinda"
         },
         {
           "title": "Dear Old Shiz",
@@ -479,7 +480,8 @@
                 "Shiz (Dear old Shiz)"
               ]
             }
-          ]
+          ],
+          "voice": "Ensemble"
         },
         {
           "title": "The Wizard And I",
@@ -579,7 +581,8 @@
                 "The Wizard and I"
               ]
             }
-          ]
+          ],
+          "voice": "Elphaba"
         },
         {
           "title": "What Is This Feeling?",
@@ -905,6 +908,10 @@
                 "Ah!"
               ]
             }
+          ],
+          "voice": [
+            "Elphaba",
+            "Glinda"
           ]
         },
         {
@@ -991,7 +998,8 @@
                 "In Oz"
               ]
             }
-          ]
+          ],
+          "voice": "Doctor Dillamond"
         },
         {
           "title": "Dancing Through Life",
@@ -1339,7 +1347,8 @@
                 "While you're dancing through"
               ]
             }
-          ]
+          ],
+          "voice": "Fiyero"
         },
         {
           "title": "Popular",
@@ -1461,7 +1470,8 @@
                 "Just not quite as popular as me"
               ]
             }
-          ]
+          ],
+          "voice": "Glinda"
         },
         {
           "title": "I'm Not That Girl",
@@ -1497,7 +1507,8 @@
                 "I'm not that girl"
               ]
             }
-          ]
+          ],
+          "voice": "Elphaba"
         },
         {
           "title": "One Short Day",
@@ -1886,7 +1897,8 @@
                 "Day"
               ]
             }
-          ]
+          ],
+          "voice": "Ensemble"
         },
         {
           "title": "A Sentimental Man",
@@ -1932,7 +1944,8 @@
                 "A sentimental man"
               ]
             }
-          ]
+          ],
+          "voice": "The Wizard"
         },
         {
           "title": "Defying Gravity",
@@ -2184,7 +2197,8 @@
                 "Woah"
               ]
             }
-          ]
+          ],
+          "voice": "Elphaba"
         }
       ]
     },
@@ -2284,7 +2298,8 @@
                 "Wicked is defeated by the good"
               ]
             }
-          ]
+          ],
+          "voice": "Ensemble"
         },
         {
           "title": "Thank Goodness / I Couldn't Be Happier",
@@ -2515,7 +2530,8 @@
                 "Thank goodness for today"
               ]
             }
-          ]
+          ],
+          "voice": "Glinda"
         },
         {
           "title": "No Place Like Home",
@@ -2563,7 +2579,8 @@
                 "There's no place like home"
               ]
             }
-          ]
+          ],
+          "voice": "Elphaba"
         },
         {
           "title": "The Wicked Witch of the East",
@@ -2702,7 +2719,8 @@
                 "We deserve each other"
               ]
             }
-          ]
+          ],
+          "voice": "Nessarose"
         },
         {
           "title": "Wonderful",
@@ -2915,7 +2933,8 @@
                 "Wonderful, wonderful"
               ]
             }
-          ]
+          ],
+          "voice": "The Wizard"
         },
         {
           "title": "I’m Not That Girl (Reprise)",
@@ -2931,7 +2950,8 @@
                 "I'm not that girl"
               ]
             }
-          ]
+          ],
+          "voice": "Glinda"
         },
         {
           "title": "As Long as You’re Mine",
@@ -3015,6 +3035,10 @@
                 "I feel Wicked"
               ]
             }
+          ],
+          "voice": [
+            "Elphaba",
+            "Fiyero"
           ]
         },
         {
@@ -3085,7 +3109,8 @@
                 "Again"
               ]
             }
-          ]
+          ],
+          "voice": "Elphaba"
         },
         {
           "title": "March of the Witch Hunters",
@@ -3158,7 +3183,8 @@
                 "Melt her!"
               ]
             }
-          ]
+          ],
+          "voice": "Ensemble"
         },
         {
           "title": "The Girl in the Bubble",
@@ -3209,7 +3235,8 @@
                 "For her bubble to pop?"
               ]
             }
-          ]
+          ],
+          "voice": "Glinda"
         },
         {
           "title": "For Good",
@@ -3372,9 +3399,27 @@
                 "For good"
               ]
             }
+          ],
+          "voice": [
+            "Elphaba",
+            "Glinda"
           ]
         }
       ]
     }
-  ]
+  ],
+  "palette": {
+    "axis": "voice",
+    "colors": {
+      "Elphaba": "#2f7d52",
+      "Glinda": "#d4739b",
+      "Fiyero": "#3f6fa8",
+      "The Wizard": "#b8873a",
+      "Nessarose": "#7e2323",
+      "Doctor Dillamond": "#7a5a38",
+      "Boq": "#8a9199",
+      "Madame Morrible": "#6a6377",
+      "Ensemble": "#9aa88f"
+    }
+  }
 }

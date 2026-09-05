@@ -388,6 +388,28 @@ function beadDefs(u) {
       `<stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>`;
 }
 
+/* ---- two-voice beads ----
+   A page can be strung in TWO colours. `beadTints[i]` normally carries one literal colour;
+   a guest catalogue coloured by VOICE rather than by album (see guestBeadTint in app.js)
+   hands over a pair for the songs that genuinely belong to two singers at once, and the
+   bead's body is filled with a gradient across the pair instead of a flat colour.
+   The seam is soft deliberately. A hard 50/50 split reads as two half-beads jammed on the
+   same cord; a blended band reads as one bead that is both, which is the thing being said.
+   It has to be a gradient DEF rather than anything CSS: the keepsake PNG rasterises this
+   markup outside the page's stylesheet, exactly as the literal colours do.
+
+   The charm dangling under the bead is painted from the SAME gradient, by handing the group
+   `--bead` the paint reference instead of a colour. The def is in objectBoundingBox units, so
+   each shape maps the pair across its OWN box: the star comes out half and half at star size
+   rather than wearing a slice of the bead's blend. That inline custom property is also why
+   this survives the keepsake export, the way the literal colours do. */
+function duoTint(t) { return Array.isArray(t) && t.length === 2 && t[0] && t[1] ? t : null; }
+function duoGradient(id, a, b) {
+  return `<linearGradient id="${id}" x1="0" y1="0.14" x2="1" y2="0.86">` +
+    `<stop offset="0" stop-color="${a}"/><stop offset="0.33" stop-color="${a}"/>` +
+    `<stop offset="0.67" stop-color="${b}"/><stop offset="1" stop-color="${b}"/></linearGradient>`;
+}
+
 // ---- One pony bead ----
 // A 9x6mm barrel reads TALLER THAN IT IS WIDE on a cord — a short fat cylinder, not a
 // lozenge lying down. `finish` is the strand's second channel, on top of album colour:
@@ -650,6 +672,7 @@ function buildSingleRowBraceletSVG(results, activeRound, freshIndex, albums, opt
       ` C${n(curlAt + r * 0.82)},${n(y + 17)} ${n(curlAt + r * 0.95)},${n(y + 9)} ${n(curlAt + r)},${n(y + 3)}`;
     tipY = y + 3;
   }
+  let duoTintDefs = "";            // gradient defs for any two-voice beads (see duoTint)
   let svg = cordStack(el, 3.6);
 
   // the knot the whole thing is strung off
@@ -659,8 +682,13 @@ function buildSingleRowBraceletSVG(results, activeRound, freshIndex, albums, opt
   for (let i = 0; i < total; i++) {
     const x = slotX(i), y = yAt(x);
     const answered = results[i];
-    const albumCol = tints[i] || ((albums && albums[i]) ? (colors[albums[i]] || null) : null);
+    const strung = tints[i] || ((albums && albums[i]) ? (colors[albums[i]] || null) : null);
+    // A pair paints the body from a gradient, and `--bead` carries that same paint down to
+    // the dangling charm, so bead and charm are both halves of the same two voices.
+    const duo = duoTint(strung);
+    const albumCol = duo ? `url(#${u}duo${i})` : strung;
     const fill = albumCol || "var(--bead)";
+    if (duo) duoTintDefs += duoGradient(`${u}duo${i}`, duo[0], duo[1]);
     // The trinket takes its tint from an inherited --bead, so the override may only be written
     // when there IS an album colour: `--bead:var(--bead)` is a self-reference, which makes the
     // whole property guaranteed-invalid and drops the trinket to black. A bead without an album
@@ -721,7 +749,7 @@ function buildSingleRowBraceletSVG(results, activeRound, freshIndex, albums, opt
   }
 
   return `<svg viewBox="0 0 ${W} ${BH}" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">` +
-    `<defs>${beadDefs(u)}<filter id="${u}drop" x="-10%" y="-30%" width="120%" height="185%">` +
+    `<defs>${beadDefs(u)}${duoTintDefs}<filter id="${u}drop" x="-10%" y="-30%" width="120%" height="185%">` +
     `<feDropShadow dx="1.4" dy="3.4" stdDeviation="2.2" flood-color="${PEN}" flood-opacity="0.28"/></filter></defs>` +
     `<g filter="url(#${u}drop)"><g class="b-strand">${svg}</g></g></svg>`;
 }
@@ -803,15 +831,19 @@ function buildCoiledBraceletSVG(results, activeRound, freshIndex, albums, opts =
     });
   }
 
+  let duoTintDefs = "";            // gradient defs for any two-voice beads (see duoTint)
   let svg = cordStack(cord, 3.6) +
     tieKnot(startKnotX, startKnotY, -firstRow.dir);
 
   for (const slot of layout.slots) {
     const i = slot.index, x = slot.x, row = layout.rows[slot.row], y = yAt(x, row);
     const answered = sealed ? "sealed" : results[i];
-    const albumCol = sealed ? null
+    const strung = sealed ? null
       : (tints[i] || (albums && albums[i] ? (colors[albums[i]] || null) : null));
+    const duo = duoTint(strung);                       // see duoTint, in the single-row builder
+    const albumCol = duo ? `url(#${u}duo${i})` : strung;
     const fill = sealed ? "var(--paper-edge)" : (albumCol || "var(--bead)");
+    if (duo) duoTintDefs += duoGradient(`${u}duo${i}`, duo[0], duo[1]);
     const tint = albumCol ? ` style="--bead:${albumCol}"` : "";
     const rot = jitter(i, 1, 9);
     const gx = x - slot.dir * layout.pitch * 0.5;
@@ -861,7 +893,7 @@ function buildCoiledBraceletSVG(results, activeRound, freshIndex, albums, opts =
   return `<svg viewBox="0 0 ${layout.width} ${layout.height}" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false" ` +
     `data-bracelet-layout="${layout.rows.length > 1 ? "coil" : "section"}" data-bracelet-total="${total}" ` +
     `data-visible-start="${layout.visibleStart}" data-visible-count="${layout.visibleCount}">` +
-    `<defs>${beadDefs(u)}<filter id="${u}drop" x="-15%" y="-18%" width="130%" height="145%">` +
+    `<defs>${beadDefs(u)}${duoTintDefs}<filter id="${u}drop" x="-15%" y="-18%" width="130%" height="145%">` +
     `<feDropShadow dx="1.4" dy="3.4" stdDeviation="2.2" flood-color="${PEN}" flood-opacity="0.28"/></filter></defs>` +
     `<g filter="url(#${u}drop)">${prefix}<g class="b-strand">${svg}</g></g></svg>`;
 }

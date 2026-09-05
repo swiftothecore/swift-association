@@ -5453,5 +5453,19 @@
         }
       ]
     }
-  ]
+  ],
+  "palette": {
+    "axis": "album",
+    "colors": {
+      "dont smile at me": "#c9a227",
+      "WHEN WE ALL FALL ASLEEP, WHERE DO WE GO?": "#262b2e",
+      "Happier Than Ever": "#d9b27a",
+      "Guitar Songs": "#8fa079",
+      "HIT ME HARD AND SOFT": "#1e4470",
+      "Soundtracks": "#2f6b4f",
+      "Standalone Singles": "#6b4a7a",
+      "Collaborations": "#7a2f4a",
+      "Unreleased": "#8f8f8a"
+    }
+  }
 }

@@ -4971,5 +4971,15 @@
         }
       ]
     }
-  ]
+  ],
+  "palette": {
+    "axis": "album",
+    "colors": {
+      "Hannah Montana": "#57906a",
+      "Hannah Montana 2": "#d16a92",
+      "Hannah Montana 3": "#a9b0b5",
+      "Hannah Montana: The Movie": "#c2963f",
+      "Hannah Montana Forever": "#5fb0dd"
+    }
+  }
 }

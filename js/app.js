@@ -202,6 +202,11 @@ let usedWords = [];
 let noveltySeen = null;  // Normal-mode coverage bias: Set of words already encountered (tally words+misses), snapshotted at game start. Non-null only during a Normal (classic · medium) run; pickWord favours words NOT in it. null everywhere else → uniform draw.
 let roundResults = [];   // per-round true/false for the bracelet
 let roundAlbums = [];    // per-round album of the picked song (for the final bracelet)
+let roundBeadTints = []; // per-round literal bead colour, or a pair for a two-voice page. Only a
+                         // guest run fills it: its catalogue is coloured by its own palette
+                         // rather than by ALBUM_COLORS, and a voice-axis guest has no album to
+                         // colour by at all. Null everywhere else, so every other strand still
+                         // strings its answers' albums exactly as before (see guestBeadTint).
 let roundWords = [];     // per-round prompt word (for the lifetime tally / Nemesis Word)
 let roundSongs = [];     // per-round answered song title, null on a miss (lifetime tally)
 let roundHinted = [];    // per-round true if a hint was taken (a hinted run can't set a PB)
@@ -10280,6 +10285,9 @@ function braceletRenderOptions(results, opts = {}) {
         ok === true && impostorRounds.has(i + 1) ? IMPOSTOR_BEAD : null)
     : commonRuleActive() ? results.map((ok, i) =>
         ok === true ? commonSpeedTint(roundTimes[i]) : null)
+    // A guest is coloured by its catalogue's own palette rather than by ALBUM_COLORS, which
+    // holds Taylor's records and nothing else, so its pages come pre-tinted (guestBeadTint).
+    : guestRunId ? roundBeadTints.slice()
     : null;
   return {
     ...opts,
@@ -11946,6 +11954,7 @@ function resetRunState() {
   recentEras = [];
   roundResults = [];
   roundAlbums = [];
+  roundBeadTints = [];
   roundWords = [];
   roundSongs = [];
   roundHinted = [];
@@ -12959,6 +12968,7 @@ async function startGuestRun(id, diffId) {
     // leaves the guest's catalogue live; the assignment below just remembers it for the replay.
     corpus = installCorpus(cat.albums || [], cat.words || [], { aliases: false, buckets: cat.buckets });
     guestCorpora.set(id, corpus);
+    guestPalettes.set(id, normalizeGuestPalette(cat.palette));
   }
 
   const mode = MODES[GUEST_DIFFS.includes(diffId) ? diffId : "medium"];
@@ -12989,18 +12999,61 @@ function guestEra() {
   const g = currentGuest();
   return (g && g.era) || "gold";
 }
-// A guest's records painted onto the bracelet. ALBUM_COLORS holds Taylor's albums only, so a
-// guest bead would come out uncoloured; the pass already carries one tick colour per record,
-// which IS the guest's record palette, so the beads and the pass agree by construction.
-// Records past the last tick reuse the accent rather than inventing a colour.
+/* A guest's own bead palette, out of its catalogue file (`palette: {axis, colors}`) and kept
+   here beside the built corpus. Deliberately NOT part of installCorpus / snapshotCorpus: the
+   matcher never reads it, so it is not one of the swapped globals and does not owe that
+   contract anything.
+
+   `axis` is what a bead is a picture of. "album" is the ordinary case and mirrors Taylor's
+   ALBUM_COLORS, keyed by the guest's own record names. "voice" is for a catalogue where the
+   record is not the meaningful division: Wicked is two books of one show, so a song is
+   coloured by whoever sings it, and each song carries a `voice`. A song genuinely shared
+   between two singers carries BOTH, and the bead is strung in both colours (see duoTint in
+   bracelet.js) rather than being handed to whichever name got listed first.
+
+   A guest file with no palette falls back to the pass's own record ticks, which is what every
+   guest bead used to be drawn from. It is a floor, not a design: four ticks cannot colour a
+   nine-record shelf, which is why the palettes exist. */
+const guestPalettes = new Map();      // guest id -> its palette block, one per fetched file
+
 function guestPalette(id) {
+  const stored = guestPalettes.get(id);
+  if (stored) return stored;
   const g = GUESTS.find((x) => x.id === id);
   const corpus = guestCorpora.get(id);
-  if (!g || !corpus) return {};
+  if (!g || !corpus) return { axis: "album", colors: {} };
   const ticks = (g.ink && g.ink.ticks) || [];
-  const map = {};
-  corpus.albumOrder.forEach((album, i) => { map[album] = ticks[i] || (g.ink && g.ink.accent) || "#7a55b0"; });
-  return map;
+  const colors = {};
+  corpus.albumOrder.forEach((album, i) => { colors[album] = ticks[i] || (g.ink && g.ink.accent) || "#7a55b0"; });
+  return { axis: "album", colors };
+}
+
+// Normalize a file's palette block. A colour is only trusted as a literal hex, because the
+// bracelet takes literal colours only — the keepsake PNG rasterises its markup outside the
+// page's CSS, so a token here would export as black.
+const HEX_COLOR = /^#[0-9a-f]{6}$/i;
+function normalizeGuestPalette(raw) {
+  const block = raw && typeof raw === "object" ? raw : {};
+  const axis = block.axis === "voice" ? "voice" : "album";
+  const colors = {};
+  for (const [key, value] of Object.entries(block.colors || {})) {
+    if (typeof value === "string" && HEX_COLOR.test(value)) colors[key] = value;
+    else console.warn(`guest palette: "${key}" is not a #rrggbb colour; skipped`);
+  }
+  return { axis, colors };
+}
+
+// The bead colour for one answered song on the guest that is live, or null on every other
+// run. A two-voice page returns a PAIR, which the bracelet strings as one bead in both.
+function guestBeadTint(song) {
+  if (!guestRunId || !song) return null;
+  const { axis, colors } = guestPalette(guestRunId);
+  const key = axis === "voice" ? song.voice : song.album;
+  if (Array.isArray(key)) {
+    const pair = key.map((name) => colors[name]).filter(Boolean);
+    return pair.length === 2 ? pair : (pair[0] || null);
+  }
+  return colors[key] || null;
 }
 
 // One Of A Kind setup: pick a song the player has never answered, then a prompt word
@@ -15072,7 +15125,6 @@ function endAlbumFocus() {
 function endGuest() {
   const id = guestRunId, diff = focusDifficulty;
   const g = GUESTS.find((x) => x.id === id) || { name: "Guest" };
-  const palette = guestPalette(id);
   markRunBreadth(null, "guest");   // someone else's catalogue, not a difficulty of the main game
   const hintFree = hintsUsed === 0;
   let rec = guestRecord(id);
@@ -15096,8 +15148,10 @@ function endGuest() {
 
   showScreen("results");
   applyEra(guestEra());   // endGame applies a random finale era; a guest keeps its own
+  // Explicitly, not off the live-run default: the corpus has been handed back to Taylor by
+  // the time this draws, and the strand must still be the guest's colours.
   renderFinishedBracelet(roundResults, roundAlbums,
-    { colors: palette, hinted: roundHinted, verseTiers: roundVerseTier });
+    { beadTints: roundBeadTints.slice(), hinted: roundHinted, verseTiers: roundVerseTier });
   setFinalTally(score, [{ v: String(TOTAL_ROUNDS), l: "pages" }]);
   $("keepGoingBtn").style.display = "none";
   $("namePrompt").style.display = "none";
@@ -18549,6 +18603,7 @@ function renderVerseMeter(text) {
 function recordImpostorPage(caught) {
   roundResults[round - 1] = caught;
   roundAlbums[round - 1] = null;
+  roundBeadTints[round - 1] = null;
   roundWords[round - 1] = null;
   roundSongs[round - 1] = null;
   roundAnswerAlbums[round - 1] = [];
@@ -19105,6 +19160,10 @@ function submitAnswer(song, isTimeout) {
   // them. The page still HAS an answer: the song on the correct tile. String that album.
   const tapAnswer = tapKnowledgeActive() ? (tapTiles.find((t) => t.correct) || {}).song : null;
   roundAlbums[round - 1] = song ? (song.album || null) : (tapAnswer ? (tapAnswer.album || null) : null);
+  // Resolved here rather than at render time because the answer's SONG is what carries the
+  // colour on a voice-axis guest, and by the results screen the corpus has been handed back
+  // to Taylor and the song object is gone.
+  roundBeadTints[round - 1] = guestBeadTint(song || tapAnswer || null);
   // Distinct albums the prompt word *could* have been answered from — the Discography skill
   // normalises breadth against this, so a word that only lives in one album never penalises.
   roundAnswerAlbums[round - 1] = [...new Set(currentSongs.map((s) => s.album).filter(Boolean))];
@@ -26027,11 +26086,33 @@ function buildDevApi() {
         buckets: c.buckets,
         records: (c.albums || []).map((a) => [a.album, (a.songs || []).length]),
       })),
+      // The catalogue's bead palette, audited against its own songs: which colour every
+      // record or voice draws, and — the failure this exists to catch — the songs that would
+      // string an UNCOLOURED bead because their album or voice has no entry in the palette.
+      // A silent fall-through to the era's --bead looks like a rendering bug from the strand.
+      palette: (id) => loadGuest(id || (GUESTS[0] && GUESTS[0].id)).then((c) => {
+        const { axis, colors } = normalizeGuestPalette(c.palette);
+        const songs = (c.albums || []).flatMap((a) => (a.songs || []).map((x) => ({ ...x, album: a.album })));
+        const keyOf = (song) => axis === "voice" ? song.voice : song.album;
+        const missing = songs.filter((song) => {
+          const key = keyOf(song);
+          return (Array.isArray(key) ? key : [key]).some((name) => !colors[name]);
+        });
+        const used = {};
+        for (const song of songs) for (const name of [keyOf(song)].flat()) used[name] = (used[name] || 0) + 1;
+        return {
+          axis, colors,
+          songsPer: used,
+          unused: Object.keys(colors).filter((name) => !used[name]),
+          duets: songs.filter((song) => Array.isArray(keyOf(song))).map((song) => [song.title, keyOf(song)]),
+          uncoloured: missing.map((song) => [song.title, keyOf(song)]),
+        };
+      }),
       // Drops the built corpus alongside the file, or an edited catalogue would re-fetch and
       // then be ignored in favour of the word lists built from the old one.
       drop: (id) => {
-        if (id) { guestFiles.delete(id); guestCorpora.delete(id); }
-        else { guestFiles.clear(); guestCorpora.clear(); }
+        if (id) { guestFiles.delete(id); guestCorpora.delete(id); guestPalettes.delete(id); }
+        else { guestFiles.clear(); guestCorpora.clear(); guestPalettes.clear(); }
         return guestFiles.size;
       },
     },

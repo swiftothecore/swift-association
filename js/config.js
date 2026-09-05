@@ -330,6 +330,12 @@ export const DIFF_RANK = { relaxed: 0, easy: 1, medium: 2, hard: 3, ultra: 4, ly
    This list carries only what the shelf itself must draw before the file arrives: the name,
    where to fetch it, and the ink. Colour and mood only — no album art, ever.
 
+   `ink` is the PASS's hardware and nothing else. The bead palette is a separate thing living
+   in the catalogue file (`palette: {axis, colors}`, see guestPalette in app.js), because four
+   record ticks cannot colour a nine-record shelf and because a catalogue like Wicked is not
+   divided by record at all. The ticks are still picked to rhyme with that palette; they are
+   just no longer the source of it.
+
    GUEST_SHELF_SLOTS is how many hangers the rail holds. Planned catalogues can occupy a hanger
    without entering GUESTS, which keeps unavailable artists out of every playable guest path. */
 export const GUEST_SHELF_SLOTS = 10;
