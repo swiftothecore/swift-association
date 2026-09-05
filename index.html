@@ -178,6 +178,26 @@ if (location.pathname.endsWith('/index.html')) {
     <feComposite in="ink" in2="hard" operator="in" result="sil"/>
     <feMerge><feMergeNode in="lift"/><feMergeNode in="sil"/></feMerge>
   </filter>
+  <!-- WAX — the texture that makes the Album Focus squares read as crayon rather than as
+       ruled colouring-pencil hatching. Two things separate a crayon from a pen on paper and
+       neither of them is the stroke: the wax rides the tooth of the paper so the colour is
+       speckled rather than solid, and the edge of a stroke is ragged because the stick is
+       blunt. So the geometry in albumCrayon stays a hand's back-and-forth scribble and this
+       does the rest: a low-frequency warp to chew the edges up, then a high-frequency noise
+       punched through the alpha so the paper shows between the grains. Applied to the ink
+       only, never to the pencilled box, which is a sharp graphite line and must stay one. -->
+  <filter id="afWax" x="-8%" y="-8%" width="116%" height="116%" color-interpolation-filters="sRGB">
+    <feTurbulence type="fractalNoise" baseFrequency="0.05 0.09" numOctaves="3" seed="17" result="warp"/>
+    <feDisplacementMap in="SourceGraphic" in2="warp" scale="5" xChannelSelector="R" yChannelSelector="G" result="ragged"/>
+    <feTurbulence type="fractalNoise" baseFrequency="0.35" numOctaves="2" seed="5" result="tooth"/>
+    <feColorMatrix in="tooth" type="matrix" result="grain"
+                   values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  1.5 0.9 0 0 -0.2"/>
+    <feComposite in="ragged" in2="grain" operator="in" result="waxed"/>
+    <feTurbulence type="fractalNoise" baseFrequency="0.028" numOctaves="2" seed="11" result="pnoise"/>
+    <feColorMatrix in="pnoise" type="matrix" result="press"
+                   values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0.9 0.5 0 0 0.42"/>
+    <feComposite in="waxed" in2="press" operator="in"/>
+  </filter>
 </svg>
 <!-- PAGE MARKS — the doodle beside each page's handwritten title, drawn once here and
      <use>d per screen. Same pen as the achievement charms (see .page-mark in styles.css,

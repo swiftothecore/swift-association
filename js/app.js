@@ -9389,7 +9389,7 @@ function difficultyTabs(list, selected) {
 
    Colour and mood only: there is no album imagery here and there is not meant to be. The
    only thing on the paper is graphite and one era colour. */
-const AF_STROKES = 54;                 // strokes in a square filled to the brim
+const AF_STROKES = 44;                 // strokes in a square filled to the brim
 
 function albumCrayon(album, level) {
   const rng = mulberry32(fnv1a("af-crayon:" + album));
@@ -9410,51 +9410,63 @@ function albumCrayon(album, level) {
   }
   box += " Z";
 
-  // The strokes themselves, laid left to right on a slant. Three things are doing the work
-  // here and all three were arrived at by drawing the wrong thing first.
+  // The strokes themselves: a hand colouring a box in, left to right on a slant. Three
+  // things are doing the work here and all three were arrived at by drawing the wrong
+  // thing first.
   //
-  // WIDTH: a stroke has to be narrow enough that its neighbours stay countable at tile size.
-  // Wide strokes merge into one flat wedge of colour, which is exactly the printed swatch
-  // this was drawn to avoid. So each is a few units across, only just overlapping the next,
-  // with the pressure varying stroke to stroke and roughly one in six a skip — the light
-  // pass a crayon leaves when the wax does not catch. Between them the paper stays visible.
+  // SHAPE: each stroke is a back-and-forth, down the paper and part of the way up again
+  // with a rounded turn at the bottom, because that is what colouring in looks like. The
+  // first version drew parallel bars, and parallel bars of one colour are hatching with a
+  // coloured pencil, not wax. The turn is the tell: it is the only mark on the square that
+  // could not have been made by a ruler.
   //
-  // ENDS: strokes stay near the pencilled box, overshooting it by a unit or two the way a
-  // hand does and sometimes stopping short of it. They must NOT run out to the picture edge:
-  // the clip then cuts every one of them off at the same height and the square gets a
-  // ruler-straight top and bottom, which is the printed look coming back in by the side door.
+  // WIDTH: a crayon is blunt, so the strokes are broad and heavily overlapped, and the
+  // pressure varies stroke to stroke with roughly one in seven a skip — the light pass the
+  // wax leaves when it does not catch. Coverage is nearly solid at the brim; what keeps it
+  // off being a printed swatch is the grain, not gaps between strokes.
   //
   // FRONTIER: the reveal order is jittered, so a half-coloured square does not end on a
-  // clean vertical line. A few strokes past the frontier got done early, a few before it got
-  // missed, and the last ones in go lighter. That is somebody who stopped, rather than
+  // clean vertical line. A few strokes past the frontier got done early, a few before it
+  // got missed, and the last ones in go lighter. That is somebody who stopped, rather than
   // somebody who cut the colour off with a ruler.
+  //
+  // The wax texture itself is not here: it is the #afWax filter in index.html, which chews
+  // the edges of these strokes up and punches the paper's tooth through them. Take the
+  // filter off and this goes straight back to being neat felt-tip.
   const tilt = -9 + rng() * 7;
-  // A single page scored is 4 strokes of 54, which with the frontier fade on top of it comes
+  // A single page scored is 3 strokes of 44, which with the frontier fade on top of it comes
   // out as bare paper. Any score at all has to leave a mark, so a played square gets a floor.
   const lv = Math.max(0, Math.min(1, level));
-  const n = level >= 1 ? AF_STROKES : Math.max(lv > 0 ? 5 : 0, Math.round(lv * AF_STROKES));
+  const n = level >= 1 ? AF_STROKES : Math.max(lv > 0 ? 4 : 0, Math.round(lv * AF_STROKES));
   let strokes = "";
   for (let i = 0; i < AF_STROKES; i++) {
     const t = i / (AF_STROKES - 1);
-    const x = -12 + t * 124 + jit(1.2);
-    const order = i + jit(2.4);
+    const x = -10 + t * 120 + jit(1.6);
+    const order = i + jit(3.6);
     const short = rng();
-    const top = short < 0.22 ? 6 + rng() * 13 : -2 + rng() * 6;
-    const bot = short > 0.78 ? 94 - rng() * 13 : 102 - rng() * 6;
-    const bow = jit(3.2);
-    const w = 2.2 + rng() * 2.4;
-    const light = rng() < 0.16;
-    let o = (0.32 + rng() * 0.2) * (light ? 0.45 : 1);
+    const top = short < 0.2 ? 5 + rng() * 12 : -3 + rng() * 6;
+    const bot = short > 0.8 ? 95 - rng() * 12 : 103 - rng() * 6;
+    const bow1 = jit(2.6), bow2 = jit(2.6);
+    const dx = 2.6 + rng() * 2.2;              // how far the return leg lands from the down leg
+    const xb = x + bow1, rx = xb + dx, rt = x + dx + jit(1.2);
+    const up = top + 4 + rng() * 22;           // the return leg dies out before the top
+    const w = 4.4 + rng() * 2.8;
+    const light = rng() < 0.15;
+    let o = (0.52 + rng() * 0.24) * (light ? 0.45 : 1);
     if (level < 1 && order >= n) continue;   // geometry already drawn from the rng: see above
-    if (level < 1 && n - order < 2.5) o *= 0.45 + 0.55 * ((n - order) / 2.5);
-    strokes += `<path d="M${f(x)} ${f(top)} Q${f(x + bow)} 50 ${f(x + bow * 0.25)} ${f(bot)}"` +
+    if (level < 1 && n - order < 4) o *= 0.35 + 0.65 * ((n - order) / 4);
+    strokes += `<path d="M${f(x)} ${f(top)}` +
+      ` C${f(x + bow1)} ${f(top + 32)} ${f(xb + bow1 * 0.4)} ${f(bot - 32)} ${f(xb)} ${f(bot)}` +
+      ` Q${f(xb + dx * 0.6)} ${f(bot + 3.4)} ${f(rx)} ${f(bot - 7)}` +
+      ` C${f(rx + bow2)} ${f(bot - 40)} ${f(rt + bow2 * 0.4)} ${f(up + 26)} ${f(rt)} ${f(up)}"` +
       ` stroke-width="${f(w)}" opacity="${o.toFixed(2)}"/>`;
   }
 
   return `<svg class="af-crayon" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">` +
     `<clipPath id="${uid}"><rect x="0" y="0" width="100" height="100"/></clipPath>` +
     `<g clip-path="url(#${uid})">` +
-      `<g class="af-crayon-ink" transform="rotate(${f(tilt)} 50 50)" fill="none" stroke-linecap="round">${strokes}</g>` +
+      `<g class="af-crayon-ink" filter="url(#afWax)" transform="rotate(${f(tilt)} 50 50)"` +
+      ` fill="none" stroke-linecap="round" stroke-linejoin="round">${strokes}</g>` +
       `<path class="af-crayon-box" d="${box}" fill="none"/>` +
     `</g></svg>`;
 }
