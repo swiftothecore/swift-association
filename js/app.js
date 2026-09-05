@@ -8627,6 +8627,17 @@ const DARK_INVITE_MARK = `<svg viewBox="0 0 32 32" class="dark-invite-svg" aria-
   `<circle cx="16" cy="16" r="8.4" fill="#150e1f"/>` +
   `</svg>`;
 
+// The way back: the same disc with nothing across it. The dark side's mark is an eclipse, so
+// its opposite is the light let through — a plain gold disc with the corona already out at
+// rest, since on this side there is nothing holding the light back. Its rays are drawn fresh
+// rather than mirrored off the eclipse's: two hands never rule the same nine lines twice.
+const LIGHT_INVITE_MARK = `<svg viewBox="0 0 32 32" class="dark-invite-svg" aria-hidden="true">` +
+  `<g class="dark-invite-rays" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M15.6 4.2 L15.1 1.2"/><path d="M9.1 6.3 L7.4 3.9"/><path d="M4.9 13.2 L1.8 12.4"/><path d="M4.9 21.6 L2.1 23.2"/><path d="M11.4 27.1 L10.3 30.2"/><path d="M20.6 27.2 L21.6 29.9"/><path d="M26.4 21.4 L29.6 22.3"/><path d="M27.3 12.4 L30.4 11.2"/><path d="M22.6 6.1 L24.1 3.6"/></g>` +
+  `<circle cx="16" cy="16" r="10.4" fill="none" stroke="currentColor" stroke-width="1.4" opacity="0.5"/>` +
+  `<circle cx="16" cy="16" r="8.2" fill="#e8b53f"/>` +
+  `<path d="M11.4 12.6 C12.6 10.9 14.4 10.1 16.3 10.2" fill="none" stroke="rgba(255,247,224,0.66)" stroke-width="1.4" stroke-linecap="round"/>` +
+  `</svg>`;
+
 // The beaten seal is a genuine two-tone: the wax body ages to a warm grey while the
 // beaded rim keeps its red. A uniform CSS filter can't do that (body and beads are both
 // red at the source), so we derive an "aged" copy of each wax seal by string-swapping the
@@ -15027,8 +15038,8 @@ function endChallenge() {
   // just been beaten, and every time it is played again afterwards. Reaching it otherwise
   // means going back to the shelf and finding the card, which is a long walk from the
   // sentence that just told you it was unlocked. Built here, appended below the action row
-  // (see the innerHTML). Not offered on a dark run itself — the replay button already deals
-  // the dark side again (see below).
+  // (see the innerHTML). A dark run gets the mirror of it instead (see lightInvite): replay
+  // deals the same side again, so the way BACK is the offer that isn't already on the screen.
   const darkOffered = !c.dark && darkSideUnlocked(c.id);
   let darkInvite = "";
   if (darkOffered) {
@@ -15054,6 +15065,36 @@ function endChallenge() {
       `</button>`;
   }
 
+  // And the way back out of it. A dark run's replay deals the dark side again, so the light
+  // side is the one thing on this screen that would otherwise mean walking to the shelf and
+  // finding the card. Offered on EVERY dark run, won or lost, deliberately: falling short of
+  // a dark side is exactly when a player wants the ordinary card back, and making the offer
+  // conditional on beating the harder version would put it only where it is least wanted.
+  // Same strip, same place, inverted — paper instead of night, and the disc with nothing
+  // across it. Its note reads the BASE record, which is the record the button would play for.
+  const lightOffered = !!c.dark;
+  let lightInvite = "";
+  if (lightOffered) {
+    // The base entry's own page count: a dark side is free to move the target, and this
+    // strip is describing the light card, not the one just played.
+    const lightNote = rec.defeated
+      ? "beaten already · the same card with the light left in"
+      : rec.attempts
+        ? `still undefeated after ${rec.attempts} attempt${rec.attempts === 1 ? "" : "s"}`
+        : "the same card with the light left in";
+    lightInvite =
+      `<button type="button" id="playLightSide" class="dark-invite light-invite">` +
+        `<span class="dark-invite-mark">${LIGHT_INVITE_MARK}</span>` +
+        `<span class="dark-invite-text">` +
+          `<span class="dark-invite-title">play the light side</span>` +
+          `<span class="dark-invite-note">${escapeHtml(lightNote)}</span>` +
+        `</span>` +
+        `<span class="dark-invite-arrow" aria-hidden="true">` +
+          `<svg viewBox="0 0 26 14"><path d="M1.4 7.3 C7 6.4 15.4 6.6 23.4 6.9 M18.4 2.2 C20.2 4.1 22.2 5.9 24.2 6.9 C22.1 8.1 20.1 9.9 18.6 11.9" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>` +
+        `</span>` +
+      `</button>`;
+  }
+
   // A two-up row: back to the list on the left, replay this same challenge on the right, each
   // half the width of the full-width buttons around them. The dark side's strip follows the
   // row rather than leading it, so the two ordinary ways out of the screen stay where they
@@ -15062,13 +15103,14 @@ function endChallenge() {
     `<div class="chall-result-actions">` +
       `<button id="backToChallenges" class="btn-primary">← challenges</button>` +
       `<button id="replayChallenge" class="btn-primary">replay ↺</button>` +
-    `</div>` + darkInvite;
+    `</div>` + darkInvite + lightInvite;
   $("backToChallenges").addEventListener("click", () => openChallenges("start"));
   // Replay means replay THIS run — `c` is the resolved challenge, so a dark run's replay has
   // to ask for the dark side again. startChallenge re-resolves from CHALLENGE_BY_ID and
   // defaults to the base, which would quietly hand back the easy version.
   $("replayChallenge").addEventListener("click", () => startChallenge(c.id, { dark: !!c.dark }));
   if (darkOffered) $("playDarkSide").addEventListener("click", () => startChallenge(c.id, { dark: true }));
+  if (lightOffered) $("playLightSide").addEventListener("click", () => startChallenge(c.id, { dark: false }));
 
   renderResultRecap();   // surface any challenge achievements just earned
   renderSkillsRecap();
