@@ -17,7 +17,7 @@
  * Paths are relative so the worker works at the site root (swiftassociation.com)
  * and under any project subpath, without hardcoding the origin.
  */
-const CACHE = "stta-v64";
+const CACHE = "stta-v65";
 // The game's panel routes. These are sections of index.html, not files, so a navigation to one
 // has nothing on the server to fetch: 404.html bounces it back through a ?/slug marker. Once
 // this worker is installed we can do better and answer with index.html directly, so a deep link
@@ -35,7 +35,9 @@ const ASSETS = [
   "ink.css",
   // Keep the revision query exact: Cache.match() includes the query string, and
   // index.html deliberately requests this URL to break the browser HTTP cache.
-  "styles.css?v=77",
+  "styles.css?v=78",
+  "textures/oak-surface.svg",
+  "textures/oak-figure.svg",
   // Self-hosted fonts (latin subset). Precached so first offline load has the
   // real faces; declared via @font-face in styles.css / search.css.
   "fonts/caveat-latin.woff2",
