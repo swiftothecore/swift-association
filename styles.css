@@ -2881,45 +2881,60 @@
      of paper, so a two-up strip leaves about 206px for the description while a readable
      one needs ~270px. Two columns would clip every line on the shelf to buy back height a
      two-line strip does not need. If the page ever gets wider, this is where to reconsider. */
-  .bonus-strips { display: grid; grid-template-columns: 1fr; gap: 2px; }
-  /* min-width: 0 is load-bearing, not tidying. A grid item defaults to min-width: auto, so
-     the nowrap description below would size the COLUMN to the sentence and shove the right
-     strip off the edge of the paper instead of being clipped inside it. */
-  .bonus-alt {
-    display: flex; align-items: flex-start; gap: 10px; width: 100%; min-width: 0; text-align: left;
-    padding: 8px 8px 8px 0; background: none; border: none; cursor: pointer;
-    border-bottom: 1px dashed rgba(60, 40, 18, 0.14);
-    transition: background 0.14s ease;
+  /* The rack: six pressings, two rows of three. The tile is a pressing over a name over a
+     score and nothing else — three columns leave ~200px each, which is not enough for a
+     description, so the mark on the label has to carry the identifying instead. That is
+     what the centred marks bought, and it is the whole reason the grid is affordable.
+     No dashed rules and no coloured tab: those were the filing-strip's furniture, and a
+     rack of records does not need ruling into rows. */
+  /* Wrapping flex rather than a grid, and that is about the SEVENTH game: three columns of
+     grid would drop a seventh tile alone at the left of a third row. Centred wrap puts an
+     orphan in the middle of its own row instead, so the rack still looks composed at any
+     count. At six it lays out identically to the grid it replaced. */
+  .bonus-rack {
+    display: flex; flex-wrap: wrap; justify-content: center; gap: 4px 2px;
   }
-  .bonus-alt:hover, .bonus-alt:focus-visible { background: rgba(60, 40, 18, 0.04); outline: none; }
-  /* the coloured tab down the edge of the strip: the pressing's label colour, filed */
-  .bonus-alt-tab { flex: none; width: 5px; height: 34px; border-radius: 1px; }
-  .bonus-alt-disc { flex: none; width: 38px; height: 38px; }
-  .bonus-alt-disc .bonus-disc {
+  .bonus-tile {
+    flex: 0 0 calc((100% - 4px) / 3);
+    display: flex; flex-direction: column; align-items: center; gap: 7px; min-width: 0;
+    padding: 12px 6px 11px; background: none; border: none; cursor: pointer; text-align: center;
+    border-radius: 3px; transition: background 0.14s ease;
+  }
+  .bonus-tile:hover, .bonus-tile:focus-visible { background: rgba(60, 40, 18, 0.05); outline: none; }
+  .bonus-tile-disc { width: 60px; height: 60px; }
+  .bonus-tile-disc .bonus-disc {
     width: 100%; height: 100%; display: block;
-    filter: drop-shadow(0 3px 4px rgba(43, 39, 34, 0.3));
+    filter: drop-shadow(0 3px 4px rgba(43, 39, 34, 0.28));
     transition: transform 0.18s ease;
   }
-  .bonus-alt:hover .bonus-alt-disc .bonus-disc,
-  .bonus-alt:focus-visible .bonus-alt-disc .bonus-disc { transform: rotate(-10deg) translateY(-2px); }
-  .bonus-alt-text { flex: 1; min-width: 0; }
-  .bonus-alt-top { display: flex; align-items: baseline; gap: 10px; }
-  .bonus-alt-name {
-    flex: 1; min-width: 0;
-    font-family: var(--hand); font-weight: 700; font-size: calc(20px + var(--text-size-adjust)); line-height: 1.05; color: var(--ink);
+  .bonus-tile:hover .bonus-tile-disc .bonus-disc,
+  .bonus-tile:focus-visible .bonus-tile-disc .bonus-disc { transform: rotate(-10deg) translateY(-2px); }
+  .bonus-tile-name {
+    font-family: var(--hand); font-weight: 700; font-size: calc(19px + var(--text-size-adjust));
+    line-height: 1.05; color: var(--ink); overflow-wrap: anywhere;
   }
-  /* One sentence, one line, ever. `nowrap` + ellipsis is a hard backstop rather than a
-     hope: a long `line` on a future game degrades to a clipped sentence instead of
-     silently pushing every strip below it down the page. */
-  .bonus-alt-line {
-    display: block; font-family: var(--type); font-size: calc(10px + var(--text-size-adjust)); line-height: 1.45;
-    color: var(--ink-soft); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  .bonus-tile-meta {
+    font-family: var(--type); font-size: calc(8.5px + var(--text-size-adjust)); letter-spacing: 1.1px;
+    text-transform: uppercase; color: var(--ink-soft); opacity: 0.8; line-height: 1.35;
   }
-  .bonus-alt-meta {
-    flex: none; font-family: var(--type); font-size: calc(8.5px + var(--text-size-adjust)); letter-spacing: 1.1px;
-    text-transform: uppercase; color: var(--ink-soft); opacity: 0.8;
+  .bonus-tile.is-soon .bonus-tile-name { color: var(--ink-soft); }
+  /* The game on the platter is in the rack too, marked with a highlighter swipe rather than
+     left out. Six games fill a 2x3 exactly, and leaving the current one out would mean
+     either a hole in the grid or writing a seventh game to fill a layout.
+     A real swipe, masked with the round screen's own marker shape, rather than a filled
+     rectangle: a hard-edged block of colour on ruled paper reads as a selected row in a
+     table, which is the one thing this page is not. It rides UNDER the pressing (the mask
+     is the marker's own uneven edge, so it wants the whole tile) and takes the era's
+     highlighter, so the mark on the deck is in the same ink as the mark on a prompt word. */
+  .bonus-tile { position: relative; }
+  .bonus-tile.is-on::before {
+    content: ""; position: absolute; inset: 1px -3px -7px; z-index: 0; pointer-events: none;
+    background: var(--highlighter); opacity: 0.62;
+    --swipe-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' preserveAspectRatio='none'%3E%3Cpath d='M1 49 C1 34 5 24 13 20 C24 16 34 21 45 17 C58 13 68 19 80 16 C91 15 98 25 99 41 C101 56 97 69 89 76 C79 82 68 77 57 82 C45 87 34 80 22 83 C11 85 3 74 1 59 C0 55 0 52 1 49 Z'/%3E%3C/svg%3E");
+    -webkit-mask: var(--swipe-mask) center / 100% 100% no-repeat;
+    mask: var(--swipe-mask) center / 100% 100% no-repeat;
   }
-  .bonus-alt.is-soon .bonus-alt-name { color: var(--ink-soft); }
+  .bonus-tile.is-on > * { position: relative; z-index: 1; }
 
   /* The same pressing, shrunk to sit beside the game's name on the play screen. */
   .bonus-disc-sm {
@@ -2931,7 +2946,7 @@
 
   [data-reduce-motion="on"] .bonus-spin,
   [data-reduce-motion="on"] .bonus-platter-disc.drop { animation: none; }
-  [data-reduce-motion="on"] .bonus-alt-disc .bonus-disc { transition: none; }
+  [data-reduce-motion="on"] .bonus-tile-disc .bonus-disc { transition: none; }
   @media (prefers-reduced-motion: reduce) {
     .bonus-spin, .bonus-platter-disc.drop { animation: none; }
   }
@@ -2944,14 +2959,10 @@
     .bonus-now { width: 100%; min-width: 0; text-align: center; padding-top: 0; }
     .bonus-now-blurb, .bonus-now-soon { margin-left: auto; margin-right: auto; }
     .bonus-now-soon { text-align: left; }
-    /* A phone has ~190px of strip left after the tab, the pressing and the score, and a
-       readable description wants ~270px. So on narrow the line WRAPS rather than clips —
-       clipping here would eat the back half of every sentence on the shelf, which is the
-       one thing this layout exists to prevent. Clamped to two lines so a strip is still a
-       fixed height, just a taller one. */
-    .bonus-alt-line {
-      white-space: normal; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
-    }
+    /* Two across on a phone, not three: a 375px page gives a third of it to a tile, and a
+       two-word name in a 19px hand face wants more than 110px. Three rows of two. */
+    .bonus-tile { flex-basis: calc((100% - 2px) / 2); }
+    .bonus-tile-disc { width: 54px; height: 54px; }
   }
 
 

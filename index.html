@@ -720,23 +720,25 @@ if (location.pathname.endsWith('/index.html')) {
   </symbol>
 </svg>
 <!-- BONUS GAME PRESSINGS — the shelf's icon family, drawn once here and <use>d per card.
-     Every bonus game is a black 7-inch pressing with a 1920s shellac label, and the label
-     is composed in two halves around the spindle hole: a shared deco SUNRISE fanned over
-     the top, and the game's OWN MARK printed large in cream underneath it. The vinyl, the
-     fan and the furniture never change from game to game; only the label colour and the
-     mark do (see BONUS_GAMES in js/config.js), which is what holds the family together.
-     That split is deliberate and was arrived at the hard way. The label used to spend its
-     whole middle on a full 24-spoke corona that was identical on all six games, and gave
-     the mark a cream lozenge the size of a fingernail at the very bottom edge — so the
-     loudest thing on every pressing was the part they all shared, the mark was about three
-     pixels wide on the 38px shelf strips, and the games could only be told apart by hue.
-     The mark now owns the biggest clear field on the label and is drawn in cream straight
-     onto the colour, so it carries at thumbnail size. Do not put the lozenge back, and do
-     not close the fan back into a full ring: both changes hand the centre of the label
-     back to the furniture.
-     Every mark is drawn inside the lower crescent, which is bounded by the spindle rings
-     above and the beaded ring below — in practice, keep every point within about 34 units
-     of (70,70) or it will foul the ring at the corners.
+     Every bonus game is a black 7-inch pressing with a 1920s shellac label. THE GAME'S OWN
+     MARK OWNS THE MIDDLE of that label, printed large in cream, and every piece the six
+     pressings share — the sunrise fan, the hairline and beaded rings, the two finials —
+     sits out at the RIM around it. The vinyl and that furniture never change from game to
+     game; only the label colour and the mark do (see BONUS_GAMES in js/config.js), which is
+     what holds the family together while still telling them apart.
+     This is the third arrangement and the first that works, and both of the others failed
+     the same way. First the middle was a full 24-spoke corona identical on all six, with the
+     mark shrunk to a cream lozenge the size of a fingernail at the bottom edge. Then the
+     corona opened into a half-fan and the mark took the lower crescent, but the spindle
+     rings still held the centre. The middle of a circle is the only place the eye goes at
+     thumbnail size, so in both versions the loudest thing on every pressing was the part
+     they all shared, and only hue told the games apart.
+     So: do not put the lozenge back, do not close the fan into a ring or bring it back
+     inboard, and do not print anything at all inside the beaded ring at r=38.5. There is
+     also NO SPINDLE HOLE any more, and that is the same rule again rather than an oversight
+     — a cream dot dead centre on all six would take the middle straight back.
+     Keep every point of a TRANSFORMED mark within about 33 units of (70,70), or it fouls
+     the beaded ring at the corners.
      The marks are DRAWN PATHS, never font glyphs: a typed "?" reads as typing rather than
      printing, and renders differently on every machine. Keep it that way. -->
 <svg width="0" height="0" aria-hidden="true" style="position:absolute" focusable="false">
@@ -755,57 +757,59 @@ if (location.pathname.endsWith('/index.html')) {
       <path d="M18 52 A54 54 0 0 1 50 17" fill="none" stroke="rgba(255,255,255,0.10)" stroke-width="5" stroke-linecap="round"/>
       <path d="M122 88 A54 54 0 0 1 90 123" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="5" stroke-linecap="round"/>
     </g>
-    <!-- the sunrise: 13 engraved spokes fanned over the top half of the label only. It was
-         a full 24-spoke ring, which meant the shared furniture owned the middle of every
-         pressing; opening it to a half-fan hands the lower crescent to the game's mark and
-         turns the corona into a horizon, which is the better deco anyway. -->
+    <!-- the sunrise: 11 engraved spokes fanned over the top half of the label, out at the
+         RIM. It was a full 24-spoke ring first, which meant the shared furniture owned the
+         middle of every pressing; opening it to a half-fan handed the lower half over, and
+         pushing that fan out to the rim hands the whole middle to the game's mark. Do not
+         close it back into a ring and do not bring it back inboard: both put shared
+         furniture where the only thing that identifies the game has to live. -->
     <g id="bd-rays">
       <g stroke="rgba(247,236,215,0.32)" stroke-width="1" stroke-linecap="round">
-        <line x1="84" y1="70" x2="104" y2="70"/><line x1="83.5" y1="66.4" x2="102.8" y2="61.2"/>
-        <line x1="82.1" y1="63" x2="99.4" y2="53"/><line x1="79.9" y1="60.1" x2="94" y2="46"/>
-        <line x1="77" y1="57.9" x2="87" y2="40.6"/><line x1="73.6" y1="56.5" x2="78.8" y2="37.2"/>
-        <line x1="70" y1="56" x2="70" y2="36"/><line x1="66.4" y1="56.5" x2="61.2" y2="37.2"/>
-        <line x1="63" y1="57.9" x2="53" y2="40.6"/><line x1="60.1" y1="60.1" x2="46" y2="46"/>
-        <line x1="57.9" y1="63" x2="40.6" y2="53"/><line x1="56.5" y1="66.4" x2="37.2" y2="61.2"/>
-        <line x1="56" y1="70" x2="36" y2="70"/>
+        <line x1="97.5" y1="62.6" x2="105.3" y2="60.6"/><line x1="94.7" y1="55.8" x2="101.6" y2="51.8"/>
+        <line x1="90.2" y1="49.8" x2="95.8" y2="44.2"/><line x1="84.2" y1="45.3" x2="88.2" y2="38.4"/>
+        <line x1="77.4" y1="42.5" x2="79.4" y2="34.7"/><line x1="70.0" y1="41.5" x2="70.0" y2="33.5"/>
+        <line x1="62.6" y1="42.5" x2="60.6" y2="34.7"/><line x1="55.8" y1="45.3" x2="51.8" y2="38.4"/>
+        <line x1="49.8" y1="49.8" x2="44.2" y2="44.2"/><line x1="45.3" y1="55.8" x2="38.4" y2="51.8"/>
+        <line x1="42.5" y1="62.6" x2="34.7" y2="60.6"/>
       </g>
     </g>
-    <!-- shared deco furniture: hairline ring, beaded ring, hub rings, and a diamond finial
-         closing each end of the fan's horizon. Nothing sits in the lower crescent: that is
-         the mark's field, and anything printed there competes with it at thumbnail size. -->
+    <!-- shared deco furniture: hairline ring, beaded ring, and a diamond finial closing each
+         end of the fan's horizon. It is ALL out at the rim, and nothing may be added inboard
+         of it: the middle of the label is the mark's field, and anything printed there is
+         shared furniture competing with the only thing that tells six pressings apart. -->
     <g id="bd-furniture">
       <circle cx="70" cy="70" r="41" fill="none" stroke="rgba(247,236,215,0.5)" stroke-width="0.8"/>
       <circle cx="70" cy="70" r="38.5" fill="none" stroke="rgba(247,236,215,0.65)" stroke-width="2.2"
               stroke-dasharray="0.1 5.05" stroke-linecap="round"/>
-      <circle cx="70" cy="70" r="10" fill="none" stroke="rgba(247,236,215,0.7)" stroke-width="1"/>
-      <circle cx="70" cy="70" r="7.8" fill="none" stroke="rgba(247,236,215,0.45)" stroke-width="0.6"/>
       <path d="M32.2 70 L34.5 67.4 L36.8 70 L34.5 72.6 Z" fill="rgba(247,236,215,0.75)"/>
       <path d="M103.2 70 L105.5 67.4 L107.8 70 L105.5 72.6 Z" fill="rgba(247,236,215,0.75)"/>
     </g>
-    <!-- the spindle hole, drawn last on every disc so nothing crosses it -->
-    <circle id="bd-hub" cx="70" cy="70" r="5.4" fill="#f2e8d3" stroke="rgba(0,0,0,0.3)" stroke-width="0.8"/>
     <!-- The marks, printed in cream on the label colour (bonusDisc supplies the fill). Each
-         one fills the lower crescent, so the extremes sit on its waist rather than at the
-         corners of a box — a mark drawn tall AND wide fouls the beaded ring. -->
-    <g id="bd-mark-question">
+         one is drawn where it always was, low on the label, and carried into the MIDDLE by a
+         transform on its own group: the paths keep their original coordinates so a mark can
+         still be edited against the drawing it was designed as, while the group decides how
+         big it prints. Grow the scale rather than redrawing bigger. Every mark has to stay
+         inside a radius of about 33 from (70,70) once transformed, or it fouls the beaded
+         ring at r=38.5. -->
+    <g id="bd-mark-question" transform="translate(70 70) scale(1.5) translate(-70 -90.4)">
       <path d="M60.5 83.5 C60.5 73 79.5 73 79.5 83 C79.5 89.5 72.4 89.3 71.6 95.5"
             fill="none" stroke-width="3.2" stroke-linecap="round"/>
       <circle cx="71.6" cy="101.4" r="2.6" stroke="none"/>
     </g>
     <!-- the needle jumping out of the groove: the line runs straight, one word throws it -->
-    <g id="bd-mark-skip">
+    <g id="bd-mark-skip" transform="translate(70 70) scale(1.05) translate(-70 -92.0)">
       <path d="M46 92 L58 92 L64 80 L70 104 L76 92 L94 92"
             fill="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
     </g>
     <!-- the proofreader's caret over an empty rule: a word belongs here and isn't. -->
-    <g id="bd-mark-caret">
+    <g id="bd-mark-caret" transform="translate(70 70) scale(1.33) translate(-70 -90.5)">
       <path d="M52 99 L88 99" fill="none" stroke-width="3" stroke-linecap="round"/>
       <path d="M60 82 L70 94 L80 82" fill="none" stroke-width="3"
             stroke-linecap="round" stroke-linejoin="round"/>
     </g>
     <!-- two lines of a document with the telling half of each one struck out: a solid block
          where the words were, a hairline rule where they were left alone. -->
-    <g id="bd-mark-redact">
+    <g id="bd-mark-redact" transform="translate(70 70) scale(1.22) translate(-71 -89.25)">
       <rect x="51" y="79.3" width="22" height="6.4" rx="2.2" stroke="none"/>
       <path d="M77 82.5 L91 82.5" fill="none" stroke-width="2.6" stroke-linecap="round"/>
       <path d="M52 96 L64 96" fill="none" stroke-width="2.6" stroke-linecap="round"/>
@@ -813,7 +817,7 @@ if (location.pathname.endsWith('/index.html')) {
     </g>
     <!-- a pin stuck in one spot, with the ground ruled either side of it: this word is here
          and nowhere else on the map. -->
-    <g id="bd-mark-pin">
+    <g id="bd-mark-pin" transform="translate(70 70) scale(1.33) translate(-70 -90.6)">
       <path d="M70 102 C62.8 94 62 92.6 62 87.2 a8 8 0 1 1 16 0 c0 5.4 -0.8 6.8 -8 14.8 Z"
             fill="none" stroke-width="3" stroke-linejoin="round"/>
       <circle cx="70" cy="86.4" r="2.9" stroke="none"/>
@@ -823,7 +827,7 @@ if (location.pathname.endsWith('/index.html')) {
     <!-- the return stroke: drop off the end of the line and go back for the next one. Drawn
          open rather than as a closed loop, because a loop this size fills in at small sizes
          and reads as a blob rather than as an arrow. -->
-    <g id="bd-mark-chain">
+    <g id="bd-mark-chain" transform="translate(70 70) scale(1.36) translate(-70.25 -90.2)">
       <path d="M88 79.5 L88 97.5 L58 97.5" fill="none"
             stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
       <path d="M52.5 97.5 L61.5 92.8 L61.5 102.2 Z" stroke="none"/>
@@ -831,7 +835,7 @@ if (location.pathname.endsWith('/index.html')) {
     <!-- a metronome, arm off centre and still swinging: the thing that will not wait. The arm
          leaves through the TOP of the case rather than past a corner, and the weight sits low
          and square on it — an arm clipping the shoulder reads as a dustpan and brush. -->
-    <g id="bd-mark-metro">
+    <g id="bd-mark-metro" transform="translate(70 70) scale(1.5) translate(-70 -88.9)">
       <path d="M56.7 102.2 L64.6 81.7 L75.4 81.7 L83.3 102.2 Z" fill="none"
             stroke-width="2.9" stroke-linejoin="round"/>
       <path d="M70 100.8 L76.3 75.6" fill="none" stroke-width="2.8" stroke-linecap="round"/>

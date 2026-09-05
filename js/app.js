@@ -6320,28 +6320,34 @@ function openBonus(from) {
    only its label colour and its mark, and an unwritten game gets the bare test pressing
    with its title pencilled on. `extra` lets a caller add classes without re-declaring the
    whole disc, so the shelf, the play screen and the end card all draw the same object.
-   The mark is printed in CREAM on the colour rather than in the tint itself. It used to be
-   tinted, sitting on a cream lozenge, which made the lozenge the bright shape and the mark
-   a smudge inside it — six pressings that could only be told apart by hue. Cream straight
-   onto the label is the highest contrast the palette has, and it is what makes the mark
-   survive down to the 38px shelf strips. Literal hex, not a CSS colour function: the disc
-   travels into the sleeve keepsake's rasteriser, where nothing resolves. */
+   The mark is printed in CREAM on the colour rather than in the tint itself, and it sits in
+   the MIDDLE of the label at full size. Both are the same lesson learned twice: the mark used
+   to be tinted on a cream lozenge, so the lozenge was the bright shape and the mark a smudge
+   inside it, and then it was cream but exiled to the lower crescent while the shared spindle
+   rings held the middle. On a 56px tile the middle of the circle is the only place the eye
+   goes, so the middle belongs to the one thing that is not shared. That is also why there is
+   no spindle hole any more: a cream dot dead centre on all six pressings would take the spot
+   back. Literal hex, not a CSS colour function: the disc travels into the sleeve keepsake's
+   rasteriser, where nothing resolves.
+   `crop` frames the LABEL ALONE and leaves the vinyl off entirely, for the shelf tiles and the
+   play screen. It used to keep the vinyl and simply zoom in, which put the label in a black
+   SQUARE — the crop box's corners fall a unit outside the record's own edge, so the four
+   corners were the only part of it that was not black. That is what made every tile look like
+   a boxed icon rather than a record. */
 function bonusDisc(g, extra = "", crop = false) {
   const cls = `bonus-disc${extra ? " " + extra : ""}`;
-  const open = `<svg class="${cls}" viewBox="${crop ? "23 23 94 94" : "0 0 140 140"}" aria-hidden="true">`;
+  const open = `<svg class="${cls}" viewBox="${crop ? "24 24 92 92" : "0 0 140 140"}" aria-hidden="true">`;
+  const vinyl = crop ? "" : `<use href="#bd-vinyl"/>`;
   if (!g.ready) {
-    return open +
-      `<use href="#bd-vinyl"/><use href="#bd-test-label"/>` +
+    return open + vinyl +
+      `<use href="#bd-test-label"/>` +
       `<text x="70" y="95" text-anchor="middle" class="bd-pencil" font-size="11"` +
-      ` transform="rotate(-2 70 92)">${escapeHtml(g.name.toLowerCase())}</text>` +
-      `<use href="#bd-hub"/></svg>`;
+      ` transform="rotate(-2 70 92)">${escapeHtml(g.name.toLowerCase())}</text></svg>`;
   }
-  return open +
-    `<use href="#bd-vinyl"/>` +
+  return open + vinyl +
     `<circle cx="70" cy="70" r="44" fill="${escapeHtml(g.tint)}"/>` +
     `<use href="#bd-rays"/><use href="#bd-furniture"/>` +
-    `<g stroke="#f7ecd7" fill="#f7ecd7"><use href="#bd-mark-${escapeHtml(g.mark)}"/></g>` +
-    `<use href="#bd-hub"/></svg>`;
+    `<g stroke="#f7ecd7" fill="#f7ecd7"><use href="#bd-mark-${escapeHtml(g.mark)}"/></g></svg>`;
 }
 
 /* The shelf is a record deck: one game is ON the platter with its details written beside
@@ -6442,7 +6448,6 @@ const BONUS_TONEARM =
 function renderBonusPage() {
   const g = bonusPicked();
   bonusPick = g.id;
-  const others = BONUS_GAMES.filter((x) => x.id !== g.id);
 
   const deck =
     `<div class="bonus-deck">` +
@@ -6465,29 +6470,31 @@ function renderBonusPage() {
       `</div>` +
     `</div>`;
 
-  /* The rest of the shelf, as title strips: a colour tab, the pressing, and two lines of
-     writing — the name with its score out on the right, and the game's one-line `line`
-     under both. Two to a row, so the shelf grows sideways as well as down.
-     The strip is deliberately a FIXED two lines tall whatever is written on it: the score
-     rides up onto the name's line so the description gets the whole width, and the
-     description is clipped rather than wrapped. That is the whole reason this replaced the
-     old described rows — those reprinted the platter's `blurb`, which is three sentences
-     long, so nine of them ran to twice the page. The kicker is not repeated here; on the
-     shelf `line` does its job, and it says more. */
-  const shelf = others.map((x) =>
-    `<button type="button" class="bonus-alt${x.ready ? "" : " is-soon"}" data-id="${escapeHtml(x.id)}">` +
-      `<span class="bonus-alt-tab" style="background:${x.ready ? escapeHtml(x.tint) : "#cfc7ba"}"></span>` +
-      `<span class="bonus-alt-disc">${bonusDisc(x, "", true)}</span>` +
-      `<span class="bonus-alt-text">` +
-        `<span class="bonus-alt-top">` +
-          `<span class="bonus-alt-name">${escapeHtml(x.name)}</span>` +
-          `<span class="bonus-alt-meta">${escapeHtml(bonusScoreLine(x, true))}</span>` +
-        `</span>` +
-        // Falls back to the kicker rather than printing an empty row: a game added to the
-        // roster before its shelf line is written should still say something true about
-        // itself, and the kicker is the one description every entry has always carried.
-        `<span class="bonus-alt-line">${escapeHtml(x.line || x.kicker)}</span>` +
-      `</span>` +
+  /* The rest of the shelf, as a RACK: every game as a tile, two rows of three, pressing
+     over name over score. The one on the platter is in it too, washed in highlighter — six
+     games make a full 2x3 with no gap, and leaving the current one out would have meant
+     either a hole in the grid or inventing a seventh game to fill a layout, which is
+     backwards.
+     A tile carries NO description, and that is the trade the grid is: three columns leave
+     about 200px each, and the `line` sentences need about 270px, so the shelf stops
+     explaining the games and becomes a rack you recognise. It only works because the mark
+     now owns the middle of the label (see bonusDisc) — the pressing has to do the
+     identifying that the sentence used to. The blurb is still a tap away on the platter,
+     which is where a description was always read properly anyway. `line` stays on the
+     roster: it is what a tile falls back to if this ever grows a caption again, and the
+     randomiser and the dev tools read it. */
+  const rack = BONUS_GAMES.map((x) =>
+    `<button type="button" class="bonus-tile${x.ready ? "" : " is-soon"}` +
+      `${x.id === g.id ? " is-on" : ""}" data-id="${escapeHtml(x.id)}"` +
+      `${x.id === g.id ? ' aria-current="true"' : ""}` +
+      // The tile is a mark and a name on screen, so the roster's one-line description is
+      // where it goes now: it is the whole meaning of the tile to anyone who cannot read
+      // the pressing, and an icon-led grid that says only "Redacted" out loud is a grid
+      // with nothing in it.
+      ` aria-label="${escapeHtml(x.name + ". " + (x.line || x.kicker))}">` +
+      `<span class="bonus-tile-disc">${bonusDisc(x, "", true)}</span>` +
+      `<span class="bonus-tile-name">${escapeHtml(x.name)}</span>` +
+      `<span class="bonus-tile-meta">${escapeHtml(bonusScoreLine(x, true))}</span>` +
     `</button>`).join("");
 
   const el = $("bonusBody");
@@ -6498,13 +6505,13 @@ function renderBonusPage() {
     `</div>` +
     deck +
     `<div class="bonus-shelf">` +
-      `<div class="bonus-shelf-label">also on the shelf</div>` +
-      `<div class="bonus-strips">` + shelf + `</div>` +
+      `<div class="bonus-shelf-label">on the shelf</div>` +
+      `<div class="bonus-rack">` + rack + `</div>` +
     `</div>`;
 
-  if ($("bonusPlayBtn")) $("bonusPlayBtn").addEventListener("click", () => startBonusGame(bonusPicked()));
-  el.querySelectorAll(".bonus-alt").forEach((b) =>
+  el.querySelectorAll(".bonus-tile").forEach((b) =>
     b.addEventListener("click", () => selectBonusGame(b.dataset.id)));
+  if ($("bonusPlayBtn")) $("bonusPlayBtn").addEventListener("click", () => startBonusGame(bonusPicked()));
 }
 
 // Dropping a record onto the platter. Every game can be loaded, including one that isn't
@@ -24830,14 +24837,14 @@ function buildDevApi() {
     // generated swaps can be eyeballed in bulk before shipping a change to js/bonus.js.
     bonus: {
       list: () => BONUS_GAMES.map((g) => ({ id: g.id, name: g.name, ready: g.ready, ...bonusRecord(g.id) })),
-      // The shelf's one-line descriptions, measured. A strip clips rather than wraps, so a
-      // `line` that has crept too long fails SILENTLY as a chopped sentence rather than as a
-      // broken layout — which is exactly the kind of thing nobody notices until it ships.
-      // Run this after writing a new game's line: `over` is what a reader would lose.
+      // The shelf's one-line descriptions. They came off the page when the shelf became a
+      // rack of pressings and are now each tile's ACCESSIBLE name, which is a place a wrong
+      // one is even easier to miss than a clipped sentence was. This reads back exactly what
+      // a screen reader would say for every tile, so run it after writing a new game's line.
       lines: () => BONUS_GAMES.map((g) => {
-        const el = document.querySelector(`.bonus-alt[data-id="${g.id}"] .bonus-alt-line`);
-        return { id: g.id, chars: (g.line || "").length, line: g.line,
-                 clipped: el ? el.scrollWidth > el.clientWidth + 1 : "not on the shelf right now" };
+        const el = document.querySelector(`.bonus-tile[data-id="${g.id}"]`);
+        return { id: g.id, line: g.line, fallback: !g.line,
+                 spoken: el ? el.getAttribute("aria-label") : "not on the shelf right now" };
       }),
       open: (from) => openBonus(from || "start"),
       play: (id) => { const g = BONUS_GAMES.find((x) => x.id === id); if (g && g.ready) startBonusGame(g); return g ? g.name : null; },
@@ -25034,19 +25041,21 @@ function buildDevApi() {
         settleBonusRound(!!ok, detail, !!timeout);
         return `${bonusGame.id}: ${ok ? "correct" : timeout ? "timed out" : "missed"}`;
       },
-      // Eyeball the pressings as a family: every disc at shelf size and at the two small
+      // Eyeball the pressings as a family: every disc at platter size and at the two small
       // sizes it has to survive, plus its test-pressing twin, pinned above the rack. The
       // marks are the whole risk here — they're drawn at one scale and used at three.
+      // The small rows are drawn CROPPED, which is what those sizes really ship: an
+      // uncropped 36px disc is a board lying about the thing it exists to check.
       discs: () => {
         if (!$("bonusBody")) return "open the shelf first";
         renderBonusPage();
-        const row = (px) => BONUS_GAMES.map((g) =>
-          `<span style="display:inline-block;width:${px}px">${bonusDisc(g)}</span>` +
-          `<span style="display:inline-block;width:${px}px">${bonusDisc({ ...g, ready: false })}</span>`).join("");
+        const row = (px, crop) => BONUS_GAMES.map((g) =>
+          `<span style="display:inline-block;width:${px}px">${bonusDisc(g, "", crop)}</span>` +
+          `<span style="display:inline-block;width:${px}px">${bonusDisc({ ...g, ready: false }, "", crop)}</span>`).join("");
         const strip = document.createElement("div");
         strip.style.cssText = "display:flex;flex-direction:column;gap:14px;margin-bottom:22px";
-        strip.innerHTML = [160, 56, 36].map((px) =>
-          `<div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">${row(px)}</div>`).join("");
+        strip.innerHTML = [[160, false], [60, true], [22, true]].map(([px, crop]) =>
+          `<div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">${row(px, crop)}</div>`).join("");
         $("bonusBody").prepend(strip);
         return BONUS_GAMES.map((g) => `${g.id}: ${g.tint} ${g.mark}`);
       },
