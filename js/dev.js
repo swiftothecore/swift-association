@@ -995,7 +995,7 @@ export function initDev(api) {
 
   // ---- Visual eggs -----------------------------------------------------------
   const penSel = select(["", "quill", "fountain", "glitter"], (x) => x, (x) => x || "no pen");
-  const doodleSel = select(["cat", "guitar", "scarf", "fence", "thirteen", "cardigan", "mirrorball", "paperplane", "willow", "seagulls"], (x) => x, (x) => x);
+  const doodleSel = select(["scarf", "fence", "thirteen", "mirrorball", "paperplane", "willow"], (x) => x, (x) => x);
   // Seasonal-layer toggles bypass the calendar/clock gate but still respect
   // reduce-motion, so they exercise the real effect rather than a special case.
   const snowBtn = btn("snow", () => snowBtn.classList.toggle("on", api.eggs.snow()));
@@ -1003,6 +1003,7 @@ export function initDev(api) {
   const leafBtn = btn("leaves", () => leafBtn.classList.toggle("on", api.eggs.leaves()));
   body.append(section("eggs",
     row(doodleSel, btn("doodle", () => api.eggs.doodle(doodleSel.value)),
+        btn("rub out", () => api.eggs.doodleOut(), "warn"),
         btn("sparkle", () => api.eggs.sparkle())),
     row(btn("star shower", () => api.eggs.starShower()), btn("blue wash", () => api.eggs.blueWash()),
         btn("secret 13", () => api.eggs.secret13())),

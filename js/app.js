@@ -11896,6 +11896,7 @@ function resetRunState() {
   roundWildcard = null;
   lastWildcardId = "";
   whaleSeenThisGame = false;
+  runDoodleInked = false;
   clearVanish();
   if (revolveId) { clearTimeout(revolveId); revolveId = null; revolveDeadline = 0; }
   revolveIndex = 0;
@@ -20464,6 +20465,7 @@ let titleTaps = 0;
 let activePen = null;            // 'quill' | 'fountain' | 'glitter' | null
 let blueUsedThisRound = false;
 let whaleSeenThisGame = false;   // caps "yes, whale!" at one surfacing per game — see runRoundEggs
+let runDoodleInked = false;      // the margin doodle is rolled once per run, not once per page
 let lyricEggMatched = false;     // whether the typed text is currently sitting on a real lyric (so the sparkle fires once per crossing, not every keystroke)
 let blueWashTimer = null;        // so the wash can be cut short when the page turns under it
 let correctStreak = 0;           // consecutive correct answers this game
@@ -20498,20 +20500,18 @@ function clearEggs() {
   // the top edge, and its 13-second visit is meant to survive page turns)
   clearBlueWash();
   const layer = $("doodleLayer");
-  if (layer) layer.innerHTML = "";
+  // The margin doodle is ink, so it survives the page turn: it is drawn once for a run and
+  // left alone. Everything else in this layer (the midnight note) is per-page and goes.
+  if (layer) layer.querySelectorAll(":scope > :not(.doodle)").forEach((e) => e.remove());
 }
 
-function addDoodle(kind, posClass) {
+function addDoodle(kind) {
   const layer = $("doodleLayer");
-  if (!layer) return;
-  // The milestone sticky is pinned to the bottom-right corner on an anniversary
-  // day, so keep doodles out of that corner and tuck them opposite instead.
-  if (posClass === "corner-br" && dayNote(todayKey())) {
-    posClass = "corner-bl";
-  }
-  const [w, h] = DOODLE_SIZE[kind] || [56, 56];
+  if (!layer || !DOODLE_SVG[kind]) return;
+  layer.querySelectorAll(".doodle").forEach((e) => e.remove());   // one doodle in the gutter, ever
+  const [w, h] = DOODLE_SIZE[kind] || [40, 58];
   const d = document.createElement("div");
-  d.className = "doodle " + posClass;
+  d.className = "doodle";
   d.style.width = w + "px"; d.style.height = h + "px";
   d.innerHTML = DOODLE_SVG[kind];
   // The scarf is the one doodle you can touch: it counts taps, lifetime, across every run. The
@@ -20927,17 +20927,25 @@ function runRoundEggs() {
   const now = new Date();
   const midnightHour = now.getHours() === 0 && now.getMinutes() <= 13;
 
-  // at most one margin doodle / note, by priority
+  /* The margin doodle is drawn ONCE for a run and then left there. It used to be a 14% roll
+     per page, which meant a drawing appeared beside page four and was gone by page five —
+     and a mark that comes and goes on its own is reading as a UI element, not as something
+     somebody inked in a margin. So the roll happens on the first page, the doodle survives
+     every page turn after it (see clearEggs), and the only thing that ever replaces it is
+     the fence, which has a page of its own to arrive on.
+
+     The midnight note is not ink and is not part of this: it is a thought scribbled in the
+     margin for thirteen minutes a day, so it stays per-page and can sit above a doodle. */
   if (gameType === "classic" && round === 5) {
-    addDoodle("fence", "corner-br");
-  } else if (midnightHour) {
-    addMarginNote("meet me at midnight");
-  } else if (chance(0.14)) {
-    const pool = ["scarf", "cat", "guitar", "cardigan", "mirrorball", "paperplane", "willow", "seagulls"];
-    addDoodle(pool[Math.floor(Math.random() * pool.length)], "corner-br");
-  } else if (chance(0.05)) {
-    addDoodle("thirteen", "corner-bl");
+    addDoodle("fence");
+  } else if (!runDoodleInked) {
+    runDoodleInked = true;
+    if (chance(0.55)) {
+      const pool = ["scarf", "thirteen", "mirrorball", "paperplane", "willow"];
+      addDoodle(pool[Math.floor(Math.random() * pool.length)]);
+    }
   }
+  if (midnightHour) addMarginNote("meet me at midnight");
 
   // Yes, whale! — its own rare roll, independent of the margin-doodle chain above,
   // because the tail lives off the page (behind the top edge), not in the margins.
@@ -26412,7 +26420,10 @@ function buildDevApi() {
              tally: resetTally, daily: resetDaily, all: clearAllData },
     // Visual eggs
     eggs: { whale: () => surfaceWhale(), bottle: (side) => surfaceBottle(side),
-            doodle: (k) => addDoodle(k || "cat", "corner-br"),
+            doodle: (k) => addDoodle(k || "scarf"),
+            // the doodle is inked once and then kept for the whole run, so seeing a second
+            // one — or seeing the bare margin the other half of runs get — needs a rubber
+            doodleOut: () => { const l = $("doodleLayer"); if (l) l.querySelectorAll(".doodle").forEach((e) => e.remove()); },
             sparkle: () => celebrateCorrect(3), lyricSparkle: () => lyricSparkle(), starShower: () => celebratePerfect(),
             blueWash: () => triggerBlueWash(), secret13: () => revealSecret13(),
             snow: (on) => { devForceSnow = on === undefined ? !devForceSnow : !!on; refreshSnow(); return devForceSnow; },

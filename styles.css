@@ -7538,14 +7538,36 @@
   }
 
   /* ---------- Easter eggs (Phase 8) ---------- */
-  /* Margin doodles — faint hand-drawn ink scribbles in the page corners */
+  /* Margin doodles — faint hand-drawn ink scribbles down the outer margin.
+
+     THE GUTTER IS THE ONLY HOME THEY CAN HAVE, and it is worth writing down why, because
+     the bottom-right corner they used to sit in looks like the obvious place and is not.
+     The card grows to fit its page: while the player is answering it ends just under the
+     input, and the moment an answer lands the feedback panel pushes the bottom edge down
+     past 800px. A doodle pinned to that edge is therefore pinned to nothing — it floated
+     in blank paper for ten seconds and then found itself inked straight across the
+     "next page" button. The 44px strip left of the red rule is the one part of the page
+     that is empty in BOTH states, so that is where the ink goes.
+
+     Which is also why every drawing in DOODLE_SVG is portrait and built to read at 40px
+     across: the gutter cannot be widened, so the artwork had to come to it. Do not add a
+     landscape doodle here and do not let one spill over the rule into the text column. */
   .doodle-layer { position: absolute; inset: 0; z-index: 1; pointer-events: none; overflow: hidden; }
-  .doodle { position: absolute; color: var(--ink-soft); opacity: 0; animation: doodleIn 0.8s ease forwards; }
+  .doodle {
+    position: absolute; left: 3px; bottom: 26px;
+    color: var(--ink-soft); opacity: 0;
+    /* low in the gutter, clear of everything else that lives there: the page register ends
+       at 199, the streak mark and its underline at about 250, and the red countdown tally
+       flashes at 39% of the card, which on the tallest page it reaches is still well above
+       a doodle sitting 26px off the bottom. */
+    transform: rotate(-3deg); transform-origin: left bottom;
+    animation: doodleIn 0.8s ease forwards;
+  }
   .doodle svg { display: block; width: 100%; height: 100%; overflow: visible; }
-  .doodle .ink { fill: none; stroke: var(--ink-soft); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  /* 1.8, not 2: these are half the size they used to be drawn at, and a 2px line on a 40px
+     drawing closes its own gaps up into a blot. */
+  .doodle .ink { fill: none; stroke: var(--ink-soft); stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
   .doodle .ink-fill { fill: var(--ink-soft); stroke: none; }
-  .doodle.corner-br { right: 14px; bottom: 16px; }
-  .doodle.corner-bl { left: 10px; bottom: 18px; }
   /* The one doodle that answers back. The layer above it is pointer-events: none, so this has to
      opt itself back in. No highlight and no hover state: the cursor is the whole affordance,
      which is as much as an egg should ever give away. */
