@@ -86,6 +86,7 @@ import {
   loadAchievements, saveAchievements,
   loadKeepsakes, saveKeepsakes, resetKeepsakes,
   loadStickers, saveStickers, resetStickers,
+  loadKeepsakesSeen, saveKeepsakesSeen, resetKeepsakesSeen,
   loadMode,
   loadDailyResult, saveDailyResult, clearDailyResult, dailyTotals, dailyPlayedDates,
   loadDailyProgress, saveDailyProgress, clearDailyProgress, dailyProgressCount,
@@ -4414,15 +4415,57 @@ function keepsakeCount(earned) {
   const map = earned || loadKeepsakes();
   return POLAROIDS.reduce((n, p) => n + (map[p.id] ? 1 : 0), 0);
 }
-// Keep the little count badge on the keepsakes icon current (hidden until the first is found).
-// The badge advertises the drawer, and the drawer holds two shelves, so it counts both. It is
-// one number rather than two: what it is for is telling you there is something in there.
+// How many earned keepsakes the player has not looked at yet — both shelves, since the drawer
+// opens on both at once. Anything earned and missing from the seen store is new, so a notebook
+// that has never opened the drawer counts everything, which is exactly right.
+function newKeepsakeCount() {
+  const seen = loadKeepsakesSeen();
+  const pol = loadKeepsakes();
+  const sti = loadStickers();
+  let n = 0;
+  for (const p of POLAROIDS) if (pol[p.id] && !seen.polaroids[p.id]) n++;
+  for (const s of STICKERS) if (sti[s.id] && !seen.stickers[s.id]) n++;
+  return n;
+}
+// Mark everything currently earned as looked at. Called when the drawer opens, which is the
+// only honest moment for it: the shelves are one scrolling body, so opening it puts the whole
+// collection in front of the player. A developing polaroid still counts as seen — the player
+// has been shown the frame and told it is coming, and re-badging it thirteen minutes later
+// would nag about something they have already been told about.
+function markKeepsakesSeen() {
+  const seen = loadKeepsakesSeen();
+  const pol = loadKeepsakes();
+  const sti = loadStickers();
+  for (const p of POLAROIDS) if (pol[p.id]) seen.polaroids[p.id] = true;
+  for (const s of STICKERS) if (sti[s.id]) seen.stickers[s.id] = true;
+  saveKeepsakesSeen(seen);
+}
+// Drop one shelf's seen record. Only the dev resets need this: wiping a shelf's earned store
+// while its seen ids stay behind would leave the badge silent the next time those same ids are
+// granted back, which is exactly the state a tester is trying to reproduce.
+function devForgetSeenShelf(shelf) {
+  const seen = loadKeepsakesSeen();
+  seen[shelf] = {};
+  saveKeepsakesSeen(seen);
+}
+// The badge on the keepsakes icon. It wears notification clothing — filled disc, corner of the
+// icon — so it has to mean what that says: how many things are waiting in there that you have
+// not seen. It clears the moment you open the drawer, and a caught-up notebook shows nothing.
+// The total you own is not this badge's job; the drawer's own counter says that.
 function updateKeepsakesNav() {
-  const n = keepsakeCount() + stickerCount();
+  const n = newKeepsakeCount();
   document.querySelectorAll(".js-keepsakes-count").forEach((el) => {
     el.textContent = n ? String(n) : "";
     el.classList.toggle("is-empty", !n);
   });
+  // The badge is aria-hidden (a bare numeral reads as nonsense), so the count has to reach a
+  // screen reader through the button's own label instead.
+  const btn = $("keepsakesGear");
+  if (btn) {
+    const label = n ? `Keepsakes (${n} new)` : "Keepsakes";
+    btn.setAttribute("aria-label", label);
+    btn.setAttribute("title", label);
+  }
 }
 
 // A stable per-polaroid tilt + vertical nudge so the wall reads as hand-pinned rather than
@@ -4446,6 +4489,8 @@ let lastFocusedBeforeKeepsakes = null;
 function openKeepsakes() {
   lastFocusedBeforeKeepsakes = document.activeElement;
   renderKeepsakesPage();   // also schedules the develop watch
+  markKeepsakesSeen();     // looking at the drawer is what clears the badge
+  updateKeepsakesNav();
   const m = $("keepsakesModal");
   m.classList.add("open");
   m.setAttribute("aria-hidden", "false");
@@ -25307,7 +25352,20 @@ function buildDevApi() {
         saveKeepsakes(e); refreshKeepsakes(); updateKeepsakesNav(); return POLAROIDS.length;
       },
       open: () => openKeepsakes(),                             // jump to the polaroid wall
-      reset: () => { resetKeepsakes(); refreshKeepsakes(); updateKeepsakesNav(); },
+      // The badge on the icon counts what is earned but unlooked-at, and the drawer clears it
+      // on open, so the only way to see the badge twice is to put things back to unseen.
+      // `unseen` reads it without opening anything (opening would clear it under you).
+      unseen: () => {
+        const seen = loadKeepsakesSeen(); const pol = loadKeepsakes(); const sti = loadStickers();
+        return {
+          count: newKeepsakeCount(),
+          polaroids: POLAROIDS.filter((p) => pol[p.id] && !seen.polaroids[p.id]).map((p) => p.id),
+          stickers: STICKERS.filter((st) => sti[st.id] && !seen.stickers[st.id]).map((st) => st.id),
+        };
+      },
+      forget: () => { resetKeepsakesSeen(); updateKeepsakesNav(); return newKeepsakeCount(); },   // everything earned goes back to new
+      markSeen: () => { markKeepsakesSeen(); updateKeepsakesNav(); return 0; },
+      reset: () => { resetKeepsakes(); devForgetSeenShelf("polaroids"); refreshKeepsakes(); updateKeepsakesNav(); },
     },
     // Stickers, the die-cut vinyl set. `earn` is the real path (toast + chime included) and the
     // rest write the store directly, for eyeballing the locked silhouette against the finished
@@ -25327,7 +25385,7 @@ function buildDevApi() {
       // window.__stickerCover.show() is the layer's own version and stops at the picture;
       // this is the player's route, tag and page turn included.
       cover: () => { closeKeepsakes(); return openCoverAdmire(null) ? "closed the notebook" : "front page only"; },
-      reset: () => { resetStickers(); updateKeepsakesNav(); refreshStickers(); },
+      reset: () => { resetStickers(); devForgetSeenShelf("stickers"); updateKeepsakesNav(); refreshStickers(); },
       // The Mastery 9 hint layer, which is otherwise only readable one hover tip at a time and
       // only while the vault is open. Prints what each STILL-LOCKED cell would whisper, beside
       // the `how` it must never turn into, so the two can be read against each other: a hint

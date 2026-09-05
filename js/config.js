@@ -129,6 +129,10 @@ export const MASTERY_KEY = "swiftSongAssociation.mastery";              // skill
 export const CUSTOM_KEY = "swiftSongAssociation.custom";               // player-authored modes — { presets:[{id,name,mode}], activeId }
 export const KEEPSAKES_KEY = "swiftSongAssociation.keepsakes";         // earned collectibles — { [polaroidId]: isoDate } (unlock time, mirrors achievements)
 export const STICKERS_KEY = "swiftSongAssociation.stickers";           // earned stickers: { [stickerId]: isoDate }, same shape as the keepsakes store
+// What the player has actually looked at in the keepsakes drawer — { polaroids:{[id]:true},
+// stickers:{[id]:true} }. Deliberately a set of ids rather than a count: the count can go down
+// (dev tools remove a keepsake) and a stored number would then leave the badge stuck or silent.
+export const KEEPSAKES_SEEN_KEY = "swiftSongAssociation.keepsakesSeen";
 export const BREADTH_KEY = "swiftSongAssociation.modesSeen";           // { [token]: true } — every mode/difficulty combination ever finished, for "Explorer"
 export const WEEKDAYS_KEY = "swiftSongAssociation.weekdaysPlayed";     // { [0-6]: true } — which weekdays you have finished a game on, for "Seven"
 // The calendar ledger — { days: { [YYYY-MM-DD]: true }, months: { [1-12]: true } }. Deliberately

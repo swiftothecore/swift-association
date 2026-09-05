@@ -10239,7 +10239,10 @@
   .sound-gear[data-on="true"] { color: var(--ink-accent); }
 
   /* Keepsakes icon — sits to the left of the sound icon. Hidden during active play so it
-     doesn't clutter the board (and can't sidestep the timer, which only the gear pauses). */
+     doesn't clutter the board (and can't sidestep the timer, which only the gear pauses).
+     The badge is a genuine unread marker: how many earned keepsakes you have not looked at,
+     cleared the moment the drawer opens. It is allowed to look like a notification because
+     it is one. The size of the collection is the drawer's own counter's business. */
   .keepsakes-gear { right: 114px; }
   @media (min-width: 1040px) { .keepsakes-gear { right: 122px; } }
   body.in-game .keepsakes-gear { display: none; }
