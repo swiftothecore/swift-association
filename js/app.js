@@ -2430,6 +2430,13 @@ function infPitch(max) { return Math.max(5.2, Math.min(13, INF_TRACK / Math.max(
 // off the right edge unfinished (no knot, no number tied on) — the same "this kept going"
 // idiom the daily streak strand uses when a run outgrows its space.
 function infStrandHTML(rounds, color, pitch) {
+  // A first-page miss is a valid Infinite run. It has no beads to thread, but it
+  // still needs a short empty cord so opening Stats cannot fall through to an
+  // undefined final point before the tab is rendered.
+  if (rounds <= 0) {
+    return `<svg class="inf-strand" viewBox="0 0 ${INF_TRACK} 22" preserveAspectRatio="xMinYMid meet" aria-hidden="true">` +
+      `<path d="M0 11 Q9 8.5 18 11" fill="none" stroke="#8a7f6b" stroke-width="1.4" stroke-linecap="round"/></svg>`;
+  }
   const r = Math.max(2.3, pitch * 0.42);
   const x0 = 3 + r;
   const room = Math.max(1, Math.floor((INF_TRACK - x0 - 10) / pitch) + 1);
