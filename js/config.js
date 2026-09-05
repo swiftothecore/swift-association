@@ -3970,11 +3970,14 @@ export const SPARKLE_SVG = `<svg viewBox="0 0 24 24"><path d="M12 1 C13 8 16 11 
 // guitar, a cardigan and a row of seagulls) were cut rather than shrunk, because all four
 // were built around their width and there is no honest portrait version of them.
 export const DOODLE_SVG = {
-  // one weathered fence board with its diamond cut out, the boards either side of it only
-  // hinted at, and a sparrow sat on top (the famous fence-photo tease). Two full boards was
-  // the first attempt and it read as two blank planks: at 40px the fence needs ONE hole in
-  // ONE board to be a fence at all.
-  fence: `<svg viewBox="0 0 40 58"><g class="ink"><path d="M10 14 L10.4 53"/><path d="M30 13.6 L29.8 53"/><path d="M10 14 Q20 12.4 30 13.6"/><path d="M20 24.5 L26.5 33 L20 41.5 L13.5 33 Z"/></g><g class="ink" stroke-width="1.3" opacity="0.55"><path d="M4.5 15.5 L4.8 53"/><path d="M35.5 15.2 L35.3 53"/></g><g class="ink" stroke-width="1.4"><path d="M17.5 11.6 Q16.8 6.2 21.6 5.4 Q25.9 4.7 26.6 8.4 L29.6 9.2 L26.6 10.2 Q25.4 11.4 23.6 11.6"/><path d="M17.5 11.6 L12.6 8.4"/></g><circle class="ink-fill" cx="24.6" cy="7.9" r="0.7"/><g class="ink" stroke-width="1.2" opacity="0.8"><path d="M8.5 55 q1.2 -4 2.6 -5.2 M12.5 55.5 q0.6 -3.2 2.2 -4.4 M27 55.5 q1.1 -3.8 2.5 -5 M31 55 q0.6 -3.2 2.1 -4.4"/></g></svg>`,
+  // the weathered fence panel with FIVE diamond holes cut in a quincunx. The count is the
+  // whole point and it is not a drawing decision: five is the joke, and a fence here with
+  // four holes, or six, or one big one, is just a fence. Everything else in this drawing
+  // gave way to keep them — the sparrow that used to sit on top is gone, the boards are two
+  // faint seams rather than five drawn planks, and the panel is 76px tall rather than 58,
+  // because the gutter has no width to spare but all the height in the world. If a future
+  // pass makes this smaller, take it out of the panel and never out of the holes.
+  fence: `<svg viewBox="0 0 40 76"><g class="ink"><path d="M4 10 L4.3 72"/><path d="M36 9.4 L35.7 72"/><path d="M4 10 Q20 8 36 9.4"/></g><g class="ink" stroke-width="1" opacity="0.4"><path d="M14.6 9.2 L14.8 72"/><path d="M25.4 9 L25.6 72"/></g><g class="ink" stroke-width="1.6"><path d="M12 15 L17.5 22 L12 29 L6.5 22 Z"/><path d="M28 15 L33.5 22 L28 29 L22.5 22 Z"/><path d="M20 33 L25.5 40 L20 47 L14.5 40 Z"/><path d="M12 51 L17.5 58 L12 65 L6.5 58 Z"/><path d="M28 51 L33.5 58 L28 65 L22.5 58 Z"/></g><g class="ink" stroke-width="1.2" opacity="0.8"><path d="M2.5 74 q1.2 -4 2.6 -5.2 M6.5 74.5 q0.6 -3.2 2.2 -4.4 M31 74.5 q1.1 -3.8 2.5 -5 M35 74 q0.6 -3.2 2.1 -4.4"/></g></svg>`,
   // the scarf, still hanging on somebody's peg: over the peg once, two tails of
   // different lengths, fringe at both ends
   scarf: `<svg viewBox="0 0 40 58"><g class="ink"><path d="M4 8.5 L19 8"/><circle cx="19.6" cy="8" r="1.3"/><path d="M9.5 13 C6.5 22 6 30 8.5 37.5"/><path d="M15.5 13.5 C13.5 22 13.2 30 14.8 37.5"/><path d="M8.5 37.5 Q11.6 39.3 14.8 37.5"/><path d="M17 12.5 C20.5 24 23 37 22.5 49.5"/><path d="M23.5 11.5 C27 23 29.5 36 29 48.5"/><path d="M22.5 49.5 Q25.7 51.3 29 48.5"/><path d="M9.5 13 Q13.5 7.5 23.5 11.5"/></g><g class="ink" stroke-width="1.3"><path d="M9 39 L8.3 43.4 M11.5 39.6 L11.4 44 M14 38.7 L14.6 43"/><path d="M23.2 51 L22.6 55.4 M25.8 51.6 L25.8 56 M28.4 50.3 L29 54.6"/></g></svg>`,
@@ -3992,7 +3995,7 @@ export const DOODLE_SVG = {
 // Natural display size (px) for each doodle, matched to its viewBox aspect. Nothing here
 // is wider than the gutter it hangs in; see the note above DOODLE_SVG before adding one.
 export const DOODLE_SIZE = {
-  fence: [40, 58], scarf: [40, 58], thirteen: [40, 49],
+  fence: [40, 76], scarf: [40, 58], thirteen: [40, 49],
   mirrorball: [40, 58], paperplane: [40, 58], willow: [40, 58],
 };
 
