@@ -9355,6 +9355,11 @@ function albumTileName(a) {
    alone: nothing else in the notebook looks like that, the ladder read as six equal options,
    and a control with a stroke and a corner radius is the one object on a paper page that
    looks like a web toolbar. One question, one control. */
+// A difficulty's own name, and the same thing as a trailing clause for a stamp. Both panels
+// name a difficulty in two places now, and neither should ever print a raw mode id.
+function diffLabel(diff) { return (MODES[diff] || {}).label || diff || ""; }
+function diffSuffix(diff) { return diff ? ` · ${diffLabel(diff)}` : ""; }
+
 function difficultyTabs(list, selected) {
   return list.map((m) => {
     const modality = MODALITY_MODES.includes(m);
@@ -9721,17 +9726,19 @@ function renderAlbumDetail(album) {
 
   const tabs = difficultyTabs(ALBUM_FOCUS_DIFFS, afSelectedDiff);
 
+  // The stamp carries the album-wide honour, and now the difficulty it was won at with it:
+  // that fact used to ride on the meta line, which belongs to the picked difficulty instead.
   const stamp = rec.perfected
-    ? `<span class="chall-detail-star">${CHALL_STAR}</span><span class="chall-detail-stamp af-stamp">perfected</span>`
-    : rec.beaten ? `<span class="chall-detail-stamp af-stamp">beaten</span>` : "";
+    ? `<span class="chall-detail-star">${CHALL_STAR}</span>` +
+      `<span class="chall-detail-stamp af-stamp">perfected${diffSuffix(rec.perfectedDiff)}</span>`
+    : rec.beaten ? `<span class="chall-detail-stamp af-stamp">beaten${diffSuffix(rec.beatenDiff)}</span>` : "";
 
-  let meta = "";
-  if (rec.best > 0) {
-    meta = `best ${rec.best}/${TOTAL_ROUNDS}`;
-    if (rec.beatenDiff) meta += ` · beaten on ${(MODES[rec.beatenDiff] || {}).label || rec.beatenDiff}`;
-  } else {
-    meta = "not played yet";
-  }
+  // The line above the button answers the difficulty the tabs have highlighted, not the album
+  // as a whole. Reading back a best set on Easy while Hard is selected made the panel look
+  // like it was quoting a record for a run you have never had.
+  const diffBest = rec.diffs[afSelectedDiff] || 0;
+  const meta = `${diffLabel(afSelectedDiff)} · ` +
+    (diffBest > 0 ? `best ${diffBest}/${TOTAL_ROUNDS}` : "not played yet");
 
   el.innerHTML =
     `<div class="chall-detail af-detail">` +
@@ -9758,7 +9765,7 @@ function renderAlbumDetail(album) {
     `</div>` +
     `<div class="chall-act">` +
       `<span class="chall-meta">${escapeHtml(meta)}</span>` +
-      `<button type="button" class="chall-go" data-play="${escapeHtml(album)}">${rec.beaten ? "Play again" : "Start writing"}</button>` +
+      `<button type="button" class="chall-go" data-play="${escapeHtml(album)}">${diffBest > 0 ? "Play again" : "Start writing"}</button>` +
     `</div></div>`;
 
   el.querySelectorAll(".af-diffs [data-diff]").forEach((b) =>
@@ -10056,12 +10063,13 @@ function renderGuestDetail(id) {
       `<span class="guest-rec-n">${(a.songs || []).length}</span></li>`).join("");
     const tabs = difficultyTabs(GUEST_DIFFS, guestSelectedDiff);
     const stamp = rec.admitted
-      ? `<span class="chall-detail-star">${CHALL_STAR}</span><span class="chall-detail-stamp af-stamp">admitted</span>` : "";
-    let meta = "not played yet";
-    if (rec.best > 0) {
-      meta = `best ${rec.best}/${TOTAL_ROUNDS}`;
-      if (rec.admittedDiff) meta += ` · admitted on ${(MODES[rec.admittedDiff] || {}).label || rec.admittedDiff}`;
-    }
+      ? `<span class="chall-detail-star">${CHALL_STAR}</span>` +
+        `<span class="chall-detail-stamp af-stamp">admitted${diffSuffix(rec.admittedDiff)}</span>` : "";
+    // Same as the album panel: the record quoted here is the picked difficulty's, and the
+    // residency stamp above carries the one it was earned at.
+    const diffBest = rec.diffs[guestSelectedDiff] || 0;
+    const meta = `${diffLabel(guestSelectedDiff)} · ` +
+      (diffBest > 0 ? `best ${diffBest}/${TOTAL_ROUNDS}` : "not played yet");
     $("guestDetailBody").innerHTML =
       `<div class="chall-detail guest-detail">` +
       `<div class="guest-detail-head" style="--g-pen:${g.ink.pen}">` +
@@ -10084,7 +10092,7 @@ function renderGuestDetail(id) {
       `</div>` +
       `<div class="chall-act">` +
         `<span class="chall-meta">${escapeHtml(meta)}</span>` +
-        `<button type="button" class="chall-go" data-play="${escapeHtml(id)}">${rec.best > 0 ? "Play again" : "Start writing"}</button>` +
+        `<button type="button" class="chall-go" data-play="${escapeHtml(id)}">${diffBest > 0 ? "Play again" : "Start writing"}</button>` +
       `</div></div>`;
     const el2 = $("guestDetailBody");
     el2.querySelectorAll(".af-diffs [data-diff]").forEach((b) =>
@@ -25922,6 +25930,9 @@ function buildDevApi() {
         if (p.best != null) { e.best = p.best | 0; e.bestDiff = d; }
         if (p.perfected) { e.perfected = true; e.perfectedDiff = d; e.beaten = true; e.beatenDiff = d; e.best = TOTAL_ROUNDS; e.bestDiff = d; }
         else if (p.beaten) { e.beaten = true; e.beatenDiff = d; e.best = Math.max(e.best || 0, ALBUM_FOCUS_TARGET); e.bestDiff = d; }
+        // the detail panel reads the per-difficulty split, so a forced record has to fill it
+        // in as well or the panel reports "not played yet" over a board that says otherwise
+        e.diffs = { ...(e.diffs || {}), [d]: Math.max((e.diffs || {})[d] || 0, e.best || 0) };
         all[a] = e; saveAlbumFocus(all);
         if ($("albumFocusBody")) renderAlbumFocusPage();
         return albumFocusRecord(a);
@@ -25932,9 +25943,9 @@ function buildDevApi() {
         if (state && state !== "fresh") {
           const d = diff || "medium"; const all = {};
           STUDIO_ALBUMS.forEach((a) => {
-            if (state === "perfect") all[a] = { best: TOTAL_ROUNDS, bestDiff: d, beaten: true, beatenDiff: d, perfected: true, perfectedDiff: d };
-            else if (state === "beaten") all[a] = { best: ALBUM_FOCUS_TARGET, bestDiff: d, beaten: true, beatenDiff: d };
-            else all[a] = { best: 7, bestDiff: d };
+            if (state === "perfect") all[a] = { best: TOTAL_ROUNDS, bestDiff: d, beaten: true, beatenDiff: d, perfected: true, perfectedDiff: d, diffs: { [d]: TOTAL_ROUNDS } };
+            else if (state === "beaten") all[a] = { best: ALBUM_FOCUS_TARGET, bestDiff: d, beaten: true, beatenDiff: d, diffs: { [d]: ALBUM_FOCUS_TARGET } };
+            else all[a] = { best: 7, bestDiff: d, diffs: { [d]: 7 } };
           });
           saveAlbumFocus(all);
         }
@@ -25970,6 +25981,7 @@ function buildDevApi() {
         const all = loadGuests(); const e = all[id] || {}; const p = patch || {}; const d = p.diff || "medium";
         if (p.best != null) { e.best = p.best | 0; e.bestDiff = d; }
         if (p.admitted) { e.admitted = true; e.admittedDiff = d; e.best = TOTAL_ROUNDS; e.bestDiff = d; }
+        e.diffs = { ...(e.diffs || {}), [d]: Math.max((e.diffs || {})[d] || 0, e.best || 0) };
         all[id] = e; saveGuests(all);
         if ($("guestBody")) renderGuestShelfPage();
         return guestRecord(id);
@@ -25981,8 +25993,8 @@ function buildDevApi() {
           const d = diff || "medium"; const all = {};
           GUESTS.forEach((g) => {
             all[g.id] = state === "admitted"
-              ? { best: TOTAL_ROUNDS, bestDiff: d, admitted: true, admittedDiff: d }
-              : { best: 9, bestDiff: d };
+              ? { best: TOTAL_ROUNDS, bestDiff: d, admitted: true, admittedDiff: d, diffs: { [d]: TOTAL_ROUNDS } }
+              : { best: 9, bestDiff: d, diffs: { [d]: 9 } };
           });
           saveGuests(all);
         }

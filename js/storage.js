@@ -211,9 +211,16 @@ export function resetChallenges() {
 }
 
 /* ---------- Album Focus board (sandboxed, like challenges) ----------
-   { [album]: { best, bestDiff, beaten, beatenDiff, perfected, perfectedDiff } }
+   { [album]: { best, bestDiff, beaten, beatenDiff, perfected, perfectedDiff, diffs } }
    beatenDiff / perfectedDiff = the HARDEST difficulty the album was beaten / perfected at,
-   so the completed-album keepsake can scale with difficulty. */
+   so the completed-album keepsake can scale with difficulty.
+
+   `diffs` is the same best score split by the difficulty it was set at ({ [diff]: score }).
+   The board's square and its stamps are about the album as a whole and go on reading `best`,
+   but the detail panel has a difficulty picked out, and a record that ignores the tab you are
+   looking at reads as though it belongs to it. A record written before this field existed is
+   filled in from bestDiff on read, which is the one difficulty it can honestly be attributed
+   to; nothing is written back, so an old board is never rewritten behind the player. */
 export function loadAlbumFocus() {
   try {
     const raw = localStorage.getItem(ALBUM_FOCUS_KEY);
@@ -231,7 +238,22 @@ export function albumFocusRecord(album) {
     best: e.best || 0, bestDiff: e.bestDiff || null,
     beaten: !!e.beaten, beatenDiff: e.beatenDiff || null,
     perfected: !!e.perfected, perfectedDiff: e.perfectedDiff || null,
+    diffs: perDiffBests(e),
   };
+}
+// The per-difficulty split, with the pre-`diffs` shape read as one entry under its bestDiff.
+function perDiffBests(e) {
+  if (e.diffs && typeof e.diffs === "object") return { ...e.diffs };
+  return e.best > 0 && e.bestDiff ? { [e.bestDiff]: e.best } : {};
+}
+// Bank a score against the difficulty it was set at. Kept separate from the `best` bookkeeping
+// above it because a tie there has to pick a winner between two difficulties, and here it
+// never has to: each difficulty keeps its own line.
+function bankDiffBest(e, score, diff) {
+  if (!diff) return;
+  const d = e.diffs && typeof e.diffs === "object" ? e.diffs : perDiffBests(e);
+  if (score > (d[diff] || 0)) d[diff] = score;
+  e.diffs = d;
 }
 // Keep the harder of two difficulty ids (null-safe).
 function harderDiff(a, b) {
@@ -244,6 +266,10 @@ export function recordAlbumFocusRun(album, score, diff, countBest = true) {
   const all = loadAlbumFocus();
   const e = all[album] || {};
   // best score ever — ties keep the harder difficulty
+  // Before the two lines below touch best/bestDiff: a record written before `diffs` existed
+  // is backfilled from exactly those two fields, so banking after them would file the old
+  // score under this run's difficulty and lose the one it was actually set at.
+  bankDiffBest(e, score, diff);
   if (score > (e.best || 0)) { e.best = score; e.bestDiff = diff; }
   else if (score === (e.best || 0) && score > 0) { e.bestDiff = harderDiff(e.bestDiff, diff); }
   if (countBest) {
@@ -259,7 +285,7 @@ export function resetAlbumFocus() {
 }
 
 /* ---------- Guest shelf board (sandboxed, like album focus) ----------
-   { [guestId]: { best, bestDiff, admitted, admittedDiff } }
+   { [guestId]: { best, bestDiff, admitted, admittedDiff, diffs } }
    One mark rather than Album Focus's two: a guest is ADMITTED at a perfect run, so there is
    no beaten/perfected pair to keep apart. admittedDiff = the HARDEST difficulty it was
    admitted at, so the pass's stamp can say how it was earned. */
@@ -279,6 +305,7 @@ export function guestRecord(id) {
   return {
     best: e.best || 0, bestDiff: e.bestDiff || null,
     admitted: !!e.admitted, admittedDiff: e.admittedDiff || null,
+    diffs: perDiffBests(e),
   };
 }
 // Fold a finished guest run into the board. `score` is 0..TOTAL_ROUNDS, `diff` a MODES id.
@@ -286,6 +313,10 @@ export function guestRecord(id) {
 export function recordGuestRun(id, score, diff, countBest = true) {
   const all = loadGuests();
   const e = all[id] || {};
+  // Before the two lines below touch best/bestDiff: a record written before `diffs` existed
+  // is backfilled from exactly those two fields, so banking after them would file the old
+  // score under this run's difficulty and lose the one it was actually set at.
+  bankDiffBest(e, score, diff);
   if (score > (e.best || 0)) { e.best = score; e.bestDiff = diff; }
   else if (score === (e.best || 0) && score > 0) { e.bestDiff = harderDiff(e.bestDiff, diff); }
   if (countBest && score >= GUEST_TARGET) { e.admitted = true; e.admittedDiff = harderDiff(e.admittedDiff, diff); }
