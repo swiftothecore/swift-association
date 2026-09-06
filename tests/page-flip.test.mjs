@@ -20,6 +20,14 @@ test("every visual page clone is collision-free, inert, and palette-stable", () 
   assert.match(app, /copy\.getContext\("2d"\)\.drawImage\(node, 0, 0\);/);
 });
 
+test("page clones do not replay one-shot streak effects", () => {
+  assert.match(app, /function settleFlipStreak\(flip\)[\s\S]*?classList\.remove\("is-kick"\)/);
+  assert.match(app, /flip\.querySelectorAll\("\.streak-bit, \.streak-fall"\)[\s\S]*?el\.remove\(\)/);
+  assert.equal(occurrences(app, "settleFlipStreak(flip);"), 2);
+  assert.match(app, /function makeFlipSheet[\s\S]*?const flip = src\.cloneNode\(true\);\s*settleFlipStreak\(flip\);/);
+  assert.match(app, /function turnPageSheet[\s\S]*?const flip = card\.cloneNode\(true\);\s*settleFlipStreak\(flip\);/);
+});
+
 test("the turn runs in a fixed, clipped interaction layer with locked geometry", () => {
   assert.match(css, /\.page-flip-layer\s*\{[\s\S]*?position:\s*fixed;[\s\S]*?overflow:\s*clip;[\s\S]*?pointer-events:\s*auto;/);
   assert.match(app, /app\.style\.height = appRect\.height \+ "px";/);

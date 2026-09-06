@@ -1086,6 +1086,16 @@ function copyFlipRuntimeState(src, flip) {
   });
 }
 
+// A flip sheet is a still copy of the page being turned, not a second animation stage.
+// Transient streak effects retain their trigger classes through cloneNode(), which makes the
+// numeral kick and any in-flight scraps start again when the clone is inserted into the DOM.
+// Keep the settled tally itself, but remove the one-shot motion from the visual copy.
+function settleFlipStreak(flip) {
+  const mark = flip.querySelector(".streak-mark");
+  if (mark) mark.classList.remove("is-kick");
+  flip.querySelectorAll(".streak-bit, .streak-fall").forEach((el) => el.remove());
+}
+
 function positionFlipSheet(flip, at) {
   const rect = at.getBoundingClientRect();
   flip.style.top = rect.top + "px";
@@ -1220,6 +1230,7 @@ if (window.visualViewport) window.visualViewport.addEventListener("resize", fini
    offsets are real even when `src` is display:none). */
 function makeFlipSheet(src, at, sideClass, shadeClass, turn) {
   const flip = src.cloneNode(true);
+  settleFlipStreak(flip);
   freezeFlipPalette(src, flip);
   renameFlipIds(flip);
   flip.classList.remove("screen", "active");
@@ -16117,6 +16128,7 @@ function turnPageSheet(card, fill, done, options = {}) {
   card.style.transform = "";
   const turn = beginPageTurn(card);
   const flip = card.cloneNode(true);
+  settleFlipStreak(flip);
   // The live body changes era while `fill` prepares the next page. Freeze the outgoing
   // sheet first, otherwise it takes on the new page's colour before it has turned away.
   freezeFlipPalette(card, flip);
