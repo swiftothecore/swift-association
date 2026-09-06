@@ -1761,7 +1761,7 @@ export const MASTERY_REWARDS = [
   { level: 4,  id: "paper-sage",      kind: "paper", name: "Sage ledger",     desc: "A cool green bookkeeper's stock.", payload: { paper: "sage" } },
   // Bracelet trinkets — a set unlocked together at level 5. Each swaps the trinket that
   // dangles from every correct-answer bead (the TRINKETS renderer in bracelet.js); the
-  // verse pen-nib stays reserved. Selection persists in settings.masteryTrinket.
+  // recall pen-nib stays reserved. Selection persists in settings.masteryTrinket.
   { level: 5,  id: "trinket-heart",     kind: "trinket", name: "Heart trinket",     desc: "Hang a friendship heart.",       payload: { trinket: "heart" } },
   { level: 5,  id: "trinket-moon",      kind: "trinket", name: "Moon trinket",      desc: "A waxing crescent moon.",        payload: { trinket: "moon" } },
   { level: 5,  id: "trinket-daisy",     kind: "trinket", name: "Daisy trinket",     desc: "A little pressed daisy.",        payload: { trinket: "daisy" } },

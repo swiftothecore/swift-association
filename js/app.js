@@ -10504,7 +10504,11 @@ function renderBraceletDetails(results, albums, opts) {
   }
   const parts = [`${filled} page${filled === 1 ? "" : "s"} strung`, `${correct} correct`, `${missed} missed`];
   if (allFinishes.includes("matte")) parts.push(`${hinted.filter(Boolean).length} hinted`);
-  if (allFinishes.includes("pearl")) parts.push(`${verseTiers.filter(Boolean).length} lyric recall`);
+  // Read straight off verseTiers rather than gating on a finish, because the two no longer
+  // agree: every recorded tier hangs a nib, but only a word-perfect one is strung as a pearl,
+  // so a run of "good" lines has pages to report and no pearl on it anywhere.
+  const recalled = verseTiers.filter(Boolean).length;
+  if (recalled) parts.push(`${recalled} lyric recall`);
   // Spoken, not printed. The tally above already says the score and the page count, and the
   // legend below counts every finish and dangle by name, so a sighted player was reading the
   // same run three times over. A screen reader has neither of those (the strand is aria-hidden
@@ -19579,10 +19583,15 @@ function submitAnswer(song, isTimeout) {
     renderSpiteBanner();
   }
   if (floatingPoolNow()) floatAdjust(correct);
-  // A word-perfect+ recall earns a pen-nib bead (set BEFORE renderBracelet so the
-  // trinket shows on the bead the moment it's earned, not a round late).
+  // Any graded recall earns a pen-nib bead, because the nib says the page was SUNG rather than
+  // named — the fact the strand would otherwise forget, since a "good" line reads on the finished
+  // bracelet exactly like a title typed straight in. The narrower word-perfect mark is the pearl
+  // finish, which braceletFinish still reads off the "perfect" tier alone. "base" is deliberately
+  // left off the strand: it carries no verse bonus, and the keepsake should not be the one surface
+  // rewarding what the rest of the game scores at zero. Set BEFORE renderBracelet so the trinket
+  // shows on the bead the moment it's earned, not a round late.
   const versePlus = lyricMatch && (lyricMatch.tier === "perfect" || lyricMatch.tier === "verse");
-  if (versePlus) roundVerseTier[round - 1] = lyricMatch.tier;
+  if (lyricMatch && lyricMatch.bonus > 0) roundVerseTier[round - 1] = lyricMatch.tier;
   renderBracelet();
 
   // Guided round beat B: the first-ever correct match. Fire it right after the bracelet redraws,
@@ -20596,9 +20605,12 @@ function endGame() {
     if (hintsUsed >= 10) earnPolaroid("traffic-lights");                     // leaned on 10+ hints
     if (score === TOTAL_ROUNDS && currentMode.id === "hard") earnPolaroid("stars");   // 13/13 on Hard
     // Hey kids! — three word-perfect (or better) lyric lines back to back.
+    // Checked against the tier by name, not for a truthy slot: roundVerseTier also carries
+    // "good" lines now (they hang a nib), and those must not count toward a word-perfect run.
     let perfectRun = 0;
     for (let i = 0; i < roundVerseTier.length; i++) {
-      if (roundVerseTier[i]) { if (++perfectRun >= 3) { earnPolaroid("hey-kids"); break; } }
+      const t = roundVerseTier[i];
+      if (t === "perfect" || t === "verse") { if (++perfectRun >= 3) { earnPolaroid("hey-kids"); break; } }
       else perfectRun = 0;
     }
     // Debutation — a debut song and a reputation song both landed this game (the arc, either way).
@@ -21006,7 +21018,7 @@ let verseBonus = 0;              // verse-bonus points this game (fuller lyric r
 let gameVersePerfect = 0;        // word-perfect-or-better lines this game (lifetime versePerfect / milestones)
 let gameWholeVerses = 0;         // whole-verse (4-line) recalls this game (Overachiever fires per-round)
 let verseKeepsake = [];          // { line, word, tier } for each perfect+ recall — results-page anthology
-let roundVerseTier = [];         // per-round verse tier ("perfect"/"verse") → nib bracelet trinket
+let roundVerseTier = [];         // per-round recall tier ("good"/"perfect"/"verse") → nib bracelet trinket
 let lyricAnswerSongs = [];       // titles answered via a lyric line this game (for Someone Has A Favourite Song)
 let gameInk = 0;                 // Long Story Long: characters of real lyric (or title) written this run
 let roundInk = [];               // ...and what each page was worth, for the banner and the results recap
@@ -24674,7 +24686,8 @@ function buildDevApi() {
     },
     /* The strand itself, strung by hand. Every finish and every earned override at once, on
        one sheet, at both the in-run and results sizes — because a bead's FINISH is now a
-       second channel beside album colour (matte for a hint, pearl for a word-perfect line,
+       second channel beside album colour (matte for a hint, pearl for a word-perfect line
+       — note bead 6 sings the nib WITHOUT the pearl, which is a "good" recall,
        frosted for a miss, patched for a miss an Insurance shield took, a bone bead for the
        page an Insurance run died on) and the only
        other way to see them together is to play until the game happens to deal them.
@@ -24685,7 +24698,7 @@ function buildDevApi() {
         const al = STUDIO_ALBUMS.slice(0, 13);
         const done = [true, true, false, true, true, true, false, true, true, true, false, true, true];
         const hinted = []; hinted[3] = true;
-        const verseTiers = []; verseTiers[7] = "perfect"; verseTiers[11] = "verse";
+        const verseTiers = []; verseTiers[5] = "good"; verseTiers[7] = "perfect"; verseTiers[11] = "verse";
         const skullMiss = []; skullMiss[6] = true;
         const shieldSaved = []; shieldSaved[2] = true;   // a miss an Insurance shield took: the patched bead
         const impostorCaught = []; impostorCaught[1] = true;

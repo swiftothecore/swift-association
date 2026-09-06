@@ -5302,7 +5302,7 @@
   .b-skull-line { fill: none; stroke: var(--ink-soft); stroke-linecap: round; opacity: 0.75; }
   .b-bead { fill: var(--bead); stroke: var(--ink); }
   .b-gloss { fill: #fff; opacity: 0.55; }
-  /* pen-nib trinket (word-perfect recall): a vent hole punched out + the slit */
+  /* pen-nib trinket (a page sung rather than named): a vent hole punched out + the slit */
   .b-nib-hole { fill: var(--paper); }
   .b-nib-slit { fill: none; stroke: var(--ink); opacity: 0.7; stroke-linecap: round; }
   .b-halo {

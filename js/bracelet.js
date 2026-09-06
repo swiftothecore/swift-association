@@ -19,7 +19,7 @@ export function starPath(cx, cy, rOut, rIn) {
 // Each draws a trinket centred at (cx,cy) with "radius" r, in the bracelet's bead
 // style (fill via .b-bead → var(--bead); the caller wraps the trinket in a group
 // carrying the album --bead tint). `sw` is the ink stroke width. "star" is the
-// default keepsake; "nib" is reserved for word-perfect verse rounds and "stopwatch"
+// default keepsake; "nib" is reserved for a page won by singing the line and "stopwatch"
 // for a Ruthless page named on sight; the rest are player-selectable via
 // settings.masteryTrinket.
 function cFill(d, sw) { return `<path d="${d}" class="b-bead" stroke-width="${sw}" stroke-linejoin="round"/>`; }
@@ -169,6 +169,12 @@ export function randomTrinketForBead(seed, i) {
   return RANDOM_TRINKET_IDS[h % RANDOM_TRINKET_IDS.length];
 }
 
+// Which recall tiers hang the pen nib: every tier gradeLyricRecall hands back. The nib means
+// "this page was sung, not named", so it belongs on any graded recall — the pearl finish is the
+// separate, narrower mark for a word-perfect one. gradeLyricRecall's "base" tier never reaches
+// here: app.js only records a tier the run was actually paid a verse bonus for.
+const NIB_TIERS = new Set(["good", "perfect", "verse"]);
+
 // One source of truth for the finish and dangle meanings. The renderer and the
 // results-page text recap both read these helpers, so the visual strand cannot
 // quietly acquire a meaning that its accessible explanation does not know.
@@ -194,7 +200,7 @@ export function braceletTrinketId(i, opts = {}) {
   if ((opts.impostorCaught || [])[i]) return "devil";
   if ((opts.riskWon || [])[i]) return "horseshoe";
   if ((opts.snapPage || [])[i]) return "stopwatch";
-  if (tier === "perfect" || tier === "verse") return "nib";
+  if (NIB_TIERS.has(tier)) return "nib";
   if (opts.trinket === "random") return randomTrinketForBead(opts.trinketSeed || 0, i);
   return opts.trinket && TRINKETS[opts.trinket] ? opts.trinket : "star";
 }
@@ -595,8 +601,9 @@ function buildSingleRowBraceletSVG(results, activeRound, freshIndex, albums, opt
   const tints = (opts && opts.beadTints) || [];
   // per-round flags: was a hint taken that round? the bead is strung sanded rather than glossy.
   const hinted = (opts && opts.hinted) || [];
-  // per-round verse tier ("perfect"/"verse"): both hang the reserved pen-nib trinket, and a
-  // word-perfect one is additionally strung as a pearl — the two tiers used to look identical.
+  // per-round recall tier ("good"/"perfect"/"verse"): all three hang the reserved pen-nib
+  // trinket, because the nib's meaning is that the page was sung rather than named. A
+  // word-perfect one is additionally strung as a pearl, which is the narrower second step.
   const verseTiers = (opts && opts.verseTiers) || [];
   // per-round flag (Impostor challenge): this bead flagged a fake, so it dangles a devil.
   const impostorCaught = (opts && opts.impostorCaught) || [];
@@ -705,9 +712,9 @@ function buildSingleRowBraceletSVG(results, activeRound, freshIndex, albums, opt
       svg += ponyBead(x, y, fill, sc, rot, finish, u, i);
       const fresh = i === freshIndex;
       const delay = fresh ? "" : ` style="animation-delay:${(-(i * 0.9) % 5.5).toFixed(2)}s"`;
-      // Verse rounds always hang the reserved pen-nib; otherwise the player's chosen trinket
+      // Sung pages always hang the reserved pen-nib; otherwise the player's chosen trinket
       // (default star), drawn by the shared TRINKETS renderer.
-      const isNib = tier === "perfect" || tier === "verse";
+      const isNib = NIB_TIERS.has(tier);
       const id = impostorCaught[i] ? "devil" : riskWon[i] ? "horseshoe"
         : snapPage[i] ? "stopwatch" : (isNib ? "nib" : defaultTrinket(i));
       const drop = (compact ? 18 : 32) * Math.max(sc, 0.55) + (i % 2 ? 8 * sc : 0);
