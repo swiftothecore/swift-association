@@ -443,7 +443,11 @@
      where thirty-one numerals are meant to sit on one line. Courier's figures
      are lining and monospaced, so the grid's fixed 26.3 column pitch and the
      numerals inside it finally agree with each other. */
-  .di-calendar text { font-family: var(--type); }
+  .di-calendar text {
+    font-family: var(--type);
+    -webkit-user-select: none;
+    user-select: none;
+  }
   /* The title is sized by CAP HEIGHT, not by the number: Courier Prime's caps
      are about 0.57em against Georgia's 0.69em, so matching the old 17px on
      paper takes roughly 19. SEPTEMBER, the longest month, then sets the block
@@ -684,33 +688,11 @@
     70%  { opacity: calc(var(--wisp) * 0.33); }
     100% { opacity: 0; transform: translateY(-12px) scaleY(1.15); }
   }
-  /* ---------- The mug: the tap, the ripple and the pour (see app.js wireDeskMug) ----------
+  /* ---------- The mug: the tap and ripple (see app.js wireDeskMug) ----------
      The desk layer is pointer-events:none as a whole, so the china turns hit testing back on
      for itself and nothing else. No hover state and no hand cursor: this is furniture you
      happen to be able to fidget with, not a control. */
   .mg-hit { pointer-events: auto; cursor: default; }
-  /* The pour forms by running its dash offset back, and the offset is written by JS on every
-     tap. The transition is what makes one tap out of a thousand visible at all: the sliver it
-     adds is a fifth of a percent of the stroke, which reads as the foam creeping rather than
-     as anything moving.
-     Hidden until app.js says otherwise, and hidden HERE rather than only in the paint: the
-     markup carries the whole clef, so a cup whose count has not been read yet (the first
-     frames of a load, or a desk where the paint bailed out) would otherwise flash the
-     finished pour at a player who has not earned a drop of it. */
-  .mg-pour-line { opacity: 0; transition: stroke-dashoffset 520ms ease-out; }
-  /* app.js writing the dash it read off the notebook rather than pouring anything: the crema
-     was already like this when the page opened, so there is nothing to creep. */
-  .mg-pour.is-placing .mg-pour-line { transition: none; }
-  body[data-reduce-motion="on"] .mg-pour-line { transition: none; }
-  /* The thousandth tap. The finished clef flares white-hot for a moment, the way fresh crema
-     does before it settles into the brew, then sits there for good. */
-  .mg-pour.is-poured .mg-pour-line { animation: mugPoured 1600ms ease-out 1; }
-  @keyframes mugPoured {
-    0%   { stroke: #fff6e4; stroke-width: 3.4; }
-    45%  { stroke: #f6dcb4; stroke-width: 2.9; }
-    100% { stroke: #e6bd88; stroke-width: 2.5; }
-  }
-  body[data-reduce-motion="on"] .mg-pour.is-poured .mg-pour-line { animation: none; }
   /* ONE TAP ON THE SURFACE (markup and the reasoning in index.html).
      Everything below hangs off .is-rippling on the mug's <svg>, not on one group, because a
      tap moves the wave AND the coffee the wave is crossing, and those are different elements.
@@ -768,12 +750,10 @@
      back, then still: the direction comes from app.js as a unit vector, and --amp is how much
      of it each layer takes. The reflection moves most because a reflection is the first thing
      a ripple takes apart, the bubbles next because they ride waves rather than resist them,
-     the crema swirl less because it is half sunk in the brew, and the poured clef least of
-     all, since a finished pour has set into the foam. */
+     and the crema swirl less because it is half sunk in the brew. */
   .mg-window    { --amp: 1.45; }
   .mg-bubbles   { --amp: 1; }
   .mg-crema     { --amp: 0.62; }
-  .mg-pourslosh { --amp: 0.4; }
   .di-mug svg.is-rippling .mg-slosh { animation: mugSlosh 900ms cubic-bezier(0.24, 0.8, 0.3, 1) 1; }
   @keyframes mugSlosh {
     0%   { transform: translate(0, 0); }

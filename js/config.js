@@ -3351,10 +3351,8 @@ export const ACHIEVEMENTS = [
   { id: "tap-every-page-mark", name: "Marked Every Page", desc: "Poke the little mark beside every page's title", secret: true, icon: "manicule" },
   /* The third touchable thing, and the only one that isn't on the page at all: the mug that has
      been sitting on this desk since the first screen. A thousand taps is deliberately absurd,
-     and what makes it findable is that the crema answers from the very first one, resolving a
-     little further toward a poured treble clef with every tap, so the reward is visible long
-     before it is finished. Counted in METRICS_KEY; the pour is redrawn from that count on
-     every load, so it survives a reload and stays on the desk forever after. */
+     and the coffee answers every one with a ripple and a shifting raft of bubbles. Counted in
+     METRICS_KEY so progress survives a reload and an interrupted unlock can be backfilled. */
   { id: "tap-desk-mug-1000-times", name: "The Thousandth Cup", desc: "Tap the coffee on the desk 1,000 times", tier: 2, secret: true, icon: "placeholder" },
   { id: "play-easy-3-times-in-row",   name: "Safe & Sound",     desc: "Play Easy three times in a row",       secret: false, icon: "lantern", sitting: true, earn: { cat: "difficulty", diff: "easy" } },
   { id: "beat-personal-best-score",          name: "R-E-V-E-N-G-E",    desc: "Beat your own best score on any board", secret: false, icon: "megaphone", sitting: true, earn: { cat: "difficulty" } },

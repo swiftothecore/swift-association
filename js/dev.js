@@ -1002,7 +1002,7 @@ export function initDev(api) {
     row("mug taps",
         btn("+100", () => toast(`mug taps = ${api.metrics.setMug(api.metrics.mug() + 100)}`)),
         btn("999", () => toast(`mug taps = ${api.metrics.setMug(999)}`)),
-        btn("full pour", () => toast(`mug taps = ${api.metrics.setMug(1000)}`)),
+        btn("1000", () => toast(`mug taps = ${api.metrics.setMug(1000)}`)),
         btn("reset mug", () => toast(`mug taps = ${api.metrics.setMug(0)}`), "warn")),
     row("coffee raft",
         btn("reshuffle", () => toast(`${api.mug.raft()} bubbles dealt`)),

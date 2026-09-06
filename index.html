@@ -1134,9 +1134,6 @@ if (location.pathname.endsWith('/index.html')) {
         <filter id="mgSoft" x="-25%" y="-25%" width="150%" height="150%"><feGaussianBlur stdDeviation="2.6"/></filter>
         <filter id="mgHaze" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="1.7"/></filter>
         <filter id="mgWisp" x="-60%" y="-30%" width="220%" height="160%"><feGaussianBlur stdDeviation="0.9"/></filter>
-        <!-- crema is poured, not inked: the pour's edges have to bleed into the brew or the
-             clef reads as a line drawn on top of the coffee rather than foam sitting in it -->
-        <filter id="mgFoam" x="-40%" y="-30%" width="180%" height="160%"><feGaussianBlur stdDeviation="0.62"/></filter>
         <!-- water has no hard edges. Without this the wave fronts are hoops drawn on the
              coffee; with it they are light bending on a surface. -->
         <filter id="mgRipple" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="0.5"/></filter>
@@ -1224,23 +1221,6 @@ if (location.pathname.endsWith('/index.html')) {
              bubbles ride a wave rather than resist it, and they take their catchlights with
              them; the shove sits on this group and each bubble's wander sits inside it. -->
         <g class="mg-slosh mg-bubbles"></g>
-        <!-- THE POUR (see app.js wireDeskMug). A treble clef in crema, drawn as ONE
-             continuous stroke in the order a hand draws a clef: up out of the bottom tail,
-             up the stem, over the top hook, down the left, then right through the crossing
-             and round the loop into the spiral. One stroke is not a stylistic preference:
-             the pour is revealed by running its dash offset back, so the mark forms the way
-             it was poured, and a second subpath would make it form in two disconnected halves.
-             Poured toward the drinking side rather than dead centre, which is where the milk
-             actually lands, and is also the only part of this cup that is ever on screen: the
-             prop hangs half off the left edge of the window. Off centre, then, but only just:
-             pushed any further toward the handle and the clef stops being foam floating on a
-             cup and starts being a mark crowding the china. -->
-        <g class="mg-slosh mg-pourslosh">
-        <g class="mg-pour" filter="url(#mgFoam)" transform="translate(68 66) scale(0.9) rotate(7 13.5 25)">
-          <path class="mg-pour-line" fill="none" stroke="#e6bd88" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
-                d="M9.4 44.6 C8.2 47.8 13.6 49.2 15.4 46 C16.4 44.2 16.2 41.6 16 39 C15.4 30 15.4 17 16.2 9 C16.6 4.6 13.8 2.6 11.6 5.4 C8.4 9.4 6.2 14.6 6.4 20.2 C6.6 24.6 9.8 27.4 14 29.4 C18.4 31.4 21 33.4 20.4 36.6 C19.8 40.2 14.4 41.4 10.6 39 C6.8 36.6 6.6 32.4 9.6 30.6 C11 29.8 12.2 30.2 12.6 31.2"/>
-        </g>
-        </g>
         <!-- WHAT A TAP DOES TO THE SURFACE. Three things happen at once, and it is the three
              together that read as coffee rather than as a cartoon ring:
                1. the dimple, the dark press where the finger went in, filling back almost at
@@ -1250,8 +1230,8 @@ if (location.pathname.endsWith('/index.html')) {
                   inside the brew's clip, so they die against the china rather than running
                   out over the rim;
                3. the surface they are crossing, which moves: the reflection, the bubble raft,
-                  the crema swirl and the pour all get shoved away from the tap and settle back
-                  through a smaller overshoot, each by a different amount (see the --amp values
+                  and the crema swirl all get shoved away from the tap and settle back through
+                  a smaller overshoot, each by a different amount (see the --amp values
                   in styles.css). A ripple that leaves the coffee untouched is a ring drawn on
                   a photograph, which is exactly what the first pass looked like.
              The outer group is moved to the tap; app.js maps the click through the SVG's own

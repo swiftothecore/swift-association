@@ -906,7 +906,7 @@ export function recordGameTally(rounds) {
 //   noTimeoutStreak — consecutive non-infinite games finished with zero timeouts
 //   correctRunStreak — correct answers in a row ACROSS game boundaries (see bumpCorrectRunStreak)
 //   scarfClicks — lifetime taps on the scarf margin doodle
-//   mugSips — lifetime taps on the desk mug (the coffee-pour egg)
+//   mugSips — lifetime taps on the desk mug
 //   marksTapped — { [markKind]: true } for each page-header mark poked, lifetime
 export function loadMetrics() {
   const d = { fastestMs: null, answerSumMs: 0, answerN: 0, lyricLines: 0, versePerfect: 0, wholeVerses: 0, bestVerseBonus: 0, roundsTotal: 0, roundsCorrect: 0, dailyPlayed: 0, dailyPerfect: 0, noTimeoutStreak: 0, correctRunStreak: 0, scarfClicks: 0, mugSips: 0, marksTapped: {}, selfTitled: {} };
@@ -961,9 +961,8 @@ export function bumpScarfClicks() {
   return m.scarfClicks;
 }
 // One tap on the desk mug. Lifetime, and kept here for the same reason the scarf's tally is:
-// it is a count of a thing the player did, spread over as many sittings as they like. What it
-// buys is the pour that forms in the crema (see app.js MUG_POUR_SIPS), so it is read on every
-// load, not only when it is written.
+// it is a count of a thing the player did, spread over as many sittings as they like. It is
+// read on every load so an interrupted live unlock can be backfilled.
 export function bumpMugSips() {
   const m = loadMetrics();
   m.mugSips = (m.mugSips || 0) + 1;
