@@ -8178,6 +8178,47 @@
     border-bottom: 1px dotted var(--ink-soft); border-radius: 0; padding: 0; cursor: pointer; }
   .ach-names-more:hover { border-bottom-color: var(--ink); }
 
+  /* ---- "also found": this run's polaroids and stickers, under the charms ----
+     Deliberately quieter than the charm recap above it and separated by a rule: these are
+     found, not earned, and must not read as a second row of score. The objects are drawn as
+     themselves rather than as chips — a sticker at its 64px floor (below that the crowded
+     ones stop being their object) and a polaroid in the toast's mini frame, still veiled,
+     because on this screen it genuinely is still developing. */
+  .found-recap { margin: 14px 0 0; padding: 12px 0 0; border-top: 1px dotted color-mix(in srgb, var(--ink-soft) 32%, transparent); }
+  .ach-recap--found-only .found-recap { margin: 0; padding: 0; border-top: 0; }
+  .found-recap-lab { margin: 0 0 9px; }
+  .found-recap-row { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 10px 12px; }
+  .found-chip { background: none; border: none; padding: 0; border-radius: 0; cursor: pointer;
+    font: inherit; line-height: 0; flex: none;
+    transition: transform 0.12s ease, filter 0.16s ease; }
+  .found-chip:hover { transform: translateY(-2px); }
+  .found-chip:focus-visible { outline: 2px solid var(--ink-accent); outline-offset: 3px; }
+  .found-chip--sticker .sticker { width: 64px; }
+  /* The toast's frame, restated here rather than shared: that copy is scoped to .toast so a
+     change to the notification cannot quietly restyle the results card. */
+  .found-chip--polaroid .pol-thumb {
+    display: block; width: 54px; box-sizing: border-box;
+    background: #f7f2e5; border: 1px solid #d8cfba; border-radius: 2px;
+    padding: 3px 3px 8px; box-shadow: 0 2px 5px rgba(43, 39, 34, 0.22);
+    transform: rotate(-4deg);
+  }
+  .found-chip--polaroid .pol-thumb-art {
+    display: block; position: relative; width: 100%; aspect-ratio: 1 / 1;
+    border-radius: 1px; overflow: hidden; background: #0c0a07;
+  }
+  .found-chip--polaroid .pol-thumb-art svg { display: block; width: 100%; height: 100%; }
+  .found-chip--polaroid .pol-thumb-veil { position: absolute; inset: 0; background: #0c0a07; opacity: 0.5; }
+  .found-chip.found-folded { display: none; }
+  .found-chip--more { align-self: center; font-family: var(--type); font-size: calc(10px + var(--text-size-adjust)); letter-spacing: 1px;
+    text-transform: uppercase; color: var(--ink-soft); border: none; border-bottom: 1px dotted var(--ink-soft);
+    background: none; border-radius: 0; padding: 2px 1px; cursor: pointer; }
+  .found-chip--more:hover { color: var(--ink); border-bottom-color: var(--ink); }
+  .found-recap-names { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 0;
+    list-style: none; padding: 0; font-family: var(--hand); font-size: calc(15px + var(--text-size-adjust));
+    line-height: 1.25; color: var(--ink-soft); margin: 9px 0 0; }
+  .found-recap-name-item { display: inline-flex; align-items: baseline; min-width: 0; }
+  .found-recap-name-item:not(:first-child)::before { content: "\2022"; color: var(--ink-soft); margin: 0 0.4em; }
+
   /* charm tiles — used by the grouped grid on the Charm Collection page */
   .ach-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 6px; }
   .ach {
@@ -10002,6 +10043,7 @@
   .recap-band > * + * { border-left: 1px dashed rgba(43, 39, 34, 0.18); }
   .recap-band--solo > * { text-align: center; }
   .recap-band--solo .ach-recap-row { justify-content: center; }
+  .recap-band--solo .found-recap-row, .recap-band--solo .found-recap-names { justify-content: center; }
   /* A lone half would otherwise stretch two skills across the whole card. */
   .recap-band--solo .sr-grid, .recap-band--solo .sr-mrow { max-width: 440px; margin-left: auto; margin-right: auto; }
   .recap-band--moment { grid-template-columns: 1fr; }

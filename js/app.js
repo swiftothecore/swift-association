@@ -2537,6 +2537,8 @@ function infiniteTabHTML() {
 /* ---------- Achievements ---------- */
 let earnedAchievements = {};   // persisted: { id: "YYYY-MM-DD" }
 let newlyUnlocked = [];        // ids unlocked this game (for the results recap)
+let newlyFound = [];           // { kind, id } polaroids + stickers found this game, in the order
+                               // they landed (for the results recap's "also found" line)
 let lastSkillFold = null;      // { delta, res } from this game's foldSkillXp — the results skills recap
 
 // `seed` is the achievement's id, and it shapes the highlighter smudge behind the glyph:
@@ -3205,6 +3207,64 @@ function syncRecapBand() {
   band.classList.toggle("recap-band--solo", live.length === 1);
 }
 
+// ---- "also found": the polaroids and stickers this run turned up ----
+// Charms are earned, so they get "newly unlocked" and a score-shaped recap. Keepsakes are
+// FOUND: a polaroid is a discovery and a sticker is a noticing, and neither is a measure of
+// how the run went, so they sit under their own quieter label rather than being folded into
+// the charm count. They need the results page at all because their toast is the worst-timed
+// one in the game — foldRunStickers fires as the results screen arrives, and a polaroid
+// earned mid-run is black film for the next thirteen minutes, so the toast is the only
+// pointer the player gets toward a drawer they now have a reason to open.
+const FOUND_RECAP_SHOWN = 3;   // objects shown before "+N" unfolds the rest in place
+// (3, not more: these are drawn at 64px — the sticker floor, see the stickers skill — and a
+// fourth will not sit beside them in the band's half-width column.)
+
+// What this run found, in the order it landed, filtered to things that exist and are still
+// held. Deduped on kind+id, since a trigger may fire on several pages of the same run.
+function foundRecapItems() {
+  const pol = loadKeepsakes();
+  const sti = loadStickers();
+  const seen = {};
+  const out = [];
+  for (const f of newlyFound) {
+    const key = f.kind + ":" + f.id;
+    if (seen[key]) continue;
+    seen[key] = true;
+    if (f.kind === "polaroid") {
+      const p = POLAROID_BY_ID[f.id];
+      if (p && pol[f.id]) out.push({ kind: "polaroid", id: f.id, name: p.name, how: p.how, art: p.art, state: polaroidState(f.id, pol) });
+    } else {
+      const st = STICKER_BY_ID[f.id];
+      if (st && sti[f.id]) out.push({ kind: "sticker", id: f.id, name: st.name, how: st.how, sticker: st });
+    }
+  }
+  return out;
+}
+
+// The found line's markup: a label, the objects themselves, then their names underneath.
+// A polaroid is drawn as the toast's mini frame, veil and all, because on this screen it IS
+// still developing and saying so is the whole point of showing it here.
+function foundRecapHTML(items) {
+  const chips = items.map((f, i) => {
+    const art = f.kind === "sticker"
+      ? stickerMarkup(f.sticker, false)
+      : `<span class="pol-thumb" aria-hidden="true"><span class="pol-thumb-art">${f.art || ""}` +
+        (f.state === "developed" ? "" : `<span class="pol-thumb-veil"></span>`) + `</span></span>`;
+    const tip = f.how ? ` data-tip="${escapeHtml(f.how)}" data-tip-delay="120"` : "";
+    return `<button type="button" class="found-chip found-chip--${f.kind}${i >= FOUND_RECAP_SHOWN ? " found-folded" : ""}" ` +
+      `aria-label="${escapeHtml(f.name)} · ${f.kind}"${tip}>${art}</button>`;
+  }).join("");
+  const extra = items.length > FOUND_RECAP_SHOWN
+    ? `<button type="button" class="found-chip--more">+${items.length - FOUND_RECAP_SHOWN}</button>`
+    : "";
+  const names = items.map((f) => `<li class="found-recap-name-item"><span class="found-recap-name">${escapeHtml(f.name)}</span></li>`).join("");
+  return `<div class="found-recap">` +
+    `<p class="sr-lab found-recap-lab">also found · ${items.length}</p>` +
+    `<div class="found-recap-row">${chips}${extra}</div>` +
+    `<ul class="found-recap-names" aria-label="Keepsakes found this game">${names}</ul>` +
+    `</div>`;
+}
+
 const ACH_RECAP_SHOWN = 5;   // unlock charms shown before "+N" points at the collection
 // (5, not 6: six charms plus the overflow count wrap to a second line in the band's half-width column)
 function renderResultRecap() {
@@ -3212,7 +3272,8 @@ function renderResultRecap() {
   if (!el) return;
   if (dailyResultIsSealed()) { el.style.display = "none"; el.innerHTML = ""; syncRecapBand(); return; }
   const ids = [...new Set(newlyUnlocked)].filter((id) => ACH_BY_ID[id] && earnedAchievements[id]);
-  if (!ids.length) { el.style.display = "none"; el.innerHTML = ""; syncRecapBand(); return; }
+  const found = foundRecapItems();
+  if (!ids.length && !found.length) { el.style.display = "none"; el.innerHTML = ""; syncRecapBand(); return; }
   // The charms carry no name inside their buttons here: at this size six names would fill
   // the column and blow the band's height out. Individually linked names sit underneath,
   // and each charm keeps its name in the tooltip and its aria-label.
@@ -3228,10 +3289,23 @@ function renderResultRecap() {
   const extra = folded
     ? `<button type="button" class="ach-chip--more">+${ids.length - ACH_RECAP_SHOWN}</button>`
     : "";
-  el.innerHTML = `<p class="sr-lab ach-recap-lab">newly unlocked · ${ids.length}</p>` +
-    `<div class="ach-recap-row">${chips}${extra}</div>` +
-    `<ul class="ach-recap-names" aria-label="Unlocked achievement names">${unlockNameLine(ids)}</ul>`;
+  const charmHTML = ids.length
+    ? `<p class="sr-lab ach-recap-lab">newly unlocked · ${ids.length}</p>` +
+      `<div class="ach-recap-row">${chips}${extra}</div>` +
+      `<ul class="ach-recap-names" aria-label="Unlocked achievement names">${unlockNameLine(ids)}</ul>`
+    : "";
+  el.innerHTML = charmHTML + (found.length ? foundRecapHTML(found) : "");
+  el.classList.toggle("ach-recap--found-only", !ids.length);
   el.style.display = "";
+
+  // Every object in the found line is the same request — "show me the drawer" — so they all
+  // go to the one place, and the "+N" unfolds the rest in place first rather than sending
+  // the player off to find them.
+  el.querySelectorAll(".found-chip").forEach((c) => c.addEventListener("click", () => openKeepsakes()));
+  el.querySelector(".found-chip--more")?.addEventListener("click", (e) => {
+    el.querySelectorAll(".found-folded").forEach((c) => c.classList.remove("found-folded"));
+    e.currentTarget.remove();
+  });
 
   // A charm and its handwritten name are two views of the same unlock. Hovering or
   // keyboard-focusing either keeps that pair vivid and quietens the other unlocks.
@@ -4727,6 +4801,7 @@ function earnPolaroid(id) {
   if (earned[id]) return false;                      // already have it
   earned[id] = new Date().toISOString();
   saveKeepsakes(earned);
+  newlyFound.push({ kind: "polaroid", id });
   if (!dailyResultIsSealed()) showKeepsakeToast(p);
   updateKeepsakesNav();
   refreshKeepsakes();                                // if the wall is open, show it developing
@@ -4986,8 +5061,7 @@ function refreshStickers() {
 }
 
 // Earn a sticker: stamp the unlock date, fire the charm-style toast and chime, refresh the
-// drawer. Idempotent, so a trigger can fire freely on every run. NOTHING calls this yet except
-// the dev tools; the fifteen triggers are a separate pass (see STICKERS.md).
+// drawer. Idempotent, so a trigger can fire freely on every run.
 function earnSticker(id) {
   if (devNoLog) return false;
   const st = STICKER_BY_ID[id];
@@ -4996,6 +5070,7 @@ function earnSticker(id) {
   if (earned[id]) return false;                      // already stuck down
   earned[id] = new Date().toISOString();
   saveStickers(earned);
+  newlyFound.push({ kind: "sticker", id });
   if (!dailyResultIsSealed()) {
     showStickerToast(st);
     playUnlockChime();
@@ -6719,6 +6794,7 @@ function startBonusGame(g, lensId = null) {
      which the shelf never calls. A Ruthless run ends on that screen, so without this it would
      open showing the charms and the skill fold of whatever main run came before it. */
   newlyUnlocked = [];
+  newlyFound = [];
   lastSkillFold = null;
   // Same reason: an archived-Daily visit belongs to how the last results screen was
   // reached, not to whatever the shelf is about to play.
@@ -12098,6 +12174,7 @@ function resetRunState() {
   gameResolveXp = 0;
   roundAnswerAlbums = [];
   newlyUnlocked = [];
+  newlyFound = [];
   lastSkillFold = null;
   usedWords = [];
   recentEras = [];
@@ -26193,6 +26270,21 @@ function buildDevApi() {
         saveKeepsakes(e); refreshKeepsakes(); updateKeepsakesNav(); return POLAROIDS.length;
       },
       open: () => openKeepsakes(),                             // jump to the polaroid wall
+      // Preview the results screen's "also found" line without hitting a trigger. Takes the
+      // first `n` polaroids and the first `n` stickers, GRANTS any not already held (the recap
+      // only draws what the store actually holds, so a fake run of it would show nothing), and
+      // puts it on the results card. Covers both shelves at once because the line is shared.
+      recap: (n = 2) => {
+        n = Math.max(1, n | 0);
+        const pol = loadKeepsakes(), sti = loadStickers(), now = new Date().toISOString();
+        newlyFound = [];
+        for (const p of POLAROIDS.slice(0, n)) { if (!pol[p.id]) pol[p.id] = now; newlyFound.push({ kind: "polaroid", id: p.id }); }
+        for (const st of STICKERS.slice(0, n)) { if (!sti[st.id]) sti[st.id] = now; newlyFound.push({ kind: "sticker", id: st.id }); }
+        saveKeepsakes(pol); saveStickers(sti); updateKeepsakesNav(); refreshKeepsakes();
+        showScreen("results");
+        renderResultRecap();
+        return newlyFound.length + " found on the results card";
+      },
       // The badge on the icon counts what is earned but unlooked-at, and the drawer clears it
       // on open, so the only way to see the badge twice is to put things back to unseen.
       // `unseen` reads it without opening anything (opening would clear it under you).

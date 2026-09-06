@@ -928,6 +928,7 @@ export function initDev(api) {
         btn("reset mastery", () => { api.mastery.reset(); toast("mastery reset"); }, "warn"))));
 
   // ---- Collections and alternate shelves ------------------------------------
+  const foundN = num(2);
   const polaroidSel = select(api.keepsakes.list(), (p) => p.id, (p) => p.name);
   const stickerSel = select(api.stickers.list(), (s) => s.id, (s) => s.name);
   const albumSel = select(api.STUDIO_ALBUMS, (x) => x, (x) => x);
@@ -941,10 +942,13 @@ export function initDev(api) {
         btn("open keepsakes", () => api.keepsakes.open())),
     row(btn("all developed", () => { api.keepsakes.all(); toast("all polaroids developed"); }),
         btn("clear keepsakes", () => { api.keepsakes.reset(); toast("keepsakes cleared"); }, "warn")),
-    // Stickers share the keepsakes drawer but not the polaroid grid. No trigger is wired yet,
-    // so these buttons are the only way to see one earned. "unlock" is the real path, toast and
-    // chime included; the other two write the store, for flipping the whole shelf between the
-    // black silhouettes and the finished set.
+    // The results screen's "also found" line, which otherwise only appears on a run that
+    // happened to turn something up. The count is per shelf, so 2 draws four objects and 4
+    // draws eight, which is where the "+N" unfold starts.
+    row("found recap", foundN, btn("show on results", () => toast(api.keepsakes.recap(+foundN.value)))),
+    // Stickers share the keepsakes drawer but not the polaroid grid. "unlock" is the real path,
+    // toast and chime included; the other two write the store, for flipping the whole shelf
+    // between the black silhouettes and the finished set.
     row(stickerSel, btn("unlock", () => { api.stickers.earn(stickerSel.value); toast("sticker: " + stickerSel.value); }),
         btn("relock", () => { api.stickers.remove(stickerSel.value); toast("relocked " + stickerSel.value); }),
         btn("open drawer", () => api.stickers.open())),
