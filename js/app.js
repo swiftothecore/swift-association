@@ -22447,6 +22447,24 @@ const SETTINGS_PANELS = [
 // player would be thrown back to Notebook each time they ticked a box.
 let settingsPanel = SETTINGS_PANELS[0].id;
 
+function stepSettingsPanel(step) {
+  const i = SETTINGS_PANELS.findIndex((p) => p.id === settingsPanel);
+  const next = SETTINGS_PANELS[(i + step + SETTINGS_PANELS.length) % SETTINGS_PANELS.length];
+  if (next) showSettingsPanel(next.id);
+}
+
+// Up and Down always turn the settings divider, even when focus is on a control or
+// the cursor is elsewhere in the modal. Capture them before a focused slider/select
+// or the browser can use the same keystroke to change a value or scroll the page.
+function handleSettingsPageArrow(e) {
+  if (!$("settingsModal").classList.contains("open")) return;
+  const step = { ArrowDown: 1, ArrowUp: -1 }[e.key];
+  if (!step) return;
+  e.preventDefault();
+  e.stopPropagation();
+  stepSettingsPanel(step);
+}
+
 function renderSettingsTabs() {
   const rail = $("settingsTabs");
   if (!rail) return;
@@ -22466,7 +22484,7 @@ function renderSettingsTabs() {
   if (rail.dataset.wired) return;
   rail.dataset.wired = "1";
   rail.addEventListener("keydown", (e) => {
-    const step = { ArrowDown: 1, ArrowRight: 1, ArrowUp: -1, ArrowLeft: -1 }[e.key];
+    const step = { ArrowRight: 1, ArrowLeft: -1 }[e.key];
     let next = null;
     if (step) {
       const i = SETTINGS_PANELS.findIndex((p) => p.id === settingsPanel);
@@ -27432,6 +27450,7 @@ async function init() {
   $("customModalScrim").addEventListener("click", closeCustomModal);
   $("customModalOkBtn").addEventListener("click", closeCustomModal);
   $("settingsModal").addEventListener("wheel", routeSettingsWheel, { passive: false });
+  document.addEventListener("keydown", handleSettingsPageArrow, true);
   // Focus traps keep Tab and Shift+Tab cycling through every control owned by each dialog.
   // Settings uses the shell because its divider tabs sit beside the scrolling card.
   $("settingsModal").addEventListener("keydown", (e) => {

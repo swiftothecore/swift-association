@@ -10584,7 +10584,9 @@
     content: ""; position: absolute; top: -1px; bottom: -1px; right: -1px; width: 5px;
     background: var(--tab-ink, var(--ink-soft)); border-radius: 0 4px 4px 0;
   }
-  .set-tab:focus-visible { outline: 2px solid var(--ink-accent); outline-offset: 1px; }
+  /* The open divider already has a reinforced coloured edge, so keyboard paging
+     does not need a second yellow browser-style border around it. */
+  .set-tab:focus-visible { outline: none; }
   body[data-reduce-motion="on"] .set-tab { transition: none; }
   /* Muted stationery-divider tints. Deliberately washed out: they are wayfinding,
      not decoration, and must never out-shout the page they open. The -deep pair is
