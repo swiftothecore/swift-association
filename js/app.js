@@ -4979,9 +4979,12 @@ function renderKeepsakesPage() {
     const j = polaroidJitter(p.id);
     // An earned tile says what you did for it, the way the sticker shelf and the unlock toast
     // do: the caption is a quip, not an explanation, and by the time a photo has developed the
-    // game that earned it is often several sessions back. A locked cell stays the question.
+    // game that earned it is often several sessions back. The name is NOT in here: the frame
+    // prints it an inch below, so a tip that opened with it spent itself on the line the eye
+    // had just read. A locked cell stays the question.
+    const feat = p.how || p.name;
     const label = state === "locked" ? "a keepsake not yet earned"
-      : (state === "developing" ? p.name + " (developing)" : p.name) + (p.how ? " · " + p.how : "");
+      : state === "developing" ? feat + " (still developing)" : feat;
     return `<div class="keep-cell" data-id="${p.id}" data-state="${state}" style="--dy:${j.dy}px;--dx:${j.dx}px" title="${escapeHtml(label)}">` +
       keepsakePolaroidHTML(p, { earned, state, tilt: j.tilt, small: true }) + `</div>`;
   }).join("");
@@ -5317,7 +5320,9 @@ function stickerShelfHTML() {
 
   const cells = STICKERS.map((st) => {
     const locked = !earned[st.id];
-    const label = !locked ? st.name + " · " + st.sub + " · " + st.how
+    // Earned: the tip is the feat ALONE. The name and the source are already printed in the
+    // caption an inch below, so repeating them there spent the tip on what the eye had just read.
+    const label = !locked ? st.how
       : (hinting && st.hint) ? st.hint
       : "a sticker not yet earned";
     const cap = locked ? "" :
