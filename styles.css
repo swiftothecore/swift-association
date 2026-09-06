@@ -8172,20 +8172,28 @@
   .ach-recap .ach-chip { display: inline-flex; align-items: center; justify-content: center;
     width: 30px; height: 30px; flex: none;
     background: none; border: none; padding: 0; border-radius: 50%; cursor: pointer;
-    font: inherit; transition: transform 0.12s ease; }
-  .ach-recap .ach-chip:hover { transform: translateY(-2px); }
+    font: inherit; transition: transform 0.12s ease, opacity 0.16s ease, filter 0.16s ease; }
+  .ach-recap .ach-chip:hover, .ach-recap .ach-chip.ach-recap-target--active { transform: translateY(-2px); }
   .ach-recap .ach-chip:focus-visible { outline: 2px solid var(--ink-accent); outline-offset: 2px; }
   .ach-recap .ach-chip .charm { width: 100%; height: 100%; }
+  .ach-recap .ach-recap-target--muted { opacity: 0.24; filter: grayscale(0.9); }
   /* Charms past the cap, waiting on the overflow count to unfold them in place. */
   .ach-recap .ach-chip.ach-folded { display: none; }
   .ach-recap .ach-chip--more { font-family: var(--type); font-size: calc(10px + var(--text-size-adjust)); letter-spacing: 1px;
     text-transform: uppercase; color: var(--ink-soft); border: none; border-bottom: 1px dotted var(--ink-soft);
     background: none; border-radius: 0; padding: 2px 1px; margin-left: 3px; cursor: pointer; }
   .ach-recap .ach-chip--more:hover { color: var(--ink); border-bottom-color: var(--ink); }
-  .ach-recap-names { font-family: var(--hand); font-size: calc(15px + var(--text-size-adjust)); line-height: 1.25;
-    color: var(--ink-soft); margin: 9px 0 0; }
-  /* The tail of the names sentence is itself the unfold control, so it has to read as part
-     of the handwriting rather than as a button parked at the end of it. */
+  .ach-recap-names { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 0;
+    list-style: none; padding: 0; font-family: var(--hand); font-size: calc(15px + var(--text-size-adjust));
+    line-height: 1.25; color: var(--ink-soft); margin: 9px 0 0; }
+  .ach-recap-name-item { display: inline-flex; align-items: baseline; min-width: 0; }
+  .ach-recap-name-item:not(:first-child)::before { content: "•"; color: var(--ink-soft); margin: 0 0.4em; }
+  .ach-recap-name { min-width: 0; font: inherit; line-height: inherit; color: var(--ach-theme);
+    background: none; border: none; border-radius: 0; padding: 0; cursor: pointer;
+    text-align: left; transition: opacity 0.16s ease, filter 0.16s ease, text-shadow 0.16s ease; }
+  .ach-recap-name:hover, .ach-recap-name.ach-recap-target--active { text-shadow: 0 0 0.01px currentColor; }
+  .ach-recap-name:focus-visible { outline: 1.5px dotted currentColor; outline-offset: 2px; }
+  /* The final list item is the unfold control, styled like a pencilled continuation. */
   .ach-names-more { font: inherit; color: var(--ink); background: none; border: none;
     border-bottom: 1px dotted var(--ink-soft); border-radius: 0; padding: 0; cursor: pointer; }
   .ach-names-more:hover { border-bottom-color: var(--ink); }

@@ -3213,14 +3213,15 @@ function renderResultRecap() {
   if (dailyResultIsSealed()) { el.style.display = "none"; el.innerHTML = ""; syncRecapBand(); return; }
   const ids = [...new Set(newlyUnlocked)].filter((id) => ACH_BY_ID[id] && earnedAchievements[id]);
   if (!ids.length) { el.style.display = "none"; el.innerHTML = ""; syncRecapBand(); return; }
-  // The charms carry no name of their own here: at this size six names would fill the
-  // column and blow the band's height out. The names read underneath as one handwritten
-  // line instead, and each charm keeps its name in the tooltip and its aria-label.
+  // The charms carry no name inside their buttons here: at this size six names would fill
+  // the column and blow the band's height out. Individually linked names sit underneath,
+  // and each charm keeps its name in the tooltip and its aria-label.
   // EVERY charm is rendered; the ones past the cap are folded away in CSS so the overflow
   // count can unfold them in place rather than throwing the player at the collection.
   const chips = ids.map((id, i) => {
     const a = ACH_BY_ID[id];
     return `<button type="button" class="ach-chip${i >= ACH_RECAP_SHOWN ? " ach-folded" : ""}" aria-label="${escapeHtml(a.name)}" ` +
+      `data-achievement-id="${escapeHtml(id)}" ` +
       `data-tip="${escapeHtml(a.name)} · ${escapeHtml(a.desc)}" data-tip-delay="120">${charmMarkup(a.icon, achColor(a), a.id)}</button>`;
   }).join("");
   const folded = ids.length > ACH_RECAP_SHOWN;
@@ -3229,8 +3230,32 @@ function renderResultRecap() {
     : "";
   el.innerHTML = `<p class="sr-lab ach-recap-lab">newly unlocked · ${ids.length}</p>` +
     `<div class="ach-recap-row">${chips}${extra}</div>` +
-    `<p class="ach-recap-names">${unlockNameLine(ids)}</p>`;
+    `<ul class="ach-recap-names" aria-label="Unlocked achievement names">${unlockNameLine(ids)}</ul>`;
   el.style.display = "";
+
+  // A charm and its handwritten name are two views of the same unlock. Hovering or
+  // keyboard-focusing either keeps that pair vivid and quietens the other unlocks.
+  const setActiveAchievement = (activeId = "") => {
+    el.querySelectorAll("[data-achievement-id]").forEach((target) => {
+      const isActive = target.dataset.achievementId === activeId;
+      target.classList.toggle("ach-recap-target--active", !!activeId && isActive);
+      target.classList.toggle("ach-recap-target--muted", !!activeId && !isActive);
+    });
+  };
+  const achievementTarget = (node) => node?.closest?.("[data-achievement-id]");
+  const leaveAchievement = (e) => {
+    const next = achievementTarget(e.relatedTarget);
+    setActiveAchievement(next && el.contains(next) ? next.dataset.achievementId : "");
+  };
+  const wireAchievementTarget = (target) => {
+    const activate = () => setActiveAchievement(target.dataset.achievementId);
+    target.addEventListener("pointerenter", activate);
+    target.addEventListener("pointerleave", leaveAchievement);
+    target.addEventListener("focus", activate);
+    target.addEventListener("blur", leaveAchievement);
+    target.addEventListener("click", () => openAchievements("results"));
+  };
+  el.querySelectorAll("[data-achievement-id]").forEach(wireAchievementTarget);
 
   // The two overflow counts ("+3" on the charms, "3 more" in the names) are one gesture:
   // either unfolds both halves in place. Only a charm itself still leaves for the
@@ -3239,27 +3264,28 @@ function renderResultRecap() {
     el.querySelectorAll(".ach-folded").forEach((c) => c.classList.remove("ach-folded"));
     el.querySelector(".ach-chip--more")?.remove();
     const names = el.querySelector(".ach-recap-names");
-    if (names) names.textContent = joinNames(ids);
+    if (names) {
+      names.innerHTML = unlockNameLine(ids, false);
+      names.querySelectorAll("[data-achievement-id]").forEach(wireAchievementTarget);
+    }
   };
   el.querySelectorAll(".ach-chip--more, .ach-names-more").forEach((c) => c.addEventListener("click", expand));
-  el.querySelectorAll(".ach-chip").forEach((c) => c.addEventListener("click", () => openAchievements("results")));
   syncRecapBand();
 }
 
-// "Word For Word, Wordsmith and The Great Escape" — or, past three, "…and 3 more", where the
-// count is the button that unfolds the rest. Reads as a sentence under the charm row so an
-// unlock is still legible without a hover.
+// Each name is its own theme-coloured control, separated by a bullet. Past three, the final
+// bullet leads to a "3 more" control that unfolds the rest alongside the hidden charms.
 const ACH_NAMES_SHOWN = 3;
-function joinNames(ids) {
-  const names = ids.map((id) => ACH_BY_ID[id].name);
-  if (names.length === 1) return names[0];
-  return `${names.slice(0, -1).join(", ")} and ${names[names.length - 1]}`;
-}
-function unlockNameLine(ids) {
-  if (ids.length <= ACH_NAMES_SHOWN) return escapeHtml(joinNames(ids));
-  const shown = ids.slice(0, ACH_NAMES_SHOWN).map((id) => ACH_BY_ID[id].name).join(", ");
-  return `${escapeHtml(shown)} and ` +
-    `<button type="button" class="ach-names-more">${ids.length - ACH_NAMES_SHOWN} more</button>`;
+function unlockNameLine(ids, folded = true) {
+  const shownIds = folded ? ids.slice(0, ACH_NAMES_SHOWN) : ids;
+  const names = shownIds.map((id) => {
+    const a = ACH_BY_ID[id];
+    return `<li class="ach-recap-name-item"><button type="button" class="ach-recap-name" ` +
+      `data-achievement-id="${escapeHtml(id)}" style="--ach-theme:${achColor(a)}">${escapeHtml(a.name)}</button></li>`;
+  }).join("");
+  if (!folded || ids.length <= ACH_NAMES_SHOWN) return names;
+  return names + `<li class="ach-recap-name-item ach-recap-name-item--more">` +
+    `<button type="button" class="ach-names-more">${ids.length - ACH_NAMES_SHOWN} more</button></li>`;
 }
 
 // The results-screen skills recap: what each skill earned this game, plus a live Mastery
