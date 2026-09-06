@@ -789,12 +789,10 @@ function buildCoiledBraceletSVG(results, activeRound, freshIndex, albums, opts =
   const tieX = tie ? lastSlot.x + layout.pitch * 0.9 : 0;
   const knotX = tie ? tieX + (tie.length - 1) * tiePitch + 30 * tieSc : 0;
 
-  let prefix = "";
+  let prefixLabel = "";
   if (layout.omitted > 0) {
     const pages = `${layout.omitted} earlier page${layout.omitted === 1 ? "" : "s"}`;
-    prefix = `<g class="b-prefix-mark">` +
-      cordStack("M18 14 C25 5 38 5 43 13 C48 21 36 24 29 18 C23 13 31 8 37 12", 2.5) +
-      `<text x="52" y="18" class="b-prefix">${pages} already strung</text></g>`;
+    prefixLabel = `<text x="52" y="18" class="b-prefix">${pages} already strung</text>`;
   }
 
   let cord = "";
@@ -802,6 +800,18 @@ function buildCoiledBraceletSVG(results, activeRound, freshIndex, albums, opts =
   const firstRow = layout.rows[0];
   const startKnotX = firstRow.startX - firstRow.dir * 22;
   const startKnotY = yAt(startKnotX, firstRow);
+  // When older pages have rolled out of view, their small coil is the incoming end of
+  // this same strand, not a detached legend mark. Draw the spiral from its centre out,
+  // then let it fall into the first visible row just as the row-to-row turns do below.
+  // Keeping it inside .b-strand also means finished-result centring moves the join and
+  // the visible bracelet together instead of opening a hairline gap between them.
+  const prefixCord = layout.omitted > 0
+    ? `<g class="b-prefix-cord">${cordStack(
+      `M37 12 C31 8 23 13 29 18 C36 24 48 21 43 13 C38 5 25 5 18 14 ` +
+      `C10 27 11 44 16 54 C18 60 21 64 ${n(startKnotX)},${n(startKnotY)}`,
+      2.5,
+    )}</g>`
+    : "";
 
   if (live) {
     const curlAt = Math.min(XEND - 44, lastSlot.x + layout.pitch * 0.95);
@@ -839,8 +849,11 @@ function buildCoiledBraceletSVG(results, activeRound, freshIndex, albums, opts =
   }
 
   let duoTintDefs = "";            // gradient defs for any two-voice beads (see duoTint)
-  let svg = cordStack(cord, 3.6) +
-    tieKnot(startKnotX, startKnotY, -firstRow.dir);
+  // A genuinely new strand starts at a knot. Once pages have been omitted, the prefix
+  // cord replaces that beginning and must flow straight into the visible beads without
+  // sprouting a second loose tail at the join.
+  let svg = prefixCord + cordStack(cord, 3.6) +
+    (layout.omitted > 0 ? "" : tieKnot(startKnotX, startKnotY, -firstRow.dir));
 
   for (const slot of layout.slots) {
     const i = slot.index, x = slot.x, row = layout.rows[slot.row], y = yAt(x, row);
@@ -902,7 +915,7 @@ function buildCoiledBraceletSVG(results, activeRound, freshIndex, albums, opts =
     `data-visible-start="${layout.visibleStart}" data-visible-count="${layout.visibleCount}">` +
     `<defs>${beadDefs(u)}${duoTintDefs}<filter id="${u}drop" x="-15%" y="-18%" width="130%" height="145%">` +
     `<feDropShadow dx="1.4" dy="3.4" stdDeviation="2.2" flood-color="${PEN}" flood-opacity="0.28"/></filter></defs>` +
-    `<g filter="url(#${u}drop)">${prefix}<g class="b-strand">${svg}</g></g></svg>`;
+    `<g filter="url(#${u}drop)">${prefixLabel}<g class="b-strand">${svg}</g></g></svg>`;
 }
 
 // A finished strand is drawn from a fixed layout centre, but what lands on the paper is
@@ -912,8 +925,9 @@ function buildCoiledBraceletSVG(results, activeRound, freshIndex, albums, opts =
 // read as crooked under a tally that is centred to the pixel. So the strand is centred on
 // what it actually drew rather than on the numbers it was drawn from. Measured rather than
 // computed: a coiled strand's turn-arounds bulge past its knots by a curve's worth, and the
-// bulge depends on the row count. The left-aligned "N earlier pages" note sits outside the
-// measured group on purpose: it is a caption, not part of the strand.
+// bulge depends on the row count. The left-aligned "N earlier pages" text sits outside the
+// measured group on purpose: it is a caption, not part of the strand. Its connected cord is
+// part of the measured group so centring cannot pull that join apart.
 // Only ever called on a FINISHED strand. A live one grows to the right from a fixed start
 // and must stay anchored there, or the beads already strung would slide as pages are added.
 export function centreStrand(host) {
