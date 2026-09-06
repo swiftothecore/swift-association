@@ -190,7 +190,7 @@ export const DEFAULT_SETTINGS = {
   openKeyboard: true,       // phones only: focus the answer line when each new round opens
   confirmLeave: true,       // require a second tap before abandoning an in-progress run
 
-  enableHints: true,        // show progressive hints in Easy/Relaxed (a hinted run can't set a personal best)
+  enableHints: true,        // show progressive hints in Easy/Relaxed (the record notes how many were taken)
   censorExplicit: false,    // mask general profanity (fuck→f**k) in shown lyrics/titles; the racial slur is always masked regardless
 
   defaultGameType: "last",  // "last" | "classic" | "infinite" | "custom"

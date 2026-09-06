@@ -5159,6 +5159,9 @@
      shrunk to sit inside the mode label without stealing width from an already tight column. */
   .hist-dark { display: inline-block; width: 11px; height: 11px; margin-left: 5px; vertical-align: -1px; color: #7a4bb0; }
   .hist-dark .chall-mark-svg { width: 100%; height: 100%; display: block; color: currentColor; }
+  /* Hint stub — graphite, not an accent: the row is noting how the run went, not flagging it. */
+  .hist-hinted { display: inline-block; width: 11px; height: 11px; margin-left: 5px; vertical-align: -1px; color: var(--ink-soft); opacity: 0.75; }
+  .hist-hinted .hint-mark-svg { width: 100%; height: 100%; display: block; }
   :is(#histMore, [data-flip-id="histMore"]) { margin-top: 12px; }
 
   /* ---------- Records calendar heatmap (games played per day / per hour) ----------
@@ -6436,10 +6439,6 @@
     text-align: left;
   }
   .hint-line mark { background: var(--highlighter); color: var(--ink); padding: 0 3px; font-weight: 700; }
-  .hint-used-note {
-    font-family: var(--type); font-size: calc(11px + var(--text-size-adjust)); letter-spacing: 0.5px;
-    color: var(--ink-soft); text-align: center; margin-top: 8px; opacity: 0.9;
-  }
   @media (prefers-reduced-motion: reduce) {
     .hint-btn.urge { animation: none; }
     .feedback .sticker { animation: none; }

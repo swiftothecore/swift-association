@@ -209,7 +209,7 @@ let roundBeadTints = []; // per-round literal bead colour, or a pair for a two-v
                          // strings its answers' albums exactly as before (see guestBeadTint).
 let roundWords = [];     // per-round prompt word (for the lifetime tally / Nemesis Word)
 let roundSongs = [];     // per-round answered song title, null on a miss (lifetime tally)
-let roundHinted = [];    // per-round true if a hint was taken (a hinted run can't set a PB)
+let roundHinted = [];    // per-round true if a hint was taken (the count rides on the record)
 let roundTimes = [];     // per-round seconds spent on the page, EVERY mode including Relaxed (see roundStart)
 // The run-scoped charm batch. Nothing here is persisted (the daily snapshot excepted, which has
 // to carry them or a resumed run judges thirteen pages off half of them — see
@@ -4175,6 +4175,9 @@ function fmtTime(sec) {
   const s = Math.round(sec);
   return Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0");
 }
+// How a record wears the hints it took: "1 hint" / "5 hints", never a bare number, because it
+// sits in a meta line beside a time and a date where a lone digit would read as either.
+function hintCountLabel(n) { return n + (n === 1 ? " hint" : " hints"); }
 // Does this run's game type count toward the cross-game correct streak? Modelled on the rule
 // noTimeoutStreak already follows: the sandboxed types are INVISIBLE to it — they neither extend
 // it nor break it — because a streak that a Challenge run could snap would make the sandbox a lie
@@ -4238,12 +4241,14 @@ function renderBestLine(el, mode, opts = {}) {
   }
   const unit = isInfiniteToken(mode) ? " rounds" : " / " + TOTAL_ROUNDS;
   const timePart = rec.time != null ? " · " + fmtTime(rec.time) : "";
+  const hintPart = rec.hints ? " · " + hintCountLabel(rec.hints) : "";
   // The start screen sets this line beside its own "Your best" heading, so the ★ best
   // badge would only say the heading again; the stacked results line keeps it.
   const badge = opts.compact ? "" : "★ best · ";
   el.innerHTML =
     `<div class="best-line"><span class="best-num">${rec.score}<span class="best-unit">${unit}</span></span>` +
-    `<span class="best-meta">${badge}${escapeHtml(modeLabel(mode))}${timePart}${rec.date ? " · " + recordDateLabel(rec.date) : ""}</span></div>`;
+    `<span class="best-meta">${badge}${escapeHtml(modeLabel(mode))}${timePart}${hintPart}` +
+    `${rec.date ? " · " + recordDateLabel(rec.date) : ""}</span></div>`;
 }
 
 /* ---------- Records page (personal-best tiles + run history) ---------- */
@@ -4286,6 +4291,7 @@ function pbTile(mode, opts = {}) {
       const parts = [];
       if (isInf) parts.push("rounds");
       if (rec.time != null) parts.push(fmtTime(rec.time));
+      if (rec.hints) parts.push(hintCountLabel(rec.hints));
       if (rec.date) parts.push(recordDateLabel(rec.date));
       sub = parts.length ? parts.join(" · ") : "—";
     }
@@ -4336,7 +4342,10 @@ function appendHistoryRows(hist) {
       // not a token suffix — see the appendHistory call in endChallenge) and because the
       // mode column is the tightest one in the row.
       `<span class="hist-mode">${escapeHtml(modeLabel(h.m))}` +
-        `${h.dk ? `<span class="hist-dark" title="dark side" aria-label="dark side">${CHALL_ECLIPSE}</span>` : ""}</span>` +
+        `${h.dk ? `<span class="hist-dark" title="dark side" aria-label="dark side">${CHALL_ECLIPSE}</span>` : ""}` +
+        // A hinted run rides as a pencil stub rather than a count: rows logged before hints
+        // could set a record only ever stored the fact, not the number (see appendHistory).
+        `${h.h ? `<span class="hist-hinted" title="hint used" aria-label="hint used">${HINT_STUB}</span>` : ""}</span>` +
       `<span class="hist-date">${histDateLabel(h.d)}</span></div>`;
   }).join(""));
   historyShown += next.length;
@@ -8626,6 +8635,16 @@ const CHALL_UNPIN = `<svg viewBox="0 0 16 16" class="chall-unpin-svg" aria-hidde
   `</svg>`;
 // The dark side's mark: an eclipse — the blotted disc with its corona still showing. Drawn
 // in currentColor so the same glyph greys out with the button in its locked state.
+// A pencil stub, whittled short: the mark a history row wears when the run took a hint. Drawn
+// leaning, with the two long edges a hair out of parallel and the point off-centre, because a
+// perfectly symmetrical pencil at 11px reads as a spreadsheet icon rather than something off
+// this desk. Sibling of CHALL_ECLIPSE and sized by the same rule (see .hist-hinted).
+const HINT_STUB = `<svg viewBox="0 0 20 20" class="hint-mark-svg" aria-hidden="true">` +
+  `<g transform="rotate(37 10 10)" fill="none" stroke="currentColor" stroke-width="1.15" stroke-linejoin="round">` +
+  `<path d="M8.0 4.5 L12.3 4.1 L13.0 13.4 L8.5 13.8 Z"/>` +
+  `<path d="M8.5 13.8 L13.0 13.4 L10.9 17.3 Z"/>` +
+  `<path d="M10.0 15.9 L12.0 15.7 L10.9 17.3 Z" fill="currentColor" stroke="none"/>` +
+  `<path d="M8.15 6.9 L12.4 6.5" opacity="0.55"/></g></svg>`;
 const CHALL_ECLIPSE = `<svg viewBox="0 0 20 20" class="chall-mark-svg" aria-hidden="true"><circle cx="10" cy="10" r="8.1" fill="none" stroke="currentColor" stroke-width="1.1" opacity="0.5"/><circle cx="10" cy="10" r="5.6" fill="currentColor"/></svg>`;
 
 // The same eclipse at invitation size, with its corona drawn out in uneven hand-ruled rays:
@@ -12346,8 +12365,9 @@ function renderImpostorBar() {
 }
 
 /* ---------- Hints (progressive ladder) ---------- */
-// All tiers derive from currentSongs — nothing is handwritten. A hinted run still
-// plays/scores/logs to history but can't set a personal best (see endGame). Custom mode
+// All tiers derive from currentSongs — nothing is handwritten. A hinted run scores, logs and
+// sets records like any other; what it can't do is claim a feat that was about doing it unaided
+// (the R-E-V-E-N-G-E charm, Album Focus's stamps, guest admission — see endGame). Custom mode
 // caps the total reveals with a hint budget (hintBudgetLeft); every other mode is uncapped.
 function hintBudgetActive() { return Number.isFinite(hintBudgetLeft); }
 // Hints and lyric-line answering are mutually exclusive, and it's the hint ladder's own top
@@ -15331,7 +15351,7 @@ function endAlbumFocus() {
       isInfinite: false, timeouts: gameTimeouts,
     });
     // The board only counts hint-free runs toward beating/perfecting (mirrors the
-    // "a hinted run can't set a personal best" rule); best score still updates.
+    // hint-free rule that still guards a "beaten" claim); best score still updates.
     rec = recordAlbumFocusRun(album, score, diff, hintFree);
     // Single-album by construction, so Discography can't earn; the rest do.
     foldSkillXp(["resolve", "tempo", "lyricist", "endurance"]);
@@ -20544,12 +20564,15 @@ function endGame() {
     d: new Date().toISOString(), tm: runTime,
     ...(runWon != null ? { w: runWon ? 1 : 0 } : {}),
     ...(verseBonus > 0 ? { v: verseBonus } : {}),
-    ...(hintsUsed > 0 ? { h: 1 } : {}),
+    // How many rounds took a hint. Rows written before hints could set a record carry h:1
+    // regardless of how many were taken, which is why the history mark is a mark and never a
+    // number: every row can honestly say "hinted", only the new ones can say how often.
+    ...(hintsUsed > 0 ? { h: hintsUsed } : {}),
   });
 
-  // Daily plays don't touch any mode's stats board. A hinted run counts toward
-  // played/average/distribution but can't set any "best" (countBest = false).
-  if (!isDaily && !devNoLog) updateStats(boardScore, mode, gameMaxStreak, hintsUsed === 0);
+  // Daily plays don't touch any mode's stats board. A hinted run counts in full here — it
+  // sets bests like any other run and wears its hint count on the record instead.
+  if (!isDaily && !devNoLog) updateStats(boardScore, mode, gameMaxStreak);
 
   // Lifetime per-song / per-word tally (every game type counts — it's a catalog
   // record, not a per-mode board). Powers Favourite Song, Songs Discovered,
@@ -20857,34 +20880,34 @@ function endGame() {
   hideNewBestBanner();
 
   // Every positive run folds into your personal records (best-per-mode); a 0 doesn't
-  // (it would never be a best). A hinted run is skipped here too — it can't set a PB,
-  // though it's always in the history log either way.
-  // Champagne coupe — one page short of the best on this board. Read outside the block below,
-  // which only opens for a run that could actually SET a record: a hinted run can still be the
-  // near miss, and being one short is not a personal best in the first place.
+  // (it would never be a best). A HINTED run folds in too, and that is deliberate: a long run
+  // that leaned on the ladder a handful of times is still the best thing that player has done
+  // on that board, and throwing it away outright taught them only that the ladder was a trap.
+  // It goes on ranked by score like anything else and carries its hint count, so the board can
+  // say how it was set rather than pretend it never happened. What stays hint-free is the
+  // narrower claim of having BEATEN something: the R-E-V-E-N-G-E charm below, Album Focus's
+  // beaten/perfected stamps and the guest shelf's admission (see endAlbumFocus / endGuest).
+  // Champagne coupe — one page short of the best on this board. Read before the insert below,
+  // so it compares against the board this run walked in on rather than the one it just joined.
   if (!devNoLog) noteNearMiss((loadRecords(mode)[0] || {}).score || 0, boardScore);
-  if (boardScore > 0 && hintsUsed === 0 && !devNoLog) {
+  if (boardScore > 0 && !devNoLog) {
     const recTime = isInfinite ? null : runTime;   // infinite ranks by rounds, not speed
     const prevBest = loadRecords(mode)[0];
-    const { isBest } = insertRecord(mode, boardScore, todayKey(), recTime, verseBonus);
+    const { isBest } = insertRecord(mode, boardScore, todayKey(), recTime, verseBonus, hintsUsed);
     const draw = () => renderBestLine($("resultPodium"), mode);
     if (!getPlayerName()) promptSignOnce(draw);   // first record ever → sign once, reuse silently after
     else draw();
     if (isBest) {
       const improvedScore = !prevBest || boardScore > prevBest.score;
       showNewBestBanner((improvedScore ? "a new personal best ★" : "a new best time ★") +
-        (recTime != null ? " · " + fmtTime(recTime) : ""));
-      // R-E-V-E-N-G-E — actually beat a previous high score (not just shaved time).
-      if (prevBest && improvedScore) unlock("beat-personal-best-score");
+        (recTime != null ? " · " + fmtTime(recTime) : "") +
+        (hintsUsed > 0 ? " · " + hintCountLabel(hintsUsed) : ""));
+      // R-E-V-E-N-G-E — actually beat a previous high score (not just shaved time), and did it
+      // unaided. The record itself accepts hints; this charm is the one that doesn't.
+      if (prevBest && improvedScore && hintsUsed === 0) unlock("beat-personal-best-score");
     }
   } else {
     renderBestLine($("resultPodium"), mode);
-    if (hintsUsed > 0) {
-      const note = document.createElement("p");
-      note.className = "hint-used-note";
-      note.textContent = "hint used — this run won't set a personal best";
-      $("resultPodium").appendChild(note);
-    }
   }
 
   // A fresh player who took the gentle Relaxed start gets a one-time nudge toward Normal, and
@@ -22435,7 +22458,7 @@ function renderSettingsBody() {
         setCheckHTML("enterOnMiss", "Enter advances on a miss", "leaves the answer screen"),
         setCheckHTML("showExamples", "Show example songs", "cards after a miss, and the rest of the field on either verdict"),
         setCheckHTML("stemMatching", "Match word variants", "off = exact word only (love won’t match loving)"),
-        setCheckHTML("enableHints", "Hints", "Easy &amp; Relaxed; a hinted run can’t set a personal best"),
+        setCheckHTML("enableHints", "Hints", "Easy &amp; Relaxed; records note how many you took"),
         setCheckHTML("censorExplicit", "Censor explicit words", "mask swearing in lyrics &amp; titles (f**k, s**t)"),
         ...(phoneViewport() ? [setCheckHTML("openKeyboard", "Open keyboard each round", "focus the answer line as a new page opens")] : []),
         setCheckHTML("confirmLeave", "Confirm before leaving a run", "requires a second tap before giving up"),
@@ -24159,6 +24182,9 @@ function devSimulate(correctCount, opts = {}) {
     const correct = i < want && valid.length > 0;
     roundWords[i] = word;
     roundResults[i] = correct;
+    // `opts.hints` marks the first N pages as hinted, so a simulated run can exercise the
+    // sanded beads and the hint count a record now carries without playing the ladder by hand.
+    if (i < (opts.hints || 0)) { roundHinted[i] = true; hintsUsed++; }
     if (correct) {
       const song = valid[Math.floor(Math.random() * valid.length)];
       roundAlbums[i] = song.album || null;
@@ -24200,7 +24226,9 @@ function devSeedRecords() {
     for (let k = 0; k < 3; k++) {
       const sc = Math.max(1, TOTAL_ROUNDS - k - (mi % 3));
       const time = m === "relaxed" ? null : 30 + k * 8 + Math.random() * 10;
-      insertRecord(m, sc, today, time);
+      // The middle entry of each mode is seeded hinted, so the tiles and the ★ best line have
+      // something to render the "· 3 hints" tail against without a real run being played.
+      insertRecord(m, sc, today, time, 0, k === 1 ? 3 : 0);
     }
   });
 }
@@ -24211,7 +24239,8 @@ function devSeedHistory(n = 25) {
     const m = modes[Math.floor(Math.random() * modes.length)];
     const c = Math.floor(Math.random() * (TOTAL_ROUNDS + 1));
     appendHistory({ s: c, c, n: TOTAL_ROUNDS, m, t: "classic",
-      d: new Date(now - i * 7 * 3600 * 1000).toISOString(), tm: 30 + Math.random() * 60 });
+      d: new Date(now - i * 7 * 3600 * 1000).toISOString(), tm: 30 + Math.random() * 60,
+      ...(i % 4 === 0 ? { h: 1 + (i % 3) } : {}) });   // every fourth row wears the pencil stub
   }
 }
 // Infinite runs, spread over both variants so the stats tab's strands have something to

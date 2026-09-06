@@ -49,9 +49,10 @@ export function totalPlayed() { return MODE_ORDER.reduce((n, m) => n + loadStats
 
 // bestRun = the game's longest correct-in-a-row (gameMaxStreak); we keep the
 // lifetime max per mode for the "Best in a row" stat.
-// `countBest` (default true) — when false (a hint was used this run), the play still
-// counts toward played/average/distribution, but it can't set any "best" (best score,
-// best-in-a-row, or the non-zero-game streak). Keeps hinted runs out of the records.
+// `countBest` (default true) — when false (the run was abandoned part-way), the rounds
+// played still count toward played/average/distribution, but a fragment of a run can't set
+// any "best" (best score, best-in-a-row, or the non-zero-game streak). A hinted run is NOT
+// excluded here: it sets bests like any other, and carries its hint count on the record.
 export function updateStats(gameScore, mode, bestRun, countBest = true) {
   const s = loadStats(mode);
   s.played += 1;
@@ -1091,7 +1092,8 @@ export function resetMastery() {
 // Same mode-token scheme as stats/high-scores: medium = unsuffixed legacy-style key,
 // every other mode (incl. infinite "inf-<variant>-<mode>" tokens) gets a suffix.
 // Entry shape: { score, date } where date is a "YYYY-MM-DD" string (or null for the
-// migrated "best so far" seed). For infinite, score holds rounds survived.
+// migrated "best so far" seed), plus optional `time`, `verse` and `hints`. For infinite,
+// score holds rounds survived.
 export function recordsKey(mode) { return mode === "medium" ? RECORDS_KEY : RECORDS_KEY + "." + mode; }
 export function loadRecords(mode) {
   try {
@@ -1120,8 +1122,12 @@ export function saveRecords(list, mode) {
 // Ranking for a mode's records: higher score first, then — at an equal score — the
 // FASTER completion time (a run with a recorded time outranks one without, so a real
 // timed run supersedes the dateless migration seed), then — when score AND time are
-// identical — the bigger verse bonus (a second-order prestige tie-break), then earliest
-// date first. `verse` is optional/back-compat (a missing value counts as 0).
+// identical — the bigger verse bonus (a second-order prestige tie-break), then the FEWER
+// hints, then earliest date first. `verse` and `hints` are optional/back-compat (a missing
+// value counts as 0). Note where hints sit in that order: last but one, so they break a
+// genuine dead heat and nothing else. A hinted run is not marked down a place for the help
+// it took — a bigger number is a bigger number — it just loses the coin toss to a clean run
+// that matched it exactly.
 function cmpRecords(a, b) {
   if (b.score !== a.score) return b.score - a.score;
   const at = a.time, bt = b.time;
@@ -1130,23 +1136,29 @@ function cmpRecords(a, b) {
   if (at == null && bt != null) return 1;
   const av = a.verse || 0, bv = b.verse || 0;
   if (av !== bv) return bv - av;                                // more verse bonus wins
+  const ah = a.hints || 0, bh = b.hints || 0;
+  if (ah !== bh) return ah - bh;                                // fewer hints wins
   const ad = a.date || "", bd = b.date || "";
   return ad < bd ? -1 : ad > bd ? 1 : 0;
 }
 // Insert a finished run; keep the top 5 per cmpRecords. `time` (completion seconds) is
 // optional — only timed classic modes pass it; relaxed/infinite omit it (no speed tie-break).
 // `verse` (verse-bonus points) is the second-order tie-break, only used at equal score+time.
+// `hints` (how many rounds took a hint) is stored so every surface that shows the record can
+// say how it was set; 0 is left off the entry entirely, so a clean run stores nothing extra.
 // Returns { list, rank, isBest }; rank is the just-played run's 0-based index (-1 if off-board).
-export function insertRecord(mode, score, date, time = null, verse = 0) {
+export function insertRecord(mode, score, date, time = null, verse = 0, hints = 0) {
   const entry = { score, date, __this: true };
   if (time != null) entry.time = time;
   if (verse) entry.verse = verse;
+  if (hints) entry.hints = hints;
   const top = loadRecords(mode).concat([entry]).sort(cmpRecords).slice(0, 5);
   const rank = top.indexOf(entry);
   saveRecords(top.map((e) => {                                  // strip the transient __this
     const o = { score: e.score, date: e.date };
     if (e.time != null) o.time = e.time;
     if (e.verse) o.verse = e.verse;
+    if (e.hints) o.hints = e.hints;
     return o;
   }), mode);
   return { list: top, rank, isBest: rank === 0 };
