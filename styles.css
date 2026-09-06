@@ -2025,6 +2025,15 @@
      fine without it; if the set ever grows enough to need the optimisation back, it has to go
      on a padded wrapper that the rotated polaroid can overflow into. */
   .keep-cell { transform: translate(var(--dx, 0), var(--dy, 0)); }
+  /* An earned tile carries a `title` saying what developed it, and a native tooltip is
+     invisible until you happen to rest on one. So the pointer announces it: a hand-inked
+     magnifying glass, hotspot on the lens, meaning "there is something to read here".
+     Drawn rather than borrowed — the built-in `zoom-in` glass wears a plus sign and promises
+     a zoom that never happens. `help` is the fallback for anything that refuses the image,
+     since a question mark is the honest second choice. Locked cells keep the plain arrow:
+     their tooltip only says the keepsake is unearned, which is what the black frame says. */
+  .keep-cell[data-state="developed"],
+  .keep-cell[data-state="developing"] { cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='26' height='26' viewBox='0 0 26 26'%3E%3Cg fill='none' stroke='%23fdfbf4' stroke-width='4.4' stroke-linecap='round'%3E%3Cpath d='M16.4 5.6a6.6 6.6 0 1 1-9.5 9.1 6.6 6.6 0 0 1 9.5-9.1z'/%3E%3Cpath d='M16.2 15.9 22.4 22.2'/%3E%3C/g%3E%3Cg fill='none' stroke='%232b2721' stroke-width='2.1' stroke-linecap='round'%3E%3Cpath d='M16.4 5.6a6.6 6.6 0 1 1-9.5 9.1 6.6 6.6 0 0 1 9.5-9.1z'/%3E%3Cpath d='M16.2 15.9 22.4 22.2'/%3E%3C/g%3E%3C/svg%3E") 11 11, help; }
   @media (max-width: 560px) {
     /* Two across on a phone, which is fatter than the FOUR this wall used to manage on a
        desktop. That is the point: the card only has ~290px of usable width once the notebook's
