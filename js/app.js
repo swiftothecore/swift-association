@@ -10740,6 +10740,7 @@ function buildCardMeta() {
   if (gameType === "infinite") {
     title = "an infinite strand";
     stats.push({ v: "Infinite", l: "mode" });
+    stats.push({ v: currentMode.label, l: "difficulty" });
     stats.push({ v: String(roundResults.length), l: "rounds" });
     stats.push({ v: String(correct), l: "strung" });
     if (runTime != null) stats.push({ v: fmtTime(runTime), l: "on the clock" });
@@ -10748,6 +10749,7 @@ function buildCardMeta() {
     title = perfect ? focusAlbum + ", start to finish ★" : "an album, in beads";
     stats.push({ v: "Album Focus", l: "mode" });
     stats.push({ v: focusAlbum, l: "the album" });
+    stats.push({ v: currentMode.label, l: "difficulty" });
     stats.push({ v: correct + "/" + TOTAL_ROUNDS, l: "strung" });
   } else if (gameType === "guest" && guestRunId) {
     const guest = GUESTS.find((x) => x.id === guestRunId);
@@ -10755,6 +10757,7 @@ function buildCardMeta() {
     title = perfect ? "admitted to the shelf ★" : "a night on someone else's catalogue";
     stats.push({ v: "Guest shelf", l: "mode" });
     stats.push({ v: (guest && guest.name) || "Guest", l: "the catalogue" });
+    stats.push({ v: currentMode.label, l: "difficulty" });
     stats.push({ v: correct + "/" + TOTAL_ROUNDS, l: "strung" });
   } else if (gameType === "ruthless" && ruthlessCard) {
     // Read off the run's own snapshot rather than roundResults, which a Ruthless run never
@@ -10813,17 +10816,23 @@ function buildCardMeta() {
           : perfect ? "thirteen for thirteen ★"
           : gameType === "daily" ? "today's daily" : "the bracelet you made";
     stats.push({ v: gameType === "daily" ? "Daily" : (GAMETYPE_LABELS[gameType] || "Classic"), l: "mode" });
+    stats.push({ v: currentMode.label, l: "difficulty" });
     stats.push({ v: hidden ? "?" : correct + "/" + TOTAL_ROUNDS, l: "strung" });
     if (runTime != null && !hidden) stats.push({ v: fmtTime(runTime), l: "on the clock" });
     if (verseBonus > 0 && !hidden) stats.push({ v: "+" + verseBonus, l: "verse bonus" });
   }
+
+  // Hint use is part of how the result was achieved, including when the honest count is zero.
+  // Keep it on every bracelet card rather than only hinted records, so a saved image never
+  // leaves the player guessing whether no hints were used or the information was omitted.
+  stats.push({ v: String(hintsUsed), l: "hints used" });
 
   const name = (settings.playerName || "").trim();
   return {
     kicker: "Swift to the Song Association",
     title,
     braceletMarkup: $("resultBracelet").innerHTML,
-    stats: stats.slice(0, 4),
+    stats: stats.slice(0, 6),
     dark: darkRun,          // violet eclipse on the kicker + violet tape, as the game marks it
     signature: name,
     footer: dateLabel + " · " + timeLabel + " · swiftassociation.com",

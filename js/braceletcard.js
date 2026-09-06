@@ -177,34 +177,46 @@ export function buildCardSVG(meta, fontCss) {
     `<svg x="${bx}" y="${by}" width="${bw}" height="${bh}" overflow="visible" preserveAspectRatio="xMidYMid meet"`
   );
 
-  // stat chips, spread evenly under the strand; the page is then cut to fit them
-  const stats = (meta.stats || []).slice(0, 4);
+  // Stat chips, spread evenly under the strand; the page is then cut to fit them.
+  // Four facts fit on one ruled line. A run can honestly need five or six now that its
+  // difficulty and hint use travel with the bracelet, so those cards use two balanced
+  // rows instead of silently dropping the last facts or squeezing album names into slivers.
+  const stats = (meta.stats || []).slice(0, 6);
   const sy = by + bh + 66;
-  const H = Math.round(sy + 116);
+  const rowSizes = stats.length > 4
+    ? [Math.ceil(stats.length / 2), Math.floor(stats.length / 2)]
+    : [stats.length];
+  const statRowGap = 58;
+  const H = Math.round(sy + 116 + (rowSizes.length - 1) * statRowGap);
 
   // faint ruled feint across the page
   let rules = "";
   for (let y = 132; y < H - 20; y += 30) {
     rules += `<line x1="0" y1="${y}" x2="${W}" y2="${y}" stroke="${v.rule}" stroke-width="1"/>`;
   }
-  const colW = stats.length ? contentW / stats.length : contentW;
   let statSvg = "";
-  stats.forEach((s, i) => {
-    const cx = +(contentL + colW * (i + 0.5)).toFixed(1);
-    // A stat value is a name as often as it is a number — a challenge, an album, a guest — and
-    // a name clipped to "Vanishing W…" fails at the one job the chip has. So the ink shrinks
-    // to fit its column first, down to 26px, and only a value still too long after that is
-    // trimmed. Numbers, which fit at full size, are untouched.
-    const raw = s.v == null ? "" : String(s.v);
-    let size = 40;
-    while (size > 26 && measureText(raw, `700 ${size}px Caveat, cursive`) > colW - 12) size -= 2;
-    const valueFont = `700 ${size}px Caveat, cursive`;
-    const value = fitText(raw, valueFont, colW - 12);
-    const label = fitText(String(s.l == null ? "" : s.l).toUpperCase(),
-      '11.5px "Courier Prime", monospace', colW - 12, 1.6);
-    statSvg +=
-      `<text x="${cx}" y="${sy}" text-anchor="middle" font-family="Caveat" font-weight="700" font-size="${size}" fill="${v.inkAccent}">${esc(value)}</text>` +
-      `<text x="${cx}" y="${sy + 22}" text-anchor="middle" font-family="Courier Prime" font-size="11.5" letter-spacing="1.6" fill="${v.inkSoft}">${esc(label)}</text>`;
+  let statIndex = 0;
+  rowSizes.forEach((rowSize, rowIndex) => {
+    const colW = rowSize ? contentW / rowSize : contentW;
+    const rowY = sy + rowIndex * statRowGap;
+    for (let col = 0; col < rowSize; col++) {
+      const s = stats[statIndex++];
+      const cx = +(contentL + colW * (col + 0.5)).toFixed(1);
+      // A stat value is a name as often as it is a number — a challenge, an album, a guest — and
+      // a name clipped to "Vanishing W…" fails at the one job the chip has. So the ink shrinks
+      // to fit its column first, down to 26px, and only a value still too long after that is
+      // trimmed. Numbers, which fit at full size, are untouched.
+      const raw = s.v == null ? "" : String(s.v);
+      let size = 40;
+      while (size > 26 && measureText(raw, `700 ${size}px Caveat, cursive`) > colW - 12) size -= 2;
+      const valueFont = `700 ${size}px Caveat, cursive`;
+      const value = fitText(raw, valueFont, colW - 12);
+      const label = fitText(String(s.l == null ? "" : s.l).toUpperCase(),
+        '11.5px "Courier Prime", monospace', colW - 12, 1.6);
+      statSvg +=
+        `<text x="${cx}" y="${rowY}" text-anchor="middle" font-family="Caveat" font-weight="700" font-size="${size}" fill="${v.inkAccent}">${esc(value)}</text>` +
+        `<text x="${cx}" y="${rowY + 22}" text-anchor="middle" font-family="Courier Prime" font-size="11.5" letter-spacing="1.6" fill="${v.inkSoft}">${esc(label)}</text>`;
+    }
   });
   const divY = sy - 42;
   const divider = stats.length
