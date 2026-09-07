@@ -388,6 +388,7 @@
   .di-placard[hidden] { display: none; }
   .di-placard .plc-under { fill: #d2c3a3; stroke: #aa9875; stroke-width: 0.8; }
   .di-placard .plc-paper { stroke: #c8b999; stroke-width: 0.9; stroke-linejoin: round; }
+  .di-placard .plc-lip { fill: none; stroke: #fffaf2; stroke-width: 1.3; opacity: 0.75; stroke-linejoin: round; }
   .di-placard .plc-rules { fill: none; stroke: #7892a4; stroke-width: 0.8; opacity: 0.24; }
   .di-placard .plc-margin { fill: none; stroke: #b23a3f; stroke-width: 1.1; opacity: 0.52; }
   /* Geometry only. The material itself comes from the shared .nav-tape rule. */
@@ -409,8 +410,6 @@
     stroke-linecap: round; stroke-linejoin: round;
   }
   .di-placard .flame-core { fill: #edc557; stroke: none; opacity: 0.9; }
-  .di-placard .plc-pencil { fill: none; stroke: #777169; stroke-width: 1.15; opacity: 0.52; stroke-linecap: round; }
-  .di-placard .plc-pencil-echo { stroke-width: 0.65; opacity: 0.26; }
   .di-pencil {
     width: 520px; top: 69%; left: calc(50% - 412px);
     /* near-vertical, tip pointing down the page; the pencil is drawn at real

@@ -1364,24 +1364,34 @@ if (location.pathname.endsWith('/index.html')) {
           <stop offset="0" stop-color="#fffaf0"/><stop offset="0.58" stop-color="#f4ecd9"/><stop offset="1" stop-color="#e7dbc0"/>
         </linearGradient>
       </defs>
+      <!-- Everything a ruled pad prints is STRAIGHT: the top edge it was cut
+           from, the two sides, the blue ruling and the red margin. Bowing any
+           of them (as this drawing used to) reads as a sheet curling up off
+           the desk, which is not what a slip lying flat under a calendar does.
+           The only irregular line here is the tear, and it is irregular on
+           purpose: uneven bite depths and uneven tooth widths, because a
+           repeating sawtooth reads as pinking shears, not torn paper. -->
       <!-- a second sheet peeks out at the torn edge, suggesting this was
            pulled from the calendar pad rather than bought as desk decor -->
-      <path class="plc-under" d="M14 15 Q95 10 178 14 L181 91 L174 96 L167 93 L159 98 L150 94 L141 99 L132 95 L122 99 L112 94 L102 98 L92 94 L82 99 L71 94 L61 98 L51 93 L41 97 L31 92 L21 95 Z"/>
-      <path class="plc-paper" d="M9 9 Q94 5 181 10 L180 86 L173 90 L165 87 L157 92 L148 88 L139 93 L130 89 L120 93 L110 88 L100 92 L90 88 L80 93 L69 88 L59 92 L49 87 L39 91 L29 86 L19 89 L10 84 Z" fill="url(#plcPaper)"/>
-      <!-- familiar notebook ruling, interrupted at the ragged edges -->
-      <g class="plc-rules"><path d="M13 42 Q94 40.5 178 42"/><path d="M12 67 Q94 65.5 179 67"/></g>
-      <path class="plc-margin" d="M43 14 Q41.5 49 43 86"/>
+      <path class="plc-under" d="M13 14 L177 13 L178 90 L171 97 L165 92 L157 99 L150 93 L144 96 L136 90 L128 97 L121 93 L113 95 L106 100 L99 92 L91 96 L83 91 L76 98 L69 93 L61 95 L54 99 L47 92 L40 96 L33 90 L26 95 L19 92 L13 91 Z"/>
+      <path class="plc-paper" d="M9 8 L181 7 L182 86 L175 92 L170 88 L161 95 L155 90 L150 91 L141 86 L133 93 L127 89 L118 90 L112 96 L104 88 L97 92 L88 87 L82 94 L75 89 L66 90 L60 95 L52 88 L45 92 L38 86 L30 91 L23 88 L15 93 L9 87 Z" fill="url(#plcPaper)"/>
+      <!-- the pale fibre lip torn paper shows where the top layer let go -->
+      <path class="plc-lip" d="M182 86 L175 92 L170 88 L161 95 L155 90 L150 91 L141 86 L133 93 L127 89 L118 90 L112 96 L104 88 L97 92 L88 87 L82 94 L75 89 L66 90 L60 95 L52 88 L45 92 L38 86 L30 91 L23 88 L15 93 L9 87"/>
+      <!-- familiar notebook ruling; the count is written ON the lower line -->
+      <g class="plc-rules"><path d="M11 44 L179 43.4"/><path d="M11 71 L179 70.4"/></g>
+      <path class="plc-margin" d="M34 8.5 L34.6 88"/>
       <!-- the flame follows the same one-weight icon language as the game's
-           keepsakes: one calm red-pen contour with a small highlighter core -->
-      <g class="plc-flame" transform="translate(10.5 23) scale(1.22)">
-        <path class="flame-body" d="M12 1.4 C12 5.4 11.2 7.8 10 9.6 C9.4 8.8 8.9 7.8 8.7 6.6 C6.5 9 4.9 11.6 4.9 14.4 C4.9 18.7 8.1 22.2 12 22.2 C15.9 22.2 19.1 18.7 19.1 14.4 C19.1 9.7 15.5 5.4 12 1.4 Z"/>
-        <path class="flame-core" d="M12 11.4 C13.5 13 14.3 14.3 14.3 15.9 C14.3 17.7 13.2 19 12 19 C10.8 19 9.7 17.7 9.7 15.9 C9.7 14.3 10.5 13 12 11.4 Z"/>
+           keepsakes: one calm red-pen contour with a small highlighter core.
+           It leans, and it has more than one lick, because a single closed
+           teardrop reads as a droplet at the sixteen screen pixels this is
+           actually drawn at. It sits in the margin gutter, centred against
+           the label-and-count block rather than against the paper. -->
+      <g class="plc-flame" transform="translate(7 36) scale(0.95)">
+        <path class="flame-body" d="M13.8 2.0 C13.0 6.6 9.8 8.4 8.0 11.4 C8.0 10.0 8.2 8.8 8.8 7.6 C6.0 10.2 4.6 13.0 4.6 15.6 C4.6 19.4 7.9 22.3 11.9 22.3 C16.0 22.3 19.2 19.3 19.2 15.4 C19.2 12.4 17.4 9.8 15.2 7.6 C15.6 9.0 15.5 10.2 15.0 11.4 C15.4 8.2 15.0 5.0 13.8 2.0 Z"/>
+        <path class="flame-core" d="M11.8 11.4 C12.3 13.8 14.2 15.0 14.2 17.2 C14.2 19.1 13.0 20.4 11.5 20.4 C10.0 20.4 8.9 19.1 8.9 17.4 C8.9 15.2 11.0 14.0 11.8 11.4 Z"/>
       </g>
-      <text class="plc-l1" x="55" y="35">DAILY STREAK</text>
-      <text class="plc-l2" x="112" y="63" text-anchor="middle"></text>
-      <!-- faint graphite echo and underline make the count feel newly written -->
-      <path class="plc-pencil" d="M64 74 Q110 77 160 73"/>
-      <path class="plc-pencil plc-pencil-echo" d="M78 78 Q112 80 147 77.5"/>
+      <text class="plc-l1" x="43" y="40">DAILY STREAK</text>
+      <text class="plc-l2" x="43" y="70"></text>
     </svg>
     <!-- This is the exact shared washi surface used on the six mode cards,
          not an SVG imitation: the same translucency, fibres, wrinkle and tear. -->
