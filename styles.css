@@ -7859,7 +7859,7 @@
      in viewBox units (132 across a 120px glass), not screen pixels; fill-box keeps the
      origin on the cork's own seated end rather than the whole drawing's corner. */
   .bottle-cork { transform-box: fill-box; transform-origin: 14% 52%; transition: transform 0.55s cubic-bezier(0.34, 1.5, 0.5, 1) 0.05s; }
-  .bottle-egg.caught .bottle-cork { transform: translate(7px, -3px) rotate(19deg); }
+  .bottle-egg.caught .bottle-cork { transform: translate(12px, -4px) rotate(21deg); }
   .bottle-egg.caught .bottle-glass { transition: transform 0.5s ease; transform: translateX(34px) rotate(-8deg); }
   .bottle-egg.caught .bottle-glass svg { animation: none; }
   .bottle-egg.caught .bottle-wave { opacity: 0.5; }

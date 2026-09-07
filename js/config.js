@@ -4142,7 +4142,12 @@ export const WHALE_SPLASH_SVG = `<svg viewBox="0 0 120 60" aria-hidden="true">
 // outward (right); the wrapper flips it with scaleX when it surfaces on the left edge.
 // The outline is inked as separate strokes rather than one stroked silhouette, so the
 // pen can run heavy round the base and lighten off through the shoulder and neck; the
-// cork is its own `.bottle-cork` group so the caught state can pop it out of the lip.
+// weights step down in small increments and overlap, because a big jump between two
+// neighbouring strokes reads as a joint rather than as a hand easing off. The bottle
+// is genuinely OPEN at the lip — a rim of glass with the bore going through it — and
+// the cork is a stepped object seated in that bore, its shank covered by the wash of
+// neck glass painted back over it. It is its own `.bottle-cork` group, so the caught
+// state can draw it out of the mouth and leave the hole behind.
 export const BOTTLE_SURFACE_MS = 13000;
 export const BOTTLE_SVG = `<svg viewBox="0 0 132 64" role="img"><title>A corked glass bottle with a rolled note inside, bobbing beside the page</title>
   <!-- the rolled note, seen through the glass: a paper tube with the near end open on
@@ -4163,18 +4168,35 @@ export const BOTTLE_SVG = `<svg viewBox="0 0 132 64" role="img"><title>A corked 
   </g>
 
   <!-- the glass itself: one sea-glass wash, then the outline inked in separate strokes
-       so the pen runs heavy round the base and lightens off through the neck -->
+       so the pen runs heavy round the base and lightens off through the neck. The
+       weights step down in small increments and each stroke starts a few units back
+       inside the one before it, so the change of pressure reads as a hand easing off
+       rather than as a joint between two different pens. -->
   <path d="M16.4 10.8 C43 10.2 62 10.4 77.4 10.7 C86.6 10.9 92.6 15.4 95.2 23.2 Q95.7 24.2 97.1 24.3
-           L108.3 24.2 L108.5 22.1 L113 22.3 L112.8 42 L108.2 41.8 L108.4 39.5
+           L108.3 24.2 L108.5 22.3 L112.4 22.4 L112.4 41.7 L108.2 41.8 L108.4 39.5
            L97 39.4 Q95.6 39.5 95.1 40.5 C92.2 48.5 86.2 53.3 77.2 53.5 C60 53.9 40 53.8 16.2 53.2
            C9.5 53 4.7 49 4.9 42.5 L5.1 21.8 C5.2 15.2 9.8 11 16.4 10.8 Z" fill="#9cc0b0" fill-opacity=".38"/>
   <g fill="none" stroke="#6f9a88" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M16.4 10.9 C9.8 11.1 5.2 15.3 5.1 21.9 L4.9 42.5 C4.7 49 9.5 53 16.2 53.2 C40 53.8 60 53.9 77.2 53.5" stroke-width="2.7"/>
-    <path d="M16.5 10.8 C43 10.2 62 10.4 77.4 10.7" stroke-width="2.15"/>
-    <path d="M77.4 10.7 C86.6 10.9 92.6 15.4 95.2 23.2 Q95.7 24.2 97.1 24.3 L108.3 24.2" stroke-width="2"/>
-    <path d="M77.2 53.5 C86.2 53.3 92.2 48.5 95.1 40.5 Q95.6 39.5 97 39.4 L108.4 39.5" stroke-width="1.85"/>
-    <path d="M108.5 24.2 L108.5 22.1 L113 22.3 L112.8 42 L108.2 41.8 L108.4 39.5" stroke-width="1.7"/>
+    <path d="M17.8 10.88 C10.8 11.05 5.2 15.3 5.1 21.9 L4.9 42.5 C4.7 49 9.4 52.95 15.8 53.16 C22.4 53.38 29 53.52 36 53.62" stroke-width="2.62"/>
+    <path d="M32 53.58 C39.4 53.68 46.6 53.75 53.6 53.78" stroke-width="2.42"/>
+    <path d="M49.6 53.77 C57 53.82 64 53.81 70.2 53.73" stroke-width="2.24"/>
+    <path d="M66.6 53.76 C71.8 53.72 76.2 53.63 80.6 53.44" stroke-width="2.06"/>
+    <path d="M17.6 10.85 C24.4 10.63 31.4 10.52 38.8 10.48" stroke-width="2.5"/>
+    <path d="M35 10.49 C43 10.45 51 10.46 58.8 10.51" stroke-width="2.32"/>
+    <path d="M55 10.48 C62 10.53 69 10.59 76 10.66" stroke-width="2.16"/>
+    <path d="M72.6 10.62 C84 10.76 91 14.6 93.8 21.6 Q94.8 24 97.1 24.3 L103.4 24.24" stroke-width="2"/>
+    <path d="M77.4 53.5 C86.6 53.24 92.2 48.4 95.1 40.5 Q95.6 39.5 97 39.4 L103.2 39.44" stroke-width="1.94"/>
+    <path d="M100 24.26 L108.3 24.2 L108.5 22.3 L112.3 22.38" stroke-width="1.86"/>
+    <path d="M100 39.42 L108.4 39.5 L108.2 41.8 L112.3 41.72" stroke-width="1.8"/>
   </g>
+  <!-- the mouth. The bottle is OPEN at this end: the lip is a ring of glass with the
+       bore going through it, and that is the hole the cork below is seated in. When
+       the cork works free the dark of the bore is what is left behind. -->
+  <ellipse cx="112.4" cy="32.05" rx="2.45" ry="9.72" fill="#8fb6a5" fill-opacity=".62"/>
+  <ellipse cx="112.9" cy="32.05" rx="1.35" ry="7.1" fill="#33564a" fill-opacity=".88"/>
+  <path d="M112.4 22.33 C114.2 24.5 114.85 28.1 114.85 32.05 C114.85 36 114.2 39.6 112.4 41.77"
+        fill="none" stroke="#6f9a88" stroke-width="1.72" stroke-linecap="round"/>
+  <ellipse cx="112.9" cy="32.05" rx="1.3" ry="7.1" fill="none" stroke="#6f9a88" stroke-width="0.8" opacity=".55"/>
   <!-- thickness in the base wall, and the shadow gathering under the shoulder -->
   <path d="M11.4 19.4 C9.1 25.6 9 39.4 11.1 45.4" fill="none" stroke="#6f9a88" stroke-width="1.2" stroke-linecap="round" opacity=".5"/>
   <path d="M79.8 50.2 C86.4 49.3 90.6 44.9 92.9 38.4" fill="none" stroke="#6f9a88" stroke-width="1.4" stroke-linecap="round" opacity=".34"/>
@@ -4185,20 +4207,28 @@ export const BOTTLE_SVG = `<svg viewBox="0 0 132 64" role="img"><title>A corked 
   <path d="M83 15.2 C87.4 16.5 90.4 19.2 92.2 22.4" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" opacity=".32"/>
   <path d="M27 49.4 C36 50.1 47 50.2 56.4 49.8" fill="none" stroke="#ffffff" stroke-width="1.7" stroke-linecap="round" opacity=".22"/>
 
-  <!-- the cork: a kraft barrel seated in the lip, grained across its outer half -->
+  <!-- the cork: a kraft barrel grained across its outer half, stepping down to the
+       shank that plugs the bore. Head and shank are inked the same, because they are
+       one object; what sells the shank as being INSIDE the bottle is the wash of
+       neck glass laid back over it below, which the cork slides out from under. -->
   <g class="bottle-cork">
-    <path d="M111 24.5 C115.2 23.1 121.2 22.9 125.6 24.1 C126.8 24.5 126.9 39.7 125.7 40.1
-             C121.2 41.3 115 41.1 110.9 39.7 C109.8 39.3 109.8 24.9 111 24.5 Z"
+    <path d="M108.4 25.9 C107 25.9 106.5 26.7 106.5 27.8 L106.5 36.3 C106.5 37.4 107 38.2 108.4 38.2
+             L114.6 38.2 L114.6 25.9 Z" fill="#b9834a" stroke="#8f6231" stroke-width="1.2" stroke-linejoin="round"/>
+    <path d="M113.4 24.5 C117.3 23.1 122.7 22.9 126.3 24.1 C127.3 24.5 127.4 39.7 126.4 40.1
+             C122.7 41.3 117.1 41.1 113.3 39.7 C112.3 39.3 112.3 24.9 113.4 24.5 Z"
           fill="#c8925a" stroke="#8f6231" stroke-width="1.7" stroke-linejoin="round"/>
-    <path d="M111 24.5 C112.2 24.1 113.6 23.9 114.8 23.8 C115.8 24.6 115.7 39.6 114.7 40.3
-             C113.4 40.2 112 40 110.9 39.7 C109.8 39.3 109.8 24.9 111 24.5 Z"
+    <path d="M113.4 24.5 C114.4 24.15 115.6 23.95 116.6 23.85 C117.5 24.65 117.4 39.6 116.5 40.3
+             C115.4 40.2 114.2 40 113.3 39.7 C112.3 39.3 112.3 24.9 113.4 24.5 Z"
           fill="#a9743c" opacity=".5"/>
     <g stroke="#8f6231" stroke-width="1" stroke-linecap="round" fill="none" opacity=".5">
-      <path d="M118.8 27.6 C120.2 27.4 121.8 27.5 123 27.8"/>
-      <path d="M118.1 32.4 C120 32.2 121.4 32.3 123.7 32.6"/>
-      <path d="M119.6 37 C120.8 36.9 122 37 122.8 37.1"/>
+      <path d="M119.8 27.6 C121.2 27.4 122.8 27.5 124 27.8"/>
+      <path d="M119.1 32.4 C121 32.2 122.4 32.3 124.7 32.6"/>
+      <path d="M120.6 37 C121.8 36.9 123 37 123.8 37.1"/>
     </g>
   </g>
+  <!-- the neck's own glass, laid back over whatever is inside it -->
+  <path d="M97.4 24.9 L112.5 24.9 L112.5 39 L97.4 39 Z" fill="#9cc0b0" fill-opacity=".42"/>
+  <path d="M99.6 27 C104 26.4 108 26.5 110.4 27" fill="none" stroke="#ffffff" stroke-width="1.3" stroke-linecap="round" opacity=".26"/>
 </svg>`;
 // A gentle wake the bottle rides on — two nested waves beneath it plus a pair of far
 // crests above, sea tint. Every bump is its own width and height: an evenly repeated
