@@ -10871,7 +10871,9 @@
   .set-era-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px 8px; }
   @media (max-width: 520px) { .set-era-grid { grid-template-columns: 1fr; } }
   .set-era { padding: 7px 10px; font-size: calc(17px + var(--text-size-adjust)); }
-  .set-era--none { --era-c: var(--ink-soft); }
+  /* Twelve albums fill six tidy rows; the thirteenth chip is the odd one out in every
+     sense, so it runs the full width as a footer instead of leaving a hole beside it. */
+  .set-era--none { --era-c: var(--ink-soft); grid-column: 1 / -1; }
   .set-era--none .fr-era-dot {
     background: transparent; border: 1.5px dashed var(--ink-soft); box-shadow: none;
   }
