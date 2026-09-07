@@ -4140,31 +4140,73 @@ export const WHALE_SPLASH_SVG = `<svg viewBox="0 0 120 60" aria-hidden="true">
 // surface) is revealed with its song + album. Sea-glass + kraft-cork palette so it
 // sits on the desk like the whale does, no album art. Lies horizontal, cork pointing
 // outward (right); the wrapper flips it with scaleX when it surfaces on the left edge.
+// The outline is inked as separate strokes rather than one stroked silhouette, so the
+// pen can run heavy round the base and lighten off through the shoulder and neck; the
+// cork is its own `.bottle-cork` group so the caught state can pop it out of the lip.
 export const BOTTLE_SURFACE_MS = 13000;
 export const BOTTLE_SVG = `<svg viewBox="0 0 132 64" role="img"><title>A corked glass bottle with a rolled note inside, bobbing beside the page</title>
-  <!-- rolled note, seen through the glass -->
-  <g>
-    <rect x="20" y="21" width="58" height="22" rx="6" fill="#efe3c4"/>
-    <ellipse cx="20" cy="32" rx="4" ry="11" fill="#e2d3a9"/>
-    <ellipse cx="78" cy="32" rx="4" ry="11" fill="#f4ebd2"/>
-    <g stroke="#a8966b" stroke-width="1.3" stroke-linecap="round" opacity=".65">
-      <path d="M30 27 H66"/><path d="M28 32 H68"/><path d="M31 37 H63"/>
+  <!-- the rolled note, seen through the glass: a paper tube with the near end open on
+       its spiral, the far end in shadow, and one seam where the roll stops wrapping -->
+  <g transform="rotate(-1.6 43 32.4)">
+    <path d="M19.2 22.3 C36 21.7 52 21.8 68.2 22.2 L68 42.6 C51.6 43.1 35.4 43.2 19 42.5 Z" fill="#f3e8ca"/>
+    <ellipse cx="19.2" cy="32.4" rx="3.5" ry="10.2" fill="#ddcb9c"/>
+    <path d="M57.8 22.6 C57 28.2 57.1 36.6 58 42.3" fill="none" stroke="#c9b381" stroke-width="1.1" stroke-linecap="round" opacity=".8"/>
+    <g stroke="#96814f" stroke-linecap="round" fill="none">
+      <path d="M25.4 26.6 q2.4 -1.1 4.6 0 t4.4 0 t4.6 0 t4.4 0 t4.2 0" stroke-width="1.25" opacity=".74"/>
+      <path d="M23.6 31.4 q2.2 -1 4.4 0 t4.6 0 t4.4 0 t4.6 0 t4.4 0 t4.4 0" stroke-width="1" opacity=".66"/>
+      <path d="M26 36.2 q2.6 -1.1 5 0 t4.6 0 t4.8 0 t4.2 0" stroke-width="1.2" opacity=".7"/>
+      <path d="M24.2 40 q2.2 -0.9 4.4 0 t4.6 0 t4.2 0" stroke-width="0.9" opacity=".56"/>
+  </g>
+  <ellipse cx="68.1" cy="32.4" rx="3.8" ry="10.3" fill="#faf3de"/>
+  <ellipse cx="68.6" cy="32.5" rx="1.5" ry="4.2" fill="#d5c194"/>
+  <path d="M69.8 23.4 C66.4 26.4 65.9 30.6 68.2 32.2" fill="none" stroke="#c3ad7c" stroke-width="1.05" stroke-linecap="round"/>
+  </g>
+
+  <!-- the glass itself: one sea-glass wash, then the outline inked in separate strokes
+       so the pen runs heavy round the base and lightens off through the neck -->
+  <path d="M16.4 10.8 C43 10.2 62 10.4 77.4 10.7 C86.6 10.9 92.6 15.4 95.2 23.2 Q95.7 24.2 97.1 24.3
+           L108.3 24.2 L108.5 22.1 L113 22.3 L112.8 42 L108.2 41.8 L108.4 39.5
+           L97 39.4 Q95.6 39.5 95.1 40.5 C92.2 48.5 86.2 53.3 77.2 53.5 C60 53.9 40 53.8 16.2 53.2
+           C9.5 53 4.7 49 4.9 42.5 L5.1 21.8 C5.2 15.2 9.8 11 16.4 10.8 Z" fill="#9cc0b0" fill-opacity=".38"/>
+  <g fill="none" stroke="#6f9a88" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M16.4 10.9 C9.8 11.1 5.2 15.3 5.1 21.9 L4.9 42.5 C4.7 49 9.5 53 16.2 53.2 C40 53.8 60 53.9 77.2 53.5" stroke-width="2.7"/>
+    <path d="M16.5 10.8 C43 10.2 62 10.4 77.4 10.7" stroke-width="2.15"/>
+    <path d="M77.4 10.7 C86.6 10.9 92.6 15.4 95.2 23.2 Q95.7 24.2 97.1 24.3 L108.3 24.2" stroke-width="2"/>
+    <path d="M77.2 53.5 C86.2 53.3 92.2 48.5 95.1 40.5 Q95.6 39.5 97 39.4 L108.4 39.5" stroke-width="1.85"/>
+    <path d="M108.5 24.2 L108.5 22.1 L113 22.3 L112.8 42 L108.2 41.8 L108.4 39.5" stroke-width="1.7"/>
+  </g>
+  <!-- thickness in the base wall, and the shadow gathering under the shoulder -->
+  <path d="M11.4 19.4 C9.1 25.6 9 39.4 11.1 45.4" fill="none" stroke="#6f9a88" stroke-width="1.2" stroke-linecap="round" opacity=".5"/>
+  <path d="M79.8 50.2 C86.4 49.3 90.6 44.9 92.9 38.4" fill="none" stroke="#6f9a88" stroke-width="1.4" stroke-linecap="round" opacity=".34"/>
+  <!-- bubbles caught in the pour, only where the glass stands empty -->
+  <g fill="#f2faf5" opacity=".7"><circle cx="12.9" cy="27.6" r="1.55"/><circle cx="15.4" cy="36.6" r="1"/><circle cx="12.1" cy="42.4" r="0.75"/><circle cx="85.8" cy="20.8" r="1.2"/><circle cx="89.6" cy="29.4" r="0.85"/><circle cx="74.4" cy="15.6" r="0.9"/></g>
+  <!-- highlights -->
+  <path d="M15.4 16.2 C10.4 19.2 9 26.2 9.4 32.6" fill="none" stroke="#ffffff" stroke-width="3.1" stroke-linecap="round" opacity=".45"/>
+  <path d="M83 15.2 C87.4 16.5 90.4 19.2 92.2 22.4" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" opacity=".32"/>
+  <path d="M27 49.4 C36 50.1 47 50.2 56.4 49.8" fill="none" stroke="#ffffff" stroke-width="1.7" stroke-linecap="round" opacity=".22"/>
+
+  <!-- the cork: a kraft barrel seated in the lip, grained across its outer half -->
+  <g class="bottle-cork">
+    <path d="M111 24.5 C115.2 23.1 121.2 22.9 125.6 24.1 C126.8 24.5 126.9 39.7 125.7 40.1
+             C121.2 41.3 115 41.1 110.9 39.7 C109.8 39.3 109.8 24.9 111 24.5 Z"
+          fill="#c8925a" stroke="#8f6231" stroke-width="1.7" stroke-linejoin="round"/>
+    <path d="M111 24.5 C112.2 24.1 113.6 23.9 114.8 23.8 C115.8 24.6 115.7 39.6 114.7 40.3
+             C113.4 40.2 112 40 110.9 39.7 C109.8 39.3 109.8 24.9 111 24.5 Z"
+          fill="#a9743c" opacity=".5"/>
+    <g stroke="#8f6231" stroke-width="1" stroke-linecap="round" fill="none" opacity=".5">
+      <path d="M118.8 27.6 C120.2 27.4 121.8 27.5 123 27.8"/>
+      <path d="M118.1 32.4 C120 32.2 121.4 32.3 123.7 32.6"/>
+      <path d="M119.6 37 C120.8 36.9 122 37 122.8 37.1"/>
     </g>
   </g>
-  <!-- glass body: rounded base at left, shoulder tapering to a neck on the right -->
-  <path d="M14 12 H84 Q93 12 95 23 L107 23 L107 41 L95 41 Q93 52 84 52 H14 Q5 52 5 43 V21 Q5 12 14 12 Z"
-        fill="#9cc0b0" fill-opacity=".42" stroke="#6f9a88" stroke-width="2.3" stroke-linejoin="round"/>
-  <!-- neck lip -->
-  <rect x="103" y="22" width="5" height="20" rx="2" fill="#9cc0b0" fill-opacity=".5" stroke="#6f9a88" stroke-width="1.8"/>
-  <!-- cork -->
-  <rect x="106" y="24" width="15" height="16" rx="3.2" fill="#c08a4d" stroke="#8f6231" stroke-width="1.6"/>
-  <rect x="106" y="24" width="5.5" height="16" rx="2.6" fill="#a9743c" opacity=".6"/>
-  <!-- glass highlights -->
-  <path d="M15 18 Q10 22 11 34" stroke="#ffffff" stroke-width="3" stroke-linecap="round" fill="none" opacity=".45"/>
-  <path d="M22 47 H80" stroke="#ffffff" stroke-width="2" stroke-linecap="round" opacity=".22"/>
 </svg>`;
-// A gentle wake the bottle rides on — two nested waves, drawn beneath it, sea tint.
+// A gentle wake the bottle rides on — two nested waves beneath it plus a pair of far
+// crests above, sea tint. Every bump is its own width and height: an evenly repeated
+// t-command swell reads as clip art next to the hand-drawn doodles.
 export const BOTTLE_WAVE_SVG = `<svg viewBox="0 0 140 24" aria-hidden="true">
-  <path d="M2 10 q10 -7 20 0 t20 0 t20 0 t20 0 t20 0 t20 0" fill="none" stroke="#7fa8b6" stroke-width="2.4" stroke-linecap="round" opacity=".7"/>
-  <path d="M8 18 q10 -6 20 0 t20 0 t20 0 t20 0 t20 0" fill="none" stroke="#a6c3cd" stroke-width="2" stroke-linecap="round" opacity=".55"/>
+  <path d="M18.4 5 q5.6 -3.6 10.6 -0.2 M95.6 4.4 q5 -3.2 9.8 0.2" fill="none" stroke="#a6c3cd" stroke-width="1.6" stroke-linecap="round" opacity=".38"/>
+  <path d="M2.6 10.4 q6.2 -6.2 12.4 -0.4 q6.6 5.6 13.6 0.2 q7 -5.4 12.8 0.6 q6.2 6 13.4 -0.4 q7.2 -5.8 13.4 0.4 q6.4 5.8 13.8 -0.6 q6.8 -5.2 12.6 0.4 q7 5.6 13.6 -0.2 q6.6 -5.6 13 0.6 q6.4 5.4 13.2 -0.4"
+        fill="none" stroke="#7fa8b6" stroke-width="2.4" stroke-linecap="round" opacity=".7"/>
+  <path d="M7.8 18.2 q7.4 -5.4 14.2 0.4 q7 5 14 -0.4 q7.4 -5 13.4 0.6 q6.8 5.4 14.4 -0.4 q7.6 -5 14 0.4 q7 5.2 13.8 -0.6 q7.2 -4.8 13.6 0.4 q7 5 14.2 -0.4 q7.4 -4.8 13.6 0.6"
+        fill="none" stroke="#a6c3cd" stroke-width="2" stroke-linecap="round" opacity=".55"/>
 </svg>`;

@@ -7850,7 +7850,12 @@
   .bottle-wave svg { display: block; width: 100%; height: 100%; animation: bottleWave 3.6s ease-in-out infinite; }
   @keyframes bottleWave { 0%,100% { transform: translateY(0); } 50% { transform: translateY(3px); } }
 
-  /* caught: the bottle settles and the note unrolls out over the desk */
+  /* caught: the cork works free of the lip, the bottle settles, and the note unrolls
+     out over the desk. .bottle-cork is a group inside BOTTLE_SVG, so its translate is
+     in viewBox units (132 across a 120px glass), not screen pixels; fill-box keeps the
+     origin on the cork's own seated end rather than the whole drawing's corner. */
+  .bottle-cork { transform-box: fill-box; transform-origin: 14% 52%; transition: transform 0.55s cubic-bezier(0.34, 1.5, 0.5, 1) 0.05s; }
+  .bottle-egg.caught .bottle-cork { transform: translate(7px, -3px) rotate(19deg); }
   .bottle-egg.caught .bottle-glass { transition: transform 0.5s ease; transform: translateX(34px) rotate(-8deg); }
   .bottle-egg.caught .bottle-glass svg { animation: none; }
   .bottle-egg.caught .bottle-wave { opacity: 0.5; }
@@ -7888,7 +7893,8 @@
   .bottle-egg.on-left.caught .bottle-note { transform: scale(1) translate(0, 0) rotate(1.5deg); }
 
   /* reduced motion: the bottle simply appears out in the gutter, the note simply shows */
-  body[data-reduce-motion="on"] .bottle-glass { transition: none; }
+  body[data-reduce-motion="on"] .bottle-glass,
+  body[data-reduce-motion="on"] .bottle-cork { transition: none; }
   body[data-reduce-motion="on"] .bottle-egg.adrift .bottle-glass svg,
   body[data-reduce-motion="on"] .bottle-wave svg { animation: none; }
   body[data-reduce-motion="on"] .bottle-note { transition: opacity 0.3s ease; transform: scale(1) translate(0,0) rotate(-1.5deg); }
