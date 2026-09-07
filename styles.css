@@ -405,11 +405,12 @@
     fill: #3f596c; font-family: var(--hand); font-size: calc(26px + var(--text-size-adjust));
     font-weight: 700;
   }
-  .di-placard .flame-body {
-    fill: rgba(169, 68, 62, 0.035); stroke: #a9443e; stroke-width: 1.65;
+  /* Graphite, one weight, shaded by hatching rather than by a fill. */
+  .di-placard .plc-flame path {
+    fill: none; stroke: #5f584c; stroke-width: 1.6;
     stroke-linecap: round; stroke-linejoin: round;
   }
-  .di-placard .flame-core { fill: #edc557; stroke: none; opacity: 0.9; }
+  .di-placard .plc-flame .plc-hatch { stroke-width: 1.05; }
   .di-pencil {
     width: 520px; top: 69%; left: calc(50% - 412px);
     /* near-vertical, tip pointing down the page; the pencil is drawn at real
