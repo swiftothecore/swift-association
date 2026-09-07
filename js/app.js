@@ -66,7 +66,7 @@ import {
 import { exportBraceletCard, copyBraceletCard, buildCardSVG, fontFaceCss } from "./braceletcard.js";
 import { exportSleeveCard, copySleeveCard, buildSleeveSVG } from "./sleevecard.js";
 import { sfx } from "./sound.js";
-import { wordRegex as wordRegexCore, extractLineWithWord as extractLineWithWordCore, highlightWord as highlightWordCore, variantBody, falseFriendRegex, addedLettersRegex } from "./match.js";
+import { wordRegex as wordRegexCore, extractLineWithWord as extractLineWithWordCore, highlightWord as highlightWordCore, variantBody, exactWordBody, boundedWordBody, falseFriendRegex, addedLettersRegex } from "./match.js";
 import { buildLyricReveal } from "./lyric-reveal.mjs";
 import { buildLineIndex, buildSlipContext, buildSlipPuzzle, buildNamePuzzle,
          buildBlankPuzzle, buildRedactedPuzzle,
@@ -189,6 +189,15 @@ let allSongs = [];
 // Every word the catalogue actually sings. Used only to tell a typo from a different word
 // when forgiving a misspelled prompt word — see phraseSingsPromptWord.
 let lyricVocab = new Set();
+// The apostrophe normalizeLyric took out, put back. Everything in the sung-line path compares
+// against text that has had its apostrophes stripped, where the catalogue's "could've" is
+// "couldve" and "baby's" is "babys" — spellings the matcher's contraction tails ("'ve", "'s")
+// can never reach, which is what left a page for "would" unable to see a line singing "would've".
+// This maps such a flattened token back to the one spelling the catalogue actually sings, so
+// promptWordRegex can ask the ORDINARY matcher about the real word, where the apostrophe is a
+// word boundary and every rule already knows what to do with it. Corpus-level, so it is the same
+// on every page and tells a player nothing about which songs are valid.
+let lyricApostrophes = new Map();
 let titleIndex = new Map();   // normalizeTitle(title|alias) -> song, built in loadData
 let spacelessIndex = new Map(); // titleIndex key with spaces removed -> song (space-error fallback)
 let playableWords = [];
@@ -11419,13 +11428,15 @@ let activeCorpus = "taylor";          // which catalogue the globals currently h
 
 function snapshotCorpus() {
   return { allSongs, titleIndex, spacelessIndex, playableWords, titleWordList,
-           shortTitleWordLists, albumWordMap, albumOrder, wordBuckets, lyricVocab };
+           shortTitleWordLists, albumWordMap, albumOrder, wordBuckets, lyricVocab, lyricApostrophes };
 }
 function applyCorpus(c) {
   allSongs = c.allSongs; titleIndex = c.titleIndex; spacelessIndex = c.spacelessIndex;
   playableWords = c.playableWords; titleWordList = c.titleWordList;
   shortTitleWordLists = c.shortTitleWordLists; albumWordMap = c.albumWordMap;
   albumOrder = c.albumOrder; wordBuckets = c.wordBuckets; lyricVocab = c.lyricVocab;
+  lyricApostrophes = c.lyricApostrophes;
+  promptRxCache = new Map();          // built from the index above, so it changes with it
 }
 // Put Taylor's catalogue back. Safe to call at any time, including when it is already
 // active — every exit from a guest run goes through it rather than trusting one path.
@@ -11464,6 +11475,8 @@ function installCorpus(grouped, words, opts = {}) {
   // irregular aliases, never letting one shadow a genuine title.
   titleIndex = new Map();
   lyricVocab = new Set();
+  lyricApostrophes = new Map();
+  const spelledPlain = new Set();      // the same flattened token, seen somewhere WITHOUT one
   for (const s of allSongs) {
     s._norm = normalizeTitle(s.title);
     s._normLyrics = normalizeLyric(s.lyrics);   // flat blob for lyric-line matching
@@ -11473,6 +11486,17 @@ function installCorpus(grouped, words, opts = {}) {
     // swap carries it automatically and there is nothing to add to snapshotCorpus.
     s._normTitleLyric = normalizeLyric(s.title);
     for (const t of s._normLyrics.split(" ")) lyricVocab.add(t);
+    // Walk the RAW lyrics for the apostrophe index: _normLyrics has already lost the thing
+    // it is built to remember. Quote marks around a word are stripped first, since a lyric
+    // sheet's 'quoted' word is not a contraction.
+    for (const raw of s.lyrics.toLowerCase().split(/[^\p{L}\p{N}'’]+/u)) {
+      const bare = raw.replace(/^['’]+|['’]+$/g, "");
+      if (!bare) continue;
+      const flat = normalizeLyric(bare);
+      if (!flat) continue;
+      if (/['’]/.test(bare)) { if (!lyricApostrophes.has(flat)) lyricApostrophes.set(flat, bare); }
+      else spelledPlain.add(flat);
+    }
     titleIndex.set(s._norm, s);
     // A catalogue may retain an official display title while accepting its common
     // short form. Keep aliases with the song so guest catalogues remain self-contained.
@@ -11486,6 +11510,10 @@ function installCorpus(grouped, words, opts = {}) {
       titleIndex.set(key, s);
     }
   }
+  // A token the catalogue also sings WITHOUT an apostrophe — "angels" beside "angel's" — says
+  // nothing once the apostrophe is gone, so it is dropped rather than guessed at. What is left
+  // is only the tokens whose flattened spelling can have come from one place.
+  for (const flat of spelledPlain) lyricApostrophes.delete(flat);
   for (const [canonical, aliases] of Object.entries(opts.aliases ? TITLE_ALIASES : {})) {
     const song = allSongs.find((s) => s.title === canonical);
     if (!song) { console.warn(`TITLE_ALIASES: no song titled "${canonical}"`); continue; }
@@ -18430,10 +18458,9 @@ function normLineSet(song) {
 function shortLineSubstantial(normPhrase, word) {
   const words = normPhrase.split(" ");
   if (words.length < SHORT_LINE_MIN_WORDS) return false;
-  const normWord = word ? normalizeLyric(word) : "";
   // Lenient regardless of the mode's strictness: here a wider notion of "that's just the
   // prompt word again" makes the guard tighter, which is the direction to err in.
-  const rx = normWord ? wordRegex(normWord, false) : null;
+  const rx = word ? promptWordRegex(word, false) : null;
   return words.some((w) => !LYRIC_FILLER.has(w) && !(rx && rx.test(w)));
 }
 
@@ -18450,6 +18477,36 @@ function shortLineSong(normPhrase) {
 function lyricRequiredWords() {
   if (bothRuleActive() && bothWords.length) return bothWords;
   return currentWord ? [currentWord] : [];
+}
+
+// The page's word as the sung-line path has to look for it: normalized into lyric space, and
+// matched with the apostrophe-blind tail lyricWordRegex carries (js/match.js), since everything
+// down here compares against text that has had its apostrophes stripped. Every rule that holds
+// the page's word up against normalized lyric text goes through this one wrapper, so the gate,
+// the gauge, the near miss and the join repair can never end up disagreeing about what counts.
+// One expression per word per strictness, and a page only ever asks about its own word or two,
+// so the cap is nowhere near reached in play; it is here because the near-miss path builds one
+// for whatever the player typed as well, and nothing player-typed gets to grow without a limit.
+const PROMPT_RX_CACHE_MAX = 400;
+let promptRxCache = new Map();
+function promptWordRegex(word, strict) {
+  if (strict === undefined) strict = effectiveStrict();
+  const nw = normalizeLyric(word);
+  const key = (strict ? "s\u0000" : "l\u0000") + nw;
+  const hit = promptRxCache.get(key);
+  if (hit) return hit;
+  // The ordinary expression, plus a literal for every flattened token that the ordinary
+  // expression accepts in its REAL spelling. The catalogue decides what a flattened token was,
+  // so nothing here has to guess: a page for "could" admits "couldve" because the catalogue
+  // sings "could've" and the matcher already reads that, while "car" never admits "carve" or
+  // "card", since no apostrophe was ever taken out of either of them.
+  const raw = wordRegex(word, strict);
+  const alts = [strict ? exactWordBody(nw) : variantBody(nw)];
+  for (const [flat, spelling] of lyricApostrophes) if (raw.test(spelling)) alts.push(exactWordBody(flat));
+  const rx = new RegExp(boundedWordBody("(?:" + alts.join("|") + ")"), "iu");
+  if (promptRxCache.size >= PROMPT_RX_CACHE_MAX) promptRxCache.clear();
+  promptRxCache.set(key, rx);
+  return rx;
 }
 
 // Does the typed phrase actually sing one of the page's words? Judged at the same
@@ -18470,8 +18527,11 @@ function phraseSingsPromptWord(normPhrase) {
   return need.some((w) => {
     const nw = normalizeLyric(w);
     if (!nw) return false;
-    const rx = wordRegex(nw, effectiveStrict());
-    if (tokens.some((t) => rx.test(t))) return true;
+    // Asked of the whole phrase rather than token by token, because the page's word can BE
+    // two words ("New York", the one such word in the list) and a token-wise test could never
+    // see it. For the other 732 it is the same question: the pattern is bounded at both ends,
+    // and a space is a boundary.
+    if (promptWordRegex(w).test(normPhrase)) return true;
     return nw.length >= LYRIC_TYPO_MIN_WORD &&
       tokens.some((t) => !lyricVocab.has(t) && oneTypoApart(t, nw));
   });
@@ -18487,6 +18547,7 @@ let joinFixCache = new Map();
 // panel forcing a word, which is a page change in every way that matters to these.
 function resetWordCaches() {
   wordSpotCache = new Map();            // where the valid songs sing it
+  promptRxCache = new Map();            // how to recognise it in flattened lyric text
   joinFixCache = new Map();             // which joined-up tokens were hiding it
   joinNeighbours = null;                // what the catalogue sings on either side of it
 }
@@ -18526,7 +18587,7 @@ function repairJoinedPromptWord(normPhrase) {
 // runs once or twice per unknown token rather than once per letter.
 function splitOnPromptWord(token, need) {
   for (const nw of need) {
-    const rx = wordRegex(nw, effectiveStrict());
+    const rx = promptWordRegex(nw);       // already normalized; the wrapper's fold is idempotent
     const { after, before } = promptWordNeighbours().get(nw) || { after: EMPTY_SET, before: EMPTY_SET };
     for (let i = JOIN_MIN_PART; i <= token.length - JOIN_MIN_PART; i++) {
       const a = token.slice(0, i), b = token.slice(i);
@@ -18554,7 +18615,7 @@ function promptWordNeighbours() {
   for (const w of lyricRequiredWords()) {
     const nw = normalizeLyric(w);
     if (!nw || joinNeighbours.has(nw)) continue;
-    const rx = wordRegex(nw, effectiveStrict());
+    const rx = promptWordRegex(w);
     // Which VOCABULARY entries count as this word, resolved once, so the walk below is a set
     // membership test per token instead of a regex per token. On a word as common as "in"
     // that is the difference between a visible hitch and nothing.
@@ -18641,24 +18702,26 @@ function oneTypoApart(a, b) {
 // player reads their own line left to right, or null.
 function nearMissPromptWord(normPhrase) {
   const strict = effectiveStrict();
-  // The page's words in both spellings: `norm` to judge by, `word` to say out loud, since
-  // normalizeLyric g-drops and would have the nudge call the word "mornin" on a page for
-  // "morning".
+  // The page's words in both spellings: `word` to say out loud and to build the regexes from
+  // (promptWordRegex folds it into lyric space itself), `norm` for the two tests that compare
+  // the word as a plain string. They are not the same text — normalizeLyric g-drops, and would
+  // otherwise have the nudge call the word "mornin" on a page for "morning".
   const need = lyricRequiredWords().map((w) => ({ word: w, norm: normalizeLyric(w) })).filter((n) => n.norm);
   if (!need.length) return null;
   for (const t of normPhrase.split(" ")) {
     if (t.length < JOIN_MIN_PART + 1) continue;
     for (const { word, norm } of need) {
-      const rx = wordRegex(norm, strict);
-      if (rx.test(t)) continue;                                    // it counts; not a near miss
-      if (strict && wordRegex(norm, false).test(t)) return { token: t, word, why: "strict" };
+      // The gate's own test, so a token the line is ACCEPTED for can never also be reported as
+      // the reason it was refused.
+      if (promptWordRegex(word, strict).test(t)) continue;         // it counts; not a near miss
+      if (strict && promptWordRegex(word, false).test(t)) return { token: t, word, why: "strict" };
       const friends = falseFriendRegex(norm);
       if (!strict && friends && friends.test(t)) return { token: t, word, why: "friend" };
       // The compound test always asks the LENIENT regex, even in a strict run: the question
       // is whether the player SAW the word in there, not whether it would have counted. With
       // variants off, strict "write" doesn't match "writer", and "typewriter" — the most
       // confusing token on the page — would go unexplained in the one mode that needs it most.
-      if (buriesPromptWord(t, wordRegex(norm, false))) return { token: t, word, why: "compound" };
+      if (buriesPromptWord(t, promptWordRegex(word, false))) return { token: t, word, why: "compound" };
     }
   }
   // Nothing above owned the line, so fall back to the coincidence: the word's letters sitting
@@ -18670,7 +18733,7 @@ function nearMissPromptWord(normPhrase) {
     if (!lyricVocab.has(t)) continue;
     for (const { word, norm } of need) {
       if (t === norm || norm.length < 2 || !t.includes(norm)) continue;
-      if (wordRegex(norm, strict).test(t)) continue;             // it counts; not a near miss
+      if (promptWordRegex(word, strict).test(t)) continue;       // it counts; not a near miss
       return { token: t, word, why: "inside" };
     }
   }
@@ -18956,9 +19019,14 @@ function isTitleFragment(np) {
 let wordSpotCache = new Map();
 function wordSpots(song) {
   if (wordSpotCache.has(song.title)) return wordSpotCache.get(song.title);
-  const rxs = lyricRequiredWords().map((w) => wordRegex(normalizeLyric(w), effectiveStrict()));
+  // Judged on a window the length of the word, not on the single token at that index, since a
+  // prompt word can be two words ("New York") and would otherwise be sung nowhere at all.
+  const needs = lyricRequiredWords().map((w) => ({ rx: promptWordRegex(w), span: normalizeLyric(w).split(" ").length }));
+  const toks = song._normLyrics.split(" ");
   const spots = [];
-  song._normLyrics.split(" ").forEach((t, i) => { if (rxs.some((rx) => rx.test(t))) spots.push(i); });
+  toks.forEach((t, i) => {
+    if (needs.some((n) => n.rx.test(n.span > 1 ? toks.slice(i, i + n.span).join(" ") : t))) spots.push(i);
+  });
   wordSpotCache.set(song.title, spots);
   return spots;
 }
