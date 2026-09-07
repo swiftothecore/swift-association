@@ -48,6 +48,18 @@ export function normalizeTitle(s) {
 // so "dancing" and "dancin'" match either way (g-dropping is common in TS lyrics).
 // Collapses all whitespace (incl. newlines) to single spaces, so a per-song blob is
 // one flat string ideal for substring search.
+//
+// Two conditions on the g-drop, both learned the hard way. It only fires when the letters
+// BEFORE the "ing" hold a vowel, because "ring", "king", "sing", "thing", "spring",
+// "string", "swing" and "bring" are not g-dropped words at all, they are words that happen
+// to end in those three letters. Folding them cost twice over: it mangled the page's own
+// word (a page for "ring" asked the matcher for "rin", which no longer reaches "rings"),
+// and it walked a line straight through the rule that a sung line must sing the word,
+// since "sing" folded onto "sin" and handed a page for "sin" every line that sings.
+// And when it does fire it takes a plural "s" with it, so the singular and the plural land
+// on the same stem: "feelings" has no word boundary after its "ing" and would otherwise
+// stay whole while "feeling" became "feelin", leaving the two forms of one word further
+// apart after normalizing than they were before it.
 export function normalizeLyric(s) {
   return s
     .toLowerCase()
@@ -56,7 +68,8 @@ export function normalizeLyric(s) {
     .replace(/[&+]/g, "and")
     .replace(/[().!?,:;"'…]/g, "")
     .replace(/[-–—/]/g, " ")
-    .replace(/ing\b/g, "in")        // g-dropping: dancing / dancin' -> dancin
+    .replace(/(\S*?)ing(s?)(?=\s|$)/g,                 // dancing / dancin' -> dancin
+             (m, stem, s2) => (/[aeiouy]/.test(stem) ? stem + "in" + s2 : m))
     .replace(/\s+/g, " ")
     .trim();
 }

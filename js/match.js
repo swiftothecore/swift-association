@@ -39,8 +39,11 @@ export function boundedWordBody(body) {
 // derivations (gold→golden, dream→dreamer, slow→slowly, blood→bloody).
 // Deliberately absent: a bare "d". It would buy die→died but also car→card, men→mend,
 // ten→tend; the silent-e rule below buys the same three-letter past tenses cleanly.
+// "ins" sits beside "in" and "ings" for the g-dropped plural: normalizeLyric folds "feelings"
+// to "feelins" the same way it folds "feeling" to "feelin", and a tail carrying two of those
+// three spellings is what leaves a page for "feel" unable to see a line about feelings.
 export const STEM_TAIL =
-  "(?:s|es|ed|ing|in|ings|er|ers|est|y|ies|ied|ier|iest|able|en|ly|less|ness|ful|'s|'d|'ll|'re|'ve)?";
+  "(?:s|es|ed|ing|in|ins|ings|er|ers|est|y|ies|ied|ier|iest|able|en|ly|less|ness|ful|'s|'d|'ll|'re|'ve)?";
 // These are the common inflections that CHANGE the stem first and so slip past even an
 // open tail: silent-e drop (love→loving), consonant+y→i (city→cities), and final-consonant
 // doubling (run→running). Each mutated stem is followed by its own bounded suffix set, so
@@ -48,7 +51,7 @@ export const STEM_TAIL =
 // Bare "in" (not "in'") so it still matches before a trailing apostrophe. A closing
 // boundary after the apostrophe cannot work, but the boundary after the "n" can
 // backtrack onto the "n" inside "lovin'". Covers g-dropped forms either way.
-export const INFLECT = "(?:ing|in|ings|ed|er|ers|es|y|ies|ied|ier|iest|able)";
+export const INFLECT = "(?:ing|in|ins|ings|ed|er|ers|es|y|ies|ied|ier|iest|able)";
 export function wordVariants(word) {
   const w = canonicalMatchText(word).toLowerCase();
   const alts = [exactWordBody(w) + STEM_TAIL];   // base: word + one bounded suffix

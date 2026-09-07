@@ -18642,7 +18642,8 @@ function oneTypoApart(a, b) {
 function nearMissPromptWord(normPhrase) {
   const strict = effectiveStrict();
   // The page's words in both spellings: `norm` to judge by, `word` to say out loud, since
-  // normalizeLyric g-drops and would have the nudge call the word "sin" on a page for "sing".
+  // normalizeLyric g-drops and would have the nudge call the word "mornin" on a page for
+  // "morning".
   const need = lyricRequiredWords().map((w) => ({ word: w, norm: normalizeLyric(w) })).filter((n) => n.norm);
   if (!need.length) return null;
   for (const t of normPhrase.split(" ")) {
