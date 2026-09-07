@@ -4992,7 +4992,7 @@ function renderKeepsakesPage() {
   const intro =
     `<p class="chall-eyebrow">Your keepsakes</p>` +
     `<p class="keep-lead">Polaroids from the notebook, earned by playing. A fresh one develops like real ` +
-    `instant film, fading up from black over thirteen minutes, so give a new photo a while to come through.</p>`;
+    `instant film, so give a new photo thirteen minutes to come through.</p>`;
 
   const counter =
     `<div class="keep-counter"><span class="keep-counter-n">${found}</span>` +
@@ -5331,10 +5331,8 @@ function stickerShelfHTML() {
 
   const intro =
     `<p class="chall-eyebrow">Your stickers</p>` +
-    `<p class="keep-lead">Die-cut vinyl, earned by noticing things rather than by scoring. ` +
-    `One you have not earned shows as its shape and nothing else, which is the point: work out ` +
-    `what the picture wants and go and do it. Hover an earned one to be reminded what you ` +
-    `did for it.` +
+    `<p class="keep-lead">Die-cut vinyl, earned by noticing rather than scoring. An unearned one ` +
+    `shows as its shape and nothing else: work out what the picture wants, then go and do it.` +
     (hinting ? ` Hover one you have not earned and the shelf will nudge you.` : ``) +
     `</p>`;
 
