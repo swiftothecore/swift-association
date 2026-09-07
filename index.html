@@ -1545,6 +1545,10 @@ if (location.pathname.endsWith('/index.html')) {
         <linearGradient id="flBlue" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#86a5cb"/><stop offset="1" stop-color="#5b7ba3"/></linearGradient>
         <path id="flHankB" d="M-30.4 -6.7 C-27.0 -6.8 -23.6 -6.9 -20.3 -7.0 C-16.9 -7.0 -13.5 -6.8 -10.1 -6.8 C-6.8 -6.9 -3.4 -7.2 0.0 -7.2 C3.4 -7.3 6.8 -7.2 10.1 -6.8 C13.5 -6.4 16.9 -6.5 20.3 -6.6 C23.6 -6.6 27.0 -6.6 30.4 -6.6 C32.1 -6.5 33.8 -5.8 35.1 -4.7 C36.2 -3.4 36.9 -1.7 37.0 -0.0 C36.9 1.7 36.2 3.4 35.1 4.7 C33.8 5.8 32.1 6.5 30.4 6.6 C27.0 6.6 23.6 6.6 20.3 6.5 C16.9 6.3 13.5 6.0 10.1 6.1 C6.8 6.1 3.4 6.0 0.0 5.9 C-3.4 5.8 -6.8 5.7 -10.1 5.7 C-13.5 5.7 -16.9 5.9 -20.3 6.1 C-23.6 6.3 -27.0 6.4 -30.4 6.5 C-32.1 6.4 -33.8 5.7 -35.1 4.7 C-36.2 3.4 -36.9 1.7 -37.0 0.0 C-36.9 -1.7 -36.2 -3.4 -35.1 -4.7 C-33.8 -5.8 -32.1 -6.5 -30.4 -6.7 Z"/>
         <path id="flHankR" d="M-40.0 -8.3 C-35.6 -8.3 -31.1 -8.2 -26.7 -8.2 C-22.2 -8.3 -17.8 -8.0 -13.3 -7.7 C-8.9 -7.6 -4.4 -7.8 0.0 -7.9 C4.4 -8.0 8.9 -8.2 13.3 -8.5 C17.8 -8.6 22.2 -7.8 26.7 -7.9 C31.1 -8.0 35.6 -8.0 40.0 -8.0 C42.0 -7.8 44.1 -7.0 45.7 -5.7 C47.0 -4.1 47.8 -2.0 48.0 -0.0 C47.8 2.0 47.0 4.1 45.7 5.7 C44.1 7.0 42.0 7.8 40.0 8.0 C35.6 8.0 31.1 8.0 26.7 7.7 C22.3 7.2 17.8 7.1 13.3 7.4 C8.9 7.8 4.4 8.0 0.0 7.9 C-4.4 7.8 -8.9 7.6 -13.3 7.4 C-17.8 7.2 -22.2 7.3 -26.7 7.6 C-31.1 7.8 -35.6 7.7 -40.0 7.7 C-42.0 7.6 -44.0 6.8 -45.6 5.6 C-46.9 4.1 -47.8 2.0 -47.9 0.0 C-48.0 -2.0 -47.0 -4.2 -45.7 -5.7 C-44.2 -7.1 -42.1 -8.0 -40.0 -8.3 Z"/>
+        <!-- The bundle's own silhouette, used to clip the strands inside it. A
+             turned strand that overshoots the fold by a tenth of a millimetre
+             reads as a burr on the edge, and there are twenty-two of them. -->
+        <clipPath id="flHankRClip"><use href="#flHankR"/></clipPath>
         <linearGradient id="flRound" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff" stop-opacity="0.12"/><stop offset="0.42" stop-color="#ffffff" stop-opacity="0"/><stop offset="1" stop-color="#3d2030" stop-opacity="0.14"/></linearGradient>
         <linearGradient id="flBand" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ece1c7"/><stop offset="1" stop-color="#dbcdad"/></linearGradient>
         <linearGradient id="flGold" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#e5bc5a"/><stop offset="1" stop-color="#c1913a"/></linearGradient>
@@ -1669,78 +1673,21 @@ if (location.pathname.endsWith('/index.html')) {
         <path d="M11 -7.4 C12.6 -8 15.4 -8 17 -7.4 L17 7.4 C15.4 8 12.6 8 11 7.4 Z"
               fill="url(#flBand)" stroke="#b9a884" stroke-width="0.7"/>
       </g>
-      <!-- dusty-rose skein, front. Long and slim the way a skein actually is,
-           and never an even tube: it lumps where the wraps pile up and waists
-           slightly wherever a paper band grips it. -->
-      <g transform="translate(60 44) rotate(-18)">
-        <use href="#flHankR" fill="url(#flRose)" stroke="#9d4664" stroke-width="0.6"/>
-        <g fill="none" stroke-linecap="round">
-          <path d="M-40.9 -7.5 C-14.4 -7.6 12.0 -7.3 39.3 -7.4" stroke="#b6738c" stroke-width="0.67" opacity="0.63"/>
-          <path d="M-43.0 -6.8 C-14.8 -6.9 13.5 -6.9 42.5 -6.8" stroke="#c5869c" stroke-width="0.79" opacity="0.89"/>
-          <path d="M-43.6 -6.1 C-14.9 -6.2 13.9 -6.3 43.5 -6.1" stroke="#c6879c" stroke-width="0.69" opacity="0.58"/>
-          <path d="M-44.6 -5.6 C-15.3 -5.5 14.0 -5.5 44.2 -5.8" stroke="#c7899e" stroke-width="0.77" opacity="0.78"/>
-          <path d="M-44.9 -5.1 C-15.2 -5.1 14.5 -4.9 45.1 -5.1" stroke="#d398ac" stroke-width="0.65" opacity="0.59"/>
-          <path d="M-45.9 -4.4 C-15.8 -4.5 14.3 -4.5 45.4 -4.4" stroke="#d89eb1" stroke-width="0.75" opacity="0.72"/>
-          <path d="M-46.2 -3.8 C-15.8 -3.9 14.5 -3.8 45.7 -3.7" stroke="#dba2b4" stroke-width="0.46" opacity="0.59"/>
-          <path d="M-46.7 -3.2 C-16.0 -3.1 14.7 -3.0 46.3 -3.1" stroke="#d69caf" stroke-width="0.72" opacity="0.89"/>
-          <path d="M-46.8 -2.6 C-15.8 -2.7 15.1 -2.7 47.0 -2.7" stroke="#d59aae" stroke-width="0.49" opacity="0.85"/>
-          <path d="M-47.2 -2.0 C-16.2 -2.1 14.9 -2.2 46.9 -1.9" stroke="#e1aabb" stroke-width="0.51" opacity="0.71"/>
-          <path d="M-47.0 -1.3 C-16.0 -1.1 15.1 -1.4 47.2 -1.3" stroke="#efbaca" stroke-width="0.61" opacity="0.80"/>
-          <path d="M-47.2 -0.7 C-16.0 -0.9 15.2 -0.6 47.4 -0.6" stroke="#f0bccb" stroke-width="0.69" opacity="0.75"/>
-          <path d="M-47.4 -0.2 C-16.3 -0.3 14.9 -0.2 46.9 -0.3" stroke="#dba2b4" stroke-width="0.56" opacity="0.70"/>
-          <path d="M-47.0 0.5 C-16.0 0.4 15.1 0.6 47.1 0.6" stroke="#e1a9ba" stroke-width="0.46" opacity="0.77"/>
-          <path d="M-46.9 1.1 C-15.8 1.0 15.3 1.2 47.3 1.0" stroke="#d195a9" stroke-width="0.74" opacity="0.68"/>
-          <path d="M-47.1 1.8 C-16.0 1.7 15.1 1.9 47.1 1.7" stroke="#d498ac" stroke-width="0.47" opacity="0.64"/>
-          <path d="M-46.6 2.5 C-15.8 2.5 15.0 2.7 46.7 2.4" stroke="#c28299" stroke-width="0.46" opacity="0.72"/>
-          <path d="M-46.6 3.1 C-15.9 2.9 14.8 2.8 46.4 3.0" stroke="#c88aa0" stroke-width="0.56" opacity="0.87"/>
-          <path d="M-45.6 4.1 C-15.4 4.2 14.8 3.9 46.0 4.1" stroke="#c28298" stroke-width="0.64" opacity="0.66"/>
-          <path d="M-45.4 4.8 C-15.6 4.6 14.3 4.7 45.1 4.8" stroke="#be7d94" stroke-width="0.69" opacity="0.73"/>
-          <path d="M-43.7 5.9 C-14.7 5.9 14.2 6.0 44.0 5.9" stroke="#ac6781" stroke-width="0.59" opacity="0.84"/>
-          <path d="M-41.8 6.9 C-14.2 6.7 13.5 7.1 42.0 6.9" stroke="#a8617b" stroke-width="0.79" opacity="0.83"/>
-          <!-- strands turning over where the hank folds -->
-          <path d="M-47.0 2.3 C-48.2 2.3 -48.3 -2.3 -47.1 -2.3" stroke="#a7617b" stroke-width="0.51" opacity="0.52"/>
-          <path d="M46.3 4.4 C47.9 4.4 48.0 -2.2 46.4 -2.2" stroke="#b26e86" stroke-width="0.64" opacity="0.61"/>
-          <path d="M-44.6 -6.0 C-45.8 -6.0 -47.6 4.0 -46.4 4.0" stroke="#c98ba0" stroke-width="0.52" opacity="0.57"/>
-          <path d="M44.8 6.0 C46.7 6.0 47.4 -4.3 45.5 -4.3" stroke="#c8899f" stroke-width="0.51" opacity="0.62"/>
-          <path d="M-46.0 4.0 C-47.9 4.0 -47.7 -3.5 -45.8 -3.5" stroke="#cc8fa3" stroke-width="0.63" opacity="0.57"/>
-          <path d="M45.5 5.5 C47.6 5.5 47.4 -4.3 45.3 -4.3" stroke="#9c526f" stroke-width="0.61" opacity="0.47"/>
-          <path d="M46.5 4.4 q1.7 -0.4 3.1 -0.2" stroke="#8a3c5b" stroke-width="0.62" opacity="0.39"/>
-          <path d="M47.5 -2.6 q1.5 1.0 2.9 1.0" stroke="#8a3c5b" stroke-width="0.48" opacity="0.50"/>
-        </g>
-        <!-- one light-to-shade wash over the strands, so the hank reads as a
-             round bundle instead of a flat field of lines -->
-        <use href="#flHankR" fill="url(#flRound)" stroke="none"/>
-        <!-- the shadow each paper band drops onto the floss it grips -->
-        <g fill="#6d2440" opacity="0.2">
-          <path d="M-7.5 -8 q1.4 8 0 16 q2.1 -8 0 -16"/>
-          <path d="M25.5 -7.6 q1.2 7.6 0 15.2 q1.9 -7.6 0 -15.2"/>
-        </g>
-        <!-- the big band, bowed where it wraps the bundle, with its printed
-             rule and skein number -->
-        <path d="M-20.5 -9.4 C-18 -10.1 -10 -10.1 -7.5 -9.4 L-7.5 9.4
-                 C-10 10.1 -18 10.1 -20.5 9.4 Z"
-              fill="url(#flBand)" stroke="#b9a884" stroke-width="0.7"/>
-        <path d="M-19 -9.8 L-19 9.8 M-9 -9.8 L-9 9.8" stroke="#cbbb99" stroke-width="1.2" opacity="0.5"/>
-        <g fill="#5f5138" opacity="0.3">
-          <rect x="-16.6" y="3.1" width="0.7" height="2"/>
-          <rect x="-15.3" y="3.1" width="0.7" height="2"/>
-          <rect x="-14" y="3.3" width="0.7" height="1.8"/>
-          <rect x="-12.7" y="3.1" width="0.7" height="2"/>
-        </g>
-        <path d="M-17.4 6.2 H-10.6" stroke="#b23a3f" stroke-width="0.8" opacity="0.4"/>
-        <!-- the second band, narrower and set nearer the far fold -->
-        <path d="M18.5 -9 C20 -9.6 24 -9.6 25.5 -9 L25.5 9
-                 C24 9.6 20 9.6 18.5 9 Z"
-              fill="url(#flBand)" stroke="#b9a884" stroke-width="0.7"/>
-        <path d="M19.8 -9.4 L19.8 9.4" stroke="#cbbb99" stroke-width="1.2" opacity="0.5"/>
-      </g>
       <!-- A part-strung strand, swaying gently: floss off the rose skein with
            three beads on it and a stopper knot below the last one, which is
            the honest reason the beads have not slid off the end. Each bead is
            lit by the fixed lamp and only its two hole mouths are turned, to
-           follow the cord where it goes in. -->
+           follow the cord where it goes in.
+
+           Drawn BEFORE the skein, and starting well inside it, so the cord
+           disappears under the bundle and comes out from beneath its lower
+           flank. That occlusion is the whole reason it reads as the same piece
+           of floss: butted against the fold with its own round cap showing, it
+           was a line touching a pill. It also hides the sway's pivot, which
+           sits under the wraps now, so the swing shows as a thread being
+           tugged rather than as an end coming loose. -->
       <g class="desk-sway">
-        <path d="M15 58 C10 74 33 80 28 96 C24 105 34 108 33 118 C32.7 120.8 33.6 122.6 34.6 124.2"
+        <path d="M31.5 53.3 C28 57 24.5 60.5 22.5 64.6 C20.5 68.7 32 80 28 96 C24 105 34 108 33 118 C32.7 120.8 33.6 122.6 34.6 124.2"
               fill="none" stroke="#b45874" stroke-width="2" stroke-linecap="round"/>
         <!-- each bead stands off the wood on the cord, so it drops a short
              shadow of its own rather than sitting flush against it -->
@@ -1770,6 +1717,93 @@ if (location.pathname.endsWith('/index.html')) {
              anything much under a millimetre. -->
         <path d="M34.4 123.4 C31.4 124.4 32.2 128.4 35.4 128" fill="none" stroke="#a04e69" stroke-width="1.7" stroke-linecap="round"/>
         <path d="M33.6 125.4 C37.2 124.8 37.6 128.8 34.6 129.6 C33.2 130 32.5 130.9 32.3 132.1" fill="none" stroke="#c1687f" stroke-width="1.9" stroke-linecap="round"/>
+      </g>
+      <!-- dusty-rose skein, front. Long and slim the way a skein actually is,
+           and never an even tube: it lumps where the wraps pile up and waists
+           slightly wherever a paper band grips it. -->
+      <g transform="translate(60 44) rotate(-18)">
+        <use href="#flHankR" fill="url(#flRose)" stroke="#9d4664" stroke-width="0.6"/>
+        <g fill="none" stroke-linecap="round" clip-path="url(#flHankRClip)">
+          <!-- The strands, and the loops they turn back in. A skein is one length
+               of floss folded on itself, so the end is not a cut: every strand
+               there is a strand on its way back. Ruled up to a rounded tip with
+               nothing happening at it, the end read as a moulded cap, which is
+               the one thing a bundle of thread must not look like. Both halves
+               come out of scripts/art/make_floss_fold.py. -->
+          <path d="M-41.1 -7.5 C-14.4 -7.6 12.0 -7.3 39.3 -7.4" stroke="#b6738c" stroke-width="0.67" opacity="0.63"/>
+          <path d="M-41.1 -6.8 C-14.8 -6.9 13.5 -6.9 42.5 -6.8" stroke="#c5869c" stroke-width="0.79" opacity="0.89"/>
+          <path d="M-43.5 -6.1 C-14.9 -6.2 13.9 -6.3 43.5 -6.1" stroke="#c6879c" stroke-width="0.69" opacity="0.58"/>
+          <path d="M-44.8 -5.6 C-15.3 -5.5 14.0 -5.5 44.2 -5.8" stroke="#c7899e" stroke-width="0.77" opacity="0.78"/>
+          <path d="M-43.5 -5.1 C-15.2 -5.1 14.5 -4.9 45.1 -5.1" stroke="#d398ac" stroke-width="0.65" opacity="0.59"/>
+          <path d="M-44.8 -4.4 C-15.8 -4.5 14.3 -4.5 45.4 -4.4" stroke="#d89eb1" stroke-width="0.75" opacity="0.72"/>
+          <path d="M-46.4 -3.8 C-15.8 -3.9 14.5 -3.8 45.7 -3.7" stroke="#dba2b4" stroke-width="0.46" opacity="0.59"/>
+          <path d="M-46.4 -3.2 C-16.0 -3.1 14.7 -3.0 46.3 -3.1" stroke="#d69caf" stroke-width="0.72" opacity="0.89"/>
+          <path d="M-47.0 -2.6 C-15.8 -2.7 15.1 -2.7 47.0 -2.7" stroke="#d59aae" stroke-width="0.49" opacity="0.85"/>
+          <path d="M-47.1 -2.0 C-16.2 -2.1 14.9 -2.2 46.9 -1.9" stroke="#e1aabb" stroke-width="0.51" opacity="0.71"/>
+          <path d="M-47.0 -1.3 C-16.0 -1.1 15.1 -1.4 47.2 -1.3" stroke="#efbaca" stroke-width="0.61" opacity="0.80"/>
+          <path d="M-47.1 -0.7 C-16.0 -0.9 15.2 -0.6 47.4 -0.6" stroke="#f0bccb" stroke-width="0.69" opacity="0.75"/>
+          <path d="M-46.9 -0.2 C-16.3 -0.3 14.9 -0.2 46.9 -0.3" stroke="#dba2b4" stroke-width="0.56" opacity="0.70"/>
+          <path d="M-46.9 0.5 C-16.0 0.4 15.1 0.6 47.1 0.6" stroke="#e1a9ba" stroke-width="0.46" opacity="0.77"/>
+          <path d="M-46.8 1.1 C-15.8 1.0 15.3 1.2 47.3 1.0" stroke="#d195a9" stroke-width="0.74" opacity="0.68"/>
+          <path d="M-46.5 1.8 C-16.0 1.7 15.1 1.9 47.1 1.7" stroke="#d498ac" stroke-width="0.47" opacity="0.64"/>
+          <path d="M-46.8 2.5 C-15.8 2.5 15.0 2.7 46.7 2.4" stroke="#c28299" stroke-width="0.46" opacity="0.72"/>
+          <path d="M-46.5 3.1 C-15.9 2.9 14.8 2.8 46.4 3.0" stroke="#c88aa0" stroke-width="0.56" opacity="0.87"/>
+          <path d="M-45.5 4.1 C-15.4 4.2 14.8 3.9 46.0 4.1" stroke="#c28298" stroke-width="0.64" opacity="0.66"/>
+          <path d="M-45.5 4.8 C-15.6 4.6 14.3 4.7 45.1 4.8" stroke="#be7d94" stroke-width="0.69" opacity="0.73"/>
+          <path d="M-42.0 5.9 C-14.7 5.9 14.2 6.0 44.0 5.9" stroke="#ac6781" stroke-width="0.59" opacity="0.84"/>
+          <path d="M-42.0 6.9 C-14.2 6.7 13.5 7.1 42.0 6.9" stroke="#a8617b" stroke-width="0.79" opacity="0.83"/>
+          <!-- The fold. Tight hairpins between neighbours, not one nested rainbow:
+               a bundle squashed flat turns in small loops that all reach about as
+               far as each other, and it is the few that skip a strand, and the two
+               that cross, that keep the fringe off a comb. -->
+          <path d="M-41.1 -7.5 C-41.3 -7.5 -41.5 -7.3 -41.5 -7.2 C-41.5 -6.9 -41.3 -6.8 -41.1 -6.8" stroke="#b6738c" stroke-width="0.73" opacity="0.58"/>
+          <path d="M-43.5 -6.1 C-43.8 -6.1 -44.0 -5.9 -44.0 -5.6 C-44.0 -5.3 -43.8 -5.1 -43.5 -5.1" stroke="#d398ac" stroke-width="0.67" opacity="0.53"/>
+          <path d="M-44.8 -5.6 C-45.2 -5.6 -45.4 -5.4 -45.4 -5.0 C-45.4 -4.7 -45.1 -4.4 -44.8 -4.4" stroke="#d89eb1" stroke-width="0.76" opacity="0.66"/>
+          <path d="M-46.4 -3.8 C-46.6 -3.8 -46.7 -3.7 -46.7 -3.5 C-46.7 -3.3 -46.6 -3.2 -46.4 -3.2" stroke="#dba2b4" stroke-width="0.59" opacity="0.54"/>
+          <path d="M-47.0 -2.6 C-47.4 -2.6 -47.7 -2.3 -47.7 -2.0 C-47.7 -1.6 -47.4 -1.3 -47.0 -1.3" stroke="#efbaca" stroke-width="0.55" opacity="0.74"/>
+          <path d="M-47.1 -2.0 C-47.4 -2.0 -47.7 -1.7 -47.7 -1.4 C-47.7 -1.0 -47.5 -0.7 -47.1 -0.7" stroke="#f0bccb" stroke-width="0.6" opacity="0.65"/>
+          <path d="M-46.9 -0.2 C-47.1 -0.2 -47.3 -0.1 -47.3 0.1 C-47.3 0.3 -47.1 0.5 -46.9 0.5" stroke="#dba2b4" stroke-width="0.51" opacity="0.64"/>
+          <path d="M-46.8 1.1 C-47.2 1.1 -47.5 1.5 -47.5 1.8 C-47.5 2.2 -47.3 2.5 -46.8 2.5" stroke="#c28299" stroke-width="0.6" opacity="0.63"/>
+          <path d="M-46.5 1.8 C-46.9 1.8 -47.1 2.1 -47.1 2.5 C-47.1 2.8 -46.9 3.1 -46.5 3.1" stroke="#c88aa0" stroke-width="0.52" opacity="0.59"/>
+          <path d="M-45.5 4.1 C-45.7 4.1 -45.9 4.2 -45.9 4.4 C-45.9 4.6 -45.7 4.8 -45.5 4.8" stroke="#c28298" stroke-width="0.67" opacity="0.61"/>
+          <path d="M-42.0 5.9 C-42.3 5.9 -42.5 6.1 -42.5 6.4 C-42.5 6.7 -42.3 6.9 -42.0 6.9" stroke="#ac6781" stroke-width="0.69" opacity="0.76"/>
+          <!-- the far fold, mostly off the window edge -->
+          <path d="M46.3 4.4 C47.9 4.4 48.0 -2.2 46.4 -2.2" stroke="#b26e86" stroke-width="0.64" opacity="0.61"/>
+          <path d="M44.8 6.0 C46.7 6.0 47.4 -4.3 45.5 -4.3" stroke="#c8899f" stroke-width="0.51" opacity="0.62"/>
+          <path d="M45.5 5.5 C47.6 5.5 47.4 -4.3 45.3 -4.3" stroke="#9c526f" stroke-width="0.61" opacity="0.47"/>
+        </g>
+        <!-- two strands sprung clear of the bundle, and the only ones outside
+             the clip: everything else stays inside the fold. -->
+        <g fill="none" stroke-linecap="round">
+          <path d="M46.5 4.4 q1.7 -0.4 3.1 -0.2" stroke="#8a3c5b" stroke-width="0.62" opacity="0.39"/>
+          <path d="M47.5 -2.6 q1.5 1.0 2.9 1.0" stroke="#8a3c5b" stroke-width="0.48" opacity="0.50"/>
+        </g>
+        <!-- one light-to-shade wash over the strands, so the hank reads as a
+             round bundle instead of a flat field of lines -->
+        <use href="#flHankR" fill="url(#flRound)" stroke="none"/>
+        <!-- the shadow each paper band drops onto the floss it grips -->
+        <g fill="#6d2440" opacity="0.2">
+          <path d="M-7.5 -8 q1.4 8 0 16 q2.1 -8 0 -16"/>
+          <path d="M25.5 -7.6 q1.2 7.6 0 15.2 q1.9 -7.6 0 -15.2"/>
+        </g>
+        <!-- the big band, bowed where it wraps the bundle, with its printed
+             rule and skein number -->
+        <path d="M-20.5 -9.4 C-18 -10.1 -10 -10.1 -7.5 -9.4 L-7.5 9.4
+                 C-10 10.1 -18 10.1 -20.5 9.4 Z"
+              fill="url(#flBand)" stroke="#b9a884" stroke-width="0.7"/>
+        <path d="M-19 -9.8 L-19 9.8 M-9 -9.8 L-9 9.8" stroke="#cbbb99" stroke-width="1.2" opacity="0.5"/>
+        <g fill="#5f5138" opacity="0.3">
+          <rect x="-16.6" y="3.1" width="0.7" height="2"/>
+          <rect x="-15.3" y="3.1" width="0.7" height="2"/>
+          <rect x="-14" y="3.3" width="0.7" height="1.8"/>
+          <rect x="-12.7" y="3.1" width="0.7" height="2"/>
+        </g>
+        <path d="M-17.4 6.2 H-10.6" stroke="#b23a3f" stroke-width="0.8" opacity="0.4"/>
+        <!-- the second band, narrower and set nearer the far fold -->
+        <path d="M18.5 -9 C20 -9.6 24 -9.6 25.5 -9 L25.5 9
+                 C24 9.6 20 9.6 18.5 9 Z"
+              fill="url(#flBand)" stroke="#b9a884" stroke-width="0.7"/>
+        <path d="M19.8 -9.4 L19.8 9.4" stroke="#cbbb99" stroke-width="1.2" opacity="0.5"/>
       </g>
       <!-- folded paper stars -->
       <use href="#flStarA" transform="translate(86 96)" fill="url(#flGold)" stroke="#a87c2e" stroke-width="0.7" stroke-linejoin="round"/>
