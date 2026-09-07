@@ -401,16 +401,24 @@
     fill: #6d6354; font-family: var(--type); font-size: calc(9px + var(--text-size-adjust));
     font-weight: 700; letter-spacing: 1.45px;
   }
-  .di-placard .plc-l2 {
-    fill: #3f596c; font-family: var(--hand); font-size: calc(26px + var(--text-size-adjust));
+  /* The count: the numeral in the notebook's hand, the unit in its printed
+     voice and small, so that "128 days" still stops short of the flame. */
+  .di-placard .plc-num {
+    fill: #3f596c; font-family: var(--hand); font-size: calc(30px + var(--text-size-adjust));
     font-weight: 700;
   }
-  /* Graphite, one weight, shaded by hatching rather than by a fill. */
+  .di-placard .plc-unit {
+    fill: #6d6354; font-family: var(--type); font-size: calc(8px + var(--text-size-adjust));
+    font-weight: 700; letter-spacing: 1.2px;
+  }
+  /* One weight, shaded by hatching rather than by a fill. Drawn in a 24-unit
+     box and blown up 2.9x by the transform on the group, so the widths here
+     are the ones that LAND at 1.74 and 1.16 on the slip, not what they read. */
   .di-placard .plc-flame path {
-    fill: none; stroke: #5f584c; stroke-width: 1.6;
+    fill: none; stroke: #3f7f74; stroke-width: 0.6;
     stroke-linecap: round; stroke-linejoin: round;
   }
-  .di-placard .plc-flame .plc-hatch { stroke-width: 1.05; }
+  .di-placard .plc-flame .plc-hatch { stroke-width: 0.4; }
   .di-pencil {
     width: 520px; top: 69%; left: calc(50% - 412px);
     /* near-vertical, tip pointing down the page; the pencil is drawn at real
@@ -7444,6 +7452,16 @@
     border-right: 1.5px solid rgba(43,39,34,0.12);
   }
   .streak-cell:last-child { border-right: none; }
+  /* The flame beside the count, drawn rather than typed: an emoji here rendered
+     as somebody else's artwork in somebody else's palette, at whatever size the
+     platform felt like. Strokes in currentColor, so it is written in the same
+     era ink as the numeral it stands next to and needs no dark-mode rule. */
+  .streak-flame { width: 0.68em; height: 0.88em; margin-right: 0.1em; vertical-align: -0.05em; }
+  .streak-flame path {
+    fill: none; stroke: currentColor; stroke-width: 1.7;
+    stroke-linecap: round; stroke-linejoin: round;
+  }
+  .streak-flame .sf-hatch { stroke-width: 1.05; opacity: 0.72; }
   .streak-cell .stat-val { font-family: var(--hand); font-size: calc(42px + var(--text-size-adjust)); font-weight: 700; color: var(--ink-accent); line-height: 1; display: block; }
   .streak-cell .stat-lbl { font-family: var(--type); font-size: calc(10px + var(--text-size-adjust)); letter-spacing: 1px; color: var(--ink-soft); display: block; margin-top: 4px; text-transform: uppercase; }
   /* "By the numbers" — a notebook bento: accuracy ring + album-spine meter,

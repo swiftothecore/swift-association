@@ -1380,23 +1380,23 @@ if (location.pathname.endsWith('/index.html')) {
       <!-- familiar notebook ruling; the count is written ON the lower line -->
       <g class="plc-rules"><path d="M11 44 L179 43.4"/><path d="M11 71 L179 70.4"/></g>
       <path class="plc-margin" d="M34 8.5 L34.6 88"/>
-      <!-- The flame is graphite, because the hand that keeps this count is the
-           same one striking through the days on the calendar pad above it, and
-           because a red-and-gold flame on a desk of pencil marks was the one
-           object here pretending to be an app icon. Shaded with three hatch
-           strokes rather than a filled core: ink on paper, no fills. It leans,
-           and a lick folds in on each side, since a single closed teardrop
-           reads as a droplet at the sixteen screen pixels this is drawn at.
-           It sits in the margin gutter, centred against the label-and-count
-           block rather than against the paper. -->
-      <g class="plc-flame" transform="translate(7 36) scale(0.95)">
+      <!-- The flame is the picture on this slip, so it is drawn at the size of
+           one, filling the right half the way a stamp fills the corner of an
+           envelope, with the label and the count reading across to meet it.
+           Teal, because everything on this desk is warm wood and warm paper
+           and the mark has to be found at a glance; graphite lost it, and a
+           red-and-gold flame was the one object here pretending to be a phone
+           app's streak counter. Shaded by hatching rather than a fill, so it
+           stays ink on paper. The stroke widths are pre-divided by the 2.9
+           scale below, which is why they read as fractions. -->
+      <g class="plc-flame" transform="translate(117.8 10.8) scale(2.9)">
         <path d="M11.6 1.8 C12.8 5.0 12.0 7.6 10.2 9.8 C10.0 8.6 9.6 7.8 9.0 7.0 C7.2 9.4 4.2 11.4 4.2 15.2 C4.2 19.0 7.6 22.2 12.0 22.2 C16.4 22.2 19.8 19.0 19.8 15.2 C19.8 12.6 18.4 10.6 16.6 8.8 C16.8 10.0 16.6 11.0 16.0 11.8 C16.4 8.0 14.6 4.4 11.6 1.8 Z"/>
         <path class="plc-hatch" d="M7.6 17.6 L10.6 13.8"/>
         <path class="plc-hatch" d="M10.0 19.4 L13.6 14.6"/>
         <path class="plc-hatch" d="M13.0 20.2 L16.0 16.2"/>
       </g>
       <text class="plc-l1" x="43" y="40">DAILY STREAK</text>
-      <text class="plc-l2" x="43" y="70"></text>
+      <text class="plc-l2" x="43" y="70"></text>   <!-- js/placard.js fills this: <tspan class="plc-num"> + <tspan class="plc-unit"> -->
     </svg>
     <!-- This is the exact shared washi surface used on the six mode cards,
          not an SVG imitation: the same translucency, fibres, wrinkle and tear. -->
