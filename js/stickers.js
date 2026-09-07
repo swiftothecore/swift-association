@@ -14,9 +14,9 @@
 //         instruction, and leave it null where the drawing and `sub` already say it rather than
 //         padding one out to fill the space.
 //   era:  the section it belongs to, used to group the shelf.
-//   art:  a self-contained viewBox="0 0 100 100" SVG, exactly as drawn. No die-cut border and
-//         no stroke rules live in here: the shared #diecut filter and the .ln stroke classes
-//         are injected ONCE (stickerDefs in app.js, styles.css) and every sticker inherits them.
+//   art:  a self-contained viewBox="0 0 100 100" SVG, exactly as drawn. The shared die-cut
+//         filters add the paper edge on both game surfaces. The original
+//         set uses .ln stroke classes; guest artwork carries its own finer stroke weights.
 // Stickers are printed objects with a cream border, NOT margin doodles (DOODLE_SVG in
 // js/config.js), which are unfilled line art. Do not let the two families converge, and never
 // render a sticker below 64px: the crowded ones stop being their object.
@@ -462,8 +462,10 @@ export const STICKERS = [
   // you have been, and the shelf exists to be visited. The stricter mark, a perfect
   // hint-free run, stays the guest board's own ADMITTED stamp and its charms.
   // Ids are `guest-` + the GUESTS id, so endGuest derives one rather than keeping a map.
-  // Only the four PLAYABLE guests are here. The other six are drawn and parked on
-  // scripts/stickers/guest-stickers.html; append one here when its catalogue ships,
+  // Only the four PLAYABLE guests are here. All ten editable originals live in
+  // stickers/guests/; sync_guests.py embeds the live four below without runtime fetches.
+  // The six parked originals can be viewed on scripts/stickers/guest-stickers.html.
+  // Append one here when its catalogue ships,
   // never insert, or the whole cover re-deals.
   {
     id: "guest-olivia-rodrigo",
@@ -472,36 +474,26 @@ export const STICKERS = [
     how: "Clear a whole guest shelf: Olivia Rodrigo",
     hint: "Somebody else's records, and not one page missed.",
     era: "The guest shelf",
-    art: `<svg class="stick" viewBox="0 0 100 100">
-  <g transform="rotate(-4.6 50 50)">
-    <path class="ln" fill="#c6b1e2" d="M15.8 24.8 L84.6 24.2 C87.5 24.3 89.1 26.2 89 28.9 L88.3 70.8 C88.2 73.5 86.4 75.3 83.8 75.4 L15.1 75.9 C12.3 75.8 10.7 74 10.8 71.3 L11.5 29 C11.6 26.4 13.2 24.9 15.8 24.8 Z"/>
-    <g fill="#3a2758">
-      <rect x="17.2" y="31.2" width="16.6" height="3.2" rx="1"/>
-      <rect x="35.1" y="31.3" width="2.4" height="3.2" rx="1"/>
-      <rect x="39.4" y="31.3" width="14.2" height="3.2" rx="1"/>
-    </g>
-    <path class="ln t" fill="none" d="M17.1 39.9 C36 39.2 63 39.1 82.2 39.6"/>
-    <path class="ln t" fill="#f7f2e4" d="M17 44.4 L43.2 44.1 L43.6 70.6 L17.3 70.9 Z"/>
-    <g class="ln t" fill="#9a7ac8">
-      <path d="M28.4 53.6 C24.6 48.4 18.8 48.8 18.4 53.6 C18 58.2 22.9 60.6 28.6 59.4 Z"/>
-      <path d="M32 53.4 C36.2 47.9 41.9 48.9 42.1 53.8 C42.3 58.5 37.4 60.6 31.8 59.4 Z"/>
-      <path d="M28.4 60.8 C24.9 62.2 22.2 65.6 23.4 68.2 C24.7 70.9 28 69.2 29.4 64.8 Z"/>
-      <path d="M31.8 60.8 C35.4 62 38.2 65.4 37.1 68.1 C35.9 70.8 32.5 69.3 30.9 64.9 Z"/>
-    </g>
-    <path class="ln t" fill="#3a2758" d="M30.2 50.4 C31.4 50.4 31.9 51.8 31.9 56.4 C31.9 61.8 31.3 65.9 30.2 67.2 C29.1 65.9 28.5 61.8 28.5 56.4 C28.5 51.8 29 50.4 30.2 50.4 Z"/>
-    <g class="ln t" fill="none" stroke="#3a2758">
-      <path d="M29.4 50.8 C28.2 48.8 26.6 47.6 24.9 47.2"/>
-      <path d="M31 50.8 C32.2 48.8 33.9 47.6 35.6 47.4"/>
-    </g>
-    <g fill="#5c4a7a">
-      <rect x="49.2" y="46.4" width="32.8" height="2.8" rx="0.9"/>
-      <rect x="49.2" y="53.4" width="24.6" height="2.8" rx="0.9"/>
-      <rect x="49.2" y="60.4" width="29.4" height="2.8" rx="0.9"/>
-    </g>
-    <g fill="#5c4a7a">
-      <circle cx="50.6" cy="69.4" r="1.6"/><circle cx="56.8" cy="69.6" r="1.5"/><circle cx="62.8" cy="69.4" r="1.6"/>
-    </g>
-  </g>
+    art: `<svg xmlns="http://www.w3.org/2000/svg" class="stick" viewBox="0 0 100 100">
+<g stroke-linecap="round" stroke-linejoin="round">
+<g transform="rotate(-8 50 50)">
+<path d="M12 22 Q9 22 9 26 L9.5 76 Q9.5 79 13 79 L88 78.5 Q91 78.5 91 75 L90.6 25 Q90.6 21.5 87 21.5 Z" fill="#c9bfd0" stroke="#302d27" stroke-width="1.65" />
+<path d="M11 73.5 Q45 76 89.5 73.2 L89.5 75.5 Q89.5 77 87 77 L13 77.5 Q11 77.5 11 75 Z" fill="#b8acbf" stroke="#302d27" stroke-width="0" />
+<text x="50" y="33" text-anchor="middle" fill="#39323d" font-family="Courier Prime, Courier New, monospace" font-size="5.6" font-weight="700" letter-spacing=".12">DRIVER’S LICENCE</text>
+<path d="M15.5 40 L37.5 39.5 L38.2 70.5 L15.9 71 Z" fill="#ece7e5" stroke="#302d27" stroke-width="1" />
+<path d="M27 52 C23 46 18 46 19.1 51.7 C19.8 55.5 23 57 26.7 56.6 C21.4 57.2 20.4 62.3 23 63 C25.2 63.8 27 60.9 27.4 57.6 C28 61 30.5 64.4 32.4 62.2 C34.7 59.9 31.4 57.1 28.3 56.3 C32.4 55.6 35.1 50.8 33.7 48.5 C32.2 46.7 28.6 49.8 27 52 Z" fill="#8a719b" stroke="#302d27" stroke-width="0.85" />
+<path d="M27.3 52.6 Q27.8 56 27.4 60.2" fill="none" stroke="#302d27" stroke-width="1.1" />
+<path d="M27 53 Q25.8 50.4 24.9 50.3" fill="none" stroke="#302d27" stroke-width="0.5" />
+<path d="M27.6 53 Q28 50.5 29.2 50.1" fill="none" stroke="#302d27" stroke-width="0.5" />
+<path d="M45 43 L83 42.4" fill="none" stroke="#49434b" stroke-width="1.05" />
+<path d="M45 50.5 L78.2 50" fill="none" stroke="#49434b" stroke-width="1.05" />
+<path d="M45 58 L71.5 57.6" fill="none" stroke="#49434b" stroke-width="1.05" />
+<path d="M45 69 L53.5 68.8" fill="none" stroke="#49434b" stroke-width="1.05" />
+<ellipse cx="66" cy="69" rx="0.6" ry="0.6" fill="#49434b" stroke="#302d27" stroke-width="0" />
+<ellipse cx="72" cy="69" rx="0.6" ry="0.6" fill="#49434b" stroke="#302d27" stroke-width="0" />
+<ellipse cx="78" cy="69" rx="0.6" ry="0.6" fill="#49434b" stroke="#302d27" stroke-width="0" />
+</g>
+</g>
 </svg>`,
   },
   {
@@ -511,25 +503,31 @@ export const STICKERS = [
     how: "Clear a whole guest shelf: Wicked",
     hint: "There is a shelf of other people's songs behind the notebook.",
     era: "The guest shelf",
-    art: `<svg class="stick" viewBox="0 0 100 100">
-  <path class="ln" fill="#1d1a18" d="M10.9 70.6 C10.9 63.4 28.6 57.6 50.2 57.6 C71.9 57.6 89.1 63.6 89.1 70.9 C89.1 78.1 71.9 83.4 50 83.4 C28.1 83.4 10.9 77.9 10.9 70.6 Z"/>
-  <path class="ln" fill="#26221f" d="M72.5 68 C72.1 66.3 70.9 61.3 70 58 C69.1 54.7 67.9 51.3 67 48.4 C66.1 45.6 65.1 43 64.4 40.6 C63.7 38.3 62.9 36.2 62.5 34.2 C62.2 32.1 62.1 30.2 62.3 28.4 C62.5 26.6 62.9 24.7 63.5 23.2 C64.1 21.8 64.9 20.4 65.8 19.6 C66.6 18.9 67.6 18.4 68.6 18.7 C69.5 18.9 71 20.7 71.5 21.1 L73.5 19.9 C73.2 18.9 73 15.8 71.4 14.3 C69.9 12.9 66.9 11.5 64.2 11.4 C61.6 11.3 58.2 12.4 55.5 13.8 C52.7 15.2 50 17.3 47.7 19.6 C45.4 22 43.3 24.9 41.5 27.8 C39.6 30.8 38 34.1 36.6 37.4 C35.2 40.6 34.1 44.1 33 47.6 C31.9 51 30.9 54.6 30 58 C29.1 61.4 27.9 66.3 27.5 68 Z"/>
-  <g class="ln t" fill="none" stroke="#4f4842">
-    <path d="M51.4 22.4 C47.4 30.9 44.4 40.9 43.1 50.4"/>
-    <path d="M20.9 67.9 C30.9 72.9 44.9 74.9 57.1 73.4"/>
-  </g>
-  <path class="ln t" fill="#d08fa2" stroke="#8f4f63" d="M32.6 49.6 C40.6 46.4 55.4 46.1 62.1 49.4 L65.1 61.4 C56.6 57.6 39.6 58.1 31.1 61.9 Z"/>
-  <g class="ln t" stroke="#8f4f63">
-    <path fill="#d08fa2" d="M63.4 57.4 C64.4 66.9 65.4 76.4 64.1 86.4 L59.9 81.4 L55.4 86.9 C55.9 76.4 58.4 66.4 61.4 57.1 Z"/>
-    <path fill="#d08fa2" d="M67.6 56.4 C72.9 63.4 78.4 70.4 81.9 79.4 L76.4 77.4 L74.4 83.4 C69.4 75.4 65.9 66.9 63.9 58.4 Z"/>
-    <path fill="#c67e93" d="M64.4 48.4 C72.9 39.9 86.4 41.4 86.9 49.9 C87.4 57.4 76.9 60.4 67.4 55.4 Z"/>
-    <path fill="#c67e93" d="M67.1 56.9 C77.4 58.9 85.4 66.4 82.4 72.4 C79.4 78.1 70.4 71.9 65.4 62.4 Z"/>
-  </g>
-  <g class="ln t" fill="none" stroke="#8f4f63">
-    <path d="M69.4 50.4 C75.4 48.4 81.4 49.4 84.4 52.4"/>
-    <path d="M69.9 59.4 C75.4 62.4 79.4 66.4 80.4 70.4"/>
-  </g>
-  <path class="ln t" fill="#e0a8b8" stroke="#8f4f63" d="M61.4 49.9 C67.4 47.4 71.9 53.6 68.9 59.4 C65.4 65.4 58.4 61.1 59.1 54.4 Z"/>
+    art: `<svg xmlns="http://www.w3.org/2000/svg" class="stick" viewBox="0 0 100 100">
+<g stroke-linecap="round" stroke-linejoin="round">
+<path d="M9 77 C16 70 25 65 37 62 C56 57 78 53 88 59 C102 68 79 83 55 87 C36 91 11 88 7 83 Q5 80 9 77 Z" fill="#403d35" stroke="#302d27" stroke-width="1.65" />
+<path d="M8 81 C30 87 59 83 78 73 C84 70 89 67 91 62 C96 70 78 81 56 86 C33 90 14 86 8 83 Z" fill="#32312b" stroke="#302d27" stroke-width="0" />
+<path d="M30 67 C28 61 32 53 33 45 C34 40 33 33 38 29 C43 25 45 17 49 12 C54 5 59 7 63 11 L75 17 Q78 18 83 15 C87 13 85 19 80 23 Q76 26 73 24 L68 21 C68 26 64 29 64 32 C64 35 68 39 66 43 C65 46 64 47 65 51 L69 64 C58 72 41 73 30 67 Z" fill="#403e35" stroke="#302d27" stroke-width="1.65" />
+<path d="M54 10 C48 20 49 24 43 30 C37 36 39 41 36 49 C34 55 34 61 32 65 C29 57 34 45 34 39 C33 32 42 28 45 20 Q50 9 54 10 Z" fill="#4e4a40" stroke="#302d27" stroke-width="0" />
+<path d="M60 16 C61 24 65 25 62 31 C59 36 64 40 62 45 Q59 56 64 65 L68 64 C64 53 64 49 66 43 C68 38 61 36 64 31 Q68 24 66 22 Z" fill="#34322c" stroke="#302d27" stroke-width="0" />
+<path d="M58 17 Q61 20 61 25" fill="none" stroke="#2f2e28" stroke-width="0.85" />
+<path d="M63 28 Q58 32 61 36" fill="none" stroke="#2f2e28" stroke-width="0.85" />
+<path d="M38 55 Q43 53 46 55" fill="none" stroke="#2f2e28" stroke-width="0.85" />
+<path d="M34 60 Q40 64 46 63" fill="none" stroke="#2f2e28" stroke-width="0.85" />
+<path d="M15 80 Q25 83 35 82" fill="none" stroke="#2f2e28" stroke-width="0.85" />
+<path d="M72 77 Q82 73 86 68" fill="none" stroke="#2f2e28" stroke-width="0.85" />
+<path d="M30.4 62 C40 66 53 65 64 60 L66.5 67 C55 73 41 74 29 70 Q27.5 67 30.4 62 Z" fill="#c99486" stroke="#302d27" stroke-width="1.25" />
+<path d="M29 68 C41 72 54 69 65 65 L66 68 C53 74 39 74 29 71 Z" fill="#b67f74" stroke="#302d27" stroke-width="0" />
+<path d="M59 69 C61 77 67 83 69 92 L73 89 L79 91 C73 79 69 73 63 67 Z" fill="#ce9687" stroke="#302d27" stroke-width="1.3" />
+<path d="M62 70 C69 71 76 77 83 84 L77 85 L79 89 C72 87 67 80 61 73 Z" fill="#c38c80" stroke="#302d27" stroke-width="1.3" />
+<path d="M61 68 C55 63 50 63 49 69 C47 74 50 78 54 77 Q60 75 63 70 Z" fill="#d7a295" stroke="#302d27" stroke-width="1.25" />
+<path d="M62 67 C67 57 72 61 72 66 C72 70 68 71 63 71 Z" fill="#cd9487" stroke="#302d27" stroke-width="1.25" />
+<path d="M60 65 C64 63 67 68 65 72 Q61 74 59 71 Z" fill="#dba89a" stroke="#302d27" stroke-width="1.1" />
+<path d="M60 69 Q55 68 53 73" fill="none" stroke="#835f54" stroke-width="0.72" />
+<path d="M66 67 Q68 64 69 64" fill="none" stroke="#835f54" stroke-width="0.72" />
+<path d="M65 75 Q69 82 71 87" fill="none" stroke="#835f54" stroke-width="0.72" />
+<path d="M32 66 Q42 69 52 66" fill="none" stroke="#835f54" stroke-width="0.72" />
+</g>
 </svg>`,
   },
   {
@@ -539,19 +537,35 @@ export const STICKERS = [
     how: "Clear a whole guest shelf: Hannah Montana",
     hint: "A borrowed catalogue, played until there is nothing left of it.",
     era: "The guest shelf",
-    art: `<svg class="stick" viewBox="0 0 100 100">
-  <path class="ln" fill="#e8c877" d="M24.4 46.4 C23.6 26.4 34.6 11.4 50 11.4 C65.4 11.4 76.4 26.4 75.6 46.4 C76.6 55.4 75.4 62.4 76.1 70.4 C76.6 76.9 75.6 82.4 74.4 87.4 L70.6 91.4 L68.1 84.4 C66.9 75.4 66.4 66.4 65.9 57.4 C65.7 53.9 65.5 50.4 65.4 47.1 L62.9 50.4 L60.1 46.6 L57.1 50.6 L54.1 46.4 L51.1 50.4 L48.1 46.4 L45.1 50.6 L42.1 46.6 L39.1 50.4 L36.4 46.6 L34.6 49.4 L34.4 47.1 C34.3 50.4 34.1 53.9 33.9 57.4 C33.4 66.4 32.9 75.4 31.6 84.4 L29.4 88.4 L25.6 83.9 C24.4 78.9 23.6 74.4 24.1 69.4 C24.9 60.4 23.4 53.4 24.4 46.4 Z"/>
-  <g class="ln t" fill="none" stroke="#8a6420">
-    <path d="M36.4 19.4 C34.4 27.4 33.9 36.9 34.4 45.9"/>
-    <path d="M43.4 14.6 C41.9 24.4 41.4 35.4 41.9 46.4"/>
-    <path d="M50.4 13.1 C49.9 24.4 49.6 35.9 50.1 46.1"/>
-    <path d="M57.4 14.9 C59.1 24.9 59.6 35.9 59.1 46.4"/>
-    <path d="M63.9 19.6 C66.1 27.6 66.6 36.9 66.1 45.9"/>
-    <path d="M27.9 52.4 C26.9 61.9 26.9 71.4 27.6 81.4"/>
-    <path d="M31.1 53.4 C30.4 62.9 30.4 71.9 30.9 79.9"/>
-    <path d="M72.1 52.4 C73.1 61.9 73.1 71.4 72.4 82.4"/>
-    <path d="M68.9 53.4 C69.6 62.9 69.6 71.9 69.1 80.9"/>
-  </g>
+    art: `<svg xmlns="http://www.w3.org/2000/svg" class="stick" viewBox="0 0 100 100">
+<g stroke-linecap="round" stroke-linejoin="round">
+<path d="M49 9 C35 5 24 16 22 29 C19 40 18 55 16 69 C14 81 17 88 26 89 L30 89 L27 86 Q33 90 38 88 Q29 81 30 71 L32 40 L68 40 L70 72 Q70 82 63 88 Q69 90 74 86 L72 90 C84 91 88 82 85 70 C83 55 82 39 79 28 C76 14 65 5 53 9 Q51 10 49 9 Z" fill="#e4c17e" stroke="#302d27" stroke-width="1.55" />
+<path d="M29 19 C20 37 24 59 21 73 Q19 85 26 88 C15 86 17 76 19 64 L22 34 Q23 25 29 19 Z" fill="#c9a367" stroke="#302d27" stroke-width="0" />
+<path d="M67 15 C77 27 75 43 77 60 C77 73 81 82 74 88 Q87 86 83 69 L79 32 Q76 19 67 15 Z" fill="#c7a167" stroke="#302d27" stroke-width="0" />
+<path d="M32 31 C31 45 29 56 28 69 C27 77 28 81 31 85 C26 81 25 74 26 66 Q29 40 32 31 Z" fill="#efcf8e" stroke="#302d27" stroke-width="0" />
+<path d="M70 37 Q73 57 73 71 Q74 79 70 84 C77 82 76 70 75 60 Z" fill="#efd093" stroke="#302d27" stroke-width="0" />
+<path d="M30 40 C30 28 34 18 43 15 Q49 12 52 15 C61 13 69 25 70 40 L65.8 40 L65.5 37.5 L65 40 L60.3 40 L59.9 36 L59.5 40 L54.5 40 L54 37 L53.5 40 L49 40 L48.5 37 L48 40 L43.8 39.8 L43.3 36.5 L42.7 40 L38.3 39.8 L37.8 37 L37.2 40 Z" fill="#e8c885" stroke="#302d27" stroke-width="0" />
+<path d="M30 40 L37.2 40 L37.8 37 L38.3 39.8 L42.7 40 L43.3 36.5 L43.8 39.8 L48 40 L48.5 37 L49 40 L53.5 40 L54 37 L54.5 40 L59.5 40 L59.9 36 L60.3 40 L65 40 L65.5 37.5 L65.8 40 L70 40" fill="none" stroke="#4b422e" stroke-width="0.68" />
+<path d="M30 39 C30 31 32 25 35 22" fill="none" stroke="#4b422e" stroke-width="0.68" />
+<path d="M36 39 Q34 31 38 24" fill="none" stroke="#4b422e" stroke-width="0.68" />
+<path d="M42 38 Q40 28 43 22" fill="none" stroke="#4b422e" stroke-width="0.68" />
+<path d="M48 39 Q46 29 47 24" fill="none" stroke="#4b422e" stroke-width="0.68" />
+<path d="M54 39 Q54 29 52 24" fill="none" stroke="#4b422e" stroke-width="0.68" />
+<path d="M60 39 Q61 30 57 23" fill="none" stroke="#4b422e" stroke-width="0.68" />
+<path d="M66 38 Q67 28 61 21" fill="none" stroke="#4b422e" stroke-width="0.68" />
+<path d="M35 18 Q41 13 48 14" fill="none" stroke="#4b422e" stroke-width="0.68" />
+<path d="M53 13 Q61 12 67 19" fill="none" stroke="#4b422e" stroke-width="0.68" />
+<path d="M26 32 C23 44 25 52 23 66 Q20 80 26 85" fill="none" stroke="#4b422e" stroke-width="0.68" />
+<path d="M28 46 C29 57 23 75 29 83" fill="none" stroke="#4b422e" stroke-width="0.68" />
+<path d="M31 76 Q32 82 36 85" fill="none" stroke="#4b422e" stroke-width="0.68" />
+<path d="M74 33 C77 46 74 56 78 70 Q81 82 75 86" fill="none" stroke="#4b422e" stroke-width="0.68" />
+<path d="M72 48 C71 61 79 77 72 84" fill="none" stroke="#4b422e" stroke-width="0.68" />
+<path d="M69 77 Q69 82 66 85" fill="none" stroke="#4b422e" stroke-width="0.68" />
+<path d="M31 25 Q29 33 29 36" fill="none" stroke="#f4dba2" stroke-width="0.9" />
+<path d="M40 18 Q44 16 47 16" fill="none" stroke="#f4dba2" stroke-width="0.9" />
+<path d="M20 73 Q19 80 22 83" fill="none" stroke="#f4dba2" stroke-width="0.9" />
+<path d="M80 75 Q82 80 79 84" fill="none" stroke="#f4dba2" stroke-width="0.9" />
+</g>
 </svg>`,
   },
   {
@@ -561,23 +575,36 @@ export const STICKERS = [
     how: "Clear a whole guest shelf: Billie Eilish",
     hint: "Thirteen pages of a catalogue that is not hers.",
     era: "The guest shelf",
-    art: `<svg class="stick" viewBox="0 0 100 100">
-  <path class="ln" fill="#232120" d="M24.4 92.9 C23.9 92 22.4 89.6 21.5 87.5 C20.6 85.3 19.6 82.8 19.1 80 C18.5 77.2 18.1 73.9 18.1 70.9 C18 67.9 18.3 65.1 18.6 61.9 C18.8 58.7 19.1 55.3 19.6 52 C20 48.6 20.8 43.7 21 42 C21.4 27.9 32.4 8.9 50 8.9 C67.6 8.9 78.6 27.9 79 41.5 L78.9 41.9 C79.2 43.4 80 47.9 80.4 50.8 C80.9 53.8 81.2 57 81.4 59.8 C81.7 62.6 82 65.1 81.9 67.8 C81.8 70.4 81.5 73.4 80.9 75.9 C80.3 78.3 79.3 80.5 78.5 82.4 C77.6 84.2 76.1 86.1 75.6 86.9 C75.6 89.4 73.9 89.9 73.2 87.2 L73.2 87.1 C72.6 86.5 70.9 85.1 69.5 83.6 C68.2 82.1 66.3 80.4 65.1 78.1 C63.8 75.9 62.8 72.9 62.1 70.2 C61.3 67.6 61 65.1 60.6 62.2 C60.2 59.4 59.8 56.2 59.6 53.2 C59.3 50.1 59.1 45.6 59.1 44.1 C55.9 40.4 44.1 40.4 41 43.4 L41 44 C40.9 45.7 40.7 50.7 40.4 54 C40.2 57.4 39.9 60.9 39.4 64.1 C39 67.3 38.7 70.1 37.9 73.1 C37.2 76.1 36.2 79.4 34.9 82 C33.7 84.6 31.8 86.7 30.5 88.5 C29.1 90.4 27.4 92.3 26.8 93.1 C26.3 95.7 24.6 95.4 24.1 92.7 Z"/>
-  <path class="ln t" fill="#a8c93a" stroke="#5e7a26" d="M21 40.4 C21.9 30.4 24.4 24.1 28.4 19.9 C33.6 12.9 41 8.9 50 8.9 C59 8.9 66.4 12.9 71.6 19.9 C75.6 24.1 78.1 30.4 79 40.4 C77.1 33.9 74.6 29.4 72.1 34.9 C70.1 39.4 66.9 36.9 65.1 30.9 C63.6 25.9 60.4 31.4 57.4 28.4 C54.9 25.9 52.6 31.4 50 28.9 C47.4 31.4 45.1 25.9 42.6 28.4 C39.6 31.4 36.4 25.9 34.9 30.9 C33.1 36.9 29.9 39.4 27.9 34.9 C25.4 29.4 22.9 33.9 21 40.4 Z"/>
-  <g class="ln t" fill="none" stroke="#5e7a26">
-    <path d="M35.4 13.9 C33.1 17.9 31.6 21.9 30.9 25.9"/>
-    <path d="M42.6 11.1 C41.4 15.4 40.9 19.9 40.9 24.4"/>
-    <path d="M57.4 11.1 C58.6 15.4 59.1 19.9 59.1 24.4"/>
-    <path d="M64.6 13.9 C66.9 17.9 68.4 21.9 69.1 25.9"/>
-  </g>
-  <g class="ln t" fill="none" stroke="#514c47">
-    <path d="M24.4 50.4 C22.9 60.4 22.4 70.4 23.4 82.4"/>
-    <path d="M31.9 51.4 C30.9 61.9 30.4 72.4 29.4 83.4"/>
-    <path d="M75.6 50.4 C77.1 60.4 77.6 70.4 76.6 81.4"/>
-    <path d="M68.1 51.4 C69.1 61.9 69.6 72.4 70.6 82.4"/>
-    <path d="M37.4 50.9 C36.6 59.4 35.9 67.9 34.6 76.4"/>
-    <path d="M62.6 50.9 C63.4 59.4 64.1 67.9 65.4 76.4"/>
-  </g>
+    art: `<svg xmlns="http://www.w3.org/2000/svg" class="stick" viewBox="0 0 100 100">
+<g stroke-linecap="round" stroke-linejoin="round">
+<path d="M50 13 C37 6 26 15 22 26 C16 40 19 46 15 57 C10 69 17 77 12 86 L9 89 Q15 91 21 87 L18 93 Q25 94 30 89 L28 94 C40 92 43 83 39 74 C36 64 31 60 35 49 C39 40 37 32 44 29 Q48 28 50 30 Q55 27 59 30 C65 34 63 41 68 50 C72 60 64 67 65 77 Q63 89 75 93 L74 89 Q80 94 87 91 L82 87 Q89 90 93 87 C82 82 89 75 85 64 C81 54 80 49 81 41 C81 24 69 6 54 12 Q52 13 50 13 Z" fill="#34352f" stroke="#302d27" stroke-width="1.6" />
+<path d="M29 21 C23 37 26 45 21 57 C15 70 25 80 17 87 C30 79 19 70 25 57 C31 44 27 35 33 24 Z" fill="#49483d" stroke="#302d27" stroke-width="0" />
+<path d="M36 48 C28 61 37 70 36 79 Q36 88 29 91 C44 87 38 77 36 70 Q31 59 36 48 Z" fill="#262a26" stroke="#302d27" stroke-width="0" />
+<path d="M67 23 C76 36 69 43 77 58 C85 72 77 79 85 86 C72 82 79 71 72 59 C65 47 71 38 63 27 Z" fill="#47473c" stroke="#302d27" stroke-width="0" />
+<path d="M70 52 C76 65 64 73 69 83 Q71 89 76 91 C62 87 68 74 68 68 Q72 59 70 52 Z" fill="#262a26" stroke="#302d27" stroke-width="0" />
+<path d="M23 29 C28 15 39 10 50 16 C60 9 73 18 78 31 L71 25 L74 32 L66 25 L69 33 L62 27 L65 35 L59 29 Q56 26 52 29 L50 30 L47 28 L41 29 L36 35 L39 27 L32 32 L34 26 L27 32 L30 25 Z" fill="#b5c653" stroke="#302d27" stroke-width="0" />
+<path d="M26 25 C32 17 42 14 48 18 Q39 15 30 24 L33 21 Z" fill="#d1d775" stroke="#302d27" stroke-width="0" />
+<path d="M54 17 Q65 12 74 24 Q63 17 55 19 Z" fill="#d1d775" stroke="#302d27" stroke-width="0" />
+<path d="M50 15 Q48.8 22 50 29" fill="none" stroke="#45462c" stroke-width="0.7" />
+<path d="M48.8 20 L45.3 18.8" fill="none" stroke="#45462c" stroke-width="0.7" />
+<path d="M49.2 24 L46.2 22.8" fill="none" stroke="#45462c" stroke-width="0.7" />
+<path d="M51 18 L54 16.7" fill="none" stroke="#45462c" stroke-width="0.7" />
+<path d="M51 23 L54.5 21.7" fill="none" stroke="#45462c" stroke-width="0.7" />
+<path d="M43 16 Q35 17 31 22" fill="none" stroke="#45462c" stroke-width="0.7" />
+<path d="M58 17 Q65 17 69 21" fill="none" stroke="#45462c" stroke-width="0.7" />
+<path d="M24 34 C22 45 24 47 19 59 C16 70 23 78 18 85" fill="none" stroke="#202620" stroke-width="0.78" />
+<path d="M29 36 C28 48 26 50 24 59 C21 71 31 80 25 88" fill="none" stroke="#202620" stroke-width="0.78" />
+<path d="M33 50 C27 64 38 76 32 86" fill="none" stroke="#202620" stroke-width="0.78" />
+<path d="M17 70 Q16 77 18 80" fill="none" stroke="#202620" stroke-width="0.78" />
+<path d="M77 34 C78 47 73 47 79 60 C83 69 78 78 83 84" fill="none" stroke="#202620" stroke-width="0.78" />
+<path d="M70 43 C70 53 80 60 75 70 Q72 80 78 87" fill="none" stroke="#202620" stroke-width="0.78" />
+<path d="M71 70 Q66 82 73 88" fill="none" stroke="#202620" stroke-width="0.78" />
+<path d="M28 82 Q28 87 24 90" fill="none" stroke="#202620" stroke-width="0.78" />
+<path d="M26 39 Q25 48 22 53" fill="none" stroke="#686658" stroke-width="0.6" />
+<path d="M26 66 Q26 74 29 78" fill="none" stroke="#686658" stroke-width="0.6" />
+<path d="M76 51 Q79 57 80 62" fill="none" stroke="#686658" stroke-width="0.6" />
+<path d="M76 77 Q76 81 79 83" fill="none" stroke="#686658" stroke-width="0.6" />
+</g>
 </svg>`,
   },
 ];

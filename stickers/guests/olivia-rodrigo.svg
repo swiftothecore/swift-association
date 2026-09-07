@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" class="stick" viewBox="0 0 100 100">
+<g stroke-linecap="round" stroke-linejoin="round">
+<g transform="rotate(-8 50 50)">
+<path d="M12 22 Q9 22 9 26 L9.5 76 Q9.5 79 13 79 L88 78.5 Q91 78.5 91 75 L90.6 25 Q90.6 21.5 87 21.5 Z" fill="#c9bfd0" stroke="#302d27" stroke-width="1.65" />
+<path d="M11 73.5 Q45 76 89.5 73.2 L89.5 75.5 Q89.5 77 87 77 L13 77.5 Q11 77.5 11 75 Z" fill="#b8acbf" stroke="#302d27" stroke-width="0" />
+<text x="50" y="33" text-anchor="middle" fill="#39323d" font-family="Courier Prime, Courier New, monospace" font-size="5.6" font-weight="700" letter-spacing=".12">DRIVER’S LICENCE</text>
+<path d="M15.5 40 L37.5 39.5 L38.2 70.5 L15.9 71 Z" fill="#ece7e5" stroke="#302d27" stroke-width="1" />
+<path d="M27 52 C23 46 18 46 19.1 51.7 C19.8 55.5 23 57 26.7 56.6 C21.4 57.2 20.4 62.3 23 63 C25.2 63.8 27 60.9 27.4 57.6 C28 61 30.5 64.4 32.4 62.2 C34.7 59.9 31.4 57.1 28.3 56.3 C32.4 55.6 35.1 50.8 33.7 48.5 C32.2 46.7 28.6 49.8 27 52 Z" fill="#8a719b" stroke="#302d27" stroke-width="0.85" />
+<path d="M27.3 52.6 Q27.8 56 27.4 60.2" fill="none" stroke="#302d27" stroke-width="1.1" />
+<path d="M27 53 Q25.8 50.4 24.9 50.3" fill="none" stroke="#302d27" stroke-width="0.5" />
+<path d="M27.6 53 Q28 50.5 29.2 50.1" fill="none" stroke="#302d27" stroke-width="0.5" />
+<path d="M45 43 L83 42.4" fill="none" stroke="#49434b" stroke-width="1.05" />
+<path d="M45 50.5 L78.2 50" fill="none" stroke="#49434b" stroke-width="1.05" />
+<path d="M45 58 L71.5 57.6" fill="none" stroke="#49434b" stroke-width="1.05" />
+<path d="M45 69 L53.5 68.8" fill="none" stroke="#49434b" stroke-width="1.05" />
+<ellipse cx="66" cy="69" rx="0.6" ry="0.6" fill="#49434b" stroke="#302d27" stroke-width="0" />
+<ellipse cx="72" cy="69" rx="0.6" ry="0.6" fill="#49434b" stroke="#302d27" stroke-width="0" />
+<ellipse cx="78" cy="69" rx="0.6" ry="0.6" fill="#49434b" stroke="#302d27" stroke-width="0" />
+</g>
+</g>
+</svg>
