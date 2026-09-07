@@ -19,5 +19,8 @@
 <path d="M46 33 C47 32 50 34 51 33 C54 31 57 33 57 38 L56 46 Q51 48 46 46 C44 42 44 36 46 33 Z" fill="#e9cc84" stroke="#302d27" stroke-width="1.3" />
 <path d="M47 35 Q49 35 49 44" fill="none" stroke="#f5dea1" stroke-width="1.25" />
 <path d="M54 35 Q56 41 53 45" fill="none" stroke="#b19251" stroke-width="0.7" />
+<path d="M45.4 46.4 Q51 48.8 56.6 46.6 L56 49.8 Q51 51.8 45.8 49.6 Z" fill="#c7a45e" stroke="#302d27" stroke-width="0" />
+<path d="M43 40.5 C34 37 27 38 25 41" fill="none" stroke="#957945" stroke-width="0.7" />
+<path d="M59 40.5 C68 37 74 38 76 41" fill="none" stroke="#957945" stroke-width="0.7" />
 </g>
 </svg>

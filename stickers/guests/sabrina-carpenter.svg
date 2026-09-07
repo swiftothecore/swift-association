@@ -14,6 +14,7 @@
 <path d="M28.5 43 Q44 36 65.9 42 C62 38 39 37 29 42 Z" fill="#9a7650" stroke="#302d27" stroke-width="0" />
 <ellipse cx="47" cy="44" rx="15.7" ry="3" fill="#604a34" stroke="#302d27" stroke-width="0" />
 <path d="M33 44 Q45 41 57 43" fill="none" stroke="#816247" stroke-width="0.7" />
+<g transform="translate(-9 -4.5) rotate(-11 48.5 61)">
 <path d="M42 58 C44 57 45 54 48 55 Q50 55 51 57 C53 56 55 60 58 61 C53 61 50 60 47 61 Q43 62 39 61 Z" fill="#b87767" stroke="#302d27" stroke-width="0" />
 <path d="M39 62 Q48 65 58 62 C55 66 52 68 48 68 Q43 67 39 62 Z" fill="#b87767" stroke="#302d27" stroke-width="0" />
 <path d="M43 58 L44 60" fill="none" stroke="#e8beaa" stroke-width="0.45" />
@@ -24,5 +25,6 @@
 <path d="M47 64.5 L47.5 66.5" fill="none" stroke="#e8beaa" stroke-width="0.45" />
 <path d="M50.5 64.5 L50 66.5" fill="none" stroke="#e8beaa" stroke-width="0.45" />
 <path d="M53.5 64 L52.5 66" fill="none" stroke="#e8beaa" stroke-width="0.45" />
+</g>
 </g>
 </svg>

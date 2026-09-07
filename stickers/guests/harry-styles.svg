@@ -2,10 +2,10 @@
 <g stroke-linecap="round" stroke-linejoin="round">
 <path d="M47 17 Q48 15 50 18 L79 73 C65 91 33 93 15 78 Z" fill="#7e9149" stroke="#302d27" stroke-width="1.55" />
 <path d="M50 18 L81 72 L79 78 Q58 98 19 85 L15 78 C36 91 62 86 76 74 Z" fill="#647a3c" stroke="#302d27" stroke-width="1.2" />
-<path d="M48 19 L77 72 C62 87 34 88 17 77 Z" fill="#e0d9a6" stroke="#302d27" stroke-width="0" />
-<path d="M47.8 19 L74.8 68.5 C62 81 36 84 19.5 73.7 Z" fill="#c87867" stroke="#302d27" stroke-width="1.0" />
-<path d="M49 21 L74 68 Q71 72 69 72 L46 23 Z" fill="#db9180" stroke="#302d27" stroke-width="0" />
-<path d="M21 72 Q44 84 70 73 Q50 86 20 75 Z" fill="#d98b76" stroke="#302d27" stroke-width="0" />
+<path d="M47.3 17.7 Q48.1 16.3 49.7 18.4 L77 71 C62.4 86.4 34.4 87.4 17.2 76.4 Z" fill="#e0d9a6" stroke="#302d27" stroke-width="0" />
+<path d="M47.5 18.1 Q48.2 16.8 49.5 18.8 L74.8 68.5 C62 81 36 84 19.5 73.7 Z" fill="#d0706a" stroke="#302d27" stroke-width="1.0" />
+<path d="M49 21 L74 68 Q71 72 69 72 L46 23 Z" fill="#e08c85" stroke="#302d27" stroke-width="0" />
+<path d="M21 72 Q44 84 70 73 Q50 86 20 75 Z" fill="#dd8a80" stroke="#302d27" stroke-width="0" />
 <path d="M50 22 L74 67" fill="none" stroke="#9c6552" stroke-width="0.55" />
 <path d="M20 80 Q47 91 74 77" fill="none" stroke="#9c6552" stroke-width="0.55" />
 <g transform="rotate(12 46 35)">

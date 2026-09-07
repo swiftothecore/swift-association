@@ -11,7 +11,7 @@
 <path d="M72 63 C65 78 71 87 78 85" fill="none" stroke="#483e2d" stroke-width="0.7" />
 <path d="M58 70 C55 79 61 86 65 87" fill="none" stroke="#483e2d" stroke-width="0.7" />
 <path d="M59 87 Q65 94 73 92" fill="none" stroke="#483e2d" stroke-width="0.7" />
-<path d="M47 23 C35 18 20 26 15 38 C10 48 12 56 17 60 C14 51 26 50 33 45 Q40 41 42 37 C40 43 49 46 47 57 Q54 52 54 43 C55 34 52 27 47 23 Z" fill="#92714e" stroke="#302d27" stroke-width="1.5" />
+<path d="M47 23 C35 18 20 26 15 38 C10 48 12 55.6 16.6 59.2 Q19.2 60.8 19.4 57.6 C20.2 51.4 27 50 33.4 45.4 Q39.8 41.4 42.6 37.6 C41 43.4 47.6 46.6 46.8 55.4 Q47.2 58.4 49.2 56.4 Q54 52 54 43 C55 34 52 27 47 23 Z" fill="#92714e" stroke="#302d27" stroke-width="1.5" />
 <path d="M17 45 Q24 29 41 25 C26 25 16 35 15 48 Z" fill="#ad885b" stroke="#302d27" stroke-width="0" />
 <path d="M17 58 C17 48 35 47 42 36 Q42 44 36 46 C27 51 21 49 17 58 Z" fill="#75583a" stroke="#302d27" stroke-width="0" />
 <path d="M46 27 Q55 36 49 48 C49 43 43 42 43 36 Z" fill="#a48258" stroke="#302d27" stroke-width="0" />

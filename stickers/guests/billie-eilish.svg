@@ -8,13 +8,12 @@
 <path d="M23 29 C28 15 39 10 50 16 C60 9 73 18 78 31 L71 25 L74 32 L66 25 L69 33 L62 27 L65 35 L59 29 Q56 26 52 29 L50 30 L47 28 L41 29 L36 35 L39 27 L32 32 L34 26 L27 32 L30 25 Z" fill="#b5c653" stroke="#302d27" stroke-width="0" />
 <path d="M26 25 C32 17 42 14 48 18 Q39 15 30 24 L33 21 Z" fill="#d1d775" stroke="#302d27" stroke-width="0" />
 <path d="M54 17 Q65 12 74 24 Q63 17 55 19 Z" fill="#d1d775" stroke="#302d27" stroke-width="0" />
-<path d="M50 15 Q48.8 22 50 29" fill="none" stroke="#45462c" stroke-width="0.7" />
-<path d="M48.8 20 L45.3 18.8" fill="none" stroke="#45462c" stroke-width="0.7" />
-<path d="M49.2 24 L46.2 22.8" fill="none" stroke="#45462c" stroke-width="0.7" />
-<path d="M51 18 L54 16.7" fill="none" stroke="#45462c" stroke-width="0.7" />
-<path d="M51 23 L54.5 21.7" fill="none" stroke="#45462c" stroke-width="0.7" />
-<path d="M43 16 Q35 17 31 22" fill="none" stroke="#45462c" stroke-width="0.7" />
-<path d="M58 17 Q65 17 69 21" fill="none" stroke="#45462c" stroke-width="0.7" />
+<path d="M27 27 C32 19 40 14.6 49 15.4" fill="none" stroke="#6f8d2c" stroke-width="0.72" />
+<path d="M31 30 C36 22.6 42.6 18.8 50.4 19.2" fill="none" stroke="#6f8d2c" stroke-width="0.72" />
+<path d="M51.6 15.6 C60 15 67 19.4 71.4 26.6" fill="none" stroke="#6f8d2c" stroke-width="0.72" />
+<path d="M50.6 19.4 C58 19.4 64 23 68 30" fill="none" stroke="#6f8d2c" stroke-width="0.72" />
+<path d="M37 33 Q37.6 27 40 23.4" fill="none" stroke="#6f8d2c" stroke-width="0.72" />
+<path d="M62 32 Q61.6 26.4 59 22.8" fill="none" stroke="#6f8d2c" stroke-width="0.72" />
 <path d="M24 34 C22 45 24 47 19 59 C16 70 23 78 18 85" fill="none" stroke="#202620" stroke-width="0.78" />
 <path d="M29 36 C28 48 26 50 24 59 C21 71 31 80 25 88" fill="none" stroke="#202620" stroke-width="0.78" />
 <path d="M33 50 C27 64 38 76 32 86" fill="none" stroke="#202620" stroke-width="0.78" />
@@ -23,9 +22,9 @@
 <path d="M70 43 C70 53 80 60 75 70 Q72 80 78 87" fill="none" stroke="#202620" stroke-width="0.78" />
 <path d="M71 70 Q66 82 73 88" fill="none" stroke="#202620" stroke-width="0.78" />
 <path d="M28 82 Q28 87 24 90" fill="none" stroke="#202620" stroke-width="0.78" />
-<path d="M26 39 Q25 48 22 53" fill="none" stroke="#686658" stroke-width="0.6" />
-<path d="M26 66 Q26 74 29 78" fill="none" stroke="#686658" stroke-width="0.6" />
-<path d="M76 51 Q79 57 80 62" fill="none" stroke="#686658" stroke-width="0.6" />
-<path d="M76 77 Q76 81 79 83" fill="none" stroke="#686658" stroke-width="0.6" />
+<path d="M26 39 Q25 48 22 53" fill="none" stroke="#7d7a69" stroke-width="0.72" />
+<path d="M26 66 Q26 74 29 78" fill="none" stroke="#7d7a69" stroke-width="0.72" />
+<path d="M76 51 Q79 57 80 62" fill="none" stroke="#7d7a69" stroke-width="0.72" />
+<path d="M76 77 Q76 81 79 83" fill="none" stroke="#7d7a69" stroke-width="0.72" />
 </g>
 </svg>

@@ -479,12 +479,17 @@ export const STICKERS = [
 <g transform="rotate(-8 50 50)">
 <path d="M12 22 Q9 22 9 26 L9.5 76 Q9.5 79 13 79 L88 78.5 Q91 78.5 91 75 L90.6 25 Q90.6 21.5 87 21.5 Z" fill="#c9bfd0" stroke="#302d27" stroke-width="1.65" />
 <path d="M11 73.5 Q45 76 89.5 73.2 L89.5 75.5 Q89.5 77 87 77 L13 77.5 Q11 77.5 11 75 Z" fill="#b8acbf" stroke="#302d27" stroke-width="0" />
-<text x="50" y="33" text-anchor="middle" fill="#39323d" font-family="Courier Prime, Courier New, monospace" font-size="5.6" font-weight="700" letter-spacing=".12">DRIVER’S LICENCE</text>
+<path d="M15.8 28.1 L46.2 27.3 L46.5 30.7 L16.1 31.5 Z" fill="#564b60" stroke="#302d27" stroke-width="0" />
+<path d="M49.7 27.2 L74.4 26.6 L74.7 30 L50 30.6 Z" fill="#564b60" stroke="#302d27" stroke-width="0" />
+<path d="M15.6 35.7 L84.4 34.7" fill="none" stroke="#807688" stroke-width="0.75" />
 <path d="M15.5 40 L37.5 39.5 L38.2 70.5 L15.9 71 Z" fill="#ece7e5" stroke="#302d27" stroke-width="1" />
-<path d="M27 52 C23 46 18 46 19.1 51.7 C19.8 55.5 23 57 26.7 56.6 C21.4 57.2 20.4 62.3 23 63 C25.2 63.8 27 60.9 27.4 57.6 C28 61 30.5 64.4 32.4 62.2 C34.7 59.9 31.4 57.1 28.3 56.3 C32.4 55.6 35.1 50.8 33.7 48.5 C32.2 46.7 28.6 49.8 27 52 Z" fill="#8a719b" stroke="#302d27" stroke-width="0.85" />
-<path d="M27.3 52.6 Q27.8 56 27.4 60.2" fill="none" stroke="#302d27" stroke-width="1.1" />
-<path d="M27 53 Q25.8 50.4 24.9 50.3" fill="none" stroke="#302d27" stroke-width="0.5" />
-<path d="M27.6 53 Q28 50.5 29.2 50.1" fill="none" stroke="#302d27" stroke-width="0.5" />
+<path d="M27 50.4 C23.5 44.4 18.5 44.1 18.3 49.8 C18.2 54.1 21.8 55.7 26.1 56.2 C21.5 57 19.1 60.7 20.9 63.3 C22.5 65.5 25.7 63.6 26.7 59.3 Z" fill="#8a719b" stroke="#302d27" stroke-width="0.8" />
+<path d="M27.9 50.4 C31.7 43.9 36.8 44.9 36.3 50.5 C36 54.5 32.2 55.9 28.5 56.2 C33.3 56.9 35.7 60.3 33.8 62.7 C32.1 64.9 29.1 63 28.1 59.1 Z" fill="#8a719b" stroke="#302d27" stroke-width="0.8" />
+<path d="M25.6 50.2 C23.3 47.1 20.6 46.9 20.4 49.9 C20.3 52.4 22.9 53.7 25.5 54.1 Z" fill="#a992bb" stroke="#302d27" stroke-width="0" />
+<path d="M29.4 50 C31.7 46.6 34.4 46.7 34.4 49.8 C34.4 52.3 31.8 53.6 29.2 54 Z" fill="#a992bb" stroke="#302d27" stroke-width="0" />
+<path d="M27.4 48.7 C28.5 52.4 28.5 57.5 27.3 61.6 C26.3 57.5 26.3 52.4 27.4 48.7 Z" fill="#3d3348" stroke="#302d27" stroke-width="0" />
+<path d="M27.2 49.2 Q25.5 46 24.1 45.4" fill="none" stroke="#302d27" stroke-width="0.55" />
+<path d="M27.9 49.2 Q29.3 46.3 30.9 45.9" fill="none" stroke="#302d27" stroke-width="0.55" />
 <path d="M45 43 L83 42.4" fill="none" stroke="#49434b" stroke-width="1.05" />
 <path d="M45 50.5 L78.2 50" fill="none" stroke="#49434b" stroke-width="1.05" />
 <path d="M45 58 L71.5 57.6" fill="none" stroke="#49434b" stroke-width="1.05" />
@@ -510,12 +515,12 @@ export const STICKERS = [
 <path d="M30 67 C28 61 32 53 33 45 C34 40 33 33 38 29 C43 25 45 17 49 12 C54 5 59 7 63 11 L75 17 Q78 18 83 15 C87 13 85 19 80 23 Q76 26 73 24 L68 21 C68 26 64 29 64 32 C64 35 68 39 66 43 C65 46 64 47 65 51 L69 64 C58 72 41 73 30 67 Z" fill="#403e35" stroke="#302d27" stroke-width="1.65" />
 <path d="M54 10 C48 20 49 24 43 30 C37 36 39 41 36 49 C34 55 34 61 32 65 C29 57 34 45 34 39 C33 32 42 28 45 20 Q50 9 54 10 Z" fill="#4e4a40" stroke="#302d27" stroke-width="0" />
 <path d="M60 16 C61 24 65 25 62 31 C59 36 64 40 62 45 Q59 56 64 65 L68 64 C64 53 64 49 66 43 C68 38 61 36 64 31 Q68 24 66 22 Z" fill="#34322c" stroke="#302d27" stroke-width="0" />
-<path d="M58 17 Q61 20 61 25" fill="none" stroke="#2f2e28" stroke-width="0.85" />
-<path d="M63 28 Q58 32 61 36" fill="none" stroke="#2f2e28" stroke-width="0.85" />
-<path d="M38 55 Q43 53 46 55" fill="none" stroke="#2f2e28" stroke-width="0.85" />
-<path d="M34 60 Q40 64 46 63" fill="none" stroke="#2f2e28" stroke-width="0.85" />
-<path d="M15 80 Q25 83 35 82" fill="none" stroke="#2f2e28" stroke-width="0.85" />
-<path d="M72 77 Q82 73 86 68" fill="none" stroke="#2f2e28" stroke-width="0.85" />
+<path d="M58 17 Q61 20 61 25" fill="none" stroke="#5d5649" stroke-width="0.82" />
+<path d="M63 28 Q58 32 61 36" fill="none" stroke="#5d5649" stroke-width="0.82" />
+<path d="M38 55 Q43 53 46 55" fill="none" stroke="#5d5649" stroke-width="0.82" />
+<path d="M34 60 Q40 64 46 63" fill="none" stroke="#5d5649" stroke-width="0.82" />
+<path d="M15 80 Q25 83 35 82" fill="none" stroke="#5d5649" stroke-width="0.82" />
+<path d="M72 77 Q82 73 86 68" fill="none" stroke="#5d5649" stroke-width="0.82" />
 <path d="M30.4 62 C40 66 53 65 64 60 L66.5 67 C55 73 41 74 29 70 Q27.5 67 30.4 62 Z" fill="#c99486" stroke="#302d27" stroke-width="1.25" />
 <path d="M29 68 C41 72 54 69 65 65 L66 68 C53 74 39 74 29 71 Z" fill="#b67f74" stroke="#302d27" stroke-width="0" />
 <path d="M59 69 C61 77 67 83 69 92 L73 89 L79 91 C73 79 69 73 63 67 Z" fill="#ce9687" stroke="#302d27" stroke-width="1.3" />
@@ -558,6 +563,10 @@ export const STICKERS = [
 <path d="M26 32 C23 44 25 52 23 66 Q20 80 26 85" fill="none" stroke="#4b422e" stroke-width="0.68" />
 <path d="M28 46 C29 57 23 75 29 83" fill="none" stroke="#4b422e" stroke-width="0.68" />
 <path d="M31 76 Q32 82 36 85" fill="none" stroke="#4b422e" stroke-width="0.68" />
+<path d="M21 42 C19.5 54 21 64 19 76" fill="none" stroke="#4b422e" stroke-width="0.68" />
+<path d="M30 44 C29.5 58 27.5 70 30.5 80" fill="none" stroke="#4b422e" stroke-width="0.68" />
+<path d="M79 42 C81 54 79.5 64 81.5 76" fill="none" stroke="#4b422e" stroke-width="0.68" />
+<path d="M70.5 45 C71 58 73 70 70 80" fill="none" stroke="#4b422e" stroke-width="0.68" />
 <path d="M74 33 C77 46 74 56 78 70 Q81 82 75 86" fill="none" stroke="#4b422e" stroke-width="0.68" />
 <path d="M72 48 C71 61 79 77 72 84" fill="none" stroke="#4b422e" stroke-width="0.68" />
 <path d="M69 77 Q69 82 66 85" fill="none" stroke="#4b422e" stroke-width="0.68" />
@@ -585,13 +594,12 @@ export const STICKERS = [
 <path d="M23 29 C28 15 39 10 50 16 C60 9 73 18 78 31 L71 25 L74 32 L66 25 L69 33 L62 27 L65 35 L59 29 Q56 26 52 29 L50 30 L47 28 L41 29 L36 35 L39 27 L32 32 L34 26 L27 32 L30 25 Z" fill="#b5c653" stroke="#302d27" stroke-width="0" />
 <path d="M26 25 C32 17 42 14 48 18 Q39 15 30 24 L33 21 Z" fill="#d1d775" stroke="#302d27" stroke-width="0" />
 <path d="M54 17 Q65 12 74 24 Q63 17 55 19 Z" fill="#d1d775" stroke="#302d27" stroke-width="0" />
-<path d="M50 15 Q48.8 22 50 29" fill="none" stroke="#45462c" stroke-width="0.7" />
-<path d="M48.8 20 L45.3 18.8" fill="none" stroke="#45462c" stroke-width="0.7" />
-<path d="M49.2 24 L46.2 22.8" fill="none" stroke="#45462c" stroke-width="0.7" />
-<path d="M51 18 L54 16.7" fill="none" stroke="#45462c" stroke-width="0.7" />
-<path d="M51 23 L54.5 21.7" fill="none" stroke="#45462c" stroke-width="0.7" />
-<path d="M43 16 Q35 17 31 22" fill="none" stroke="#45462c" stroke-width="0.7" />
-<path d="M58 17 Q65 17 69 21" fill="none" stroke="#45462c" stroke-width="0.7" />
+<path d="M27 27 C32 19 40 14.6 49 15.4" fill="none" stroke="#6f8d2c" stroke-width="0.72" />
+<path d="M31 30 C36 22.6 42.6 18.8 50.4 19.2" fill="none" stroke="#6f8d2c" stroke-width="0.72" />
+<path d="M51.6 15.6 C60 15 67 19.4 71.4 26.6" fill="none" stroke="#6f8d2c" stroke-width="0.72" />
+<path d="M50.6 19.4 C58 19.4 64 23 68 30" fill="none" stroke="#6f8d2c" stroke-width="0.72" />
+<path d="M37 33 Q37.6 27 40 23.4" fill="none" stroke="#6f8d2c" stroke-width="0.72" />
+<path d="M62 32 Q61.6 26.4 59 22.8" fill="none" stroke="#6f8d2c" stroke-width="0.72" />
 <path d="M24 34 C22 45 24 47 19 59 C16 70 23 78 18 85" fill="none" stroke="#202620" stroke-width="0.78" />
 <path d="M29 36 C28 48 26 50 24 59 C21 71 31 80 25 88" fill="none" stroke="#202620" stroke-width="0.78" />
 <path d="M33 50 C27 64 38 76 32 86" fill="none" stroke="#202620" stroke-width="0.78" />
@@ -600,10 +608,10 @@ export const STICKERS = [
 <path d="M70 43 C70 53 80 60 75 70 Q72 80 78 87" fill="none" stroke="#202620" stroke-width="0.78" />
 <path d="M71 70 Q66 82 73 88" fill="none" stroke="#202620" stroke-width="0.78" />
 <path d="M28 82 Q28 87 24 90" fill="none" stroke="#202620" stroke-width="0.78" />
-<path d="M26 39 Q25 48 22 53" fill="none" stroke="#686658" stroke-width="0.6" />
-<path d="M26 66 Q26 74 29 78" fill="none" stroke="#686658" stroke-width="0.6" />
-<path d="M76 51 Q79 57 80 62" fill="none" stroke="#686658" stroke-width="0.6" />
-<path d="M76 77 Q76 81 79 83" fill="none" stroke="#686658" stroke-width="0.6" />
+<path d="M26 39 Q25 48 22 53" fill="none" stroke="#7d7a69" stroke-width="0.72" />
+<path d="M26 66 Q26 74 29 78" fill="none" stroke="#7d7a69" stroke-width="0.72" />
+<path d="M76 51 Q79 57 80 62" fill="none" stroke="#7d7a69" stroke-width="0.72" />
+<path d="M76 77 Q76 81 79 83" fill="none" stroke="#7d7a69" stroke-width="0.72" />
 </g>
 </svg>`,
   },
