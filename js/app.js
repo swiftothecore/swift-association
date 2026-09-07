@@ -15611,6 +15611,12 @@ function endGuest() {
   const admittedNow = score >= GUEST_TARGET && hintFree;
   if (admittedNow && (diff === "hard" || diff === "ultra")) unlock("admit-guest-hard");
   if (admittedNow && diff === "lyricist") unlock("admit-guest-lyricist");
+  // The shelf's souvenir sticker. Deliberately a LOOSER bar than the stamp above: every
+  // page, but at any difficulty and hints allowed, because the point of it is to get you
+  // onto somebody else's records at all rather than to rank the run. The id is derived
+  // from the guest's, so a guest with no sticker drawn yet is a silent no-op in
+  // earnSticker rather than a crash; __dev.stickers.guests() is what catches that.
+  if (score >= GUEST_TARGET) earnSticker("guest-" + id);
 
   showScreen("results");
   applyEra(guestEra());   // endGame applies a random finale era; a guest keeps its own
@@ -26443,6 +26449,15 @@ function buildDevApi() {
         on: stickerHintsOn(),
         locked: stickersLeft().map((st) => ({ id: st.id, hint: st.hint, how: st.how })),
         noHint: STICKERS.filter((st) => !st.hint).map((st) => st.id),
+      }),
+      // The guest shelf's souvenir row, which is the one sticker input that can go stale
+      // WITHOUT anything failing: the trigger derives its id from the guest's, so a guest
+      // added to GUESTS before its sticker is drawn simply earns nothing, silently and
+      // forever. `drawn: false` on a playable guest is that bug, and this is where it shows.
+      guests: () => GUESTS.map((g) => {
+        const id = "guest-" + g.id, rec = guestRecord(g.id);
+        return { guest: g.id, sticker: id, drawn: !!STICKER_BY_ID[id], earned: stickerEarned(id),
+                 best: rec.best, target: GUEST_TARGET };
       }),
       // The session ledger the three "in one session" stickers read. It is memory-only and
       // cleared by a reload, which makes it the one sticker input a test session cannot inspect

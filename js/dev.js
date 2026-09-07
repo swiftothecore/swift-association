@@ -973,6 +973,13 @@ export function initDev(api) {
     row("pages", btn("lonely words", () => { const w = api.stickers.lonely(); console.log("[dev] lonely", w); toast(w.join(" · ") || "none"); }),
         btn("vault tracks", () => { const v = api.stickers.vault(); console.log("[dev] vault", v); toast(v.length + " vault tracks"); }),
         btn("verse for this page", () => { const v = api.stickers.verse(); console.log("[dev] verse", v); toast(v ? v.song : "no four-line section here"); })),
+    // The guest souvenirs. Their ids are derived from GUESTS, so a guest shipped before its
+    // sticker is drawn earns nothing and says nothing; "audit" is what makes that visible.
+    row("guest shelf", btn("audit", () => {
+          const g = api.stickers.guests(); console.log("[dev] guest stickers", g);
+          const gap = g.filter((x) => !x.drawn).map((x) => x.guest);
+          toast(gap.length ? "no sticker drawn: " + gap.join(", ") : "every guest has a sticker");
+        }, (api.stickers.guests().some((x) => !x.drawn) ? "warn" : ""))),
     row(albumSel, shelfDiffSel, btn("play album", () => api.album.play(albumSel.value, shelfDiffSel.value)),
         btn("open albums", () => api.album.open())),
     row(shelfStateSel, btn("fill albums", () => { api.album.fill(shelfStateSel.value, shelfDiffSel.value); toast("album board filled"); }),

@@ -455,6 +455,113 @@ export const STICKERS = [
   </g>
 </svg>`,
   },
+  // ---- The guest shelf ---------------------------------------------------
+  // One souvenir per guest catalogue, for clearing all thirteen pages of it at ANY
+  // difficulty, hints allowed. These are the one family that DOES turn on a score, and
+  // the exception is argued in scripts/stickers/STICKERS.md: a band sticker is a place
+  // you have been, and the shelf exists to be visited. The stricter mark, a perfect
+  // hint-free run, stays the guest board's own ADMITTED stamp and its charms.
+  // Ids are `guest-` + the GUESTS id, so endGuest derives one rather than keeping a map.
+  // Only the four PLAYABLE guests are here. The other six are drawn and parked on
+  // scripts/stickers/guest-stickers.html; append one here when its catalogue ships,
+  // never insert, or the whole cover re-deals.
+  {
+    id: "guest-olivia-rodrigo",
+    name: "Driver's licence",
+    sub: "Olivia Rodrigo",
+    how: "Clear a whole guest shelf: Olivia Rodrigo",
+    hint: "Somebody else's records, and not one page missed.",
+    era: "The guest shelf",
+    art: `<svg class="stick" viewBox="0 0 100 100">
+<g transform="rotate(-4 50 50)">
+    <path class="ln" fill="#c6b1e2" d="M14.6 28.6 C14.6 26 16.4 24.4 19 24.4 L81 24.4 C83.6 24.4 85.4 26 85.4 28.6 L85.4 71.4 C85.4 74 83.6 75.6 81 75.6 L19 75.6 C16.4 75.6 14.6 74 14.6 71.4 Z"/>
+    <path class="ln t" fill="none" stroke="#7a5aa8" opacity="0.6" d="M15.4 39.6 C34.6 38.6 66.6 38.6 84.6 39.4"/>
+    <g fill="#4a3268">
+      <rect x="20.6" y="30" width="15.4" height="4.2" rx="1.8"/>
+      <rect x="38.4" y="30.2" width="4.4" height="4.2" rx="1.8"/>
+      <rect x="45.4" y="30" width="20.6" height="4.2" rx="1.8"/>
+    </g>
+    <path class="ln t" fill="#f4eedd" d="M20.6 45 L44.6 44.6 L45 69.6 L21 69.8 Z"/>
+    <g class="ln t" stroke="#4a3268" fill="#9a7ac8">
+      <path d="M32.8 57.4 C29.6 51.4 24 49.4 23.2 53.6 C22.4 57.8 26.6 59.8 32.8 57.4 Z"/>
+      <path d="M32.8 57.4 C36.2 51.6 41.8 49.6 42.6 53.8 C43.4 58 39.2 59.8 32.8 57.4 Z"/>
+      <path d="M32.8 57.6 C29.8 62.6 25.8 65.6 25 62.6 C24.2 59.6 27.6 57.4 32.8 57.6 Z"/>
+      <path d="M32.8 57.6 C35.8 62.8 39.8 65.4 40.6 62.4 C41.4 59.4 38 57.4 32.8 57.6 Z"/>
+    </g>
+    <path class="ln t" fill="none" stroke="#3a2758" d="M32.8 51.6 L33 63.6"/>
+    <g fill="#5c4a7a" opacity="0.72">
+      <rect x="51" y="46.6" width="29.6" height="2.8" rx="1.4"/>
+      <rect x="51" y="53.6" width="23.4" height="2.8" rx="1.4"/>
+      <rect x="51" y="60.4" width="27.6" height="2.8" rx="1.4"/>
+    </g>
+    <g fill="#5c4a7a" opacity="0.5">
+      <circle cx="52.6" cy="68.4" r="1.5"/><circle cx="58.6" cy="68.6" r="1.4"/><circle cx="64.4" cy="68.4" r="1.5"/>
+    </g>
+  </g>
+</svg>`,
+  },
+  {
+    id: "guest-wicked-soundtrack",
+    name: "Witch's hat",
+    sub: "Wicked",
+    how: "Clear a whole guest shelf: Wicked",
+    hint: "There is a shelf of other people's songs behind the notebook.",
+    era: "The guest shelf",
+    art: `<svg class="stick" viewBox="0 0 100 100">
+<path class="ln" fill="#26221f" d="M29.4 69.4 C30.4 55.6 36.6 39.6 44.6 27.6 C48.6 21.6 54.6 14.4 61.4 13.4 C68.6 12.4 70.6 18.6 66.4 23.6 C63.4 27.4 58.4 29.6 56.4 33.6 C53.4 39.6 61.4 54.6 70.6 69.4 Z"/>
+  <path class="ln" fill="#1d1a18" d="M12.6 69.6 C12.6 63.4 28.4 58.4 50 58.4 C71.6 58.4 87.4 63.4 87.4 69.6 C87.4 75.8 71.6 80.8 50 80.8 C28.4 80.8 12.6 75.8 12.6 69.6 Z"/>
+  <path class="ln t" fill="none" stroke="#5f564e" opacity="0.5" d="M22.6 66.6 C31.6 71.4 45.6 73.4 57.6 72"/>
+  <path class="ln t" fill="none" stroke="#5f564e" opacity="0.45" d="M49.4 24.6 C46.4 31.6 43.4 40.6 41.4 49.6"/>
+  <path class="ln t" fill="#d08fa2" stroke="#8f4f63" d="M32.4 51.6 C39.6 48.6 57.6 48.6 63.4 51.8 L65.6 61.6 C58.4 58 39.6 58 30.4 61.6 Z"/>
+  <g class="ln t" stroke="#8f4f63">
+    <path fill="#c67e93" d="M65.4 51.4 C74.6 44 85.8 47.4 84.4 55.6 C83.2 62.8 73.4 63.6 66.6 59.6 Z"/>
+    <path fill="#c67e93" d="M66.4 58.4 C74.6 62.6 82.8 71.6 78.4 76.6 C74.2 81.4 67.8 73.4 65.2 64.4 Z"/>
+    <path fill="#e0a8b8" d="M61.4 52.4 C67.4 50.8 70.8 57 67.4 61.6 C63.4 66 57.8 61 60.2 55.4 Z"/>
+  </g>
+</svg>`,
+  },
+  {
+    id: "guest-hannah-montana",
+    name: "Blonde wig",
+    sub: "Hannah Montana",
+    how: "Clear a whole guest shelf: Hannah Montana",
+    hint: "A borrowed catalogue, played until there is nothing left of it.",
+    era: "The guest shelf",
+    art: `<svg class="stick" viewBox="0 0 100 100">
+<ellipse class="ln" cx="50" cy="87.4" rx="20.6" ry="5.6" fill="#c99a5c"/>
+  <path class="ln t" fill="none" stroke="#7a5228" opacity="0.6" d="M33 85.6 C39.6 88.4 60.4 88.4 67 85.6"/>
+  <path class="ln" fill="#c99a5c" d="M44 66.6 L56 66.6 L54.4 85.6 L45.6 85.6 Z"/>
+  <path class="ln" fill="#e8dfcc" d="M50 23.6 C63 23.6 71.4 34 71.4 48.4 C71.4 63 62.2 73.4 50 73.4 C37.8 73.4 28.6 63 28.6 48.4 C28.6 34 37 23.6 50 23.6 Z"/>
+  <path class="ln" fill="#e8c877" d="M50 13 C32.4 13 21.2 26.6 20.4 45 L18.8 72 C18.6 76.4 22.8 78.8 25.8 75.6 L32.2 68.4 C32.4 58.8 33.2 47.6 34.4 40.4 C40.6 44.8 47.8 46.2 55 44.6 C62 43 66.6 39.6 68.8 36 C69.8 45.4 70.4 58.8 70.6 68.4 L77 75.6 C80 78.8 84.2 76.4 84 72 L82.4 45 C81.6 26.6 67.6 13 50 13 Z"/>
+  <g class="ln t" fill="none" stroke="#c9a44e" opacity="0.72">
+    <path d="M31.6 21.6 C29 27.4 27.8 33.6 28 39.6"/>
+    <path d="M41.4 16.4 C38 24 36.6 31.6 36.4 39.6"/>
+    <path d="M57.4 15.6 C60.6 22.6 62.4 29.6 62.6 37.6"/>
+    <path d="M68.4 20.6 C71.4 25.6 72.6 31.6 72.6 37.4"/>
+    <path d="M23.4 51.6 C22.4 61.6 22.2 69.6 22.6 76.4"/>
+    <path d="M76.6 51.6 C77.6 61.6 77.8 69.6 77.4 76.4"/>
+  </g>
+</svg>`,
+  },
+  {
+    id: "guest-billie-eilish",
+    name: "Green roots",
+    sub: "Billie Eilish",
+    how: "Clear a whole guest shelf: Billie Eilish",
+    hint: "Thirteen pages of a catalogue that is not hers.",
+    era: "The guest shelf",
+    art: `<svg class="stick" viewBox="0 0 100 100">
+<path class="ln" fill="#232120" d="M50 10.6 C37.4 10.6 29.2 19.6 27.8 33.6 C26.4 47.6 26.2 66.6 27.4 82.6 C27.8 87.4 32.4 88.8 34.4 84.6 C35.6 82 36.4 78.4 37 74.4 C38 79.4 39.4 83.4 41.4 85.6 C43.8 88.4 47.6 87 48.2 82.6 C48.8 78.4 49.4 72 49.6 64.6 C50.4 72 51.4 78.4 52.2 82.6 C53 87 56.8 88.4 59 85.6 C61 83.4 62.4 79.4 63.4 74.4 C64 78.4 64.8 82 66 84.6 C68 88.8 72.4 87.4 72.8 82.6 C74 66.6 73.8 47.6 72.4 33.6 C71 19.6 62.6 10.6 50 10.6 Z"/>
+  <path class="ln t" fill="#a8c93a" stroke="#6f8d2c" d="M27.4 32.6 C28 18.4 37.4 10.6 50 10.6 C62.6 10.6 72 18.4 72.6 32.6 C70.6 29.4 68.4 34 65.6 30.6 C63 27.4 60.6 30 57.6 26.6 C55 23.6 52.4 28.6 50 24.6 C47.6 28.6 45 23.6 42.4 26.6 C39.4 30 37 27.4 34.4 30.6 C31.6 34 29.4 29.4 27.4 32.6 Z"/>
+  <g class="ln t" fill="none" stroke="#514d49" opacity="0.8">
+    <path d="M50 26.6 C50 40.6 49.8 54.6 49.6 64.6"/>
+    <path d="M33.6 42.6 C32 55.6 32 69.6 33.4 79.6"/>
+    <path d="M66.4 42.6 C68 55.6 68 69.6 66.6 79.6"/>
+    <path d="M41.6 44.6 C40.4 55.6 40.2 66.6 41 76.6"/>
+    <path d="M58.4 44.6 C59.6 55.6 59.8 66.6 59 76.6"/>
+  </g>
+</svg>`,
+  },
 ];
 
 export const STICKER_BY_ID = Object.fromEntries(STICKERS.map((s) => [s.id, s]));
