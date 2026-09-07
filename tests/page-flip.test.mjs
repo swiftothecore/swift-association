@@ -40,6 +40,14 @@ test("the turn runs in a fixed, clipped interaction layer with locked geometry",
   assert.match(app, /matchMedia\("\(prefers-reduced-motion: reduce\)"\)\.addEventListener\("change"/);
 });
 
+test("long destination pages animate only through the visible viewport", () => {
+  assert.match(app, /const viewportBottom = window\.visualViewport/);
+  assert.match(app, /const visibleHeight = Math\.max\(appRect\.height, viewportBottom - appRect\.top\);/);
+  assert.match(app, /const animatedHeight = Math\.min\(natural, visibleHeight\);/);
+  assert.match(app, /app\.style\.height = animatedHeight \+ "px";/);
+  assert.doesNotMatch(app, /app\.style\.height = natural \+ "px";/);
+});
+
 test("renamed clone ids retain every id-based presentation rule", () => {
   const aliasedIds = [
     "screen-bonusplay",

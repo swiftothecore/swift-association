@@ -1173,6 +1173,19 @@ function beginPageTurn(anchor) {
       app.style.minHeight = appRect.height + "px";
       app.style.maxHeight = appRect.height + "px";
       if (natural <= appRect.height + 1) return;    // same length or shorter: nothing to reveal
+      // Only animate the part of the growth the player can actually see. A collection page can
+      // be many viewports tall (Charms is more than ten thousand pixels on desktop); driving the
+      // lock through that whole distance makes the browser recalculate the document on every
+      // frame for paper that is still below the fold. Grow as far as the visible desk edge, then
+      // let finish() release the remaining off-screen height in one step. The visible page is
+      // already continuous at that point, while short destinations such as the opening board
+      // still unfurl through their complete height.
+      const viewportBottom = window.visualViewport
+        ? window.visualViewport.offsetTop + window.visualViewport.height
+        : window.innerHeight;
+      const visibleHeight = Math.max(appRect.height, viewportBottom - appRect.top);
+      const animatedHeight = Math.min(natural, visibleHeight);
+      if (animatedHeight <= appRect.height + 1) return;
       app.offsetHeight;                             // flush the locked baseline so it transitions
       // Height alone holds the clip while it moves, so min/max step out of the way: a min-height
       // sitting at the destination's size would land the whole page on the first frame, which is
@@ -1182,7 +1195,7 @@ function beginPageTurn(anchor) {
       // Deliberately a shade shorter than the 0.5s sheet, and on the sheet's own easing: the
       // growth should have settled by the time the page it belongs to has finished turning.
       app.style.transition = `height ${(0.42 * (animScale() || 1)).toFixed(3)}s cubic-bezier(.42,.04,.34,1)`;
-      app.style.height = natural + "px";
+      app.style.height = animatedHeight + "px";
     },
     finish() {
       if (finished) return;
