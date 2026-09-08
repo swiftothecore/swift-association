@@ -7577,7 +7577,29 @@
   /* The rust of the Ruthless plate goes dusty at the standard 42% and starts reading as
      Mastery's rose, so its swipe is laid on heavier to keep the ink's brick in it. */
   .page-mark.mark-ruthless   { --mark-tint: #8c4a34; --mark-wash: 56%; }  /* the ruthless stamp's ink */
-  .page-mark.mark-guests     { --mark-tint: var(--guest-shelf-ink, #35618f); }  /* this load's guest stamp plate */
+  .page-mark.mark-guests {
+    --mark-tint-a: var(--guest-shelf-ink-a, var(--guest-shelf-ink, #35618f));
+    --mark-tint-b: var(--guest-shelf-ink-b, var(--guest-shelf-ink, #35618f));
+    --mark-tint: var(--mark-tint-a);
+  }  /* this load's guest stamp plate */
+  .page-mark.mark-guests .guest-mark-ink-a {
+    stop-color: color-mix(in srgb, var(--mark-tint-a) var(--mark-tone, 70%), var(--ink));
+  }
+  .page-mark.mark-guests .guest-mark-ink-b {
+    stop-color: color-mix(in srgb, var(--mark-tint-b) var(--mark-tone, 70%), var(--ink));
+  }
+  .page-mark.mark-guests::before {
+    background: linear-gradient(126deg,
+      color-mix(in srgb, var(--mark-tint-a) var(--mark-wash, 42%), transparent) 0 47%,
+      color-mix(in srgb, var(--mark-tint-b) var(--mark-wash, 42%), transparent) 53% 100%);
+  }
+  .page-mark.mark-guests::after {
+    content: ""; position: absolute; inset: 3% 8%; z-index: -1; opacity: 0;
+    background: color-mix(in srgb, var(--paper) 78%, transparent);
+    clip-path: polygon(68% 0, 59% 31%, 66% 28%, 51% 57%, 59% 53%, 40% 100%, 49% 64%, 41% 69%, 56% 38%, 49% 43%, 62% 0);
+    transform: rotate(-3.5deg);
+  }
+  :root[data-guest-shelf-split] .page-mark.mark-guests::after { opacity: 1; }
   .page-mark.mark-songbook   { --mark-tint: #5f7d5a; }
   .page-mark.mark-howto      { --mark-tint: #b23a3a; }  /* the margin rule's own red */
   .page-mark.mark-glossary   { --mark-tint: #7a6a4e; }  /* desk leather, the plainest ink in the set */
@@ -10518,12 +10540,19 @@
   .stamp--ruthless .rs-ink { fill: var(--rs-ink); }
   .stamp--ruthless .rs-line { stroke: var(--rs-ink); }
   .stamp--guest { --stamp-rot: 3.5deg; --stamp-lean: 7.5deg; width: 58px; margin-left: -4px; }
-  /* The guest die is franked in one ink chosen per page load (STAMP_INKS in js/config.js,
-     applied in app.js). The figure and the caption print in the paper colour and knock
-     out of that ink, so the plate is a single colour on cream like real postage. The
-     fallback here is what a page with no JS gets, so it has to be a real ink, not white. */
-  .stamp--guest { --gs-ink: var(--guest-shelf-ink, #35618f); --gs-paper: #fdfaf1; }
-  .stamp--guest .gs-tint { fill: var(--gs-ink); }
+  /* The guest die is franked in one plate chosen per page load (STAMP_INKS in js/config.js,
+     applied in app.js). Most are one ink; the Wicked plate splits rose and emerald across
+     a cream lightning seam. The figure and caption knock out in the paper colour over both.
+     The fallback here is what a page with no JS gets, so it has to be a real ink, not white. */
+  .stamp--guest {
+    --gs-ink-a: var(--guest-shelf-ink-a, var(--guest-shelf-ink, #35618f));
+    --gs-ink-b: var(--guest-shelf-ink-b, var(--guest-shelf-ink, #35618f));
+    --gs-paper: #fdfaf1;
+  }
+  .stamp--guest .gs-ink-a { stop-color: var(--gs-ink-a); }
+  .stamp--guest .gs-ink-b { stop-color: var(--gs-ink-b); }
+  .stamp--guest .gs-bolt { fill: none; stroke: var(--gs-paper); stroke-width: 1.35; opacity: 0; }
+  :root[data-guest-shelf-split] .stamp--guest .gs-bolt { opacity: 0.82; }
   .stamp--guest .gs-fig,
   .stamp--guest .stamp-cap { fill: var(--gs-paper); }
   .stamp:hover, .stamp:focus-visible {

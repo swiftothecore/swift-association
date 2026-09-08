@@ -10525,19 +10525,32 @@ function guestRailPlan() {
   return Array.from({ length: rails }, (_, i) => base + (i < extra ? 1 : 0));
 }
 
-// The corner guest stamp is franked in a random ink from STAMP_INKS once per page load and
+// The corner guest stamp is franked in a random plate from STAMP_INKS once per page load and
 // then left alone: a stamp that changed colour while you looked at it would read as a bug,
-// and the point is the small pleasure of noticing a different plate on the next visit. The
-// figure and caption knock out in the paper colour, so one property does the whole plate.
+// and the point is the small pleasure of noticing a different plate on the next visit. Most
+// plates carry one ink; the Wicked plate carries rose and emerald across a lightning seam.
+// The figure and caption knock out in the paper colour above either kind of plate.
 // Keep the ink on the page root: the shelf and catalogue mastheads consume the same variable,
 // so the mark beside their title is always franked in the stamp's current colour too.
 function setGuestShelfInk(ink) {
-  document.documentElement.style.setProperty("--guest-shelf-ink", ink);
-  return ink;
+  // Native selects stringify the dev panel's two-item array as "rose,green". Accept that
+  // form too, so the split plate is as directly testable as every solid swatch.
+  const parts = Array.isArray(ink) ? ink : String(ink).split(",").map((part) => part.trim());
+  const pair = parts.length > 1 ? parts.slice(0, 2) : [parts[0], parts[0]];
+  const root = document.documentElement;
+  root.style.setProperty("--guest-shelf-ink", pair[0]);
+  root.style.setProperty("--guest-shelf-ink-a", pair[0]);
+  root.style.setProperty("--guest-shelf-ink-b", pair[1]);
+  root.toggleAttribute("data-guest-shelf-split", pair[0] !== pair[1]);
+  return pair[0] === pair[1] ? pair[0] : pair.slice();
 }
 
 function guestShelfInk() {
-  return getComputedStyle(document.documentElement).getPropertyValue("--guest-shelf-ink").trim();
+  const root = document.documentElement;
+  const css = getComputedStyle(root);
+  const a = css.getPropertyValue("--guest-shelf-ink-a").trim() || css.getPropertyValue("--guest-shelf-ink").trim();
+  const b = css.getPropertyValue("--guest-shelf-ink-b").trim() || a;
+  return root.hasAttribute("data-guest-shelf-split") ? [a, b] : a;
 }
 
 function frankGuestStamp() {

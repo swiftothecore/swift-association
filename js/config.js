@@ -2007,13 +2007,15 @@ export const TS_LORE_DAYS = [
 
 /* ---------- Guest-shelf stamp inks ---------- */
 // The corner guest stamp is franked in a different colour every page load, the way a
-// post office works through whatever plate is on the press that morning. Every one of
-// these is dark enough to carry the cream silhouette printed over it, which is the
+// post office works through whatever plate is on the press that morning. A two-item
+// array prints a split plate; the rose/emerald pair gives Wicked a turn on the press.
+// Every ink is dark enough to carry the cream silhouette printed over it, which is the
 // only real constraint: a pale yellow would swallow the figure whole, so the yellow
 // here is a deep ochre. Keep them printing inks, not screen colours.
 export const STAMP_INKS = [
   "#b8392f",  // pillar-box red
   "#c9536f",  // rose
+  ["#c5799b", "#4f8b63"], // Wicked rose / emerald split plate
   "#96345f",  // plum
   "#6a4d92",  // violet
   "#35618f",  // royal blue
