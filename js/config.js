@@ -234,6 +234,8 @@ export const DEFAULT_SETTINGS = {
   avatar: "",               // profile polaroid — a center-cropped data-URL, stays on this device
   masteryPen: "",           // chosen writing pen, unlocked via Mastery ("" = the default random egg)
   masteryPaper: "",         // chosen paper stock, unlocked via Mastery ("" = the default cream page)
+  titleInk: "",             // chosen masthead ink, unlocked by beating that album in Album Focus
+                            // (a MAST_INKS slug; "" = the house brand gold). See MAST_INKS.
   masteryTrinket: "",         // chosen bracelet trinket, unlocked via Mastery ("" = the default star)
   masteryTitle: "",         // chosen prestige title, unlocked via Mastery ("" = follows your mastery: the highest tier's default)
   masteryButton: "",        // chosen "start writing" button finish, unlocked via Mastery ("" = the default gold marker)
@@ -2105,6 +2107,43 @@ export const CB_ALBUM_COLORS = {
   "Written for Others":               "#999933",  // olive
   "Collaborations":                   "#882255",  // maroon
 };
+
+/* ---------- Masthead inks (Album Focus reward) ----------
+   Beating an album in Album Focus unlocks that album's INK, and the ink repaints the one gold
+   word in the wordmark ("Song"), the star over the i, the tagline hearts, the closed cover's
+   title and the favicon's highlighter blob. This map holds only the album -> slug pairing and
+   the ink's name; the hexes live in styles.css as `body[data-ink="<slug>"] { --mast-ink: … }`,
+   next to every other palette, with their own dark-mode and high-contrast blocks. Anything
+   needing the colour in JS (the generated favicon) reads the computed --mast-ink rather than a
+   second copy of the value.
+
+   The inks are NOT the era accents, and five of them deliberately differ from the era their
+   album plays in. Read the palette note in PLAN.md before "simplifying" any of them back:
+   - Fearless is off gold because the gold era's accent IS --brand-gold, so that unlock would
+     have handed the player the colour they already had.
+   - folklore is off graphite because ALBUM_ERA maps folklore AND the Tortured Poets to the same
+     era, and a collection cannot hold the same ink twice.
+   - evermore is warmer than its era value, which sat on the brown of the words either side of it
+     and swallowed "Song" whole.
+   - The Tortured Poets and The Life of a Showgirl have no era of their own to borrow from. */
+export const MAST_INKS = {
+  "Taylor Swift":                  { slug: "debut",      name: "Debut green" },
+  "Fearless":                      { slug: "fearless",   name: "Champagne" },
+  "Speak Now":                     { slug: "speaknow",   name: "Lavender" },
+  "Red":                           { slug: "red",        name: "Red" },
+  "1989":                          { slug: "nineteen89", name: "Denim" },
+  "reputation":                    { slug: "reputation", name: "Black" },
+  "Lover":                         { slug: "lover",      name: "Pink" },
+  "folklore":                      { slug: "folklore",   name: "Pencil grey" },
+  "evermore":                      { slug: "evermore",   name: "Rust" },
+  "Midnights":                     { slug: "midnights",  name: "Navy" },
+  "The Tortured Poets Department": { slug: "poets",      name: "Sepia" },
+  "The Life of a Showgirl":        { slug: "showgirl",   name: "Orange" },
+};
+// Reverse lookup, so a stored slug can be validated and named without scanning the map.
+export const MAST_INK_BY_SLUG = Object.fromEntries(
+  Object.entries(MAST_INKS).map(([album, ink]) => [ink.slug, { album, ...ink }])
+);
 
 // Extra accepted spellings for titles whose forgiving forms normalizeTitle can't
 // derive (irregular abbreviations). Keyed by the canonical title; each alias is run

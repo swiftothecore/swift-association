@@ -10,6 +10,7 @@ import {
   MODES, MODE_ORDER, MODE_COLORS, DIFFICULTY_LADDER, MODALITY_MODES, EXPLORER_TOKENS, SHELF_TYPES, PAGE_MARK_KINDS,
   ERAS, TENDER_ERAS, FINALE_ERAS, ALBUM_ERA, TS_MILESTONES, TS_LORE_DAYS, SALT_SHAKER_D, SALT_CAP_D,
   ALBUM_COLORS, CB_ALBUM_COLORS, IMPOSTOR_BEAD, COMMON_THREAD_BEADS,
+  MAST_INKS, MAST_INK_BY_SLUG,
   STUDIO_ALBUMS, TITLE_ALIASES, STAMP_INKS,
   VAULT_TRACKS, AOTY_ALBUMS, VAULT_ALBUMS,
   ACHIEVEMENTS, ACH_ICONS, ACH_BY_ID, ACH_GROUPS, ACH_GROUP_COLORS, ACH_GROUP_OF,
@@ -518,6 +519,14 @@ function applySettings() {
   // mode we drop data-paper entirely and let the dark tokens stand for every stock.
   if (settings.masteryPaper && !dark) body.setAttribute("data-paper", settings.masteryPaper);
   else body.removeAttribute("data-paper");
+  // The masthead ink (the Album Focus reward). ONE attribute: the four surfaces that wear it
+  // (the wordmark's gold word, the star over the i, the tagline hearts, the closed cover's
+  // title) each read --mast-ink with their own fallback, so no attribute means no change.
+  // Unlock state is deliberately NOT consulted here — this paints whatever is chosen, and the
+  // choosing path is what refuses a locked ink and falls back if a board reset relocks one.
+  const ink = MAST_INK_BY_SLUG[settings.titleInk] ? settings.titleInk : "";
+  if (ink) body.setAttribute("data-ink", ink);
+  else body.removeAttribute("data-ink");
   // The start-button finish sits on the button itself, not the body: the Mastery reward board
   // previews every finish at once, and each swatch is a real .play-cta carrying its own.
   const playCta = $("playBtn");
@@ -27465,6 +27474,27 @@ function buildDevApi() {
         return n;
       },
       clear: () => { saveAlbumFocus({}); if ($("albumFocusBody")) renderAlbumFocusPage(); },
+    },
+    // The masthead ink. No UI wears this yet (the tray page is still to come), so until it does
+    // this IS the feature's only door. `cycle` is the one that earns its place: the four surfaces
+    // an ink repaints are spread across the header, the tagline and the browser tab, and the only
+    // way to know they move together is to watch them move together.
+    ink: {
+      list: () => Object.entries(MAST_INKS).map(([album, i]) => `${i.slug} — ${i.name} (${album})`),
+      set: (slug) => {
+        if (slug && !MAST_INK_BY_SLUG[slug]) return `no such ink: ${slug}`;
+        settings.titleInk = slug || "";
+        saveSettings(settings); applySettings();
+        return settings.titleInk || "(brand gold)";
+      },
+      off: () => window.__dev.ink.set(""),
+      // Steps to the next ink in MAST_INKS order, wrapping through brand gold so the default
+      // is part of the loop rather than something you have to remember to go back to.
+      cycle: () => {
+        const slugs = ["", ...Object.values(MAST_INKS).map((i) => i.slug)];
+        const at = slugs.indexOf(MAST_INK_BY_SLUG[settings.titleInk] ? settings.titleInk : "");
+        return window.__dev.ink.set(slugs[(at + 1) % slugs.length]);
+      },
     },
     // Seeding
     seed: { records: devSeedRecords, history: devSeedHistory, tally: devSeedTally,

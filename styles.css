@@ -113,6 +113,30 @@
   body[data-era="lover"]      { --ink-accent:#b8487f; --highlighter:rgba(234,150,196,0.46); --bead:#d472a6; --page-wash:rgba(196,100,154,0.05); }
   body[data-era="evermore"]   { --ink-accent:#6b4a2e; --highlighter:rgba(160,120,80,0.42);  --bead:#8a6038; --page-wash:rgba(122,90,56,0.05); }
 
+  /* ---- Masthead inks (Album Focus reward, body[data-ink]) ----
+     ONE token, --mast-ink, worn by the wordmark's gold word, the star over the i, the tagline
+     hearts and the closed cover's title. Every one of those reads it as
+     `var(--mast-ink, <its own old value>)`, so with no ink chosen the attribute is simply absent
+     and all four keep exactly the colour they had. Never give --mast-ink a :root default: the
+     surfaces do NOT share one fallback (the masthead falls back to --brand-gold, the cover to
+     --ink-accent) and a root default would silently flatten that difference.
+
+     These are NOT the era accents. Five differ from the era their album plays in, each for a
+     reason found by eye on the real oak at real size; MAST_INKS in js/config.js carries the
+     reasons, and PLAN.md the full palette note. Do not "simplify" them back to --ink-accent. */
+  body[data-ink="debut"]      { --mast-ink:#3f7d54; }
+  body[data-ink="fearless"]   { --mast-ink:#d0a021; }
+  body[data-ink="speaknow"]   { --mast-ink:#6d5aa6; }
+  body[data-ink="red"]        { --mast-ink:#9b2226; }
+  body[data-ink="nineteen89"] { --mast-ink:#3f6fa3; }
+  body[data-ink="reputation"] { --mast-ink:#2c2c2e; }
+  body[data-ink="lover"]      { --mast-ink:#b8487f; }
+  body[data-ink="folklore"]   { --mast-ink:#7e8180; }
+  body[data-ink="evermore"]   { --mast-ink:#7e4a1f; }
+  body[data-ink="midnights"]  { --mast-ink:#2b3a67; }
+  body[data-ink="poets"]      { --mast-ink:#856c50; }
+  body[data-ink="showgirl"]   { --mast-ink:#c2571a; }
+
   /* ---- Paper stocks (Mastery reward, body[data-paper]) ----
      Retint the page surface only — the era accents above keep floating on top.
      Defined before the high-contrast block so high contrast cleanly overrides them. */
@@ -166,6 +190,25 @@
   :root[data-theme="dark"] body[data-era="reputation"] { --ink-accent:#cdccd2; --highlighter:rgba(150,150,160,0.26); --bead:#cdccd2; --page-wash:rgba(150,150,160,0.06); }
   :root[data-theme="dark"] body[data-era="lover"]      { --ink-accent:#f194c1; --highlighter:rgba(235,150,196,0.30); --bead:#f194c1; --page-wash:rgba(225,140,186,0.06); }
   :root[data-theme="dark"] body[data-era="evermore"]   { --ink-accent:#cb9568; --highlighter:rgba(190,140,90,0.30);  --bead:#cb9568; --page-wash:rgba(180,130,80,0.06); }
+
+  /* Masthead inks on the night desk. NOT a lightened copy of the light values and not derivable
+     from one: at night the wordmark's other words are a warm cream, so the three monochrome inks
+     (reputation, folklore, poets) invert to nearly that same cream and "Song" stops reading as a
+     separate word at all. Those three are darkened and tinted by hand. reputation's silver and
+     folklore's grey are the tightest pair in the set, held apart only by hue — reputation leans
+     violet, folklore leans green — so re-check that pair first if anything here moves. */
+  :root[data-theme="dark"] body[data-ink="debut"]      { --mast-ink:#74c48b; }
+  :root[data-theme="dark"] body[data-ink="fearless"]   { --mast-ink:#f4cf62; }
+  :root[data-theme="dark"] body[data-ink="speaknow"]   { --mast-ink:#bca6f0; }
+  :root[data-theme="dark"] body[data-ink="red"]        { --mast-ink:#eb6a66; }
+  :root[data-theme="dark"] body[data-ink="nineteen89"] { --mast-ink:#74abe1; }
+  :root[data-theme="dark"] body[data-ink="reputation"] { --mast-ink:#a9a8b6; }
+  :root[data-theme="dark"] body[data-ink="lover"]      { --mast-ink:#f194c1; }
+  :root[data-theme="dark"] body[data-ink="folklore"]   { --mast-ink:#9aa1a6; }
+  :root[data-theme="dark"] body[data-ink="evermore"]   { --mast-ink:#cb9568; }
+  :root[data-theme="dark"] body[data-ink="midnights"]  { --mast-ink:#8398da; }
+  :root[data-theme="dark"] body[data-ink="poets"]      { --mast-ink:#bda284; }
+  :root[data-theme="dark"] body[data-ink="showgirl"]   { --mast-ink:#f0975a; }
   /* The desk goes to night: a heavy dark wash over the same oak SVG (so the grain
      survives, just dimmed) plus a warm pool of lamplight over where the notebook
      sits — the "lamp on the desk" read, kept even though the paper itself is dark. */
@@ -893,8 +936,8 @@
        the text-clip box, so any clipped fill leaves its tip unpainted (a brown
        smudge when nested in the brown text, a cut-off tip once isolated). A solid
        colour paints the whole glyph, descender and all. */
-    color: var(--brand-gold);
-    -webkit-text-fill-color: var(--brand-gold);
+    color: var(--mast-ink, var(--brand-gold));
+    -webkit-text-fill-color: var(--mast-ink, var(--brand-gold));
     /* ONE tight underside and nothing else. The brown words can carry a light top
        edge, a dark underside and a wide ambient because brown on tan has the
        contrast to survive them; mid-gold on tan does not. Stacking a near-white
@@ -902,7 +945,7 @@
        once, and the word went to mush at a distance. So: no light edge, no wide
        ambient, and the remaining shadow is a half-pixel blur rather than a glow,
        just enough to seat the gold on the wood instead of floating over it. */
-    filter: drop-shadow(0 1px 0.5px color-mix(in srgb, var(--brand-gold), #000 55%));
+    filter: drop-shadow(0 1px 0.5px color-mix(in srgb, var(--mast-ink, var(--brand-gold)), #000 55%));
   }
   /* the dot on the first i becomes the game's gold star */
   .mast-i { position: relative; }
@@ -913,8 +956,8 @@
     /* wears the same gold as the "Song" letters but keeps its own lifted edge:
        a star is a solid little mark, not a run of thin strokes, so the near-white
        top edge that blurred the word reads as a highlight on it instead. */
-    fill: var(--brand-gold);
-    stroke: var(--brand-gold); stroke-width: 1.1;
+    fill: var(--mast-ink, var(--brand-gold));
+    stroke: var(--mast-ink, var(--brand-gold)); stroke-width: 1.1;
     stroke-linejoin: round; stroke-linecap: round;
     filter: drop-shadow(0 1px 0 rgba(255,248,232,0.45)) drop-shadow(0 2px 5px rgba(58,30,8,0.28));
   }
@@ -983,7 +1026,7 @@
   .tagline-row .tag-heart {
     width: 13px; height: auto; overflow: visible;
     margin: 0 10px; vertical-align: -2px;
-    fill: none; stroke: var(--brand-gold);
+    fill: none; stroke: var(--mast-ink, var(--brand-gold));
     stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
     opacity: 0.9;
   }
@@ -7246,7 +7289,7 @@
     font-size: clamp(30px, 5.4vw, 44px); color: #43301a;
     text-shadow: 0 1px 0 rgba(255,248,232,0.5);
   }
-  .nb-cover-gold { color: var(--ink-accent); }
+  .nb-cover-gold { color: var(--mast-ink, var(--ink-accent)); }
   .nb-cover-sub {
     margin: 12px 0 0; font-family: var(--type); font-size: calc(11px + var(--text-size-adjust)); letter-spacing: 0.6px;
     color: #7b7062;
