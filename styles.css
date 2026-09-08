@@ -147,6 +147,16 @@
   [data-ink="showgirl"]     { --mast-ink-day:#c2571a; --mast-ink-night:#f0975a; }
   [data-ink] { --mast-ink: var(--mast-ink-day); }
 
+  /* ---- Gold leaf (the perfect tier) ----
+     Beating an album buys its ink; PERFECTING it lays leaf over the star above the i. One token
+     rather than a thirteenth ink: the leaf is the same gold whichever ink it sits on, which is
+     what makes it read as a second, rarer honour instead of another colour to choose. Deliberately
+     NOT the board tiles' corner gold (#ddb43c / #c9a435): those are flat paper triangles on the
+     page and go DOWN at night, while this sits on the oak beside a wordmark that comes up.
+     Flat, both halves. There is no gradient on this star and there should not be one. */
+  :root { --leaf: #e0b23c; }
+  :root[data-theme="dark"] { --leaf: #f2ce62; }
+
   /* ---- Paper stocks (Mastery reward, body[data-paper]) ----
      Retint the page surface only — the era accents above keep floating on top.
      Defined before the high-contrast block so high contrast cleanly overrides them. */
@@ -960,6 +970,15 @@
     stroke: var(--mast-ink, var(--brand-gold)); stroke-width: 1.1;
     stroke-linejoin: round; stroke-linecap: round;
     filter: drop-shadow(0 1px 0 rgba(255,248,232,0.45)) drop-shadow(0 2px 5px rgba(58,30,8,0.28));
+  }
+  /* Leafed, once the worn ink's album has been PERFECTED. The fill goes to gold and the ink
+     stays on as the outline, so the star still belongs to the ink it was won with rather than
+     turning into a generic gold mark — and the outline is thickened, because leaf laid over a
+     drawn shape leaves the drawing showing at the edge. On Fearless the two are nearly the same
+     colour and the gild barely shows; champagne is already a gold, and that is accepted. */
+  body[data-gild="leaf"] .mast-i .mast-star {
+    fill: var(--leaf);
+    stroke: var(--mast-ink, var(--brand-gold)); stroke-width: 1.7;
   }
   /* a songwriter's underline flourish, drawn in the same pen as the era ink: the
      pen comes in low at the left, turns a single leaning loop under the "S",
@@ -4276,6 +4295,18 @@
     /* the same fallback chain the masthead itself uses, so the default chip and the default
        title can never disagree about what "no ink chosen" looks like */
     color: var(--mast-ink, var(--brand-gold));
+  }
+  /* The leaf on a perfected ink's chip. Pinned to the chip's corner rather than set beside the
+     word, because on the real masthead the star sits ABOVE the line, not in it — a star tucked
+     into the row would read as punctuation. Outlined in the chip's own ink for the same reason
+     the masthead's is: leaf laid over a drawn mark leaves the drawing showing at the edge. */
+  .ink-sw { position: relative; }
+  .ink-sw-leaf {
+    position: absolute; right: -4px; top: -5px; width: 13px; height: 13px;
+    transform: rotate(-8deg);
+    fill: var(--leaf); stroke: var(--mast-ink, var(--brand-gold)); stroke-width: 1.4;
+    stroke-linejoin: round; stroke-linecap: round;
+    filter: drop-shadow(0 1px 1px rgba(60,50,35,0.3));
   }
   .ink-sw.locked { background: rgba(43,39,34,0.04); border: 1px dashed rgba(43,39,34,0.25); box-shadow: none; color: var(--ink-soft); }
   /* Borrow .rb-lock for the padlock: it is the shared icon-INK primitive (it gives the .ink /

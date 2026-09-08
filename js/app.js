@@ -530,7 +530,7 @@ function applySettings() {
   const ink = MAST_INK_BY_SLUG[settings.titleInk] ? settings.titleInk : "";
   if (ink) body.setAttribute("data-ink", ink);
   else body.removeAttribute("data-ink");
-  paintFavicon();
+  paintTitleGild();   // after data-ink, which it and the favicon both read back off the body
   // The start-button finish sits on the button itself, not the body: the Mastery reward board
   // previews every finish at once, and each swatch is a real .play-cta carrying its own.
   const playCta = $("playBtn");
@@ -10209,6 +10209,24 @@ function guardTitleInk() {
   applySettings();
 }
 
+// The perfect tier. Beating an album buys its ink; perfecting it lays gold leaf over the star
+// above the i. The leaf follows the ink being WORN rather than the board as a whole, so a
+// notebook that has perfected six albums still shows a bare star while it wears the seventh's
+// ink — the gild is a thing about this ink, not a badge for the shelf.
+//
+// Its own function rather than a few lines inside applySettings because it answers to TWO
+// things. The ink moving is one; the board moving is the other, and perfecting the album whose
+// ink you are already wearing has to gild the star on the spot rather than at the next reload.
+// Paints what is chosen, for the same reason applySettings paints the ink it is given: refusing
+// an unearned one is the picker's job, not this one's.
+function paintTitleGild() {
+  const ink = MAST_INK_BY_SLUG[settings.titleInk] ? settings.titleInk : "";
+  const album = ink ? MAST_INK_BY_SLUG[ink].album : null;
+  if (album && albumFocusRecord(album).perfected) document.body.setAttribute("data-gild", "leaf");
+  else document.body.removeAttribute("data-gild");
+  paintFavicon();
+}
+
 // The tab icon is the fifth surface wearing the ink, and the only one CSS cannot reach: a
 // favicon is a document of its own, not an element on the page. So it is drawn in JS and handed
 // over as a data URL, which has the useful side effect of stepping around the service worker's
@@ -10222,7 +10240,7 @@ function paintFavicon() {
   const link = document.querySelector('link[rel="icon"]');
   if (!link) return;
   const ink = getComputedStyle(document.body).getPropertyValue("--mast-ink-day").trim();
-  const href = faviconDataUrl(ink);
+  const href = faviconDataUrl(ink, document.body.getAttribute("data-gild") === "leaf");
   if (link.getAttribute("href") === href) return;
   const next = document.createElement("link");
   next.rel = "icon";
@@ -10259,19 +10277,30 @@ function closeInkTray() {
   requestAnimationFrame(() => window.scrollTo({ top: inkTrayScrollY, behavior: "instant" }));
 }
 
+// The masthead's own star, small. Same path as the one over the i in index.html on purpose: the
+// leaf on a tray chip has to be recognisably the mark the tray is promising to gild.
+const INK_STAR = `<svg class="ink-sw-leaf" viewBox="0 0 24 24" aria-hidden="true">` +
+  `<path d="M11.6 1.9 L14.9 8.7 L22.1 9.0 L16.4 14.1 L18.4 21.3 L11.7 17.1 L5.2 20.7 L7.6 13.6 L2.0 9.5 L9.2 8.4 Z"/></svg>`;
+
 // One swatch: a chip of the ink with the word it will actually write, and its name beneath.
 // A locked one is a dashed slot naming the album that opens it, so the tray doubles as a second
 // reading of the board it hangs off. The chip carries its own data-ink, which is why the palette
 // in styles.css is keyed on [data-ink] rather than body[data-ink].
+//
+// A perfected ink wears the leaf on its chip. Only a perfected one: twelve ink-coloured stars
+// would be decoration, and the point of the mark is that it is rare enough to notice. It is the
+// only place the second tier is visible before you pick the ink, which is what makes the gild
+// something you can see you have earned rather than something you stumble into.
 function inkSwatch(slug, name, album, active, available) {
   if (!available) {
     return `<span class="ink-sw-col locked">` +
       `<span class="ink-sw locked"><span class="rb-lock">${MASTERY_ICONS.lock}</span></span>` +
       `<span class="ink-sw-nm">beat ${escapeHtml(albumTileName(album))}</span></span>`;
   }
+  const gilded = !!album && albumFocusRecord(album).perfected;
   return `<button type="button" class="ink-sw-col${active ? " active" : ""}" data-ink-pick="${escapeHtml(slug)}"` +
-    ` aria-pressed="${active ? "true" : "false"}" aria-label="${escapeHtml(name)}${active ? ", in use" : ""}">` +
-    `<span class="ink-sw"${slug ? ` data-ink="${escapeHtml(slug)}"` : ""}>Song</span>` +
+    ` aria-pressed="${active ? "true" : "false"}" aria-label="${escapeHtml(name)}${gilded ? ", gilded" : ""}${active ? ", in use" : ""}">` +
+    `<span class="ink-sw"${slug ? ` data-ink="${escapeHtml(slug)}"` : ""}>Song${gilded ? INK_STAR : ""}</span>` +
     `<span class="ink-sw-nm">${escapeHtml(active ? "in use" : name)}</span></button>`;
 }
 
@@ -10284,6 +10313,7 @@ function renderInkTrayPage() {
   // also keeps the tray in the same order as the board it hangs off, which is the point of it.
   const albums = STUDIO_ALBUMS.filter((a) => MAST_INKS[a]);
   const owned = albums.filter((album) => inkUnlocked(album)).length;
+  const gilded = albums.filter((album) => albumFocusRecord(album).perfected).length;
 
   // Brand gold leads and is never locked: it is the notebook's own ink, not a prize, and it has
   // to stay reachable so a player can always put the title back the way they found it.
@@ -10297,7 +10327,13 @@ function renderInkTrayPage() {
     `<div class="chall-head">` +
       `<div class="chall-head-sub">tap an ink · the title above is written in it</div>` +
       `<span class="chall-beaten"><span class="chall-beaten-txt">` +
-        `<b>${owned}</b>of ${albums.length} inks earned</span></span>` +
+        `<b>${owned}</b>of ${albums.length} inks earned` +
+        // Second line, not a clause: the <b> above is the hand-set headline numeral and the leaf
+        // is a footnote to it. Worded to match the board's "perfected N of 12" exactly, and kept
+        // to that length — the counter sits beside the header line, and a longer footnote pushes
+        // it wide enough to wrap the header.
+        (gilded ? `<span class="chall-beaten-perf">gilded ${gilded} of ${albums.length}</span>` : "") +
+      `</span></span>` +
     `</div>` +
     `<div class="ink-tray">${sw}</div>`;
 
@@ -15847,6 +15883,9 @@ function endAlbumFocus() {
     // The board only counts hint-free runs toward beating/perfecting (mirrors the
     // hint-free rule that still guards a "beaten" claim); best score still updates.
     rec = recordAlbumFocusRun(album, score, diff, hintFree);
+    // A run that perfects the album whose ink is being worn gilds the star while the player is
+    // still looking at the results, which is the whole reward landing at the moment it is won.
+    paintTitleGild();
     // Single-album by construction, so Discography can't earn; the rest do.
     foldSkillXp(["resolve", "tempo", "lyricist", "endurance"]);
   }
@@ -27622,7 +27661,21 @@ function buildDevApi() {
         if ($("albumFocusBody")) renderAlbumFocusPage();
         return n;
       },
-      clear: () => { saveAlbumFocus({}); guardTitleInk(); if ($("albumFocusBody")) renderAlbumFocusPage(); },
+      // The second tier, and the only way to see the gild without thirteen clean runs.
+      perfect: (n) => {
+        const board = loadAlbumFocus();
+        STUDIO_ALBUMS.slice(0, Math.max(0, Math.min(STUDIO_ALBUMS.length, n))).forEach((a) => {
+          board[a] = { best: TOTAL_ROUNDS, bestDiff: "normal", beaten: true, beatenDiff: "normal",
+                       perfected: true, perfectedDiff: "normal" };
+        });
+        saveAlbumFocus(board);
+        guardTitleInk();
+        applySettings();          // the gild rides on the body, so the masthead has to be repainted
+        if ($("albumFocusBody")) renderAlbumFocusPage();
+        if ($("inkTrayBody")) renderInkTrayPage();
+        return n;
+      },
+      clear: () => { saveAlbumFocus({}); guardTitleInk(); applySettings(); if ($("albumFocusBody")) renderAlbumFocusPage(); if ($("inkTrayBody")) renderInkTrayPage(); },
     },
     // The masthead ink. The ink tray on the Album Focus board is the player's door to this;
     // these skip the unlock. `cycle` is the one that earns its place: the five surfaces an ink

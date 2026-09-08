@@ -11,8 +11,10 @@
      luminance floor, which is exactly what watering a marker down does. It keeps the hue, which
      at 16px is the only thing telling reputation's blob from folklore's.
    - the star, at FULL strength. It carries its own near-black outline, so it stays visible at
-     any value, and it is the one element that shows the ink undiluted. It is also the element
-     the perfect tier gilds, so it must not already be gold by default.
+     any value, and it is the one element that shows the ink undiluted. That is also why it is
+     the element the perfect tier gilds: PERFECT the album and the star is leafed, which reads at
+     16px because the whole mark changes hue. Fearless is the one ink where the gild is nearly
+     invisible, since champagne is already a gold; that is accepted, not a bug.
 
    The artwork lives here and nowhere else. icons/favicon.svg is the no-JS/social fallback and is
    this same drawing with no ink; if you change a path here, reprint it with __dev.ink.favicon()
@@ -25,6 +27,9 @@
 // not read from CSS, and they are the fallback pair rather than a copy of anything in the palette.
 export const FAVICON_BLOB = "#f2c33d";
 export const FAVICON_STAR = "#e0a32f";
+// The gold leaf the perfect tier lays over the star. The day value, always: this star is on the
+// cream tile, not on the night masthead, so it does not take the --leaf pair's other half.
+export const FAVICON_LEAF = "#e0b23c";
 
 // The paper the blob is laid on, and the alpha it is laid at. Both are read back out of the
 // drawing below; the alpha is the denser of the two blob passes, since that is the patch the "1"
@@ -73,10 +78,12 @@ export function highlighterTint(hex) {
   return rgbToHex(rgb.map((v, j) => v + (PAPER[j] - v) * hi));
 }
 
-/* The tile. `ink` is a hex or "" for the house gold. */
-export function faviconSVG(ink) {
+/* The tile. `ink` is a hex or "" for the house gold; `gild` leafs the star (the perfect tier). */
+export function faviconSVG(ink, gild) {
   const blob = ink ? highlighterTint(ink) : FAVICON_BLOB;
-  const star = ink || FAVICON_STAR;
+  // The gild only means anything over an ink. With no ink the star is already the house gold,
+  // so there would be nothing for the leaf to change.
+  const star = !ink ? FAVICON_STAR : gild ? FAVICON_LEAF : ink;
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
   <title>Swift To The Song Association</title>
   <clipPath id="tile"><rect x="2" y="2" width="60" height="60" rx="14"/></clipPath>
@@ -101,6 +108,6 @@ export function faviconSVG(ink) {
    copy of icons/favicon.svg entirely, so the tab never shows a stale ink. encodeURIComponent
    rather than base64 — Safari has historically been the fussy one here and takes the percent
    encoding without complaint, and it keeps the markup readable in devtools. */
-export function faviconDataUrl(ink) {
-  return "data:image/svg+xml;charset=utf-8," + encodeURIComponent(faviconSVG(ink));
+export function faviconDataUrl(ink, gild) {
+  return "data:image/svg+xml;charset=utf-8," + encodeURIComponent(faviconSVG(ink, gild));
 }
