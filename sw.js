@@ -17,7 +17,7 @@
  * Paths are relative so the worker works at the site root (swiftassociation.com)
  * and under any project subpath, without hardcoding the origin.
  */
-const CACHE = "stta-v70";
+const CACHE = "stta-v71";
 // The game's panel routes. These are sections of index.html, not files, so a navigation to one
 // has nothing on the server to fetch: 404.html bounces it back through a ?/slug marker. Once
 // this worker is installed we can do better and answer with index.html directly, so a deep link
@@ -45,6 +45,7 @@ const ASSETS = [
   "fonts/courierprime-700-latin.woff2",
   "fonts/courierprime-italic-latin.woff2",
   "js/app.js",
+  "js/cta.js",   // Shared start-button contents and decorative finish layers.
   // Imported at module evaluation time by both app.js and search/search.js.
   // Missing it makes either surface fail on its first offline reload.
   "js/credential-guard.js",

@@ -2,6 +2,7 @@
 import { $, escapeRegExp, escapeHtml, tabNameLines, prefersReducedMotion, shuffle, chance, normalizeTitle, normalizeLyric, fuzzySubstringRatio, levenshtein, swappedNeighbours, mulberry32, fnv1a, charmBlob, dailySeed, censorText, anniversaryNote, thirteenNote } from "./util.js";
 import "./credential-guard.js";
 import { SITE_URL, copyToClipboard } from "./share.js";
+import { ctaContentHTML } from "./cta.js";
 import { launchFlock } from "./messengers.js";
 import {
   PANEL_ROUTES,
@@ -47,7 +48,7 @@ import {
   ENDURANCE_BASE, ENDURANCE_GROWTH, ENDURANCE_RUN_CAP, RANGE_RATIO_XP, RANGE_PER_ALBUM,
   RESOLVE_BASE, RESOLVE_STREAK_CAP,
   MASTERY_REWARDS, MASTERY_REWARD_BY_ID, MASTERY_GATE, MASTERY_MAX_LEVEL, MASTERY_LEVEL_STEP, SKILL_MAX_LEVEL, SKILL_EVEN_LEVEL,
-  CTA_LABELS, CTA_MARKS, PRIDE_BUTTONS, PRIDE_BUTTON_BY_ID, prideStripes,
+  CTA_LABELS, PRIDE_BUTTONS, PRIDE_BUTTON_BY_ID, prideStripes,
   MASTERY_TITLES, MASTERY_TITLE_BY_VALUE, masteryDefaultTitle, MASTERY_ICONS, MASTERY_LEVEL_ICONS, MASTERY_TIER_ICONS, MASTERY_TILE_MARKS,
   skillXpForLevel, skillLevelFromXp, masteryXpForLevel, masteryLevelFromXp,
   POLAROID_DEVELOP_MS, POLAROID_TOTAL,
@@ -456,8 +457,7 @@ function paintThemeColor(dark) {
    contrast against it has to survive every roll.
 
    Only the plain gold rolls. The Mastery finishes are earned cosmetics and a player who chose
-   rose picked THAT rose, so they set their own background-color and never touch this. The one
-   exception is the ink finish's hover, which returns to gold and so returns to today's gold.
+   rose picked THAT rose, so they supply their own fill and never touch this.
    Session-scoped on purpose: it lives in a style property on <html> rather than storage, so a
    reload is the thing that changes it, which is the whole gag. */
 const CTA_GOLD = { h: 41, s: 85, l: 59 };   // #efb73e, the nominal fill
@@ -484,15 +484,8 @@ function rollCtaGold(fixed) {
 // a pencil held in a hand; a nametag or a turned page rocking 12° reads as a wobble rather
 // than as writing, and the ones it would suit are not worth a per-mark opt-in.
 function writeCtaLabel(btn, labelId) {
-  const opt = labelId ? CTA_LABELS[labelId] : null;
-  if (!opt) {
-    btn.classList.remove("cta-mk");
-    btn.textContent = "Start writing";
-    return;
-  }
-  btn.classList.add("cta-mk");
-  const mark = opt.mark ? `<span class="cta-mark" aria-hidden="true">${CTA_MARKS[opt.mark] || ""}</span>` : "";
-  btn.innerHTML = mark + escapeHtml(opt.text);
+  btn.classList.toggle("cta-mk", !!CTA_LABELS[labelId]);
+  btn.innerHTML = ctaContentHTML(labelId, btn.dataset.startbtn || "");
 }
 
 function applySettings() {
@@ -6315,7 +6308,7 @@ const paperChip = (paper) => (locked) => locked
 // will look there, with no second description of the four fills to drift out of step.
 const buttonChip = (style) => (locked) => locked
   ? `<span class="rb-btn-sw locked"><span class="rb-lock">${MASTERY_ICONS.lock}</span></span>`
-  : `<span class="rb-btn-sw"><span class="btn-primary play-cta"${finishAttrs(style)} aria-hidden="true">Start writing</span></span>`;
+  : `<span class="rb-btn-sw"><span class="btn-primary play-cta"${finishAttrs(style)} aria-hidden="true">${ctaContentHTML("", style)}</span></span>`;
 // What a .play-cta has to be told to wear a finish: the finish itself, plus — for the Pride
 // set, whose eight ramps live in PRIDE_BUTTONS rather than in CSS — that flag's gradient.
 // Everything that previews a start button goes through this, so a preview cannot wear a
@@ -6401,14 +6394,9 @@ function buildButtonTile(buttons, m) {
 // keeps the real button's proportions instead of wrapping. 280px is its floor rather than its
 // width, or the longest label would run through the right border.
 function ctaPreviewHTML(labelId, finish) {
-  const opt = labelId ? CTA_LABELS[labelId] : null;
-  const mark = opt && opt.mark ? `<span class="cta-mark">${CTA_MARKS[opt.mark] || ""}</span>` : "";
-  const text = opt ? escapeHtml(opt.text) : "Start writing";
-  // .cta-mk suppresses the ✎ pseudo-element on every row except the default, which IS the
-  // glyph. Blank page gets .cta-mk with no mark child, which is the point of it.
-  const cls = opt ? " cta-mk" : "";
+  const cls = CTA_LABELS[labelId] ? " cta-mk" : "";
   return `<span class="cta-prev"><span class="btn-primary play-cta${cls}"` +
-    `${finishAttrs(finish)} aria-hidden="true">${mark}${text}</span></span>`;
+    `${finishAttrs(finish)} aria-hidden="true">${ctaContentHTML(labelId, finish)}</span></span>`;
 }
 
 // A start-button words row. The preview is aria-hidden (it is a decorative copy of a button
