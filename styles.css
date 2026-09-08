@@ -7605,6 +7605,7 @@
   .page-mark.mark-guests     { --mark-tint: var(--guest-shelf-ink, #35618f); }  /* this load's guest stamp plate */
   .page-mark.mark-songbook   { --mark-tint: #5f7d5a; }
   .page-mark.mark-howto      { --mark-tint: #b23a3a; }  /* the margin rule's own red */
+  .page-mark.mark-glossary   { --mark-tint: #7a6a4e; }  /* desk leather, the plainest ink in the set */
   /* The one thing on an inside page you can prod. Nothing advertises it — no pointer
      cursor, no hover state, no title — but a press makes the drawing kick off the paper
      and its highlighter swipe puff out behind it, so a stray click gets an answer. Poking
@@ -8811,6 +8812,44 @@
   @media (hover: none) {
     .ach-latest-nav:not(:disabled) { opacity: 1; transform: translateY(0); }
   }
+
+
+  /* GLOSSARY — a definition list, set as a reference rather than as prose. The term sits in the
+     hand and its definition in the typewriter face, which is the project's split everywhere
+     else: the invented word is the creative thing, the explanation is functional. */
+  .gloss-intro {
+    font-family: var(--type); font-size: calc(11.5px + var(--text-size-adjust));
+    color: var(--ink-soft); line-height: 1.5; margin: 2px 0 16px; max-width: 62ch;
+  }
+  .gloss-list { margin: 0; }
+  .gloss-row { padding: 11px 0; border-top: 1px dashed rgba(43,39,34,0.16); scroll-margin-top: 18px; }
+  .gloss-row:first-child { border-top: 0; }
+  .gloss-term-name {
+    font-family: var(--hand); font-weight: 700; font-size: calc(20px + var(--text-size-adjust));
+    color: var(--ink); line-height: 1.1;
+  }
+  .gloss-defn {
+    margin: 3px 0 0; font-family: var(--type); font-size: calc(12px + var(--text-size-adjust));
+    color: var(--ink); line-height: 1.5; max-width: 66ch;
+  }
+  .gloss-also { margin: 5px 0 0; font-family: var(--type); font-size: calc(10.5px + var(--text-size-adjust)); color: var(--ink-soft); }
+  /* Deliberately understated. A row of loud buttons under every definition would turn a page you
+     read into a page you navigate, and most readers want the next term, not a detour. */
+  .gloss-jump {
+    font: inherit; color: var(--ink-accent); background: none; border: 0; padding: 0;
+    cursor: pointer; text-decoration: underline; text-underline-offset: 2px;
+  }
+  .gloss-jump:hover, .gloss-jump:focus-visible { background: var(--highlighter); outline: none; }
+  /* The count of what is still hidden, with none of the words in it. */
+  .gloss-rest {
+    margin: 18px 0 0; padding-top: 12px; border-top: 1px dashed rgba(43,39,34,0.16);
+    font-family: var(--type); font-size: calc(11px + var(--text-size-adjust));
+    color: var(--ink-soft); font-style: italic;
+  }
+  /* A term borrowing its definition wherever it is used. No underline: these sit on glyphs and
+     counters all over the notebook, and dotting every one would look like an error state. */
+  .gloss-term { cursor: help; }
+  .howto-door { margin: 12px 0 0; font-family: var(--type); font-size: calc(11.5px + var(--text-size-adjust)); }
 
   /* HOW TO PLAY — the leafed card stack. It borrows the charm keepsake's corner arrows wholesale
      (same .ach-latest-nav classes, same inked glyph) with one deliberate difference: there they

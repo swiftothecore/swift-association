@@ -300,6 +300,21 @@ if (location.pathname.endsWith('/index.html')) {
     <path d="M18.1 14 C14.6 13.8 10.2 13.7 6.9 13.9 C6 15 5.2 15.9 4.3 16.8 C5.3 17.7 6.1 18.6 6.9 19.6 C10.2 19.8 14.6 19.7 17.7 19.4"/>
     <path d="M15.6 22 C17.6 21.6 19.4 21.6 21.2 21.9"/>
   </symbol>
+  <!-- a dictionary lying open with a ribbon marker down the gutter, and two ruled column
+       blocks of "entries" either side. The columns are what separate it from the songbook's
+       open book: a glossary is a book you look INTO rather than read, and columns say that
+       faster than any object could. Uneven line lengths on purpose. -->
+  <symbol id="mark-glossary" viewBox="0 0 36 24">
+    <path d="M18 7.2 C14.8 5.4 9.8 4.7 4.2 5 C4 9 4 14.2 4.2 18.4 C9.8 18.1 14.8 18.8 18 20.6 C21.2 18.8 26.2 18.1 31.8 18.4 C32 14.2 32 9 31.8 5 C26.2 4.7 21.2 5.4 18 7.2 Z"/>
+    <path d="M18 7.2 C18.1 11.6 18.1 16.2 18 20.6"/>
+    <path d="M7.4 9.2 C9 9.2 10.8 9.4 12 9.7"/>
+    <path d="M7.4 12.2 C9.8 12.2 12.4 12.5 14.2 12.9"/>
+    <path d="M7.4 15.2 C8.8 15.2 10.2 15.3 11.2 15.5"/>
+    <path d="M22.8 9.7 C24.2 9.4 26.2 9.2 27.8 9.2"/>
+    <path d="M21.6 12.9 C23.6 12.5 26.2 12.2 28.6 12.2"/>
+    <path d="M23.8 15.5 C25 15.3 26.6 15.2 28 15.2"/>
+    <path d="M18 20.4 C18.6 21.5 18.9 22.3 19 23.2 C19.6 22.6 20.1 22.2 20.7 21.9"/>
+  </symbol>
   <!-- an open book, finally at the proportions a book actually has -->
   <symbol id="mark-songbook" viewBox="0 0 36 24">
     <path d="M18 8.2 C14.6 6.2 9.4 5.4 3.6 5.7 C3.4 9.8 3.4 14.6 3.6 18.6 C9.4 18.3 14.6 19.1 18 21 C21.4 19.1 26.6 18.3 32.4 18.6 C32.6 14.6 32.6 9.8 32.4 5.7 C26.6 5.4 21.4 6.2 18 8.2 Z"/>
@@ -3269,6 +3284,21 @@ if (location.pathname.endsWith('/index.html')) {
       <button id="howToBackBtn" class="btn-link">← back</button>
     </div>
     <div id="howToBody"></div>
+  </section>
+
+  <!-- GLOSSARY SCREEN — the notebook's own vocabulary, one definition per term. Body rendered
+       by renderGlossary() in app.js off the GLOSSARY array in config.js, which is the single
+       place any of these words is defined; the surfaces that USE a term borrow their tooltip
+       from the same row rather than restating it. -->
+  <section id="screen-glossary" class="screen card" tabindex="-1" aria-label="Glossary">
+    <div class="stats-nav">
+      <span class="title-group">
+        <span class="page-mark mark-glossary" aria-hidden="true"><svg viewBox="0 0 36 24"><use href="#mark-glossary"/></svg></span>
+        <span class="stats-title">Glossary</span>
+      </span>
+      <button id="glossaryBackBtn" class="btn-link">← back</button>
+    </div>
+    <div id="glossaryBody"></div>
   </section>
 
   <!-- MASTERY SCREEN -->

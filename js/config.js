@@ -96,6 +96,7 @@ export const PANEL_ROUTES = {
   "album-focus": "albumfocus",
   ruthless: "ruthless",
   "how-to-play": "howto",
+  glossary: "glossary",
 };
 
 /* ---------- localStorage keys ---------- */
@@ -303,6 +304,7 @@ export const SHELF_TYPES = ["classic", "infinite", "daily", "album", "challenge"
 export const PAGE_MARK_KINDS = [
   "stats", "records", "charms", "mastery", "challenges",
   "bonus", "album", "ruthless", "guests", "songbook", "howto",
+  "glossary",
 ];
 // Per-mode accent for the index-card record tiles (label + tape tint). Keyed by mode id;
 // infinite tokens borrow the colour of their underlying difficulty.
@@ -3407,8 +3409,8 @@ export const ACHIEVEMENTS = [
      Counted in METRICS_KEY. */
   { id: "tap-scarf-doodle-13-times", name: "You Keep My Old Scarf", desc: "Tap the scarf doodle 13 times", secret: true, icon: "scarftap" },
   /* The other drawings you can touch: the little inked mark beside every inside page's title
-     (see PAGE_MARK_KINDS). Lifetime and set-shaped — ten distinct marks, in any order, across
-     any number of sittings. Nothing invites the tap and the cursor never changes, so this one
+     (see PAGE_MARK_KINDS). Lifetime and set-shaped: every mark in that array, in any order,
+     across any number of sittings. Nothing invites the tap and the cursor never changes, so this one
      is found by fidgeting; the mark jumps when you press it so at least the fidgeting answers. */
   { id: "tap-every-page-mark", name: "Marked Every Page", desc: "Poke the little mark beside every page's title", secret: true, icon: "manicule" },
   /* The third touchable thing, and the only one that isn't on the page at all: the mug that has
@@ -4302,3 +4304,75 @@ export const BOTTLE_WAVE_SVG = `<svg viewBox="0 0 140 24" aria-hidden="true">
   <path d="M7.8 18.2 q7.4 -5.4 14.2 0.4 q7 5 14 -0.4 q7.4 -5 13.4 0.6 q6.8 5.4 14.4 -0.4 q7.6 -5 14 0.4 q7 5.2 13.8 -0.6 q7.2 -4.8 13.6 0.4 q7 5 14.2 -0.4 q7.4 -4.8 13.6 0.6"
         fill="none" stroke="#a6c3cd" stroke-width="2" stroke-linecap="round" opacity=".55"/>
 </svg>`;
+
+/* ---------- Glossary ----------
+   The notebook has invented a lot of nouns, and a player meets each one mid-flow with nothing
+   to look it up in. This is the ONE place a term is defined. It is a source, not a second
+   description: the glossary page renders these entries, and the surfaces that use a term pull
+   their tooltip from the same row (see glossaryDefn in app.js). If you rename a mechanic or
+   retune what a word means, this array is the edit, and every surface follows.
+
+   `seen` is a gate key, not a condition: config stays free of live state, and app.js maps the
+   key to a predicate over the player's notebook (GLOSSARY_GATES). Its job is only to keep the
+   page from spoiling what the player has not met yet, so a term that names a thing already on
+   the front page is "always" and one that names a thing you have to earn your way to names a
+   flag. Gate on the CHEAPEST honest flag: one boolean the notebook already stores, never a
+   re-derivation of another system's unlock logic.
+
+   `also` cross-links sibling terms. It carries the distinctions the game leans on hardest and
+   never states anywhere: a charm is not a trinket is not a sticker, and nothing on a surface
+   says so. Those three rows are the reason this page exists.
+
+   Stored alphabetically so this array can be read as the reference itself. */
+export const GLOSSARY = [
+  { term: "bead", slug: "bead", seen: "riskPlayed", also: ["challenge"],
+    defn: "On the risk challenges, the beads ARE your score: a run pays them out, a wrong page takes them back, and banking is what makes them yours. Everywhere else beads are just the colours on the bracelet." },
+  { term: "bonus game", slug: "bonus-game", seen: "always", also: ["run"],
+    defn: "A short game on its own shelf, played for its own best score. A bonus run never counts toward your records, stats or streaks in the main game." },
+  { term: "bracelet", slug: "bracelet", seen: "always", also: ["charm", "trinket"],
+    defn: "The strand your charms hang on. It restrings itself as you earn, and the dangle on the end is the one part of it you get to choose." },
+  { term: "challenge", slug: "challenge", seen: "always", also: ["token", "tape", "dark-side"],
+    defn: "A run with one rule of the game bent. Challenges are sandboxed: they keep their own records and never touch your ordinary stats." },
+  { term: "charm", slug: "charm", seen: "always", also: ["bracelet", "sticker", "trinket"],
+    defn: "An achievement, hung on the bracelet. Charms are for performance: doing something well, or doing something hard." },
+  { term: "dark side", slug: "dark-side", seen: "challengeDefeated", also: ["challenge"],
+    defn: "A harder second version of a challenge, opened by defeating the ordinary one. It keeps its own separate record, so beating the dark side never overwrites the run that opened it." },
+  { term: "era", slug: "era", seen: "always", also: ["ink"],
+    defn: "An album expressed as colour and mood on the page. Eras tint the desk during a run; they are never album art." },
+  { term: "guest", slug: "guest", seen: "always", also: ["run"],
+    defn: "Another artist's catalogue, played as its own thing on its own shelf. A guest's songs are never mixed into Taylor's pool." },
+  { term: "hint", slug: "hint", seen: "always", also: ["suggestion"],
+    defn: "A rung of help you spend deliberately, on the modes that carry them. Not the same thing as a suggestion, which arrives on its own." },
+  { term: "ink", slug: "ink", seen: "albumBeaten", also: ["era"],
+    defn: "The colour of the one gold word in the title at the top of the page. Beating an album in Album Focus earns you its ink to write that word in." },
+  { term: "keepsake", slug: "keepsake", seen: "always", also: ["polaroid", "sticker"],
+    defn: "The drawer, not a thing in it. Keepsakes is where the collections that are not charms are kept." },
+  { term: "lens", slug: "lens", seen: "ruthlessPlayed", also: ["run"],
+    defn: "In the Ruthless Game, the part of the song you are shown: the whole thing from the top, or one named section. Each lens keeps its own best time." },
+  { term: "mastery", slug: "mastery", seen: "always", also: ["skill", "trinket"],
+    defn: "The reward ladder that your five skills climb together. Mastery is what unlocks the things you get to choose: your pen, your paper, your title." },
+  { term: "page", slug: "page", seen: "always", also: ["run"],
+    defn: "One word, and your answer to it. A page is the unit the whole game is counted in: a run is thirteen pages, a score is the pages you took." },
+  { term: "page mark", slug: "page-mark", seen: "always", also: ["rule-mark"],
+    defn: "The small inked doodle beside the handwritten title of every inside page. It says which page you are on, and it kicks if you poke it." },
+  { term: "polaroid", slug: "polaroid", seen: "polaroidFound", also: ["keepsake"],
+    defn: "A photograph pinned to the wall in the keepsakes drawer, developed by finding it rather than by scoring well." },
+  { term: "rule mark", slug: "rule-mark", seen: "always", also: ["page-mark", "challenge"],
+    defn: "The five little icons that state the terms of a page before you play it: the clock, suggestions, hints, the word pool, and how you may answer. A struck mark means that one is not available here." },
+  { term: "run", slug: "run", seen: "always", also: ["page"],
+    defn: "One whole game, start to results. Thirteen pages, unless you are somewhere that says otherwise." },
+  { term: "skill", slug: "skill", seen: "always", also: ["mastery"],
+    defn: "One of five tracks that grow from how you play rather than what you score: Instinct, Quick Pen, By Heart, The Long Game and Discography. They feed Mastery." },
+  { term: "sticker", slug: "sticker", seen: "stickerEarned", also: ["charm", "keepsake"],
+    defn: "A die-cut collectible, stuck to the closed cover of the notebook. Where charms are for performance, stickers are for NOTICING: none of them ever fires on a score. Once stuck, a sticker never moves." },
+  { term: "suggestion", slug: "suggestion", seen: "always", also: ["hint"],
+    defn: "The list of matching titles that drops down as you type, on the modes that allow it. It costs nothing and you never ask for it, which is what makes it not a hint." },
+  { term: "tape", slug: "tape", seen: "always", also: ["challenge"],
+    defn: "How hard a challenge is rated, one to four. A challenge shows no tapes at all until somebody has actually played it, because an unplayed rule has not earned a rating." },
+  { term: "token", slug: "token", seen: "always", also: ["challenge"],
+    defn: "What unlocks a challenge. You start with one, and beating a challenge for the first time mints another, so defeating one always pays for the next." },
+  { term: "trinket", slug: "trinket", seen: "masteryReached", also: ["charm", "bracelet"],
+    defn: "The single dangle on the end of the bracelet, unlocked through Mastery and chosen by you. There are many charms and only ever one trinket." },
+  { term: "wax seal", slug: "wax-seal", seen: "always", also: ["challenge"],
+    defn: "The blob of wax pressed onto a challenge card. Its colour and its device say what you have done with that challenge, so a shelf of cards can be read at a glance." },
+];

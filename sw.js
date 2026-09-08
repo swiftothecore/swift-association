@@ -24,7 +24,7 @@ const CACHE = "stta-v70";
 // (or an offline one) opens the notebook with no bounce at all. Same list as PANEL_ROUTES in
 // js/config.js and ROUTES in 404.html — a slug added to one must be added to all three.
 const ROUTES = ["records", "charms", "stats", "mastery", "challenges", "bonus", "guests", "songbook",
-                "album-focus", "ruthless", "how-to-play"];
+                "album-focus", "ruthless", "how-to-play", "glossary"];
 const routeSlug = (url) => url.pathname.replace(/^\/+|\/+$/g, "");
 const isRoute = (url) => ROUTES.includes(routeSlug(url));
 const isAppShellRoute = (url) => routeSlug(url) === "" || isRoute(url);

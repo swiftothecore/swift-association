@@ -649,6 +649,7 @@ export function initDev(api) {
   // every one its own button — checking them across viewport widths is the whole point.
   const beatSel = select(api.GUIDE_BEAT_IDS, (x) => x, (x) => x.replace("guide", "").toLowerCase() + " beat");
   const howToSel = select([...Array(api.onboarding.howToCards()).keys()], (x) => String(x), (x) => `card ${x + 1}`);
+  const glossSel = select(["", ...api.onboarding.glossaryTerms()], (x) => x, (x) => x || "top of page");
   body.append(section("onboarding",
     row(btn("replay first-run", () => api.onboarding.replay()),
         btn("ready-for-normal nudge", () => api.onboarding.normalNudge())),
@@ -666,6 +667,15 @@ export function initDev(api) {
     // How to play opens on card one for players, so proofreading the last card would otherwise
     // cost three clicks every time. Jump straight to any of them.
     row(howToSel, btn("open how to play", () => api.onboarding.howTo(Number(howToSel.value)))),
+    // The glossary hides terms the player hasn't met. "gate report" prints that decision for every
+    // term, which is the only way to catch an entry whose gate can never fire.
+    row(glossSel, btn("open glossary", () => api.onboarding.glossary(glossSel.value)),
+        btn("gate report", () => {
+          const g = api.onboarding.glossaryGates();
+          const hidden = g.filter((x) => !x.met);
+          readout.textContent = `glossary: ${g.length - hidden.length}/${g.length} shown` +
+            (hidden.length ? ` · hidden: ${hidden.map((x) => x.term + " (" + x.gate + ")").join(", ")}` : "");
+        })),
     // The persistent testing flag (same switch as ?intro=0 / ?intro=1 on the URL): stop every
     // one-time greeting getting in the way of a session, or hand them all back.
     row(btn("silence intros (persists)", () => { api.onboarding.quiet(true); toast("first impressions silenced"); }),

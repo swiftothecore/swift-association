@@ -7,7 +7,7 @@ import {
   PANEL_ROUTES,
   TOTAL_ROUNDS, RECENT_WINDOW, NOVELTY_BOOST, DAILY_ALBUM_SKEW, DAILY_ALBUM_WEIGHT_EXP, DIFF_KEY, DEFAULT_SETTINGS,
   LAUNCH_DATE, SERIAL_DIGITS,
-  MODES, MODE_ORDER, MODE_COLORS, DIFFICULTY_LADDER, MODALITY_MODES, EXPLORER_TOKENS, SHELF_TYPES, PAGE_MARK_KINDS,
+  MODES, MODE_ORDER, MODE_COLORS, DIFFICULTY_LADDER, MODALITY_MODES, EXPLORER_TOKENS, SHELF_TYPES, PAGE_MARK_KINDS, GLOSSARY,
   ERAS, TENDER_ERAS, FINALE_ERAS, ALBUM_ERA, TS_MILESTONES, TS_LORE_DAYS, SALT_SHAKER_D, SALT_CAP_D,
   ALBUM_COLORS, CB_ALBUM_COLORS, IMPOSTOR_BEAD, COMMON_THREAD_BEADS,
   MAST_INKS, MAST_INK_BY_SLUG, MAST_SHUFFLE, MAST_SHUFFLE_NAME,
@@ -922,6 +922,7 @@ const screens = {
   guestdetail: $("screen-guest-detail"),
   mastery: $("screen-mastery"),
   howto: $("screen-howto"),
+  glossary: $("screen-glossary"),
 };
 /* ---------- Desk tail ----------
    How much bare desk sits under the notebook, decided by whether the page is long enough
@@ -978,6 +979,11 @@ function commitScreenPresentation(name, refresh = true) {
   if (refresh) window.dispatchEvent(new CustomEvent("deskscatter:refresh"));
 }
 
+// Which screen is up, by its `screens` key. Used by anything that opens a page from wherever
+// the player happens to be and has to send them back there.
+function activeScreenName() {
+  return Object.keys(screens).find((k) => screens[k].classList.contains("active")) || "start";
+}
 function showScreen(name, options = {}) {
   const deferFocus = !!options.deferFocus;
   const deferPresentation = !!options.deferPresentation;
@@ -1466,6 +1472,7 @@ const routeOpeners = {
   "album-focus": () => openAlbumFocus("start"),
   ruthless: () => openRuthless("start"),
   "how-to-play": () => openHowTo("start"),
+  glossary: () => openGlossary("start"),
 };
 // True while a popstate (or the boot deep-link) is driving the screen change, so the opener
 // it calls doesn't push the very entry we're already sitting on back onto the stack.
@@ -9133,9 +9140,9 @@ const TAPE_WORD = { 0: "unrated", 1: "easy", 2: "tricky", 3: "tough", 4: "brutal
 // `n` tapes (0 = unrated placeholder, else clamped 1–4); the wrapper's t<n> class
 // colours them by tier. Unrated draws a single ghosted, dashed tape.
 function tapesMarkup(n) {
-  if ((n || 0) === 0) return `<span class="chall-tapes t0" aria-label="difficulty not yet rated">${TAPE_GLYPH}</span>`;
+  if ((n || 0) === 0) return glossTip("tape", `<span class="chall-tapes t0" aria-label="difficulty not yet rated">${TAPE_GLYPH}</span>`);
   const t = Math.max(1, Math.min(4, n));
-  return `<span class="chall-tapes t${t}" aria-label="difficulty ${t} of 4">${TAPE_GLYPH.repeat(t)}</span>`;
+  return glossTip("tape", `<span class="chall-tapes t${t}" aria-label="difficulty ${t} of 4">${TAPE_GLYPH.repeat(t)}</span>`);
 }
 
 function openChallenges(from, focusId) {
@@ -9336,7 +9343,7 @@ function renderChallengesPage() {
   const html =
     `<div class="chall-head">` +
       `<div class="chall-head-sub">spend a token · defeat the rule</div>` +
-      `<span class="chall-wallet${tk === 0 ? " is-empty" : ""}" title="spend a token to unlock a challenge">` +
+      `<span class="chall-wallet${tk === 0 ? " is-empty" : ""}" data-gloss="token" title="${escapeHtml("token: " + glossaryDefn("token"))}">` +
         `<span class="chall-wallet-stubs" aria-hidden="true">${walletStubs(tk)}</span>` +
         `<span class="chall-wallet-cnt"><b>${tk}</b>token${tk === 1 ? "" : "s"}</span></span>` +
     `</div>` +
@@ -23916,6 +23923,83 @@ function closeCustomModal() {
   if (target) { try { target.focus({ preventScroll: true }); } catch (_) { target.focus(); } }
 }
 
+/* ---------- Glossary ----------
+   Renders GLOSSARY (js/config.js), which is the single place any of these words is defined.
+   Nothing here writes a definition: if a term reads wrong on this page, the fix is in the array,
+   and every surface that borrows the term follows in the same edit.
+
+   The gates below are the whole spoiler policy. Each maps a term's `seen` key to ONE boolean the
+   notebook already stores, so a player who has never opened a challenge is not told what a dark
+   side is. Keep them cheap and keep them honest: a gate that re-derives another system's unlock
+   rules is a second copy of that logic and will drift away from it. If a new term needs a
+   condition no flag here covers, prefer widening the term's definition over inventing a gate. */
+const GLOSSARY_GATES = {
+  always: () => true,
+  challengeDefeated: () => CHALLENGES.some((c) => challengeRecord(c.id).defeated),
+  albumBeaten: () => STUDIO_ALBUMS.some((a) => albumFocusRecord(a).beaten),
+  ruthlessPlayed: () => RUTHLESS_LENSES.some((l) => ruthlessRecord(l.id).plays > 0),
+  polaroidFound: () => Object.keys(loadKeepsakes()).length > 0,
+  stickerEarned: () => Object.keys(loadStickers()).length > 0,
+  masteryReached: () => isMasteryUnlocked(),
+  // Attempted, not defeated: the beads ARE the score in these rules, so one page of one run is
+  // enough to have met the word and to want it explained.
+  riskPlayed: () => CHALLENGES.some((c) => RISK_RULES.has(c.rule) && challengeRecord(c.id).attempts > 0),
+};
+function glossaryMet(entry) {
+  const gate = GLOSSARY_GATES[entry.seen];
+  // An unknown gate key fails CLOSED. A typo that silently showed every term would quietly
+  // undo the spoiler policy, and a missing term is a far cheaper mistake than a spoiled one.
+  return typeof gate === "function" ? !!gate() : false;
+}
+const GLOSSARY_BY_SLUG = Object.fromEntries(GLOSSARY.map((g) => [g.slug, g]));
+/* The borrow point for every other surface. A tape glyph, a token wallet or a seal asks for its
+   own definition here rather than restating one, which is what keeps this page a source instead
+   of a second description. Returns "" for an unknown slug so a caller can fall back quietly. */
+function glossaryDefn(slug) { return (GLOSSARY_BY_SLUG[slug] || {}).defn || ""; }
+/* A term rendered as its own tooltip: same text as the glossary row, attached to the thing the
+   word is about. `data-gloss` also makes it a door — clicking one opens the page at that term. */
+function glossTip(slug, inner) {
+  const g = GLOSSARY_BY_SLUG[slug];
+  if (!g) return inner;
+  return `<span class="gloss-term" data-gloss="${g.slug}" title="${escapeHtml(g.term)}: ${escapeHtml(g.defn)}">${inner}</span>`;
+}
+let glossaryBackTarget = "start";
+function renderGlossary(focus = "") {
+  const el = $("glossaryBody");
+  if (!el) return;
+  const met = GLOSSARY.filter(glossaryMet);
+  const hidden = GLOSSARY.length - met.length;
+  let html = `<p class="gloss-intro">The notebook's own words, defined once each. Terms appear here ` +
+    `as you meet them, so nothing on this page gets ahead of your notebook.</p>`;
+  html += `<dl class="gloss-list">` + met.map((g) => {
+    // Cross-links only point at terms the reader can currently see. A "see also: dark side" on a
+    // notebook that has not earned dark side would leak the word this page just withheld.
+    const also = (g.also || []).map((s) => GLOSSARY_BY_SLUG[s]).filter((x) => x && glossaryMet(x));
+    const seeAlso = also.length
+      ? `<p class="gloss-also">see also ` + also.map((x) =>
+          `<button type="button" class="gloss-jump" data-gloss-jump="${x.slug}">${escapeHtml(x.term)}</button>`).join(" · ") + `</p>`
+      : "";
+    return `<div class="gloss-row" id="gloss-${g.slug}" data-gloss-row="${g.slug}">` +
+      `<dt class="gloss-term-name">${escapeHtml(g.term)}</dt>` +
+      `<dd class="gloss-defn">${escapeHtml(g.defn)}${seeAlso}</dd></div>`;
+  }).join("") + `</dl>`;
+  // The count without the words: honest that there is more, and it names none of it.
+  if (hidden) {
+    html += `<p class="gloss-rest">${hidden} more ${hidden === 1 ? "word" : "words"} you haven't met yet.</p>`;
+  }
+  el.innerHTML = html;
+  if (focus) {
+    const row = el.querySelector(`[data-gloss-row="${focus}"]`);
+    if (row) revealAfterFlip(() => row, { pad: 18 });
+  }
+}
+function openGlossary(from, focus = "") {
+  glossaryBackTarget = from;
+  routeTo("glossary", from);
+  renderGlossary(focus);
+  flipAwayToScreen("glossary");
+}
+
 /* ---------- How to play ----------
    A short stack of cards, one idea each, leafed through with the same corner arrows the charm
    keepsake uses. Four cards where one page of prose would have fitted, on purpose: a reader who
@@ -23966,6 +24050,9 @@ const HOWTO_PAGES = [
       `and experience across five skills that unlocks as it climbs. None of it is spent by ` +
       `playing badly, so there's no wrong way to start.`,
     note: `Everything lives on this device alone. There's no account, and nothing to sign up for.`,
+    // The one card that sends you somewhere. The notebook invents a lot of nouns and this is
+    // where a reader who noticed that gets told where they are defined.
+    door: { label: "the notebook's own words", to: "glossary" },
   },
 ];
 let howToBackTarget = "start";   // where the How to play page's ← back returns to
@@ -23991,6 +24078,8 @@ function renderHowTo() {
           `<p class="howto-body">${page.body}</p>` +
           (page.legend ? ruleLegendMarkup() : "") +
           `<p class="howto-note">${note}</p>` +
+          (page.door ? `<p class="howto-door"><button type="button" class="gloss-jump" ` +
+            `data-howto-door="${page.door.to}">${escapeHtml(page.door.label)} &rarr;</button></p>` : "") +
         `</div>` +
       `</div>` +
       `<button type="button" class="ach-latest-nav ach-latest-prev" data-howto-prev` +
@@ -25169,6 +25258,12 @@ function buildDevApi() {
       // proofreading card four should not cost three clicks.
       howTo: (page = 0) => openHowTo("start", page),
       howToCards: () => HOWTO_PAGES.length,
+      // Glossary: open it, and report which terms the gates are currently hiding. The report is
+      // the useful half — a term stuck behind a gate that can never fire is invisible in play and
+      // only shows up here.
+      glossary: (slug = "") => openGlossary("start", slug),
+      glossaryGates: () => GLOSSARY.map((g) => ({ term: g.term, gate: g.seen, met: glossaryMet(g) })),
+      glossaryTerms: () => GLOSSARY.map((g) => g.slug),
       normalNudge: () => { markCoachmark("readyForNormal"); showReadyForNormal(true); },
       eraPrompt: () => { markCoachmark("askEra"); showAskEra(true); },
       // Guided first round: clear every beat gate (+ the first-match flag) so they re-arm on the
@@ -27911,9 +28006,29 @@ async function init() {
   // delegated because renderHowTo replaces them on every turn.
   $("howToPlayLink").addEventListener("click", () => openHowTo("start"));
   $("howToBackBtn").addEventListener("click", () => backToScreen(howToBackTarget));
+  // Glossary — its own back target, plus two ways in from elsewhere: the "see also" jumps inside
+  // the page, and any `data-gloss` term anywhere in the notebook (delegated, since those live in
+  // bodies that re-render).
+  $("glossaryBackBtn").addEventListener("click", () => backToScreen(glossaryBackTarget));
+  $("glossaryBody").addEventListener("click", (e) => {
+    const jump = e.target.closest("[data-gloss-jump]");
+    if (!jump) return;
+    const row = $("glossaryBody").querySelector(`[data-gloss-row="${jump.dataset.glossJump}"]`);
+    if (row) row.scrollIntoView({ behavior: prefersReducedMotion() ? "auto" : "smooth", block: "center" });
+  });
+  document.addEventListener("click", (e) => {
+    const term = e.target.closest("[data-gloss]");
+    if (!term) return;
+    // A term sitting inside a real control keeps its tooltip but is NOT a door: hijacking the
+    // click would mean tapping a challenge card's tapes opened the glossary instead of the card.
+    if (term.closest("button, a")) return;
+    openGlossary(activeScreenName(), term.dataset.gloss);
+  });
   $("howToBody").addEventListener("click", (e) => {
     if (e.target.closest("[data-howto-prev]")) turnHowTo(-1);
     else if (e.target.closest("[data-howto-next]")) turnHowTo(1);
+    // A door on a card returns to how-to on back, not past it to the start screen.
+    else if (e.target.closest("[data-howto-door]")) openGlossary("howto");
   });
   // Arrow keys turn the cards too. Scoped to the screen, and left alone when the player is
   // in a field or on a control that wants its own arrow behaviour.
