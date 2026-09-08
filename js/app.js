@@ -912,6 +912,7 @@ const screens = {
   songbook: $("screen-songbook"),
   albumfocus: $("screen-albumfocus"),
   albumdetail: $("screen-album-detail"),
+  inktray: $("screen-ink-tray"),
   ruthless: $("screen-ruthless"),
   guests: $("screen-guests"),
   guestdetail: $("screen-guest-detail"),
@@ -10130,6 +10131,8 @@ function renderAlbumFocusPage() {
   // the beaten count it is a footnote to.
   const perfectLine = perfected
     ? `<span class="chall-beaten-perf">perfected ${perfected} of ${STUDIO_ALBUMS.length}</span>` : "";
+  const wornInk = MAST_INK_BY_SLUG[earnedTitleInk()];
+  const inkName = wornInk ? wornInk.name : "Brand gold";
   const html =
     `<div class="chall-head">` +
       `<div class="chall-head-sub">tap an album · beat all 12</div>` +
@@ -10138,12 +10141,21 @@ function renderAlbumFocusPage() {
         `<span class="chall-beaten-txt"><b>${beaten}</b>of ${STUDIO_ALBUMS.length} beaten${perfectLine}</span>` +
       `</span>` +
     `</div>` +
+    // The ink pot: what beating an album buys. It sits above the board rather than below it so
+    // it is seen without scrolling past twelve tiles, and it stays live from the very first
+    // visit — a tray of twelve locked inks teaches the whole reward at a glance, where a
+    // greyed-out button would teach nothing.
+    `<button type="button" class="af-pot" id="afInkPot" aria-label="Title ink: ${escapeHtml(inkName)}">` +
+      inkPotSVG() +
+      `<span class="af-pot-txt"><b>title ink</b>${escapeHtml(inkName)}</span>` +
+    `</button>` +
     `<div class="af-board">${tiles}</div>`;
 
   const el = $("albumFocusBody");
   el.innerHTML = html;
   el.querySelectorAll(".af-tile").forEach((b) =>
     b.addEventListener("click", () => selectAlbum(b.dataset.album)));
+  $("afInkPot").addEventListener("click", openInkTray);
 }
 
 function selectAlbum(album) {
@@ -10159,6 +10171,116 @@ function closeAlbumDetail() {
   renderAlbumFocusPage();
   flipInToScreen("albumfocus");
   requestAnimationFrame(() => window.scrollTo({ top: albumFocusScrollY, behavior: "instant" }));
+}
+
+/* ---------- The ink tray ----------
+   The Album Focus reward: beating an album earns its INK, and the ink is what the wordmark's
+   one gold word is written in (plus the star over the i, the tagline hearts, the closed cover's
+   title and the favicon's blob — see MAST_INKS and the --mast-ink note in styles.css).
+
+   The tray is a sub-page of the board, routeless, exactly like the album detail beside it. It
+   needs no preview of its own and must never grow one: the masthead is in normal flow directly
+   above this page, so tapping a swatch repaints the real title in front of you. That is also the
+   page's one hard layout rule — keep it short enough that the masthead stays on screen. */
+
+// Beating earns the ink. Perfecting is deliberately NOT asked for here; that tier gilds the
+// star instead, so the two rewards stay one decision each.
+function inkUnlocked(album) { return !!albumFocusRecord(album).beaten; }
+
+// The chosen ink, but only if the notebook still owns it. The Album Focus board can be wiped
+// (the dev tools do it, and a full data reset does), which would otherwise leave the masthead
+// wearing an ink the board no longer says was earned. "" is the house brand gold.
+function earnedTitleInk() {
+  const ink = MAST_INK_BY_SLUG[settings.titleInk];
+  return ink && inkUnlocked(ink.album) ? settings.titleInk : "";
+}
+// Forget a stranded ink rather than merely declining to paint it, so the setting, the tray and
+// the masthead can never disagree about what the notebook is wearing. applySettings paints what
+// it is given on purpose (that is what lets __dev.ink preview a locked one); THIS is the guard.
+function guardTitleInk() {
+  const earned = earnedTitleInk();
+  if (settings.titleInk === earned) return;
+  settings.titleInk = earned;
+  saveSettings(settings);
+  applySettings();
+}
+
+// The pot on the board, and the door to the tray. Drawn rather than lettered, and drawn as a
+// readout: the pool inside it takes --mast-ink, so the pot always holds the ink the title is
+// actually written in. Uneven on purpose — a pressed-glass well off a desk, not a CAD part.
+function inkPotSVG() {
+  return `<svg class="af-pot-art" viewBox="0 0 44 42" aria-hidden="true">` +
+    `<path class="af-pot-pool" d="M10.6 23.1 C16.4 21.7 28.2 21.9 33.6 23.0 C33.1 28.4 32.4 32.6 31.4 34.5 C29.6 37.1 14.1 37.0 12.6 34.4 C11.6 32.5 11.0 28.5 10.6 23.1 Z"/>` +
+    `<path class="af-pot-line" d="M9.4 16.2 C8.9 24.6 10.3 31.8 12.3 34.6 C14.2 37.3 30.0 37.2 31.7 34.5 C33.6 31.6 34.9 24.4 34.6 16.0"/>` +
+    `<path class="af-pot-line" d="M9.4 16.2 C13.6 14.4 30.6 14.3 34.6 16.0"/>` +
+    `<path class="af-pot-line" d="M17.1 15.4 C17.5 12.6 17.8 10.4 17.9 8.6"/>` +
+    `<path class="af-pot-line" d="M26.9 15.3 C26.6 12.5 26.4 10.3 26.4 8.5"/>` +
+    `<path class="af-pot-line" d="M17.9 8.6 C19.4 7.3 25.2 7.2 26.4 8.5 C25.4 9.9 19.1 10.0 17.9 8.6 Z"/>` +
+    `</svg>`;
+}
+
+let inkTrayScrollY = 0;   // the board's scroll position, restored on the way back
+
+function openInkTray() {
+  inkTrayScrollY = window.scrollY;
+  renderInkTrayPage();
+  flipAwayToScreen("inktray");
+  window.scrollTo({ top: 0, behavior: "instant" });
+}
+function closeInkTray() {
+  renderAlbumFocusPage();   // the pot on the board is a readout, so it has to be redrawn
+  flipInToScreen("albumfocus");
+  requestAnimationFrame(() => window.scrollTo({ top: inkTrayScrollY, behavior: "instant" }));
+}
+
+// One swatch: a chip of the ink with the word it will actually write, and its name beneath.
+// A locked one is a dashed slot naming the album that opens it, so the tray doubles as a second
+// reading of the board it hangs off. The chip carries its own data-ink, which is why the palette
+// in styles.css is keyed on [data-ink] rather than body[data-ink].
+function inkSwatch(slug, name, album, active, available) {
+  if (!available) {
+    return `<span class="ink-sw-col locked">` +
+      `<span class="ink-sw locked"><span class="rb-lock">${MASTERY_ICONS.lock}</span></span>` +
+      `<span class="ink-sw-nm">beat ${escapeHtml(albumTileName(album))}</span></span>`;
+  }
+  return `<button type="button" class="ink-sw-col${active ? " active" : ""}" data-ink-pick="${escapeHtml(slug)}"` +
+    ` aria-pressed="${active ? "true" : "false"}" aria-label="${escapeHtml(name)}${active ? ", in use" : ""}">` +
+    `<span class="ink-sw"${slug ? ` data-ink="${escapeHtml(slug)}"` : ""}>Song</span>` +
+    `<span class="ink-sw-nm">${escapeHtml(active ? "in use" : name)}</span></button>`;
+}
+
+function renderInkTrayPage() {
+  const el = $("inkTrayBody");
+  if (!el) return;
+  const worn = earnedTitleInk();
+  // STUDIO_ALBUMS, never Object.keys(MAST_INKS): "1989" is an integer-like key, so JS hoists it
+  // to the front of any object-key walk and the tray comes out shuffled. Walking the album list
+  // also keeps the tray in the same order as the board it hangs off, which is the point of it.
+  const albums = STUDIO_ALBUMS.filter((a) => MAST_INKS[a]);
+  const owned = albums.filter((album) => inkUnlocked(album)).length;
+
+  // Brand gold leads and is never locked: it is the notebook's own ink, not a prize, and it has
+  // to stay reachable so a player can always put the title back the way they found it.
+  let sw = inkSwatch("", "Brand gold", null, worn === "", true);
+  albums.forEach((album) => {
+    const ink = MAST_INKS[album];
+    sw += inkSwatch(ink.slug, ink.name, album, worn === ink.slug, inkUnlocked(album));
+  });
+
+  el.innerHTML =
+    `<div class="chall-head">` +
+      `<div class="chall-head-sub">tap an ink · the title above is written in it</div>` +
+      `<span class="chall-beaten"><span class="chall-beaten-txt">` +
+        `<b>${owned}</b>of ${albums.length} inks earned</span></span>` +
+    `</div>` +
+    `<div class="ink-tray">${sw}</div>`;
+
+  el.querySelectorAll("[data-ink-pick]").forEach((b) => b.addEventListener("click", () => {
+    settings.titleInk = b.dataset.inkPick || "";
+    saveSettings(settings);
+    applySettings();
+    renderInkTrayPage();
+  }));
 }
 
 function renderAlbumDetail(album) {
@@ -27470,17 +27592,18 @@ function buildDevApi() {
           board[a] = { best: TOTAL_ROUNDS, bestDiff: "normal", beaten: true, beatenDiff: "normal" };
         });
         saveAlbumFocus(board);
+        guardTitleInk();
         if ($("albumFocusBody")) renderAlbumFocusPage();
         return n;
       },
-      clear: () => { saveAlbumFocus({}); if ($("albumFocusBody")) renderAlbumFocusPage(); },
+      clear: () => { saveAlbumFocus({}); guardTitleInk(); if ($("albumFocusBody")) renderAlbumFocusPage(); },
     },
     // The masthead ink. No UI wears this yet (the tray page is still to come), so until it does
     // this IS the feature's only door. `cycle` is the one that earns its place: the four surfaces
     // an ink repaints are spread across the header, the tagline and the browser tab, and the only
     // way to know they move together is to watch them move together.
     ink: {
-      list: () => Object.entries(MAST_INKS).map(([album, i]) => `${i.slug} — ${i.name} (${album})`),
+      list: () => STUDIO_ALBUMS.filter((a) => MAST_INKS[a]).map((a) => `${MAST_INKS[a].slug} — ${MAST_INKS[a].name} (${a})`),
       set: (slug) => {
         if (slug && !MAST_INK_BY_SLUG[slug]) return `no such ink: ${slug}`;
         settings.titleInk = slug || "";
@@ -27491,7 +27614,7 @@ function buildDevApi() {
       // Steps to the next ink in MAST_INKS order, wrapping through brand gold so the default
       // is part of the loop rather than something you have to remember to go back to.
       cycle: () => {
-        const slugs = ["", ...Object.values(MAST_INKS).map((i) => i.slug)];
+        const slugs = ["", ...STUDIO_ALBUMS.filter((a) => MAST_INKS[a]).map((a) => MAST_INKS[a].slug)];
         const at = slugs.indexOf(MAST_INK_BY_SLUG[settings.titleInk] ? settings.titleInk : "");
         return window.__dev.ink.set(slugs[(at + 1) % slugs.length]);
       },
@@ -27623,6 +27746,10 @@ async function init() {
   earnedAchievements = loadAchievements();
   settings = loadSettings();
   applySettings();
+  // Drop a masthead ink whose album is no longer beaten on the board (a wiped board, a restored
+  // backup from before that album was won). applySettings has already painted it by then, which
+  // is fine: the guard re-applies.
+  guardTitleInk();
   // When the theme is "system", track the OS toggle live so the page follows a day/night flip
   // without a reload. Ignored while the setting is a forced "light"/"dark".
   if (window.matchMedia) {
@@ -27722,6 +27849,7 @@ async function init() {
   $("albumFocusBtn").addEventListener("click", () => openAlbumFocus("start"));
   $("albumFocusBackBtn").addEventListener("click", () => backToScreen(albumFocusBackTarget));
   $("albumDetailBackBtn").addEventListener("click", closeAlbumDetail);
+  $("inkTrayBackBtn").addEventListener("click", closeInkTray);
   $("ruthlessBtn").addEventListener("click", () => openRuthless("start"));
   $("ruthlessBackBtn").addEventListener("click", () => backToScreen(ruthlessBackTarget));
   frankGuestStamp();

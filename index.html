@@ -3351,6 +3351,22 @@ if (location.pathname.endsWith('/index.html')) {
     <div id="albumDetailBody"></div>
   </section>
 
+  <!-- INK TRAY SCREEN: pick the ink the masthead is written in. A sub-page of the Album Focus
+       board (routeless, like the album detail beside it). The masthead sits above this page in
+       normal flow, so the tray is the preview: tapping a swatch repaints the real wordmark,
+       the real star, the real hearts and the real browser-tab icon. Keep this page SHORT for
+       that reason — a tray tall enough to scroll pushes the thing it is previewing off screen. -->
+  <section id="screen-ink-tray" class="screen card" tabindex="-1" aria-label="Title ink">
+    <div class="stats-nav">
+      <span class="title-group">
+        <span class="page-mark mark-album" aria-hidden="true"><svg viewBox="0 0 36 24"><use href="#mark-album"/></svg></span>
+        <span class="stats-title">Title ink</span>
+      </span>
+      <button id="inkTrayBackBtn" class="btn-link">← albums</button>
+    </div>
+    <div id="inkTrayBody"></div>
+  </section>
+
   <!-- RUTHLESS SCREEN — the six section lenses, each with its own best time -->
   <section id="screen-ruthless" class="screen card" tabindex="-1" aria-label="Ruthless Game">
     <div class="stats-nav">

@@ -121,21 +121,25 @@
      surfaces do NOT share one fallback (the masthead falls back to --brand-gold, the cover to
      --ink-accent) and a root default would silently flatten that difference.
 
+     Keyed on [data-ink] rather than body[data-ink] on purpose: the body wears one for the page,
+     and the ink tray's swatch chips each wear their own, so one palette paints both and a chip
+     can never show a colour the page would not.
+
      These are NOT the era accents. Five differ from the era their album plays in, each for a
      reason found by eye on the real oak at real size; MAST_INKS in js/config.js carries the
      reasons, and PLAN.md the full palette note. Do not "simplify" them back to --ink-accent. */
-  body[data-ink="debut"]      { --mast-ink:#3f7d54; }
-  body[data-ink="fearless"]   { --mast-ink:#d0a021; }
-  body[data-ink="speaknow"]   { --mast-ink:#6d5aa6; }
-  body[data-ink="red"]        { --mast-ink:#9b2226; }
-  body[data-ink="nineteen89"] { --mast-ink:#3f6fa3; }
-  body[data-ink="reputation"] { --mast-ink:#2c2c2e; }
-  body[data-ink="lover"]      { --mast-ink:#b8487f; }
-  body[data-ink="folklore"]   { --mast-ink:#7e8180; }
-  body[data-ink="evermore"]   { --mast-ink:#7e4a1f; }
-  body[data-ink="midnights"]  { --mast-ink:#2b3a67; }
-  body[data-ink="poets"]      { --mast-ink:#856c50; }
-  body[data-ink="showgirl"]   { --mast-ink:#c2571a; }
+  [data-ink="debut"]      { --mast-ink:#3f7d54; }
+  [data-ink="fearless"]   { --mast-ink:#d0a021; }
+  [data-ink="speaknow"]   { --mast-ink:#6d5aa6; }
+  [data-ink="red"]        { --mast-ink:#9b2226; }
+  [data-ink="nineteen89"] { --mast-ink:#3f6fa3; }
+  [data-ink="reputation"] { --mast-ink:#2c2c2e; }
+  [data-ink="lover"]      { --mast-ink:#b8487f; }
+  [data-ink="folklore"]   { --mast-ink:#7e8180; }
+  [data-ink="evermore"]   { --mast-ink:#7e4a1f; }
+  [data-ink="midnights"]  { --mast-ink:#2b3a67; }
+  [data-ink="poets"]      { --mast-ink:#856c50; }
+  [data-ink="showgirl"]   { --mast-ink:#c2571a; }
 
   /* ---- Paper stocks (Mastery reward, body[data-paper]) ----
      Retint the page surface only — the era accents above keep floating on top.
@@ -197,18 +201,18 @@
      separate word at all. Those three are darkened and tinted by hand. reputation's silver and
      folklore's grey are the tightest pair in the set, held apart only by hue — reputation leans
      violet, folklore leans green — so re-check that pair first if anything here moves. */
-  :root[data-theme="dark"] body[data-ink="debut"]      { --mast-ink:#74c48b; }
-  :root[data-theme="dark"] body[data-ink="fearless"]   { --mast-ink:#f4cf62; }
-  :root[data-theme="dark"] body[data-ink="speaknow"]   { --mast-ink:#bca6f0; }
-  :root[data-theme="dark"] body[data-ink="red"]        { --mast-ink:#eb6a66; }
-  :root[data-theme="dark"] body[data-ink="nineteen89"] { --mast-ink:#74abe1; }
-  :root[data-theme="dark"] body[data-ink="reputation"] { --mast-ink:#a9a8b6; }
-  :root[data-theme="dark"] body[data-ink="lover"]      { --mast-ink:#f194c1; }
-  :root[data-theme="dark"] body[data-ink="folklore"]   { --mast-ink:#9aa1a6; }
-  :root[data-theme="dark"] body[data-ink="evermore"]   { --mast-ink:#cb9568; }
-  :root[data-theme="dark"] body[data-ink="midnights"]  { --mast-ink:#8398da; }
-  :root[data-theme="dark"] body[data-ink="poets"]      { --mast-ink:#bda284; }
-  :root[data-theme="dark"] body[data-ink="showgirl"]   { --mast-ink:#f0975a; }
+  :root[data-theme="dark"] [data-ink="debut"]      { --mast-ink:#74c48b; }
+  :root[data-theme="dark"] [data-ink="fearless"]   { --mast-ink:#f4cf62; }
+  :root[data-theme="dark"] [data-ink="speaknow"]   { --mast-ink:#bca6f0; }
+  :root[data-theme="dark"] [data-ink="red"]        { --mast-ink:#eb6a66; }
+  :root[data-theme="dark"] [data-ink="nineteen89"] { --mast-ink:#74abe1; }
+  :root[data-theme="dark"] [data-ink="reputation"] { --mast-ink:#a9a8b6; }
+  :root[data-theme="dark"] [data-ink="lover"]      { --mast-ink:#f194c1; }
+  :root[data-theme="dark"] [data-ink="folklore"]   { --mast-ink:#9aa1a6; }
+  :root[data-theme="dark"] [data-ink="evermore"]   { --mast-ink:#cb9568; }
+  :root[data-theme="dark"] [data-ink="midnights"]  { --mast-ink:#8398da; }
+  :root[data-theme="dark"] [data-ink="poets"]      { --mast-ink:#bda284; }
+  :root[data-theme="dark"] [data-ink="showgirl"]   { --mast-ink:#f0975a; }
   /* The desk goes to night: a heavy dark wash over the same oak SVG (so the grain
      survives, just dimmed) plus a warm pool of lamplight over where the notebook
      sits — the "lamp on the desk" read, kept even though the paper itself is dark. */
@@ -4241,6 +4245,54 @@
      perfected. Tapping a tile turns to a separate album menu with the difficulty
      picker and record. Nothing here is a flat swatch on purpose — twelve saturated
      rectangles side by side read as a paint chart, and strokes let the paper through. */
+  /* ---------- The ink pot, and the tray behind it (Album Focus reward) ----------
+     The pot is the door to the ink tray AND a readout of what the title is currently written
+     in: its pool takes --mast-ink, so it holds the real ink. Line art only, per the page's own
+     rule — the pool is a flat fill, never a gradient, and the glass is drawn rather than shaded. */
+  .af-pot {
+    display: flex; align-items: center; gap: 10px; margin: 2px auto 0;
+    padding: 6px 14px 6px 8px; border: 1px dashed rgba(67,48,26,0.3); border-radius: 999px;
+    background: rgba(255,250,238,0.5); cursor: pointer; font: inherit; color: var(--ink);
+    transition: transform 0.16s ease, border-color 0.16s ease;
+  }
+  .af-pot:hover { transform: translateY(-1px); border-color: rgba(67,48,26,0.5); }
+  .af-pot:active { transform: translateY(0); }
+  .af-pot-art { width: 30px; height: 29px; flex: none; overflow: visible; }
+  .af-pot-pool { fill: var(--mast-ink, var(--brand-gold)); opacity: 0.9; }
+  .af-pot-line { fill: none; stroke: var(--ink); stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; opacity: 0.75; }
+  .af-pot-txt { font-family: var(--type); font-size: calc(9px + var(--text-size-adjust)); letter-spacing: 0.05em; color: var(--ink-soft); text-align: left; }
+  .af-pot-txt b { display: block; text-transform: uppercase; letter-spacing: 0.1em; color: var(--ink); font-weight: 400; }
+  @media (prefers-reduced-motion: reduce) { .af-pot, .af-pot:hover { transition: none; transform: none; } }
+
+  /* The tray. Mirrors the Mastery reward board's swatch idiom (a chip, its name beneath, a
+     dashed slot while locked) without borrowing its markup: those swatches ring the active one
+     in --m-accent, a token that only exists on .mastery-page, and an ink's own colour is a
+     better ring than any fixed accent anyway. */
+  .ink-tray { display: grid; grid-template-columns: repeat(auto-fit, minmax(84px, 1fr)); gap: 14px 10px; padding: 16px 4px 8px; }
+  .ink-sw-col { display: flex; flex-direction: column; align-items: center; gap: 6px; font: inherit; border: 0; background: none; padding: 0; cursor: pointer; }
+  .ink-sw-col.locked { cursor: default; }
+  .ink-sw {
+    display: flex; align-items: center; justify-content: center;
+    width: 100%; max-width: 88px; height: 44px; border-radius: 5px;
+    background: #fbf6ea; border: 1px solid rgba(67,48,26,0.16);
+    box-shadow: 0 2px 5px rgba(60,50,35,0.16);
+    font-family: var(--hand); font-weight: 700; font-size: 22px; line-height: 1;
+    /* the same fallback chain the masthead itself uses, so the default chip and the default
+       title can never disagree about what "no ink chosen" looks like */
+    color: var(--mast-ink, var(--brand-gold));
+  }
+  .ink-sw.locked { background: rgba(43,39,34,0.04); border: 1px dashed rgba(43,39,34,0.25); box-shadow: none; color: var(--ink-soft); }
+  /* Borrow .rb-lock for the padlock: it is the shared icon-INK primitive (it gives the .ink /
+     .ink-fill classes their stroke and fill), not a Mastery layout class, and without it the
+     glyph renders as a solid black blob. The bento scopes its own svg sizing, so size it here. */
+  .ink-sw.locked .rb-lock { width: 18px; height: 18px; opacity: 0.55; }
+  .ink-sw.locked .rb-lock svg { width: 100%; height: 100%; overflow: visible; }
+  .ink-sw-col.active .ink-sw { border-color: var(--mast-ink, var(--brand-gold)); box-shadow: 0 0 0 3px color-mix(in srgb, var(--mast-ink, var(--brand-gold)) 22%, transparent); }
+  .ink-sw-nm { font-family: var(--type); font-size: calc(8.5px + var(--text-size-adjust)); letter-spacing: 0.03em; color: var(--ink-soft); text-align: center; }
+  .ink-sw-col.active .ink-sw-nm { color: var(--ink); }
+  :root[data-theme="dark"] .ink-sw { background: rgba(255,246,226,0.06); border-color: rgba(255,246,226,0.16); }
+  :root[data-theme="dark"] .ink-sw.locked { background: rgba(255,246,226,0.03); border-color: rgba(255,246,226,0.18); }
+
   .af-board {
     display: grid; grid-template-columns: repeat(4, 1fr); gap: 30px 18px;
     padding: 16px 6px 24px; justify-items: center;
