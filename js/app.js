@@ -2,7 +2,7 @@
 import { $, escapeRegExp, escapeHtml, tabNameLines, prefersReducedMotion, shuffle, chance, normalizeTitle, normalizeLyric, fuzzySubstringRatio, levenshtein, swappedNeighbours, mulberry32, fnv1a, charmBlob, dailySeed, censorText, anniversaryNote, thirteenNote } from "./util.js";
 import "./credential-guard.js";
 import { SITE_URL, copyToClipboard } from "./share.js";
-import { ctaContentHTML } from "./cta.js";
+import { ctaContentHTML, initCtaInteractions } from "./cta.js";
 import { launchFlock } from "./messengers.js";
 import {
   PANEL_ROUTES,
@@ -27933,6 +27933,7 @@ function buildDevApi() {
 
 /* ---------- Init ---------- */
 async function init() {
+  initCtaInteractions();
   showScreen("start");
   rollCtaGold();   // today's gold, decided once per load and never mentioned to anyone
   applyEra("gold");
