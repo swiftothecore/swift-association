@@ -58,6 +58,7 @@ import {
 import { drawRandom, poolSummary } from "./random.js";
 import { POLAROIDS, POLAROID_BY_ID } from "./polaroids.js";
 import { STICKERS, STICKER_BY_ID } from "./stickers.js";
+import { TUMBLR_POSTS, TUMBLR_BY_ID, redactionRows } from "./tumblr.js";
 import { showCover } from "./stickercover.js";
 import {
   BRACELET_ROW_CAP, buildBraceletSVG, braceletFinish, braceletLayout, braceletTrinketId,
@@ -86,6 +87,7 @@ import {
   loadAchievements, saveAchievements,
   loadKeepsakes, saveKeepsakes, resetKeepsakes,
   loadStickers, saveStickers, resetStickers,
+  loadTumblr, saveTumblr, resetTumblr,
   loadKeepsakesSeen, saveKeepsakesSeen, resetKeepsakesSeen,
   loadMode,
   loadDailyResult, saveDailyResult, clearDailyResult, dailyTotals, dailyPlayedDates,
@@ -3258,6 +3260,7 @@ const FOUND_RECAP_SHOWN = 3;   // objects shown before "+N" unfolds the rest in 
 function foundRecapItems() {
   const pol = loadKeepsakes();
   const sti = loadStickers();
+  const tum = loadTumblr();
   const seen = {};
   const out = [];
   for (const f of newlyFound) {
@@ -3267,6 +3270,9 @@ function foundRecapItems() {
     if (f.kind === "polaroid") {
       const p = POLAROID_BY_ID[f.id];
       if (p && pol[f.id]) out.push({ kind: "polaroid", id: f.id, name: p.name, how: p.how, art: p.art, state: polaroidState(f.id, pol) });
+    } else if (f.kind === "tumblr") {
+      const t = TUMBLR_BY_ID[f.id];
+      if (t && tum[f.id]) out.push({ kind: "tumblr", id: f.id, name: t.name, how: t.how, post: t });
     } else {
       const st = STICKER_BY_ID[f.id];
       if (st && sti[f.id]) out.push({ kind: "sticker", id: f.id, name: st.name, how: st.how, sticker: st });
@@ -3282,6 +3288,8 @@ function foundRecapHTML(items) {
   const chips = items.map((f, i) => {
     const art = f.kind === "sticker"
       ? stickerMarkup(f.sticker, false)
+      : f.kind === "tumblr"
+      ? tumblrPostMarkup(f.post, true, { small: true })
       : `<span class="pol-thumb" aria-hidden="true"><span class="pol-thumb-art">${f.art || ""}` +
         (f.state === "developed" ? "" : `<span class="pol-thumb-veil"></span>`) + `</span></span>`;
     const tip = f.how ? ` data-tip="${escapeHtml(f.how)}" data-tip-delay="120"` : "";
@@ -4892,16 +4900,18 @@ function keepsakeCount(earned) {
   const map = earned || loadKeepsakes();
   return POLAROIDS.reduce((n, p) => n + (map[p.id] ? 1 : 0), 0);
 }
-// How many earned keepsakes the player has not looked at yet — both shelves, since the drawer
-// opens on both at once. Anything earned and missing from the seen store is new, so a notebook
+// How many earned keepsakes the player has not looked at yet — all three shelves, since the
+// drawer opens on all of them at once. Anything earned and missing from the seen store is new, so a notebook
 // that has never opened the drawer counts everything, which is exactly right.
 function newKeepsakeCount() {
   const seen = loadKeepsakesSeen();
   const pol = loadKeepsakes();
   const sti = loadStickers();
+  const tum = loadTumblr();
   let n = 0;
   for (const p of POLAROIDS) if (pol[p.id] && !seen.polaroids[p.id]) n++;
   for (const s of STICKERS) if (sti[s.id] && !seen.stickers[s.id]) n++;
+  for (const t of TUMBLR_POSTS) if (tum[t.id] && !seen.tumblr[t.id]) n++;
   return n;
 }
 // Mark everything currently earned as looked at. Called when the drawer opens, which is the
@@ -4913,8 +4923,10 @@ function markKeepsakesSeen() {
   const seen = loadKeepsakesSeen();
   const pol = loadKeepsakes();
   const sti = loadStickers();
+  const tum = loadTumblr();
   for (const p of POLAROIDS) if (pol[p.id]) seen.polaroids[p.id] = true;
   for (const s of STICKERS) if (sti[s.id]) seen.stickers[s.id] = true;
+  for (const t of TUMBLR_POSTS) if (tum[t.id]) seen.tumblr[t.id] = true;
   saveKeepsakesSeen(seen);
 }
 // Drop one shelf's seen record. Only the dev resets need this: wiping a shelf's earned store
@@ -5023,7 +5035,7 @@ function renderKeepsakesPage() {
       keepsakePolaroidHTML(p, { earned, state, tilt: j.tilt, small: true }) + `</div>`;
   }).join("");
 
-  body.innerHTML = intro + counter + `<div class="keep-grid">${tiles}</div>` + stickerShelfHTML();
+  body.innerHTML = intro + counter + `<div class="keep-grid">${tiles}</div>` + stickerShelfHTML() + tumblrShelfHTML();
   // "Look at the cover" (never "close the notebook" — the in-run quit button owns that phrase):
   // the drawer is a modal over the front page, so it has to get out of the way first, and focus
   // comes back to the keepsakes icon once the book reopens.
@@ -5145,6 +5157,17 @@ function devSetSticker(id, on) {
   updateKeepsakesNav();
   refreshStickers();
   return stickerEarned(id) ? "earned" : "locked";
+}
+// Dev-only: put `id` on the tumblr shelf, or take it off, writing the store directly (no toast).
+// earnTumblrPost is the real find path.
+function devSetTumblr(id, on) {
+  if (!TUMBLR_BY_ID[id]) return "unknown post: " + id;
+  const found = loadTumblr();
+  if (on) found[id] = found[id] || new Date().toISOString(); else delete found[id];
+  saveTumblr(found);
+  refreshTumblr();
+  updateKeepsakesNav();
+  return on ? "found" : "locked";
 }
 
 /* ---------- The session ledger ---------- */
@@ -5383,6 +5406,152 @@ function stickerShelfHTML() {
     `</div>`;
 
   return `<div class="stick-shelf">${intro}${counter}<div class="stick-grid">${cells}</div>${cover}</div>`;
+}
+
+/* ---------- Tumblr messages: the screenshotted post set (see js/tumblr.js) ---------- */
+// The third family, and the one that is not an object. A polaroid is a photo from the desk and
+// a sticker is vinyl off a sheet; a tumblr message is a screenshot of her actually talking, so
+// it is drawn as a post card rather than as something you could pick up. It arrives finished,
+// like a sticker, and has exactly two states.
+//
+// Locked is BLACKED OUT, not hidden: the card still shows the header, the foot and the shape of
+// the paragraph, with a bar over every line, measured off the real words by redactionRows. The
+// shelf is therefore honest about what you are missing — how long it is, where it breaks, how
+// short the last line runs — without leaking a syllable of it.
+
+function tumblrFound(id, map) { return !!(map || loadTumblr())[id]; }
+// How many posts the player has found. The denominator is TUMBLR_POSTS.length rather than a
+// written-down target — see the note beside STICKER_TOTAL in config.js.
+function tumblrCount(found) {
+  const map = found || loadTumblr();
+  return TUMBLR_POSTS.reduce((n, p) => n + (map[p.id] ? 1 : 0), 0);
+}
+function refreshTumblr() { refreshKeepsakes(); }
+
+// The blog avatar. One shared hand-inked mark rather than a photograph of anybody: a wobbly 13
+// in a rounded square, drawn twice-over so it reads as pen rather than as a font glyph. Shared
+// across the whole set on purpose — every post comes from the same blog, and a per-post avatar
+// would be inventing a detail the screenshots do not have.
+const TUMBLR_AVATAR = `<svg viewBox="0 0 32 32" aria-hidden="true">
+  <rect x="1.4" y="1.8" width="29" height="28.6" rx="7" fill="none" stroke="currentColor" stroke-width="1.7"/>
+  <path d="M9.4 14.1 q1.8 -1.9 3.4 -2.2 q-.5 5.2 -.2 9.6" fill="none" stroke="currentColor"
+        stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M16.8 11.6 q4.4 -1.1 5.2 1.4 q.6 2 -2.6 2.9 q3.6 .2 3.6 2.8 q0 2.9 -3.6 2.9 q-2.2 0 -3.2 -1.3"
+        fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>`;
+
+// The foot row: reply, reblog, like. Drawn as ink marks and carrying NO numbers. A real post
+// card ends in a notes count, and there is no honest one available — the screenshots the posts
+// come from are cropped above it — so the row keeps the shape of the foot and says nothing it
+// cannot back up. Never add a made-up count here.
+const TUMBLR_FOOT = `<svg viewBox="0 0 66 18" aria-hidden="true">
+  <path d="M2.6 4.2 q5.4 -1.6 10.4 0 q1.2 3.4 -.4 6.4 q-4.6 1.4 -7.2 .2 l-3 2.4 q.6 -2 .2 -3
+           q-1.4 -3 0 -6z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+  <path d="M24.6 4.6 h9.2 l-2.6 -2.4 M33.8 4.6 v3.6 h-9.6 M43 12.6 h-9.2 l2.6 2.4 M33.8 12.6 v-3.4 h9.6"
+        fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M57 14.4 q-6.6 -4 -6.6 -7.4 q0 -2.8 2.6 -2.8 q2.4 0 4 2.6 q1.6 -2.6 4 -2.6 q2.6 0 2.6 2.8
+           q0 3.4 -6.6 7.4z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+</svg>`;
+
+// One post card. `found` false draws the redacted version. `small` is the shelf size; the toast
+// and the results recap use the same markup unscaled, so the card never gets a second drawing.
+function tumblrPostMarkup(post, found, opts = {}) {
+  const body = found
+    ? String(post.text || "").split(/\n+/)
+        .map((para) => `<p class="tpost-p">${escapeHtml(para)}</p>`).join("")
+    : `<p class="tpost-p tpost-p--bars">` +
+      redactionRows(post.text).map((w) => `<span class="tpost-bar" style="--w:${(w * 100).toFixed(1)}%"></span>`).join("") +
+      `</p>`;
+  // The blog name is blacked out with the post. A locked card that still named the blog would
+  // be the only line on the shelf that is legible before you have earned it, and it would draw
+  // the eye to the one thing every card says identically.
+  const blog = found
+    ? `<span class="tpost-blog">${escapeHtml(post.blog)}</span>`
+    : `<span class="tpost-blog tpost-blog--bar"></span>`;
+  return `<div class="tpost${opts.small ? " tpost--small" : ""}" data-state="${found ? "found" : "locked"}">` +
+    `<div class="tpost-head"><span class="tpost-av">${TUMBLR_AVATAR}</span>${blog}</div>` +
+    `<div class="tpost-body">${body}</div>` +
+    `<div class="tpost-foot">${TUMBLR_FOOT}</div>` +
+    `</div>`;
+}
+
+// Find a post: stamp the date, toast it, refresh the drawer. Idempotent, so a trigger can fire
+// freely on every run. Mirrors earnSticker exactly, including the devNoLog gate and the sealed
+// daily-result silence.
+function earnTumblrPost(id) {
+  if (devNoLog) return false;
+  const post = TUMBLR_BY_ID[id];
+  if (!post) return false;
+  const found = loadTumblr();
+  if (found[id]) return false;                       // already on the shelf
+  found[id] = new Date().toISOString();
+  saveTumblr(found);
+  newlyFound.push({ kind: "tumblr", id });
+  if (!dailyResultIsSealed()) {
+    showTumblrToast(post);
+    playUnlockChime();
+  }
+  updateKeepsakesNav();
+  refreshTumblr();
+  return true;
+}
+
+// The unlock toast. Same surface as the sticker toast, with the post card where the art goes,
+// held small: the toast has room for the shape of a post, not for reading one, and the shelf is
+// where you actually read it.
+function showTumblrToast(post) {
+  const layer = $("toastLayer");
+  if (!layer) return;
+  const t = document.createElement("div");
+  t.className = "toast toast-tumblr";
+  if (post.how) { t.setAttribute("data-tip", post.how); t.setAttribute("data-tip-delay", "500"); }
+  t.innerHTML = tumblrPostMarkup(post, true, { small: true }) +
+    `<div><div class="t-label">message found</div>` +
+    `<div class="t-name">${escapeHtml(post.name)}</div></div>`;
+  layer.appendChild(t);
+  setTimeout(() => t.classList.add("show"), 20);
+  setTimeout(() => { t.classList.remove("show"); setTimeout(() => t.remove(), 400); }, 4200);
+}
+
+// The shelf: a lead, the found counter, then the posts as a column of cards. A COLUMN, not a
+// grid — a post is a block of reading and the two shelves above have already spent the drawer's
+// horizontal room on things that are looked at rather than read.
+function tumblrShelfHTML() {
+  const found = loadTumblr();
+  const n = tumblrCount(found);
+  const total = TUMBLR_POSTS.length;
+
+  const intro =
+    `<p class="chall-eyebrow">Her messages</p>` +
+    `<p class="keep-lead">Things she actually posted, screenshotted and kept. An unfound one is ` +
+    `blacked out to the shape of what she wrote, so you can see how long it is and nothing else.</p>`;
+
+  const counter =
+    `<div class="keep-counter"><span class="keep-counter-n">${n}</span>` +
+    `<span class="keep-counter-d">/ ${total}</span>` +
+    `<span class="keep-counter-l">screenshotted</span></div>`;
+
+  const cards = TUMBLR_POSTS.map((post) => {
+    const has = !!found[post.id];
+    // Found: the tip is the feat alone, the way the sticker shelf does it, and nothing at all
+    // while a post has no trigger yet — an empty `how` prints no tip rather than a fib. A
+    // locked card gets the standard unearned line, because it is meant to be the question.
+    const label = has ? (post.how || "") : "a message not yet found";
+    const cap = has
+      ? `<span class="tpost-cap"><span class="tpost-cap-name">${escapeHtml(post.name)}</span>` +
+        `<span class="tpost-cap-sub">${escapeHtml(post.sub)}</span></span>`
+      : "";
+    // A stable, tiny tilt hashed off the id, the same trick the wall and the shelf use. It is
+    // an order of magnitude smaller than theirs on purpose: a polaroid is pinned by hand and a
+    // sticker is stuck down by hand, but a screenshot was pasted in straight and only ever
+    // misses by a hair. Anything bigger and the column reads as a fan of cards.
+    const rot = ((mulberry32(fnv1a(post.id))() * 1.6) - 0.8).toFixed(2);
+    return `<div class="tpost-cell" data-id="${post.id}" data-state="${has ? "found" : "locked"}" style="--rot:${rot}deg"` +
+      (label ? ` title="${escapeHtml(label)}"` : "") + `>` +
+      tumblrPostMarkup(post, has, { small: true }) + cap + `</div>`;
+  }).join("");
+
+  return `<div class="tpost-shelf">${intro}${counter}<div class="tpost-list">${cards}</div></div>`;
 }
 
 // Read a chosen image file, center-crop it to a square and downscale it to a
@@ -26392,16 +26561,17 @@ function buildDevApi() {
       },
       open: () => openKeepsakes(),                             // jump to the polaroid wall
       // Preview the results screen's "also found" line without hitting a trigger. Takes the
-      // first `n` polaroids and the first `n` stickers, GRANTS any not already held (the recap
-      // only draws what the store actually holds, so a fake run of it would show nothing), and
-      // puts it on the results card. Covers both shelves at once because the line is shared.
+      // first `n` of each shelf, GRANTS any not already held (the recap only draws what the
+      // store actually holds, so a fake run of it would show nothing), and puts it on the
+      // results card. Covers all three shelves at once because the line is shared.
       recap: (n = 2) => {
         n = Math.max(1, n | 0);
-        const pol = loadKeepsakes(), sti = loadStickers(), now = new Date().toISOString();
+        const pol = loadKeepsakes(), sti = loadStickers(), tum = loadTumblr(), now = new Date().toISOString();
         newlyFound = [];
         for (const p of POLAROIDS.slice(0, n)) { if (!pol[p.id]) pol[p.id] = now; newlyFound.push({ kind: "polaroid", id: p.id }); }
         for (const st of STICKERS.slice(0, n)) { if (!sti[st.id]) sti[st.id] = now; newlyFound.push({ kind: "sticker", id: st.id }); }
-        saveKeepsakes(pol); saveStickers(sti); updateKeepsakesNav(); refreshKeepsakes();
+        for (const t of TUMBLR_POSTS.slice(0, n)) { if (!tum[t.id]) tum[t.id] = now; newlyFound.push({ kind: "tumblr", id: t.id }); }
+        saveKeepsakes(pol); saveStickers(sti); saveTumblr(tum); updateKeepsakesNav(); refreshKeepsakes();
         showScreen("results");
         renderResultRecap();
         return newlyFound.length + " found on the results card";
@@ -26424,6 +26594,26 @@ function buildDevApi() {
     // Stickers, the die-cut vinyl set. `earn` is the real path (toast + chime included) and the
     // rest write the store directly, for eyeballing the locked silhouette against the finished
     // sticker without having to hit the trigger.
+    // Tumblr messages, the screenshotted post set. Every post is currently dev-only: the shelf
+    // and the earn path are built, the triggers are not written yet (PLAN.md holds the list), so
+    // this is the only way onto the shelf until each post is given the thing it is earned for.
+    // `earn` is the real path, toast and chime included; the rest write the store directly.
+    tumblr: {
+      list: () => { const e = loadTumblr(); return TUMBLR_POSTS.map((t) => ({ id: t.id, name: t.name, blog: t.blog, found: !!e[t.id], at: e[t.id] || null, how: t.how || "(no trigger yet)" })); },
+      state: (id) => (TUMBLR_BY_ID[id] ? (tumblrFound(id) ? "found" : "locked") : "unknown post: " + id),
+      earn: (id) => (earnTumblrPost(id) ? "found" : devSetTumblr(id, true)),
+      remove: (id) => devSetTumblr(id, false),
+      all: () => {
+        const e = loadTumblr(); const now = new Date().toISOString();
+        for (const t of TUMBLR_POSTS) if (!e[t.id]) e[t.id] = now;
+        saveTumblr(e); updateKeepsakesNav(); refreshTumblr(); return TUMBLR_POSTS.length;
+      },
+      open: () => openKeepsakes(),                             // the shelf sits under the sticker sheet
+      // Which posts still have no way of being found in real play. Empty is the goal; while it
+      // is not empty this shelf is dev-only, and that is what the readout is here to keep visible.
+      untriggered: () => TUMBLR_POSTS.filter((t) => !t.how).map((t) => t.id),
+      reset: () => { resetTumblr(); devForgetSeenShelf("tumblr"); updateKeepsakesNav(); refreshTumblr(); },
+    },
     stickers: {
       list: () => { const e = loadStickers(); return STICKERS.map((s) => ({ id: s.id, name: s.name, era: s.era, earned: !!e[s.id], at: e[s.id] || null })); },
       state: (id) => (STICKER_BY_ID[id] ? (stickerEarned(id) ? "earned" : "locked") : "unknown sticker: " + id),

@@ -4,7 +4,7 @@ Swift To The Song Association ships a handful of things that other people made. 
 file records what they are and what their terms require. My own source code is not
 covered here: see the licence section of [README.md](README.md) for that.
 
-## Lyrics and liner-note messages
+## Lyrics, liner notes and posts
 
 `data/songs.json`, `data/guests/*.json` and `data/secret-messages.json` contain song lyrics, titles and
 album liner-note messages written by Taylor Swift and her co-writers, and by the artists
@@ -12,6 +12,11 @@ on the guest shelf and theirs. Copyright in that material belongs to those write
 their publishers. It is quoted here for a non-commercial word-association game and is not
 licensed for redistribution by me, because it is not mine to license. If you are a rights
 holder and want something removed, contact me and I will remove it.
+
+`js/tumblr.js` holds the same thing in a different form: short posts written by Taylor
+Swift on her own Tumblr, quoted verbatim as the collectible "tumblr messages" in the
+keepsakes drawer. Same position exactly. They are hers, they are quoted rather than
+licensed, and the removal offer above covers them too.
 
 ## Fonts
 

@@ -15,6 +15,7 @@ import {
   CUSTOM_KEY, CUSTOM_DEFAULT_MODE,
   KEEPSAKES_KEY,
   STICKERS_KEY,
+  TUMBLR_KEY,
   KEEPSAKES_SEEN_KEY,
   MASTERY_KEY, SKILL_IDS, MASTERY_REWARDS, MASTERY_GATE,
   skillLevelFromXp, masteryLevelFromXp,
@@ -132,9 +133,28 @@ export function resetStickers() {
   try { localStorage.removeItem(STICKERS_KEY); } catch (e) { /* ignore */ }
 }
 
+/* ---------- Tumblr messages: the screenshotted post set ---------- */
+// Same shape as the two shelves above — { [postId]: isoDate } — and deliberately its own key
+// rather than a third bucket inside the keepsakes store: the three sets are cleared, exported
+// and dev-reset independently, and a shared object would make "clear stickers" a risk to the
+// other two.
+export function loadTumblr() {
+  try {
+    const raw = localStorage.getItem(TUMBLR_KEY);
+    if (raw) { const o = JSON.parse(raw); if (o && typeof o === "object") return o; }
+  } catch (e) { /* ignore */ }
+  return {};
+}
+export function saveTumblr(found) {
+  try { localStorage.setItem(TUMBLR_KEY, JSON.stringify(found)); } catch (e) { /* ignore */ }
+}
+export function resetTumblr() {
+  try { localStorage.removeItem(TUMBLR_KEY); } catch (e) { /* ignore */ }
+}
+
 /* ---------- Keepsakes: what has been looked at ---------- */
-// Two id sets, one per shelf, so a polaroid and a sticker that happen to share an id can never
-// mark each other seen. Anything earned and missing from here is what the drawer's badge counts.
+// One id set per shelf, so a polaroid, a sticker and a tumblr message that happen to share an
+// id can never mark each other seen. Anything earned and missing from here is what the drawer's badge counts.
 export function loadKeepsakesSeen() {
   try {
     const raw = localStorage.getItem(KEEPSAKES_SEEN_KEY);
@@ -144,11 +164,12 @@ export function loadKeepsakesSeen() {
         return {
           polaroids: (o.polaroids && typeof o.polaroids === "object") ? o.polaroids : {},
           stickers: (o.stickers && typeof o.stickers === "object") ? o.stickers : {},
+          tumblr: (o.tumblr && typeof o.tumblr === "object") ? o.tumblr : {},
         };
       }
     }
   } catch (e) { /* ignore */ }
-  return { polaroids: {}, stickers: {} };
+  return { polaroids: {}, stickers: {}, tumblr: {} };
 }
 export function saveKeepsakesSeen(seen) {
   try { localStorage.setItem(KEEPSAKES_SEEN_KEY, JSON.stringify(seen)); } catch (e) { /* ignore */ }

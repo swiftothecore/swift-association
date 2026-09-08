@@ -88,6 +88,7 @@ const ASSETS = [
   // breaks a cold offline start rather than just the keepsakes drawer.
   "js/polaroids.js",
   "js/stickers.js",
+  "js/tumblr.js",
   // The stickers stuck to the closed notebook cover. Pairs with js/stickers.js above the
   // same way scatter.js pairs with deskprops.js, and it is wanted earlier than either:
   // the cover is the first thing drawn on a cold start, so a missing half of this pair
