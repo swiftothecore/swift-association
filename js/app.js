@@ -10528,7 +10528,7 @@ function guestRailPlan() {
 // The corner guest stamp is franked in a random plate from STAMP_INKS once per page load and
 // then left alone: a stamp that changed colour while you looked at it would read as a bug,
 // and the point is the small pleasure of noticing a different plate on the next visit. Most
-// plates carry one ink; the Wicked plate carries rose and emerald across a lightning seam.
+// plates carry one ink; the Wicked plate carries rose and emerald along a soft diagonal.
 // The figure and caption knock out in the paper colour above either kind of plate.
 // Keep the ink on the page root: the shelf and catalogue mastheads consume the same variable,
 // so the mark beside their title is always franked in the stamp's current colour too.
