@@ -2141,6 +2141,19 @@ export const MAST_INKS = {
   "The Life of a Showgirl":        { slug: "showgirl",   name: "Orange" },
 };
 // Reverse lookup, so a stored slug can be validated and named without scanning the map.
+/* The thirteenth ink, and the only one with no album behind it. Beat all twelve and the title
+   stops being pinned at all: it wears the era colour of whatever you are currently playing, live.
+   That is precisely the behaviour --mast-ink exists to forbid by default (see the .mast-gold note
+   in styles.css), handed over once the player has proved they know all twelve records.
+
+   A reserved slug rather than a thirteenth MAST_INKS entry, because everything that walks the
+   inks — the tray, the board, the unlock check — walks STUDIO_ALBUMS, and an album-less entry in
+   that map would be a hole in every one of those walks. It carries no hex either: the CSS points
+   it straight at --ink-accent, so the era palettes, the dark palette and the high-contrast
+   palettes all reach it already built. */
+export const MAST_SHUFFLE = "shuffle";
+export const MAST_SHUFFLE_NAME = "Era ink";
+
 export const MAST_INK_BY_SLUG = Object.fromEntries(
   Object.entries(MAST_INKS).map(([album, ink]) => [ink.slug, { album, ...ink }])
 );

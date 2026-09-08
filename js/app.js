@@ -10,7 +10,7 @@ import {
   MODES, MODE_ORDER, MODE_COLORS, DIFFICULTY_LADDER, MODALITY_MODES, EXPLORER_TOKENS, SHELF_TYPES, PAGE_MARK_KINDS,
   ERAS, TENDER_ERAS, FINALE_ERAS, ALBUM_ERA, TS_MILESTONES, TS_LORE_DAYS, SALT_SHAKER_D, SALT_CAP_D,
   ALBUM_COLORS, CB_ALBUM_COLORS, IMPOSTOR_BEAD, COMMON_THREAD_BEADS,
-  MAST_INKS, MAST_INK_BY_SLUG,
+  MAST_INKS, MAST_INK_BY_SLUG, MAST_SHUFFLE, MAST_SHUFFLE_NAME,
   STUDIO_ALBUMS, TITLE_ALIASES, STAMP_INKS,
   VAULT_TRACKS, AOTY_ALBUMS, VAULT_ALBUMS,
   ACHIEVEMENTS, ACH_ICONS, ACH_BY_ID, ACH_GROUPS, ACH_GROUP_COLORS, ACH_GROUP_OF,
@@ -527,7 +527,7 @@ function applySettings() {
   // attribute we just wrote — which is why paintFavicon has to come after it, not before.
   // Unlock state is deliberately NOT consulted here — this paints whatever is chosen, and the
   // choosing path is what refuses a locked ink and falls back if a board reset relocks one.
-  const ink = MAST_INK_BY_SLUG[settings.titleInk] ? settings.titleInk : "";
+  const ink = inkSlugKnown(settings.titleInk) ? settings.titleInk : "";
   if (ink) body.setAttribute("data-ink", ink);
   else body.removeAttribute("data-ink");
   paintTitleGild();   // after data-ink, which it and the favicon both read back off the body
@@ -1727,7 +1727,11 @@ function pickEra() {
   if (recentEras.length > 3) recentEras.shift();
   return era;
 }
-function applyEra(era) { document.body.setAttribute("data-era", era); }
+// The era wash. It also has to repaint the tab icon, because the shuffle ink points --mast-ink
+// at --ink-accent: under that one ink the era IS the title's colour, and a favicon left alone
+// would sit on whichever era happened to be loaded when the ink was last applied. paintFavicon
+// bails on an unchanged href, so for the other thirteen inks this costs one string compare.
+function applyEra(era) { document.body.setAttribute("data-era", era); paintFavicon(); }
 
 /* ---------- Matching helpers ---------- */
 // The pure matching core (variantBody/wordRegex/extractLineWithWord/highlightWord)
@@ -10135,8 +10139,9 @@ function renderAlbumFocusPage() {
   // the beaten count it is a footnote to.
   const perfectLine = perfected
     ? `<span class="chall-beaten-perf">perfected ${perfected} of ${STUDIO_ALBUMS.length}</span>` : "";
-  const wornInk = MAST_INK_BY_SLUG[earnedTitleInk()];
-  const inkName = wornInk ? wornInk.name : "Brand gold";
+  const worn = earnedTitleInk();
+  const wornInk = MAST_INK_BY_SLUG[worn];
+  const inkName = worn === MAST_SHUFFLE ? MAST_SHUFFLE_NAME : wornInk ? wornInk.name : "Brand gold";
   const html =
     `<div class="chall-head">` +
       `<div class="chall-head-sub">tap an album · beat all 12</div>` +
@@ -10190,11 +10195,19 @@ function closeAlbumDetail() {
 // Beating earns the ink. Perfecting is deliberately NOT asked for here; that tier gilds the
 // star instead, so the two rewards stay one decision each.
 function inkUnlocked(album) { return !!albumFocusRecord(album).beaten; }
+// The thirteenth ink has no album of its own: all twelve buy it. Beaten, not perfected — it is
+// the same rung as every other ink, just asked for twelve times over.
+function shuffleUnlocked() { return STUDIO_ALBUMS.every((a) => inkUnlocked(a)); }
+// "" (the house gold), the shuffle, or one of the twelve. Everything that reads settings.titleInk
+// goes through this, so a slug from an older notebook or a fat-fingered dev call falls back to
+// the house gold instead of writing a data-ink no palette answers to.
+function inkSlugKnown(slug) { return slug === MAST_SHUFFLE || !!MAST_INK_BY_SLUG[slug]; }
 
 // The chosen ink, but only if the notebook still owns it. The Album Focus board can be wiped
 // (the dev tools do it, and a full data reset does), which would otherwise leave the masthead
 // wearing an ink the board no longer says was earned. "" is the house brand gold.
 function earnedTitleInk() {
+  if (settings.titleInk === MAST_SHUFFLE) return shuffleUnlocked() ? MAST_SHUFFLE : "";
   const ink = MAST_INK_BY_SLUG[settings.titleInk];
   return ink && inkUnlocked(ink.album) ? settings.titleInk : "";
 }
@@ -10220,9 +10233,14 @@ function guardTitleInk() {
 // Paints what is chosen, for the same reason applySettings paints the ink it is given: refusing
 // an unearned one is the picker's job, not this one's.
 function paintTitleGild() {
-  const ink = MAST_INK_BY_SLUG[settings.titleInk] ? settings.titleInk : "";
-  const album = ink ? MAST_INK_BY_SLUG[ink].album : null;
-  if (album && albumFocusRecord(album).perfected) document.body.setAttribute("data-gild", "leaf");
+  const ink = inkSlugKnown(settings.titleInk) ? settings.titleInk : "";
+  // The shuffle's album is all twelve, so its leaf is all twelve perfected. Stating it here
+  // rather than exempting the shuffle keeps one rule for the gild — the ink's album, perfected —
+  // and stops the top ink being the one that can never be leafed.
+  const gild = ink === MAST_SHUFFLE
+    ? STUDIO_ALBUMS.every((a) => albumFocusRecord(a).perfected)
+    : !!ink && albumFocusRecord(MAST_INK_BY_SLUG[ink].album).perfected;
+  if (gild) document.body.setAttribute("data-gild", "leaf");
   else document.body.removeAttribute("data-gild");
   paintFavicon();
 }
@@ -10293,11 +10311,15 @@ const INK_STAR = `<svg class="ink-sw-leaf" viewBox="0 0 24 24" aria-hidden="true
 // something you can see you have earned rather than something you stumble into.
 function inkSwatch(slug, name, album, active, available) {
   if (!available) {
+    // The shuffle is the one locked slot with no album to name, so it says what it wants instead.
+    const how = slug === MAST_SHUFFLE ? `beat all ${STUDIO_ALBUMS.length}` : `beat ${albumTileName(album)}`;
     return `<span class="ink-sw-col locked">` +
       `<span class="ink-sw locked"><span class="rb-lock">${MASTERY_ICONS.lock}</span></span>` +
-      `<span class="ink-sw-nm">beat ${escapeHtml(albumTileName(album))}</span></span>`;
+      `<span class="ink-sw-nm">${escapeHtml(how)}</span></span>`;
   }
-  const gilded = !!album && albumFocusRecord(album).perfected;
+  const gilded = slug === MAST_SHUFFLE
+    ? STUDIO_ALBUMS.every((a) => albumFocusRecord(a).perfected)
+    : !!album && albumFocusRecord(album).perfected;
   return `<button type="button" class="ink-sw-col${active ? " active" : ""}" data-ink-pick="${escapeHtml(slug)}"` +
     ` aria-pressed="${active ? "true" : "false"}" aria-label="${escapeHtml(name)}${gilded ? ", gilded" : ""}${active ? ", in use" : ""}">` +
     `<span class="ink-sw"${slug ? ` data-ink="${escapeHtml(slug)}"` : ""}>Song${gilded ? INK_STAR : ""}</span>` +
@@ -10322,6 +10344,10 @@ function renderInkTrayPage() {
     const ink = MAST_INKS[album];
     sw += inkSwatch(ink.slug, ink.name, album, worn === ink.slug, inkUnlocked(album));
   });
+  // Last, and last on purpose: it is the only one the other twelve have to be finished to reach,
+  // so it reads as the end of the row rather than another colour in it. Its chip is the reward
+  // demonstrating itself — it wears the era of whatever is loaded, so it is never the same twice.
+  sw += inkSwatch(MAST_SHUFFLE, MAST_SHUFFLE_NAME, null, worn === MAST_SHUFFLE, shuffleUnlocked());
 
   el.innerHTML =
     `<div class="chall-head">` +
@@ -27682,9 +27708,10 @@ function buildDevApi() {
     // repaints are spread across the header, the tagline, the closed cover and the browser tab,
     // and the only way to know they move together is to watch them move together.
     ink: {
-      list: () => STUDIO_ALBUMS.filter((a) => MAST_INKS[a]).map((a) => `${MAST_INKS[a].slug} — ${MAST_INKS[a].name} (${a})`),
+      list: () => STUDIO_ALBUMS.filter((a) => MAST_INKS[a]).map((a) => `${MAST_INKS[a].slug} — ${MAST_INKS[a].name} (${a})`)
+              .concat(`${MAST_SHUFFLE} — ${MAST_SHUFFLE_NAME} (all 12 beaten)`),
       set: (slug) => {
-        if (slug && !MAST_INK_BY_SLUG[slug]) return `no such ink: ${slug}`;
+        if (slug && !inkSlugKnown(slug)) return `no such ink: ${slug}`;
         settings.titleInk = slug || "";
         saveSettings(settings); applySettings();
         return settings.titleInk || "(brand gold)";
@@ -27697,8 +27724,8 @@ function buildDevApi() {
       // Steps to the next ink in MAST_INKS order, wrapping through brand gold so the default
       // is part of the loop rather than something you have to remember to go back to.
       cycle: () => {
-        const slugs = ["", ...STUDIO_ALBUMS.filter((a) => MAST_INKS[a]).map((a) => MAST_INKS[a].slug)];
-        const at = slugs.indexOf(MAST_INK_BY_SLUG[settings.titleInk] ? settings.titleInk : "");
+        const slugs = ["", ...STUDIO_ALBUMS.filter((a) => MAST_INKS[a]).map((a) => MAST_INKS[a].slug), MAST_SHUFFLE];
+        const at = slugs.indexOf(inkSlugKnown(settings.titleInk) ? settings.titleInk : "");
         return window.__dev.ink.set(slugs[(at + 1) % slugs.length]);
       },
     },

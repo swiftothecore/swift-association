@@ -145,6 +145,18 @@
   [data-ink="midnights"]    { --mast-ink-day:#2b3a67; --mast-ink-night:#8398da; }
   [data-ink="poets"]        { --mast-ink-day:#856c50; --mast-ink-night:#bda284; }
   [data-ink="showgirl"]     { --mast-ink-day:#c2571a; --mast-ink-night:#f0975a; }
+  /* The thirteenth ink: all twelve albums beaten, and the title stops being pinned. It points
+     at --ink-accent rather than carrying a hex, so the era palettes, the dark palette and the
+     high-contrast palettes all reach it already built and it can never drift out of step with
+     them. The note on .mast-gold below still stands for the automatic era wash — the wordmark
+     does NOT follow the era by default, and this is the unlock that hands that over by hand.
+
+     One rough edge, accepted: the generated favicon reads --mast-ink-day so it can draw a cream
+     tile while the page wears night, but --ink-accent has no day/night pair to read, so on a
+     dark page the tile takes the era's dark accent. It is watered down to the legibility floor
+     either way, and giving the twelve eras a second palette to fix it would cost far more than
+     the tab icon being a shade off. */
+  [data-ink="shuffle"] { --mast-ink-day: var(--ink-accent); --mast-ink-night: var(--ink-accent); }
   [data-ink] { --mast-ink: var(--mast-ink-day); }
 
   /* ---- Gold leaf (the perfect tier) ----
