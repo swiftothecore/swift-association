@@ -17,7 +17,8 @@ export const POLAROIDS = [
     sub: "sat quietly on that beach",
     how: "Discover the last great american dynasty",
     art: `<svg viewBox="0 0 200 200" role="img"><title>Holiday House photo</title>
-  <rect width="200" height="70" fill="#ccd6d2"/>
+  <defs><linearGradient id="pol-holiday-house-sky" x2="0" y2="1"><stop stop-color="#b7ccd0"/><stop offset="1" stop-color="#edf0df"/></linearGradient></defs>
+  <rect width="200" height="70" fill="url(#pol-holiday-house-sky)"/>
   <circle cx="164" cy="24" r="11" fill="#eae7d6"/>
   <rect x="0" y="32" width="200" height="6" fill="#d9e0da" opacity=".8"/>
   <rect x="20" y="45" width="180" height="4" fill="#d9e0da" opacity=".6"/>
@@ -49,6 +50,7 @@ export const POLAROIDS = [
   <polygon points="140,110 148,96 172,96 186,110" fill="#565550"/>
   <rect x="142" y="108" width="40" height="42" fill="#f0ece0"/>
   <rect x="158" y="84" width="5" height="14" fill="#96594a"/>
+  <path d="M55 80 H145 V84 H55 Z M18 110 H58 V113 H18 Z M142 110 H182 V113 H142 Z" fill="#afa997" opacity=".55"/><path d="M60 102 H140 M60 124 H140 M76 84 V148 M124 84 V148" fill="none" stroke="#d6d0bf" stroke-width="0.8" opacity="1" stroke-linecap="round" stroke-linejoin="round"/>
   <g fill="#4a4f4c">
     <rect x="61" y="86" width="9" height="12"/>
     <rect x="82" y="86" width="9" height="12"/>
@@ -67,6 +69,7 @@ export const POLAROIDS = [
   </g>
   <path d="M93 130 a9 9 0 0 1 18 0 Z" fill="#e4dfd0"/>
   <rect x="95" y="130" width="14" height="20" fill="#4a4f4c"/>
+  <path d="M64 87 v9 M85 87 v9 M112 87 v9 M133 87 v9 M29 119 v8 M153 119 v8" fill="none" stroke="#c4d7d2" stroke-width="2" opacity="0.75" stroke-linecap="round" stroke-linejoin="round"/><path d="M91 150 h22 l5 7 H86 Z" fill="#d2ccba"/>
   <g stroke="#f5f2e8" stroke-width="1.3" fill="none">
     <path d="M2 128 H18 M4 128 V136 M9 128 V136 M14 128 V136 M2 136 H18"/>
     <path d="M182 128 H198 M184 128 V136 M189 128 V136 M194 128 V136 M182 136 H198"/>
@@ -88,17 +91,17 @@ export const POLAROIDS = [
     sub: "romance is not dead",
     how: "Finish a Relaxed game",
     art: `<svg viewBox="0 0 200 200" role="img"><title>Paris photo</title>
-  <rect width="200" height="200" fill="#2b3053"/>
-  <rect y="106" width="200" height="54" fill="#6c6293" opacity=".38"/>
-  <rect y="128" width="200" height="32" fill="#9184b5" opacity=".38"/>
+  <defs><linearGradient id="pol-paris-sky" x2="0" y2="1"><stop stop-color="#191f40"/><stop offset="1" stop-color="#9180a9"/></linearGradient></defs>
+  <rect width="200" height="200" fill="url(#pol-paris-sky)"/>
+
+
   <g fill="#e9e4f4">
     <circle cx="22" cy="26" r="1.3"/><circle cx="52" cy="52" r="1"/><circle cx="172" cy="40" r="1.4"/>
     <circle cx="150" cy="20" r="1"/><circle cx="68" cy="16" r=".9"/><circle cx="184" cy="88" r="1"/>
     <circle cx="30" cy="82" r=".9"/><circle cx="136" cy="66" r=".9"/>
   </g>
   <path d="M162 50 l1.6 5 5 1.6 -5 1.6 -1.6 5 -1.6 -5 -5 -1.6 5 -1.6 z" fill="#efe9f8"/>
-  <circle cx="34" cy="40" r="12" fill="#ece6f2"/>
-  <circle cx="39" cy="37" r="11" fill="#2b3053"/>
+  <path d="M34 28 A12 12 0 1 0 44 48 A11 11 0 0 1 34 28 Z" fill="#ece6f2"/>
   <path d="M100 22 V10" stroke="#14172c" stroke-width="2"/>
   <circle cx="100" cy="9" r="1.8" fill="#f2d98a"/>
   <path d="M97 22 L103 22 L106 58 C108 82 112 102 124 124 C132 140 142 152 154 162 L128 162 C119 150 110 140 105 128 L95 128 C90 140 81 150 72 162 L46 162 C58 152 68 140 76 124 C88 102 92 82 94 58 Z" fill="#14172c"/>
@@ -108,6 +111,7 @@ export const POLAROIDS = [
   <g stroke="#2b3053" stroke-width="1" opacity=".5" fill="none">
     <path d="M96 34 L104 50 M104 34 L96 50 M95 60 L105 78 M105 60 L95 78 M92 90 L108 114 M108 90 L92 114"/>
   </g>
+  <path d="M98 30 L96 57 M96 62 L92 81 M91 90 L81 117 M79 127 Q70 145 57 157 M104 62 L108 81 M109 90 L119 117 M121 127 Q130 145 143 157" fill="none" stroke="#d4b575" stroke-width="1.3" opacity="0.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M88 85 H112 M78 121 H122" fill="none" stroke="#f1d89a" stroke-width="1.5" opacity="0.9" stroke-linecap="round" stroke-linejoin="round"/>
   <path d="M0 200 L0 162 h14 v-8 h10 v8 h20 v-12 h12 v12 h16 v-6 h12 v6 h32 v-10 h14 v10 h18 v-7 h12 v7 h20 v-11 h10 v11 h10 v38 Z" fill="#191d33"/>
   <g fill="#ecc979" opacity=".9">
     <rect x="8" y="170" width="2.4" height="3"/><rect x="30" y="168" width="2.4" height="3"/>
@@ -125,8 +129,9 @@ export const POLAROIDS = [
     sub: "got a long list of ex-lovers",
     how: "Type “starbucks lovers” into any field in the game",
     art: `<svg viewBox="0 0 200 200" role="img"><title>Coffee cup with lovers badge, lipstick on the lid, croissant beside, cafe window behind</title>
+  <defs><linearGradient id="pol-starbucks-lovers-sky" x2="0" y2="1"><stop stop-color="#b8cbd3"/><stop offset="1" stop-color="#eee6d5"/></linearGradient></defs>
   <defs><path id="sb3T" d="M82 102 A18.5 18.5 0 0 1 118 102"/><path id="sb3B" d="M84.5 106 A16 16 0 0 0 115.5 106"/></defs>
-  <rect width="200" height="200" fill="#d8dee2"/>
+  <rect width="200" height="200" fill="url(#pol-starbucks-lovers-sky)"/>
   <rect x="128" y="10" width="62" height="100" fill="#e6edf0"/>
   <g fill="#c4ced4"><rect x="134" y="58" width="14" height="52"/><rect x="152" y="42" width="18" height="68"/><rect x="174" y="66" width="12" height="44"/></g>
   <g stroke="#8a938c" stroke-width="1.2" fill="none" stroke-linecap="round"><path d="M140 26 q3 -3 6 0 M148 28 q3 -3 6 0"/></g>
@@ -143,7 +148,8 @@ export const POLAROIDS = [
   <g stroke="#a8752c" stroke-width="1.2" fill="none"><path d="M35 151 q1 5 1 9 M44 149 q0 6 0 11 M53 151 q-1 5 -1 9"/></g>
   <g fill="#a8752c" opacity=".7"><circle cx="66" cy="166" r="0.9"/><circle cx="24" cy="168" r="0.8"/><circle cx="58" cy="170" r="0.7"/></g>
   <g transform="rotate(-10 152 156)"><rect x="140" y="150" width="24" height="12" rx="2" fill="#f2eee2"/><path d="M141 152 h22 M141 160 h22" stroke="#d8d0bc" stroke-width="1" stroke-dasharray="1.5 1.5"/></g>
-  <g stroke="#b9c6cc" stroke-width="2" fill="none" stroke-linecap="round"><path d="M92 40 q-4 -8 2 -14 M108 42 q4 -9 -2 -16"/></g>
+  <g stroke="#7d969f" stroke-width="1.6" fill="none" stroke-linecap="round"><path d="M92 40 q-4 -8 2 -14 M108 42 q4 -9 -2 -16"/></g>
+  <ellipse cx="103" cy="154" rx="30" ry="5" fill="#302c29" opacity=".16"/>
   <rect x="76" y="50" width="48" height="9" rx="3" fill="#f6f2e7"/>
   <ellipse cx="90" cy="52" rx="4.5" ry="2.6" fill="#b23a3a" opacity=".85" transform="rotate(-12 90 52)"/>
   <rect x="68" y="58" width="64" height="11" rx="3" fill="#e9e2d0"/>
@@ -152,6 +158,7 @@ export const POLAROIDS = [
   <path d="M74 126 L126 126 L124.5 148 L75.5 148 Z" fill="#c9a86b"/>
   <g stroke="#b3915a" stroke-width="1" opacity=".7"><path d="M80 128 V146 M85 128 V146 M90 128 V146 M110 128 V146 M115 128 V146 M120 128 V146"/></g>
   <text x="100" y="141" font-family="Caveat,cursive" font-size="13" font-weight="600" fill="#6f4a2a" text-anchor="middle">taylor?</text>
+  <path d="M78 76 L83 120" fill="none" stroke="#fffdf1" stroke-width="3" opacity="0.7" stroke-linecap="round" stroke-linejoin="round"/>
   <circle cx="100" cy="100" r="24" fill="#1e6b4b"/>
   <circle cx="100" cy="100" r="14.5" fill="#f6f2e7"/>
   <path d="M79.5 96.5 l1.2 2.8 2.8 1.2 -2.8 1.2 -1.2 2.8 -1.2 -2.8 -2.8 -1.2 2.8 -1.2 z" fill="#f6f2e7"/>
@@ -173,7 +180,8 @@ export const POLAROIDS = [
     sub: "dyed it key lime green",
     how: "Sing the key lime green line word-perfect",
     art: `<svg viewBox="0 0 200 200" role="img"><title>A dog freshly dyed key lime green sitting proudly beside the dye bucket in a formal garden with a fountain</title>
-  <rect width="200" height="200" fill="#ccd4cd"/>
+  <defs><linearGradient id="pol-neighbors-dog-sky" x2="0" y2="1"><stop stop-color="#b6cbd0"/><stop offset="1" stop-color="#e5e9cf"/></linearGradient></defs>
+  <rect width="200" height="200" fill="url(#pol-neighbors-dog-sky)"/>
   <rect y="36" width="200" height="6" fill="#dae0da" opacity=".8"/>
   <rect y="88" width="200" height="24" fill="#8a996b"/>
   <g fill="#8a996b"><circle cx="12" cy="88" r="7"/><circle cx="40" cy="87" r="8"/><circle cx="68" cy="88" r="7"/><circle cx="132" cy="88" r="7"/><circle cx="160" cy="87" r="8"/><circle cx="188" cy="88" r="7"/></g>
@@ -185,7 +193,7 @@ export const POLAROIDS = [
   <rect x="96" y="86" width="8" height="18" fill="#c9c3b4"/>
   <ellipse cx="100" cy="106" rx="24" ry="5.5" fill="#d8d2c4"/>
   <g stroke="#b9c6cc" stroke-width="1.6" fill="none" stroke-linecap="round"><path d="M96 84 q-6 8 -10 18 M104 84 q6 8 10 18 M100 83 q0 10 0 19"/></g>
-  <rect y="110" width="200" height="90" fill="#9aa878"/>
+  <rect y="110" width="200" height="90" fill="#82936b"/>
   <path d="M148 138 Q146 128 152 126 L168 126 Q174 128 172 138 L169 160 L151 160 Z" fill="#8b98a3"/>
   <ellipse cx="160" cy="128" rx="11" ry="3.5" fill="#6f7a84"/>
   <ellipse cx="160" cy="128" rx="8" ry="2.4" fill="#b7d24b"/>
@@ -195,6 +203,7 @@ export const POLAROIDS = [
     <circle cx="140" cy="164" r="1.4"/><circle cx="144" cy="167" r="1.1"/><circle cx="137" cy="168" r="1"/>
     <circle cx="122" cy="158" r="1.4"/><circle cx="126" cy="161" r="1.1"/><circle cx="119" cy="162" r="1"/>
   </g>
+  <ellipse cx="89" cy="171" rx="30" ry="5" fill="#302c29" opacity=".16"/>
   <ellipse cx="84" cy="170" rx="24" ry="4" fill="#8fb03a" opacity=".8"/>
   <g stroke="#8fb03a" stroke-width="1.6" fill="none" stroke-linecap="round"><path d="M76 152 q-1 8 -2 14 M88 154 q0 7 0 12 M96 150 q1 8 2 14"/></g>
   <circle cx="98" cy="146" r="16" fill="#b7d24b"/>
@@ -204,6 +213,7 @@ export const POLAROIDS = [
   <rect x="78" y="153" width="5" height="16" rx="2" fill="#b7d24b"/>
   <rect x="96" y="160" width="12" height="6" rx="3" fill="#a3c243"/>
   <path d="M74 128 Q72 116 72 112" stroke="#b7d24b" stroke-width="10" stroke-linecap="round" fill="none"/>
+  <path d="M83 133 Q97 129 106 144" fill="none" stroke="#d3e78c" stroke-width="3" opacity="0.7" stroke-linecap="round" stroke-linejoin="round"/>
   <circle cx="72" cy="112" r="12" fill="#b7d24b"/>
   <ellipse cx="60" cy="117" rx="7" ry="5" fill="#c8de70"/>
   <circle cx="55" cy="115" r="2" fill="#2b2722"/>
@@ -224,12 +234,13 @@ export const POLAROIDS = [
     sub: "every interview, ever",
     how: "Time out on three or more pages in one game",
     art: `<svg viewBox="0 0 200 200" role="img"><title>Interview podium with three microphones, a water glass and an on-air sign against stage curtains</title>
-  <rect width="200" height="200" fill="#322f38"/>
+  <defs><linearGradient id="pol-interview-um-sky" x2="0" y2="1"><stop stop-color="#211f2c"/><stop offset="1" stop-color="#49404d"/></linearGradient></defs>
+  <rect width="200" height="200" fill="url(#pol-interview-um-sky)"/>
   <g stroke="#3c3844" stroke-width="3" fill="none" opacity=".9">
     <path d="M12 0 q4 100 -2 200 M36 0 q-4 100 2 200 M60 0 q4 100 -2 200 M84 0 q-3 100 2 200 M110 0 q4 100 -2 200 M134 0 q-4 100 2 200 M158 0 q4 100 -2 200 M182 0 q-3 100 2 200"/>
   </g>
-  <circle cx="100" cy="96" r="62" fill="#413c48" opacity=".8"/>
-  <circle cx="100" cy="96" r="38" fill="#4a4452"/>
+  <path d="M74 0 H126 L164 132 H36 Z" fill="#ead9bb" opacity=".07"/>
+
   <g fill="#d9d0bc" opacity=".3"><circle cx="80" cy="56" r="1"/><circle cx="118" cy="48" r="0.8"/><circle cx="98" cy="66" r="0.7"/></g>
   <rect x="132" y="16" width="54" height="22" rx="4" fill="#1f1c24" stroke="#c25353" stroke-width="1.5"/>
   <text x="159" y="31" font-family="'Courier New',monospace" font-size="10" font-weight="bold" fill="#e06a6a" text-anchor="middle" letter-spacing="1.5">ON AIR</text>
@@ -240,6 +251,7 @@ export const POLAROIDS = [
   <circle cx="78" cy="96" r="7.5" fill="#6e6a76"/>
   <circle cx="100" cy="90" r="8.5" fill="#8b5a5a"/>
   <circle cx="124" cy="98" r="7.5" fill="#5c6e7e"/>
+  <path d="M74 93 h7 M74 97 h7 M95 87 h10 M95 91 h10 M120 95 h8 M120 99 h8" fill="none" stroke="#ccc1be" stroke-width="1" opacity="0.65" stroke-linecap="round" stroke-linejoin="round"/>
   <rect x="64" y="106" width="17" height="11" rx="1.5" fill="#d9d0bc"/>
   <text x="72.5" y="114.5" font-family="'Courier New',monospace" font-size="8" font-weight="bold" fill="#2b2722" text-anchor="middle">13</text>
   <rect x="119" y="110" width="17" height="11" rx="1.5" fill="#d9d0bc"/>
@@ -247,6 +259,7 @@ export const POLAROIDS = [
   <rect x="62" y="126" width="76" height="8" rx="2" fill="#8a7050"/>
   <path d="M60 200 L66 134 L134 134 L140 200 Z" fill="#6f5a42"/>
   <path d="M64 152 q36 5 72 0 M62 176 q38 5 76 0" stroke="#5c4a36" stroke-width="1.4" fill="none" opacity=".7"/>
+  <path d="M68 137 L65 196 M64 130 H135" fill="none" stroke="#b89a73" stroke-width="1.6" opacity="0.7" stroke-linecap="round" stroke-linejoin="round"/>
   <circle cx="100" cy="166" r="11" fill="none" stroke="#d4a017" stroke-width="1.6"/>
   <text x="100" y="170.5" font-family="'Courier New',monospace" font-size="11" font-weight="bold" fill="#d4a017" text-anchor="middle">13</text>
   <g stroke="#b9c6cc" stroke-width="1.6" fill="none"><path d="M146 112 L148 126 M158 112 L156 126"/><ellipse cx="152" cy="112" rx="6" ry="2" /><path d="M147.5 119 Q152 121 156.5 119"/></g>
@@ -262,7 +275,8 @@ export const POLAROIDS = [
     sub: "look what you made me do",
     how: "Name a debut song and a reputation song in the same game",
     art: `<svg viewBox="0 0 200 200" role="img"><title>Snake in a cowboy hat performing at a vintage microphone under a spotlight</title>
-  <rect width="200" height="200" fill="#2e2c31"/>
+  <defs><linearGradient id="pol-debutation-sky" x2="0" y2="1"><stop stop-color="#1e1c27"/><stop offset="1" stop-color="#51454a"/></linearGradient></defs>
+  <rect width="200" height="200" fill="url(#pol-debutation-sky)"/>
   <polygon points="70,0 130,0 172,152 28,152" fill="#47424d" opacity=".55"/>
   <polygon points="82,0 118,0 150,152 50,152" fill="#544e5b" opacity=".5"/>
   <g fill="#d4a017"><circle cx="24" cy="36" r="1"/><circle cx="176" cy="28" r="1.2"/><circle cx="40" cy="88" r="0.9"/><circle cx="182" cy="100" r="1"/></g>
@@ -283,14 +297,15 @@ export const POLAROIDS = [
   <circle cx="151" cy="112" r="3" fill="#2b2830"/>
   <ellipse cx="96" cy="146" rx="36" ry="12" fill="#46444d"/>
   <ellipse cx="96" cy="131" rx="28" ry="10" fill="#504e58"/>
-  <ellipse cx="96" cy="118" rx="20" ry="8" fill="#5a5863"/>
+  <ellipse cx="96" cy="118" rx="20" ry="8" fill="#85818b"/>
   <g fill="#d4a017" opacity=".7">
     <path d="M72 143 l3 3 -3 3 -3 -3 z"/><path d="M96 145 l3 3 -3 3 -3 -3 z"/><path d="M120 143 l3 3 -3 3 -3 -3 z"/>
     <path d="M84 128 l2.6 2.6 -2.6 2.6 -2.6 -2.6 z"/><path d="M108 128 l2.6 2.6 -2.6 2.6 -2.6 -2.6 z"/>
     <path d="M96 114 l2.4 2.4 -2.4 2.4 -2.4 -2.4 z"/>
   </g>
   <path d="M108 116 C110 106 106 100 102 96" stroke="#5a5863" stroke-width="9" fill="none" stroke-linecap="round"/>
-  <ellipse cx="99" cy="93" rx="9" ry="6.5" fill="#5a5863"/>
+  <path d="M106 114 Q109 105 103 99" fill="none" stroke="#c2b6ac" stroke-width="1.4" opacity="0.65" stroke-linecap="round" stroke-linejoin="round"/>
+  <ellipse cx="99" cy="93" rx="9" ry="6.5" fill="#85818b"/>
   <circle cx="96" cy="91" r="1.6" fill="#f2eee2"/>
   <circle cx="95.6" cy="91" r="0.8" fill="#191722"/>
   <path d="M90 94 q-6 1 -8 -1 M90 94 q-5 3 -8 3" stroke="#c25a5a" stroke-width="1.2" fill="none"/>
@@ -309,19 +324,22 @@ export const POLAROIDS = [
     sub: "- taylor alison swift",
     how: "Catch the whale when its tail breaks the page",
     art: `<svg viewBox="0 0 200 200" role="img"><title>Whale tail rising from the sea with a sailboat on the horizon</title>
-  <rect width="200" height="108" fill="#cfdae0"/>
+  <defs><linearGradient id="pol-yes-whale-sky" x2="0" y2="1"><stop stop-color="#adc9d7"/><stop offset="1" stop-color="#e5e9df"/></linearGradient></defs>
+  <rect width="200" height="108" fill="url(#pol-yes-whale-sky)"/>
   <circle cx="40" cy="30" r="11" fill="#eae7d6"/>
   <ellipse cx="120" cy="26" rx="20" ry="6" fill="#e3eaee"/>
   <ellipse cx="170" cy="46" rx="15" ry="5" fill="#e3eaee"/>
   <g stroke="#8a938c" stroke-width="1.4" fill="none" stroke-linecap="round"><path d="M56 44 q4 -4 8 0 M64 44 q4 -4 8 0 M148 62 q3 -3 6 0 M154 62 q3 -3 6 0"/></g>
-  <path d="M170 90 L170 76 L179 88 Z" fill="#f2eee2"/>
+  <g transform="translate(0 13)"><path d="M170 90 L170 76 L179 88 Z" fill="#f2eee2"/>
   <path d="M170 76 V90" stroke="#3a4652" stroke-width="1.2"/>
   <path d="M162 90 L182 90 L178 95 L165 95 Z" fill="#27384a"/>
+  </g>
   <rect y="108" width="200" height="26" fill="#6d94a8"/>
   <rect y="134" width="200" height="30" fill="#5f8aa0"/>
   <rect y="164" width="200" height="36" fill="#567d92"/>
   <g stroke="#dbe7ec" stroke-width="1.6" stroke-linecap="round" opacity=".7"><path d="M16 114 h10 M34 118 h7 M130 112 h9 M148 118 h6"/></g>
   <path d="M94 128 C93 106 88 90 72 70 C87 74 95 82 98 91 C99 85 103 78 107 74 C114 67 121 64 130 62 C114 86 109 104 108 128 Z" fill="#27384a"/>
+  <path d="M77 75 Q93 84 98 100 M124 69 Q108 83 104 117" fill="none" stroke="#6f8797" stroke-width="2" opacity="0.8" stroke-linecap="round" stroke-linejoin="round"/>
   <g fill="#dfe7ec"><circle cx="114" cy="76" r="1"/><circle cx="119" cy="71" r="0.8"/><circle cx="110" cy="86" r="1.1"/><circle cx="80" cy="76" r="0.9"/><circle cx="87" cy="83" r="0.8"/><circle cx="104" cy="98" r="0.9"/></g>
   <ellipse cx="100" cy="128" rx="30" ry="6" fill="none" stroke="#dbe7ec" stroke-width="2.5"/>
   <g stroke="#dbe7ec" stroke-width="2" fill="none" stroke-linecap="round">
@@ -347,7 +365,8 @@ export const POLAROIDS = [
     sub: "i rent a place there",
     how: "Discover Cornelia Street",
     art: `<svg viewBox="0 0 200 200" role="img"><title>Cornelia Street sign on a brick wall with string lights, a fire escape and a leaning bicycle</title>
-  <rect width="200" height="200" fill="#a2624d"/>
+  <defs><linearGradient id="pol-cornelia-street-sky" x2="0" y2="1"><stop stop-color="#8b4e40"/><stop offset="1" stop-color="#c18a69"/></linearGradient></defs>
+  <rect width="200" height="200" fill="url(#pol-cornelia-street-sky)"/>
   <g stroke="#8a4f3d" stroke-width="1.2" opacity=".7" fill="none">
     <path d="M0 24 H200 M0 48 H200 M0 72 H200 M0 96 H200 M0 120 H200 M0 144 H200 M0 168 H200"/>
     <path d="M30 0 V24 M90 0 V24 M150 0 V24 M60 24 V48 M120 24 V48 M180 24 V48 M30 48 V72 M90 48 V72 M150 48 V72 M60 72 V96 M120 72 V96 M180 72 V96 M30 96 V120 M90 96 V120 M150 96 V120 M60 120 V144 M120 120 V144 M180 120 V144 M30 144 V168 M90 144 V168 M150 144 V168 M60 168 V178 M120 168 V178"/>
@@ -369,12 +388,14 @@ export const POLAROIDS = [
   <circle cx="42.5" cy="23" r="3" fill="#2f3d35"/>
   <rect x="45" y="30" width="60" height="18" rx="2" fill="#1e6b4b" stroke="#e9e4d6" stroke-width="1.4"/>
   <text x="75" y="42.5" font-family="'Courier New',monospace" font-size="10" font-weight="bold" fill="#f2eee2" text-anchor="middle" letter-spacing="0.5">W 4 ST</text>
+  <rect x="47" y="57" width="105" height="25" rx="2" fill="#422f2b" opacity=".25"/>
   <rect x="45" y="54" width="104" height="24" rx="2" fill="#1e6b4b" stroke="#e9e4d6" stroke-width="1.5"/>
   <text x="97" y="70.5" font-family="'Courier New',monospace" font-size="12" font-weight="bold" fill="#f2eee2" text-anchor="middle" letter-spacing="1">CORNELIA ST</text>
   <g stroke="#2f3d35" stroke-width="2.5" fill="none">
     <circle cx="66" cy="162" r="12"/><circle cx="104" cy="162" r="12"/>
     <path d="M66 162 L81 140 L104 162 M81 140 L76 162 M104 162 L99 136 M94 136 h9 q3 0 3 3 M76 138 h10"/>
   </g>
+  <path d="M66 162 H80 L99 140 M80 162 L99 140 M80 162 h6 M65 151 v22 M55 162 h22 M104 151 v22 M93 162 h22" fill="none" stroke="#8f9b87" stroke-width="0.8" opacity="0.85" stroke-linecap="round" stroke-linejoin="round"/><circle cx="80" cy="162" r="3" fill="none" stroke="#2f3d35"/>
   <circle cx="66" cy="162" r="2" fill="#2f3d35"/>
   <circle cx="104" cy="162" r="2" fill="#2f3d35"/>
   <path d="M26 152 q-3 -4 -6 -1 q-2 2 1 5 l5 4 5 -4 q3 -3 1 -5 q-3 -3 -6 1 z" fill="#e9c9d0" opacity=".9"/>
@@ -389,9 +410,9 @@ export const POLAROIDS = [
     sub: "nothing good starts in it",
     how: "Answer correctly with under a second left",
     art: `<svg viewBox="0 0 200 200" role="img"><title>Sleek vintage luxury car with whitewall tires escaping past a motel at night</title>
-  <rect width="200" height="200" fill="#23222b"/>
-  <circle cx="32" cy="30" r="10" fill="#e9e4d4"/>
-  <circle cx="36" cy="27" r="9" fill="#23222b"/>
+  <defs><linearGradient id="pol-getaway-car-sky" x2="0" y2="1"><stop stop-color="#181a2c"/><stop offset="1" stop-color="#514251"/></linearGradient></defs>
+  <rect width="200" height="200" fill="url(#pol-getaway-car-sky)"/>
+  <path d="M32 20 A10 10 0 1 0 40 37 A9 9 0 0 1 32 20 Z" fill="#e9e4d4"/>
   <g fill="#d9d0bc" opacity=".8"><circle cx="70" cy="16" r="0.9"/><circle cx="102" cy="32" r="1.1"/><circle cx="56" cy="52" r="0.8"/><circle cx="86" cy="60" r="0.7"/></g>
   <path d="M0 140 V96 h22 v-8 h14 v8 h26 v-14 h16 v14 h20 v-6 h14 v6 h88 v40 Z" fill="#1b1a22"/>
   <g fill="#e8c97a" opacity=".8"><rect x="28" y="104" width="4" height="6"/><rect x="66" y="94" width="4" height="6"/><rect x="96" y="108" width="4" height="6"/></g>
@@ -404,9 +425,10 @@ export const POLAROIDS = [
   <ellipse cx="40" cy="192" rx="20" ry="4" fill="#2b2a34"/>
   <path d="M30 192 q5 -2 10 0 q5 2 10 0" stroke="#e06a7e" stroke-width="1.4" fill="none" opacity=".5"/>
   <g stroke="#e06a7e" stroke-width="2" fill="none" opacity=".35"><path d="M148 148 q3 7 -1 13 M153 166 q3 6 -1 11"/></g>
-  <polygon points="46,127 4,116 4,140" fill="#e8dba3" opacity=".45"/>
+  <polygon points="46,127 0,110 0,147" fill="#e8dba3" opacity=".45"/>
   <ellipse cx="26" cy="146" rx="24" ry="4" fill="#e8dba3" opacity=".22"/>
   <g fill="#3f3c48" opacity=".65"><circle cx="164" cy="134" r="6"/><circle cx="173" cy="138" r="5"/><circle cx="181" cy="132" r="4"/><circle cx="188" cy="136" r="3"/></g>
+  <ellipse cx="101" cy="149" rx="60" ry="4" fill="#302c29" opacity=".16"/>
   <path d="M46 138 Q43 128 52 123 L94 120 L106 106 Q108 104 112 104 L128 104 Q131 104 133 106 L150 122 Q158 125 158 132 Q158 136 155 138 Z" fill="#cbb98e"/>
   <path d="M97 120 L107 107 Q109 105.5 112 105.5 L127 105.5 Q129 105.5 131 107 L145 120 Z" fill="#23222c"/>
   <path d="M116 120 V106" stroke="#cbb98e" stroke-width="2.5"/>
@@ -433,6 +455,7 @@ export const POLAROIDS = [
   <circle cx="138" cy="138" r="6.5" fill="none" stroke="#e9e4d6" stroke-width="2"/>
   <circle cx="138" cy="138" r="3" fill="#cfd4da"/>
   <path d="M135 135 l6 6 M141 135 l-6 6" stroke="#8a8f9a" stroke-width="1"/>
+  <path d="M61 156 H87 M123 156 H148" fill="none" stroke="#d9c7a3" stroke-width="1.3" opacity="0.25" stroke-linecap="round" stroke-linejoin="round"/>
   <g stroke="#6f6a76" stroke-width="2" stroke-linecap="round" opacity=".8"><path d="M164 108 h26 M170 118 h22 M166 98 h18"/></g>
   <rect width="200" height="200" fill="#d4a017" opacity=".04"/>
   <rect x="0.5" y="0.5" width="199" height="199" fill="none" stroke="#e9e4f4" opacity=".12"/>
@@ -444,7 +467,8 @@ export const POLAROIDS = [
     sub: "picture me in the trees",
     how: "Answer seven pages in a row correctly",
     art: `<svg viewBox="0 0 200 200" role="img"><title>Rope swing in deep misty woods with light shafts and a small bird on the branch</title>
-  <rect width="200" height="200" fill="#c9d1c8"/>
+  <defs><linearGradient id="pol-seven-sky" x2="0" y2="1"><stop stop-color="#9aafa5"/><stop offset="1" stop-color="#e1e5d5"/></linearGradient></defs>
+  <rect width="200" height="200" fill="url(#pol-seven-sky)"/>
   <polygon points="60,0 78,0 40,200 22,200" fill="#e3e7de" opacity=".3"/>
   <polygon points="120,0 132,0 160,200 148,200" fill="#e3e7de" opacity=".22"/>
   <rect x="58" y="26" width="5" height="150" fill="#b3ada0" opacity=".5"/>
@@ -454,6 +478,7 @@ export const POLAROIDS = [
   <rect width="200" height="26" fill="#55604f"/>
   <g fill="#55604f"><circle cx="8" cy="26" r="9"/><circle cx="32" cy="24" r="10"/><circle cx="56" cy="27" r="9"/><circle cx="80" cy="24" r="10"/><circle cx="104" cy="27" r="9"/><circle cx="128" cy="24" r="10"/><circle cx="152" cy="27" r="9"/><circle cx="176" cy="24" r="10"/><circle cx="196" cy="26" r="9"/></g>
   <g stroke="#55604f" stroke-width="1.4" fill="none"><path d="M48 32 q1 8 0 14 M48 40 l-3 3 M48 40 l3 3 M156 34 q1 7 0 12 M156 40 l-3 3 M156 40 l3 3"/></g>
+  <path d="M0 79 Q54 66 108 82 T200 77 V96 Q139 87 85 95 T0 93 Z" fill="#e1e7dd" opacity=".5"/><path d="M0 137 Q74 119 138 138 T200 130 V149 Q100 138 0 153 Z" fill="#e1e7dd" opacity=".4"/>
   <rect x="8" width="16" height="200" fill="#6f6a5e"/>
   <rect x="176" width="18" height="200" fill="#6f6a5e"/>
   <g stroke="#5c574c" stroke-width="1" opacity=".6"><path d="M13 20 q2 40 -1 80 M19 60 q1 50 -1 90 M182 30 q2 44 -1 88 M188 80 q1 40 -1 80"/></g>
@@ -462,12 +487,12 @@ export const POLAROIDS = [
   <circle cx="112" cy="33.5" r="2.2" fill="#4a4639"/>
   <path d="M134 34 Q133 30.5 136.5 30 Q139.5 29.7 139.8 32 L141.4 32.6 L139.6 33.2 Q138.8 34 137.8 34.1" stroke="#4a4639" stroke-width="1.4" fill="none"/>
   <path d="M134 34 l-3.6 -2" stroke="#4a4639" stroke-width="1.4" fill="none"/>
-  <path d="M90 34 L88 122 M112 35 L114 122" stroke="#8b8272" stroke-width="2"/>
+  <path d="M90 34 L88 122 M112 35 L114 122" stroke="#76634c" stroke-width="2"/>
   <rect x="80" y="121" width="42" height="7" rx="2.5" fill="#7a5c3e"/>
   <path d="M84 124.5 h34" stroke="#6a4e32" stroke-width="1"/>
   <path d="M86 120 v9 M116 120 v9" stroke="#8b8272" stroke-width="1.2"/>
-  <rect y="78" width="200" height="10" fill="#dde2da" opacity=".85"/>
-  <rect y="132" width="200" height="7" fill="#dde2da" opacity=".55"/>
+
+
   <rect y="186" width="200" height="14" fill="#b3bcae"/>
   <ellipse cx="60" cy="190" rx="8" ry="3" fill="#a8a396"/>
   <ellipse cx="136" cy="193" rx="6" ry="2.5" fill="#a8a396"/>
@@ -488,10 +513,10 @@ export const POLAROIDS = [
     sub: "in my heart",
     how: "Finish a game in December",
     art: `<svg viewBox="0 0 200 200" role="img"><title>Snowy Christmas tree farm at dusk with a farmhouse, fence and red sled</title>
-  <rect width="200" height="70" fill="#ddc9d2"/>
-  <rect y="70" width="200" height="48" fill="#cfd3de"/>
-  <circle cx="168" cy="26" r="8" fill="#f2ecdc"/>
-  <circle cx="171" cy="24" r="7" fill="#ddc9d2"/>
+  <defs><linearGradient id="pol-christmas-tree-farm-sky" x2="0" y2="1"><stop stop-color="#b6b9cf"/><stop offset="1" stop-color="#f1d5d4"/></linearGradient></defs>
+  <rect width="200" height="118" fill="url(#pol-christmas-tree-farm-sky)"/>
+  <path d="M0 105 Q45 90 90 100 T200 96 V118 H0 Z" fill="#b9c5cd" opacity=".65"/>
+  <path d="M168 18 A8 8 0 1 0 174 32 A7 7 0 0 1 168 18 Z" fill="#f2ecdc"/>
   <g fill="#f6f2e7" opacity=".9"><circle cx="30" cy="18" r="1"/><circle cx="76" cy="12" r="0.9"/><circle cx="120" cy="22" r="1"/></g>
   <g stroke="#c4c9d6" stroke-width="1.6" fill="none" stroke-linecap="round"><path d="M52 76 q-3 -8 3 -13 M56 66 q-2 -6 2 -10"/></g>
   <rect x="48" y="76" width="5" height="10" fill="#6f4433"/>
@@ -506,6 +531,7 @@ export const POLAROIDS = [
   <g fill="#8a6a4a"><rect x="6" y="140" width="3" height="17"/><rect x="24" y="134" width="3" height="15"/><rect x="40" y="128" width="3" height="13"/><rect x="54" y="123" width="3" height="11"/></g>
   <g stroke="#8a6a4a" stroke-width="1.6" fill="none"><path d="M6 144 L57 125 M6 152 L57 131"/></g>
   <g fill="#6f8a78"><polygon points="78,114 84,98 90,114"/><polygon points="102,112 108,97 114,112"/><polygon points="128,114 134,99 140,114"/><polygon points="152,112 158,98 164,112"/></g>
+  <path d="M99 155 l-26 14 32 -10 M136 154 l-20 13 28 -9 M174 191 l-26 9 h44" fill="#bccbd1" opacity=".55"/>
   <g fill="#567560"><polygon points="88,150 102,118 116,150"/><polygon points="93,134 102,112 111,134"/><polygon points="126,148 138,120 150,148"/><polygon points="130,134 138,116 146,134"/></g>
   <rect x="99" y="150" width="6" height="8" fill="#5c3a2e"/>
   <rect x="135" y="148" width="5" height="8" fill="#5c3a2e"/>
@@ -529,11 +555,14 @@ export const POLAROIDS = [
     sub: "left at my apartment",
     how: "Recall a whole verse, word-perfect",
     art: `<svg viewBox="0 0 200 200" role="img"><title>Typewriter on a desk with ink bottle, pen and a crumpled draft</title>
-  <rect width="200" height="200" fill="#46403a"/>
+  <defs><linearGradient id="pol-typewriter-sky" x2="0" y2="1"><stop stop-color="#302d2d"/><stop offset="1" stop-color="#75614b"/></linearGradient></defs>
+  <rect width="200" height="200" fill="url(#pol-typewriter-sky)"/>
   <circle cx="10" cy="20" r="70" fill="#d9c7a3" opacity=".08"/>
   <rect y="140" width="200" height="60" fill="#6f5f4a"/>
   <g stroke="#5c4e3c" stroke-width="1.5" opacity=".7" fill="none"><path d="M0 158 q50 5 100 0 t100 3 M0 182 q60 -6 120 0 t80 -3"/></g>
+  <ellipse cx="102" cy="145" rx="58" ry="7" fill="#302c29" opacity=".16"/>
   <rect x="72" y="30" width="56" height="56" fill="#f2ecd9"/>
+  <path d="M119 30 h9 v10 Z" fill="#d0c4a9"/>
   <g stroke="#6f675a" stroke-width="1.6"><path d="M80 42 h34 M80 50 h40 M80 58 h26 M80 66 h36 M80 74 h14"/></g>
   <g stroke="#15130f" stroke-width="1"><path d="M100 100 L88 90 M100 100 L94 89 M100 100 L100 88 M100 100 L106 89 M100 100 L112 90"/></g>
   <circle cx="62" cy="88" r="5" fill="#201d1a"/><circle cx="62" cy="88" r="1.5" fill="#b23a3a"/>
@@ -544,6 +573,7 @@ export const POLAROIDS = [
   <circle cx="158" cy="94" r="4.5" fill="#201d1a"/>
   <rect x="42" y="88" width="116" height="12" rx="3" fill="#2b2722"/>
   <rect x="52" y="98" width="96" height="44" rx="7" fill="#3a3531"/>
+  <path d="M58 102 Q100 98 142 102 M49 85 H150" fill="none" stroke="#9b9382" stroke-width="1.6" opacity="0.6" stroke-linecap="round" stroke-linejoin="round"/>
   <rect x="88" y="102" width="24" height="5" rx="1" fill="#d4a017" opacity=".8"/>
   <g fill="#d9d0bc">
     <circle cx="66" cy="114" r="3.2"/><circle cx="76" cy="114" r="3.2"/><circle cx="86" cy="114" r="3.2"/><circle cx="96" cy="114" r="3.2"/><circle cx="106" cy="114" r="3.2"/><circle cx="116" cy="114" r="3.2"/><circle cx="126" cy="114" r="3.2"/><circle cx="136" cy="114" r="3.2"/>
@@ -567,7 +597,8 @@ export const POLAROIDS = [
     sub: "at the moment",
     how: "Finish a game on the 22nd",
     art: `<svg viewBox="0 0 200 200" role="img"><title>An almost empty room: a sun patch, a ghost mark where a picture hung, a clock and one houseplant</title>
-  <rect width="200" height="200" fill="#e9e3d3"/>
+  <defs><linearGradient id="pol-not-a-lot-sky" x2="0" y2="1"><stop stop-color="#d9d0bd"/><stop offset="1" stop-color="#f4eedc"/></linearGradient></defs>
+  <rect width="200" height="200" fill="url(#pol-not-a-lot-sky)"/>
   <polygon points="26,26 88,26 70,118 8,118" fill="#f2ecd9" opacity=".85"/>
   <path d="M57 26 L39 118 M17 72 L79 72" stroke="#ded7c5" stroke-width="3"/>
   <g fill="#ffffff" opacity=".6"><circle cx="40" cy="52" r="1"/><circle cx="56" cy="88" r="0.9"/><circle cx="30" cy="98" r="0.8"/></g>
@@ -581,6 +612,7 @@ export const POLAROIDS = [
   <rect y="166" width="200" height="4" fill="#cfc6b0"/>
   <rect y="170" width="200" height="30" fill="#d8d0bc"/>
   <g stroke="#cfc6b0" stroke-width="1" opacity=".7"><path d="M40 170 L30 200 M100 170 L98 200 M160 170 L170 200"/></g>
+  <path d="M0 171 H55 L93 200 H0 Z" fill="#fff3cf" opacity=".45"/><path d="M166 184 L129 194 L150 195 L177 184" fill="#938c72" opacity=".25"/>
   <ellipse cx="170" cy="188" rx="16" ry="3" fill="#cfc6b0"/>
   <g stroke="#7d8a5c" stroke-width="2.5" fill="none" stroke-linecap="round"><path d="M170 168 q0 -14 0 -18 M170 168 q-8 -10 -12 -12 M170 168 q8 -10 12 -13 M170 168 q-4 -14 -7 -17 M170 168 q10 -4 14 2 q-6 4 -14 -2"/></g>
   <path d="M160 168 h20 l-2.5 16 h-15 z" fill="#b06a4a"/>
@@ -595,7 +627,8 @@ export const POLAROIDS = [
     sub: "spelling is fun",
     how: "Sing three word-perfect lyric lines back to back",
     art: `<svg viewBox="0 0 200 200" role="img"><title>Alphabet beads spilling from a tipped tin across a desk, three strung on gold thread</title>
-  <rect width="200" height="200" fill="#c9a86b"/>
+  <defs><linearGradient id="pol-hey-kids-sky" x2="0" y2="1"><stop stop-color="#b89760"/><stop offset="1" stop-color="#e0c58e"/></linearGradient></defs>
+  <rect width="200" height="200" fill="url(#pol-hey-kids-sky)"/>
   <g stroke="#b3915a" stroke-width="2" opacity=".6" fill="none"><path d="M0 30 q50 6 100 0 t100 4 M0 92 q60 -8 120 0 t80 -4 M0 158 q50 6 100 0 t100 4"/></g>
   <ellipse cx="100" cy="60" rx="7" ry="4" fill="none" stroke="#b3915a" stroke-width="2" opacity=".6"/>
   <polygon points="0,144 58,152 46,200 0,200" fill="#f4efdf"/>
@@ -641,6 +674,7 @@ export const POLAROIDS = [
     <ellipse cx="166" cy="182" rx="5" ry="3.5" fill="none" stroke="#b23a3a" stroke-width="2"/>
     <ellipse cx="167" cy="175" rx="5" ry="3.5" fill="none" stroke="#b23a3a" stroke-width="2"/>
   </g>
+  <circle cx="60" cy="120" r="10.5" fill="none" stroke="#735638" stroke-width=".9" opacity=".3"/><path d="M51.5 118 q1 -4 4 -4" fill="none" stroke="#fff8dd" stroke-width="1.2" opacity="0.7" stroke-linecap="round" stroke-linejoin="round"/><circle cx="88" cy="123" r="10.5" fill="none" stroke="#735638" stroke-width=".9" opacity=".3"/><path d="M79.5 121 q1 -4 4 -4" fill="none" stroke="#fff8dd" stroke-width="1.2" opacity="0.7" stroke-linecap="round" stroke-linejoin="round"/><circle cx="116" cy="118" r="10.5" fill="none" stroke="#735638" stroke-width=".9" opacity=".3"/><path d="M107.5 116 q1 -4 4 -4" fill="none" stroke="#fff8dd" stroke-width="1.2" opacity="0.7" stroke-linecap="round" stroke-linejoin="round"/><circle cx="36" cy="62" r="9" fill="none" stroke="#735638" stroke-width=".9" opacity=".3"/><path d="M29 60 q1 -4 4 -4" fill="none" stroke="#fff8dd" stroke-width="1.2" opacity="0.7" stroke-linecap="round" stroke-linejoin="round"/><circle cx="68" cy="44" r="9" fill="none" stroke="#735638" stroke-width=".9" opacity=".3"/><path d="M61 42 q1 -4 4 -4" fill="none" stroke="#fff8dd" stroke-width="1.2" opacity="0.7" stroke-linecap="round" stroke-linejoin="round"/><circle cx="160" cy="140" r="9" fill="none" stroke="#735638" stroke-width=".9" opacity=".3"/><path d="M153 138 q1 -4 4 -4" fill="none" stroke="#fff8dd" stroke-width="1.2" opacity="0.7" stroke-linecap="round" stroke-linejoin="round"/><circle cx="128" cy="152" r="9" fill="none" stroke="#735638" stroke-width=".9" opacity=".3"/><path d="M121 150 q1 -4 4 -4" fill="none" stroke="#fff8dd" stroke-width="1.2" opacity="0.7" stroke-linecap="round" stroke-linejoin="round"/><circle cx="70" cy="164" r="9" fill="none" stroke="#735638" stroke-width=".9" opacity=".3"/><path d="M63 162 q1 -4 4 -4" fill="none" stroke="#fff8dd" stroke-width="1.2" opacity="0.7" stroke-linecap="round" stroke-linejoin="round"/><circle cx="184" cy="168" r="9" fill="none" stroke="#735638" stroke-width=".9" opacity=".3"/><path d="M177 166 q1 -4 4 -4" fill="none" stroke="#fff8dd" stroke-width="1.2" opacity="0.7" stroke-linecap="round" stroke-linejoin="round"/>
   <rect width="200" height="200" fill="#d9c7a3" opacity=".06"/>
   <rect x="0.5" y="0.5" width="199" height="199" fill="none" stroke="#3f3a2e" opacity=".12"/>
 </svg>`,
@@ -651,13 +685,14 @@ export const POLAROIDS = [
     sub: "your english & gym teachers",
     how: "Discover every song with “love” in its title",
     art: `<svg viewBox="0 0 200 200" role="img"><title>Wedding arch wound with vines and flowers, guest chairs, an aisle and a ring cushion</title>
-  <rect width="200" height="130" fill="#e9dcc4"/>
+  <defs><linearGradient id="pol-getting-married-sky" x2="0" y2="1"><stop stop-color="#d3bcaa"/><stop offset="1" stop-color="#f5e8cb"/></linearGradient></defs>
+  <rect width="200" height="130" fill="url(#pol-getting-married-sky)"/>
   <circle cx="100" cy="40" r="16" fill="#f2e6c8"/>
   <rect y="118" width="200" height="12" fill="#8a996b"/>
   <g fill="#8a996b"><circle cx="16" cy="118" r="5"/><circle cx="44" cy="117" r="6"/><circle cx="72" cy="118" r="5"/><circle cx="128" cy="118" r="5"/><circle cx="156" cy="117" r="6"/><circle cx="184" cy="118" r="5"/></g>
   <g stroke="#f6f2e7" stroke-width="1.4" fill="none" stroke-linecap="round"><path d="M40 44 q4 -4 8 0 M48 44 q4 -4 8 0 M148 58 q3 -3 6 0 M154 58 q3 -3 6 0"/></g>
   <rect y="130" width="200" height="70" fill="#a8b586"/>
-  <polygon points="86,200 93,130 107,130 114,200" fill="#f2ecd9"/>
+  <polygon points="74,200 93,130 107,130 126,200" fill="#f2ecd9"/>
   <g fill="#d98a9e" opacity=".7"><ellipse cx="98" cy="150" rx="1.6" ry="1"/><ellipse cx="104" cy="168" rx="1.5" ry="1"/><ellipse cx="96" cy="186" rx="1.6" ry="1"/><ellipse cx="106" cy="142" rx="1.4" ry="0.9"/></g>
   <path d="M56 178 L56 96 Q56 50 100 50 Q144 50 144 96 L144 178" stroke="#7d8a5c" stroke-width="11" fill="none"/>
   <path d="M52 170 q8 -6 6 -16 q-8 -4 -6 -14 q8 -5 6 -15 q-7 -6 -4 -16 q8 -8 14 -14 q10 -8 20 -9 q12 -1 22 4 q10 6 16 16 q5 10 4 20 q-2 10 2 20 q6 6 4 16" stroke="#5f7047" stroke-width="1.8" fill="none" opacity=".8"/>
@@ -665,6 +700,7 @@ export const POLAROIDS = [
   <g fill="#d98a9e"><circle cx="56" cy="158" r="4.5"/><circle cx="55" cy="112" r="5"/><circle cx="66" cy="72" r="4.5"/><circle cx="110" cy="50" r="4"/><circle cx="140" cy="86" r="5"/><circle cx="145" cy="136" r="4.5"/><circle cx="60" cy="152" r="3"/><circle cx="136" cy="80" r="3"/></g>
   <g fill="#f2e6d0"><circle cx="57" cy="134" r="4"/><circle cx="60" cy="88" r="4.5"/><circle cx="88" cy="53" r="4"/><circle cx="128" cy="60" r="4.5"/><circle cx="143" cy="110" r="4"/><circle cx="143" cy="160" r="4.5"/><circle cx="122" cy="54" r="2.8"/></g>
   <g fill="#e0c478"><circle cx="54" cy="146" r="3.2"/><circle cx="76" cy="60" r="3.4"/><circle cx="100" cy="49" r="3.2"/><circle cx="136" cy="74" r="3.2"/><circle cx="146" cy="124" r="3.4"/><circle cx="144" cy="148" r="3"/></g>
+  <path d="M95 128 h10 l2 14 H93 Z" fill="#e3d6bd"/><path d="M92 127 h16" stroke="#f9f2e1" stroke-width="2"/>
   <ellipse cx="100" cy="127" rx="9" ry="3.5" fill="#e8a3b6"/>
   <circle cx="97.5" cy="125" r="2.2" fill="none" stroke="#d4a017" stroke-width="1.3"/>
   <circle cx="102.5" cy="125" r="2.2" fill="none" stroke="#d4a017" stroke-width="1.3"/>
@@ -676,6 +712,7 @@ export const POLAROIDS = [
     <rect x="58" y="140" width="3.5" height="32"/><rect x="58" y="156" width="17" height="3.5"/><rect x="72" y="159" width="3.5" height="13"/>
     <rect x="138.5" y="140" width="3.5" height="32"/><rect x="125" y="156" width="17" height="3.5"/><rect x="124.5" y="159" width="3.5" height="13"/>
   </g>
+  <path d="M54 155 l-12 24 M145 161 l-7 19" fill="none" stroke="#65784f" stroke-width="2" opacity="0.35" stroke-linecap="round" stroke-linejoin="round"/>
   <g fill="#d98a9e" opacity=".8"><ellipse cx="90" cy="92" rx="1.8" ry="1.2"/><ellipse cx="112" cy="106" rx="1.6" ry="1.1"/><ellipse cx="84" cy="118" rx="1.5" ry="1"/><ellipse cx="118" cy="90" rx="1.4" ry="1"/><ellipse cx="100" cy="76" rx="1.5" ry="1"/></g>
   <rect width="200" height="200" fill="#e0c478" opacity=".08"/>
   <rect x="0.5" y="0.5" width="199" height="199" fill="none" stroke="#3f3a2e" opacity=".12"/>
@@ -687,7 +724,8 @@ export const POLAROIDS = [
     sub: "(it was taylor swift)",
     how: "Flag an impostor word and be right",
     art: `<svg viewBox="0 0 200 200" role="img"><title>Yellow tee reading no its becky hanging large on a wooden hanger</title>
-  <rect width="200" height="200" fill="#d8d2c4"/>
+  <defs><linearGradient id="pol-no-its-becky-sky" x2="0" y2="1"><stop stop-color="#c0b9ae"/><stop offset="1" stop-color="#ece3d1"/></linearGradient></defs>
+  <rect width="200" height="200" fill="url(#pol-no-its-becky-sky)"/>
   <rect y="12" width="200" height="5" fill="#b3a68e"/>
   <rect x="20" y="8" width="4" height="13" fill="#a3947c"/>
   <rect x="176" y="8" width="4" height="13" fill="#a3947c"/>
@@ -701,6 +739,7 @@ export const POLAROIDS = [
   <g transform="rotate(14 162 44)"><rect x="156" y="38" width="13" height="19" rx="2" fill="#d9c7a3"/><circle cx="162.5" cy="43" r="1.6" fill="#b3a68e"/></g>
   <path d="M126 26 q6 8 8 14" stroke="#8b8272" stroke-width="1" fill="none"/>
   <path d="M86 56 Q100 47 104 47 Q118 58 132 47 Q136 47 150 56 L168 76 L152 88 L148 84 L148 156 L88 156 L88 84 L84 88 L68 76 Z" fill="#e8b73a"/>
+  <path d="M142 84 L148 84 V156 H88 V150 H140 Z" fill="#b48126" opacity=".23"/>
   <path d="M104 47 Q118 58 132 47 Q126 64 118 64 Q110 64 104 47 Z" fill="#c9992c"/>
   <path d="M109 50 Q118 57 127 50" stroke="#c9992c" stroke-width="1.4" fill="none"/>
   <rect x="112" y="58" width="12" height="7" rx="1" fill="#f6f2e7" opacity=".9"/>
@@ -708,7 +747,7 @@ export const POLAROIDS = [
     <path d="M94 92 q4 30 2 60 M142 96 q-3 28 -2 56 M88 84 l10 5 M148 84 l-10 5 M100 124 q10 3 20 0 M112 138 q9 2 18 -1 M106 74 q6 3 12 2"/>
   </g>
   <g stroke="#c9992c" stroke-width="1" stroke-dasharray="2.5 2.5" fill="none"><path d="M90 151 h56 M70 72 l14 9 M166 72 l-14 9 M86 58 l4 4 M150 58 l-4 4"/></g>
-  <text x="118" y="110" font-family="'Courier New',monospace" font-size="8" fill="#2b2722" text-anchor="middle" letter-spacing="0.8">no its becky</text>
+  <text x="118" y="110" font-family="'Courier New',monospace" font-size="9" font-weight="bold" fill="#2b2722" text-anchor="middle" letter-spacing="0">no its becky</text>
   <rect width="200" height="200" fill="#cfd8de" opacity=".05"/>
   <rect width="200" height="200" fill="#d9c7a3" opacity=".05"/>
   <rect x="0.5" y="0.5" width="199" height="199" fill="none" stroke="#3f3a2e" opacity=".12"/>
@@ -720,7 +759,8 @@ export const POLAROIDS = [
     sub: "i asked the traffic lights",
     how: "Lean on ten or more hints in one game",
     art: `<svg viewBox="0 0 200 200" role="img"><title>Traffic light glowing amber in the rain with a speech bubble saying i don't know</title>
-  <rect width="200" height="200" fill="#262936"/>
+  <defs><linearGradient id="pol-traffic-lights-sky" x2="0" y2="1"><stop stop-color="#181f30"/><stop offset="1" stop-color="#4b4b60"/></linearGradient></defs>
+  <rect width="200" height="200" fill="url(#pol-traffic-lights-sky)"/>
   <rect y="120" width="200" height="30" fill="#343a4d" opacity=".8"/>
   <path d="M0 150 V132 h16 v-6 h12 v6 h22 v-10 h14 v10 h18 v-5 h12 v5 h26 v-8 h12 v8 h20 v-4 h10 v4 h38 v18 Z" fill="#1c1f2b"/>
   <g fill="#e8c97a" opacity=".7"><rect x="20" y="136" width="3" height="4"/><rect x="52" y="130" width="3" height="4"/><rect x="88" y="134" width="3" height="4"/><rect x="170" y="140" width="3" height="4"/></g>
@@ -738,6 +778,7 @@ export const POLAROIDS = [
   <circle cx="140" cy="92" r="24" fill="#d4a017" opacity=".09"/>
   <circle cx="140" cy="92" r="17" fill="#d4a017" opacity=".18"/>
   <circle cx="140" cy="92" r="10" fill="#d4a017"/>
+  <path d="M134 87 q5 -5 11 0" stroke="#ffe7a0" stroke-width="2" stroke-linecap="round" fill="none"/>
   <circle cx="140" cy="122" r="10" fill="#5fae7a" opacity=".28"/>
   <g stroke="#d4a017" stroke-width="2.5" opacity=".38" stroke-linecap="round">
     <path d="M137 156 q3 6 -1 12 M141 172 q3 6 -1 12 M136 186 q2 5 0 10"/>
@@ -750,6 +791,7 @@ export const POLAROIDS = [
     <path d="M44 30 l-5 14 M78 44 l-5 14 M124 14 l-5 14 M148 46 l-5 14 M16 80 l-5 14 M84 84 l-5 14 M178 100 l-5 14 M56 96 l-5 14 M100 124 l-5 14 M20 132 l-5 14"/>
   </g>
   <g stroke="#9aa3b8" stroke-width="1" opacity=".5" stroke-linecap="round"><path d="M60 164 l3 -3 M66 164 l-3 -3 M96 178 l3 -3 M102 178 l-3 -3 M170 168 l3 -3 M176 168 l-3 -3"/></g>
+  <path d="M126 165 h23 M130 177 h26 M121 190 h27" fill="none" stroke="#e2b654" stroke-width="1.8" opacity="0.28" stroke-linecap="round" stroke-linejoin="round"/><path d="M123 37 Q120 32 129 32 H151" fill="none" stroke="#838494" stroke-width="1.2" opacity="0.5" stroke-linecap="round" stroke-linejoin="round"/>
   <polygon points="102,52 124,74 100,64" fill="#f2eee2" stroke="#191b24" stroke-width="1.5"/>
   <rect x="14" y="34" width="92" height="30" rx="9" fill="#f2eee2" stroke="#191b24" stroke-width="1.5"/>
   <text x="60" y="53.5" font-family="'Courier New',monospace" font-size="10" font-weight="bold" fill="#2b2722" text-anchor="middle" letter-spacing="0.5">i don't know</text>
@@ -763,7 +805,8 @@ export const POLAROIDS = [
     sub: "i knew you were trouble",
     how: "Time out and snap a five-answer streak",
     art: `<svg viewBox="0 0 200 200" role="img"><title>A goat standing in a field screaming skyward, autumn tree and barn behind</title>
-  <rect width="200" height="150" fill="#d8cfc0"/>
+  <defs><linearGradient id="pol-goat-remix-sky" x2="0" y2="1"><stop stop-color="#bac7c3"/><stop offset="1" stop-color="#eee0c5"/></linearGradient></defs>
+  <rect width="200" height="150" fill="url(#pol-goat-remix-sky)"/>
   <polygon points="8,104 27,88 46,104" fill="#5c3a30"/>
   <rect x="12" y="104" width="32" height="22" fill="#8a5a4a"/>
   <rect x="23" y="110" width="11" height="16" fill="#4a2e26"/>
@@ -788,6 +831,7 @@ export const POLAROIDS = [
   <rect x="32" y="155" width="2.5" height="10" fill="#c9c1ae"/>
   <rect x="38" y="154" width="2.5" height="10" fill="#c9c1ae"/>
   <path d="M44 144 q4 -3 4 -7" stroke="#d8d0bc" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+  <ellipse cx="94" cy="169" rx="37" ry="5" fill="#302c29" opacity=".16"/>
   <rect x="66" y="148" width="6" height="18" rx="2" fill="#dcd6c6"/>
   <rect x="118" y="148" width="6" height="18" rx="2" fill="#dcd6c6"/>
   <rect x="78" y="151" width="6" height="16" rx="2" fill="#eae5d6"/>
@@ -795,6 +839,7 @@ export const POLAROIDS = [
   <g fill="#55504a"><rect x="66" y="164" width="6" height="4" rx="1"/><rect x="78" y="165" width="6" height="4" rx="1"/><rect x="106" y="165" width="6" height="4" rx="1"/><rect x="118" y="164" width="6" height="4" rx="1"/></g>
   <ellipse cx="94" cy="134" rx="33" ry="18" fill="#eae5d6"/>
   <g stroke="#d8d0bc" stroke-width="1.6" fill="none" stroke-linecap="round"><path d="M68 128 q-2 6 0 12 M76 124 q-2 7 0 14 M86 122 q-1 7 0 15"/></g>
+  <path d="M68 139 Q93 151 120 141" fill="none" stroke="#c5bba6" stroke-width="2" opacity="0.8" stroke-linecap="round" stroke-linejoin="round"/>
   <path d="M62 124 q-8 -4 -8 -12" stroke="#eae5d6" stroke-width="5" fill="none" stroke-linecap="round"/>
   <path d="M110 124 C114 110 120 100 130 92 L146 102 C138 110 130 120 126 132 Z" fill="#eae5d6"/>
   <path d="M132 86 q-4 -12 -14 -14 M138 84 q0 -12 -7 -17" stroke="#b3a68e" stroke-width="3" fill="none" stroke-linecap="round"/>
@@ -821,7 +866,8 @@ export const POLAROIDS = [
     sub: "a fate worse than bread",
     how: "Discover The Fate of Ophelia",
     art: `<svg viewBox="0 0 200 200" role="img"><title>A cat shaped like a bread loaf in a bakery, ears properly attached, flower tucked behind one ear</title>
-  <rect width="200" height="200" fill="#bfe0d2"/>
+  <defs><linearGradient id="pol-doughphelia-sky" x2="0" y2="1"><stop stop-color="#9ec7b8"/><stop offset="1" stop-color="#e2ebd8"/></linearGradient></defs>
+  <rect width="200" height="200" fill="url(#pol-doughphelia-sky)"/>
   <g stroke="#a8cdbc" stroke-width="1" opacity=".5"><path d="M0 50 H200 M0 100 H200 M33 0 V150 M66 0 V150 M99 0 V150 M132 0 V150 M165 0 V150"/></g>
   <path d="M8 36 H92" stroke="#9d7c48" stroke-width="4"/>
   <path d="M16 36 v6 M84 36 v6" stroke="#9d7c48" stroke-width="3"/>
@@ -840,6 +886,7 @@ export const POLAROIDS = [
   </g>
   <ellipse cx="100" cy="164" rx="46" ry="4" fill="#f2ecd9" opacity=".7"/>
   <g fill="#f2ecd9" opacity=".8"><circle cx="52" cy="160" r="1.2"/><circle cx="148" cy="162" r="1.2"/><circle cx="60" cy="168" r="1"/><circle cx="142" cy="170" r="1"/></g>
+  <ellipse cx="106" cy="161" rx="62" ry="4" fill="#302c29" opacity=".16"/>
   <rect x="36" y="146" width="132" height="14" rx="7" fill="#a8814e"/>
   <circle cx="48" cy="153" r="3" fill="#8a6a3e"/>
   <g stroke="#f6f2e7" stroke-width="2" fill="none" stroke-linecap="round" opacity=".7"><path d="M86 90 q-4 -8 2 -14 M116 94 q4 -9 -2 -16"/></g>
@@ -852,6 +899,7 @@ export const POLAROIDS = [
   <path d="M91 108 Q91 100 95 98.5 Q98.5 102 98.5 108 Z" fill="#e8b06a"/>
   <path d="M64 128 Q62 116 78 112" stroke="#e2ab60" stroke-width="2.5" fill="none" stroke-linecap="round"/>
   <g stroke="#a8672e" stroke-width="1.8" fill="none" stroke-linecap="round"><path d="M106 118 q8 -4 16 0 M116 126 q8 -4 16 0 M124 136 q7 -3 14 1"/></g>
+  <path d="M101 143 Q125 147 148 140 L150 150 H101 Z" fill="#aa6c34" opacity=".4"/><path d="M105 114 Q132 109 142 122" fill="none" stroke="#f2c782" stroke-width="2.5" opacity="0.7" stroke-linecap="round" stroke-linejoin="round"/>
   <ellipse cx="82" cy="134" rx="17" ry="15" fill="#f6ecd2"/>
   <g stroke="#6f4a2a" stroke-width="1.8" fill="none" stroke-linecap="round">
     <path d="M72 130 q3 3 6 0 M88 130 q3 3 6 0"/>
@@ -875,6 +923,7 @@ export const POLAROIDS = [
     sub: "do u like dem",
     how: "Score a perfect 13/13 on Hard",
     art: `<svg viewBox="0 0 200 200" role="img"><title>The scribbled stars artwork on spiral notebook paper</title>
+  <defs><linearGradient id="pol-stars-sky" x2="0" y2="1"><stop stop-color="#e8dfcb"/><stop offset="1" stop-color="#faf5e7"/></linearGradient></defs>
   <defs>
     <g id="tsstars">
       <path fill="#a87fa9" d="M746.6,379.5l3.8,2.4,43.6,31c1.8,2,4.8,2.7,5.1,3,3.6,4,6.9,17,6.7,22.3-.1,3.6-3.8,10.4-2.1,13.3,4.7,2.7,9.4,6,14.3,8.3,38.1,17.4,57.2,6.9,86.3-19,6-5.4,16.8-15.3,22-21.1,6.7-7.4,28-42.8,35.6-44.3,6-1.1,12.1,1.9,12.1,8.5-6.2,21.5-7.1,43-6.3,65.2l70.4,1.1c7.6-.9,5.2-3.4,9.2-6.3,22.8-16.7,55.8-27.1,83.8-19,17.5,5,31.3,29.1,13.7,41.4-13.4,9.3-27.7,5.5-43.1,6.1-4.9.2-12.2,2.6-16.9,2.6-9.9,0-22.7-5-32.4-5.3-12.1-.3-19.9,14.6-26.5,22.6-2.6,3.2-7,6.9-9.5,10-2.6-.1-3.4,1-3.4,3.6-.8.8-.5.4-1.3,2.3-3.8-.2.7-10.5,5.5-6.8-.4.2-12.2,15.7-13,16.3-.8.7-5.2,10.8-6,12.8-4.6,11.8-11.8,31.2-12.4,42.6,0,1.7-.9,3.8-1.1,5.5-3.3,5.2-2.7,6.3-2.8,8.1-1,13.4-.7,32.3,0,45.9.3,5.3.7,12.2,1.3,17.4.6,4.5,3.7,4.3,1.5,10.7-2.8,8.6-11.3,10.7-17.8,4.3.4-4.4-2.7-9-3.2-12.4-2.2-18-3.5-36.8-5.2-54.9-.4-4.2.2-10.7-3.9-12.9-.2-1.3-3.8-8-3.9-9.3-.2-2.5,3-.7,0,.2-1.7-11.8-6.5-35-22-33.6.2-.8-1.5-5.6-1.3-8.3.2-3.5,2.3-7,2.6-9.8,20.4-.8,28.6,16.3,35.4,32.5.5,1.3,1.7,12,4.7,8.9l14.2-45.3c2.8-1.9,4.2-10.4,5.2-11.6,4.5-5.4,5.9-8.1,10.1-13.9,6.4-9,15-16.1,19.7-26.2-11.5-1.8-23.5-1.5-34.9,0-.4-1-10-11-11.2-11.4-4.6-1.3-13.9-.5-19.1-1.6-1.8-.4-4.8-3.4-5.9-2.5.5-9.7,2-19.3,1.3-29.1-.1-1.9,1-3.7-1.9-3.2-3.9,8.9-11.9,13.1-18.2,19.4-4.2,4.2-7.3,9-11.6,13-5.9,5.5-13.3,9.5-18.8,15.5-.5-.3-10.3-2.5-11.1-2.6-11.1-1.3-8.2,9.5-11.3,13.9-3.4,4.9-23.2,6.7-29.4,6.8-11.8.2-26.5-5.1-37.4-9.8-5-2.2-9-5.5-13.6-8.2l-2.6,2.6c-3.7,13.5-15.4,27.3-19.3,40.2-.7,2.4-1.4,3.6-.2,6.1,1.8,4.1,15.2,22.2,18.7,26.3,6.2,7.2,33.1,30.3,41.4,32.7,3.7,1.1,10.7,1.1,14.3,0,2.2-.7,22-14.5,24.1-16.7,2-2.1,3.1-5.5,5.6-8,8.1-8,21-20,32.3-22.5,0,.2,1.7,1.7,1.8,2.7.3,5,3,9.2-.2,14.2-.1,0-7.5,6.1-8.3,6.4-2,.9.1-4,.3-.2-8.9,5-14.5,16.2-22.7,23.2-6.2,5.4-24.8,18.8-32.3,19.5-21.5,2-36.2-8.6-51.8-22.1-17.6-15.2-29.5-34-44-51.7-2.2-4.8,1.1-10.5,3-15.1,4-9.8,24.2-43.6,22-51.2-.7-2.5-9.7-9.7-11.8-12.9-3.7-5.6-5.8-13.1-8.8-18-5.4-9.1-23.7-26.6-25.5-35.6-.5-2.4-.4-4.9-.4-7.3,0-.3,3.3-1.9,4-2.1,2.4-.9,8.5-1.3,10.3,0M1068.7,450.6l.5,3.9c2.6,3.6,25.7,0,31.1-.1,7.4-.2,21.3,1.7,27,.9.6,0,4.3-2,5.1-2.5,8.1-5.5-9-11.3-13.2-12-19-3.2-33.4,3.1-50.4,9.8h0Z"/>
@@ -901,7 +950,8 @@ export const POLAROIDS = [
       <path fill="#8ea59d" d="M458.8,531.2c8.5-1.1,8.7,5.8,1.1,8.2-10.7,3.3-7-1.5-8.8-5.6,3,.5,5-2.2,7.8-2.6Z"/>
     </g>
   </defs>
-  <rect width="200" height="200" fill="#f4efdf"/>
+  <rect width="200" height="200" fill="url(#pol-stars-sky)"/>
+  <path d="M0 0 H20 V200 H0 Z" fill="#9e8e72" opacity=".1"/><path d="M22 0 V200" fill="none" stroke="#fffdf3" stroke-width="1.4" opacity="0.8" stroke-linecap="round" stroke-linejoin="round"/>
   <g fill="#d8d0bc"><circle cx="11" cy="24" r="2.8"/><circle cx="11" cy="52" r="2.8"/><circle cx="11" cy="80" r="2.8"/><circle cx="11" cy="108" r="2.8"/><circle cx="11" cy="136" r="2.8"/><circle cx="11" cy="164" r="2.8"/></g>
   <g stroke="#8b8272" stroke-width="1.6" fill="none"><path d="M6 24 a5 5 0 0 1 10 0 M6 52 a5 5 0 0 1 10 0 M6 80 a5 5 0 0 1 10 0 M6 108 a5 5 0 0 1 10 0 M6 136 a5 5 0 0 1 10 0 M6 164 a5 5 0 0 1 10 0"/></g>
   <g stroke="#2b2722" stroke-width="1" opacity=".08"><path d="M24 40 H200 M24 64 H200 M24 88 H200 M24 112 H200 M24 136 H200 M24 160 H200 M24 184 H200"/></g>
@@ -921,7 +971,8 @@ export const POLAROIDS = [
     // polaroid) — a corked bottle bobbing on the water with its rolled note. Swap for
     // the real hand-drawn photo later, same as the other keepsakes.
     art: `<svg viewBox="0 0 200 200" role="img"><title>A corked bottle with a note inside, bobbing on the sea at dusk</title>
-  <rect width="200" height="108" fill="#cfdae0"/>
+  <defs><linearGradient id="pol-message-in-a-bottle-sky" x2="0" y2="1"><stop stop-color="#a7bfcc"/><stop offset="1" stop-color="#f1dcc1"/></linearGradient></defs>
+  <rect width="200" height="108" fill="url(#pol-message-in-a-bottle-sky)"/>
   <circle cx="158" cy="30" r="11" fill="#eae7d6"/>
   <ellipse cx="46" cy="26" rx="20" ry="6" fill="#e3eaee"/>
   <ellipse cx="92" cy="44" rx="15" ry="5" fill="#e3eaee"/>
@@ -931,11 +982,12 @@ export const POLAROIDS = [
   <rect y="164" width="200" height="36" fill="#567d92"/>
   <g stroke="#dbe7ec" stroke-width="1.6" stroke-linecap="round" opacity=".7"><path d="M20 114 h10 M38 118 h7 M150 112 h9 M168 118 h6"/></g>
   <!-- the bottle, lying on the swell, cork to the right -->
-  <g transform="rotate(-9 100 116)">
-    <rect x="58" y="105" width="64" height="24" rx="11" fill="#9cc0b0" fill-opacity=".62" stroke="#6f9a88" stroke-width="1.8"/>
+  <g transform="translate(-25 -29) scale(1.25) rotate(-9 100 116)">
+    <rect x="58" y="105" width="64" height="24" rx="11" fill="#9cc0b0" fill-opacity=".62" stroke="#456f65" stroke-width="1.8"/>
     <rect x="66" y="110" width="40" height="14" rx="4" fill="#efe3c4"/>
     <g stroke="#a8966b" stroke-width="1.1" stroke-linecap="round" opacity=".6"><path d="M72 114 H98"/><path d="M70 117 H100"/><path d="M74 120 H94"/></g>
-    <rect x="118" y="109" width="6" height="16" rx="2" fill="#9cc0b0" fill-opacity=".6" stroke="#6f9a88" stroke-width="1.4"/>
+    <path d="M69 108 H108" fill="none" stroke="#eef9e8" stroke-width="1.6" opacity="0.8" stroke-linecap="round" stroke-linejoin="round"/><ellipse cx="69" cy="117" rx="2.4" ry="6" fill="none" stroke="#b6a078" stroke-width="1"/>
+  <rect x="118" y="109" width="6" height="16" rx="2" fill="#9cc0b0" fill-opacity=".6" stroke="#456f65" stroke-width="1.4"/>
     <rect x="122" y="110" width="12" height="14" rx="3" fill="#c08a4d" stroke="#8f6231" stroke-width="1.4"/>
     <path d="M62 110 Q58 114 59 122" stroke="#ffffff" stroke-width="2.4" stroke-linecap="round" fill="none" opacity=".5"/>
   </g>
