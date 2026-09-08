@@ -10664,6 +10664,58 @@
   body[data-contrast="high"][data-era="lover"]      { --ink-accent:#8a0050; --highlighter:rgba(230,90,165,0.62); --bead:#8a0050; }
   body[data-contrast="high"][data-era="evermore"]   { --ink-accent:#452a10; --highlighter:rgba(175,115,50,0.62); --bead:#452a10; }
 
+  /* ---- Masthead inks in high contrast ----
+     Only the day/night PAIR is restated; --mast-ink is still resolved from it by the two rules
+     up top, so one block covers both desks and the generated favicon follows for free.
+
+     Seven of the twelve are their era accent at normal contrast, and those seven take that era's
+     high-contrast accent verbatim here. The other five were tuned on scripts/ui/mast-inks.html
+     against the real oak and the real page, because the ink is worn on two grounds that pull
+     opposite ways: the masthead sits on the desk, which high contrast does not touch, while the
+     closed cover and the tray chips sit on paper, which it whitens.
+
+     By day the move is down towards black. Fearless is the weakest cell and knowingly so — a
+     dark gold on oak reads olive, which is the same trap that took Fearless off --brand-gold in
+     the first place — but it buys 5.5:1 on white paper against champagne's 2.4:1, and legibility
+     is what the setting is for.
+
+     By night the move is up, and for the three monochrome inks it is a move in CHROMA rather
+     than value: the wordmark's other words are cream, so a brighter neutral walks straight into
+     them. reputation goes further violet, folklore further green — the same hue pair that holds
+     them apart at normal contrast, widened rather than replaced. Both were checked against every
+     neutral alternative on the board and every one of those vanished into the cream. evermore
+     stays muted against showgirl's brighter orange for the same reason: lifting it to match cost
+     the only thing separating that pair.
+
+     The selector is doubled on every line and has to be. The body wears one ink and the tray's
+     chips wear their own, so the palette is keyed on [data-ink] rather than body[data-ink] — but
+     data-contrast lives on the body, and a descendant combinator does not match the element it
+     hangs off. One half of each pair catches the body, the other catches the chips. */
+  body[data-contrast="high"][data-ink="debut"],
+  body[data-contrast="high"] [data-ink="debut"]        { --mast-ink-day:#14512c; --mast-ink-night:#8ee0a6; }
+  body[data-contrast="high"][data-ink="fearless"],
+  body[data-contrast="high"] [data-ink="fearless"]     { --mast-ink-day:#8a6200; --mast-ink-night:#ffd97a; }
+  body[data-contrast="high"][data-ink="speaknow"],
+  body[data-contrast="high"] [data-ink="speaknow"]     { --mast-ink-day:#3f2c80; --mast-ink-night:#d3bcff; }
+  body[data-contrast="high"][data-ink="red"],
+  body[data-contrast="high"] [data-ink="red"]          { --mast-ink-day:#8a0008; --mast-ink-night:#ff8480; }
+  body[data-contrast="high"][data-ink="nineteen89"],
+  body[data-contrast="high"] [data-ink="nineteen89"]   { --mast-ink-day:#0d3f73; --mast-ink-night:#8fc4ff; }
+  body[data-contrast="high"][data-ink="reputation"],
+  body[data-contrast="high"] [data-ink="reputation"]   { --mast-ink-day:#000000; --mast-ink-night:#c6c2ea; }
+  body[data-contrast="high"][data-ink="lover"],
+  body[data-contrast="high"] [data-ink="lover"]        { --mast-ink-day:#8a0050; --mast-ink-night:#ffaad3; }
+  body[data-contrast="high"][data-ink="folklore"],
+  body[data-contrast="high"] [data-ink="folklore"]     { --mast-ink-day:#3f4342; --mast-ink-night:#a8ccb9; }
+  body[data-contrast="high"][data-ink="evermore"],
+  body[data-contrast="high"] [data-ink="evermore"]     { --mast-ink-day:#5c3208; --mast-ink-night:#e0a171; }
+  body[data-contrast="high"][data-ink="midnights"],
+  body[data-contrast="high"] [data-ink="midnights"]    { --mast-ink-day:#101d4d; --mast-ink-night:#9fb4ff; }
+  body[data-contrast="high"][data-ink="poets"],
+  body[data-contrast="high"] [data-ink="poets"]        { --mast-ink-day:#4a3720; --mast-ink-night:#d9b57c; }
+  body[data-contrast="high"][data-ink="showgirl"],
+  body[data-contrast="high"] [data-ink="showgirl"]     { --mast-ink-day:#8f3400; --mast-ink-night:#ff9440; }
+
   /* ---- High contrast on the dark page ----
      This block exists because the cascade had quietly switched the setting off at night.
      `:root[data-theme="dark"]` (0,2,0) outranks `body[data-contrast="high"]` (0,1,1), and
