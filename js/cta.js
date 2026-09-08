@@ -20,12 +20,18 @@ const flower = (x, i) => {
   return `<g class="cta-flower" style="--flower-delay:${i * 0.07}s;--flower-colour:${FLOWER_COLOURS[i]}"><path d="M${x} 31V${y + 2}M${x} 25q-4 -1 -4 -4M${x} 22q4 -1 4 -4" fill="none" stroke="#47683b" stroke-width="1.3"/><g class="cta-petals" transform="translate(${x} ${y})" stroke="#785e32" stroke-width=".5">${FLOWER_HEADS[i % FLOWER_HEADS.length]}</g></g>`;
 };
 const garden = `<svg class="cta-garden" viewBox="0 0 400 28" preserveAspectRatio="none" aria-hidden="true">${Array.from({ length: 55 }, (_, i) => `<path class="cta-blade" d="M${i * 7.5} 30q3 -7 ${i % 2 ? -1 : 1} -${8 + i % 4 * 3}"/>`).join("")}${[22, 48, 78, 325, 354, 379].map(flower).join("")}</svg>`;
+const snow = `<svg class="cta-snowdrift" viewBox="0 0 400 60" preserveAspectRatio="none"><path d="M0 49Q35 39 73 49T149 48T230 50T312 46T400 47V60H0Z" fill="#f5fafb"/><path d="M0 55Q65 45 126 54T254 53T400 51" fill="none" stroke="#c8dce3"/></svg>${Array.from({ length: 24 }, (_, i) => `<i class="cta-snowflake" style="left:${(i * 37 + 7) % 100}%;--snow-size:${2 + i % 3}px;--snow-time:${2.6 + i % 5 * .35}s;--snow-delay:${i * .11}s"></i>`).join("")}`;
+// Each vine has its own leaves and veins, with a clear centre for every CTA label.
+const ivyVine = (side) => `<svg class="cta-ivy cta-ivy--${side}" viewBox="0 0 110 74"><path d="M4 68C30 54 9 31 31 15S75 20 104 3M26 24Q52 27 66 44M34 14Q48 3 72 4" fill="none" stroke="#425332" stroke-width="2"/>${[[10,57,-35],[20,43,30],[19,28,-50],[32,16,25],[45,13,-25],[62,16,35],[80,11,-35],[97,5,40],[46,29,-20],[61,40,20],[60,4,-30]].map(([x,y,r],i)=>`<g transform="translate(${x} ${y}) rotate(${r})"><path d="M0 10C-3 5 -10 4 -9 -2L-5 -1L-3 -9L1 -6L6 -10L7 -3L12 -1C10 6 4 5 0 10Z" fill="${['#45643d','#63834c','#78905a'][i%3]}" stroke="#344d31" stroke-width=".65"/><path d="M0 9L1 -5M0 4L-5 0M0 3L7 -1" fill="none" stroke="#b5c38a" stroke-width=".6" opacity=".7"/></g>`).join("")}</svg>`;
+const ivy = ivyVine("left") + ivyVine("right");
 const FINISH_ART = {
   "": `<i class="cta-stroke"></i>`,
   ink: `<i class="cta-pool"></i>`,
   rose: `<i class="cta-bloom"></i>`,
   sky: `<i class="cta-storm-clouds"></i><span class="cta-rain cta-rain--far">${rain(15, 11)}</span><span class="cta-rain">${rain(19, 3)}</span>${bolt}`,
   meadow: garden,
+  snow,
+  ivy,
   pride: `<i class="cta-ribbon"></i>`,
 };
 

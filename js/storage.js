@@ -1044,7 +1044,11 @@ export function loadMastery() {
         return {
           skills: { ...d.skills, ...(o.skills || {}) },
           masteryXp: o.masteryXp || 0,
-          unlocked: migrateTrinketRewards((o.unlocked && typeof o.unlocked === "object") ? o.unlocked : {}),
+          // New finishes belong to the existing level-8 set, including on older notebooks.
+          unlocked: {
+            ...migrateTrinketRewards((o.unlocked && typeof o.unlocked === "object") ? o.unlocked : {}),
+            ...(masteryLevelFromXp(o.masteryXp || 0) >= 8 ? { "btn-snow": true, "btn-ivy": true } : {}),
+          },
         };
       }
     }

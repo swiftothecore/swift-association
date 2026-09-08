@@ -1507,6 +1507,36 @@
   :is(.play-cta:hover, .play-cta:focus-visible, .rb-sw-col:hover .play-cta, .rb-sw-col:focus-visible .play-cta, .rb-row:hover .play-cta, .rb-row:focus-visible .play-cta) .cta-blade { animation: ctaBreeze 1s ease-in-out 2; }
   @keyframes ctaBreeze { 0%, 100% { transform: skewX(0); } 40% { transform: skewX(12deg); } 75% { transform: skewX(-6deg); } }
 
+  /* Snow rests on the sill until the pointer or keyboard arrives. */
+  .play-cta[data-startbtn="snow"] {
+    --cta-fill: #adc8d3; --cta-text: #253e4b; --cta-hover-text: #253e4b;
+    --cta-hover-fill: #bdd5df;
+    --cta-art: radial-gradient(ellipse at 20% 0, #ffffffa6, transparent 65%);
+  }
+  .play-cta:is([data-startbtn="snow"], [data-startbtn="ivy"])::after { content: none; }
+  .cta-snowdrift { inset: 0; width: 100%; height: 100%; }
+  .cta-snowflake { top: -6px; width: var(--snow-size); height: var(--snow-size); border-radius: 50%; background: #fff; opacity: 0; }
+  :is(.play-cta:hover, .play-cta:focus-visible, .rb-sw-col:hover .play-cta, .rb-sw-col:focus-visible .play-cta, .rb-row:hover .play-cta, .rb-row:focus-visible .play-cta) .cta-snowflake {
+    animation: ctaSnowfall var(--snow-time) var(--snow-delay) linear infinite;
+  }
+  @keyframes ctaSnowfall {
+    0% { opacity: 0; transform: translate(0, 0); }
+    12%, 80% { opacity: .9; }
+    50% { transform: translate(7px, 34px); }
+    100% { opacity: 0; transform: translate(-3px, 76px); }
+  }
+
+  /* Ivy is deliberately allowed out of the frame, like a cutting laid on brick. */
+  .play-cta[data-startbtn="ivy"] {
+    --cta-fill: #aa705b; --cta-hover-fill: #b77e65;
+    --cta-text: #fff6df; --cta-hover-text: #fff6df;
+    --cta-art: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='84' height='32' viewBox='0 0 84 32'><path d='M0 0H84M0 16H84M0 32H84M42 0V16M0 16V32M84 16V32' fill='none' stroke='%23dfbea0' stroke-width='2'/><path d='M3 4H38M46 4H80M5 20H78' stroke='%237e4d40' opacity='.4'/></svg>");
+  }
+  .play-cta[data-startbtn="ivy"] .cta-label { text-shadow: 0 1px 2px #482b20; }
+  .play-cta[data-startbtn="ivy"] .cta-fx { overflow: visible; }
+  .cta-ivy { top: -11px; left: -9px; width: 29%; max-width: 110px; height: calc(100% + 20px); overflow: visible; filter: drop-shadow(1px 2px 1px #24361b44); }
+  .cta-ivy--right { left: auto; right: -9px; transform: scaleX(-1); }
+
   /* Pride: all eight ramps still come only from PRIDE_BUTTONS. A local wash carries the
      dark label without dimming the flag, and one moving light fold gives it ribbon depth. */
   .play-cta[data-startbtn^="pride-"] {
@@ -10246,8 +10276,8 @@
   }
   .rb-ms-go:hover { border-color: var(--v-foil); }
 
-  /* Start-writing button — swatches of the real CTA (reuses .rb-sw-col). Six finishes, so
-     they sit 2x3 and centred rather than wrapping; the grid is scoped to this tile because
+  /* Start-writing button — swatches of the real CTA (reuses .rb-sw-col). Eight finishes, so
+     they sit in two columns and centred rather than wrapping; the grid is scoped to this tile because
      the paper tile shares .rb-swatches and wants its own free-flowing wrap. Two columns, not
      three: each swatch is a real button scaled down, so it is ~116px wide however narrow its
      column gets, and a third column would have them overlapping each other. */

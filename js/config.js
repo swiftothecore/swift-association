@@ -1799,6 +1799,8 @@ export const MASTERY_REWARDS = [
   { level: 8,  id: "btn-blush",  kind: "button", name: "Blush",     desc: "A soft rose marker start button.",    payload: { button: "rose" } },
   { level: 8,  id: "btn-sky",    kind: "button", name: "Sky",       desc: "Cool blue, with little white clouds.", payload: { button: "sky" } },
   { level: 8,  id: "btn-meadow", kind: "button", name: "Meadow",    desc: "Spring green, with grass at the hem.", payload: { button: "meadow" } },
+  { level: 8, id: "btn-snow", kind: "button", name: "Snowfall", desc: "Settled snow, with flakes falling as you hover.", payload: { button: "snow" } },
+  { level: 8, id: "btn-ivy", kind: "button", name: "Ivy house", desc: "Warm brickwork with ivy climbing over the edges.", payload: { button: "ivy" } },
   // The only reward with a set inside it. `variants` is what chooseMasteryCosmetic will
   // accept in place of the payload's default, so a flag pick runs through the same unlock
   // guard as every other cosmetic instead of a picker of its own.
