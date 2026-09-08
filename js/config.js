@@ -388,7 +388,7 @@ export const GUESTS_COMING_SOON = [
   { id: "sabrina-carpenter", name: "Sabrina Carpenter" },
   { id: "ariana-grande", name: "Ariana Grande" },
   { id: "gracie-abrams", name: "Gracie Abrams" },
-  { id: "miley-cyrus", name: "Miley Cyrus" },
+  { id: "miley-cyrus", name: "Miley" },
   { id: "harry-styles", name: "Harry Styles" },
 ];
 // A guest is played at a chosen difficulty, from the same ladder Album Focus offers:
