@@ -1515,13 +1515,13 @@
   }
   .play-cta:is([data-startbtn="snow"], [data-startbtn="ivy"])::after { content: none; }
   .cta-snowdrift { inset: 0; width: 100%; height: 100%; }
-  .cta-snowflake { top: -6px; width: var(--snow-size); height: var(--snow-size); border-radius: 50%; background: #fff; opacity: 0; }
+  .cta-snowflake { top: -3px; width: var(--snow-size); height: var(--snow-size); border-radius: 50%; background: #fff; opacity: 0; }
   :is(.play-cta:hover, .play-cta:focus-visible, .rb-sw-col:hover .play-cta, .rb-sw-col:focus-visible .play-cta, .rb-row:hover .play-cta, .rb-row:focus-visible .play-cta) .cta-snowflake {
     animation: ctaSnowfall var(--snow-time) var(--snow-delay) linear infinite;
   }
   @keyframes ctaSnowfall {
     0% { opacity: 0; transform: translate(0, 0); }
-    12%, 80% { opacity: .9; }
+    6%, 80% { opacity: .9; }
     50% { transform: translate(7px, 34px); }
     100% { opacity: 0; transform: translate(-3px, 76px); }
   }
@@ -1534,8 +1534,10 @@
   }
   .play-cta[data-startbtn="ivy"] .cta-label { text-shadow: 0 1px 2px #482b20; }
   .play-cta[data-startbtn="ivy"] .cta-fx { overflow: visible; }
-  .cta-ivy { top: -11px; left: -9px; width: 29%; max-width: 110px; height: calc(100% + 20px); overflow: visible; filter: drop-shadow(1px 2px 1px #24361b44); }
+  .cta-ivy { top: -11px; left: -9px; width: 29%; max-width: 110px; height: calc(100% + 20px); overflow: visible; filter: drop-shadow(1px 2px 1px #24361b44); transition: transform .45s cubic-bezier(.25,.8,.25,1); }
   .cta-ivy--right { left: auto; right: -9px; transform: scaleX(-1); }
+  :is(.play-cta:hover, .play-cta:focus-visible, .rb-sw-col:hover .play-cta, .rb-sw-col:focus-visible .play-cta, .rb-row:hover .play-cta, .rb-row:focus-visible .play-cta) .cta-ivy--left { transform: translateX(-18%); }
+  :is(.play-cta:hover, .play-cta:focus-visible, .rb-sw-col:hover .play-cta, .rb-sw-col:focus-visible .play-cta, .rb-row:hover .play-cta, .rb-row:focus-visible .play-cta) .cta-ivy--right { transform: translateX(18%) scaleX(-1); }
 
   /* Pride: all eight ramps still come only from PRIDE_BUTTONS. A local wash carries the
      dark label without dimming the flag, and one moving light fold gives it ribbon depth. */
