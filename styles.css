@@ -1534,10 +1534,12 @@
   }
   .play-cta[data-startbtn="ivy"] .cta-label { text-shadow: 0 1px 2px #482b20; }
   .play-cta[data-startbtn="ivy"] .cta-fx { overflow: visible; }
-  .cta-ivy { top: -11px; left: -9px; width: 29%; max-width: 110px; height: calc(100% + 20px); overflow: visible; filter: drop-shadow(1px 2px 1px #24361b44); transition: transform .45s cubic-bezier(.25,.8,.25,1); }
+  .cta-ivy { top: -11px; left: -9px; width: 29%; max-width: 110px; height: calc(100% + 20px); overflow: visible; filter: drop-shadow(1px 2px 1px #24361b44); }
+  .cta-ivy-stem { transform-origin: 4px 68px; transition: transform .65s cubic-bezier(.22,.75,.3,1); }
+  .cta-ivy-leaf { transform-box: fill-box; transform-origin: 50% 90%; transition: transform .55s cubic-bezier(.22,.75,.3,1); transition-delay: var(--ivy-delay); }
   .cta-ivy--right { left: auto; right: -9px; transform: scaleX(-1); }
-  :is(.play-cta:hover, .play-cta:focus-visible, .rb-sw-col:hover .play-cta, .rb-sw-col:focus-visible .play-cta, .rb-row:hover .play-cta, .rb-row:focus-visible .play-cta) .cta-ivy--left { transform: translateX(-18%); }
-  :is(.play-cta:hover, .play-cta:focus-visible, .rb-sw-col:hover .play-cta, .rb-sw-col:focus-visible .play-cta, .rb-row:hover .play-cta, .rb-row:focus-visible .play-cta) .cta-ivy--right { transform: translateX(18%) scaleX(-1); }
+  :is(.play-cta:hover, .play-cta:focus-visible, .rb-sw-col:hover .play-cta, .rb-sw-col:focus-visible .play-cta, .rb-row:hover .play-cta, .rb-row:focus-visible .play-cta) .cta-ivy-stem { transform: rotate(-14deg); }
+  :is(.play-cta:hover, .play-cta:focus-visible, .rb-sw-col:hover .play-cta, .rb-sw-col:focus-visible .play-cta, .rb-row:hover .play-cta, .rb-row:focus-visible .play-cta) .cta-ivy-leaf { transform: rotate(var(--ivy-turn)); }
 
   /* Pride: all eight ramps still come only from PRIDE_BUTTONS. A local wash carries the
      dark label without dimming the flag, and one moving light fold gives it ribbon depth. */
