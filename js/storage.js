@@ -4,6 +4,7 @@
 import {
   HS_KEY, RECORDS_KEY, HISTORY_KEY, STATS_KEY, ACH_KEY, DIFF_KEY,
   DAILY_KEY, DAILY_PROGRESS_KEY, DAILY_BOARD_KEY, DAILY_STREAK_KEY, TYPES_KEY, TALLY_KEY,
+  DAILY_OWNER_KEY, DAILY_OWNER_TTL_MS,
   BREADTH_KEY, WEEKDAYS_KEY, DATES_KEY, EXPLORER_TOKENS, RANDOM_KEY, GOAL_KEY, ACH_FOLD_KEY,
   DAY_TYPES_KEY, DICE_KEY, SHELF_TYPES,
   SETTINGS_KEY, METRICS_KEY, APP_PREFIX, DEFAULT_SETTINGS,
@@ -1289,6 +1290,58 @@ export function dailyProgressCount() {
   } catch (e) { return 0; }
 }
 
+// ---- Which tab holds today's daily run ----
+// The daily is one play per day and dailyProgress is one record per day, so two tabs opening
+// it side by side used to write over each other: a refresh in either resumed a run neither of
+// them had played. One tab holds the day; the others are turned away at startDaily.
+// Key: swiftSongAssociation.dailyOwner   Value: { date, owner, at }
+// `at` is a heartbeat, renewed while the run is live, so a tab that goes away without
+// releasing (a crash, a killed browser) frees the day by going stale instead of locking it
+// out forever. `owner` is a per-PAGE-LOAD id, not a per-player one: a reload is a new holder,
+// which is why the unload path releases rather than relying on the id surviving.
+export function readDailyOwner() {
+  try {
+    const raw = localStorage.getItem(DAILY_OWNER_KEY);
+    if (raw) { const o = JSON.parse(raw); if (o && typeof o.owner === "string") return o; }
+  } catch (e) { /* ignore */ }
+  return null;
+}
+// Take (or renew) the day for `tabId`. Both are the same operation on purpose: renewing is
+// just claiming something you already hold, and writing one function means a renewal can
+// never use a weaker test than a first claim did.
+//
+// The write is verified by reading it straight back. localStorage settles each write whole
+// and same-origin tabs share one store, so when two tabs claim in the same instant both read
+// the same winner back and exactly one of them is it — which is the part a bare
+// read-then-write cannot promise. Returns whether `tabId` holds the day afterwards.
+export function claimDailyRun(dateStr, tabId, now = Date.now()) {
+  try {
+    const held = readDailyOwner();
+    if (held && held.date === dateStr && held.owner !== tabId && now - held.at < DAILY_OWNER_TTL_MS) return false;
+    localStorage.setItem(DAILY_OWNER_KEY, JSON.stringify({ date: dateStr, owner: tabId, at: now }));
+    const back = readDailyOwner();
+    return !!back && back.date === dateStr && back.owner === tabId;
+  } catch (e) {
+    // Storage refused (private mode, quota). A browser that cannot store the run cannot have
+    // two tabs fighting over a stored run either, so play on rather than lock the day out.
+    return true;
+  }
+}
+// Hand the day back. Only ever removes OUR claim: a tab whose claim already went stale and
+// was taken over must not delete the new holder's on its way out.
+export function releaseDailyRun(tabId) {
+  try {
+    const held = readDailyOwner();
+    if (held && held.owner === tabId) localStorage.removeItem(DAILY_OWNER_KEY);
+  } catch (e) { /* ignore */ }
+}
+// Is a live claim on `dateStr` held by someone other than `tabId`? Read-only — for the dev
+// panel and for anything that wants to describe the state without taking it.
+export function dailyRunHeldByOther(dateStr, tabId, now = Date.now()) {
+  const held = readDailyOwner();
+  return !!held && held.date === dateStr && held.owner !== tabId && now - held.at < DAILY_OWNER_TTL_MS;
+}
+
 // Lifetime daily totals derived from the per-day result keys (the authoritative
 // record — saved on every daily completion). The `metrics` counters miss any
 // dailies finished before that store existed; these keys don't, so the Stats
@@ -1462,7 +1515,10 @@ function removeByPrefix(base) {
 // A plain { key: rawString } snapshot of every app key, for a JSON backup.
 export function exportData() {
   const out = {};
-  for (const k of appKeys()) out[k] = localStorage.getItem(k);
+  // The daily-run claim is this machine's tab bookkeeping, not the notebook. Restoring one
+  // into another browser would hand a tab id that does not exist there the run for two
+  // minutes, so it stays out of the backup entirely.
+  for (const k of appKeys()) if (k !== DAILY_OWNER_KEY) out[k] = localStorage.getItem(k);
   return out;
 }
 // Restore from such a snapshot. Only keys in the app namespace are written.
@@ -1472,6 +1528,7 @@ export function importData(obj) {
   let n = 0;
   for (const k in obj) {
     if (!k.startsWith(APP_PREFIX) || typeof obj[k] !== "string") continue;
+    if (k === DAILY_OWNER_KEY) continue;   // never restore a tab claim — see exportData
     try { localStorage.setItem(k, obj[k]); n++; } catch (e) { /* ignore */ }
   }
   return n;
@@ -1504,6 +1561,7 @@ export function resetDaily() {
   removeByPrefix(DAILY_KEY);
   removeByPrefix(DAILY_PROGRESS_KEY);
   removeByPrefix(DAILY_BOARD_KEY);
+  try { localStorage.removeItem(DAILY_OWNER_KEY); } catch (e) { /* ignore */ }
 }
 // Wipe everything (settings included). Caller should reload afterward.
 export function clearAllData() { for (const k of appKeys()) localStorage.removeItem(k); }

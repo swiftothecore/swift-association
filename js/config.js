@@ -110,6 +110,12 @@ export const DAILY_KEY = "swiftSongAssociation.daily";
 export const DAILY_PROGRESS_KEY = "swiftSongAssociation.dailyProgress";  // in-progress daily run, so a refresh/exit resumes instead of restarting
 export const DAILY_BOARD_KEY = "swiftSongAssociation.dailyBoard";
 export const DAILY_STREAK_KEY = "swiftSongAssociation.dailyStreak";
+export const DAILY_OWNER_KEY = "swiftSongAssociation.dailyOwner";  // which tab holds today's daily run — see claimDailyRun (storage.js)
+// The claim is a heartbeat rather than a flag, so a tab that goes away without releasing frees
+// the day by going stale. The TTL sits above a minute on purpose: a backgrounded tab's timers
+// are throttled to roughly one tick a minute, and alt-tabbing away is not abandoning a run.
+export const DAILY_OWNER_TTL_MS = 120000;  // a claim goes stale this long after its last beat
+export const DAILY_OWNER_BEAT_MS = 20000;  // how often a live daily run renews its claim
 export const TYPES_KEY = "swiftSongAssociation.typesPlayed";   // { [type]: true } — every game type ever finished, for Hits Different and the breadth rungs above it (see SHELF_TYPES)
 export const DAY_TYPES_KEY = "swiftSongAssociation.dayTypes";  // { d: "YYYY-MM-DD", types: {…} } — TODAY's game types only, for Every Single Day. One day deep on purpose: the charm asks about a sitting, so yesterday's is dead weight.
 export const DICE_KEY = "swiftSongAssociation.dicePicks";      // { n } — how many runs the randomiser has dealt you, for the two dice charms

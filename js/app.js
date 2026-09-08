@@ -56,6 +56,7 @@ import {
   RANDOM_CATEGORIES, RANDOM_UNPLAYED_WEIGHT, RANDOM_GOAL_WEIGHT,
   STREAK_FLOOR, STREAK_CAP, STREAK_SALT, STREAK_TIERS,
   STREAK_THROW, STREAK_DROP, STREAK_SPIN, STREAK_MS, STREAK_SIZE, STREAK_CONE,
+  DAILY_OWNER_KEY, DAILY_OWNER_BEAT_MS,
 } from "./config.js";
 import { drawRandom, poolSummary } from "./random.js";
 import { POLAROIDS, POLAROID_BY_ID } from "./polaroids.js";
@@ -95,6 +96,7 @@ import {
   loadMode,
   loadDailyResult, saveDailyResult, clearDailyResult, dailyTotals, dailyPlayedDates,
   loadDailyProgress, saveDailyProgress, clearDailyProgress, dailyProgressCount,
+  claimDailyRun, releaseDailyRun, readDailyOwner, dailyRunHeldByOther,
   bumpDailyStreak, effectiveDailyStreak, saveDailyStreak, loadDailyStreak, recentDailyAlbums, yesterdayOf,
   markTypePlayed, loadTypesPlayed, shelfTypesPlayed,
   loadDayTypes, markDayTypePlayed, loadDicePicks, markDicePick,
@@ -263,6 +265,12 @@ let dailyShareTime = null;      // completion time (sec) of the daily on screen 
 let dailyBraceletSnapshot = null; // versioned finished-strand state, restored when today's result is reopened
 let dailyResultRevealed = true; // false only while the optional Daily result ritual is still sealed
 let dailyPerfectCelebrated = false; // prevents a revealed perfect Daily from celebrating twice
+// This page load's identity, for the daily's one-tab-holds-the-day claim (see claimDailyRun).
+// Per LOAD rather than per player: a reload is a new holder, and the unload path hands the
+// day back so the reloaded page can take it straight up again.
+const TAB_ID = Math.random().toString(36).slice(2) + "-" + Date.now().toString(36);
+let dailyOwnerBeat = null;      // interval renewing this tab's claim while a daily run is live
+let dailySurrendered = false;   // true only during the teardown of a daily another tab took over
 // Non-null only while the results screen is showing a Daily reopened from the Stats
 // calendar — the date being viewed, which drives the "back to your calendar" chrome
 // in place of the ordinary "today" framing. Cleared at the top of every real run (it
@@ -352,6 +360,15 @@ let impostorFailed = false;     // a fatal misjudgement happened — the run is 
 let impostorSeen = 0;           // impostor pages encountered so far (for "first impostor" charm)
 let impostorFlagged = 0;        // impostors correctly flagged this run
 let impostorMissed = 0;         // real pages answered wrong or timed out (perfect-run tracker)
+// What the player actually DID on each impostor-rule page, written natively at the moment
+// it happens rather than reconstructed afterwards from the score and impostorRounds:
+//   "flag"      — pressed 🚩 on a decoy and caught it
+//   "falseflag" — pressed 🚩 on a genuine word (fatal)
+//   "fell"      — named a song for a decoy (fatal)
+//   "slipped"   — let a decoy run the clock out (fatal)
+// Ordinary answered pages leave their slot empty, so a non-empty entry always means the page
+// was resolved by the impostor paths and never by the matcher.
+let roundImpostorAct = [];
 // Sea of Songs: this page's grid of song objects, each tagged {song, valid} — valids hold the
 // word in their lyrics, decoys don't. Rebuilt each round in buildSeaGrid; read only by dev tools.
 let seaTiles = [];
@@ -10914,8 +10931,11 @@ const hasBraceletOption = (opts, key) => !!opts && Object.prototype.hasOwnProper
 // is essential for saved Dailies and for special challenge dangles.
 function braceletRenderOptions(results, opts = {}) {
   // Impostor challenge: a bead that flagged a fake dangles a little devil, not the star.
+  // Read off what the page actually did, not off "a decoy page that scored" — those agree
+  // today only because flagging is the sole way to win a decoy page, and a strand should not
+  // be resting on a coincidence between two other systems.
   const impostorCaught = hasBraceletOption(opts, "impostorCaught") ? opts.impostorCaught
-    : impostorRuleActive() ? results.map((ok, i) => ok === true && impostorRounds.has(i + 1)) : null;
+    : impostorRuleActive() ? results.map((_, i) => roundImpostorAct[i] === "flag") : null;
   // Risk challenges: a bead won at stake dangles a horseshoe instead of the usual trinket,
   // and the uninsured miss that ended an Insurance run strings a bone bead in place of a
   // frosted one.
@@ -10929,8 +10949,8 @@ function braceletRenderOptions(results, opts = {}) {
   // Per-bead colours for the two rules whose pages have no album to be coloured by. Left null
   // everywhere else, so every other strand still strings its answers' albums exactly as before.
   const beadTints = hasBraceletOption(opts, "beadTints") ? opts.beadTints
-    : impostorRuleActive() ? results.map((ok, i) =>
-        ok === true && impostorRounds.has(i + 1) ? IMPOSTOR_BEAD : null)
+    : impostorRuleActive() ? results.map((_, i) =>
+        roundImpostorAct[i] === "flag" ? IMPOSTOR_BEAD : null)
     : commonRuleActive() ? results.map((ok, i) =>
         ok === true ? commonSpeedTint(roundTimes[i]) : null)
     // A guest is coloured by its catalogue's own palette rather than by ALBUM_COLORS, which
@@ -12682,6 +12702,7 @@ function resetRunState() {
   impostorSeen = 0;
   impostorFlagged = 0;
   impostorMissed = 0;
+  roundImpostorAct = [];
   commonPuzzle = null;
   commonAnswerCorrect = null;
   tapTiles = [];
@@ -13479,6 +13500,46 @@ function restoreDailyProgress(p) {
   lyricAnswerSongs = Array.isArray(p.lyricAnswerSongs) ? p.lyricAnswerSongs.slice() : [];
 }
 
+/* ---------- One tab holds the day ----------
+   The daily is one play per day and its resume record is one key per day, so two tabs used
+   to be able to open it side by side and write over each other: whichever saved last decided
+   what a refresh in EITHER tab resumed, and the run the player thought they were playing
+   quietly became a splice of two. The claim (storage.js) settles that before a page is dealt.
+
+   Three things walk a run out of a tab that has lost the day: the storage event below (the
+   instant case, and the one that actually fires in practice), the heartbeat here (the case
+   where this tab was asleep long enough for its claim to go stale), and the guard on the
+   progress save (which simply stays quiet rather than stamping over the new holder's record). */
+function stopDailyOwnerBeat() {
+  if (dailyOwnerBeat) { clearInterval(dailyOwnerBeat); dailyOwnerBeat = null; }
+}
+function startDailyOwnerBeat(dateStr) {
+  stopDailyOwnerBeat();
+  dailyOwnerBeat = setInterval(() => {
+    if (gameType !== "daily") { stopDailyOwnerBeat(); return; }
+    if (!claimDailyRun(dateStr, TAB_ID)) surrenderDailyRun();
+  }, DAILY_OWNER_BEAT_MS);
+}
+// Another tab holds today's daily now. Walk out WITHOUT the quit charms: nobody chose to
+// leave, so She Must Bolt, No Closure and the jewel bathtub would all be paying out for a
+// decision that was never made. Nothing is lost — the holder has the progress record, and
+// the daily's tally only folds at completion anyway (see foldRunProgress).
+function surrenderDailyRun() {
+  // gameType stays "daily" after a run ends, so the live-run test is the SCREEN. A finished
+  // or already-abandoned daily has nothing to surrender, and saying so would be a lie.
+  if (gameType !== "daily" || !screens.game.classList.contains("active")) return;
+  stopDailyOwnerBeat();
+  notifyNote("daily moved tabs", "Another tab picked today's daily up. Your run is safe there.");
+  dailySurrendered = true;
+  try { quitGame(); } finally { dailySurrendered = false; }
+}
+// Hand the day back. Called wherever a daily run stops being this tab's business: it
+// finished, it was quit, or the page is going away.
+function endDailyOwnership() {
+  stopDailyOwnerBeat();
+  releaseDailyRun(TAB_ID);
+}
+
 // Daily challenge: the same seeded 13 words + eras for everyone on a given date,
 // one play per day. Always Normal settings. If you've already played today, jump
 // straight to your saved result instead of replaying.
@@ -13486,6 +13547,13 @@ function startDaily() {
   const dateStr = todayKey();
   const existing = loadDailyResult(dateStr);
   if (existing) { showDailyResult(existing, dateStr); return; }
+  // One tab at a time. A second tab is turned away rather than allowed to play a run whose
+  // progress the first tab is going to overwrite; nothing here has touched the run state yet,
+  // so the refusal leaves the player exactly where they were.
+  if (!claimDailyRun(dateStr, TAB_ID)) {
+    notifyNote("already open", "Today's daily is running in another tab. Finish it there, or close it and try again.");
+    return;
+  }
   gameType = "daily";
   notePlayed("daily");
   currentMode = MODES.medium;   // daily is always Normal — override without persisting via DIFF_KEY
@@ -13520,6 +13588,7 @@ function startDaily() {
   // A settled page 13 has no page left to replay. Finish its ordinary Daily fold from the
   // saved accumulators; endGame's saved-result guard makes this safe if another path won first.
   if (settled) { endGame(); return; }
+  startDailyOwnerBeat(dateStr);   // hold the day for as long as this run is live
   applyInputHints();
   updateTagline();
   $("pageTotalWrap").style.display = "";
@@ -13791,6 +13860,7 @@ function setupImpostorChallenge() {
   impostorRounds = new Set();
   impostorSeen = impostorFlagged = impostorMissed = 0;
   impostorFailed = false;
+  roundImpostorAct = [];
   const slots = [];
   for (let r = 2; r <= TOTAL_ROUNDS; r++) slots.push(r);
   shuffle(slots).slice(0, Math.min(impostorCountNow(), slots.length)).forEach((r) => impostorRounds.add(r));
@@ -19517,13 +19587,47 @@ function renderVerseMeter(text) {
 /* ---------- Impostor: resolving a page (flag / fall / catch) ---------- */
 // Record a resolved impostor page onto the run arrays. Decoys never touch the lifetime
 // word/song tally (roundWords/roundSongs null), so a fake never pollutes Nemesis / discovery.
-function recordImpostorPage(caught) {
+// `act` is what the player did (see roundImpostorAct) — stored rather than inferred, so the
+// strand and the read-outs read the page's own history instead of guessing it back out of
+// the score. A caught decoy is the only true one of these; the other three end the run.
+function recordImpostorPage(caught, act) {
   roundResults[round - 1] = caught;
   roundAlbums[round - 1] = null;
   roundBeadTints[round - 1] = null;
   roundWords[round - 1] = null;
   roundSongs[round - 1] = null;
   roundAnswerAlbums[round - 1] = [];
+  roundImpostorAct[round - 1] = act;
+}
+
+// Bank how long an impostor page took. Every one of the four impostor resolutions leaves
+// submitAnswer before the verdict's stopwatch freeze (or never enters it at all), so without
+// this a flagged page and the fatal page that ended the run were simply missing from
+// roundTimes, gameTimeSum, gameTimedRounds and gameFastestMs — an Impostor run's logged
+// completion time was the time spent on its ORDINARY pages and nothing else, which is short
+// by exactly the pages the challenge is about. Deliberately parallel to the freeze in
+// submitAnswer: same page stopwatch, same buzzer reading, same timeout cap discarding
+// interval-callback lag. Idempotent per page, since flagImpostor can route into
+// impostorGameOver, and it must run BEFORE lockImpostorPage's clearTimer.
+function bankImpostorPageTime(isTimeout, correct) {
+  if (typeof roundTimes[round - 1] === "number") return;
+  const raw = Math.max(0, (performance.now() - roundStart) / 1000);
+  const clockLeft = clockRemaining();
+  const elapsed = isTimeout && clockLeft != null ? Math.min(raw, roundClockTotal) : raw;
+  roundTimes[round - 1] = elapsed;
+  // A page that timed out timed out, whatever ended the run afterwards. It counts here for
+  // the same reason it counts on an ordinary page: recordGameMetrics reads it, and an
+  // Impostor run that let a fake run the clock down was not a run without timeouts.
+  if (isTimeout) gameTimeouts++;
+  if (clockLeft == null) return;   // no clock on this page — nothing timed to average
+  gameTimeSum += elapsed;
+  gameTimedRounds++;
+  if (clockLeft <= 3) gameHitRedZone = true;
+  if (roundClockTotal > 0 && clockLeft <= roundClockTotal / 2) gameHitHalfClock = true;
+  if (correct) {
+    const ms = elapsed * 1000;
+    if (gameFastestMs == null || ms < gameFastestMs) gameFastestMs = ms;
+  }
 }
 // Lock the page's inputs (shared by every impostor resolution path).
 function lockImpostorPage() {
@@ -19539,13 +19643,14 @@ function lockImpostorPage() {
 function flagImpostor() {
   if (roundClockPending || !impostorRuleActive() || roundLocked) return;
   if (!roundIsImpostor) { impostorGameOver("falseflag"); return; }   // accused a genuine word
+  bankImpostorPageTime(false, true);   // before lockImpostorPage stops the clock under it
   lockImpostorPage();
   impostorSeen++;
   impostorFlagged++;
   earnPolaroid("no-its-becky");     // caught an impostor — "(it was taylor swift)"
   score++;                          // a caught fake fills a bead; real answers = score - impostorFlagged
   justEarnedIndex = round - 1;
-  recordImpostorPage(true);
+  recordImpostorPage(true, "flag");
   renderBracelet();
   renderImpostorBanner();
   celebrateCorrect(1, 0);
@@ -19562,13 +19667,17 @@ function flagImpostor() {
 // (let a fake slip past the clock) — both mean you fell for an impostor — or "falseflag"
 // (accused a real word). Plays the gag, then drops to the sandboxed challenge results.
 function impostorGameOver(kind) {
+  bankImpostorPageTime(kind === "timeout", false);    // the fatal page's own duration, before the clock stops
   lockImpostorPage();
   impostorFailed = true;
   if (kind === "answered" || kind === "timeout") {
     impostorSeen++;                                   // this fake page counts as met
     if (impostorSeen === 1) unlock("fall-for-first-impostor");   // fell for the very first impostor you met
   }
-  recordImpostorPage(false);                          // the fatal page is a miss
+  // The fatal page is a miss, stamped with WHICH misjudgement it was — the same three the
+  // wipe already names on screen, kept on the run rather than only in the copy.
+  recordImpostorPage(false,
+    kind === "falseflag" ? "falseflag" : kind === "timeout" ? "slipped" : "fell");
   renderBracelet();
   playImpostorLose(kind);
 }
@@ -20366,7 +20475,11 @@ function submitAnswer(song, isTimeout) {
   if (gameType === "daily") {
     const dateStr = dailyRunDate || todayKey();
     dailyRunDate = dateStr;
-    saveDailyProgress(dateStr, dailyProgressSnapshot(dateStr));
+    // Only the tab holding the day writes its record, and the write renews the hold in the
+    // same breath. If the claim has gone, stay quiet rather than stamping over the new
+    // holder — walking this run out is the storage listener's and the heartbeat's job, not
+    // something to do halfway through resolving a page.
+    if (claimDailyRun(dateStr, TAB_ID)) saveDailyProgress(dateStr, dailyProgressSnapshot(dateStr));
   }
 
   // Common Thread has its own reveal (lines + thread), not the song-card feedback.
@@ -21120,7 +21233,7 @@ function endGame() {
   if (gameType === "daily") {
     const dateStr = dailyRunDate || todayKey();
     const existing = loadDailyResult(dateStr);
-    if (existing) { showDailyResult(existing, dateStr); return; }
+    if (existing) { endDailyOwnership(); showDailyResult(existing, dateStr); return; }
     dailyResultRevealed = !settings.hideDailyScore;
     dailyPerfectCelebrated = false;
   }
@@ -21466,6 +21579,7 @@ function endGame() {
       bracelet: dailyBraceletSnapshot,
     });
     clearDailyProgress(dateStr);   // run finished — drop the resumable in-progress record
+    endDailyOwnership();           // ...and the day itself: there is nothing left to hold
     const streak = bumpDailyStreak(dateStr);   // extend (or reset) the consecutive-days streak
     unlock("first-daily-finished");   // finished a Daily Challenge
     if (score === TOTAL_ROUNDS && !dailyResultIsSealed()) unlock("perfect-daily");
@@ -21597,8 +21711,9 @@ function quitGame() {
   if (!screens.game.classList.contains("active")) return;
 
   // Quit achievements — checked against the live run state, before teardown. Skipped
-  // for challenges (sandboxed — a challenge run never fires global achievements).
-  if (gameType !== "challenge") {
+  // for challenges (sandboxed — a challenge run never fires global achievements), and for a
+  // daily surrendered to another tab, where nobody decided to leave (see surrenderDailyRun).
+  if (gameType !== "challenge" && !dailySurrendered) {
     // She Must Bolt: bail in round 1 having typed nothing.
     if (round === 1 && roundResults.length === 0 && !($("songInput").value || "").trim()) {
       unlock("quit-round-1-before-typing");
@@ -21614,7 +21729,7 @@ function quitGame() {
   // anything is not a perfect score, it is no score. Deliberately outside the charm guard above:
   // the sticker fires from a challenge too, since it records a decision rather than a result and
   // pays nothing a sandbox exists to protect (see STICKERS.md).
-  if (!devNoLog && roundResults.length > 0 && roundResults.every(Boolean)) earnSticker("jewel-bathtub");
+  if (!devNoLog && !dailySurrendered && roundResults.length > 0 && roundResults.every(Boolean)) earnSticker("jewel-bathtub");
 
   // Save the progress made before quitting, so a partial run still credits the
   // lifetime stats (see foldRunProgress).
@@ -21622,6 +21737,7 @@ function quitGame() {
 
   // Teardown: stop every timer / animation a round may have started.
   restoreCorpus();   // a quit guest run hands the globals back before anything else reads them
+  if (gameType === "daily") endDailyOwnership();   // the day is free again the moment the run stops
   clearTimer();
   if (countdownId) { clearInterval(countdownId); countdownId = null; }
   clearTimeout(hintUrgeTimer);
@@ -25599,6 +25715,22 @@ function buildDevApi() {
       resetToday: () => clearDailyResult(todayKey()),
       clearProgress: () => clearDailyProgress(dailyRunDate || todayKey()),   // drop the live run's pinned resume record
       hasProgress: () => !!loadDailyProgress(dailyRunDate || todayKey()),
+      // The one-tab-holds-the-day claim. `owner` reads it (with this tab's id and how stale
+      // the claim is, in seconds, so a heartbeat can be watched ticking over); `steal` writes
+      // a foreign claim, which is the only way to exercise the takeover path without opening
+      // a second window; `free` drops it, for when a crashed test leaves one standing.
+      owner: () => ({ tab: TAB_ID, held: readDailyOwner(), heldByOther: dailyRunHeldByOther(dailyRunDate || todayKey(), TAB_ID),
+        ageSec: (() => { const h = readDailyOwner(); return h ? +((Date.now() - h.at) / 1000).toFixed(1) : null; })() }),
+      // Drops our own claim first, since a live one is (correctly) unstealable. Same-tab
+      // writes fire no storage event, so this lands via the heartbeat rather than instantly:
+      // expect the surrender within DAILY_OWNER_BEAT_MS, not on the next frame.
+      steal: (dateKey) => {
+        const d = dateKey || dailyRunDate || todayKey();
+        releaseDailyRun(TAB_ID);
+        claimDailyRun(d, "dev-other-tab");
+        return readDailyOwner();
+      },
+      free: () => { releaseDailyRun(TAB_ID); releaseDailyRun("dev-other-tab"); return readDailyOwner(); },
       setDate: (d) => { window.__devDate = d || null; refreshDateSurfaces(); },
       // Redraws the start screen after writing, so the daily button's inline streak and
       // the desk placard show the set number straight away — the placard is the whole
@@ -27387,6 +27519,23 @@ function buildDevApi() {
         forceRounds: (...rs) => { impostorRounds = new Set(rs.map((r) => r | 0).filter((r) => r >= 1 && r <= TOTAL_ROUNDS)); },
         win: () => { impostorFailed = false; score = ((CHALLENGE_BY_ID.impostor.target) || 7) + impostorFlagged; endGame(); },
         lose: (kind) => impostorGameOver(kind || "answered"),      // "answered" | "timeout" | "falseflag"
+        // The run's page-by-page telemetry, which is the thing to check after a run rather
+        // than during one: what each page was, what the player DID on it, and how long it
+        // took. Every page a decoy or a fatal misjudgement resolved should carry a `secs` —
+        // an `act` with no time beside it means an impostor path slipped past the stopwatch.
+        pages: () => Array.from({ length: Math.max(roundResults.length, round) }, (_, i) => ({
+          page: i + 1,
+          fake: impostorRounds.has(i + 1),
+          act: roundImpostorAct[i] || "",
+          result: roundResults[i],
+          secs: typeof roundTimes[i] === "number" ? +roundTimes[i].toFixed(2) : null,
+        })),
+        // What the run hands the metrics store, so a short completion time is visible as a
+        // number rather than only as a suspicion.
+        timing: () => ({ timeSum: +gameTimeSum.toFixed(2), timedRounds: gameTimedRounds,
+          fastestMs: gameFastestMs == null ? null : Math.round(gameFastestMs),
+          timeouts: gameTimeouts, pagesResolved: roundResults.length,
+          untimedPages: roundResults.map((_, i) => i + 1).filter((n) => typeof roundTimes[n - 1] !== "number") }),
       },
       // Wildcard — inspect / pin the per-round sub-rule (useful for verifying that the
       // rarity stamp, the reveal and getState().valid all describe the same in-rule set).
@@ -28149,8 +28298,22 @@ async function init() {
   // far, exactly like the quit button. Skipped for bfcache restores (persisted),
   // where the in-memory game just resumes.
   window.addEventListener("pagehide", (e) => {
-    if (e.persisted) return;
+    if (e.persisted) return;   // a bfcache restore keeps the same tab, and its claim with it
     if (screens.game.classList.contains("active")) foldRunProgress();
+    // Hand today's daily back on the way out. Without this a plain refresh mid-daily would
+    // lock the player out of their own run until the stale claim timed out — the reloaded
+    // page is a new holder id, so it cannot recognise the claim it left behind.
+    endDailyOwnership();
+  });
+
+  // Another tab took today's daily. The claim it wrote is a storage event here, so this is
+  // the instant, ordinary path out; the heartbeat only catches the case where this tab was
+  // asleep while it happened.
+  window.addEventListener("storage", (e) => {
+    if (e.key !== DAILY_OWNER_KEY || gameType !== "daily" || !e.newValue) return;
+    let held = null;
+    try { held = JSON.parse(e.newValue); } catch (err) { return; }
+    if (held && held.owner !== TAB_ID && held.date === (dailyRunDate || todayKey())) surrenderDailyRun();
   });
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape" && $("settingsModal").classList.contains("open")) closeSettings();
