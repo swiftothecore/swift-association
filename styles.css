@@ -127,19 +127,25 @@
 
      These are NOT the era accents. Five differ from the era their album plays in, each for a
      reason found by eye on the real oak at real size; MAST_INKS in js/config.js carries the
-     reasons, and PLAN.md the full palette note. Do not "simplify" them back to --ink-accent. */
-  [data-ink="debut"]      { --mast-ink:#3f7d54; }
-  [data-ink="fearless"]   { --mast-ink:#d0a021; }
-  [data-ink="speaknow"]   { --mast-ink:#6d5aa6; }
-  [data-ink="red"]        { --mast-ink:#9b2226; }
-  [data-ink="nineteen89"] { --mast-ink:#3f6fa3; }
-  [data-ink="reputation"] { --mast-ink:#2c2c2e; }
-  [data-ink="lover"]      { --mast-ink:#b8487f; }
-  [data-ink="folklore"]   { --mast-ink:#7e8180; }
-  [data-ink="evermore"]   { --mast-ink:#7e4a1f; }
-  [data-ink="midnights"]  { --mast-ink:#2b3a67; }
-  [data-ink="poets"]      { --mast-ink:#856c50; }
-  [data-ink="showgirl"]   { --mast-ink:#c2571a; }
+     reasons, and PLAN.md the full palette note. Do not "simplify" them back to --ink-accent.
+
+     Each ink is stated ONCE, as a day/night pair, and --mast-ink is resolved from that pair.
+     That is what lets the generated favicon read --mast-ink-day off the body whatever theme
+     the page is wearing: its tile is cream paper at midnight too, so it wants the day column
+     and must never be handed the night one. */
+  [data-ink="debut"]        { --mast-ink-day:#3f7d54; --mast-ink-night:#74c48b; }
+  [data-ink="fearless"]     { --mast-ink-day:#d0a021; --mast-ink-night:#f4cf62; }
+  [data-ink="speaknow"]     { --mast-ink-day:#6d5aa6; --mast-ink-night:#bca6f0; }
+  [data-ink="red"]          { --mast-ink-day:#9b2226; --mast-ink-night:#eb6a66; }
+  [data-ink="nineteen89"]   { --mast-ink-day:#3f6fa3; --mast-ink-night:#74abe1; }
+  [data-ink="reputation"]   { --mast-ink-day:#2c2c2e; --mast-ink-night:#a9a8b6; }
+  [data-ink="lover"]        { --mast-ink-day:#b8487f; --mast-ink-night:#f194c1; }
+  [data-ink="folklore"]     { --mast-ink-day:#7e8180; --mast-ink-night:#9aa1a6; }
+  [data-ink="evermore"]     { --mast-ink-day:#7e4a1f; --mast-ink-night:#cb9568; }
+  [data-ink="midnights"]    { --mast-ink-day:#2b3a67; --mast-ink-night:#8398da; }
+  [data-ink="poets"]        { --mast-ink-day:#856c50; --mast-ink-night:#bda284; }
+  [data-ink="showgirl"]     { --mast-ink-day:#c2571a; --mast-ink-night:#f0975a; }
+  [data-ink] { --mast-ink: var(--mast-ink-day); }
 
   /* ---- Paper stocks (Mastery reward, body[data-paper]) ----
      Retint the page surface only — the era accents above keep floating on top.
@@ -195,24 +201,14 @@
   :root[data-theme="dark"] body[data-era="lover"]      { --ink-accent:#f194c1; --highlighter:rgba(235,150,196,0.30); --bead:#f194c1; --page-wash:rgba(225,140,186,0.06); }
   :root[data-theme="dark"] body[data-era="evermore"]   { --ink-accent:#cb9568; --highlighter:rgba(190,140,90,0.30);  --bead:#cb9568; --page-wash:rgba(180,130,80,0.06); }
 
-  /* Masthead inks on the night desk. NOT a lightened copy of the light values and not derivable
-     from one: at night the wordmark's other words are a warm cream, so the three monochrome inks
-     (reputation, folklore, poets) invert to nearly that same cream and "Song" stops reading as a
-     separate word at all. Those three are darkened and tinted by hand. reputation's silver and
+  /* Masthead inks on the night desk: the night half of each pair above, switched on here. The
+     night column is NOT a lightened copy of the day one and is not derivable from it: at night
+     the wordmark's other words are a warm cream, so the three monochrome inks (reputation,
+     folklore, poets) invert to nearly that same cream and "Song" stops reading as a separate
+     word at all. Those three are darkened and tinted by hand. reputation's silver and
      folklore's grey are the tightest pair in the set, held apart only by hue — reputation leans
      violet, folklore leans green — so re-check that pair first if anything here moves. */
-  :root[data-theme="dark"] [data-ink="debut"]      { --mast-ink:#74c48b; }
-  :root[data-theme="dark"] [data-ink="fearless"]   { --mast-ink:#f4cf62; }
-  :root[data-theme="dark"] [data-ink="speaknow"]   { --mast-ink:#bca6f0; }
-  :root[data-theme="dark"] [data-ink="red"]        { --mast-ink:#eb6a66; }
-  :root[data-theme="dark"] [data-ink="nineteen89"] { --mast-ink:#74abe1; }
-  :root[data-theme="dark"] [data-ink="reputation"] { --mast-ink:#a9a8b6; }
-  :root[data-theme="dark"] [data-ink="lover"]      { --mast-ink:#f194c1; }
-  :root[data-theme="dark"] [data-ink="folklore"]   { --mast-ink:#9aa1a6; }
-  :root[data-theme="dark"] [data-ink="evermore"]   { --mast-ink:#cb9568; }
-  :root[data-theme="dark"] [data-ink="midnights"]  { --mast-ink:#8398da; }
-  :root[data-theme="dark"] [data-ink="poets"]      { --mast-ink:#bda284; }
-  :root[data-theme="dark"] [data-ink="showgirl"]   { --mast-ink:#f0975a; }
+  :root[data-theme="dark"] [data-ink] { --mast-ink: var(--mast-ink-night); }
   /* The desk goes to night: a heavy dark wash over the same oak SVG (so the grain
      survives, just dimmed) plus a warm pool of lamplight over where the notebook
      sits — the "lamp on the desk" read, kept even though the paper itself is dark. */

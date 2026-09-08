@@ -68,6 +68,7 @@ import {
 import { exportBraceletCard, copyBraceletCard, buildCardSVG, fontFaceCss } from "./braceletcard.js";
 import { exportSleeveCard, copySleeveCard, buildSleeveSVG } from "./sleevecard.js";
 import { sfx } from "./sound.js";
+import { faviconDataUrl, faviconSVG } from "./favicon.js";
 import { wordRegex as wordRegexCore, extractLineWithWord as extractLineWithWordCore, highlightWord as highlightWordCore, variantBody, exactWordBody, boundedWordBody, falseFriendRegex, addedLettersRegex } from "./match.js";
 import { buildLyricReveal } from "./lyric-reveal.mjs";
 import { buildLineIndex, buildSlipContext, buildSlipPuzzle, buildNamePuzzle,
@@ -519,14 +520,17 @@ function applySettings() {
   // mode we drop data-paper entirely and let the dark tokens stand for every stock.
   if (settings.masteryPaper && !dark) body.setAttribute("data-paper", settings.masteryPaper);
   else body.removeAttribute("data-paper");
-  // The masthead ink (the Album Focus reward). ONE attribute: the four surfaces that wear it
-  // (the wordmark's gold word, the star over the i, the tagline hearts, the closed cover's
-  // title) each read --mast-ink with their own fallback, so no attribute means no change.
+  // The masthead ink (the Album Focus reward). ONE attribute: the four painted surfaces that
+  // wear it (the wordmark's gold word, the star over the i, the tagline hearts, the closed
+  // cover's title) each read --mast-ink with their own fallback, so no attribute means no
+  // change. The tab icon is the fifth and cannot be reached by CSS, so it is redrawn from the
+  // attribute we just wrote — which is why paintFavicon has to come after it, not before.
   // Unlock state is deliberately NOT consulted here — this paints whatever is chosen, and the
   // choosing path is what refuses a locked ink and falls back if a board reset relocks one.
   const ink = MAST_INK_BY_SLUG[settings.titleInk] ? settings.titleInk : "";
   if (ink) body.setAttribute("data-ink", ink);
   else body.removeAttribute("data-ink");
+  paintFavicon();
   // The start-button finish sits on the button itself, not the body: the Mastery reward board
   // previews every finish at once, and each swatch is a real .play-cta carrying its own.
   const playCta = $("playBtn");
@@ -10203,6 +10207,28 @@ function guardTitleInk() {
   settings.titleInk = earned;
   saveSettings(settings);
   applySettings();
+}
+
+// The tab icon is the fifth surface wearing the ink, and the only one CSS cannot reach: a
+// favicon is a document of its own, not an element on the page. So it is drawn in JS and handed
+// over as a data URL, which has the useful side effect of stepping around the service worker's
+// cached copy of icons/favicon.svg — that file stays as the no-JS and social fallback.
+//
+// The DAY ink, always. The tile is cream paper at midnight too, so the night column (tuned for a
+// dark masthead) would be wrong on it; that is the whole reason the palette states both halves.
+// The link element is replaced rather than re-pointed because Safari has been unreliable about
+// noticing an href change on the icon it has already taken.
+function paintFavicon() {
+  const link = document.querySelector('link[rel="icon"]');
+  if (!link) return;
+  const ink = getComputedStyle(document.body).getPropertyValue("--mast-ink-day").trim();
+  const href = faviconDataUrl(ink);
+  if (link.getAttribute("href") === href) return;
+  const next = document.createElement("link");
+  next.rel = "icon";
+  next.type = "image/svg+xml";
+  next.setAttribute("href", href);
+  link.replaceWith(next);
 }
 
 // The pot on the board, and the door to the tray. Drawn rather than lettered, and drawn as a
@@ -27598,10 +27624,10 @@ function buildDevApi() {
       },
       clear: () => { saveAlbumFocus({}); guardTitleInk(); if ($("albumFocusBody")) renderAlbumFocusPage(); },
     },
-    // The masthead ink. No UI wears this yet (the tray page is still to come), so until it does
-    // this IS the feature's only door. `cycle` is the one that earns its place: the four surfaces
-    // an ink repaints are spread across the header, the tagline and the browser tab, and the only
-    // way to know they move together is to watch them move together.
+    // The masthead ink. The ink tray on the Album Focus board is the player's door to this;
+    // these skip the unlock. `cycle` is the one that earns its place: the five surfaces an ink
+    // repaints are spread across the header, the tagline, the closed cover and the browser tab,
+    // and the only way to know they move together is to watch them move together.
     ink: {
       list: () => STUDIO_ALBUMS.filter((a) => MAST_INKS[a]).map((a) => `${MAST_INKS[a].slug} — ${MAST_INKS[a].name} (${a})`),
       set: (slug) => {
@@ -27611,6 +27637,10 @@ function buildDevApi() {
         return settings.titleInk || "(brand gold)";
       },
       off: () => window.__dev.ink.set(""),
+      // Prints the no-ink tile, which is what icons/favicon.svg is supposed to contain. The
+      // static file is the no-JS fallback and cannot import the module, so after any change to
+      // the artwork, paste this output over it or the two copies drift.
+      favicon: () => { const svg = faviconSVG(""); console.log(svg); return svg; },
       // Steps to the next ink in MAST_INKS order, wrapping through brand gold so the default
       // is part of the loop rather than something you have to remember to go back to.
       cycle: () => {

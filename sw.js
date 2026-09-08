@@ -17,7 +17,7 @@
  * Paths are relative so the worker works at the site root (swiftassociation.com)
  * and under any project subpath, without hardcoding the origin.
  */
-const CACHE = "stta-v69";
+const CACHE = "stta-v70";
 // The game's panel routes. These are sections of index.html, not files, so a navigation to one
 // has nothing on the server to fetch: 404.html bounces it back through a ?/slug marker. Once
 // this worker is installed we can do better and answer with index.html directly, so a deep link
@@ -94,6 +94,10 @@ const ASSETS = [
   // the cover is the first thing drawn on a cold start, so a missing half of this pair
   // breaks the load screen itself.
   "js/stickercover.js",
+  // The generated tab icon, drawn in the Album Focus ink. Wanted on a cold start for the same
+  // reason as the cover: applySettings swaps the <link> on the first paint, and without this the
+  // tab would sit on the static gold tile until the network came back.
+  "js/favicon.js",
   // The sound palette (opt-in sfx; see js/sound.js for sources + licences).
   "sounds/correct.mp3",
   "sounds/wrong.mp3",

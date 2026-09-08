@@ -1,4 +1,8 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+<!-- The no-JS and social fallback ONLY. The live tab icon is generated at runtime by
+     js/favicon.js so it can be drawn in the Album Focus ink; this file is that same drawing
+     with no ink chosen. Reprint it with __dev.ink.favicon() after any change to the artwork,
+     or the two copies drift. -->
   <title>Swift To The Song Association</title>
   <clipPath id="tile"><rect x="2" y="2" width="60" height="60" rx="14"/></clipPath>
   <rect x="2" y="2" width="60" height="60" rx="14" fill="#f5efe1" stroke="#e0d6bf" stroke-width="1"/>
