@@ -10144,20 +10144,23 @@ function renderAlbumFocusPage() {
   const inkName = worn === MAST_SHUFFLE ? MAST_SHUFFLE_NAME : wornInk ? wornInk.name : "Brand gold";
   const html =
     `<div class="chall-head">` +
-      `<div class="chall-head-sub">tap an album · beat all 12</div>` +
+      `<div class="chall-head-l">` +
+        `<div class="chall-head-sub">tap an album · beat all 12</div>` +
+        // The ink pot: what beating an album buys. It stands in the header beside the
+        // instruction line rather than on a row of its own, so the board starts a line
+        // higher and the reward is read on the way past instead of stepped over. It stays
+        // live from the very first visit — a tray of twelve locked inks teaches the whole
+        // reward at a glance, where a greyed-out button would teach nothing.
+        `<button type="button" class="af-pot" id="afInkPot" aria-label="Title ink: ${escapeHtml(inkName)}">` +
+          inkPotSVG() +
+          `<span class="af-pot-txt"><b>title ink</b><span class="af-pot-name">${escapeHtml(inkName)}</span></span>` +
+        `</button>` +
+      `</div>` +
       `<span class="chall-beaten">` +
         beatenFigure(beaten, STUDIO_ALBUMS.length) +
         `<span class="chall-beaten-txt"><b>${beaten}</b>of ${STUDIO_ALBUMS.length} beaten${perfectLine}</span>` +
       `</span>` +
     `</div>` +
-    // The ink pot: what beating an album buys. It sits above the board rather than below it so
-    // it is seen without scrolling past twelve tiles, and it stays live from the very first
-    // visit — a tray of twelve locked inks teaches the whole reward at a glance, where a
-    // greyed-out button would teach nothing.
-    `<button type="button" class="af-pot" id="afInkPot" aria-label="Title ink: ${escapeHtml(inkName)}">` +
-      inkPotSVG() +
-      `<span class="af-pot-txt"><b>title ink</b>${escapeHtml(inkName)}</span>` +
-    `</button>` +
     `<div class="af-board">${tiles}</div>`;
 
   const el = $("albumFocusBody");

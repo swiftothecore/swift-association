@@ -4276,20 +4276,42 @@
      The pot is the door to the ink tray AND a readout of what the title is currently written
      in: its pool takes --mast-ink, so it holds the real ink. Line art only, per the page's own
      rule — the pool is a flat fill, never a gradient, and the glass is drawn rather than shaded. */
+  .chall-head-l { display: flex; flex-direction: column; align-items: flex-start; gap: 7px; min-width: 0; }
+  /* No pill, no border, no fill: a dashed capsule made the pot read as one more of the
+     page's buttons, when it is a bottle standing on the paper. What is clickable is said
+     by the object and by the ink's name ruled underneath it in the ink itself — a blank
+     filled in on a form. It sits slightly askew, as a bottle set down would. */
   .af-pot {
-    display: flex; align-items: center; gap: 10px; margin: 2px auto 0;
-    padding: 6px 14px 6px 8px; border: 1px dashed rgba(67,48,26,0.3); border-radius: 999px;
-    background: rgba(255,250,238,0.5); cursor: pointer; font: inherit; color: var(--ink);
-    transition: transform 0.16s ease, border-color 0.16s ease;
+    display: inline-flex; align-items: center; gap: 8px;
+    margin: 0; padding: 0; border: 0; background: none;
+    cursor: pointer; font: inherit; color: var(--ink); text-align: left;
   }
-  .af-pot:hover { transform: translateY(-1px); border-color: rgba(67,48,26,0.5); }
-  .af-pot:active { transform: translateY(0); }
-  .af-pot-art { width: 30px; height: 29px; flex: none; overflow: visible; }
+  .af-pot-art {
+    width: 26px; height: 25px; flex: none; overflow: visible;
+    transform: rotate(-3.5deg); transform-origin: 50% 88%;
+    transition: transform 0.16s ease;
+  }
+  .af-pot:hover .af-pot-art { transform: rotate(-6.5deg) translateY(-1px); }
+  .af-pot:active .af-pot-art { transform: rotate(-3.5deg) translateY(0); }
   .af-pot-pool { fill: var(--mast-ink, var(--brand-gold)); opacity: 0.9; }
   .af-pot-line { fill: none; stroke: var(--ink); stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; opacity: 0.75; }
-  .af-pot-txt { font-family: var(--type); font-size: calc(9px + var(--text-size-adjust)); letter-spacing: 0.05em; color: var(--ink-soft); text-align: left; }
-  .af-pot-txt b { display: block; text-transform: uppercase; letter-spacing: 0.1em; color: var(--ink); font-weight: 400; }
-  @media (prefers-reduced-motion: reduce) { .af-pot, .af-pot:hover { transition: none; transform: none; } }
+  .af-pot-txt { text-align: left; }
+  .af-pot-txt b {
+    display: block; font-family: var(--type); font-size: calc(8px + var(--text-size-adjust));
+    text-transform: uppercase; letter-spacing: 0.14em; color: var(--ink-soft); font-weight: 400;
+  }
+  /* The name is written, not labelled, and the rule under it is the ink on the nib. */
+  .af-pot-name {
+    display: inline-block; margin-top: 1px; padding-bottom: 1px;
+    font-family: var(--hand); font-size: calc(15px + var(--text-size-adjust)); line-height: 1.05;
+    color: var(--ink);
+    border-bottom: 1.6px solid var(--mast-ink, var(--brand-gold));
+    transition: border-bottom-width 0.16s ease;
+  }
+  .af-pot:hover .af-pot-name { border-bottom-width: 2.6px; }
+  @media (prefers-reduced-motion: reduce) {
+    .af-pot-art, .af-pot:hover .af-pot-art, .af-pot-name { transition: none; transform: none; }
+  }
 
   /* The tray. Mirrors the Mastery reward board's swatch idiom (a chip, its name beneath, a
      dashed slot while locked) without borrowing its markup: those swatches ring the active one
