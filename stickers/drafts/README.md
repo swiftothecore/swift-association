@@ -1,7 +1,9 @@
 # Sticker artwork drafts
 
-Vector traces of the supplied boots, koi fish guitar, and pegacorn references. Each SVG is self-contained, uses editable paths, has a transparent background, and retains the reference white die-cut outline. Lettering is outlined and needs no installed fonts.
+Hand-authored vector illustrations based on the supplied boots, koi fish guitar, and pegacorn visual references. These replace the earlier automatic traces. Each SVG is self-contained, has a transparent background and ivory die-cut outline, and uses editable vector shapes. Banner and guitar lettering are outlined.
 
-These are artwork drafts, not registered collectibles. Unlock triggers and integration into the sticker renderer are still to be designed. The supplied outline should be considered when applying the game’s shared die-cut filter.
+The boots feature braided trim, roses, flames and heart banners. The blue guitar has six strings, frets and individually drawn koi. The pegacorn has a rainbow mane and tail, overlapping teal feathers and sparse vector foil marks. Flat colours and drawn highlights replace photographic textures.
 
-The pegacorn retains detailed glitter texture and is approximately 5.8 MB. Simplify that texture before embedding it in the game module.
+These are artwork drafts, not registered collectibles. Unlock triggers and integration remain to be designed. Avoid doubling the supplied outline when applying the shared sticker die-cut filter.
+
+Approximate uncompressed sizes: boots 109 KB, guitar 30 KB, pegacorn 40 KB. The local drawing generator is `scripts/stickers/redraw_reference_stickers.py`; it does not read or trace the PNG references.
