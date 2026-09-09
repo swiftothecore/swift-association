@@ -7048,10 +7048,15 @@
   /* Deep Cut's "but you could have had" — pencilled under the card of an answer that scored
      the page off the wrong album. An aside in the same margin hand as the forms note, not a
      second verdict: the tick above it still stands. The album is set small beside the title,
-     in the album's own colour, which is the same pairing the pips above the word already use. */
+     in the album's own colour, which is the same pairing the pips above the word already use.
+     The measure is wide because the sentence carries a whole song title inside it, and titles
+     like "We Are Never Ever Getting Back Together" broke a 42ch line in two with half the page
+     still empty beside it. It stays capped so it never runs past the card, and balances the
+     break when a title is long enough to need one. */
   .deepcut-note {
     font-family: var(--hand); font-size: calc(15px + var(--text-size-adjust)); color: var(--ink-soft);
-    text-align: center; margin: 9px auto 0; max-width: 42ch; line-height: 1.45;
+    text-align: center; margin: 9px auto 0; max-width: min(100%, 62ch); line-height: 1.45;
+    text-wrap: balance;
   }
   .deepcut-note b { color: var(--ink); font-weight: 700; }
   .deepcut-note-album {
