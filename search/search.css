@@ -48,6 +48,11 @@
   --rule: rgba(43, 39, 34, 0.07);   /* faint ruled lines, matching the game */
   --line: 32px;                     /* notebook baseline rhythm */
   --margin: rgba(178, 58, 58, 0.45);
+  /* The red rule actually drawn down the page. Separate from --margin (which is the game's
+     token name and sits a touch stronger) because it is painted INSIDE the .sx-page background
+     shorthand, in two places — desktop and the 560px layout. Tokenising it is what lets the dark
+     and high-contrast palettes move the rule without restating that whole shorthand twice more. */
+  --margin-line: rgba(178, 58, 58, 0.38);
   --page-wash: rgba(212, 160, 23, 0.05);
   --ink-accent: #a9791f;         /* gold era ink, matching the game masthead */
   --highlighter: rgba(247, 201, 72, 0.55); /* gold highlighter swipe, matching the game */
@@ -250,7 +255,7 @@ body.sx-scrolled .dx-book { transform: translate(46%, 54%) rotate(-6deg); }
   position: relative;
   max-width: 820px; margin: 24px auto 90px; padding: 30px 34px 44px 58px;
   background:
-    linear-gradient(to right, transparent 44px, rgba(178, 58, 58, 0.38) 44px, rgba(178, 58, 58, 0.38) 46px, transparent 46px),
+    linear-gradient(to right, transparent 44px, var(--margin-line) 44px, var(--margin-line) 46px, transparent 46px),
     linear-gradient(var(--page-wash), var(--page-wash)),
     repeating-linear-gradient(to bottom,
       var(--paper) 0, var(--paper) calc(var(--line) - 1px),
@@ -544,7 +549,7 @@ body.sx-scrolled .dx-book { transform: translate(46%, 54%) rotate(-6deg); }
   .sx-page {
     padding: 22px 18px 40px 42px;
     background:
-      linear-gradient(to right, transparent 28px, rgba(178, 58, 58, 0.38) 28px, rgba(178, 58, 58, 0.38) 30px, transparent 30px),
+      linear-gradient(to right, transparent 28px, var(--margin-line) 28px, var(--margin-line) 30px, transparent 30px),
       linear-gradient(var(--page-wash), var(--page-wash)),
       repeating-linear-gradient(to bottom,
         var(--paper) 0, var(--paper) calc(var(--line) - 1px),
@@ -553,4 +558,222 @@ body.sx-scrolled .dx-book { transform: translate(46%, 54%) rotate(-6deg); }
   }
   #q { font-size: 28px; }
   .sx-hit { grid-template-columns: 42px 1fr; gap: 7px; }
+}
+
+/* =========================================================
+   DARK NOTEBOOK — parity with the game's Phase 1/2 palette
+   =========================================================
+   The searcher has no settings menu and is not getting one. It shares an ORIGIN with the
+   game, so the inline script in search/index.html reads the game's own settings object and
+   stamps data-theme (and data-contrast) on <html> before first paint. One switch on the
+   front page turns both pages, and there is no second copy of the preference to drift.
+
+   The attribute lands on <html> rather than <body>, unlike the game: the body does not
+   exist yet when that script runs, and waiting for it would cost the flash it is there to
+   prevent. Nothing here composes with data-era or data-paper — the searcher is always the
+   gold era and has no earned paper stocks — so there is no specificity fight to lose.
+
+   Base tokens copied verbatim from :root[data-theme="dark"] in styles.css, so the two
+   pages are the same warm dark paper and the same warm off-white ink rather than two
+   near-misses. --ink-faint and --pen are the searcher's own names with no game
+   counterpart, and are tuned below against those copied values. */
+:root[data-theme="dark"] {
+  --paper: #2a241b;
+  --paper-edge: #362e24;
+  --desk: #12100c;
+  --ink: #ece5d6;
+  --ink-soft: #9d947f;
+  /* The faintest tier: hints, counts, placeholder. Lifted a little relative to its light
+     value (2.4:1 → 2.9:1 on paper), the same move the game makes on --ink-soft, because a
+     faded pencil on a dark page loses more than it does on cream. Still comfortably below
+     --ink-soft's 5.1:1, so the three tiers stay three tiers. */
+  --ink-faint: #736c5d;
+  --rule: rgba(236, 229, 214, 0.08);
+  --margin: rgba(206, 86, 86, 0.5);
+  --margin-line: rgba(206, 86, 86, 0.42);
+  --page-wash: rgba(224, 168, 58, 0.06);
+  --ink-accent: #e0a83a;
+  --highlighter: rgba(240, 196, 90, 0.32);
+  --pen: #df6b64;
+  /* Hands the form controls, the search field's own UI and the scrollbars to the dark
+     side. Without it the <select> filters open a white popup list over a night page. */
+  color-scheme: dark;
+}
+
+/* The desk goes to night: the same oak tile under a heavy dark wash (the grain survives,
+   just dimmed) with a warm pool of lamplight where the paper sits. Copied from the game's
+   body / body::before so the two desks are the same room. */
+:root[data-theme="dark"] body { background-color: #12100c; }
+:root[data-theme="dark"] body::before {
+  background:
+    radial-gradient(ellipse 66% 52% at 50% 26%, rgba(255, 212, 148, 0.12), rgba(255, 212, 148, 0) 62%),
+    linear-gradient(rgba(6, 5, 3, 0.88), rgba(6, 5, 3, 0.93));
+}
+
+/* Desk props are physical objects and keep their own colours, so they are dimmed rather
+   than repainted — the game's exact treatment, and the reason their hardcoded lettering
+   (.dx-label, .dx-type) needs no dark value of its own: brightness takes the object and
+   its writing down together, keeping every ratio they were drawn with. */
+:root[data-theme="dark"] .sx-desk-item {
+  filter: drop-shadow(3px 8px 8px rgba(0, 0, 0, 0.55)) saturate(0.82) brightness(0.6);
+}
+:root[data-theme="dark"] .dx-loupe {
+  filter: drop-shadow(5px 12px 11px rgba(0, 0, 0, 0.5)) saturate(0.82) brightness(0.6);
+}
+/* The index journal is dimmed on its two pseudo-elements, NOT on .sx-rail itself. The rail's
+   children are the album flags, which are functional buttons with labels on them: a
+   brightness on the parent would drag their text down with the cloth. The parent keeps only
+   its drop-shadow, so the flags still cast onto a dimmed book. */
+:root[data-theme="dark"] .sx-rail::before,
+:root[data-theme="dark"] .sx-rail::after { filter: brightness(0.62) saturate(0.86); }
+
+/* Masthead — it sits on the DESK, not on the paper, so its carved desk-brown goes invisible
+   at night. Repaint it warm paper-white with a dark underside, exactly as the game's does.
+   The loupe over the i loses its seating shadow for the game's reason: on a night desk there
+   is no light to cast an underside, and the shadow only thickens the stroke. */
+:root[data-theme="dark"] .sx-title {
+  color: #ece5d6;
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.45), 0 2px 6px rgba(0, 0, 0, 0.5);
+}
+:root[data-theme="dark"] .sx-title .mast-loupe { filter: none; }
+/* .sx-tagline currently has no element in search/index.html — the masthead ends at the
+   swash. The rule is kept in step with its light counterpart anyway, so that a tagline
+   restored to the markup comes back with both palettes rather than light-only, which is
+   the exact gap this whole pass exists to close. */
+:root[data-theme="dark"] .sx-tagline { color: #b7a888; }
+:root[data-theme="dark"] .sx-back {
+  color: var(--ink); border-color: rgba(236, 229, 214, 0.18);
+}
+:root[data-theme="dark"] .sx-back:hover { background: #423a2e; }
+
+/* The sheet lifts off the night desk on a warm hairline rather than the light-mode white
+   inset and brown drop shadow, both of which vanish on dark. Same trade as the game's card. */
+:root[data-theme="dark"] .sx-page {
+  box-shadow:
+    0 0 0 1px rgba(236, 229, 214, 0.09),
+    0 1px 0 rgba(236, 229, 214, 0.05) inset,
+    0 26px 60px rgba(0, 0, 0, 0.62),
+    0 4px 14px rgba(0, 0, 0, 0.45);
+}
+
+/* Controls. Every hairline that was a warm cream line on cream paper becomes an alpha of the
+   ink instead of a second hardcoded colour, so it tracks the paper rather than needing a
+   third value if the paper ever moves again. */
+:root[data-theme="dark"] .sx-search { border-bottom-color: rgba(236, 229, 214, 0.18); }
+:root[data-theme="dark"] .sx-clear:hover { background: rgba(236, 229, 214, 0.12); color: var(--ink); }
+:root[data-theme="dark"] .sx-explain { border-left-color: rgba(236, 229, 214, 0.18); }
+:root[data-theme="dark"] .sx-recent-head { border-bottom-color: rgba(236, 229, 214, 0.14); }
+:root[data-theme="dark"] .sx-flat .sx-hit-flat { border-bottom-color: rgba(236, 229, 214, 0.12); }
+
+:root[data-theme="dark"] :is(.sx-seg button, .sx-filter select) {
+  background: rgba(236, 229, 214, 0.06); border-color: rgba(236, 229, 214, 0.18);
+}
+/* The "chosen" state is one red-pen family shared by the committed term chips, the selected
+   segment button and the active filter select, and at night all three are driven off --pen
+   rather than the light palette's three separate browns. A washed red fill that reads as a
+   pencil-ringed choice on cream reads as nothing at all on dark paper, so the fill goes to a
+   low alpha of the pen and the ring and the lettering carry the state. */
+:root[data-theme="dark"] :is(.sx-seg button.on, .sx-filter select.active, .sx-chip) {
+  color: #f0b3a6;
+  background: rgba(223, 107, 100, 0.15);
+  border-color: rgba(223, 107, 100, 0.5);
+}
+:root[data-theme="dark"] .sx-seg button.on .sx-seg-eg { color: #d99f92; }
+:root[data-theme="dark"] .sx-chip-x { color: var(--pen); }
+:root[data-theme="dark"] :is(.sx-chip-x, .sx-leg-more, .sx-play):hover { color: #f6b7ae; }
+:root[data-theme="dark"] :is(.sx-play, .sx-leg-more) { border-bottom-color: rgba(223, 107, 100, 0.45); }
+:root[data-theme="dark"] :is(.sx-play, .sx-leg-more):hover { border-bottom-color: rgba(223, 107, 100, 0.9); }
+:root[data-theme="dark"] .sx-copy { border-bottom-color: rgba(157, 148, 127, 0.45); }
+:root[data-theme="dark"] .sx-copy:hover { border-bottom-color: rgba(157, 148, 127, 0.9); }
+/* The "letters in a word" caveat badge: a printed warning, so it keeps its amber rather than
+   going neutral, lifted to the dark page's gold. */
+:root[data-theme="dark"] .sx-explain-note { color: #c9a961; border-color: rgba(224, 168, 58, 0.4); }
+
+/* The rainbow bar, the legend and the flat-view dots all ring their colour to hold it off the
+   background. The light ring is a dark alpha, which disappears on dark paper — so the rings
+   invert while the album colours inside them do not. */
+:root[data-theme="dark"] .sx-bar { box-shadow: inset 0 0 0 1px rgba(236, 229, 214, 0.18); }
+:root[data-theme="dark"] .sx-bar.sx-locked span.sx-lit { box-shadow: inset 0 0 0 2px rgba(236, 229, 214, 0.6); }
+:root[data-theme="dark"] :is(.sx-leg-dot, .sx-dot) { box-shadow: inset 0 0 0 1px rgba(236, 229, 214, 0.25); }
+:root[data-theme="dark"] .sx-leg:hover,
+:root[data-theme="dark"] .sx-leg:focus-visible { background: rgba(236, 229, 214, 0.1); }
+:root[data-theme="dark"] .sx-leg[aria-pressed="true"] { box-shadow: inset 0 0 0 1px rgba(236, 229, 214, 0.4); }
+
+/* Recent-search scraps: paper tags, so they follow --paper-edge on their own and only the
+   hairline and the lifted hover need saying. */
+:root[data-theme="dark"] .sx-recent-item {
+  border-color: rgba(236, 229, 214, 0.16); box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+}
+:root[data-theme="dark"] .sx-recent-item:hover { background: #423a2e; border-color: var(--pen); }
+/* Top and bottom only. The flag's LEFT border is its 5px of album colour and the whole of
+   its identity, and the right border is none — a border-color shorthand here quietly paints
+   over the album stripe and leaves twelve identical tags. */
+:root[data-theme="dark"] .sx-rail button {
+  border-top-color: rgba(236, 229, 214, 0.16);
+  border-bottom-color: rgba(236, 229, 214, 0.16);
+}
+:root[data-theme="dark"] .sx-rail button:hover { background: #423a2e; }
+
+/* Album colours are NOT re-tuned for the night, deliberately, and neither is the song title
+   that mixes into them. They are the game's identity palette and it does not re-tune them
+   either, so a second interpretation here would put the two pages' albums out of step for no
+   gain. It also is not needed: .sx-song-title is color-mix(album 80%, --ink), and --ink flips
+   with the theme, so the mix self-corrects. Measured across the twelve it lands at 3.0–6.8:1
+   on dark paper against 3.2–7.9:1 on cream — the same spread, with the weak end simply moving
+   from the pale albums to the dark ones. Do not "fix" this by lifting the album share.
+   The one member of that family that cannot self-correct is the song rule, which mixes into a
+   hardcoded cream instead of a token. */
+:root[data-theme="dark"] .sx-song-head {
+  border-bottom-color: color-mix(in srgb, var(--album) 24%, #4a4238);
+}
+
+/* =========================================================
+   HIGH CONTRAST — both desks
+   =========================================================
+   Copied from the game's two high-contrast palettes, reduced to the gold era, which is the
+   only one the searcher wears. The dark half is a SEPARATE palette rather than the light one
+   turned up: light buys contrast by pushing the accent DOWN towards black on white paper,
+   dark has to bring it UP against white ink, and the highlighter has a ceiling on dark that
+   the light palette never meets because the mark sits under white text. The full reasoning
+   lives beside those blocks in styles.css and is not restated here.
+
+   The light gold highlighter below is knowingly the weakest cell in the whole palette table
+   (1.59:1 mark against paper). It is copied anyway rather than quietly improved here: it is
+   the game's number, PLAN.md has it booked to be retuned when the light palette is next
+   opened, and a searcher that fixed it alone would just be a divergence to reconcile later. */
+:root[data-contrast="high"] {
+  --paper: #ffffff;
+  --paper-edge: #f0f0f0;
+  --ink: #000000;
+  --ink-soft: #3a3a3a;
+  --ink-faint: #55524c;
+  --rule: rgba(0, 0, 0, 0.14);
+  --margin: rgba(190, 0, 0, 0.85);
+  --margin-line: rgba(190, 0, 0, 0.8);
+  --pen: #9a0006;
+  --ink-accent: #7a5300;
+  --highlighter: rgba(230, 180, 0, 0.7);
+}
+:root[data-theme="dark"][data-contrast="high"] {
+  --paper: #17130d;
+  --paper-edge: #221c14;
+  --desk: #070605;
+  --ink: #ffffff;
+  --ink-soft: #cfc6b2;
+  --ink-faint: #a49a85;
+  --rule: rgba(255, 255, 255, 0.18);
+  --margin: rgba(255, 118, 118, 0.9);
+  --margin-line: rgba(255, 118, 118, 0.85);
+  --pen: #ff8a80;
+  --ink-accent: #ffc94a;
+  --highlighter: rgba(255, 205, 80, 0.46);
+}
+/* The night desk goes darker still and the lamp comes down, because the sheet has dropped
+   nearly to the desk's own value to buy ink contrast and would otherwise stop reading as a
+   separate object lying on it. */
+:root[data-theme="dark"][data-contrast="high"] body { background-color: #070605; }
+:root[data-theme="dark"][data-contrast="high"] body::before {
+  background:
+    radial-gradient(ellipse 66% 52% at 50% 26%, rgba(255, 212, 148, 0.07), rgba(255, 212, 148, 0) 62%),
+    linear-gradient(rgba(3, 2, 1, 0.94), rgba(3, 2, 1, 0.97));
 }

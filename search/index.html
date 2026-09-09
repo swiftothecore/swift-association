@@ -6,6 +6,48 @@
 <title>Swift to the Lyric</title>
 <meta name="description" content="Search every line of Taylor Swift's lyrics. Type a word to see every song it appears in, with the section and line number. Works offline, no tracking." />
 <meta name="theme-color" content="#f5efe1" />
+<script>
+// Set the theme before first paint so a dark-mode notebook never flashes light on load.
+// The searcher has no settings menu of its own and is never getting one: it shares an
+// ORIGIN with the game, so it reads the game's own settings object and wears whatever
+// the gear on the front page last chose. One switch, both pages, no second source of
+// truth to drift. Standalone (no imports), mirroring the same script in /index.html and
+// effectiveTheme() in js/app.js; fails open to light if anything is missing or storage
+// is unreadable, which is also the game's default for a notebook that has never played.
+//
+// data-contrast lands on <html> here, not on <body> as it does in the game. The body does
+// not exist yet at this point in the head, and waiting for it would cost the very flash
+// this script is here to prevent. The searcher owns its whole stylesheet, so it can key
+// the selector wherever it likes; the game cannot, because data-era and data-paper are
+// already body attributes and the two have to compose.
+(function () {
+  var mq = window.matchMedia ? window.matchMedia("(prefers-color-scheme: dark)") : null;
+  function apply() {
+    try {
+      var raw = localStorage.getItem("swiftSongAssociation.settings");
+      var cfg = raw ? (JSON.parse(raw) || {}) : {};
+      var t = cfg.theme || "light";
+      var dark = t === "dark" || (t === "system" && mq && mq.matches);
+      var root = document.documentElement;
+      root.setAttribute("data-theme", dark ? "dark" : "light");
+      if (cfg.highContrast) root.setAttribute("data-contrast", "high");
+      else root.removeAttribute("data-contrast");
+      var m = document.querySelector('meta[name="theme-color"]');
+      if (m) m.setAttribute("content", dark ? "#14110d" : "#f5efe1");
+    } catch (e) { /* light is the default; nothing to do */ }
+  }
+  apply();
+  // Two ways the answer can change while this page is open, both worth following. The OS
+  // flipping matters only on "system", but apply() re-reads the setting anyway, so the
+  // listener does not need to know that. The storage event is the game in ANOTHER TAB:
+  // change the theme on the front page and the searcher behind it turns with it, which is
+  // the whole point of sharing one settings object rather than keeping a private copy.
+  if (mq && mq.addEventListener) mq.addEventListener("change", apply);
+  window.addEventListener("storage", function (e) {
+    if (!e.key || e.key === "swiftSongAssociation.settings") apply();
+  });
+})();
+</script>
 
 <!-- Open Graph / social preview -->
 <meta property="og:type" content="website" />
