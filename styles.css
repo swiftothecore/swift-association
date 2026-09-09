@@ -6263,10 +6263,18 @@
   /* ---------- Timer (draining highlighter underline) ---------- */
   .timer-wrap { max-width: 320px; margin: 0 auto 30px; position: relative; }
   /* A flourish canvas riding above the bar: era-tinted sparks crackle off the
-     draining edge like a lit fuse. Decorative only (pointer-events:none); it
-     overlaps into the gap above the bar so sparks can rise. */
+     draining edge like a lit fuse. Decorative only (pointer-events:none).
+     It is deliberately BIGGER than the bar on every side: up into the gap above so
+     sparks can rise, out past both ends, and well below the track. The ember's halo
+     is wider than the spark that throws it, so a canvas cropped to the bar's own box
+     cuts that halo off against a straight edge you can see. The emitter is located
+     from the track's rect, not this canvas's, so the box can grow without moving
+     the light. */
   .timer-spark {
-    position: absolute; left: 0; top: -44px; width: 100%; height: 54px;
+    /* width is stated, never left to `left`+`right`: a canvas is a replaced element
+       with an intrinsic size, so an auto width would resolve to its own width
+       attribute, which the sizing code then writes back from the layout it just read. */
+    position: absolute; left: -46px; top: -44px; width: calc(100% + 92px); height: 116px;
     pointer-events: none;
   }
   .timer-track {

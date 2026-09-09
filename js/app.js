@@ -18356,12 +18356,14 @@ const timerSpark = (() => {
     if (canvas.clientWidth !== W || canvas.clientHeight !== H) resize();
     if (!W || !H) { raf = requestAnimationFrame(frame); return; }
     // locate the draining edge in the canvas's CSS-px space
+    // The canvas is wider than the bar on purpose (see .timer-spark), so how far the
+    // clock has drained is measured against the TRACK's width, never the canvas's.
     const fill = $("timerFill"), cr = canvas.getBoundingClientRect();
     let ex = W * 0.5, ey = H - 6, frac = 1;
     if (fill && cr.width) {
-      const fr = fill.getBoundingClientRect();
+      const fr = fill.getBoundingClientRect(), tr = (fill.parentElement || fill).getBoundingClientRect();
       ex = fr.right - cr.left; ey = (fr.top + fr.height / 2) - cr.top;
-      frac = Math.max(0, Math.min(1, ex / cr.width));
+      frac = tr.width ? Math.max(0, Math.min(1, (fr.right - tr.left) / tr.width)) : 1;
     }
     const inten = 0.16 + 0.84 * Math.pow(1 - frac, 1.45);  // small at full → big near zero
 
