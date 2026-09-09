@@ -463,9 +463,9 @@ export const STICKERS = [
   // you have been, and the shelf exists to be visited. The stricter mark, a perfect
   // hint-free run, stays the guest board's own ADMITTED stamp and its charms.
   // Ids are `guest-` + the GUESTS id, so endGuest derives one rather than keeping a map.
-  // Only the four PLAYABLE guests are here. All ten editable originals live in
-  // stickers/guests/; sync_guests.py embeds the live four below without runtime fetches.
-  // The six parked originals can be viewed on scripts/stickers/guest-stickers.html.
+  // Only the PLAYABLE guests are here. All ten editable originals live in
+  // stickers/guests/; sync_guests.py embeds the live set below without runtime fetches.
+  // The parked originals can be viewed on scripts/stickers/guest-stickers.html.
   // Append one here when its catalogue ships,
   // never insert, or the whole cover re-deals.
   {
@@ -1398,6 +1398,44 @@ export const STICKERS = [
 <path d="M83 18 C84 22.5 84.6 23.2 87.8 24 C84.6 24.8 84 25.5 83 30 C82 25.5 81.4 24.8 78.2 24 C81.4 23.2 82 22.5 83 18 Z" fill="#ead49a" stroke="#a0844c" stroke-width="0.75" />
 <path d="M11 41.9 C11.85 45.725 12.36 46.32 15.08 47 C12.36 47.68 11.85 48.275 11 52.1 C10.15 48.275 9.64 47.68 6.92 47 C9.64 46.32 10.15 45.725 11 41.9 Z" fill="#ead49a" stroke="#a0844c" stroke-width="0.75" />
 <path d="M88 81.4 C88.6 84.1 88.96 84.52 90.88 85 C88.96 85.48 88.6 85.9 88 88.6 C87.4 85.9 87.04 85.48 85.12 85 C87.04 84.52 87.4 84.1 88 81.4 Z" fill="#ead49a" stroke="#a0844c" stroke-width="0.75" />
+</g>
+</svg>`,
+  },
+  {
+    id: "guest-sabrina-carpenter",
+    name: "Espresso cup",
+    sub: "Sabrina Carpenter",
+    how: "Clear a whole guest shelf: Sabrina Carpenter",
+    hint: "Thirteen pages of a catalogue that is not hers.",
+    era: "The guest shelf",
+    art: `<svg xmlns="http://www.w3.org/2000/svg" class="stick" viewBox="0 0 100 100">
+<g stroke-linecap="round" stroke-linejoin="round">
+<path d="M11 72 C16 64 34 59 52 61 C73 61 88 68 87 75 C85 83 66 88 44 86 C23 85 7 80 11 72 Z" fill="#e9e2ce" stroke="#302d27" stroke-width="1.5" />
+<path d="M14 77 Q48 89 80 78 C72 84 52 86 35 83 Q21 82 14 77 Z" fill="#cfc7b1" stroke="#302d27" stroke-width="0" />
+<path d="M21 72 Q44 82 74 72" fill="none" stroke="#8a806b" stroke-width="0.75" />
+<path d="M67 45 C77 39 90 43 86 54 C84 63 76 68 67 68 L66 61 C73 62 81 57 80 51 C79 46 74 47 70 51 Z" fill="#ede6d4" stroke="#302d27" stroke-width="1.5" />
+<path d="M73 47 Q84 44 84 52 Q84 60 74 64" fill="none" stroke="#998e77" stroke-width="0.7" />
+<ellipse cx="47" cy="74" rx="15.5" ry="4.2" fill="#e7dfcb" stroke="#302d27" stroke-width="1.2" />
+<path d="M25 42 C23 50 27 67 35 73 Q46 79 59 73 C67 68 71 50 69 41 Z" fill="#eee7d4" stroke="#302d27" stroke-width="1.5" />
+<path d="M62 48 Q61 66 55 72 Q64 70 67 55 L69 46 Z" fill="#d1c8ae" stroke="#302d27" stroke-width="0" />
+<path d="M28 48 Q28 63 34 68 Q29 60 31 49 Z" fill="#fbf5e3" stroke="#302d27" stroke-width="0" />
+<ellipse cx="47" cy="42" rx="22.3" ry="7.4" fill="#f4ecd9" stroke="#302d27" stroke-width="1.35" />
+<ellipse cx="47.2" cy="43" rx="19.7" ry="5.3" fill="#514231" stroke="#302d27" stroke-width="0.85" />
+<path d="M28.5 43 Q44 36 65.9 42 C62 38 39 37 29 42 Z" fill="#9a7650" stroke="#302d27" stroke-width="0" />
+<ellipse cx="47" cy="44" rx="15.7" ry="3" fill="#604a34" stroke="#302d27" stroke-width="0" />
+<path d="M33 44 Q45 41 57 43" fill="none" stroke="#816247" stroke-width="0.7" />
+<g transform="translate(-9 -4.5) rotate(-11 48.5 61)">
+<path d="M42 58 C44 57 45 54 48 55 Q50 55 51 57 C53 56 55 60 58 61 C53 61 50 60 47 61 Q43 62 39 61 Z" fill="#b87767" stroke="#302d27" stroke-width="0" />
+<path d="M39 62 Q48 65 58 62 C55 66 52 68 48 68 Q43 67 39 62 Z" fill="#b87767" stroke="#302d27" stroke-width="0" />
+<path d="M43 58 L44 60" fill="none" stroke="#e8beaa" stroke-width="0.45" />
+<path d="M46 56.5 L46.6 59.7" fill="none" stroke="#e8beaa" stroke-width="0.45" />
+<path d="M49 56.5 L49.5 59.5" fill="none" stroke="#e8beaa" stroke-width="0.45" />
+<path d="M52 58.5 L52 60" fill="none" stroke="#e8beaa" stroke-width="0.45" />
+<path d="M44 64 L45 66" fill="none" stroke="#e8beaa" stroke-width="0.45" />
+<path d="M47 64.5 L47.5 66.5" fill="none" stroke="#e8beaa" stroke-width="0.45" />
+<path d="M50.5 64.5 L50 66.5" fill="none" stroke="#e8beaa" stroke-width="0.45" />
+<path d="M53.5 64 L52.5 66" fill="none" stroke="#e8beaa" stroke-width="0.45" />
+</g>
 </g>
 </svg>`,
   },

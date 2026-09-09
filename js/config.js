@@ -171,7 +171,7 @@ export const POLAROID_TOTAL = 21;
 // are printed and arrive finished. STICKER_TOTAL is the drawer's counter denominator and sits
 // at the true count of the drawn set, for the same reason POLAROID_TOTAL does: a denominator
 // running ahead of what exists would report "every sticker found" over a short count.
-export const STICKER_TOTAL = 23;
+export const STICKER_TOTAL = 24;
 export const COVER_STICKER_LIMIT = 15;
 
 // Tumblr messages, the screenshotted post set (the posts live in js/tumblr.js). A third
@@ -423,12 +423,21 @@ export const GUESTS = [
            ticks: ["#7f9552", "#d48a6f", "#cf6b70", "#556b43"] },
     era: "gold",
   },
+  {
+    id: "sabrina-carpenter",
+    name: "Sabrina Carpenter",
+    file: "data/guests/sabrina-carpenter.json",
+    // Espresso brown, cream and a lipstick accent give the pass its own hardware while
+    // the nine-category bracelet palette waits for its dedicated colour pass.
+    ink: { deep: "#4b3429", accent: "#b87767", strap: "#8b6a52", pen: "#5c4032",
+           ticks: ["#6b4b3b", "#d7c7aa", "#b87767", "#879eb8"] },
+    era: "denim",
+  },
 ];
 // Names announced on the shelf before their catalogue data is ready. These deliberately have no
 // file, ink, or era, so nothing can mistake them for playable guests.
 export const GUESTS_COMING_SOON = [
   { id: "beyonce", name: "Beyoncé" },
-  { id: "sabrina-carpenter", name: "Sabrina Carpenter" },
   { id: "gracie-abrams", name: "Gracie Abrams" },
   { id: "miley-cyrus", name: "Miley" },
 ];

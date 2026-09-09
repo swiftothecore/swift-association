@@ -10,11 +10,11 @@ const catalogue = JSON.parse(fs.readFileSync(
   'utf8',
 ));
 
-test('Harry Styles is a playable guest with his souvenir registered last', () => {
+test('Harry Styles is a playable guest with his souvenir registered', () => {
   const guest = GUESTS.find(({ id }) => id === 'harry-styles');
   assert.equal(guest?.file, 'data/guests/harry-styles.json');
   assert.equal(GUESTS_COMING_SOON.some(({ id }) => id === 'harry-styles'), false);
-  assert.equal(STICKERS.at(-1).id, 'guest-harry-styles');
+  assert.ok(STICKERS.some(({ id }) => id === 'guest-harry-styles'));
 });
 
 test('Harry Styles catalogue has the four requested album splits', () => {
