@@ -984,9 +984,11 @@ export function initDev(api) {
     // actually be judged. Same door the drawer offers, so the corner tag and the page turn
     // out are both in the test. Only works from the front page, which is also the rule the
     // player's button follows.
-    row(btn("look at the cover", () => toast(api.stickers.cover()))),
+    row(btn("look at the cover", () => toast(api.stickers.cover())),
+        btn("cover selection", () => { console.log("[dev] cover selection", api.stickers.coverSelection()); toast(api.stickers.coverSelection().available ? "Settings controls available; slots in console" : "controls appear after 15 unlocks"); }),
+        btn("coincidences", () => { console.log("[dev] sticker coincidences", api.stickers.coincidences()); toast("triggers and missing songs in console"); })),
     // The session ledger is memory-only and dies on reload, so these are the only way to see the
-    // two "in one session" stickers without playing until every record has turned up.
+    // three "in one session" stickers without playing until every record has turned up.
     row("session", btn("name one per album", () => toast("albums: " + api.stickers.fill().length)),
         btn("peek ledger", () => { console.log("[dev] session", api.stickers.session()); toast("ledger in console"); }),
         btn("forget", () => { api.stickers.forget(); toast("ledger cleared"); }, "warn")),

@@ -20,8 +20,10 @@
    Loaded as its own module from index.html rather than through app.js: the cover is on screen
    before app.js has finished booting, and this has no business waiting for game data. */
 
-import { STICKERS } from "./stickers.js";
-import { loadStickers } from "./storage.js";
+import { STICKERS, STICKER_BY_ID, stickerArt } from "./stickers.js";
+import { coverStickerSlots } from "./stickerselection.js";
+import { COVER_STICKER_LIMIT } from "./config.js";
+import { loadStickers, loadSettings } from "./storage.js";
 import { mulberry32, fnv1a } from "./util.js";
 
 /* ---------- The numbers ---------- */
@@ -49,7 +51,7 @@ import { mulberry32, fnv1a } from "./util.js";
 // the whole field (see the best-candidate sampling below), so an arbitrary handful lands
 // scattered rather than rafted. That work is what keeps a partial set looking right, and it
 // matters more, not less, now that the ceiling is not doing any trimming on desktop.
-let COVER_MAX = 15;
+let COVER_MAX = COVER_STICKER_LIMIT;
 
 // Never below 44 (that size belongs to the margin doodles, a family these must not converge
 // with) and 64 is the real floor: below it the crowded drawings stop being their object and
@@ -221,17 +223,8 @@ function earnedMap() {
   return devPick || loadStickers();
 }
 
-// The ceiling picks by EARN ORDER, oldest first: the cover is the handful you stuck on as you
-// got them, and once it is full it stops changing. Picking the newest instead would take an
-// earned sticker off the cover every time another one landed, which is the same broken promise
-// as moving one. Ties and missing dates fall back to the array's own order.
-function coverSet(earned, max) {
-  const mine = STICKERS.filter((s) => earned[s.id]);
-  mine.sort((a, b) => String(earned[a.id]).localeCompare(String(earned[b.id]))
-                      || STICKERS.indexOf(a) - STICKERS.indexOf(b));
-  return mine.slice(0, max);
-}
-
+// Selection is shared with Settings in stickerselection.js. The default is oldest-first;
+// explicit choices retain their anchor when a sticker is removed or replaced.
 // A stand-in earned map for a list of ids, dated in list order. Used by the dev tools and by
 // the density comparison board, both of which need "pretend these N are earned, in this order".
 export function fakeEarned(ids) {
@@ -282,7 +275,10 @@ export function placeCoverStickers(cov, opts) {
   ensureDieCut();
 
   const spots = layout(geo);
-  const set = coverSet((opts && opts.earned) || earnedMap(), max).filter((s) => spots[s.id]);
+  // Dev density boards still show their requested roster, independent of player choices.
+  const preference = devPick || (opts && opts.earned) ? null : loadSettings().coverStickerSlots;
+  const set = coverStickerSlots((opts && opts.earned) || earnedMap(), preference, max)
+    .filter((slot) => slot.id && spots[slot.anchor]);
 
   const layer = document.createElement("div");
   layer.className = "cover-stickers";
@@ -293,15 +289,18 @@ export function placeCoverStickers(cov, opts) {
     layer.appendChild(devBox(geo.field, "#4a8c87"));
   }
 
-  for (const st of set) {
-    const p = spots[st.id];
+  for (const slot of set) {
+    const st = STICKER_BY_ID[slot.id];
+    const p = spots[slot.anchor];
     const cell = document.createElement("span");
-    cell.className = "cover-sticker";
+    cell.className = "cover-sticker" + (st.bordered ? " cover-sticker-bordered" : "");
+    cell.dataset.sticker = st.id;
+    cell.dataset.anchor = slot.anchor;
     cell.style.cssText =
       `left:${p.x.toFixed(1)}px;top:${p.y.toFixed(1)}px;` +
       `width:${p.size.toFixed(1)}px;height:${p.size.toFixed(1)}px;` +
       `--rot:${p.rot.toFixed(2)}deg`;
-    cell.innerHTML = st.art;
+    cell.innerHTML = stickerArt(st);
     layer.appendChild(cell);
   }
   cov.appendChild(layer);

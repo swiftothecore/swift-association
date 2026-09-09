@@ -95,6 +95,7 @@ const ASSETS = [
   // the cover is the first thing drawn on a cold start, so a missing half of this pair
   // breaks the load screen itself.
   "js/stickercover.js",
+  "js/stickerselection.js",
   // The generated tab icon, drawn in the Album Focus ink. Wanted on a cold start for the same
   // reason as the cover: applySettings swaps the <link> on the first paint, and without this the
   // tab would sit on the static gold tile until the network came back.

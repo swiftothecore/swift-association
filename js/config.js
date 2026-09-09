@@ -171,7 +171,8 @@ export const POLAROID_TOTAL = 21;
 // are printed and arrive finished. STICKER_TOTAL is the drawer's counter denominator and sits
 // at the true count of the drawn set, for the same reason POLAROID_TOTAL does: a denominator
 // running ahead of what exists would report "every sticker found" over a short count.
-export const STICKER_TOTAL = 19;
+export const STICKER_TOTAL = 21;
+export const COVER_STICKER_LIMIT = 15;
 
 // Tumblr messages, the screenshotted post set (the posts live in js/tumblr.js). A third
 // collectible, and the only one that is a picture of her rather than a thing from the desk:
@@ -226,6 +227,7 @@ export const DEFAULT_SETTINGS = {
   clock: "12",              // time-of-day format wherever a clock time is shown: "12" (4:31 PM) | "24" (16:31)
   // onboarding / first-run — the shared state every "first impressions" feature hangs off
   firstRunDone: false,      // has the player finished the first-run welcome flow (gates the intro + the ready-for-normal nudge)
+  coverStickerSlots: null,  // null = first 15 earned; otherwise [{ anchor, id }], with null id for an empty spot
   favouriteAlbum: "",       // era chosen in the first-run question ("" = never asked or skipped); surfaced on the profile
   firstMatchDone: false,    // has the player ever landed a correct answer (guards the one-time first-match celebration)
   seenCoachmarks: {},       // { [coachmarkId]: true } — just-in-time tips already shown, so each fires once

@@ -52,7 +52,7 @@ import {
   MASTERY_TITLES, MASTERY_TITLE_BY_VALUE, masteryDefaultTitle, MASTERY_ICONS, MASTERY_LEVEL_ICONS, MASTERY_TIER_ICONS, MASTERY_TILE_MARKS,
   skillXpForLevel, skillLevelFromXp, masteryXpForLevel, masteryLevelFromXp,
   POLAROID_DEVELOP_MS, POLAROID_TOTAL,
-  STICKER_TOTAL,
+  STICKER_TOTAL, COVER_STICKER_LIMIT,
   RANDOM_CATEGORIES, RANDOM_UNPLAYED_WEIGHT, RANDOM_GOAL_WEIGHT,
   STREAK_FLOOR, STREAK_CAP, STREAK_SALT, STREAK_TIERS,
   STREAK_THROW, STREAK_DROP, STREAK_SPIN, STREAK_MS, STREAK_SIZE, STREAK_CONE,
@@ -60,9 +60,10 @@ import {
 } from "./config.js";
 import { drawRandom, poolSummary } from "./random.js";
 import { POLAROIDS, POLAROID_BY_ID } from "./polaroids.js";
-import { STICKERS, STICKER_BY_ID } from "./stickers.js";
+import { STICKERS, STICKER_BY_ID, stickerArt } from "./stickers.js";
 import { TUMBLR_POSTS, TUMBLR_BY_ID, redactionRows } from "./tumblr.js";
-import { showCover } from "./stickercover.js";
+import { showCover, placeCoverStickers } from "./stickercover.js";
+import { coverStickerSlots, toggleCoverSticker } from "./stickerselection.js";
 import {
   BRACELET_ROW_CAP, buildBraceletSVG, braceletFinish, braceletLayout, braceletTrinketId,
   centreStrand, trinketPreviewSVG, randomTrinketForBead,
@@ -5141,13 +5142,16 @@ function stickerTilt(id) {
 // One sticker at one state. `locked` swaps the die-cut filter for the silhouette variant;
 // nothing else about the markup changes, so the two states share a footprint exactly.
 function stickerMarkup(s, locked) {
-  const cls = "sticker" + (locked ? " sticker-locked" : "");
-  return `<span class="${cls}" style="--rot:${stickerTilt(s.id)}deg" aria-hidden="true">${s.art}</span>`;
+  const cls = "sticker" + (locked ? " sticker-locked" : "") + (s.bordered ? " sticker-bordered" : "");
+  return `<span class="${cls}" style="--rot:${stickerTilt(s.id)}deg" aria-hidden="true">${stickerArt(s)}</span>`;
 }
 // Re-render the keepsakes drawer if it is open (otherwise a no-op), so an unlock landing while
 // the player is looking at the shelf lands on screen.
 function refreshStickers() {
   refreshKeepsakes();
+  settings.coverStickerSlots = loadSettings().coverStickerSlots;
+  placeCoverStickers();
+  if ($("settingsModal").classList.contains("open")) renderSettingsBody();
 }
 
 // Earn a sticker: stamp the unlock date, fire the charm-style toast and chime, refresh the
@@ -5231,16 +5235,17 @@ let sessionAlbums = new Set();    // the albums those songs came off
 
 // Record one correctly named song and take whatever the ledger now owes.
 function noteSessionSong(song) {
-  if (!song || !song.title || !catalogueCharmsLive()) return;
+  if (devNoLog || !song || !song.title || !catalogueCharmsLive()) return;
   if (sessionSongs.has(song.title)) return;          // already on the ledger this sitting
   sessionSongs.set(song.title, song.album || null);
   if (song.album) sessionAlbums.add(song.album);
   checkSessionStickers();
 }
 
-// The two ledger stickers. Both read STUDIO_ALBUMS rather than naming records here, so the ends
-// of the discography move on their own the day a new one is added.
+// The two album-ledger stickers follow the discography; the pegacorn reads a song pair.
 function checkSessionStickers() {
+  const named = new Set([...sessionSongs.keys()].map((title) => normalizeTitle(baseTitleOf(title))));
+  if (named.has("enchanted") && named.has("starlight")) earnSticker("pegacorn");
   // Junior Jewels tee — a song off every studio record in one sitting. The signed shirt is
   // covered in names, so this is the one that wants the whole guest list.
   if (STUDIO_ALBUMS.length && STUDIO_ALBUMS.every((a) => sessionAlbums.has(a))) {
@@ -5293,7 +5298,7 @@ function sangWholeSection(song, match) {
   return false;
 }
 
-// The four stickers that read one answered page. All of them want Taylor's own catalogue
+// The five stickers that read one answered page. All of them want Taylor's own catalogue
 // underneath, so they sit behind the gate the Catalogue charms already use: a guest run has
 // swapped the corpus wholesale, and none of these objects means anything against another
 // artist's records.
@@ -5309,6 +5314,10 @@ function checkAnswerStickers(song, lyricMatch) {
   // as the game being awkward rather than as the joke landing.
   if (song && currentWord && normalizeTitle(currentWord) === "karma"
       && baseTitleOf(song.title) === "Karma") earnSticker("cat-in-a-tiara");
+
+  // Boots: the dancing page answered with the cowboy song, from Taylor's own corpus.
+  if (song && cataloguePageHasWord() && normalizeTitle(currentWord) === "dance"
+      && normalizeTitle(baseTitleOf(song.title)) === "cowboy like me") earnSticker("boots");
 
   // Solitaire — one stone, one setting: a word only one song in the whole catalogue sings.
   // Measured live off the same call the word buckets are built from rather than kept as a list,
@@ -5432,7 +5441,7 @@ function stickerShelfHTML() {
   // otherwise only up while the data loads, so this is the door to it. Offered whatever the
   // count is: a bare cover is a fair thing to look at, and it is the before picture.
   const admire = found
-    ? `${found === 1 ? "Your sticker is" : "Your stickers are"} stuck to the front of the notebook.`
+    ? `Your earned stickers are kept here, with up to ${COVER_STICKER_LIMIT} on the front cover.`
     : `Nothing is on the front of the notebook yet.`;
   // The drawer opens over whatever screen you are on, and the cover can only be closed over
   // the front page — there is no notebook to shut in the middle of a run. Off the front page
@@ -20361,11 +20370,10 @@ function submitAnswer(song, isTimeout) {
      that starts on the last one's last word) read a log that already includes this answer. The
      eggs need the page to have been really sent: a timeout leaves whatever was in the box. */
   if (correct) checkCatalogueCharms(song);
-  // The session ledger, which the two "in one session" stickers read. Sits beside the Catalogue
+  // The session ledger, which the three "in one session" stickers read. Sits beside the Catalogue
   // charms because it asks the same kind of question, and takes every mode's correct answers.
   if (correct) noteSessionSong(song);
-  // The four stickers about THIS page: the vault track, the lonely word, the sung verse and the
-  // cat. Fed lyricMatch, since one of them is about how the page was answered rather than what.
+  // The five stickers about THIS page: the vault track, lonely word, sung verse, cat and boots. Fed lyricMatch, since one of them is about how the page was answered rather than what.
   if (correct) checkAnswerStickers(song, lyricMatch);
   if (!isTimeout) checkCatalogueEggs($("songInput").value, song, correct);
   // Bullet Holes — every rung of the hint ladder burned on this page and the page missed anyway.
@@ -23254,6 +23262,28 @@ function showSettingsPanel(id) {
   if (tab) { try { tab.focus({ preventScroll: true }); } catch (_) { tab.focus(); } }
 }
 
+function coverStickerSettingsHTML() {
+  const earned = loadStickers();
+  if (stickerCount(earned) <= COVER_STICKER_LIMIT) return "";
+  const slots = coverStickerSlots(earned, settings.coverStickerSlots);
+  const selected = new Set(slots.map((s) => s.id).filter(Boolean));
+  const full = selected.size >= COVER_STICKER_LIMIT;
+  const cards = STICKERS.filter((s) => earned[s.id]).map((s) => {
+    const on = selected.has(s.id);
+    return `<button type="button" class="set-cover-sticker" data-cover-sticker="${s.id}" ` +
+      `aria-pressed="${on}" aria-label="${escapeHtml(s.name)}: ${on ? "remove from cover" : "add to cover"}"` +
+      `${!on && full ? ' aria-disabled="true"' : ''}>${stickerMarkup(s, false)}` +
+      `<span class="set-cover-name">${escapeHtml(s.name)}</span>` +
+      `<span class="set-cover-state">${on ? "On cover" : "In drawer"}</span></button>`;
+  }).join("");
+  return `<section id="coverStickerSettings" class="set-section" aria-labelledby="coverStickerHeading">` +
+    `<h3 id="coverStickerHeading" class="set-section-title">Cover stickers</h3>` +
+    `<p class="set-cover-note">Choose up to ${COVER_STICKER_LIMIT} stickers for the front cover. Removed stickers stay in your collection.</p>` +
+    `<p id="coverStickerStatus" class="set-cover-count" role="status">${selected.size} of ${COVER_STICKER_LIMIT} chosen. ` +
+    `${full ? "Take one off to make room for another." : "Tap a sticker in the drawer to fill an empty spot."}</p>` +
+    `<div class="set-cover-grid" aria-describedby="coverStickerStatus">${cards}</div></section>`;
+}
+
 function renderSettingsBody() {
   disarmBookplateTitle();   // the re-render replaces the bookplate, so no arm may outlive it
   const diffOpts = [{ val: "last", label: "Last" }].concat(MODE_ORDER.map((m) => ({ val: m, label: MODES[m].label })));
@@ -23267,7 +23297,7 @@ function renderSettingsBody() {
     setSection("",
       setBookplateHTML() +
       setEraGridHTML()
-    );
+    ) + coverStickerSettingsHTML();
   panels.motion =
     setSection("",
       setChoiceHTML("reduceMotion", "Reduce motion", "Auto follows your system", [{ val: "auto", label: "Auto" }, { val: "on", label: "On" }, { val: "off", label: "Off" }]) +
@@ -23378,7 +23408,8 @@ function renderSettingsBody() {
   const was = document.activeElement;
   const d = (was && was.dataset) || {};
   // eraPick is compared against undefined, not truthiness: "" is the "no favourite" chip.
-  const wasSel = d.toggle ? `[data-toggle="${CSS.escape(d.toggle)}"]`
+  const wasSel = d.coverSticker ? `[data-cover-sticker="${CSS.escape(d.coverSticker)}"]`
+    : d.toggle ? `[data-toggle="${CSS.escape(d.toggle)}"]`
     : d.choice ? `[data-choice="${CSS.escape(d.choice)}"][data-val="${CSS.escape(d.val)}"]`
     : d.eraPick !== undefined ? `[data-era-pick="${CSS.escape(d.eraPick)}"]`
     : d.select ? `[data-select="${CSS.escape(d.select)}"]`
@@ -23399,6 +23430,18 @@ function renderSettingsBody() {
 let dangerTimer = null;
 function wireSettingsBody() {
   const body = $("settingsBody");
+  body.querySelectorAll("[data-cover-sticker]").forEach((button) => button.addEventListener("click", () => {
+    const earned = loadStickers();
+    if (stickerCount(earned) <= COVER_STICKER_LIMIT) return;
+    if (button.getAttribute("aria-disabled") === "true") {
+      $("coverStickerStatus").textContent = "Your cover is full. Take one off to make room for another.";
+      return;
+    }
+    settings.coverStickerSlots = toggleCoverSticker(earned, settings.coverStickerSlots, button.dataset.coverSticker);
+    saveSettings(settings);
+    placeCoverStickers();
+    renderSettingsBody();
+  }));
   body.querySelectorAll("[data-toggle]").forEach((b) => b.addEventListener("click", () => {
     const k = b.dataset.toggle;
     const disablingDailySeal = k === "hideDailyScore" && settings.hideDailyScore;
@@ -27220,6 +27263,15 @@ function buildDevApi() {
       reset: () => { resetTumblr(); devForgetSeenShelf("tumblr"); updateKeepsakesNav(); refreshTumblr(); },
     },
     stickers: {
+      coverSelection: () => ({
+        available: stickerCount() > COVER_STICKER_LIMIT,
+        slots: coverStickerSlots(loadStickers(), settings.coverStickerSlots),
+      }),
+      coincidences: () => ({
+        boots: { word: "dance", song: "cowboy like me" },
+        pegacornMissing: ["Enchanted", "Starlight"].filter((title) =>
+          ![...sessionSongs.keys()].some((s) => normalizeTitle(baseTitleOf(s)) === normalizeTitle(title))),
+      }),
       list: () => { const e = loadStickers(); return STICKERS.map((s) => ({ id: s.id, name: s.name, era: s.era, earned: !!e[s.id], at: e[s.id] || null })); },
       state: (id) => (STICKER_BY_ID[id] ? (stickerEarned(id) ? "earned" : "locked") : "unknown sticker: " + id),
       earn: (id) => (earnSticker(id) ? "earned" : devSetSticker(id, true)),   // real path, then a no-op report if already held

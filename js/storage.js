@@ -132,6 +132,9 @@ export function saveStickers(earned) {
 }
 export function resetStickers() {
   try { localStorage.removeItem(STICKERS_KEY); } catch (e) { /* ignore */ }
+  const settings = loadSettings();
+  settings.coverStickerSlots = null;
+  saveSettings(settings);
 }
 
 /* ---------- Tumblr messages: the screenshotted post set ---------- */

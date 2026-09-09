@@ -2201,6 +2201,7 @@
     filter: url(#stickCut);
   }
   .sticker-locked svg { filter: url(#stickCutLocked); }
+  .sticker-bordered:not(.sticker-locked) svg { filter: none; }
   .sticker .ln { stroke: #2b2722; stroke-width: 2.3; stroke-linecap: round; stroke-linejoin: round; }
   .sticker .ln.t { stroke-width: 1.4; }   /* interior detail */
   .sticker .ln.h { stroke-width: 1.7; }   /* between the two */
@@ -7699,6 +7700,7 @@
   }
   /* Stroke only. Every path in the artwork carries its own fill attribute, so these classes
      must never set one, or the fills stop being the drawing's own. */
+  .cover-sticker-bordered svg { filter: none; }
   .cover-sticker .ln { stroke: #2b2722; stroke-width: 2.3; stroke-linecap: round; stroke-linejoin: round; }
   .cover-sticker .ln.t { stroke-width: 1.4; }   /* interior detail */
   .cover-sticker .ln.h { stroke-width: 1.7; }   /* between the two */
@@ -11566,6 +11568,28 @@
   .btn-link:hover { color: var(--ink); }
 
   .set-section { margin: 0 0 18px; }
+  #coverStickerSettings { border-top: 1px solid var(--rule); padding-top: 20px; }
+  .set-cover-note, .set-cover-count {
+    font-family: var(--type); font-size: calc(11px + var(--text-size-adjust));
+    line-height: 1.65; color: var(--ink-soft); margin: 0 0 12px;
+  }
+  .set-cover-count { color: var(--ink); }
+  .set-cover-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(94px, 1fr)); gap: 10px; }
+  .set-cover-sticker {
+    display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
+    gap: 6px; padding: 12px 5px 9px; min-width: 0;
+    border: 1px dashed var(--rule-soft, var(--ink-soft)); border-radius: 3px; background: transparent;
+    color: var(--ink); cursor: pointer;
+  }
+  .set-cover-sticker[aria-pressed="true"] { border-style: solid; border-color: var(--ink-soft); background: var(--paper-edge); }
+  .set-cover-sticker[aria-disabled="true"] { cursor: default; }
+  .set-cover-sticker:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
+  .set-cover-sticker:hover { border-color: var(--ink); }
+  .set-cover-sticker .sticker { width: 70px; height: 70px; margin-bottom: 5px; }
+  .set-cover-sticker .sticker svg { width: 100%; height: 100%; }
+  .set-cover-name { font-family: var(--hand); font-size: calc(16px + var(--text-size-adjust)); line-height: 1.15; }
+  .set-cover-state { font-family: var(--type); font-size: calc(9px + var(--text-size-adjust)); color: var(--ink-soft); }
+
   .set-section-title {
     font-family: var(--type); font-size: calc(10px + var(--text-size-adjust)); letter-spacing: 1.6px; text-transform: uppercase;
     color: var(--ink-soft); margin: 0 0 8px; padding-bottom: 4px;

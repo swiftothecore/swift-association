@@ -4,7 +4,7 @@ Hand-authored vector illustrations based on the supplied boots, koi fish guitar,
 
 The boots feature braided trim, roses, flames and heart banners. The blue guitar has six strings, frets and individually drawn koi. The pegacorn has a rainbow mane and tail, overlapping teal feathers and sparse vector foil marks. Flat colours and drawn highlights replace photographic textures.
 
-All three drawings are approved, including the user’s final boot-lettering placement. They are not registered collectibles. Unlock triggers and integration remain to be designed. Avoid doubling the supplied outline when applying the shared sticker die-cut filter.
+All three drawings are approved, including the user’s final boot-lettering placement. The boots and pegacorn are registered collectibles; the koi guitar remains parked until its unlock is designed. The embedded copies keep their supplied outlines and bypass the extra earned die-cut filter.
 
 Approximate uncompressed sizes: boots 105 KB, guitar 30 KB, pegacorn 40 KB. The local drawing generator is `scripts/stickers/redraw_reference_stickers.py`; it does not read or trace the PNG references.
 
