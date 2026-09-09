@@ -1408,6 +1408,30 @@
     border-color: var(--ink); box-shadow: 3px 3px 0 #2b272238;
     transition: background-color .45s ease, color .3s ease, transform .2s, box-shadow .2s;
   }
+  /* The default gold on the night desk. Every other finish is a MATERIAL and keeps its own
+     colour on either paper (see above) — but plain gold is not a material, it is the era's
+     accent worn as a button, and the era accent already has a night value. So the CTA is taken
+     down to meet it rather than given a hand-picked third gold that would drift from the
+     masthead and the beads.
+
+     It is a color-mix rather than a flat colour because --cta-gold is NOT a constant: rollCtaGold
+     in js/app.js sets it inline on <html> as a fresh hsl() every load, jittered a few degrees and
+     percent around #efb73e so the button is hand-inked rather than printed. A flat dark gold here
+     would quietly delete that. Mixing 90% of whatever was rolled with the ink keeps the roll and
+     lands on 0.44 luminance, which is the night --brand-gold to within a rounding error, and
+     holds 6.0-8.4:1 against the paper across the jitter's full range.
+
+     It matters because of the size. At #efb73e this is a 31,000px slab at 0.53 luminance on a
+     0.02 desk, comfortably the brightest object on the screen and reading as a light source
+     rather than as a stroke of marker. The night gold keeps it the brightest thing on the page
+     (7.2:1 against the paper, against ink at 6.9:1 on the fill) without the glare. The white
+     sheen down the face comes back to a third of its daytime strength for the same reason it
+     did on the tape: a highlight only reads as a highlight against a lit surface. */
+  :root[data-theme="dark"] .btn-primary.play-cta:not([data-startbtn]) {
+    --cta-fill: color-mix(in srgb, var(--cta-gold, #efb73e) 90%, #2b2722);
+    background-image: linear-gradient(168deg, #ffffff1f 0%, #ffffff00 46%, #2b272233 100%), var(--cta-art, none);
+  }
+
   .btn-primary.play-cta::before {
     content: "✎"; margin-right: 9px; font-size: calc(19px + var(--text-size-adjust)); vertical-align: -1px;
     position: relative; z-index: 1; display: inline-block; transform-origin: 70% 90%;
@@ -9622,6 +9646,18 @@
   }
   .corner-link:hover .corner-link-label,
   .corner-link:focus-visible .corner-link-label { max-width: 160px; opacity: 1; }
+  /* Same treatment as the settings gear, and for the same reason: these are discs on the
+     desk rather than marks on the page. The red pen the icons are drawn in comes up to the
+     dark page's --red-pen value, and keeps carrying its fade as element opacity rather than
+     a translucent stroke — see the note above, the doubled join it prevents is still there
+     at night. */
+  :root[data-theme="dark"] .corner-link {
+    color: #d9cfb8;
+    background: rgba(44, 38, 29, 0.86);
+    border-color: rgba(236, 229, 214, 0.22);
+    box-shadow: 0 2px 7px rgba(0, 0, 0, 0.5);
+  }
+  :root[data-theme="dark"] .corner-link-ic { color: #df6b64; }
   /* No hover means touch: keep the labels out so mobile users can read what these are. */
   @media (hover: none) {
     .corner-link { gap: 7px; padding: 8px 14px 8px 8px; }
@@ -9717,6 +9753,41 @@
     clip-path: var(--tape-clip,
       polygon(5% 0%, 96% 0%, 91% 20%, 97% 40%, 88% 60%, 96% 80%, 90% 100%, 8% 100%, 4% 80%, 10% 60%, 3% 40%, 7% 20%));
   }
+  /* Tape at night. Not dimmed with a filter, because tape is TRANSLUCENT and the filter would
+     darken what shows through it as well; the honest move is to take down the frosted base so
+     the dark page underneath comes through instead. That base was the whole problem — a 0.62
+     cream over dark paper measured 0.95 luminance, the brightest surface on the night screen,
+     six of them lined up across the nav cards like a row of lit windows.
+
+     The wrinkle sheen comes down with it, and this is the part not to "restore" later: a bright
+     white band reads as a sheen only against a lit strip. On a dark strip the same band is the
+     brightest thing in the frame and the tape stops looking like tape and starts looking like a
+     tear in the page. The fibre and the tint are untouched — the tint is per-context and often
+     an era colour, and it is what keeps a strip recognisable as the same piece of tape it was
+     by day. The lip highlight inverts for the same reason the searcher's dots did: a white
+     hairline on top and a dark one underneath is how light falls on a raised edge in daylight,
+     and at 0.6 alpha on a dark strip it is just a bright line. */
+  :root[data-theme="dark"] :is(.nav-tape, .pol-tape, .an-tape, .ms-tape,
+                               .pb-tile::before, .bg-sleeve::before, .dropdown .item::before) {
+    background:
+      linear-gradient(102deg,
+        rgba(255, 255, 255, 0) 26%, rgba(255, 255, 255, 0.10) 40%, rgba(255, 255, 255, 0) 52%,
+        rgba(0, 0, 0, 0.10) 66%, rgba(255, 255, 255, 0.05) 78%, rgba(255, 255, 255, 0) 90%),
+      repeating-linear-gradient(90.5deg, rgba(0, 0, 0, 0.10) 0 1px, rgba(255, 255, 255, 0.02) 1px 3px),
+      linear-gradient(
+        color-mix(in srgb, var(--tape-color, #c9b27a) 30%, transparent),
+        color-mix(in srgb, var(--tape-color, #c9b27a) 23%, transparent)),
+      rgba(236, 229, 214, 0.13);
+    box-shadow:
+      inset 0 0.5px 0 rgba(255, 255, 255, 0.14),
+      inset 0 -1px 1px rgba(0, 0, 0, 0.28);
+    filter:
+      drop-shadow(0 1px 1.2px rgba(0, 0, 0, 0.55))
+      drop-shadow(0 0.5px 0.5px rgba(0, 0, 0, 0.35));
+  }
+  /* The dropdown strip gives up its filter by day for the stranded-layer bug documented below,
+     and must keep giving it up at night — the shorthand above would hand it straight back. */
+  :root[data-theme="dark"] .dropdown .item::before { filter: none; }
   /* Preset hand-torn outlines, cycled so neighbouring tiles/dropdown rows differ. */
   .pb-tile:nth-child(3n+2)::before,
   .dropdown .item:nth-child(3n+2)::before {
@@ -10941,6 +11012,21 @@
     text-align: center; box-shadow: 0 1px 3px rgba(43, 39, 34, 0.3);
   }
   .keepsakes-gear-badge.is-empty { display: none; }
+
+  /* The three desk buttons at night. They are chips of stationery lying on the DESK, not on
+     the page, so a cream disc has nothing dark behind it to be read against and simply burns
+     — measured, they were the brightest thing on the night screen after the start button.
+     Repaint rather than dim: these are chrome you have to hit, not props, and a brightness
+     filter would take the icon down with the disc. The disc goes to the notebook's own dark
+     stock so it still reads as an object set on the wood, and the ink comes up to meet it.
+     The hover keeps reading --highlighter, which is already the era's dark mark. */
+  :root[data-theme="dark"] .settings-gear {
+    color: #d9cfb8;
+    background: rgba(44, 38, 29, 0.86);
+    border-color: rgba(236, 229, 214, 0.22);
+    box-shadow: 0 2px 7px rgba(0, 0, 0, 0.5);
+  }
+  :root[data-theme="dark"] .settings-gear:hover { color: var(--ink); }
 
   .settings-modal { position: fixed; inset: 0; z-index: 200; display: none; }
   .settings-modal.open { display: block; }
