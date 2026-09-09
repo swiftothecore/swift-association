@@ -2904,6 +2904,7 @@
      place: gold here is the era accent worn as a sticker, and the era accent has a night value.
      The white sheen down the face drops with it, since a highlight only reads as one on a lit
      surface. The hover still flips to ink-on-paper, which themes itself. */
+  :root[data-theme="dark"] .chall-go.is-unlock { background-color: #c9ac74; }
   :root[data-theme="dark"] :is(.chall-go, .chall-curtain-next) {
     background-color: #e0a83a;
     background-image: linear-gradient(168deg, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0) 46%, rgba(43,39,34,0.2) 100%);
@@ -2994,7 +2995,11 @@
      "spends 1 token" underneath, which is the same fact three times in a 300px column. */
   .chall-go.is-unlock {
     display: inline-flex; align-items: center; gap: 10px;
-    background-color: #e0c48c; color: var(--ink); padding: 10px 15px;
+    /* Ink on a kraft sticker, stated rather than read from --ink, exactly as .chall-go above
+       it — this is that button wearing its unlock face. The hover still inverts to
+       ink-on-paper, which themes itself, and the stub stays hollow so the kraft cannot fight
+       it. See the note below. */
+    background-color: #e0c48c; color: #2b2722; padding: 10px 15px;
   }
   .chall-go.is-unlock::before { content: none; margin-right: 0; }
   /* hollow, so the whole sticker can invert to ink-on-paper on hover without the kraft
@@ -3409,11 +3414,17 @@
   }
   .bg-chain-card {
     display: block; width: 100%; text-align: left; cursor: pointer;
-    background: rgba(255,253,247,0.5); border: 1px solid rgba(43,39,34,0.16);
+    background: var(--card-wash, rgba(255,253,247,0.5)); border: 1px solid var(--card-edge, rgba(43,39,34,0.16));
     border-radius: 4px; padding: 8px 11px; color: var(--ink);
     transition: background 0.14s, box-shadow 0.14s, transform 0.1s;
   }
   .bg-chain-card:hover:not(:disabled) { background: rgba(199,149,31,0.14); }
+  /* A white wash lifts a card off cream paper and IS the light on a dark one. Inverted, so the
+     three lines still read as cards you can tap rather than as lit bars. The gold hover wash
+     works on either ground and is left alone. */
+  :root[data-theme="dark"] .bg-chain-card {
+    --card-wash: rgba(236,229,214,0.06); --card-edge: rgba(236,229,214,0.16);
+  }
   .bg-chain-card:active:not(:disabled) { transform: translateY(1px); }
   .bg-chain-card:disabled { cursor: default; }
   /* The verdict lands on the cards, where the eye already is: the real line ringed in gold,
@@ -3440,7 +3451,7 @@
   .bg-scrap {
     position: relative; display: flex; flex-direction: column; align-items: center;
     justify-content: center; gap: 2px; min-height: 56px; padding: 9px 6px; cursor: pointer;
-    color: var(--ink); background: #fbf6ea; border: 0;
+    color: var(--ink); background: var(--scrap-stock, #fbf6ea); border: 0;
     /* Torn on all four sides rather than cut. The shadow has to be a FILTER rather than a
        box-shadow: clip-path clips a box-shadow away with the corners, which leaves the scraps
        reading as flat rounded rectangles and throws away the tear entirely. */
@@ -3467,7 +3478,11 @@
                        100% 79%, 98% 98%, 71% 99.5%, 46% 94%, 20% 100%, 2.5% 97%,
                        0.5% 71%, 2% 47%, 0% 21%);
   }
-  .bg-scrap:hover:not(:disabled) { background: #fff8e6; }
+  .bg-scrap:hover:not(:disabled) { background: var(--scrap-hi, #fff8e6); }
+  /* Torn paper scraps carrying tokenised writing: the same card-and-ink pairing as the
+     personal-best tiles, so the same dark stock. Left alone, the word on the scrap turned
+     cream on a cream tear and the whole hand went blank. */
+  :root[data-theme="dark"] .bg-scrap { --scrap-stock: #3a3226; --scrap-hi: #473d2e; }
   .bg-scrap:active:not(:disabled) { transform: translateY(1px); }
   .bg-scrap:disabled { cursor: default; }
   .bg-scrap-word {
@@ -4863,6 +4878,19 @@
     box-shadow: 2.5px 3px 0 rgba(43,39,34,0.16);
     transform: rotate(-0.35deg);
   }
+  /* The fourth and last of the cream index cards carrying tokenised writing — the preset's
+     name reads --ink and was landing cream on cream. The note above says the card is
+     deliberately BRIGHTER than the page it lies on, and that is preserved rather than
+     contradicted: on the night page brighter than the page is this stock, the same one the
+     personal-best tiles, the nameplate and the bonus sleeve take. The ruling stays a dark
+     alpha and inverts with it, or the index-card lines become the brightest thing on the card. */
+  :root[data-theme="dark"] .custom-active {
+    background-color: #3a3226;
+    background-image: repeating-linear-gradient(
+      to bottom, transparent 0 21px, rgba(236,229,214,0.07) 21px 22px);
+    border-color: rgba(236, 229, 214, 0.16);
+    box-shadow: 2.5px 3px 0 rgba(0, 0, 0, 0.34);
+  }
   .custom-active-head {
     display: flex; align-items: center; justify-content: space-between; gap: 12px;
     padding-bottom: 8px; border-bottom: 1.5px solid rgba(187,86,64,0.55);
@@ -4895,7 +4923,7 @@
   }
   .custom-change-btn .type-glyph { width: 15px; height: 15px; margin-right: 0; vertical-align: 0; }
   .custom-change-btn .type-glyph--levers circle { fill: none; }
-  .custom-active-levers { font-family: var(--type); font-size: calc(11.5px + var(--text-size-adjust)); line-height: 1.5; color: #5a5042; }
+  .custom-active-levers { font-family: var(--type); font-size: calc(11.5px + var(--text-size-adjust)); line-height: 1.5; color: var(--ink-soft); }
 
   /* ---------- Custom "Change" modal (reuses the settings-modal chrome) ---------- */
   .cm-foot { display: flex; justify-content: flex-end; margin-top: 8px; padding-top: 13px; border-top: 1px solid rgba(43,39,34,0.1); }
@@ -11558,15 +11586,23 @@
   .set-check-box {
     flex: 0 0 auto; position: relative; width: 19px; height: 19px; margin-top: 2px;
     border: 1.5px solid var(--ink-soft); border-radius: 2px;
-    background: rgba(255, 255, 255, 0.35);
+    background: var(--box-wash, rgba(255, 255, 255, 0.35));
     /* hand-ruled, not printed */
     transform: rotate(-1.2deg);
     transition: border-color 0.14s, background 0.14s, box-shadow 0.14s;
   }
   body[data-reduce-motion="on"] .set-check-box { transition: none; }
   .set-check:hover .set-check-box {
-    border-color: var(--ink); background: rgba(255, 255, 255, 0.85);
-    box-shadow: 0 0 0 3px rgba(43, 39, 34, 0.07);
+    border-color: var(--ink); background: var(--box-wash-hi, rgba(255, 255, 255, 0.85));
+    box-shadow: 0 0 0 3px var(--box-ring, rgba(43, 39, 34, 0.07));
+  }
+  /* The hover wash went to 0.85 white, which on cream paper is "this box is lit up under your
+     cursor" and on the night page is a small white rectangle. Inverted, keeping the same
+     two-step ladder; the seating ring inverts with it. */
+  :root[data-theme="dark"] .set-check-box {
+    --box-wash: rgba(236, 229, 214, 0.06);
+    --box-wash-hi: rgba(236, 229, 214, 0.18);
+    --box-ring: rgba(236, 229, 214, 0.1);
   }
   .set-check-tick {
     position: absolute; left: -3px; top: -5px; width: 25px; height: 25px;
