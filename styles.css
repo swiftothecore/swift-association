@@ -1676,6 +1676,16 @@
     text-transform: uppercase; color: #7a4bb0; margin-bottom: 3px;
   }
   .podium-dark .chall-mark-svg { width: 11px; height: 11px; color: currentColor; }
+  /* The challenge's wax, pressed beside the name on its results screen. Smaller than the
+     drawer's 53px: there it is the head of a card and gets to be the object you look at
+     first, whereas here the score above it and the verdict stamp below it are the reason the
+     screen exists, and the seal is identity. It rides the title's rotation rather than
+     correcting for it, which is the one thing on the line that SHOULD sit askew — wax is
+     pressed by hand. Baseline alignment is wrong for a round object next to two different
+     title heights (a dark run carries a kicker above the name), so the row centres. */
+  .podium-sealed { display: flex; align-items: center; gap: 11px; }
+  .podium-seal { flex: 0 0 40px; display: block; width: 40px; height: 40px; }
+  .podium-seal > svg { display: block; width: 40px; height: 40px; }
 
   /* ---------- Difficulty picker — notebook tabs ---------- */
   .mode-picker { margin: 0 0 20px; }
@@ -5266,6 +5276,48 @@
   }
   /* One Of A Kind — a remaining guess (drains to a hollow pip as guesses are spent) */
   .chall-pip.filled { background: #b23a3a; border-color: #b23a3a; }
+
+  /* One Of A Kind, last guess spent: the title comes apart. The song's name is the only thing
+     on screen the player has been hunting all run, so it is the thing that breaks — letters
+     thrown out on their own arcs, tumbling and falling off the paper, with a spray of ink in
+     the song's own album colour left where the name used to be. It is a pen driven through the
+     page, not a firework: nothing glows, nothing flashes, and the ink obeys the same gravity
+     the dropped props down the desk do. The banner takes the same knock the wiped pot does,
+     which is why that shake is borrowed here rather than written twice. */
+  .ns-burst { position: relative; display: inline-block; }
+  .ns-frag {
+    display: inline-block; font-style: normal; will-change: transform;
+    animation: ns-frag-fly 1s cubic-bezier(0.22, 0.62, 0.4, 1) both;
+    animation-delay: var(--d, 0s);
+  }
+  /* Up and out first, then the fall — the arc a struck letter would actually take. */
+  @keyframes ns-frag-fly {
+    0% { transform: none; opacity: 1; }
+    14% { transform: translate(calc(var(--dx) * 0.24), var(--dy)) rotate(calc(var(--rot) * 0.2)) scale(calc(1 + (var(--s) - 1) * 0.5)); opacity: 1; }
+    62% { opacity: 1; }
+    100% { transform: translate(var(--dx), calc(var(--dy) + 112px)) rotate(var(--rot)) scale(var(--s)); opacity: 0; }
+  }
+  /* The spray sits over the name's own box and inherits its colour, so the ink that comes out
+     of a Reputation song is Reputation's ink. Pointer-events off: the row is still a banner. */
+  .ns-spray { position: absolute; inset: 0; pointer-events: none; }
+  .ns-drop {
+    position: absolute; left: var(--x); top: 50%; width: var(--r); height: var(--r);
+    background: currentColor; opacity: 0.9;
+    /* Uneven on all four corners — a flicked droplet is never a circle. */
+    border-radius: var(--blob);
+    animation: ns-drop-fly 0.86s cubic-bezier(0.2, 0.66, 0.4, 1) both;
+    animation-delay: var(--d, 0s);
+  }
+  @keyframes ns-drop-fly {
+    0% { transform: translate(-50%, -50%) scale(0.3); opacity: 0.95; }
+    100% { transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy) + 52px)) scale(1) rotate(var(--rot)); opacity: 0; }
+  }
+  .chall-banner.is-burst { animation: pot-wipe-shake 0.42s ease both; }
+  /* Reduced motion gets the outcome without the throw: the name struck off the page. */
+  @media (prefers-reduced-motion: reduce) {
+    .ns-frag, .ns-drop, .chall-banner.is-burst { animation: none; }
+  }
+  .chall-prog-name.is-struck { text-decoration: line-through; opacity: 0.55; }
   .chall-prog-count {
     font-family: var(--hand); font-weight: 700; letter-spacing: 0;
     font-size: calc(19px + var(--text-size-adjust));

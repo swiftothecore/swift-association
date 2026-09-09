@@ -15805,12 +15805,28 @@ function endChallenge() {
   // A dark run signs off the way it was announced: the briefing card's violet kicker,
   // repeated above the challenge name so the run opens and closes on the same note. The
   // other end paths set .textContent here, which wipes the kicker again on the way past.
+  //
+  // The challenge's own wax sits to the left of the name, and it answers the RECORD rather
+  // than the run: red for a challenge still undefeated, aged taupe once it has been beaten,
+  // black-violet once its dark side has. The run's own verdict is stamped underneath in
+  // letters an inch high, so a seal that also swung on win-or-lose would only be saying the
+  // same thing twice — and worse, it would disagree with the drawer's copy of itself two
+  // clicks later, since that one reports the record. `rec` is read AFTER
+  // markChallengeDefeated above, which is what makes a first-ever defeat land on this screen
+  // with the wax already cooled: you beat it, and the seal you stared at all run has changed.
+  // Same expression as renderChallengeDetail's head, and through sealMarkup() for the same
+  // reason it is there — the fore-edge tab still holds a live copy of this exact SVG when
+  // results paint, and two unscoped copies wash each other out to the defeated taupe.
   const titleEl = document.querySelector("#screen-results .podium-title");
-  if (c.dark) {
-    titleEl.innerHTML = `<span class="podium-dark">${CHALL_ECLIPSE}dark side</span>` + escapeHtml(c.name);
-  } else {
-    titleEl.textContent = c.name;
-  }
+  const resultSeal = `<span class="podium-seal" aria-hidden="true">` +
+    sealMarkup((rec.darkDefeated ? CHALLENGE_SEALS_DARK
+      : rec.defeated ? CHALLENGE_SEALS_AGED : CHALLENGE_SEALS)[c.id]) + `</span>`;
+  // Seal and words are wrapped together rather than laid out on .podium-title itself, so the
+  // whole arrangement is one node the other end paths' .textContent wipes on the way past.
+  // A layout class left on the title element would outlive the challenge that put it there.
+  titleEl.innerHTML = `<span class="podium-sealed">${resultSeal}<span>` +
+    (c.dark ? `<span class="podium-dark">${CHALL_ECLIPSE}dark side</span>` : "") +
+    `${escapeHtml(c.name)}</span></span>`;
   const outOfGuesses = c.rule === "newsong" && challengeTargetSong && newSongLives <= 0;
   // The verdict, and the bar it was measured against.
   //
@@ -18929,13 +18945,93 @@ function lastChainLetter(title) {
 function newSongRuleActive() {
   return gameType === "challenge" && currentChallenge && currentChallenge.rule === "newsong";
 }
+// One Of A Kind, the last guess: the song the whole run was hunting is gone, and the banner
+// carrying its title is the one thing on screen that has meant anything for ten pages. So that
+// is what breaks. Every letter is thrown out on its own arc and falls off the paper, and a
+// spray of ink in the song's album colour is left where the name was — the era's own ink, out
+// of the song that got away. The measurements are jittered per letter and per droplet because
+// nothing on this desk is drawn twice the same way. Returns how long the caller should hold the
+// screen before the results take it (0 when motion is reduced, which strikes the name off
+// instead and lets the run end at once).
+function burstNewSongTitle() {
+  const banner = $("challBanner");
+  const name = banner && banner.querySelector(".chall-prog-name");
+  if (!name) return 0;
+  if (motionReduced() || animInstant()) { name.classList.add("is-struck"); return 0; }
+
+  const chars = Array.from(name.textContent);
+  const mid = (chars.length - 1) / 2;
+  const jit = (n) => (Math.random() * 2 - 1) * n;
+  // How far a fragment may be thrown. Measured off the room the title actually has beside it
+  // rather than fixed, because a letter that leaves the viewport widens the document and hands
+  // the notebook a horizontal scrollbar — on a phone the desktop throw did exactly that.
+  const box = name.getBoundingClientRect();
+  const reach = Math.max(48, Math.min(150,
+    Math.min(box.left, window.innerWidth - box.right) - 12));
+  name.textContent = "";
+  name.classList.add("ns-burst");
+  chars.forEach((ch, i) => {
+    if (ch === " ") { name.append(document.createTextNode("\u00a0")); return; }
+    // -1 at the first letter, +1 at the last: the halves of the title go opposite ways, so the
+    // break reads as coming from the middle of the word rather than blowing off in one gust.
+    const spread = mid ? (i - mid) / mid : 0;
+    const frag = document.createElement("i");
+    frag.className = "ns-frag";
+    frag.textContent = ch;
+    frag.style.setProperty("--dx", `${(spread * reach * 0.78 + jit(reach * 0.22)).toFixed(1)}px`);
+    frag.style.setProperty("--dy", `${(-30 - Math.random() * 38).toFixed(1)}px`);
+    frag.style.setProperty("--rot", `${(spread * 64 + jit(34)).toFixed(1)}deg`);
+    // Thrown towards the reader as well as outwards, so a 12px banner still reads as a break
+    // rather than a word quietly sliding off the line.
+    frag.style.setProperty("--s", (1.2 + Math.random() * 0.5).toFixed(2));
+    // The centre goes first and the ends a frame or two later — the break travelling outwards.
+    frag.style.setProperty("--d", `${Math.round(Math.abs(spread) * 46)}ms`);
+    name.append(frag);
+  });
+
+  const spray = document.createElement("span");
+  spray.className = "ns-spray";
+  for (let i = 0; i < 22; i++) {
+    const drop = document.createElement("i");
+    drop.className = "ns-drop";
+    const ang = Math.random() * Math.PI * 2;
+    const dist = reach * (0.2 + Math.random() * 0.36);
+    drop.style.setProperty("--x", `${(8 + Math.random() * 84).toFixed(1)}%`);
+    drop.style.setProperty("--dx", `${(Math.cos(ang) * dist).toFixed(1)}px`);
+    drop.style.setProperty("--dy", `${(Math.sin(ang) * dist * 0.62 - 10).toFixed(1)}px`);
+    drop.style.setProperty("--r", `${(3.5 + Math.random() * 5.5).toFixed(1)}px`);
+    drop.style.setProperty("--rot", `${Math.round(jit(90))}deg`);
+    drop.style.setProperty("--d", `${Math.round(Math.random() * 90)}ms`);
+    drop.style.setProperty("--blob", `${52 + Math.random() * 40}% ${44 + Math.random() * 46}% ` +
+      `${50 + Math.random() * 42}% ${46 + Math.random() * 44}% / ` +
+      `${48 + Math.random() * 44}% ${52 + Math.random() * 40}% ` +
+      `${44 + Math.random() * 46}% ${50 + Math.random() * 42}%`);
+    spray.append(drop);
+  }
+  name.append(spray);
+  banner.classList.remove("is-burst");
+  void banner.offsetWidth;
+  banner.classList.add("is-burst");
+  // The graphite stroke that crosses out a spent life, on the stroke rather than after it —
+  // here it is the pen going through the title. Nothing new in the palette for one event.
+  playSound("scratch");
+  return 1150;
+}
 function rejectNewSong() {
   const t = challengeTargetSong ? challengeTargetSong.title : "your song";
   newSongLives -= 1;
   if (newSongLives <= 0) {                       // out of guesses — the song got away
     roundLocked = true;
+    clearTimer();                                // the run is already lost; the clock has no say
     softRejectFlash(`<b>“${escapeHtml(censor(t))}”</b> doesn't fit — out of guesses`);
-    endGame();                                   // routes to endChallenge (a loss)
+    renderNewSongBanner();                       // drain the last pip BEFORE the title goes
+    const hold = burstNewSongTitle();
+    if (!hold) { endGame(); return; }            // routes to endChallenge (a loss)
+    // Nothing typed into the blast can matter, and the results screen must not land on top of
+    // it — so the box is shut for exactly as long as the title takes to leave the page.
+    const input = $("songInput");
+    input.blur(); input.disabled = true;
+    setTimeout(() => { input.disabled = false; endGame(); }, hold);
     return;
   }
   const n = newSongLives;
@@ -27886,6 +27982,10 @@ function buildDevApi() {
         // and at zero the "out of guesses" loss.
         miss: () => { if (challengeTargetSong) submitAnswer(challengeTargetSong);
           return newSongLives; },
+        // The title coming apart when the last guess is spent, watched on its own: the loss it
+        // belongs to ends the run in a second, which is no way to look at an animation. Re-renders
+        // the banner first, so it can be fired over and over on one page.
+        burst: () => { renderNewSongBanner(); return burstNewSongTitle(); },
       },
       // Deep Cut — five correct off one album. Been Here All Along wants the WHOLE run off it,
       // so `win(false)` adds a stray from a second album to prove the charm withholds.
