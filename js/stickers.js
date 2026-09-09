@@ -1360,6 +1360,47 @@ export const STICKERS = [
 </g>
 </svg>`,
   },
+  {
+    id: "guest-harry-styles",
+    name: "Watermelon slice",
+    sub: "Harry Styles",
+    how: "Clear a whole guest shelf: Harry Styles",
+    hint: "Thirteen pages of a catalogue that is not hers.",
+    era: "The guest shelf",
+    art: `<svg xmlns="http://www.w3.org/2000/svg" class="stick" viewBox="0 0 100 100">
+<g stroke-linecap="round" stroke-linejoin="round">
+<path d="M47 17 Q48 15 50 18 L79 73 C65 91 33 93 15 78 Z" fill="#7e9149" stroke="#302d27" stroke-width="1.55" />
+<path d="M50 18 L81 72 L79 78 Q58 98 19 85 L15 78 C36 91 62 86 76 74 Z" fill="#647a3c" stroke="#302d27" stroke-width="1.2" />
+<path d="M47.3 17.7 Q48.1 16.3 49.7 18.4 L77 71 C62.4 86.4 34.4 87.4 17.2 76.4 Z" fill="#e0d9a6" stroke="#302d27" stroke-width="0" />
+<path d="M47.5 18.1 Q48.2 16.8 49.5 18.8 L74.8 68.5 C62 81 36 84 19.5 73.7 Z" fill="#d0706a" stroke="#302d27" stroke-width="1.0" />
+<path d="M49 21 L74 68 Q71 72 69 72 L46 23 Z" fill="#e08c85" stroke="#302d27" stroke-width="0" />
+<path d="M21 72 Q44 84 70 73 Q50 86 20 75 Z" fill="#dd8a80" stroke="#302d27" stroke-width="0" />
+<path d="M50 22 L74 67" fill="none" stroke="#9c6552" stroke-width="0.55" />
+<path d="M20 80 Q47 91 74 77" fill="none" stroke="#9c6552" stroke-width="0.55" />
+<g transform="rotate(12 46 35)">
+<path d="M46 32.3 C43 35.8 44.2 38 46 38 C48.4 38 48.3 35.5 46 32.3 Z" fill="#38382c" stroke="#302d27" stroke-width="0" />
+</g>
+<g transform="rotate(15 41 49)">
+<path d="M41 46.165 C37.85 49.84 39.11 52.15 41 52.15 C43.52 52.15 43.415 49.525 41 46.165 Z" fill="#38382c" stroke="#302d27" stroke-width="0" />
+</g>
+<g transform="rotate(-7 52 47)">
+<path d="M52 44.435 C49.15 47.76 50.29 49.85 52 49.85 C54.28 49.85 54.185 47.475 52 44.435 Z" fill="#38382c" stroke="#302d27" stroke-width="0" />
+</g>
+<g transform="rotate(16 33 62)">
+<path d="M33 59.3 C30 62.8 31.2 65 33 65 C35.4 65 35.3 62.5 33 59.3 Z" fill="#38382c" stroke="#302d27" stroke-width="0" />
+</g>
+<g transform="rotate(3 46 64)">
+<path d="M46 61.03 C42.7 64.88 44.02 67.3 46 67.3 C48.64 67.3 48.53 64.55 46 61.03 Z" fill="#38382c" stroke="#302d27" stroke-width="0" />
+</g>
+<g transform="rotate(-15 57 59)">
+<path d="M57 56.165 C53.85 59.84 55.11 62.15 57 62.15 C59.52 62.15 59.415 59.525 57 56.165 Z" fill="#38382c" stroke="#302d27" stroke-width="0" />
+</g>
+<path d="M83 18 C84 22.5 84.6 23.2 87.8 24 C84.6 24.8 84 25.5 83 30 C82 25.5 81.4 24.8 78.2 24 C81.4 23.2 82 22.5 83 18 Z" fill="#ead49a" stroke="#a0844c" stroke-width="0.75" />
+<path d="M11 41.9 C11.85 45.725 12.36 46.32 15.08 47 C12.36 47.68 11.85 48.275 11 52.1 C10.15 48.275 9.64 47.68 6.92 47 C9.64 46.32 10.15 45.725 11 41.9 Z" fill="#ead49a" stroke="#a0844c" stroke-width="0.75" />
+<path d="M88 81.4 C88.6 84.1 88.96 84.52 90.88 85 C88.96 85.48 88.6 85.9 88 88.6 C87.4 85.9 87.04 85.48 85.12 85 C87.04 84.52 87.4 84.1 88 81.4 Z" fill="#ead49a" stroke="#a0844c" stroke-width="0.75" />
+</g>
+</svg>`,
+  },
 ];
 
 export const STICKER_BY_ID = Object.fromEntries(STICKERS.map((s) => [s.id, s]));

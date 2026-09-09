@@ -171,7 +171,7 @@ export const POLAROID_TOTAL = 21;
 // are printed and arrive finished. STICKER_TOTAL is the drawer's counter denominator and sits
 // at the true count of the drawn set, for the same reason POLAROID_TOTAL does: a denominator
 // running ahead of what exists would report "every sticker found" over a short count.
-export const STICKER_TOTAL = 22;
+export const STICKER_TOTAL = 23;
 export const COVER_STICKER_LIMIT = 15;
 
 // Tumblr messages, the screenshotted post set (the posts live in js/tumblr.js). A third
@@ -412,6 +412,17 @@ export const GUESTS = [
            ticks: ["#d8b9ad", "#3d3742", "#d59ab3", "#b74743"] },
     era: "lover",
   },
+  {
+    id: "harry-styles",
+    name: "Harry Styles",
+    file: "data/guests/harry-styles.json",
+    // Deep green and watermelon-red pick up the souvenir sticker without deciding the
+    // four album bead colours. Until the catalogue gets a palette, these ticks are the
+    // guest shelf's documented fallback.
+    ink: { deep: "#26362d", accent: "#cf6b70", strap: "#647b43", pen: "#3c4934",
+           ticks: ["#7f9552", "#d48a6f", "#cf6b70", "#556b43"] },
+    era: "gold",
+  },
 ];
 // Names announced on the shelf before their catalogue data is ready. These deliberately have no
 // file, ink, or era, so nothing can mistake them for playable guests.
@@ -420,7 +431,6 @@ export const GUESTS_COMING_SOON = [
   { id: "sabrina-carpenter", name: "Sabrina Carpenter" },
   { id: "gracie-abrams", name: "Gracie Abrams" },
   { id: "miley-cyrus", name: "Miley" },
-  { id: "harry-styles", name: "Harry Styles" },
 ];
 // A guest is played at a chosen difficulty, from the same ladder Album Focus offers:
 // deliberately the same list, since a guest round IS Album Focus pointed at another corpus.
