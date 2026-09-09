@@ -3068,13 +3068,18 @@ if (location.pathname.endsWith('/index.html')) {
            otherwise on screen. -->
       <p id="braceletKeepsakeNote" class="bracelet-keepsake-note"></p>
 
-      <details id="braceletMemory" class="bracelet-memory">
-        <summary id="braceletGuide"><span>what the beads mean</span></summary>
-        <div class="bracelet-memory-sheet">
-          <div id="braceletLegend" class="bracelet-legend"></div>
-          <div id="braceletRecap" class="bracelet-recap"></div>
-        </div>
-      </details>
+      <!-- A button and a panel rather than a <details>, because the two have to sit on
+           different lines of the keepsake row: the toggle keeps its place beside Copy and
+           Download while the sheet it opens claims a full-width line underneath. A real
+           <details> is one box and would drag its own summary down with it. -->
+      <button id="braceletGuide" class="bracelet-memory" type="button"
+              aria-expanded="false" aria-controls="braceletMemory">
+        <span>what the beads mean</span>
+      </button>
+      <div id="braceletMemory" class="bracelet-memory-sheet" hidden>
+        <div id="braceletLegend" class="bracelet-legend"></div>
+        <div id="braceletRecap" class="bracelet-recap"></div>
+      </div>
       </div>
     </div>
 

@@ -11035,6 +11035,19 @@ function braceletFilledCount(results) {
   return results.reduce((last, value, i) => value == null ? last : i + 1, 0);
 }
 
+// The beads note is a button and a panel, not a <details>: the toggle has to stay on the
+// keepsake row beside Copy and Download while the sheet it opens takes the line below.
+function braceletMemoryOpen() {
+  return $("braceletGuide")?.getAttribute("aria-expanded") === "true";
+}
+
+function setBraceletMemoryOpen(open) {
+  const guide = $("braceletGuide");
+  const sheet = $("braceletMemory");
+  if (guide) guide.setAttribute("aria-expanded", open ? "true" : "false");
+  if (sheet) sheet.hidden = !open;
+}
+
 function setBraceletKeepsakeAvailable(available) {
   [$("saveBraceletBtn"), $("downloadBraceletBtn")].filter(Boolean).forEach((btn) => {
     btn.disabled = !available;
@@ -11052,6 +11065,7 @@ function setBraceletKeepsakeAvailable(available) {
 function renderBraceletDetails(results, albums, opts) {
   const summary = $("braceletSummary");
   const memory = $("braceletMemory");
+  const guide = $("braceletGuide");
   const legend = $("braceletLegend");
   const recap = $("braceletRecap");
   const caption = document.querySelector("#screen-results .bracelet-caption");
@@ -11061,7 +11075,8 @@ function renderBraceletDetails(results, albums, opts) {
 
   if (sealed) {
     if (summary) summary.textContent = "Today's 13-page bracelet is sealed. Tear the Daily result slip to reveal the tally and strand.";
-    if (memory) { memory.hidden = true; memory.open = false; }
+    if (memory) memory.hidden = true;
+    if (guide) { guide.hidden = true; setBraceletMemoryOpen(false); }
     if (legend) legend.innerHTML = "";
     if (recap) recap.innerHTML = "";
     return;
@@ -11169,7 +11184,8 @@ function renderBraceletDetails(results, albums, opts) {
       ? `<p class="bracelet-recap-note">The strand shows the latest ${layout.visibleCount} pages. ${layout.omitted} earlier page${layout.omitted === 1 ? " is" : "s are"} already strung into the loop.</p>` : "";
     recap.innerHTML = omitted + `<ol class="bracelet-recap-list" start="${layout.visibleStart + 1}">${items}</ol>`;
   }
-  if (memory) { memory.hidden = false; memory.open = false; }
+  if (guide) guide.hidden = false;
+  setBraceletMemoryOpen(false);
 }
 
 function renderFinishedBracelet(results, albums, opts = {}) {
@@ -25665,7 +25681,7 @@ function buildDevApi() {
           // Only rendered when a daily result is still sealed; skipped, like anything with no
           // width, on every other run. #braceletSummary is deliberately absent: it is sr-only.
           keepsakeNote: ".bracelet-keepsake-note",
-          memory: ".bracelet-memory > summary", memorySheet: ".bracelet-memory-sheet",
+          memory: ".bracelet-memory", memorySheet: ".bracelet-memory-sheet",
         };
         for (const [k, sel] of Object.entries(parts)) {
           const el = R.querySelector(sel);
@@ -28293,6 +28309,8 @@ async function init() {
   // Save the finished bracelet as a keepsake PNG (a torn notebook page).
   $("saveBraceletBtn").addEventListener("click", saveBraceletPNG);
   $("downloadBraceletBtn")?.addEventListener("click", (e) => saveBraceletPNG(e, "download"));
+  // The beads note opens a panel on the line below without the toggle leaving its own line.
+  $("braceletGuide")?.addEventListener("click", () => setBraceletMemoryOpen(!braceletMemoryOpen()));
   // Roll a finished classic run straight into endless play, carrying the score.
   $("keepGoingBtn").addEventListener("click", () => startInfinite("3lives", { carry: true }));
   // Quit / give up mid-game — first tap arms, second tap leaves (see armQuit).
