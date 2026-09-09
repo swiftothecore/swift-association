@@ -27023,6 +27023,16 @@ function buildDevApi() {
         saveKeepsakes(e); refreshKeepsakes(); updateKeepsakesNav(); return POLAROIDS.length;
       },
       open: () => openKeepsakes(),                             // jump to the polaroid wall
+      // One polaroid's frame at a chosen develop state, for the dev panel's gallery. The
+      // store is not consulted and not written: `state` and `frac` (how far through the
+      // develop window the veil should pretend to be, 0 → 1) are handed in, so the whole set
+      // can be looked at mid-develop without granting anything or waiting out the 13 minutes.
+      markup: (id, state = "developed", frac = 1) => {
+        const p = POLAROID_BY_ID[id];
+        if (!p) return "";
+        const elapsed = POLAROID_DEVELOP_MS * Math.max(0, Math.min(1, frac)) + (frac >= 1 ? 1000 : 0);
+        return polaroidHTML(null, p.name, { keepsake: true, state, elapsed, art: p.art, sub: p.sub, tilt: 0 });
+      },
       // Preview the results screen's "also found" line without hitting a trigger. Takes the
       // first `n` of each shelf, GRANTS any not already held (the recap only draws what the
       // store actually holds, so a fake run of it would show nothing), and puts it on the
@@ -27088,6 +27098,9 @@ function buildDevApi() {
         saveStickers(e); updateKeepsakesNav(); refreshStickers(); return STICKERS.length;
       },
       open: () => openKeepsakes(),                             // the shelf lives under the polaroid wall
+      // One sticker as the shelf draws it, earned or as the locked silhouette, for the dev
+      // panel's gallery. Reads nothing and writes nothing: the state is handed in.
+      markup: (id, locked = false) => (STICKER_BY_ID[id] ? stickerMarkup(STICKER_BY_ID[id], locked) : ""),
       // The cover the set actually lives on, put back on the desk from wherever you are.
       // window.__stickerCover.show() is the layer's own version and stops at the picture;
       // this is the player's route, tag and page turn included.

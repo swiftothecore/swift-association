@@ -1,12 +1,14 @@
 // Dev cheats panel — loaded only behind the ?dev flag (see devActive in app.js).
 // Deliberately un-notebook (dark, monospace, fixed corner) so it can never be
 // confused with the game UI. Receives a curated `api` from app.js's buildDevApi.
-// Pure config data (achievement/icon tables for the charm gallery) is imported
-// directly rather than routed through the api.
+// Pure config data (achievement/icon tables for the charm gallery, and the polaroid and
+// sticker sets for theirs) is imported directly rather than routed through the api.
 
 import { ACHIEVEMENTS, ACH_ICONS, ACH_GROUPS, ACH_GROUP_OF, ACH_GROUP_COLORS,
          CHALLENGES, CHALLENGE_SEALS, WAX_SEEDS, WAX_AUTO_IDS, reseedSeal, waxPourFaults,
          byShelf, auditChallengeShelf } from "./config.js";
+import { POLAROIDS } from "./polaroids.js";
+import { STICKERS } from "./stickers.js";
 
 function auditAchievementIdSources(config, app) {
   const failures = [];
@@ -1141,7 +1143,8 @@ export function initDev(api) {
   // Every achievement charm at real render size on real paper, grouped like the
   // collection page, with duplicate-key flagging. QA tool for the icon set.
   body.append(section("icons",
-    row(btn("charm gallery", openGallery), btn("seal gallery", openSeals))));
+    row(btn("charm gallery", openGallery), btn("seal gallery", openSeals)),
+    row(btn("polaroid gallery", openPolaroids), btn("sticker gallery", openStickers))));
 
   function openGallery() {
     const old = document.getElementById("dv-gallery");
@@ -1309,6 +1312,134 @@ export function initDev(api) {
     markDupes();
   }
 
+  // ---- Keepsake polaroid gallery -----------------------------------------------
+  // The whole photo set on one wall, in the frame the drawer draws, at whichever develop state
+  // you want to judge it in. Nothing is granted and nothing is written: the state is faked per
+  // render, so black film and a half-cleared veil can both be looked at without earning a
+  // keepsake or sitting out its thirteen minutes.
+  // The audit is duplicate SVG ids. The set paints into ONE document, so two photos sharing a
+  // gradient id means the second silently wears the first's fill — the trap sealMarkup exists
+  // to answer for the seals, except a polaroid's art is hand-written and cannot be re-scoped
+  // from here. Anything flagged has to be renamed in js/polaroids.js.
+  const POL_VIEWS = [
+    { label: "developed", state: "developed", frac: 1 },
+    { label: "developing · fresh", state: "developing", frac: 0 },
+    { label: "developing · half", state: "developing", frac: 0.5 },
+    { label: "locked · sealed", state: "locked", frac: 0 },
+  ];
+  const svgIds = (art) => [...String(art).matchAll(/\bid="([^"]+)"/g)].map((m) => m[1]);
+
+  function openPolaroids() {
+    const old = document.getElementById("dv-pol");
+    if (old) { old.remove(); return; }
+
+    const seen = {};
+    POLAROIDS.forEach((p) => svgIds(p.art).forEach((id) => { seen[id] = (seen[id] || 0) + 1; }));
+    const shared = (p) => svgIds(p.art).filter((id) => seen[id] > 1);
+    const nShared = POLAROIDS.filter((p) => shared(p).length).length;
+
+    let view = 0;
+    const grid = mk("div", { class: "dvp-grid" });
+    POLAROIDS.forEach((p, i) => {
+      const dup = shared(p);
+      // A photo with no `sub` loses its second caption line the moment it develops, and one
+      // with no `how` has nothing to hang off the unlock toast. Neither throws, so flag both.
+      const gaps = [dup.length ? "shared id: " + dup.join(", ") : "", p.sub ? "" : "no sub line",
+                    p.how ? "" : "no how"].filter(Boolean);
+      grid.append(mk("div", { class: "dvg-cell dvp-cell" + (dup.length ? " dup" : "") + (gaps.length ? " gap" : ""),
+                              "data-pol": p.id, title: gaps.length ? gaps.join(" · ") : p.how || "" },
+        mk("span", { class: "dvp-frame", html: api.keepsakes.markup(p.id, "developed", 1) }),
+        mk("span", { class: "dvg-key" }, `${i + 1}. ${p.id}`)));
+    });
+
+    const paint = () => {
+      const v = POL_VIEWS[view];
+      grid.querySelectorAll("[data-pol]").forEach((c) => {
+        c.querySelector(".dvp-frame").innerHTML = api.keepsakes.markup(c.dataset.pol, v.state, v.frac);
+      });
+    };
+    // 112 is the phone wall's column, 150 the drawer's own, and the two larger steps are for
+    // judging the drawing rather than the tile.
+    const sizes = [112, 150, 200, 260].map((px) =>
+      btn(px + "px", (e) => {
+        overlay.style.setProperty("--dvp-w", px + "px");
+        overlay.querySelectorAll(".dvp-size .dv-btn").forEach((b) => b.classList.toggle("on", b === e.target));
+      }, px === 150 ? "on" : ""));
+    const stateBtn = btn(POL_VIEWS[0].label, (e) => {
+      view = (view + 1) % POL_VIEWS.length;
+      e.target.textContent = POL_VIEWS[view].label;
+      paint();
+    });
+
+    const title = `polaroid gallery · ${POLAROIDS.length} photos · ` +
+      (nShared ? `${nShared} sharing an svg id` : "all svg ids unique");
+    const overlay = mk("div", { id: "dv-pol", style: "--dvp-w:150px" },
+      mk("div", { class: "dvg-bar" },
+        mk("span", { class: "dvg-title" }, title),
+        mk("span", { class: "dvp-size" }, ...sizes),
+        stateBtn,
+        btn("✕ close", () => overlay.remove())),
+      mk("div", { class: "dvg-body" }, grid));
+    overlay.addEventListener("click", (e) => { if (e.target === overlay) overlay.remove(); });
+    document.body.append(overlay);
+  }
+
+  // ---- Sticker gallery ----------------------------------------------------------
+  // Every die-cut sticker as the shelf prints it, earned or as the locked silhouette, with the
+  // whole set flipped between the two at once — which is the only way to check that a shape
+  // still ASKS its question with the colour taken away, since the silhouette is the puzzle.
+  // Deliberately in ARRAY ORDER rather than grouped by era: STICKERS is append-only because the
+  // closed cover deals its placement off that order, so the index is the thing worth seeing.
+  // The size steps stop at 64px because the shelf's floor is 64px — below it the crowded
+  // stickers stop being their object, and this bench must not be where that gets forgotten.
+  // The one thing here that is NOT the shelf: a locked cell keeps its caption. On the shelf that
+  // would be handing over the answer; on a bench you have to know which shape you are judging.
+  function openStickers() {
+    const old = document.getElementById("dv-stick");
+    if (old) { old.remove(); return; }
+
+    let locked = false;
+    const grid = mk("div", { class: "dvk-grid" });
+    STICKERS.forEach((st, i) => {
+      // No `hint` is a legitimate choice (the drawing and the source already say it), so this
+      // is a mark rather than a fault: it is what the Mastery 9 vault will have to stay silent
+      // about, and worth seeing beside the picture that has to carry the question alone.
+      grid.append(mk("div", { class: "dvg-cell dvk-cell" + (st.hint ? "" : " nohint"), "data-stick": st.id,
+                              title: `${st.how}${st.hint ? "\nhint: " + st.hint : "\n(no vault hint)"}` },
+        mk("span", { class: "dvk-art", html: api.stickers.markup(st.id, false) }),
+        mk("span", { class: "dvg-nm" }, st.name),
+        mk("span", { class: "dvg-key" }, `${i + 1}. ${st.era}`)));
+    });
+
+    const paint = () => {
+      grid.querySelectorAll("[data-stick]").forEach((c) => {
+        c.querySelector(".dvk-art").innerHTML = api.stickers.markup(c.dataset.stick, locked);
+      });
+    };
+    const sizes = [64, 84, 110, 160].map((px) =>
+      btn(px + "px", (e) => {
+        overlay.style.setProperty("--dvk-w", px + "px");
+        overlay.querySelectorAll(".dvk-size .dv-btn").forEach((b) => b.classList.toggle("on", b === e.target));
+      }, px === 84 ? "on" : ""));
+    const stateBtn = btn("earned", (e) => {
+      locked = !locked;
+      e.target.textContent = locked ? "locked · silhouette" : "earned";
+      paint();
+    });
+
+    const noHint = STICKERS.filter((st) => !st.hint).length;
+    const title = `sticker gallery · ${STICKERS.length} stickers · ${noHint} without a vault hint`;
+    const overlay = mk("div", { id: "dv-stick", style: "--dvk-w:84px" },
+      mk("div", { class: "dvg-bar" },
+        mk("span", { class: "dvg-title" }, title),
+        mk("span", { class: "dvk-size" }, ...sizes),
+        stateBtn,
+        btn("✕ close", () => overlay.remove())),
+      mk("div", { class: "dvg-body" }, grid));
+    overlay.addEventListener("click", (e) => { if (e.target === overlay) overlay.remove(); });
+    document.body.append(overlay);
+  }
+
   // ---- Reset (danger) --------------------------------------------------------
   body.append(section("reset",
     row(btn("records", () => { api.reset.records(); toast("records reset"); }, "warn"),
@@ -1433,6 +1564,29 @@ function injectStyles() {
   /* the known generator fault (curvature kinked into corners) — advisory, hover for the score */
   .dvg-cell.fault { border-color: #c08a2e; background: rgba(192,138,46,.09); }
   .dv-btn.dvs-mini { padding: 0 4px; line-height: 14px; min-width: 0; }
+  /* Polaroid gallery — the keepsake wall's own tiles, so the frame, veil and caption block
+     are the real ones from styles.css and only the grid is dev's. */
+  #dv-pol { position: fixed; inset: 0; z-index: 2147482999; background: rgba(12,10,8,.55);
+    display: flex; flex-direction: column; align-items: center; padding: 24px; overflow-y: auto; }
+  .dvp-size { display: flex; gap: 4px; }
+  .dvp-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(var(--dvp-w), 1fr));
+    gap: 22px 20px; align-items: start; }
+  .dvp-cell { padding: 4px 0 2px; }
+  .dvp-frame { display: block; width: 100%; }
+  /* The real veil is a live 13-minute fade, so a "half developed" bench would quietly clear
+     itself while you were looking at it. Frozen here: the gallery shows the state you picked. */
+  .dvp-frame .pol-veil { animation-play-state: paused; }
+  .dvg-cell.gap { border-color: #c08a2e; background: rgba(192,138,46,.09); }   /* missing caption/how */
+  /* Sticker gallery — same deal: .sticker and its two die-cut filters do the drawing, and the
+     smallest step is the shelf's 64px floor rather than a doodle-sized preview. */
+  #dv-stick { position: fixed; inset: 0; z-index: 2147482999; background: rgba(12,10,8,.55);
+    display: flex; flex-direction: column; align-items: center; padding: 24px; overflow-y: auto; }
+  .dvk-size { display: flex; gap: 4px; }
+  .dvk-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(calc(var(--dvk-w) + 34px), 1fr));
+    gap: 18px 12px; align-items: start; justify-items: center; }
+  .dvk-cell { gap: 6px; padding: 6px 2px 4px; }
+  .dvk-art { display: block; width: var(--dvk-w); }
+  .dvg-cell.nohint .dvg-key { font-style: italic; opacity: .75; }   /* no Mastery 9 whisper */
   .dvg-nm { font: 9px/1.2 ui-monospace, Menlo, monospace; color: var(--ink, #2b2722); }
   .dvg-key { font: 8px ui-monospace, Menlo, monospace; color: var(--ink-soft, #8a7f70); }
   .dvg-cell.dup .dvg-key { color: #b23a3a; font-weight: 700; }
