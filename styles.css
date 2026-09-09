@@ -205,6 +205,14 @@
     --highlighter: rgba(240, 196, 90, 0.32);
     --bead: #e0a83a;
     --page-wash: rgba(224, 168, 58, 0.06);
+    /* Hands the browser's OWN widgets to the dark side: the settings sliders, the <select>
+       dropdowns, the scrollbars, and the text fields' insertion caret and selection. None of
+       those are drawn by this stylesheet, so no amount of dark rules reaches them — the range
+       inputs in Gameplay were rendering as full-brightness light-mode tracks on a night page,
+       measured at 1.0 luminance, the brightest thing in the settings binder. One line, and it
+       has to live here on :root rather than on body: a scrollbar on the scrolling element
+       reads it off the root. */
+    color-scheme: dark;
   }
   /* ---- Dark era palettes ----
      The light accents were tuned to sit dark on cream; several (reputation,
