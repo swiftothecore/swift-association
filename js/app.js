@@ -5863,7 +5863,14 @@ function renderMasteryPage() {
     const maxed = lvl >= SKILL_MAX_LEVEL;
     const cur = skillXpForLevel(lvl), next = skillXpForLevel(lvl + 1);
     const frac = maxed ? 1 : Math.max(0, Math.min(1, (xp - cur) / (next - cur)));
-    const tint = maxed ? GOLD_TINT : sk.tint;
+    // The tint is handed over as a custom property with the config.js triplet as its FALLBACK,
+    // not as the triplet itself, for the same reason modeAccent does it: this is written inline
+    // on the row, and an inline custom property cannot be overridden by any stylesheet rule.
+    // The night column lives in the --skill-* block in styles.css. One triplet drives all three
+    // derived values below, so the wash and the rule follow the ink instead of being left on
+    // the light palette when the ink moves.
+    const tintKey = maxed ? "gold" : sk.id;
+    const tint = `var(--skill-${tintKey}, ${maxed ? GOLD_TINT : sk.tint})`;
     let pips = "";
     for (let i = 1; i <= SKILL_MAX_LEVEL; i++) {
       if (i <= lvl) pips += `<span class="on"></span>`;
@@ -5872,7 +5879,7 @@ function renderMasteryPage() {
     }
     const lvlText = (maxed ? "★ " : "") + "Level " + lvl;
     const nextText = maxed ? "mastered" : `${xp - cur} ink to ${lvl + 1}`;
-    return `<div class="skill-row" style="--c:rgb(${tint});--cs:rgba(${tint},0.14);--cr:rgba(${tint},0.42)">` +
+    return `<div class="skill-row" style="--ct:${tint};--c:rgb(var(--ct));--cs:rgba(var(--ct),0.14);--cr:rgba(var(--ct),0.42)">` +
       `<span class="skill-emblem">${MASTERY_ICONS[sk.icon] || ""}</span>` +
       `<div class="skill-main">` +
         `<div class="skill-top"><span class="skill-name">${escapeHtml(sk.name)}</span><span class="skill-lvl">${lvlText}</span></div>` +

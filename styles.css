@@ -2531,6 +2531,11 @@
   .chall-item-num { font-family: var(--type); font-size: calc(11px + var(--text-size-adjust)); color: var(--ink-soft); text-align: right; }
   .chall-item-name { font-family: var(--hand); font-weight: 700; font-size: calc(22px + var(--text-size-adjust)); line-height: 1; color: var(--ink); }
   .chall-item.selected .chall-item-name { color: #1f3a52; }
+  /* Selection is said in navy because the unselected names are plain --ink; on the night page
+     --ink is cream, so the navy that used to read as "this one" read as 1.26:1, i.e. as nothing.
+     Lifted to the file's dark denim, which is the same hue the light navy is, arriving from the
+     other side of the paper. */
+  :root[data-theme="dark"] .chall-item.selected .chall-item-name { color: #74abe1; }
   .chall-item-mark { grid-column: 2; grid-row: 1; display: flex; justify-content: center; }
   .chall-mark-svg { width: 20px; height: 20px; display: block; }
   /* The token mark. Inline-block with a text-relative nudge so it sits on the line wherever a
@@ -2841,13 +2846,16 @@
   .chall-eyebrow { font-family: var(--type); font-size: calc(9.5px + var(--text-size-adjust)); letter-spacing: 1.6px; text-transform: uppercase; color: var(--ink-soft); margin-bottom: 5px; }
   .chall-rule { font-family: var(--hand); font-size: calc(21px + var(--text-size-adjust)); line-height: 1.25; color: var(--ink); }
   .chall-goal { font-family: var(--hand); font-size: calc(22px + var(--text-size-adjust)); line-height: 1.2; color: var(--ink); margin-bottom: 4px; }
-  .chall-mods { font-family: var(--type); font-size: calc(12px + var(--text-size-adjust)); line-height: 1.45; color: #5a5042; }
+  /* #5a5042 was --ink-soft spelled out by hand: a hair darker than the token, identical in
+     intent, and stranded in the light palette. Both this and .chall-need below now read the
+     token, which is a no-op by day and the difference between 1.95:1 and legible at night. */
+  .chall-mods { font-family: var(--type); font-size: calc(12px + var(--text-size-adjust)); line-height: 1.45; color: var(--ink-soft); }
   /* wraps: with two actions the row can outgrow the detail panel, so the meta line drops
      above them rather than being squeezed to a two-word column */
   .chall-act { display: flex; align-items: center; justify-content: space-between; gap: 10px 14px; margin-top: 16px; flex-wrap: wrap; }
   .chall-meta { font-family: var(--type); font-size: calc(10px + var(--text-size-adjust)); color: var(--ink-soft); flex: 1 1 auto; min-width: 130px; }
   .chall-need {
-    font-family: var(--type); font-size: calc(11px + var(--text-size-adjust)); color: #5a5042; text-align: center;
+    font-family: var(--type); font-size: calc(11px + var(--text-size-adjust)); color: var(--ink-soft); text-align: center;
     border: 1px dashed #b3a584; border-radius: 1px; padding: 9px 18px; background: rgba(236,227,208,0.5);
   }
   /* mastery-gated lock: oxblood-tinted, carries the padlock glyph inline */
@@ -2866,7 +2874,12 @@
   /* primary action — the gold "Start writing" sticker, reused */
   .chall-go {
     font-family: var(--type); font-size: calc(15px + var(--text-size-adjust)); letter-spacing: 1px; font-weight: 700;
-    color: var(--ink); background-color: #efb73e;
+    /* The lettering is ink on a GOLD STICKER, not ink on the page, so it is stated outright
+       rather than read from --ink. It used to read the token, which meant that at night the
+       label turned cream and sat on the gold at 1.45:1 — the same class of bug as the
+       personal-best score, and on the button that starts the run. .play-cta already spells its
+       --cta-text out for exactly this reason; this is the same sticker, so it does too. */
+    color: #2b2722; background-color: #efb73e;
     background-image: linear-gradient(168deg, rgba(255,255,255,0.34) 0%, rgba(255,255,255,0) 46%, rgba(43,39,34,0.12) 100%);
     border: 2px solid var(--ink); border-radius: 2px;
     box-shadow: 3px 3px 0 rgba(43,39,34,0.22); transform: rotate(-0.6deg);
@@ -2879,6 +2892,14 @@
   .chall-go::before { content: "\270E"; margin-right: 9px; font-size: calc(17px + var(--text-size-adjust)); vertical-align: -1px; }
   .chall-go:hover, .chall-go:focus-visible { background-color: var(--ink); color: var(--paper); }
   .chall-go:active { transform: rotate(-0.6deg) translateY(1px); box-shadow: 1px 1px 0 rgba(43,39,34,0.22); }
+  /* Deepened for the night desk on the same reasoning as the start button, and to the same
+     place: gold here is the era accent worn as a sticker, and the era accent has a night value.
+     The white sheen down the face drops with it, since a highlight only reads as one on a lit
+     surface. The hover still flips to ink-on-paper, which themes itself. */
+  :root[data-theme="dark"] .chall-go {
+    background-color: #e0a83a;
+    background-image: linear-gradient(168deg, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0) 46%, rgba(43,39,34,0.2) 100%);
+  }
 
   /* the pre-run briefing for a dark run: the kicker carries the marker, inked violet, and
      the card's rule underline follows it so the whole card reads dark at a glance */
@@ -2946,6 +2967,17 @@
     background-color: #cec7b7; color: #8b8375; box-shadow: 3px 3px 0 rgba(43,39,34,0.14);
   }
   .chall-dark.is-locked:active { transform: rotate(-0.6deg); }
+  /* Locked at night. The point of this state is that it is FLAT and dead beside the inked one,
+     and pencil-grey card stock does that on cream paper — on the night desk the same stock is
+     a lit panel at 0.57 luminance, louder than the unlocked button it is supposed to sit
+     quietly next to. It stays the same object, one stop down for the same lamp, with the
+     lettering lifted to keep the flat, unavailable look rather than becoming unreadable. */
+  :root[data-theme="dark"] .chall-dark.is-locked,
+  :root[data-theme="dark"] .chall-dark.is-locked:hover,
+  :root[data-theme="dark"] .chall-dark.is-locked:focus-visible {
+    color: #8d8677; background-color: #423c31; border-color: #2e2921;
+    box-shadow: 3px 3px 0 rgba(0,0,0,0.34);
+  }
 
 
   /* unlock action — the same stationery sticker as Play, inked in kraft, carrying the
@@ -4657,6 +4689,19 @@
   .guest-peg--soon, .guest-peg--soon * { cursor: not-allowed; }
   .guest-peg--soon .guest-strap { opacity: 0.48; filter: grayscale(1); }
   .guest-pass--soon { background: linear-gradient(150deg, #e3dfd6, #cbc7be); }
+  /* The passes at night. Dimmed, never repainted, and this is the clearest case for it in the
+     whole pass: a guest pass is a laminated card brought in from outside, and EVERY colour on
+     it is the artist's own — the card stock, the woven strap, the band, and the pen the name is
+     written in, which comes from that guest's ink block in config.js. A repaint would have to
+     invent a night version of somebody else's identity, twice per artist and again for every
+     guest ever added. brightness() takes the laminate, the print and the name down together
+     and keeps every ratio the card was designed with, which is exactly the trade the keepsake
+     polaroids settled on. Six cream cards measured 0.94 luminance on the night desk before
+     this; they were the brightest thing in the notebook. */
+  :root[data-theme="dark"] .guest-pass { filter: brightness(0.62) saturate(0.94); }
+  :root[data-theme="dark"] .guest-pass:hover,
+  :root[data-theme="dark"] .guest-pass:focus-visible,
+  :root[data-theme="dark"] .guest-pass.selected { filter: brightness(0.78) saturate(0.96); }
   .guest-pass--soon .guest-print { opacity: 0.55; filter: grayscale(1); }
   .guest-pass--soon:hover {
     transform: rotate(var(--tilt, 0deg));
@@ -4672,9 +4717,12 @@
     font-family: var(--type); font-weight: 700; font-style: normal;
     font-size: calc(9px + var(--text-size-adjust)); letter-spacing: 1.5px;
     line-height: 1; text-transform: uppercase; white-space: nowrap;
-    color: rgba(160,62,46,0.82); padding: 5px 7px 4px;
-    border: 2px solid rgba(160,62,46,0.7); border-radius: 2px;
-    box-shadow: 0 0 0 1px rgba(160,62,46,0.16) inset;
+    /* A rubber stamp, so it keeps its stamp-red — but as a mix of --red-pen rather than a
+       literal, so the red the page is using at night is the red the stamp is pressed in.
+       Composites to within a shade of the old literal by day. */
+    color: color-mix(in srgb, var(--red-pen) 88%, transparent); padding: 5px 7px 4px;
+    border: 2px solid color-mix(in srgb, var(--red-pen) 75%, transparent); border-radius: 2px;
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--red-pen) 18%, transparent) inset;
   }
   /* the punched slot the strap's crimp passes through */
   .guest-slot {
@@ -7982,9 +8030,14 @@
     border: 1.5px solid rgba(43,39,34,0.12); border-radius: 3px;
     padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; gap: 12px;
   }
-  .cat-nemesis-sub { font-family: var(--type); font-size: calc(11px + var(--text-size-adjust)); color: rgba(155,34,38,0.85); }
-  .cat-search-link { color: inherit; text-decoration: none; border-bottom: 1px dashed rgba(155,34,38,0.5); white-space: nowrap; }
-  .cat-search-link:hover, .cat-search-link:focus-visible { color: #8f2e20; border-bottom-color: rgba(155,34,38,0.9); outline: none; }
+  /* The red here is the editor's pen and always was — it was just spelled out as a literal,
+     which is the "tinted rather than tokenised" trap: on the night page it measured 1.7:1 and
+     the nemesis line and its link were all but gone. --red-pen is the token for exactly this,
+     "solid ink, for text you must be able to read", and composites to within a shade of the
+     old literal by day, so the swap is a fix at night and a no-op by day. */
+  .cat-nemesis-sub { font-family: var(--type); font-size: calc(11px + var(--text-size-adjust)); color: var(--red-pen); }
+  .cat-search-link { color: inherit; text-decoration: none; border-bottom: 1px dashed color-mix(in srgb, var(--red-pen) 55%, transparent); white-space: nowrap; }
+  .cat-search-link:hover, .cat-search-link:focus-visible { color: color-mix(in srgb, var(--red-pen) 78%, var(--ink)); border-bottom-color: var(--red-pen); outline: none; }
   .cat-nemesis-word { position: relative; padding: 4px 10px; flex: none; }
   .cat-nemesis-word span {
     font-family: var(--hand); font-weight: 700; font-size: calc(34px + var(--text-size-adjust));
@@ -9268,7 +9321,10 @@
     padding: 14px 16px 16px; margin-bottom: 18px; background: var(--page-wash);
   }
   .sb-meter.done { border-color: var(--bead); }
-  .sb-sub { font-family: var(--hand); font-size: calc(19px + var(--text-size-adjust)); color: var(--margin); margin-top: 9px; line-height: 1; }
+  /* --margin is the RULE down the page, an alpha tuned to be seen through; --red-pen is the
+     token for red you have to read. This line is a sentence, so it takes the pen. The two are
+     close enough by day that the swap barely shows; at night the rule was 1.8:1. */
+  .sb-sub { font-family: var(--hand); font-size: calc(19px + var(--text-size-adjust)); color: var(--red-pen); margin-top: 9px; line-height: 1; }
   .sb-meter.done .sb-sub { color: var(--ink-accent); }
   .sb-album { margin-bottom: 18px; }
   .sb-album-head { display: flex; align-items: center; gap: 9px; margin-bottom: 8px; }
@@ -9279,7 +9335,10 @@
   .sb-list { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 2px 18px; }
   .sb-song { display: flex; align-items: flex-start; gap: 9px; padding: 3px 0; min-width: 0; }
   .sb-title {
-    font-family: var(--hand); font-size: calc(20px + var(--text-size-adjust)); line-height: 1.1; color: rgba(43,39,34,0.42); min-width: 0;
+    /* A song you have not found yet is the ink faded, so it is written as a mix of --ink and
+       follows the theme. As a literal it was the LIGHT ink, which put every unfound title on
+       the night page at 1.01:1 — the checklist was a list of blanks. Identical by day. */
+    font-family: var(--hand); font-size: calc(20px + var(--text-size-adjust)); line-height: 1.1; color: color-mix(in srgb, var(--ink) 42%, transparent); min-width: 0;
   }
   .sb-song.got .sb-title { color: var(--ink); }
   .sb-hollow { width: 13px; height: 13px; border: 1.6px solid rgba(43,39,34,0.3); border-radius: 50%; flex: none; margin-top: 4px; }
@@ -9963,7 +10022,27 @@
   /* --m-accent-deep is the "worn" rose, and worn has to stay the LOUDER of the two states.
      On the light page that means going deeper than the rose; on the dark page deeper is the
      way to disappear, so it inverts and goes brighter instead. Same job, opposite direction. */
-  :root[data-theme="dark"] .mastery-page { --m-accent-deep: 240, 156, 196; }
+  /* The rose itself needed the same move and did not get it in the earlier pass, which is why
+     every count, tag and medal state on this page sat at 2.7-3.0:1. Lifted to 4.6:1, matching
+     the 4.25:1 the light rose has on cream, and deliberately left well under deep's 7.5 so the
+     "worn" state stays the louder of the two in both themes. */
+  :root[data-theme="dark"] .mastery-page { --m-accent: 201, 112, 155; --m-accent-deep: 240, 156, 196; }
+  /* The five skill inks at night. config.js says outright that each tint is "drawn from the era
+     palette", so each one here is simply that era's DARK accent — midnight, red, lover, debut,
+     lavender — and the maxed state takes the dark gold. Nothing is hand-picked, which is the
+     point: a skill row cannot drift away from the era colour it is supposed to be written in.
+     Level text was measuring 1.95:1 against the paper before this.
+
+     As triplets, not colours, because the row derives a 0.14 wash and a 0.42 rule from the same
+     value and all three have to move together. */
+  :root[data-theme="dark"] {
+    --skill-resolve:   131, 152, 218;   /* dark midnight */
+    --skill-tempo:     235, 106, 102;   /* dark red */
+    --skill-lyricist:  241, 148, 193;   /* dark lover */
+    --skill-endurance: 116, 196, 139;   /* dark debut */
+    --skill-range:     188, 166, 240;   /* dark lavender */
+    --skill-gold:      230, 173,  61;   /* dark gold, for a mastered skill */
+  }
 
   /* Mastery hero — a notebook card, three states (see masteryHead* in app.js). */
   .mastery-head { margin: 4px 0 6px; }
@@ -10321,6 +10400,14 @@
   .rb-bead-col.long .rb-stem { height: 30px; }
   .rb-bead { width: 42px; height: 42px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
     background: rgba(255, 255, 255, 0.5); border: 1px solid rgba(43, 39, 34, 0.16); }
+  /* The disc is a SEAT for the bead, not a material, so unlike the paper chips beside it there
+     is nothing here to preserve and it simply inverts — the same move .nav-card-seat already
+     makes. A half-white disc reads as a lit hole punched in the night page. */
+  :root[data-theme="dark"] .rb-bead {
+    background: rgba(236, 229, 214, 0.08); border-color: rgba(236, 229, 214, 0.16);
+  }
+  :root[data-theme="dark"] .rb-bead-col.active .rb-bead { background: rgba(236, 229, 214, 0.16); }
+  :root[data-theme="dark"] .rb-bead-col.locked .rb-bead { background: rgba(236, 229, 214, 0.04); }
   /* Two kinds of mark hang here: a TRINKETS glyph (.trinket-preview) and, on the random bead,
      a MASTERY_ICONS mark wrapped by masteryMarkup (.charm). Sized alike so the strand reads
      as one row of beads whichever one a slot is wearing. */
@@ -10512,6 +10599,17 @@
   .paper-chip[data-paper="blush"]     { background: #f6e4e4; }
   .paper-chip[data-paper="slate"]     { background: #dfe3e8; }
   .paper-chip[data-paper="sage"] { background: #e2e8d8; }
+  /* A paper chip is a little sheet of the ACTUAL stock, so its six colours are the six stocks
+     and cannot be traded for night versions without the swatch ceasing to be a swatch. Dimmed
+     instead, which keeps them recognisable against each other and takes the glare off — a row
+     of cream sheets measured 0.87-0.95 luminance on the night desk, brighter than anything
+     else on the Mastery page including its own headings. There is a second reason not to
+     repaint: dark mode DROPS data-paper, so these stocks are a light-mode cosmetic and the
+     chips are previewing something the page is not currently wearing. Showing them lit would
+     be the page promising a stock it will not give you until morning. */
+  :root[data-theme="dark"] .paper-chip { filter: brightness(0.6) saturate(0.92); }
+  :root[data-theme="dark"] .rb-sw-col:hover .paper-chip,
+  :root[data-theme="dark"] .rb-sw-col.active .paper-chip { filter: brightness(0.76) saturate(0.94); }
   /* Bracelet-trinket glyph in the reward ladder (reuses the global .b-bead/.b-gloss styling). */
   .trinket-preview { overflow: visible; }
 
@@ -10748,7 +10846,11 @@
   .cal-cell--done { cursor: pointer; border-radius: 8px; }
   .cal-cell--done:hover, .cal-cell--done:focus-visible { background: var(--paper-edge); }
   .cal-num { font-family: var(--type); font-size: calc(14px + var(--text-size-adjust)); color: var(--ink); position: relative; z-index: 1; }
-  .cal-future .cal-num { color: rgba(43, 39, 34, 0.3); }
+  /* A day that has not happened yet is the ink faded, not a grey. Written as a mix of --ink
+     rather than a literal rgba of it so it follows the theme: the literal was the light ink,
+     which on the dark page put the future half of every month at 1.01:1 against the paper —
+     the numbers were there and could not be seen. Composites identically by day. */
+  .cal-future .cal-num { color: color-mix(in srgb, var(--ink) 30%, transparent); }
   .cal-today .cal-num { font-weight: 700; }
   .cal-ink { position: absolute; left: 5px; right: 5px; top: 5px; bottom: 5px; pointer-events: none; }
   .cal-mark { position: absolute; left: 0; top: 0; width: 100%; height: 100%; overflow: visible; }
