@@ -2896,7 +2896,7 @@
      place: gold here is the era accent worn as a sticker, and the era accent has a night value.
      The white sheen down the face drops with it, since a highlight only reads as one on a lit
      surface. The hover still flips to ink-on-paper, which themes itself. */
-  :root[data-theme="dark"] .chall-go {
+  :root[data-theme="dark"] :is(.chall-go, .chall-curtain-next) {
     background-color: #e0a83a;
     background-image: linear-gradient(168deg, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0) 46%, rgba(43,39,34,0.2) 100%);
   }
@@ -3628,6 +3628,28 @@
     background: rgba(251,247,234,0.94); box-shadow: 0 1px 0 rgba(43,39,34,0.06);
     padding: 20px 20px 15px; max-width: 560px; margin: 0 auto;
   }
+  /* The sleeve is a paper card carrying tokenised writing, so it takes the dark stock the
+     personal-best tiles take, and NOT a brightness filter. It looks like a filter case — a
+     printed object with its own tint — but almost everything on it, the pressing name, the big
+     score, every one of the ten track titles, reads --ink or --ink-soft. On the cream card those
+     all flipped to cream at night: the run's only keepsake was a blank slab with a faint "/10"
+     on it. A filter would have dimmed the blankness rather than fixed it.
+
+     This does not touch the PNG. The saved sleeve is drawn from scratch in js/sleevecard.js on a
+     canvas that cannot see this stylesheet at all — the skill notes say so explicitly, down to
+     color-mix() not resolving in there — so what you take off the page stays the printed cream
+     sleeve whatever the screen is wearing, which is correct: a keepsake is a thing you printed,
+     not a screenshot of the room you printed it in. */
+  :root[data-theme="dark"] .bg-sleeve {
+    background: #3a3226;
+    border-color: rgba(236, 229, 214, 0.14);
+    box-shadow: 0 1px 0 rgba(0, 0, 0, 0.28);
+  }
+  /* The kicker mixes the game's tint DOWN towards ink to sit on cream; on the dark stock it has
+     to come up instead. Same mix, other direction, so a game's own tint still identifies it. */
+  :root[data-theme="dark"] .bg-sleeve-kicker {
+    color: color-mix(in srgb, var(--bg-tint, #4a8c87) 72%, #ece5d6);
+  }
   /* washi tape pinning the sleeve to the page, tinted to the game (shared .nav-tape surface) */
   .bg-sleeve::before {
     content: ""; position: absolute; top: -9px; left: 50%; width: 62px; height: 17px;
@@ -3667,8 +3689,10 @@
     transform: rotate(-7deg);
     font-family: var(--type); font-weight: 700; font-size: calc(8.5px + var(--text-size-adjust)); letter-spacing: 2.2px;
     text-transform: uppercase; font-style: normal; white-space: nowrap;
-    color: rgba(160,62,46,0.74); padding: 3px 7px;
-    border: 1.4px solid rgba(160,62,46,0.6); border-radius: 2px;
+    /* Stamp red, taken from --red-pen rather than written out, so the ink the page is using is
+       the ink the stamp is pressed in — the same swap the guest shelf's COMING SOON took. */
+    color: color-mix(in srgb, var(--red-pen) 80%, transparent); padding: 3px 7px;
+    border: 1.4px solid color-mix(in srgb, var(--red-pen) 65%, transparent); border-radius: 2px;
   }
   .bg-sleeve-label {
     font-family: var(--type); font-size: calc(8.5px + var(--text-size-adjust)); letter-spacing: 1.8px; text-transform: uppercase;
@@ -3700,7 +3724,7 @@
   .bg-mark-svg { width: 100%; height: auto; display: block; }
   .bg-track.no .bg-track-title { color: var(--ink-soft); }
   /* On a missed track the note is the answer you didn't have, so it's written in red pen. */
-  .bg-track.no .bg-track-note { color: rgba(160,62,46,0.82); }
+  .bg-track.no .bg-track-note { color: var(--red-pen); }
   /* Padded both sides by the width of the copy mark in the corner, so the small print stays
      centred on the card rather than centred on what's left of it. */
   .bg-sleeve-foot {
@@ -5377,7 +5401,8 @@
     display: block; width: fit-content; margin: 0 auto 12px;
     font-family: var(--type); font-weight: 700;
     text-transform: uppercase; font-size: calc(10px + var(--text-size-adjust)); letter-spacing: 1.5px;
-    color: #b23a3a; border: 1px solid rgba(178, 58, 58, 0.5); border-radius: 3px;
+    /* --red-pen rather than the literal, so the tag is stamped in the ink the page is using. */
+    color: var(--red-pen); border: 1px solid color-mix(in srgb, var(--red-pen) 55%, transparent); border-radius: 3px;
     padding: 2px 8px;
   }
   .chall-curtain-rule {
@@ -5434,7 +5459,9 @@
   .chall-curtain-next {
     margin-top: 20px;
     font-family: var(--type); font-size: calc(14px + var(--text-size-adjust)); letter-spacing: 1px; font-weight: 700;
-    color: var(--ink); background-color: #efb73e;
+    /* Ink on a gold sticker, stated rather than read from --ink — see .chall-go, of which this
+       is the third copy in the file. Read from the token it turned cream on gold at night. */
+    color: #2b2722; background-color: #efb73e;
     background-image: linear-gradient(168deg, rgba(255,255,255,0.34) 0%, rgba(255,255,255,0) 46%, rgba(43,39,34,0.12) 100%);
     border: 2px solid var(--ink); border-radius: 2px;
     box-shadow: 3px 3px 0 rgba(43,39,34,0.22); transform: rotate(-0.6deg);
@@ -11253,6 +11280,28 @@
     --set-tab-6: #dfe3d3;   --set-tab-6-deep: #6f8f5c;   /* sage   */
     --set-tab-7: #ece2cf;   --set-tab-7-deep: #9a6b3a;   /* buff   */
   }
+  /* The dividers at night. Same seven stocks, printed on the dark side of the paper: each one
+     keeps its HUE and is rebuilt at a lightness that stands off the night page by 1.16-1.19:1,
+     which is the same 1.12-1.19 the light tints stand off the cream page by. Matching that
+     number is the whole brief — the note above says these are wayfinding and must never
+     out-shout the page they open, and a tab that stands further off the paper at night than it
+     does by day is doing exactly that. They measured 0.73 luminance before this, brighter than
+     the settings card itself.
+
+     Saturation goes UP a little (to ~26%, against 17-43% by day) and that is not a drift. What
+     separates seven washed-out tints at high lightness is hue, and hue is harder to read at low
+     lightness, so holding them apart costs a little chroma. --ink-soft still clears 4.3:1 on
+     every one. The -deep pair is untouched: it is a saturated edge stripe on the open tab and
+     reads on either stock. */
+  :root[data-theme="dark"] {
+    --set-tab-1: #373020;   /* manila */
+    --set-tab-2: #432841;   /* lilac  */
+    --set-tab-3: #3a2e22;   /* clay   */
+    --set-tab-4: #24313d;   /* blue   */
+    --set-tab-5: #47292f;   /* rose   */
+    --set-tab-6: #2e331e;   /* sage   */
+    --set-tab-7: #372f20;   /* buff   */
+  }
   .set-panel[hidden] { display: none; }
 
   /* Under the rail's width the tabs can't sit beside the paper, so they lie across
@@ -11317,13 +11366,25 @@
   @media (max-width: 480px) { .fr-era-grid { grid-template-columns: 1fr; } }
   .fr-era {
     display: flex; align-items: center; gap: 10px; text-align: left;
-    padding: 9px 12px; border-radius: 4px; background: rgba(255, 255, 255, 0.35);
-    border: 1.5px solid rgba(43, 39, 34, 0.16); color: var(--ink);
+    padding: 9px 12px; border-radius: 4px; background: var(--chip-wash, rgba(255, 255, 255, 0.35));
+    border: 1.5px solid var(--chip-edge, rgba(43, 39, 34, 0.16)); color: var(--ink);
     font-family: var(--hand); font-size: calc(18px + var(--text-size-adjust)); transition: border-color .15s, background .15s;
   }
-  .fr-era:hover { background: rgba(255, 255, 255, 0.6); border-color: var(--era-c); }
-  .fr-era.is-selected { border-color: var(--era-c); background: rgba(255, 255, 255, 0.72); box-shadow: 0 0 0 1px var(--era-c) inset; }
-  .fr-era-dot { width: 14px; height: 14px; border-radius: 50%; flex: none; box-shadow: 0 0 0 1.5px rgba(255, 255, 255, 0.7); }
+  .fr-era:hover { background: var(--chip-wash-hi, rgba(255, 255, 255, 0.6)); border-color: var(--era-c); }
+  .fr-era.is-selected { border-color: var(--era-c); background: var(--chip-wash-on, rgba(255, 255, 255, 0.72)); box-shadow: 0 0 0 1px var(--era-c) inset; }
+  .fr-era-dot { width: 14px; height: 14px; border-radius: 50%; flex: none; box-shadow: 0 0 0 1.5px var(--dot-ring, rgba(255, 255, 255, 0.7)); }
+  /* Era chips at night. A white wash lifts a chip off cream paper; on the night page the same
+     wash IS the light and the row reads as a lit bar. It inverts to a wash of the ink instead,
+     keeping the three-step ladder (rest, hover, chosen) the interaction depends on. The dot's
+     ring inverts with it — a white keyline around an era colour is how you separate it from
+     paper, and how you lose it against a dark page. */
+  :root[data-theme="dark"] .fr-era {
+    --chip-wash: rgba(236, 229, 214, 0.06);
+    --chip-wash-hi: rgba(236, 229, 214, 0.12);
+    --chip-wash-on: rgba(236, 229, 214, 0.16);
+    --chip-edge: rgba(236, 229, 214, 0.16);
+  }
+  :root[data-theme="dark"] .fr-era-dot { --dot-ring: rgba(236, 229, 214, 0.28); }
   .fr-era-name { line-height: 1.15; }
   .fr-actions { display: flex; flex-direction: column; align-items: center; gap: 10px; }
   .fr-confirm { width: 100%; }
@@ -11531,11 +11592,19 @@
     /* z-index lifts the plate above the card's ::after tension vignette (z-index 5)
        so the signature can never be painted over; the photo sits a layer above it. */
     flex: 1; min-width: 0;
-    position: relative; z-index: 10; background: rgba(251, 247, 234, 0.93);
-    border: 1px solid rgba(43, 39, 34, 0.16); border-radius: 3px;
+    position: relative; z-index: 10; background: var(--plate-stock, rgba(251, 247, 234, 0.93));
+    border: 1px solid var(--plate-edge, rgba(43, 39, 34, 0.16)); border-radius: 3px;
     /* extra left padding clears the overlapping polaroid */
     padding: 14px 18px 15px 34px; transform: rotate(-0.4deg);
     box-shadow: 0 1px 0 rgba(43, 39, 34, 0.06);
+  }
+  /* The nameplate is the same object as a personal-best tile — a near-opaque paper patch laid
+     over the ruled lines — so it takes the same dark stock and for the same reason: the words
+     on it read --ink, which flips, while the card did not. At 0.8 luminance it was also the
+     brightest thing in the settings binder by a distance. */
+  :root[data-theme="dark"] .bp-plate {
+    --plate-stock: #3a3226; --plate-edge: rgba(236, 229, 214, 0.14);
+    box-shadow: 0 1px 0 rgba(0, 0, 0, 0.28);
   }
   .np-kicker {
     font-family: var(--type); font-size: calc(11px + var(--text-size-adjust)); letter-spacing: 0.5px;
