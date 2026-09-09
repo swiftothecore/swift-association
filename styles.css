@@ -10071,6 +10071,37 @@
     --skill-gold:      230, 173,  61;   /* dark gold, for a mastered skill */
   }
 
+  /* High contrast on the night page needs its own column for both palettes, for the reason the
+     dark high-contrast block further down spells out at length: :root[data-theme="dark"] (0,2,0)
+     outranks body[data-contrast="high"] (0,1,1), so without these the setting would leave the
+     tiles and the skill rows exactly as ordinary dark mode left them — an accessibility control
+     that silently does nothing, which is the bug that block exists to have fixed once already.
+
+     Both columns are the HIGH-CONTRAST dark ERA accents, the same mapping ordinary dark mode
+     uses one step quieter, so nothing here is a fourth hand-picked palette. The card drops with
+     the paper (the HC page takes its sheet down to #17130d to buy ink contrast, and a card that
+     stayed put would stop reading as a card lying on it) and white ink clears 15:1 on it. */
+  :root[data-theme="dark"] body[data-contrast="high"] .pb-tile {
+    background: #2b2519; border-color: rgba(255, 255, 255, 0.22);
+  }
+  :root[data-theme="dark"] body[data-contrast="high"] {
+    --mode-relaxed:  #8fc4ff;
+    --mode-easy:     #8ee0a6;
+    --mode-medium:   #ffc94a;
+    --mode-hard:     #ff8480;
+    --mode-ultra:    #d8d7e6;   /* graphite, violet lean kept, as in ordinary dark */
+    --mode-lyricist: #d3bcff;
+    --mode-daily:    #ffa9a2;   /* still a touch off hard's coral, as by day */
+    --mode-darkside: #dcc2ff;
+    --mode-ruthless: #f0a184;
+    --skill-resolve:   159, 180, 255;
+    --skill-tempo:     255, 132, 128;
+    --skill-lyricist:  255, 170, 211;
+    --skill-endurance: 142, 224, 166;
+    --skill-range:     211, 188, 255;
+    --skill-gold:      255, 201,  74;
+  }
+
   /* Mastery hero — a notebook card, three states (see masteryHead* in app.js). */
   .mastery-head { margin: 4px 0 6px; }
   .mh-card { position: relative; border-radius: 14px; padding: 20px 24px 18px 46px;
