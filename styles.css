@@ -5520,21 +5520,27 @@
   /* The terms of the run, off the challenge's own blurb: the clock, the suggestions, the word
      pool, the title rule. Ruled off above and below like a clause pasted into the page, and
      set in the typewriter face because these are the functional facts, not the flavour. Two
-     columns from 380px so a five-term blurb does not push the button off a short screen. */
+     columns from 380px so a five-term blurb does not push the button off a short screen.
+     Columns, not a grid: terms wrap to wildly different heights, and a grid row is as tall as
+     its tallest cell, so a one-word term sitting beside a three-line one left a hole under it.
+     Multi-column packs each term against the one above instead, and balances the two columns
+     itself. A lone term takes the full width rather than half of it. */
   .chall-curtain-terms {
     list-style: none; margin: 15px auto 0; padding: 9px 0 10px; max-width: 340px;
     border-top: 1px solid rgba(43, 39, 34, 0.16);
     border-bottom: 1px solid rgba(43, 39, 34, 0.16);
     font-family: var(--type); font-size: calc(11px + var(--text-size-adjust));
     line-height: 1.5; color: var(--ink-soft); text-align: left;
-    display: grid; grid-template-columns: 1fr; gap: 1px 18px;
   }
   @media (min-width: 380px) {
-    .chall-curtain-terms { grid-template-columns: 1fr 1fr; }
-    .chall-curtain-terms > li:only-child { grid-column: 1 / -1; }
+    .chall-curtain-terms { column-count: 2; column-gap: 18px; }
+    .chall-curtain-terms:has(> li:only-child) { column-count: 1; }
   }
   /* a pencil tick against each term — the same mark the rule row uses for "this applies" */
-  .chall-curtain-terms > li { position: relative; padding-left: 15px; }
+  .chall-curtain-terms > li {
+    position: relative; padding-left: 15px;
+    break-inside: avoid; -webkit-column-break-inside: avoid;
+  }
   .chall-curtain-terms > li::before {
     content: "✓"; position: absolute; left: 0; top: 0;
     color: #b23a3a; opacity: 0.75; font-size: calc(10px + var(--text-size-adjust));
