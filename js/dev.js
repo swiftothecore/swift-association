@@ -353,12 +353,18 @@ export function initDev(api) {
   // every correct page also stands in a sung line — which is what makes the fold pay all five
   // skills at once, the only way to reach that charm without typing thirteen lyrics by hand.
   const simLyrics = mk("input", { type: "checkbox" });
+  // Which pages to drop, by page number. The count field fills from the front, so this is the
+  // only way to deal a run whose miss PATTERN is the point — "1,13" is Bookends.
+  const simMiss = mk("input", { type: "text", class: "dv-num", value: "1,13", style: "width:66px" });
+  const missList = () => simMiss.value.split(/[^0-9]+/).filter(Boolean).map(Number);
   body.append(section("simulate full game",
     row("correct=", simN, "/13"),
     row(simType, simMode, btn("run", () => api.simulate(+simN.value, { type: simType.value, mode: simMode.value, lyrics: simLyrics.checked }))),
     row(mk("label", { class: "dv-check" }, simLyrics, " answer in lyric lines")),
     row(btn("auto-win 13/13", () => api.simulate(13, { type: "classic", mode: simMode.value, lyrics: simLyrics.checked })),
-        btn("auto-lose 0/13", () => api.simulate(0, { type: "classic", mode: simMode.value })))));
+        btn("auto-lose 0/13", () => api.simulate(0, { type: "classic", mode: simMode.value }))),
+    row("miss pages", simMiss,
+        btn("run", () => api.simulate(0, { type: simType.value, mode: simMode.value, lyrics: simLyrics.checked, misses: missList() })))));
 
   // ---- Start games -----------------------------------------------------------
   const startMode = select(api.MODE_ORDER, (x) => x, (x) => x);

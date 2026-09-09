@@ -3472,6 +3472,10 @@ export const ACHIEVEMENTS = [
   { id: "submit-same-wrong-answer-5-times-one-round", name: "I Once Was Poison Ivy", desc: "Submit the same wrong answer 5 times in one round", secret: true, icon: "ivyword" },
   { id: "answer-right-with-song-given-wrongly-earlier", name: "Lost In Translation", desc: "Answer right with a song you gave wrongly earlier", secret: true, icon: "rightsong" },
   { id: "answer-13-wrong-having-typed-every-round", name: "I Was Wrong", desc: "Answer 13 wrong, having typed something every round", secret: true, icon: "everycrossed" },
+  // The mirror of that one: a run that dropped nothing except the two pages holding it up.
+  // Eleven right in the middle and both ends crossed out, which is the only miss pattern in
+  // the game you can see at a glance on the finished bracelet.
+  { id: "miss-only-first-and-last-round", name: "Bookends", desc: "Miss the first and last page of a run and nothing else", secret: true, icon: "placeholder" },
   { id: "time-out-with-right-answer-typed", name: "The Words I Held Back", desc: "Run out of time with the right answer typed", secret: true, icon: "unsentword" },
   { id: "type-nothing-until-2s-left-then-answer-right", name: "Holding My Breath", desc: "Type nothing until under 2s left, then answer right", secret: true, icon: "heldbreath" },
   { id: "take-first-suggestion-all-13-rounds", name: "Took The Money", desc: "Take the first suggestion on all 13 rounds", secret: true, icon: "topofthelist" },
@@ -4105,6 +4109,7 @@ export const ACH_GROUP_OF = {
   "recover-after-miss-3-times-one-game": "misfires", "score-zero": "misfires", "score-12": "misfires",
   "finish-with-no-answers": "misfires", "submit-same-wrong-answer-5-times-one-round": "misfires",
   "answer-13-wrong-having-typed-every-round": "misfires", "miss-round-after-every-hint": "misfires",
+  "miss-only-first-and-last-round": "misfires",
   "submit-answer-in-all-caps": "misfires", "submit-prompt-word-as-answer": "misfires",
   "submit-title-answer-off-limits": "misfires",
   "quit-round-1-before-typing": "misfires", "give-up-after-12-before-13": "misfires",

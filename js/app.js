@@ -2804,6 +2804,7 @@ const HIDDEN_ACH_IDS = [
   "keep-page-company-past-midnight", "watch-autumn-leaves-fall", "answer-3-rounds-same-song", "answer-paris-for-somewhere",
   "answer-nemesis-word", "answer-rain-on-monday", "play-all-seven-weekdays", "type-reputation-tv",
   "quit-round-1-before-typing", "give-up-after-12-before-13", "defeat-challenge-after-7-runs", "fall-for-first-impostor",
+  "miss-only-first-and-last-round",
   "find-every-polaroid-keepsake",
   // The bonus shelf's five. Added deliberately, which is what this list is for: each one makes
   // Is It Over Now? cost a little more, and three of them are failures you have to go and
@@ -21605,6 +21606,11 @@ function endGame() {
     // I Was Wrong — thirteen misses, every one of them a real answer sent in. Sitting on your
     // hands for thirteen timeouts is I Can't See You, and it is a different charm.
     if (score === 0 && fullRun && roundTyped.length === TOTAL_ROUNDS && roundTyped.every(Boolean)) unlock("answer-13-wrong-having-typed-every-round");
+    // Bookends — the two pages holding the run up are the only two that fell over. Read off
+    // roundResults rather than off `score === TOTAL_ROUNDS - 2`, so the shape of the run has to
+    // be right and not just the total: eleven anywhere else is a different game entirely.
+    if (fullRun && !roundResults[0] && !roundResults[TOTAL_ROUNDS - 1]
+        && roundResults.slice(1, -1).every(Boolean)) unlock("miss-only-first-and-last-round");
     // Took The Money — the top line of the dropdown taken on all thirteen pages, right or wrong.
     if (fullRun && roundFirstPick.length === TOTAL_ROUNDS && roundFirstPick.every(Boolean)) unlock("take-first-suggestion-all-13-rounds");
 
@@ -25077,12 +25083,17 @@ function devSimulate(correctCount, opts = {}) {
   if (gameType === "infinite") lives = startingLives();
   const total = TOTAL_ROUNDS;
   const want = Math.max(0, Math.min(correctCount, total));
+  // `opts.misses` names the pages to drop by 1-based page number and overrides the count. The
+  // fill below is front-loaded, so a bare "11 correct" can only ever put its two misses at the
+  // end — which leaves every charm that reads the SHAPE of a run (Bookends and its like)
+  // unsimulatable. Naming the pages is the general lever for all of them.
+  const missSet = Array.isArray(opts.misses) ? new Set(opts.misses.map((n) => n - 1)) : null;
   for (let i = 0; i < total; i++) {
     round = i + 1;
     const word = pickWord();
     currentWord = word;
     const valid = validSongs(word, effectiveStrict(), currentMode.noTitle);
-    const correct = i < want && valid.length > 0;
+    const correct = (missSet ? !missSet.has(i) : i < want) && valid.length > 0;
     roundWords[i] = word;
     roundResults[i] = correct;
     // `opts.hints` marks the first N pages as hinted, so a simulated run can exercise the
