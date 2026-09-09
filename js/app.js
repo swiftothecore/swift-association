@@ -4442,10 +4442,15 @@ function dailyBest() {
 }
 // Accent colour for a record tile — classic mode, infinite token (borrows its
 // difficulty), or daily (the red margin rule).
+// The accent a personal-best tile is written in. Returned as a custom property with the
+// MODE_COLORS value as its FALLBACK rather than as the value itself, so the day palette
+// still lives in config.js and dark mode only has to supply the night column (the
+// --mode-* block in styles.css). Written inline on the tile, so a plain hex here could
+// not be themed at all: an inline custom property beats every stylesheet rule.
 function modeAccent(token) {
-  if (token === "daily") return "#b23a3a";
+  if (token === "daily") return "var(--mode-daily, #b23a3a)";
   const base = isInfiniteToken(token) ? token.split("-")[2] : token;
-  return MODE_COLORS[base] || "var(--ink-accent)";
+  return MODE_COLORS[base] ? `var(--mode-${base}, ${MODE_COLORS[base]})` : "var(--ink-accent)";
 }
 function pbTile(mode, opts = {}) {
   const rec = opts.score != null ? { score: opts.score, date: null } : loadRecords(mode)[0];
@@ -5701,7 +5706,7 @@ function renderRecordsPage() {
   const darkBeaten = DARK_SIDE_IDS.filter((k) => challengeRecord(k).darkDefeated).length;
   const darkBlock = darkBeaten > 0
     ? `<p class="rec-group-label">dark sides</p><div class="pb-grid">` +
-        `<div class="pb-tile" style="--pb-accent:#7a4bb0">` +
+        `<div class="pb-tile" style="--pb-accent:var(--mode-darkside, #7a4bb0)">` +
           `<span class="pb-mode">Dark sides beaten</span>` +
           `<span class="pb-score">${darkBeaten}</span>` +
           `<span class="pb-sub">of ${DARK_SIDE_IDS.length}</span>` +
@@ -5724,7 +5729,7 @@ function renderRecordsPage() {
         // a different number of pages handed back, and that is the more interesting half.
         const how = rec.bestGaveUp
           ? `${rec.bestGaveUp} given up` : `named all ${BONUS_ROUNDS}`;
-        return `<div class="pb-tile pb-ruthless" style="--pb-accent:#8c4a34">` +
+        return `<div class="pb-tile pb-ruthless" style="--pb-accent:var(--mode-ruthless, #8c4a34)">` +
           `<span class="pb-mode">${escapeHtml(lens.label)}</span>` +
           `<span class="pb-score">${fmtTime(rec.best)}</span>` +
           `<span class="pb-sub">${escapeHtml(how)} · ${escapeHtml(recordDateLabel(rec.date))}</span>` +

@@ -2369,6 +2369,46 @@
   .pb-grid .pb-tile:nth-child(4n)   { transform: rotate(1.5deg); }
   .pb-grid .pb-tile:nth-child(even)::before { transform: translateX(-50%) rotate(3.5deg); }
   .pb-tile.pb-empty { opacity: 0.5; }
+  /* Personal-best tiles at night. Not a filter, and not left alone: the tile is the one
+     shape on the page that mixes both kinds of colour. Its card and its per-mode accent are
+     hardcoded, which argues for a brightness filter — but its SCORE reads var(--ink), which
+     flips to cream with the theme, and a cream number on a 0.93 cream card is invisible. That
+     was the actual state of this panel: every personal best you had set was a blank tile with
+     a "/13" floating in it. So the card is repainted to a dark stock and the accents are given
+     a night column, which is the only combination that leaves all three legible.
+
+     The card sits barely above the page (1.22:1) and that is correct, not an oversight: by day
+     it is cream on cream at a similar remove, and it is the border and the shadow that say
+     "card", not the value. Going darker to buy separation would make it a hole in the page
+     rather than an index card lying on it — the mistake the snapshot board already made once.
+     --ink still clears 10:1 on it, which is what the score needed. */
+  :root[data-theme="dark"] .pb-tile {
+    background: #3a3226;
+    border-color: rgba(236, 229, 214, 0.14);
+    box-shadow: 0 1px 0 rgba(0, 0, 0, 0.28);
+  }
+  /* The night column for the tile accents. Six of these are verbatim the dark ERA accent for
+     the hue the light value was already named after in config.js ("denim", "green", "gold",
+     "coral-red", "graphite", "lavender"), so the tiles cannot drift away from the palette the
+     rest of the night page is painted in. Ultra is the exception: dark graphite (#bcbcbc) is a
+     pure neutral, and this one has always leaned violet, so it is lifted by hand keeping that
+     lean. Daily takes the page's own --red-pen, which sits deeper than hard's coral and holds
+     the pair apart exactly as #b23a3a and #bb5640 do by day.
+
+     Defined on :root and NOT on .pb-tile, because the tile's --pb-accent is written inline by
+     pbTile and an inline custom property beats any rule that tries to set it here. These are
+     the values that inline var() falls through to, which is the only way in. */
+  :root[data-theme="dark"] {
+    --mode-relaxed:  #74abe1;   /* dark denim */
+    --mode-easy:     #74c48b;   /* dark debut */
+    --mode-medium:   #e6ad3d;   /* dark gold */
+    --mode-hard:     #eb6a66;   /* dark red */
+    --mode-ultra:    #aeadbd;   /* graphite, lifted, violet lean kept */
+    --mode-lyricist: #bca6f0;   /* dark lavender */
+    --mode-daily:    #df6b64;   /* --red-pen */
+    --mode-darkside: #c49af0;   /* the dark sides' own violet, already in this file */
+    --mode-ruthless: #d9856a;   /* rust, lifted */
+  }
   .pb-kicker { font-family: var(--type); font-size: calc(9px + var(--text-size-adjust)); letter-spacing: 1px; text-transform: uppercase; color: var(--ink-soft); }
   .pb-mode { font-family: var(--type); font-size: calc(10px + var(--text-size-adjust)); font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; color: var(--pb-accent); }
   .pb-score { font-family: var(--hand); font-weight: 700; font-size: calc(40px + var(--text-size-adjust)); line-height: 0.95; color: var(--ink); margin: 2px 0 1px; }
