@@ -25700,6 +25700,11 @@ function buildDevApi() {
         return window.__devDate;
       },
       clear: () => { window.__devDate = null; refreshDateSurfaces(); return todayKey(); },
+      // Which way the desk calendar reads its seasons. No argument reports the
+      // live guess (which is the point: the timezone list behind it is hand-kept
+      // and worth checking), "north"/"south" forces it for the session, anything
+      // else hands it back to the zone.
+      hemisphere: (which) => window.deskCalendar?.hemisphere(which) ?? "north",
       // Every day the calendar marks, as this year's date keys: the real milestones
       // plus the lyric days, ordered through the year.
       marked: () => {

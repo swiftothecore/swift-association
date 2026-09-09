@@ -756,7 +756,14 @@ export function initDev(api) {
         btn("-1 day", () => showDate(api.date.shift(-1))),
         btn("+1 day", () => showDate(api.date.shift(1))),
         btn("live", () => { const d = api.date.clear(); dateInput.value = ""; toast("date → live (" + d + ")"); })),
-    row(markSel, btn("jump", () => showDate(api.date.set(markSel.value))))));
+    row(markSel, btn("jump", () => showDate(api.date.set(markSel.value)))),
+    // The calendar's season rotation. "hemisphere" reports what the timezone
+    // guessed (the list behind it is hand-kept, so seeing the guess matters),
+    // and the two forces are session-only like the date override above.
+    row(btn("hemisphere", () => toast("seasons: " + api.date.hemisphere())),
+        btn("north", () => toast("seasons: " + api.date.hemisphere("north"))),
+        btn("south", () => toast("seasons: " + api.date.hemisphere("south"))),
+        btn("by zone", () => toast("seasons: " + api.date.hemisphere("auto"))))));
 
   // ---- Desk cassette ---------------------------------------------------------
   // The tape on the desk carries a song the DATE picks, weighted so Clean comes up

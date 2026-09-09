@@ -132,12 +132,18 @@ const DIGIT_W = 6.6;
 // leaves and needles all differ, like marks made by a hand rather than a font.
 //
 // Two months are drawn around what the GRID already stamps on them, because the
-// same object twice on one sheet reads as a mistake: August is not a salt
-// shaker (the 1st wears one for "august") and December is not a folded star
-// (the 13th wears one for her birthday).
+// same object twice on one sheet reads as a mistake: the sheet that stamps a
+// salt shaker (the 1st, for "august") does not draw one in the title, and the
+// sheet that stamps a folded star (the 13th, her birthday) does not either.
+// Both rotations below were checked against that, so a southern August takes
+// the mitten and a southern December the sun.
 //
-// Northern hemisphere, matching the seasonal eggs the game already runs on the
-// calendar year (December snowfall, the Halloween-week leaves).
+// The array is indexed NORTHERN: [0] is January's snowflake. A southern
+// notebook turns the whole set half a year, drawings and washes together, so
+// its September sheet wears the sprig over a green wash rather than the acorn.
+// See seasonMonth. The seasonal eggs (December snowfall, the Halloween-week
+// leaves) do not turn with it: those are tied to real dates in her calendar
+// rather than to the weather outside the window.
 const MONTH_MARKS = [
   { name: "snowflake", ink: [
     "M12 3.6 V20.3", "M5.1 7.6 L19.1 16.2", "M19.3 7.9 L4.9 16.4",
@@ -208,6 +214,56 @@ const MARK_WASH_D = "M3.4 8.6 C5.4 5.6 9 4.6 13.4 4.9 C18 5.2 20.6 7.4 20.4 11.6
 const MONTH_SEASON = ["winter", "winter", "spring", "spring", "spring", "summer",
                       "summer", "summer", "autumn", "autumn", "autumn", "winter"];
 const SEASON_WASH = { spring: "#6f8f4a", summer: "#c8912a", autumn: "#b0603a", winter: "#5a7c94" };
+
+// Which hemisphere's seasons the pad keeps. A browser will not answer this: the
+// timezone is the only signal on offer, and an IANA id names a place, not a
+// latitude. So this is a hand-kept list rather than a clever test, and it lists
+// COUNTRIES whose seasons are lived as southern rather than every zone that
+// happens to sit below the equator. Somewhere tropical has no four seasons to
+// be wrong about, so nothing equatorial is here and anything unlisted keeps the
+// northern set. The zone comes from the same place the daily reset takes it:
+// the Settings override first, the detected zone otherwise.
+const SOUTHERN_PREFIX = ["Australia/", "Antarctica/", "America/Argentina/"];
+const SOUTHERN_ZONES = new Set([
+  // New Zealand and the southern Pacific
+  "Pacific/Auckland", "Pacific/Chatham", "Pacific/Norfolk", "Pacific/Fiji", "Pacific/Noumea",
+  "Pacific/Port_Moresby", "Pacific/Bougainville", "Pacific/Guadalcanal", "Pacific/Efate",
+  "Pacific/Tongatapu", "Pacific/Apia", "Pacific/Niue", "Pacific/Rarotonga", "Pacific/Tahiti",
+  "Pacific/Marquesas", "Pacific/Gambier", "Pacific/Pitcairn", "Pacific/Pago_Pago", "Pacific/Easter",
+  // South America
+  "America/Sao_Paulo", "America/Bahia", "America/Fortaleza", "America/Recife", "America/Maceio",
+  "America/Araguaina", "America/Belem", "America/Santarem", "America/Manaus", "America/Boa_Vista",
+  "America/Porto_Velho", "America/Rio_Branco", "America/Eirunepe", "America/Campo_Grande",
+  "America/Cuiaba", "America/Noronha", "America/Santiago", "America/Punta_Arenas",
+  "America/Montevideo", "America/Asuncion", "America/La_Paz", "America/Lima",
+  // the pre-2009 Argentine ids, still handed out by older browsers
+  "America/Buenos_Aires", "America/Cordoba", "America/Rosario", "America/Mendoza",
+  "America/Catamarca", "America/Jujuy",
+  // southern Africa and the southern Indian Ocean
+  "Africa/Johannesburg", "Africa/Windhoek", "Africa/Gaborone", "Africa/Maseru", "Africa/Mbabane",
+  "Africa/Harare", "Africa/Lusaka", "Africa/Blantyre", "Africa/Maputo", "Africa/Luanda",
+  "Africa/Lubumbashi", "Indian/Antananarivo", "Indian/Mauritius", "Indian/Reunion",
+  "Indian/Kerguelen",
+]);
+
+function zoneName() {
+  try {
+    const tz = loadSettings().timezone;
+    if (tz && tz !== "auto") return tz;
+    return Intl.DateTimeFormat().resolvedOptions().timeZone || "";
+  } catch (e) { return ""; }
+}
+// Session-only override, in the spirit of the date one: it lives on window and
+// never in storage, so a reload is always honestly where you actually are.
+function southernSeasons() {
+  const dev = typeof window !== "undefined" && window.__devHemisphere;
+  if (dev === "south" || dev === "north") return dev === "south";
+  const zone = zoneName();
+  return !!zone && (SOUTHERN_ZONES.has(zone) || SOUTHERN_PREFIX.some((p) => zone.startsWith(p)));
+}
+// The index into the drawings and the washes: the real month up north, half a
+// year around it down south. Every other date on the sheet is untouched.
+const seasonMonth = (m) => southernSeasons() ? (m + 6) % 12 : m;
 const MARK_SCALE = 0.92;                // the 24-box drawn at ~22px, the height of the whole title line
 const MARK_GAP = 8;                     // paper between the mark and the M of the month
 
@@ -227,7 +283,8 @@ function drawMonthMark(svg, title, m, seed) {
   title.removeAttribute("transform");
   const b = title.getBBox();
   if (!b.width) return false;
-  const mark = MONTH_MARKS[m];
+  const sm = seasonMonth(m);
+  const mark = MONTH_MARKS[sm];
   const size = 24 * MARK_SCALE;
   const shift = (size + MARK_GAP) / 2;
   title.setAttribute("transform", `translate(${shift.toFixed(1)} 0)`);
@@ -235,7 +292,7 @@ function drawMonthMark(svg, title, m, seed) {
     `translate(${(b.x - MARK_GAP - size + shift).toFixed(1)} ${(b.y + b.height / 2 - size / 2).toFixed(1)}) scale(${MARK_SCALE})` });
   const inner = el("g", { transform: `rotate(${(-9 + jit(seed) * 18).toFixed(1)} 12 12)` });
   inner.appendChild(el("path", { d: MARK_WASH_D, class: "cal-wash",
-    fill: SEASON_WASH[MONTH_SEASON[m]], opacity: 0.34 }));
+    fill: SEASON_WASH[MONTH_SEASON[sm]], opacity: 0.34 }));
   for (const d of mark.ink) {
     inner.appendChild(el("path", { d, fill: "none", stroke: "#55412a", "stroke-width": 1.3,
       "stroke-linecap": "round", "stroke-linejoin": "round" }));
@@ -435,6 +492,18 @@ if (svg) {
   scheduleMidnight();
   // Dev hook in the spirit of the snowfall toggle. `refresh` is what app.js's
   // date override calls; `render` still takes a Date for console poking, e.g.
-  // deskCalendar.render(new Date(2026, 11, 13)) for her birthday.
-  window.deskCalendar = { render, refresh };
+  // deskCalendar.render(new Date(2026, 11, 13)) for her birthday. `hemisphere`
+  // forces the season rotation for a session ("north", "south", or anything
+  // else to hand it back to the timezone) and reports which way the pad is
+  // currently reading, so the guess itself can be checked.
+  window.deskCalendar = {
+    render, refresh,
+    hemisphere: (which) => {
+      if (which !== undefined) {
+        window.__devHemisphere = (which === "north" || which === "south") ? which : null;
+        refresh();
+      }
+      return southernSeasons() ? "south" : "north";
+    },
+  };
 }
