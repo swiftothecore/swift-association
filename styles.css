@@ -163,7 +163,7 @@
   [data-ink] { --mast-ink: var(--mast-ink-day); }
 
   /* ---- Gold leaf (the perfect tier) ----
-     Beating an album buys its ink; PERFECTING it lays leaf over the star above the i. One token
+     Beating an album buys its ink; PERFECTING it lays leaf around the star above the i. One token
      rather than a thirteenth ink: the leaf is the same gold whichever ink it sits on, which is
      what makes it read as a second, rarer honour instead of another colour to choose. Deliberately
      NOT the board tiles' corner gold (#ddb43c / #c9a435): those are flat paper triangles on the
@@ -994,14 +994,17 @@
     stroke-linejoin: round; stroke-linecap: round;
     filter: drop-shadow(0 1px 0 rgba(255,248,232,0.45)) drop-shadow(0 2px 5px rgba(58,30,8,0.28));
   }
-  /* Leafed, once the worn ink's album has been PERFECTED. The fill goes to gold and the ink
-     stays on as the outline, so the star still belongs to the ink it was won with rather than
-     turning into a generic gold mark — and the outline is thickened, because leaf laid over a
-     drawn shape leaves the drawing showing at the edge. On Fearless the two are nearly the same
-     colour and the gild barely shows; champagne is already a gold, and that is accepted. */
+  /* Leafed, once the worn ink's album has been PERFECTED. The star's BODY stays the ink and the
+     leaf goes round it as the rim: gilding the fill instead turned the one mark in the header
+     that is meant to show the ink at full strength into a generic gold star, and on a green or a
+     navy ink it stopped matching the word it sits two letters away from. A rim reads as a thing
+     laid onto the ink rather than a thing replacing it, which is what the second tier is. The
+     stroke is widened for it, since a centred stroke only shows half its width outside the shape.
+     On Fearless the two are nearly the same colour and the gild barely shows; champagne is
+     already a gold, and that is accepted. */
   body[data-gild="leaf"] .mast-i .mast-star {
-    fill: var(--leaf);
-    stroke: var(--mast-ink, var(--brand-gold)); stroke-width: 1.7;
+    fill: var(--mast-ink, var(--brand-gold));
+    stroke: var(--leaf); stroke-width: 2.4;
   }
   /* a songwriter's underline flourish, drawn in the same pen as the era ink: the
      pen comes in low at the left, turns a single leaning loop under the "S",
@@ -4498,13 +4501,14 @@
   }
   /* The leaf on a perfected ink's chip. Pinned to the chip's corner rather than set beside the
      word, because on the real masthead the star sits ABOVE the line, not in it — a star tucked
-     into the row would read as punctuation. Outlined in the chip's own ink for the same reason
-     the masthead's is: leaf laid over a drawn mark leaves the drawing showing at the edge. */
+     into the row would read as punctuation. Inked in the chip's own colour with the leaf as the
+     rim, exactly as the masthead's star is: the chip is a promise of what the title will look
+     like, so the two have to gild the same way round. */
   .ink-sw { position: relative; }
   .ink-sw-leaf {
     position: absolute; right: -4px; top: -5px; width: 13px; height: 13px;
     transform: rotate(-8deg);
-    fill: var(--leaf); stroke: var(--mast-ink, var(--brand-gold)); stroke-width: 1.4;
+    fill: var(--mast-ink, var(--brand-gold)); stroke: var(--leaf); stroke-width: 2;
     stroke-linejoin: round; stroke-linecap: round;
     filter: drop-shadow(0 1px 1px rgba(60,50,35,0.3));
   }
