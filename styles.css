@@ -4857,6 +4857,15 @@
     padding: 5px 0; border-bottom: 1px dotted rgba(43,39,34,0.22);
     font-family: var(--type); font-size: calc(12px + var(--text-size-adjust));
   }
+  /* The record's own bead, at index scale (the same colour-only language .ms-dot uses on the
+     verdict). The ring is what keeps a pale sleeve, like Ariana's Yours Truly or petal's
+     white half, from disappearing into the paper. */
+  .guest-rec-dot {
+    flex: none; align-self: center; width: 9px; height: 9px; border-radius: 50%;
+    background: var(--ink-soft);
+    box-shadow: 0 0 0 1px var(--rec-dot-ring, rgba(43,39,34,0.22));
+  }
+  :root[data-theme="dark"] .guest-rec-dot { --rec-dot-ring: rgba(236,229,214,0.26); }
   .guest-rec-name { flex: 1; min-width: 0; }
   .guest-rec-n { color: var(--ink-soft); font-size: calc(10.5px + var(--text-size-adjust)); letter-spacing: 1px; }
   .guest-detail-note {

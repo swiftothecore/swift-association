@@ -10762,8 +10762,23 @@ function renderGuestDetail(id) {
     if (guestSelected !== id || !$("guestDetailBody")) return;
     const counts = guestCounts(c);
     const rec = guestRecord(id);
-    const records = (c.albums || []).map((a) =>
-      `<li><span class="guest-rec-name">${escapeHtml(a.album)}</span>` +
+    // A bead of each record's own colour down the left of the list, so the sleeve reads in the
+    // same palette the strand will string those songs in (see guestBeadTint). A two-colour
+    // record paints its dot in both halves, exactly as its bead is strung. A voice-axis guest
+    // has no album colour to give, so the pass's own record ticks stand in, which is the same
+    // floor guestPalette falls back to for a file with no palette at all.
+    const pal = normalizeGuestPalette(c.palette);
+    const ticks = (g.ink && g.ink.ticks) || [];
+    const recDot = (album, i) => {
+      const tint = pal.axis === "album" ? pal.colors[album] : null;
+      const col = tint || ticks[i] || (g.ink && g.ink.accent) || null;
+      if (!col) return `<span class="guest-rec-dot"></span>`;
+      const paint = Array.isArray(col)
+        ? `linear-gradient(125deg, ${col[0]} 0 46%, ${col[1]} 54% 100%)` : col;
+      return `<span class="guest-rec-dot" style="background:${paint}"></span>`;
+    };
+    const records = (c.albums || []).map((a, i) =>
+      `<li>${recDot(a.album, i)}<span class="guest-rec-name">${escapeHtml(a.album)}</span>` +
       `<span class="guest-rec-n">${(a.songs || []).length}</span></li>`).join("");
     const tabs = difficultyTabs(GUEST_DIFFS, guestSelectedDiff);
     const stamp = rec.admitted
