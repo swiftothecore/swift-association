@@ -114,10 +114,13 @@
   body[data-era="evermore"]   { --ink-accent:#6b4a2e; --highlighter:rgba(160,120,80,0.42);  --bead:#8a6038; --page-wash:rgba(122,90,56,0.05); }
 
   /* ---- Masthead inks (Album Focus reward, body[data-ink]) ----
-     ONE token, --mast-ink, worn by the wordmark's gold word, the star over the i, the tagline
-     hearts and the closed cover's title. Every one of those reads it as
-     `var(--mast-ink, <its own old value>)`, so with no ink chosen the attribute is simply absent
-     and all four keep exactly the colour they had. Never give --mast-ink a :root default: the
+     ONE token, --mast-ink, worn by every gold mark in the masthead — the gold word, the star
+     over the i, the underline swash, the four flanking pen strokes and the tagline hearts —
+     plus the closed cover's title. The rule is that the wordmark is drawn in ONE pen: leaving
+     the swash and the flanks pinned to --brand-gold left a green title sitting inside yellow
+     furniture, which read as a half-finished reward rather than a chosen ink. Every one of
+     those reads it as `var(--mast-ink, <its own old value>)`, so with no ink chosen the
+     attribute is simply absent and they all keep exactly the colour they had. Never give --mast-ink a :root default: the
      surfaces do NOT share one fallback (the masthead falls back to --brand-gold, the cover to
      --ink-accent) and a root default would silently flatten that difference.
 
@@ -1023,7 +1026,7 @@
        the drawing space is 320x34 with the wave axis on y=14, and the -0.554em
        drop is what lands that axis on the h1 content bottom, where the old flat
        rule sat. Move one and you must move the other. */
-    stroke: var(--brand-gold); opacity: 0.85; pointer-events: none;
+    stroke: var(--mast-ink, var(--brand-gold)); opacity: 0.85; pointer-events: none;
   }
   /* four short pen strokes flanking the title, the marks you rule beside a
      line you mean. deliberately uneven: the lengths differ, the angles are not
@@ -1039,7 +1042,7 @@
        baseline, so a mark on the true centre reads as riding high */
     transform: translateY(calc(-50% + 0.08em));
     pointer-events: none;
-    fill: none; stroke: var(--brand-gold);
+    fill: none; stroke: var(--mast-ink, var(--brand-gold));
     stroke-width: 2.3; stroke-linecap: round;
     opacity: 0.9;
   }
