@@ -737,10 +737,10 @@ body.sx-scrolled .dx-book { transform: translate(46%, 54%) rotate(-6deg); }
    the light palette never meets because the mark sits under white text. The full reasoning
    lives beside those blocks in styles.css and is not restated here.
 
-   The light gold highlighter below is knowingly the weakest cell in the whole palette table
-   (1.59:1 mark against paper). It is copied anyway rather than quietly improved here: it is
-   the game's number, PLAN.md has it booked to be retuned when the light palette is next
-   opened, and a searcher that fixed it alone would just be a divergence to reconcile later. */
+   The light gold highlighter below was once the weakest cell in the whole palette table, at
+   1.59:1 mark against paper. It was retuned in the game by taking the swipe's opacity up
+   rather than its hue down, to 2.32:1, and copied here the same day. The reasoning lives
+   beside the game's rule; what matters on this side is only that the two stay identical. */
 :root[data-contrast="high"] {
   --paper: #ffffff;
   --paper-edge: #f0f0f0;
@@ -752,7 +752,7 @@ body.sx-scrolled .dx-book { transform: translate(46%, 54%) rotate(-6deg); }
   --margin-line: rgba(190, 0, 0, 0.8);
   --pen: #9a0006;
   --ink-accent: #7a5300;
-  --highlighter: rgba(230, 180, 0, 0.7);
+  --highlighter: rgba(202, 152, 0, 0.88);
 }
 :root[data-theme="dark"][data-contrast="high"] {
   --paper: #17130d;

@@ -11174,7 +11174,16 @@
     --margin: rgba(190, 0, 0, 0.85);
     --red-pen: #9a0006;
   }
-  body[data-contrast="high"][data-era="gold"]     { --ink-accent:#7a5300; --highlighter:rgba(230,180,0,0.7);  --bead:#7a5300; }
+  /* Gold's highlighter is the one cell in this table that had to be tuned rather than
+     copied down from its normal-contrast value. Yellow on white paper is inherently the
+     hardest mark to see, and at rgba(230,180,0,0.7) it composited to 1.59:1 against the
+     sheet: the floor of the whole palette, and weaker than ordinary DARK mode's gold at
+     2.21:1, so the accessibility setting was leaving the weakest highlight in the game
+     weaker still. The fix is opacity, not hue: the swipe keeps its gold and stops
+     pretending to be translucent, which is the same trade the lamp makes a few rules up.
+     2.32:1 puts it mid-pack between lavender and denim, and black ink still reads 9:1
+     over the mark. The searcher copies this pair verbatim, so it moves in both or neither. */
+  body[data-contrast="high"][data-era="gold"]     { --ink-accent:#7a5300; --highlighter:rgba(202,152,0,0.88); --bead:#7a5300; }
   body[data-contrast="high"][data-era="lavender"] { --ink-accent:#3f2c80; --highlighter:rgba(150,120,225,0.7); --bead:#3f2c80; }
   body[data-contrast="high"][data-era="red"]      { --ink-accent:#8a0008; --highlighter:rgba(210,40,45,0.6);  --bead:#8a0008; }
   body[data-contrast="high"][data-era="denim"]    { --ink-accent:#0d3f73; --highlighter:rgba(60,130,200,0.65); --bead:#0d3f73; }
