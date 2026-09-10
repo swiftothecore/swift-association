@@ -15,15 +15,18 @@
  "palette": {
   "axis": "album",
   "colors": {
-   "Yours Truly": "#d8b9ad",
-   "My Everything": "#68718a",
-   "Dangerous Woman": "#3d3742",
-   "Sweetener": "#d6a06e",
-   "thank u, next": "#d59ab3",
-   "Positions": "#829274",
-   "eternal sunshine": "#b74743",
-   "petal": "#d7c35e",
-   "Christmas Songs": "#a63d49"
+   "Yours Truly": "#e5b9bb",
+   "My Everything": "#545c73",
+   "Dangerous Woman": "#1b191d",
+   "Sweetener": "#e0a97f",
+   "thank u, next": "#a48c96",
+   "Positions": "#6f9d8a",
+   "eternal sunshine": "#8a5f3c",
+   "petal": [
+    "#1a1a1a",
+    "#c8ccd0"
+   ],
+   "Christmas Songs": "#26543a"
   }
  },
  "words": [

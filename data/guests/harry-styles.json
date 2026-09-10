@@ -4118,5 +4118,14 @@
         }
       ]
     }
-  ]
+  ],
+  "palette": {
+    "axis": "album",
+    "colors": {
+      "Harry Styles": "#c07f7a",
+      "Fine Line": "#5fb9e0",
+      "Harry's House": "#dcc39b",
+      "Kiss All the Time. Disco, Occasionally": "#545c72"
+    }
+  }
 }

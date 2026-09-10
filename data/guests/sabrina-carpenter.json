@@ -10639,5 +10639,19 @@
     }
    ]
   }
- ]
+ ],
+ "palette": {
+  "axis": "album",
+  "colors": {
+   "Eyes Wide Open": "#bcd8e2",
+   "EVOLution": "#a75124",
+   "Singular: Act I": "#5a6353",
+   "Singular: Act II": "#8a7360",
+   "emails i can’t send fwd:": "#e8c4a0",
+   "Short n’ Sweet": "#3a63ae",
+   "Man’s Best Friend": "#472e22",
+   "fruitcake": "#b1332f",
+   "Singles & Collaborations": "#9c86b0"
+  }
+ }
 }

@@ -408,29 +408,31 @@ export const GUESTS = [
     file: "data/guests/ariana-grande.json",
     // Cocoa, rose and champagne translate the catalogue's warm neutrals and pinks
     // into pass hardware while the full nine-record palette stays in the data file.
+    // The ticks are four rungs off that palette — blush, mauve, caramel, near-black.
     ink: { deep: "#533747", accent: "#d5a2b4", strap: "#8a6574", pen: "#654454",
-           ticks: ["#d8b9ad", "#3d3742", "#d59ab3", "#b74743"] },
+           ticks: ["#e5b9bb", "#a48c96", "#8a5f3c", "#1b191d"] },
     era: "lover",
   },
   {
     id: "harry-styles",
     name: "Harry Styles",
     file: "data/guests/harry-styles.json",
-    // Deep green and watermelon-red pick up the souvenir sticker without deciding the
-    // four album bead colours. Until the catalogue gets a palette, these ticks are the
-    // guest shelf's documented fallback.
-    ink: { deep: "#26362d", accent: "#cf6b70", strap: "#647b43", pen: "#3c4934",
-           ticks: ["#7f9552", "#d48a6f", "#cf6b70", "#556b43"] },
+    // The band runs dusk to sand, which is the sky on the fourth record's sleeve. Four
+    // albums means the ticks can simply BE the palette, one rung per record, which no
+    // other guest on the shelf is small enough to do.
+    ink: { deep: "#2f3646", accent: "#dcc39b", strap: "#6f7891", pen: "#3a4353",
+           ticks: ["#c07f7a", "#5fb9e0", "#dcc39b", "#545c72"] },
     era: "gold",
   },
   {
     id: "sabrina-carpenter",
     name: "Sabrina Carpenter",
     file: "data/guests/sabrina-carpenter.json",
-    // Espresso brown, cream and a lipstick accent give the pass its own hardware while
-    // the nine-category bracelet palette waits for its dedicated colour pass.
+    // Espresso brown, cream and a lipstick accent give the pass its own hardware, and the
+    // espresso now answers Man's Best Friend directly. The ticks take the four corners of
+    // the nine-record palette: cobalt, burnt orange, pale sky, dark brown.
     ink: { deep: "#4b3429", accent: "#b87767", strap: "#8b6a52", pen: "#5c4032",
-           ticks: ["#6b4b3b", "#d7c7aa", "#b87767", "#879eb8"] },
+           ticks: ["#3a63ae", "#a75124", "#bcd8e2", "#472e22"] },
     era: "denim",
   },
 ];

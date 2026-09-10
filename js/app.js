@@ -13820,20 +13820,30 @@ function guestPalette(id) {
 // Normalize a file's palette block. A colour is only trusted as a literal hex, because the
 // bracelet takes literal colours only — the keepsake PNG rasterises its markup outside the
 // page's CSS, so a token here would export as black.
+//
+// An entry may also be a PAIR of hexes, which strings that record's bead in both colours
+// through the same duoTint path the Wicked duets use. That path was built for the voice axis,
+// where a shared song genuinely has two owners; on an album axis it is a deliberate piece of
+// art direction for a sleeve that is two colours (Ariana's petal is black and white), not a
+// second meaning. Anything else is dropped with a warning rather than passed through, because
+// a bad value falls through to the era's --bead and reads as a rendering bug from the strand.
 const HEX_COLOR = /^#[0-9a-f]{6}$/i;
+const isHex = (v) => typeof v === "string" && HEX_COLOR.test(v);
 function normalizeGuestPalette(raw) {
   const block = raw && typeof raw === "object" ? raw : {};
   const axis = block.axis === "voice" ? "voice" : "album";
   const colors = {};
   for (const [key, value] of Object.entries(block.colors || {})) {
-    if (typeof value === "string" && HEX_COLOR.test(value)) colors[key] = value;
-    else console.warn(`guest palette: "${key}" is not a #rrggbb colour; skipped`);
+    if (isHex(value)) colors[key] = value;
+    else if (Array.isArray(value) && value.length === 2 && value.every(isHex)) colors[key] = value.slice();
+    else console.warn(`guest palette: "${key}" is not a #rrggbb colour or a pair of them; skipped`);
   }
   return { axis, colors };
 }
 
 // The bead colour for one answered song on the guest that is live, or null on every other
-// run. A two-voice page returns a PAIR, which the bracelet strings as one bead in both.
+// run. A two-voice page returns a PAIR, which the bracelet strings as one bead in both — as
+// does a record whose palette entry is itself a pair, which passes straight through here.
 function guestBeadTint(song) {
   if (!guestRunId || !song) return null;
   const { axis, colors } = guestPalette(guestRunId);
