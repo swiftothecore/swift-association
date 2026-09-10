@@ -71,7 +71,7 @@ import {
 import { exportBraceletCard, copyBraceletCard, buildCardSVG, fontFaceCss } from "./braceletcard.js";
 import { exportSleeveCard, copySleeveCard, buildSleeveSVG } from "./sleevecard.js";
 import { sfx } from "./sound.js";
-import { faviconDataUrl, faviconSVG } from "./favicon.js";
+import { faviconBlobUrl, faviconSVG } from "./favicon.js";
 import { wordRegex as wordRegexCore, extractLineWithWord as extractLineWithWordCore, highlightWord as highlightWordCore, variantBody, exactWordBody, boundedWordBody, falseFriendRegex, addedLettersRegex } from "./match.js";
 import { buildLyricReveal } from "./lyric-reveal.mjs";
 import { buildLineIndex, buildSlipContext, buildSlipPuzzle, buildNamePuzzle,
@@ -10284,24 +10284,40 @@ function paintTitleGild() {
 
 // The tab icon is the fifth surface wearing the ink, and the only one CSS cannot reach: a
 // favicon is a document of its own, not an element on the page. So it is drawn in JS and handed
-// over as a data URL, which has the useful side effect of stepping around the service worker's
-// cached copy of icons/favicon.svg — that file stays as the no-JS and social fallback.
+// over as a blob url, which also steps around the service worker's cached copy of
+// icons/favicon.svg — that file stays as the no-JS and social fallback.
 //
 // The DAY ink, always. The tile is cream paper at midnight too, so the night column (tuned for a
 // dark masthead) would be wrong on it; that is the whole reason the palette states both halves.
-// The link element is replaced rather than re-pointed because Safari has been unreliable about
-// noticing an href change on the icon it has already taken.
+//
+// Two things here are load-bearing on WebKit and neither is obvious from reading the result:
+// the link element is REPLACED rather than re-pointed, because Safari does not reliably notice
+// an href change on an icon it has already taken; and the href is a blob rather than a data url,
+// because Safari does not fetch a `data:` icon at all and just keeps the one it already has (see
+// faviconBlobUrl). Which is why the dedupe is keyed off the ink instead of the href: every blob
+// url is unique, so comparing hrefs would redraw every time and never match.
+let faviconKey = null;
+let faviconUrl = null;
 function paintFavicon() {
   const link = document.querySelector('link[rel="icon"]');
   if (!link) return;
   const ink = getComputedStyle(document.body).getPropertyValue("--mast-ink-day").trim();
-  const href = faviconDataUrl(ink, document.body.getAttribute("data-gild") === "leaf");
-  if (link.getAttribute("href") === href) return;
+  const gild = document.body.getAttribute("data-gild") === "leaf";
+  const key = ink + "|" + gild;
+  if (key === faviconKey) return;
+  faviconKey = key;
+  const href = faviconBlobUrl(ink, gild);
   const next = document.createElement("link");
   next.rel = "icon";
   next.type = "image/svg+xml";
   next.setAttribute("href", href);
   link.replaceWith(next);
+  // The old blob only becomes collectable once nothing points at it, and the tile is repainted
+  // on every ink change, so dropping this would leak one per repaint. Revoked a tick late: the
+  // browser has to have started the fetch on the new link before the previous one goes.
+  const stale = faviconUrl;
+  faviconUrl = href;
+  if (stale && stale.startsWith("blob:")) setTimeout(() => URL.revokeObjectURL(stale), 1000);
 }
 
 // The pot on the board, and the door to the tray. Drawn rather than lettered, and drawn as a

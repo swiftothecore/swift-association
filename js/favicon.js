@@ -104,10 +104,23 @@ export function faviconSVG(ink, gild) {
 </svg>`;
 }
 
-/* A data URL, which is how the icon reaches the <link>: it sidesteps the service worker's cached
-   copy of icons/favicon.svg entirely, so the tab never shows a stale ink. encodeURIComponent
-   rather than base64 — Safari has historically been the fussy one here and takes the percent
-   encoding without complaint, and it keeps the markup readable in devtools. */
-export function faviconDataUrl(ink, gild) {
+/* How the icon reaches the <link>. Either form sidesteps the service worker's cached copy of
+   icons/favicon.svg entirely, so the tab never shows a stale ink; that file stays as the no-JS
+   and social fallback.
+
+   A BLOB url, not a data url, and this is not a style preference. WebKit does not fetch a
+   `data:` href on link[rel=icon] at all: it does not error, it just keeps whatever icon it
+   already loaded, which is the un-inked icons/favicon.svg. So on Safari the ink silently never
+   arrived. A blob url is a real fetch against this origin and WebKit takes it, as do the others,
+   which is why there is no branch here. The percent-encoded data url survives as the fallback
+   for an environment with no URL.createObjectURL, and nothing else reaches for it.
+
+   The caller owns the handle: a blob url pins its blob until URL.revokeObjectURL is called, and
+   the tile is redrawn on every ink change, so leaving them unrevoked leaks one per repaint. */
+function faviconDataUrl(ink, gild) {
   return "data:image/svg+xml;charset=utf-8," + encodeURIComponent(faviconSVG(ink, gild));
+}
+export function faviconBlobUrl(ink, gild) {
+  if (typeof URL === "undefined" || !URL.createObjectURL) return faviconDataUrl(ink, gild);
+  return URL.createObjectURL(new Blob([faviconSVG(ink, gild)], { type: "image/svg+xml" }));
 }
