@@ -436,7 +436,6 @@ export function initDev(api) {
   // filled, and each punch count is its own thing to look at.
   const returnSel = select(api.challenge.list(), (x) => x, (x) => x);
   const returnRunsNum = num(4);
-  const albumBeatenNum = num(5);
   body.append(section("challenges",
     row(btn("open shelf", () => api.challenge.open()),
         btn("unlock all", () => { readout.textContent = `${api.challenge.unlockAll()} challenges unlocked`; }),
@@ -471,18 +470,51 @@ export function initDev(api) {
           const n = api.challenge.returns.completed(returnSel.value, +returnRunsNum.value);
           readout.textContent = `${returnSel.value}: ${n} completed runs · open its card`;
         })),
-    // The album board's beaten figure grows a side per album, so there are thirteen drawings
-    // between an empty board and a full one and no reasonable way to see them by playing.
-    row("albums beaten", albumBeatenNum, btn("set", () => {
-          api.albumBoard.beaten(+albumBeatenNum.value);
-          readout.textContent = `album board: ${albumBeatenNum.value} beaten · open Album Focus`;
-        }),
-        btn("clear board", () => { api.albumBoard.clear(); readout.textContent = "album board cleared"; }, "warn")),
     // Flourish charms hide behind ??? until their challenge is defeated, so checking how one
     // reads as a revealed target otherwise means actually beating the challenge first.
     row(btn("defeat all (reveal flourishes)", () => { const n = api.challenge.defeat();
           readout.textContent = `${n} challenges marked defeated — open Achievements`; }),
         btn("clear defeats", () => { api.challenge.undefeat(); readout.textContent = "defeats cleared — flourishes masked again"; }, "warn"))));
+
+  // ---- Album Focus -----------------------------------------------------------
+  // Two halves, and the difference between them matters. The BOARD row forges the pinned
+  // snapshot outright, which is what the drawings need: the beaten figure grows a side per
+  // album, so there are thirteen of them between an empty board and a full one and no
+  // reasonable way to see them by playing. The RUN rows win albums properly, through the real
+  // endAlbumFocus — the only path that fires the charms, drops the ink in the tray and gilds
+  // the star. "win all twelve" flicks twelve results screens past on its way to the shuffle.
+  const afAlbumSel = select(api.STUDIO_ALBUMS, (x) => x, (x) => x);
+  const afDiffSel = select(api.ALBUM_FOCUS_DIFFS, (x) => x, (x) => x);
+  const afHints = mk("input", { type: "checkbox" });
+  const albumBeatenNum = num(5);
+  const afOpts = () => ({ diff: afDiffSel.value, hints: afHints.checked ? 1 : 0 });
+  body.append(section("album focus",
+    row(afAlbumSel, afDiffSel, btn("play", () => api.album.play(afAlbumSel.value, afDiffSel.value))),
+    row(btn("perfect it 13/13", () => {
+          api.album.win(afAlbumSel.value, afOpts());
+          readout.textContent = `${afAlbumSel.value}: perfected`;
+        }),
+        btn("beat it 9/13", () => {
+          api.album.win(afAlbumSel.value, { ...afOpts(), score: 9 });
+          readout.textContent = `${afAlbumSel.value}: beaten`;
+        }),
+        btn("lose it 0/13", () => {
+          api.album.win(afAlbumSel.value, { ...afOpts(), score: 0 });
+          readout.textContent = `${afAlbumSel.value}: lost`;
+        })),
+    // A hinted run still scores and still sets a best, but the board refuses to call it
+    // beaten. That refusal is a whole branch of the results card nobody would otherwise see.
+    row(mk("label", { class: "dv-check" }, afHints, " take a hint (board won't mark it beaten)")),
+    row(btn("win all twelve", () => {
+          api.album.winAll(afOpts());
+          readout.textContent = "twelve albums perfected — check the ink tray for the shuffle";
+        })),
+    row("albums beaten", albumBeatenNum, btn("set", () => {
+          api.albumBoard.beaten(+albumBeatenNum.value);
+          readout.textContent = `album board: ${albumBeatenNum.value} beaten · open Album Focus`;
+        }),
+        btn("clear board", () => { api.albumBoard.clear(); readout.textContent = "album board cleared"; }, "warn")),
+    row(btn("reset board", () => { api.album.reset(); readout.textContent = "album focus board reset"; }, "warn"))));
 
   // ---- Word / Era / Mode -----------------------------------------------------
   const eraSel = select(api.ERAS, (x) => x, (x) => x);

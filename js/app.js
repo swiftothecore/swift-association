@@ -25146,11 +25146,21 @@ function devTimerDisable() {
 // data, then runs the genuine endGame so results / records / achievements all fire).
 function devSimulate(correctCount, opts = {}) {
   const type = opts.type || "classic";
-  gameType = type === "infinite" ? "infinite" : type === "daily" ? "daily" : "classic";
+  gameType = type === "infinite" ? "infinite" : type === "daily" ? "daily"
+           : type === "album" ? "album" : "classic";
   if (opts.mode && MODES[opts.mode]) currentMode = MODES[opts.mode];
   if (gameType === "daily") currentMode = MODES.medium;
+  // Album Focus runs on its own difficulty list, so a mode the shelf doesn't offer is not a
+  // run the board could ever have recorded. Cloned for the same reason startAlbumFocus clones.
+  if (gameType === "album")
+    currentMode = { ...MODES[ALBUM_FOCUS_DIFFS.includes(opts.mode) ? opts.mode : "medium"] };
   resetRunState();
   if (gameType === "infinite") lives = startingLives();
+  // AFTER resetRunState, which nulls them — the same ordering startAlbumFocus depends on.
+  if (gameType === "album") {
+    focusAlbum = STUDIO_ALBUMS.includes(opts.album) ? opts.album : STUDIO_ALBUMS[0];
+    focusDifficulty = currentMode.id;
+  }
   const total = TOTAL_ROUNDS;
   const want = Math.max(0, Math.min(correctCount, total));
   // `opts.misses` names the pages to drop by 1-based page number and overrides the count. The
@@ -25162,7 +25172,11 @@ function devSimulate(correctCount, opts = {}) {
     round = i + 1;
     const word = pickWord();
     currentWord = word;
-    const valid = validSongs(word, effectiveStrict(), currentMode.noTitle);
+    let valid = validSongs(word, effectiveStrict(), currentMode.noTitle);
+    // An Album Focus page only clears on a song from the album (see the same filter on
+    // currentSongs), so a simulated run must credit one too or the strand strings the wrong
+    // beads and the tally counts songs the run could never have answered with.
+    if (gameType === "album" && focusAlbum) valid = valid.filter((s) => s.album === focusAlbum);
     const correct = (missSet ? !missSet.has(i) : i < want) && valid.length > 0;
     roundWords[i] = word;
     roundResults[i] = correct;
@@ -25339,7 +25353,7 @@ function buildDevApi() {
     return challengeSlips();
   };
   return {
-    MODES, MODE_ORDER, ERAS, ACHIEVEMENTS, SKILL_IDS, STUDIO_ALBUMS,
+    MODES, MODE_ORDER, ERAS, ACHIEVEMENTS, SKILL_IDS, STUDIO_ALBUMS, ALBUM_FOCUS_DIFFS,
     GUIDE_BEAT_IDS: Object.keys(GUIDE_BEATS),
     getState: () => ({
       screen: Object.keys(screens).find((k) => screens[k].classList.contains("active")),
@@ -27450,6 +27464,38 @@ function buildDevApi() {
       play: (a, diff) => startAlbumFocus(a, diff || "medium"),
       open: () => openAlbumFocus("start"),
       reset: () => { resetAlbumFocus(); if ($("albumFocusBody")) renderAlbumFocusPage(); },
+      /* Winning one, rather than writing one down. `set` and `fill` above forge the BOARD,
+         which is all the pinned snapshot needs — but the board is the last thing an album run
+         touches. Everything before it (the results card's status line, the charms, the ink
+         unlock, the gild landing on the star while the player is still looking at it) only
+         happens on the way through endAlbumFocus, and there is no way to forge a path.
+         So these fabricate thirteen real pages of the album and finish through the genuine
+         endGame. `album` defaults to the live run's, so mid-run `__dev.album.win()` ends the
+         run you are sitting in. Options ride on devSimulate: { diff, hints, misses, lyrics }.
+         `hints` is the one worth knowing about — the board refuses to mark an album beaten on
+         a hinted run, and win("Red", { hints: 1 }) is the only quick way to see that branch. */
+      win: (a, opts = {}) => {
+        const live = gameType === "album" && focusAlbum;
+        const album = a || focusAlbum;
+        if (!STUDIO_ALBUMS.includes(album)) return `unknown album: ${album}`;
+        const want = opts.score == null ? TOTAL_ROUNDS
+          : Math.max(0, Math.min(TOTAL_ROUNDS, opts.score | 0));
+        // Finishing the run you are sitting in has to be judged at the difficulty you started
+        // it at, or the board records an Ultra run as a medium one.
+        const diff = opts.diff || opts.mode || (live && !a ? focusDifficulty : null);
+        devSimulate(want, { ...opts, type: "album", album, mode: diff });
+        return albumFocusRecord(album);
+      },
+      // Over the bar and no further: the beaten-but-not-perfected state, which is the one the
+      // board draws differently and the one a single number in `win` keeps overshooting.
+      beat: (a, diff) => window.__dev.album.win(a, { score: ALBUM_FOCUS_TARGET, diff }),
+      // The whole board, played out. Twelve results screens flick past, which is the point:
+      // albumBoard.perfect(12) writes the same record but fires none of the charms, and the
+      // twelfth ink dropping into the tray is a moment that only exists on this path.
+      winAll: (opts = {}) => {
+        STUDIO_ALBUMS.forEach((a) => window.__dev.album.win(a, opts));
+        return loadAlbumFocus();
+      },
     },
     // Guest shelf. Two halves: the FETCH (a catalogue is read out of its file, so `counts` /
     // `inspect` prove one parses and report exactly what a pass and a round would draw, and
