@@ -6938,9 +6938,14 @@ function renderBonusPage() {
              lettering, so starting a run still looks the same act wherever it is started
              from — but torn rather than cut, because on this leaf it sits beside a collage
              of ripped paper and a crisp bordered rectangle next to that reads as printed
-             vinyl on a pile of rag stock. The material changes; the act does not. See
-             .bonus-play in styles.css. */
-          ? `<button type="button" id="bonusPlayBtn" class="chall-go bonus-play">${PLAY_NIB}` +
+             vinyl on a pile of rag stock. The material changes; the act does not.
+             It does NOT wear .chall-go as well. It used to, and every state that class has
+             leaked through: its hover paints an unclipped ink rectangle across the element
+             itself, which showed up as a black box behind the torn scrap, and its :active
+             puts a square box-shadow under it. By the time the material had changed there was
+             nothing left of the shared class but its lettering, so .bonus-play states that
+             itself and inherits none of the traps. See styles.css. */
+          ? `<button type="button" id="bonusPlayBtn" class="bonus-play">${PLAY_NIB}` +
             `<span>${bonusRecord(g.id).plays ? "Play again" : "Play"}</span></button>`
           : `<p class="bonus-now-soon">This one is still being written, so there is nothing inside it yet.</p>`) +
       `</div>` +
