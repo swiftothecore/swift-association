@@ -19,7 +19,15 @@
      art is ink on paper (never shaded objects). Depth comes from one hard-edged shadow copy
      of each layer, offset a unit and a half — which is exactly what a stack of cut paper
      does under a lamp, and it survives being rasterised into a keepsake PNG where a filter
-     would not.
+     would not. Texture is made the same way: every bit of it is a flat shape, because the
+     only kind of paper grain that survives a rasteriser is grain that is drawn.
+   - THE TEXTURE IS TWO THINGS, AND BOTH ARE DRAWN. A sheet gets a FIBRE edge — a paler copy
+     of itself underneath, torn harder, so the pale core of the stock shows in a hair along
+     the rip the way it does on real cardstock; it is what separates a torn edge from a
+     wiggly cut one. Over the finished collage goes GRAIN: a few hundred flecks of near-black
+     and near-white at very low alpha, the pulp and the inclusions of the stock everything is
+     pasted onto. Keep both subtle. Grain you can pick out fleck by fleck is a texture
+     overlay; grain you only notice when you remove it is paper.
    - EVERY EDGE IS UNEVEN AND NO TWO ARE THE SAME. `torn()` walks a shape's outline and
      kicks every few units of it sideways by a seeded random amount, so a cover's sixth
      layer does not trace its fifth and a pair of ridges is never a mirror. The composition
@@ -102,16 +110,38 @@ function roundRectPts(x, y, w, h, r, per = 4) {
   return pts;
 }
 
-/* One layer of paper: its shadow, then the sheet. The shadow is a translated copy in flat
-   near-black at low alpha, laid down FIRST so it only shows where the sheet does not cover
-   it — along the bottom and right edges, which is where a raised sheet throws one. */
+/* The pale core of a sheet of stock: its colour mixed most of the way to bone. Only hex
+   fills are mixed, because a literal is the only thing a cover is allowed to carry (see the
+   no-CSS-colour-functions rule) and anything else is handed back untouched. */
+function core(fill, k = 0.62) {
+  const m = /^#([0-9a-f]{6})$/i.exec(String(fill).trim());
+  if (!m) return null;
+  const v = parseInt(m[1], 16);
+  const mixTo = [246, 239, 224];
+  const out = [16, 8, 0].map((sh, i) => {
+    const c = (v >> sh) & 255;
+    return Math.round(c + (mixTo[i] - c) * k);
+  });
+  return "#" + out.map((c) => c.toString(16).padStart(2, "0")).join("");
+}
+
+/* One layer of paper: its shadow, its torn fibre, then the sheet. The shadow is a translated
+   copy in flat near-black at low alpha, laid down FIRST so it only shows where the sheet does
+   not cover it — along the bottom and right edges, which is where a raised sheet throws one.
+   The fibre is a second copy in the stock's pale core, torn at twice the amplitude and half
+   again as often, so it wanders both sides of the true edge: where it wanders inward the
+   sheet covers it, and where it wanders out it shows as the fluff of a rip. It is drawn from
+   its own draws on `rand`, never the sheet's, which is what keeps it from tracing the edge it
+   is supposed to be escaping. */
 function sheet(pts, fill, rand, o = {}) {
   const amp = o.amp == null ? 1.1 : o.amp;
   const step = o.step == null ? 5.5 : o.step;
   const d = pathOf(o.crisp ? pts : torn(pts, rand, amp, step));
   const shade = o.shadow === false ? ""
     : `<path d="${d}" fill="rgba(26,18,12,0.22)" transform="translate(${o.sx == null ? 1.2 : o.sx} ${o.sy == null ? 1.8 : o.sy})"/>`;
-  return shade + `<path d="${d}" fill="${fill}"/>`;
+  const pale = o.crisp || o.fibre === false ? null : core(fill);
+  const fibre = pale ? `<path d="${pathOf(torn(pts, rand, amp * 1.85, step * 0.58))}" fill="${pale}"/>` : "";
+  return shade + fibre + `<path d="${d}" fill="${fill}"/>`;
 }
 
 // A stack of concentric shapes, back to front, each one a sheet in its own colour. The
@@ -119,6 +149,27 @@ function sheet(pts, fill, rand, o = {}) {
 // rather than a screen of coordinates.
 function stack(colours, shapeAt, rand, o = {}) {
   return colours.map((c, i) => sheet(shapeAt(i), c, rand, o)).join("");
+}
+
+/* ---------- the grain ----------
+   Everything above is pasted onto stock, and stock is not smooth. This scatters flecks of
+   near-black and near-white over the finished collage: the darker ones read as inclusions
+   pressed into the pulp, the paler ones as the tooth catching the light. They are flat rects
+   at very low alpha, emitted as TWO paths rather than five hundred nodes, because a shelf
+   draws seven covers twice over and a cover is not allowed to cost a thousand elements.
+   It goes on last, over the label as well as the art, because the whole object is one pasted
+   sheet and grain that stops at the title strip announces the strip is a separate drawing. */
+function grain(rand, n = 420) {
+  let dark = "", light = "";
+  for (let i = 0; i < n; i++) {
+    const x = rand() * 124 - 2, y = rand() * 164 - 2;
+    const w = (0.45 + rand() * 1.0).toFixed(2);
+    const h = (0.4 + rand() * 0.7).toFixed(2);
+    const d = `M${x.toFixed(1)} ${y.toFixed(1)}h${w}v${h}h-${w}Z`;
+    if (rand() < 0.55) dark += d; else light += d;
+  }
+  return `<path d="${dark}" fill="rgba(34,24,14,0.11)"/>` +
+         `<path d="${light}" fill="rgba(255,251,240,0.10)"/>`;
 }
 
 /* ---------- the covers ----------
@@ -327,7 +378,7 @@ export function zineCover(g, extra = "") {
     `<defs><clipPath id="${id}"><rect x="0" y="0" width="120" height="160" rx="1.5"/></clipPath></defs>` +
     `<g clip-path="url(#${id})">` +
       `<rect x="0" y="0" width="120" height="160" fill="${ready ? (GROUNDS[g.id] || "#efe3cd") : "#b9a074"}"/>` +
-      art + label +
+      art + label + grain(r) +
     `</g></svg>`;
 }
 
