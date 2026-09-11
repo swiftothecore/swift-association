@@ -3219,7 +3219,58 @@
     margin-top: 9px; font-family: var(--type); font-size: calc(9.5px + var(--text-size-adjust)); letter-spacing: 1.1px;
     text-transform: uppercase; color: var(--ink-soft); opacity: 0.85;
   }
-  .bonus-play { margin-top: 15px; }
+  /* ---- the Play sticker, torn instead of cut ----
+     Everywhere else in the game this is .chall-go: a crisp gold rectangle with a 2px ink
+     border and a sheen down its face, which is right on a challenge card. Here it sits two
+     inches from a collage of hand-torn paper, and next to that it reads as printed vinyl
+     lying on a pile of rag stock. So on this one leaf the sticker keeps the gold, the bold
+     typewriter lettering and the hard offset shadow — starting a run still looks like the
+     same act — and changes only its MATERIAL: the border goes, the sheen goes, and the
+     rectangle is torn.
+     The tear is two clip-paths, the covers' sheet-and-fibre trick done in CSS. The element's
+     own background is the paler core and ::after is the gold face, each clipped to its own
+     ragged walk of the border box; the two wobble by the same amount about very nearly the
+     same line, so the pale one surfaces as short hairs rather than ringing the button. Both
+     came out of scripts/bonus/tornclip.py, which runs the same xorshift walk zine.js does —
+     regenerate there rather than nudging a number by hand in here.
+     The shadow is a drop-shadow filter, not a box-shadow, because box-shadow is clipped away
+     with everything else and a filter is applied to what the clip leaves behind, which is the
+     only way to throw a shadow the shape of the tear. */
+  .bonus-play {
+    --play-sheet: #efb73e;
+    --play-fibre: #f0c362;
+    --tear-sheet: polygon(3% 3.1px, 10% 1.1px, 17% 1.6px, 24% 2.5px, 31% 1.0px, 38% 0.9px, 45% 1.5px, 52% 3.2px, 59% 2.7px, 66% 2.6px, 73% 2.0px, 80% 2.5px, 87% 1.2px, 94% 2.0px, calc(100% - 0.9px) 3%, calc(100% - 2.7px) 25%, calc(100% - 2.5px) 47%, calc(100% - 1.5px) 69%, calc(100% - 2.0px) 91%, 97% calc(100% - 1.9px), 90% calc(100% - 3.1px), 83% calc(100% - 1.9px), 76% calc(100% - 2.2px), 69% calc(100% - 1.4px), 62% calc(100% - 2.2px), 55% calc(100% - 2.6px), 48% calc(100% - 1.6px), 41% calc(100% - 1.5px), 34% calc(100% - 3.4px), 27% calc(100% - 2.6px), 20% calc(100% - 2.4px), 13% calc(100% - 3.2px), 6% calc(100% - 2.1px), 2.2px 97%, 2.8px 75%, 3.2px 53%, 3.4px 31%, 3.3px 9%);
+    --tear-fibre: polygon(3% 1.5px, 10% 1.4px, 17% 2.3px, 24% 1.7px, 31% 2.4px, 38% 2.6px, 45% 1.3px, 52% 1.7px, 59% 2.9px, 66% 1.2px, 73% 0.7px, 80% 2.8px, 87% 2.7px, 94% 2.3px, calc(100% - 1.5px) 3%, calc(100% - 2.3px) 25%, calc(100% - 1.7px) 47%, calc(100% - 2.3px) 69%, calc(100% - 2.4px) 91%, 97% calc(100% - 2.4px), 90% calc(100% - 0.9px), 83% calc(100% - 1.8px), 76% calc(100% - 2.4px), 69% calc(100% - 1.5px), 62% calc(100% - 2.0px), 55% calc(100% - 2.6px), 48% calc(100% - 2.9px), 41% calc(100% - 2.3px), 34% calc(100% - 2.1px), 27% calc(100% - 1.4px), 20% calc(100% - 1.0px), 13% calc(100% - 2.6px), 6% calc(100% - 1.2px), 0.7px 97%, 1.4px 75%, 2.5px 53%, 2.7px 31%, 2.4px 9%);
+    position: relative; margin-top: 15px;
+    display: inline-flex; align-items: center; gap: 9px;
+    padding: 12px 18px;
+    border: 0; border-radius: 0; box-shadow: none;
+    background-color: var(--play-fibre); background-image: none;
+    clip-path: var(--tear-fibre);
+    filter: drop-shadow(3px 3px 0 rgba(43, 39, 34, 0.26));
+    transform: rotate(-0.8deg);
+    transition: background-color 0.24s ease, color 0.2s ease, transform 0.12s, filter 0.2s;
+  }
+  /* the shared sticker's ✎ is a font glyph, and this one draws its own — see PLAY_NIB */
+  .bonus-play::before { content: none; margin-right: 0; }
+  .bonus-play::after {
+    content: ""; position: absolute; inset: 0; z-index: -1;
+    background-color: var(--play-sheet); clip-path: var(--tear-sheet);
+    transition: background-color 0.24s ease;
+  }
+  .bonus-play .play-nib { width: 15px; height: 15px; flex: none; }
+  .bonus-play:hover, .bonus-play:focus-visible { --play-sheet: var(--ink); background-color: var(--ink); color: var(--paper); }
+  .bonus-play:active { transform: rotate(-0.8deg) translate(1px, 1px); filter: drop-shadow(1px 1px 0 rgba(43, 39, 34, 0.26)); }
+  /* night gold, flat, matching the deepened value the shared sticker takes after dark */
+  :root[data-theme="dark"] .bonus-play {
+    --play-sheet: #e0a83a; --play-fibre: #e5b85f;
+    background-color: var(--play-fibre); background-image: none;
+  }
+  /* the shared sticker drops its tilt here, so this one does too */
+  @media (prefers-reduced-motion: reduce) {
+    .bonus-play { transform: none; }
+    .bonus-play:active { transform: translate(1px, 1px); }
+  }
   .bonus-now-soon {
     margin-top: 12px; font-family: var(--type); font-size: calc(11px + var(--text-size-adjust)); line-height: 1.6;
     color: var(--ink-soft); max-width: 34ch;

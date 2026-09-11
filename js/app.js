@@ -6901,6 +6901,18 @@ const ZINE_STAPLES =
     `<i style="top:79%;transform:rotate(-1.5deg)"></i>` +
   `</span>`;
 
+/* The pencil on the Play sticker. The shared gold sticker prints U+270E, which is whatever
+   pencil the reader's font vendor happened to draw and on most machines is a neat little
+   typographic one — fine on a challenge card, wrong beside a torn-paper collage, and against
+   the house rule that a mark on this page is a drawn path rather than a glyph. So it is drawn:
+   ink on paper, stroked rather than filled, and deliberately not straight. */
+const PLAY_NIB =
+  `<svg class="play-nib" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor"` +
+  ` stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">` +
+    `<path d="M12.9 1.7 L14.6 3.5 L6.0 12.1 L2.9 13.7 L4.2 10.5 Z"/>` +
+    `<path d="M11.0 3.7 L12.9 5.4"/>` +
+  `</svg>`;
+
 function renderBonusPage() {
   const g = bonusPicked();
   bonusPick = g.id;
@@ -6922,9 +6934,14 @@ function renderBonusPage() {
         `<p class="bonus-now-blurb">${escapeHtml(g.blurb)}</p>` +
         `<div class="bonus-now-meta">${escapeHtml(bonusScoreLine(g))}</div>` +
         (g.ready
-          // the same gold pencil sticker the Challenges detail plays from, so starting a
-          // run looks the same act wherever you start it from
-          ? `<button type="button" id="bonusPlayBtn" class="chall-go bonus-play">${bonusRecord(g.id).plays ? "Play again" : "Play"}</button>`
+          /* The Challenges detail's gold pencil sticker, in the same gold with the same
+             lettering, so starting a run still looks the same act wherever it is started
+             from — but torn rather than cut, because on this leaf it sits beside a collage
+             of ripped paper and a crisp bordered rectangle next to that reads as printed
+             vinyl on a pile of rag stock. The material changes; the act does not. See
+             .bonus-play in styles.css. */
+          ? `<button type="button" id="bonusPlayBtn" class="chall-go bonus-play">${PLAY_NIB}` +
+            `<span>${bonusRecord(g.id).plays ? "Play again" : "Play"}</span></button>`
           : `<p class="bonus-now-soon">This one is still being written, so there is nothing inside it yet.</p>`) +
       `</div>` +
     `</div>`;
