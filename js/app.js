@@ -20,7 +20,7 @@ import {
   BONUS_REDACT_SECONDS, REDACT_MIN_POINTS,
   BONUS_ONLY_SECONDS, ONLY_WIDE_PAGES,
   BONUS_CHAIN_SECONDS, CHAIN_EASY_PAGES, BONUS_SNAP_MS,
-  BONUS_TRACK_SECONDS, TRACK_PAGE, TRACK_TIERS, TRACK_MIN_POINTS,
+  BONUS_TRACK_SECONDS,
   RUTHLESS_WORD_MS, RUTHLESS_OPEN_WORDS,
   RUTHLESS_PACE_SECONDS, RUTHLESS_RUN_RUNGS,
   CHALLENGES, CHALLENGE_BY_ID, CHALLENGE_ORDER, CHALLENGE_SEALS, byShelf, DARK_SIDE_IDS, DARK_SIDE_TODO,
@@ -6743,12 +6743,11 @@ let bonusEnded = false;
 let bonusRecentFakes = []; // Spot the Slip: impostor words used recently, so a run doesn't repeat one
 let bonusRecentSongs = []; // Name That Song / Sing It Back / Redacted: songs already used this run, so one doesn't come round twice
 let bonusRecentAlbums = [];// Running Order: the last couple of albums dealt, so a run doesn't ask three Midnights pages in a row
-/* Running Order: what THIS page is still worth, falling through TRACK_TIERS as the seconds go.
-   It is kept on the clock's own tick rather than worked out at the settle for one reason: the
-   settle happens after stopBonusClock has thrown the deadline away, so a page scored from the
-   clock at that point would score every page the same. The tick is the only place the
-   remaining time is still true, which makes this the frozen answer AND the live readout. */
-let trackWorth = 0;
+/* Running Order: seconds still on this page's clock, kept current by its tick. It exists for
+   the By Heart charm alone, and it has to be carried rather than read at the settle for one
+   reason: the settle happens after stopBonusClock has thrown the deadline away, so a page asked
+   about its clock at that point would report the same nothing every time. */
+let trackLeft = 0;
 let redactWorth = 0;       // Redacted: what THIS page is still worth, one point per strip left unpeeled
 let redactPeeled = 0;      // ...and how many strips have come off it
 /* When THIS page went live, for the charms that ask how fast a page was answered. Baselined
@@ -7192,8 +7191,7 @@ function nextBonusRound(options = {}) {
   // A fresh page opens worth the full ten and nothing has been spent on it yet.
   redactWorth = bonusPagePoints(bonusGame);
   redactPeeled = 0;
-  // A fresh page opens on the top tier, and starts falling the moment its clock does.
-  trackWorth = TRACK_PAGE;
+  trackLeft = 0;
   onlyPlayed = null;
   if (bonusGame.id === "only-here" && bonusPuzzle.hand)
     bonusPuzzle.hand.forEach((c) => onlyDealt.add(c.key));
@@ -7399,22 +7397,28 @@ function renderBonusRound() {
     // strip, and a focused field on a phone would put a keyboard over the verse before the
     // player had seen it.
   } else if (bonusGame.id === "running-order") {
-    /* The page is a tracklist entry with the title left off it, rather than a question about
-       one: the album written at the top the way it is on the back of a sleeve, a rule under it,
-       and the numbered row waiting underneath. That is also what makes the reveal free: the
-       answer is written into the empty slot when the page settles, and the row finishes as the
-       line it always was, so this game needs no answer card. */
+    /* THE PAGE IS A LYRIC SHEET WITH ITS TITLE MISSING, and it is the shelf's own `bg-sheet`
+       rather than any furniture of its own: the heading in pen, the red rule, the album noted
+       small underneath. The question sits in the TITLE slot, because that is the one thing this
+       page does not know, and the reveal simply writes the real title over it, so the page
+       finishes as the same lyric-sheet heading every other game's reveal ends on, which is why
+       this game needs no answer card.
+
+       It was built once as a tracklist row (album centred, number and a ruled blank in a
+       left-aligned two-column row under it) and that was the wrong object: three competing
+       alignments, an empty rule doing nothing, and three separate typewriter lines of chrome
+       around a one-line question. What is left is one centred block and nothing else, and the
+       whole question is ONE WRITTEN LINE, "track 14 from reputation", because that is all there
+       is to ask and anything laid out around it was furniture. The album keeps its own casing
+       (reputation, folklore) rather than being set in the typewriter's capitals: this line is a
+       note to yourself, not the printing on a sleeve. */
     body.innerHTML =
-      `<p class="bg-ask">name the track before the page loses its value</p>` +
-      `<div class="bg-sleeve" role="group" aria-label="${escapeHtml(`Track ${p.track} on ${p.album}`)}">` +
-        `<div class="bg-sleeve-album">${escapeHtml(p.album)}</div>` +
-        `<div class="bg-sleeve-rule" aria-hidden="true"></div>` +
-        `<div class="bg-sleeve-row">` +
-          `<span class="bg-sleeve-no">${p.track}</span>` +
-          `<span class="bg-sleeve-slot" id="bonusSlot"></span>` +
-        `</div>` +
+      `<p class="bg-ask">name this track</p>` +
+      `<div class="bg-sheet bg-sheet--ask">` +
+        `<h3 class="bg-sheet-title" id="bonusSlot">track ${p.track} from ${escapeHtml(p.album)}</h3>` +
+        `<div class="bg-sheet-rule" aria-hidden="true"></div>` +
+        `<div class="bg-sheet-meta" id="bonusTrackMeta"></div>` +
       `</div>` +
-      `<p class="bg-worth">this page is worth <b id="bonusWorth">${trackWorth}</b></p>` +
       bonusWritingLine({ placeholder: "type the title…", aria: "Type the song title",
                          hint: "Enter accepts the top match", dropdown: true });
     const input = $("bonusInput");
@@ -7483,9 +7487,9 @@ function startBonusClock(resumeState = null) {
     fill.style.width = pct + "%";
     label.textContent = (left / 1000).toFixed(1);
     fill.classList.toggle("low", pct <= 25);
-    // Running Order's page loses value as the clock goes, and this is the only place the
-    // remaining time is still true when the page is answered. See trackWorth.
-    if (bonusGame.id === "running-order") updateTrackWorth(total - left);
+    // The only place this page's remaining seconds are still true when it is answered, which
+    // is what By Heart is judged on. See trackLeft.
+    if (bonusGame.id === "running-order") trackLeft = left / 1000;
     if (left <= 0) bonusTimeout();
   }, 50);
 }
@@ -7962,28 +7966,6 @@ function revealRedacted() {
 }
 
 // What the verdict says about a won page: what it paid out and what it cost.
-/* ---------- Running Order: what the page is still worth ----------
-   TRACK_TIERS read against the page's ELAPSED time rather than the clock's remaining seconds,
-   so the ladder stays honest if the clock is ever retuned under it, which is the same choice
-   BONUS_SNAP_MS makes, and for the same reason. */
-function trackPointsAt(elapsedMs) {
-  const secs = elapsedMs / 1000;
-  for (const [upto, pts] of TRACK_TIERS) if (secs <= upto) return pts;
-  return TRACK_MIN_POINTS;
-}
-// Only touches the page when the number actually changes: this runs twenty times a second, and
-// a readout rewritten on every tick is a readout that flickers.
-function updateTrackWorth(elapsedMs) {
-  const worth = trackPointsAt(elapsedMs);
-  if (worth === trackWorth) return;
-  trackWorth = worth;
-  const el = $("bonusWorth");
-  if (el) el.textContent = String(worth);
-}
-function trackDetail(points) {
-  return `<b>${points}</b> point${points === 1 ? "" : "s"}`;
-}
-
 function redactDetail(points) {
   return `<b>${points}</b> point${points === 1 ? "" : "s"} · ` +
     (redactPeeled ? `${redactPeeled} strip${redactPeeled === 1 ? "" : "s"} peeled` : "not one strip peeled");
@@ -8119,11 +8101,7 @@ function judgeName(picked = null) {
   // and on a hit that's the same thing twice. Redacted is the exception: a won page there has
   // a number on it, and the number is the whole brag.
   const detail = correct
-    ? (bonusGame.id === "redacted" ? redactDetail(bonusPageScore(true))
-       // Same reason as Redacted's: a won page here has a number on it, and the number (how
-       // fast you were) is the whole brag. Nothing else needs saying, since the row below
-       // writes the title in itself.
-       : bonusGame.id === "running-order" ? trackDetail(bonusPageScore(true)) : "")
+    ? (bonusGame.id === "redacted" ? redactDetail(bonusPageScore(true)) : "")
     : `you wrote <b>${escapeHtml(censor(song.title))}</b>`;
   settleBonusRound(correct, detail);
 }
@@ -8277,9 +8255,6 @@ function bonusPageScore(correct) {
   if (bonusGame && bonusGame.id === "then-what") return chainPage;
   if (!correct) return 0;
   if (bonusGame && bonusGame.id === "redacted") return Math.max(REDACT_MIN_POINTS, redactWorth);
-  // Whatever the page had fallen to when it was answered, floored, so a right answer always beats
-  // a wrong one however long it took to arrive.
-  if (bonusGame && bonusGame.id === "running-order") return Math.max(TRACK_MIN_POINTS, trackWorth);
   return 1;
 }
 
@@ -8360,11 +8335,10 @@ function settleBonusRound(correct, detail, isTimeout = false) {
         // first, but the note column runs out around six characters on a two-up listing and
         // "1:23 · 62w" came back as "1:23 · …" — so the column keeps the one that adds up to
         // the score, and the verdict line is where a page's word count gets said in full.
-        // A points game, so the note column takes the same thing Redacted's and Then What's do:
-        // what the page paid, which is the one number the back cover can't work out from a tick
-        // or a cross. The track number is the question rather than the answer, and the row
-        // already carries the title that answered it.
-        : bonusGame.id === "running-order" ? `${gained} pts`
+        // The number that was asked. Every other game notes the answer it hid, and this one hid
+        // a title the listing already prints beside it, so the useful column is the question:
+        // a row here reads as the tracklist line it was, "The Best Day / track 12".
+        : bonusGame.id === "running-order" ? `track ${bonusPuzzle.track}`
         : isRuthlessRun() ? fmtTime(gained)
         : bonusPuzzle.song.album,
   });
@@ -8387,14 +8361,21 @@ function settleBonusRound(correct, detail, isTimeout = false) {
   } else if (isRuthlessRun()) {
     revealRuthless();
   } else if (bonusGame.id === "running-order") {
-    // The row finishes itself. Right or wrong, the title is written into the slot it was always
-    // waiting in, so the page ends as the tracklist line it has been drawn as all along, which
-    // is why this game needs no answer card underneath it.
+    /* The sheet finishes itself. The real title is written over the question in the heading slot
+       it was always standing in, and the question drops into the meta line under the rule, so
+       nothing the page asked is lost and what is left on screen is an ordinary lyric sheet
+       heading: title in pen, rule, album and track noted small beneath. The meta is empty while
+       the page is live for exactly that reason, since the question is up in the heading until
+       there is a title to put there. A missed title goes in the editor's red pen; a named one
+       needs no mark, because the banner above it has already said so. */
     const slot = $("bonusSlot");
     if (slot) {
       slot.textContent = bonusPuzzle.song.title;
-      slot.classList.add(correct ? "is-got" : "is-answer");
+      if (!correct) slot.classList.add("is-answer");
     }
+    const meta = $("bonusTrackMeta");
+    if (meta) meta.textContent = `${bonusPuzzle.album} · track ${bonusPuzzle.track}`;
+
   } else if (bonusGame.id === "sing-it-back") {
     // Whatever was in the gap — a wrong word, a half-typed one, nothing at all — the real
     // word goes in, so the line is left whole and correct on the page.
@@ -8568,11 +8549,10 @@ function foldBonusPageCharms(correct, isTimeout) {
     if (correct && redactPeeled === 0) unlock("name-redacted-song-no-strips-removed");
     if (correct && bonusPuzzle.blocks && redactPeeled >= bonusPuzzle.blocks) unlock("name-redacted-song-after-buying-all-strips");
   } else if (bonusGame.id === "running-order") {
-    // The page named before the decay took anything off it. Read off the page's own frozen
-    // worth rather than off a stopwatch, because the six is the number the player was watching
-    // watching: a charm priced in a number the game never showed you is the mistake the Ruthless roster
-    // had to be rebuilt to fix.
-    if (correct && !isTimeout && trackWorth >= TRACK_PAGE) unlock("name-running-order-page-at-full-value");
+    // Named with half the ten still on the clock. Read off the countdown the player was
+    // watching rather than off a stopwatch they never see, which is the Ruthless roster's rule.
+    if (correct && !isTimeout && trackLeft >= BONUS_TRACK_SECONDS / 2)
+      unlock("name-running-order-page-with-half-the-clock-left");
   } else if (bonusGame.id === "only-here" && onlyPlayed) {
     // The commonest card in the hand, and NOT when that card is also the rarest: a hand where
     // every word is sung equally often is a tie the player cannot lose, and charging them with
@@ -26672,24 +26652,17 @@ function buildDevApi() {
         }
         return { tried: n, built: ok, rate: `${((ok / n) * 100).toFixed(1)}%` };
       },
-      /* Running Order. `track()` reads the live page (the question, the answer and what the
-         page has already fallen to), since the player is never shown the title and the decay is
-         the only thing on screen that moves. `worth(n)` sets what the page is still worth, the
-         way `.worth` does for Redacted, so the top tier and the floor can both be settled
-         without racing a real clock. `tracks()` is the one that matters before shipping a
-         catalogue change: it prints every album's standard run and the song sitting at each
-         number, which is the only way to see that ALBUM_TRACKS still agrees with songs.json. */
+      /* Running Order. `track()` reads the live page, since the player is never shown the
+         title: the question, the answer, and the seconds still on the clock, which is the one
+         number By Heart is judged on and the one thing about the page that moves. `tracks()` is
+         the one that matters before shipping a catalogue change: it prints every album's
+         standard run and the song sitting at each number, which is the only way to see that
+         ALBUM_TRACKS still agrees with songs.json. */
       track: () => {
         if (!bonusGame || bonusGame.id !== "running-order" || !bonusPuzzle) return "no Running Order page live";
-        return { ask: `${bonusPuzzle.album} ${bonusPuzzle.track}`, answer: bonusPuzzle.song.title,
-                 of: bonusPuzzle.total, worth: trackWorth, opened: TRACK_PAGE };
-      },
-      worth: (n) => {
-        if (!bonusGame || bonusGame.id !== "running-order") return "no Running Order page live";
-        trackWorth = Math.max(TRACK_MIN_POINTS, Math.min(TRACK_PAGE, +n || 0));
-        const el = $("bonusWorth");
-        if (el) el.textContent = String(trackWorth);
-        return trackWorth;
+        return { ask: `track ${bonusPuzzle.track} from ${bonusPuzzle.album}`,
+                 answer: bonusPuzzle.song.title, of: bonusPuzzle.total,
+                 left: +trackLeft.toFixed(2), byHeartAt: BONUS_TRACK_SECONDS / 2 };
       },
       tracks: (album = null) => {
         const { trackIndex } = bonusIndexes();

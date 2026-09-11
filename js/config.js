@@ -608,15 +608,14 @@ export const BONUS_GAMES = [
     kicker: "what comes next?", tint: "#4c3f8a",
     line: "Three lines. Pick the one that comes next.",
     blurb: "One line of the song, and three that might follow it. Pick the right one and it locks into the page in pen; four picks and the verse is yours." },
-  // The one game on the shelf that asks nothing about the words. A page is an album and a
-  // track number, and what it pays falls away while you think about it (TRACK_TIERS), so it
-  // carries `points` like Redacted and Then What, and its sixty is unreachable for the same
-  // reason theirs are. No `sweep`: the clean-sweep clock goes on games with a reachable
-  // ceiling, and a game already scored on how fast you were does not need a second stopwatch.
-  { id: "running-order", name: "Running Order", ready: true, points: 6,
+  // The one game on the shelf that asks nothing about the words: a page is a track number and
+  // an album, and ten seconds. Right or wrong like the first three, so a run is out of ten and
+  // it takes `sweep` for their reason too, the reachable ceiling: at 10/10 an eleventh perfect
+  // run would tie the tenth forever, and the clock is what it goes on to beat.
+  { id: "running-order", name: "Running Order", ready: true, sweep: true,
     kicker: "name it from its number", tint: "#9c6b21",
     line: "An album and a track number. Name the song, fast.",
-    blurb: "Track eight on Fearless. Track five on folklore. The album and the number are all you get, and the page is worth less every second you spend on it." },
+    blurb: "Track eight on Fearless. Track five on folklore. The album and the number are all you get, and ten seconds to put a name to it." },
 ];
 /* ---------- The Ruthless run descriptor ----------
    NOT a bonus game and no longer in the roster above (2026-08-18). It is the object the Ruthless
@@ -678,23 +677,16 @@ export const CHAIN_EASY_PAGES = 3;
 /* ---------- Running Order ----------
    Naming a track from its number is instant recall or it is nothing: you either have the
    running order in your head or you are counting up from track one, and the whole game is the
-   difference. So the clock is Name That Song's fifteen: long enough to type a title you know,
-   nowhere near long enough to recite an album to yourself. */
-export const BONUS_TRACK_SECONDS = 15;
-/* What a page pays, and how fast it stops paying. A page opens worth TRACK_PAGE and falls
-   through TRACK_TIERS as the seconds go: `[elapsed seconds, what the page is worth up to
-   there]`, floored at one so a right answer always beats a wrong one however long it took.
+   difference. TEN SECONDS is the entire scoring mechanism, which is why it is a round number
+   rather than a tuned one. It is long enough to type a title you already have, and nowhere
+   near long enough to walk an album up to track fourteen.
 
-   The decay is the entire game (without it this is Name That Song with a worse prompt), and
-   the shape of it is deliberate. The first tier is a THREE-SECOND SHELF rather than an instant
-   drop, because the answer has to be typed and a curve that starts falling from the first
-   keystroke would score typing speed rather than knowledge. After that it falls a point every
-   two seconds, so the player can watch the number go and feel the cost of thinking. Sixty is
-   unreachable by design, like every other points game on the shelf: ten pages answered inside
-   three seconds each is not a run anybody has. */
-export const TRACK_PAGE = 6;
-export const TRACK_TIERS = [[3, 6], [5, 5], [7, 4], [9, 3], [12, 2]];
-export const TRACK_MIN_POINTS = 1;
+   An earlier build made the page worth six and decayed it a point at a time, so a run came out
+   of sixty. It was cut for being two pressures doing one job: the clock was already the whole
+   question, and a second falling number beside it gave the page a running total to read, a
+   sentence of chrome to carry it, and a charm priced in a currency the game did not need. The
+   page is right or wrong now, and the clock is the only thing on it that moves. */
+export const BONUS_TRACK_SECONDS = 10;
 // What counts as spotting the impostor on sight (the Saw It Coming charm). Read against the
 // page's own baseline, not the clock's remaining seconds, so it stays honest if a game's clock
 // is ever retuned under it.
@@ -3763,10 +3755,11 @@ export const ACHIEVEMENTS = [
   { id: "finish-then-what-unbroken-chain", name: "Follow The Sparks", desc: "Sing a whole Then What run on one unbroken chain", tier: 2, secret: false, icon: "chain", sitting: true, earn: { cat: "bonus" } },
   { id: "sweep-running-order", name: "I Know Places", desc: "Sweep Running Order", tier: 2, secret: false, icon: "placeholder", sitting: true, earn: { cat: "bonus" } },
   // The one page-level charm outside Redacted's pair, and it asks for the thing the game is
-  // actually about: a track named at the page's full opening value, before the decay has taken
-  // a single point off it. Priced in POINTS rather than in seconds on purpose: six is the
-  // number on screen while the page is live, and the three seconds behind it are not.
-  { id: "name-running-order-page-at-full-value", name: "By Heart", desc: "Name a Running Order track before the page loses a point", tier: 2, secret: false, icon: "placeholder", sitting: true, earn: { cat: "bonus" } },
+  // actually about: the track named while half the clock is still there. Priced off the
+  // COUNTDOWN, which is on screen and ticking the whole time the page is live, rather than off
+  // a stopwatch the player never sees. That is the Ruthless roster's lesson, and it survived
+  // the page's rebuild even though the number it used to be priced in did not.
+  { id: "name-running-order-page-with-half-the-clock-left", name: "By Heart", desc: "Name a Running Order track with half the clock still on it", tier: 2, secret: false, icon: "placeholder", sitting: true, earn: { cat: "bonus" } },
   // The secrets. Three of them are failures worn well (the register of I'm The Problem), which is the
   // shelf's own tone: these games have soft edges and losing on them is funny rather than sore.
   { id: "take-commonest-only-here-card",      name: "I Bought It",      desc: "Take the commonest card in an Only Here hand", secret: true, icon: "receipt" },
@@ -4027,6 +4020,10 @@ export const ACH_ID_MIGRATIONS = {
      ("one-last-souvenir" → "keep-bonus-sleeve") still has to run first, which is why a
      new row is appended rather than dropped in wherever it reads best. */
   "keep-bonus-sleeve": "keep-bonus-back-cover",
+  /* Running Order lost its per-page points the day after it shipped, so the charm that was
+     priced in them had to be re-cut against the clock instead. The feat is the same one (you
+     had it instantly), but the id has to describe what the game now actually asks. */
+  "name-running-order-page-at-full-value": "name-running-order-page-with-half-the-clock-left",
 };
 
 // Achievements are shown grouped by theme on the Charm Collection page. Order here is

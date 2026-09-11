@@ -3807,45 +3807,23 @@
     border-left: 2px solid rgba(178,58,63,0.35);
   }
 
-  /* Running Order, the back of a sleeve with one title left off it. The album is set in the
-     typewriter voice because it is printed matter, the number sits in the margin where a
-     tracklist puts it, and the empty slot is a ruled line waiting to be filled in by hand.
-     The slot is what the reveal writes into, so the page ends as a finished tracklist row
-     rather than as a question with an answer card stapled under it. */
-  .bg-sleeve { max-width: 28ch; margin: 6px auto 18px; }
-  .bg-sleeve-album {
-    font-family: var(--type); font-size: calc(13px + var(--text-size-adjust));
-    letter-spacing: 2.6px; text-transform: uppercase; color: var(--ink);
-    text-align: center; line-height: 1.25;
-  }
-  .bg-sleeve-rule {
-    height: 1.5px; margin: 7px auto 14px; max-width: 18ch;
-    background: linear-gradient(90deg, transparent, rgba(178,58,63,0.5) 18%, rgba(178,58,63,0.5) 82%, transparent);
-  }
-  .bg-sleeve-row { display: flex; align-items: baseline; gap: 12px; }
-  /* Tabular figures so a one-digit track and a two-digit one hang the slot in the same place.
-     a line that shifts sideways between pages reads as the layout settling rather than as a
-     list. */
-  .bg-sleeve-no {
-    font-family: var(--type); font-size: calc(26px + var(--text-size-adjust)); font-weight: 700;
-    color: var(--ink-soft); font-variant-numeric: tabular-nums; min-width: 2ch; text-align: right;
-  }
-  /* Empty, this is just the rule; min-height holds it open so the row does not grow when the
-     title lands in it at the reveal. */
-  /* Every colour here is a TOKEN rather than a literal, and the empty rule is why: a hard-coded
-     ink at 45% is invisible on a dark page, and an empty slot with no line under it leaves the
-     page looking like it forgot to ask the question. */
-  .bg-sleeve-slot {
-    flex: 1; min-height: 1.15em; font-family: var(--hand); font-weight: 700;
-    font-size: calc(27px + var(--text-size-adjust)); line-height: 1.15; color: var(--ink);
-    border-bottom: 1.5px solid var(--ink-soft); padding: 0 2px 2px;
-  }
-  /* The title you had is written in as though it was always on the sleeve; the one you missed
-     goes in the same red pen the margin rule is drawn in. */
-  .bg-sleeve-slot.is-got { border-bottom-color: var(--ink-accent); }
-  .bg-sleeve-slot.is-answer {
-    color: var(--margin); border-bottom-color: var(--margin);
-  }
+  /* Running Order asks its question in a `bg-sheet`'s TITLE slot, so it needs almost nothing of
+     its own: a little more air under the heading than a reveal wants, since here the heading is
+     the thing being read rather than the answer to something above it. Its meta line is empty
+     while the page is live and fills in at the reveal, which is why the block still needs its
+     bottom margin rather than borrowing one from a line that is not there yet. */
+  .bg-sheet--ask { margin: 12px auto 30px; }
+  /* Bigger than a reveal's heading, because here it IS the page: one written line with nothing
+     else on the paper, which at the shared size reads as a caption for something missing rather
+     than as the question. The real title inherits the size when it lands. */
+  .bg-sheet--ask .bg-sheet-title { font-size: calc(34px + var(--text-size-adjust)); }
+  /* A missed title is written in the editor's red pen (--red-pen), NOT in --margin: that one is
+     the printed rule, deliberately faint because it is meant to sit under text, and a heading
+     set in it reads as washed out rather than as corrected. A named title gets no mark at all,
+     since the banner directly above it has already said so, and a second signal on the same
+     fact is the clutter this page was rebuilt to lose. */
+  .bg-sheet-title.is-answer { color: var(--red-pen); }
+
   .bg-reject {
     opacity: 0; font-family: var(--type); font-size: calc(10.5px + var(--text-size-adjust)); letter-spacing: 0.8px;
     color: var(--margin); text-align: center; pointer-events: none;
@@ -4071,8 +4049,7 @@
   @media (max-width: 560px) {
     .bg-word, .bg-word-plain { font-size: calc(23px + var(--text-size-adjust)); }
     .bg-lyric { font-size: calc(23px + var(--text-size-adjust)); }
-    .bg-sleeve-slot { font-size: calc(22px + var(--text-size-adjust)); }
-    .bg-sleeve-no { font-size: calc(22px + var(--text-size-adjust)); }
+    .bg-sheet--ask .bg-sheet-title { font-size: calc(27px + var(--text-size-adjust)); }
     /* A redacted verse is several lines rather than one, and a block can't hyphenate, so it
        comes down further than the single-line games to keep the words off each other. */
     .bg-tok { font-size: calc(21px + var(--text-size-adjust)); }
