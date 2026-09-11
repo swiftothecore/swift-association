@@ -6788,11 +6788,11 @@
     pointer-events: none; user-select: none;
   }
   /* The flip layer outranks .app, so it carries a temporary mirror of the exposed bookmark
-     while a page is in the air. Only the tongue beyond the paper edge is allowed through this
-     clip: lifting the whole tab above the sheet would expose the 46px that is meant to remain
-     tucked into the notebook. The ordinary tab keeps its full V-cut polygon above. */
+     while a page is in the air. It sits UNDER the turning sheet, letting the paper and its
+     shadow pass over naturally. Only the tongue beyond the paper edge is allowed through this
+     clip, so the 46px tucked into the notebook cannot appear as the sheet lifts away. */
   .page-flip-challenge-tab {
-    z-index: 2;
+    z-index: 0;
     clip-path: polygon(
       var(--bite) 0,
       100% 0,

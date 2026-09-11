@@ -40,14 +40,15 @@ test("the turn runs in a fixed, clipped interaction layer with locked geometry",
   assert.match(app, /matchMedia\("\(prefers-reduced-motion: reduce\)"\)\.addEventListener\("change"/);
 });
 
-test("the exposed challenge bookmark stays above the turning sheet", () => {
+test("the exposed challenge bookmark stays in the turn layer beneath the sheet", () => {
   assert.match(app, /function mirrorChallengeTabForTurn\(layer, app, appRect\)/);
   assert.match(app, /const mirror = tab\.cloneNode\(true\);\s*renameFlipIds\(mirror\);/);
   assert.match(app, /mirror\.setAttribute\("aria-hidden", "true"\);\s*mirror\.setAttribute\("inert", ""\);/);
   assert.match(app, /mirror\.classList\.add\("page-flip-challenge-tab"\);/);
   assert.doesNotMatch(app, /mirror\.style\.(?:width|height)\s*=/);
   assert.match(app, /mirrorChallengeTabForTurn\(layer, app, appRect\);/);
-  assert.match(css, /\.page-flip-challenge-tab\s*\{[\s\S]*?z-index:\s*2;[\s\S]*?clip-path:\s*polygon\([\s\S]*?var\(--bite\) 0/);
+  assert.match(css, /\.page-flip-challenge-tab\s*\{[\s\S]*?z-index:\s*0;[\s\S]*?clip-path:\s*polygon\([\s\S]*?var\(--bite\) 0/);
+  assert.match(css, /\.page-flip-sheet\s*\{[\s\S]*?z-index:\s*1;/);
 });
 
 test("long destination pages animate only through the visible viewport", () => {
