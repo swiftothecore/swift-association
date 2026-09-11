@@ -2760,9 +2760,14 @@ if (location.pathname.endsWith('/index.html')) {
           <span class="nav-card-seat">
             <svg class="nav-ic" width="50" height="50" viewBox="0 0 48 48" aria-hidden="true">
               <!-- The fanned cards, with the deco diamond the bonus shelf's own pressings already
-                   use in place of the gold star that used to sit on every icon in this row. -->
+                   use in place of the gold star that used to sit on every icon in this row. Every
+                   card sits on a paper-filled copy of itself, because the tints are translucent
+                   and without it the fan behind shows straight through the card in front. -->
+              <rect x="15" y="12" width="18" height="25" rx="3" class="paper flat" transform="rotate(-17 24 40)"/>
               <rect x="15" y="12" width="18" height="25" rx="3" class="wash" transform="rotate(-17 24 40)"/>
+              <rect x="15" y="12" width="18" height="25" rx="3" class="paper flat" transform="rotate(17 24 40)"/>
               <rect x="15" y="12" width="18" height="25" rx="3" class="wash" transform="rotate(17 24 40)"/>
+              <rect x="15" y="12" width="18" height="25" rx="3" class="paper flat"/>
               <rect x="15" y="12" width="18" height="25" rx="3" class="mid"/>
               <path class="solid fine" d="M24 19.4 L28.2 24.6 L24 29.8 L19.8 24.6 Z"/>
             </svg>
@@ -3109,9 +3114,14 @@ if (location.pathname.endsWith('/index.html')) {
         <span class="nav-card-seat">
           <svg class="nav-ic" width="50" height="50" viewBox="0 0 48 48" aria-hidden="true">
             <!-- The fanned cards, with the deco diamond the bonus shelf's own pressings already
-                 use in place of the gold star that used to sit on every icon in this row. -->
+                 use in place of the gold star that used to sit on every icon in this row. Every
+                   card sits on a paper-filled copy of itself, because the tints are translucent
+                   and without it the fan behind shows straight through the card in front. -->
+            <rect x="15" y="12" width="18" height="25" rx="3" class="paper flat" transform="rotate(-17 24 40)"/>
             <rect x="15" y="12" width="18" height="25" rx="3" class="wash" transform="rotate(-17 24 40)"/>
+            <rect x="15" y="12" width="18" height="25" rx="3" class="paper flat" transform="rotate(17 24 40)"/>
             <rect x="15" y="12" width="18" height="25" rx="3" class="wash" transform="rotate(17 24 40)"/>
+            <rect x="15" y="12" width="18" height="25" rx="3" class="paper flat"/>
             <rect x="15" y="12" width="18" height="25" rx="3" class="mid"/>
             <path class="solid fine" d="M24 19.4 L28.2 24.6 L24 29.8 L19.8 24.6 Z"/>
           </svg>
