@@ -110,17 +110,21 @@ function roundRectPts(x, y, w, h, r, per = 4) {
   return pts;
 }
 
-/* The pale core of a sheet of stock: its colour mixed most of the way to bone. Only hex
-   fills are mixed, because a literal is the only thing a cover is allowed to carry (see the
-   no-CSS-colour-functions rule) and anything else is handed back untouched. */
-function core(fill, k = 0.5) {
+/* The pale core of a sheet of stock: its colour nudged a fifth of the way to bone, and no
+   further. A dyed sheet's core is a shade lighter than its face, not a different colour, and
+   the moment the mix gets generous the fibre stops being the same paper and starts being a
+   cream rim drawn round the shape — which on a dark ground is the loudest thing on the cover.
+   Only hex fills are mixed, because a literal is the only thing a cover is allowed to carry
+   (see the no-CSS-colour-functions rule) and anything else is handed back untouched. */
+function core(fill, k = 0.22) {
   const m = /^#([0-9a-f]{6})$/i.exec(String(fill).trim());
   if (!m) return null;
   const v = parseInt(m[1], 16);
   const rgb = [16, 8, 0].map((sh) => (v >> sh) & 255);
-  /* Dark stock gets a much shorter mix. A near-black block lightened halfway lands on a grey
-     that reads as a blurred edge rather than a torn one, which is what the first pass at this
-     did to Redacted's three blacked-out strips. */
+  /* Dark stock gets less than half of even that. A near-black block lifted by the mid-tone
+     amount lands on a grey with no relationship to the sheet it came off, and reads as a
+     blurred edge rather than a torn one — which is what an earlier pass did to Redacted's
+     three blacked-out strips. */
   const lum = 0.299 * rgb[0] + 0.587 * rgb[1] + 0.114 * rgb[2];
   const kk = lum < 70 ? k * 0.45 : k;
   const mixTo = [246, 239, 224];
