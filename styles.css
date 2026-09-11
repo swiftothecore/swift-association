@@ -3286,7 +3286,12 @@
   /* the backing scrap */
   .bonus-play::before {
     content: ""; position: absolute; z-index: -2;
-    inset: -3px -1px -7px -6px;
+    /* Top, right, bottom, left. The RIGHT one is positive and the other three are not:
+       that edge of the backing is tucked several pixels INSIDE the face, so the gold hangs
+       off it there, while the kraft shows below and to the left. A scrap pasted down by hand
+       overhangs its backing somewhere — it is the difference between a label stuck on a
+       bigger label and one piece of paper landing on another. */
+    inset: -3px 6px -8px -7px;
     background-color: var(--play-back); background-image: var(--play-grain);
     clip-path: var(--tear-back);
     transform: rotate(1.6deg);
