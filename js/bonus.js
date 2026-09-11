@@ -8,6 +8,7 @@
    puzzle handed to the player must have exactly one defensible answer. Enforcing that is
    most of what this file does. */
 import { normalizeLyric, levenshtein, swappedNeighbours } from "./util.js";
+import { STUDIO_ALBUMS } from "./config.js";
 
 /* Words never worth swapping or counting as a line's content. Swapping a function word
    ("the" -> "a") is invisible rather than hard, and a line whose only meat is filler makes a
@@ -968,7 +969,9 @@ export function buildChainPuzzle(songs, rng = Math.random, tries = 120, avoid = 
      • NOT HERS TO SING. The Written for Others tracks are hers on paper only, and the
        Collaborations are someone else's record with her on it — the stream can open on a verse
        she has no part in, and the title belongs to a song most of the catalogue's readers have
-       never filed under her name at all.
+       never filed under her name at all. Both albums are now barred by the wider rule below
+       rather than by this one, and the reasoning is kept here because it is what the wider
+       rule grew out of.
      • SECOND CUTS. A re-recording or a remix sings the SAME WORDS as the album version sitting
        beside it, so the stream is another song's stream and the honest answer ("State Of Grace")
        is rejected for missing a parenthesis. There is no play that ends that page except
@@ -981,10 +984,24 @@ export function buildChainPuzzle(songs, rng = Math.random, tries = 120, avoid = 
    Everything else stays, including the songs that never sing their own title: those are slow,
    not impossible, and the give-up is the valve for them. */
 export const RUTHLESS_MIN_WORDS = 30;
-export const RUTHLESS_SKIP_ALBUMS = new Map([
-  ["Written for Others", "not hers to sing"],
-  ["Collaborations", "not hers to sing"],
-]);
+
+/* ---------- THE TWELVE ----------
+   The bonus shelf deals from the twelve studio albums and nothing else. That is a SCOPE
+   decision rather than a fairness guard, and it belongs beside the bars above because it is the
+   same judgement widened: Written for Others and Collaborations were already barred for being
+   hers on paper only, and Holiday Collection and Songs From Movies are a covers record and a
+   soundtrack shelf. Every game here asks you to recognise a song, and a page on Macavity or
+   Silent Night tests what you happen to have heard rather than what you know. Before the cut
+   each of the six games spent about six pages in a hundred off the twelve, and about ten on
+   vault tracks, which is the deep-cut load that was always meant to be there.
+
+   An ALLOWLIST rather than a skip list, on purpose: a pseudo-album added to songs.json later is
+   out of the shelf until somebody decides it is in, which is the same reason STUDIO_ALBUMS
+   exists at all. The vault tracks live on their albums and are untouched.
+
+   It is barred HERE, in the one question every deal and every audit already asks, so the pool
+   the dev tools report and the pool the builders draw from cannot drift apart. That makes it
+   shelf-wide rather than this mode's: see bonusSongs in app.js. */
 export const RUTHLESS_SKIP_TITLES = new Map([
   ["State Of Grace (Acoustic Version)", "second cut"],
   ["Forever & Always (Piano Version)", "second cut"],
@@ -1000,7 +1017,8 @@ export const RUTHLESS_SKIP_TITLES = new Map([
    question, so what the pool reports and what the pool actually is cannot drift apart. */
 export function ruthlessBar(song) {
   if (!song) return "no song";
-  return RUTHLESS_SKIP_ALBUMS.get(song.album) || RUTHLESS_SKIP_TITLES.get(song.title) || null;
+  if (!STUDIO_ALBUMS.includes(song.album)) return "off the twelve";
+  return RUTHLESS_SKIP_TITLES.get(song.title) || null;
 }
 
 /* THE LENS: which section the stream OPENS on. Six of them, and they are lenses on the catalogue
@@ -1011,13 +1029,14 @@ export function ruthlessBar(song) {
    never where it ENDS: it runs on through the rest of the song exactly as it always has. That is
    measured rather than chosen. Only 11 to 18% of verses and bridges ever sing the title inside
    themselves, so a stream fenced into its own section would run dry unnamed on most pages and the
-   give-up would stop being a valve and start being the game. Running on puts every lens at 85 to
-   94% named, which is the same band as the whole-song game's own 91%, so no lens needs a guard
-   that the default does not already have.
+   give-up would stop being a valve and start being the game. Running on puts every lens at 91 to
+   97% named, a band tight enough that no lens needs a guard the default does not already have.
 
-   `median` is the measured median words-to-the-title for that lens over the catalogue, and it is
-   here because the give-up has to be priced against it (see `ruthlessGiveUp`). It is the one
-   number to re-measure if the catalogue grows.
+   `median` is the measured median words-to-the-title for that lens over the DEALABLE pool, and
+   it is here because the give-up has to be priced against it (see `ruthlessGiveUp`). It is the
+   one number to re-measure if the catalogue grows, or if the pool is narrowed under it: these
+   six were re-stamped off `__dev.ruthless.lenses()` when the shelf went studio-only and four of
+   them moved (76→77, 79→80, 22→23, 48→51).
 
    OUTRO IS NOT A LENS, and is barred by the endable-page rule above rather than by taste: 181
    songs have one, but only 43% can be named from it and the median stream left behind it is 19
@@ -1031,15 +1050,15 @@ export function ruthlessBar(song) {
    old lens quietly started Cruel Summer, Getaway Car and Lavender Haze a few lines in, and for
    the other 237 it was the top of the song wearing a name that only happened to be true. Naming
    it for where it starts instead of for what is written there also drops the "no verse 1" bar,
-   which is why this lens deals 263 where Verse 1 dealt 260 — the whole endable pool, since every
-   song has a first word. It is the lens the shelf's own Ruthless Game used to be, which is why
+   which is why this lens deals 247 where Verse 1 would deal 244 — the whole endable pool, since
+   every song has a first word. It is the lens the shelf's own Ruthless Game used to be, which is why
    that game left the shelf rather than sitting beside its own duplicate. */
 export const RUTHLESS_LENSES = [
-  { id: "from-the-top", label: "From the Top", section: null,         median: 76 },
-  { id: "verse-2",     label: "Verse 2",     section: "verse 2",     median: 79 },
-  { id: "chorus",      label: "Chorus",      section: "chorus",      median: 22 },
+  { id: "from-the-top", label: "From the Top", section: null,         median: 77 },
+  { id: "verse-2",     label: "Verse 2",     section: "verse 2",     median: 80 },
+  { id: "chorus",      label: "Chorus",      section: "chorus",      median: 23 },
   { id: "bridge",      label: "Bridge",      section: "bridge",      median: 68 },
-  { id: "pre-chorus",  label: "Pre-Chorus",  section: "pre-chorus",  median: 48 },
+  { id: "pre-chorus",  label: "Pre-Chorus",  section: "pre-chorus",  median: 51 },
   { id: "post-chorus", label: "Post-Chorus", section: "post-chorus", median: 39 },
 ];
 

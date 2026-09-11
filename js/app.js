@@ -6711,10 +6711,14 @@ function bonusIndexes() {
   return { lineIndex: bonusLineIndex, ctx: bonusSlipCtx, wordIndex: bonusWordIndex };
 }
 
-// The Ruthless exclusions are catalogue-wide bonus-game exclusions. The full catalogue still
-// builds the fairness indexes above, so a barred song's duplicate line cannot accidentally make
-// an eligible Name That Song or Redacted page look unique; it simply cannot be dealt or named
-// anywhere on the bonus shelf.
+// What the whole shelf deals from: the twelve studio albums, less the handful of titles the
+// endable-page rule throws out (see ruthlessBar, which is the one place both questions are
+// asked). Holiday Collection and Songs From Movies are OUT — every game here asks you to
+// recognise a song, and a covers record is a test of what you have heard.
+// The full catalogue still builds the fairness indexes above, deliberately: a barred song's
+// duplicate line must not make an eligible Name That Song or Redacted page look unique, and
+// Only Here's prices say how many songs in the CATALOGUE sing a word, which stays true whether
+// or not the shelf can deal them. Barred songs simply cannot be dealt or named on the shelf.
 function bonusSongs() { return allSongs.filter((song) => !ruthlessBar(song)); }
 
 /* In-run state. Deliberately separate from the main game's state (score/round/currentSongs):
@@ -26493,6 +26497,21 @@ function buildDevApi() {
           }
         }
         return out;
+      },
+      /* What the shelf can deal from at all, and what it cannot. A run never shows you a bar,
+         so this is the only way to see that an exclusion caught what it was written for and
+         nothing else. Pass a reason ("off the twelve", "second cut", "unheard") to list those
+         songs in full. The same question `__dev.ruthless.pool()` asks, printed for the shelf,
+         because the bar is shared and a dev looking at the six games should not have to know
+         that it is spelled `ruthlessBar`. */
+      pool: (why = null) => {
+        const { deal, barred } = ruthlessPool(allSongs);
+        if (why) return barred.filter((b) => b.why === why);
+        const by = {};
+        barred.forEach((b) => { by[b.why] = (by[b.why] || 0) + 1; });
+        const albums = {};
+        deal.forEach((s) => { albums[s.album] = (albums[s.album] || 0) + 1; });
+        return { dealable: deal.length, of: allSongs.length, barred: by, albums };
       },
       // How often a builder succeeds within its own retry budget — a failure here means the
       // fairness guards have been tightened past what the catalogue can serve.
