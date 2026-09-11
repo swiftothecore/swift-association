@@ -8139,6 +8139,10 @@
     text-decoration: underline; text-underline-offset: 3px; padding: 4px 0;
   }
   .btn-link:hover { color: var(--ink); }
+  /* Armed: the second tap really leaves. Same red margin ink the round screen's own quit
+     wears, so "give up? tap again" reads as a warning on both screens rather than as more
+     grey nav. */
+  .btn-link.armed { color: var(--margin); opacity: 1; font-weight: 700; text-decoration-color: var(--margin); }
   /* "By the numbers" header (design E): three primaries on top, then a
      recent-form sparkline beside the secondary stats. Transparent over paper,
      thin ruled dividers — no boxed border. */

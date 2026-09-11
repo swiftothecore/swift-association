@@ -7083,6 +7083,9 @@ function startBonusGame(g, lensId = null) {
   // Same: a run is exact until a page is forgiven, so it starts true once per run.
   blankExactRun = true;
   bonusRunId++;
+  // A finished run swapped the quit link for the way home; a new one is a run again.
+  $("bonusQuitBtn").hidden = false;
+  $("bonusHomeBtn").hidden = true;
   // Sweep time begins with the first playable page, after the shelf turn has landed.
   bonusRunStart = 0;
   stopBonusClock();
@@ -8529,6 +8532,11 @@ function endBonusRun() {
   // foldBonusRunCharms), and after the lens fork above, so Ruthless earns none of them.
   foldBonusRunCharms(perfect, bonusLog.filter((t) => t.ok).length);
   $("bonusTimer").style.display = "none";
+  // The run is over, so there is nothing left to quit. The nav slot hands its place to the way
+  // home instead, which the back cover's own two actions (the shelf, replay) don't cover.
+  disarmBonusQuit();
+  $("bonusQuitBtn").hidden = true;
+  $("bonusHomeBtn").hidden = false;
   $("bonusProgress").textContent = "run complete";
   $("bonusScore").textContent = bonusScoreText();
   $("bonusFeedback").innerHTML = "";
@@ -8783,7 +8791,10 @@ function endRuthlessRun() {
 
 // Leaving a game (quit or from the end card) always lands back on the shelf, with the board
 // re-rendered so a new best shows immediately.
-function leaveBonusGame() {
+/* Out of a bonus run. `to` is the screen it lands on: the shelf by default (the run's own
+   section, which is what quitting mid-game means), or the front page, which is where the
+   finished back cover's nav link goes. */
+function leaveBonusGame(to = "bonus") {
   disarmBonusQuit();
   stopBonusClock();
   stopBonusCountdown();
@@ -8793,7 +8804,8 @@ function leaveBonusGame() {
   bonusPuzzle = null;
   renderBonusPageRegister();
   renderBonusPage();
-  flipInToScreen("bonus");
+  if (to === "start") { backToScreen("start"); return; }
+  flipInToScreen(to);
 }
 
 let bonusQuitTimer = null;
@@ -16914,6 +16926,15 @@ function turnPageSheet(card, fill, done, options = {}) {
   flip.setAttribute("aria-hidden", "true");
   flip.setAttribute("inert", "");
   flip.classList.add("page-flip-sheet");
+  /* Never inherit a one-off inline animation from the source, exactly as makeFlipSheet doesn't.
+     A screen entered through flipAwayToScreen keeps `animation: none` on it for the whole visit
+     (deliberately — see the note there), and the bonus play screen is entered that way on every
+     run. Cloned unchecked, that inline rule outranks .page-flip-sheet's own `animation: pageFlip`
+     and the sheet never turns: it just sits there while the shade darkens the foot of the page
+     for half a second and then vanishes, taking the page with it. */
+  flip.style.animation = "";
+  flip.style.opacity = "";
+  flip.style.transition = "";
   positionFlipSheet(flip, card);
   const shade = document.createElement("div");
   shade.className = "flip-shade";
@@ -28548,6 +28569,7 @@ async function init() {
   $("viewBonusBtn").addEventListener("click", () => openBonus("results"));
   $("bonusBackBtn").addEventListener("click", () => backToScreen(bonusBackTarget));
   $("bonusQuitBtn").addEventListener("click", armBonusQuit);
+  $("bonusHomeBtn").addEventListener("click", () => leaveBonusGame("start"));
   $("albumFocusBtn").addEventListener("click", () => openAlbumFocus("start"));
   $("albumFocusBackBtn").addEventListener("click", () => backToScreen(albumFocusBackTarget));
   $("albumDetailBackBtn").addEventListener("click", closeAlbumDetail);

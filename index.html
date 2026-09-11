@@ -3218,6 +3218,9 @@ if (location.pathname.endsWith('/index.html')) {
     <div class="stats-nav">
       <span class="stats-title" id="bonusPlayTitle">Bonus game</span>
       <button id="bonusQuitBtn" class="btn-link" data-label="← quit">← quit</button>
+      <!-- Swapped in for the quit link once the run is over: there is nothing left to give up
+           on, and the back cover's own actions only reach as far as the shelf. -->
+      <button id="bonusHomeBtn" class="btn-link" hidden>← front page</button>
     </div>
     <div id="bonusHud" class="bg-hud">
       <span id="bonusProgress" class="bg-progress"></span>
