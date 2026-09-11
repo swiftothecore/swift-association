@@ -6743,7 +6743,8 @@
   /* ---------- Challenge tab (the active challenge, hung off the fore-edge) ----------
      A slip of the same paper as the page, wearing the challenge's wax seal and its name,
      tucked into the notebook at the right-hand edge. Decorative and non-interactive — it
-     just names the challenge you're in.
+     just names the challenge you're in. beginPageTurn mirrors its exposed tongue into the
+     fixed turn layer, since that layer necessarily outranks the whole notebook while active.
 
      The trick that makes it belong to the notebook rather than sit beside it is that the
      play page outranks it: #screen-game takes z-index 1 and the tab sits at 0 beneath it,
@@ -6751,7 +6752,8 @@
      it. They are siblings, which is what keeps that true through a page turn — as a child
      of the card the tab was cloned into every .page-flip-sheet, and a transformed sheet is
      a stacking context, so the cloned tab dropped behind the turning paper and the tab
-     appeared to darken under the flip shade and then vanish.
+     appeared to darken under the flip shade and then vanish. The separate turn-layer mirror
+     avoids both failures while clipping away the part still tucked under the page.
 
      The right edge, not the left, because the app's page turns pivot on a left spine
      (see .page-flip-sheet--side) — a tab out of that edge is a tab out of the binding.
@@ -6784,6 +6786,20 @@
        tongue used to read better than a notched one. */
     clip-path: polygon(0 0, 100% 0, calc(100% - 12px) 50%, 100% 100%, 0 100%);
     pointer-events: none; user-select: none;
+  }
+  /* The flip layer outranks .app, so it carries a temporary mirror of the exposed bookmark
+     while a page is in the air. Only the tongue beyond the paper edge is allowed through this
+     clip: lifting the whole tab above the sheet would expose the 46px that is meant to remain
+     tucked into the notebook. The ordinary tab keeps its full V-cut polygon above. */
+  .page-flip-challenge-tab {
+    z-index: 2;
+    clip-path: polygon(
+      var(--bite) 0,
+      100% 0,
+      calc(100% - 12px) 50%,
+      100% 100%,
+      var(--bite) 100%
+    );
   }
   /* The ribbon the wax is pressed over. Deliberately NARROWER than the seal, because that is
      the only arrangement that reads correctly: the wax has to overhang the ribbon on both

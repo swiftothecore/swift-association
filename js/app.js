@@ -1147,6 +1147,29 @@ function positionFlipSheet(flip, at) {
   flip.style.height = rect.height + "px";
 }
 
+// The challenge bookmark belongs to the notebook, not to any one page, so it deliberately
+// lives outside #screen-game and is not part of the turning sheet. The fixed flip layer sits
+// above the whole .app, though, which also puts it above that live bookmark for half a second.
+// Mirror only the exposed tongue into the layer: it stays still while the paper turns, while
+// --bite remains clipped away so the part tucked under the page never floats over the sheet.
+// renameFlipIds is load-bearing here because the wax seal carries gradients and filters of its
+// own, and a straight clone would duplicate those ids with the live tab beneath it.
+function mirrorChallengeTabForTurn(layer, app, appRect) {
+  const tab = $("challengeTab");
+  if (!tab || tab.hidden || getComputedStyle(tab).display === "none") return;
+  const mirror = tab.cloneNode(true);
+  renameFlipIds(mirror);
+  mirror.setAttribute("aria-hidden", "true");
+  mirror.setAttribute("inert", "");
+  mirror.classList.add("page-flip-challenge-tab");
+  mirror.style.left = (appRect.left + tab.offsetLeft) + "px";
+  mirror.style.right = "auto";
+  mirror.style.top = (appRect.top + tab.offsetTop) + "px";
+  mirror.style.width = tab.offsetWidth + "px";
+  mirror.style.height = tab.offsetHeight + "px";
+  layer.appendChild(mirror);
+}
+
 // A page turn is one transaction. The fixed layer contains every visual clone, the app keeps
 // its pre-turn dimensions, and state restored by finish() is shared by animationend, timeout,
 // resize, preference changes, and a newer turn superseding this one.
@@ -1162,6 +1185,7 @@ function beginPageTurn(anchor) {
   layer.style.setProperty("--flip-origin-y", appRect.top + "px");
   layer.addEventListener("wheel", (event) => event.preventDefault(), { passive: false });
   document.body.appendChild(layer);
+  mirrorChallengeTabForTurn(layer, app, appRect);
   // Some notebook tabs deliberately protrude past the paper. Switching to a screen without one
   // can shrink the root scrollable width even while app height is locked, so retain the exact
   // pre-turn horizontal extent with a non-painted layout sentinel.

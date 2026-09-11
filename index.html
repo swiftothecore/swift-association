@@ -3322,9 +3322,10 @@ if (location.pathname.endsWith('/index.html')) {
   <!-- The active challenge's tab, tucked into the notebook's fore-edge. A sibling of the
        screens rather than a child of the play page ON PURPOSE: a page turn clones the whole
        card into a .page-flip-sheet and transforms it, and a transformed clone is a stacking
-       context, which would drop the tab (it paints at z-index -1) behind the turning sheet's
-       own paper. Out here it belongs to the notebook instead of the page, so pages turn over
-       it and it stays put — which is what a bookmark does anyway. -->
+       context, which would drop the tab behind the turning sheet's own paper. Out here it
+       belongs to the notebook instead of the page. beginPageTurn mirrors only its exposed
+       tongue into the fixed flip layer so it stays put above that layer too, which is what
+       a bookmark does anyway. -->
   <div id="challengeTab" class="challenge-tab" role="img" hidden></div>
 </main>
 
