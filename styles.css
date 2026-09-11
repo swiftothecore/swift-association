@@ -3367,10 +3367,17 @@
      shorter book rather than as a longer caption. */
   .zine-row {
     display: flex; flex-wrap: wrap; justify-content: center; align-items: flex-start;
-    gap: 12px 10px; padding-bottom: 10px;
+    gap: 12px 9px; padding-bottom: 10px;
   }
   .zine-tile {
-    flex: 0 0 clamp(74px, 14%, 98px);
+    /* Sized so the whole shelf stands in ONE row on a desktop and three across on a phone.
+       All three numbers are the shelf's LENGTH written down, and they moved together when it
+       grew to seven: the percentage is one tile's share of the row, and the floor had to come
+       down with it because the notebook's page is only so wide and seven tiles at the old 74px
+       came to six pixels more than the row has (measured). A shelf that wraps to six and a
+       lonely one is exactly what this is defending against, so re-measure all three the next
+       time a game is added rather than nudging the percentage alone. */
+    flex: 0 0 clamp(70px, 12%, 98px);
     display: flex; flex-direction: column; align-items: center; gap: 7px; min-width: 0;
     padding: 8px 4px 7px; background: none; border: none; cursor: pointer; text-align: center;
     border-radius: 3px; position: relative;
@@ -3799,6 +3806,46 @@
     text-align: center; max-width: 30ch; margin: 0 auto 24px; padding: 0 10px;
     border-left: 2px solid rgba(178,58,63,0.35);
   }
+
+  /* Running Order, the back of a sleeve with one title left off it. The album is set in the
+     typewriter voice because it is printed matter, the number sits in the margin where a
+     tracklist puts it, and the empty slot is a ruled line waiting to be filled in by hand.
+     The slot is what the reveal writes into, so the page ends as a finished tracklist row
+     rather than as a question with an answer card stapled under it. */
+  .bg-sleeve { max-width: 28ch; margin: 6px auto 18px; }
+  .bg-sleeve-album {
+    font-family: var(--type); font-size: calc(13px + var(--text-size-adjust));
+    letter-spacing: 2.6px; text-transform: uppercase; color: var(--ink);
+    text-align: center; line-height: 1.25;
+  }
+  .bg-sleeve-rule {
+    height: 1.5px; margin: 7px auto 14px; max-width: 18ch;
+    background: linear-gradient(90deg, transparent, rgba(178,58,63,0.5) 18%, rgba(178,58,63,0.5) 82%, transparent);
+  }
+  .bg-sleeve-row { display: flex; align-items: baseline; gap: 12px; }
+  /* Tabular figures so a one-digit track and a two-digit one hang the slot in the same place.
+     a line that shifts sideways between pages reads as the layout settling rather than as a
+     list. */
+  .bg-sleeve-no {
+    font-family: var(--type); font-size: calc(26px + var(--text-size-adjust)); font-weight: 700;
+    color: var(--ink-soft); font-variant-numeric: tabular-nums; min-width: 2ch; text-align: right;
+  }
+  /* Empty, this is just the rule; min-height holds it open so the row does not grow when the
+     title lands in it at the reveal. */
+  /* Every colour here is a TOKEN rather than a literal, and the empty rule is why: a hard-coded
+     ink at 45% is invisible on a dark page, and an empty slot with no line under it leaves the
+     page looking like it forgot to ask the question. */
+  .bg-sleeve-slot {
+    flex: 1; min-height: 1.15em; font-family: var(--hand); font-weight: 700;
+    font-size: calc(27px + var(--text-size-adjust)); line-height: 1.15; color: var(--ink);
+    border-bottom: 1.5px solid var(--ink-soft); padding: 0 2px 2px;
+  }
+  /* The title you had is written in as though it was always on the sleeve; the one you missed
+     goes in the same red pen the margin rule is drawn in. */
+  .bg-sleeve-slot.is-got { border-bottom-color: var(--ink-accent); }
+  .bg-sleeve-slot.is-answer {
+    color: var(--margin); border-bottom-color: var(--margin);
+  }
   .bg-reject {
     opacity: 0; font-family: var(--type); font-size: calc(10.5px + var(--text-size-adjust)); letter-spacing: 0.8px;
     color: var(--margin); text-align: center; pointer-events: none;
@@ -4024,6 +4071,8 @@
   @media (max-width: 560px) {
     .bg-word, .bg-word-plain { font-size: calc(23px + var(--text-size-adjust)); }
     .bg-lyric { font-size: calc(23px + var(--text-size-adjust)); }
+    .bg-sleeve-slot { font-size: calc(22px + var(--text-size-adjust)); }
+    .bg-sleeve-no { font-size: calc(22px + var(--text-size-adjust)); }
     /* A redacted verse is several lines rather than one, and a block can't hyphenate, so it
        comes down further than the single-line games to keep the words off each other. */
     .bg-tok { font-size: calc(21px + var(--text-size-adjust)); }

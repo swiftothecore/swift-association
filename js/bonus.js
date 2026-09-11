@@ -8,7 +8,7 @@
    puzzle handed to the player must have exactly one defensible answer. Enforcing that is
    most of what this file does. */
 import { normalizeLyric, levenshtein, swappedNeighbours } from "./util.js";
-import { STUDIO_ALBUMS } from "./config.js";
+import { STUDIO_ALBUMS, ALBUM_TRACKS } from "./config.js";
 
 /* Words never worth swapping or counting as a line's content. Swapping a function word
    ("the" -> "a") is invisible rather than hard, and a line whose only meat is filler makes a
@@ -1269,4 +1269,61 @@ export function buildRuthlessPuzzle(songs, rng = Math.random, tries = 120, avoid
     return { song, stream, lens: lens ? lens.id : null, titleAt: at, titleOutside: outside };
   }
   return null;
+}
+
+
+/* ---------- Running Order ----------
+   The one game on the shelf that asks nothing about the lyrics: a page is an album and a
+   track number, and the answer is the song that sits there.
+
+   THE INDEX IS BUILT OFF THE WHOLE CATALOGUE AND THAT IS LOAD-BEARING, in the same way
+   buildLineIndex is. A track number is a fact about the record, so it has to be counted over
+   every song the album has, and `bonusSongs()` has already thrown four titles out of the
+   twelve for being second cuts or unheard demos. Count the positions on the filtered pool and
+   every song after the first gap moves up one, so the game would confidently ask for track 12
+   and mark track 13 correct. Hand this allSongs; deal from the filtered pool separately.
+
+   The cap is ALBUM_TRACKS, the standard edition's length, and it is the whole fairness story
+   (see the note on that table). Past the last standard track the arrays run on into platinum
+   editions, deluxe cuts and the vault, where a number means a different song on every
+   pressing. Inside it, position IS track number on every release of that record. */
+export function buildTrackIndex(songs) {
+  const byAlbum = new Map();
+  for (const song of songs) {
+    if (!ALBUM_TRACKS[song.album]) continue;
+    if (!byAlbum.has(song.album)) byAlbum.set(song.album, []);
+    byAlbum.get(song.album).push(song);
+  }
+  const of = new Map();       // song title -> { album, track, total }
+  const albums = [];
+  for (const album of STUDIO_ALBUMS) {
+    const list = byAlbum.get(album);
+    if (!list) continue;
+    const total = Math.min(ALBUM_TRACKS[album], list.length);
+    for (let i = 0; i < total; i++) of.set(list[i].title, { album, track: i + 1, total });
+    albums.push(album);
+  }
+  return { of, albums };
+}
+
+/* One page: an album, a number, and the song that answers it.
+
+   `avoidAlbums` is a soft preference rather than a bar. Ten pages over twelve albums will
+   repeat one and should, but three Midnights pages in a row reads as a broken shuffle. It is
+   tried first and dropped if the pool cannot honour it, which is what keeps a run from ever
+   failing to deal a page over a cosmetic preference. */
+export function buildTrackPuzzle(songs, index, rng = Math.random, tries = 120, avoid = null, avoidAlbums = null) {
+  const pool = songs.filter((song) => index.of.has(song.title));
+  if (!pool.length) return null;
+  const pick = (fussy) => {
+    for (let t = 0; t < tries; t++) {
+      const song = pool[Math.floor(rng() * pool.length)];
+      if (avoid && avoid.has(song.title)) continue;
+      const spot = index.of.get(song.title);
+      if (fussy && avoidAlbums && avoidAlbums.has(spot.album)) continue;
+      return { song, album: spot.album, track: spot.track, total: spot.total };
+    }
+    return null;
+  };
+  return pick(true) || pick(false);
 }

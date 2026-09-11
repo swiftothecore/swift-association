@@ -608,6 +608,15 @@ export const BONUS_GAMES = [
     kicker: "what comes next?", tint: "#4c3f8a",
     line: "Three lines. Pick the one that comes next.",
     blurb: "One line of the song, and three that might follow it. Pick the right one and it locks into the page in pen; four picks and the verse is yours." },
+  // The one game on the shelf that asks nothing about the words. A page is an album and a
+  // track number, and what it pays falls away while you think about it (TRACK_TIERS), so it
+  // carries `points` like Redacted and Then What, and its sixty is unreachable for the same
+  // reason theirs are. No `sweep`: the clean-sweep clock goes on games with a reachable
+  // ceiling, and a game already scored on how fast you were does not need a second stopwatch.
+  { id: "running-order", name: "Running Order", ready: true, points: 6,
+    kicker: "name it from its number", tint: "#9c6b21",
+    line: "An album and a track number. Name the song, fast.",
+    blurb: "Track eight on Fearless. Track five on folklore. The album and the number are all you get, and the page is worth less every second you spend on it." },
 ];
 /* ---------- The Ruthless run descriptor ----------
    NOT a bonus game and no longer in the roster above (2026-08-18). It is the object the Ruthless
@@ -665,6 +674,27 @@ export const BONUS_CHAIN_SECONDS = 11;
 // cross a section boundary, which asks a harder question — does the verse hand off to the
 // chorus, the pre-chorus, the bridge? — and tests the song's architecture rather than its lines.
 export const CHAIN_EASY_PAGES = 3;
+
+/* ---------- Running Order ----------
+   Naming a track from its number is instant recall or it is nothing: you either have the
+   running order in your head or you are counting up from track one, and the whole game is the
+   difference. So the clock is Name That Song's fifteen: long enough to type a title you know,
+   nowhere near long enough to recite an album to yourself. */
+export const BONUS_TRACK_SECONDS = 15;
+/* What a page pays, and how fast it stops paying. A page opens worth TRACK_PAGE and falls
+   through TRACK_TIERS as the seconds go: `[elapsed seconds, what the page is worth up to
+   there]`, floored at one so a right answer always beats a wrong one however long it took.
+
+   The decay is the entire game (without it this is Name That Song with a worse prompt), and
+   the shape of it is deliberate. The first tier is a THREE-SECOND SHELF rather than an instant
+   drop, because the answer has to be typed and a curve that starts falling from the first
+   keystroke would score typing speed rather than knowledge. After that it falls a point every
+   two seconds, so the player can watch the number go and feel the cost of thinking. Sixty is
+   unreachable by design, like every other points game on the shelf: ten pages answered inside
+   three seconds each is not a run anybody has. */
+export const TRACK_PAGE = 6;
+export const TRACK_TIERS = [[3, 6], [5, 5], [7, 4], [9, 3], [12, 2]];
+export const TRACK_MIN_POINTS = 1;
 // What counts as spotting the impostor on sight (the Saw It Coming charm). Read against the
 // page's own baseline, not the clock's remaining seconds, so it stays honest if a game's clock
 // is ever retuned under it.
@@ -2075,6 +2105,29 @@ export const STUDIO_ALBUMS = [
   "Lover", "folklore", "evermore", "Midnights",
   "The Tortured Poets Department", "The Life of a Showgirl",
 ];
+
+/* How many tracks each of the twelve had ON THE ORIGINAL RECORD, which is a different number
+   from how many songs sit under that album in songs.json. It is held here as literals for the
+   same reason the vault list is: it is a fact about the pressings rather than anything the
+   lyric data knows.
+
+   Running Order is the only thing that reads it, and it is what stops that game asking a
+   question with two honest answers. The album arrays are stored in real running order, so a
+   song's position in its album IS its track number, but only up to this line. Past it the
+   arrays run on into platinum editions, deluxe bonus tracks and the vault, where the numbering
+   is a different number on every pressing: "track 22 on Red" is one song on Red (Taylor's
+   Version) and does not exist at all on the 2012 record. Inside the standard edition there is
+   no such argument, because every re-recording kept the original order.
+
+   So this doubles as the game's POOL: 172 of the catalogue's songs sit at an unambiguous
+   number, and the deluxe and vault tracks are simply not asked about. If a re-recording ever
+   reorders its standard half, this is the one place that would have to learn about it. */
+export const ALBUM_TRACKS = {
+  "Taylor Swift": 11, "Fearless": 13, "Speak Now": 14, "Red": 16,
+  "1989": 13, "reputation": 15, "Lover": 18, "folklore": 16,
+  "evermore": 15, "Midnights": 13,
+  "The Tortured Poets Department": 16, "The Life of a Showgirl": 12,
+};
 /* Three named slices of the catalogue, for the Catalogue-knowledge charms that ask you to
    know where a song SITS rather than what it says. Held here as literals because none of
    them is derivable from songs.json: the vault list is a fact about the re-recordings, and
@@ -3698,7 +3751,7 @@ export const ACHIEVEMENTS = [
   { id: "clean-sweep-bonus-game",     name: "A Clean Kill",     desc: "Clean-sweep a bonus game: ten pages cleared", tier: 2, secret: false, icon: "broom", sitting: true, earn: { cat: "bonus" } },
   { id: "clean-sweep-every-bonus-game", name: "Every Single One", desc: "Clean-sweep every game on the shelf",  tier: 3, secret: false, icon: "goldrecord" },
   { id: "keep-bonus-back-cover", name: "One Last Souvenir", desc: "Take a back cover off the page and keep it", secret: false, icon: "backcover", sitting: true, earn: { cat: "bonus" } },
-  // One per game, and four of the six are that game's clean sweep said in its own voice. The
+  // One per game, and five of the seven are that game's clean sweep said in its own voice. The
   // two that aren't ask for something a sweep doesn't: exactness on Sing It Back, nerve on
   // Redacted. They are NOT masked like the challenge flourishes — a bonus game has no defeat
   // to reveal them on, so they stand as ordinary named targets from the start.
@@ -3708,6 +3761,12 @@ export const ACHIEVEMENTS = [
   { id: "name-redacted-song-no-strips-removed",      name: "Blind Faith",      desc: "Name a Redacted song with every strip still down", tier: 2, secret: false, icon: "taped", sitting: true, earn: { cat: "bonus" } },
   { id: "take-rarest-only-here-card-all-10-pages",       name: "Rarest Air",       desc: "Take the rarest card on all ten pages of Only Here", tier: 2, secret: false, icon: "highcard", sitting: true, earn: { cat: "bonus" } },
   { id: "finish-then-what-unbroken-chain", name: "Follow The Sparks", desc: "Sing a whole Then What run on one unbroken chain", tier: 2, secret: false, icon: "chain", sitting: true, earn: { cat: "bonus" } },
+  { id: "sweep-running-order", name: "I Know Places", desc: "Sweep Running Order", tier: 2, secret: false, icon: "placeholder", sitting: true, earn: { cat: "bonus" } },
+  // The one page-level charm outside Redacted's pair, and it asks for the thing the game is
+  // actually about: a track named at the page's full opening value, before the decay has taken
+  // a single point off it. Priced in POINTS rather than in seconds on purpose: six is the
+  // number on screen while the page is live, and the three seconds behind it are not.
+  { id: "name-running-order-page-at-full-value", name: "By Heart", desc: "Name a Running Order track before the page loses a point", tier: 2, secret: false, icon: "placeholder", sitting: true, earn: { cat: "bonus" } },
   // The secrets. Three of them are failures worn well (the register of I'm The Problem), which is the
   // shelf's own tone: these games have soft edges and losing on them is funny rather than sore.
   { id: "take-commonest-only-here-card",      name: "I Bought It",      desc: "Take the commonest card in an Only Here hand", secret: true, icon: "receipt" },

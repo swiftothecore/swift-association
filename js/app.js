@@ -20,6 +20,7 @@ import {
   BONUS_REDACT_SECONDS, REDACT_MIN_POINTS,
   BONUS_ONLY_SECONDS, ONLY_WIDE_PAGES,
   BONUS_CHAIN_SECONDS, CHAIN_EASY_PAGES, BONUS_SNAP_MS,
+  BONUS_TRACK_SECONDS, TRACK_PAGE, TRACK_TIERS, TRACK_MIN_POINTS,
   RUTHLESS_WORD_MS, RUTHLESS_OPEN_WORDS,
   RUTHLESS_PACE_SECONDS, RUTHLESS_RUN_RUNGS,
   CHALLENGES, CHALLENGE_BY_ID, CHALLENGE_ORDER, CHALLENGE_SEALS, byShelf, DARK_SIDE_IDS, DARK_SIDE_TODO,
@@ -81,6 +82,7 @@ import { buildLineIndex, buildSlipContext, buildSlipPuzzle, buildNamePuzzle,
          buildChainPuzzle, CHAIN_PICKS, CHAIN_CARDS, CHAIN_PAY, CHAIN_PAGE,
          buildRuthlessPuzzle, ruthlessPool, ruthlessLens, ruthlessLensAudit, ruthlessGiveUp, ruthlessSnap,
          ruthlessBar, RUTHLESS_LENSES, RUTHLESS_HANDOUT_WORDS,
+         buildTrackIndex, buildTrackPuzzle,
          judgeBlank, blankExact } from "./bonus.js";
 import { renderStreakPlacard } from "./placard.js";
 import { ruleSlotsMarkup, ruleTermsMarkup, ruleTermsLabel, ruleLegendMarkup,
@@ -6704,11 +6706,17 @@ let bonusBackTarget = "start";       // where the shelf's back link returns to
 let bonusLineIndex = null;
 let bonusSlipCtx = null;
 let bonusWordIndex = null;
+let bonusTrackIndex = null;
 function bonusIndexes() {
   if (!bonusLineIndex) bonusLineIndex = buildLineIndex(allSongs);
   if (!bonusSlipCtx) bonusSlipCtx = buildSlipContext(allSongs);
   if (!bonusWordIndex) bonusWordIndex = buildWordIndex(allSongs);
-  return { lineIndex: bonusLineIndex, ctx: bonusSlipCtx, wordIndex: bonusWordIndex };
+  // Off allSongs like the other three, and for a sharper reason than theirs: a track number is
+  // counted over every song the record has, so building this on the dealable pool would shuffle
+  // every position after a barred title up by one. See buildTrackIndex.
+  if (!bonusTrackIndex) bonusTrackIndex = buildTrackIndex(allSongs);
+  return { lineIndex: bonusLineIndex, ctx: bonusSlipCtx, wordIndex: bonusWordIndex,
+           trackIndex: bonusTrackIndex };
 }
 
 // What the whole shelf deals from: the twelve studio albums, less the handful of titles the
@@ -6734,6 +6742,13 @@ let bonusClockDeadline = 0;// countdown deadline, so Settings can preserve the e
 let bonusEnded = false;
 let bonusRecentFakes = []; // Spot the Slip: impostor words used recently, so a run doesn't repeat one
 let bonusRecentSongs = []; // Name That Song / Sing It Back / Redacted: songs already used this run, so one doesn't come round twice
+let bonusRecentAlbums = [];// Running Order: the last couple of albums dealt, so a run doesn't ask three Midnights pages in a row
+/* Running Order: what THIS page is still worth, falling through TRACK_TIERS as the seconds go.
+   It is kept on the clock's own tick rather than worked out at the settle for one reason: the
+   settle happens after stopBonusClock has thrown the deadline away, so a page scored from the
+   clock at that point would score every page the same. The tick is the only place the
+   remaining time is still true, which makes this the frozen answer AND the live readout. */
+let trackWorth = 0;
 let redactWorth = 0;       // Redacted: what THIS page is still worth, one point per strip left unpeeled
 let redactPeeled = 0;      // ...and how many strips have come off it
 /* When THIS page went live, for the charms that ask how fast a page was answered. Baselined
@@ -6981,8 +6996,8 @@ function renderBonusPage() {
     `</div>`;
 
   /* The rest of the shelf: every zine standing closed, in one row, cover out. The one lying
-     open is on the shelf too — six of them fill a single row, and leaving the current one
-     out would mean either a gap in the row or writing a seventh game to fill a layout.
+     open is on the shelf too, and the whole roster fills a single row, so leaving the current one
+     out would mean either a gap in the row or writing another game to fill a layout.
      A tile is a COVER and a score line and nothing else. The name is not printed under it
      because it is printed ON it, which is the whole reason the covers were drawn: a shelf of
      seven pictures with seven names pasted across them needs no caption, where a rack of
@@ -7112,6 +7127,9 @@ function bonusSeconds() {
   // every set of three cards, which is what keeps the answer an instinct rather than a
   // deliberation.
   if (bonusGame.id === "then-what") return BONUS_CHAIN_SECONDS;
+  // Long enough to type a title you already know, nowhere near long enough to count up from
+  // track one, which is the whole game (see BONUS_TRACK_SECONDS).
+  if (bonusGame.id === "running-order") return BONUS_TRACK_SECONDS;
   // Ruthless Game has no budget: its page runs until it is named or given up on, and the
   // seconds it took ARE the score. Nothing asks this for a timed game (startBonusClock takes
   // the count-up branch before it gets here), so the value is never reached in practice.
@@ -7140,6 +7158,9 @@ function buildBonusPuzzle() {
     // ask for a chain that crosses a section boundary.
     return buildChainPuzzle(songs, Math.random, 120, new Set(bonusRecentSongs),
                             { cross: bonusRound > CHAIN_EASY_PAGES });
+  if (bonusGame.id === "running-order")
+    return buildTrackPuzzle(songs, bonusIndexes().trackIndex, Math.random, 120,
+                            new Set(bonusRecentSongs), new Set(bonusRecentAlbums));
   if (isRuthlessRun())
     return buildRuthlessPuzzle(songs, Math.random, 120, new Set(bonusRecentSongs), activeLens());
   return buildNamePuzzle(songs, lineIndex, Math.random, 120, new Set(bonusRecentSongs));
@@ -7160,11 +7181,19 @@ function nextBonusRound(options = {}) {
   }
   if (bonusGame.id === "name-that-song" || bonusGame.id === "sing-it-back" || bonusGame.id === "redacted" ||
       bonusGame.id === "only-here" || bonusGame.id === "then-what" ||
-      isRuthlessRun())
+      bonusGame.id === "running-order" || isRuthlessRun())
     bonusRecentSongs.push(bonusPuzzle.song.title);
+  // Only the last two, and a preference rather than a bar: over ten pages and twelve albums a
+  // repeat is honest, a hat-trick looks like the shuffle broke.
+  if (bonusGame.id === "running-order") {
+    bonusRecentAlbums.push(bonusPuzzle.album);
+    if (bonusRecentAlbums.length > 2) bonusRecentAlbums.shift();
+  }
   // A fresh page opens worth the full ten and nothing has been spent on it yet.
   redactWorth = bonusPagePoints(bonusGame);
   redactPeeled = 0;
+  // A fresh page opens on the top tier, and starts falling the moment its clock does.
+  trackWorth = TRACK_PAGE;
   onlyPlayed = null;
   if (bonusGame.id === "only-here" && bonusPuzzle.hand)
     bonusPuzzle.hand.forEach((c) => onlyDealt.add(c.key));
@@ -7369,6 +7398,32 @@ function renderBonusRound() {
     // Deliberately NOT focused: the first thing to do on this page is read it and choose a
     // strip, and a focused field on a phone would put a keyboard over the verse before the
     // player had seen it.
+  } else if (bonusGame.id === "running-order") {
+    /* The page is a tracklist entry with the title left off it, rather than a question about
+       one: the album written at the top the way it is on the back of a sleeve, a rule under it,
+       and the numbered row waiting underneath. That is also what makes the reveal free: the
+       answer is written into the empty slot when the page settles, and the row finishes as the
+       line it always was, so this game needs no answer card. */
+    body.innerHTML =
+      `<p class="bg-ask">name the track before the page loses its value</p>` +
+      `<div class="bg-sleeve" role="group" aria-label="${escapeHtml(`Track ${p.track} on ${p.album}`)}">` +
+        `<div class="bg-sleeve-album">${escapeHtml(p.album)}</div>` +
+        `<div class="bg-sleeve-rule" aria-hidden="true"></div>` +
+        `<div class="bg-sleeve-row">` +
+          `<span class="bg-sleeve-no">${p.track}</span>` +
+          `<span class="bg-sleeve-slot" id="bonusSlot"></span>` +
+        `</div>` +
+      `</div>` +
+      `<p class="bg-worth">this page is worth <b id="bonusWorth">${trackWorth}</b></p>` +
+      bonusWritingLine({ placeholder: "type the title…", aria: "Type the song title",
+                         hint: "Enter accepts the top match", dropdown: true });
+    const input = $("bonusInput");
+    input.addEventListener("input", updateBonusDropdown);
+    input.addEventListener("keydown", (e) => {
+      if (bonusDropdownKey(e)) return;
+      if (e.key === "Enter") { e.preventDefault(); judgeName(); }
+    });
+    if (!bonusLocked) focusRoundInput(input);
   } else {
     body.innerHTML =
       `<p class="bg-ask">name the song this line is from</p>` +
@@ -7428,6 +7483,9 @@ function startBonusClock(resumeState = null) {
     fill.style.width = pct + "%";
     label.textContent = (left / 1000).toFixed(1);
     fill.classList.toggle("low", pct <= 25);
+    // Running Order's page loses value as the clock goes, and this is the only place the
+    // remaining time is still true when the page is answered. See trackWorth.
+    if (bonusGame.id === "running-order") updateTrackWorth(total - left);
     if (left <= 0) bonusTimeout();
   }, 50);
 }
@@ -7904,6 +7962,28 @@ function revealRedacted() {
 }
 
 // What the verdict says about a won page: what it paid out and what it cost.
+/* ---------- Running Order: what the page is still worth ----------
+   TRACK_TIERS read against the page's ELAPSED time rather than the clock's remaining seconds,
+   so the ladder stays honest if the clock is ever retuned under it, which is the same choice
+   BONUS_SNAP_MS makes, and for the same reason. */
+function trackPointsAt(elapsedMs) {
+  const secs = elapsedMs / 1000;
+  for (const [upto, pts] of TRACK_TIERS) if (secs <= upto) return pts;
+  return TRACK_MIN_POINTS;
+}
+// Only touches the page when the number actually changes: this runs twenty times a second, and
+// a readout rewritten on every tick is a readout that flickers.
+function updateTrackWorth(elapsedMs) {
+  const worth = trackPointsAt(elapsedMs);
+  if (worth === trackWorth) return;
+  trackWorth = worth;
+  const el = $("bonusWorth");
+  if (el) el.textContent = String(worth);
+}
+function trackDetail(points) {
+  return `<b>${points}</b> point${points === 1 ? "" : "s"}`;
+}
+
 function redactDetail(points) {
   return `<b>${points}</b> point${points === 1 ? "" : "s"} · ` +
     (redactPeeled ? `${redactPeeled} strip${redactPeeled === 1 ? "" : "s"} peeled` : "not one strip peeled");
@@ -8039,7 +8119,11 @@ function judgeName(picked = null) {
   // and on a hit that's the same thing twice. Redacted is the exception: a won page there has
   // a number on it, and the number is the whole brag.
   const detail = correct
-    ? (bonusGame.id === "redacted" ? redactDetail(bonusPageScore(true)) : "")
+    ? (bonusGame.id === "redacted" ? redactDetail(bonusPageScore(true))
+       // Same reason as Redacted's: a won page here has a number on it, and the number (how
+       // fast you were) is the whole brag. Nothing else needs saying, since the row below
+       // writes the title in itself.
+       : bonusGame.id === "running-order" ? trackDetail(bonusPageScore(true)) : "")
     : `you wrote <b>${escapeHtml(censor(song.title))}</b>`;
   settleBonusRound(correct, detail);
 }
@@ -8163,8 +8247,12 @@ function bonusAnswerCard() {
   // quarter of what is sitting an inch above it.
   // Ruthless Game has none either, and most obviously of all: its reveal writes the song's name
   // over a page that is already the song, printed out further than any card could quote it.
+  /* Running Order has none for Sing It Back's reason, turned around: its reveal writes the
+     title into the empty slot, so the page finishes as a completed tracklist row that names the
+     song an inch above where the card would reprint it. There is no lyric on the page to quote
+     either, since this is the one game that never showed the player a word of the song. */
   if (bonusGame.id === "redacted" || bonusGame.id === "only-here" ||
-      bonusGame.id === "then-what" || isRuthlessRun()) return "";
+      bonusGame.id === "then-what" || bonusGame.id === "running-order" || isRuthlessRun()) return "";
   if (bonusGame.id === "sing-it-back")
     return `<div class="bg-ctx">${lyricCardContext(p.song, p.answer, p.line)}</div>`;
   const slip = bonusGame.id === "spot-the-slip";
@@ -8189,6 +8277,9 @@ function bonusPageScore(correct) {
   if (bonusGame && bonusGame.id === "then-what") return chainPage;
   if (!correct) return 0;
   if (bonusGame && bonusGame.id === "redacted") return Math.max(REDACT_MIN_POINTS, redactWorth);
+  // Whatever the page had fallen to when it was answered, floored, so a right answer always beats
+  // a wrong one however long it took to arrive.
+  if (bonusGame && bonusGame.id === "running-order") return Math.max(TRACK_MIN_POINTS, trackWorth);
   return 1;
 }
 
@@ -8208,6 +8299,10 @@ function bonusBannerText(correct, isTimeout) {
   // banner reports a broken chain rather than a lost page.
   if (bonusGame && bonusGame.id === "then-what")
     return correct ? "sung it straight through" : "the chain broke";
+  // Nothing on this page is a "this", since the player never saw a line, only a number, so a miss
+  // reports the track it was rather than pointing at something that isn't on the page.
+  if (bonusGame && bonusGame.id === "running-order")
+    return correct ? "straight to it" : isTimeout ? "the page ran out" : "not that one";
   return correct ? "that's the one" : isTimeout ? "the page ran out" : "not this one";
 }
 
@@ -8265,6 +8360,11 @@ function settleBonusRound(correct, detail, isTimeout = false) {
         // first, but the note column runs out around six characters on a two-up listing and
         // "1:23 · 62w" came back as "1:23 · …" — so the column keeps the one that adds up to
         // the score, and the verdict line is where a page's word count gets said in full.
+        // A points game, so the note column takes the same thing Redacted's and Then What's do:
+        // what the page paid, which is the one number the back cover can't work out from a tick
+        // or a cross. The track number is the question rather than the answer, and the row
+        // already carries the title that answered it.
+        : bonusGame.id === "running-order" ? `${gained} pts`
         : isRuthlessRun() ? fmtTime(gained)
         : bonusPuzzle.song.album,
   });
@@ -8286,6 +8386,15 @@ function settleBonusRound(correct, detail, isTimeout = false) {
     if (cards) cards.remove();
   } else if (isRuthlessRun()) {
     revealRuthless();
+  } else if (bonusGame.id === "running-order") {
+    // The row finishes itself. Right or wrong, the title is written into the slot it was always
+    // waiting in, so the page ends as the tracklist line it has been drawn as all along, which
+    // is why this game needs no answer card underneath it.
+    const slot = $("bonusSlot");
+    if (slot) {
+      slot.textContent = bonusPuzzle.song.title;
+      slot.classList.add(correct ? "is-got" : "is-answer");
+    }
   } else if (bonusGame.id === "sing-it-back") {
     // Whatever was in the gap — a wrong word, a half-typed one, nothing at all — the real
     // word goes in, so the line is left whole and correct on the page.
@@ -8458,6 +8567,12 @@ function foldBonusPageCharms(correct, isTimeout) {
     // construction — a page cannot be both untouched and bought out.
     if (correct && redactPeeled === 0) unlock("name-redacted-song-no-strips-removed");
     if (correct && bonusPuzzle.blocks && redactPeeled >= bonusPuzzle.blocks) unlock("name-redacted-song-after-buying-all-strips");
+  } else if (bonusGame.id === "running-order") {
+    // The page named before the decay took anything off it. Read off the page's own frozen
+    // worth rather than off a stopwatch, because the six is the number the player was watching
+    // watching: a charm priced in a number the game never showed you is the mistake the Ruthless roster
+    // had to be rebuilt to fix.
+    if (correct && !isTimeout && trackWorth >= TRACK_PAGE) unlock("name-running-order-page-at-full-value");
   } else if (bonusGame.id === "only-here" && onlyPlayed) {
     // The commonest card in the hand, and NOT when that card is also the rarest: a hand where
     // every word is sung equally often is a tie the player cannot lose, and charging them with
@@ -8490,7 +8605,8 @@ function foldBonusRunCharms(perfect, cleared) {
     // (every word exact), and Redacted's charm is a single page rather than a run, so neither
     // is in this table.
     const sweepCharm = { "spot-the-slip": "sweep-spot-the-slip", "name-that-song": "sweep-name-that-song-one-line-each",
-                         "only-here": "take-rarest-only-here-card-all-10-pages", "then-what": "finish-then-what-unbroken-chain" }[bonusGame.id];
+                         "only-here": "take-rarest-only-here-card-all-10-pages", "then-what": "finish-then-what-unbroken-chain",
+                         "running-order": "sweep-running-order" }[bonusGame.id];
     if (sweepCharm) unlock(sweepCharm);
     if (bonusGame.id === "sing-it-back" && blankExactRun) unlock("sweep-sing-it-back-all-words-exact");
   }
@@ -26505,6 +26621,10 @@ function buildDevApi() {
             if (p) recent.push(p.song.title);
             out.push(p ? { song: p.song.title, crossed: p.crossed, fallbacks: p.fallbacks,
                            chain: devChainLines(p) } : null);
+          } else if (id === "running-order") {
+            const p = buildTrackPuzzle(songs, bonusIndexes().trackIndex, Math.random, 120, new Set(recent));
+            if (p) recent.push(p.song.title);
+            out.push(p ? { ask: `${p.album} ${p.track}`, answer: p.song.title, of: p.total } : null);
           } else if (id === "sing-it-back") {
             const p = buildBlankPuzzle(songs, ctx, Math.random, 120, new Set(recent));
             if (p) recent.push(p.song.title);
@@ -26523,7 +26643,7 @@ function buildDevApi() {
          so this is the only way to see that an exclusion caught what it was written for and
          nothing else. Pass a reason ("off the twelve", "second cut", "unheard") to list those
          songs in full. The same question `__dev.ruthless.pool()` asks, printed for the shelf,
-         because the bar is shared and a dev looking at the six games should not have to know
+         because the bar is shared and a dev looking at the shelf should not have to know
          that it is spelled `ruthlessBar`. */
       pool: (why = null) => {
         const { deal, barred } = ruthlessPool(allSongs);
@@ -26545,11 +26665,42 @@ function buildDevApi() {
             : id === "redacted" ? buildRedactedPuzzle(songs, ctx, lineIndex)
             : id === "only-here" ? buildOnlyHerePuzzle(songs, bonusIndexes().wordIndex)
             : id === "then-what" ? buildChainPuzzle(songs)
+            : id === "running-order" ? buildTrackPuzzle(songs, bonusIndexes().trackIndex)
             : id === "sing-it-back" ? buildBlankPuzzle(songs, ctx)
             : buildSlipPuzzle(songs, playableWords, lineIndex, ctx);
           if (p) ok++;
         }
         return { tried: n, built: ok, rate: `${((ok / n) * 100).toFixed(1)}%` };
+      },
+      /* Running Order. `track()` reads the live page (the question, the answer and what the
+         page has already fallen to), since the player is never shown the title and the decay is
+         the only thing on screen that moves. `worth(n)` sets what the page is still worth, the
+         way `.worth` does for Redacted, so the top tier and the floor can both be settled
+         without racing a real clock. `tracks()` is the one that matters before shipping a
+         catalogue change: it prints every album's standard run and the song sitting at each
+         number, which is the only way to see that ALBUM_TRACKS still agrees with songs.json. */
+      track: () => {
+        if (!bonusGame || bonusGame.id !== "running-order" || !bonusPuzzle) return "no Running Order page live";
+        return { ask: `${bonusPuzzle.album} ${bonusPuzzle.track}`, answer: bonusPuzzle.song.title,
+                 of: bonusPuzzle.total, worth: trackWorth, opened: TRACK_PAGE };
+      },
+      worth: (n) => {
+        if (!bonusGame || bonusGame.id !== "running-order") return "no Running Order page live";
+        trackWorth = Math.max(TRACK_MIN_POINTS, Math.min(TRACK_PAGE, +n || 0));
+        const el = $("bonusWorth");
+        if (el) el.textContent = String(trackWorth);
+        return trackWorth;
+      },
+      tracks: (album = null) => {
+        const { trackIndex } = bonusIndexes();
+        const rows = [];
+        for (const [title, spot] of trackIndex.of) rows.push({ ...spot, title });
+        const pool = new Set(bonusSongs().map((x) => x.title));
+        const out = rows.filter((r) => !album || r.album === album)
+                        .sort((a, b) => a.album.localeCompare(b.album) || a.track - b.track)
+                        .map((r) => ({ ...r, dealable: pool.has(r.title) }));
+        return album ? out : { numbered: rows.length, dealable: out.filter((r) => r.dealable).length,
+                               albums: trackIndex.albums.length, rows: out };
       },
       // A timed run has no ceiling to clamp against, so it takes the number as given (in seconds).
       score: (n) => {

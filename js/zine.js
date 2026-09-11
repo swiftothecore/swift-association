@@ -297,6 +297,34 @@ const COVERS = {
     return s;
   },
 
+  /* RUNNING ORDER, the back of the sleeve. A cream card on a burnt-ochre ground with the
+     tracklist ruled down the right of it, and one row struck in vermillion: the track being
+     asked about. The big handwritten numeral is what carries the cover at thumbnail size:
+     nothing else on the shelf is a NUMBER, so at 24px this one is told apart from six pictures
+     without resolving a single shape in it. The digit is drawn twice, a dark copy offset under
+     the ink one, because that is the same hard-edged shadow every sheet here throws and the
+     only kind of depth this collage is allowed.
+     The eight is not a promise that every page is track eight; it is the fan's shorthand for
+     the question, the way a contour line stands in for Only Here. */
+  "running-order": (r) => {
+    let s = sheet([[-6, -6], [126, -6], [126, 166], [-6, 166]], "#7a4f22", r, { shadow: false, crisp: true });
+    // the sleeve back, pasted a little off square
+    s += sheet([[14, 32], [107, 26], [111, 142], [10, 148]], "#ece0c4", r, { amp: 1.2 });
+    // the tracklist: five ruled rows down the right, the third one struck in red because it is
+    // the one the page is asking about
+    [[48, 38], [64, 31], [80, 41], [96, 26], [112, 35]].forEach(([y, w], i) => {
+      s += sheet([[60, y], [60 + w, y - 1], [60 + w, y + 5], [60, y + 6]],
+        i === 2 ? "#c4452f" : "#b3a98a", r,
+        { amp: 0.7, step: 4, sx: 1, sy: 1.2, fibre: false });
+    });
+    // the numeral, ink over its own shadow
+    s += `<text x="36" y="106" text-anchor="middle" font-family="Caveat, cursive" font-weight="700"` +
+         ` font-size="68" fill="#9c6b21">8</text>`;
+    s += `<text x="34.4" y="104.2" text-anchor="middle" font-family="Caveat, cursive" font-weight="700"` +
+         ` font-size="68" fill="#2b2118">8</text>`;
+    return s;
+  },
+
   /* RUTHLESS GAME — the sun going down on you. A huge ochre sun half off the page behind
      hot torn rays, with the ridges closing in front of it in the mode's own deep red. The
      one cover that is about a clock without drawing one. */
@@ -347,6 +375,7 @@ const LABELS = {
   "redacted":       { x: 16, y: 120, w: 92, h: 22, rot: 1.4, fill: "#e9e0cb" },
   "only-here":      { x: 12, y: 14,  w: 96, h: 23, rot: -1.2 },
   "then-what":      { x: 14, y: 16,  w: 92, h: 23, rot: 1.6 },
+  "running-order":  { x: 13, y: 122, w: 94, h: 21, rot: 1.5 },
   "ruthless-game":  { x: 12, y: 16,  w: 96, h: 23, rot: -1.8 },
 };
 const BLANK_LABEL = { x: 16, y: 28, w: 88, h: 20, rot: -1, fill: "#cdb489", ink: "rgba(52,42,30,0.68)" };
