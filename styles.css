@@ -3219,78 +3219,106 @@
     margin-top: 9px; font-family: var(--type); font-size: calc(9.5px + var(--text-size-adjust)); letter-spacing: 1.1px;
     text-transform: uppercase; color: var(--ink-soft); opacity: 0.85;
   }
-  /* ---- the Play sticker, torn instead of cut ----
+  /* ---- the Play sticker: a scrap of collage, not a button ----
      Everywhere else in the game this is .chall-go: a crisp gold rectangle with a 2px ink
      border and a sheen down its face, which is right on a challenge card. Here it sits two
      inches from a collage of hand-torn paper, and next to that it reads as printed vinyl
-     lying on a pile of rag stock. So on this one leaf the sticker keeps the gold, the bold
-     typewriter lettering and the hard offset shadow — starting a run still looks like the
-     same act — and changes only its MATERIAL.
+     lying on a pile of rag stock. So on this one leaf it keeps the gold, the bold typewriter
+     lettering and the hard offset shadow — starting a run still looks like the same act —
+     and is built the way the covers are instead.
 
-     It is TWO sheets, not one, and that is the whole of where its depth comes from. The first
-     pass tore a single scrap and went flat, which was the predictable cost of dropping a
-     border and a sheen and putting nothing in their place: the gloss was doing the work of
-     saying this is an object. The covers never needed a gloss because they are stacks, and
-     every layer in them throws a hard-edged shadow onto the layer below. So does this. The
-     element itself is a kraft backing scrap; ::after is the gold face sitting a few pixels
-     inside it; ::before is the face's own shadow cast onto the kraft, offset the same couple
-     of pixels the collage layers use. Whatever replaces any of this has to keep a real second
-     sheet in it — a lighter colour or a softer shadow on one scrap will go flat again.
+     Three things had to be true before it stopped looking like a flat shape, and all three
+     are load-bearing:
 
-     Both tears came out of scripts/bonus/tornclip.py, which runs the same xorshift walk
-     zine.js does, in percentages along each edge and pixels across it so Play and Play again
-     tear alike. Regenerate there rather than nudging a number by hand in here.
+     - THE BACKING IS A SECOND SCRAP, NOT A MAT. It is bigger on the bottom and the left,
+       nearly flush along the top and right, and it sits at its own angle. An even margin of
+       darker paper all the way round is a picture frame, and that is exactly what it looked
+       like when the inset was uniform. Never even it up.
+     - THE TEAR HAS TO BE DEEP ENOUGH TO SEE. The covers are 120 units wide and read at
+       thumbnail size; this is a hundred-odd pixels wide and read at arm's length, so the same
+       proportional wobble vanishes. Both walks are torn about twice as hard as a cover's.
+     - THE GOLD HAS GRAIN IN IT. A flat fill of one colour is a fill; the same fill with the
+       covers' flecks scattered over it is stock. It is the drawn grain from zine.js baked
+       into a small tile, so there is still no gradient and no filter anywhere near it.
 
-     The outer shadow is a drop-shadow filter, not a box-shadow, because box-shadow is clipped
-     away with everything else and a filter is applied to what the clip leaves behind, which is
-     the only way to throw a shadow the shape of the tear. */
+     Everything comes out of scripts/bonus/tornclip.py, which runs the same xorshift walk
+     zine.js does — the two tears in percentages along each edge and pixels across it, so Play
+     and Play again tear alike, and the grain tile as a data URI. Regenerate there rather than
+     nudging a number by hand in here.
+
+     Shadows are drop-shadow filters, not box-shadows, because a box-shadow is clipped away
+     with everything else and a filter applies to what the clip leaves behind, which is the
+     only way to throw a shadow the shape of a tear. There are two: the face throws one onto
+     the backing, and the whole scrap throws one onto the leaf. */
   .bonus-play {
     --play-face: #efb73e;
     --play-back: #c79a52;
-    --tear-face: polygon(3% 3.1px, 10% 1.1px, 17% 1.6px, 24% 2.5px, 31% 1.0px, 38% 0.9px, 45% 1.5px, 52% 3.2px, 59% 2.7px, 66% 2.6px, 73% 2.0px, 80% 2.5px, 87% 1.2px, 94% 2.0px, calc(100% - 0.9px) 3%, calc(100% - 2.7px) 25%, calc(100% - 2.5px) 47%, calc(100% - 1.5px) 69%, calc(100% - 2.0px) 91%, 97% calc(100% - 1.9px), 90% calc(100% - 3.1px), 83% calc(100% - 1.9px), 76% calc(100% - 2.2px), 69% calc(100% - 1.4px), 62% calc(100% - 2.2px), 55% calc(100% - 2.6px), 48% calc(100% - 1.6px), 41% calc(100% - 1.5px), 34% calc(100% - 3.4px), 27% calc(100% - 2.6px), 20% calc(100% - 2.4px), 13% calc(100% - 3.2px), 6% calc(100% - 2.1px), 2.2px 97%, 2.8px 75%, 3.2px 53%, 3.4px 31%, 3.3px 9%);
-    --tear-back: polygon(3% 1.5px, 10% 1.4px, 17% 2.3px, 24% 1.7px, 31% 2.4px, 38% 2.6px, 45% 1.3px, 52% 1.7px, 59% 2.9px, 66% 1.2px, 73% 0.7px, 80% 2.8px, 87% 2.7px, 94% 2.3px, calc(100% - 1.5px) 3%, calc(100% - 2.3px) 25%, calc(100% - 1.7px) 47%, calc(100% - 2.3px) 69%, calc(100% - 2.4px) 91%, 97% calc(100% - 2.4px), 90% calc(100% - 0.9px), 83% calc(100% - 1.8px), 76% calc(100% - 2.4px), 69% calc(100% - 1.5px), 62% calc(100% - 2.0px), 55% calc(100% - 2.6px), 48% calc(100% - 2.9px), 41% calc(100% - 2.3px), 34% calc(100% - 2.1px), 27% calc(100% - 1.4px), 20% calc(100% - 1.0px), 13% calc(100% - 2.6px), 6% calc(100% - 1.2px), 0.7px 97%, 1.4px 75%, 2.5px 53%, 2.7px 31%, 2.4px 9%);
+    --play-grain: url("data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20width=%2248%22%20height=%2232%22%3E%3Cg%20fill=%22rgba(34%2C24%2C14%2C0.14)%22%3E%3Crect%20x=%2243.7%22%20y=%2225.7%22%20width=%221.0%22%20height=%220.5%22/%3E%3Crect%20x=%226.6%22%20y=%2217.9%22%20width=%220.8%22%20height=%220.4%22/%3E%3Crect%20x=%2214.9%22%20y=%2215.9%22%20width=%221.2%22%20height=%220.5%22/%3E%3Crect%20x=%225.1%22%20y=%2224.1%22%20width=%220.6%22%20height=%220.9%22/%3E%3Crect%20x=%2215.0%22%20y=%2227.0%22%20width=%221.3%22%20height=%220.7%22/%3E%3Crect%20x=%222.9%22%20y=%221.9%22%20width=%220.6%22%20height=%220.8%22/%3E%3Crect%20x=%2235.1%22%20y=%223.6%22%20width=%220.7%22%20height=%220.6%22/%3E%3Crect%20x=%223.1%22%20y=%221.2%22%20width=%221.0%22%20height=%221.1%22/%3E%3Crect%20x=%2217.2%22%20y=%2218.4%22%20width=%220.8%22%20height=%220.4%22/%3E%3Crect%20x=%2216.1%22%20y=%225.1%22%20width=%220.9%22%20height=%220.4%22/%3E%3Crect%20x=%2241.5%22%20y=%229.9%22%20width=%220.7%22%20height=%221.1%22/%3E%3Crect%20x=%2211.4%22%20y=%225.3%22%20width=%220.6%22%20height=%220.5%22/%3E%3Crect%20x=%2221.7%22%20y=%2229.9%22%20width=%221.1%22%20height=%220.4%22/%3E%3C/g%3E%3Cg%20fill=%22rgba(255%2C251%2C240%2C0.13)%22%3E%3Crect%20x=%220.8%22%20y=%225.9%22%20width=%221.1%22%20height=%220.5%22/%3E%3Crect%20x=%224.5%22%20y=%221.5%22%20width=%221.1%22%20height=%220.6%22/%3E%3Crect%20x=%2213.1%22%20y=%2225.3%22%20width=%220.9%22%20height=%220.7%22/%3E%3Crect%20x=%2218.6%22%20y=%2226.1%22%20width=%221.2%22%20height=%221.0%22/%3E%3Crect%20x=%2245.4%22%20y=%2210.0%22%20width=%220.8%22%20height=%220.6%22/%3E%3Crect%20x=%2221.7%22%20y=%2223.1%22%20width=%220.8%22%20height=%220.6%22/%3E%3Crect%20x=%2226.0%22%20y=%2217.9%22%20width=%220.9%22%20height=%220.7%22/%3E%3Crect%20x=%223.6%22%20y=%2226.7%22%20width=%221.2%22%20height=%221.1%22/%3E%3Crect%20x=%2224.2%22%20y=%2219.3%22%20width=%220.9%22%20height=%220.9%22/%3E%3Crect%20x=%2235.6%22%20y=%224.2%22%20width=%221.3%22%20height=%220.7%22/%3E%3Crect%20x=%2235.2%22%20y=%2210.5%22%20width=%221.2%22%20height=%220.9%22/%3E%3Crect%20x=%2214.8%22%20y=%225.7%22%20width=%220.5%22%20height=%221.0%22/%3E%3Crect%20x=%2215.7%22%20y=%2227.9%22%20width=%220.6%22%20height=%220.7%22/%3E%3C/g%3E%3C/svg%3E");
+    --tear-face: polygon(3% 3.9px, 8% 0.9px, 13% 1.7px, 18% 3.0px, 23% 0.8px, 28% 0.6px, 33% 1.5px, 38% 4.2px, 43% 3.4px, 48% 3.2px, 53% 2.3px, 58% 3.1px, 63% 1.1px, 68% 2.4px, 73% 0.6px, 78% 3.4px, 83% 3.0px, 88% 1.5px, 93% 2.3px, 98% 2.2px, calc(100% - 4.0px) 3%, calc(100% - 2.1px) 25%, calc(100% - 2.6px) 47%, calc(100% - 1.3px) 69%, calc(100% - 2.7px) 91%, 97% calc(100% - 3.2px), 92% calc(100% - 1.7px), 87% calc(100% - 1.5px), 82% calc(100% - 4.4px), 77% calc(100% - 3.2px), 72% calc(100% - 2.9px), 67% calc(100% - 4.1px), 62% calc(100% - 2.5px), 57% calc(100% - 2.7px), 52% calc(100% - 3.5px), 47% calc(100% - 4.1px), 42% calc(100% - 4.4px), 37% calc(100% - 4.3px), 32% calc(100% - 1.9px), 27% calc(100% - 1.8px), 22% calc(100% - 3.3px), 17% calc(100% - 2.3px), 12% calc(100% - 3.3px), 7% calc(100% - 3.7px), 2% calc(100% - 1.7px), 2.3px 97%, 4.1px 75%, 1.5px 53%, 0.7px 31%, 3.9px 9%);
+    --tear-back: polygon(3% 4.2px, 8% 3.5px, 13% 2.1px, 18% 3.5px, 23% 2.5px, 28% 3.5px, 33% 3.6px, 38% 3.7px, 43% 1.1px, 48% 2.7px, 53% 3.7px, 58% 2.0px, 63% 3.0px, 68% 4.0px, 73% 4.5px, 78% 3.5px, 83% 3.2px, 88% 1.9px, 93% 1.2px, 98% 4.1px, calc(100% - 1.6px) 3%, calc(100% - 0.7px) 25%, calc(100% - 1.9px) 47%, calc(100% - 3.9px) 69%, calc(100% - 4.3px) 91%, 97% calc(100% - 3.7px), 92% calc(100% - 1.1px), 87% calc(100% - 4.2px), 82% calc(100% - 3.0px), 77% calc(100% - 2.3px), 72% calc(100% - 0.7px), 67% calc(100% - 1.8px), 62% calc(100% - 4.9px), 57% calc(100% - 1.0px), 52% calc(100% - 5.1px), 47% calc(100% - 1.3px), 42% calc(100% - 2.5px), 37% calc(100% - 2.1px), 32% calc(100% - 3.4px), 27% calc(100% - 2.9px), 22% calc(100% - 4.3px), 17% calc(100% - 3.9px), 12% calc(100% - 4.7px), 7% calc(100% - 4.4px), 2% calc(100% - 3.5px), 1.9px 97%, 4.0px 75%, 2.1px 53%, 4.2px 31%, 0.7px 9%);
     position: relative; margin-top: 15px;
     display: inline-flex; align-items: center; gap: 9px;
-    /* The horizontal and vertical padding both carry the 4px the face is inset by, so the
-       lettering keeps the same clearance inside the GOLD that it had inside the old sticker. */
-    padding: 15px 21px;
+    padding: 12px 18px;
     border: 0; border-radius: 0; box-shadow: none;
-    background-color: var(--play-back); background-image: none;
-    clip-path: var(--tear-back);
-    filter: drop-shadow(3px 4px 0 rgba(43, 39, 34, 0.3));
+    /* The element itself is only the layout box and the shadow the pair casts on the leaf.
+       It must stay unclipped: the backing scrap hangs outside it on two sides, and a
+       clip-path here would shear it off. */
+    background: none;
+    filter: drop-shadow(3px 4px 0 rgba(43, 39, 34, 0.28));
     transform: rotate(-0.8deg);
-    transition: color 0.2s ease, transform 0.12s, filter 0.2s;
+    transition: transform 0.16s ease-out, filter 0.16s ease-out, color 0.1s linear;
   }
-  /* the face's shadow on the kraft. Also the reason the shared sticker's ✎ never appears
-     here: that glyph is this pseudo-element's content, and this one is a sheet of paper. */
+  /* the backing scrap. Also why the shared sticker's ✎ never shows up here: that glyph is
+     this pseudo-element's content, and this one is a piece of paper. */
   .bonus-play::before {
-    content: ""; position: absolute; inset: 4px; z-index: -1; margin-right: 0;
-    background-color: rgba(43, 39, 34, 0.28); clip-path: var(--tear-face);
-    transform: translate(1.8px, 2.2px);
-    transition: transform 0.12s;
+    content: ""; position: absolute; z-index: -2;
+    inset: -3px -1px -7px -6px;
+    background-color: var(--play-back); background-image: var(--play-grain);
+    clip-path: var(--tear-back);
+    transform: rotate(1.6deg);
   }
+  /* the gold face, with its own hard shadow onto the backing */
   .bonus-play::after {
-    content: ""; position: absolute; inset: 4px; z-index: -1;
-    background-color: var(--play-face); clip-path: var(--tear-face);
-    transition: background-color 0.24s ease;
+    content: ""; position: absolute; inset: 0; z-index: -1;
+    background-color: var(--play-face); background-image: var(--play-grain);
+    clip-path: var(--tear-face);
+    filter: drop-shadow(1.5px 2px 0 rgba(43, 39, 34, 0.3));
+    /* fast and linear on purpose: this only ever runs on the keyboard flip below, and a
+       leisurely ease from gold to near-black spends its middle in mud */
+    transition: background-color 0.1s linear;
   }
   .bonus-play .play-nib { width: 15px; height: 15px; flex: none; }
-  /* the face flips to ink and the kraft stays put, so the sticker inverts on its own backing */
-  .bonus-play:hover, .bonus-play:focus-visible { --play-face: var(--ink); color: var(--paper); }
-  /* pressed: the whole scrap goes down onto the leaf and the face settles onto the kraft */
-  .bonus-play:active { transform: rotate(-0.8deg) translate(1px, 1px); filter: drop-shadow(1px 2px 0 rgba(43, 39, 34, 0.3)); }
-  .bonus-play:active::before { transform: translate(0.9px, 1.1px); }
-  /* night stock: the deepened gold the shared sticker takes after dark, on a darker kraft */
-  :root[data-theme="dark"] .bonus-play {
-    --play-face: #e0a83a; --play-back: #a8803c;
-    background-color: var(--play-back); background-image: none;
+
+  /* ---- what hover does ----
+     It used to crossfade the gold face to ink over a quarter of a second, which is the one
+     thing two flat sheets of paper cannot do, and it looked like a transition nobody had
+     chosen. This is a thing on a desk, so it behaves like one: reach for it and it comes up
+     off the leaf, straightening as it lifts, its shadow lengthening under it. Press it and it
+     goes back down past where it started.
+     The two scraps never move relative to each other through any of it, and the face's shadow
+     on the backing does not grow: they are pasted together, and what changed is how far the
+     pair is off the page. */
+  .bonus-play:hover, .bonus-play:focus-visible {
+    transform: rotate(-0.25deg) translate(-1px, -2px);
+    filter: drop-shadow(5px 7px 0 rgba(43, 39, 34, 0.24));
   }
-  :root[data-theme="dark"] .bonus-play:hover,
+  /* Keyboard focus also flips the face to ink. A two-pixel lift is a fine invitation to a
+     pointer already sitting on the thing, and useless as the only sign of where the focus
+     ring is, so this one state says it in colour as well. */
+  .bonus-play:focus-visible { --play-face: var(--ink); color: var(--paper); }
+  .bonus-play:active {
+    transform: rotate(-0.8deg) translate(1px, 1.5px);
+    filter: drop-shadow(1px 2px 0 rgba(43, 39, 34, 0.32));
+  }
+  /* night stock: the deepened gold the shared sticker takes after dark, on a darker kraft */
+  :root[data-theme="dark"] .bonus-play { --play-face: #e0a83a; --play-back: #a8803c; background: none; }
   :root[data-theme="dark"] .bonus-play:focus-visible { --play-face: var(--ink); }
-  /* the shared sticker drops its tilt here, so this one does too */
+  /* No tilt and no lift here, so the only thing left to say a pointer has arrived is the
+     colour flip the keyboard gets — which is why hover is given it back in this block. */
   @media (prefers-reduced-motion: reduce) {
-    .bonus-play { transform: none; }
-    .bonus-play:active { transform: translate(1px, 1px); }
+    .bonus-play, .bonus-play:hover, .bonus-play:focus-visible { transform: none; }
+    .bonus-play:active { transform: translate(1px, 1.5px); }
+    .bonus-play:hover { --play-face: var(--ink); color: var(--paper); }
   }
   .bonus-now-soon {
     margin-top: 12px; font-family: var(--type); font-size: calc(11px + var(--text-size-adjust)); line-height: 1.6;
