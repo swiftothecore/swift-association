@@ -1,13 +1,14 @@
-// The bonus shelf's keepsake: the back of the record sleeve, taped to a notebook page and
-// rasterised to a PNG. It is the exact object the end card already shows on screen — the
-// pressing, the score, the one-line remark, the ten tracks with a tick or a cross in the
-// margin — because a bonus run has no bracelet and no records board by design, and that
-// track listing IS the run's only souvenir.
+// The bonus shelf's keepsake: the BACK COVER of the zine you just played, taped to a
+// notebook page and rasterised to a PNG. It is the exact object the end card already shows
+// on screen — the cover, the score, the one-line remark, the ten pages with a tick or a
+// cross in the margin — because a bonus run has no bracelet and no records board by design,
+// and that listing IS the run's only souvenir.
 //
-// Pure of app state, like braceletcard.js: the caller hands over the already-rendered disc
-// markup, the sprite pieces it points at, the log and the live colour tokens. Everything
-// else — fonts, measuring, tape, rasterising, the two ways out — is borrowed from the
-// bracelet's workshop rather than copied.
+// Pure of app state, like braceletcard.js: the caller hands over the already-rendered cover
+// markup, the log and the live colour tokens. Everything else — fonts, measuring, tape,
+// rasterising, the two ways out — is borrowed from the bracelet's workshop rather than
+// copied. The cover needs nothing carried with it: js/zine.js draws it with no <use> and no
+// CSS colour functions precisely so it can be lifted in here whole.
 
 import {
   fontFaceCss, esc, measureText, fitText, washiTape, TAPE_DEFS,
@@ -15,11 +16,11 @@ import {
 } from "./braceletcard.js";
 
 const W = 760, H = 514;
-const SX = 70, SY = 74, SW = 620;         // the sleeve on the page
+const SX = 70, SY = 74, SW = 620;         // the back cover on the page
 const SL = SX + 26, SR = SX + SW - 26;    // its writing column
 const COL_GAP = 24, COL_W = (SR - SL - COL_GAP) / 2;
 const ROW_TOP = 226, ROW_H = 30, ROWS = 5;
-const SB = 422;                           // the sleeve's bottom edge
+const SB = 422;                           // the card's bottom edge
 
 const RED = "rgba(160,62,46,0.82)";
 const GOLD = "#a9791f";
@@ -39,7 +40,7 @@ function towardInk(hex, amount) {
   return "#" + mixed.map((c) => c.toString(16).padStart(2, "0")).join("");
 }
 
-// The same tint as a translucent wash, for the strip of tape pinning the sleeve down:
+// The same tint as a translucent wash, for the strip of tape pinning the card down:
 // the tape is a colour laid OVER the kraft, so it has to keep its alpha.
 function tintWash(hex, alpha) {
   const m = /^#([0-9a-f]{6})$/i.exec(String(hex).trim());
@@ -48,11 +49,12 @@ function tintWash(hex, alpha) {
   return `rgba(${(n >> 16) & 255},${(n >> 8) & 255},${n & 255},${alpha})`;
 }
 
-// The disc, nested and scaled into place (its own viewBox is 140x140). Its class is
-// dropped: the card re-declares what little of it matters in its own <style>.
-function discMark(markup, x, y, size) {
+// The zine's cover, nested and scaled into place. Its viewBox is 120x160, so the width is
+// three quarters of the height — a cover asked for a square box comes out squashed, which
+// is the one thing that would give away that this used to be a record.
+function coverMark(markup, x, y, h) {
   if (!markup) return "";
-  return markup.replace("<svg ", `<svg x="${x}" y="${y}" width="${size}" height="${size}" `);
+  return markup.replace("<svg ", `<svg x="${x}" y="${y}" width="${(h * 0.75).toFixed(1)}" height="${h}" `);
 }
 
 // The heart-hands emblem, re-tinted and placed — the bracelet card's own trick, kept here
@@ -67,12 +69,12 @@ function heartHandsMark(markup, x, y, w, h, fill) {
     .replace("<svg ", `<svg x="${x}" y="${y}" `);
 }
 
-// The rubber stamp pressed across the sleeve's corner ("clean sweep" / "new best"). Sized
+// The rubber stamp pressed across the card's corner ("clean sweep" / "new best"). Sized
 // off the measured text so a two-word stamp and a three-word one both sit in their box.
 // The tilt turns about the box's CENTRE, the way the on-screen .bg-stamp's CSS rotate()
 // does. An SVG rotate() with no centre given turns about the local origin, which after the
 // translate is the box's top-left corner, so the far end of the stamp was swung up by the
-// box's own width — clear of the sleeve on a wide stamp, less so on a narrow one, which is
+// box's own width — clear of the card on a wide stamp, less so on a narrow one, which is
 // how the same rule produced two different-looking stamps.
 function stamp(text, rightX, topY) {
   const font = '700 9.5px "Courier Prime", monospace';
@@ -88,9 +90,9 @@ function stamp(text, rightX, topY) {
 const TICK = `<path d="M3 8.6 L6.4 12 L13 4.6" fill="none" stroke="#c7951f" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/>`;
 const CROSS = `<path d="M4 4 L12 12 M12 4 L4 12" fill="none" stroke="#b23a3f" stroke-width="2" stroke-linecap="round"/>`;
 
-// One line of the track listing, laid out right to left: the mark holds the margin, the
-// note takes what it needs, and the TITLE gives way last — a clipped song name is worse
-// than a clipped one-word note, which is the same call the on-screen sleeve makes in CSS.
+// One line of the listing, laid out right to left: the mark holds the margin, the note
+// takes what it needs, and the TITLE gives way last — a clipped song name is worse than a
+// clipped one-word note, which is the same call the on-screen card makes in CSS.
 function track(t, x, baseline, v) {
   const noteFont = '9.5px "Courier Prime", monospace';
   // The note is trimmed FIRST and then measured, letter-spacing included, so the width the
@@ -115,7 +117,7 @@ function track(t, x, baseline, v) {
       ` stroke="${v.inkSoft}" stroke-width="1" stroke-dasharray="1 3" opacity="0.5"/>`;
 }
 
-export function buildSleeveSVG(meta, fontCss) {
+export function buildBackSVG(meta, fontCss) {
   const v = meta.vars;
   const tint = meta.tint || "#4a8c87";
 
@@ -125,15 +127,15 @@ export function buildSleeveSVG(meta, fontCss) {
     rules += `<line x1="0" y1="${y}" x2="${W}" y2="${y}" stroke="${v.rule}" stroke-width="1"/>`;
   }
 
-  // ---- the sleeve's head: pressing, titles, and the run's number
+  // ---- the head: the cover, the titles, and the run's number
   const headTop = SY + 26;
-  const titleX = SL + 78 + 18;
+  const titleX = SL + 69 + 18;
   const scoreFont = '700 52px Caveat, cursive';
   const scoreW = measureText(meta.score, scoreFont) + (meta.scoreSub ? measureText(meta.scoreSub, '700 22px Caveat, cursive') : 0);
   const titleMax = Math.max(120, SR - scoreW - 22 - titleX);
 
   const head =
-    discMark(meta.disc, SL, headTop, 78) +
+    coverMark(meta.cover, SL, headTop, 92) +
     `<text x="${titleX}" y="${headTop + 12}" font-family="Courier Prime" font-weight="700" font-size="10.5"` +
       ` letter-spacing="2" fill="${towardInk(tint, 0.78)}">${esc(String(meta.kicker).toUpperCase())}</text>` +
     `<text x="${titleX}" y="${headTop + 44}" font-family="Caveat" font-weight="700" font-size="32" fill="${v.ink}">` +
@@ -147,7 +149,7 @@ export function buildSleeveSVG(meta, fontCss) {
       `${esc(meta.score)}${meta.scoreSub ? `<tspan font-size="22" fill="${v.inkSoft}">${esc(meta.scoreSub)}</tspan>` : ""}</text>` +
     `<line x1="${SL}" y1="${SY + 120}" x2="${SR}" y2="${SY + 120}" stroke="rgba(43,39,34,0.16)" stroke-width="1.5"/>`;
 
-  // ---- the track listing: two columns of five, read down then across, as on screen
+  // ---- the listing: two columns of five pages, read down then across, as on screen
   const tracks = (meta.tracks || []).slice(0, ROWS * 2).map((t, i) => {
     const col = i < ROWS ? 0 : 1;
     const x = SL + col * (COL_W + COL_GAP);
@@ -156,7 +158,7 @@ export function buildSleeveSVG(meta, fontCss) {
   }).join("");
   const lastRow = ROW_TOP + ROW_H * (ROWS - 1) + 19;
 
-  // ---- signature and footer, on the page below the sleeve (the bracelet card's bottom row)
+  // ---- signature and footer, on the page below the card (the bracelet's bottom row)
   const sigY = H - 46;
   let sig = "";
   if (meta.signature) {
@@ -168,28 +170,25 @@ export function buildSleeveSVG(meta, fontCss) {
   }
 
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">` +
-    `<defs><style>${fontCss}` +
-      `.bd-pencil{font-family:Caveat,cursive;fill:#4a4238}` +
-      `.bd-stamp-type{font-family:"Courier Prime",monospace}` +
-    `</style>` + TAPE_DEFS + meta.discDefs + `</defs>` +
+    `<defs><style>${fontCss}</style>` + TAPE_DEFS + `</defs>` +
     `<rect width="${W}" height="${H}" fill="${v.paper}"/>` +
     rules +
     `<line x1="54" y1="0" x2="54" y2="${H}" stroke="${v.margin}" stroke-width="2"/>` +
     `<text x="74" y="46" font-family="Courier Prime" font-weight="700" font-size="12" letter-spacing="2.6" fill="${v.inkSoft}">` +
       `${esc(String(meta.eyebrow).toUpperCase())}</text>` +
-    // the sleeve itself, taped to the page in the game's own colour
+    // the back cover itself, taped to the page in the game's own colour
     `<rect x="${SX}" y="${SY}" width="${SW}" height="${SB - SY}" rx="3" fill="rgba(251,247,234,0.94)"` +
       ` stroke="rgba(43,39,34,0.18)" stroke-width="1"/>` +
     head +
     `<text x="${SL}" y="${ROW_TOP - 12}" font-family="Courier Prime" font-size="9.5" letter-spacing="1.8"` +
-      ` fill="${v.inkSoft}">THE RUN, TRACK BY TRACK</text>` +
+      ` fill="${v.inkSoft}">THE RUN, PAGE BY PAGE</text>` +
     tracks +
     `<text x="${(SL + SR) / 2}" y="${lastRow + 30}" text-anchor="middle" font-family="Courier Prime" font-size="10"` +
       ` letter-spacing="0.9" fill="${v.inkSoft}">${esc(meta.foot)}</text>` +
-    // The stamp is pressed INSIDE the sleeve's top-right corner, not over its edge. On screen
-    // .bg-stamp's "right:-4px; top:-12px" is read against .bg-sleeve-head, which is the
-    // positioned ancestor and sits inside the sleeve's own padding — so those two negative
-    // numbers still land the stamp well within the card. Measured against the sleeve's outer
+    // The stamp is pressed INSIDE the card's top-right corner, not over its edge. On screen
+    // .bg-stamp's "right:-4px; top:-12px" is read against .bg-back-head, which is the
+    // positioned ancestor and sits inside the card's own padding — so those two negative
+    // numbers still land the stamp well within the card. Measured against the card's outer
     // edge instead, as this card did, the same numbers hang it off the corner entirely.
     (meta.stamp ? stamp(meta.stamp, SR + 4, headTop - 12) : "") +
     washiTape(W / 2 - 44, SY - 13, 88, 26, -2.4, 0, tintWash(tint, 0.4)) +
@@ -199,9 +198,9 @@ export function buildSleeveSVG(meta, fontCss) {
   `</svg>`;
 }
 
-export async function renderSleevePng(meta) {
-  return rasterisePng(buildSleeveSVG(meta, await fontFaceCss()), W, H);
+export async function renderBackPng(meta) {
+  return rasterisePng(buildBackSVG(meta, await fontFaceCss()), W, H);
 }
 
-export function exportSleeveCard(meta) { return downloadPng(() => renderSleevePng(meta), meta.filename || "sleeve.png"); }
-export function copySleeveCard(meta)   { return copyPng(() => renderSleevePng(meta)); }
+export function exportBackCard(meta) { return downloadPng(() => renderBackPng(meta), meta.filename || "back-cover.png"); }
+export function copyBackCard(meta)   { return copyPng(() => renderBackPng(meta)); }

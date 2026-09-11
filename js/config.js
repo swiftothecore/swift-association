@@ -544,19 +544,21 @@ export const CUSTOM_DEFAULT_MODE = {
 // launches nothing. Flip `ready` true and wire the launcher in `selectBonusGame` when the
 // game is built. Keep `name` short and `blurb` to a single sentence so the cards stay even.
 //
-// `tint` and `mark` dress the game's pressing on the shelf: the label colour of the disc,
-// and which drawn cartouche mark sits on it (the marks live in the #bd-* sprite in
-// index.html). The vinyl, rays and deco furniture are shared and identical on every disc,
-// so a new game means one new colour and one new mark, nothing else. A `ready:false` game
-// gets neither: an unreleased record wears a bare white-label test pressing instead, which
-// is what makes "coming soon" legible without a word of UI.
+// A game's face is its ZINE COVER, a torn-paper collage drawn in js/zine.js and keyed on
+// the id — so ADDING A GAME HERE MEANS DRAWING ONE THERE, and a roster entry with no
+// cover falls back to the blank kraft an unwritten game wears (`__dev.bonus.covers()`
+// says which are drawn). Nothing about the cover lives on this roster, deliberately: the
+// covers share no furniture, no palette and no silhouette, which is the whole reason the
+// shelf is legible, and a `mark`-style field here would be the first step back towards six
+// objects told apart by a colour.
+// `tint` survives that change because it is not the cover: it is the game's colour on the
+// back-cover keepsake and the tape that pins it down.
 // Two descriptions, deliberately, and they are not the same sentence at two lengths.
-// `blurb` is written for the platter, where there is room to say how a game FEELS. `line` is
-// written for the shelf, where every game has to say what it IS in one row: one sentence, kept
-// near 45 characters so it holds on a phone, and clipped by CSS rather than wrapped if a new
-// one ever runs long — a shelf row that reflows is what made the old described list so tall.
-// The kicker below is the platter's, not the shelf's; on the shelf `line` stands in its place,
-// because a three-word tag and a real sentence are the same job done twice.
+// `blurb` is written for the open zine, where there is room to say how a game FEELS.
+// `line` is written for the shelf, where a closed zine is a picture and a name: it never
+// appears on screen there, but it IS the tile's accessible name, so a shelf that says only
+// "Redacted" out loud is a shelf with nothing in it. Keep it near 45 characters.
+// The kicker is the open zine's, not the shelf's.
 /* `sweep: true` is the SECOND AXIS for a game whose ceiling is reachable. The three games
    scored right/wrong over ten pages top out at 10/10 and then have nothing left to chase, so
    clearing all ten additionally stamps a TIME and best clean-sweep time becomes the chase.
@@ -570,15 +572,15 @@ export const CUSTOM_DEFAULT_MODE = {
    Nor is it on Ruthless, which is scored in seconds already. */
 export const BONUS_GAMES = [
   { id: "spot-the-slip", name: "Spot the Slip", ready: true, sweep: true,
-    kicker: "find the wrong word", tint: "#bf5340", mark: "skip",
+    kicker: "find the wrong word", tint: "#bf5340",
     line: "One word in the lyric is an impostor. Catch it.",
     blurb: "One word in the lyric has been swapped for an impostor. Catch it before the ink dries." },
   { id: "name-that-song", name: "Name That Song", ready: true, sweep: true,
-    kicker: "lyric in, title out", tint: "#33628f", mark: "question",
+    kicker: "lyric in, title out", tint: "#33628f",
     line: "Read the line, name the song, beat the clock.",
     blurb: "Read the line, name the song, and beat the clock. No prompt word to lean on but the lyric itself." },
   { id: "sing-it-back", name: "Sing It Back", ready: true, sweep: true,
-    kicker: "fill the gap", tint: "#8d4064", mark: "caret",
+    kicker: "fill the gap", tint: "#8d4064",
     line: "A word is missing from the line. Write it back.",
     blurb: "A word has been lifted out of one of the song's own lines. Write it back in." },
   // The one game on the shelf scored in POINTS rather than pages cleared: `points` is what a
@@ -589,13 +591,13 @@ export const BONUS_GAMES = [
   // stare rather than spend. Six keeps the same shape (a strip a point, floored at one) with a
   // shorter drop, so peeling the two or three you actually need is not a ruined page.
   { id: "redacted", name: "Redacted", ready: true, points: 6,
-    kicker: "how little do you need?", tint: "#3b4d31", mark: "redact",
+    kicker: "how little do you need?", tint: "#3b4d31",
     line: "Peel the tape off a verse, and name it cheap.",
     blurb: "A verse with the telling words taped over. Peel them off one at a time, and name the song before you have spent the page." },
   // The one game on the shelf with no fail state: every card in the hand is really in the song,
   // so every pick pays, and the rarity is what the five points are for. See buildOnlyHerePuzzle.
   { id: "only-here", name: "Only Here", ready: true, points: 5,
-    kicker: "the game backwards", tint: "#1c7371", mark: "pin",
+    kicker: "the game backwards", tint: "#1c7371",
     line: "Six words from the song. Pick the rarest.",
     blurb: "The game backwards: here is the song, and here are six words out of it. Pick the one you think the fewest other songs sing, and the hand turns over to show you what they were all worth." },
   // Four picks down one song, worth 1, 1, 2 and 2 — the payout escalates because the decoys
@@ -603,7 +605,7 @@ export const BONUS_GAMES = [
   // asked to survive but never paid for reads as the game turning mean rather than exciting.
   // The six is CHAIN_PAGE written out; the two must stay in step.
   { id: "then-what", name: "Then What", ready: true, points: 6,
-    kicker: "what comes next?", tint: "#4c3f8a", mark: "chain",
+    kicker: "what comes next?", tint: "#4c3f8a",
     line: "Three lines. Pick the one that comes next.",
     blurb: "One line of the song, and three that might follow it. Pick the right one and it locks into the page in pen; four picks and the verse is yours." },
 ];
@@ -627,7 +629,7 @@ export const BONUS_GAMES = [
    That is also why nothing was lost when the card went: From the Top IS the shelf game. */
 export const RUTHLESS_GAME = {
   id: "ruthless-game", name: "Ruthless Game", ready: true, timed: true,
-  kicker: "a word a second", tint: "#7d2b34", mark: "metro",
+  kicker: "a word a second", tint: "#7d2b34",
   line: "A word a second until you name it.",
   blurb: "The song writes itself out from its very first word, one word every second, and the clock never stops. Guess as often as you like, because a wrong answer costs nothing but the seconds it took.",
 };
@@ -2529,7 +2531,11 @@ export const ACH_ICONS = {
   // the needle down in the grooves — your first run played through. Drawn as the arm and
   // the record it is sitting on rather than as a deck seen whole, because a disc with a
   // stick across it is `dart` at 30px, and these two live in the same section.
-  tonearm: `<svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.2" opacity="0.5" stroke-linecap="round"><path d="M1.8 13.8 C6.4 12 14.6 11.6 21.4 12.8"/><path d="M1.8 16.5 C6.4 14.7 14.6 14.3 21.4 15.5"/><path d="M1.8 19.2 C6.4 17.4 14.6 17 21.4 18.2"/><path d="M1.8 21.9 C6.4 20.1 14.6 19.7 21.4 20.9"/></g><path class="ink" fill="none" stroke-width="1.6" d="M22.4 2.6 C20.8 3.8 20.4 5.6 18.8 6.9"/><circle class="ink-fill" cx="22.8" cy="2.1" r="1.2"/><g transform="rotate(28 16.4 8.2)"><rect class="ink-fill" x="14.4" y="6.2" width="4" height="4" rx="0.8"/></g><path class="ink" stroke-width="1.4" d="M15 9.9 L13.9 11.5"/><circle class="ink-fill" cx="13.6" cy="12.1" r="0.8"/></svg>`,
+  // a little stapled booklet lying open, seen from above — the shelf's own object, and
+  // the first bonus run is the first one you took off it
+  openzine: `<svg viewBox="0 0 24 24"><path class="ink-fill" d="M12 6.4 C9.6 4.6 6.2 4.2 2.6 4.8 L2.6 18.2 C6.2 17.6 9.6 18 12 19.8 C14.4 18 17.8 17.6 21.4 18.2 L21.4 4.8 C17.8 4.2 14.4 4.6 12 6.4 Z"/><path class="ink" d="M12 6.6 L12 19.4"/><g class="ink" stroke-width="1.1" opacity="0.55"><path d="M5.2 9 L9.4 8.6"/><path d="M5.2 12 L9.4 11.6"/><path d="M14.6 8.6 L18.8 9"/><path d="M14.6 11.6 L18.8 12"/></g></svg>`,
+  // the back cover, lifted off the page and kept: a sheet with its corner turned up
+  backcover: `<svg viewBox="0 0 24 24"><path class="ink-fill" d="M4.4 2.8 L14.6 2.4 L19.8 7.6 L19.4 21.2 L4 21.6 Z"/><path class="ink" d="M14.4 2.6 L14.7 7.8 L19.7 7.6"/><g class="ink" stroke-width="1.1" opacity="0.55"><path d="M7.4 12 L16.4 11.8"/><path d="M7.4 15 L16.4 14.8"/><path d="M7.4 18 L12.6 17.9"/></g></svg>`,
   // the crate flipped through to the back: five sleeves still filed, the sixth stood up out
   // of it. Five and one is the shelf's own count, not a decorative number.
   crate:   `<svg viewBox="0 0 24 24"><rect class="ink-fill" x="15.2" y="2.4" width="6.2" height="7.4" rx="0.6"/><circle cx="18.3" cy="6.1" r="2" fill="var(--paper)" stroke="currentColor" stroke-width="0.9"/><circle cx="18.3" cy="6.1" r="0.5" fill="currentColor" stroke="none"/><rect class="ink-fill" x="2.4" y="9.8" width="19.2" height="11.6" rx="1.3"/><g fill="none" stroke="currentColor" stroke-width="1.3" opacity="0.55"><path d="M5.2 11.1 V15.8"/><path d="M7.8 11.1 V15.8"/><path d="M10.4 11.1 V15.8"/><path d="M13 11.1 V15.8"/><path d="M15.6 11.1 V15.8"/></g><rect x="8.6" y="17.8" width="6.8" height="1.9" rx="0.95" fill="var(--paper)" stroke="currentColor" stroke-width="0.95"/></svg>`,
@@ -2538,11 +2544,6 @@ export const ACH_ICONS = {
   // the whole shelf swept, so the disc comes off the crate and goes on the wall: framed,
   // matted, with its little plate under it
   goldrecord:`<svg viewBox="0 0 24 24"><rect class="ink-fill" x="3.4" y="2.4" width="17.2" height="19.2" rx="1.2"/><circle cx="12" cy="10.4" r="6" fill="none" stroke="currentColor" stroke-width="1.3"/><circle cx="12" cy="10.4" r="4.4" fill="none" stroke="currentColor" stroke-width="0.7" opacity="0.45"/><circle cx="12" cy="10.4" r="2.2" fill="none" stroke="currentColor" stroke-width="0.9"/><circle cx="12" cy="10.4" r="0.6" fill="currentColor" stroke="none"/><rect x="7" y="17.8" width="10" height="2.6" rx="0.5" fill="none" stroke="currentColor" stroke-width="1.2"/></svg>`,
-  // the sleeve taken off the page and its record stood against it, the writing still on the
-  // face and the left edge torn where it came away from the notebook. The disc sits BESIDE
-  // the sleeve rather than rising out of its mouth: a dome on a flat top edge is a
-  // carrier-bag handle at charm size, however many grooves get drawn into it.
-  sleeve:  `<svg viewBox="0 0 24 24"><circle class="ink-fill" cx="17" cy="13.8" r="5.9"/><circle cx="17" cy="13.8" r="4.2" fill="none" stroke="currentColor" stroke-width="0.8" opacity="0.45"/><circle cx="17" cy="13.8" r="2.1" fill="var(--paper)" stroke="currentColor" stroke-width="1"/><circle cx="17" cy="13.8" r="0.5" fill="currentColor" stroke="none"/><g transform="rotate(-4 9 13.4)"><path class="ink-fill" d="M15.4 6.6 V20.4 H4.6 L3.3 18.1 L4.6 15.8 L3.3 13.5 L4.6 11.2 L3.3 8.9 L4.6 6.6 Z"/><g fill="none" stroke="currentColor" stroke-width="0.95" opacity="0.45" stroke-linecap="round"><path d="M6.6 10.4 H11.4"/><path d="M6.6 13 H9.8"/></g></g></svg>`,
   // one word out of the line ringed in a loop that runs well past where it started, the way
   // you ring a word you have already spotted. The tilt and the overshoot are load-bearing:
   // a closed symmetric oval with a bar through it is an eye, not a ring.
@@ -3692,11 +3693,11 @@ export const ACHIEVEMENTS = [
      it writes outside BONUS_KEY, and that is deliberate: a charm is a collection entry, never
      a ranking, so it doesn't breach the rule that a bonus run is never ranked beside the main
      game. Nothing here may fold stats, history, records or skill XP. */
-  { id: "finish-first-bonus-run",    name: "Play It Again",    desc: "Finish your first bonus run",          secret: false, icon: "tonearm", sitting: true, earn: { cat: "bonus" } },
+  { id: "finish-first-bonus-run",    name: "Play It Again",    desc: "Finish your first bonus run",          secret: false, icon: "openzine", sitting: true, earn: { cat: "bonus" } },
   { id: "play-every-bonus-game",      name: "Vinyl Shelf",      desc: "Play every game on the shelf",         tier: 2, secret: false, icon: "crate" },
   { id: "clean-sweep-bonus-game",     name: "A Clean Kill",     desc: "Clean-sweep a bonus game: ten pages cleared", tier: 2, secret: false, icon: "broom", sitting: true, earn: { cat: "bonus" } },
   { id: "clean-sweep-every-bonus-game", name: "Every Single One", desc: "Clean-sweep every game on the shelf",  tier: 3, secret: false, icon: "goldrecord" },
-  { id: "keep-bonus-sleeve", name: "One Last Souvenir", desc: "Take a sleeve off the page and keep it", secret: false, icon: "sleeve", sitting: true, earn: { cat: "bonus" } },
+  { id: "keep-bonus-back-cover", name: "One Last Souvenir", desc: "Take a back cover off the page and keep it", secret: false, icon: "backcover", sitting: true, earn: { cat: "bonus" } },
   // One per game, and four of the six are that game's clean sweep said in its own voice. The
   // two that aren't ask for something a sweep doesn't: exactness on Sing It Back, nerve on
   // Redacted. They are NOT masked like the challenge flourishes — a bonus game has no defeat
@@ -3962,6 +3963,11 @@ export const ACH_ID_MIGRATIONS = {
   "you-took-a-polaroid-of-us": "find-every-polaroid-keepsake",
   "is-it-over-now": "earn-every-hidden-achievement",
   "the-lucky-one": "earn-every-other-achievement",
+  /* The bonus shelf stopped being a rack of records, so its keepsake stopped being a
+     sleeve. This is the SECOND rename of that charm, so it is a CHAIN: the row above
+     ("one-last-souvenir" → "keep-bonus-sleeve") still has to run first, which is why a
+     new row is appended rather than dropped in wherever it reads best. */
+  "keep-bonus-sleeve": "keep-bonus-back-cover",
 };
 
 // Achievements are shown grouped by theme on the Charm Collection page. Order here is
@@ -4083,7 +4089,7 @@ export const ACH_GROUP_OF = {
   "finish-first-custom-run": "custom", "keep-5-custom-presets": "custom", "reach-round-50-endless-custom": "custom", "perfect-custom-at-least-ultra": "custom",
   "admit-guest": "guests", "admit-guest-hard": "guests", "admit-guest-lyricist": "guests",
   "finish-first-bonus-run": "bonus", "play-every-bonus-game": "bonus", "clean-sweep-bonus-game": "bonus",
-  "clean-sweep-every-bonus-game": "bonus", "keep-bonus-sleeve": "bonus", "sweep-spot-the-slip": "bonus",
+  "clean-sweep-every-bonus-game": "bonus", "keep-bonus-back-cover": "bonus", "sweep-spot-the-slip": "bonus",
   "sweep-name-that-song-one-line-each": "bonus", "sweep-sing-it-back-all-words-exact": "bonus", "name-redacted-song-no-strips-removed": "bonus",
   "take-rarest-only-here-card-all-10-pages": "bonus", "finish-then-what-unbroken-chain": "bonus", "take-commonest-only-here-card": "bonus",
   "name-redacted-song-after-buying-all-strips": "bonus", "time-out-all-10-only-here-pages": "bonus", "finish-bonus-run-one-page-short-of-sweep": "bonus",

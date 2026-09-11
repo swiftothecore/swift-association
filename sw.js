@@ -64,7 +64,10 @@ const ASSETS = [
   "js/random.js",
   "js/bracelet.js",
   "js/braceletcard.js",
-  "js/sleevecard.js",
+  "js/backcard.js",
+  // The bonus shelf's torn-paper zine covers (pure; see js/zine.js). app.js imports it at
+  // load, so a stale copy of one and a fresh copy of the other is a broken shelf.
+  "js/zine.js",
   "js/storage.js",
   "js/sound.js",
   // Share/copy plumbing — imported by both the game and the searcher.

@@ -20,7 +20,7 @@ The game is still a work in progress and is by no means 'done', but it is quite 
 - Daily challenge
 - The ability to make your own **custom modes**
 - A guest shelf of other artists' catalogues, played on their own and never mixed into Taylor's
-- A shelf of bonus mini-games, including one where you hunt a swapped word in a real lyric
+- A shelf of bonus mini-games, each one a little hand-bound zine with a torn-paper cover, including one where you hunt a swapped word in a real lyric
 - Ruthless Game, where the song writes itself out a word a second from a section you pick, and your time is the score
 - A randomiser that deals one run from anywhere in the notebook, leaning toward what you haven't played yet and toward the charm you've pinned
 

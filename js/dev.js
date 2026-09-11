@@ -93,8 +93,14 @@ function auditAchievementIdSources(config, app) {
       if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(id)) failures.push(`Unknown migration key format: ${id}`);
       if (achievementSet.has(id)) failures.push(`ACH_ID_MIGRATIONS key is still a current id: ${id}`);
     });
+    /* A target is either a live id or ANOTHER MIGRATION KEY — the second case being a
+       charm renamed twice, where the old row hops to the intermediate id and a later row
+       carries it the rest of the way. storage.js walks the map in insertion order, so a
+       chain resolves as long as each new row is APPENDED after the one it continues. */
+    const migrationKeySet = new Set(migrationKeys);
     migrationValues.forEach((id) => {
-      if (!achievementSet.has(id)) failures.push(`ACH_ID_MIGRATIONS has unknown target id: ${id}`);
+      if (!achievementSet.has(id) && !migrationKeySet.has(id))
+        failures.push(`ACH_ID_MIGRATIONS has unknown target id: ${id}`);
     });
   }
 
@@ -1104,7 +1110,7 @@ export function initDev(api) {
         btn("fill sleeve", () => toast(api.bonus.fill(10)))),
     row("sample", bonusN, btn("show", () => { console.table(api.bonus.sample(bonusSel.value, +bonusN.value)); toast("bonus sample in console"); }),
         btn("audit", () => { console.log("[dev] bonus audit", api.bonus.audit(bonusSel.value, 200)); toast("audit in console"); }),
-        btn("pressings", () => toast(api.bonus.discs()))),
+        btn("covers", () => toast(api.bonus.covers()))),
     row(btn("random sample", () => { console.log("[dev] random", api.random.sample(1000)); toast("random sample in console"); }),
         btn("reset random", () => toast(api.random.reset()), "warn"),
         btn("goal sample", () => { console.log("[dev] goals", api.goal.sample(1000)); toast("goal sample in console"); }),

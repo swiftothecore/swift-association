@@ -5,7 +5,7 @@
 //
 // It is also the workshop the other keepsakes are built in: the fonts, the measuring
 // ruler, the washi tape, the rasteriser and the two ways out (download / clipboard)
-// are all exported, so `sleevecard.js` frames a bonus run's sleeve without owning a
+// are all exported, so `backcard.js` frames a bonus run's sleeve without owning a
 // second copy of any of it. Only `buildCardSVG` below is the bracelet's own.
 //
 // Why the fonts are inlined as base64: an SVG drawn through an <img> onto a canvas

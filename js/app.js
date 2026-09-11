@@ -69,11 +69,12 @@ import {
   centreStrand, trinketPreviewSVG, randomTrinketForBead,
 } from "./bracelet.js";
 import { exportBraceletCard, copyBraceletCard, buildCardSVG, fontFaceCss } from "./braceletcard.js";
-import { exportSleeveCard, copySleeveCard, buildSleeveSVG } from "./sleevecard.js";
+import { exportBackCard, copyBackCard, buildBackSVG } from "./backcard.js";
 import { sfx } from "./sound.js";
 import { faviconBlobUrl, faviconSVG } from "./favicon.js";
 import { wordRegex as wordRegexCore, extractLineWithWord as extractLineWithWordCore, highlightWord as highlightWordCore, variantBody, exactWordBody, boundedWordBody, falseFriendRegex, addedLettersRegex } from "./match.js";
 import { buildLyricReveal } from "./lyric-reveal.mjs";
+import { zineCover, hasCover } from "./zine.js";
 import { buildLineIndex, buildSlipContext, buildSlipPuzzle, buildNamePuzzle,
          buildBlankPuzzle, buildRedactedPuzzle,
          buildWordIndex, buildOnlyHerePuzzle, onlyHerePoints, ONLY_HAND,
@@ -6661,8 +6662,8 @@ function renderTitleStepper() {
 
 /* ---------- Bonus games shelf ----------
    A shelf of quick, self-contained mini-games away from the main association loop. Every
-   entry in BONUS_GAMES is gated by its `ready` flag: a false one can still sit on the deck,
-   where it says in words that it isn't written yet and offers no Play button. To build one:
+   entry in BONUS_GAMES is gated by its `ready` flag: a false one can still be opened on the
+   desk, where it says in words that it isn't written yet and offers no Play button. To build one:
    flip `ready` and add its branch to `buildBonusPuzzle` + `renderBonusRound`.
 
    SANDBOXED, like Challenges/Album Focus/Custom. A bonus run is not a run of the association
@@ -6773,11 +6774,12 @@ let ruthlessWrong = 0;
    read exactly once, at the end. */
 let bonusRunStart = 0;
 let bonusLog = [];         // one entry per settled round, for the end card's track listing
-/* The finished run, written down as the strings the sleeve already shows, so the keepsake
-   PNG is the sleeve on screen rather than a second derivation of it. Snapshotted at the end
+/* The finished run, written down as the strings the back cover already shows, so the
+   keepsake PNG is the page on screen rather than a second derivation of it. Snapshotted at
    of the run instead of read live, because `bonusGame` and `bonusScore` are cleared the
-   moment the player leaves for the shelf while the sleeve is still the page they're on. */
-let bonusSleeveRun = null;
+   the end, because the run's globals are cleared the moment the player leaves for the shelf
+   while the back cover is still the page they are on. */
+let bonusBackRun = null;
 /* The same trick for the Ruthless mode's bracelet: the run written down as the card's own
    strings at the moment it ends, because the keepsake is pressed off a results screen whose
    bonus globals have already been handed back. */
@@ -6798,47 +6800,22 @@ function openBonus(from) {
   flipAwayToScreen("bonus");
 }
 
-/* The game's pressing. All the geometry is shared (#bd-* in index.html); a game supplies
-   only its label colour and its mark, and an unwritten game gets the bare test pressing
-   with its title pencilled on. `extra` lets a caller add classes without re-declaring the
-   whole disc, so the shelf, the play screen and the end card all draw the same object.
-   The mark is printed in CREAM on the colour rather than in the tint itself, and it sits in
-   the MIDDLE of the label at full size. Both are the same lesson learned twice: the mark used
-   to be tinted on a cream lozenge, so the lozenge was the bright shape and the mark a smudge
-   inside it, and then it was cream but exiled to the lower crescent while the shared spindle
-   rings held the middle. On a 56px tile the middle of the circle is the only place the eye
-   goes, so the middle belongs to the one thing that is not shared. That is also why there is
-   no spindle hole any more: a cream dot dead centre on all six pressings would take the spot
-   back. Literal hex, not a CSS colour function: the disc travels into the sleeve keepsake's
-   rasteriser, where nothing resolves.
-   `crop` frames the LABEL ALONE and leaves the vinyl off entirely, for the shelf tiles and the
-   play screen. It used to keep the vinyl and simply zoom in, which put the label in a black
-   SQUARE — the crop box's corners fall a unit outside the record's own edge, so the four
-   corners were the only part of it that was not black. That is what made every tile look like
-   a boxed icon rather than a record. */
-function bonusDisc(g, extra = "", crop = false) {
-  const cls = `bonus-disc${extra ? " " + extra : ""}`;
-  const open = `<svg class="${cls}" viewBox="${crop ? "24 24 92 92" : "0 0 140 140"}" aria-hidden="true">`;
-  const vinyl = crop ? "" : `<use href="#bd-vinyl"/>`;
-  if (!g.ready) {
-    return open + vinyl +
-      `<use href="#bd-test-label"/>` +
-      `<text x="70" y="95" text-anchor="middle" class="bd-pencil" font-size="11"` +
-      ` transform="rotate(-2 70 92)">${escapeHtml(g.name.toLowerCase())}</text></svg>`;
-  }
-  return open + vinyl +
-    `<circle cx="70" cy="70" r="44" fill="${escapeHtml(g.tint)}"/>` +
-    `<use href="#bd-rays"/><use href="#bd-furniture"/>` +
-    `<g stroke="#f7ecd7" fill="#f7ecd7"><use href="#bd-mark-${escapeHtml(g.mark)}"/></g></svg>`;
-}
+/* The game's cover. A bonus game is a little hand-bound zine on the desk, and its front is
+   a collage of torn coloured paper drawn by js/zine.js — see that file for why the shelf
+   stopped being a rack of record pressings, which is the short version of: six objects with
+   the same silhouette cannot be told apart by a glyph the size of a fingernail, and seven
+   pictures can be told apart from across the room.
+   `extra` adds classes without re-declaring the object, so the shelf, the open spread, the
+   play screen and the keepsake all draw the one cover. An unwritten game gets a blank kraft
+   cover with its name pencilled on: an object that exists, for a game that does not. */
+function bonusCover(g, extra = "") { return zineCover(g, extra); }
 
-/* The shelf is a record deck: one game is ON the platter with its details written beside
-   it, and the rest wait on the shelf below as smaller pressings, each with its own name,
-   line and score so nothing has to be guessed from a colour. Tapping one drops it onto the
-   platter; Play starts it. Two taps to play instead of one is the deliberate cost of the
-   metaphor, and it buys the games somewhere to be described properly.
-   `bonusPick` is the id on the platter. It survives the screen so returning from a run
-   leaves your record where you left it. */
+/* The shelf is a row of zines: one is OPEN on the desk with its cover on the left leaf and
+   everything about it written on the right, and the rest stand closed on the shelf below.
+   Tapping one opens it; Play starts it. Two taps to play instead of one is the deliberate
+   cost of the metaphor, and it buys the games somewhere to be described properly.
+   `bonusPick` is the id of the one lying open. It survives the screen, so coming back from
+   a run leaves the shelf exactly as you left it. */
 let bonusPick = null;
 
 /* Is the run on screen the Ruthless MODE rather than a game off the shelf? The two share every
@@ -6914,32 +6891,32 @@ function bonusScoreLine(g, short = false) {
   return `${score}${swept} · played ${rec.plays}`;
 }
 
-// The tonearm, resting on the record. Drawn here rather than in the sprite because it
-// belongs to the deck, not to any pressing.
-const BONUS_TONEARM =
-  `<svg class="bonus-arm" viewBox="0 0 150 150" aria-hidden="true">` +
-    `<circle cx="126" cy="26" r="13" fill="#cfc7ba" stroke="rgba(43,39,34,0.35)" stroke-width="1.5"/>` +
-    `<circle cx="126" cy="26" r="4" fill="#8d8477"/>` +
-    `<path d="M126 26 L117 48 L111 63" fill="none" stroke="#cfc7ba" stroke-width="7" stroke-linecap="round"/>` +
-    `<path d="M126 26 L117 48 L111 63" fill="none" stroke="rgba(43,39,34,0.22)" stroke-width="1" stroke-linecap="round"/>` +
-    // the head, sat down on the outer grooves rather than in the label: a stylus resting on
-    // the paper label is the tell that gives a drawn record player away
-    `<rect x="104" y="59" width="15" height="11" rx="2" transform="rotate(22 111 65)" fill="#4a433a"/>` +
-  `</svg>`;
+/* The staples down the spine of the open zine. Three of them, uneven, because a hand-bound
+   booklet is stapled by a hand: two of these at machine-perfect spacing would be the one
+   thing on the page that looked manufactured. */
+const ZINE_STAPLES =
+  `<span class="zine-spine" aria-hidden="true">` +
+    `<i style="top:16%;transform:rotate(-4deg)"></i>` +
+    `<i style="top:47%;transform:rotate(2.5deg)"></i>` +
+    `<i style="top:79%;transform:rotate(-1.5deg)"></i>` +
+  `</span>`;
 
 function renderBonusPage() {
   const g = bonusPicked();
   bonusPick = g.id;
 
-  const deck =
-    `<div class="bonus-deck">` +
-      `<div class="bonus-platter${g.ready ? "" : " is-soon"}">` +
-        // An unpressed record sits still: nothing is playing it, and a turning test
-        // pressing would promise a game that isn't there.
-        `<div class="bonus-platter-disc">${bonusDisc(g, g.ready ? "bonus-spin" : "")}</div>` +
-        BONUS_TONEARM +
-      `</div>` +
-      `<div class="bonus-now">` +
+  /* The one lying open on the desk. Its own cover on the left leaf and everything the
+     player needs on the right, across a stapled gutter: this is the "big front and centre"
+     the shelf below cannot give, and it is where a game gets described properly.
+     The left leaf carries the cover rather than a blank inside-of-a-cover, which is what a
+     booklet opened at the front really shows. That is a deliberate cheat: what the player
+     came here to look at is the collage, and hiding it behind a physics lesson would make
+     the open zine the one place on the shelf where the art is missing. */
+  const open =
+    `<div class="zine-open${g.ready ? "" : " is-soon"}">` +
+      `<div class="zine-leaf zine-leaf-art">${bonusCover(g)}</div>` +
+      ZINE_STAPLES +
+      `<div class="zine-leaf zine-leaf-page">` +
         `<div class="bonus-now-kicker">${escapeHtml(g.kicker)}</div>` +
         `<h3 class="bonus-now-name">${escapeHtml(g.name)}</h3>` +
         `<p class="bonus-now-blurb">${escapeHtml(g.blurb)}</p>` +
@@ -6948,64 +6925,55 @@ function renderBonusPage() {
           // the same gold pencil sticker the Challenges detail plays from, so starting a
           // run looks the same act wherever you start it from
           ? `<button type="button" id="bonusPlayBtn" class="chall-go bonus-play">${bonusRecord(g.id).plays ? "Play again" : "Play"}</button>`
-          : `<p class="bonus-now-soon">This one is still being written, so there is nothing to put the needle on yet.</p>`) +
+          : `<p class="bonus-now-soon">This one is still being written, so there is nothing inside it yet.</p>`) +
       `</div>` +
     `</div>`;
 
-  /* The rest of the shelf, as a RACK: every game as a tile, two rows of three, pressing
-     over name over score. The one on the platter is in it too, washed in highlighter — six
-     games make a full 2x3 with no gap, and leaving the current one out would have meant
-     either a hole in the grid or inventing a seventh game to fill a layout, which is
-     backwards.
-     A tile carries NO description, and that is the trade the grid is: three columns leave
-     about 200px each, and the `line` sentences need about 270px, so the shelf stops
-     explaining the games and becomes a rack you recognise. It only works because the mark
-     now owns the middle of the label (see bonusDisc) — the pressing has to do the
-     identifying that the sentence used to. The blurb is still a tap away on the platter,
-     which is where a description was always read properly anyway. `line` stays on the
-     roster: it is what a tile falls back to if this ever grows a caption again, and the
-     randomiser and the dev tools read it. */
-  const rack = BONUS_GAMES.map((x) =>
-    `<button type="button" class="bonus-tile${x.ready ? "" : " is-soon"}` +
+  /* The rest of the shelf: every zine standing closed, in one row, cover out. The one lying
+     open is on the shelf too — six of them fill a single row, and leaving the current one
+     out would mean either a gap in the row or writing a seventh game to fill a layout.
+     A tile is a COVER and a score line and nothing else. The name is not printed under it
+     because it is printed ON it, which is the whole reason the covers were drawn: a shelf of
+     seven pictures with seven names pasted across them needs no caption, where a rack of
+     near-identical record labels needed one and could not afford one. `line` is still on the
+     roster and is still the tile's accessible name, since a shelf that says only "Redacted"
+     out loud is a shelf with nothing in it. */
+  const shelf = BONUS_GAMES.map((x) =>
+    `<button type="button" class="zine-tile${x.ready ? "" : " is-soon"}` +
       `${x.id === g.id ? " is-on" : ""}" data-id="${escapeHtml(x.id)}"` +
       `${x.id === g.id ? ' aria-current="true"' : ""}` +
-      // The tile is a mark and a name on screen, so the roster's one-line description is
-      // where it goes now: it is the whole meaning of the tile to anyone who cannot read
-      // the pressing, and an icon-led grid that says only "Redacted" out loud is a grid
-      // with nothing in it.
       ` aria-label="${escapeHtml(x.name + ". " + (x.line || x.kicker))}">` +
-      `<span class="bonus-tile-disc">${bonusDisc(x, "", true)}</span>` +
-      `<span class="bonus-tile-name">${escapeHtml(x.name)}</span>` +
-      `<span class="bonus-tile-meta">${escapeHtml(bonusScoreLine(x, true))}</span>` +
+      `<span class="zine-tile-cover">${bonusCover(x)}</span>` +
+      `<span class="zine-tile-meta">${escapeHtml(bonusScoreLine(x, true))}</span>` +
     `</button>`).join("");
 
   const el = $("bonusBody");
   el.innerHTML =
     `<div class="bonus-head">` +
-      `<p class="bonus-intro">Quick games kept apart from the main round. Put one on and play it.</p>` +
-      `<span class="bonus-count">${BONUS_GAMES.filter((x) => x.ready).length} in print</span>` +
+      `<p class="bonus-intro">Quick games kept apart from the main round. Take one off the shelf and play it.</p>` +
+      `<span class="bonus-count">${BONUS_GAMES.filter((x) => x.ready).length} on the shelf</span>` +
     `</div>` +
-    deck +
+    open +
     `<div class="bonus-shelf">` +
       `<div class="bonus-shelf-label">on the shelf</div>` +
-      `<div class="bonus-rack">` + rack + `</div>` +
+      `<div class="zine-row">` + shelf + `</div>` +
     `</div>`;
 
-  el.querySelectorAll(".bonus-tile").forEach((b) =>
+  el.querySelectorAll(".zine-tile").forEach((b) =>
     b.addEventListener("click", () => selectBonusGame(b.dataset.id)));
   if ($("bonusPlayBtn")) $("bonusPlayBtn").addEventListener("click", () => startBonusGame(bonusPicked()));
 }
 
-// Dropping a record onto the platter. Every game can be loaded, including one that isn't
-// written yet: its test pressing goes on the deck and the panel says so in words. Nothing
-// launches from here, so a shell can be read about without ever being playable.
+// Opening a different zine on the desk. Every game can be opened, including one that isn't
+// written yet: its blank kraft cover goes on the left leaf and the right one says so in
+// words. Nothing launches from here, so a shell can be read about without being playable.
 function selectBonusGame(id) {
   const g = BONUS_GAMES.find((x) => x.id === id);
   if (!g) return;
   bonusPick = id;
   renderBonusPage();
-  const disc = $("bonusBody").querySelector(".bonus-platter-disc");
-  if (disc) { disc.classList.remove("drop"); void disc.offsetWidth; disc.classList.add("drop"); }
+  const open = $("bonusBody").querySelector(".zine-open");
+  if (open) { open.classList.remove("drop"); void open.offsetWidth; open.classList.add("drop"); }
 }
 
 // `lensId` is the Ruthless mode's section lens, and null for every shelf game including the
@@ -7034,7 +7002,7 @@ function startBonusGame(g, lensId = null) {
   bonusRecentFakes = [];
   bonusRecentSongs = [];
   bonusLog = [];
-  bonusSleeveRun = null;
+  bonusBackRun = null;
   redactWorth = 0;
   redactPeeled = 0;
   onlyPlayed = null;
@@ -7076,7 +7044,7 @@ function startBonusGame(g, lensId = null) {
   const lens = lensId ? ruthlessLens(lensId) : null;
   const title = lens ? `Ruthless Game · ${lens.label}` : g.name;
   screens.bonusplay.dataset.bonusGame = lens ? "ruthless" : g.id;
-  $("bonusPlayTitle").innerHTML = `${bonusDisc(g, "bonus-disc-sm", true)}<span>${escapeHtml(title)}</span>`;
+  $("bonusPlayTitle").innerHTML = `${bonusCover(g, "bonus-cover-sm")}<span>${escapeHtml(title)}</span>`;
   nextBonusRound({ entering: true });
 }
 
@@ -7567,7 +7535,7 @@ function ruthlessFreeze() {
 
 /* Walking away from a page. The penalty is banked BEFORE the page is frozen, so it lands in the
    one number the run carries. Deliberately not a fail state in the run's terms — the page is
-   over and paid for, and the sleeve marks it with a cross so a given-up page can never pass for
+   over and paid for, and the back cover marks it with a cross so a given-up page never passes for
    a named one (which is also what stops it counting toward a clean sweep). */
 function giveUpRuthless() {
   if (bonusLocked || !bonusTimed(bonusGame)) return;
@@ -7799,7 +7767,7 @@ function judgeChain(i) {
   else armChainBeat(on, CHAIN_BEAT_MS);
 }
 
-// A page is CLEARED at the full six, which is the verse whole — that is what the sleeve's tick
+// A page is CLEARED at the full six, which is the verse whole — that is what the back cover's tick
 // and the clean-sweep stamp mean here, as everywhere else on the shelf. The picks still pay
 // either way: two lines heard out of four is half a page's knowledge and should read as it.
 function settleChain() {
@@ -8208,7 +8176,7 @@ function settleBonusRound(correct, detail, isTimeout = false) {
   // The run's track listing, written up on the end card. Each game notes the one thing worth
   // remembering about its page: the impostor you were hunting, the word that was missing, or
   // (Name That Song, where the song IS the answer) which record it came off.
-  // `album` and `words` are the Ruthless MODE's alone — the sleeve prints neither. They ride
+  // `album` and `words` are the Ruthless MODE's alone — the back cover prints neither. They ride
   // here rather than in a second log because the mode's results page needs exactly this list
   // with two more columns on it: the album to tint the page's bead, and how many words were on
   // the page when it was named.
@@ -8227,7 +8195,7 @@ function settleBonusRound(correct, detail, isTimeout = false) {
     note: bonusGame.id === "spot-the-slip" ? bonusPuzzle.fakeWord
         : bonusGame.id === "sing-it-back" ? bonusPuzzle.answer
         // Redacted's pages are worth different amounts, and that number is the only thing the
-        // sleeve can't already work out — so it takes the note column outright.
+        // back cover can't already work out — so it takes the note column outright.
         : bonusGame.id === "redacted" ? `${gained} pts`
         // Every other game notes the answer it was hiding; this one never hid an answer, so
         // the useful keepsake is how the page went.
@@ -8240,7 +8208,7 @@ function settleBonusRound(correct, detail, isTimeout = false) {
         : bonusGame.id === "only-here" ? (onlyPlayed ? `${gained} · ${onlyPlayed.word.toLowerCase()}`
                                                      : bonusPuzzle.hand[bonusPuzzle.optimal[0]].word.toLowerCase())
         // The time alone. The word count is the more interesting number and it was tried here
-        // first, but the note column runs out around six characters on a two-up sleeve and
+        // first, but the note column runs out around six characters on a two-up listing and
         // "1:23 · 62w" came back as "1:23 · …" — so the column keeps the one that adds up to
         // the score, and the verdict line is where a page's word count gets said in full.
         : isRuthlessRun() ? fmtTime(gained)
@@ -8280,10 +8248,10 @@ function settleBonusRound(correct, detail, isTimeout = false) {
   const last = bonusRound >= BONUS_ROUNDS;
   const auto = settings.autoAdvance;
   const advanceUI = auto
-    ? `<div class="countdown">${last ? "the sleeve" : "next page"} in ` +
+    ? `<div class="countdown">${last ? "the back cover" : "next page"} in ` +
         `<b id="bonusCd">${settings.countdownSecs}</b></div>` +
       `<button type="button" id="bonusSkipBtn" class="countdown-skip">skip →</button>`
-    : `<button type="button" id="bonusNextBtn" class="btn-ghost">${last ? "the sleeve" : "next page"} →</button>`;
+    : `<button type="button" id="bonusNextBtn" class="btn-ghost">${last ? "the back cover" : "next page"} →</button>`;
   resetLyricReveals();
   const fb = $("bonusFeedback");
   fb.className = "bg-feedback show " + (correct ? "ok" : "no");
@@ -8362,7 +8330,7 @@ function advanceFromBonusFeedback() {
 const BG_TICK = `<svg viewBox="0 0 16 16" class="bg-mark-svg" aria-hidden="true"><path d="M3 8.6 L6.4 12 L13 4.6" fill="none" stroke="#c7951f" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
 const BG_CROSS = `<svg viewBox="0 0 16 16" class="bg-mark-svg" aria-hidden="true"><path d="M4 4 L12 12 M12 4 L4 12" fill="none" stroke="#b23a3f" stroke-width="2" stroke-linecap="round"/></svg>`;
 
-/* The mark on the sleeve's copy button: a second sheet slipped out from behind the first,
+/* The mark on the back cover's copy button: a second sheet slipped out from behind the first,
    ruled with the two lines every card on this desk is written on, and the gold tick the run
    already uses for a page it got right. Both glyphs ship in the button and the state on the
    element decides which one shows, so a landed copy needs no relayout and no second render. */
@@ -8385,14 +8353,14 @@ const KEEPSAKE_COPY_MARK =
 // ten songs off untouched verses) and the perfect run it CAN have is a run with no misses.
 function bonusRemark(score, max, clean) {
   if (bonusTimed(bonusGame)) return ruthlessRemark(score, clean);
-  if (clean) return "a perfect pressing";
+  if (clean) return "not a page out of place";
   const r = max ? score / max : 0;
-  if (r >= 0.9) return "one crackle, no more";
-  if (r >= 0.7) return "a clean side";
-  if (r >= 0.5) return "half the record";
-  if (r >= 0.3) return "a rough cut";
-  if (score > 0) return "mostly static";
-  return "a blank tape";
+  if (r >= 0.9) return "one smudge, no more";
+  if (r >= 0.7) return "a clean copy";
+  if (r >= 0.5) return "half the book";
+  if (r >= 0.3) return "a rough cut and paste";
+  if (score > 0) return "mostly margins";
+  return "a blank page";
 }
 
 /* The same remark in the shelf's voice, read off a time instead of a proportion — a run scored
@@ -8406,7 +8374,7 @@ function ruthlessRemark(secs, clean) {
   if (avg <= 25) return "off the first verse, mostly";
   if (avg <= 40) return "a chorus a song";
   if (avg <= 60) return "you heard them out";
-  return "the record played you";
+  return "the song outlasted you";
 }
 
 /* ---------- The shelf's charms ----------
@@ -8491,7 +8459,7 @@ function endBonusRun() {
   /* A LENS run is the Ruthless mode and leaves here before a single line of the shelf's ending
      runs — most of all before recordBonusRun, which would bank a mode run on the retired card's
      shelf board. The lens-less run below it is the dev-only whole-song game, and that one still
-     ends on its sleeve. */
+     ends on its back cover. */
   if (ruthlessLensId) { endRuthlessRun(); return; }
   const timed = bonusTimed(bonusGame);
   // A clean sweep is ten pages cleared, which on a right/wrong game is the same thing as a
@@ -8516,12 +8484,12 @@ function endBonusRun() {
   $("bonusFeedback").className = "bg-feedback";
 
   const max = bonusMaxScore(bonusGame);
-  // The run written up on the back of its own sleeve: the pressing, the score in pen, and the
+  // The run written up on the back of its own zine: the cover, the score in pen, and the
   // ten tracks listed out with what each one turned on. A bonus run has no bracelet and no
   // stats to show for itself by design, so the track listing is the keepsake — and it doubles
   // as the only place the missed answers are all readable at once.
   // The chain line is Then What's alone, and the score sub is the "/60" a timed run doesn't
-  // have — both are pulled out here because the sleeve and its PNG have to agree exactly.
+  // have — both are pulled out here because the page and its PNG have to agree exactly.
   /* The second line under the remark, and the two games that have one can never collide: Then
      What is a points game and so never sweeps, and a sweep line only exists on a run that swept.
      The stamp above it already says CLEAN SWEEP, so this line says what the sweep cost rather
@@ -8538,7 +8506,7 @@ function endBonusRun() {
   const sweepFoot = rec.sweep ? ` · swept ${fmtTime(rec.sweep)}` : "";
   const foot = timed ? `best ${fmtTime(rec.best)} · played ${rec.plays}`
                      : `best ${Math.min(rec.best, max)} / ${max}${sweepFoot} · played ${rec.plays}`;
-  bonusSleeveRun = {
+  bonusBackRun = {
     game: bonusGame,
     remark: bonusRemark(bonusScore, max, perfect),
     aside, stamp: stampText, foot,
@@ -8558,32 +8526,32 @@ function endBonusRun() {
 
   $("bonusPlayBody").innerHTML =
     `<div class="bg-end">` +
-      `<div class="bg-sleeve" style="--bg-tint:${escapeHtml(bonusGame.tint)}">` +
-        `<div class="bg-sleeve-head">` +
-          `<div class="bg-end-disc">${bonusDisc(bonusGame)}</div>` +
-          `<div class="bg-sleeve-titles">` +
-            `<div class="bg-sleeve-kicker">${escapeHtml(bonusGame.kicker)}</div>` +
-            `<h3 class="bg-sleeve-name">${escapeHtml(bonusGame.name)}</h3>` +
-            `<div class="bg-sleeve-remark">${escapeHtml(bonusSleeveRun.remark)}</div>` +
+      `<div class="bg-back" style="--bg-tint:${escapeHtml(bonusGame.tint)}">` +
+        `<div class="bg-back-head">` +
+          `<div class="bg-back-cover">${bonusCover(bonusGame)}</div>` +
+          `<div class="bg-back-titles">` +
+            `<div class="bg-back-kicker">${escapeHtml(bonusGame.kicker)}</div>` +
+            `<h3 class="bg-back-name">${escapeHtml(bonusGame.name)}</h3>` +
+            `<div class="bg-back-remark">${escapeHtml(bonusBackRun.remark)}</div>` +
             // Then What's other number. It costs nothing and is scored by nothing, but it is
             // the one thing about a run that a total out of sixty can't say.
-            (aside ? `<div class="bg-sleeve-chain">${escapeHtml(aside)}</div>` : "") +
+            (aside ? `<div class="bg-back-chain">${escapeHtml(aside)}</div>` : "") +
           `</div>` +
           // A time stands alone: there is no total for a run of seconds to be out of, and the
           // number is the whole of what the run was.
-          `<div class="bg-sleeve-score">${escapeHtml(bonusSleeveRun.score)}` +
-            (bonusSleeveRun.scoreSub ? `<span>${escapeHtml(bonusSleeveRun.scoreSub)}</span>` : "") + `</div>` +
+          `<div class="bg-back-score">${escapeHtml(bonusBackRun.score)}` +
+            (bonusBackRun.scoreSub ? `<span>${escapeHtml(bonusBackRun.scoreSub)}</span>` : "") + `</div>` +
           (stampText ? `<i class="bg-stamp">${escapeHtml(stampText)}</i>` : "") +
         `</div>` +
-        `<div class="bg-sleeve-label">the run, track by track</div>` +
+        `<div class="bg-back-label">the run, page by page</div>` +
         `<ol class="bg-tracks">${tracks}</ol>` +
         // The run's only souvenir, taken off the page the way the bracelet is: click to copy
-        // the sleeve, shift-click to save it. It rides at the end of the sleeve's own small
-        // print rather than under the card, because what it copies is the card it sits in.
-        `<div class="bg-sleeve-foot"><span>${escapeHtml(foot)}</span>` +
-          `<button type="button" id="saveSleeveBtn" class="bg-sleeve-copy"` +
-          ` data-tip="Copy sleeve to clipboard (shift-click to download)">${KEEPSAKE_COPY_MARK}` +
-          `<span class="sr-only">Copy sleeve</span></button>` +
+        // the back cover, shift-click to save it. It rides at the end of the card's own
+        // small print rather than under it, because what it copies is the card it sits in.
+        `<div class="bg-back-foot"><span>${escapeHtml(foot)}</span>` +
+          `<button type="button" id="saveBackBtn" class="bg-back-copy"` +
+          ` data-tip="Copy the back cover to the clipboard (shift-click to download)">${KEEPSAKE_COPY_MARK}` +
+          `<span class="sr-only">Copy the back cover</span></button>` +
         `</div>` +
       `</div>` +
       `<div class="bg-end-actions">` +
@@ -8593,11 +8561,11 @@ function endBonusRun() {
     `</div>`;
   $("bonusAgainBtn").addEventListener("click", () => startBonusGame(bonusGame));
   $("bonusShelfBtn").addEventListener("click", () => leaveBonusGame());
-  $("saveSleeveBtn").addEventListener("click", saveSleevePNG);
+  $("saveBackBtn").addEventListener("click", saveBackPNG);
 }
 
 /* ---------- Ruthless mode: the ending ----------
-   The mode's own results path, taken instead of the sleeve, and the whole reason the lens run
+   The mode's own results path, taken instead of the back cover, and the whole reason the lens run
    is a gameType rather than a card. It writes the lens's best time, a history row and skill XP,
    and it strings a bracelet — which is the point of the promotion: the most fun thing here used
    to leave one number behind on a shelf board nothing else could see.
@@ -8752,7 +8720,7 @@ function endRuthlessRun() {
   $("replayRuthless").addEventListener("click", () => startRuthlessMode(lensId));
 
   // The finished run, written down for the bracelet keepsake, which is pressed long after
-  // `bonusGame` and `bonusScore` have been cleared — the sleeve's snapshot for the same reason.
+  // `bonusGame` and `bonusScore` have been cleared — the back cover's snapshot, for that reason.
   ruthlessCard = { lens: lens ? lens.label : "", secs, named, pages: pages.length };
   bonusGame = null;
   bonusPuzzle = null;
@@ -11469,27 +11437,15 @@ function buildCardMeta() {
   };
 }
 
-/* An exported SVG is rasterised through an <img>, in an isolated document that cannot see
-   index.html's #bd-* sprite — so every piece the disc points at has to travel WITH it. This
-   walks the disc markup's own hrefs and lifts those defs out of the live page, which means a
-   new mark added to the sprite is carried by the keepsake without anyone remembering to. */
-function discSpriteDefs(markup) {
-  const ids = new Set();
-  String(markup).replace(/href="#([\w-]+)"/g, (m, id) => (ids.add(id), m));
-  let out = "";
-  ids.forEach((id) => { const el = document.getElementById(id); if (el) out += el.outerHTML; });
-  return out;
-}
-
-/* The bonus sleeve's keepsake. Almost all of it was written down when the run ended (see
-   bonusSleeveRun); what's added here is what belongs to the moment the button is pressed —
-   the disc and its sprite pieces, the clock, the era's colours, and the player's signature. */
-function buildSleeveMeta() {
-  const r = bonusSleeveRun;
+/* The bonus back cover's keepsake. Almost all of it was written down when the run ended
+   (see bonusBackRun); what's added here belongs to the moment the button is pressed — the
+   zine's cover, the clock, the era's colours, and the player's signature. */
+function buildBackMeta() {
+  const r = bonusBackRun;
   const dateKey = window.__devDate || todayKey();
   const dateLabel = new Date(dateKey + "T00:00:00").toLocaleDateString("en-US",
     { month: "long", day: "numeric", year: "numeric" });
-  const disc = bonusDisc(r.game);
+  const cover = bonusCover(r.game);
   return {
     eyebrow: "Swift to the Song Association · bonus games",
     name: r.game.name,
@@ -11502,8 +11458,7 @@ function buildSleeveMeta() {
     stamp: r.stamp,
     foot: r.foot,
     tracks: r.tracks.map((t) => ({ n: t.n, ok: t.ok, title: censor(t.title), note: t.note || "" })),
-    disc,
-    discDefs: discSpriteDefs(disc),
+    cover,
     signature: (settings.playerName || "").trim(),
     footer: dateLabel + " · " + fmtClock(new Date()) + " · swiftassociation.com",
     filename: "swift-" + r.game.id + "-" + dateKey + ".png",
@@ -11514,8 +11469,8 @@ function buildSleeveMeta() {
 
 /* ---------- Taking a keepsake off the page ----------
    One handler behind every "save this" button on the site (the results bracelet, the bonus
-   shelf's sleeve). The bracelet has explicit Copy and Download controls; the older sleeve
-   mark also keeps its shift/command shortcut. If the browser cannot write images to the
+   shelf's back cover). The bracelet has explicit Copy and Download controls; the older
+   compact mark also keeps its shift/command shortcut. If the browser cannot write images to the
    clipboard, the copy path falls back to a download. Guards against a double-click while
    rasterising.
    The meta is built LATE (inside the handler) rather than passed in, so a button that has
@@ -11591,21 +11546,21 @@ function saveBraceletPNG(e, intent = "copy") {
   });
 }
 
-// Wired to the bonus sleeve's button. `onKept` is the SLEEVE's own charm and deliberately not
-// the bracelet's: keeping a sleeve must never hand out Make The Friendship Bracelets, which is the
+// Wired to the bonus back cover's button. `onKept` is the BACK COVER's own charm and
+// deliberately not the bracelet's: keeping one must never hand out the charm that is the
 // keepsake charm of a main run and would put a bonus run's takings beside it. The two are
 // separate keepsakes and stay separately earned. (This handler was empty for exactly that
 // reason before One Last Souvenir existed — the emptiness was the sandbox, not an oversight,
 // and naming a second charm here is what replaces it rather than a loosening of it.)
-function saveSleevePNG(e) {
-  if (!bonusSleeveRun) return;
+function saveBackPNG(e) {
+  if (!bonusBackRun) return;
   return saveKeepsakePNG(e, {
-    btn: $("saveSleeveBtn"),
-    meta: buildSleeveMeta,
-    copy: copySleeveCard,
-    download: exportSleeveCard,
-    noun: "sleeve",
-    onKept: () => unlock("keep-bonus-sleeve"),
+    btn: $("saveBackBtn"),
+    meta: buildBackMeta,
+    copy: copyBackCard,
+    download: exportBackCard,
+    noun: "back cover",
+    onKept: () => unlock("keep-bonus-back-cover"),
   });
 }
 
@@ -26433,11 +26388,11 @@ function buildDevApi() {
     bonus: {
       list: () => BONUS_GAMES.map((g) => ({ id: g.id, name: g.name, ready: g.ready, ...bonusRecord(g.id) })),
       // The shelf's one-line descriptions. They came off the page when the shelf became a
-      // rack of pressings and are now each tile's ACCESSIBLE name, which is a place a wrong
-      // one is even easier to miss than a clipped sentence was. This reads back exactly what
-      // a screen reader would say for every tile, so run it after writing a new game's line.
+      // row of covers and are now each tile's ACCESSIBLE name, which is a place a wrong one
+      // is even easier to miss than a clipped sentence was. This reads back exactly what a
+      // screen reader would say for every tile, so run it after writing a new game's line.
       lines: () => BONUS_GAMES.map((g) => {
-        const el = document.querySelector(`.bonus-tile[data-id="${g.id}"]`);
+        const el = document.querySelector(`.zine-tile[data-id="${g.id}"]`);
         return { id: g.id, line: g.line, fallback: !g.line,
                  spoken: el ? el.getAttribute("aria-label") : "not on the shelf right now" };
       }),
@@ -26517,7 +26472,7 @@ function buildDevApi() {
          while a run is in progress by design, so there is nothing on screen to check it against
          either. `clock()` reads where the run stands, `sweep(n)` moves the run's own baseline so
          the next sweep lands on a chosen time (pair it with `fill(10)`, which is a clean sweep),
-         and `seedSweep` writes a time onto the board for eyeballing the shelf and the sleeve
+         and `seedSweep` writes a time onto the board for eyeballing the shelf and the card
          without a run at all. */
       clock: () => {
         if (!bonusGame) return "no run in progress";
@@ -26636,23 +26591,23 @@ function buildDevApi() {
         settleBonusRound(!!ok, detail, !!timeout);
         return `${bonusGame.id}: ${ok ? "correct" : timeout ? "timed out" : "missed"}`;
       },
-      // Eyeball the pressings as a family: every disc at platter size and at the two small
-      // sizes it has to survive, plus its test-pressing twin, pinned above the rack. The
-      // marks are the whole risk here — they're drawn at one scale and used at three.
-      // The small rows are drawn CROPPED, which is what those sizes really ship: an
-      // uncropped 36px disc is a board lying about the thing it exists to check.
-      discs: () => {
+      /* Eyeball the covers as a family: every one at the three sizes it really ships at
+         (open on the desk, closed on the shelf, and the thumbnail beside the play screen's
+         title), plus the blank kraft an unwritten game gets. The thumbnail row is the one
+         that matters — a collage that reads beautifully at 200px and turns to mud at 24 is
+         a cover that has failed at the only size it has to survive. */
+      covers: () => {
         if (!$("bonusBody")) return "open the shelf first";
         renderBonusPage();
-        const row = (px, crop) => BONUS_GAMES.map((g) =>
-          `<span style="display:inline-block;width:${px}px">${bonusDisc(g, "", crop)}</span>` +
-          `<span style="display:inline-block;width:${px}px">${bonusDisc({ ...g, ready: false }, "", crop)}</span>`).join("");
+        const row = (px) => [...BONUS_GAMES, RUTHLESS_GAME].map((g) =>
+          `<span style="display:inline-block;width:${px}px">${bonusCover(g)}</span>`).join("") +
+          `<span style="display:inline-block;width:${px}px">${bonusCover({ id: "not-yet", name: "Something New", ready: false })}</span>`;
         const strip = document.createElement("div");
         strip.style.cssText = "display:flex;flex-direction:column;gap:14px;margin-bottom:22px";
-        strip.innerHTML = [[160, false], [60, true], [22, true]].map(([px, crop]) =>
-          `<div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">${row(px, crop)}</div>`).join("");
+        strip.innerHTML = [200, 96, 24].map((px) =>
+          `<div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap">${row(px)}</div>`).join("");
         $("bonusBody").prepend(strip);
-        return BONUS_GAMES.map((g) => `${g.id}: ${g.tint} ${g.mark}`);
+        return [...BONUS_GAMES, RUTHLESS_GAME].map((g) => `${g.id}: ${hasCover(g.id) ? "drawn" : "NO COVER — blank kraft"}`);
       },
       /* Then What. The ramp is the whole design and NONE of it is visible on screen — three
          lines look the same whether they came from another album or from this very song — so
@@ -26720,18 +26675,18 @@ function buildDevApi() {
                  fallbackRate: picks ? `${((fell / picks) * 100).toFixed(1)}%` : "n/a" };
       },
       end: () => endBonusRun(),
-      // The sleeve-as-PNG keepsake, mirroring __dev.card for the bracelet. Needs a finished
+      // The back-cover-as-PNG keepsake, mirroring __dev.card for the bracelet. Needs a finished
       // run on screen — `fill()` below is the fastest way to one. `open()` is the one to
       // reach for: it eyeballs the layout (and the ten titles' truncation, which is where
       // this card breaks) without a download or a clipboard round trip.
-      sleeve: {
-        meta: () => (bonusSleeveRun ? buildSleeveMeta() : "no finished run on screen"),
-        copy: () => copySleeveCard(buildSleeveMeta()),
-        save: () => exportSleeveCard(buildSleeveMeta()),
-        svg: async () => buildSleeveSVG(buildSleeveMeta(), await fontFaceCss()),
+      back: {
+        meta: () => (bonusBackRun ? buildBackMeta() : "no finished run on screen"),
+        copy: () => copyBackCard(buildBackMeta()),
+        save: () => exportBackCard(buildBackMeta()),
+        svg: async () => buildBackSVG(buildBackMeta(), await fontFaceCss()),
         open: async () => {
-          if (!bonusSleeveRun) return "no finished run on screen";
-          const svg = buildSleeveSVG(buildSleeveMeta(), await fontFaceCss());
+          if (!bonusBackRun) return "no finished run on screen";
+          const svg = buildBackSVG(buildBackMeta(), await fontFaceCss());
           const url = URL.createObjectURL(new Blob([svg], { type: "image/svg+xml" }));
           window.open(url, "_blank");
           setTimeout(() => URL.revokeObjectURL(url), 8000);
@@ -26739,7 +26694,7 @@ function buildDevApi() {
         },
       },
       // Fabricate a finished run — real puzzles, `wins` of them ticked — and go straight to the
-      // sleeve. The end card's track listing is the one surface that needs ten SETTLED rounds
+      // back cover. Its listing is the one surface that needs ten SETTLED rounds
       // to look at, and playing ten out honestly to check a layout is a waste of an afternoon.
       fill: (wins = 7) => {
         if (!bonusGame) return "start a bonus game first";
@@ -26758,7 +26713,7 @@ function buildDevApi() {
           // cleared one lands anywhere on the ladder rather than at the top of it.
           const pts = bonusGame.id === "only-here" ? (ok ? 1 + (n % 5) : 0)
             // A missed Then What page still banked whatever picks it made, which is the
-            // column the sleeve has to show off.
+            // column the listing has to show off.
             : bonusGame.id === "then-what" ? (ok ? CHAIN_PAGE : n % CHAIN_PAGE)
             : ok ? Math.max(REDACT_MIN_POINTS, bonusPagePoints(bonusGame) - (n % 6)) : 0;
           bonusLog.push({
@@ -26859,8 +26814,8 @@ function buildDevApi() {
         for (let i = 0; i < n; i++) if (buildRuthlessPuzzle(songs, Math.random, 120, null, lens)) ok++;
         return { lens: lensId || "whole song", tried: n, built: ok, rate: `${((ok / n) * 100).toFixed(1)}%` };
       },
-      /* Fabricate a finished run and go straight to the results, the sleeve's `fill` for the
-         mode that no longer ends on a sleeve. Ten honest pages is four minutes of metronome, and
+      /* Fabricate a finished run and go straight to the results, the shelf's `fill` for the
+         mode that no longer ends on a back cover. Ten honest pages is four minutes of metronome, and
          the surfaces that need ten SETTLED pages — the strand's tints and stopwatches, the page
          listing, the best-time copy — are the ones you want to look at twenty times in a row.
          `named` is how many were named and `snaps` how many of those were named on sight, so

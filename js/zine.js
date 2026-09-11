@@ -1,0 +1,336 @@
+/* ---------- The bonus shelf's zine covers ----------
+   Every game on the shelf is a little hand-bound booklet, and its cover is a collage of
+   torn coloured paper. This module draws them. It is pure: nothing in here reads app
+   state, and the only thing it is ever handed is a roster entry.
+
+   Why torn paper rather than another set of marks. The shelf used to be a rack of record
+   pressings, where a game's whole identity was one colour and one small drawn mark in the
+   middle of a label — six objects with the same silhouette, told apart by a glyph the size
+   of a fingernail. A cover has no shared silhouette to fight: it is a picture, so the eye
+   recognises Only Here's contour map and Redacted's blacked-out page from across the page,
+   at any size, without reading anything. That is the whole point of the change, and it is
+   why the covers are allowed to be completely unlike one another. Do NOT normalise them
+   into a family later: their only shared furniture is the torn title label, and even that
+   sits where each composition wants it.
+
+   Three rules the drawing obeys:
+
+   - FLAT COLOUR ONLY. No gradients, no blurs, no filters. Paper is flat, and the notebook's
+     art is ink on paper (never shaded objects). Depth comes from one hard-edged shadow copy
+     of each layer, offset a unit and a half — which is exactly what a stack of cut paper
+     does under a lamp, and it survives being rasterised into a keepsake PNG where a filter
+     would not.
+   - EVERY EDGE IS UNEVEN AND NO TWO ARE THE SAME. `torn()` walks a shape's outline and
+     kicks every few units of it sideways by a seeded random amount, so a cover's sixth
+     layer does not trace its fifth and a pair of ridges is never a mirror. The composition
+     is hand-authored; only the raggedness is generated, which is the one part no hand would
+     get right a hundred times over.
+   - NO <use>, NO SPRITE, NO CSS COLOUR FUNCTIONS. A cover has to survive being lifted into
+     the keepsake card's rasteriser, which renders in an isolated document that can see
+     neither index.html's defs nor the page's custom properties. Everything a cover needs is
+     inside its own <svg>, and every colour is a literal. Fonts are named literally too
+     ("Caveat"), because that is the family the card embeds. */
+
+/* ---------- the torn-paper workshop ---------- */
+
+// Deterministic noise, so a cover is the same cover every time it is drawn — a shelf whose
+// edges reshuffle on every render is a shelf that looks like it is buffering.
+function rng(seed) {
+  let s = (seed >>> 0) || 0x9e3779b9;
+  return () => {
+    s ^= s << 13; s >>>= 0;
+    s ^= s >> 17;
+    s ^= s << 5;  s >>>= 0;
+    return s / 4294967296;
+  };
+}
+
+/* Roughen a closed polygon into a torn edge. Each side is walked in steps of about
+   `step` units and every step lands off the true line by up to `amp`, perpendicular to
+   it — the fibre-and-fluff of a sheet pulled apart rather than cut.
+   The amplitude is deliberately small (about one unit on a 120-wide cover): paper tears
+   raggedly at the scale of its fibres, and a big amplitude reads as a badly drawn shape
+   instead of a torn one. */
+function torn(pts, rand, amp = 1.1, step = 5.5) {
+  const out = [];
+  for (let i = 0; i < pts.length; i++) {
+    const [x1, y1] = pts[i];
+    const [x2, y2] = pts[(i + 1) % pts.length];
+    const dx = x2 - x1, dy = y2 - y1;
+    const len = Math.hypot(dx, dy) || 1;
+    const nx = -dy / len, ny = dx / len;
+    const n = Math.max(1, Math.round(len / step));
+    for (let k = 0; k < n; k++) {
+      const t = k / n;
+      const j = (rand() * 2 - 1) * amp;
+      out.push([x1 + dx * t + nx * j, y1 + dy * t + ny * j]);
+    }
+  }
+  return out;
+}
+
+function pathOf(pts) {
+  return "M" + pts.map(([x, y]) => `${x.toFixed(1)} ${y.toFixed(1)}`).join("L") + "Z";
+}
+
+/* A circle as a polygon, so `torn` can chew it like any other outline. `wob` pulls each
+   sample's radius about a little before the tearing does its own work, which is what keeps
+   a stack of concentric discs from reading as machine-drawn rings. */
+function circlePts(cx, cy, r, rand, n = 30, wob = 0) {
+  const pts = [];
+  for (let i = 0; i < n; i++) {
+    const a = (i / n) * Math.PI * 2;
+    const rr = r + (wob ? (rand() * 2 - 1) * wob : 0);
+    pts.push([cx + Math.cos(a) * rr, cy + Math.sin(a) * rr]);
+  }
+  return pts;
+}
+
+// A rounded rectangle as a polygon, for the tunnel of frames Sing It Back falls down.
+function roundRectPts(x, y, w, h, r, per = 4) {
+  const pts = [];
+  const corner = (cx, cy, from) => {
+    for (let i = 0; i <= per; i++) {
+      const a = from + (i / per) * (Math.PI / 2);
+      pts.push([cx + Math.cos(a) * r, cy + Math.sin(a) * r]);
+    }
+  };
+  corner(x + w - r, y + h - r, 0);
+  corner(x + r, y + h - r, Math.PI / 2);
+  corner(x + r, y + r, Math.PI);
+  corner(x + w - r, y + r, -Math.PI / 2);
+  return pts;
+}
+
+/* One layer of paper: its shadow, then the sheet. The shadow is a translated copy in flat
+   near-black at low alpha, laid down FIRST so it only shows where the sheet does not cover
+   it — along the bottom and right edges, which is where a raised sheet throws one. */
+function sheet(pts, fill, rand, o = {}) {
+  const amp = o.amp == null ? 1.1 : o.amp;
+  const step = o.step == null ? 5.5 : o.step;
+  const d = pathOf(o.crisp ? pts : torn(pts, rand, amp, step));
+  const shade = o.shadow === false ? ""
+    : `<path d="${d}" fill="rgba(26,18,12,0.22)" transform="translate(${o.sx == null ? 1.2 : o.sx} ${o.sy == null ? 1.8 : o.sy})"/>`;
+  return shade + `<path d="${d}" fill="${fill}"/>`;
+}
+
+// A stack of concentric shapes, back to front, each one a sheet in its own colour. The
+// workhorse behind three of the seven covers and the reason they took a paragraph each
+// rather than a screen of coordinates.
+function stack(colours, shapeAt, rand, o = {}) {
+  return colours.map((c, i) => sheet(shapeAt(i), c, rand, o)).join("");
+}
+
+/* ---------- the covers ----------
+   Each one is a function of a seeded random source, returning the collage as markup in a
+   120 x 160 field. They are authored, not generated: the shapes below are a composition
+   someone chose, and only the edges are random. The whole field is clipped to the cover's
+   own rectangle by the caller, so a shape is free to run off the paper and be trimmed
+   clean at the fold — which is how the sun sits half off the page on Ruthless without
+   anyone drawing a semicircle. */
+
+const COVERS = {
+  /* SPOT THE SLIP — the line that throws. A slate page of ruled taupe strips with one
+     vermillion impostor kicked out of line, longer than the rest and running off the edge.
+     The idea is legible at thumbnail size with no reading at all: five things agree and
+     one does not. */
+  "spot-the-slip": (r) => {
+    let s = sheet([[-6, 18], [126, 14], [126, 132], [-6, 136]], "#2f4858", r, { amp: 1.4 });
+    const rows = [30, 46, 62, 86, 102, 118];
+    rows.forEach((y, i) => {
+      if (i === 3) return;
+      const w = [74, 88, 62, 0, 80, 68][i];
+      s += sheet([[14, y], [14 + w, y - 1], [14 + w, y + 8], [14, y + 9]], "#cfc3ab", r, { amp: 0.8, step: 4 });
+    });
+    // the slip: wider, hotter, tilted, and sticking out past the page it was pasted on
+    s += sheet([[8, 88], [118, 80], [120, 93], [10, 101]], "#e0553c", r, { amp: 1.3, sy: 2.4, sx: 1.6 });
+    return s;
+  },
+
+  /* NAME THAT SONG — sound coming out of nowhere. Concentric torn bands radiating from a
+     cream disc low on the left, on a midnight ground: a line arrives and you have to say
+     where it came from. Drawn as filled discs stacked smallest-last rather than as rings,
+     because a torn ring needs two ragged edges that must not touch and a stack of discs
+     needs none. */
+  "name-that-song": (r) => {
+    const cx = 22, cy = 128;
+    const bands = ["#1f3f6b", "#2f5d8c", "#4a86b8", "#7fb2cf", "#bcd8e2"];
+    let s = stack(bands, (i) => circlePts(cx, cy, 128 - i * 22, r, 40, 1.6), r, { amp: 1.4, step: 7 });
+    s += sheet(circlePts(cx, cy, 15, r, 26, 0.9), "#f4ead6", r, { amp: 0.9, step: 4 });
+    return s;
+  },
+
+  /* SING IT BACK — the gap. Rounded frames of plum falling away into a hole, and the hole
+     is the bone of the cover paper itself showing through the whole stack. The one word
+     lifted out of a line, drawn as a place where there is nothing. */
+  "sing-it-back": (r) => {
+    const frames = ["#57203f", "#73304f", "#8d4064", "#a95179", "#c47394", "#dba4b8"];
+    let s = stack(frames, (i) => {
+      const inset = 4 + i * 8.5;
+      return roundRectPts(inset, inset + 8, 120 - inset * 2, 144 - inset * 2, Math.max(3, 16 - i * 2));
+    }, r, { amp: 1.0, step: 6 });
+    // the gap itself: not a colour, the page under everything
+    s += sheet(roundRectPts(51, 63, 18, 34, 5), "#efe3cd", r, { amp: 0.8, step: 4, sx: -1, sy: -1.4 });
+    return s;
+  },
+
+  /* REDACTED — a page with its telling words taped over. Manila ground, a cream sheet, thin
+     olive lines of type and three heavy blocks laid across them. One block is lifted at its
+     corner, which is the only thing on the cover that says the blocks come OFF. */
+  "redacted": (r) => {
+    let s = sheet([[10, 10], [112, 7], [114, 142], [8, 146]], "#f2e9d6", r, { amp: 1.3 });
+    const line = (y, x, w) => sheet([[x, y], [x + w, y - 0.6], [x + w, y + 4.6], [x, y + 5.2]],
+      "#6a6250", r, { amp: 0.55, step: 3.5 });
+    // a page of type, close-set, so the blocks have something to be laid ACROSS
+    [[26, 20, 58], [37, 20, 80], [48, 20, 44], [59, 20, 72],
+     [78, 20, 66], [89, 20, 82], [100, 20, 50], [111, 20, 76], [122, 20, 38]]
+      .forEach(([y, x, w]) => { s += line(y, x, w); });
+    const block = (x, y, w) => sheet([[x, y], [x + w, y - 1.2], [x + w, y + 11], [x, y + 12.2]],
+      "#191916", r, { amp: 1.0, step: 4.5, sy: 2.4, sx: 1.4 });
+    s += block(30, 22, 46) + block(46, 74, 52) + block(20, 96, 34);
+    /* the strip being taken off: the same block with its right end folded back on itself,
+       and the fold drawn in the tape's pale underside. It is the only thing on the cover
+       that says the blocks come OFF, which is the whole game. */
+    s += sheet([[52, 118], [96, 116], [96, 122], [80, 129], [52, 130]], "#191916", r, { amp: 0.9, step: 4.5, sy: 2.4 });
+    s += sheet([[80, 129], [96, 122], [99, 131], [84, 136]], "#b9b09a", r, { amp: 0.8, step: 4, sx: -1, sy: 1.4 });
+    return s;
+  },
+
+  /* ONLY HERE — the map. Torn contour islands rising out of a dark sea, with a single
+     vermillion pin at the summit: one word that lives in exactly one place. The blob is
+     drawn once and scaled about its own centre for each ring, so the island keeps a shape
+     while every contour is torn differently. */
+  "only-here": (r) => {
+    // the sea, full bleed: without it the contours float in the cover's own paper and the
+    // map reads as a stain rather than as land with water round it
+    let s = sheet([[-6, -6], [126, -6], [126, 166], [-6, 166]], "#0d3a42", r, { shadow: false, crisp: true });
+    const base = [[10, 124], [24, 96], [46, 82], [42, 60], [62, 44], [90, 50], [110, 70],
+                  [114, 100], [100, 128], [68, 142], [34, 140]];
+    const cx = 62, cy = 94;
+    const ring = (k) => base.map(([x, y]) => [cx + (x - cx) * k, cy + (y - cy) * k]);
+    const bands = ["#17585c", "#1c7371", "#2f8f83", "#59ab95", "#8fc5a8", "#c8e0c2"];
+    s += stack(bands, (i) => ring(1 - i * 0.155), r, { amp: 1.2, step: 6 });
+    // the pin: a drop of red where the contours run out
+    s += sheet(circlePts(62, 88, 8, r, 20, 0.7), "#d9432f", r, { amp: 0.7, step: 3.5 });
+    return s;
+  },
+
+  /* THEN WHAT — the path over the ridge. Layered violet ridges with a pale road climbing
+     out of the bottom of the page, over the last crest, and gone. The cover asks the
+     game's question without a word on it: you can see where the road goes until you
+     cannot. */
+  "then-what": (r) => {
+    const ridge = (y, f, drop) => sheet(
+      [[-6, y + 14], [16, y + drop], [40, y - 4], [62, y + drop * 0.6], [86, y - 8], [126, y + 6], [126, 170], [-6, 170]],
+      f, r, { amp: 1.3, step: 7 });
+    let s = ridge(52, "#3b3170", 6) + ridge(78, "#4c3f8a", -3) + ridge(104, "#6a5cb0", 8) + ridge(130, "#8878cb", 2);
+    /* The road, as stepping stones rather than a ribbon. A continuous pale strip laid over
+       four ridges reads as a river or a rip in the paper — which is exactly what it looked
+       like — where separate slabs read as something you walk. They shrink as they climb, and
+       the last two are simply NOT THERE: the line of them stops halfway up the hill with
+       nothing at the end of it, which is the question the game asks, drawn. */
+    [[60, 150, 30, 9], [61, 133, 25, 8], [63, 117, 20, 7], [64, 102, 15.5, 6], [66, 90, 11.5, 5]]
+      .forEach(([cx, y, w, h]) => {
+        s += sheet([[cx - w / 2, y], [cx + w / 2, y - 0.8], [cx + w / 2 - 1, y + h], [cx - w / 2 + 1, y + h + 0.8]],
+          "#e8dfc6", r, { amp: 0.7, step: 4, sx: 1.2, sy: 1.4 });
+      });
+    return s;
+  },
+
+  /* RUTHLESS GAME — the sun going down on you. A huge ochre sun half off the page behind
+     hot torn rays, with the ridges closing in front of it in the mode's own deep red. The
+     one cover that is about a clock without drawing one. */
+  "ruthless-game": (r) => {
+    let s = sheet(circlePts(60, 74, 46, r, 34, 1.6), "#e8a23a", r, { amp: 1.3, step: 6 });
+    const ray = (y, w) => sheet([[-6, y], [126, y - 2], [126, y + w], [-6, y + w + 2]], "#c4562f", r, { amp: 0.9, step: 5 });
+    s += ray(46, 5) + ray(64, 7) + ray(86, 6);
+    s += sheet([[-6, 96], [30, 86], [66, 100], [126, 88], [126, 170], [-6, 170]], "#7d2b34", r, { amp: 1.3, step: 7 });
+    s += sheet([[-6, 122], [44, 112], [90, 126], [126, 116], [126, 170], [-6, 170]], "#4a1620", r, { amp: 1.3, step: 7 });
+    return s;
+  },
+};
+
+/* The unwritten game's cover: a blank sheet of kraft with nothing pasted on it but the
+   title label, pencilled rather than printed. It is the test pressing's replacement and it
+   does the same job — it has to look like an object that exists and a game that does not,
+   so it is deliberately the one cover with no collage on it at all. */
+function blankCover(r) {
+  return sheet([[6, 8], [114, 5], [116, 152], [4, 155]], "#c2a878", r, { amp: 1.2 }) +
+         sheet([[16, 30], [104, 26], [106, 44], [14, 48]], "#b39868", r, { amp: 1.0, step: 5, shadow: false });
+}
+
+/* ---------- the title label ----------
+   The one piece of shared furniture: a torn strip of near-white pasted across the cover
+   with the game's name written on it. It is the cover's only text and the only reason a
+   shelf of seven pictures can be read as a shelf of seven names.
+   The size is measured off the name rather than fixed, because "Redacted" and "Name That
+   Song" are nowhere near the same width in a handwriting face and a fixed size would
+   either starve one or spill the other. Caveat runs at roughly 0.40em per character. */
+function titleLabel(name, r, box) {
+  const { x, y, w, h, rot } = box;
+  const size = Math.max(9.5, Math.min(19, (w - 11) / (0.40 * Math.max(1, name.length))));
+  const strip = sheet([[x, y], [x + w, y - 1.4], [x + w, y + h], [x, y + h + 1.4]],
+    box.fill || "#f7f1e2", r, { amp: 1.0, step: 5, sy: 2.2, sx: 1.4 });
+  return `<g transform="rotate(${rot || 0} ${x + w / 2} ${y + h / 2})">${strip}` +
+    `<text x="${x + w / 2}" y="${y + h / 2 + size * 0.34}" text-anchor="middle"` +
+    ` font-family="Caveat, cursive" font-weight="700" font-size="${size.toFixed(1)}"` +
+    ` fill="${box.ink || "#241f1a"}">${esc(name)}</text></g>`;
+}
+
+// Where each cover wants its label. Hand-placed: the label goes in the quiet part of its
+// own composition, which is a different corner on every one of them, and a shared position
+// would put it over the gap on Sing It Back or the pin on Only Here.
+const LABELS = {
+  "spot-the-slip":  { x: 12, y: 124, w: 96, h: 22, rot: -1.6 },
+  "name-that-song": { x: 14, y: 16,  w: 94, h: 24, rot: 1.8 },
+  "sing-it-back":   { x: 13, y: 116, w: 94, h: 22, rot: -2.2 },
+  "redacted":       { x: 16, y: 120, w: 92, h: 22, rot: 1.4, fill: "#e9e0cb" },
+  "only-here":      { x: 12, y: 14,  w: 96, h: 23, rot: -1.2 },
+  "then-what":      { x: 14, y: 16,  w: 92, h: 23, rot: 1.6 },
+  "ruthless-game":  { x: 12, y: 16,  w: 96, h: 23, rot: -1.8 },
+};
+const BLANK_LABEL = { x: 16, y: 28, w: 88, h: 20, rot: -1, fill: "#cdb489", ink: "rgba(52,42,30,0.68)" };
+
+function esc(s) {
+  return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+// A seed from the id, so a cover's raggedness is tied to the game rather than to where it
+// happens to sit in the roster.
+function seedOf(id) {
+  let h = 0x811c9dc5;
+  for (let i = 0; i < id.length; i++) { h ^= id.charCodeAt(i); h = Math.imul(h, 0x01000193); }
+  return h >>> 0;
+}
+
+/* The paper the collage is pasted onto. Bone unless a cover says otherwise: Redacted wants
+   a darker manila so the cream sheet on top of it reads as a separate sheet rather than as
+   a margin, which is the difference between a page and a rectangle. */
+const GROUNDS = { "redacted": "#cbb794" };
+
+let uid = 0;
+
+/* The cover as standalone markup. `extra` adds classes the way the old disc did, so the
+   shelf, the spread, the play screen and the keepsake all draw one object.
+   The clip is what makes the paper's four edges crisp while every contour inside it is
+   torn: shapes are authored over the edge of the field and cut off at the fold. Its id is
+   counted rather than derived from the game, because a shelf draws the same cover twice
+   (in the rack and open on the desk) and two nodes cannot share one. */
+export function zineCover(g, extra = "") {
+  const cls = `zine-cover${extra ? " " + extra : ""}`;
+  const r = rng(seedOf(g.id));
+  const ready = !!g.ready;
+  const art = ready ? (COVERS[g.id] || blankCover)(r) : blankCover(r);
+  const label = titleLabel(g.name, r, ready ? (LABELS[g.id] || BLANK_LABEL) : BLANK_LABEL);
+  const id = `zc${++uid}`;
+  return `<svg class="${cls}" viewBox="0 0 120 160" aria-hidden="true">` +
+    `<defs><clipPath id="${id}"><rect x="0" y="0" width="120" height="160" rx="1.5"/></clipPath></defs>` +
+    `<g clip-path="url(#${id})">` +
+      `<rect x="0" y="0" width="120" height="160" fill="${ready ? (GROUNDS[g.id] || "#efe3cd") : "#b9a074"}"/>` +
+      art + label +
+    `</g></svg>`;
+}
+
+// Is there a collage drawn for this game, or is it getting the blank kraft? The dev board
+// reads it, and so does anything that wants to know a new roster entry still needs art.
+export function hasCover(id) { return Object.prototype.hasOwnProperty.call(COVERS, id); }
