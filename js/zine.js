@@ -113,26 +113,31 @@ function roundRectPts(x, y, w, h, r, per = 4) {
 /* The pale core of a sheet of stock: its colour mixed most of the way to bone. Only hex
    fills are mixed, because a literal is the only thing a cover is allowed to carry (see the
    no-CSS-colour-functions rule) and anything else is handed back untouched. */
-function core(fill, k = 0.62) {
+function core(fill, k = 0.5) {
   const m = /^#([0-9a-f]{6})$/i.exec(String(fill).trim());
   if (!m) return null;
   const v = parseInt(m[1], 16);
+  const rgb = [16, 8, 0].map((sh) => (v >> sh) & 255);
+  /* Dark stock gets a much shorter mix. A near-black block lightened halfway lands on a grey
+     that reads as a blurred edge rather than a torn one, which is what the first pass at this
+     did to Redacted's three blacked-out strips. */
+  const lum = 0.299 * rgb[0] + 0.587 * rgb[1] + 0.114 * rgb[2];
+  const kk = lum < 70 ? k * 0.45 : k;
   const mixTo = [246, 239, 224];
-  const out = [16, 8, 0].map((sh, i) => {
-    const c = (v >> sh) & 255;
-    return Math.round(c + (mixTo[i] - c) * k);
-  });
+  const out = rgb.map((c, i) => Math.round(c + (mixTo[i] - c) * kk));
   return "#" + out.map((c) => c.toString(16).padStart(2, "0")).join("");
 }
 
 /* One layer of paper: its shadow, its torn fibre, then the sheet. The shadow is a translated
    copy in flat near-black at low alpha, laid down FIRST so it only shows where the sheet does
    not cover it — along the bottom and right edges, which is where a raised sheet throws one.
-   The fibre is a second copy in the stock's pale core, torn at twice the amplitude and half
-   again as often, so it wanders both sides of the true edge: where it wanders inward the
-   sheet covers it, and where it wanders out it shows as the fluff of a rip. It is drawn from
-   its own draws on `rand`, never the sheet's, which is what keeps it from tracing the edge it
-   is supposed to be escaping. */
+   The fibre is a second copy in the stock's pale core, torn at very nearly the sheet's own
+   amplitude but sampled twice as finely, and crucially from its OWN draws on `rand`. That is
+   the whole trick: two edges wobbling by the same amount about the same line cross each other
+   constantly, so the fibre is buried for most of its length and surfaces as short thin hairs
+   where its wobble happens to beat the sheet's. Do not raise the multiplier to make it more
+   visible. A fibre that clears the sheet everywhere stops being fluff and becomes an outline
+   stroke around every shape, which is exactly what it looked like the first time. */
 function sheet(pts, fill, rand, o = {}) {
   const amp = o.amp == null ? 1.1 : o.amp;
   const step = o.step == null ? 5.5 : o.step;
@@ -140,7 +145,7 @@ function sheet(pts, fill, rand, o = {}) {
   const shade = o.shadow === false ? ""
     : `<path d="${d}" fill="rgba(26,18,12,0.22)" transform="translate(${o.sx == null ? 1.2 : o.sx} ${o.sy == null ? 1.8 : o.sy})"/>`;
   const pale = o.crisp || o.fibre === false ? null : core(fill);
-  const fibre = pale ? `<path d="${pathOf(torn(pts, rand, amp * 1.85, step * 0.58))}" fill="${pale}"/>` : "";
+  const fibre = pale ? `<path d="${pathOf(torn(pts, rand, amp * 1.12, step * 0.5))}" fill="${pale}"/>` : "";
   return shade + fibre + `<path d="${d}" fill="${fill}"/>`;
 }
 
