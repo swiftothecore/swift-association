@@ -12,11 +12,11 @@
      at 16px is the only thing telling reputation's blob from folklore's.
    - the star, at FULL strength. It carries its own near-black outline, so it stays visible at
      any value, and it is the one element that shows the ink undiluted. That is also why it is
-     the element the perfect tier gilds: PERFECT the album and a leaf rim is laid AROUND the star,
-     which reads at 16px as the mark growing a gold edge. The rim rather than a gold fill, because
-     the star is the one place the ink is shown at full strength and gilding the fill spent it.
-     Fearless is the one ink where the gild is nearly invisible, since champagne is already a gold;
-     that is accepted, not a bug.
+     the element the perfect tier gilds: PERFECT the album and a small leaf twinkle is set BESIDE
+     the star, which reads at 16px as the mark having picked up a spark of gold. Beside it rather
+     than on or around it, because the star is the one place the ink is shown at full strength and
+     anything laid over it spends that. Fearless is the one ink where the gild barely reads, since
+     champagne is already a gold; that is accepted, not a bug.
 
    The artwork lives here and nowhere else. icons/favicon.svg is the no-JS/social fallback and is
    this same drawing with no ink; if you change a path here, reprint it with __dev.ink.favicon()
@@ -80,23 +80,26 @@ export function highlighterTint(hex) {
   return rgbToHex(rgb.map((v, j) => v + (PAPER[j] - v) * hi));
 }
 
-// The star in the corner, drawn once and stroked twice when it is gilded: a wide leaf pass first,
-// then the inked star with its own near-black outline on top of it, which leaves the leaf showing
-// as a rim outside the outline. The black line stays in both states because it is what holds the
-// mark together at 16px, and it is the reason the favicon's gild is a rim OUTSIDE an outline
-// while the masthead's is the outline itself.
+// The star in the corner, drawn exactly the same way gilded or not: the ink, with its own
+// near-black outline holding the mark together at 16px. The perfect tier adds a separate leaf
+// twinkle beside it rather than changing the star, which is the masthead's rule too. It is a
+// chunky little mark on purpose, since a thin four-armed sparkle is a smudge at 16px.
 const STAR_D = "M54.5,8.8 L55.56,11.54 L58.49,11.7 L56.21,13.56 L56.97,16.4 L54.5,14.8 L52.03,16.4 L52.79,13.56 L50.51,11.7 L53.44,11.54 Z";
 
-/* The tile. `ink` is a hex or "" for the house gold; `gild` rims the star in leaf (the perfect tier). */
+// The twinkle the perfect tier sets beside the star, in tile coordinates.
+const GILD_D = "M44.2,2.4 Q45.1,7.8 50.8,9.4 Q45.2,10.9 43.8,15.9 Q42.9,10.7 37.6,9.1 Q43.1,7.7 44.2,2.4 Z";
+
+/* The tile. `ink` is a hex or "" for the house gold; `gild` sets a leaf twinkle beside the star
+   (the perfect tier). */
 export function faviconSVG(ink, gild) {
   const blob = ink ? highlighterTint(ink) : FAVICON_BLOB;
-  // The star's body is the ink itself, undiluted, gild or no gild. The perfect tier lays the leaf
-  // AROUND it instead of over it (see the rim below), the same way round as the masthead's star,
-  // so the tab icon and the title can never disagree about what a gilded ink looks like.
+  // The star's body is the ink itself, undiluted, gild or no gild. The perfect tier sets the leaf
+  // BESIDE it rather than on it, the same way round as the masthead's star, so the tab icon and
+  // the title can never disagree about what a gilded ink looks like.
   const star = ink || FAVICON_STAR;
   // The gild only means anything over an ink. With no ink the star is already the house gold, so
-  // a leaf rim on it would be gold on gold and say nothing.
-  const rim = ink && gild;
+  // a leaf twinkle beside it would be gold on gold and say nothing.
+  const twinkle = ink && gild;
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
   <title>Swift To The Song Association</title>
   <clipPath id="tile"><rect x="2" y="2" width="60" height="60" rx="14"/></clipPath>
@@ -113,8 +116,8 @@ export function faviconSVG(ink, gild) {
     <path d="M37.5,18.2 Q47,14 49.3,21 Q50.3,26.8 45,30.4" fill="none" stroke="#2b2722" stroke-width="5.8" stroke-linecap="round"/>
     <path d="M45,30.4 Q52.6,32 52.9,39.8 Q53.2,47.8 45,49.3 Q39.8,50.1 36.8,46.8" fill="none" stroke="#2b2722" stroke-width="5.8" stroke-linecap="round"/>
   </g>
+  ${twinkle ? `<path d="${GILD_D}" fill="${FAVICON_LEAF}" transform="rotate(6 44.2 9.1)"/>` : ""}
   <g transform="rotate(-10 54.5 13)">
-    ${rim ? `<path d="${STAR_D}" fill="none" stroke="${FAVICON_LEAF}" stroke-width="5" stroke-linejoin="round"/>` : ""}
     <path d="${STAR_D}" fill="${star}" stroke="#2b2722" stroke-width="1.5" stroke-linejoin="round"/>
   </g>
 </svg>`;

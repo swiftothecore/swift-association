@@ -10274,10 +10274,11 @@ function guardTitleInk() {
   applySettings();
 }
 
-// The perfect tier. Beating an album buys its ink; perfecting it lays gold leaf over the star
-// above the i. The leaf follows the ink being WORN rather than the board as a whole, so a
-// notebook that has perfected six albums still shows a bare star while it wears the seventh's
-// ink — the gild is a thing about this ink, not a badge for the shelf.
+// The perfect tier. Beating an album buys its ink; perfecting it sets a twinkle of gold leaf
+// beside the star above the i, leaving the star itself the ink at full strength. The leaf follows
+// the ink being WORN rather than the board as a whole, so a notebook that has perfected six
+// albums still shows a bare star while it wears the seventh's ink — the gild is a thing about
+// this ink, not a badge for the shelf.
 //
 // Its own function rather than a few lines inside applySettings because it answers to TWO
 // things. The ink moving is one; the board moving is the other, and perfecting the album whose
@@ -10363,10 +10364,13 @@ function closeInkTray() {
   requestAnimationFrame(() => window.scrollTo({ top: inkTrayScrollY, behavior: "instant" }));
 }
 
-// The masthead's own star, small. Same path as the one over the i in index.html on purpose: the
-// leaf on a tray chip has to be recognisably the mark the tray is promising to gild.
-const INK_STAR = `<svg class="ink-sw-leaf" viewBox="0 0 24 24" aria-hidden="true">` +
-  `<path d="M11.6 1.9 L14.9 8.7 L22.1 9.0 L16.4 14.1 L18.4 21.3 L11.7 17.1 L5.2 20.7 L7.6 13.6 L2.0 9.5 L9.2 8.4 Z"/></svg>`;
+// The masthead's own star with its gild beside it, small. Same two paths as the pair over the i
+// in index.html on purpose: the leaf on a tray chip has to be recognisably the mark the tray is
+// promising to gild, which means the star in the chip's ink and the twinkle in leaf, never a
+// gold edge round the ink.
+const INK_STAR = `<svg class="ink-sw-leaf" viewBox="0 0 34 24" aria-hidden="true">` +
+  `<path class="ink-sw-star" d="M11.6 1.9 L14.9 8.7 L22.1 9.0 L16.4 14.1 L18.4 21.3 L11.7 17.1 L5.2 20.7 L7.6 13.6 L2.0 9.5 L9.2 8.4 Z"/>` +
+  `<path class="ink-sw-tw" d="M26.9 1.6 Q27.5 6.1 32.7 7.6 Q27.6 9.0 26.4 13.4 Q25.8 9.1 21.0 7.4 Q26.0 6.2 26.9 1.6 Z"/></svg>`;
 
 // One swatch: a chip of the ink with the word it will actually write, and its name beneath.
 // A locked one is a dashed slot naming the album that opens it, so the tray doubles as a second
