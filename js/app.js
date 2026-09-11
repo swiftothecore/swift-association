@@ -1165,8 +1165,9 @@ function mirrorChallengeTabForTurn(layer, app, appRect) {
   mirror.style.left = (appRect.left + tab.offsetLeft) + "px";
   mirror.style.right = "auto";
   mirror.style.top = (appRect.top + tab.offsetTop) + "px";
-  mirror.style.width = tab.offsetWidth + "px";
-  mirror.style.height = tab.offsetHeight + "px";
+  // Keep width:max-content and the intrinsic height. offsetWidth/offsetHeight are rounded
+  // integers; feeding those values back into a vertical writing mode can leave the name a
+  // fraction of a pixel too short and make its final word wrap into a second column.
   layer.appendChild(mirror);
 }
 
