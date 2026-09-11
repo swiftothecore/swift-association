@@ -3957,6 +3957,11 @@
     text-transform: uppercase; color: var(--ink-soft); text-align: right;
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   }
+  /* ...EXCEPT when the note is a time. Running Order's column is a number, and a number that
+     gives way does not come back shorter, it comes back WRONG: "10.0s" clipped to "10..." reads
+     as a different run. It is at most five characters, so holding its width costs the title
+     almost nothing. */
+  .bg-track-note.is-time { flex: none; max-width: none; }
   .bg-track-mark { flex: none; width: 14px; }
   .bg-mark-svg { width: 100%; height: auto; display: block; }
   .bg-track.no .bg-track-title { color: var(--ink-soft); }
@@ -4084,7 +4089,11 @@
     .bg-tracks { columns: 1; }
     /* A ticked track needs no note, so the title gets the whole line. A missed one keeps it:
        that note is the answer you didn't have. */
+    /* The note goes on a narrow card to buy the titles room, but not Running Order's: the time
+       a page took IS that run's record, and a cleared page is the one you most want it on. It
+       is short enough to keep. */
     .bg-track.ok .bg-track-note { display: none; }
+    .bg-track.ok .bg-track-note.is-time { display: block; }
     .bg-end-actions { flex-direction: column; gap: 9px; }
   }
   [data-reduce-motion="on"] .bg-feedback.show,

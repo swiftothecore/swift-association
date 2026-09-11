@@ -6743,11 +6743,14 @@ let bonusEnded = false;
 let bonusRecentFakes = []; // Spot the Slip: impostor words used recently, so a run doesn't repeat one
 let bonusRecentSongs = []; // Name That Song / Sing It Back / Redacted: songs already used this run, so one doesn't come round twice
 let bonusRecentAlbums = [];// Running Order: the last couple of albums dealt, so a run doesn't ask three Midnights pages in a row
-/* Running Order: seconds still on this page's clock, kept current by its tick. It exists for
-   the By Heart charm alone, and it has to be carried rather than read at the settle for one
-   reason: the settle happens after stopBonusClock has thrown the deadline away, so a page asked
-   about its clock at that point would report the same nothing every time. */
-let trackLeft = 0;
+/* Running Order: how long the page took, in seconds, frozen once as it settles. Measured off
+   `bonusPageStart` rather than sampled from the clock's tick, which is both exact and the same
+   stopwatch Spot the Slip's snap charm reads: the tick only fires every 50ms, so a sampled time
+   is quantised and a page answered inside the first tick reads as having taken no time at all.
+   `bonusPageStart` is also shifted by the Settings pause, so a page is never charged for the
+   seconds the notebook was shut. Frozen rather than recomputed because the page's listing row
+   and its charm must be judged on one number, not two readings a few microseconds apart. */
+let trackSecs = 0;
 let redactWorth = 0;       // Redacted: what THIS page is still worth, one point per strip left unpeeled
 let redactPeeled = 0;      // ...and how many strips have come off it
 /* When THIS page went live, for the charms that ask how fast a page was answered. Baselined
@@ -7191,7 +7194,7 @@ function nextBonusRound(options = {}) {
   // A fresh page opens worth the full ten and nothing has been spent on it yet.
   redactWorth = bonusPagePoints(bonusGame);
   redactPeeled = 0;
-  trackLeft = 0;
+  trackSecs = 0;
   onlyPlayed = null;
   if (bonusGame.id === "only-here" && bonusPuzzle.hand)
     bonusPuzzle.hand.forEach((c) => onlyDealt.add(c.key));
@@ -7487,9 +7490,6 @@ function startBonusClock(resumeState = null) {
     fill.style.width = pct + "%";
     label.textContent = (left / 1000).toFixed(1);
     fill.classList.toggle("low", pct <= 25);
-    // The only place this page's remaining seconds are still true when it is answered, which
-    // is what By Heart is judged on. See trackLeft.
-    if (bonusGame.id === "running-order") trackLeft = left / 1000;
     if (left <= 0) bonusTimeout();
   }, 50);
 }
@@ -8284,6 +8284,11 @@ function bonusBannerText(correct, isTimeout) {
 function settleBonusRound(correct, detail, isTimeout = false) {
   bonusLocked = true;
   stopBonusClock();
+  // Frozen here, before anything else can read it: Running Order's listing row and its charm
+  // are both judged on how long this page took, and they have to agree. Clamped to the budget so
+  // a page the clock took reads as the full ten rather than as the few ms of overrun.
+  if (bonusGame && bonusGame.id === "running-order")
+    trackSecs = Math.min(BONUS_TRACK_SECONDS, (performance.now() - bonusPageStart) / 1000);
   const gained = bonusPageScore(correct);
   bonusScore += gained;
   playSound(correct ? "correct" : "wrong");
@@ -8335,10 +8340,14 @@ function settleBonusRound(correct, detail, isTimeout = false) {
         // first, but the note column runs out around six characters on a two-up listing and
         // "1:23 · 62w" came back as "1:23 · …" — so the column keeps the one that adds up to
         // the score, and the verdict line is where a page's word count gets said in full.
-        // The number that was asked. Every other game notes the answer it hid, and this one hid
-        // a title the listing already prints beside it, so the useful column is the question:
-        // a row here reads as the tracklist line it was, "The Best Day / track 12".
-        : bonusGame.id === "running-order" ? `track ${bonusPuzzle.track}`
+        /* HOW LONG THE PAGE TOOK, which is the one thing about a Running Order run that the
+           ticks and crosses cannot say. It beat the track number to this column: every other
+           game notes the answer it was hiding, and this one hid a title the listing already
+           prints, so the column was free for the run's real story. Read off the clock the
+           player was watching (the budget less what was left on it) rather than off a second
+           stopwatch, so the page's time and the countdown it was raced against can never
+           disagree. A page the clock took reads as the full ten, which is exactly what it cost. */
+        : bonusGame.id === "running-order" ? `${trackSecs.toFixed(1)}s`
         : isRuthlessRun() ? fmtTime(gained)
         : bonusPuzzle.song.album,
   });
@@ -8549,9 +8558,10 @@ function foldBonusPageCharms(correct, isTimeout) {
     if (correct && redactPeeled === 0) unlock("name-redacted-song-no-strips-removed");
     if (correct && bonusPuzzle.blocks && redactPeeled >= bonusPuzzle.blocks) unlock("name-redacted-song-after-buying-all-strips");
   } else if (bonusGame.id === "running-order") {
-    // Named with half the ten still on the clock. Read off the countdown the player was
-    // watching rather than off a stopwatch they never see, which is the Ruthless roster's rule.
-    if (correct && !isTimeout && trackLeft >= BONUS_TRACK_SECONDS / 2)
+    // Named with half the ten still on the clock. Priced against the countdown the player was
+    // watching rather than against a stopwatch they never see, which is the Ruthless roster's
+    // rule: the page took under five, so five were still showing when they hit Enter.
+    if (correct && !isTimeout && trackSecs <= BONUS_TRACK_SECONDS / 2)
       unlock("name-running-order-page-with-half-the-clock-left");
   } else if (bonusGame.id === "only-here" && onlyPlayed) {
     // The commonest card in the hand, and NOT when that card is also the rarest: a hand where
@@ -8618,8 +8628,8 @@ function endBonusRun() {
   // The sweep clock, banked only when the run actually swept. A time off a run that dropped a
   // page is not a slower sweep, it is not a sweep, so it is thrown away rather than stored and
   // compared — which is the whole reason the clock costs a player nothing to ignore.
-  const sweepSecs = (perfect && bonusSweeps(bonusGame))
-    ? (performance.now() - bonusRunStart) / 1000 : null;
+  const runSecs = (performance.now() - bonusRunStart) / 1000;
+  const sweepSecs = (perfect && bonusSweeps(bonusGame)) ? runSecs : null;
   // Read BEFORE the run is banked: a first sweep and a faster one are both `isSweepBest`, and
   // only the second of them has beaten anything, so only the second may say so.
   const hadSweep = bonusRecord(bonusGame.id).sweep;
@@ -8645,14 +8655,25 @@ function endBonusRun() {
   // as the only place the missed answers are all readable at once.
   // The chain line is Then What's alone, and the score sub is the "/60" a timed run doesn't
   // have — both are pulled out here because the page and its PNG have to agree exactly.
-  /* The second line under the remark, and the two games that have one can never collide: Then
-     What is a points game and so never sweeps, and a sweep line only exists on a run that swept.
+  /* The second line under the remark, and the games that have one can never collide: Then What
+     is a points game and so never sweeps, and a sweep line only exists on a run that swept.
      The stamp above it already says CLEAN SWEEP, so this line says what the sweep cost rather
-     than repeating that it happened. */
+     than repeating that it happened.
+
+     RUNNING ORDER SHOWS ITS RUN TIME WHETHER IT SWEPT OR NOT, and it is the only game on the
+     shelf that does. That is not an exception to the sweep clock's rule but the other side of
+     it: the rule says a time off a dropped page is not a sweep and must not be BANKED, which is
+     still true here (`sweepSecs` is null and thrown away exactly as before). What the rule never
+     said is that the player may not be told how long they took, and on the one game whose whole
+     question is a ten-second clock, a back cover that says nothing about time is the run's own
+     story left off its keepsake. A swept run keeps the sweep wording, because "fastest yet" is
+     a real claim about the board and "N pages in" is not. */
   const aside = bonusGame.id === "then-what"
     ? `longest chain · ${chainRun} line${chainRun === 1 ? "" : "s"}`
     : sweepSecs != null
     ? `in ${fmtTime(sweepSecs)}` + (rec.isSweepBest && hadSweep ? " · fastest yet" : "")
+    : bonusGame.id === "running-order"
+    ? `${BONUS_ROUNDS} pages in ${fmtTime(runSecs)}`
     : "";
   const stampText = perfect ? "clean sweep" : (rec.isBest && rec.plays > 1 ? "new best" : "");
   // The fastest sweep joins the small print only once there IS one. An empty slot on a game
@@ -8674,7 +8695,10 @@ function endBonusRun() {
     `<li class="bg-track ${t.ok ? "ok" : "no"}">` +
       `<span class="bg-track-n">${t.n}</span>` +
       `<span class="bg-track-title">${escapeHtml(censor(t.title))}</span>` +
-      (t.note ? `<span class="bg-track-note">${escapeHtml(t.note)}</span>` : "") +
+      // A time is a NUMBER, and a clipped number is a wrong one rather than a short one, so
+      // Running Order's column is marked to hold its width (see .bg-track-note.is-time).
+      (t.note ? `<span class="bg-track-note${bonusGame.id === "running-order" ? " is-time" : ""}">` +
+                  `${escapeHtml(t.note)}</span>` : "") +
       `<span class="bg-track-mark" aria-hidden="true">${t.ok ? BG_TICK : BG_CROSS}</span>` +
       `<span class="sr-only">${t.ok ? "correct" : "missed"}</span>` +
     `</li>`).join("");
@@ -26662,7 +26686,8 @@ function buildDevApi() {
         if (!bonusGame || bonusGame.id !== "running-order" || !bonusPuzzle) return "no Running Order page live";
         return { ask: `track ${bonusPuzzle.track} from ${bonusPuzzle.album}`,
                  answer: bonusPuzzle.song.title, of: bonusPuzzle.total,
-                 left: +trackLeft.toFixed(2), byHeartAt: BONUS_TRACK_SECONDS / 2 };
+                 spent: +((performance.now() - bonusPageStart) / 1000).toFixed(2),
+                 byHeartUnder: BONUS_TRACK_SECONDS / 2 };
       },
       tracks: (album = null) => {
         const { trackIndex } = bonusIndexes();
