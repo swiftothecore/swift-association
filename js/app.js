@@ -4385,28 +4385,35 @@ function fmtTime(sec) {
   const s = Math.round(sec);
   return Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0");
 }
-/* The same clock read to a TENTH, and the shelf's clocks are the only ones that get it. The
+/* The same clock read to a HUNDREDTH, and the shelf's clocks are the only ones that get it. The
    reason is what those numbers are compared against: a clean-sweep time and a Ruthless Game
-   lens best are BANKED as floats and ranked as floats, so two runs a tenth apart really are a
-   new best, and rounding them on the way out would print "fastest yet" underneath a number
+   lens best are BANKED as floats and ranked as floats, so two runs a hundredth apart really are
+   a new best, and rounding them on the way out would print "fastest yet" underneath a number
    identical to the one it beat. A main-game run time is never ranked that finely and keeps
    fmtTime, which is why this is a second function rather than a decimals argument on the first
    one: the two are different promises about what the number means, not two spellings of it.
-   A PRICE STAYS ON fmtTime even here — the give-up penalty is authored in whole seconds, so
-   a tenth on it would be a decimal place of pure zero.
-   Rounded ONCE, in tenths, before it is split, or 59.97 comes out as 0:60.0. */
-// Snap a measured time to the tenth the shelf banks and prints. Every clock on this shelf is
-// read off performance.now() and so arrives with more precision than is meaningful (the tick is
-// 50ms) and, once ten page costs have been added up, with float noise on the end of it — a run
-// of flat tenths summed to 123.50000000000001 the first time this was measured. Rounding at the
-// two points a time is BANKED means a stored best is always exactly the number the player was
-// shown, which is what makes "fastest yet" answerable by looking at it.
-function roundTenth(sec) { return Math.round(sec * 10) / 10; }
+   TWO DECIMALS RATHER THAN ONE because this is a stopwatch and that is how a stopwatch reads.
+   A single trailing decimal is the shape of a number that got cut off rather than of a time;
+   every clock anyone races against — a lap, a split, a heat — runs to hundredths. The digit is
+   earned rather than decorative, since a page is frozen off performance.now() at the moment the
+   answer lands and that is sub-millisecond. THE PAD MATTERS AS MUCH AS THE PRECISION: five
+   hundredths has to print as 0:30.05 and never as 0:30.5, which is a different time by an order
+   of magnitude, so the remainder is padded and not concatenated raw.
+   A PRICE STAYS ON fmtTime even here — the give-up penalty is authored in whole seconds, so two
+   decimals on it would be two pure zeroes.
+   Rounded ONCE, in hundredths, before it is split, or 59.997 comes out as 0:60.00. */
+// Snap a measured time to the hundredth the shelf banks and prints. The precision is genuinely
+// there — a page is frozen straight off performance.now() — but the number is not clean: ten
+// page costs added together arrive with float noise on the end (a run of flat tenths summed to
+// 123.50000000000001 the first time this was measured). Rounding at the two points a time is
+// BANKED means a stored best is always exactly the number the player was shown, which is what
+// makes "fastest yet" answerable by looking at it.
+function roundHundredth(sec) { return Math.round(sec * 100) / 100; }
 function fmtTimeFine(sec) {
   if (sec == null) return null;
-  const tenths = Math.round(sec * 10);
-  const s = Math.floor(tenths / 10);
-  return Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0") + "." + (tenths % 10);
+  const cs = Math.round(sec * 100);
+  const s = Math.floor(cs / 100);
+  return Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0") + "." + String(cs % 100).padStart(2, "0");
 }
 // How a record wears the hints it took: "1 hint" / "5 hints", never a bare number, because it
 // sits in a meta line beside a time and a date where a lone digit would read as either.
@@ -7566,6 +7573,16 @@ function focusBonusRoundInput() {
    requestAnimationFrame: rAF is suspended in a backgrounded tab, which would freeze the clock
    while hidden and then, because the deadline is absolute, expire the round the instant the
    player came back. An interval keeps ticking (throttled but firing) and stays accurate. */
+/* How often both shelf clocks repaint. It was 50ms while the readout showed one decimal, and it
+   had to come down when the readout went to two: at 50ms the hundredths digit could only ever
+   land on 0 or 5, so the clock looked like it was missing eight of its ten digits, which reads
+   as broken rather than as fast. Roughly a frame now. It is cheap to do this often — the tick
+   writes a textContent and a width and measures nothing — and the READING does not depend on the
+   rate anyway, since every tick subtracts from a performance.now() baseline rather than counting
+   its own firings. A throttled background tab therefore repaints less and still tells the truth.
+   It lives here rather than in config.js because it is how these two intervals paint, not a
+   number the game is balanced on. */
+const CLOCK_TICK_MS = 16;
 function startBonusClock(resumeState = null) {
   // A bonus page can finish turning while Settings is already over it. Keep the page inert
   // and start its clock from the top when the modal closes, just like beginRoundClock does for
@@ -7590,15 +7607,15 @@ function startBonusClock(resumeState = null) {
   fill.classList.remove("low");
   // The seconds are written out as well as drawn, exactly as the round screen does it — a bar
   // alone tells you time is going but never how much of it there is left to spend.
-  label.textContent = (begin / 1000).toFixed(1);
+  label.textContent = (begin / 1000).toFixed(2);
   bonusRaf = setInterval(() => {
     const left = Math.max(0, bonusClockDeadline - performance.now());
     const pct = (left / total) * 100;
     fill.style.width = pct + "%";
-    label.textContent = (left / 1000).toFixed(1);
+    label.textContent = (left / 1000).toFixed(2);
     fill.classList.toggle("low", pct <= 25);
     if (left <= 0) bonusTimeout();
-  }, 50);
+  }, CLOCK_TICK_MS);
 }
 function stopBonusClock() {
   if (bonusRaf) clearInterval(bonusRaf);
@@ -7624,7 +7641,7 @@ function showBonusClockReady() {
     return;
   }
   fill.style.width = "100%";
-  label.textContent = bonusSeconds().toFixed(1);
+  label.textContent = bonusSeconds().toFixed(2);
 }
 
 /* ---------- Ruthless Game: the count-up clock and the drip ----------
@@ -7648,18 +7665,18 @@ function startRuthlessClock(resumeState = null) {
   fill.style.width = initialPct + "%";
   fill.classList.remove("low");
   fill.classList.toggle("low", initialPct >= 75);
-  label.textContent = elapsed.toFixed(1);
+  label.textContent = elapsed.toFixed(2);
   const spentEl = $("bonusSpent");
   if (spentEl) spentEl.textContent = fmtTimeFine(elapsed);
   bonusRaf = setInterval(() => {
     const spent = (performance.now() - ruthlessStart) / 1000;
-    label.textContent = spent.toFixed(1);
+    label.textContent = spent.toFixed(2);
     const pct = Math.min(100, (spent / RUTHLESS_PACE_SECONDS) * 100);
     fill.style.width = pct + "%";
     fill.classList.toggle("low", pct >= 75);
     const el = $("bonusSpent");
     if (el) el.textContent = fmtTimeFine(spent);
-  }, 50);
+  }, CLOCK_TICK_MS);
   startRuthlessDrip(resumeState && resumeState.kind === "ruthless"
     ? resumeState.dripRemaining : RUTHLESS_WORD_MS);
 }
@@ -7748,7 +7765,7 @@ function updateRuthlessMeta() {
     : `give up · +${fmtTime(penalty)}`;
 }
 
-/* What this page has cost, read off the clock ONCE and then held, IN TENTHS. It used to round
+/* What this page has cost, read off the clock ONCE and then held, IN HUNDREDTHS. It used to round
    to a whole second here, and that rounding was the only thing in the mode standing between a
    measured time and the board — every lens best, every history row and every ladder charm is
    downstream of this one number, so a run was never ranked finer than a second however finely
@@ -7760,7 +7777,7 @@ function updateRuthlessMeta() {
    quietly beat every best already on the board with the same play. */
 function ruthlessFreeze() {
   if (!ruthlessSpent)
-    ruthlessSpent = roundTenth(Math.max(1, (performance.now() - ruthlessStart) / 1000) + ruthlessPenalty);
+    ruthlessSpent = roundHundredth(Math.max(1, (performance.now() - ruthlessStart) / 1000) + ruthlessPenalty);
   return ruthlessSpent;
 }
 
@@ -8462,7 +8479,7 @@ function settleBonusRound(correct, detail, isTimeout = false) {
            player was watching (the budget less what was left on it) rather than off a second
            stopwatch, so the page's time and the countdown it was raced against can never
            disagree. A page the clock took reads as the full ten, which is exactly what it cost. */
-        : bonusGame.id === "running-order" ? `${trackSecs.toFixed(1)}s`
+        : bonusGame.id === "running-order" ? `${trackSecs.toFixed(2)}s`
         : isRuthlessRun() ? fmtTimeFine(gained)
         : bonusPuzzle.song.album,
   });
@@ -8753,7 +8770,7 @@ function endBonusRun() {
   // page is not a slower sweep, it is not a sweep, so it is thrown away rather than stored and
   // compared — which is the whole reason the clock costs a player nothing to ignore.
   const runSecs = (performance.now() - bonusRunStart) / 1000;
-  const sweepSecs = (perfect && bonusSweeps(bonusGame)) ? roundTenth(runSecs) : null;
+  const sweepSecs = (perfect && bonusSweeps(bonusGame)) ? roundHundredth(runSecs) : null;
   // Read BEFORE the run is banked: a first sweep and a faster one are both `isSweepBest`, and
   // only the second of them has beaten anything, so only the second may say so.
   const hadSweep = bonusRecord(bonusGame.id).sweep;
@@ -8923,7 +8940,7 @@ function foldRuthlessCharms({ pages, named, gaveUp, secs, prevLast }) {
 
 function endRuthlessRun() {
   const lensId = ruthlessLensId, lens = ruthlessLens(lensId);
-  const secs = roundTenth(bonusScore);
+  const secs = roundHundredth(bonusScore);
   const pages = bonusLog.slice();
   const named = pages.filter((t) => t.ok).length;
   const gaveUp = pages.length - named;
@@ -26892,9 +26909,9 @@ function buildDevApi() {
         // it as UNPLAYED — so a seed meant for eyeballing the strip would show nothing at all.
         // The run that swept is therefore banked too, at the full marks it must have scored.
         if (!bonusRecord(id).plays) recordBonusRun(id, bonusMaxScore(g), bonusMaxScore(g));
-        // Snapped to the tenth the board really stores, so a seeded time is one a played run
-        // could actually beat rather than a hidden hundredth standing in its way.
-        const out = seedBonusSweep(id, roundTenth(Math.max(0, +secs || 0)));
+        // Snapped to the hundredth the board really stores, so a seeded time is one a played
+        // run could actually beat rather than a hidden remainder standing in its way.
+        const out = seedBonusSweep(id, roundHundredth(Math.max(0, +secs || 0)));
         if ($("bonusBody")) renderBonusPage();
         return out;
       },
@@ -27251,10 +27268,10 @@ function buildDevApi() {
           const words = ok ? (n <= snaps ? Math.max(1, snapAt - (n % 2))
                                          : snapAt + 6 + (n % 17))
                            : giveUp.after;
-          // A tenth on top, since a real page is frozen off the clock to a tenth and a run of
-          // flat whole seconds is the one shape a played run can almost never post. Derived from
-          // the page number so a fabrication stays reproducible.
-          const secs = (ok ? words : words + giveUp.penalty) + (n * 3 % 10) / 10;
+          // A fraction on top, since a real page is frozen off the clock to a hundredth and a
+          // run of flat whole seconds is the one shape a played run can almost never post.
+          // Derived from the page number so a fabrication stays reproducible.
+          const secs = (ok ? words : words + giveUp.penalty) + (n * 37 % 100) / 100;
           bonusScore += secs;
           accrueRuthlessXp(ok, secs);
           // The handouts are taken off the BACK of the named pages so they never collide with the
@@ -27318,9 +27335,10 @@ function buildDevApi() {
 
       seed: (lensId, seconds, gaveUp = 0) => {
         if (!ruthlessLens(lensId)) return `no such lens — ${RUTHLESS_LENSES.map((l) => l.id).join(", ")}`;
-        // Snapped to the tenth the board really stores (see roundTenth), so a seeded best is a
-        // time a played run can beat rather than a hidden hundredth sitting in front of it.
-        const out = recordRuthlessRun(lensId, roundTenth(seconds), gaveUp, todayKey());
+        // Snapped to the hundredth the board really stores (see roundHundredth), so a seeded
+        // best is a time a played run can beat rather than a hidden remainder sitting in front
+        // of it.
+        const out = recordRuthlessRun(lensId, roundHundredth(seconds), gaveUp, todayKey());
         repaintRuthless();
         return out;
       },
@@ -27328,7 +27346,7 @@ function buildDevApi() {
       // margin, the played count, and how a lens that was given up on sits beside one that wasn't),
       // and seeding six lenses one at a time to look at that is six presses too many.
       fill: () => {
-        RUTHLESS_LENSES.forEach((l, i) => recordRuthlessRun(l.id, roundTenth(90 + l.median * 2 + i / 10), i % 3 === 0 ? 1 : 0, todayKey()));
+        RUTHLESS_LENSES.forEach((l, i) => recordRuthlessRun(l.id, roundHundredth(90 + l.median * 2 + i / 8), i % 3 === 0 ? 1 : 0, todayKey()));
         repaintRuthless();
         return "board filled — open Ruthless Game";
       },
