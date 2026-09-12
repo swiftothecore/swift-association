@@ -3832,8 +3832,8 @@
   .bg-stream.is-done { opacity: 0.78; border-left-color: rgba(43,39,34,0.18); }
   /* ---- Word Cloud ----
      The words are absolutely positioned by js/cloud.js, which has already measured the real
-     glyphs and fitted the whole block to this box's width, so there is almost nothing for CSS
-     to do here and it must not try: any padding, letter-spacing or font-weight set on the word
+     glyphs, fitted the whole block to this box's width and hung every word off the box's own
+     centre line, so there is almost nothing for CSS to do here and it must not try: any padding, letter-spacing or font-weight set on the word
      below would change the metrics the packing was computed from and open gaps the ink masks
      closed. The container's HEIGHT is written by the painter for the same reason. */
   .bg-cloud {

@@ -204,12 +204,20 @@ export function cloudMarkup(words, opts = {}) {
 
   const html = placed.map((p) => {
     const off = inkOffset(p.word, p.pt);
-    const left = ((p.cx - x0 - off.x) * scale).toFixed(1);
+    /* MEASURED FROM THE MIDDLE, not from the left edge. The fit is capped, so the finished
+       block is usually a little narrower than the box it is given (at a wide width, as little
+       as two thirds of it), and a block laid from x=0 puts every one of those spare pixels on
+       the right, which reads as a cloud that has slid off the page. Hanging each word off the
+       container's own centre line splits the slack, and it keeps splitting it if the box
+       changes width before the repaint lands (a turned phone, a box measured at zero because
+       it was still behind its screen) rather than leaving the page flush left until then. */
+    const dx = (p.cx - x0 - off.x - cw / 2) * scale;
+    const left = `calc(50% ${dx < 0 ? "-" : "+"} ${Math.abs(dx).toFixed(1)}px)`;
     const top = ((p.cy - y0 - off.y) * scale).toFixed(1);
     // The tail of the cloud is lighter than its head, which is the second reading of the
     // same number the size already says. It never goes far enough to be unreadable.
     const ink = (0.55 + 0.45 * p.t).toFixed(2);
-    return `<span class="bg-cloud-word" style="left:${left}px;top:${top}px;` +
+    return `<span class="bg-cloud-word" style="left:${left};top:${top}px;` +
       `font-size:${(p.pt * scale).toFixed(1)}px;` +
       `transform:translate(-50%,-50%) rotate(${p.rot.toFixed(1)}deg);opacity:${ink}">` +
       `${esc(p.word)}</span>`;
