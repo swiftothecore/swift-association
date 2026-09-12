@@ -40,6 +40,7 @@ The game is still a work in progress and is by no means 'done', but it is quite 
 - Lyricist mode, where you answer by typing a lyric line instead of a song title
 - Four marks in the corner of every page saying what it will take, so the rules aren't something you learn by breaking them
 - A streak penciled in the margin that bursts across the page, climbing from pencil to your era's own pen to gold
+- A rubber stamp pressed into the corner of your results when a run has a story worth one: thirteen clean, a comeback, or three lines sung from memory
 - Beads that record how a page went and not just whether: sanded for a hint taken, pearl for a line written from memory, clear for one you missed
 - Finished bracelets stay readable across long runs, explain what each bead remembers, and can be copied or downloaded as a PNG
 - A companion lyric searcher, [Swift To The Lyric](https://swiftassociation.com/search), for searching every line of every song

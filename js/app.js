@@ -11580,6 +11580,92 @@ const TALLY_PREVIEWS = {
   ink:      { score: "1184", sub: [{ v: "1100", l: "needed" }], unit: "characters" },
 };
 
+/* ---- The run-story stamp ----
+   One rubber stamp, pressed crooked into the corner of the tally, when the run has a story
+   worth a mark. It reads existing run arrays and writes nothing: no charm, no score, no
+   record. An ordinary run gets NO stamp, and that restraint is the whole design — a mark that
+   turns up every time is a decoration, and a mark that turns up one run in five is a thing you
+   notice. Do not add a consolation stamp for a run that merely finished.
+
+   The stamp is a double-rule slab in --red-pen, deliberately the same family as the round
+   screen's rarity stamp, because the notebook having ONE stamp language is coherence rather
+   than confusion: the two never share a screen, and no story here is a rarity name. Two
+   disciplines keep them distinct anyway, and both are load-bearing — the story stamp is always
+   --red-pen and never a rarity tier hue, and it is always the larger press.
+
+   There is deliberately no list of modes this applies to. Every story is a reading of the
+   arrays the ordinary answering loop fills — roundResults, hintsUsed, gameTimeouts,
+   roundRejects, lyricLineAnswers — so a mode that does not play that loop produces no story
+   without being named anywhere: Ruthless writes a time rather than thirteen judged pages, and
+   the bonus shelf ends on its own back cover and never reaches this screen at all. The data is
+   the gate. Adding a mode list here would be a second gate to keep in step with the first. */
+const STORY_COMEBACK_TAIL = 5;   // correct answers to close on, after a run that had a miss in it
+const STORY_MEMORY_LINES = 3;    // accepted lyric-line answers that make a run one sung from memory
+
+// Correct answers at the very end of the run, which is what "closes with" means: a miss
+// anywhere in the tail ends the count, so a good middle cannot be read as a recovery.
+function trailingCorrect() {
+  let n = 0;
+  for (let i = roundResults.length - 1; i >= 0 && roundResults[i]; i--) n++;
+  return n;
+}
+
+/* Resolved in order, first match wins. Each `words` array is the press's own lines: one word
+   per line on a phone, where the slab has to stack to clear the label beside it. */
+const RUN_STORIES = [
+  // A full run, every page landed, nothing crossed out and nothing asked for. The page count
+  // is read off sessionRounds rather than TOTAL_ROUNDS so a Custom run of seven pages can earn
+  // it honestly, and a partial run can never claim it.
+  { id: "clean-copy", words: ["clean", "copy"], test: () =>
+      roundResults.length > 0 && roundResults.length === sessionRounds()
+      && roundResults.every(Boolean) && hintsUsed === 0 && gameTimeouts === 0
+      && roundRejects.every((list) => !(list || []).length) },
+  // Fell apart somewhere, then closed the run out. Both halves are required: without the miss
+  // this is just a good run, and without the tail it is just a run with a miss in it.
+  { id: "comeback", words: ["comeback"], test: () =>
+      roundResults.includes(false) && trailingCorrect() >= STORY_COMEBACK_TAIL },
+  // Sung rather than named, three times over. lyricLineAnswers is already counted for a charm.
+  { id: "from-memory", words: ["from", "memory"], test: () =>
+      lyricLineAnswers >= STORY_MEMORY_LINES },
+];
+
+let devStoryForce = null;   // dev panel only — a story id to press regardless of the run
+
+/* The story this run earned, or null. A sealed Daily earns nothing until it is torn open:
+   CLEAN COPY on a held-back result would announce a perfect run before the player chose to
+   look, which is the one thing the seal exists to prevent. */
+function runStory() {
+  if (dailyResultIsSealed()) return null;
+  if (devStoryForce) return RUN_STORIES.find((s) => s.id === devStoryForce) || null;
+  return RUN_STORIES.find((s) => s.test()) || null;
+}
+
+// Press it, or make sure last run's is gone. Called from setFinalTally, which is the one
+// function every end path goes through — Challenges, Album Focus, Custom, the guest shelf,
+// Ruthless and Daily all land here, so the stamp needs no per-path wiring and cannot fall out
+// of step with a new ending that forgets to ask for it.
+function renderRunStamp() {
+  // Anchored to the PAGE, not to the tally column. The column carries a -14px paper-centring
+  // shift and sits inside the card's asymmetric padding, so a stamp hung off it is dragged
+  // left — far enough on a phone to land on "the final tally". The card is the thing being
+  // stamped anyway, and it is already position:relative.
+  const host = $("screen-results");
+  if (!host) return null;
+  const old = host.querySelector(".run-stamp");
+  if (old) old.remove();
+  const story = runStory();
+  if (!story) return null;
+  const el = document.createElement("div");
+  el.className = "run-stamp";
+  el.dataset.story = story.id;
+  // Each word its own span: inline on paper wide enough for one line, stacked on a phone,
+  // where the measured free paper beside the number is 125px and a single line runs through
+  // "the final tally". Same markup either way, so nothing has to know which it is.
+  el.innerHTML = story.words.map((w) => `<span class="rs-w">${escapeHtml(w)}</span>`).join(" ");
+  host.append(el);
+  return story.id;
+}
+
 // ---- The final tally ----
 // One number in the hand, a ruled line, then the run's numbers as a small ledger of
 // value-over-label cells sized to the strand below, so the tally and the bracelet stack
@@ -11601,6 +11687,7 @@ function setFinalTally(score, sub, unit) {
   $("finalSub").textContent = prose;
   $("finalRule").style.display = (cells.length || prose) ? "" : "none";
   centreTallyHead();
+  renderRunStamp();
 }
 
 // Optical centring for the headline number. A layout box is centred on the text's ADVANCE
@@ -26755,6 +26842,34 @@ function buildDevApi() {
       },
       // Wipe the word history only, leaving the song/album counts (same reach as novelty.forget).
       forget: () => { const t = loadSongTally(); t.words = {}; t.misses = {}; saveSongTally(t); return loadSongTally(); },
+    },
+    /* The run-story stamp. A run with a story is rare on purpose, so waiting for one is not a
+       test plan: `press` puts any of the three on the results page, and `state` says which one
+       the LIVE run has actually earned and why the others missed. */
+    story: {
+      ids: () => RUN_STORIES.map((x) => x.id),
+      // What the run in progress would be stamped with, with every test's own reading beside
+      // it, so a story that did not fire names the clause that refused it.
+      state: () => ({
+        earned: (RUN_STORIES.find((x) => x.test()) || {}).id || null,
+        forced: devStoryForce,
+        sealedDaily: dailyResultIsSealed(),
+        pages: roundResults.length, of: sessionRounds(),
+        allCorrect: roundResults.length > 0 && roundResults.every(Boolean),
+        hints: hintsUsed, timeouts: gameTimeouts,
+        rejects: roundRejects.reduce((n, l) => n + ((l || []).length ? 1 : 0), 0),
+        hadMiss: roundResults.includes(false), closingRun: trailingCorrect(),
+        lyricLines: lyricLineAnswers,
+      }),
+      // Force one onto the page. Re-renders through the real path, so what appears is what a
+      // run that earned it would get, not a mock-up pasted into the DOM.
+      press: (id) => {
+        if (id && !RUN_STORIES.some((x) => x.id === id)) return `no such story: ${id}`;
+        devStoryForce = id || null;
+        return renderRunStamp() || "no stamp (sealed daily, or cleared)";
+      },
+      // Hand the page back to the run's own story.
+      clear: () => { devStoryForce = null; return renderRunStamp(); },
     },
     /* The revenge note. Its three gates are all invisible from the page, which is exactly why
        it needs a window: the note not appearing looks identical whether the word was wrong, the

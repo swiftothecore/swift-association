@@ -292,6 +292,26 @@ export function initDev(api) {
   body.append(section("charm batch 1",
     row(btn("fast ✓ underline", () => toast(api.batch1.firstThought() ? "0.5s verdict" : "start a live answerable round")))));
 
+  // ---- Run-story stamp -------------------------------------------------------
+  // A story is rare by design, so the panel presses one rather than waiting for one. The
+  // readout is every clause the three tests read, because a stamp that did not appear is
+  // otherwise indistinguishable from a stamp that is not implemented.
+  const storyOut = mk("span", { class: "dv-note" }, "—");
+  const readStory = () => {
+    const s = api.story.state();
+    storyOut.textContent =
+      `earned ${s.earned || "none"}${s.forced ? ` · forced ${s.forced}` : ""}` +
+      `${s.sealedDaily ? " · sealed daily suppresses it" : ""} · ` +
+      `${s.pages}/${s.of} pages${s.allCorrect ? " all correct" : ""} · ` +
+      `${s.hints} hints · ${s.timeouts} timeouts · ${s.rejects} rejected · ` +
+      `closing run ${s.closingRun}${s.hadMiss ? " after a miss" : " (no miss yet)"} · ` +
+      `${s.lyricLines} sung`;
+  };
+  const storyRow = row();
+  api.story.ids().forEach((id) => storyRow.append(btn(id, () => { api.story.press(id); readStory(); })));
+  storyRow.append(btn("clear", () => { api.story.clear(); readStory(); }), btn("read", readStory));
+  body.append(section("run-story stamp", storyRow, row(storyOut)));
+
   // ---- Revenge note ----------------------------------------------------------
   // The "finally." scribble is gated on three things the page cannot show you: the run's
   // nemesis SNAPSHOT (not the live tally), the once-a-run latch, and whether this game type
