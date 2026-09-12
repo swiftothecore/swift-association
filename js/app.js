@@ -4385,6 +4385,29 @@ function fmtTime(sec) {
   const s = Math.round(sec);
   return Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0");
 }
+/* The same clock read to a TENTH, and the shelf's clocks are the only ones that get it. The
+   reason is what those numbers are compared against: a clean-sweep time and a Ruthless Game
+   lens best are BANKED as floats and ranked as floats, so two runs a tenth apart really are a
+   new best, and rounding them on the way out would print "fastest yet" underneath a number
+   identical to the one it beat. A main-game run time is never ranked that finely and keeps
+   fmtTime, which is why this is a second function rather than a decimals argument on the first
+   one: the two are different promises about what the number means, not two spellings of it.
+   A PRICE STAYS ON fmtTime even here — the give-up penalty is authored in whole seconds, so
+   a tenth on it would be a decimal place of pure zero.
+   Rounded ONCE, in tenths, before it is split, or 59.97 comes out as 0:60.0. */
+// Snap a measured time to the tenth the shelf banks and prints. Every clock on this shelf is
+// read off performance.now() and so arrives with more precision than is meaningful (the tick is
+// 50ms) and, once ten page costs have been added up, with float noise on the end of it — a run
+// of flat tenths summed to 123.50000000000001 the first time this was measured. Rounding at the
+// two points a time is BANKED means a stored best is always exactly the number the player was
+// shown, which is what makes "fastest yet" answerable by looking at it.
+function roundTenth(sec) { return Math.round(sec * 10) / 10; }
+function fmtTimeFine(sec) {
+  if (sec == null) return null;
+  const tenths = Math.round(sec * 10);
+  const s = Math.floor(tenths / 10);
+  return Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0") + "." + (tenths % 10);
+}
 // How a record wears the hints it took: "1 hint" / "5 hints", never a bare number, because it
 // sits in a meta line beside a time and a date where a lone digit would read as either.
 function hintCountLabel(n) { return n + (n === 1 ? " hint" : " hints"); }
@@ -4550,7 +4573,7 @@ function appendHistoryRows(hist) {
       : h.s > 0 && h.s === _pbByMode[h.m];
     return `<div class="hist-row${isPB ? " hist-pb" : ""}">` +
       `<span class="hist-score">${isPB ? `<span class="hist-crown" aria-hidden="true">${ACH_ICONS.crown}</span>` : ""}${scoreText}${unit ? `<span class="hist-unit">${unit}</span>` : ""}</span>` +
-      `<span class="hist-time">${h.tm != null ? fmtTime(h.tm) : "—"}</span>` +
+      `<span class="hist-time">${h.tm != null ? (ruthless ? fmtTimeFine(h.tm) : fmtTime(h.tm)) : "—"}</span>` +
       `<span class="hist-verse">${h.v > 0 ? `<span class="hist-verse-star" aria-hidden="true">★</span>+${h.v}` : "—"}</span>` +
       // `dk` marks a challenge run played on its dark side. It rides as a violet eclipse
       // rather than a word because modeLabel is deliberately token-only (the dark flag is
@@ -5772,7 +5795,7 @@ function renderRecordsPage() {
           ? `${rec.bestGaveUp} given up` : `named all ${BONUS_ROUNDS}`;
         return `<div class="pb-tile pb-ruthless" style="--pb-accent:var(--mode-ruthless, #8c4a34)">` +
           `<span class="pb-mode">${escapeHtml(lens.label)}</span>` +
-          `<span class="pb-score">${fmtTime(rec.best)}</span>` +
+          `<span class="pb-score">${fmtTimeFine(rec.best)}</span>` +
           `<span class="pb-sub">${escapeHtml(how)} · ${escapeHtml(recordDateLabel(rec.date))}</span>` +
         `</div>`;
       }).join("") + `</div>`
@@ -6915,7 +6938,7 @@ function bonusBest(g) {
   return Math.min(bonusRecord(g.id).best, bonusMaxScore(g));
 }
 function bonusScoreText() {
-  if (bonusTimed(bonusGame)) return `${fmtTime(bonusScore)} so far`;
+  if (bonusTimed(bonusGame)) return `${fmtTimeFine(bonusScore)} so far`;
   // Then What carries its longest unbroken chain beside the score. It is not scored and never
   // will be — it is there so a run has a personal chase that a 0-60 total cannot give it.
   // The page's points are banked into bonusScore only when it settles, so while it is still
@@ -6938,10 +6961,10 @@ function bonusScoreLine(g, short = false) {
   if (!rec.plays) return "unplayed";
   // A time is quoted on its own — "best 3:41 / 10" would be nonsense, and there is no total
   // for it to be out of.
-  if (bonusTimed(g)) return `best ${fmtTime(bonusBest(g))} · played ${rec.plays}`;
+  if (bonusTimed(g)) return `best ${fmtTimeFine(bonusBest(g))} · played ${rec.plays}`;
   const score = `best ${bonusBest(g)} / ${bonusMaxScore(g)}`;
-  if (rec.sweep && short) return `${score} · swept ${fmtTime(rec.sweep)}`;
-  const swept = rec.sweep ? ` · swept ${fmtTime(rec.sweep)}` : "";
+  if (rec.sweep && short) return `${score} · swept ${fmtTimeFine(rec.sweep)}`;
+  const swept = rec.sweep ? ` · swept ${fmtTimeFine(rec.sweep)}` : "";
   return `${score}${swept} · played ${rec.plays}`;
 }
 
@@ -7597,7 +7620,7 @@ function showBonusClockReady() {
     fill.style.width = "0%";
     label.textContent = "0.0";
     const spent = $("bonusSpent");
-    if (spent) spent.textContent = fmtTime(0);
+    if (spent) spent.textContent = fmtTimeFine(0);
     return;
   }
   fill.style.width = "100%";
@@ -7627,7 +7650,7 @@ function startRuthlessClock(resumeState = null) {
   fill.classList.toggle("low", initialPct >= 75);
   label.textContent = elapsed.toFixed(1);
   const spentEl = $("bonusSpent");
-  if (spentEl) spentEl.textContent = fmtTime(elapsed);
+  if (spentEl) spentEl.textContent = fmtTimeFine(elapsed);
   bonusRaf = setInterval(() => {
     const spent = (performance.now() - ruthlessStart) / 1000;
     label.textContent = spent.toFixed(1);
@@ -7635,7 +7658,7 @@ function startRuthlessClock(resumeState = null) {
     fill.style.width = pct + "%";
     fill.classList.toggle("low", pct >= 75);
     const el = $("bonusSpent");
-    if (el) el.textContent = fmtTime(spent);
+    if (el) el.textContent = fmtTimeFine(spent);
   }, 50);
   startRuthlessDrip(resumeState && resumeState.kind === "ruthless"
     ? resumeState.dripRemaining : RUTHLESS_WORD_MS);
@@ -7725,11 +7748,19 @@ function updateRuthlessMeta() {
     : `give up · +${fmtTime(penalty)}`;
 }
 
-// What this page has cost, read off the clock ONCE and then held. A page is never free: a title
-// typed inside half a second still rounds up to a second, so ten pages can never total nothing.
+/* What this page has cost, read off the clock ONCE and then held, IN TENTHS. It used to round
+   to a whole second here, and that rounding was the only thing in the mode standing between a
+   measured time and the board — every lens best, every history row and every ladder charm is
+   downstream of this one number, so a run was never ranked finer than a second however finely
+   it was clocked.
+   THE ONE-SECOND FLOOR IS NOT THE ROUNDING and stays: a page is never free, and a title typed
+   off the dropdown inside half a second is still a second of the run. It kept ten pages from
+   totalling nothing back when a fast page rounded to zero, and it is now the honest minimum
+   price of a page rather than an artefact of how the clock was read. Removing it would also
+   quietly beat every best already on the board with the same play. */
 function ruthlessFreeze() {
   if (!ruthlessSpent)
-    ruthlessSpent = Math.max(1, Math.round((performance.now() - ruthlessStart) / 1000)) + ruthlessPenalty;
+    ruthlessSpent = roundTenth(Math.max(1, (performance.now() - ruthlessStart) / 1000) + ruthlessPenalty);
   return ruthlessSpent;
 }
 
@@ -7753,7 +7784,7 @@ function settleRuthless(correct) {
   const secs = ruthlessFreeze();
   accrueRuthlessXp(correct, secs);
   const detail = correct
-    ? `named in <b>${fmtTime(secs)}</b> off <b>${ruthlessShown}</b> word${ruthlessShown === 1 ? "" : "s"}`
+    ? `named in <b>${fmtTimeFine(secs)}</b> off <b>${ruthlessShown}</b> word${ruthlessShown === 1 ? "" : "s"}`
     : `given up after <b>${ruthlessShown}</b> words · <b>+${fmtTime(ruthlessSkip().penalty)}</b> on the run`;
   settleBonusRound(correct, detail);
 }
@@ -8432,7 +8463,7 @@ function settleBonusRound(correct, detail, isTimeout = false) {
            stopwatch, so the page's time and the countdown it was raced against can never
            disagree. A page the clock took reads as the full ten, which is exactly what it cost. */
         : bonusGame.id === "running-order" ? `${trackSecs.toFixed(1)}s`
-        : isRuthlessRun() ? fmtTime(gained)
+        : isRuthlessRun() ? fmtTimeFine(gained)
         : bonusPuzzle.song.album,
   });
   foldBonusPageCharms(correct, isTimeout);
@@ -8722,7 +8753,7 @@ function endBonusRun() {
   // page is not a slower sweep, it is not a sweep, so it is thrown away rather than stored and
   // compared — which is the whole reason the clock costs a player nothing to ignore.
   const runSecs = (performance.now() - bonusRunStart) / 1000;
-  const sweepSecs = (perfect && bonusSweeps(bonusGame)) ? runSecs : null;
+  const sweepSecs = (perfect && bonusSweeps(bonusGame)) ? roundTenth(runSecs) : null;
   // Read BEFORE the run is banked: a first sweep and a faster one are both `isSweepBest`, and
   // only the second of them has beaten anything, so only the second may say so.
   const hadSweep = bonusRecord(bonusGame.id).sweep;
@@ -8764,22 +8795,22 @@ function endBonusRun() {
   const aside = bonusGame.id === "then-what"
     ? `longest chain · ${chainRun} line${chainRun === 1 ? "" : "s"}`
     : sweepSecs != null
-    ? `in ${fmtTime(sweepSecs)}` + (rec.isSweepBest && hadSweep ? " · fastest yet" : "")
+    ? `in ${fmtTimeFine(sweepSecs)}` + (rec.isSweepBest && hadSweep ? " · fastest yet" : "")
     : bonusGame.id === "running-order"
-    ? `${BONUS_ROUNDS} pages in ${fmtTime(runSecs)}`
+    ? `${BONUS_ROUNDS} pages in ${fmtTimeFine(runSecs)}`
     : "";
   const stampText = perfect ? "clean sweep" : (rec.isBest && rec.plays > 1 ? "new best" : "");
   // The fastest sweep joins the small print only once there IS one. An empty slot on a game
   // you have never swept advertises a ceiling you haven't reached, which is the opposite of
   // what a second axis is for.
-  const sweepFoot = rec.sweep ? ` · swept ${fmtTime(rec.sweep)}` : "";
-  const foot = timed ? `best ${fmtTime(rec.best)} · played ${rec.plays}`
+  const sweepFoot = rec.sweep ? ` · swept ${fmtTimeFine(rec.sweep)}` : "";
+  const foot = timed ? `best ${fmtTimeFine(rec.best)} · played ${rec.plays}`
                      : `best ${Math.min(rec.best, max)} / ${max}${sweepFoot} · played ${rec.plays}`;
   bonusBackRun = {
     game: bonusGame,
     remark: bonusRemark(bonusScore, max, perfect),
     aside, stamp: stampText, foot,
-    score: timed ? fmtTime(bonusScore) : String(bonusScore),
+    score: timed ? fmtTimeFine(bonusScore) : String(bonusScore),
     scoreSub: timed ? "" : "/" + max,
     tracks: bonusLog.slice(),
   };
@@ -8892,7 +8923,7 @@ function foldRuthlessCharms({ pages, named, gaveUp, secs, prevLast }) {
 
 function endRuthlessRun() {
   const lensId = ruthlessLensId, lens = ruthlessLens(lensId);
-  const secs = bonusScore;
+  const secs = roundTenth(bonusScore);
   const pages = bonusLog.slice();
   const named = pages.filter((t) => t.ok).length;
   const gaveUp = pages.length - named;
@@ -8932,7 +8963,7 @@ function endRuthlessRun() {
   });
   // A time is the whole result, so it takes the big number; the pages it took are the sub.
   // Prose rather than ledger cells: "all 10 named" is the finding, not a column of numbers.
-  setFinalTally(fmtTime(secs), gaveUp
+  setFinalTally(fmtTimeFine(secs), gaveUp
     ? `${named} of ${pages.length} named` : `all ${pages.length} named`);
   $("keepGoingBtn").style.display = "none";
   $("namePrompt").style.display = "none";
@@ -8954,11 +8985,11 @@ function endRuthlessRun() {
     const gap = secs - rec.best;
     status = gap === 0
       ? `<div class="chall-result-status">level with your best</div>`
-      : `<div class="chall-result-status">${fmtTime(gap)} off your best</div>`;
+      : `<div class="chall-result-status">${fmtTimeFine(gap)} off your best</div>`;
   }
   const note = rec.bestGaveUp
     ? `${rec.bestGaveUp} given up` : `named all ${pages.length}`;
-  const meta = `<div class="chall-result-meta">best ${fmtTime(rec.best)} · ${escapeHtml(note)}` +
+  const meta = `<div class="chall-result-meta">best ${fmtTimeFine(rec.best)} · ${escapeHtml(note)}` +
     ` · played ${rec.plays}</div>`;
 
   // The ten pages, kept BELOW the actions where the fine print goes: the run's own keepsake and
@@ -10339,7 +10370,7 @@ function renderRuthlessPage() {
     const rec = ruthlessRecord(lens.id);
     const pool = ruthlessPool(allSongs, lens).deal.length;
     const best = rec.plays
-      ? `<span class="rl-best">${fmtTime(rec.best)}</span>`
+      ? `<span class="rl-best">${fmtTimeFine(rec.best)}</span>`
       : `<span class="rl-best rl-best--none">—</span>`;
     // How the best was got, kept UNDER the time. A time with pages handed back is the same record
     // and a different run, so the section says which without making it a second board.
@@ -10347,7 +10378,7 @@ function renderRuthlessPage() {
       ? (rec.bestGaveUp ? `${rec.bestGaveUp} given up` : `named all ${BONUS_ROUNDS}`)
       : "not played";
     secs += `<button type="button" class="rl-sec" data-lens="${lens.id}"` +
-        ` aria-label="${escapeHtml(lens.label)}: ${pool} songs, ${rec.plays ? "best " + fmtTime(rec.best) + ", " : ""}${escapeHtml(note)}">` +
+        ` aria-label="${escapeHtml(lens.label)}: ${pool} songs, ${rec.plays ? "best " + fmtTimeFine(rec.best) + ", " : ""}${escapeHtml(note)}">` +
       `<span>` +
         `<span class="rl-h">[${escapeHtml(lens.label)}]<span class="rl-pool">${pool} songs</span></span>` +
         `<span class="rl-lines" aria-hidden="true">${rlStrokes(lens)}</span>` +
@@ -11641,7 +11672,7 @@ function buildCardMeta() {
     const clean = ruthlessCard.named === ruthlessCard.pages;
     title = clean ? "ten named, nothing handed back ★" : "ten pages against the clock";
     stats.push({ v: "Ruthless Game", l: ruthlessCard.lens || "mode" });
-    stats.push({ v: fmtTime(ruthlessCard.secs), l: "the run" });
+    stats.push({ v: fmtTimeFine(ruthlessCard.secs), l: "the run" });
     stats.push({ v: ruthlessCard.named + "/" + ruthlessCard.pages, l: "named" });
   } else if (gameType === "custom") {
     const finite = !customInfinite();
@@ -26845,13 +26876,13 @@ function buildDevApi() {
       clock: () => {
         if (!bonusGame) return "no run in progress";
         return { game: bonusGame.id, sweeps: bonusSweeps(bonusGame),
-                 elapsed: fmtTime((performance.now() - bonusRunStart) / 1000) };
+                 elapsed: fmtTimeFine((performance.now() - bonusRunStart) / 1000) };
       },
       sweep: (n = 90) => {
         if (!bonusGame) return "no run in progress";
         if (!bonusSweeps(bonusGame)) return `${bonusGame.id} keeps no sweep time`;
         bonusRunStart = performance.now() - Math.max(0, +n || 0) * 1000;
-        return { game: bonusGame.id, elapsed: fmtTime((performance.now() - bonusRunStart) / 1000) };
+        return { game: bonusGame.id, elapsed: fmtTimeFine((performance.now() - bonusRunStart) / 1000) };
       },
       seedSweep: (id, secs = 120) => {
         const g = BONUS_GAMES.find((x) => x.id === id);
@@ -26861,7 +26892,9 @@ function buildDevApi() {
         // it as UNPLAYED — so a seed meant for eyeballing the strip would show nothing at all.
         // The run that swept is therefore banked too, at the full marks it must have scored.
         if (!bonusRecord(id).plays) recordBonusRun(id, bonusMaxScore(g), bonusMaxScore(g));
-        const out = seedBonusSweep(id, Math.max(0, +secs || 0));
+        // Snapped to the tenth the board really stores, so a seeded time is one a played run
+        // could actually beat rather than a hidden hundredth standing in its way.
+        const out = seedBonusSweep(id, roundTenth(Math.max(0, +secs || 0)));
         if ($("bonusBody")) renderBonusPage();
         return out;
       },
@@ -27218,17 +27251,20 @@ function buildDevApi() {
           const words = ok ? (n <= snaps ? Math.max(1, snapAt - (n % 2))
                                          : snapAt + 6 + (n % 17))
                            : giveUp.after;
-          const secs = ok ? words : words + giveUp.penalty;
+          // A tenth on top, since a real page is frozen off the clock to a tenth and a run of
+          // flat whole seconds is the one shape a played run can almost never post. Derived from
+          // the page number so a fabrication stays reproducible.
+          const secs = (ok ? words : words + giveUp.penalty) + (n * 3 % 10) / 10;
           bonusScore += secs;
           accrueRuthlessXp(ok, secs);
           // The handouts are taken off the BACK of the named pages so they never collide with the
           // snapped ones at the front: a page cannot be both named on sight and told to you.
           const handout = ok && n > named - handouts;
-          bonusLog.push({ n, ok, title: song.title, album: song.album, words, handout, note: fmtTime(secs) });
+          bonusLog.push({ n, ok, title: song.title, album: song.album, words, handout, note: fmtTimeFine(secs) });
         }
         bonusRound = BONUS_ROUNDS;
         endRuthlessRun();
-        return `${lens.label}: ${fmtTime(bonusScore)}, ${named} named, ${Math.min(snaps, named)} on sight, ` +
+        return `${lens.label}: ${fmtTimeFine(bonusScore)}, ${named} named, ${Math.min(snaps, named)} on sight, ` +
           `${Math.min(handouts, named)} handed to you, ${wrong} wrong typed`;
       },
       /* Ruthless Game. `drip(n)` pulls the next n words onto the page without waiting for the
@@ -27253,7 +27289,7 @@ function buildDevApi() {
         $("bonusInput").value = bonusPuzzle.song.title;
         judgeName();
         return ruthlessSpent
-          ? `${fmtTime(ruthlessSpent)} off ${ruthlessShown} word${ruthlessShown === 1 ? "" : "s"}`
+          ? `${fmtTimeFine(ruthlessSpent)} off ${ruthlessShown} word${ruthlessShown === 1 ? "" : "s"}`
           : "not settled";
       },
       /* What the deal can and cannot land on. A ten-page run never shows you a bar, so this is
@@ -27282,7 +27318,9 @@ function buildDevApi() {
 
       seed: (lensId, seconds, gaveUp = 0) => {
         if (!ruthlessLens(lensId)) return `no such lens — ${RUTHLESS_LENSES.map((l) => l.id).join(", ")}`;
-        const out = recordRuthlessRun(lensId, seconds, gaveUp, todayKey());
+        // Snapped to the tenth the board really stores (see roundTenth), so a seeded best is a
+        // time a played run can beat rather than a hidden hundredth sitting in front of it.
+        const out = recordRuthlessRun(lensId, roundTenth(seconds), gaveUp, todayKey());
         repaintRuthless();
         return out;
       },
@@ -27290,7 +27328,7 @@ function buildDevApi() {
       // margin, the played count, and how a lens that was given up on sits beside one that wasn't),
       // and seeding six lenses one at a time to look at that is six presses too many.
       fill: () => {
-        RUTHLESS_LENSES.forEach((l, i) => recordRuthlessRun(l.id, 90 + l.median * 2, i % 3 === 0 ? 1 : 0, todayKey()));
+        RUTHLESS_LENSES.forEach((l, i) => recordRuthlessRun(l.id, roundTenth(90 + l.median * 2 + i / 10), i % 3 === 0 ? 1 : 0, todayKey()));
         repaintRuthless();
         return "board filled — open Ruthless Game";
       },
