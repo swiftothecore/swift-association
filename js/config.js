@@ -622,7 +622,7 @@ export const BONUS_GAMES = [
   { id: "word-cloud", name: "Word Cloud", ready: true, sweep: true,
     kicker: "the song, out of order", tint: "#6b7a50",
     line: "A scatter of a song's own words. Name it.",
-    blurb: "A song's words scattered across the page, the ones it leans on written biggest, and not a line of it in order. Nothing here can be sung: either you know what the song sounds like from the inside, or you don't." },
+    blurb: "A song's own words scattered across the page, the ones it leans on written biggest, and not a line of it in order. Nothing here can be sung." },
 ];
 /* ---------- The Ruthless run descriptor ----------
    NOT a bonus game and no longer in the roster above (2026-08-18). It is the object the Ruthless
