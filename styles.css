@@ -3865,11 +3865,17 @@
      the thing being read rather than the answer to something above it. Its meta line is empty
      while the page is live and fills in at the reveal, which is why the block still needs its
      bottom margin rather than borrowing one from a line that is not there yet. */
-  .bg-sheet--ask { margin: 12px auto 30px; }
+  /* Wider than a reveal's measure. `bg-sheet`'s 34ch is a reading width for a heading with a
+     lyric under it; here the heading is set half again as big and has nothing under it, so at
+     that measure ordinary titles ("I Can Do It With a Broken Heart") broke over two lines for
+     no reason. At this width all but the three longest in the catalogue sit on one line, and
+     those three are long enough to have earned the second one, which `balance` splits evenly
+     rather than leaving a single word stranded. */
+  .bg-sheet--ask { margin: 12px auto 30px; max-width: 46ch; }
   /* Bigger than a reveal's heading, because here it IS the page: one written line with nothing
      else on the paper, which at the shared size reads as a caption for something missing rather
      than as the question. The real title inherits the size when it lands. */
-  .bg-sheet--ask .bg-sheet-title { font-size: calc(34px + var(--text-size-adjust)); }
+  .bg-sheet--ask .bg-sheet-title { font-size: calc(34px + var(--text-size-adjust)); text-wrap: balance; }
   /* A missed title is written in the editor's red pen (--red-pen), NOT in --margin: that one is
      the printed rule, deliberately faint because it is meant to sit under text, and a heading
      set in it reads as washed out rather than as corrected. A named title gets no mark at all,
