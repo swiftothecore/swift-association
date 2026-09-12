@@ -249,6 +249,12 @@ let runStartHour = -1;   // wall-clock hour the run opened on (3 AM And I'm Stil
 let hintsUsed = 0;       // count of rounds this game where a hint was taken
 let hintBudgetLeft = Infinity; // Custom mode: total hint reveals still allowed this run (Infinity = uncapped, every other mode)
 let runFolded = false;   // partial/full stats already saved for the current run (quit / unload / endGame)
+// The word that had beaten the player most often BEFORE this run opened, snapshotted at run
+// start so a word missed on page three and answered on page nine cannot crown itself and be
+// avenged in the same breath. Null when nothing has ever been missed. The note it feeds is
+// once a run, which is what runNemesisNoted holds.
+let runNemesis = null;
+let runNemesisNoted = false;
 let hintTier = 0;        // hints revealed this round (0..3); reset each round
 let roundHintSong = null;// the valid song this round's hints zoom in on
 let hintUrgeTimer = null;// idle nudge timer for Relaxed (no clock)
@@ -13026,6 +13032,9 @@ function resetRunState() {
   hintsUsed = 0;
   hintBudgetLeft = Infinity;   // Custom mode overrides this to its hint budget in startCustom
   runFolded = false;
+  // Read before a single page of this run exists, which is the whole point of it.
+  runNemesis = topTallyEntry(loadSongTally().misses || {});
+  runNemesisNoted = false;
   flourishThisRun = false;   // the closing flourish is once per run, and this is every run's start
   floatLevel = ADAPT_START_LEVEL;   // only read on a run riding Custom's floating rarity pool
   floatPromo = 0;
@@ -13131,6 +13140,25 @@ function resetRunState() {
   if (wrap) wrap.classList.remove("vanished");
 }
 
+/* Which game types fold a run into the LIFETIME catalogue tally — the per-song and per-word
+   record behind Songs Discovered, Favourite Song, Favourite Album and the Nemesis Word. Three
+   end paths write it (endGame, endChallenge, endAlbumFocus) plus the partial fold below, and
+   they all go through foldCatalogue, so this list IS the rule rather than a description of it.
+   Custom, the guest shelf, Ruthless and the bonus shelf are sandboxed: they end somewhere else
+   and write nothing here.
+
+   It is a predicate rather than an inline check because the copy that reads the tally has to
+   agree with the copy that writes it. A note saying a nemesis was finally beaten, printed on a
+   run whose result never reaches the tally, is a lie the next page would expose. */
+const CATALOGUE_FOLD_TYPES = ["classic", "infinite", "daily", "challenge", "album"];
+function foldsCatalogue(type = gameType) { return CATALOGUE_FOLD_TYPES.includes(type); }
+// The only way this file writes the catalogue. A sandboxed type returns the stored tally
+// untouched, so callers that read the result back (for "I Knew Everything" and the song
+// keepsakes) still see the truth rather than a half-built object.
+function foldCatalogue(rounds) {
+  return foldsCatalogue() ? recordGameTally(rounds) : loadSongTally();
+}
+
 // Fold the rounds completed so far into the lifetime stats (songs/words
 // discovered, played count, score distribution). Shared by quitGame and the
 // page-unload handler so leaving mid-game never throws away progress. An
@@ -13145,7 +13173,7 @@ function foldRunProgress() {
   runFolded = true;
   const partialScore = gameType === "infinite" ? roundResults.length : score;
   updateStats(partialScore, boardMode(), gameMaxStreak, false);
-  recordGameTally(roundResults.map((correct, i) => ({
+  foldCatalogue(roundResults.map((correct, i) => ({
     correct,
     title: roundSongs[i] || null,
     album: roundAlbums[i] || null,
@@ -16006,7 +16034,7 @@ function endChallenge() {
       ...(verseBonus > 0 ? { v: verseBonus } : {}),
       ...(hintsUsed > 0 ? { h: 1 } : {}),
     });
-    const tally = recordGameTally(roundResults.map((correct, i) => ({
+    const tally = foldCatalogue(roundResults.map((correct, i) => ({
       correct,
       title: roundSongs[i] || null,
       album: roundAlbums[i] || null,
@@ -16350,7 +16378,7 @@ function endAlbumFocus() {
       ...(verseBonus > 0 ? { v: verseBonus } : {}),
       ...(hintsUsed > 0 ? { h: 1 } : {}),
     });
-    const tally = recordGameTally(roundResults.map((correct, i) => ({
+    const tally = foldCatalogue(roundResults.map((correct, i) => ({
       correct,
       title: roundSongs[i] || null,
       album: roundAlbums[i] || null,
@@ -20662,12 +20690,8 @@ function submitAnswer(song, isTimeout) {
   // Distinct albums the prompt word *could* have been answered from — the Discography skill
   // normalises breadth against this, so a word that only lives in one album never penalises.
   roundAnswerAlbums[round - 1] = [...new Set(currentSongs.map((s) => s.album).filter(Boolean))];
-  // Prompt word — for Nemesis Word. Whose Line? never shows a word, so it logs none: crediting
-  // (or blaming) the player for a word they were never asked about would poison the catalogue.
-  // Both Of Us logs none for the mirror reason: the page's difficulty belongs to the SET of
-  // words, and the tally has one slot per round, so either half would be a lie — a miss on
-  // "storm + diamond" is no evidence at all about "storm". The song still logs normally.
-  roundWords[round - 1] = (whoseLineRuleActive() || bothRuleActive()) ? null : currentWord;
+  // Prompt word — for Nemesis Word. See loggedPromptWord for why two rules log none.
+  roundWords[round - 1] = loggedPromptWord();
   roundSongs[round - 1] = correct && song ? song.title : null;  // credited song — for the lifetime tally
   // One Of A Kind: the page the named song was finally landed on. This IS the run's score (see
   // isGameOver and the bestScore swap in endChallenge), so it is written once and never
@@ -21381,6 +21405,40 @@ function wordFormsNote(song, lineOverride) {
     `<i>Match word variants</i> in settings turns that off.</p>`;
 }
 
+/* The prompt word THIS page is credited against in the lifetime tally — the value that goes into
+   roundWords at the verdict, read live here by the revenge note and the dev panel, which both
+   need the same answer a moment earlier.
+
+   Whose Line? never shows a word, so it logs none: crediting (or blaming) the player for a word
+   they were never asked about would poison the catalogue. Both Of Us logs none for the mirror
+   reason: the page's difficulty belongs to the SET of words, and the tally has one slot per
+   round, so either half would be a lie — a miss on "storm + diamond" is no evidence at all about
+   "storm". The song still logs normally in both. */
+function loggedPromptWord() {
+  return (whoseLineRuleActive() || bothRuleActive()) ? null : currentWord;
+}
+
+/* A revenge note. The word that has beaten the player more than any other, finally answered,
+   gets a small `finally.` scribbled beside the verdict — the notebook noticing, and nothing
+   else: no charm, no score, no tally of its own.
+
+   Three gates, each closing a way the note could lie. The nemesis is the one snapshotted at
+   run start (runNemesis), never a live read, or a word missed earlier in THIS run could be
+   crowned and avenged on the same page. It fires only where the result will actually reach
+   the catalogue (foldsCatalogue), because a sandboxed run that congratulates you on settling
+   a score it will not save is telling you your standings changed when they did not. And it is
+   once a run, so a nemesis dealt twice does not turn a marginal note into a running commentary.
+
+   The page's word is read off roundWords, which the verdict has already written, rather than off
+   currentWord: a page that logs no word (see loggedPromptWord) has no nemesis to beat and gets no
+   note. Marks itself spent, so the caller printing it is what spends it. */
+function revengeNote() {
+  if (runNemesisNoted || !runNemesis || !foldsCatalogue()) return "";
+  if (roundWords[round - 1] !== runNemesis.key) return "";
+  runNemesisNoted = true;
+  return `<p class="revenge-note" aria-label="finally answered your most missed word">finally.</p>`;
+}
+
 function showCorrectFeedback(song, lyricMatch) {
   resetLyricReveals();
   const fb = $("feedback");
@@ -21439,8 +21497,12 @@ function showCorrectFeedback(song, lyricMatch) {
   const advanceUI = auto
     ? `<div class="countdown">next page in <b id="cd">${settings.countdownSecs}</b></div><button id="skipBtn" class="countdown-skip">skip →</button>`
     : `<button id="continueBtn" class="btn-ghost">next page →</button>`;
+  // Scribbled between the banner and the lyric card, where the eye already is, and above
+  // everything that explains the page — it is a margin aside, not part of the verdict.
+  const revenge = revengeNote();
   fb.innerHTML = `
     <div class="fb-head"><div class="banner good">${banner}</div>${sticker}</div>
+    ${revenge}
     ${inkNote}
     ${firstNote}
     ${card}
@@ -21794,7 +21856,7 @@ function endGame() {
       unlock("answer-word-missed-in-earlier-game");
     }
 
-    const tally = recordGameTally(roundResults.map((correct, i) => ({
+    const tally = foldCatalogue(roundResults.map((correct, i) => ({
       correct,
       title: roundSongs[i] || null,
       album: roundAlbums[i] || null,
@@ -26693,6 +26755,44 @@ function buildDevApi() {
       },
       // Wipe the word history only, leaving the song/album counts (same reach as novelty.forget).
       forget: () => { const t = loadSongTally(); t.words = {}; t.misses = {}; saveSongTally(t); return loadSongTally(); },
+    },
+    /* The revenge note. Its three gates are all invisible from the page, which is exactly why
+       it needs a window: the note not appearing looks identical whether the word was wrong, the
+       snapshot was taken before the word was a nemesis, or the mode was never going to save the
+       result anyway. `state` answers all three at once. */
+    revenge: {
+      // The nemesis this RUN is judging against, the once-a-run latch, this page's logged word
+      // and whether this game type will reach the catalogue at all.
+      state: () => ({
+        nemesis: runNemesis ? runNemesis.key : null,
+        misses: runNemesis ? runNemesis.count : 0,
+        noted: runNemesisNoted,
+        pageWord: loggedPromptWord() || null,
+        gameType, foldsCatalogue: foldsCatalogue(),
+      }),
+      // Point the RUN's snapshot at a word without touching the lifetime tally, so the note can
+      // be seen on the very next page without a seeded miss history rewriting the catalogue.
+      // This is the honest test of the display gate; tally.miss is the test of the snapshot.
+      set: (word, n = 1) => {
+        const w = playableWords.find((x) => x.toLowerCase() === String(word || "").toLowerCase());
+        if (!w) return `not a playable prompt word: ${word}`;
+        runNemesis = { key: w, count: Math.max(1, n | 0) };
+        runNemesisNoted = false;
+        return { nemesis: w, misses: runNemesis.count, noted: false };
+      },
+      // Aim the snapshot at the word on the page in front of you, the one-liner for "show me the
+      // note". Refuses the pages that log no word (Whose Line?, Both Of Us) rather than pretending.
+      arm: () => {
+        const w = loggedPromptWord();
+        if (!w) return "this page logs no prompt word, so it can have no nemesis";
+        runNemesis = { key: w, count: Math.max(1, runNemesis && runNemesis.key === w ? runNemesis.count : 3) };
+        runNemesisNoted = false;
+        return { nemesis: w, misses: runNemesis.count, foldsCatalogue: foldsCatalogue() };
+      },
+      // Hand the once-a-run latch back, to see a second note without restarting the run.
+      rearm: () => { runNemesisNoted = false; return { noted: false }; },
+      // Forget the run's snapshot entirely — the no-history case, where no note can fire.
+      clear: () => { runNemesis = null; runNemesisNoted = false; return { nemesis: null }; },
     },
     // The live run's per-page stopwatch. Reads the array the timing charms will judge; `sum` is
     // what Relaxed's results line shows (null in any mode that has a clock of its own).

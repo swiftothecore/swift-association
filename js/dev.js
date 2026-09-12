@@ -292,6 +292,28 @@ export function initDev(api) {
   body.append(section("charm batch 1",
     row(btn("fast ✓ underline", () => toast(api.batch1.firstThought() ? "0.5s verdict" : "start a live answerable round")))));
 
+  // ---- Revenge note ----------------------------------------------------------
+  // The "finally." scribble is gated on three things the page cannot show you: the run's
+  // nemesis SNAPSHOT (not the live tally), the once-a-run latch, and whether this game type
+  // will fold the catalogue at all. The readout prints all three, so a note that did not
+  // appear has a reason rather than a shrug. "arm this page" is the one-click demo: it points
+  // the snapshot at the word in front of you, leaving the lifetime tally untouched.
+  const revOutNote = mk("span", { class: "dv-note" }, "—");
+  const readRevenge = () => {
+    const s = api.revenge.state();
+    revOutNote.textContent =
+      `nemesis ${s.nemesis ? `"${s.nemesis}" ×${s.misses}` : "none"} · ` +
+      `page ${s.pageWord ? `"${s.pageWord}"` : "no word"} · ` +
+      `${s.noted ? "already noted this run" : "unspent"} · ` +
+      `${s.gameType}${s.foldsCatalogue ? " folds" : " is sandboxed (no note)"}`;
+  };
+  body.append(section("revenge note",
+    row(btn("arm this page", () => { toast(String(JSON.stringify(api.revenge.arm()))); readRevenge(); }),
+        btn("un-note", () => { api.revenge.rearm(); readRevenge(); }),
+        btn("clear", () => { api.revenge.clear(); readRevenge(); }),
+        btn("read", readRevenge)),
+    row(revOutNote)));
+
   // ---- Answer reveal ---------------------------------------------------------
   // The verdict's cards and repeatable batches under them. "Widest page" deals enough songs to
   // exercise several presses; the readout distinguishes the pool, loaded rows and remainder.

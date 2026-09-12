@@ -7400,6 +7400,29 @@
     font-family: var(--hand); font-size: calc(16px + var(--text-size-adjust)); color: var(--ink-soft);
     text-align: center; margin: 0 auto 10px; max-width: 32ch; line-height: 1.35;
   }
+  /* The revenge note: your most-missed word, finally answered. Written in --red-pen because
+     that is the pen this notebook has always marked the nemesis in, on the stats page and on
+     every page it took off you, so the closure is in the hand as much as in the word. Small,
+     lowercase, tilted off the baseline and pushed to the right of the measure: a thing
+     scribbled in the margin while the page was being marked, not an announcement. It sits in
+     the flow rather than absolutely, so it can never land on the card or the next-page button
+     at any width. */
+  .revenge-note {
+    font-family: var(--hand); font-weight: 700; font-size: calc(17px + var(--text-size-adjust));
+    color: var(--red-pen); line-height: 1;
+    margin: -2px 0 9px; padding-right: clamp(0px, 6vw, 46px);
+    text-align: right; transform: rotate(-3.5deg); transform-origin: 100% 50%;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .revenge-note { animation: revengeInk 340ms ease-out both; }
+  }
+  /* Written on, left to right, the way the hand would do it. Opacity alone rather than a
+     scale or a slide, so nothing under it appears to move. */
+  @keyframes revengeInk {
+    0% { opacity: 0; clip-path: inset(0 100% 0 0); }
+    100% { opacity: 1; clip-path: inset(0 -8% 0 0); }
+  }
+
   /* Long Story Long: what the page just paid, under the verdict banner. Typewriter rather
      than handwriting because it is a meter reading and not a remark, and the number itself
      is the only thing lifted to full ink — the sentence around it is there to be glanced at
