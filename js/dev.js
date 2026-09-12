@@ -1147,9 +1147,17 @@ export function initDev(api) {
   // ---- Bonus games / random goals -------------------------------------------
   const bonusSel = select(api.bonus.list(), (g) => g.id, (g) => g.name);
   const bonusN = num(10);
+  const endlessN = num(30);
   body.append(section("bonus / random",
     row(bonusSel, btn("play", () => api.bonus.play(bonusSel.value)), btn("open shelf", () => api.bonus.open()),
         btn("fill sleeve", () => toast(api.bonus.fill(10)))),
+    // The endless side. "play endless" is refused on a game that hasn't got one, which is the
+    // answer worth having: the flag is on the roster, and this row is where you find out
+    // whether the game you are looking at carries it. `deep` fabricates a run that deep and
+    // lands on its back cover, which is the only way to see a truncated listing.
+    row("endless", btn("play endless", () => toast(api.bonus.play(bonusSel.value, true))),
+        endlessN, btn("deep run", () => toast(api.bonus.endless(+endlessN.value))),
+        btn("board", () => { console.table(api.bonus.endlessBoard()); toast("endless board in console"); })),
     row("sample", bonusN, btn("show", () => { console.table(api.bonus.sample(bonusSel.value, +bonusN.value)); toast("bonus sample in console"); }),
         btn("audit", () => { console.log("[dev] bonus audit", api.bonus.audit(bonusSel.value, 200)); toast("audit in console"); }),
         btn("covers", () => toast(api.bonus.covers()))),

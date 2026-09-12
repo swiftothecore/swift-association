@@ -20,7 +20,7 @@ import {
   BONUS_REDACT_SECONDS, REDACT_MIN_POINTS,
   BONUS_ONLY_SECONDS, ONLY_WIDE_PAGES,
   BONUS_CHAIN_SECONDS, CHAIN_EASY_PAGES, BONUS_SNAP_MS,
-  BONUS_TRACK_SECONDS,
+  BONUS_TRACK_SECONDS, BONUS_ENDLESS_RUNGS,
   BONUS_CLOUD_SECONDS, CLOUD_WIDE_PAGES, CLOUD_WORDS_WIDE, CLOUD_WORDS_SPARE,
   RUTHLESS_WORD_MS, RUTHLESS_OPEN_WORDS,
   RUTHLESS_PACE_SECONDS, RUTHLESS_RUN_RUNGS,
@@ -2844,10 +2844,12 @@ const HIDDEN_ACH_IDS = [
   "quit-round-1-before-typing", "give-up-after-12-before-13", "defeat-challenge-after-7-runs", "fall-for-first-impostor",
   "miss-only-first-and-last-round",
   "find-every-polaroid-keepsake",
-  // The bonus shelf's five. Added deliberately, which is what this list is for: each one makes
+  // The bonus shelf's six. Added deliberately, which is what this list is for: each one makes
   // Is It Over Now? cost a little more, and three of them are failures you have to go and
   // commit on purpose once you know they exist.
   "take-commonest-only-here-card", "name-redacted-song-after-buying-all-strips", "time-out-all-10-only-here-pages", "finish-bonus-run-one-page-short-of-sweep", "flag-spot-the-slip-impostor-under-2s",
+  // The shelf's sixth, and the endless side's own: a run that ended on the page it opened on.
+  "end-an-endless-bonus-run-on-its-first-page",
   /* The Core batch's twenty-three secrets, the scarf first. Listing them roughly two-thirds
      again on the capstone's price, which is the deliberate reading of it: leaving them out
      would make Is It Over Now?'s own description untrue the moment they shipped. Grouped the
@@ -6779,6 +6781,14 @@ let bonusRaf = null;       // clock handle (setInterval id — see startBonusClo
 let bonusClockTotal = 0;   // countdown length in ms for the live shelf page
 let bonusClockDeadline = 0;// countdown deadline, so Settings can preserve the exact remainder
 let bonusEnded = false;
+/* ---------- The endless side ----------
+   `bonusEndless` says this run has no last page: the same game off the same clock, dealt until
+   a page is missed, scored in pages cleared. `bonusDead` marks the page that ended one, set as
+   it settles so the ordinary countdown turns to the back cover instead of to another page.
+   They are two flags rather than one because a dead run is still on screen being read: the
+   verdict, the revealed title and the countdown all run exactly as they do mid-run. */
+let bonusEndless = false;
+let bonusDead = false;
 let bonusRecentFakes = []; // Spot the Slip: impostor words used recently, so a run doesn't repeat one
 let bonusRecentSongs = []; // Name That Song / Sing It Back / Redacted: songs already used this run, so one doesn't come round twice
 let bonusRecentAlbums = [];// Running Order: the last couple of albums dealt, so a run doesn't ask three Midnights pages in a row
@@ -6933,6 +6943,21 @@ function bonusMaxScore(g) { return BONUS_ROUNDS * bonusPagePoints(g); }
    first rather than reach for bonusMaxScore, which for a timed game would quote a meaningless
    ten. This one flag is the whole difference; there is no second timed code path. */
 function bonusTimed(g) { return !!(g && g.timed); }
+/* A game that can also be played with no last page. The flag is on the roster because it is a
+   property of the GAME rather than of the run: a page has to be right or wrong for a miss to
+   end anything, which is why Only Here (where every card pays and nothing is ever wrong) and
+   Redacted (where surviving at any cost means peeling every strip, and the peel economy IS the
+   game) do not carry it and must not be given it. */
+function bonusHasEndless(g) { return !!(g && g.endless); }
+/* An endless run banks on its OWN board, under the game's id with a suffix, and that is the
+   whole of its storage. A separate record rather than a field on the shared one, because every
+   number on that record means something a run with no last page cannot have: a `best` out of a
+   maximum, a `sweep`, a `swept`. Keeping them apart means recordBonusRun needs no endless
+   branch, a ten-page best can never be overwritten by a depth, and the shelf-wide charms that
+   walk BONUS_GAMES asking for plays and sweeps never see these keys — which is right, since an
+   endless run is not one of the runs they are counting. */
+function endlessId(g) { return g.id + "#endless"; }
+function endlessRecord(g) { return bonusRecord(endlessId(g)); }
 /* A game that keeps a best CLEAN-SWEEP TIME beside its score, because its ceiling is reachable
    and a tenth 10/10 is not a chase (see BONUS_GAMES). The clock runs on every run of one of
    these and is thrown away on any run that drops a page: it is the sweep that is being timed,
@@ -6952,6 +6977,10 @@ function bonusBest(g) {
 }
 function bonusScoreText() {
   if (bonusTimed(bonusGame)) return `${fmtTimeFine(bonusScore)} so far`;
+  /* Before the per-game lines below, all of which are about a total out of something. An endless
+     run is a streak and nothing else: there is no total for it to be out of, and "7 correct" is
+     a scoreboard's way of saying a number that is really a distance. */
+  if (bonusEndless) return `${bonusScore} in a row`;
   // Then What carries its longest unbroken chain beside the score. It is not scored and never
   // will be — it is there so a run has a personal chase that a 0-60 total cannot give it.
   // The page's points are banked into bonusScore only when it settles, so while it is still
@@ -6971,14 +7000,22 @@ function bonusScoreText() {
 function bonusScoreLine(g, short = false) {
   const rec = bonusRecord(g.id);
   if (!g.ready) return "not pressed yet";
-  if (!rec.plays) return "unplayed";
+  // A notebook that has only ever played the endless side has a board to report and no
+  // ten-page run behind it, so the line leads with the number it actually has.
+  if (!rec.plays) return endlessRecord(g).plays
+    ? `endless ${endlessRecord(g).best} · unplayed on ten` : "unplayed";
   // A time is quoted on its own — "best 3:41 / 10" would be nonsense, and there is no total
   // for it to be out of.
   if (bonusTimed(g)) return `best ${fmtTimeFine(bonusBest(g))} · played ${rec.plays}`;
   const score = `best ${bonusBest(g)} / ${bonusMaxScore(g)}`;
   if (rec.sweep && short) return `${score} · swept ${fmtTimeFine(rec.sweep)}`;
   const swept = rec.sweep ? ` · swept ${fmtTimeFine(rec.sweep)}` : "";
-  return `${score}${swept} · played ${rec.plays}`;
+  // The endless board, on the long line only. The shelf STRIP shares one line with nothing and
+  // already spends its room on the sweep, so a fourth unit there would clip the thing it is
+  // quoting. A game whose endless side has never been played says nothing about it, for the
+  // same reason an unswept game does not advertise a ceiling nobody has reached.
+  const endless = endlessRecord(g).plays ? ` · endless ${endlessRecord(g).best}` : "";
+  return `${score}${swept}${endless} · played ${rec.plays}`;
 }
 
 /* The staples down the spine of the open zine. Three of them, uneven, because a hand-bound
@@ -7001,6 +7038,18 @@ const PLAY_NIB =
   ` stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">` +
     `<path d="M12.9 1.7 L14.6 3.5 L6.0 12.1 L2.9 13.7 L4.2 10.5 Z"/>` +
     `<path d="M11.0 3.7 L12.9 5.4"/>` +
+  `</svg>`;
+
+/* The mark on the endless sticker, and deliberately not the Play pencil again: the two scraps
+   sit side by side and start different things, so they cannot both be a pencil. A loop drawn in
+   one stroke, wonky on purpose and with the left lobe fatter than the right, because the house
+   rule is that a mark on this page is a drawn path with a hand behind it rather than a glyph —
+   and the typographic ∞ is exactly the neat machine-set symbol that rule exists to keep off. */
+const ENDLESS_LOOP =
+  `<svg class="play-nib play-loop" viewBox="0 0 20 12" aria-hidden="true" fill="none"` +
+  ` stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">` +
+    `<path d="M10.2 6.1 C12.4 2.2 18.6 2.7 18.2 6.2 C17.8 9.8 11.9 9.5 10.0 6.0` +
+    ` C8.0 2.3 2.0 1.9 1.7 5.9 C1.4 9.8 7.7 10.2 10.2 6.1 Z"/>` +
   `</svg>`;
 
 function renderBonusPage() {
@@ -7039,8 +7088,26 @@ function renderBonusPage() {
              puts a square box-shadow under it. By the time the material had changed there was
              nothing left of the shared class but its lettering, so .bonus-play states that
              itself and inherits none of the traps. See styles.css. */
-          ? `<button type="button" id="bonusPlayBtn" class="bonus-play">${PLAY_NIB}` +
-            `<span>${bonusRecord(g.id).plays ? "Play again" : "Play"}</span></button>`
+          /* THE ENDLESS SIDE IS A SECOND SCRAP, NOT A SETTING. A toggle above one Play would
+             make the two runs look like one game in two moods, and they keep separate boards
+             and mean different things by a score. Kraft rather than gold: gold on this shelf
+             means "start the game this zine is about", and the endless side is the other way
+             to play it rather than a second front door. The note under the pair is the whole
+             rule, said once, because a run with no last page has to say so before it starts. */
+          ? `<div class="bonus-play-row">` +
+            `<button type="button" id="bonusPlayBtn" class="bonus-play">${PLAY_NIB}` +
+            `<span>${bonusRecord(g.id).plays ? "Play again" : "Play"}</span></button>` +
+            /* THE RULE RIDES ON THE STICKER, not under it. A line of explanation beneath the
+               pair made the leaf read as a form with a footnote, and it was explaining a word
+               the sticker already says: a run with no last page. What is left to know — that
+               one miss ends it — is on the tooltip and in the button's own accessible name, so
+               the pointer and the screen reader both get it and the leaf stays a leaf. */
+            (bonusHasEndless(g)
+              ? `<button type="button" id="bonusEndlessBtn" class="bonus-play is-endless"` +
+                ` data-tip="No last page: it deals until you miss one">${ENDLESS_LOOP}` +
+                `<span>Endless</span><span class="sr-only"> — no last page: it deals until you miss one</span>` +
+                `</button>` : "") +
+            `</div>`
           : `<p class="bonus-now-soon">This one is still being written, so there is nothing inside it yet.</p>`) +
       `</div>` +
     `</div>`;
@@ -7086,6 +7153,8 @@ function renderBonusPage() {
   el.querySelectorAll(".zine-tile").forEach((b) =>
     b.addEventListener("click", () => selectBonusGame(b.dataset.id)));
   if ($("bonusPlayBtn")) $("bonusPlayBtn").addEventListener("click", () => startBonusGame(bonusPicked()));
+  if ($("bonusEndlessBtn"))
+    $("bonusEndlessBtn").addEventListener("click", () => startBonusGame(bonusPicked(), null, { endless: true }));
 }
 
 // Opening a different zine on the desk. Every game can be opened, including one that isn't
@@ -7103,7 +7172,7 @@ function selectBonusGame(id) {
 // `lensId` is the Ruthless mode's section lens, and null for every shelf game including the
 // shelf's own Ruthless. It is assigned HERE rather than by the mode's start function so that
 // walking from a lens run onto the shelf cannot leave the last lens applied to a shelf page.
-function startBonusGame(g, lensId = null) {
+function startBonusGame(g, lensId = null, opts = {}) {
   disarmBonusQuit();
   ruthlessLensId = lensId;
   /* A lens run is the Ruthless MODE, and it ends on the results screen the way every other
@@ -7122,6 +7191,12 @@ function startBonusGame(g, lensId = null) {
   bonusRound = 0;
   bonusScore = 0;
   bonusEnded = false;
+  /* Checked against the roster rather than taken from the caller. A lens run is never endless,
+     and a game that does not carry the flag cannot be asked for a side it hasn't got — so a
+     stale dev call, or a launcher written later, can never put a game with no fail state on a
+     loop that needs one to stop. */
+  bonusEndless = !lensId && bonusHasEndless(g) && !!opts.endless;
+  bonusDead = false;
   flourishThisRun = false;   // the shelf never touches resetRunState, so it re-arms its own flourish
   bonusRecentFakes = [];
   bonusRecentSongs = [];
@@ -7170,7 +7245,10 @@ function startBonusGame(g, lensId = null) {
   // to be played through — the shelf's Ruthless Game card is retired, and with six lenses the one
   // thing the header has to say is which of them you are on.
   const lens = lensId ? ruthlessLens(lensId) : null;
-  const title = lens ? `Ruthless Game · ${lens.label}` : g.name;
+  // The play screen says WHICH SIDE is being played, for the same reason it says which lens a
+  // Ruthless run is on: the two are the same pages under different stakes, and a header that
+  // cannot tell them apart is a run you can forget the rules of halfway down.
+  const title = lens ? `Ruthless Game · ${lens.label}` : bonusEndless ? `${g.name} · endless` : g.name;
   screens.bonusplay.dataset.bonusGame = lens ? "ruthless" : g.id;
   $("bonusPlayTitle").innerHTML = `${bonusCover(g, "bonus-cover-sm")}<span>${escapeHtml(title)}</span>`;
   nextBonusRound({ entering: true });
@@ -7234,15 +7312,74 @@ function buildBonusPuzzle() {
   return buildNamePuzzle(songs, lineIndex, Math.random, 120, new Set(bonusRecentSongs));
 }
 
+/* How many songs this game can actually deal, which is what the endless run's no-repeat list
+   is measured against. Running Order deals off the track index rather than off the pool
+   directly — a song on a pseudo-album or past its record's standard edition has no track number
+   and is never a page — so the count has to ask the same question the builder does. */
+function bonusDealCount() {
+  const songs = bonusSongs();
+  if (bonusGame && bonusGame.id === "running-order") {
+    const idx = bonusIndexes().trackIndex;
+    return songs.filter((song) => idx.of.has(song.title)).length;
+  }
+  return songs.length;
+}
+
+/* Everything an endless run has been barring, handed back at once. Only Here keeps a SECOND
+   ban list — the card words it has already dealt, which is a hard bar inside the builder rather
+   than the soft song preference — and a long run starves its own pages if that one is never
+   emptied: a song whose vocabulary has been spent can no longer make a hand. The two are
+   cleared together and never apart, because a reshuffle that hands back the songs while still
+   barring their words is a reshuffle that changes nothing. */
+function endlessReshuffle() {
+  bonusRecentSongs = [];
+  onlyDealt = new Set();
+}
+
 function nextBonusRound(options = {}) {
-  if (bonusRound >= BONUS_ROUNDS) { endBonusRun(); return; }
+  /* An endless run ends on a PAGE rather than on a count, and the page it ends on is read on
+     screen first: the miss settles like any other, and this is the countdown under it arriving
+     at the back cover instead of at another page. */
+  if (bonusDead) { endBonusRun(); return; }
+  if (!bonusEndless && bonusRound >= BONUS_ROUNDS) { endBonusRun(); return; }
   bonusRound++;
+  /* No song comes round twice until every one has been dealt — `bonusRecentSongs` is the ban
+     list and nothing trims it, so a ten-page run never repeats and an endless run repeats only
+     once it has been through the whole pool. Emptied exactly when it has barred everything,
+     which is the reshuffle: a deep run goes on dealing rather than running out of pages, and
+     the alternative (letting the builder fail its way to a repeat) would start handing back
+     songs while there were still fresh ones left.
+     Deliberately NOT a rolling window of the last N. A window would deal a song again at a
+     point where the run still remembers answering it, and a page you have already been told
+     the answer to is a free one. */
+  if (bonusEndless && bonusRecentSongs.length >= bonusDealCount()) endlessReshuffle();
   bonusPuzzle = buildBonusPuzzle();
   // A builder returning null means it couldn't find a puzzle clearing its fairness bars. That
   // should be vanishingly rare, but skipping the page is the honest response — never show a
   // puzzle we can't vouch for. Settled BEFORE the page turns, so a skip can never leave a
   // half-turned sheet on the desk or start two flips over each other.
-  if (!bonusPuzzle) { nextBonusRound(options); return; }
+  /* Belt and braces under the reshuffle above: if a builder somehow keeps coming back empty,
+     the recursion has to stop somewhere rather than spin. A finite run has ten pages to run out
+     of and could only ever loop here through a bug; an endless one has no such floor. */
+  if (!bonusPuzzle) {
+    const skips = (options.skips || 0) + 1;
+    /* An endless run has one thing left to try before it gives up on a page: empty the ban list
+       and deal again. The count above catches the clean exhaustion, but a builder can also fail
+       while a handful of songs are still free — 120 random tries do not reliably find the last
+       four in a pool of hundreds — and a run that ended there would have ended on a deal that
+       failed rather than on a page the player missed, which is the one way this mode must never
+       stop. The page number is given back first, so the retry is the same page rather than the
+       next one. */
+    if (bonusEndless && (bonusRecentSongs.length || onlyDealt.size)) {
+      endlessReshuffle();
+      bonusRound--;
+      nextBonusRound({ ...options, skips });
+      return;
+    }
+    if (skips > 12) { endBonusRun(); return; }
+    nextBonusRound({ ...options, skips });
+    return;
+  }
   if (bonusPuzzle.fakeWord) {
     bonusRecentFakes.push(bonusPuzzle.fakeWord.toLowerCase());
     if (bonusRecentFakes.length > 6) bonusRecentFakes.shift();
@@ -7280,7 +7417,9 @@ function nextBonusRound(options = {}) {
   const lay = () => {
     $("bonusFeedback").innerHTML = "";
     $("bonusFeedback").className = "bg-feedback";
-    $("bonusProgress").textContent = `round ${bonusRound} / ${BONUS_ROUNDS}`;
+    // An endless page is not out of anything, so it is numbered rather than counted down.
+    $("bonusProgress").textContent = bonusEndless
+      ? `page ${bonusRound}` : `round ${bonusRound} / ${BONUS_ROUNDS}`;
     $("bonusScore").textContent = bonusScoreText();
     $("bonusTimer").style.display = "";
     renderBonusPageRegister();
@@ -7306,7 +7445,9 @@ function nextBonusRound(options = {}) {
 // own mode furniture, so it deliberately does not inherit the shelf's margin register.
 function renderBonusPageRegister() {
   const el = $("bonusPageRegister");
-  const shelfRun = bonusGame && !isRuthlessRun() && !bonusEnded;
+  // An endless run gets none: the register draws the whole stack with the current page marked
+  // in it, and there is no stack to draw when the run has no last page (Ruthless's reason too).
+  const shelfRun = bonusGame && !isRuthlessRun() && !bonusEndless && !bonusEnded;
   renderNotebookPageRegister(el, bonusRound, shelfRun ? BONUS_ROUNDS : 0,
                              shelfRun ? bonusGame.tint : "");
 }
@@ -7432,7 +7573,12 @@ function renderBonusRound() {
       `<p class="bg-ask">pick the word the fewest other songs sing</p>` +
       bonusSongHead(p.song, "") +
       `<div class="bg-hand" id="bonusHand"></div>` +
-      `<p class="bg-hint">every one of them is in the song, spelled the way it is sung</p>`;
+      // The hint is the game's own reassurance on the ten-page side, where no pick is wrong.
+      // On the endless side that is no longer true and would be exactly the wrong thing to say:
+      // every card is still real, and only one of them keeps the run alive.
+      `<p class="bg-hint">${bonusEndless
+          ? "every one of them is in the song — only the rarest keeps the run"
+          : "every one of them is in the song, spelled the way it is sung"}</p>`;
     renderOnlyHand();
   } else if (isRuthlessRun()) {
     // The song writes itself out into `.bg-stream`, a word a second, breaking where the song
@@ -7477,10 +7623,18 @@ function renderBonusRound() {
         return `<span class="bg-tok">${escapeHtml(t.pre)}${core}${escapeHtml(t.post)}</span>`;
       }).join("") + `</div>`).join("");
     body.innerHTML =
-      `<p class="bg-ask">name the song — every strip you peel costs a point</p>` +
+      /* The page's two sides ask for different things and have to say so, because the whole of
+         Redacted's play is what a strip is costing you. Ten pages: a point a strip. Endless: the
+         strips are free and the title is everything, so what is left to spend is the clock — and
+         a worth counter under a page that is worth one page either way would be the one number
+         on screen that meant nothing. */
+      `<p class="bg-ask">${bonusEndless
+          ? "name the song — peel what you need, the clock is the cost"
+          : "name the song — every strip you peel costs a point"}</p>` +
       label +
       `<div class="bg-redact" role="group" aria-label="A verse with words taped over">${rows}</div>` +
-      `<p class="bg-worth">this page is worth <b id="bonusWorth">${redactWorth}</b></p>` +
+      (bonusEndless ? ""
+        : `<p class="bg-worth">this page is worth <b id="bonusWorth">${redactWorth}</b></p>`) +
       bonusWritingLine({ placeholder: "type the title…", aria: "Type the song title",
                          hint: "Enter accepts the top match", dropdown: true });
     body.querySelectorAll(".bg-tape").forEach((b) => b.addEventListener("click", () => peelTape(b)));
@@ -8013,7 +8167,12 @@ function judgeChain(i) {
   const on = () => {
     chainBeatId = null;
     chainBusy = false;
-    if (chainStep >= CHAIN_PICKS) { settleChain(); return; }
+    /* A wrong pick ENDS AN ENDLESS PAGE where it happened, rather than playing the rest of the
+       verse out first. The run is already over at that moment — the page cannot be cleared and
+       nothing below it can be scored — so carrying on through two more picks is three seconds
+       of a game that has finished. The marks have already landed on the cards above, so the
+       right line is still shown before the page settles. */
+    if (chainStep >= CHAIN_PICKS || (bonusEndless && !right)) { settleChain(); return; }
     renderChainCards();
     startBonusClock();
   };
@@ -8029,6 +8188,9 @@ function settleChain() {
   settleBonusRound(chainPage === CHAIN_PAGE, chainDetail(got));
 }
 function chainDetail(got) {
+  // The points half is dropped on an endless run, where a page is worth a page and the picks
+  // buy nothing: what the line has left to say is how far down the verse the chain got.
+  if (bonusEndless) return `<b>${got}</b> of ${CHAIN_PICKS} lines`;
   return `<b>${got}</b> of ${CHAIN_PICKS} lines · <b>${chainPage}</b> point${chainPage === 1 ? "" : "s"}`;
 }
 
@@ -8313,9 +8475,12 @@ function judgeOnly(i) {
 // What the verdict says about a played word: the word, what it cost the catalogue to keep
 // secret, and what that paid. The count is the whole brag, so it is said before the points.
 function onlyDetail(p) {
+  // The card's price is dropped on an endless run, where the hand pays nothing and the only
+  // question the page asked was which word the catalogue sings least. The count is the answer
+  // to that question and stays; the points are a scale from the other side of the shelf.
+  const paid = bonusEndless ? "" : ` · ${p.points} point${p.points === 1 ? "" : "s"}`;
   return `<b>${escapeHtml(censor(p.word.toLowerCase()))}</b> · ` +
-    (p.count === 1 ? "in no other song" : `in <b>${p.count}</b> songs`) +
-    ` · ${p.points} point${p.points === 1 ? "" : "s"}`;
+    (p.count === 1 ? "in no other song" : `in <b>${p.count}</b> songs`) + paid;
 }
 
 /* The reveal. The hand turns over in place — every card's true count, the rarest marked in gold,
@@ -8385,6 +8550,13 @@ function bonusPageScore(correct) {
   // A timed game's page doesn't pay, it CHARGES: what the run adds up is the seconds each page
   // took, penalty included, and the lowest total wins.
   if (bonusTimed(bonusGame)) return ruthlessFreeze();
+  /* AN ENDLESS PAGE IS WORTH ONE PAGE, on every game that has a side, and the game's own points
+     scale is ignored for the length of the run. The score here is a distance rather than a
+     total: a run is "nine in a row", and a Then What page paying six of them would make one
+     game's distance six times another's for the same nine pages. The scale still decides what a
+     page is worth on the ten-page side, which is where a scale means something — there the
+     question is how well you did a fixed ten, and here it is how far you got. */
+  if (bonusEndless) return correct ? 1 : 0;
   // Only Here pays for the card that was picked, whatever it was worth — the page is never
   // failed, only answered cheaply or not at all.
   if (bonusGame && bonusGame.id === "only-here") return onlyPlayed ? onlyPlayed.points : 0;
@@ -8429,6 +8601,10 @@ function settleBonusRound(correct, detail, isTimeout = false) {
     trackSecs = Math.min(BONUS_TRACK_SECONDS, (performance.now() - bonusPageStart) / 1000);
   const gained = bonusPageScore(correct);
   bonusScore += gained;
+  /* The miss that ends an endless run, marked as the page settles rather than acted on: what
+     happens next is what happens after any page — the banner, the revealed title, the
+     countdown — and the only difference is what the countdown turns to. */
+  if (bonusEndless && !correct) bonusDead = true;
   playSound(correct ? "correct" : "wrong");
 
   const input = $("bonusInput");
@@ -8463,17 +8639,30 @@ function settleBonusRound(correct, detail, isTimeout = false) {
         : bonusGame.id === "sing-it-back" ? bonusPuzzle.answer
         // Redacted's pages are worth different amounts, and that number is the only thing the
         // back cover can't already work out — so it takes the note column outright.
-        : bonusGame.id === "redacted" ? `${gained} pts`
+        // What the page cost, in the currency each side actually charges. An endless page is
+        // worth one page however much tape came off it, so "1 pts" would be the truth about
+        // nothing — but how much of the verse you had to buy is still the story of the page,
+        // and now it is the whole of it.
+        : bonusGame.id === "redacted"
+          ? (bonusEndless ? (redactPeeled ? `${redactPeeled} peeled` : "untouched") : `${gained} pts`)
         // Every other game notes the answer it was hiding; this one never hid an answer, so
         // the useful keepsake is how the page went.
-        : bonusGame.id === "then-what" ? `${gained} pts`
+        // On an endless run a page is worth one page, so "1 pts" would be the truth about
+        // nothing. The album is what every other title game notes, and it is what is left worth
+        // carrying off the page.
+        : bonusGame.id === "then-what" ? (bonusEndless ? bonusPuzzle.song.album : `${gained} pts`)
         // What it paid and the word that paid it: this column is the run's own vocabulary,
         // which is the thing worth carrying off ten pages of it. The number leads because the
         // note is clipped from the right at 10ch, and a long word half-shown still reads. A page
         // the clock took carries the word it was hiding instead, in red — every other game's
         // missed note is the answer you didn't have, and this is what that is here.
-        : bonusGame.id === "only-here" ? (onlyPlayed ? `${gained} · ${onlyPlayed.word.toLowerCase()}`
-                                                     : bonusPuzzle.hand[bonusPuzzle.optimal[0]].word.toLowerCase())
+        /* The word, and on the ten-page side what it paid. An endless page pays one and is
+           cleared only by the rarest card, so the number in front of the word would be a 1 on
+           every row that has one — the word alone is the run's vocabulary, which is what this
+           column was always for. */
+        : bonusGame.id === "only-here" ? (onlyPlayed
+            ? (bonusEndless ? onlyPlayed.word.toLowerCase() : `${gained} · ${onlyPlayed.word.toLowerCase()}`)
+            : bonusPuzzle.hand[bonusPuzzle.optimal[0]].word.toLowerCase())
         // The time alone. The word count is the more interesting number and it was tried here
         // first, but the note column runs out around six characters on a two-up listing and
         // "1:23 · 62w" came back as "1:23 · …" — so the column keeps the one that adds up to
@@ -8536,7 +8725,9 @@ function settleBonusRound(correct, detail, isTimeout = false) {
   // The verdict is written up the way the round screen writes one: the handwritten banner, then
   // the proof on a lyric card, then the countdown to the next page. Same furniture, same
   // reading order — a bonus page is answered on this notebook's terms, not the shelf's own.
-  const last = bonusRound >= BONUS_ROUNDS;
+  // What the countdown is counting down TO. An endless run's last page is the one it just lost
+  // on, which nothing but `bonusDead` can know.
+  const last = bonusEndless ? bonusDead : bonusRound >= BONUS_ROUNDS;
   const auto = settings.autoAdvance;
   const advanceUI = auto
     ? `<div class="countdown">${last ? "the back cover" : "next page"} in ` +
@@ -8619,6 +8810,12 @@ function advanceFromBonusFeedback() {
    The marks in the margin of the track listing: a gold pen tick, a red pen cross. Drawn
    rather than typed, like every other mark on the site. */
 const BG_TICK = `<svg viewBox="0 0 16 16" class="bg-mark-svg" aria-hidden="true"><path d="M3 8.6 L6.4 12 L13 4.6" fill="none" stroke="#c7951f" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+/* The listing's page arrows. Drawn like the tick and the cross above rather than typed as
+   arrow characters, because everything inside this card is ink: a glyph here would be the one
+   mark on the keepsake that came from a font. Two strokes, each with its own slight lean, so
+   the pair is not one arrow flipped. */
+const BG_ARROW_L = `<svg viewBox="0 0 16 16" class="bg-arrow-svg" aria-hidden="true"><path d="M10.2 3.2 L5.1 8.1 L10.0 12.8" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+const BG_ARROW_R = `<svg viewBox="0 0 16 16" class="bg-arrow-svg" aria-hidden="true"><path d="M6.0 3.1 L11.0 7.9 L5.9 12.9" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
 const BG_CROSS = `<svg viewBox="0 0 16 16" class="bg-mark-svg" aria-hidden="true"><path d="M4 4 L12 12 M12 4 L4 12" fill="none" stroke="#b23a3f" stroke-width="2" stroke-linecap="round"/></svg>`;
 
 /* The mark on the back cover's copy button: a second sheet slipped out from behind the first,
@@ -8642,6 +8839,20 @@ const KEEPSAKE_COPY_MARK =
 // `clean` — every page cleared — carries the top remark rather than a full score, because a
 // game scored in points has a maximum nobody will ever reach (Redacted's 100 would mean naming
 // ten songs off untouched verses) and the perfect run it CAN have is a run with no misses.
+/* The line in pen under the game's name on an endless card. Priced in PAGES rather than in a
+   proportion, because there is no maximum here for a proportion to be of — which is the same
+   reason bonusRemark cannot simply be handed a total and left to it. Flat, unexcitable wording:
+   the number beside it is already the boast, and a card that whoops at nine pages has nothing
+   left to say at forty. */
+function endlessRemark(pages) {
+  if (pages === 0) return "out on the opening page";
+  if (pages < 5) return "a short way in";
+  if (pages < 10) return "past the warm-up";
+  if (pages < 20) return "deep into the stack";
+  if (pages < 30) return "a long way past a full run";
+  return "no sign of stopping";
+}
+
 function bonusRemark(score, max, clean) {
   if (bonusTimed(bonusGame)) return ruthlessRemark(score, clean);
   if (clean) return "not a page out of place";
@@ -8724,6 +8935,21 @@ function foldBonusRunCharms(perfect, cleared) {
      this excludes. */
   if (isRuthlessRun()) return;
   unlock("finish-first-bonus-run");
+  /* An endless run earns the endless charms and then leaves, because everything below this is
+     about a run of ten: a sweep, a page short of one, all ten clocks run out, the shelf-wide
+     ledgers counting plays and sweeps off the roster's own keys. None of them can be true of a
+     run with no last page, and an endless run does not write the board they are read from.
+     The page charms are the other way round and deliberately so — foldBonusPageCharms is left
+     alone, because By Heart is a fact about one page (named with half the clock still on it)
+     and that page is the same page whichever side it was dealt on. */
+  if (bonusEndless) {
+    const [deep, deeper] = BONUS_ENDLESS_RUNGS;
+    if (cleared >= deep) unlock("clear-13-pages-in-an-endless-bonus-run");
+    if (cleared >= deeper) unlock("clear-25-pages-in-an-endless-bonus-run");
+    // The run that ended where it started. One page long, and the page was missed.
+    if (bonusLog.length === 1 && !cleared) unlock("end-an-endless-bonus-run-on-its-first-page");
+    return;
+  }
   if (perfect) unlock("clean-sweep-bonus-game");
   // One page shy, and only on the three games that keep a sweep clock — the shelf's own
   // Crestfallen On The Landing, and it stings most exactly where a ceiling is reachable.
@@ -8769,9 +8995,11 @@ function endBonusRun() {
      ends on its back cover. */
   if (ruthlessLensId) { endRuthlessRun(); return; }
   const timed = bonusTimed(bonusGame);
+  const endless = bonusEndless;
   // A clean sweep is ten pages cleared, which on a right/wrong game is the same thing as a
   // full score and on a points game is the only perfect run available (see bonusRemark).
-  const perfect = bonusLog.length === BONUS_ROUNDS && bonusLog.every((t) => t.ok);
+  // An endless run can never be one: it ends by dropping a page, every time, by definition.
+  const perfect = !endless && bonusLog.length === BONUS_ROUNDS && bonusLog.every((t) => t.ok);
   // The sweep clock, banked only when the run actually swept. A time off a run that dropped a
   // page is not a slower sweep, it is not a sweep, so it is thrown away rather than stored and
   // compared — which is the whole reason the clock costs a player nothing to ignore.
@@ -8780,7 +9008,16 @@ function endBonusRun() {
   // Read BEFORE the run is banked: a first sweep and a faster one are both `isSweepBest`, and
   // only the second of them has beaten anything, so only the second may say so.
   const hadSweep = bonusRecord(bonusGame.id).sweep;
-  const rec = recordBonusRun(bonusGame.id, bonusScore, bonusMaxScore(bonusGame), timed, sweepSecs, perfect);
+  // The endless board as it stood BEFORE this run, which is what the card's chase line is
+  // measured against — recordBonusRun has overwritten it by the line after.
+  const prevEndless = endlessRecord(bonusGame);
+  /* Two boards, and a run only ever writes to one of them. An endless run banks a depth under
+     its own key and touches none of the ten-page numbers: no sweep, no `swept`, no best out of
+     a maximum. It is also why the finite call keeps every argument it had — there is no endless
+     branch inside recordBonusRun and there should never be one. */
+  const rec = endless
+    ? recordBonusRun(endlessId(bonusGame), bonusScore)
+    : recordBonusRun(bonusGame.id, bonusScore, bonusMaxScore(bonusGame), timed, sweepSecs, perfect);
   // After the run is banked, so a sweep that completes the set counts itself (see the note in
   // foldBonusRunCharms), and after the lens fork above, so Ruthless earns none of them.
   foldBonusRunCharms(perfect, bonusLog.filter((t) => t.ok).length);
@@ -8790,7 +9027,8 @@ function endBonusRun() {
   disarmBonusQuit();
   $("bonusQuitBtn").hidden = true;
   $("bonusHomeBtn").hidden = false;
-  $("bonusProgress").textContent = "run complete";
+  // An endless run is not completed, it is survived until it isn't.
+  $("bonusProgress").textContent = endless ? "run over" : "run complete";
   $("bonusScore").textContent = bonusScoreText();
   $("bonusFeedback").innerHTML = "";
   $("bonusFeedback").className = "bg-feedback";
@@ -8815,7 +9053,17 @@ function endBonusRun() {
      question is a ten-second clock, a back cover that says nothing about time is the run's own
      story left off its keepsake. A swept run keeps the sweep wording, because "fastest yet" is
      a real claim about the board and "N pages in" is not. */
-  const aside = bonusGame.id === "then-what"
+  /* The endless card's second line is a CHASE rather than a fact about the run, because the
+     run's only fact is the number already printed beside it in pen. What it is worth saying is
+     how that number stands against the board: past it, level with it, or how far short. A first
+     run has nothing to stand against and says so. A new best says nothing here at all, because
+     the stamp above it has already said it and saying it twice makes it smaller. */
+  const endlessAside = !prevEndless.plays ? "a number to beat"
+    : bonusScore > prevEndless.best ? `${bonusScore - prevEndless.best} past your best`
+    : bonusScore === prevEndless.best ? "level with your best"
+    : `${prevEndless.best - bonusScore} short of your best`;
+  const aside = endless ? endlessAside
+    : bonusGame.id === "then-what"
     ? `longest chain · ${chainRun} line${chainRun === 1 ? "" : "s"}`
     : sweepSecs != null
     ? `in ${fmtTimeFine(sweepSecs)}` + (rec.isSweepBest && hadSweep ? " · fastest yet" : "")
@@ -8827,28 +9075,57 @@ function endBonusRun() {
   // you have never swept advertises a ceiling you haven't reached, which is the opposite of
   // what a second axis is for.
   const sweepFoot = rec.sweep ? ` · swept ${fmtTimeFine(rec.sweep)}` : "";
-  const foot = timed ? `best ${fmtTimeFine(rec.best)} · played ${rec.plays}`
+  // An endless best is not out of anything and has no sweep beside it, so the small print is
+  // the two numbers the endless board actually keeps.
+  const foot = endless ? `best ${rec.best} · played ${rec.plays}`
+             : timed ? `best ${fmtTimeFine(rec.best)} · played ${rec.plays}`
                      : `best ${Math.min(rec.best, max)} / ${max}${sweepFoot} · played ${rec.plays}`;
+  /* An endless run can be forty pages long and the keepsake is one card, so the listing is
+     dealt in SLICES of ten and the card opens on the last of them, ending on the page that
+     ended the run. Ten because ten is what the PNG draws (two columns of five, see
+     backcard.js), and the card and its copy must never disagree about what is on it.
+     The slices are measured FROM THE END rather than from page one, so the last one is always
+     full: a forty-seven page run reads 38-47, 28-37, and so on down to a short first slice.
+     A run's last ten pages are the ones it was about, and a keepsake whose most important view
+     is the ragged one has its arithmetic the wrong way round. */
+  const slices = Math.max(1, Math.ceil(bonusLog.length / BONUS_ROUNDS));
+  // SLICE 0 IS THE LAST TEN PAGES, since the slices are counted back from the end (sliceOf
+  // below), and the card opens on it: a run's own ending is what it is about.
+  let slice = 0;
+  const sliceOf = (i) => bonusLog.slice(Math.max(0, bonusLog.length - (i + 1) * BONUS_ROUNDS),
+                                        bonusLog.length - i * BONUS_ROUNDS);
+  const sliceLabel = (list) => slices > 1
+    ? `pages ${list[0].n}–${list[list.length - 1].n} of ${bonusLog.length}`
+    : "the run, page by page";
+  let shown = sliceOf(slice);
+  const listLabel = sliceLabel(shown);
   bonusBackRun = {
     game: bonusGame,
-    remark: bonusRemark(bonusScore, max, perfect),
-    aside, stamp: stampText, foot,
+    endless,
+    remark: endless ? endlessRemark(bonusScore) : bonusRemark(bonusScore, max, perfect),
+    aside, stamp: stampText, foot, label: listLabel,
+    // A depth stands alone: there is no total for a run with no last page to be out of, which
+    // is the timed card's reason for the same omission.
     score: timed ? fmtTimeFine(bonusScore) : String(bonusScore),
-    scoreSub: timed ? "" : "/" + max,
-    tracks: bonusLog.slice(),
+    scoreSub: (timed || endless) ? "" : "/" + max,
+    tracks: shown,
   };
 
-  const tracks = bonusLog.map((t) =>
+  // The game the listing belongs to, held rather than read live: the arrows below redraw these
+  // rows after the run is over, and `bonusGame` is cleared the moment the player leaves.
+  const listGame = bonusGame;
+  const trackRow = (t) =>
     `<li class="bg-track ${t.ok ? "ok" : "no"}">` +
       `<span class="bg-track-n">${t.n}</span>` +
       `<span class="bg-track-title">${escapeHtml(censor(t.title))}</span>` +
       // A time is a NUMBER, and a clipped number is a wrong one rather than a short one, so
       // Running Order's column is marked to hold its width (see .bg-track-note.is-time).
-      (t.note ? `<span class="bg-track-note${bonusGame.id === "running-order" ? " is-time" : ""}">` +
+      (t.note ? `<span class="bg-track-note${listGame.id === "running-order" ? " is-time" : ""}">` +
                   `${escapeHtml(t.note)}</span>` : "") +
       `<span class="bg-track-mark" aria-hidden="true">${t.ok ? BG_TICK : BG_CROSS}</span>` +
       `<span class="sr-only">${t.ok ? "correct" : "missed"}</span>` +
-    `</li>`).join("");
+    `</li>`;
+  const tracks = shown.map(trackRow).join("");
 
   $("bonusPlayBody").innerHTML =
     `<div class="bg-end">` +
@@ -8869,8 +9146,21 @@ function endBonusRun() {
             (bonusBackRun.scoreSub ? `<span>${escapeHtml(bonusBackRun.scoreSub)}</span>` : "") + `</div>` +
           (stampText ? `<i class="bg-stamp">${escapeHtml(stampText)}</i>` : "") +
         `</div>` +
-        `<div class="bg-back-label">the run, page by page</div>` +
-        `<ol class="bg-tracks">${tracks}</ol>` +
+        /* The label carries the range, and the arrows ride at the end of it rather than under
+           the listing: it is a heading for the ten pages below it, and the controls that change
+           which ten belong with the words that say which ten. On a run short enough to print
+           whole there are no arrows at all and the heading is the sentence it always was. */
+        `<div class="bg-back-label">` +
+          `<span id="bgTracksLabel">${escapeHtml(listLabel)}</span>` +
+          (slices > 1
+            ? `<span class="bg-tracks-nav">` +
+                `<button type="button" id="bgTracksPrev" class="bg-tracks-arrow"` +
+                ` aria-controls="bgTracks">${BG_ARROW_L}<span class="sr-only">Earlier pages</span></button>` +
+                `<button type="button" id="bgTracksNext" class="bg-tracks-arrow"` +
+                ` aria-controls="bgTracks">${BG_ARROW_R}<span class="sr-only">Later pages</span></button>` +
+              `</span>` : "") +
+        `</div>` +
+        `<ol class="bg-tracks" id="bgTracks">${tracks}</ol>` +
         // The run's only souvenir, taken off the page the way the bracelet is: click to copy
         // the back cover, shift-click to save it. It rides at the end of the card's own
         // small print rather than under it, because what it copies is the card it sits in.
@@ -8880,14 +9170,57 @@ function endBonusRun() {
           `<span class="sr-only">Copy the back cover</span></button>` +
         `</div>` +
       `</div>` +
+      /* THREE ACTIONS: back, the same again, and the OTHER SIDE of the same game. The third is
+         the one worth explaining. A run ends at the moment the player knows exactly how that
+         side of the game feels, which is the moment they are most likely to want the other one
+         — and without this the trip is back to the shelf, find the zine, open it, find the right
+         sticker. It carries the mark the shelf uses for what it is starting, the pencil for a
+         ten-page run and the loop for an endless one, so the button and the sticker it stands in
+         for are recognisably the same act. */
       `<div class="bg-end-actions">` +
         `<button type="button" id="bonusShelfBtn" class="btn-primary">← the shelf</button>` +
         `<button type="button" id="bonusAgainBtn" class="btn-primary">replay ↺</button>` +
+        (bonusHasEndless(bonusGame)
+          ? `<button type="button" id="bonusOtherBtn"` +
+            ` class="btn-primary btn-other ${endless ? "is-ten" : "is-endless"}"` +
+            ` data-tip="${endless ? `Play the same game as a ${BONUS_ROUNDS}-page run`
+                                  : "Play the same game with no last page"}">` +
+            (endless ? PLAY_NIB : ENDLESS_LOOP) +
+            `<span>${endless ? `${BONUS_ROUNDS} pages` : "endless"}</span></button>` : "") +
       `</div>` +
     `</div>`;
-  $("bonusAgainBtn").addEventListener("click", () => startBonusGame(bonusGame));
+  // Replay puts you back on the SIDE you were playing. `bonusEndless` is still standing when
+  // the button is pressed, but it is captured anyway: the run is over, and what the button
+  // means must not depend on nothing else having touched a live flag in between.
+  $("bonusAgainBtn").addEventListener("click", () => startBonusGame(bonusGame, null, { endless }));
+  // The other side of the same game, which is the only button here that changes what a run is.
+  if ($("bonusOtherBtn"))
+    $("bonusOtherBtn").addEventListener("click", () => startBonusGame(bonusGame, null, { endless: !endless }));
   $("bonusShelfBtn").addEventListener("click", () => leaveBonusGame());
   $("saveBackBtn").addEventListener("click", saveBackPNG);
+  /* Flicking through the run. What is on screen is what the keepsake copies, so the snapshot
+     moves with the listing — the alternative is a card that saves a different ten pages to the
+     ten you were looking at when you pressed the button, which is the one thing the snapshot
+     exists to prevent. */
+  if (slices > 1) {
+    const drawSlice = () => {
+      shown = sliceOf(slice);
+      $("bgTracks").innerHTML = shown.map(trackRow).join("");
+      const label = sliceLabel(shown);
+      $("bgTracksLabel").textContent = label;
+      bonusBackRun.tracks = shown;
+      bonusBackRun.label = label;
+      $("bgTracksPrev").disabled = slice >= slices - 1;   // the highest slice is page one
+      $("bgTracksNext").disabled = slice <= 0;
+    };
+    const step = (by) => { slice = Math.max(0, Math.min(slices - 1, slice + by)); drawSlice(); };
+    // Earlier pages are further from the end, which is a HIGHER slice index: the slices are
+    // counted back from the last page (see sliceOf), so the arrows read the way the run does
+    // and not the way the array does.
+    $("bgTracksPrev").addEventListener("click", () => step(1));
+    $("bgTracksNext").addEventListener("click", () => step(-1));
+    drawSlice();
+  }
 }
 
 /* ---------- Ruthless mode: the ending ----------
@@ -9067,6 +9400,10 @@ function leaveBonusGame(to = "bonus") {
   stopBonusCountdown();
   stopChainBeat();
   bonusEnded = true;
+  // Both sides of the run are handed back, not just the game. A quit endless run leaving its
+  // flag up would have the shelf answering questions about a run that is no longer on the desk.
+  bonusEndless = false;
+  bonusDead = false;
   bonusGame = null;
   bonusPuzzle = null;
   renderBonusPageRegister();
@@ -11878,11 +12215,12 @@ function buildBackMeta() {
     scoreSub: r.scoreSub,
     stamp: r.stamp,
     foot: r.foot,
+    label: r.label,
     tracks: r.tracks.map((t) => ({ n: t.n, ok: t.ok, title: censor(t.title), note: t.note || "" })),
     cover,
     signature: (settings.playerName || "").trim(),
     footer: dateLabel + " · " + fmtClock(new Date()) + " · swiftassociation.com",
-    filename: "swift-" + r.game.id + "-" + dateKey + ".png",
+    filename: "swift-" + r.game.id + (r.endless ? "-endless" : "") + "-" + dateKey + ".png",
     heartHands: HEART_HANDS_SVG,
     vars: cardVars(),
   };
@@ -26972,7 +27310,12 @@ function buildDevApi() {
     // touching the UI, so the fairness guards and (for Spot the Slip) the quality of the
     // generated swaps can be eyeballed in bulk before shipping a change to js/bonus.js.
     bonus: {
-      list: () => BONUS_GAMES.map((g) => ({ id: g.id, name: g.name, ready: g.ready, ...bonusRecord(g.id) })),
+      // `endless` says whether the game has a side at all, and `endlessBest` is what has been
+      // done on it — two different questions, and a game with a side and no runs answers the
+      // first yes and the second nothing.
+      list: () => BONUS_GAMES.map((g) => ({ id: g.id, name: g.name, ready: g.ready,
+        endless: bonusHasEndless(g), endlessBest: endlessRecord(g).plays ? endlessRecord(g).best : null,
+        ...bonusRecord(g.id) })),
       // The shelf's one-line descriptions. They came off the page when the shelf became a
       // row of covers and are now each tile's ACCESSIBLE name, which is a place a wrong one
       // is even easier to miss than a clipped sentence was. This reads back exactly what a
@@ -26983,7 +27326,9 @@ function buildDevApi() {
                  spoken: el ? el.getAttribute("aria-label") : "not on the shelf right now" };
       }),
       open: (from) => openBonus(from || "start"),
-      play: (id) => { const g = BONUS_GAMES.find((x) => x.id === id); if (g && g.ready) startBonusGame(g); return g ? g.name : null; },
+      play: (id, endless = false) => { const g = BONUS_GAMES.find((x) => x.id === id);
+        if (g && g.ready) startBonusGame(g, null, { endless: !!endless });
+        return g ? g.name + (bonusEndless ? " · endless" : "") : null; },
       sample: (id, n = 10) => {
         const { lineIndex, ctx } = bonusIndexes();
         const songs = bonusSongs();
@@ -27365,6 +27710,10 @@ function buildDevApi() {
       // to look at, and playing ten out honestly to check a layout is a waste of an afternoon.
       fill: (wins = 7) => {
         if (!bonusGame) return "start a bonus game first";
+        // A ten-page run, whatever side the screen happens to have been left on: fabricating a
+        // finite run while the endless flag is still up would bank it on the wrong board.
+        bonusEndless = false;
+        bonusDead = false;
         bonusLog = [];
         bonusScore = 0;
         for (let n = 1; n <= BONUS_ROUNDS; n++) {
@@ -27400,6 +27749,50 @@ function buildDevApi() {
         endBonusRun();
         return `${bonusGame.name}: ${bonusScore}/${bonusMaxScore(bonusGame)}`;
       },
+      /* The endless side's own fill: `pages` cleared and then the one that ends it, straight to
+         the back cover. The listing is the surface that needs it most — a truncated slice of a
+         forty-page run cannot be eyeballed any other way, and playing forty pages honestly to
+         look at a heading is not a test. Banks a real depth on the endless board and earns the
+         endless charms for real, exactly as `fill` does on the finite side. */
+      endless: (pages = 30) => {
+        if (!bonusGame) return "start a bonus game first";
+        if (!bonusHasEndless(bonusGame)) return `${bonusGame.id} has no endless side`;
+        bonusEndless = true;
+        bonusLog = [];
+        bonusScore = 0;
+        const want = Math.max(0, pages | 0);
+        for (let n = 1; n <= want + 1; n++) {
+          if (bonusRecentSongs.length >= bonusDealCount()) endlessReshuffle();
+          let puz = buildBonusPuzzle();
+          // The live loop's own last resort, so a fabricated deep run runs as deep as it is asked
+          // for rather than stopping where the random tries thinned out.
+          if (!puz) { endlessReshuffle(); puz = buildBonusPuzzle(); }
+          if (!puz) break;
+          bonusRecentSongs.push(puz.song.title);
+          // Only Here's hand is barred word by word, so a fabricated run has to spend the words
+          // the same way a played one does or its later pages deal cards the run already used.
+          if (puz.hand) puz.hand.forEach((c) => onlyDealt.add(c.key));
+          const ok = n <= want;
+          // Each game's real note column, so the fabricated listing is the one a played run
+          // would leave behind rather than a column of albums under every game.
+          const note = bonusGame.id === "running-order" ? `${(2.1 + (n % 6) + (n % 9) / 10).toFixed(2)}s`
+            : bonusGame.id === "only-here" ? puz.hand[puz.optimal[0]].word.toLowerCase()
+            : bonusGame.id === "redacted" ? (n % 4 ? `${n % 4} peeled` : "untouched")
+            : bonusGame.id === "spot-the-slip" ? puz.fakeWord
+            : bonusGame.id === "sing-it-back" ? puz.answer
+            : puz.song.album;
+          bonusLog.push({ n, ok, title: puz.song.title, album: puz.song.album, note });
+          if (ok) bonusScore++;
+        }
+        bonusRound = bonusLog.length;
+        bonusDead = true;
+        endBonusRun();
+        return `${bonusGame.name} endless: ${bonusScore} in a row`;
+      },
+      // The endless board, which is a separate set of keys under the games that have a side
+      // (see endlessId) and is invisible to every reader of the ten-page board.
+      endlessBoard: () => BONUS_GAMES.filter(bonusHasEndless)
+        .map((g) => ({ id: g.id, ...endlessRecord(g) })),
       reset: () => { resetBonus(); if ($("bonusBody")) renderBonusPage(); },
       /* The shelf's charms. Nine of the sixteen come off a finished run and `fill(10)` already
          reaches those; these are the ones a run cannot be fabricated into, because they turn on
@@ -27419,6 +27812,7 @@ function buildDevApi() {
           blankExactRun,
           chainRun, chainNeeded: BONUS_ROUNDS * CHAIN_PAY.length,
           cleared: bonusLog.filter((t) => t.ok).length,
+          endless: bonusEndless, endlessRungs: BONUS_ENDLESS_RUNGS,
           shelfPlayed: BONUS_GAMES.filter((g) => bonusRecord(g.id).plays > 0).map((g) => g.id),
           shelfSwept: BONUS_GAMES.filter((g) => bonusRecord(g.id).swept).map((g) => g.id),
         }),

@@ -3440,6 +3440,59 @@
     .bonus-play:active { transform: translate(1px, 1.5px); }
     .bonus-play:hover { --play-face: var(--ink); color: var(--paper); }
   }
+  /* ---- the endless sticker ----
+     The two scraps sit SIDE BY SIDE, Play first, and the endless one is the smaller of the
+     pair: it is the other way to play the game rather than the way in, and the size says which
+     is which before the colour does. The row still wraps, so a leaf too narrow for both stacks
+     them rather than shrinking either — a torn scrap with its lettering squeezed is a scrap
+     that has been resized, which is the one thing a piece of paper cannot do.
+     The margin-top lives on .bonus-play itself, so the row cancels it and carries it once,
+     otherwise a wrapped stack is spaced by a number chosen for a single sticker. */
+  .bonus-play-row {
+    display: flex; flex-wrap: wrap; align-items: center;
+    gap: 10px 14px; margin-top: 15px;
+  }
+  .bonus-play-row .bonus-play { margin-top: 0; }
+  /* OXBLOOD, AND CHOSEN RATHER THAN INHERITED. Gold on this shelf means "start the game this
+     zine is about", so the endless side cannot be gold and must not be a paler gold either,
+     which would read as the same sticker with the ink running out. Red is the one colour on
+     this desk that already means a mark against you — the crosses in the back cover's margin,
+     the editor's pen over a missed title — and an endless run is the one thing on the shelf
+     that ends the moment you are wrong. Cream lettering rather than the gold scrap's ink,
+     because ink on oxblood is a smudge at this size.
+     ITS OWN TEAR, WITH ITS OWN ARITHMETIC. The gold scrap walks its long edges in 5% steps
+     with an even 0.5-4.5px kick and leaves the short edges four points each. This one steps in
+     7s, kicks on a long tail (mostly small, occasionally deep) and gives the short edges six
+     points, so it is raggeder down the sides as well as across the top. Two scraps sharing one
+     silhouette are one sticker printed twice; these were torn separately, and at a glance the
+     difference is what says so. */
+  .bonus-play.is-endless {
+    --play-face: #a8443c; --play-back: #76302c;
+    --tear-face: polygon(1.2px 5.2px, 7% 0.8px, 14% 2.7px, 21% 2.7px, 28% 4.0px, 35% 0.6px, 42% 0.7px, 49% 0.6px, 56% 0.7px, 63% 3.1px, 70% 0.6px, 77% 1.8px, 84% 0.7px, 91% 0.9px, 98% 1.3px, calc(100% - 0.6px) 2.1px, calc(100% - 5.0px) 14%, calc(100% - 0.5px) 29%, calc(100% - 3.1px) 43%, calc(100% - 0.6px) 57%, calc(100% - 5.3px) 71%, calc(100% - 0.5px) 86%, calc(100% - 5.3px) calc(100% - 3.8px), 98% calc(100% - 0.7px), 91% calc(100% - 0.6px), 84% calc(100% - 3.4px), 77% calc(100% - 1.2px), 70% calc(100% - 2.7px), 63% calc(100% - 0.9px), 56% calc(100% - 2.5px), 49% calc(100% - 3.1px), 42% calc(100% - 0.8px), 35% calc(100% - 0.8px), 28% calc(100% - 4.8px), 21% calc(100% - 2.5px), 14% calc(100% - 2.8px), 7% calc(100% - 0.5px), 2.8px calc(100% - 1.5px), 2.5px 86%, 1.3px 71%, 1.4px 57%, 1.3px 43%, 1.6px 29%, 1.1px 14%);
+    --tear-back: polygon(2.9px 2.6px, 7% 0.5px, 14% 2.2px, 21% 5.4px, 28% 0.6px, 35% 4.0px, 42% 0.6px, 49% 1.3px, 56% 4.4px, 63% 0.9px, 70% 2.7px, 77% 0.5px, 84% 4.1px, 91% 1.5px, 98% 0.5px, calc(100% - 2.6px) 4.1px, calc(100% - 0.5px) 14%, calc(100% - 0.6px) 29%, calc(100% - 2.7px) 43%, calc(100% - 0.6px) 57%, calc(100% - 4.9px) 71%, calc(100% - 3.9px) 86%, calc(100% - 1.6px) calc(100% - 4.9px), 98% calc(100% - 0.5px), 91% calc(100% - 3.0px), 84% calc(100% - 0.5px), 77% calc(100% - 0.8px), 70% calc(100% - 0.8px), 63% calc(100% - 3.7px), 56% calc(100% - 4.3px), 49% calc(100% - 1.4px), 42% calc(100% - 1.1px), 35% calc(100% - 2.4px), 28% calc(100% - 2.1px), 21% calc(100% - 2.5px), 14% calc(100% - 0.5px), 7% calc(100% - 0.7px), 1.3px calc(100% - 4.3px), 5.1px 86%, 3.6px 71%, 2.1px 57%, 1.9px 43%, 2.0px 29%, 1.3px 14%);
+    color: #fbf7ea;
+    font-size: calc(13px + var(--text-size-adjust));
+    padding: 10px 14px; gap: 7px;
+    transform: rotate(1.4deg);
+  }
+  .bonus-play.is-endless:hover, .bonus-play.is-endless:focus-visible {
+    transform: rotate(0.5deg) translate(-1px, -2px);
+  }
+  .bonus-play.is-endless:active { transform: rotate(1.4deg) translate(1px, 1.5px); }
+  /* The keyboard flip goes the other way here: the gold scrap turns to ink because its face is
+     light, and this one is already dark, so it turns to PAPER with the page's own ink on it. */
+  .bonus-play.is-endless:focus-visible { --play-face: var(--paper); color: var(--ink); }
+  :root[data-theme="dark"] .bonus-play.is-endless { --play-face: #8e3a33; --play-back: #5e2724; }
+  :root[data-theme="dark"] .bonus-play.is-endless:focus-visible { --play-face: var(--paper); }
+  @media (prefers-reduced-motion: reduce) {
+    .bonus-play.is-endless, .bonus-play.is-endless:hover, .bonus-play.is-endless:focus-visible { transform: none; }
+    .bonus-play.is-endless:active { transform: translate(1px, 1.5px); }
+    .bonus-play.is-endless:hover { --play-face: var(--paper); color: var(--ink); }
+  }
+  /* The loop is wider than it is tall, unlike the pencil, so it is sized off its own box rather
+     than squared into the nib's. */
+  .bonus-play .play-loop { width: 18px; height: 11px; }
+
   .bonus-now-soon {
     margin-top: 12px; font-family: var(--type); font-size: calc(11px + var(--text-size-adjust)); line-height: 1.6;
     color: var(--ink-soft); max-width: 34ch;
@@ -3995,11 +4048,15 @@
      out of, written up by hand: the cover and the score at the top, then the ten pages listed
      with a tick or a cross in the margin and the answer noted beside each. --bg-tint is the
      game's own colour, set inline, so each back cover belongs to its own booklet. */
-  .bg-end { padding: 6px 0 4px; }
+  /* THE CARD'S WIDTH, STATED ONCE. The actions under the back cover line up with its edges, so
+     the two have to agree — and two numbers that must match are two numbers that eventually
+     will not. The row used to be capped narrower than the card, which read as a row of controls
+     parked under a card rather than as the card's own bottom edge. */
+  .bg-end { padding: 6px 0 4px; --bg-card-w: 560px; }
   .bg-back {
     position: relative; border: 1px solid rgba(43,39,34,0.18); border-radius: 3px;
     background: rgba(251,247,234,0.94); box-shadow: 0 1px 0 rgba(43,39,34,0.06);
-    padding: 20px 20px 15px; max-width: 560px; margin: 0 auto;
+    padding: 20px 20px 15px; max-width: var(--bg-card-w); margin: 0 auto;
   }
   /* The back cover is a paper card carrying tokenised writing, so it takes the dark stock the
      personal-best tiles take, and NOT a brightness filter. It looks like a filter case — a
@@ -4070,9 +4127,31 @@
     color: color-mix(in srgb, var(--red-pen) 80%, transparent); padding: 3px 7px;
     border: 1.4px solid color-mix(in srgb, var(--red-pen) 65%, transparent); border-radius: 2px;
   }
+  /* The heading over the listing, and on a long run the controls that change which ten pages
+     are under it. A row rather than a block for that reason alone: the arrows say which ten,
+     and the words beside them say which ten, so they are one thing. */
   .bg-back-label {
     font-family: var(--type); font-size: calc(8.5px + var(--text-size-adjust)); letter-spacing: 1.8px; text-transform: uppercase;
     color: var(--ink-soft); margin: 11px 0 6px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .bg-tracks-nav { margin-left: auto; display: flex; gap: 2px; flex: none; }
+  /* Ink on the card, not a control panel on it: no border, no fill, no rounded box. It comes up
+     to full strength when you reach for it, the way a pencil mark darkens under the hand, and
+     goes flat and unclickable at the ends of the run rather than disappearing — an arrow that
+     vanishes at the last page takes the layout with it. */
+  .bg-tracks-arrow {
+    appearance: none; background: none; border: 0; padding: 2px 4px; margin: 0;
+    color: var(--ink-soft); opacity: 0.72; cursor: pointer; line-height: 0;
+    transition: opacity 0.14s ease-out, transform 0.14s ease-out;
+  }
+  .bg-tracks-arrow:hover, .bg-tracks-arrow:focus-visible { opacity: 1; }
+  .bg-tracks-arrow:first-child:hover { transform: translateX(-1.5px); }
+  .bg-tracks-arrow:last-child:hover { transform: translateX(1.5px); }
+  .bg-tracks-arrow:disabled { opacity: 0.22; cursor: default; transform: none; }
+  .bg-arrow-svg { width: 15px; height: 15px; display: block; }
+  @media (prefers-reduced-motion: reduce) {
+    .bg-tracks-arrow, .bg-tracks-arrow:hover { transform: none; }
   }
   /* the track listing — two hand-ruled columns on a wide page, one on a narrow one */
   .bg-tracks { list-style: none; margin: 0; padding: 0; columns: 2; column-gap: 22px; }
@@ -4159,7 +4238,7 @@
      replay on the RIGHT because the shelf is where you came from. The shelf's own pair is
      inked in slate indigo hatched into cross-stitch x's, and a berry rose scalloped like
      the grooves running out to the edge of a record. */
-  .bg-end-actions { display: flex; gap: 12px; max-width: 400px; margin: 18px auto 0; }
+  .bg-end-actions { display: flex; gap: 12px; max-width: var(--bg-card-w); margin: 18px auto 0; }
   .bg-end-actions .btn-primary { flex: 1; width: auto; margin: 0; padding: 11px 10px; font-size: calc(13px + var(--text-size-adjust)); }
   .bg-end-actions .btn-primary:first-child { transform: rotate(0.6deg); }
 
@@ -4192,6 +4271,64 @@
     --btn-wash: #a8465e;
     --btn-mark: rgba(245, 239, 225, 0.30);
   }
+  /* ---- the other side of the same game ----
+     A third button changes the arithmetic of the row: at 400px three come out at 125 each,
+     which fits every label but leaves nothing around them, so a three-button row is allowed
+     wider. It stays well inside the card (560px), because the actions have never run the full
+     width of the thing they sit under.
+     THE PATTERN IS THE POINT OF THIS FAMILY, not decoration on it. Every button in this row is
+     a coloured wash with one flat mark repeated across it, and no two of them may share a mark:
+     the shelf wears a cross-hatch, replay wears scallops, and the two faces of this one wear
+     rings and dashes. They are drawn out of gradients rather than an image so they take the
+     wash with them on hover, when the button floods to full colour and the mark turns to paper.
+     Both new marks say what the button does before the word does. RINGS for endless, because a
+     ring is the one shape with no end to point at, and the sticker on the shelf is a loop for
+     the same reason. DASHES for the ten-page run, laid in staggered rows like ruled marks
+     counted off: a thing with a fixed number of them, which is exactly what the other side is.
+     The colours are borrowed rather than invented — the oxblood of the endless sticker and the
+     gold of the Play one — so the button is visibly the sticker it stands in for. */
+  .btn-other { display: inline-flex; align-items: center; justify-content: center; gap: 7px; }
+  .btn-other .play-nib { width: 14px; height: 14px; flex: none; }
+  .btn-other .play-loop { width: 17px; height: 10px; flex: none; }
+
+  /* endless: rings, one bullseye to a tile */
+  :is(#bonusOtherBtn.is-endless, [data-flip-id="bonusOtherBtn"].is-endless) {
+    --btn-wash: rgba(168, 68, 60, 0.26);
+    --btn-mark: rgba(134, 46, 40, 0.34);
+    background-color: var(--btn-wash);
+    background-image: repeating-radial-gradient(circle at 50% 50%,
+      transparent 0 2.4px, var(--btn-mark) 2.5px 3.3px, transparent 3.4px 6.1px);
+    background-size: 13px 13px;
+    transition: --btn-wash 0.22s ease, --btn-mark 0.22s ease, color 0.2s ease, transform 0.12s, box-shadow 0.2s;
+  }
+  :is(#bonusOtherBtn.is-endless, [data-flip-id="bonusOtherBtn"].is-endless):hover {
+    color: var(--paper);
+    --btn-wash: #8f3a33;
+    --btn-mark: rgba(245, 239, 225, 0.30);
+  }
+
+  /* the ten-page run: dashes in staggered rows, counted off */
+  :is(#bonusOtherBtn.is-ten, [data-flip-id="bonusOtherBtn"].is-ten) {
+    --btn-wash: rgba(199, 154, 82, 0.30);
+    --btn-mark: rgba(146, 105, 38, 0.34);
+    background-color: var(--btn-wash);
+    background-image:
+      radial-gradient(ellipse 4px 0.85px at 50% 50%, var(--btn-mark) 99%, transparent 100%),
+      radial-gradient(ellipse 4px 0.85px at 50% 50%, var(--btn-mark) 99%, transparent 100%);
+    background-size: 13px 7px;
+    background-position: 0 0, 6.5px 3.5px;
+    transition: --btn-wash 0.22s ease, --btn-mark 0.22s ease, color 0.2s ease, transform 0.12s, box-shadow 0.2s;
+  }
+  :is(#bonusOtherBtn.is-ten, [data-flip-id="bonusOtherBtn"].is-ten):hover {
+    color: var(--paper);
+    --btn-wash: #9a7526;
+    --btn-mark: rgba(245, 239, 225, 0.32);
+  }
+  /* The row is hand-laid, so the three are not in perfect parallel. The first already leans one
+     way; this one leans the other and less far, which is what stops the pair reading as a
+     deliberate mirror. */
+  .bg-end-actions .btn-primary:last-child { transform: rotate(-0.4deg); }
+
   @media (max-width: 560px) {
     .bg-word, .bg-word-plain { font-size: calc(23px + var(--text-size-adjust)); }
     .bg-lyric { font-size: calc(23px + var(--text-size-adjust)); }
@@ -4235,7 +4372,15 @@
        is short enough to keep. */
     .bg-track.ok .bg-track-note { display: none; }
     .bg-track.ok .bg-track-note.is-time { display: block; }
-    .bg-end-actions { flex-direction: column; gap: 9px; }
+    /* Stacked on a phone, and now a button taller than they used to be. The corner links float
+       over the bottom of the screen, so without somewhere to scroll to the last action sits
+       underneath them at the very end of the page and cannot be pressed. The padding is the
+       links' own height plus a thumb's worth of clearance. */
+    .bg-end-actions { flex-direction: column; gap: 9px; padding-bottom: 104px; }
+    /* Stacked, so the hand-laid lean of the row's ends would read as two crooked buttons in a
+       column rather than as three things laid down beside each other. */
+    .bg-end-actions .btn-primary:first-child,
+    .bg-end-actions .btn-primary:last-child { transform: none; }
   }
   [data-reduce-motion="on"] .bg-feedback.show,
   [data-reduce-motion="on"] .bg-reject.show { animation: none; opacity: 1; }

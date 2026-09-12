@@ -595,7 +595,7 @@ export const CUSTOM_DEFAULT_MODE = {
    the roster straight, so a run's record card walks the same ladder the shelf does. */
 export const BONUS_GAMES = [
   // Tap: the whole line is in front of you and nothing has to be recalled, only heard.
-  { id: "spot-the-slip", name: "Spot the Slip", ready: true, sweep: true,
+  { id: "spot-the-slip", name: "Spot the Slip", ready: true, sweep: true, endless: true,
     kicker: "find the wrong word", tint: "#bf5340",
     line: "One word in the lyric is an impostor. Catch it.",
     blurb: "One word in the lyric has been swapped for an impostor. Catch it before the ink dries, and trust the ear that says a line is wrong." },
@@ -603,29 +603,42 @@ export const BONUS_GAMES = [
   // move closer to home as the page goes on (see buildChainPuzzle), and a ramp the player is
   // asked to survive but never paid for reads as the game turning mean rather than exciting.
   // The six is CHAIN_PAGE written out; the two must stay in step.
-  { id: "then-what", name: "Then What", ready: true, points: 6,
+  { id: "then-what", name: "Then What", ready: true, points: 6, endless: true,
     kicker: "what comes next?", tint: "#4c3f8a",
     line: "Three lines. Pick the one that comes next.",
     blurb: "One line of the song, and three lines that might follow it. Pick the right one and it locks into the page in pen, four times over." },
+  /* ITS ENDLESS SIDE MOVES THE BAR RATHER THAN ADDING ONE: the page is cleared only by the
+     RAREST card, so anything else ends the run. On the ten-page side every pick still pays and
+     the page is never failed - the two sides ask different questions of the same hand, which is
+     the sharpest example on the shelf of what an endless side is for. `best` is already the
+     flag judgeOnly settles on, so nothing about the judging changes; what changes is that a
+     run is now over when it comes back false. Ties still count as one answer between them
+     (see `optimal`), so a hand the catalogue sings equally rarely can never kill a run. */
   // The one game on the shelf with no fail state: every card in the hand is really in the song,
   // so every pick pays, and the rarity is what the five points are for. See buildOnlyHerePuzzle.
   // Last of the tap games because it is the only one that asks about songs you are not being
   // shown: a card is priced by the rest of the catalogue, not by the song at the top.
-  { id: "only-here", name: "Only Here", ready: true, points: 5,
+  { id: "only-here", name: "Only Here", ready: true, points: 5, endless: true,
     kicker: "the game backwards", tint: "#1c7371",
     line: "Six words from the song. Pick the rarest.",
     blurb: "The game backwards: here is the song, and here are six of its own words. Pick the one you think the fewest other songs sing." },
   // The hinge of the shelf: the song is still named, but the answer is now written rather than
   // pointed at, which is the last page before every game below asks for a title.
-  { id: "sing-it-back", name: "Sing It Back", ready: true, sweep: true,
+  { id: "sing-it-back", name: "Sing It Back", ready: true, sweep: true, endless: true,
     kicker: "fill the gap", tint: "#8d4064",
     line: "A word is missing from the line. Write it back.",
     blurb: "A word has been lifted out of one of the song's own lines, and the song is named above it. Write the missing word back into the gap." },
   // Title family, gentlest: a whole line of the song's own writing, unmarked.
-  { id: "name-that-song", name: "Name That Song", ready: true, sweep: true,
+  { id: "name-that-song", name: "Name That Song", ready: true, sweep: true, endless: true,
     kicker: "lyric in, title out", tint: "#33628f",
     line: "Read the line, name the song, beat the clock.",
     blurb: "Read the line, name the song, and beat the clock. There is no prompt word to lean on here and nothing to go on but the lyric itself." },
+  /* ON ITS ENDLESS SIDE THE STRIPS ARE FREE AND THE TITLE IS EVERYTHING: a page is cleared by
+     naming the song and lost by naming the wrong one, and what the page cost stops being
+     scored. That is the deliberate trade. Peeling is no longer paid for, so the natural play is
+     to buy the whole verse — and the thing that stops it being the free play is the clock, which
+     is the same thirty seconds it always was and now has to cover the peeling, the reading and
+     the typing. The page still costs; it costs seconds instead of points. */
   // The one game on the shelf scored in POINTS rather than pages cleared: `points` is what a
   // page opens worth, and every other surface reads its maximum off it (see bonusMaxScore).
   // Any future game that scores a page on a scale rather than right/wrong sets the same field.
@@ -633,14 +646,14 @@ export const BONUS_GAMES = [
   // at ten it paid so far above a normally-peeled page that the sensible play was to sit and
   // stare rather than spend. Six keeps the same shape (a strip a point, floored at one) with a
   // shorter drop, so peeling the two or three you actually need is not a ruined page.
-  { id: "redacted", name: "Redacted", ready: true, points: 6,
+  { id: "redacted", name: "Redacted", ready: true, points: 6, endless: true,
     kicker: "how little do you need?", tint: "#3b4d31",
     line: "Peel the tape off a verse, and name it cheap.",
     blurb: "A verse with the telling words taped over. Peel them off one at a time, and name the song before you have spent the page." },
   // The one game on the shelf with no lines on the page at all. See buildCloudPuzzle for why
   // the words are CHOSEN by rarity and SIZED by frequency, which are deliberately two
   // different signals doing two different jobs.
-  { id: "word-cloud", name: "Word Cloud", ready: true, sweep: true,
+  { id: "word-cloud", name: "Word Cloud", ready: true, sweep: true, endless: true,
     kicker: "the song, out of order", tint: "#6b7a50",
     line: "A scatter of a song's own words. Name it.",
     blurb: "A song's own words scattered across the page, the ones it leans on written biggest and none of it in order. Nothing here can be sung." },
@@ -649,7 +662,7 @@ export const BONUS_GAMES = [
   // ten and it takes `sweep` for their reason too, the reachable ceiling: at 10/10 an eleventh
   // perfect run would tie the tenth forever, and the clock is what it goes on to beat.
   // The end of the ramp: every other title game hands you some of the song's own writing.
-  { id: "running-order", name: "Running Order", ready: true, sweep: true,
+  { id: "running-order", name: "Running Order", ready: true, sweep: true, endless: true,
     kicker: "name it from its number", tint: "#9c6b21",
     line: "An album and a track number. Name the song, fast.",
     blurb: "Track eight on Fearless. Track five on folklore. The album and the number are all you get, and ten seconds to put a name to it." },
@@ -724,6 +737,23 @@ export const CHAIN_EASY_PAGES = 3;
    sentence of chrome to carry it, and a charm priced in a currency the game did not need. The
    page is right or wrong now, and the clock is the only thing on it that moves. */
 export const BONUS_TRACK_SECONDS = 10;
+/* ---------- The endless side of a game ----------
+   A second way to play a game carrying `endless`: the same pages off the same clock, dealt
+   until one is missed. There is no last page, so a run is not out of anything — the score is
+   how many were cleared in a row, and the ten-page run's whole vocabulary of sweeps, clean
+   sweeps and maximums is meaningless here and deliberately never shown.
+
+   NO DIFFICULTY RAMP, AND THAT IS THE DESIGN RATHER THAN AN OMISSION. The obvious move is to
+   shave the clock every few pages, and it was rejected: a clock that keeps tightening has a
+   point past which the honest answer is impossible, and from there the number stops saying how
+   far a player got and starts saying where the clock gave out, which is the same figure for
+   everyone. The flat ten seconds is already the pressure. What ends a run is a page the player
+   could have had and didn't.
+
+   The rungs are shelf-wide rather than per game, because what they are about is depth in an
+   endless run and not which zine it was played out of. Thirteen is the notebook's own number;
+   twenty-five is roughly twice as far and needs a chunk of the running order held cold. */
+export const BONUS_ENDLESS_RUNGS = [13, 25];
 /* Word Cloud's clock. Longer than Name That Song's fifteen because a cloud is READ rather
    than scanned: the eye has to travel the whole page and weigh what it finds, and a line can
    be taken in at once. Short enough that a page you cannot place is a decision to move on
@@ -3817,6 +3847,15 @@ export const ACHIEVEMENTS = [
   // flex — knowing a song off less of it. Priced in something on screen, like everything else
   // on this shelf: the cloud you are looking at and the page number above it.
   { id: "clear-every-spare-word-cloud-page", name: "You Saw Enough", desc: "Clear all five of a Word Cloud run's spare pages", tier: 2, secret: false, icon: "placeholder", sitting: true, earn: { cat: "bonus" } },
+  /* ---- The endless side (2026-09-13) ----
+     Two rungs and a pratfall, and all three are shelf-wide rather than Running Order's: the
+     feat is how far an endless run got, which is the same feat out of whichever zine it was
+     played. A game gaining an endless side later inherits them and needs no charms of its own.
+     Priced in the only number an endless run has, the pages cleared, which is on screen the
+     whole way up. Nothing here can be locked out: an endless run is always there to play again,
+     and the run that ends on page one is the cheapest thing on the shelf to go and do. */
+  { id: "clear-13-pages-in-an-endless-bonus-run", name: "On And On", desc: "Clear 13 pages in a row in an endless run", tier: 2, secret: false, icon: "placeholder", sitting: true, earn: { cat: "bonus" } },
+  { id: "clear-25-pages-in-an-endless-bonus-run", name: "It Never Ends", desc: "Clear 25 pages in a row in an endless run", tier: 2, secret: false, icon: "placeholder", sitting: true, earn: { cat: "bonus" } },
   // The secrets. Three of them are failures worn well (the register of I'm The Problem), which is the
   // shelf's own tone: these games have soft edges and losing on them is funny rather than sore.
   { id: "take-commonest-only-here-card",      name: "I Bought It",      desc: "Take the commonest card in an Only Here hand", secret: true, icon: "receipt" },
@@ -3824,6 +3863,7 @@ export const ACHIEVEMENTS = [
   { id: "time-out-all-10-only-here-pages", name: "Never Heard Silence", desc: "Let all ten Only Here clocks run out without a card played", secret: true, icon: "spider" },
   { id: "finish-bonus-run-one-page-short-of-sweep",    name: "Almost Had It",    desc: "Finish one page shy of a clean sweep", secret: true, icon: "dart" },
   { id: "flag-spot-the-slip-impostor-under-2s",    name: "Saw It Coming",    desc: "Flag a Spot the Slip impostor inside two seconds", secret: true, icon: "mask" },
+  { id: "end-an-endless-bonus-run-on-its-first-page", name: "Ending So Suddenly", desc: "End an endless run on its very first page", secret: true, icon: "placeholder" },
   /* ---- Ruthless: the mode where the clock is the score (2026-08-18) ----
      Eight charms. The first roster went in unvetted and came back out the same day, and the
      lesson it left is the rule this one is built on: NOTHING HERE MAY BE PRICED IN A NUMBER THE
@@ -4225,6 +4265,8 @@ export const ACH_GROUP_OF = {
   "name-redacted-song-after-buying-all-strips": "bonus", "time-out-all-10-only-here-pages": "bonus", "finish-bonus-run-one-page-short-of-sweep": "bonus",
   "sweep-running-order": "bonus", "name-running-order-page-with-half-the-clock-left": "bonus",
   "sweep-word-cloud": "bonus", "clear-every-spare-word-cloud-page": "bonus",
+  "clear-13-pages-in-an-endless-bonus-run": "bonus", "clear-25-pages-in-an-endless-bonus-run": "bonus",
+  "end-an-endless-bonus-run-on-its-first-page": "bonus",
   "name-ruthless-page-off-one-word": "ruthless", "finish-ruthless-run-naming-all-ten": "ruthless",
   "finish-ruthless-run-with-no-wrong-guess": "ruthless", "every-ruthless-lens-best-under-90s": "ruthless",
   "every-ruthless-lens-best-under-60s": "ruthless", "every-ruthless-lens-best-under-45s": "ruthless",

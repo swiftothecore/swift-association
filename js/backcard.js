@@ -181,7 +181,10 @@ export function buildBackSVG(meta, fontCss) {
       ` stroke="rgba(43,39,34,0.18)" stroke-width="1"/>` +
     head +
     `<text x="${SL}" y="${ROW_TOP - 12}" font-family="Courier Prime" font-size="9.5" letter-spacing="1.8"` +
-      ` fill="${v.inkSoft}">THE RUN, PAGE BY PAGE</text>` +
+      // The listing's own heading. Written by the caller because an endless run's listing is a
+      // SLICE of the run rather than the whole of it, and a card that says "the run, page by
+      // page" over the last ten of forty is telling the reader something untrue about itself.
+      ` fill="${v.inkSoft}">${esc(String(meta.label || "the run, page by page").toUpperCase())}</text>` +
     tracks +
     `<text x="${(SL + SR) / 2}" y="${lastRow + 30}" text-anchor="middle" font-family="Courier Prime" font-size="10"` +
       ` letter-spacing="0.9" fill="${v.inkSoft}">${esc(meta.foot)}</text>` +
