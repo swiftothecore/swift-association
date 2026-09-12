@@ -3409,8 +3409,18 @@
   .zine-tile-meta {
     font-family: var(--type); font-size: calc(8px + var(--text-size-adjust)); letter-spacing: 1px;
     text-transform: uppercase; color: var(--ink-soft); opacity: 0.8; line-height: 1.35;
-    position: relative; z-index: 1;
+    position: relative; z-index: 1; isolation: isolate;
+    /* Full width of the tile rather than shrink-to-fit, so an unbreakable line like
+       "best 10 / 10" has the tile's whole measure to sit in instead of overrunning a box
+       sized to something shorter. */
+    align-self: stretch;
   }
+  /* One unit of the record per line (see renderBonusPage): "best 10 / 10" over "swept 0:29".
+     Kept off its own internal break too, so a unit is never split down the middle. */
+  .zine-tile-line { display: block; white-space: nowrap; }
+  /* The open leaf's record keeps its units whole for the same reason, but stays on one line:
+     the leaf is wide enough that only a phone wraps it, and there it breaks between units. */
+  .bonus-now-meta span { white-space: nowrap; }
   .zine-tile.is-soon .zine-tile-meta { opacity: 0.6; }
   /* The one lying open is on the shelf too, pulled half out of the row and marked with a
      highlighter swipe rather than left out: six fill the row exactly, and leaving the
@@ -3420,8 +3430,13 @@
      table, which is the one thing this page is not. It takes the era's highlighter, so the
      mark on the shelf is in the same ink as the mark on a prompt word. */
   .zine-tile.is-on .zine-cover { transform: translateY(-7px) rotate(-2deg); }
-  .zine-tile.is-on::before {
-    content: ""; position: absolute; inset: auto -3px 0 -3px; height: 34px; z-index: 0; pointer-events: none;
+  /* The swipe is drawn on the RECORD, not on the tile. Anchored to the tile it was a fixed
+     34px block at the bottom, which only lined up with the text by luck: a one-line
+     "unplayed" floated inside it and a two-line record grew out of the top of it. Hung on
+     the record itself it is exactly as tall as whatever is written there, which is what a
+     highlighter over a line of writing actually does. */
+  .zine-tile.is-on .zine-tile-meta::before {
+    content: ""; position: absolute; inset: -4px -7px -3px -7px; z-index: -1; pointer-events: none;
     background: var(--highlighter); opacity: 0.62;
     --swipe-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' preserveAspectRatio='none'%3E%3Cpath d='M1 49 C1 34 5 24 13 20 C24 16 34 21 45 17 C58 13 68 19 80 16 C91 15 98 25 99 41 C101 56 97 69 89 76 C79 82 68 77 57 82 C45 87 34 80 22 83 C11 85 3 74 1 59 C0 55 0 52 1 49 Z'/%3E%3C/svg%3E");
     -webkit-mask: var(--swipe-mask) center / 100% 100% no-repeat;

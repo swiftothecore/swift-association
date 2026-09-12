@@ -6986,7 +6986,11 @@ function renderBonusPage() {
         `<div class="bonus-now-kicker">${escapeHtml(g.kicker)}</div>` +
         `<h3 class="bonus-now-name">${escapeHtml(g.name)}</h3>` +
         `<p class="bonus-now-blurb">${escapeHtml(g.blurb)}</p>` +
-        `<div class="bonus-now-meta">${escapeHtml(bonusScoreLine(g))}</div>` +
+        // Same rule as the tile's record below, on one line rather than stacked because the
+        // leaf has the room for it: the units are kept whole, so a narrow page breaks BETWEEN
+        // them and never leaves a bare "1" under "played".
+        `<div class="bonus-now-meta">${bonusScoreLine(g).split(" · ")
+            .map((part) => `<span>${escapeHtml(part)}</span>`).join(" · ")}</div>` +
         (g.ready
           /* The Challenges detail's gold pencil sticker, in the same gold with the same
              lettering, so starting a run still looks the same act wherever it is started
@@ -7014,13 +7018,21 @@ function renderBonusPage() {
      near-identical record labels needed one and could not afford one. `line` is still on the
      roster and is still the tile's accessible name, since a shelf that says only "Redacted"
      out loud is a shelf with nothing in it. */
+  /* The tile's record is set a UNIT PER LINE rather than as one string left to wrap. The
+     units are what bonusScoreLine already joins with a middot, and a flat string at this
+     width breaks wherever it happens to run out — "best 10 / 10 · swept" on one line and
+     "0:29" alone on the next, which reads as a mistake rather than as a caption. Split on
+     the separator the string is already built with, and the break lands where the meaning
+     does. The middots go with it: they exist to join units on ONE line and are noise once
+     the units are stacked. */
   const shelf = BONUS_GAMES.map((x) =>
     `<button type="button" class="zine-tile${x.ready ? "" : " is-soon"}` +
       `${x.id === g.id ? " is-on" : ""}" data-id="${escapeHtml(x.id)}"` +
       `${x.id === g.id ? ' aria-current="true"' : ""}` +
       ` aria-label="${escapeHtml(x.name + ". " + (x.line || x.kicker))}">` +
       `<span class="zine-tile-cover">${bonusCover(x)}</span>` +
-      `<span class="zine-tile-meta">${escapeHtml(bonusScoreLine(x, true))}</span>` +
+      `<span class="zine-tile-meta">${bonusScoreLine(x, true).split(" · ")
+          .map((part) => `<span class="zine-tile-line">${escapeHtml(part)}</span>`).join("")}</span>` +
     `</button>`).join("");
 
   const el = $("bonusBody");
