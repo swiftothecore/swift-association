@@ -2265,7 +2265,17 @@
      in. Under a dark notebook it flips to the site's own dark card rather than to paper, for
      the same reason and because a white rectangle at night is a torch, not a keepsake. */
   .tpost-shelf { margin: 26px 0 4px; padding-top: 20px; border-top: 1px solid var(--rule-soft, rgba(43, 39, 34, 0.14)); }
-  .tpost-list { display: flex; flex-direction: column; gap: 22px; padding: 16px 4px 12px; }
+  /* Two screenshots to a row wherever the drawer is wide enough for two full cards, and one
+     where it is not. The columns are auto-fit off the card's OWN measure, so nothing here
+     negotiates with the 40ch cap below: a column too narrow for a whole card is never made,
+     which is what keeps the blackout bars counting against the same width the found card
+     prints at. The drawer body caps around 808px, so two is the most this can ever deal.
+     `align-items: start` keeps a short post's caption tight under it instead of letting the
+     row's tallest card drag it down. */
+  .tpost-list {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(min(40ch, 100%), 1fr));
+    align-items: start; gap: 26px 30px; padding: 16px 4px 12px;
+  }
   .tpost-cell { display: flex; flex-direction: column; align-items: stretch; gap: 8px; }
   .tpost {
     --tp-card: #ffffff;
@@ -2360,7 +2370,7 @@
   }
   :root[data-theme="dark"] .tpost-foot { border-top-color: rgba(232, 236, 241, 0.14); }
   @media (max-width: 560px) {
-    .tpost-list { gap: 18px; }
+    .tpost-list { gap: 20px 22px; }
     .tpost { padding: 12px 13px 7px; }
     .tpost-p { font-size: calc(15px + var(--text-size-adjust)); }
     .tpost-bar { height: 13px; }
