@@ -5726,10 +5726,18 @@
      goes on reporting the score through all three — it is still what the run is. */
   .chall-margin {
     display: flex; flex-direction: column; align-items: center; gap: 2px;
-    margin: -3px auto 8px; max-width: 430px; padding: 0 12px;
+    margin: -3px auto 4px; max-width: 430px; padding: 0 12px;
     font-family: var(--type); color: var(--ink-soft); text-align: center;
   }
   .chall-margin[hidden] { display: none; }
+  /* The margin line and the word it stands over belong to the same breath, so the air
+     between them is closed up to a hair. `.word-label` is a <p> and carries the browser's
+     own 1em top margin, which collapses against the block above and opens a gap wide
+     enough to read as a section break on a page that has only one section. Both sides are
+     named here because collapsing takes the larger of the two: trimming one alone changes
+     nothing. Challenge pages only — every other mode has the bracelet, not a count, above
+     the label, and that spacing is right as it is. */
+  .chall-margin + .word-label { margin-top: 4px; }
   .chall-margin-prog {
     font-size: calc(12.5px + var(--text-size-adjust)); letter-spacing: 0.3px;
     font-weight: 700; color: var(--ink); line-height: 1.3;
