@@ -4149,14 +4149,22 @@ export const ACH_FAMILIES = [
 ];
 // One hue per family, for the index tabs down the collection. Deliberately drawn from the
 // middle of each family's own themes so a tab and the dots beneath it read as one run.
+//
+// TOKENS, not literals, and for the reason the other three inline palettes in this project
+// were tokenised: these are written into a style attribute as --fam, and a custom property
+// set inline cannot be overridden by any stylesheet rule, so a hex here is unthemeable by
+// construction. As five hexes chosen for a cream page they came out at 2.14:1 to 2.64:1
+// against the night sheet — four of the five tabs and every family heading under them. The
+// four columns (day, night, and a high-contrast twin for each) live beside --red-pen in
+// styles.css; a new family needs a row in all four or its tab silently keeps the day hue.
 export const ACH_FAMILY_COLORS = {
-  craft:     "#b07d2a",
-  shelf:     "#3f6b7d",
-  knowledge: "#a33a3a",
-  offpage:   "#6b5a3f",
+  craft:     "var(--ach-fam-craft)",
+  shelf:     "var(--ach-fam-shelf)",
+  knowledge: "var(--ach-fam-knowledge)",
+  offpage:   "var(--ach-fam-offpage)",
   // Not a family in ACH_FAMILIES: the trailing Secret section gets a tab of its own, and it
   // takes the plain ink of the masked charms rather than a hue that would hint at a theme.
-  sealed:    "#6f6a60",
+  sealed:    "var(--ach-fam-sealed)",
 };
 
 // Membership: only the non-core ids are listed; everything else defaults to "core"
