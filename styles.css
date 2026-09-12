@@ -5332,9 +5332,18 @@
   .cm-tile {
     display: flex; flex-direction: column; gap: 9px;
     padding: 12px 13px 13px; border-radius: 7px;
-    background: rgba(255,255,255,0.36);
-    border: 1.5px solid rgba(43,39,34,0.14);
-    box-shadow: 0 1px 0 rgba(255,255,255,0.55) inset, 0 2px 6px rgba(60,50,35,0.05);
+    background: var(--cm-wash, rgba(255,255,255,0.36));
+    border: 1.5px solid var(--cm-edge, rgba(43,39,34,0.14));
+    box-shadow: 0 1px 0 var(--cm-lip, rgba(255,255,255,0.55)) inset, 0 2px 6px rgba(60,50,35,0.05);
+  }
+  /* The same inversion the era chips and the chain cards make, and for the same reason: a
+     36% white wash lifts a tile off cream paper, but on a dark page it IS the light, and it
+     lifted the tile to a mid grey that --ink-soft then sat on at 1.57:1 — the lever
+     descriptions and every unchosen tab in the modal, which is most of the words in it. */
+  :root[data-theme="dark"] .cm-tile {
+    --cm-wash: rgba(236,229,214,0.06);
+    --cm-edge: rgba(236,229,214,0.16);
+    --cm-lip: rgba(236,229,214,0.10);
   }
   .cm-tile--wide { grid-column: span 4; }
   .cm-tile--half { grid-column: span 2; }
