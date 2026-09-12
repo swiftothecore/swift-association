@@ -12661,11 +12661,16 @@ function milestoneColor(album) {
 function dayNote(dateKey) {
   return anniversaryNote(dateKey, TS_MILESTONES) || thirteenNote(dateKey);
 }
+// The day the page is currently drawn for, as a todayKey(). Written by refreshDateSurfaces
+// (the only thing that redraws the dated surfaces) and read by the rollover poll below.
+let shownDayKey = null;
 // Every surface that reads today's date, re-rendered together. Called whenever the dev
-// date override moves (see buildDevApi's `date`), so the page can never show one day in
-// the margin and another on the desk. The desk calendar is an optional decorative prop —
-// desktop-only, and its module may not have run — so it's refreshed only if it's there.
+// date override moves (see buildDevApi's `date`) and whenever the real day turns under a
+// page left open (see watchDayRollover), so the page can never show one day in the margin
+// and another on the desk. The desk props are optional decoration — desktop-only, and
+// their modules may not have run — so they are refreshed only if they are there.
 function refreshDateSurfaces() {
+  shownDayKey = todayKey();   // whatever moved the date, the page is now showing THIS day
   renderAnniversaryNote();
   renderMilestoneSticky();
   window.deskCalendar?.refresh();
@@ -12674,6 +12679,35 @@ function refreshDateSurfaces() {
   // played/unplayed coat, its countdown and the streak on the desk placard all
   // have to be redrawn with it.
   renderDailyButtonState();
+  // The weather is on the calendar too: snow is a December reading, the leaves are three
+  // days in November, and the rain wants the hour. Each refresher re-asks its own gate.
+  refreshSnow();
+  refreshRain();
+  refreshLeaves();
+}
+// The day turning under a page that is already open. This is deliberately a POLL against
+// todayKey() rather than one long setTimeout aimed at midnight, because a timer is the one
+// thing that cannot be trusted here: a laptop that sleeps through midnight wakes with the
+// timer still pending (macOS suspends the monotonic clock the delay is measured on, so it
+// fires hours late), a background tab has its timers throttled, and a clock correction or
+// a timezone-setting change moves the day without any midnight passing at all. Reading the
+// key and comparing it is immune to all three — whatever happened while we were not looking,
+// the answer is simply "is it a different day than the one on the page".
+//
+// The check is cheap (one toLocaleDateString) so it can run every half minute, and it also
+// runs the moment the tab comes back, which is when a sleeping machine actually returns.
+function checkDayRollover() {
+  if (todayKey() === shownDayKey) return;
+  refreshDateSurfaces();   // which re-stamps shownDayKey itself
+}
+function watchDayRollover() {
+  shownDayKey = todayKey();
+  setInterval(checkDayRollover, 30000);
+  // A machine asleep across midnight runs no timers at all; the wake is the event that
+  // matters, and it arrives as the tab being shown again rather than as a tick.
+  document.addEventListener("visibilitychange", () => { if (!document.hidden) checkDayRollover(); });
+  window.addEventListener("focus", checkDayRollover);
+  window.addEventListener("pageshow", checkDayRollover);
 }
 // Dated marginalia at the top of today's page: a torn slip for real Taylor milestones and
 // sacred-13 days, with milestone album names tinted to their eras. Most days it is silent
@@ -29235,6 +29269,9 @@ async function init() {
   wireDeskMug();
   setupTooltips();
   wireFirstRun();
+  // A notebook gets left open. From here on the page notices the day turning under it
+  // instead of waiting for a reload to find out.
+  watchDayRollover();
 
   try {
     await loadData();

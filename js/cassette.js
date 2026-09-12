@@ -208,11 +208,9 @@ function currentKey() {
 }
 export const refresh = () => render(currentKey());
 
-function scheduleMidnight() {
-  const now = new Date();
-  const next = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 0, 0, 5);
-  setTimeout(() => { refresh(); scheduleMidnight(); }, next - now);
-}
+// No midnight timer of its own, for the same reason the desk calendar has none: app.js's
+// day-rollover watcher turns every dated surface together, and a long setTimeout aimed at
+// midnight is the one clock a laptop's sleep quietly breaks.
 
 // Hand the module the catalogue and let it dub the tape. Called once, from
 // loadData, with TAYLOR'S songs — the desk keeps her tape on it through a guest
@@ -223,7 +221,7 @@ export function install(songs) {
     !(s.album === HOUSE_TAPE.album && s.title === HOUSE_TAPE.title));
   house = songs.find((s) => s.album === HOUSE_TAPE.album && s.title === HOUSE_TAPE.title) || null;
   // The hand decides how wide a title is, so measure only once it has arrived.
-  const draw = () => { refresh(); scheduleMidnight(); };
+  const draw = refresh;
   // How much of the card is on screen changes with the window, and so does how
   // small the hand has to be written; re-fit once the drag has stopped.
   let resizeT = 0;

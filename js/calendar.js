@@ -22,10 +22,11 @@
 //
 // The hand marks use seeded jitter — stable within a day so nothing flickers
 // on re-render, but each day's slash gets its own angle, length and bow, and
-// the pen loop tilts differently every day. Re-renders just after local
-// midnight so a page left open overnight crosses off the day and moves the
-// loop. Purely decorative and non-interactive, like every desk prop; if the
-// markup isn't there it does nothing.
+// the pen loop tilts differently every day. The pad is re-rendered whenever
+// app.js says the day has turned (refreshDateSurfaces), so a page left open
+// overnight crosses off the day and moves the loop. Purely decorative and
+// non-interactive, like every desk prop; if the markup isn't there it does
+// nothing.
 
 import { TS_MILESTONES, TS_LORE_DAYS, ALBUM_COLORS, CB_ALBUM_COLORS, SALT_SHAKER_D, SALT_CAP_D } from "./config.js";
 import { loadSettings } from "./storage.js";
@@ -479,17 +480,15 @@ function currentDate() {
 }
 export const refresh = () => render(currentDate());
 
-// Re-render just after the next local midnight, then every following
-// midnight, so a page left open overnight advances the marks.
-function scheduleMidnight() {
-  const now = new Date();
-  const next = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 0, 0, 5);
-  setTimeout(() => { refresh(); scheduleMidnight(); }, next - now);
-}
+// The pad does NOT keep its own midnight timer. A page left open overnight is refreshed
+// by app.js's day-rollover watcher, which calls refreshDateSurfaces and so turns this pad,
+// the cassette label, the margin slip and the daily gate on the same beat. A timer here
+// would be both a second opinion about what day it is and the unreliable one: see the
+// comment over watchDayRollover for why a long setTimeout cannot be trusted to survive
+// a sleeping laptop.
 
 if (svg) {
   refresh();
-  scheduleMidnight();
   // Dev hook in the spirit of the snowfall toggle. `refresh` is what app.js's
   // date override calls; `render` still takes a Date for console poking, e.g.
   // deskCalendar.render(new Date(2026, 11, 13)) for her birthday. `hemisphere`
