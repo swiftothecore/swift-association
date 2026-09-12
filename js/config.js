@@ -4149,6 +4149,7 @@ export const ACH_GROUP_OF = {
   "sweep-name-that-song-one-line-each": "bonus", "sweep-sing-it-back-all-words-exact": "bonus", "name-redacted-song-no-strips-removed": "bonus",
   "take-rarest-only-here-card-all-10-pages": "bonus", "finish-then-what-unbroken-chain": "bonus", "take-commonest-only-here-card": "bonus",
   "name-redacted-song-after-buying-all-strips": "bonus", "time-out-all-10-only-here-pages": "bonus", "finish-bonus-run-one-page-short-of-sweep": "bonus",
+  "sweep-running-order": "bonus", "name-running-order-page-with-half-the-clock-left": "bonus",
   "name-ruthless-page-off-one-word": "ruthless", "finish-ruthless-run-naming-all-ten": "ruthless",
   "finish-ruthless-run-with-no-wrong-guess": "ruthless", "every-ruthless-lens-best-under-90s": "ruthless",
   "every-ruthless-lens-best-under-60s": "ruthless", "every-ruthless-lens-best-under-45s": "ruthless",
