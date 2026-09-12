@@ -67,6 +67,9 @@
        same reason the red one is — it is INK, for text and marks you must be able to read,
        not a wash. --margin is the printed line and belongs under text, never as text. */
     --green-pen: #2f6340;
+    /* The third pencil in the tin. Blue is what the shelf pins a shortlist in, deliberately
+       not a difficulty colour, and it was the darkest of the three at 1.54:1 after dark. */
+    --blue-pencil: #274560;
 
     /* The charm collection's five family hues, one per index tab and the heading above it.
        Tokens rather than the hexes they used to be in ACH_FAMILY_COLORS, because that object
@@ -239,6 +242,7 @@
     --margin: rgba(206, 86, 86, 0.5);  /* the red rule still reads as red */
     --red-pen: #df6b64;                /* brightened so editor's ink stays legible */
     --green-pen: #6fbf8b;              /* lifted the same way, so a tick reads on a dark sheet */
+    --blue-pencil: #7090af;
     /* Lifted off the day hues rather than re-picked: same hue, enough lightness to clear the
        night sheet. As the day hexes they measured 2.14:1 to 2.64:1 here. */
     --ach-fam-craft:     #d9a94e;
@@ -2696,14 +2700,14 @@
     margin-left: auto; font-family: var(--type); font-size: calc(10px + var(--text-size-adjust)); color: #b3a584;
   }
   /* brutal tier group-head: oxblood accent on the divider + label */
-  .chall-group-head.t4 { border-bottom-color: #a86a6a; }
-  .chall-group-head.t4 .chall-group-label { color: #7a2b2b; }
+  .chall-group-head.t4 { border-bottom-color: color-mix(in srgb, var(--red-pen) 62%, var(--paper)); }
+  .chall-group-head.t4 .chall-group-label { color: var(--red-pen); }
   /* Pinning is a small personal shortlist, not a new completion tier. It gets blue pencil
      rather than a cassette colour so it cannot be mistaken for difficulty. */
   .chall-group--pinned { margin-bottom: 16px; }
   .chall-group-head--pinned { border-bottom-color: rgba(39,69,96,0.42); }
-  .chall-group-head--pinned .chall-group-label { color: #274560; }
-  .chall-group-head--pinned .chall-pin-svg { width: 17px; height: 17px; color: #274560; }
+  .chall-group-head--pinned .chall-group-label { color: var(--blue-pencil); }
+  .chall-group-head--pinned .chall-pin-svg { width: 17px; height: 17px; color: var(--blue-pencil); }
   /* tier 0 "unrated" — placeholder while a freshly-built challenge's real difficulty is
      decided. A single ghosted, dashed cassette; the group sits last in the list. */
   .chall-tapes.t0 { opacity: 0.8; }
@@ -2965,9 +2969,11 @@
   /* mastery-gated lock: oxblood-tinted, carries the padlock glyph inline */
   .chall-need--mastery {
     display: inline-flex; align-items: center; gap: 7px;
-    color: #7a2b2b; border-color: #b06a6a; background: rgba(92,26,26,0.06);
+    color: var(--red-pen);
+    border-color: color-mix(in srgb, var(--red-pen) 66%, var(--paper));
+    background: color-mix(in srgb, var(--red-pen) 7%, transparent);
   }
-  .chall-need--mastery .chall-mark-svg { width: 15px; height: 15px; color: #7a2b2b; }
+  .chall-need--mastery .chall-mark-svg { width: 15px; height: 15px; color: var(--red-pen); }
   /* can't-afford state: the torn ticket stub, with the way to earn one pencilled under it */
   .chall-need-wrap { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
   .chall-need-hint {
@@ -7296,13 +7302,13 @@
   }
 
   /* the gag: a caught-out fake word cackles; a wronged real word recoils */
-  .word-wrap.impostor-laugh .word { animation: impostorLaugh 0.42s ease-in-out 0s 3 both; color: #7a2b2b; }
-  .word-wrap.impostor-wronged .word { animation: impostorWronged 0.5s ease-out both; color: #3f7d6e; }
+  .word-wrap.impostor-laugh .word { animation: impostorLaugh 0.42s ease-in-out 0s 3 both; color: var(--red-pen); }
+  .word-wrap.impostor-wronged .word { animation: impostorWronged 0.5s ease-out both; color: var(--green-pen); }
   /* reduced-motion fallback: a static "ha!" stamp instead of the wiggle */
-  .word-wrap.impostor-ha .word { color: #7a2b2b; }
+  .word-wrap.impostor-ha .word { color: var(--red-pen); }
   .word-wrap.impostor-ha .word::after {
     content: "ha!"; position: absolute; left: 100%; bottom: 60%;
-    font-family: var(--hand); font-size: calc(26px + var(--text-size-adjust)); color: #b23a3a; transform: rotate(-12deg);
+    font-family: var(--hand); font-size: calc(26px + var(--text-size-adjust)); color: var(--red-pen); transform: rotate(-12deg);
     margin-left: 6px; white-space: nowrap;
   }
   @keyframes impostorLaugh {
@@ -10658,6 +10664,7 @@
        an ordinary-dark value left here would make the setting do nothing on these. */
     --red-pen: #ff9a92;
     --green-pen: #8fe0ab;
+    --blue-pencil: #84a5c5;
     --ach-fam-craft:     #f0c46a;
     --ach-fam-shelf:     #9ad0e8;
     --ach-fam-knowledge: #ff9a9a;
@@ -11653,6 +11660,7 @@
     --margin: rgba(190, 0, 0, 0.85);
     --red-pen: #9a0006;
     --green-pen: #00521f;
+    --blue-pencil: #274560;
     /* Deepened onto the whiter sheet, the same trade the era accents make in this block. */
     --ach-fam-craft:     #6b4700;
     --ach-fam-shelf:     #10455c;
