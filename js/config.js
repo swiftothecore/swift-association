@@ -570,19 +570,62 @@ export const CUSTOM_DEFAULT_MODE = {
    in its longest chain) but that a clock would DELETE them. Only Here's 20s exists to force
    judgement over recall, and Redacted is a game about deliberating over which strip to buy.
    Nor is it on Ruthless, which is scored in seconds already. */
+/* THE ORDER OF THIS ARRAY IS THE ORDER OF THE SHELF, and it is a designed order rather than
+   the order the games were written in. There is no second list the way the challenges have
+   one (CHALLENGE_SHELF): eight zines fit in a single row with no tiers to sort into, so the
+   roster IS the reading order and a game is placed by being moved here.
+
+   The sort key, so a ninth game can be placed without re-arguing it: what the page asks you
+   to PRODUCE, cheapest first: a tap, then a word, then a title. Inside each family, order by
+   how much of the catalogue you have to already carry to answer at all.
+
+     you tap      the answer is somewhere on the page and you point at it
+     you write a word   the song is named; one word of it is missing
+     you write a title  the song is the answer, and the families differ by how much of its
+                        own writing you are given to find it with
+
+   The title family is the shelf's real ramp and it should stay in this order: a clean line,
+   then a verse you have to buy a word at a time, then the song's words with the order and the
+   singing taken out of them, then no words at all. Each one takes away the thing the last one
+   was leaning on, which is a sentence a player never reads but can feel by the fourth cover.
+
+   Two practical consequences of the order, both intentional. The first ready game is the zine
+   that lies open when the shelf is first opened, so the front of the list has to be the one
+   that explains what a bonus game IS in a single glance. And the back cover's keepsake reads
+   the roster straight, so a run's record card walks the same ladder the shelf does. */
 export const BONUS_GAMES = [
+  // Tap: the whole line is in front of you and nothing has to be recalled, only heard.
   { id: "spot-the-slip", name: "Spot the Slip", ready: true, sweep: true,
     kicker: "find the wrong word", tint: "#bf5340",
     line: "One word in the lyric is an impostor. Catch it.",
     blurb: "One word in the lyric has been swapped for an impostor. Catch it before the ink dries, and trust the ear that says a line is wrong." },
-  { id: "name-that-song", name: "Name That Song", ready: true, sweep: true,
-    kicker: "lyric in, title out", tint: "#33628f",
-    line: "Read the line, name the song, beat the clock.",
-    blurb: "Read the line, name the song, and beat the clock. There is no prompt word to lean on here and nothing to go on but the lyric itself." },
+  // Four picks down one song, worth 1, 1, 2 and 2 — the payout escalates because the decoys
+  // move closer to home as the page goes on (see buildChainPuzzle), and a ramp the player is
+  // asked to survive but never paid for reads as the game turning mean rather than exciting.
+  // The six is CHAIN_PAGE written out; the two must stay in step.
+  { id: "then-what", name: "Then What", ready: true, points: 6,
+    kicker: "what comes next?", tint: "#4c3f8a",
+    line: "Three lines. Pick the one that comes next.",
+    blurb: "One line of the song, and three lines that might follow it. Pick the right one and it locks into the page in pen, four times over." },
+  // The one game on the shelf with no fail state: every card in the hand is really in the song,
+  // so every pick pays, and the rarity is what the five points are for. See buildOnlyHerePuzzle.
+  // Last of the tap games because it is the only one that asks about songs you are not being
+  // shown: a card is priced by the rest of the catalogue, not by the song at the top.
+  { id: "only-here", name: "Only Here", ready: true, points: 5,
+    kicker: "the game backwards", tint: "#1c7371",
+    line: "Six words from the song. Pick the rarest.",
+    blurb: "The game backwards: here is the song, and here are six of its own words. Pick the one you think the fewest other songs sing." },
+  // The hinge of the shelf: the song is still named, but the answer is now written rather than
+  // pointed at, which is the last page before every game below asks for a title.
   { id: "sing-it-back", name: "Sing It Back", ready: true, sweep: true,
     kicker: "fill the gap", tint: "#8d4064",
     line: "A word is missing from the line. Write it back.",
     blurb: "A word has been lifted out of one of the song's own lines, and the song is named above it. Write the missing word back into the gap." },
+  // Title family, gentlest: a whole line of the song's own writing, unmarked.
+  { id: "name-that-song", name: "Name That Song", ready: true, sweep: true,
+    kicker: "lyric in, title out", tint: "#33628f",
+    line: "Read the line, name the song, beat the clock.",
+    blurb: "Read the line, name the song, and beat the clock. There is no prompt word to lean on here and nothing to go on but the lyric itself." },
   // The one game on the shelf scored in POINTS rather than pages cleared: `points` is what a
   // page opens worth, and every other surface reads its maximum off it (see bonusMaxScore).
   // Any future game that scores a page on a scale rather than right/wrong sets the same field.
@@ -594,28 +637,6 @@ export const BONUS_GAMES = [
     kicker: "how little do you need?", tint: "#3b4d31",
     line: "Peel the tape off a verse, and name it cheap.",
     blurb: "A verse with the telling words taped over. Peel them off one at a time, and name the song before you have spent the page." },
-  // The one game on the shelf with no fail state: every card in the hand is really in the song,
-  // so every pick pays, and the rarity is what the five points are for. See buildOnlyHerePuzzle.
-  { id: "only-here", name: "Only Here", ready: true, points: 5,
-    kicker: "the game backwards", tint: "#1c7371",
-    line: "Six words from the song. Pick the rarest.",
-    blurb: "The game backwards: here is the song, and here are six of its own words. Pick the one you think the fewest other songs sing." },
-  // Four picks down one song, worth 1, 1, 2 and 2 — the payout escalates because the decoys
-  // move closer to home as the page goes on (see buildChainPuzzle), and a ramp the player is
-  // asked to survive but never paid for reads as the game turning mean rather than exciting.
-  // The six is CHAIN_PAGE written out; the two must stay in step.
-  { id: "then-what", name: "Then What", ready: true, points: 6,
-    kicker: "what comes next?", tint: "#4c3f8a",
-    line: "Three lines. Pick the one that comes next.",
-    blurb: "One line of the song, and three lines that might follow it. Pick the right one and it locks into the page in pen, four times over." },
-  // The one game on the shelf that asks nothing about the words: a page is a track number and
-  // an album, and ten seconds. Right or wrong like the first three, so a run is out of ten and
-  // it takes `sweep` for their reason too, the reachable ceiling: at 10/10 an eleventh perfect
-  // run would tie the tenth forever, and the clock is what it goes on to beat.
-  { id: "running-order", name: "Running Order", ready: true, sweep: true,
-    kicker: "name it from its number", tint: "#9c6b21",
-    line: "An album and a track number. Name the song, fast.",
-    blurb: "Track eight on Fearless. Track five on folklore. The album and the number are all you get, and ten seconds to put a name to it." },
   // The one game on the shelf with no lines on the page at all. See buildCloudPuzzle for why
   // the words are CHOSEN by rarity and SIZED by frequency, which are deliberately two
   // different signals doing two different jobs.
@@ -623,6 +644,15 @@ export const BONUS_GAMES = [
     kicker: "the song, out of order", tint: "#6b7a50",
     line: "A scatter of a song's own words. Name it.",
     blurb: "A song's own words scattered across the page, the ones it leans on written biggest and none of it in order. Nothing here can be sung." },
+  // The one game on the shelf that asks nothing about the words: a page is a track number and
+  // an album, and ten seconds. Right or wrong like the tap and gap games, so a run is out of
+  // ten and it takes `sweep` for their reason too, the reachable ceiling: at 10/10 an eleventh
+  // perfect run would tie the tenth forever, and the clock is what it goes on to beat.
+  // The end of the ramp: every other title game hands you some of the song's own writing.
+  { id: "running-order", name: "Running Order", ready: true, sweep: true,
+    kicker: "name it from its number", tint: "#9c6b21",
+    line: "An album and a track number. Name the song, fast.",
+    blurb: "Track eight on Fearless. Track five on folklore. The album and the number are all you get, and ten seconds to put a name to it." },
 ];
 /* ---------- The Ruthless run descriptor ----------
    NOT a bonus game and no longer in the roster above (2026-08-18). It is the object the Ruthless
