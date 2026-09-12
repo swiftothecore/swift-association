@@ -620,7 +620,7 @@ export const BONUS_GAMES = [
   // the words are CHOSEN by rarity and SIZED by frequency, which are deliberately two
   // different signals doing two different jobs.
   { id: "word-cloud", name: "Word Cloud", ready: true, sweep: true,
-    kicker: "the song, out of order", tint: "#3f3a34",
+    kicker: "the song, out of order", tint: "#6b7a50",
     line: "A scatter of a song's own words. Name it.",
     blurb: "A song's words scattered across the page, the ones it leans on written biggest, and not a line of it in order. Nothing here can be sung: either you know what the song sounds like from the inside, or you don't." },
 ];

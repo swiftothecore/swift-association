@@ -339,7 +339,7 @@ const COVERS = {
      abandoning the torn-paper collage every other cover on this shelf is built from, so it
      read as a slide rather than as something made by hand. */
   "word-cloud": (r) => {
-    const GROUND = "#8e9484", DARK = "#2f352c", MID = "#5f6a58", PALE = "#dfe0ce";
+    const GROUND = "#7f8a6a", DARK = "#232b1c", MID = "#4c5739", PALE = "#e8e8d0";
     let s = sheet([[-6, -6], [126, -6], [126, 166], [-6, 166]], GROUND, r, { shadow: false, crisp: true });
     /* x, y, width, height, tilt, tone. Hand-placed, and the placement is the whole drawing:
        the bands TAPER, so the mass is widest through its middle and closes to a single short
