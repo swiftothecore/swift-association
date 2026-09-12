@@ -78,6 +78,28 @@
     --ach-fam-offpage:   #6b5a3f;
     --ach-fam-sealed:    #6f6a60;
 
+    /* The eighteen charm-theme inks, one per ACH_GROUPS theme. Tokens for the reason the note
+       on ACH_GROUP_COLORS gives: they are written inline as --bead / --ach-theme / --plate and
+       no stylesheet rule can reach an inline custom property. */
+    --ach-th-core: #c8951f;
+    --ach-th-perfect: #c2622a;
+    --ach-th-clock: #55707f;
+    --ach-th-misfires: #8a3b2f;
+    --ach-th-daily: #3f7d6e;
+    --ach-th-infinite: #2f4d7a;
+    --ach-th-lyricist: #9b6b9e;
+    --ach-th-catalogue: #b23a3a;
+    --ach-th-nemesis: #6d3f5c;
+    --ach-th-challenges: #2b2722;
+    --ach-th-album-focus: #a8577a;
+    --ach-th-custom: #4a6b8a;
+    --ach-th-guests: #6b5a92;
+    --ach-th-bonus: #2f6f6a;
+    --ach-th-ruthless: #8c4a34;
+    --ach-th-longhaul: #4a6b3f;
+    --ach-th-margins: #7d5a3f;
+    --ach-th-mastery: #8a6d1f;
+
     /* The masthead's gold. Deliberately NOT an era token: the drawn title is the
        one fixed mark on the desk, and a logo that repaints itself every ten
        seconds is not a logo. Era ink starts below the header. */
@@ -224,6 +246,26 @@
     --ach-fam-knowledge: #e08080;
     --ach-fam-offpage:   #c2ad84;
     --ach-fam-sealed:    #a8a296;
+    /* Same eighteen hues, OKLab lightness moved until each clears the night sheet at about
+       4.6:1. Not re-picked: a charm keeps its own ink, it just stops being written in the dark. */
+    --ach-th-core: #c8951f;
+    --ach-th-perfect: #d4733c;
+    --ach-th-clock: #7590a0;
+    --ach-th-misfires: #cb7567;
+    --ach-th-daily: #5a9888;
+    --ach-th-infinite: #6d8fc0;
+    --ach-th-lyricist: #ad7cb0;
+    --ach-th-catalogue: #e26561;
+    --ach-th-nemesis: #b17d9c;
+    --ach-th-challenges: #908c85;
+    --ach-th-album-focus: #c77296;
+    --ach-th-custom: #6e90b0;
+    --ach-th-guests: #9583bf;
+    --ach-th-bonus: #599792;
+    --ach-th-ruthless: #c27b63;
+    --ach-th-longhaul: #739567;
+    --ach-th-margins: #aa8569;
+    --ach-th-mastery: #a6893f;
     /* Default (no-era) accent, lifted for the dark page so the masthead gold and
        "Your best" number don't sit muddy. Per-era dark tunings are below. */
     --brand-gold: #e0a83a;
@@ -4099,7 +4141,9 @@
   .bg-back-copy[data-state="kept"] .keepsake-ic--copy { display: none; }
   .bg-back-copy[data-state="kept"] .keepsake-ic--kept { display: block; }
   .bg-back-copy[data-state="failed"] {
-    color: rgba(160,62,46,0.85); border-color: rgba(160,62,46,0.4); background: rgba(160,62,46,0.08);
+    color: color-mix(in srgb, var(--red-pen) 85%, transparent);
+    border-color: color-mix(in srgb, var(--red-pen) 40%, transparent);
+    background: color-mix(in srgb, var(--red-pen) 8%, transparent);
   }
   .bg-back-copy[disabled] { cursor: default; }
   [data-reduce-motion="on"] .bg-back-copy { transition: none; }
@@ -4714,7 +4758,7 @@
   /* A page handed back goes quiet, and its words column says so in the red pen the sleeve
      wrote its misses in. The seconds stay in black: they were still paid. */
   .rl-page.no .rl-page-title { color: var(--ink-soft); }
-  .rl-page.no .rl-page-words { color: rgba(160,62,46,0.82); }
+  .rl-page.no .rl-page-words { color: color-mix(in srgb, var(--red-pen) 82%, transparent); }
   /* A page named on sight: its word count goes to full ink and gets the underline a marked
      figure would get in a notebook, so the listing agrees with the stopwatch on the strand
      without printing a second glyph an inch below the first one. */
@@ -10619,6 +10663,24 @@
     --ach-fam-knowledge: #ff9a9a;
     --ach-fam-offpage:   #dcc79c;
     --ach-fam-sealed:    #c4beb1;
+    --ach-th-core: #cc9926;
+    --ach-th-perfect: #eb8852;
+    --ach-th-clock: #89a5b6;
+    --ach-th-misfires: #e28a7b;
+    --ach-th-daily: #6fad9d;
+    --ach-th-infinite: #82a3d6;
+    --ach-th-lyricist: #c390c6;
+    --ach-th-catalogue: #fa7b76;
+    --ach-th-nemesis: #c792b2;
+    --ach-th-challenges: #a6a09a;
+    --ach-th-album-focus: #de88ab;
+    --ach-th-custom: #82a6c7;
+    --ach-th-guests: #aa99d5;
+    --ach-th-bonus: #6daca7;
+    --ach-th-ruthless: #d89077;
+    --ach-th-longhaul: #88ab7c;
+    --ach-th-margins: #c19a7d;
+    --ach-th-mastery: #bc9e55;
     --mode-relaxed:  #8fc4ff;
     --mode-easy:     #8ee0a6;
     --mode-medium:   #ffc94a;
@@ -11597,6 +11659,24 @@
     --ach-fam-knowledge: #8a0008;
     --ach-fam-offpage:   #40331b;
     --ach-fam-sealed:    #3f3b33;
+    --ach-th-core: #7c4c00;
+    --ach-th-perfect: #963a00;
+    --ach-th-clock: #405b69;
+    --ach-th-misfires: #8a3b2f;
+    --ach-th-daily: #216153;
+    --ach-th-infinite: #2f4d7a;
+    --ach-th-lyricist: #754778;
+    --ach-th-catalogue: #a22b2d;
+    --ach-th-nemesis: #6d3f5c;
+    --ach-th-challenges: #2b2722;
+    --ach-th-album-focus: #8a3d60;
+    --ach-th-custom: #3a5a78;
+    --ach-th-guests: #5f4e85;
+    --ach-th-bonus: #1e615c;
+    --ach-th-ruthless: #87452f;
+    --ach-th-longhaul: #3f5f34;
+    --ach-th-margins: #725035;
+    --ach-th-mastery: #705300;
   }
   /* Gold's highlighter is the one cell in this table that had to be tuned rather than
      copied down from its normal-contrast value. Yellow on white paper is inherently the

@@ -4106,25 +4106,34 @@ export const ACH_GROUPS = [
   { id: "mastery",   label: "Skills & Mastery",       short: "Mastery" },
 ];
 // One muted notebook hue per theme — the section marks and the by-theme breakdown bars.
+/* TOKENS, not hexes, for the same reason ACH_FAMILY_COLORS below is: every one of these is
+   written into a style attribute (--bead on a charm, --ach-theme on a recap name, --plate on
+   a plate), and an inline custom property cannot be reached by any stylesheet rule. As the
+   day hexes they were chosen against cream paper, and twelve of the eighteen came in under
+   3:1 on the night sheet — "challenges" was --ink's day value at 1.04:1, which is a charm
+   mark drawn in invisible ink. The night and high-contrast columns in styles.css are the
+   same hues with their OKLab lightness moved until they clear the sheet, so nothing here has
+   been re-picked; a theme added here needs a row in all four columns or it keeps the day hue
+   on every page. */
 export const ACH_GROUP_COLORS = {
-  core:      "#c8951f",
-  perfect:   "#c2622a",
-  clock:     "#55707f",
-  misfires:  "#8a3b2f",
-  daily:     "#3f7d6e",
-  infinite:  "#2f4d7a",
-  lyricist:  "#9b6b9e",
-  catalogue: "#b23a3a",
-  nemesis:   "#6d3f5c",
-  challenges: "#2b2722",
-  albumFocus: "#a8577a",
-  custom:    "#4a6b8a",
-  guests:    "#6b5a92",
-  bonus:     "#2f6f6a",
-  ruthless:  "#8c4a34",   // the Ruthless stamp's own rust, so the section mark matches the door in
-  longhaul:  "#4a6b3f",
-  margins:   "#7d5a3f",
-  mastery:   "#8a6d1f",
+  core:       "var(--ach-th-core)",
+  perfect:    "var(--ach-th-perfect)",
+  clock:      "var(--ach-th-clock)",
+  misfires:   "var(--ach-th-misfires)",
+  daily:      "var(--ach-th-daily)",
+  infinite:   "var(--ach-th-infinite)",
+  lyricist:   "var(--ach-th-lyricist)",
+  catalogue:  "var(--ach-th-catalogue)",
+  nemesis:    "var(--ach-th-nemesis)",
+  challenges: "var(--ach-th-challenges)",
+  albumFocus: "var(--ach-th-album-focus)",
+  custom:     "var(--ach-th-custom)",
+  guests:     "var(--ach-th-guests)",
+  bonus:      "var(--ach-th-bonus)",
+  ruthless:   "var(--ach-th-ruthless)",   // the Ruthless stamp's own rust, so the section mark matches the door in
+  longhaul:   "var(--ach-th-longhaul)",
+  margins:    "var(--ach-th-margins)",
+  mastery:    "var(--ach-th-mastery)",
 };
 
 /* Families: one layer ABOVE the themes, so seventeen equal rows read as four groups of
