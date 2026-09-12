@@ -3367,17 +3367,20 @@
      shorter book rather than as a longer caption. */
   .zine-row {
     display: flex; flex-wrap: wrap; justify-content: center; align-items: flex-start;
-    gap: 12px 9px; padding-bottom: 10px;
+    gap: 12px 7px; padding-bottom: 10px;
   }
   .zine-tile {
     /* Sized so the whole shelf stands in ONE row on a desktop and three across on a phone.
-       All three numbers are the shelf's LENGTH written down, and they moved together when it
-       grew to seven: the percentage is one tile's share of the row, and the floor had to come
-       down with it because the notebook's page is only so wide and seven tiles at the old 74px
-       came to six pixels more than the row has (measured). A shelf that wraps to six and a
-       lonely one is exactly what this is defending against, so re-measure all three the next
-       time a game is added rather than nudging the percentage alone. */
-    flex: 0 0 clamp(70px, 12%, 98px);
+       All three numbers are the shelf's LENGTH written down and they move TOGETHER — the
+       percentage is one tile's share of the row, the floor is what it may never shrink past,
+       and the column gap is what stands between them. They came down once for the seventh
+       game and again for the eighth, both times by measurement rather than by feel: the row
+       inside the notebook is 482px on a narrow desktop and 572px on a wide one (the page has
+       its own maximum, so the window getting bigger stops helping), and eight tiles at the
+       old 70px floor plus 9px gaps came to 623px against the 482 that exists. A shelf that
+       wraps to seven and a lonely one is exactly what this is defending against, so measure
+       all three again the next time a game is added rather than nudging the percentage. */
+    flex: 0 0 clamp(50px, 10.8%, 86px);
     display: flex; flex-direction: column; align-items: center; gap: 7px; min-width: 0;
     padding: 8px 4px 7px; background: none; border: none; cursor: pointer; text-align: center;
     border-radius: 3px; position: relative;
@@ -3794,6 +3797,23 @@
   }
   /* Answered: the page stops being the question and becomes the lyric sheet under its heading. */
   .bg-stream.is-done { opacity: 0.78; border-left-color: rgba(43,39,34,0.18); }
+  /* ---- Word Cloud ----
+     The words are absolutely positioned by js/cloud.js, which has already measured the real
+     glyphs and fitted the whole block to this box's width, so there is almost nothing for CSS
+     to do here and it must not try: any padding, letter-spacing or font-weight set on the word
+     below would change the metrics the packing was computed from and open gaps the ink masks
+     closed. The container's HEIGHT is written by the painter for the same reason. */
+  .bg-cloud {
+    position: relative; width: 100%; margin: 2px auto 14px;
+    /* A cloud fitted to a stale width (a turned phone, mid-repaint) is clipped rather than
+       allowed to run out over the writing line underneath it. */
+    overflow: hidden;
+  }
+  .bg-cloud-word {
+    position: absolute; font-family: var(--hand); font-weight: 600; line-height: 1;
+    color: var(--ink); white-space: nowrap; transform-origin: center;
+    -webkit-user-select: none; user-select: none;
+  }
   .bg-giveup { display: block; width: max-content; max-width: 100%; margin: 12px auto 0; }
   .bg-giveup[disabled] { opacity: 0.4; cursor: default; }
   @media (max-width: 560px) {

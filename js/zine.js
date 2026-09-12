@@ -325,6 +325,46 @@ const COVERS = {
     return s;
   },
 
+  /* WORD CLOUD — a clump of torn strips at every weight, packed into a ragged lozenge.
+
+     It is told apart from Redacted by SHAPE, not by medium, which is the distinction that
+     actually holds. Redacted's blocks are uniform, horizontal, share a left edge and lie on
+     ruled lines: it is a PAGE, and it reads as one. This has no page under it, no rules, no
+     shared edge and no two strips the same size or angle — it is a MASS, thinning to nothing
+     at its edges, which is the one silhouette a word cloud has. The other half of it is
+     value: Redacted is dark-on-light only, and this puts strips both lighter AND darker than
+     its own ground, so the two never read as the same object even at 24px.
+
+     A cover made of real lettering was tried here and thrown out. It dodged Redacted, but by
+     abandoning the torn-paper collage every other cover on this shelf is built from, so it
+     read as a slide rather than as something made by hand. */
+  "word-cloud": (r) => {
+    const GROUND = "#8e9484", DARK = "#2f352c", MID = "#5f6a58", PALE = "#dfe0ce";
+    let s = sheet([[-6, -6], [126, -6], [126, 166], [-6, 166]], GROUND, r, { shadow: false, crisp: true });
+    /* x, y, width, height, tilt, tone. Hand-placed, and the placement is the whole drawing:
+       the bands TAPER, so the mass is widest through its middle and closes to a single short
+       strip top and bottom. A first pass spread every band the full width of the field and
+       the result was a brick wall — which is the same failure as looking like Redacted,
+       arrived at from the other direction. No two strips share a left edge, a length or an
+       angle, for the same reason. */
+    const strips = [
+      [48, 24, 24, 5, -5, PALE],
+      [36, 33, 26, 6, 3, MID], [66, 35, 22, 5, -3, PALE],
+      [26, 43, 34, 9, -2, DARK], [64, 45, 30, 7, 4, MID],
+      [18, 56, 44, 13, 2, DARK], [66, 58, 36, 10, -3, PALE],
+      [16, 72, 48, 14, -2, PALE], [68, 74, 34, 9, 3, DARK],
+      [24, 89, 38, 9, 3, MID], [66, 90, 26, 7, -4, MID],
+      [32, 103, 30, 7, -3, DARK], [66, 104, 20, 5, 4, PALE],
+      [44, 114, 24, 4, -5, MID],
+    ];
+    strips.forEach(([x, y, w, h, rot, fill]) => {
+      const strip = sheet([[x, y], [x + w, y - 1], [x + w, y + h], [x, y + h + 1]], fill, r,
+        { amp: 0.9, step: 4, sx: 1, sy: 1.3, fibre: false });
+      s += `<g transform="rotate(${rot} ${x + w / 2} ${y + h / 2})">${strip}</g>`;
+    });
+    return s;
+  },
+
   /* RUTHLESS GAME — the sun going down on you. A huge ochre sun half off the page behind
      hot torn rays, with the ridges closing in front of it in the mode's own deep red. The
      one cover that is about a clock without drawing one. */
@@ -376,6 +416,7 @@ const LABELS = {
   "only-here":      { x: 12, y: 14,  w: 96, h: 23, rot: -1.2 },
   "then-what":      { x: 14, y: 16,  w: 92, h: 23, rot: 1.6 },
   "running-order":  { x: 13, y: 122, w: 94, h: 21, rot: 1.5 },
+  "word-cloud":     { x: 12, y: 126, w: 96, h: 21, rot: -1.3 },
   "ruthless-game":  { x: 12, y: 16,  w: 96, h: 23, rot: -1.8 },
 };
 const BLANK_LABEL = { x: 16, y: 28, w: 88, h: 20, rot: -1, fill: "#cdb489", ink: "rgba(52,42,30,0.68)" };

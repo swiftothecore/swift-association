@@ -68,6 +68,8 @@ const ASSETS = [
   // The bonus shelf's torn-paper zine covers (pure; see js/zine.js). app.js imports it at
   // load, so a stale copy of one and a fresh copy of the other is a broken shelf.
   "js/zine.js",
+  // Word Cloud's ink-mask packing (pure; see js/cloud.js). app.js imports it at load.
+  "js/cloud.js",
   "js/storage.js",
   "js/sound.js",
   // Share/copy plumbing — imported by both the game and the searcher.

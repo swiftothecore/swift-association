@@ -616,6 +616,13 @@ export const BONUS_GAMES = [
     kicker: "name it from its number", tint: "#9c6b21",
     line: "An album and a track number. Name the song, fast.",
     blurb: "Track eight on Fearless. Track five on folklore. The album and the number are all you get, and ten seconds to put a name to it." },
+  // The one game on the shelf with no lines on the page at all. See buildCloudPuzzle for why
+  // the words are CHOSEN by rarity and SIZED by frequency, which are deliberately two
+  // different signals doing two different jobs.
+  { id: "word-cloud", name: "Word Cloud", ready: true, sweep: true,
+    kicker: "the song, out of order", tint: "#3f3a34",
+    line: "A scatter of a song's own words. Name it.",
+    blurb: "A song's words scattered across the page, the ones it leans on written biggest, and not a line of it in order. Nothing here can be sung: either you know what the song sounds like from the inside, or you don't." },
 ];
 /* ---------- The Ruthless run descriptor ----------
    NOT a bonus game and no longer in the roster above (2026-08-18). It is the object the Ruthless
@@ -687,6 +694,19 @@ export const CHAIN_EASY_PAGES = 3;
    sentence of chrome to carry it, and a charm priced in a currency the game did not need. The
    page is right or wrong now, and the clock is the only thing on it that moves. */
 export const BONUS_TRACK_SECONDS = 10;
+/* Word Cloud's clock. Longer than Name That Song's fifteen because a cloud is READ rather
+   than scanned: the eye has to travel the whole page and weigh what it finds, and a line can
+   be taken in at once. Short enough that a page you cannot place is a decision to move on
+   rather than a free wait, which is the same bar Only Here's clock is set by. */
+export const BONUS_CLOUD_SECONDS = 20;
+/* The run's ramp, and the only one it has: pages 1 to CLOUD_WIDE_PAGES deal a WIDE cloud and
+   everything after it a SPARE one. Nothing about the rules changes — the late pages simply
+   give you less of the song to recognise, which is felt rather than announced. The two counts
+   are what a page is dealt, not what it must fill; a song with a thin vocabulary hands over
+   what it has and is re-rolled below CLOUD_MIN_WORDS (see buildCloudPuzzle). */
+export const CLOUD_WIDE_PAGES = 5;
+export const CLOUD_WORDS_WIDE = 25;
+export const CLOUD_WORDS_SPARE = 15;
 // What counts as spotting the impostor on sight (the Saw It Coming charm). Read against the
 // page's own baseline, not the clock's remaining seconds, so it stays honest if a game's clock
 // is ever retuned under it.
@@ -3760,6 +3780,13 @@ export const ACHIEVEMENTS = [
   // a stopwatch the player never sees. That is the Ruthless roster's lesson, and it survived
   // the page's rebuild even though the number it used to be priced in did not.
   { id: "name-running-order-page-with-half-the-clock-left", name: "By Heart", desc: "Name a Running Order track with half the clock still on it", tier: 2, secret: false, icon: "placeholder", sitting: true, earn: { cat: "bonus" } },
+  { id: "sweep-word-cloud", name: "All The Words", desc: "Sweep Word Cloud", tier: 2, secret: false, icon: "placeholder", sitting: true, earn: { cat: "bonus" } },
+  // Word Cloud's second, and NOT a re-skin of By Heart above: this one is not about speed at
+  // all. The run's late pages deal a spare cloud (see CLOUD_WIDE_PAGES), so the player can see
+  // the page thinning out under them, and clearing all five of the thin ones is the game's own
+  // flex — knowing a song off less of it. Priced in something on screen, like everything else
+  // on this shelf: the cloud you are looking at and the page number above it.
+  { id: "clear-every-spare-word-cloud-page", name: "You Saw Enough", desc: "Clear all five of a Word Cloud run's spare pages", tier: 2, secret: false, icon: "placeholder", sitting: true, earn: { cat: "bonus" } },
   // The secrets. Three of them are failures worn well (the register of I'm The Problem), which is the
   // shelf's own tone: these games have soft edges and losing on them is funny rather than sore.
   { id: "take-commonest-only-here-card",      name: "I Bought It",      desc: "Take the commonest card in an Only Here hand", secret: true, icon: "receipt" },
@@ -4150,6 +4177,7 @@ export const ACH_GROUP_OF = {
   "take-rarest-only-here-card-all-10-pages": "bonus", "finish-then-what-unbroken-chain": "bonus", "take-commonest-only-here-card": "bonus",
   "name-redacted-song-after-buying-all-strips": "bonus", "time-out-all-10-only-here-pages": "bonus", "finish-bonus-run-one-page-short-of-sweep": "bonus",
   "sweep-running-order": "bonus", "name-running-order-page-with-half-the-clock-left": "bonus",
+  "sweep-word-cloud": "bonus", "clear-every-spare-word-cloud-page": "bonus",
   "name-ruthless-page-off-one-word": "ruthless", "finish-ruthless-run-naming-all-ten": "ruthless",
   "finish-ruthless-run-with-no-wrong-guess": "ruthless", "every-ruthless-lens-best-under-90s": "ruthless",
   "every-ruthless-lens-best-under-60s": "ruthless", "every-ruthless-lens-best-under-45s": "ruthless",

@@ -1327,3 +1327,128 @@ export function buildTrackPuzzle(songs, index, rng = Math.random, tries = 120, a
   };
   return pick(true) || pick(false);
 }
+
+/* ---------- Word Cloud ----------
+   A song's own words, scattered across the page at the size the song sings them, and nothing
+   else. It is the only game on the shelf that strips word ORDER out: Name That Song, Redacted
+   and Ruthless all hand over real lines, and a real line can be sung, which is most of how a
+   player answers them. A cloud cannot be sung. What it asks is whether you know what a song's
+   VOCABULARY is, which is a different thing to know and nothing else here tests it.
+
+   TWO SEPARATE DECISIONS, AND THEY DO NOT USE THE SAME SIGNAL. That is the whole design and
+   it is worth stating plainly, because collapsing them is the obvious "simplification" and it
+   breaks the game in one of two ways depending on which one you keep:
+
+     WHICH WORDS ARE ON THE PAGE is decided by RARITY. A word sung by more than CLOUD_DF_MAX
+     of the songs in the catalogue never appears, however often this song sings it.
+     HOW BIG EACH ONE IS drawn is decided by FREQUENCY — how many times THIS song sings it.
+
+   Size by rarity instead and the page is over on sight: a one-of-one word like "Maserati"
+   comes out at seventy-odd points and the cloud has printed its own answer. Select by
+   frequency instead and the top of the page is "like", "never", "know", "back" — words every
+   record sings, taking the type sizes that carry the most weight, with the song's own words
+   shrunk into the tail underneath them. Measured on this catalogue before the bar was set:
+   the words a song can genuinely lean on come in under forty songs ("give" 38, "stay" 39,
+   "heard" 34, "people" 29) and the ones that identify nothing sit well above it ("first" 46,
+   "said" 91, "never" 146, "when" 175, "like" 210). One number does what a stopword list would
+   need a hand-maintained entry per word to do, including for the words nobody would think to
+   write down.
+
+   The rarity question is asked of `buildWordIndex`, the same index Only Here prices a card
+   with, so a word's rarity means exactly one thing on this shelf. Like Only Here's, it counts
+   over the WHOLE catalogue rather than the dealable pool: whether a word is unusual is a fact
+   about Taylor's songs, not about which of them this shelf happens to deal.
+
+   TITLE WORDS COME OUT FIRST, on their stems, before any of the above is weighed. A chorus
+   repeats the title more than anything else in the song, so a cloud that keeps them is a
+   cloud whose biggest word is the answer. */
+
+// Words never shown, however this song leans on them: over this many songs sing them.
+// See the measurements above — this is the number the whole game turns on.
+const CLOUD_DF_MAX = 40;
+// A page that cannot fill this many is not a page: re-roll rather than deal a thin cloud.
+// Interludes and the two-minute sketches are what this throws out.
+const CLOUD_MIN_WORDS = 12;
+
+/* Which of a song's words go on its page, in the order they would be dealt. Exported for the
+   dev panel, which wants to see the whole ranked list rather than the slice a page took. */
+export function cloudWords(song, wordIndex, want = 25) {
+  const titleStems = new Set(lyricTokens(song.title || "").map(({ key }) => stemOf(key)));
+  const counts = new Map(), spelling = cloudSpellings(song);
+  for (const w of String(song.lyrics || "").split(/\s+/)) {
+    const p = splitWord(w);
+    const k = wordKey(p ? p.core : w);
+    if (!k) continue;
+    counts.set(k, (counts.get(k) || 0) + 1);
+  }
+  const eligible = [];
+  for (const [k, n] of counts) {
+    if (k.length < 3 || FUNCTION_WORDS.has(k) || FILLER.has(k)) continue;
+    if (titleStems.has(stemOf(k)) || babble(k)) continue;
+    const idx = wordIndex.get(k);
+    if (!idx || idx.size > CLOUD_DF_MAX) continue;
+    eligible.push({ word: spelling.get(k) || k, key: k, count: n });
+  }
+  // Commonest in the song first, and never two words off one stem: "loved" beside "loving"
+  // reads as one word written twice and spends two of the page's slots saying it.
+  eligible.sort((a, b) => b.count - a.count || a.key.localeCompare(b.key));
+  const out = [], stems = new Set();
+  for (const e of eligible) {
+    const s = stemOf(e.key);
+    if (stems.has(s)) continue;
+    stems.add(s);
+    out.push(e);
+    if (out.length >= want) break;
+  }
+  return out;
+}
+
+/* How each word is written on the page. A word keeps its capital only where the song
+   capitalises it AWAY FROM THE START OF A LINE and does so more often than not — the one
+   signal in the data that separates a proper noun from a sentence opening, with the "more
+   often than not" there because quoted speech capitalises mid-line too ("I said, 'Stop'").
+   Everything else is inked lowercase, so a cloud never hands over a tell purely from where a
+   word happened to sit in a line. */
+function cloudSpellings(song) {
+  const mid = new Map(), cap = new Map(), first = new Map();
+  for (const { line } of songLines(song)) {
+    const words = String(line).split(/\s+/);
+    words.forEach((w, i) => {
+      const p = splitWord(w);
+      const core = p ? p.core : w;
+      const k = wordKey(core);
+      if (!k) return;
+      if (!first.has(k)) first.set(k, core);
+      if (i === 0) return;
+      mid.set(k, (mid.get(k) || 0) + 1);
+      if (core[0] === core[0].toUpperCase()) cap.set(k, (cap.get(k) || 0) + 1);
+    });
+  }
+  const out = new Map();
+  for (const [k, core] of first) {
+    const c = cap.get(k) || 0;
+    out.set(k, c && c * 2 >= (mid.get(k) || 0) ? core : core.toLowerCase());
+  }
+  return out;
+}
+
+/* One page: a song, and the words its cloud is built from.
+
+   `opts.words` is how wide the page is dealt, and it is the run's only ramp — the early pages
+   hand over a generous cloud and the late ones a spare one, so a run gets harder without a
+   single rule changing under the player. The ramp lives in the caller (see CLOUD_WIDE_PAGES)
+   because it is a property of the RUN, not of the song. */
+export function buildCloudPuzzle(songs, wordIndex, rng = Math.random, tries = 120, avoid = null, opts = {}) {
+  const want = Math.max(CLOUD_MIN_WORDS, opts.words || 25);
+  const pickSong = (fussy) => {
+    for (let t = 0; t < tries; t++) {
+      const song = songs[Math.floor(rng() * songs.length)];
+      if (fussy && avoid && avoid.has(song.title)) continue;
+      const words = cloudWords(song, wordIndex, want);
+      if (words.length < CLOUD_MIN_WORDS) continue;
+      return { song, words, label: "" };
+    }
+    return null;
+  };
+  return pickSong(true) || pickSong(false);
+}

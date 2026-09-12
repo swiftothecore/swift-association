@@ -21,6 +21,7 @@ import {
   BONUS_ONLY_SECONDS, ONLY_WIDE_PAGES,
   BONUS_CHAIN_SECONDS, CHAIN_EASY_PAGES, BONUS_SNAP_MS,
   BONUS_TRACK_SECONDS,
+  BONUS_CLOUD_SECONDS, CLOUD_WIDE_PAGES, CLOUD_WORDS_WIDE, CLOUD_WORDS_SPARE,
   RUTHLESS_WORD_MS, RUTHLESS_OPEN_WORDS,
   RUTHLESS_PACE_SECONDS, RUTHLESS_RUN_RUNGS,
   CHALLENGES, CHALLENGE_BY_ID, CHALLENGE_ORDER, CHALLENGE_SEALS, byShelf, DARK_SIDE_IDS, DARK_SIDE_TODO,
@@ -76,6 +77,7 @@ import { faviconBlobUrl, faviconSVG } from "./favicon.js";
 import { wordRegex as wordRegexCore, extractLineWithWord as extractLineWithWordCore, highlightWord as highlightWordCore, variantBody, exactWordBody, boundedWordBody, falseFriendRegex, addedLettersRegex } from "./match.js";
 import { buildLyricReveal } from "./lyric-reveal.mjs";
 import { zineCover, hasCover } from "./zine.js";
+import { cloudMarkup, cloudFontReady } from "./cloud.js";
 import { buildLineIndex, buildSlipContext, buildSlipPuzzle, buildNamePuzzle,
          buildBlankPuzzle, buildRedactedPuzzle,
          buildWordIndex, buildOnlyHerePuzzle, onlyHerePoints, ONLY_HAND,
@@ -83,6 +85,7 @@ import { buildLineIndex, buildSlipContext, buildSlipPuzzle, buildNamePuzzle,
          buildRuthlessPuzzle, ruthlessPool, ruthlessLens, ruthlessLensAudit, ruthlessGiveUp, ruthlessSnap,
          ruthlessBar, RUTHLESS_LENSES, RUTHLESS_HANDOUT_WORDS,
          buildTrackIndex, buildTrackPuzzle,
+         buildCloudPuzzle, cloudWords,
          judgeBlank, blankExact } from "./bonus.js";
 import { renderStreakPlacard } from "./placard.js";
 import { ruleSlotsMarkup, ruleTermsMarkup, ruleTermsLabel, ruleLegendMarkup,
@@ -6762,6 +6765,11 @@ let bonusPageStart = 0;
    Where You Left Me asks for the run judgeBlank would have passed on its strictest setting, so
    this rides the whole run and any forgiven page kills it. */
 let blankExactRun = true;
+/* Word Cloud: how many of this run's SPARE pages have been cleared. The run's late pages deal a
+   thinner cloud (see CLOUD_WIDE_PAGES), and You Saw Enough asks for all of them, so this counts
+   up across the run and is read once at the end. A count rather than a flag, because the charm
+   is about clearing every one of them rather than about never missing. */
+let cloudSpareRun = 0;
 // Only Here: the word this page was answered with, once one has been accepted —
 // {word, count, points} — or null while the page is still open. It IS the page's score, so it
 // is also what bonusPageScore reads.
@@ -7099,6 +7107,7 @@ function startBonusGame(g, lensId = null) {
   chainRun = 0;
   // Same: a run is exact until a page is forgiven, so it starts true once per run.
   blankExactRun = true;
+  cloudSpareRun = 0;
   bonusRunId++;
   // A finished run swapped the quit link for the way home; a new one is a run again.
   $("bonusQuitBtn").hidden = false;
@@ -7132,6 +7141,9 @@ function bonusSeconds() {
   // Long enough to type a title you already know, nowhere near long enough to count up from
   // track one, which is the whole game (see BONUS_TRACK_SECONDS).
   if (bonusGame.id === "running-order") return BONUS_TRACK_SECONDS;
+  // A cloud is READ rather than scanned — the eye has to cross the whole page and weigh what
+  // it finds — so it gets the reading budget the lyric games get rather than a title game's.
+  if (bonusGame.id === "word-cloud") return BONUS_CLOUD_SECONDS;
   // Ruthless Game has no budget: its page runs until it is named or given up on, and the
   // seconds it took ARE the score. Nothing asks this for a timed game (startBonusClock takes
   // the count-up branch before it gets here), so the value is never reached in practice.
@@ -7163,6 +7175,12 @@ function buildBonusPuzzle() {
   if (bonusGame.id === "running-order")
     return buildTrackPuzzle(songs, bonusIndexes().trackIndex, Math.random, 120,
                             new Set(bonusRecentSongs), new Set(bonusRecentAlbums));
+  if (bonusGame.id === "word-cloud")
+    // The run's ramp, and its only one: the first pages deal a wide cloud and the rest a spare
+    // one, so the page gives you less of the song to go on as the run goes on.
+    return buildCloudPuzzle(songs, bonusIndexes().wordIndex, Math.random, 120,
+                            new Set(bonusRecentSongs),
+                            { words: bonusRound > CLOUD_WIDE_PAGES ? CLOUD_WORDS_SPARE : CLOUD_WORDS_WIDE });
   if (isRuthlessRun())
     return buildRuthlessPuzzle(songs, Math.random, 120, new Set(bonusRecentSongs), activeLens());
   return buildNamePuzzle(songs, lineIndex, Math.random, 120, new Set(bonusRecentSongs));
@@ -7183,7 +7201,7 @@ function nextBonusRound(options = {}) {
   }
   if (bonusGame.id === "name-that-song" || bonusGame.id === "sing-it-back" || bonusGame.id === "redacted" ||
       bonusGame.id === "only-here" || bonusGame.id === "then-what" ||
-      bonusGame.id === "running-order" || isRuthlessRun())
+      bonusGame.id === "running-order" || bonusGame.id === "word-cloud" || isRuthlessRun())
     bonusRecentSongs.push(bonusPuzzle.song.title);
   // Only the last two, and a preference rather than a bar: over ten pages and twelve albums a
   // repeat is honest, a hat-trick looks like the shuffle broke.
@@ -7274,6 +7292,34 @@ function bonusSongHead(song, label) {
         (label ? ` · ${escapeHtml(label.toLowerCase())}` : "") + `</div>` +
     `</div>`;
 }
+
+/* Lay the cloud out at the width it actually has. The packing measures real glyphs, so it
+   cannot be done until the container is in the document and the handwriting face has arrived —
+   measuring against a fallback packs the page to the wrong widths, and the gaps that opens are
+   the ones the ink masks exist to close. So: paint now, and paint once more when the font
+   lands if it had not. */
+function paintCloud() {
+  const box = $("bonusCloud");
+  if (!box || !bonusPuzzle || !bonusPuzzle.words) return;
+  const { html, height } = cloudMarkup(bonusPuzzle.words, { width: box.clientWidth });
+  box.innerHTML = html;
+  box.style.height = `${height}px`;
+  if (!cloudFontReady() && !cloudRepaintQueued) {
+    cloudRepaintQueued = true;
+    document.fonts.ready.then(() => { cloudRepaintQueued = false; paintCloud(); });
+  }
+}
+let cloudRepaintQueued = false;
+
+/* A cloud is fitted to a width, so a turned phone leaves it either clipped or marooned. Nothing
+   else on the page needs this, which is why the listener is registered once here and no-ops for
+   every other game rather than living in a shared resize path. */
+let cloudResizeTimer = null;
+addEventListener("resize", () => {
+  if (!$("bonusCloud")) return;
+  clearTimeout(cloudResizeTimer);
+  cloudResizeTimer = setTimeout(paintCloud, 150);
+});
 
 function renderBonusRound() {
   const body = $("bonusPlayBody");
@@ -7424,6 +7470,32 @@ function renderBonusRound() {
       `</div>` +
       bonusWritingLine({ placeholder: "type the title…", aria: "Type the song title",
                          hint: "Enter accepts the top match", dropdown: true });
+    const input = $("bonusInput");
+    input.addEventListener("input", updateBonusDropdown);
+    input.addEventListener("keydown", (e) => {
+      if (bonusDropdownKey(e)) return;
+      if (e.key === "Enter") { e.preventDefault(); judgeName(); }
+    });
+    if (!bonusLocked) focusRoundInput(input);
+  } else if (bonusGame.id === "word-cloud") {
+    /* THE PAGE IS THE CLOUD AND NOTHING ELSE. No title, no album, no section label, no line of
+       the song in order anywhere on it — the scatter is the only evidence there is meant to be,
+       for Ruthless's reason, and a section label would quietly hand over where in the song these
+       words came from.
+
+       It is drawn as a `role="img"` with the words read out in its label rather than as a run of
+       text, because that is honestly what it is: the arrangement carries meaning that a screen
+       reader walking twenty-five absolutely-positioned spans would not convey, and the sizes are
+       the whole question. The label gives the words biggest-first, which is the same reading a
+       sighted player gets from the type. */
+    const cloud = bonusPuzzle.words.map((w) => w.word).join(", ");
+    body.innerHTML =
+      `<p class="bg-ask">name the song these words came out of</p>` +
+      `<div class="bg-cloud" id="bonusCloud" role="img" ` +
+           `aria-label="The song's own words, most-sung first: ${escapeHtml(cloud)}"></div>` +
+      bonusWritingLine({ placeholder: "type the title…", aria: "Type the song title",
+                         hint: "Enter accepts the top match", dropdown: true });
+    paintCloud();
     const input = $("bonusInput");
     input.addEventListener("input", updateBonusDropdown);
     input.addEventListener("keydown", (e) => {
@@ -8563,6 +8635,10 @@ function foldBonusPageCharms(correct, isTimeout) {
     // rule: the page took under five, so five were still showing when they hit Enter.
     if (correct && !isTimeout && trackSecs <= BONUS_TRACK_SECONDS / 2)
       unlock("name-running-order-page-with-half-the-clock-left");
+  } else if (bonusGame.id === "word-cloud") {
+    // Counted here rather than at the end, because whether a page was a spare one is a fact
+    // about the page and the run fold has no page left to ask.
+    if (correct && !isTimeout && bonusRound > CLOUD_WIDE_PAGES) cloudSpareRun++;
   } else if (bonusGame.id === "only-here" && onlyPlayed) {
     // The commonest card in the hand, and NOT when that card is also the rarest: a hand where
     // every word is sung equally often is a tie the player cannot lose, and charging them with
@@ -8596,10 +8672,15 @@ function foldBonusRunCharms(perfect, cleared) {
     // is in this table.
     const sweepCharm = { "spot-the-slip": "sweep-spot-the-slip", "name-that-song": "sweep-name-that-song-one-line-each",
                          "only-here": "take-rarest-only-here-card-all-10-pages", "then-what": "finish-then-what-unbroken-chain",
-                         "running-order": "sweep-running-order" }[bonusGame.id];
+                         "running-order": "sweep-running-order", "word-cloud": "sweep-word-cloud" }[bonusGame.id];
     if (sweepCharm) unlock(sweepCharm);
     if (bonusGame.id === "sing-it-back" && blankExactRun) unlock("sweep-sing-it-back-all-words-exact");
   }
+  // NOT gated on a sweep: knowing a song off the spare cloud is the flex here, and a run that
+  // cleared all five thin pages and dropped a fat one has done the hard half. Outside the
+  // `perfect` block for exactly that reason.
+  if (bonusGame.id === "word-cloud" && cloudSpareRun === BONUS_ROUNDS - CLOUD_WIDE_PAGES)
+    unlock("clear-every-spare-word-cloud-page");
   // The two shelf-wide ledger charms, read off the board rather than off this run, so they
   // close on whichever game happens to be the last one. The roster is the shelf again now that
   // Ruthless's descriptor lives outside it, so these count BONUS_GAMES straight — and the
@@ -26629,6 +26710,13 @@ function buildDevApi() {
             const p = buildTrackPuzzle(songs, bonusIndexes().trackIndex, Math.random, 120, new Set(recent));
             if (p) recent.push(p.song.title);
             out.push(p ? { ask: `${p.album} ${p.track}`, answer: p.song.title, of: p.total } : null);
+          } else if (id === "word-cloud") {
+            // Dealt as a run deals it, wide pages then spare ones, so a sample shows both.
+            const p = buildCloudPuzzle(songs, bonusIndexes().wordIndex, Math.random, 120, new Set(recent),
+                                       { words: i >= CLOUD_WIDE_PAGES ? CLOUD_WORDS_SPARE : CLOUD_WORDS_WIDE });
+            if (p) recent.push(p.song.title);
+            out.push(p ? { song: p.song.title, dealt: p.words.length,
+                           cloud: p.words.map((w) => `${w.word} (${w.count})`).join("  ") } : null);
           } else if (id === "sing-it-back") {
             const p = buildBlankPuzzle(songs, ctx, Math.random, 120, new Set(recent));
             if (p) recent.push(p.song.title);
@@ -26688,6 +26776,34 @@ function buildDevApi() {
                  answer: bonusPuzzle.song.title, of: bonusPuzzle.total,
                  spent: +((performance.now() - bonusPageStart) / 1000).toFixed(2),
                  byHeartUnder: BONUS_TRACK_SECONDS / 2 };
+      },
+      /* The live Word Cloud page, with the two numbers the page deliberately does NOT show:
+         what each word is worth in SIZE (how often this song sings it) and what got it onto
+         the page at all (how few other songs do). Reading them side by side is the only way
+         to see the selection and the sizing doing two different jobs, which is the whole
+         design and the thing an innocent-looking edit collapses. */
+      cloud: () => {
+        if (!bonusGame || bonusGame.id !== "word-cloud" || !bonusPuzzle) return "no Word Cloud page live";
+        const { wordIndex } = bonusIndexes();
+        return { song: bonusPuzzle.song.title, album: bonusPuzzle.song.album,
+                 page: bonusRound, spare: bonusRound > CLOUD_WIDE_PAGES,
+                 spareCleared: cloudSpareRun,
+                 words: bonusPuzzle.words.map((w) => ({ word: w.word, sungHere: w.count,
+                                                        inSongs: (wordIndex.get(w.key) || new Set()).size })) };
+      },
+      /* How much of the shelf's pool can actually fill a cloud, and how thin the thin ones get.
+         The build rate is the number to watch after any move to CLOUD_DF_MAX: a bar tightened
+         far enough starves the spare pages first, and a starved page is silently re-rolled
+         rather than shown, so nothing on screen would ever tell you. */
+      cloudAudit: (want = CLOUD_WORDS_SPARE) => {
+        const { wordIndex } = bonusIndexes();
+        const rows = bonusSongs().map((song) => ({ title: song.title,
+                                                   words: cloudWords(song, wordIndex, want).length }));
+        const short = rows.filter((r) => r.words < want).sort((a, b) => a.words - b.words);
+        return { pool: rows.length, want,
+                 filled: rows.length - short.length,
+                 rate: `${(100 * (rows.length - short.length) / rows.length).toFixed(1)}%`,
+                 thinnest: short.slice(0, 12) };
       },
       tracks: (album = null) => {
         const { trackIndex } = bonusIndexes();
