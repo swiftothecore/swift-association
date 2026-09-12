@@ -3366,21 +3366,26 @@
      alignment instead lifts a zine whose record has wrapped to two lines, which reads as a
      shorter book rather than as a longer caption. */
   .zine-row {
-    display: flex; flex-wrap: wrap; justify-content: center; align-items: flex-start;
-    gap: 12px 7px; padding-bottom: 10px;
+    display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); justify-content: center;
+    align-items: start; gap: 14px 10px; padding-bottom: 10px;
   }
   .zine-tile {
-    /* Sized so the whole shelf stands in ONE row on a desktop and three across on a phone.
-       All three numbers are the shelf's LENGTH written down and they move TOGETHER — the
-       percentage is one tile's share of the row, the floor is what it may never shrink past,
-       and the column gap is what stands between them. They came down once for the seventh
-       game and again for the eighth, both times by measurement rather than by feel: the row
-       inside the notebook is 482px on a narrow desktop and 572px on a wide one (the page has
-       its own maximum, so the window getting bigger stops helping), and eight tiles at the
-       old 70px floor plus 9px gaps came to 623px against the 482 that exists. A shelf that
-       wraps to seven and a lonely one is exactly what this is defending against, so measure
-       all three again the next time a game is added rather than nudging the percentage. */
-    flex: 0 0 clamp(50px, 10.8%, 86px);
+    /* FOUR ACROSS, and the count is in the grid above rather than in a width here: a tile
+       fills its column and the column count is the only number that decides the shape. That
+       replaced a measured `flex: 0 0 clamp()` which had to be re-derived every time the shelf
+       grew, and which put the split at the mercy of whether a fifth tile happened to fit the
+       row on a wide window.
+       The shelf stood in ONE row up to seven games. Eight broke it: the notebook's page gives
+       the row 482px on a narrow desktop and 572px on a wide one, so eight in a line came out
+       at 62px a tile — below every size the covers are drawn and audited at (200 / 96 / 24),
+       in the dead zone between a picture and a mark. Two rows of four put it at 113px. The
+       old rule was defending against an UNEVEN wrap, "six and a lonely one", and eight is the
+       first count that divides evenly, so the thing it feared cannot happen at this length.
+       What it costs is that the shelf no longer clears the fold on a short window, which is
+       a real loss and was taken knowingly.
+       Nine games is the next decision, not a nudge: 3x3 is the even shape, and 5+4 is the
+       wrap the original rule was written about. */
+    width: 100%;
     display: flex; flex-direction: column; align-items: center; gap: 7px; min-width: 0;
     padding: 8px 4px 7px; background: none; border: none; cursor: pointer; text-align: center;
     border-radius: 3px; position: relative;
@@ -3462,7 +3467,7 @@
     .zine-spine i:nth-child(3) { left: 81%; }
     /* Three across on a phone: a 375px page divided six ways gives a cover 55px, which is
        below the size its collage still reads at. */
-    .zine-tile { flex: 0 0 calc((100% - 20px) / 3); }
+    .zine-row { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   }
 
 
