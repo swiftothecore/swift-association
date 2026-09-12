@@ -3216,13 +3216,29 @@
     font-family: var(--hand); font-weight: 700; font-size: calc(30px + var(--text-size-adjust)); line-height: 1.02; color: var(--ink);
     margin: 0;
   }
+  /* FOUR LINES RESERVED, always. The open zine is the tallest thing on this page and the
+     shelf sits directly under it, so a blurb one line longer than the last one moves the whole
+     shelf when you click between games — the hero grew and shrank and the row of eight bobbed
+     with it. The real fix is upstream: every blurb on the roster is written to one length
+     (121-133 characters), so they all break to the same number of lines at any width, which a
+     fixed pixel height could never guarantee since line count moves with the measure. This
+     floor is the backstop for the one case that beats that — a future entry written short —
+     and it is in em so it follows the reader's text size like the text it is reserving. */
   .bonus-now-blurb {
     font-family: var(--type); font-size: calc(11.5px + var(--text-size-adjust)); line-height: 1.6; color: var(--ink-soft);
-    margin: 8px 0 0; max-width: 40ch;
+    margin: 8px 0 0; max-width: 40ch; min-height: 6.4em;
   }
+  /* TWO LINES RESERVED, for the blurb's reason above. This line is the other thing on the
+     leaf that changes height between games: a swept game's record carries three units
+     ("best 10 / 10 · swept 0:29 · played 1") and wraps, where an unplayed one is the single
+     word "unplayed". Without the floor the hero still moved by 11px the moment you clicked
+     from a game you had swept to one you had not, which is the same fault as the blurb's in
+     a smaller size. `line-height` is set here rather than inherited so the two lines being
+     reserved are a number this rule knows. */
   .bonus-now-meta {
     margin-top: 9px; font-family: var(--type); font-size: calc(9.5px + var(--text-size-adjust)); letter-spacing: 1.1px;
     text-transform: uppercase; color: var(--ink-soft); opacity: 0.85;
+    line-height: 1.5; min-height: 3em;
   }
   /* ---- the Play sticker: a scrap of collage, not a button ----
      Everywhere else in the game this is .chall-go: a crisp gold rectangle with a 2px ink

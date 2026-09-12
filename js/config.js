@@ -574,15 +574,15 @@ export const BONUS_GAMES = [
   { id: "spot-the-slip", name: "Spot the Slip", ready: true, sweep: true,
     kicker: "find the wrong word", tint: "#bf5340",
     line: "One word in the lyric is an impostor. Catch it.",
-    blurb: "One word in the lyric has been swapped for an impostor. Catch it before the ink dries." },
+    blurb: "One word in the lyric has been swapped for an impostor. Catch it before the ink dries, and trust the ear that says a line is wrong." },
   { id: "name-that-song", name: "Name That Song", ready: true, sweep: true,
     kicker: "lyric in, title out", tint: "#33628f",
     line: "Read the line, name the song, beat the clock.",
-    blurb: "Read the line, name the song, and beat the clock. No prompt word to lean on but the lyric itself." },
+    blurb: "Read the line, name the song, and beat the clock. There is no prompt word to lean on here and nothing to go on but the lyric itself." },
   { id: "sing-it-back", name: "Sing It Back", ready: true, sweep: true,
     kicker: "fill the gap", tint: "#8d4064",
     line: "A word is missing from the line. Write it back.",
-    blurb: "A word has been lifted out of one of the song's own lines. Write it back in." },
+    blurb: "A word has been lifted out of one of the song's own lines, and the song is named above it. Write the missing word back into the gap." },
   // The one game on the shelf scored in POINTS rather than pages cleared: `points` is what a
   // page opens worth, and every other surface reads its maximum off it (see bonusMaxScore).
   // Any future game that scores a page on a scale rather than right/wrong sets the same field.
@@ -599,7 +599,7 @@ export const BONUS_GAMES = [
   { id: "only-here", name: "Only Here", ready: true, points: 5,
     kicker: "the game backwards", tint: "#1c7371",
     line: "Six words from the song. Pick the rarest.",
-    blurb: "The game backwards: here is the song, and here are six words out of it. Pick the one you think the fewest other songs sing, and the hand turns over to show you what they were all worth." },
+    blurb: "The game backwards: here is the song, and here are six of its own words. Pick the one you think the fewest other songs sing." },
   // Four picks down one song, worth 1, 1, 2 and 2 — the payout escalates because the decoys
   // move closer to home as the page goes on (see buildChainPuzzle), and a ramp the player is
   // asked to survive but never paid for reads as the game turning mean rather than exciting.
@@ -607,7 +607,7 @@ export const BONUS_GAMES = [
   { id: "then-what", name: "Then What", ready: true, points: 6,
     kicker: "what comes next?", tint: "#4c3f8a",
     line: "Three lines. Pick the one that comes next.",
-    blurb: "One line of the song, and three that might follow it. Pick the right one and it locks into the page in pen; four picks and the verse is yours." },
+    blurb: "One line of the song, and three lines that might follow it. Pick the right one and it locks into the page in pen, four times over." },
   // The one game on the shelf that asks nothing about the words: a page is a track number and
   // an album, and ten seconds. Right or wrong like the first three, so a run is out of ten and
   // it takes `sweep` for their reason too, the reachable ceiling: at 10/10 an eleventh perfect
@@ -622,7 +622,7 @@ export const BONUS_GAMES = [
   { id: "word-cloud", name: "Word Cloud", ready: true, sweep: true,
     kicker: "the song, out of order", tint: "#6b7a50",
     line: "A scatter of a song's own words. Name it.",
-    blurb: "A song's own words scattered across the page, the ones it leans on written biggest, and not a line of it in order. Nothing here can be sung." },
+    blurb: "A song's own words scattered across the page, the ones it leans on written biggest and none of it in order. Nothing here can be sung." },
 ];
 /* ---------- The Ruthless run descriptor ----------
    NOT a bonus game and no longer in the roster above (2026-08-18). It is the object the Ruthless
