@@ -35,6 +35,7 @@ import {
   INK_FLOURISH_PAGES,
   ALBUM_FOCUS_DIFFS, ALBUM_FOCUS_TARGET,
   GUEST_SHELF_SLOTS, GUESTS, GUESTS_COMING_SOON, GUEST_DIFFS, GUEST_TARGET, TAYLOR_BUCKETS,
+  HOME_ARTIST,
   ADAPT_BUCKETS, ADAPT_LEVELS, ADAPT_MAX_LEVEL, ADAPT_START_LEVEL, ADAPT_PROMO_STREAK,
   CUSTOM_SECONDS_MIN, CUSTOM_SECONDS_MAX, CUSTOM_SECONDS_TYPED_MAX, CUSTOM_HINT_MAX,
   CUSTOM_HINT_TYPED_MAX, CUSTOM_HINT_UNLIMITED, CUSTOM_POOLS,
@@ -12606,7 +12607,7 @@ async function loadData() {
   if (!wordsRes.ok || !songsRes.ok) throw new Error("Failed to fetch data files");
   const words = await wordsRes.json();
   const grouped = await songsRes.json();
-  taylorCorpus = installCorpus(grouped, words, { aliases: true });
+  taylorCorpus = installCorpus(grouped, words, { aliases: true, artist: HOME_ARTIST });
   // Dub the desk cassette. It is handed Taylor's songs once and never re-pointed,
   // so a guest run leaves her tape sitting on the desk where it belongs.
   try { (await import("./cassette.js")).install(taylorCorpus.allSongs); }
@@ -12659,10 +12660,18 @@ function installCorpus(grouped, words, opts = {}) {
   // works off a flat newline-joined `lyrics` string, so derive it here once. The
   // `sections` stay on the song object (line numbers + verse/chorus/bridge) for the
   // lyrics searcher. The flatten is byte-identical to the old flat `lyrics` field.
-  allSongs = grouped.flatMap(({ album, songs }) =>
+  allSongs = grouped.flatMap(({ album, artist, songs }) =>
     songs.map((s, i) => ({
       ...s,
       album,
+      // WHO SANG IT. A per-song field rather than a corpus-level index, on purpose and for
+      // the same reason as _normTitleLyric below: it rides on allSongs, so the guest swap
+      // carries it for free and there is NOTHING to add to snapshotCorpus/applyCorpus. A
+      // corpus-level artist index would owe that contract, and a field added to one half of
+      // the swap and not the other leaves a stale Taylor index beside a guest's songs.
+      // Read off the album group first so ONE corpus can hold several artists — which is
+      // exactly what a blended lineup corpus is — and falling back to the catalogue-wide name.
+      artist: artist || opts.artist || null,
       // Where the song sits on its record, 1-based. Only the Catalogue charms about track
       // position read it (a fifth track, a thirteenth), and they check the album is a studio
       // one first — the pseudo-albums are ordered lists, not tracklistings.
@@ -14556,7 +14565,8 @@ async function startGuestRun(id, diffId) {
     catch (e) { toast("couldn't fetch that catalogue — check your connection"); return; }
     // Building installs into the globals as it goes (see installCorpus), so this line already
     // leaves the guest's catalogue live; the assignment below just remembers it for the replay.
-    corpus = installCorpus(cat.albums || [], cat.words || [], { aliases: false, buckets: cat.buckets });
+    corpus = installCorpus(cat.albums || [], cat.words || [],
+      { aliases: false, buckets: cat.buckets, artist: g.name });
     guestCorpora.set(id, corpus);
     guestPalettes.set(id, normalizeGuestPalette(cat.palette));
   }
@@ -28585,6 +28595,12 @@ function buildDevApi() {
       // a guest run this reads the guest; anywhere else it must read "taylor" with the full
       // 287. Anything else means a swap leaked (see restoreCorpus).
       corpus: () => ({ active: activeCorpus, songs: allSongs.length, words: playableWords.length,
+        // Who the live corpus believes sang its songs. One name here on a guest run or on the
+        // desk; several only once a blended lineup corpus exists. A null means installCorpus
+        // was handed a catalogue with no artist, which is the silent failure to watch for.
+        artists: Object.entries(allSongs.reduce((m, s) => {
+          const k = s.artist || "(unattributed)"; m[k] = (m[k] || 0) + 1; return m;
+        }, {})).sort((x, y) => y[1] - x[1]),
         buckets: Object.fromEntries(Object.entries(wordBuckets).map(([k, v]) => [k, v.length])) }),
       // Everything the shelf believes about a catalogue, checked against the file: records
       // with their song counts, plus the per-catalogue bucket thresholds a guest round would

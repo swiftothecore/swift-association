@@ -361,6 +361,13 @@ export const DIFF_RANK = { relaxed: 0, easy: 1, medium: 2, hard: 3, ultra: 4, ly
    GUEST_SHELF_SLOTS is how many hangers the rail holds. Planned catalogues can occupy a hanger
    without entering GUESTS, which keeps unavailable artists out of every playable guest path. */
 export const GUEST_SHELF_SLOTS = 10;
+// The house artist. Named once because two things will read it and must agree: a song
+// stamped with its own artist by installCorpus, and any rule that talks about "not Taylor"
+// (the lineup's No Home Team bans her outright, Quiet Half shuts her after six pages).
+// NOT the same string as her debut record, which is also "Taylor Swift" and which the
+// notebook renders as "Self-Titled" — one is an album, this is a performer.
+export const HOME_ARTIST = "Taylor Swift";
+
 export const GUESTS = [
   {
     id: "olivia-rodrigo",
