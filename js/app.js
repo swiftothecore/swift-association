@@ -10,7 +10,8 @@ import { launchFlock } from "./messengers.js";
    the rule cannot drift between the board a card is designed on and the felt it is dealt to. */
 import { DECK, byId as goalById } from "./lineupdeck.js";
 import { BUDGET, handCost, conflicts, validateHand, poolForHand, POOL_ORDER } from "./lineuphand.js";
-import { cardFace, SUIT_LOOK } from "./lineupcards.js";
+import { cardFace, SUIT_LOOK, mark as suitMark } from "./lineupcards.js";
+import { judge, WON, DEAD } from "./lineupgoals.js";
 import {
   PANEL_ROUTES,
   TOTAL_ROUNDS, RECENT_WINDOW, NOVELTY_BOOST, DAILY_ALBUM_SKEW, DAILY_ALBUM_WEIGHT_EXP, DIFF_KEY, DEFAULT_SETTINGS,
@@ -244,6 +245,13 @@ let roundBeadTints = []; // per-round literal bead colour, or a pair for a two-v
 // An array per page rather than a name, because a song that sits on two shelves counts for both
 // of them: the goal deck counts artists, so a shared song has to answer for each (songArtists).
 let roundArtists = [];
+// How a page was answered, for the goal cards that judge the MANNER rather than the artist
+// (the clubs: Off The Cuff, Cold Open, Sing It Back). Filled on a lineup run and nowhere else,
+// because nothing else asks: the run's own stopwatch, hint ledger and verse tiers already
+// carry what every other surface needs, and a second copy of them on every classic page would
+// be state kept for no reader.
+let roundHow = [];
+let pageDropdownShown = false;   // this page's dropdown opened at all (Cold Open). Per page, not per run.
 let roundWords = [];     // per-round prompt word (for the lifetime tally / Nemesis Word)
 let roundSongs = [];     // per-round answered song title, null on a miss (lifetime tally)
 let roundHinted = [];    // per-round true if a hint was taken (the count rides on the record)
@@ -283,8 +291,10 @@ let guestRunId = null;          // Guest shelf: the guest whose catalogue is loa
 // happens BEFORE the run exists: they are what is on the table while you are still choosing,
 // and the run copies from them once you deal yourself in.
 let lineupHand = [];
+let lineupHandNames = [];
 let lineupDealt = [];
 let lineupKept = [];
+let lineupNamed = [];
 let infiniteVariant = "3lives"; // "3lives" | "sudden"
 let lives = 0;                  // remaining lives in infinite mode
 let floatLevel = ADAPT_START_LEVEL; // Floating rarity pool: current level (1..4), climbs and falls with performance
@@ -13019,7 +13029,10 @@ function renderLineupFelt() {
   $("lineupWhy").textContent = !lineupKept.length
     ? "Nothing kept yet. A run with no goals is a run with no point."
     : ceiling ? `This hand can only be played on the ${ceiling} pool.` : "";
-  $("lineupGoBtn").disabled = !lineupKept.length;
+  renderLineupNaming();
+  const short = namesWanted() - lineupNamed.length;
+  if (short > 0) $("lineupWhy").textContent = `Name ${short} more before you can deal in.`;
+  $("lineupGoBtn").disabled = !lineupKept.length || short > 0;
 }
 
 function toggleLineupCard(id) {
@@ -13040,6 +13053,7 @@ async function startLineupRun(diffId) {
   lineupDiff = GUEST_DIFFS.includes(diffId) ? diffId : "medium";
   lineupDealt = dealLineupFive();
   lineupKept = [];
+  lineupNamed = [];
   renderLineupFelt();
   showScreen("lineup");
 }
@@ -13066,12 +13080,14 @@ function beginLineupRun() {
   applyCorpus(corpus);                     // AFTER resetRunState, which just restored Taylor
   activeCorpus = "lineup";
   lineupHand = lineupKept.slice();         // after resetRunState, which clears the run's hand
+  lineupHandNames = lineupNamed.slice();
   focusDifficulty = currentMode.id;
   applyInputHints();
   updateTagline();
   $("pageTotalWrap").style.display = "";
   $("pageTotal").textContent = TOTAL_ROUNDS;
   showScreen("game");
+  renderLineupGoals();
   nextRound();
 }
 
@@ -13091,6 +13107,103 @@ function handPoolCeiling() {
   const cards = lineupKept.map((id) => goalById[id]);
   if (!cards.some((c) => c.pools)) return null;
   return poolForHand(cards);
+}
+
+/* ---------- Naming before page one ----------
+   Two cards ask you to commit to artists before the first word: Three Chairs (three, and only
+   their catalogues count) and Sworn In (one, who must answer seven pages). The deck says how
+   many with `names`, and judge() reads them as ctx.named — a card that wants names and has
+   none is DEAD, never quietly winnable, which is exactly why the felt will not let you deal
+   in without them.
+
+   ORDER MATTERS when both are kept: Sworn In reads the FIRST name, Three Chairs reads all
+   three, so the felt says so rather than leaving it to be discovered. */
+function lineupShelf() {
+  return [HOME_ARTIST, ...GUESTS.map((g) => g.name)];
+}
+function namesWanted() {
+  return Math.max(0, ...lineupKept.map((id) => goalById[id].names || 0));
+}
+
+function renderLineupNaming() {
+  const box = $("lineupNaming");
+  if (!box) return;
+  const want = namesWanted();
+  lineupNamed = lineupNamed.filter((n) => lineupShelf().includes(n)).slice(0, want);
+  box.hidden = !want;
+  if (!want) return;
+  const swornFirst = want > 1 && lineupKept.includes("sworn-in");
+  const lead = want === 1
+    ? "Name the artist you are sworn to."
+    : `Name ${want}. ${swornFirst ? "The first is the one you are sworn to." : "Only their catalogues count."}`;
+  box.innerHTML = `<p class="lu-name-lead">${escapeHtml(lead)}</p><div class="lu-name-row">` +
+    lineupShelf().map((who) => {
+      const at = lineupNamed.indexOf(who);
+      return `<button type="button" class="lu-who${at > -1 ? " is-named" : ""}" data-who="${escapeHtml(who)}">` +
+        (at > -1 && want > 1 ? `<span class="lu-who-n">${at + 1}</span>` : "") +
+        escapeHtml(who) + `</button>`;
+    }).join("") + `</div>`;
+}
+
+function toggleLineupName(who) {
+  const want = namesWanted();
+  if (!want || !lineupShelf().includes(who)) return;
+  const at = lineupNamed.indexOf(who);
+  if (at > -1) lineupNamed.splice(at, 1);
+  else if (lineupNamed.length < want) lineupNamed.push(who);
+  else return;
+  renderLineupFelt();
+}
+
+/* ---------- The hand, judged ----------
+   js/lineupgoals.js is pure: a run goes in, a verdict comes out. Everything here is the
+   translation layer, and it is deliberately thin — no rule of any card is restated on this
+   side of the line, or the two copies would drift and the tested one would be the wrong one. */
+function lineupPages() {
+  return roundResults.map((_, i) => {
+    const how = roundHow[i] || {};
+    return {
+      artists: roundArtists[i] || [],
+      ms: how.ms || 0,
+      dropdown: !!how.dropdown,
+      sung: !!how.sung,
+      hinted: !!roundHinted[i],
+    };
+  });
+}
+
+function lineupCtx() {
+  return {
+    pages: TOTAL_ROUNDS,
+    shelf: lineupShelf(),
+    home: HOME_ARTIST,
+    named: lineupHandNames.slice(),
+    // Nobody Admitted shuts every catalogue the guest shelf has already stamped, so it reads
+    // the board rather than the run: the card gets harder as you get better, which is the
+    // point of it.
+    admitted: GUESTS.filter((g) => guestRecord(g.id).admitted).map((g) => g.name),
+  };
+}
+
+// Every card in the hand against the run so far. ALIVE mid-run, and WON or DEAD by page
+// thirteen — no card can still be undecided once the pages are gone.
+function judgeLineupHand() {
+  const pages = lineupPages(), ctx = lineupCtx();
+  return lineupHand.map((id) => ({ card: goalById[id], state: judge(goalById[id], pages, ctx) }));
+}
+
+/* The hand as it stands, on the page you are playing. A dead card is struck the MOMENT it
+   dies rather than at the end, because a goal that fails silently is the worst version of
+   failing: you would play six more pages for something already gone. Red pen through the
+   name is the notebook's own way of saying a thing is no longer available. */
+function renderLineupGoals() {
+  const strip = $("lineupGoals");
+  if (!strip) return;
+  if (gameType !== "lineup" || !lineupHand.length) { strip.hidden = true; strip.innerHTML = ""; return; }
+  strip.hidden = false;
+  strip.innerHTML = judgeLineupHand().map(({ card, state }) =>
+    `<span class="lu-goal${state === DEAD ? " is-dead" : state === WON ? " is-won" : ""}">` +
+    suitMark(card.suit) + `<b>${escapeHtml(card.name)}</b></span>`).join("");
 }
 
 // The distinct artists a finished run actually covered, in the order they first turned up.
@@ -13124,11 +13237,24 @@ function endLineup() {
   hideNewBestBanner();
 
   document.querySelector("#screen-results .podium-title").textContent = "the lineup";
+  // The verdict, card by card. By page thirteen nothing is still ALIVE, so every card here
+  // reads won or lost; the ones that died did so on the page they died on, and were struck
+  // there at the time rather than sprung on the player now.
+  const verdict = judgeLineupHand();
+  const won = verdict.filter((v) => v.state === WON).length;
+  const goals = verdict.map(({ card, state }) =>
+    `<span class="lu-goal${state === WON ? " is-won" : " is-dead"}">` +
+    suitMark(card.suit) + `<b>${escapeHtml(card.name)}</b></span>`).join("");
   const names = covered.length
     ? covered.map((n) => escapeHtml(n)).join(" · ")
     : "nobody: not a page landed";
-  const status = `<div class="chall-result-status">${covered.length} of ${SHELF} on one strand</div>`;
-  const meta = `<div class="chall-result-meta">${names}</div>`;
+  const status = verdict.length
+    ? `<div class="chall-result-status${won === verdict.length ? " win" : ""}">` +
+      (won === verdict.length ? "the whole hand, held ★" : `${won} of ${verdict.length} held`) +
+      "</div>"
+    : "";
+  const meta = `<div class="lu-goals lu-goals-result">${goals}</div>` +
+    `<div class="chall-result-meta">${covered.length} of ${SHELF} on one strand · ${names}</div>`;
   $("resultPodium").innerHTML = status + meta +
     `<div class="chall-result-actions">` +
       `<button id="replayLineup" class="btn-primary">replay ↺</button>` +
@@ -13835,7 +13961,13 @@ function resetRunState() {
   roundAlbums = [];
   roundBeadTints = [];
   roundArtists = [];
+  roundHow = [];
   lineupHand = [];
+  lineupHandNames = [];
+  // The hand strip lives on the game screen, which is reused by every mode, so it is cleared
+  // at the choke point every start path passes through rather than on the way out of a lineup
+  // run. beginLineupRun re-renders it straight after, once the run HAS a hand.
+  renderLineupGoals();
   roundWords = [];
   roundSongs = [];
   roundHinted = [];
@@ -19286,6 +19418,7 @@ function revealedHintSong() {
 function advanceRound(options = {}) {
   round++;
   roundLocked = false;
+  pageDropdownShown = false;   // Cold Open asks per page; see renderDropdown
   roundClockPending = !!options.clockPending;
   pendingRoundSubmission = null;
   justEarnedIndex = -1;
@@ -19971,6 +20104,10 @@ function renderDropdown() {
     dd.appendChild(div);
   });
   dd.classList.add("show");
+  // Cold Open asks that the dropdown stay SHUT for a whole run, so the fact it opened is
+  // recorded where it opens. Not "a suggestion was taken", which roundFirstPick already says:
+  // the card is about looking, not about accepting.
+  pageDropdownShown = true;
   input.setAttribute("aria-expanded", "true");
   if (activeIndex >= 0) input.setAttribute("aria-activedescendant", "dd-opt-" + activeIndex);
   else input.removeAttribute("aria-activedescendant");
@@ -21513,6 +21650,17 @@ function submitAnswer(song, isTimeout) {
   // Same reasoning, one mode over: who the answered song belongs to, resolved while the blend
   // is still installed. Empty off a lineup run; see lineupArtists.
   roundArtists[round - 1] = lineupArtists(song || tapAnswer || null);
+  // Same gate, read here because this is where the page's own answer is still in hand:
+  // `lyricMatch` is the sung line that resolved it, and the stopwatch above has already banked
+  // the response time the page actually took.
+  if (gameType === "lineup") {
+    roundHow[round - 1] = {
+      ms: Math.round((roundTimes[round - 1] || 0) * 1000),
+      dropdown: pageDropdownShown,
+      sung: !!lyricMatch,
+    };
+    renderLineupGoals();   // a card that just died is struck on this page, not at the end
+  }
   // Distinct albums the prompt word *could* have been answered from — the Discography skill
   // normalises breadth against this, so a word that only lives in one album never penalises.
   roundAnswerAlbums[round - 1] = [...new Set(currentSongs.map((s) => s.album).filter(Boolean))];
@@ -28933,12 +29081,17 @@ function buildDevApi() {
         const want = ids.flat().filter((id) => goalById[id]);
         lineupDealt = want.length ? want.slice(0, 5) : dealLineupFive();
         lineupKept = [];
+        lineupNamed = [];
         renderLineupFelt();
         showScreen("lineup");
         return lineupDealt;
       },
+      // The live verdict on the hand, which is the check that the judge is being fed the run
+      // it thinks it is: pages in, a state per card out.
+      judge: () => judgeLineupHand().map(({ card, state }) => card.id + ": " + state),
+      pages: () => lineupPages(),
       hand: () => ({
-        dealt: lineupDealt, kept: lineupKept, held: lineupHand,
+        dealt: lineupDealt, kept: lineupKept, held: lineupHand, named: lineupHandNames,
         spent: handCost(lineupKept, goalById), of: BUDGET,
         pool: currentMode && currentMode.pool, ceiling: handPoolCeiling(),
       }),
@@ -29986,6 +30139,10 @@ async function init() {
     if (!deal) return;
     e.preventDefault();
     toggleLineupCard(deal.dataset.card);
+  });
+  $("lineupNaming").addEventListener("click", (e) => {
+    const who = e.target.closest(".lu-who");
+    if (who) toggleLineupName(who.dataset.who);
   });
   $("lineupGoBtn").addEventListener("click", beginLineupRun);
   // Backing out of the felt is backing out of the mode, so the corpus goes with it rather

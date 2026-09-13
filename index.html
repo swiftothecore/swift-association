@@ -2824,6 +2824,10 @@ if (location.pathname.endsWith('/index.html')) {
       <div id="bracelet" class="bracelet"></div>
     </div>
     <div id="floatGauge" class="float-gauge" aria-hidden="true"></div>
+    <!-- The lineup's hand, on the page it is being played on. A card struck through in red
+         pen has DIED and cannot be won back; it is struck the moment it dies, because a goal
+         that fails silently is the worst version of failing. -->
+    <div id="lineupGoals" class="lu-goals" hidden></div>
 
     <p class="word-label">write a song with</p>
     <!-- #wordExtra carries the SECOND (and third) prompt word on a Both Of Us page, so
@@ -3338,6 +3342,7 @@ if (location.pathname.endsWith('/index.html')) {
     <p class="lu-felt-lead">Five dealt. Keep up to three.</p>
     <div id="lineupSpend" class="lu-spend"></div>
     <div id="lineupFelt" class="lu-felt"></div>
+    <div id="lineupNaming" class="lu-naming" hidden></div>
     <p id="lineupWhy" class="lu-felt-why"></p>
     <div class="lu-felt-go"><button id="lineupGoBtn" class="btn-primary">deal me in</button></div>
   </section>

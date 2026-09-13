@@ -12908,3 +12908,40 @@ body.lu-nomiss .lu-miss { visibility: hidden; }
   color: var(--ink-soft);
 }
 .lu-felt-go { display: flex; justify-content: center; padding: 2px 0 14px; }
+
+/* ---- naming before page one (Three Chairs, Sworn In) ---- */
+.lu-naming { text-align: center; margin: 0 0 10px; }
+.lu-name-lead { font-family: var(--hand); font-size: 17px; color: var(--ink); margin: 0 0 7px; }
+.lu-name-row { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
+.lu-who {
+  position: relative; font-family: var(--type); font-size: 10.5px; letter-spacing: 0.3px;
+  padding: 5px 10px; border-radius: 3px; cursor: pointer;
+  color: var(--ink); background: rgba(255,255,255,0.45);
+  border: 1px solid color-mix(in srgb, var(--ink) 26%, transparent);
+}
+.lu-who:hover { background: rgba(255,255,255,0.75); }
+.lu-who.is-named { color: var(--red-pen); border-color: var(--red-pen); background: rgba(255,255,255,0.8); }
+/* The ordinal is load-bearing when both naming cards are in the hand: Sworn In reads the
+   first name and Three Chairs reads all three, so which one you picked first is a decision. */
+.lu-who-n { font-weight: 700; margin-right: 5px; opacity: 0.8; }
+
+/* ---- the hand, live on the page and again on the results ---- */
+.lu-goals { display: flex; flex-wrap: wrap; gap: 5px 12px; justify-content: center; margin: 0 0 9px; }
+.lu-goal {
+  display: inline-flex; align-items: center; gap: 4px; position: relative;
+  font-family: var(--type); font-size: 10px; letter-spacing: 0.4px; color: var(--ink-soft);
+}
+.lu-goal .lu-pip { width: 9px; height: 9px; color: var(--ink-soft); }
+.lu-goal b { font-weight: 400; }
+.lu-goal.is-won { color: var(--ink); }
+.lu-goal.is-won .lu-pip { color: var(--ink); }
+.lu-goal.is-won b { font-weight: 700; }
+.lu-goal.is-won::after { content: " ★"; color: var(--red-pen); }
+/* Struck in red pen, drawn slightly off level so it reads as a line ruled by hand rather
+   than a text-decoration. Same vocabulary as a struck rule mark: not available here. */
+.lu-goal.is-dead { opacity: 0.55; }
+.lu-goal.is-dead::before {
+  content: ""; position: absolute; left: -2px; right: -2px; top: 54%;
+  border-top: 1.5px solid var(--red-pen); transform: rotate(-1.2deg); opacity: 0.85;
+}
+.lu-goals-result { margin: 8px 0 6px; }

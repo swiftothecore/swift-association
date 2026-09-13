@@ -21,6 +21,10 @@
              any. MEASURED (scripts/lineup/deal-lab.html), never
              chosen: a breadth card in a pool that cannot supply it
              is a card decided by the deal instead of the player.
+     names   how many artists must be NAMED before page one, for
+             the two cards that ask for it. The felt collects them
+             and judge() reads them as ctx.named; a card that wants
+             names and has none is DEAD, never quietly winnable.
      need / hog / cap / hogCap / bans
              the mechanics conflicts() derives a clash from. Two
              cards can be impossible together without ever naming
@@ -52,7 +56,7 @@ export const DECK = [
   { id:"no-home-team", miss:"skipped", suit:"spades", rank:"A", name:"No Home Team",
     rule:"Thirteen pages and not one Taylor song.", cap:null, bans:["full-lineup"] },
   { id:"three-chairs", miss:"fails", suit:"spades", rank:"K", name:"Three Chairs",
-    rule:"Name three artists before page one. Only their catalogues count.", cap:3, flag:"pick three first" },
+    rule:"Name three artists before page one. Only their catalogues count.", cap:3, names:3, flag:"pick three first" },
   { id:"quiet-half", miss:"skipped", suit:"spades", rank:"Q", name:"Quiet Half",
     rule:"Taylor is allowed for six pages. After that she is shut." },
   { id:"closed-shelf", suit:"spades", rank:"J", name:"Closed Shelf",
@@ -67,7 +71,7 @@ export const DECK = [
   // ---- HEARTS: devotion ----
   { id:"sworn-in", miss:"fails", suit:"hearts", rank:"A", name:"Sworn In",
     rule:"Name one artist before page one. They must answer seven pages.",
-    need:1, hog:7, flag:"pick one first" },
+    need:1, hog:7, names:1, flag:"pick one first" },
   { id:"homecoming", hog:7, miss:"fails", suit:"hearts", rank:"K", name:"Homecoming",
     rule:"Seven of the thirteen on one artist, and nothing wrong all run.",
     bans:["closed-shelf"] },

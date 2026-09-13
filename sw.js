@@ -17,7 +17,7 @@
  * Paths are relative so the worker works at the site root (swiftassociation.com)
  * and under any project subpath, without hardcoding the origin.
  */
-const CACHE = "stta-v78";
+const CACHE = "stta-v79";
 // The game's panel routes. These are sections of index.html, not files, so a navigation to one
 // has nothing on the server to fetch: 404.html bounces it back through a ?/slug marker. Once
 // this worker is installed we can do better and answer with index.html directly, so a deep link
@@ -70,12 +70,13 @@ const ASSETS = [
   "js/zine.js",
   // Word Cloud's ink-mask packing (pure; see js/cloud.js). app.js imports it at load.
   "js/cloud.js",
-  // The lineup's goal deck: what the cards say, what a hand of them costs, and the line art
-  // on the face. app.js imports all three at load, so an uncached copy breaks a cold offline
-  // start rather than only the felt. js/lineupgoals.js joins them when the judge is wired in.
+  // The lineup's goal deck: what the cards say, what a hand of them costs, the line art on
+  // the face, and the pure judge that says whether a card is still alive. app.js imports
+  // them all at load, so an uncached copy breaks a cold offline start, not just the felt.
   "js/lineupdeck.js",
   "js/lineuphand.js",
   "js/lineupcards.js",
+  "js/lineupgoals.js",
   "js/storage.js",
   "js/sound.js",
   // Share/copy plumbing — imported by both the game and the searcher.
