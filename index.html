@@ -3327,6 +3327,21 @@ if (location.pathname.endsWith('/index.html')) {
     <div id="guestDetailBody"></div>
   </section>
 
+  <!-- THE LINEUP: THE FELT — five goal cards dealt before page one, keep up to three.
+       Dealt rather than picked from the whole deck on purpose: the 24-pip budget only
+       bites because you do not get to choose which five turn up. -->
+  <section id="screen-lineup" class="screen card" tabindex="-1" aria-label="The lineup: your hand">
+    <div class="stats-nav">
+      <span class="title-group"><span class="stats-title">The lineup</span></span>
+      <button id="lineupBackBtn" class="btn-link">← back</button>
+    </div>
+    <p class="lu-felt-lead">Five dealt. Keep up to three.</p>
+    <div id="lineupSpend" class="lu-spend"></div>
+    <div id="lineupFelt" class="lu-felt"></div>
+    <p id="lineupWhy" class="lu-felt-why"></p>
+    <div class="lu-felt-go"><button id="lineupGoBtn" class="btn-primary">deal me in</button></div>
+  </section>
+
   <!-- SONGBOOK SCREEN — the missing-songs checklist behind "I Hate It Here" -->
   <section id="screen-songbook" class="screen card" tabindex="-1" aria-label="Songbook">
     <div class="stats-nav">

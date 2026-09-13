@@ -4,6 +4,13 @@ import "./credential-guard.js";
 import { SITE_URL, copyToClipboard } from "./share.js";
 import { ctaContentHTML, initCtaInteractions } from "./cta.js";
 import { launchFlock } from "./messengers.js";
+/* The lineup's goal deck. js/lineupdeck.js is the source of truth for what a card says,
+   js/lineuphand.js for what a hand of them costs and what cannot sit beside what, and
+   js/lineupcards.js draws the face. All three are imported rather than reimplemented so
+   the rule cannot drift between the board a card is designed on and the felt it is dealt to. */
+import { DECK, byId as goalById } from "./lineupdeck.js";
+import { BUDGET, handCost, conflicts, validateHand, poolForHand, POOL_ORDER } from "./lineuphand.js";
+import { cardFace, SUIT_LOOK } from "./lineupcards.js";
 import {
   PANEL_ROUTES,
   TOTAL_ROUNDS, RECENT_WINDOW, NOVELTY_BOOST, DAILY_ALBUM_SKEW, DAILY_ALBUM_WEIGHT_EXP, DIFF_KEY, DEFAULT_SETTINGS,
@@ -271,6 +278,13 @@ let customSessionLen = 0;       // Custom mode: rounds this run (finite runs). 0
 let focusAlbum = null;          // Album Focus: the locked-in studio album while gameType === "album"
 let focusDifficulty = null;     // Album Focus / guest run: the chosen MODES id this run plays at
 let guestRunId = null;          // Guest shelf: the guest whose catalogue is loaded while gameType === "guest"
+// The lineup's hand. `lineupHand` is RUN state, the goal cards this run was played under, and
+// is cleared with everything else in resetRunState. The other two belong to the felt, which
+// happens BEFORE the run exists: they are what is on the table while you are still choosing,
+// and the run copies from them once you deal yourself in.
+let lineupHand = [];
+let lineupDealt = [];
+let lineupKept = [];
 let infiniteVariant = "3lives"; // "3lives" | "sudden"
 let lives = 0;                  // remaining lives in infinite mode
 let floatLevel = ADAPT_START_LEVEL; // Floating rarity pool: current level (1..4), climbs and falls with performance
@@ -949,6 +963,7 @@ const screens = {
   inktray: $("screen-ink-tray"),
   ruthless: $("screen-ruthless"),
   guests: $("screen-guests"),
+  lineup: $("screen-lineup"),
   guestdetail: $("screen-guest-detail"),
   mastery: $("screen-mastery"),
   howto: $("screen-howto"),
@@ -12922,30 +12937,129 @@ async function installBlendCorpus() {
 }
 
 /* ---------- The lineup run ----------
-   Thirteen pages dealt from Taylor AND every guest at once. The corpus dance is the guest
-   shelf's, for the guest shelf's reasons: resetRunState hands the globals back to Taylor at
-   the top of every start path, so the blend is re-applied immediately AFTER it and that order
-   is load-bearing.
+   Thirteen pages dealt from Taylor AND every guest at once, played under a hand of goal
+   cards committed to before page one. The corpus dance is the guest shelf's, for the guest
+   shelf's reasons: resetRunState hands the globals back to Taylor at the top of every start
+   path, so the blend is re-applied immediately AFTER it and that order is load-bearing.
 
-   No way in yet, deliberately. Nothing on the front page reaches this, and
-   `__dev.lineup.play()` is the only caller, because the hand of goal cards the mode is FOR
-   is not built, and a
-   lineup run without it is just an easier classic run on a bigger catalogue. */
+   THE HAND IS DEALT, NOT PICKED, and that is the decision the whole felt rests on. Picking
+   three from all twenty-four is a decision made once: you would find the cheapest legal trio
+   and play it forever, and the 24-pip budget would stop biting the day you solved it. Five
+   dealt with "keep up to three" is a different question every run, because the ten possible
+   trios in your five are not the ten in anybody else's. hand-lab.html measured the part that
+   could have sunk it: a dealt five ALWAYS contains a legal pair, at every budget from 20 to
+   34, so the failure worth fearing does not happen.
+
+   No redeal, deliberately. Nothing REQUIRES one when no deal is dead, and every price for it
+   is either free (in which case you are picking, with extra steps) or punitive enough that
+   you would reroll to the cheap hand anyway.
+
+   Still no way in: `__dev.lineup.play()` is the only caller. */
+
+const HAND_MAX = 3;
+
+// Five off the top of a shuffled deck. The guard is not the measurement repeated — it is the
+// measurement's guarantee held onto: hand-lab says no five is dead today, and this makes sure
+// nobody discovers otherwise on a live run the day a card is added or retuned.
+function dealLineupFive() {
+  for (let attempt = 0; attempt < 40; attempt++) {
+    const five = shuffle(DECK.map((c) => c.id)).slice(0, 5);
+    const pair = five.some((a) => five.some((b) => a !== b && validateHand([a, b], goalById).ok));
+    if (pair) return five;
+  }
+  return shuffle(DECK.map((c) => c.id)).slice(0, 5);   // unreachable in practice; never deal nothing
+}
+
+// Why this card cannot join what is already on the table, or "" when it can. A kept card is
+// always droppable, so it never asks.
+function lineupBlocked(id) {
+  if (lineupKept.includes(id)) return "";
+  return conflicts(goalById[id], lineupKept, goalById, { maxHand: HAND_MAX });
+}
+
+// The red pen round a kept card's corner index, which is where its price is printed. Drawn
+// rather than a tick or a checkbox: the notebook marks a decision in pen.
+const KEEP_MARK = `<svg viewBox="0 0 40 40" aria-hidden="true">
+  <ellipse cx="19.5" cy="19" rx="14.5" ry="13" transform="rotate(-8 19.5 19)"/>
+  <path d="M6.5 25.5 C11 30.5 27 31.5 33 24.5"/>
+</svg>`;
+
+function renderLineupFelt() {
+  const felt = $("lineupFelt");
+  if (!felt) return;
+  felt.innerHTML = lineupDealt.map((id) => {
+    const card = goalById[id];
+    const kept = lineupKept.includes(id);
+    const why = kept ? "" : lineupBlocked(id);
+    const cls = kept ? " is-kept" : why ? " is-out" : "";
+    return `<div class="lu-deal${cls}" data-card="${id}" role="button" tabindex="0"` +
+      ` aria-pressed="${kept}" aria-label="${escapeHtml(card.name)}, ${card.rank}">` +
+      (kept ? `<div class="lu-keep-mark">${KEEP_MARK}</div>` : "") +
+      cardFace(card, SUIT_LOOK[card.suit]) +
+      `<p class="lu-out-why">${escapeHtml(why)}</p></div>`;
+  }).join("");
+
+  const spent = handCost(lineupKept, goalById);
+  const pipRow = Array.from({ length: BUDGET }, (_, i) =>
+    `<span class="lu-spend-pip${i < spent ? " spent" : ""}"></span>`).join("");
+  $("lineupSpend").innerHTML =
+    `<div class="lu-spend-pips">${pipRow}</div>` +
+    `<div class="lu-spend-count">${spent} of ${BUDGET} spent · ${lineupKept.length} of ${HAND_MAX} kept</div>`;
+
+  // The one line that says what the hand you are holding will DO to the run, which is the
+  // half of the choice the card faces cannot print: the pool is a property of the hand, not
+  // of any one card in it.
+  const ceiling = handPoolCeiling();
+  $("lineupWhy").textContent = !lineupKept.length
+    ? "Nothing kept yet. A run with no goals is a run with no point."
+    : ceiling ? `This hand can only be played on the ${ceiling} pool.` : "";
+  $("lineupGoBtn").disabled = !lineupKept.length;
+}
+
+function toggleLineupCard(id) {
+  if (!lineupDealt.includes(id)) return;
+  if (lineupKept.includes(id)) lineupKept = lineupKept.filter((x) => x !== id);
+  else if (!lineupBlocked(id)) lineupKept.push(id);
+  else return;
+  renderLineupFelt();
+}
+
+// Open the felt. The corpus is built FIRST, before a card is shown: the blend pulls every
+// guest file at once and a hand chosen against a catalogue that then fails to download would
+// be a hand thrown away.
 async function startLineupRun(diffId) {
-  const mode = MODES[GUEST_DIFFS.includes(diffId) ? diffId : "medium"];
-  // The blend pulls every guest file at once and they are network-first on purpose, so the
-  // first run of a session waits on eight fetches. A toast is the honest minimum and not the
-  // finished answer: the mode wants a real load beat before it has a way in.
   if (!blendCorpus) notifyNote("the lineup", "pulling every catalogue onto one shelf…");
-  let corpus;
-  try { corpus = await installBlendCorpus(); }
+  try { await installBlendCorpus(); }
   catch (e) { notifyNote("the lineup", "couldn't fetch the catalogues — check your connection"); return; }
+  lineupDiff = GUEST_DIFFS.includes(diffId) ? diffId : "medium";
+  lineupDealt = dealLineupFive();
+  lineupKept = [];
+  renderLineupFelt();
+  showScreen("lineup");
+}
+let lineupDiff = "medium";   // the difficulty the felt was opened at, spent by beginLineupRun
 
+// Deal yourself in: the felt's choice becomes a run.
+function beginLineupRun() {
+  if (!lineupKept.length) return;
+  const corpus = blendCorpus;
+  // The felt cannot be reached without the blend built (startLineupRun builds it first), so
+  // this only fires if the corpus was dropped underneath it, which __dev.lineup.drop() can do.
+  if (!corpus) { notifyNote("the lineup", "the blended catalogue is gone; open the felt again"); return; }
+  const mode = MODES[lineupDiff] || MODES.medium;
   gameType = "lineup";
   currentMode = { ...mode };               // clone — never mutate the shared MODES object
+  // THE HAND CAN ONLY MAKE THE POOL EASIER, never harder. A card carrying a pool restriction
+  // carries a measured one (deal-lab.html): Full Lineup is unsatisfiable outside the easy
+  // pool, so a run holding it has to be dealt there or the pips spent on it bought nothing.
+  // Clamping downward rather than simply obeying the hand keeps the difficulty the player
+  // chose meaningful everywhere it is still winnable.
+  const ceiling = handPoolCeiling();
+  if (ceiling && poolRank(ceiling) < poolRank(currentMode.pool)) currentMode.pool = ceiling;
   resetRunState();
   applyCorpus(corpus);                     // AFTER resetRunState, which just restored Taylor
   activeCorpus = "lineup";
+  lineupHand = lineupKept.slice();         // after resetRunState, which clears the run's hand
   focusDifficulty = currentMode.id;
   applyInputHints();
   updateTagline();
@@ -12953,6 +13067,24 @@ async function startLineupRun(diffId) {
   $("pageTotal").textContent = TOTAL_ROUNDS;
   showScreen("game");
   nextRound();
+}
+
+// Where a pool sits on the easy to ultra ladder. MODES "all" is the widest draw of the lot, so
+// it ranks above ultra: every restriction a card can carry is a narrowing of it.
+function poolRank(pool) {
+  const i = POOL_ORDER.indexOf(pool);
+  return i === -1 ? POOL_ORDER.length : i;
+}
+
+// The hardest pool the kept hand can be played on, or null when nothing in it is restricted.
+// Asking only the cards that CARRY a restriction is the load-bearing part: poolForHand returns
+// the hardest pool every card allows, which for an unrestricted hand is "ultra" — obeying that
+// blindly would deal Normal's every-word pool as the rarest words in the blend, on a hand that
+// never asked for it.
+function handPoolCeiling() {
+  const cards = lineupKept.map((id) => goalById[id]);
+  if (!cards.some((c) => c.pools)) return null;
+  return poolForHand(cards);
 }
 
 // The distinct artists a finished run actually covered, in the order they first turned up.
@@ -12995,7 +13127,10 @@ function endLineup() {
     `<div class="chall-result-actions">` +
       `<button id="replayLineup" class="btn-primary">replay ↺</button>` +
     `</div>`;
-  $("replayLineup").addEventListener("click", () => startLineupRun(focusDifficulty));
+  // A replay deals a FRESH five rather than handing back the same hand: the deal is half of
+  // what the mode is, and replaying into an identical table would be the picking this mode
+  // deliberately does not do.
+  $("replayLineup").addEventListener("click", () => startLineupRun(lineupDiff));
 
   // Hand the globals back now the run's own numbers are on screen, exactly as endGuest does:
   // everything above reads the run's arrays, and every screen the player can now reach is
@@ -13694,6 +13829,7 @@ function resetRunState() {
   roundAlbums = [];
   roundBeadTints = [];
   roundArtists = [];
+  lineupHand = [];
   roundWords = [];
   roundSongs = [];
   roundHinted = [];
@@ -28783,6 +28919,23 @@ function buildDevApi() {
       // the hand of goal cards the run is built around is not written, and without it a lineup
       // run is an easier classic run on a bigger catalogue.
       play: (diff) => { startLineupRun(diff); return "dealing the lineup…"; },
+      // Force a hand onto the felt, which is the only way to test a specific card without
+      // shuffling until it turns up. Ids that are not in the deck are dropped rather than
+      // dealt, so a typo cannot put a card on the table that conflicts() has never seen.
+      deal: async (...ids) => {
+        await installBlendCorpus();   // the felt is only playable with the blend behind it
+        const want = ids.flat().filter((id) => goalById[id]);
+        lineupDealt = want.length ? want.slice(0, 5) : dealLineupFive();
+        lineupKept = [];
+        renderLineupFelt();
+        showScreen("lineup");
+        return lineupDealt;
+      },
+      hand: () => ({
+        dealt: lineupDealt, kept: lineupKept, held: lineupHand,
+        spent: handCost(lineupKept, goalById), of: BUDGET,
+        pool: currentMode && currentMode.pool, ceiling: handPoolCeiling(),
+      }),
       // Who the run actually credited, page by page, off roundArtists. The check that the
       // answer-time capture worked, since by the results screen the blend is gone.
       covered: () => ({ artists: lineupCovered(), pages: roundArtists.map((a) => (a || []).join(" + ")) }),
@@ -29816,6 +29969,26 @@ async function init() {
   $("guestShelfBtn").addEventListener("click", () => openGuestShelf("start"));
   $("guestBackBtn").addEventListener("click", () => backToScreen(guestBackTarget));
   $("guestDetailBackBtn").addEventListener("click", closeGuestDetail);
+  // The felt. Delegated, because the five cards are re-rendered on every keep and drop.
+  $("lineupFelt").addEventListener("click", (e) => {
+    const deal = e.target.closest(".lu-deal");
+    if (deal) toggleLineupCard(deal.dataset.card);
+  });
+  $("lineupFelt").addEventListener("keydown", (e) => {
+    if (e.key !== "Enter" && e.key !== " ") return;
+    const deal = e.target.closest(".lu-deal");
+    if (!deal) return;
+    e.preventDefault();
+    toggleLineupCard(deal.dataset.card);
+  });
+  $("lineupGoBtn").addEventListener("click", beginLineupRun);
+  // Backing out of the felt is backing out of the mode, so the corpus goes with it rather
+  // than being left blended on the front page.
+  $("lineupBackBtn").addEventListener("click", () => {
+    restoreCorpus();
+    renderStartPickers();
+    flipInToScreen("start");
+  });
   // The rail's pass-per-rail count is a layout decision made in markup (a pass cannot shrink
   // past its own name), so a width change that crosses a breakpoint has to re-render. Only
   // while the shelf is the visible screen, and only when the count actually changes.

@@ -12845,7 +12845,67 @@ body.lu-nomiss .lu-miss { visibility: hidden; }
 
 /* inset so no stem or petal can cross the keyline — running the sprigs off
    the corners is what made them read as clip art laid on top of the card */
-.look-vine .lu-art { inset: 13px; }
-.look-vine .lu-mid { top: 50%; transform: translateY(-50%); padding: 0 22px; }
-.look-vine .lu-name { font-size: 23px; }
+.lu-look-vine .lu-art { inset: 13px; }
+.lu-look-vine .lu-mid { top: 50%; transform: translateY(-50%); padding: 0 22px; }
+.lu-look-vine .lu-name { font-size: 23px; }
+
+/* ---- the felt: five cards dealt before page one ----
+   The cards are the stock above at their printed size, so they are laid out in a
+   row that SCROLLS rather than one that shrinks them: a goal card the player is
+   spending pips on has to stay readable, and five at 176px will not fit a phone. */
+/* Three and two rather than five across: at their printed size five cards are wider than
+   the notebook, and a felt you have to scroll sideways is a felt you cannot compare. The
+   max-width is what forces the break, so the rows stay 3/2 instead of 4/1 on a wide desk. */
+.lu-felt {
+  display: flex; flex-wrap: wrap; gap: 14px 14px; padding: 6px 4px 16px;
+  justify-content: center; max-width: 566px; margin: 0 auto;
+}
+.lu-deal { position: relative; padding-top: 13px; }
+.lu-deal .lu-card { cursor: pointer; }
+/* A dealt card sits at a slight angle, alternating, the way five cards fanned on a
+   desk do. Kept cards straighten up and lift: the tidy one is the chosen one. */
+.lu-deal:nth-child(odd) .lu-card  { transform: rotate(-1.4deg); }
+.lu-deal:nth-child(even) .lu-card { transform: rotate(1.1deg); }
+.lu-deal.is-kept .lu-card {
+  transform: translateY(-11px) rotate(0deg);
+  box-shadow: 0 16px 24px rgba(60,50,35,0.2), 0 1px 2px rgba(60,50,35,0.14);
+}
+/* Struck through rather than hidden: a card you cannot afford is information, and
+   the reason it is out is printed under it. */
+.lu-deal.is-out .lu-card { opacity: 0.42; cursor: not-allowed; transform: rotate(0deg); }
+.lu-deal.is-out .lu-card:hover { transform: rotate(0deg); box-shadow: 0 5px 13px rgba(60,50,35,0.15), 0 1px 2px rgba(60,50,35,0.14); }
+.lu-out-why {
+  font-family: var(--type); font-size: 9px; letter-spacing: 0.4px; text-align: center;
+  color: var(--red-pen); margin: 7px 2px 0; min-height: 12px;
+}
+/* The kept mark: red pen round the corner index, which is where the price is. */
+.lu-keep-mark {
+  position: absolute; top: 2px; left: 2px; width: 40px; height: 40px; z-index: 6; pointer-events: none;
+  color: var(--red-pen);
+}
+.lu-keep-mark svg { width: 100%; height: 100%; display: block; overflow: visible; }
+.lu-keep-mark path, .lu-keep-mark ellipse {
+  fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; opacity: 0.85;
+}
+
+.lu-felt-lead {
+  font-family: var(--hand); font-size: 21px; color: var(--ink); text-align: center; margin: 10px 0 2px;
+}
+.lu-felt-why {
+  font-family: var(--type); font-size: 11px; color: var(--ink-soft); text-align: center;
+  margin: 0 0 10px; min-height: 15px;
+}
+/* The budget, drawn as the twenty-four pips it is rather than written as a number:
+   the unit is the card's own pips, so the meter is a row of them being spent. */
+.lu-spend { display: flex; flex-direction: column; align-items: center; gap: 5px; margin: 0 0 6px; }
+.lu-spend-pips { display: flex; gap: 3px; flex-wrap: wrap; justify-content: center; max-width: 340px; }
+.lu-spend-pip {
+  width: 7px; height: 7px; border-radius: 50%; border: 1px solid color-mix(in srgb, var(--ink) 32%, transparent);
+}
+.lu-spend-pip.spent { background: var(--ink); border-color: var(--ink); }
+.lu-spend-count {
+  font-family: var(--type); font-size: 10px; letter-spacing: 1.1px; text-transform: uppercase;
+  color: var(--ink-soft);
+}
+.lu-felt-go { display: flex; justify-content: center; padding: 2px 0 14px; }
 
