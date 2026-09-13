@@ -12743,3 +12743,109 @@
     .about-note, .about-note::after { transition: none; }
   }
   .set-note { font-family: var(--type); font-size: calc(10px + var(--text-size-adjust)); color: var(--ink-soft); font-style: italic; }
+
+/* ============================================================
+   LINEUP CARD STOCK — the goal deck's card and its line art.
+   EVERY class here is lu- prefixed, and that is not tidiness. This
+   block moved in from its own stylesheet where .c, .mid, .ln and
+   .name were safe; in the shared sheet a bare .mid absolutely
+   positions the nav icons' innards and a bare .ln pushes fill:none
+   onto the stickers. Keep the prefix on anything added here.
+   Pairs with js/lineupcards.js. The stock is SETTLED (card-faces.html
+   picked it) so it lives in one file: an inset double keyline,
+   two unmirrored foxing spots, a lifted corner showing the back.
+
+   Placement classes hang off the CARD (.lu-card.lu-look-crest), never off
+   a section, because a mixed deck stands cards of different looks
+   side by side.
+   ============================================================ */
+
+.lu-card, .lu-back {
+  position: relative; width: 176px; height: 245px; flex: none; border-radius: 7px;
+  --card: #fdfaf0; --suit: #2b2722;
+  background: linear-gradient(162deg, #fdfaf0, #f2ead6);
+  border: 1px solid rgba(43,39,34,0.13);
+  box-shadow: 0 5px 13px rgba(60,50,35,0.15), 0 1px 2px rgba(60,50,35,0.14);
+  transition: transform 0.16s ease, box-shadow 0.16s ease;
+}
+.lu-card:hover, .lu-back:hover { transform: translateY(-6px) rotate(-0.7deg); box-shadow: 0 14px 22px rgba(60,50,35,0.18); }
+.lu-card.lu-red, .lu-back.lu-red { --suit: #a8322e; }
+.lu-keyline {
+  position: absolute; inset: 7px; border-radius: 4px; pointer-events: none; z-index: 1;
+  border: 1px solid color-mix(in srgb, var(--suit) 48%, transparent);
+  box-shadow: 0 0 0 2.5px rgba(253,250,240,0.9), 0 0 0 3.4px color-mix(in srgb, var(--suit) 16%, transparent);
+}
+.lu-card::after, .lu-back::after {
+  content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 4; border-radius: 7px;
+  background:
+    radial-gradient(10px 7px at 22% 79%, rgba(146,113,58,0.16), transparent 70%),
+    radial-gradient(6px 9px at 81% 17%, rgba(146,113,58,0.12), transparent 72%),
+    radial-gradient(120px 90px at 106% 108%, rgba(120,92,48,0.10), transparent 70%);
+}
+.lu-card::before, .lu-back::before {
+  content: ""; position: absolute; top: -1px; right: -1px; width: 21px; height: 21px; z-index: 5;
+  background: linear-gradient(225deg, #e8dcc0 0 47%, rgba(43,39,34,0.30) 47% 50%, transparent 50%);
+  filter: drop-shadow(-1px 1px 1px rgba(60,50,35,0.25));
+}
+body.lu-noframe .lu-keyline { display: none; }
+body.lu-noframe .lu-card::before, body.lu-noframe .lu-back::before { display: none; }
+
+.lu-ix { position: absolute; display: flex; flex-direction: column; align-items: center; gap: 1px; line-height: 1; color: var(--suit); z-index: 3; }
+.lu-ix-tl { left: 11px; top: 10px; }
+.lu-ix-br { right: 11px; bottom: 10px; transform: rotate(180deg); }
+.lu-ix b { font-family: var(--type); font-weight: 700; font-size: 15px; }
+.lu-ix b.lu-und { text-decoration: underline; text-underline-offset: 1.5px; }
+.lu-ix svg { width: 12px; height: 12px; display: block; }
+
+/* One weight everywhere at every scale. non-scaling-stroke is the whole
+   difference between line art and a logo, so it is on every stroke. */
+.lu-art { position: absolute; inset: 0; z-index: 2; color: var(--suit); pointer-events: none; }
+.lu-art svg { width: 100%; height: 100%; display: block; overflow: visible; }
+.lu-ln   { fill: none;        stroke: currentColor; stroke-width: 1.15; stroke-linecap: round; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
+.lu-ln-o { fill: var(--card); stroke: currentColor; stroke-width: 1.15; stroke-linecap: round; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
+body.lu-heavy .lu-ln, body.lu-heavy .lu-ln-o { stroke-width: 1.7; }
+.lu-pip .ink-fill { fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linejoin: round; stroke-linecap: round; }
+
+.lu-mid { position: absolute; left: 0; right: 0; text-align: center; z-index: 3; }
+.lu-name { font-family: var(--hand); font-weight: 700; font-size: 25px; line-height: 1.02; color: var(--ink); margin: 0 0 5px; }
+.lu-rule { font-family: var(--type); font-size: 9px; line-height: 1.5; color: var(--ink-soft); margin: 0; }
+.lu-miss {
+  font-family: var(--type); font-size: 7.5px; letter-spacing: 1.1px; text-transform: uppercase;
+  color: rgba(43,39,34,0.38); margin: 0 0 4px;
+}
+.lu-miss.bad { color: var(--red-pen); opacity: 0.85; }
+/* the printed pool restriction: set like the missed-page ruling because it is the same
+   kind of thing — small print the player has to be able to read before spending on the card */
+.lu-pool {
+  font-family: var(--type); font-size: 7px; letter-spacing: 1.1px; text-transform: uppercase;
+  color: var(--suit); opacity: 0.7; margin: 6px 0 0;
+}
+.lu-pool::before, .lu-pool::after { content: "·"; opacity: 0.5; margin: 0 5px; }
+body.lu-nomiss .lu-miss { visibility: hidden; }
+
+/* ---- per-look placement, on the card ---- */
+/* the two bare-field looks share a rhythm: ornament up top, words beneath */
+.lu-look-facet .lu-art, .lu-look-strandbare .lu-art { inset: 12px 12px 92px; }
+.lu-look-facet .lu-mid, .lu-look-strandbare .lu-mid { bottom: 20px; padding: 0 14px; }
+.lu-look-strandbare .lu-art { inset: 10px 8px 94px; }
+
+.lu-look-frame .lu-mid { top: 50%; transform: translateY(-50%); padding: 0 27px; }
+.lu-look-frame .lu-name { font-size: 21px; }
+.lu-look-frame .lu-rule { font-size: 8.5px; }
+.lu-look-frame .lu-miss { font-size: 7px; letter-spacing: 0.5px; }
+
+/* the four per-suit looks all hang the words in the same place under the
+   ornament, so a mixed hand still has one typographic rhythm */
+.lu-look-crest .lu-mid, .lu-look-posy .lu-mid, .lu-look-strand .lu-mid, .lu-look-ruled .lu-mid {
+  top: 60%; transform: translateY(-50%); padding: 0 27px;
+}
+.lu-look-crest .lu-name, .lu-look-posy .lu-name, .lu-look-strand .lu-name, .lu-look-ruled .lu-name { font-size: 20px; }
+.lu-look-crest .lu-rule, .lu-look-posy .lu-rule, .lu-look-strand .lu-rule, .lu-look-ruled .lu-rule { font-size: 8.5px; }
+.lu-look-crest .lu-miss, .lu-look-posy .lu-miss, .lu-look-strand .lu-miss, .lu-look-ruled .lu-miss { font-size: 7px; letter-spacing: 0.5px; }
+
+/* inset so no stem or petal can cross the keyline — running the sprigs off
+   the corners is what made them read as clip art laid on top of the card */
+.look-vine .lu-art { inset: 13px; }
+.look-vine .lu-mid { top: 50%; transform: translateY(-50%); padding: 0 22px; }
+.look-vine .lu-name { font-size: 23px; }
+
