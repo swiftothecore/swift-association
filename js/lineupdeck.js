@@ -21,6 +21,12 @@
              any. MEASURED (scripts/lineup/deal-lab.html), never
              chosen: a breadth card in a pool that cannot supply it
              is a card decided by the deal instead of the player.
+     lever   levers on the run's own mode, applied when the card
+             is kept. Only for a card whose rule describes a state
+             of the run rather than a promise you could break: Cold
+             Open says the dropdown IS shut, so keeping it shuts it.
+             A promise you can break (No Hints, and every spade) must
+             never become a lever, or it stops being losable.
      names   how many artists must be NAMED before page one, for
              the two cards that ask for it. The felt collects them
              and judge() reads them as ctx.named; a card that wants
@@ -119,8 +125,14 @@ export const DECK = [
     rule:"Thirteen from thirteen." },
   { id:"off-the-cuff", suit:"clubs", rank:"K", name:"Off The Cuff",
     rule:"Every page answered inside ten seconds." },
+  // The one card that CHANGES the run rather than judging it. The words were always a
+  // statement of fact rather than a promise, and read as a promise the card is unplayable:
+  // the list renders on the keystrokes that type a title, so it would die on page one of
+  // every mode that has one and be free in the two that do not. Shutting the list is what
+  // it says, and the price is real, because thirteen titles typed in full makes every other
+  // card in the hand harder to hold.
   { id:"cold-open", suit:"clubs", rank:"Q", name:"Cold Open",
-    rule:"The dropdown stays shut for the whole run." },
+    rule:"The dropdown stays shut for the whole run.", lever:{ dropdown:false } },
   { id:"sing-it-back", suit:"clubs", rank:"J", name:"Sing It Back",
     rule:"Five pages answered with a sung line, not a title." },
   { id:"no-hints", suit:"clubs", rank:"7", name:"No Hints",

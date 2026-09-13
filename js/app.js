@@ -13025,10 +13025,18 @@ function renderLineupFelt() {
   // The one line that says what the hand you are holding will DO to the run, which is the
   // half of the choice the card faces cannot print: the pool is a property of the hand, not
   // of any one card in it.
+  // What this hand DOES to the run, which is the half of the choice a card face cannot
+  // print: the pool is a property of the whole hand, and a lever is a change the player is
+  // buying rather than a rule they are promising to keep.
   const ceiling = handPoolCeiling();
+  const notes = [];
+  if (ceiling) notes.push(`this hand can only be played on the ${ceiling} pool`);
+  if (lineupKept.some((id) => (goalById[id].lever || {}).dropdown === false)) {
+    notes.push("the suggestions are shut, so every title is typed in full");
+  }
   $("lineupWhy").textContent = !lineupKept.length
     ? "Nothing kept yet. A run with no goals is a run with no point."
-    : ceiling ? `This hand can only be played on the ${ceiling} pool.` : "";
+    : notes.length ? notes.join(" · ") : "";
   renderLineupNaming();
   const short = namesWanted() - lineupNamed.length;
   if (short > 0) $("lineupWhy").textContent = `Name ${short} more before you can deal in.`;
@@ -13076,6 +13084,10 @@ function beginLineupRun() {
   // chose meaningful everywhere it is still winnable.
   const ceiling = handPoolCeiling();
   if (ceiling && poolRank(ceiling) < poolRank(currentMode.pool)) currentMode.pool = ceiling;
+  // A card whose rule describes the STATE of the run rather than a promise you could break
+  // sets that state here, on the run's own clone of the mode. Cold Open is the only one:
+  // effectiveDropdown reads currentMode.dropdown, so shutting it there is the whole change.
+  for (const id of lineupKept) Object.assign(currentMode, goalById[id].lever || {});
   resetRunState();
   applyCorpus(corpus);                     // AFTER resetRunState, which just restored Taylor
   activeCorpus = "lineup";
