@@ -399,13 +399,28 @@ export const HOME_ARTIST = "Taylor Swift";
    page's CSS, so a var() here would export as black. An artist with no colours falls through
    to the page's era tint, which reads as a rendering bug, so __dev.lineup.palette() flags one. */
 export const LINEUP_INKS = {
-  // Home is the notebook itself: the red rule down the margin, and the pencil it is written in.
-  "Taylor Swift": ["#b4453a", "#4f555c"],
+  // Home is the notebook, not a record. She is the only artist here who cannot be summed up by
+  // one sleeve — sixteen of them, each with its own colour already spoken for by the album
+  // maps — so home strings in the two inks the BOOK is made of: the pencil every page is
+  // written in, and the gold of the one lit word in the masthead. The margin red was the first
+  // answer and the wrong one: red is the furniture of the page rather than a voice on it, and
+  // it sat in the same corner of the wheel as Sabrina's espresso.
+  "Taylor Swift": ["#4a5058", "#c08b2c"],
   "Olivia Rodrigo": ["#7a55b0", "#2b1c3f"],      // violet over the near-black plum under it
   "Wicked": ["#3f8f63", "#d98cae"],              // Elphaba and Glinda, which is the whole show
-  "Hannah Montana": ["#e2b63d", "#d94f8a"],      // the star, and the pop pink around it
+  // The show's own wordmark, which is a yellow star on violet. Olivia is the other purple on
+  // the shelf and they stay apart on two counts: this one is a saturated royal against her
+  // dusty one, and it never appears without the star, while hers never appears without the
+  // near-black. Neither bead can be mistaken for the other; a single-colour palette could not
+  // have afforded to let both of them be purple at all.
+  "Hannah Montana": ["#e2b63d", "#6b4291"],
   "Billie Eilish": ["#1e2622", "#b6d62b"],       // the near-black of the sleeves and the acid
-  "Ariana Grande": ["#d79ab0", "#6d4a3c"],       // blush over the warm neutral the records sit on
+  // Yours Truly's blush against the latex black of Dangerous Woman. The cocoa this started as
+  // was the one mud colour in the set and was never hers: it came off the pass hardware, which
+  // was drawn to sit alone on a hanger. Billie also leads on a near-black, and that is fine for
+  // the same reason three pinks are fine — neither black ever appears on its own, so one bead
+  // is always pink-and-black and the other always black-and-acid, and no glance confuses them.
+  "Ariana Grande": ["#d5a2b4", "#1b191d"],
   "Harry Styles": ["#5aa8d6", "#dcc39b"],        // the Fine Line sky and the fourth record's sand
   "Sabrina Carpenter": ["#6b4426", "#e3cba9"],   // espresso and cream
 };
