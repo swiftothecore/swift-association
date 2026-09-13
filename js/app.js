@@ -11190,7 +11190,16 @@ const guestFiles = new Map();         // id -> Promise<catalogue json>, one fetc
 // seven-step range as the old slot formula, so randomising never makes a pass look untidy.
 const GUEST_STRAP_LENGTHS = [96, 113, 130, 147, 164];
 const guestHangLayout = new Map();
-const GUEST_SHELF_ENTRIES = [...GUESTS, ...GUESTS_COMING_SOON];
+/* THE ALL-ACCESS LAMINATE, and it hangs first.
+   The lineup is every catalogue on this rail at once, so the rail is where it belongs, and the
+   object it wants to be is the one thing a rail of single-artist guest passes is missing: the
+   crew laminate that gets you into all of them. It is not a guest and is deliberately not in
+   GUESTS — nothing that walks the playable-guest paths (the randomiser, the board, the
+   catalogue charms, loadGuest) can see it, exactly as the coming-soon entries cannot.
+   It hangs at slot zero on the shortest strap, and dead straight while every pass around it
+   lies at an angle, because straight among crooked is what makes a thing look deliberate. */
+const LINEUP_PASS = { id: "__lineup", name: "The Lineup", allAccess: true };
+const GUEST_SHELF_ENTRIES = [LINEUP_PASS, ...GUESTS, ...GUESTS_COMING_SOON];
 for (let offset = 0; offset < GUEST_SHELF_ENTRIES.length; offset += GUEST_STRAP_LENGTHS.length) {
   const lengths = shuffle(GUEST_STRAP_LENGTHS.slice());
   GUEST_SHELF_ENTRIES.slice(offset, offset + lengths.length).forEach((guest, i) => {
@@ -11306,8 +11315,12 @@ function renderGuestShelfPage() {
     let pegs = "";
     for (let n = 0; n < count; n++, slot++) {
       const entry = GUEST_SHELF_ENTRIES[slot];
+      // Asked of the entry rather than of its index: the laminate sits ahead of GUESTS, so the
+      // old `slot < GUESTS.length` arithmetic would have called the last guest a coming-soon.
       pegs += entry
-        ? (slot < GUESTS.length ? guestPassMarkup(entry, slot) : guestSoonMarkup(entry, slot))
+        ? (entry.allAccess ? guestAllAccessMarkup(entry)
+          : GUESTS.includes(entry) ? guestPassMarkup(entry, slot)
+          : guestSoonMarkup(entry, slot))
         : guestEmptyMarkup();
     }
     rails += `<div class="guest-rail">${pegs}</div>`;
@@ -11316,7 +11329,8 @@ function renderGuestShelfPage() {
   // The rack shows its occupancy directly, so keep the count out of the visible header. The
   // group label preserves the same information for screen readers without adding more UI.
   const openSlots = Math.max(0, GUEST_SHELF_SLOTS - GUEST_SHELF_ENTRIES.length);
-  const rackLabel = `${GUESTS.length} playable guest catalogue${GUESTS.length === 1 ? "" : "s"}; ` +
+  const rackLabel = `the lineup, every catalogue at once; ` +
+    `${GUESTS.length} playable guest catalogue${GUESTS.length === 1 ? "" : "s"}; ` +
     `${GUESTS_COMING_SOON.length} coming soon; ` +
     `${openSlots} empty shelf slot${openSlots === 1 ? "" : "s"}`;
 
@@ -11329,6 +11343,8 @@ function renderGuestShelfPage() {
 
   el.querySelectorAll(".guest-pass[data-guest]").forEach((b) =>
     b.addEventListener("click", () => selectGuest(b.dataset.guest)));
+  const lam = el.querySelector(".guest-pass[data-lineup]");
+  if (lam) lam.addEventListener("click", () => selectGuest(LINEUP_PASS.id));
 
   // Fill the counts in as the files land. Each pass renders with em-dashes first so the rail
   // never waits on the network to draw.
@@ -11368,6 +11384,46 @@ function guestPassMarkup(g, slot) {
             `<span class="guest-ticks" aria-hidden="true">${ticks}</span>` +
             `<span class="guest-line"><span data-count="songs"><strong class="guest-song-count">—</strong> songs</span></span>` +
             stub +
+          `</span>` +
+        `</span>` +
+      `</button>` +
+    `</span>`
+  );
+}
+
+/* The laminate itself. Everything here is a deliberate contrast with a guest pass rather than
+   a louder version of one: the card stock is dark where theirs is cream, the band reads ALL
+   ACCESS where theirs reads GUEST, the stub admits to all rather than to one, and the ticks
+   are not four record colours but ONE PER ARTIST ON THE SHELF, read live off the same place
+   Full Lineup reads it. Add a guest tomorrow and the laminate grows a tick without being
+   touched, which is the point: the pass is a picture of what it lets you into.
+
+   It borrows no artist's ink. A guest pass is printed in the colours of the artist it admits
+   you to, and this one admits you to all of them, so taking any single guest's palette would
+   be picking a favourite. Dark card and brass instead, which is what a crew laminate actually
+   looks like and what the notebook's own gold already is. */
+function guestAllAccessMarkup(pass) {
+  // One tick per artist, inked the colour that artist's BEADS are strung in, so the pass and
+  // the bracelet the run produces are the same picture. Home leads and takes brass rather than
+  // a bead colour, because her bead is all twelve records cut as a cake and a 5px tick cannot
+  // be a cake; the laminate's own metal stands in for her.
+  const ticks = lineupShelf().map((name) => {
+    const ink = name === HOME_ARTIST ? "#b08d46" : (LINEUP_INKS[name] || [])[0];
+    return `<i title="${escapeHtml(name)}"${ink ? ` style="background:${ink}"` : ""}></i>`;
+  }).join("");
+  return (
+    `<span class="guest-peg guest-peg--all">` +
+      guestStrapMarkup(GUEST_STRAP_LENGTHS[0]) +
+      `<button type="button" class="guest-pass guest-pass--all" data-lineup="1"` +
+        ` style="--tilt:0deg" aria-label="${escapeHtml(pass.name)}: every catalogue on the shelf at once">` +
+        `<span class="guest-slot" aria-hidden="true"></span>` +
+        `<span class="guest-print">` +
+          `<span class="guest-band">all access${GUEST_STAR}</span>` +
+          `<span class="guest-face">` +
+            `<span class="guest-name">The<br>Lineup</span>` +
+            `<span class="guest-ticks guest-ticks--all" aria-hidden="true">${ticks}</span>` +
+            `<span class="guest-line"><span><strong>${SHELF}</strong> catalogues</span></span>` +
+            `<span class="guest-stub guest-stub--all"></span>` +
           `</span>` +
         `</span>` +
       `</button>` +
@@ -11432,7 +11488,7 @@ function paintGuestCounts(id, counts) {
 function selectGuest(id) {
   guestSelected = id;
   guestShelfScrollY = window.scrollY;
-  renderGuestDetail(id);
+  if (id === LINEUP_PASS.id) renderLineupDetail(); else renderGuestDetail(id);
   flipAwayToScreen("guestdetail");
   window.scrollTo({ top: 0, behavior: "instant" });
 }
@@ -11445,6 +11501,57 @@ function closeGuestDetail() {
 
 // The pass turned over: what is actually in this catalogue. The record list comes straight
 // from the file, so it can never drift from what a guest round would draw on.
+/* The laminate's panel. It borrows the guest detail's shape on purpose — same head, same
+   sections, same difficulty tabs, same act row — because the shelf has one grammar and the
+   lineup arriving with its own would read as a different feature bolted on. What differs is
+   what it can honestly print: a guest quotes its own song and record counts off its file,
+   while the blend's are only true once every catalogue has been fetched and deduped, so this
+   panel quotes the thing it knows for certain (who is in it) and leaves the arithmetic to the
+   felt. The artists are listed rather than counted, since the whole proposition is WHO. */
+function renderLineupDetail() {
+  const el = $("guestDetailBody");
+  if (!el) return;
+  const shelf = lineupShelf();
+  const names = shelf.map((name) => {
+    const ink = name === HOME_ARTIST ? "#b08d46" : (LINEUP_INKS[name] || [])[0];
+    return `<li><span class="guest-rec-dot"${ink ? ` style="background:${ink}"` : ""}></span>` +
+      `<span class="guest-rec-name">${escapeHtml(name)}</span></li>`;
+  }).join("");
+  const tabs = difficultyTabs(GUEST_DIFFS, guestSelectedDiff);
+  el.innerHTML =
+    `<div class="chall-detail guest-detail">` +
+    `<div class="guest-detail-head" style="--g-pen:#6b5324">` +
+      `<span class="guest-detail-name">The Lineup</span>` +
+      `<span class="guest-detail-nums">${shelf.length} catalogues · ${TOTAL_ROUNDS} pages · one strand</span>` +
+    `</div>` +
+    `<ul class="guest-recs">${names}</ul>` +
+    `<div class="chall-sec">` +
+      `<div class="chall-eyebrow">The rule</div>` +
+      `<div class="chall-rule">${TOTAL_ROUNDS} pages dealt from <b>every catalogue at once</b>, hers and ` +
+        `every guest's on one shelf. A page can come from anybody, and the bead it earns is ` +
+        `coloured by whoever you answered, so the bracelet ends up a picture of your lineup. ` +
+        `Nothing here counts toward your Taylor records.</div>` +
+    `</div>` +
+    `<div class="chall-sec chall-sec--beat">` +
+      `<div class="chall-eyebrow">The catch</div>` +
+      `<div class="chall-goal">You are dealt five goal cards and keep up to three, on a budget of ` +
+        `${BUDGET} pips, <b>before page one</b>. They are what makes a wider catalogue harder ` +
+        `instead of easier, and you commit to them blind.</div>` +
+    `</div>` +
+    `<div class="chall-sec chall-sec--pick">` +
+      `<div class="chall-eyebrow">Written at</div>` +
+      `<div class="mode-tabs af-diffs">${tabs}</div>` +
+    `</div>` +
+    `<div class="chall-act">` +
+      `<span class="chall-meta">${escapeHtml(diffLabel(guestSelectedDiff))}</span>` +
+      `<button type="button" class="chall-go" data-lineup-go="1">Deal me a hand</button>` +
+    `</div></div>`;
+  el.querySelectorAll(".af-diffs [data-diff]").forEach((b) =>
+    b.addEventListener("click", () => { guestSelectedDiff = b.dataset.diff; renderLineupDetail(); }));
+  const go = el.querySelector("[data-lineup-go]");
+  if (go) go.addEventListener("click", () => startLineupRun(guestSelectedDiff));
+}
+
 function renderGuestDetail(id) {
   const el = $("guestDetailBody");
   if (!el) return;
@@ -13139,6 +13246,15 @@ function dealLineupFlourish(kind) {
   // The real fix is upstream and is a decision about the FELT: a goal card carries a rule you
   // read before spending pips on it, and two per row on a phone means 118px cards and 7px type,
   // so the card cannot simply be shrunk. Until that is settled, a phone deals without ceremony.
+  // A felt that FITS the screen but is sitting half below the fold is not a reason to skip:
+  // arriving at the top of the page with the last row under the edge is a scroll away from a
+  // perfectly watchable deal. Centre it first, then ask. A felt taller than the screen cannot
+  // be rescued this way and falls through to the check below.
+  const fb = felt.getBoundingClientRect();
+  if (fb.height <= window.innerHeight - 12 && (fb.top < 0 || fb.bottom > window.innerHeight)) {
+    window.scrollBy({ top: fb.top - (window.innerHeight - fb.height) / 2, behavior: "instant" });
+  }
+
   const seen = cards.every((el) => {
     const r = el.getBoundingClientRect(), my = r.top + r.height / 2, mx = r.left + r.width / 2;
     return my > 0 && my < window.innerHeight && mx > 0 && mx < window.innerWidth;

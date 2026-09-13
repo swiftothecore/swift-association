@@ -511,7 +511,6 @@ export const GUESTS = [
 // file, ink, or era, so nothing can mistake them for playable guests.
 export const GUESTS_COMING_SOON = [
   { id: "beyonce", name: "Beyoncé" },
-  { id: "gracie-abrams", name: "Gracie Abrams" },
   { id: "miley-cyrus", name: "Miley" },
 ];
 // Everybody the lineup deals from: every playable guest, plus home. It lives here rather than

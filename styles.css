@@ -5267,6 +5267,57 @@
                 0 0 0 1px rgba(120,100,70,0.32), 0 1px 0 rgba(255,255,255,0.85) inset;
     z-index: auto;
   }
+  /* ---- the all-access laminate ----
+     The lineup's way in, and the one pass on the rail that is not an artist's. It stands out by
+     being a DIFFERENT OBJECT rather than a shoutier version of the same one: seven cream paper
+     passes and one dark crew laminate, which is what the difference actually looks like
+     backstage. Brass rather than any guest's ink, because it admits you to all of them and
+     borrowing one artist's palette would be picking a favourite. */
+  .guest-pass--all {
+    background: linear-gradient(150deg, #4a4036 0%, #2b2722 55%, #3b342c 100%);
+    box-shadow:
+      0 14px 26px rgba(30,20,8,0.44),
+      0 2px 5px rgba(30,20,8,0.3),
+      0 0 0 1px rgba(176,141,70,0.55),
+      0 1px 0 rgba(255,236,198,0.22) inset;
+  }
+  .guest-pass--all:hover, .guest-pass--all:focus-visible {
+    box-shadow: 0 22px 38px rgba(30,20,8,0.5), 0 2px 5px rgba(30,20,8,0.28),
+                0 0 0 1.5px rgba(214,175,96,0.8), 0 1px 0 rgba(255,236,198,0.22) inset;
+  }
+  .guest-pass--all .guest-print {
+    background: linear-gradient(178deg, #37302a, #241f1a);
+    box-shadow: 0 0 0 1px rgba(176,141,70,0.3);
+  }
+  .guest-pass--all .guest-band {
+    background: linear-gradient(100deg, #17140f, #6b5324 62%, #b08d46);
+    color: #fdf6e6; font-weight: 700;
+  }
+  .guest-pass--all .guest-band-star { fill: #fdf6e6; opacity: 1; }
+  .guest-pass--all .guest-name { color: #f2dfb4; }
+  .guest-pass--all .guest-line {
+    color: #c5b48c; border-top-color: rgba(176,141,70,0.38);
+  }
+  .guest-pass--all .guest-line strong { color: #f2dfb4; }
+  /* Eight ticks rather than four, so they are thinner; the gap does the separating. */
+  .guest-ticks--all i { height: 6px; border-radius: 1px; }
+  /* Qualified by the pass, not just the stub: the base .guest-stub rules are declared further
+     down this block, so an equally specific .guest-stub--all would lose on order alone. */
+  .guest-pass--all .guest-stub {
+    border-top-color: rgba(176,141,70,0.42); background: rgba(255,236,198,0.045);
+  }
+  .guest-pass--all .guest-stub::before { content: "admit to all"; color: #c5b48c; opacity: 0.95; }
+  .guest-peg--all .guest-strap .webbing { fill: #2e2822; }
+  .guest-peg--all .guest-strap .webbing--dark { fill: #17140f; }
+  /* EXEMPT FROM THE NIGHT DIM, and for the reason the dim exists. Guest passes are dimmed
+     because six cream cards measured 0.94 luminance on the night desk and were the brightest
+     thing in the notebook. This card is already dark; putting it through brightness(0.62) as
+     well would take a near-black laminate to unreadable, so it keeps its own values and the
+     brass keeps its ratio against them. */
+  :root[data-theme="dark"] .guest-pass--all,
+  :root[data-theme="dark"] .guest-pass--all:hover,
+  :root[data-theme="dark"] .guest-pass--all:focus-visible,
+  :root[data-theme="dark"] .guest-pass--all.selected { filter: none; }
   .guest-ticks--soon { height: 5px; }
   .guest-stub--soon::before { content: none; }
   .guest-soon-stamp {
