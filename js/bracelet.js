@@ -394,43 +394,66 @@ function beadDefs(u) {
       `<stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>`;
 }
 
-/* ---- banded beads ----
-   A page can be strung in MORE THAN ONE colour. `beadTints[i]` normally carries one literal
-   colour; a guest catalogue coloured by VOICE rather than by album hands over a pair for the
-   songs that genuinely belong to two singers at once (guestBeadTint in app.js), and a lineup
-   page hands over every colour its artists answer in (lineupBeadTint), which is two per artist
-   and so four on a song that sits on two shelves. The bead's body is then filled with a
-   gradient banded across them instead of a flat colour.
+/* ---- beads painted in more than one colour ----
+   A page can be strung in MORE THAN ONE colour, and in one of two ways.
+
+   BANDS are the ordinary case. `beadTints[i]` normally carries one literal colour; a guest
+   catalogue coloured by VOICE hands over a pair for the songs that genuinely belong to two
+   singers at once (guestBeadTint in app.js), and a lineup page hands over every colour its
+   artists answer in (lineupBeadTint), which is two per guest and so four on a song that sits
+   on two shelves. The bead's body is filled with a gradient banded across them.
 
    Each colour holds a SOLID core and the seams between them are soft, at every count. A hard
    split reads as that many part-beads jammed on the same cord; bands with blended edges read
    as one bead that is all of them, which is the thing being said. The core is what stops three
    or four colours turning to mud the way an evenly interpolated gradient would: the arithmetic
    below gives each band its own share of the diagonal and spends only a third of that share on
-   the two seams, so a two-colour bead comes out exactly as it always did and a four-colour one
-   still has four colours in it rather than a smear.
+   the two seams, so a two-colour bead comes out exactly as it always did.
 
-   THE CEILING IS TWELVE, which is the most anything asks for: Taylor's studio records, if home
-   is ever strung as the whole catalogue rather than as two inks. It is a stop against a
-   runaway list rather than a recommendation — four is about as many as a 24px bead can really
-   SAY, and past that the bands stop being colours and start being a texture, which is a choice
-   the palette makes and not one this function should make for it. A longer list is cut rather
-   than squeezed, because a band you cannot see is worse than a name plainly missing.
+   WEDGES are the exception, and there is exactly one caller: the lineup's home artist, who is
+   not a voice on the shelf but the whole catalogue the shelf hangs off, and is strung in all
+   twelve of her studio records at once. Twelve BANDS would be a smear, because blending is the
+   wrong verb for twelve things in a row — a cake is cut, not poured. So the twelve are cut as
+   wedges off one centre, and the bead becomes a pinwheel that nothing else on any strand
+   resembles, which is the point: home is a different kind of object, not another artist with
+   another colour. The convergence in the middle is busier than a band seam and that is the
+   price; a hub over it was tried twice, pale and dark, and reads as a hole punched through the
+   bead or as an eye staring back (scripts/lineup/artist-palette.html keeps both).
 
-   It has to be a gradient DEF rather than anything CSS: the keepsake PNG rasterises this
-   markup outside the page's stylesheet, exactly as the literal colours do.
+   Wedges are also the only paint that survives the DANGLE. Both paints are declared in
+   objectBoundingBox units, so each shape maps the whole paint across its OWN box and the charm
+   under a bead is painted the same way at its own size. A striped star lands mostly on the dark
+   bands and goes black; a wedged one gets a whole cake at star size and still reads.
 
-   The charm dangling under the bead is painted from the SAME gradient, by handing the group
-   `--bead` the paint reference instead of a colour. The def is in objectBoundingBox units, so
-   each shape maps the bands across its OWN box: the star comes out banded at star size rather
-   than wearing a slice of the bead's blend. That inline custom property is also why this
-   survives the keepsake export, the way the literal colours do. */
-const BEAD_BANDS_MAX = 12;
-function bandTint(t) {
-  if (!Array.isArray(t)) return null;
-  const cols = t.filter(Boolean);
-  return cols.length > 1 ? cols.slice(0, BEAD_BANDS_MAX) : null;
+   TWELVE IS THE CEILING, which is the most anything asks for. It is a stop against a runaway
+   list rather than a recommendation: four is about as many BANDS as a 24px bead can really say,
+   and past that they stop being colours and start being a texture, which is a choice the
+   palette makes and not one this function should make for it. A longer list is cut rather than
+   squeezed, because a colour you cannot see is worse than a name plainly missing.
+
+   Both have to be defs rather than anything CSS: the keepsake PNG rasterises this markup
+   outside the page's stylesheet, exactly as the literal colours do. The charm takes its paint
+   by being handed `--bead` as the url() reference instead of a colour, and that inline custom
+   property is also why this survives the keepsake export. */
+const BEAD_PAINT_MAX = 12;
+const f4 = (v) => (+v).toFixed(4);
+
+// What a tint asks to be painted as, or null for the flat-colour case. A bare array is bands;
+// `{ cut: "wedge", colors: [...] }` is the cake. Anything else, including a one-colour list,
+// falls back to the flat path rather than drawing a def with nothing to blend.
+function beadPaint(t) {
+  const raw = Array.isArray(t) ? { cut: "band", colors: t }
+    : (t && typeof t === "object" && Array.isArray(t.colors)) ? t
+    : null;
+  if (!raw) return null;
+  const cols = raw.colors.filter(Boolean);
+  if (cols.length < 2) return null;
+  return { cut: raw.cut === "wedge" ? "wedge" : "band", cols: cols.slice(0, BEAD_PAINT_MAX) };
 }
+function beadPaintDef(id, paint) {
+  return paint.cut === "wedge" ? wedgePattern(id, paint.cols) : bandGradient(id, paint.cols);
+}
+
 function bandGradient(id, cols) {
   const bands = cols.length;
   // A third of each band's width, split between its two seams. At two colours this lands the
@@ -442,6 +465,24 @@ function bandGradient(id, cols) {
     return `<stop offset="${n(from)}" stop-color="${c}"/><stop offset="${n(to)}" stop-color="${c}"/>`;
   }).join("");
   return `<linearGradient id="${id}" x1="0" y1="0.14" x2="1" y2="0.86">${stops}</linearGradient>`;
+}
+
+// The cake from above. The radius overshoots the box so the corners of a rounded rect are
+// covered, and the first colour also backs the whole tile, so nothing can show through a
+// rounding gap at the rim.
+function wedgePattern(id, cols) {
+  const k = cols.length, R = 1.25;
+  const at = (t) => {
+    const a = t * 2 * Math.PI - Math.PI / 2;
+    return [f4(0.5 + R * Math.cos(a)), f4(0.5 + R * Math.sin(a))];
+  };
+  const slices = cols.map((c, i) => {
+    const [x0, y0] = at(i / k), [x1, y1] = at((i + 1) / k);
+    return `<path d="M0.5,0.5 L${x0},${y0} A${R},${R} 0 0 1 ${x1},${y1} Z" fill="${c}"/>`;
+  }).join("");
+  return `<pattern id="${id}" patternUnits="objectBoundingBox" ` +
+    `patternContentUnits="objectBoundingBox" width="1" height="1">` +
+    `<rect width="1" height="1" fill="${cols[0]}"/>${slices}</pattern>`;
 }
 
 // ---- One pony bead ----
@@ -707,7 +748,7 @@ function buildSingleRowBraceletSVG(results, activeRound, freshIndex, albums, opt
       ` C${n(curlAt + r * 0.82)},${n(y + 17)} ${n(curlAt + r * 0.95)},${n(y + 9)} ${n(curlAt + r)},${n(y + 3)}`;
     tipY = y + 3;
   }
-  let bandDefs = "";               // gradient defs for any multi-colour beads (see bandTint)
+  let paintDefs = "";              // defs for any bead painted in more than one colour
   let svg = cordStack(el, 3.6);
 
   // the knot the whole thing is strung off
@@ -718,12 +759,13 @@ function buildSingleRowBraceletSVG(results, activeRound, freshIndex, albums, opt
     const x = slotX(i), y = yAt(x);
     const answered = results[i];
     const strung = tints[i] || ((albums && albums[i]) ? (colors[albums[i]] || null) : null);
-    // A pair paints the body from a gradient, and `--bead` carries that same paint down to
-    // the dangling charm, so bead and charm are both halves of the same two voices.
-    const bands = bandTint(strung);
-    const albumCol = bands ? `url(#${u}band${i})` : strung;
+    // More than one colour paints the body from a def, and `--bead` carries that same paint
+    // down to the dangling charm, so bead and charm say the same thing at their own sizes.
+    const paint = beadPaint(strung);
+    const flat = typeof strung === "string" ? strung : null;
+    const albumCol = paint ? `url(#${u}paint${i})` : flat;
     const fill = albumCol || "var(--bead)";
-    if (bands) bandDefs += bandGradient(`${u}band${i}`, bands);
+    if (paint) paintDefs += beadPaintDef(`${u}paint${i}`, paint);
     // The trinket takes its tint from an inherited --bead, so the override may only be written
     // when there IS an album colour: `--bead:var(--bead)` is a self-reference, which makes the
     // whole property guaranteed-invalid and drops the trinket to black. A bead without an album
@@ -784,7 +826,7 @@ function buildSingleRowBraceletSVG(results, activeRound, freshIndex, albums, opt
   }
 
   return `<svg viewBox="0 0 ${W} ${BH}" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">` +
-    `<defs>${beadDefs(u)}${bandDefs}<filter id="${u}drop" x="-10%" y="-30%" width="120%" height="185%">` +
+    `<defs>${beadDefs(u)}${paintDefs}<filter id="${u}drop" x="-10%" y="-30%" width="120%" height="185%">` +
     `<feDropShadow dx="1.4" dy="3.4" stdDeviation="2.2" flood-color="${PEN}" flood-opacity="0.28"/></filter></defs>` +
     `<g filter="url(#${u}drop)"><g class="b-strand">${svg}</g></g></svg>`;
 }
@@ -876,7 +918,7 @@ function buildCoiledBraceletSVG(results, activeRound, freshIndex, albums, opts =
     });
   }
 
-  let bandDefs = "";               // gradient defs for any multi-colour beads (see bandTint)
+  let paintDefs = "";              // defs for any bead painted in more than one colour
   // A genuinely new strand starts at a knot. Once pages have been omitted, the prefix
   // cord replaces that beginning and must flow straight into the visible beads without
   // sprouting a second loose tail at the join.
@@ -888,10 +930,11 @@ function buildCoiledBraceletSVG(results, activeRound, freshIndex, albums, opts =
     const answered = sealed ? "sealed" : results[i];
     const strung = sealed ? null
       : (tints[i] || (albums && albums[i] ? (colors[albums[i]] || null) : null));
-    const bands = bandTint(strung);                    // see bandTint, in the single-row builder
-    const albumCol = bands ? `url(#${u}band${i})` : strung;
+    const paint = beadPaint(strung);                   // see beadPaint, in the single-row builder
+    const flat = typeof strung === "string" ? strung : null;
+    const albumCol = paint ? `url(#${u}paint${i})` : flat;
     const fill = sealed ? "var(--paper-edge)" : (albumCol || "var(--bead)");
-    if (bands) bandDefs += bandGradient(`${u}band${i}`, bands);
+    if (paint) paintDefs += beadPaintDef(`${u}paint${i}`, paint);
     const tint = albumCol ? ` style="--bead:${albumCol}"` : "";
     const rot = jitter(i, 1, 9);
     const gx = x - slot.dir * layout.pitch * 0.5;
@@ -941,7 +984,7 @@ function buildCoiledBraceletSVG(results, activeRound, freshIndex, albums, opts =
   return `<svg viewBox="0 0 ${layout.width} ${layout.height}" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false" ` +
     `data-bracelet-layout="${layout.rows.length > 1 ? "coil" : "section"}" data-bracelet-total="${total}" ` +
     `data-visible-start="${layout.visibleStart}" data-visible-count="${layout.visibleCount}">` +
-    `<defs>${beadDefs(u)}${bandDefs}<filter id="${u}drop" x="-15%" y="-18%" width="130%" height="145%">` +
+    `<defs>${beadDefs(u)}${paintDefs}<filter id="${u}drop" x="-15%" y="-18%" width="130%" height="145%">` +
     `<feDropShadow dx="1.4" dy="3.4" stdDeviation="2.2" flood-color="${PEN}" flood-opacity="0.28"/></filter></defs>` +
     `<g filter="url(#${u}drop)">${prefixLabel}<g class="b-strand">${svg}</g></g></svg>`;
 }

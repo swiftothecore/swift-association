@@ -12892,16 +12892,42 @@ function lineupArtists(song) {
   return songArtists(song).filter(Boolean);
 }
 
-/* The bead for one answered lineup page: the colours of whoever it was by, in order. Every
-   artist strings in two (see LINEUP_INKS), so an ordinary page is a two-band bead and a song
-   that sits on two shelves is a four-band one carrying both signatures rather than being
-   handed to whichever name got listed first — all three of the blend's merges are Taylor plus
-   a guest, so a shared page really is half home and should read that way. Four is the bead's
-   ceiling and a two-artist page is exactly at it, which is why nobody here gets a third.
-   An artist with no ink contributes nothing and the page falls through to its era, which is
-   why __dev.lineup.palette() exists to catch one. */
-function lineupBeadTint(artists) {
-  const inks = (artists || []).flatMap((name) => LINEUP_INKS[name] || []);
+/* Home's bead: all twelve studio records at once, cut as a cake rather than banded. Read off
+   the LIVE album palette rather than written down, so the colour-blind setting reaches the
+   lineup the way it reaches every other strand, and in release order, because that is the
+   order the eras happened in and any other order would be decoration. */
+function homeCake() {
+  const colors = albumPalette();
+  return { cut: "wedge", colors: STUDIO_ALBUMS.map((a) => colors[a]).filter(Boolean) };
+}
+
+/* The bead for one answered lineup page.
+
+   A guest strings in two colours (LINEUP_INKS), so an ordinary guest page is a two-band bead
+   and two guests on one song is a four-band one carrying both signatures rather than being
+   handed to whichever name got listed first.
+
+   Home is not a colour at all. Answering alone, she is the whole catalogue: twelve wedges off
+   one centre, an object no guest bead resembles. SHARING a page, she cannot also be twelve —
+   a cake does not merge with a pair, and twelve plus two would ask for fourteen bands of a
+   bead that can say four. So a shared page takes the ONE record of hers the song is on and
+   bands it beside the guest's two. That is the truthful reading rather than a workaround:
+   the cake means all of her, and a shared song is not all of her, it is this one of hers and
+   them. Santa Baby comes out Holiday Collection blue against Ariana's blush and black.
+
+   A guest with no ink contributes nothing and the page falls through to its era, which is why
+   __dev.lineup.palette() exists to catch one. */
+function lineupBeadTint(artists, song) {
+  const names = artists || [];
+  const home = names.includes(HOME_ARTIST);
+  const guests = names.filter((name) => name !== HOME_ARTIST);
+  if (home && !guests.length) return homeCake();
+  const inks = guests.flatMap((name) => LINEUP_INKS[name] || []);
+  if (home) {
+    const record = song && song._record;
+    const col = record && albumPalette()[record];
+    if (col) inks.unshift(col);
+  }
   if (inks.length > 1) return inks;
   return inks[0] || null;
 }
@@ -12934,11 +12960,22 @@ function buildBlendGrouped(cats) {
         );
         if (prior) {
           (prior.song._alsoBy = prior.song._alsoBy || []).push(cat.name);
+          // `record` is the surviving copy's own album, which is what the shared page's bead
+          // is banded in beside the guest's pair (lineupBeadTint). Reported so the dev panel
+          // can prove the stamp landed: a merge with no record here would string a two-band
+          // guest bead and quietly drop home off a page she is half of.
           merged.push({ title: s.title, kept: prior.artist, alsoBy: cat.name,
+                        record: prior.song._record,
                         overlap: +blendOverlap(prior.lyrics, lyr).toFixed(3) });
           continue;
         }
-        const copy = { ...s };
+        // The record this song is really on, kept beside the blended album name the corpus
+        // will stamp over it ("Taylor Swift · Fearless"). A shared page needs it: home is
+        // strung as the whole catalogue when she answers alone, and as THIS ONE record of
+        // hers when she shares a bead with a guest. Unpicking it back out of the display
+        // name would be string surgery on a label; carrying it is a per-song field, which
+        // owes snapshotCorpus nothing (the _normTitleLyric precedent).
+        const copy = { ...s, _record: a.album };
         songs.push(copy);
         if (!byTitle.has(key)) byTitle.set(key, []);
         byTitle.get(key).push({ song: copy, lyrics: lyr, artist: cat.name });
@@ -21679,7 +21716,7 @@ function submitAnswer(song, isTimeout) {
   // record in its catalogue's own palette, a lineup run strings the answered ARTIST. Both are
   // resolved here rather than at render time for the same reason.
   roundBeadTints[round - 1] = gameType === "lineup"
-    ? lineupBeadTint(roundArtists[round - 1])
+    ? lineupBeadTint(roundArtists[round - 1], song || tapAnswer || null)
     : guestBeadTint(song || tapAnswer || null);
   // Same gate, read here because this is where the page's own answer is still in hand:
   // `lyricMatch` is the sung line that resolved it, and the stopwatch above has already banked
@@ -29134,8 +29171,10 @@ function buildDevApi() {
       // reads as a rendering bug rather than as a missing entry in LINEUP_INKS. Also lists
       // what the run just played strung in, so a live strand can be checked against the map.
       palette: () => ({
-        shelf: lineupShelf().map((name) => name + ": " + (LINEUP_INKS[name] || "NO INK")),
-        missing: lineupShelf().filter((name) => !LINEUP_INKS[name]),
+        home: HOME_ARTIST + ": the cake, " + homeCake().colors.length + " records",
+        shelf: lineupShelf().filter((name) => name !== HOME_ARTIST)
+          .map((name) => name + ": " + (LINEUP_INKS[name] || "NO INK")),
+        missing: lineupShelf().filter((name) => name !== HOME_ARTIST && !LINEUP_INKS[name]),
         strung: roundArtists.map((a, i) => (a || []).join(" + ") + " → " +
           JSON.stringify(roundBeadTints[i] || null)),
       }),
