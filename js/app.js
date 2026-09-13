@@ -43,7 +43,7 @@ import {
   INK_FLOURISH_PAGES,
   ALBUM_FOCUS_DIFFS, ALBUM_FOCUS_TARGET,
   GUEST_SHELF_SLOTS, GUESTS, GUESTS_COMING_SOON, GUEST_DIFFS, GUEST_TARGET, TAYLOR_BUCKETS,
-  HOME_ARTIST, BLEND_BUCKETS, SHELF,
+  HOME_ARTIST, BLEND_BUCKETS, SHELF, LINEUP_INKS,
   ADAPT_BUCKETS, ADAPT_LEVELS, ADAPT_MAX_LEVEL, ADAPT_START_LEVEL, ADAPT_PROMO_STREAK,
   CUSTOM_SECONDS_MIN, CUSTOM_SECONDS_MAX, CUSTOM_SECONDS_TYPED_MAX, CUSTOM_HINT_MAX,
   CUSTOM_HINT_TYPED_MAX, CUSTOM_HINT_UNLIMITED, CUSTOM_POOLS,
@@ -12892,6 +12892,18 @@ function lineupArtists(song) {
   return songArtists(song).filter(Boolean);
 }
 
+/* The bead for one answered lineup page: the colour of whoever it was by. A song that sits on
+   two shelves returns the PAIR, which the bracelet strings as one bead split between them
+   (duoTint in bracelet.js) rather than handing the page to whichever name got listed first —
+   all three of the blend's merges are Taylor plus a guest, so a shared page really is half
+   home and should read that way. An artist with no ink returns nothing and falls through to
+   the page's era, which is why __dev.lineup.palette() exists to catch one. */
+function lineupBeadTint(artists) {
+  const inks = (artists || []).map((name) => LINEUP_INKS[name]).filter(Boolean);
+  if (inks.length > 1) return inks.slice(0, 2);
+  return inks[0] || null;
+}
+
 const blendLyricKey = (s) => normalizeLyric(
   Array.isArray(s.sections) ? s.sections.flatMap((x) => x.lines || []).join("\n") : (s.lyrics || "")
 );
@@ -13236,12 +13248,12 @@ function lineupCovered() {
 function endLineup() {
   const covered = lineupCovered();
   showScreen("results");
-  // The strand is still coloured by ALBUM, and a blended album name ("Sabrina Carpenter ·
-  // Short n' Sweet") is in none of Taylor's colour maps, so every bead falls through to the
-  // page's era. Colouring it by ARTIST is the whole reason the mode exists and is its own
-  // piece of work; roundArtists is the input it will read.
+  // The strand, coloured by ARTIST. roundAlbums is still handed over and is still ignored for
+  // every page that has a tint, because a blended album name ("Sabrina Carpenter · Short n'
+  // Sweet") is in none of Taylor's colour maps: the tints are the whole picture here, and the
+  // beads must be passed explicitly because by now the blend has been handed back to Taylor.
   renderFinishedBracelet(roundResults, roundAlbums,
-    { hinted: roundHinted, verseTiers: roundVerseTier });
+    { beadTints: roundBeadTints.slice(), hinted: roundHinted, verseTiers: roundVerseTier });
   setFinalTally(score, [{ v: String(TOTAL_ROUNDS), l: "pages" }]);
   $("keepGoingBtn").style.display = "none";
   $("namePrompt").style.display = "none";
@@ -21658,10 +21670,15 @@ function submitAnswer(song, isTimeout) {
   // Resolved here rather than at render time because the answer's SONG is what carries the
   // colour on a voice-axis guest, and by the results screen the corpus has been handed back
   // to Taylor and the song object is gone.
-  roundBeadTints[round - 1] = guestBeadTint(song || tapAnswer || null);
   // Same reasoning, one mode over: who the answered song belongs to, resolved while the blend
   // is still installed. Empty off a lineup run; see lineupArtists.
   roundArtists[round - 1] = lineupArtists(song || tapAnswer || null);
+  // One slot, two modes, and they can never both be live: a guest run strings the answered
+  // record in its catalogue's own palette, a lineup run strings the answered ARTIST. Both are
+  // resolved here rather than at render time for the same reason.
+  roundBeadTints[round - 1] = gameType === "lineup"
+    ? lineupBeadTint(roundArtists[round - 1])
+    : guestBeadTint(song || tapAnswer || null);
   // Same gate, read here because this is where the page's own answer is still in hand:
   // `lyricMatch` is the sung line that resolved it, and the stopwatch above has already banked
   // the response time the page actually took.
@@ -29110,6 +29127,16 @@ function buildDevApi() {
       // Who the run actually credited, page by page, off roundArtists. The check that the
       // answer-time capture worked, since by the results screen the blend is gone.
       covered: () => ({ artists: lineupCovered(), pages: roundArtists.map((a) => (a || []).join(" + ")) }),
+      // The strand, audited. Reports the ink every artist on the shelf strings in, and the
+      // thing it exists for: an artist with NO ink, which falls through to the page's era and
+      // reads as a rendering bug rather than as a missing entry in LINEUP_INKS. Also lists
+      // what the run just played strung in, so a live strand can be checked against the map.
+      palette: () => ({
+        shelf: lineupShelf().map((name) => name + ": " + (LINEUP_INKS[name] || "NO INK")),
+        missing: lineupShelf().filter((name) => !LINEUP_INKS[name]),
+        strung: roundArtists.map((a, i) => (a || []).join(" + ") + " → " +
+          JSON.stringify(roundBeadTints[i] || null)),
+      }),
       restore: () => { restoreCorpus(); return window.__dev.guest.corpus(); },
       drop: () => { blendCorpus = null; blendMerges = []; return "blend dropped — next build refetches"; },
     },

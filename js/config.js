@@ -368,6 +368,36 @@ export const GUEST_SHELF_SLOTS = 10;
 // notebook renders as "Self-Titled" — one is an album, this is a performer.
 export const HOME_ARTIST = "Taylor Swift";
 
+/* The lineup's bead palette: one colour per ARTIST, which is the whole reason the mode exists.
+   A lineup strand cannot be coloured by record the way every other strand is, because a blended
+   album name ("Sabrina Carpenter · Short n' Sweet") is in none of the colour maps and because
+   "which records did I touch" is not the question the mode asks. Thirteen beads have to come
+   out as a picture of who you played.
+
+   ONE MAP, keyed by the artist name as installCorpus stamps it, rather than a colour field on
+   each GUESTS entry. The only thing that matters about these eight is that they are
+   distinguishable FROM EACH OTHER on one strand, which is a property of the set: scattered
+   across seven entries the clash you cannot see is the one that ships. They are deliberately
+   NOT the pass inks either — those were drawn to sit alone on a hanger, so two of them are the
+   same rose and two more the same sand, which is invisible on the rail and unreadable on a
+   strand. See scripts/lineup/artist-palette.html, where every candidate is dealt through real
+   runs by the game's own renderer.
+
+   Literal #rrggbb only, never a token: the keepsake PNG rasterises the strand outside the
+   page's CSS, so a var() here would export as black. An artist with no colour falls through to
+   the page's era tint, which reads as a rendering bug, so __dev.lineup.palette() flags one. */
+export const LINEUP_INKS = {
+  // Home is the notebook itself, so home is the red rule down the margin of every page.
+  "Taylor Swift": "#b4453a",
+  "Olivia Rodrigo": "#7a55b0",      // violet, straight off the pass: already alone on the wheel
+  "Wicked": "#3f8f63",              // Elphaba's emerald, which frees rose for Ariana
+  "Hannah Montana": "#e2b63d",      // the show's star
+  "Billie Eilish": "#1e2622",       // the near-black of the sleeves, not the acid accent
+  "Ariana Grande": "#d79ab0",       // blush, now that no one else holds pink
+  "Harry Styles": "#5aa8d6",        // the Fine Line sky, off the pass's sand
+  "Sabrina Carpenter": "#7a5033",   // espresso
+};
+
 // Rarity thresholds for the BLENDED lineup corpus (Taylor plus every guest, ~745 songs).
 // MEASURED, not scaled — see scripts/lineup/blend-lab.html, which counts with the game's own
 // wordRegex. Easy rises with the shelf because abundance scales with it; hard and ultra keep
