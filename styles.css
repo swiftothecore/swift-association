@@ -7047,7 +7047,7 @@
   .an-name { font-weight: 700; }
   .an-note {
     font-family: var(--hand); font-size: calc(14px + var(--text-size-adjust)); line-height: 1.15;
-    color: var(--ink-soft); margin-top: 1px;
+    color: var(--ink-soft); margin-top: 1px; text-wrap: balance;
   }
   /* Too narrow to sit beside the podium, so stack it under: still right-aligned, still
      just above the button. */
@@ -12908,4 +12908,3 @@ body.lu-nomiss .lu-miss { visibility: hidden; }
   color: var(--ink-soft);
 }
 .lu-felt-go { display: flex; justify-content: center; padding: 2px 0 14px; }
-
