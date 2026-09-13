@@ -12888,6 +12888,49 @@ body.lu-nomiss .lu-miss { visibility: hidden; }
   fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; opacity: 0.85;
 }
 
+/* ---- THE DEAL ----
+   The hand arrives as a flourish rather than appearing, because this is the one decision the
+   mode asks for and the cards should be seen to be dealt rather than found already on the felt.
+   Two of them, chosen at random per deal: the spread thumbs cards off the top left to right,
+   the ribbon opens all five into an arc, holds so the whole hand is legible as one shape, then
+   collapses into the grid. The back is the same one every time — a deck that changed its back
+   between runs would not be a deck.
+
+   The geometry is handed in as custom properties because only JS can know it: --dx/--dy is the
+   vector from a card's resting slot back up to the deck's mouth, and the ribbon's --fx/--fy/--fr
+   is its seat on the arc. The keyframes own the SHAPE of the move and nothing else, so the
+   timing is retuned in one constant in app.js without touching this block.
+
+   perspective and pointer-events live on .dealing rather than on .lu-felt, so a felt at rest is
+   byte-for-byte the felt that shipped before the flourish existed. */
+.lu-felt.dealing { perspective: 1500px; }
+.lu-felt.dealing .lu-deal { will-change: transform; pointer-events: none; animation-fill-mode: both; animation-timing-function: cubic-bezier(0.2, 0.86, 0.28, 1); }
+.lu-felt.dealing .lu-flip { animation-fill-mode: both; animation-timing-function: cubic-bezier(0.4, 0, 0.25, 1); }
+/* The resting tilt and the hover lift both live on .lu-card, and a card in the air is doing
+   neither. Without this the nth-child rotation composes into the flight and every card lands
+   crooked in a different way than it means to. */
+.lu-felt.dealing .lu-deal .lu-card,
+.lu-felt.dealing .lu-deal .lu-card:hover {
+  transform: none !important;
+  box-shadow: 0 5px 13px rgba(60,50,35,0.15), 0 1px 2px rgba(60,50,35,0.14) !important;
+}
+.lu-flip { position: relative; transform-style: preserve-3d; }
+.lu-flip > .lu-card, .lu-flip > .lu-back { backface-visibility: hidden; -webkit-backface-visibility: hidden; }
+.lu-flip > .lu-back { position: absolute; inset: 0; transform: rotateY(180deg); }
+
+@keyframes lu-turn { from { transform: rotateY(180deg); } to { transform: rotateY(0deg); } }
+@keyframes lu-spread {
+  0%   { transform: translate(var(--dx), var(--dy)) rotate(var(--rz)) scale(0.94); }
+  72%  { transform: translate(0, -7px) rotate(calc(var(--rz) * 0.14)) scale(1.01); }
+  100% { transform: translate(0, 0) rotate(0deg) scale(1); }
+}
+@keyframes lu-ribbon {
+  0%   { transform: translate(var(--dx), var(--dy)) rotate(0deg) scale(0.95); }
+  34%  { transform: translate(var(--fx), var(--fy)) rotate(var(--fr)) scale(1); }
+  64%  { transform: translate(var(--fx), var(--fy)) rotate(var(--fr)) scale(1); }
+  100% { transform: translate(0, 0) rotate(0deg) scale(1); }
+}
+
 .lu-felt-lead {
   font-family: var(--hand); font-size: 21px; color: var(--ink); text-align: center; margin: 10px 0 2px;
 }

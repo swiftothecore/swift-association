@@ -10,7 +10,7 @@ import { launchFlock } from "./messengers.js";
    the rule cannot drift between the board a card is designed on and the felt it is dealt to. */
 import { DECK, byId as goalById } from "./lineupdeck.js";
 import { BUDGET, handCost, conflicts, validateHand, poolForHand, POOL_ORDER } from "./lineuphand.js";
-import { cardFace, SUIT_LOOK, mark as suitMark } from "./lineupcards.js";
+import { cardFace, SUIT_LOOK, mark as suitMark, BACKS, backCard } from "./lineupcards.js";
 import { judge, WON, DEAD } from "./lineupgoals.js";
 import {
   PANEL_ROUTES,
@@ -13094,6 +13094,142 @@ function renderLineupFelt() {
   $("lineupGoBtn").disabled = !lineupKept.length || short > 0;
 }
 
+/* ---------- The deal ----------
+   The hand is DEALT, so it should be seen to be dealt. Two flourishes, picked at random per
+   deal: the spread thumbs the cards off the top in order, the ribbon opens all five into an
+   arc, holds it long enough to read the hand as one shape, and collapses into the grid. They
+   are alternated rather than one being chosen because the deal is the mode's opening beat and
+   a second version costs almost nothing once the geometry is measured.
+
+   ONE back, always. Four are drawn in js/lineupcards.js and this is the first thing in the
+   game that has ever shown one, because nothing else deals a card face-down; a deck that wore
+   a different back each run would stop reading as a deck.
+
+   DEAL_CRAWL is the only timing number. The deal happens once per RUN and not once per page,
+   so it is allowed to be a ceremony, but it is also the thing standing between a player and
+   thirteen pages, and the honest way to price that is to sit through it rather than to argue
+   about it. At 5 the spread runs about 5.3s and the ribbon about 7.3s. Retune here. */
+const DEAL_CRAWL = 5;
+const DEAL_BACK = BACKS.find((b) => b.key === "swirl") || BACKS[0];
+const DEAL_FLOURISHES = ["spread", "ribbon"];
+let dealToken = 0;   // bumped by every deal and by every skip, so a stale timer cannot fire
+
+/* Deal the felt that renderLineupFelt has just laid out. Everything is measured from the
+   RESTING positions and animated backwards from the deck's mouth, rather than laying the
+   cards out somewhere else and moving them in: the felt wraps 3/2 (and reflows on a phone),
+   so the resting grid is the only layout that is reliably correct, and the flight is derived
+   from it. */
+function dealLineupFlourish(kind) {
+  const felt = $("lineupFelt");
+  if (!felt) return;
+  const cards = [...felt.querySelectorAll(".lu-deal")];
+  if (!cards.length) return;
+  const which = DEAL_FLOURISHES.includes(kind) ? kind
+    : DEAL_FLOURISHES[Math.floor(Math.random() * DEAL_FLOURISHES.length)];
+
+  // Reduced motion gets the settled felt and no flight at all. Not a faster deal: the request
+  // is for no movement, and a quick spin is still a spin.
+  if (prefersReducedMotion()) return;
+
+  // AND SO DOES A FELT THAT DOES NOT FIT THE SCREEN. Five cards at their printed size stack one
+  // per row on a phone, so the felt runs about 1460px and only the first card is ever on screen
+  // at once; a flourish there would send three of the five to places the player cannot see, and
+  // watching cards leave and never arrive is worse than no flourish at all. Measured off the
+  // slots rather than off a width breakpoint, so a short desktop window is judged the same way.
+  // The real fix is upstream and is a decision about the FELT: a goal card carries a rule you
+  // read before spending pips on it, and two per row on a phone means 118px cards and 7px type,
+  // so the card cannot simply be shrunk. Until that is settled, a phone deals without ceremony.
+  const seen = cards.every((el) => {
+    const r = el.getBoundingClientRect(), my = r.top + r.height / 2, mx = r.left + r.width / 2;
+    return my > 0 && my < window.innerHeight && mx > 0 && mx < window.innerWidth;
+  });
+  if (!seen) return;
+
+  const mine = ++dealToken;
+  const S = DEAL_CRAWL;
+  felt.classList.add("dealing");
+
+  // Face-down until it lands. The back is only in the DOM for the length of the flight, so a
+  // re-render (which is every single card toggle) never has to know the flourish exists.
+  const flips = cards.map((el) => {
+    const face = el.querySelector(".lu-card");
+    const flip = document.createElement("div");
+    flip.className = "lu-flip";
+    face.replaceWith(flip);
+    flip.appendChild(face);
+    flip.insertAdjacentHTML("beforeend", backCard(DEAL_BACK));
+    return flip;
+  });
+
+  const box = felt.getBoundingClientRect();
+  const ox = box.left + box.width / 2, oy = box.top - 74;   // the deck's mouth, above the felt
+  const cx = box.left + box.width / 2, cy = box.top + box.height / 2;
+  let last = 0;
+
+  // THE FAN HAS TO FIT THE SCREEN, and it is measured to rather than guessed at, because a
+  // rotated card is far wider than a card: at 48 degrees a 176x245 card spans 324px, so a fan
+  // sized by eye on a desk runs off both edges of a phone and makes the whole PAGE scroll
+  // sideways mid-deal. Shrink the arc and its radius together until the outermost card's
+  // rotated bounding box sits inside the viewport. On a desk nothing shrinks and the fan
+  // overhangs the felt into the notebook's margins, which is where it looks best.
+  const cw = cards[0].offsetWidth || 176, ch = cards[0].offsetHeight || 245;
+  const half = window.innerWidth / 2 - 12;
+  let spread = Math.min(96, 22 * cards.length), R = 300;
+  for (let k = 0; k < 24; k++) {
+    const A = spread / 2 * Math.PI / 180;
+    if (R * Math.sin(A) + (cw * Math.cos(A) + ch * Math.sin(A)) / 2 <= half) break;
+    spread *= 0.9; R *= 0.9;
+  }
+
+  cards.forEach((el, i) => {
+    const r = el.getBoundingClientRect();
+    const mx = r.left + r.width / 2, my = r.top + r.height / 2;
+    el.style.setProperty("--dx", (ox - mx).toFixed(1) + "px");
+    el.style.setProperty("--dy", (oy - my).toFixed(1) + "px");
+    el.style.setProperty("--rz", (Math.random() * 18 - 9).toFixed(2) + "deg");
+    if (which === "ribbon") {
+      // A seat on the arc struck above, about a pivot below the felt, which is how a fanned
+      // hand actually hangs.
+      const t = cards.length === 1 ? 0.5 : i / (cards.length - 1);
+      const ang = (t - 0.5) * spread;
+      el.style.setProperty("--fx", (cx + R * Math.sin(ang * Math.PI / 180) - mx).toFixed(1) + "px");
+      el.style.setProperty("--fy", (cy + 120 - R * Math.cos(ang * Math.PI / 180) - my).toFixed(1) + "px");
+      el.style.setProperty("--fr", ang.toFixed(1) + "deg");
+    }
+
+    let dur, delay, flipAt, flipDur = 300 * S;
+    if (which === "spread") { dur = 420 * S; delay = i * 78 * S; flipAt = delay + dur * 0.72 + i * 34 * S; }
+    else { dur = 1350 * S; delay = i * 26 * S; flipAt = delay + dur * 0.22; }
+    el.style.animation = `lu-${which} ${dur}ms both`;
+    el.style.animationDelay = delay + "ms";
+    flips[i].style.animation = `lu-turn ${flipDur}ms both`;
+    flips[i].style.animationDelay = flipAt + "ms";
+    last = Math.max(last, delay + dur, flipAt + flipDur);
+  });
+
+  // Snap to the settled felt: the end of the flight, and also what a click buys you. The deal
+  // is long on purpose and a player who has seen it should never have to sit through it again.
+  const finish = () => {
+    if (mine !== dealToken) return;
+    dealToken++;
+    document.removeEventListener("pointerdown", finish, true);
+    document.removeEventListener("keydown", finish, true);
+    clearTimeout(timer);
+    felt.classList.remove("dealing");
+    cards.forEach((el, i) => {
+      el.style.animation = "";
+      el.style.animationDelay = "";
+      const flip = flips[i];
+      if (!flip.isConnected) return;
+      const face = flip.querySelector(".lu-card");
+      if (face) flip.replaceWith(face);
+    });
+  };
+  const timer = setTimeout(finish, last + 60);
+  document.addEventListener("pointerdown", finish, true);
+  document.addEventListener("keydown", finish, true);
+}
+
 function toggleLineupCard(id) {
   if (!lineupDealt.includes(id)) return;
   if (lineupKept.includes(id)) lineupKept = lineupKept.filter((x) => x !== id);
@@ -13115,6 +13251,9 @@ async function startLineupRun(diffId) {
   lineupNamed = [];
   renderLineupFelt();
   showScreen("lineup");
+  // One frame late, because the flight is measured off the RESTING slots and the felt has not
+  // been laid out until the screen is active.
+  requestAnimationFrame(() => dealLineupFlourish());
 }
 let lineupDiff = "medium";   // the difficulty the felt was opened at, spent by beginLineupRun
 
@@ -29152,7 +29291,17 @@ function buildDevApi() {
         lineupNamed = [];
         renderLineupFelt();
         showScreen("lineup");
+        requestAnimationFrame(() => dealLineupFlourish());
         return lineupDealt;
+      },
+      // Replay the deal on the felt that is already up, which is the only way to watch one
+      // flourish twice: a live deal picks between them at random, so waiting for the one you
+      // wanted to check is a coin flip. No argument re-deals whatever chance hands you.
+      flourish: (kind) => {
+        if ($("lineupFelt") && !$("lineupFelt").querySelector(".lu-deal")) return "no hand on the felt";
+        renderLineupFelt();
+        requestAnimationFrame(() => dealLineupFlourish(kind));
+        return kind ? "dealing the " + kind : "dealing, at random";
       },
       // The live verdict on the hand, which is the check that the judge is being fed the run
       // it thinks it is: pages in, a state per card out.
