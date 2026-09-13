@@ -8530,12 +8530,11 @@ function revealOnlyHere() {
   else body.insertAdjacentHTML("beforeend", html);
 }
 
-/* The proof of the page, on the round screen's own lyric card: the song in small caps with its
-   album tag, the real lyric written out large, and an "in context" peek into the lines either
-   side of it. Two of the three games need it, and for opposite reasons — Spot the Slip's page
-   shows a DOCTORED line, so the card is where the line goes right (highlighting the real word
-   the impostor stood in for), and Name That Song's page shows a real line but no song, so the
-   card is the answer.
+/* The proof of the page, using the round screen's lyric-card furniture. Spot the Slip needs the
+   complete card: its page shows a DOCTORED line, so the reveal is where the line goes right
+   (highlighting the real word the impostor stood in for). Name That Song already has the real
+   line on the page, so its answer card adds only the missing song and album attribution plus the
+   context control. Reprinting the line there would make the same lyric compete with itself.
    Redacted gets no card either, and for Sing It Back's reason: its reveal peels the whole verse
    and writes the song's name and album at the top of it, so a card underneath would quote one
    of the lines already sitting in full an inch above itself — which is exactly what it did
@@ -8558,6 +8557,13 @@ function bonusAnswerCard() {
       bonusGame.id === "then-what" || bonusGame.id === "running-order" || isRuthlessRun()) return "";
   if (bonusGame.id === "sing-it-back")
     return `<div class="bg-ctx">${lyricCardContext(p.song, p.answer, p.line)}</div>`;
+  if (bonusGame.id === "name-that-song") {
+    const color = albumColor(p.song.album) || "var(--ink-soft)";
+    const headingId = nextLyricRevealId("title");
+    return `<article class="lyric-card" style="--album-color:${color}" aria-labelledby="${headingId}">` +
+      `<div class="song-title" id="${headingId}">${escapeHtml(censor(p.song.title))}${albumTag(p.song, color)}</div>` +
+      `${lyricCardContext(p.song, null, p.line)}</article>`;
+  }
   const slip = bonusGame.id === "spot-the-slip";
   return lyricCard(p.song, slip ? p.realWord : null, false, slip ? p.realLine : p.line, true);
 }
