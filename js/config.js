@@ -368,6 +368,14 @@ export const GUEST_SHELF_SLOTS = 10;
 // notebook renders as "Self-Titled" — one is an album, this is a performer.
 export const HOME_ARTIST = "Taylor Swift";
 
+// Rarity thresholds for the BLENDED lineup corpus (Taylor plus every guest, ~745 songs).
+// MEASURED, not scaled — see scripts/lineup/blend-lab.html, which counts with the game's own
+// wordRegex. Easy rises with the shelf because abundance scales with it; hard and ultra keep
+// Taylor's ranges untouched because scarcity does NOT — three songs is three songs whether the
+// shelf holds 287 or 745. Do not "fix" this by matching Taylor's bucket shares: that slides
+// ultra out to a window of 18-54 songs, which is not rare, it is just a different word.
+export const BLEND_BUCKETS = { easy: 38, hard: [3, 9], ultra: [1, 3] };
+
 export const GUESTS = [
   {
     id: "olivia-rodrigo",

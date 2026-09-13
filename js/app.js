@@ -35,7 +35,7 @@ import {
   INK_FLOURISH_PAGES,
   ALBUM_FOCUS_DIFFS, ALBUM_FOCUS_TARGET,
   GUEST_SHELF_SLOTS, GUESTS, GUESTS_COMING_SOON, GUEST_DIFFS, GUEST_TARGET, TAYLOR_BUCKETS,
-  HOME_ARTIST,
+  HOME_ARTIST, BLEND_BUCKETS,
   ADAPT_BUCKETS, ADAPT_LEVELS, ADAPT_MAX_LEVEL, ADAPT_START_LEVEL, ADAPT_PROMO_STREAK,
   CUSTOM_SECONDS_MIN, CUSTOM_SECONDS_MAX, CUSTOM_SECONDS_TYPED_MAX, CUSTOM_HINT_MAX,
   CUSTOM_HINT_TYPED_MAX, CUSTOM_HINT_UNLIMITED, CUSTOM_POOLS,
@@ -12607,6 +12607,10 @@ async function loadData() {
   if (!wordsRes.ok || !songsRes.ok) throw new Error("Failed to fetch data files");
   const words = await wordsRes.json();
   const grouped = await songsRes.json();
+  // Kept for the blended lineup corpus, which needs Taylor's catalogue in its ORIGINAL
+  // grouped shape (installCorpus flattens); re-fetching a precached file would work but
+  // would be a second copy of the same bytes.
+  taylorGrouped = grouped; taylorWords = words;
   taylorCorpus = installCorpus(grouped, words, { aliases: true, artist: HOME_ARTIST });
   // Dub the desk cassette. It is handed Taylor's songs once and never re-pointed,
   // so a guest run leaves her tape sitting on the desk where it belongs.
@@ -12626,6 +12630,7 @@ async function loadData() {
    added to loadData, it must be added to BOTH or a guest run will leave a stale Taylor index
    sitting beside Olivia's songs. That is the whole contract; there is nothing else to it. */
 let taylorCorpus = null;              // the main catalogue, snapshotted at load
+let taylorGrouped = null, taylorWords = null;   // her raw file shape, for the blend to fold in
 const guestCorpora = new Map();       // guest id -> its built corpus, one build per session
 let activeCorpus = "taylor";          // which catalogue the globals currently hold
 
@@ -12799,6 +12804,101 @@ function installCorpus(grouped, words, opts = {}) {
 // never the bare word itself. Checked against the whole catalogue: of 210,371 word/song
 // pairs there is not one where strict matches and lenient does not, on lyrics or titles.
 // Lenient misses 94% of pairs, so that line skips almost every strict scan there was.
+
+/* ---------- The blended lineup corpus ----------
+   Taylor and every guest as ONE corpus, which is the thing the guest shelf deliberately
+   refuses and the lineup mode is built on. It is a corpus swap exactly like a guest's, so
+   it goes through installCorpus/snapshotCorpus/restoreCorpus and owes the same contract.
+
+   Three things here are not obvious and cost real time to rediscover:
+
+   1. ALBUM NAMES ARE QUALIFIED with the artist. "Collaborations" is the name of a record in
+      two different catalogues, and albumWordMap keys on the album string, so unqualified
+      names would silently merge two artists' records into one. Qualifying every album rather
+      than only the colliding ones also makes it impossible to lean on Taylor's album maps
+      (ALBUM_ERA, ALBUM_COLORS, STUDIO_ALBUMS) from inside a blend, which is right: a blended
+      run is coloured by ARTIST, never by her eras.
+   2. THE DEDUPE IS CONSERVATIVE. A song can sit on two shelves — The Life of a Showgirl is on
+      Taylor's and Sabrina's, Santa Baby on Taylor's and Ariana's — and in a blend it would be
+      dealt twice and counted twice, inflating every rarity figure it touches. Songs merge when
+      their lyrics are identical, OR when they share a title AND their words overlap by 70%+.
+      The title gate is what makes the fuzzy half safe: songs with different titles never merge,
+      so a threshold can never eat an unrelated song. Ariana's Last Christmas is a rework at 24%
+      and stays separate, correctly — it keeps the chorus but writes its own verses.
+   3. A MERGED SONG CREDITS BOTH ARTISTS, via _alsoBy. Every goal card counts artists, so a
+      shared song has to count for each of them; songArtists() is the one way to ask. */
+const blendFiles = () => [
+  Promise.resolve({ name: HOME_ARTIST, albums: taylorGrouped, words: taylorWords }),
+  ...GUESTS.map((g) => loadGuest(g.id).then((cat) => ({
+    name: g.name, albums: cat.albums || [], words: cat.words || [],
+  }))),
+];
+
+// Who a song counts for. One song, possibly two artists — see the dedupe above.
+function songArtists(s) {
+  return s._alsoBy ? [s.artist, ...s._alsoBy] : [s.artist];
+}
+
+const blendLyricKey = (s) => normalizeLyric(
+  Array.isArray(s.sections) ? s.sections.flatMap((x) => x.lines || []).join("\n") : (s.lyrics || "")
+);
+function blendOverlap(a, b) {
+  const A = new Set(a.split(" ").filter(Boolean));
+  const B = new Set(b.split(" ").filter(Boolean));
+  if (!A.size && !B.size) return 1;
+  let hit = 0;
+  for (const t of A) if (B.has(t)) hit++;
+  return hit / (A.size + B.size - hit);
+}
+
+// Fold the catalogues into one grouped list, qualifying albums and merging shared songs.
+// Returns the merges it made so __dev.lineup.dupes() can show its working.
+function buildBlendGrouped(cats) {
+  const byTitle = new Map();          // normalized title -> [{ song, lyrics, artist }]
+  const grouped = [], merged = [];
+  for (const cat of cats) {
+    for (const a of cat.albums) {
+      const songs = [];
+      for (const s of a.songs) {
+        const lyr = blendLyricKey(s);
+        const key = normalizeTitle(s.title);
+        const prior = (byTitle.get(key) || []).find(
+          (p) => p.artist !== cat.name && (p.lyrics === lyr || blendOverlap(p.lyrics, lyr) >= 0.7)
+        );
+        if (prior) {
+          (prior.song._alsoBy = prior.song._alsoBy || []).push(cat.name);
+          merged.push({ title: s.title, kept: prior.artist, alsoBy: cat.name,
+                        overlap: +blendOverlap(prior.lyrics, lyr).toFixed(3) });
+          continue;
+        }
+        const copy = { ...s };
+        songs.push(copy);
+        if (!byTitle.has(key)) byTitle.set(key, []);
+        byTitle.get(key).push({ song: copy, lyrics: lyr, artist: cat.name });
+      }
+      if (songs.length) grouped.push({ album: cat.name + " · " + a.album, artist: cat.name, songs });
+    }
+  }
+  return { grouped, merged };
+}
+
+let blendCorpus = null;               // built once per session, like a guest's
+let blendMerges = [];                 // what the dedupe folded together, for the dev panel
+
+// Build the blend and INSTALL it into the globals (installCorpus installs as it goes; see
+// there). Network-first like the guest files it pulls, and it pulls all of them at once, so
+// a caller on a game screen wants a load beat rather than a stall.
+async function installBlendCorpus() {
+  if (blendCorpus) { applyCorpus(blendCorpus); activeCorpus = "lineup"; return blendCorpus; }
+  const cats = await Promise.all(blendFiles());
+  const { grouped, merged } = buildBlendGrouped(cats);
+  blendMerges = merged;
+  const words = [...new Set(cats.flatMap((c) => c.words))].sort();
+  blendCorpus = installCorpus(grouped, words, { aliases: false, buckets: BLEND_BUCKETS });
+  activeCorpus = "lineup";
+  return blendCorpus;
+}
+
 function indexPlayableWords(cfg = TAYLOR_BUCKETS) {
   const MIN = RECENT_WINDOW + 8;
   const easy = [], hard = [], ultra = [];
@@ -28544,6 +28644,27 @@ function buildDevApi() {
         STUDIO_ALBUMS.forEach((a) => window.__dev.album.win(a, opts));
         return loadAlbumFocus();
       },
+    },
+    // The blended lineup corpus: Taylor and every guest at once, which is the thing the
+    // guest shelf refuses and this mode is built on. `build` installs it (network-first,
+    // pulling every guest file), `corpus` is the same report as guest.corpus but will show
+    // several artists, `dupes` shows what the dedupe folded together and why, and `restore`
+    // hands the globals back to Taylor. If `corpus` ever reports a "(unattributed)" count or
+    // a song total far from the sum of the catalogues, the fold is wrong.
+    lineup: {
+      build: () => installBlendCorpus().then(() => window.__dev.lineup.corpus()),
+      corpus: () => ({
+        active: activeCorpus, songs: allSongs.length, words: playableWords.length,
+        artists: Object.entries(allSongs.reduce((m, s) => {
+          for (const a of songArtists(s)) m[a || "(unattributed)"] = (m[a || "(unattributed)"] || 0) + 1;
+          return m;
+        }, {})).sort((x, y) => y[1] - x[1]),
+        buckets: Object.fromEntries(Object.entries(wordBuckets).map(([k, v]) => [k, v.length])),
+        shared: allSongs.filter((s) => s._alsoBy).length,
+      }),
+      dupes: () => blendMerges,
+      restore: () => { restoreCorpus(); return window.__dev.guest.corpus(); },
+      drop: () => { blendCorpus = null; blendMerges = []; return "blend dropped — next build refetches"; },
     },
     // Guest shelf. Two halves: the FETCH (a catalogue is read out of its file, so `counts` /
     // `inspect` prove one parses and report exactly what a pass and a round would draw, and
