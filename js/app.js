@@ -35,7 +35,7 @@ import {
   INK_FLOURISH_PAGES,
   ALBUM_FOCUS_DIFFS, ALBUM_FOCUS_TARGET,
   GUEST_SHELF_SLOTS, GUESTS, GUESTS_COMING_SOON, GUEST_DIFFS, GUEST_TARGET, TAYLOR_BUCKETS,
-  HOME_ARTIST, BLEND_BUCKETS,
+  HOME_ARTIST, BLEND_BUCKETS, SHELF,
   ADAPT_BUCKETS, ADAPT_LEVELS, ADAPT_MAX_LEVEL, ADAPT_START_LEVEL, ADAPT_PROMO_STREAK,
   CUSTOM_SECONDS_MIN, CUSTOM_SECONDS_MAX, CUSTOM_SECONDS_TYPED_MAX, CUSTOM_HINT_MAX,
   CUSTOM_HINT_TYPED_MAX, CUSTOM_HINT_UNLIMITED, CUSTOM_POOLS,
@@ -231,6 +231,12 @@ let roundBeadTints = []; // per-round literal bead colour, or a pair for a two-v
                          // rather than by ALBUM_COLORS, and a voice-axis guest has no album to
                          // colour by at all. Null everywhere else, so every other strand still
                          // strings its answers' albums exactly as before (see guestBeadTint).
+// Per-round artists credited with the answered song, and EMPTY on every run but a lineup one.
+// Filled at answer time beside roundAlbums for the reason roundBeadTints is (see there): by the
+// results screen the blended corpus has been handed back to Taylor and the song object is gone.
+// An array per page rather than a name, because a song that sits on two shelves counts for both
+// of them: the goal deck counts artists, so a shared song has to answer for each (songArtists).
+let roundArtists = [];
 let roundWords = [];     // per-round prompt word (for the lifetime tally / Nemesis Word)
 let roundSongs = [];     // per-round answered song title, null on a miss (lifetime tally)
 let roundHinted = [];    // per-round true if a hint was taken (the count rides on the record)
@@ -259,7 +265,7 @@ let runNemesisNoted = false;
 let hintTier = 0;        // hints revealed this round (0..3); reset each round
 let roundHintSong = null;// the valid song this round's hints zoom in on
 let hintUrgeTimer = null;// idle nudge timer for Relaxed (no clock)
-let gameType = "classic";       // "classic" (fixed 13) | "infinite" (until lives run out) | "daily" | "challenge" | "album" | "custom" (player-authored levers, sandboxed) | "guest" (another artist's catalogue, sandboxed) | "ruthless" (ten timed pages on a section lens, sandboxed)
+let gameType = "classic";       // "classic" (fixed 13) | "infinite" (until lives run out) | "daily" | "challenge" | "album" | "custom" (player-authored levers, sandboxed) | "guest" (another artist's catalogue, sandboxed) | "ruthless" (ten timed pages on a section lens, sandboxed) | "lineup" (Taylor and every guest on one blended corpus, sandboxed)
 let customPreset = null;        // Custom mode: the active preset {id,name,mode} while gameType === "custom"
 let customSessionLen = 0;       // Custom mode: rounds this run (finite runs). 0 while running an infinite custom run
 let focusAlbum = null;          // Album Focus: the locked-in studio album while gameType === "album"
@@ -12113,6 +12119,13 @@ function buildCardMeta() {
     stats.push({ v: (guest && guest.name) || "Guest", l: "the catalogue" });
     stats.push({ v: currentMode.label, l: "difficulty" });
     stats.push({ v: correct + "/" + TOTAL_ROUNDS, l: "strung" });
+  } else if (gameType === "lineup") {
+    const covered = lineupCovered().length;
+    title = "everybody, on one strand";
+    stats.push({ v: "The lineup", l: "mode" });
+    stats.push({ v: covered + "/" + SHELF, l: "artists" });
+    stats.push({ v: currentMode.label, l: "difficulty" });
+    stats.push({ v: correct + "/" + TOTAL_ROUNDS, l: "strung" });
   } else if (gameType === "ruthless" && ruthlessCard) {
     // Read off the run's own snapshot rather than roundResults, which a Ruthless run never
     // touches: the bonus loop keeps its pages in bonusLog and would otherwise hand the card
@@ -12839,6 +12852,15 @@ function songArtists(s) {
   return s._alsoBy ? [s.artist, ...s._alsoBy] : [s.artist];
 }
 
+// The artists to credit an answered page to, and EMPTY on every run that isn't a lineup one.
+// Guarded on the gameType rather than on the song carrying an `artist` field, because every
+// song does now: installCorpus stamps one on all of them, so Taylor's own catalogue would
+// otherwise fill roundArtists on a classic run with thirteen copies of her name.
+function lineupArtists(song) {
+  if (gameType !== "lineup" || !song) return [];
+  return songArtists(song).filter(Boolean);
+}
+
 const blendLyricKey = (s) => normalizeLyric(
   Array.isArray(s.sections) ? s.sections.flatMap((x) => x.lines || []).join("\n") : (s.lyrics || "")
 );
@@ -12897,6 +12919,91 @@ async function installBlendCorpus() {
   blendCorpus = installCorpus(grouped, words, { aliases: false, buckets: BLEND_BUCKETS });
   activeCorpus = "lineup";
   return blendCorpus;
+}
+
+/* ---------- The lineup run ----------
+   Thirteen pages dealt from Taylor AND every guest at once. The corpus dance is the guest
+   shelf's, for the guest shelf's reasons: resetRunState hands the globals back to Taylor at
+   the top of every start path, so the blend is re-applied immediately AFTER it and that order
+   is load-bearing.
+
+   No way in yet, deliberately. Nothing on the front page reaches this, and
+   `__dev.lineup.play()` is the only caller, because the hand of goal cards the mode is FOR
+   is not built, and a
+   lineup run without it is just an easier classic run on a bigger catalogue. */
+async function startLineupRun(diffId) {
+  const mode = MODES[GUEST_DIFFS.includes(diffId) ? diffId : "medium"];
+  // The blend pulls every guest file at once and they are network-first on purpose, so the
+  // first run of a session waits on eight fetches. A toast is the honest minimum and not the
+  // finished answer: the mode wants a real load beat before it has a way in.
+  if (!blendCorpus) notifyNote("the lineup", "pulling every catalogue onto one shelf…");
+  let corpus;
+  try { corpus = await installBlendCorpus(); }
+  catch (e) { notifyNote("the lineup", "couldn't fetch the catalogues — check your connection"); return; }
+
+  gameType = "lineup";
+  currentMode = { ...mode };               // clone — never mutate the shared MODES object
+  resetRunState();
+  applyCorpus(corpus);                     // AFTER resetRunState, which just restored Taylor
+  activeCorpus = "lineup";
+  focusDifficulty = currentMode.id;
+  applyInputHints();
+  updateTagline();
+  $("pageTotalWrap").style.display = "";
+  $("pageTotal").textContent = TOTAL_ROUNDS;
+  showScreen("game");
+  nextRound();
+}
+
+// The distinct artists a finished run actually covered, in the order they first turned up.
+// Read off roundArtists, which was filled page by page while the blend was installed.
+function lineupCovered() {
+  const seen = [];
+  for (const names of roundArtists) {
+    for (const name of names || []) if (name && !seen.includes(name)) seen.push(name);
+  }
+  return seen;
+}
+
+// A lineup run's own end, sandboxed the way endCustom and endGuest are. It writes NOTHING:
+// there is no board for it yet, and a blended catalogue must never reach the lifetime tally,
+// the difficulty boards or the history: those are Taylor's, and two thirds of what this run
+// dealt is not hers. markRunBreadth is skipped for the same reason the bonus shelf skips it:
+// the breadth ladder is a main-game charm and this is not a main-game run.
+function endLineup() {
+  const covered = lineupCovered();
+  showScreen("results");
+  // The strand is still coloured by ALBUM, and a blended album name ("Sabrina Carpenter ·
+  // Short n' Sweet") is in none of Taylor's colour maps, so every bead falls through to the
+  // page's era. Colouring it by ARTIST is the whole reason the mode exists and is its own
+  // piece of work; roundArtists is the input it will read.
+  renderFinishedBracelet(roundResults, roundAlbums,
+    { hinted: roundHinted, verseTiers: roundVerseTier });
+  setFinalTally(score, [{ v: String(TOTAL_ROUNDS), l: "pages" }]);
+  $("keepGoingBtn").style.display = "none";
+  $("namePrompt").style.display = "none";
+  $("verseAnthology").style.display = "none";
+  hideNewBestBanner();
+
+  document.querySelector("#screen-results .podium-title").textContent = "the lineup";
+  const names = covered.length
+    ? covered.map((n) => escapeHtml(n)).join(" · ")
+    : "nobody: not a page landed";
+  const status = `<div class="chall-result-status">${covered.length} of ${SHELF} on one strand</div>`;
+  const meta = `<div class="chall-result-meta">${names}</div>`;
+  $("resultPodium").innerHTML = status + meta +
+    `<div class="chall-result-actions">` +
+      `<button id="replayLineup" class="btn-primary">replay ↺</button>` +
+    `</div>`;
+  $("replayLineup").addEventListener("click", () => startLineupRun(focusDifficulty));
+
+  // Hand the globals back now the run's own numbers are on screen, exactly as endGuest does:
+  // everything above reads the run's arrays, and every screen the player can now reach is
+  // Taylor's again.
+  restoreCorpus();
+
+  renderResultRecap();
+  renderSkillsRecap();
 }
 
 function indexPlayableWords(cfg = TAYLOR_BUCKETS) {
@@ -13024,6 +13131,10 @@ function updateTagline() {
     // instead is the only thing worth saying: the clock is not the limit, it is the result.
     : gameType === "ruthless"
     ? `${BONUS_ROUNDS} pages · the clock is the score`
+    // The one run where "name the song" means anybody's song, which the guest tagline says one
+    // name at a time and this one cannot: there are eight of them.
+    : gameType === "lineup"
+    ? `${TOTAL_ROUNDS} pages · ${clock} · everybody at once`
     : `${TOTAL_ROUNDS} pages · ${clock} · ${currentMode.label} difficulty`;
   // Without this a dark run is indistinguishable from the base challenge: same tagline, same
   // page count, just quietly harder numbers. The eclipse + "dark side" is the only thing on
@@ -13582,6 +13693,7 @@ function resetRunState() {
   roundResults = [];
   roundAlbums = [];
   roundBeadTints = [];
+  roundArtists = [];
   roundWords = [];
   roundSongs = [];
   roundHinted = [];
@@ -13737,7 +13849,7 @@ function foldRunProgress() {
   // Sandboxed modes never fold into difficulty stats. Daily is also skipped: it resumes
   // after a refresh/exit and folds its tally in full at completion (endGame), so folding
   // a partial here would double-count the same rounds once the run is finished.
-  if (gameType === "challenge" || gameType === "album" || gameType === "daily" || gameType === "custom" || gameType === "guest" || gameType === "ruthless") { runFolded = true; return; }
+  if (gameType === "challenge" || gameType === "album" || gameType === "daily" || gameType === "custom" || gameType === "guest" || gameType === "ruthless" || gameType === "lineup") { runFolded = true; return; }
   runFolded = true;
   const partialScore = gameType === "infinite" ? roundResults.length : score;
   updateStats(partialScore, boardMode(), gameMaxStreak, false);
@@ -14662,7 +14774,7 @@ async function startGuestRun(id, diffId) {
   if (!corpus) {
     let cat;
     try { cat = await loadGuest(id); }
-    catch (e) { toast("couldn't fetch that catalogue — check your connection"); return; }
+    catch (e) { notifyNote("guest shelf", "couldn't fetch that catalogue — check your connection"); return; }
     // Building installs into the globals as it goes (see installCorpus), so this line already
     // leaves the guest's catalogue live; the assignment below just remembers it for the replay.
     corpus = installCorpus(cat.albums || [], cat.words || [],
@@ -21256,6 +21368,9 @@ function submitAnswer(song, isTimeout) {
   // colour on a voice-axis guest, and by the results screen the corpus has been handed back
   // to Taylor and the song object is gone.
   roundBeadTints[round - 1] = guestBeadTint(song || tapAnswer || null);
+  // Same reasoning, one mode over: who the answered song belongs to, resolved while the blend
+  // is still installed. Empty off a lineup run; see lineupArtists.
+  roundArtists[round - 1] = lineupArtists(song || tapAnswer || null);
   // Distinct albums the prompt word *could* have been answered from — the Discography skill
   // normalises breadth against this, so a word that only lives in one album never penalises.
   roundAnswerAlbums[round - 1] = [...new Set(currentSongs.map((s) => s.album).filter(Boolean))];
@@ -22352,6 +22467,7 @@ function endGame() {
   if (gameType === "album") { endAlbumFocus(); return; }
   if (gameType === "custom") { endCustom(); return; }
   if (gameType === "guest") { endGuest(); return; }
+  if (gameType === "lineup") { endLineup(); return; }
 
   const isInfinite = gameType === "infinite";
   const isDaily = gameType === "daily";
@@ -28663,6 +28779,13 @@ function buildDevApi() {
         shared: allSongs.filter((s) => s._alsoBy).length,
       }),
       dupes: () => blendMerges,
+      // The only way into the mode. There is no entry point on the front page yet, on purpose:
+      // the hand of goal cards the run is built around is not written, and without it a lineup
+      // run is an easier classic run on a bigger catalogue.
+      play: (diff) => { startLineupRun(diff); return "dealing the lineup…"; },
+      // Who the run actually credited, page by page, off roundArtists. The check that the
+      // answer-time capture worked, since by the results screen the blend is gone.
+      covered: () => ({ artists: lineupCovered(), pages: roundArtists.map((a) => (a || []).join(" + ")) }),
       restore: () => { restoreCorpus(); return window.__dev.guest.corpus(); },
       drop: () => { blendCorpus = null; blendMerges = []; return "blend dropped — next build refetches"; },
     },

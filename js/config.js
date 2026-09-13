@@ -458,6 +458,12 @@ export const GUESTS_COMING_SOON = [
   { id: "gracie-abrams", name: "Gracie Abrams" },
   { id: "miley-cyrus", name: "Miley" },
 ];
+// Everybody the lineup deals from: every playable guest, plus home. It lives here rather than
+// in js/lineupdeck.js so that app.js can ask for it without pulling the whole goal deck into
+// every page load, and it is READ LIVE rather than written down, because "every artist on the
+// shelf" has to mean the shelf as it is the day the card is dealt, which is also why no card
+// counting artists can ever be a charm.
+export const SHELF = GUESTS.length + 1;
 // A guest is played at a chosen difficulty, from the same ladder Album Focus offers:
 // deliberately the same list, since a guest round IS Album Focus pointed at another corpus.
 export const GUEST_DIFFS = ALBUM_FOCUS_DIFFS;

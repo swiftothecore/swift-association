@@ -26,14 +26,15 @@
              cards can be impossible together without ever naming
              each other, so the arithmetic matters more than bans.
    ============================================================ */
-import { GUESTS } from "./config.js";
+import { SHELF } from "./config.js";
 import { PAGES } from "./lineuphand.js";
 
-/* How many catalogues are playable, READ LIVE rather than written down. Full Lineup
-   and Round The Table are "every artist on the shelf", so a hardcoded count would
-   quietly change what those cards mean the day a guest is added — which is also why
-   neither can ever be a charm. */
-export const SHELF = GUESTS.length + 1;      // the guests, plus home
+/* How many catalogues are playable, READ LIVE rather than written down (see config.js,
+   which owns it so the game can read it without loading the deck). Full Lineup and Round
+   The Table are "every artist on the shelf", so a hardcoded count would quietly change
+   what those cards mean the day a guest is added — which is also why neither can ever be
+   a charm. Re-exported because the boards import the deck, not the config. */
+export { SHELF };
 
 export const SUITS = {
   spades:   { label: "Lockouts",  gloss: "what you may not do",
