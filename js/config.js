@@ -399,13 +399,21 @@ export const HOME_ARTIST = "Taylor Swift";
    page's CSS, so a var() here would export as black. An artist with no colours falls through
    to the page's era tint, which reads as a rendering bug, so __dev.lineup.palette() flags one. */
 export const LINEUP_INKS = {
-  // Home is the notebook, not a record. She is the only artist here who cannot be summed up by
-  // one sleeve — sixteen of them, each with its own colour already spoken for by the album
-  // maps — so home strings in the two inks the BOOK is made of: the pencil every page is
-  // written in, and the gold of the one lit word in the masthead. The margin red was the first
-  // answer and the wrong one: red is the furniture of the page rather than a voice on it, and
-  // it sat in the same corner of the wheel as Sabrina's espresso.
-  "Taylor Swift": ["#4a5058", "#c08b2c"],
+  // Red and Speak Now. She is the one artist no single sleeve can stand for, with twelve studio
+  // records each already carrying a colour, so home had to be an idea rather than a cover: the
+  // reddest red in the maps against the purple beside it. The margin red ALONE was the first
+  // answer and the wrong one, because red on its own is the furniture of the page rather than
+  // a voice on it — the rule is already drawn down every sheet the strand lies on. With the
+  // purple it stops being the page and starts being her. Three purples now sit on this shelf
+  // and all three hold apart, because hers is the only one that arrives behind a red.
+  //
+  // Two other answers are drawn on scripts/lineup/artist-palette.html and are a line away.
+  // Home can be strung in all TWELVE at once, which does not turn to mud the way it sounds
+  // like it will: it comes out a candy-striped bead that nothing else on the shelf resembles.
+  // Or her pages can take the album colour they were answered from, one bead per record, the
+  // way every other bracelet in the notebook works — the most meaningful of the three, and the
+  // only one where home stops being a single recognisable thing.
+  "Taylor Swift": ["#a32a2a", "#8b5fa0"],
   "Olivia Rodrigo": ["#7a55b0", "#2b1c3f"],      // violet over the near-black plum under it
   "Wicked": ["#3f8f63", "#d98cae"],              // Elphaba and Glinda, which is the whole show
   // The show's own wordmark, which is a yellow star on violet. Olivia is the other purple on

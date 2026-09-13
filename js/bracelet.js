@@ -410,9 +410,12 @@ function beadDefs(u) {
    the two seams, so a two-colour bead comes out exactly as it always did and a four-colour one
    still has four colours in it rather than a smear.
 
-   FOUR IS THE CEILING, and it is a legibility limit rather than a technical one: a 24px bead
-   cannot say five things. A longer list is cut rather than squeezed, because a fifth band you
-   cannot see is worse than an artist plainly missing from the strand.
+   THE CEILING IS TWELVE, which is the most anything asks for: Taylor's studio records, if home
+   is ever strung as the whole catalogue rather than as two inks. It is a stop against a
+   runaway list rather than a recommendation — four is about as many as a 24px bead can really
+   SAY, and past that the bands stop being colours and start being a texture, which is a choice
+   the palette makes and not one this function should make for it. A longer list is cut rather
+   than squeezed, because a band you cannot see is worse than a name plainly missing.
 
    It has to be a gradient DEF rather than anything CSS: the keepsake PNG rasterises this
    markup outside the page's stylesheet, exactly as the literal colours do.
@@ -422,7 +425,7 @@ function beadDefs(u) {
    each shape maps the bands across its OWN box: the star comes out banded at star size rather
    than wearing a slice of the bead's blend. That inline custom property is also why this
    survives the keepsake export, the way the literal colours do. */
-const BEAD_BANDS_MAX = 4;
+const BEAD_BANDS_MAX = 12;
 function bandTint(t) {
   if (!Array.isArray(t)) return null;
   const cols = t.filter(Boolean);
