@@ -368,34 +368,46 @@ export const GUEST_SHELF_SLOTS = 10;
 // notebook renders as "Self-Titled" — one is an album, this is a performer.
 export const HOME_ARTIST = "Taylor Swift";
 
-/* The lineup's bead palette: one colour per ARTIST, which is the whole reason the mode exists.
-   A lineup strand cannot be coloured by record the way every other strand is, because a blended
-   album name ("Sabrina Carpenter · Short n' Sweet") is in none of the colour maps and because
-   "which records did I touch" is not the question the mode asks. Thirteen beads have to come
-   out as a picture of who you played.
+/* The lineup's bead palette: the colours one ARTIST strings in, which is the whole reason the
+   mode exists. A lineup strand cannot be coloured by record the way every other strand is,
+   because a blended album name ("Sabrina Carpenter · Short n' Sweet") is in none of the colour
+   maps and because "which records did I touch" is not the question the mode asks. Thirteen
+   beads have to come out as a picture of who you played.
+
+   TWO COLOURS EACH, not one, and that is the design rather than a flourish. One colour per
+   artist puts eight names on one wheel and makes every near-miss fatal: two of the passes are
+   the same rose and two more the same sand, so somebody has to be moved off the colour they
+   are actually remembered in to make room. A PAIR is a signature instead of a point, and near
+   neighbours stop colliding because they never appear alone — Wicked's rose is always beside
+   emerald, Ariana's blush always beside cocoa, Hannah's pink always beside the star. It also
+   lets the artists who genuinely are two colours be both: Wicked stops having to choose
+   between Elphaba and Glinda, and Billie keeps the acid green next to the near-black instead
+   of losing one of them.
+
+   A song that sits on two shelves hands over all four, which is exactly the bead's ceiling
+   (BEAD_BANDS_MAX in js/bracelet.js). Nothing here may grow to three.
 
    ONE MAP, keyed by the artist name as installCorpus stamps it, rather than a colour field on
    each GUESTS entry. The only thing that matters about these eight is that they are
    distinguishable FROM EACH OTHER on one strand, which is a property of the set: scattered
    across seven entries the clash you cannot see is the one that ships. They are deliberately
-   NOT the pass inks either — those were drawn to sit alone on a hanger, so two of them are the
-   same rose and two more the same sand, which is invisible on the rail and unreadable on a
-   strand. See scripts/lineup/artist-palette.html, where every candidate is dealt through real
-   runs by the game's own renderer.
+   NOT the pass inks either — those were drawn to sit alone on a hanger, where nothing ever
+   puts two of them side by side. See scripts/lineup/artist-palette.html, where every candidate
+   is dealt through real runs by the game's own renderer.
 
    Literal #rrggbb only, never a token: the keepsake PNG rasterises the strand outside the
-   page's CSS, so a var() here would export as black. An artist with no colour falls through to
-   the page's era tint, which reads as a rendering bug, so __dev.lineup.palette() flags one. */
+   page's CSS, so a var() here would export as black. An artist with no colours falls through
+   to the page's era tint, which reads as a rendering bug, so __dev.lineup.palette() flags one. */
 export const LINEUP_INKS = {
-  // Home is the notebook itself, so home is the red rule down the margin of every page.
-  "Taylor Swift": "#b4453a",
-  "Olivia Rodrigo": "#7a55b0",      // violet, straight off the pass: already alone on the wheel
-  "Wicked": "#3f8f63",              // Elphaba's emerald, which frees rose for Ariana
-  "Hannah Montana": "#e2b63d",      // the show's star
-  "Billie Eilish": "#1e2622",       // the near-black of the sleeves, not the acid accent
-  "Ariana Grande": "#d79ab0",       // blush, now that no one else holds pink
-  "Harry Styles": "#5aa8d6",        // the Fine Line sky, off the pass's sand
-  "Sabrina Carpenter": "#7a5033",   // espresso
+  // Home is the notebook itself: the red rule down the margin, and the pencil it is written in.
+  "Taylor Swift": ["#b4453a", "#4f555c"],
+  "Olivia Rodrigo": ["#7a55b0", "#2b1c3f"],      // violet over the near-black plum under it
+  "Wicked": ["#3f8f63", "#d98cae"],              // Elphaba and Glinda, which is the whole show
+  "Hannah Montana": ["#e2b63d", "#d94f8a"],      // the star, and the pop pink around it
+  "Billie Eilish": ["#1e2622", "#b6d62b"],       // the near-black of the sleeves and the acid
+  "Ariana Grande": ["#d79ab0", "#6d4a3c"],       // blush over the warm neutral the records sit on
+  "Harry Styles": ["#5aa8d6", "#dcc39b"],        // the Fine Line sky and the fourth record's sand
+  "Sabrina Carpenter": ["#6b4426", "#e3cba9"],   // espresso and cream
 };
 
 // Rarity thresholds for the BLENDED lineup corpus (Taylor plus every guest, ~745 songs).

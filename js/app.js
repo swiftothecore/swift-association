@@ -12892,15 +12892,17 @@ function lineupArtists(song) {
   return songArtists(song).filter(Boolean);
 }
 
-/* The bead for one answered lineup page: the colour of whoever it was by. A song that sits on
-   two shelves returns the PAIR, which the bracelet strings as one bead split between them
-   (duoTint in bracelet.js) rather than handing the page to whichever name got listed first —
-   all three of the blend's merges are Taylor plus a guest, so a shared page really is half
-   home and should read that way. An artist with no ink returns nothing and falls through to
-   the page's era, which is why __dev.lineup.palette() exists to catch one. */
+/* The bead for one answered lineup page: the colours of whoever it was by, in order. Every
+   artist strings in two (see LINEUP_INKS), so an ordinary page is a two-band bead and a song
+   that sits on two shelves is a four-band one carrying both signatures rather than being
+   handed to whichever name got listed first — all three of the blend's merges are Taylor plus
+   a guest, so a shared page really is half home and should read that way. Four is the bead's
+   ceiling and a two-artist page is exactly at it, which is why nobody here gets a third.
+   An artist with no ink contributes nothing and the page falls through to its era, which is
+   why __dev.lineup.palette() exists to catch one. */
 function lineupBeadTint(artists) {
-  const inks = (artists || []).map((name) => LINEUP_INKS[name]).filter(Boolean);
-  if (inks.length > 1) return inks.slice(0, 2);
+  const inks = (artists || []).flatMap((name) => LINEUP_INKS[name] || []);
+  if (inks.length > 1) return inks;
   return inks[0] || null;
 }
 
@@ -15118,7 +15120,7 @@ function guestEra() {
    ALBUM_COLORS, keyed by the guest's own record names. "voice" is for a catalogue where the
    record is not the meaningful division: Wicked is two books of one show, so a song is
    coloured by whoever sings it, and each song carries a `voice`. A song genuinely shared
-   between two singers carries BOTH, and the bead is strung in both colours (see duoTint in
+   between two singers carries BOTH, and the bead is strung in both colours (see bandTint in
    bracelet.js) rather than being handed to whichever name got listed first.
 
    A guest file with no palette falls back to the pass's own record ticks, which is what every
@@ -15143,7 +15145,7 @@ function guestPalette(id) {
 // page's CSS, so a token here would export as black.
 //
 // An entry may also be a PAIR of hexes, which strings that record's bead in both colours
-// through the same duoTint path the Wicked duets use. That path was built for the voice axis,
+// through the same banded path the Wicked duets use. That path was built for the voice axis,
 // where a shared song genuinely has two owners; on an album axis it is a deliberate piece of
 // art direction for a sleeve that is two colours (Ariana's petal is black and white), not a
 // second meaning. Anything else is dropped with a warning rather than passed through, because
