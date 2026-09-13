@@ -35,7 +35,10 @@ test("the turn runs in a fixed, clipped interaction layer with locked geometry",
   assert.match(app, /widthSentinel\.style\.cssText = `position:absolute;[\s\S]*?width:\$\{documentWidth\}px/);
   assert.match(app, /holdAttribute\(app, "aria-busy", "true"\);/);
   assert.match(app, /window\.addEventListener\("resize", finishActivePageTurn\);/);
-  assert.match(app, /window\.addEventListener\("scroll", finishActivePageTurn/);
+  assert.match(app, /const scrollX = window\.scrollX;\s*const scrollY = window\.scrollY;/);
+  assert.match(app, /holdScrollPosition\(\) \{[\s\S]*?window\.scrollTo\(scrollX, scrollY\);/);
+  assert.match(app, /window\.addEventListener\("scroll", holdActivePageTurnScroll/);
+  assert.doesNotMatch(app, /window\.addEventListener\("scroll", finishActivePageTurn/);
   assert.match(app, /function applySettings\(\) \{[\s\S]*?if \(activePageTurn\) finishActivePageTurn\(\);/);
   assert.match(app, /matchMedia\("\(prefers-reduced-motion: reduce\)"\)\.addEventListener\("change"/);
 });

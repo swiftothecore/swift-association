@@ -1222,6 +1222,12 @@ function beginPageTurn(anchor) {
   const app = document.querySelector(".app");
   const appRect = app.getBoundingClientRect();
   const documentWidth = document.documentElement.scrollWidth;
+  // Keep the viewport pinned for the half-second transaction. A scroll event from the gesture
+  // that led into the turn can still be queued when beginPageTurn runs, and finishing on that
+  // event made every turn begun below scrollY=0 disappear immediately. Capturing the settled
+  // coordinates lets a stale event pass harmlessly and restores only a real mid-turn movement.
+  const scrollX = window.scrollX;
+  const scrollY = window.scrollY;
   const layer = document.createElement("div");
   layer.className = "page-flip-layer";
   layer.setAttribute("aria-hidden", "true");
@@ -1265,6 +1271,10 @@ function beginPageTurn(anchor) {
     layer,
     holdInert(el) { holdAttribute(el, "inert"); },
     holdBusy(el) { holdAttribute(el, "aria-busy", "true"); },
+    holdScrollPosition() {
+      if (finished || (window.scrollX === scrollX && window.scrollY === scrollY)) return;
+      window.scrollTo(scrollX, scrollY);
+    },
     setCompletion(fn) { callback = fn; },
     // The page being turned to is often TALLER than the page being left (opening the cover, or
     // any short board → long panel turn). The lock above holds the notebook at its pre-turn
@@ -1337,8 +1347,12 @@ function finishActivePageTurn() {
   if (activePageTurn) activePageTurn.finish();
 }
 
+function holdActivePageTurnScroll() {
+  if (activePageTurn) activePageTurn.holdScrollPosition();
+}
+
 window.addEventListener("resize", finishActivePageTurn);
-window.addEventListener("scroll", finishActivePageTurn, { passive: true });
+window.addEventListener("scroll", holdActivePageTurnScroll, { passive: true });
 if (window.visualViewport) window.visualViewport.addEventListener("resize", finishActivePageTurn);
 
 /* Side-to-side page turns for screen navigation. Where nextRound's flip lifts the answered
