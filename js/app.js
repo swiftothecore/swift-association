@@ -11883,7 +11883,11 @@ function braceletRenderOptions(results, opts = {}) {
         ok === true ? commonSpeedTint(roundTimes[i]) : null)
     // A guest is coloured by its catalogue's own palette rather than by ALBUM_COLORS, which
     // holds Taylor's records and nothing else, so its pages come pre-tinted (guestBeadTint).
-    : guestRunId ? roundBeadTints.slice()
+    // A lineup run is the same situation one step further out: its pages are tinted by the
+    // ARTIST answered (lineupBeadTint), and its album strings read "Sabrina Carpenter · Short
+    // n' Sweet", which no colour map of Taylor's has an entry for. Both are read off the same
+    // slot, and they can never both be live, so the live strand asks for it under either.
+    : (guestRunId || gameType === "lineup") ? roundBeadTints.slice()
     : null;
   return {
     ...opts,
