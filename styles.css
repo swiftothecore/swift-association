@@ -13129,6 +13129,12 @@ body.lu-nomiss .lu-miss { visibility: hidden; }
   font-family: var(--type); font-size: calc(9px + var(--text-size-adjust));
   letter-spacing: 1.2px; text-transform: uppercase; color: var(--ink-soft); opacity: 0.85;
 }
+/* The payload beat, beside the difficulty label in the panel's act row. It is a status, not
+   a warning, so it sits quiet and takes the row's own type; it is empty (and so invisible)
+   the moment the blend is built, which on a second visit is immediately. */
+.lu-beat { display: inline; font-style: normal; opacity: 0.75; }
+.lu-beat:not(:empty)::before { content: " · "; opacity: 0.6; }
+
 /* The news at the end of a run: one line, and only when a card was held for the first time. */
 .lu-board-news {
   font-family: var(--hand); font-size: calc(15px + var(--text-size-adjust));

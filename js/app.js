@@ -11617,13 +11617,30 @@ function renderLineupDetail() {
       `<div class="mode-tabs af-diffs">${tabs}</div>` +
     `</div>` +
     `<div class="chall-act">` +
-      `<span class="chall-meta">${escapeHtml(diffLabel(guestSelectedDiff))}</span>` +
+      `<span class="chall-meta">${escapeHtml(diffLabel(guestSelectedDiff))}` +
+        `<i class="lu-beat" data-lineup-beat="1"></i></span>` +
       `<button type="button" class="chall-go" data-lineup-go="1">Deal me a hand</button>` +
     `</div></div>`;
   el.querySelectorAll(".af-diffs [data-diff]").forEach((b) =>
     b.addEventListener("click", () => { guestSelectedDiff = b.dataset.diff; renderLineupDetail(); }));
   const go = el.querySelector("[data-lineup-go]");
   if (go) go.addEventListener("click", () => startLineupRun(guestSelectedDiff));
+
+  /* The payload beat. Opening the panel starts the build, so the two and a half seconds are
+     spent while you read the rule and the board rather than after you have asked for a run.
+     The line says what is happening only while it IS happening, and never on a panel that is
+     already ready, because a notice about work that is finished is just noise.
+     Re-rendering the panel (a difficulty tab) re-enters here and finds it built or building,
+     and warmBlendCorpus no-ops on both, so tabbing about cannot start a second build. */
+  const beat = el.querySelector("[data-lineup-beat]");
+  if (beat && !blendCorpus) {
+    beat.textContent = "putting every catalogue on one shelf…";
+    warmBlendCorpus(() => {
+      // The panel may be long gone, or showing another guest, by the time this lands.
+      if (guestSelected !== LINEUP_PASS.id || !beat.isConnected) return;
+      beat.textContent = "";
+    });
+  }
 }
 
 function renderGuestDetail(id) {
@@ -12984,19 +13001,37 @@ function installCorpus(grouped, words, opts = {}) {
   // Lenient playability (Easy/Medium/Hard use derived forms).
   playableWords = words.filter((w) => songsContainingWord(w, false).length >= 1);
   if (!playableWords.length) throw new Error("No playable words found in data");
-  // Title...? challenge pool: words that appear in at least one song title (so every
-  // round can be won by naming a title that holds the word). Strict, because the challenge
-  // judges titles strictly — a word whose only title is a derived form ("crazy" → "Crazier")
-  // has no legal answer and must never be dealt.
-  titleWordList = playableWords.filter((w) => titleSongsForWord(w, true).length >= 1);
-  // Short n' Sweet pool: words with at least one valid (lyrics) song whose title is ≤2 words,
-  // so every round can be won with a one- or two-word title.
-  // One pool per title-length rule, so the dark side's one-word-only run is guaranteed a
-  // winnable page just as the base ≤2-word run is.
+  /* THE TWO CHALLENGE POOLS, AND THE ONE CORPUS THAT NEEDS THEM. Both are read from exactly
+     one place each (pickWord, gated on `gameType === "challenge"` and on the pool being
+     non-empty), and a challenge only ever runs on Taylor's catalogue. So on a guest corpus and
+     on the blend these are three full passes over every word against every song, built to be
+     read by nothing.
+
+     Measured on the blend, where it hurts most: 324ms for the title pool and 930ms for the two
+     short-title pools, out of a 2357ms install. Half the wait before a lineup run was for
+     pools that run could not use. Taylor's own boot still builds them, because she is the one
+     corpus that plays challenges, and there it is 570ms of a 1620ms install that is real work.
+
+     Skipping leaves them EMPTY in the snapshot, which is correct rather than merely tolerable:
+     applyCorpus installs empty lists alongside that corpus's songs, so a stale Taylor pool can
+     never sit beside a guest's catalogue, restoreCorpus hands the real ones back, and both
+     readers already fall through to the ordinary bucket on an empty pool. */
+  titleWordList = [];
   shortTitleWordLists = {};
-  for (const max of [1, 2]) {
-    shortTitleWordLists[max] = playableWords.filter((w) =>
-      validSongs(w, false, false).some((s) => titleWordCount(s.title) <= max));
+  if (opts.challengePools !== false) {
+    // Title...? challenge pool: words that appear in at least one song title (so every
+    // round can be won by naming a title that holds the word). Strict, because the challenge
+    // judges titles strictly — a word whose only title is a derived form ("crazy" → "Crazier")
+    // has no legal answer and must never be dealt.
+    titleWordList = playableWords.filter((w) => titleSongsForWord(w, true).length >= 1);
+    // Short n' Sweet pool: words with at least one valid (lyrics) song whose title is ≤2 words,
+    // so every round can be won with a one- or two-word title.
+    // One pool per title-length rule, so the dark side's one-word-only run is guaranteed a
+    // winnable page just as the base ≤2-word run is.
+    for (const max of [1, 2]) {
+      shortTitleWordLists[max] = playableWords.filter((w) =>
+        validSongs(w, false, false).some((s) => titleWordCount(s.title) <= max));
+    }
   }
   albumOrder = grouped.map((g) => g.album);
   // The rarity buckets, plus the On Tour! pools: for each album, the playable words that
@@ -13223,18 +13258,89 @@ function buildBlendGrouped(cats) {
 let blendCorpus = null;               // built once per session, like a guest's
 let blendMerges = [];                 // what the dedupe folded together, for the dev panel
 
-// Build the blend and INSTALL it into the globals (installCorpus installs as it goes; see
-// there). Network-first like the guest files it pulls, and it pulls all of them at once, so
-// a caller on a game screen wants a load beat rather than a stall.
-async function installBlendCorpus() {
-  if (blendCorpus) { applyCorpus(blendCorpus); activeCorpus = "lineup"; return blendCorpus; }
-  const cats = await Promise.all(blendFiles());
+/* THE COST IS CPU, NOT NETWORK, and that is worth stating because it is the opposite of what
+   it looks like. The blend pulls 1.4MB across seven guest files, which reads like a download
+   problem, but the files are already in hand by the time anybody can ask for a lineup: the
+   guest shelf fetches all seven to paint the counts on its passes, blendFiles() goes through
+   the same loadGuest session cache, and the laminate is ON that shelf, so the way in is also
+   the prefetch. Measured cold on a local server: 14ms fetching, 30ms deduping, and 2426ms
+   building the indexes. Ninety-eight per cent of the wait is installCorpus, which walks 919
+   words against 745 songs five times over and blocks the main thread solidly while it does.
+
+   So the two halves are split. fetchBlendCats is the part that can FAIL and is nearly free;
+   buildBlend is the part that COSTS and cannot fail. Splitting them is what lets the failure
+   be reported early and the cost be paid somewhere the player is not waiting on it. */
+async function fetchBlendCats() {
+  return Promise.all(blendFiles());
+}
+
+// The expensive half. Synchronous on purpose: installCorpus installs into the globals as it
+// goes (its derivations read them), so there is no safe point to yield in the middle of it.
+function buildBlend(cats) {
   const { grouped, merged } = buildBlendGrouped(cats);
   blendMerges = merged;
   const words = [...new Set(cats.flatMap((c) => c.words))].sort();
-  blendCorpus = installCorpus(grouped, words, { aliases: false, buckets: BLEND_BUCKETS });
+  blendCorpus = installCorpus(grouped, words,
+    { aliases: false, buckets: BLEND_BUCKETS, challengePools: false });
   activeCorpus = "lineup";
   return blendCorpus;
+}
+
+/* Wait until the browser has actually PAINTED, not merely until the task queue turns over.
+   This exists because the two-and-a-half-second build blocks the main thread solidly, so the
+   beat announcing it has to be on screen BEFORE the freeze or it is never seen at all: a
+   status line that only renders after the work it describes has finished is worse than none.
+   setTimeout(0) is not enough and was measured not to be — it yields a task, but the render
+   step need not happen in that gap, and the line went up at t+0 with the next frame landing
+   at t+2451. Two rAFs put us after a real paint. The timeout is not a nicety either: a hidden
+   tab never fires rAF at all, and a build that never starts would be a far worse bug than an
+   unpainted line, so it proceeds regardless after a beat. */
+function paintedOnce() {
+  return new Promise((resolve) => {
+    let done = false;
+    const go = () => { if (!done) { done = true; resolve(); } };
+    requestAnimationFrame(() => requestAnimationFrame(go));
+    setTimeout(go, 120);
+  });
+}
+
+let blendBuilding = null;   // the in-flight build, so a warm and a click share one run of it
+
+// Build the blend and INSTALL it into the globals. Two callers share one build: the detail
+// panel warms it while you read, and startLineupRun awaits whatever is already running.
+async function installBlendCorpus() {
+  if (blendCorpus) { applyCorpus(blendCorpus); activeCorpus = "lineup"; return blendCorpus; }
+  if (blendBuilding) { await blendBuilding; applyCorpus(blendCorpus); activeCorpus = "lineup"; return blendCorpus; }
+  const cats = await fetchBlendCats();
+  return buildBlend(cats);
+}
+
+/* Warm the blend from the laminate's panel, which is the whole payload beat. The 2.4 seconds
+   has to be spent somewhere, and the least bad place is not after the player asks for a run:
+   it is while they are reading the rule, the catch and the board and choosing a difficulty,
+   which is time they were spending anyway. By the time "Deal me a hand" is clicked it is
+   normally already built, and if it is not, startLineupRun awaits this same promise rather
+   than starting a second one.
+
+   It hands the globals straight BACK afterwards. Warming is a side effect of opening a panel,
+   and a panel should not leave the matcher pointed at a corpus the player has not asked to
+   play; every start path would recover it, but leaving it swapped and trusting that is how a
+   stale index ends up beside the wrong songs. What is kept is the snapshot, which is the
+   expensive thing and the only thing worth keeping.
+
+   Fire and forget by design: nothing awaits it, a failure here is silent, and the real
+   fetch error is reported by startLineupRun, which is where a player is actually waiting. */
+function warmBlendCorpus(onDone) {
+  if (blendCorpus || blendBuilding) return;
+  blendBuilding = (async () => {
+    const cats = await fetchBlendCats();
+    await paintedOnce();
+    buildBlend(cats);
+    restoreCorpus();                 // the panel is not a run; hand Taylor back (it sets the flag)
+  })();
+  blendBuilding
+    .catch(() => { blendCorpus = null; })
+    .finally(() => { blendBuilding = null; if (onDone) onDone(); });
 }
 
 /* ---------- The lineup run ----------
@@ -13485,7 +13591,10 @@ function toggleLineupCard(id) {
 // guest file at once and a hand chosen against a catalogue that then fails to download would
 // be a hand thrown away.
 async function startLineupRun(diffId) {
-  if (!blendCorpus) notifyNote("the lineup", "pulling every catalogue onto one shelf…");
+  // Normally already built: the laminate's panel warms it while you read (warmBlendCorpus).
+  // The note is for the paths that skip the panel — a replay off the results screen, or
+  // __dev.lineup.play — and for a first open slow enough that the reading did not cover it.
+  if (!blendCorpus) notifyNote("the lineup", "putting every catalogue on one shelf…");
   try { await installBlendCorpus(); }
   catch (e) { notifyNote("the lineup", "couldn't fetch the catalogues — check your connection"); return; }
   lineupDiff = GUEST_DIFFS.includes(diffId) ? diffId : "medium";
@@ -15516,8 +15625,10 @@ async function startGuestRun(id, diffId) {
     catch (e) { notifyNote("guest shelf", "couldn't fetch that catalogue — check your connection"); return; }
     // Building installs into the globals as it goes (see installCorpus), so this line already
     // leaves the guest's catalogue live; the assignment below just remembers it for the replay.
+    // challengePools: false for the same reason the blend skips them — a challenge only ever
+    // runs on Taylor's catalogue, so on a guest's these are passes built to be read by nothing.
     corpus = installCorpus(cat.albums || [], cat.words || [],
-      { aliases: false, buckets: cat.buckets, artist: g.name });
+      { aliases: false, buckets: cat.buckets, artist: g.name, challengePools: false });
     guestCorpora.set(id, corpus);
     guestPalettes.set(id, normalizeGuestPalette(cat.palette));
   }
@@ -29623,6 +29734,20 @@ function buildDevApi() {
         bad: lineupShelf().filter((n) => n !== HOME_ARTIST && !lineupEraFor([n], null)),
         rolled: roundArtists.map((a, i) => (i + 1) + ": " + ((a || []).join(" + ") || "missed")),
       }),
+      /* Where the wait actually goes, which is the thing this mode's load beat was designed
+         against and the thing that will be wrong first if the corpus grows. Drops the blend
+         and rebuilds it, so it always reports a COLD build rather than a cached no-op. */
+      profile: async () => {
+        window.__dev.lineup.drop();
+        const t0 = performance.now();
+        const cats = await fetchBlendCats();
+        const t1 = performance.now();
+        const built = buildBlend(cats);
+        const t2 = performance.now();
+        return { fetchMs: Math.round(t1 - t0), buildMs: Math.round(t2 - t1),
+                 totalMs: Math.round(t2 - t0), songs: allSongs.length,
+                 words: playableWords.length, ok: !!built };
+      },
       board: () => {
         const cell = (c) => { const r = lineupCardRecord(c.id); return c.id +
           (r.won ? ": held " + r.won + "/" + r.held + (r.at ? " @" + r.at : "") : r.held ? ": struck x" + r.held : ": undealt"); };
