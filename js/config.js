@@ -463,7 +463,11 @@ export const GUESTS = [
     // The show's violet wordmark and warm yellow star translated into the pass hardware.
     ink: { deep: "#56346f", accent: "#e2b63d", strap: "#76528e", pen: "#5a3971",
            ticks: ["#8a63a2", "#e2b63d", "#c78b35", "#6a4c88"] },
-    era: "speak-now",
+    // lavender, NOT "speak-now": the wash is named for the colour, not the record, and
+    // ALBUM_ERA maps Speak Now onto lavender for the same reason. It read as speak-now here
+    // for as long as this pass has shipped, which is not one of the ten in ERAS, so the run
+    // wore no wash at all and fell back to the bare root palette.
+    era: "lavender",
   },
   {
     id: "billie-eilish",
@@ -472,7 +476,10 @@ export const GUESTS = [
     // Near-black, acid green, and cold grey-green: a nocturnal palette translated into pass ink.
     ink: { deep: "#101512", accent: "#b6d62b", strap: "#26332b", pen: "#17211c",
            ticks: ["#b6d62b", "#6f8d37", "#26332b", "#899788"] },
-    era: "folklore",
+    // midnight, NOT "folklore": there is no folklore wash and never has been, so this pass
+    // played unwashed too. Midnight is the right replacement rather than the nearest survivor
+    // — every colour on this card is nocturnal near-black, which is what midnight IS.
+    era: "midnight",
   },
   {
     id: "ariana-grande",

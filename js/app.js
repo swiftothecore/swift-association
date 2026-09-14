@@ -1813,6 +1813,12 @@ function pickEra() {
   // it keys on Taylor's albums — and shuffling through her eras would dress someone else's
   // catalogue in her colours, which is exactly the blending the guest shelf exists to avoid.
   if (gameType === "guest") return guestEra();
+  // A lineup run is washed by WHO YOU LAST ANSWERED, rolled at answer time by rollLineupWash.
+  // Returning the held wash here is what stops the ordinary shuffle from repainting over it at
+  // the top of every page; without this the desk would flicker between the rolled colour and a
+  // random era of hers, which is also the one place her palette would still be touching a
+  // corpus that is not hers.
+  if (gameType === "lineup") return lineupWash;
   // An album-anniversary daily already leans its words toward that album, so let the page
   // wear its colours all thirteen pages rather than shuffling eras over an album-shaped run.
   if (gameType === "daily" && dailyAlbum) return ALBUM_ERA[dailyAlbum] || "gold";
@@ -13067,6 +13073,59 @@ function lineupArtists(song) {
   return songArtists(song).filter(Boolean);
 }
 
+/* ---------- The lineup's era wash ----------
+   THE DESK WEARS THE ARTIST YOU LAST ANSWERED, and the lag is the whole design rather than a
+   compromise. applyEra(pickEra()) runs at the TOP of a page, before the word is shown, so a
+   wash that knew the current page's artist would paint the desk before you answered it: on a
+   745-song blend, "this is a Billie page" cuts the search to 64 songs, which is not an era
+   wash, it is a free hint. Reading one page behind can never leak, because it only ever shows
+   what you have already named.
+
+   What it gets in return is the bracelet's idea in a bigger register. The strand ends up a
+   picture of your lineup; the room becomes the same picture while you are still playing it.
+
+   It changes when WHAT YOU JUST PLAYED changes, which is not the same as when the artist
+   changes. A guest holds their one colour for as long as you keep answering them, but home has
+   no single era and wears the era of the RECORD instead, so two Taylor pages off two records
+   do move the desk. That is the right granularity rather than a compromise: it is what Album
+   Focus and an anniversary daily already do with her catalogue, and it is still less movement
+   than classic mode, which reshuffles every single page. A measured thirteen-page run all on
+   her came out at eight changes.
+   A missed page recolours nothing: no artist was named, so there is nothing to say.
+
+   Page one is the plain gold desk, which is honest rather than a fallback. Nothing has been
+   answered, so your lineup is empty, and gold is what the notebook wears when no run is on. */
+let lineupWash = "gold";      // the wash the desk is CURRENTLY holding, run state
+
+/* One artist's wash. Guests carry their own (GUESTS[].era, which is why __dev.guest.eras()
+   exists to check they are real), and home has no single era, so she wears the one belonging
+   to the RECORD the answered song is on — the same `_record` the bracelet bands her bead
+   from, so the desk and the bead are reading the same fact. */
+// Two artists sharing a wash is accepted, not a bug to design away: Olivia and Hannah are both
+// lavender because both genuinely ARE purple artists, and each guest's era has to be right for
+// that guest's own run first, which is the surface it was chosen for. The only cost is that the
+// desk holds rather than turns when an Olivia page follows a Hannah one.
+function lineupEraFor(artists, song) {
+  const names = artists || [];
+  if (!names.length) return null;
+  // A page two artists share can only paint the desk one colour, and the credited-first name
+  // wins. The bead is the surface that shows both, and it does.
+  const name = names[0];
+  if (name === HOME_ARTIST) {
+    const rec = song && song._record;
+    return (rec && ALBUM_ERA[rec]) || null;
+  }
+  const g = GUESTS.find((x) => x.name === name);
+  return (g && ERAS.includes(g.era)) ? g.era : null;
+}
+
+// Called at ANSWER time, beside the bead and the artist credit, for the reason all three are:
+// by the time anything renders, the page is over and the song object is gone.
+function rollLineupWash(artists, song) {
+  const era = lineupEraFor(artists, song);
+  if (era && era !== lineupWash) { lineupWash = era; applyEra(era); }
+}
+
 /* Home's bead: all twelve studio records at once, cut as a cake rather than banded. Read off
    the LIVE album palette rather than written down, so the colour-blind setting reaches the
    lineup the way it reaches every other strand, and in release order, because that is the
@@ -13450,6 +13509,8 @@ function beginLineupRun() {
   if (!corpus) { notifyNote("the lineup", "the blended catalogue is gone; open the felt again"); return; }
   const mode = MODES[lineupDiff] || MODES.medium;
   gameType = "lineup";
+  lineupWash = "gold";        // nothing answered yet, so no lineup to wear
+
   currentMode = { ...mode };               // clone — never mutate the shared MODES object
   // THE HAND CAN ONLY MAKE THE POOL EASIER, never harder. A card carrying a pool restriction
   // carries a measured one (deal-lab.html): Full Lineup is unsatisfiable outside the easy
@@ -22059,6 +22120,10 @@ function submitAnswer(song, isTimeout) {
   roundBeadTints[round - 1] = gameType === "lineup"
     ? lineupBeadTint(roundArtists[round - 1], song || tapAnswer || null)
     : guestBeadTint(song || tapAnswer || null);
+  // And the room, which is the same fact painted at a bigger size. Here rather than at the top
+  // of the next page because this is the only moment the answered song is still in hand, and
+  // one page behind because the top of a page is before you have answered it.
+  if (gameType === "lineup") rollLineupWash(roundArtists[round - 1], song || tapAnswer || null);
   // Same gate, read here because this is where the page's own answer is still in hand:
   // `lyricMatch` is the sung line that resolved it, and the stopwatch above has already banked
   // the response time the page actually took.
@@ -29548,6 +29613,16 @@ function buildDevApi() {
          (no argument wins the whole deck, which is the only sane way to check the laminate's
          frank), and `clear` empties it. tick goes through recordLineupRun rather than writing
          the store directly, so a ticked card is banked by exactly the code a real run uses. */
+      // The desk's rolling wash: what it is holding, and what every artist on the shelf would
+      // turn it. `bad` is the one that matters and is the same check __dev.guest.eras() runs,
+      // because a guest whose era is not in ERAS silently paints nothing.
+      wash: () => ({
+        holding: lineupWash,
+        byArtist: lineupShelf().map((n) => n + ": " +
+          (n === HOME_ARTIST ? "its record's era, per page" : (lineupEraFor([n], null) || "NO WASH"))),
+        bad: lineupShelf().filter((n) => n !== HOME_ARTIST && !lineupEraFor([n], null)),
+        rolled: roundArtists.map((a, i) => (i + 1) + ": " + ((a || []).join(" + ") || "missed")),
+      }),
       board: () => {
         const cell = (c) => { const r = lineupCardRecord(c.id); return c.id +
           (r.won ? ": held " + r.won + "/" + r.held + (r.at ? " @" + r.at : "") : r.held ? ": struck x" + r.held : ": undealt"); };
@@ -29576,6 +29651,16 @@ function buildDevApi() {
       open: () => openGuestShelf("start"),
       slots: () => ({ filled: GUESTS.length, comingSoon: GUESTS_COMING_SOON.length,
         total: GUEST_SHELF_SLOTS, perRail: guestPerRail() }),
+      /* Every guest's wash, and the check this exists for: an `era` that is not one of the ten
+         in ERAS. Nothing throws on a bad one — data-era just matches no rule and the run plays
+         on the bare root palette — so it is invisible unless something asks. Hannah Montana
+         ("speak-now") and Billie Eilish ("folklore") both shipped that way and nobody noticed,
+         which is the argument for this row. The lineup's rolling wash reads the same field. */
+      eras: () => ({
+        shelf: GUESTS.map((g) => g.id + ": " + g.era),
+        bad: GUESTS.filter((g) => !ERAS.includes(g.era)).map((g) => g.id + ": " + g.era),
+        washes: ERAS.slice(),
+      }),
       load: (id) => loadGuest(id || (GUESTS[0] && GUESTS[0].id)),
       counts: (id) => loadGuest(id || (GUESTS[0] && GUESTS[0].id)).then(guestCounts),
       // Play one, at any of the difficulties the detail panel offers.
