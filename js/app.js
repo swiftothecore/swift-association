@@ -7296,7 +7296,9 @@ function startBonusGame(g, lensId = null, opts = {}) {
   // cannot tell them apart is a run you can forget the rules of halfway down.
   const title = lens ? `Ruthless Game · ${lens.label}` : bonusEndless ? `${g.name} · endless` : g.name;
   screens.bonusplay.dataset.bonusGame = lens ? "ruthless" : g.id;
-  $("bonusPlayTitle").innerHTML = `${bonusCover(g, "bonus-cover-sm")}<span>${escapeHtml(title)}</span>`;
+  $("bonusPlayTitle").innerHTML = `<button type="button" class="bonus-cover-play" aria-label="Make the ${escapeHtml(g.name)} cover dance" title="a little encore">` +
+    `<span class="bonus-cover-stack" aria-hidden="true">${bonusCover(g, "bonus-cover-sm")}</span>` +
+    `<span class="bonus-cover-stars" aria-hidden="true">✧</span></button><span class="bonus-title-label">${escapeHtml(title)}</span>`;
   nextBonusRound({ entering: true });
 }
 
@@ -23953,10 +23955,22 @@ function wireDeskMug() {
   });
 }
 
-/* Inside-page titles are plain text, including the bonus-game title that changes
-   between runs. Split the current text only when it is clicked, then lift its
-   letters in sequence. Rebuilding on every click keeps dynamic titles honest and
-   lets a second click restart the wave immediately. */
+/* Animate only the text label of a decorated title. Reading the whole heading's
+   textContent includes the SVG's printed cover label and destroys the art. */
+const bonusCoverDanceTimers = new WeakMap();
+function danceBonusCover(button) {
+  clearTimeout(bonusCoverDanceTimers.get(button));
+  button.classList.remove("is-dancing", "is-winking");
+  void button.offsetWidth;
+  const quiet = motionReduced() || animInstant();
+  const duration = quiet ? 450 : 1100 * animScale();
+  button.style.setProperty("--cover-dance-time", `${duration}ms`);
+  button.classList.add(quiet ? "is-winking" : "is-dancing");
+  bonusCoverDanceTimers.set(button, setTimeout(() => {
+    button.classList.remove("is-dancing", "is-winking");
+    bonusCoverDanceTimers.delete(button);
+  }, duration));
+}
 const PAGE_TITLE_LETTER_MS = 42;
 const PAGE_TITLE_WAVE_MS = 480;
 const pageTitleWaveTimers = new WeakMap();
@@ -23978,8 +23992,10 @@ function wavePageTitle(title) {
 }
 function wirePageTitles() {
   document.addEventListener("click", (event) => {
+    const cover = event.target.closest(".bonus-cover-play");
+    if (cover) { danceBonusCover(cover); return; }
     const title = event.target.closest(".stats-nav .stats-title");
-    if (title) wavePageTitle(title);
+    if (title) wavePageTitle(title.querySelector(".bonus-title-label") || title);
   });
 }
 
