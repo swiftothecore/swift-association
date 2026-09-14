@@ -130,6 +130,7 @@ export const ALBUM_FOCUS_KEY = "swiftSongAssociation.albumFocus";       // per-a
 export const ADAPTIVE_LEGACY_KEY = "swiftSongAssociation.adaptive";
 export const GUEST_KEY = "swiftSongAssociation.guests";                 // guest shelf board — { [guestId]: {best, bestDiff, admitted, admittedDiff} }
 export const BONUS_KEY = "swiftSongAssociation.bonus";                  // bonus games shelf — { [gameId]: {best, plays, last} }
+export const LINEUP_KEY = "swiftSongAssociation.lineup";                // the lineup's goal board — { [cardId]: {held, won, at} }
 export const RUTHLESS_KEY = "swiftSongAssociation.ruthless";            // Ruthless mode board, one best per lens — { [lensId]: {best, bestGaveUp, plays, last, date} }
 export const SEARCH_KEY = "swiftSongAssociation.search";                // Swift To The Lyric searcher — { mode, view, recent:[] }
 export const MASTERY_KEY = "swiftSongAssociation.mastery";              // skills + mastery progression — { skills:{...xp}, masteryXp, unlocked:{[rewardId]:isoDate} }

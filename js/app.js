@@ -132,6 +132,7 @@ import {
   loadChallengeTokens, saveChallengeTokens, resetChallenges,
   loadAlbumFocus, saveAlbumFocus, albumFocusRecord, recordAlbumFocusRun, resetAlbumFocus,
   loadGuests, saveGuests, guestRecord, recordGuestRun, resetGuests,
+  loadLineupBoard, lineupCardRecord, recordLineupRun, resetLineupBoard,
   purgeAdaptive,
   bonusRecord, recordBonusRun, resetBonus, seedBonusSweep,
   ruthlessRecord, recordRuthlessRun, resetRuthless,
@@ -11439,7 +11440,14 @@ function guestAllAccessMarkup(pass) {
             `<span class="guest-name">The<br>Lineup</span>` +
             `<span class="guest-ticks guest-ticks--all" aria-hidden="true">${ticks}</span>` +
             `<span class="guest-line"><span><strong>${SHELF}</strong> catalogues</span></span>` +
-            `<span class="guest-stub guest-stub--all"></span>` +
+            // Franked exactly as a guest's pass is franked on admission, because it means the
+            // same kind of thing: the shelf's own mark on a pass that has been earned out. A
+            // guest earns it with one perfect run, this with every card in the deck held at
+            // least once, which is the work of many.
+            (lineupBoardComplete()
+              ? `<span class="guest-stub guest-stub--stamped">` +
+                  `<i class="guest-admit" style="--stamp-rot:-1.6deg">the full deck</i></span>`
+              : `<span class="guest-stub guest-stub--all"></span>`) +
           `</span>` +
         `</span>` +
       `</button>` +
@@ -11524,6 +11532,46 @@ function closeGuestDetail() {
    while the blend's are only true once every catalogue has been fetched and deduped, so this
    panel quotes the thing it knows for certain (who is in it) and leaves the arithmetic to the
    felt. The artists are listed rather than counted, since the whole proposition is WHO. */
+/* The goal board: the mode's record, and the reason a lineup run is worth playing twice.
+
+   ALL TWENTY-FOUR NAMES ARE SHOWN, unlike the sticker shelf this borrows its ticked-not-scored
+   model from, and that is deliberate rather than an oversight. A sticker is a thing you notice,
+   so hiding it until you do IS the feature. A goal card is a RULE, and the board sits on the
+   panel where you decide whether to play at all; a deck you cannot read until chance has dealt
+   it to you would make the mode less legible for no gain. The record here is what you have done
+   with the cards, not which ones exist.
+
+   Three states, walked off DECK so the three BENCH cards nothing deals stay off the board:
+   HELD (won at least once, ticked, with the hardest difficulty it was taken at in its tooltip),
+   STRUCK (committed to and lost, every time so far), and UNDEALT (faint). The middle one is why
+   `held` is counted separately from `won`: five off a shuffled twenty-four means a blank cell is
+   usually chance rather than failure, and only one of those two is about the player. */
+function lineupBoardHTML() {
+  const cells = DECK.map((card) => {
+    const rec = lineupCardRecord(card.id);
+    const cls = rec.won ? " is-won" : rec.held ? " is-struck" : " is-undealt";
+    const tip = rec.won
+      ? `held ${rec.won} of ${rec.held}` + (rec.at ? `, hardest at ${diffLabel(rec.at)}` : "")
+      : rec.held ? `dealt and lost, ${rec.held} time${rec.held === 1 ? "" : "s"}`
+      : "never dealt to you";
+    return `<span class="lu-board-cell${cls}" title="${escapeHtml(card.name + " — " + tip)}">` +
+      suitMark(card.suit) + `<b>${escapeHtml(card.name)}</b></span>`;
+  }).join("");
+  const won = DECK.filter((c) => lineupCardRecord(c.id).won).length;
+  const struck = DECK.filter((c) => { const r = lineupCardRecord(c.id); return !r.won && r.held; }).length;
+  const line = won === DECK.length
+    ? "every card in the deck, held at least once"
+    : `${won} of ${DECK.length} held` + (struck ? ` · ${struck} still owed` : "");
+  return `<div class="lu-board">${cells}</div><div class="lu-board-count">${escapeHtml(line)}</div>`;
+}
+
+// Whether the board is full, which is what franks the laminate's stub. Asked of DECK so adding
+// a twenty-fifth card un-completes a board that was complete, which is correct: the pass says
+// you have held every card there is, and tomorrow there would be one you had not.
+function lineupBoardComplete() {
+  return DECK.every((c) => lineupCardRecord(c.id).won);
+}
+
 function renderLineupDetail() {
   const el = $("guestDetailBody");
   if (!el) return;
@@ -11553,6 +11601,10 @@ function renderLineupDetail() {
       `<div class="chall-goal">You are dealt five goal cards and keep up to three, on a budget of ` +
         `${BUDGET} pips, <b>before page one</b>. They are what makes a wider catalogue harder ` +
         `instead of easier, and you commit to them blind.</div>` +
+    `</div>` +
+    `<div class="chall-sec">` +
+      `<div class="chall-eyebrow">The board</div>` +
+      lineupBoardHTML() +
     `</div>` +
     `<div class="chall-sec chall-sec--pick">` +
       `<div class="chall-eyebrow">Written at</div>` +
@@ -13576,8 +13628,17 @@ function endLineup() {
   // there at the time rather than sprung on the player now.
   const verdict = judgeLineupHand();
   const won = verdict.filter((v) => v.state === WON).length;
+  /* THE ONE THING A LINEUP RUN WRITES. The mode is sandboxed the way Custom and the guest shelf
+     are, so this is its whole footprint: the goal board, ticked. Written HERE, before the cards
+     are drawn, because recordLineupRun answers with the ids won for the first time ever and
+     that answer only exists until it is written down — ask the board afterwards and every card
+     you just won looks like one you had already. Only the cards COMMITTED TO are folded in; a
+     card dealt and declined is not a card failed. */
+  const firsts = new Set(recordLineupRun(
+    verdict.map(({ card, state }) => ({ id: card.id, won: state === WON })), lineupDiff));
   const goals = verdict.map(({ card, state }) =>
-    `<span class="lu-goal${state === WON ? " is-won" : " is-dead"}">` +
+    `<span class="lu-goal${state === WON ? " is-won" : " is-dead"}` +
+    `${firsts.has(card.id) ? " is-first" : ""}">` +
     suitMark(card.suit) + `<b>${escapeHtml(card.name)}</b></span>`).join("");
   const names = covered.length
     ? covered.map((n) => escapeHtml(n)).join(" · ")
@@ -13587,7 +13648,16 @@ function endLineup() {
       (won === verdict.length ? "the whole hand, held ★" : `${won} of ${verdict.length} held`) +
       "</div>"
     : "";
-  const meta = `<div class="lu-goals lu-goals-result">${goals}</div>` +
+  // New to the board, said plainly and only when there is something to say. This is the whole
+  // reward: the board is not a score, so the news is "one you have never held before", not a
+  // number going up.
+  const onBoard = DECK.filter((c) => lineupCardRecord(c.id).won).length;
+  const newsLine = firsts.size
+    ? `<div class="lu-board-news">` +
+      `${firsts.size === 1 ? "a card you had never held" : firsts.size + " cards you had never held"}` +
+      ` · ${onBoard} of ${DECK.length} on the board</div>`
+    : "";
+  const meta = `<div class="lu-goals lu-goals-result">${goals}</div>` + newsLine +
     `<div class="chall-result-meta">${covered.length} of ${SHELF} on one strand · ${names}</div>`;
   $("resultPodium").innerHTML = status + meta +
     `<div class="chall-result-actions">` +
@@ -29473,6 +29543,24 @@ function buildDevApi() {
         strung: roundArtists.map((a, i) => (a || []).join(" + ") + " → " +
           JSON.stringify(roundBeadTints[i] || null)),
       }),
+      /* The goal board, and the thing PLAN asked for: a way to tick it without grinding
+         twenty-four hands out of a shuffled deck. `board` reports it, `tick` wins cards by id
+         (no argument wins the whole deck, which is the only sane way to check the laminate's
+         frank), and `clear` empties it. tick goes through recordLineupRun rather than writing
+         the store directly, so a ticked card is banked by exactly the code a real run uses. */
+      board: () => {
+        const cell = (c) => { const r = lineupCardRecord(c.id); return c.id +
+          (r.won ? ": held " + r.won + "/" + r.held + (r.at ? " @" + r.at : "") : r.held ? ": struck x" + r.held : ": undealt"); };
+        return { held: DECK.filter((c) => lineupCardRecord(c.id).won).length, of: DECK.length,
+                 complete: lineupBoardComplete(), cards: DECK.map(cell) };
+      },
+      tick: (...ids) => {
+        const want = ids.flat().filter((id) => DECK.some((c) => c.id === id));
+        const cards = want.length ? want : DECK.map((c) => c.id);
+        recordLineupRun(cards.map((id) => ({ id, won: true })), lineupDiff);
+        return window.__dev.lineup.board();
+      },
+      clear: () => { resetLineupBoard(); return window.__dev.lineup.board(); },
       restore: () => { restoreCorpus(); return window.__dev.guest.corpus(); },
       drop: () => { blendCorpus = null; blendMerges = []; return "blend dropped — next build refetches"; },
     },

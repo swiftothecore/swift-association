@@ -11,7 +11,7 @@ import {
   CHALLENGES_KEY, CHALLENGE_TOKENS_KEY,
   ALBUM_FOCUS_KEY, ALBUM_FOCUS_TARGET, DIFF_RANK,
   ADAPTIVE_LEGACY_KEY,
-  GUEST_KEY, GUEST_TARGET,
+  GUEST_KEY, GUEST_TARGET, LINEUP_KEY,
   BONUS_KEY, RUTHLESS_KEY,
   CUSTOM_KEY, CUSTOM_DEFAULT_MODE,
   KEEPSAKES_KEY,
@@ -350,6 +350,66 @@ export function recordGuestRun(id, score, diff, countBest = true) {
   saveGuests(all);
   return guestRecord(id);
 }
+/* ---------- The lineup's goal board ----------
+   The mode's record, and it is a BOARD TICKED ACROSS MANY RUNS rather than a score. The lineup
+   has no best-of: a run is thirteen pages under a hand you were dealt, so "your best lineup run"
+   would mostly be a record of which cards turned up. What carries over is which of the
+   twenty-four you have ever held and held onto, the way the sticker shelf carries over what you
+   have noticed.
+
+   THREE STATES PER CARD, and the middle one is the reason this is not just a checklist. A deal
+   is five off a shuffled twenty-four, so a blank cell usually means the card has never come up,
+   which is nothing to do with the player. Counting `held` separately lets the board say "never
+   dealt to you" and "you had this one and lost it" differently, and the second is the only one
+   of the two that is about you.
+
+   `at` is the HARDEST difficulty a card was ever won at, the same promotion rule the guest
+   shelf's admitted stamp uses. Losing a card never un-wins it: this board only ever fills in.
+
+   Keyed by card id, and every reader must walk DECK rather than lineupdeck's `byId`, which also
+   carries the three BENCH cards that nothing deals. */
+export function loadLineupBoard() {
+  try {
+    const raw = localStorage.getItem(LINEUP_KEY);
+    if (raw) { const o = JSON.parse(raw); if (o && typeof o === "object") return o; }
+  } catch (e) { /* ignore */ }
+  return {};
+}
+export function saveLineupBoard(o) {
+  try { localStorage.setItem(LINEUP_KEY, JSON.stringify(o)); } catch (e) { /* ignore */ }
+}
+// One card's record, with defaults filled in. `held` counts committed hands it was in, `won`
+// how many of those it survived, so held > 0 && won === 0 is the struck state.
+export function lineupCardRecord(id) {
+  const e = loadLineupBoard()[id] || {};
+  return { held: e.held || 0, won: e.won || 0, at: e.at || null };
+}
+/* Fold a finished lineup run into the board. `verdict` is the hand as judged, one
+   { id, won } per card COMMITTED TO (never the whole deck, and never the cards that were dealt
+   and dropped — a card you declined to keep is not a card you failed). Returns the ids won for
+   the FIRST time ever, so the results screen can mark them; the caller is the only place that
+   knows how to say so, and it has to be told before the board is written or the news is gone. */
+export function recordLineupRun(verdict, diff) {
+  const all = loadLineupBoard();
+  const firsts = [];
+  for (const { id, won } of verdict || []) {
+    if (!id) continue;
+    const e = all[id] || {};
+    e.held = (e.held || 0) + 1;
+    if (won) {
+      if (!(e.won || 0)) firsts.push(id);
+      e.won = (e.won || 0) + 1;
+      e.at = harderDiff(e.at, diff);
+    }
+    all[id] = e;
+  }
+  saveLineupBoard(all);
+  return firsts;
+}
+export function resetLineupBoard() {
+  try { localStorage.removeItem(LINEUP_KEY); } catch (e) { /* ignore */ }
+}
+
 export function resetGuests() {
   try { localStorage.removeItem(GUEST_KEY); } catch (e) { /* ignore */ }
 }
