@@ -816,6 +816,142 @@ export function initDev(api) {
         }, "warn")),
     swBox));
 
+  // ---- Flip profiler ----------------------------------------------------------
+  // How much a page turn actually costs, in dropped frames, measured on whatever machine and
+  // window size you are really using. Built because the page turn into a long page felt slow
+  // and every remote way of measuring it lied: a setTimeout drift probe reports a page pegged
+  // at 100% when the only thing wrong is that the tab is in the background, and the layout
+  // benchmarks that replaced it went to noise in the same conditions. rAF is the only honest
+  // clock here, and it only tells the truth in a window that is genuinely on screen, which is
+  // what the gate below is for. Numbers from this section are trustworthy or absent, never
+  // approximate.
+  const FLIP_TARGETS = [
+    ["achievementsBtn", "achievementsBackBtn", "charms"],
+    ["challengesBtn", "challengesBackBtn", "challenges"],
+    ["masteryBtn", "masteryBackBtn", "mastery"],
+    ["bonusBtn", "bonusBackBtn", "bonus"],
+    ["recordsBtn", "recordsBackBtn", "records"],
+    ["statsBtn", "statsBackBtn", "stats"],
+  ];
+  const flipSleep = (ms) => new Promise((r) => setTimeout(r, ms));
+  /* Collect frame timestamps for `ms`, with a WALL-CLOCK stop as well as the frame one. The
+     frame stop alone is a trap in exactly the case this tool exists to detect: when frames are
+     being handed out once every few seconds, the rAF that would close a 600ms window does not
+     arrive for several seconds, and the panel sits there apparently thinking. The timeout hands
+     back whatever did arrive, which is all the gate needs to say no. */
+  const flipFrames = (ms) => new Promise((res) => {
+    const t = [];
+    const stop = performance.now() + ms;
+    let done = false;
+    const finish = () => { if (!done) { done = true; res(t); } };
+    setTimeout(finish, ms + 400);
+    (function f(n) {
+      if (done) return;
+      t.push(n);
+      if (n < stop) requestAnimationFrame(f); else finish();
+    })(performance.now());
+  });
+  const flipGaps = (t) => { const g = []; for (let i = 1; i < t.length; i++) g.push(t[i] - t[i - 1]); return g; };
+  const flipMedian = (a) => { const s = [...a].sort((x, y) => x - y); return s[Math.floor(s.length / 2)]; };
+
+  /* The gate. One frame budget measured at rest, which doubles as the refresh rate (so a 120Hz
+     screen is judged against 8.3ms rather than a hardcoded 16.7) and as the proof that frames
+     are being presented at all. A window that is minimised, fully covered by another window, or
+     on a background desktop keeps reporting visibilityState "visible" while Chrome quietly drops
+     to a frame every second or three, and every number taken in that state is fiction. */
+  async function flipBudget() {
+    const g = flipGaps(await flipFrames(600));
+    if (g.length < 12) {
+      return { ok: false, why: `only ${g.length} frames in 600ms — the window is not being drawn.` };
+    }
+    const budget = flipMedian(g);
+    if (budget > 24) {
+      return { ok: false, why: `idle frames are ${budget.toFixed(1)}ms apart — the window is being throttled.` };
+    }
+    return { ok: true, budget, idleDropped: g.filter((x) => x > budget * 1.6).length };
+  }
+
+  async function profileOneFlip(openId, backId, budget) {
+    await flipSleep(600);
+    const t0 = performance.now();
+    const pending = flipFrames(1300);
+    document.getElementById(openId)?.click();
+    const t = await pending;
+    const g = [];
+    for (let i = 1; i < t.length; i++) g.push({ at: Math.round(t[i - 1] - t0), ms: t[i] - t[i - 1] });
+    const bad = g.filter((x) => x.ms > budget * 1.6);
+    const screen = document.querySelector(".screen.active");
+    const worst = bad.slice().sort((a, b) => b.ms - a.ms)[0];
+    const out = {
+      dropped: bad.length,
+      lost: Math.round(bad.reduce((a, x) => a + x.ms - budget, 0)),
+      worst: worst ? `${Math.round(worst.ms)}ms @${worst.at}ms` : "-",
+      nodes: screen ? screen.getElementsByTagName("*").length : 0,
+      docH: document.documentElement.scrollHeight,
+    };
+    document.getElementById(backId)?.click();
+    await flipSleep(1200);
+    return out;
+  }
+
+  const flipBox = mk("pre", { class: "dv-pre" }, "not run yet");
+  const flipSel = select([["", "every page"], ...FLIP_TARGETS.map((t) => [t[0], t[2]])],
+    (x) => x[0], (x) => x[1]);
+  const flipRuns = select([1, 3, 5], (x) => String(x), (x) => `${x} run${x > 1 ? "s" : ""} each`);
+  flipRuns.value = "3";
+  const flipBtn = btn("profile", async () => {
+    flipBtn.disabled = true;
+    try {
+      flipBox.textContent = "measuring the frame budget…";
+      const gate = await flipBudget();
+      if (!gate.ok) {
+        // Refusing is the feature. A number from a throttled window looks exactly like a real
+        // one and is worth less than nothing, because it gets acted on.
+        flipBox.textContent = `CANNOT MEASURE: ${gate.why}\n` +
+          `Bring the window fully to the front (not covered, not on another desktop) and run it again.`;
+        return;
+      }
+      const start = document.querySelector(".screen.active");
+      if (start && start.id !== "screen-start") {
+        flipBox.textContent = "Go back to the front page first: the profiler turns pages from there.";
+        return;
+      }
+      const targets = flipSel.value ? FLIP_TARGETS.filter((t) => t[0] === flipSel.value) : FLIP_TARGETS;
+      const runs = Number(flipRuns.value) || 3;
+      const hz = Math.round(1000 / gate.budget);
+      const lines = [`budget ${gate.budget.toFixed(1)}ms/frame (~${hz}Hz), ${gate.idleDropped} dropped at rest`,
+                     "page          nodes   docH   lost ms        worst frame"];
+      let n = 0;
+      for (const [openId, backId, label] of targets) {
+        n += 1;
+        if (!document.getElementById(openId)) { lines.push(`${label.padEnd(13)} (button not on this page)`); continue; }
+        const got = [];
+        for (let i = 0; i < runs; i++) {
+          // Each run is a real page turn plus the settle either side, so a full sweep is the
+          // better part of a minute. Say where it is rather than looking hung.
+          flipBox.textContent = lines.join("\n") +
+            `\n\nturning to ${label}… (page ${n}/${targets.length}, run ${i + 1}/${runs})`;
+          got.push(await profileOneFlip(openId, backId, gate.budget));
+        }
+        const last = got[got.length - 1];
+        lines.push(
+          label.padEnd(13) +
+          String(last.nodes).padStart(6) +
+          String(last.docH).padStart(7) + "   " +
+          got.map((r) => String(r.lost)).join("/").padEnd(14) +
+          got.map((r) => r.worst)[0]
+        );
+        flipBox.textContent = lines.join("\n");
+      }
+      lines.push(`lost ms = time beyond budget across the turn, one figure per run.`);
+      flipBox.textContent = lines.join("\n");
+    } finally { flipBtn.disabled = false; }
+  });
+  body.append(section("flip profiler",
+    row(flipSel, flipRuns),
+    row(flipBtn),
+    flipBox));
+
   // ---- The typing hint's fade -------------------------------------------------
   // The instruction under the answer line teaches, then abbreviates, then retires, segment by
   // segment, over dozens of pages. That is far too slow to watch, so age it by hand: pick a
