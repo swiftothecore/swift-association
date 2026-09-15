@@ -1,23 +1,36 @@
 /* Service worker for Swift To The Song Association (static, GitHub Pages).
  *
  * Strategy:
- *  - same-origin FONTS → CACHE-FIRST. A .woff2 here is immutable: the filename
- *    changes when the face does, so there is nothing to revalidate. Sending them
- *    down the network-first path cost a round trip on EVERY load (`cache: "reload"`
- *    below deliberately bypasses the HTTP cache), which is a real problem for a
- *    font: a slow face means a flash of the fallback. Serve from the precache.
- *  - other same-origin → NETWORK-FIRST (always latest when online; fall back to
- *    cache offline). Root and known panel navigations use the cached notebook shell;
- *    other uncached navigations use the cached 404 page. This deliberately
- *    avoids the "my deploy isn't showing up" stale-code trap — no need to bump
- *    CACHE on every change; bump it only to evict stale precached entries.
- *  - cross-origin → CACHE-FIRST (kept as a safety net; the fonts are now
- *    self-hosted same-origin, so in practice nothing hits this branch).
+ *  - HTML NAVIGATIONS → NETWORK-FIRST, always. The shell is the one thing that must never be
+ *    stale, because it is what points at everything else. Root and known panel navigations are
+ *    answered with index.html; the searcher and any other page fetches itself; an uncached
+ *    navigation that is neither falls back to the real 404 page, never the game shell.
+ *  - PRECACHED ASSETS (the ASSETS list) → CACHE-FIRST, served straight from the versioned
+ *    cache with no network round trip at all. This is the whole point of the worker: the
+ *    notebook is ~1.3MB gzipped across forty-odd files, and paying for every byte of it on
+ *    every single visit was the single biggest thing between opening the site and playing it.
+ *  - other same-origin (guest catalogues, anything not precached) → NETWORK-FIRST, cached as
+ *    it goes, so it works offline from the second visit.
+ *  - cross-origin → CACHE-FIRST (kept as a safety net; the fonts are now self-hosted
+ *    same-origin, so in practice nothing hits this branch).
+ *
+ * BUMP `CACHE` ON EVERY DEPLOY THAT TOUCHES A PRECACHED FILE. This is not the old advice and
+ * the difference matters: the worker used to fetch everything with `cache: "reload"`, so the
+ * code on screen was always the code on the server and the version string only evicted dead
+ * entries. Cache-first removes that safety net. The version string IS the deploy now, and a
+ * push that edits js/app.js without bumping it ships nothing to anyone who has been here
+ * before. Bumping costs a background re-download and nothing else, so when in doubt, bump.
+ *
+ * What still updates on its own: the browser revalidates sw.js itself on every navigation, so
+ * a bumped worker installs without anyone clearing anything, and `skipWaiting` + `claim` below
+ * hand the new cache to the next navigation. And because install fetches with `cache: "reload"`
+ * (see below), a bump is guaranteed to precache what is actually on the server rather than
+ * whatever GitHub Pages' max-age left sitting in the HTTP cache.
  *
  * Paths are relative so the worker works at the site root (swiftassociation.com)
  * and under any project subpath, without hardcoding the origin.
  */
-const CACHE = "stta-v92";
+const CACHE = "stta-v93";
 // The game's panel routes. These are sections of index.html, not files, so a navigation to one
 // has nothing on the server to fetch: 404.html bounces it back through a ?/slug marker. Once
 // this worker is installed we can do better and answer with index.html directly, so a deep link
@@ -152,9 +165,35 @@ const ASSETS = [
   // so it works offline from then on. Keep new guests out of this list.
 ];
 
+/* The same list as absolute URLs, for the cache-first branch below to test a request against.
+   Resolved against the worker's own location so the relative paths keep working under a project
+   subpath. The href includes the query string, which is what makes "styles.css?v=80" match the
+   exact URL index.html asks for and nothing else. */
+const PRECACHED = new Set(ASSETS.map((path) => new URL(path, self.location).href));
+
+/* Precache every asset, bypassing the HTTP cache on the way.
+   cache.addAll() would be shorter, but it fetches through the browser's HTTP cache, and GitHub
+   Pages serves these files with a max-age. A worker installing inside that window would happily
+   precache the copies the previous deploy left behind and then serve them cache-first forever,
+   which is the exact failure this whole strategy has to be immune to. Fetching each file with
+   `cache: "reload"` guarantees the precache holds what is really on the server.
+   Atomic like addAll: a single missing or non-ok file rejects the install and leaves the old
+   worker (and its complete cache) in charge, rather than claiming clients with half a site. */
 self.addEventListener("install", (e) => {
   e.waitUntil(
-    caches.open(CACHE).then((c) => c.addAll(ASSETS)).then(() => self.skipWaiting())
+    caches
+      .open(CACHE)
+      .then((c) =>
+        Promise.all(
+          ASSETS.map((path) =>
+            fetch(new Request(path, { cache: "reload" })).then((res) => {
+              if (!res.ok) throw new Error(`precache failed: ${path} (${res.status})`);
+              return c.put(path, res);
+            })
+          )
+        )
+      )
+      .then(() => self.skipWaiting())
   );
 });
 
@@ -171,7 +210,14 @@ self.addEventListener("fetch", (e) => {
   const req = e.request;
   if (req.method !== "GET") return;
   const url = new URL(req.url);
-  const isFont = url.origin === location.origin && url.pathname.endsWith(".woff2");
+  // A precached asset is a same-origin subresource on the ASSETS list. Navigations are excluded
+  // on purpose even when the page is on the list (index.html, 404.html, search/): an HTML
+  // document is the one thing that has to come from the network while there is a network, since
+  // it is what decides which version of everything else gets asked for. Fonts land here too,
+  // which is what they always wanted: a .woff2 is immutable, and a round trip for one means a
+  // flash of the fallback face.
+  const isPrecachedAsset =
+    url.origin === location.origin && req.mode !== "navigate" && PRECACHED.has(url.href);
 
   if (url.origin === location.origin && req.mode === "navigate" && isAppShellRoute(url)) {
     // Serve the notebook itself only for its root and known panel URLs. index.html is precached,
@@ -185,26 +231,35 @@ self.addEventListener("fetch", (e) => {
         })
         .catch(() => caches.match("index.html").then((hit) => hit || Response.error()))
     );
-  } else if (isFont) {
-    // Immutable + latency-critical: hand over the precached copy, and only touch
-    // the network for a face this cache has never seen (then keep it).
+  } else if (isPrecachedAsset) {
+    // The fast path, and the reason this worker exists. Everything in ASSETS was fetched fresh
+    // at install time and is keyed to this CACHE version, so there is nothing to revalidate:
+    // hand it straight over. No network, no round trip, no waiting on GitHub Pages before the
+    // notebook can be drawn. Freshness is the version string's job, not this branch's.
+    // The network fallback covers the gap between a worker claiming a client and its install
+    // finishing, and any entry evicted by storage pressure; it refills the cache as it goes.
+    // Scoped to this version's cache rather than caches.match()'s search across all of them:
+    // the previous version's cache is still on disk until activate finishes deleting it, and an
+    // unscoped match can answer an early fetch out of it.
     e.respondWith(
-      caches.match(req).then(
-        (hit) =>
-          hit ||
-          fetch(req).then((res) => {
-            const copy = res.clone();
-            caches.open(CACHE).then((c) => c.put(req, copy));
-            return res;
-          })
+      caches.open(CACHE).then((c) =>
+        c.match(req).then(
+          (hit) =>
+            hit ||
+            fetch(req).then((res) => {
+              c.put(req, res.clone());
+              return res;
+            })
+        )
       )
     );
   } else if (url.origin === location.origin) {
-    // Network-first, then fall back to the exact cached request. An uncached navigation that is
-    // not the root or a known panel route gets the real 404 page, never the game shell.
-    // `cache: "reload"` makes the SW's own fetch BYPASS the browser HTTP cache —
-    // without it, GitHub Pages' max-age means fetch() can return a stale file and
-    // "network-first" silently behaves like "HTTP-cache-first" after a deploy.
+    // Everything not precached: guest catalogues, and any HTML page that fetches itself. Network
+    // first, then fall back to the exact cached request. An uncached navigation that is not the
+    // root or a known panel route gets the real 404 page, never the game shell.
+    // `cache: "reload"` makes the SW's own fetch BYPASS the browser HTTP cache: without it,
+    // GitHub Pages' max-age means fetch() can return a stale file and "network-first" silently
+    // behaves like "HTTP-cache-first" after a deploy.
     e.respondWith(
       fetch(req, { cache: "reload" })
         .then((res) => {

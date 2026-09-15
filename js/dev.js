@@ -770,6 +770,52 @@ export function initDev(api) {
         btn("restore intros", () => { api.onboarding.quiet(false); toast("first impressions restored — reload"); })),
     row(btn("reset", () => { api.onboarding.reset(); toast("onboarding reset"); }, "warn"))));
 
+  // ---- Service worker / precache ----------------------------------------------
+  // Every precached file is served cache-first, which makes the CACHE version string in sw.js
+  // the deploy: edit a precached file without bumping it and the change reaches nobody who has
+  // opened the site before. Nothing on the page looks wrong when that happens, which is exactly
+  // why this section exists. "check" reads the version this browser is holding and the version
+  // sw.js is actually serving, and says which of the two states you are in.
+  const swReport = async () => {
+    if (!("serviceWorker" in navigator)) return "no service worker in this browser";
+    const held = (await caches.keys()).filter((k) => k.startsWith("stta-"));
+    let served = "?";
+    try {
+      const text = await (await fetch("sw.js", { cache: "reload" })).text();
+      served = (text.match(/const CACHE = "([^"]+)"/) || [])[1] || "unparseable";
+    } catch { served = "unreachable (offline)"; }
+    const mine = held[0] || "none";
+    const count = mine === "none" ? 0 : (await (await caches.open(mine)).keys()).length;
+    const verdict = !navigator.serviceWorker.controller
+      ? "page not controlled (first visit, or a hard reload)"
+      : mine === served ? "up to date"
+      : `STALE: reload once to take ${served}`;
+    return `holding ${mine} (${count} files) · sw.js serves ${served} · ${verdict}` +
+      (held.length > 1 ? ` · ${held.length} caches still on disk` : "");
+  };
+  // Its own output box rather than the shared header readout: the panel tick repaints that
+  // every 600ms, and this report is several lines of the kind you want to sit and read.
+  const swBox = mk("pre", { class: "dv-pre" }, "not checked yet");
+  body.append(section("service worker",
+    row(btn("check", async () => { swBox.textContent = "checking…"; swBox.textContent = await swReport(); })),
+    // update() re-fetches sw.js and installs it if the bytes changed, without waiting for the
+    // browser's own revalidation window. The wipe is the bigger hammer for a precache that has
+    // genuinely gone wrong: it throws away every cache and every registration and starts over.
+    row(btn("update now", async () => {
+          const reg = await navigator.serviceWorker.getRegistration();
+          if (!reg) return toast("no worker registered");
+          await reg.update();
+          swBox.textContent = await swReport();
+          toast("checked for a new worker");
+        }),
+        btn("wipe + reload", async () => {
+          const regs = await navigator.serviceWorker.getRegistrations();
+          await Promise.all(regs.map((r) => r.unregister()));
+          await Promise.all((await caches.keys()).map((k) => caches.delete(k)));
+          location.reload();
+        }, "warn")),
+    swBox));
+
   // ---- The typing hint's fade -------------------------------------------------
   // The instruction under the answer line teaches, then abbreviates, then retires, segment by
   // segment, over dozens of pages. That is far too slow to watch, so age it by hand: pick a
