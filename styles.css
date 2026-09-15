@@ -415,9 +415,11 @@
     /* Blonde oak: a long, transparent growth figure over a finer seamless
        surface. Their 4800 / 1733 heights keep knots, pores and fibres from
        repeating together. Both scroll 1:1 with the notebook and desk props.
-       Noise stitches at its edges; drawn details stay clear of the vertical
-       join, including the displacement reach. Lighting stays viewport-fixed
-       in body::before, separate from the wood. */
+       Noise stitches at its edges and drawn details stay clear of the
+       horizontal join, so a repeat reads as another gap between rings.
+       Lighting stays viewport-fixed in body::before, separate from the wood.
+       Both tiles come out of scripts/art/make_oak.py; edit there, never here,
+       and keep them at the same CSS width or the two periods stop agreeing. */
     background:
       url("textures/oak-figure.svg") top center / 1200px auto repeat-y,
       url("textures/oak-surface.svg") top center / 1200px auto repeat-y;
