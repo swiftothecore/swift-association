@@ -924,6 +924,22 @@ export function initDev(api) {
     (x) => x[0], (x) => x[1]);
   const flipRuns = select([1, 3, 5], (x) => String(x), (x) => `${x} run${x > 1 ? "s" : ""} each`);
   flipRuns.value = "3";
+  const flipMode = select([["", "as it ships"], ["ab", "A/B the height growth"]], (x) => x[0], (x) => x[1]);
+
+  /* The A/B arm. settleHeight grows `.app` by TRANSITIONING its height when the destination is
+     taller than the page being left, and height is a layout property: every frame of that 0.42s
+     relayouts and REPAINTS the notebook. Suppressing the transition leaves the growth itself
+     alone and collapses it to one step, so the pair isolates the animation rather than the
+     resize. Worth having as a button rather than a one-off: the same measurement taken in a
+     small window says the animation is nearly free, because the repaint it forces is nearly
+     free there, and the honest answer only appears at the size the page is really read at.
+     Blunt on purpose, `.app` runs no other transition during a turn. */
+  const HEIGHT_GROWTH_OFF = ".app{transition:none !important}";
+  function suppress(css) {
+    const el = mk("style", {}, css);
+    document.head.append(el);
+    return () => el.remove();
+  }
   const flipBtn = btn("profile", async () => {
     flipBtn.disabled = true;
     try {
@@ -954,14 +970,18 @@ export function initDev(api) {
       for (const [openId, backId, label] of targets) {
         n += 1;
         if (!document.getElementById(openId)) { lines.push(`${label.padEnd(13)} (button not on this page)`); continue; }
-        const got = [];
-        for (let i = 0; i < runs; i++) {
-          // Each run is a real page turn plus the settle either side, so a full sweep is the
-          // better part of a minute. Say where it is rather than looking hung.
-          flipBox.textContent = lines.join("\n") +
-            `\n\nturning to ${label}… (page ${n}/${targets.length}, run ${i + 1}/${runs})`;
-          got.push(await profileOneFlip(openId, backId, gate.budget));
-        }
+        const arm = async (note) => {
+          const got = [];
+          for (let i = 0; i < runs; i++) {
+            // Each run is a real page turn plus the settle either side, so a full sweep is the
+            // better part of a minute. Say where it is rather than looking hung.
+            flipBox.textContent = lines.join("\n") +
+              `\n\nturning to ${label}${note}… (page ${n}/${targets.length}, run ${i + 1}/${runs})`;
+            got.push(await profileOneFlip(openId, backId, gate.budget));
+          }
+          return got;
+        };
+        const got = await arm("");
         const last = got[got.length - 1];
         // The late COUNT next to the lost TOTAL is what separates a turn with two big stalls in
         // it from one that is merely late on every frame it draws; they feel different and they
@@ -975,14 +995,29 @@ export function initDev(api) {
           got.map((r) => r.worst)[0]
         );
         flipBox.textContent = lines.join("\n");
+        if (flipMode.value === "ab") {
+          const release = suppress(HEIGHT_GROWTH_OFF);
+          let off;
+          try { off = await arm(" without height growth"); } finally { release(); }
+          lines.push(
+            "  no growth".padEnd(26) + "   " +
+            off.map((r) => String(r.lost)).join("/").padEnd(13) +
+            off.map((r) => String(r.dropped)).join("/").padEnd(8) +
+            off.map((r) => r.worst)[0]
+          );
+          flipBox.textContent = lines.join("\n");
+        }
       }
       lines.push("", "lost ms = time beyond budget across the turn; late = how many frames were late. One figure per run.");
+      if (flipMode.value === "ab") {
+        lines.push("\"no growth\" = the same turn with settleHeight's height transition suppressed.");
+      }
       flipBox.textContent = lines.join("\n");
     } finally { flipBtn.disabled = false; }
   });
   body.append(section("flip profiler",
     row(flipSel, flipRuns),
-    row(flipBtn),
+    row(flipMode, flipBtn),
     flipBox));
 
   // ---- The typing hint's fade -------------------------------------------------
