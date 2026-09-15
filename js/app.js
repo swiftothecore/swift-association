@@ -1251,12 +1251,26 @@ function beginPageTurn(anchor) {
     minHeight: app.style.minHeight,
     maxHeight: app.style.maxHeight,
     overflow: app.style.overflow,
+    overflowClipMargin: app.style.overflowClipMargin,
     transition: app.style.transition,
   };
   app.style.height = appRect.height + "px";
   app.style.minHeight = appRect.height + "px";
   app.style.maxHeight = appRect.height + "px";
   app.style.overflow = "clip";
+  /* The clip has to stand off the paper's edge, or it cuts the page's own drop shadow off for
+     the length of the turn. A screen is a direct child of .app, its shadow is painted outside
+     its border box, and `overflow: clip` clips a descendant's ink as readily as its content: the
+     destination sat there shadowless under the turning sheet and only got its edges back when
+     finish() put the overflow back, which read as the shadow arriving late rather than the page
+     having had one all along. It should simply take over from the shadow the outgoing sheet was
+     casting, in the same frame the turn starts.
+     58px is the furthest the page's own shadow reaches: the widest layer is
+     `0 18px 40px`, so 18 + 40 down, 40 to the sides. Re-measure it if that shadow is
+     restyled (the .screen.card rule). The margin does let 58px more of a taller destination
+     show below the lock, which is paper the turn was hiding anyway and is the cheaper of the
+     two wrongs by a distance. */
+  app.style.overflowClipMargin = "58px";
 
   const held = [];
   let callback = null;
@@ -1302,6 +1316,7 @@ function beginPageTurn(anchor) {
       app.style.minHeight = oldStyle.minHeight;
       app.style.maxHeight = oldStyle.maxHeight;
       app.style.overflow = oldStyle.overflow;
+      app.style.overflowClipMargin = oldStyle.overflowClipMargin;
       held.reverse().forEach(({ el, name, had, value }) => {
         if (had) el.setAttribute(name, value == null ? "" : value);
         else el.removeAttribute(name);
