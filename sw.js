@@ -1,18 +1,30 @@
 /* Service worker for Swift To The Song Association (static, GitHub Pages).
  *
  * Strategy:
- *  - HTML NAVIGATIONS → NETWORK-FIRST, always. The shell is the one thing that must never be
- *    stale, because it is what points at everything else. Root and known panel navigations are
- *    answered with index.html; the searcher and any other page fetches itself; an uncached
- *    navigation that is neither falls back to the real 404 page, never the game shell.
- *  - PRECACHED ASSETS (the ASSETS list) → CACHE-FIRST, served straight from the versioned
+ *  - EVERYTHING PRECACHED → CACHE-FIRST, the page included, served straight from the versioned
  *    cache with no network round trip at all. This is the whole point of the worker: the
  *    notebook is ~1.3MB gzipped across forty-odd files, and paying for every byte of it on
  *    every single visit was the single biggest thing between opening the site and playing it.
+ *    Root and known panel navigations are answered with the precached index.html; the searcher
+ *    and the 404 page are precached under their own paths and answered the same way.
  *  - other same-origin (guest catalogues, anything not precached) → NETWORK-FIRST, cached as
- *    it goes, so it works offline from the second visit.
+ *    it goes, so it works offline from the second visit. An uncached navigation that is not the
+ *    root or a known panel route falls back to the real 404 page, never the game shell.
  *  - cross-origin → CACHE-FIRST (kept as a safety net; the fonts are now self-hosted
  *    same-origin, so in practice nothing hits this branch).
+ *
+ * The page is served from the cache rather than the network ON PURPOSE, and it is the second
+ * decision here worth understanding. Serving it network-first sounds strictly safer, and it is
+ * not: it hands out the NEW markup to a page that is still controlled by the OLD worker, and so
+ * still runs the OLD modules out of the old cache. One visit of new HTML against last deploy's
+ * JavaScript is a mismatch that cannot happen at all when both come from the same cache. A
+ * client is either wholly on one version or wholly on the next, never straddling two.
+ *
+ * What makes that safe is that the worker script is not subject to any of this. sw.js is never
+ * served through the fetch handler below; the browser revalidates it out of band on navigation,
+ * so a new worker is still found, installed and activated even though no navigation has touched
+ * the network in weeks. The cost is a one-visit lag: the page you are looking at keeps the
+ * worker it was bound to, and the new one takes over from the next navigation.
  *
  * BUMP `CACHE` ON EVERY DEPLOY THAT TOUCHES A PRECACHED FILE. This is not the old advice and
  * the difference matters: the worker used to fetch everything with `cache: "reload"`, so the
@@ -30,7 +42,7 @@
  * Paths are relative so the worker works at the site root (swiftassociation.com)
  * and under any project subpath, without hardcoding the origin.
  */
-const CACHE = "stta-v93";
+const CACHE = "stta-v94";
 // The game's panel routes. These are sections of index.html, not files, so a navigation to one
 // has nothing on the server to fetch: 404.html bounces it back through a ?/slug marker. Once
 // this worker is installed we can do better and answer with index.html directly, so a deep link
@@ -206,53 +218,48 @@ self.addEventListener("activate", (e) => {
   );
 });
 
+/* Cache-first against THIS version's cache.
+   `key` is what to look up (a request, or a path when the URL asked for is not the file that
+   answers it, as with a panel route answered by index.html). Scoped with caches.open(CACHE)
+   rather than the unscoped caches.match(), which searches every cache in creation order: the
+   previous version's is still on disk until activate finishes deleting it, and an unscoped
+   match can quietly answer an early fetch out of it.
+   The network fallback covers the gap between a worker claiming a client and its install
+   finishing, and any entry evicted by storage pressure; it refills the cache as it goes. */
+const cacheFirst = (key, req = key) =>
+  caches.open(CACHE).then((c) =>
+    c.match(key).then(
+      (hit) =>
+        hit ||
+        fetch(req, { cache: "reload" }).then((res) => {
+          if (res.ok) c.put(key, res.clone());
+          return res;
+        })
+    )
+  );
+
 self.addEventListener("fetch", (e) => {
   const req = e.request;
   if (req.method !== "GET") return;
   const url = new URL(req.url);
-  // A precached asset is a same-origin subresource on the ASSETS list. Navigations are excluded
-  // on purpose even when the page is on the list (index.html, 404.html, search/): an HTML
-  // document is the one thing that has to come from the network while there is a network, since
-  // it is what decides which version of everything else gets asked for. Fonts land here too,
-  // which is what they always wanted: a .woff2 is immutable, and a round trip for one means a
-  // flash of the fallback face.
-  const isPrecachedAsset =
-    url.origin === location.origin && req.mode !== "navigate" && PRECACHED.has(url.href);
+  // Anything on the ASSETS list, same-origin. Navigations are NOT excluded: the searcher and the
+  // 404 page are on the list under their own paths and are answered from the cache like
+  // everything else, so a page and the modules it loads always come from one version. Fonts land
+  // here too, which is what they always wanted: a .woff2 is immutable, and a round trip for one
+  // means a flash of the fallback face.
+  const isPrecachedAsset = url.origin === location.origin && PRECACHED.has(url.href);
 
   if (url.origin === location.origin && req.mode === "navigate" && isAppShellRoute(url)) {
-    // Serve the notebook itself only for its root and known panel URLs. index.html is precached,
-    // and `cache: "reload"` keeps the network copy authoritative when there is one.
-    e.respondWith(
-      fetch("index.html", { cache: "reload" })
-        .then((res) => {
-          const copy = res.clone();
-          caches.open(CACHE).then((c) => c.put("index.html", copy));
-          return res;
-        })
-        .catch(() => caches.match("index.html").then((hit) => hit || Response.error()))
-    );
+    // The notebook itself, for its root and its known panel URLs. A panel route is a section of
+    // index.html rather than a file, so there is nothing at that path to ask for: the precached
+    // shell is the answer, and the route only decides which panel app.js opens.
+    e.respondWith(cacheFirst("index.html", new Request("index.html")));
   } else if (isPrecachedAsset) {
     // The fast path, and the reason this worker exists. Everything in ASSETS was fetched fresh
     // at install time and is keyed to this CACHE version, so there is nothing to revalidate:
     // hand it straight over. No network, no round trip, no waiting on GitHub Pages before the
     // notebook can be drawn. Freshness is the version string's job, not this branch's.
-    // The network fallback covers the gap between a worker claiming a client and its install
-    // finishing, and any entry evicted by storage pressure; it refills the cache as it goes.
-    // Scoped to this version's cache rather than caches.match()'s search across all of them:
-    // the previous version's cache is still on disk until activate finishes deleting it, and an
-    // unscoped match can answer an early fetch out of it.
-    e.respondWith(
-      caches.open(CACHE).then((c) =>
-        c.match(req).then(
-          (hit) =>
-            hit ||
-            fetch(req).then((res) => {
-              c.put(req, res.clone());
-              return res;
-            })
-        )
-      )
-    );
+    e.respondWith(cacheFirst(req));
   } else if (url.origin === location.origin) {
     // Everything not precached: guest catalogues, and any HTML page that fetches itself. Network
     // first, then fall back to the exact cached request. An uncached navigation that is not the
