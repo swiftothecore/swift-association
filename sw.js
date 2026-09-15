@@ -42,7 +42,7 @@
  * Paths are relative so the worker works at the site root (swiftassociation.com)
  * and under any project subpath, without hardcoding the origin.
  */
-const CACHE = "stta-v94";
+const CACHE = "stta-v95";
 // The game's panel routes. These are sections of index.html, not files, so a navigation to one
 // has nothing on the server to fetch: 404.html bounces it back through a ?/slug marker. Once
 // this worker is installed we can do better and answer with index.html directly, so a deep link
@@ -60,7 +60,7 @@ const ASSETS = [
   "ink.css",
   // Keep the revision query exact: Cache.match() includes the query string, and
   // index.html deliberately requests this URL to break the browser HTTP cache.
-  "styles.css?v=80",
+  "styles.css?v=81",
   "textures/oak-surface.svg",
   "textures/oak-figure.svg",
   // Self-hosted fonts (latin subset). Precached so first offline load has the
@@ -179,7 +179,7 @@ const ASSETS = [
 
 /* The same list as absolute URLs, for the cache-first branch below to test a request against.
    Resolved against the worker's own location so the relative paths keep working under a project
-   subpath. The href includes the query string, which is what makes "styles.css?v=80" match the
+   subpath. The href includes the query string, which is what makes "styles.css?v=81" match the
    exact URL index.html asks for and nothing else. */
 const PRECACHED = new Set(ASSETS.map((path) => new URL(path, self.location).href));
 

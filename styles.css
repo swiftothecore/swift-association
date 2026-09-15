@@ -9554,6 +9554,21 @@
        so anything the tiers draw takes its weight from these instead. */
     --tier-rule: rgba(43,39,34,0.30);
     --tier-lift: rgba(43,39,34,0.10);
+    /* Skip layout and paint for the tiles that are off-screen. The Charm Collection draws all
+       244 tiles at once down a page thirteen thousand pixels tall, of which about a screenful
+       is ever in view; laying the other ninety-two percent out was the single most expensive
+       thing in the notebook, and it landed inside the page turn that opens this page. Measured
+       on the flip in: laying the body out drops from 18.1ms to 5.7ms.
+       The 49px is the CONTENT box, not the tile. contain-intrinsic-size sizes the content box
+       and these tiles add 21px of padding and border on top, so a tile of the commonest height
+       (70px drawn) is 49 here; guessing at the drawn height instead makes the page LONGER than
+       it really is, which is the wrong way round and the easy mistake to make. 49 is the mean
+       drawn height less that chrome, and it holds the page to within 15px of its true 12,998
+       (0.1%). `auto` then lets each tile remember its real height once it has been seen, so the
+       estimate only ever governs a tile nobody has scrolled to yet. Re-measure this number if
+       the tile's padding, border or type sizes move. */
+    content-visibility: auto;
+    contain-intrinsic-size: auto 49px;
   }
   :root[data-theme="dark"] .ach { --tier-rule: rgba(236,229,214,0.32); --tier-lift: rgba(0,0,0,0.38); }
   .ach .charm { width: 30px; height: 30px; flex: none; }
