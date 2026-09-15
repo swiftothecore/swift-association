@@ -894,6 +894,31 @@ export function initDev(api) {
     return out;
   }
 
+  /* What the run was measured UNDER. Every one of these has already been the answer to "why
+     does that number look nothing like mine": a profile taken in a narrow pane against an empty
+     notebook, or against a stylesheet the service worker was still serving from its own cache,
+     is not comparable to one taken on a real desk, and nothing in a table of milliseconds says
+     so. Printed at the top of every run so a pasted result carries its own conditions. */
+  async function flipConditions() {
+    // The tile rule can only be read off a real .ach, and there is no .ach on the page until the
+    // collection has been drawn once — so stand one up, read it, and take it away again.
+    const probe = mk("div", { class: "ach", style: "position:absolute;left:-9999px;top:0" });
+    document.body.append(probe);
+    const cv = getComputedStyle(probe).contentVisibility || "(unsupported)";
+    const intrinsic = getComputedStyle(probe).containIntrinsicSize || "-";
+    probe.remove();
+    const held = (await caches.keys()).filter((k) => k.startsWith("stta-"));
+    const sheet = [...document.querySelectorAll('link[rel="stylesheet"]')]
+      .map((l) => l.getAttribute("href")).find((h) => h && h.includes("styles.css")) || "-";
+    const dpr = window.devicePixelRatio || 1;
+    return [
+      `window ${window.innerWidth}x${window.innerHeight} @${dpr}x` +
+        ` (${(window.innerWidth * window.innerHeight * dpr * dpr / 1e6).toFixed(1)}Mpx to raster per frame)`,
+      `tiles  content-visibility:${cv} contain-intrinsic-size:${intrinsic}`,
+      `served ${sheet} · worker ${held[0] || "none"}${navigator.serviceWorker.controller ? "" : " (page not controlled)"}`,
+    ];
+  }
+
   const flipBox = mk("pre", { class: "dv-pre" }, "not run yet");
   const flipSel = select([["", "every page"], ...FLIP_TARGETS.map((t) => [t[0], t[2]])],
     (x) => x[0], (x) => x[1]);
@@ -919,8 +944,12 @@ export function initDev(api) {
       const targets = flipSel.value ? FLIP_TARGETS.filter((t) => t[0] === flipSel.value) : FLIP_TARGETS;
       const runs = Number(flipRuns.value) || 3;
       const hz = Math.round(1000 / gate.budget);
-      const lines = [`budget ${gate.budget.toFixed(1)}ms/frame (~${hz}Hz), ${gate.idleDropped} dropped at rest`,
-                     "page          nodes   docH   lost ms        worst frame"];
+      const lines = [
+        ...(await flipConditions()),
+        `budget ${gate.budget.toFixed(1)}ms/frame (~${hz}Hz), ${gate.idleDropped} dropped at rest`,
+        "",
+        "page          nodes   docH   lost ms       late    worst frame",
+      ];
       let n = 0;
       for (const [openId, backId, label] of targets) {
         n += 1;
@@ -934,16 +963,20 @@ export function initDev(api) {
           got.push(await profileOneFlip(openId, backId, gate.budget));
         }
         const last = got[got.length - 1];
+        // The late COUNT next to the lost TOTAL is what separates a turn with two big stalls in
+        // it from one that is merely late on every frame it draws; they feel different and they
+        // have different causes, and the total alone cannot tell them apart.
         lines.push(
           label.padEnd(13) +
           String(last.nodes).padStart(6) +
           String(last.docH).padStart(7) + "   " +
-          got.map((r) => String(r.lost)).join("/").padEnd(14) +
+          got.map((r) => String(r.lost)).join("/").padEnd(13) +
+          got.map((r) => String(r.dropped)).join("/").padEnd(8) +
           got.map((r) => r.worst)[0]
         );
         flipBox.textContent = lines.join("\n");
       }
-      lines.push(`lost ms = time beyond budget across the turn, one figure per run.`);
+      lines.push("", "lost ms = time beyond budget across the turn; late = how many frames were late. One figure per run.");
       flipBox.textContent = lines.join("\n");
     } finally { flipBtn.disabled = false; }
   });
