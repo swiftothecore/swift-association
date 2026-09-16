@@ -3331,6 +3331,17 @@ if (location.pathname.endsWith('/index.html')) {
     <div id="guestDetailBody"></div>
   </section>
 
+  <!-- THE LINEUP: THE GOAL DECK — all twenty-four cards, what each one asks, and what you
+       have done with it. Its own panel rather than a block on the laminate: the laminate is
+       a decision you make in one screenful, and twenty-four rules do not fit inside one. -->
+  <section id="screen-lineup-board" class="screen card" tabindex="-1" aria-label="The lineup: the goal deck">
+    <div class="stats-nav">
+      <span class="title-group"><span class="stats-title">The goal deck</span></span>
+      <button id="lineupBoardBackBtn" class="btn-link">← the lineup</button>
+    </div>
+    <div id="lineupBoardBody"></div>
+  </section>
+
   <!-- THE LINEUP: THE FELT — five goal cards dealt before page one, keep up to three.
        Dealt rather than picked from the whole deck on purpose: the 24-pip budget only
        bites because you do not get to choose which five turn up. -->

@@ -5472,6 +5472,13 @@
   }
   :root[data-theme="dark"] .guest-rec-dot { --rec-dot-ring: rgba(236,229,214,0.26); }
   .guest-rec-name { flex: 1; min-width: 0; }
+  /* The lineup's list is eight short NAMES, not a guest's albums with a track count beside
+     each, so it sets as a wrapped row of beads instead of eight full-width ruled lines. The
+     laminate has to be read in one screenful and the ruled version spent two hundred pixels
+     saying eight words. */
+  .guest-recs--inline { display: flex; flex-wrap: wrap; gap: 2px 18px; margin-bottom: 12px; }
+  .guest-recs--inline li { flex: 0 0 auto; padding: 3px 0; gap: 7px; border-bottom: 0; }
+  .guest-recs--inline .guest-rec-name { flex: 0 0 auto; }
   .guest-rec-n { color: var(--ink-soft); font-size: calc(10.5px + var(--text-size-adjust)); letter-spacing: 1px; }
   .guest-detail-note {
     margin: 12px 0 0; font-family: var(--hand); font-size: calc(18px + var(--text-size-adjust));
@@ -13110,42 +13117,94 @@ body.lu-nomiss .lu-miss { visibility: hidden; }
 .lu-goals-result { margin: 8px 0 6px; }
 
 /* ---- THE GOAL BOARD ----
-   The mode's record, on the laminate's panel. It FLOWS BY COLUMN over six rows, which puts one
-   suit in each column, because DECK is ordered by suit six at a time and the board should read
-   as the deck laid out rather than as a list of feats. Row flow would break each suit across
-   two rows and lose that for nothing. No column headings: every chip carries its suit pip, so
-   a column of spades already looks like one.
-   It reuses the results screen's own marks on purpose: a card ticked here is the same card,
-   marked the same way, as the one that was ticked at the end of the run that earned it.
-
-   The three states in one sentence: ticked is held, struck in red pen is dealt and lost, and
-   faint is a card chance has not brought you yet. Faint is NOT greyscale or hidden, because the
-   name still has to be readable — the board sits on the panel where a player decides whether to
-   play, so the deck has to be legible even where the record is empty. */
-.lu-board {
-  display: grid; grid-template-rows: repeat(6, auto); grid-auto-flow: column;
-  grid-auto-columns: minmax(0, 1fr); gap: 6px 12px; margin: 4px 0 8px;
-}
-.lu-board-cell {
-  display: inline-flex; align-items: center; gap: 4px; position: relative; min-width: 0;
+   The mode's record lives on its own panel (see renderLineupBoardPage); what sits on the
+   laminate is a STUB of it. The stub is a line of the panel's own typewriter, not a button
+   with a border: a control drawn in full on a panel whose one real control is "Deal me a
+   hand" would compete with it, and this is a way through to a record, not a second way to
+   play. The rule above it is the same dashed one the catch uses, so it reads as another
+   section of the laminate rather than something stuck on the end. */
+.lu-board-stub {
+  display: flex; align-items: baseline; gap: 6px 12px; flex-wrap: wrap; width: 100%;
+  background: none; border: 0; border-top: 1px dashed #c7ba9b; border-radius: 0;
+  padding: 9px 0 0; margin: 0 0 14px; cursor: pointer; text-align: left;
   font-family: var(--type); font-size: calc(9.5px + var(--text-size-adjust));
-  letter-spacing: 0.3px; color: var(--ink-soft); line-height: 1.35;
+  letter-spacing: 1.2px; text-transform: uppercase; color: var(--ink-soft);
 }
-.lu-board-cell .lu-pip { width: 9px; height: 9px; flex: none; color: currentColor; }
-.lu-board-cell b { font-weight: 400; min-width: 0; }
-.lu-board-cell.is-won { color: var(--ink); }
-.lu-board-cell.is-won b { font-weight: 700; }
-.lu-board-cell.is-won::after { content: " ★"; color: var(--red-pen); flex: none; }
-.lu-board-cell.is-struck { opacity: 0.7; }
-.lu-board-cell.is-struck::before {
-  content: ""; position: absolute; left: -2px; right: -2px; top: 54%;
-  border-top: 1.5px solid var(--red-pen); transform: rotate(-1.2deg); opacity: 0.8;
+.lu-stub-count { opacity: 0.85; }
+.lu-stub-count::before { content: "· "; opacity: 0.55; }
+.lu-stub-go {
+  margin-left: auto; color: var(--red-pen); opacity: 0.9;
+  border-bottom: 1px solid currentColor; padding-bottom: 1px;
 }
-.lu-board-cell.is-undealt { opacity: 0.42; }
-.lu-board-count {
+.lu-board-stub:hover .lu-stub-go, .lu-board-stub:focus-visible .lu-stub-go { opacity: 1; }
+:root[data-theme="dark"] .lu-board-stub { border-top-color: rgba(236,229,214,0.24); }
+
+/* ---- THE GOAL DECK PANEL ----
+   Twenty-four rules, grouped by the four suits, because a suit is what a card PROMISES and a
+   hand is read as a mix of families. Each row prints the name, its price in pips, the line
+   printed on the card's face, and what you have done with it — the last of which the old grid
+   on the laminate could only ever put in a tooltip.
+   Three states in the same vocabulary the felt and the results strand use: ticked is held,
+   struck in red pen is dealt and lost, faint is a card chance has not brought you yet. */
+.lu-deck-lead {
+  font-family: var(--hand); font-size: calc(19px + var(--text-size-adjust)); line-height: 1.3;
+  color: var(--ink); margin: 0 0 6px;
+}
+.lu-deck-count {
   font-family: var(--type); font-size: calc(9px + var(--text-size-adjust));
   letter-spacing: 1.2px; text-transform: uppercase; color: var(--ink-soft); opacity: 0.85;
+  padding-bottom: 10px; border-bottom: 1.5px solid rgba(43,39,34,0.18);
 }
+:root[data-theme="dark"] .lu-deck-count { border-bottom-color: rgba(236,229,214,0.22); }
+.lu-deck { display: grid; gap: 22px 34px; margin-top: 16px; }
+@media (min-width: 720px) { .lu-deck { grid-template-columns: 1fr 1fr; } }
+.lu-deck-head {
+  display: flex; align-items: baseline; gap: 8px; margin: 0 0 3px;
+  font-family: var(--type); font-size: calc(11px + var(--text-size-adjust));
+  letter-spacing: 1.6px; text-transform: uppercase; color: var(--ink);
+}
+.lu-deck-head .lu-pip { width: 11px; height: 11px; flex: none; align-self: center; color: var(--suit, var(--ink-soft)); }
+.lu-deck-head b { font-weight: 700; }
+.lu-deck-gloss { font-family: var(--hand); font-size: calc(16px + var(--text-size-adjust)); letter-spacing: 0; text-transform: none; color: var(--ink-soft); }
+.lu-suit-hearts, .lu-suit-diamonds { --suit: #a8322e; }
+.lu-deck-note {
+  font-family: var(--type); font-size: calc(10px + var(--text-size-adjust)); line-height: 1.5;
+  color: var(--ink-soft); opacity: 0.85; margin: 0 0 9px;
+}
+.lu-deck-list { list-style: none; margin: 0; padding: 0; }
+.lu-deck-row {
+  position: relative; padding: 6px 0; border-bottom: 1px dotted rgba(43,39,34,0.22);
+}
+:root[data-theme="dark"] .lu-deck-row { border-bottom-color: rgba(236,229,214,0.2); }
+.lu-deck-name {
+  display: flex; align-items: baseline; gap: 8px;
+  font-family: var(--type); font-size: calc(11.5px + var(--text-size-adjust)); color: var(--ink);
+}
+.lu-deck-pips {
+  margin-left: auto; flex: none; font-size: calc(9px + var(--text-size-adjust));
+  letter-spacing: 1px; color: var(--ink-soft); opacity: 0.8;
+}
+.lu-deck-rule {
+  display: block; font-family: var(--hand); font-size: calc(17px + var(--text-size-adjust));
+  line-height: 1.22; color: var(--ink); opacity: 0.9;
+}
+.lu-deck-rec {
+  display: block; font-family: var(--type); font-size: calc(8.5px + var(--text-size-adjust));
+  letter-spacing: 0.8px; text-transform: uppercase; color: var(--ink-soft); opacity: 0.7;
+}
+.lu-deck-row.is-won .lu-deck-name { font-weight: 700; }
+.lu-deck-row.is-won .lu-deck-name::after { content: "★"; color: var(--red-pen); font-weight: 400; order: -1; }
+.lu-deck-row.is-won .lu-deck-rec { color: var(--red-pen); opacity: 0.85; }
+/* Struck across the NAME only, not the whole row: the rule still has to be readable, because
+   this panel is where the deck is read. Ruled slightly off level, by hand, like every other
+   strike in the notebook. */
+.lu-deck-row.is-struck .lu-deck-name { opacity: 0.8; }
+.lu-deck-row.is-struck .lu-deck-name::before {
+  content: ""; position: absolute; left: -2px; top: 13px; width: 40%;
+  border-top: 1.5px solid var(--red-pen); transform: rotate(-0.8deg); opacity: 0.8;
+}
+.lu-deck-row.is-undealt { opacity: 0.55; }
+
 /* The payload beat, beside the difficulty label in the panel's act row. It is a status, not
    a warning, so it sits quiet and takes the row's own type; it is empty (and so invisible)
    the moment the blend is built, which on a second visit is immediately. */
@@ -13156,10 +13215,4 @@ body.lu-nomiss .lu-miss { visibility: hidden; }
 .lu-board-news {
   font-family: var(--hand); font-size: calc(15px + var(--text-size-adjust));
   color: var(--red-pen); text-align: center; margin: 2px 0 6px;
-}
-/* Four columns is right on the panel and impossible on a phone, where a card name would break
-   to three lines inside a 70px column. Twelve rows gives two columns instead, and because the
-   deck is six a suit the break still lands cleanly on a suit boundary rather than mid-family. */
-@media (max-width: 560px) {
-  .lu-board { grid-template-rows: repeat(12, auto); }
 }

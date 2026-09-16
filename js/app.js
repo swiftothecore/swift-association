@@ -8,8 +8,8 @@ import { launchFlock } from "./messengers.js";
    js/lineuphand.js for what a hand of them costs and what cannot sit beside what, and
    js/lineupcards.js draws the face. All three are imported rather than reimplemented so
    the rule cannot drift between the board a card is designed on and the felt it is dealt to. */
-import { DECK, byId as goalById } from "./lineupdeck.js";
-import { BUDGET, handCost, conflicts, validateHand, poolForHand, POOL_ORDER } from "./lineuphand.js";
+import { DECK, byId as goalById, SUITS } from "./lineupdeck.js";
+import { BUDGET, handCost, conflicts, validateHand, poolForHand, POOL_ORDER, pips } from "./lineuphand.js";
 import { cardFace, SUIT_LOOK, mark as suitMark, BACKS, backCard } from "./lineupcards.js";
 import { judge, WON, DEAD } from "./lineupgoals.js";
 import {
@@ -975,6 +975,7 @@ const screens = {
   ruthless: $("screen-ruthless"),
   guests: $("screen-guests"),
   lineup: $("screen-lineup"),
+  lineupboard: $("screen-lineup-board"),
   guestdetail: $("screen-guest-detail"),
   mastery: $("screen-mastery"),
   howto: $("screen-howto"),
@@ -11524,34 +11525,99 @@ function closeGuestDetail() {
 
    ALL TWENTY-FOUR NAMES ARE SHOWN, unlike the sticker shelf this borrows its ticked-not-scored
    model from, and that is deliberate rather than an oversight. A sticker is a thing you notice,
-   so hiding it until you do IS the feature. A goal card is a RULE, and the board sits on the
-   panel where you decide whether to play at all; a deck you cannot read until chance has dealt
-   it to you would make the mode less legible for no gain. The record here is what you have done
-   with the cards, not which ones exist.
+   so hiding it until you do IS the feature. A goal card is a RULE, and a deck you cannot read
+   until chance has dealt it to you would make the mode less legible for no gain. The record
+   here is what you have done with the cards, not which ones exist.
+
+   THE DECK HAS ITS OWN PANEL and the laminate carries only a stub of it. It used to be a
+   twenty-four cell grid sitting between the catch and the difficulty tabs, which pushed the
+   thing you came to the laminate to do — read the rule, pick a difficulty, deal — below the
+   fold. Twenty-four rules and a one-screen decision are two different jobs. Split, both get
+   what they need: the laminate says how many you hold and offers the deck, and the deck gets
+   room to print what each card actually ASKS, which the grid never had space for and left
+   buried in a tooltip.
 
    Three states, walked off DECK so the three BENCH cards nothing deals stay off the board:
-   HELD (won at least once, ticked, with the hardest difficulty it was taken at in its tooltip),
-   STRUCK (committed to and lost, every time so far), and UNDEALT (faint). The middle one is why
-   `held` is counted separately from `won`: five off a shuffled twenty-four means a blank cell is
-   usually chance rather than failure, and only one of those two is about the player. */
-function lineupBoardHTML() {
-  const cells = DECK.map((card) => {
-    const rec = lineupCardRecord(card.id);
-    const cls = rec.won ? " is-won" : rec.held ? " is-struck" : " is-undealt";
-    const tip = rec.won
-      ? `held ${rec.won} of ${rec.held}` + (rec.at ? `, hardest at ${diffLabel(rec.at)}` : "")
-      : rec.held ? `dealt and lost, ${rec.held} time${rec.held === 1 ? "" : "s"}`
-      : "never dealt to you";
-    return `<span class="lu-board-cell${cls}" title="${escapeHtml(card.name + " — " + tip)}">` +
-      suitMark(card.suit) + `<b>${escapeHtml(card.name)}</b></span>`;
-  }).join("");
+   HELD (won at least once, with the hardest difficulty it was taken at), STRUCK (committed to
+   and lost, every time so far), and UNDEALT (faint). The middle one is why `held` is counted
+   separately from `won`: five off a shuffled twenty-four means a blank cell is usually chance
+   rather than failure, and only one of those two is about the player. */
+function lineupBoardTally() {
   const won = DECK.filter((c) => lineupCardRecord(c.id).won).length;
   const struck = DECK.filter((c) => { const r = lineupCardRecord(c.id); return !r.won && r.held; }).length;
   const line = won === DECK.length
     ? "every card in the deck, held at least once"
     : `${won} of ${DECK.length} held` + (struck ? ` · ${struck} still owed` : "");
-  return `<div class="lu-board">${cells}</div><div class="lu-board-count">${escapeHtml(line)}</div>`;
+  return { won, struck, line };
 }
+
+/* What a card's record reads as in words, which is the one thing the old grid could not print.
+   A card chance has not brought you yet returns NOTHING rather than "never dealt to you":
+   twenty-four rows each ending in the same four words is noise, and the faint row already
+   says it. The line only appears once there is something to report. */
+function lineupCardTip(id) {
+  const rec = lineupCardRecord(id);
+  if (rec.won) return `held ${rec.won} of ${rec.held}` + (rec.at ? `, hardest at ${diffLabel(rec.at)}` : "");
+  if (rec.held) return `dealt and lost, ${rec.held} time${rec.held === 1 ? "" : "s"}`;
+  return "";
+}
+
+// The stub on the laminate: the tally, and the way through to the deck. One line on purpose.
+function lineupBoardStubHTML() {
+  return `<button type="button" class="lu-board-stub" data-lineup-board="1">` +
+    `<span class="lu-stub-eyebrow">The board</span>` +
+    `<span class="lu-stub-count">${escapeHtml(lineupBoardTally().line)}</span>` +
+    `<span class="lu-stub-go">read the deck →</span></button>`;
+}
+
+/* The deck panel: four suits, and under each the cards it deals, with the rule printed and the
+   record beside it. Grouped by suit rather than listed flat because the suit is what a card
+   PROMISES — a hand is read as a mix of families — and because four headed blocks are how the
+   deck is designed (scripts/lineup/goal-cards.html) and how the felt deals it. */
+function renderLineupBoardPage() {
+  const el = $("lineupBoardBody");
+  if (!el) return;
+  const tally = lineupBoardTally();
+  const suits = Object.keys(SUITS).map((suit) => {
+    const meta = SUITS[suit];
+    const rows = DECK.filter((c) => c.suit === suit).map((card) => {
+      const rec = lineupCardRecord(card.id);
+      const cls = rec.won ? " is-won" : rec.held ? " is-struck" : " is-undealt";
+      const tip = lineupCardTip(card.id);
+      return `<li class="lu-deck-row${cls}">` +
+        `<span class="lu-deck-name">${escapeHtml(card.name)}` +
+          `<span class="lu-deck-pips">${pips(card.rank)} pips</span></span>` +
+        `<span class="lu-deck-rule">${escapeHtml(card.rule)}</span>` +
+        (tip ? `<span class="lu-deck-rec">${escapeHtml(tip)}</span>` : "") + `</li>`;
+    }).join("");
+    return `<section class="lu-deck-suit lu-suit-${suit}">` +
+      `<h3 class="lu-deck-head">${suitMark(suit)}<b>${escapeHtml(meta.label)}</b>` +
+        `<span class="lu-deck-gloss">${escapeHtml(meta.gloss)}</span></h3>` +
+      `<p class="lu-deck-note">${escapeHtml(meta.note)}</p>` +
+      `<ul class="lu-deck-list">${rows}</ul></section>`;
+  }).join("");
+  el.innerHTML =
+    `<p class="lu-deck-lead">Five of these are dealt before page one and you keep up to three, ` +
+      `on a budget of ${BUDGET} pips. A card you held at least once is ticked; one you ` +
+      `committed to and lost is struck.</p>` +
+    `<div class="lu-deck-count">${escapeHtml(tally.line)}</div>` +
+    `<div class="lu-deck">${suits}</div>`;
+}
+
+// The deck is reached from the laminate and goes back to it, so the laminate is re-rendered on
+// the way back: its stub is a readout of a board a run may have just moved.
+function openLineupBoard() {
+  lineupBoardScrollY = window.scrollY;
+  renderLineupBoardPage();
+  flipAwayToScreen("lineupboard");
+  window.scrollTo({ top: 0, behavior: "instant" });
+}
+function closeLineupBoard() {
+  renderLineupDetail();
+  flipInToScreen("guestdetail");
+  requestAnimationFrame(() => window.scrollTo({ top: lineupBoardScrollY, behavior: "instant" }));
+}
+let lineupBoardScrollY = 0;
 
 // Whether the board is full, which is what franks the laminate's stub. Asked of DECK so adding
 // a twenty-fifth card un-completes a board that was complete, which is correct: the pass says
@@ -11576,7 +11642,7 @@ function renderLineupDetail() {
       `<span class="guest-detail-name">The Lineup</span>` +
       `<span class="guest-detail-nums">${shelf.length} catalogues · ${TOTAL_ROUNDS} pages · one strand</span>` +
     `</div>` +
-    `<ul class="guest-recs">${names}</ul>` +
+    `<ul class="guest-recs guest-recs--inline">${names}</ul>` +
     `<div class="chall-sec">` +
       `<div class="chall-eyebrow">The rule</div>` +
       `<div class="chall-rule">${TOTAL_ROUNDS} pages dealt from <b>every catalogue at once</b>, hers and ` +
@@ -11590,10 +11656,7 @@ function renderLineupDetail() {
         `${BUDGET} pips, <b>before page one</b>. They are what makes a wider catalogue harder ` +
         `instead of easier, and you commit to them blind.</div>` +
     `</div>` +
-    `<div class="chall-sec">` +
-      `<div class="chall-eyebrow">The board</div>` +
-      lineupBoardHTML() +
-    `</div>` +
+    lineupBoardStubHTML() +
     `<div class="chall-sec chall-sec--pick">` +
       `<div class="chall-eyebrow">Written at</div>` +
       `<div class="mode-tabs af-diffs">${tabs}</div>` +
@@ -11607,6 +11670,8 @@ function renderLineupDetail() {
     b.addEventListener("click", () => { guestSelectedDiff = b.dataset.diff; renderLineupDetail(); }));
   const go = el.querySelector("[data-lineup-go]");
   if (go) go.addEventListener("click", () => startLineupRun(guestSelectedDiff));
+  const board = el.querySelector("[data-lineup-board]");
+  if (board) board.addEventListener("click", openLineupBoard);
 
   /* The payload beat. Opening the panel starts the build, so the two and a half seconds are
      spent while you read the rule and the board rather than after you have asked for a run.
@@ -29745,7 +29810,19 @@ function buildDevApi() {
         recordLineupRun(cards.map((id) => ({ id, won: true })), lineupDiff);
         return window.__dev.lineup.board();
       },
+      /* Force the STRUCK state — dealt, committed to, and lost every time. There is no other
+         way to see it short of deliberately losing a run, and it is half of what the goal-deck
+         panel prints, so testing that panel without this means hand-writing localStorage. */
+      strike: (...ids) => {
+        const want = ids.flat().filter((id) => DECK.some((c) => c.id === id));
+        const cards = want.length ? want : DECK.map((c) => c.id);
+        recordLineupRun(cards.map((id) => ({ id, won: false })), lineupDiff);
+        return window.__dev.lineup.board();
+      },
       clear: () => { resetLineupBoard(); return window.__dev.lineup.board(); },
+      // The board's own panel, reached from the laminate's stub. Opening it from here skips
+      // the two clicks through the guest shelf, which is the whole cost of checking a state.
+      deck: () => { openLineupBoard(); return `${lineupBoardTally().line}`; },
       restore: () => { restoreCorpus(); return window.__dev.guest.corpus(); },
       drop: () => { blendCorpus = null; blendMerges = []; return "blend dropped — next build refetches"; },
     },
@@ -30786,6 +30863,7 @@ async function init() {
   $("guestShelfBtn").addEventListener("click", () => openGuestShelf("start"));
   $("guestBackBtn").addEventListener("click", () => backToScreen(guestBackTarget));
   $("guestDetailBackBtn").addEventListener("click", closeGuestDetail);
+  $("lineupBoardBackBtn").addEventListener("click", closeLineupBoard);
   // The felt. Delegated, because the five cards are re-rendered on every keep and drop.
   $("lineupFelt").addEventListener("click", (e) => {
     const deal = e.target.closest(".lu-deal");
