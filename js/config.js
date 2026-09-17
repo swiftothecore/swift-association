@@ -2576,8 +2576,8 @@ export const ACH_ICONS = {
 
   // TEMPORARY placeholder charm — a dashed frame around a question mark. Any icon set to
   // "placeholder" is art-pending (new challenges / achievements before their real icon is
-  // drawn). Search "placeholder" to find everything still awaiting a bespoke charm; The Thousandth
-  // Cup is the only one wearing it, and its mark is being drawn separately.
+  // drawn). Search "placeholder" to find everything still awaiting a bespoke charm; as of
+  // 2026-09-17 nothing wears it, and a new charm borrowing it should not stay on it for long.
   placeholder: `<svg viewBox="0 0 24 24"><rect class="ink" fill="none" stroke-width="1.5" stroke-dasharray="2.6 2.2" x="4" y="4" width="16" height="16" rx="3"/><path class="ink" fill="none" stroke-width="1.8" stroke-linecap="round" d="M9.3 9.5 a2.7 2.7 0 1 1 3.5 2.6 c-0.95 0.32 -1.05 0.95 -1.05 1.9"/><circle class="ink-fill" cx="11.75" cy="16.6" r="1.05"/></svg>`,
 
   /* ---- Achievement charm overhaul (every charm bespoke) ---- */
@@ -3149,6 +3149,61 @@ export const ACH_ICONS = {
   // desk that is worked by the hands and answers by luck. Dice were unavailable three times
   // over — the randomiser already wears a pair, and two charms are drawn from them
   fortuneteller:`<svg viewBox="0 0 24 24"><g transform="rotate(-8 12 12)"><path class="ink-fill" d="M12 2.2 L21.8 12 L12 21.8 L2.2 12 Z"/><g class="ink" fill="none"><path d="M7.1 7.1 L16.9 16.9"/><path d="M16.9 7.1 L7.1 16.9"/></g><path stroke="currentColor" stroke-width="1" opacity="0.45" fill="none" d="M7.1 7.1 H16.9 V16.9 H7.1 Z"/><g fill="currentColor" stroke="none"><circle cx="12" cy="8.8" r="0.85"/><circle cx="15.2" cy="12" r="0.85"/><circle cx="12" cy="15.2" r="0.85"/><circle cx="8.8" cy="12" r="0.85"/></g></g></svg>`,
+  /* ---- The last twelve stand-ins, drawn for real (2026-09-17) ----
+     Every charm still wearing the dashed question mark: two one-offs off the buzzer and desk,
+     the miss-pattern secret, Long Story Long's pair, and the seven the Running Order / Word
+     Cloud / endless work shipped on. Each is priced in the thing its charm is about, and
+     each was checked against the mark it sits nearest so the set stays readable at 34px. */
+  // the fuse burnt to the last inch of cord, spark still travelling, the charge an inch off.
+  // A clock was unavailable six times over (stopwatch, halfdial, lasttick, clockrush,
+  // hourglass, clock), and the ladder below this charm already ends on a struck match
+  lastfuse:`<svg viewBox="0 0 24 24"><path class="ink" fill="none" stroke-width="2" d="M21.4 20.6 C16 20.4 11.5 18.3 8.9 14.6 C7.3 12.3 6.9 10.2 7.8 8.8"/><g class="ink" stroke-width="0.9" opacity="0.55" stroke-linecap="round"><path d="M18.4 19.3 L17.8 21.2"/><path d="M14.4 17.6 L13.4 19.3"/><path d="M11.2 15 L9.8 16.4"/><path d="M9 11.9 L7.4 12.6"/></g><g class="ink" stroke-width="1.2" stroke-linecap="round" opacity="0.85"><path d="M6.6 5.7 L6.1 3.9"/><path d="M4.5 7.3 L2.8 6.5"/><path d="M9.4 6.5 L11 5.2"/><path d="M4.1 10.2 L2.3 10.5"/><path d="M9.7 9.7 L11.4 10.4"/></g><circle class="ink-fill" cx="6.9" cy="8.1" r="1.7"/><path class="ink" fill="none" stroke-width="2" d="M6.3 6.6 C6 6 5.8 5.6 5.7 5.1"/><g class="ink" stroke-width="1.1" stroke-linecap="round"><path d="M5.7 5.1 L4.8 4.3"/><path d="M5.7 5.1 L6.6 4.4"/></g></svg>`,
+  // not the mug but what a thousand of them leave: coffee rings overlapping on the desk, the
+  // last one still wet. The cup itself is already drawn side-on (coffeecup), and a mug from
+  // above came out a frying pan; the stain is the honest record of the tapping anyway
+  cuprings:`<svg viewBox="0 0 24 24"><circle class="ink" fill="none" stroke-width="1.5" opacity="0.5" cx="8.2" cy="8.4" r="5.2"/><circle class="ink" fill="none" stroke-width="1.3" opacity="0.36" cx="15.6" cy="7.2" r="4.4"/><circle class="ink" fill="none" stroke-width="1.1" opacity="0.3" cx="5.4" cy="16.4" r="3.6"/><circle class="ink" fill="none" stroke-width="2.2" cx="13.9" cy="14.5" r="6.4"/><g fill="currentColor" stroke="none"><circle cx="19.8" cy="20" r="0.6"/><circle cx="21.4" cy="17.6" r="0.42"/></g></svg>`,
+  // eleven spines standing and the two holding them up struck out — the miss pattern read off
+  // the shelf rather than off the bracelet, because two crossed ends and a clean middle is the
+  // one shape in this game you can see at a glance
+  bookends:`<svg viewBox="0 0 24 24"><g class="ink-fill"><rect x="2.6" y="7.6" width="3" height="12" rx="0.5" transform="rotate(-3 4.1 13.6)"/><rect x="6.7" y="5.9" width="2.8" height="13.7" rx="0.5" transform="rotate(1 8.1 12.7)"/><rect x="10.5" y="6.9" width="3.2" height="12.7" rx="0.5"/><rect x="14.7" y="5.5" width="2.8" height="14.1" rx="0.5" transform="rotate(-1.5 16.1 12.5)"/><rect x="18.5" y="7.9" width="3" height="11.7" rx="0.5" transform="rotate(2.5 20 13.7)"/></g><g class="ink" stroke-width="2" stroke-linecap="round"><path d="M1.8 19.4 L6.5 7.3"/><path d="M17.9 20 L22 7.5"/></g><path class="ink" stroke-width="1.2" opacity="0.45" d="M2.2 21.2 H21.8"/></svg>`,
+  // a page whose every ruled line is written out to the margin and one line still going, nib
+  // and all, off the edge of the paper. The opposite number of everycrossed, which is the same
+  // page with all five lines struck: here nothing was struck and nothing was kept short
+  filledlines:`<svg viewBox="0 0 24 24"><g transform="rotate(-2.5 12 12)"><rect class="ink-fill" x="3.2" y="2.6" width="13.8" height="18.6" rx="1.2"/><path class="ink" stroke-width="1" opacity="0.4" d="M5.9 3.1 V20.7"/><g class="ink" fill="none" stroke-width="1.15" stroke-linecap="round"><path d="M6.9 6.4 C8 5.4 8.7 7 9.8 6.2 C10.7 5.6 11.5 6.9 12.6 6.2 C13.6 5.6 14.6 6.8 15.8 6.3"/><path d="M6.9 9.6 C8 8.6 8.8 10.2 9.9 9.4 C10.8 8.8 11.6 10 12.7 9.4 C13.7 8.8 14.9 10 15.9 9.5"/><path d="M6.9 12.8 C8 11.8 8.7 13.4 9.8 12.6 C10.7 12 11.7 13.2 12.8 12.6 C13.8 12 14.8 13.2 15.7 12.7"/><path d="M6.9 16 C8 15 8.8 16.6 9.9 15.8 C10.8 15.2 11.6 16.4 12.7 15.8 C13.7 15.2 15 16.4 16 15.9"/><path d="M6.9 19.2 C8 18.2 8.7 19.8 9.8 19 C10.7 18.4 11.7 19.6 12.8 19 C14.1 18.3 16 19.4 18.2 18.4 C19.4 17.8 20.4 18.5 21.4 18"/></g><path class="ink-fill" d="M21.2 16.6 L23.4 17.3 L21.6 19.2 L20.7 18.4 Z"/></g></svg>`,
+  // the target filled long before the pages ran out: the inkwell brimmed over and still
+  // running, a pool of it on the desk. The one charm in the game where too much ink is the
+  // feat, so the mark is the overflow rather than the pen. A blot soaking through a ruled
+  // page was drawn first and read as an eye at any size, which is the hazard of a dark
+  // centre inside a round outline
+  inkwell:`<svg viewBox="0 0 24 24"><path class="ink-fill" d="M6.9 9.2 C5.3 11.1 4.6 13.4 4.6 15.5 C4.6 18.5 7.3 20.4 11.4 20.4 C15.5 20.4 18.2 18.5 18.2 15.5 C18.2 13.4 17.5 11.1 15.9 9.2 Z"/><rect class="ink-fill" x="8" y="5.3" width="6.8" height="3.6" rx="0.9" transform="rotate(-2 11.4 7.1)"/><path class="ink-fill" d="M13.6 5.6 C16.1 5.6 17.6 7.4 18.2 9.8 C18.7 11.8 18.7 13.9 18.2 15.6 C17.7 13.6 17.2 11.4 16.3 10.1 C15.6 9 14.7 8.5 13.6 8.4 Z"/><path class="ink-fill" d="M16.2 17.6 C18.8 16.8 22 17.7 22.6 19.4 C23 20.8 20.9 21.7 18.4 21.5 C16.3 21.3 15.1 20.5 15.3 19.4 Z"/><g fill="currentColor" stroke="none"><circle cx="20.4" cy="15.4" r="0.5"/><circle cx="13.4" cy="22" r="0.42"/></g></svg>`,
+  // the running order learned as places rather than words: a track list with a tab flagged at
+  // every one of them. Sweeping the game is knowing where each of them sits, which is a thing
+  // you can only draw as somewhere already marked
+  tabbedpage:`<svg viewBox="0 0 24 24"><g transform="rotate(-1.5 12 12)"><rect class="ink-fill" x="2.6" y="2.6" width="13.6" height="18.8" rx="1.2"/><g class="ink-fill"><rect x="16" y="4.2" width="4.8" height="2.7" rx="0.7" transform="rotate(1.5 18.4 5.55)"/><rect x="16" y="8.3" width="5.6" height="2.7" rx="0.7" transform="rotate(-1 18.8 9.65)"/><rect x="16" y="12.4" width="4.3" height="2.7" rx="0.7" transform="rotate(2 18.2 13.75)"/><rect x="16" y="16.5" width="5.2" height="2.7" rx="0.7" transform="rotate(-1.5 18.6 17.85)"/></g><g fill="currentColor" stroke="none"><circle cx="5.2" cy="6.8" r="0.55"/><circle cx="5.2" cy="10.4" r="0.55"/><circle cx="5.2" cy="14" r="0.55"/><circle cx="5.2" cy="17.6" r="0.55"/></g><g class="ink" stroke-width="1" opacity="0.45" fill="none"><path d="M7 6.8 H13.6"/><path d="M7 10.4 H12.8"/><path d="M7 14 H13.4"/><path d="M7 17.6 H12"/></g></g></svg>`,
+  // the heart keeping the time itself, hand still short of the half — the track named off
+  // memory while the countdown had plenty left. Not halfdial, which is a real clock face gone
+  // half dark; this one is not a clock at all, it is the thing you knew it by
+  heartdial:`<svg viewBox="0 0 24 24"><path class="ink-fill" d="M12 21.1 C12 21.1 3.4 15.3 3.4 9.5 C3.4 6.5 5.6 4.6 8.1 4.6 C9.8 4.6 11.3 5.6 12 7 C12.8 5.6 14.3 4.6 16 4.6 C18.5 4.6 20.6 6.5 20.6 9.5 C20.6 15.3 12 21.1 12 21.1 Z"/><g class="ink" stroke-width="1.6" stroke-linecap="round"><path d="M12 12.6 V8.4"/><path d="M12 12.6 L15.9 12.9"/></g><circle cx="12" cy="12.6" r="0.9" fill="currentColor" stroke="none"/><g class="ink" stroke-width="1" opacity="0.5"><path d="M12 7.2 V8.1"/><path d="M17.1 12.5 L16.2 12.5"/><path d="M6.9 12.4 L7.9 12.5"/><path d="M12 17.6 V16.7"/></g></svg>`,
+  // the song written out as nothing but its own words, the ones it leans on inked heaviest —
+  // the page the game deals, drawn as the page you cleared ten of. The faint outline is the
+  // only cloud in the set, and the words are drawn as strokes so they read solid everywhere
+  wordcloud:`<svg viewBox="0 0 24 24"><path class="ink" fill="none" stroke-width="1.45" d="M6.9 19.6 A4.6 4.6 0 0 1 4.9 10.8 A5.4 5.4 0 0 1 15.4 8.6 A4.2 4.2 0 0 1 19.6 11.4 A4 4 0 0 1 18 19.5 Z"/><g class="ink" fill="none" stroke-linecap="round"><path stroke-width="1.5" d="M8.2 11.4 H11.2"/><path stroke-width="2.6" d="M12.4 11.2 H17.4"/><path stroke-width="1.2" d="M6.2 13.6 H8"/><path stroke-width="2.1" d="M9.2 13.9 H15.2"/><path stroke-width="1.35" d="M16.4 13.7 H18.3"/><path stroke-width="1.8" d="M7 16.2 H10.4"/><path stroke-width="1.15" d="M11.6 16.4 H13.4"/><path stroke-width="1.55" d="M14.6 16.1 H17.6"/></g></svg>`,
+  // the reading glasses, with one word left under each lens and the rest of the page gone
+  // faint. The spare pages are the game handing over less of the song, so the charm is drawn
+  // as the thing you do about that rather than as another cloud with words taken out
+  spectacles:`<svg viewBox="0 0 24 24"><g class="ink" fill="none" stroke-width="1.6"><rect x="2.2" y="8.9" width="8.1" height="6.5" rx="2.4"/><rect x="13.2" y="8.4" width="8.4" height="6.8" rx="2.4"/><path d="M10.3 11.5 C11.3 10.7 12.2 10.7 13.2 11.4"/><path d="M2.3 10.3 C1.5 9.4 1 8.4 0.9 7.2"/><path d="M21.5 9.9 C22.3 9.1 22.8 8.2 23 7.1"/></g><g class="ink" fill="none" stroke-linecap="round"><path stroke-width="1.7" d="M4.3 12.2 H8.1"/><path stroke-width="1.5" d="M15.4 11.7 H19.2"/></g><g class="ink" fill="none" stroke-linecap="round" opacity="0.25"><path stroke-width="1.3" d="M6.4 5.6 H11.2"/><path stroke-width="1.2" d="M14.6 18.8 H18.2"/><path stroke-width="1.1" d="M4.8 19.2 H8"/></g></svg>`,
+  // a pleated strip of pages folded on and on, running off both edges of the frame because an
+  // endless run has no last page to draw. Thirteen deep is the notebook's own number, so the
+  // mark is paper rather than a counter
+  concertina:`<svg viewBox="0 0 24 24"><g class="ink-fill"><path d="M0.6 9.2 L5 12.4 L5 19.2 L0.6 16 Z"/><path d="M5 12.4 L9.4 9 L9.4 15.8 L5 19.2 Z"/><path d="M9.4 9 L13.8 12.2 L13.8 19 L9.4 15.8 Z"/><path d="M13.8 12.2 L18.2 8.8 L18.2 15.6 L13.8 19 Z"/><path d="M18.2 8.8 L23.4 12.6 L23.4 19.4 L18.2 15.6 Z"/></g><g class="ink" stroke-width="0.85" opacity="0.35" fill="none" stroke-linecap="round"><path d="M6.4 14.6 H8.2"/><path d="M6.4 16.6 H7.8"/><path d="M15.2 14.4 H17"/><path d="M15.2 16.4 H16.6"/></g></svg>`,
+  // pages as a stair climbing out of the top corner, each tread the edge of the one before —
+  // twenty-five deep and the flight still leaving the frame. A twisted band was drawn first
+  // and read as a knot at 34px, and the lazy eight (infinity) is a symbol rather than a thing
+  paperstairs:`<svg viewBox="0 0 24 24"><path class="ink-fill" d="M1.2 21.4 V17.6 H5.6 V14 H10 V10.4 H14.4 V6.8 H18.8 V2.6 H23.4 V21.4 Z"/><g class="ink" stroke-width="0.9" opacity="0.4" fill="none"><path d="M1.9 19.4 H5"/><path d="M6.3 15.8 H9.4"/><path d="M10.7 12.2 H13.8"/><path d="M15.1 8.6 H18.2"/><path d="M19.5 4.8 H22.6"/></g></svg>`,
+  // the needle bounced straight off the first groove and skidded across the face of it: one
+  // page dealt, one page missed, run over. Drawn as a record because this is the shelf's
+  // pratfall and the shelf is zines and vinyl — the skid is the joke and it carries the mark
+  skid:`<svg viewBox="0 0 24 24"><circle class="ink" fill="none" stroke-width="1.8" cx="10.2" cy="14.4" r="7.5"/><circle class="ink" fill="none" stroke-width="0.9" opacity="0.45" cx="10.2" cy="14.4" r="5.1"/><circle cx="10.2" cy="14.4" r="1.1" fill="currentColor" stroke="none"/><path class="ink" fill="none" stroke-width="1.5" d="M22 2.6 L18.4 7.6"/><path class="ink-fill" d="M18.6 6.9 L20.4 8.2 L18.4 11 L16.6 9.7 Z"/><path class="ink" fill="none" stroke-width="1.7" stroke-linejoin="round" stroke-linecap="round" d="M16.4 10.6 L12.9 12.6 L14.9 14 L11.2 16 L13.3 17.4 L9.6 19.2"/></svg>`,
 };
 
 /* ---------- Mastery marks ----------
@@ -3671,7 +3726,7 @@ export const ACHIEVEMENTS = [
   // that rounds to nothing. The window is real but tiny — the clock's own interval only checks
   // for expiry every 100ms, so a page whose time has genuinely run out stays answerable until
   // that check lands. Landing inside it is mostly nerve and a little luck, which is the charm.
-  { id: "answer-with-a-hundredth-of-a-second-left", name: "Nick Of Time", desc: "Answer right with 0.01s left", tier: 3, secret: true, icon: "placeholder" },
+  { id: "answer-with-a-hundredth-of-a-second-left", name: "Nick Of Time", desc: "Answer right with 0.01s left", tier: 3, secret: true, icon: "lastfuse" },
   { id: "streak-3-same-album",       name: "Time To Branch Out?", desc: "3 correct in a row from one album", secret: true, icon: "branch" },
   { id: "score-nearly-every-studio-album-one-game",        name: "The Eras Tour",    desc: "Score from nearly every studio album in one game", tier: 2, secret: false, icon: "ticket", sitting: true, earn: { cat: "difficulty" } },
   { id: "perfect-daily",         name: "Golden Like Daylight", desc: "Score a perfect Daily",               tier: 2, secret: false, icon: "sunrise", sitting: true, earn: { cat: "daily" } },
@@ -3708,7 +3763,7 @@ export const ACHIEVEMENTS = [
      been sitting on this desk since the first screen. A thousand taps is deliberately absurd,
      and the coffee answers every one with a ripple and a shifting raft of bubbles. Counted in
      METRICS_KEY so progress survives a reload and an interrupted unlock can be backfilled. */
-  { id: "tap-desk-mug-1000-times", name: "The Thousandth Cup", desc: "Tap the coffee on the desk 1,000 times", tier: 2, secret: true, icon: "placeholder" },
+  { id: "tap-desk-mug-1000-times", name: "The Thousandth Cup", desc: "Tap the coffee on the desk 1,000 times", tier: 2, secret: true, icon: "cuprings" },
   { id: "play-easy-3-times-in-row",   name: "Safe & Sound",     desc: "Play Easy three times in a row",       secret: false, icon: "lantern", sitting: true, earn: { cat: "difficulty", diff: "easy" } },
   { id: "beat-personal-best-score",          name: "R-E-V-E-N-G-E",    desc: "Beat your own best score on any board", secret: false, icon: "megaphone", sitting: true, earn: { cat: "difficulty" } },
   { id: "perfect-13-every-mode",       name: "Every Version Of Yourself", desc: "Score a perfect 13/13 in every difficulty", tier: 3, secret: false, icon: "mirrorball" },
@@ -3756,7 +3811,7 @@ export const ACHIEVEMENTS = [
   // The mirror of that one: a run that dropped nothing except the two pages holding it up.
   // Eleven right in the middle and both ends crossed out, which is the only miss pattern in
   // the game you can see at a glance on the finished bracelet.
-  { id: "miss-only-first-and-last-round", name: "Bookends", desc: "Miss the first and last page of a run and nothing else", secret: true, icon: "placeholder" },
+  { id: "miss-only-first-and-last-round", name: "Bookends", desc: "Miss the first and last page of a run and nothing else", secret: true, icon: "bookends" },
   { id: "time-out-with-right-answer-typed", name: "The Words I Held Back", desc: "Run out of time with the right answer typed", secret: true, icon: "unsentword" },
   { id: "type-nothing-until-2s-left-then-answer-right", name: "Holding My Breath", desc: "Type nothing until under 2s left, then answer right", secret: true, icon: "heldbreath" },
   { id: "take-first-suggestion-all-13-rounds", name: "Took The Money", desc: "Take the first suggestion on all 13 rounds", secret: true, icon: "topofthelist" },
@@ -3881,8 +3936,8 @@ export const ACHIEVEMENTS = [
   // Long Story Long's two, and they pull in opposite directions on purpose: one asks you to
   // refuse the cheap page every single time, the other asks you to write faster than the
   // target needs. A run that does both has played the challenge at its limit.
-  { id: "win-long-story-long-no-titles-banked", name: "Every Word I Said", desc: "Win Long Story Long on the lines alone: not one page banked by naming the song", tier: 2, secret: true, reveal: "lyric-ink", icon: "placeholder" },
-  { id: "win-long-story-long-filling-target-early",   name: "The Ink Bleeds",    desc: `Win Long Story Long with the target filled inside ${INK_FLOURISH_PAGES} pages`, tier: 2, secret: true, reveal: "lyric-ink", icon: "placeholder" },
+  { id: "win-long-story-long-no-titles-banked", name: "Every Word I Said", desc: "Win Long Story Long on the lines alone: not one page banked by naming the song", tier: 2, secret: true, reveal: "lyric-ink", icon: "filledlines" },
+  { id: "win-long-story-long-filling-target-early",   name: "The Ink Bleeds",    desc: `Win Long Story Long with the target filled inside ${INK_FLOURISH_PAGES} pages`, tier: 2, secret: true, reveal: "lyric-ink", icon: "inkwell" },
   { id: "clear-double-trouble-all-13-two-songs-each",     name: "Two Is Better Than One", desc: "Clear all thirteen pages of Double Trouble: two songs each, none dropped", tier: 2, secret: true, reveal: "double-trouble", icon: "cherries" },
   { id: "win-vanishing-word-all-answers-blind",       name: "Blank Space",       desc: "Win Vanishing Word writing blind: every answer landed after the word had gone", tier: 2, secret: true, reveal: "vanishing-word", icon: "vanish" },
   { id: "win-deep-cut-all-correct-same-album", name: "Been Here All Along", desc: "Win Deep Cut loyal to one album: every correct answer of the run off the same record", tier: 2, secret: true, reveal: "deep-cut", icon: "heartlabel" },
@@ -3951,20 +4006,20 @@ export const ACHIEVEMENTS = [
   { id: "name-redacted-song-no-strips-removed",      name: "Blind Faith",      desc: "Name a Redacted song with every strip still down", tier: 2, secret: false, icon: "taped", sitting: true, earn: { cat: "bonus" } },
   { id: "take-rarest-only-here-card-all-10-pages",       name: "Rarest Air",       desc: "Take the rarest card on all ten pages of Only Here", tier: 2, secret: false, icon: "highcard", sitting: true, earn: { cat: "bonus" } },
   { id: "finish-then-what-unbroken-chain", name: "Follow The Sparks", desc: "Sing a whole Then What run on one unbroken chain", tier: 2, secret: false, icon: "chain", sitting: true, earn: { cat: "bonus" } },
-  { id: "sweep-running-order", name: "I Know Places", desc: "Sweep Running Order", tier: 2, secret: false, icon: "placeholder", sitting: true, earn: { cat: "bonus" } },
+  { id: "sweep-running-order", name: "I Know Places", desc: "Sweep Running Order", tier: 2, secret: false, icon: "tabbedpage", sitting: true, earn: { cat: "bonus" } },
   // The one page-level charm outside Redacted's pair, and it asks for the thing the game is
   // actually about: the track named while half the clock is still there. Priced off the
   // COUNTDOWN, which is on screen and ticking the whole time the page is live, rather than off
   // a stopwatch the player never sees. That is the Ruthless roster's lesson, and it survived
   // the page's rebuild even though the number it used to be priced in did not.
-  { id: "name-running-order-page-with-half-the-clock-left", name: "By Heart", desc: "Name a Running Order track with half the clock still on it", tier: 2, secret: false, icon: "placeholder", sitting: true, earn: { cat: "bonus" } },
-  { id: "sweep-word-cloud", name: "All The Words", desc: "Sweep Word Cloud", tier: 2, secret: false, icon: "placeholder", sitting: true, earn: { cat: "bonus" } },
+  { id: "name-running-order-page-with-half-the-clock-left", name: "By Heart", desc: "Name a Running Order track with half the clock still on it", tier: 2, secret: false, icon: "heartdial", sitting: true, earn: { cat: "bonus" } },
+  { id: "sweep-word-cloud", name: "All The Words", desc: "Sweep Word Cloud", tier: 2, secret: false, icon: "wordcloud", sitting: true, earn: { cat: "bonus" } },
   // Word Cloud's second, and NOT a re-skin of By Heart above: this one is not about speed at
   // all. The run's late pages deal a spare cloud (see CLOUD_WIDE_PAGES), so the player can see
   // the page thinning out under them, and clearing all five of the thin ones is the game's own
   // flex — knowing a song off less of it. Priced in something on screen, like everything else
   // on this shelf: the cloud you are looking at and the page number above it.
-  { id: "clear-every-spare-word-cloud-page", name: "You Saw Enough", desc: "Clear all five of a Word Cloud run's spare pages", tier: 2, secret: false, icon: "placeholder", sitting: true, earn: { cat: "bonus" } },
+  { id: "clear-every-spare-word-cloud-page", name: "You Saw Enough", desc: "Clear all five of a Word Cloud run's spare pages", tier: 2, secret: false, icon: "spectacles", sitting: true, earn: { cat: "bonus" } },
   /* ---- The endless side (2026-09-13) ----
      Two rungs and a pratfall, and all three are shelf-wide rather than Running Order's: the
      feat is how far an endless run got, which is the same feat out of whichever zine it was
@@ -3972,8 +4027,8 @@ export const ACHIEVEMENTS = [
      Priced in the only number an endless run has, the pages cleared, which is on screen the
      whole way up. Nothing here can be locked out: an endless run is always there to play again,
      and the run that ends on page one is the cheapest thing on the shelf to go and do. */
-  { id: "clear-13-pages-in-an-endless-bonus-run", name: "On And On", desc: "Clear 13 pages in a row in an endless bonus game", tier: 2, secret: false, icon: "placeholder", sitting: true, earn: { cat: "bonus" } },
-  { id: "clear-25-pages-in-an-endless-bonus-run", name: "It Never Ends", desc: "Clear 25 pages in a row in an endless bonus game", tier: 2, secret: false, icon: "placeholder", sitting: true, earn: { cat: "bonus" } },
+  { id: "clear-13-pages-in-an-endless-bonus-run", name: "On And On", desc: "Clear 13 pages in a row in an endless bonus game", tier: 2, secret: false, icon: "concertina", sitting: true, earn: { cat: "bonus" } },
+  { id: "clear-25-pages-in-an-endless-bonus-run", name: "It Never Ends", desc: "Clear 25 pages in a row in an endless bonus game", tier: 2, secret: false, icon: "paperstairs", sitting: true, earn: { cat: "bonus" } },
   // The secrets. Three of them are failures worn well (the register of I'm The Problem), which is the
   // shelf's own tone: these games have soft edges and losing on them is funny rather than sore.
   { id: "take-commonest-only-here-card",      name: "I Bought It",      desc: "Take the commonest card in an Only Here hand", secret: true, icon: "receipt" },
@@ -3981,7 +4036,7 @@ export const ACHIEVEMENTS = [
   { id: "time-out-all-10-only-here-pages", name: "Never Heard Silence", desc: "Let all ten Only Here clocks run out without a card played", secret: true, icon: "spider" },
   { id: "finish-bonus-run-one-page-short-of-sweep",    name: "Almost Had It",    desc: "Finish one page shy of a clean sweep", secret: true, icon: "dart" },
   { id: "flag-spot-the-slip-impostor-under-2s",    name: "Saw It Coming",    desc: "Flag a Spot the Slip impostor inside two seconds", secret: true, icon: "mask" },
-  { id: "end-an-endless-bonus-run-on-its-first-page", name: "Ending So Suddenly", desc: "End an endless bonus game on its very first page", secret: true, icon: "placeholder" },
+  { id: "end-an-endless-bonus-run-on-its-first-page", name: "Ending So Suddenly", desc: "End an endless bonus game on its very first page", secret: true, icon: "skid" },
   /* ---- Ruthless: the mode where the clock is the score (2026-08-18) ----
      Eight charms. The first roster went in unvetted and came back out the same day, and the
      lesson it left is the rule this one is built on: NOTHING HERE MAY BE PRICED IN A NUMBER THE
