@@ -1261,26 +1261,22 @@ if (location.pathname.endsWith('/index.html')) {
       <path class="plc-paper" d="M9 8 L181 7 L182 86 L175 92 L170 88 L161 95 L155 90 L150 91 L141 86 L133 93 L127 89 L118 90 L112 96 L104 88 L97 92 L88 87 L82 94 L75 89 L66 90 L60 95 L52 88 L45 92 L38 86 L30 91 L23 88 L15 93 L9 87 Z" fill="url(#plcPaper)"/>
       <!-- the pale fibre lip torn paper shows where the top layer let go -->
       <path class="plc-lip" d="M182 86 L175 92 L170 88 L161 95 L155 90 L150 91 L141 86 L133 93 L127 89 L118 90 L112 96 L104 88 L97 92 L88 87 L82 94 L75 89 L66 90 L60 95 L52 88 L45 92 L38 86 L30 91 L23 88 L15 93 L9 87"/>
-      <!-- familiar notebook ruling; the count is written ON the lower line -->
-      <g class="plc-rules"><path d="M11 44 L179 43.4"/><path d="M11 71 L179 70.4"/></g>
+      <!-- familiar notebook ruling; the count is written ON the line. One rule, not
+           two: the upper one used to sit where the strand now lies, and a cord
+           threaded along a ruled line reads as a mistake rather than a drawing. -->
+      <g class="plc-rules"><path d="M11 76 L179 75.4"/></g>
       <path class="plc-margin" d="M34 8.5 L34.6 88"/>
-      <!-- The flame is the picture on this slip, so it is drawn at the size of
-           one, filling the right half the way a stamp fills the corner of an
-           envelope, with the label and the count reading across to meet it.
-           Teal, because everything on this desk is warm wood and warm paper
-           and the mark has to be found at a glance; graphite lost it, and a
-           red-and-gold flame was the one object here pretending to be a phone
-           app's streak counter. Shaded by hatching rather than a fill, so it
-           stays ink on paper. The stroke widths are pre-divided by the 2.9
-           scale below, which is why they read as fractions. -->
-      <g class="plc-flame" transform="translate(117.8 10.8) scale(2.9)">
-        <path d="M11.6 1.8 C12.8 5.0 12.0 7.6 10.2 9.8 C10.0 8.6 9.6 7.8 9.0 7.0 C7.2 9.4 4.2 11.4 4.2 15.2 C4.2 19.0 7.6 22.2 12.0 22.2 C16.4 22.2 19.8 19.0 19.8 15.2 C19.8 12.6 18.4 10.6 16.6 8.8 C16.8 10.0 16.6 11.0 16.0 11.8 C16.4 8.0 14.6 4.4 11.6 1.8 Z"/>
-        <path class="plc-hatch" d="M7.6 17.6 L10.6 13.8"/>
-        <path class="plc-hatch" d="M10.0 19.4 L13.6 14.6"/>
-        <path class="plc-hatch" d="M13.0 20.2 L16.0 16.2"/>
-      </g>
-      <text class="plc-l1" x="43" y="40">DAILY STREAK</text>
-      <text class="plc-l2" x="43" y="70"></text>   <!-- js/placard.js fills this: <tspan class="plc-num"> + <tspan class="plc-unit"> -->
+      <!-- The picture is the bead strand: one bead per day kept, on the game's own
+           waxed cord, in the era ink of the album that carried that day. It is the
+           drawing the daily ticket already uses for a streak, so the desk and the
+           ticket say the same thing in the same hand. What was here before was a
+           flame, which is a phone app's streak icon on a desk with no phone on it.
+           Capped at seven beads, past which the cord runs off the left edge to say
+           "more, back there". The numeral underneath is what carries the count.
+           js/placard.js draws into this group; empty means no strand today. -->
+      <g class="plc-strand"></g>
+      <text class="plc-l1" x="43" y="24">DAILY STREAK</text>
+      <text class="plc-l2" x="43" y="75"></text>   <!-- js/placard.js fills this: <tspan class="plc-num"> + <tspan class="plc-unit"> -->
     </svg>
     <!-- This is the exact shared washi surface used on the six mode cards,
          not an SVG imitation: the same translucency, fibres, wrinkle and tear. -->

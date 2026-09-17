@@ -1174,6 +1174,13 @@ export function initDev(api) {
     row(btn("fake 45-day strand", () => { api.daily.fakeStrand(45); toast("45 fake days saved — open Stats → All to see the calendar"); }),
         "reopen", reopenDate,
         btn("reopen", () => toast(api.daily.reopen(reopenDate.value)))),
+    // The desk slip's strand at the three counts that decide the drawing: the singular
+    // "1 day", a full cord at the seven-bead cap, and one past it, where the cord has to
+    // run off the left edge instead of shrinking the beads. setStreak alone cannot show
+    // any of them, because a bead is a saved day and not a number.
+    row("slip strand", btn("1", () => { api.daily.fakeStrand(1); toast("1 day"); }),
+        btn("7 · at the cap", () => { api.daily.fakeStrand(7); toast("7 days"); }),
+        btn("31 · over", () => { api.daily.fakeStrand(31); toast("31 days"); })),
     row(btn("preview album pool", () => {
           const r = api.daily.preview();
           api.daily.dump(r.date);

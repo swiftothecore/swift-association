@@ -2437,18 +2437,6 @@ function dailyCalendarHTML() {
     `</div>`;
 }
 
-// The streak flame, drawn instead of typed. This used to be a fire emoji, which is
-// somebody else's artwork in somebody else's palette, rendered at whatever size and
-// weight the reader's platform felt like — the one glyph on these screens the notebook
-// had no say over. Same mark as the one on the desk slip: a leaning contour with a lick
-// folding in on each side, shaded by three hatch strokes rather than a fill. It takes
-// currentColor, so it is written in the era ink of the number standing next to it.
-const STREAK_FLAME = `<svg class="streak-flame" viewBox="0 0 24 24" aria-hidden="true">` +
-  `<path d="M11.6 1.8 C12.8 5.0 12.0 7.6 10.2 9.8 C10.0 8.6 9.6 7.8 9.0 7.0 C7.2 9.4 4.2 11.4 4.2 15.2 C4.2 19.0 7.6 22.2 12.0 22.2 C16.4 22.2 19.8 19.0 19.8 15.2 C19.8 12.6 18.4 10.6 16.6 8.8 C16.8 10.0 16.6 11.0 16.0 11.8 C16.4 8.0 14.6 4.4 11.6 1.8 Z"/>` +
-  `<path class="sf-hatch" d="M7.6 17.6 L10.6 13.8"/>` +
-  `<path class="sf-hatch" d="M10.0 19.4 L13.6 14.6"/>` +
-  `<path class="sf-hatch" d="M13.0 20.2 L16.0 16.2"/></svg>`;
-
 function dailyStatsHTML() {
   const d = effectiveDailyStreak(todayKey());
   const cal = dailyCalendarHTML();
@@ -2461,7 +2449,7 @@ function dailyStatsHTML() {
     : `<p class="daily-streak-note">today's challenge awaits</p>`;
   return head +
     `<div class="streak-row">` +
-    `<div class="streak-cell"><span class="stat-val">${STREAK_FLAME}${d.current}</span><span class="stat-lbl">day streak</span></div>` +
+    `<div class="streak-cell"><span class="stat-val">${d.current}</span><span class="stat-lbl">day streak</span></div>` +
     `<div class="streak-cell"><span class="stat-val">${d.best}</span><span class="stat-lbl">best streak</span></div>` +
     `</div>` + note + cal;
 }
@@ -14351,10 +14339,23 @@ function renderDailyButtonState() {
   btn.classList.toggle("day--done", !undone);
 
   const live = effectiveDailyStreak(dateStr);
-  // The desk placard runs off the same number, but shows it whether or not today's
+  // The desk slip runs off the same number, but shows it whether or not today's
   // puzzle is in: a streak stays alive until the day after it was last fed, and the
-  // whole point of the plaque is standing there reminding you of that.
-  renderStreakPlacard(live);
+  // whole point of the keepsake is standing there reminding you of that. Its beads
+  // are the ticket's beads, resolved to ink here rather than in placard.js so the
+  // colour-blind album palette is honoured in one place. Days walk back from the
+  // last one FED, which on an unplayed day is yesterday, exactly as the ticket does.
+  const slipEnd = live.playedToday ? dateStr : yesterdayOf(dateStr);
+  // The walk is capped by the streak as well as by the cord, so the slip can never
+  // string more beads than there are days in the run it is drawing. Honest data can't
+  // produce that (a streak of one means yesterday is missing, which stops the walk),
+  // but dev.daily.fakeStrand can, and a slip reading "1 day" over seven beads is the
+  // kind of thing that gets believed.
+  const slipBeads = live.current > 0
+    ? recentDailyAlbums(slipEnd, Math.min(DAY_STRAND_CAP, live.current))
+        .map((a) => (a ? albumColor(a) : null))
+    : [];
+  renderStreakPlacard(live, slipBeads);
 
   const { month, day, dow } = dayChipFields(dateStr);
   const serial = dailySerial(dateStr);
@@ -18324,7 +18325,7 @@ function renderDailyResultPanel() {
       : `<p class="daily-streak-note">come back tomorrow to keep the streak</p>`;
   $("resultPodium").innerHTML =
     `<div class="streak-row">` +
-    `<div class="streak-cell"><span class="stat-val">${STREAK_FLAME}${d.current}</span><span class="stat-lbl">day streak</span></div>` +
+    `<div class="streak-cell"><span class="stat-val">${d.current}</span><span class="stat-lbl">day streak</span></div>` +
     `<div class="streak-cell"><span class="stat-val">${d.best}</span><span class="stat-lbl">best streak</span></div>` +
     `</div>` + note;
 }
