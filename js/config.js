@@ -2268,28 +2268,59 @@ export const STUDIO_ALBUMS = [
   "The Tortured Poets Department", "The Life of a Showgirl",
 ];
 
-/* How many tracks each of the twelve had ON THE ORIGINAL RECORD, which is a different number
-   from how many songs sit under that album in songs.json. It is held here as literals for the
-   same reason the vault list is: it is a fact about the pressings rather than anything the
-   lyric data knows.
+/* How far up each of the twelve the track numbers run, which is a different number from how
+   many songs sit under that album in songs.json. It is held here as literals for the same
+   reason the vault list is: it is a fact about the pressings rather than anything the lyric
+   data knows.
 
    Running Order is the only thing that reads it, and it is what stops that game asking a
    question with two honest answers. The album arrays are stored in real running order, so a
    song's position in its album IS its track number, but only up to this line. Past it the
-   arrays run on into platinum editions, deluxe bonus tracks and the vault, where the numbering
-   is a different number on every pressing: "track 22 on Red" is one song on Red (Taylor's
-   Version) and does not exist at all on the 2012 record. Inside the standard edition there is
-   no such argument, because every re-recording kept the original order.
+   arrays run on into songs that were never on the record at that number: singles, EP cuts,
+   remixes and the strays that got filed under an era rather than pressed onto it.
 
-   So this doubles as the game's POOL: 172 of the catalogue's songs sit at an unambiguous
-   number, and the deluxe and vault tracks are simply not asked about. If a re-recording ever
-   reorders its standard half, this is the one place that would have to learn about it. */
+   EACH NUMBER IS ONE NAMED PRESSING, and every one of them is the edition that is on streaming
+   today, because that is the running order a player actually holds. The debut stops at its
+   Deluxe (14), Fearless and Speak Now and Red and 1989 at their Taylor's Versions (26, 22, 30,
+   21), folklore and evermore at their deluxes (17, 17), Midnights at 3am (20), The Tortured
+   Poets Department at The Anthology (31), and reputation, Lover and The Life of a Showgirl at
+   the only pressing they have. The cut-offs are where a pressing stops being the one everybody
+   has: Midnights stops at 20 because Hits Different sits at 21 on the Lavender edition and at
+   a different number again on Til Dawn and Late Night, and the debut stops at 14 because
+   Beautiful Eyes is an EP rather than a track on this record.
+
+   WHAT SITS INSIDE A CAP IS STILL NOT ALWAYS ASKABLE — see TRACK_ALT_TAKES below, which is the
+   other half of the same fairness story. If a re-recording ever reorders the half of itself
+   that already exists, this is the one place that would have to learn about it. */
 export const ALBUM_TRACKS = {
-  "Taylor Swift": 11, "Fearless": 13, "Speak Now": 14, "Red": 16,
-  "1989": 13, "reputation": 15, "Lover": 18, "folklore": 16,
-  "evermore": 15, "Midnights": 13,
-  "The Tortured Poets Department": 16, "The Life of a Showgirl": 12,
+  "Taylor Swift": 14, "Fearless": 26, "Speak Now": 22, "Red": 30,
+  "1989": 21, "reputation": 15, "Lover": 18, "folklore": 17,
+  "evermore": 17, "Midnights": 20,
+  "The Tortured Poets Department": 31, "The Life of a Showgirl": 12,
 };
+
+/* Tracks that HAVE a number but must never be the question, because they are a second take of
+   a song sitting at another number on the same record. Ask for Red track 20 and the honest
+   answer is "State Of Grace", which is also the honest answer to Red track 2; ask for Red 30
+   and it is "All Too Well", which is track 5. A player who knows the record cold gets those
+   pages wrong for knowing it, which is the one thing this game must not do.
+
+   They are excluded from being ASKED and not from being NUMBERED, and the difference is the
+   whole point: drop them out of the count and every track after them shifts up one, so the
+   game would ask for Red 21 and mark "Ronan" wrong. buildTrackIndex numbers them and flags
+   them; buildTrackPuzzle never deals them.
+
+   Three of these currently sit outside their album's cap and so are already unreachable. They
+   are listed anyway, because what makes a title belong here is what the title IS, and a cap
+   moved up a pressing should not quietly turn one of them into a page. */
+export const TRACK_ALT_TAKES = new Set([
+  "Forever & Always (Piano Version)",   // Fearless 16, against Fearless 11
+  "State Of Grace (Acoustic Version)",  // Red 20, against Red 2
+  "All Too Well (10 Minute Version)",   // Red 30, against Red 5
+  "Bad Blood (Remix)",                  // 1989 22, against 1989 8
+  "Snow On The Beach (Remix)",          // Midnights 22, against Midnights 4
+  "Karma (Remix)",                      // Midnights 23, against Midnights 11
+]);
 /* Three named slices of the catalogue, for the Catalogue-knowledge charms that ask you to
    know where a song SITS rather than what it says. Held here as literals because none of
    them is derivable from songs.json: the vault list is a fact about the re-recordings, and

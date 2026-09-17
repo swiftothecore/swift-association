@@ -7340,13 +7340,14 @@ function buildBonusPuzzle() {
 
 /* How many songs this game can actually deal, which is what the endless run's no-repeat list
    is measured against. Running Order deals off the track index rather than off the pool
-   directly — a song on a pseudo-album or past its record's standard edition has no track number
-   and is never a page — so the count has to ask the same question the builder does. */
+   directly — a song past the end of its record's pressing has no track number at all, and a
+   second take of another track has one it must never be asked for — so the count has to ask
+   the same question the builder does, which is `ask` rather than `of`. */
 function bonusDealCount() {
   const songs = bonusSongs();
   if (bonusGame && bonusGame.id === "running-order") {
     const idx = bonusIndexes().trackIndex;
-    return songs.filter((song) => idx.of.has(song.title)).length;
+    return songs.filter((song) => idx.ask.has(song.title)).length;
   }
   return songs.length;
 }
@@ -28659,8 +28660,9 @@ function buildDevApi() {
          title: the question, the answer, and the seconds still on the clock, which is the one
          number By Heart is judged on and the one thing about the page that moves. `tracks()` is
          the one that matters before shipping a catalogue change: it prints every album's
-         standard run and the song sitting at each number, which is the only way to see that
-         ALBUM_TRACKS still agrees with songs.json. */
+         numbered run and the song sitting at each number, with `dealable` false on the rows a
+         page can never ask for, which is the only way to see that ALBUM_TRACKS and
+         TRACK_ALT_TAKES still agree with songs.json. */
       track: () => {
         if (!bonusGame || bonusGame.id !== "running-order" || !bonusPuzzle) return "no Running Order page live";
         return { ask: `track ${bonusPuzzle.track} from ${bonusPuzzle.album}`,
@@ -28701,9 +28703,12 @@ function buildDevApi() {
         const rows = [];
         for (const [title, spot] of trackIndex.of) rows.push({ ...spot, title });
         const pool = new Set(bonusSongs().map((x) => x.title));
+        // `alt` is the second take barred by TRACK_ALT_TAKES, printed rather than hidden: it is
+        // the one row that is numbered and still not a page, and the only way to see that the
+        // bar caught it WITHOUT shifting everything under it up a number.
         const out = rows.filter((r) => !album || r.album === album)
                         .sort((a, b) => a.album.localeCompare(b.album) || a.track - b.track)
-                        .map((r) => ({ ...r, dealable: pool.has(r.title) }));
+                        .map((r) => ({ ...r, dealable: pool.has(r.title) && trackIndex.ask.has(r.title) }));
         return album ? out : { numbered: rows.length, dealable: out.filter((r) => r.dealable).length,
                                albums: trackIndex.albums.length, rows: out };
       },

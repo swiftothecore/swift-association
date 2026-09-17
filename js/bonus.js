@@ -8,7 +8,7 @@
    puzzle handed to the player must have exactly one defensible answer. Enforcing that is
    most of what this file does. */
 import { normalizeLyric, levenshtein, swappedNeighbours } from "./util.js";
-import { STUDIO_ALBUMS, ALBUM_TRACKS } from "./config.js";
+import { STUDIO_ALBUMS, ALBUM_TRACKS, TRACK_ALT_TAKES } from "./config.js";
 
 /* Words never worth swapping or counting as a line's content. Swapping a function word
    ("the" -> "a") is invisible rather than hard, and a line whose only meat is filler makes a
@@ -1283,10 +1283,17 @@ export function buildRuthlessPuzzle(songs, rng = Math.random, tries = 120, avoid
    every song after the first gap moves up one, so the game would confidently ask for track 12
    and mark track 13 correct. Hand this allSongs; deal from the filtered pool separately.
 
-   The cap is ALBUM_TRACKS, the standard edition's length, and it is the whole fairness story
-   (see the note on that table). Past the last standard track the arrays run on into platinum
-   editions, deluxe cuts and the vault, where a number means a different song on every
-   pressing. Inside it, position IS track number on every release of that record. */
+   TWO SEPARATE QUESTIONS, AND A TITLE CAN FAIL EITHER ONE. What is NUMBERED is capped by
+   ALBUM_TRACKS, the length of the pressing that album is counted against, because past it the
+   arrays run on into songs that sit at no fixed number at all. What is ASKED is narrower
+   still: a title in TRACK_ALT_TAKES is numbered but never dealt, because it is a second take
+   of a song already sitting at another number on the same record and the page would have two
+   honest answers. Both tables carry the full reasoning; the shape to hold on to here is that a
+   barred title keeps its position, so nothing after it shifts.
+
+   That cap is why high numbers are fair game. The Anthology runs to 31 and the numbering does
+   not wobble on the way, so track 31 of The Tortured Poets Department is exactly as answerable
+   as track 3 — a longer count, not a murkier one. */
 export function buildTrackIndex(songs) {
   const byAlbum = new Map();
   for (const song of songs) {
@@ -1294,16 +1301,21 @@ export function buildTrackIndex(songs) {
     if (!byAlbum.has(song.album)) byAlbum.set(song.album, []);
     byAlbum.get(song.album).push(song);
   }
-  const of = new Map();       // song title -> { album, track, total }
+  const of = new Map();       // song title -> { album, track, total, alt }
+  const ask = new Set();      // the subset of those titles a page may actually ask for
   const albums = [];
   for (const album of STUDIO_ALBUMS) {
     const list = byAlbum.get(album);
     if (!list) continue;
     const total = Math.min(ALBUM_TRACKS[album], list.length);
-    for (let i = 0; i < total; i++) of.set(list[i].title, { album, track: i + 1, total });
+    for (let i = 0; i < total; i++) {
+      const title = list[i].title, alt = TRACK_ALT_TAKES.has(title);
+      of.set(title, { album, track: i + 1, total, alt });
+      if (!alt) ask.add(title);
+    }
     albums.push(album);
   }
-  return { of, albums };
+  return { of, ask, albums };
 }
 
 /* One page: an album, a number, and the song that answers it.
@@ -1313,7 +1325,7 @@ export function buildTrackIndex(songs) {
    tried first and dropped if the pool cannot honour it, which is what keeps a run from ever
    failing to deal a page over a cosmetic preference. */
 export function buildTrackPuzzle(songs, index, rng = Math.random, tries = 120, avoid = null, avoidAlbums = null) {
-  const pool = songs.filter((song) => index.of.has(song.title));
+  const pool = songs.filter((song) => index.ask.has(song.title));
   if (!pool.length) return null;
   const pick = (fussy) => {
     for (let t = 0; t < tries; t++) {
