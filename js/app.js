@@ -453,8 +453,6 @@ let roundStart = 0;
 let roundLocked = false;
 let roundClockPending = false;
 let pendingRoundSubmission = null;
-let feedbackShownAt = 0;        // ms timestamp the verdict appeared — Enter-to-advance is held off for ENTER_SKIP_GRACE after it
-const ENTER_SKIP_GRACE = 250;   // so a held/late Enter from the answer screen can't instantly blow past the result
 let statsBackTarget = "start";
 let settings = { ...{} };       // populated from loadSettings() in init
 let pausedClockState = null;    // actual main clock state captured while Settings is open
@@ -8791,7 +8789,6 @@ function settleBonusRound(correct, detail, isTimeout = false) {
     bonusAnswerCard() +
     advanceUI;
   $("bonusScore").textContent = bonusScoreText();
-  bonusFeedbackAt = Date.now();
   $(auto ? "bonusSkipBtn" : "bonusNextBtn").addEventListener("click", advanceFromBonusFeedback);
   if (auto) runBonusCountdown();
 }
@@ -8803,7 +8800,6 @@ function settleBonusRound(correct, detail, isTimeout = false) {
    the countdown runs on a MISS too — these are ten quick pages and the shelf has always turned
    its own; the reveal is still readable for the full count, and opening "in context" pauses it. */
 let bonusCdId = null;
-let bonusFeedbackAt = 0;        // ms timestamp the verdict appeared — Enter is held off for ENTER_SKIP_GRACE after it
 let bonusCdValue = 0;
 let bonusCdDeadline = 0;
 let bonusCdRunId = 0;
@@ -16284,7 +16280,6 @@ function revealTapKnowledge(correct) {
     `<div class="banner ${correct ? "good" : "bad"}">${banner}</div>` +
     `<p class="red-note">${note}</p>` +
     advanceUI;
-  feedbackShownAt = Date.now();
   playSound(correct ? "correct" : "wrong");
   $(auto ? "skipBtn" : "continueBtn").addEventListener("click", advanceFromFeedback);
   if (correct) celebrateCorrect(correctStreak, 0);
@@ -16550,7 +16545,6 @@ function revealCommon(correct) {
     `<p class="red-note">the thread was “<b>${escapeHtml(word)}</b>”</p>` +
     `<div class="common-reveal">${cards}</div>` +
     advanceUI;
-  feedbackShownAt = Date.now();
   playSound(correct ? "correct" : "wrong");
   $(auto ? "skipBtn" : "continueBtn").addEventListener("click", advanceFromFeedback);
   if (correct) celebrateCorrect(correctStreak, 0);
@@ -19249,13 +19243,12 @@ function beginRoundClock() {
       // it) and the button never has to wear a focus ring to be usable. Capture phase, so
       // this Enter is claimed before the input's own keydown could ever submit behind it.
       if (curtainKeyOff) curtainKeyOff();   // never orphan a prior card's listener behind this one
-      const shownAt = Date.now();
       const onKey = (e) => {
         if (e.key !== "Enter") return;
         if ($("settingsModal").classList.contains("open")) return;   // a modal over the curtain is captive in turn
         // An Enter still held from the previous page's advance must not auto-repeat
-        // through the notice, nor land inside the grace window a fresh press would miss.
-        if (e.repeat || Date.now() - shownAt < ENTER_SKIP_GRACE) { e.preventDefault(); return; }
+        // through the notice. A deliberate fresh press is always allowed straight away.
+        if (e.repeat) { e.preventDefault(); return; }
         e.preventDefault();
         e.stopPropagation();
         next();
@@ -21780,7 +21773,6 @@ function flagImpostor() {
     `<div class="fb-head"><div class="banner good">🚩 impostor caught</div></div>` +
     `<div class="impostor-caught">“<b>${escapeHtml(currentWord)}</b>” appears in no Taylor song. Good instinct.</div>` +
     `<button id="continueBtn" class="btn-ghost">next page →</button>`;
-  feedbackShownAt = Date.now();
   playSound("correct");
   $("continueBtn").addEventListener("click", advanceFromFeedback);
 }
@@ -23161,7 +23153,6 @@ function showCorrectFeedback(song, lyricMatch) {
     ${more}
     ${advanceUI}`;
   if (formsNote) markCoachmark("wordForms");   // it's on screen now — spend the one-time note
-  feedbackShownAt = Date.now();
   $(auto ? "skipBtn" : "continueBtn").addEventListener("click", advanceFromFeedback);
   playSound("correct");
   // One celebration per answer. Where the streak glitter runs it IS the celebration, because
@@ -23234,7 +23225,6 @@ function showWrongFeedback(song, isTimeout) {
     ${submitted}
     ${help}
     <button id="continueBtn" class="btn-ghost">next page →</button>`;
-  feedbackShownAt = Date.now();
   playSound("wrong");
   $("continueBtn").addEventListener("click", advanceFromFeedback);
 }
@@ -24822,8 +24812,9 @@ function wireInput() {
     // well as the count itself, since pausing to read the context replaces the count (see
     // pauseAutoAdvanceForReading) but leaves skip there to be taken.
     if (!$("cd") && !$("skipBtn") && !$("continueBtn")) return;
-    // Brief grace so an Enter still held from submitting can't instantly skip the result.
-    if (Date.now() - feedbackShownAt < ENTER_SKIP_GRACE) return;
+    // A fresh press advances immediately; only the auto-repeat of an Enter still held down
+    // from submitting is ignored, so the key can never run away with the verdict by itself.
+    if (e.repeat) return;
     // "Enter advances on a miss" off → require a click on the miss/answer screen.
     if (!settings.enterOnMiss && document.querySelector("#feedback .banner.bad")) return;
     e.preventDefault();
@@ -24842,7 +24833,7 @@ function wireInput() {
     // A verdict really is on the page. The skip button is checked as well as the count itself,
     // since pausing to read the context replaces the count but leaves skip there to be taken.
     if (!$("bonusCd") && !$("bonusSkipBtn") && !$("bonusNextBtn")) return;
-    if (Date.now() - bonusFeedbackAt < ENTER_SKIP_GRACE) return;
+    if (e.repeat) return;   // as on the round screen: only a held key's auto-repeat is ignored
     if (!settings.enterOnMiss && document.querySelector("#bonusFeedback .banner.bad")) return;
     e.preventDefault();
     advanceFromBonusFeedback();
