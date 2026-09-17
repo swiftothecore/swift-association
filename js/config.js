@@ -2845,9 +2845,6 @@ export const ACH_ICONS = {
   // right, having lost it to that same word before: the old attempt struck and faded on the
   // line above, the word ringed on the line below
   wordreturned: `<svg viewBox="0 0 24 24"><path class="ink" fill="none" stroke-width="2" d="M20.4 11.3 A8.4 8.4 0 1 1 16.8 5.1"/><path d="M19.6 7.05 L14.55 6.58 L17.42 2.48 Z" fill="currentColor" stroke="currentColor" stroke-width="1.1" stroke-linejoin="round"/><path class="ink" fill="none" stroke-width="2.6" stroke-linecap="round" d="M7.8 12.3 L10.6 15.2 L16 9"/></svg>`,
-  // the word you have missed most, finally gone: the block broken clean through the middle,
-  // with the give of it drawn out either side
-  crackedword:`<svg viewBox="0 0 24 24"><path class="ink-fill" d="M3.2 8.6 H10.6 L9 12 L10.6 15.4 H3.2 Z"/><path class="ink-fill" d="M20.8 8.6 H13.4 L15 12 L13.4 15.4 H20.8 Z"/><g class="ink" stroke-width="1.2" opacity="0.55" stroke-linecap="round"><path d="M12 5.4 V2.6"/><path d="M8.6 6.2 L7 4"/><path d="M15.4 6.2 L17 4"/><path d="M12 18.6 V21.4"/><path d="M8.6 17.8 L7 20"/><path d="M15.4 17.8 L17 20"/></g></svg>`,
   // every word in the pool dealt at least once: the page gone through with all of it ringed,
   // nothing on it left unturned
   wordscroll: `<svg viewBox="0 0 24 24"><g class="ink" stroke-width="1.6"><path d="M5.6 5.4 V18.6"/><path d="M18.4 5.4 V18.6"/></g><path class="ink" fill="none" stroke-width="2.6" stroke-linecap="round" d="M8.6 12.4 L11 14.9 L15.6 8.8"/><rect class="ink-fill" x="3.2" y="1.9" width="17.6" height="3.8" rx="1.9"/><rect class="ink-fill" x="3.2" y="18.3" width="17.6" height="3.8" rx="1.9"/></svg>`,
@@ -3695,7 +3692,7 @@ export const ACHIEVEMENTS = [
   { id: "make-10-fuzzy-matches-one-lyricist-game",      name: "Eyes Closed",      desc: "10 fuzzy lyric matches in one Lyricist game", secret: false, icon: "eyeclosed", sitting: true, earn: { cat: "difficulty", diff: "lyricist" } },
   { id: "answer-paris-for-somewhere",            name: "We Were Somewhere Else", desc: "Answer “Paris” when the word is “somewhere”", secret: true, icon: "tower" },
   { id: "answer-every-catalogue-song",   name: "I Knew Everything", desc: "Answer every song in the catalogue at least once", tier: 3, secret: false, icon: "checklist" },
-  { id: "answer-nemesis-word",             name: "The Cycle Ends",   desc: "Finally answer your nemesis word right", tier: 2, secret: true, icon: "banjo" },
+  { id: "answer-nemesis-word",             name: "The Cycle Ends",   desc: "Answer your nemesis word after it has beaten you five times", tier: 2, secret: true, icon: "banjo" },
   { id: "answer-rain-on-monday",   name: "It's Raining And It's Monday", desc: "Answer “rain” correctly on a Monday", secret: true, icon: "umbrella" },
   { id: "perfect-13-no-hints-used",                name: "Finally Clean",    desc: "Perfect a run in a mode that offers hints, without opening one",  secret: false, icon: "drop", sitting: true, earn: { cat: "difficulty" } },
   { id: "win-every-difficulty", name: "Everything & Nothing All At Once", desc: "Win a game in every difficulty", tier: 2, secret: false, icon: "yinyang" },
@@ -3744,10 +3741,6 @@ export const ACHIEVEMENTS = [
      times in one run counts once — which is exactly what "three separate games" wants. */
   { id: "answer-word-missed-in-earlier-game", name: "The Moment I Knew", desc: "Answer a word you missed in an earlier game", secret: false, icon: "wordreturned", sitting: true, earn: { cat: "difficulty" } },
   { id: "miss-same-word-in-3-games", name: "Haunted", desc: "Miss the same word in 3 separate games", tier: 2, secret: true, icon: "ghost" },
-  // The lower rung of a two-step ladder with The Cycle Ends: this one asks only that the word
-  // you have missed MOST has finally fallen, where The Cycle Ends holds out for a word that
-  // has beaten you MEAN_GRUDGE times first.
-  { id: "answer-most-missed-word", name: "I Just Know", desc: "Finally crack your most-missed word", tier: 2, secret: false, icon: "crackedword" },
   { id: "be-dealt-every-prompt-word", name: "You Learn My Secrets", desc: "Be dealt every prompt word in the game", tier: 3, secret: false, icon: "wordscroll" },
   /* Charms judged against the runs BEFORE this one. "In a row" means among runs of the same
      game type: the sandboxed types are invisible to them, neither extending nor breaking a
@@ -3756,9 +3749,8 @@ export const ACHIEVEMENTS = [
   { id: "perfect-13-two-games-in-row", name: "Two For The Show", desc: "Score two perfect 13/13 games in a row", tier: 2, secret: false, icon: "twostars", sitting: true, earn: { cat: "difficulty" } },
   { id: "same-final-score-3-games-in-row", name: "It's All The Same", desc: "Finish on the same score three games running", tier: 2, secret: true, icon: "samescore" },
   /* The long haul. The three dated ones read the calendar ledger rather than the run history,
-     which is capped — see DATES_KEY. None of these carry `sitting`, and neither does I Just
-     Know or You Learn My Secrets: the goal card only ever pins what an evening could actually
-     close, and a charm measured in months or in a word you cannot ask to be dealt would sit
+     which is capped — see DATES_KEY. None of these carry `sitting`, and neither does You Learn
+     My Secrets: the goal card only ever pins what an evening could actually close, and a charm measured in months or in a word you cannot ask to be dealt would sit
      there as a reproach rather than a destination. */
   { id: "play-7-days-in-row", name: "Running Like Water", desc: "Play seven days in a row", tier: 2, secret: false, icon: "sevendays" },
   { id: "play-on-13-different-days", name: "I'm Thirteen Now", desc: "Play on 13 different days", tier: 2, secret: false, icon: "thirteendays" },
@@ -4378,11 +4370,10 @@ export const ACH_GROUP_OF = {
   "wear-blank-start-button": "mastery", "set-every-cosmetic-to-random": "mastery",
   "reach-round-89-infinite": "infinite",
   /* Nemesis: the charms that read your own per-word history back to you. The Cycle Ends sits
-     here rather than under Catalogue because it is the lower rung of a ladder whose upper rung
-     is answer-most-missed-word, and a ladder split across two themes reads as two unrelated
-     charms. */
+     here rather than under Catalogue because the word it asks for is one your own misses
+     named, not one the catalogue did. */
   "answer-nemesis-word": "nemesis", "answer-word-missed-in-earlier-game": "nemesis",
-  "miss-same-word-in-3-games": "nemesis", "answer-most-missed-word": "nemesis",
+  "miss-same-word-in-3-games": "nemesis",
   "be-dealt-every-prompt-word": "nemesis",
   /* The long haul: everything priced in days on the calendar or rounds on the clock rather than
      in one good run. Pulled out of Core, which used to hold nearly half the roster on its own. */

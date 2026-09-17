@@ -23516,10 +23516,6 @@ function endGame() {
     const nemesisBefore = topTallyEntry(before.misses);
     if (nemesisBefore && nemesisBefore.count >= MEAN_GRUDGE
         && roundResults.some((correct, i) => correct && roundWords[i] === nemesisBefore.key)) unlock("answer-nemesis-word");
-    // I Just Know — the lower rung of the same ladder, and read off the same pre-fold snapshot for
-    // the same reason: this asks only that the word you have missed MOST has finally fallen, where
-    // The Cycle Ends holds out for one that has beaten you MEAN_GRUDGE times first.
-    if (nemesisBefore && roundResults.some((correct, i) => correct && roundWords[i] === nemesisBefore.key)) unlock("answer-most-missed-word");
     // The Moment I Knew — any word that has ever beaten you, answered. Also pre-fold, or a word
     // missed on page three and answered on page nine would qualify inside the same run.
     if (roundResults.some((correct, i) => correct && roundWords[i] && (before.misses[roundWords[i]] || 0) >= 1)) {
