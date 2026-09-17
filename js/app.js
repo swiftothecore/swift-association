@@ -17758,8 +17758,14 @@ function endChallenge() {
   // reason it is there — the fore-edge tab still holds a live copy of this exact SVG when
   // results paint, and two unscoped copies wash each other out to the defeated taupe.
   const titleEl = document.querySelector("#screen-results .podium-title");
+  // Which seal: the one belonging to the run just played, NOT the card's lifetime high-water
+  // mark. This used to read darkDefeated first, so a player who had beaten the dark side once
+  // saw the black-violet dark wax on top of every ordinary light run they played afterwards —
+  // and since the dark side is the only thing on the roster that wax means, the screen was
+  // telling them they had just played a dark side. The fore-edge tab they stared at all run
+  // picks its seal off `challengeDark` for exactly this reason; results now agrees with it.
   const resultSeal = `<span class="podium-seal" aria-hidden="true">` +
-    sealMarkup((rec.darkDefeated ? CHALLENGE_SEALS_DARK
+    sealMarkup((c.dark ? CHALLENGE_SEALS_DARK
       : rec.defeated ? CHALLENGE_SEALS_AGED : CHALLENGE_SEALS)[c.id]) + `</span>`;
   // Seal and words are wrapped together rather than laid out on .podium-title itself, so the
   // whole arrangement is one node the other end paths' .textContent wipes on the way past.
@@ -17787,6 +17793,13 @@ function endChallenge() {
     // One Of A Kind has no number to hit — it is "find the song" — so it quotes the card's
     // own goal sentence instead of inventing a tally for it.
     : `<div class="chall-verdict-goal">${escapeHtml(c.win)}</div>`;
+  // Has the side just played been beaten before THIS run? `rec` is read after
+  // markChallengeDefeated, but that only fires on a win and this is the losing branch, so it
+  // is still the standing the player walked in with. It matters because "not yet" was being
+  // printed on cards the player had already defeated, which is simply untrue: the run fell
+  // short, the card did not go back to being unbeaten. Read off the side played, since the
+  // two sides keep separate records and a dark loss says nothing about the light card.
+  const beatenBefore = c.dark ? rec.darkDefeated : rec.defeated;
   const status = won
     // A dark run's stamp is violet, not red: the drawer already prints the dark record in
     // that ink, and a beaten dark side that signs off in the base challenge's red is the one
@@ -17798,7 +17811,8 @@ function endChallenge() {
       `</div>`
     : `<div class="chall-verdict">` +
         `<div class="chall-result-status">` +
-          (outOfGuesses ? "out of guesses — the song got away" : "not yet") +
+          (outOfGuesses ? "out of guesses — the song got away"
+            : beatenBefore ? "not this time" : "not yet") +
         `</div>` + goalLine +
       `</div>`;
   const tokenLine = firstTime ? `<div class="chall-result-token">${CHALL_TICKET} +1 token earned</div>` : "";
@@ -17843,8 +17857,12 @@ function endChallenge() {
     // as a page and not as a tally out of thirteen.
     : c.rule === "newsong" ? ` · best: found on page ${metaBest}`
     : ` · best ${metaBest}/${challengeTotal}`;
-  const meta = `<div class="chall-result-meta">${metaAttempts} attempt${metaAttempts === 1 ? "" : "s"}` +
-    `${bestLine}</div>`;
+  // The standing leads the attempts line on a card already beaten, so the one sentence that
+  // reports the player's history with it says outright that there IS a defeat in it. Only on a
+  // loss: a win has just stamped "challenge defeated" across the top of the panel, and saying
+  // it twice in two registers would read as two different claims.
+  const meta = `<div class="chall-result-meta">${!won && beatenBefore ? "beaten before · " : ""}` +
+    `${metaAttempts} attempt${metaAttempts === 1 ? "" : "s"}${bestLine}</div>`;
   // The dark side, offered where it is actually wanted: the moment the base challenge has
   // just been beaten, and every time it is played again afterwards. Reaching it otherwise
   // means going back to the shelf and finding the card, which is a long walk from the
