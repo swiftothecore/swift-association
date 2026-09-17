@@ -4775,6 +4775,47 @@
     --btn-mark: rgba(245, 239, 225, 0.26);
   }
 
+  /* The Ruthless end card's pair, the last two-up row still wearing the plain highlighter.
+     It borrows its two colours from the run's own lens inks rather than inventing a pair: the
+     indigo biro that writes "from the top", which is where ← goes, and the red pen everyone
+     reaches for, which is what replay is. Both marks are new to the family, as they have to be:
+     back is a dot-dash rule, a line ticking off the way the clock does, and replay is a wave,
+     arcs alternating up and down so the field reads as something that goes round again rather
+     than as the single row of scallops on the bonus back cover. */
+  :is(#backToRuthless, [data-flip-id="backToRuthless"]) {
+    --btn-wash: rgba(90, 106, 150, 0.30);
+    --btn-mark: rgba(59, 74, 107, 0.40);
+    background-color: var(--btn-wash);
+    background-image:
+      radial-gradient(ellipse 3.4px 0.9px at 50% 50%, var(--btn-mark) 99%, transparent 100%),
+      radial-gradient(circle at 50% 50%, var(--btn-mark) 0.9px, transparent 1px);
+    background-size: 14px 8px;
+    background-position: 0 0, 7px 0;
+    transition: --btn-wash 0.22s ease, --btn-mark 0.22s ease, color 0.2s ease, transform 0.12s, box-shadow 0.2s;
+  }
+  :is(#backToRuthless, [data-flip-id="backToRuthless"]):hover {
+    color: var(--paper);
+    --btn-wash: #3b4a6b;
+    --btn-mark: rgba(245, 239, 225, 0.32);
+  }
+
+  :is(#replayRuthless, [data-flip-id="replayRuthless"]) {
+    --btn-wash: rgba(168, 64, 47, 0.26);
+    --btn-mark: rgba(140, 48, 34, 0.38);
+    background-color: var(--btn-wash);
+    background-image:
+      radial-gradient(circle at 50% 0%, transparent 4.2px, var(--btn-mark) 4.3px 5.3px, transparent 5.4px),
+      radial-gradient(circle at 50% 100%, transparent 4.2px, var(--btn-mark) 4.3px 5.3px, transparent 5.4px);
+    background-size: 12px 9px;
+    background-position: 0 0, 6px 0;
+    transition: --btn-wash 0.22s ease, --btn-mark 0.22s ease, color 0.2s ease, transform 0.12s, box-shadow 0.2s;
+  }
+  :is(#replayRuthless, [data-flip-id="replayRuthless"]):hover {
+    color: var(--paper);
+    --btn-wash: #a8402f;
+    --btn-mark: rgba(245, 239, 225, 0.30);
+  }
+
   /* The Change modal's OK button echoes the results "front page" button: the gold
      highlighter wash under a faint graph-paper grid, so it reads as a patterned stamp
      rather than a plain block. */
