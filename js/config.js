@@ -3972,8 +3972,8 @@ export const ACHIEVEMENTS = [
      Priced in the only number an endless run has, the pages cleared, which is on screen the
      whole way up. Nothing here can be locked out: an endless run is always there to play again,
      and the run that ends on page one is the cheapest thing on the shelf to go and do. */
-  { id: "clear-13-pages-in-an-endless-bonus-run", name: "On And On", desc: "Clear 13 pages in a row in an endless run", tier: 2, secret: false, icon: "placeholder", sitting: true, earn: { cat: "bonus" } },
-  { id: "clear-25-pages-in-an-endless-bonus-run", name: "It Never Ends", desc: "Clear 25 pages in a row in an endless run", tier: 2, secret: false, icon: "placeholder", sitting: true, earn: { cat: "bonus" } },
+  { id: "clear-13-pages-in-an-endless-bonus-run", name: "On And On", desc: "Clear 13 pages in a row in an endless bonus game", tier: 2, secret: false, icon: "placeholder", sitting: true, earn: { cat: "bonus" } },
+  { id: "clear-25-pages-in-an-endless-bonus-run", name: "It Never Ends", desc: "Clear 25 pages in a row in an endless bonus game", tier: 2, secret: false, icon: "placeholder", sitting: true, earn: { cat: "bonus" } },
   // The secrets. Three of them are failures worn well (the register of I'm The Problem), which is the
   // shelf's own tone: these games have soft edges and losing on them is funny rather than sore.
   { id: "take-commonest-only-here-card",      name: "I Bought It",      desc: "Take the commonest card in an Only Here hand", secret: true, icon: "receipt" },
@@ -3981,7 +3981,7 @@ export const ACHIEVEMENTS = [
   { id: "time-out-all-10-only-here-pages", name: "Never Heard Silence", desc: "Let all ten Only Here clocks run out without a card played", secret: true, icon: "spider" },
   { id: "finish-bonus-run-one-page-short-of-sweep",    name: "Almost Had It",    desc: "Finish one page shy of a clean sweep", secret: true, icon: "dart" },
   { id: "flag-spot-the-slip-impostor-under-2s",    name: "Saw It Coming",    desc: "Flag a Spot the Slip impostor inside two seconds", secret: true, icon: "mask" },
-  { id: "end-an-endless-bonus-run-on-its-first-page", name: "Ending So Suddenly", desc: "End an endless run on its very first page", secret: true, icon: "placeholder" },
+  { id: "end-an-endless-bonus-run-on-its-first-page", name: "Ending So Suddenly", desc: "End an endless bonus game on its very first page", secret: true, icon: "placeholder" },
   /* ---- Ruthless: the mode where the clock is the score (2026-08-18) ----
      Eight charms. The first roster went in unvetted and came back out the same day, and the
      lesson it left is the rule this one is built on: NOTHING HERE MAY BE PRICED IN A NUMBER THE
