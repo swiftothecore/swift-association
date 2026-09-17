@@ -1056,7 +1056,7 @@ export function initDev(api) {
   });
   body.append(section("timer",
     row(freezeBtn, btn("+5s", () => api.timer.add(5)), btn("−5s", () => api.timer.add(-5)),
-        btn("set 3s", () => api.timer.set(3)), btn("disable", () => { api.timer.disable(); frozen = false; freezeBtn.textContent = "freeze"; freezeBtn.classList.remove("on"); }, "warn"))));
+        btn("set 3s", () => api.timer.set(3)), btn("buzzer", () => api.timer.buzzer()), btn("disable", () => { api.timer.disable(); frozen = false; freezeBtn.textContent = "freeze"; freezeBtn.classList.remove("on"); }, "warn"))));
 
   // ---- Sound -------------------------------------------------------------------
   // Audition buttons force each effect past the sound setting (api.sound.play).

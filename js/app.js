@@ -2869,7 +2869,9 @@ function unlock(id) {
 // a charm's mask was reconsidered: unmasking anything quietly made "find every hidden charm"
 // cheaper for anyone still chasing it. Adding a new secret charm here is now a deliberate
 // decision, not a side effect. Excludes the two meta charms (circularity) and the flourish
-// charms, which carry `reveal` and are gated targets rather than things to be found.
+// charms, which carry `reveal` and are gated targets rather than things to be found. Nick Of
+// Time is left out on purpose too: it is a hundredth-of-a-second window, so folding it in would
+// make "find every hidden charm" hinge on a piece of luck rather than on knowing where to look.
 const HIDDEN_ACH_IDS = [
   "answer-under-1s-left", "finish-on-5-streak-after-miss", "score-12", "score-zero",
   "answer-under-half-second-left", "streak-3-same-album", "play-between-midnight-and-1am", "answer-cardigan-betty-august-one-game",
@@ -22587,6 +22589,9 @@ function submitAnswer(song, isTimeout) {
       if (round === 1 && elapsed < 2) unlock("round-1-under-2s");
       if (remaining < 1) { unlock("answer-under-1s-left"); earnPolaroid("getaway-car"); }   // same beat, both fire
       if (remaining < 0.5) unlock("answer-under-half-second-left");
+      // Nick Of Time. `remaining` is clamped at zero, so this also covers the page whose clock
+      // has actually run out and is still sitting there waiting for the interval to notice.
+      if (remaining < 0.01) unlock("answer-with-a-hundredth-of-a-second-left");
       // Holding My Breath — the page sat untouched until the last two seconds, and then landed.
       // The stamp is the clock reading at the FIRST keystroke, so deleting and retyping can't
       // launder a page you started early; -1 means there was no clock, which cannot qualify.
@@ -27165,6 +27170,18 @@ function devTimerSet(secs) {
     timerStart = performance.now() - (roundClockTotal - Math.max(0, +secs || 0)) * 1000;
   else if (devFrozenRemaining != null) devFrozenRemaining = secs;
 }
+// Land a correct answer with the clock reading all but nothing, which is the one reading Nick
+// Of Time asks for and the only one the panel cannot produce by hand: "set 3s" and then
+// "correct" is two clicks racing a 100ms interval that ends the page first. Both halves happen
+// here, in one turn of the loop. timerStart is moved directly rather than through devTimerSet,
+// so a frozen clock beats the buzzer too.
+function devAnswerAtBuzzer() {
+  if (!screens.game.classList.contains("active") || roundLocked) return false;
+  if (!(roundClockTotal > 0)) return false;   // Relaxed and friends have no buzzer to beat
+  timerStart = performance.now() - (roundClockTotal - 0.001) * 1000;
+  devAnswer("correct");
+  return true;
+}
 function devTimerDisable() {
   clearTimer();
   devFrozenRemaining = null;
@@ -27689,7 +27706,7 @@ function buildDevApi() {
     },
     // Timer
     timer: { freeze: devTimerFreeze, unfreeze: devTimerUnfreeze, add: devTimerAdd,
-             set: devTimerSet, disable: devTimerDisable },
+             set: devTimerSet, disable: devTimerDisable, buzzer: devAnswerAtBuzzer },
     // Sound (sample palette): play() forces the effect even while the setting
     // is off, so the palette can be auditioned; all() walks every sound in turn.
     sound: {

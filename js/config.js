@@ -3633,6 +3633,11 @@ export const ACHIEVEMENTS = [
   { id: "perfect-13-lyricist",         name: "Alive In My Head", desc: "Perfect 13/13 in Lyricist",           tier: 3, secret: false, icon: "cameo", sitting: true, earn: { cat: "difficulty", diff: "lyricist" } },
   { id: "round-1-under-2s",     name: "Let The Games Begin", desc: "Nail round 1 in under 2s",            secret: false, icon: "rocket", sitting: true, earn: { cat: "difficulty" } },
   { id: "answer-under-half-second-left", name: "It Just Felt So Good", desc: "Answer right with under 0.5s left", secret: true, icon: "match" },
+  // The top of the buzzer ladder, and struck for it: under 1s, under 0.5s, and then a reading
+  // that rounds to nothing. The window is real but tiny — the clock's own interval only checks
+  // for expiry every 100ms, so a page whose time has genuinely run out stays answerable until
+  // that check lands. Landing inside it is mostly nerve and a little luck, which is the charm.
+  { id: "answer-with-a-hundredth-of-a-second-left", name: "Nick Of Time", desc: "Answer right with 0.01s left", tier: 3, secret: true, icon: "placeholder" },
   { id: "streak-3-same-album",       name: "Time To Branch Out?", desc: "3 correct in a row from one album", secret: true, icon: "branch" },
   { id: "score-nearly-every-studio-album-one-game",        name: "The Eras Tour",    desc: "Score from nearly every studio album in one game", tier: 2, secret: false, icon: "ticket", sitting: true, earn: { cat: "difficulty" } },
   { id: "perfect-daily",         name: "Golden Like Daylight", desc: "Score a perfect Daily",               tier: 2, secret: false, icon: "sunrise", sitting: true, earn: { cat: "daily" } },
@@ -4392,7 +4397,8 @@ export const ACH_GROUP_OF = {
      answers and the deliberate crawls — because what they share is that the timer, not the
      song, is the thing being played. */
   "answer-under-2s": "clock", "round-1-under-2s": "clock", "answer-under-1s-left": "clock",
-  "answer-under-half-second-left": "clock", "average-under-3s-per-answer": "clock",
+  "answer-under-half-second-left": "clock", "answer-with-a-hundredth-of-a-second-left": "clock",
+  "average-under-3s-per-answer": "clock",
   "answer-all-13-rounds-under-3s": "clock", "answer-under-1s-three-rounds-running": "clock",
   "perfect-13-every-answer-under-2s": "clock", "win-without-clock-dropping-below-half": "clock",
   "finish-without-timer-red-zone": "clock", "answer-in-final-second-all-13-rounds": "clock",
