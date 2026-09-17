@@ -23620,8 +23620,11 @@ function endGame() {
     if (score === 0) unlock("score-zero");
     if (gameTimeouts === 0) unlock("finish-with-no-timeouts");
     if (metrics.noTimeoutStreak >= 2) unlock("finish-no-timeouts-2-games-in-row");   // two no-timeout games in a row
-    // Finally Clean — a majority win (7+/13) on the clock, no timeouts and no hints leaned on.
-    if (timedMode && score >= 7 && gameTimeouts === 0 && hintsUsed === 0) unlock("win-with-no-hints-or-timeouts");
+    // Finally Clean — a perfect page in a mode that OFFERS the hint ladder, with the ladder
+    // never opened. It reads currentMode.hint rather than naming Relaxed, so a hinted Custom
+    // preset counts too; the clock is deliberately not in it, since the only base mode that
+    // hands out hints is the one with no clock to beat.
+    if (currentMode.hint && score === TOTAL_ROUNDS && hintsUsed === 0) unlock("perfect-13-no-hints-used");
     if (currentMode.lyricOnly) unlock("finish-lyricist-game");
     // The Very First Page used to sit at the head of this ladder on `played >= 1`. It moved to
     // markRunBreadth, which every game-shaped end path calls, so the daily can earn it too. The

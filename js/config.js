@@ -256,7 +256,12 @@ export const DEFAULT_SETTINGS = {
    word-rarity pool, matching strictness, wrong-answer help). Gameplay code is
    shared; the mode object sets the parameters. */
 export const MODES = {
-  easy:   { id: "easy",   label: "Easy",   seconds: 15, dropdown: true,  pool: "easy",  strict: false, noTitle: false, examples: 3, hint: true,  blurb: "15s · suggestions & hints · common words" },
+  // Easy is the rung BETWEEN Relaxed and Normal, so it has to differ from both. What it keeps
+  // from the soft end is the thing Normal takes away first and misses most: the prompt word may
+  // sit in the title (noTitle: false), which turns half the pages into a gimme you still have to
+  // spot. What it gives up is the hint ladder — that is Relaxed's alone now, the one place the
+  // page will answer for you, which is also what stops Relaxed reading as Easy with the clock off.
+  easy:   { id: "easy",   label: "Easy",   seconds: 15, dropdown: true,  pool: "easy",  strict: false, noTitle: false, examples: 3, hint: false, blurb: "15s · suggestions · common words · may be in the title" },
   medium: { id: "medium", label: "Normal", seconds: 10, dropdown: true,  pool: "all",   strict: false, noTitle: true,  examples: 3, hint: false, blurb: "10s · suggestions · all words · not in the title" },
   hard:   { id: "hard",   label: "Hard",   seconds: 7,  dropdown: false, pool: "hard",  strict: false, noTitle: true,  examples: 3, hint: false, blurb: "7s · type the full title · rarer words · not in the title" },
   // `moreExamples: false` is Ultra's alone: every other mode lets a missed page open out into
@@ -267,8 +272,9 @@ export const MODES = {
   // Lyric-only: no title input (lyricOnly), longer clock. You answer by typing a lyric
   // line (a few words around the prompt word are enough — the matcher is fuzzy).
   lyricist: { id: "lyricist", label: "Lyricist", seconds: 20, dropdown: false, pool: "all", strict: false, noTitle: false, examples: 3, hint: false, lyricOnly: true, blurb: "20s · type a lyric line, not the title" },
-  // No-timer practice mode (seconds: 0 → startTimer takes the no-timer path). Same
-  // forgiving levers as Normal; the only difference is the clock never runs.
+  // No-timer practice mode (seconds: 0 → startTimer takes the no-timer path). Normal's word
+  // pool and suggestions, with two things neither Normal nor Easy has: no clock at all, and
+  // the hint ladder, which lives here and nowhere else on the difficulty ladder.
   relaxed: { id: "relaxed", label: "Relaxed", seconds: 0, dropdown: true, pool: "all", strict: false, noTitle: false, examples: 3, hint: true,  blurb: "no timer · suggestions & hints · all words" },
 };
 /* How many additional proof rows each press on a result page reveals. The player can keep
@@ -3691,7 +3697,7 @@ export const ACHIEVEMENTS = [
   { id: "answer-every-catalogue-song",   name: "I Knew Everything", desc: "Answer every song in the catalogue at least once", tier: 3, secret: false, icon: "checklist" },
   { id: "answer-nemesis-word",             name: "The Cycle Ends",   desc: "Finally answer your nemesis word right", tier: 2, secret: true, icon: "banjo" },
   { id: "answer-rain-on-monday",   name: "It's Raining And It's Monday", desc: "Answer “rain” correctly on a Monday", secret: true, icon: "umbrella" },
-  { id: "win-with-no-hints-or-timeouts",            name: "Finally Clean",    desc: "Win without hints or a single timeout",  secret: false, icon: "drop", sitting: true, earn: { cat: "difficulty" } },
+  { id: "perfect-13-no-hints-used",                name: "Finally Clean",    desc: "Perfect a run in a mode that offers hints, without opening one",  secret: false, icon: "drop", sitting: true, earn: { cat: "difficulty" } },
   { id: "win-every-difficulty", name: "Everything & Nothing All At Once", desc: "Win a game in every difficulty", tier: 2, secret: false, icon: "yinyang" },
   { id: "finish-no-timeouts-2-games-in-row",      name: "Fearless (Taylor's Version)", desc: "Two games in a row with no timeouts", tier: 2, secret: false, icon: "vinyl", sitting: true, earn: { cat: "difficulty" } },
   { id: "play-every-required-mode",         name: "Explorer",         desc: "Play every difficulty in Classic and in both Infinite variants, plus Custom", tier: 2, secret: false, icon: "compass" },
@@ -4210,6 +4216,10 @@ export const ACH_ID_MIGRATIONS = {
      priced in them had to be re-cut against the clock instead. The feat is the same one (you
      had it instantly), but the id has to describe what the game now actually asks. */
   "name-running-order-page-at-full-value": "name-running-order-page-with-half-the-clock-left",
+  // Finally Clean lost its "no hints" half when the hint ladder became Relaxed-only: in a timed
+  // mode there was no hint left to decline, so the clause was always true. It now asks for the
+  // perfect page in a mode that DOES offer the ladder, with the ladder left shut.
+  "win-with-no-hints-or-timeouts": "perfect-13-no-hints-used",
 };
 
 // Achievements are shown grouped by theme on the Charm Collection page. Order here is
@@ -4392,7 +4402,7 @@ export const ACH_GROUP_OF = {
   "perfect-13-lyricist": "perfect", "perfect-13-every-mode": "perfect", "perfect-13-all-one-album": "perfect",
   "perfect-13-no-wrong-submissions": "perfect", "perfect-13-two-games-in-row": "perfect",
   "win-ultra-10-correct": "perfect", "beat-personal-best-score": "perfect",
-  "win-with-no-hints-or-timeouts": "perfect", "streak-5": "perfect", "streak-10": "perfect",
+  "perfect-13-no-hints-used": "perfect", "streak-5": "perfect", "streak-10": "perfect",
   /* Against the clock: everything priced in seconds. Both directions count — the sub-second
      answers and the deliberate crawls — because what they share is that the timer, not the
      song, is the thing being played. */
