@@ -20539,6 +20539,9 @@ function scheduleVanish(wrap, delay) {
     vanishTimer = null;
     vanishDeadline = 0;
     if (wrap) wrap.classList.add("vanished");
+    // A gauge lit while the word was still up would otherwise sit there confirming the song
+    // for the rest of the page. renderVerseMeter re-reads legibility, so this takes it down.
+    renderVerseMeter("");
   }, ms);
 }
 function clearTimer() {
@@ -21687,6 +21690,13 @@ function renderVerseMeter(text) {
   // Impostor: the meter only lights when the typed text is a real lyric fragment, which
   // would confirm the prompt word is genuine — so it's suppressed for the whole run.
   if (impostorRuleActive()) { meter.hidden = true; return; }
+  // Same tell, from the other side: the meter only lights for a real fragment of a song that
+  // sings the page's word, so on a page where the word can't be read it confirms what the word
+  // was. Type a line you half-remember, watch a notch light, and Vanishing Word, Word Games and
+  // Ready For It??? are answered off the gauge rather than off what you managed to read. The
+  // nudge has the same guard for the same reason (see promptWordLegible) — the whole point of
+  // those challenges is that the word is gone, and nothing else on screen may hand it back.
+  if (!promptWordLegible()) { meter.hidden = true; return; }
   const tier = (gameType !== "daily" && hintTier >= 3) ? null : verseProgress(text);
   if (!tier) { meter.hidden = true; return; }
   const { level, label } = VERSE_METER[tier];
