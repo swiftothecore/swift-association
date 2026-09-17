@@ -141,14 +141,22 @@
   body[data-text-size="large"] { --text-size-adjust: 2px; }
 
   /* ---- Era palettes (accent / highlighter / bead / wash) ---- */
+  /* The wash is the only one of these four that touches the sheet itself, so it obeys a
+     rule the other three do not: it may move the paper's HUE, never its VALUE. Every era
+     composites to within about three points of gold's lightness on cream, which is what
+     lets a run change era mid-page without the paper appearing to change stock. That is
+     why midnight and reputation carry a pale wash and not their own near-black swatch:
+     inking navy or charcoal over cream at any useful alpha greys the page down, and the
+     finale eras are exactly the ones a results screen wears, sat next to a start screen
+     that is always gold. The accent, highlighter and bead still carry the dark era. */
   body[data-era="gold"]     { --ink-accent:#a9791f; --highlighter:rgba(247,201,72,0.55); --bead:#c8951f; --page-wash:rgba(212,160,23,0.05); }
   body[data-era="lavender"] { --ink-accent:#6d5aa6; --highlighter:rgba(186,160,235,0.50); --bead:#8b73c9; --page-wash:rgba(139,115,201,0.05); }
   body[data-era="red"]      { --ink-accent:#9b2226; --highlighter:rgba(225,90,95,0.42);  --bead:#b23a3f; --page-wash:rgba(178,58,63,0.05); }
   body[data-era="denim"]    { --ink-accent:#3f6fa3; --highlighter:rgba(120,170,220,0.45); --bead:#5b87b8; --page-wash:rgba(91,135,184,0.05); }
   body[data-era="graphite"] { --ink-accent:#4a4a4a; --highlighter:rgba(130,130,130,0.40); --bead:#6b6b6b; --page-wash:rgba(90,90,90,0.05); }
-  body[data-era="midnight"] { --ink-accent:#2b3a67; --highlighter:rgba(90,110,180,0.42); --bead:#3d4f86; --page-wash:rgba(43,58,103,0.06); }
+  body[data-era="midnight"] { --ink-accent:#2b3a67; --highlighter:rgba(90,110,180,0.42); --bead:#3d4f86; --page-wash:rgba(150,165,210,0.06); }
   body[data-era="debut"]      { --ink-accent:#3f7d54; --highlighter:rgba(120,185,135,0.42); --bead:#5a9e6e; --page-wash:rgba(63,125,84,0.05); }
-  body[data-era="reputation"] { --ink-accent:#2c2c2e; --highlighter:rgba(80,80,86,0.42);   --bead:#3a3a3e; --page-wash:rgba(44,44,46,0.07); }
+  body[data-era="reputation"] { --ink-accent:#2c2c2e; --highlighter:rgba(80,80,86,0.42);   --bead:#3a3a3e; --page-wash:rgba(170,172,180,0.07); }
   body[data-era="lover"]      { --ink-accent:#b8487f; --highlighter:rgba(234,150,196,0.46); --bead:#d472a6; --page-wash:rgba(196,100,154,0.05); }
   body[data-era="evermore"]   { --ink-accent:#6b4a2e; --highlighter:rgba(160,120,80,0.42);  --bead:#8a6038; --page-wash:rgba(122,90,56,0.05); }
 
