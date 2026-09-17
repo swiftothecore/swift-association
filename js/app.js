@@ -18331,12 +18331,48 @@ function openArchivedDaily(dateStr) {
   renderDailyResultPanel();
 }
 
+/* The two places this button can put you back down, drawn rather than typed. The mark
+   NAMES THE DESTINATION instead of pointing at it: a left arrow would only repeat what
+   the label already says, and the rest of the family sets marks as nouns anyway — the
+   play CTA wears a pencil, the chance stamp wears dice, and neither reaches for an
+   arrow. So the front page is its own spiral cover, and the calendar is the month card
+   from the Stats panel with a day struck out, the same red-marker X that makes a day
+   clickable there in the first place.
+
+   They replace a typed "←" that used to sit in the calendar label. A font glyph was the
+   wrong material for a mark on this desk, and it also made the two states inconsistent:
+   one wore an arrow and the other wore nothing. Now both wear ink, and neither wears an
+   arrow. Stroke weight is set in styles.css (.again-mark .ink) to match the CTA's pencil
+   — .cta-mark deliberately sets none, so a mark that says nothing draws hairline. */
+const AGAIN_MARK_COVER =
+  `<path class="ink" d="M7.4 4.3 L19 4.7 L18.6 20 L7 19.6Z"/>` +
+  `<path class="ink" d="M7.6 6.7 Q4 6.3 4.5 8.2"/>` +
+  `<path class="ink" d="M7.5 11 Q3.9 10.6 4.4 12.5"/>` +
+  `<path class="ink" d="M7.4 15.3 Q3.8 14.9 4.3 16.8"/>`;
+const AGAIN_MARK_CALENDAR =
+  `<path class="ink" d="M3.6 5.6 L20.4 6 L20 20.4 L4 20Z"/>` +
+  `<path class="ink" d="M3.75 10 L20.25 10.3"/>` +
+  `<path class="ink" d="M8.2 3.3 L8.1 7"/>` +
+  `<path class="ink" d="M16 3.4 L15.9 7.1"/>` +
+  `<path class="ink" d="M9.6 13.6 L14.4 17.4"/>` +
+  `<path class="ink" d="M14.5 13.7 L9.5 17.3"/>`;
+
 // The results screen's "leave" stamp reads differently depending on how we got here:
 // finishing a real run turns back to the front page, but flipping back to an old
-// Daily from the calendar should turn back to the calendar. One button, one label.
+// Daily from the calendar should turn back to the calendar. One button, one label,
+// one mark. The label is written into its own span rather than over the button, so
+// setting it cannot wipe the mark standing beside it.
 function applyAgainBtnLabel() {
   const btn = $("againBtn");
-  if (btn) btn.textContent = archivedDailyDate ? "← Back to your calendar" : "Turn back to the front page";
+  if (!btn) return;
+  const archived = !!archivedDailyDate;
+  const label = btn.querySelector(".cta-label");
+  const mark = btn.querySelector(".again-mark");
+  if (label) label.textContent = archived ? "Back to your calendar" : "Turn back to the front page";
+  if (mark) {
+    mark.innerHTML = `<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">` +
+      (archived ? AGAIN_MARK_CALENDAR : AGAIN_MARK_COVER) + `</svg>`;
+  }
 }
 
 /* The three pieces of the shared summary, derived once and used twice: they are what
@@ -30723,6 +30759,10 @@ function buildDevApi() {
 /* ---------- Init ---------- */
 async function init() {
   initCtaInteractions();
+  // Inks the results button's mark before anything can reach that screen. The markup
+  // ships the span empty rather than duplicating the path data, so this is the one
+  // place the default (the spiral cover) is put down.
+  applyAgainBtnLabel();
   showScreen("start");
   rollCtaGold();   // today's gold, decided once per load and never mentioned to anyone
   applyEra("gold");
