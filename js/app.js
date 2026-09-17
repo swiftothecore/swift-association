@@ -3184,7 +3184,7 @@ function checkWrinkleEgg() {
 /* ---------- Custom tooltips (data-tip; controllable delay, no clipping) ---------- */
 // A single body-level bubble shared by every [data-tip] element. Default shows
 // immediately; an element can opt into a delay with data-tip-delay (ms).
-let _tipEl = null, _tipTimer = null;
+let _tipEl = null, _tipTimer = null, _tipTarget = null, _tipWatch = 0;
 function ensureTipEl() {
   if (_tipEl) return _tipEl;
   _tipEl = document.createElement("div");
@@ -3212,9 +3212,28 @@ function showTip(target) {
   el.textContent = text;
   el.classList.add("show");
   positionTip(el, target);
+  _tipTarget = target;
+  watchTip();
+}
+/* A BUBBLE OUTLIVES ITS TARGET UNLESS SOMETHING WATCHES FOR IT. mouseout is the only
+   thing that takes a tooltip down, and a button that re-renders the screen under the
+   pointer never fires one: clicking Endless on a bonus zine replaces the whole shelf
+   with the first page, the element the pointer was over stops existing mid-click, and
+   the bubble sits there over the running game until something unrelated happens to
+   fire a mouseout. So while a bubble is up, poll the target: if it has left the
+   document, or the pointer has left it, take the bubble down. */
+function watchTip() {
+  clearInterval(_tipWatch);
+  _tipWatch = setInterval(() => {
+    if (!_tipTarget) { clearInterval(_tipWatch); _tipWatch = 0; return; }
+    if (!_tipTarget.isConnected || !_tipTarget.matches(":hover")) hideTip();
+  }, 200);
 }
 function hideTip() {
   clearTimeout(_tipTimer);
+  clearInterval(_tipWatch);
+  _tipWatch = 0;
+  _tipTarget = null;
   if (_tipEl) _tipEl.classList.remove("show");
 }
 function setupTooltips() {
@@ -3231,6 +3250,10 @@ function setupTooltips() {
     if (!t || t.contains(e.relatedTarget)) return;
     hideTip();
   });
+  // A tap or a click is nearly always about to change what is under the pointer, so
+  // drop the bubble on the way down rather than waiting for the poll above.
+  document.addEventListener("pointerdown", hideTip, true);
+  window.addEventListener("blur", hideTip);
   window.addEventListener("scroll", hideTip, true);
 }
 
