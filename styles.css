@@ -3721,6 +3721,12 @@
      the cover dances here too — that listener is delegated on the document and asks for nothing
      but the button. */
   .tbt-mark { display: inline-flex; align-self: center; }
+  /* The play screen's button is 40px wide around an 18px cover, which is room for the encore to
+     scale and lean about in a header that has nothing else on that side. Here it left 23px of
+     paper between the zine and its own title. The box is pulled in to the cover and the spacing
+     handed back to .title-group's gap, which is what sets it for every other panel; the dance is
+     a transform, so it still throws itself around outside the box without moving anything. */
+  .tbt-mark .bonus-cover-play { width: 18px; margin: -10px 0; }
 
   .tbt-blurb {
     font-family: var(--hand); font-size: calc(19px + var(--text-size-adjust));
