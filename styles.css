@@ -6795,10 +6795,19 @@
   }
 
   .bracelet-finished { max-width: 520px; margin: 0 auto 4px; }
+  /* Only the sealed Daily wears this now. On an ordinary run a drawing of a friendship
+     bracelet, directly under the final tally, on the results page of a game about making
+     one, does not need to be told it is the bracelet you made — and the line cost a whole
+     block of paper to say it. Sealed is different: the strand is drawn as blank beads,
+     and without the caption it reads as broken rather than as deliberately covered.
+     Hidden rather than dropped, so the 14px it held under the tally rule survives on
+     .bracelet-finished below. */
   .bracelet-caption {
     text-align: center; font-family: var(--hand); font-size: calc(19px + var(--text-size-adjust));
     color: var(--ink-soft); margin: 14px 0 0;
   }
+  .bracelet-caption[hidden] { display: none; }
+  .bracelet-caption[hidden] + .bracelet-finished { margin-top: 14px; }
 
   /* Two ordinary, worded keepsake actions make copy and download independently
      discoverable on touch. Their labels are also the live state targets in JS, so the
@@ -6812,7 +6821,7 @@
      the opened memory sheet each take a full-width line of their own, in that order. */
   .bracelet-keepsake {
     display: flex; align-items: center; justify-content: center; flex-wrap: wrap;
-    gap: 6px 10px; max-width: 520px; margin: 6px auto 4px;
+    gap: 5px 7px; max-width: 520px; margin: 4px auto 0;
   }
   .bracelet-keepsake > .bracelet-actions { margin: 0; max-width: none; }
   .bracelet-keepsake > .bracelet-memory { margin: 0; order: 4; }
@@ -6821,21 +6830,21 @@
   .bracelet-keepsake > .bracelet-memory-sheet { order: 6; flex: 1 0 100%; }
   .bracelet-actions {
     display: flex; align-items: stretch; justify-content: center; flex-wrap: wrap;
-    gap: 8px; max-width: 520px; margin: 6px auto 10px;
+    gap: 6px; max-width: 520px; margin: 6px auto 10px;
   }
   .bracelet-action {
     display: inline-flex; align-items: center; justify-content: center;
-    gap: 6px; min-width: 112px; min-height: 36px; padding: 6px 12px;
+    gap: 5px; min-width: 100px; min-height: 27px; padding: 3px 9px;
     border: 1.3px solid color-mix(in srgb, var(--ink-soft) 40%, transparent);
     border-radius: 4px;
     background: color-mix(in srgb, var(--paper-edge) 64%, transparent);
     color: var(--ink-soft); cursor: pointer; touch-action: manipulation;
-    font-family: var(--type); font-size: calc(10px + var(--text-size-adjust));
-    font-weight: 700; letter-spacing: 0.04em; line-height: 1.15;
+    font-family: var(--type); font-size: calc(9px + var(--text-size-adjust));
+    font-weight: 700; letter-spacing: 0.03em; line-height: 1.15;
     transition: color 0.18s ease, background-color 0.18s ease,
                 border-color 0.18s ease, transform 0.1s ease;
   }
-  .bracelet-action .keepsake-ic { width: 14px; height: 14px; flex: none; }
+  .bracelet-action .keepsake-ic { width: 12px; height: 12px; flex: none; }
   .bracelet-action:hover {
     color: var(--ink); border-color: var(--ink-soft);
     background: color-mix(in srgb, var(--ink) 7%, var(--paper));

@@ -12696,7 +12696,13 @@ function renderBraceletDetails(results, albums, opts) {
   const recap = $("braceletRecap");
   const caption = document.querySelector("#screen-results .bracelet-caption");
   const sealed = !!opts.sealed;
-  if (caption) caption.textContent = sealed ? "today's bracelet, still sealed" : "the bracelet you made";
+  // The caption is the sealed Daily's label and nothing else's. On every other ending the
+  // strand speaks for itself under the tally, and the line was a block of paper spent naming
+  // a picture. Sealed, the beads are drawn blank, so without it the strand reads as broken.
+  if (caption) {
+    caption.hidden = !sealed;
+    caption.textContent = sealed ? "today's bracelet, still sealed" : "";
+  }
   setBraceletKeepsakeAvailable(!sealed);
 
   if (sealed) {
