@@ -156,10 +156,13 @@ const MOTIFS = {
     for (let row = 0; row < 2; row++) {
       for (let col = 0; col < 4; col++) {
         if (row === 1 && col === 3) continue;
-        // Both rows sit ABOVE the name label. A count nobody can finish is not a count: the
-        // second row used to run under the label and left six tiles showing out of seven.
-        const x = 12 + col * 36, y = 6 + row * 28;
-        s += sheet([[x, y], [x + 28, y - 1], [x + 29, y + 24], [x + 1, y + 25]],
+        /* The second row runs UNDER the name label on purpose. Lifting both rows clear of it so
+           the seven could be counted was tried and thrown away: it makes the tiles squat and the
+           card top-heavy, and the paste-up stops looking pasted. The seven is a wink, and a wink
+           does not get to cost the picture — a big tile half behind a label is what a collage
+           looks like. */
+        const x = 12 + col * 36, y = 10 + row * 40;
+        s += sheet([[x, y], [x + 28, y - 1], [x + 29, y + 30], [x + 1, y + 31]],
           (row + col) % 2 ? C.pale : C.palest, r, { amp: 1.0 });
       }
     }
