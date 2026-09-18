@@ -241,7 +241,7 @@ export function hasMotif(album) {
    off its own paper. `renderTrackPicker` draws again when the fonts settle. */
 const NAME_SIZES = [20, 17, 15, 13, 11.5];
 const NAME_PAD = 10;          // paper before the writing
-const NAME_TAIL = 20;         // and after it: enough blank to read the name as flush left
+const NAME_TAIL = 15;         // and after it: enough blank to read the name as flush left
 const NAME_ROOM = 146;        // how much of a 160-wide card a label may take
 
 let measurer = null;
