@@ -3840,14 +3840,6 @@
     margin-left: -2.6ch; padding-left: 2.6ch;
     background: var(--paper); box-shadow: 0 -12px 16px -8px var(--paper);
   }
-  /* The corner links sit fixed at the foot of the window at z-index 60, and body.in-game hides
-     them for a main round but has never been set by a bonus run. That has never mattered,
-     because every other game on the shelf keeps its writing line in the flow of the page and
-     the two never meet. This one sticks its line to the bottom edge, which on a phone is
-     exactly where that cluster lives, and the line ends up reading through the buttons.
-     Hidden for the length of a run of THIS game rather than by widening body.in-game to cover
-     the whole shelf: that would change the chrome of eight other games to fix one. */
-  body:has(#screen-bonusplay.active[data-bonus-game="track-by-track"]) .corner-links { display: none; }
 
   /* ---------- The finished sheet ---------- */
   .tbt-end {
@@ -7454,9 +7446,11 @@
      renderChallengeTab, and refreshed on resize) carries the play page's offset inside
      the notebook and `--tab-y` is where the tab sits down that page. */
   .challenge-tab[hidden] { display: none; }
-  /* A run is the only place this belongs: showScreen puts body.in-game up for the play
-     board and takes it down everywhere else, so results and panels never wear it. */
-  body:not(.in-game) .challenge-tab { display: none; }
+  /* A MAIN run is the only place this belongs, so it asks for the round screen by name rather
+     than for body.in-game, which since 2026-09-18 also covers a run on the bonus shelf — where
+     a challenge tab left up by a run that ended untidily would hang off a zine. Results and
+     panels never wear it either. */
+  body:not(:has(#screen-game.active)) .challenge-tab { display: none; }
   .challenge-tab {
     --bite: 46px; --notch: 15px; --tab-y: 92px;
     /* --pad-l is a variable rather than a literal because the ribbon has to line its column
@@ -10829,6 +10823,10 @@
     display: flex; align-items: center; gap: 8px;
     flex-wrap: wrap-reverse; max-width: calc(100vw - 28px);
   }
+  /* Down for the length of a run, on the round screen and on the shelf's play screen alike
+     (showScreen sets body.in-game for both). They are pinned to the bottom of the VIEWPORT,
+     not to the page, so on a phone they sit over the board — which is how Track by Track's
+     sticky writing line came to read through them. The pickers are not runs and keep them. */
   body.in-game .corner-links { display: none; }
   @media (min-width: 1040px) { .corner-links { left: 22px; bottom: 18px; } }
   /* Collapsed to an icon-only disc by default so it recedes and lets gameplay stay
@@ -12353,7 +12351,9 @@
   .sound-gear[data-on="true"] { color: var(--ink-accent); }
 
   /* Keepsakes icon — sits to the left of the sound icon. Hidden during active play so it
-     doesn't clutter the board (and can't sidestep the timer, which only the gear pauses).
+     doesn't clutter the board (and can't sidestep the timer, which only the gear pauses) —
+     on the shelf's play screen as well as the round screen, and the clock argument is if
+     anything stronger there, since every game on the shelf is timed.
      The badge is a genuine unread marker: how many earned keepsakes you have not looked at,
      cleared the moment the drawer opens. It is allowed to look like a notification because
      it is one. The size of the collection is the drawer's own counter's business. */

@@ -1032,7 +1032,20 @@ function focusScreen(name) {
 
 function commitScreenPresentation(name, refresh = true) {
   // Chrome outside the paper stays with the outgoing page until a page turn completes.
-  document.body.classList.toggle("in-game", name === "game");
+  // A RUN IS A RUN, whichever board it plays on: the round screen and the shelf's own play
+  // screen both wear this. What it takes off the window is fixed furniture that would sit over
+  // the board — the corner links at the foot and the keepsakes drawer's icon — and the shelf
+  // wanted both gone for the same reasons the main game does. The corner links are pinned to
+  // the bottom of the VIEWPORT, so any game that sticks its writing line to the bottom edge
+  // reads straight through them (Track by Track did, and was patched game by game until this).
+  // The keepsakes icon is worse than clutter on a timed board: the drawer doesn't pause the
+  // clock, and every game on the shelf is timed. `bonusplay` covers a bonus run, a Ruthless
+  // run and a Track by Track sheet, but NOT the pickers they are chosen from (`ruthless`,
+  // `tracks`, `bonus`), which are boards to browse and keep their links. Screen-keyed rather
+  // than run-keyed on purpose: the end card renders onto this same screen, so the chrome stays
+  // down until the player leaves — which is right, the shelf's own `← front page` is at the
+  // top of the card — and there is no flag that can get stuck up after a run that ended oddly.
+  document.body.classList.toggle("in-game", name === "game" || name === "bonusplay");
   updateMastheadHome(name);
   if (refresh) window.dispatchEvent(new CustomEvent("deskscatter:refresh"));
 }
