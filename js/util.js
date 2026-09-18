@@ -327,6 +327,50 @@ export function anniversaryNote(dateKey, milestones) {
   };
 }
 
+// Guest-shelf marginalia for a "YYYY-MM-DD" key, matched against a GUEST_DAYS table the same
+// month-day way anniversaryNote() matches milestones. Pure: the table is passed in, the year
+// drives the count, no DOM and no globals. Returns null on a quiet day, else the SAME note
+// shape the milestone renderers already consume, so the slip, the sticky and the calendar need
+// no new plumbing — plus `guest`, the id the caller resolves the pass ink from (this file
+// knows nothing about colour).
+//
+// The caller resolves a real Taylor milestone FIRST and only falls back to this: it is her
+// notebook, and on the one day both could speak she does. A guest day still outranks the
+// sacred 13, because a birthday is a thing that happened and a 13-day is arithmetic.
+//
+// Both surfaces carry the Long Live line, because a guest day is the notebook being generous
+// about somebody else rather than a fact about a record: the slip says it in the note, the
+// sticky in its caption, and neither ever shows the other's copy.
+export function guestDayNote(dateKey, guestDays) {
+  if (!dateKey || dateKey.length < 10) return null;
+  const md = dateKey.slice(5);
+  const year = +dateKey.slice(0, 4);
+  const g = guestDays.find((x) => x.md === md);
+  if (!g) return null;
+
+  const age = year - g.year;
+  const ago = age === 1 ? "1 year ago" : `${age} years ago`;
+  // A first name for the headline, which is why the table stores full names: "Happy birthday,
+  // Sabrina Carpenter" reads like an envelope, and the slip is a note to a friend.
+  const first = g.name.split(" ")[0];
+  const headline = g.headline || `Happy birthday, ${first}`;
+  // An arrival day (Wicked's opening night, Hannah's premiere) is written as the thing it was;
+  // only a person gets "born".
+  const opening = g.arrived
+    ? `${g.name} ${g.arrived} this day in ${g.year}${age > 0 ? `, ${ago}` : ""}.`
+    : (age > 0 ? `Born this day in ${g.year}, ${ago}.` : "Born this day.");
+  const note = `${opening} We all got crowns.`;
+  return {
+    icon: "crown", album: null, guest: g.guest,
+    eyebrow: "On the guest shelf",
+    headline,
+    headlineRest: "",
+    note,
+    caption: "we all got crowns",
+    aria: `${headline}. ${opening}`,
+  };
+}
+
 const MONTH_NAMES = [
   "January", "February", "March", "April", "May", "June",
   "July", "August", "September", "October", "November", "December",

@@ -17,8 +17,10 @@
 //
 // The marked days come from the real tables in config.js rather than a list of
 // this module's own: TS_MILESTONES (her birthday, the twelve studio albums and
-// the re-records) and TS_LORE_DAYS (the days the songs put a date on). Each
-// wears its album's colour, honouring the colour-blind palette setting.
+// the re-records), GUEST_DAYS (the guest shelf's birthdays) and TS_LORE_DAYS
+// (the days the songs put a date on). A Taylor day wears its album's colour,
+// honouring the colour-blind palette setting; a guest day wears its own pass ink,
+// which is not an album colour and so is not part of that setting.
 //
 // The hand marks use seeded jitter — stable within a day so nothing flickers
 // on re-render, but each day's slash gets its own angle, length and bow, and
@@ -28,7 +30,8 @@
 // non-interactive, like every desk prop; if the markup isn't there it does
 // nothing.
 
-import { TS_MILESTONES, TS_LORE_DAYS, ALBUM_COLORS, CB_ALBUM_COLORS, SALT_SHAKER_D, SALT_CAP_D } from "./config.js";
+import { TS_MILESTONES, TS_LORE_DAYS, GUEST_DAYS, guestInk, ALBUM_COLORS, CB_ALBUM_COLORS,
+         SALT_SHAKER_D, SALT_CAP_D, CROWN_D, CROWN_BAND_D } from "./config.js";
 import { loadSettings } from "./storage.js";
 
 const SVG = "http://www.w3.org/2000/svg";
@@ -86,9 +89,12 @@ const STAR_D = "M0 -12 L2.94 -4.05 L11.41 -3.71 L4.76 1.55 L7.05 9.71 L0 5 L-7.0
 // It must be listed: an absent kind makes RANK[kind] undefined, and every comparison
 // against undefined is false, which silently ranks that kind last as a challenger and
 // first as an incumbent depending only on table order.
-const RANK = { birthday: 0, album: 1, tv: 2, songday: 3, lore: 4 };
+// A guest's birthday sits below everything of hers and above a bare lyric day, the same
+// order the start-page slip resolves in (dayNote in app.js): it is her notebook, so on a
+// shared square she speaks, but a birthday still outranks a date a song merely names.
+const RANK = { birthday: 0, album: 1, tv: 2, songday: 3, guest: 4, lore: 5 };
 const DAY_MARK = new Map();
-for (const m of [...TS_MILESTONES, ...TS_LORE_DAYS]) {
+for (const m of [...TS_MILESTONES, ...GUEST_DAYS, ...TS_LORE_DAYS]) {
   const held = DAY_MARK.get(m.md);
   if (!held || RANK[m.kind] < RANK[held.kind]) DAY_MARK.set(m.md, m);
 }
@@ -344,7 +350,31 @@ function drawMark(g, mark, cx, cy, colors, s) {
     return;
   }
   const hollow = mark.kind === "lore";
-  const color = (mark.album && colors[mark.album]) || "#8a7c62";
+  // A guest day is coloured by its pass, not by an album: guestInk is the one place that
+  // lookup lives, so a re-inked pass re-inks its square here too.
+  const color = mark.kind === "guest"
+    ? (guestInk(mark.guest)?.accent || "#8a7c62")
+    : ((mark.album && colors[mark.album]) || "#8a7c62");
+  // A guest birthday stamps the paper crown. Grouped so the band seam shares the crown's
+  // transform, and both weights are quoted in the 32-box that scale(0.3) is about to divide:
+  // 2.7 lands at 0.81 for the silhouette, matching the heart's separating edge, and the seam
+  // at 0.51, lighter because it is an interior line. The sticky's jewels would be a third of
+  // a pixel across here, so they are the larger surface's job, not this one's.
+  if (mark.kind === "guest") {
+    const crown = el("g", {
+      transform: `translate(${x} ${y}) rotate(${tilt}) scale(0.3) translate(-16 -16)`
+    });
+    crown.appendChild(el("path", {
+      d: CROWN_D, fill: color, stroke: "rgba(0,0,0,0.3)", "stroke-width": 2.7,
+      "stroke-linejoin": "round"
+    }));
+    crown.appendChild(el("path", {
+      d: CROWN_BAND_D, fill: "none", stroke: "rgba(0,0,0,0.26)", "stroke-width": 1.7,
+      "stroke-linecap": "round"
+    }));
+    g.appendChild(crown);
+    return;
+  }
   // A day can ask for its own object instead of the heart (August 1st stamps a salt shaker).
   // Same 32x32 box and centring as the heart, so it takes the identical transform.
   if (mark.mark === "salt") {

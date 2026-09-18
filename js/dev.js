@@ -1365,7 +1365,23 @@ export function initDev(api) {
         btn("open guests", () => api.guest.open()),
         btn("inspect", () => api.guest.inspect(guestSel.value).then((r) => { console.log("[dev] guest", r); toast("guest report in console"); }))),
     row(guestStateSel, btn("fill guests", () => { api.guest.fill(guestStateSel.value, shelfDiffSel.value); toast("guest board filled"); }),
-        btn("clear guests", () => { api.guest.reset(); toast("guest board cleared"); }, "warn"))));
+        btn("clear guests", () => { api.guest.reset(); toast("guest board cleared"); }, "warn")),
+    // The guest birthdays in the margin. Same shape as the souvenir audit above and for the
+    // same reason: a guest shipped without its day is invisible on screen — the shelf gains a
+    // hanger, the slip simply never mentions it, and nothing looks wrong on any day of the year.
+    row("birthdays", btn("audit", () => {
+          const m = api.guestday.missing(); console.log("[dev] guest days", m, api.guestday.dates());
+          const bad = [...m.noDay.map((n) => n + ": no day"), ...m.noPass.map((n) => n + ": no pass")];
+          toast(bad.length ? bad.join(", ") : "every guest has a birthday");
+        }, (() => { const m = api.guestday.missing(); return m.noDay.length || m.noPass.length ? "warn" : ""; })()),
+        btn("jump to next", () => {
+          // shift(0), not date.set(): it reports the day the page is CURRENTLY showing,
+          // override included, where set() with no argument would clear the override first.
+          const today = api.date.shift(0) || "";
+          const keys = api.guestday.dates().map((s) => s.slice(0, 10)).sort();
+          const next = keys.find((k) => k >= today) || keys[0];
+          api.date.set(next); toast("date → " + next);
+        }))));
 
   // ---- Custom mode / breadth -------------------------------------------------
   // The calendar row is the one that can't be waited out: a seven-day streak is a real week and

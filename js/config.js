@@ -2239,6 +2239,32 @@ export const SALT_SHAKER_D =
   "C8.8 14.6 10.4 12.6 13 11.6C12.2 11.1 11.6 10.3 11.6 9.2H12.3Z";
 export const SALT_CAP_D = "M11.6 9.2H20.4";
 
+// The guest-day crown, in the same 32x32 box as the heart and the shaker and centred on
+// (16, 16), so it drops into either the sticky's transform or the calendar's unchanged.
+// Shared rather than copied because two surfaces stamp it: the milestone sticky (js/app.js)
+// and the desk calendar's square (js/calendar.js).
+//
+// Nothing on it is regular, and that is the drawing rather than a wobble for its own sake: a
+// symmetrical crown with three matched points is a playing-card suit or a logo, and this has
+// to read as something cut out of card with scissors. The three peaks stand at different
+// heights, the two valleys are cut to different depths, and the band sags across the middle
+// the way a paper band does.
+//
+// The whole job of this outline is to survive the calendar, where it is stamped about 10px
+// wide. What failed there first was SHALLOW NOTCHES: valleys at 15.8 and 14.7 left points
+// only about seven units proud of them, and at 0.3 scale seven units is two pixels, so the
+// three points merged into one lumpy roof and the crown read as a bucket. Cutting the valleys
+// to 17.8 and 16.6 while lifting the centre peak to 5.6 is what separated them. So if you
+// redraw this, keep the CENTRE peak the tallest, keep every notch at least eight units deep,
+// and keep the valley floors clear of the band seam at 20.9 — a valley cut past it eats the
+// band, and without the band the points have nothing to stand on and become a fence.
+// CROWN_BAND_D is the seam where the band meets the points, drawn separately so each surface
+// can weight it; like the shaker's lip it is an interior feature and wants LESS ink than the
+// silhouette, not more.
+export const CROWN_D =
+  "M5.8 24.8 L7.3 8.4 L11.9 17.8 L16.4 5.6 L20.7 16.6 L25.6 9.4 L25.5 25.2 Q16 27.3 5.8 24.8 Z";
+export const CROWN_BAND_D = "M6.1 20.9 Q16 23.2 25.2 20.9";
+
 /* ---------- Lyric days (desk-calendar marginalia only) ----------
    Days the songs themselves put a date on. Deliberately kept OUT of
    TS_MILESTONES: that table is real release history, and it drives the
@@ -2251,6 +2277,42 @@ export const TS_LORE_DAYS = [
   { md: "07-09", kind: "lore", title: "Last Kiss",       album: "Speak Now" },
   { md: "04-29", kind: "lore", title: "High Infidelity", album: "Midnights" },
 ];
+
+/* ---------- Guest days (the guest shelf's own dated marginalia) ----------
+   The birthdays of the artists hanging on the guest shelf, and the two arrival days that
+   stand in for a birthday where there is no person to have one. Deliberately kept OUT of
+   TS_MILESTONES for the same reason TS_LORE_DAYS is: that table is her release history and
+   it skews the daily challenge's album, which somebody else's birthday has no business
+   doing. These only ever reach the start-page slip, the in-game sticky and the desk
+   calendar, and they always yield to a real Taylor milestone on the same square.
+
+   `guest` keys into GUESTS, which is where the colour comes from: nothing here carries a
+   hex, so a pass that gets re-inked re-inks its birthday too. A guest with no entry simply
+   has no day, which is the right failure — a wrong birthday is worse than a quiet one.
+
+   Two of the seven are not people and are not pretended to be. Wicked has an opening night
+   and Hannah Montana has a premiere, so each names its own `headline` and the `arrived`
+   phrase that builds its line, exactly the way a songday overrides its slip. The remaining
+   five take the default "Happy birthday, <first name>".
+   ⚠ Verify every date before editing — fans catch a wrong one instantly. */
+export const GUEST_DAYS = [
+  { md: "02-01", year: 1994, kind: "guest", guest: "harry-styles",      name: "Harry Styles" },
+  { md: "02-20", year: 2003, kind: "guest", guest: "olivia-rodrigo",    name: "Olivia Rodrigo" },
+  { md: "03-24", year: 2006, kind: "guest", guest: "hannah-montana",    name: "Hannah Montana",
+    headline: "Happy premiere day, Hannah", arrived: "first aired on the Disney Channel" },
+  { md: "05-11", year: 1999, kind: "guest", guest: "sabrina-carpenter", name: "Sabrina Carpenter" },
+  { md: "06-26", year: 1993, kind: "guest", guest: "ariana-grande",     name: "Ariana Grande" },
+  { md: "10-30", year: 2003, kind: "guest", guest: "wicked-soundtrack", name: "Wicked",
+    headline: "Happy opening night, Wicked", arrived: "opened on Broadway" },
+  { md: "12-18", year: 2001, kind: "guest", guest: "billie-eilish",     name: "Billie Eilish" },
+];
+
+// The pass hardware for one guest id, or null. The single-source lookup behind every guest
+// colour outside the shelf itself: the birthday slip tints its name with `deep` and the
+// crown on the sticky and the calendar fills with `accent`.
+export function guestInk(id) {
+  return GUESTS.find((g) => g.id === id)?.ink || null;
+}
 
 /* ---------- Guest-shelf stamp inks ---------- */
 // The corner guest stamp is franked in a different colour every page load, the way a

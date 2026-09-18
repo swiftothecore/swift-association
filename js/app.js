@@ -1,5 +1,5 @@
 "use strict";
-import { $, escapeRegExp, escapeHtml, tabNameLines, prefersReducedMotion, shuffle, chance, normalizeTitle, normalizeLyric, fuzzySubstringRatio, levenshtein, swappedNeighbours, mulberry32, fnv1a, charmBlob, dailySeed, censorText, anniversaryNote, thirteenNote } from "./util.js";
+import { $, escapeRegExp, escapeHtml, tabNameLines, prefersReducedMotion, shuffle, chance, normalizeTitle, normalizeLyric, fuzzySubstringRatio, levenshtein, swappedNeighbours, mulberry32, fnv1a, charmBlob, dailySeed, censorText, anniversaryNote, thirteenNote, guestDayNote } from "./util.js";
 import "./credential-guard.js";
 import { SITE_URL, copyToClipboard } from "./share.js";
 import { ctaContentHTML, initCtaInteractions } from "./cta.js";
@@ -17,7 +17,7 @@ import {
   TOTAL_ROUNDS, RECENT_WINDOW, NOVELTY_BOOST, DAILY_ALBUM_SKEW, DAILY_ALBUM_WEIGHT_EXP, DIFF_KEY, DEFAULT_SETTINGS,
   LAUNCH_DATE, SERIAL_DIGITS,
   MODES, MODE_ORDER, MODE_COLORS, DIFFICULTY_LADDER, MODALITY_MODES, EXPLORER_TOKENS, SHELF_TYPES, PAGE_MARK_KINDS, GLOSSARY,
-  ERAS, TENDER_ERAS, FINALE_ERAS, ALBUM_ERA, TS_MILESTONES, TS_LORE_DAYS, SALT_SHAKER_D, SALT_CAP_D,
+  ERAS, TENDER_ERAS, FINALE_ERAS, ALBUM_ERA, TS_MILESTONES, TS_LORE_DAYS, GUEST_DAYS, guestInk, SALT_SHAKER_D, SALT_CAP_D, CROWN_D, CROWN_BAND_D,
   ALBUM_COLORS, CB_ALBUM_COLORS, IMPOSTOR_BEAD, COMMON_THREAD_BEADS,
   MAST_INKS, MAST_INK_BY_SLUG, MAST_SHUFFLE, MAST_SHUFFLE_NAME,
   STUDIO_ALBUMS, TITLE_ALIASES, STAMP_INKS, pressingName,
@@ -14581,12 +14581,22 @@ function milestoneColor(album) {
   const colors = settings.colorBlindAlbums ? CB_ALBUM_COLORS : ALBUM_COLORS;
   return (album && colors[album]) || "";
 }
+// A guest day's pass hardware, or null for every other kind of note. Resolved here rather
+// than written into GUEST_DAYS so a re-inked pass re-inks its birthday with it: the slip
+// tints the name with `deep` (every accent is chosen to sit on a hanger, and Billie's acid
+// green is unreadable as text on cream), the crown fills with `accent`.
+function noteInk(note) {
+  return note?.guest ? guestInk(note.guest) : null;
+}
 // Today's dated note for the margin and the game sticky: a real Taylor milestone always wins;
-// on a quiet day we fall back to the game's sacred 13 (the 13th, or a date that adds up to 13).
-// Album-only paths (daily theming) keep calling anniversaryNote directly, so a 13-day never
-// tints the daily challenge.
+// then a guest-shelf birthday, because it is a thing that happened; and on a quiet day we fall
+// back to the game's sacred 13 (the 13th, or a date that adds up to 13), which is arithmetic
+// and yields to both. Album-only paths (daily theming) keep calling anniversaryNote directly,
+// so neither a guest day nor a 13-day ever tints the daily challenge.
 function dayNote(dateKey) {
-  return anniversaryNote(dateKey, TS_MILESTONES) || thirteenNote(dateKey);
+  return anniversaryNote(dateKey, TS_MILESTONES)
+      || guestDayNote(dateKey, GUEST_DAYS)
+      || thirteenNote(dateKey);
 }
 // The day the page is currently drawn for, as a todayKey(). Written by refreshDateSurfaces
 // (the only thing that redraws the dated surfaces) and read by the rollover poll below.
@@ -14644,7 +14654,7 @@ function renderAnniversaryNote() {
   if (!el) return;
   const note = dayNote(todayKey());
   if (!note) { el.hidden = true; el.innerHTML = ""; return; }
-  const accent = milestoneColor(note.album);
+  const accent = noteInk(note)?.deep || milestoneColor(note.album);
   const name = accent
     ? `<span class="an-name" style="color:${accent}">${escapeHtml(note.headline)}</span>`
     : `<span class="an-name">${escapeHtml(note.headline)}</span>`;
@@ -14666,8 +14676,10 @@ function renderMilestoneSticky() {
   if (!el) return;
   const note = dayNote(todayKey());
   if (!note) { el.hidden = true; el.innerHTML = ""; el.removeAttribute("aria-label"); return; }
+  const ink = noteInk(note);
   const icon = note.icon === "cake" ? cakeSvg()
     : note.icon === "thirteen" ? thirteenSvg()
+    : note.icon === "crown" ? crownSvg(ink?.accent || "var(--bead)", ink?.deep)
     : note.icon === "salt" ? saltSvg(milestoneColor(note.album) || "var(--bead)")
     : heartSvg(milestoneColor(note.album) || "var(--bead)");
   el.innerHTML =
@@ -14682,6 +14694,21 @@ function heartSvg(fill) {
   return `<svg viewBox="0 0 32 32" width="38" height="38" aria-hidden="true">` +
     `<path d="M16 27.5C15.4 27.1 4.5 19.6 4.5 11.7c0-3.6 2.7-6.4 6-6.4 2.3 0 4.2 1.3 5.5 3.4 1.3-2.1 3.2-3.4 5.5-3.4 3.3 0 6 2.8 6 6.4 0 7.9-10.9 15.4-11.5 15.8z" fill="${fill}" stroke="rgba(0,0,0,0.22)" stroke-width="0.7" stroke-linejoin="round"/>` +
     `<path d="M9.5 9.2c-1 .6-1.6 1.7-1.7 3" fill="none" stroke="rgba(255,255,255,0.55)" stroke-width="1.1" stroke-linecap="round"/>` +
+    `</svg>`;
+}
+// The guest-day mark: a paper crown in the guest's own pass ink, drawn the same way as the
+// heart (fill, translucent dark edge, one white highlight) so the sticky keeps one hand. The
+// silhouette and its band seam live in config.js, shared with the desk calendar.
+// `edge` is the pass's deep ink for the jewels, which keeps them legible on an accent as pale
+// as Hannah's yellow; it falls back to plain dark when there is no pass.
+function crownSvg(fill, edge) {
+  const gem = edge || "rgba(0,0,0,0.42)";
+  return `<svg viewBox="0 0 32 32" width="38" height="38" aria-hidden="true">` +
+    `<path d="${CROWN_D}" fill="${fill}" stroke="rgba(0,0,0,0.24)" stroke-width="0.8" stroke-linejoin="round"/>` +
+    `<path d="${CROWN_BAND_D}" fill="none" stroke="rgba(0,0,0,0.26)" stroke-width="0.8" stroke-linecap="round"/>` +
+    `<g fill="${gem}"><circle cx="7.3" cy="8.2" r="1"/><circle cx="16.4" cy="5.7" r="1.25"/>` +
+      `<circle cx="25.6" cy="9.1" r="0.85"/></g>` +
+    `<path d="M9.2 13.6 L9.7 19.8" fill="none" stroke="rgba(255,255,255,0.5)" stroke-width="1.1" stroke-linecap="round"/>` +
     `</svg>`;
 }
 // The August 1st mark: a salt shaker, drawn the same way as the heart (era ink, translucent
@@ -28481,13 +28508,15 @@ function buildDevApi() {
       // and worth checking), "north"/"south" forces it for the session, anything
       // else hands it back to the zone.
       hemisphere: (which) => window.deskCalendar?.hemisphere(which) ?? "north",
-      // Every day the calendar marks, as this year's date keys: the real milestones
-      // plus the lyric days, ordered through the year.
+      // Every day the calendar marks, as this year's date keys: the real milestones, the
+      // guest shelf's birthdays and the lyric days, ordered through the year. This is also
+      // what fills the dev panel's jump dropdown, which is why a guest day needs no control
+      // of its own there.
       marked: () => {
         const yr = todayKey().slice(0, 4);
-        const tag = { birthday: "birthday", album: "album", tv: "TV", lore: "lyric" };
-        return [...TS_MILESTONES, ...TS_LORE_DAYS]
-          .map((m) => ({ key: `${yr}-${m.md}`, label: `${m.md}  ${m.title} (${tag[m.kind]})` }))
+        const tag = { birthday: "birthday", album: "album", tv: "TV", songday: "songday", guest: "guest", lore: "lyric" };
+        return [...TS_MILESTONES, ...GUEST_DAYS, ...TS_LORE_DAYS]
+          .map((m) => ({ key: `${yr}-${m.md}`, label: `${m.md}  ${m.title || m.name} (${tag[m.kind]})` }))
           .sort((a, b) => a.key.localeCompare(b.key) || a.label.localeCompare(b.label));
       },
     },
@@ -28602,6 +28631,38 @@ function buildDevApi() {
       // The album-anniversary word pool for a date now lives with the rest of the daily
       // tooling, which sees more of the draw than this did: see __dev.daily.preview.
     },
+    // Guest-shelf birthdays. Same three verbs as `milestone`, against GUEST_DAYS: `dates`
+    // lists this year's keys with the pass ink each crown will wear (the one thing that can
+    // silently go wrong — a guest id that no longer matches a GUESTS entry draws a fallback
+    // taupe crown and looks merely dull rather than broken, so it is printed here);
+    // `preview` jumps the date and re-renders the slip, the sticky and the calendar.
+    guestday: {
+      dates: () => {
+        const yr = (window.__devDate || todayKey()).slice(0, 4);
+        return GUEST_DAYS.map((g) => {
+          const ink = guestInk(g.guest);
+          return `${yr}-${g.md}  ${g.name}${g.arrived ? " (" + g.arrived + ")" : ""}` +
+                 `  ${ink ? ink.accent : "⚠ NO PASS — check the guest id against GUESTS"}`;
+        }).sort();
+      },
+      preview: (dateKey) => {
+        window.__devDate = dateKey || todayKey();
+        refreshDateSurfaces();
+        // dayNote, not guestDayNote: what a guest day actually shows is what survives her
+        // milestones, and this is the only place that difference is visible.
+        return dayNote(window.__devDate);
+      },
+      // Both halves of the one mistake a new guest makes: a playable guest with no birthday
+      // (the shelf gains a hanger and the margin never mentions it, which nothing on screen
+      // can tell you), and a GUEST_DAYS row pointing at an id that has left GUESTS (which
+      // draws a fallback taupe crown and merely looks dull). Behind the dev panel's guest
+      // "birthdays" button, where it warns.
+      missing: () => ({
+        noDay: GUESTS.filter((g) => !GUEST_DAYS.some((d) => d.guest === g.id)).map((g) => g.name),
+        noPass: GUEST_DAYS.filter((d) => !guestInk(d.guest)).map((d) => d.guest),
+      }),
+      clear: () => { window.__devDate = null; refreshDateSurfaces(); },
+    },
     // Sacred-13 days (the 13th of the month + dates that add up to 13). `dates` lists this
     // year's qualifying days, flagging any that a real milestone outranks; `preview` jumps
     // the date and re-renders both surfaces; `next` finds the soonest one on or after today.
@@ -28615,8 +28676,9 @@ function buildDevApi() {
             const key = `${yr}-${String(mo).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
             const tn = thirteenNote(key);
             if (!tn) continue;
-            const shadowed = !!anniversaryNote(key, TS_MILESTONES);
-            out.push(`${key}  ${tn.caption}${shadowed ? "  (shadowed by milestone)" : ""}`);
+            const shadowed = anniversaryNote(key, TS_MILESTONES) ? "milestone"
+              : guestDayNote(key, GUEST_DAYS) ? "guest day" : "";
+            out.push(`${key}  ${tn.caption}${shadowed ? `  (shadowed by ${shadowed})` : ""}`);
           }
         }
         return out;
