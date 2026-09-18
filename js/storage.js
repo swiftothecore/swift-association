@@ -12,7 +12,7 @@ import {
   ALBUM_FOCUS_KEY, ALBUM_FOCUS_TARGET, DIFF_RANK,
   ADAPTIVE_LEGACY_KEY,
   GUEST_KEY, GUEST_TARGET, LINEUP_KEY,
-  BONUS_KEY, RUTHLESS_KEY,
+  BONUS_KEY, RUTHLESS_KEY, TRACKS_KEY,
   CUSTOM_KEY, CUSTOM_DEFAULT_MODE,
   KEEPSAKES_KEY,
   STICKERS_KEY,
@@ -610,6 +610,62 @@ export function recordRuthlessRun(lensId, seconds, gaveUp = 0, date = null) {
 }
 export function resetRuthless() {
   try { localStorage.removeItem(RUTHLESS_KEY); } catch (e) { /* ignore */ }
+}
+
+/* ---------- Track by Track board: one best per album ----------
+   { [album]: { best, plays, last, date } }, where a best is a TIME IN HUNDREDTHS and LOW WINS.
+
+   TWELVE RECORDS AND NO COMBINED NUMBER, for the Ruthless board's reason said about albums
+   instead of lenses: folklore is sixteen slots and the Anthology is thirty-one, so any single
+   figure across the twelve is mostly a statement about how long a record is. The two obvious
+   combined numbers are both worse than no number at all. A SUM runs the wrong way — low wins,
+   but the total grows every time you record another album, so three albums in it reads better
+   than twelve and it cannot be compared with anything until all twelve exist. An AVERAGE fixes
+   the direction and breaks the incentive instead: it is dominated by WHICH albums you have
+   recorded, so the optimal play becomes banking the four shortest records and never opening the
+   Anthology, which is a number that pays you to avoid the game. The shelf tile shows the single
+   fastest album WITH ITS NAME, because a bare time with no scope is not a record of anything.
+
+   "All twelve" is worth having as a chase and it is a CHARM rather than a score, which is the
+   shelf's own convention: a charm is a collection entry and never a ranking, so it can ask for
+   the whole discography without printing a misleading figure on a tile. */
+export function loadTracks() {
+  try {
+    const raw = localStorage.getItem(TRACKS_KEY);
+    if (raw) { const o = JSON.parse(raw); if (o && typeof o === "object") return o; }
+  } catch (e) { /* ignore */ }
+  return {};
+}
+export function saveTracks(o) {
+  try { localStorage.setItem(TRACKS_KEY, JSON.stringify(o)); } catch (e) { /* ignore */ }
+}
+export function trackRecord(album) {
+  const e = loadTracks()[album] || {};
+  return { best: e.best || 0, plays: e.plays || 0, last: e.last || 0, date: e.date || null };
+}
+/* Fold a finished album into the board and say whether it set a best.
+
+   THE FIRST RUN TAKES THE BEST OUTRIGHT (`!e.plays`, never `seconds < e.best`), which is the
+   Ruthless board's rule and the same bug it was written for: on a low-wins board an unplayed
+   album and a stored zero are the same number, so a comparison alone would leave every first
+   run failing to bank. There is no clamp and no maximum either — a time is not out of anything.
+
+   ONLY A FINISHED SHEET IS EVER BANKED. There is no partial credit and no give-up, so the
+   caller only reaches here having filled every blank; a quit writes nothing at all, not even a
+   play. That is what keeps the twelve times comparable with each other run to run. */
+export function recordTrackRun(album, seconds, date = null) {
+  const all = loadTracks();
+  const e = all[album] || {};
+  const isBest = !e.plays || seconds < e.best;
+  if (isBest) { e.best = seconds; e.date = date || null; }
+  e.plays = (e.plays || 0) + 1;
+  e.last = seconds;
+  all[album] = e;
+  saveTracks(all);
+  return { ...trackRecord(album), isBest };
+}
+export function resetTracks() {
+  try { localStorage.removeItem(TRACKS_KEY); } catch (e) { /* ignore */ }
 }
 
 /* ---------- Custom mode: player-authored preset store ---------- */

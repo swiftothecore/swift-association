@@ -132,6 +132,7 @@ export const GUEST_KEY = "swiftSongAssociation.guests";                 // guest
 export const BONUS_KEY = "swiftSongAssociation.bonus";                  // bonus games shelf — { [gameId]: {best, plays, last} }
 export const LINEUP_KEY = "swiftSongAssociation.lineup";                // the lineup's goal board — { [cardId]: {held, won, at} }
 export const RUTHLESS_KEY = "swiftSongAssociation.ruthless";            // Ruthless mode board, one best per lens — { [lensId]: {best, bestGaveUp, plays, last, date} }
+export const TRACKS_KEY = "swiftSongAssociation.tracks";                // Track by Track board, one best per album — { [album]: {best, plays, last, date} }
 export const SEARCH_KEY = "swiftSongAssociation.search";                // Swift To The Lyric searcher — { mode, view, recent:[] }
 export const MASTERY_KEY = "swiftSongAssociation.mastery";              // skills + mastery progression — { skills:{...xp}, masteryXp, unlocked:{[rewardId]:isoDate} }
 export const CUSTOM_KEY = "swiftSongAssociation.custom";               // player-authored modes — { presets:[{id,name,mode}], activeId }
@@ -756,6 +757,18 @@ export const BONUS_GAMES = [
     kicker: "name it from its number", tint: "#9c6b21",
     line: "An album and a track number. Name the song, fast.",
     blurb: "Track eight on Fearless. Track five on folklore. The album and the number are all you get, and ten seconds to put a name to it." },
+  /* THE END OF THE SHELF AND THE END OF THE RAMP: every other game hands you something of the
+     song's, and Running Order takes even the words away but still asks for one title at a time.
+     This one asks for a whole record in order and is the only game here scored purely in
+     SECONDS, so it carries `timed` for the Ruthless Game's reason — everything that reads a
+     score reads that flag rather than assuming a run counts upward.
+     No `points` (a track is early or late, never worth more or less), no `sweep` (the time IS
+     the score rather than a second axis beside it) and no `endless` (the album already bounds
+     the run, so an endless side would only be playing again). */
+  { id: "track-by-track", name: "Track by Track", ready: false, timed: true,
+    kicker: "the whole record, in order", tint: "#6a4630",
+    line: "One album, top to bottom, against the clock.",
+    blurb: "Pick a record and write its running order out from track one, in order, with the clock running the whole way. No suggestions and no skipping: the only way past track nine is to remember track nine." },
 ];
 /* ---------- The Ruthless run descriptor ----------
    NOT a bonus game and no longer in the roster above (2026-08-18). It is the object the Ruthless

@@ -7,7 +7,7 @@
    All three games work off REAL lyric lines, so all three need the same guarantee: the
    puzzle handed to the player must have exactly one defensible answer. Enforcing that is
    most of what this file does. */
-import { normalizeLyric, levenshtein, swappedNeighbours } from "./util.js";
+import { normalizeLyric, normalizeTitle, levenshtein, swappedNeighbours } from "./util.js";
 import { STUDIO_ALBUMS, ALBUM_TRACKS, TRACK_ALT_TAKES } from "./config.js";
 
 /* Words never worth swapping or counting as a line's content. Swapping a function word
@@ -1341,6 +1341,141 @@ export function buildTrackPuzzle(songs, index, rng = Math.random, tries = 120, a
     return null;
   };
   return pick(true) || pick(false);
+}
+
+/* ---------- Track by Track ----------
+   One album, its whole running order, and a clock that does not stop until the last blank is
+   filled. The run IS the time and LOW WINS, which is the Ruthless Game's scoring rather than
+   the shelf's, and it is why nothing here is worth points: a track is not right or wrong, it is
+   early or late.
+
+   WHY IT IS NOT RUNNING ORDER SAID TWICE. That game asks a lookup — track eight on Fearless,
+   in isolation, against ten seconds. This one asks for the chain. Nobody recalls a tracklist as
+   a table; they recall it as a thing that plays, which is why "what is track nine on 1989" is
+   hard and reciting 1989 from the top is not. Random access and sequential recall are different
+   memories, so the two games sit at opposite ends of the shelf's ramp on purpose.
+
+   THERE IS NO DROPDOWN, AND THIS IS THE ONLY TITLE GAME ON THE SHELF WITHOUT ONE. Every other
+   one has it, Ruthless included, and the reason it is right there and wrong here is what the
+   list can tell you. On a Ruthless page the stream has either given the song away or it has
+   not; a list of titles cannot answer that, so the dropdown is a transcription aid and nothing
+   more. Here the question IS "what comes next on 1989", and a list of titles answers it
+   directly: you would scan for the one you recognise, which turns recall into recognition and
+   dissolves the game. Wrong guesses being free makes it worse, since walking the alphabet costs
+   only seconds and seconds are all a wrong guess ever costs.
+
+   WHAT REPLACES IT IS LENIENCE, NOT ASSISTANCE, and the distinction is the whole design. Take
+   the dropdown away from a game scored purely in seconds and the clock quietly starts measuring
+   TYPING: "The Last Great American Dynasty" is thirty characters, and across sixteen tracks the
+   run would be as much about transcription as about the record. So a guess does not have to be
+   the title, it has to be enough of it — any run of the title's own words, the last of them
+   half-typed if you like. "dynasty" lands. "last great" lands. That is a thing you can only
+   produce if you already know the answer, which a list of candidates is not, so the recall test
+   survives intact and the transcription tax does not.
+
+   FRAGMENTS RESOLVE AGAINST THE ASKABLE TITLES ONLY. The alt takes (see TRACK_ALT_TAKES) are
+   printed onto the sheet rather than asked, so they must also be invisible to the matcher —
+   otherwise "all too well" is ambiguous with the ten-minute version sitting ten slots below it,
+   and the one title on Red everybody can produce becomes the one the game will not take. */
+
+// A guess and a title are compared on normalizeTitle's key, which is the game's own idea of
+// what two titles being the same means, so the shelf cannot drift from the main game over a
+// curly apostrophe or a spelled-out numeral.
+const trackKey = (s) => normalizeTitle(String(s == null ? "" : s));
+
+/* A fragment must be this long before it counts, which is a probe guard rather than a fairness
+   one: a single letter prefix-matches a word on nearly every album, and on the odd album where
+   it matches exactly one it would hand over a track for one keystroke. An EXACT title is exempt
+   and has to be, or "22" could never be typed on Red. */
+const TRACK_FRAGMENT_MIN = 3;
+
+/* One album's sheet: every slot the pressing has, in running order, alt takes marked. Built off
+   buildTrackIndex rather than off the song list so the numbering is the same numbering Running
+   Order asks its questions from — two games disagreeing about which song is track twelve would
+   be the worst kind of bug here, silent and only visible to somebody who plays both. */
+export function buildAlbumSheet(album, index) {
+  const slots = [];
+  for (const [title, spot] of index.of) {
+    if (spot.album !== album) continue;
+    slots.push({ n: spot.track, title, alt: spot.alt });
+  }
+  if (!slots.length) return null;
+  slots.sort((a, b) => a.n - b.n);
+  return { album, total: slots.length, slots, asked: slots.filter((s) => !s.alt).length };
+}
+
+// The candidate set a guess resolves against, normalized once per run rather than per keystroke.
+export function trackCandidates(sheet) {
+  return sheet.slots.filter((s) => !s.alt).map((s) => {
+    const key = trackKey(s.title);
+    return { title: s.title, key, tokens: key.split(" ") };
+  });
+}
+
+// Does the guess appear as a run of consecutive words in the title, with the last word allowed
+// to be half-typed? The prefix is on the LAST token only, because that is the one the player is
+// still in the middle of; allowing it anywhere would let "e" stand in for "everything".
+function tokenRun(tokens, want) {
+  if (!want.length || want.length > tokens.length) return false;
+  for (let i = 0; i + want.length <= tokens.length; i++) {
+    let ok = true;
+    for (let j = 0; j < want.length; j++) {
+      const have = tokens[i + j], typed = want[j];
+      if (j === want.length - 1 ? !have.startsWith(typed) : have !== typed) { ok = false; break; }
+    }
+    if (ok) return true;
+  }
+  return false;
+}
+
+/* One slipped key, forgiven. The clock is the score here, so a run should never be decided by a
+   transposed letter — but the forgiveness is deliberately narrower than judgeBlank's, because a
+   near-miss that lands on a DIFFERENT track is a free slot rather than a kindness. Five
+   characters minimum and one edit, against the whole title or against a single word of it. */
+function nearTitle(cand, got, typed) {
+  if (got.length >= 5 && Math.abs(got.length - cand.key.length) <= 1 &&
+      (levenshtein(got, cand.key) <= 1 || swappedNeighbours(got, cand.key))) return true;
+  if (typed.length !== 1 || got.length < 5) return false;
+  return cand.tokens.some((t) => t.length >= 5 && Math.abs(t.length - got.length) <= 1 &&
+    (levenshtein(t, got) <= 1 || swappedNeighbours(t, got)));
+}
+
+/* What a typed string resolves to, on this album and nothing else.
+
+   `why` is for the dev tools and for nothing the player sees. THE PLAYER IS TOLD NOTHING BUT
+   "not that": a reject never says whether the title is on this record, never says it belongs
+   further down, and never says a fragment was ambiguous. All three are real information about
+   the running order, which is the one thing the game is asking for, and "that one is on this
+   album, just not here" would be the single biggest hint the page could give. */
+export function resolveTrackGuess(typed, cands) {
+  const got = trackKey(typed);
+  if (!got) return { hit: null, why: "empty" };
+  const words = got.split(" ");
+
+  // The whole title as written always wins, and has to be checked first: a title that happens
+  // to sit inside a longer one on the same record would otherwise come back ambiguous when it
+  // was typed out in full and meant exactly.
+  const exact = cands.filter((c) => c.key === got);
+  if (exact.length) return { hit: exact[0].title, why: "exact" };
+
+  if (got.length >= TRACK_FRAGMENT_MIN) {
+    const frag = cands.filter((c) => tokenRun(c.tokens, words));
+    if (frag.length === 1) return { hit: frag[0].title, why: "fragment" };
+    if (frag.length > 1) return { hit: null, why: "several" };
+  }
+
+  const near = cands.filter((c) => nearTitle(c, got, words));
+  if (near.length === 1) return { hit: near[0].title, why: "typo" };
+  if (near.length > 1) return { hit: null, why: "several" };
+  return { hit: null, why: "unknown" };
+}
+
+// The judge. `want` is the title in the slot the sheet is currently open at, and nothing else
+// clears it: a title from later on the same record is as wrong as one from another album,
+// because the order is the question rather than the scenery.
+export function judgeTrack(typed, cands, want) {
+  const res = resolveTrackGuess(typed, cands);
+  return { ...res, correct: !!res.hit && res.hit === want };
 }
 
 /* ---------- Word Cloud ----------
