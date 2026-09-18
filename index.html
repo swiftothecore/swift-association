@@ -2952,13 +2952,23 @@ if (location.pathname.endsWith('/index.html')) {
       <!-- A button and a panel rather than a <details>, because the two have to sit on
            different lines of the keepsake row: the toggle keeps its place beside Copy and
            Download while the sheet it opens claims a full-width line underneath. A real
-           <details> is one box and would drag its own summary down with it. -->
-      <button id="braceletGuide" class="bracelet-memory" type="button"
+           <details> is one box and would drag its own summary down with it.
+
+           It says "The pages" because that is what it opens. It used to be labelled after
+           the bead legend it carried, which was a key to a picture nobody needs decoded and
+           a third printing of counts the tally already has. The legend is gone; what is left
+           is the only page-by-page playback of a run anywhere in the app, and the label and
+           the weight of the button both have to advertise that rather than shrug at it. -->
+      <button id="braceletGuide" class="bracelet-action bracelet-memory" type="button"
               aria-expanded="false" aria-controls="braceletMemory">
-        <span>what the beads mean</span>
+        <svg viewBox="0 0 24 24" class="keepsake-ic keepsake-ic--pages" aria-hidden="true">
+          <path d="M4 5.1 A1.5 1.5 0 0 1 5.5 3.6 L11 3.6 L11 20.4 L5.5 20.4 A1.5 1.5 0 0 1 4 18.9 Z"/>
+          <path d="M20 5.1 A1.5 1.5 0 0 0 18.5 3.6 L13 3.6 L13 20.4 L18.5 20.4 A1.5 1.5 0 0 0 20 18.9 Z"/>
+          <path d="M6.4 8.1 L8.9 8.1 M6.4 11.4 L8.9 11.4 M15.1 8.1 L17.6 8.1 M15.1 11.4 L17.6 11.4"/>
+        </svg>
+        <span>The pages</span>
       </button>
       <div id="braceletMemory" class="bracelet-memory-sheet" hidden>
-        <div id="braceletLegend" class="bracelet-legend"></div>
         <div id="braceletRecap" class="bracelet-recap"></div>
       </div>
       </div>

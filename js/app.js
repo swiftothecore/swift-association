@@ -12685,13 +12685,14 @@ function setBraceletKeepsakeAvailable(available) {
   if (note) note.textContent = available ? "" : "Reveal today's result before keeping the strand.";
 }
 
-// The SVG stays decorative. This companion describes the same finish and dangle decisions in
-// text, then offers a collapsed page-by-page recap for anyone who wants to inspect the strand.
+// The SVG stays decorative, and the sheet under it is the run played back page by page: the
+// word, the song it turned out to be, its album and the time it took. There is no bead legend
+// any more. It was a key to a picture that was never meant to be read, and every number on it
+// was the tally above said a third time.
 function renderBraceletDetails(results, albums, opts) {
   const summary = $("braceletSummary");
   const memory = $("braceletMemory");
   const guide = $("braceletGuide");
-  const legend = $("braceletLegend");
   const recap = $("braceletRecap");
   const caption = document.querySelector("#screen-results .bracelet-caption");
   const sealed = !!opts.sealed;
@@ -12702,7 +12703,6 @@ function renderBraceletDetails(results, albums, opts) {
     if (summary) summary.textContent = "Today's 13-page bracelet is sealed. Tear the Daily result slip to reveal the tally and strand.";
     if (memory) memory.hidden = true;
     if (guide) { guide.hidden = true; setBraceletMemoryOpen(false); }
-    if (legend) legend.innerHTML = "";
     if (recap) recap.innerHTML = "";
     return;
   }
@@ -12713,23 +12713,13 @@ function renderBraceletDetails(results, albums, opts) {
   const missed = results.filter((value) => value === false).length;
   const hinted = Array.isArray(opts.hinted) ? opts.hinted : [];
   const verseTiers = Array.isArray(opts.verseTiers) ? opts.verseTiers : [];
-  // Both the every-bead lists (which the legend counts) and their first-appearance order
-  // (which the legend reads in, so the note runs left to right the way the strand does).
-  const finishes = [];
-  const trinkets = [];
+  // Which finishes the strand used at all. Only "matte" is asked about — its presence is what
+  // makes the hinted count worth speaking — but the walk stays a walk rather than a hasMatte
+  // flag, because the spoken summary is where a new finish would want to be counted next.
   const allFinishes = [];
-  const allTrinkets = [];
   for (let i = 0; i < filled; i++) {
     const finish = braceletFinish(results[i], i, opts);
-    finishes.push(finish);
     if (!allFinishes.includes(finish)) allFinishes.push(finish);
-    if (results[i] === true) {
-      const trinket = braceletTrinketId(i, opts);
-      if (trinket) {
-        trinkets.push(trinket);
-        if (!allTrinkets.includes(trinket)) allTrinkets.push(trinket);
-      }
-    }
   }
   const parts = [`${filled} page${filled === 1 ? "" : "s"} strung`, `${correct} correct`, `${missed} missed`];
   if (allFinishes.includes("matte")) parts.push(`${hinted.filter(Boolean).length} hinted`);
@@ -12738,32 +12728,11 @@ function renderBraceletDetails(results, albums, opts) {
   // so a run of "good" lines has pages to report and no pearl on it anywhere.
   const recalled = verseTiers.filter(Boolean).length;
   if (recalled) parts.push(`${recalled} lyric recall`);
-  // Spoken, not printed. The tally above already says the score and the page count, and the
-  // legend below counts every finish and dangle by name, so a sighted player was reading the
-  // same run three times over. A screen reader has neither of those (the strand is aria-hidden
-  // and the legend is behind a closed <details>), which is why the sentence still exists.
+  // Spoken, not printed. The tally above already says the score and the page count, so a
+  // sighted player was reading the same run twice over. A screen reader has neither the tally's
+  // layout nor the strand (which is aria-hidden), which is why the sentence still exists — and
+  // why deleting the visible legend costs nobody anything: this line always said the same counts.
   if (summary) summary.textContent = parts.join(" · ") + ".";
-
-  // The legend counts as well as explains. That count is what lets the summary line come off
-  // the page: "×5 pearl bead" is the same fact, said where the swatch beside it makes it mean
-  // something. A multiplier rather than a plural, so one bead reads as "×1" and no copy string
-  // needs two forms of itself.
-  if (legend) {
-    const tally = (list) => list.reduce((m, v) => (m[v] = (m[v] || 0) + 1, m), {});
-    const finishCounts = tally(finishes);
-    const trinketCounts = tally(trinkets);
-    const item = (attr, swatchClass, glyph, count, text) =>
-      `<span class="bracelet-legend-item" ${attr}>` +
-        `<span class="bracelet-legend-swatch ${swatchClass}" aria-hidden="true">${glyph}</span>` +
-        `<span class="bracelet-legend-count">×${count}</span>` +
-        `<span>${escapeHtml(text)}</span></span>`;
-    const finishItems = allFinishes.filter((finish) => BRACELET_FINISH_COPY[finish]).map((finish) =>
-      item(`data-finish="${finish}"`, "", "", finishCounts[finish] || 0, BRACELET_FINISH_COPY[finish]));
-    const trinketItems = allTrinkets.map((id) =>
-      item(`data-trinket="${escapeHtml(id)}"`, "bracelet-legend-dangle", "◇", trinketCounts[id] || 0,
-        `${BRACELET_TRINKET_COPY[id] || "chosen dangle"} on a correct bead`));
-    legend.innerHTML = finishItems.concat(trinketItems).join("");
-  }
 
   if (recap) {
     const layout = braceletLayout(total, 0, Math.max(filled, 1), false);
@@ -12771,12 +12740,11 @@ function renderBraceletDetails(results, albums, opts) {
     const songs = Array.isArray(opts.songs) ? opts.songs : roundSongs;
     const times = Array.isArray(opts.times) ? opts.times : roundTimes;
     const palette = opts.colors && typeof opts.colors === "object" ? opts.colors : albumPalette();
-    // What the row says in WORDS is only what the legend above it hasn't already said.
-    // The finish rides along as the same swatch the legend uses, and the dangle is named
-    // only when it is one of the special ones: printing "glossy bead, correct without a
-    // hint · star dangle" thirteen times down a clean run buried the two facts a player
-    // actually opened the note for, which page held which word and what it turned out to be.
-    // The finish still reaches a screen reader as text, since a swatch reaches nobody.
+    // The row is deliberately short of words. The finish rides along as a swatch and the
+    // dangle is named only when it is one of the special ones: printing "glossy bead, correct
+    // without a hint · star dangle" thirteen times down a clean run buried the two facts a
+    // player actually opened the sheet for, which page held which word and what it turned out
+    // to be. The finish still reaches a screen reader as text, since a swatch reaches nobody.
     const items = layout.slots.filter((slot) => slot.index < filled).map((slot) => {
       const i = slot.index;
       const ok = results[i] === true;
@@ -12799,7 +12767,7 @@ function renderBraceletDetails(results, albums, opts) {
         || (albums[i] && palette[albums[i]]) || "";
       const tint = /^#[0-9a-f]{3,8}$/i.test(hue) ? ` style="--bead:${hue}"` : "";
       return `<li class="bracelet-recap-item" value="${i + 1}">` +
-        `<span class="bracelet-legend-swatch bracelet-recap-bead" data-finish="${finish}"${tint} aria-hidden="true"></span>` +
+        `<span class="bracelet-bead-swatch bracelet-recap-bead" data-finish="${finish}"${tint} aria-hidden="true"></span>` +
         `<span class="bracelet-recap-page">page ${i + 1} · ${escapeHtml(prompt)}</span>` +
         `<span class="bracelet-recap-title">${escapeHtml(title)}` +
           `<span class="sr-only"> · ${escapeHtml(BRACELET_FINISH_COPY[finish] || "")}</span></span>` +

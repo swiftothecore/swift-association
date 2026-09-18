@@ -6867,40 +6867,29 @@
   }
   .bracelet-keepsake-note:empty { display: none; margin: 0; }
 
-  /* A ruled note under the keepsake. The player can ignore it, while the same
-     meanings remain available as text instead of living only in bead finishes.
-     CLOSED it is one quiet pencilled line sharing the keepsake row, not a panel: a shut
-     drawer should cost the results page no paper at all. The box, the ruled paper and the
-     shadow are all drawn on the sheet, and so exist only while somebody is reading it. */
-  .bracelet-memory {
-    max-width: 520px; margin: 0 auto 4px; border: 0; background: none;
-    appearance: none; touch-action: manipulation; min-height: 30px; padding: 5px 8px; display: flex;
-    align-items: center; justify-content: center; gap: 7px;
-    cursor: pointer; color: var(--ink-soft);
-    font-family: var(--type); font-size: calc(9.5px + var(--text-size-adjust));
-    font-weight: 700; letter-spacing: 0.07em; line-height: 1.15;
-  }
+  /* The third keepsake button. It is a peer of Copy and Download, not a pencilled link
+     beside them: what it opens is the run played back page by page, which is the only such
+     playback in the app, and a thin underlined caption next to two bordered chips advertised
+     it as trivia. It inherits .bracelet-action wholesale and adds only the chevron and the
+     open state. The panel it controls still takes the full-width line below, which is why
+     this is a button and a div rather than a <details>. */
   .bracelet-memory[hidden] { display: none; }
-  .bracelet-memory::before {
-    content: ""; width: 15px; height: 15px; flex: none;
-    display: inline-flex; align-items: center; justify-content: center;
-    border: 1.1px solid color-mix(in srgb, var(--ink-soft) 62%, transparent);
-    border-radius: 50%;
-    background:
-      linear-gradient(var(--ink-soft) 0 0) no-repeat center / 7px 1.2px,
-      linear-gradient(var(--ink-soft) 0 0) no-repeat center / 1.2px 7px;
+  .bracelet-memory::after {
+    content: ""; width: 7px; height: 7px; flex: none; margin-left: 1px;
+    border-right: 1.4px solid currentColor; border-bottom: 1.4px solid currentColor;
+    transform: translateY(-2px) rotate(45deg);
+    transition: transform 0.18s ease;
   }
-  .bracelet-memory[aria-expanded="true"]::before {
-    background: linear-gradient(var(--ink-soft) 0 0) no-repeat center / 7px 1.2px;
+  .bracelet-memory[aria-expanded="true"]::after { transform: translateY(1px) rotate(225deg); }
+  [data-reduce-motion="on"] .bracelet-memory::after { transition: none; }
+  /* Open reads as pressed: the sheet below it is the button still being held down. */
+  .bracelet-memory[aria-expanded="true"] {
+    color: var(--ink); border-color: var(--ink-soft);
+    background: color-mix(in srgb, var(--ink) 9%, var(--paper));
   }
-  .bracelet-memory > span {
-    border-bottom: 1px dotted color-mix(in srgb, var(--ink-soft) 52%, transparent);
-  }
-  .bracelet-memory:hover { color: var(--ink-accent); }
-  .bracelet-memory:hover > span { border-bottom-color: var(--ink-accent); }
-  .bracelet-memory:focus-visible {
-    outline: 3px solid var(--ink-accent); outline-offset: -2px; border-radius: 3px;
-  }
+
+  /* The sheet it opens. The box, the ruled paper and the shadow are all drawn on the sheet,
+     and so exist only while somebody is reading it. */
   .bracelet-memory-sheet[hidden] { display: none; }
   .bracelet-memory-sheet {
     margin: 2px 0 8px; padding: 11px 13px 13px; overflow: hidden;
@@ -6914,65 +6903,39 @@
       color-mix(in srgb, var(--paper) 84%, var(--paper-edge));
   }
 
-  .bracelet-legend {
-    display: flex; flex-wrap: wrap; gap: 7px; margin: 0;
-  }
-  .bracelet-legend:empty { display: none; }
-  .bracelet-legend-item {
-    display: inline-flex; align-items: center; gap: 6px; min-height: 30px;
-    padding: 4px 7px; border: 1px dotted color-mix(in srgb, var(--ink-soft) 46%, transparent);
-    border-radius: 3px; background: color-mix(in srgb, var(--paper) 75%, transparent);
-    color: var(--ink-soft); font-family: var(--type);
-    font-size: calc(9.5px + var(--text-size-adjust)); line-height: 1.2;
-  }
-  .bracelet-legend-swatch {
+  .bracelet-bead-swatch {
     position: relative; width: 15px; height: 18px; flex: none;
     display: grid; place-items: center;
     border: 1px solid var(--ink-soft); border-radius: 4px;
     background: var(--paper); overflow: hidden;
   }
-  .bracelet-legend-swatch[data-finish="gloss"],
-  .bracelet-legend-item[data-finish="gloss"] .bracelet-legend-swatch {
+  .bracelet-bead-swatch[data-finish="gloss"] {
     background:
       radial-gradient(circle at 32% 27%, rgba(255,255,255,0.88) 0 1.8px, transparent 2.4px),
       var(--bead);
   }
-  .bracelet-legend-swatch[data-finish="matte"],
-  .bracelet-legend-item[data-finish="matte"] .bracelet-legend-swatch {
+  .bracelet-bead-swatch[data-finish="matte"] {
     background: color-mix(in srgb, var(--bead) 48%, var(--paper));
   }
-  .bracelet-legend-swatch[data-finish="pearl"],
-  .bracelet-legend-item[data-finish="pearl"] .bracelet-legend-swatch {
+  .bracelet-bead-swatch[data-finish="pearl"] {
     background:
       radial-gradient(circle at 31% 26%, #fff 0 2px, transparent 2.7px),
       linear-gradient(145deg, color-mix(in srgb, var(--bead) 64%, #fff),
         color-mix(in srgb, var(--bead) 42%, var(--paper)));
   }
-  .bracelet-legend-swatch[data-finish="clear"],
-  .bracelet-legend-item[data-finish="clear"] .bracelet-legend-swatch {
+  .bracelet-bead-swatch[data-finish="clear"] {
     border-style: dashed; background: color-mix(in srgb, var(--paper) 82%, transparent);
   }
-  .bracelet-legend-swatch[data-finish="skull"]::after,
-  .bracelet-legend-item[data-finish="skull"] .bracelet-legend-swatch::after {
+  .bracelet-bead-swatch[data-finish="skull"]::after {
     content: "\00d7"; position: absolute; inset: 0; display: grid; place-items: center;
     color: var(--ink); font: 700 15px/1 var(--type);
   }
-  .bracelet-legend-swatch[data-finish="sealed"],
-  .bracelet-legend-item[data-finish="sealed"] .bracelet-legend-swatch {
+  .bracelet-bead-swatch[data-finish="sealed"] {
     background:
       repeating-linear-gradient(45deg, transparent 0 3px,
         color-mix(in srgb, var(--ink-soft) 24%, transparent) 3px 4px),
       var(--paper-edge);
   }
-  .bracelet-legend-count {
-    flex: none; color: var(--ink); font-weight: 700; letter-spacing: 0.02em;
-    font-variant-numeric: tabular-nums;
-  }
-  .bracelet-legend-dangle {
-    color: var(--ink-accent); background: var(--paper);
-    font: 700 12px/1 var(--type);
-  }
-
   .bracelet-recap { margin-top: 10px; }
   .bracelet-recap:empty { display: none; }
   .bracelet-recap-list { list-style: none; margin: 0; padding: 0; }
@@ -6981,8 +6944,7 @@
     align-items: baseline; gap: 2px 8px; padding: 7px 3px;
     border-top: 1px dotted color-mix(in srgb, var(--ink-soft) 32%, transparent);
   }
-  /* The row's finish, said the way the legend two inches above says it, so the words for
-     it only have to appear once on the page. */
+  /* The same bead as the one on the strand, at the head of the row that describes it. */
   .bracelet-recap-bead {
     grid-column: 1; grid-row: 1 / span 3; width: 11px; height: 13px;
     align-self: center;
@@ -7005,10 +6967,10 @@
   :root[data-theme="dark"] .bracelet-memory-sheet {
     box-shadow: 2px 3px 0 rgba(0,0,0,0.34);
   }
-  body[data-contrast="high"] :is(.bracelet-action, .bracelet-memory-sheet, .bracelet-legend-item) {
+  body[data-contrast="high"] :is(.bracelet-action, .bracelet-memory-sheet) {
     border-color: var(--ink); border-width: 2px;
   }
-  body[data-contrast="high"] .bracelet-legend-swatch { border-color: var(--ink); border-width: 2px; }
+  body[data-contrast="high"] .bracelet-bead-swatch { border-color: var(--ink); border-width: 2px; }
   body[data-contrast="high"] :is(.bracelet-action, .bracelet-memory) { color: var(--ink); }
   body[data-contrast="high"] :is(.bracelet-action, .bracelet-memory):focus-visible {
     outline-color: var(--ink); outline-width: 3px;
