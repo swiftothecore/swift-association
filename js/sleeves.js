@@ -259,13 +259,13 @@ export function albumSleeve(album, colour, time, extra = "") {
   const art = (MOTIFS[motifOf(album)] || MOTIFS.rings)(r, C);
   const label = sleeveName(album);
   const fs = nameType(label);
-  const lw = Math.max(70, label.length * fs * 0.48 + 18);
+  const lw = label.length * fs * 0.48 + 22;
   const id = `sl${++uid}`;
 
   let s = sheet([[-6, -6], [W + 6, -6], [W + 6, H + 6], [-6, H + 6]], C.ground, r, { amp: 1.6, shadow: false });
   s += art;
   s += sheet([[8, 64], [8 + lw, 60], [9 + lw, 94], [9, 98]], "#f2ead8", r, { amp: 1.2, sy: 2, sx: 1.4 });
-  s += `<text x="${(10 + lw / 2).toFixed(1)}" y="84" text-anchor="middle" font-family="Caveat"` +
+  s += `<text x="19" y="84" font-family="Caveat"` +
        ` font-size="${fs}" fill="#2b2722">${escapeHtml(label)}</text>`;
   if (time) {
     /* The time's label is measured off the time, for the same reason the name's is. A board

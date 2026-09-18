@@ -3731,9 +3731,12 @@
     display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 14px 12px; margin: 0 0 16px;
   }
+  /* Left aligned, both the name lettered on the sleeve and the count under it. Everything on
+     this page hangs off the same left edge — the blurb, the sub-line, the first card — and a
+     centred caption under a flush-left name reads as two decisions rather than one. */
   .tbt-rec {
     display: block; width: 100%; padding: 0; border: none; background: none;
-    cursor: pointer; text-align: center; border-radius: 3px;
+    cursor: pointer; text-align: left; border-radius: 3px;
     transition: transform 0.16s ease;
   }
   .tbt-art { display: block; width: 100%; height: auto; border-radius: 2px; }
@@ -3741,7 +3744,7 @@
      is ever handed: a second line under one card and not another pulls that row out of line with
      the rest of the board, which on a grid of twelve is the first thing the eye finds. */
   .tbt-cap {
-    display: block; margin-top: 5px; white-space: nowrap;
+    display: block; margin-top: 5px; white-space: nowrap; padding-left: 2px;
     font-family: var(--type); font-size: calc(9px + var(--text-size-adjust));
     letter-spacing: 1px; text-transform: uppercase; color: var(--ink-soft);
   }
