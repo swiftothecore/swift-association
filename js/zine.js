@@ -349,11 +349,21 @@ const COVERS = {
      pass is walked backwards so the two close into a polygon `torn` can chew. The turns are
      deliberately few and the groove deliberately fat — an accurate record has a hundred turns
      and at 24px a hundred turns is a grey disc. See the note on Running Order for why these
-     two look nothing alike. */
+     two look nothing alike.
+
+     THE RECORD IS THE COLOUR HERE, NOT THE STOCK, which is the opposite of every other cover on
+     the shelf and the reason this one is worth the exception. The first pass pressed it in black
+     on charcoal and it was a correct, dull drawing: the whole field went one dark value and the
+     picture stopped carrying any further than its own silhouette. A coloured pressing on bone
+     inverts the value as well as the hue — light paper, one saturated object on it — so it is
+     the brightest card on a shelf whose other bright card, Redacted's manila, is a page of black
+     bars and shares nothing with a disc. It is also simply what these records ARE: a coloured
+     variant is the format this catalogue actually comes in, so the cover is the object rather
+     than a diagram of one. See the ground in GROUNDS: the bone is the cover's own paper, so
+     nothing is pasted full bleed and the grain lands on the stock itself. */
   "track-by-track": (r) => {
-    let s = sheet([[-6, -6], [126, -6], [126, 166], [-6, 166]], "#2e2a33", r, { shadow: false, crisp: true });
     const cx = 60, cy = 80;
-    s += sheet(circlePts(cx, cy, 57, r, 44, 1.4), "#17151a", r, { amp: 1.2, step: 6 });
+    let s = sheet(circlePts(cx, cy, 57, r, 44, 1.4), "#4a2660", r, { amp: 1.2, step: 6 });
     const N = 300, turns = 3.4, r0 = 51, r1 = 11, hw = 1.8;
     const outer = [], inner = [];
     for (let i = 0; i <= N; i++) {
@@ -361,9 +371,9 @@ const COVERS = {
       outer.push([cx + Math.cos(a) * (rad + hw), cy + Math.sin(a) * (rad + hw)]);
       inner.push([cx + Math.cos(a) * (rad - hw), cy + Math.sin(a) * (rad - hw)]);
     }
-    /* No fibre on the groove. It is a hairline against near-black, and the pale core along a
-       shape that thin stops being fluff and becomes a second, brighter groove beside the one
-       that is meant to be there. */
+    /* No fibre on the groove. It is a hairline, and the pale core along a shape that thin stops
+       being fluff and becomes a second, brighter groove beside the one that is meant to be
+       there — which on a spiral reads as a printing error rather than as paper. */
     s += sheet(outer.concat(inner.reverse()), "#ecdfbe", r,
       { amp: 0.3, step: 7, sx: 0.8, sy: 1.0, fibre: false });
     // where it runs out: the last track, and the end of the clock
@@ -483,7 +493,7 @@ export function seedOf(id) {
 /* The paper the collage is pasted onto. Bone unless a cover says otherwise: Redacted wants
    a darker manila so the cream sheet on top of it reads as a separate sheet rather than as
    a margin, which is the difference between a page and a rectangle. */
-const GROUNDS = { "redacted": "#cbb794" };
+const GROUNDS = { "redacted": "#cbb794", "track-by-track": "#e6dbc0" };
 
 let uid = 0;
 

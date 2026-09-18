@@ -766,7 +766,7 @@ export const BONUS_GAMES = [
      the score rather than a second axis beside it) and no `endless` (the album already bounds
      the run, so an endless side would only be playing again). */
   { id: "track-by-track", name: "Track by Track", ready: true, timed: true,
-    kicker: "the whole record, in order", tint: "#4a4552",
+    kicker: "the whole record, in order", tint: "#5e3184",
     line: "One album, top to bottom, against the clock.",
     blurb: "Pick a record and write its running order out from track one, in order, with the clock running the whole way. No suggestions and no skipping: the only way past track nine is to remember track nine." },
 ];
