@@ -4489,6 +4489,38 @@
   .bg-back-copy[disabled] { cursor: default; }
   [data-reduce-motion="on"] .bg-back-copy { transition: none; }
 
+  /* ---- The run's charms, lying on the desk under the back cover ----
+     Outside the card and above the actions (see bonusCharmRow in app.js). It borrows the
+     results recap's parts — the typewriter label, the charm mark, the handwritten name in the
+     charm's own theme colour — and none of its furniture: no band, no rule, no cap, no fold.
+     Centred and held to the card's own width so the card, this row and the actions under it
+     read as one column rather than three things that happen to be stacked. */
+  .bg-charms { max-width: var(--bg-card-w, 100%); margin: 16px auto 0; text-align: center; }
+  .bg-charms-lab { margin: 0 0 8px; }
+  .bg-charms-row { display: flex; flex-wrap: wrap; justify-content: center; align-items: center;
+    gap: 6px 18px; list-style: none; margin: 0; padding: 0; }
+  .bg-charm { display: inline-flex; min-width: 0; }
+  /* One control per charm, the mark and its name together: they are two views of the same
+     unlock, so hovering half of it and lighting the other half would be the results band's
+     pairing machinery rebuilt for a row four items long. Here they are simply one button. */
+  .bg-charm-go { display: inline-flex; align-items: center; gap: 7px; min-width: 0;
+    background: none; border: none; border-radius: 0; padding: 2px 1px; cursor: pointer;
+    transition: transform 0.12s ease; }
+  .bg-charm-go:hover { transform: translateY(-2px); }
+  .bg-charm-go:focus-visible { outline: 1.5px dotted currentColor; outline-offset: 3px; }
+  [data-reduce-motion="on"] .bg-charm-go { transition: none; }
+  .bg-charm-ic { width: 26px; height: 26px; flex: none; }
+  .bg-charm-ic .charm { width: 100%; height: 100%; display: block; }
+  .bg-charm-nm { font-family: var(--hand); font-size: calc(16px + var(--text-size-adjust));
+    line-height: 1.2; color: var(--ach-theme); }
+  /* Track by Track's ending is a bordered panel rather than a card that gets rasterised, so the
+     row goes INSIDE it — there is no PNG here for a line to disagree with. It sits below the
+     record's own numbers and above the one action, cut off from the time by a dotted rule so
+     the panel does not read as one block of four centred lines. `--bg-card-w` is not set on
+     this screen, which is what the fallback above is for. */
+  .tbt-end .bg-charms { margin: 0 0 12px; padding-top: 11px;
+    border-top: 1px dotted color-mix(in srgb, var(--ink-soft) 32%, transparent); }
+
   /* The back cover's two-up row, cut from the same cloth as the Challenges / Album Focus /
      Custom rows: half-width coloured-pencil washes under a hand-drawn pattern, with the
      replay on the RIGHT because the shelf is where you came from. The shelf's own pair is
@@ -4632,6 +4664,11 @@
        over the bottom of the screen, so without somewhere to scroll to the last action sits
        underneath them at the very end of the page and cannot be pressed. The padding is the
        links' own height plus a thumb's worth of clearance. */
+    /* Tighter on a phone, where four charms across the card's width would wrap to a word a
+       line. The row still never gets a scroller: it is a handful of objects, not a list. */
+    .bg-charms { margin-top: 13px; }
+    .bg-charms-row { gap: 4px 13px; }
+    .bg-charm-ic { width: 23px; height: 23px; }
     .bg-end-actions { flex-direction: column; gap: 9px; padding-bottom: 104px; }
     /* Stacked, so the hand-laid lean of the row's ends would read as two crooked buttons in a
        column rather than as three things laid down beside each other. */

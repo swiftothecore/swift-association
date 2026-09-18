@@ -2866,6 +2866,9 @@ function unlock(id) {
   // because the re-entry no-ops on `earnedAchievements`. The shelf is excluded by hand: a bonus
   // run may not satisfy a main-game charm, and this is one.
   if (!bonusGame && newlyUnlocked.length >= 3) unlock("earn-3-achievements-one-run");
+  // A shelf ending prints the run's charms, and this one may have landed after it was drawn
+  // (keeping the back cover is the case that matters). No-ops everywhere else.
+  if (bonusEnded) refreshBonusCharmRow();
 }
 
 // The charms that count as hidden for Is It Over Now?. Frozen as a literal rather than
@@ -9143,6 +9146,78 @@ function foldTrackCharms(secs, rec) {
   foldShelfLedgerCharms();
 }
 
+/* The charms a shelf run earned, written UNDER the back cover rather than on it. Before this
+   (2026-09-18) a charm won on the shelf existed only as a toast, which on the last page of a run
+   has come and gone by the time the card is read: the run's own unlocks were the one thing you
+   could not see from the screen that ended it.
+
+   TWO REASONS IT IS NOT INSIDE THE CARD, and they are worth keeping. The card is a keepsake of
+   the RUN — cover, score, remark, the pages listed — and backcard.js has to draw every line of
+   it, so a line added inside has to be written into `bonusBackRun` and rasterised too or the
+   copy quietly disagrees with the page. And a charm is not part of what the run WAS; it is a
+   thing you now own. So it lies next to the card on the desk the way a charm would, and the
+   PNG stays a record of the ten pages.
+
+   DELIBERATELY NOT renderResultRecap. That is a band with a label block, a five-charm cap, an
+   overflow fold, hover pairing and a separate "also found" section, and the simplicity of this
+   screen is the thing worth protecting. One line, every charm shown with its own name, and
+   absent entirely on a run that earned none — which is most runs, so the common case is the
+   screen exactly as it was.
+
+   NO KEEPSAKES LINE, and that is not an omission: nothing on the shelf reaches earnSticker or
+   the polaroid path, so `newlyFound` is always empty here (startBonusGame clears it, so a main
+   run's finds cannot leak in either). If a shelf game is ever given one, this is where it goes
+   and foundRecapHTML already draws it. */
+function bonusCharmRow() {
+  const ids = [...new Set(newlyUnlocked)].filter((id) => ACH_BY_ID[id] && earnedAchievements[id]);
+  if (!ids.length) return "";
+  const items = ids.map((id) => {
+    const a = ACH_BY_ID[id];
+    // The description is the tooltip rather than the name, because the name is already printed
+    // beside the mark — a tooltip repeating what is on screen is a tooltip saying nothing.
+    return `<li class="bg-charm"><button type="button" class="bg-charm-go"` +
+      ` data-achievement-id="${escapeHtml(id)}" style="--ach-theme:${achColor(a)}"` +
+      ` data-tip="${escapeHtml(a.desc)}" data-tip-delay="120">` +
+      `<span class="bg-charm-ic">${charmMarkup(a.icon, achColor(a), a.id)}</span>` +
+      `<span class="bg-charm-nm">${escapeHtml(a.name)}</span></button></li>`;
+  }).join("");
+  return `<div class="bg-charms">` +
+    `<p class="sr-lab bg-charms-lab">picked up · ${ids.length}</p>` +
+    `<ul class="bg-charms-row">${items}</ul>` +
+    `</div>`;
+}
+
+/* Every charm in the row is the same request, "show me this one", so they all go to the one
+   place. The back target is the PLAY SCREEN rather than "results": the card is still sitting in
+   #bonusPlayBody and nothing has cleared it, so ← back turns straight onto the run you just
+   finished. It also keeps the no-URL invariant honest for free — routeTo pushes nothing for a
+   `from` with no slug, so the charms panel opens without putting a run in the address bar. */
+function wireBonusCharmRow(root) {
+  root.querySelectorAll(".bg-charm-go").forEach((b) =>
+    b.addEventListener("click", () => openAchievements("bonusplay")));
+}
+
+/* Redraw the row where it stands, for a charm earned while the ending is already on screen.
+   One Last Souvenir is the whole reason it exists: it is unlocked by KEEPING the back cover, a
+   button that only exists on this screen, so it is the one charm the row could never show if
+   the row were only ever built once. unlock() calls this, which also covers anything a future
+   ending grows a button for.
+
+   It finds its own host rather than being told, because both endings put the row in the same
+   place relative to their actions and neither holds a handle to it: the back cover's is written
+   into one innerHTML and Track by Track's into a detached card. Doing nothing when the actions
+   are not on screen is what keeps this inert for every unlock that is not on an ending. */
+function refreshBonusCharmRow() {
+  const host = document.querySelector(".bg-end, .tbt-end");
+  const anchor = host && host.querySelector(".bg-end-actions, .tbt-end-row");
+  if (!anchor) return;
+  host.querySelector(".bg-charms")?.remove();
+  const html = bonusCharmRow();
+  if (!html) return;
+  anchor.insertAdjacentHTML("beforebegin", html);
+  wireBonusCharmRow(host);
+}
+
 function endBonusRun() {
   bonusEnded = true;
   renderBonusPageRegister();
@@ -9331,6 +9406,9 @@ function endBonusRun() {
           `<span class="sr-only">Copy the back cover</span></button>` +
         `</div>` +
       `</div>` +
+      // The run's charms, outside the card on purpose (see bonusCharmRow), and nothing at all
+      // on a run that earned none.
+      bonusCharmRow() +
       /* THREE ACTIONS: back, the same again, and the OTHER SIDE of the same game. The third is
          the one worth explaining. A run ends at the moment the player knows exactly how that
          side of the game feels, which is the moment they are most likely to want the other one
@@ -9353,6 +9431,7 @@ function endBonusRun() {
   // Replay puts you back on the SIDE you were playing. `bonusEndless` is still standing when
   // the button is pressed, but it is captured anyway: the run is over, and what the button
   // means must not depend on nothing else having touched a live flag in between.
+  wireBonusCharmRow($("bonusPlayBody"));
   $("bonusAgainBtn").addEventListener("click", () => startBonusGame(bonusGame, null, { endless }));
   // The other side of the same game, which is the only button here that changes what a run is.
   if ($("bonusOtherBtn"))
@@ -11114,17 +11193,26 @@ function endTrackRun() {
   stopBonusClock();
   bonusLocked = true;
   bonusEnded = true;
+  // First, as it is in endBonusRun: the book closing is the longer sound, and playUnlockChime
+  // reads how much of it is left to decide the chime's lead. Fold the charms ahead of it and
+  // the two land on top of each other.
+  playRunFlourish();
   trackSpent = ruthlessStart ? (performance.now() - ruthlessStart) / 1000 : 0;
   const snapped = Math.round(trackSpent * 100) / 100;
   const rec = recordTrackRun(trackSheet.album, snapped, todayKey());
+  /* BEFORE the sleeve is drawn, and that ordering is now load-bearing: renderTrackEnd prints
+     the run's charms (bonusCharmRow), so a fold that ran after it would draw the panel against
+     an empty `newlyUnlocked` and the charms would appear on the NEXT run instead. The rule the
+     fold was written for is untouched — it still runs after recordTrackRun, so a run that
+     completes the set of twelve can count itself. endBonusRun has the same order for the same
+     two reasons. */
+  foldTrackCharms(snapped, rec);
   renderTrackSheet(true);
   renderTrackEnd(rec, snapped);
   // A finished run has nothing left to give up on, so the quit link becomes the way home —
   // the same swap endBonusRun makes, and startBonusGame is what puts the pair back.
   $("bonusQuitBtn").hidden = true;
   $("bonusHomeBtn").hidden = false;
-  foldTrackCharms(snapped, rec);
-  playRunFlourish();
 }
 
 function renderTrackEnd(rec, secs) {
@@ -11143,10 +11231,14 @@ function renderTrackEnd(rec, secs) {
     `<p class="tbt-end-meta">${escapeHtml(trackSheet.album)} · ${trackSheet.total} tracks · ` +
       `${trackWrong} wrong ${trackWrong === 1 ? "guess" : "guesses"}` +
       (best ? "" : ` · best ${fmtTimeFine(rec.best)}`) + `</p>` +
+    // The same row the back cover gets, for the same reason: this game's ending is the filled-in
+    // sleeve rather than a card, but a charm earned writing out a record was just as invisible.
+    bonusCharmRow() +
     `<div class="tbt-end-row">` +
       `<button type="button" class="chall-go" id="tbtAgainBtn">Another record</button>` +
     `</div>`;
   body.insertBefore(card, body.firstChild);
+  wireBonusCharmRow(card);
   const again = $("tbtAgainBtn");
   if (again) again.addEventListener("click", () => {
     // Straight back to the picker rather than to the shelf: what you want after finishing one
@@ -29746,6 +29838,18 @@ function buildDevApi() {
          run earns charms for real, exactly as it banks a score for real — the shelf has never
          honoured devNoLog, and one half of a fake run counting is worse than both halves. */
       charms: {
+        /* What the ending's charm row is currently printing, and why. An empty row is the
+           expected state on most runs, so the one thing worth being able to see is whether it
+           is empty because nothing unlocked or because the row itself is broken — `earned` is
+           the run's ledger and `printed` is what actually reached the screen, and the two
+           disagreeing is the bug. `drawn` says the row is in the DOM at all, which separates
+           "an ending with no charms" from "not on an ending". */
+        row: () => ({
+          earned: [...new Set(newlyUnlocked)],
+          printed: [...document.querySelectorAll(".bg-charm-nm")].map((n) => n.textContent),
+          drawn: !!document.querySelector(".bg-charms"),
+          ended: bonusEnded,
+        }),
         state: () => ({
           game: bonusGame ? bonusGame.id : null,
           lens: ruthlessLensId,       // non-null = a Ruthless run, which earns NONE of these
