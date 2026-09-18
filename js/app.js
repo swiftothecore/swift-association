@@ -10869,8 +10869,9 @@ function renderTrackPicker() {
   });
   const el = $("tracksBody");
   el.innerHTML =
-    `<p class="tbt-blurb">Pick a record and write its running order out from the top. The clock ` +
-      `starts when you do and does not stop until the last blank is filled.</p>` +
+    // One line at the head, not four. The sub-line under it already says the clock is the score,
+    // and a clock reading 0.00 that does not move until you type says the rest by itself.
+    `<p class="tbt-blurb">Pick a record and write its running order out from the top.</p>` +
     `<p class="tbt-sub"><span>one album · the clock is the score · low wins</span></p>` +
     `<div class="tbt-shelf">${cards}</div>` +
     `<p class="tbt-foot">No suggestions and no skipping. A wrong guess costs nothing but the ` +

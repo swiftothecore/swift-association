@@ -239,7 +239,7 @@ function nameType(label) {
    is either a label running the whole width of the card or type too small to read on a phone,
    and every one of these records is known by the short name anyway. */
 const SLEEVE_NAMES = {
-  "The Tortured Poets Department": "The Tortured Poets",
+  "The Tortured Poets Department": "Tortured Poets",
   "The Life of a Showgirl": "Life of a Showgirl",
 };
 export function sleeveName(album) { return SLEEVE_NAMES[album] || album; }

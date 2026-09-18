@@ -282,6 +282,16 @@ if (location.pathname.endsWith('/index.html')) {
     <path d="M5 14 C8 13.8 11.6 13.8 14.6 14"/>
     <path d="M7 18.4 C9.6 18.2 12.6 18.2 15.2 18.4"/>
   </symbol>
+  <!-- TRACK BY TRACK: the back of a sleeve with the running order written down it, the last
+       line still blank. The lines rather than a disc are the point — every other mark in this
+       set that means "records" is round, and this game is the writing, not the record. -->
+  <symbol id="mark-tracks" viewBox="0 0 36 24">
+    <path d="M4.2 4.6 C12 4.2 24 4.3 31.6 4.9 C32.1 9 32 15.4 31.4 19.4 C24 19.9 11.8 19.8 4.4 19.2 C3.9 15 4 8.8 4.2 4.6 Z"/>
+    <path d="M8.1 9.3 C13 8.9 20.2 9 24.8 9.3"/>
+    <path d="M8 13.7 C12.1 13.4 18.4 13.5 22.3 13.7"/>
+    <path d="M8.2 18 C10.5 17.8 12.7 17.8 14.5 18"/>
+    <path d="M18.2 18.1 C20.9 17.9 23.6 17.9 25.8 18.1"/>
+  </symbol>
   <!-- a rail with two passes hanging off it: the shelf, literally -->
   <symbol id="mark-guests" viewBox="0 0 36 24">
     <path d="M2.6 4.8 C12.4 4.2 24.6 4.2 33.4 4.8"/>
@@ -3309,6 +3319,7 @@ if (location.pathname.endsWith('/index.html')) {
   <section id="screen-tracks" class="screen card" tabindex="-1" aria-label="Track by Track">
     <div class="stats-nav">
       <span class="title-group">
+        <span class="page-mark mark-tracks" aria-hidden="true"><svg viewBox="0 0 36 24"><use href="#mark-tracks"/></svg></span>
         <span class="stats-title">Track by Track</span>
       </span>
       <button id="tracksBackBtn" class="btn-link">← back</button>

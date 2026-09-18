@@ -8815,6 +8815,9 @@
   .page-mark.mark-mastery    { --mark-tint: #a8577a; }  /* rose card */
   .page-mark.mark-challenges { --mark-tint: #2b2722; }  /* graphite card */
   .page-mark.mark-bonus      { --mark-tint: #4a8c87; }  /* teal card */
+  /* Track by Track is one step in from the shelf, so it wears the shelf's teal: the rule above
+     is "the hue of whatever you pressed to get here", and what you pressed was the bonus card. */
+  .page-mark.mark-tracks     { --mark-tint: #4a8c87; }
   .page-mark.mark-album      { --mark-tint: #2b3a5e; }  /* the framed tile on the album stamp */
   /* The rust of the Ruthless plate goes dusty at the standard 42% and starts reading as
      Mastery's rose, so its swipe is laid on heavier to keep the ink's brick in it. */
