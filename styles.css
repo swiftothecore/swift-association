@@ -5211,15 +5211,45 @@
   }
   [data-reduce-motion="on"] .rl-sec { transition: none; }
 
-  /* The Ruthless results listing — the ten pages, sitting in the fine print BELOW the actions
-     so the page a player most often wants stays in reach. It is the only place a given-up page
-     is readable as the song it was, which the strand's matte spacer cannot say. Two ruled
-     columns on a wide page, one on a narrow one, exactly like the back cover's listing it replaces. */
-  .rl-pages { margin-top: 18px; text-align: left; }
-  .rl-pages-label {
-    font-family: var(--type); font-size: calc(8.5px + var(--text-size-adjust)); letter-spacing: 1.8px; text-transform: uppercase;
-    color: var(--ink-soft); margin: 0 0 6px;
+  /* ---------- The Ruthless ending — ONE CARD ----------
+     A lens run ends on the results screen, but not on the results PAGE. The card it prints is
+     the shelf's own back cover (.bg-back, class for class — see endRuthlessRun), and `rl-end`
+     folds away everything the main game's ending brings with it that a ten-page run measured in
+     seconds has nothing to put in: the tally and its ledger, the bracelet's caption and keepsake
+     row, the podium heading, the full-width way home and the see-also tiles. What is left is the
+     card, its two actions, and the skills and charms the house rule keeps below them. */
+  #screen-results.rl-end > .word-label,
+  #screen-results.rl-end .final-score,
+  #screen-results.rl-end .bracelet-result,
+  #screen-results.rl-end .podium-title,
+  #screen-results.rl-end #againBtn,
+  #screen-results.rl-end .see-also { display: none; }
+  /* The card is the top of the page now, so the paper starts at it. */
+  #screen-results.rl-end .podium { margin-top: 0; }
+  /* The strand hangs under the card's head, in the room the shelf's listing would start in.
+     It is the one thing on this card the back cover has no equivalent for, which is exactly
+     why it is worth the height. */
+  .rl-strand-slot {
+    padding: 12px 0 2px; border-bottom: 1px solid rgba(43,39,34,0.12); margin-bottom: 2px;
   }
+  .rl-strand-slot .bracelet-finished { max-width: 100%; margin: 0 auto; }
+  .rl-strand-line {
+    margin: 4px 0 8px; text-align: center;
+    font-family: var(--type); font-size: calc(9px + var(--text-size-adjust));
+    letter-spacing: 1.4px; text-transform: uppercase; color: var(--ink-soft); opacity: .75;
+  }
+  :root[data-theme="dark"] .rl-strand-slot { border-bottom-color: rgba(236,229,214,0.12); }
+  /* The shelf drops its kicker on a phone because there it is a flavour line the zine cover
+     has already said. On this card the kicker is the LENS, which is the only thing on screen
+     that says which of the six runs you just played, so it stays — it is two words at most,
+     it sits left of the stamp, and the name still reads on one line under it. */
+  @media (max-width: 560px) {
+    .rl-back .bg-back-kicker { display: block; }
+  }
+
+  /* The listing — the ten pages, and the only place a given-up page is readable as the song it
+     was, which the strand's matte spacer cannot say. Two ruled columns on a wide page, one on a
+     narrow one, exactly like the back cover's listing it sits in place of. */
   .rl-page-list { list-style: none; margin: 0; padding: 0; columns: 2; column-gap: 22px; }
   .rl-page {
     display: flex; align-items: baseline; gap: 6px; break-inside: avoid;

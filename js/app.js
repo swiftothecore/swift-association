@@ -1081,6 +1081,23 @@ function showScreen(name, options = {}) {
   // back button can't close a game the player is in the middle of (see clearRoute).
   if (name === "game" || name === "bonusplay") clearRoute();
   if (name !== "game") dismissCoachmark();   // no guided-round note should outlive the board
+  /* The Ruthless card folds most of the results page away (see .rl-end). Dropped on every
+     show, so the class can only ever be standing for the run that just put it there:
+     endRuthlessRun adds it back straight after its own showScreen call. The card itself goes
+     with it, because the podium is the one place the main game's ending does not necessarily
+     rewrite before the page is looked at — a signed first run holds it back behind the name
+     prompt — and a Ruthless card sitting under "Your best" is last run's keepsake on this
+     run's page. */
+  if (screens.results.classList.contains("rl-end")) {
+    screens.results.classList.remove("rl-end");
+    // The strand host goes home FIRST: the card it was borrowed into is about to be emptied,
+    // and #resultBracelet going down with it would take the bracelet off every ending after
+    // this one. It returns to its own block, ahead of the summary it is described by.
+    const home = document.querySelector("#screen-results .bracelet-result");
+    const strand = $("resultBracelet");
+    if (home && strand && !home.contains(strand)) home.insertBefore(strand, $("braceletSummary"));
+    $("resultPodium").innerHTML = "";
+  }
   // Re-arm the quit button fresh for each visit to the game (drop any stale armed state).
   if (name === "game") {
     const qb = $("quitBtn");
@@ -9553,45 +9570,38 @@ function endRuthlessRun() {
 
   showScreen("results");
   applyEra(FINALE_ERAS[Math.floor(Math.random() * FINALE_ERAS.length)]);
-  renderFinishedBracelet(results, albums, {
-    colors: albumPalette(), total: pages.length, tieText: String(pages.length), snapPage,
-    songs: pages.map((t) => t.ok ? t.title : null), words: [], times: [],
-  });
-  // A time is the whole result, so it takes the big number; the pages it took are the sub.
-  // Prose rather than ledger cells: "all 10 named" is the finding, not a column of numbers.
-  setFinalTally(fmtTimeFine(secs), gaveUp
-    ? `${named} of ${pages.length} named` : `all ${pages.length} named`);
+  /* The ending is ONE CARD, the mode's own answer to the shelf's back cover, and not the main
+     game's results page with a Ruthless run poured into it. A ten-page run measured in seconds
+     has no tally ledger to fill, no keepsake toolbar worth a line and nothing to say to the
+     front page's tile row, so `rl-end` folds all of that away (see styles.css) and everything
+     the run has to say is printed inside the card instead. The recaps stay where the house
+     rule puts them, below the actions. */
+  screens.results.classList.add("rl-end");
+  // No tally means no setFinalTally, which is where the run stamp is normally pressed or
+  // cleared. Nothing here can earn one — every story is measured in roundResults, hints and
+  // timeouts, none of which a lens run touches — so the only stamp that could be standing is
+  // the last main-game run's, and it is taken off the page.
+  screens.results.querySelector(".run-stamp")?.remove();
   $("keepGoingBtn").style.display = "none";
   $("namePrompt").style.display = "none";
   $("verseAnthology").style.display = "none";
   hideNewBestBanner();
-  document.querySelector("#screen-results .podium-title").textContent =
-    "Ruthless Game · " + (lens ? lens.label : "");
 
   const beat = rec.isBest && rec.plays > 1;
   foldRuthlessCharms({ pages, named, gaveUp, secs, prevLast });
-  let status;
-  if (beat) {
-    status = `<div class="chall-result-status win">a new best for ${escapeHtml(lens ? lens.label : "this lens")} ★</div>`;
-  } else if (rec.plays <= 1) {
-    status = `<div class="chall-result-status win">the first time down this lens — a time to beat</div>`;
-  } else {
-    // How far off the best, said in the same seconds the whole mode is counted in. A run that
-    // ties it is neither a beat nor a miss, and saying so is more use than rounding it either way.
-    const gap = secs - rec.best;
-    status = gap === 0
-      ? `<div class="chall-result-status">level with your best</div>`
-      : `<div class="chall-result-status">${fmtTimeFine(gap)} off your best</div>`;
-  }
+  /* The chase line, and it is the back cover's grammar exactly: how this time stands against
+     the board, not a second announcement of what the stamp above it has already said. A beaten
+     best says NOTHING here, because saying it twice makes it smaller, and a first run has
+     nothing to stand against and says so. */
+  const aside = beat ? ""
+    : rec.plays <= 1 ? "a time to beat"
+    : secs === rec.best ? "level with your best"
+    : `${fmtTimeFine(secs - rec.best)} off your best`;
   const note = rec.bestGaveUp
     ? `${rec.bestGaveUp} given up` : `named all ${pages.length}`;
-  const meta = `<div class="chall-result-meta">best ${fmtTimeFine(rec.best)} · ${escapeHtml(note)}` +
-    ` · played ${rec.plays}</div>`;
 
-  // The ten pages, kept BELOW the actions where the fine print goes: the run's own keepsake and
-  // the only place a given-up page is readable as the song it was. It rides inside the podium
-  // rather than in a block of its own so that every other end path, which rewrites the podium
-  // outright, is incapable of leaving a stale Ruthless listing behind it.
+  // The ten pages: the run's own record of itself, and the only place a page handed back is
+  // readable as the song it was, which the strand's frosted spacer cannot say.
   const rows = pages.map((t, i) =>
     `<li class="rl-page ${t.ok ? "ok" : "no"}${snapPage[i] ? " snap" : ""}">` +
       `<span class="rl-page-n">${t.n}</span>` +
@@ -9608,13 +9618,65 @@ function endRuthlessRun() {
     : `<p class="rl-pages-foot">name one inside ${snapWords} word${snapWords === 1 ? "" : "s"}` +
       ` and its bead wears a stopwatch</p>`;
 
-  $("resultPodium").innerHTML = status + meta +
-    `<div class="chall-result-actions">` +
-      `<button id="backToRuthless" class="btn-primary">← ruthless game</button>` +
-      `<button id="replayRuthless" class="btn-primary">replay ↺</button>` +
-    `</div>` +
-    `<div class="rl-pages"><p class="rl-pages-label">the run, page by page</p>` +
-      `<ol class="rl-page-list">${rows}</ol>${snapFoot}</div>`;
+  $("resultPodium").innerHTML =
+    `<div class="bg-end">` +
+      // The shelf's own back-cover stock, class for class, because that is what this card IS:
+      // the same taped paper, the same head, the same small print. A parallel set of rl- rules
+      // would be a second copy of the shelf's card drifting away from it one edit at a time.
+      `<div class="bg-back rl-back" style="--bg-tint:${escapeHtml(RUTHLESS_GAME.tint)}">` +
+        `<div class="bg-back-head">` +
+          `<div class="bg-back-titles">` +
+            // The lens takes the kicker's tinted line: on the shelf that slot says which game
+            // you played, and here the lens is the only thing that answers the same question.
+            `<div class="bg-back-kicker">${escapeHtml(lens ? lens.label : "")}</div>` +
+            `<h3 class="bg-back-name">Ruthless Game</h3>` +
+            (aside ? `<div class="bg-back-chain">${escapeHtml(aside)}</div>` : "") +
+          `</div>` +
+          // A time is the whole result, so it takes the big number, and the pages it bought
+          // are the sub. Prose rather than a ledger: "all 10 named" is the finding.
+          `<div class="bg-back-score">${escapeHtml(fmtTimeFine(secs))}</div>` +
+          (beat ? `<i class="bg-stamp">new best</i>` : "") +
+        `</div>` +
+        /* The strand, hung under the head where the card's own listing would start. It is the
+           one thing here the shelf has no equivalent for, which is why it is worth the room.
+           The slot is filled below with the results page's OWN strand host, moved in rather
+           than copied: it carries ids, and a second copy of it earlier in the document steals
+           every `use` reference in this one, which draws the card an empty box. */
+        `<div class="rl-strand-slot">` +
+          `<p class="rl-strand-line">${gaveUp ? `${named} of ${pages.length} named`
+                                              : `all ${pages.length} named`}</p>` +
+        `</div>` +
+        `<div class="bg-back-label">the run, page by page</div>` +
+        `<ol class="rl-page-list">${rows}</ol>${snapFoot}` +
+        // The run's only souvenir, taken off the page the way the back cover's is: click to
+        // copy the strand, shift-click to save it. One mark at the end of the small print, in
+        // place of the results page's three-control keepsake row, which is most of what made
+        // this ending read as the main game's.
+        `<div class="bg-back-foot"><span>best ${escapeHtml(fmtTimeFine(rec.best))}` +
+          ` · ${escapeHtml(note)} · played ${rec.plays}</span>` +
+          `<button type="button" id="rlKeepBtn" class="bg-back-copy"` +
+          ` data-tip="Copy the bracelet to the clipboard (shift-click to download)">${KEEPSAKE_COPY_MARK}` +
+          `<span class="sr-only">Copy the bracelet</span></button></div>` +
+      `</div>` +
+      `<div class="bg-end-actions">` +
+        `<button id="backToRuthless" class="btn-primary">← ruthless game</button>` +
+        `<button id="replayRuthless" class="btn-primary">replay ↺</button>` +
+      `</div>` +
+    `</div>`;
+  /* The strand host is BORROWED into the card, and handed back to the bracelet block the
+     moment the results screen is shown for anything else (see showScreen). Moving it rather
+     than printing a second strand keeps one #resultBracelet in the document, which is what
+     lets renderFinishedBracelet, centreStrand and the keepsake PNG all go on working here
+     exactly as they do on every other ending — and it is the only strand on the page, so
+     nothing can steal its internal references. */
+  const slot = $("resultPodium").querySelector(".rl-strand-slot");
+  slot.insertBefore($("resultBracelet"), slot.firstChild);
+  renderFinishedBracelet(results, albums, {
+    colors: albumPalette(), total: pages.length, tieText: String(pages.length), snapPage,
+    songs: pages.map((t) => t.ok ? t.title : null), words: [], times: [],
+  });
+  $("rlKeepBtn").addEventListener("click", (e) =>
+    saveBraceletPNG(e, e.shiftKey ? "download" : "copy", $("rlKeepBtn")));
   $("backToRuthless").addEventListener("click", () => openRuthless(ruthlessBackTarget));
   $("replayRuthless").addEventListener("click", () => startRuthlessMode(lensId));
 
@@ -12795,7 +12857,6 @@ const TALLY_PREVIEWS = {
   relaxed:  { score: "9",  sub: [{ v: "13", l: "pages" }] },
   daily:    { score: "?",  sub: null },
   infinite: { score: "24", sub: [{ v: "21", l: "correct" }, { v: "6:31", l: "on the clock" }, { v: "+11", l: "verse bonus" }], unit: "rounds" },
-  ruthless: { score: "3:07", sub: "all 10 named" },
   risk:     { score: "14", sub: [{ v: "12", l: "needed" }], unit: "beads" },
   ink:      { score: "1184", sub: [{ v: "1100", l: "needed" }], unit: "characters" },
 };
@@ -12860,10 +12921,12 @@ function runStory() {
   return RUN_STORIES.find((s) => s.test()) || null;
 }
 
-// Press it, or make sure last run's is gone. Called from setFinalTally, which is the one
-// function every end path goes through — Challenges, Album Focus, Custom, the guest shelf,
-// Ruthless and Daily all land here, so the stamp needs no per-path wiring and cannot fall out
-// of step with a new ending that forgets to ask for it.
+// Press it, or make sure last run's is gone. Called from setFinalTally, which every end path
+// with a tally goes through — Challenges, Album Focus, Custom, the guest shelf and Daily all
+// land here, so the stamp needs no per-path wiring and cannot fall out of step with a new
+// ending that forgets to ask for it. The Ruthless card has no tally and presses no story
+// (every one of them is measured in main-game state a lens run never writes), so it clears
+// the stamp itself rather than coming through here.
 function renderRunStamp() {
   // Anchored to the PAGE, not to the tally column. The column carries a -14px paper-centring
   // shift and sits inside the card's asymmetric padding, so a stamp hung off it is dragged
@@ -13178,14 +13241,17 @@ async function saveKeepsakePNG(e, { btn, meta, copy, download, noun, onKept, int
 }
 
 // Wired to the results-screen bracelet actions.
-function saveBraceletPNG(e, intent = "copy") {
+/* `btn` is the control that was pressed, for the kept-tick feedback. It defaults to the
+   results page's own keepsake row, and the Ruthless card passes its own mark instead: that
+   row is folded away on a lens run, and a tick played on a hidden button is no tick. */
+function saveBraceletPNG(e, intent = "copy", btn = null) {
   if (dailyResultIsSealed()) {
     notifyNote("bracelet still sealed", "tear the Daily result slip to reveal it first");
     return;
   }
   if (!$("resultBracelet").innerHTML.trim()) return;   // nothing strung yet
   return saveKeepsakePNG(e, {
-    btn: intent === "download" ? $("downloadBraceletBtn") : $("saveBraceletBtn"),
+    btn: btn || (intent === "download" ? $("downloadBraceletBtn") : $("saveBraceletBtn")),
     meta: buildCardMeta,
     copy: copyBraceletCard,
     download: exportBraceletCard,
