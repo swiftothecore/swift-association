@@ -126,19 +126,19 @@ export const leaf = (x, y, a, l) => {
           <path class="lu-ln" d="M${x.toFixed(1)} ${y.toFixed(1)} L${tx.toFixed(1)} ${ty.toFixed(1)}"/>`;
 };
 
-/* Measured, not guessed: on a heart card the words occupy y 33 to 107 of the
-   140-unit field, and they run nearly the full width, so there is no usable
-   margin down the SIDES. The sprays therefore lie along the top and bottom
-   bands instead -- same long sweep, same two-separate-drawings rule, but they
-   can no longer cross a word. Running them down the sides put a leaf through
-   the text of every heart in the deck. */
+/* Two independent sprays in the top and bottom bands. The compact groups leave
+   the central copy field clear even when Large text wraps a title and rule. */
 export const VINE = `
+  <g transform="scale(.68)">
   <path class="lu-ln" d="M5 31 C13 19 25 12 40 10"/>
   ${leaf(11, 25, -1.05, 7)}${leaf(21, 16, 0.35, 6)}${leaf(32, 11, -1.15, 6)}
   ${petals(47, 13, 6, 6.5, -0.3)}
+  </g>
+  <g transform="translate(32 45) scale(.68)">
   <path class="lu-ln" d="M95 109 C87 121 75 128 60 130"/>
   ${leaf(89, 115, 2.09, 7)}${leaf(79, 124, 3.49, 6)}${leaf(68, 129, 1.99, 6)}
-  ${petals(53, 127, 5, 7, 0.55)}`;
+  ${petals(53, 127, 5, 7, 0.55)}
+  </g>`;
 
 /* ============================================================
    THE SPREAD STRAND. Diamonds is the breadth suit and the

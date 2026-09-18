@@ -13215,8 +13215,10 @@
    ============================================================ */
 
 .lu-card, .lu-back {
-  position: relative; width: 176px; height: 245px; flex: none; border-radius: 7px;
+  position: relative; width: 176px; height: 305px; flex: none; border-radius: 7px;
   --card: #fdfaf0; --suit: #2b2722;
+  --lu-ink: #302a24; --lu-ink-soft: #584d40; --lu-miss-ink: #655849;
+  --lu-red-ink: #9b302b;
   background: linear-gradient(162deg, #fdfaf0, #f2ead6);
   border: 1px solid rgba(43,39,34,0.13);
   box-shadow: 0 5px 13px rgba(60,50,35,0.15), 0 1px 2px rgba(60,50,35,0.14);
@@ -13261,47 +13263,51 @@ body.lu-heavy .lu-ln, body.lu-heavy .lu-ln-o { stroke-width: 1.7; }
 .lu-pip .ink-fill { fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linejoin: round; stroke-linecap: round; }
 
 .lu-mid { position: absolute; left: 0; right: 0; text-align: center; z-index: 3; }
-.lu-name { font-family: var(--hand); font-weight: 700; font-size: 25px; line-height: 1.02; color: var(--ink); margin: 0 0 5px; }
-.lu-rule { font-family: var(--type); font-size: 9px; line-height: 1.5; color: var(--ink-soft); margin: 0; }
+.lu-name { font-family: var(--hand); font-weight: 700; font-size: calc(23px + var(--text-size-adjust)); line-height: 1.02; color: var(--lu-ink); margin: 0 0 5px; }
+.lu-rule { font-family: var(--type); font-size: calc(10.5px + var(--text-size-adjust)); line-height: 1.35; color: var(--lu-ink-soft); margin: 0; }
 .lu-miss {
-  font-family: var(--type); font-size: 7.5px; letter-spacing: 1.1px; text-transform: uppercase;
-  color: rgba(43,39,34,0.38); margin: 0 0 4px;
+  font-family: var(--type); font-size: calc(8.5px + var(--text-size-adjust)); letter-spacing: 0.3px; text-transform: uppercase;
+  color: var(--lu-miss-ink); margin: 0 0 4px;
 }
-.lu-miss.bad { color: var(--red-pen); opacity: 0.85; }
+.lu-miss.bad { color: var(--lu-red-ink); }
 /* the printed pool restriction: set like the missed-page ruling because it is the same
    kind of thing — small print the player has to be able to read before spending on the card */
 .lu-pool {
-  font-family: var(--type); font-size: 7px; letter-spacing: 1.1px; text-transform: uppercase;
-  color: var(--suit); opacity: 0.7; margin: 6px 0 0;
+  font-family: var(--type); font-size: calc(8.5px + var(--text-size-adjust)); letter-spacing: 0.2px; text-transform: uppercase;
+  color: var(--suit); margin: 6px 0 0;
 }
-.lu-pool::before, .lu-pool::after { content: "·"; opacity: 0.5; margin: 0 5px; }
+.lu-pool::before, .lu-pool::after { content: "·"; opacity: 0.5; margin: 0 2px; }
 body.lu-nomiss .lu-miss { visibility: hidden; }
 
 /* ---- per-look placement, on the card ---- */
-/* the two bare-field looks share a rhythm: ornament up top, words beneath */
-.lu-look-facet .lu-art, .lu-look-strandbare .lu-art { inset: 12px 12px 92px; }
-.lu-look-facet .lu-mid, .lu-look-strandbare .lu-mid { bottom: 20px; padding: 0 14px; }
-.lu-look-strandbare .lu-art { inset: 10px 8px 94px; }
+/* A bounded drawing field and a separate copy field. The longest spade and
+   diamond can grow upward within the latter without meeting a stem or bead. */
+.lu-look-facet .lu-art { inset: 14px 12px auto; height: 100px; }
+.lu-look-strandbare .lu-art { inset: 12px 8px auto; height: 120px; }
+.lu-look-facet .lu-mid, .lu-look-strandbare .lu-mid {
+  top: 143px; bottom: 19px; padding: 0 14px;
+  display: flex; flex-direction: column; justify-content: flex-end;
+}
+.lu-look-facet .lu-rule, .lu-look-strandbare .lu-rule { padding: 0 7px; }
 
 .lu-look-frame .lu-mid { top: 50%; transform: translateY(-50%); padding: 0 27px; }
-.lu-look-frame .lu-name { font-size: 21px; }
-.lu-look-frame .lu-rule { font-size: 8.5px; }
-.lu-look-frame .lu-miss { font-size: 7px; letter-spacing: 0.5px; }
+.lu-look-frame .lu-name { font-size: calc(23px + var(--text-size-adjust)); }
 
 /* the four per-suit looks all hang the words in the same place under the
    ornament, so a mixed hand still has one typographic rhythm */
 .lu-look-crest .lu-mid, .lu-look-posy .lu-mid, .lu-look-strand .lu-mid, .lu-look-ruled .lu-mid {
   top: 60%; transform: translateY(-50%); padding: 0 27px;
 }
-.lu-look-crest .lu-name, .lu-look-posy .lu-name, .lu-look-strand .lu-name, .lu-look-ruled .lu-name { font-size: 20px; }
-.lu-look-crest .lu-rule, .lu-look-posy .lu-rule, .lu-look-strand .lu-rule, .lu-look-ruled .lu-rule { font-size: 8.5px; }
-.lu-look-crest .lu-miss, .lu-look-posy .lu-miss, .lu-look-strand .lu-miss, .lu-look-ruled .lu-miss { font-size: 7px; letter-spacing: 0.5px; }
+.lu-look-crest .lu-name, .lu-look-posy .lu-name, .lu-look-strand .lu-name, .lu-look-ruled .lu-name { font-size: calc(21px + var(--text-size-adjust)); }
 
-/* inset so no stem or petal can cross the keyline — running the sprigs off
-   the corners is what made them read as clip art laid on top of the card */
-.lu-look-vine .lu-art { inset: 13px; }
-.lu-look-vine .lu-mid { top: 50%; transform: translateY(-50%); padding: 0 22px; }
-.lu-look-vine .lu-name { font-size: 23px; }
+/* The full field gives the two compact sprigs their outer bands while keeping
+   the centre open for longer copy and its Large text setting. */
+.lu-look-vine .lu-art { inset: 0; }
+.lu-look-vine .lu-mid {
+  top: 70px; bottom: 65px; padding: 0 17px;
+  display: flex; flex-direction: column; justify-content: center;
+}
+.lu-look-vine .lu-name { font-size: calc(23px + var(--text-size-adjust)); }
 
 /* ---- the felt: five cards dealt before page one ----
    The cards are the stock above at their printed size, so they are laid out in a
@@ -13326,7 +13332,7 @@ body.lu-nomiss .lu-miss { visibility: hidden; }
 }
 /* Struck through rather than hidden: a card you cannot afford is information, and
    the reason it is out is printed under it. */
-.lu-deal.is-out .lu-card { opacity: 0.42; cursor: not-allowed; transform: rotate(0deg); }
+.lu-deal.is-out .lu-card { opacity: 0.65; cursor: not-allowed; transform: rotate(0deg); }
 .lu-deal.is-out .lu-card:hover { transform: rotate(0deg); box-shadow: 0 5px 13px rgba(60,50,35,0.15), 0 1px 2px rgba(60,50,35,0.14); }
 .lu-out-why {
   font-family: var(--type); font-size: 9px; letter-spacing: 0.4px; text-align: center;
