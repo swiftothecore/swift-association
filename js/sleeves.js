@@ -178,10 +178,15 @@ const MOTIFS = {
   sash: (r, C) => sheet([[-10, 72], [120, -8], [152, -8], [16, H]], C.pale, r, { amp: 1.3 }) +
     sheet([[54, H], [W + 8, 10], [W + 8, 34], [96, H]], C.palest, r, { amp: 1.2 }),
 
-  // Scraps scattered face down: a page torn up and left where it fell.
+  /* Scraps scattered face down: a page torn up and left where it fell. TEN of them, Midnights
+     being the tenth record. The two added to the original eight went into the gaps in the
+     scatter and NOT into the clear ground round the label: scraps run under the lettering here
+     the way they run off the edge of the card, and a layout that tiptoes around the label to
+     protect a count is a scatter that has stopped being scattered. Partly covered is fine. */
   scraps: (r, C) => {
     let s = "";
-    [[18, 14], [62, 8], [110, 18], [26, 50], [74, 44], [122, 54], [44, 74], [138, 30]]
+    [[18, 14], [62, 8], [110, 18], [6, 36], [26, 50], [74, 44], [122, 54], [44, 74],
+     [88, 70], [138, 30]]
       .forEach(([x, y], k) => {
         const w = 18 + r() * 16, h = 11 + r() * 9;
         s += sheet([[x, y], [x + w, y - 2], [x + w + 1, y + h], [x + 1, y + h + 2]],
