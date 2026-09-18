@@ -240,7 +240,8 @@ export function hasMotif(album) {
    strip for the first render is nothing; a strip measured for the wrong face is a name that runs
    off its own paper. `renderTrackPicker` draws again when the fonts settle. */
 const NAME_SIZES = [20, 17, 15, 13, 11.5];
-const NAME_PAD = 10;          // paper either side of the writing
+const NAME_PAD = 10;          // paper before the writing
+const NAME_TAIL = 20;         // and after it: enough blank to read the name as flush left
 const NAME_ROOM = 146;        // how much of a 160-wide card a label may take
 
 let measurer = null;
@@ -255,24 +256,28 @@ function textWidth(text, fs) {
   } catch (e) { return null; }
 }
 
-/* The largest size the name fits the card at, with the width it takes there. The steps are what
-   keeps one rule for every record: a short name is lettered big, and the Anthology steps down
-   until it fits rather than being given a size by hand. */
-function fitName(label) {
+/* ONE SIZE FOR THE WHOLE BOARD, and it is the largest step every record fits at.
+   Sizing each name on its own was the first pass and it is the thing you notice: twelve cards
+   in three or four different hands, with the shortest record lettered biggest for no reason a
+   player could name. A board is one object, so it gets one size, and the longest name is what
+   sets it. It is still computed rather than written down, so a record renamed — or a thirteenth
+   one — moves the whole board down a step instead of quietly running off its own paper. */
+export function commonNameSize(labels) {
   for (const fs of NAME_SIZES) {
-    const w = textWidth(label, fs);
-    const width = w == null ? label.length * fs * 0.46 : w;
-    if (width + NAME_PAD * 2 <= NAME_ROOM || fs === NAME_SIZES[NAME_SIZES.length - 1]) {
-      return { fs, w: width };
-    }
+    if (labels.every((l) => nameWidth(l, fs) + NAME_PAD + NAME_TAIL <= NAME_ROOM)) return fs;
   }
-  return { fs: NAME_SIZES[NAME_SIZES.length - 1], w: NAME_ROOM - NAME_PAD * 2 };
+  return NAME_SIZES[NAME_SIZES.length - 1];
+}
+function nameWidth(label, fs) {
+  const w = textWidth(label, fs);
+  return w == null ? label.length * fs * 0.46 : w;
 }
 
 /* The name to letter across a sleeve. The Anthology loses its article, which was costing it a
    whole type size on the longest name on the board. */
 const SLEEVE_NAMES = {
   "The Tortured Poets Department": "Tortured Poets",
+  "The Life of a Showgirl": "Showgirl",
 };
 export function sleeveName(album) { return SLEEVE_NAMES[album] || album; }
 
@@ -285,13 +290,13 @@ let uid = 0;
    every contour inside it is torn: shapes are authored over the edge of the field and cut off
    at the fold. Its id is counted rather than derived from the album, because a board may draw
    the same record twice and two nodes cannot share one. */
-export function albumSleeve(album, colour, time, extra = "") {
+export function albumSleeve(album, colour, time, size, extra = "") {
   const r = rng(seedOf("sleeve:" + album));
   const C = stockOf(colour || "#999999");
   const art = (MOTIFS[motifOf(album)] || MOTIFS.rings)(r, C);
   const label = sleeveName(album);
-  const { fs, w: nameW } = fitName(label);
-  const lw = nameW + NAME_PAD * 2;
+  const fs = size || commonNameSize([label]);
+  const lw = nameWidth(label, fs) + NAME_PAD + NAME_TAIL;
   const id = `sl${++uid}`;
 
   let s = sheet([[-6, -6], [W + 6, -6], [W + 6, H + 6], [-6, H + 6]], C.ground, r, { amp: 1.6, shadow: false });

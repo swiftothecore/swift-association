@@ -87,7 +87,7 @@ import { wordRegex as wordRegexCore, extractLineWithWord as extractLineWithWordC
 import { buildLyricReveal } from "./lyric-reveal.mjs";
 import { zineCover, hasCover } from "./zine.js";
 // Track by Track's twelve album sleeves (pure; see js/sleeves.js).
-import { albumSleeve, hasMotif, motifOf, sleeveName } from "./sleeves.js";
+import { albumSleeve, commonNameSize, hasMotif, motifOf, sleeveName } from "./sleeves.js";
 import { cloudMarkup, cloudFontReady } from "./cloud.js";
 import { buildLineIndex, buildSlipContext, buildSlipPuzzle, buildNamePuzzle,
          buildBlankPuzzle, buildRedactedPuzzle,
@@ -10852,6 +10852,8 @@ function renderTrackPicker() {
   const index = trackIndexNow();
   const albums = trackAlbums(index);
   const board = loadTracks();
+  // One lettering size for the whole board, set by the longest record on it. See commonNameSize.
+  const nameSize = commonNameSize(albums.map(sleeveName));
   let cards = "";
   albums.forEach((album) => {
     const sheet = buildAlbumSheet(album, index);
@@ -10864,7 +10866,7 @@ function renderTrackPicker() {
     // to, because a record with no time label on its sleeve is already saying exactly that.
     cards += `<button type="button" class="tbt-rec${rec ? " is-done" : ""}" data-album="${escapeHtml(album)}"` +
         ` aria-label="${escapeHtml(album)}, ${sheet.total} tracks: ${escapeHtml(said)}">` +
-      albumSleeve(album, albumColor(album) || "#999999", time) +
+      albumSleeve(album, albumColor(album) || "#999999", time, nameSize) +
       `<span class="tbt-cap">${sheet.total} tracks</span>` +
     `</button>`;
   });
@@ -29383,9 +29385,10 @@ function buildDevApi() {
           if (!$("tracksBody")) return "open the picker first";
           renderTrackPicker();
           const albums = trackAlbums(trackIndexNow());
+          const size = commonNameSize(albums.map(sleeveName));
           const row = (px, time) => albums.map((a) =>
             `<span style="display:inline-block;width:${px}px">` +
-            albumSleeve(a, albumColor(a) || "#999999", time ? "3:19.94" : "") + `</span>`).join("");
+            albumSleeve(a, albumColor(a) || "#999999", time ? "3:19.94" : "", size) + `</span>`).join("");
           const strip = document.createElement("div");
           strip.style.cssText = "display:flex;flex-direction:column;gap:14px;margin-bottom:22px";
           strip.innerHTML = [[182, false], [182, true], [127, false], [127, true], [56, false]]
