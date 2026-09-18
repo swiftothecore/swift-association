@@ -10944,11 +10944,15 @@ function renderTrackSheet(finished = false) {
       `<h3 class="tbt-sheet-head">${escapeHtml(trackSheet.album)}</h3>` +
       `<ol class="tbt-list">${rows}</ol>` +
     `</div>` +
-    (finished ? "" : bonusWritingLine({
+    /* The writing line goes inside a wrapper of its own so ONE element can be made sticky.
+       bonusWritingLine returns the input area and the hint as SIBLINGS, and sticking both to
+       bottom:0 lands them on top of each other — the hint reads through the input, which is
+       exactly what the first build shipped. */
+    (finished ? "" : `<div class="tbt-pen">` + bonusWritingLine({
       placeholder: "track " + (trackSheet.slots[trackAt] ? trackSheet.slots[trackAt].n : "") + "…",
       aria: "Name the next track",
       hint: "part of the title is enough · Enter to write it in",
-    }));
+    }) + `</div>`);
   if (!finished) wireTrackInput();
   paintTrackProgress();
 }

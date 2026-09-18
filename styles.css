@@ -3779,7 +3779,10 @@
      The row is CENTRED with a min-height and no padding rather than baseline-aligned with one:
      that way the height is one number every row kind resolves to — a line of handwriting, a
      dashed rule and a small typewriter line of a printed alt take are all 1.6em — instead of
-     three different line boxes being talked into agreeing. Measured: 35px for all three. */
+     three different line boxes being talked into agreeing. Measured: 35px for all three on a
+     desktop page. A title too long for the column still wraps to two lines and takes the room
+     it needs, which is right — a wrapped title is honest, where a blank row pretending to be
+     shorter than a written one is not. */
   .tbt-row {
     display: grid; grid-template-columns: 2.6ch 1fr auto; align-items: center;
     gap: 0 10px; padding: 0; margin-left: -2.6ch;
@@ -3829,13 +3832,22 @@
      sheet scrolls under the line the way paper moves under a hand. It is scoped to this game
      off the play screen's own data attribute, because every other game on the shelf fits its
      page and would only gain a line that detaches itself for no reason. */
-  :is(#screen-bonusplay, [data-flip-id="screen-bonusplay"])[data-bonus-game="track-by-track"] .bg-write {
-    position: sticky; bottom: 0; z-index: 3;
-    background: var(--paper); box-shadow: 0 -10px 14px -8px var(--paper);
+  /* The gutter is covered too. A row hangs its track number out to the left on a negative
+     margin, so a sticky block that only spans the content box leaves that column showing
+     through — the numbers of the rows underneath read straight over the hint line. */
+  .tbt-pen {
+    position: sticky; bottom: 0; z-index: 3; padding-bottom: 4px;
+    margin-left: -2.6ch; padding-left: 2.6ch;
+    background: var(--paper); box-shadow: 0 -12px 16px -8px var(--paper);
   }
-  :is(#screen-bonusplay, [data-flip-id="screen-bonusplay"])[data-bonus-game="track-by-track"] .bg-hint {
-    position: sticky; bottom: 0; z-index: 3; background: var(--paper); padding-bottom: 2px;
-  }
+  /* The corner links sit fixed at the foot of the window at z-index 60, and body.in-game hides
+     them for a main round but has never been set by a bonus run. That has never mattered,
+     because every other game on the shelf keeps its writing line in the flow of the page and
+     the two never meet. This one sticks its line to the bottom edge, which on a phone is
+     exactly where that cluster lives, and the line ends up reading through the buttons.
+     Hidden for the length of a run of THIS game rather than by widening body.in-game to cover
+     the whole shelf: that would change the chrome of eight other games to fix one. */
+  body:has(#screen-bonusplay.active[data-bonus-game="track-by-track"]) .corner-links { display: none; }
 
   /* ---------- The finished sheet ---------- */
   .tbt-end {
