@@ -1855,7 +1855,13 @@
     background-blend-mode: normal, soft-light, normal;
     box-shadow: 3px 3px 0 rgba(43, 39, 34, 0.22);
     transform: rotate(0.7deg);
-    transition: background-color 0.24s ease, color 0.2s ease, transform 0.12s, box-shadow 0.2s;
+    /* ONE CLOCK FOR THE WHOLE INVERSION. The board, the dice inked on it and the hole the
+       front die knocks through the back one are three properties across two elements, and any
+       difference between their durations reads as the dice turning a beat after the board
+       rather than as one stamp going over. They all run off --chance-turn, which is the only
+       place that number is written. */
+    --chance-turn: 0.2s;
+    transition: background-color var(--chance-turn) ease, color var(--chance-turn) ease, transform 0.12s, box-shadow 0.2s;
   }
   .btn-primary.chance-cta:hover, .btn-primary.chance-cta:focus-visible {
     background-color: var(--ink); color: var(--paper);
@@ -1869,7 +1875,10 @@
   /* The front die is IN FRONT, so it knocks a real hole in the one behind it instead of being
      drawn over the top of it. The hole is the board's own colour, which means it has to follow
      the hover inversion too, or the die fills with card on an inked button. */
-  .chance-mark .knock { fill: var(--chance-board, #f4eddf); stroke: none; }
+  .chance-mark .knock {
+    fill: var(--chance-board, #f4eddf); stroke: none;
+    transition: fill var(--chance-turn, 0.2s) ease;
+  }
   .btn-primary.chance-cta:hover .chance-mark .knock,
   .btn-primary.chance-cta:focus-visible .chance-mark .knock { fill: var(--ink); }
   /* Dark page: the board stays the same near-white card it is in daylight, so the stamp reads
