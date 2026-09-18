@@ -21,7 +21,8 @@ The game is still a work in progress and is by no means 'done', but it is quite 
 - The ability to make your own **custom modes**
 - A guest shelf of other artists' catalogues, played on their own and never mixed into Taylor's
 - The lineup, reached by the all-access pass at the front of that shelf: thirteen pages dealt from every catalogue at once, played under a hand of goal cards you are dealt and commit to before page one, and every bead on the bracelet is coloured by whoever you answered. Which of the twenty-four cards you have held is a board that fills in across many runs
-- A shelf of bonus mini-games, each one a little hand-bound zine with a torn-paper cover, including one where you hunt a swapped word in a real lyric and one where an album and a track number are all you get. Every one of them has an endless side as well, with no last page and one miss to end it
+- A shelf of bonus mini-games, each one a little hand-bound zine with a torn-paper cover, including one where you hunt a swapped word in a real lyric and one where an album and a track number are all you get. Most of them have an endless side as well, with no last page and one miss to end it
+- Track by Track, where you write a whole record's running order out from track one with no suggestions and no skipping, and your time is the score
 - Ruthless Game, where the song writes itself out a word a second from a section you pick, and your time is the score
 - A randomiser that deals one run from anywhere in the notebook, leaning toward what you haven't played yet and toward the charm you've pinned
 
