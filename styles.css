@@ -8872,9 +8872,10 @@
   .page-mark.mark-challenges { --mark-tint: #2b2722; }  /* graphite card */
   .page-mark.mark-bonus      { --mark-tint: #4a8c87; }  /* teal card */
   .page-mark.mark-album      { --mark-tint: #2b3a5e; }  /* the framed tile on the album stamp */
-  /* The rust of the Ruthless plate goes dusty at the standard 42% and starts reading as
-     Mastery's rose, so its swipe is laid on heavier to keep the ink's brick in it. */
-  .page-mark.mark-ruthless   { --mark-tint: #8c4a34; --mark-wash: 56%; }  /* the ruthless stamp's ink */
+  /* A knocked-back cousin of the rust in the Ruthless die's torn rays, dark enough to sit in
+     a line of page marks. That rust goes dusty at the standard 42% and starts reading as
+     Mastery's rose, so its swipe is laid on heavier to keep the brick in it. */
+  .page-mark.mark-ruthless   { --mark-tint: #8c4a34; --mark-wash: 56%; }
   .page-mark.mark-guests {
     --mark-tint-a: var(--guest-shelf-ink-a, var(--guest-shelf-ink, #35618f));
     --mark-tint-b: var(--guest-shelf-ink-b, var(--guest-shelf-ink, #35618f));
@@ -11995,18 +11996,15 @@
     font-family: var(--type); font-weight: 700; letter-spacing: 0.6px;
   }
   .stamp--focus { --stamp-rot: -4deg; --stamp-lean: -8deg; width: 46px; }
-  /* The Ruthless die: a pencil nib printed big and cropped by the vignette, over the line it
-     has just written and the one already arriving. It leans the other way from the album sheet
-     so three in a row read as stamps torn off a sheet rather than as a toolbar, and it overlaps
-     its neighbours slightly for the same reason. Its ink is fixed rather than franked per load
-     like the guest's, since the mode has no era of its own; the caption and the pencil's point
-     are the family graphite and are baked into the markup. */
+  /* The Ruthless die: the mode's own bonus-shelf cover, printed small — the sun going down
+     behind torn rays with the ridges closing in front. It leans the other way from the album
+     sheet so three in a row read as stamps torn off a sheet rather than as a toolbar, and it
+     overlaps its neighbours slightly for the same reason. Nothing here tints it: unlike the
+     guest die, which is franked in one of several inks per page load, this one is a picture in
+     paper colours and every colour is baked into the markup by scripts/stamps/make_stamps.py. */
   .stamp--ruthless {
     --stamp-rot: 2.5deg; --stamp-lean: 6deg; width: 44px; margin-left: -3px;
-    --rs-ink: #8c4a34;
   }
-  .stamp--ruthless .rs-ink { fill: var(--rs-ink); }
-  .stamp--ruthless .rs-line { stroke: var(--rs-ink); }
   .stamp--guest { --stamp-rot: 3.5deg; --stamp-lean: 7.5deg; width: 58px; margin-left: -4px; }
   /* The guest die is franked in one plate chosen per page load (STAMP_INKS in js/config.js,
      applied in app.js). Most are one ink; the Wicked plate splits rose and emerald along
