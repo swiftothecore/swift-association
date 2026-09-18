@@ -303,61 +303,71 @@ const COVERS = {
     return s;
   },
 
-  /* RUNNING ORDER, the back of the sleeve. A cream card on a burnt-ochre ground with the
-     tracklist ruled down the right of it, and one row struck in vermillion: the track being
-     asked about. The big handwritten numeral is what carries the cover at thumbnail size:
-     nothing else on the shelf is a NUMBER, so at 24px this one is told apart from six pictures
-     without resolving a single shape in it. The digit is drawn twice, a dark copy offset under
-     the ink one, because that is the same hard-edged shadow every sheet here throws and the
-     only kind of depth this collage is allowed.
-     The eight is not a promise that every page is track eight; it is the fan's shorthand for
-     the question, the way a contour line stands in for Only Here. */
+  /* RUNNING ORDER — the needle dropped on one band. A black disc low on a marigold field,
+     its groove bands drawn as a stack of torn discs with one of them picked out in vermillion,
+     and the tonearm swung in from the top right to land on exactly that band. The game asks
+     you to name a POSITION on a record, so the cover draws a position on a record: not the
+     song, not the words, just the place the needle is sitting.
+
+     Told apart from TRACK BY TRACK — the pair most at risk of collapsing, since both are about
+     a record's running order — by ground and by silhouette, and both gaps are deliberately
+     enormous. This is the shelf's only marigold and the only bright cover after Ruthless; that
+     one is near-black. This disc sits off-centre with a hard diagonal across it, so its
+     outline is a circle with a bar through it; that one is a centred spiral and nothing else.
+     Both survive 24px, where the arm is still a diagonal and the spiral is still a spiral long
+     after either has stopped resolving as a record.
+
+     The pair used to be a brown sleeve and a brown sheet, which is how they got here. */
   "running-order": (r) => {
-    let s = sheet([[-6, -6], [126, -6], [126, 166], [-6, 166]], "#7a4f22", r, { shadow: false, crisp: true });
-    // the sleeve back, pasted a little off square
-    s += sheet([[14, 32], [107, 26], [111, 142], [10, 148]], "#ece0c4", r, { amp: 1.2 });
-    // the tracklist: five ruled rows down the right, the third one struck in red because it is
-    // the one the page is asking about
-    [[48, 38], [64, 31], [80, 41], [96, 26], [112, 35]].forEach(([y, w], i) => {
-      s += sheet([[60, y], [60 + w, y - 1], [60 + w, y + 5], [60, y + 6]],
-        i === 2 ? "#c4452f" : "#b3a98a", r,
-        { amp: 0.7, step: 4, sx: 1, sy: 1.2, fibre: false });
-    });
-    // the numeral, ink over its own shadow
-    s += `<text x="36" y="106" text-anchor="middle" font-family="Caveat, cursive" font-weight="700"` +
-         ` font-size="68" fill="#9c6b21">8</text>`;
-    s += `<text x="34.4" y="104.2" text-anchor="middle" font-family="Caveat, cursive" font-weight="700"` +
-         ` font-size="68" fill="#2b2118">8</text>`;
+    let s = sheet([[-6, -6], [126, -6], [126, 166], [-6, 166]], "#d9a12c", r, { shadow: false, crisp: true });
+    const cx = 54, cy = 98;
+    /* The bands, back to front. A ring is two ragged edges that must not touch, so every one
+       of these is a filled disc with the next one laid on top — the same dodge Name That Song
+       uses for its radiating bands, and the reason neither cover needs a torn annulus. The
+       vermillion one is the track being asked about; the cream one under it is the label. */
+    [[47, "#1b1815"], [40, "#272119"], [33, "#141210"], [26, "#c4452f"], [19, "#1b1815"], [11, "#f0e4c8"]]
+      .forEach(([rad, f]) => { s += sheet(circlePts(cx, cy, rad, r, 34, 0.8), f, r, { amp: 0.8, step: 5 }); });
+    s += sheet(circlePts(cx, cy, 2.6, r, 12, 0.2), "#3a3128", r, { amp: 0.4, step: 2, shadow: false, fibre: false });
+    // the arm, its headshell, and the pivot it swings on
+    s += sheet([[106, 14], [116, 23], [75, 80], [65, 71]], "#e8dfc6", r, { amp: 0.55, step: 5, sx: 1.4, sy: 1.8 });
+    s += sheet([[65, 71], [75, 80], [70, 86], [60, 77]], "#2b2118", r, { amp: 0.6, step: 3.5, sx: 1.2, sy: 1.6 });
+    s += sheet(circlePts(112, 20, 10, r, 20, 0.6), "#4a4036", r, { amp: 0.8, step: 4 });
+    s += sheet(circlePts(112, 20, 4, r, 14, 0.3), "#e8dfc6", r, { amp: 0.5, step: 3, shadow: false });
     return s;
   },
 
-  /* TRACK BY TRACK — a numbered list, half of it written in and half of it still blank.
+  /* TRACK BY TRACK — one unbroken groove from the outer edge to the middle.
 
-     Told apart from RUNNING ORDER by what fills the field, which is the pair most at risk of
-     collapsing into each other since both are about a tracklist. That cover is a sleeve with a
-     huge numeral across it and five rows as scenery: its silhouette is A NUMBER. This one has no
-     numeral at all and nine rows running the whole height of the page: its silhouette is A LIST,
-     and a list is the one shape on this shelf nothing else makes. Told apart from REDACTED by
-     value and by rhythm — those blocks are uniform, dark and share a left edge, where these run
-     to nine different lengths in two tones, and the tonal split is the whole picture: the top
-     four are in ink and the bottom five are pale rules waiting. That is the game in one image,
-     and it survives 24px, where the two tones read as a list half done long after the
-     individual rows have stopped being rows. */
+     The game is a whole side played through in order against a clock, and a record's groove is
+     a single continuous line that does exactly that: it starts at the rim, it ends at the
+     centre, and there is no way to be at track nine without having been through track eight.
+     That is the rule this game enforces, drawn, with no numbers and nothing to read.
+
+     Drawn as a BAND rather than a stroke, because everything on this shelf is torn paper and a
+     stroked path is the one mark that would give that away: the outline is sampled twice along
+     the same spiral, once at the groove's outer radius and once at its inner, and the second
+     pass is walked backwards so the two close into a polygon `torn` can chew. The turns are
+     deliberately few and the groove deliberately fat — an accurate record has a hundred turns
+     and at 24px a hundred turns is a grey disc. See the note on Running Order for why these
+     two look nothing alike. */
   "track-by-track": (r) => {
-    // the sleeve, pasted full bleed
-    let s = sheet([[-6, -6], [126, -6], [126, 166], [-6, 166]], "#6a4630", r, { shadow: false, crisp: true });
-    // the sheet it is being written on, a little off square
-    s += sheet([[11, 14], [111, 10], [114, 150], [8, 154]], "#efe6d0", r, { amp: 1.2 });
-    // nine rows: a tick in the margin where the number goes, and the title line beside it
-    const WIDTHS = [57, 43, 66, 38, 52, 61, 41, 64, 47];
-    WIDTHS.forEach((w, i) => {
-      const y = 26 + i * 11.5;
-      const done = i < 4;
-      s += sheet([[19, y], [26, y - 1], [26, y + 4], [19, y + 5]], done ? "#6a4630" : "#c2b590", r,
-        { amp: 0.5, step: 3, sx: 0.8, sy: 1.1, fibre: false });
-      s += sheet([[32, y], [32 + w, y - 1], [32 + w, y + 5], [32, y + 6]], done ? "#2b2118" : "#b3a98a", r,
-        { amp: 0.7, step: 4, sx: 1, sy: 1.2, fibre: false });
-    });
+    let s = sheet([[-6, -6], [126, -6], [126, 166], [-6, 166]], "#2e2a33", r, { shadow: false, crisp: true });
+    const cx = 60, cy = 80;
+    s += sheet(circlePts(cx, cy, 57, r, 44, 1.4), "#17151a", r, { amp: 1.2, step: 6 });
+    const N = 300, turns = 3.4, r0 = 51, r1 = 11, hw = 1.8;
+    const outer = [], inner = [];
+    for (let i = 0; i <= N; i++) {
+      const t = i / N, a = t * turns * Math.PI * 2 - Math.PI / 2, rad = r0 + (r1 - r0) * t;
+      outer.push([cx + Math.cos(a) * (rad + hw), cy + Math.sin(a) * (rad + hw)]);
+      inner.push([cx + Math.cos(a) * (rad - hw), cy + Math.sin(a) * (rad - hw)]);
+    }
+    /* No fibre on the groove. It is a hairline against near-black, and the pale core along a
+       shape that thin stops being fluff and becomes a second, brighter groove beside the one
+       that is meant to be there. */
+    s += sheet(outer.concat(inner.reverse()), "#ecdfbe", r,
+      { amp: 0.3, step: 7, sx: 0.8, sy: 1.0, fibre: false });
+    // where it runs out: the last track, and the end of the clock
+    s += sheet(circlePts(cx, cy, 8, r, 18, 0.4), "#c4452f", r, { amp: 0.6, step: 3.5 });
     return s;
   },
 
@@ -451,9 +461,9 @@ const LABELS = {
   "redacted":       { x: 16, y: 120, w: 92, h: 22, rot: 1.4, fill: "#e9e0cb" },
   "only-here":      { x: 12, y: 14,  w: 96, h: 23, rot: -1.2 },
   "then-what":      { x: 14, y: 16,  w: 92, h: 23, rot: 1.6 },
-  "running-order":  { x: 13, y: 122, w: 94, h: 21, rot: 1.5 },
+  "running-order":  { x: 12, y: 128, w: 96, h: 22, rot: -1.5 },
   "word-cloud":     { x: 12, y: 126, w: 96, h: 21, rot: -1.3 },
-  "track-by-track": { x: 14, y: 129, w: 92, h: 21, rot: -1.1 },
+  "track-by-track": { x: 14, y: 130, w: 92, h: 21, rot: -1.1 },
   "ruthless-game":  { x: 12, y: 16,  w: 96, h: 23, rot: -1.8 },
 };
 const BLANK_LABEL = { x: 16, y: 28, w: 88, h: 20, rot: -1, fill: "#cdb489", ink: "rgba(52,42,30,0.68)" };
