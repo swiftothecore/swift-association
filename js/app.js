@@ -10850,6 +10850,19 @@ function openTrackPicker(from) {
 let trackFontsSettled = false;
 function renderTrackPicker() {
   const index = trackIndexNow();
+  /* The head of the page is the game's own cover, the same one that sits beside the title on the
+     play screen and the same markup, so it takes its bow here too. A page mark was the first
+     answer and it was wrong for one reason: the shelf hands you a little torn-paper zine, the run
+     puts that zine next to the title, and the board in between them is the one screen where the
+     game would have been a different object. */
+  const mark = $("tracksMark");
+  const g = trackGame();
+  if (mark && g) {
+    mark.innerHTML = `<button type="button" class="bonus-cover-play"` +
+      ` aria-label="Make the ${escapeHtml(g.name)} cover dance" title="a little encore">` +
+      `<span class="bonus-cover-stack" aria-hidden="true">${bonusCover(g, "bonus-cover-sm")}</span>` +
+      `<span class="bonus-cover-stars" aria-hidden="true">✧</span></button>`;
+  }
   const albums = trackAlbums(index);
   const board = loadTracks();
   // One lettering size for the whole board, set by the longest record on it. See commonNameSize.
