@@ -128,9 +128,11 @@ export const DECK = [
   // The one card that CHANGES the run rather than judging it. The words were always a
   // statement of fact rather than a promise, and read as a promise the card is unplayable:
   // the list renders on the keystrokes that type a title, so it would die on page one of
-  // every mode that has one and be free in the two that do not. Shutting the list is what
+  // every mode that has one and be free in the ones that do not. Shutting the list is what
   // it says, and the price is real, because thirteen titles typed in full makes every other
-  // card in the hand harder to hold.
+  // card in the hand harder to hold. The lever is also what keeps this card indifferent to
+  // which difficulty the lineup was dealt on, now that Hard's list is a LATE one rather than
+  // no list: `dropdown: false` overwrites the string the same way it overwrites a true.
   { id:"cold-open", suit:"clubs", rank:"Q", name:"Cold Open",
     rule:"The dropdown stays shut for the whole run.", lever:{ dropdown:false } },
   { id:"sing-it-back", suit:"clubs", rank:"J", name:"Sing It Back",

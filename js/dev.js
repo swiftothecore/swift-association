@@ -388,10 +388,30 @@ export function initDev(api) {
   });
   giveBtn.classList.toggle("on", api.giveaways.state());
   readGive();
+  // The suggestions lever, which is three-valued now that Hard's list is late. The state line
+  // answers "why is nothing listed" — not enough typed, or nothing starting that way — and the
+  // box under it ranks a string through the live page without spending the clock on it.
+  const sugOut = mk("span", { class: "dv-note" }, "—");
+  const readSug = () => {
+    const s = api.suggest.state();
+    sugOut.textContent = !s.lever ? "no suggestions on this page"
+      : !s.late ? `as you type · ${s.listed} listed`
+      : `late · ${s.typed}/${s.min} chars typed · first word only · ${s.listed} listed`;
+  };
+  const sugInput = mk("input", { class: "dv-text", placeholder: "part of a title…", style: "width:150px" });
+  const sugListOut = mk("span", { class: "dv-note" }, "—");
+  const runSug = () => {
+    const hits = api.suggest.try(sugInput.value);
+    sugListOut.textContent = hits.length ? hits.join(", ") : "nothing would list";
+  };
+  sugInput.addEventListener("keydown", (e) => { if (e.key === "Enter") runSug(); });
+  readSug();
   body.append(section("typed answers",
     row(typoBtn, `min title ${api.typos.minLen()} chars`),
     row(tryInput, btn("resolve", runTry), tryOut),
-    row(giveBtn, btn("read", readGive), giveOut)));
+    row(giveBtn, btn("read", readGive), giveOut),
+    row(btn("read suggestions", readSug), sugOut),
+    row(sugInput, btn("rank", runSug), sugListOut)));
 
   // ---- Simulate --------------------------------------------------------------
   const simN = num(13);

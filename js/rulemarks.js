@@ -16,20 +16,27 @@ import { escapeHtml } from "./util.js";
 
 // One shared grammar, learned once: a struck mark means "not available to you on this page".
 // Nearly every mark is two states and nothing more. A mark with a third thing to say does not
-// get a second overlay to be taught — it declares `onlySymbol` and is REDRAWN, so the stronger
-// state is the same mark escalated rather than a new piece of punctuation over an old one.
+// get a second overlay to be taught — it declares that state in `more` and is REDRAWN from its
+// own `<state>Symbol`, so the stronger state is the same mark escalated rather than a new piece
+// of punctuation over an old one.
 // The quaver takes its own stroke rather than the shared one, for a drawing reason and not a meaning one — a quaver's axis runs bottom-left
 // to top-right, the same direction the strike travels, so the shared stroke lays alongside
 // the note instead of across it and reads as a stray pen mark. Same angle, same weight,
 // nudged onto the note's actual mass. The drawings are in index.html.
 export const RULE_MARKS = {
+  // Three states, because Hard's list is neither offered nor withheld: it waits. Drawn as the
+  // same list in broken strokes — a list that has not arrived yet, against one that has (solid)
+  // and one that never will (struck). The escalation reads without being taught because it is
+  // the same four strokes either way, and dashes are already what a page means by "pending".
   suggest: {
-    symbol: "rule-suggest", strike: "rule-strike",
+    symbol: "rule-suggest", strike: "rule-strike", lateSymbol: "rule-suggest-late",
+    more: ["late"],
     on: "suggestions are offered as you type",
     // "in full" rather than "the full title": on a lyric page this mark is struck beside a
     // CIRCLED quaver, and a line telling you to type the full title there contradicts the
     // mark next to it.
     off: "no suggestions — type it out in full",
+    late: "suggestions once you're a few letters into a title, and only from its first word",
   },
   hint: {
     symbol: "rule-hint", strike: "rule-strike",
@@ -53,6 +60,7 @@ export const RULE_MARKS = {
   // One note, then two: the escalation is in the music rather than in a mark laid over it.
   sung: {
     symbol: "rule-sung", strike: "rule-strike-note", onlySymbol: "rule-sung-only",
+    more: ["only"],
     on: "sing the line the word is in, for a verse bonus",
     off: "the full title, nothing else",
     only: "sing the line the word is in — a title won't do",
@@ -87,8 +95,11 @@ export function ruleTermsFrom({ dropdown, hint, noTitle, seconds, lyricOnly, tit
   const lyric = !!lyricOnly;
   return {
     // A lyric page never offers suggestions, whatever the mode it borrowed says — matching
-    // effectiveDropdown, which short-circuits on exactly this.
-    suggest: typed ? (lyric ? false : !!dropdown) : null,
+    // effectiveDropdown, which short-circuits on exactly this. The lever is three-valued there
+    // (false / true / "late"), so the string is carried through rather than coerced: `!!dropdown`
+    // would quietly tell a Hard page it hands over titles as you type, which is the one claim
+    // the whole late list exists to avoid making.
+    suggest: typed ? (lyric ? false : (dropdown === "late" ? "late" : !!dropdown)) : null,
     // Absent rather than struck on a lyric page, for the title mark's reason: the ladder's
     // top rung prints the lyric line, which on that page IS the answer, so hintsAllowed
     // retires the whole ladder there. A page with no hint to withhold has no opinion to
@@ -115,22 +126,23 @@ export function ruleShapeFor(rule) {
   };
 }
 
-// A term's value as the key its copy and its drawing are filed under. `false` strikes,
-// `"only"` redraws, anything else truthy is the plain mark. Kept in one function because a
-// caller that reads the raw value gets `"only"` wrong in the most dangerous possible way: it
-// is a truthy string, so a bare `terms.sung ? on : off` silently prints the bonus line on a
-// page where the bonus is the only way through.
-function markState(v) { return v === false ? "off" : v === "only" ? "only" : "on"; }
+// A term's value as the key its copy and its drawing are filed under. `false` strikes, a
+// STRING names one of the mark's `more` states and redraws, anything else truthy is the plain
+// mark. Kept in one function because a caller that reads the raw value gets those strings wrong
+// in the most dangerous possible way: they are truthy, so a bare `terms.sung ? on : off`
+// silently prints the bonus line on a page where the bonus is the only way through, and a bare
+// `terms.suggest ? on : off` promises a Hard page's list from the first keystroke.
+function markState(v) { return v === false ? "off" : typeof v === "string" ? v : "on"; }
 
 // One mark. The state picks the drawing and what is laid over it: the plain symbol, the plain
-// symbol struck, or — for a mark that carries one — a second symbol drawn instead. A mark
-// asked for a state it has no drawing for falls back to the plain mark rather than inventing
-// a meaning.
+// symbol struck, or — for a mark that carries one — a second symbol drawn instead, filed under
+// `<state>Symbol`. A mark asked for a state it has no drawing for falls back to the plain mark
+// rather than inventing a meaning.
 export function ruleMarkMarkup(key, state) {
   const m = RULE_MARKS[key];
   if (!m) return "";
   const s = markState(state);
-  const symbol = (s === "only" && m.onlySymbol) || m.symbol;
+  const symbol = (s !== "on" && s !== "off" && m[s + "Symbol"]) || m.symbol;
   return `<svg class="rule-mark" viewBox="0 0 24 24" aria-hidden="true" focusable="false">` +
     `<use href="#${symbol}"/>` +
     (s === "off" ? `<use href="#${m.strike}"/>` : "") +
@@ -184,13 +196,13 @@ export function ruleTermsMarkup(terms, { labelled = true, tips = true, cls = "" 
 export function ruleLegendMarkup() {
   return `<div class="rule-legend">` + RULE_ORDER.map((key) => {
     const m = RULE_MARKS[key];
-    // A mark with a second drawing teaches all three at once. Splitting the stronger state
-    // onto a row of its own would file it as a sixth mark to learn, when the whole point is
-    // that it is the same mark saying something more.
-    const states = ["on", "off", ...(m.onlySymbol && m.only ? ["only"] : [])];
+    // A mark with a second drawing teaches all of its states at once. Splitting the stronger
+    // one onto a row of its own would file it as a sixth mark to learn, when the whole point
+    // is that it is the same mark saying something more.
+    const states = ["on", "off", ...(m.more || []).filter((st) => m[st + "Symbol"] && m[st])];
     return `<div class="rule-legend-row">` +
       `<span class="rule-legend-pair" aria-hidden="true">` +
-        states.map((st) => ruleMarkMarkup(key, st === "on" ? true : st === "off" ? false : "only")).join("") +
+        states.map((st) => ruleMarkMarkup(key, st === "on" ? true : st === "off" ? false : st)).join("") +
       `</span>` +
       `<span class="rule-legend-text">` +
         states.map((st) => `<span class="rule-legend-${st}">${escapeHtml(m[st])}</span>`).join("") +

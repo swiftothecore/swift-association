@@ -1893,6 +1893,13 @@ function effectivePool() {
 // Whether suggestions (the title dropdown) are live right now. Off in lyric-only modes,
 // off on a Switch-Up lyric page (a dropdown would hand over the title), and off once
 // Devil's Path's "In The Dark" curse has been taken.
+//
+// THREE-VALUED, not two: `false` (no list at all), `true` (the list opens on the first
+// keystroke) and the string `"late"` (Hard — see DROPDOWN_LATE_MIN). "late" is truthy on
+// purpose, so every caller asking the yes/no question "does this page offer suggestions"
+// keeps reading correctly without knowing the third state exists. The callers that DO care
+// go through dropdownLate(): the list itself, the placeholder, the coachmark, the marginalia
+// note and the suggestions rule mark.
 function effectiveDropdown() {
   if (lyricModeNow()) return false;
   if (gameType === "challenge" && currentChallenge && currentChallenge.rule === "devil" && devilDropOff) return false;
@@ -1934,14 +1941,21 @@ function titleSongsForWord(word, strict) {
   const rx = wordRegex(word, strict);
   return allSongs.filter((s) => rx.test(s.title));
 }
-// Marginalia warning: in dropdown-less noTitle modes (Hard/Ultra), list the songs
-// whose title holds the word so the player knows e.g. "All Too Well" won't be
-// accepted. Modes WITH a dropdown (Normal) skip this — there the off-limits titles
-// are greyed out in the dropdown and a reject-flash explains a blocked pick.
+// Marginalia warning: in noTitle modes with no list to lean on (Hard/Ultra), name the songs
+// whose title holds the word so the player knows e.g. "All Too Well" won't be accepted. Modes
+// with an AS-YOU-TYPE dropdown (Normal) skip this — there the off-limits titles are greyed out
+// in the list and a reject-flash explains a blocked pick.
+//
+// Hard keeps the note even though it now has a late list, and the two are not redundant. The
+// note is on the page before a single key is pressed, which is when the rule can still change
+// which song you reach for; the greyed row only appears if you happen to type five characters
+// toward a title that was never going to be accepted, by which point the clock has already
+// taken the cost. A page whose suggestions arrive late is a page that spends most of its
+// seconds with nothing listed, so the list cannot be the thing that teaches this.
 function renderExcludedNote() {
   const el = $("excludedNote");
   if (!el) return;
-  if (!effectiveNoTitle() || effectiveDropdown()) { el.style.display = "none"; el.innerHTML = ""; return; }
+  if (!effectiveNoTitle() || (effectiveDropdown() && !dropdownLate())) { el.style.display = "none"; el.innerHTML = ""; return; }
   const titles = titleSongsForWord(currentWord, effectiveStrict()).map((s) => s.title);
   if (!titles.length) { el.style.display = "none"; el.innerHTML = ""; return; }
   const SHOWN = 3;
@@ -15535,7 +15549,17 @@ function typeHintSegments(input) {
   }
   const segs = [];
   const suggesting = effectiveDropdown();
-  if (suggesting) {
+  // A late list has to be described as one, or the placeholder is a promise the page keeps
+  // breaking: a player told "a title… or sing me the line" types two letters, sees nothing,
+  // and reads the silence as the mode having no suggestions at all. Both halves of what makes
+  // it late get said — you write first, and you write it from the FIRST word — because the
+  // second half is the one that costs a page when nobody mentions it.
+  if (suggesting && dropdownLate()) {
+    input.placeholder = currentMode.titleOnly ? "start the title…" : "start the title… or sing me the line";
+    segs.push({ id: "late-match",
+      full: `Suggestions come once you're a few letters in, and only from a title's <b>first</b> word.`,
+      short: "suggestions once you're a few letters in" });
+  } else if (suggesting) {
     input.placeholder = currentMode.titleOnly ? "type the title…" : "a title… or sing me the line";
     segs.push({ id: "top-match",
       full: `Pick a suggestion, or <span class="nowrap">press ${keycap("Enter")}</span> for the top match.`,
@@ -21436,13 +21460,37 @@ function titleMatchScore(title, query) {
   return null;
 }
 
+/* How much of a title a LATE dropdown (Hard) wants written before it will finish it. Five
+   normalized characters is the bar because it is roughly where a title stops being guessable
+   from its opening: "the s" already separates The Story Of Us from The Smallest Man Who Ever
+   Lived, while nothing shorter separates anything. It is also why the short titles never get
+   a completion — "Mine", "Ours", "Red" — and that is the lever working rather than failing,
+   because a four-letter title was never the one the clock beat you on. */
+const DROPDOWN_LATE_MIN = 5;
+
+// Is the live dropdown the LATE kind — shut until DROPDOWN_LATE_MIN characters, and only ever
+// completing a title from its first word? Read off the string form of the `dropdown` lever, so
+// a challenge or a lineup card that overwrites it with a plain true/false gets the plain
+// dropdown, which is what overwriting a lever ought to mean.
+function dropdownLate() { return effectiveDropdown() === "late"; }
+
 function rankMatches(query) {
   const q = normalizeTitle(query);
   if (!q) return [];
+  // The late gate lives HERE rather than in updateDropdown because submitAnswer re-ranks
+  // through this same function to resolve Enter. Gated in only one of the two, a Hard page
+  // would show no list and still hand Enter a match off the list it was not showing.
+  const late = dropdownLate();
+  if (late && q.length < DROPDOWN_LATE_MIN) return [];
   const scored = [];
   for (const song of allSongs) {
     const match = titleMatchScore(song._norm, q);
     if (!match) continue;
+    // Late completions start at the beginning of a title and nowhere else: ranks 0-3 are the
+    // exact and prefix hits, 4-5 are the ones found mid-title. Finishing a title you have
+    // begun is help with your typing; finding one from a word out of its middle is help with
+    // your recall, and recall is the thing Hard is asking for.
+    if (late && match.idx !== 0) continue;
     if (!roundAcceptsSong(song)) continue;   // hide rule-breaking suggestions
     if (isGiveawayPick(song)) continue;      // ...and answers the prompt word alone would hand over
     scored.push({ song, ...match });
@@ -27347,6 +27395,7 @@ const GUIDE_BEATS = {
     // contradict each other; where a dropdown is up it IS the action, title-only or not.
     body: () => {
       if (lyricModeNow()) return 'Type a <b>lyric line</b> with the word in it. Get close enough and it counts.';
+      if (dropdownLate()) return 'Type a song\'s <b>title</b> from its first word. A few letters in, <b>suggestions</b> appear to finish it. Every song that uses the word counts.';
       if (effectiveDropdown()) return 'Start typing a song\'s <b>title</b> and pick it from the <b>suggestions</b>. Every song that uses the word counts.';
       if (currentMode.titleOnly) return 'Type a song\'s <b>full title</b>. Every song that uses the word counts.';
       return 'Type a song\'s <b>full title</b>, or a <b>lyric line</b> with the word in it.';
@@ -28225,6 +28274,24 @@ function buildDevApi() {
       state: () => giveawaysHidden,
       set: (on) => { giveawaysHidden = on === undefined ? !giveawaysHidden : !!on; updateDropdown(); return giveawaysHidden; },
       on: () => (currentWord ? allSongs.filter((s) => titleHoldsWord(s)).map((s) => s.title) : []),
+    },
+    /* The suggestions lever read back, because a LATE list (Hard) fails silently in both
+       directions and neither failure looks like anything from inside the game: gated too hard
+       it simply never appears, and gated too softly it is Normal's list wearing Hard's blurb.
+       `try` ranks a string through the live page's rules WITHOUT typing it into the box, which
+       is the only way to ask "what would four letters get me here" without spending the clock
+       — and the interesting reads are the ones where a mid-title word returns nothing, since
+       that is the prefix rule doing the job the threshold gets the credit for. */
+    suggest: {
+      state: () => ({
+        lever: effectiveDropdown(), late: dropdownLate(), min: DROPDOWN_LATE_MIN,
+        typed: normalizeTitle($("songInput").value || "").length,
+        listed: dropdownItems.length,
+      }),
+      // Empty on a page with no list at all, rather than what ranking WOULD have produced:
+      // rankMatches is only ever called behind the effectiveDropdown gate, so reporting its
+      // raw output on Ultra would show six titles the page has no intention of offering.
+      try: (text) => (effectiveDropdown() ? rankMatches(text || "").map((s) => s.title) : []),
     },
     typos: {
       state: () => typosForgiven,

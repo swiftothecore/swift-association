@@ -264,7 +264,19 @@ export const MODES = {
   // page will answer for you, which is also what stops Relaxed reading as Easy with the clock off.
   easy:   { id: "easy",   label: "Easy",   seconds: 15, dropdown: true,  pool: "easy",  strict: false, noTitle: false, examples: 3, hint: false, blurb: "15s · suggestions · common words · may be in the title" },
   medium: { id: "medium", label: "Normal", seconds: 10, dropdown: true,  pool: "all",   strict: false, noTitle: true,  examples: 3, hint: false, blurb: "10s · suggestions · all words · not in the title" },
-  hard:   { id: "hard",   label: "Hard",   seconds: 7,  dropdown: false, pool: "hard",  strict: false, noTitle: true,  examples: 3, hint: false, blurb: "7s · type the full title · rarer words · not in the title" },
+  // Hard's suggestions are LATE (`dropdown: "late"`, see DROPDOWN_LATE_MIN), and that is a
+  // deliberate softening of the Normal→Hard step. Three levers move at once on that step —
+  // the clock drops 10s→7s, the pool goes rare, and the list used to vanish outright — and the
+  // list was the cruellest of the three for the wrong reason: it tests typing speed, not the
+  // association the game is about, and it punishes hardest exactly when you are most right,
+  // because the long titles are the distinctive ones. Seven seconds is not enough to spell
+  // "The Smallest Man Who Ever Lived" from a standing start however well you know it.
+  // A late list is autocomplete rather than a lookup: it stays shut until you have written
+  // enough to prove you already have the answer, and it only completes a title from its FIRST
+  // word, so it can finish your sentence but never start it. That keeps three real rungs —
+  // Normal completes from the first letter and matches mid-title, Hard waits and only ever
+  // completes a beginning, Ultra never helps at all.
+  hard:   { id: "hard",   label: "Hard",   seconds: 7,  dropdown: "late", pool: "hard",  strict: false, noTitle: true,  examples: 3, hint: false, blurb: "7s · suggestions once you start the title · rarer words · not in the title" },
   // `moreExamples: false` is Ultra's alone: every other mode lets a missed page open out into
   // the rest of the field (see MORE_EXAMPLES_BATCH). Ultra shows its one card and closes. The
   // reveal is post-mortem either way, so this isn't about difficulty — it's that Ultra's whole

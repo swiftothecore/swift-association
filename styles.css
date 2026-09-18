@@ -6763,16 +6763,17 @@
   .rule-legend-pair { flex: none; display: inline-flex; align-items: center; gap: 7px; padding-top: 1px; }
   .rule-legend-pair .rule-mark { width: 17px; height: 17px; }
   .rule-legend-text { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
-  .rule-legend-on, .rule-legend-off, .rule-legend-only {
+  .rule-legend-on, .rule-legend-off, .rule-legend-only, .rule-legend-late {
     font-family: var(--type); font-size: calc(10.5px + var(--text-size-adjust)); line-height: 1.45;
   }
   .rule-legend-on { color: var(--ink); }
-  .rule-legend-off, .rule-legend-only { color: var(--ink-soft); }
+  .rule-legend-off, .rule-legend-only, .rule-legend-late { color: var(--ink-soft); }
   /* The rows that are not the plain mark name themselves, because a legend row showing three
      drawings of the same mark is otherwise three lines of text with nothing tying each to the
      one above it. */
   .rule-legend-off::before { content: "struck: "; opacity: 0.62; }
   .rule-legend-only::before { content: "doubled: "; opacity: 0.62; }
+  .rule-legend-late::before { content: "dashed: "; opacity: 0.62; }
 
   /* ---- On the cards that choose a mode ----------------------------------------
      The marks ride WITH the blurb rather than replacing it. Prose teaches, marks remind, and
