@@ -2280,7 +2280,9 @@ export const STUDIO_ALBUMS = [
    remixes and the strays that got filed under an era rather than pressed onto it.
 
    EACH NUMBER IS ONE NAMED PRESSING, and every one of them is the edition that is on streaming
-   today, because that is the running order a player actually holds. The debut stops at its
+   today, because that is the running order a player actually holds. Where that pressing is not
+   what the bare album name means, TRACK_PRESSINGS below carries the name to print, and a page
+   asked without it is a page asked about a record that does not exist. The debut stops at its
    Deluxe (14), Fearless and Speak Now and Red and 1989 at their Taylor's Versions (26, 22, 30,
    21), folklore and evermore at their deluxes (17, 17), Midnights at 3am (20), The Tortured
    Poets Department at The Anthology (31), and reputation, Lover and The Life of a Showgirl at
@@ -2298,6 +2300,36 @@ export const ALBUM_TRACKS = {
   "evermore": 17, "Midnights": 20,
   "The Tortured Poets Department": 31, "The Life of a Showgirl": 12,
 };
+
+/* WHAT TO CALL THE PRESSING each of those numbers is counted against, which is the other half
+   of the same fact and has to be printed wherever a number is asked for. "track 20 from 1989"
+   is not a question anybody can answer: the record called 1989 has thirteen songs on it, and
+   the twentieth exists only because the count runs up the Taylor's Version. Naming the pressing
+   turns an unanswerable line into a fair one.
+
+   THE NAME IS PRINTED ON EVERY PAGE OF AN ALBUM LISTED HERE, not only on the numbers that need
+   it. A qualifier that appeared at track 20 and vanished at track 3 would be telling the player
+   how far up the record they are before they had thought about it, and a question should not
+   leak its own answer's neighbourhood. An album not listed here is asked about by its own name,
+   because the pressing the count runs to is the one that name means on streaming today. */
+export const TRACK_PRESSINGS = {
+  "Taylor Swift": "Taylor Swift (Deluxe Edition)",
+  "Fearless": "Fearless (Taylor's Version)",
+  "Speak Now": "Speak Now (Taylor's Version)",
+  "Red": "Red (Taylor's Version)",
+  "1989": "1989 (Taylor's Version)",
+  "folklore": "folklore (deluxe version)",
+  "evermore": "evermore (deluxe version)",
+  "Midnights": "Midnights (3am Edition)",
+  "The Tortured Poets Department": "The Tortured Poets Department: The Anthology",
+};
+
+/* The name to print for an album whose track numbers are being asked about. Everything that
+   words a Running Order page goes through here, so the question, the reveal under the rule and
+   the dev panel's read of the live page can never disagree about which record is being counted. */
+export function pressingName(album) {
+  return TRACK_PRESSINGS[album] || album;
+}
 
 /* Tracks that HAVE a number but must never be the question, because they are a second take of
    a song sitting at another number on the same record. Ask for Red track 20 and the honest

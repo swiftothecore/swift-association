@@ -1291,9 +1291,12 @@ export function buildRuthlessPuzzle(songs, rng = Math.random, tries = 120, avoid
    honest answers. Both tables carry the full reasoning; the shape to hold on to here is that a
    barred title keeps its position, so nothing after it shifts.
 
-   That cap is why high numbers are fair game. The Anthology runs to 31 and the numbering does
-   not wobble on the way, so track 31 of The Tortured Poets Department is exactly as answerable
-   as track 3 — a longer count, not a murkier one. */
+   That cap is why high numbers are fair game, PROVIDED THE PAGE SAYS WHICH PRESSING IT MEANS.
+   The Anthology runs to 31 and the numbering does not wobble on the way, so its track 31 is
+   exactly as answerable as its track 3 — a longer count, not a murkier one. But the count only
+   holds against the edition ALBUM_TRACKS measured, which is why every surface that words a page
+   names it through TRACK_PRESSINGS: the twentieth song of 1989 is a real thing to be asked for
+   and the record called 1989 has thirteen songs on it. */
 export function buildTrackIndex(songs) {
   const byAlbum = new Map();
   for (const song of songs) {

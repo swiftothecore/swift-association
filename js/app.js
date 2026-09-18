@@ -20,7 +20,7 @@ import {
   ERAS, TENDER_ERAS, FINALE_ERAS, ALBUM_ERA, TS_MILESTONES, TS_LORE_DAYS, SALT_SHAKER_D, SALT_CAP_D,
   ALBUM_COLORS, CB_ALBUM_COLORS, IMPOSTOR_BEAD, COMMON_THREAD_BEADS,
   MAST_INKS, MAST_INK_BY_SLUG, MAST_SHUFFLE, MAST_SHUFFLE_NAME,
-  STUDIO_ALBUMS, TITLE_ALIASES, STAMP_INKS,
+  STUDIO_ALBUMS, TITLE_ALIASES, STAMP_INKS, pressingName,
   VAULT_TRACKS, AOTY_ALBUMS, VAULT_ALBUMS,
   ACHIEVEMENTS, ACH_ICONS, ACH_BY_ID, ACH_GROUPS, ACH_GROUP_COLORS, ACH_GROUP_OF,
   ACH_FAMILIES, ACH_FAMILY_COLORS,
@@ -7716,7 +7716,7 @@ function renderBonusRound() {
     body.innerHTML =
       `<p class="bg-ask">name this track</p>` +
       `<div class="bg-sheet bg-sheet--ask">` +
-        `<h3 class="bg-sheet-title" id="bonusSlot">track ${p.track} from ${escapeHtml(p.album)}</h3>` +
+        `<h3 class="bg-sheet-title" id="bonusSlot">track ${p.track} from ${escapeHtml(pressingName(p.album))}</h3>` +
         `<div class="bg-sheet-rule" aria-hidden="true"></div>` +
         `<div class="bg-sheet-meta" id="bonusTrackMeta"></div>` +
       `</div>` +
@@ -8766,7 +8766,7 @@ function settleBonusRound(correct, detail, isTimeout = false) {
       if (!correct) slot.classList.add("is-answer");
     }
     const meta = $("bonusTrackMeta");
-    if (meta) meta.textContent = `${bonusPuzzle.album} · track ${bonusPuzzle.track}`;
+    if (meta) meta.textContent = `${pressingName(bonusPuzzle.album)} · track ${bonusPuzzle.track}`;
 
   } else if (bonusGame.id === "sing-it-back") {
     // Whatever was in the gap — a wrong word, a half-typed one, nothing at all — the real
@@ -28624,7 +28624,8 @@ function buildDevApi() {
           } else if (id === "running-order") {
             const p = buildTrackPuzzle(songs, bonusIndexes().trackIndex, Math.random, 120, new Set(recent));
             if (p) recent.push(p.song.title);
-            out.push(p ? { ask: `${p.album} ${p.track}`, answer: p.song.title, of: p.total } : null);
+            out.push(p ? { ask: `track ${p.track} from ${pressingName(p.album)}`,
+                           answer: p.song.title, of: p.total } : null);
           } else if (id === "word-cloud") {
             // Dealt as a run deals it, wide pages then spare ones, so a sample shows both.
             const p = buildCloudPuzzle(songs, bonusIndexes().wordIndex, Math.random, 120, new Set(recent),
@@ -28688,7 +28689,7 @@ function buildDevApi() {
          TRACK_ALT_TAKES still agree with songs.json. */
       track: () => {
         if (!bonusGame || bonusGame.id !== "running-order" || !bonusPuzzle) return "no Running Order page live";
-        return { ask: `track ${bonusPuzzle.track} from ${bonusPuzzle.album}`,
+        return { ask: `track ${bonusPuzzle.track} from ${pressingName(bonusPuzzle.album)}`,
                  answer: bonusPuzzle.song.title, of: bonusPuzzle.total,
                  spent: +((performance.now() - bonusPageStart) / 1000).toFixed(2),
                  byHeartUnder: BONUS_TRACK_SECONDS / 2 };
