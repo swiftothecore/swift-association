@@ -90,6 +90,15 @@ function roundRectPts(x, y, w, h, r, per = 4) {
    of a picture over a glyph, and it is why the shelf's covers work at a thumbnail. Do not
    normalise them into a family later.
 
+   WHERE A MOTIF COUNTS, IT COUNTS THE ALBUM. Lover has seven tiles, 1989 five rays, the
+   Anthology eleven columns, because those are the seventh, fifth and eleventh records. It is a
+   wink for whoever looks twice, NOT a system, and it cannot be made into one: a rule that held
+   everywhere would want one ring on the debut, eight frames on folklore and twelve waves on
+   Showgirl, none of which is a drawing. So the rule is only this — a motif whose objects fall
+   naturally on the album's number takes it, and the rest are composed for the picture. Track
+   counts were the other candidate and they are unusable: fourteen to thirty-one objects is not a
+   collage, it is a chart.
+
    EVERY MOTIF LEAVES THE BOTTOM-LEFT AND TOP-RIGHT ALONE. The name label sits at the foot and
    the time label at the head, so a composition that puts its subject dead centre gets cut in
    half by its own title. Compose across the field or into the corners that are left. */
@@ -122,10 +131,11 @@ const MOTIFS = {
     return s;
   },
 
-  // Rays out of the bottom-left corner.
+  // Rays out of the bottom-left corner. FIVE of them, 1989 being the fifth record (see the note
+  // under MOTIFS); the sixth was doing nothing the other five were not.
   rays: (r, C) => {
     let s = "";
-    for (let k = 0; k < 6; k++) {
+    for (let k = 0; k < 5; k++) {
       const a1 = -0.06 - k * 0.2, a2 = a1 - 0.11;
       s += sheet([[-4, H], [Math.cos(a1) * 230 - 4, H + Math.sin(a1) * 230],
                   [Math.cos(a2) * 230 - 4, H + Math.sin(a2) * 230]],
@@ -139,13 +149,17 @@ const MOTIFS = {
     sheet([[-8, 58], [W + 8, 54], [W + 8, H + 8], [-8, H + 8]], C.pale, r, { amp: 1.3, shadow: false }) +
     sheet([[-8, 78], [W + 8, 74], [W + 8, H + 8], [-8, H + 8]], C.mid, r, { amp: 1.2, shadow: false }),
 
-  // Torn tiles, a paste-up of squares.
+  // Torn tiles, a paste-up of squares. SEVEN of them, with the bottom-right corner of the grid
+  // left empty — Lover is the seventh record (see the note under MOTIFS).
   tiles: (r, C) => {
     let s = "";
     for (let row = 0; row < 2; row++) {
       for (let col = 0; col < 4; col++) {
-        const x = 12 + col * 36, y = 10 + row * 40;
-        s += sheet([[x, y], [x + 28, y - 1], [x + 29, y + 30], [x + 1, y + 31]],
+        if (row === 1 && col === 3) continue;
+        // Both rows sit ABOVE the name label. A count nobody can finish is not a count: the
+        // second row used to run under the label and left six tiles showing out of seven.
+        const x = 12 + col * 36, y = 6 + row * 28;
+        s += sheet([[x, y], [x + 28, y - 1], [x + 29, y + 24], [x + 1, y + 25]],
           (row + col) % 2 ? C.pale : C.palest, r, { amp: 1.0 });
       }
     }
@@ -173,12 +187,17 @@ const MOTIFS = {
     return s;
   },
 
-  // Columns standing up off the bottom edge.
+  // Columns standing up off the bottom edge. ELEVEN of them — the Anthology is the eleventh
+  // record (see the note under MOTIFS). They are narrower and closer than the ten were, which is
+  // if anything truer to the drawing: a skyline is a crowd.
   skyline: (r, C) => {
     let s = "";
-    [52, 74, 38, 88, 60, 80, 44, 68, 34, 58].forEach((hh, k) => {
-      const x = 4 + k * 16;
-      s += sheet([[x, H - hh], [x + 13, H - hh - 2], [x + 13, H + 4], [x, H + 4]],
+    // Nothing shorter than fifty-two: the label covers the foot of this card almost end to end,
+    // and the three stubby columns the skyline used to have were hidden behind it, so eleven
+    // towers showed up as eight.
+    [58, 76, 54, 88, 64, 80, 56, 72, 52, 62, 68].forEach((hh, k) => {
+      const x = 3 + k * 14;
+      s += sheet([[x, H - hh], [x + 12, H - hh - 2], [x + 12, H + 4], [x, H + 4]],
         k % 2 ? C.palest : C.pale, r, { amp: 0.9 });
     });
     return s;
