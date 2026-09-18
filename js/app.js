@@ -86,6 +86,8 @@ import { faviconBlobUrl, faviconSVG } from "./favicon.js";
 import { wordRegex as wordRegexCore, extractLineWithWord as extractLineWithWordCore, highlightWord as highlightWordCore, variantBody, exactWordBody, boundedWordBody, falseFriendRegex, addedLettersRegex } from "./match.js";
 import { buildLyricReveal } from "./lyric-reveal.mjs";
 import { zineCover, hasCover } from "./zine.js";
+// Track by Track's twelve album sleeves (pure; see js/sleeves.js).
+import { albumSleeve, hasMotif, motifOf, sleeveName } from "./sleeves.js";
 import { cloudMarkup, cloudFontReady } from "./cloud.js";
 import { buildLineIndex, buildSlipContext, buildSlipPuzzle, buildNamePuzzle,
          buildBlankPuzzle, buildRedactedPuzzle,
@@ -10832,10 +10834,13 @@ function trackShelfLine(short = false) {
    single run, so it is a board that actually gets looked at, where a records page is not. The
    records page still carries a tile per PLAYED album for anyone who only wants to look.
 
-   TWELVE SPINES, NOT TWELVE SQUARES. Album Focus already owns a board of twelve album tiles and
-   has the masthead ink hanging off it; two boards of twelve albums in one notebook is a real
-   risk of reading as one system built twice, so this one is the edge of a sleeve on a shelf and
-   must stay visually unlike that one. */
+   TWELVE SLEEVES, AND THEY ARE LANDSCAPE. The shelf one click back is a rack of upright zine
+   covers and Album Focus owns a board of twelve album squares, so a board of upright cards here
+   would read as one of those two dealt again. These lie on their side — wider than they are
+   tall, which is a silhouette neither of those screens uses — and they are pasted up out of the
+   shelf's own torn stock (js/sleeves.js, drawn with js/zine.js's workshop) rather than ruled
+   like a table. A record you have written out wears its time on a second torn label, so the
+   played and the untouched are told apart by the card itself and not by a column of type. */
 function openTrackPicker(from) {
   trackBackTarget = from || "bonus";
   renderTrackPicker();
@@ -10846,25 +10851,20 @@ function renderTrackPicker() {
   const index = trackIndexNow();
   const albums = trackAlbums(index);
   const board = loadTracks();
-  let spines = "";
+  let cards = "";
   albums.forEach((album) => {
     const sheet = buildAlbumSheet(album, index);
     if (!sheet) return;
     const rec = board[album] && board[album].plays ? board[album] : null;
-    // A time, or a rule waiting for one. The dash is the whole reason the unplayed albums are
-    // shown at all: the shape of what is missing is the only completion report this game makes,
-    // and it says it without printing a fraction anywhere.
-    const time = rec
-      ? `<span class="tbt-time">${fmtTimeFine(rec.best)}</span>`
-      : `<span class="tbt-time tbt-time--none">—</span>`;
-    const said = rec ? `best ${fmtTimeFine(rec.best)}, played ${rec.plays}` : "never written out";
-    spines += `<button type="button" class="tbt-spine${rec ? " is-done" : ""}" data-album="${escapeHtml(album)}"` +
-        ` style="--era:${albumColor(album) || "#999"}"` +
+    const time = rec ? fmtTimeFine(rec.best) : "";
+    const said = rec ? `best ${time}, played ${rec.plays}` : "never written out";
+    // The caption carries the track count and NOTHING ELSE. It has to hold one line on a card
+    // 127px wide on a phone, and "never written out" hung underneath does not — nor does it need
+    // to, because a record with no time label on its sleeve is already saying exactly that.
+    cards += `<button type="button" class="tbt-rec${rec ? " is-done" : ""}" data-album="${escapeHtml(album)}"` +
         ` aria-label="${escapeHtml(album)}, ${sheet.total} tracks: ${escapeHtml(said)}">` +
-      `<span class="tbt-spine-edge" aria-hidden="true"></span>` +
-      `<span class="tbt-spine-name">${escapeHtml(album)}</span>` +
-      `<span class="tbt-spine-n">${sheet.total} tracks</span>` +
-      time +
+      albumSleeve(album, albumColor(album) || "#999999", time) +
+      `<span class="tbt-cap">${sheet.total} tracks</span>` +
     `</button>`;
   });
   const el = $("tracksBody");
@@ -10872,10 +10872,10 @@ function renderTrackPicker() {
     `<p class="tbt-blurb">Pick a record and write its running order out from the top. The clock ` +
       `starts when you do and does not stop until the last blank is filled.</p>` +
     `<p class="tbt-sub"><span>one album · the clock is the score · low wins</span></p>` +
-    `<div class="tbt-shelf">${spines}</div>` +
+    `<div class="tbt-shelf">${cards}</div>` +
     `<p class="tbt-foot">No suggestions and no skipping. A wrong guess costs nothing but the ` +
       `seconds it took, and part of a title is enough if only one track on the record has it.</p>`;
-  el.querySelectorAll(".tbt-spine").forEach((b) =>
+  el.querySelectorAll(".tbt-rec").forEach((b) =>
     b.addEventListener("click", () => startTrackRun(b.dataset.album)));
 }
 
@@ -29359,6 +29359,31 @@ function buildDevApi() {
         },
         board: () => loadTracks(),
         reset: () => { resetTracks(); return "board cleared"; },
+        /* THE TWELVE SLEEVES, at the two sizes they ship at and once more at a thumbnail.
+           The board is the twin of the shelf's `covers()` and it exists for the same reason: a
+           collage that reads beautifully at 300px and turns to mud at 127 has failed at the only
+           size that matters, and a phone is where this board spends half its life. Every record
+           is drawn twice over — once as it sits with no time on it and once wearing one — because
+           the time label is pasted over the art and a motif that the label ruins is invisible
+           until a record has been played. It also names any album borrowing a picture off its own
+           hash instead of being spoken for by name in ALBUM_MOTIF. */
+        sleeves: () => {
+          if (!$("tracksBody")) return "open the picker first";
+          renderTrackPicker();
+          const albums = trackAlbums(trackIndexNow());
+          const row = (px, time) => albums.map((a) =>
+            `<span style="display:inline-block;width:${px}px">` +
+            albumSleeve(a, albumColor(a) || "#999999", time ? "3:19.94" : "") + `</span>`).join("");
+          const strip = document.createElement("div");
+          strip.style.cssText = "display:flex;flex-direction:column;gap:14px;margin-bottom:22px";
+          strip.innerHTML = [[182, false], [182, true], [127, false], [127, true], [56, false]]
+            .map(([px, time]) =>
+              `<div style="display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap">${row(px, time)}</div>`)
+            .join("");
+          $("tracksBody").prepend(strip);
+          return albums.map((a) => `${a}: ${motifOf(a)}${hasMotif(a) ? "" : "  [UNNAMED — dealt off a hash]"}` +
+            `${sleeveName(a) === a ? "" : `  (lettered "${sleeveName(a)}")`}`);
+        },
       },
       // A timed run has no ceiling to clamp against, so it takes the number as given (in seconds).
       score: (n) => {

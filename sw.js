@@ -93,6 +93,10 @@ const ASSETS = [
   // The bonus shelf's torn-paper zine covers (pure; see js/zine.js). app.js imports it at
   // load, so a stale copy of one and a fresh copy of the other is a broken shelf.
   "js/zine.js",
+  // Track by Track's twelve album sleeves (pure; see js/sleeves.js). They are drawn with the
+  // workshop exported from js/zine.js, so the two are one deploy: a stale copy of either is a
+  // board pasted up by different hands from the shelf beside it.
+  "js/sleeves.js",
   // Word Cloud's ink-mask packing (pure; see js/cloud.js). app.js imports it at load.
   "js/cloud.js",
   // The lineup's goal deck: what the cards say, what a hand of them costs, the line art on

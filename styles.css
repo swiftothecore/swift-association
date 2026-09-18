@@ -3707,11 +3707,12 @@
 
 
   /* ---------- TRACK BY TRACK: the album board and the sheet ----------
-     The board is TWELVE SPINES, not twelve squares, and that is a deliberate distance from
-     Album Focus rather than a stylistic whim: that screen already owns a board of twelve album
-     tiles with the masthead ink hanging off it, and two grids of twelve albums in one notebook
-     would read as one system built twice. This one is the edge of a sleeve seen on a shelf —
-     wide, short, stacked — which is a silhouette that page does not use anywhere. */
+     The board is TWELVE LANDSCAPE SLEEVES, pasted up out of the bonus shelf's own torn stock
+     (js/sleeves.js). It is laid on its side on purpose: the shelf one click back is a rack of
+     upright covers and Album Focus is a board of twelve squares, so an upright card here would
+     read as one of those dealt twice. Everything inside a card is drawn in the SVG — ground,
+     collage, both labels, grain — and the only thing this stylesheet owns is how many fit
+     across, which is the one decision that has to change with the width of the paper. */
   .tbt-blurb {
     font-family: var(--hand); font-size: calc(19px + var(--text-size-adjust));
     line-height: 1.4; color: var(--ink); margin: 2px 0 6px; max-width: 46ch;
@@ -3721,41 +3722,40 @@
     letter-spacing: 1.2px; text-transform: uppercase; color: var(--ink-soft);
     margin: 0 0 12px;
   }
-  .tbt-shelf { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
-  /* A spine, read left to right: the coloured edge of the sleeve, the record's name, how long
-     it runs, and the time in pen at the far end. The era colour is the only colour on the row,
-     because twelve fully-tinted bars would be a paint chart rather than a shelf. */
-  .tbt-spine {
-    display: grid; grid-template-columns: 7px 1fr auto auto; align-items: baseline;
-    gap: 0 12px; width: 100%; text-align: left; cursor: pointer;
-    background: none; border: none; border-bottom: 1px solid var(--rule);
-    padding: 9px 6px 8px; border-radius: 3px; position: relative;
+  /* THREE ACROSS ON THE NOTEBOOK, TWO ON A PHONE, and those are measured numbers rather than
+     taste: the leaf hands this board 572px of paper on a desktop and 266px on a phone, which
+     makes a card 182px and 127px wide. Four across would drop the notebook card to 134px and
+     the lettering on the longest record with it, which is the size the hand stops being the
+     notebook's hand. */
+  .tbt-shelf {
+    display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 14px 12px; margin: 0 0 16px;
   }
-  .tbt-spine-edge {
-    grid-row: 1; align-self: stretch; background: var(--era);
-    border-radius: 1px; opacity: 0.85; min-height: 20px;
+  .tbt-rec {
+    display: block; width: 100%; padding: 0; border: none; background: none;
+    cursor: pointer; text-align: center; border-radius: 3px;
+    transition: transform 0.16s ease;
   }
-  .tbt-spine-name {
-    font-family: var(--hand); font-size: calc(22px + var(--text-size-adjust));
-    color: var(--ink); line-height: 1.1;
+  .tbt-art { display: block; width: 100%; height: auto; border-radius: 2px; }
+  /* ONE LINE, ALWAYS. The caption is the track count and nothing else, at every width the board
+     is ever handed: a second line under one card and not another pulls that row out of line with
+     the rest of the board, which on a grid of twelve is the first thing the eye finds. */
+  .tbt-cap {
+    display: block; margin-top: 5px; white-space: nowrap;
+    font-family: var(--type); font-size: calc(9px + var(--text-size-adjust));
+    letter-spacing: 1px; text-transform: uppercase; color: var(--ink-soft);
   }
-  .tbt-spine-n {
-    font-family: var(--type); font-size: calc(10px + var(--text-size-adjust));
-    letter-spacing: 1px; color: var(--ink-soft); white-space: nowrap;
-  }
-  .tbt-time {
-    font-family: var(--hand); font-size: calc(21px + var(--text-size-adjust));
-    color: var(--ink); min-width: 4.5ch; text-align: right;
-  }
-  /* The dash is the whole completion report this game makes, so it is quiet rather than
-     alarming: an album you have not written out is not a failure, it is one you have not got
-     to yet. */
-  .tbt-time--none { color: var(--ink-soft); opacity: 0.55; }
-  .tbt-spine:hover { background: rgba(43, 39, 34, 0.045); }
-  .tbt-spine:focus-visible { outline: 2px dotted rgba(43, 39, 34, 0.5); outline-offset: 2px; }
+  .tbt-rec:hover { transform: translateY(-3px) rotate(-0.6deg); }
+  .tbt-rec:focus-visible { outline: 2px dotted rgba(43, 39, 34, 0.5); outline-offset: 3px; }
   .tbt-foot {
     font-family: var(--type); font-size: calc(10.5px + var(--text-size-adjust));
     color: var(--ink-soft); line-height: 1.6; margin: 0; max-width: 56ch;
+  }
+  /* Two across on a phone. This sits HERE rather than up in the shelf's own phone block, where
+     it was first written and quietly did nothing: that block is above this section in the file,
+     so the three-across rule below it won on source order alone. */
+  @media (max-width: 560px) {
+    .tbt-shelf { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 11px 10px; }
   }
 
   /* ---------- The sheet itself ---------- */

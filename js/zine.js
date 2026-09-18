@@ -39,11 +39,17 @@
      inside its own <svg>, and every colour is a literal. Fonts are named literally too
      ("Caveat"), because that is the family the card embeds. */
 
-/* ---------- the torn-paper workshop ---------- */
+/* ---------- the torn-paper workshop ----------
+   Everything down to `grain` is EXPORTED, because the bonus shelf is no longer the only
+   thing in the notebook made of torn paper: Track by Track's album board (js/sleeves.js)
+   pastes its twelve records up out of the same stock. Two modules drawing paper two ways
+   would drift within a month — one would grow a softer tear or a heavier shadow and the
+   shelf and the board would stop looking like they came off the same desk. So the hands
+   live here and the compositions live with whatever is being drawn. */
 
 // Deterministic noise, so a cover is the same cover every time it is drawn — a shelf whose
 // edges reshuffle on every render is a shelf that looks like it is buffering.
-function rng(seed) {
+export function rng(seed) {
   let s = (seed >>> 0) || 0x9e3779b9;
   return () => {
     s ^= s << 13; s >>>= 0;
@@ -59,7 +65,7 @@ function rng(seed) {
    The amplitude is deliberately small (about one unit on a 120-wide cover): paper tears
    raggedly at the scale of its fibres, and a big amplitude reads as a badly drawn shape
    instead of a torn one. */
-function torn(pts, rand, amp = 1.1, step = 5.5) {
+export function torn(pts, rand, amp = 1.1, step = 5.5) {
   const out = [];
   for (let i = 0; i < pts.length; i++) {
     const [x1, y1] = pts[i];
@@ -77,14 +83,14 @@ function torn(pts, rand, amp = 1.1, step = 5.5) {
   return out;
 }
 
-function pathOf(pts) {
+export function pathOf(pts) {
   return "M" + pts.map(([x, y]) => `${x.toFixed(1)} ${y.toFixed(1)}`).join("L") + "Z";
 }
 
 /* A circle as a polygon, so `torn` can chew it like any other outline. `wob` pulls each
    sample's radius about a little before the tearing does its own work, which is what keeps
    a stack of concentric discs from reading as machine-drawn rings. */
-function circlePts(cx, cy, r, rand, n = 30, wob = 0) {
+export function circlePts(cx, cy, r, rand, n = 30, wob = 0) {
   const pts = [];
   for (let i = 0; i < n; i++) {
     const a = (i / n) * Math.PI * 2;
@@ -95,7 +101,7 @@ function circlePts(cx, cy, r, rand, n = 30, wob = 0) {
 }
 
 // A rounded rectangle as a polygon, for the tunnel of frames Sing It Back falls down.
-function roundRectPts(x, y, w, h, r, per = 4) {
+export function roundRectPts(x, y, w, h, r, per = 4) {
   const pts = [];
   const corner = (cx, cy, from) => {
     for (let i = 0; i <= per; i++) {
@@ -116,7 +122,7 @@ function roundRectPts(x, y, w, h, r, per = 4) {
    cream rim drawn round the shape — which on a dark ground is the loudest thing on the cover.
    Only hex fills are mixed, because a literal is the only thing a cover is allowed to carry
    (see the no-CSS-colour-functions rule) and anything else is handed back untouched. */
-function core(fill, k = 0.22) {
+export function core(fill, k = 0.22) {
   const m = /^#([0-9a-f]{6})$/i.exec(String(fill).trim());
   if (!m) return null;
   const v = parseInt(m[1], 16);
@@ -142,7 +148,7 @@ function core(fill, k = 0.22) {
    where its wobble happens to beat the sheet's. Do not raise the multiplier to make it more
    visible. A fibre that clears the sheet everywhere stops being fluff and becomes an outline
    stroke around every shape, which is exactly what it looked like the first time. */
-function sheet(pts, fill, rand, o = {}) {
+export function sheet(pts, fill, rand, o = {}) {
   const amp = o.amp == null ? 1.1 : o.amp;
   const step = o.step == null ? 5.5 : o.step;
   const d = pathOf(o.crisp ? pts : torn(pts, rand, amp, step));
@@ -156,7 +162,7 @@ function sheet(pts, fill, rand, o = {}) {
 // A stack of concentric shapes, back to front, each one a sheet in its own colour. The
 // workhorse behind three of the seven covers and the reason they took a paragraph each
 // rather than a screen of coordinates.
-function stack(colours, shapeAt, rand, o = {}) {
+export function stack(colours, shapeAt, rand, o = {}) {
   return colours.map((c, i) => sheet(shapeAt(i), c, rand, o)).join("");
 }
 
@@ -168,10 +174,10 @@ function stack(colours, shapeAt, rand, o = {}) {
    draws seven covers twice over and a cover is not allowed to cost a thousand elements.
    It goes on last, over the label as well as the art, because the whole object is one pasted
    sheet and grain that stops at the title strip announces the strip is a separate drawing. */
-function grain(rand, n = 420) {
+export function grain(rand, n = 420, fieldW = 124, fieldH = 164) {
   let dark = "", light = "";
   for (let i = 0; i < n; i++) {
-    const x = rand() * 124 - 2, y = rand() * 164 - 2;
+    const x = rand() * fieldW - 2, y = rand() * fieldH - 2;
     const w = (0.45 + rand() * 1.0).toFixed(2);
     const h = (0.4 + rand() * 0.7).toFixed(2);
     const d = `M${x.toFixed(1)} ${y.toFixed(1)}h${w}v${h}h-${w}Z`;
@@ -458,7 +464,7 @@ function esc(s) {
 
 // A seed from the id, so a cover's raggedness is tied to the game rather than to where it
 // happens to sit in the roster.
-function seedOf(id) {
+export function seedOf(id) {
   let h = 0x811c9dc5;
   for (let i = 0; i < id.length; i++) { h ^= id.charCodeAt(i); h = Math.imul(h, 0x01000193); }
   return h >>> 0;
