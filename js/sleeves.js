@@ -227,20 +227,52 @@ export function hasMotif(album) {
 
 /* ---------- the labels ----------
    Both are torn paper, not type set on the art: the name at the foot and the time at the head.
-   The name's label is measured off the name so a short record and a long one both sit on a
-   strip that fits them, and the type steps down twice on the way to "The Tortured Poets" — a
-   card is 182px wide on the notebook and 127px on a phone, and a title that has to be readable
-   at the smaller of those cannot be set at one size. */
-function nameType(label) {
-  return label.length > 15 ? 15 : label.length > 11 ? 17 : 20;
+
+   THE STRIP IS MEASURED OFF THE TEXT, NOT COUNTED OFF IT. Sizing a label by `length * size * a
+   guessed factor` is what the first pass did, and in a hand face it is wrong for nearly every
+   name: "Taylor Swift" and "evermore" and "Red" all came out with a tail of blank paper hanging
+   off the right, because the factor has to be generous enough for the widest string it will ever
+   meet. A canvas measures the actual run instead, so every strip ends where its writing does.
+
+   The fallback matters as much as the measurement. If Caveat has not arrived yet, `measureText`
+   silently answers in whatever face the browser substituted, so the check below refuses to trust
+   it until the font is really loaded and goes back to a count in the meantime — a slightly loose
+   strip for the first render is nothing; a strip measured for the wrong face is a name that runs
+   off its own paper. `renderTrackPicker` draws again when the fonts settle. */
+const NAME_SIZES = [20, 17, 15, 13, 11.5];
+const NAME_PAD = 10;          // paper either side of the writing
+const NAME_ROOM = 146;        // how much of a 160-wide card a label may take
+
+let measurer = null;
+function textWidth(text, fs) {
+  try {
+    if (typeof document === "undefined") return null;
+    if (!document.fonts || !document.fonts.check(`${fs}px Caveat`)) return null;
+    measurer = measurer || document.createElement("canvas").getContext("2d");
+    measurer.font = `${fs}px Caveat, cursive`;
+    const w = measurer.measureText(text).width;
+    return w > 0 ? w : null;
+  } catch (e) { return null; }
 }
 
-/* The name to letter across a sleeve. The two long ones are shortened, because the alternative
-   is either a label running the whole width of the card or type too small to read on a phone,
-   and every one of these records is known by the short name anyway. */
+/* The largest size the name fits the card at, with the width it takes there. The steps are what
+   keeps one rule for every record: a short name is lettered big, and the Anthology steps down
+   until it fits rather than being given a size by hand. */
+function fitName(label) {
+  for (const fs of NAME_SIZES) {
+    const w = textWidth(label, fs);
+    const width = w == null ? label.length * fs * 0.46 : w;
+    if (width + NAME_PAD * 2 <= NAME_ROOM || fs === NAME_SIZES[NAME_SIZES.length - 1]) {
+      return { fs, w: width };
+    }
+  }
+  return { fs: NAME_SIZES[NAME_SIZES.length - 1], w: NAME_ROOM - NAME_PAD * 2 };
+}
+
+/* The name to letter across a sleeve. The Anthology loses its article, which was costing it a
+   whole type size on the longest name on the board. */
 const SLEEVE_NAMES = {
   "The Tortured Poets Department": "Tortured Poets",
-  "The Life of a Showgirl": "Life of a Showgirl",
 };
 export function sleeveName(album) { return SLEEVE_NAMES[album] || album; }
 
@@ -258,14 +290,14 @@ export function albumSleeve(album, colour, time, extra = "") {
   const C = stockOf(colour || "#999999");
   const art = (MOTIFS[motifOf(album)] || MOTIFS.rings)(r, C);
   const label = sleeveName(album);
-  const fs = nameType(label);
-  const lw = label.length * fs * 0.48 + 22;
+  const { fs, w: nameW } = fitName(label);
+  const lw = nameW + NAME_PAD * 2;
   const id = `sl${++uid}`;
 
   let s = sheet([[-6, -6], [W + 6, -6], [W + 6, H + 6], [-6, H + 6]], C.ground, r, { amp: 1.6, shadow: false });
   s += art;
   s += sheet([[8, 64], [8 + lw, 60], [9 + lw, 94], [9, 98]], "#f2ead8", r, { amp: 1.2, sy: 2, sx: 1.4 });
-  s += `<text x="19" y="84" font-family="Caveat"` +
+  s += `<text x="${(8 + NAME_PAD).toFixed(1)}" y="84" font-family="Caveat"` +
        ` font-size="${fs}" fill="#2b2722">${escapeHtml(label)}</text>`;
   if (time) {
     /* The time's label is measured off the time, for the same reason the name's is. A board
@@ -273,7 +305,8 @@ export function albumSleeve(album, colour, time, extra = "") {
        and "12:41.20" does not, and a thirty-one-track record is entirely capable of taking ten
        minutes. The strip grows leftward off its right edge so the head of every card lines up. */
     const tfs = time.length > 8 ? 13 : 16;
-    const tw = Math.min(88, Math.max(46, time.length * tfs * 0.5 + 12));
+    const measured = textWidth(time, tfs);
+    const tw = Math.min(88, (measured == null ? time.length * tfs * 0.5 : measured) + 16);
     const x0 = 154 - tw;
     s += sheet([[x0, 6], [154, 3], [155, 28], [x0 + 1, 32]], "#f2ead8", r, { amp: 1.0, sy: 1.8 });
     s += `<text x="${(x0 + tw / 2).toFixed(1)}" y="23" text-anchor="middle" font-family="Caveat"` +

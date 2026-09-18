@@ -10847,6 +10847,7 @@ function openTrackPicker(from) {
   flipAwayToScreen("tracks");
 }
 
+let trackFontsSettled = false;
 function renderTrackPicker() {
   const index = trackIndexNow();
   const albums = trackAlbums(index);
@@ -10878,6 +10879,16 @@ function renderTrackPicker() {
       `seconds it took, and part of a title is enough if only one track on the record has it.</p>`;
   el.querySelectorAll(".tbt-rec").forEach((b) =>
     b.addEventListener("click", () => startTrackRun(b.dataset.album)));
+  /* A sleeve's labels are measured off the real writing, which cannot be done until Caveat has
+     actually arrived — before that the module falls back to a counted width and the strips run a
+     little loose. Draw once more when the fonts settle, and only once, so a board opened on a
+     cold cache still ends up with paper cut to its own lettering. */
+  if (!trackFontsSettled && typeof document !== "undefined" && document.fonts) {
+    document.fonts.ready.then(() => {
+      trackFontsSettled = true;
+      if ($("tracksBody") && $("tracksBody").querySelector(".tbt-rec")) renderTrackPicker();
+    });
+  }
 }
 
 function startTrackRun(album) {
