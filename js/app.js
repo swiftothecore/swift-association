@@ -11330,8 +11330,15 @@ function rlRandom(seedStr) {
   return () => ((s = (Math.imul(s, 1103515245) + 12345) >>> 0) / 4294967296);
 }
 
-// One section's greeked page: whole lines of stroke-words, widths in % of the column so the
-// document reflows with the notebook instead of overflowing it.
+/* One section's greeked page: whole lines of stroke-words, widths in % of the column so the
+   document reflows with the notebook instead of overflowing it.
+
+   Every stroke also carries four numbers off the same seeded draw, which is what stops a hundred
+   of them reading as a loading skeleton rather than as handwriting: --j is how hard the pencil was
+   pressed, --k how tall the word sits, --o how far off the baseline it drifted and --r how far it
+   tilted. They are WRITTEN HERE rather than picked in CSS because the sheet has to be stable — the
+   same lens must greek identically every render, and nth-child cycling would put a visible repeat
+   into a page whose whole job is to look like something a person wrote out. */
 function rlStrokes(lens) {
   const rnd = rlRandom(lens.id);
   const lines = Math.max(1, Math.round(lens.median / RL_LINE_WORDS));
@@ -11341,7 +11348,9 @@ function rlStrokes(lens) {
     let words = "", used = 0;
     while (used < target) {
       const w = 3.4 + rnd() * 6.4;
-      words += `<span class="rl-w" style="width:${w.toFixed(1)}%"></span>`;
+      const jitter = `--j:${rnd().toFixed(3)};--k:${rnd().toFixed(3)};` +
+        `--o:${(rnd() * 2 - 1).toFixed(3)};--r:${(rnd() * 2 - 1).toFixed(3)}`;
+      words += `<span class="rl-w" style="width:${w.toFixed(1)}%;${jitter}"></span>`;
       used += w + 1;
     }
     out += `<span class="rl-ln">${words}</span>`;
@@ -11439,7 +11448,9 @@ function renderRuthlessPage() {
     const note = rec.plays
       ? (rec.bestGaveUp ? `${rec.bestGaveUp} given up` : `named all ${BONUS_ROUNDS}`)
       : "not played";
-    secs += `<button type="button" class="rl-sec" data-lens="${lens.id}"` +
+    // data-played is what the sheet's ink hangs off: a lens you have run is written in its own
+    // pen, one you have not stays pencil grey. See the LENS SHEET note in styles.css.
+    secs += `<button type="button" class="rl-sec" data-lens="${lens.id}" data-played="${rec.plays ? 1 : 0}"` +
         ` aria-label="${escapeHtml(lens.label)}: ${pool} songs, ${rec.plays ? "best " + fmtTimeFine(rec.best) + ", " : ""}${escapeHtml(note)}">` +
       `<span>` +
         `<span class="rl-h">[${escapeHtml(lens.label)}]<span class="rl-pool">${pool} songs</span></span>` +

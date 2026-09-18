@@ -5091,12 +5091,21 @@
      verses are four. That is why there is no bar, no rating and no "~78 words" anywhere:
      the page already says it, at a glance, in the only unit that matters here.
 
-     COLOUR IS A PEN, NOT A CODE. Each heading is inked in one colour from a desk drawer —
-     indigo biro, moss, red pen, ochre, plum, teal — and the colour touches the heading and
-     the hover wash and NOTHING ELSE. The strokes stay pencil grey. Colour is already the
-     album language in this game; keep it to six pen marks here and the two never collide.
-     Push the ink into the strokes and the page stops being a song someone wrote and starts
-     being six colour-coded categories, which is a different and worse screen.
+     COLOUR IS A PEN, NOT A CODE, AND IT IS EARNED. Each heading is inked in one colour from a
+     desk drawer — indigo biro, moss, red pen, ochre, plum, teal. Ink every section's STROKES in
+     its pen as well and the page stops being a song someone wrote and becomes six colour-coded
+     categories, which is a different and worse screen; that was tried and rejected. So the pen
+     only reaches the strokes of a lens you have actually PLAYED (data-played, written by
+     renderRuthlessPage). A fresh notebook is six passages in pencil and no colour at all below
+     the headings, and a section you have run is the one thing on the sheet written out in ink.
+     Colour never becomes a code because on almost every notebook only one or two sections carry
+     it, and the album language it might otherwise collide with is never six-at-once here.
+
+     THE STROKES ARE PENCIL MARKS, NOT BARS. A rounded rectangle with an even fill is the shape of
+     a loading skeleton, and there are about a hundred of them on this page; at that count the
+     shape is the whole impression. So a stroke has no radius, fades out at both ends the way a
+     pencil lifts off, and takes its weight, height, baseline drift and tilt from the four seeded
+     numbers rlStrokes writes onto it. Do not give .rl-w a border-radius or a flat background back.
 
      THE PAGE NEVER SCROLLS. app.js measures what is left below the heading and writes it
      to --rl-h; the document is exactly that tall, spreads the six sections into it, and
@@ -5190,17 +5199,44 @@
     display: flex; gap: 5px; align-items: center;
     height: clamp(4px, calc(var(--rl-u) * 23), 9px); overflow: hidden;
   }
-  .rl-w { height: 100%; border-radius: 2px; background: var(--ink-soft); opacity: .17; }
+  /* A pencil mark: no radius, lifted at both ends, and sitting on the seeded jitter rlStrokes
+     wrote onto it. --j presses the pencil, --k sets the height, --o drifts it off the baseline
+     and --r tilts it. The fallbacks matter: an --rl-h measure or a re-render can paint a stroke
+     before its inline style lands, and without them the whole page would flash at zero height. */
+  .rl-w {
+    height: calc(100% * (.62 + var(--k, .5) * .5));
+    background: linear-gradient(90deg,
+      transparent 0, var(--ink-soft) 9%, var(--ink-soft) 91%, transparent 100%);
+    opacity: calc(.13 + var(--j, .5) * .12);
+    transform: translateY(calc(var(--o, 0) * 1.6px)) rotate(calc(var(--r, 0) * .5deg));
+  }
+  /* the words sit on a line, so they grow upward off it rather than around their own middle */
+  .rl-ln { align-items: flex-end; padding-bottom: 1px; }
+  /* ...and a lens you have run is written in its pen instead of pencilled. */
+  .rl-sec[data-played="1"] .rl-w {
+    background: linear-gradient(90deg,
+      transparent 0, var(--rl-ink) 9%, var(--rl-ink) 91%, transparent 100%);
+    opacity: calc(.4 + var(--j, .5) * .25);
+  }
 
   .rl-rec { text-align: right; white-space: nowrap; }
+  /* The time is the score on this board, so it is the second-loudest thing on the sheet after the
+     heading. It takes that weight from SIZE and from the section's own pen — never from the hand,
+     because a record is functional text and functional text on this desk is typewritten. */
   .rl-best {
-    display: block; font-family: var(--type); font-size: clamp(.8rem, calc(var(--rl-u) * 42), 1.04rem);
-    color: var(--ink); font-variant-numeric: tabular-nums;
+    display: block; font-family: var(--type); font-weight: 700;
+    font-size: clamp(1rem, calc(var(--rl-u) * 58), 1.36rem); letter-spacing: -.01em;
+    color: var(--rl-ink); font-variant-numeric: tabular-nums;
   }
-  .rl-best--none { opacity: .28; }
+  /* An unplayed lens has no record to shout, so its dash drops back to the old quiet size and
+     the neutral ink: nothing has been earned here yet, and the pen is what earning looks like. */
+  .rl-best--none {
+    font-weight: 400; font-size: clamp(.8rem, calc(var(--rl-u) * 42), 1.04rem);
+    letter-spacing: 0; color: var(--ink); opacity: .28;
+  }
   .rl-note {
     display: block; font-family: var(--type); font-size: clamp(.48rem, calc(var(--rl-u) * 24), .58rem);
-    letter-spacing: .04em; color: var(--ink-soft); opacity: .7; margin-top: 1px;
+    letter-spacing: .04em; color: var(--ink-soft); opacity: .7; margin-top: 3px;
   }
 
   .rl-foot {
