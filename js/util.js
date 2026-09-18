@@ -341,6 +341,10 @@ export function anniversaryNote(dateKey, milestones) {
 // Both surfaces carry the Long Live line, because a guest day is the notebook being generous
 // about somebody else rather than a fact about a record: the slip says it in the note, the
 // sticky in its caption, and neither ever shows the other's copy.
+//
+// A row flagged `soon` is a name the shelf has announced without a catalogue yet. It gets the
+// same birthday wish, since the player can read that name on the shelf, but a different eyebrow
+// and a `soon` flag the renderers draw a hollow, uncoloured crown from.
 export function guestDayNote(dateKey, guestDays) {
   if (!dateKey || dateKey.length < 10) return null;
   const md = dateKey.slice(5);
@@ -361,8 +365,10 @@ export function guestDayNote(dateKey, guestDays) {
     : (age > 0 ? `Born this day in ${g.year}, ${ago}.` : "Born this day.");
   const note = `${opening} We all got crowns.`;
   return {
-    icon: "crown", album: null, guest: g.guest,
-    eyebrow: "On the guest shelf",
+    icon: "crown", album: null, guest: g.guest, soon: !!g.soon,
+    // An announced name has a hanger on the shelf but no catalogue behind it, and the slip
+    // says so rather than implying the player could go and play them this afternoon.
+    eyebrow: g.soon ? "Coming to the guest shelf" : "On the guest shelf",
     headline,
     headlineRest: "",
     note,

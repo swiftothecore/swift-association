@@ -2280,7 +2280,15 @@ export const TS_LORE_DAYS = [
 
 /* ---------- Guest days (the guest shelf's own dated marginalia) ----------
    The birthdays of the artists hanging on the guest shelf, and the two arrival days that
-   stand in for a birthday where there is no person to have one. Deliberately kept OUT of
+   stand in for a birthday where there is no person to have one. It covers the ANNOUNCED
+   names too, not just the playable ones: the shelf already prints Beyoncé and Miley on a
+   hanger, so the margin saying happy birthday to a name the player can read on that shelf
+   is telling the truth. `soon: true` marks those two, the slip changes its eyebrow to
+   "Coming to the guest shelf" and the crown is drawn HOLLOW, in plain ink, because they
+   have no pass to be coloured by and pretending otherwise would be the lie. The flag is
+   deliberately written down rather than inferred from GUESTS_COMING_SOON so that a stale
+   one is catchable: __dev.guestday.missing() cross-checks every row against both rosters
+   and shouts the day a coming-soon name goes playable with `soon` still on it. Deliberately kept OUT of
    TS_MILESTONES for the same reason TS_LORE_DAYS is: that table is her release history and
    it skews the daily challenge's album, which somebody else's birthday has no business
    doing. These only ever reach the start-page slip, the in-game sticky and the desk
@@ -2302,16 +2310,30 @@ export const GUEST_DAYS = [
     headline: "Happy premiere day, Hannah", arrived: "first aired on the Disney Channel" },
   { md: "05-11", year: 1999, kind: "guest", guest: "sabrina-carpenter", name: "Sabrina Carpenter" },
   { md: "06-26", year: 1993, kind: "guest", guest: "ariana-grande",     name: "Ariana Grande" },
+  { md: "09-04", year: 1981, kind: "guest", guest: "beyonce",           name: "Beyoncé",        soon: true },
   { md: "10-30", year: 2003, kind: "guest", guest: "wicked-soundtrack", name: "Wicked",
     headline: "Happy opening night, Wicked", arrived: "opened on Broadway" },
+  { md: "11-23", year: 1992, kind: "guest", guest: "miley-cyrus",       name: "Miley",          soon: true },
   { md: "12-18", year: 2001, kind: "guest", guest: "billie-eilish",     name: "Billie Eilish" },
 ];
 
 // The pass hardware for one guest id, or null. The single-source lookup behind every guest
 // colour outside the shelf itself: the birthday slip tints its name with `deep` and the
-// crown on the sticky and the calendar fills with `accent`.
+// crown on the sticky and the calendar fills with `accent`. An announced-but-not-playable
+// name has none by design (see GUESTS_COMING_SOON) and gets null here, which is what the
+// hollow crown is drawn from.
 export function guestInk(id) {
   return GUESTS.find((g) => g.id === id)?.ink || null;
+}
+// Where a guest id stands on the shelf: "playable", "announced" (a name on a hanger with no
+// catalogue behind it yet) or "" for an id that is on neither roster. The empty answer is the
+// one that matters — it is a typo, or a guest that has been removed while its birthday stayed
+// behind, and without this a bad id would be indistinguishable from a coming-soon one and
+// would quietly draw the announced hollow crown forever. __dev.guestday.missing() reports it.
+export function guestShelfState(id) {
+  if (GUESTS.some((g) => g.id === id)) return "playable";
+  if (GUESTS_COMING_SOON.some((g) => g.id === id)) return "announced";
+  return "";
 }
 
 /* ---------- Guest-shelf stamp inks ---------- */

@@ -30,7 +30,7 @@
 // non-interactive, like every desk prop; if the markup isn't there it does
 // nothing.
 
-import { TS_MILESTONES, TS_LORE_DAYS, GUEST_DAYS, guestInk, ALBUM_COLORS, CB_ALBUM_COLORS,
+import { TS_MILESTONES, TS_LORE_DAYS, GUEST_DAYS, guestInk, guestShelfState, ALBUM_COLORS, CB_ALBUM_COLORS,
          SALT_SHAKER_D, SALT_CAP_D, CROWN_D, CROWN_BAND_D } from "./config.js";
 import { loadSettings } from "./storage.js";
 
@@ -349,7 +349,15 @@ function drawMark(g, mark, cx, cy, colors, s) {
       transform: `translate(${x} ${y}) rotate(${tilt}) scale(0.4)` }));
     return;
   }
-  const hollow = mark.kind === "lore";
+  // A guest whose name is on the shelf but whose catalogue has not arrived is drawn hollow,
+  // the same way a lyric day is: on this pad hollow has always meant "marked, but not the
+  // real thing", and an announced name has no pass to be coloured by.
+  // guestShelfState, not simply "has no ink": an id that is on NEITHER roster has no ink
+  // either, and drawing that hollow would dress a typo up as a deliberate state. It falls
+  // through to the filled fallback taupe instead, which looks dull, which is the right way
+  // for a mistake to look. __dev.guestday.missing() names it.
+  const soft = mark.kind === "guest" && guestShelfState(mark.guest) === "announced";
+  const hollow = mark.kind === "lore" || soft;
   // A guest day is coloured by its pass, not by an album: guestInk is the one place that
   // lookup lives, so a re-inked pass re-inks its square here too.
   const color = mark.kind === "guest"
@@ -365,13 +373,20 @@ function drawMark(g, mark, cx, cy, colors, s) {
       transform: `translate(${x} ${y}) rotate(${tilt}) scale(0.3) translate(-16 -16)`
     });
     crown.appendChild(el("path", {
-      d: CROWN_D, fill: color, stroke: "rgba(0,0,0,0.3)", "stroke-width": 2.7,
+      d: CROWN_D,
+      fill: hollow ? "none" : color,
+      stroke: hollow ? color : "rgba(0,0,0,0.3)",
+      "stroke-width": hollow ? 3.5 : 2.7,
       "stroke-linejoin": "round"
     }));
-    crown.appendChild(el("path", {
-      d: CROWN_BAND_D, fill: "none", stroke: "rgba(0,0,0,0.26)", "stroke-width": 1.7,
-      "stroke-linecap": "round"
-    }));
+    // The band seam is what tells a filled crown's points from its base. On a hollow one the
+    // outline already draws both, and a third line across the middle at 0.5px only muddies it.
+    if (!hollow) {
+      crown.appendChild(el("path", {
+        d: CROWN_BAND_D, fill: "none", stroke: "rgba(0,0,0,0.26)", "stroke-width": 1.7,
+        "stroke-linecap": "round"
+      }));
+    }
     g.appendChild(crown);
     return;
   }

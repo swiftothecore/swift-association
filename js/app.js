@@ -17,7 +17,7 @@ import {
   TOTAL_ROUNDS, RECENT_WINDOW, NOVELTY_BOOST, DAILY_ALBUM_SKEW, DAILY_ALBUM_WEIGHT_EXP, DIFF_KEY, DEFAULT_SETTINGS,
   LAUNCH_DATE, SERIAL_DIGITS,
   MODES, MODE_ORDER, MODE_COLORS, DIFFICULTY_LADDER, MODALITY_MODES, EXPLORER_TOKENS, SHELF_TYPES, PAGE_MARK_KINDS, GLOSSARY,
-  ERAS, TENDER_ERAS, FINALE_ERAS, ALBUM_ERA, TS_MILESTONES, TS_LORE_DAYS, GUEST_DAYS, guestInk, SALT_SHAKER_D, SALT_CAP_D, CROWN_D, CROWN_BAND_D,
+  ERAS, TENDER_ERAS, FINALE_ERAS, ALBUM_ERA, TS_MILESTONES, TS_LORE_DAYS, GUEST_DAYS, guestInk, guestShelfState, SALT_SHAKER_D, SALT_CAP_D, CROWN_D, CROWN_BAND_D,
   ALBUM_COLORS, CB_ALBUM_COLORS, IMPOSTOR_BEAD, COMMON_THREAD_BEADS,
   MAST_INKS, MAST_INK_BY_SLUG, MAST_SHUFFLE, MAST_SHUFFLE_NAME,
   STUDIO_ALBUMS, TITLE_ALIASES, STAMP_INKS, pressingName,
@@ -14679,7 +14679,7 @@ function renderMilestoneSticky() {
   const ink = noteInk(note);
   const icon = note.icon === "cake" ? cakeSvg()
     : note.icon === "thirteen" ? thirteenSvg()
-    : note.icon === "crown" ? crownSvg(ink?.accent || "var(--bead)", ink?.deep)
+    : note.icon === "crown" ? crownSvg(ink?.accent || "var(--ink-soft)", ink?.deep, note.soon)
     : note.icon === "salt" ? saltSvg(milestoneColor(note.album) || "var(--bead)")
     : heartSvg(milestoneColor(note.album) || "var(--bead)");
   el.innerHTML =
@@ -14701,14 +14701,26 @@ function heartSvg(fill) {
 // silhouette and its band seam live in config.js, shared with the desk calendar.
 // `edge` is the pass's deep ink for the jewels, which keeps them legible on an accent as pale
 // as Hannah's yellow; it falls back to plain dark when there is no pass.
-function crownSvg(fill, edge) {
+//
+// `hollow` is the announced-but-not-playable state (Beyoncé, Miley): an outline in plain ink,
+// no fill, no jewels and no highlight, because the whole point is that there is no pass to be
+// coloured by yet. It is deliberately the SAME language the desk calendar already uses for a
+// lyric day, where hollow means "marked, but not a release" — here it means "named, but not
+// arrived". The stroke is heavier than the filled crown's separating edge for the same reason
+// it is on the hollow heart: with no fill the stroke IS the drawing.
+function crownSvg(fill, edge, hollow) {
   const gem = edge || "rgba(0,0,0,0.42)";
+  const shell = hollow
+    ? `fill="none" stroke="${fill}" stroke-width="1.5"`
+    : `fill="${fill}" stroke="rgba(0,0,0,0.24)" stroke-width="0.8"`;
   return `<svg viewBox="0 0 32 32" width="38" height="38" aria-hidden="true">` +
-    `<path d="${CROWN_D}" fill="${fill}" stroke="rgba(0,0,0,0.24)" stroke-width="0.8" stroke-linejoin="round"/>` +
-    `<path d="${CROWN_BAND_D}" fill="none" stroke="rgba(0,0,0,0.26)" stroke-width="0.8" stroke-linecap="round"/>` +
-    `<g fill="${gem}"><circle cx="7.3" cy="8.2" r="1"/><circle cx="16.4" cy="5.7" r="1.25"/>` +
+    `<path d="${CROWN_D}" ${shell} stroke-linejoin="round"/>` +
+    `<path d="${CROWN_BAND_D}" fill="none" stroke="${hollow ? fill : "rgba(0,0,0,0.26)"}" ` +
+      `stroke-width="${hollow ? 1.2 : 0.8}" stroke-linecap="round"/>` +
+    (hollow ? "" :
+      `<g fill="${gem}"><circle cx="7.3" cy="8.2" r="1"/><circle cx="16.4" cy="5.7" r="1.25"/>` +
       `<circle cx="25.6" cy="9.1" r="0.85"/></g>` +
-    `<path d="M9.2 13.6 L9.7 19.8" fill="none" stroke="rgba(255,255,255,0.5)" stroke-width="1.1" stroke-linecap="round"/>` +
+      `<path d="M9.2 13.6 L9.7 19.8" fill="none" stroke="rgba(255,255,255,0.5)" stroke-width="1.1" stroke-linecap="round"/>`) +
     `</svg>`;
 }
 // The August 1st mark: a salt shaker, drawn the same way as the heart (era ink, translucent
@@ -28641,8 +28653,11 @@ function buildDevApi() {
         const yr = (window.__devDate || todayKey()).slice(0, 4);
         return GUEST_DAYS.map((g) => {
           const ink = guestInk(g.guest);
-          return `${yr}-${g.md}  ${g.name}${g.arrived ? " (" + g.arrived + ")" : ""}` +
-                 `  ${ink ? ink.accent : "⚠ NO PASS — check the guest id against GUESTS"}`;
+          const state = guestShelfState(g.guest);
+          const tail = ink ? ink.accent
+            : state === "announced" ? "announced (hollow crown, no pass yet)"
+            : "⚠ NO PASS — check the guest id against GUESTS";
+          return `${yr}-${g.md}  ${g.name}${g.arrived ? " (" + g.arrived + ")" : ""}  ${tail}`;
         }).sort();
       },
       preview: (dateKey) => {
@@ -28658,8 +28673,18 @@ function buildDevApi() {
       // draws a fallback taupe crown and merely looks dull). Behind the dev panel's guest
       // "birthdays" button, where it warns.
       missing: () => ({
-        noDay: GUESTS.filter((g) => !GUEST_DAYS.some((d) => d.guest === g.id)).map((g) => g.name),
-        noPass: GUEST_DAYS.filter((d) => !guestInk(d.guest)).map((d) => d.guest),
+        noDay: [...GUESTS, ...GUESTS_COMING_SOON]
+          .filter((g) => !GUEST_DAYS.some((d) => d.guest === g.id)).map((g) => g.name),
+        // An id on neither roster: a typo, or a guest removed with its birthday left behind.
+        // It would otherwise look exactly like a coming-soon name and draw the hollow crown.
+        unknown: GUEST_DAYS.filter((d) => !guestShelfState(d.guest)).map((d) => d.guest),
+        // A playable guest with no pass ink (its crown would fall back to plain), and the
+        // stale-flag case the whole `soon` field exists to make catchable: the day Beyoncé
+        // ships, her row still says `soon` and would keep drawing hollow forever.
+        noPass: GUEST_DAYS.filter((d) => guestShelfState(d.guest) === "playable" && !guestInk(d.guest))
+          .map((d) => d.guest),
+        staleSoon: GUEST_DAYS.filter((d) => !!d.soon !== (guestShelfState(d.guest) === "announced"))
+          .filter((d) => guestShelfState(d.guest)).map((d) => d.guest),
       }),
       clear: () => { window.__devDate = null; refreshDateSurfaces(); },
     },
