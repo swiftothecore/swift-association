@@ -94,6 +94,7 @@ import { buildLineIndex, buildSlipContext, buildSlipPuzzle, buildNamePuzzle,
          buildRuthlessPuzzle, ruthlessPool, ruthlessLens, ruthlessLensAudit, ruthlessGiveUp, ruthlessSnap,
          ruthlessBar, RUTHLESS_LENSES, RUTHLESS_HANDOUT_WORDS,
          buildTrackIndex, buildTrackPuzzle,
+         buildAlbumSheet, trackCandidates, resolveTrackGuess, judgeTrack,
          buildCloudPuzzle, cloudWords,
          judgeBlank, blankExact } from "./bonus.js";
 import { renderStreakPlacard } from "./placard.js";
@@ -136,6 +137,7 @@ import {
   purgeAdaptive,
   bonusRecord, recordBonusRun, resetBonus, seedBonusSweep,
   ruthlessRecord, recordRuthlessRun, resetRuthless,
+  loadTracks, trackRecord, recordTrackRun, resetTracks,
   resetRecords, resetStatsAll, resetAchievements, resetTally, resetDaily, clearAllData,
   loadMastery, saveMastery, recordSkillXp, resetMastery, totalSkillLevels, isMasteryUnlocked,
 } from "./storage.js";
@@ -971,6 +973,7 @@ const screens = {
   albumdetail: $("screen-album-detail"),
   inktray: $("screen-ink-tray"),
   ruthless: $("screen-ruthless"),
+  tracks: $("screen-tracks"),
   guests: $("screen-guests"),
   lineup: $("screen-lineup"),
   lineupboard: $("screen-lineup-board"),
@@ -5863,6 +5866,26 @@ function renderRecordsPage() {
       }).join("") + `</div>`
     : "";
 
+  /* Track by Track — one tile per album actually written out, low wins. Only the played ones,
+     which is the Ruthless group's rule for the Ruthless group's reason: the game's OWN picker is
+     where all twelve live with dashes against the ones still blank, and this page is a record of
+     what has been done rather than a list of what has not. There is no combined tile and there
+     must not be one — see the storage note on why a sum runs backwards on a low-wins board and
+     an average pays you to bank the four shortest records. */
+  const tbtBoard = loadTracks();
+  const tbtPlayed = STUDIO_ALBUMS.filter((a) => tbtBoard[a] && tbtBoard[a].plays);
+  const tracksBlock = tbtPlayed.length
+    ? `<p class="rec-group-label">track by track — fastest record, lowest wins</p><div class="pb-grid">` +
+      tbtPlayed.map((album) => {
+        const rec = tbtBoard[album];
+        return `<div class="pb-tile" style="--pb-accent:${albumColor(album) || "#999"}">` +
+          `<span class="pb-mode">${escapeHtml(album)}</span>` +
+          `<span class="pb-score">${fmtTimeFine(rec.best)}</span>` +
+          `<span class="pb-sub">played ${rec.plays} · ${escapeHtml(recordDateLabel(rec.date))}</span>` +
+        `</div>`;
+      }).join("") + `</div>`
+    : "";
+
   const hist = loadHistory();
   _pbByMode = {};
   for (const h of hist) if (!(h.m in _pbByMode)) _pbByMode[h.m] = h.m === "daily" ? db : (loadRecords(h.m)[0] ? loadRecords(h.m)[0].score : -1);
@@ -5876,7 +5899,7 @@ function renderRecordsPage() {
   $("recordsBody").innerHTML =
     `<div class="rec-sig">${sig}</div>` +
     `<p class="rec-group-label">personal bests</p><div class="pb-grid">${classicTiles}</div>` +
-    infBlock + dailyBlock + verseBlock + ruthlessBlock + darkBlock + heatSectionHTML() + histBlock;
+    infBlock + dailyBlock + verseBlock + ruthlessBlock + tracksBlock + darkBlock + heatSectionHTML() + histBlock;
 
   renderHeatBody();
   const heatSel = $("heatRange");
@@ -7047,6 +7070,9 @@ function bonusScoreText() {
 function bonusScoreLine(g, short = false) {
   const rec = bonusRecord(g.id);
   if (!g.ready) return "not pressed yet";
+  // Track by Track banks nothing in BONUS_KEY: its runs live on their own twelve-album board,
+  // so every line below this would read an empty record and report a game nobody had played.
+  if (g.id === "track-by-track") return trackShelfLine(short);
   // A notebook that has only ever played the endless side has a board to report and no
   // ten-page run behind it, so the line leads with the number it actually has.
   if (!rec.plays) return endlessRecord(g).plays
@@ -7142,8 +7168,12 @@ function renderBonusPage() {
              to play it rather than a second front door. The note under the pair is the whole
              rule, said once, because a run with no last page has to say so before it starts. */
           ? `<div class="bonus-play-row">` +
+            /* Track by Track's sticker opens the album board instead of starting a run, so it
+               says `pick an album` — pressing it never promised a clock, which is what makes
+               going in for a look at the twelve records obviously allowed. */
             `<button type="button" id="bonusPlayBtn" class="bonus-play">${PLAY_NIB}` +
-            `<span>${bonusRecord(g.id).plays ? "Play again" : "Play"}</span></button>` +
+            `<span>${g.id === "track-by-track" ? "Pick an album"
+              : bonusRecord(g.id).plays ? "Play again" : "Play"}</span></button>` +
             /* THE RULE RIDES ON THE STICKER, not under it. A line of explanation beneath the
                pair made the leaf read as a form with a footnote, and it was explaining a word
                the sticker already says: a run with no last page. What is left to know — that
@@ -7199,7 +7229,11 @@ function renderBonusPage() {
 
   el.querySelectorAll(".zine-tile").forEach((b) =>
     b.addEventListener("click", () => selectBonusGame(b.dataset.id)));
-  if ($("bonusPlayBtn")) $("bonusPlayBtn").addEventListener("click", () => startBonusGame(bonusPicked()));
+  if ($("bonusPlayBtn")) $("bonusPlayBtn").addEventListener("click", () => {
+    const pick = bonusPicked();
+    if (pick.id === "track-by-track") { openTrackPicker("bonus"); return; }
+    startBonusGame(pick);
+  });
   if ($("bonusEndlessBtn"))
     $("bonusEndlessBtn").addEventListener("click", () => startBonusGame(bonusPicked(), null, { endless: true }));
 }
@@ -7300,6 +7334,11 @@ function startBonusGame(g, lensId = null, opts = {}) {
   $("bonusPlayTitle").innerHTML = `<button type="button" class="bonus-cover-play" aria-label="Make the ${escapeHtml(g.name)} cover dance" title="a little encore">` +
     `<span class="bonus-cover-stack" aria-hidden="true">${bonusCover(g, "bonus-cover-sm")}</span>` +
     `<span class="bonus-cover-stars" aria-hidden="true">✧</span></button><span class="bonus-title-label">${escapeHtml(title)}</span>`;
+  /* Track by Track is not a run of pages, so it never enters the page loop. This is the same
+     hand-over the Ruthless Game makes at the other end of a run, and for the same reason: the
+     screen, the clock and the chrome are the shelf's, the pages are not, and nothing in
+     nextBonusRound / settleBonusRound / endBonusRun has to learn about a game with none. */
+  if (g.id === "track-by-track") { beginTrackSheet(); return; }
   nextBonusRound({ entering: true });
 }
 
@@ -7497,7 +7536,7 @@ function renderBonusPageRegister() {
   const el = $("bonusPageRegister");
   // An endless run gets none: the register draws the whole stack with the current page marked
   // in it, and there is no stack to draw when the run has no last page (Ruthless's reason too).
-  const shelfRun = bonusGame && !isRuthlessRun() && !bonusEndless && !bonusEnded;
+  const shelfRun = bonusGame && !isRuthlessRun() && !isTrackRun() && !bonusEndless && !bonusEnded;
   renderNotebookPageRegister(el, bonusRound, shelfRun ? BONUS_ROUNDS : 0,
                              shelfRun ? bonusGame.tint : "");
 }
@@ -7868,25 +7907,37 @@ function showBonusClockReady() {
 function startRuthlessClock(resumeState = null) {
   const fill = $("bonusTimerFill");
   const label = $("bonusTimerLabel");
+  /* Track by Track borrows this clock and only this clock. It takes the baseline, because
+     that is what the Settings pause already knows how to capture and restore, and it takes
+     neither the word drip (there is no stream to write out) nor the pace gauge (a whole album
+     has no expected duration, so a bar scaled to RUTHLESS_PACE_SECONDS would peg in the first
+     twenty seconds and mean nothing for the rest of the run). Its gauge shows how far down the
+     sleeve the pen is instead — see paintTrackProgress. */
+  const onTrack = isTrackRun();
   const elapsed = resumeState && resumeState.kind === "ruthless"
     ? Math.max(0, resumeState.elapsed) : 0;
   ruthlessStart = performance.now() - elapsed * 1000;
   const initialPct = Math.min(100, (elapsed / RUTHLESS_PACE_SECONDS) * 100);
-  fill.style.width = initialPct + "%";
-  fill.classList.remove("low");
-  fill.classList.toggle("low", initialPct >= 75);
+  if (onTrack) paintTrackProgress();
+  else {
+    fill.style.width = initialPct + "%";
+    fill.classList.remove("low");
+    fill.classList.toggle("low", initialPct >= 75);
+  }
   label.textContent = elapsed.toFixed(2);
   const spentEl = $("bonusSpent");
   if (spentEl) spentEl.textContent = fmtTimeFine(elapsed);
   bonusRaf = setInterval(() => {
     const spent = (performance.now() - ruthlessStart) / 1000;
     label.textContent = spent.toFixed(2);
+    if (onTrack) return;
     const pct = Math.min(100, (spent / RUTHLESS_PACE_SECONDS) * 100);
     fill.style.width = pct + "%";
     fill.classList.toggle("low", pct >= 75);
     const el = $("bonusSpent");
     if (el) el.textContent = fmtTimeFine(spent);
   }, CLOCK_TICK_MS);
+  if (onTrack) return;
   startRuthlessDrip(resumeState && resumeState.kind === "ruthless"
     ? resumeState.dripRemaining : RUTHLESS_WORD_MS);
 }
@@ -9032,8 +9083,49 @@ function foldBonusRunCharms(perfect, cleared) {
   // Ruthless's descriptor lives outside it, so these count BONUS_GAMES straight — and the
   // orphaned "ruthless-game" record an early notebook may still carry in BONUS_KEY is simply
   // never asked about, which is the right amount of attention to pay it.
-  if (BONUS_GAMES.every((g) => bonusRecord(g.id).plays > 0)) unlock("play-every-bonus-game");
-  if (BONUS_GAMES.every((g) => bonusRecord(g.id).swept)) unlock("clean-sweep-every-bonus-game");
+  foldShelfLedgerCharms();
+}
+
+/* The two shelf-wide ledger charms, read off the board rather than off any one run so they
+   close on whichever game happens to be the last one. Lifted out of foldBonusRunCharms because
+   Track by Track never reaches it — that fold is the END of a run of ten pages, and this game
+   has none — so the ledger has to be readable from its ending too.
+
+   ADDING THE NINTH GAME WOULD HAVE LOCKED BOTH OF THESE FOREVER, which is the trap worth
+   naming here: a straight `BONUS_GAMES.every(...)` over BONUS_KEY asks a game that never writes
+   BONUS_KEY whether it has been played, gets a permanent no, and quietly makes two charms
+   unwinnable on every notebook. So each walk now asks the question its charm actually means.
+   Played counts Track by Track off its OWN board, because it really can be played. Swept skips
+   it, because it cannot be swept: a sweep is ten pages cleared and this game does not deal
+   pages, so there is no run of it that would ever satisfy the test. The charm's wording says so
+   rather than leaving the shelf quietly meaning eight of nine. */
+function foldShelfLedgerCharms() {
+  const played = (g) => g.id === "track-by-track"
+    ? Object.values(loadTracks()).some((e) => e && e.plays > 0)
+    : bonusRecord(g.id).plays > 0;
+  if (BONUS_GAMES.every(played)) unlock("play-every-bonus-game");
+  if (BONUS_GAMES.filter((g) => !bonusTimed(g)).every((g) => bonusRecord(g.id).swept))
+    unlock("clean-sweep-every-bonus-game");
+}
+
+/* Track by Track's own charms, folded after the board has been written so a run that completes
+   the set counts itself — foldBonusRunCharms's rule, for the same reason. */
+function foldTrackCharms(secs, rec) {
+  if (!trackSheet) return;
+  unlock("finish-first-bonus-run");
+  if (!trackWrong) unlock("write-out-an-album-with-no-wrong-guesses");
+  // The longest record on the shelf, worked out rather than named: ALBUM_TRACKS is the one
+  // pressing each album is counted at, and hard-coding "the Anthology" here would go quietly
+  // wrong the day a cap moves.
+  const index = trackIndexNow();
+  const longest = trackAlbums(index)
+    .map((a) => ({ a, n: (buildAlbumSheet(a, index) || { total: 0 }).total }))
+    .sort((x, y) => y.n - x.n)[0];
+  if (longest && longest.a === trackSheet.album) unlock("write-out-the-longest-album");
+  const board = loadTracks();
+  if (trackAlbums(index).every((a) => board[a] && board[a].plays > 0))
+    unlock("write-out-all-twelve-albums");
+  foldShelfLedgerCharms();
 }
 
 function endBonusRun() {
@@ -10663,6 +10755,364 @@ const RUTHLESS_RUNNING_ORDER = ["from-the-top", "pre-chorus", "chorus", "post-ch
 const RL_LINE_WORDS = 22;
 let ruthlessBackTarget = "start";
 let rlDocEl = null;
+/* ---------- Track by Track: the picker, the sheet and the clock ----------
+   The shelf's ninth game and the only one that is not a run of pages. One album, its whole
+   running order, one clock that starts on the first keystroke and does not stop until the last
+   blank is filled. The run IS the time and LOW WINS.
+
+   IT BORROWS THE SHELF'S CHROME AND NONE OF ITS LOOP. `startBonusGame` hands over to
+   `beginTrackSheet` instead of `nextBonusRound`, which is the same shape as the Ruthless Game
+   leaving for its own ending: the play screen, the clock, the quit link and the title are the
+   shelf's, and the pages are not, because there are none. Nothing here touches bonusPuzzle,
+   bonusLog, bonusScore, settleBonusRound or endBonusRun, so none of the per-page machinery
+   needs to learn about a game that has no pages.
+
+   WHAT A QUIT COSTS IS EVERYTHING, and that is the design rather than an omission. There is no
+   skip, no pass and no handing a track back: the only way past track nine is to remember track
+   nine. So an unfinished sheet banks nothing at all, not even a play, which is what keeps the
+   twelve times comparable run to run — every number on that board is a whole record. */
+
+let trackAlbum = null;          // the record being written out
+let trackSheet = null;          // its slots, in running order
+let trackCands = null;          // the askable titles, normalized once per run
+let trackAt = 0;                // index into slots of the blank the pen is on
+let trackWritten = [];          // what has been filled in so far, parallel to slots
+let trackWrong = 0;             // wrong guesses, for the finished sheet to remark on
+let trackSpent = 0;             // the run's seconds, frozen when the last blank fills
+let trackBackTarget = "bonus";
+
+function isTrackRun() { return !!bonusGame && bonusGame.id === "track-by-track"; }
+function trackGame() { return BONUS_GAMES.find((g) => g.id === "track-by-track") || null; }
+
+/* Built fresh every time rather than cached, and the reason is the guest shelf. A guest run
+   SWAPS the corpus `allSongs` points at, so an index built during one and kept would leave
+   Taylor's albums being numbered off somebody else's catalogue for the rest of the session —
+   the exact shape of bug the guest-shelf notes warn about for any derived index. It is a walk
+   over 287 songs twice a run, which is nothing, and it cannot go stale. */
+function trackIndexNow() { return buildTrackIndex(allSongs); }
+
+/* Every album that can be written out: the twelve studio records, in the order the shelf's own
+   album lists use. STUDIO_ALBUMS rather than the keys of anything, for the reason the masthead
+   inks have — an object's keys hoist "1989" to the front and quietly reorder the shelf. */
+function trackAlbums(index) { return STUDIO_ALBUMS.filter((a) => index.albums.includes(a)); }
+
+// The one line the shelf tile and the open leaf get. The fastest album WITH ITS NAME, because a
+// bare time here would be a record of nothing: twelve albums keep twelve separate times and a
+// number with no album against it cannot be read. See the storage note for why there is no
+// combined figure.
+function trackShelfLine(short = false) {
+  const board = loadTracks();
+  const played = Object.keys(board).filter((a) => board[a] && board[a].plays);
+  if (!played.length) return "unplayed";
+  let bestAlbum = played[0];
+  for (const a of played) if (board[a].best < board[bestAlbum].best) bestAlbum = a;
+  const line = `${bestAlbum} ${fmtTimeFine(board[bestAlbum].best)}`;
+  if (short) return line;
+  const runs = played.reduce((n, a) => n + (board[a].plays || 0), 0);
+  return `fastest ${line} · played ${runs}`;
+}
+
+/* ---------- The picker, which is also the board ----------
+   Pressing the sticker on the shelf opens this rather than starting a run, and the sticker says
+   `pick an album` so it never promised one. That means the twelve records live one step in from
+   the shelf, which is the trade taken knowingly: the player passes through here before every
+   single run, so it is a board that actually gets looked at, where a records page is not. The
+   records page still carries a tile per PLAYED album for anyone who only wants to look.
+
+   TWELVE SPINES, NOT TWELVE SQUARES. Album Focus already owns a board of twelve album tiles and
+   has the masthead ink hanging off it; two boards of twelve albums in one notebook is a real
+   risk of reading as one system built twice, so this one is the edge of a sleeve on a shelf and
+   must stay visually unlike that one. */
+function openTrackPicker(from) {
+  trackBackTarget = from || "bonus";
+  renderTrackPicker();
+  flipAwayToScreen("tracks");
+}
+
+function renderTrackPicker() {
+  const index = trackIndexNow();
+  const albums = trackAlbums(index);
+  const board = loadTracks();
+  let spines = "";
+  albums.forEach((album) => {
+    const sheet = buildAlbumSheet(album, index);
+    if (!sheet) return;
+    const rec = board[album] && board[album].plays ? board[album] : null;
+    // A time, or a rule waiting for one. The dash is the whole reason the unplayed albums are
+    // shown at all: the shape of what is missing is the only completion report this game makes,
+    // and it says it without printing a fraction anywhere.
+    const time = rec
+      ? `<span class="tbt-time">${fmtTimeFine(rec.best)}</span>`
+      : `<span class="tbt-time tbt-time--none">—</span>`;
+    const said = rec ? `best ${fmtTimeFine(rec.best)}, played ${rec.plays}` : "never written out";
+    spines += `<button type="button" class="tbt-spine${rec ? " is-done" : ""}" data-album="${escapeHtml(album)}"` +
+        ` style="--era:${albumColor(album) || "#999"}"` +
+        ` aria-label="${escapeHtml(album)}, ${sheet.total} tracks: ${escapeHtml(said)}">` +
+      `<span class="tbt-spine-edge" aria-hidden="true"></span>` +
+      `<span class="tbt-spine-name">${escapeHtml(album)}</span>` +
+      `<span class="tbt-spine-n">${sheet.total} tracks</span>` +
+      time +
+    `</button>`;
+  });
+  const el = $("tracksBody");
+  el.innerHTML =
+    `<p class="tbt-blurb">Pick a record and write its running order out from the top. The clock ` +
+      `starts when you do and does not stop until the last blank is filled.</p>` +
+    `<p class="tbt-sub"><span>one album · the clock is the score · low wins</span></p>` +
+    `<div class="tbt-shelf">${spines}</div>` +
+    `<p class="tbt-foot">No suggestions and no skipping. A wrong guess costs nothing but the ` +
+      `seconds it took, and part of a title is enough if only one track on the record has it.</p>`;
+  el.querySelectorAll(".tbt-spine").forEach((b) =>
+    b.addEventListener("click", () => startTrackRun(b.dataset.album)));
+}
+
+function startTrackRun(album) {
+  const g = trackGame();
+  if (!g || !g.ready || !album) return;
+  trackAlbum = album;
+  startBonusGame(g);
+}
+
+/* ---------- The sheet ---------- */
+
+// Called by startBonusGame in place of nextBonusRound. Everything a page turn would normally
+// set up happens once here, because the sheet is the whole run.
+function beginTrackSheet() {
+  const index = trackIndexNow();
+  trackSheet = trackAlbum ? buildAlbumSheet(trackAlbum, index) : null;
+  if (!trackSheet) { leaveBonusGame("bonus"); return; }
+  trackCands = trackCandidates(trackSheet);
+  trackWritten = trackSheet.slots.map((s) => (s.alt ? s.title : null));
+  trackWrong = 0;
+  trackSpent = 0;
+  trackAt = 0;
+  skipToNextBlank();
+  /* Entering the play screen is nextBonusRound's own gesture and not a variation on it: lay the
+     sheet out while the screen is still hidden, turn the page, and only then let the player
+     write. A run that rendered after the flip would show the shelf turning onto a blank sheet. */
+  bonusLocked = true;
+  const lay = () => {
+    $("bonusFeedback").innerHTML = "";
+    $("bonusFeedback").className = "bg-feedback";
+    $("bonusTimer").style.display = "";
+    renderBonusPageRegister();
+    renderTrackSheet();
+    // The clock is NOT started here. It starts on the first keystroke (see trackTyped), so
+    // reading the album's name off the top of the sheet is free and the number always begins
+    // at the moment the player actually began.
+    showTrackClockReady();
+  };
+  const begin = () => { bonusLocked = false; focusTrackInput(); };
+  playSound("page");
+  lay();
+  flipAwayToScreen("bonusplay", begin);
+}
+
+// Walk past anything already written in. That is the alt takes on a fresh sheet — the second
+// cuts whose honest answer is a title sitting higher up the same record, printed rather than
+// asked so the sheet never demands a duplicate of a track you already wrote.
+function skipToNextBlank() {
+  while (trackAt < trackSheet.slots.length && trackWritten[trackAt] != null) trackAt++;
+}
+
+function trackDone() { return !!trackSheet && trackAt >= trackSheet.slots.length; }
+
+function renderTrackSheet(finished = false) {
+  if (!trackSheet) return;
+  const rows = trackSheet.slots.map((slot, i) => {
+    const written = trackWritten[i];
+    const now = !finished && i === trackAt;
+    const cls = slot.alt ? "is-printed" : written != null ? "is-done" : now ? "is-now" : "";
+    const body = written != null
+      ? `<span class="tbt-title">${escapeHtml(censor(written))}</span>`
+      : finished
+        // An unfinished sheet can only be a quit, which banks nothing, so a blank on the
+        // finished sheet never happens. Drawn anyway rather than assumed away.
+        ? `<span class="tbt-rule tbt-rule--miss" aria-hidden="true"></span>`
+        : `<span class="tbt-rule" aria-hidden="true"></span>`;
+    const said = written != null ? censor(written) : "blank";
+    return `<li class="tbt-row ${cls}" aria-label="Track ${slot.n}: ${escapeHtml(said)}">` +
+      `<span class="tbt-n">${slot.n}</span>${body}` +
+      (slot.alt ? `<span class="tbt-printed">printed</span>` : "") +
+    `</li>`;
+  }).join("");
+
+  $("bonusPlayBody").innerHTML =
+    `<div class="tbt-sheet" style="--era:${albumColor(trackSheet.album) || "#999"}">` +
+      // The album keeps its OWN casing (reputation, folklore) rather than the typewriter capitals
+      // a printed sleeve would get: this is a list you are writing to yourself, not printed matter.
+      `<h3 class="tbt-sheet-head">${escapeHtml(trackSheet.album)}</h3>` +
+      `<ol class="tbt-list">${rows}</ol>` +
+    `</div>` +
+    (finished ? "" : bonusWritingLine({
+      placeholder: "track " + (trackSheet.slots[trackAt] ? trackSheet.slots[trackAt].n : "") + "…",
+      aria: "Name the next track",
+      hint: "part of the title is enough · Enter to write it in",
+    }));
+  if (!finished) wireTrackInput();
+  paintTrackProgress();
+}
+
+function focusTrackInput() {
+  const i = $("bonusInput");
+  if (i && !prefersReducedMotion()) setTimeout(() => i.focus(), 60);
+  else if (i) i.focus();
+}
+
+function wireTrackInput() {
+  const input = $("bonusInput");
+  if (!input) return;
+  input.addEventListener("input", trackTyped);
+  input.addEventListener("keydown", (e) => {
+    if (e.key !== "Enter") return;
+    e.preventDefault();
+    submitTrack();
+  });
+}
+
+/* THE CLOCK STARTS ON THE FIRST KEYSTROKE, which is the one piece of timing the player is given
+   for free. The album's name is at the top of the sheet and reading it should not be charged
+   for; what is being measured is how long the RECALL takes, and that begins when the writing
+   does. It also means the number can never be inflated by a page that landed while the player
+   was looking somewhere else. */
+function trackTyped() {
+  if (bonusLocked || ruthlessStart) return;
+  startBonusClock();
+}
+
+function submitTrack() {
+  if (bonusLocked || !trackSheet || trackDone()) return;
+  const input = $("bonusInput");
+  const raw = input ? input.value.trim() : "";
+  if (!raw) return;
+  // Typing and submitting in one gesture (a paste, or an autofill) would otherwise settle a
+  // track before the clock had ever been started.
+  if (!ruthlessStart) startBonusClock();
+
+  const want = trackSheet.slots[trackAt].title;
+  const res = judgeTrack(raw, trackCands, want);
+  if (!res.correct) {
+    trackWrong++;
+    /* THE REJECT SAYS NOTHING BUT "NOT THAT", and every other thing it could say is a real
+       hint. Naming the song back (the Ruthless Game's soft reject) would confirm the title
+       exists on this record; saying a fragment was ambiguous confirms two tracks here share a
+       word; saying "that one is further down" hands over the running order outright, which is
+       the only thing being asked for. So all three collapse into one mute shake. */
+    const r = $("bonusReject");
+    if (r) {
+      r.textContent = "not that one";
+      r.classList.remove("show"); void r.offsetWidth; r.classList.add("show");
+    }
+    sfx.play("wrong");
+    // The wrong count lives in the score slot, so it has to be repainted here: nothing else
+    // redraws on a reject, and a counter that only catches up on the next correct answer reads
+    // as though the miss had not registered.
+    paintTrackProgress();
+    if (input) { input.value = ""; input.focus(); }
+    return;
+  }
+
+  trackWritten[trackAt] = want;
+  noteSessionSong({ title: want, album: trackSheet.album });
+  if (input) input.value = "";
+  trackAt++;
+  skipToNextBlank();
+  sfx.play("correct");
+  if (trackDone()) { endTrackRun(); return; }
+  renderTrackSheet();
+  focusTrackInput();
+  /* `nearest` rather than `center`: the sheet should only move when the pen has actually walked
+     off the window. Centring every row means the whole list slides on every single answer, which
+     on a thirty-track record is thirty unnecessary scrolls and makes the page feel like it is
+     fighting the player. */
+  const el = $("bonusPlayBody").querySelector(".tbt-row.is-now");
+  if (el && el.scrollIntoView) el.scrollIntoView({ block: "nearest", behavior: prefersReducedMotion() ? "auto" : "smooth" });
+}
+
+/* ---------- The clock ----------
+   Reuses the Ruthless count-up clock's baseline (`ruthlessStart`) deliberately and not by
+   accident: the Settings pause already captures and restores exactly that, so a run is never
+   charged for the seconds the notebook was shut, and a second baseline would need the same
+   machinery written twice. What it does NOT take is the word drip or the pace bar — see
+   startRuthlessClock, which asks isTrackRun() for both. */
+
+// The gauge is PROGRESS THROUGH THE RECORD rather than a read on the clock. There is no expected
+// duration for a whole album, so a bar scaled to time would either peg immediately or mean
+// nothing; how far down the sleeve you are is a real number and the one thing the sheet cannot
+// show at a glance once it is long enough to scroll.
+function paintTrackProgress() {
+  const fill = $("bonusTimerFill");
+  if (!fill || !trackSheet) return;
+  const done = trackWritten.filter((t, i) => t != null && !trackSheet.slots[i].alt).length;
+  const asked = trackSheet.asked || 1;
+  fill.style.width = Math.min(100, (done / asked) * 100) + "%";
+  fill.classList.remove("low");
+  const prog = $("bonusProgress");
+  if (prog) prog.textContent = trackDone()
+    ? `${trackSheet.total} of ${trackSheet.total}`
+    : `track ${trackSheet.slots[trackAt] ? trackSheet.slots[trackAt].n : trackSheet.total} of ${trackSheet.total}`;
+  const score = $("bonusScore");
+  if (score) score.textContent = trackWrong ? `${trackWrong} wrong` : "";
+}
+
+function showTrackClockReady() {
+  const label = $("bonusTimerLabel");
+  if (label) label.textContent = "0.00";
+  paintTrackProgress();
+}
+
+/* ---------- The ending: the finished sheet ----------
+   It ends on the sheet it was written on rather than on the zine's back cover, which every
+   other game uses. The back cover lists the run's pages, and this run's pages ARE the list —
+   it would reprint the tracklist an inch below the tracklist. What the player made is the
+   filled-in sleeve, so that is the keepsake, and the run's time is written at the head of it. */
+function endTrackRun() {
+  stopBonusClock();
+  bonusLocked = true;
+  bonusEnded = true;
+  trackSpent = ruthlessStart ? (performance.now() - ruthlessStart) / 1000 : 0;
+  const snapped = Math.round(trackSpent * 100) / 100;
+  const rec = recordTrackRun(trackSheet.album, snapped, todayKey());
+  renderTrackSheet(true);
+  renderTrackEnd(rec, snapped);
+  // A finished run has nothing left to give up on, so the quit link becomes the way home —
+  // the same swap endBonusRun makes, and startBonusGame is what puts the pair back.
+  $("bonusQuitBtn").hidden = true;
+  $("bonusHomeBtn").hidden = false;
+  foldTrackCharms(snapped, rec);
+  playRunFlourish();
+}
+
+function renderTrackEnd(rec, secs) {
+  const best = rec.isBest;
+  const remark = trackWrong === 0
+    ? "Straight down the sleeve, not a wrong word in it."
+    : trackWrong <= 3 ? "A couple of false starts, and then the whole record."
+    : "You got there. The record does not care how many times you tried.";
+  const body = $("bonusPlayBody");
+  const card = document.createElement("div");
+  card.className = "tbt-end" + (best ? " is-best" : "");
+  card.innerHTML =
+    (best ? `<div class="tbt-stamp" aria-hidden="true">fastest yet</div>` : "") +
+    `<div class="tbt-end-time">${fmtTimeFine(secs)}</div>` +
+    `<p class="tbt-end-remark">${escapeHtml(remark)}</p>` +
+    `<p class="tbt-end-meta">${escapeHtml(trackSheet.album)} · ${trackSheet.total} tracks · ` +
+      `${trackWrong} wrong ${trackWrong === 1 ? "guess" : "guesses"}` +
+      (best ? "" : ` · best ${fmtTimeFine(rec.best)}`) + `</p>` +
+    `<div class="tbt-end-row">` +
+      `<button type="button" class="chall-go" id="tbtAgainBtn">Another record</button>` +
+    `</div>`;
+  body.insertBefore(card, body.firstChild);
+  const again = $("tbtAgainBtn");
+  if (again) again.addEventListener("click", () => {
+    // Straight back to the picker rather than to the shelf: what you want after finishing one
+    // record is the board with the new time on it and eleven others waiting.
+    bonusGame = null;
+    bonusEnded = false;
+    openTrackPicker(trackBackTarget);
+  });
+}
+
 function openRuthless(from) {
   ruthlessBackTarget = from;
   routeTo("ruthless", from);
@@ -28736,6 +29186,76 @@ function buildDevApi() {
         return album ? out : { numbered: rows.length, dealable: out.filter((r) => r.dealable).length,
                                albums: trackIndex.albums.length, rows: out };
       },
+      /* Track by Track's own bench. `audit()` is the one that matters and should be run after
+         ANY change to the matcher or to ALBUM_TRACKS: it types every askable title out in full
+         on its own record and insists it resolves back to itself, which is the property the
+         whole game rests on and the one that a new normalisation rule quietly breaks. It also
+         reports the shortest fragment each title can be won with, because a record where some
+         song is reachable in two letters is a record with a hole in it. */
+      tbt: {
+        sheet: (album) => {
+          const sheet = buildAlbumSheet(album, trackIndexNow());
+          return sheet ? { album: sheet.album, total: sheet.total, asked: sheet.asked,
+                           slots: sheet.slots.map((x) => `${x.n}. ${x.title}${x.alt ? "  [printed]" : ""}`) }
+                       : `no sheet for ${album}`;
+        },
+        audit: () => {
+          const index = trackIndexNow();
+          const bad = [], thin = [];
+          let slots = 0, asked = 0;
+          for (const album of trackAlbums(index)) {
+            const sheet = buildAlbumSheet(album, index);
+            if (!sheet) { bad.push({ album, why: "no sheet" }); continue; }
+            const cands = trackCandidates(sheet);
+            slots += sheet.total; asked += sheet.asked;
+            for (const c of cands) {
+              const full = resolveTrackGuess(c.title, cands);
+              if (full.hit !== c.title) bad.push({ album, title: c.title, why: full.why, got: full.hit });
+              // The cheapest prefix of the title that still lands, which is what a player can
+              // actually get away with typing.
+              let shortest = null;
+              for (let n = 1; n <= c.key.length; n++) {
+                const r = resolveTrackGuess(c.key.slice(0, n), cands);
+                if (r.hit === c.title) { shortest = c.key.slice(0, n); break; }
+              }
+              if (shortest && shortest.length <= 3) thin.push({ album, title: c.title, wonWith: shortest });
+            }
+          }
+          return { albums: trackAlbums(index).length, slots, asked,
+                   printed: slots - asked, failures: bad.length, bad,
+                   thinnest: thin.sort((x, y) => x.wonWith.length - y.wonWith.length).slice(0, 15) };
+        },
+        // The live sheet: where the pen is and what would clear it. The answer is printed, so
+        // this is the one dev tool here that gives the game away on purpose.
+        now: () => (!trackSheet ? "no run" : {
+          album: trackSheet.album, at: trackAt + 1, of: trackSheet.total,
+          answer: trackSheet.slots[trackAt] ? trackSheet.slots[trackAt].title : null,
+          wrong: trackWrong,
+          spent: ruthlessStart ? +((performance.now() - ruthlessStart) / 1000).toFixed(2) : 0,
+        }),
+        solve: () => {
+          if (!trackSheet || trackDone()) return "no blank";
+          const i = $("bonusInput");
+          if (!i) return "no input";
+          i.value = trackSheet.slots[trackAt].title;
+          submitTrack();
+          return __dev.bonus.tbt.now();
+        },
+        // Walk a whole record in, which is the only sane way to eyeball the finished sheet and
+        // the charms without typing thirty-one titles by hand. It banks FOR REAL, exactly as the
+        // shelf has always treated a fabricated run — `__dev.seed.removeAch(id)` is the way back,
+        // and resetTracks() clears the board.
+        fill: (album = null, wrong = 0) => {
+          if (!trackSheet && album) startTrackRun(album);
+          setTimeout(() => {
+            for (let w = 0; w < wrong; w++) { trackWrong++; }
+            while (trackSheet && !trackDone()) __dev.bonus.tbt.solve();
+          }, 700);
+          return "filling…";
+        },
+        board: () => loadTracks(),
+        reset: () => { resetTracks(); return "board cleared"; },
+      },
       // A timed run has no ceiling to clamp against, so it takes the number as given (in seconds).
       score: (n) => {
         bonusScore = bonusTimed(bonusGame)
@@ -30964,6 +31484,7 @@ async function init() {
   $("inkTrayBackBtn").addEventListener("click", closeInkTray);
   $("ruthlessBtn").addEventListener("click", () => openRuthless("start"));
   $("ruthlessBackBtn").addEventListener("click", () => backToScreen(ruthlessBackTarget));
+  $("tracksBackBtn").addEventListener("click", () => backToScreen(trackBackTarget));
   frankGuestStamp();
   $("guestShelfBtn").addEventListener("click", () => openGuestShelf("start"));
   $("guestBackBtn").addEventListener("click", () => backToScreen(guestBackTarget));

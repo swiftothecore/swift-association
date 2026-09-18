@@ -765,7 +765,7 @@ export const BONUS_GAMES = [
      No `points` (a track is early or late, never worth more or less), no `sweep` (the time IS
      the score rather than a second axis beside it) and no `endless` (the album already bounds
      the run, so an endless side would only be playing again). */
-  { id: "track-by-track", name: "Track by Track", ready: false, timed: true,
+  { id: "track-by-track", name: "Track by Track", ready: true, timed: true,
     kicker: "the whole record, in order", tint: "#6a4630",
     line: "One album, top to bottom, against the clock.",
     blurb: "Pick a record and write its running order out from track one, in order, with the clock running the whole way. No suggestions and no skipping: the only way past track nine is to remember track nine." },
@@ -4039,7 +4039,7 @@ export const ACHIEVEMENTS = [
   { id: "finish-first-bonus-run",    name: "Play It Again",    desc: "Finish your first bonus run",          secret: false, icon: "openzine", sitting: true, earn: { cat: "bonus" } },
   { id: "play-every-bonus-game",      name: "Vinyl Shelf",      desc: "Play every game on the shelf",         tier: 2, secret: false, icon: "crate" },
   { id: "clean-sweep-bonus-game",     name: "A Clean Kill",     desc: "Clean-sweep a bonus game: ten pages cleared", tier: 2, secret: false, icon: "broom", sitting: true, earn: { cat: "bonus" } },
-  { id: "clean-sweep-every-bonus-game", name: "Every Single One", desc: "Clean-sweep every game on the shelf",  tier: 3, secret: false, icon: "goldrecord" },
+  { id: "clean-sweep-every-bonus-game", name: "Every Single One", desc: "Clean-sweep every game on the shelf that runs ten pages",  tier: 3, secret: false, icon: "goldrecord" },
   { id: "keep-bonus-back-cover", name: "One Last Souvenir", desc: "Take a back cover off the page and keep it", secret: false, icon: "backcover", sitting: true, earn: { cat: "bonus" } },
   // One per game, and five of the seven are that game's clean sweep said in its own voice. The
   // two that aren't ask for something a sweep doesn't: exactness on Sing It Back, nerve on
@@ -4058,6 +4058,14 @@ export const ACHIEVEMENTS = [
   // a stopwatch the player never sees. That is the Ruthless roster's lesson, and it survived
   // the page's rebuild even though the number it used to be priced in did not.
   { id: "name-running-order-page-with-half-the-clock-left", name: "By Heart", desc: "Name a Running Order track with half the clock still on it", tier: 2, secret: false, icon: "heartdial", sitting: true, earn: { cat: "bonus" } },
+  /* Track by Track's three. None of them is a sweep, because the game has no pages to sweep:
+     a run is a whole record or it is nothing, so what is left to ask for is how CLEANLY, how
+     LONG a record, and how MANY of them. All three stay winnable on a notebook that has done
+     anything at all — every album can be written out again, so none of these can be walked
+     past. */
+  { id: "write-out-an-album-with-no-wrong-guesses", name: "Every Word", desc: "Write out a record in Track by Track without a single wrong guess", tier: 2, secret: false, icon: "placeholder", sitting: true, earn: { cat: "bonus" } },
+  { id: "write-out-the-longest-album", name: "Straight Through", desc: "Write out the longest record on the shelf, top to bottom", tier: 2, secret: false, icon: "placeholder", sitting: true, earn: { cat: "bonus" } },
+  { id: "write-out-all-twelve-albums", name: "Remember It All", desc: "Write out all twelve records in Track by Track", tier: 3, secret: false, icon: "placeholder" },
   { id: "sweep-word-cloud", name: "All The Words", desc: "Sweep Word Cloud", tier: 2, secret: false, icon: "wordcloud", sitting: true, earn: { cat: "bonus" } },
   // Word Cloud's second, and NOT a re-skin of By Heart above: this one is not about speed at
   // all. The run's late pages deal a spare cloud (see CLOUD_WIDE_PAGES), so the player can see

@@ -325,6 +325,36 @@ const COVERS = {
     return s;
   },
 
+  /* TRACK BY TRACK — a numbered list, half of it written in and half of it still blank.
+
+     Told apart from RUNNING ORDER by what fills the field, which is the pair most at risk of
+     collapsing into each other since both are about a tracklist. That cover is a sleeve with a
+     huge numeral across it and five rows as scenery: its silhouette is A NUMBER. This one has no
+     numeral at all and nine rows running the whole height of the page: its silhouette is A LIST,
+     and a list is the one shape on this shelf nothing else makes. Told apart from REDACTED by
+     value and by rhythm — those blocks are uniform, dark and share a left edge, where these run
+     to nine different lengths in two tones, and the tonal split is the whole picture: the top
+     four are in ink and the bottom five are pale rules waiting. That is the game in one image,
+     and it survives 24px, where the two tones read as a list half done long after the
+     individual rows have stopped being rows. */
+  "track-by-track": (r) => {
+    // the sleeve, pasted full bleed
+    let s = sheet([[-6, -6], [126, -6], [126, 166], [-6, 166]], "#6a4630", r, { shadow: false, crisp: true });
+    // the sheet it is being written on, a little off square
+    s += sheet([[11, 14], [111, 10], [114, 150], [8, 154]], "#efe6d0", r, { amp: 1.2 });
+    // nine rows: a tick in the margin where the number goes, and the title line beside it
+    const WIDTHS = [57, 43, 66, 38, 52, 61, 41, 64, 47];
+    WIDTHS.forEach((w, i) => {
+      const y = 26 + i * 11.5;
+      const done = i < 4;
+      s += sheet([[19, y], [26, y - 1], [26, y + 4], [19, y + 5]], done ? "#6a4630" : "#c2b590", r,
+        { amp: 0.5, step: 3, sx: 0.8, sy: 1.1, fibre: false });
+      s += sheet([[32, y], [32 + w, y - 1], [32 + w, y + 5], [32, y + 6]], done ? "#2b2118" : "#b3a98a", r,
+        { amp: 0.7, step: 4, sx: 1, sy: 1.2, fibre: false });
+    });
+    return s;
+  },
+
   /* WORD CLOUD — a clump of torn strips at every weight, packed into a ragged lozenge.
 
      It is told apart from Redacted by SHAPE, not by medium, which is the distinction that
@@ -417,6 +447,7 @@ const LABELS = {
   "then-what":      { x: 14, y: 16,  w: 92, h: 23, rot: 1.6 },
   "running-order":  { x: 13, y: 122, w: 94, h: 21, rot: 1.5 },
   "word-cloud":     { x: 12, y: 126, w: 96, h: 21, rot: -1.3 },
+  "track-by-track": { x: 14, y: 129, w: 92, h: 21, rot: -1.1 },
   "ruthless-game":  { x: 12, y: 16,  w: 96, h: 23, rot: -1.8 },
 };
 const BLANK_LABEL = { x: 16, y: 28, w: 88, h: 20, rot: -1, fill: "#cdb489", ink: "rgba(52,42,30,0.68)" };

@@ -3528,7 +3528,7 @@
      alignment instead lifts a zine whose record has wrapped to two lines, which reads as a
      shorter book rather than as a longer caption. */
   .zine-row {
-    display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); justify-content: center;
+    display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); justify-content: center;
     align-items: start; gap: 14px 10px; padding-bottom: 10px;
   }
   .zine-tile {
@@ -3545,8 +3545,16 @@
        first count that divides evenly, so the thing it feared cannot happen at this length.
        What it costs is that the shelf no longer clears the fold on a short window, which is
        a real loss and was taken knowingly.
-       Nine games is the next decision, not a nudge: 3x3 is the even shape, and 5+4 is the
-       wrap the original rule was written about. */
+       FIVE ACROSS SINCE TRACK BY TRACK MADE IT NINE (2026-09-18), which is deliberately NOT
+       the 3x3 this note used to point at. The shelf is expected to reach ten, and five across
+       is the column count that is even at ten and merely short by one at nine; 3x3 would have
+       to be pulled apart again the moment a tenth game arrived. So the second row runs 5 and
+       then 4, left-aligned, and the gap at its end is honest: it is a shelf with room on it
+       rather than a layout that came out wrong. The old rule's "six and a lonely one" fear
+       does not apply to a row four wide. Five across measures 88px on a narrow page and 106px
+       on a wide one, both clear of the 62px floor that broke one-row-of-eight.
+       The PHONE is three across below, where nine is a clean 3x3. Ten will not be, and that is
+       the next thing to decide rather than something to nudge: 3+3+3+1 is the lonely one. */
     width: 100%;
     display: flex; flex-direction: column; align-items: center; gap: 7px; min-width: 0;
     padding: 8px 4px 7px; background: none; border: none; cursor: pointer; text-align: center;
@@ -3696,6 +3704,167 @@
     .zine-row { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   }
 
+
+
+  /* ---------- TRACK BY TRACK: the album board and the sheet ----------
+     The board is TWELVE SPINES, not twelve squares, and that is a deliberate distance from
+     Album Focus rather than a stylistic whim: that screen already owns a board of twelve album
+     tiles with the masthead ink hanging off it, and two grids of twelve albums in one notebook
+     would read as one system built twice. This one is the edge of a sleeve seen on a shelf —
+     wide, short, stacked — which is a silhouette that page does not use anywhere. */
+  .tbt-blurb {
+    font-family: var(--hand); font-size: calc(19px + var(--text-size-adjust));
+    line-height: 1.4; color: var(--ink); margin: 2px 0 6px; max-width: 46ch;
+  }
+  .tbt-sub {
+    font-family: var(--type); font-size: calc(10.5px + var(--text-size-adjust));
+    letter-spacing: 1.2px; text-transform: uppercase; color: var(--ink-soft);
+    margin: 0 0 12px;
+  }
+  .tbt-shelf { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
+  /* A spine, read left to right: the coloured edge of the sleeve, the record's name, how long
+     it runs, and the time in pen at the far end. The era colour is the only colour on the row,
+     because twelve fully-tinted bars would be a paint chart rather than a shelf. */
+  .tbt-spine {
+    display: grid; grid-template-columns: 7px 1fr auto auto; align-items: baseline;
+    gap: 0 12px; width: 100%; text-align: left; cursor: pointer;
+    background: none; border: none; border-bottom: 1px solid var(--rule);
+    padding: 9px 6px 8px; border-radius: 3px; position: relative;
+  }
+  .tbt-spine-edge {
+    grid-row: 1; align-self: stretch; background: var(--era);
+    border-radius: 1px; opacity: 0.85; min-height: 20px;
+  }
+  .tbt-spine-name {
+    font-family: var(--hand); font-size: calc(22px + var(--text-size-adjust));
+    color: var(--ink); line-height: 1.1;
+  }
+  .tbt-spine-n {
+    font-family: var(--type); font-size: calc(10px + var(--text-size-adjust));
+    letter-spacing: 1px; color: var(--ink-soft); white-space: nowrap;
+  }
+  .tbt-time {
+    font-family: var(--hand); font-size: calc(21px + var(--text-size-adjust));
+    color: var(--ink); min-width: 4.5ch; text-align: right;
+  }
+  /* The dash is the whole completion report this game makes, so it is quiet rather than
+     alarming: an album you have not written out is not a failure, it is one you have not got
+     to yet. */
+  .tbt-time--none { color: var(--ink-soft); opacity: 0.55; }
+  .tbt-spine:hover { background: rgba(43, 39, 34, 0.045); }
+  .tbt-spine:focus-visible { outline: 2px dotted rgba(43, 39, 34, 0.5); outline-offset: 2px; }
+  .tbt-foot {
+    font-family: var(--type); font-size: calc(10.5px + var(--text-size-adjust));
+    color: var(--ink-soft); line-height: 1.6; margin: 0; max-width: 56ch;
+  }
+
+  /* ---------- The sheet itself ---------- */
+  .tbt-sheet { margin: 0 0 14px; }
+  .tbt-sheet-head {
+    font-family: var(--hand); font-size: calc(30px + var(--text-size-adjust));
+    color: var(--ink); margin: 0 0 2px; font-weight: 400; line-height: 1.1;
+  }
+  /* The red margin rule the notebook uses everywhere, here doing a real job: it is the line the
+     track numbers sit to the left of, which is how a tracklist written by hand actually lands
+     on a page. */
+  .tbt-list {
+    list-style: none; margin: 0; padding: 0;
+    border-left: 1px solid var(--margin, rgba(160, 62, 46, 0.45)); padding-left: 0;
+  }
+  /* EVERY ROW IS THE SAME HEIGHT, WRITTEN OR NOT, and it has to be: the type size lives on the
+     row rather than on the title so a blank and a filled-in track occupy the same box. Without
+     it the sheet grows as it is filled — sixteen short rules become sixteen tall lines of
+     handwriting — and the list creeps down the page under the pen while the player is writing
+     on it, which is both ugly and genuinely disorienting on a long record.
+     The row is CENTRED with a min-height and no padding rather than baseline-aligned with one:
+     that way the height is one number every row kind resolves to — a line of handwriting, a
+     dashed rule and a small typewriter line of a printed alt take are all 1.6em — instead of
+     three different line boxes being talked into agreeing. Measured: 35px for all three. */
+  .tbt-row {
+    display: grid; grid-template-columns: 2.6ch 1fr auto; align-items: center;
+    gap: 0 10px; padding: 0; margin-left: -2.6ch;
+    border-bottom: 1px solid var(--rule);
+    font-size: calc(22px + var(--text-size-adjust)); line-height: 1.3; min-height: 1.6em;
+  }
+  .tbt-n {
+    font-family: var(--type); font-size: calc(11px + var(--text-size-adjust));
+    color: var(--ink-soft); text-align: right;
+  }
+  .tbt-title { font-family: var(--hand); font-size: inherit; color: var(--ink); }
+  /* A blank is a ruled line and nothing else — the same thing the paper would give you. It is
+     sized off the row rather than off the title it is hiding, because a rule as long as the
+     answer would quietly tell you how long the answer is. */
+  /* The rule takes the SAME LINE BOX as a line of handwriting rather than being a 1px element,
+     which is what actually holds the row heights level: min-height alone measures against the
+     row's own padding and leaves a blank row six pixels shorter than a written one. The dash is
+     painted as a background instead, sitting where the pen would have rested. */
+  .tbt-rule {
+    display: block; height: 1px; width: 100%; max-width: 21ch;
+    background-image: repeating-linear-gradient(to right,
+      var(--ink-soft) 0 6px, transparent 6px 10px);
+    opacity: 0.4;
+  }
+  .tbt-row.is-now { background: rgba(43, 39, 34, 0.05); }
+  .tbt-row.is-now .tbt-rule {
+    opacity: 0.85; height: 2px;
+    background-image: linear-gradient(var(--era, var(--ink-soft)), var(--era, var(--ink-soft)));
+  }
+  .tbt-row.is-now .tbt-n { color: var(--ink); font-weight: 700; }
+  /* An alt take: printed onto the sheet rather than asked for, because its honest answer is a
+     title sitting higher up the same record. Set in the typewriter face, which is the notebook's
+     way of saying a thing was printed rather than written. */
+  .tbt-row.is-printed .tbt-title {
+    font-family: var(--type); font-size: calc(13px + var(--text-size-adjust));
+    color: var(--ink-soft); line-height: 1.6;
+  }
+  .tbt-printed {
+    font-family: var(--type); font-size: calc(9px + var(--text-size-adjust));
+    letter-spacing: 1px; text-transform: uppercase; color: var(--ink-soft); opacity: 0.7;
+  }
+
+  /* THE WRITING LINE STICKS TO THE FOOT OF THE PAGE for the length of a run. A thirty-track
+     record is taller than the window, so an ordinary line under the sheet ends up somewhere
+     below the fold while the pen is up at track nine, and the player has to scroll between
+     reading where they are and writing what comes next. Sticky keeps the two together: the
+     sheet scrolls under the line the way paper moves under a hand. It is scoped to this game
+     off the play screen's own data attribute, because every other game on the shelf fits its
+     page and would only gain a line that detaches itself for no reason. */
+  :is(#screen-bonusplay, [data-flip-id="screen-bonusplay"])[data-bonus-game="track-by-track"] .bg-write {
+    position: sticky; bottom: 0; z-index: 3;
+    background: var(--paper); box-shadow: 0 -10px 14px -8px var(--paper);
+  }
+  :is(#screen-bonusplay, [data-flip-id="screen-bonusplay"])[data-bonus-game="track-by-track"] .bg-hint {
+    position: sticky; bottom: 0; z-index: 3; background: var(--paper); padding-bottom: 2px;
+  }
+
+  /* ---------- The finished sheet ---------- */
+  .tbt-end {
+    border: 1px solid var(--rule); border-radius: 4px; padding: 14px 16px 12px;
+    margin: 0 0 16px; text-align: center; position: relative;
+    background: rgba(43, 39, 34, 0.035);
+  }
+  .tbt-end-time {
+    font-family: var(--hand); font-size: calc(52px + var(--text-size-adjust));
+    line-height: 1; color: var(--ink);
+  }
+  .tbt-end-remark {
+    font-family: var(--hand); font-size: calc(20px + var(--text-size-adjust));
+    color: var(--ink); margin: 6px 0 4px;
+  }
+  .tbt-end-meta {
+    font-family: var(--type); font-size: calc(10.5px + var(--text-size-adjust));
+    letter-spacing: 0.8px; color: var(--ink-soft); margin: 0 0 12px;
+  }
+  .tbt-end-row { display: flex; justify-content: center; gap: 10px; }
+  /* The rubber stamp the back cover uses, in this game's own words. Only ever printed on a run
+     that actually took the record, so it can be as loud as a stamp is. */
+  .tbt-stamp {
+    position: absolute; top: 8px; right: 10px; transform: rotate(-7deg);
+    font-family: var(--type); font-size: calc(11px + var(--text-size-adjust));
+    letter-spacing: 1.4px; text-transform: uppercase;
+    color: #b0402f; border: 2px solid #b0402f; border-radius: 3px;
+    padding: 2px 7px; opacity: 0.8;
+  }
 
   /* ---------- Bonus game play screen (shared chrome for every bonus game) ---------- */
   /* Spot the Slip's short prompt should still open as a full notebook page. This is a

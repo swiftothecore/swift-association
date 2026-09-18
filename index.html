@@ -3303,6 +3303,19 @@ if (location.pathname.endsWith('/index.html')) {
     <div id="ruthlessBody"></div>
   </section>
 
+  <!-- TRACK BY TRACK SCREEN — the album board, which is also the picker. Reached from the
+       shelf's own sticker rather than from a corner stamp, so it has no route of its own: a
+       run has no URL, and neither does the thing you pick one from. -->
+  <section id="screen-tracks" class="screen card" tabindex="-1" aria-label="Track by Track">
+    <div class="stats-nav">
+      <span class="title-group">
+        <span class="stats-title">Track by Track</span>
+      </span>
+      <button id="tracksBackBtn" class="btn-link">← back</button>
+    </div>
+    <div id="tracksBody"></div>
+  </section>
+
   <!-- GUEST SHELF SCREEN — other artists' catalogues, hung as backstage passes -->
   <section id="screen-guests" class="screen card" tabindex="-1" aria-label="Guest shelf">
     <div class="stats-nav">
