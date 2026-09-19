@@ -374,13 +374,16 @@
   :root[data-theme="dark"] .nav-ic .solid { fill: rgba(var(--tint), 0.65); }
   :root[data-theme="dark"] .nav-ic .deep  { fill: rgba(var(--tint), 0.85); }
   /* Same reason for the bracelet beads, the other way round: the day beads are era colours
-     knocked back into cream, and on #2f281f that pastel reads as chalk. Night takes the era
-     palette nearly neat, off the dark card instead of the paper. */
-  :root[data-theme="dark"] .nav-ic .bead-gold    { fill: #b0851f; }
-  :root[data-theme="dark"] .nav-ic .bead-violet  { fill: #7d68b0; }
-  :root[data-theme="dark"] .nav-ic .bead-denim   { fill: #5479a1; }
-  :root[data-theme="dark"] .nav-ic .bead-crimson { fill: #9e373a; }
-  :root[data-theme="dark"] .nav-ic .bead-sage    { fill: #6f8c55; }
+     knocked back into cream, and on #2f281f even a fifth of cream reads as chalk. Night
+     takes the era palette nearly neat, off the dark card instead of the paper, and shades
+     into something darker than the ink for the same reason the tint steps are all lifted:
+     a shade mixed toward #2b2722 disappears against a card that is nearly that colour. */
+  :root[data-theme="dark"] .nav-ic .nav-bead { --nav-bead-shade: color-mix(in srgb, var(--nav-bead) 58%, #17130d); }
+  :root[data-theme="dark"] .nav-ic .nav-bead-gold    { --nav-bead: #c79626; }
+  :root[data-theme="dark"] .nav-ic .nav-bead-violet  { --nav-bead: #8f77c6; }
+  :root[data-theme="dark"] .nav-ic .nav-bead-denim   { --nav-bead: #5f89b6; }
+  :root[data-theme="dark"] .nav-ic .nav-bead-crimson { --nav-bead: #b23a3f; }
+  :root[data-theme="dark"] .nav-ic .nav-bead-sage    { --nav-bead: #7d9f60; }
   :root[data-theme="dark"] .nav-card:hover .nav-card-seat,
   :root[data-theme="dark"] .nav-card:focus-visible .nav-card-seat { background: rgba(var(--tint), 0.34); }
   :root[data-theme="dark"] .nav-card:hover,
@@ -11178,14 +11181,21 @@
      lavender seat was the obvious way to keep them at the icon set's weight and the wrong
      one: alpha in this set means STRENGTH of a single hue, so six different hues at .5-.62
      only washed each one toward a lavender that was not theirs, and the beads overlap by
-     design, which turned every join into a darker lens. These are those same era colours
-     laid over the cream card at the old alphas and then baked, so the weight is unchanged
-     and the hue is the bead's own. Night restates them up where the dark card needs them. */
-  .nav-ic .bead-gold    { fill: #dbba6c; }
-  .nav-ic .bead-violet  { fill: #b6a5d5; }
-  .nav-ic .bead-denim   { fill: #98b1cb; }
-  .nav-ic .bead-crimson { fill: #d79894; }
-  .nav-ic .bead-sage    { fill: #aec196; }
+     design, which turned every join into a darker lens.
+     Knocked back a fifth into the cream card and no further. Two fifths was the first
+     attempt, matching the weight of the old alphas exactly, and matching that weight is
+     what made them chalky: mixing white into a colour is how paint is made matte, so the
+     beads read as flat discs rather than as beads.
+     Each bead is one custom property, because the drawing needs the colour twice: --bead
+     is the body and --bead-shade is the crescent on its underside, derived here rather
+     than stated ten times. Nothing here is a gradient or a sheen; the shade is a second
+     flat tone, the way a pen shades a round thing on paper. Night moves --bead alone. */
+  .nav-ic .nav-bead { --nav-bead-shade: color-mix(in srgb, var(--nav-bead) 64%, #2b2722); }
+  .nav-ic .nav-bead-gold    { --nav-bead: #d1a847; }
+  .nav-ic .nav-bead-violet  { --nav-bead: #a18dcf; }
+  .nav-ic .nav-bead-denim   { --nav-bead: #7b9dc2; }
+  .nav-ic .nav-bead-crimson { --nav-bead: #c16061; }
+  .nav-ic .nav-bead-sage    { --nav-bead: #94b07a; }
   .nav-card-title {
     grid-area: title; align-self: end; justify-self: start;
     display: inline-block; font-family: var(--hand); font-weight: 700;

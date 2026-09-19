@@ -324,6 +324,23 @@ if (location.pathname.endsWith('/index.html')) {
     <path d="M7 13.6 C9.4 13.6 11.8 14 13.6 14.6"/>
   </symbol>
 </svg>
+<!-- THE KEEPSAKE BRACELET'S BEAD — one drawing, placed six times by the charms card's icon,
+     which appears twice in this page (the board's nav row and the results row). A bead is a
+     body in its own era colour plus a crescent of that colour pushed toward ink, sitting
+     against the inside of the pen outline and tapering to nothing at both ends. That crescent
+     is the whole reason the drawing is shared: six hand-placed shade lines drift, and a line
+     floating inside the bead only thickens the bottom of the outline at 50px.
+     Unlike the page and theme marks above, this one DOES carry fills, but they are var()
+     references rather than colours: --bead comes off the class on each <use> and --bead-shade
+     is derived from it once in styles.css, so the colour is still CSS's to set and night
+     restates it by moving --bead alone. The pen outline is still pure inheritance. -->
+<svg width="0" height="0" aria-hidden="true" style="position:absolute" focusable="false">
+  <g id="nav-bead">
+    <circle r="3.5" fill="var(--nav-bead)"/>
+    <path d="M1.62 -2.47 A2.95 2.95 0 1 1 -2.47 1.62 A2.95 2.95 0 0 0 1.62 -2.47 Z"
+          fill="var(--nav-bead-shade)" stroke="none"/>
+  </g>
+</svg>
 <!-- THEME MARKS — one per charm theme, used twice on the charm page: in the at-a-glance
      panel's rows, and again on the section heading of the theme each row points at. Same pen as the
      page marks above and styled the same way, by inheritance only: carry NO stroke or fill
@@ -2727,21 +2744,22 @@ if (location.pathname.endsWith('/index.html')) {
             <svg class="nav-ic" width="50" height="50" viewBox="0 0 48 48" aria-hidden="true">
               <!-- The bracelet. Its beads are the ONE deliberate exception to the tint rule: a beaded
                    bracelet's whole point is that every bead is a different colour, so these take the
-                   era palette instead of inheriting the card's lavender. They are OPAQUE, and the
-                   classes carry the colour so night can restate it: the beads used to be era rgba()
-                   at .5-.62, which pulled every hue toward the lavender seat behind them and turned
-                   each overlap into a darker lens. Six evenly spaced beads rather than six huddled
-                   ones, and no white speckle highlights, which at 20px were just noise. -->
+                   era palette instead of inheriting the card's lavender. They are OPAQUE and shaded
+                   (see #nav-bead at the top of this file), so the class on each <use> is the whole
+                   bead. Painted RIGHT TO LEFT, which is not decoration: beads overlap by design, and
+                   this order puts every bead in front of the one on its right, so no bead's shaded
+                   side is ever clipped by its neighbour. Six evenly spaced beads rather than six
+                   huddled ones, and no white speckle highlights, which at 20px were just noise. -->
               <path d="M7 15 Q24 40 41 15"/>
               <circle cx="7" cy="15" r="2.4" class="paper fine"/>
               <circle cx="41" cy="15" r="2.4" class="paper fine"/>
               <g class="fine">
-                <circle cx="11.9" cy="21.6" r="3.5" class="bead-gold"/>
-                <circle cx="16.4" cy="26.6" r="3.5" class="bead-violet"/>
-                <circle cx="21.6" cy="29.6" r="3.5" class="bead-denim"/>
-                <circle cx="26.4" cy="29.6" r="3.5" class="bead-crimson"/>
-                <circle cx="31.6" cy="26.6" r="3.5" class="bead-sage"/>
-                <circle cx="36.1" cy="21.6" r="3.5" class="bead-gold"/>
+                <use href="#nav-bead" x="36.1" y="21.6" class="nav-bead nav-bead-gold"/>
+                <use href="#nav-bead" x="31.6" y="26.6" class="nav-bead nav-bead-sage"/>
+                <use href="#nav-bead" x="26.4" y="29.6" class="nav-bead nav-bead-crimson"/>
+                <use href="#nav-bead" x="21.6" y="29.6" class="nav-bead nav-bead-denim"/>
+                <use href="#nav-bead" x="16.4" y="26.6" class="nav-bead nav-bead-violet"/>
+                <use href="#nav-bead" x="11.9" y="21.6" class="nav-bead nav-bead-gold"/>
               </g>
             </svg>
           </span>
@@ -3097,21 +3115,22 @@ if (location.pathname.endsWith('/index.html')) {
           <svg class="nav-ic" width="50" height="50" viewBox="0 0 48 48" aria-hidden="true">
             <!-- The bracelet. Its beads are the ONE deliberate exception to the tint rule: a beaded
                  bracelet's whole point is that every bead is a different colour, so these take the
-                 era palette instead of inheriting the card's lavender. They are OPAQUE, and the
-                 classes carry the colour so night can restate it: the beads used to be era rgba()
-                 at .5-.62, which pulled every hue toward the lavender seat behind them and turned
-                 each overlap into a darker lens. Six evenly spaced beads rather than six huddled
-                 ones, and no white speckle highlights, which at 20px were just noise. -->
+                 era palette instead of inheriting the card's lavender. They are OPAQUE and shaded
+                 (see #nav-bead at the top of this file), so the class on each <use> is the whole
+                 bead. Painted RIGHT TO LEFT, which is not decoration: beads overlap by design, and
+                 this order puts every bead in front of the one on its right, so no bead's shaded
+                 side is ever clipped by its neighbour. Six evenly spaced beads rather than six
+                 huddled ones, and no white speckle highlights, which at 20px were just noise. -->
             <path d="M7 15 Q24 40 41 15"/>
             <circle cx="7" cy="15" r="2.4" class="paper fine"/>
             <circle cx="41" cy="15" r="2.4" class="paper fine"/>
             <g class="fine">
-              <circle cx="11.9" cy="21.6" r="3.5" class="bead-gold"/>
-              <circle cx="16.4" cy="26.6" r="3.5" class="bead-violet"/>
-              <circle cx="21.6" cy="29.6" r="3.5" class="bead-denim"/>
-              <circle cx="26.4" cy="29.6" r="3.5" class="bead-crimson"/>
-              <circle cx="31.6" cy="26.6" r="3.5" class="bead-sage"/>
-              <circle cx="36.1" cy="21.6" r="3.5" class="bead-gold"/>
+              <use href="#nav-bead" x="36.1" y="21.6" class="nav-bead nav-bead-gold"/>
+              <use href="#nav-bead" x="31.6" y="26.6" class="nav-bead nav-bead-sage"/>
+              <use href="#nav-bead" x="26.4" y="29.6" class="nav-bead nav-bead-crimson"/>
+              <use href="#nav-bead" x="21.6" y="29.6" class="nav-bead nav-bead-denim"/>
+              <use href="#nav-bead" x="16.4" y="26.6" class="nav-bead nav-bead-violet"/>
+              <use href="#nav-bead" x="11.9" y="21.6" class="nav-bead nav-bead-gold"/>
             </g>
           </svg>
         </span>
