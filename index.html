@@ -2726,20 +2726,22 @@ if (location.pathname.endsWith('/index.html')) {
           <span class="nav-card-seat">
             <svg class="nav-ic" width="50" height="50" viewBox="0 0 48 48" aria-hidden="true">
               <!-- The bracelet. Its beads are the ONE deliberate exception to the tint rule: a beaded
-                   bracelet's whole point is that every bead is a different colour, so these stay
-                   hardcoded to the era palette instead of inheriting the card's lavender. Six evenly
-                   spaced beads rather than six huddled ones, and no white speckle highlights, which
-                   at 20px were just noise. -->
+                   bracelet's whole point is that every bead is a different colour, so these take the
+                   era palette instead of inheriting the card's lavender. They are OPAQUE, and the
+                   classes carry the colour so night can restate it: the beads used to be era rgba()
+                   at .5-.62, which pulled every hue toward the lavender seat behind them and turned
+                   each overlap into a darker lens. Six evenly spaced beads rather than six huddled
+                   ones, and no white speckle highlights, which at 20px were just noise. -->
               <path d="M7 15 Q24 40 41 15"/>
               <circle cx="7" cy="15" r="2.4" class="paper fine"/>
               <circle cx="41" cy="15" r="2.4" class="paper fine"/>
               <g class="fine">
-                <circle cx="11.9" cy="21.6" r="3.5" fill="rgba(199,149,31,.62)"/>
-                <circle cx="16.4" cy="26.6" r="3.5" fill="rgba(139,115,201,.62)"/>
-                <circle cx="21.6" cy="29.6" r="3.5" fill="rgba(91,135,184,.62)"/>
-                <circle cx="26.4" cy="29.6" r="3.5" fill="rgba(178,58,63,.5)"/>
-                <circle cx="31.6" cy="26.6" r="3.5" fill="rgba(122,158,94,.6)"/>
-                <circle cx="36.1" cy="21.6" r="3.5" fill="rgba(199,149,31,.62)"/>
+                <circle cx="11.9" cy="21.6" r="3.5" class="bead-gold"/>
+                <circle cx="16.4" cy="26.6" r="3.5" class="bead-violet"/>
+                <circle cx="21.6" cy="29.6" r="3.5" class="bead-denim"/>
+                <circle cx="26.4" cy="29.6" r="3.5" class="bead-crimson"/>
+                <circle cx="31.6" cy="26.6" r="3.5" class="bead-sage"/>
+                <circle cx="36.1" cy="21.6" r="3.5" class="bead-gold"/>
               </g>
             </svg>
           </span>
@@ -3094,20 +3096,22 @@ if (location.pathname.endsWith('/index.html')) {
         <span class="nav-card-seat">
           <svg class="nav-ic" width="50" height="50" viewBox="0 0 48 48" aria-hidden="true">
             <!-- The bracelet. Its beads are the ONE deliberate exception to the tint rule: a beaded
-                 bracelet's whole point is that every bead is a different colour, so these stay
-                 hardcoded to the era palette instead of inheriting the card's lavender. Six evenly
-                 spaced beads rather than six huddled ones, and no white speckle highlights, which
-                 at 20px were just noise. -->
+                 bracelet's whole point is that every bead is a different colour, so these take the
+                 era palette instead of inheriting the card's lavender. They are OPAQUE, and the
+                 classes carry the colour so night can restate it: the beads used to be era rgba()
+                 at .5-.62, which pulled every hue toward the lavender seat behind them and turned
+                 each overlap into a darker lens. Six evenly spaced beads rather than six huddled
+                 ones, and no white speckle highlights, which at 20px were just noise. -->
             <path d="M7 15 Q24 40 41 15"/>
             <circle cx="7" cy="15" r="2.4" class="paper fine"/>
             <circle cx="41" cy="15" r="2.4" class="paper fine"/>
             <g class="fine">
-              <circle cx="11.9" cy="21.6" r="3.5" fill="rgba(199,149,31,.62)"/>
-              <circle cx="16.4" cy="26.6" r="3.5" fill="rgba(139,115,201,.62)"/>
-              <circle cx="21.6" cy="29.6" r="3.5" fill="rgba(91,135,184,.62)"/>
-              <circle cx="26.4" cy="29.6" r="3.5" fill="rgba(178,58,63,.5)"/>
-              <circle cx="31.6" cy="26.6" r="3.5" fill="rgba(122,158,94,.6)"/>
-              <circle cx="36.1" cy="21.6" r="3.5" fill="rgba(199,149,31,.62)"/>
+              <circle cx="11.9" cy="21.6" r="3.5" class="bead-gold"/>
+              <circle cx="16.4" cy="26.6" r="3.5" class="bead-violet"/>
+              <circle cx="21.6" cy="29.6" r="3.5" class="bead-denim"/>
+              <circle cx="26.4" cy="29.6" r="3.5" class="bead-crimson"/>
+              <circle cx="31.6" cy="26.6" r="3.5" class="bead-sage"/>
+              <circle cx="36.1" cy="21.6" r="3.5" class="bead-gold"/>
             </g>
           </svg>
         </span>

@@ -373,6 +373,14 @@
   :root[data-theme="dark"] .nav-ic .mid   { fill: rgba(var(--tint), 0.45); }
   :root[data-theme="dark"] .nav-ic .solid { fill: rgba(var(--tint), 0.65); }
   :root[data-theme="dark"] .nav-ic .deep  { fill: rgba(var(--tint), 0.85); }
+  /* Same reason for the bracelet beads, the other way round: the day beads are era colours
+     knocked back into cream, and on #2f281f that pastel reads as chalk. Night takes the era
+     palette nearly neat, off the dark card instead of the paper. */
+  :root[data-theme="dark"] .nav-ic .bead-gold    { fill: #b0851f; }
+  :root[data-theme="dark"] .nav-ic .bead-violet  { fill: #7d68b0; }
+  :root[data-theme="dark"] .nav-ic .bead-denim   { fill: #5479a1; }
+  :root[data-theme="dark"] .nav-ic .bead-crimson { fill: #9e373a; }
+  :root[data-theme="dark"] .nav-ic .bead-sage    { fill: #6f8c55; }
   :root[data-theme="dark"] .nav-card:hover .nav-card-seat,
   :root[data-theme="dark"] .nav-card:focus-visible .nav-card-seat { background: rgba(var(--tint), 0.34); }
   :root[data-theme="dark"] .nav-card:hover,
@@ -11151,7 +11159,7 @@
      interior detail, 0.9 for a hairline. Fills: the CARD'S OWN --tint at four strengths,
      so an icon takes the era colour of the card it sits on and a retint is one edit here
      rather than twelve in the markup. Only the trinket bracelet's beads opt out, and they
-     say so in the markup. */
+     opt out down here with the rest of the fills rather than in the markup. */
   .nav-ic {
     display: block; fill: none; stroke: currentColor; stroke-width: 1.7;
     stroke-linecap: round; stroke-linejoin: round;
@@ -11165,6 +11173,19 @@
   .nav-ic .deep  { fill: rgba(var(--tint), 0.78); }
   .nav-ic .paper { fill: var(--card-bg); }
   .nav-ic .tintstroke { stroke: rgba(var(--tint), 0.95); }
+  /* The trinket bracelet's beads, the one exception the rule above allows: six era colours
+     rather than six strengths of one tint. They are flat and OPAQUE. Era rgba() over the
+     lavender seat was the obvious way to keep them at the icon set's weight and the wrong
+     one: alpha in this set means STRENGTH of a single hue, so six different hues at .5-.62
+     only washed each one toward a lavender that was not theirs, and the beads overlap by
+     design, which turned every join into a darker lens. These are those same era colours
+     laid over the cream card at the old alphas and then baked, so the weight is unchanged
+     and the hue is the bead's own. Night restates them up where the dark card needs them. */
+  .nav-ic .bead-gold    { fill: #dbba6c; }
+  .nav-ic .bead-violet  { fill: #b6a5d5; }
+  .nav-ic .bead-denim   { fill: #98b1cb; }
+  .nav-ic .bead-crimson { fill: #d79894; }
+  .nav-ic .bead-sage    { fill: #aec196; }
   .nav-card-title {
     grid-area: title; align-self: end; justify-self: start;
     display: inline-block; font-family: var(--hand); font-weight: 700;
