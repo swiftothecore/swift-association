@@ -42,7 +42,7 @@
  * Paths are relative so the worker works at the site root (swiftassociation.com)
  * and under any project subpath, without hardcoding the origin.
  */
-const CACHE = "stta-v144";
+const CACHE = "stta-v145";
 // The game's panel routes. These are sections of index.html, not files, so a navigation to one
 // has nothing on the server to fetch: 404.html bounces it back through a ?/slug marker. Once
 // this worker is installed we can do better and answer with index.html directly, so a deep link
@@ -100,6 +100,9 @@ const ASSETS = [
   // Album Focus's twelve halftone snapshots (pure; see js/albumdots.js). It shares the seeded
   // random source in js/zine.js, so it deploys with that one for the same reason the sleeves do.
   "js/albumdots.js",
+  // ...and the tone maps it prints from, generated from the covers by
+  // scripts/albumfocus/covertone.py. Useless without each other, so they cache together.
+  "js/albumtone.js",
   // Word Cloud's ink-mask packing (pure; see js/cloud.js). app.js imports it at load.
   "js/cloud.js",
   // The lineup's goal deck: what the cards say, what a hand of them costs, the line art on

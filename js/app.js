@@ -71,7 +71,7 @@ import {
 } from "./config.js";
 import { drawRandom, poolSummary } from "./random.js";
 import { POLAROIDS, POLAROID_BY_ID } from "./polaroids.js";
-import { albumDots, sceneOf, hasScene } from "./albumdots.js";
+import { albumDots, hasTone } from "./albumdots.js";
 import { STICKERS, STICKER_BY_ID, stickerArt } from "./stickers.js";
 import { TUMBLR_POSTS, TUMBLR_BY_ID, redactionRows } from "./tumblr.js";
 import { showCover, placeCoverStickers } from "./stickercover.js";
@@ -30700,8 +30700,8 @@ function buildDevApi() {
          how a picture GAINS ink, so the states have to be seen side by side or a scene that
          reads at 13/13 and dissolves into dirt at 4/13 ships unnoticed. The bottom row is the
          64px thumbnail from an album's own menu, which is where a composition with anything
-         small in it falls apart. It also names any record drawing off its own hash instead of
-         an authored scene — the tell that STUDIO_ALBUMS has grown and albumdots.js has not. */
+         small in it falls apart. It also names any record with no tone map behind it — the tell
+         that STUDIO_ALBUMS has grown and scripts/albumfocus/covertone.py has not been re-run. */
       pictures: () => {
         if (!$("albumFocusBody")) return "open the board first";
         renderAlbumFocusPage();
@@ -30715,7 +30715,7 @@ function buildDevApi() {
         strip.innerHTML = [[0, 112], [4 / TOTAL_ROUNDS, 112], [9 / TOTAL_ROUNDS, 112], [1, 112], [1, 64]]
           .map(([lv, px]) => row(lv, px)).join("");
         $("albumFocusBody").prepend(strip);
-        return STUDIO_ALBUMS.map((a) => `${a}: ${hasScene(a) ? sceneOf(a) : "NO SCENE — borrowing " + sceneOf(a)}`);
+        return STUDIO_ALBUMS.map((a) => `${a}: ${hasTone(a) ? "printed" : "NO TONE MAP — blank square, re-run covertone.py"}`);
       },
       reset: () => { resetAlbumFocus(); if ($("albumFocusBody")) renderAlbumFocusPage(); },
       /* Winning one, rather than writing one down. `set` and `fill` above forge the BOARD,

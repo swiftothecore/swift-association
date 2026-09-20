@@ -1,45 +1,49 @@
 /* ---------- The album pictures on the Album Focus board ----------
    Twelve square snapshots, one per studio record, drawn as a HALFTONE: a screen of dots on
    bare paper, one era colour plus its own shadow, printed slightly out of register. This
-   module is pure. It reads no app state; it is handed a name, a colour and how far the
-   album has been beaten, and it hands back an <svg>.
+   module is pure. It reads no app state; it is handed a name, a colour and how far the album
+   has been beaten, and it hands back an <svg>.
+
+   WHERE THE PICTURES COME FROM. Each record's shape is a tone map generated from its own
+   cover by scripts/albumfocus/covertone.py and kept in js/albumtone.js: 36 by 36 cells, each
+   one of four steps, no colour and no line. That is a thousandth of the picture, printed back
+   at about twenty dots across in a colour the sleeve does not use — the era colour — so what
+   lands on the board is the cover's light and mass and nothing else. The album's OWN colours,
+   type, photography and marks are not in the data and cannot be got out of it.
 
    WHY DOTS. The square used to be a crayon colouring-in, and a crayon can only ever say the
-   same thing twelve times in twelve colours. A dot screen says it with a PICTURE and still
+   same thing twelve times in twelve colours. A dot screen says it with a picture and still
    obeys the notebook's one art rule — this is ink on paper, and a halftone is literally how
    ink makes a tone, so nothing here is shaded, blurred or gradiated. Every dot is a flat
    circle of one colour.
 
    WHY IT IS NOT THE TRACK BY TRACK SHELF. The record sleeves next door are torn paper,
-   landscape, and made of collage; these are printed, square, and made of light. The two
-   boards are a click apart and they must not read as one board dealt twice, which is also
-   why an album's sleeve motif and its scene here are allowed to be completely different
-   pictures of the same record.
+   landscape, and composed by hand; these are printed, square, and taken off the real records.
+   The two boards are a click apart and must not read as one board dealt twice.
 
    HOW THE SCORE IS IN THE DRAWING. The fraction of the screen actually printed is the best
    score over the thirteen pages: a record never played is bare paper inside a pencilled box,
    a record in progress is a sparse ghost of its picture, and a beaten record is the full
-   press run. The dots arrive in a seeded dissolve rather than sweeping across, so improving
-   a score adds ink to the picture you already had instead of redrawing it. Crucially the
+   press run. The dots arrive in a seeded dissolve rather than sweeping across, so improving a
+   score adds ink to the picture you already had instead of redrawing it. Crucially the
    geometry of EVERY dot is drawn off the random source whether or not it is printed, so the
-   picture is stable for that album forever and only gains ink.
+   picture is stable for that album forever and only gains ink. */
 
-   Colour and mood only. There is no album artwork here and there never will be: what tells
-   the records apart is the composition and the era colour, the same rule the rest of the
-   notebook keeps. */
-
+import { ALBUM_TONES, ALBUM_TONE_N } from "./albumtone.js";
 import { rng, seedOf } from "./zine.js";
 
 const F = 100;              // the field, square, matching the tile's window
-const CELL = 4.7;           // the screen's pitch — about 21 dots across a 100-unit field
+/* The screen's pitch: about twenty-four dots across the square, which is deliberately the
+   same count as the tone map is cells wide (ALBUM_TONE_N). A screen finer than its map prints
+   the map's own cell edges as steps; a screen coarser than it throws half the picture away. */
+const CELL = F / ALBUM_TONE_N;
 
 /* ---------- the ink ----------
-   One era colour in four weights, plus the shadow plate. Nothing invents a hue: a picture is
+   One era colour in three weights, the heaviest of which prints as the shadow plate. Nothing invents a hue: a picture is
    one colour printed at different densities, which is what keeps twelve tiles in twelve
    album colours from turning into a paint chart. */
 function stockOf(hex) {
   return {
-    pale: mix(hex, 0.34),
     mid: hex,
     deep: mix(hex, -0.16),
     shade: mix(hex, -0.38),
@@ -54,218 +58,49 @@ function mix(hex, k) {
   return "#" + rgb.map((c, i) => Math.round(c + (to[i] - c) * t).toString(16).padStart(2, "0")).join("");
 }
 
-/* ---------- what a region is ----------
-   A scene is a list of flat regions, back to front, each one an area of the field printed at
-   one tone in one ink. The last region covering a dot wins, so a shape laid on top simply
-   prints over what is under it, exactly as a second pass of the press would. */
-function poly(pts) {
-  return (x, y) => {
-    let inside = false;
-    for (let i = 0, j = pts.length - 1; i < pts.length; j = i++) {
-      const [xi, yi] = pts[i], [xj, yj] = pts[j];
-      if ((yi > y) !== (yj > y) && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi) inside = !inside;
-    }
-    return inside;
-  };
+/* ---------- the steps ----------
+   Four densities and no more. A halftone with twenty tones in it is a photograph; this is a
+   poster, and the map it prints from only carries four. Step 0 is bare paper, which is what
+   does the drawing: ink is the figure and the stock is the light, so roughly a third of every
+   square is never printed at all.
+
+   The heaviest step prints on its own plate in the shadow ink, which is what gives the print
+   its out-of-register edge (see `press`). The two middle steps are the era colour at two dot
+   sizes, because that is how one ink makes two tones. */
+const STEPS = [
+  null,
+  { d: 0.48, key: "mid" },
+  { d: 0.78, key: "mid" },
+  { d: 0.99, key: "shade", plate: "shade" },
+];
+
+/* One record's row: the tone map, the colour it was generated against, and — when the sleeve
+   has one — the supporting ink and the cells that carry it. A record with no row draws nothing
+   at all: an empty ruled box, exactly as a record nobody has played draws, rather than
+   borrowing another album's picture, which would be a thirteenth record wearing the twelfth's
+   cover. `__dev.album.pictures()` names any album in that state, and it is the tell that
+   STUDIO_ALBUMS has grown and covertone.py has not been re-run. */
+export function hasTone(album) {
+  const row = ALBUM_TONES[album];
+  return !!row && typeof row.t === "string" && row.t.length === ALBUM_TONE_N * ALBUM_TONE_N;
 }
-function disc(cx, cy, r) {
-  return (x, y) => (x - cx) * (x - cx) + (y - cy) * (y - cy) <= r * r;
-}
-function ring(cx, cy, r, w) {
-  const inner = (r - w) * (r - w), outer = r * r;
-  return (x, y) => {
-    const d = (x - cx) * (x - cx) + (y - cy) * (y - cy);
-    return d <= outer && d >= inner;
-  };
-}
-// A parallelogram: a rectangle sheared sideways, which is the whole vocabulary a flat plane
-// seen at an angle needs.
-function par(x, y, w, h, skew) {
-  return poly([[x, y], [x + w, y - skew], [x + w, y - skew + h], [x, y + h]]);
-}
-// A diamond standing on its point.
-function dia(cx, cy, rx, ry) {
-  return poly([[cx, cy - ry], [cx + rx, cy], [cx, cy + ry], [cx - rx, cy]]);
+function cellAt(map, x, y) {
+  const n = ALBUM_TONE_N;
+  const cx = Math.floor((x / F) * n), cy = Math.floor((y / F) * n);
+  if (cx < 0 || cy < 0 || cx >= n || cy >= n) return 0;
+  return map.charCodeAt(cy * n + cx) - 48;
 }
 
-/* The densities a scene may print at. They are steps, not a scale: a halftone with twenty
-   tones in it is a photograph, and this is a poster. CUT is the important one — a region at
-   CUT prints nothing at all, so a shape laid over another in CUT takes a bite of bare paper
-   out of it, which is how the moon gets its crescent and the rug its middle. */
-const CUT = 0, LIGHT = 0.5, MID = 0.74, HEAVY = 0.92, SOLID = 1;
-
-/* ---------- the twelve scenes ----------
-   Authored compositions, not generated ones. They are rooms reduced until only the light is
-   left: a plane, the wall it leans on, and one object — which is where the dot screen came
-   from in the first place, and what stops twelve abstract squares reading as twelve
-   patterns. They are allowed to be completely unlike each other.
-
-   THREE RULES EVERY SCENE KEEPS, all three learned by drawing the wrong thing first.
-   - THE PAPER IS THE LIGHT. Ink is the figure and bare stock is everything the light falls
-     on, so nothing is ever printed pale over the whole field to mean "bright". The first pass
-     did exactly that — a light screen of the era colour standing in for a lit wall — and on
-     cream paper a pale dot at forty percent is invisible, so all twelve squares came out as
-     an even rash of colour with no picture in them. Roughly half the field stays bare.
-   - BIG SHAPES ONLY. A tile is 120 pixels wide on a phone and the screen's pitch is five of
-     them, so a shape narrower than about twelve units resolves to a line of four dots and
-     reads as dirt. Nothing here is small except a deliberate scatter.
-   - TONE CARRIES THE COMPOSITION, not outline. Two regions that touch are a full step apart
-     or more, or the picture goes flat the moment the print is only half in.
-   Where a count falls naturally on the record's number it takes it — Lover's seven spots,
-   1989's five bars — which is a wink and not a system. See the same note in js/sleeves.js. */
-const SCENES = {
-  // The sun coming up over a floor: one disc high on the wall and the light lying in bands
-  // across the boards under it. The debut gets the plainest room on the board.
-  corner: (C) => [
-    { in: disc(62, 30, 23), tone: HEAVY, ink: C.deep },
-    { in: poly([[-4, 60], [104, 52], [104, 78], [-4, 86]]), tone: MID, ink: C.mid },
-    { in: poly([[-4, 90], [104, 82], [104, 104], [-4, 104]]), tone: HEAVY, ink: C.shade, plate: "shade" },
-  ],
-
-  // Light through a blind: bars of shadow leaning across the whole square with the lit paper
-  // left standing between them.
-  blind: (C) => {
-    const out = [];
-    for (let k = 0; k < 4; k++) {
-      const x = -18 + k * 31;
-      out.push({ in: poly([[x, 104], [x + 17, 104], [x + 41, -4], [x + 24, -4]]),
-        tone: k % 2 ? MID : HEAVY, ink: k % 2 ? C.mid : C.deep });
-    }
-    return out;
-  },
-
-  // Three steps climbing out of the bottom-left corner, each block a weight lighter than the
-  // one below it: going up, into the light. The treads are cut well apart by bare paper,
-  // because blocks that touch are one diagonal smear and not a stair — and there are three
-  // rather than four because at this pitch a narrower tread stops being a block at all.
-  steps: (C) => [
-    { in: par(0, 66, 30, 42, 8), tone: HEAVY, ink: C.deep },
-    { in: par(38, 46, 30, 42, 8), tone: HEAVY, ink: C.mid },
-    { in: par(76, 26, 30, 42, 8), tone: MID, ink: C.mid },
-  ],
-
-  // A table seen end-on: one long plane across the room and one block standing on it, with a
-  // gap of lit paper between the two so the block is a block and not a bruise on the table.
-  slab: (C) => [
-    { in: par(20, 18, 36, 32, 9), tone: HEAVY, ink: C.deep },
-    { in: poly([[-4, 66], [104, 58], [104, 82], [-4, 90]]), tone: MID, ink: C.mid },
-    { in: poly([[-4, 92], [104, 84], [104, 104], [-4, 104]]), tone: HEAVY, ink: C.shade, plate: "shade" },
-  ],
-
-  // A dark wall with FIVE bars of light thrown down it and across the floor, widening as
-  // they fall. 1989 is the fifth record (see the note over SCENES). The light is cut out of
-  // the ink rather than printed: five narrow bars of colour would be five lines of four
-  // dots, which at this pitch is dirt, and the same five as holes are unmistakable.
-  window: (C) => {
-    const out = [{ in: poly([[-4, -4], [104, -4], [104, 104], [-4, 104]]), tone: HEAVY, ink: C.deep }];
-    for (let k = 0; k < 5; k++) {
-      const top = 12 + k * 15, bot = -6 + k * 22;
-      out.push({ in: poly([[top, -4], [top + 11, -4], [bot + 19, 104], [bot, 104]]), tone: CUT });
-    }
-    out.push({ in: poly([[-4, 84], [104, 78], [104, 104], [-4, 104]]), tone: MID, ink: C.shade, plate: "shade" });
-    return out;
-  },
-
-  // A dark room with one door open in it. The only card on the board that is mostly ink, and
-  // the only one where the light is a hole rather than a shape.
-  doorway: (C) => [
-    { in: poly([[-4, -4], [104, -4], [104, 104], [-4, 104]]), tone: HEAVY, ink: C.deep },
-    { in: poly([[38, 10], [66, 14], [66, 94], [38, 98]]), tone: CUT },
-    { in: poly([[38, 98], [66, 94], [96, 104], [18, 104]]), tone: LIGHT, ink: C.mid },
-  ],
-
-  // A rug thrown down on a floor, diamond inside diamond, with SEVEN spots scattered round
-  // it — Lover being the seventh record.
-  rug: (C) => {
-    const out = [
-      { in: dia(50, 56, 46, 36), tone: MID, ink: C.mid },
-      { in: dia(50, 56, 30, 23), tone: CUT },
-      { in: dia(50, 56, 17, 13), tone: HEAVY, ink: C.deep },
-    ];
-    [[13, 15], [35, 8], [60, 12], [84, 9], [92, 30], [8, 34], [76, 26]].forEach(([x, y]) =>
-      out.push({ in: disc(x, y, 5.5), tone: HEAVY, ink: C.shade, plate: "shade" }));
-    return out;
-  },
-
-  // Trunks standing in a wood, near ones darker than far. Flat verticals and no branches: an
-  // outline would be a drawing of a tree, and this is a drawing of standing in one.
-  wood: (C) => {
-    const out = [];
-    [[3, 14, MID, C.mid], [24, 16, HEAVY, C.deep], [48, 13, MID, C.mid],
-     [66, 17, HEAVY, C.deep], [89, 12, MID, C.mid]].forEach(([x, w, tone, ink]) => {
-      out.push({ in: poly([[x, -4], [x + w, -4], [x + w - 2, 104], [x - 2, 104]]), tone, ink });
-    });
-    out.push({ in: poly([[-4, 92], [104, 86], [104, 104], [-4, 104]]), tone: MID, ink: C.shade, plate: "shade" });
-    return out;
-  },
-
-  // A sheet of paper folded once and stood on the desk. Only the far plane is printed: the
-  // near one is bare stock, which is the face the light is on, and the crease between them is
-  // the gap rather than a drawn line — the only kind of edge this press can make.
-  fold: (C) => [
-    { in: poly([[54, 10], [90, 34], [90, 86], [54, 80]]), tone: HEAVY, ink: C.deep },
-    { in: poly([[12, 30], [46, 10], [46, 78], [12, 90]]), tone: MID, ink: C.mid },
-    { in: poly([[46, 84], [94, 90], [104, 102], [26, 102]]), tone: MID, ink: C.shade, plate: "shade" },
-  ],
-
-  // A moon over a low floor with the small hours scattered round it. The crescent is bitten
-  // out of the disc rather than drawn, which is the only way a moon works in one ink.
-  moon: (C) => {
-    const out = [
-      { in: disc(58, 36, 27), tone: HEAVY, ink: C.deep },
-      { in: disc(44, 30, 22), tone: CUT },
-      { in: poly([[-4, 82], [104, 74], [104, 104], [-4, 104]]), tone: MID, ink: C.mid },
-    ];
-    [[14, 14], [30, 48], [10, 62], [88, 12], [92, 54], [40, 6]].forEach(([x, y]) =>
-      out.push({ in: disc(x, y, 4.6), tone: HEAVY, ink: C.shade, plate: "shade" }));
-    return out;
-  },
-
-  // A desk under a lamp at two in the morning: the room in shadow either side, the cone of
-  // light bare paper straight down the middle, and one page lying in it.
-  desk: (C) => [
-    { in: poly([[-4, -4], [104, -4], [104, 104], [-4, 104]]), tone: HEAVY, ink: C.deep },
-    { in: poly([[36, -4], [60, -4], [96, 78], [6, 78]]), tone: CUT },
-    { in: poly([[-4, 78], [104, 70], [104, 104], [-4, 104]]), tone: MID, ink: C.mid },
-    { in: par(38, 54, 30, 20, 7), tone: SOLID, ink: C.shade, plate: "shade" },
-  ],
-
-  // A stage: the arc a spotlight throws across the boards, and the dark beyond the edge of
-  // it. The Life of a Showgirl.
-  arc: (C) => [
-    { in: ring(50, 104, 62, 20), tone: MID, ink: C.mid },
-    { in: ring(50, 104, 36, 16), tone: HEAVY, ink: C.deep },
-    { in: poly([[-4, -4], [104, -4], [104, 26], [-4, 32]]), tone: HEAVY, ink: C.shade, plate: "shade" },
-  ],
-};
-
-/* WHICH RECORD GETS WHICH SCENE, stated by name and never by position — the same promise the
-   sleeves make, for the same reason: dealt off an index into STUDIO_ALBUMS, a thirteenth
-   record would silently swap every picture on the board. An album with no line here still
-   draws, off its own name, rather than coming up blank. */
-const ALBUM_SCENE = {
-  "Taylor Swift": "corner",
-  "Fearless": "blind",
-  "Speak Now": "steps",
-  "Red": "slab",
-  "1989": "window",
-  "reputation": "doorway",
-  "Lover": "rug",
-  "folklore": "wood",
-  "evermore": "fold",
-  "Midnights": "moon",
-  "The Tortured Poets Department": "desk",
-  "The Life of a Showgirl": "arc",
-};
-const SCENE_NAMES = Object.keys(SCENES);
-
-export function sceneOf(album) {
-  return ALBUM_SCENE[album] || SCENE_NAMES[seedOf(String(album)) % SCENE_NAMES.length];
-}
-// Is there a picture spoken for by name, or is this record borrowing one off its own hash?
-// The dev board asks, the way it asks the sleeves whether a cover is authored.
-export function hasScene(album) {
-  return Object.prototype.hasOwnProperty.call(ALBUM_SCENE, album);
+/* THE SUPPORTING INK IS CONDITIONAL, and the condition is the palette. It was chosen against a
+   particular era colour — to be the hue that colour is NOT — so on the colour-blind palette,
+   where every album wears a different swatch, that reasoning no longer holds and the second
+   plate could easily land on top of the hue it was picked to avoid. When the colour handed in
+   is not the one the map was generated against, the record simply prints in one ink. */
+function secondInk(album, colour) {
+  const row = ALBUM_TONES[album];
+  if (!row || !row.ink || !row.a) return null;
+  if (String(colour).trim().toLowerCase() !== String(row.base).toLowerCase()) return null;
+  return { ink: row.ink, map: row.a };
 }
 
 /* ---------- the press ----------
@@ -287,7 +122,10 @@ export function hasScene(album) {
    Everything is accumulated into ONE PATH PER INK. A tile is four or five paths, not four
    hundred circles: the board draws twelve of these at once, and twelve squares of five
    thousand nodes is a scrolling board that stutters on a phone. */
-function press(regions, r, level, angle, reg) {
+function press(album, C, r, level, angle, reg, colour) {
+  const row = ALBUM_TONES[album];
+  const tones = row && row.t;
+  const second = secondInk(album, colour);
   const cos = Math.cos(angle), sin = Math.sin(angle);
   const buckets = new Map();
   // How much of the screen actually printed. A single page scored is a thirteenth of the
@@ -309,22 +147,34 @@ function press(regions, r, level, angle, reg) {
       // at every score and only gains ink. Do not move these inside the checks below.
       const jx = (r() * 2 - 1) * CELL * 0.18, jy = (r() * 2 - 1) * CELL * 0.18;
       const grit = 0.84 + r() * 0.32;
+      const agrit = 0.8 + r() * 0.4;               // the second plate's own dot, drawn here for
+                                                   // the same reason: see the note above
       const order = r();
       const skip = r() < 0.04;
       const x = bx + jx, y = by + jy;
-      let hit = null;
-      for (let k = regions.length - 1; k >= 0; k--) {
-        if (regions[k].in(x, y)) { hit = regions[k]; break; }
+      if (!tones || skip || order > frac) continue;
+      const step = STEPS[cellAt(tones, x, y)];
+      /* The second plate. Small, and never in place of the first: a supporting dot sits in the
+         gap beside its neighbour rather than on top of it, which is what a spare screen run at
+         an offset actually does. It prints on bare cells too — that is where it does the most
+         work, since a few specks of a second colour over blank paper is what stops a
+         one-colour picture from ending at its own edge. */
+      if (second && cellAt(second.map, x, y)) {
+        const ar = CELL * 0.31 * agrit * weight;
+        const ax = (x + reg[0] * 1.5).toFixed(1), ay = (y - reg[1] * 1.2).toFixed(1);
+        const arr = ar.toFixed(2);
+        buckets.set(second.ink, (buckets.get(second.ink) || "") +
+          `M${ax} ${ay}m-${arr} 0a${arr} ${arr} 0 1 0 ${(ar * 2).toFixed(2)} 0a${arr} ${arr} 0 1 0 -${(ar * 2).toFixed(2)} 0`);
       }
-      if (!hit || hit.tone <= 0 || skip) continue;
-      if (order > frac) continue;
-      const rad = CELL * 0.68 * hit.tone * grit * weight;
+      if (!step) continue;
+      const rad = CELL * 0.68 * step.d * grit * weight;
       if (rad < 0.25) continue;
-      const dx = hit.plate === "shade" ? reg[0] : 0, dy = hit.plate === "shade" ? reg[1] : 0;
+      const dx = step.plate === "shade" ? reg[0] : 0, dy = step.plate === "shade" ? reg[1] : 0;
       const cx = (x + dx).toFixed(1), cy = (y + dy).toFixed(1);
       const rr = rad.toFixed(2);
       const d = `M${cx} ${cy}m-${rr} 0a${rr} ${rr} 0 1 0 ${(rad * 2).toFixed(2)} 0a${rr} ${rr} 0 1 0 -${(rad * 2).toFixed(2)} 0`;
-      buckets.set(hit.ink, (buckets.get(hit.ink) || "") + d);
+      const ink = C[step.key];
+      buckets.set(ink, (buckets.get(ink) || "") + d);
     }
   }
   let out = "";
@@ -351,6 +201,14 @@ function boxPath(r) {
   return d + " Z";
 }
 
+/* A record with no tone map behind it. It is the same empty ruled box a record nobody has
+   played draws, which is the honest thing for it to be: a square waiting to be printed. */
+function blankSquare(r, extra) {
+  return `<svg class="af-pic${extra ? " " + extra : ""}" viewBox="0 0 ${F} ${F}"` +
+    ` preserveAspectRatio="none" aria-hidden="true">` +
+    `<path class="af-pic-box" d="${boxPath(r)}" fill="none"/></svg>`;
+}
+
 let uid = 0;
 
 /* ---------- a snapshot ----------
@@ -364,7 +222,7 @@ let uid = 0;
 export function albumDots(album, colour, level, extra = "") {
   const r = rng(seedOf("afdots:" + album));
   const C = stockOf(colour || "#999999");
-  const scene = (SCENES[sceneOf(album)] || SCENES.corner)(C);
+  if (!hasTone(album)) return blankSquare(r, extra);
   // Drawn before the press so the screen angle, the registration and the box are the album's
   // and not a function of how well it has been played.
   const angle = (14 + r() * 26) * (Math.PI / 180);
@@ -374,7 +232,7 @@ export function albumDots(album, colour, level, extra = "") {
 
   return `<svg class="af-pic${extra ? " " + extra : ""}" viewBox="0 0 ${F} ${F}" preserveAspectRatio="none" aria-hidden="true">` +
     `<defs><clipPath id="${id}"><rect x="0" y="0" width="${F}" height="${F}"/></clipPath></defs>` +
-    `<g clip-path="url(#${id})">${press(scene, r, level, angle, reg)}</g>` +
+    `<g clip-path="url(#${id})">${press(album, C, r, level, angle, reg, colour)}</g>` +
     `<path class="af-pic-box" d="${box}" fill="none"/>` +
     `</svg>`;
 }
