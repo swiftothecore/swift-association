@@ -183,6 +183,16 @@
      That is what lets the generated favicon read --mast-ink-day off the body whatever theme
      the page is wearing: its tile is cream paper at midnight too, so it wants the day column
      and must never be handed the night one. */
+  /* The house gold, as a paint key. It is NOT an ink and the body never wears it: choosing
+     brand gold REMOVES data-ink, which is what lets every masthead surface fall back to the
+     colour it already had. But a chip in the tray sits INSIDE a body that may be wearing an
+     ink, and --mast-ink inherits, so a chip with no key of its own was painting itself in
+     whatever the title currently wore — brand gold's chip went navy behind a navy title and
+     told you the house ink was navy. So the chip states the gold outright. Restated here
+     rather than pointing at --brand-gold because the day column has to stay the DAY colour
+     whatever theme the page is in (see the favicon note above), and --brand-gold is swapped
+     by theme on :root. If the gold on line 109/283 moves, move it here too. */
+  [data-ink="brand"]        { --mast-ink-day:#a9791f; --mast-ink-night:#e0a83a; }
   [data-ink="debut"]        { --mast-ink-day:#3f7d54; --mast-ink-night:#74c48b; }
   [data-ink="fearless"]     { --mast-ink-day:#d0a021; --mast-ink-night:#f4cf62; }
   [data-ink="speaknow"]     { --mast-ink-day:#6d5aa6; --mast-ink-night:#bca6f0; }
@@ -5458,45 +5468,55 @@
      perfected. Tapping a tile turns to a separate album menu with the difficulty
      picker and record. Nothing here is a flat swatch on purpose — twelve saturated
      rectangles side by side read as a paint chart, and strokes let the paper through. */
-  /* ---------- The ink pot, and the tray behind it (Album Focus reward) ----------
-     The pot is the door to the ink tray AND a readout of what the title is currently written
-     in: its pool takes --mast-ink, so it holds the real ink. Line art only, per the page's own
-     rule — the pool is a flat fill, never a gradient, and the glass is drawn rather than shaded. */
+  /* ---------- The ink card, and the tray behind it (Album Focus reward) ----------
+     The card is the door to the ink tray AND a readout of what the title is currently written
+     in: the chip inside it takes --mast-ink, so it writes in the real ink. It is built the way
+     every other button in this notebook is built — a 2px ink edge, a 2px radius, the house hard
+     shadow, set down a degree off square — because the old drawing was a 26px wireframe with no
+     edge at all, and on ruled paper a wireframe reads as a smudge rather than an object. Line
+     art only still holds inside it: the chip is a flat wash of the ink under a written word,
+     never a gradient and never a shaded bottle. */
   .chall-head-l { display: flex; flex-direction: column; align-items: flex-start; gap: 7px; min-width: 0; }
-  /* No pill, no border, no fill: a dashed capsule made the pot read as one more of the
-     page's buttons, when it is a bottle standing on the paper. What is clickable is said
-     by the object and by the ink's name ruled underneath it in the ink itself — a blank
-     filled in on a form. It sits slightly askew, as a bottle set down would. */
   .af-pot {
-    display: inline-flex; align-items: center; gap: 8px;
-    margin: 0; padding: 0; border: 0; background: none;
+    display: inline-flex; align-items: center; gap: 9px;
+    margin: 0; padding: 5px 12px 5px 6px;
+    background: var(--paper); border: 2px solid var(--ink); border-radius: 2px;
+    box-shadow: 3px 3px 0 rgba(43, 39, 34, 0.18);
     cursor: pointer; font: inherit; color: var(--ink); text-align: left;
+    transform: rotate(-0.9deg);
+    transition: transform 0.14s ease, box-shadow 0.14s ease;
   }
-  .af-pot-art {
-    width: 26px; height: 25px; flex: none; overflow: visible;
-    transform: rotate(-3.5deg); transform-origin: 50% 88%;
-    transition: transform 0.16s ease;
+  .af-pot:hover, .af-pot:focus-visible { transform: rotate(-0.9deg) translate(-1px, -1px); box-shadow: 4px 4px 0 rgba(43, 39, 34, 0.22); }
+  .af-pot:active { transform: rotate(-0.9deg) translate(1px, 1px); box-shadow: 2px 2px 0 rgba(43, 39, 34, 0.18); }
+  /* One of the tray's chips, shrunk. Same construction as .ink-sw on purpose — the button is a
+     promise of what the tray holds, so it has to be made of the same thing. The fallback chain
+     is the masthead's own, so an unchosen ink can never disagree with an unwritten title. */
+  .af-pot-chip {
+    display: block; flex: none; padding: 3px 9px 4px; position: relative;
+    background: #fbf6ea; border: 1.6px solid var(--ink); border-radius: 1px;
+    font-family: var(--hand); font-weight: 700; line-height: 1;
+    font-size: calc(17px + var(--text-size-adjust));
+    color: var(--mast-ink, var(--brand-gold));
   }
-  .af-pot:hover .af-pot-art { transform: rotate(-6.5deg) translateY(-1px); }
-  .af-pot:active .af-pot-art { transform: rotate(-3.5deg) translateY(0); }
-  .af-pot-pool { fill: var(--mast-ink, var(--brand-gold)); opacity: 0.9; }
-  .af-pot-line { fill: none; stroke: var(--ink); stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; opacity: 0.75; }
   .af-pot-txt { text-align: left; }
   .af-pot-txt b {
     display: block; font-family: var(--type); font-size: calc(8px + var(--text-size-adjust));
     text-transform: uppercase; letter-spacing: 0.14em; color: var(--ink-soft); font-weight: 400;
   }
-  /* The name is written, not labelled, and the rule under it is the ink on the nib. */
+  /* The name is written, not labelled. No rule under it any more: the chip beside it is now
+     carrying the colour, and an underline in the same ink made two readouts of one fact. */
   .af-pot-name {
-    display: inline-block; margin-top: 1px; padding-bottom: 1px;
+    display: inline-block; margin-top: 1px;
     font-family: var(--hand); font-size: calc(15px + var(--text-size-adjust)); line-height: 1.05;
     color: var(--ink);
-    border-bottom: 1.6px solid var(--mast-ink, var(--brand-gold));
-    transition: border-bottom-width 0.16s ease;
   }
-  .af-pot:hover .af-pot-name { border-bottom-width: 2.6px; }
+  :root[data-theme="dark"] .af-pot { background: rgba(255,246,226,0.05); }
+  /* background-COLOR, not the shorthand. The chip under it is a containing block for Era
+     ink's field layer, and keeping the two properties apart here stops a night rule from
+     quietly resetting anything the cut relies on. */
+  :root[data-theme="dark"] .af-pot-chip { background-color: rgba(255,246,226,0.08); }
   @media (prefers-reduced-motion: reduce) {
-    .af-pot-art, .af-pot:hover .af-pot-art, .af-pot-name { transition: none; transform: none; }
+    .af-pot, .af-pot:hover, .af-pot:focus-visible, .af-pot:active { transition: none; transform: none; }
   }
 
   /* The tray. Mirrors the Mastery reward board's swatch idiom (a chip, its name beneath, a
@@ -5536,10 +5556,58 @@
   .ink-sw.locked .rb-lock { width: 18px; height: 18px; opacity: 0.55; }
   .ink-sw.locked .rb-lock svg { width: 100%; height: 100%; overflow: visible; }
   .ink-sw-col.active .ink-sw { border-color: var(--mast-ink, var(--brand-gold)); box-shadow: 0 0 0 3px color-mix(in srgb, var(--mast-ink, var(--brand-gold)) 22%, transparent); }
+  /* ---- Era ink, cut ----
+     Era ink is the only ink with no colour of its own: it wears whichever era the notebook is
+     loaded in. Painted flat it is a lie by omission — on the gold era its accent is #a9791f,
+     which is brand gold to the byte, so the thirteenth ink and the house ink came out as the
+     same swatch twice and the tray gave you no way to tell them apart.
+
+     So its chip is CUT: the whole card is two flat fields meeting on a hard diagonal, with the
+     word knocked out on top. A HARD stop, never a blend — this page is ink on paper, and a
+     colour fading into another colour is neither.
+
+     The two colours are TWO OF THE TWELVE INKS, rolled fresh on every page load and fixed for
+     the visit (see ERA_CUT_PAIR in js/app.js). Rolled rather than fixed because the chip is not
+     a swatch of a colour, it is a sign that this ink HAS no colour, and a pair that is different
+     every time you open the notebook says that better than any one pair could. Drawn from the
+     twelve rather than from the ten era washes for a plain reason: [data-ink] is already a
+     palette any element can wear, with a day column, a night column and both high-contrast
+     columns behind it, so two <i>s wearing it are correct on all four desks with no second
+     table to keep in step. The trade is that the pair names album inks where the label says
+     era — accepted, because what the chip has to communicate is "not fixed", not "this hue".
+
+     It is the one chip in the tray that is not paper with writing on it, and that is the point
+     rather than an oversight: every other chip can show you its ink by being written in it, and
+     this one cannot, because it does not have one. */
+  .ink-word { display: inline-block; position: relative; }
+  /* The field layer, NOT the chip, is what clips: the gilded leaf hangs outside the chip's
+     top-right corner and would be beheaded by an overflow on .ink-sw itself. */
+  .era-cut {
+    position: absolute; inset: 0; border-radius: inherit; overflow: hidden;
+    background: #2b2722;          /* shows through the gap between the fields AS the rule */
+  }
+  .era-cut i { position: absolute; inset: 0; background-color: var(--mast-ink); }
+  /* The two halves are clipped to either side of one diagonal and stop ~1px short of each
+     other, so the backdrop above draws the join. Percentages, so the cut keeps its angle at
+     the tray chip's 88px and the header card's smaller width alike. */
+  .era-cut i:first-child { clip-path: polygon(0 0, 61.4% 0, 37.4% 100%, 0 100%); }
+  .era-cut i:last-child  { clip-path: polygon(62.6% 0, 100% 0, 100% 100%, 38.6% 100%); }
+  /* --era-cut is the word knocked out of the two fields, and it FLIPS with the theme — but not
+     for the usual reason. An ink is not one colour seen on two papers: the day column is dark
+     and saturated and the night column is pale, because each is tuned to read on its own desk.
+     So the knockout goes the OTHER way from the page: cream out of dark fields by day, ink out
+     of pale fields by night. Reading --ink or --paper here would get it exactly backwards. */
+  .ink-sw[data-ink="shuffle"],
+  body[data-ink="shuffle"] .af-pot-chip { --era-cut: #fbf6ea; }
+  :root[data-theme="dark"] .ink-sw[data-ink="shuffle"],
+  :root[data-theme="dark"] body[data-ink="shuffle"] .af-pot-chip { --era-cut: #2b2722; }
+  .ink-sw[data-ink="shuffle"] .ink-word,
+  body[data-ink="shuffle"] .af-pot-chip .ink-word { color: var(--era-cut); }
   .ink-sw-nm { font-family: var(--type); font-size: calc(8.5px + var(--text-size-adjust)); letter-spacing: 0.03em; color: var(--ink-soft); text-align: center; }
   .ink-sw-col.active .ink-sw-nm { color: var(--ink); }
-  :root[data-theme="dark"] .ink-sw { background: rgba(255,246,226,0.06); border-color: rgba(255,246,226,0.16); }
-  :root[data-theme="dark"] .ink-sw.locked { background: rgba(255,246,226,0.03); border-color: rgba(255,246,226,0.18); }
+  /* background-COLOR for the same reason as .af-pot-chip above. */
+  :root[data-theme="dark"] .ink-sw { background-color: rgba(255,246,226,0.06); border-color: rgba(255,246,226,0.16); }
+  :root[data-theme="dark"] .ink-sw.locked { background-color: rgba(255,246,226,0.03); border-color: rgba(255,246,226,0.18); }
 
   .af-board {
     display: grid; grid-template-columns: repeat(4, 1fr); gap: 30px 18px;

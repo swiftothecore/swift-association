@@ -11542,13 +11542,20 @@ function renderAlbumFocusPage() {
     `<div class="chall-head">` +
       `<div class="chall-head-l">` +
         `<div class="chall-head-sub">tap an album · beat all 12</div>` +
-        // The ink pot: what beating an album buys. It stands in the header beside the
+        // The ink card: what beating an album buys. It stands in the header beside the
         // instruction line rather than on a row of its own, so the board starts a line
         // higher and the reward is read on the way past instead of stepped over. It stays
         // live from the very first visit — a tray of twelve locked inks teaches the whole
         // reward at a glance, where a greyed-out button would teach nothing.
+        //
+        // The chip is the WORD, not a swatch and not a bottle: one of the tray's own chips
+        // shrunk down, writing the word the ink actually writes. That makes the door and the
+        // room the same object, and it demonstrates the reward instead of symbolising it —
+        // a rectangle of colour would say an ink was chosen without saying what an ink does.
         `<button type="button" class="af-pot" id="afInkPot" aria-label="Title ink: ${escapeHtml(inkName)}">` +
-          inkPotSVG() +
+          `<span class="af-pot-chip" aria-hidden="true">` +
+            `${worn === MAST_SHUFFLE ? eraCutFields() : ""}` +
+            `<span class="ink-word">Song</span></span>` +
           `<span class="af-pot-txt"><b>title ink</b><span class="af-pot-name">${escapeHtml(inkName)}</span></span>` +
         `</button>` +
       `</div>` +
@@ -11683,20 +11690,6 @@ function paintFavicon() {
   if (stale && stale.startsWith("blob:")) setTimeout(() => URL.revokeObjectURL(stale), 1000);
 }
 
-// The pot on the board, and the door to the tray. Drawn rather than lettered, and drawn as a
-// readout: the pool inside it takes --mast-ink, so the pot always holds the ink the title is
-// actually written in. Uneven on purpose — a pressed-glass well off a desk, not a CAD part.
-function inkPotSVG() {
-  return `<svg class="af-pot-art" viewBox="0 0 44 42" aria-hidden="true">` +
-    `<path class="af-pot-pool" d="M10.6 23.1 C16.4 21.7 28.2 21.9 33.6 23.0 C33.1 28.4 32.4 32.6 31.4 34.5 C29.6 37.1 14.1 37.0 12.6 34.4 C11.6 32.5 11.0 28.5 10.6 23.1 Z"/>` +
-    `<path class="af-pot-line" d="M9.4 16.2 C8.9 24.6 10.3 31.8 12.3 34.6 C14.2 37.3 30.0 37.2 31.7 34.5 C33.6 31.6 34.9 24.4 34.6 16.0"/>` +
-    `<path class="af-pot-line" d="M9.4 16.2 C13.6 14.4 30.6 14.3 34.6 16.0"/>` +
-    `<path class="af-pot-line" d="M17.1 15.4 C17.5 12.6 17.8 10.4 17.9 8.6"/>` +
-    `<path class="af-pot-line" d="M26.9 15.3 C26.6 12.5 26.4 10.3 26.4 8.5"/>` +
-    `<path class="af-pot-line" d="M17.9 8.6 C19.4 7.3 25.2 7.2 26.4 8.5 C25.4 9.9 19.1 10.0 17.9 8.6 Z"/>` +
-    `</svg>`;
-}
-
 let inkTrayScrollY = 0;   // the board's scroll position, restored on the way back
 
 function openInkTray() {
@@ -11719,10 +11712,39 @@ const INK_STAR = `<svg class="ink-sw-leaf" viewBox="0 0 34 24" aria-hidden="true
   `<path class="ink-sw-star" d="M11.6 1.9 L14.9 8.7 L22.1 9.0 L16.4 14.1 L18.4 21.3 L11.7 17.1 L5.2 20.7 L7.6 13.6 L2.0 9.5 L9.2 8.4 Z"/>` +
   `<path class="ink-sw-tw" d="M26.9 1.6 Q27.5 6.1 32.7 7.6 Q27.6 9.0 26.4 13.4 Q25.8 9.1 21.0 7.4 Q26.0 6.2 26.9 1.6 Z"/></svg>`;
 
+/* Era ink's two fields, rolled ONCE per page load and fixed for the visit.
+   The chip is a sign that this ink has no colour of its own, so a pair that is different every
+   time the notebook is opened says that better than any one fixed pair could. It is rolled here
+   at module scope rather than inside the render on purpose: renderInkTrayPage runs again on
+   every pick, and a pair that re-rolled under your thumb would read as a rendering fault rather
+   than as the ink changing. Only a reload moves it.
+
+   Two of the TWELVE, never the same one twice — a pair that came up equal would print a flat
+   chip and put the original bug back on screen. Drawn from the inks rather than the era washes
+   because [data-ink] is a palette any element can wear and it already answers on all four desks
+   (day, night, and both high-contrast columns); see the note in styles.css. */
+const ERA_CUT_PAIR = (() => {
+  const slugs = STUDIO_ALBUMS.filter((a) => MAST_INKS[a]).map((a) => MAST_INKS[a].slug);
+  const a = Math.floor(Math.random() * slugs.length);
+  const b = (a + 1 + Math.floor(Math.random() * (slugs.length - 1))) % slugs.length;
+  return [slugs[a], slugs[b]];
+})();
+// The field layer behind Era ink's word: two <i>s in the rolled inks, clipped to either side of
+// the diagonal by .era-cut in styles.css. aria-hidden — the chip's own label already says which
+// ink this is, and the fields are a sign, not information.
+function eraCutFields() {
+  return `<span class="era-cut" aria-hidden="true">` +
+    ERA_CUT_PAIR.map((slug) => `<i data-ink="${escapeHtml(slug)}"></i>`).join("") +
+    `</span>`;
+}
+
 // One swatch: a chip of the ink with the word it will actually write, and its name beneath.
 // A locked one is a dashed slot naming the album that opens it, so the tray doubles as a second
 // reading of the board it hangs off. The chip carries its own data-ink, which is why the palette
-// in styles.css is keyed on [data-ink] rather than body[data-ink].
+// in styles.css is keyed on [data-ink] rather than body[data-ink] — and it carries one ALWAYS,
+// including the house gold's "brand". An empty attribute is not the same as no attribute here:
+// --mast-ink inherits, so a keyless chip paints itself in whatever ink the body is wearing, and
+// brand gold's chip went navy behind a navy title.
 //
 // A perfected ink wears the leaf on its chip. Only a perfected one: twelve ink-coloured stars
 // would be decoration, and the point of the mark is that it is rare enough to notice. It is the
@@ -11741,7 +11763,9 @@ function inkSwatch(slug, name, album, active, available) {
     : !!album && albumFocusRecord(album).perfected;
   return `<button type="button" class="ink-sw-col${active ? " active" : ""}" data-ink-pick="${escapeHtml(slug)}"` +
     ` aria-pressed="${active ? "true" : "false"}" aria-label="${escapeHtml(name)}${gilded ? ", gilded" : ""}${active ? ", in use" : ""}">` +
-    `<span class="ink-sw"${slug ? ` data-ink="${escapeHtml(slug)}"` : ""}>Song${gilded ? INK_STAR : ""}</span>` +
+    `<span class="ink-sw" data-ink="${escapeHtml(slug || "brand")}">` +
+      `${slug === MAST_SHUFFLE ? eraCutFields() : ""}` +
+      `<span class="ink-word">Song</span>${gilded ? INK_STAR : ""}</span>` +
     `<span class="ink-sw-nm">${escapeHtml(active ? "in use" : name)}</span></button>`;
 }
 
