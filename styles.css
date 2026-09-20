@@ -3796,87 +3796,191 @@
     .tbt-shelf { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 11px 10px; }
   }
 
-  /* ---------- The sheet itself ---------- */
-  .tbt-sheet { margin: 0 0 14px; }
+  /* ---------- The sheet itself ----------
+     THE TRACKLIST IS WRITTEN ON THE PAGE'S OWN RULING, and every number below follows from
+     that one decision. .card already paints ruled paper at a `--line` pitch and a red margin
+     rule at `--rule-x`; the first build of this sheet ignored both and drew its own — rows on
+     a 35.2px rhythm with their own border-bottom, over paper ruled at 32px, plus a second red
+     margin a few pixels right of the real one. Two rulings beating against each other drift a
+     whole line apart by track ten, and the numbers sat ON the card's red rule rather than in
+     the margin it opens up. The page read as a table dropped onto notebook paper, which is
+     exactly what it was. Now: the row IS a ruled line of the paper, and the margin the paper
+     already has is where the track numbers go. */
+  .tbt-sheet {
+    /* Snapped onto the paper's ruling by snapTrackGrid(), which measures where the sheet
+       actually lands and pushes it down by the remainder. It is a measured number and not a
+       constant because everything above it — the HUD, the title, a wrapped album name — moves
+       with the viewport and the text-size setting. Shifting the WHOLE sheet rather than just
+       the list keeps the gap under the album name fixed; the slack is spent on the margin
+       above the heading, where up to a line of it is invisible.
+       PADDING and not margin: #bonusPlayBody has neither padding nor a border, so a top margin
+       here collapses straight through it and moves nothing at all — which is exactly what the
+       first version of this did, silently. */
+    margin: 0 0 14px; padding-top: var(--tbt-snap, 0px);
+    /* EVERY MARK THE SHEET MAKES IN THE RECORD'S COLOUR USES THIS, and it is the era colour
+       taken two thirds of the way toward the page's own ink rather than the era colour itself.
+       These are PEN marks — the line under the album's name, the nib in the margin, the line
+       the pen is resting on — and a pen in folklore's grey is still a pen, where folklore's
+       grey laid straight onto cream is a 1.8:1 smudge and the Tortured Poets' sand is worse.
+       Mixed and at full weight the palest of the twelve comes back at 3.1:1 and the record
+       still reads as itself. Measured across all twelve; do not swap it back for raw --era. */
+    --tbt-ink: color-mix(in srgb, var(--era, var(--ink)) 66%, var(--ink));
+  }
   .tbt-sheet-head {
-    font-family: var(--hand); font-size: calc(30px + var(--text-size-adjust));
-    color: var(--ink); margin: 0 0 2px; font-weight: 400; line-height: 1.1;
+    font-family: var(--hand); font-size: calc(33px + var(--text-size-adjust));
+    color: var(--ink); margin: 0; font-weight: 400; line-height: 1.1;
   }
-  /* The red margin rule the notebook uses everywhere, here doing a real job: it is the line the
-     track numbers sit to the left of, which is how a tracklist written by hand actually lands
-     on a page. */
-  .tbt-list {
-    list-style: none; margin: 0; padding: 0;
-    border-left: 1px solid var(--margin, rgba(160, 62, 46, 0.45)); padding-left: 0;
+  /* The album keeps its own casing, so the kicker is what says which of the twelve games this
+     is — set in the typewriter face, the notebook's voice for a printed label, and lowercase
+     because it is a note to yourself rather than a masthead. */
+  .tbt-sheet-kicker {
+    font-family: var(--type); font-size: calc(9px + var(--text-size-adjust));
+    letter-spacing: 1.8px; text-transform: uppercase; color: var(--ink-soft);
+    margin: 0 0 3px;
   }
-  /* EVERY ROW IS THE SAME HEIGHT, WRITTEN OR NOT, and it has to be: the type size lives on the
-     row rather than on the title so a blank and a filled-in track occupy the same box. Without
-     it the sheet grows as it is filled — sixteen short rules become sixteen tall lines of
-     handwriting — and the list creeps down the page under the pen while the player is writing
-     on it, which is both ugly and genuinely disorienting on a long record.
-     The row is CENTRED with a min-height and no padding rather than baseline-aligned with one:
-     that way the height is one number every row kind resolves to — a line of handwriting, a
-     dashed rule and a small typewriter line of a printed alt take are all 1.6em — instead of
-     three different line boxes being talked into agreeing. Measured: 35px for all three on a
-     desktop page. A title too long for the column still wraps to two lines and takes the room
-     it needs, which is right — a wrapped title is honest, where a blank row pretending to be
-     shorter than a written one is not. */
+  /* A pen line under the heading in the record's own ink. It stops well short of the measure
+     and fades out at the right, the way a line drawn by hand under a title does — a rule that
+     ran the full width would read as a border. */
+  .tbt-sheet-rule {
+    /* Pulled up under the name. At its first offset it landed five pixels off one of the
+       paper's own printed rules and read as a smudge on that line rather than as an underline
+       of its own. */
+    height: 2px; margin: -1px 0 0; max-width: 168px; border-radius: 2px;
+    background: linear-gradient(90deg,
+      var(--tbt-ink, var(--ink-soft)) 0%, var(--tbt-ink, var(--ink-soft)) 62%, transparent 100%);
+    opacity: 0.75;
+  }
+  .tbt-list { list-style: none; margin: 0; padding: 0; }
+  /* EVERY ROW IS EXACTLY ONE RULED LINE OF THE PAPER, written or not. The height is `--line`
+     and so is the line-height, which does three jobs at once: a blank, a line of handwriting
+     and a printed alt take all resolve to the same box without three line boxes being talked
+     into agreeing; the sheet cannot grow as it is filled and creep down the page under the pen;
+     and a title too long for the measure wraps to exactly TWO ruled lines instead of knocking
+     everything below it off the grid. There is deliberately no border-bottom — the paper's own
+     rule is the line, which is the whole point. */
   .tbt-row {
-    display: grid; grid-template-columns: 2.6ch 1fr auto; align-items: center;
-    gap: 0 10px; padding: 0; margin-left: -2.6ch;
-    border-bottom: 1px solid var(--rule);
-    font-size: calc(22px + var(--text-size-adjust)); line-height: 1.3; min-height: 1.6em;
+    display: grid; grid-template-columns: 22px 1fr auto; align-items: center;
+    gap: 0 18px; padding: 0;
+    /* -40px puts the number column at 18–40px from the padding box, clear of the card's red
+       rule at 44px. The same tie to .card's 58px left padding the achievement plate uses;
+       move that padding and this follows. */
+    margin-left: -40px;
+    font-size: calc(20px + var(--text-size-adjust));
+    line-height: var(--line); min-height: var(--line);
   }
   .tbt-n {
-    font-family: var(--type); font-size: calc(11px + var(--text-size-adjust));
-    color: var(--ink-soft); text-align: right;
+    position: relative; top: var(--tbt-sit);
+    font-family: var(--type); font-size: calc(10.5px + var(--text-size-adjust));
+    color: var(--ink-soft); text-align: right; line-height: var(--line);
   }
-  .tbt-title { font-family: var(--hand); font-size: inherit; color: var(--ink); }
-  /* A blank is a ruled line and nothing else — the same thing the paper would give you. It is
-     sized off the row rather than off the title it is hiding, because a rule as long as the
-     answer would quietly tell you how long the answer is. */
-  /* The rule takes the SAME LINE BOX as a line of handwriting rather than being a 1px element,
-     which is what actually holds the row heights level: min-height alone measures against the
-     row's own padding and leaves a blank row six pixels shorter than a written one. The dash is
-     painted as a background instead, sitting where the pen would have rested. */
-  .tbt-rule {
-    display: block; height: 1px; width: 100%; max-width: 21ch;
-    background-image: repeating-linear-gradient(to right,
-      var(--ink-soft) 0 6px, transparent 6px 10px);
-    opacity: 0.4;
+  /* WRITING SITS ON THE LINE, not between the lines. A 20px face centred in a 32px band puts
+     its baseline about eight pixels clear of the rule, which reads as floating — the giveaway
+     that the text and the paper are two separate things. `--tbt-sit` drops the ink onto the
+     rule; it is a nudge in `top` rather than a transform so it cannot fight the ink-settling
+     animation, and it moves nothing in the layout, so a title that wraps still takes exactly
+     two ruled lines. The number and the highlighter take the same drop, or the three come
+     apart from each other. */
+  .tbt-row { --tbt-sit: 7px; }
+  .tbt-title {
+    position: relative; top: var(--tbt-sit);
+    font-family: var(--hand); font-size: inherit; color: var(--ink);
   }
-  .tbt-row.is-now { background: rgba(43, 39, 34, 0.05); }
-  .tbt-row.is-now .tbt-rule {
-    opacity: 0.85; height: 2px;
-    background-image: linear-gradient(var(--era, var(--ink-soft)), var(--era, var(--ink-soft)));
+  /* Ink settling rather than a title appearing: a written track fades up over a beat and
+     rises a pixel or two, which is as much as a pen does. It is the only motion on the sheet
+     and it only ever plays on the row just written, because renderTrackSheet redraws the whole
+     list and an animation on every .is-done would replay the entire record on every answer. */
+  .tbt-row.is-fresh .tbt-title { animation: tbtInk 0.34s ease-out both; }
+  @keyframes tbtInk {
+    from { opacity: 0; transform: translateY(2px); }
+    to   { opacity: 1; transform: none; }
   }
+  /* Nothing here opts out globally, so both of the sheet's animations say so themselves. A
+     track still has to arrive written and the line still has to be drawn — only the arriving
+     and the drawing go. */
+  [data-reduce-motion="on"] .tbt-row.is-fresh .tbt-title { animation: none; }
+  /* A blank track is a blank ruled line and NOTHING else, which is both the honest thing and
+     the safe one: a dash sized off the title it hides would quietly say how long the answer is,
+     and a dash of any fixed length on a full-width ruled line was the stub that made the right
+     two thirds of the page read as dead. The paper is already drawing the line. */
+
+  /* ---------- Where the pen is ----------
+     Not a selected table row. The first build shaded the whole row grey and drew a hard solid
+     bar in the era colour across the writing area, which read as a row hover state under a
+     loading bar — the two most generic things a web page can do, on the screen that is
+     supposed to be the most hand-made. What marks the place now is what would mark it on
+     paper: the nib resting in the margin, the number gone over in ink, and a swipe of
+     highlighter in the record's own colour over the space the answer goes. */
   .tbt-row.is-now .tbt-n { color: var(--ink); font-weight: 700; }
+  /* The nib: a small ink wedge in the margin, pointing at the line being written. It sits in
+     the gap between the number column and the red rule, which is the one piece of the margin
+     nothing else is using. */
+  .tbt-row.is-now .tbt-n::after {
+    content: ""; position: absolute; left: 100%; top: 50%;
+    transform: translateY(-50%); margin-left: 4px;
+    width: 0; height: 0;
+    border-left: 6px solid var(--tbt-ink, var(--ink));
+    border-top: 4px solid transparent; border-bottom: 4px solid transparent;
+    opacity: 0.85;
+  }
+  /* Drawn at its own size and NOT stretched to the column: a pen line scaled to fit would
+     thin or fatten with the window, and the wobble in the path would stretch with it. It sits
+     a shade higher than the writing does, because a line goes under the words. */
+  .tbt-cur {
+    position: relative; top: calc(var(--tbt-sit) + 1px);
+    display: block; max-width: 100%; height: 10px;
+    fill: var(--tbt-ink, var(--ink)); opacity: 0.85;
+  }
+  /* The pen resting on the line rather than a bar switching on. It only ever plays on the row
+     the pen just moved to, which is the one row the player is looking at. */
+  .tbt-row.is-now .tbt-cur { animation: tbtPen 0.4s ease-out both; transform-origin: left center; }
+  @keyframes tbtPen {
+    from { clip-path: inset(0 100% 0 0); }
+    to   { clip-path: inset(0 0 0 0); }
+  }
+  [data-reduce-motion="on"] .tbt-row.is-now .tbt-cur { animation: none; clip-path: none; }
   /* An alt take: printed onto the sheet rather than asked for, because its honest answer is a
      title sitting higher up the same record. Set in the typewriter face, which is the notebook's
      way of saying a thing was printed rather than written. */
   .tbt-row.is-printed .tbt-title {
-    font-family: var(--type); font-size: calc(13px + var(--text-size-adjust));
-    color: var(--ink-soft); line-height: 1.6;
+    font-family: var(--type); font-size: calc(12.5px + var(--text-size-adjust));
+    color: var(--ink-soft); line-height: var(--line); top: calc(var(--tbt-sit) - 3px);
   }
   .tbt-printed {
     font-family: var(--type); font-size: calc(9px + var(--text-size-adjust));
     letter-spacing: 1px; text-transform: uppercase; color: var(--ink-soft); opacity: 0.7;
+  }
+  /* The one blank that can reach the finished sheet. A quit banks nothing, so in practice it
+     never does — drawn in the editor's red pen rather than assumed away. */
+  .tbt-rule--miss {
+    display: block; height: 1.5px; width: 100%; max-width: 168px;
+    background: var(--red-pen, #b0402f); opacity: 0.5;
   }
 
   /* THE WRITING LINE STICKS TO THE FOOT OF THE PAGE for the length of a run. A thirty-track
      record is taller than the window, so an ordinary line under the sheet ends up somewhere
      below the fold while the pen is up at track nine, and the player has to scroll between
      reading where they are and writing what comes next. Sticky keeps the two together: the
-     sheet scrolls under the line the way paper moves under a hand. It is scoped to this game
-     off the play screen's own data attribute, because every other game on the shelf fits its
-     page and would only gain a line that detaches itself for no reason. */
+     sheet scrolls under the line the way paper moves under a hand. */
   /* The gutter is covered too. A row hangs its track number out to the left on a negative
      margin, so a sticky block that only spans the content box leaves that column showing
      through — the numbers of the rows underneath read straight over the hint line. */
+  /* It spans the whole sheet of paper, both edges: -40px reaches back over the margin the
+     track numbers hang in and -30px cancels .card's right padding, so the band runs clean to
+     each edge of the page. Stopping at the content box left the paper's own ruling showing in
+     two strips down the sides of it, which on the dark page reads as a panel floating on the
+     sheet rather than as the foot of it. Both numbers are tied to .card's padding (58px left,
+     30px right); move that and these follow. */
   .tbt-pen {
-    position: sticky; bottom: 0; z-index: 3; padding-bottom: 4px;
-    margin-left: -2.6ch; padding-left: 2.6ch;
-    background: var(--paper); box-shadow: 0 -12px 16px -8px var(--paper);
+    position: sticky; bottom: 0; z-index: 3; padding: 10px 30px 4px 40px;
+    margin-left: -40px; margin-right: -30px;
+    background: var(--paper); box-shadow: 0 -14px 18px -8px var(--paper);
+  }
+  /* The clock IS the score in this game, and the shelf's shared readout sets it at 12px under
+     a bar sized for a countdown. Scoped up here only — every other game on the shelf is scored
+     in points and its clock is a thing running out, not the number being played for. */
+  [data-bonus-game="track-by-track"] .bg-timer-label {
+    font-family: var(--hand); font-size: calc(21px + var(--text-size-adjust));
+    color: var(--ink); margin-top: 5px; letter-spacing: 0.5px;
   }
 
   /* ---------- The finished sheet ---------- */

@@ -10949,6 +10949,7 @@ let trackAt = 0;                // index into slots of the blank the pen is on
 let trackWritten = [];          // what has been filled in so far, parallel to slots
 let trackWrong = 0;             // wrong guesses, for the finished sheet to remark on
 let trackSpent = 0;             // the run's seconds, frozen when the last blank fills
+let trackFresh = -1;            // the row just written, so only that one's ink settles
 let trackBackTarget = "bonus";
 
 function isTrackRun() { return !!bonusGame && bonusGame.id === "track-by-track"; }
@@ -11081,6 +11082,7 @@ function beginTrackSheet() {
   trackWrong = 0;
   trackSpent = 0;
   trackAt = 0;
+  trackFresh = -1;
   skipToNextBlank();
   /* Entering the play screen is nextBonusRound's own gesture and not a variation on it: lay the
      sheet out while the screen is still hidden, turn the page, and only then let the player
@@ -11097,7 +11099,16 @@ function beginTrackSheet() {
     // at the moment the player actually began.
     showTrackClockReady();
   };
-  const begin = () => { bonusLocked = false; focusTrackInput(); };
+  const begin = () => {
+    bonusLocked = false;
+    // The sheet was laid out inside the flip, where the card it has to measure against is the
+    // clone rather than the live page. Snap again now that it is on the real paper, and once
+    // more when Caveat lands, since the album's name is set in it and a heading that changes
+    // height moves everything under it off the ruling.
+    snapTrackGrid();
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { if (isTrackRun()) snapTrackGrid(); });
+    focusTrackInput();
+  };
   playSound("page");
   lay();
   flipAwayToScreen("bonusplay", begin);
@@ -11112,19 +11123,49 @@ function skipToNextBlank() {
 
 function trackDone() { return !!trackSheet && trackAt >= trackSheet.slots.length; }
 
+/* THE LINE THE PEN IS ON, inked in the record's own colour. What marked the place before was
+   a grey wash over the whole row under a hard-ended bar in the era colour, which read as a
+   table's hover state under a loading bar — and a pale wash over an empty line reads as a
+   skeleton placeholder, which is the one thing a hand-made page must never look like.
+   A stroke cannot be mistaken for either, because it is a line rather than a block: this is
+   the ruled line gone over in pen. It is DRAWN rather than given a border, so it can swell and
+   thin the way a nib does and start from the little pool of ink left where the pen came down.
+   The path is deliberately uneven end to end and the two edges are not each other's mirror;
+   evening it up turns it straight back into a bar. */
+function trackPenStroke() {
+  return `<svg class="tbt-cur" viewBox="0 0 220 10" width="220" height="10" aria-hidden="true" focusable="false">` +
+    `<path d="M0 5.11C3.1 5.02 12.2 4.69 18.3 4.53 24.4 4.36 30.6 4.2 36.7 4.12 42.8 4.04 48.9 4.05 55 4.04` +
+      ` 61.1 4.04 67.2 4.12 73.3 4.1 79.4 4.09 85.6 4.05 91.7 3.97 97.8 3.88 103.9 3.75 110 3.6` +
+      ` 116.1 3.46 122.2 3.21 128.3 3.1 134.4 2.99 140.6 2.9 146.7 2.95 152.8 2.99 158.9 3.1 165 3.36` +
+      ` 171.1 3.61 177.2 4.17 183.3 4.48 189.4 4.79 195.6 5.08 201.7 5.21 207.8 5.35 216.9 5.26 220 5.27` +
+      `L220 5.57C216.9 5.56 207.8 5.54 201.7 5.51 195.6 5.49 189.4 5.49 183.3 5.43 177.2 5.37 171.1 5.22 165 5.17` +
+      ` 158.9 5.12 152.8 5.11 146.7 5.15 140.6 5.18 134.4 5.23 128.3 5.41 122.2 5.58 116.1 6 110 6.19` +
+      ` 103.9 6.37 97.8 6.43 91.7 6.51 85.6 6.59 79.4 6.62 73.3 6.66 67.2 6.69 61.1 6.73 55 6.7` +
+      ` 48.9 6.66 42.8 6.52 36.7 6.47 30.6 6.42 24.4 6.45 18.3 6.41 12.2 6.37 3.1 6.25 0 6.21Z"/>` +
+    `<ellipse cx="2.4" cy="5.7" rx="2.4" ry="1.9"/>` +
+  `</svg>`;
+}
+
 function renderTrackSheet(finished = false) {
   if (!trackSheet) return;
   const rows = trackSheet.slots.map((slot, i) => {
     const written = trackWritten[i];
     const now = !finished && i === trackAt;
-    const cls = slot.alt ? "is-printed" : written != null ? "is-done" : now ? "is-now" : "";
+    let cls = slot.alt ? "is-printed" : written != null ? "is-done" : now ? "is-now" : "";
+    // The ink only settles on the row just written. The whole list is redrawn on every answer,
+    // so an animation on every .is-done would replay the entire record each time a track lands.
+    if (written != null && i === trackFresh) cls += " is-fresh";
     const body = written != null
       ? `<span class="tbt-title">${escapeHtml(censor(written))}</span>`
       : finished
         // An unfinished sheet can only be a quit, which banks nothing, so a blank on the
         // finished sheet never happens. Drawn anyway rather than assumed away.
-        ? `<span class="tbt-rule tbt-rule--miss" aria-hidden="true"></span>`
-        : `<span class="tbt-rule" aria-hidden="true"></span>`;
+        ? `<span class="tbt-rule--miss" aria-hidden="true"></span>`
+        // A blank track is the paper's own ruled line and nothing drawn on top of it. The rows
+        // sit on the page's ruling now, so there is already a line there to write on — and a
+        // dash of any length was either a stub on a full-width rule or a quiet hint at how long
+        // the answer is. The current row gets the highlighter instead; the rest get paper.
+        : now ? trackPenStroke() : `<span></span>`;
     const said = written != null ? censor(written) : "blank";
     return `<li class="tbt-row ${cls}" aria-label="Track ${slot.n}: ${escapeHtml(said)}">` +
       `<span class="tbt-n">${slot.n}</span>${body}` +
@@ -11136,7 +11177,10 @@ function renderTrackSheet(finished = false) {
     `<div class="tbt-sheet" style="--era:${albumColor(trackSheet.album) || "#999"}">` +
       // The album keeps its OWN casing (reputation, folklore) rather than the typewriter capitals
       // a printed sleeve would get: this is a list you are writing to yourself, not printed matter.
+      // The kicker above it is what names the thing, since the heading cannot.
+      `<p class="tbt-sheet-kicker">running order</p>` +
       `<h3 class="tbt-sheet-head">${escapeHtml(trackSheet.album)}</h3>` +
+      `<div class="tbt-sheet-rule" aria-hidden="true"></div>` +
       `<ol class="tbt-list">${rows}</ol>` +
     `</div>` +
     /* The writing line goes inside a wrapper of its own so ONE element can be made sticky.
@@ -11150,6 +11194,39 @@ function renderTrackSheet(finished = false) {
     }) + `</div>`);
   if (!finished) wireTrackInput();
   paintTrackProgress();
+  snapTrackGrid();
+}
+
+/* THE SHEET IS SNAPPED ONTO THE PAPER'S OWN RULING. .card paints ruled paper at a `--line`
+   pitch from the top of its padding box, and the rows are exactly one line tall, so the only
+   thing standing between the handwriting and the printed lines is wherever the sheet happens
+   to start. That is not a constant — the HUD, the clock readout and the album's own name all
+   move with the viewport and the text-size setting, and a wrapped heading moves it by a whole
+   line — so it is measured rather than written down, the same way the picker measures its
+   lettering rather than assuming it.
+   The push is applied to the WHOLE sheet and not just the list: the slack is then spent above
+   the heading, where up to a line of it is invisible, instead of opening and closing the gap
+   between the album's name and its first track. */
+function snapTrackGrid() {
+  const body = $("bonusPlayBody");
+  const sheet = body && body.querySelector(".tbt-sheet");
+  const list = body && body.querySelector(".tbt-list");
+  const card = document.querySelector('.screen.card.active, [data-flip-id="screen-bonusplay"]');
+  if (!sheet || !list || !card) return;
+  const line = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--line")) || 32;
+  // Measure with the current push removed, or every call would compound the last one.
+  sheet.style.setProperty("--tbt-snap", "0px");
+  // MEASURE THE LIST, PUSH THE SHEET. Measuring the list is what actually matters, since the
+  // rows are the things that have to land on the rules; pushing the sheet is what keeps the
+  // gap between the album's name and its first track FIXED, with the slack spent up above the
+  // heading instead. Snapping the list itself would align it just as well and open a gap under
+  // the heading that changes size with the window.
+  const top = list.getBoundingClientRect().top - card.getBoundingClientRect().top
+    - parseFloat(getComputedStyle(card).borderTopWidth || 0);
+  // The writing rests ON the rule, and the rule is painted at the BOTTOM of each band, so a
+  // row has to start where a band starts.
+  const shift = (line - (top % line)) % line;
+  sheet.style.setProperty("--tbt-snap", shift.toFixed(2) + "px");
 }
 
 function focusTrackInput() {
@@ -11212,6 +11289,7 @@ function submitTrack() {
   }
 
   trackWritten[trackAt] = want;
+  trackFresh = trackAt;
   noteSessionSong({ title: want, album: trackSheet.album });
   if (input) input.value = "";
   trackAt++;
@@ -11283,6 +11361,12 @@ function endTrackRun() {
      completes the set of twelve can count itself. endBonusRun has the same order for the same
      two reasons. */
   foldTrackCharms(snapped, rec);
+  /* The clock goes with the run. Its readout is the run's TIME, and the sleeve prints that
+     same number an inch below in an inch-high hand — two copies of one number, the smaller of
+     which has stopped meaning anything — over a gauge sitting full against a sheet that is
+     visibly full. Only the timer: the HUD's "30 of 30" costs nothing and both entry paths
+     already put the timer back, so nothing shared has to learn this game exists. */
+  $("bonusTimer").style.display = "none";
   renderTrackSheet(true);
   renderTrackEnd(rec, snapped);
   // A finished run has nothing left to give up on, so the quit link becomes the way home —
@@ -11437,6 +11521,16 @@ addEventListener("resize", () => {
   if (!screens.ruthless.classList.contains("active")) return;
   clearTimeout(rlFitTimer);
   rlFitTimer = setTimeout(fitRuthlessDoc, 120);
+});
+
+// The track sheet is snapped onto the paper's ruling off a measurement, so a width change has
+// to re-take it: the HUD and the album's name both reflow, and a heading that wraps at a
+// narrower width pushes the whole list half a line off the lines it is written on.
+let tbtSnapTimer = null;
+addEventListener("resize", () => {
+  if (!isTrackRun() || !screens.bonusplay.classList.contains("active")) return;
+  clearTimeout(tbtSnapTimer);
+  tbtSnapTimer = setTimeout(snapTrackGrid, 120);
 });
 
 // Re-paint the sheet under a board that changed beneath it (the dev panel's seeders), and re-fit,
@@ -29596,6 +29690,35 @@ function buildDevApi() {
         },
         board: () => loadTracks(),
         reset: () => { resetTracks(); return "board cleared"; },
+        /* IS THE SHEET ACTUALLY ON THE PAPER'S LINES? The whole look of this game now rests on
+           the answer, and it is the one thing on the page that goes wrong invisibly: a row half
+           a line off the rule does not throw, does not warn and does not look broken in a
+           screenshot — it just makes the page feel slightly cheap, which is exactly the
+           complaint the sheet was rebuilt to answer. So it is measured rather than eyeballed.
+           Run it after changing anything above the list (the HUD, the clock, the heading), at
+           a couple of widths and at both ends of the text-size setting. */
+        grid: () => {
+          const list = $("bonusPlayBody") && $("bonusPlayBody").querySelector(".tbt-list");
+          const card = document.querySelector('.screen.card.active, [data-flip-id="screen-bonusplay"]');
+          if (!list || !card) return "no sheet on screen";
+          const line = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--line")) || 32;
+          const top = card.getBoundingClientRect().top + parseFloat(getComputedStyle(card).borderTopWidth || 0);
+          const off = [...list.querySelectorAll(".tbt-row")].map((r, i) => {
+            const d = (r.getBoundingClientRect().top - top) % line;
+            // A row is on the grid if its top sits on a band boundary, from either side.
+            return { n: i + 1, off: +Math.min(d, line - d).toFixed(2), h: +r.getBoundingClientRect().height.toFixed(1) };
+          });
+          const bad = off.filter((r) => r.off > 0.6);
+          const tall = off.filter((r) => Math.abs(r.h % line) > 0.6);
+          return {
+            snap: $("bonusPlayBody").querySelector(".tbt-sheet").style.getPropertyValue("--tbt-snap"),
+            line, rows: off.length,
+            offGrid: bad.length, worst: off.reduce((a, b) => (b.off > a.off ? b : a), off[0]),
+            // A row that is not a whole number of lines tall knocks every row under it off, so
+            // it is worth naming separately from a sheet that is simply mis-snapped.
+            notWholeLines: tall.length, tall: tall.slice(0, 5), bad: bad.slice(0, 5),
+          };
+        },
         /* THE TWELVE SLEEVES, at the two sizes they ship at and once more at a thumbnail.
            The board is the twin of the shelf's `covers()` and it exists for the same reason: a
            collage that reads beautifully at 300px and turns to mud at 127 has failed at the only
