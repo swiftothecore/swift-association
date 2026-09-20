@@ -157,6 +157,7 @@ const ASSETS = [
   "sounds/scratch.mp3",
   "sounds/close.mp3",
   "data/songs.json",
+  "data/producers.json",
   "data/words.json",
   // Taylor's liner-note secret messages — lazy-loaded when a message-in-a-bottle egg
   // is first caught (see loadSecretMessages in js/app.js).

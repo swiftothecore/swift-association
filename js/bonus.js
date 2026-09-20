@@ -8,7 +8,7 @@
    puzzle handed to the player must have exactly one defensible answer. Enforcing that is
    most of what this file does. */
 import { normalizeLyric, normalizeTitle, levenshtein, swappedNeighbours } from "./util.js";
-import { STUDIO_ALBUMS, ALBUM_TRACKS, TRACK_ALT_TAKES } from "./config.js";
+import { STUDIO_ALBUMS, ALBUM_TRACKS, TRACK_ALT_TAKES, PRODUCER_ALBUMS } from "./config.js";
 
 /* Words never worth swapping or counting as a line's content. Swapping a function word
    ("the" -> "a") is invisible rather than hard, and a line whose only meat is filler makes a
@@ -1341,6 +1341,46 @@ export function buildTrackPuzzle(songs, index, rng = Math.random, tries = 120, a
     return null;
   };
   return pick(true) || pick(false);
+}
+
+/* ---------- Aaron or Jack ----------
+   One page: a song title, and which of the two produced it. There is no puzzle to construct
+   here, so this builder does almost nothing — the whole game is in the DATA (data/producers.json)
+   and in which songs are allowed to be dealt, both of which are decided before it is called.
+
+   `credits` is a Map of title -> { by, credit, album } and is the only thing that decides an
+   answer. A song not in it has neither man on it and is not dealable, so the builder is a
+   filter rather than a search: the pool is the intersection of the shelf's own songs, the four
+   PRODUCER_ALBUMS and the credits file, and a page is one of them picked at random.
+
+   IT DEALS THE ALBUM BUT THE PAGE MUST NOT PRINT IT (see the roster note). It is carried on the
+   puzzle because the REVEAL wants it, and because the listing on the back cover notes it —
+   both of which happen after the page has been answered.
+
+   No fairness guard beyond `avoid`, and none is needed: every other builder on this shelf has
+   to prove its page has exactly one honest answer, and this one's answer is a credit somebody
+   printed on a record. The one thing that could go wrong is a title the credits file spells
+   differently from songs.json, and that is caught at load rather than here (see
+   `installProducerCredits`), because a page silently vanishing from the pool is the kind of bug
+   that never shows up as a bug. */
+export function buildProducerPuzzle(songs, credits, rng = Math.random, tries = 120, avoid = null) {
+  const pool = songs.filter((song) => PRODUCER_ALBUMS.includes(song.album) && credits.has(song.title));
+  if (!pool.length) return null;
+  for (let t = 0; t < tries; t++) {
+    const song = pool[Math.floor(rng() * pool.length)];
+    if (avoid && avoid.has(song.title)) continue;
+    const c = credits.get(song.title);
+    return { song, by: c.by, credit: c.credit, album: song.album };
+  }
+  return null;
+}
+
+/* How many songs this game can deal, which is what an endless run's no-repeat list is measured
+   against. It asks the builder's own question rather than counting the pool, for Running
+   Order's reason: a song on one of the four records that nobody in the pair produced is in
+   `bonusSongs()` and is not a page. */
+export function producerDealCount(songs, credits) {
+  return songs.filter((song) => PRODUCER_ALBUMS.includes(song.album) && credits.has(song.title)).length;
 }
 
 /* ---------- Track by Track ----------

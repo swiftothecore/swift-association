@@ -29,6 +29,7 @@ import {
   BONUS_ONLY_SECONDS, ONLY_WIDE_PAGES,
   BONUS_CHAIN_SECONDS, CHAIN_EASY_PAGES, BONUS_SNAP_MS,
   BONUS_TRACK_SECONDS, BONUS_ENDLESS_RUNGS,
+  BONUS_WHO_SECONDS, PRODUCER_ALBUMS, WHO_PAY_ONE, WHO_PAY_BOTH,
   BONUS_CLOUD_SECONDS, CLOUD_WIDE_PAGES, CLOUD_WORDS_WIDE, CLOUD_WORDS_SPARE,
   RUTHLESS_WORD_MS, RUTHLESS_OPEN_WORDS,
   RUTHLESS_PACE_SECONDS, RUTHLESS_RUN_RUNGS,
@@ -97,6 +98,7 @@ import { buildLineIndex, buildSlipContext, buildSlipPuzzle, buildNamePuzzle,
          buildRuthlessPuzzle, ruthlessPool, ruthlessLens, ruthlessLensAudit, ruthlessGiveUp, ruthlessSnap,
          ruthlessBar, RUTHLESS_LENSES, RUTHLESS_HANDOUT_WORDS,
          buildTrackIndex, buildTrackPuzzle,
+         buildProducerPuzzle, producerDealCount,
          buildAlbumSheet, trackCandidates, resolveTrackGuess, judgeTrack,
          buildCloudPuzzle, cloudWords,
          judgeBlank, blankExact } from "./bonus.js";
@@ -2924,7 +2926,7 @@ const HIDDEN_ACH_IDS = [
   // The bonus shelf's six. Added deliberately, which is what this list is for: each one makes
   // Is It Over Now? cost a little more, and three of them are failures you have to go and
   // commit on purpose once you know they exist.
-  "take-commonest-only-here-card", "name-redacted-song-after-buying-all-strips", "time-out-all-10-only-here-pages", "finish-bonus-run-one-page-short-of-sweep", "flag-spot-the-slip-impostor-under-2s",
+  "take-commonest-only-here-card", "name-a-joint-production", "name-redacted-song-after-buying-all-strips", "time-out-all-10-only-here-pages", "finish-bonus-run-one-page-short-of-sweep", "flag-spot-the-slip-impostor-under-2s",
   // The shelf's sixth, and the endless side's own: a run that ended on the page it opened on.
   "end-an-endless-bonus-run-on-its-first-page",
   /* The Core batch's twenty-three secrets, the scarf first. Listing them roughly two-thirds
@@ -6940,6 +6942,18 @@ let cloudSpareRun = 0;
 // {word, count, points} — or null while the page is still open. It IS the page's score, so it
 // is also what bonusPageScore reads.
 let onlyPlayed = null;
+/* Which of the three cards was tapped on an Aaron or Jack page, or null on a page the clock
+   took. Read by the reveal and by the back cover's note column, so it has to survive the settle
+   and is cleared with the rest of the page state in nextBonusRound. */
+let whoPlayed = null;
+/* WHAT THIS RUN COULD HAVE PAID. Aaron or Jack has no fixed maximum (see `dealMax`): a page is
+   worth two, or five on the four joint productions, and which of those you are dealt is not
+   something a player did. So the run is scored against the ceiling of its OWN deal, accumulated
+   a page at a time here and read once at the end. It is deliberately never shown while the run
+   is live — a denominator climbing by five instead of two announces a joint song before the
+   player has looked at the title, which is the same leak the page avoids by not printing the
+   album. */
+let whoCeiling = 0;
 // Only Here: every word already DEALT this run, so a run can't teach you a word's count on page
 // 3 and then ask about it on page 8 — a hand that grades its own answer key.
 let onlyDealt = new Set();
@@ -7085,6 +7099,20 @@ function endlessRecord(g) { return bonusRecord(endlessId(g)); }
    also why there is no clock on screen while a run is in progress — a visible one would apply
    exactly the pressure this design is avoiding. */
 function bonusSweeps(g) { return !!(g && g.sweep); }
+/* A points game with NO FIXED MAXIMUM, scored instead against what its own deal could have
+   paid. Only Aaron or Jack carries it, and the reason is that its top payout is a property of
+   the SONG rather than of the play: five points needs one of the four joint productions to come
+   up, which happens on about two runs in five. A static maximum would therefore misreport most
+   runs — the theoretical 32 needs all four dealt at once, which is a one-in-ten-thousand deal —
+   and quoting a perfect twenty against it reads as a bad run.
+
+   So this flag means "ask the run, not the roster". `whoCeiling` is the live answer, and like
+   `bonusTimed` it has to be asked BEFORE anything reaches for bonusMaxScore. Three surfaces
+   care: the shelf line and the back cover's small print quote a best with no denominator (a
+   stored 23 is not out of anything, exactly as a stored time isn't), and the card's big number
+   is quoted against the ceiling of the run that just happened. A stored best is also never
+   clamped, for `bonusBest`'s timed reason: there is nothing to clamp it against. */
+function bonusDealMax(g) { return !!(g && g.dealMax); }
 // A best is read back through the maximum it is quoted against, because a game's `points` can
 // be retuned after a run has been banked — and a stored 74 shown as "best 74 / 60" is a
 // notebook contradicting itself. Clamped on the way out rather than rewritten in storage: the
@@ -7092,7 +7120,7 @@ function bonusSweeps(g) { return !!(g && g.sweep); }
 // A timed game's best is a time, and there is nothing to clamp it against: it is not out of
 // anything, and a retune can't invalidate it the way a changed `points` scale can.
 function bonusBest(g) {
-  if (bonusTimed(g)) return bonusRecord(g.id).best;
+  if (bonusTimed(g) || bonusDealMax(g)) return bonusRecord(g.id).best;
   return Math.min(bonusRecord(g.id).best, bonusMaxScore(g));
 }
 function bonusScoreText() {
@@ -7107,6 +7135,10 @@ function bonusScoreText() {
   // being played they have to be added on here for the chrome to keep up with the taps.
   if (bonusGame && bonusGame.id === "then-what")
     return `${bonusScore + (bonusLocked ? 0 : chainPage)} points · chain ${Math.max(chainRun, chainNow)}`;
+  // THE BARE NUMBER, and the omission is the design. A running "12 / 14" would say a joint song
+  // has already been dealt, and a ceiling climbing by five rather than two says one is on the
+  // page you are looking at. The denominator arrives on the back cover, where it can't leak.
+  if (bonusDealMax(bonusGame)) return `${bonusScore} points`;
   return `${bonusScore} ${bonusGame && bonusGame.points ? "points" : "correct"}`;
 }
 
@@ -7130,7 +7162,10 @@ function bonusScoreLine(g, short = false) {
   // A time is quoted on its own — "best 3:41 / 10" would be nonsense, and there is no total
   // for it to be out of.
   if (bonusTimed(g)) return `best ${fmtTimeFine(bonusBest(g))} · played ${rec.plays}`;
-  const score = `best ${bonusBest(g)} / ${bonusMaxScore(g)}`;
+  // A best with nothing to be out of, for the timed line's reason: every run of this game has a
+  // different ceiling, so the only honest denominator is the one belonging to the run that
+  // scored it, and that is on the back cover rather than on the shelf.
+  const score = bonusDealMax(g) ? `best ${bonusBest(g)}` : `best ${bonusBest(g)} / ${bonusMaxScore(g)}`;
   if (rec.sweep && short) return `${score} · swept ${fmtTimeFine(rec.sweep)}`;
   const swept = rec.sweep ? ` · swept ${fmtTimeFine(rec.sweep)}` : "";
   // The endless board, on the long line only. The shelf STRIP shares one line with nothing and
@@ -7362,6 +7397,8 @@ function startBonusGame(g, lensId = null, opts = {}) {
   // Same: a run is exact until a page is forgiven, so it starts true once per run.
   blankExactRun = true;
   cloudSpareRun = 0;
+  // What this run could have paid, accumulated page by page. A run property, so it resets here.
+  whoCeiling = 0;
   bonusRunId++;
   // A finished run swapped the quit link for the way home; a new one is a run again.
   $("bonusQuitBtn").hidden = false;
@@ -7405,6 +7442,7 @@ function bonusSeconds() {
   // Long enough to type a title you already know, nowhere near long enough to count up from
   // track one, which is the whole game (see BONUS_TRACK_SECONDS).
   if (bonusGame.id === "running-order") return BONUS_TRACK_SECONDS;
+  if (bonusGame.id === "aaron-or-jack") return BONUS_WHO_SECONDS;
   // A cloud is READ rather than scanned — the eye has to cross the whole page and weigh what
   // it finds — so it gets the reading budget the lyric games get rather than a title game's.
   if (bonusGame.id === "word-cloud") return BONUS_CLOUD_SECONDS;
@@ -7445,6 +7483,8 @@ function buildBonusPuzzle() {
     return buildCloudPuzzle(songs, bonusIndexes().wordIndex, Math.random, 120,
                             new Set(bonusRecentSongs),
                             { words: bonusRound > CLOUD_WIDE_PAGES ? CLOUD_WORDS_SPARE : CLOUD_WORDS_WIDE });
+  if (bonusGame.id === "aaron-or-jack")
+    return buildProducerPuzzle(songs, producerCredits, Math.random, 120, new Set(bonusRecentSongs));
   if (isRuthlessRun())
     return buildRuthlessPuzzle(songs, Math.random, 120, new Set(bonusRecentSongs), activeLens());
   return buildNamePuzzle(songs, lineIndex, Math.random, 120, new Set(bonusRecentSongs));
@@ -7461,6 +7501,10 @@ function bonusDealCount() {
     const idx = bonusIndexes().trackIndex;
     return songs.filter((song) => idx.ask.has(song.title)).length;
   }
+  // Same reason as Running Order's, from the other direction: this game deals four records
+  // rather than twelve, and only the songs on them that either man is credited on.
+  if (bonusGame && bonusGame.id === "aaron-or-jack")
+    return producerDealCount(songs, producerCredits);
   return songs.length;
 }
 
@@ -7525,7 +7569,8 @@ function nextBonusRound(options = {}) {
   }
   if (bonusGame.id === "name-that-song" || bonusGame.id === "sing-it-back" || bonusGame.id === "redacted" ||
       bonusGame.id === "only-here" || bonusGame.id === "then-what" ||
-      bonusGame.id === "running-order" || bonusGame.id === "word-cloud" || isRuthlessRun())
+      bonusGame.id === "running-order" || bonusGame.id === "word-cloud" ||
+      bonusGame.id === "aaron-or-jack" || isRuthlessRun())
     bonusRecentSongs.push(bonusPuzzle.song.title);
   // Only the last two, and a preference rather than a bar: over ten pages and twelve albums a
   // repeat is honest, a hat-trick looks like the shuffle broke.
@@ -7538,6 +7583,7 @@ function nextBonusRound(options = {}) {
   redactPeeled = 0;
   trackSecs = 0;
   onlyPlayed = null;
+  whoPlayed = null;
   if (bonusGame.id === "only-here" && bonusPuzzle.hand)
     bonusPuzzle.hand.forEach((c) => onlyDealt.add(c.key));
   // A fresh chain: nothing picked, nothing banked. The longest run survives the page.
@@ -7786,6 +7832,48 @@ function renderBonusRound() {
     // Deliberately NOT focused: the first thing to do on this page is read it and choose a
     // strip, and a focused field on a phone would put a keyboard over the verse before the
     // player had seen it.
+  } else if (bonusGame.id === "aaron-or-jack") {
+    /* THE TITLE IS THE WHOLE PAGE, and it borrows Running Order's sheet rather than inventing
+       furniture: the heading in pen, the red rule, the meta line empty beneath it. The two
+       games are opposites through the same object — there the title slot holds the question and
+       the reveal writes the answer into it, here the slot holds the QUESTION'S SUBJECT and the
+       reveal writes the credits into the meta underneath.
+
+       THE META IS EMPTY WHILE THE PAGE IS LIVE AND THAT IS LOAD-BEARING. It is where the album
+       goes at the reveal, and the album is the one thing this page must not leak: Midnights is
+       nearly all Jack and evermore is nearly all Aaron, so naming the record answers the
+       question before the player has looked at the title. */
+    /* Three rubber stamps. "both" carries two extra pieces, both of them decoration the screen
+       reader never needs: the SECOND STRIKE (the vermillion frame that overprints the teal one)
+       and the two HALVES that show only once the page has settled, when the stamp prints in both
+       inks at once. They are in the markup from the start rather than injected at the reveal, so
+       the settle is a class change on a card that is already built — markWhoCards has no DOM to
+       construct and cannot get it wrong on a timeout. */
+    const cards = [
+      ["aaron", "Aaron", "Aaron Dessner"],
+      ["both", "both", "Dessner and Antonoff"],
+      ["jack", "Jack", "Jack Antonoff"],
+    ].map(([v, label, full]) =>
+      `<button type="button" class="bg-who" data-v="${v}" aria-label="${escapeHtml(full)}">` +
+        `<span class="bg-who-stamp">` +
+          (v === "both"
+            ? `<span class="bg-who-strike" aria-hidden="true"></span>` +
+              `<span class="bg-who-half is-a" aria-hidden="true"></span>` +
+              `<span class="bg-who-half is-j" aria-hidden="true"></span>`
+            : "") +
+          `<span class="bg-who-word">${escapeHtml(label)}</span>` +
+        `</span>` +
+      `</button>`).join("");
+    body.innerHTML =
+      `<p class="bg-ask">who produced it?</p>` +
+      `<div class="bg-sheet bg-sheet--ask">` +
+        `<h3 class="bg-sheet-title">${escapeHtml(censor(p.song.title))}</h3>` +
+        `<div class="bg-sheet-rule" aria-hidden="true"></div>` +
+        `<div class="bg-sheet-meta" id="bonusWhoMeta"></div>` +
+      `</div>` +
+      `<div class="bg-who-row" role="group" aria-label="Who produced this song">${cards}</div>`;
+    body.querySelectorAll(".bg-who").forEach((b) =>
+      b.addEventListener("click", () => judgeProducer(b.dataset.v)));
   } else if (bonusGame.id === "running-order") {
     /* THE PAGE IS A LYRIC SHEET WITH ITS TITLE MISSING, and it is the shelf's own `bg-sheet`
        rather than any furniture of its own: the heading in pen, the red rule, the album noted
@@ -8160,6 +8248,13 @@ function bonusTimeout() {
   // Spot the Slip names the impostor even on a timeout: that word is the one thing the page
   // still has to teach, and unlike the other two games the answer card can't carry it (the card
   // shows the line as it really goes, with no sign of what stood in the gap).
+  // A page the clock took still turns its cards over: nothing was picked, so nothing is
+  // crossed, and the true one is marked exactly as it would have been.
+  if (bonusGame && bonusGame.id === "aaron-or-jack") {
+    markWhoCards(null);
+    settleBonusRound(false, whoDetail(), true);
+    return;
+  }
   const detail = bonusGame && bonusGame.id === "spot-the-slip"
     ? `<b>${escapeHtml(bonusPuzzle.fakeWord)}</b> was the slip`
     : "";
@@ -8610,6 +8705,45 @@ function renderOnlyHand(reveal = false) {
     b.addEventListener("click", () => judgeOnly(+b.dataset.i)));
 }
 
+/* One tap, one answer, no confirm — Then What's rule, and for its reason: three cards spaced to
+   absorb a misclick, and a page whose whole content is one title does not want a second step
+   between deciding and being told. A tap after the page has settled does nothing (`bonusLocked`),
+   which is what stops the countdown's last second being spent changing your mind. */
+function judgeProducer(choice) {
+  if (bonusLocked || !bonusPuzzle) return;
+  whoPlayed = choice;
+  // Mark the cards before the page settles, so the verdict lands on a board that already shows
+  // what was picked and what was true — the same order Then What's marks arrive in.
+  markWhoCards(choice);
+  settleBonusRound(choice === bonusPuzzle.by, whoDetail(choice));
+}
+
+// The three cards turned over: the true one in gold, a wrong pick crossed. Called from the
+// judge and again on a timeout, where there is no pick to mark and only the answer shows.
+function markWhoCards(choice) {
+  $("bonusPlayBody").querySelectorAll(".bg-who").forEach((b) => {
+    const v = b.dataset.v;
+    b.disabled = true;
+    if (v === bonusPuzzle.by) b.classList.add("is-answer");
+    if (choice && v === choice) b.classList.add(v === bonusPuzzle.by ? "is-got" : "is-missed");
+  });
+}
+
+/* What the verdict says under the banner: the real credit line, exactly as the record prints it.
+   It is the whole teaching moment of the game and the reason `credit` is carried in the data at
+   all — "Jack" is a right answer, and "Taylor Swift; Jack Antonoff; Sounwave; Jahaan Sweet" is
+   the thing a player actually wanted to know. The names are not censored: this is a production
+   credit, not a lyric, and the blackout is for the words of songs.
+
+   IT LIVES HERE AND NOT IN THE SHEET'S META LINE, which takes the album alone. The first build
+   put the credit in both and they sat an inch apart saying the same thing, which is the failure
+   every reveal on this shelf is arranged to avoid. The split is also practical: the meta is set
+   in the typewriter's capitals and a five-name credit with a parenthetical in it is unreadable
+   like that, where the verdict line is ordinary type with room to run. */
+function whoDetail() {
+  return `<b>${escapeHtml(bonusPuzzle.credit)}</b>`;
+}
+
 /* One tap, and the page is answered. Every card is real, so every pick banks at least a point
    and nothing here can be WRONG — a page is CLEARED by picking the rarest word in the hand,
    whatever it paid, not by scoring five. A hand's best word might only be worth 3, and a tick
@@ -8682,8 +8816,14 @@ function bonusAnswerCard() {
      title into the empty slot, so the page finishes as a completed tracklist row that names the
      song an inch above where the card would reprint it. There is no lyric on the page to quote
      either, since this is the one game that never showed the player a word of the song. */
+  /* Aaron or Jack has none, for Running Order's reason exactly: its reveal finishes the sheet
+     it was already standing on — the title stays in the heading and the album and the real
+     credit line drop into the meta under the rule — so a card beneath would reprint a title
+     sitting an inch above it. There is no lyric on the page to quote either; this game never
+     showed the player a word of the song. */
   if (bonusGame.id === "redacted" || bonusGame.id === "only-here" ||
-      bonusGame.id === "then-what" || bonusGame.id === "running-order" || isRuthlessRun()) return "";
+      bonusGame.id === "then-what" || bonusGame.id === "running-order" ||
+      bonusGame.id === "aaron-or-jack" || isRuthlessRun()) return "";
   if (bonusGame.id === "sing-it-back")
     return `<div class="bg-ctx">${lyricCardContext(p.song, p.answer, p.line)}</div>`;
   if (bonusGame.id === "name-that-song") {
@@ -8720,6 +8860,13 @@ function bonusPageScore(correct) {
   // Then What pays per PICK, and the picks are not worth the same: 1, 1, 2, 2 up the page, so
   // what the page banked is already added up in chainPage.
   if (bonusGame && bonusGame.id === "then-what") return chainPage;
+  /* Aaron or Jack pays a flat two for a page placed, and five for a joint production named as
+     one. The premium is not a difficulty bonus — a "both" page is no harder to READ than any
+     other — it is the price of a call you can only make deliberately, since four songs out of
+     87 are joint and tapping that card on a hunch loses the page outright. See WHO_PAY_BOTH for
+     why five and not eleven. */
+  if (bonusGame && bonusGame.id === "aaron-or-jack")
+    return !correct ? 0 : bonusPuzzle.by === "both" ? WHO_PAY_BOTH : WHO_PAY_ONE;
   if (!correct) return 0;
   if (bonusGame && bonusGame.id === "redacted") return Math.max(REDACT_MIN_POINTS, redactWorth);
   return 1;
@@ -8745,6 +8892,13 @@ function bonusBannerText(correct, isTimeout) {
   // reports the track it was rather than pointing at something that isn't on the page.
   if (bonusGame && bonusGame.id === "running-order")
     return correct ? "straight to it" : isTimeout ? "the page ran out" : "not that one";
+  // Naming a joint production is the rarest thing that happens on this shelf, so it gets its
+  // own word rather than sharing "that's the one" with the other 95% of pages. The miss says
+  // which way it went wrong, because "not this one" is nonsense about a page of three names.
+  if (bonusGame && bonusGame.id === "aaron-or-jack")
+    return correct ? (bonusPuzzle.by === "both" ? "both of them, and you knew it" : "that's his")
+         : isTimeout ? "the page ran out"
+         : bonusPuzzle.by === "both" ? "it was the two of them" : "the other one";
   return correct ? "that's the one" : isTimeout ? "the page ran out" : "not this one";
 }
 
@@ -8757,6 +8911,11 @@ function settleBonusRound(correct, detail, isTimeout = false) {
   if (bonusGame && bonusGame.id === "running-order")
     trackSecs = Math.min(BONUS_TRACK_SECONDS, (performance.now() - bonusPageStart) / 1000);
   const gained = bonusPageScore(correct);
+  /* What this page COULD have paid, banked whether it was answered or not — the ceiling is a
+     fact about the deal, and a page dropped is exactly the page you failed to take. Not on an
+     endless run, where a page is worth one page and the score is a distance with no total. */
+  if (bonusDealMax(bonusGame) && !bonusEndless)
+    whoCeiling += bonusPuzzle.by === "both" ? WHO_PAY_BOTH : WHO_PAY_ONE;
   bonusScore += gained;
   /* The miss that ends an endless run, marked as the page settles rather than acted on: what
      happens next is what happens after any page — the banner, the revealed title, the
@@ -8831,6 +8990,12 @@ function settleBonusRound(correct, detail, isTimeout = false) {
            player was watching (the budget less what was left on it) rather than off a second
            stopwatch, so the page's time and the countdown it was raced against can never
            disagree. A page the clock took reads as the full ten, which is exactly what it cost. */
+        /* WHO IT REALLY WAS, which is the answer this page hid, exactly as every other game
+           notes its own. "both" is spelled out rather than abbreviated because it is the one
+           the listing exists to show off — a run with one of those in it wants it legible at a
+           glance down the margin. */
+        : bonusGame.id === "aaron-or-jack"
+            ? (bonusPuzzle.by === "both" ? "both" : bonusPuzzle.by)
         : bonusGame.id === "running-order" ? `${trackSecs.toFixed(2)}s`
         : isRuthlessRun() ? fmtTimeFine(gained)
         : bonusPuzzle.song.album,
@@ -8869,6 +9034,16 @@ function settleBonusRound(correct, detail, isTimeout = false) {
     const meta = $("bonusTrackMeta");
     if (meta) meta.textContent = `${pressingName(bonusPuzzle.album)} · track ${bonusPuzzle.track}`;
 
+  } else if (bonusGame.id === "aaron-or-jack") {
+    /* The sheet finishes itself, the same way Running Order's does. The title has been in the
+       heading all along, so all the reveal owes is what the page was holding back: the album it
+       came off, and the credit line the answer was read from. Both go in the meta under the
+       rule, and the page ends as an ordinary lyric-sheet heading with the record it came off
+       named under it. The credit itself goes in the verdict line instead of here — see
+       whoDetail for why the two must not both carry it. The cards above have already been
+       turned over by the judge. */
+    const meta = $("bonusWhoMeta");
+    if (meta) meta.textContent = bonusPuzzle.album;
   } else if (bonusGame.id === "sing-it-back") {
     // Whatever was in the gap — a wrong word, a half-typed one, nothing at all — the real
     // word goes in, so the line is left whole and correct on the page.
@@ -9071,6 +9246,11 @@ function foldBonusPageCharms(correct, isTimeout) {
     // Counted here rather than at the end, because whether a page was a spare one is a fact
     // about the page and the run fold has no page left to ask.
     if (correct && !isTimeout && bonusRound > CLOUD_WIDE_PAGES) cloudSpareRun++;
+  } else if (bonusGame.id === "aaron-or-jack") {
+    // Both Ways. A single page rather than a run, because only four songs in the pool are joint
+    // productions and a run can be dealt none at all — a charm nobody can work towards on the
+    // page in front of them would be a lottery wearing a collection's clothes.
+    if (correct && !isTimeout && bonusPuzzle.by === "both") unlock("name-a-joint-production");
   } else if (bonusGame.id === "only-here" && onlyPlayed) {
     // The commonest card in the hand, and NOT when that card is also the rarest: a hand where
     // every word is sung equally often is a tie the player cannot lose, and charging them with
@@ -9285,7 +9465,12 @@ function endBonusRun() {
      branch inside recordBonusRun and there should never be one. */
   const rec = endless
     ? recordBonusRun(endlessId(bonusGame), bonusScore)
-    : recordBonusRun(bonusGame.id, bonusScore, bonusMaxScore(bonusGame), timed, sweepSecs, perfect);
+    /* `max` is a CLAMP inside recordBonusRun (a stored best above it is pulled down to it), so
+       a dealMax game must not hand it this run's ceiling: a 23 banked on a generous deal would
+       be cut to 20 by the next stingy one. It has no maximum to be clamped against at all,
+       which is what Infinity says here. */
+    : recordBonusRun(bonusGame.id, bonusScore, bonusDealMax(bonusGame) ? Infinity : bonusMaxScore(bonusGame),
+                     timed, sweepSecs, perfect);
   // After the run is banked, so a sweep that completes the set counts itself (see the note in
   // foldBonusRunCharms), and after the lens fork above, so Ruthless earns none of them.
   foldBonusRunCharms(perfect, bonusLog.filter((t) => t.ok).length);
@@ -9301,7 +9486,10 @@ function endBonusRun() {
   $("bonusFeedback").innerHTML = "";
   $("bonusFeedback").className = "bg-feedback";
 
-  const max = bonusMaxScore(bonusGame);
+  /* THE RUN'S OWN CEILING on a dealMax game, rather than the roster's. This is the one place
+     the number can be shown without leaking anything, because there are no pages left to deal:
+     a clean run reads 20/20 or 23/23 depending on what it was handed, and both are true. */
+  const max = bonusDealMax(bonusGame) ? whoCeiling : bonusMaxScore(bonusGame);
   // The run written up on the back of its own zine: the cover, the score in pen, and the
   // ten tracks listed out with what each one turned on. A bonus run has no bracelet and no
   // stats to show for itself by design, so the track listing is the keepsake — and it doubles
@@ -9347,6 +9535,10 @@ function endBonusRun() {
   // the two numbers the endless board actually keeps.
   const foot = endless ? `best ${rec.best} · played ${rec.plays}`
              : timed ? `best ${fmtTimeFine(rec.best)} · played ${rec.plays}`
+             // A best from some other run, quoted against THIS run's ceiling, would be two
+             // different deals sharing one fraction — and clamped to it, the way the line below
+             // clamps, it would quietly under-report the board. So it stands alone.
+             : bonusDealMax(bonusGame) ? `best ${rec.best}${sweepFoot} · played ${rec.plays}`
                      : `best ${Math.min(rec.best, max)} / ${max}${sweepFoot} · played ${rec.plays}`;
   /* An endless run can be forty pages long and the keepsake is one card, so the listing is
      dealt in SLICES of ten and the card opens on the last of them, ending on the page that
@@ -13577,14 +13769,53 @@ function renderFloatGauge() {
 }
 
 /* ---------- Data load ---------- */
+/* ---------- the production credits (Aaron or Jack) ----------
+   data/producers.json flattened into one Map, title -> { by, credit, album }, which is the only
+   thing that decides an answer on that game's pages. Kept as a Map rather than folded onto the
+   song objects so the file stays a separate fact that can be regenerated without touching
+   songs.json, and so a missing file costs exactly one game rather than the catalogue.
+
+   THE TITLE CHECK IS THE POINT OF THIS FUNCTION. The credits file is keyed by title and matched
+   to songs.json on a straight lookup, so a title spelled even slightly differently in one file
+   does not throw — it silently drops that song out of the pool, and a page that quietly stops
+   existing is the kind of bug nobody ever sees. Anything that fails to match is counted and
+   warned about once, loudly, with the titles named. */
+let producerCredits = new Map();
+function installProducerCredits(doc, grouped) {
+  const known = new Set();
+  grouped.forEach((a) => a.songs.forEach((song) => known.add(a.album + "\u0000" + song.title)));
+  const map = new Map();
+  const orphans = [];
+  (doc.albums || []).forEach((a) => (a.songs || []).forEach((row) => {
+    if (!known.has(a.album + "\u0000" + row.title)) { orphans.push(`${a.album} / ${row.title}`); return; }
+    map.set(row.title, { by: row.by, credit: row.credit, album: a.album });
+  }));
+  if (orphans.length)
+    console.warn(`producers.json: ${orphans.length} title(s) do not match songs.json and were dropped`, orphans);
+  producerCredits = map;
+  return map;
+}
+
 async function loadData() {
-  const [wordsRes, songsRes] = await Promise.all([
+  const [wordsRes, songsRes, credsRes] = await Promise.all([
     fetch("data/words.json"),
     fetch("data/songs.json"),
+    fetch("data/producers.json"),
   ]);
   if (!wordsRes.ok || !songsRes.ok) throw new Error("Failed to fetch data files");
   const words = await wordsRes.json();
   const grouped = await songsRes.json();
+  /* The production credits, for Aaron or Jack. Deliberately NOT part of the corpus (see the
+     contract below): it is a fact about Taylor's catalogue keyed by her titles, it is never
+     swapped for a guest's, and a guest run can't reach the bonus shelf anyway. So it is
+     installed once, beside the corpus rather than inside it, and snapshotCorpus does not and
+     must not carry it.
+     A failure here is survivable on purpose — the file is one game's data, and the rest of the
+     notebook should not refuse to open because a zine cannot be dealt. */
+  if (credsRes.ok) {
+    try { installProducerCredits(await credsRes.json(), grouped); }
+    catch (e) { console.warn("producer credits failed to load", e); }
+  } else console.warn("producer credits missing: Aaron or Jack will have nothing to deal");
   // Kept for the blended lineup corpus, which needs Taylor's catalogue in its ORIGINAL
   // grouped shape (installCorpus flattens); re-fetching a precached file would work but
   // would be a second copy of the same bytes.
@@ -29488,12 +29719,54 @@ function buildDevApi() {
             : id === "redacted" ? buildRedactedPuzzle(songs, ctx, lineIndex)
             : id === "only-here" ? buildOnlyHerePuzzle(songs, bonusIndexes().wordIndex)
             : id === "then-what" ? buildChainPuzzle(songs)
+            : id === "aaron-or-jack" ? buildProducerPuzzle(songs, producerCredits)
             : id === "running-order" ? buildTrackPuzzle(songs, bonusIndexes().trackIndex)
             : id === "sing-it-back" ? buildBlankPuzzle(songs, ctx)
             : buildSlipPuzzle(songs, playableWords, lineIndex, ctx);
           if (p) ok++;
         }
         return { tried: n, built: ok, rate: `${((ok / n) * 100).toFixed(1)}%` };
+      },
+      /* Aaron or Jack. `who()` reads the live page — what was asked, what the answer really is
+         and what it pays — because the player is shown a title and nothing else, so there is no
+         way to check a page against the data by looking at it.
+
+         `credits()` is the one that matters before shipping a data change. It reports the pool
+         the game actually deals and the split it deals at, which is the number the whole design
+         rests on: pooling the four records is what drops "always say Aaron" from a winning
+         strategy to a coin flip, and a fifth record appended to PRODUCER_ALBUMS without
+         re-measuring would quietly undo that. `orphans` is the other half — titles in
+         producers.json that match nothing in songs.json, which do not throw and would otherwise
+         only show up as pages that mysteriously never come round. */
+      who: () => {
+        if (!bonusGame || bonusGame.id !== "aaron-or-jack" || !bonusPuzzle) return "no Aaron or Jack page live";
+        return { ask: bonusPuzzle.song.title, album: bonusPuzzle.album,
+                 answer: bonusPuzzle.by, credit: bonusPuzzle.credit,
+                 pays: bonusPuzzle.by === "both" ? WHO_PAY_BOTH : WHO_PAY_ONE,
+                 picked: whoPlayed, ceiling: whoCeiling,
+                 spent: +((performance.now() - bonusPageStart) / 1000).toFixed(2) };
+      },
+      credits: () => {
+        const pool = bonusSongs().filter((x) => PRODUCER_ALBUMS.includes(x.album) && producerCredits.has(x.title));
+        const by = { aaron: 0, jack: 0, both: 0 };
+        const byAlbum = {};
+        pool.forEach((x) => {
+          const c = producerCredits.get(x.title);
+          by[c.by] = (by[c.by] || 0) + 1;
+          byAlbum[x.album] = byAlbum[x.album] || { aaron: 0, jack: 0, both: 0 };
+          byAlbum[x.album][c.by]++;
+        });
+        const n = pool.length || 1;
+        const known = new Set(allSongs.map((x) => x.album + "\u0000" + x.title));
+        const orphans = [...producerCredits.entries()]
+          .filter(([title, c]) => !known.has(c.album + "\u0000" + title)).map(([t]) => t);
+        return { pool: pool.length, loaded: producerCredits.size, by, byAlbum, orphans,
+                 // The whole reason the pool is these four records and not the twelve.
+                 share: Object.fromEntries(Object.entries(by).map(([k, v]) => [k, `${((v / n) * 100).toFixed(1)}%`])),
+                 // What a run could pay at best and at worst, which is what the back cover quotes.
+                 ceilingFloor: BONUS_ROUNDS * WHO_PAY_ONE,
+                 ceilingMax: by.both >= BONUS_ROUNDS ? BONUS_ROUNDS * WHO_PAY_BOTH
+                   : by.both * WHO_PAY_BOTH + (BONUS_ROUNDS - by.both) * WHO_PAY_ONE };
       },
       /* Running Order. `track()` reads the live page, since the player is never shown the
          title: the question, the answer, and the seconds still on the clock, which is the one
@@ -29922,11 +30195,16 @@ function buildDevApi() {
         bonusDead = false;
         bonusLog = [];
         bonusScore = 0;
+        // A dealMax game is scored against the ceiling of its own deal, and a fabricated run has
+        // to build that ceiling the same way a played one does or the card quotes the LAST real
+        // run's number — which is how this tool first printed a seven-page fill as "7/12".
+        whoCeiling = 0;
         for (let n = 1; n <= BONUS_ROUNDS; n++) {
           const p = buildBonusPuzzle();
           if (!p) continue;
           if (bonusGame.id === "sing-it-back" || bonusGame.id === "redacted" ||
-              bonusGame.id === "only-here" || bonusGame.id === "then-what")
+              bonusGame.id === "only-here" || bonusGame.id === "then-what" ||
+              bonusGame.id === "aaron-or-jack")
             bonusRecentSongs.push(p.song.title);
           const ok = n <= wins;
           // Points games get a plausible spread rather than a flat number, so the track
@@ -29937,7 +30215,13 @@ function buildDevApi() {
             // A missed Then What page still banked whatever picks it made, which is the
             // column the listing has to show off.
             : bonusGame.id === "then-what" ? (ok ? CHAIN_PAGE : n % CHAIN_PAGE)
+            // Aaron or Jack pays by what the SONG is rather than by how the page went, so the
+            // fabricated page reads its own deal exactly as a played one would.
+            : bonusGame.id === "aaron-or-jack"
+              ? (ok ? (p.by === "both" ? WHO_PAY_BOTH : WHO_PAY_ONE) : 0)
             : ok ? Math.max(REDACT_MIN_POINTS, bonusPagePoints(bonusGame) - (n % 6)) : 0;
+          if (bonusGame.id === "aaron-or-jack")
+            whoCeiling += p.by === "both" ? WHO_PAY_BOTH : WHO_PAY_ONE;
           bonusLog.push({
             n, ok, title: p.song.title,
             note: bonusGame.id === "spot-the-slip" ? p.fakeWord
@@ -29946,11 +30230,13 @@ function buildDevApi() {
                 : bonusGame.id === "then-what" ? `${pts} pts`
                 : bonusGame.id === "only-here" ? (ok ? `${pts} · ${p.hand[p.optimal[0]].word.toLowerCase()}`
                                                         : p.hand[p.optimal[0]].word.toLowerCase())
+                : bonusGame.id === "aaron-or-jack" ? p.by
                 : p.song.album,
           });
-          if (bonusGame.points) bonusScore += pts;
+          if (bonusGame.points || bonusDealMax(bonusGame)) bonusScore += pts;
         }
-        if (!bonusGame.points) bonusScore = Math.max(0, Math.min(BONUS_ROUNDS, wins | 0));
+        if (!bonusGame.points && !bonusDealMax(bonusGame))
+          bonusScore = Math.max(0, Math.min(BONUS_ROUNDS, wins | 0));
         bonusRound = BONUS_ROUNDS;
         endBonusRun();
         return `${bonusGame.name}: ${bonusScore}/${bonusMaxScore(bonusGame)}`;

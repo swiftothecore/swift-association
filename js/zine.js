@@ -421,6 +421,63 @@ const COVERS = {
     return s;
   },
 
+  /* AARON OR JACK — two inks and what happens where they overlap.
+
+     The game asks which of two producers made a song, and the third answer is "both of them",
+     which is only four songs in the whole pool. So the cover is a venn: two discs of stock, and
+     the lens where they cross in a third colour.
+
+     THE LENS COLOUR IS NOT CHOSEN, IT IS THE OTHER TWO MULTIPLIED. That is what two inks
+     physically do when a two-colour press lays one over the other, it is what "both produced
+     it" means, and it is the reason the palette does not read as three colours somebody picked.
+     A pale shape pasted on top was the first pass and it looked exactly like what it was — a
+     third decision. Teal and vermillion are near-complementary, so the overprint drops to a dark
+     slate-olive and the meeting point reads as WEIGHT rather than as brightness: the rarest
+     answer in the game is the densest spot on the cover, which fell out of the arithmetic rather
+     than being arranged.
+
+     THE LENS IS A REAL VESICA AND THE ANGLE IS DERIVED. Two equal circles a distance d apart
+     cross where the half-distance subtends `acos((d/2) / rad)` at either centre, so the lens is
+     the right disc's arc from PI+a to PI-a closing onto the left disc's from +a to -a. Both
+     earlier passes hand-picked those angles and both were wrong in a way that only showed on
+     screen: angles a few degrees inside the crossing points leave the two arcs not meeting, and
+     the lens comes apart into a pair of crescents with the discs showing through between them.
+     Do not replace this with an ellipse dropped between the discs — same bug, slower to spot.
+
+     TWO ADJACENCIES IT HAS TO SURVIVE, and neither is the one you would guess. It is the shelf's
+     third round cover, but it never sits next to either of the other two: the roster's ramp puts
+     it fourth, at the end of the tap family, so Running Order's pressing and Track by Track's
+     spiral are both on the row below. Its actual neighbours are ONLY HERE on its left and SING
+     IT BACK on its right.
+
+     Only Here is the one that matters, because it is dark teal with a vermillion pin and this is
+     teal and vermillion — the same two hues, side by side. What separates them is VALUE and
+     SILHOUETTE rather than colour: that card is a dark ground with one small red dot on it, this
+     one is the palest card on the shelf with two big discs, so they never read as the same
+     object even at tile size. It is worth knowing that the hue pair is doubled there, though,
+     because a future retune of either that darkens this ground or lightens that one takes away
+     the only thing holding them apart. */
+  "aaron-or-jack": (r) => {
+    const cy = 86, rad = 33, cx1 = 38, cx2 = 82;
+    const INK_L = "#3f9fb5", INK_R = "#e2643a", LENS = "#383e29";
+    let s = sheet(circlePts(cx1, cy, rad, r, 34, 1.2), INK_L, r, { amp: 1.2, step: 6 });
+    s += sheet(circlePts(cx2, cy, rad, r, 34, 1.2), INK_R, r, { amp: 1.2, step: 6 });
+    const a = Math.acos(((cx2 - cx1) / 2) / rad);
+    const arc = (cx, from, to) => {
+      const out = [];
+      for (let i = 0; i <= 20; i++) {
+        const t = from + (to - from) * (i / 20);
+        out.push([cx + Math.cos(t) * rad, cy + Math.sin(t) * rad]);
+      }
+      return out;
+    };
+    /* Torn gently, and no shadow. The tips are cusps, and a cusp chewed at the discs' own
+       amplitude stops reading as a point; a shadow under a shape that sits flush inside two
+       others would be a lifted edge where there is no edge to lift. */
+    return s + sheet(arc(cx2, Math.PI + a, Math.PI - a).concat(arc(cx1, a, -a)), LENS, r,
+      { amp: 0.55, step: 4, shadow: false });
+  },
+
   /* RUTHLESS GAME — the sun going down on you. A huge ochre sun half off the page behind
      hot torn rays, with the ridges closing in front of it in the mode's own deep red. The
      one cover that is about a clock without drawing one. */
@@ -474,6 +531,7 @@ const LABELS = {
   "running-order":  { x: 12, y: 128, w: 96, h: 22, rot: -1.5 },
   "word-cloud":     { x: 12, y: 126, w: 96, h: 21, rot: -1.3 },
   "track-by-track": { x: 14, y: 130, w: 92, h: 21, rot: -1.1 },
+  "aaron-or-jack":  { x: 14, y: 14,  w: 94, h: 23, rot: 1.6 },
   "ruthless-game":  { x: 12, y: 16,  w: 96, h: 23, rot: -1.8 },
 };
 const BLANK_LABEL = { x: 16, y: 28, w: 88, h: 20, rot: -1, fill: "#cdb489", ink: "rgba(52,42,30,0.68)" };
@@ -493,7 +551,10 @@ export function seedOf(id) {
 /* The paper the collage is pasted onto. Bone unless a cover says otherwise: Redacted wants
    a darker manila so the cream sheet on top of it reads as a separate sheet rather than as
    a margin, which is the difference between a page and a rectangle. */
-const GROUNDS = { "redacted": "#cbb794", "track-by-track": "#e6dbc0" };
+/* Aaron or Jack is printed rather than pasted — two inks on pale stock — so its ground is a
+   shade warmer than the shelf's default bone, which is the paper showing round the discs
+   rather than a field they sit on. */
+const GROUNDS = { "redacted": "#cbb794", "track-by-track": "#e6dbc0", "aaron-or-jack": "#ece0c6" };
 
 let uid = 0;
 

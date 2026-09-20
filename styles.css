@@ -4255,6 +4255,94 @@
      hasn't got. */
   .bg-scrap-mark { position: absolute; top: 3px; right: 4px; width: 12px; }
 
+  /* ---------- Aaron or Jack: the three stamps ----------
+     A production credit is a thing STAMPED on a sleeve, so the three answers are three rubber
+     stamps: a struck box, a hairline inside it, and the name in spaced capitals. Ink on paper,
+     which is what this whole notebook is.
+
+     THEY USED TO BE TORN SCRAPS and that was the reason to change: a scrap is Only Here's card,
+     and Only Here is the game immediately to the left of this one on the shelf. Two neighbours
+     cannot share an object. Nothing else on the shelf is a stamp.
+
+     THE INKS ARE THE COVER'S, a shade deeper. The cover's teal and vermillion are chosen to read
+     as paper at 24px; type knocked out of them at 15px needs more weight behind it, so these are
+     the same two hues pushed down rather than a second palette. Do not let the two drift apart —
+     the whole page is one idea printed twice, on the collage and on the controls. */
+  .bg-who-row {
+    --who-teal: #2f7f95;
+    --who-verm: #c9552a;
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;
+    max-width: 430px; margin: 4px auto 8px;
+  }
+  .bg-who {
+    background: none; border: 0; padding: 0; min-height: 78px; cursor: pointer;
+    display: grid; place-items: center; transition: opacity 0.14s;
+  }
+  /* Three different tilts, because three stamps struck by hand are not three stamps aligned. */
+  .bg-who[data-v="aaron"] { transform: rotate(-1.4deg); color: var(--who-teal); }
+  .bg-who[data-v="both"]  { transform: rotate(0.5deg);  color: var(--who-teal); }
+  .bg-who[data-v="jack"]  { transform: rotate(1.2deg);  color: var(--who-verm); }
+  .bg-who-stamp {
+    position: relative; display: grid; place-items: center; padding: 13px 14px;
+    border: 2.5px solid currentColor; border-radius: 2px; transition: transform 0.1s;
+  }
+  .bg-who-stamp::after {
+    content: ""; position: absolute; inset: 3px; border: 1px solid currentColor;
+    border-radius: 1px; opacity: 0.5;
+  }
+  .bg-who-word {
+    position: relative; z-index: 2; font-family: var(--type); font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.15em; line-height: 1;
+    font-size: calc(15px + var(--text-size-adjust));
+  }
+  /* THE SECOND STRIKE, and it is the BOX that is struck twice rather than the word. Doubling the
+     word was the first idea and is unreadable at this size — two four-letter words a few pixels
+     apart stop being one word printed twice and become a scribble. Striking the frame twice says
+     the same thing and leaves the name legible. `multiply` is what makes the crossing darken on
+     its own, so the overlap is a real overprint rather than a third colour anybody picked; it is
+     a blend of two flat colours, not a gradient, so it stays inside the ink-on-paper rule. */
+  .bg-who-strike {
+    position: absolute; inset: 0; border: 2.5px solid var(--who-verm); border-radius: 2px;
+    mix-blend-mode: multiply; transform: translate(5px, 4px); pointer-events: none;
+  }
+  .bg-who[data-v="both"] .bg-who-stamp::after { display: none; }
+
+  /* THE REVEAL: the true stamp is the one that actually took the ink — filled solid, name knocked
+     out in paper — while the others stay as light impressions. There is NO GOLD anywhere here and
+     that is deliberate. A gold ring was tried and it is a third frame on a card that already has
+     two; the shelf's own reveal idiom is a gold WASH (Only Here's best card), and a wash has
+     nothing to do on a stamp that is about to be filled anyway. "This one printed" is a reason
+     rather than a styling, which is why it survives on all three. */
+  .bg-who.is-answer .bg-who-stamp { background: currentColor; }
+  .bg-who.is-answer .bg-who-stamp::after { border-color: var(--paper); opacity: 0.3; }
+  .bg-who.is-answer .bg-who-word { color: var(--paper); }
+  /* "both" PRINTS IN BOTH INKS, split straight down the middle, and the split is VERTICAL for two
+     reasons. The boundary runs perpendicular to the word, so it falls between the O and the T and
+     every letter sits wholly in one ink — a diagonal cuts through the letterforms instead. And
+     the row reads Aaron | both | Jack, so teal lands on the left where Aaron's stamp is and
+     vermillion on the right where Jack's is: the card is its two neighbours pushed together. A
+     diagonal throws that mapping away for decoration.
+     TWO BLOCKS RATHER THAN A GRADIENT. A hard-stop linear-gradient renders identically, but the
+     house rule is no gradients in page art and a rule worth having is worth keeping literally. */
+  .bg-who-half { position: absolute; top: 0; bottom: 0; width: 50%; display: none; }
+  .bg-who-half.is-a { left: 0; background: var(--who-teal); }
+  .bg-who-half.is-j { right: 0; background: var(--who-verm); }
+  .bg-who[data-v="both"].is-answer .bg-who-stamp { background: none; border-color: #6a4a4a; }
+  .bg-who[data-v="both"].is-answer .bg-who-strike { display: none; }
+  .bg-who[data-v="both"].is-answer .bg-who-half { display: block; }
+
+  /* A wrong pick fades rather than being struck through: the stamp it should have been is right
+     beside it, and two marks competing on one row is noise. */
+  .bg-who.is-missed { opacity: 0.5; }
+  .bg-who:disabled { cursor: default; }
+  .bg-who:disabled:not(.is-answer):not(.is-missed) { opacity: 0.55; }
+  /* The press, on the stamp rather than the button, so it does not cancel the button's tilt. */
+  .bg-who:active:not(:disabled) .bg-who-stamp { transform: translateY(1px); }
+
+  /* Dark stock takes the inks up, or two mid-tone inks on a near-black page go muddy. */
+  :root[data-theme="dark"] .bg-who-row { --who-teal: #5fb6cc; --who-verm: #e97a4d; }
+  :root[data-theme="dark"] .bg-who[data-v="both"].is-answer .bg-who-stamp { border-color: #9a7f6a; }
+
   /* The reveal's line: where the rarest word actually sits in the song. It goes under the hand
      rather than under the heading, because by then the hand is the answer key and the line is
      the footnote to it. There is no lyric card on this game at all. */
@@ -4766,6 +4854,10 @@
        two: a 3+3 hand you read in one glance is the whole reason it is six. */
     .bg-hand { gap: 6px; }
     .bg-scrap { min-height: 46px; padding: 6px 3px; }
+    .bg-who-row { gap: 6px; }
+    .bg-who { min-height: 62px; }
+    .bg-who-stamp { padding: 10px 6px; }
+    .bg-who-word { font-size: calc(12.5px + var(--text-size-adjust)); letter-spacing: 0.1em; }
     .bg-scrap-word { font-size: calc(17px + var(--text-size-adjust)); }
     .bg-chain-text { font-size: calc(17px + var(--text-size-adjust)); }
     .bg-chain-row.is-miss .bg-chain-text { font-size: calc(13.5px + var(--text-size-adjust)); }

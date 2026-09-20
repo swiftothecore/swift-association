@@ -1,0 +1,765 @@
+{
+  "note": [
+    "Which of Jack Antonoff and Aaron Dessner is credited as a producer on a song, and the",
+    "full producer line it is read off. `by` is one of \"jack\", \"aaron\" or \"both\", and it",
+    "answers ONLY that question: it says nothing about whether Taylor, Max Martin or anyone",
+    "else is on the record too. \"jack\" means Antonoff is credited and Dessner is not.",
+    "",
+    "A song absent from this file has NEITHER of them on it. That is how a title opts out —",
+    "there is no fourth bucket, and The Life of a Showgirl is absent entirely for that reason",
+    "rather than by an oversight (Swift, Max Martin and Shellback produced it).",
+    "",
+    "`credit` is the real producer line and exists to be PRINTED at a reveal, not to be parsed.",
+    "Do not derive `by` from it: a vocal-production or additional-production credit names people",
+    "who do not change the bucket, which is why \"Nothing New\" is aaron with Tony Berg on the",
+    "line and \"Fortnight\" is jack with Louis Bell on it.",
+    "",
+    "Four rulings this file bakes in, so they are not re-litigated from the data later:",
+    "  1. folklore is read off the JULY 2020 RELEASE CREDITS, not later database metadata",
+    "     rewritten around the William Bowery disclosure.",
+    "  2. A Taylor's Version re-recording is NOT a second entry. The four that would collapse",
+    "     (Out of the Woods, I Wish You Would, You Are in Love, Sweeter than Fiction) carry the",
+    "     same producer as their originals, so the original's row stands for both.",
+    "  3. Remixes, acoustic cuts, piano versions and long pond performances are not songs here.",
+    "     All Too Well (10 Minute Version) IS, because it is its own studio master.",
+    "  4. Songs released under another artist's name are out — Big Red Machine's Renegade and",
+    "     Birch, the National's The Alcott, and Gracie Abrams's us., which would otherwise be a",
+    "     fifth \"both\".",
+    "",
+    "Album and track order mirror data/songs.json exactly, so the two files diff against each",
+    "other. Every title here is spelled as songs.json spells it and matches it on a straight",
+    "lookup — no normalising needed at the call site."
+  ],
+  "albums": [
+    {
+      "album": "Fearless",
+      "songs": [
+        {
+          "title": "You All Over Me",
+          "by": "aaron",
+          "credit": "Taylor Swift; Aaron Dessner"
+        },
+        {
+          "title": "Mr. Perfectly Fine",
+          "by": "jack",
+          "credit": "Taylor Swift; Jack Antonoff"
+        },
+        {
+          "title": "We Were Happy",
+          "by": "aaron",
+          "credit": "Taylor Swift; Aaron Dessner"
+        },
+        {
+          "title": "That's When",
+          "by": "jack",
+          "credit": "Taylor Swift; Jack Antonoff"
+        },
+        {
+          "title": "Don't You",
+          "by": "jack",
+          "credit": "Taylor Swift; Jack Antonoff"
+        },
+        {
+          "title": "Bye Bye Baby",
+          "by": "jack",
+          "credit": "Taylor Swift; Jack Antonoff"
+        }
+      ]
+    },
+    {
+      "album": "Speak Now",
+      "songs": [
+        {
+          "title": "Electric Touch",
+          "by": "aaron",
+          "credit": "Taylor Swift; Aaron Dessner"
+        },
+        {
+          "title": "When Emma Falls In Love",
+          "by": "aaron",
+          "credit": "Taylor Swift; Aaron Dessner"
+        },
+        {
+          "title": "I Can See You",
+          "by": "jack",
+          "credit": "Taylor Swift; Jack Antonoff"
+        },
+        {
+          "title": "Castles Crumbling",
+          "by": "jack",
+          "credit": "Taylor Swift; Jack Antonoff"
+        },
+        {
+          "title": "Foolish One",
+          "by": "aaron",
+          "credit": "Taylor Swift; Aaron Dessner"
+        },
+        {
+          "title": "Timeless",
+          "by": "jack",
+          "credit": "Taylor Swift; Jack Antonoff"
+        }
+      ]
+    },
+    {
+      "album": "Red",
+      "songs": [
+        {
+          "title": "Better Man",
+          "by": "aaron",
+          "credit": "Taylor Swift; Aaron Dessner"
+        },
+        {
+          "title": "Nothing New",
+          "by": "aaron",
+          "credit": "Taylor Swift; Aaron Dessner; Tony Berg (vocal production)"
+        },
+        {
+          "title": "Babe",
+          "by": "jack",
+          "credit": "Taylor Swift; Jack Antonoff"
+        },
+        {
+          "title": "I Bet You Think About Me",
+          "by": "aaron",
+          "credit": "Taylor Swift; Aaron Dessner"
+        },
+        {
+          "title": "Forever Winter",
+          "by": "jack",
+          "credit": "Taylor Swift; Jack Antonoff"
+        },
+        {
+          "title": "Run",
+          "by": "aaron",
+          "credit": "Taylor Swift; Aaron Dessner"
+        },
+        {
+          "title": "All Too Well (10 Minute Version)",
+          "by": "jack",
+          "credit": "Taylor Swift; Jack Antonoff"
+        }
+      ]
+    },
+    {
+      "album": "1989",
+      "songs": [
+        {
+          "title": "Out Of The Woods",
+          "by": "jack",
+          "credit": "Taylor Swift; Jack Antonoff; Max Martin (vocal production)"
+        },
+        {
+          "title": "I Wish You Would",
+          "by": "jack",
+          "credit": "Taylor Swift; Jack Antonoff; Max Martin (vocal production); Greg Kurstin (additional production)"
+        },
+        {
+          "title": "You Are In Love",
+          "by": "jack",
+          "credit": "Taylor Swift; Jack Antonoff"
+        },
+        {
+          "title": "\"Slut!\"",
+          "by": "jack",
+          "credit": "Taylor Swift; Jack Antonoff; Patrik Berger"
+        },
+        {
+          "title": "Say Don't Go",
+          "by": "jack",
+          "credit": "Taylor Swift; Jack Antonoff"
+        },
+        {
+          "title": "Now That We Don't Talk",
+          "by": "jack",
+          "credit": "Taylor Swift; Jack Antonoff"
+        },
+        {
+          "title": "Suburban Legends",
+          "by": "jack",
+          "credit": "Taylor Swift; Jack Antonoff"
+        },
+        {
+          "title": "Is It Over Now?",
+          "by": "jack",
+          "credit": "Taylor Swift; Jack Antonoff"
+        },
+        {
+          "title": "Sweeter Than Fiction",
+          "by": "jack",
+          "credit": "Taylor Swift; Jack Antonoff"
+        }
+      ]
+    },
+    {
+      "album": "reputation",
+      "songs": [
+        {
+          "title": "Look What You Made Me Do",
+          "by": "jack",
+          "credit": "Taylor Swift; Jack Antonoff"
+        },
+        {
+          "title": "Getaway Car",
+          "by": "jack",
+          "credit": "Taylor Swift; Jack Antonoff"
+        },
+        {
+          "title": "Dress",
+          "by": "jack",
+          "credit": "Taylor Swift; Jack Antonoff"
+        },
+        {
+          "title": "This Is Why We Can't Have Nice Things",
+          "by": "jack",
+          "credit": "Taylor Swift; Jack Antonoff"
+        },
+        {
+          "title": "Call It What You Want",
+          "by": "jack",
+          "credit": "Taylor Swift; Jack Antonoff"
+        },
+        {
+          "title": "New Year's Day",
+          "by": "jack",
+          "credit": "Taylor Swift; Jack Antonoff"
+        }
+      ]
+    },
+    {
+      "album": "Lover",
+      "songs": [
+        {
+          "title": "Cruel Summer",
+          "by": "jack",
+          "credit": "Taylor Swift; Jack Antonoff"
+        },
+        {
+          "title": "Lover",
+          "by": "jack",
+          "credit": "Taylor Swift; Jack Antonoff"
+        },
+        {
+          "title": "The Archer",
+          "by": "jack",
+          "credit": "Taylor Swift; Jack Antonoff"
+        },
+        {
+          "title": "I Think He Knows",
+          "by": "jack",
+          "credit": "Taylor Swift; Jack Antonoff"
+        },
+        {
+          "title": "Paper Rings",
+          "by": "jack",
+          "credit": "Taylor Swift; Jack Antonoff"
+        },
+        {
+          "title": "Cornelia Street",
+          "by": "jack",
+          "credit": "Taylor Swift; Jack Antonoff"
+        },
+        {
+          "title": "Death By A Thousand Cuts",
+          "by": "jack",
+          "credit": "Taylor Swift; Jack Antonoff"
+        },
+        {
+          "title": "London Boy",
+          "by": "jack",
+          "credit": "Taylor Swift; Jack Antonoff; Sounwave (co-production)"
+        },
+        {
+          "title": "Soon You'll Get Better",
+          "by": "jack",
+          "credit": "Taylor Swift; Jack Antonoff"
+        },
+        {
+          "title": "False God",
+          "by": "jack",
+          "credit": "Taylor Swift; Jack Antonoff"
+        },
+        {
+          "title": "Daylight",
+          "by": "jack",
+          "credit": "Taylor Swift; Jack Antonoff"
+        }
+      ]
+    },
+    {
+      "album": "folklore",
+      "songs": [
+        {
+          "title": "the 1",
+          "by": "aaron",
+          "credit": "Aaron Dessner"
+        },
+        {
+          "title": "cardigan",
+          "by": "aaron",
+          "credit": "Aaron Dessner"
+        },
+        {
+          "title": "the last great american dynasty",
+          "by": "aaron",
+          "credit": "Aaron Dessner"
+        },
+        {
+          "title": "exile",
+          "by": "aaron",
+          "credit": "Aaron Dessner"
+        },
+        {
+          "title": "my tears ricochet",
+          "by": "jack",
+          "credit": "Jack Antonoff; Taylor Swift"
+        },
+        {
+          "title": "mirrorball",
+          "by": "jack",
+          "credit": "Jack Antonoff; Taylor Swift"
+        },
+        {
+          "title": "seven",
+          "by": "aaron",
+          "credit": "Aaron Dessner"
+        },
+        {
+          "title": "august",
+          "by": "jack",
+          "credit": "Jack Antonoff; Taylor Swift"
+        },
+        {
+          "title": "this is me trying",
+          "by": "jack",
+          "credit": "Jack Antonoff; Taylor Swift"
+        },
+        {
+          "title": "illicit affairs",
+          "by": "jack",
+          "credit": "Jack Antonoff; Taylor Swift"
+        },
+        {
+          "title": "invisible string",
+          "by": "aaron",
+          "credit": "Aaron Dessner"
+        },
+        {
+          "title": "mad woman",
+          "by": "aaron",
+          "credit": "Aaron Dessner"
+        },
+        {
+          "title": "epiphany",
+          "by": "aaron",
+          "credit": "Aaron Dessner"
+        },
+        {
+          "title": "betty",
+          "by": "both",
+          "credit": "Aaron Dessner; Jack Antonoff; Taylor Swift"
+        },
+        {
+          "title": "peace",
+          "by": "aaron",
+          "credit": "Aaron Dessner"
+        },
+        {
+          "title": "hoax",
+          "by": "aaron",
+          "credit": "Aaron Dessner"
+        },
+        {
+          "title": "the lakes",
+          "by": "jack",
+          "credit": "Jack Antonoff; Taylor Swift"
+        }
+      ]
+    },
+    {
+      "album": "evermore",
+      "songs": [
+        {
+          "title": "willow",
+          "by": "aaron",
+          "credit": "Aaron Dessner"
+        },
+        {
+          "title": "champagne problems",
+          "by": "aaron",
+          "credit": "Taylor Swift; Aaron Dessner"
+        },
+        {
+          "title": "gold rush",
+          "by": "jack",
+          "credit": "Taylor Swift; Jack Antonoff"
+        },
+        {
+          "title": "'tis the damn season",
+          "by": "aaron",
+          "credit": "Aaron Dessner"
+        },
+        {
+          "title": "tolerate it",
+          "by": "aaron",
+          "credit": "Aaron Dessner"
+        },
+        {
+          "title": "no body, no crime",
+          "by": "aaron",
+          "credit": "Taylor Swift; Aaron Dessner"
+        },
+        {
+          "title": "happiness",
+          "by": "aaron",
+          "credit": "Aaron Dessner"
+        },
+        {
+          "title": "dorothea",
+          "by": "aaron",
+          "credit": "Aaron Dessner"
+        },
+        {
+          "title": "coney island",
+          "by": "aaron",
+          "credit": "Aaron Dessner; Bryce Dessner"
+        },
+        {
+          "title": "ivy",
+          "by": "aaron",
+          "credit": "Aaron Dessner"
+        },
+        {
+          "title": "cowboy like me",
+          "by": "aaron",
+          "credit": "Aaron Dessner"
+        },
+        {
+          "title": "long story short",
+          "by": "aaron",
+          "credit": "Aaron Dessner"
+        },
+        {
+          "title": "marjorie",
+          "by": "aaron",
+          "credit": "Aaron Dessner"
+        },
+        {
+          "title": "closure",
+          "by": "aaron",
+          "credit": "Aaron Dessner; BJ Burton (additional production); James McAlister (additional production)"
+        },
+        {
+          "title": "evermore",
+          "by": "aaron",
+          "credit": "Taylor Swift; Aaron Dessner"
+        },
+        {
+          "title": "right where you left me",
+          "by": "aaron",
+          "credit": "Aaron Dessner"
+        },
+        {
+          "title": "it's time to go",
+          "by": "aaron",
+          "credit": "Aaron Dessner"
+        }
+      ]
+    },
+    {
+      "album": "Midnights",
+      "songs": [
+        {
+          "title": "Lavender Haze",
+          "by": "jack",
+          "credit": "Taylor Swift; Jack Antonoff; Sounwave; Jahaan Sweet; Braxton Cook (additional production)"
+        },
+        {
+          "title": "Maroon",
+          "by": "jack",
+          "credit": "Taylor Swift; Jack Antonoff"
+        },
+        {
+          "title": "Anti-Hero",
+          "by": "jack",
+          "credit": "Taylor Swift; Jack Antonoff"
+        },
+        {
+          "title": "Snow On The Beach",
+          "by": "jack",
+          "credit": "Taylor Swift; Jack Antonoff"
+        },
+        {
+          "title": "You're On Your Own, Kid",
+          "by": "jack",
+          "credit": "Taylor Swift; Jack Antonoff"
+        },
+        {
+          "title": "Midnight Rain",
+          "by": "jack",
+          "credit": "Taylor Swift; Jack Antonoff"
+        },
+        {
+          "title": "Question...?",
+          "by": "jack",
+          "credit": "Taylor Swift; Jack Antonoff"
+        },
+        {
+          "title": "Vigilante Shit",
+          "by": "jack",
+          "credit": "Taylor Swift; Jack Antonoff"
+        },
+        {
+          "title": "Bejeweled",
+          "by": "jack",
+          "credit": "Taylor Swift; Jack Antonoff"
+        },
+        {
+          "title": "Labyrinth",
+          "by": "jack",
+          "credit": "Taylor Swift; Jack Antonoff"
+        },
+        {
+          "title": "Karma",
+          "by": "jack",
+          "credit": "Taylor Swift; Jack Antonoff; Sounwave; Keanu Beats; Jahaan Sweet"
+        },
+        {
+          "title": "Sweet Nothing",
+          "by": "jack",
+          "credit": "Taylor Swift; Jack Antonoff"
+        },
+        {
+          "title": "Mastermind",
+          "by": "jack",
+          "credit": "Taylor Swift; Jack Antonoff"
+        },
+        {
+          "title": "The Great War",
+          "by": "aaron",
+          "credit": "Taylor Swift; Aaron Dessner"
+        },
+        {
+          "title": "Bigger Than The Whole Sky",
+          "by": "jack",
+          "credit": "Taylor Swift; Jack Antonoff"
+        },
+        {
+          "title": "Paris",
+          "by": "jack",
+          "credit": "Taylor Swift; Jack Antonoff"
+        },
+        {
+          "title": "High Infidelity",
+          "by": "aaron",
+          "credit": "Taylor Swift; Aaron Dessner"
+        },
+        {
+          "title": "Glitch",
+          "by": "jack",
+          "credit": "Taylor Swift; Jack Antonoff; Sounwave"
+        },
+        {
+          "title": "Would've, Could've, Should've",
+          "by": "aaron",
+          "credit": "Taylor Swift; Aaron Dessner"
+        },
+        {
+          "title": "Dear Reader",
+          "by": "jack",
+          "credit": "Taylor Swift; Jack Antonoff"
+        },
+        {
+          "title": "Hits Different",
+          "by": "both",
+          "credit": "Taylor Swift; Jack Antonoff; Aaron Dessner"
+        },
+        {
+          "title": "You're Losing Me",
+          "by": "jack",
+          "credit": "Taylor Swift; Jack Antonoff"
+        }
+      ]
+    },
+    {
+      "album": "The Tortured Poets Department",
+      "songs": [
+        {
+          "title": "Fortnight",
+          "by": "jack",
+          "credit": "Jack Antonoff; Taylor Swift; Louis Bell (vocal production)"
+        },
+        {
+          "title": "The Tortured Poets Department",
+          "by": "jack",
+          "credit": "Jack Antonoff; Taylor Swift"
+        },
+        {
+          "title": "My Boy Only Breaks His Favorite Toys",
+          "by": "jack",
+          "credit": "Jack Antonoff; Taylor Swift"
+        },
+        {
+          "title": "Down Bad",
+          "by": "jack",
+          "credit": "Jack Antonoff; Taylor Swift"
+        },
+        {
+          "title": "So Long, London",
+          "by": "aaron",
+          "credit": "Aaron Dessner; Taylor Swift"
+        },
+        {
+          "title": "But Daddy I Love Him",
+          "by": "both",
+          "credit": "Aaron Dessner; Jack Antonoff; Taylor Swift"
+        },
+        {
+          "title": "Fresh Out The Slammer",
+          "by": "jack",
+          "credit": "Jack Antonoff; Taylor Swift"
+        },
+        {
+          "title": "Florida!!!",
+          "by": "jack",
+          "credit": "Jack Antonoff; Taylor Swift"
+        },
+        {
+          "title": "Guilty as Sin?",
+          "by": "jack",
+          "credit": "Jack Antonoff; Taylor Swift"
+        },
+        {
+          "title": "Who's Afraid of Little Old Me?",
+          "by": "jack",
+          "credit": "Jack Antonoff; Taylor Swift"
+        },
+        {
+          "title": "I Can Fix Him (No Really I Can)",
+          "by": "jack",
+          "credit": "Jack Antonoff; Taylor Swift"
+        },
+        {
+          "title": "loml",
+          "by": "aaron",
+          "credit": "Aaron Dessner; Taylor Swift"
+        },
+        {
+          "title": "I Can Do It With a Broken Heart",
+          "by": "jack",
+          "credit": "Jack Antonoff; Taylor Swift"
+        },
+        {
+          "title": "The Smallest Man Who Ever Lived",
+          "by": "aaron",
+          "credit": "Aaron Dessner; Taylor Swift"
+        },
+        {
+          "title": "The Alchemy",
+          "by": "jack",
+          "credit": "Jack Antonoff; Taylor Swift"
+        },
+        {
+          "title": "Clara Bow",
+          "by": "aaron",
+          "credit": "Aaron Dessner; Taylor Swift"
+        },
+        {
+          "title": "The Black Dog",
+          "by": "jack",
+          "credit": "Jack Antonoff; Taylor Swift"
+        },
+        {
+          "title": "imgonnagetyouback",
+          "by": "jack",
+          "credit": "Jack Antonoff; Taylor Swift"
+        },
+        {
+          "title": "The Albatross",
+          "by": "aaron",
+          "credit": "Aaron Dessner; Taylor Swift"
+        },
+        {
+          "title": "Chloe or Sam or Sophia or Marcus",
+          "by": "aaron",
+          "credit": "Aaron Dessner; Taylor Swift"
+        },
+        {
+          "title": "How Did It End?",
+          "by": "aaron",
+          "credit": "Aaron Dessner; Taylor Swift"
+        },
+        {
+          "title": "So High School",
+          "by": "aaron",
+          "credit": "Aaron Dessner; Taylor Swift"
+        },
+        {
+          "title": "I Hate It Here",
+          "by": "aaron",
+          "credit": "Aaron Dessner; Taylor Swift"
+        },
+        {
+          "title": "thanK you aIMee",
+          "by": "both",
+          "credit": "Aaron Dessner; Jack Antonoff; Taylor Swift"
+        },
+        {
+          "title": "I Look in People's Windows",
+          "by": "jack",
+          "credit": "Jack Antonoff; Taylor Swift; Patrik Berger"
+        },
+        {
+          "title": "The Prophecy",
+          "by": "aaron",
+          "credit": "Aaron Dessner; Taylor Swift"
+        },
+        {
+          "title": "Cassandra",
+          "by": "aaron",
+          "credit": "Aaron Dessner; Taylor Swift"
+        },
+        {
+          "title": "Peter",
+          "by": "aaron",
+          "credit": "Aaron Dessner; Taylor Swift"
+        },
+        {
+          "title": "The Bolter",
+          "by": "aaron",
+          "credit": "Aaron Dessner; Taylor Swift"
+        },
+        {
+          "title": "Robin",
+          "by": "aaron",
+          "credit": "Aaron Dessner; Taylor Swift"
+        },
+        {
+          "title": "The Manuscript",
+          "by": "aaron",
+          "credit": "Aaron Dessner; Taylor Swift"
+        }
+      ]
+    },
+    {
+      "album": "Songs From Movies",
+      "songs": [
+        {
+          "title": "I Don't Wanna Live Forever",
+          "by": "jack",
+          "credit": "Jack Antonoff"
+        },
+        {
+          "title": "Carolina",
+          "by": "aaron",
+          "credit": "Taylor Swift; Aaron Dessner"
+        },
+        {
+          "title": "I Knew It, I Knew You",
+          "by": "jack",
+          "credit": "Taylor Swift; Jack Antonoff"
+        }
+      ]
+    }
+  ]
+}

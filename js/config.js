@@ -725,6 +725,36 @@ export const BONUS_GAMES = [
     kicker: "the game backwards", tint: "#1c7371",
     line: "Six words from the song. Pick the rarest.",
     blurb: "The game backwards: here is the song, and here are six of its own words. Pick the one you think the fewest other songs sing." },
+  /* AARON OR JACK — the end of the tap family, and the only game on the shelf that asks about
+     something OUTSIDE the songs. A title is written on the page and you say which of the two
+     producers made it: Aaron Dessner, Jack Antonoff, or both of them.
+
+     It sits here for the shelf's own sort key — the page asks you to PRODUCE a tap, so it is in
+     the tap family, and inside a family the order is how much you must already be carrying.
+     Only Here prices a card by every song you are NOT being shown, which is the deepest ask
+     the catalogue itself can make; this one is deeper still, because what it asks for is not in
+     the catalogue at all. It is the last thing you can answer with one finger.
+
+     THE POOL IS FOUR RECORDS (PRODUCER_ALBUMS) and that is a fairness decision rather than a
+     scoping one. Across the whole twelve, "always say Jack" scores 57% while knowing nothing;
+     across folklore, evermore, Midnights and TTPD — the four where both men actually worked —
+     the split measures 50.6 / 44.8 / 4.6 and the meta stops paying. Widen the pool and the game
+     starts grading whether you know which producer is busier rather than whether you know the
+     record.
+
+     THE PAGE NEVER PRINTS THE ALBUM, and must not be given it later. Midnights is nearly all
+     Jack and evermore is nearly all Aaron, so naming the record hands over each record's prior
+     before the player has thought about the song. The album is a hint you earn by recognising
+     the title, which is the shelf's own register, and it goes on the page at the reveal where
+     it costs nothing.
+
+     NO `points` AND NO FIXED MAXIMUM — see `dealMax`. A correct page pays two, a correct
+     "both" pays five, and only four songs in the whole pool can ever be a five, so there is no
+     honest number for a run to be out of. */
+  { id: "aaron-or-jack", name: "Aaron or Jack", ready: true, dealMax: true, sweep: true, endless: true,
+    kicker: "whose record is this?", tint: "#3f9fb5",
+    line: "Name the producer: Aaron, Jack, or both.",
+    blurb: "A song from one of the four records the two of them share, and nothing else on the page. Say whether Aaron Dessner made it, Jack Antonoff made it, or the pair of them did." },
   // The hinge of the shelf: the song is still named, but the answer is now written rather than
   // pointed at, which is the last page before every game below asks for a title.
   { id: "sing-it-back", name: "Sing It Back", ready: true, sweep: true, endless: true,
@@ -810,6 +840,10 @@ export const RUTHLESS_GAME = {
 export const BONUS_ROUNDS = 10;
 export const BONUS_SLIP_SECONDS = 20;   // reading a whole line takes longer than naming a title
 export const BONUS_NAME_SECONDS = 15;
+/* Three cards and no reading: the page is a title you either place or you don't, and the honest
+   answer arrives long before fifteen seconds do. Long enough to picture the record and talk
+   yourself out of the wrong one, short enough that the page is a recall rather than a study. */
+export const BONUS_WHO_SECONDS = 12;
 export const BONUS_BLANK_SECONDS = 20;  // read the line, find the gap, then type — slip's budget
 // Redacted's clock is a backstop rather than a pressure: the cost of thinking here is already
 // the strips you peel while you think, so a tight clock would charge you twice for the same
@@ -886,6 +920,30 @@ export const CLOUD_WORDS_SPARE = 15;
 // page's own baseline, not the clock's remaining seconds, so it stays honest if a game's clock
 // is ever retuned under it.
 export const BONUS_SNAP_MS = 2000;
+
+/* ---------- Aaron or Jack ----------
+   THE FOUR RECORDS THE TWO OF THEM SHARE, and the only pool this game deals from. Named by the
+   album key songs.json uses, and read through `bonusSongs()` like every other game here, so the
+   shelf's own bars (second cuts, unheard demos) still apply on top of it.
+
+   Measured off data/producers.json when the pool was chosen: over all twelve studio albums the
+   credits run 53 Aaron / 75 Jack / 4 both, so a player who knows only that Jack is the busier
+   of the two scores 57% having read nothing. Over these four it is 44 / 39 / 4 — a coin flip —
+   because Aaron owns folklore and evermore almost outright and Jack owns Midnights almost
+   outright, and pooling them cancels each record's prior out. THAT CANCELLATION IS THE GAME'S
+   WHOLE DEFENCE, so adding a fifth record means re-measuring rather than appending a string. */
+export const PRODUCER_ALBUMS = ["folklore", "evermore", "Midnights", "The Tortured Poets Department"];
+/* What a page pays, and why the numbers are 2 and 5 rather than 1 and 2.
+
+   Only FOUR songs in the pool of 87 are joint productions (betty, Hits Different, But Daddy I
+   Love Him, thanK you aIMee), so tapping "both" blind is right 4.6% of the time. That rarity is
+   what makes the premium safe: guessing Aaron blind is worth 0.506 of a page and bluffing
+   "both" blind is worth 0.046 times whatever it pays, so the bluff only becomes the better play
+   above about ELEVEN. At five the premium is real and the bluff is still strictly worse than
+   simply saying Aaron, which is the whole balance — "both" pays when you have narrowed the page
+   down to it, and never when you are guessing. Raising it past eleven inverts that. */
+export const WHO_PAY_ONE = 2;
+export const WHO_PAY_BOTH = 5;
 
 /* ---------- Ruthless Game ----------
    The one game here with no clock to beat, because the clock IS the score: a page runs until
@@ -2650,6 +2708,10 @@ export const ACH_ICONS = {
   drop:    `<svg viewBox="0 0 24 24"><path class="ink-fill" d="M12 2.2 C12 2.2 5.2 10.2 5.2 15 a6.8 6.8 0 0 0 13.6 0 C18.8 10.2 12 2.2 12 2.2 Z"/><path d="M8.9 14.4 a3.2 3.2 0 0 0 2.3 3.5" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><circle cx="10" cy="11.8" r="0.75" fill="var(--paper)" stroke="none"/></svg>`,
   // yin-yang — everything & nothing, all at once (the gold half is the bead fill,
   // the other half solid ink; two eyes complete the taijitu)
+  /* The Aaron or Jack cover's mark at 24px: two discs and the lens where they overprint. The
+     lens is a real vesica (two arcs closing on the crossing points) rather than an ellipse
+     dropped between them, for the cover's reason — an approximation reads as a gap. */
+  overprint: `<svg viewBox="0 0 24 24"><circle class="ink-fill" cx="9" cy="12" r="6.4" stroke-width="1.2"/><circle class="ink-fill" cx="15" cy="12" r="6.4" stroke-width="1.2"/><path d="M12 6.3 A6.4 6.4 0 0 0 12 17.7 A6.4 6.4 0 0 0 12 6.3 Z" fill="currentColor"/></svg>`,
   yinyang: `<svg viewBox="0 0 24 24"><circle class="ink-fill" cx="12" cy="12" r="10" stroke-width="1.2"/><path d="M12 2 a10 10 0 0 1 0 20 a5 5 0 0 1 0 -10 a5 5 0 0 0 0 -10 z" fill="currentColor"/><circle cx="12" cy="7" r="1.7" fill="currentColor"/><circle cx="12" cy="17" r="1.7" fill="var(--paper)"/></svg>`,
   // a vinyl record — Taylor's Version (re-recording)
   vinyl:   `<svg viewBox="0 0 24 24"><circle class="ink-fill" cx="11.4" cy="12.6" r="9"/><circle cx="11.4" cy="12.6" r="4" fill="var(--paper)" stroke="none"/><circle class="ink-fill" cx="11.4" cy="12.6" r="1.2"/><g stroke="currentColor" stroke-width="0.8" fill="none" opacity="0.6"><circle cx="11.4" cy="12.6" r="6.2"/><circle cx="11.4" cy="12.6" r="7.6"/></g><path class="ink-fill" d="M20.6 2.6 L21.3 4 L22.7 4.7 L21.3 5.4 L20.6 6.8 L19.9 5.4 L18.5 4.7 L19.9 4 Z"/></svg>`,
@@ -4180,6 +4242,13 @@ export const ACHIEVEMENTS = [
   { id: "clear-25-pages-in-an-endless-bonus-run", name: "It Never Ends", desc: "Clear 25 pages in a row in an endless bonus game", tier: 2, secret: false, icon: "paperstairs", sitting: true, earn: { cat: "bonus" } },
   // The secrets. Three of them are failures worn well (the register of I'm The Problem), which is the
   // shelf's own tone: these games have soft edges and losing on them is funny rather than sore.
+  /* Aaron or Jack's only charm, and a single PAGE rather than a run. It has to be: just four
+     songs in the pool are joint productions, so "get them all" would be a lifetime ledger of
+     four facts kept outside BONUS_KEY, which the shelf's sandbox does not do for anything but
+     the two shelf-wide walks. One page, answered right, is a fact the page itself knows.
+     Named off "The knife cuts both ways" (long story short), which is on evermore and so is a
+     song this very game can deal. */
+  { id: "name-a-joint-production",             name: "Both Ways",        desc: "Name a song both Aaron and Jack produced", secret: true, icon: "overprint" },
   { id: "take-commonest-only-here-card",      name: "I Bought It",      desc: "Take the commonest card in an Only Here hand", secret: true, icon: "receipt" },
   { id: "name-redacted-song-after-buying-all-strips",   name: "Knew The Price",   desc: "Buy every strip on a Redacted page and still name the song", secret: true, icon: "peeled" },
   { id: "time-out-all-10-only-here-pages", name: "Never Heard Silence", desc: "Let all ten Only Here clocks run out without a card played", secret: true, icon: "spider" },
@@ -4424,6 +4493,7 @@ export const ACH_ID_MIGRATIONS = {
   "rarest-air": "take-rarest-only-here-card-all-10-pages",
   "follow-the-sparks": "finish-then-what-unbroken-chain",
   "i-bought-it": "take-commonest-only-here-card",
+  "both-ways": "name-a-joint-production",
   "knew-the-price": "name-redacted-song-after-buying-all-strips",
   "never-heard-silence": "time-out-all-10-only-here-pages",
   "almost-had-it": "finish-bonus-run-one-page-short-of-sweep",
@@ -4587,7 +4657,7 @@ export const ACH_GROUP_OF = {
   "finish-first-bonus-run": "bonus", "play-every-bonus-game": "bonus", "clean-sweep-bonus-game": "bonus",
   "clean-sweep-every-bonus-game": "bonus", "keep-bonus-back-cover": "bonus", "sweep-spot-the-slip": "bonus",
   "sweep-name-that-song-one-line-each": "bonus", "sweep-sing-it-back-all-words-exact": "bonus", "name-redacted-song-no-strips-removed": "bonus",
-  "take-rarest-only-here-card-all-10-pages": "bonus", "finish-then-what-unbroken-chain": "bonus", "take-commonest-only-here-card": "bonus",
+  "take-rarest-only-here-card-all-10-pages": "bonus", "finish-then-what-unbroken-chain": "bonus", "take-commonest-only-here-card": "bonus", "name-a-joint-production": "bonus",
   "name-redacted-song-after-buying-all-strips": "bonus", "time-out-all-10-only-here-pages": "bonus", "finish-bonus-run-one-page-short-of-sweep": "bonus",
   "sweep-running-order": "bonus", "name-running-order-page-with-half-the-clock-left": "bonus",
   "sweep-word-cloud": "bonus", "clear-every-spare-word-cloud-page": "bonus",
